@@ -33,6 +33,7 @@ pop = pop[['GEOID20', 'name', 'population']]
 df = pd.merge(df, pop, left_on='GEOID20', right_on='GEOID20')
 df.population = df.population.astype(int)
 
+
 counties = ['061', '047', '081', '005', '085']
 df = df[(df.COUNTYFP20 == '061') | (df.COUNTYFP20 == '047') | (df.COUNTYFP20 == '081') | (df.COUNTYFP20 == '005') | (df.COUNTYFP20 == '085')] # 5 boroughs
 #df = df[df.COUNTYFP20 == '061'] #just manhattan

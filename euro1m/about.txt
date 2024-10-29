@@ -1,0 +1,29 @@
+higher res: i.imgur.com/xS5SbQ7.png
+
+each region contains a million people, to within 5% of the last census or government published estimate. the projection is albers equal area.
+
+i drew the lines trying to respect
+	- 1 million people
+	- linguistic boundaries
+	- mountain ranges 
+	- existing political borders
+	- historical political borders 
+	- rivers
+	- urban/rural divide
+in roughly this order.
+
+the colors don't strictly mean anything, they were mostly just what i thought would look nice, but i also tried to make these line up with colors that have been associated with these regions, or colors from eu4.
+
+and for the names, i tried to draw on a mix of cities, historical region names, mountain ranges, and rivers, depending on what i thought was closest to a shared characteristic of the whole region.
+
+the little + symbols are what i thought could be hypothetical capital cities. 
+
+i used asesprite to draw. i used citypopulation.de for convenient access to subdivision census data. i used geopandas and simplemaps to draw coastlines and place cities.
+
+feedback is welcomed! please let me know if you think i messed up where you live
+
+note: ukraine uses pre-war population estimates because there haven't been any estimates since. this means some ukrainian refugees and migrants are double counted in countries that have had censuses in the past 2 years. 
+
+also check out my last map with the whole world into regions of 10 million: https://www.reddit.com/r/dataisbeautiful/comments/1e339nf/the_world_divided_into_804_zones_of_10_million/
+
+
