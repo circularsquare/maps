@@ -157,7 +157,7 @@ df.plot(color = df.color, ax=ax)
 
 ax.scatter(subway.Longitude, subway.Latitude, s=subway.population / 1000, c=subway.color, alpha=0.8)
 
-print(subway.sort_values('population').head(3))
+print(subway.sort_values('population').head(10))
 
 ax.set_facecolor('black')
 plt.tight_layout()
@@ -166,12 +166,4 @@ fig.savefig("nycensus/geopNyc.png", dpi=500)
 
 # df.to_csv('nycensus/blockswithpop.csv')
 #subway.to_csv('data/subwaystations2.csv')
-
-
-# todo
-# color each station
-# average color for stations with multiple lines?
-# brighter colors for express
-# color each block based on nearest station (unless 0 pop)
-
 
