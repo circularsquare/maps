@@ -24,6 +24,9 @@ plat = ccrs.PlateCarree()
 
 df = geopandas.read_file('data/tl_2020_36_tabblock20.shp')
 df = df.to_crs("EPSG:4326")
+df.to_csv('data/blockshapefilesNoShape.csv')
+print(df.head(20))
+print(df.columns)
 
 pop = pd.read_csv('data/DECENNIALDHC2020.P12-Data.csv') # block is DECENNIALDHC2020.P12-Data.csv
 pop = pop.rename(columns={'NAME': 'name', 'P12_001N': 'population'})
@@ -34,10 +37,11 @@ df = pd.merge(df, pop, left_on='GEOID20', right_on='GEOID20')
 df.population = df.population.astype(int)
 
 
-counties = ['061', '047', '081', '005', '085']
+# counties = ['061', '047', '081', '005', '085']
 df = df[(df.COUNTYFP20 == '061') | (df.COUNTYFP20 == '047') | (df.COUNTYFP20 == '081') | (df.COUNTYFP20 == '005') | (df.COUNTYFP20 == '085')] # 5 boroughs
-#df = df[df.COUNTYFP20 == '061'] #just manhattan
-print('merged, ', df.iloc[:3, :])
+#df = df[(df.COUNTYFP20 == '103')| (df.COUNTYFP20 == '059')] # nassau and westchester
+# #df = df[df.COUNTYFP20 == '061'] #just manhattan
+# print('merged, ', df.iloc[:3, :])
 
 fig, ax = plt.subplots(subplot_kw={"projection": plat}, figsize=(10, 10))
 ax.set_extent([-74.15, -73.7, 40.55, 40.92])
@@ -47,7 +51,7 @@ df['density'] = df.population/(df.ALAND20+df.AWATER20+1)
 print('pop ', pop.iloc[1:3, :])
 print('blocks ', df.iloc[1, :])
 
-# df.plot(column='density', cmap='magma', ax=ax)
+# df.plot(column='density', cmap='cividis', ax=ax)
 
 
 
@@ -84,7 +88,6 @@ for index, block in df.iterrows():
         print(i)
     if i > 2000000:
         break;
-
 
 
 
@@ -154,14 +157,26 @@ df.loc[df.station == -1, 'color'] = '#000000' # 0 pop or unpopulated for other r
 df.color = df.apply(lambda x: muteHue(x.color, x.density * 30), axis=1)
 df.plot(color = df.color, ax=ax)
 
-
 ax.scatter(subway.Longitude, subway.Latitude, s=subway.population / 1000, c=subway.color, alpha=0.8)
 
 print(subway.sort_values('population').head(10))
 
+
 ax.set_facecolor('black')
 plt.tight_layout()
 fig.savefig("nycensus/geopNyc.png", dpi=500)
+
+
+
+
+# df['color'] = '#555555'
+# df.color = df.apply(lambda x: muteHue(x.color, x.density * 30), axis=1)
+# df.loc[df.ALAND20/(df.AWATER20+0.001) < 1.0, 'color'] == '#000000'
+# df.plot(color = df.color, ax=ax)
+
+# ax.set_facecolor('black')
+# plt.tight_layout()
+# fig.savefig("nycensus/geopNycPlus.png", dpi=500)
 
 
 # df.to_csv('nycensus/blockswithpop.csv')
