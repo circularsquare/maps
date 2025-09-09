@@ -18,25 +18,24 @@ cache_dir = os.path.join(os.getcwd(), 'cartopycache')
 cartopy.config['pre_existing_data_dir'] = cache_dir
 
 
-crs = ccrs.AlbersEqualArea(-95, 0, 0, 0, (21, 52))
+crs = ccrs.AlbersEqualArea(95, 0, 0, 0, (5, 45))
 plat = ccrs.PlateCarree()
 
-#fig, ax = plt.subplots(subplot_kw={"projection": crs}, figsize=(50, 40))
-fig, ax = plt.subplots(subplot_kw={"projection": crs}, figsize=(100, 80))
+fig, ax = plt.subplots(subplot_kw={"projection": crs}, figsize=(95, 80))
 
-ax.set_extent([-130, -62, 6, 75], crs=ccrs.PlateCarree())
+ax.set_extent([48.2, 129, -9, 65], crs=ccrs.PlateCarree())
+ax.add_feature(cfeature.NaturalEarthFeature(
+    category='cultural', name='admin_1_states_provinces',
+    scale=resolution, edgecolor='#535D8D', facecolor='none', zorder=10,
+    rasterized = True, antialiased = False, linewidth = 0.004))
 # ax.add_feature(cfeature.NaturalEarthFeature(
-#     category='cultural', name='admin_1_states_provinces',
-#     scale=resolution, edgecolor='#535D8D', facecolor='none', zorder=10,
-#     rasterized = True, antialiased = False, linewidth = 0.005))
-ax.add_feature(cfeature.NaturalEarthFeature(
-    category='physical', name='lakes',
-    scale=resolution, facecolor='#D9F6FF', edgecolor='#535D8D', zorder=5,
-    rasterized = True, antialiased = False, linewidth = 0.004))
-ax.add_feature(cfeature.NaturalEarthFeature(
-    category='physical', name='ocean',
-    scale=resolution, facecolor='#D9F6FF', edgecolor='none', zorder=5,
-    rasterized = True, antialiased = False, linewidth = 0.004))
+#     category='physical', name='lakes',
+#     scale=resolution, facecolor='#D9F6FF', edgecolor='#535D8D', zorder=5,
+#     rasterized = True, antialiased = False, linewidth = 0.0035))
+# ax.add_feature(cfeature.NaturalEarthFeature(
+#     category='physical', name='ocean',
+#     scale=resolution, facecolor='#D9F6FF', edgecolor='none', zorder=5,
+#     rasterized = True, antialiased = False, linewidth = 0.004))
 ax.add_feature(cfeature.NaturalEarthFeature(
     category='physical',name='coastline',
     scale=resolution, facecolor='none', edgecolor='#535D8D', zorder=10,
@@ -65,7 +64,7 @@ ax.add_feature(cfeature.NaturalEarthFeature(
 #     rasterized=True, antialiased=False)
 
 plt.tight_layout()
-plt.savefig('na1m/nacoast2x.png')
+plt.savefig('asia1m/asiacoast.png')
 
 
 
