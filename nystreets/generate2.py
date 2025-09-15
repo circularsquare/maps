@@ -8,7 +8,7 @@ import pickle
 import numpy as np
 
 # todo: weight on road length, not node coutn
-# todo: add jersey?
+# todo: add jersey? 
 
 def jittered_weight(u, v, data):
     #'data' is a dictionary of the edge's attributes.
