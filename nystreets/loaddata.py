@@ -32,6 +32,7 @@ stations_gdf = gpd.GeoDataFrame(
     geometry=gpd.points_from_xy(stations_df['GTFS Longitude'], stations_df['GTFS Latitude']),
     crs="EPSG:4326").to_crs(TARGET_CRS)
 stations_gdf['routes'] = stations_gdf['Daytime Routes'].str.split(' ')
+print(stations_gdf[['Stop Name', 'Daytime Routes']].head(40))
 
 print('subway data loaded!')
 
@@ -40,7 +41,7 @@ fig, ax = plt.subplots(figsize=(imageSize, imageSize))
 ax.set_facecolor('black')
 ax.set_axis_off()
 
-# lines_gdf = lines_gdf[lines_gdf.service == 'G']
+lines_gdf = lines_gdf[lines_gdf.service == 'A']
 # station = stations_gdf[stations_gdf['Stop Name'] == 'Court Sq']
 # print(station)
 rgbs = [generate_random_rgb() for x in range(len(lines_gdf))]
