@@ -16,10 +16,11 @@ from shapely.geometry import Point, box
 import multiprocessing
 from functools import partial
 import time
+from collections import defaultdict
 
 
 mta_colors = {
-    'A': '#0027a6', 'C': '#0039A6', 'E': '#0053a6', 'SIR': '#08179C',
+    'A': '#42f593', 'C': '#0039A6', 'E': '#0053a6', 'SIR': '#08179C', #A is 0027a6
     'B': '#ff8c19', 'D': '#ff7119', 'F': '#FF6319', 'M': '#e66325', 
     'G': '#6CBE45', 'J': '#996633', 'Z': '#825c35', 'L': '#A7A9AC',
     'N': '#FCCC0A', 'Q': '#fcd40a', 'R': '#ebc923', 'W': '#f0cc3c', 
@@ -35,8 +36,14 @@ subway_speeds = {
     '4': 1, '5': 0.99, '6': 1, '7': 1,
     'S': 1, 'SF': 1, 'ST': 1, 'SR': 0.95,
 }
+subway_lines = ['A', 'C', 'E', 'SIR', 'B', 'D', 'F', 'M', 'G', 'J', 'Z', 'L', 'N', 'Q', 'R', 'W', '1', '2', '3', '4', '5', '6', '7', 'S']
+def route_offsets(route):
+    if route in subway_lines:
+        return subway_lines.index(route) * 1e-6
+    return -1e-6
 
-SUBWAY_SPEED = 4 # used in euclidean dist
+
+SUBWAY_SPEED = 3 # used in euclidean dist
 TARGET_CRS = "EPSG:32618"
 
 def jittered_weight(u, v, data):
@@ -157,8 +164,8 @@ def findUsage(num_iterations = 10000000):
     for seg_data in all_subway_data:
         segment = seg_data['geometry']
         route_id = seg_data['route_id'] 
-        start_node = segment.coords[0][:2]
-        end_node = segment.coords[-1][:2]
+        start_node = (segment.coords[0][0] + route_offsets(route_id), segment.coords[0][1])
+        end_node = (segment.coords[-1][0] + route_offsets(route_id), segment.coords[-1][1])
         if start_node != end_node:
             travel_time = segment.length / (SUBWAY_SPEED * subway_speeds[route_id])
             subG.add_edge(start_node, end_node,
@@ -166,28 +173,38 @@ def findUsage(num_iterations = 10000000):
                         type='subway',
                         route_id=route_id) 
 
-    # 3. find and bridge gaps between segment!
-    endpoints = []
+    endpoints_by_route = defaultdict(list)
     for index, row in lines_gdf.iterrows():
         line = row.geometry
-        if len(line.coords) > 1: # Ensure the line is valid
-            endpoints.append(line.coords[0])
-            endpoints.append(line.coords[-1])
-    unique_endpoints = list(set(endpoints))
-    endpoint_tree = KDTree(unique_endpoints)
-
-    # Find all pairs of endpoints that are within 20 meters of each other
-    gap_pairs = endpoint_tree.query_pairs(r=20)
-    for (i, j) in gap_pairs:
-        node1 = unique_endpoints[i]
-        node2 = unique_endpoints[j]
-        dist = euclidean_dist(node1, node2)
-        subG.add_edge(node1, node2, length = dist / SUBWAY_SPEED, type='subway')
+        route = row['route_id']
+        if len(line.coords) > 1:
+            endpoints_by_route[route].append(line.coords[0])
+            endpoints_by_route[route].append(line.coords[-1])
+    gaps_bridged = 0
+    for route, endpoints in endpoints_by_route.items():
+        if len(endpoints) < 2: continue
+        unique_endpoints = list(set(endpoints))
+        endpoint_tree = KDTree(unique_endpoints)
+        gap_pairs = endpoint_tree.query_pairs(r=20)
+        for (i, j) in gap_pairs:
+            node1 = unique_endpoints[i]
+            node2 = unique_endpoints[j]
+            dist = euclidean_dist(node1, node2)
+            subG.add_edge(node1, node2, length=dist/SUBWAY_SPEED, type='subway', route_id = route)
+            gaps_bridged += 1
+    print(f"Bridged {gaps_bridged} gaps in the subway network.")
 
     G = nx.compose(G, subG)
 
+    # line_df = lines_gdf[lines_gdf.route_id == 'A']
+    # line_df.plot(color = mta_colors['A'],
+    #     linewidth = 5, #np.maximum(5, 0.25 * imageSize * line_df['usage']**width_exp / maxUsage**width_exp), # max is new
+    #     capstyle='round')
+    # plt.savefig('nystreets/lines/' + 'A' + '2.png', pad_inches=0, facecolor='none')
+    # plt.close(fig_layer)
+
     # connecting stations!
-    ENTER_STATION = 30 # meters from station to street (walking is ~ 1 m/s)
+    ENTER_STATION = 20 # meters from station to street (walking is ~ 1 m/s)
     TRAIN_WAIT = 400 # meters from station to getting on train (applied both ways)
 
     print("Connecting networks at station entrances...")
@@ -207,23 +224,11 @@ def findUsage(num_iterations = 10000000):
         entrance_time = dist + ENTER_STATION
         G.add_edge(platform_node, nearest_street_node, length = dist + ENTER_STATION, type='station_entrance')
 
-    # for station_id, platform_node in station_id_to_node.items(): # station to subway
-    #     dist, idx = subway_tree.query(platform_node)
-    #     nearest_track_node = subway_nodes[idx]
-    #     G.add_edge(platform_node, nearest_track_node, length=TRAIN_WAIT, type='platform_access')
-
-    # print(stations_gdf.columns)
-    # print(stations_gdf.head(15)[['line', 'stop_name', 'daytime_routes', 'routes']])
-    # print(stations_gdf.daytime_routes.unique())
-    # print(lines_gdf.columns)
-    # print(sorted(lines_gdf.route_id.unique()))
-    # exit()
-
+    # connect station to train
     for station in stations_gdf.itertuples():
         for route in station.routes:
             try:
-                # 1. Find ALL possible line segments for the current route
-                platform_coords = (station.geometry.x, station.geometry.y)
+                platform_coords = (station.geometry.x, station.geometry.y) # 1. Find ALL possible line segments for route
                 platform_point = Point(platform_coords)
 
                 possible_lines = lines_gdf[lines_gdf['route_id'] == route]
@@ -239,9 +244,7 @@ def findUsage(num_iterations = 10000000):
                     platform_track_dist = euclidean_dist(platform_coords, nearest_track_node_on_route)
                 else: 
                     fallback = True 
-                if fallback or platform_track_dist > 200 and route != '5':
-                    print(f"warning: Large platform-to-track distance of {platform_track_dist:.0f}m "
-                        f"for route {route} at {station.stop_name}")
+                if fallback or platform_track_dist > 250 and route != '5':
                     # fallback if interpolate doesn't work: find closest node
                     route_nodes = []
                     if isinstance(route_geom, MultiLineString):
@@ -252,6 +255,10 @@ def findUsage(num_iterations = 10000000):
                     route_tree = KDTree(route_nodes)
                     dist, idx = route_tree.query(platform_coords)
                     nearest_track_node_on_route = route_nodes[idx]
+                    platform_track_dist = euclidean_dist(platform_coords, nearest_track_node_on_route)
+                if platform_track_dist > 250:
+                    print(f"warning: Large platform-to-track distance of {platform_track_dist:.0f}m "
+                        f"for route {route} at {station.stop_name}")
                 # Add an edge from the platform to the specific track
                 G.add_edge(platform_coords, nearest_track_node_on_route, 
                         length=TRAIN_WAIT + platform_track_dist*1.5, type='platform_access')
@@ -261,7 +268,7 @@ def findUsage(num_iterations = 10000000):
                 pass
 
     # adding stop time penalties
-    STOP_TIME = 20 # applied twice while passing a station
+    STOP_TIME = 30 # applied twice while passing a station
     track_nodes_with_stops = set()
     for station_id, platform_node in station_id_to_node.items():
         for neighbor in G.neighbors(platform_node):
@@ -271,22 +278,26 @@ def findUsage(num_iterations = 10000000):
         for neighbor in G.neighbors(track_node):
             edge_data = G.edges[track_node, neighbor]
             if edge_data.get('type') == 'subway':
-                edge_data['length'] += STOP_TIME
+                #G.edges[u, v]['length'] = G.edges[u, v]['length']
+                G.edges[track_node, neighbor]['length'] = G.edges[track_node,neighbor]['length'] + STOP_TIME
         
     print("Multi-modal graph creation complete!")
 
     # --- 2.6 load population! --
     print('loading population...')
     kontur_filepath = "data/nystreets/kontur_population_US_20231101.gpkg"
+    pop_gdf_info = gpd.read_file(kontur_filepath, rows=1)
+
     west, south, east, north = -74.253845, 40.497615, -73.656464, 40.981972
     bbox_gdf_latlon = gpd.GeoDataFrame(
         geometry=[box(west, south, east, north)],
         crs="EPSG:4326")
-    bbox_gdf_projected = bbox_gdf_latlon.to_crs("EPSG:32618")
+    bbox_gdf_projected = bbox_gdf_latlon.to_crs("EPSG:3857")
     projected_bbox_coords = tuple(bbox_gdf_projected.total_bounds)
     pop_gdf = gpd.read_file(
         kontur_filepath,
         bbox=projected_bbox_coords).to_crs(TARGET_CRS)
+        
     pop_centers_gdf = pop_gdf.copy() # collapse to centers
     pop_centers_gdf['geometry'] = pop_centers_gdf.geometry.centroid
     pop_points = np.array([p.coords[0] for p in pop_centers_gdf.geometry])
@@ -301,8 +312,6 @@ def findUsage(num_iterations = 10000000):
     final_weights = []
     for u, v, data in G.edges(data=True):
         G.edges[u, v]['usage'] = 0
-        # G.edges[u, v]['length'] = G.edges[u, v]['length']
-
 
     shortDistance = 1000
     exponent = 2.3  
@@ -357,7 +366,7 @@ def findUsage(num_iterations = 10000000):
     successful_paths = 0
     failed_paths = 0
 
-    parallel = successful_selections > 5000    
+    parallel = successful_selections > 1200    
     if parallel:
         print('running parallel...')
         pathfinding_jobs = list(zip(final_source_nodes, final_target_nodes))
@@ -398,7 +407,6 @@ def findUsage(num_iterations = 10000000):
     end_time = time.time()
     print(f"Pathfinding complete. {successful_paths} successful paths found. took {end_time-start_time:.2f} seconds, {(end_time-start_time)/successful_paths:5f} each.")
     
-
     # --- Step 4: Create Final GeoDataFrame ---
     # --- 4a: Start with the original street geometries from G_proj ---
     df_streets = ox.graph_to_gdfs(G_proj, nodes=False)
@@ -432,91 +440,64 @@ def findUsage(num_iterations = 10000000):
                 'type': data.get('type', 'unknown'),
                 'route_id': data.get('route_id', None)
             })
-    # Create a GeoDataFrame from the other edges, if any exist
-    if other_edges_data:
-        df_other = gpd.GeoDataFrame(other_edges_data, crs=TARGET_CRS)
-        # --- 4c: Combine the two GeoDataFrames ---
-        print("Combining street and subway GeoDataFrames...")
-        df = pd.concat([df_streets, df_other], ignore_index=True)
-    else:
-        df = df_streets
+    df_other = gpd.GeoDataFrame(other_edges_data, crs=TARGET_CRS)
+    # --- 4c: Combine the two GeoDataFrames ---
+    print("Combining street and subway GeoDataFrames...")
+    df = pd.concat([df_streets, df_other], ignore_index=True)
 
     # Select only the columns you need for plotting to keep things clean
     df = df[['geometry', 'usage', 'type', 'route_id']]
 
     print("Final combined GeoDataFrame created successfully.")
     
+    test_lon, test_lat = -73.9525, 40.8115
+    transformer = Transformer.from_crs("EPSG:4326", TARGET_CRS, always_xy=True)
+    test_x, test_y = transformer.transform(test_lon, test_lat)
+    test_point = Point(test_x, test_y)
+
+    # Find all subway line segments within a 50-meter buffer of this point
+    nearby_lines = lines_gdf[lines_gdf.distance(test_point) < 50]
+
+    print("--- DEBUGGING: 8th Ave / 125th St ---")
+    print("Route IDs found on the tracks at this location:")
+    print(nearby_lines['route_id'].unique())
+    print("---------------------------------------")
+
+    new_lines_gdf = df[df['type'] == 'subway']
+    nearby_lines = new_lines_gdf[new_lines_gdf.distance(test_point) < 50]
+
+    print("--- DEBUGGING: 8th Ave / 125th St ---")
+    print("Route IDs found on the tracks at this location:")
+    print(nearby_lines['route_id'].unique())
+    print("---------------------------------------")
+
+
     # save!
-    df.to_file('usage_map_ds.gpkg', driver='GPKG')
+    df.to_file('usage_map_ds3.gpkg', driver='GPKG')
     print('File saved.')
 
 if __name__ == '__main__':
     
-    findUsage(4000000)
+    findUsage(400000)
 
     print('loading file...')
-    df = gpd.read_file('usage_map_ds.gpkg')
-    #df = gpd.read_file('usage_map_s_big.gpkg')
-
-    # print(df['type'].value_counts())
-
-    # OFFSET_METERS = 100
-    # subway_df = df[df['type'] == 'subway'].copy().reset_index(drop=True)
-    # non_subway_df = df[df['type'] != 'subway'].copy()
-    # subway_sindex = subway_df.sindex
-    # print("Finding and offsetting parallel subway line bundles...")
-    # # Keep track of rows we've already processed in a bundle
-    # processed_indices = set()
-    # final_offset_geoms = []
-    # final_offset_data = []
-
-    # # Define the search distance (e.g., 20 meters) to find parallel lines
-    # BUFFER_METERS = 1
-    # bundled_count = 0
-    # for index, line_row in subway_df.iterrows():
-    #     if index in processed_indices:
-    #         continue # Skip if this line was already part of another bundle
-    #     # Create a small buffer around the current line to find its neighbors
-    #     buffer = line_row.geometry.buffer(BUFFER_METERS)
-    #     # Use the spatial index to find all lines that intersect this buffer
-    #     possible_matches_indices = list(subway_sindex.intersection(buffer.bounds))
-    #     group = subway_df.iloc[possible_matches_indices].copy()
-        
-    #     if len(group) > 1:
-    #         offset_geoms = offset_geometries(group, OFFSET_METERS)
-    #         final_offset_geoms.extend(offset_geoms)
-    #         final_offset_data.extend(group.drop(columns='geometry').to_dict('records'))
-    #         bundled_count += 1
-    #     else:
-    #         final_offset_geoms.append(line_row.geometry)
-    #         final_offset_data.append(line_row.drop('geometry').to_dict())
-
-    #     # Add all the indices from this group to our processed set
-    #     processed_indices.update(group.index)
-
-    # print(len(subway_df))
-    # print(bundled_count)
-
-
-    # # --- 4. Create a new GeoDataFrame from the offset geometries ---
-    # offset_subway_gdf = gpd.GeoDataFrame(final_offset_data, geometry=final_offset_geoms, crs=TARGET_CRS)
-
-    # # --- 5. Combine the offset subways with the original streets ---
-    # print("Recombining datasets...")
-    # df = pd.concat([non_subway_df, offset_subway_gdf], ignore_index=True)
-
+    df = gpd.read_file('usage_map_ds3.gpkg')
+    #df = gpd.read_file('usage_map_ds2.gpkg')
 
     print("Plotting final map...")
-    imageSize = 80
+    imageSize = 50
     fig, ax = plt.subplots(figsize=(imageSize, imageSize))
     ax.set_facecolor('black')
     ax.set_axis_off()
     maxUsage = df.usage.max()
+    xmin, ymin, xmax, ymax = df.total_bounds
+    ax.set_xlim(xmin, xmax)
+    ax.set_ylim(ymin, ymax)
 
     cmap = 'magma'
 
     width_exp = 0.7
-    streets_df = df[(df['type'] != 'subway') & (df['usage'] > 0)].sort_values('usage', ascending=True)
+    streets_df = df[(df['type'] != 'subway')].sort_values('usage', ascending=True)
     streets_df.plot(
         ax=ax,
         column='usage',
@@ -526,17 +507,16 @@ if __name__ == '__main__':
         capstyle='round'    
     )
     
-    subway_df = df[df['type'] == 'subway'].copy()
-    subway_df['routeColor'] = subway_df['route_id'].map(mta_colors).fillna('#FFFFFF')
-    subway_df = subway_df[subway_df['usage'] > 0].sort_values('usage', ascending=True)
-    for i in range(10):
-        subway_df.plot(
-            ax=ax,
-            color = subway_df['routeColor'],
-            linewidth = 0.25 * imageSize * subway_df['usage']**width_exp / maxUsage**width_exp, 
-            alpha=0.2,
-            #capstyle='round', 
-        )
+    # subway_df = df[df['type'] == 'subway'].copy()
+    # subway_df['routeColor'] = subway_df['route_id'].map(mta_colors).fillna('#FFFFFF')
+    # subway_df = subway_df.sort_values('usage', ascending=True)
+    # subway_df.plot(
+    #     ax=ax,
+    #     color = subway_df['routeColor'],
+    #     linewidth = 0.25 * imageSize * subway_df['usage']**width_exp / maxUsage**width_exp, 
+    #     alpha=0.5,
+    #     capstyle='round', 
+    # )
     # subway_df.plot(
     #     ax=ax,
     #     column='usage',
@@ -546,12 +526,27 @@ if __name__ == '__main__':
     #     capstyle='round'    
     # )
 
-
-
-    plt.tight_layout()
-    plt.savefig('nystreets/osmsub' + '.png', bbox_inches='tight', pad_inches=0,
-    facecolor='black')
+    plt.savefig('nystreets/osmsub' + '.png', pad_inches=0, facecolor='black')
     print('plot saved!')
+
+    
+    for route in subway_lines:
+        line_df = df[df.route_id == route]
+        if not line_df.empty:
+            fig_layer, ax_layer = plt.subplots(figsize=(imageSize, imageSize))
+            ax_layer.set_facecolor('none')
+            ax_layer.set_axis_off()
+            ax_layer.set_xlim(xmin, xmax)
+            ax_layer.set_ylim(ymin, ymax)
+
+            line_df.plot(ax=ax_layer,
+                color = mta_colors[route],
+                linewidth = np.maximum(0.1, 0.25 * imageSize * line_df['usage']**width_exp / maxUsage**width_exp), # max is new
+                capstyle='round')
+            fig_layer.savefig('nystreets/lines/' + route + '.png', pad_inches=0, facecolor='none')
+            plt.close(fig_layer)
+
+    print('line plots saved!')
 
 
 

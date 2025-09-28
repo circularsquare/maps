@@ -79,12 +79,12 @@ def findUsage(num_iterations = 10000000):
 
     # --- 1. Get data by uncommenting below 4 lines! ---
 
-    G_directed = ox.graph_from_bbox(bbox = bbox, network_type='drive')
-    G_proj = ox.project_graph(G_directed, to_crs=TARGET_CRS)
-    with open('g_proj_d.pkl', 'wb') as f:
-        pickle.dump(G_proj, f)
+    # G_directed = ox.graph_from_bbox(bbox = bbox, network_type='drive')
+    # G_proj = ox.project_graph(G_directed, to_crs=TARGET_CRS)
+    # with open('graph_tokyo.pkl', 'wb') as f:
+    #     pickle.dump(G_proj, f)
 
-    with open('g_proj_d.pkl', 'rb') as f:
+    with open('graph_tokyo.pkl', 'rb') as f:
         G_proj = pickle.load(f)
 
     G_initial = nx.Graph(G_proj)
@@ -103,20 +103,29 @@ def findUsage(num_iterations = 10000000):
     # # --- 2.5. subway! ---
     print('loading subway data...')
 
-    #lines_path = "data/nystreets/routes_nyc_subway_may2016.shp" # 'route_id'
-    lines_path = 'data/nystreets/geo_export_6c9929cb-3ce9-4cb5-862d-dc06efa13f97.shp' # 'service'
-    lines_gdf = gpd.read_file(lines_path)
-    lines_gdf = lines_gdf.to_crs(TARGET_CRS).explode()
-    lines_gdf['route_id'] = lines_gdf['service'].map(lambda x: 'S' if len(x) == 2 else x) # call all shuttle  'S'
-    lines_gdf['route_id'] = lines_gdf['route_id'].map(lambda x: '5' if x == '5 Peak' else x)
+    station_tags = {'railway': 'station', 'station': 'subway'}
+    stations_gdf = ox.features_from_bbox(bbox, station_tags)
+    stations_gdf = stations_gdf.to_crs(TARGET_CRS)
+    # Filter for valid Point geometries
+    stations_gdf = stations_gdf[stations_gdf.geometry.type == 'Point']
+    print(f"Downloaded {len(stations_gdf)} subway stations.")
 
-    stations_df = pd.read_csv("data/nystreets/MTA_Subway_Stations.csv")
-    stations_gdf = gpd.GeoDataFrame(
-        stations_df,
-        geometry=gpd.points_from_xy(stations_df['GTFS Longitude'], stations_df['GTFS Latitude']),
-        crs="EPSG:4326").to_crs(TARGET_CRS)
-    stations_gdf['routes'] = stations_gdf['Daytime Routes'].str.split(' ')
-    stations_gdf.columns = stations_gdf.columns.str.lower().str.replace(' ', '_')
+    line_tags = {'railway': 'subway'}
+    lines_gdf = ox.features_from_bbox(bbox, line_tags)
+    lines_gdf = lines_gdf.to_crs(TARGET_CRS)
+    print(f"Downloaded {len(lines_gdf)} subway line segments.")
+
+    print(stations_gdf.columns[:120])
+    print(lines_gdf.columns)
+
+    print(stations_gdf.iloc[0])
+    print(lines_gdf.iloc[0])
+
+    stations_gdf = stations_gdf[['geometry', 'colour', 'name', 'name:en', 'operator', 'subway', 'station', 'distance']]
+    lines_gdf = lines_gdf[['geometry', 'name', 'passenger_lines']]
+    print(stations_gdf.iloc[0])
+    print(lines_gdf.iloc[0, 1:])
+
 
     # prepare street graph G
     for u, v, data in G.edges(data=True):
@@ -415,7 +424,7 @@ def findUsage(num_iterations = 10000000):
     print("Final combined GeoDataFrame created successfully.")
     
     # save!
-    df.to_file('usage_map_ds.gpkg', driver='GPKG')
+    df.to_file('tokyo_gdf.gpkg', driver='GPKG')
     print('File saved.')
 
 if __name__ == '__main__':
@@ -423,7 +432,7 @@ if __name__ == '__main__':
     findUsage(4000000)
 
     print('loading file...')
-    df = gpd.read_file('usage_map_ds.gpkg')
+    df = gpd.read_file('tokyo_gdf.gpkg')
 
 
 
