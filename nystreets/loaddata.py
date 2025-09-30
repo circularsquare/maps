@@ -24,7 +24,7 @@ TARGET_CRS = "EPSG:2263"
 lines_path = 'data/nystreets/geo_export_6c9929cb-3ce9-4cb5-862d-dc06efa13f97.shp'
 lines_gdf = gpd.read_file(lines_path)
 lines_gdf['geometry'] = lines_gdf.geometry.apply(lambda x: linemerge(x) if isinstance(x, MultiLineString) else x)
-lines_gdf = lines_gdf.to_crs(TARGET_CRS)
+lines_gdf = lines_gdf.to_crs(TARGET_CRS).explode()
 
 stations_df = pd.read_csv("data/nystreets/MTA_Subway_Stations.csv")
 stations_gdf = gpd.GeoDataFrame(
@@ -32,7 +32,7 @@ stations_gdf = gpd.GeoDataFrame(
     geometry=gpd.points_from_xy(stations_df['GTFS Longitude'], stations_df['GTFS Latitude']),
     crs="EPSG:4326").to_crs(TARGET_CRS)
 stations_gdf['routes'] = stations_gdf['Daytime Routes'].str.split(' ')
-print(stations_gdf[['Stop Name', 'Daytime Routes']].head(40))
+#print(stations_gdf[['Stop Name', 'Daytime Routes']].head(40))
 
 print('subway data loaded!')
 
@@ -41,7 +41,7 @@ fig, ax = plt.subplots(figsize=(imageSize, imageSize))
 ax.set_facecolor('black')
 ax.set_axis_off()
 
-lines_gdf = lines_gdf[lines_gdf.service == 'A']
+#lines_gdf = lines_gdf[lines_gdf.service == 'A']
 # station = stations_gdf[stations_gdf['Stop Name'] == 'Court Sq']
 # print(station)
 rgbs = [generate_random_rgb() for x in range(len(lines_gdf))]
