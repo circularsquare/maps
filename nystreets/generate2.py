@@ -20,21 +20,21 @@ from collections import defaultdict
 
 
 mta_colors = {
-    'A': '#0027a6', 'C': '#0039A6', 'E': '#0053a6', 'SIR': '#08179C', #A is 0027a6
-    'B': '#ff8c19', 'D': '#ff7119', 'F': '#FF6319', 'M': '#e66325', 
+    'A': '#1373c2', 'C': '#0b4ab8', 'E': '#0b33b8', 'SIR': '#08179C', #A is 0027a6
+    'B': '#ff8c19', 'D': '#ff7919', 'F': '#FF6319', 'M': '#e66325', 
     'G': '#6CBE45', 'J': '#996633', 'Z': '#825c35', 'L': '#A7A9AC',
-    'N': '#FCCC0A', 'Q': '#fcd40a', 'R': '#ebc923', 'W': '#f0cc3c', 
+    'N': '#f7d52a', 'Q': '#f2e422', 'R': '#fcBb0a', 'W': '#f0b618', 
     '1': '#d92121', '2': '#EE352E', '3': '#ed5247', 
-    '4': '#19b056', '5': '#19b037', '6': '#00933C', '7': '#B933AD', 
+    '4': '#21b559', '5': '#1dad46', '6': '#00933C', '7': '#B933AD', 
     'S': '#808183', 'SF': '#808183', 'ST': '#808183', 'SR': '#808183'}
 subway_speeds = {
-    'A': 1, 'C': 0.9, 'E': 0.95, 'SIR': 1,
-    'B': 0.95, 'D': 1, 'F': 0.97, 'M': 0.9,
-    'G': 0.95, 'J': 0.95, 'Z': 0.85, 'L': 1,
-    'N': 1.0, 'Q': 0.97, 'R': 0.92, 'W': 0.9,
-    '1': 1, '2': 1, '3': 0.95,
-    '4': 1, '5': 0.99, '6': 1, '7': 1,
-    'S': 1, 'SF': 1, 'ST': 1, 'SR': 0.95,
+    'A': 1, 'C': 1, 'E': 1, 'SIR': 1,
+    'B': 1, 'D': 1, 'F': 1, 'M': 1,
+    'G': 1, 'J': 1, 'Z': 0.01, 'L': 1,
+    'N': 1, 'Q': 1, 'R': 1, 'W': 1,
+    '1': 1, '2': 1, '3': 1,
+    '4': 1, '5': 1, '6': 1, '7': 1,
+    'S': 1, 'SF': 1, 'ST': 1, 'SR': 1,
 }
 subway_lines = ['A', 'C', 'E', 'SIR', 'B', 'D', 'F', 'M', 'G', 'J', 'Z', 'L', 'N', 'Q', 'R', 'W', '1', '2', '3', '4', '5', '6', '7', 'S']
 def route_offsets(route): # jitter by this amount by index
@@ -46,7 +46,7 @@ def jitter_line(line, route_id):
     # Add the offset to every coordinate point in the line
     new_coords = [tuple(np.array(p) + offset) for p in line.coords]
     return LineString(new_coords)
-def subdivide_line(line, max_length=100):
+def subdivide_line(line, max_length=30):
     if line.length <= max_length:
         return [line]
     segments = []
@@ -57,23 +57,20 @@ def subdivide_line(line, max_length=100):
     return segments
 
 
-SUBWAY_SPEED = 3.6 # used in euclidean dist
+SUBWAY_SPEED = 1 # used in euclidean dist
 TARGET_CRS = "EPSG:32618"
 
 def jittered_weight(u, v, data):
-    jitterSize = 0.03
+    jitterSize = 1
     base_length = data['length']
     jitter = random.gauss(1, jitterSize)
     return base_length * jitter
 def jitter_sqrt(u, v, data):
-    strength = 1 # strength of 1 means 10 m path will be jittered by 1 * sqrt(10) = 3
+    strength = 1.0 # strength of 1 means 10 m path will be jittered by 1 * sqrt(10) = 3
                 # or 100 m path will get jittered by 1 * sqrt (100) = 10
-    base_length = data['length']
-    if base_length <= 0:
-        return 0.001
-    sigma = strength * math.sqrt(base_length)
-    noise = random.gauss(0, sigma)
-    return max(0.001, base_length + noise)
+    sigma = strength * math.sqrt(data['length'])
+    noise = np.abs(random.gauss(0, sigma)) # abs makes heuristic never overestimate
+    return max(0.001, data['length'] + noise)
 def euclidean_dist_heuristic(u, v):
     return np.linalg.norm(np.array(u) - np.array(v)) / SUBWAY_SPEED 
 def euclidean_dist(u, v):
@@ -86,6 +83,8 @@ def pathfind(source_target_pair, graph, weight_func, heuristic_func, exponent_va
     try: 
         path = nx.astar_path(graph, source_node, target_node, 
                             weight=weight_func, heuristic=heuristic_func)
+        # path = nx.shortest_path(graph, source_node, target_node, 
+        #                 weight=weight_func)
         network_dist = sum(graph.edges[u, v]['length'] for u, v in zip(path[:-1], path[1:]))
         distance = np.linalg.norm(np.array(source_node) - np.array(target_node))
         directness = distance / (network_dist + 0.001)
@@ -101,7 +100,7 @@ def findUsage(num_iterations = 10000000):
     place_name = "New York, New York"
     TARGET_CRS = "EPSG:32618"
 
-    bbox = (-74.253845,40.497615,-73.656464,40.981972)
+    bbox = (-74.2768441,40.497615,-73.6334,40.981972)
     center_lon, center_lat = -73.920135,40.710313
     #center_lat, center_lon = 40.664279, -73.865331 # test near howard beach
     transformer = Transformer.from_crs("EPSG:4326", TARGET_CRS, always_xy = True)
@@ -117,8 +116,17 @@ def findUsage(num_iterations = 10000000):
     with open('g_proj_d.pkl', 'rb') as f:
         G_proj = pickle.load(f)
 
+    true_lengths = {}
+    # Iterate through the original, unsimplified G_proj to get the correct lengths
+    for u_osmid, v_osmid, data in G_proj.edges(data=True):
+        u_coords = (G_proj.nodes[u_osmid]['x'], G_proj.nodes[u_osmid]['y'])
+        v_coords = (G_proj.nodes[v_osmid]['x'], G_proj.nodes[v_osmid]['y'])
+        edge_key = tuple(sorted((u_coords, v_coords)))
+        length = data['length']
+        if edge_key not in true_lengths or length < true_lengths[edge_key]:
+            true_lengths[edge_key] = length # if multiple edges with same endpoints, only keep shortest one
+
     G_initial = nx.Graph(G_proj)
-    print(f"Downloaded graph with {nx.number_connected_components(G_initial)} components.")
 
     # --- 2. Convert Graph Nodes to Coordinate Tuples ---
     print("Converting graph nodes from OSM IDs to coordinates...")
@@ -128,203 +136,208 @@ def findUsage(num_iterations = 10000000):
         u_coords = pos[u]
         v_coords = pos[v]
         G.add_edge(u_coords, v_coords, **data)
+    for u, v in G.edges():
+        edge_key = tuple(sorted((u, v)))
+        if edge_key in true_lengths:
+            G.edges[u, v]['length'] = true_lengths[edge_key]
     street_nodes = list(G.nodes())
+    print("Graph creation and length correction complete.")
 
-    # # --- 2.5. subway! ---
-    print('loading subway data...')
+    # # # --- 2.5. subway! ---
+    # print('loading subway data...')
 
-    #lines_path = "data/nystreets/routes_nyc_subway_may2016.shp" # 'route_id'
-    lines_path = 'data/nystreets/geo_export_6c9929cb-3ce9-4cb5-862d-dc06efa13f97.shp' # 'service'
-    lines_gdf = gpd.read_file(lines_path)
-    lines_gdf = lines_gdf.to_crs(TARGET_CRS).explode()
-    #here
-    lines_gdf['route_id'] = lines_gdf['service'].map(lambda x: 'S' if len(x) == 2 else x) # call all shuttle  'S'
-    lines_gdf['route_id'] = lines_gdf['route_id'].map(lambda x: '5' if x=='5 Peak' else x) 
+    # #lines_path = "data/nystreets/routes_nyc_subway_may2016.shp" # 'route_id'
+    # lines_path = 'data/nystreets/geo_export_6c9929cb-3ce9-4cb5-862d-dc06efa13f97.shp' # 'service'
+    # lines_gdf = gpd.read_file(lines_path)
+    # lines_gdf = lines_gdf.to_crs(TARGET_CRS).explode()
+    # #here
+    # lines_gdf['route_id'] = lines_gdf['service'].map(lambda x: 'S' if len(x) == 2 else x) # call all shuttle  'S'
+    # lines_gdf['route_id'] = lines_gdf['route_id'].map(lambda x: '5' if x=='5 Peak' else x) 
 
-    all_subdivided_lines_data = []
+    # all_subdivided_lines_data = []
 
-    # Iterate through your original subway lines DataFrame
-    for index, row in lines_gdf.iterrows():
-        original_line = row.geometry
-        original_data = row.to_dict()
-        new_segments = subdivide_line(original_line)
-        # For each new, small segment, create a new row of data
-        for seg in new_segments:
-            new_row_data = original_data.copy()
-            new_row_data['geometry'] = seg
-            all_subdivided_lines_data.append(new_row_data)
+    # # Iterate through your original subway lines DataFrame
+    # for index, row in lines_gdf.iterrows():
+    #     original_line = row.geometry
+    #     original_data = row.to_dict()
+    #     new_segments = subdivide_line(original_line)
+    #     # For each new, small segment, create a new row of data
+    #     for seg in new_segments:
+    #         new_row_data = original_data.copy()
+    #         new_row_data['geometry'] = seg
+    #         all_subdivided_lines_data.append(new_row_data)
 
-    lines_gdf_subdivided = gpd.GeoDataFrame(all_subdivided_lines_data, crs=TARGET_CRS)
-    print(f"Subdivision complete. Original {len(lines_gdf)} lines became {len(lines_gdf_subdivided)} segments.")
-    lines_gdf = lines_gdf_subdivided
+    # lines_gdf_subdivided = gpd.GeoDataFrame(all_subdivided_lines_data, crs=TARGET_CRS)
+    # print(f"Subdivision complete. Original {len(lines_gdf)} lines became {len(lines_gdf_subdivided)} segments.")
+    # lines_gdf = lines_gdf_subdivided
 
 
-    stations_df = pd.read_csv("data/nystreets/MTA_Subway_Stations.csv")
-    stations_gdf = gpd.GeoDataFrame(
-        stations_df,
-        geometry=gpd.points_from_xy(stations_df['GTFS Longitude'], stations_df['GTFS Latitude']),
-        crs="EPSG:4326").to_crs(TARGET_CRS)
-    stations_gdf['routes'] = stations_gdf['Daytime Routes'].str.split(' ')
-    stations_gdf.columns = stations_gdf.columns.str.lower().str.replace(' ', '_')
+    # stations_df = pd.read_csv("data/nystreets/MTA_Subway_Stations.csv")
+    # stations_gdf = gpd.GeoDataFrame(
+    #     stations_df,
+    #     geometry=gpd.points_from_xy(stations_df['GTFS Longitude'], stations_df['GTFS Latitude']),
+    #     crs="EPSG:4326").to_crs(TARGET_CRS)
+    # stations_gdf['routes'] = stations_gdf['Daytime Routes'].str.split(' ')
+    # stations_gdf.columns = stations_gdf.columns.str.lower().str.replace(' ', '_')
 
-    # prepare street graph G
-    for u, v, data in G.edges(data=True):
-        G.edges[u, v]['type'] = 'street'
+    # # prepare street graph G
+    # for u, v, data in G.edges(data=True):
+    #     G.edges[u, v]['type'] = 'street'
 
-    subG = nx.Graph()
+    # subG = nx.Graph()
 
-    # jitter lines
-    lines_gdf['geometry'] = lines_gdf.apply(
-        lambda row: jitter_line(row.geometry, row['route_id']),
-        axis=1)
+    # # jitter lines
+    # lines_gdf['geometry'] = lines_gdf.apply(
+    #     lambda row: jitter_line(row.geometry, row['route_id']),
+    #     axis=1)
 
-    all_subway_data = [] # We'll create a list of dictionaries
-    for index, row in lines_gdf.iterrows():
-        line = row.geometry
-        route_id = row['route_id'] 
-        segments = [LineString(pair) for pair in zip(line.coords, line.coords[1:])]
-        for seg in segments:
-            all_subway_data.append({'geometry': seg, 'route_id': route_id})
+    # all_subway_data = [] # We'll create a list of dictionaries
+    # for index, row in lines_gdf.iterrows():
+    #     line = row.geometry
+    #     route_id = row['route_id'] 
+    #     segments = [LineString(pair) for pair in zip(line.coords, line.coords[1:])]
+    #     for seg in segments:
+    #         all_subway_data.append({'geometry': seg, 'route_id': route_id})
 
-    # --- Part 2: Build the graph from our new, detailed list ---
-    for seg_data in all_subway_data:
-        segment = seg_data['geometry']
-        route_id = seg_data['route_id'] 
-        start_node = (segment.coords[0])
-        end_node = (segment.coords[-1])
-        if start_node != end_node:
-            travel_time = segment.length / (SUBWAY_SPEED * subway_speeds[route_id])
-            subG.add_edge(start_node, end_node,
-                        length=travel_time, 
-                        type='subway',
-                        route_id=route_id) 
-    endpoints_by_route = defaultdict(list)
-    for index, row in lines_gdf.iterrows():
-        line = row.geometry
-        route = row['route_id']
-        if len(line.coords) > 1:
-            endpoints_by_route[route].append(line.coords[0])
-            endpoints_by_route[route].append(line.coords[-1])
-    gaps_bridged = 0
-    for route, endpoints in endpoints_by_route.items():
-        if len(endpoints) < 2: continue
-        unique_endpoints = list(set(endpoints))
-        endpoint_tree = KDTree(unique_endpoints)
-        gap_pairs = endpoint_tree.query_pairs(r=20) # radius for closing gaps
-        for (i, j) in gap_pairs:
-            node1 = unique_endpoints[i]
-            node2 = unique_endpoints[j]
-            dist = euclidean_dist(node1, node2)
-            if dist > 20:
-                print('oh no')
-            subG.add_edge(node1, node2, length=dist/SUBWAY_SPEED, type='subway', route_id = route)
-            gaps_bridged += 1
-    print(f"Bridged {gaps_bridged} gaps in the subway network.")
+    # # --- Part 2: Build the graph from our new, detailed list ---
+    # for seg_data in all_subway_data:
+    #     segment = seg_data['geometry']
+    #     route_id = seg_data['route_id'] 
+    #     start_node = (segment.coords[0])
+    #     end_node = (segment.coords[-1])
+    #     if start_node != end_node:
+    #         travel_time = segment.length / (SUBWAY_SPEED * subway_speeds[route_id])
+    #         subG.add_edge(start_node, end_node,
+    #                     length=travel_time, 
+    #                     type='subway',
+    #                     route_id=route_id) 
+    # endpoints_by_route = defaultdict(list)
+    # for index, row in lines_gdf.iterrows():
+    #     line = row.geometry
+    #     route = row['route_id']
+    #     if len(line.coords) > 1:
+    #         endpoints_by_route[route].append(line.coords[0])
+    #         endpoints_by_route[route].append(line.coords[-1])
+    # gaps_bridged = 0
+    # for route, endpoints in endpoints_by_route.items():
+    #     if len(endpoints) < 2: continue
+    #     unique_endpoints = list(set(endpoints))
+    #     endpoint_tree = KDTree(unique_endpoints)
+    #     gap_pairs = endpoint_tree.query_pairs(r=20) # radius for closing gaps
+    #     for (i, j) in gap_pairs:
+    #         node1 = unique_endpoints[i]
+    #         node2 = unique_endpoints[j]
+    #         dist = euclidean_dist(node1, node2)
+    #         if dist > 20:
+    #             print('oh no')
+    #         subG.add_edge(node1, node2, length=dist/SUBWAY_SPEED, type='subway', route_id = route)
+    #         gaps_bridged += 1
+    # print(f"Bridged {gaps_bridged} gaps in the subway network.")
 
-    G = nx.compose(G, subG)
+    # G = nx.compose(G, subG)
 
     
-    # connecting stations!
-    ENTER_STATION = 30 # meters from station to street (walking is ~ 1 m/s)
-    TRAIN_WAIT = 300 # meters from station to getting on train (applied both ways)
+    # # connecting stations!
+    # ENTER_STATION = 20 # meters from station to street (walking is ~ 1 m/s)
+    # TRAIN_WAIT = 180 # meters from station to getting on train (applied both ways)
 
-    print("Connecting networks at station entrances...")
-    station_id_to_node = {}
-    for station in stations_gdf.itertuples():
-        platform_coords = (station.geometry.x, station.geometry.y)
-        G.add_node(platform_coords)
-        station_id_to_node[station.station_id] = platform_coords
+    # print("Connecting networks at station entrances...")
+    # station_id_to_node = {}
+    # for station in stations_gdf.itertuples():
+    #     platform_coords = (station.geometry.x, station.geometry.y)
+    #     G.add_node(platform_coords)
+    #     station_id_to_node[station.station_id] = platform_coords
 
-    # subway_nodes = [n for n, d in G.nodes(data=True) if G.degree(n) > 0 and all(G.edges[n, neighbor].get('type') == 'subway' for neighbor in G.neighbors(n))]
-    # subway_tree = KDTree(subway_nodes)
+    # # subway_nodes = [n for n, d in G.nodes(data=True) if G.degree(n) > 0 and all(G.edges[n, neighbor].get('type') == 'subway' for neighbor in G.neighbors(n))]
+    # # subway_tree = KDTree(subway_nodes)
 
-    street_tree = KDTree(street_nodes) # connect station to street
-    for station_id, platform_node in station_id_to_node.items():
-        dist, idx = street_tree.query(platform_node)
-        nearest_street_node = street_nodes[idx]
-        entrance_time = dist + ENTER_STATION
-        G.add_edge(platform_node, nearest_street_node, length = dist + ENTER_STATION, type='station_entrance')
+    # street_tree = KDTree(street_nodes) # connect station to street
+    # for station_id, platform_node in station_id_to_node.items():
+    #     dist, idx = street_tree.query(platform_node)
+    #     nearest_street_node = street_nodes[idx]
+    #     entrance_time = dist + ENTER_STATION
+    #     G.add_edge(platform_node, nearest_street_node, length = dist + ENTER_STATION, type='station_entrance')
 
-    g_nodes = list(G.nodes())
-    node_tree = KDTree(g_nodes)
+    # g_nodes = list(G.nodes())
+    # node_tree = KDTree(g_nodes)
 
 
-    nodes_by_route = defaultdict(list)
-    for u, v, data in G.edges(data=True):
-        if data.get('type') == 'subway':
-            route_id = data.get('route_id')
-            if route_id:
-                nodes_by_route[route_id].append(u)
-                nodes_by_route[route_id].append(v)
-    for route, nodes in nodes_by_route.items():
-        nodes_by_route[route] = list(set(nodes))
+    # nodes_by_route = defaultdict(list)
+    # for u, v, data in G.edges(data=True):
+    #     if data.get('type') == 'subway':
+    #         route_id = data.get('route_id')
+    #         if route_id:
+    #             nodes_by_route[route_id].append(u)
+    #             nodes_by_route[route_id].append(v)
+    # for route, nodes in nodes_by_route.items():
+    #     nodes_by_route[route] = list(set(nodes))
 
-    # 3. Loop through each station and find the best edge to split
-    for station in stations_gdf.itertuples():
-        for route in station.routes:
-            platform_coords = (station.geometry.x, station.geometry.y)
-            platform_point = np.array(platform_coords)
-            G.add_node(platform_coords)
+    # # 3. Loop through each station and find the best edge to split
+    # for station in stations_gdf.itertuples():
+    #     for route in station.routes:
+    #         platform_coords = (station.geometry.x, station.geometry.y)
+    #         platform_point = np.array(platform_coords)
+    #         G.add_node(platform_coords)
 
-            route_nodes = nodes_by_route.get(route)
-            route_tree = KDTree(route_nodes)
+    #         route_nodes = nodes_by_route.get(route)
+    #         route_tree = KDTree(route_nodes)
 
-            dist, idx = route_tree.query(platform_coords)
-            closest_node = route_nodes[idx]
+    #         dist, idx = route_tree.query(platform_coords)
+    #         closest_node = route_nodes[idx]
             
-            best_edge = None
-            min_dist_to_edge = float('inf')
-            for neighbor in G.neighbors(closest_node):
-                edge_geom = LineString([closest_node, neighbor])
-                dist = edge_geom.distance(Point(platform_coords))
-                if dist < min_dist_to_edge and G.edges[closest_node, neighbor]['type'] == 'subway':
-                    min_dist_to_edge = dist
-                    best_edge = (closest_node, neighbor)
+    #         best_edge = None
+    #         min_dist_to_edge = float('inf')
+    #         for neighbor in G.neighbors(closest_node):
+    #             edge_geom = LineString([closest_node, neighbor])
+    #             dist = edge_geom.distance(Point(platform_coords))
+    #             if dist < min_dist_to_edge and G.edges[closest_node, neighbor]['type'] == 'subway':
+    #                 min_dist_to_edge = dist
+    #                 best_edge = (closest_node, neighbor)
                     
-            if best_edge:
-                # We found the correct edge in G to split
-                u, v = best_edge
-                edge_data = G.edges[u, v].copy() # Get its attributes
+    #         if best_edge:
+    #             # We found the correct edge in G to split
+    #             u, v = best_edge
+    #             edge_data = G.edges[u, v].copy() # Get its attributes
                 
-                # Create the new connection point
-                new_node = tuple(LineString(best_edge).interpolate(LineString(best_edge).project(Point(platform_coords))).coords[0])
+    #             # Create the new connection point
+    #             new_node = tuple(LineString(best_edge).interpolate(LineString(best_edge).project(Point(platform_coords))).coords[0])
                 
-                # Perform the split-and-insert directly on G
-                G.remove_edge(u, v)
-                G.add_edge(u, new_node, **edge_data)
-                G.add_edge(new_node, v, **edge_data)
+    #             # Perform the split-and-insert directly on G
+    #             G.remove_edge(u, v)
+    #             G.add_edge(u, new_node, **edge_data)
+    #             G.add_edge(new_node, v, **edge_data)
 
-                edist = euclidean_dist(new_node, platform_coords)
-                if edist > 200:
-                    print(f"platform track dist {edist:.0f}m for route {route} at {station.stop_name}")
-                    print(euclidean_dist(u, platform_coords))
-                    print(euclidean_dist(v, platform_coords))
-                    print(u)
-                    print(v)
-                    print(new_node)
-                    print(platform_coords)
+    #             edist = euclidean_dist(new_node, platform_coords)
+    #             if edist > 200:
+    #                 print(f"platform track dist {edist:.0f}m for route {route} at {station.stop_name}")
+    #                 print(euclidean_dist(u, platform_coords))
+    #                 print(euclidean_dist(v, platform_coords))
+    #                 print(u)
+    #                 print(v)
+    #                 print(new_node)
+    #                 print(platform_coords)
                 
-                # Add the final connection from the platform to the new split point
-                G.add_edge(platform_coords, new_node, 
-                        length=TRAIN_WAIT, type='platform_access')
+    #             # Add the final connection from the platform to the new split point
+    #             G.add_edge(platform_coords, new_node, 
+    #                     length=TRAIN_WAIT, type='platform_access')
 
-    # adding stop time penalties
-    STOP_TIME = 30 # applied twice while passing a station
-    track_nodes_with_stops = set()
-    for station_id, platform_node in station_id_to_node.items():
-        for neighbor in G.neighbors(platform_node):
-            if G.edges[platform_node, neighbor].get('type') == 'platform_access':
-                track_nodes_with_stops.add(neighbor)
-    for track_node in track_nodes_with_stops:
-        for neighbor in G.neighbors(track_node):
-            edge_data = G.edges[track_node, neighbor]
-            if edge_data.get('type') == 'subway':
-                #G.edges[u, v]['length'] = G.edges[u, v]['length']
-                G.edges[track_node, neighbor]['length'] = G.edges[track_node,neighbor]['length'] + STOP_TIME
+    # # adding stop time penalties
+    # STOP_TIME = 30 # applied twice while passing a station
+    # track_nodes_with_stops = set()
+    # for station_id, platform_node in station_id_to_node.items():
+    #     for neighbor in G.neighbors(platform_node):
+    #         if G.edges[platform_node, neighbor].get('type') == 'platform_access':
+    #             track_nodes_with_stops.add(neighbor)
+    # for track_node in track_nodes_with_stops:
+    #     for neighbor in G.neighbors(track_node):
+    #         edge_data = G.edges[track_node, neighbor]
+    #         if edge_data.get('type') == 'subway':
+    #             #G.edges[u, v]['length'] = G.edges[u, v]['length']
+    #             G.edges[track_node, neighbor]['length'] = G.edges[track_node,neighbor]['length'] + STOP_TIME
 
     
         
-    print("Multi-modal graph creation complete!")
+    # print("Multi-modal graph creation complete!")
 
 
 
@@ -368,7 +381,7 @@ def findUsage(num_iterations = 10000000):
     midpoints = (u_coords + v_coords)/2
     lengths = np.array(list(nx.get_edge_attributes(G, 'length').values()))
     # dist_center = np.linalg.norm(u_coords - center_point, axis=1)
-    prox_weight = 1 #np.exp(-(dist_center**2) / (2 * proximity_sigma**2))
+    prox_weight = 1 #unused: np.exp(-(dist_center**2) / (2 * proximity_sigma**2))
 
     pop_distances, pop_indices = pop_tree.query(midpoints, k=1)
     edge_pops = pop_values[pop_indices]
@@ -378,9 +391,7 @@ def findUsage(num_iterations = 10000000):
     temp_df['hexagon_total_length'] = temp_df['hexagon_id'].map(hexagon_total_lengths)
     normalized_length_weight = temp_df['edge_length'] / temp_df['hexagon_total_length']
     # square root because weight will be applied once at source and once at destination
-    pop_weight = ((temp_df['population'] / (temp_df['population'].max() + 1)) + 0.01)**0.5
-
-    final_weights = lengths * prox_weight * pop_weight
+    final_weights = np.sqrt(temp_df['population']) * normalized_length_weight
 
     # do random selections
     probabilities = final_weights / np.sum(final_weights)
@@ -453,59 +464,65 @@ def findUsage(num_iterations = 10000000):
     # --- Step 4: Create Final GeoDataFrame ---
     # --- 4a: Start with the original street geometries from G_proj ---
     df_streets = ox.graph_to_gdfs(G_proj, nodes=False)
+    print(df_streets.columns)
+    df_streets = df_streets.reset_index()
+
+    print('Filtering out detour paths...')
+    pos = {node: (data['x'], data['y']) for node, data in G_proj.nodes(data=True)}
+    def get_edge_key(row):
+        return tuple(sorted((pos[row['u']], pos[row['v']])))
+    df_streets['edge_key'] = df_streets.apply(get_edge_key, axis=1)
+
+    def is_shortest_path(row):
+        return np.isclose(row['length'], true_lengths.get(row['edge_key'], -1))
+    df_streets = df_streets[df_streets.apply(is_shortest_path, axis=1)].copy()
 
     # Map the calculated 'usage' from your main graph G back to this GeoDataFrame
     print("Mapping usage counts to street geometries...")
-    usage_counts = []
-    for u_osmid, v_osmid, data in G_proj.edges(data=True, keys=False):
-        # Get the coordinate-based nodes used in your main graph G
-        u_coords = (G_initial.nodes[u_osmid]['x'], G_initial.nodes[u_osmid]['y'])
-        v_coords = (G_initial.nodes[v_osmid]['x'], G_initial.nodes[v_osmid]['y'])
-        # Look up the edge in G to find its usage
-        edge_data = G.get_edge_data(u_coords, v_coords)
-        if edge_data:
-            usage_counts.append(edge_data.get('usage', 0))
-        else: # This might happen if the edge was removed from G, though unlikely here
-            usage_counts.append(0)
-    df_streets['usage'] = usage_counts
+    # First, create a simple lookup dictionary for usage from G.
+    usage_lookup = {tuple(sorted((u, v))): data.get('usage', 0) for u, v, data in G.edges(data=True)}
+    df_streets['usage'] = df_streets['edge_key'].map(usage_lookup).fillna(0)
     df_streets['type'] = 'street'
     df_streets['route_id'] = None
+    df_streets = df_streets[['geometry', 'usage', 'type', 'route_id']] # Keep only needed columns
 
     # --- 4b: Create geometries for all NON-street edges (subway, transfers, etc.) ---
-    print("Creating geometries for subway and other network edges...")
-    other_edges_data = []
-    for u, v, data in G.edges(data=True):
-        if data.get('type') != 'street':
-            geom = LineString([u, v])
-            other_edges_data.append({
-                'geometry': geom,
-                'usage': data.get('usage', 0),
-                'type': data.get('type', 'unknown'),
-                'route_id': data.get('route_id', None)
-            })
-    df_other = gpd.GeoDataFrame(other_edges_data, crs=TARGET_CRS)
-    # --- 4c: Combine the two GeoDataFrames ---
-    print("Combining street and subway GeoDataFrames...")
-    df = pd.concat([df_streets, df_other], ignore_index=True)
+    # print("Creating geometries for subway and other network edges...")
+    # other_edges_data = []
+    # for u, v, data in G.edges(data=True):
+    #     if data.get('type') != 'street':
+    #         geom = LineString([u, v])
+    #         other_edges_data.append({
+    #             'geometry': geom,
+    #             'usage': data.get('usage', 0),
+    #             'type': data.get('type', 'unknown'),
+    #             'route_id': data.get('route_id', None)
+    #         })
+    # df_other = gpd.GeoDataFrame(other_edges_data, crs=TARGET_CRS)
+    # # --- 4c: Combine the two GeoDataFrames ---
+    # print("Combining street and subway GeoDataFrames...")
+    # df = pd.concat([df_streets, df_other], ignore_index=True)
+
+    df = df_streets # comment this out if doing subway!!
 
     # Select only the columns you need for plotting to keep things clean
     df = df[['geometry', 'usage', 'type', 'route_id']]
     print("Final combined GeoDataFrame created successfully.")
 
     # save!
-    df.to_file('usage_map_ds5.gpkg', driver='GPKG')
+    df.to_file('usage_map2.gpkg', driver='GPKG')
     print('File saved.')
 
 if __name__ == '__main__':
     
-    #findUsage(6000000)
+    findUsage(80000 * 100) 
 
     print('loading file...')
-    df = gpd.read_file('usage_map_ds5.gpkg')
-    #df = gpd.read_file('usage_map_ds4.gpkg')
+    df = gpd.read_file('usage_map2.gpkg')
+    #df = gpd.read_file('usage_map.gpkg')
 
     print("Plotting final map...")
-    imageSize = 80
+    imageSize = 100
     fig, ax = plt.subplots(figsize=(imageSize, imageSize))
     ax.set_facecolor('black')
     ax.set_axis_off()
@@ -515,35 +532,15 @@ if __name__ == '__main__':
 
     cmap = 'magma'
 
-    width_exp = 0.72
-    maxWidth = 0.15
+    width_exp = 0.7
+    maxWidth = 0.17
+    vmin = 0.8
     maxUsage = df.usage.max()
 
     streets_df = df[(df['type'] != 'subway')].sort_values('usage', ascending=True)
     subway_df = df[df['type'] == 'subway'].copy()
     subway_df['routeColor'] = subway_df['route_id'].map(mta_colors).fillna('#FFFFFF')
-    
-    streets_df.plot(
-        ax=ax,
-        column='usage',
-        cmap=cmap, 
-        linewidth = maxWidth * imageSize * streets_df['usage']**width_exp / maxUsage**width_exp, 
-        norm=LogNorm(vmin=0.3, vmax=df['usage'].max()*0.8),
-        capstyle='round'    
-    )
-    
-    subway_df = subway_df.sort_values('usage', ascending=True)
-    subway_df.plot( ax=ax, color = subway_df['routeColor'],
-        linewidth = maxWidth * imageSize * subway_df['usage']**width_exp / maxUsage**width_exp, 
-        alpha=0.8, capstyle='round', 
-    )
-    # subway_df.plot( ax=ax, column='usage', cmap=cmap, 
-    #     linewidth = maxWidth * imageSize * subway_df['usage']**width_exp / maxUsage**width_exp, 
-    #     norm=LogNorm(vmin=0.3, vmax=df['usage'].max()*0.8), capstyle='round'    
-    # )
-    plt.savefig('nystreets/osmsuball' + '.png', pad_inches=0, facecolor='black')
-    print('plot saved!')
-    
+
     fig, ax = plt.subplots(figsize=(imageSize, imageSize))
     ax.set_facecolor('black')
     ax.set_axis_off()
@@ -551,29 +548,47 @@ if __name__ == '__main__':
     ax.set_ylim(ymin, ymax)
     streets_df.plot(ax=ax, column='usage', cmap=cmap, 
         linewidth = maxWidth * imageSize * streets_df['usage']**width_exp / maxUsage**width_exp, 
-        norm=LogNorm(vmin=0.3, vmax=df['usage'].max()*0.8), capstyle='round'    
+        norm=LogNorm(vmin=vmin, vmax=df['usage'].max()*1.0), capstyle='round'    
     )
-    plt.savefig('nystreets/osmsub' + '.png', pad_inches=0, facecolor='black')
+    plt.savefig('nystreets/osm' + '.png', pad_inches=0, facecolor='black')
     print('plot saved!')
 
     
-    for route in subway_lines:
-        line_df = df[df.route_id == route]
-        if not line_df.empty:
-            fig_layer, ax_layer = plt.subplots(figsize=(imageSize, imageSize))
-            ax_layer.set_facecolor('none')
-            ax_layer.set_axis_off()
-            ax_layer.set_xlim(xmin, xmax)
-            ax_layer.set_ylim(ymin, ymax)
+    # streets_df.plot(
+    #     ax=ax,
+    #     column='usage',
+    #     cmap=cmap, 
+    #     linewidth = maxWidth * imageSize * streets_df['usage']**width_exp / maxUsage**width_exp, 
+    #     norm=LogNorm(vmin=vmin, vmax=df['usage'].max()*1.0),
+    #     capstyle='round'    
+    # )
+    
+    # subway_df = subway_df.sort_values('usage', ascending=True)
+    # subway_df.plot( ax=ax, color = subway_df['routeColor'],
+    #     linewidth = maxWidth * imageSize * subway_df['usage']**width_exp / maxUsage**width_exp, 
+    #     alpha=0.99, capstyle='round', 
+    # )
+    # plt.savefig('nystreets/osmsuball' + '.png', pad_inches=0, facecolor='black')
+    # print('plot saved!')
 
-            line_df.plot(ax=ax_layer,
-                color = mta_colors[route],
-                linewidth = np.maximum(0.1, maxWidth * imageSize * line_df['usage']**width_exp / maxUsage**width_exp), # max is new
-                capstyle='round')
-            fig_layer.savefig('nystreets/lines/' + route + '.png', pad_inches=0, facecolor='none')
-            plt.close(fig_layer)
+    
+    # for route in subway_lines:
+    #     line_df = df[df.route_id == route]
+    #     if not line_df.empty:
+    #         fig_layer, ax_layer = plt.subplots(figsize=(imageSize, imageSize))
+    #         ax_layer.set_facecolor('none')
+    #         ax_layer.set_axis_off()
+    #         ax_layer.set_xlim(xmin, xmax)
+    #         ax_layer.set_ylim(ymin, ymax)
 
-    print('line plots saved!')
+    #         line_df.plot(ax=ax_layer,
+    #             color = mta_colors[route],
+    #             linewidth = np.maximum(0.1, maxWidth * imageSize * line_df['usage']**width_exp / maxUsage**width_exp), # max is new
+    #             capstyle='round')
+    #         fig_layer.savefig('nystreets/lines/' + route + '.png', pad_inches=0, facecolor='none')
+    #         plt.close(fig_layer)
+
+    # print('line plots saved!')
 
 
 
