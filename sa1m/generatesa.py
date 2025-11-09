@@ -48,18 +48,20 @@ ax.set_extent([-80, -36, -56.5, 14.5], crs=ccrs.PlateCarree())
 
 def plotShapefile(path):
     df = geopandas.read_file(path)
+    if df.crs is None:
+        df = df.set_crs("EPSG:4326")
     df = df.to_crs(crs)
     df.plot(ax=ax, edgecolor = '#63538d', facecolor='none', zorder = 10, 
         rasterized=True, antialiased = False, linewidth = 0.004)
-plotShapefile('data/sa1m/argentina/arg_admbnda_adm2_unhcr2017.shp')
-plotShapefile('data/sa1m/brazil/RG2017_regioesgeograficas2017.shp')
-plotShapefile('data/sa1m/peru/per_admbnda_adm2_ign_20200714.shp')
-plotShapefile('data/sa1m/bolivia/bol_admbnd_adm2_mdrt_2013_v01.shp')
-#plotShapefile('data/sa1m/chile/chl_admbnda_adm2_bcn_20211008.shp')
-plotShapefile('data/sa1m/colombia/col_admbnda_adm2_mgn_20200416.shp')
-plotShapefile('data/sa1m/venezuela/ven_admbnda_adm2_ine_20210223.shp')
-plotShapefile('data/sa1m/ecuador/ecu_adm_adm2_2024.shp')
-plotShapefile('data/sa1m/paraguay/pry_admbnda_adm2_DGEEC_2020.shp')
+# plotShapefile('data/sa1m/argentina/arg_admbnda_adm2_unhcr2017.shp')
+# plotShapefile('data/sa1m/brazil/RG2017_regioesgeograficas2017.shp')
+# plotShapefile('data/sa1m/peru/per_admbnda_adm2_ign_20200714.shp')
+# plotShapefile('data/sa1m/bolivia/bol_admbnd_adm2_mdrt_2013_v01.shp')
+plotShapefile('data/sa1m/chile/chl_admbnda_adm3_bcn_20211008.shp')
+# plotShapefile('data/sa1m/colombia/col_admbnda_adm2_mgn_20200416.shp')
+# plotShapefile('data/sa1m/venezuela/ven_admbnda_adm2_ine_20210223.shp')
+# plotShapefile('data/sa1m/ecuador/ecu_adm_adm2_2024.shp')
+# plotShapefile('data/sa1m/paraguay/pry_admbnda_adm2_DGEEC_2020.shp')
 #plotShapefile('data/sa1m/brazil/RG2017_rgint.shp')
 
 #plotShapefile('data/sa1m/geoBoundariesCGAZ_ADM1.shp')
@@ -67,7 +69,7 @@ plotShapefile('data/sa1m/paraguay/pry_admbnda_adm2_DGEEC_2020.shp')
 
 
 plt.tight_layout()
-plt.savefig('sa1m/adm2.png')
+plt.savefig('sa1m/adm25.png')
 
 
 
