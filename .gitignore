@@ -1,5 +1,9 @@
+<<<<<<< HEAD
+data/
+=======
 data/
 cache/
 venv/
 *.gpkg
 *.pkl
+>>>>>>> 6bd637e490e1961f85600d98d1427f80e8ae73b5

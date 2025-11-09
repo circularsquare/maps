@@ -21,8 +21,12 @@ cartopy.config['pre_existing_data_dir'] = cache_dir
 crs = ccrs.AlbersEqualArea(-95, 0, 0, 0, (21, 52))
 plat = ccrs.PlateCarree()
 
+<<<<<<< HEAD
+fig, ax = plt.subplots(subplot_kw={"projection": crs}, figsize=(50, 40))
+=======
 #fig, ax = plt.subplots(subplot_kw={"projection": crs}, figsize=(50, 40))
 fig, ax = plt.subplots(subplot_kw={"projection": crs}, figsize=(100, 80))
+>>>>>>> 6bd637e490e1961f85600d98d1427f80e8ae73b5
 
 ax.set_extent([-130, -62, 6, 75], crs=ccrs.PlateCarree())
 # ax.add_feature(cfeature.NaturalEarthFeature(
@@ -65,7 +69,11 @@ ax.add_feature(cfeature.NaturalEarthFeature(
 #     rasterized=True, antialiased=False)
 
 plt.tight_layout()
+<<<<<<< HEAD
+plt.savefig('na1m/nacoast.png')
+=======
 plt.savefig('na1m/nacoast2x.png')
+>>>>>>> 6bd637e490e1961f85600d98d1427f80e8ae73b5
 
 
 
