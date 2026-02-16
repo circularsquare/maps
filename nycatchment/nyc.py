@@ -47,7 +47,7 @@ df['INTPTLON20'] = df['INTPTLON20'].astype(float)
 df['INTPTLAT20'] = df['INTPTLAT20'].astype(float)
 
 fig, ax = plt.subplots(subplot_kw={"projection": plat}, figsize=(10, 10))
-ax.set_extent([-74.926758,-71.801147,39.867588,41.783601])
+ax.set_extent([-74.926758,-72.4,40.0,41.783601])
 
 df['density'] = df.population/(df.ALAND20+df.AWATER20+1) 
 df = df.drop(['TRACTCE20', 'BLOCKCE20', 'GEOIDFQ20', 'NAME20', 'MTFCC20', 'UR20', 'UACE20', 'FUNCSTAT20'], axis=1)
@@ -135,7 +135,7 @@ def randomizeHue(color):
     return hex_code
 def muteHue(hex, density):
     r, g, b = ImageColor.getcolor(hex, "RGB")
-    densityFactor = ((1 / (1 + np.exp(-density*1.5)) - 0.5) * 2) * 0.79 + 0.08
+    densityFactor = ((1 / (1 + np.exp(-density*2.4)) - 0.5) * 2) * 0.91 + 0.03
     return '#{:02x}{:02x}{:02x}'.format(int(r*densityFactor), int(g*densityFactor), int(b*densityFactor))
 
 df['color'] = df.station.apply(lambda x: rail.iloc[x].color)
@@ -144,15 +144,16 @@ df.color = df.apply(lambda x: muteHue(x.color, x.density * 30), axis=1)
 
 print(rail.sort_values('population').tail(10))
 
+rail = rail.sort_values('population')
 rail.to_csv('data/nyc/railprocessed.csv')
 print('data saved.')
 
 df.plot(color = df.color, ax=ax)
-ax.scatter(rail.Longitude, rail.Latitude, s=rail.population / 1000 * 0.3, c=rail.color, alpha=0.8, edgecolor='none')
+ax.scatter(rail.Longitude, rail.Latitude, s=rail.population / 1000 * 0.12, c=rail.color, alpha=0.8, edgecolor='none')
 
 ax.set_facecolor('black')
-plt.tight_layout()
-fig.savefig("nycatchment/geopNyc.png", dpi=1000)
+plt.tight_layout(pad=0)
+fig.savefig("nycatchment/geopNyc.png", dpi=1400, facecolor='black')
 
 
 # df['color'] = '#555555'

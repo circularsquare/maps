@@ -30,7 +30,7 @@ def getStationColor(routes):
         noiseFactor = 0.08
     elif routes[0] in ('L'):
         noiseFactor = 0.12
-    vnoiseFactor = 0.02
+    vnoiseFactor = 0.04
     if routes[0] == 'L':
         vnoiseFactor = 0.05
     hnew = h + ((random.random()-0.5)*noiseFactor)%1
@@ -52,94 +52,83 @@ colorDict = {
     '7': '#B933AD', 'S': '#808183', 'SIR': '#0039A6',
     
     # NJ Transit Rail Lines - UPDATED TO MATCH CONVENTION
-    'Northeast Corridor': '#CE1126',        # RED (official NEC red)
-    'NEC': '#CE1126',
-    'NEC / NJCL': '#8B2F5F',
-    'NEC / NJCL / ME / Main/Bergen': '#942D5E',
-    'NEC / NJCL / RVL': '#9B3068',
-    
-    'Raritan Valley Line': '#FAA634',       # ORANGE (official RVL orange)
+    'Northeast Corridor': '#EF3E42',        # RED (official NEC red)
+    'NEC': '#EF3E42',
+    'NEC / NJCL': '#9F6078',
+    'NEC / NJCL / RVL': '#B67267',
+    'NEC / NJCL / ME / Main/Bergen': '#9E8C52',
+    'Raritan Valley Line': '#FAA634',      
     'RVL': '#FAA634',
+    'North Jersey Coast Line': '#00A4E4',
+    'NJCL': '#00A4E4',
     
-    'Morris and Essex Line': '#00A94F',     # GREEN (official M&E green) - Morristown
-    'ME': '#00A94F',
+    'Morris and Essex Line': '#00A94F',    
     'Morristown Line / ME': '#00A94F',
-    'Montclair-Boonton Line / ME': '#1A8A42',
+    'Montclair-Boonton Line / ME': '#E66B5B',
+    'Gladstone Branch / ME': '#A2D5AE',   
+    'Main/Bergen Line': '#FFCF01',        
+    'Main Line': '#FFCF01',
+    'ML': '#FFCF01',
     
-    'Gladstone Branch / ME': '#8BC540',     # PALE GREEN (official Gladstone)
-    
-    'Main/Bergen Line': '#FFD100',          # YELLOW (official Main Line)
-    'Main Line': '#FFD100',
-    'ML': '#FFD100',
-    
-    'Bergen Line': '#808080',               # GRAY (Bergen Line conventional)
-    'Bergen': '#808080',
-    
+    'Bergen Line': '#B9C9DF',              
     'Pascack Valley Line': '#8B4789',
     'Pascack Valley': '#8B4789',
     'PVL': '#8B4789',
-    
-    'North Jersey Coast Line': '#0076BF',
-    'NJCL': '#0076BF',
-    
+
     'Atlantic City Line': '#00A5E3',
-    'Meadowlands Rail Line': '#003D79',
+    'Meadowlands Rail Line': '#B7A673',
     'West Trenton Line': '#8E3A80',
     
     # NJ Light Rail
     'Hudson-Bergen Light Rail': '#009FDA',
     'HBLR': '#009FDA',
     'Newark Light Rail': '#FDDA24',
-    'River Line Light Rail': '#7C3F8D',
+    'River Line Light Rail': '#403f8d',
     
     # PATH
     'PATH': '#D93A30',
-    
     # PATCO
     'PATCO': '#EE3E34',
     
     # Metro-North Lines (official colors)
     'Hudson': '#009B3A',
     'Harlem': '#0039A6',
-    'New Haven': '#EE3124',
+    'New Haven': '#EE0034',
     'Wassaic': '#0039A6',
-    'Waterbury': '#EE3124',
-    'Danbury': '#EE3124',
-    'New Canaan': '#EE3124',
+    'Waterbury': '#EE0034',
+    'Danbury': '#EE0034',
+    'New Canaan': '#EE0034',
     'MNR': '#0039A6',
     
-    # LIRR Branches - UPDATED TO MATCH CONVENTION
+    # LIRR Branches 
     'Babylon': '#00985F',
-    'Belmont': '#0039A6',
+    'Belmont': '#60269E',
     'City Terminal Zone': '#4D5357',
     'Far Rockaway': '#6E3219',
     'Hempstead': '#CE8E00',
     'Long Beach': '#FF6319',
     'Montauk': '#006983',
-    
-    'Oyster Bay': '#00A94F',                # GREEN (official)
-    
-    'Port Jefferson': '#0062A0',            # BLUE (official)
-    
+    'Oyster Bay': '#00AF3F',              
+    'Port Jefferson': '#0039A6',           
     'Port Washington': '#C60C30',
     'Ronkonkoma': '#A626AA',
-    'West Hempstead': '#00AF3F',
-    'Greenport': '#006983',
-    'LIRR': '#0039A6',
+    'West Hempstead': '#00A1DE',
+    'Greenport': '#A626AA',
 }
 
 subway = pd.read_csv('data/nyc/subwaystations.csv')
-subway = subway[['Daytime Routes', 'Latitude', 'Longitude', 'population']]
+subway = subway[['Daytime Routes', 'Latitude', 'Longitude', 'population', 'Stop Name']]
 
 subway['routes'] = subway['Daytime Routes'].apply(lambda x: x.split(' '))
 subway['color'] = subway.routes.apply(getStationColor)
+subway['name'] = subway['Stop Name']
 
 nyrail = pd.read_csv('data/nyc/MTA_Rail_Stations.csv')
 nyrail = nyrail.drop(['Parking Map URL', 'Accessibility', 'Railroad', 'Zone', 'Station URL', 'Outbound Title', 'Inbound Title'], axis=1)
 print(nyrail.columns)
 nyrail['route'] = nyrail.Branch;
-nyrail = nyrail[['route', 'Latitude', 'Longitude']]
-{''}
+nyrail['name'] = nyrail['Station Name']
+nyrail = nyrail[['name', 'route', 'Latitude', 'Longitude']]
 
 njt = gpd.read_file('data/nyc/NJ_Passenger_Rail_Stations.csv')
 geometry = [Point(xy) for xy in zip(njt['X'], njt['Y'])]
@@ -148,7 +137,9 @@ gdf = gdf.to_crs('EPSG:4326')
 njt['Longitude'] = gdf.geometry.x
 njt['Latitude'] = gdf.geometry.y
 njt['route'] = njt['RAIL_LINE']
-njt = njt[['route', 'Longitude', 'Latitude']]
+njt['name'] = njt['STATION']
+njt.loc[njt['name'].isin(['Radburn', 'Broadway', 'Plauderville', 'Garfield', 'Rutherford', 'Wesmont']), 'route'] = 'Bergen Line'
+njt = njt[['name', 'route', 'Longitude', 'Latitude']]
 
 rail = pd.concat([njt, nyrail])
 print(rail.iloc[0])
@@ -159,5 +150,11 @@ rail['routes'] = rail.route.apply(lambda x: [x])
 rail['color'] = rail.routes.apply(getStationColor);
 
 rail.to_csv('data/nyc/rail.csv')
-allrail = pd.concat([subway, rail])
+extrarail = pd.read_csv('data/nyc/extrarail.csv')
+
+print(rail.columns)
+print(extrarail.columns)
+allrail = pd.concat([subway, rail, extrarail])
+print(allrail.head(2))
+print(allrail.tail(2))
 allrail.to_csv('data/nyc/allrail.csv')
