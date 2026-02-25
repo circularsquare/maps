@@ -70,7 +70,7 @@ def plotShapefile(path):
         rasterized=True, antialiased = False, linewidth = 0.004)
 
 
-plotShapefile('data/asia1m/china/xiangzhen.shp')
+#plotShapefile('data/asia1m/china/xiangzhen.shp')
 
 #plotShapefile('data/asia1m/china/geoBoundaries-CHN-ADM3.shp')
 
@@ -78,6 +78,7 @@ plotShapefile('data/asia1m/china/xiangzhen.shp')
 # plotShapefile('data/asia1m/russia/rus_admbnda_adm2_gadm_2022_v02.shp')
 # plotShapefile('data/asia1m/indonesia/idn_admbnda_adm2_bps_20200401.shp')
 # plotShapefile('data/asia1m/northkorea/prk_admin2.shp')
+plotShapefile('data/asia1m/northkorea/PRK_adm2.shp')
 # plotShapefile('data/asia1m/taiwan/whosonfirst-data-admin-tw-macrocounty-polygon.shp')
 # plotShapefile('data/asia1m/vietnam/vnm_admin1.shp')
 # plotShapefile('data/asia1m/thailand/tha_admin1.shp')
@@ -127,6 +128,6 @@ sk_geo.plot(ax=ax, edgecolor = '#63538d', facecolor='none', zorder = 10,
         rasterized=True, antialiased = False, linewidth = 0.004)
 
 plt.tight_layout()
-plt.savefig('asia1m/asiadiv4.png')
+plt.savefig('asia1m/asiadivspec.png')
 
 
