@@ -7,8 +7,6 @@ from cartopy import crs as ccrs
 import cartopy.feature as cfeature
 import cartopy
 import os
-import osmnx as ox
-from geodatasets import get_path
 
 resolution = '10m'
 
@@ -75,10 +73,10 @@ def plotShapefile(path):
 #plotShapefile('data/asia1m/china/geoBoundaries-CHN-ADM3.shp')
 
 # plotShapefile('data/asia1m/japan/jpn_admbnda_adm2_2019.shp')
-# plotShapefile('data/asia1m/russia/rus_admbnda_adm2_gadm_2022_v02.shp')
+plotShapefile('data/asia1m/russia/geoBoundaries-RUS-ADM2.shp')
 # plotShapefile('data/asia1m/indonesia/idn_admbnda_adm2_bps_20200401.shp')
 # plotShapefile('data/asia1m/northkorea/prk_admin2.shp')
-plotShapefile('data/asia1m/northkorea/PRK_adm2.shp')
+#plotShapefile('data/asia1m/northkorea/PRK_adm2.shp')
 # plotShapefile('data/asia1m/taiwan/whosonfirst-data-admin-tw-macrocounty-polygon.shp')
 # plotShapefile('data/asia1m/vietnam/vnm_admin1.shp')
 # plotShapefile('data/asia1m/thailand/tha_admin1.shp')
