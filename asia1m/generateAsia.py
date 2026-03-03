@@ -18,10 +18,10 @@ from rasterio.features import rasterize as rio_rasterize
 resolution = '10m'
 
 # save coastline 
-import cartopy.io.shapereader as shpreader
+# import cartopy.io.shapereader as shpreader
 # shpreader.natural_earth(category='physical', name='land', resolution=resolution)
-cache_dir = os.path.join(os.getcwd(), 'cartopycache')
-cartopy.config['pre_existing_data_dir'] = cache_dir
+# cache_dir = os.path.join(os.getcwd(), 'cartopycache')
+# cartopy.config['pre_existing_data_dir'] = cache_dir
 
 # final tuple is latitude levels of correctness
 crs = ccrs.AlbersEqualArea(95, 0, 0, 0, (6, 42))
@@ -29,6 +29,15 @@ plat = ccrs.PlateCarree()
 
 fig, ax = plt.subplots(subplot_kw={"projection": crs}, figsize=(95, 80))
 ax.set_extent([47.7, 129.2, -9, 65], crs=ccrs.PlateCarree())
+
+plt.tight_layout()
+fig.savefig('tmp.png')  # force a render first
+bbox = ax.get_position()  # in figure-fraction coordinates
+ax_width_px = int(bbox.width * 95 * 100)   # fig width inches * dpi
+ax_height_px = int(bbox.height * 80 * 100)  # fig height inches * dpi
+print(ax_width_px, ax_height_px)
+
+exit()
 
 # for plotting the distortion circles
 # lons = np.arange(45, 130, 5)
@@ -116,9 +125,9 @@ def plotColorThreshold(df_or_path, coverage_threshold=0.25, scale=3):
 # plotColorThreshold("data/water-polygons-split-4326/water_polygons.shp")
 
 
-lakes = geopandas.read_file("data/HydroLAKES_polys_v10_shp/HydroLAKES_polys_v10.shp")
-lakes = lakes[lakes['Lake_area'] >= 60]  # km²
-plotColorThreshold(lakes)
+# lakes = geopandas.read_file("data/HydroLAKES_polys_v10_shp/HydroLAKES_polys_v10.shp")
+# lakes = lakes[lakes['Lake_area'] >= 60]  # km²
+# plotColorThreshold(lakes)
 
 #plotColorThreshold("data/ne_10m_lakes/ne_10m_ocean.shp")
 
@@ -179,7 +188,6 @@ plotColorThreshold(lakes)
 # sk_geo.plot(ax=ax, edgecolor = '#63538d', facecolor='none', zorder = 10, 
 #         rasterized=True, antialiased = False, linewidth = 0.004)
 
-plt.tight_layout()
 plt.savefig('asia1m/asialakesne.png')
 
 
