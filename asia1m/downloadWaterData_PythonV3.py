@@ -7,8 +7,8 @@ def main(argv):
       print("Creating folder " + DESTINATION_FOLDER)
       os.makedirs(DESTINATION_FOLDER)
    DATASET_NAME = argv[1]
-   longs = [str(e) + "E" for e in range(30,130,10)]
-   lats = [str(s) + "S" for s in range(10,0,-10)]
+   longs = [str(e) + "E" for e in range(0,160,10)]
+   lats = [str(s) + "S" for s in range(20,0,-10)]
    lats.extend([str(n) + "N" for n in range(0,70,10)])
    fileCount = len(longs)*len(lats)
    counter = 1

@@ -1,67 +1,75 @@
-
-import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt 
-import geopandas
-from cartopy import crs as ccrs 
-import cartopy.feature as cfeature
-import cartopy
-import os
-import cartopy.io.shapereader as shpreader
-from cartopy.feature import ShapelyFeature
-from shapely.geometry import box
+from scipy.ndimage import convolve, binary_dilation
 import rasterio
-from rasterio.plot import show
-from rasterio.transform import from_bounds
-from rasterio.features import rasterize as rio_rasterize
+from rasterio.merge import merge
+from rasterio.warp import reproject, Resampling
+from rasterio.crs import CRS
+import glob
+from cartopy import crs as ccrs
+import matplotlib.pyplot as plt
+from scipy.ndimage import binary_dilation
+from PIL import Image
 
-
-
-# final tuple is latitude levels of correctness
-crs = ccrs.AlbersEqualArea(95, 0, 0, 0, (6, 42))
+# ── projections ────────────────────────────────────────────────────────────────
+crs_albers = ccrs.AlbersEqualArea(95, 0, 0, 0, (6, 42))
 plat = ccrs.PlateCarree()
 
-fig, ax = plt.subplots(subplot_kw={"projection": crs}, figsize=(95, 80))
-#ax.set_extent([47.7, 129.2, -9, 65], crs=ccrs.PlateCarree())
-
-with rasterio.open('waterdata/seasonality_120E_30Nv1_4_2021.tif') as src:
-    img = src.read()
-    print(img)
-    show(img, transform=src.transform, ax=ax)
+# Set up the figure just to get the Albers extent/bounds
+fig, ax = plt.subplots(subplot_kw={"projection": crs_albers}, figsize=(95, 80))
+ax.set_extent([47.7, 129.2, -9, 65], crs=plat)
+x0, x1 = ax.get_xlim()
+y0, y1 = ax.get_ylim()
 
 plt.tight_layout()
-plt.savefig('waterdataplot.png')
+fig.savefig('tmp.png', dpi=100)  # force a render first
+bbox = ax.get_position()  # in figure-fraction coordinates
+ax_width_px = int(bbox.width * 95 * 100)   # fig width inches * dpi
+ax_height_px = int(bbox.height * 80 * 100)  # fig height inches * dpi
+print(ax_width_px, ax_height_px)
+
+# ── load and mosaic tiles ──────────────────────────────────────────────────────
+tile_files = glob.glob("../data/asia1m/waterdata/*.tif")
+# print(tile_files)
+# exit()
+datasets = [rasterio.open(f) for f in tile_files]
+mosaic, src_transform = merge(datasets, bounds=(0, -15, 155, 85), res=0.003)
+#mosaic, src_transform = merge(datasets, bounds=(110, 28, 130, 35), res=0.003)
+seasonality = mosaic[0]
+
+src_crs = CRS.from_epsg(4326)
+dst_crs = CRS.from_proj4(crs_albers.proj4_init)
+
+# ── step 1: reproject to 3× fine resolution using nearest-neighbor ─────────────
+SCALE = 4
+fine_height = ax_height_px * SCALE   # 24000
+fine_width  = ax_width_px * SCALE   # 28500
+
+fine_transform = rasterio.transform.from_bounds(x0, y0, x1, y1, fine_width, fine_height)
+
+fine_output = np.zeros((fine_height, fine_width), dtype=np.float32)
+reproject(
+    source=seasonality.astype(np.float32),
+    destination=fine_output,
+    src_transform=src_transform,
+    src_crs=src_crs,
+    dst_transform=fine_transform,
+    dst_crs=dst_crs,
+    resampling=Resampling.nearest,   # ← nearest, not average
+)
+
+# ── step 2: threshold at fine resolution ──────────────────────────────────────
+fine_water = (fine_output > 10).astype(np.uint8)  # 1 = water, 0 = not water
+
+# ── step 3: 3×3 majority-vote downsample ──────────────────────────────────────
+# Reshape to (8000, 3, 9500, 3) then sum over the two SCALE axes
+blocks = fine_water.reshape(ax_height_px, SCALE, ax_width_px, SCALE)
+votes  = blocks.sum(axis=(1, 3))          # shape (8000, 9500), range 0–9
+water_mask = votes >= 3                   # majority = at least x of 9 pixels
 
 
-def plotTif(df_or_path, coverage_threshold=0.25, scale=3):
-    if isinstance(df_or_path, str):
-        df = geopandas.read_file(df_or_path)
-    else:
-        df = df_or_path
-    if df.crs is None:
-        df = df.set_crs("EPSG:4326")
-    df = df.to_crs(crs)
-    
-    x0, x1 = ax.get_xlim()
-    y0, y1 = ax.get_ylim()
-    
-    width, height = 9500, 8000  # your actual output size
-    
-    transform_hr = from_bounds(x0, y0, x1, y1, width*scale, height*scale)
-    
-    hr_mask = rio_rasterize(
-        [(geom, 1) for geom in df.geometry],
-        out_shape=(height*scale, width*scale),
-        transform=transform_hr,
-        fill=0, dtype=np.uint8
-    )
-    
-    hr_mask = hr_mask.reshape(height, scale, width, scale)
-    coverage = hr_mask.mean(axis=(1, 3))
-    water_mask = coverage >= coverage_threshold
-    
-    rgba = np.zeros((height, width, 4), dtype=np.uint8)
-    rgba[water_mask] = [150, 200, 250, 255]
-    
-    ax.imshow(rgba, extent=[x0, x1, y0, y1], origin='upper', zorder=10, interpolation='none')
+# ── render ─────────────────────────────────────────────────────────────────────
+rgba = np.zeros((ax_height_px, ax_width_px, 4), dtype=np.uint8)
+rgba[water_mask] = [217, 246, 255, 255]   # water
+# -----------------------------------------------------
 
+Image.fromarray(rgba).save('globalwater.png')
