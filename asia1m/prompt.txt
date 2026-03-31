@@ -1,0 +1,8 @@
+hey! naming regions for the 1 million people map. the regions are already determined, i'd just like to name them. 
+please avoid hallucinating names, if you are giving an obscure name try to look it up and see if it's real and whether people have talked about it.
+avoid names that are like "north dakota" that suggest a part of a whole. as we'd like these names to feel like standalone regions.
+ideally we have a mix of name origins. cities, historical region names, current region names, rivers, and whatever else is fine. go for whatever represents the region well. also don't pick anything super obscure.	
+try to use the pronunciation/spelling of the most commonly spoken local language.  for instance, in china, it's good to use indigenous names sometimes, but if the most commonly spoken language in the region is still mostly mandarin, we should probably lean to use the common mandarin pronunciation / spelling of that indigenous name.
+please dont go ahead and provide names for more than the areas i specify. also if i provide feedback that i dont like certain region names, please provide additional ideas for those but no need to go back and provide extra names for any of the ones i dont mention, those are probably fine.
+please give the meaning of any names you suggest, or any candidates that we might consider.
+for big > 1m cities, i'd generally like one of their regions, the most central, either modern or historic, to just be named after the city itself. 

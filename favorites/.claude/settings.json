@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python test_placeid.py)",
+      "Read(//c/Users/anita/projects/maps/asia1m/**)"
+    ]
+  }
+}
