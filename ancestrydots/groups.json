@@ -1,0 +1,17 @@
+{
+  "_comment": "Color group definitions. hue/sat/lit set the center color (HLS); hue_range spreads individual ancestries across that many degrees around the center hue.",
+  "groups": {
+    "western":   { "label": "Western European",      "hue": 220, "sat": 0.70, "lit": 0.55, "hue_range": 40 },
+    "eastern":   { "label": "Eastern European",      "hue": 250, "sat": 0.759, "lit": 0.65, "hue_range": 25 },
+    "american":  { "label": "American",              "hue": 195, "sat": 0.65, "lit": 0.55, "hue_range": 15 },
+    "east_asian":{ "label": "East Asian",            "hue":  12, "sat": 0.70, "lit": 0.55, "hue_range": 25 },
+    "se_asian":  { "label": "Southeast Asian",       "hue": 320, "sat": 0.70, "lit": 0.60, "hue_range": 25 },
+    "s_c_asian": { "label": "South & Central Asian", "hue": 295, "sat": 0.70, "lit": 0.65, "hue_range": 25 },
+    "mena":      { "label": "MENA",                  "hue": 270, "sat": 0.70, "lit": 0.65, "hue_range": 30 },
+    "latino":    { "label": "Latino / Hispanic",     "hue":  55, "sat": 0.70, "lit": 0.55, "hue_range": 40 },
+    "native":    { "label": "Native American",       "hue":  30, "sat": 0.70, "lit": 0.55, "hue_range": 20 },
+    "african":   { "label": "African",               "hue": 145, "sat": 0.70, "lit": 0.55, "hue_range": 30 },
+    "afro_carib":{ "label": "Afro-Caribbean",        "hue":  88, "sat": 0.70, "lit": 0.55, "hue_range": 25 },
+    "pacific":   { "label": "Pacific Islander",      "hue": 347, "sat": 0.70, "lit": 0.60, "hue_range": 20 }
+  }
+}

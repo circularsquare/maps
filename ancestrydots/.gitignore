@@ -1,0 +1,10 @@
+__pycache__/
+*.py[cod]
+.env
+*.csv
+*.geojson
+*.fgb
+data/raw/
+data/processed/
+node_modules/
+.DS_Store

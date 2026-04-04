@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s \"https://api.census.gov/data/2024/acs/acs5/groups/B04006.json\")",
+      "Bash(python3 -c ':*)",
+      "Bash(python -c ':*)",
+      "Bash(wsl --status)",
+      "Bash(wsl tippecanoe:*)",
+      "Read(//c/Users/anita/**)",
+      "Bash(python)"
+    ],
+    "additionalDirectories": [
+      "C:\\Users\\anita\\projects",
+      "C:\\Users\\anita\\.claude\\projects\\c--Users-anita-projects-maps\\memory",
+      "C:\\Users\\anita\\projects\\maps\\ancestrydots\\ancestrydots",
+      "C:\\Users\\anita\\projects\\maps\\ancestrydots\\ancestrydots\\.git"
+    ]
+  }
+}

@@ -1,0 +1,49 @@
+ANCESTRY DOT MAP — COMMAND REFERENCE
+=====================================
+
+---- ONE-TIME SETUP ----
+
+Install Python deps:
+    pip install -r requirements.txt
+
+Build tippecanoe (WSL Ubuntu, one-time):
+    sudo apt-get install -y build-essential libsqlite3-dev zlib1g-dev
+    git clone https://github.com/felt/tippecanoe.git
+    cd tippecanoe && make -j && sudo make install
+
+
+---- DATA PIPELINE (run in order) ----
+
+1. Fetch Census ACS data:
+    python fetch_data.py --state 36        # single state (NY = 36)
+    python fetch_data.py --all             # all 50 states
+
+2. Download shapefiles:
+    python download_shapefiles.py --state 36 --areawater
+    python download_shapefiles.py --all --areawater
+
+3. Scatter dots → GeoJSON (also regenerates legend.json automatically):
+    python scatter_dots.py --state 36      # single state
+    python scatter_dots.py --all           # all 50 states
+
+    To update only colors/legend without re-scattering (e.g. after subgroup changes):
+    python scatter_dots.py --write-colors  # rewrites ancestry_colors.csv + legend.json
+    python scatter_dots.py --write-legend  # rewrites legend.json only (reads existing GeoJSON)
+
+4. Convert GeoJSON → PMTiles (run inside WSL for speed):
+    run wsl, then
+
+    cp /mnt/c/Users/anita/projects/maps/ancestrydots/data/processed/dots_36_1per100.geojson ~/dots.geojson
+    tippecanoe -o ~/dots.pmtiles --name ancestry-dots --layer dots --minimum-zoom 4 --maximum-zoom 11 --drop-rate 1.6 --force ~/dots.geojson
+    cp ~/dots.pmtiles /mnt/c/Users/anita/projects/maps/ancestrydots/data/processed/dots_36_1per100.pmtiles
+
+    (for nationwide, swap dots_36 for dots_all in filenames)
+
+
+---- LOCAL DEV SERVER ----
+
+    npx serve . -p 8080
+    open http://localhost:8080
+
+    (must be run from the ancestrydots directory)
+    (Python's http.server won't work — it doesn't support HTTP range requests)
