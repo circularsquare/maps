@@ -27,17 +27,17 @@ Build tippecanoe (WSL Ubuntu, one-time):
     python scatter_dots.py --all           # all 50 states
 
     To update only colors/legend without re-scattering (e.g. after subgroup changes):
-    python scatter_dots.py --write-colors  # rewrites ancestry_colors.csv + legend.json
-    python scatter_dots.py --write-legend  # rewrites legend.json only (reads existing GeoJSON)
+    python scatter_dots.py --write-colors       # rewrites ancestry_colors.csv + legend.json
+    python scatter_dots.py --write-legend       # rewrites legend.json only (reads existing GeoJSON)
+    python scatter_dots.py --update-populations # updates only population column in ancestry_colors.csv + legend.json
 
 4. Convert GeoJSON → PMTiles (run inside WSL for speed):
-    run wsl, then
 
-    cp /mnt/c/Users/anita/projects/maps/ancestrydots/data/processed/dots_36_1per100.geojson ~/dots.geojson
-    tippecanoe -o ~/dots.pmtiles --name ancestry-dots --layer dots --minimum-zoom 4 --maximum-zoom 11 --drop-rate 1.6 --force ~/dots.geojson
-    cp ~/dots.pmtiles /mnt/c/Users/anita/projects/maps/ancestrydots/data/processed/dots_36_1per100.pmtiles
-
-    (for nationwide, swap dots_36 for dots_all in filenames)
+    cp /mnt/c/Users/anita/projects/maps/ancestrydots/data/processed/dots_all_1per100.geojson ~/dots.geojson
+    tippecanoe -o ~/dots.pmtiles --name ancestry-dots --layer dots \
+      --minimum-zoom 5 --maximum-zoom 9 \
+      --drop-rate 1.0 --drop-densest-as-needed --maximum-tile-bytes 1000000 --no-feature-limit --full-detail 12 --force ~/dots.geojson
+    cp ~/dots.pmtiles /mnt/c/Users/anita/projects/maps/ancestrydots/data/processed/dots_all_1per100.pmtiles
 
 
 ---- LOCAL DEV SERVER ----
@@ -47,3 +47,29 @@ Build tippecanoe (WSL Ubuntu, one-time):
 
     (must be run from the ancestrydots directory)
     (Python's http.server won't work — it doesn't support HTTP range requests)
+
+
+---- DEPLOY TO WEBSITE ----
+
+1. Upload PMTiles to Cloudflare R2:
+    - Go to https://dash.cloudflare.com > R2 Object Storage > "anita-maps" bucket
+    - Upload dots_all_1per100.pmtiles (overwrites the old one)
+    - Public URL: https://pub-ae551368cea941f39101e13c84d60bde.r2.dev/dots_all_1per100.pmtiles
+
+    (PMTiles is NOT in the git repo — GitHub Pages + Cloudflare CDN breaks
+    range requests with gzip encoding. R2 handles them correctly.)
+
+2. Copy legend + index to the website repo:
+
+    cp ~/projects/maps/ancestrydots/index.html  ~/projects/website/ancestrydots/index.html
+
+    cp ~/projects/maps/ancestrydots/data/processed/legend.json ~/projects/website/ancestrydots/data/processed/legend.json
+
+3. Commit and push:
+
+    cd ~/projects/website
+    git add ancestrydots/
+    git commit -m "update ancestry dot map"
+    git push
+
+Live at: https://circularsquare.github.io/ancestrydots/

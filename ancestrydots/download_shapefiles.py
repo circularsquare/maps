@@ -18,6 +18,7 @@ import argparse
 import time
 import zipfile
 import requests
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 import geopandas as gpd
@@ -158,6 +159,11 @@ def download_areawater_and_clip(state_fips: str, out_dir: Path, min_water_area: 
         keep = water_m.geometry.area >= min_water_area
         print(f"  Kept {keep.sum()} / {len(water)} water polygons >= {min_water_area:.0f} m²")
         water = water[keep]
+    # Simplify water geometry in meters (30m tolerance) before reprojecting back —
+    # reduces vertex count dramatically on complex river polygons, speeds up overlay
+    water = water.to_crs(epsg=3857)
+    water["geometry"] = water.geometry.simplify(30, preserve_topology=True)
+    water = water.to_crs(epsg=4326)
     # overlay uses an STR-tree spatial index — only tracts that actually intersect
     # a water polygon get clipped; the rest pass through untouched
     clipped = gpd.overlay(tracts, water[["geometry"]], how="difference", keep_geom_type=True)
@@ -172,9 +178,10 @@ def main():
     parser.add_argument("--state", help="Single state FIPS code (e.g. 36 for NY)")
     parser.add_argument("--all", action="store_true", help="Download all 50 states + DC")
     parser.add_argument("--areawater", action="store_true", help="Also download inland water shapefiles")
+    parser.add_argument("--workers", type=int, default=4, help="Number of parallel states to process (default: 4)")
     parser.add_argument(
-        "--min-water-area", type=float, default=40_000,
-        help="Minimum water polygon area in sq meters to include (default: 40000). "
+        "--min-water-area", type=float, default=5_000,
+        help="Minimum water polygon area in sq meters to include (default: 5000). "
              "Filters out tiny ditches/streams. Set 0 to disable.",
     )
     args = parser.parse_args()
@@ -190,11 +197,22 @@ def main():
         parser.print_help()
         return
 
-    for fips in states:
+    def process_state(fips):
         print(f"State {fips}:")
         download_tracts(fips, out_dir)
         if args.areawater:
             download_areawater_and_clip(fips, out_dir, min_water_area=args.min_water_area)
+
+    if args.workers == 1 or len(states) == 1:
+        for fips in states:
+            process_state(fips)
+    else:
+        with ThreadPoolExecutor(max_workers=args.workers) as ex:
+            futures = {ex.submit(process_state, fips): fips for fips in states}
+            for fut in as_completed(futures):
+                fips = futures[fut]
+                if fut.exception():
+                    print(f"State {fips} ERROR: {fut.exception()}")
 
 
 if __name__ == "__main__":

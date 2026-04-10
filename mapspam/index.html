@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>MapSPAM — Global Crop Production</title>
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<style>
+  body { margin: 0; font-family: system-ui, sans-serif; }
+  #map { position: absolute; top: 0; left: 0; right: 0; bottom: 0; }
+  #legend {
+    position: absolute; top: 10px; right: 10px; z-index: 1;
+    background: white; padding: 10px 14px; border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    max-height: calc(100vh - 40px); overflow-y: auto;
+    width: 220px;
+  }
+  #legend h3 { margin: 0 0 8px 0; font-size: 13px; }
+  .legend-buttons { display: flex; gap: 6px; margin-bottom: 8px; }
+  .legend-buttons button {
+    flex: 1; font-size: 11px; padding: 3px 0; cursor: pointer;
+    border: 1px solid #ccc; border-radius: 3px; background: #f8f8f8;
+  }
+  .legend-buttons button:hover { background: #eee; }
+
+  /* Group collapsible */
+  details.legend-group { margin-top: 4px; }
+  details.legend-group:first-child { margin-top: 0; }
+  summary.legend-group-header {
+    list-style: none;
+    display: flex; align-items: center;
+    font-size: 11px; font-weight: bold;
+    text-transform: uppercase; letter-spacing: 0.05em;
+    color: #666; cursor: pointer;
+    padding: 5px 0 2px;
+    border-top: 1px solid #ddd;
+    user-select: none;
+  }
+  details.legend-group:first-child > summary.legend-group-header { border-top: none; }
+  summary.legend-group-header::-webkit-details-marker { display: none; }
+  summary.legend-group-header::after {
+    content: '\25B6'; font-size: 9px; color: #999;
+    margin-left: 6px; display: inline-block; width: 12px;
+    text-align: center; flex-shrink: 0;
+  }
+  details[open] > summary.legend-group-header::after {
+    transform: rotate(90deg);
+  }
+  .group-indicator {
+    margin-right: 6px; flex-shrink: 0; cursor: pointer;
+  }
+  .group-swatch {
+    width: 10px; height: 10px; border-radius: 50%;
+    flex-shrink: 0; margin-right: 5px;
+  }
+  .group-label { flex: 1; }
+  .group-count { color: #999; font-size: 10px; margin-left: 4px; }
+
+  /* Individual crop entries */
+  .legend-entry {
+    display: flex; align-items: center; gap: 5px;
+    padding: 2px 0 2px 22px; font-size: 12px;
+    user-select: none;
+  }
+  .legend-entry input[type="checkbox"] { flex-shrink: 0; cursor: pointer; }
+  .legend-swatch {
+    width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+  }
+  .legend-name { flex: 1; }
+  .legend-count { color: #999; font-size: 11px; }
+
+  #status {
+    position: absolute; bottom: 10px; left: 10px; z-index: 1;
+    background: white; padding: 6px 12px; border-radius: 4px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+    font-size: 12px; color: #666;
+  }
+
+  /* Tooltip popup */
+  .maplibregl-popup-content {
+    background: #333; color: #fff; padding: 4px 8px;
+    border-radius: 4px; font-size: 12px; font-family: system-ui, sans-serif;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+  }
+  .maplibregl-popup-tip { border-top-color: #333; }
+</style>
+</head>
+<body>
+<div id="map"></div>
+<div id="legend">
+  <h3>Crops (1 dot = 10,000 ha)</h3>
+  <div class="legend-buttons">
+    <button id="show-all">Show all</button>
+    <button id="hide-all">Hide all</button>
+  </div>
+  <div id="legend-scroll"></div>
+</div>
+<div id="status">Loading...</div>
+<script>
+const map = new maplibregl.Map({
+  container: "map",
+  style: {
+    version: 8,
+    sources: {
+      "carto": {
+        type: "raster",
+        tiles: ["https://basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}@2x.png"],
+        tileSize: 256,
+        attribution: "&copy; OpenStreetMap &copy; CARTO"
+      }
+    },
+    layers: [{ id: "carto", type: "raster", source: "carto" }]
+  },
+  center: [20, 30],
+  zoom: 2,
+  maxZoom: 12,
+});
+
+const statusEl = document.getElementById("status");
+const legendScrollEl = document.getElementById("legend-scroll");
+
+let legend = [];
+let visible = new Set();
+
+// Crop groupings — hue is center color (degrees), hue_range spreads members around it
+const GROUPS = {
+  cereals:    { label: "Cereals & Grains",    hue:  45, sat: 0.70, lit: 0.50, hue_range: 30, codes: ["whea","rice","maiz","barl","sorg","pmil","mill","ocer"] },
+  oilseeds:   { label: "Oilseeds",            hue:  85, sat: 0.55, lit: 0.45, hue_range: 30, codes: ["soyb","rape","sunf","grou","sesa","oilp","ooil","cnut"] },
+  pulses:     { label: "Pulses & Legumes",    hue: 155, sat: 0.55, lit: 0.45, hue_range: 25, codes: ["bean","chic","cowp","lent","pige","opul"] },
+  roots:      { label: "Roots & Tubers",      hue:  25, sat: 0.60, lit: 0.45, hue_range: 20, codes: ["cass","pota","swpo","yams","orts"] },
+  fruits:     { label: "Fruits",              hue: 340, sat: 0.65, lit: 0.55, hue_range: 25, codes: ["bana","plnt","citr","temf","trof"] },
+  vegetables: { label: "Vegetables",          hue: 120, sat: 0.50, lit: 0.40, hue_range: 20, codes: ["toma","onio","vege"] },
+  stimulants: { label: "Stimulants & Spices", hue: 280, sat: 0.50, lit: 0.55, hue_range: 25, codes: ["coff","rcof","teas","coco","toba"] },
+  sugar:      { label: "Sugar Crops",         hue: 195, sat: 0.60, lit: 0.50, hue_range: 15, codes: ["sugc","sugb"] },
+  fibre:      { label: "Fibre & Industrial",  hue: 220, sat: 0.55, lit: 0.50, hue_range: 20, codes: ["cott","rubb","ofib"] },
+  other:      { label: "Other",               hue:   0, sat: 0.00, lit: 0.50, hue_range:  0, codes: ["rest"] },
+};
+
+function hslToHex(h, s, l) {
+  h = ((h % 360) + 360) % 360;
+  const a = s * Math.min(l, 1 - l);
+  const f = n => {
+    const k = (n + h / 30) % 12;
+    const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+    return Math.round(255 * color).toString(16).padStart(2, '0');
+  };
+  return `#${f(0)}${f(8)}${f(4)}`;
+}
+
+function assignGroupColors() {
+  for (const group of Object.values(GROUPS)) {
+    const codes = group.codes.filter(c => cropByCode[c]);
+    const n = codes.length;
+    for (let i = 0; i < n; i++) {
+      const offset = n > 1 ? (i / (n - 1) - 0.5) * group.hue_range : 0;
+      cropByCode[codes[i]].color = hslToHex(group.hue + offset, group.sat, group.lit);
+    }
+  }
+}
+const GROUP_ORDER = ["cereals","oilseeds","pulses","roots","fruits","vegetables","stimulants","sugar","fibre","other"];
+
+// Build lookup: code -> crop object
+let cropByCode = {};
+// Build lookup: code -> group key
+let groupOfCrop = {};
+
+function updateFilter() {
+  if (!map.getSource("crops")) return;
+  const checked = [...visible];
+  map.setPaintProperty("crop-dots", "circle-opacity",
+    ["case", ["in", ["get", "crop"], ["literal", checked]], 0.75, 0]
+  );
+  // update checkbox states
+  document.querySelectorAll('#legend-scroll input[data-code]').forEach(cb => {
+    cb.checked = visible.has(cb.dataset.code);
+  });
+  // update group indicator checkboxes
+  for (const key of GROUP_ORDER) {
+    const codes = GROUPS[key].codes.filter(c => cropByCode[c]);
+    const allOn = codes.every(c => visible.has(c));
+    const noneOn = codes.every(c => !visible.has(c));
+    const groupCb = document.querySelector(`.group-indicator[data-group="${key}"]`);
+    if (groupCb) {
+      groupCb.checked = allOn;
+      groupCb.indeterminate = !allOn && !noneOn;
+    }
+  }
+}
+
+function buildLegend() {
+  let html = '';
+  for (const key of GROUP_ORDER) {
+    const group = GROUPS[key];
+    const crops = group.codes.map(c => cropByCode[c]).filter(Boolean);
+    if (!crops.length) continue;
+
+    // Sort by dot count descending within group
+    crops.sort((a, b) => b.dots - a.dots);
+
+    const groupDots = crops.reduce((s, c) => s + c.dots, 0);
+    const groupColor = hslToHex(group.hue, group.sat, group.lit);
+
+    html += `<details class="legend-group" open>`;
+    html += `<summary class="legend-group-header">`;
+    html += `<input type="checkbox" class="group-indicator" data-group="${key}" checked>`;
+    html += `<div class="group-swatch" style="background:${groupColor}"></div>`;
+    html += `<span class="group-label">${group.label}</span>`;
+    html += `<span class="group-count">${groupDots.toLocaleString()}</span>`;
+    html += `</summary>`;
+
+    for (const crop of crops) {
+      visible.add(crop.code);
+      html += `<div class="legend-entry">`;
+      html += `<input type="checkbox" data-code="${crop.code}" data-group="${key}" checked>`;
+      html += `<div class="legend-swatch" style="background:${crop.color}"></div>`;
+      html += `<span class="legend-name">${crop.name}</span>`;
+      html += `<span class="legend-count">${crop.dots.toLocaleString()}</span>`;
+      html += `</div>`;
+    }
+    html += `</details>`;
+  }
+  legendScrollEl.innerHTML = html;
+
+  // Event delegation for checkboxes
+  legendScrollEl.addEventListener('change', e => {
+    const cb = e.target;
+    if (!cb.matches('input[type="checkbox"]')) return;
+    if (cb.classList.contains('group-indicator')) {
+      const key = cb.dataset.group;
+      const codes = GROUPS[key].codes.filter(c => cropByCode[c]);
+      codes.forEach(c => cb.checked ? visible.add(c) : visible.delete(c));
+      legendScrollEl.querySelectorAll(`input[data-group="${key}"]:not(.group-indicator)`)
+        .forEach(child => child.checked = cb.checked);
+      updateFilter();
+    } else {
+      cb.checked ? visible.add(cb.dataset.code) : visible.delete(cb.dataset.code);
+      updateFilter();
+    }
+  });
+}
+
+async function loadData() {
+  const legendResp = await fetch("data/legend.json");
+  legend = await legendResp.json();
+
+  // Build lookups
+  legend.forEach(c => {
+    cropByCode[c.code] = c;
+  });
+  for (const [key, group] of Object.entries(GROUPS)) {
+    group.codes.forEach(c => { groupOfCrop[c] = key; });
+  }
+
+  // Assign HSL-spread colors per group
+  assignGroupColors();
+
+  // Load binary
+  statusEl.textContent = "Loading dots...";
+  const resp = await fetch("data/all_dots.bin");
+  const buf = await resp.arrayBuffer();
+  const view = new DataView(buf);
+  const recordSize = 9;
+  const n = Math.floor(buf.byteLength / recordSize);
+
+  const features = [];
+  for (let i = 0; i < n; i++) {
+    const offset = i * recordSize;
+    const lon = view.getFloat32(offset, true);
+    const lat = view.getFloat32(offset + 4, true);
+    const cropIdx = view.getUint8(offset + 8);
+    features.push({
+      type: "Feature",
+      geometry: { type: "Point", coordinates: [lon, lat] },
+      properties: { crop: legend[cropIdx].code, name: legend[cropIdx].name }
+    });
+  }
+
+  const geojson = { type: "FeatureCollection", features };
+
+  // Build color expression
+  const colorExpr = ["match", ["get", "crop"]];
+  legend.forEach(c => { colorExpr.push(c.code, c.color); });
+  colorExpr.push("#888");
+
+  map.addSource("crops", { type: "geojson", data: geojson });
+  map.addLayer({
+    id: "crop-dots",
+    type: "circle",
+    source: "crops",
+    paint: {
+      "circle-radius": ["interpolate", ["exponential", 2], ["zoom"], 2, 1.5, 6, 3, 10, 12],
+      "circle-color": colorExpr,
+      "circle-opacity": 0.75,
+    }
+  });
+
+  buildLegend();
+
+  // Tooltip
+  const tooltip = new maplibregl.Popup({
+    closeButton: false,
+    closeOnClick: false,
+    offset: 8,
+  });
+
+  map.on('mousemove', 'crop-dots', e => {
+    const feature = e.features[0];
+    if (!visible.has(feature.properties.crop)) {
+      tooltip.remove();
+      return;
+    }
+    tooltip.setLngLat(feature.geometry.coordinates)
+      .setHTML(feature.properties.name)
+      .addTo(map);
+  });
+
+  map.on('mouseleave', 'crop-dots', () => {
+    tooltip.remove();
+  });
+
+  // Show all / hide all
+  document.getElementById("show-all").addEventListener("click", () => {
+    legend.forEach(c => visible.add(c.code));
+    updateFilter();
+  });
+  document.getElementById("hide-all").addEventListener("click", () => {
+    visible.clear();
+    updateFilter();
+  });
+
+  statusEl.textContent = `${n.toLocaleString()} dots across ${legend.length} crops (1 dot = 10,000 ha harvested)`;
+}
+
+map.on("load", loadData);
+</script>
+</body>
+</html>

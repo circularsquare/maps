@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>NYC Subway Ridership</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #0a0a0a; color: #eee; font-family: 'Helvetica Neue', sans-serif; overflow: hidden; }
+#map { width: 100vw; height: 100vh; }
+
+#controls {
+    position: absolute;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(10,10,10,0.85);
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    z-index: 10;
+}
+#hour-label {
+    font-size: 28px;
+    font-weight: 700;
+    min-width: 70px;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+}
+#hour-slider {
+    width: 300px;
+    accent-color: #ff6319;
+}
+#play-btn {
+    background: none;
+    border: 1px solid #555;
+    color: #eee;
+    border-radius: 4px;
+    padding: 6px 12px;
+    cursor: pointer;
+    font-size: 14px;
+}
+#play-btn:hover { border-color: #ff6319; }
+#rider-count {
+    font-size: 14px;
+    color: #999;
+    min-width: 120px;
+}
+#loading {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 18px;
+    color: #999;
+    z-index: 20;
+}
+</style>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+</head>
+<body>
+
+<div id="map"></div>
+<div id="loading">Loading data...</div>
+
+<div id="controls" style="display:none;">
+    <button id="play-btn">&#9654; Play</button>
+    <input type="range" id="hour-slider" min="0" max="23" value="8" step="1">
+    <div id="hour-label">8:00</div>
+    <div id="rider-count"></div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const map = L.map('map', {
+    center: [40.735, -73.95],
+    zoom: 12,
+    zoomControl: false,
+    preferCanvas: true,
+});
+
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    attribution: '&copy; OSM &copy; CARTO',
+    maxZoom: 18,
+}).addTo(map);
+
+// MTA line colors
+const routeColors = {
+    'A':'#0039A6','C':'#0039A6','E':'#0039A6',
+    'B':'#FF6319','D':'#FF6319','F':'#FF6319','M':'#FF6319',
+    'G':'#6CBE45','J':'#996633','Z':'#996633','L':'#A7A9AC',
+    'N':'#FCCC0A','Q':'#FCCC0A','R':'#FCCC0A','W':'#FCCC0A',
+    '1':'#EE352E','2':'#EE352E','3':'#EE352E',
+    '4':'#00933C','5':'#00933C','6':'#00933C','7':'#B933AD',
+    'S':'#808183',
+};
+
+let data = null;
+let currentHour = 8;
+let playing = false;
+let playInterval = null;
+let tripLayer = null;
+let animFrame = null;
+let animStart = 0;
+
+// --- Data loading ---
+fetch('data.json')
+    .then(r => r.json())
+    .then(d => {
+        data = d;
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('controls').style.display = 'flex';
+        // index O-D by hour
+        data.odByHour = {};
+        for (const [oid, did, hour, riders] of data.od) {
+            if (!data.odByHour[hour]) data.odByHour[hour] = [];
+            data.odByHour[hour].push({ oid: String(oid), did: String(did), riders });
+        }
+        drawSubwayLines();
+        showHour(currentHour);
+    })
+    .catch(e => {
+        document.getElementById('loading').textContent = 'Failed to load data: ' + e.message;
+    });
+
+
+// --- Draw subway line paths as thin background lines ---
+function drawSubwayLines() {
+    // draw all paths faintly to show the network
+    const seen = new Set();
+    for (const key in data.paths) {
+        const coords = data.paths[key];
+        if (coords.length < 2) continue;
+        // just draw unique paths (many overlap)
+        const pathKey = coords[0].join(',') + '-' + coords[coords.length-1].join(',');
+        if (seen.has(pathKey)) continue;
+        seen.add(pathKey);
+        const latlngs = coords.map(c => [c[1], c[0]]);
+        L.polyline(latlngs, {
+            color: '#333',
+            weight: 1.5,
+            opacity: 0.5,
+        }).addTo(map);
+    }
+}
+
+
+// --- Trip animation ---
+function showHour(hour) {
+    currentHour = hour;
+    document.getElementById('hour-label').textContent =
+        `${hour === 0 ? 12 : hour > 12 ? hour - 12 : hour}${hour < 12 ? 'am' : 'pm'}`;
+
+    if (animFrame) cancelAnimationFrame(animFrame);
+
+    const hourData = data.odByHour[hour] || [];
+    // filter to pairs that have a path and meaningful ridership
+    const trips = [];
+    let totalRiders = 0;
+    for (const { oid, did, riders } of hourData) {
+        const pathKey = `${oid}-${did}`;
+        const path = data.paths[pathKey];
+        if (!path || path.length < 2) continue;
+        totalRiders += riders;
+        trips.push({ path, riders });
+    }
+
+    document.getElementById('rider-count').textContent =
+        `${Math.round(totalRiders).toLocaleString()} riders`;
+
+    // sort by ridership desc, take top N for performance
+    trips.sort((a, b) => b.riders - a.riders);
+    const maxTrips = 3000;
+    const activeTrips = trips.slice(0, maxTrips);
+
+    // precompute path distances for animation
+    for (const trip of activeTrips) {
+        const dists = [0];
+        let total = 0;
+        for (let i = 1; i < trip.path.length; i++) {
+            const dx = trip.path[i][0] - trip.path[i-1][0];
+            const dy = trip.path[i][1] - trip.path[i-1][1];
+            total += Math.sqrt(dx*dx + dy*dy);
+            dists.push(total);
+        }
+        trip.dists = dists;
+        trip.totalDist = total;
+    }
+
+    // create canvas overlay for dots
+    if (tripLayer) map.removeLayer(tripLayer);
+    tripLayer = L.canvas({ padding: 0.5 });
+
+    animStart = performance.now();
+    animate(activeTrips);
+}
+
+
+function animate(trips) {
+    const CYCLE_MS = 8000; // one full trip cycle
+    const now = performance.now();
+    const elapsed = now - animStart;
+    const canvas = document.querySelector('.leaflet-canvas-container canvas')
+        || document.querySelector('canvas');
+
+    if (!canvas) {
+        animFrame = requestAnimationFrame(() => animate(trips));
+        return;
+    }
+
+    const ctx = canvas.getContext('2d');
+    // clear only our dots (leaflet manages the canvas)
+    // We'll use a separate overlay approach instead
+
+    // use a simple circle marker approach with leaflet
+    // Actually let's use a custom pane with raw canvas
+
+    // For now, let's use a simpler approach: update circle markers
+    if (!window._dotMarkers) window._dotMarkers = [];
+    // remove old markers
+    for (const m of window._dotMarkers) map.removeLayer(m);
+    window._dotMarkers = [];
+
+    const t = (elapsed % CYCLE_MS) / CYCLE_MS;
+
+    for (const trip of trips) {
+        // stagger starts based on ridership (more riders = more dots)
+        const numDots = Math.max(1, Math.min(5, Math.ceil(trip.riders / 50)));
+        for (let d = 0; d < numDots; d++) {
+            const phase = (t + d / numDots) % 1;
+            const targetDist = phase * trip.totalDist;
+
+            // find segment
+            let segIdx = 0;
+            for (let i = 1; i < trip.dists.length; i++) {
+                if (trip.dists[i] >= targetDist) { segIdx = i - 1; break; }
+                if (i === trip.dists.length - 1) segIdx = i - 1;
+            }
+
+            const segStart = trip.dists[segIdx];
+            const segEnd = trip.dists[segIdx + 1] || trip.dists[segIdx] + 0.001;
+            const frac = (targetDist - segStart) / (segEnd - segStart);
+
+            const lon = trip.path[segIdx][0] + frac * (trip.path[segIdx+1][0] - trip.path[segIdx][0]);
+            const lat = trip.path[segIdx][1] + frac * (trip.path[segIdx+1][1] - trip.path[segIdx][1]);
+
+            const marker = L.circleMarker([lat, lon], {
+                radius: 2,
+                color: '#ff6319',
+                fillColor: '#ff6319',
+                fillOpacity: 0.8,
+                weight: 0,
+                pane: 'markerPane',
+            }).addTo(map);
+            window._dotMarkers.push(marker);
+        }
+    }
+
+    animFrame = requestAnimationFrame(() => animate(trips));
+}
+
+
+// --- Controls ---
+const slider = document.getElementById('hour-slider');
+slider.addEventListener('input', () => {
+    if (data) showHour(parseInt(slider.value));
+});
+
+const playBtn = document.getElementById('play-btn');
+playBtn.addEventListener('click', () => {
+    playing = !playing;
+    playBtn.innerHTML = playing ? '&#9646;&#9646; Pause' : '&#9654; Play';
+    if (playing) {
+        playInterval = setInterval(() => {
+            currentHour = (currentHour + 1) % 24;
+            slider.value = currentHour;
+            showHour(currentHour);
+        }, 4000);
+    } else {
+        clearInterval(playInterval);
+    }
+});
+
+</script>
+</body>
+</html>

@@ -7,13 +7,15 @@
       "Bash(wsl --status)",
       "Bash(wsl tippecanoe:*)",
       "Read(//c/Users/anita/**)",
-      "Bash(python)"
+      "Bash(python)",
+      "WebFetch(domain:api.census.gov)"
     ],
     "additionalDirectories": [
       "C:\\Users\\anita\\projects",
       "C:\\Users\\anita\\.claude\\projects\\c--Users-anita-projects-maps\\memory",
       "C:\\Users\\anita\\projects\\maps\\ancestrydots\\ancestrydots",
-      "C:\\Users\\anita\\projects\\maps\\ancestrydots\\ancestrydots\\.git"
+      "C:\\Users\\anita\\projects\\maps\\ancestrydots\\ancestrydots\\.git",
+      "C:\\Users\\anita\\projects\\maps\\mapspam"
     ]
   }
 }

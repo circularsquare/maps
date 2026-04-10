@@ -27,8 +27,10 @@ resolution = '10m'
 crs = ccrs.AlbersEqualArea(95, 0, 0, 0, (6, 42))
 plat = ccrs.PlateCarree()
 
-# fig, ax = plt.subplots(subplot_kw={"projection": crs}, figsize=(95, 80))
-fig, ax = plt.subplots(subplot_kw={"projection": crs}, figsize=(189.65, 159.69)) # for 2x zoom
+# switch this line for zoom...
+fig, ax = plt.subplots(subplot_kw={"projection": crs}, figsize=(95, 80))
+# fig, ax = plt.subplots(subplot_kw={"projection": crs}, figsize=(189.65, 159.69)) # for 2x zoom
+
 ax.set_extent([47.7, 129.2, -9, 65], crs=ccrs.PlateCarree())
 plt.tight_layout()
 
@@ -131,21 +133,28 @@ def plotColorThreshold(df_or_path, coverage_threshold=0.25, scale=3):
 
 #plotColorThreshold("data/ne_10m_lakes/ne_10m_ocean.shp")
 
-plotShapefile('data/asia1m/china/xiangzhen.shp')
+#plotShapefile('data/asia1m/china/xiangzhen.shp')
 #plotShapefile('data/asia1m/china/geoBoundaries-CHN-ADM3.shp')
 
 # plotShapefile('data/asia1m/japan/jpn_admbnda_adm2_2019.shp')
 # plotShapefile('data/asia1m/russia/rus_admbnda_adm2_gadm_2022_v02.shp')
 # plotShapefile('data/asia1m/indonesia/idn_admbnda_adm2_bps_20200401.shp')
+
 # plotShapefile('data/asia1m/northkorea/prk_admin2.shp')
 # plotShapefile('data/asia1m/taiwan/whosonfirst-data-admin-tw-macrocounty-polygon.shp')
+plotShapefile('data/asia1m/taiwan/whosonfirst-data-admin-tw-locality-polygon.shp')
+plotShapefile('data/asia1m/indonesia/idn_admbnda_adm3_bps_20200401.shp')
+plotShapefile('data/asia1m/indonesia/tls_admin1.shp')
 # plotShapefile('data/asia1m/vietnam/vnm_admin1.shp')
-# plotShapefile('data/asia1m/thailand/tha_admin1.shp')
-# plotShapefile('data/asia1m/cambodia/khm_admin1.shp')
-# plotShapefile('data/asia1m/laos/lao_admin1.shp')
-# plotShapefile('data/asia1m/myanmar/mmr_admin2.shp')
+plotShapefile('data/asia1m/vietnam/VNM_adm2.shp')
+plotShapefile('data/asia1m/thailand/tha_admin2.shp')
+plotShapefile('data/asia1m/cambodia/khm_admin2.shp')
+plotShapefile('data/asia1m/laos/lao_admin2.shp')
+plotShapefile('data/asia1m/myanmar/mmr_admin3.shp')
 # plotShapefile('data/asia1m/malaysia/mys_admin2.shp')
-# plotShapefile('data/asia1m/philippines/phl_admbnda_adm2_psa_namria_20231106.shp')
+plotShapefile('data/asia1m/malaysia/whosonfirst-data-admin-sg-borough-polygon.shp')
+plotShapefile('data/asia1m/malaysia/geoBoundaries-MYS-ADM3.shp')
+plotShapefile('data/asia1m/philippines/phl_admbnda_adm3_psa_namria_20231106.shp')
 
 # plotShapefile('data/asia1m/india/geoBoundaries-IND-ADM3.shp')
 # plotShapefile('data/asia1m/bangladesh/bgd_admin2.shp')
@@ -186,6 +195,6 @@ sk_geo = sk_geo.to_crs(crs)
 sk_geo.plot(ax=ax, edgecolor = '#63538d', facecolor='none', zorder = 10, 
         rasterized=True, antialiased = False, linewidth = 0.004)
 
-plt.savefig('asia1m/asiadiv2xchina.png')
+plt.savefig('asia1m/asiadivspec.png')
 
 

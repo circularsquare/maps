@@ -1,7 +1,9 @@
 """
 Fetch ACS B04006 (People Reporting Ancestry) data for all census tracts.
-Also fetches B02015 (detailed Asian), B02016 (Pacific Islander),
-B02020 (American Indian and Alaska Native), and B03001 (detailed Hispanic).
+Also fetches B02018 (detailed Asian, alone or in combination),
+B02019 (Pacific Islander, alone or in combination),
+B02021 (American Indian and Alaska Native, alone or in combination),
+and B03001 (detailed Hispanic).
 
 Usage:
     python fetch_data.py --state 36          # NY only (for NYC dev)
@@ -33,7 +35,7 @@ STATE_FIPS = [
     "50","51","53","54","55","56"
 ]
 
-TABLES = ["B04006", "B02015", "B03001", "B02016", "B02020", "B02008", "B02009"]
+TABLES = ["B04006", "B02018", "B03001", "B02019", "B02021", "B02008", "B02009"]
 
 
 def fetch_table(table: str, state_fips: str) -> pd.DataFrame:

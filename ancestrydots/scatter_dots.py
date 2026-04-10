@@ -24,12 +24,18 @@ import pandas as pd
 import geopandas as gpd
 import shapely
 
+# Polygons to exclude dots from (open water artifacts etc.)
+# Hudson River open-water channel between Manhattan (59th–140th St) and NJ shore.
+_EXCLUSION_ZONES = [
+
+]
+
 # Maps B04006 variable codes → (label, color_group)
 # Source: https://api.census.gov/data/2024/acs/acs5/groups/B04006.json
 # NOTE: Skip parent/subtotal rows (_006E Arab total, _073E Subsaharan African total,
 #       _094E West Indian total) to avoid double-counting with their sub-categories.
 # NOTE: Asian, Latino, Native American, and Pacific Islander are NOT in B04006 —
-#       they're captured by race/Hispanic origin questions. Pull from B02015 + B03001.
+#       they're captured by race/Hispanic origin questions. Pull from B02018 + B03001.
 ANCESTRY_GROUPS = {
     # --- Western European → blue (Germany/Italy/Finland and west) ---
     "B04006_004E": ("Alsatian", "western"),
@@ -143,7 +149,7 @@ ANCESTRY_GROUPS = {
     "B04006_105E": ("West Indian", "afro_carib"),
     "B04006_106E": ("Other West Indian", "afro_carib"),
 
-    # --- South & Central Asian (partial — B02015 fills the rest) → purple ---
+    # --- South & Central Asian (partial — B02018 fills the rest) → purple ---
     "B04006_002E": ("Afghan", "s_c_asian"),
 
     # --- Guyanese (mixed Indo/Afro — mapped afro_carib as Caribbean context) ---
@@ -153,51 +159,52 @@ ANCESTRY_GROUPS = {
     "B04006_022E": ("Brazilian", "latino"),
 
     # Asian, Latino, Native American, Pacific Islander:
-    # not present in B04006 — covered by B02015 + B02016 + B02020 + B03001 below
+    # not present in B04006 — covered by B02018 + B02019 + B02021 + B03001 below
 }
 
-# Maps B02015 variable codes → (label, color_group)
-# Source: https://api.census.gov/data/2024/acs/acs5/groups/B02015.json
-# Skipped: _001E (total), _035E (Two or more Asian)
+# Maps B02018 variable codes → (label, color_group)
+# Source: https://api.census.gov/data/2024/acs/acs5/groups/B02018.json
+# "Asian alone or in any combination by selected group"
+# Skipped: _001E (total)
 # Note: _029E Afghan overlaps with B04006_002E — omitted here to avoid double-counting
-B02015_GROUPS = {
+B02018_GROUPS = {
     # --- East Asian → orangey red ---
-    "B02015_002E": ("Chinese", "east_asian"),
-    "B02015_003E": ("Hmong", "east_asian"),
-    "B02015_004E": ("Japanese", "east_asian"),
-    "B02015_005E": ("Korean", "east_asian"),
-    "B02015_006E": ("Mongolian", "east_asian"),
-    "B02015_007E": ("Okinawan", "east_asian"),
-    "B02015_008E": ("Taiwanese", "east_asian"),
-    "B02015_009E": ("Other East Asian", "east_asian"),
+    "B02018_002E": ("Chinese", "east_asian"),
+    "B02018_003E": ("Hmong", "east_asian"),
+    "B02018_004E": ("Japanese", "east_asian"),
+    "B02018_005E": ("Korean", "east_asian"),
+    "B02018_006E": ("Mongolian", "east_asian"),
+    "B02018_007E": ("Okinawan", "east_asian"),
+    "B02018_008E": ("Taiwanese", "east_asian"),
+    "B02018_009E": ("Other East Asian", "east_asian"),
     # --- Southeast Asian → magenta/red-purple ---
-    "B02015_010E": ("Burmese", "se_asian"),
-    "B02015_011E": ("Cambodian", "se_asian"),
-    "B02015_012E": ("Filipino", "se_asian"),
-    "B02015_013E": ("Indonesian", "se_asian"),
-    "B02015_014E": ("Laotian", "se_asian"),
-    "B02015_015E": ("Malaysian", "se_asian"),
-    "B02015_016E": ("Mien", "se_asian"),
-    "B02015_017E": ("Singaporean", "se_asian"),
-    "B02015_018E": ("Thai", "se_asian"),
-    "B02015_019E": ("Vietnamese", "se_asian"),
-    "B02015_020E": ("Other Southeast Asian", "se_asian"),
+    "B02018_010E": ("Burmese", "se_asian"),
+    "B02018_011E": ("Cambodian", "se_asian"),
+    "B02018_012E": ("Filipino", "se_asian"),
+    "B02018_013E": ("Indonesian", "se_asian"),
+    "B02018_014E": ("Laotian", "se_asian"),
+    "B02018_015E": ("Malaysian", "se_asian"),
+    "B02018_016E": ("Mien", "se_asian"),
+    "B02018_017E": ("Singaporean", "se_asian"),
+    "B02018_018E": ("Thai", "se_asian"),
+    "B02018_019E": ("Vietnamese", "se_asian"),
+    "B02018_020E": ("Other Southeast Asian", "se_asian"),
     # --- South & Central Asian → purple ---
-    "B02015_021E": ("Indian", "s_c_asian"),
-    "B02015_022E": ("Bangladeshi", "s_c_asian"),
-    "B02015_023E": ("Bhutanese", "s_c_asian"),
-    "B02015_024E": ("Nepalese", "s_c_asian"),
-    "B02015_025E": ("Pakistani", "s_c_asian"),
-    "B02015_026E": ("Sikh", "s_c_asian"),
-    "B02015_027E": ("Sri Lankan", "s_c_asian"),
-    "B02015_028E": ("Other South Asian", "s_c_asian"),
-    # B02015_029E Afghan omitted — already in B04006_002E
-    "B02015_030E": ("Kazakh", "s_c_asian"),
-    "B02015_031E": ("Uzbek", "s_c_asian"),
-    "B02015_032E": ("Other Central Asian", "s_c_asian"),
+    "B02018_021E": ("Indian", "s_c_asian"),
+    "B02018_022E": ("Bangladeshi", "s_c_asian"),
+    "B02018_023E": ("Bhutanese", "s_c_asian"),
+    "B02018_024E": ("Nepalese", "s_c_asian"),
+    "B02018_025E": ("Pakistani", "s_c_asian"),
+    "B02018_026E": ("Sikh", "s_c_asian"),
+    "B02018_027E": ("Sri Lankan", "s_c_asian"),
+    "B02018_028E": ("Other South Asian", "s_c_asian"),
+    # B02018_029E Afghan omitted — already in B04006_002E
+    "B02018_030E": ("Kazakh", "s_c_asian"),
+    "B02018_031E": ("Uzbek", "s_c_asian"),
+    "B02018_032E": ("Other Central Asian", "s_c_asian"),
     # --- Other ---
-    "B02015_033E": ("Other Asian, specified", "east_asian"),
-    "B02015_034E": ("Other Asian, not specified", "east_asian"),
+    "B02018_033E": ("Other Asian, specified", "east_asian"),
+    "B02018_034E": ("Other Asian, not specified", "east_asian"),
 }
 
 # Maps B03001 variable codes → (label, color_group)
@@ -236,72 +243,74 @@ B03001_GROUPS = {
     "B03001_031E": ("Other Hispanic or Latino", "latino"),
 }
 
-# Maps B02016 variable codes → (label, color_group)
-# Source: https://api.census.gov/data/2024/acs/acs5/groups/B02016.json
-# Skipped: _001E (total), _014E (Two or more Pacific Islander)
-B02016_GROUPS = {
-    "B02016_002E": ("Native Hawaiian", "pacific"),
-    "B02016_003E": ("Samoan", "pacific"),
-    "B02016_004E": ("Tongan", "pacific"),
-    "B02016_005E": ("Other Polynesian", "pacific"),
-    "B02016_006E": ("Chamorro", "pacific"),
-    "B02016_007E": ("Chuukese", "pacific"),
-    "B02016_008E": ("Guamanian", "pacific"),
-    "B02016_009E": ("Marshallese", "pacific"),
-    "B02016_010E": ("Other Micronesian", "pacific"),
-    "B02016_011E": ("Fijian", "pacific"),
-    "B02016_012E": ("Other Melanesian", "pacific"),
-    "B02016_013E": ("Other Pacific Islander", "pacific"),
+# Maps B02019 variable codes → (label, color_group)
+# Source: https://api.census.gov/data/2024/acs/acs5/groups/B02019.json
+# "Native Hawaiian and Other Pacific Islander alone or in any combination by selected group"
+# Skipped: _001E (total)
+B02019_GROUPS = {
+    "B02019_002E": ("Native Hawaiian", "pacific"),
+    "B02019_003E": ("Samoan", "pacific"),
+    "B02019_004E": ("Tongan", "pacific"),
+    "B02019_005E": ("Other Polynesian", "pacific"),
+    "B02019_006E": ("Chamorro", "pacific"),
+    "B02019_007E": ("Chuukese", "pacific"),
+    "B02019_008E": ("Guamanian", "pacific"),
+    "B02019_009E": ("Marshallese", "pacific"),
+    "B02019_010E": ("Other Micronesian", "pacific"),
+    "B02019_011E": ("Fijian", "pacific"),
+    "B02019_012E": ("Other Melanesian", "pacific"),
+    "B02019_013E": ("Other Pacific Islander", "pacific"),
 }
 
-# Maps B02020 variable codes → (label, color_group)
-# Source: https://api.census.gov/data/2024/acs/acs5/groups/B02020.json
-# Skipped: _001E (total), _002E/_023E/_031E (subtotals), _041E (Two or more AIAN)
-B02020_GROUPS = {
-    "B02020_003E": ("Blackfeet", "native"),
-    "B02020_004E": ("Cherokee", "native"),
-    "B02020_005E": ("Cheyenne River Sioux", "native"),
-    "B02020_006E": ("Comanche", "native"),
-    "B02020_007E": ("Crow", "native"),
-    "B02020_008E": ("Gila River", "native"),
-    "B02020_009E": ("Hopi", "native"),
-    "B02020_010E": ("Lumbee", "native"),
-    "B02020_011E": ("Navajo", "native"),
-    "B02020_012E": ("Oglala Sioux", "native"),
-    "B02020_013E": ("Pascua Yaqui", "native"),
-    "B02020_014E": ("Rosebud Sioux", "native"),
-    "B02020_015E": ("Chickasaw", "native"),
-    "B02020_016E": ("Choctaw", "native"),
-    "B02020_017E": ("Muscogee (Creek)", "native"),
-    "B02020_018E": ("Tohono O'odham", "native"),
-    "B02020_019E": ("Turtle Mountain Chippewa", "native"),
-    "B02020_020E": ("White Mountain Apache", "native"),
-    "B02020_021E": ("All other American Indian", "native"),
-    "B02020_022E": ("American Indian, not specified", "native"),
-    "B02020_024E": ("Aztec", "native"),
-    "B02020_025E": ("Inca", "native"),
-    "B02020_026E": ("Maya", "native"),
-    "B02020_027E": ("Mixtec", "native"),
-    "B02020_028E": ("Taino", "native"),
-    "B02020_029E": ("Tarasco (Purepecha)", "native"),
-    "B02020_030E": ("All other Latin American Indian", "native"),
-    "B02020_032E": ("Tlingit and Haida", "native"),
-    "B02020_033E": ("Metlakatla", "native"),
-    "B02020_034E": ("Inupiat (Barrow)", "native"),
-    "B02020_035E": ("Yup'ik (Hooper Bay)", "native"),
-    "B02020_036E": ("Inupiat (Kotzebue)", "native"),
-    "B02020_037E": ("Nome Eskimo Community", "native"),
-    "B02020_038E": ("All other Alaska Native", "native"),
-    "B02020_039E": ("Alaska Native, not specified", "native"),
-    "B02020_040E": ("AIAN, not specified", "native"),
+# Maps B02021 variable codes → (label, color_group)
+# Source: https://api.census.gov/data/2024/acs/acs5/groups/B02021.json
+# "American Indian and Alaska Native alone or in any combination by selected tribal grouping"
+# Skipped: _001E (total), _002E/_023E/_031E (subtotals)
+B02021_GROUPS = {
+    "B02021_003E": ("Blackfeet", "native"),
+    "B02021_004E": ("Cherokee", "native"),
+    "B02021_005E": ("Cheyenne River Sioux", "native"),
+    "B02021_006E": ("Comanche", "native"),
+    "B02021_007E": ("Crow", "native"),
+    "B02021_008E": ("Gila River", "native"),
+    "B02021_009E": ("Hopi", "native"),
+    "B02021_010E": ("Lumbee", "native"),
+    "B02021_011E": ("Navajo", "native"),
+    "B02021_012E": ("Oglala Sioux", "native"),
+    "B02021_013E": ("Pascua Yaqui", "native"),
+    "B02021_014E": ("Rosebud Sioux", "native"),
+    "B02021_015E": ("Chickasaw", "native"),
+    "B02021_016E": ("Choctaw", "native"),
+    "B02021_017E": ("Muscogee (Creek)", "native"),
+    "B02021_018E": ("Tohono O'odham", "native"),
+    "B02021_019E": ("Turtle Mountain Chippewa", "native"),
+    "B02021_020E": ("White Mountain Apache", "native"),
+    "B02021_021E": ("All other American Indian", "native"),
+    "B02021_022E": ("American Indian, not specified", "native"),
+    "B02021_024E": ("Aztec", "native"),
+    "B02021_025E": ("Inca", "native"),
+    "B02021_026E": ("Maya", "native"),
+    "B02021_027E": ("Mixtec", "native"),
+    "B02021_028E": ("Taino", "native"),
+    "B02021_029E": ("Tarasco (Purepecha)", "native"),
+    "B02021_030E": ("All other Latin American Indian", "native"),
+    "B02021_032E": ("Tlingit and Haida", "native"),
+    "B02021_033E": ("Metlakatla", "native"),
+    "B02021_034E": ("Inupiat (Barrow)", "native"),
+    "B02021_035E": ("Yup'ik (Hooper Bay)", "native"),
+    "B02021_036E": ("Inupiat (Kotzebue)", "native"),
+    "B02021_037E": ("Nome Eskimo Community", "native"),
+    "B02021_038E": ("All other Alaska Native", "native"),
+    "B02021_039E": ("Alaska Native, not specified", "native"),
+    "B02021_040E": ("AIAN, not specified", "native"),
 }
 
 # Combined lookup: table name → its variable mapping
 ALL_TABLES = {
     "B04006": ANCESTRY_GROUPS,
-    "B02015": B02015_GROUPS,
-    "B02016": B02016_GROUPS,
-    "B02020": B02020_GROUPS,
+    "B02018": B02018_GROUPS,
+    "B02019": B02019_GROUPS,
+    "B02021": B02021_GROUPS,
     "B03001": B03001_GROUPS,
 }
 
@@ -448,7 +457,7 @@ def load_groups() -> dict:
 def build_ancestry_colors(groups: dict) -> dict:
     """Return {label: hex_color} using SUBGROUPS colors where defined, group center otherwise."""
     all_labels: dict = {}
-    for _code, (label, group) in {**ANCESTRY_GROUPS, **B02015_GROUPS, **B02016_GROUPS, **B02020_GROUPS, **B03001_GROUPS}.items():
+    for _code, (label, group) in {**ANCESTRY_GROUPS, **B02018_GROUPS, **B02019_GROUPS, **B02021_GROUPS, **B03001_GROUPS}.items():
         all_labels[label] = group
     for label, group in RESIDUAL_LABELS.items():
         all_labels[label] = group
@@ -526,11 +535,11 @@ def write_colors_csv(color_map: dict, group_map: dict = None, pop_map: dict = No
 
     lw = max(len(csv_label(row[1])) for row in rows)
     gw = max(len(row[0]) for row in rows)
-    pw = max(len(f"{row[5]:,}") for row in rows)
+    pw = max(len(str(row[5])) for row in rows)
 
     def fmt(group, label, hue, sat, lit, pop):
         lbl = csv_label(label)
-        return f"{lbl:<{lw}}, {group:<{gw}}, {hue:>5}, {sat:>5}, {lit:>5}, {pop:>{pw},}"
+        return f"{lbl:<{lw}}, {group:<{gw}}, {hue:>5}, {sat:>5}, {lit:>5}, {pop:>{pw}}"
 
     with open(COLORS_FILE, "w", newline="\n") as f:
         f.write(f"{'label':<{lw}}, {'group':<{gw}}, {'hue':>5}, {'sat':>5}, {'lit':>5}, {'population':>{pw}}\n")
@@ -542,7 +551,7 @@ def write_legend_json(color_map: dict, pop_map: dict = None):
     """Write legend.json from the color map (label → hex). Reads group from ALL_TABLES + RESIDUAL_LABELS, overridden by CSV."""
     import csv as _csv
     pop_map = pop_map or {}
-    all_var_map = {**ANCESTRY_GROUPS, **B02015_GROUPS, **B02016_GROUPS, **B02020_GROUPS, **B03001_GROUPS}
+    all_var_map = {**ANCESTRY_GROUPS, **B02018_GROUPS, **B02019_GROUPS, **B02021_GROUPS, **B03001_GROUPS}
     group_map = {info[0]: info[1] for info in all_var_map.values()}
     group_map.update(RESIDUAL_LABELS)
     # CSV group column takes precedence over hardcoded tables
@@ -594,7 +603,9 @@ def _pop_map_from_geojsons(scale: int) -> dict:
             for row in reader:
                 label = row["label"].strip().strip('"')
                 try:
-                    pop_map[label] = int(row["population"].strip().replace(",", ""))
+                    val = row["population"]
+                    if val is not None:
+                        pop_map[label] = int(val.strip().replace(",", ""))
                 except (ValueError, KeyError):
                     pass
     # Override with actual dot counts from geojson where available
@@ -686,7 +697,7 @@ def process_state(state_fips: str, scale: int, raw_dir: Path, shp_dir: Path, gro
         merged = merged.merge(acs, on="GEOID", how="left")
 
     # Melt to long form and filter to nonzero counts — much faster than iterrows
-    all_var_map = {**ANCESTRY_GROUPS, **B02015_GROUPS, **B02016_GROUPS, **B02020_GROUPS, **B03001_GROUPS}
+    all_var_map = {**ANCESTRY_GROUPS, **B02018_GROUPS, **B02019_GROUPS, **B02021_GROUPS, **B03001_GROUPS}
     present_cols = [c for c in all_var_map if c in merged.columns]
     long = merged[["GEOID", "geometry"] + present_cols].melt(
         id_vars=["GEOID", "geometry"], var_name="var_code", value_name="raw"
@@ -758,13 +769,15 @@ def process_state(state_fips: str, scale: int, raw_dir: Path, shp_dir: Path, gro
 
         total_dots = sum(r[0] for r in dot_rows)
         all_pts = random_points_in_polygon(geom, total_dots)
+        if _EXCLUSION_ZONES:
+            all_pts = [pt for pt in all_pts if not any(z.contains(shapely.geometry.Point(pt)) for z in _EXCLUSION_ZONES)]
         idx = 0
         for n, label, group, color in dot_rows:
             for pt in all_pts[idx : idx + n]:
                 features.append({
                     "type": "Feature",
                     "geometry": {"type": "Point", "coordinates": list(pt)},
-                    "properties": {"label": label, "group": group, "color": color},
+                    "properties": {"label": label, "group": group},
                 })
             idx += n
 
@@ -778,20 +791,60 @@ def main():
     parser.add_argument("--no-areawater", action="store_true", help="Skip inland water subtraction (faster, less accurate)")
     parser.add_argument("--write-colors", action="store_true", help="Write current algorithmic colors to ancestry_colors.csv and exit")
     parser.add_argument("--write-legend", action="store_true", help="Write legend.json from ancestry_colors.csv and exit")
+    parser.add_argument("--update-populations", action="store_true", help="Update only the population column in ancestry_colors.csv from GeoJSON dot counts, then write legend.json")
 
     args = parser.parse_args()
     scale = 100
 
-    if args.write_legend:
-        colors = load_colors_csv()
+    if args.update_populations:
+        import csv as _csv
         pop_map = _pop_map_from_geojsons(scale)
+        with open(COLORS_FILE, newline="") as f:
+            lines = f.readlines()
+        # Parse header to find population column index
+        import re
+        new_lines = [lines[0]]
+        for line in lines[1:]:
+            # Parse label from quoted or unquoted first field
+            m = re.match(r'^("(?:[^"]|"")*"|[^,]*)', line)
+            label = m.group(1).strip().strip('"').replace('""', '"') if m else ""
+            # Replace trailing population value (last field, may have commas if thousands-formatted)
+            # Match: last comma + optional spaces + digits/commas + optional spaces + end
+            def replace_pop(m2):
+                old_width = len(m2.group(1))
+                new_val = str(pop_map[label]) if label in pop_map else re.sub(r'[,\s]', '', m2.group(1)).strip()
+                return "," + f"{new_val:>{old_width}}"
+            new_line = re.sub(r',( *[\d,]+ *)$', replace_pop, line.rstrip("\n")) + "\n"
+            new_lines.append(new_line)
+        with open(COLORS_FILE, "w", newline="\n") as f:
+            f.writelines(new_lines)
+        print(f"Updated populations in {COLORS_FILE}")
+        colors = load_colors_csv()
+        write_legend_json(colors, pop_map)
+        return
+
+    if args.write_legend:
+        import csv as _csv
+        colors = load_colors_csv()
+        pop_map = {}
+        with open(COLORS_FILE, newline="") as f:
+            reader = _csv.DictReader(f)
+            reader.fieldnames = [n.strip() for n in reader.fieldnames]
+            for row in reader:
+                label = row["label"].strip().strip('"')
+                try:
+                    val = row["population"]
+                    if val is not None:
+                        pop_map[label] = int(val.strip().replace(",", ""))
+                except (ValueError, KeyError):
+                    pass
         write_legend_json(colors, pop_map)
         return
 
     if args.write_colors:
         groups = load_groups()
         colors = build_ancestry_colors(groups)
-        all_var_map = {**ANCESTRY_GROUPS, **B02015_GROUPS, **B02016_GROUPS, **B02020_GROUPS, **B03001_GROUPS}
+        all_var_map = {**ANCESTRY_GROUPS, **B02018_GROUPS, **B02019_GROUPS, **B02021_GROUPS, **B03001_GROUPS}
         group_map = {info[0]: info[1] for info in all_var_map.values()}
         group_map.update(RESIDUAL_LABELS)
         pop_map = _pop_map_from_geojsons(scale)
@@ -837,7 +890,7 @@ def main():
     # Sort so rarest ancestries (fewest total dots) are drawn last (on top).
     from collections import Counter
     label_counts = Counter(f["properties"]["label"] for f in all_features)
-    all_features.sort(key=lambda f: label_counts[f["properties"]["label"]], reverse=True)
+
 
     out_path = out_dir / f"dots_{tag}_1per{scale}.geojson"
     geojson = {"type": "FeatureCollection", "features": all_features}
