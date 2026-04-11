@@ -1,6 +1,6 @@
 """
 Fetch MTA Subway Origin-Destination ridership data from Socrata API.
-Pulls a single representative day (Wednesday in October 2024) and filters
+Pulls a single representative day (Wednesday in September 2025) and filters
 to all O-D pairs for a single day type.
 
 Expected: ~1.6M rows, may take a while.
@@ -9,11 +9,11 @@ import requests
 import csv
 import time
 
-DATASET_ID = "jsu2-fbtj"
+DATASET_ID = "y2qv-fytt"
 BASE_URL = f"https://data.ny.gov/resource/{DATASET_ID}.json"
 
 EXPECTED_ROWS = 1588000
-WHERE = "month=10 AND day_of_week='Wednesday'"
+WHERE = "month=9 AND day_of_week='Wednesday'"
 FIELDS = (
     "hour_of_day,"
     "origin_station_complex_id,origin_station_complex_name,"
@@ -23,7 +23,7 @@ FIELDS = (
     "estimated_average_ridership"
 )
 
-OUT_FILE = "data/od_wednesday_oct.csv"
+OUT_FILE = "data/od_wednesday_sep.csv"
 LIMIT = 10000
 TIMEOUT = 300
 
@@ -75,7 +75,7 @@ def write_csv(rows):
 
 
 if __name__ == "__main__":
-    print(f"Fetching O-D data for Wednesdays in October 2024 (ridership >= 10)...")
+    print(f"Fetching O-D data for Wednesdays in September 2025...")
     print(f"Expecting ~{EXPECTED_ROWS:,} rows")
     rows = fetch_all()
     write_csv(rows)

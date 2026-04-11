@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>MapSPAM — Global Crop Production</title>
+<title>CROPGRIDS — Global Crop Production</title>
 <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
 <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
 <style>
@@ -10,18 +10,34 @@
   #map { position: absolute; top: 0; left: 0; right: 0; bottom: 0; }
   #legend {
     position: absolute; top: 10px; right: 10px; z-index: 1;
-    background: white; padding: 10px 14px; border-radius: 6px;
+    background: white; border-radius: 6px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-    max-height: calc(100vh - 40px); overflow-y: auto;
+    max-height: calc(100vh - 40px);
     width: 220px;
+    display: flex; flex-direction: column;
   }
-  #legend h3 { margin: 0 0 8px 0; font-size: 13px; }
+  #legend-header {
+    padding: 10px 14px 0;
+    flex-shrink: 0;
+  }
+  #legend-header h3 { margin: 0 0 8px 0; font-size: 13px; }
   .legend-buttons { display: flex; gap: 6px; margin-bottom: 8px; }
   .legend-buttons button {
     flex: 1; font-size: 11px; padding: 3px 0; cursor: pointer;
     border: 1px solid #ccc; border-radius: 3px; background: #f8f8f8;
   }
   .legend-buttons button:hover { background: #eee; }
+  .slider-row {
+    display: flex; align-items: center; gap: 6px;
+    margin-bottom: 8px; font-size: 11px; color: #666;
+  }
+  .slider-row label { flex-shrink: 0; }
+  .slider-row input[type="range"] { flex: 1; height: 14px; cursor: pointer; }
+
+  #legend-scroll {
+    overflow-y: auto; padding: 0 14px 10px;
+    flex: 1; min-height: 0;
+  }
 
   /* Group collapsible */
   details.legend-group { margin-top: 4px; }
@@ -88,10 +104,16 @@
 <body>
 <div id="map"></div>
 <div id="legend">
-  <h3>Crops (1 dot = 10,000 ha)</h3>
-  <div class="legend-buttons">
-    <button id="show-all">Show all</button>
-    <button id="hide-all">Hide all</button>
+  <div id="legend-header">
+    <h3>Crops (1 dot = 10,000 ha)</h3>
+    <div class="legend-buttons">
+      <button id="show-all">Show all</button>
+      <button id="hide-all">Hide all</button>
+    </div>
+    <div class="slider-row">
+      <label>Dot size</label>
+      <input type="range" id="dot-size" min="0" max="100" value="50">
+    </div>
   </div>
   <div id="legend-scroll"></div>
 </div>
@@ -121,19 +143,95 @@ const legendScrollEl = document.getElementById("legend-scroll");
 
 let legend = [];
 let visible = new Set();
+let dotScale = 1.0; // multiplier from slider
+
+// Rename NES -> Other, clean up display names
+function displayName(name) {
+  return name
+    .replace(/^Cereals NES$/, "Other Cereals")
+    .replace(/^Oilseeds NES$/, "Other Oilseeds")
+    .replace(/^Pulses NES$/, "Other Pulses")
+    .replace(/^Legumes NES$/, "Other Legumes")
+    .replace(/^Roots NES$/, "Other Roots")
+    .replace(/^Fruit NES$/, "Other Fruit")
+    .replace(/^Tropical Fruit NES$/, "Other Tropical Fruit")
+    .replace(/^Stone Fruit NES$/, "Other Stone Fruit")
+    .replace(/^Berries NES$/, "Other Berries")
+    .replace(/^Citrus NES$/, "Other Citrus")
+    .replace(/^Vegetables NES$/, "Other Vegetables")
+    .replace(/^Nuts NES$/, "Other Nuts")
+    .replace(/^Spices NES$/, "Other Spices")
+    .replace(/^Fibre NES$/, "Other Fibre")
+    .replace(/^Fodder NES$/, "Other Fodder")
+    .replace(/^Grass NES$/, "Other Grass")
+    .replace(/^Sugar NES$/, "Other Sugar");
+}
 
 // Crop groupings — hue is center color (degrees), hue_range spreads members around it
 const GROUPS = {
-  cereals:    { label: "Cereals & Grains",    hue:  45, sat: 0.70, lit: 0.50, hue_range: 30, codes: ["whea","rice","maiz","barl","sorg","pmil","mill","ocer"] },
-  oilseeds:   { label: "Oilseeds",            hue:  85, sat: 0.55, lit: 0.45, hue_range: 30, codes: ["soyb","rape","sunf","grou","sesa","oilp","ooil","cnut"] },
-  pulses:     { label: "Pulses & Legumes",    hue: 155, sat: 0.55, lit: 0.45, hue_range: 25, codes: ["bean","chic","cowp","lent","pige","opul"] },
-  roots:      { label: "Roots & Tubers",      hue:  25, sat: 0.60, lit: 0.45, hue_range: 20, codes: ["cass","pota","swpo","yams","orts"] },
-  fruits:     { label: "Fruits",              hue: 340, sat: 0.65, lit: 0.55, hue_range: 25, codes: ["bana","plnt","citr","temf","trof"] },
-  vegetables: { label: "Vegetables",          hue: 120, sat: 0.50, lit: 0.40, hue_range: 20, codes: ["toma","onio","vege"] },
-  stimulants: { label: "Stimulants & Spices", hue: 280, sat: 0.50, lit: 0.55, hue_range: 25, codes: ["coff","rcof","teas","coco","toba"] },
-  sugar:      { label: "Sugar Crops",         hue: 195, sat: 0.60, lit: 0.50, hue_range: 15, codes: ["sugc","sugb"] },
-  fibre:      { label: "Fibre & Industrial",  hue: 220, sat: 0.55, lit: 0.50, hue_range: 20, codes: ["cott","rubb","ofib"] },
-  other:      { label: "Other",               hue:   0, sat: 0.00, lit: 0.50, hue_range:  0, codes: ["rest"] },
+  cereals: {
+    label: "Cereals & Grains", hue: 45, sat: 0.70, lit: 0.50, hue_range: 30,
+    codes: ["wheat","rice","maize","barley","sorghum","millet","oats","rye","buckwheat",
+            "triticale","fonio","quinoa","mixedgrain","cerealnes","popcorn","greencorn"]
+  },
+  oilseeds: {
+    label: "Oilseeds", hue: 85, sat: 0.55, lit: 0.45, hue_range: 30,
+    codes: ["soybean","rapeseed","sunflower","groundnut","sesame","oilpalm","coconut",
+            "linseed","castor","safflower","olive","oilseednes","mustard","hempseed",
+            "poppy","melonseed","tung","kapokseed"]
+  },
+  pulses: {
+    label: "Pulses & Legumes", hue: 155, sat: 0.55, lit: 0.45, hue_range: 25,
+    codes: ["bean","chickpea","cowpea","lentil","pigeonpea","pea","broadbean",
+            "greenpea","greenbean","greenbroadbean","lupin","bambara",
+            "stringbean","pulsenes","legumenes"]
+  },
+  roots: {
+    label: "Roots & Tubers", hue: 25, sat: 0.60, lit: 0.45, hue_range: 20,
+    codes: ["cassava","potato","sweetpotato","yam","taro","rootnes","yautia",
+            "beet","swede","turnip"]
+  },
+  fruits: {
+    label: "Fruits", hue: 340, sat: 0.65, lit: 0.55, hue_range: 35,
+    codes: ["apple","banana","plantain","mango","grape","orange","tangetc",
+            "lemonlime","grapefruitetc","citrusnes","cherry","sourcherry","plum",
+            "peachetc","apricot","pear","fig","date","avocado","papaya",
+            "pineapple","kiwi","persimmon","watermelon","melonetc","strawberry",
+            "blueberry","cranberry","rasberry","currant","gooseberry","quince",
+            "stonefruitnes","berrynes","fruitnes","tropicalnes","carob","cashewapple"]
+  },
+  vegetables: {
+    label: "Vegetables", hue: 120, sat: 0.50, lit: 0.40, hue_range: 25,
+    codes: ["cabbage","cauliflower","tomato","onion","garlic","greenonion",
+            "carrot","lettuce","spinach","eggplant","okra","cucumberetc",
+            "pumpkinetc","chilleetc","artichoke","asparagus","mushroom","vegetablenes",
+            "vegfor"]
+  },
+  nuts: {
+    label: "Nuts", hue: 30, sat: 0.50, lit: 0.40, hue_range: 20,
+    codes: ["almond","cashew","hazelnut","walnut","pistachio","chestnut",
+            "kolanut","karite","brazil","areca","nutnes"]
+  },
+  stimulants: {
+    label: "Stimulants & Spices", hue: 280, sat: 0.50, lit: 0.55, hue_range: 30,
+    codes: ["coffee","tea","cocoa","tobacco","cinnamon","clove","nutmeg",
+            "pepper","pimento","vanilla","ginger","aniseetc","peppermint",
+            "spicenes","mate","hop"]
+  },
+  sugar: {
+    label: "Sugar Crops", hue: 195, sat: 0.60, lit: 0.50, hue_range: 15,
+    codes: ["sugarcane","sugarbeet","sugarnes"]
+  },
+  fibre: {
+    label: "Fibre & Industrial", hue: 220, sat: 0.55, lit: 0.50, hue_range: 25,
+    codes: ["cotton","rubber","jute","flax","hemp","sisal","abaca","agave",
+            "ramie","kapokfiber","jutelikefiber","fibrenes"]
+  },
+  fodder: {
+    label: "Fodder & Forage", hue: 70, sat: 0.40, lit: 0.50, hue_range: 25,
+    codes: ["alfalfa","clover","mixedgrass","grassnes",
+            "fornes","canaryseed","vetch","pyrethrum"]
+  },
 };
 
 function hslToHex(h, s, l) {
@@ -157,12 +255,21 @@ function assignGroupColors() {
     }
   }
 }
-const GROUP_ORDER = ["cereals","oilseeds","pulses","roots","fruits","vegetables","stimulants","sugar","fibre","other"];
+const GROUP_ORDER = ["cereals","oilseeds","pulses","roots","fruits","vegetables","nuts","stimulants","sugar","fibre","fodder"];
 
 // Build lookup: code -> crop object
 let cropByCode = {};
 // Build lookup: code -> group key
 let groupOfCrop = {};
+
+// Dot size: base radii * 1.5, slider goes from 0.5x to 2x of that
+const BASE_RADII = [2, 2.25, 4.5, 18]; // at zoom 2, 6, 10 (already 1.5x of original)
+function dotSizeExpr() {
+  return ["interpolate", ["exponential", 2], ["zoom"],
+    2, BASE_RADII[0] * dotScale,
+    6, BASE_RADII[1] * dotScale,
+    10, BASE_RADII[2] * dotScale];
+}
 
 function updateFilter() {
   if (!map.getSource("crops")) return;
@@ -200,7 +307,7 @@ function buildLegend() {
     const groupDots = crops.reduce((s, c) => s + c.dots, 0);
     const groupColor = hslToHex(group.hue, group.sat, group.lit);
 
-    html += `<details class="legend-group" open>`;
+    html += `<details class="legend-group">`;
     html += `<summary class="legend-group-header">`;
     html += `<input type="checkbox" class="group-indicator" data-group="${key}" checked>`;
     html += `<div class="group-swatch" style="background:${groupColor}"></div>`;
@@ -210,10 +317,11 @@ function buildLegend() {
 
     for (const crop of crops) {
       visible.add(crop.code);
+      const name = displayName(crop.name);
       html += `<div class="legend-entry">`;
       html += `<input type="checkbox" data-code="${crop.code}" data-group="${key}" checked>`;
       html += `<div class="legend-swatch" style="background:${crop.color}"></div>`;
-      html += `<span class="legend-name">${crop.name}</span>`;
+      html += `<span class="legend-name">${name}</span>`;
       html += `<span class="legend-count">${crop.dots.toLocaleString()}</span>`;
       html += `</div>`;
     }
@@ -259,7 +367,7 @@ async function loadData() {
   const resp = await fetch("data/all_dots.bin");
   const buf = await resp.arrayBuffer();
   const view = new DataView(buf);
-  const recordSize = 9;
+  const recordSize = 10; // float32 lon + float32 lat + uint16 crop_id
   const n = Math.floor(buf.byteLength / recordSize);
 
   const features = [];
@@ -267,11 +375,11 @@ async function loadData() {
     const offset = i * recordSize;
     const lon = view.getFloat32(offset, true);
     const lat = view.getFloat32(offset + 4, true);
-    const cropIdx = view.getUint8(offset + 8);
+    const cropIdx = view.getUint16(offset + 8, true);
     features.push({
       type: "Feature",
       geometry: { type: "Point", coordinates: [lon, lat] },
-      properties: { crop: legend[cropIdx].code, name: legend[cropIdx].name }
+      properties: { crop: legend[cropIdx].code, name: displayName(legend[cropIdx].name) }
     });
   }
 
@@ -288,13 +396,22 @@ async function loadData() {
     type: "circle",
     source: "crops",
     paint: {
-      "circle-radius": ["interpolate", ["exponential", 2], ["zoom"], 2, 1.5, 6, 3, 10, 12],
+      "circle-radius": dotSizeExpr(),
       "circle-color": colorExpr,
       "circle-opacity": 0.75,
     }
   });
 
   buildLegend();
+
+  // Dot size slider
+  const slider = document.getElementById("dot-size");
+  slider.addEventListener("input", () => {
+    // slider 0-100, 50 = 1x. Map: 0->0.5, 50->1.0, 100->2.0
+    const v = slider.value / 100;
+    dotScale = v < 0.5 ? 0.5 + v : v * 2;
+    map.setPaintProperty("crop-dots", "circle-radius", dotSizeExpr());
+  });
 
   // Tooltip
   const tooltip = new maplibregl.Popup({
