@@ -10,62 +10,125 @@
 body { background: #0a0a0a; color: #eee; font-family: 'Nunito', sans-serif; overflow: hidden; }
 #map { width: 100vw; height: 100vh; }
 
-#controls {
+#controls-wrap {
     position: absolute;
-    top: 12px;
-    right: 12px;
-    max-width: calc(100vw - 160px);
+    top: 10px;
+    right: 10px;
+    max-width: calc(100vw - 24px);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    z-index: 9999;
+}
+#controls {
+    background: rgba(10,10,10,0.85);
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 8px 10px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 5px 10px;
+}
+#settings-panel {
     background: rgba(10,10,10,0.85);
     border: 1px solid #333;
     border-radius: 8px;
     padding: 10px 12px;
     display: flex;
-    flex-wrap: wrap;
+    flex-direction: column;
+    gap: 8px;
+    width: 72%;
+    align-self: flex-end;
+}
+#settings-panel.hidden { display: none; }
+.settings-row {
+    display: flex;
     align-items: center;
-    gap: 5px 7px;
-    z-index: 9999;
+    gap: 10px;
+}
+#speed-slider-row #speed-slider {
+    flex: 1;
+    min-width: 0;
+    accent-color: #6889a8;
+}
+.settings-label {
+    font-size: 12px;
+    color: #ccc;
+    flex-shrink: 0;
 }
 #time-label {
     font-size: 20px;
     font-weight: 700;
     color: #ccc;
-    width: 95px;
-    flex: 0 0 90px;
+    width: 81px;
     text-align: center;
     font-variant-numeric: tabular-nums;
 }
 #time-slider {
-    flex: 1;
-    min-width: 120px;
-    accent-color: #6889a8;
+    min-width: 180px;
+    height: 14px;
+    -webkit-appearance: none;
+    appearance: none;
+    background: transparent;
+    cursor: pointer;
+}
+#time-slider::-webkit-slider-runnable-track {
+    height: 3px;
+    background: #555;
+    border-radius: 2px;
+}
+#time-slider::-moz-range-track {
+    height: 3px;
+    background: #555;
+    border-radius: 2px;
+}
+#time-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 3px;
+    height: 14px;
+    background: #cfd9e4;
+    border: none;
+    border-radius: 1px;
+    margin-top: -5.5px;
+}
+#time-slider::-moz-range-thumb {
+    width: 3px;
+    height: 14px;
+    background: #cfd9e4;
+    border: none;
+    border-radius: 1px;
 }
 #dot-size-wrap {
     display: flex;
-    flex-direction: column;
     align-items: center;
-    flex-shrink: 0;
-    gap: 1px;
-}
-#dot-size-wrap span {
-    font-size: 12px;
-    color: #ccc;
-    line-height: 1;
+    gap: 6px;
+    flex: 1;
+    min-width: 0;
 }
 #dot-slider {
-    width: 60px;
+    flex: 1;
+    min-width: 0;
     accent-color: #6889a8;
 }
-#hide-waiting-wrap {
+#toggle-wrap {
     display: flex;
-    align-items: center;
-    gap: 4px;
+    gap: 10px;
     font-size: 12px;
     color: #ccc;
-    cursor: pointer;
     flex-shrink: 0;
+    line-height: 1.2;
 }
-#hide-waiting-cb {
+#toggle-wrap label {
+    cursor: pointer;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+#toggle-wrap input {
     accent-color: #6889a8;
+    margin: 0;
 }
 #speed-buttons {
     display: flex;
@@ -77,8 +140,8 @@ body { background: #0a0a0a; color: #eee; font-family: 'Nunito', sans-serif; over
     border: 1px solid #555;
     color: #ccc;
     border-radius: 4px;
-    width: 32px;
-    height: 32px;
+    width: 30px;
+    height: 30px;
     padding: 0;
     cursor: pointer;
     font-size: 13px;
@@ -88,14 +151,22 @@ body { background: #0a0a0a; color: #eee; font-family: 'Nunito', sans-serif; over
     justify-content: center;
     line-height: 1;
 }
-#speed-buttons button:hover { border-color: #6889a8; color: #eee; }
+@media (hover: hover) {
+    #speed-buttons button:hover { border-color: #6889a8; color: #eee; }
+}
 #speed-buttons button.active { border-color: #6889a8; color: #6889a8; }
-#stats-group {
-    display: flex;
-    align-items: center;
-    gap: 7px;
+#speed-expand-btn {
+    font-size: 13px;
+    margin-right: 5px;
+}
+#speed-slider-label {
+    font-size: 12px;
+    color: #ccc;
     flex-shrink: 0;
-    margin-left: auto;
+    font-variant-numeric: tabular-nums;
+    min-width: 27px;
+    text-align: right;
+    margin-left: -6px;
 }
 #train-count {
     font-size: 13px;
@@ -104,6 +175,7 @@ body { background: #0a0a0a; color: #eee; font-family: 'Nunito', sans-serif; over
     text-align: right;
     line-height: 1.4;
     font-variant-numeric: tabular-nums;
+    margin-left: -4px;
 }
 #loading {
     position: absolute;
@@ -223,35 +295,34 @@ body { background: #0a0a0a; color: #eee; font-family: 'Nunito', sans-serif; over
 #info-panel a { color: #89b4fa; }
 
 @media (max-width: 560px) {
+    #controls-wrap {
+        top: 6px;
+        right: 6px;
+    }
     #controls {
-        top: 8px;
-        right: 80px;
-        left: 8px;
-        max-width: none;
         padding: 10px 12px;
-        gap: 6px 10px;
+        gap: 3px 10px;
     }
     #speed-buttons { order: 0; }
-    #time-label {
+    #train-count {
         order: 1;
-        font-size: 22px;
-        width: 95px;
-        min-width: 95px;
-        flex: 0 0 auto;
+        margin-left: auto;
+    }
+    #controls::before {
+        content: '';
+        order: 2;
+        flex-basis: 100%;
+        height: 0;
+    }
+    #time-label {
+        order: 3;
+        font-size: 20px;
+        width: 81px;
     }
     #time-slider {
-        order: 2;
+        order: 4;
         min-width: 0;
-        width: 100%;
-        flex-basis: 100%;
-    }
-    #stats-group {
-        order: 3;
-        margin-left: 0;
-        margin-top: -2px;
-        width: 100%;
-        flex-basis: 100%;
-        justify-content: space-between;
+        flex: 1;
     }
     #map-title {
         display: none;
@@ -298,29 +369,39 @@ body { background: #0a0a0a; color: #eee; font-family: 'Nunito', sans-serif; over
     <p>The MTA publishes <a href="https://data.ny.gov/Transportation/MTA-Subway-Origin-Destination-Ridership-Estimate-2/y2qv-fytt" target="_blank"> hourly origin-destination pair ridership estimates</a>, as well as <a href="https://new.mta.info/developers" target="_blank">train timetables</a>. In this map, riders navigate from their origins to their destinations, taking into account transfer times and when trains are scheduled. The size of a train's bubble is proportional to the number of riders on it. </p>
     <p>The riders use the <a href="https://www.microsoft.com/en-us/research/wp-content/uploads/2012/01/raptor_alenex.pdf" target="_blank">RAPTOR</a> algorithm to navigate, finding the fastest possible route. All trains are assumed to run on time. Origin-destination data is hourly, so the exact departure time of a rider within the hour is randomly chosen. There is no cap on the number of riders on a train.</p>
     <p>Trains' speed is based on their timetables. Sometimes the timetables are a bit wonky, which is why trains sometimes go weirdly fast or slow.</p>
+    <p>If the display is slow, you can hide station and walking bubbles in the settings to improve performance. </p>
     <p>Route geometry from <a href="https://new.mta.info/developers" target="_blank">MTA GTFS</a>. Map built with <a href="https://maplibre.org" target="_blank">MapLibre GL</a> and <a href="https://carto.com/basemaps" target="_blank">CARTO</a> basemap tiles. Visuals inspired by <a href="https://subwaybuilder.com" target="_blank">subwaybuilder</a>.</p>
     <p>Made by <a href="https://anita.garden/projects" target="_blank">anita</a>!</p>
 </div>
 
-<div id="controls" style="display:none;">
-    <div id="speed-buttons">
-        <button data-speed="0"><svg width="10" height="12" viewBox="0 0 10 12"><rect x="0" y="0" width="3" height="12" fill="currentColor"/><rect x="7" y="0" width="3" height="12" fill="currentColor"/></svg></button>
-        <button data-speed="1">1x</button>
-        <button data-speed="2" class="active">2x</button>
-        <button data-speed="4">4x</button>
-    </div>
-    <input type="range" id="time-slider" min="0" max="1439" value="390" step="1">
-    <div id="time-label">6:30am</div>
-    <div id="stats-group">
-        <div id="dot-size-wrap">
-            <span>dot size</span>
-            <input type="range" id="dot-slider" min="40" max="200" value="120" step="1" title="Dot size">
+<div id="controls-wrap" style="display:none;">
+    <div id="controls">
+        <div id="speed-buttons">
+            <button id="speed-expand-btn" title="Settings"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"/><circle cx="12" cy="12" r="3"/></svg></button>
+            <button data-speed="0"><svg width="10" height="12" viewBox="0 0 10 12"><rect x="0" y="0" width="3" height="12" fill="currentColor"/><rect x="7" y="0" width="3" height="12" fill="currentColor"/></svg></button>
+            <button data-speed="1">1x</button>
+            <button data-speed="2" class="active">2x</button>
         </div>
-        <label id="hide-waiting-wrap" title="Hide station bubbles">
-            <input type="checkbox" id="hide-waiting-cb">
-            <span>hide waiting</span>
-        </label>
+        <input type="range" id="time-slider" min="0" max="1439" value="420" step="1">
+        <div id="time-label">7:00am</div>
         <div id="train-count"></div>
+    </div>
+    <div id="settings-panel" class="hidden">
+        <div class="settings-row" id="speed-slider-row">
+            <span class="settings-label">time speed</span>
+            <input type="range" id="speed-slider" min="0" max="20" value="2" step="0.1">
+            <span id="speed-slider-label">2x</span>
+        </div>
+        <div class="settings-row">
+            <div id="dot-size-wrap">
+                <span class="settings-label">dot size</span>
+                <input type="range" id="dot-slider" min="40" max="200" value="120" step="1" title="Dot size">
+            </div>
+            <div id="toggle-wrap">
+                <label title="Show riders waiting at stations"><input type="checkbox" id="toggle-waiting-cb" checked>stations</label>
+                <label title="Show riders walking to/from/between stations"><input type="checkbox" id="toggle-walks-cb" checked>walks</label>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -390,7 +471,7 @@ const ROUTE_COLORS = {
 };
 
 let data = null;
-let simTime = 6.5 * 3600;
+let simTime = 7 * 3600;
 let speedMultiplier = 2;
 let lastSpeed = 2; // last non-zero speed for spacebar toggle
 let dotScale = 1.2;
@@ -409,7 +490,7 @@ map.on('load', () => {
             data = d;
             preprocessData();
             document.getElementById('loading').style.display = 'none';
-            document.getElementById('controls').style.display = 'flex';
+            document.getElementById('controls-wrap').style.display = 'flex';
             drawSubwayLines();
             setupTrainLayer();
             startAnimation();
@@ -443,6 +524,12 @@ function preprocessData() {
     // filter walks to >= 20 riders
     if (data.transfer_walks) {
         data.transfer_walks = data.transfer_walks.filter(w => w[6] >= 20);
+    }
+    if (data.origin_walks) {
+        data.origin_walks = data.origin_walks.filter(w => w[6] >= 10);
+    }
+    if (data.dest_walks) {
+        data.dest_walks = data.dest_walks.filter(w => w[6] >= 10);
     }
 }
 
@@ -503,10 +590,11 @@ function setupTrainLayer() {
         id: 'walks-layer',
         type: 'circle',
         source: 'walks',
+        layout: { visibility: showWalks ? 'visible' : 'none' },
         paint: {
             'circle-radius': ['get', 'radius'],
             'circle-color': '#cbcbcb',
-            'circle-opacity': 0.6,
+            'circle-opacity': ['get', 'opacity'],
         },
     });
 
@@ -515,6 +603,7 @@ function setupTrainLayer() {
         id: 'waiting-layer',
         type: 'circle',
         source: 'waiting',
+        layout: { visibility: showWaiting ? 'visible' : 'none' },
         paint: {
             'circle-radius': ['get', 'radius'],
             'circle-color': '#cbcbcb',
@@ -534,7 +623,7 @@ function setupTrainLayer() {
             'circle-radius': ['get', 'radius'],
             'circle-color': ['get', 'color'],
             'circle-opacity': 0.8,
-            'circle-stroke-width': 1.5,
+            'circle-stroke-width': ['get', 'strokeWidth'],
             'circle-stroke-color': ['get', 'stroke'],
             'circle-stroke-opacity': 0.8,
         },
@@ -561,6 +650,7 @@ function resetAnchor() {
 
 let lastRenderWall = 0;
 const RENDER_INTERVAL = 32; // ~30fps cap for setData calls
+let tooltipDirty = false; // set when trains re-rendered or mouse moved
 
 function startAnimation() {
     resetAnchor();
@@ -619,6 +709,15 @@ function darkenHex(hex, factor) {
     const b = Math.round(parseInt(hex.slice(5, 7), 16) * factor);
     return `#${r.toString(16).padStart(2,'0')}${g.toString(16).padStart(2,'0')}${b.toString(16).padStart(2,'0')}`;
 }
+function lightenHex(hex, factor) {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    const lr = Math.round(r + (255 - r) * factor);
+    const lg = Math.round(g + (255 - g) * factor);
+    const lb = Math.round(b + (255 - b) * factor);
+    return `#${lr.toString(16).padStart(2,'0')}${lg.toString(16).padStart(2,'0')}${lb.toString(16).padStart(2,'0')}`;
+}
 
 const WAIT_TRANSITION = 10; // sim seconds to smoothly ramp between values
 
@@ -660,7 +759,7 @@ function renderTrains() {
 
     // for midnight wrap: also check late-night trains that cross midnight
     // (endTime >= 86400) by using simTime + 86400 for time comparisons
-    const wrapActive = simTime < 3600; // first hour after midnight
+    const wrapActive = simTime < 5 * 3600; // GTFS trips can extend past midnight (up to ~28h)
     let wrapLo = 0;
     if (wrapActive) {
         let lo2 = 0, hi2 = trainIndex.length;
@@ -692,11 +791,16 @@ function renderTrains() {
         const useWrap = ii >= tLo;
         const effSim = useWrap ? simTime + 86400 : simTime;
 
-        // find current timeline segment
-        let idx = 0;
-        for (let i = 1; i < tl.length; i++) {
-            if (tl[i][0] >= effSim) { idx = i - 1; break; }
-            if (i === tl.length - 1) idx = i;
+        // find current timeline segment (binary search on tl[i][0])
+        let idx;
+        {
+            let lo = 0, hi = tl.length - 1;
+            while (lo < hi) {
+                const mid = (lo + hi + 1) >> 1;
+                if (tl[mid][0] <= effSim) lo = mid;
+                else hi = mid - 1;
+            }
+            idx = lo;
         }
 
         let lat, lon, riders;
@@ -777,36 +881,58 @@ function renderTrains() {
         const ridersRound = Math.round(riders);
         trainPositions.set(ti, [lon, lat, ridersRound]);
 
+        let color = ROUTE_COLORS[train.route] || train.color;
+        let stroke = ROUTE_STROKES[train.route] || darkenHex(train.color, 0.75);
+        let strokeWidth = 1.5;
+        if (riders > 1600) {
+            color = lightenHex(color, 0.2);
+            stroke = '#d01818';
+            strokeWidth = 3;
+        }
+
         features.push({
             type: 'Feature',
             geometry: { type: 'Point', coordinates: [lon, lat] },
-            properties: { radius, color: ROUTE_COLORS[train.route] || train.color, stroke: ROUTE_STROKES[train.route] || darkenHex(train.color, 0.75), route: train.route, riders: ridersRound, ti, order: trainDrawOrder[ti] },
+            properties: { radius, color, stroke, strokeWidth, route: train.route, riders: ridersRound, ti, order: trainDrawOrder[ti] },
         });
     }
 
     map.getSource('trains').setData({ type: 'FeatureCollection', features });
+    tooltipDirty = true;
 
     // render transfer waiting bubbles (per-station, with smooth transitions)
-    const waitFeatures = [];
-    for (let si = 0; si < data.waiting.length; si++) {
-        const station = data.waiting[si];
-        const waiting = getStationWaiting(si);
-        if (waiting < 0.5) continue;
+    if (showWaiting) {
+        const waitFeatures = [];
+        for (let si = 0; si < data.waiting.length; si++) {
+            const station = data.waiting[si];
+            const waiting = getStationWaiting(si);
+            if (waiting < 0.5) continue;
 
-        const radius = bubbleRadius(waiting) * zoomScale * dotScale;
-        waitFeatures.push({
-            type: 'Feature',
-            geometry: { type: 'Point', coordinates: [station.lon, station.lat] },
-            properties: { radius, riders: Math.round(waiting), name: station.name || '', routes: JSON.stringify(station.routes || []), si },
-        });
+            const radius = bubbleRadius(waiting) * zoomScale * dotScale;
+            waitFeatures.push({
+                type: 'Feature',
+                geometry: { type: 'Point', coordinates: [station.lon, station.lat] },
+                properties: { radius, si },
+            });
+        }
+        map.getSource('waiting').setData({ type: 'FeatureCollection', features: waitFeatures });
     }
-    map.getSource('waiting').setData({ type: 'FeatureCollection', features: waitFeatures });
 
-    // render transfer walking bubbles (riders moving between platforms)
+    // render walking bubbles (transfer walks + origin walks + dest walks)
+    // Opacity fades so the far-from-station end is invisible:
+    //  - origin walks: fade in  (invisible at spawn → full opacity at station)
+    //  - dest walks:   fade out (full opacity at station → invisible at despawn)
+    //  - transfer walks: full opacity throughout (both endpoints are stations)
+    const WALK_PEAK_OPACITY = 0.6;
     const walkFeatures = [];
-    if (data.transfer_walks) {
+    const walkSources = showWalks ? [
+        { walks: data.transfer_walks, fade: 'none' },
+        { walks: data.origin_walks, fade: 'in' },
+        { walks: data.dest_walks, fade: 'out' },
+    ] : [];
+    for (const { walks, fade } of walkSources) {
+        if (!walks) continue;
         // walks sorted by t0; binary search for first walk that could be active
-        const walks = data.transfer_walks;
         let lo = 0, hi = walks.length;
         while (lo < hi) {
             const mid = (lo + hi) >> 1;
@@ -823,14 +949,19 @@ function renderTrains() {
             const lat = w[1] + f * (w[3] - w[1]);
             const riders = w[6];
             const radius = bubbleRadius(riders) * zoomScale * dotScale * 0.7;
+            let opacity = WALK_PEAK_OPACITY;
+            if (fade === 'in') opacity *= f;
+            else if (fade === 'out') opacity *= 1 - f;
             walkFeatures.push({
                 type: 'Feature',
                 geometry: { type: 'Point', coordinates: [lon, lat] },
-                properties: { radius },
+                properties: { radius, opacity },
             });
         }
     }
-    map.getSource('walks').setData({ type: 'FeatureCollection', features: walkFeatures });
+    if (showWalks) {
+        map.getSource('walks').setData({ type: 'FeatureCollection', features: walkFeatures });
+    }
 
     document.getElementById('train-count').innerHTML =
         `${activeCount} trains<br>${Math.round(totalRiders).toLocaleString()} riders`;
@@ -838,6 +969,11 @@ function renderTrains() {
 
 // update all tooltips (hover + locked) with live data
 map.on('render', () => {
+    // Skip if nothing relevant changed. Tooltips need updates only when trains
+    // re-rendered (positions moved) or the mouse moved. Pan/zoom fires 'render'
+    // too but popups track LngLat automatically.
+    if (!tooltipDirty) return;
+    tooltipDirty = false;
     // re-query what's under the cursor so tooltips update as trains move
     if (lastMousePoint) {
         const trainFeats = map.queryRenderedFeatures(lastMousePoint, { layers: ['trains-layer'] });
@@ -914,25 +1050,59 @@ dotSlider.addEventListener('input', () => {
     dotScale = parseInt(dotSlider.value) / 100;
 });
 
-let hideWaiting = false;
-document.getElementById('hide-waiting-cb').addEventListener('change', (e) => {
-    hideWaiting = e.target.checked;
-    const vis = hideWaiting ? 'none' : 'visible';
-    map.setLayoutProperty('waiting-layer', 'visibility', vis);
-    map.setLayoutProperty('walks-layer', 'visibility', vis);
+// default stations/walks off on narrow screens — they're the heaviest layers
+// and mobile GPUs struggle with hundreds of extra circles
+const isMobile = window.innerWidth <= 560;
+let showWaiting = !isMobile;
+let showWalks = !isMobile;
+if (isMobile) {
+    document.getElementById('toggle-waiting-cb').checked = false;
+    document.getElementById('toggle-walks-cb').checked = false;
+}
+document.getElementById('toggle-waiting-cb').addEventListener('change', (e) => {
+    showWaiting = e.target.checked;
+    map.setLayoutProperty('waiting-layer', 'visibility', showWaiting ? 'visible' : 'none');
+    if (!showWaiting) map.getSource('waiting').setData(emptyGeoJSON);
+});
+document.getElementById('toggle-walks-cb').addEventListener('change', (e) => {
+    showWalks = e.target.checked;
+    map.setLayoutProperty('walks-layer', 'visibility', showWalks ? 'visible' : 'none');
+    if (!showWalks) map.getSource('walks').setData(emptyGeoJSON);
 });
 
 function setSpeed(s) {
     speedMultiplier = s;
     if (s > 0) lastSpeed = s;
     resetAnchor();
-    document.querySelectorAll('#speed-buttons button').forEach(btn => {
+    document.querySelectorAll('#speed-buttons button[data-speed]').forEach(btn => {
         btn.classList.toggle('active', Number(btn.dataset.speed) === s);
     });
+    const sl = document.getElementById('speed-slider');
+    const lb = document.getElementById('speed-slider-label');
+    if (sl) { sl.value = s; lb.textContent = (s % 1 === 0 ? s : s.toFixed(1)) + 'x'; }
 }
 
-document.querySelectorAll('#speed-buttons button').forEach(btn => {
-    btn.addEventListener('click', () => setSpeed(Number(btn.dataset.speed)));
+document.querySelectorAll('#speed-buttons button[data-speed]').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const s = Number(btn.dataset.speed);
+        if (s === 0) setSpeed(speedMultiplier > 0 ? 0 : lastSpeed);
+        else setSpeed(s);
+    });
+});
+
+const settingsPanel = document.getElementById('settings-panel');
+const speedSlider = document.getElementById('speed-slider');
+const speedSliderLabel = document.getElementById('speed-slider-label');
+const speedExpandBtn = document.getElementById('speed-expand-btn');
+speedExpandBtn.addEventListener('mousedown', (e) => e.preventDefault());
+speedExpandBtn.addEventListener('click', () => {
+    settingsPanel.classList.toggle('hidden');
+    speedExpandBtn.classList.toggle('active', !settingsPanel.classList.contains('hidden'));
+});
+speedSlider.addEventListener('input', () => {
+    const v = parseFloat(speedSlider.value);
+    speedSliderLabel.textContent = v % 1 === 0 ? v + 'x' : v.toFixed(1) + 'x';
+    setSpeed(v);
 });
 
 document.addEventListener('keydown', (e) => {
@@ -994,8 +1164,8 @@ function clearAllLocked() {
     lockedTooltips.length = 0;
 }
 
-map.on('mousemove', (e) => { lastMousePoint = e.point; });
-map.on('mouseout', () => { lastMousePoint = null; });
+map.on('mousemove', (e) => { lastMousePoint = e.point; tooltipDirty = true; });
+map.on('mouseout', () => { lastMousePoint = null; tooltipDirty = true; });
 
 map.on('mousemove', 'trains-layer', (e) => {
     map.getCanvas().style.cursor = 'pointer';
@@ -1034,7 +1204,7 @@ map.on('mousemove', 'waiting-layer', (e) => {
     hoverStation = { si: p.si, lngLat: coords };
     hoverType = 'station';
     hoverTooltip.setLngLat(coords)
-        .setHTML(stationTooltipHTML(p.si, p.riders))
+        .setHTML(stationTooltipHTML(p.si, Math.round(getStationWaiting(p.si))))
         .addTo(map);
 });
 map.on('mouseleave', 'waiting-layer', () => {
@@ -1051,7 +1221,7 @@ map.on('click', 'waiting-layer', (e) => {
     const p = e.features[0].properties;
     const coords = e.features[0].geometry.coordinates;
     const popup = makePopup();
-    popup.setLngLat(coords).setHTML(stationTooltipHTML(p.si, p.riders)).addTo(map);
+    popup.setLngLat(coords).setHTML(stationTooltipHTML(p.si, Math.round(getStationWaiting(p.si)))).addTo(map);
     lockedTooltips.push({ type: 'station', popup, si: p.si });
 });
 

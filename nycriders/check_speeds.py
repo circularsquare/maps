@@ -15,7 +15,7 @@ from collections import defaultdict
 GTFS_DIR = "data/gtfs_subway"
 SERVICE_ID = "Weekday"
 
-SPEED_THRESHOLD_KMH = 85
+SPEED_THRESHOLD_KMH = 90
 DWELL_TIME = 20
 ACCEL_DECEL_PENALTY = 20  # 20s accel + 20s decel at half speed = 20s lost
 OVERHEAD = DWELL_TIME + ACCEL_DECEL_PENALTY
@@ -55,7 +55,9 @@ def time_needed_for_speed(dist_m, target_kmh):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--apply', action='store_true',
-                        help='Apply fixes to stop_times.txt')
+                        help='Apply fixes to stop_times_fixed.txt')
+    parser.add_argument('--check-fixed', action='store_true',
+                        help='Check stop_times_fixed.txt instead of the original')
     args = parser.parse_args()
 
     # load stops
@@ -69,7 +71,9 @@ def main():
     trips = trips[trips.service_id == SERVICE_ID]
     trip_route = dict(zip(trips.trip_id, trips.route_id))
 
-    st = pd.read_csv(f"{GTFS_DIR}/stop_times.txt")
+    st_path = f"{GTFS_DIR}/stop_times_fixed.txt" if args.check_fixed else f"{GTFS_DIR}/stop_times.txt"
+    print(f"Reading {st_path}")
+    st = pd.read_csv(st_path)
     st = st[st.trip_id.isin(trips.trip_id)]
     st['arr_secs'] = st.arrival_time.apply(time_to_secs)
     st['dep_secs'] = st.departure_time.apply(time_to_secs)
@@ -148,7 +152,7 @@ def main():
             total_avail = before_avail + after_avail
             if total_avail == 0:
                 fix_proposals.append((route, trip_id, fr_stop, to_stop, speed,
-                                      extra, 0, "NO DONOR"))
+                                      extra, 0, f"{speed:.0f} km/h  NO DONOR"))
                 continue
 
             take = min(extra, total_avail)
@@ -167,14 +171,14 @@ def main():
                                   f"(steal {take_before}s before, {take_after}s after)"))
 
             if take_before > 0:
-                # shift the middle stop (j) later by take_before
-                # this slows down segment j-1->j and speeds up j->j+1
-                adjustments[idx] += take_before
+                # shift stop j earlier by take_before
+                # this steals time from j-1->j and gives it to j->j+1
+                adjustments[idx] -= take_before
 
             if take_after > 0:
-                # shift stop j+1 earlier by take_after
-                # this speeds up j->j+1 and slows down j+1->j+2
-                adjustments[idx_next] -= take_after
+                # shift stop j+1 later by take_after
+                # this steals time from j+1->j+2 and gives it to j->j+1
+                adjustments[idx_next] += take_after
 
     # dedupe proposals for display: group by (route, from, to), show worst
     seen = set()
@@ -225,8 +229,9 @@ def main():
         full_st.at[real_idx, 'departure_time'] = secs_to_time(old_dep + delta)
         changes += 1
 
-    full_st.to_csv(f"{GTFS_DIR}/stop_times.txt", index=False)
-    print(f"Wrote {changes} changes to {GTFS_DIR}/stop_times.txt")
+    out_path = f"{GTFS_DIR}/stop_times_fixed.txt"
+    full_st.to_csv(out_path, index=False)
+    print(f"Wrote {changes} changes to {out_path}")
 
 
 if __name__ == '__main__':

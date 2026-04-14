@@ -54,7 +54,12 @@ def load_gtfs():
     trips = trips[trips.service_id == SERVICE_ID]
     print(f"  {len(trips)} weekday trips")
 
-    stop_times = pd.read_csv(f"{GTFS_DIR}/stop_times.txt")
+    import os
+    st_path = f"{GTFS_DIR}/stop_times_fixed.txt"
+    if not os.path.exists(st_path):
+        st_path = f"{GTFS_DIR}/stop_times.txt"
+    print(f"  using {st_path}")
+    stop_times = pd.read_csv(st_path)
     stop_times = stop_times[stop_times.trip_id.isin(trips.trip_id)]
 
     def time_to_secs(t):
@@ -253,8 +258,21 @@ def simplify_polyline(points, epsilon):
 def precompute_shape_segments(patterns, shapes, trip_shape, get_stop_coord):
     """Pre-compute simplified shape sub-polylines between consecutive stops per pattern."""
     print("Pre-computing shape segments for train animation...")
+
+    # build index: (route, direction) -> [shape_id, ...] for fallback matching
+    route_dir_shape_list = defaultdict(list)
+    for pattern in patterns:
+        for trip in pattern['trips']:
+            sid = trip_shape.get(trip['trip_id'])
+            if sid and sid in shapes:
+                key = (pattern['route'], pattern['direction'])
+                if sid not in route_dir_shape_list[key]:
+                    route_dir_shape_list[key].append(sid)
+                break
+
     pattern_segments = {}
     matched = 0
+    fallback_matched = 0
     for pid, pattern in enumerate(patterns):
         # find a shape for this pattern
         shape_id = None
@@ -263,6 +281,32 @@ def precompute_shape_segments(patterns, shapes, trip_shape, get_stop_coord):
             if sid and sid in shapes:
                 shape_id = sid
                 break
+
+        # fallback: find a shape from the same route+direction that covers
+        # this pattern's stops (e.g. short-turn trips with no shape_id)
+        if not shape_id:
+            route = pattern['route']
+            direction = pattern['direction']
+            stops = pattern['stops']
+            candidate_shapes = route_dir_shape_list.get((route, direction), [])
+            best_sid = None
+            best_max_dist = float('inf')
+            for sid in candidate_shapes:
+                polyline = shapes[sid]
+                max_snap_dist = 0
+                for stop_id in stops:
+                    coord = get_stop_coord(stop_id, route)
+                    if coord:
+                        _, _, dist, _, _ = snap_to_polyline(coord[0], coord[1], polyline)
+                        max_snap_dist = max(max_snap_dist, dist)
+                if max_snap_dist < best_max_dist:
+                    best_max_dist = max_snap_dist
+                    best_sid = sid
+            # accept if worst snap is under ~500m (0.005 degrees)
+            if best_sid and best_max_dist < 0.005:
+                shape_id = best_sid
+                fallback_matched += 1
+
         if not shape_id:
             continue
 
@@ -296,7 +340,8 @@ def precompute_shape_segments(patterns, shapes, trip_shape, get_stop_coord):
         pattern_segments[pid] = segments
         matched += 1
 
-    print(f"  {matched}/{len(patterns)} patterns matched to shapes")
+    print(f"  {matched}/{len(patterns)} patterns matched to shapes"
+          f" ({fallback_matched} via fallback)")
     return pattern_segments
 
 
@@ -573,6 +618,7 @@ def _route_chunk(chunk):
     transfer_events = []
     origin_walk_events = []
     transfer_walk_events = []
+    dest_walk_events = []
     assigned = 0
     unassigned = 0
 
@@ -643,13 +689,20 @@ def _route_chunk(chunk):
                         if board_time > wait_start:
                             transfer_events.append((board_stop, wait_start, board_time, riders, route_b))
 
+                # record destination walk (riders leaving final station)
+                pid_last, tidx_last, _, alight_stop_last = legs[-1]
+                alight_pos_last = patterns[pid_last]['stops'].index(alight_stop_last)
+                alight_time_last = patterns[pid_last]['trips'][tidx_last]['times'][alight_pos_last][0]
+                dest_walk_events.append((alight_stop_last, alight_time_last, riders))
+
                 assigned += 1
 
     # convert defaultdicts to plain dicts for pickling
     boardings = {tid: dict(stops) for tid, stops in train_boardings.items()}
     alightings = {tid: dict(stops) for tid, stops in train_alightings.items()}
     return (boardings, alightings, transfer_events,
-            origin_walk_events, transfer_walk_events, assigned, unassigned)
+            origin_walk_events, transfer_walk_events, dest_walk_events,
+            assigned, unassigned)
 
 
 def route_all_riders(od_data, complex_to_stops, stop_to_complex, patterns,
@@ -736,10 +789,11 @@ def route_all_riders(od_data, complex_to_stops, stop_to_complex, patterns,
     transfer_events = []
     origin_walk_events = []
     transfer_walk_events = []
+    dest_walk_events = []
     assigned = 0
     unassigned = 0
 
-    for (wb, wa, wte, wowe, wtwe, wa_count, wu_count) in results:
+    for (wb, wa, wte, wowe, wtwe, wdwe, wa_count, wu_count) in results:
         for tid, stops in wb.items():
             for pos, riders in stops.items():
                 train_boardings[tid][pos] += riders
@@ -749,6 +803,7 @@ def route_all_riders(od_data, complex_to_stops, stop_to_complex, patterns,
         transfer_events.extend(wte)
         origin_walk_events.extend(wowe)
         transfer_walk_events.extend(wtwe)
+        dest_walk_events.extend(wdwe)
         assigned += wa_count
         unassigned += wu_count
 
@@ -757,9 +812,10 @@ def route_all_riders(od_data, complex_to_stops, stop_to_complex, patterns,
           f"{unassigned} unassigned ({elapsed:.0f}s)")
     print(f"  {len(transfer_events)} waiting events, "
           f"{len(origin_walk_events)} origin walks, "
-          f"{len(transfer_walk_events)} transfer walks")
+          f"{len(transfer_walk_events)} transfer walks, "
+          f"{len(dest_walk_events)} dest walks")
     return (train_boardings, train_alightings, transfer_events,
-            origin_walk_events, transfer_walk_events)
+            origin_walk_events, transfer_walk_events, dest_walk_events)
 
 
 # ---------------------------------------------------------------------------
@@ -865,15 +921,18 @@ def build_waiting(transfer_events, complex_info, geometry=None):
     return waiting_out
 
 
-ORIGIN_WALK_TIME = 120   # seconds for riders to walk to origin station
+ORIGIN_WALK_TIME = 120   # seconds for riders to walk to origin station (~1.7-3.3 m/s over 200-400m)
+DEST_WALK_TIME = 120     # seconds for riders to walk away from dest station
 WALK_BIN = 60            # aggregate walks into 1-minute bins
 
 
-def build_walks(origin_walk_events, transfer_walk_events, geometry=None):
-    """Build walk animation data: small bubbles moving toward stations.
+def build_walks(origin_walk_events, transfer_walk_events, geometry=None,
+                dest_walk_events=None):
+    """Build walk animation data: small bubbles moving toward/away from stations.
 
     Origin walks: random nearby point -> station (arrive at bin_time).
     Transfer walks: alight platform -> board platform.
+    Destination walks: station -> random nearby point (depart at alight_time).
 
     Output: list of [from_lon, from_lat, to_lon, to_lat, t0, t1, riders],
             sorted by t0.
@@ -899,20 +958,27 @@ def build_walks(origin_walk_events, transfer_walk_events, geometry=None):
         transfer_agg[key][0] += riders
         transfer_agg[key][1] = max(transfer_agg[key][1], walk_time)
 
+    # --- aggregate dest walks by (alight_stop, 1-min bin) ---
+    dest_agg = defaultdict(float)
+    for alight_stop, alight_time, riders in (dest_walk_events or []):
+        t_bin = (alight_time // WALK_BIN) * WALK_BIN
+        dest_agg[(alight_stop, t_bin)] += riders
+
     origin_walks = []
     transfer_walks = []
+    dest_walks = []
     rng = random.Random(99)
 
     # --- origin walks ---
     for (stop_id, t_bin), riders in origin_agg.items():
-        if riders < 20:
+        if riders < 10:
             continue
         if stop_id not in stop_coords_map:
             continue
         to_lat, to_lon = stop_coords_map[stop_id]
         # random direction and distance per (stop, time) for variety
         angle = rng.uniform(0, 2 * math.pi)
-        dist = rng.uniform(0.003, 0.006)  # ~300-600m
+        dist = rng.uniform(0.002, 0.004)  # ~200-400m
         from_lat = to_lat + dist * math.cos(angle)
         from_lon = to_lon + dist * math.sin(angle) / math.cos(math.radians(to_lat))
         t1 = t_bin
@@ -935,18 +1001,38 @@ def build_walks(origin_walk_events, transfer_walk_events, geometry=None):
                                round(to_lon, 5), round(to_lat, 5),
                                t0, t1, round(riders)])
 
+    # --- destination walks ---
+    for (stop_id, t_bin), riders in dest_agg.items():
+        if riders < 10:
+            continue
+        if stop_id not in stop_coords_map:
+            continue
+        from_lat, from_lon = stop_coords_map[stop_id]
+        angle = rng.uniform(0, 2 * math.pi)
+        dist = rng.uniform(0.002, 0.004)  # ~200-400m
+        to_lat = from_lat + dist * math.cos(angle)
+        to_lon = from_lon + dist * math.sin(angle) / math.cos(math.radians(from_lat))
+        t0 = t_bin
+        t1 = t0 + DEST_WALK_TIME
+        dest_walks.append([round(from_lon, 5), round(from_lat, 5),
+                           round(to_lon, 5), round(to_lat, 5),
+                           t0, t1, round(riders)])
+
     origin_walks.sort(key=lambda w: w[4])
     transfer_walks.sort(key=lambda w: w[4])
+    dest_walks.sort(key=lambda w: w[4])
 
     print(f"  {len(origin_walks)} origin walk animations, "
-          f"{len(transfer_walks)} transfer walk animations")
-    return origin_walks, transfer_walks
+          f"{len(transfer_walks)} transfer walk animations, "
+          f"{len(dest_walks)} dest walk animations")
+    return origin_walks, transfer_walks, dest_walks
 
 
 def build_output(patterns, train_boardings, train_alightings, transfer_events,
                  route_colors, stop_coords, complex_info, geometry=None,
                  shapes=None, trip_shape=None,
-                 origin_walk_events=None, transfer_walk_events=None):
+                 origin_walk_events=None, transfer_walk_events=None,
+                 dest_walk_events=None):
     """Build trains.json output with train timelines and line geometries."""
     print("Building output...")
 
@@ -1072,9 +1158,11 @@ def build_output(patterns, train_boardings, train_alightings, transfer_events,
 
     origin_walks = []
     transfer_walks = []
-    if origin_walk_events is not None or transfer_walk_events is not None:
-        origin_walks, transfer_walks = build_walks(
-            origin_walk_events or [], transfer_walk_events or [], geometry)
+    dest_walks = []
+    if origin_walk_events is not None or transfer_walk_events is not None or dest_walk_events is not None:
+        origin_walks, transfer_walks, dest_walks = build_walks(
+            origin_walk_events or [], transfer_walk_events or [], geometry,
+            dest_walk_events or [])
 
     # stations dict for the UI
     stations = {}
@@ -1085,6 +1173,10 @@ def build_output(patterns, train_boardings, train_alightings, transfer_events,
            'waiting': waiting}
     if transfer_walks:
         out['transfer_walks'] = transfer_walks
+    if origin_walks:
+        out['origin_walks'] = origin_walks
+    if dest_walks:
+        out['dest_walks'] = dest_walks
     return out
 
 
@@ -1122,14 +1214,15 @@ def main():
     transfers_map, complex_to_stops = build_transfers(stop_to_complex, geometry)
 
     (train_boardings, train_alightings, transfer_events,
-     origin_walk_events, transfer_walk_events) = route_all_riders(
+     origin_walk_events, transfer_walk_events, dest_walk_events) = route_all_riders(
         od_data, complex_to_stops, stop_to_complex, patterns, pattern_deps,
         stop_routes, transfers_map)
 
     out = build_output(patterns, train_boardings, train_alightings,
                        transfer_events, route_colors, stop_coords, complex_info,
                        geometry, shapes, trip_shape,
-                       origin_walk_events, transfer_walk_events)
+                       origin_walk_events, transfer_walk_events,
+                       dest_walk_events)
 
     print(f"Writing {OUT_JSON}...")
     with open(OUT_JSON, 'w') as f:
