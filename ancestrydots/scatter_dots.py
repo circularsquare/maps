@@ -3,15 +3,16 @@ Scatter ancestry dots within census tract polygons.
 Reads raw ACS CSVs + cartographic boundary shapefiles, outputs GeoJSON.
 
 Tract shapefiles are the cb_ (cartographic boundary) versions, pre-clipped to the
-coastline. Pass --areawater to also subtract inland water bodies (rivers, lakes, bays).
-Download shapefiles first with download_shapefiles.py.
+coastline. Inland water (rivers, lakes, bays) is subtracted by default using the
+clipped shapefile from download_shapefiles.py --areawater; pass --no-areawater to
+skip that and fall back to coastline-only.
 
 Usage:
-    python scatter_dots.py --state 36 --scale 100               # NYC, coast-clipped
-    python scatter_dots.py --state 36 --scale 100 --areawater   # also clip inland water
-    python scatter_dots.py --all --scale 1000 --areawater       # nationwide
+    python scatter_dots.py --state 36                # single state
+    python scatter_dots.py --all                     # all states
+    python scatter_dots.py --state 36 --no-areawater # coastline-only (faster)
 
-Outputs to data/processed/dots_<state|all>_1per<scale>.geojson
+Outputs to data/processed/dots_<state|all>_1per100.geojson
 """
 
 import argparse

@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>tokyo riders — per-segment ridership</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #0a0a0a; color: #eee; font-family: 'Nunito', system-ui, sans-serif; overflow: hidden; }
+#map { width: 100vw; height: 100vh; }
+
+#title {
+    position: absolute;
+    top: 12px; left: 14px;
+    background: rgba(10,10,10,0.82);
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 8px 12px;
+    z-index: 100;
+    max-width: 320px;
+    font-size: 13px;
+    line-height: 1.4;
+}
+#title h1 { font-size: 15px; font-weight: 700; margin-bottom: 2px; }
+#title .sub { color: #888; font-size: 11px; }
+#title a { color: #5bb6ff; }
+
+#tooltip {
+    position: absolute;
+    pointer-events: none;
+    background: rgba(10,10,10,0.95);
+    border: 1px solid #444;
+    border-radius: 6px;
+    padding: 6px 9px;
+    font-size: 12px;
+    line-height: 1.4;
+    z-index: 200;
+    display: none;
+    white-space: nowrap;
+}
+#tooltip .line { color: #5bb6ff; font-weight: 700; }
+#tooltip .seg { color: #fff; }
+#tooltip .ri { color: #ffd66b; font-weight: 700; }
+
+.maplibregl-ctrl-attrib { font-size: 10px !important; }
+</style>
+</head>
+<body>
+<div id="map"></div>
+<div id="title">
+    <h1>tokyo per-segment ridership</h1>
+    <div class="sub">line thickness ∝ average weekday riders<br>
+    source: 第12回大都市交通センサス (MLIT, 2021)<br>
+    geometry: 国土数値情報 N02-2024</div>
+</div>
+<div id="tooltip"></div>
+
+<link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet" />
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<script>
+const map = new maplibregl.Map({
+    container: 'map',
+    style: {
+        version: 8,
+        sources: {
+            'carto-dark': {
+                type: 'raster',
+                tiles: ['https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png'],
+                tileSize: 256,
+                attribution: '&copy; OSM &copy; CARTO',
+            }
+        },
+        layers: [{
+            id: 'carto-dark-layer',
+            type: 'raster',
+            source: 'carto-dark',
+            minzoom: 0,
+            maxzoom: 18,
+            paint: { 'raster-brightness-max': 1.0, 'raster-brightness-min': 0.05 },
+        }],
+    },
+    center: [139.75, 35.70],
+    zoom: 10.2,
+    minZoom: 8,
+    attributionControl: true,
+});
+
+// per-operator colors (only a small palette; fallback for unknown ops)
+const OP_COLORS = {
+    '東日本旅客鉄道': '#7ac943',    // JR East green
+    '東海旅客鉄道': '#ffb84d',      // JR Central orange
+    '東京地下鉄': '#4ca9ff',         // Tokyo Metro blue
+    '東京都交通局': '#e05a5a',       // Toei red
+    '東京急行電鉄': '#c56fe0',       // Tokyu purple
+    '京王電鉄': '#e07aa0',           // Keio pink
+    '小田急電鉄': '#f0d25b',         // Odakyu yellow
+    '京浜急行電鉄': '#ff6a4c',       // Keikyu orange-red
+    '京成電鉄': '#5ad2c0',           // Keisei teal
+    '西武鉄道': '#5ed19b',           // Seibu green
+    '東武鉄道': '#f2a055',           // Tobu orange
+    '横浜市交通局': '#5cc0ff',
+    '相模鉄道': '#a98cff',
+    'ゆりかもめ': '#ffe07a',
+    'りんかい線': '#ff9aa2',
+    '横浜高速鉄道': '#ff8fa3',
+    '埼玉高速鉄道': '#9ad08b',
+    '首都圏新都市鉄道': '#ff8761',
+    '多摩モノレール': '#b0b0b0',
+    '東京モノレール': '#d4d4d4',
+    '横浜新都市交通': '#b0b0b0',
+    '箱根登山鉄道': '#c58a5a',
+    '伊豆箱根鉄道': '#c58a5a',
+    '京葉臨海鉄道': '#888',
+    '江ノ島電鉄': '#a07050',
+    '銚子電気鉄道': '#aaa',
+    '千葉都市モノレール': '#aaa',
+    '秩父鉄道': '#aaa',
+    '真岡鐵道': '#aaa',
+    '関東鉄道': '#aaa',
+    '流鉄': '#aaa',
+    '北総鉄道': '#aaa',
+    '東葉高速鉄道': '#aaa',
+    '新京成電鉄': '#aaa',
+    '埼玉新都市交通': '#aaa',
+};
+const DEFAULT_COLOR = '#999';
+
+const WIDTH_EXP = 0.55;      // sublinear scaling; 0.5=sqrt
+const WIDTH_SCALE = 0.045;   // multiplier after exponent
+const MIN_WIDTH = 0.4;
+
+map.on('load', async () => {
+    const resp = await fetch('data/processed/segments_kanto.geojson');
+    const fc = await resp.json();
+
+    // Assign color per feature based on op
+    for (const f of fc.features) {
+        const op = f.properties.op_name;
+        f.properties.color = OP_COLORS[op] || DEFAULT_COLOR;
+        f.properties.width = Math.max(
+            MIN_WIDTH,
+            WIDTH_SCALE * Math.pow(f.properties.riders, WIDTH_EXP)
+        );
+    }
+    // Draw thicker segments on top
+    fc.features.sort((a, b) => a.properties.riders - b.properties.riders);
+
+    map.addSource('segs', { type: 'geojson', data: fc });
+    map.addLayer({
+        id: 'segs-line',
+        type: 'line',
+        source: 'segs',
+        paint: {
+            'line-color': ['get', 'color'],
+            'line-width': ['get', 'width'],
+            'line-opacity': 0.85,
+            'line-blur': 0.3,
+        },
+        layout: {
+            'line-cap': 'round',
+            'line-join': 'round',
+        },
+    });
+
+    // Hover tooltip
+    const tip = document.getElementById('tooltip');
+    map.on('mousemove', 'segs-line', (e) => {
+        if (!e.features.length) return;
+        const p = e.features[0].properties;
+        tip.style.display = 'block';
+        tip.style.left = (e.point.x + 14) + 'px';
+        tip.style.top = (e.point.y + 14) + 'px';
+        tip.innerHTML =
+            `<div class="line" style="color:${p.color}">${p.op_name} ${p.line_name}</div>` +
+            `<div class="seg">${p.from} → ${p.to}</div>` +
+            `<div class="ri">${Number(p.riders).toLocaleString()} riders/day</div>`;
+        map.getCanvas().style.cursor = 'pointer';
+    });
+    map.on('mouseleave', 'segs-line', () => {
+        tip.style.display = 'none';
+        map.getCanvas().style.cursor = '';
+    });
+});
+</script>
+</body>
+</html>

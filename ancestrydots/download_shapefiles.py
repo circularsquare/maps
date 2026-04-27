@@ -50,6 +50,7 @@ FIPS_TO_NHD = {
     "45": "South_Carolina", "46": "South_Dakota", "47": "Tennessee", "48": "Texas",
     "49": "Utah", "50": "Vermont", "51": "Virginia", "53": "Washington",
     "54": "West_Virginia", "55": "Wisconsin", "56": "Wyoming",
+    "72": "Puerto_Rico",
 }
 
 

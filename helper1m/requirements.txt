@@ -1,0 +1,6 @@
+geopandas
+pandas
+shapely
+stadata
+python-dotenv
+requests

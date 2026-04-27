@@ -9,7 +9,9 @@
       "Read(//c/Users/anita/**)",
       "Bash(python)",
       "WebFetch(domain:api.census.gov)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(python download_shapefiles.py --state 72 --areawater)",
+      "Bash(python tokyoriders/peek.py)"
     ],
     "additionalDirectories": [
       "C:\\Users\\anita\\projects",

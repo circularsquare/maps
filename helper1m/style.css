@@ -1,0 +1,36 @@
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; font: 13px/1.4 -apple-system, BlinkMacSystemFont, system-ui, sans-serif; }
+body { display: flex; }
+
+#sidebar {
+  width: 320px; height: 100vh; overflow-y: auto;
+  background: #fafafa; border-right: 1px solid #ddd;
+  padding: 12px; flex: 0 0 auto;
+}
+#map { flex: 1 1 auto; height: 100vh; }
+
+.panel { margin-bottom: 16px; }
+.panel label { display: block; font-weight: 600; margin-bottom: 4px; color: #444; }
+.panel .panel-header { display: flex; justify-content: space-between; align-items: baseline; font-weight: 600; margin-bottom: 4px; color: #444; }
+.panel .empty { color: #999; font-style: italic; }
+
+select, button { font: inherit; padding: 4px 8px; }
+select { width: 100%; }
+button { cursor: pointer; }
+
+#level-radios label { display: inline-block; margin-right: 10px; font-weight: 400; }
+#level-radios input { margin-right: 4px; }
+
+#info-panel .name { font-size: 16px; font-weight: 600; margin-bottom: 2px; }
+#info-panel .parent { color: #666; margin-bottom: 8px; }
+#info-panel .estimate { font-size: 20px; font-weight: 600; color: #222; }
+#info-panel .estimate-note { color: #666; margin-bottom: 8px; }
+#info-panel .flag { color: #b8400a; font-size: 12px; margin-bottom: 6px; }
+#info-panel .history { margin: 6px 0; border-collapse: collapse; }
+#info-panel .history td { padding: 1px 8px 1px 0; }
+#info-panel .history td:first-child { color: #666; }
+
+#selection-panel ul { list-style: none; padding: 0; margin: 0; font-size: 12px; }
+#selection-panel li { padding: 2px 0; display: flex; justify-content: space-between; }
+#selection-panel li .sel-remove { cursor: pointer; color: #999; border: none; background: none; padding: 0 4px; }
+#selection-summary .sum { font-size: 18px; font-weight: 600; }

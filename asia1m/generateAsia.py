@@ -28,8 +28,8 @@ crs = ccrs.AlbersEqualArea(95, 0, 0, 0, (6, 42))
 plat = ccrs.PlateCarree()
 
 # switch this line for zoom...
-fig, ax = plt.subplots(subplot_kw={"projection": crs}, figsize=(95, 80))
-# fig, ax = plt.subplots(subplot_kw={"projection": crs}, figsize=(189.65, 159.69)) # for 2x zoom
+#fig, ax = plt.subplots(subplot_kw={"projection": crs}, figsize=(95, 80))
+fig, ax = plt.subplots(subplot_kw={"projection": crs}, figsize=(189.65, 159.69)) # for 2x zoom
 
 ax.set_extent([47.7, 129.2, -9, 65], crs=ccrs.PlateCarree())
 plt.tight_layout()

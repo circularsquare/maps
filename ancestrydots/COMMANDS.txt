@@ -36,7 +36,7 @@ Build tippecanoe (WSL Ubuntu, one-time):
     cp /mnt/c/Users/anita/projects/maps/ancestrydots/data/processed/dots_all_1per100.geojson ~/dots.geojson
     tippecanoe -o ~/dots.pmtiles --name ancestry-dots --layer dots \
       --minimum-zoom 5 --maximum-zoom 9 \
-      --drop-rate 1.0 --drop-densest-as-needed --maximum-tile-bytes 1000000 --no-feature-limit --full-detail 12 --force ~/dots.geojson
+      --drop-rate 1.0 --drop-densest-as-needed --maximum-tile-bytes 1500000 --no-feature-limit --full-detail 12 --force ~/dots.geojson
     cp ~/dots.pmtiles /mnt/c/Users/anita/projects/maps/ancestrydots/data/processed/dots_all_1per100.pmtiles
 
 

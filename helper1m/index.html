@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>helper1m</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4/dist/maplibre-gl.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="sidebar">
+    <div class="panel">
+      <label>Country</label>
+      <select id="country-select"></select>
+    </div>
+    <div class="panel">
+      <label>Admin level</label>
+      <div id="level-radios"></div>
+    </div>
+    <div class="panel" id="info-panel">
+      <div class="empty">Click a region for details.</div>
+    </div>
+    <div class="panel" id="selection-panel">
+      <div class="panel-header">
+        <span>Selection <span id="selection-count">0</span></span>
+        <button id="clear-selection">clear</button>
+      </div>
+      <div id="selection-summary" class="empty">Shift-click regions to add.</div>
+      <ul id="selection-list"></ul>
+    </div>
+  </div>
+  <div id="map"></div>
+  <script src="https://unpkg.com/maplibre-gl@4/dist/maplibre-gl.js"></script>
+  <script src="viewer.js"></script>
+</body>
+</html>

@@ -3,4 +3,8 @@ cache/
 venv/
 *.gpkg
 *.pkl
+*.geojson
+helper1m/countries/
 **/.git_bak/
+*.env
+secrets.*
