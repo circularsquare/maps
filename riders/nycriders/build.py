@@ -1354,7 +1354,14 @@ def find_logical_passing_stops(patterns):
     some other pattern visits between from_stop and to_stop. These are
     candidate cut points for local/express subdivision — derived from pattern
     structure instead of polyline geometry, so we don't lose cuts to snap-
-    distance thresholds when shape and parent-stop coords disagree."""
+    distance thresholds when shape and parent-stop coords disagree.
+
+    Witness patterns are matched in EITHER direction: a pattern that visits
+    [B, …, mid, …, A] is just as valid evidence that `mid` is between A and B
+    as one that visits [A, …, mid, …, B]. Without the reverse search, e.g. the
+    7 train's dir=1 segment 710→712 (which skips 69 St) wouldn't subdivide,
+    because the only pattern listing 69 St between them is 7 dir=0, which
+    visits the trunk in the opposite order."""
     print("Finding logical passing stops...")
 
     stop_visits = defaultdict(list)
@@ -1375,10 +1382,21 @@ def find_logical_passing_stops(patterns):
                 if pid_Q == pid_A:
                     continue
                 stops_Q = patterns[pid_Q]['stops']
-                # find stop_B in pat_Q after pos_QA; intermediates are candidates
+                # forward witness: stop_B appears after pos_QA
                 for k in range(pos_QA + 1, len(stops_Q)):
                     if stops_Q[k] == stop_B:
                         for j in range(pos_QA + 1, k):
+                            sid_mid = stops_Q[j]
+                            if sid_mid != stop_A and sid_mid != stop_B:
+                                passing[key].add(sid_mid)
+                        break
+                # reverse witness: stop_B appears before pos_QA (same physical
+                # track, opposite traversal). Ride-shares: 7 dir=0 trips
+                # visiting [712, 711, 710] tell us 711 sits between 710 and 712
+                # for the 7 dir=1 trips that go 710→712 directly.
+                for k in range(pos_QA - 1, -1, -1):
+                    if stops_Q[k] == stop_B:
+                        for j in range(pos_QA - 1, k, -1):
                             sid_mid = stops_Q[j]
                             if sid_mid != stop_A and sid_mid != stop_B:
                                 passing[key].add(sid_mid)
@@ -1477,7 +1495,13 @@ def subdivide_segments(seg_polylines, get_stop_coord, stop_to_complex,
                 # build_stats_output. coords stays from first encountered.
                 existing['parents'].append(parent_key)
             else:
-                sub_polylines[sub_key] = {'coords': sub_coords, 'parents': [parent_key]}
+                # normalize coords to direction-0 order so every sub-segment of
+                # this route points toward the route's direction-0 ("uptown")
+                # terminus. lets the front-end use coords as-is and keep the
+                # perpendicular offset on a single side of the trunk as the line
+                # bends through the network.
+                oriented = list(reversed(sub_coords)) if direction == 1 else sub_coords
+                sub_polylines[sub_key] = {'coords': oriented, 'parents': [parent_key]}
 
         if not cuts:
             add_sub(key, coords, key)
@@ -1503,7 +1527,17 @@ def subdivide_segments(seg_polylines, get_stop_coord, stop_to_complex,
 def build_stops_meta(seg_polylines, get_stop_coord, stop_to_complex, complex_info):
     """Per-parent-stop metadata (name, complex_id, coords) for stops referenced
     by segments. Used by the front-end to label segment endpoints in drill-downs
-    and to determine which end is further west."""
+    and to determine which end is further west.
+
+    `name` is the complex name (shared across all platforms in the complex);
+    `gtfs_name` is the per-parent-stop name from stops.txt, which distinguishes
+    different platforms in the same complex (e.g. L's "8 Av" vs "6 Av", both at
+    "14 St" complexes). Front-end uses gtfs_name in line diagrams so co-named
+    complexes don't collapse to identical labels."""
+    stops_df = pd.read_csv(f"{GTFS_DIR}/stops.txt")
+    parent_names = {str(r.stop_id): r.stop_name
+                    for _, r in stops_df[stops_df.location_type == 1].iterrows()}
+
     seen = set()
     for (route, direction, from_stop, to_stop) in seg_polylines.keys():
         seen.add(from_stop)
@@ -1517,12 +1551,16 @@ def build_stops_meta(seg_polylines, get_stop_coord, stop_to_complex, complex_inf
         info = complex_info.get(int(cid))
         if not info:
             continue
-        out[sid] = {
+        entry = {
             'name': info['name'],
             'complex_id': int(cid),
             'lat': round(coord[0], 5),
             'lon': round(coord[1], 5),
         }
+        gtfs_name = parent_names.get(sid)
+        if gtfs_name and gtfs_name != info['name']:
+            entry['gtfs_name'] = gtfs_name
+        out[sid] = entry
     return out
 
 
