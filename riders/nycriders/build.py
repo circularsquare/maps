@@ -255,9 +255,14 @@ def simplify_polyline(points, epsilon):
     return [points[0], points[-1]]
 
 
-def precompute_shape_segments(patterns, shapes, trip_shape, get_stop_coord):
-    """Pre-compute simplified shape sub-polylines between consecutive stops per pattern."""
-    print("Pre-computing shape segments for train animation...")
+def precompute_shape_segments(patterns, shapes, trip_shape, get_stop_coord,
+                              simplify_epsilon=SHAPE_SIMPLIFY_EPSILON):
+    """Pre-compute shape sub-polylines between consecutive stops per pattern.
+
+    `simplify_epsilon`>0 applies Douglas-Peucker simplification (used for the
+    train animation to keep waypoint count down). Pass 0 to keep raw curves
+    (used for the static-mode line rendering)."""
+    print(f"Pre-computing shape segments (simplify_epsilon={simplify_epsilon})...")
 
     # build index: (route, direction) -> [shape_id, ...] for fallback matching
     route_dir_shape_list = defaultdict(list)
@@ -324,7 +329,7 @@ def precompute_shape_segments(patterns, shapes, trip_shape, get_stop_coord):
             else:
                 snaps.append(None)
 
-        # extract + simplify sub-polylines between consecutive stops
+        # extract sub-polylines between consecutive stops (optionally simplify)
         segments = []
         for i in range(len(stops) - 1):
             if snaps[i] is None or snaps[i + 1] is None:
@@ -333,9 +338,9 @@ def precompute_shape_segments(patterns, shapes, trip_shape, get_stop_coord):
             seg0, t0 = snaps[i]
             seg1, t1 = snaps[i + 1]
             sub = extract_subline(polyline, seg0, t0, seg1, t1)
-            if len(sub) > 2:
-                sub = simplify_polyline(sub, SHAPE_SIMPLIFY_EPSILON)
-            segments.append(sub if len(sub) > 2 else None)
+            if simplify_epsilon > 0 and len(sub) > 2:
+                sub = simplify_polyline(sub, simplify_epsilon)
+            segments.append(sub if len(sub) >= 2 else None)
 
         pattern_segments[pid] = segments
         matched += 1
@@ -612,6 +617,7 @@ def _route_chunk(chunk):
     stop_routes = _worker_data['stop_routes']
     transfers_map = _worker_data['transfers_map']
     complex_to_stops = _worker_data['complex_to_stops']
+    stop_to_complex = _worker_data['stop_to_complex']
 
     train_boardings = defaultdict(lambda: defaultdict(float))
     train_alightings = defaultdict(lambda: defaultdict(float))
@@ -619,6 +625,8 @@ def _route_chunk(chunk):
     origin_walk_events = []
     transfer_walk_events = []
     dest_walk_events = []
+    # station stats: (complex_id, route, hour) -> [entry_b, transfer_b, exit_a, transfer_a]
+    station_agg = defaultdict(lambda: [0.0, 0.0, 0.0, 0.0])
     assigned = 0
     unassigned = 0
 
@@ -657,12 +665,30 @@ def _route_chunk(chunk):
                     unassigned += 1
                     continue
 
-                for pid, tidx, board_stop, alight_stop in legs:
-                    trip_id = patterns[pid]['trips'][tidx]['trip_id']
-                    board_pos = patterns[pid]['stops'].index(board_stop)
-                    alight_pos = patterns[pid]['stops'].index(alight_stop)
+                n_legs = len(legs)
+                for li, (pid, tidx, board_stop, alight_stop) in enumerate(legs):
+                    pat = patterns[pid]
+                    trip_id = pat['trips'][tidx]['trip_id']
+                    board_pos = pat['stops'].index(board_stop)
+                    alight_pos = pat['stops'].index(alight_stop)
                     train_boardings[trip_id][board_pos] += riders
                     train_alightings[trip_id][alight_pos] += riders
+
+                    # station per-route per-hour breakdown
+                    route_str = str(pat['route'])
+                    times = pat['trips'][tidx]['times']
+                    board_time = times[board_pos][1]
+                    alight_time = times[alight_pos][0]
+                    board_hour = (int(board_time) // 3600) % 24
+                    alight_hour = (int(alight_time) // 3600) % 24
+                    bcid = stop_to_complex.get(board_stop)
+                    acid = stop_to_complex.get(alight_stop)
+                    if bcid is not None:
+                        idx = 0 if li == 0 else 1
+                        station_agg[(bcid, route_str, board_hour)][idx] += riders
+                    if acid is not None:
+                        idx = 2 if li == n_legs - 1 else 3
+                        station_agg[(acid, route_str, alight_hour)][idx] += riders
 
                 # record origin walk + waiting
                 pid_0, tidx_0, board_stop_0, _ = legs[0]
@@ -700,9 +726,10 @@ def _route_chunk(chunk):
     # convert defaultdicts to plain dicts for pickling
     boardings = {tid: dict(stops) for tid, stops in train_boardings.items()}
     alightings = {tid: dict(stops) for tid, stops in train_alightings.items()}
+    station_out = [(k, v) for k, v in station_agg.items()]
     return (boardings, alightings, transfer_events,
             origin_walk_events, transfer_walk_events, dest_walk_events,
-            assigned, unassigned)
+            station_out, assigned, unassigned)
 
 
 def route_all_riders(od_data, complex_to_stops, stop_to_complex, patterns,
@@ -770,6 +797,7 @@ def route_all_riders(od_data, complex_to_stops, stop_to_complex, patterns,
         'stop_routes': stop_routes,
         'transfers_map': transfers_map,
         'complex_to_stops': complex_to_stops,
+        'stop_to_complex': stop_to_complex,
     }
     tmp = tempfile.NamedTemporaryFile(delete=False, suffix='.pkl')
     pickle.dump(shared, tmp)
@@ -790,10 +818,11 @@ def route_all_riders(od_data, complex_to_stops, stop_to_complex, patterns,
     origin_walk_events = []
     transfer_walk_events = []
     dest_walk_events = []
+    station_stats = defaultdict(lambda: [0.0, 0.0, 0.0, 0.0])
     assigned = 0
     unassigned = 0
 
-    for (wb, wa, wte, wowe, wtwe, wdwe, wa_count, wu_count) in results:
+    for (wb, wa, wte, wowe, wtwe, wdwe, wsa, wa_count, wu_count) in results:
         for tid, stops in wb.items():
             for pos, riders in stops.items():
                 train_boardings[tid][pos] += riders
@@ -804,6 +833,10 @@ def route_all_riders(od_data, complex_to_stops, stop_to_complex, patterns,
         origin_walk_events.extend(wowe)
         transfer_walk_events.extend(wtwe)
         dest_walk_events.extend(wdwe)
+        for key, vals in wsa:
+            agg = station_stats[key]
+            for i in range(4):
+                agg[i] += vals[i]
         assigned += wa_count
         unassigned += wu_count
 
@@ -813,9 +846,11 @@ def route_all_riders(od_data, complex_to_stops, stop_to_complex, patterns,
     print(f"  {len(transfer_events)} waiting events, "
           f"{len(origin_walk_events)} origin walks, "
           f"{len(transfer_walk_events)} transfer walks, "
-          f"{len(dest_walk_events)} dest walks")
+          f"{len(dest_walk_events)} dest walks, "
+          f"{len(station_stats)} (complex,route,hour) station tuples")
     return (train_boardings, train_alightings, transfer_events,
-            origin_walk_events, transfer_walk_events, dest_walk_events)
+            origin_walk_events, transfer_walk_events, dest_walk_events,
+            station_stats)
 
 
 # ---------------------------------------------------------------------------
@@ -1028,15 +1063,8 @@ def build_walks(origin_walk_events, transfer_walk_events, geometry=None,
     return origin_walks, transfer_walks, dest_walks
 
 
-def build_output(patterns, train_boardings, train_alightings, transfer_events,
-                 route_colors, stop_coords, complex_info, geometry=None,
-                 shapes=None, trip_shape=None,
-                 origin_walk_events=None, transfer_walk_events=None,
-                 dest_walk_events=None):
-    """Build trains.json output with train timelines and line geometries."""
-    print("Building output...")
-
-    # load per-route station coords from geometry.json if available
+def make_get_stop_coord(geometry, stop_coords):
+    """Build a closure returning best coords for a stop (per-route > station > GTFS parent)."""
     geo_stop_coords = {}
     geo_route_coords = {}
     if geometry:
@@ -1044,10 +1072,8 @@ def build_output(patterns, train_boardings, train_alightings, transfer_events,
             geo_stop_coords[sid] = (c['lat'], c['lon'])
         for key, c in geometry['stop_route_coords'].items():
             geo_route_coords[key] = (c['lat'], c['lon'])
-        print(f"  Using station-level coords from {GEOMETRY_JSON}")
 
     def get_stop_coord(stop_id, route=None):
-        """Get best coords for a stop: per-route > station-level > GTFS parent."""
         if route:
             key = f"{stop_id}:{route}"
             if key in geo_route_coords:
@@ -1056,31 +1082,50 @@ def build_output(patterns, train_boardings, train_alightings, transfer_events,
             return geo_stop_coords[stop_id]
         return stop_coords.get(stop_id)
 
-    # pre-compute shape segments for curved train animation
-    pattern_segments = {}
-    if shapes and trip_shape:
-        pattern_segments = precompute_shape_segments(
-            patterns, shapes, trip_shape, get_stop_coord)
+    return get_stop_coord
 
-    # map trip_id -> (pattern_idx, trip_idx) for looking up stops/times
+
+def build_trip_to_pattern(patterns):
+    """Map trip_id -> (pattern_idx, trip_idx)."""
     trip_to_pattern = {}
     for pid, pattern in enumerate(patterns):
         for tidx, trip in enumerate(pattern['trips']):
             trip_to_pattern[trip['trip_id']] = (pid, tidx)
+    return trip_to_pattern
 
-    # merge wrapped midnight trips back onto originals
+
+def merge_wrapped_trips(train_boardings, train_alightings):
+    """Merge `_wrap_<trip_id>` entries (late-night trips that crossed midnight)
+    back into their originals, and delete the wrapped copies."""
     for trip_id in list(train_boardings.keys()):
-        if trip_id.startswith('_wrap_'):
-            orig_id = trip_id[6:]
-            for pos, riders in train_boardings[trip_id].items():
-                train_boardings.setdefault(orig_id, {})[pos] = \
-                    train_boardings.get(orig_id, {}).get(pos, 0) + riders
-            for pos, riders in train_alightings.get(trip_id, {}).items():
-                train_alightings.setdefault(orig_id, {})[pos] = \
-                    train_alightings.get(orig_id, {}).get(pos, 0) + riders
-            del train_boardings[trip_id]
-            if trip_id in train_alightings:
-                del train_alightings[trip_id]
+        if not trip_id.startswith('_wrap_'):
+            continue
+        orig_id = trip_id[6:]
+        for pos, riders in train_boardings[trip_id].items():
+            train_boardings.setdefault(orig_id, {})[pos] = \
+                train_boardings.get(orig_id, {}).get(pos, 0) + riders
+        for pos, riders in train_alightings.get(trip_id, {}).items():
+            train_alightings.setdefault(orig_id, {})[pos] = \
+                train_alightings.get(orig_id, {}).get(pos, 0) + riders
+        del train_boardings[trip_id]
+        if trip_id in train_alightings:
+            del train_alightings[trip_id]
+
+
+def build_output(patterns, train_boardings, train_alightings, transfer_events,
+                 route_colors, stop_coords, complex_info, geometry=None,
+                 origin_walk_events=None, transfer_walk_events=None,
+                 dest_walk_events=None,
+                 get_stop_coord=None, pattern_segments=None,
+                 trip_to_pattern=None):
+    """Build trains.json output with train timelines and line geometries."""
+    print("Building output...")
+    if get_stop_coord is None:
+        get_stop_coord = make_get_stop_coord(geometry, stop_coords)
+    if pattern_segments is None:
+        pattern_segments = {}
+    if trip_to_pattern is None:
+        trip_to_pattern = build_trip_to_pattern(patterns)
 
     trains_out = []
     total_waypoints = 0
@@ -1183,6 +1228,376 @@ def build_output(patterns, train_boardings, train_alightings, transfer_events,
 
 
 # ---------------------------------------------------------------------------
+# Static-mode stats output (stats.json)
+# ---------------------------------------------------------------------------
+
+STATS_JSON = "stats.json"
+CACHE_FILE = "build_cache.pkl"
+
+
+def load_build_cache(path):
+    print(f"Loading build cache from {path}...")
+    with open(path, 'rb') as f:
+        cache = pickle.load(f)
+    print(f"  Loaded ({os.path.getsize(path) / 1024 / 1024:.0f} MB)")
+    return cache
+
+
+def write_build_cache(path, cache):
+    print(f"Writing build cache to {path}...")
+    with open(path, 'wb') as f:
+        pickle.dump(cache, f, protocol=pickle.HIGHEST_PROTOCOL)
+    print(f"  Wrote ({os.path.getsize(path) / 1024 / 1024:.0f} MB)")
+
+
+def build_segment_stats(patterns, train_boardings, train_alightings, trip_to_pattern):
+    """Per-segment ridership and crowdedness, bucketed by hour the train passes
+    through `from_stop`.
+
+    Returns: dict[(route, direction, from_stop, to_stop)] -> list of 24
+        [sum_riders, n_trains] entries (one per hour-of-day).
+    """
+    print("Building segment stats...")
+
+    # count all scheduled trips per segment-hour (regardless of riders) so that
+    # crowdedness average isn't biased by which trips happened to carry zero riders
+    scheduled = defaultdict(lambda: defaultdict(int))
+    for pattern in patterns:
+        route = str(pattern['route'])
+        direction = pattern['direction']
+        stops = pattern['stops']
+        for trip in pattern['trips']:
+            if trip['trip_id'].startswith('_wrap_'):
+                continue
+            for i in range(len(stops) - 1):
+                dep_time = trip['times'][i][1]
+                hour = (int(dep_time) // 3600) % 24
+                scheduled[(route, direction, stops[i], stops[i + 1])][hour] += 1
+
+    # sum riders per segment-hour from per-trip boardings/alightings
+    loads = defaultdict(lambda: defaultdict(float))
+    for trip_id, boardings in train_boardings.items():
+        if trip_id.startswith('_wrap_') or trip_id not in trip_to_pattern:
+            continue
+        pid, tidx = trip_to_pattern[trip_id]
+        pattern = patterns[pid]
+        route = str(pattern['route'])
+        direction = pattern['direction']
+        stops = pattern['stops']
+        times = pattern['trips'][tidx]['times']
+        alightings = train_alightings.get(trip_id, {})
+        load = 0.0
+        for i in range(len(stops) - 1):
+            load += boardings.get(i, 0)
+            load -= alightings.get(i, 0)
+            if load < 0:
+                load = 0
+            dep_time = times[i][1]
+            hour = (int(dep_time) // 3600) % 24
+            loads[(route, direction, stops[i], stops[i + 1])][hour] += load
+
+    seg = {}
+    for key, hour_counts in scheduled.items():
+        by_hour = []
+        load_for_key = loads.get(key, {})
+        for h in range(24):
+            n = hour_counts.get(h, 0)
+            r = load_for_key.get(h, 0.0)
+            by_hour.append([round(r, 1), n])
+        seg[key] = by_hour
+
+    print(f"  {len(seg)} segments")
+    return seg
+
+
+def build_segment_polylines(patterns, pattern_segments, get_stop_coord):
+    """Pick one polyline per (route, direction, from_stop, to_stop). Falls back
+    to a straight line when no shape segment is available."""
+    print("Building segment polylines...")
+    poly = {}
+
+    for pid, segments in pattern_segments.items():
+        pattern = patterns[pid]
+        route = str(pattern['route'])
+        direction = pattern['direction']
+        stops = pattern['stops']
+        for i, seg_pts in enumerate(segments):
+            if i + 1 >= len(stops):
+                break
+            key = (route, direction, stops[i], stops[i + 1])
+            if key in poly:
+                continue
+            if seg_pts and len(seg_pts) >= 2:
+                poly[key] = seg_pts
+
+    fallback = 0
+    for pattern in patterns:
+        route = str(pattern['route'])
+        direction = pattern['direction']
+        stops = pattern['stops']
+        for i in range(len(stops) - 1):
+            key = (route, direction, stops[i], stops[i + 1])
+            if key in poly:
+                continue
+            from_coord = get_stop_coord(stops[i], route)
+            to_coord = get_stop_coord(stops[i + 1], route)
+            if from_coord and to_coord:
+                poly[key] = [from_coord, to_coord]
+                fallback += 1
+
+    print(f"  {len(poly)} polylines ({fallback} straight-line fallback)")
+    return poly
+
+
+def find_logical_passing_stops(patterns):
+    """For each (route, direction, from_stop, to_stop) segment, find stops that
+    some other pattern visits between from_stop and to_stop. These are
+    candidate cut points for local/express subdivision — derived from pattern
+    structure instead of polyline geometry, so we don't lose cuts to snap-
+    distance thresholds when shape and parent-stop coords disagree."""
+    print("Finding logical passing stops...")
+
+    stop_visits = defaultdict(list)
+    for pid, pat in enumerate(patterns):
+        for pos, sid in enumerate(pat['stops']):
+            stop_visits[sid].append((pid, pos))
+
+    passing = defaultdict(set)
+    for pid_A, pat_A in enumerate(patterns):
+        stops_A = pat_A['stops']
+        route_A = str(pat_A['route'])
+        dir_A = pat_A['direction']
+        for i in range(len(stops_A) - 1):
+            stop_A = stops_A[i]
+            stop_B = stops_A[i + 1]
+            key = (route_A, dir_A, stop_A, stop_B)
+            for pid_Q, pos_QA in stop_visits.get(stop_A, []):
+                if pid_Q == pid_A:
+                    continue
+                stops_Q = patterns[pid_Q]['stops']
+                # find stop_B in pat_Q after pos_QA; intermediates are candidates
+                for k in range(pos_QA + 1, len(stops_Q)):
+                    if stops_Q[k] == stop_B:
+                        for j in range(pos_QA + 1, k):
+                            sid_mid = stops_Q[j]
+                            if sid_mid != stop_A and sid_mid != stop_B:
+                                passing[key].add(sid_mid)
+                        break
+
+    n_cuts = sum(len(v) for v in passing.values())
+    print(f"  {n_cuts} candidate cuts across {len(passing)} segments")
+    return passing
+
+
+def subdivide_segments(seg_polylines, get_stop_coord, stop_to_complex,
+                       logical_passing):
+    """Cut each segment's polyline at any other stops that pass close to it
+    (e.g. local stops the express skips), so the result is one sub-segment per
+    inter-station gap of the actual track.
+
+    Sub-segments inherit by_hour from their parent segment. The front-end
+    groups features by (from_stop, to_stop) for offset rendering, so this
+    automatically lines up local and express on the shared trunk.
+
+    Cuts whose stop is in the same complex as either segment endpoint are
+    skipped: e.g. F-train approaching its 14 St terminus shouldn't cut at the
+    L-train's 14 St parent stop (different parent, same complex).
+
+    Returns: dict[(route, direction, sub_from, sub_to)] -> {coords, parent}
+    """
+    print("Subdividing segments at passing stops...")
+
+    # collect every parent stop referenced by a segment endpoint, for snapping
+    stop_xy = {}
+    for (r, d, f, t) in seg_polylines.keys():
+        for sid in (f, t):
+            if sid in stop_xy:
+                continue
+            c = get_stop_coord(sid)
+            if c:
+                stop_xy[sid] = c   # (lat, lon)
+
+    # candidates come from `logical_passing` (stops that some other pattern
+    # visits between A and B), so the snap-distance check just sanity-bounds
+    # the cut position — if a candidate is logically intermediate but
+    # geometrically way off, it's probably noise (or a wildly wrong shape)
+    SNAP_THRESHOLD = 0.0015   # ~165 m at NYC latitude
+    MIN_GAP = 0.05            # min polyline-position distance between cuts
+
+    sub_polylines = {}
+    n_subdivided = 0
+
+    for key, coords in seg_polylines.items():
+        route, direction, from_stop, to_stop = key
+        if len(coords) < 2:
+            continue
+        max_pos = len(coords) - 1
+
+        from_complex = stop_to_complex.get(from_stop)
+        to_complex = stop_to_complex.get(to_stop)
+        candidates = logical_passing.get((str(route), direction, from_stop, to_stop), ())
+
+        cuts = []
+        for sid in candidates:
+            if sid == from_stop or sid == to_stop:
+                continue
+            sid_complex = stop_to_complex.get(sid)
+            if sid_complex is not None and (sid_complex == from_complex or sid_complex == to_complex):
+                continue
+            xy = stop_xy.get(sid)
+            if xy is None:
+                xy = get_stop_coord(sid)
+                if xy is None:
+                    continue
+                stop_xy[sid] = xy
+            lat, lon = xy
+            _, _, dist, seg_idx, t = snap_to_polyline(lat, lon, coords)
+            if dist >= SNAP_THRESHOLD:
+                continue
+            cum_pos = seg_idx + t
+            if cum_pos < MIN_GAP or cum_pos > max_pos - MIN_GAP:
+                continue
+            cuts.append((cum_pos, seg_idx, t, sid))
+        cuts.sort()
+
+        # dedupe cuts that snap to nearly the same polyline position (multiple
+        # stops in one complex with neighbour coords)
+        kept = []
+        for c in cuts:
+            if kept and (c[0] - kept[-1][0]) < MIN_GAP:
+                continue
+            kept.append(c)
+        cuts = kept
+
+        def add_sub(sub_key, sub_coords, parent_key):
+            existing = sub_polylines.get(sub_key)
+            if existing:
+                # multiple parents (e.g. A local 14→23 and A express 14→34 both
+                # produce a 14→23 sub-piece) — preserve all so by_hour sums in
+                # build_stats_output. coords stays from first encountered.
+                existing['parents'].append(parent_key)
+            else:
+                sub_polylines[sub_key] = {'coords': sub_coords, 'parents': [parent_key]}
+
+        if not cuts:
+            add_sub(key, coords, key)
+            continue
+
+        n_subdivided += 1
+        prev_seg, prev_t = 0, 0.0
+        prev_sid = from_stop
+        for cum_pos, seg_idx, t, sid in cuts:
+            sub = extract_subline(coords, prev_seg, prev_t, seg_idx, t)
+            if len(sub) >= 2:
+                add_sub((route, direction, prev_sid, sid), sub, key)
+            prev_seg, prev_t, prev_sid = seg_idx, t, sid
+        sub = extract_subline(coords, prev_seg, prev_t, max_pos - 1, 1.0)
+        if len(sub) >= 2:
+            add_sub((route, direction, prev_sid, to_stop), sub, key)
+
+    print(f"  {n_subdivided}/{len(seg_polylines)} parents had passing stops")
+    print(f"  {len(sub_polylines)} total sub-segments")
+    return sub_polylines
+
+
+def build_stops_meta(seg_polylines, get_stop_coord, stop_to_complex, complex_info):
+    """Per-parent-stop metadata (name, complex_id, coords) for stops referenced
+    by segments. Used by the front-end to label segment endpoints in drill-downs
+    and to determine which end is further west."""
+    seen = set()
+    for (route, direction, from_stop, to_stop) in seg_polylines.keys():
+        seen.add(from_stop)
+        seen.add(to_stop)
+    out = {}
+    for sid in seen:
+        cid = stop_to_complex.get(sid)
+        coord = get_stop_coord(sid)
+        if cid is None or coord is None:
+            continue
+        info = complex_info.get(int(cid))
+        if not info:
+            continue
+        out[sid] = {
+            'name': info['name'],
+            'complex_id': int(cid),
+            'lat': round(coord[0], 5),
+            'lon': round(coord[1], 5),
+        }
+    return out
+
+
+def build_stats_output(seg_stats, sub_polylines, station_stats, complex_info,
+                       stops_meta):
+    """Combine segment + station stats into stats.json structure.
+
+    Iterates sub-segments (cut at passing stops by `subdivide_segments`) and
+    pulls by_hour from each sub-segment's parent so local/express overlap on a
+    shared trunk emits matching (from, to) keys for the front-end to group."""
+    print("Building stats output...")
+
+    segments_out = []
+    for key, info in sub_polylines.items():
+        # sum by_hour across all parent segments that contributed this sub-piece
+        # (e.g. A express 14→34 + A local 14→23 both produce a 14→23 sub-piece;
+        # both physically pass riders through it, so totals add)
+        combined = [[0.0, 0] for _ in range(24)]
+        for parent in info['parents']:
+            bh = seg_stats.get(parent)
+            if not bh:
+                continue
+            for h in range(24):
+                combined[h][0] += bh[h][0]
+                combined[h][1] += bh[h][1]
+        if sum(r for r, _ in combined) < 1:
+            continue
+        by_hour = [[round(r, 1), n] for r, n in combined]
+        route, direction, sub_from, sub_to = key
+        coords = info['coords']
+        # parents = list of [parent_from, parent_to]; front-end uses these to find
+        # all sub-pieces of the same trip-set for highlight on click
+        parents_out = [[p[2], p[3]] for p in info['parents']]
+        segments_out.append({
+            'route': route,
+            'direction': int(direction),
+            'from': sub_from,
+            'to': sub_to,
+            'coords': [[round(c[1], 5), round(c[0], 5)] for c in coords],
+            'by_hour': by_hour,
+            'parents': parents_out,
+        })
+
+    # nest station stats by complex
+    nested = defaultdict(lambda: defaultdict(lambda: [[0.0] * 4 for _ in range(24)]))
+    for (cid, route, hour), vals in station_stats.items():
+        slot = nested[cid][route][hour]
+        for i in range(4):
+            slot[i] += vals[i]
+
+    stations_out = []
+    for cid, by_route in nested.items():
+        info = complex_info.get(cid)
+        if not info:
+            continue
+        by_route_hour = {}
+        for route, arr in by_route.items():
+            if any(any(v > 0.5 for v in row) for row in arr):
+                by_route_hour[route] = [[round(v, 1) for v in row] for row in arr]
+        if not by_route_hour:
+            continue
+        stations_out.append({
+            'complex_id': int(cid),
+            'name': info['name'],
+            'lat': round(info['lat'], 5),
+            'lon': round(info['lon'], 5),
+            'by_route_hour': by_route_hour,
+        })
+
+    print(f"  {len(segments_out)} segments, {len(stations_out)} stations, "
+          f"{len(stops_meta)} stop endpoints")
+    return {'segments': segments_out, 'stations': stations_out, 'stops': stops_meta}
+
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 
@@ -1192,6 +1607,11 @@ def main():
                         help=f"O-D sampling rate, 0.0-1.0 (default: {DEFAULT_SAMPLE_RATE})")
     parser.add_argument('--hours', type=str, default=None,
                         help="Hour range to include, e.g. '7-12' (default: all hours)")
+    parser.add_argument('--fast', action='store_true',
+                        help=f"Skip RAPTOR + GTFS load by reusing {CACHE_FILE} from a prior full build. "
+                             f"Use this while iterating on stats.json / trains.json output.")
+    parser.add_argument('--no-cache', action='store_true',
+                        help=f"Skip writing {CACHE_FILE} after a full build")
     args = parser.parse_args()
 
     global SAMPLE_RATE, HOUR_RANGE
@@ -1202,36 +1622,114 @@ def main():
     else:
         HOUR_RANGE = None
 
-    stop_times, trips, route_colors = load_gtfs()
-    stop_to_complex = load_stop_to_complex()
-    stop_coords = load_stop_coords()
-    od_data = load_od_data()
-    complex_info = load_complex_info(stop_to_complex, stop_coords)
-    geometry = load_geometry()
-    shapes = load_shapes() if geometry else None
-    trip_shape = dict(zip(trips.trip_id, trips.shape_id)) if shapes else {}
+    use_cache = args.fast and os.path.exists(CACHE_FILE)
+    if args.fast and not use_cache:
+        print(f"--fast given but {CACHE_FILE} not found; falling back to full build")
 
-    patterns, pattern_deps = build_route_patterns(stop_times)
-    stop_routes = build_stop_routes(patterns)
-    transfers_map, complex_to_stops = build_transfers(stop_to_complex, geometry)
+    if use_cache:
+        c = load_build_cache(CACHE_FILE)
+        if 'pattern_segments_full' not in c:
+            print(f"Cache missing pattern_segments_full (older format). Re-run without --fast.")
+            return
+        patterns               = c['patterns']
+        pattern_segments       = c['pattern_segments']
+        pattern_segments_full  = c['pattern_segments_full']
+        train_boardings        = c['train_boardings']
+        train_alightings       = c['train_alightings']
+        transfer_events        = c['transfer_events']
+        origin_walk_events     = c['origin_walk_events']
+        transfer_walk_events   = c['transfer_walk_events']
+        dest_walk_events       = c['dest_walk_events']
+        station_stats          = c['station_stats']
+        route_colors           = c['route_colors']
+        stop_coords            = c['stop_coords']
+        complex_info           = c['complex_info']
+        stop_to_complex        = c['stop_to_complex']
+        geometry               = c['geometry']
+    else:
+        stop_times, trips, route_colors = load_gtfs()
+        stop_to_complex = load_stop_to_complex()
+        stop_coords = load_stop_coords()
+        od_data = load_od_data()
+        complex_info = load_complex_info(stop_to_complex, stop_coords)
+        geometry = load_geometry()
+        shapes = load_shapes() if geometry else None
+        trip_shape = dict(zip(trips.trip_id, trips.shape_id)) if shapes else {}
 
-    (train_boardings, train_alightings, transfer_events,
-     origin_walk_events, transfer_walk_events, dest_walk_events) = route_all_riders(
-        od_data, complex_to_stops, stop_to_complex, patterns, pattern_deps,
-        stop_routes, transfers_map)
+        patterns, pattern_deps = build_route_patterns(stop_times)
+        stop_routes = build_stop_routes(patterns)
+        transfers_map, complex_to_stops = build_transfers(stop_to_complex, geometry)
+
+        (train_boardings, train_alightings, transfer_events,
+         origin_walk_events, transfer_walk_events, dest_walk_events,
+         station_stats) = route_all_riders(
+            od_data, complex_to_stops, stop_to_complex, patterns, pattern_deps,
+            stop_routes, transfers_map)
+
+        get_stop_coord_tmp = make_get_stop_coord(geometry, stop_coords)
+        pattern_segments = {}
+        pattern_segments_full = {}
+        if shapes and trip_shape:
+            pattern_segments = precompute_shape_segments(
+                patterns, shapes, trip_shape, get_stop_coord_tmp)
+            pattern_segments_full = precompute_shape_segments(
+                patterns, shapes, trip_shape, get_stop_coord_tmp,
+                simplify_epsilon=0)
+        merge_wrapped_trips(train_boardings, train_alightings)
+
+        if not args.no_cache:
+            write_build_cache(CACHE_FILE, {
+                'patterns':              patterns,
+                'pattern_segments':      pattern_segments,
+                'pattern_segments_full': pattern_segments_full,
+                'train_boardings':       dict(train_boardings),
+                'train_alightings':      dict(train_alightings),
+                'transfer_events':       transfer_events,
+                'origin_walk_events':    origin_walk_events,
+                'transfer_walk_events':  transfer_walk_events,
+                'dest_walk_events':      dest_walk_events,
+                'station_stats':         dict(station_stats),
+                'route_colors':          route_colors,
+                'stop_coords':           stop_coords,
+                'complex_info':          complex_info,
+                'stop_to_complex':       stop_to_complex,
+                'geometry':              geometry,
+            })
+
+    # everything below here is the "fast" output stage that runs on every build
+    get_stop_coord = make_get_stop_coord(geometry, stop_coords)
+    trip_to_pattern = build_trip_to_pattern(patterns)
 
     out = build_output(patterns, train_boardings, train_alightings,
                        transfer_events, route_colors, stop_coords, complex_info,
-                       geometry, shapes, trip_shape,
+                       geometry,
                        origin_walk_events, transfer_walk_events,
-                       dest_walk_events)
+                       dest_walk_events,
+                       get_stop_coord=get_stop_coord,
+                       pattern_segments=pattern_segments,
+                       trip_to_pattern=trip_to_pattern)
 
     print(f"Writing {OUT_JSON}...")
     with open(OUT_JSON, 'w') as f:
         json.dump(out, f)
+    print(f"Done! {OUT_JSON} is {os.path.getsize(OUT_JSON) / 1024 / 1024:.1f} MB")
 
-    size_mb = os.path.getsize(OUT_JSON) / 1024 / 1024
-    print(f"Done! {OUT_JSON} is {size_mb:.1f} MB")
+    seg_stats = build_segment_stats(patterns, train_boardings, train_alightings,
+                                    trip_to_pattern)
+    # use unsimplified shape segments for static-mode rendering (smoother curves)
+    seg_polylines = build_segment_polylines(patterns, pattern_segments_full, get_stop_coord)
+    logical_passing = find_logical_passing_stops(patterns)
+    sub_polylines = subdivide_segments(seg_polylines, get_stop_coord, stop_to_complex,
+                                       logical_passing)
+    stops_meta = build_stops_meta(sub_polylines, get_stop_coord, stop_to_complex,
+                                  complex_info)
+    stats_out = build_stats_output(seg_stats, sub_polylines, station_stats,
+                                   complex_info, stops_meta)
+
+    print(f"Writing {STATS_JSON}...")
+    with open(STATS_JSON, 'w') as f:
+        json.dump(stats_out, f)
+    print(f"Done! {STATS_JSON} is {os.path.getsize(STATS_JSON) / 1024 / 1024:.1f} MB")
 
 
 if __name__ == '__main__':

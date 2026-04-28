@@ -157,7 +157,8 @@ body { background: #0a0a0a; color: #eee; font-family: 'Nunito', sans-serif; over
     #speed-buttons button:hover { border-color: #6889a8; color: #eee; }
 }
 #speed-buttons button.active { border-color: #6889a8; color: #6889a8; }
-#ridership-toggle-btn {
+#ridership-toggle-btn,
+#static-toggle-btn {
     background: none;
     border: 1px solid #555;
     color: #ccc;
@@ -172,9 +173,11 @@ body { background: #0a0a0a; color: #eee; font-family: 'Nunito', sans-serif; over
     justify-content: center;
 }
 @media (hover: hover) {
-    #ridership-toggle-btn:hover { border-color: #6889a8; color: #eee; }
+    #ridership-toggle-btn:hover,
+    #static-toggle-btn:hover { border-color: #6889a8; color: #eee; }
 }
-#ridership-toggle-btn.active { border-color: #6889a8; color: #6889a8; }
+#ridership-toggle-btn.active,
+#static-toggle-btn.active { border-color: #6889a8; color: #6889a8; }
 #speed-expand-btn {
     font-size: 13px;
     margin-right: 5px;
@@ -461,6 +464,170 @@ body { background: #0a0a0a; color: #eee; font-family: 'Nunito', sans-serif; over
         max-width: 50vw;
     }
 }
+
+/* static mode drill-down panel */
+#drill-panel {
+    position: absolute;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
+    background: rgba(10,10,10,0.92);
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 22px 14px 10px 14px;
+    width: min(490px, calc(100vw - 24px));
+    color: #ccc;
+    font-family: inherit;
+    font-size: 12px;
+}
+#drill-panel.hidden { display: none; }
+.drill-close {
+    position: absolute;
+    top: 4px;
+    right: 6px;
+    background: none;
+    border: none;
+    color: #888;
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+    padding: 4px 6px;
+}
+.drill-close:hover { color: #fff; }
+.drill-header {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+.drill-station-name {
+    color: #eee;
+    font-weight: 700;
+    font-size: 13px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.drill-station-name.right { margin-left: auto; text-align: right; }
+.drill-sep {
+    flex: 1;
+    border-bottom: 1px dashed #444;
+    margin: 0 4px;
+    align-self: center;
+}
+.drill-subheader {
+    color: #888;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 6px;
+}
+.drill-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-bottom: 4px;
+}
+.drill-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 31px;
+}
+.drill-row .route-icon {
+    width: 16px;
+    height: 16px;
+    font-size: 10px;
+    flex-shrink: 0;
+}
+.drill-arrow {
+    color: #aaa;
+    font-size: 12px;
+    width: 10px;
+    text-align: center;
+    flex-shrink: 0;
+    line-height: 1;
+}
+.drill-chart {
+    flex: 1;
+    height: 31px;
+    display: block;
+}
+.drill-chart rect { transition: opacity 80ms; }
+.drill-chart rect:hover { opacity: 1 !important; }
+.drill-axis {
+    position: relative;
+    margin-left: 38px;
+    margin-right: 66px;   /* matches .drill-row-total + the row's 6px gap */
+    height: 14px;
+    color: #777;
+    font-size: 10px;
+    font-variant-numeric: tabular-nums;
+}
+.drill-axis span {
+    position: absolute;
+    transform: translateX(-50%);
+    top: 1px;
+}
+.drill-row-total {
+    flex-shrink: 0;
+    width: 60px;
+    text-align: right;
+    color: #ccc;
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+}
+.drill-metric-buttons {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 6px;
+}
+.drill-total {
+    margin-left: auto;
+    color: #aaa;
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+}
+.station-metric-btn,
+.drill-toggle-btn {
+    background: none;
+    border: 1px solid #555;
+    color: #ccc;
+    border-radius: 3px;
+    height: 22px;
+    padding: 0 8px;
+    cursor: pointer;
+    font-size: 11px;
+    font-family: inherit;
+    line-height: 1;
+}
+@media (hover: hover) {
+    .station-metric-btn:hover,
+    .drill-toggle-btn:hover { border-color: #6889a8; color: #eee; }
+}
+.station-metric-btn.active,
+.drill-toggle-btn.active { border-color: #6889a8; color: #6889a8; }
+#drill-tooltip {
+    position: fixed;
+    z-index: 10001;
+    background: rgba(10,10,10,0.92);
+    border: 1px solid #444;
+    border-radius: 4px;
+    color: #eee;
+    padding: 4px 8px;
+    font-size: 11px;
+    font-family: inherit;
+    pointer-events: none;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+#drill-tooltip.hidden { display: none; }
+@media (max-width: 560px) {
+    #drill-panel { font-size: 11px; bottom: 8px; }
+}
 </style>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap" />
 <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" />
@@ -499,6 +666,7 @@ body { background: #0a0a0a; color: #eee; font-family: 'Nunito', sans-serif; over
         <input type="range" id="time-slider" min="0" max="1439" value="420" step="1">
         <div id="time-label">7:00am</div>
         <div id="train-count"></div>
+        <button id="static-toggle-btn" title="Daily totals (static mode)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="4" y1="8" x2="20" y2="8"/><line x1="4" y1="14" x2="14" y2="14"/><line x1="4" y1="20" x2="18" y2="20"/></svg></button>
         <button id="ridership-toggle-btn" title="Ridership by line"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="4" width="12" height="3" rx="1"/><rect x="3" y="11" width="18" height="3" rx="1"/><rect x="3" y="18" width="8" height="3" rx="1"/></svg></button>
     </div>
     <div id="settings-panel" class="hidden">
@@ -521,6 +689,8 @@ body { background: #0a0a0a; color: #eee; font-family: 'Nunito', sans-serif; over
     <div id="ridership-panel" class="hidden"></div>
 </div>
 <div id="ridership-tooltip" class="hidden"></div>
+<div id="drill-panel" class="hidden"></div>
+<div id="drill-tooltip" class="hidden"></div>
 
 <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
 <script>
@@ -585,6 +755,29 @@ const ROUTE_COLORS = {
     'FS': '#787981', // Franklin Ave Shuttle, darken 0.03
     'H': '#787981', // Rockaway Park Shuttle, darken 0.03
     'SI': '#000000', // no OD data
+};
+
+// Per-route train capacity at "100%" (peak loading guideline: seats + ~3 sq ft
+// per standee, per NYCT service planning). Per-car: IRT 51-ft = 110, IND/BMT
+// 60-ft = 145, IND/BMT 75-ft = 175.
+const ROUTE_CAPACITY = {
+    // IRT (A Division), 51-ft cars
+    '1':  10 * 110,  '2':  10 * 110,  '3':  10 * 110,
+    '4':  10 * 110,  '5':  10 * 110,  '6':  10 * 110,  '6X': 10 * 110,
+    '7':  11 * 110,  '7X': 11 * 110,                      // R188 CBTC
+    'GS': 4  * 110,                                       // 42 St shuttle
+    // IND/BMT (B Division), 75-ft cars (R46 / R68)
+    'A':  10 * 175,  'B':  10 * 175,  'D':  10 * 175,
+    // IND/BMT (B Division), 60-ft cars (R160 / R179 / R211)
+    'C':  8  * 145,
+    'E':  10 * 145,  'F':  10 * 145,  'FX': 10 * 145,
+    'N':  10 * 145,  'Q':  10 * 145,  'R':  10 * 145,
+    'M':  8  * 145,  'W':  8  * 145,
+    'J':  8  * 145,  'Z':  8  * 145,
+    'L':  8  * 145,
+    'G':  4  * 145,
+    'FS': 4  * 145,                                       // Franklin Av shuttle
+    'H':  2  * 145,                                       // Rockaway Park shuttle
 };
 
 let data = null;
@@ -901,6 +1094,93 @@ function setupTrainLayer() {
             'circle-stroke-opacity': 0.8,
         },
     });
+
+    // static-mode layers (added now so they sit underneath trains; hidden until activated)
+    // MapLibre only allows ['zoom'] inside a top-level interpolate/step. To
+    // replicate the animated-mode multiplier 2 ^ ((zoom - BASE_ZOOM) / 2) we
+    // anchor two stops and use exponential base sqrt(2): per zoom level the
+    // value grows by sqrt(2), so per 2 zoom levels by 2x.
+    const ZOOM_HIGH = BASE_ZOOM + 8;
+    const ZOOM_HIGH_FACTOR = Math.pow(2, (ZOOM_HIGH - BASE_ZOOM) / 2);   // = 16
+    const zoomScaledExpr = (prop) => [
+        'interpolate', ['exponential', Math.SQRT2], ['zoom'],
+        BASE_ZOOM, ['get', prop],
+        ZOOM_HIGH, ['*', ['get', prop], ZOOM_HIGH_FACTOR],
+    ];
+    const widthExpr        = zoomScaledExpr('width');
+    const offsetExpr       = zoomScaledExpr('offset');
+    const radiusExpr       = zoomScaledExpr('radius');
+    const outlineWidthExpr = zoomScaledExpr('outline_width');
+    const baseWidthExpr    = zoomScaledExpr('base_width');
+
+    map.addSource('static-highlight', { type: 'geojson', data: emptyGeoJSON });
+    map.addLayer({
+        id: 'static-highlight-layer',
+        type: 'line',
+        source: 'static-highlight',
+        layout: {
+            visibility: 'none',
+            'line-cap': 'round',
+            'line-join': 'round',
+        },
+        paint: {
+            'line-color': '#ffffff',
+            'line-width': outlineWidthExpr,
+            'line-offset': offsetExpr,
+            'line-opacity': 0.55,
+        },
+    }, 'trains-layer');
+
+    map.addSource('static-segments', { type: 'geojson', data: emptyGeoJSON });
+    map.addLayer({
+        id: 'static-segments-layer',
+        type: 'line',
+        source: 'static-segments',
+        layout: {
+            visibility: 'none',
+            'line-cap': 'round',
+            'line-join': 'round',
+            'line-sort-key': ['get', 'priority'],
+        },
+        paint: {
+            'line-color': ['get', 'color'],
+            'line-width': widthExpr,
+            'line-offset': offsetExpr,
+            'line-opacity': 0.85,
+        },
+    }, 'trains-layer');
+
+    // overlay layer: white at 0.2 over the colored line itself, on top of segments,
+    // so highlighted routes also "lighten" rather than just having an outline halo.
+    map.addLayer({
+        id: 'static-highlight-overlay-layer',
+        type: 'line',
+        source: 'static-highlight',
+        layout: {
+            visibility: 'none',
+            'line-cap': 'round',
+            'line-join': 'round',
+        },
+        paint: {
+            'line-color': '#ffffff',
+            'line-width': baseWidthExpr,
+            'line-offset': offsetExpr,
+            'line-opacity': 0.22,
+        },
+    }, 'trains-layer');
+
+    map.addSource('static-stations', { type: 'geojson', data: emptyGeoJSON });
+    map.addLayer({
+        id: 'static-stations-layer',
+        type: 'circle',
+        source: 'static-stations',
+        layout: { visibility: 'none' },
+        paint: {
+            'circle-radius': radiusExpr,
+            'circle-color': '#cbcbcb',
+            'circle-opacity': 0.85,
+        },
+    }, 'trains-layer');
 }
 
 
@@ -1327,6 +1607,12 @@ map.on('render', () => {
 // --- Controls ---
 const slider = document.getElementById('time-slider');
 slider.addEventListener('input', () => {
+    if (staticMode) {
+        staticHourIdx = parseInt(slider.value);
+        updateStaticTimeLabel();
+        renderCurrentStatic();
+        return;
+    }
     simTime = parseInt(slider.value) * 60;
     resetAnchor();
     updateTimeLabel();
@@ -1348,11 +1634,13 @@ if (isMobile) {
 }
 document.getElementById('toggle-waiting-cb').addEventListener('change', (e) => {
     showWaiting = e.target.checked;
+    if (staticMode) return;
     map.setLayoutProperty('waiting-layer', 'visibility', showWaiting ? 'visible' : 'none');
     if (!showWaiting) map.getSource('waiting').setData(emptyGeoJSON);
 });
 document.getElementById('toggle-walks-cb').addEventListener('change', (e) => {
     showWalks = e.target.checked;
+    if (staticMode) return;
     map.setLayoutProperty('walks-layer', 'visibility', showWalks ? 'visible' : 'none');
     if (!showWalks) map.getSource('walks').setData(emptyGeoJSON);
 });
@@ -1363,6 +1651,579 @@ ridershipToggleBtn.addEventListener('click', () => {
     panel.classList.toggle('hidden');
     ridershipPanelOpen = !panel.classList.contains('hidden');
     ridershipToggleBtn.classList.toggle('active', ridershipPanelOpen);
+});
+
+
+// --- Static mode (daily aggregated stats) ---
+
+let staticMode = false;
+let staticData = null;        // contents of stats.json (lazy-loaded)
+let staticHourIdx = 0;        // 0 = all-day, 1..24 = hour 0..23
+let speedBeforeStatic = null;
+let staticFetchPromise = null;
+let clickedStatic = false;    // suppresses global-click drill-panel close
+
+const staticToggleBtn = document.getElementById('static-toggle-btn');
+staticToggleBtn.addEventListener('mousedown', (e) => e.preventDefault());
+staticToggleBtn.addEventListener('click', () => setStaticMode(!staticMode));
+
+async function setStaticMode(on) {
+    if (on === staticMode) return;
+    if (on && !staticData) {
+        if (!staticFetchPromise) {
+            staticFetchPromise = fetch('stats.json')
+                .then(r => r.json())
+                .catch(e => { console.error('stats.json failed:', e); return null; });
+        }
+        staticData = await staticFetchPromise;
+        if (!staticData) { staticFetchPromise = null; return; }
+        buildParentIndex();
+    }
+
+    staticMode = on;
+    staticToggleBtn.classList.toggle('active', on);
+
+    const animVis = on ? 'none' : 'visible';
+    map.setLayoutProperty('trains-layer', 'visibility', animVis);
+    if (showWaiting) map.setLayoutProperty('waiting-layer', 'visibility', animVis);
+    if (showWalks) map.setLayoutProperty('walks-layer', 'visibility', animVis);
+    map.setLayoutProperty('subway-lines-layer', 'visibility', on ? 'none' : 'visible');
+    map.setLayoutProperty('static-segments-layer', 'visibility', on ? 'visible' : 'none');
+    map.setLayoutProperty('static-stations-layer', 'visibility', on ? 'visible' : 'none');
+    map.setLayoutProperty('static-highlight-layer', 'visibility', on ? 'visible' : 'none');
+    map.setLayoutProperty('static-highlight-overlay-layer', 'visibility', on ? 'visible' : 'none');
+
+    document.getElementById('speed-buttons').style.display = on ? 'none' : '';
+    document.getElementById('train-count').style.display = on ? 'none' : '';
+    if (!on) {
+        document.getElementById('drill-panel').classList.add('hidden');
+        clearHighlight();
+        currentSegmentDrill = null;
+        currentStationDrill = null;
+    }
+
+    if (on) {
+        if (speedMultiplier > 0) { speedBeforeStatic = speedMultiplier; setSpeed(0); }
+        slider.min = 0;
+        slider.max = 24;
+        slider.step = 1;
+        slider.value = staticHourIdx;
+        updateStaticTimeLabel();
+        renderCurrentStatic();
+    } else {
+        slider.min = 0;
+        slider.max = 1439;
+        slider.step = 1;
+        slider.value = Math.floor(simTime / 60);
+        updateTimeLabel();
+        if (speedBeforeStatic) { setSpeed(speedBeforeStatic); speedBeforeStatic = null; }
+    }
+}
+
+function renderCurrentStatic() {
+    if (!staticData) return;
+    renderStaticSegments();
+    renderStaticStations();
+    if (currentSegmentDrill) renderHighlight();
+}
+
+// parent-key (`route|dir|pf|pt`) -> [sub_segments] — for click highlight lookup
+const parentToSubs = new Map();
+function buildParentIndex() {
+    parentToSubs.clear();
+    if (!staticData) return;
+    for (const seg of staticData.segments) {
+        const ps = seg.parents || [[seg.from, seg.to]];
+        for (const [pf, pt] of ps) {
+            const k = `${seg.route}|${seg.direction}|${pf}|${pt}`;
+            if (!parentToSubs.has(k)) parentToSubs.set(k, []);
+            parentToSubs.get(k).push(seg);
+        }
+    }
+}
+
+// rendered segment features keyed by `route|from|to` so highlight can find geometry+offset
+const renderedSegmentFeatures = new Map();
+
+function clearHighlight() {
+    map.getSource('static-highlight').setData(emptyGeoJSON);
+}
+
+function collectSegmentDrillMatches() {
+    if (!currentSegmentDrill) return [];
+    const { fromStop, toStop } = currentSegmentDrill;
+    return staticData.segments.filter(s =>
+        (s.from === fromStop && s.to === toStop) ||
+        (s.from === toStop && s.to === fromStop));
+}
+
+function renderHighlight() {
+    if (!currentSegmentDrill) { clearHighlight(); return; }
+    const matches = collectSegmentDrillMatches();
+    if (matches.length === 0) { clearHighlight(); return; }
+
+    // collect every (route, dir, parent_from, parent_to) trip-set that the drill spans
+    const parentKeys = new Set();
+    for (const m of matches) {
+        const ps = m.parents || [[m.from, m.to]];
+        for (const [pf, pt] of ps) {
+            parentKeys.add(`${m.route}|${m.direction}|${pf}|${pt}`);
+        }
+    }
+
+    // expand each trip-set to all its sub-segments. renderedSegmentFeatures is
+    // keyed by (route, sorted-from, sorted-to) since renderStaticSegments dedups
+    // directions to one feature; sort here so the lookup matches regardless of
+    // whether s.from < s.to in the underlying pattern direction.
+    const subKeys = new Set();
+    for (const pk of parentKeys) {
+        const subs = parentToSubs.get(pk) || [];
+        for (const s of subs) {
+            const a = s.from < s.to ? s.from : s.to;
+            const b = s.from < s.to ? s.to : s.from;
+            subKeys.add(`${s.route}|${a}|${b}`);
+        }
+    }
+
+    // clone each rendered colored feature; the highlight layer paints both an
+    // outline (wider, under) and an overlay (same width, on top)
+    const features = [];
+    for (const subKey of subKeys) {
+        const f = renderedSegmentFeatures.get(subKey);
+        if (!f) continue;
+        features.push({
+            type: 'Feature',
+            geometry: f.geometry,
+            properties: {
+                base_width: f.properties.width,
+                outline_width: f.properties.width + 3.5,
+                offset: f.properties.offset,
+            },
+        });
+    }
+    map.getSource('static-highlight').setData({ type: 'FeatureCollection', features });
+}
+
+function fmtHour12(h) {
+    const ampm = h % 24 < 12 ? 'a' : 'p';
+    let hh = h % 24;
+    if (hh === 0) hh = 12;
+    else if (hh > 12) hh -= 12;
+    return hh + ampm;
+}
+
+function updateStaticTimeLabel() {
+    const lbl = document.getElementById('time-label');
+    if (staticHourIdx === 0) lbl.textContent = 'all day';
+    else {
+        const h = staticHourIdx - 1;
+        lbl.textContent = `${fmtHour12(h)}-${fmtHour12(h + 1)}m`;
+    }
+}
+
+function segmentValue(seg, hourIdx, metric) {
+    const bh = seg.by_hour;
+    if (metric === 'load') {
+        if (hourIdx === 0) {
+            let r = 0, n = 0;
+            for (let h = 0; h < 24; h++) { r += bh[h][0]; n += bh[h][1]; }
+            return n > 0 ? r / n : 0;
+        }
+        const e = bh[hourIdx - 1];
+        return e[1] > 0 ? e[0] / e[1] : 0;
+    }
+    if (hourIdx === 0) {
+        let s = 0;
+        for (let h = 0; h < 24; h++) s += bh[h][0];
+        return s;
+    }
+    return bh[hourIdx - 1][0];
+}
+
+// gap (in pixels) between adjacent routes that share a track segment
+const SEGMENT_GAP = 1.0;
+
+function renderStaticSegments() {
+    // step 1: collapse both directions per (route, sorted-stop-pair) keeping
+    // the busier direction's value
+    const combined = new Map();
+    for (const seg of staticData.segments) {
+        const a = seg.from < seg.to ? seg.from : seg.to;
+        const b = seg.from < seg.to ? seg.to : seg.from;
+        const key = `${seg.route}|${a}|${b}`;
+        const v = segmentValue(seg, staticHourIdx, 'riders');
+        const ex = combined.get(key);
+        if (ex) { if (v > ex.value) ex.value = v; }
+        else combined.set(key, { route: seg.route, coords: seg.coords, from: a, to: b, value: v });
+    }
+
+    // step 2: assign widths
+    let maxValue = 0;
+    for (const e of combined.values()) if (e.value > maxValue) maxValue = e.value;
+    for (const e of combined.values()) {
+        if (e.value < 0.5) { e.width = 0; continue; }
+        const norm = maxValue > 0 ? Math.sqrt(e.value / maxValue) : 0;
+        e.width = (1 + norm * 14) * 0.65;   // 35% thinner
+    }
+
+    // step 3: group by stop-pair (= shared trunk), assign perpendicular offsets
+    // sized by line thickness so that wider lines get correspondingly more
+    // separation. all features in a group share one canonical polyline so the
+    // offset direction is consistent across routes.
+    const groups = new Map();
+    for (const e of combined.values()) {
+        if (e.width === 0) continue;
+        const k = `${e.from}|${e.to}`;
+        if (!groups.has(k)) groups.set(k, []);
+        groups.get(k).push(e);
+    }
+
+    const features = [];
+    renderedSegmentFeatures.clear();
+    for (const grp of groups.values()) {
+        // draw lower-priority routes leftmost so the topmost route ends up on
+        // the visual right; doesn't really matter, just needs to be deterministic
+        grp.sort((a, b) => (LINE_PRIORITY[a.route] ?? 0) - (LINE_PRIORITY[b.route] ?? 0));
+        const canonCoords = grp[0].coords;
+
+        const totalW = grp.reduce((s, g) => s + g.width, 0) + SEGMENT_GAP * (grp.length - 1);
+        let cum = -totalW / 2;
+        for (const e of grp) {
+            const offset = cum + e.width / 2;
+            cum += e.width + SEGMENT_GAP;
+            const feat = {
+                type: 'Feature',
+                geometry: { type: 'LineString', coordinates: canonCoords },
+                properties: {
+                    color: ROUTE_COLORS[e.route] || '#888',
+                    width: e.width,
+                    offset,
+                    priority: LINE_PRIORITY[e.route] ?? 0,
+                    from: e.from,
+                    to: e.to,
+                },
+            };
+            features.push(feat);
+            renderedSegmentFeatures.set(`${e.route}|${e.from}|${e.to}`, feat);
+        }
+    }
+    map.getSource('static-segments').setData({ type: 'FeatureCollection', features });
+}
+
+function stationTotal(station, hourIdx) {
+    // entry + transfer boardings, summed across all routes serving the complex
+    let total = 0;
+    if (hourIdx === 0) {
+        for (const r in station.by_route_hour) {
+            const arr = station.by_route_hour[r];
+            for (let h = 0; h < 24; h++) total += arr[h][0] + arr[h][1];
+        }
+    } else {
+        const h = hourIdx - 1;
+        for (const r in station.by_route_hour) {
+            const v = station.by_route_hour[r][h];
+            total += v[0] + v[1];
+        }
+    }
+    return total;
+}
+
+function renderStaticStations() {
+    let maxVal = 0;
+    for (const s of staticData.stations) {
+        const v = stationTotal(s, staticHourIdx);
+        if (v > maxVal) maxVal = v;
+    }
+    const features = [];
+    for (const s of staticData.stations) {
+        const v = stationTotal(s, staticHourIdx);
+        if (v < 0.5) continue;
+        const norm = maxVal > 0 ? Math.sqrt(v / maxVal) : 0;
+        const radius = (1.5 + norm * 16) * 1.15;   // 15% larger
+        features.push({
+            type: 'Feature',
+            geometry: { type: 'Point', coordinates: [s.lon, s.lat] },
+            properties: { complex_id: s.complex_id, radius, name: s.name },
+        });
+    }
+    map.getSource('static-stations').setData({ type: 'FeatureCollection', features });
+}
+
+
+// --- Drill-down panel ---
+
+const DRILL_CHART_W = 210;
+const DRILL_CHART_H = 31;
+let stationDrillMetric = 'all';     // 'entries' | 'transfers' | 'all'
+let segmentDrillMetric = 'riders';  // 'riders' | 'crowd' — only affects the segment drill panel
+let currentSegmentDrill = null;     // {fromStop, toStop} for re-render on metric change
+let currentStationDrill = null;     // complex_id for re-render on sub-metric change
+
+function buildDrillRow(route, arrow, valFn, maxVal, tipFn, refRatio, rowTotalText) {
+    const W = DRILL_CHART_W, H = DRILL_CHART_H;
+    const slot = W / 24;
+    const barW = Math.max(1, slot - 1.2);
+    const color = ROUTE_COLORS[route] || '#888';
+    let bars = '';
+    for (let h = 0; h < 24; h++) {
+        const v = valFn(h);
+        if (v <= 0 || maxVal <= 0) continue;   // exact zero → omit the bar (and its hover hit-area) entirely
+        const barH = Math.max(1, (v / maxVal) * (H - 2));
+        const x = h * slot + (slot - barW) / 2;
+        const y = H - barH;
+        const tip = tipFn(h);
+        bars += `<rect data-tip="${tip}" x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${barW.toFixed(1)}" height="${barH.toFixed(1)}" fill="${color}" opacity="0.8"/>`;
+    }
+    let refLine = '';
+    if (refRatio != null && refRatio > 0 && refRatio <= 1) {
+        const y100 = (H - refRatio * (H - 2)).toFixed(1);
+        refLine = `<line x1="0" y1="${y100}" x2="${W}" y2="${y100}" stroke="#aaa" stroke-width="0.5" stroke-dasharray="2,2" opacity="0.7" pointer-events="none"/>`;
+    }
+    const arrowEl = `<span class="drill-arrow">${arrow || ''}</span>`;
+    const totalEl = rowTotalText != null ? `<span class="drill-row-total">${rowTotalText}</span>` : '';
+    return `<div class="drill-row">${routeIconHTML(route)}${arrowEl}<svg class="drill-chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">${bars}${refLine}</svg>${totalEl}</div>`;
+}
+
+const AXIS_LABELS = [[0,'12a'],[3,'3a'],[6,'6a'],[9,'9a'],[12,'12p'],[15,'3p'],[18,'6p'],[21,'9p']];
+const DRILL_AXIS_HTML = `<div class="drill-axis">${
+    AXIS_LABELS.map(([h, lbl]) =>
+        `<span style="left:${((h + 0.5) / 24 * 100).toFixed(2)}%">${lbl}</span>`).join('')
+}</div>`;
+
+function showDrillPanel(html) {
+    const panel = document.getElementById('drill-panel');
+    panel.innerHTML = `<button class="drill-close" id="drill-close-btn" title="Close">&#10005;</button>${html}`;
+    panel.classList.remove('hidden');
+    document.getElementById('drill-close-btn').onclick = () => {
+        panel.classList.add('hidden');
+        currentSegmentDrill = null;
+        currentStationDrill = null;
+        document.getElementById('drill-tooltip').classList.add('hidden');
+        clearHighlight();
+    };
+}
+
+// hover tooltip on bars (event delegation on the panel)
+const drillPanelEl = document.getElementById('drill-panel');
+const drillTooltipEl = document.getElementById('drill-tooltip');
+drillPanelEl.addEventListener('mousemove', (e) => {
+    const tip = e.target && e.target.dataset && e.target.dataset.tip;
+    if (!tip) { drillTooltipEl.classList.add('hidden'); return; }
+    drillTooltipEl.textContent = tip;
+    drillTooltipEl.style.left = (e.clientX + 12) + 'px';
+    drillTooltipEl.style.top = (e.clientY - 26) + 'px';
+    drillTooltipEl.classList.remove('hidden');
+});
+drillPanelEl.addEventListener('mouseleave', () => drillTooltipEl.classList.add('hidden'));
+
+function openSegmentDrill(fromStop, toStop) {
+    currentSegmentDrill = { fromStop, toStop };
+    currentStationDrill = null;
+    renderSegmentDrill();
+}
+
+function renderSegmentDrill() {
+    if (!staticData || !currentSegmentDrill) return;
+    const { fromStop, toStop } = currentSegmentDrill;
+    const stops = staticData.stops || {};
+    const fromMeta = stops[fromStop], toMeta = stops[toStop];
+    if (!fromMeta || !toMeta) return;
+
+    const matches = staticData.segments.filter(s =>
+        (s.from === fromStop && s.to === toStop) ||
+        (s.from === toStop && s.to === fromStop));
+    if (matches.length === 0) return;
+
+    // left = further west by longitude (arbitrary tiebreak for N-S segments)
+    const leftStop = fromMeta.lon <= toMeta.lon ? fromStop : toStop;
+    const leftName = stops[leftStop].name;
+    const rightName = stops[leftStop === fromStop ? toStop : fromStop].name;
+
+    matches.sort((a, b) => {
+        if (a.route !== b.route) return a.route < b.route ? -1 : 1;
+        return a.direction - b.direction;
+    });
+
+    const isCrowd = segmentDrillMetric === 'crowd';
+    const valOf = (seg) => {
+        if (isCrowd) {
+            const cap = ROUTE_CAPACITY[seg.route] || 1000;
+            return (h) => seg.by_hour[h][1] > 0
+                ? (seg.by_hour[h][0] / seg.by_hour[h][1]) / cap
+                : 0;
+        }
+        return (h) => seg.by_hour[h][0];
+    };
+
+    let maxVal = 0;
+    for (const seg of matches) {
+        const f = valOf(seg);
+        for (let h = 0; h < 24; h++) { const v = f(h); if (v > maxVal) maxVal = v; }
+    }
+    // in crowd mode pin the y-axis to at least 100% so the dashed reference
+    // line is always visible; if any segment exceeds capacity the chart grows
+    // to fit and the line drops below the top
+    if (isCrowd) maxVal = Math.max(1, maxVal);
+
+    const tipForSeg = (seg) => {
+        if (isCrowd) {
+            const cap = ROUTE_CAPACITY[seg.route] || 1000;
+            return (h) => {
+                const n = seg.by_hour[h][1];
+                const avg = n > 0 ? seg.by_hour[h][0] / n : 0;
+                const pct = Math.round((avg / cap) * 100);
+                return `${fmtHour12(h)}–${fmtHour12(h + 1)}m · ${pct}% full · ${Math.round(avg).toLocaleString()} avg riders`;
+            };
+        }
+        return (h) => `${fmtHour12(h)}–${fmtHour12(h + 1)}m · ${Math.round(seg.by_hour[h][0]).toLocaleString()} riders`;
+    };
+
+    const refRatio = isCrowd ? 1 / maxVal : null;
+
+    // totals are always rider counts (the bars' shape depends on mode, but a
+    // crowdedness percentage doesn't aggregate into a meaningful daily figure)
+    const fmtN = (n) => Math.round(n).toLocaleString();
+    const segTotal = (seg) => {
+        let s = 0;
+        for (let h = 0; h < 24; h++) s += seg.by_hour[h][0];
+        return s;
+    };
+    let grandTotal = 0;
+    const rowTotals = new Map();
+    for (const seg of matches) {
+        const t = segTotal(seg);
+        rowTotals.set(seg, t);
+        grandTotal += t;
+    }
+
+    const rowsHTML = matches.map(seg => {
+        const arrow = (seg.from === leftStop) ? '▸' : '◂';
+        return buildDrillRow(seg.route, arrow, valOf(seg), maxVal, tipForSeg(seg),
+            refRatio, fmtN(rowTotals.get(seg)));
+    }).join('');
+
+    const btn = (key, label) =>
+        `<button class="drill-toggle-btn ${segmentDrillMetric === key ? 'active' : ''}" data-sm="${key}">${label}</button>`;
+    const totalEl = `<span class="drill-total">${fmtN(grandTotal)} riders</span>`;
+    const buttons = `<div class="drill-metric-buttons">${btn('riders', 'riders')}${btn('crowd', 'crowdedness')}${totalEl}</div>`;
+
+    const subhead = isCrowd
+        ? 'avg train crowdedness · 100% = MTA peak loading guideline'
+        : `riders per segment · max ${Math.round(maxVal).toLocaleString()}`;
+    showDrillPanel(`
+        <div class="drill-header">
+            <span class="drill-station-name left">${leftName}</span>
+            <span class="drill-sep"></span>
+            <span class="drill-station-name right">${rightName}</span>
+        </div>
+        ${buttons}
+        <div class="drill-subheader">${subhead}</div>
+        <div class="drill-rows">${rowsHTML}</div>
+        ${DRILL_AXIS_HTML}
+    `);
+
+    document.querySelectorAll('.drill-toggle-btn').forEach(b => {
+        b.addEventListener('mousedown', (e) => e.preventDefault());
+        b.onclick = () => {
+            segmentDrillMetric = b.dataset.sm;
+            renderSegmentDrill();
+        };
+    });
+
+    renderHighlight();
+}
+
+function openStationDrill(complexId) {
+    currentStationDrill = complexId;
+    currentSegmentDrill = null;
+    renderStationDrill();
+}
+
+function renderStationDrill() {
+    if (!staticData || currentStationDrill === null) return;
+    clearHighlight();   // station drills don't tie to segment trip-sets
+    const station = staticData.stations.find(s => s.complex_id === currentStationDrill);
+    if (!station) return;
+    const routes = Object.keys(station.by_route_hour).sort();
+    if (routes.length === 0) return;
+
+    const m = stationDrillMetric;
+    const unit = m === 'entries' ? 'entries' : (m === 'transfers' ? 'transfers' : 'boardings');
+    const cellVal = (v) => {
+        if (m === 'entries') return v[0];
+        if (m === 'transfers') return v[1];
+        return v[0] + v[1];
+    };
+
+    // lock max to 'all' so switching metrics never grows bars (only shrinks)
+    let maxVal = 0;
+    for (const r of routes) {
+        const arr = station.by_route_hour[r];
+        for (let h = 0; h < 24; h++) {
+            const all = arr[h][0] + arr[h][1];
+            if (all > maxVal) maxVal = all;
+        }
+    }
+
+    const fmtN = (n) => Math.round(n).toLocaleString();
+    const rowTotal = (arr) => {
+        let s = 0;
+        for (let h = 0; h < 24; h++) s += cellVal(arr[h]);
+        return s;
+    };
+    let grandTotal = 0;
+    const totals = {};
+    for (const r of routes) {
+        const t = rowTotal(station.by_route_hour[r]);
+        totals[r] = t;
+        grandTotal += t;
+    }
+
+    const rowsHTML = routes.map(r => {
+        const arr = station.by_route_hour[r];
+        const tipFn = (h) => `${fmtHour12(h)}–${fmtHour12(h + 1)}m · ${Math.round(cellVal(arr[h])).toLocaleString()} ${unit}`;
+        return buildDrillRow(r, '', (h) => cellVal(arr[h]), maxVal, tipFn, null, fmtN(totals[r]));
+    }).join('');
+
+    const btn = (key, label) =>
+        `<button class="station-metric-btn ${m === key ? 'active' : ''}" data-sm="${key}">${label}</button>`;
+    const totalEl = `<span class="drill-total">${fmtN(grandTotal)} ${unit}</span>`;
+    const subhead = `<div class="drill-metric-buttons">${btn('all', 'all')}${btn('entries', 'entries')}${btn('transfers', 'transfers')}${totalEl}</div>`;
+
+    showDrillPanel(`
+        <div class="drill-header">
+            <span class="drill-station-name left">${station.name}</span>
+        </div>
+        ${subhead}
+        <div class="drill-rows">${rowsHTML}</div>
+        ${DRILL_AXIS_HTML}
+    `);
+
+    document.querySelectorAll('.station-metric-btn').forEach(b => {
+        b.addEventListener('mousedown', (e) => e.preventDefault());
+        b.onclick = () => {
+            stationDrillMetric = b.dataset.sm;
+            renderStationDrill();
+        };
+    });
+}
+
+// --- Static-layer interactions ---
+
+map.on('mouseenter', 'static-segments-layer', () => map.getCanvas().style.cursor = 'pointer');
+map.on('mouseleave', 'static-segments-layer', () => map.getCanvas().style.cursor = '');
+map.on('mouseenter', 'static-stations-layer', () => map.getCanvas().style.cursor = 'pointer');
+map.on('mouseleave', 'static-stations-layer', () => map.getCanvas().style.cursor = '');
+
+map.on('click', 'static-segments-layer', (e) => {
+    clickedStatic = true;
+    const p = e.features[0].properties;
+    openSegmentDrill(p.from, p.to);
+});
+map.on('click', 'static-stations-layer', (e) => {
+    clickedStatic = true;
+    const p = e.features[0].properties;
+    openStationDrill(p.complex_id);
 });
 
 const SPEED_STOPS = [0, 1/60, 0.05, 0.1, 0.2, 0.3, 0.5, 0.7, 1, 1.5, 2, 3, 5, 7, 10, 15, 20, 30, 50];
@@ -1536,6 +2397,13 @@ map.on('click', 'waiting-layer', (e) => {
 });
 
 map.on('click', (e) => {
+    if (!clickedStatic) {
+        document.getElementById('drill-panel').classList.add('hidden');
+        currentSegmentDrill = null;
+        currentStationDrill = null;
+        clearHighlight();
+    }
+    clickedStatic = false;
     clickedTrain = false;
     document.getElementById('info-panel').classList.add('hidden');
     if (lockedTooltips.length === 0) return;
