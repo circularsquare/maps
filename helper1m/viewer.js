@@ -2,11 +2,17 @@
 // then loads the current admin level's geojson and lets the user click / shift-click.
 
 const CURRENT_YEAR = new Date().getFullYear();
+const DISPLAY_YEARS = [2011, 2026];  // years shown in the detail panel history table
 const state = {
   country: null,   // {id, name, meta}
   level: null,     // int
   featuresByCode: new Map(),
   selection: [],   // [{code, level, name, raw_pop, est_pop}]
+  groups: [],      // [{code, name}] — adm1 regions (states), for the state filter
+  shownGroups: null,  // Set of group codes currently visible
+  hoverCode: null,    // feature under the cursor
+  activeCode: null,   // feature clicked for the detail panel
+  overlayGeo: {},     // {1: adm1, 2: adm2} geojson — coarser borders drawn as context
 };
 
 const map = new maplibregl.Map({
@@ -20,24 +26,53 @@ const map = new maplibregl.Map({
         tileSize: 256,
         attribution: "© OpenStreetMap contributors",
       },
+      topo: {
+        type: "raster",
+        tiles: [
+          "https://a.tile.opentopomap.org/{z}/{x}/{y}.png",
+          "https://b.tile.opentopomap.org/{z}/{x}/{y}.png",
+          "https://c.tile.opentopomap.org/{z}/{x}/{y}.png",
+        ],
+        tileSize: 256,
+        maxzoom: 17,
+        attribution: "© OpenTopoMap (CC-BY-SA)",
+      },
     },
-    layers: [{ id: "osm", type: "raster", source: "osm", paint: { "raster-opacity": 0.55 } }],
+    layers: [
+      { id: "osm", type: "raster", source: "osm", paint: { "raster-opacity": 0.55 } },
+      { id: "topo", type: "raster", source: "topo",
+        layout: { visibility: "none" }, paint: { "raster-opacity": 0.8 } },
+    ],
   },
   center: [0, 0],
   zoom: 2,
 });
 
+// Shift-click is our multi-select; free it from MapLibre's box-zoom handler.
+map.boxZoom.disable();
+
 // ---- data loading ----
 
+// Always bypass the HTTP cache. python -m http.server sends only Last-Modified
+// (no ETag/Cache-Control) and mishandles If-Modified-Since, so a rebuilt
+// geojson can keep serving stale bytes via a 304 even on a hard refresh.
+function fetchNoCache(url) {
+  return fetch(url, { cache: "no-store" });
+}
+
 async function loadCountriesIndex() {
-  const res = await fetch("countries.json");
+  const res = await fetchNoCache("countries.json");
   return (await res.json()).countries;
 }
 
 async function loadCountry(id) {
-  const meta = await (await fetch(`countries/${id}/meta.json`)).json();
+  const meta = await (await fetchNoCache(`countries/${id}/meta.json`)).json();
+  teardown();   // drop the previous country's sources/layers
   state.country = { id, name: meta.name, meta };
   map.flyTo({ center: meta.center, zoom: meta.zoom, duration: 0 });
+  await loadOverlays();
+  loadGroups();
+  renderGroupFilter();
   renderLevelRadios();
   // default to the finest level with a geojson already built
   const lvl = meta.admin_levels.find(l => l).level;
@@ -50,7 +85,7 @@ async function setLevel(level) {
   const url = `countries/${state.country.id}/${cfg.file}`;
   let geo;
   try {
-    geo = await (await fetch(url)).json();
+    geo = await (await fetchNoCache(url)).json();
   } catch (e) {
     showInfo(`<div class="empty">No data for level ${level}. Run the build script.</div>`);
     return;
@@ -63,16 +98,147 @@ async function setLevel(level) {
   });
 }
 
+// ---- state filter ----
+
+function loadGroups() {
+  state.groups = [];
+  state.shownGroups = null;
+  const geo = state.overlayGeo[1];   // adm1 — the state list
+  if (!geo) return;
+  state.groups = geo.features
+    .map(f => ({ code: f.properties.code, name: f.properties.name }))
+    .sort((a, b) => a.name.localeCompare(b.name));
+  state.shownGroups = new Set(state.groups.map(g => g.code));
+}
+
+function renderGroupFilter() {
+  const panel = document.getElementById("group-panel");
+  const host = document.getElementById("group-list");
+  if (!state.groups.length) { panel.style.display = "none"; return; }
+  panel.style.display = "";
+  host.innerHTML = "";
+  for (const g of state.groups) {
+    const on = state.shownGroups.has(g.code) ? "checked" : "";
+    host.insertAdjacentHTML("beforeend",
+      `<label><input type="checkbox" value="${escapeHtml(g.code)}" ${on}>${escapeHtml(g.name)}</label>`);
+  }
+}
+
+// MapLibre filter: show a feature when its group is checked. Features with no
+// group (a country not built with one) always show.
+function groupFilterExpr() {
+  if (!state.shownGroups || state.shownGroups.size === state.groups.length) return null;
+  return ["any",
+    ["!", ["has", "group"]],
+    ["in", ["get", "group"], ["literal", [...state.shownGroups]]]];
+}
+
+function applyGroupFilter() {
+  const expr = groupFilterExpr();
+  for (const id of [FILL, LINE, HL, OV_DIST + "-line", OV_STATE + "-line"]) {
+    if (map.getLayer(id)) map.setFilter(id, expr);
+  }
+}
+
 // ---- map layer ----
 
 const SRC = "admin";
 const FILL = "admin-fill";
 const LINE = "admin-line";
-const HOVER = "admin-hover";
+const HL = "admin-highlight";
+const OV_STATE = "ov-state";      // overlay source: state borders
+const OV_DIST = "ov-district";    // overlay source: district borders
+
+// Fill opacity for the density choropleth (set to 0 in topographic mode, so
+// regions stay clickable but their colours don't fight the topo basemap).
+const FILL_OPACITY = ["case",
+  ["boolean", ["feature-state", "selected"], false], 0.75,
+  0.55];
+
+// Pointer handlers — registered once. They key off the layer id, so they keep
+// working when the layer is torn down and rebuilt on a country switch.
+map.on("mousemove", FILL, (e) => {
+  if (!e.features.length) return;
+  map.getCanvas().style.cursor = "pointer";
+  setHover(e.features[0].properties.code);
+});
+map.on("mouseleave", FILL, () => {
+  map.getCanvas().style.cursor = "";
+  setHover(null);
+});
+map.on("click", FILL, onFeatureClick);
+
+// A plain click on empty space (no division) clears the multi-selection.
+map.on("click", (e) => {
+  if (e.originalEvent.shiftKey || !map.getLayer(FILL)) return;
+  if (!map.queryRenderedFeatures(e.point, { layers: [FILL] }).length) clearSelection();
+});
+
+// ---- boundary overlays (coarser levels drawn as context) ----
+
+async function loadOverlays() {
+  state.overlayGeo = {};
+  for (const lvl of [1, 2]) {
+    const cfg = state.country.meta.admin_levels.find(l => l.level === lvl);
+    if (!cfg) continue;
+    try {
+      state.overlayGeo[lvl] =
+        await (await fetchNoCache(`countries/${state.country.id}/${cfg.file}`)).json();
+    } catch (e) { /* level not built */ }
+  }
+}
+
+function addOverlay(srcId, geo, color, width) {
+  if (!geo || map.getSource(srcId)) return;
+  map.addSource(srcId, { type: "geojson", data: geo });
+  map.addLayer({
+    id: srcId + "-line", type: "line", source: srcId,
+    layout: { visibility: "none" },
+    paint: { "line-color": color, "line-width": width },
+  });
+}
+
+// State borders show below state level; district borders below district level.
+function updateOverlayVisibility() {
+  const vis = (id, show) => {
+    if (map.getLayer(id)) map.setLayoutProperty(id, "visibility", show ? "visible" : "none");
+  };
+  vis(OV_STATE + "-line", state.level >= 2);
+  vis(OV_DIST + "-line", state.level >= 3);
+}
+
+function teardown() {
+  for (const id of [FILL, LINE, HL, OV_DIST + "-line", OV_STATE + "-line"]) {
+    if (map.getLayer(id)) map.removeLayer(id);
+  }
+  for (const id of [SRC, OV_DIST, OV_STATE]) {
+    if (map.getSource(id)) map.removeSource(id);
+  }
+}
+
+// Topographic mode swaps the basemap and hides the density fill (regions stay
+// clickable — an opacity-0 fill still receives events).
+function applyBasemap() {
+  const topo = document.getElementById("topo-toggle").checked;
+  map.setLayoutProperty("topo", "visibility", topo ? "visible" : "none");
+  map.setLayoutProperty("osm", "visibility", topo ? "none" : "visible");
+  if (map.getLayer(FILL))
+    map.setPaintProperty(FILL, "fill-opacity", topo ? 0 : FILL_OPACITY);
+}
 
 function renderLayer(geojson) {
+  // Density (people / km²) — recomputed on every load so it survives level switches.
+  for (const f of geojson.features) {
+    const latest = latestPop(f.properties.populations);
+    f.properties.density = (latest && f.properties.area_km2)
+      ? latest.pop / f.properties.area_km2 : 0;
+  }
+  state.hoverCode = null;
   if (map.getSource(SRC)) {
     map.getSource(SRC).setData(geojson);
+    applyGroupFilter();
+    reapplyFeatureStates();
+    updateOverlayVisibility();
     return;
   }
   map.addSource(SRC, { type: "geojson", data: geojson, promoteId: "code" });
@@ -85,52 +251,49 @@ function renderLayer(geojson) {
         "case",
         ["==", ["coalesce", ["get", "density"], 0], 0], "#cccccc",
         ["interpolate", ["linear"], ["log10", ["get", "density"]],
-          0, "#ffffcc",
-          1, "#a1dab4",
-          2, "#41b6c4",
-          3, "#2c7fb8",
-          4, "#253494",
+          0,     "#3b6fb5",   //      1 /km²  — blue
+          1,     "#1b7a3d",   //     10 /km²  — dark green
+          1.845, "#9ace48",   //     70 /km²  — light green
+          2.602, "#f4e01f",   //    400 /km²  — yellow
+          3,     "#f5901e",   //   1000 /km²  — orange
+          3.204, "#e02020",   //   1600 /km²  — red
+          3.699, "#ff45e0",   //   5000 /km²  — pink
+          4.079, "#8e24aa",   //  12000 /km²  — purple
+          4.602, "#2233cc",   //  40000 /km²  — blue
         ],
       ],
-      "fill-opacity": [
-        "case",
-        ["boolean", ["feature-state", "selected"], false], 0.75,
-        0.55,
-      ],
+      "fill-opacity": FILL_OPACITY,
     },
   });
   map.addLayer({
     id: LINE, type: "line", source: SRC,
     paint: { "line-color": "#333", "line-width": 0.4 },
   });
+  // Coarser-level borders as context — created hidden, toggled by level.
+  addOverlay(OV_DIST, state.overlayGeo[2], "#222", 1.0);
+  addOverlay(OV_STATE, state.overlayGeo[1], "#000", 1.4);
+  // Highlight layer on top — driven by feature-state, so hover is a cheap
+  // setFeatureState instead of a per-mousemove setFilter (which queued and lagged).
   map.addLayer({
-    id: HOVER, type: "line", source: SRC,
-    paint: { "line-color": "#e94", "line-width": 2 },
-    filter: ["==", ["get", "code"], ""],
+    id: HL, type: "line", source: SRC,
+    paint: {
+      "line-color": ["case",
+        ["boolean", ["feature-state", "hover"], false], "#ff8c00",
+        ["boolean", ["feature-state", "selected"], false], "#1d4ed8",
+        ["boolean", ["feature-state", "active"], false], "#dc2626",
+        "#000"],
+      "line-width": ["case",
+        ["boolean", ["feature-state", "hover"], false], 3,
+        ["boolean", ["feature-state", "selected"], false], 2.5,
+        ["boolean", ["feature-state", "active"], false], 2.5,
+        0],
+    },
   });
 
-  // Compute density on client-side (avoids baking stale density into geojson).
-  // Mutates feature properties of the loaded source.
-  for (const f of geojson.features) {
-    const latest = latestPop(f.properties.populations);
-    if (latest && f.properties.area_km2) {
-      f.properties.density = latest.pop / f.properties.area_km2;
-    } else {
-      f.properties.density = 0;
-    }
-  }
-  map.getSource(SRC).setData(geojson);
-
-  map.on("mousemove", FILL, (e) => {
-    if (!e.features.length) return;
-    map.getCanvas().style.cursor = "pointer";
-    map.setFilter(HOVER, ["==", ["get", "code"], e.features[0].properties.code]);
-  });
-  map.on("mouseleave", FILL, () => {
-    map.getCanvas().style.cursor = "";
-    map.setFilter(HOVER, ["==", ["get", "code"], ""]);
-  });
-  map.on("click", FILL, onFeatureClick);
+  applyGroupFilter();
+  reapplyFeatureStates();
+  updateOverlayVisibility();
+  applyBasemap();
 }
 
 // ---- interactions ----
@@ -142,15 +305,45 @@ function onFeatureClick(e) {
   if (e.originalEvent.shiftKey) {
     toggleSelection(feature);
   } else {
+    clearSelection();
+    setActive(code);
     showFeatureInfo(feature);
   }
+}
+
+// Hover / active highlight via feature-state (source has promoteId "code").
+function setHover(code) {
+  if (code === state.hoverCode) return;
+  if (state.hoverCode != null)
+    map.setFeatureState({ source: SRC, id: state.hoverCode }, { hover: false });
+  state.hoverCode = code;
+  if (code != null)
+    map.setFeatureState({ source: SRC, id: code }, { hover: true });
+}
+
+function setActive(code) {
+  if (state.activeCode != null && state.activeCode !== code)
+    map.setFeatureState({ source: SRC, id: state.activeCode }, { active: false });
+  state.activeCode = code;
+  map.setFeatureState({ source: SRC, id: code }, { active: true });
+}
+
+// setData drops feature-state; restore highlights for features still present.
+function reapplyFeatureStates() {
+  for (const s of state.selection) {
+    if (state.featuresByCode.has(s.code))
+      map.setFeatureState({ source: SRC, id: s.code }, { selected: true });
+  }
+  if (state.activeCode && state.featuresByCode.has(state.activeCode))
+    map.setFeatureState({ source: SRC, id: state.activeCode }, { active: true });
 }
 
 function showFeatureInfo(feature) {
   const p = feature.properties;
   const pops = p.populations || {};
   const est = estimate(pops);
-  const years = Object.keys(pops).map(Number).sort((a, b) => a - b);
+  const years = Object.keys(pops).map(Number)
+    .filter(y => DISPLAY_YEARS.includes(y)).sort((a, b) => a - b);
 
   let html = `<div class="name">${escapeHtml(p.name)}</div>`;
   if (p.parent_name) html += `<div class="parent">${escapeHtml(p.parent_name)}</div>`;
@@ -258,13 +451,15 @@ function renderSelection() {
   }
 }
 
-document.getElementById("clear-selection").addEventListener("click", () => {
+function clearSelection() {
   for (const s of state.selection) {
     map.setFeatureState({ source: SRC, id: s.code }, { selected: false });
   }
   state.selection = [];
   renderSelection();
-});
+}
+
+document.getElementById("clear-selection").addEventListener("click", clearSelection);
 
 document.getElementById("selection-list").addEventListener("click", (e) => {
   const code = e.target?.dataset?.code;
@@ -272,6 +467,25 @@ document.getElementById("selection-list").addEventListener("click", (e) => {
   const feature = state.featuresByCode.get(code);
   if (feature) toggleSelection(feature);
 });
+
+document.getElementById("group-list").addEventListener("change", (e) => {
+  if (e.target.type !== "checkbox") return;
+  if (e.target.checked) state.shownGroups.add(e.target.value);
+  else state.shownGroups.delete(e.target.value);
+  applyGroupFilter();
+});
+document.getElementById("groups-all").addEventListener("click", () => {
+  state.shownGroups = new Set(state.groups.map(g => g.code));
+  renderGroupFilter();
+  applyGroupFilter();
+});
+document.getElementById("groups-none").addEventListener("click", () => {
+  state.shownGroups = new Set();
+  renderGroupFilter();
+  applyGroupFilter();
+});
+
+document.getElementById("topo-toggle").addEventListener("change", applyBasemap);
 
 // ---- UI wiring ----
 

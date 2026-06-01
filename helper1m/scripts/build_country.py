@@ -20,6 +20,10 @@ import pandas as pd
 REPO_ROOT = Path(__file__).resolve().parents[2]
 HELPER = REPO_ROOT / "helper1m"
 
+# Geometry simplification tolerance (degrees, ~330 m). Keeps the geojsons small;
+# sub-pixel at the zoom levels the viewer uses.
+SIMPLIFY_TOL = 0.003
+
 # Per-country shapefile locations. Each entry lists candidate paths (first hit wins)
 # and the PCODE column used to join with population.csv.
 SHAPEFILES = {
@@ -55,6 +59,32 @@ SHAPEFILES = {
             "parent_name_col": "ADM2_EN",
         },
     },
+    "india": {
+        1: {
+            "candidates": [REPO_ROOT / "data/asia1m/india/state.shp"],
+            "code_col": "pc11_s_id",
+            "name_col": "s_name",
+            "parent_col": None,
+            "parent_name_col": None,
+            "group_col": "pc11_s_id",
+        },
+        2: {
+            "candidates": [REPO_ROOT / "data/asia1m/india/district.shp"],
+            "code_col": "pc11_d_id",
+            "name_col": "d_name",
+            "parent_col": "pc11_s_id",
+            "parent_name_col": None,
+            "group_col": "pc11_s_id",
+        },
+        3: {
+            "candidates": [REPO_ROOT / "data/asia1m/india/subdistrict.shp"],
+            "code_col": ["pc11_d_id", "pc11_sd_id"],  # composite: pc11_d_id is global
+            "name_col": "sd_name",
+            "parent_col": "pc11_d_id",
+            "parent_name_col": None,
+            "group_col": "pc11_s_id",
+        },
+    },
 }
 
 
@@ -87,13 +117,16 @@ def build_level(country_id, level, cfg, pops_by_code):
         return
     gdf = gpd.read_file(shp).to_crs("EPSG:4326")
 
-    # Area in km² via equal-area projection (World Mollweide).
+    # Area in km² via equal-area projection (World Mollweide) — before simplifying.
     areas_m2 = gdf.to_crs("ESRI:54009").area
     gdf["area_km2"] = (areas_m2 / 1e6).round(2)
+    # Lighten the geojson — the viewer doesn't need metre-accurate borders.
+    gdf["geometry"] = gdf.geometry.simplify(SIMPLIFY_TOL)
 
     # Slim properties — just what the viewer needs.
     def props(row):
-        code = row[cfg["code_col"]]
+        cc = cfg["code_col"]
+        code = "".join(str(row[c]) for c in cc) if isinstance(cc, list) else row[cc]
         p = {
             "code": code,
             "name": row[cfg["name_col"]],
@@ -102,7 +135,10 @@ def build_level(country_id, level, cfg, pops_by_code):
         }
         if cfg["parent_col"]:
             p["parent_code"] = row[cfg["parent_col"]]
-            p["parent_name"] = row[cfg["parent_name_col"]]
+            if cfg.get("parent_name_col"):
+                p["parent_name"] = row[cfg["parent_name_col"]]
+        if cfg.get("group_col"):
+            p["group"] = row[cfg["group_col"]]  # adm1 ancestor — viewer's state filter
         return p
 
     features = []

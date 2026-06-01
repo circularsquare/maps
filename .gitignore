@@ -5,6 +5,11 @@ venv/
 *.pkl
 *.geojson
 helper1m/countries/
+riders/londonriders/trains.json
+flights/pull/
+__pycache__/
+*.pyc
+*.stackdump
 **/.git_bak/
 *.env
 secrets.*

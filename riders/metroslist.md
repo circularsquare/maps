@@ -40,3 +40,22 @@ Hong Kong MTR, Tokyo (JR East / Tokyo Metro / Toei), Beijing Subway, Berlin BVG,
 - Shanghai 2017 dataset predates Lines 14, 15, 17, 18 and major suburban extensions; inner city network mostly unchanged.
 - Seoul disaggregation method: take monthly OD, divide by ~22 weekdays, redistribute across hours using that day's hourly entry/exit share at the origin station.
 - BART is the only system with true measured OD (entry + exit gates). NYC infers via next-swipe. London, Shanghai, Seoul, Shenzhen, Singapore all have entry + exit gates and measured data.
+
+
+
+
+
+## misc notes
+
+- contact tokyo? 
+    - odpt.org, odpt secretariat?
+    - academic labs?
+- contact china? 
+    - academic lab / tsinghua? data sharing MOU?
+    - shenzhen tencent partnership?
+
+to run:
+python -m http.server 8000
+
+todo for london
+- loading progress bar

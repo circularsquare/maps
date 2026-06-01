@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>eigenvector of bunny</title>
+<style>
+  html, body { margin: 0; padding: 0; background: #fafafa; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; color: #222; }
+  #wrap { display: flex; flex-direction: column; align-items: center; padding: 18px; gap: 10px; }
+  canvas { background: white; border: 1px solid #ddd; border-radius: 4px; }
+  .controls { display: flex; gap: 14px; align-items: center; font-size: 14px; flex-wrap: wrap; justify-content: center; }
+  button { padding: 6px 14px; font-size: 14px; cursor: pointer; background: white; border: 1px solid #bbb; border-radius: 3px; }
+  button:hover { background: #f0f0f0; }
+  .info { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 15px; color: #333; min-height: 20px; }
+  .info b { color: #c83a5e; }
+  label { display: flex; align-items: center; gap: 6px; }
+  input[type=range] { width: 120px; }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <div class="info" id="info">&nbsp;</div>
+  <canvas id="c" width="500" height="500"></canvas>
+  <div class="controls">
+    <button id="playBtn">pause</button>
+    <button id="resetBtn">reset</button>
+    <button id="stepBtn">step once</button>
+    <label>speed <input type="range" id="speed" min="0.3" max="3" step="0.05" value="1"></label>
+    <label><input type="checkbox" id="trail" checked> trail</label>
+    <label><input type="checkbox" id="eline" checked> eigenvector line</label>
+  </div>
+</div>
+<script>
+"use strict";
+
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+const W = canvas.width, H = canvas.height;
+
+const ORIGIN_X = 80;
+const ORIGIN_Y = H - 80;
+const VISUAL_LENGTH = Math.min(W - ORIGIN_X, ORIGIN_Y) * 0.82;
+const MAX_STEPS = 7; // path[7] = (21, 13), so a stays <= 25
+const STEP_DURATION = 2.8; // seconds at speed 1
+const HOLD = 1.2; // step-durations to pause at end before looping
+
+const PHI = (1 + Math.sqrt(5)) / 2;
+
+// dynamics: 1 adult -> 1 adult + 1 baby ; 1 baby -> 1 adult
+// new_a = a + b, new_b = a
+function step(v) { return [v[0] + v[1], v[0]]; }
+
+let path = [[1, 0]];
+for (let i = 0; i < MAX_STEPS + 2; i++) path.push(step(path[path.length - 1]));
+
+let stepIdx = 0;
+let stepProgress = 0;
+let playing = true;
+let speed = 1.0;
+let showTrail = true;
+let showEigenLine = true;
+
+function easeInOut(t) { return t < 0.5 ? 2*t*t : 1 - Math.pow(-2*t+2, 2)/2; }
+function lerp(a, b, t) { return a + (b - a) * t; }
+function lerpV(p, q, t) { return [lerp(p[0], q[0], t), lerp(p[1], q[1], t)]; }
+
+function currentVec() {
+  if (stepIdx >= MAX_STEPS) return path[MAX_STEPS];
+  return lerpV(path[stepIdx], path[stepIdx + 1], easeInOut(stepProgress));
+}
+
+function getScale() {
+  const v = currentVec();
+  const len = Math.hypot(v[0], v[1]);
+  if (len < 1e-6) return VISUAL_LENGTH;
+  return VISUAL_LENGTH / len;
+}
+
+function w2c(p, scale) {
+  return [ORIGIN_X + p[0] * scale, ORIGIN_Y - p[1] * scale];
+}
+
+function niceStep(target) {
+  const mag = Math.pow(10, Math.floor(Math.log10(target)));
+  const m = target / mag;
+  let n;
+  if (m < 1.5) n = 1;
+  else if (m < 3) n = 2;
+  else if (m < 7) n = 5;
+  else n = 10;
+  return n * mag;
+}
+
+function fmt(n) {
+  if (Math.abs(n) >= 1000) return n.toExponential(1).replace('+', '');
+  if (Math.abs(n - Math.round(n)) < 1e-9) return Math.round(n).toString();
+  return (+n.toFixed(2)).toString();
+}
+
+function drawArrow(fx, fy, tx, ty, color, width, headSize) {
+  ctx.strokeStyle = color;
+  ctx.fillStyle = color;
+  ctx.lineWidth = width;
+  ctx.lineCap = 'round';
+  const dx = tx - fx, dy = ty - fy;
+  const len = Math.hypot(dx, dy);
+  if (len < 0.5) return;
+  const ux = dx/len, uy = dy/len;
+  const ah = headSize, aw = headSize * 0.6;
+  // shaft stops just before the head
+  const sx = tx - ux * ah * 0.7;
+  const sy = ty - uy * ah * 0.7;
+  ctx.beginPath();
+  ctx.moveTo(fx, fy);
+  ctx.lineTo(sx, sy);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(tx, ty);
+  ctx.lineTo(tx - ux*ah - uy*aw, ty - uy*ah + ux*aw);
+  ctx.lineTo(tx - ux*ah + uy*aw, ty - uy*ah - ux*aw);
+  ctx.closePath();
+  ctx.fill();
+}
+
+function draw() {
+  ctx.clearRect(0, 0, W, H);
+  const scale = getScale();
+
+  // grid
+  const visibleW = (W - ORIGIN_X + 60) / scale;
+  const visibleH = (ORIGIN_Y + 60) / scale;
+  const gridStep = niceStep(Math.max(visibleW, visibleH) / 8);
+
+  ctx.strokeStyle = '#eee';
+  ctx.lineWidth = 1;
+  for (let x = 0; ; x++) {
+    const px = ORIGIN_X + x * gridStep * scale;
+    if (px > W + 1) break;
+    ctx.beginPath(); ctx.moveTo(px, 0); ctx.lineTo(px, H); ctx.stroke();
+  }
+  for (let y = 0; ; y++) {
+    const py = ORIGIN_Y - y * gridStep * scale;
+    if (py < -1) break;
+    ctx.beginPath(); ctx.moveTo(0, py); ctx.lineTo(W, py); ctx.stroke();
+  }
+
+  // axes
+  ctx.strokeStyle = '#444';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(0, ORIGIN_Y); ctx.lineTo(W, ORIGIN_Y);
+  ctx.moveTo(ORIGIN_X, 0); ctx.lineTo(ORIGIN_X, H);
+  ctx.stroke();
+
+  // axis labels
+  ctx.fillStyle = '#444';
+  ctx.font = 'italic 18px Georgia, serif';
+  ctx.fillText('a  (adult bunnies)', W - 170, ORIGIN_Y + 30);
+  ctx.save();
+  ctx.translate(ORIGIN_X - 35, ORIGIN_Y / 2);
+  ctx.rotate(-Math.PI / 2);
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('b  (baby bunnies)', 0, 0);
+  ctx.restore();
+
+  // tick labels
+  ctx.font = '11px ui-monospace, Menlo, monospace';
+  ctx.fillStyle = '#888';
+  ctx.textAlign = 'center';
+  for (let x = 1; ; x++) {
+    const px = ORIGIN_X + x * gridStep * scale;
+    if (px > W + 1) break;
+    ctx.fillText(fmt(x * gridStep), px, ORIGIN_Y + 14);
+  }
+  ctx.textAlign = 'right';
+  for (let y = 1; ; y++) {
+    const py = ORIGIN_Y - y * gridStep * scale;
+    if (py < -1) break;
+    ctx.fillText(fmt(y * gridStep), ORIGIN_X - 6, py + 4);
+  }
+  ctx.textAlign = 'left';
+
+  // eigenvector direction line
+  if (showEigenLine) {
+    ctx.strokeStyle = 'rgba(80, 130, 200, 0.55)';
+    ctx.setLineDash([6, 5]);
+    ctx.lineWidth = 1.5;
+    const farA = (W + 200) / scale;
+    const farB = farA / PHI;
+    ctx.beginPath();
+    ctx.moveTo(ORIGIN_X, ORIGIN_Y);
+    ctx.lineTo(ORIGIN_X + farA * scale, ORIGIN_Y - farB * scale);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // label along the line
+    ctx.fillStyle = 'rgba(60, 110, 180, 0.85)';
+    ctx.font = '13px ui-monospace, Menlo, monospace';
+    const labelA = visibleW * 0.55;
+    const labelB = labelA / PHI;
+    const lp = w2c([labelA, labelB], scale);
+    ctx.save();
+    ctx.translate(lp[0], lp[1]);
+    ctx.rotate(-Math.atan2(1, PHI));
+    ctx.fillText('eigenvector  (φ, 1)', 4, -6);
+    ctx.restore();
+  }
+
+  // past vector trail — dot at path[i] appears once the arrow has begun
+  // moving away from it (i.e. as soon as stepProgress > 0 for that step)
+  if (showTrail) {
+    const trailEnd = stepProgress > 0 ? stepIdx + 1 : stepIdx;
+    for (let i = 0; i < trailEnd; i++) {
+      const v = path[i];
+      const c = w2c(v, scale);
+      const alpha = 0.35 + 0.3 * (i / Math.max(1, stepIdx));
+      ctx.strokeStyle = `rgba(200, 58, 94, ${alpha})`;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(ORIGIN_X, ORIGIN_Y);
+      ctx.lineTo(c[0], c[1]);
+      ctx.stroke();
+      ctx.fillStyle = `rgba(200, 58, 94, ${0.85})`;
+      ctx.beginPath();
+      ctx.arc(c[0], c[1], 7, 0, 2 * Math.PI);
+      ctx.fill();
+    }
+  }
+
+  // current vector
+  const v = currentVec();
+  const tip = w2c(v, scale);
+  drawArrow(ORIGIN_X, ORIGIN_Y, tip[0], tip[1], '#c83a5e', 2.5, 14);
+
+  // tip label
+  ctx.font = 'bold 14px ui-monospace, Menlo, monospace';
+  ctx.fillStyle = '#c83a5e';
+  const tipLabel = `(${fmt(v[0])}, ${fmt(v[1])})`;
+  // offset perpendicular to vector for readability
+  const len = Math.hypot(v[0], v[1]);
+  const ox = len > 0 ? -v[1] / len * 14 : 0;
+  const oy = len > 0 ? -v[0] / len * 14 : -14;
+  ctx.fillText(tipLabel, tip[0] + 10 + ox, tip[1] - 6 + oy);
+}
+
+function updateInfo() {
+  const v = currentVec();
+  const ratio = v[1] === 0 ? '∞' : (v[0] / v[1]).toFixed(4);
+  const phiStr = PHI.toFixed(4);
+  const stepNum = (stepIdx + (stepIdx < MAX_STEPS ? stepProgress : 0)).toFixed(2);
+  document.getElementById('info').innerHTML =
+    `step <b>${stepNum}</b> &nbsp;·&nbsp; ` +
+    `(a, b) = (<b>${fmt(v[0])}</b>, <b>${fmt(v[1])}</b>) &nbsp;·&nbsp; ` +
+    `a/b = <b>${ratio}</b> &nbsp;→&nbsp; φ = ${phiStr}`;
+}
+
+let lastTime = performance.now();
+function loop(now) {
+  const dt = (now - lastTime) / 1000;
+  lastTime = now;
+  if (playing) {
+    stepProgress += dt * speed / STEP_DURATION;
+    while (stepProgress >= 1 && stepIdx < MAX_STEPS) {
+      stepProgress -= 1;
+      stepIdx += 1;
+    }
+    // hold at the end, then loop
+    if (stepIdx >= MAX_STEPS && stepProgress >= HOLD) {
+      stepIdx = 0;
+      stepProgress = 0;
+    }
+  }
+  draw();
+  updateInfo();
+  requestAnimationFrame(loop);
+}
+
+document.getElementById('playBtn').onclick = () => {
+  playing = !playing;
+  document.getElementById('playBtn').innerText = playing ? 'pause' : 'play';
+  lastTime = performance.now();
+};
+document.getElementById('resetBtn').onclick = () => {
+  stepIdx = 0; stepProgress = 0; playing = true;
+  document.getElementById('playBtn').innerText = 'pause';
+  lastTime = performance.now();
+};
+document.getElementById('stepBtn').onclick = () => {
+  if (stepIdx < MAX_STEPS) {
+    stepIdx += 1;
+    stepProgress = 0;
+  }
+  playing = false;
+  document.getElementById('playBtn').innerText = 'play';
+};
+document.getElementById('speed').oninput = (e) => { speed = parseFloat(e.target.value); };
+document.getElementById('trail').onchange = (e) => { showTrail = e.target.checked; };
+document.getElementById('eline').onchange = (e) => { showEigenLine = e.target.checked; };
+
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
