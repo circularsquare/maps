@@ -5,7 +5,6 @@ venv/
 *.pkl
 *.geojson
 helper1m/countries/
-riders/londonriders/trains.json
 flights/pull/
 __pycache__/
 *.pyc
@@ -13,3 +12,15 @@ __pycache__/
 **/.git_bak/
 *.env
 secrets.*
+
+# Large intermediate / regenerable products — kept on disk, not uploaded.
+# (New map outputs elsewhere are still tracked by default.)
+# NetworkX graph intermediates:
+*.gpickle
+# raw / intermediate rider data (regenerable from fetch):
+riders/londonriders/trains.json
+riders/nycriders/trains.json
+riders/nycriders/data.json
+# street-render experiments / colormap variants:
+nystreets/osm*.png
+nystreets/nystreets.png
