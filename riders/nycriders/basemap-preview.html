@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>nycriders — basemap preview</title>
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.css" />
+<style>
+  html, body { margin: 0; height: 100%; background: #000; font-family: 'Nunito', system-ui, sans-serif; }
+  #map { position: absolute; inset: 0; }
+  #bar {
+    position: absolute; top: 12px; left: 12px; z-index: 10;
+    background: rgba(20,20,22,0.92); border: 1px solid #333; border-radius: 8px;
+    padding: 10px 12px; color: #ddd; max-width: 300px;
+  }
+  #bar h1 { font-size: 13px; margin: 0 0 8px; font-weight: 700; letter-spacing: .02em; }
+  #bar .btns { display: flex; flex-direction: column; gap: 6px; }
+  #bar button {
+    text-align: left; background: #2a2a2e; color: #ddd; border: 1px solid #3a3a40;
+    border-radius: 6px; padding: 7px 9px; font: inherit; font-size: 12px; cursor: pointer;
+  }
+  #bar button:hover { background: #34343a; }
+  #bar button.active { background: #1d6fe0; border-color: #1d6fe0; color: #fff; }
+  #bar .note { font-size: 11px; color: #888; margin-top: 8px; line-height: 1.35; }
+  #bar .meta { font-size: 11px; color: #aaa; margin-top: 6px; }
+  #overlay-toggle { margin-top: 8px; font-size: 11px; color: #aaa; display: flex; align-items: center; gap: 6px; }
+</style>
+</head>
+<body>
+<div id="map"></div>
+<div id="bar">
+  <h1>BASEMAP PREVIEW — nycriders</h1>
+  <div class="btns">
+    <button data-key="carto" class="active">CARTO dark-matter <span style="color:#888">(current / reference)</span></button>
+    <button data-key="openfreemap">OpenFreeMap — Dark <span style="color:#888">(keyless)</span></button>
+    <button data-key="protomaps">Protomaps — dark <span style="color:#888">(keyless, PMTiles)</span></button>
+  </div>
+  <label id="overlay-toggle"><input type="checkbox" id="overlay-cb" checked /> show subway lines overlay</label>
+  <div class="meta" id="meta"></div>
+  <div class="note">Same NYC view + your real route geometry on each basemap. CARTO is here only as the visual reference — it's the one banned on anita.garden, so it works locally but not live.</div>
+</div>
+
+<script src="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.js"></script>
+<script src="https://unpkg.com/pmtiles@4.2.1/dist/pmtiles.js"></script>
+<script src="https://unpkg.com/@protomaps/basemaps@5/dist/basemaps.js"></script>
+<script>
+const PMTILES_PROTOCOL = new pmtiles.Protocol();
+maplibregl.addProtocol('pmtiles', PMTILES_PROTOCOL.tile);
+
+const META = {
+  carto:       'CARTO dark-matter — your old look: near-black, whisper-quiet roads/labels.',
+  openfreemap: 'OpenFreeMap Dark — free public tiles, no key, no limits. OSM-Liberty-derived.',
+  protomaps:   'Protomaps dark (v4) — self-hostable on your R2. Demo tiles are the global planet file.',
+};
+
+// ---- basemap style builders ----
+function cartoStyle() {
+  return {
+    version: 8,
+    sources: {
+      'carto-dark': {
+        type: 'raster',
+        tiles: ['https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png'],
+        tileSize: 256,
+        attribution: '&copy; OSM &copy; CARTO',
+      },
+    },
+    layers: [{
+      id: 'carto-dark-layer', type: 'raster', source: 'carto-dark',
+      minzoom: 0, maxzoom: 18,
+      paint: { 'raster-brightness-max': 1.0, 'raster-brightness-min': 0.05 },
+    }],
+  };
+}
+
+function protomapsStyle() {
+  return {
+    version: 8,
+    glyphs: 'https://protomaps.github.io/basemaps-assets/fonts/{fontstack}/{range}.pbf',
+    sprite: 'https://protomaps.github.io/basemaps-assets/sprites/v4/dark',
+    sources: {
+      protomaps: {
+        type: 'vector',
+        url: 'pmtiles://https://demo-bucket.protomaps.com/v4.pmtiles',
+        attribution: '&copy; OpenStreetMap &copy; Protomaps',
+      },
+    },
+    layers: basemaps.layers('protomaps', basemaps.namedFlavor('dark'), { lang: 'en' }),
+  };
+}
+
+const STYLES = {
+  carto: cartoStyle,
+  openfreemap: () => 'https://tiles.openfreemap.org/styles/dark',
+  protomaps: protomapsStyle,
+};
+
+// ---- map ----
+const map = new maplibregl.Map({
+  container: 'map',
+  style: cartoStyle(),
+  center: [-73.95, 40.735],
+  zoom: 11.38,
+  // no minZoom cap in this preview — zoom out as far as you like
+  attributionControl: true,
+});
+
+// ---- subway line overlay (from real geometry.json) ----
+let geometryFC = null;     // cached GeoJSON FeatureCollection
+let overlayOn = true;
+
+fetch('geometry.json')
+  .then(r => r.json())
+  .then(g => {
+    geometryFC = {
+      type: 'FeatureCollection',
+      features: (g.lines || []).map(l => ({
+        type: 'Feature',
+        properties: { color: l.color || '#888' },
+        geometry: { type: 'LineString', coordinates: l.coords },
+      })),
+    };
+    addOverlay();
+  })
+  .catch(e => console.warn('geometry.json load failed:', e));
+
+function addOverlay() {
+  // NB: don't gate on map.isStyleLoaded() — it returns false *inside* the
+  // 'style.load' handler, which is exactly when we need to re-add the overlay.
+  if (!geometryFC || !overlayOn || map.getSource('subway-lines')) return;
+  try {
+    map.addSource('subway-lines', { type: 'geojson', data: geometryFC });
+    map.addLayer({
+      id: 'subway-lines-layer',
+      type: 'line',
+      source: 'subway-lines',
+      paint: {
+        'line-color': ['get', 'color'],
+        'line-width': ['interpolate', ['linear'], ['zoom'], 4, 0.6, 10, 1.5, 14, 4],
+        'line-opacity': 0.9,
+      },
+    });
+  } catch (e) {
+    // style not ready yet — the next 'style.load' will retry
+  }
+}
+
+function removeOverlay() {
+  if (map.getLayer('subway-lines-layer')) map.removeLayer('subway-lines-layer');
+  if (map.getSource('subway-lines')) map.removeSource('subway-lines');
+}
+
+// re-add overlay after every style swap
+map.on('style.load', addOverlay);
+
+// ---- controls ----
+document.getElementById('meta').textContent = META.carto;
+
+document.querySelectorAll('#bar button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const key = btn.dataset.key;
+    document.querySelectorAll('#bar button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('meta').textContent = META[key];
+    const s = STYLES[key]();
+    map.setStyle(s);   // overlay re-added on 'style.load'
+  });
+});
+
+document.getElementById('overlay-cb').addEventListener('change', e => {
+  overlayOn = e.target.checked;
+  if (overlayOn) addOverlay(); else removeOverlay();
+});
+</script>
+</body>
+</html>

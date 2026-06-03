@@ -824,14 +824,14 @@ def main():
             # Skipped for census-direct lines — they have no gtfs density.
             # The census only surveys each metropolitan area, so a line running
             # past the census boundary (飯田線, 近鉄大阪線, …) keeps its outer
-            # extent as a "remainder". An un-anchored remainder stays at the
-            # line's whole-line 輸送密度 (gp['density']) — the base-map default.
-            # A remainder on a line in REMAINDER_ANCHOR is instead filled
-            # max(anchor, nearest census value): the anchor sets the outer
-            # extent, and census_floor() keeps any short interior coverage gap
-            # matching its busy surroundings. Skipped for census-direct lines —
-            # they have no gtfs density to fall back on. `floor` is recorded for
-            # every remainder so the report can suggest anchors.
+            # extent as a "remainder". Fill priority (see the branch below):
+            # interior gap / short tip → adjacent census; REMAINDER_ANCHOR →
+            # max(anchor, census); a long endpoint stub with a credible census
+            # edge → min(whole-line, census edge), i.e. continue flat without
+            # inflating; otherwise (no/low census edge) → the whole-line default.
+            # Skipped for census-direct lines — they have no gtfs density to fall
+            # back on. `floor` is recorded for every remainder so the report can
+            # suggest anchors.
             if gp['density'] is not None:
                 anchor = REMAINDER_ANCHOR.get((gp['op'], gp['line']), 0.0)
                 for s in f_strands:
@@ -876,8 +876,23 @@ def main():
                             fill = floor_display
                         elif span.length < SHORT_TAIL and floor > 0:
                             fill = floor_display
+                        elif anchor:
+                            fill = max(anchor, floor_display)
+                        elif floor >= LOW_VOL_THRESHOLD:
+                            # A long endpoint stub of an otherwise census-covered
+                            # line (Midosuji's tail to 新金岡; 東海道線 past 彦根
+                            # toward 米原): continue flat from the census edge
+                            # rather than jumping to the busier whole-line average
+                            # — a remainder past the boundary is an extension of
+                            # the line, never busier than where the census left
+                            # off. Capped at the whole-line average so a census
+                            # edge that happens to read higher (武蔵野線, 相模本線)
+                            # can't inflate the tail. A spuriously low census edge
+                            # (rural lines the survey barely sampled — 伊勢線's 77)
+                            # falls through to the whole-line default below.
+                            fill = min(default, floor_display)
                         else:
-                            fill = max(anchor, floor_display) if anchor else default
+                            fill = default
                         rkm = round((gp['km'] or 0) * (hi - lo) / full_len, 3)
                         # Identity-grouping: every remainder on a line used to
                         # share gp['from']/gp['to'], so right-clicking one

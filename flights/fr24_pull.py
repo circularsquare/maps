@@ -22,7 +22,7 @@ import urllib.request, urllib.parse, urllib.error
 from datetime import datetime, timedelta, timezone
 
 # ============================ CONFIG ============================
-DAY          = "2026-05-16"      # UTC day to pull (Sat; then 05-17 Sun, 05-18 Mon)
+DAY          = "2026-05-15"      # UTC day to pull (Fri; pairs with the Sat 05-16 pull)
 HOUR_FROM    = 0                 # window start hour (inclusive)
 HOUR_TO      = 24                # window end hour (exclusive). 24 = whole day.
 MAX_AIRPORTS = 0                 # 0 = all (~3260). Busiest-first.
