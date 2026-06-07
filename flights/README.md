@@ -61,19 +61,22 @@ The projects-page link lives in `~/projects/website/pages/projects/projects.md`
 (under maps → interactive). Before sharing publicly, settle the FR24 attribution
 + license review in the TODO below.
 
-## Known coverage gaps (2026-05-16 pull)
+## Known coverage gaps (2026-05-15 + 05-16 pulls)
 
 Some countries come back blank from the FR24 `flight-summary` API even though
 they have real traffic. Checked both directions (departures pulled per airport
 *and* arrivals seen landing from anywhere); a country is a "hole" only if blank
-both ways. **None of this is fixable by the flight-count threshold — it's an
-upstream FR24 data/coverage gap.**
+both ways, and confirmed across **both** pull days. **None of this is fixable by
+the flight-count threshold — it's an upstream FR24 data/coverage gap.**
 
-- **Kuwait** — anomaly. Kuwait Intl (OKBK) returns `ok:true` / **0 flights in &
-  out**, while every neighbour is fine (Dubai 360, Riyadh 344, Doha 233, Bahrain
-  74 a 30-min hop away). Coverage in the Gulf clearly works, so this looks like
-  an FR24 historical-data glitch for that one airport/day, *not* a coverage gap.
-  Most likely date-specific — re-test on another day before backfilling.
+- **Kuwait** — persistent anomaly. Kuwait Intl (OKBK) returns `ok:true` / **0
+  flights in & out on BOTH days**, while every neighbour is fine (Dubai 360,
+  Riyadh 344, Doha 233, Bahrain 74 a 30-min hop away). Coverage in the Gulf
+  clearly works, so it's not a signal gap — looks like a standing FR24
+  indexing/blocking issue for OKBK specifically. NOT date-specific (re-pull
+  won't fix it). Next step before backfilling: re-query OKBK a different way
+  (`inbound:OKBK`, or `operating_as=KAC`/`JZR`) to see if it's only the
+  outbound-airport index that's broken.
 - **Uzbekistan** (11 airports, incl. Tashkent/Samarkand/Bukhara) and
   **Kyrgyzstan** (Bishkek/Manas FRU, Osh OSS) — all blank. Systemic Central-Asia
   ADS-B/MLAT gap (no MLAT region, sparse receivers). FR24's *live* product does
@@ -85,13 +88,21 @@ upstream FR24 data/coverage gap.**
   empty), Mongolia (3 recs), Zambia (2 recs), Tajikistan (31 recs), Russia (35
   of 112 empty). Borderline real-low: South Sudan, Eswatini (0 dep / 3 arr),
   Nauru, Christmas Island.
+- **Weekend bias** — the pull is **Fri 05-15 + Sat 05-16**, and charter/leisure
+  flying clusters on weekends. Annualizing (×182) therefore *overstates*
+  seasonal holiday routes (e.g. Katowice–Marsa Alam, the Polish-charter Red Sea
+  corridors). The routes are real; their magnitudes skew high. Real fix is more
+  pull days across the week, not filtering. Freighters are handled separately —
+  all-cargo operators are dropped in `build_fr24.py` (see CLAUDE.md).
 
 ## TODO
 
-- [ ] Backfill the coverage holes above (Kuwait first — cheap to re-test;
-      Uzbekistan/Kyrgyzstan need a schedule source). See methods discussion.
-
-- [ ] Pull Sun 2026-05-17 (~273k credits — 345k remaining in budget).
+- [x] Backfilled the persistent FR24 coverage holes for Kuwait, Uzbekistan, and
+      Kyrgyzstan from schedule-derived `data/airport_<iata>.txt` dumps via
+      `build_backfill.py`; `build_fr24.py` merges `data/backfill_routes.csv`
+      rows and tags them as `source="sched"` in `routes_fr24.json`.
+- [x] Pulled Fri 2026-05-15 + Sat 2026-05-16 (2 full days). ~32k credits left —
+      no room for a 3rd day without a top-up.
 - [ ] Unexpected-routes engine: GeoNames `cities1000` join → 3-bucket gravity
       baseline (<500 / 500-3000 / >3000 km) → residual list panel in the viewer.
 - [ ] Recover the ~2k flights dropped to "unknown airport" — extend the lookup

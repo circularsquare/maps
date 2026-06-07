@@ -20,6 +20,19 @@ Aircraft type is real per-flight; seat count is a typical-per-type lookup; load
 factor is a flat assumption. Good enough for a *comparative* oddity-finder, not
 for exact passenger totals.
 
+**Freighters are excluded.** A 747-8F shares its ICAO type code (`B748`) with a
+passenger 748, so the seats lookup would otherwise count each freighter as a
+full jumbo of passengers and invent phantom corridors — Cargolux's Luxembourg
+hub was the giveaway (LUX–Ashgabat showed 5.5 "pax" flights/day of pure 747F
+cargo). The `light` record has no cargo/pax flag, so the only signal is the
+operator: `build_fr24.py`'s `CARGO_OPERATORS` set drops all-cargo airlines
+(FedEx, UPS, Cargolux, the DHL network, Atlas, the China cargo carriers, …),
+vetted by tail-reg + route so no passenger carrier is caught. **Known residual:**
+combination carriers (Emirates, Qatar, Korean, Cathay, Lufthansa, …) fly
+freighters under their *passenger* code, and the freighter-dominant type `B77L`
+(777F) is the same code as the rare passenger 777-200LR — these can't be cleanly
+separated and are left in.
+
 ## Data source — the story so far
 
 No free global origin-destination passenger database exists (that is OAG /
