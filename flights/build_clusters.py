@@ -1,16 +1,24 @@
 """Cluster detection over the FR24 route graph.
 
 Reads routes_fr24.json, runs weighted Louvain (airports = nodes, passengers =
-edge weight), and writes the result back into the SAME file so the viewer ships
-one data file:
+edge weight) at a RANGE of resolutions, and writes every result back into the
+SAME file so the viewer can switch between them live:
 
-  - each airport entry gains a 5th element: its cluster id (int, -1 = "other")
-  - meta.clusters = [{id, hub, hubCity, hubCountry, n, countries}, ...]
-                    ordered by total cluster traffic (id 0 = biggest)
+  - each airport entry's 5th element [4] becomes an ARRAY of cluster ids, one
+    per resolution (int, -1 = "other"), parallel to meta.resolutions
+  - meta.resolutions  = [1.3, 1.4, ..., 2.0]
+  - meta.clusterSets  = [{res, clusters:[{id, hub, hubCity, hubCountry, n,
+                        countries}, ...]}, ...] parallel to meta.resolutions;
+                        each set's clusters are ordered by total traffic (id 0 =
+                        biggest)
+  - meta.clusterDefault = index of the resolution shown on first load
+  - meta.clusters     = the default resolution's cluster list (back-compat)
 
-Idempotent: strips any prior cluster data first, so re-running is safe. Run it
-AFTER build_fr24.py (which regenerates routes_fr24.json with 4-element airport
-entries and no cluster meta).
+Higher resolution = more, smaller clusters (1.5 leaves Africa as a thin
+S-Africa-only cluster; 2.0 fragments Africa and splits Japan off from SE Asia).
+
+Idempotent: rebuilds slot [4] from scratch each run, so re-running is safe. Run
+it AFTER build_fr24.py.
 
     python build_clusters.py
 """
@@ -18,14 +26,13 @@ import json
 import networkx as nx
 from collections import Counter, defaultdict
 
-DATA       = "routes_fr24.json"
-RESOLUTION = 1.75   # higher = more, smaller clusters; 1.75 = clean ~11 regions
-                    # (1.5 leaves Africa as a thin S-Africa-only cluster; 2.0
-                    #  fragments Africa and splits Japan off from SE Asia)
-SEED       = 42     # Louvain is order-dependent; fix for reproducible colours
-MIN_SIZE   = 10     # clusters smaller than this fall into "other" (id -1)
-MAX_CLUST  = 12     # cap on coloured clusters (palette size in the viewer)
-MIN_COHESION = 0.25  # repair clusters whose internal traffic share is below this
+DATA        = "routes_fr24.json"
+RESOLUTIONS = [round(1.0 + 0.1 * i, 1) for i in range(11)]  # 1.0 .. 2.0
+DEFAULT_RES = 1.7    # resolution shown on first load (must be in RESOLUTIONS)
+SEED        = 45    # Louvain is order-dependent; fix for reproducible colours
+MIN_SIZE    = 15     # clusters smaller than this fall into "other" (id -1)
+MAX_CLUST   = 15     # cap on coloured clusters (palette size in the viewer)
+MIN_COHESION = 0.04  # repair clusters whose internal traffic share is below this
 
 
 def _internal_pct(comm, rts):
@@ -80,22 +87,14 @@ def _repair(parts, rts, max_passes=5):
     return list(groups.values())
 
 
-def main():
-    with open(DATA, encoding="utf-8") as f:
-        d = json.load(f)
-    ap, rts = d["airports"], d["routes"]
+def cluster_at(G, rts, ap, traf, resolution):
+    """One weighted-Louvain pass at `resolution`.
 
-    # --- graph + per-airport traffic (for hub-picking and ordering) ----------
-    G = nx.Graph()
-    traf = defaultdict(float)
-    for a, b, pax, *_ in rts:
-        if a in ap and b in ap:
-            G.add_edge(a, b, weight=pax)
-            traf[a] += pax
-            traf[b] += pax
-
+    Returns (airport_cluster, meta_clusters): a code->cluster-id map and the
+    per-cluster label list, ordered so id 0 is the heaviest cluster.
+    """
     parts = nx.community.louvain_communities(
-        G, weight="weight", resolution=RESOLUTION, seed=SEED)
+        G, weight="weight", resolution=resolution, seed=SEED)
     parts = _repair(parts, rts)   # eject swing-hub misfits from junk communities
 
     # order by total cluster traffic so id 0 = the heaviest cluster
@@ -122,26 +121,58 @@ def main():
         for code in c:
             airport_cluster[code] = cid
         cid += 1
+    return airport_cluster, meta_clusters
 
-    # --- write back: airport element [4] = cluster id; meta.clusters ---------
-    # Set only our own slot; preserve any later slots (e.g. [5] betweenness from
-    # build_centrality.py) so the two enrichment scripts are order-independent.
+
+def main():
+    with open(DATA, encoding="utf-8") as f:
+        d = json.load(f)
+    ap, rts = d["airports"], d["routes"]
+
+    # --- graph + per-airport traffic (for hub-picking and ordering) ----------
+    G = nx.Graph()
+    traf = defaultdict(float)
+    for a, b, pax, *_ in rts:
+        if a in ap and b in ap:
+            G.add_edge(a, b, weight=pax)
+            traf[a] += pax
+            traf[b] += pax
+
+    # --- one cluster set per resolution --------------------------------------
+    assigns = []        # parallel to RESOLUTIONS: list of code->cid maps
+    cluster_sets = []   # parallel to RESOLUTIONS: list of {res, clusters}
+    for res in RESOLUTIONS:
+        ac, mc = cluster_at(G, rts, ap, traf, res)
+        assigns.append(ac)
+        cluster_sets.append({"res": res, "clusters": mc})
+
+    default_idx = RESOLUTIONS.index(DEFAULT_RES)
+
+    # --- write back: airport element [4] = ARRAY of cluster ids --------------
+    # Keep only lon/lat/city/country, then set [4] to the per-resolution ids.
     for code, info in ap.items():
-        base = list(info)
-        while len(base) < 5:
-            base.append(-1)
-        base[4] = airport_cluster.get(code, -1)
+        base = list(info)[:4]
+        base.append([assigns[i].get(code, -1) for i in range(len(RESOLUTIONS))])
         ap[code] = base
-    d["meta"]["clusters"] = meta_clusters
+
+    d["meta"]["resolutions"] = RESOLUTIONS
+    d["meta"]["clusterSets"] = cluster_sets
+    d["meta"]["clusterDefault"] = default_idx
+    d["meta"]["clusters"] = cluster_sets[default_idx]["clusters"]   # back-compat
 
     with open(DATA, "w", encoding="utf-8") as f:
         json.dump(d, f, ensure_ascii=False, separators=(",", ":"))
 
-    n_colored = sum(1 for v in airport_cluster.values() if v >= 0)
-    print(f"{len(meta_clusters)} clusters coloured, "
-          f"{n_colored}/{len(ap)} airports assigned "
-          f"({sum(1 for v in airport_cluster.values() if v < 0)} -> other)")
-    for m in meta_clusters:
+    # --- report --------------------------------------------------------------
+    for res, ac, cs in zip(RESOLUTIONS, assigns, cluster_sets):
+        n_colored = sum(1 for v in ac.values() if v >= 0)
+        mark = " (default)" if res == DEFAULT_RES else ""
+        print(f"res {res}: {len(cs['clusters'])} clusters, "
+              f"{n_colored}/{len(ap)} airports assigned "
+              f"({sum(1 for v in ac.values() if v < 0)} -> other){mark}")
+    print()
+    print(f"default res {DEFAULT_RES}:")
+    for m in cluster_sets[default_idx]["clusters"]:
         tops = ", ".join(f"{k}({v})" for k, v in m["countries"][:3])
         print(f"  C{m['id']:2d} n={m['n']:4d} hub={m['hub']} "
               f"[{m['hubCountry']}] :: {tops}")

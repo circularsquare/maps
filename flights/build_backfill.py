@@ -37,6 +37,10 @@ IATA_OVERRIDE = {
 }
 
 ANCHOR  = re.compile(r"^([A-Z]{3}) [A-Za-z0-9]")          # "IST Istanbul" dest line
+# All-caps 3-letter AIRLINE names ("ATA Airlines", "ITA Airways", "AIS Airlines")
+# look exactly like a dest anchor and get mis-mapped to a same-coded airport
+# (ATA -> Anta, Peru). Exclude any anchor whose 2nd word is an airline word.
+AIRLINE = re.compile(r"^[A-Z]{3} (Airlines|Airways|Airline|Aviation|Aero|Jet|Express|Connection)\b")
 FREQ    = re.compile(r"(\d+)(?:\s*-\s*(\d+))?\s+flights?\s+per\s+day")
 DUR     = re.compile(r"^(\d+)h\s+(\d+)m$")
 
@@ -57,7 +61,8 @@ def parse_file(path, orig_icao, i2i):
     """Yield (dest_icao, weekly, seats, note) for one airport_<iata>.txt."""
     lines = [ln.rstrip("\n") for ln in open(path, encoding="utf-8")]
     # find the dest-anchor line indices, then slice each block to the next anchor
-    anchors = [i for i, ln in enumerate(lines) if ANCHOR.match(ln)]
+    anchors = [i for i, ln in enumerate(lines)
+               if ANCHOR.match(ln) and not AIRLINE.match(ln)]
     for k, start in enumerate(anchors):
         end = anchors[k + 1] if k + 1 < len(anchors) else len(lines)
         block = lines[start:end]

@@ -11,7 +11,7 @@ The aircraft-type table is AIRLINERS ONLY: a flight whose type is not in it
 (business jets, helicopters, light GA, sub-~20-seat commuters) is dropped — the
 size filter (see CLAUDE.md).
 """
-import json, os, csv, collections
+import json, os, csv, collections, math, statistics
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATA = os.path.join(HERE, "data")
@@ -20,10 +20,35 @@ DATA = os.path.join(HERE, "data")
 PULL_DIRS    = [os.path.join(HERE, "pull", "2026-05-15"),
                 os.path.join(HERE, "pull", "2026-05-16")]
 WINDOW_HOURS = 24.0         # 1 = first-hour validation pull; 24 = a full day
-LOAD_FACTOR  = 0.80
+
+# Load factor. Real load factors aren't flat: thick, high-frequency routes run
+# fuller and thin/remote routes emptier. assign_load_factors() spreads LF by
+# route density (offered seats/day) on an S-curve, then rescales so the CAPACITY-
+# WEIGHTED MEAN equals LOAD_FACTOR — i.e. it redistributes passengers across
+# routes without changing the system total. The anchor is set to IATA's real
+# global passenger load factor (~0.83).
+LOAD_FACTOR  = 0.83
+LF_MIN, LF_MAX, LF_K = 0.55, 0.90, 1.3   # S-curve floor / ceiling / steepness
+LF_CLAMP = (0.50, 0.92)                   # hard bounds after rescaling
 
 # observed-flight count -> per-year estimate. 8760 hours/year.
 YEAR_FACTOR  = 8760.0 / (WINDOW_HOURS * len(PULL_DIRS))
+
+
+def assign_load_factors(caps):
+    """Per-route load factor from route density (annual offered seats -> seats/day
+    on an S-curve), rescaled so the capacity-weighted mean is exactly LOAD_FACTOR.
+    Returns a list parallel to `caps`."""
+    if not caps:
+        return []
+    xs = [math.log10(max(c / 365.0, 1.0)) for c in caps]      # log10 seats/day
+    x0 = statistics.median(xs)
+    raw = [LF_MIN + (LF_MAX - LF_MIN) / (1.0 + math.exp(-LF_K * (x - x0))) for x in xs]
+    tot = sum(caps)
+    mean = sum(c * l for c, l in zip(caps, raw)) / tot if tot else LOAD_FACTOR
+    scale = LOAD_FACTOR / mean if mean else 1.0
+    lo, hi = LF_CLAMP
+    return [min(hi, max(lo, l * scale)) for l in raw]
 
 # Hand-curated routes for airports FR24's flight-summary API can't see
 # (Kuwait OKBK, all of Uzbekistan, Kyrgyzstan — confirmed blank both directions
@@ -172,9 +197,9 @@ def merge_backfill(routes, used, airports, fr24_pairs):
         seen.add(key)
         seats = seats_override or SEATS.get(ac, 180)   # explicit > type lookup > narrowbody default
         annual_flights = wk * (365.0 / 7.0)             # weekly -> yearly, same daily-rate x365 basis as FR24
-        pax = annual_flights * seats * LOAD_FACTOR
+        cap = annual_flights * seats                    # offered seats; LF applied globally below
         routes.append([airports[o][0], airports[d][0],
-                       round(pax), round(wk / 7.0, 1), seats, "sched"])
+                       cap, round(wk / 7.0, 1), seats, "sched"])
         used.add(o); used.add(d)
         added += 1
     print(f"  backfill added        : {added}  (dup {skipped_dup}, unknown apt {skipped_apt})")
@@ -216,12 +241,18 @@ def main():
     for (a, b), rec in pairs.items():
         avg_seats = rec["seats"] / rec["n"]
         annual_flights = rec["n"] * YEAR_FACTOR
-        pax = annual_flights * avg_seats * LOAD_FACTOR
+        cap = annual_flights * avg_seats                # offered seats; LF applied globally below
         routes.append([airports[a][0], airports[b][0],
-                       round(pax), round(annual_flights / 365, 1), round(avg_seats)])
+                       cap, round(annual_flights / 365, 1), round(avg_seats)])
         used.add(a); used.add(b)
 
     n_backfill = merge_backfill(routes, used, airports, pairs)
+
+    # density-based load factor: slot [2] currently holds offered capacity; turn
+    # it into a passenger estimate — fuller on thick routes, emptier on thin ones,
+    # with the capacity-weighted mean pinned to LOAD_FACTOR (total pax unchanged).
+    for r, lf in zip(routes, assign_load_factors([r[2] for r in routes])):
+        r[2] = round(r[2] * lf)
 
     routes.sort(key=lambda r: -r[2])
     out = {
@@ -231,6 +262,8 @@ def main():
             "note": f"Observed flights annualised x{YEAR_FACTOR:.0f} "
                     f"({WINDOW_HOURS:g}h x {len(PULL_DIRS)} day(s) -> 8760h/yr). "
                     f"Day-of-week / seasonal mix is whatever was pulled. "
+                    f"Load factor scales with route density (capacity-weighted "
+                    f"mean {LOAD_FACTOR:.2f}). "
                     f"{n_backfill} schedule-derived routes (source=\"sched\") "
                     f"backfill FR24's coverage holes.",
             "n_routes": len(routes),

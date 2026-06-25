@@ -3,8 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Global air traffic — estimated passengers</title>
-<link rel="icon" href="data:,">
+<title>flight traffic map</title>
+<meta property="og:title" content="flight traffic map">
+<meta property="og:description" content="Estimated passenger traffic between airports worldwide, surfacing the unexpected routes that distance and population alone don't explain.">
+<meta property="og:image" content="preview.png">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="preview.png">
+<link rel="icon" type="image/png" href="favicon.png">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;700;800&display=swap">
 <link href="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.css" rel="stylesheet">
 <script src="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.js"></script>
@@ -41,14 +47,15 @@
   button:disabled { opacity:.4; cursor:not-allowed; }
   button:disabled:hover { border-color:#2a2f38; }
   .stat { color:#5bb6ff; font-variant-numeric:tabular-nums; }
+  select {
+    background:#11151c; color:#e8ebf0; border:1px solid #2a2f38; border-radius:5px;
+    padding:4px 8px; font-size:11px; cursor:pointer; font-variant-numeric:tabular-nums;
+  }
+  select:hover { border-color:#3a414c; }
   #legend { margin-top:10px; }
   #legend .bar { height:8px; border-radius:4px; margin:4px 0 2px;
     background:linear-gradient(90deg,#3b3a8c,#5e2d8a,#832681,#b5367a,#e0506b,#fb8761,#fec98b); }
   #legend .ends { display:flex; justify-content:space-between; color:#8b939e; font-size:10px; }
-  #centlegend { margin-top:10px; }
-  #centlegend .bar { height:8px; border-radius:4px; margin:4px 0 2px;
-    background:linear-gradient(90deg,#3a4350,#b5506b,#fb8761,#fed98b); }
-  #centlegend .ends { display:flex; justify-content:space-between; color:#8b939e; font-size:10px; }
   #commlegend { margin-top:10px; display:grid; grid-template-columns:1fr 1fr; gap:3px 8px; }
   #commlegend .ci { display:flex; align-items:center; gap:5px; color:#c0c5cc; font-size:10.5px;
     white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
@@ -155,7 +162,9 @@
   }
   #legendtip.on { display:block; }
   #legendtip b { color:#5bb6ff; }
-  #commlegend .ci { cursor:default; }
+  #commlegend .ci { cursor:pointer; }
+  #commlegend .ci.sel { color:#fff; font-weight:700; }
+  #commlegend .ci.sel .sw { outline:1.5px solid #fff; outline-offset:1px; }
 
   /* about panel — methodology + attribution, anchored bottom-left above its toggle */
   #aboutbtn {
@@ -250,8 +259,8 @@
   <div class="row">
     <label>colour by cluster</label><button id="cluster">off</button>
   </div>
-  <div class="row">
-    <label>highlight connectors</label><button id="centrality">off</button>
+  <div class="row" id="resrow" style="display:none">
+    <label>cluster detail</label><select id="resselect"></select>
   </div>
   <div class="row">
     <label>projection</label><button id="proj" class="on">globe</button>
@@ -261,10 +270,6 @@
     <div class="ends"><span id="leglo">2k</span><span>pax / year</span><span id="leghi">8M+</span></div>
   </div>
   <div id="commlegend" style="display:none"></div>
-  <div id="centlegend" style="display:none">
-    <div class="bar"></div>
-    <div class="ends"><span>low</span><span>betweenness</span><span>most central</span></div>
-  </div>
   <div id="moremaps">see more maps <a href="https://anita.garden/projects/" target="_blank" rel="noopener">here</a>!</div>
   </div>
 </div>
@@ -282,20 +287,16 @@
 <div id="about">
   <h2>flight map </h2>
   <p>This map shows estimated passengers traffic on every commercial route. Thicker and brighter lines have more traffic.
-
-  <h2>estimate</h2>
-  We take the number of flights and the types of airplanes and assume they are all 80% full. Cargo carriers and private jets are filtered out.
+  The estimate assumes flights are about 83% full on average — fuller on busy high-frequency routes, emptier on thin ones. Cargo carriers and private jets are filtered out.
 
   <h2>data</h2>
-  <p>Flights come from <a href="https://www.flightradar24.com" target="_blank" rel="noopener">Flightradar24</a>, which tracks planes worldwide by fusing ADS-B, radar, satellite, and airline schedules. We pull every commercial departure over two full days: Fri &amp; Sat, 15&ndash;16 May 2026 and scale up to a year. It's just 2 days because this data is expensive. the FR24 data also had gaps for Kuwait, Uzbekistan, and Kyrgyzstan which were manually filled from flightsfrom.com. </p>
+  <p>Flights come from <a href="https://www.flightradar24.com" target="_blank" rel="noopener">Flightradar24</a>, which tracks planes worldwide by fusing ADS-B, radar, satellite, and airline schedules. We pull every commercial departure over two full days: Friday and Saturday, 15-16 May 2026 and scale up to a year. Only two days are pulled because it's expensive. FR24 data has gaps for several countries, including Uzbekistan and Kuwait, and these were manually filled with data from flightsfrom.com. </p>
   <h2>top routes</h2>
-  The busiest routes are shown on the right side of the screen. If ranking by "unexpected", it shows routes that are unexpectedly busy relative to the traffic at either endpoint and the distance between them.
+  The busiest routes are shown on the right side of the screen. When ranking by "unexpected", it shows routes that are unexpectedly busy relative to the traffic at either endpoint and the distance between them.
 
   <h2>colour by cluster</h2>
-  <p>Groups airports into <a href="https://en.wikipedia.org/wiki/Louvain_method" target="_blank" rel="noopener">Louvain </a> clusters that fly with each other more than with the outside world. </p>
+  <p>This setting groups airports into <a href="https://en.wikipedia.org/wiki/Louvain_method" target="_blank" rel="noopener">Louvain </a> clusters that fly with each other more than with the outside world. </p>
 
-  <h2>highlight connectors</h2>
-  <p>Colours each airport by its <a href="https://en.wikipedia.org/wiki/Betweenness_centrality" target="_blank" rel="noopener">betweenness</a> — how often it lies on the quickest path between two other airports (travel time ≈ flight distance + a layover penalty per stop). Brighter = more central. The biggest hubs (Istanbul, Chicago, Seoul, Beijing) dominate, with surprising regional connectors like Addis Ababa, Montreal and Bogotá ranking close behind.</p>
 </div>
 
 <script>
@@ -351,8 +352,16 @@ map.on('load', async () => {
   // ---- dataset state ------------------------------------------------------
   let feats=[], traffic={}, rcount={}, airportInfo={};
   let focus=null, routeFocus=null, minLog=0;
-  let commMode=false, commMeta=[], commStats={};   // cluster ("colour by cluster") mode
-  let centMode=false, centScore={}, btwRank={}, trafRank={};   // betweenness ("highlight connectors") mode
+  let commMode=false, commMeta=[], commStats={}, clusterFocus=null;   // cluster ("colour by cluster") mode
+  // multiple cluster sets precomputed offline (build_clusters.py) at a range of
+  // Louvain resolutions; the slider picks one live. Each airport's slot [4] is
+  // an array of cluster ids parallel to `resolutions`; resIdx selects which.
+  let resolutions=[], clusterSets=[], resIdx=0;
+  const commOf = A => {           // resolution-aware cluster id of an airport entry
+    if (!A) return -1;
+    const c = A[4];
+    return Array.isArray(c) ? (c[resIdx] ?? -1) : (typeof c === 'number' ? c : -1);
+  };
   // airport-bubble state, shared with the pie overlay
   let aptFeats=[], maxS=1, aptVisible=true, pieMode=false, isGlobe=true, pieRAF=0;
 
@@ -485,8 +494,9 @@ map.on('load', async () => {
   // and meta.clusters holds the labels. Here we just paint by it.
   // Categorical palette, dark-bg friendly; id 0 is the heaviest cluster, and
   // -1 ("other": the tiny clusters) falls through to grey.
-  const COMM_PAL = ['#4f9dff','#ff6b6b','#ffd24d','#5fd38b','#c08bff','#ff9d4d',
-                    '#4dd6d6','#ff7fc4','#9fd34d','#7d8cff','#d98b5f','#b6c0cc'];
+  const COMM_PAL = ['#4f9dff','#ff6b6b','#ffd24d','#5fd38b','#c08bff','#ff7a33',
+                    '#4dd6d6','#ff7fc4','#9fd34d','#7d8cff','#d98b5f','#cf6bd6',
+                    '#2bb89a','#e6a91f','#e05780','#9aa635'];
   const COMM_OTHER = '#828d9c';   // cross-cluster bridges + tiny clusters — real routes, kept legible
   let lineRamp = colour;             // magma line-colour ramp (refreshed per load)
   const commColorOf = id => (id>=0 && id<COMM_PAL.length) ? COMM_PAL[id] : COMM_OTHER;
@@ -496,48 +506,15 @@ map.on('load', async () => {
     e.push(COMM_OTHER);
     return e;
   }
-  // ---- betweenness colouring ("highlight connectors") ---------------------
-  // Betweenness is precomputed offline (build_centrality.py) into airport slot
-  // [5]. Bubbles stay sized by traffic; here we colour each airport by how much
-  // MORE central it is than its traffic predicts (a log-log residual, computed
-  // in computeCentrality()). Expected hubs stay dim; over-connectors glow.
-  const CENT_ROUTE_GREY = '#37424f';   // routes recede so the bubbles carry the story
-  function centColorExpr(){            // ramp on a bubble's 'score' (0..1)
-    return ['interpolate',['linear'],['get','score'],
-      0,'#3a4350', 0.45,'#b5506b', 0.8,'#fb8761', 1,'#fed98b'];
-  }
-
-  // base (non-selected) colour for bubbles/routes, mode-dependent.
-  const aptBaseColor = () => commMode ? commColorExpr() : centMode ? centColorExpr() : '#cfe0ff';
-  // selected bubble colour: blue highlight normally, but in a colour-mode keep
-  // the airport's own mode colour (selection reads through opacity instead) so
-  // a picked airport / route endpoint isn't recoloured or given a pie.
-  const aptSelColor = () => commMode ? commColorExpr() : centMode ? centColorExpr() : '#5bb6ff';
-  // in connector mode, fade the field by score so high-betweenness airports are
-  // fully opaque and pop, while the rest recede — otherwise the flat 0.40 base
-  // opacity washes the colour ramp out.
-  const aptBaseOpacity = () => centMode ? ['interpolate',['linear'],['get','score'],0,0.18,1,1.0] : 0.40;
-  const aptBaseStroke  = () => centMode ? ['interpolate',['linear'],['get','score'],0,0.15,1,0.9]  : 0.85;
+  // base (non-selected) colour for bubbles/routes: cluster colours in cluster
+  // mode, else the default light blue.
+  const aptBaseColor = () => commMode ? commColorExpr() : '#cfe0ff';
+  // selected bubble colour: blue highlight normally, but in cluster mode keep the
+  // airport's cluster colour (selection reads through opacity instead) so a
+  // picked airport / route endpoint isn't recoloured or given a pie.
+  const aptSelColor = () => commMode ? commColorExpr() : '#5bb6ff';
   function applyLineColor(){
-    map.setPaintProperty('lines','line-color',
-      commMode ? commColorExpr() : centMode ? CENT_ROUTE_GREY : lineRamp);
-  }
-  // raw betweenness score per airport, sqrt-scaled against the max (betweenness
-  // is heavily skewed — a few hubs dwarf the rest — and sqrt spreads the tail so
-  // it stays visible, matching the bubble-size convention). No traffic
-  // adjustment: the biggest hubs are the brightest. Ranks kept for popups.
-  function computeCentrality(){
-    centScore={}; btwRank={}; trafRank={};
-    const codes = Object.keys(traffic);
-    const nz = codes.filter(c => (airportInfo[c][5]||0) > 0);
-    nz.slice().sort((a,b)=>airportInfo[b][5]-airportInfo[a][5]).forEach((c,i)=>btwRank[c]=i+1);
-    codes.slice().sort((a,b)=>traffic[b]-traffic[a]).forEach((c,i)=>trafRank[c]=i+1);
-    let maxB = 0;
-    for (const c of nz) if (airportInfo[c][5] > maxB) maxB = airportInfo[c][5];
-    for (const c of codes){
-      const b = airportInfo[c][5] || 0;
-      centScore[c] = (b>0 && maxB>0) ? Math.sqrt(b/maxB) : 0;
-    }
+    map.setPaintProperty('lines','line-color', commMode ? commColorExpr() : lineRamp);
   }
   // per-cluster traffic split: a route is "internal" if both endpoints share
   // the cluster, "crossing" if exactly one endpoint is in it. The within-%
@@ -549,7 +526,7 @@ map.on('load', async () => {
     for (const f of feats){
       const p = f.properties;
       const A = airportInfo[p.a], B = airportInfo[p.b];
-      const ca = (A && A[4]!=null) ? A[4] : -1, cb = (B && B[4]!=null) ? B[4] : -1;
+      const ca = commOf(A), cb = commOf(B);
       if (ca===cb && ca>=0){
         const s = commStats[ca]; if (s){ s.intRoutes++; s.intPax += p.pax; }
       } else {
@@ -587,7 +564,74 @@ map.on('load', async () => {
       it.addEventListener('mouseenter', e => { tip.innerHTML = legendTipHTML(c); tip.classList.add('on'); place(e); });
       it.addEventListener('mousemove', place);
       it.addEventListener('mouseleave', () => tip.classList.remove('on'));
+      it.addEventListener('click', () => setClusterFocus(+it.dataset.cid));
     });
+  }
+
+  // ---- resolution slider: switch between precomputed cluster sets ----------
+  // Each set is a full Louvain run at a different resolution (higher = more,
+  // smaller clusters). Switching re-derives every route/airport's cluster id
+  // from the new set — no refetch, the data for all resolutions is already here.
+  function setupResControl(){
+    // populate the dropdown; visibility is handled by applyColorMode (only shown
+    // while cluster mode is on). A dropdown — not a slider — because each switch
+    // rebuilds every feature, too heavy to drag through.
+    const sel=document.getElementById('resselect');
+    sel.innerHTML = resolutions.map((r,i) =>
+      `<option value="${i}"${i===resIdx?' selected':''}>${r}</option>`
+    ).join('');
+  }
+  // whether the resolution dropdown should be visible right now
+  const resAvailable = () => clusterSets.length > 1;
+  function applyResolution(idx){
+    if (!clusterSets.length || idx===resIdx) return;
+    resIdx = idx;
+    commMeta = clusterSets[idx].clusters;
+    // re-derive cluster id for every route + airport from the new set
+    for (const f of feats){
+      const ca=commOf(airportInfo[f.properties.a]), cb=commOf(airportInfo[f.properties.b]);
+      f.properties.comm = (ca===cb && ca>=0) ? ca : -1;
+    }
+    map.getSource('routes').setData({type:'FeatureCollection',features:feats});
+    for (const af of aptFeats) af.properties.comm = commOf(airportInfo[af.properties.code]);
+    map.getSource('airports').setData({type:'FeatureCollection',features:aptFeats});
+    computeCommStats();
+    buildCommLegend();
+    clusterFocus=null; markClusterSel();   // cluster ids changed; drop any isolation
+    if (commMode){                          // refresh colours + clear any focus dim
+      applyLineColor();
+      map.setPaintProperty('lines','line-opacity', linesOpacityExpr());
+      applyBubbleStyle();
+    }
+    apply();
+  }
+  document.getElementById('resselect').addEventListener('change', e => applyResolution(+e.target.value));
+
+  // ---- cluster focus: click a legend swatch to isolate that cluster --------
+  // dims every route/airport not in the cluster; only valid in cluster mode.
+  function applyClusterFocus(){
+    const m = ['==', ['get','comm'], clusterFocus];
+    map.setPaintProperty('lines','line-opacity', ['case', m, 0.92, 0.05]);
+    map.setPaintProperty('airports','circle-opacity', ['case', m, 0.95, 0.07]);
+    map.setPaintProperty('airports','circle-stroke-opacity', ['case', m, 0.9, 0.06]);
+  }
+  function markClusterSel(){
+    document.querySelectorAll('#commlegend .ci').forEach(it =>
+      it.classList.toggle('sel', clusterFocus!=null && +it.dataset.cid===clusterFocus));
+  }
+  function setClusterFocus(id){
+    if (!commMode) return;
+    focus=null; routeFocus=null; rinfo.classList.remove('on');   // mutually exclusive
+    clusterFocus = (clusterFocus===id) ? null : id;
+    markClusterSel();
+    if (clusterFocus==null){
+      map.setPaintProperty('lines','line-opacity', linesOpacityExpr());
+      restoreCircles();
+    } else {
+      applyClusterFocus();
+    }
+    apply();          // refresh the hit-layer filter
+    popup.remove();
   }
 
   // ---- build route features from a dataset --------------------------------
@@ -598,8 +642,8 @@ map.on('load', async () => {
       if(!A||!B) continue;
       // a route's cluster = its endpoints' shared cluster (else -1), so
       // intra-cluster routes take the cluster colour and bridges go grey.
-      const cmA=A[4], cmB=B[4];
-      const comm=(cmA!=null && cmA===cmB && cmA>=0) ? cmA : -1;
+      const cmA=commOf(A), cmB=commOf(B);
+      const comm=(cmA===cmB && cmA>=0) ? cmA : -1;
       fs.push({
         type:'Feature',
         geometry:{type:'LineString',coordinates:arc(A[0],A[1],B[0],B[1])},
@@ -629,6 +673,14 @@ map.on('load', async () => {
       return;
     }
     airportInfo = data.airports;
+    // resolution sets: pick the dataset's default before building features (comm
+    // ids depend on resIdx). Datasets without clusterSets (e.g. OpenSky) leave
+    // these empty and the resolution slider hides.
+    const meta = data.meta || {};
+    resolutions = meta.resolutions || [];
+    clusterSets = meta.clusterSets || [];
+    resIdx = (clusterSets.length && meta.clusterDefault!=null) ? meta.clusterDefault : 0;
+    setupResControl();
     feats = buildFeatures(data);
     map.getSource('routes').setData({type:'FeatureCollection',features:feats});
     // recolour against this dataset's distribution; label the legend with its
@@ -637,7 +689,7 @@ map.on('load', async () => {
     lineRamp = _ramp;
     map.setPaintProperty('lines','line-color', _ramp);
     captureStops(_ramp);
-    commMeta = (data.meta && data.meta.clusters) || [];
+    commMeta = clusterSets.length ? clusterSets[resIdx].clusters : (meta.clusters || []);
     computeCommStats();
     buildCommLegend();
     applyLineColor();   // honour cluster mode if it's already on
@@ -661,14 +713,12 @@ map.on('load', async () => {
       const bucket = p.intl ? intlSum : domSum;
       bucket[p.a]=(bucket[p.a]||0)+p.pax; bucket[p.b]=(bucket[p.b]||0)+p.pax;
     }
-    computeCentrality();   // "above its weight" score + betweenness/traffic ranks
     aptFeats=[]; maxS=1;
     for (const code in traffic){
       const A=airportInfo[code]; if(!A) continue;
       const s=Math.sqrt(traffic[code]); if(s>maxS) maxS=s;
       aptFeats.push({type:'Feature',geometry:{type:'Point',coordinates:[A[0],A[1]]},
-        properties:{code, city:A[2], country:A[3], comm:(A[4]!=null?A[4]:-1),
-                    score:centScore[code]||0,
+        properties:{code, city:A[2], country:A[3], comm:commOf(A),
                     t:traffic[code], s,
                     rt:rcount[code], fpd:Math.round(fpdSum[code]),
                     td:domSum[code]||0, ti:intlSum[code]||0}});
@@ -695,7 +745,17 @@ map.on('load', async () => {
       `<div class="pop-line">${p.fpd} flights/day · ${p.seats} seats · ${p.dist.toLocaleString()} km</div>`;
   }
   const popup = new maplibregl.Popup({closeButton:false,closeOnMove:false,offset:8});
+  // In globe view the feature hit-test still unprojects an off-sphere cursor to a
+  // (clamped) lng/lat, so layer mousemove events fire for points in empty space
+  // around the globe. Guard: round-trip e.lngLat back to screen pixels; if it
+  // lands far from the actual cursor, the cursor isn't on the globe → ignore.
+  function offGlobe(e){
+    if (!isGlobe) return false;
+    const p = map.project(e.lngLat);
+    return Math.hypot(p.x-e.point.x, p.y-e.point.y) > 4;
+  }
   map.on('mousemove','hit', e=>{
+    if (offGlobe(e)){ map.getCanvas().style.cursor=''; popup.remove(); return; }
     const f=e.features[0]; if(!f) return;
     map.getCanvas().style.cursor='pointer';
     popup.setLngLat(e.lngLat).setHTML(routePopupHTML(f.properties)).addTo(map);
@@ -705,6 +765,7 @@ map.on('load', async () => {
   // ---- airport hover (registered AFTER the route hover so it wins when both
   //      fire — busy airports always have lines passing under their bubble) --
   map.on('mousemove','airports', e=>{
+    if (offGlobe(e)){ map.getCanvas().style.cursor=''; popup.remove(); return; }
     const f=e.features[0]; if(!f) return;
     map.getCanvas().style.cursor='pointer';
     const p=f.properties;
@@ -714,7 +775,6 @@ map.on('load', async () => {
       `<div class="pop-line">${p.city}${p.country?', '+p.country:''}</div>`+
       `<div style="margin-top:5px"><span class="pop-pax">${fmt(p.t)} pax/yr</span> &nbsp;est.</div>`+
       `<div class="pop-line">${p.fpd.toLocaleString()} flights/day · ${p.rt} routes</div>`+
-      (centMode ? `<div class="pop-line">connector #${btwRank[p.code]||'?'} · traffic #${trafRank[p.code]||'?'}</div>` : '')+
       (tt ? `<div class="pop-line"><span style="color:#f06464">${Math.round(dd/tt*100)}% domestic</span> · `+
             `<span style="color:#64a0ff">${Math.round(ii/tt*100)}% international</span></div>` : '')
     ).addTo(map);
@@ -746,15 +806,15 @@ map.on('load', async () => {
     } else {
       map.setPaintProperty('lines','line-opacity',0.72);
       map.setPaintProperty('airports','circle-color',aptBaseColor());
-      map.setPaintProperty('airports','circle-opacity',aptBaseOpacity());
-      map.setPaintProperty('airports','circle-stroke-opacity',aptBaseStroke());
+      map.setPaintProperty('airports','circle-opacity',0.50);
+      map.setPaintProperty('airports','circle-stroke-opacity',0.85);
       rinfo.classList.remove('on');
     }
     // refresh the hit-layer filter so non-touching routes go inert
     // (or become live again on deselect).
     apply();
     popup.remove();   // clear any stale route popup from before the focus change
-    if (!commMode && !centMode && pieMode && aptVisible) hidePieCircles();   // focus just re-set circle opacities
+    if (!commMode && pieMode && aptVisible) hidePieCircles();   // focus just re-set circle opacities
     schedulePie();
     renderScatter();   // highlight this airport's routes in the scatter
     if (!unexpMode) renderTopList();   // list the focused airport's routes (or global top)
@@ -762,6 +822,7 @@ map.on('load', async () => {
   function setFocus(code){
     if (unexpMode){ unexpMode=false; applyMode(); }  // mutually exclusive
     if (routeFocus){ routeFocus=null; }              // ditto
+    if (clusterFocus!=null){ clusterFocus=null; markClusterSel(); }
     focus=(focus===code)?null:code;
     applyFocus();
   }
@@ -825,15 +886,15 @@ map.on('load', async () => {
       }
     } else {
       map.setPaintProperty('airports','circle-color',aptBaseColor());
-      map.setPaintProperty('airports','circle-opacity',aptBaseOpacity());
-      map.setPaintProperty('airports','circle-stroke-opacity',aptBaseStroke());
+      map.setPaintProperty('airports','circle-opacity',0.50);
+      map.setPaintProperty('airports','circle-stroke-opacity',0.85);
       rinfo.classList.remove('on');
     }
     map.setPaintProperty('lines','line-opacity', linesOpacityExpr());
     map.setPaintProperty('lines','line-width', linesWidthExpr());
     apply();
     popup.remove();
-    if (!commMode && !centMode && pieMode && aptVisible) hidePieCircles();   // route focus just re-set circle opacities
+    if (!commMode && pieMode && aptVisible) hidePieCircles();   // route focus just re-set circle opacities
     schedulePie();
     renderScatter();   // highlight the picked route in the scatter (thumb + modal)
     if (!unexpMode) renderTopList();
@@ -843,6 +904,7 @@ map.on('load', async () => {
     // NOT mutually exclusive with unexp mode — clicking a route there should
     // zoom in while keeping the unexpectedness encoding on the other lines.
     if (focus){ focus=null; }   // airport focus IS still mutually exclusive
+    if (clusterFocus!=null){ clusterFocus=null; markClusterSel(); }
     const same = routeFocus && routeFocus.a===a && routeFocus.b===b;
     routeFocus = same ? null : {a, b};
     applyRouteFocus();
@@ -864,6 +926,7 @@ map.on('load', async () => {
     // empty click: clear whichever focus is set
     if (focus){ focus=null; applyFocus(); }
     else if (routeFocus){ routeFocus=null; applyRouteFocus(); }
+    else if (clusterFocus!=null){ setClusterFocus(clusterFocus); }   // toggles off
   });
   // right-click anywhere clears the current selection. A right-DRAG rotates the
   // globe and MapLibre suppresses contextmenu for it, so this only fires on a
@@ -871,6 +934,7 @@ map.on('load', async () => {
   map.on('contextmenu', ()=>{
     if (focus){ focus=null; applyFocus(); }
     else if (routeFocus){ routeFocus=null; applyRouteFocus(); }
+    else if (clusterFocus!=null){ setClusterFocus(clusterFocus); }
   });
   // ---- about panel (methodology + attribution) ---------------------------
   const aboutBtn = document.getElementById('aboutbtn');
@@ -886,6 +950,7 @@ map.on('load', async () => {
     else if (scatOpen){ closeScat(); }
     else if (focus){ focus=null; applyFocus(); }
     else if (routeFocus){ routeFocus=null; applyRouteFocus(); }
+    else if (clusterFocus!=null){ setClusterFocus(clusterFocus); }
   });
 
   // ---- right-panel list + unexpected-routes mode -------------------------
@@ -1235,7 +1300,7 @@ map.on('load', async () => {
     }
     pieCtx.setTransform(dpr,0,0,dpr,0,0);
     pieCtx.clearRect(0,0,w,h);
-    if (!aptVisible || commMode || centMode) return;   // colour modes: circles carry the colour, no pies
+    if (!aptVisible || commMode) return;   // cluster mode: circles carry the colour, no pies
     const sel = code => focus ? code===focus
               : routeFocus ? (code===routeFocus.a || code===routeFocus.b) : false;
     const hasSel = !!(focus || routeFocus);
@@ -1298,13 +1363,13 @@ map.on('load', async () => {
       map.setPaintProperty('airports','circle-stroke-opacity',['case',mEnd,1,0.15]);
     } else {
       map.setPaintProperty('airports','circle-color',aptBaseColor());
-      map.setPaintProperty('airports','circle-opacity',aptBaseOpacity());
-      map.setPaintProperty('airports','circle-stroke-opacity',aptBaseStroke());
+      map.setPaintProperty('airports','circle-opacity',0.50);
+      map.setPaintProperty('airports','circle-stroke-opacity',0.85);
     }
   }
   function applyBubbleStyle(){
-    // colour modes (cluster / connectors) always use plain coloured circles, never pies.
-    if (!commMode && !centMode && aptVisible && pieMode) hidePieCircles();   // hide circles, pies take over
+    // cluster mode always uses plain (cluster-coloured) circles, never pies.
+    if (!commMode && aptVisible && pieMode) hidePieCircles();   // hide circles, pies take over
     else restoreCircles();                                       // plain bubbles
     schedulePie();
   }
@@ -1356,25 +1421,21 @@ map.on('load', async () => {
     e.target.classList.toggle('on',pieMode);
     applyBubbleStyle();
   });
-  // cluster + connector colouring are mutually exclusive (both repaint bubbles
-  // and routes); one shared applier keeps the two buttons, legends and pie state
-  // in sync no matter which is toggled.
+  // cluster colouring applier: keeps the button, legend and pie state in sync.
   function applyColorMode(){
-    const cb=document.getElementById('cluster'), eb=document.getElementById('centrality');
+    clusterFocus=null; markClusterSel();   // a mode switch clears any cluster isolation
+    const cb=document.getElementById('cluster');
     cb.textContent=commMode?'on':'off'; cb.classList.toggle('on',commMode);
-    eb.textContent=centMode?'on':'off'; eb.classList.toggle('on',centMode);
-    document.getElementById('legend').style.display     = (commMode||centMode)?'none':'';
+    document.getElementById('legend').style.display     = commMode?'none':'';
     document.getElementById('commlegend').style.display = commMode?'':'none';
-    document.getElementById('centlegend').style.display = centMode?'':'none';
-    document.getElementById('piemode').disabled = commMode||centMode;   // no pies in a colour mode
-    applyLineColor();      // routes: cluster colours / dim grey / magma ramp
-    applyBubbleStyle();    // bubbles: mode colours ↔ white/pie (clears pies)
+    document.getElementById('resrow').style.display = (commMode && resAvailable())?'':'none';
+    document.getElementById('piemode').disabled = commMode;   // no pies in cluster mode
+    applyLineColor();      // routes: cluster colours ↔ magma ramp
+    map.setPaintProperty('lines','line-opacity', linesOpacityExpr());   // clear any cluster-focus dim
+    applyBubbleStyle();    // bubbles: cluster colours ↔ white/pie (clears pies)
   }
   document.getElementById('cluster').addEventListener('click',()=>{
-    commMode=!commMode; if (commMode) centMode=false; applyColorMode();
-  });
-  document.getElementById('centrality').addEventListener('click',()=>{
-    centMode=!centMode; if (centMode) commMode=false; applyColorMode();
+    commMode=!commMode; applyColorMode();
   });
   document.getElementById('proj').addEventListener('click',e=>{
     const globe=e.target.textContent==='globe';
