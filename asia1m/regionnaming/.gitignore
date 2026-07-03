@@ -1,0 +1,7 @@
+# large regenerable intermediates
+main.png
+*.npy
+adm_all_names.json
+adm_twn_names.json
+regions_prelim.csv
+_work/
