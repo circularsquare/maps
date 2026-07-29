@@ -1,0 +1,251 @@
+label,group,hue,sat,lit,population
+English,western,196.0,0.5,0.48,5322830
+Irish,western,198.0,0.42,0.52,4413120
+Scottish,western,204.0,0.55,0.52,4392200
+French,western,216.0,0.86,0.492,3985945
+German,western,216.0,0.53,0.58,2955695
+Italian,western,220.0,0.62,0.52,1546390
+Dutch,western,214.0,0.75,0.5,988585
+British Isles,western,197.5,0.7,0.442,938950
+European,western,216.0,0.55,0.55,551910
+Norwegian,western,205.0,0.72,0.64,466500
+Welsh,western,204.0,0.6,0.48,455720
+Portuguese,western,209.0,0.72,0.55,448305
+Swedish,western,205.0,0.72,0.64,334505
+Danish,western,205.0,0.72,0.64,196945
+Austrian,western,216.0,0.55,0.54,189535
+Belgian,western,213.0,0.75,0.49,182175
+Mennonite,western,202.0,0.7,0.449,155095
+Swiss,western,217.0,0.58,0.55,145570
+Finnish,western,205.0,0.72,0.64,144055
+Northern European,western,205.0,0.72,0.64,110735
+Icelandic,western,206.5,0.7,0.458,101990
+Australian,western,199.0,0.54,0.56,46765
+Maltese,western,220.0,0.72,0.55,40670
+Western European,western,211.0,0.7,0.469,38520
+Northern Irish,western,215.5,0.7,0.482,25200
+Celtic,western,199.0,0.48,0.48,24420
+Breton,western,220.0,0.7,0.497,17465
+Pennsylvania Dutch,western,224.5,0.7,0.508,17315
+Norman,western,229.0,0.7,0.516,15340
+Flemish,western,233.5,0.7,0.524,10275
+Sicilian,western,238.0,0.7,0.53,9835
+Azorean,western,242.5,0.7,0.532,8970
+Basque,western,208.0,0.72,0.49,7745
+Ukrainian,eastern,244.0,0.5,0.61,1258635
+Polish,eastern,235.0,0.56,0.66,982820
+Russian,eastern,244.0,0.42,0.6,548140
+Hungarian,eastern,238.0,0.66,0.64,320150
+Greek,eastern,250.0,0.68,0.54,262140
+Romanian,eastern,246.0,0.65,0.55,215885
+Croatian,eastern,246.0,0.65,0.58,130820
+Czech,eastern,238.0,0.64,0.64,98925
+Serbian,eastern,246.0,0.65,0.57,93360
+Slovak,eastern,238.0,0.64,0.64,68210
+Eastern European,eastern,238.0,0.66,0.63,66780
+Lithuanian,eastern,238.0,0.68,0.66,52040
+Albanian,eastern,246.0,0.65,0.56,41620
+Macedonian,eastern,248.0,0.65,0.54,39440
+Slovene,eastern,246.0,0.65,0.6,38595
+Czechoslovakian,eastern,238.0,0.65,0.63,33135
+Bulgarian,eastern,248.0,0.65,0.54,33085
+Yugoslavian,eastern,246.0,0.65,0.56,30565
+Slavic,eastern,246.0,0.65,0.55,30220
+Bosnian,eastern,236.0,0.76,0.532,28490
+Latvian,eastern,238.0,0.68,0.66,28140
+Estonian,eastern,238.0,0.68,0.67,23455
+Byelorussian,eastern,245.3,0.76,0.535,18850
+Moldovan,eastern,254.7,0.76,0.531,18190
+Roma,eastern,264.0,0.76,0.527,6545
+Canadian,american,184.0,0.49,0.46,5677205
+Québécois,american,216.0,0.86,0.492,981635
+French Canadian,american,216.0,0.86,0.492,906315
+American,american,184.9,0.49,0.46,353495
+Acadian,american,216.0,0.86,0.492,305170
+Newfoundlander,american,185.9,0.49,0.46,91670
+Ontarian,american,186.8,0.49,0.46,80555
+Nova Scotian,american,187.7,0.49,0.46,44720
+New Brunswicker,american,188.7,0.49,0.46,37670
+Albertan,american,189.6,0.49,0.46,32575
+British Columbian,american,190.5,0.49,0.46,24325
+Franco Ontarian,american,216.0,0.86,0.492,24110
+North American,american,191.5,0.49,0.46,22785
+New Zealander,american,192.4,0.49,0.46,17755
+Saskatchewanian,american,193.3,0.49,0.46,15780
+Gaspesian,american,194.3,0.49,0.46,15650
+Manitoban,american,195.2,0.49,0.46,13095
+Cape Bretoner,american,196.1,0.49,0.46,13065
+United Empire Loyalist,american,197.1,0.49,0.46,10015
+Prince Edward Islander,american,198.0,0.49,0.46,7225
+Chinese,east_asian,1.0,0.6,0.47,1713870
+Asian,east_asian,342.0,0.35,0.62,226220
+Korean,east_asian,9.0,0.64,0.56,217650
+Japanese,east_asian,10.0,0.64,0.62,129425
+Hong Konger,east_asian,1.0,0.7,0.513,81680
+Taiwanese,east_asian,5.0,0.72,0.53,64020
+East or Southeast Asian,east_asian,12.0,0.7,0.484,58870
+Tibetan,east_asian,23.0,0.7,0.456,9350
+Mongolian,east_asian,5.0,0.73,0.55,9090
+Filipino,se_asian,341.0,0.56,0.47,925490
+Vietnamese,se_asian,346.0,0.62,0.61,275530
+Cambodian,se_asian,341.0,0.68,0.57,41950
+Indonesian,se_asian,335.0,0.76,0.51,26330
+Laotian,se_asian,341.0,0.68,0.54,25875
+Ilocano,se_asian,307.5,0.7,0.504,25575
+Thai,se_asian,330.0,0.68,0.51,22275
+Malaysian,se_asian,335.0,0.76,0.53,17050
+Malay,se_asian,315.8,0.7,0.506,9795
+Burmese,se_asian,330.0,0.68,0.51,9150
+Igorot,se_asian,324.2,0.7,0.508,7535
+Singaporean,se_asian,335.0,0.76,0.53,6060
+Karen,se_asian,332.5,0.7,0.509,6050
+Indian (India),s_c_asian,282.5,0.7,0.513,1347715
+Pakistani,s_c_asian,317.0,0.54,0.55,303260
+Punjabi,s_c_asian,284.2,0.7,0.512,279950
+Sikh,s_c_asian,317.0,0.51,0.52,194640
+Hindu,s_c_asian,285.8,0.7,0.511,166160
+Sri Lankan,s_c_asian,317.0,0.54,0.52,132410
+South Asian,s_c_asian,287.5,0.7,0.51,120125
+Tamil,s_c_asian,289.2,0.7,0.509,102170
+Afghan,s_c_asian,305.0,0.7,0.6,96810
+Bangladeshi,s_c_asian,318.0,0.52,0.52,75425
+Gujarati,s_c_asian,290.8,0.7,0.508,36970
+Bengali,s_c_asian,292.5,0.7,0.507,26675
+Jatt,s_c_asian,294.2,0.7,0.506,22785
+Nepali,s_c_asian,295.8,0.7,0.505,21975
+Malayali,s_c_asian,297.5,0.7,0.504,12490
+Sinhalese,s_c_asian,299.2,0.7,0.503,12080
+Pashtun,s_c_asian,300.8,0.7,0.503,9825
+Goan,s_c_asian,302.5,0.7,0.503,9700
+Telugu,s_c_asian,304.2,0.7,0.504,6670
+Kashmiri,s_c_asian,305.8,0.7,0.504,6165
+Tajik,s_c_asian,307.5,0.7,0.504,5980
+Arab,mena,285.0,0.51,0.5,263710
+Lebanese,mena,285.0,0.58,0.52,210605
+Iranian,mena,288.0,0.64,0.55,200465
+Egyptian,mena,275.0,0.62,0.52,105245
+Moroccan,mena,275.0,0.62,0.54,99980
+Syrian,mena,282.0,0.62,0.52,98250
+Persian,mena,255.0,0.7,0.527,80340
+Turkish,mena,275.0,0.66,0.52,76745
+Algerian,mena,257.3,0.7,0.526,73770
+Armenian,mena,285.0,0.62,0.58,68850
+Iraqi,mena,288.0,0.64,0.55,59300
+West or Central Asian or Middle Eastern,mena,259.6,0.7,0.525,58840
+Palestinian,mena,282.0,0.62,0.52,45905
+Berber,mena,261.9,0.7,0.524,41700
+Israeli,mena,270.0,0.57,0.58,35345
+Tunisian,mena,264.2,0.7,0.522,30465
+Kurdish,mena,266.5,0.7,0.521,23130
+Coptic,mena,268.8,0.7,0.52,22570
+Kabyle,mena,271.2,0.7,0.519,20565
+Assyrian,mena,273.5,0.7,0.518,19685
+North African,mena,275.8,0.7,0.517,16315
+Jordanian,mena,282.0,0.62,0.52,13225
+Chaldean,mena,278.1,0.7,0.515,12115
+Azerbaijani,mena,280.4,0.7,0.514,9915
+Yemeni,mena,282.7,0.7,0.513,8115
+Libyan,mena,285.0,0.7,0.512,7945
+Spanish,latino,50.0,0.72,0.52,342040
+Mexican,latino,61.0,0.48,0.46,155495
+"Latin, Central or South American",latino,37.5,0.7,0.432,104765
+Colombian,latino,47.0,0.73,0.46,100555
+Brazilian,latino,43.0,0.76,0.46,71755
+Salvadoran,latino,57.0,0.62,0.44,59280
+Chilean,latino,42.0,0.73,0.46,45685
+Hispanic,latino,72.5,0.7,0.412,42405
+Peruvian,latino,46.0,0.73,0.46,42295
+Cuban,latino,66.0,0.65,0.52,30065
+Venezuelan,latino,48.0,0.73,0.46,28395
+Guatemalan,latino,59.0,0.64,0.46,26460
+Ecuadorian,latino,47.0,0.73,0.46,24255
+Argentinean,latino,42.0,0.73,0.46,23500
+Dominican,latino,70.0,0.72,0.48,22125
+Nicaraguan,latino,57.0,0.64,0.47,13840
+Honduran,latino,59.0,0.64,0.47,10920
+Uruguayan,latino,42.0,0.73,0.46,7660
+Costa Rican,latino,56.0,0.68,0.48,6500
+Paraguayan,latino,46.0,0.73,0.46,5925
+First Nations,native,30,0.65,0.46,632340
+Métis,native,33,0.61,0.49,560335
+Cree,native,28,0.66,0.47,219855
+North American Indigenous,native,30,0.63,0.47,194840
+Mi'kmaq,native,29,0.66,0.44,111605
+Ojibway,native,27,0.66,0.46,92220
+Inuit,native,31,0.6,0.53,76675
+Algonquin,native,28,0.66,0.45,56070
+Mohawk,native,32,0.65,0.45,33330
+Innu/Montagnais,native,28,0.66,0.48,28225
+Dene,native,26,0.63,0.5,18745
+Blackfoot,native,27,0.66,0.44,18545
+Abenaki,native,30,0.66,0.43,18420
+Iroquois (Haudenosaunee),native,32,0.65,0.46,17955
+Plains Cree,native,27,0.66,0.46,16570
+Huron (Wendat),native,31,0.65,0.46,15910
+Saulteaux,native,27,0.66,0.45,14265
+Anishinaabe,native,27,0.66,0.47,14260
+Oji-Cree,native,27,0.66,0.48,13525
+Maya,native,35.0,0.72,0.44,11710
+Cherokee,native,27.0,0.66,0.46,10825
+Qalipu Mi'kmaq,native,29,0.66,0.45,10750
+Atikamekw,native,28,0.66,0.47,8400
+Woodland Cree,native,28,0.65,0.49,7415
+Maliseet,native,30,0.66,0.44,7220
+African,african,135.0,0.62,0.4,301955
+Black,african,129.0,0.7,0.425,94585
+Nigerian,african,135.0,0.72,0.4,69540
+Somali,african,140.0,0.77,0.45,65555
+South African,african,145.0,0.77,0.45,49840
+Congolese,african,130.2,0.7,0.424,45260
+Ethiopian,african,140.0,0.77,0.45,42545
+Yoruba,african,131.4,0.7,0.424,42075
+Eritrean,african,132.6,0.7,0.424,36290
+African Canadian,african,133.7,0.7,0.424,35395
+Ghanaian,african,135.0,0.72,0.42,31720
+African American,african,134.9,0.7,0.424,31430
+Cameroonian,african,136.1,0.7,0.424,26535
+Igbo,african,137.3,0.7,0.424,19305
+Sudanese,african,135.0,0.72,0.42,17485
+Southern or East African,african,138.5,0.7,0.424,15055
+Ivorian,african,139.7,0.7,0.423,15010
+Burundian,african,140.9,0.7,0.423,14110
+Tigrinya,african,142.0,0.7,0.423,13910
+Mauritian,african,143.2,0.7,0.423,13755
+Kenyan,african,140.0,0.77,0.45,13565
+Rwandan,african,144.4,0.7,0.423,12890
+Senegalese,african,135.0,0.72,0.42,9955
+Bantu,african,145.6,0.7,0.423,9455
+Zimbabwean,african,140.0,0.77,0.45,9165
+Bamileke,african,146.8,0.7,0.423,8315
+Ugandan,african,135.0,0.72,0.42,8285
+Oromo,african,148.0,0.7,0.422,8255
+Tanzanian,african,149.1,0.7,0.422,8140
+Central African,african,150.3,0.7,0.422,8080
+Akan,african,151.5,0.7,0.422,7640
+Central or West African,african,152.7,0.7,0.422,7635
+Fulani,african,153.9,0.7,0.422,7480
+Guinean,african,155.1,0.7,0.422,7390
+Beninese,african,156.3,0.7,0.422,6810
+African Nova Scotian,african,157.4,0.7,0.421,6480
+Malagasy,african,158.6,0.7,0.421,6255
+Edo,african,159.8,0.7,0.421,5985
+Amhara,african,161.0,0.7,0.421,5945
+Jamaican,afro_carib,100.0,0.61,0.42,249070
+Haitian,afro_carib,104.0,0.67,0.38,178990
+Guyanese,afro_carib,82.0,0.71,0.41,97210
+Trinidadian and Tobagonian,afro_carib,85.0,0.73,0.41,77405
+African Caribbean,afro_carib,75.5,0.7,0.412,59050
+Caribbean,afro_carib,79.7,0.7,0.413,57195
+West Indian,afro_carib,90.0,0.73,0.41,52085
+Barbadian,afro_carib,93.0,0.73,0.41,31440
+Vincentian,afro_carib,83.8,0.7,0.414,13245
+Grenadian,afro_carib,88.0,0.7,0.416,12890
+Indo-Caribbean,afro_carib,92.2,0.7,0.417,10490
+Indo-Guyanese,afro_carib,96.3,0.7,0.418,8310
+St. Lucian,afro_carib,100.5,0.7,0.419,7285
+Fijian,pacific,347.0,0.66,0.67,23020
+Caucasian (White),other,253.0,0.18,0.74,691260
+Jewish,other,264.0,0.18,0.74,282015
+Christian,other,275.0,0.18,0.74,200340
+Muslim,other,286.0,0.18,0.74,105620
+Buddhist,other,297.0,0.18,0.74,15660

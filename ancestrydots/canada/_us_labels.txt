@@ -1,0 +1,208 @@
+AIAN, not specified	native
+Afghan	s_c_asian
+African	african
+Alaska Native, not specified	native
+Albanian	eastern
+All other Alaska Native	native
+All other American Indian	native
+All other Latin American Indian	native
+Alsatian	western
+American	american
+American Indian, not specified	native
+Arab	mena
+Argentinean	latino
+Armenian	mena
+Assyrian/Chaldean/Syriac	mena
+Australian	western
+Austrian	western
+Aztec	native
+Bahamian	afro_carib
+Bangladeshi	s_c_asian
+Barbadian	afro_carib
+Basque	western
+Belgian	western
+Belizean	afro_carib
+Bermudan	afro_carib
+Bhutanese	s_c_asian
+Black, no ancestry reported	no_ancestry
+Blackfeet	native
+Bolivian	latino
+Brazilian	latino
+British	western
+British West Indian	afro_carib
+Bulgarian	eastern
+Burmese	se_asian
+Cajun	american
+Cambodian	se_asian
+Canadian	american
+Cape Verdean	african
+Carpatho Rusyn	eastern
+Celtic	western
+Chamorro	pacific
+Cherokee	native
+Cheyenne River Sioux	native
+Chickasaw	native
+Chilean	latino
+Chinese	east_asian
+Choctaw	native
+Chuukese	pacific
+Colombian	latino
+Comanche	native
+Costa Rican	latino
+Croatian	eastern
+Crow	native
+Cuban	latino
+Czech	eastern
+Czechoslovakian	eastern
+Danish	western
+Dominican	latino
+Dutch	western
+Dutch West Indian	afro_carib
+Eastern European	eastern
+Ecuadorian	latino
+Egyptian	mena
+English	western
+Estonian	eastern
+Ethiopian	african
+European	western
+Fijian	pacific
+Filipino	se_asian
+Finnish	western
+French	western
+French Canadian	american
+German	western
+German Russian	eastern
+Ghanaian	african
+Gila River	native
+Greek	eastern
+Guamanian	pacific
+Guatemalan	latino
+Guyanese	afro_carib
+Haitian	afro_carib
+Hmong	se_asian
+Honduran	latino
+Hopi	native
+Hungarian	eastern
+Icelander	western
+Inca	native
+Indian	s_c_asian
+Indonesian	se_asian
+Inupiat (Barrow)	native
+Inupiat (Kotzebue)	native
+Iranian	mena
+Iraqi	mena
+Irish	western
+Israeli	mena
+Italian	western
+Jamaican	afro_carib
+Japanese	east_asian
+Jordanian	mena
+Kazakh	s_c_asian
+Kenyan	african
+Korean	east_asian
+Laotian	se_asian
+Latvian	eastern
+Lebanese	mena
+Liberian	african
+Lithuanian	eastern
+Lumbee	native
+Luxembourger	western
+Macedonian	eastern
+Malaysian	se_asian
+Maltese	western
+Marshallese	pacific
+Maya	native
+Metlakatla	native
+Mexican	latino
+Mien	se_asian
+Mixtec	native
+Mongolian	east_asian
+Moroccan	mena
+Muscogee (Creek)	native
+Native Hawaiian	pacific
+Navajo	native
+Nepalese	s_c_asian
+Nicaraguan	latino
+Nigerian	african
+Nome Eskimo Community	native
+Northern European	western
+Norwegian	western
+Oglala Sioux	native
+Okinawan	east_asian
+Other Arab	mena
+Other Asian, not specified	east_asian
+Other Asian, specified	east_asian
+Other Central American	latino
+Other Central Asian	s_c_asian
+Other East Asian	east_asian
+Other Hispanic or Latino	latino
+Other Melanesian	pacific
+Other Micronesian	pacific
+Other Pacific Islander	pacific
+Other Polynesian	pacific
+Other South American	latino
+Other South Asian	s_c_asian
+Other Southeast Asian	se_asian
+Other Subsaharan African	african
+Other West Indian	afro_carib
+Pakistani	s_c_asian
+Palestinian	mena
+Panamanian	latino
+Paraguayan	latino
+Pascua Yaqui	native
+Pennsylvania German	american
+Peruvian	latino
+Polish	eastern
+Portuguese	western
+Puerto Rican	latino
+Romanian	eastern
+Rosebud Sioux	native
+Russian	eastern
+Salvadoran	latino
+Samoan	pacific
+Scandinavian	western
+Scotch-Irish	western
+Scottish	western
+Senegalese	african
+Serbian	eastern
+Sierra Leonean	african
+Sikh	s_c_asian
+Singaporean	se_asian
+Slavic	eastern
+Slovak	eastern
+Slovene	eastern
+Somali	african
+South African	african
+Soviet Union	eastern
+Spaniard	western
+Spanish	latino
+Spanish American	latino
+Sri Lankan	s_c_asian
+Sudanese	african
+Swedish	western
+Swiss	western
+Syrian	mena
+Taino	native
+Taiwanese	east_asian
+Tarasco (Purepecha)	native
+Thai	se_asian
+Tlingit and Haida	native
+Tohono O'odham	native
+Tongan	pacific
+Trinidadian and Tobagonian	afro_carib
+Turkish	mena
+Turtle Mountain Chippewa	native
+U.S. Virgin Islander	afro_carib
+Ugandan	african
+Ukrainian	eastern
+Uruguayan	latino
+Uzbek	s_c_asian
+Venezuelan	latino
+Vietnamese	se_asian
+Welsh	western
+West Indian	afro_carib
+White Mountain Apache	native
+White, no ancestry reported	no_ancestry
+Yugoslavian	eastern
+Yup'ik (Hooper Bay)	native
+Zimbabwean	african

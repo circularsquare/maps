@@ -1,0 +1,4 @@
+# Large intermediates (data/) are already ignored by the maps-root .gitignore.
+# Re-include our hand-editable source-of-truth colour classification, which the
+# parent ancestrydots/.gitignore *.csv rule would otherwise ignore.
+!ancestry_colors_ca.csv

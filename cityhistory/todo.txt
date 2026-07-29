@@ -1,0 +1,79 @@
+cityhistory — interactive historical world-city population map
+
+data: build on Stadestér (see FINDINGS.md). city-proper figures mostly; metro/agglomeration
+variants dropped. full history 3000BC->2025, annual, sublinear bubbles. viridis (big=bright).
+
+- [done] evaluate Stadestér, decide build-on (FINDINGS.md)
+- [done] build.py: clip bad years, drop (agglomeration) variants, dedup, DP-simplify -> cities.json
+- [done] index.html: dark map, year scrubber + play, sublinear bubbles, hover tooltip
+- [done] bubble scaling: BASE 0.21, exp 0.29; live "bubble size" + "big-city contrast" sliders
+- [done] show ALL cities >=5,000 (cap removed); MINPOP in index.html
+- [done] segmented play pacing: slider 50%/25%/25% for pre-1400 / 1400-1900 / 1900-now,
+        bars+labels at 1400 & 1900; play advances slider fraction so recent years pass slower
+- [done] fast projection (precomputed mercator + affine) — fixed pan lag from per-frame map.project
+- [done] color floor raised to 40/256 (blue smallest, not violet/teal)
+- [done] largest-cities top-10 panel (right side)
+- [done] modern tail past 2000: graft GHSL urban centres (data/stadester/ghsl.json), one
+        principal per centre, blend city-proper->agglomeration across 1975-2000 (smooth seam)
+- [done] viridis color, big cities bright (absolute scale: 5k->20M, so pre-modern "big" reads green)
+- [done] land basemap: 50m coastline drawn on 2D canvas (maplibre only projects; avoids the
+        big-geojson fill not rendering). ?year=N url param; cache-buster on cities.json fetch.
+
+known source-data warts (fix later, need a small rename/override map):
+- [done] RENAME map in build.py (keyed by source key): modern town on ancient ruins ->
+      historical name. Pi-Ramesses(Faqus), Thebes(Luxor), Memphis, Babylon(Hillah),
+      Nineveh(Mosul), Anyang(Yin), Karachi (was "Drigh Road Cantonment"). This is why the
+      antiquity charts used to read "Faqus biggest city in the world" -> now "Pi-Ramesses".
+- [done] New World antiquity RAMP in build.py (nw_cap + fade-in seed): American (lon<-30)
+      cities now fade in gradually over ~200BC..400CE instead of popping in full-size, and
+      pre-200BC phantoms are dropped. Killed Teotihuacan 150k@800BC, Tikal/Caracol/Tula/
+      Tiwanaku flat ~100k from 900BC. Region-based (the Old World giants share the same
+      sparse shape, so a gap/shape filter can't discriminate).
+- [done] DROP_KEYS: dropped "Kensington and Chelsea" (duplicate of London, carried Greater
+      London's agglomeration figure). Seoul rename (was mojibake "Sõul").
+- [ ] BIG ONE -- interpolation SMEAR conflates ancient+modern into one series, so a city
+      huge in ONE era shows huge in ALL eras. Two flavors:
+        * flat-hold: Pi-Ramesses held 120k from 1000BC->1940 (abandoned ~1050BC);
+          Babylon(Hillah) held ~100k 500BC->1900 (declined after ~300BC).
+        * monotonic smear: Memphis(Badrashayn) rises 100k->845k ancient->modern, so "Memphis"
+          is 675k in 1500CE (ruins by then!); Yuzhou smooth 120k(-400)->1.1M(2000), a minor
+          Henan town shown as a top-5 WORLD city 1-1500CE purely from interpolation.
+      FIXED by two changes: (1) DP switch below ~halves the smear via geometric interp;
+      (2) fade_long_gaps() -- across any control-point gap >700yr, insert floor points so the
+      city fades OUT after the earlier anchor and IN before the later one, instead of smearing
+      a line across centuries of no data. Killed ~64 mid-gap smears at once (Yuzhou, Memphis,
+      Nara, Ctesiphon, Samarra, Pergamon, Rajgir...). Medieval top-5 now historically sane
+      (1400: Nanjing/Beijing/Vijayanagara; 1700: Istanbul/Edo/Beijing/Paris/London). General +
+      data-driven, NOT the rejected per-city active-span trim. Legit continuous cities (Baghdad,
+      Song Kaifeng, Constantinople) have dense anchors / short gaps so are untouched.
+      Renames added along the way: Nunjiang->Nanjing (garbled name, coords are Nanjing),
+      Hospet->Vijayanagara (Hospet).
+- [done] North-American pre-1700 placeholder clip (NA_* in build.py): Anglo/French N.America had
+      no cities before ~1700, so pre-1700 data there is fabricated ("Cincinnati" held flat 10k
+      from 1425, "Saint Louis" 40k from 1100, "Boston-MA-type" 1000->5k ramps). Rule: drop
+      pre-1700 for lat>32 & lon in (-130,-55), then strip a flat leading run held a century+
+      (Cincinnati's 10k spilled to 1810). Latin America (lat<32) kept -- it had real cities from
+      the 1500s (Potosi, Mexico City). NB "Boston" in the data is Boston ENGLAND (a real medieval
+      port), not Boston MA -- correctly untouched.
+- [ ] next-tier smears: gaps of 640-700yr just UNDER the fade threshold, city still visible
+      mid-gap. Worst: Kamakura 200k (1250..1940, declined after 1333), Kannauj 92k (1150..1840),
+      Xiangfan 57k, Luoyang 50k, Kalinjar/Kayseri/Tiruchendur 50k. Lowering FADE_GAP 700->~600
+      would catch these; watch borderline-continuous cases (Milan 361..1000, Memphis Old Kingdom
+      -2500..-1800 30k is real-ish).
+- [done] DP switch: dp_simplify now runs in LINEAR space with a relative eps (0.01), not log.
+      Root cause was Stadester filling gaps with straight-LINE interpolation (Yuzhou = dead-
+      constant +438/yr for 2300yr = 2 real anchors + linear fill). Linear-space DP collapses
+      that fill to its real anchors, so the viewer's log-linear interp reconnects them
+      GEOMETRICALLY. Same change stops the modern era being over-simplified: Tokyo 3->10 ctrl
+      pts, so no more fake 20yr gaps. Verified real rise/fall preserved (Baghdad 1258 sack,
+      Rome medieval nadir) and antiquity ranks unchanged. File 3.85->4.18MB.
+- [done] MODERN SOURCE swapped ghsl.json -> UN WUP 2025 (prep_wup.py -> wup2025.json, same
+      schema, graft unchanged). 13,191 aggloms >=50k (was 11,121), annual 1975-2025, official
+      centroids, CC BY 3.0 IGO. 2025 ranks now match WUP (Jakarta 41.9M #1, Dhaka, Tokyo...).
+      Attribution needed in UI: "UN DESA Population Division, WUP 2025". Source csv.gz kept at
+      data/stadester/wup2025_source.csv.gz (gitignored). Old ghsl.json now unused (kept on disk).
+- [done] slider now starts at 3500 BC (Eridu+Larak+Uruk) not the lone-Eridu 3700 BC frame.
+- [ ] map thins after ~2000 (grafted principals reach 2025 but WUP has ~8k MORE cities not in
+      the historical set); add WUP-only modern cities (with dedup) so the modern era stays dense.
+- [ ] add WUP attribution line to index.html (CC BY 3.0 IGO requirement).
+- [ ] maybe 10m coastline; favicon + og preview; historical borders overlay?

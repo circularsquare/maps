@@ -1,0 +1,56 @@
+CANADIAN ANCESTRY DOT MAP — COMMAND REFERENCE
+==============================================
+Data: StatCan 2021 Census Profile (98-401-X2021006), ethnic or cultural origin,
+250 origins at Dissemination Area level. Sibling of ../ (the US map); reuses the
+same MapLibre frontend + dot-scatter approach.
+
+---- DATA PIPELINE (run in order, from this canada/ directory) ----
+
+1. Fetch + parse Census Profile (downloads region zip, streams to DA-origin rows):
+       python fetch_data.py --region Ontario
+       python fetch_data.py --all              # all 6 regions (~1.9 GB of downloads)
+   Regions: Territories, Atlantic, Quebec, Ontario, Prairies, BC
+
+2. One-time: convert DA boundary shapefile -> fast GeoParquet cache:
+       python convert_boundaries.py            # 414 MB .shp -> data/shapefiles/da_2021.parquet
+   (The boundary .shp comes from lda_000b21a_e.zip — cartographic, coastline-clipped.)
+
+3. Colors + legend (250 origins -> hue-wheel groups):
+       python make_colors.py                   # writes ancestry_colors_ca.csv + groups_ca.json
+       python make_legend.py                   # writes data/processed/legend.json
+   ancestry_colors_ca.csv is the hand-editable source of truth — tweak group/hue there,
+   then re-run make_legend.py. (make_colors.py OVERWRITES it — only re-run to regenerate.)
+
+4. Scatter dots -> GeoJSON (1 dot per 100 reported origins):
+       python build_dots.py --region Ontario   # one region (uses parquet cache, ~seconds)
+       python build_dots.py --all              # all downloaded regions -> dots_all_1per100.geojson
+
+5. Convert GeoJSON -> PMTiles (needed for the full-Canada map; small regions can skip this
+   and load the GeoJSON directly). WSL is broken on this machine, so use Docker:
+
+   One-time build of the tippecanoe image (note: default branch is main, not master):
+       docker build -t tippecanoe https://github.com/felt/tippecanoe.git#main
+
+   Tile (run from canada/ so the bind mount sees data/):
+       docker run --rm -v "$PWD/data/processed:/d" tippecanoe tippecanoe \
+         -o /d/dots_all_1per100.pmtiles --name canada-ancestry-dots --layer dots \
+         --minimum-zoom 4 --maximum-zoom 9 \
+         --drop-rate 1.0 --drop-densest-as-needed --maximum-tile-bytes 1500000 \
+         --no-feature-limit --full-detail 12 --force /d/dots_all_1per100.geojson
+
+   Then in index.html swap the geojson source back to PMTiles (see the commented block).
+
+
+---- LOCAL DEV SERVER ----
+       npx serve . -l 8091
+       open http://localhost:8091
+   (GeoJSON works over any static server. PMTiles needs range requests — `serve` is fine,
+    Python http.server is NOT.)
+
+
+---- NOTES ----
+- 1 dot = 100 reported origins, NOT 100 people: a person may report multiple origins, so
+  origins sum to more than population (same model as the US map).
+- Counts are random-rounded to nearest 5 by StatCan (invisible at 1:100).
+- National totals in the legend come from the Canada-level rows (present in every regional
+  file), extracted to data/raw/national_pops.csv.

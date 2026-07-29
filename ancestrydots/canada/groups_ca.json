@@ -1,0 +1,95 @@
+{
+  "groups": {
+    "western": {
+      "label": "Western European",
+      "hue": 220,
+      "sat": 0.7,
+      "lit": 0.55,
+      "hue_range": 45
+    },
+    "eastern": {
+      "label": "Eastern European",
+      "hue": 250,
+      "sat": 0.76,
+      "lit": 0.65,
+      "hue_range": 28
+    },
+    "american": {
+      "label": "North American",
+      "hue": 191,
+      "sat": 0.49,
+      "lit": 0.46,
+      "hue_range": 14
+    },
+    "east_asian": {
+      "label": "East Asian",
+      "hue": 12,
+      "sat": 0.7,
+      "lit": 0.55,
+      "hue_range": 22
+    },
+    "se_asian": {
+      "label": "Southeast Asian",
+      "hue": 320,
+      "sat": 0.7,
+      "lit": 0.6,
+      "hue_range": 25
+    },
+    "s_c_asian": {
+      "label": "South & Central Asian",
+      "hue": 295,
+      "sat": 0.7,
+      "lit": 0.65,
+      "hue_range": 25
+    },
+    "mena": {
+      "label": "MENA",
+      "hue": 270,
+      "sat": 0.7,
+      "lit": 0.65,
+      "hue_range": 30
+    },
+    "latino": {
+      "label": "Latin American",
+      "hue": 55,
+      "sat": 0.7,
+      "lit": 0.55,
+      "hue_range": 35
+    },
+    "native": {
+      "label": "Indigenous",
+      "hue": 30,
+      "sat": 0.72,
+      "lit": 0.55,
+      "hue_range": 22
+    },
+    "african": {
+      "label": "African",
+      "hue": 145,
+      "sat": 0.7,
+      "lit": 0.55,
+      "hue_range": 32
+    },
+    "afro_carib": {
+      "label": "West Indian",
+      "hue": 88,
+      "sat": 0.7,
+      "lit": 0.55,
+      "hue_range": 25
+    },
+    "pacific": {
+      "label": "Pacific Islander",
+      "hue": 347,
+      "sat": 0.7,
+      "lit": 0.6,
+      "hue_range": 18
+    },
+    "other": {
+      "label": "Other (Canada)",
+      "hue": 275,
+      "sat": 0.18,
+      "lit": 0.74,
+      "hue_range": 44
+    }
+  }
+}

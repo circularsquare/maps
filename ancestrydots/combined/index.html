@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Ancestry Dot Map</title>
+  <title>North American Ancestry Dot Map</title>
   <link rel="icon" href="data/favicon.png" />
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;700&display=swap" />
@@ -522,12 +522,12 @@
       <span id="info-panel-title">About</span>
       <button id="info-panel-close" title="Close">✕</button>
     </div>
-    <p>Each dot represents 100 reported ancestries from the US Census (ACS 5-year estimates, 2024).</p>
-    <p>Dots are distributed randomly in their census tract's land area.</p>
+    <p>Each dot represents 100 reported ancestries. United States data is from the American Community Survey (2020 to 2024 5-year estimates, by census tract); Canadian data is from the 2021 Census of Canada (ethnic or cultural origin, by dissemination area).</p>
+    <p>Dots are placed randomly within each area's land.</p>
     <p>You can customize colors by clicking the colored dot in the legend! </p>
-    <p>Double clicking a dot on the map will filter to just that ancestry. </p>
-    <p>Ancestry reporting in the ACS is voluntary. So in this data, some people are not counted, and others are double-counted (putting up to two ancestries is allowed).</p>
-    <p>* <strong> Note: </strong>The two "no reported ancestry" groups don't reflect specific census data. Rather, they are my crude estimates that attempt to count some of the people who do not report ancestry. <em>Black, no reported ancestry</em> is calculated per census tract as the black (race) population minus all the ancestries in the African and West Indian groups. <em>White, no reported ancestry</em> is analogously the white (race) population minus the European and North American groups.</p>
+    <p>Double clicking a dot on the map will filter to just that origin. </p>
+    <p>People can report more than one origin, so each dot is one reported origin, not one person. The US survey allows up to two origins per person; the Canadian census kept up to six.</p>
+    <p>* <strong>Note:</strong> The two "no reported ancestry" groups don't reflect specific census data. Rather, they are my crude estimates that attempt to count some of the people who do not report ancestry. <em>Black, no reported ancestry</em> is calculated per census tract as the black (race) population minus all the ancestries in the African and West Indian groups. <em>White, no reported ancestry</em> is analogously the white (race) population minus the European and North American groups.</p>
     <p>Inspired by <a href="https://censusdots.com" target="_blank">censusdots.com</a>.</p>
     <p>This map is made by <a href="https://anita.garden/projects" target="_blank">anita</a>!</p>
   </div>
@@ -586,7 +586,7 @@
     }
   </script>
   <script>
-    const GROUP_ORDER = ['eastern', 'western', 'american', 'african', 'afro_carib', 'latino', 'mena', 's_c_asian', 'se_asian', 'east_asian', 'native', 'pacific', 'no_ancestry'];
+    const GROUP_ORDER = ['western', 'eastern', 'american', 'native', 'african', 'afro_carib', 'latino', 'mena', 's_c_asian', 'se_asian', 'east_asian', 'pacific', 'other', 'no_ancestry'];
     const SUBGROUP_ORDER  = ['uk_ireland', 'nordic', 'france_benelux', 'germany_rest', 'north_balkans', 'balkan', 'russia_ukraine', 'central_american', 'south_american', 'south_asian', 'central_asian', 'white_unspecified', 'black_unspecified'];
     const SUBGROUP_LABELS = {
       uk_ireland:       'UK & Ireland',
@@ -611,11 +611,12 @@
       s_c_asian: 'South & Central Asian',
       african:   'African',
       afro_carib:'West Indian',
-      latino:    'Latino',
+      latino:    'Latin American',
       mena:      'Middle Eastern & North African',
-      native:      'Native American',
-      pacific:     'Pacific Islander',
-      no_ancestry: 'No Reported Ancestry',
+      native:    'Indigenous',
+      pacific:   'Pacific Islander',
+      other:     'Other (Canada)',
+      no_ancestry: 'No Reported Ancestry (US)',
     };
 
     function fmtCount(n) {
@@ -627,16 +628,17 @@
     const GROUP_COLOR_ANCHOR = {
       eastern:    'Croatian',
       western:    'Dutch',
-      american:   'American',
+      american:   'Canadian',
       african:    'Nigerian',
       afro_carib: 'Barbadian',
-      latino:     'Spanish',
+      latino:     'Mexican',
       mena:       'Lebanese',
-      s_c_asian:  'Afghan',
-      se_asian:   'Thai',
-      east_asian: 'Taiwanese',
-      native:     'Oglala Sioux',
-      pacific:    'Samoan',
+      s_c_asian:  'Punjabi',
+      se_asian:   'Filipino',
+      east_asian: 'Chinese',
+      native:     'Cree',
+      pacific:    'Fijian',
+      other:      'Christian',
     };
 
     function buildLegend(items, map) {
@@ -976,11 +978,13 @@
     });
 
     map.on('load', () => {
-      // Add PMTiles vector source — only tiles for the current viewport are fetched
+      // PMTiles vector source — only tiles for the current viewport are fetched.
+      // (To fall back to raw GeoJSON, use { type:'geojson', data:'.../dots_all_1per100.geojson' }
+      //  and drop the 'source-layer' below.)
       const isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
       const tilesUrl = isLocal
-        ? 'pmtiles://data/processed/dots_all_1per100.pmtiles'
-        : 'pmtiles://https://pub-ae551368cea941f39101e13c84d60bde.r2.dev/dots_all_1per100.pmtiles';
+        ? 'pmtiles://data/processed/na_combined_1per100.pmtiles'
+        : 'pmtiles://https://pub-ae551368cea941f39101e13c84d60bde.r2.dev/na_combined_1per100.pmtiles';
       map.addSource('dots', {
         type: 'vector',
         url: tilesUrl,

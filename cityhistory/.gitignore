@@ -1,0 +1,3 @@
+# large raw source data (regenerate cities.json via build.py from these)
+data/stadester/
+data/ghs_ucdb.csv

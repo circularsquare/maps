@@ -1,0 +1,250 @@
+1699	Canadian
+1700	English
+1701	Irish
+1702	Scottish
+1703	French, n.o.s.
+1704	German
+1705	Chinese
+1706	Italian
+1707	Indian (India)
+1708	Ukrainian
+1709	Dutch
+1710	Polish
+1711	Québécois
+1712	British Isles, n.o.s.
+1713	Filipino
+1714	French Canadian
+1715	Caucasian (White), n.o.s.
+1716	First Nations (North American Indian), n.o.s.
+1717	Métis
+1718	European, n.o.s.
+1719	Russian
+1720	Norwegian
+1721	Welsh
+1722	Portuguese
+1723	American
+1724	Spanish
+1725	Swedish
+1726	Hungarian
+1727	Acadian
+1728	Pakistani
+1729	African, n.o.s.
+1730	Jewish
+1731	Punjabi
+1732	Vietnamese
+1733	Arab, n.o.s.
+1734	Greek
+1735	Jamaican
+1736	Asian, n.o.s.
+1737	Cree, n.o.s.
+1738	Korean
+1739	Romanian
+1740	Lebanese
+1741	Iranian
+1742	Christian, n.i.e.
+1743	Danish
+1744	North American Indigenous, n.o.s.
+1745	Sikh
+1746	Austrian
+1747	Belgian
+1748	Haitian
+1749	Hindu
+1750	Mexican
+1751	Mennonite
+1752	Swiss
+1753	Finnish
+1754	Sri Lankan
+1755	Croatian
+1756	Japanese
+1757	South Asian, n.o.s.
+1758	Mi'kmaq, n.o.s.
+1759	Northern European, n.o.s.
+1760	Muslim
+1761	Egyptian
+1762	Latin, Central or South American, n.o.s.
+1763	Tamil
+1764	Icelandic
+1765	Colombian
+1766	Moroccan
+1767	Czech
+1768	Syrian
+1769	Guyanese
+1770	Afghan
+1771	Black, n.o.s.
+1772	Serbian
+1773	Ojibway
+1774	Newfoundlander
+1775	Hong Konger
+1776	Ontarian
+1777	Persian
+1778	Trinidadian/Tobagonian
+1779	Turkish
+1780	Inuit, n.o.s.
+1781	Bangladeshi
+1782	Algerian
+1783	Brazilian
+1784	Nigerian
+1785	Armenian
+1786	Slovak
+1787	Eastern European, n.o.s.
+1788	Somali
+1789	Taiwanese
+1790	Iraqi
+1791	Salvadorean
+1792	African Caribbean
+1793	East or Southeast Asian, n.o.s.
+1794	West or Central Asian or Middle Eastern, n.o.s.
+1795	Caribbean, n.o.s.
+1796	Algonquin
+1797	West Indian, n.o.s.
+1798	Lithuanian
+1799	South African
+1800	Australian
+1801	Palestinian
+1802	Chilean
+1803	Congolese
+1804	Nova Scotian
+1805	Ethiopian
+1806	Hispanic, n.o.s.
+1807	Peruvian
+1808	Yoruba
+1809	Cambodian (Khmer)
+1810	Berber
+1811	Albanian
+1812	Maltese
+1813	Macedonian
+1814	Slovenian
+1815	Western European, n.o.s.
+1816	New Brunswicker
+1817	Gujarati
+1818	Eritrean
+1819	African Canadian
+1820	Israeli
+1821	Mohawk
+1822	Czechoslovakian, n.o.s.
+1823	Bulgarian
+1824	Albertan
+1825	Ghanaian
+1826	Barbadian
+1827	African American
+1828	Yugoslavian, n.o.s.
+1829	Tunisian
+1830	Slavic, n.o.s.
+1831	Cuban
+1832	Bosnian
+1833	Venezuelan
+1834	Innu/Montagnais, n.o.s.
+1835	Latvian
+1836	Bengali
+1837	Cameroonian
+1838	Guatemalan
+1839	Indonesian
+1840	Laotian
+1841	Ilocano
+1842	Northern Irish
+1843	Celtic, n.o.s.
+1844	British Columbian
+1845	Ecuadorian
+1846	Franco Ontarian
+1847	Argentinian
+1848	Estonian
+1849	Kurdish
+1850	Fijian
+1851	Jatt
+1852	North American, n.o.s.
+1853	Coptic
+1854	Thai
+1855	Dominican
+1856	Nepali
+1857	Kabyle
+1858	Assyrian
+1859	Igbo
+1860	Byelorussian
+1861	Dene, n.o.s.
+1862	Blackfoot, n.o.s.
+1863	Abenaki
+1864	Moldovan
+1865	Iroquois (Haudenosaunee), n.o.s.
+1866	New Zealander
+1867	Sudanese
+1868	Breton
+1869	Pennsylvania Dutch
+1870	Malaysian
+1871	Plains Cree
+1872	North African, n.o.s.
+1873	Huron (Wendat)
+1874	Saskatchewanian
+1875	Buddhist
+1876	Gaspesian
+1877	Norman
+1878	Southern or East African, n.o.s.
+1879	Ivorian
+1880	Saulteaux
+1881	Anishinaabe, n.o.s.
+1882	Burundian
+1883	Tigrinya
+1884	Nicaraguan
+1885	Mauritian
+1886	Kenyan
+1887	Oji-Cree
+1888	Vincentian
+1889	Jordanian
+1890	Manitoban
+1891	Cape Bretoner
+1892	Rwandan
+1893	Grenadian
+1894	Malayali
+1895	Chaldean
+1896	Sinhalese
+1897	Mayan
+1898	Honduran
+1899	Cherokee
+1900	Qalipu Mi'kmaq
+1901	Indo-Caribbean
+1902	Flemish
+1903	United Empire Loyalist
+1904	Senegalese
+1905	Azerbaijani
+1906	Sicilian
+1907	Pashtun
+1908	Malay
+1909	Goan
+1910	Bantu, n.o.s.
+1911	Tibetan
+1912	Zimbabwean
+1913	Burmese
+1914	Mongolian
+1915	Azorean
+1916	Atikamekw
+1917	Bamileke
+1918	Indo-Guyanese
+1919	Ugandan
+1920	Oromo
+1921	Tanzanian
+1922	Yemeni
+1923	Central African
+1924	Libyan
+1925	Basque
+1926	Uruguayan
+1927	Akan, n.o.s.
+1928	Central or West African, n.o.s.
+1929	Igorot
+1930	Fulani
+1931	Woodland Cree
+1932	Guinean
+1933	St. Lucian
+1934	Prince Edward Islander
+1935	Maliseet
+1936	Beninese
+1937	Telugu
+1938	Roma
+1939	Costa Rican
+1940	African Nova Scotian
+1941	Malagasy
+1942	Kashmiri
+1943	Singaporean
+1944	Karen
+1945	Edo
+1946	Tajik
+1947	Amhara
+1948	Paraguayan

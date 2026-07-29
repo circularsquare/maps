@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>city history — world population through time</title>
+<meta property="og:title" content="city history">
+<meta property="og:description" content="Every city in the world, sized by population, from 3000 BC to today.">
+<meta property="og:type" content="website">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;700;800&display=swap">
+<link href="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.css" rel="stylesheet">
+<script src="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.js"></script>
+<style>
+  html,body { margin:0; height:100%; background:#080b11; overflow:hidden;
+    font-family:'Nunito',system-ui,-apple-system,Segoe UI,Roboto,sans-serif; color:#e8ebf0; }
+  #map { position:absolute; inset:0; }
+  #landcv  { position:absolute; inset:0; pointer-events:none; z-index:1; }
+  #bubbles { position:absolute; inset:0; pointer-events:none; z-index:2; }
+
+  /* top-left title panel */
+  .panel {
+    position:absolute; top:12px; left:12px; z-index:3;
+    background:rgba(8,11,17,.86); border:1px solid #232c38;
+    border-radius:9px; padding:12px 14px; width:216px; font-size:12px; box-sizing:border-box;
+    backdrop-filter:blur(3px);
+  }
+  .panel h1 { font-size:14px; margin:0 0 3px; letter-spacing:.3px; font-weight:800; }
+  .panel .sub { color:#8b939e; font-size:11px; line-height:1.45; margin-bottom:10px; }
+
+  /* top-right largest-cities panel */
+  .rpanel {
+    position:absolute; top:12px; right:12px; z-index:3; width:212px; box-sizing:border-box;
+    background:rgba(8,11,17,.86); border:1px solid #232c38; border-radius:9px;
+    padding:10px 12px; font-size:12px; backdrop-filter:blur(3px);
+  }
+  .rpanel .rhead { font-weight:800; letter-spacing:.3px; margin-bottom:7px; }
+  .rpanel ol { list-style:none; margin:0; padding:0; }
+  .rpanel li { display:flex; align-items:baseline; gap:8px; padding:2.5px 0; }
+  .rpanel .rk { color:#5b6472; width:15px; text-align:right; flex:none; font-variant-numeric:tabular-nums; }
+  .rpanel .rn { flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .rpanel .rp { color:#ff9a4d; flex:none; font-variant-numeric:tabular-nums; font-weight:700; }
+  .row { display:flex; justify-content:space-between; align-items:center; margin:8px 0; gap:8px; }
+  .row label { color:#aeb6c0; flex:none; }
+  input[type=range] { width:100%; accent-color:#ff8a3c; cursor:pointer; }
+  .stat { color:#ff9a4d; font-variant-numeric:tabular-nums; font-weight:700; }
+
+  /* bottom time scrubber */
+  #timebar {
+    position:absolute; left:50%; transform:translateX(-50%); bottom:16px; z-index:3;
+    display:flex; align-items:center; gap:12px;
+    background:rgba(8,11,17,.9); border:1px solid #232c38; border-radius:11px;
+    padding:10px 16px; width:min(760px, 92vw); box-sizing:border-box; backdrop-filter:blur(3px);
+  }
+  #playbtn {
+    background:#ff8a3c; color:#161009; border:none; border-radius:7px; flex:none;
+    width:38px; height:38px; font-size:15px; cursor:pointer; font-weight:800;
+  }
+  #playbtn:hover { background:#ffa15c; }
+  #yearwrap { flex:none; width:118px; text-align:center; }
+  #yearbig { font-size:22px; font-weight:800; font-variant-numeric:tabular-nums; line-height:1; }
+  #yearsub { font-size:10px; color:#8b939e; margin-top:2px; }
+  #scrubwrap { flex:1; position:relative; display:flex; align-items:center; }
+  #scrub { width:100%; accent-color:#ff8a3c; cursor:pointer; }
+  .seg { position:absolute; top:2px; bottom:2px; width:2px; background:#4a5361;
+    pointer-events:none; transform:translateX(-1px); }
+  .seg span { position:absolute; top:-13px; left:50%; transform:translateX(-50%);
+    font-size:9px; color:#8b939e; }
+  #speedsel {
+    background:#11151c; color:#e8ebf0; border:1px solid #2a2f38; border-radius:6px;
+    padding:5px 7px; font-size:11px; cursor:pointer; flex:none;
+  }
+
+  /* hover tooltip */
+  #tip {
+    position:absolute; z-index:4; pointer-events:none; display:none;
+    background:rgba(8,11,17,.95); border:1px solid #38424f; border-radius:7px;
+    padding:6px 9px; font-size:12px; max-width:220px; transform:translate(-50%, -115%);
+  }
+  #tip .tn { font-weight:800; }
+  #tip .tp { color:#ff9a4d; font-variant-numeric:tabular-nums; }
+  #tip .tt { color:#8b939e; font-size:10px; margin-top:1px; }
+  a { color:#ff9a4d; }
+  #loading { position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    z-index:5; color:#8b939e; font-size:14px; }
+</style>
+</head>
+<body>
+<div id="map"></div>
+<canvas id="landcv"></canvas>
+<canvas id="bubbles"></canvas>
+<div id="tip"></div>
+<div id="loading">loading cities…</div>
+
+<div class="rpanel">
+  <div class="rhead">largest cities</div>
+  <ol id="toplist"></ol>
+</div>
+
+<div class="panel">
+  <h1>city history</h1>
+  <div class="sub">Every city in the world, sized by population.
+    Data: <a href="https://github.com/Confoederatio/Stadester" target="_blank">Stadestér</a>
+    (Chandler, Bairoch/Buringh, de Vries, Populstat…); modern era from
+    <a href="https://population.un.org/wup/" target="_blank">UN WUP 2025</a>.</div>
+  <div class="row"><label>cities shown</label><span class="stat" id="ncities">–</span></div>
+  <div class="sub" style="margin:2px 0 8px;">all cities · ≥5,000 people</div>
+  <div class="row"><label>bubble size</label><input type="range" id="sizeslider" min="0.4" max="2.4" step="0.05" value="1"></div>
+  <div class="row"><label>big-city contrast</label><input type="range" id="expslider" min="0.22" max="0.42" step="0.01" value="0.29"></div>
+</div>
+
+<div id="timebar">
+  <button id="playbtn">▶</button>
+  <div id="yearwrap"><div id="yearbig">–</div><div id="yearsub">drag to scrub</div></div>
+  <div id="scrubwrap">
+    <input type="range" id="scrub" min="0" max="1000" step="1" value="750">
+    <div class="seg" style="left:50%"><span>1400</span></div>
+    <div class="seg" style="left:75%"><span>1900</span></div>
+  </div>
+  <select id="speedsel">
+    <option value="0.008">0.5×</option>
+    <option value="0.016" selected>1×</option>
+    <option value="0.032">2×</option>
+    <option value="0.064">4×</option>
+  </select>
+</div>
+
+<script>
+// ---------- map ----------
+const map = new maplibregl.Map({
+  container: 'map',
+  style: {
+    version: 8,
+    sources: {},
+    layers: [ { id: 'bg', type: 'background', paint: { 'background-color': '#080b11' } } ]
+  },
+  center: [20, 30], zoom: 1.5, minZoom: 0.6, maxZoom: 9,
+  renderWorldCopies: true, attributionControl: false
+});
+map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'bottom-right');
+
+// ---------- state ----------
+const cv = document.getElementById('bubbles'), ctx = cv.getContext('2d');
+const lcv = document.getElementById('landcv'), lctx = lcv.getContext('2d');
+let DATA = null, LAND = null, year = 1900, playing = false, sizeMul = 1, expo = 0.29;
+const MINPOP = 5000;   // only draw cities at/above this population
+let projected = [];   // {x,y,r,name,pop,type} from last draw, for hover hit-testing
+
+// ---------- helpers ----------
+function fmtYear(y){ y = Math.round(y); return y < 0 ? (-y) + ' BC' : 'AD ' + y; }
+function fmtPop(p){
+  p = Math.round(p);
+  if (p >= 1e6) return (p/1e6).toFixed(p >= 1e7 ? 0 : 1) + 'M';
+  if (p >= 1e3) return (p/1e3).toFixed(p >= 1e5 ? 0 : 1) + 'k';
+  return p.toLocaleString();
+}
+// interpolate a city's population at a (possibly fractional) year, log-linear
+function popAt(c, y){
+  const p = c.p, n = p.length;
+  if (y < p[0][0] || y > p[n-1][0]) return 0;
+  let lo = 0, hi = n - 1;
+  while (hi - lo > 1){ const m = (lo+hi)>>1; if (p[m][0] <= y) lo = m; else hi = m; }
+  const a = p[lo], b = p[hi];
+  if (b[0] === a[0]) return a[1];
+  const f = (y - a[0]) / (b[0] - a[0]);
+  return Math.pow(10, Math.log10(a[1]) + (Math.log10(b[1]) - Math.log10(a[1])) * f);
+}
+// viridis: small cities dark, big cities bright (log-population)
+const VIRIDIS = ['#440154','#46327e','#365c8d','#277f8e','#1fa187',
+                 '#4ac16d','#a0da39','#fde725'];
+const COLOR_LO = 40/256; // start ~blue on viridis (dark violet is unreadable on the dark map)
+function colorFor(pop){
+  let t = Math.max(0, Math.min(1, (Math.log10(pop) - 3.7) / 3.6));  // ~5k -> ~20M
+  t = COLOR_LO + (1 - COLOR_LO) * t;
+  const x = t * (VIRIDIS.length - 1), i = Math.floor(x);
+  if (i >= VIRIDIS.length - 1) return VIRIDIS[VIRIDIS.length - 1];
+  return mix(VIRIDIS[i], VIRIDIS[i+1], x - i);
+}
+function mix(a,b,f){
+  const pa=[parseInt(a.slice(1,3),16),parseInt(a.slice(3,5),16),parseInt(a.slice(5,7),16)];
+  const pb=[parseInt(b.slice(1,3),16),parseInt(b.slice(3,5),16),parseInt(b.slice(5,7),16)];
+  return 'rgb('+pa.map((v,i)=>Math.round(v+(pb[i]-v)*f)).join(',')+')';
+}
+
+// ---------- fast projection ----------
+// Precompute each point's normalized web-mercator coord once; per frame it's just a
+// multiply-add (no trig, no map.project() call) — that's what keeps panning smooth with
+// the detailed coastline. Matches maplibre's transform (we use no bearing/pitch).
+function mercNorm(lng, lat){
+  lat = Math.max(-85.051, Math.min(85.051, lat));
+  const s = Math.sin(lat * Math.PI / 180);
+  return [(lng + 180) / 360, 0.5 - Math.log((1 + s) / (1 - s)) / (4 * Math.PI)];
+}
+function view(){
+  const c = map.getCenter(), z = map.getZoom(), ws = 512 * Math.pow(2, z);
+  const cn = mercNorm(c.lng, c.lat);
+  return { ws, cxn: cn[0], cyn: cn[1], W: innerWidth, H: innerHeight,
+           kR: Math.ceil((innerWidth / ws) / 2) + 1 };   // # of world-copies to tile across
+}
+
+// ---------- canvas sizing ----------
+function resize(){
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  for (const [c, x] of [[cv, ctx], [lcv, lctx]]){
+    c.width = innerWidth * dpr; c.height = innerHeight * dpr;
+    c.style.width = innerWidth + 'px'; c.style.height = innerHeight + 'px';
+    x.setTransform(dpr,0,0,dpr,0,0);
+  }
+  drawLand(); draw();
+}
+
+// ---------- land basemap (drawn on canvas; each ring is precomputed mercator coords) ----------
+function drawLand(){
+  lctx.clearRect(0,0,innerWidth,innerHeight);
+  if (!LAND) return;
+  const v = view(), W = v.W, H = v.H, ws = v.ws;
+  lctx.beginPath();
+  for (const ring of LAND){
+    const a = ring.c;
+    for (let k = -v.kR; k <= v.kR; k++){
+      const off = (k - v.cxn) * ws + W/2;
+      const sx0 = ring.x0 * ws + off, sx1 = ring.x1 * ws + off;   // ring screen bbox
+      if (sx1 < -40 || sx0 > W + 40) continue;
+      const sy0 = (ring.y0 - v.cyn) * ws + H/2, sy1 = (ring.y1 - v.cyn) * ws + H/2;
+      if (sy1 < -40 || sy0 > H + 40) continue;
+      lctx.moveTo(a[0] * ws + off, (a[1] - v.cyn) * ws + H/2);
+      for (let j = 2; j < a.length; j += 2)
+        lctx.lineTo(a[j] * ws + off, (a[j+1] - v.cyn) * ws + H/2);
+      lctx.closePath();
+    }
+  }
+  lctx.fillStyle = '#1b2431';
+  lctx.fill('evenodd');
+  lctx.lineWidth = 0.6;
+  lctx.strokeStyle = '#33404f';
+  lctx.stroke();
+}
+
+// ---------- draw ----------
+function draw(){
+  if (!DATA) return;
+  ctx.clearRect(0,0,innerWidth,innerHeight);
+  projected.length = 0;
+  const BASE = 0.21 * sizeMul, W = innerWidth, H = innerHeight;
+
+  // rank every city alive & above the floor this year (global ranking, not viewport)
+  const cand = [];
+  for (const c of DATA.cities){
+    const p = c.p;
+    if (year < p[0][0] || year > p[p.length-1][0]) continue;
+    const pop = popAt(c, year);
+    if (pop < MINPOP) continue;
+    cand.push({ c, pop });
+  }
+  cand.sort((a,b) => b.pop - a.pop);
+  const n = cand.length;
+
+  // draw smallest-first so bigger bubbles land on top
+  const v = view();
+  ctx.globalAlpha = 0.65;
+  for (let i = n - 1; i >= 0; i--){
+    const c = cand[i].c, pop = cand[i].pop;
+    const sy = (c.my - v.cyn) * v.ws + H/2;
+    if (sy < -40 || sy > H + 40) continue;
+    const r = Math.max(1.0, BASE * Math.pow(pop, expo));
+    const col = colorFor(pop), baseX = (c.mx - v.cxn) * v.ws + W/2;
+    for (let k = -v.kR; k <= v.kR; k++){
+      const sx = baseX + k * v.ws;
+      if (sx < -40 || sx > W + 40) continue;
+      ctx.beginPath();
+      ctx.arc(sx, sy, r, 0, 6.2832);
+      ctx.fillStyle = col;
+      ctx.fill();
+      projected.push({ x: sx, y: sy, r, name: c.n, pop, type: c.t });
+    }
+  }
+  ctx.globalAlpha = 1;
+  document.getElementById('ncities').textContent = n.toLocaleString();
+
+  // largest-cities panel
+  let rows = '';
+  for (let i = 0; i < Math.min(10, cand.length); i++){
+    rows += `<li><span class="rk">${i+1}</span><span class="rn">${cand[i].c.n}</span>`+
+            `<span class="rp">${fmtPop(cand[i].pop)}</span></li>`;
+  }
+  document.getElementById('toplist').innerHTML = rows;
+}
+
+// ---------- year / scrubber (segmented timeline: warps play so recent years pass slower) ----------
+// slider fraction s in [0,1] maps piecewise-linearly to year across 3 segments that take
+// 50% / 25% / 25% of the track: pre-1400, 1400-1900, 1900-present.
+const scrub = document.getElementById('scrub');
+const SEG_S = [0, 0.5, 0.75, 1];
+// start the scrubber at 3500 BC (Eridu/Larak/Uruk) rather than the lone-Eridu 3700 BC point
+function yStart(){ return Math.max(DATA.yearMin, -3500); }
+function segY(){ return [yStart(), 1400, 1900, DATA.yearMax]; }
+function sToYear(s){
+  const Y = segY(); s = Math.max(0, Math.min(1, s));
+  for (let i = 0; i < 3; i++)
+    if (s <= SEG_S[i+1]){
+      const f = (s - SEG_S[i]) / (SEG_S[i+1] - SEG_S[i]);
+      return Y[i] + f * (Y[i+1] - Y[i]);
+    }
+  return Y[3];
+}
+function yearToS(y){
+  const Y = segY(); y = Math.max(Y[0], Math.min(Y[3], y));
+  for (let i = 0; i < 3; i++)
+    if (y <= Y[i+1]){
+      const f = (y - Y[i]) / (Y[i+1] - Y[i]);
+      return SEG_S[i] + f * (SEG_S[i+1] - SEG_S[i]);
+    }
+  return 1;
+}
+function setYear(y, fromScrub){
+  year = Math.max(yStart(), Math.min(DATA.yearMax, y));
+  document.getElementById('yearbig').textContent = fmtYear(year);
+  if (!fromScrub) scrub.value = Math.round(yearToS(year) * 1000);
+  draw();
+}
+
+// ---------- play loop (advances the slider fraction at constant speed -> time-warp) ----------
+let lastT = null, playS = 0;
+function tick(t){
+  if (!playing){ lastT = null; return; }
+  if (lastT != null){
+    const dt = (t - lastT)/1000;
+    playS += (+document.getElementById('speedsel').value) * dt;   // fractions of track / sec
+    if (playS >= 1){ playS = 1; setYear(DATA.yearMax); setPlaying(false); }
+    else { setYear(sToYear(playS)); scrub.value = Math.round(playS * 1000); }
+  }
+  lastT = t;
+  if (playing) requestAnimationFrame(tick);
+}
+function setPlaying(p){
+  playing = p;
+  document.getElementById('playbtn').textContent = p ? '❚❚' : '▶';
+  if (p){
+    playS = year >= DATA.yearMax ? 0 : yearToS(year);
+    lastT = null; requestAnimationFrame(tick);
+  }
+}
+
+// ---------- wire up ----------
+document.getElementById('playbtn').onclick = () => setPlaying(!playing);
+scrub.oninput = () => { if (playing) setPlaying(false); setYear(sToYear(+scrub.value / 1000), true); };
+document.getElementById('sizeslider').oninput = e => { sizeMul = +e.target.value; draw(); };
+document.getElementById('expslider').oninput  = e => { expo = +e.target.value; draw(); };
+function redraw(){ drawLand(); draw(); }
+map.on('move', redraw);
+map.on('render', redraw);
+addEventListener('resize', resize);
+
+// load land basemap (drawn on canvas, not a maplibre layer); store normalized-mercator rings
+fetch('data/ne_50m_land.geojson').then(r => r.json()).then(gj => {
+  const rings = [];
+  for (const f of gj.features){
+    const g = f.geometry; if (!g) continue;
+    const polys = g.type === 'Polygon' ? [g.coordinates] : g.coordinates;
+    for (const poly of polys)
+      for (const ring of poly){
+        const flat = new Float32Array(ring.length * 2);
+        let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+        for (let i = 0; i < ring.length; i++){
+          const m = mercNorm(ring[i][0], ring[i][1]);
+          flat[2*i] = m[0]; flat[2*i+1] = m[1];
+          if (m[0] < x0) x0 = m[0]; if (m[0] > x1) x1 = m[0];
+          if (m[1] < y0) y0 = m[1]; if (m[1] > y1) y1 = m[1];
+        }
+        rings.push({ c: flat, x0, y0, x1, y1 });
+      }
+  }
+  LAND = rings;
+  drawLand();
+});
+
+// hover
+const tip = document.getElementById('tip');
+map.getCanvas().parentElement.addEventListener('mousemove', e => {
+  const rect = cv.getBoundingClientRect();
+  const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+  // among bubbles whose disk covers the cursor, take the largest — it's the one drawn on top
+  let best = null;
+  for (const p of projected){
+    const hit = p.r + 2;
+    if ((p.x-mx)**2 + (p.y-my)**2 <= hit*hit && (!best || p.r > best.r)) best = p;
+  }
+  if (best){
+    tip.style.display = 'block';
+    tip.style.left = best.x + 'px'; tip.style.top = best.y + 'px';
+    tip.innerHTML = `<div class="tn">${best.name}</div>`+
+      `<div class="tp">${fmtPop(best.pop)}</div><div class="tt">${fmtYear(year)} · ${best.type}</div>`;
+  } else tip.style.display = 'none';
+});
+
+// ---------- load ----------
+fetch('data/cities.json?v=' + Date.now()).then(r => r.json()).then(d => {
+  DATA = d;
+  for (const c of d.cities){ const m = mercNorm(c.lo, c.la); c.mx = m[0]; c.my = m[1]; }
+  document.getElementById('loading').remove();
+  scrub.min = 0; scrub.max = 1000;
+  const q = new URLSearchParams(location.search);
+  setYear(q.has('year') ? +q.get('year') : 1900);
+  if (map.loaded()) draw();
+});
+map.on('load', () => { if (DATA) draw(); });
+resize();
+</script>
+</body>
+</html>
