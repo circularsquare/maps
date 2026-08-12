@@ -1,0 +1,4 @@
+# Source downloads and derived intermediates — all regenerable.
+# The curation that matters (overrides.json, build tables) is NOT ignored.
+data/
+cache/

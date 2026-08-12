@@ -1,0 +1,8 @@
+# regenerable: run fetch.py
+data/
+
+# regenerable: run build.py (17 MB)
+out/field.csv
+
+# regenerable: run build_rwi.py
+out/field_rwi.csv
