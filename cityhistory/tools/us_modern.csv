@@ -1,0 +1,1625 @@
+# US city-proper populations 2010 / 2020 / 2024. Loaded by build.py.
+# Source: US Census Bureau, Population Estimates Program, "Subcounty Resident
+#   Population Estimates" (SUB-EST), SUMLEV 162 = incorporated place:
+#     2010 = CENSUS2010POP        (sub-est2019_all.csv, 2010-2019 vintage)
+#     2020 = ESTIMATESBASE2020    (sub-est2024.csv, 2020-2024 vintage)
+#     2024 = POPESTIMATE2024      (sub-est2024.csv)
+#   Both from www2.census.gov/programs-surveys/popest/datasets/.
+#
+# Why: populstat ends about 2000 and WUP maps agglomerations >=50k, not places, so
+#   only 388 of 1,790 US cities got a modern graft. The other ~1,300 had NOTHING after
+#   2000 -- build.py held the last value flat and the viewer correctly dimmed it, so
+#   ~80% of the US read as no-data from 2010 on.
+#
+# unit check: a row is here only if the entry's own last 1985-2005 value is within 40%
+#   of the 2010 census -- these series are city proper, and this keeps a metro twin
+#   from quietly receiving place figures.
+# NB build.py applies these ONLY to cities with no WUP graft. A grafted city already
+#   has an agglomeration tail, and a city-proper 2020 on top of it would manufacture
+#   the definition oscillation the rest of the pipeline exists to remove.
+# key,y2010,y2020,y2024,unit_err
+New York-New York,8175133,8805594,8478072,0.020
+New York-United States,8175133,8805594,8478072,0.020
+Los Angeles-California,3792621,3899449,3878704,0.026
+Los Angeles-United States,3792621,3899449,3878704,0.026
+Los Angeles-Equatorial Guinea,3792621,3899449,3878704,0.026
+Chicago-Illinois,2695598,2748331,2721308,0.074
+Chicago-United States,2695598,2748331,2721308,0.074
+Houston-Texas,2099451,2300351,2390125,0.069
+Houston-United States,2099451,2300351,2390125,0.069
+Philadelphia-Pennsylvania,1526006,1603794,1573916,0.006
+Philadelphia-United States,1526006,1603794,1573916,0.005
+Phoenix-Arizona,1445632,1608415,1673164,0.086
+Phoenix-United States,1445632,1608415,1673164,0.086
+San Antonio-Texas,1327407,1434322,1526656,0.138
+San Antonio-United States,1327407,1434322,1526656,0.138
+San Diego-California,1307402,1384429,1404452,0.064
+San Diego-United States,1307402,1384429,1404452,0.064
+Dallas-Texas,1197816,1304345,1326087,0.008
+Dallas-United States,1197816,1304345,1326087,0.008
+San Jose-California,945942,1013419,997368,0.054
+San Jose-United States,945942,1013419,997368,0.054
+Jacksonville-Florida,821784,949618,1009833,0.105
+Jacksonville-United States,821784,949618,1009833,0.105
+San Francisco-California,805235,878392,827526,0.035
+San Francisco-United States,805235,878392,827526,0.035
+Austin-Texas,790390,961899,993588,0.169
+Austin-United States,790390,961899,993588,0.169
+Columbus-Ohio,787033,906022,933263,0.096
+Columbus-United States,787033,906022,933263,0.096
+Fort Worth-Texas,741206,918923,1008106,0.279
+Fort Worth-United States,741206,918923,1008106,0.279
+Charlotte-North Carolina,731424,874687,943476,0.261
+Charlotte-United States,731424,874687,943476,0.261
+Detroit-Michigan,713777,639471,645705,0.333
+Detroit-United States,713777,639471,645705,0.333
+El Paso-Texas,649121,678959,681723,0.132
+El Paso-United States,649121,678959,681723,0.132
+Memphis-Tennessee,646889,628546,610919,0.005
+Memphis-United States,646889,628546,610919,0.005
+Baltimore-Maryland,620961,585720,568271,0.049
+Baltimore-United States,620961,585720,568271,0.049
+Boston-Massachusetts,617594,678622,673458,0.046
+Boston-United States,617594,678622,673458,0.046
+Seattle-Washington,608660,737020,780995,0.074
+Seattle-United States,608660,737020,780995,0.074
+Denver-Colorado,600158,715513,729019,0.076
+Denver-United States,600158,715513,729019,0.076
+Milwaukee-Wisconsin,594833,577897,563531,0.004
+Milwaukee-United States,594833,577897,563531,0.004
+Portland-Oregon,583776,652522,635749,0.094
+Portland-United States,583776,652522,635749,0.094
+Las Vegas-Nevada,583756,645822,678922,0.180
+Las Vegas-United States,583756,645822,678922,0.180
+Albuquerque-New Mexico,545852,564549,560326,0.178
+Albuquerque-United States,545852,564549,560326,0.178
+Tucson-Arizona,520116,542649,554013,0.064
+Tucson-United States,520116,542649,554013,0.064
+Fresno-California,494665,542235,550105,0.135
+Fresno-United States,494665,542235,550105,0.135
+Sacramento-California,466488,524908,535798,0.128
+Sacramento-United States,466488,524908,535798,0.128
+Long Beach-California,462257,466766,450901,0.002
+Long Beach-United States,462257,466766,450901,0.002
+Mesa-Arizona,439041,504374,517151,0.097
+Mesa-United States,439041,504374,517151,0.097
+Virginia Beach-Virginia,437994,459444,454808,0.029
+Virginia Beach-United States,437994,459444,454808,0.029
+Atlanta-Georgia,420003,498792,520070,0.008
+Atlanta-United States,420003,498792,520070,0.008
+Colorado Springs-Colorado,416427,480378,493554,0.133
+Colorado Springs-United States,416427,480378,493554,0.133
+Omaha-Nebraska,408958,491875,489265,0.046
+Omaha-United States,408958,491875,489265,0.046
+Raleigh-North Carolina,403892,467911,499825,0.316
+Raleigh-United States,403892,467911,499825,0.316
+Miami-Florida,399457,442244,487014,0.093
+Miami-United States,399457,442244,487014,0.093
+Cleveland-Ohio,396815,372626,365379,0.206
+Cleveland-United States,396815,372626,365379,0.206
+Tulsa-Oklahoma,391906,413143,415154,0.003
+Tulsa-United States,391906,413143,415154,0.003
+Oakland-California,390724,440679,443554,0.022
+Oakland-United States,390724,440679,443554,0.022
+Minneapolis-Minnesota,382578,429983,428579,0.000
+Minneapolis-United States,382578,429983,428579,0.000
+Wichita-Kansas,382368,397572,400991,0.100
+Wichita-United States,382368,397572,400991,0.100
+Arlington-Texas,365438,394377,403672,0.089
+Bakersfield-California,347483,404368,417468,0.289
+Bakersfield-United States,347483,404368,417468,0.289
+Anaheim-California,336265,346810,344561,0.025
+Anaheim-United States,336265,346810,344561,0.025
+Tampa-Florida,335709,385288,414547,0.096
+Tampa-United States,335709,385288,414547,0.096
+Aurora-Colorado,325078,386333,403130,0.150
+Santa Ana-California,324528,310534,316184,0.042
+Santa Ana-United States,324528,310534,316184,0.042
+Saint Louis-Missouri,319294,301371,279695,0.091
+Saint Louis-United States,319294,301371,279695,0.091
+Pittsburgh-Pennsylvania,305704,302960,307668,0.095
+Pittsburgh-United States,305704,302960,307668,0.095
+Corpus Christi-Texas,305215,318066,317317,0.091
+Corpus Christi-United States,305215,318066,317317,0.091
+Riverside-California,303871,315478,323757,0.160
+Riverside-United States,303871,315478,323757,0.160
+Cincinnati-Ohio,296943,309561,314915,0.116
+Cincinnati-United States,296943,309561,314915,0.116
+Stockton-California,291707,320802,324975,0.164
+Stockton-United States,291707,320802,324975,0.164
+Toledo-Ohio,287208,270877,265638,0.092
+Toledo-United States,287208,270877,265638,0.092
+Saint Paul-Minnesota,285068,311483,307465,0.007
+Saint Paul-United States,285068,311483,307465,0.007
+Newark-New Jersey,277140,311553,317303,0.013
+Newark-United States,277140,311553,317303,0.013
+Greensboro-North Carolina,269666,299190,307381,0.170
+Greensboro-United States,269666,299190,307381,0.170
+Buffalo-New York,261310,278286,276617,0.120
+Buffalo-United States,261310,278286,276617,0.120
+Plano-Texas,259841,285464,293286,0.146
+Plano-United States,259841,285464,293286,0.146
+Lincoln-Nebraska,258379,291333,300619,0.127
+Lincoln-United States,258379,291333,300619,0.127
+Henderson-Nevada,257729,316893,350039,0.319
+Henderson-United States,257729,316893,350039,0.319
+Fort Wayne-Indiana,253691,263914,273203,0.189
+Fort Wayne-United States,253691,263914,273203,0.189
+Saint Petersburg-Florida,244769,258344,267102,0.014
+Saint Petersburg-United States,244769,258344,267102,0.014
+Chula Vista-California,243916,275494,278546,0.288
+Chula Vista-United States,243916,275494,278546,0.288
+Norfolk-Virginia,242803,238029,231105,0.035
+Norfolk-United States,242803,238029,231105,0.035
+Orlando-Florida,238300,307785,334854,0.219
+Orlando-United States,238300,307785,334854,0.219
+Chandler-Arizona,236123,276103,281231,0.252
+Chandler-United States,236123,276103,281231,0.252
+Laredo-Texas,236091,255211,261260,0.252
+Laredo-United States,236091,255211,261260,0.252
+Madison-Wisconsin,233209,274667,285300,0.108
+Madison-United States,233209,274667,285300,0.108
+Winston-Salem-North Carolina,229617,249567,255769,0.191
+Winston-Salem-United States,229617,249567,255769,0.191
+Lubbock-Texas,229573,257206,272086,0.131
+Lubbock-United States,229573,257206,272086,0.131
+Baton Rouge-Louisiana,229493,226926,220907,0.007
+Baton Rouge-United States,229493,226926,220907,0.007
+Durham-North Carolina,228330,283827,301870,0.181
+Durham-United States,228330,283827,301870,0.181
+Garland-Texas,226876,246191,250431,0.049
+Garland-United States,226876,246191,250431,0.049
+Glendale-Arizona,226721,248399,258143,0.035
+Reno-Nevada,225221,264146,281714,0.199
+Reno-United States,225221,264146,281714,0.199
+Hialeah-Florida,224669,223122,235388,0.008
+Hialeah-United States,224669,223122,235388,0.008
+Chesapeake-Virginia,222209,249302,254997,0.104
+Chesapeake-United States,222209,249302,254997,0.104
+Scottsdale-Arizona,217385,241334,246170,0.068
+Scottsdale-United States,217385,241334,246170,0.068
+Irving-Texas,216290,256781,258060,0.114
+Irving-United States,216290,256781,258060,0.114
+Fremont-California,214089,230497,228192,0.050
+Fremont-United States,214089,230497,228192,0.050
+Irvine-California,212375,307682,318683,0.326
+Irvine-United States,212375,307682,318683,0.326
+Birmingham-Alabama,212237,200542,196357,0.144
+Birmingham-United States,212237,200542,196357,0.144
+Rochester-New York,210565,211318,207282,0.044
+Rochester-United States,210565,211318,207282,0.044
+San Bernardino-California,209924,222100,224775,0.117
+San Bernardino-United States,209924,222100,224775,0.117
+Spokane-Washington,208916,228973,230609,0.064
+Spokane-United States,208916,228973,230609,0.064
+Montgomery-Alabama,205764,200588,195818,0.020
+Montgomery-United States,205764,200588,195818,0.020
+Richmond-Virginia,204214,226525,233655,0.031
+Richmond-United States,204214,226525,233655,0.031
+Des Moines-Iowa,203433,214058,213096,0.023
+Des Moines-United States,203433,214058,213096,0.023
+Modesto-California,201165,218504,220592,0.061
+Modesto-United States,201165,218504,220592,0.061
+Fayetteville-North Carolina,200564,208472,209496,0.397
+Fayetteville-United States,200564,208472,209496,0.397
+Shreveport-Louisiana,199311,187540,176578,0.004
+Shreveport-United States,199311,187540,176578,0.004
+Akron-Ohio,199110,190408,189664,0.090
+Akron-United States,199110,190408,189664,0.090
+Tacoma-Washington,198397,219210,228202,0.024
+Tacoma-United States,198397,219210,228202,0.024
+Oxnard-California,197899,202059,200616,0.139
+Aurora-Illinois,197899,180529,180710,0.277
+Oxnard-United States,197899,202059,200616,0.139
+Fontana-California,196069,208407,218455,0.343
+Fontana-United States,196069,208407,218455,0.343
+Yonkers-New York,195976,211575,211040,0.001
+Yonkers-United States,195976,211575,211040,0.001
+Mobile-Alabama,195111,206932,201367,0.019
+Mobile-United States,195111,206932,201367,0.019
+Little Rock-Arkansas,193524,202531,204774,0.054
+Little Rock-United States,193524,202531,204774,0.054
+Moreno Valley-California,193365,208644,213919,0.264
+Moreno Valley-United States,193365,208644,213919,0.264
+Glendale-California,191719,196527,187823,0.017
+Glendale-United States,191719,196527,187823,0.017
+Amarillo-Texas,190695,200414,203729,0.090
+Amarillo-United States,190695,200414,203729,0.090
+Huntington Beach-California,189992,198729,193151,0.002
+Huntington Beach-United States,189992,198729,193151,0.002
+Columbus-Georgia,189885,206918,201830,0.019
+Grand Rapids-Michigan,188040,198910,200117,0.052
+Grand Rapids-United States,188040,198910,200117,0.052
+Tallahassee-Florida,181376,196181,205089,0.170
+Tallahassee-United States,181376,196181,205089,0.170
+Worcester-Massachusetts,181045,206511,211286,0.047
+Worcester-United States,181045,206511,211286,0.047
+Newport News-Virginia,180719,186239,183056,0.003
+Newport News-United States,180719,186239,183056,0.003
+Huntsville-Alabama,180105,215079,230402,0.122
+Huntsville-United States,180105,215079,230402,0.122
+Knoxville-Tennessee,178874,190674,198722,0.028
+Knoxville-United States,178874,190674,198722,0.028
+Providence-Rhode Island,178042,190978,194706,0.025
+Providence-United States,178042,190978,194706,0.025
+Santa Clarita-California,176320,232809,229159,0.143
+Santa Clarita-United States,176320,232809,229159,0.143
+Grand Prairie-Texas,175396,196075,207331,0.274
+Grand Prairie-United States,175396,196075,207331,0.274
+Brownsville-Texas,175023,186361,191967,0.202
+Brownsville-United States,175023,186361,191967,0.202
+Jackson-Mississippi,173514,153703,141449,0.062
+Jackson-United States,173514,153703,141449,0.062
+Overland Park-Kansas,173372,197246,202893,0.140
+Overland Park-United States,173372,197246,202893,0.140
+Garden Grove-California,170883,171976,172361,0.033
+Garden Grove-United States,170883,171976,172361,0.033
+Santa Rosa-California,167815,178118,177524,0.120
+Santa Rosa-United States,167815,178118,177524,0.120
+Chattanooga-Tennessee,167674,181671,191496,0.072
+Chattanooga-United States,167674,181671,191496,0.072
+Oceanside-California,167086,174160,170941,0.036
+Oceanside-United States,167086,174160,170941,0.036
+Fort Lauderdale-Florida,165521,182644,190641,0.079
+Fort Lauderdale-United States,165521,182644,190641,0.079
+Rancho Cucamonga-California,165269,174620,176675,0.227
+Rancho Cucamonga-United States,165269,174620,176675,0.227
+Ontario-California,163924,175264,185285,0.036
+Vancouver-Washington,161791,190887,198992,0.112
+Vancouver-United States,161791,190887,198992,0.112
+Tempe-Arizona,161719,184208,190114,0.019
+Tempe-United States,161719,184208,190114,0.019
+Springfield-Missouri,159498,169149,170596,0.050
+Lancaster-California,156633,173584,167426,0.242
+Eugene-Oregon,156185,177254,178786,0.117
+Eugene-United States,156185,177254,178786,0.117
+Pembroke Pines-Florida,154750,171185,179326,0.112
+Pembroke Pines-United States,154750,171185,179326,0.112
+Salem-Oregon,154637,175473,180406,0.115
+Cape Coral-Florida,154305,194001,233025,0.337
+Cape Coral-United States,154305,194001,233025,0.337
+Peoria-Arizona,154065,190988,199924,0.296
+Sioux Falls-South Dakota,153888,192721,209289,0.194
+Sioux Falls-United States,153888,192721,209289,0.194
+Springfield-Massachusetts,153060,155927,154888,0.006
+Rockford-Illinois,152871,148946,147486,0.018
+Rockford-United States,152871,148946,147486,0.018
+Palmdale-California,152750,169415,162536,0.236
+Palmdale-United States,152750,169415,162536,0.236
+Corona-California,152374,157043,161540,0.180
+Corona-United States,152374,157043,161540,0.180
+Salinas-California,150441,163537,160783,0.004
+Salinas-United States,150441,163537,160783,0.004
+Pomona-California,149058,151478,147966,0.003
+Pomona-United States,149058,151478,147966,0.003
+Pasadena-Texas,149043,151973,149617,0.049
+Joliet-Illinois,147433,150490,151837,0.280
+Joliet-United States,147433,150490,151837,0.280
+Paterson-New Jersey,146199,159759,160463,0.021
+Paterson-United States,146199,159759,160463,0.021
+Torrance-California,145438,146946,139576,0.052
+Torrance-United States,145438,146946,139576,0.052
+Syracuse-New York,145170,148611,146097,0.015
+Syracuse-United States,145170,148611,146097,0.015
+Bridgeport-Connecticut,144229,148637,151599,0.033
+Bridgeport-United States,144229,148637,151599,0.033
+Hayward-California,144186,162933,158440,0.029
+Hayward-United States,144186,162933,158440,0.029
+Fort Collins-Colorado,143986,169826,170924,0.176
+Fort Collins-United States,143986,169826,170924,0.176
+Escondido-California,143911,151100,148847,0.072
+Escondido-United States,143911,151100,148847,0.072
+Lakewood-Colorado,142980,155999,156868,0.008
+Naperville-Illinois,141853,149566,153124,0.095
+Naperville-United States,141853,149566,153124,0.095
+Dayton-Ohio,141527,137677,136346,0.174
+Dayton-United States,141527,137677,136346,0.174
+Hollywood-Florida,140768,153048,159073,0.010
+Sunnyvale-California,140081,155631,156792,0.059
+Sunnyvale-United States,140081,155631,156792,0.059
+Alexandria-Virginia,139966,159463,159102,0.083
+Alexandria-United States,139966,159463,159102,0.083
+Mesquite-Texas,139824,150232,150140,0.110
+Hampton-Virginia,137436,137154,137596,0.065
+Hampton-United States,137436,137154,137596,0.065
+Pasadena-California,137122,139622,137195,0.023
+Pasadena-United States,137122,139622,137195,0.033
+Orange-California,136416,139930,137941,0.056
+Orange-United States,136416,139930,137941,0.056
+Savannah-Georgia,136286,147802,148808,0.035
+Savannah-United States,136286,147802,148808,0.035
+Cary-North Carolina,135234,174799,182659,0.301
+Fullerton-California,135161,143645,140054,0.068
+Fullerton-United States,135161,143645,140054,0.068
+Warren-Michigan,134056,139395,137686,0.031
+Warren-United States,134056,139395,137686,0.031
+Clarksville-Tennessee,132929,166755,185690,0.221
+Clarksville-United States,132929,166755,185690,0.221
+McAllen-Texas,129877,142188,148782,0.181
+McAllen-United States,129877,142188,148782,0.181
+New Haven-Connecticut,129779,133986,137562,0.048
+New Haven-United States,129779,133986,137562,0.048
+Sterling Heights-Michigan,129699,134340,134342,0.040
+Sterling Heights-United States,129699,134340,134342,0.040
+Columbia-South Carolina,129272,136805,144788,0.100
+Columbia-United States,129272,136805,144788,0.100
+Killeen-Texas,127921,153157,160616,0.321
+Topeka-Kansas,127473,126600,125467,0.040
+Topeka-United States,127473,126600,125467,0.040
+Thousand Oaks-California,126683,126954,124229,0.076
+Thousand Oaks-United States,126683,126954,124229,0.076
+Cedar Rapids-Iowa,126326,137732,137904,0.044
+Cedar Rapids-United States,126326,137732,137904,0.044
+Olathe-Kansas,125872,141290,149035,0.261
+Elizabeth-New Jersey,124969,137310,140413,0.035
+Elizabeth-United States,124969,137310,140413,0.035
+Waco-Texas,124805,140122,146608,0.089
+Waco-United States,124805,140122,146608,0.089
+Hartford-Connecticut,124775,121631,122129,0.025
+Visalia-California,124442,141590,146271,0.264
+Gainesville-Florida,124354,141149,148720,0.233
+Simi Valley-California,124237,126369,125778,0.103
+Simi Valley-United States,124237,126369,125778,0.103
+Stamford-Connecticut,122643,135453,139134,0.045
+Stamford-United States,122643,135453,139134,0.045
+Bellevue-Washington,122363,151868,154377,0.104
+Bellevue-United States,122363,151868,154377,0.104
+Concord-California,122067,125410,124016,0.002
+Concord-United States,122067,125410,124016,0.002
+Coral Springs-Florida,121096,134403,140808,0.030
+Coral Springs-United States,121096,134403,140808,0.030
+Lafayette-Louisiana,120623,121391,122280,0.086
+Lafayette-United States,120623,121391,122280,0.086
+Charleston-South Carolina,120083,150599,157665,0.195
+Carrollton-Texas,119097,133440,135456,0.080
+Roseville-California,118788,147793,163304,0.327
+Thornton-Colorado,118772,141865,146689,0.306
+Beaumont-Texas,118296,115149,112893,0.037
+Beaumont-United States,118296,115149,112893,0.037
+Allentown-Pennsylvania,118032,125855,127138,0.097
+Allentown-United States,118032,125855,127138,0.097
+Evansville-Indiana,117429,117293,115395,0.036
+Evansville-United States,117429,117293,115395,0.036
+Abilene-Texas,117063,125004,130501,0.010
+Abilene-United States,117063,125004,130501,0.010
+Independence-Missouri,116830,122926,121629,0.030
+Independence-United States,116830,122926,121629,0.030
+Santa Clara-California,116468,127863,133132,0.121
+Santa Clara-United States,116468,127863,133132,0.121
+Springfield-Illinois,116250,114506,112949,0.041
+Vallejo-California,115942,126082,123475,0.007
+Vallejo-United States,115942,126082,123475,0.007
+Peoria-Illinois,115007,113264,111696,0.018
+Peoria-United States,115007,113264,111696,0.018
+Lansing-Michigan,114297,112642,114336,0.042
+Lansing-United States,114297,112642,114336,0.042
+Ann Arbor-Michigan,113934,123892,122925,0.001
+Ann Arbor-United States,113934,123892,122925,0.001
+El Monte-California,113475,109457,104639,0.022
+El Monte-United States,113475,109457,104639,0.022
+Denton-Texas,113383,139874,165998,0.290
+Berkeley-California,112580,124320,121749,0.088
+Berkeley-United States,112580,124320,121749,0.088
+Provo-Utah,112488,115178,115479,0.065
+Provo-United States,112488,115178,115479,0.065
+Downey-California,111772,114351,109368,0.040
+Downey-United States,111772,114351,109368,0.040
+Midland-Texas,111147,132874,143687,0.145
+Norman-Oklahoma,110925,127997,131010,0.137
+Waterbury-Connecticut,110366,114457,115908,0.028
+Waterbury-United States,110366,114457,115908,0.028
+Costa Mesa-California,109960,112187,109131,0.011
+Costa Mesa-United States,109960,112187,109131,0.011
+Inglewood-California,109673,107765,102774,0.027
+Inglewood-United States,109673,107765,102774,0.027
+Manchester-New Hampshire,109565,115653,116386,0.023
+Manchester-United States,109565,115653,116386,0.023
+Murfreesboro-Tennessee,108755,152835,168387,0.367
+Columbia-Missouri,108500,126055,130900,0.221
+Elgin-Illinois,108188,114834,114701,0.127
+Clearwater-Florida,107685,117435,116811,0.010
+Clearwater-United States,107685,117435,116811,0.010
+Rochester-Minnesota,106769,121391,123624,0.196
+Pueblo-Colorado,106595,111868,111166,0.042
+Pueblo-United States,106595,111868,111166,0.042
+Lowell-Massachusetts,106519,115560,120418,0.012
+Lowell-United States,106519,115560,120418,0.012
+Wilmington-North Carolina,106476,115459,125284,0.288
+Arvada-Colorado,106433,124354,121873,0.040
+Arvada-United States,106433,124354,121873,0.040
+Westminster-Colorado,106114,116654,115302,0.049
+West Covina-California,106098,109500,106920,0.009
+West Covina-United States,106098,109500,106920,0.009
+Gresham-Oregon,105594,114265,111507,0.146
+Norwalk-California,105549,102766,98230,0.021
+Fargo-North Dakota,105549,125949,136285,0.142
+Carlsbad-California,105328,114733,113575,0.258
+Fairfield-California,105321,119927,122646,0.087
+Cambridge-Massachusetts,105162,118379,121186,0.036
+Cambridge-United States,105162,118379,121186,0.036
+Wichita Falls-Texas,104553,102285,102372,0.003
+Wichita Falls-United States,104553,102285,102372,0.003
+High Point-North Carolina,104371,114115,118601,0.178
+Billings-Montana,104170,117159,121483,0.138
+Green Bay-Wisconsin,104057,107365,106311,0.017
+Green Bay-United States,104057,107365,106311,0.017
+West Jordan-Utah,103712,116961,116688,0.341
+Richmond-California,103701,116303,115353,0.043
+Burbank-California,103340,107334,103533,0.029
+Burbank-United States,103340,107334,103533,0.029
+Palm Bay-Florida,103190,119751,142023,0.231
+Everett-Washington,103019,110600,113011,0.112
+Flint-Michigan,102434,81266,79735,0.219
+Flint-United States,102434,81266,79735,0.219
+Antioch-California,102372,115304,118453,0.116
+Erie-Pennsylvania,101786,95017,92940,0.019
+South Bend-Indiana,101168,103444,103713,0.066
+South Bend-United States,101168,103444,103713,0.066
+Odessa-Texas,99940,114451,119748,0.090
+West Palm Beach-Florida,99919,117321,127744,0.178
+Round Rock-Texas,99887,119529,135359,0.388
+Pompano Beach-Florida,99845,112057,118104,0.217
+Davenport-Iowa,99685,101730,100938,0.013
+Davenport-United States,99685,101730,100938,0.013
+Santa Maria-California,99553,109694,111346,0.223
+El Cajon-California,99478,106193,103291,0.046
+Richardson-Texas,99223,119465,118221,0.075
+Kenosha-Wisconsin,99218,100005,99578,0.089
+Rialto-California,99171,103931,104918,0.073
+Broken Arrow-Oklahoma,98850,113577,122756,0.242
+Dearborn-Michigan,98153,109956,106377,0.004
+Albany-New York,97856,99161,101317,0.022
+Albany-United States,97856,99161,101317,0.022
+Las Cruces-New Mexico,97618,111400,116998,0.239
+North Charleston-South Carolina,97471,114885,126005,0.183
+Lakeland-Florida,97422,112614,124990,0.194
+Boulder-Colorado,97385,108556,106803,0.028
+San Mateo-California,97207,105663,103006,0.048
+Roanoke-Virginia,97032,100016,97912,0.022
+Roanoke-United States,97032,100016,97912,0.022
+Livonia-Michigan,96942,95527,93113,0.037
+Livonia-United States,96942,95527,93113,0.037
+Tyler-Texas,96900,105972,112219,0.136
+Lawton-Oklahoma,96867,90378,90027,0.042
+Compton-California,96455,95728,91129,0.031
+Clovis-California,95631,120165,127993,0.284
+Portsmouth-Virginia,95535,97945,96482,0.053
+Portsmouth-United States,95535,97945,96482,0.053
+Lewisville-Texas,95290,125674,135983,0.185
+New Bedford-Massachusetts,95072,101079,101318,0.013
+South Gate-California,94396,92719,90805,0.021
+College Station-Texas,93857,120523,128023,0.277
+Sandy Springs-Georgia,93853,108106,105505,0.086
+Vista-California,93834,98732,99322,0.042
+Brockton-Massachusetts,93810,105654,105788,0.005
+Mission Viejo-California,93305,93638,91601,0.002
+San Angelo-Texas,93200,99903,100159,0.052
+Yuma-Arizona,93064,97090,103559,0.167
+Greeley-Colorado,92889,108809,114363,0.172
+Vacaville-California,92428,102388,103994,0.041
+Kent-Washington,92411,136608,136588,0.140
+Quincy-Massachusetts,92271,101618,103434,0.046
+Davie-Florida,91992,105705,112052,0.177
+Carson-California,91714,95557,91358,0.022
+Hillsboro-Oregon,91611,106492,110337,0.234
+Lee's Summit-Missouri,91364,101122,106419,0.226
+Yakima-Washington,91067,96992,97390,0.212
+Tuscaloosa-Alabama,90468,100987,114288,0.139
+Lynn-Massachusetts,90329,101261,103489,0.014
+Sparks-Nevada,90264,108459,111520,0.265
+Hesperia-California,90173,99815,101836,0.306
+Redding-California,89861,93919,93502,0.100
+Beaverton-Oregon,89803,97538,98302,0.153
+Santa Monica-California,89736,93075,90729,0.063
+Westminster-California,89701,90818,89537,0.017
+Westminster-United States,89701,90818,89537,0.125
+Federal Way-Washington,89306,101023,100252,0.067
+Waukegan-Illinois,89078,89309,88570,0.013
+Fall River-Massachusetts,88857,93983,94689,0.034
+Santa Barbara-California,88410,88806,87291,0.044
+Roswell-Georgia,88346,92825,92227,0.102
+Orem-Utah,88328,98130,96646,0.046
+Reading-Pennsylvania,88082,95100,96000,0.078
+Miami Beach-Florida,87779,82897,83251,0.001
+Lawrence-Kansas,87643,94933,97271,0.086
+Sandy-Utah,87461,97278,92840,0.011
+Nashua-New Hampshire,86494,91331,91851,0.001
+Longmont-Colorado,86270,98919,99818,0.176
+Duluth-Minnesota,86265,86718,87986,0.007
+Fort Smith-Arkansas,86209,89144,90507,0.069
+Chico-California,86187,103830,102911,0.304
+Norwalk-Connecticut,85603,91188,93661,0.030
+Norwalk-United States,85603,91188,93661,0.207
+Whittier-California,85331,87865,85589,0.019
+Newport Beach-California,85186,85229,82970,0.178
+Deltona-Florida,85182,93700,100513,0.184
+Newton-Massachusetts,85146,88931,90700,0.016
+Plantation-Florida,84955,91779,100694,0.024
+San Leandro-California,84950,90997,86571,0.064
+Trenton-New Jersey,84913,90810,91193,0.006
+Suffolk-Virginia,84585,94406,103105,0.247
+Greenville-North Carolina,84554,89273,95138,0.284
+Sunrise-Florida,84439,97294,100128,0.016
+Boca Raton-Florida,84392,97436,102238,0.114
+Hawthorne-California,84293,88080,83633,0.002
+Clifton-New Jersey,84136,89872,90322,0.065
+Westland-Michigan,84094,85408,82745,0.030
+Cicero-Illinois,83891,85289,82090,0.020
+San Marcos-California,83781,94868,96620,0.344
+Asheville-North Carolina,83393,94725,94992,0.174
+Citrus Heights-California,83301,87578,86909,0.022
+Alhambra-California,83089,82863,80279,0.033
+Tracy-California,82922,93118,100136,0.314
+Bloomington-Minnesota,82893,89978,88344,0.028
+Ogden-Utah,82825,87342,88656,0.068
+Warwick-Rhode Island,82672,82831,83554,0.038
+Hoover-Alabama,81619,92571,93013,0.232
+Parma-Ohio,81601,81121,79350,0.050
+Nampa-Idaho,81557,100428,117350,0.364
+Edmond-Oklahoma,81405,94427,99040,0.161
+Champaign-Illinois,81055,88317,91961,0.167
+Troy-Michigan,80980,87306,89209,0.000
+Livermore-California,80968,87966,84867,0.095
+Danbury-Connecticut,80893,86863,88692,0.075
+Bellingham-Washington,80885,91476,95860,0.169
+Hammond-Indiana,80830,77844,76030,0.027
+Buena Park-California,80530,84024,82611,0.028
+Longview-Texas,80455,81765,83668,0.089
+Bloomington-Indiana,80405,80212,79986,0.138
+Cranston-Rhode Island,80387,82885,84448,0.014
+Gary-Indiana,80294,69082,67555,0.279
+Gary-United States,80294,69082,67555,0.279
+Lakewood-California,80048,82496,78494,0.009
+Farmington Hills-Michigan,79740,84002,84173,0.030
+Concord-North Carolina,79066,105329,112395,0.292
+Merced-California,78958,86374,96073,0.191
+Racine-Wisconsin,78860,78337,78057,0.039
+Sugar Land-Texas,78817,111040,109851,0.197
+Hemet-California,78657,89811,92912,0.252
+Chino-California,77983,91390,94010,0.138
+Largo-Florida,77648,82681,82337,0.106
+Albany-Georgia,77434,69653,66705,0.007
+Camden-New Jersey,77344,71775,71749,0.033
+Lake Forest-California,77264,85864,87159,0.240
+Edinburg-Texas,77100,100316,108733,0.371
+New Rochelle-New York,77062,79751,85512,0.063
+Napa-California,76915,79305,76921,0.056
+Saint Joseph-Missouri,76780,72479,71098,0.036
+Bend-Oregon,76639,99221,106926,0.321
+Bellflower-California,76616,79213,75716,0.049
+Bloomington-Illinois,76610,78701,79232,0.154
+Lawrence-Massachusetts,76377,89165,89332,0.057
+Bryan-Texas,76201,83988,91541,0.138
+Decatur-Illinois,76122,71152,68763,0.076
+Scranton-Pennsylvania,76089,76340,75905,0.004
+Melbourne-Florida,76068,84727,87561,0.061
+Brooklyn Park-Minnesota,75781,86460,82893,0.111
+Somerville-Massachusetts,75754,81048,82149,0.023
+Lynchburg-Virginia,75568,79017,80301,0.136
+Tustin-California,75540,79948,78863,0.106
+Baldwin Park-California,75390,72191,69247,0.005
+Arlington Heights-Illinois,75101,77663,75596,0.012
+Deerfield Beach-Florida,75018,86856,90507,0.139
+Bethlehem-Pennsylvania,74982,75795,79453,0.049
+Medford-Oregon,74907,86028,86301,0.156
+Chino Hills-California,74799,78429,77418,0.107
+Evanston-Illinois,74486,78102,76006,0.004
+Kalamazoo-Michigan,74262,73547,73290,0.038
+Schaumburg-Illinois,74227,78723,77099,0.016
+Mountain View-California,74066,82537,87316,0.045
+Kennewick-Washington,73917,83940,86728,0.260
+Alameda-California,73812,78285,78795,0.020
+Upland-California,73732,79040,79684,0.072
+Fayetteville-Arkansas,73580,94311,103134,0.212
+Bolingbrook-Illinois,73366,73949,74756,0.233
+New Britain-Connecticut,73206,74150,75871,0.023
+Canton-Ohio,73007,70743,69211,0.107
+Saint George-Utah,72897,95353,106288,0.318
+Appleton-Wisconsin,72623,75678,75344,0.035
+Folsom-California,72203,80463,88091,0.281
+Wyoming-Michigan,72125,76518,78559,0.038
+Lake Charles-Louisiana,71993,84938,81157,0.003
+Baytown-Texas,71802,85600,86004,0.075
+Gastonia-North Carolina,71741,80434,85535,0.076
+Southfield-Michigan,71739,76608,76874,0.091
+Pawtucket-Rhode Island,71148,75611,76996,0.026
+Rochester Hills-Michigan,70995,76311,78330,0.031
+Wilmington-Delaware,70851,70889,73176,0.026
+Wilmington-United States,70851,70889,73176,0.026
+# Waukesha-Wisconsin,70718,8468,8573,0.084
+#   MIXED UNITS inside one row: 70,718 is the CITY of Waukesha (2010 census), while 8,468 and
+#   8,573 are the TOWN of Waukesha, a separate municipality of the same name. Drawn, it fell
+#   70,700 -> 8,470 between 2010 and 2020. The unit check above validates the 2010 figure
+#   against the entry's own populstat tail and never checks that 2020 came from the same
+#   record, which is the gap. `y2010 / y2020 >= 2` finds exactly this row and no other in the
+#   1,594 here; it must stay one-directional, because the inverse (`y2020 / y2010 >= 1.6`)
+#   returns three rows and all three are real growth -- Kirkland WA annexed Juanita, Finn Hill
+#   and Kingsgate in 2011, plus Conroe TX and Williston ND.
+#   Commented rather than corrected: the right 2020/2024 values are the City's, and inventing
+#   them would be worse than the row's absence. Without it Waukesha simply holds its populstat
+#   tail forward, dimmed, like the other ~1,300 US cities this file does not reach.
+Plymouth-Minnesota,70576,81020,78551,0.066
+Pharr-Texas,70400,79731,81142,0.337
+Pleasanton-California,70285,79858,75664,0.094
+Jacksonville-North Carolina,70145,72740,70840,0.049
+Muncie-Indiana,70085,65202,65320,0.038
+Springdale-Arkansas,69797,87323,89368,0.344
+Passaic-New Jersey,69781,70547,70722,0.027
+Lynwood-California,69772,67238,63596,0.000
+Apple Valley-California,69135,75784,75029,0.216
+Redlands-California,68747,73179,74279,0.075
+Palatine-Illinois,68557,67890,65951,0.045
+Turlock-California,68549,72689,72888,0.186
+Waterloo-Iowa,68406,67309,67477,0.004
+Boynton Beach-Florida,68217,80201,83095,0.115
+Santa Fe-New Mexico,67947,87508,90551,0.085
+Mount Pleasant-South Carolina,67843,90987,95604,0.298
+Gulfport-Mississippi,67793,72925,74621,0.049
+Layton-Utah,67311,81783,84348,0.131
+Mount Vernon-New York,67292,73908,71999,0.016
+Jonesboro-Arkansas,67263,78555,82384,0.175
+Lafayette-Indiana,67140,70804,71757,0.160
+Youngstown-Ohio,66982,60047,59123,0.224
+Youngstown-United States,66982,60047,59123,0.224
+Lauderhill-Florida,66887,74493,76627,0.139
+Loveland-Colorado,66859,76367,81102,0.243
+Milpitas-California,66790,80269,79746,0.061
+Missoula-Montana,66788,74137,78204,0.145
+Redondo Beach-California,66748,71583,68075,0.052
+Kenner-Louisiana,66702,66457,64650,0.057
+Warner Robins-Georgia,66588,80357,86199,0.267
+Portland-Maine,66194,68409,69568,0.030
+Rock Hill-South Carolina,66154,74366,75798,0.247
+Schenectady-New York,66135,67039,69495,0.066
+Temple-Texas,66102,82217,96267,0.176
+Oshkosh-Wisconsin,66083,66895,67242,0.048
+Eau Claire-Wisconsin,65883,69449,72331,0.063
+Flagstaff-Arizona,65870,76845,77539,0.182
+Saint Cloud-Minnesota,65842,69615,72145,0.102
+Saint Charles-Missouri,65794,70586,72458,0.084
+Davis-California,65622,66861,67125,0.081
+Dothan-Alabama,65496,71068,71650,0.119
+Weston-Florida,65333,68114,70674,0.245
+Frederick-Maryland,65239,78134,89537,0.191
+Jackson-Tennessee,65211,68214,69303,0.086
+Camarillo-California,65201,70731,69881,0.124
+Harlingen-Texas,64849,71989,72234,0.112
+Skokie-Illinois,64784,67824,65850,0.023
+Rancho Cordova-California,64776,79332,84113,0.149
+Flower Mound-Texas,64669,75975,79990,0.216
+Palo Alto-California,64403,68585,67658,0.090
+East Orange-New Jersey,64270,69656,71850,0.086
+Yorba Linda-California,64234,68319,66489,0.083
+Eagan-Minnesota,64206,68862,67240,0.009
+Walnut Creek-California,64173,70131,70817,0.002
+Lorain-Ohio,64097,65218,65751,0.072
+South San Francisco-California,63632,66095,64660,0.048
+Janesville-Wisconsin,63575,65633,66428,0.064
+North Richland Hills-Texas,63343,69912,71436,0.122
+Pittsburg-California,63264,76407,77131,0.102
+Taylor-Michigan,63131,63390,61544,0.044
+Bayonne-New Jersey,63024,71686,74532,0.019
+Laguna Niguel-California,62979,64346,64185,0.017
+Pico Rivera-California,62942,62081,59363,0.007
+Victoria-Texas,62592,65535,66020,0.032
+Montebello-California,62500,62634,60617,0.005
+Franklin-Tennessee,62487,83548,89142,0.331
+Hamilton-Ohio,62477,63393,63953,0.028
+North Little Rock-Arkansas,62304,64609,64498,0.031
+Fort Myers-Florida,62298,86428,99918,0.226
+Utica-New York,62235,65288,63660,0.025
+Council Bluffs-Iowa,62230,62781,62665,0.063
+Shawnee-Kansas,62209,67315,69724,0.228
+Lodi-California,62134,66339,68642,0.083
+Woodbury-Minnesota,61961,75105,80596,0.217
+Maple Grove-Minnesota,61567,70268,72739,0.178
+Coon Rapids-Minnesota,61476,63636,63807,0.002
+Bismarck-North Dakota,61272,73623,77772,0.094
+Rockville-Maryland,61209,67099,68417,0.226
+Daytona Beach-Florida,61005,71599,86015,0.051
+Haverhill-Massachusetts,60879,67776,68291,0.031
+Meriden-Connecticut,60868,60833,60849,0.044
+Eden Prairie-Minnesota,60797,64198,62905,0.097
+Terre Haute-Indiana,60785,58413,58531,0.019
+Vineland-New Jersey,60724,60782,62070,0.073
+Waltham-Massachusetts,60632,65206,65849,0.024
+Springfield-Ohio,60608,58644,58138,0.079
+Delray Beach-Florida,60522,66846,70140,0.009
+Bristol-Connecticut,60477,60861,62195,0.006
+Tamarac-Florida,60427,71903,75147,0.080
+West Allis-Wisconsin,60411,60337,59784,0.015
+Burnsville-Minnesota,60306,64324,64864,0.002
+Monterey Park-California,60269,61109,57996,0.003
+La Habra-California,60239,63123,61391,0.021
+Santa Cruz-California,59946,64230,62581,0.089
+Gaithersburg-Maryland,59933,69629,70686,0.122
+Saint Clair Shores-Michigan,59715,58872,58077,0.057
+Kissimmee-Florida,59682,79191,84756,0.199
+Encinitas-California,59518,62001,61137,0.026
+Pontiac-Michigan,59515,61602,62528,0.114
+Cheyenne-Wyoming,59466,65187,65704,0.109
+Malden-Massachusetts,59450,66274,66693,0.053
+Springfield-Oregon,59403,61875,61182,0.109
+Lancaster-Pennsylvania,59322,58051,58441,0.051
+Ames-Iowa,58965,66432,69026,0.140
+Conway-Arkansas,58908,64154,70711,0.267
+Gardena-California,58829,61024,58921,0.019
+North Miami-Florida,58786,60182,62202,0.019
+Taylorsville-Utah,58652,60439,57819,0.021
+Grand Junction-Colorado,58566,65641,70554,0.283
+Great Falls-Montana,58505,60478,60013,0.031
+Greenville-South Carolina,58409,71110,74371,0.041
+Des Plaines-Illinois,58364,60672,58832,0.006
+Cupertino-California,58302,60229,58710,0.134
+Lakewood-Washington,58163,63608,62709,0.001
+Huntington Park-California,58114,54885,52166,0.055
+Bowling Green-Kentucky,58067,72313,79076,0.151
+Petaluma-California,57941,59799,59393,0.059
+Dearborn Heights-Michigan,57774,63287,61040,0.009
+New Braunfels-Texas,57740,90441,116477,0.368
+San Rafael-California,57713,61284,59961,0.028
+Dubuque-Iowa,57637,59676,58987,0.001
+Alpharetta-Georgia,57551,65811,67275,0.394
+Rocky Mount-North Carolina,57477,54394,54541,0.027
+Owensboro-Kentucky,57265,60249,60675,0.055
+Royal Oak-Michigan,57236,58203,58251,0.050
+Chapel Hill-North Carolina,57233,62264,64028,0.149
+Blaine-Minnesota,57186,70216,75172,0.215
+La Mesa-California,57065,61114,60767,0.041
+White Plains-New York,56853,59558,62561,0.066
+Idaho Falls-Idaho,56813,65622,69523,0.108
+Orland Park-Illinois,56767,58723,58020,0.100
+Tinley Park-Illinois,56703,56004,54856,0.146
+Oak Lawn-Illinois,56690,58367,56531,0.026
+Berwyn-Illinois,56657,57233,55152,0.047
+West Des Moines-Iowa,56609,68725,73664,0.180
+Marietta-Georgia,56579,61055,63122,0.037
+Arcadia-California,56364,56673,54472,0.058
+Ocala-Florida,56315,63678,70251,0.185
+Conroe-Texas,56207,89973,114581,0.345
+Rowlett-Texas,56199,62553,68123,0.208
+Medford-Massachusetts,56173,59671,59898,0.007
+Kettering-Ohio,56163,57860,57028,0.024
+Anderson-Indiana,56129,54848,55851,0.064
+Port Orange-Florida,56048,62621,66556,0.183
+Rogers-Arkansas,55964,69924,75639,0.307
+Lakeville-Minnesota,55954,69495,77971,0.230
+Broomfield-Colorado,55889,74106,78323,0.304
+Taunton-Massachusetts,55874,59350,61936,0.002
+Decatur-Alabama,55683,57321,57974,0.032
+West Haven-Connecticut,55564,55580,55379,0.057
+Diamond Bar-California,55544,55190,52292,0.014
+Casper-Wyoming,55316,59097,58823,0.103
+Fountain Valley-California,55313,57049,56036,0.006
+Chicopee-Massachusetts,55298,55566,55381,0.011
+Carson City-Nevada,55274,58642,58148,0.050
+Novi-Michigan,55224,66232,67675,0.142
+New Brunswick-New Jersey,55181,55256,57487,0.119
+Moore-Oklahoma,55081,62808,63845,0.254
+Bowie-Maryland,54727,58321,58421,0.081
+Bartlett-Tennessee,54613,57792,56708,0.258
+Elyria-Ohio,54533,52668,53604,0.027
+Valdosta-Georgia,54518,55392,55667,0.198
+Corvallis-Oregon,54462,59918,61993,0.095
+Pocatello-Idaho,54255,56324,58231,0.051
+Mount Prospect-Illinois,54167,56862,55460,0.039
+Redmond-Washington,54144,73269,82195,0.163
+Paramount-California,54098,53749,51169,0.022
+Hempstead-New York,53891,59185,59569,0.050
+Port Arthur-Texas,53818,56033,55799,0.074
+Rosemead-California,53764,51178,49582,0.005
+Santee-California,53413,60042,59104,0.008
+Auburn-Alabama,53380,76585,83757,0.194
+Margate-Florida,53284,58701,60650,0.012
+Shoreline-Washington,53007,58609,66251,0.000
+Coconut Creek-Florida,52909,57829,59721,0.176
+Wheaton-Illinois,52894,54012,53741,0.047
+Grand Forks-North Dakota,52838,59173,59845,0.067
+Blue Springs-Missouri,52575,58749,61246,0.085
+Saint Peters-Missouri,52575,57729,61398,0.022
+Normal-Illinois,52497,53017,53304,0.135
+Battle Creek-Michigan,52347,52754,52205,0.020
+Manhattan-Kansas,52281,54104,54700,0.143
+Florissant-Missouri,52158,52545,51290,0.032
+Lakewood-Ohio,52131,50940,49517,0.086
+Pensacola-Florida,51923,54319,53898,0.084
+Sarasota-Florida,51917,54851,57764,0.015
+Hoffman Estates-Illinois,51895,52539,50920,0.046
+Oak Park-Illinois,51878,54773,52947,0.012
+Revere-Massachusetts,51755,62247,60702,0.086
+Saginaw-Michigan,51508,44207,43001,0.200
+Charleston-West Virginia,51400,48810,46482,0.039
+Hendersonville-Tennessee,51372,61786,63947,0.210
+La Crosse-Wisconsin,51320,52687,51049,0.009
+Euless-Texas,51277,61027,60010,0.103
+Smyrna-Georgia,51271,56199,57177,0.200
+Peabody-Massachusetts,51251,54501,55418,0.061
+Elkhart-Indiana,50949,53937,53690,0.019
+Perth Amboy-New Jersey,50814,55437,56939,0.069
+Niagara Falls-New York,50193,48668,47512,0.108
+Albany-Oregon,50158,56332,57156,0.185
+Joplin-Missouri,50150,51768,53605,0.093
+Bellevue-Nebraska,50137,65042,64777,0.114
+Troy-New York,50129,51405,51065,0.019
+Hoboken-New Jersey,50005,60057,59149,0.228
+Burlington-North Carolina,49963,57369,61365,0.101
+Plainfield-New Jersey,49808,54600,56507,0.040
+Greenwood-Indiana,49791,63822,68175,0.277
+Minnetonka-Minnesota,49734,53812,52651,0.031
+West New York-New Jersey,49708,52835,52975,0.079
+Cuyahoga Falls-Ohio,49652,51116,50979,0.005
+Bradenton-Florida,49546,55713,58184,0.001
+Harrisburg-Pennsylvania,49528,50080,50649,0.011
+Enid-Oklahoma,49379,51282,50519,0.048
+Sheboygan-Wisconsin,49288,49938,49624,0.031
+Wilson-North Carolina,49167,48456,48579,0.097
+Huntington-West Virginia,49138,46841,44942,0.048
+Apple Valley-Minnesota,49084,56367,55272,0.073
+Pine Bluff-Arkansas,49083,41255,38785,0.123
+Pinellas Park-Florida,49079,53110,53503,0.069
+Cerritos-California,49041,49566,46851,0.050
+Euclid-Ohio,48920,49689,48421,0.077
+Harrisonburg-Virginia,48914,51811,51164,0.172
+Monroe-Louisiana,48815,47706,46622,0.088
+Kirkland-Washington,48787,92164,95499,0.076
+Kentwood-Michigan,48707,54295,54768,0.070
+Middletown-Ohio,48694,50986,52291,0.060
+East Lansing-Michigan,48579,48083,48964,0.043
+Grand Island-Nebraska,48520,53134,53250,0.116
+Roswell-New Mexico,48366,48448,47176,0.063
+Mishawaka-Indiana,48252,51095,51020,0.034
+Kingsport-Tennessee,48205,55535,57109,0.069
+Lenexa-Kansas,48190,57411,59427,0.166
+Logan-Utah,48174,52842,56770,0.114
+Richland-Washington,48058,60575,64372,0.195
+Tigard-Oregon,48035,54830,57301,0.142
+Edina-Minnesota,47941,53480,53564,0.011
+Downers Grove-Illinois,47833,50276,50552,0.018
+Mansfield-Ohio,47821,47530,47593,0.031
+Galveston-Texas,47743,53695,53538,0.202
+Alexandria-Louisiana,47723,45262,43133,0.030
+Salina-Kansas,47707,46878,46109,0.042
+Middletown-Connecticut,47648,47727,48616,0.093
+Newark-Ohio,47573,49970,51424,0.027
+Chesterfield-Missouri,47484,49992,49465,0.014
+Binghamton-New York,47376,47945,46773,0.001
+Roseville-Michigan,47299,47713,47047,0.017
+Mentor-Ohio,47159,47442,47113,0.067
+East Providence-Rhode Island,47037,47130,47961,0.035
+Coral Gables-Florida,46780,49242,50379,0.098
+Murray-Utah,46746,50637,50817,0.273
+Olympia-Washington,46478,55367,56271,0.086
+Wauwatosa-Wisconsin,46396,48383,48794,0.019
+Grapevine-Texas,46334,50632,51320,0.091
+Altoona-Pennsylvania,46320,43951,42719,0.069
+Portage-Michigan,46292,48876,49975,0.030
+Dunwoody-Georgia,46267,51645,51795,0.291
+Cleveland Heights-Ohio,46121,45314,44064,0.084
+Lawrence-Indiana,46001,49374,49817,0.154
+Hattiesburg-Mississippi,45989,48738,48522,0.026
+Farmington-New Mexico,45877,46608,46262,0.176
+Stillwater-Oklahoma,45688,48380,50138,0.144
+Kokomo-Indiana,45468,59603,60093,0.014
+Saint Louis Park-Minnesota,45250,50010,49899,0.025
+Beavercreek-Ohio,45193,46562,48012,0.159
+Cedar Hill-Texas,45028,49151,49618,0.287
+Jeffersonville-Indiana,44953,49456,52912,0.390
+San Marcos-Texas,44894,67782,74316,0.227
+Strongsville-Ohio,44750,46487,45768,0.019
+Pittsfield-Massachusetts,44737,43959,43121,0.024
+Glenview-Illinois,44692,48721,47634,0.065
+Belleville-Illinois,44478,42386,40560,0.069
+Coeur d'Alene-Idaho,44137,54651,57355,0.218
+Twin Falls-Idaho,44125,51843,55589,0.218
+Elmhurst-Illinois,44121,45784,46108,0.030
+Columbus-Indiana,44061,50492,51970,0.113
+Biloxi-Mississippi,44054,49442,48144,0.149
+Collierville-Tennessee,43965,51325,51951,0.274
+Sierra Vista-Arizona,43888,45322,44710,0.139
+Titusville-Florida,43761,48797,49883,0.070
+York-Pennsylvania,43718,44793,45241,0.064
+Attleboro-Massachusetts,43593,46471,47085,0.034
+Moline-Illinois,43483,42983,42442,0.007
+Charlottesville-Virginia,43475,46513,44767,0.035
+Summerville-South Carolina,43392,50841,52625,0.359
+Lombard-Illinois,43165,44509,44490,0.020
+Danville-Virginia,43055,42586,41993,0.124
+Fond du Lac-Wisconsin,43021,44694,44469,0.019
+Hackensack-New Jersey,43010,46032,46630,0.007
+Madison-Alabama,42938,56976,64029,0.318
+Freeport-New York,42860,44472,44028,0.022
+Sayreville-New Jersey,42704,45337,47165,0.054
+Concord-New Hampshire,42695,43996,44674,0.047
+Kannapolis-North Carolina,42625,53197,60521,0.134
+Blacksburg-Virginia,42620,44834,45452,0.071
+Leesburg-Virginia,42616,48307,49831,0.336
+Bountiful-Utah,42552,45773,45024,0.029
+Fairfield-Ohio,42510,44898,45094,0.010
+Burlington-Vermont,42417,44743,44432,0.083
+Lacey-Washington,42393,56326,58644,0.264
+Hutchinson-Kansas,42080,40018,39561,0.030
+State College-Pennsylvania,42034,40787,41228,0.086
+Midland-Michigan,41863,42664,42780,0.004
+Dublin-Ohio,41751,49315,49456,0.248
+Littleton-Colorado,41737,45665,44879,0.034
+Everett-Massachusetts,41667,49078,51825,0.088
+Warren-Ohio,41557,39248,38683,0.126
+North Miami Beach-Florida,41523,43669,45655,0.017
+Wilkes-Barre-Pennsylvania,41498,44349,44661,0.039
+Altamonte Springs-Florida,41496,46254,47261,0.007
+Buffalo Grove-Illinois,41496,43199,43072,0.034
+Salem-Massachusetts,41340,44474,45677,0.023
+Cleveland-Tennessee,41285,47799,50232,0.099
+Findlay-Ohio,41202,40297,40343,0.053
+Woonsocket-Rhode Island,41186,43224,44508,0.049
+Meridian-Mississippi,41148,35053,33549,0.028
+Westfield-Massachusetts,41094,40824,40403,0.024
+Oro Valley-Arizona,41011,47072,48855,0.276
+Minot-North Dakota,40888,48386,47440,0.105
+Leominster-Massachusetts,40759,43792,44209,0.013
+Kearny-New Jersey,40684,42004,40866,0.005
+Covington-Kentucky,40640,40953,41611,0.068
+Quincy-Illinois,40633,39637,38786,0.006
+Sumter-South Carolina,40524,43488,42958,0.023
+Linden-New Jersey,40499,43746,45393,0.027
+Norwich-Connecticut,40493,40126,39993,0.108
+Fitchburg-Massachusetts,40318,41948,42145,0.030
+Hickory-North Carolina,40010,43601,45081,0.070
+Smyrna-Tennessee,39974,53106,60302,0.360
+Holyoke-Massachusetts,39880,38248,37838,0.002
+Prescott-Arizona,39843,45903,48224,0.149
+Carol Stream-Illinois,39711,39851,39556,0.017
+Edmonds-Washington,39709,42853,42871,0.005
+Hagerstown-Maryland,39662,43546,43909,0.075
+New Berlin-Wisconsin,39584,40449,40302,0.035
+Shelton-Connecticut,39559,40880,42805,0.037
+Beverly-Massachusetts,39502,42674,43223,0.010
+Urbandale-Iowa,39463,45577,47759,0.263
+Florence-Alabama,39319,40178,42716,0.077
+Mankato-Minnesota,39309,44575,46459,0.176
+Cedar Falls-Iowa,39260,40728,41417,0.080
+Muskogee-Oklahoma,39223,36846,36849,0.024
+Wausau-Wisconsin,39106,40034,40262,0.018
+Rock Island-Illinois,39018,37103,36434,0.017
+Germantown-Tennessee,38844,41335,40128,0.040
+Prescott Valley-Arizona,38822,46745,51440,0.395
+Lancaster-Ohio,38780,40535,41671,0.090
+Lima-Ohio,38771,35531,34690,0.034
+Riverton-Utah,38753,45290,46680,0.355
+Coppell-Texas,38659,42982,41785,0.069
+Huntsville-Texas,38548,45823,49500,0.089
+Duncanville-Texas,38524,40707,39203,0.063
+Sherman-Texas,38521,43671,50229,0.089
+Marlborough-Massachusetts,38499,41800,42169,0.057
+Muskegon-Michigan,38401,37228,37287,0.044
+Annapolis-Maryland,38394,40799,40689,0.068
+Lincoln Park-Michigan,38144,40258,38774,0.049
+Woburn-Massachusetts,38120,40881,43895,0.022
+Huber Heights-Ohio,38101,43429,43590,0.003
+Moorhead-Minnesota,38065,44511,45726,0.154
+Maplewood-Minnesota,38018,42086,40142,0.082
+Cape Girardeau-Missouri,37941,39556,40818,0.070
+Brookfield-Wisconsin,37920,41465,41268,0.018
+Manassas-Virginia,37821,42773,43616,0.072
+Clovis-New Mexico,37775,38553,37555,0.134
+Bremerton-Washington,37729,43506,45291,0.011
+Valley Stream-New York,37511,40637,40232,0.030
+Hurst-Texas,37337,40417,39500,0.028
+Bozeman-Montana,37280,53563,57894,0.262
+Hilton Head Island-South Carolina,37099,37662,38158,0.086
+Brentwood-Tennessee,37060,45384,45525,0.369
+Florence-South Carolina,37056,40109,40923,0.185
+Puyallup-Washington,37022,42977,42552,0.109
+Spartanburg-South Carolina,37013,38727,39606,0.073
+Beloit-Wisconsin,36966,36689,36633,0.032
+Roy-Utah,36884,39305,38719,0.108
+Gadsden-Alabama,36856,33911,33086,0.058
+Marion-Ohio,36837,36053,35576,0.042
+Portage-Indiana,36828,37933,38576,0.090
+Richmond-Indiana,36812,35754,35561,0.062
+Greenfield-Wisconsin,36720,37788,37232,0.033
+Longview-Washington,36648,37819,38294,0.053
+Lake Oswego-Oregon,36619,40845,40029,0.036
+Lewiston-Maine,36592,37124,38772,0.024
+Keizer-Oregon,36478,39363,39152,0.117
+Goldsboro-North Carolina,36437,34255,34629,0.070
+Texarkana-Texas,36411,36243,35971,0.044
+Torrington-Connecticut,36383,35503,35673,0.033
+New Albany-Indiana,36372,37819,37652,0.034
+Rome-Georgia,36303,37929,38747,0.036
+Westerville-Ohio,36120,39192,38612,0.023
+Dover-Delaware,36047,39498,40191,0.109
+Goose Creek-South Carolina,35938,45972,50352,0.187
+Reynoldsburg-Ohio,35893,41083,42897,0.106
+Apache Junction-Arizona,35840,38515,44309,0.113
+Lynnwood-Washington,35836,38571,41597,0.057
+Northglenn-Colorado,35789,38111,38287,0.117
+Bartlesville-Oklahoma,35750,37281,38355,0.029
+Menomonee Falls-Wisconsin,35626,38522,40700,0.085
+Del Rio-Texas,35591,34715,34678,0.048
+Wildwood-Missouri,35517,35418,35082,0.074
+Franklin-Wisconsin,35451,36142,36591,0.168
+Fort Lee-New Jersey,35345,40172,40566,0.004
+Leavenworth-Kansas,35251,37350,37370,0.004
+Merrillville-Indiana,35246,36444,36989,0.132
+Richfield-Minnesota,35228,37002,36491,0.024
+Hot Springs-Arkansas,35193,37898,37971,0.017
+Chelsea-Massachusetts,35177,40746,40245,0.002
+Lufkin-Texas,35067,34173,34399,0.067
+Stow-Ohio,34837,34490,34101,0.079
+Marion-Iowa,34768,41552,42542,0.244
+Delaware-Ohio,34753,41327,46521,0.275
+Columbia-Tennessee,34681,41615,48812,0.046
+Cottage Grove-Minnesota,34589,38835,42760,0.115
+Tupelo-Mississippi,34546,37919,37775,0.010
+Grants Pass-Oregon,34533,39191,39468,0.334
+Oak Creek-Wisconsin,34451,36507,38373,0.173
+Greenville-Mississippi,34400,29700,27015,0.209
+Norristown-Pennsylvania,34324,35744,36075,0.088
+Brunswick-Ohio,34255,35407,35166,0.025
+Hobbs-New Mexico,34122,40523,41061,0.159
+Vestavia Hills-Alabama,34033,39160,38151,0.280
+Chester-Pennsylvania,33972,32724,34052,0.086
+Prattville-Alabama,33960,37731,40139,0.284
+Gainesville-Georgia,33804,41976,47712,0.243
+La Porte-Texas,33800,35128,38046,0.056
+Upper Arlington-Ohio,33771,36793,36140,0.002
+Manitowoc-Wisconsin,33736,34646,34616,0.011
+Houma-Louisiana,33727,33411,31671,0.039
+Rome-New York,33725,32125,31990,0.038
+East Point-Georgia,33712,38362,38270,0.175
+Salisbury-North Carolina,33662,35539,36579,0.213
+Roseville-Minnesota,33660,36270,35637,0.001
+Jackson-Michigan,33534,31314,30920,0.082
+Pleasant Grove-Utah,33509,37715,38127,0.299
+Bothell-Washington,33505,48154,51770,0.099
+Olive Branch-Mississippi,33484,46395,47365,0.370
+Hinesville-Georgia,33437,34892,36583,0.091
+Cottonwood Heights-Utah,33433,33612,32437,0.174
+Brighton-Colorado,33352,40072,43473,0.373
+Burien-Washington,33313,52072,52046,0.042
+Long Beach-New York,33275,35046,34777,0.067
+Gahanna-Ohio,33248,35727,35544,0.019
+Bettendorf-Iowa,33217,39101,40281,0.058
+Dalton-Georgia,33128,34461,34970,0.158
+Holland-Michigan,33051,34374,35023,0.059
+Bangor-Maine,33039,31740,32446,0.047
+Nacogdoches-Texas,32996,32153,32381,0.094
+Monroe-North Carolina,32797,34626,40054,0.201
+Poughkeepsie-New York,32736,31593,32293,0.087
+Westlake-Ohio,32729,34238,34232,0.031
+North Olmsted-Ohio,32718,32439,31690,0.042
+Fair Lawn-New Jersey,32457,34930,36489,0.026
+Eastpointe-Michigan,32442,34329,33943,0.051
+Petersburg-Virginia,32420,33465,34058,0.039
+Fairborn-Ohio,32352,34524,35105,0.008
+Bethel Park-Pennsylvania,32313,33565,32376,0.040
+McMinnville-Oregon,32187,34349,35255,0.177
+Massillon-Ohio,32149,32039,32750,0.005
+Wenatchee-Washington,31925,35626,35401,0.126
+Lewiston-Idaho,31894,34210,34693,0.031
+Leawood-Kansas,31867,33896,34013,0.131
+Naugatuck-Connecticut,31862,31581,32116,0.027
+Mount Vernon-Washington,31743,35234,35344,0.175
+Walla Walla-Washington,31731,34275,33901,0.064
+Valparaiso-Indiana,31730,34161,35065,0.136
+Goshen-Indiana,31719,34514,34458,0.073
+Tooele-Utah,31605,35744,40919,0.288
+Hopkinsville-Kentucky,31577,31169,30800,0.047
+North Tonawanda-New York,31568,30495,29981,0.055
+Parkersburg-West Virginia,31492,29749,28834,0.051
+Newark-Delaware,31454,30621,30506,0.094
+Richmond-Kentucky,31364,35150,39581,0.133
+Spring Valley-New York,31347,33066,33637,0.187
+Jamestown-New York,31146,28704,27699,0.018
+University Place-Washington,31144,34872,35160,0.040
+West Bend-Wisconsin,31078,31746,32149,0.093
+Douglasville-Georgia,30961,34652,40540,0.351
+Laramie-Wyoming,30816,31413,32957,0.117
+Kearney-Nebraska,30787,33800,34741,0.110
+Long Branch-New Jersey,30719,31660,33214,0.019
+Benton-Arkansas,30681,35020,38088,0.286
+New Iberia-Louisiana,30617,28519,26849,0.065
+Andover-Minnesota,30598,32598,33426,0.131
+Garfield-New Jersey,30487,32651,33530,0.055
+North Royalton-Ohio,30444,31328,30894,0.061
+Cookeville-Tennessee,30435,34825,37102,0.215
+College Park-Maryland,30413,34759,34667,0.188
+Ballwin-Missouri,30404,31694,31036,0.029
+Alamogordo-New Mexico,30403,30933,31667,0.171
+Alabaster-Alabama,30352,33342,34460,0.255
+Salisbury-Maryland,30343,32984,33616,0.219
+Westfield-New Jersey,30316,31039,32050,0.024
+Gallatin-Tennessee,30278,44453,52489,0.234
+Englewood-Colorado,30255,33639,35238,0.048
+Port Huron-Michigan,30184,28974,28342,0.070
+Clearfield-Utah,30112,31902,34778,0.137
+Brooklyn Center-Minnesota,30104,33782,31755,0.030
+Southgate-Michigan,30047,30015,29081,0.002
+Bowling Green-Ohio,30028,30800,30463,0.014
+Ithaca-New York,30014,32107,33768,0.024
+Burton-Michigan,29999,29709,29420,0.010
+Dover-New Hampshire,29987,32749,33909,0.103
+Florence-Kentucky,29951,31985,33763,0.212
+Marion-Indiana,29948,28321,28216,0.045
+Texarkana-Arkansas,29919,29391,28897,0.118
+Shawnee-Oklahoma,29857,31274,32092,0.039
+Pullman-Washington,29799,32905,33543,0.171
+Kennesaw-Georgia,29783,33236,37740,0.271
+Rochester-New Hampshire,29752,32496,33598,0.042
+East Chicago-Indiana,29698,26380,25768,0.091
+Madison Heights-Michigan,29694,28466,28626,0.047
+Des Moines-Washington,29673,32915,33207,0.013
+Morgantown-West Virginia,29660,30068,30490,0.096
+West Lafayette-Indiana,29596,44503,46338,0.027
+Raytown-Missouri,29526,30013,29244,0.030
+New Bern-North Carolina,29524,31317,34218,0.218
+Aiken-South Carolina,29524,32126,32694,0.143
+Sherwood-Arkansas,29523,32759,33281,0.272
+Springville-Utah,29466,35272,36027,0.308
+Williamsport-Pennsylvania,29381,27770,27628,0.045
+Sun Prairie-Wisconsin,29364,35972,39253,0.305
+Oak Ridge-Tennessee,29330,31406,34039,0.066
+Oak Park-Michigan,29319,29570,29402,0.016
+Schererville-Indiana,29243,29660,29780,0.149
+Elmira-New York,29200,26516,26255,0.058
+Liberty-Missouri,29149,30158,31245,0.101
+Morristown-Tennessee,29137,30446,32994,0.142
+Georgetown-Kentucky,29098,37551,40518,0.378
+Gillette-Wyoming,29087,33423,33846,0.326
+Hobart-Indiana,29059,29741,29418,0.126
+Port Chester-New York,28967,31747,30957,0.037
+Owasso-Oklahoma,28915,38313,42821,0.360
+Kent-Ohio,28904,28207,27720,0.035
+Newburgh-New York,28866,28864,28181,0.020
+Garfield Heights-Ohio,28849,29791,29014,0.064
+Gloucester-Massachusetts,28789,29736,30491,0.052
+Henderson-Kentucky,28757,28200,27750,0.047
+Lawrenceville-Georgia,28546,30634,31877,0.215
+Elizabethtown-Kentucky,28531,31392,34565,0.211
+Wheeling-West Virginia,28486,26986,26060,0.102
+Shaker Heights-Ohio,28448,29448,28689,0.033
+Hilliard-Ohio,28435,37168,38832,0.149
+Statesboro-Georgia,28422,33427,35226,0.201
+Millville-New Jersey,28400,27495,27838,0.056
+Jacksonville-Arkansas,28364,29483,29129,0.054
+Allen Park-Michigan,28210,28640,27604,0.042
+Helena-Montana,28190,32112,34729,0.085
+Sanford-North Carolina,28094,30197,32971,0.174
+Middletown-New York,28086,30361,30188,0.096
+Kingman-Arizona,28068,32689,35383,0.284
+Nicholasville-Kentucky,28015,31108,33458,0.297
+Midvale-Utah,27964,36024,36219,0.034
+Russellville-Arkansas,27920,28931,29442,0.151
+Auburn-New York,27687,26876,25963,0.033
+New London-Connecticut,27620,27371,28081,0.070
+Winona-Minnesota,27592,26001,26173,0.018
+Post Falls-Idaho,27574,38605,45800,0.376
+Marshalltown-Iowa,27552,27592,27886,0.056
+Kirkwood-Missouri,27540,29469,29348,0.009
+Maryland Heights-Missouri,27472,28300,27671,0.061
+Harrison-New York,27472,28207,31321,0.119
+Maryville-Tennessee,27465,31920,32373,0.159
+Bessemer-Alabama,27456,26070,25079,0.082
+Oakdale-Minnesota,27378,28298,30441,0.025
+Rahway-New Jersey,27346,29550,30763,0.031
+Kaysville-Utah,27300,32971,33252,0.253
+Lindenhurst-New York,27253,27146,27160,0.020
+Superior-Wisconsin,27244,26748,26620,0.006
+Fridley-Minnesota,27208,29580,30679,0.007
+Matthews-North Carolina,27198,29427,32048,0.187
+Englewood-New Jersey,27147,29309,30221,0.035
+Plum-Pennsylvania,27126,27161,26420,0.008
+Myrtle Beach-South Carolina,27109,35696,40535,0.159
+Slidell-Louisiana,27068,28688,28440,0.051
+Watertown-New York,27023,24677,24038,0.012
+East Saint Louis-Illinois,27006,18462,17808,0.166
+Glen Cove-New York,26964,28372,28088,0.013
+Savage-Minnesota,26911,32453,32896,0.216
+Seatac-Washington,26909,31439,34024,0.052
+Clinton-Iowa,26885,24467,24118,0.034
+Easton-Pennsylvania,26800,28127,30432,0.019
+Bergenfield-New Jersey,26764,28340,28921,0.021
+Thomasville-North Carolina,26757,27126,27605,0.260
+Stevens Point-Wisconsin,26717,25681,26465,0.079
+Bristol-Tennessee,26702,27133,27867,0.071
+Anderson-South Carolina,26686,29441,30937,0.044
+Medina-Ohio,26678,26079,25757,0.059
+Duluth-Georgia,26600,31954,33157,0.169
+Jeffersontown-Kentucky,26595,29322,29388,0.000
+Saratoga Springs-New York,26586,28511,28741,0.015
+Enterprise-Alabama,26562,28700,30731,0.202
+Barberton-Ohio,26550,25181,24624,0.051
+Opelika-Alabama,26477,31005,35005,0.112
+Fremont-Nebraska,26397,27135,28190,0.045
+Paramus-New Jersey,26342,26692,26786,0.024
+American Fork-Utah,26263,33378,41298,0.166
+West Memphis-Arkansas,26245,24523,23538,0.055
+Winchester-Virginia,26203,28115,27800,0.099
+Lebanon-Tennessee,26190,38486,51501,0.229
+Carlsbad-New Mexico,26138,32216,31999,0.021
+Wooster-Ohio,26119,27246,26982,0.050
+Paragould-Arkansas,26113,29551,30680,0.158
+Aberdeen-South Dakota,26091,28495,27919,0.053
+Tualatin-Oregon,26054,27947,28036,0.125
+Mount Pleasant-Michigan,26016,21703,21090,0.004
+Wyandotte-Michigan,25883,25041,24214,0.082
+Sandusky-Ohio,25793,25147,24174,0.078
+Xenia-Ohio,25719,25435,26067,0.059
+Hazelwood-Missouri,25703,25455,24951,0.019
+Burlington-Iowa,25663,24022,23637,0.044
+Owatonna-Minnesota,25599,26424,26626,0.125
+Frankfort-Kentucky,25527,28609,28610,0.085
+Greer-South Carolina,25515,35378,46316,0.342
+Neenah-Wisconsin,25501,27330,27502,0.039
+Zanesville-Ohio,25487,24769,24916,0.004
+Rexburg-Idaho,25484,39790,40695,0.321
+Lebanon-Pennsylvania,25477,26808,26456,0.038
+Gladstone-Missouri,25410,27066,27579,0.039
+Inkster-Michigan,25369,26077,25108,0.186
+Bridgeton-New Jersey,25349,27275,27722,0.101
+Hazleton-Pennsylvania,25340,29939,30354,0.081
+Fitchburg-Wisconsin,25260,30983,34357,0.188
+Clinton-Mississippi,25216,28092,26617,0.076
+Fort Dodge-Iowa,25206,24871,24886,0.004
+Riverside-Ohio,25201,24471,24472,0.067
+Homewood-Alabama,25167,26419,27919,0.007
+West Linn-Oregon,25109,27373,26597,0.112
+Pearl-Mississippi,25092,27061,28458,0.123
+Ossining-New York,25060,27533,26895,0.042
+Shoreview-Minnesota,25043,26931,26939,0.034
+Paducah-Kentucky,25024,27130,26712,0.051
+Ottumwa-Iowa,25023,25545,25648,0.001
+Asheboro-North Carolina,25012,27195,27928,0.132
+South Portland-Maine,25002,26500,26994,0.068
+Ridgewood-New Jersey,24958,25975,26701,0.002
+Emporia-Kansas,24916,24140,24354,0.076
+Hastings-Nebraska,24907,25136,25152,0.032
+Salem-Virginia,24802,25341,25908,0.004
+Independence-Kentucky,24757,28690,30196,0.394
+North Platte-Nebraska,24733,23407,22549,0.034
+Austin-Minnesota,24718,26183,26690,0.057
+Newport-Rhode Island,24672,25169,24482,0.074
+Statesville-North Carolina,24532,28463,31693,0.050
+Grandview-Missouri,24475,26199,26630,0.017
+Lafayette-Colorado,24453,30377,30587,0.051
+Trotwood-Ohio,24431,23078,23073,0.122
+Carrollton-Georgia,24388,26798,28306,0.188
+Fredericksburg-Virginia,24286,27976,29992,0.205
+Ardmore-Oklahoma,24283,24720,25064,0.024
+Norfolk-Nebraska,24210,25908,26162,0.029
+Madison-Mississippi,24149,27749,28210,0.391
+Lodi-New Jersey,24136,26200,26358,0.006
+Muskego-Wisconsin,24135,25039,25759,0.113
+Woodburn-Oregon,24080,26093,30449,0.165
+Ridgeland-Mississippi,24047,24666,24576,0.160
+Rockville Centre-New York,24023,26005,25718,0.024
+Norton Shores-Michigan,23994,25034,25070,0.062
+Romulus-Michigan,23989,25173,24652,0.041
+Kingston-New York,23893,24040,23748,0.016
+Starkville-Mississippi,23888,25726,25844,0.083
+Watertown-Wisconsin,23861,22933,22617,0.095
+Vicksburg-Mississippi,23856,21559,20032,0.107
+Moscow-Idaho,23800,25456,26894,0.105
+De Pere-Wisconsin,23800,25412,25453,0.134
+White Bear Lake-Minnesota,23797,24876,23479,0.021
+Staunton-Virginia,23746,25751,26361,0.006
+Highland-Indiana,23727,23983,23497,0.010
+Griffin-Georgia,23643,23482,23994,0.006
+Columbus-Mississippi,23640,24070,22820,0.096
+South Salt Lake-Utah,23617,26765,26561,0.068
+Munster-Indiana,23603,23895,23634,0.089
+Cliffside Park-New Jersey,23594,25703,26183,0.025
+Peekskill-New York,23583,25442,25757,0.050
+Walker-Michigan,23537,25138,25921,0.074
+Duncan-Oklahoma,23431,22675,23174,0.040
+Keene-New Hampshire,23409,23034,23036,0.035
+South Plainfield-New Jersey,23385,24330,25062,0.068
+Faribault-Minnesota,23352,24463,24983,0.109
+Herndon-Virginia,23292,24649,25180,0.068
+New Castle-Pennsylvania,23273,21933,21332,0.130
+Greenwood-South Carolina,23222,22555,22667,0.048
+Mequon-Wisconsin,23132,25147,25329,0.058
+Belton-Missouri,23116,23980,25861,0.061
+Anniston-Alabama,23106,21567,21127,0.052
+Champlin-Minnesota,23089,23913,23045,0.039
+Greenbelt-Maryland,23068,24917,24843,0.068
+Auburn-Maine,23055,24067,25200,0.006
+Rock Springs-Wyoming,23036,23526,22967,0.188
+Bainbridge Island-Washington,23025,24825,24618,0.118
+Webster Groves-Missouri,22995,24001,23525,0.009
+Chanhassen-Minnesota,22952,25950,25746,0.116
+Mauldin-South Carolina,22889,24755,29746,0.336
+Muscatine-Iowa,22886,23809,23298,0.008
+Carteret-New Jersey,22844,25330,26003,0.094
+Yukon-Oklahoma,22709,23640,27068,0.075
+Mercer Island-Washington,22699,25754,25302,0.031
+Prichard-Alabama,22659,19346,18778,0.262
+Hopewell-Virginia,22591,23032,22970,0.008
+Fairfax-Virginia,22565,24147,26340,0.047
+Fountain Hills-Arizona,22489,23818,23696,0.102
+Hamtramck-Michigan,22423,28435,27424,0.026
+Pascagoula-Mississippi,22392,22000,21476,0.170
+Pottstown-Pennsylvania,22377,23442,23553,0.021
+Derby-Kansas,22158,25660,26604,0.197
+Crystal-Minnesota,22151,23328,22082,0.025
+Columbus-Nebraska,22111,24044,25126,0.050
+Newberg-Oregon,22068,25449,27136,0.180
+Brookings-South Dakota,22056,23382,24555,0.161
+La Porte-Indiana,22053,22453,22444,0.021
+North Plainfield-New Jersey,21936,22806,23072,0.038
+Ruston-Louisiana,21859,22160,22330,0.062
+Clarksville-Indiana,21724,22348,22041,0.015
+Brandon-Mississippi,21705,25097,25870,0.244
+Radcliff-Kentucky,21688,23021,22706,0.014
+Ashland-Kentucky,21684,21627,21066,0.015
+Gallup-New Mexico,21678,21902,20339,0.068
+Kinston-North Carolina,21677,19810,19519,0.093
+Lumberton-North Carolina,21542,19310,18882,0.034
+Watertown-South Dakota,21482,22660,23492,0.060
+Summit-New Jersey,21457,22730,23102,0.017
+New Brighton-Minnesota,21456,23457,22374,0.035
+Sedalia-Missouri,21387,21731,22310,0.051
+Marquette-Michigan,21355,21147,21845,0.077
+North Augusta-South Carolina,21348,24430,26395,0.176
+Biddeford-Maine,21277,22549,22370,0.018
+Ferguson-Missouri,21203,18515,18043,0.056
+Roseburg-Oregon,21181,23656,23795,0.056
+South Milwaukee-Wisconsin,21156,20797,20233,0.007
+Adrian-Michigan,21133,20647,20259,0.022
+Roselle-New Jersey,21085,22694,23064,0.010
+Forest Grove-Oregon,21083,26214,27076,0.160
+Christiansburg-Virginia,21041,23355,22632,0.197
+Waynesboro-Virginia,21006,22193,23498,0.072
+East Ridge-Tennessee,20979,22169,21970,0.018
+Johnstown-Pennsylvania,20978,18410,17853,0.139
+Bixby-Oklahoma,20884,28595,31728,0.363
+Cumberland-Maryland,20859,19093,18643,0.031
+Klamath Falls-Oregon,20840,21787,22174,0.064
+Nogales-Arizona,20837,19763,19965,0.003
+Arnold-Missouri,20808,20898,21036,0.039
+Portsmouth-New Hampshire,20779,21959,22938,0.001
+Selma-Alabama,20756,17970,16312,0.012
+Havelock-North Carolina,20735,16736,17407,0.080
+Monroe-Michigan,20733,20460,20177,0.066
+Farragut-Tennessee,20676,23508,25242,0.144
+Sapulpa-Oklahoma,20544,21923,23297,0.065
+Liberal-Kansas,20525,19832,19184,0.040
+Hays-Kansas,20510,21140,21213,0.025
+Clinton-Utah,20426,23393,23728,0.383
+Mountain Brook-Alabama,20413,22549,21701,0.009
+Sulphur-Louisiana,20410,21826,20572,0.004
+Golden Valley-Minnesota,20371,22556,21263,0.003
+New Hope-Minnesota,20339,21981,20745,0.028
+Shelbyville-Tennessee,20335,23582,25792,0.208
+West Mifflin-Pennsylvania,20313,19597,18902,0.108
+Milwaukie-Oregon,20291,21157,21620,0.010
+Pittsburg-Kansas,20233,20655,20547,0.051
+South Saint Paul-Minnesota,20160,20757,20590,0.002
+Birmingham-Michigan,20103,21817,22198,0.040
+Ashland-Oregon,20078,21394,20935,0.029
+Hammond-Louisiana,20019,19632,23426,0.121
+Easley-South Carolina,19993,22961,27001,0.110
+Kalispell-Montana,19927,25078,31296,0.287
+Mountlake Terrace-Washington,19909,21290,25198,0.025
+Ferndale-Michigan,19900,19185,19431,0.111
+Altus-Oklahoma,19813,18738,18543,0.080
+Baldwin-Pennsylvania,19767,21520,20712,0.012
+Weirton-West Virginia,19746,19162,18317,0.033
+McKeesport-Pennsylvania,19731,17734,17119,0.216
+Madisonville-Kentucky,19591,19647,19502,0.015
+Wilsonville-Oregon,19509,26697,27895,0.282
+Columbia Heights-Minnesota,19496,21963,22358,0.051
+Ypsilanti-Michigan,19435,20653,20150,0.153
+Central Falls-Rhode Island,19376,22583,23034,0.025
+Augusta-Maine,19136,18907,19168,0.028
+Newton-Kansas,19132,18603,18320,0.101
+Bethany-Oklahoma,19051,20822,20421,0.066
+Oxford-Mississippi,18916,25427,26801,0.376
+Coralville-Iowa,18907,22333,23959,0.201
+Sand Springs-Oklahoma,18906,19917,20330,0.074
+Papillion-Nebraska,18894,25345,25248,0.132
+El Dorado-Arkansas,18884,17760,16657,0.139
+Trenton-Michigan,18853,18545,17957,0.040
+Fairmont-West Virginia,18704,18410,18063,0.021
+Tullahoma-Tennessee,18655,20345,21035,0.035
+Amsterdam-New York,18620,18221,18169,0.012
+Claremore-Oklahoma,18581,19584,20602,0.144
+Gautier-Mississippi,18572,19022,19055,0.370
+Laurel-Mississippi,18540,17846,17508,0.008
+Saco-Maine,18482,20379,21064,0.091
+Forest Park-Georgia,18468,19818,19301,0.159
+McAlester-Oklahoma,18383,18167,18108,0.032
+Winchester-Kentucky,18368,19157,19413,0.091
+Mandan-North Dakota,18331,24193,24788,0.089
+Natchitoches-Louisiana,18323,18164,17165,0.023
+Elko-Nevada,18297,20541,20822,0.087
+Payson-Utah,18294,21142,24666,0.306
+Farmington-Utah,18275,24527,26163,0.338
+Simpsonville-South Carolina,18238,23385,28078,0.210
+Sherwood-Oregon,18194,20458,20441,0.351
+Lackawanna-New York,18141,19961,19629,0.053
+Erlanger-Kentucky,18082,19651,20172,0.076
+Hanahan-South Carolina,17997,20276,21983,0.283
+Clarksdale-Mississippi,17962,14896,13861,0.147
+South Burlington-Vermont,17904,20201,21713,0.118
+Bristol-Virginia,17835,17222,16316,0.024
+Dickinson-North Dakota,17787,25675,25695,0.100
+Murray-Kentucky,17741,17757,18567,0.155
+Gretna-Louisiana,17736,17809,17185,0.019
+Beckley-West Virginia,17614,17270,16515,0.018
+Westbrook-Maine,17494,20405,21386,0.080
+Saint Matthews-Kentucky,17472,17563,17806,0.090
+Sheridan-Wyoming,17444,18743,19813,0.094
+Ocean Springs-Mississippi,17442,18375,18954,0.014
+Colonial Heights-Virginia,17411,18146,18674,0.029
+Mustang-Oklahoma,17395,19918,23965,0.241
+North Ogden-Utah,17357,20926,22908,0.136
+Martinsburg-West Virginia,17227,18739,19047,0.129
+Central Point-Oregon,17169,19025,19128,0.272
+Dyersburg-Tennessee,17145,16162,15915,0.021
+Conway-South Carolina,17103,25035,29656,0.310
+Center Point-Alabama,16921,16354,15603,0.347
+Aberdeen-Washington,16896,17018,17044,0.023
+Ada-Oklahoma,16810,16479,16578,0.066
+El Reno-Oklahoma,16749,16993,20041,0.033
+Hermiston-Oregon,16745,19430,19746,0.212
+Opelousas-Louisiana,16634,15836,15176,0.377
+Pendleton-Oregon,16612,17066,17026,0.013
+Clarksburg-West Virginia,16578,15943,15262,0.128
+South Ogden-Utah,16532,17488,17749,0.129
+Rutland-Vermont,16495,15810,15565,0.049
+Springfield-Tennessee,16440,18786,19842,0.130
+Hazel Park-Michigan,16422,14988,15064,0.157
+Radford-Virginia,16408,16063,17273,0.031
+Fort Thomas-Kentucky,16325,17430,16914,0.011
+Danville-Kentucky,16218,17245,17562,0.044
+Chickasha-Oklahoma,16036,16059,17014,0.008
+Great Bend-Kansas,15995,14736,14306,0.043
+Coos Bay-Oregon,15967,15997,15801,0.036
+Troutdale-Oregon,15962,16295,15749,0.135
+Laconia-New Hampshire,15951,16880,17310,0.028
+Wilkinsburg-Pennsylvania,15930,14349,13800,0.205
+Goodlettsville-Tennessee,15921,17797,17433,0.133
+Durant-Oklahoma,15856,18589,20908,0.149
+Canby-Oregon,15829,18181,18027,0.191
+Natchez-Mississippi,15792,14507,14233,0.171
+La Vista-Nebraska,15758,16750,16543,0.258
+Tahlequah-Oklahoma,15753,16436,17319,0.080
+Waterville-Maine,15722,16682,17336,0.008
+Vienna-Virginia,15687,16473,16562,0.076
+Blytheville-Arkansas,15620,13414,12359,0.172
+Lebanon-Oregon,15518,18500,19950,0.162
+Clive-Iowa,15447,18615,19508,0.165
+Jamestown-North Dakota,15427,15855,15789,0.005
+Centerville-Utah,15335,16884,16560,0.048
+Mesquite-Nevada,15276,20456,23599,0.385
+Newport-Kentucky,15273,14160,13792,0.113
+Shively-Kentucky,15264,15640,15850,0.004
+Newton-Iowa,15254,15758,15709,0.023
+Mitchell-South Dakota,15254,15671,15621,0.043
+Greenwood-Mississippi,15205,14718,13627,0.210
+Greeneville-Tennessee,15062,15486,15979,0.009
+Scottsbluff-Nebraska,15039,14451,14323,0.023
+West Columbia-South Carolina,14988,17493,18418,0.126
+Zachary-Louisiana,14960,19423,20370,0.245
+Deming-New Mexico,14855,15175,15272,0.051
+Los Lunas-New Mexico,14835,17376,19907,0.326
+Sevierville-Tennessee,14807,18179,18231,0.203
+Long Beach-Mississippi,14792,16778,17217,0.170
+Indianola-Iowa,14782,15835,16297,0.121
+Williston-North Dakota,14716,29169,28821,0.151
+Dallas-Oregon,14583,16883,17911,0.143
+Corinth-Mississippi,14573,14621,14219,0.032
+Thibodaux-Louisiana,14566,15933,15569,0.011
+Pineville-Louisiana,14555,14384,13966,0.052
+Altoona-Iowa,14541,19669,22598,0.292
+Dickson-Tennessee,14538,16069,16878,0.161
+Yankton-South Dakota,14454,15441,15670,0.066
+Front Royal-Virginia,14440,15014,15628,0.058
+Manassas Park-Virginia,14273,17218,16611,0.278
+Mountain Home-Idaho,14206,16064,16912,0.219
+Elizabethton-Tennessee,14176,14543,14461,0.055
+Sunland Park-New Mexico,14106,16713,18185,0.057
+Williamsburg-Virginia,14068,15416,16030,0.147
+Shelbyville-Kentucky,14045,17292,18048,0.281
+Glasgow-Kentucky,14028,15026,15388,0.073
+Orangeburg-South Carolina,13964,13229,13378,0.083
+Clemson-South Carolina,13905,17683,18610,0.144
+Baker-Louisiana,13895,12482,12147,0.007
+Martinsville-Virginia,13821,13482,13834,0.114
+Las Vegas-New Mexico,13753,13210,12711,0.062
+North Myrtle Beach-South Carolina,13752,18830,20798,0.200
+Moss Point-Mississippi,13704,12146,11791,0.160
+Pierre-South Dakota,13646,14093,13788,0.019
+McMinnville-Tennessee,13605,13788,14032,0.067
+Miami-Oklahoma,13570,12995,12886,0.010
+Athens-Tennessee,13458,14077,15050,0.019
+South Charleston-West Virginia,13450,13891,13177,0.004
+Claremont-New Hampshire,13355,12953,13105,0.012
+Crowley-Louisiana,13265,11698,11216,0.070
+Canton-Mississippi,13189,10934,10777,0.022
+McPherson-Kansas,13155,14089,14068,0.049
+Lebanon-New Hampshire,13151,14293,15389,0.042
+Grenada-Mississippi,13092,12693,12138,0.138
+Minden-Louisiana,13082,11917,11195,0.006
+La Grande-Oregon,13082,13024,13058,0.060
+West Monroe-Louisiana,13065,13093,12476,0.018
+El Dorado-Kansas,13021,12793,12694,0.071
+Saint Helens-Oregon,12883,13843,14460,0.224
+McComb-Mississippi,12790,12413,11762,0.040
+Soddy-Daisy-Tennessee,12714,13069,13430,0.095
+Boone-Iowa,12661,12450,12461,0.011
+Ottawa-Kansas,12649,12625,12733,0.059
+Huron-South Dakota,12592,14254,14515,0.055
+Cayce-South Carolina,12528,13768,13645,0.026
+Green River-Wyoming,12515,11836,11474,0.057
+Brookhaven-Mississippi,12513,11688,11654,0.209
+Beatrice-Nebraska,12459,12247,12290,0.003
+Gaffney-South Carolina,12414,12761,12546,0.047
+Beaufort-South Carolina,12361,13627,14334,0.052
+Evanston-Wyoming,12359,11779,11691,0.070
+Cleveland-Mississippi,12334,11203,10183,0.119
+Falls Church-Virginia,12332,14657,15034,0.157
+Okmulgee-Oklahoma,12321,11301,11354,0.055
+Winfield-Kansas,12301,11787,11678,0.008
+Portales-New Mexico,12280,12152,11789,0.096
+Abbeville-Louisiana,12257,11199,10902,0.029
+Bogalusa-Louisiana,12232,10653,10367,0.095
+Poquoson-Virginia,12150,12454,12854,0.045
+Woodward-Oklahoma,12051,12129,11750,0.013
+Blackfoot-Idaho,11899,12408,13224,0.126
+Somersworth-New Hampshire,11766,11855,12218,0.023
+Bardstown-Kentucky,11700,13567,14104,0.111
+Red Bank-Tennessee,11651,11899,12073,0.064
+Mandeville-Louisiana,11560,12832,12973,0.092
+Gladstone-Oregon,11497,12028,11898,0.008
+Martin-Tennessee,11473,10831,10989,0.085
+Oskaloosa-Iowa,11463,11551,11575,0.049
+Guymon-Oklahoma,11442,12959,12397,0.082
+Ontario-Oregon,11366,11744,11957,0.032
+Bastrop-Louisiana,11365,9677,8922,0.144
+West Point-Mississippi,11307,10101,9758,0.070
+Artesia-New Mexico,11301,12875,12550,0.053
+Spencer-Iowa,11233,11322,11418,0.006
+Somerset-Kentucky,11196,11933,12389,0.018
+Lewisburg-Tennessee,11100,12295,13473,0.063
+Irmo-South Carolina,11097,11445,12086,0.009
+Fort Madison-Iowa,11051,10318,9983,0.032
+Saint Albans-West Virginia,11044,10861,10301,0.050
+Atchison-Kansas,11021,10878,10813,0.074
+Merriam-Kansas,11003,11105,11560,0.000
+Picayune-Mississippi,10878,11890,12017,0.035
+Weatherford-Oklahoma,10833,12086,12047,0.086
+Keokuk-Iowa,10780,9909,9462,0.058
+Vienna-West Virginia,10749,10665,10406,0.014
+Indianola-Mississippi,10683,9487,8702,0.133
+Storm Lake-Iowa,10600,11264,11627,0.047
+Vermillion-South Dakota,10571,11704,11877,0.073
+Parsons-Kansas,10500,9595,9328,0.095
+Bluefield-West Virginia,10447,9639,9157,0.101
+Lawrenceburg-Tennessee,10428,11635,12112,0.036
+Eunice-Louisiana,10398,9419,9044,0.106
+Jennings-Louisiana,10383,9825,9280,0.059
+Forest Acres-South Carolina,10361,10614,10438,0.023
+Middlesborough-Kentucky,10334,9397,8899,0.006
+Coffeyville-Kansas,10295,8831,8545,0.068
+Brownsville-Tennessee,10292,9918,9358,0.040
+Newberry-South Carolina,10277,10713,10874,0.031
+Lexington-Nebraska,10230,10663,11205,0.022
+Guthrie-Oklahoma,10191,10785,11682,0.029
+Millington-Tennessee,10176,10580,11486,0.022
+Carroll-Iowa,10103,10328,10125,0.000
+Berlin-New Hampshire,10051,9421,9248,0.025
+Mayfield-Kentucky,10024,10017,9805,0.028
+Presque Isle-Maine,9692,8785,8728,0.020
+Independence-Kansas,9483,8576,8287,0.033
+Astoria-Oregon,9477,10185,9906,0.034
+Chanute-Kansas,9119,8736,8536,0.031
+Campbellsville-Kentucky,9108,11443,11820,0.153
+Barre-Vermont,9052,8490,8304,0.027
+Westwego-Louisiana,8534,8567,8231,0.266
+Bath-Maine,8514,8768,8817,0.092
+Humboldt-Tennessee,8452,7881,7852,0.124
+Caribou-Maine,8189,7393,7328,0.014
+Montpelier-Vermont,7855,8083,7915,0.018

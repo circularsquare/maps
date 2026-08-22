@@ -23,7 +23,23 @@ SUBDISTRICTS = "tools/subdistricts.txt"
 # single bad geocodes (not on a stacked point, so the stacking scan missed them):
 #   Minsk sat at 53.90,37.57 -- longitude 37.57 instead of 27.56, i.e. near Tula, Russia
 #   Rabat-Sale sat at 34.17,-6.24, ~60km NE of Rabat, so it grafted to Kenitra
-MANUAL = {"Minsk-Belarus": "Minsk", "Rabat-Salé-Morocco": "Rabat"}
+#   Hefa sat at 32.4814,34.9948 -- 34.6km SOUTH of Haifa, right next to Hadera. Both effects
+#   of that were on screen: Haifa's own entry never reached its WUP centre, so it was frozen
+#   flat from 2002 to 2025 at 276,000; and the 484,770 centre WUP calls "Haifa" was instead
+#   claimed by "Qiryat Motzkin", a suburb of ~40,000, which therefore stepped 14.6x at its
+#   graft seam and is drawn as a 485k bubble sitting exactly where Haifa is. So the map had no
+#   entry named Haifa within 12km of Haifa. The agglomeration entry shares the bad coordinate.
+#   Worth noting this coordinate is why spec §6.4 lists "Haifa takes Hadera's centre 40km away"
+#   as a false positive of a rejected rule -- the sentence is true only because of this bug.
+#   Kathmandu sat at 28.395,84.124 -- ~90km NW, up in the Gandaki hills. So the capital never
+#   reached its own WUP centre (3,231,516, named "Kathmandu") and was drawn frozen at 697,000,
+#   while the centre was taken by Patan/Lalitpur, the twin city 4.6km south whose own record
+#   peaks at 161,600 -- i.e. the map drew Kathmandu as Patan. Same shape as Hefa. See also
+#   MERGE_INTO in build.py: the pre-1911 half of Kathmandu is filed under "Sihara".
+MANUAL = {"Minsk-Belarus": "Minsk", "Rabat-Salé-Morocco": "Rabat",
+          "Hefa-Israel": "Haifa", "Hefa (agglomeration)-Israel": "Haifa",
+          "Kâthmândau-Nepal": "Kathmandu",
+          "Kâthmândau (agglomeration)-Nepal": "Kathmandu"}
 
 
 def norm(s):

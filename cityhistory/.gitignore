@@ -1,3 +1,10 @@
 # large raw source data (regenerate cities.json via build.py from these)
 data/stadester/
 data/ghs_ucdb.csv
+
+# data/events.json is hand-written source, not a build output, so it has to be tracked. The repo
+# root ignores data/ wholesale and a negation cannot reach inside a directory git never descends
+# into -- so un-ignore the directory first, re-ignore everything in it, then rescue the one file.
+!data/
+data/*
+!data/events.json

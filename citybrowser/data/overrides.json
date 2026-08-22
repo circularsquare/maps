@@ -1,0 +1,89 @@
+{
+ "Q125805955": {
+  "altNames": {
+   "at": "2026-08-15",
+   "value": [
+    "asd"
+   ],
+   "was": null
+  }
+ },
+ "Q1490": {
+  "altNames": {
+   "at": "2026-08-15",
+   "value": [
+    "Tokio",
+    "東京",
+    "Edo"
+   ],
+   "was": null
+  },
+  "facts": {
+   "at": "2026-08-15",
+   "value": [
+    "Was called Edo until 1868."
+   ],
+   "was": null
+  }
+ },
+ "Q16572": {
+  "altNames": {
+   "at": "2026-08-20",
+   "value": [
+    "Canton"
+   ],
+   "was": null
+  },
+  "languages": {
+   "at": "2026-08-20",
+   "value": [
+    "Cantonese"
+   ],
+   "was": null
+  }
+ },
+ "Q18419": {
+  "altNames": {
+   "at": "2026-08-15",
+   "value": [
+    "asd"
+   ],
+   "was": null
+  },
+  "facts": {
+   "at": "2026-08-15",
+   "value": [
+    "da big apple"
+   ],
+   "was": null
+  }
+ },
+ "Q2288728": {
+  "altNames": {
+   "at": "2026-08-15",
+   "value": [
+    "boswijk"
+   ],
+   "was": null
+  },
+  "lat": {
+   "at": "2026-08-15",
+   "value": 40.710762854118414,
+   "was": 40.694166666
+  },
+  "lon": {
+   "at": "2026-08-15",
+   "value": -73.91763507130766,
+   "was": -73.918611111
+  }
+ },
+ "Q406": {
+  "altNames": {
+   "at": "2026-08-20",
+   "value": [
+    "Constantinople"
+   ],
+   "was": null
+  }
+ }
+}

@@ -1,4 +1,19 @@
 # Source downloads and derived intermediates — all regenerable.
-# The curation that matters (overrides.json, build tables) is NOT ignored.
-data/
+# The curation that matters (overrides.json) is NOT ignored.
+#
+# All three lines are load-bearing, in this order:
+#
+#   !data/   the REPO ROOT .gitignore excludes `data/` as a directory, and git
+#            does not descend into an excluded directory — so without this, no
+#            negation below can reach anything inside, and the one irreplaceable
+#            file in the project stays silently untracked. (It was.)
+#   data/*   re-exclude the CONTENTS, as children rather than as a directory,
+#            which is what leaves the next line reachable.
+#   !...     the exception that actually matters.
+#
+# Verify after any edit — the failure mode here is silence, not an error:
+#   git check-ignore -v citybrowser/data/overrides.json   # must print nothing
+!data/
+data/*
+!data/overrides.json
 cache/

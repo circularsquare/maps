@@ -2,17 +2,27 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- maximum-scale/user-scalable: pinching on mobile was zooming the PAGE rather than the map,
+     shrinking the whole UI to a corner of a white field. Every panel here is fixed to the
+     viewport, so page zoom has nothing useful to do -- pinch belongs to the map. -->
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>city history</title>
 <meta property="og:title" content="city history">
 <meta property="og:description" content="Every city in the world, sized by population, from 3000 BC to today.">
 <meta property="og:type" content="website">
+<meta property="og:url" content="https://anita.garden/cityhistory/">
+<!-- Absolute, not the relative "index.png" the other map pages use: several crawlers
+     (Facebook's among them) will not resolve a relative og:image against the page URL and
+     just drop the card. Regenerate index.png from a 1600x900 screenshot cropped to 1200x630. -->
+<meta property="og:image" content="https://anita.garden/cityhistory/index.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://anita.garden/cityhistory/index.png">
+<link rel="icon" type="image/png" href="/favicon.png">
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
   html,body { height:100%; background:#0a0a0a; overflow:hidden;
     font-family:'Nunito',system-ui,-apple-system,Segoe UI,Roboto,sans-serif; color:#eee; }
   #map { position:absolute; inset:0; }
-  #landcv  { position:absolute; inset:0; pointer-events:none; z-index:1; }
   #bubbles { position:absolute; inset:0; pointer-events:none; z-index:2; }
 
   #map-title {
@@ -55,8 +65,6 @@
     font-size:10px; font-variant-numeric:tabular-nums; }
   .rn { position:relative; flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .rp { position:relative; color:#aaa; flex:none; font-size:11px; font-variant-numeric:tabular-nums; }
-  #ncities { margin-top:7px; padding-top:6px; border-top:1px solid #262626;
-    font-size:11px; color:#777; font-variant-numeric:tabular-nums; }
 
   /* bottom time scrubber */
   #timebar {
@@ -64,6 +72,11 @@
     display:flex; align-items:center; gap:10px;
     padding:8px 12px; width:min(720px, 92vw);
   }
+  /* Expanded, the timebar stretches to just inside the two things that share its row: the info
+     button bottom-left (16px + 31px wide) and maplibre's zoom control bottom-right (10px + 29px).
+     62px of clearance each side clears both. The graph follows automatically -- positionGraph()
+     pins it to the scrub track, which is flex:1 inside here. */
+  #timebar.big { width:calc(100vw - 124px); }
   #scrubwrap { flex:1; min-width:0; position:relative; height:26px; }
   #scrub {
     width:100%; height:14px; margin-top:1px; position:relative; z-index:1;
@@ -76,7 +89,7 @@
   #scrub::-moz-range-thumb { width:3px; height:14px; background:#cfd9e4; border:none; border-radius:1px; }
   .seg { position:absolute; top:2px; width:1px; height:11px; background:#3d3d3d; pointer-events:none; }
   .seg span { position:absolute; top:12px; left:50%; transform:translateX(-50%);
-    font-size:11px; color:#666; font-variant-numeric:tabular-nums; }
+    font-size:11px; color:#666; font-variant-numeric:tabular-nums; white-space:nowrap; }
   #yearbig { flex:none; width:96px; text-align:center; font-size:20px; font-weight:700;
     color:#ccc; font-variant-numeric:tabular-nums; }
 
@@ -98,6 +111,28 @@
     border:1px solid #333; border-radius:5px; font-size:12px; user-select:none; }
   .segsel span:hover { border-color:#6889a8; color:#eee; }
   .segsel span.on { color:#fff; background:#2a2f38; border-color:#6889a8; }
+  /* growth legend. Stop positions are the growth values placed on a linear -2%..+2% axis, so the
+     bar matches growthColor() exactly. The axis runs -5%..+8%, so zero sits at 38.5%, not at the
+     midpoint, and the labels are placed absolutely rather than spread evenly. */
+  #growthkey { margin-top:3px; }
+  #growthkey.hidden { display:none; }
+  #growthbar { height:7px; border-radius:3px; background:linear-gradient(90deg,
+    #5d60e2 0%, #489cf0 7.692%, #45cf77 23.077%, #c6db55 38.462%, #fde047 46.154%,
+    #fb923c 61.538%, #ef4444 84.615%, #e879f9 100%); }
+  #growthlabels { position:relative; height:12px; margin-top:3px;
+    font-size:10px; color:#777; font-variant-numeric:tabular-nums; }
+  #growthlabels span { position:absolute; transform:translateX(-50%); }
+  #growthlabels span:first-child { left:0; transform:none; }
+  #growthlabels span:last-child { left:100%; transform:translateX(-100%); }
+  /* white sits outside the growth ramp, so it needs its own line rather than a stop on the bar */
+  #srckey { margin-top:4px; display:flex; align-items:center; gap:5px; opacity:.75; }
+  #srckey i { width:9px; height:9px; border-radius:50%; background:#fff; flex:none; }
+  /* History notes are one four-way control rather than a checkbox plus a three-way level: "none"
+     says what the checkbox said, so the checkbox was a second way to spell the same state and
+     the two could disagree. A NOTE_IMPACT colour ramp used to sit under it too, the same shape
+     and colours as #growthbar right above it, which read as a second copy of that scale and
+     pulled the eye off the control. The notes carry their own colour on the map. */
+
   /* settings toggle, sits under the leaderboard */
   #settingsbtn { margin-top:9px; width:100%; display:flex; align-items:center; justify-content:center;
     gap:6px; background:none; border:1px solid #333; color:#aaa; border-radius:5px;
@@ -110,9 +145,22 @@
     position:absolute; left:50%; transform:translateX(-50%); bottom:70px; z-index:3;
     width:min(720px, 92vw); height:142px; padding:6px 8px;
   }
+  /* Taller only -- never wider. The x axis is pinned to the scrub track by positionGraph(), so
+     widening the panel would slide the plot out of step with the timeline under it. The cap
+     keeps it clear of the timebar on short windows. */
+  #tgraph.big { height:min(40vh, calc(100vh - 150px)); }
   #tgraph.hidden, #settings-panel.hidden, #info-panel.hidden { display:none; }
   #tgraphcv { width:100%; height:100%; display:block; }
-  #tglabel { position:absolute; top:6px; left:11px; font-size:12px; color:#777; }
+  #tgsize {
+    position:absolute; top:6px; right:11px; z-index:1; font-size:12px; color:#8a929c;
+    cursor:pointer; border-bottom:1px solid #444; user-select:none;
+  }
+  #tgsize:hover { color:#eee; }
+  #tglabel { position:absolute; top:6px; left:11px; right:64px; font-size:12px; color:#777;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  #tglabel b { color:#eef3f8; font-weight:700; }
+  #tglabel .clear { color:#8a929c; cursor:pointer; border-bottom:1px solid #444; }
+  #tglabel .clear:hover { color:#eee; }
 
   /* info */
   #info-btn {
@@ -154,14 +202,33 @@
   .maplibregl-ctrl-group button+button { border-top:1px solid #333!important; }
   .maplibregl-ctrl-group button .maplibregl-ctrl-icon { filter:invert(.75); }
   .maplibregl-ctrl-group button:hover { background:rgba(255,255,255,.06)!important; }
+  /* attribution: same dark chrome as the panels, rather than maplibre's white pill */
+  .maplibregl-ctrl-attrib { background:rgba(10,10,10,.85)!important; border:1px solid #333;
+    border-radius:4px; font-size:11px; }
+  .maplibregl-ctrl-attrib a { color:#8a929c!important; }
+  .maplibregl-ctrl-attrib a:hover { color:#eee!important; }
+  .maplibregl-ctrl-attrib-button { filter:invert(.75); }
 
   @media (max-width:640px) {
     #map-title { display:none; }
     #toplist-panel { width:176px; top:8px; right:8px; }
-    #timebar { bottom:8px; gap:7px; padding:8px 10px; width:calc(100vw - 16px); }
+    #timebar, #timebar.big { bottom:8px; gap:7px; padding:8px 10px; width:calc(100vw - 16px); }
     #yearbig { width:82px; font-size:17px; }
     #tgraph { bottom:62px; }
-    #info-panel { bottom:56px; left:4px; padding:8px 9px; max-width:calc(100vw - 32px); font-size:13px; }
+    /* the info button sat on top of the year readout once the timebar went full-bleed; the
+       top-left corner is free here because #map-title is hidden, so move button and panel up */
+    #info-btn { top:8px; left:8px; bottom:auto; }
+    /* maplibre's bottom-right stack ends up under the timebar and graph, which on a phone cover
+       the whole bottom of the screen. Move it beside the info button and drop the zoom buttons —
+       pinch already zooms, and the attribution has to stay reachable. */
+    /* width:max-content + float:left because the container is a display:block strip whose
+       children float RIGHT — left:52px alone just moved the box, leaving the "i" at its far
+       edge, back on top of the leaderboard. */
+    .maplibregl-ctrl-bottom-right { bottom:auto; right:auto; top:4px; left:52px; width:max-content; }
+    .maplibregl-ctrl-bottom-right .maplibregl-ctrl { float:left; }
+    .maplibregl-ctrl-bottom-right .maplibregl-ctrl-group { display:none; }
+    #info-panel { top:48px; bottom:auto; left:4px; padding:8px 9px;
+      max-width:calc(100vw - 32px); max-height:calc(100vh - 60px); font-size:13px; }
   }
 </style>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap">
@@ -171,7 +238,6 @@
 <body>
 <span id="map-title">city history</span>
 <div id="map"></div>
-<canvas id="landcv"></canvas>
 <canvas id="bubbles"></canvas>
 <div id="tip"></div>
 <div id="loading">loading cities…</div>
@@ -185,17 +251,18 @@
     <span class="panel-title" style="margin:0">About</span>
     <button id="info-panel-close" title="Close">&#10005;</button>
   </div>
-  <p>Every city in the world, sized by population. Each settlement appears once it reaches 5,000 people; colour runs dark to bright with population.</p>
-  <p>The timeline is warped so recent centuries get more of the track than ancient millennia: the first half of it covers everything up to 1400, then 1400–1900, then 1900–today.</p>
-  <p>Historical populations from <a href="https://github.com/Confoederatio/Stadester" target="_blank">Stadestér</a>, which compiles Chandler, Bairoch/Buringh, de Vries, Populstat and others. Figures before 1800 are estimates and often disagree between sources. The modern era comes from <a href="https://population.un.org/wup/" target="_blank">UN WUP 2025</a>.</p>
-  <p>Coastlines from <a href="https://www.naturalearthdata.com/" target="_blank">Natural Earth</a>, map built with <a href="https://maplibre.org" target="_blank">MapLibre GL</a>.</p>
+  <p>Track city populations through history!</p>
+  <p>Clicking a city traces its history on the graph. A line is full thickness where there is a population estimate near that year, and is thin where it is interpolating between distant estimates.</p>
+  <p>The timeline is stretched out for recent times and compressed for the distant past.</p>
+  <p>Historical populations are mostly from <a href="https://github.com/Confoederatio/Stadester" target="_blank">Stadestér</a>, which compiles Chandler, Bairoch/Buringh, de Vries, Populstat and others. Early figures are estimates and often disagree between sources.</p>
+  <p>Each city's historical series runs out around 2000 and we switch to a metropolitan figure. The metropolitan area definition for most big cities comes from the <a href="https://human-settlement.emergency.copernicus.eu/ghs_fua.php" target="_blank">EC/OECD functional urban areas</a>, and the modern populations come from <a href="https://population.un.org/wup/" target="_blank">UN WUP 2025</a>. For smaller cities we use WUP's urban centre alone, and in the United States we use <a href="https://www.census.gov/programs-surveys/popest.html" target="_blank">US Census</a> metropolitan statistical areas. Since the sources before 2000 sometimes measure the city proper instead of the metropolitan area, there is often a jump in the population at 2000, represented as a dashed line in the graph.</p>
+  <p>Basemap by <a href="https://openfreemap.org/" target="_blank">OpenFreeMap</a> from <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> data, built with <a href="https://maplibre.org" target="_blank">MapLibre GL</a>.</p>
   <p>Made by <a href="https://anita.garden/projects" target="_blank">anita</a>!</p>
 </div>
 
 <div class="panel" id="toplist-panel">
   <div class="panel-title">Largest cities</div>
   <ol id="toplist"></ol>
-  <div id="ncities"></div>
   <button id="settingsbtn" title="Settings">
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"/><circle cx="12" cy="12" r="3"/></svg>
     <span>Settings</span>
@@ -203,7 +270,8 @@
 </div>
 
 <div class="panel hidden" id="tgraph">
-  <div id="tglabel">top-10 cities over time · log population</div>
+  <div id="tglabel"></div>
+  <div id="tgsize" title="Taller graph">expand</div>
   <canvas id="tgraphcv"></canvas>
 </div>
 
@@ -215,14 +283,38 @@
   </div>
   <div class="settings-row">
     <span class="settings-label">big-city contrast</span>
-    <input type="range" id="expslider" min="0.22" max="0.42" step="0.01" value="0.29">
+    <input type="range" id="expslider" min="0.15" max="0.45" step="0.01" value="0.38">
+  </div>
+  <div class="settings-row">
+    <span class="settings-label">max cities <span id="capval">4000</span></span>
+    <input type="range" id="capslider" min="0" max="17" step="1" value="12">
+  </div>
+  <div class="settings-row">
+    <span class="settings-label">play speed <span id="speedval">1.0x</span></span>
+    <input type="range" id="speedslider" min="0.5" max="5" step="0.1" value="1">
   </div>
   <div class="seg-group">
     <div class="seg-label">colour by</div>
     <div class="segsel" id="colormode">
-      <span data-v="pop" class="on">population</span>
+      <span data-v="pop">population</span>
       <span data-v="region">continent</span>
+      <span data-v="growth" class="on">growth</span>
     </div>
+    <div id="growthkey">
+      <div id="growthbar"></div>
+      <div id="growthlabels"><span>−5%</span><span style="left:38.462%">0</span><span>+8%</span></div>
+      <div id="srckey"><i></i>step between two sources, not a real change</div>
+    </div>
+  </div>
+  <div class="seg-group">
+    <div class="seg-label">history notes</div>
+    <div class="segsel" id="notelevel">
+      <span data-v="0">none</span><span data-v="1">few</span><span data-v="2" class="on">some</span><span data-v="3">all</span>
+    </div>
+  </div>
+  <div class="settings-row">
+    <label class="settings-label" for="fadetoggle" style="cursor:pointer">fade city bubbles</label>
+    <input type="checkbox" id="fadetoggle">
   </div>
   <div class="settings-row">
     <label class="settings-label" for="graphtoggle" style="cursor:pointer">line graph</label>
@@ -235,6 +327,7 @@
   <button class="btn" id="playbtn" title="Play"></button>
   <div id="scrubwrap">
     <input type="range" id="scrub" min="0" max="1000" step="1" value="750">
+    <div class="seg" id="seg-ad1"><span>AD 1</span></div>
     <div class="seg" style="left:50%"><span>1400</span></div>
     <div class="seg" style="left:75%"><span>1900</span></div>
   </div>
@@ -244,25 +337,75 @@
 // ---------- map ----------
 // Zooming out is capped at the point where one world copy fills the viewport width — any
 // further and you just get repeated worlds and a lot of empty ocean.
-function worldFitZoom(){ return Math.log2(innerWidth / 512); }
+// The bubble canvas is projected by hand (see view()), so it needs the MAP's viewport, not the
+// window's. On mobile those differ -- innerHeight counts the strip under the browser's collapsing
+// URL bar, while #map is inset:0 inside a height:100% body and does not. The canvas was being
+// sized from innerHeight and drawn centred on innerHeight/2, which put every bubble low on the
+// screen by half the difference. Read the map element instead and the two always agree.
+const mapBox = document.getElementById('map');   // NB not map.getCanvas()'s parent
+function vpW(){ return mapBox.clientWidth  || innerWidth; }
+function vpH(){ return mapBox.clientHeight || innerHeight; }
+function worldFitZoom(){ return Math.log2(vpW() / 512); }
 
+// Real vector basemap, same source as japanrail. This replaces a Natural Earth coastline drawn
+// on its own 2D canvas -- that existed because a single big geojson fill would not render as a
+// maplibre layer, which a TILED style sidesteps entirely. Losing it also drops
+// ne_50m_land.geojson (1.6MB) from what has to ship.
 const map = new maplibregl.Map({
   container: 'map',
-  style: {
-    version: 8,
-    sources: {},
-    layers: [ { id: 'bg', type: 'background', paint: { 'background-color': '#0a0a0a' } } ]
-  },
+  style: 'https://tiles.openfreemap.org/styles/dark',
   center: [20, 30], zoom: worldFitZoom(), minZoom: worldFitZoom(), maxZoom: 9,
-  renderWorldCopies: true, attributionControl: false
+  renderWorldCopies: true, attributionControl: false,
+  // view() is a flat affine -- north-up, no perspective -- so it cannot follow a rotated or
+  // tilted map, and right-drag used to spin the basemap out from under bubbles that stayed put.
+  // Turn the gestures off rather than reimplement the projection: a world population map gains
+  // nothing from bearing or pitch, and matching maplibre's perspective per frame for 20k bubbles
+  // is exactly the per-point map.project() cost the affine exists to avoid.
+  dragRotate: false, pitchWithRotate: false, touchPitch: false, maxPitch: 0
 });
+map.touchZoomRotate.disableRotation();   // ...and the two-finger twist on touch
 map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'bottom-right');
+// Compact (an "i" that opens on hover) rather than the default full bar: expanded, the timebar
+// runs to 100vw-62px and the full bar sits right on top of the scrub track and the 1900 tick.
+// compact:true forces the collapsed form at any width instead of only under 640px.
+map.addControl(new maplibregl.AttributionControl({ compact: true }), 'bottom-right');
+// ...and compact:true still renders it OPEN on first load, collapsing only once the "i" is
+// clicked, so collapse it up front. Sources are also credited in full in the About panel.
+map.once('load', () => document.querySelector('.maplibregl-ctrl-attrib')
+                        ?.classList.remove('maplibregl-compact-show'));
 
 // ---------- state ----------
 const cv = document.getElementById('bubbles'), ctx = cv.getContext('2d');
-const lcv = document.getElementById('landcv'), lctx = lcv.getContext('2d');
-let DATA = null, LAND = null, year = 1900, playing = false, sizeMul = 1, expo = 0.29;
-const MINPOP = 5000;   // only draw cities at/above this population
+let DATA = null, year = 1900, playing = false, sizeMul = 1, expo = 0.38;
+const PIVOT_LOG = 6, EXPO_REF = 0.29;   // the contrast exponent pivots on a 1M city -- see draw()
+// Bubble size drifts down as the map runs forward, because the same size is not right at both
+// ends: 39 cities on an empty world at AD 1 want to be seen, 14,600 overlapping ones in 2025
+// want to get out of each other's way. Values are interpolated between these knots rather than
+// stepped, so nothing pops mid-playback. Touching the slider sets sizeTouched and pins the size
+// for the rest of the session -- an explicit choice outranks the automatic one, and a control
+// that keeps sliding out from under you is worse than one that is sometimes the wrong size.
+const SIZE_KNOTS = [[-4000, 1.3], [1400, 1.3], [1700, 1.15], [1800, 1.1], [1900, 1], [1980, 0.8]];
+const sizeslider = document.getElementById('sizeslider');
+let sizeTouched = false;
+function autoSizeMul(y){
+  const K = SIZE_KNOTS;
+  if (y <= K[0][0]) return K[0][1];
+  for (let i = 1; i < K.length; i++){
+    if (y <= K[i][0]){
+      const a = K[i-1], b = K[i];
+      return a[1] + (b[1] - a[1]) * (y - a[0]) / (b[0] - a[0]);
+    }
+  }
+  return K[K.length-1][1];
+}
+// Stops rather than a plain numeric range: the resolution that matters is all at the low end
+// (25 vs 100 is a different map, 9000 vs 9500 is not), and the top of the range has to be able
+// to mean "all of them" on a dataset whose drawn count swings from 39 to 14,600.
+const CAP_STOPS = [0, 25, 50, 100, 200, 300, 500, 750, 1000, 1500, 2000, 3000, 4000, 5000, 7500, 10000, 15000, Infinity];
+let maxCities = 4000;
+// The graph's floor, and the level below which a control point is "not a city here" for the
+// data windows. The MAP's floor is mapFloor(), which starts here and rises with the era.
+const MINPOP = 5000;
 let projected = [];   // {x,y,r,name,pop,type} from last draw, for hover hit-testing
 
 const ICON_PLAY  = '<svg width="10" height="12" viewBox="0 0 10 12"><path d="M0 0 L10 6 L0 12 Z" fill="currentColor"/></svg>';
@@ -270,7 +413,8 @@ const ICON_PAUSE = '<svg width="10" height="12" viewBox="0 0 10 12"><rect x="0" 
 
 // line graph state (on by default; ?graph=0 or the settings toggle hides it)
 const gcv = document.getElementById('tgraphcv'), gx2 = gcv.getContext('2d');
-let GLINES = [], curTopSet = new Set(), gW = 0, gH = 0, graphOn = true, hoverLine = null;
+let GLINES = [], GALL = [], curTopSet = new Set(), gW = 0, gH = 0, graphOn = true, hoverLine = null;
+let selCity = null, selLine = null, gKey = '', gLayoutKey = '';   // clicked city: traced thick, on top of the graph
 const G_LOGLO = Math.log10(5000), G_LOGHI = Math.log10(4.5e7), G_PADT = 20, G_PADB = 6;
 
 // ---------- helpers ----------
@@ -310,6 +454,15 @@ function mix(a,b,f){
 }
 function rgba(hex, a){
   return `rgba(${parseInt(hex.slice(1,3),16)},${parseInt(hex.slice(3,5),16)},${parseInt(hex.slice(5,7),16)},${a})`;
+}
+// accepts either form the palettes produce ('#rrggbb' from the tables, 'rgb(...)' from mix())
+function parseCol(c){
+  return c[0] === '#'
+    ? [parseInt(c.slice(1,3),16), parseInt(c.slice(3,5),16), parseInt(c.slice(5,7),16)]
+    : c.slice(4, -1).split(',').map(Number);
+}
+function lighten(c, f){
+  return 'rgb(' + parseCol(c).map(v => Math.round(v + (255 - v) * f)).join(',') + ')';
 }
 
 // ---------- continent / region coloring ----------
@@ -363,9 +516,280 @@ function regionOf(la, lo){
   if (lo >= 130 && lo <= 180 && la >= 22 && la <= 60) return 'East Asia';      // Russian Far East (Kamchatka)
   return 'Central Asia';                                             // stans, Afghanistan(→S.Asia), Mongolia, Siberia
 }
-let colorMode = 'pop';   // 'pop' = viridis by size, 'region' = by continent
+let colorMode = 'growth';   // 'growth' = annual rate (default), 'pop' = viridis by
+                            // size, 'region' = by continent
+// ---------- growth mode ----------
+// Diverging scale on annual growth rate, on the heat convention: growth runs hot, decline runs
+// cool. Not symmetric, and not evenly spaced: the stops bunch up near zero and spread out at the
+// extremes, because most cities in most centuries sit inside +/-1%/yr and an evenly spaced ramp
+// spent almost nothing on the range that actually separates them. Zero is a yellow-green rather
+// than a pure hue, so "barely growing" and "barely shrinking" are told apart by a shift towards
+// yellow or towards green instead of both washing out to the same colour.
+// Green and blue carry a 0.06 brightness darkening; at full value they glared against the dark
+// basemap and read as the loudest thing on the map rather than as one end of a scale.
+const GROWTH_STOPS = [                  // must stay sorted high -> low
+  [ 0.08, '#e879f9'],   // magenta: +8%/yr and up, doubling in ~9 years
+  [ 0.06, '#ef4444'],   // red
+  [ 0.03, '#fb923c'],   // orange
+  [ 0.01, '#fde047'],   // yellow
+  [ 0.00, '#c6db55'],   // yellow-green, leaning yellow: flat
+  [-0.02, '#45cf77'],   // green
+  [-0.04, '#489cf0'],   // blue
+  [-0.05, '#5d60e2'],   // indigo: -5%/yr and down
+];
+// ---------- source changes, in growth mode ----------
+// build.py emits `s`, one character per control point, saying which of the merged datasets that
+// point came from: c chandler, b buringh, p populstat, w UN WUP 2025, i straight-line fill,
+// f a planted fade floor. Only ~19% of the corpus is a real measurement, and a single line here
+// can be three different compilers in consecutive segments with nothing on screen to say so.
+//
+// Where two adjacent control points come from DIFFERENT sources, the step between them is not a
+// population change at all -- it is two books disagreeing -- and annualising it is meaningless.
+// The growth window already refuses to measure across the WUP handover for exactly this reason
+// (see growthAt); this is the same rule applied to the other three sources, which until now were
+// invisible. Rome is the case to look at: it falls 999,000 -> 150,000 between 300 and 361, which
+// reads as a catastrophe and is actually populstat handing over to Chandler, two compilers who
+// disagree 2.2x about how big Rome ever was.
+//
+// Drawn WHITE rather than as a growth rate: white is outside the scale entirely, so it cannot be
+// misread as "very fast" at either end, which any in-gamut choice would be.
+const SOURCE_CHANGE_COLOR = '#fff';
+// ...but OFF for now. The reasoning below is sound and the gating works; the problem is what it
+// looks like in motion. White is outside the scale precisely so it cannot be misread, and that
+// same property makes it the most eye-catching thing on the map, so during playback the eye is
+// pulled to compiler handovers -- a fact about our sources -- instead of to the cities. Left
+// wired up rather than deleted: flip this to true to get it back, and the legend row follows.
+const SOURCE_CHANGE_ON = false;
+// A handover only LIES about growth if its step is big enough to move the colour, and gating on
+// that is what keeps this readable. Ungated, 25-54% of every pre-modern frame goes white -- a
+// buringh entry's grid years (1550, 1650, 1740, 1790, 1840) interleave with populstat's census
+// rows, so nearly every segment is technically a handover, and most are a percent or two and
+// distort nothing. At 1.5%/yr the pre-modern wash clears (1800 goes 54% -> 12%) while every case
+// worth seeing survives: Rome's 999,000 -> 150,000 at 300-361, and the WUP seam, which peaks at
+// ~13% of the map around 2001 and is the one moment where a white flash is the correct answer.
+// 1.5% is also where the growth ramp has clearly left its flat yellow-green band, so below it
+// there is no misleading colour to suppress.
+const SOURCE_CHANGE_MIN_RATE = 0.015;
+// Fill and fade points make no claim about provenance, so they are not source changes in
+// themselves. `i` inherits the source of the last attributed point to its left -- it was
+// interpolated, and the question is which compiler the SEGMENT belongs to -- and `f` is ours,
+// not a source at all, so it never opens or closes a change.
+function sourceSpans(c){
+  const s = c.s, p = c.p;
+  if (!s) return [];
+  const out = [];
+  let prev = null;                       // last attributed source seen
+  for (let i = 0; i < s.length; i++){
+    const ch = s[i];
+    if (ch === 'f') continue;
+    const src = ch === 'i' ? prev : ch;
+    if (src !== null && prev !== null && src !== prev){
+      const y0 = p[i - 1][0], v0 = p[i - 1][1], y1 = p[i][0], v1 = p[i][1];
+      if (v0 > 0 && v1 > 0 && y1 > y0 &&
+          Math.abs(Math.pow(v1 / v0, 1 / (y1 - y0)) - 1) >= SOURCE_CHANGE_MIN_RATE)
+        out.push([y0, y1]);
+    }
+    if (ch !== 'i') prev = ch;
+  }
+  return out;
+}
+function atSourceChange(c, y){
+  if (c._sc === undefined) c._sc = sourceSpans(c);
+  for (let i = 0; i < c._sc.length; i++){
+    if (y >= c._sc[i][0] && y <= c._sc[i][1]) return true;
+  }
+  return false;
+}
+
+function growthColor(g){
+  const last = GROWTH_STOPS[GROWTH_STOPS.length - 1];
+  if (!(g > last[0])) return last[1];
+  for (let i = 0; i < GROWTH_STOPS.length - 1; i++){
+    const hi = GROWTH_STOPS[i][0], ch = GROWTH_STOPS[i][1];
+    const lo = GROWTH_STOPS[i + 1][0], cl = GROWTH_STOPS[i + 1][1];
+    if (g >= hi) return ch;
+    if (g >= lo) return mix(ch, cl, (hi - g) / (hi - lo));
+  }
+  return last[1];
+}
+// Window half-width in TRACK FRACTION -- the timeline's own warp -- rather than in real years.
+// It used to be 4 x solidTol(), and solidTol is a STEP function (100/20/5), so the window jumped
+// 5x at 1400 and 4x at 1900: every city on the map changed colour hard at those two instants.
+// That was most of what read as the colours flipping. Track fraction is continuous, and 0.04
+// reproduces the widths the step function gave -- ~20 real years after 1900, ~80 across
+// 1400-1900, ~250 in AD1-1400, ~500 before AD 1 -- without the cliffs.
+//
+// A single window, not a blend of nested ones. Averaging +/-20 with +/-10 and +/-5 was tried and
+// is worse: a narrow window annualises the same one-year step in the data over fewer years, so
+// it spikes HARDER, and mixing it in raised the mean per-frame colour step from 0.13 to 0.40 at
+// 1995 while costing 40% more per draw (38.7 -> 54.3 ms). Width is the lever here, not count.
+const GROWTH_TRACK = 0.03;
+// Cumulative integral of log10(pop) at each control point, cached per city. Lets logInt() give
+// the exact area under the (piecewise linear) curve from the series start to any year with one
+// binary search, which is what makes the smoothed slope above no more expensive than the
+// endpoint version it replaced.
+function logCum(c){
+  if (c._LC) return c._LC;
+  const p = c.p, n = p.length, L = new Float64Array(n), C = new Float64Array(n);
+  for (let i = 0; i < n; i++) L[i] = Math.log10(Math.max(1, p[i][1]));
+  for (let i = 1; i < n; i++)
+    C[i] = C[i-1] + (L[i-1] + L[i]) / 2 * (p[i][0] - p[i-1][0]);
+  return (c._LC = { L, C });
+}
+function logInt(c, y){
+  const p = c.p, n = p.length, lc = logCum(c), L = lc.L, C = lc.C;
+  if (y <= p[0][0]) return 0;
+  if (y >= p[n-1][0]) return C[n-1];
+  let lo = 0, hi = n - 1;
+  while (hi - lo > 1){ const m = (lo + hi) >> 1; if (p[m][0] <= y) lo = m; else hi = m; }
+  const y0 = p[lo][0], y1 = p[hi][0];
+  if (y1 === y0) return C[lo];
+  const dt = y - y0, slope = (L[hi] - L[lo]) / (y1 - y0);
+  return C[lo] + L[lo] * dt + slope * dt * dt / 2;   // trapezoid, exact for a linear segment
+}
+// The window's real-year bounds depend only on the year, not the city, so they are computed once
+// per frame instead of 20,000 times -- the two warp conversions were costing ~6ms a draw.
+let _gwYear = NaN, _gwA = 0, _gwB = 0;
+function growthWindow(y){
+  if (y === _gwYear) return;
+  _gwYear = y;
+  const s = yearToS(y);
+  _gwA = sToYear(Math.max(0, s - GROWTH_TRACK));
+  _gwB = sToYear(Math.min(1, s + GROWTH_TRACK));
+}
+// Smoothed slope over [a,b], as an annual rate. Endpoint differences alone make the rate
+// piecewise LINEAR in y: continuous, but with corners wherever a window edge crosses a control
+// point, so a city walks green->orange over the few frames that edge takes to cross a one-year
+// step in the data and then stops dead. Averaging several offset windows fixes that at two
+// popAt() per extra window; this gets the same result for less. log10(pop) is piecewise linear,
+// so its INTEGRAL is closed-form, and the difference of its mean over the two halves of the
+// window is the tent-weighted derivative -- C1, so the rate has no corners at all. Three
+// integral lookups replace two popAt(), and each is the same binary search.
+function slopeRate(c, a, b){
+  if (b - a < 1e-6) return 0;
+  const mid = (a + b) / 2, h = (b - a) / 2;
+  const g = ((logInt(c, b) - logInt(c, mid)) - (logInt(c, mid) - logInt(c, a))) / (h * h);
+  return Math.pow(10, g) - 1;
+}
+// NEVER measure across the source handover. It is a change of definition, not of population --
+// the About panel says so and the graph draws it dashed for that reason -- and annualising it
+// reads as explosive growth: Shenzhen's one-year 8.6x step came out at +24%/yr, saturating the
+// scale. With 6,689 grafted cities whose seams cluster on 1990-2002, playing through the
+// handover would wash the map blue for a second.
+// So the window slides up to the join and stops, keeping its width by extending backwards. Then
+// the two one-sided rates are CROSSFADED across the join rather than switched at its far edge:
+// switching put a hard flip in every grafted city at s1, which was the single biggest remaining
+// source of flashing once the corners were gone.
+function growthAt(c, y){
+  growthWindow(y);
+  const p = c.p, ya = p[0][0], yb = p[p.length - 1][0];
+  const a0 = Math.max(ya, _gwA), b0 = Math.min(yb, _gwB), w = b0 - a0;
+  if (c.sw === undefined) return slopeRate(c, a0, b0);
+  const s0 = c.sw, s1 = Math.min(c.sw + HANDOVER_YEARS, yb);
+  if (y <= s0 || s1 <= s0){
+    const b = Math.min(b0, s0);
+    return slopeRate(c, Math.max(ya, b - w), b);
+  }
+  if (y >= s1){
+    const a = Math.max(a0, s1);
+    return slopeRate(c, a, Math.min(yb, a + w));
+  }
+  const bB = Math.min(b0, s0), aA = Math.max(a0, s1), t = (y - s0) / (s1 - s0);
+  return (1 - t) * slopeRate(c, Math.max(ya, bB - w), bB)
+       +      t  * slopeRate(c, aA, Math.min(yb, aA + w));
+}
+// ---------- bubble size, smoothed in time ----------
+// Two separate things, because they want different shapes and different lengths.
+//
+// (1) sizeLog -- the size itself is the MEAN of log10(pop) across a window centred on the current
+// year, not popAt() at the year itself, so any step in the data -- a graft seam, a census that
+// jumps, the rise out of a fade -- is spread across the window instead of snapping between two
+// frames. The window is CLAMPED to the city's own record, so this is smoothing and nothing else:
+// it says nothing about the ends, which (2) owns. logInt() -- the cumulative integral the growth
+// colour already builds -- makes it two binary searches.
+//
+// Width is in TRACK FRACTION, for the same reason GROWTH_TRACK is: it has to be a constant amount
+// of PLAYBACK rather than of years, or it would be invisible in 3000 BC and enormous in 2020.
+// 0.010 lands on +/-5yr after 1900 and +/-20yr across 1400-1900 -- exactly solidTol's two modern
+// tiers -- and +/-63yr to 1400, +/-126yr before AD 1, straddling its +/-100. That is the
+// justification as much as the arithmetic: the bubble is sized from the population averaged over
+// the era's own dating tolerance, the same window inside which the map already refuses to claim
+// precision. Drawing a razor-sharp size off a figure we only date to +/-100 years was the less
+// honest of the two. Widening it past solidTol would start flattening real peaks -- mid-life
+// distortion is nil today (median ratio 1.000 at every year sampled) because log10(pop) is
+// piecewise linear, so a window inside one segment averages to its own centre.
+//
+// (2) edgeRamp -- a city's first control point is a first RECORD, not a founding, and drawing it
+// at full size made cities materialise out of nothing: 4,357 arrived as a disc 4px or wider, and
+// Shuicheng, Tianmen and Xiantao each appeared as a ~13px blob between one frame and the next.
+// So the bubble grows in -- but AHEAD of the first record, reaching full size exactly AT it, and
+// the mirror at the far end for a city whose record stops before the timeline does.
+//
+// Running the ramp *after* the first point was the first attempt and it is wrong twice over. It
+// contradicts the record it is drawn from (the figure says 100k at that year and we drew 19k),
+// and because 1900 is the single biggest census year in the sources, the default paused frame
+// came up full of pinprick cities that the data says are cities. Ahead-of-the-record invents
+// presence instead, which is the softer claim of the two -- a city with a first census in 1900
+// was there in 1898 -- and interpW already dims a bubble with no figure near it to the most-
+// interpolated opacity for free, so the ramp arrives pre-labelled as a guess.
+//
+// Shape is ease-OUT, 1-(1-u)^2. Mean-log alone came out slow-then-sudden, because averaging in
+// log space and then exponentiating is exponential in u. This leaves 0 at twice the linear rate
+// and lands on full size with zero slope, so there is no corner where the ramp hands over to the
+// record. BIRTH_TRACK is half SIZE_TRACK: the ramp reads as a bloom, the smoothing wants to stay
+// at the era's tolerance, and there is no reason those two numbers should be the same one.
+const SIZE_TRACK  = 0.010;    // smoothing half-window   -- +/-126yr .. +/-5yr, by era
+const BIRTH_TRACK = 0.005;    // grow-in / fade-out ramp -- 63yr .. 2.5yr, by era
+let _szYear = NaN, _szA = 0, _szB = 0, _brA = 0, _brB = 0;
+function sizeWindow(y){        // once per frame, not once per city -- the warp conversions are
+  if (y === _szYear) return;   // the expensive part and they do not depend on the city
+  _szYear = y;
+  const s = yearToS(y);
+  _szA = sToYear(Math.max(0, s - SIZE_TRACK));
+  _szB = sToYear(Math.min(1, s + SIZE_TRACK));
+  _brA = sToYear(Math.max(0, s - BIRTH_TRACK));
+  _brB = sToYear(Math.min(1, s + BIRTH_TRACK));
+}
+function sizeLog(c){           // mean log10(pop) over the window -> what the radius is built from
+  const p = c.p, yb = p[p.length-1][0];
+  const a = Math.max(_szA, p[0][0]), b = Math.min(_szB, yb);
+  if (b - a < 1e-9) return Math.log10(Math.max(1, popAt(c, b)));   // shorter-lived than a frame
+  return (logInt(c, b) - logInt(c, a)) / (b - a);
+}
+// 1 across the whole record, easing 0 -> 1 over the ramp before it and 1 -> 0 over the ramp after,
+// and 0 outside both -- so this doubles as the test for whether to draw the city at all.
+// The ramp's length is taken from the frame's own reach (_brA/_brB) rather than from the city's
+// birth year, so it costs no per-city warp conversion and still lands exactly on the record.
+//
+// Capped at the record's own span, which is not a detail: 659 cities have a SINGLE control point
+// and were previously undrawable (popAt() only returns a value if the year lands exactly on it),
+// and 229 of those are post-1900 and large -- Landhi Korangi 551k, Kázimiyah 521k, the orphans
+// and district-duplicates §6.5 of the spec is about. An uncapped ramp would flash each of them
+// onto the modern map as an ~11px bubble for five years. Nothing may be extended past its record
+// by more than the length of that record, so a one-point city stays exactly as invisible as it was.
+function edgeRamp(c, y){
+  const p = c.p, ya = p[0][0], yb = p[p.length-1][0];
+  let u;
+  if (y < ya){ const D = Math.min(_brB - y, yb - ya); u = D > 0 ? 1 - (ya - y) / D : 0; }
+  else if (y > yb){ const D = Math.min(y - _brA, yb - ya); u = D > 0 ? 1 - (y - yb) / D : 0; }
+  else return 1;
+  return u <= 0 ? 0 : 1 - (1 - u) * (1 - u);
+}
+
 function cityColor(c, pop){
-  return colorMode === 'region' ? (REGION_COLORS[c.reg] || '#888') : colorFor(pop);
+  if (colorMode === 'region') return REGION_COLORS[c.reg] || '#888';
+  if (colorMode === 'growth')
+    return (SOURCE_CHANGE_ON && atSourceChange(c, year))
+      ? SOURCE_CHANGE_COLOR : growthColor(growthAt(c, year));
+  return colorFor(pop);
+}
+// the selected city's trace: its bubble colour, lightened so it reads apart from the ordinary
+// top-10 line in the same colour. Falls back to the city's peak while you're scrubbing outside
+// its lifetime, so the trace doesn't go dark just because the bubble isn't on the map.
+function selColor(){
+  if (!selCity) return '#fff';
+  const p = popAt(selCity, year);
+  return lighten(cityColor(selCity, p >= MINPOP ? p : selLine.peak), 0.65);
 }
 
 // ---------- fast projection ----------
@@ -380,77 +804,390 @@ function mercNorm(lng, lat){
 function view(){
   const c = map.getCenter(), z = map.getZoom(), ws = 512 * Math.pow(2, z);
   const cn = mercNorm(c.lng, c.lat);
-  return { ws, cxn: cn[0], cyn: cn[1], W: innerWidth, H: innerHeight,
-           kR: Math.ceil((innerWidth / ws) / 2) + 1 };   // # of world-copies to tile across
+  const W = vpW(), H = vpH();
+  return { ws, cxn: cn[0], cyn: cn[1], W, H,
+           kR: Math.ceil((W / ws) / 2) + 1 };   // # of world-copies to tile across
 }
 
 // ---------- canvas sizing ----------
 function resize(){
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
-  for (const [c, x] of [[cv, ctx], [lcv, lctx]]){
-    c.width = innerWidth * dpr; c.height = innerHeight * dpr;
-    c.style.width = innerWidth + 'px'; c.style.height = innerHeight + 'px';
-    x.setTransform(dpr,0,0,dpr,0,0);
-  }
+  const W = vpW(), H = vpH();
+  cv.width = W * dpr; cv.height = H * dpr;
+  cv.style.width = W + 'px'; cv.style.height = H + 'px';
+  ctx.setTransform(dpr,0,0,dpr,0,0);
   map.setMinZoom(worldFitZoom());   // keep the cap tied to the current window width
   resizeGraph();
-  drawLand(); draw();
+  draw();
 }
 
-// ---------- land basemap (drawn on canvas; each ring is precomputed mercator coords) ----------
-function drawLand(){
-  lctx.clearRect(0,0,innerWidth,innerHeight);
-  if (!LAND) return;
-  const v = view(), W = v.W, H = v.H, ws = v.ws;
-  lctx.beginPath();
-  for (const ring of LAND){
-    const a = ring.c;
-    for (let k = -v.kR; k <= v.kR; k++){
-      const off = (k - v.cxn) * ws + W/2;
-      const sx0 = ring.x0 * ws + off, sx1 = ring.x1 * ws + off;   // ring screen bbox
-      if (sx1 < -40 || sx0 > W + 40) continue;
-      const sy0 = (ring.y0 - v.cyn) * ws + H/2, sy1 = (ring.y1 - v.cyn) * ws + H/2;
-      if (sy1 < -40 || sy0 > H + 40) continue;
-      lctx.moveTo(a[0] * ws + off, (a[1] - v.cyn) * ws + H/2);
-      for (let j = 2; j < a.length; j += 2)
-        lctx.lineTo(a[j] * ws + off, (a[j+1] - v.cyn) * ws + H/2);
-      lctx.closePath();
+
+// ---------- display floor, by era ----------
+// A 5,000-person town is a real city in AD 600 and a suburb in 1900, and the sources thin out in
+// exactly the opposite direction: by 2025 there are 19,145 bubbles at MINPOP and the small end is
+// a grey wash you cannot read anything out of, on top of being most of draw()'s ~42ms. So the
+// floor rises with the era. It hides bubbles and nothing else -- the data is untouched, and a
+// city under the floor still draws its line on the graph if you select it.
+//
+// Ramped rather than stepped. A hard cut at 1400 takes 103 of the 292 bubbles on screen out
+// between two frames; over a century they thin out instead. (The 600 tier costs nothing to ramp
+// either way -- there is no city between 5k and 10k on the map at that year.) This is the same
+// objection GROWTH_TRACK's comment records against solidTol's step function: a threshold every
+// city shares turns into a visible instant the moment it moves.
+const FLOOR_KNOTS = [[600, 5000], [700, 10000], [1400, 10000], [1500, 20000]];
+function mapFloor(y){
+  const K = FLOOR_KNOTS;
+  if (y <= K[0][0]) return K[0][1];
+  for (let i = 1; i < K.length; i++){
+    if (y <= K[i][0]){
+      const a = K[i-1], b = K[i];
+      if (a[1] === b[1]) return a[1];
+      const f = (y - a[0]) / (b[0] - a[0]);
+      return Math.pow(10, Math.log10(a[1]) + (Math.log10(b[1]) - Math.log10(a[1])) * f);
     }
   }
-  lctx.fillStyle = '#1b1f24';
-  lctx.fill('evenodd');
-  lctx.lineWidth = 0.6;
-  lctx.strokeStyle = '#383f47';
-  lctx.stroke();
+  return K[K.length-1][1];
+}
+
+// ---------- history notes ----------
+// Curated one-liners (data/events.json) that pop up on the map as the run passes their year:
+// what was going on where a bubble suddenly swells, empties, or conspicuously fails to appear.
+// The map shows that Vijayanagara dies between 1560 and 1570 and says nothing about why.
+//
+// Visibility is measured in SCRUBBER FRACTION, not in years. The play loop advances the scrub
+// fraction at a constant rate, so a fixed window in s is a fixed number of SECONDS on screen
+// wherever it sits -- which is what "up for a couple of seconds" has to mean on a timeline that
+// gives 1400-1900 the same track width as 1900-2025. Scaling by speedMul keeps that true when
+// the speed slider moves. The cost is that an ancient note covers a wide span of years (the
+// Bronze Age collapse is up from roughly 1430 to 940 BC), which only shows when scrubbing by
+// hand; during playback every note gets the same two and a bit seconds.
+//
+// A note is coloured by what it DID to the population, not by what kind of event it was, and on
+// the bubbles' own scale: the colours below are GROWTH_STOPS, so a note about a city emptying is
+// the same blue as the bubbles emptying under it. Seven steps, because "-3.2%/yr" is not a
+// judgement anyone can make by hand about the Black Death, and the yellow stop is skipped to
+// keep the steps far enough apart to tell apart in 13px text.
+//   -3 indigo  abandoned, never recovers      +1 orange  steady growth
+//   -2 blue    heavy loss, recovers later     +2 red     strong growth
+//   -1 green   mild or slow decline           +3 magenta explosive growth
+//    0 yellow-green  a marker: nothing on the map changes yet (Columbus, Dammam No. 7)
+const NOTE_IMPACT = [7, 6, 5, 4, 2, 1, 0].map(i => GROWTH_STOPS[i][1]);
+const noteColor = e => NOTE_IMPACT[(e.im || 0) + 3] || NOTE_IMPACT[3];
+// Headline set in white instead of its impact colour -- on trial. Most notes carry no detail
+// line, and a lone coloured headline with nothing white under it reads oddly. The dot, ring and
+// leader keep the colour, so the impact is still legible; set this false to put it back.
+const NOTE_WHITE = true;
+// A note is FIRED by crossing its year and then lives in wall-clock milliseconds, not in any
+// coordinate on the timeline. The obvious alternative -- a window around the note's year, in
+// years or in scrubber fraction -- fails at both ends of the run: in scrubber fraction the
+// Black Death is legible from 1206 to 1488 (2 seconds of playback there is 280 years), and in
+// either the Ukraine note hangs permanently on the AD 2025 screen, which is where the run stops
+// and where most people end up sitting. Firing on the crossing means a note is up for two
+// seconds and then gone, whether it was passed at 1x, at 5x, or by dragging the scrubber.
+const NOTE_IN = 120, NOTE_HOLD = 2400, NOTE_OUT = 600;   // ms: fade in, full, fade out
+const NOTE_STACK = 2;         // slots a note may be pushed from its natural spot before it is
+                              // dropped instead -- see placeNote
+const NOTE_MAX = 5;           // most fired at once; best pri wins
+const NOTE_FAR = 0.05;        // scrubber fraction past which a live note is cut, not faded
+const NOTE_F_T = "700 13px Nunito,system-ui,sans-serif";
+const NOTE_F_D = "400 11.5px Nunito,system-ui,sans-serif";
+// How much of the file to use: 1 = the headline events only, 2 = + the strong ones (default),
+// 3 = everything including the flavour tier. events.json holds ~140 notes, which is roughly
+// half again as many as the run has room for -- simulated at 1x, all three tiers leave the
+// screen full 60% of the time and 17 notes that never once get drawn. Two tiers is the level
+// the file was actually built for: 15% full, and everything in it appears.
+// 0 none / 1 few / 2 some / 3 all. Level 0 is the whole off switch: the firing filter below
+// compares against e.pri, which is never below 1, so nothing fires and drawNotes bails.
+let noteLevel = 2;
+let EVENTS = [], RAW_EVENTS = null, noteRAF = 0;
+
+function prepNotes(){
+  if (!DATA || !RAW_EVENTS) return;
+  EVENTS = RAW_EVENTS
+    .filter(e => e.y >= yStart() && e.y <= DATA.yearMax)
+    .map(e => { const m = mercNorm(e.lo, e.la);
+                return Object.assign({}, e, { mx: m[0], my: m[1], s: yearToS(e.y), t0: 0, off: null }); });
+}
+function noteAlpha(e, t){
+  if (!e.t0) return 0;
+  // A note is about a moment, so it dies the instant the timeline leaves that moment behind --
+  // otherwise a hard scrub outruns the fade and leaves a caption about 1350 sitting over a map
+  // of 1900. Measured on the scrubber rather than in years, because the timeline is warped:
+  // NOTE_FAR reaches +/-25 years in the 20th century and +/-600 in the Bronze Age.
+  if (Math.abs(yearToS(year) - e.s) > NOTE_FAR) return 0;
+  const a = (t - e.t0) / (e.w || 1);
+  if (a < 0 || a > NOTE_HOLD + NOTE_OUT) return 0;
+  if (a < NOTE_IN) return a / NOTE_IN;
+  if (a > NOTE_HOLD) return 1 - (a - NOTE_HOLD) / NOTE_OUT;
+  return 1;
+}
+// years the play loop covers per second at 1x, at this point in the timeline
+function yearsPerSec(y){
+  const Y = segY(), S = segS();
+  for (let i = 0; i < NSEG; i++)
+    if (y <= Y[i+1]) return (Y[i+1] - Y[i]) / (S[i+1] - S[i]) * PLAY_SPEED;
+  return 1;
+}
+// Where a note's anchor lands on screen right now. Unlike a bubble, a label must NOT be drawn
+// once per world copy -- take the copy nearest the middle of the viewport, and give up if the
+// anchor is off-screen entirely.
+// `fixed` is the world copy an already-placed note chose when it fired, and passing it is the
+// whole point: picking "the copy nearest the middle of the viewport" fresh every frame means a
+// small pan can hand the note a different copy, and the label jumps a whole world sideways --
+// which reads as the text mirroring to the other side of the map. Chosen once, kept for life.
+// If the pinned copy scrolls off, the note simply stops drawing rather than reappearing
+// somewhere else.
+function noteAnchor(e, v, fixed){
+  const sy = (e.my - v.cyn) * v.ws + v.H / 2;
+  if (sy < 14 || sy > v.H - 14) return null;
+  const bx = (e.mx - v.cxn) * v.ws + v.W / 2;
+  let k = fixed;
+  if (k == null){
+    let bd = Infinity;
+    for (let i = -v.kR; i <= v.kR; i++){
+      const dd = Math.abs(bx + i * v.ws - v.W / 2);
+      if (dd < bd){ bd = dd; k = i; }
+    }
+  }
+  const ax = bx + k * v.ws;
+  return (ax < 6 || ax > v.W - 6) ? null : { ax, sy, k };
+}
+// the rectangle a note that has already been placed is occupying at this instant
+function noteBox(e, v){
+  const a = e.off && noteAnchor(e, v, e.off.k);
+  if (!a) return null;
+  const x0 = e.off.dir > 0 ? a.ax + 26 : a.ax - 26 - e.off.bw;
+  return { x0, x1: x0 + e.off.bw,
+           y0: a.sy + e.off.dy, y1: a.sy + e.off.dy + e.off.bh };
+}
+// Choose where a note sits, ONCE, at the moment it fires, and store it as an offset from its own
+// anchor. Everything about that is deliberate. Re-deciding every frame is what the first version
+// did, and it meant a note you were halfway through reading got shoved aside the instant a
+// higher-ranked one fired -- the layout was correct at every instant and unreadable in motion.
+// Storing an OFFSET rather than a screen position means the label still rides with the map when
+// you pan or zoom, which it must, since it is pointing at a place.
+//
+// The other half of holding still is refusing to place a note that does not fit: it may be
+// pushed NOTE_STACK slots from its natural spot to clear something, and past that it is dropped
+// rather than parked somewhere its leader no longer explains. A note nobody reads costs nothing;
+// one sitting 150px from the city it is about is worse than absent.
+function placeNote(e, v, boxes){
+  const a = noteAnchor(e, v);
+  if (!a) return false;
+  ctx.font = NOTE_F_T;
+  const wT = ctx.measureText(e.t).width;
+  ctx.font = NOTE_F_D;
+  const bw = Math.max(wT, e.d ? ctx.measureText(e.d).width : 0), bh = e.d ? 32 : 17;
+  const ax = a.ax, sy = a.sy, W = v.W, H = v.H;
+  const tryDir = d => {
+    const x0 = d > 0 ? ax + 26 : ax - 26 - bw, x1 = x0 + bw;
+    if (x0 < 6 || x1 > W - 6) return null;
+    const hits = ty => boxes.some(b => !(x1 + 4 < b.x0 || x0 - 4 > b.x1 ||
+                                         ty + bh + 5 < b.y0 || ty - 5 > b.y1));
+    for (const step of [-(bh + 9), bh + 9]){        // try stacking up, then down
+      let ty = sy - 30;
+      for (let i = 0; i < NOTE_STACK && hits(ty); i++) ty += step;
+      if (!hits(ty) && ty >= 6 && ty <= H - bh - 6) return ty;
+    }
+    return null;
+  };
+  const A = tryDir(1), B = tryDir(-1);
+  // whichever ends up closest to the anchor's own line; ties go to the right-hand side
+  const ty = A == null ? B : B == null ? A
+           : (Math.abs(B - sy + 30) < Math.abs(A - sy + 30) - 1 ? B : A);
+  if (ty == null) return false;
+  e.off = { dir: ty === A ? 1 : -1, dy: ty - sy, bw, bh, k: a.k };
+  return true;
+}
+
+// Everything whose year lies in (from, to] starts its three seconds. Half-open so a note fires on
+// the one frame that crosses it and not on the next. `from` null means we LANDED on a year
+// rather than travelled through it (first load, ?year=): fire whatever is close enough that the
+// run would have shown it, scaled to the era so it means the same everywhere.
+function fireNotes(from, to){
+  if (!EVENTS.length) return;
+  const t = performance.now();
+  let lo, hi, jump = false;
+  if (from == null){
+    const eps = yearsPerSec(to) * 0.5;
+    lo = to - eps; hi = to + eps;
+  } else {
+    lo = Math.min(from, to); hi = Math.max(from, to);
+    // A fast drag of the scrubber crosses centuries between two frames. Firing everything in
+    // them turns the map into a strobe, so a jump gets one note -- the best one it passed.
+    jump = Math.abs(yearToS(to) - yearToS(from)) > 0.02;
+  }
+  // filtered at FIRING, not at drawing: a note below the level must not take a slot and then
+  // be thrown away, and must not stop a note that would have been drawn from firing at all
+  const hits = EVENTS.filter(e => (e.pri || 2) <= noteLevel && e.y > lo && e.y <= hi);
+  if (!hits.length) return;
+  hits.sort((a, b) => (a.pri || 2) - (b.pri || 2) || Math.abs(a.y - to) - Math.abs(b.y - to));
+
+  // Whatever is already on screen keeps its place; a new note has to find room around it, and
+  // around the panels, or it does not appear. NOTE_MAX is counted over everything still fading,
+  // not just what fires this instant.
+  const v = view(), boxes = panelBoxes();
+  let live = 0, fired = false;
+  for (const e of EVENTS){
+    if (noteAlpha(e, t) <= 0) continue;
+    live++;
+    const b = noteBox(e, v);
+    if (b) boxes.push(b);
+  }
+  // Slots are reserved by rank. Placement is frozen, so a note that takes a slot holds it for
+  // its whole life and nothing can be evicted to make way -- which meant plain first-come-first-
+  // served let a flavour note fired in 1868 keep the Industrial Revolution off the screen
+  // entirely. Leaving each tier one slot of headroom for the tier above costs a little density
+  // and means a pri 1 note essentially always finds room.
+  for (const e of (jump ? hits.slice(0, 1) : hits)){
+    const pri = e.pri || 2;
+    // pri 1 may overflow to one extra slot rather than be lost -- a headline note not appearing
+    // at all is worse than six on screen for a moment. Lower tiers keep their headroom.
+    if (live >= (pri === 1 ? NOTE_MAX + 1 : NOTE_MAX + 1 - pri)) continue;
+    if (!placeNote(e, v, boxes)) continue;
+    e.t0 = t; live++; fired = true;
+    boxes.push(noteBox(e, v));
+  }
+  if (fired) noteFrames();
+}
+// The play loop already redraws every frame; this is for the rest of the time -- a note fired
+// while paused, or one still fading when playback stops, needs frames of its own to fade on.
+function noteFrames(){
+  if (noteRAF || playing) return;
+  noteRAF = requestAnimationFrame(() => {
+    noteRAF = 0;
+    draw();
+    if (!playing && EVENTS.some(e => noteAlpha(e, performance.now()) > 0)) noteFrames();
+  });
+}
+// The panels are opaque and sit over the canvas, so a label placed under one is simply lost.
+// Feed their rects into the same collision list the notes use and they route around them --
+// offsetParent is null for anything display:none, which covers every .hidden panel here.
+const NOTE_PANELS = ['toplist-panel', 'settings-panel', 'tgraph', 'timebar', 'info-panel'];
+function panelBoxes(){
+  const cr = cv.getBoundingClientRect(), out = [];
+  for (const id of NOTE_PANELS){
+    const el = document.getElementById(id);
+    if (!el || !el.offsetParent) continue;
+    const r = el.getBoundingClientRect();
+    out.push({ x0: r.left - cr.left - 6, x1: r.right  - cr.left + 6,
+               y0: r.top  - cr.top  - 6, y1: r.bottom - cr.top  + 6 });
+  }
+  return out;
+}
+// Pure rendering -- every layout decision was made once, at fire time, by placeNote. The only
+// thing that changes per frame is where the anchor has moved to and how faded the note is.
+function drawNotes(v){
+  if (!noteLevel || !EVENTS.length) return;
+  const t = performance.now();
+  for (const e of EVENTS){
+    const a = noteAlpha(e, t);
+    if (a <= 0.02 || !e.off) continue;
+    const an = noteAnchor(e, v, e.off.k);   // the copy it chose when it fired, not a fresh pick
+    if (!an) continue;                      // panned off-screen since it fired
+    const col = noteColor(e), dir = e.off.dir;
+    const ax = an.ax, sy = an.sy, tx = ax + dir * 26, ty = sy + e.off.dy;
+
+    ctx.globalAlpha = a;
+    const ly = ty + 9;                                // leader meets the headline's midline
+    ctx.strokeStyle = rgba(col, 0.5);
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(ax, sy);
+    ctx.lineTo(ax + dir * 11, ly);
+    ctx.lineTo(tx - dir * 5, ly);
+    ctx.stroke();
+    ctx.fillStyle = col;
+    ctx.beginPath(); ctx.arc(ax, sy, 2.2, 0, 6.2832); ctx.fill();
+    ctx.strokeStyle = rgba(col, 0.45);
+    ctx.beginPath(); ctx.arc(ax, sy, 6, 0, 6.2832); ctx.stroke();
+
+    ctx.textAlign = dir > 0 ? 'left' : 'right';
+    ctx.textBaseline = 'alphabetic';
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = 'rgba(0,0,0,.9)';
+    ctx.font = NOTE_F_T; ctx.lineWidth = 3.5;
+    ctx.strokeText(e.t, tx, ty + 13);
+    ctx.fillStyle = NOTE_WHITE ? '#fff' : col;
+    ctx.fillText(e.t, tx, ty + 13);
+    if (e.d){
+      ctx.font = NOTE_F_D; ctx.lineWidth = 3;
+      ctx.strokeText(e.d, tx, ty + 28);
+      ctx.fillStyle = '#c8ccd2';
+      ctx.fillText(e.d, tx, ty + 28);
+    }
+  }
+  ctx.globalAlpha = 1;
+  ctx.textAlign = 'left'; ctx.lineWidth = 1;
 }
 
 // ---------- draw ----------
 function draw(){
   if (!DATA) return;
-  ctx.clearRect(0,0,innerWidth,innerHeight);
+  ctx.clearRect(0, 0, vpW(), vpH());
   projected.length = 0;
-  const BASE = 0.21 * sizeMul, W = innerWidth, H = innerHeight;
+  if (!sizeTouched){                     // keep the control honest about what it is doing
+    sizeMul = autoSizeMul(year);
+    sizeslider.value = sizeMul;
+  }
+  const BASE = 0.21 * sizeMul, W = vpW(), H = vpH();
+  // Radius is BASE * pop^expo, but the exponent is applied around a PIVOT population rather
+  // than to the raw figure, which is what makes the contrast slider a contrast slider. Applied
+  // raw it multiplies every radius at once -- over the slider's range a 20k town grew 8x and a
+  // 10M city 26x, so the ratio between them did widen, but underneath a map that had inflated
+  // to the point of being unreadable, and the control just felt like a second size slider.
+  // Pivoted, a 1M city holds its radius, larger cities grow and smaller ones shrink. EXPO_REF
+  // is only the scale anchor -- it fixes the pivot city at the 11.5px it always had, and is
+  // deliberately not the default expo, which sits higher now that raising it costs nothing.
+  const PIV = BASE * Math.pow(10, EXPO_REF * PIVOT_LOG);
+  const FLOOR = mapFloor(year);
+  sizeWindow(year);
 
-  // rank every city alive & above the floor this year (global ranking, not viewport)
+  // Every city above the floor this year, plus the ones inside an edgeRamp on either side of
+  // their record. `on` marks the ones actually ON the record: a ramping bubble is drawn, but it
+  // is not ranked, not hoverable and not in the top 10, because there is no figure behind it to
+  // put in a readout. (Global ranking, not viewport.)
   const cand = [];
   for (const c of DATA.cities){
-    const p = c.p;
-    if (year < p[0][0] || year > p[p.length-1][0]) continue;
-    const pop = popAt(c, year);
-    if (pop < MINPOP) continue;
-    cand.push({ c, pop });
+    const p = c.p, ya = p[0][0], yb = p[p.length-1][0];
+    let pop, on = true, ramp = 1;
+    if (year < ya || year > yb){
+      ramp = edgeRamp(c, year);
+      if (ramp <= 0) continue;
+      pop = year < ya ? p[0][1] : p[p.length-1][1];
+      on = false;
+    } else pop = popAt(c, year);
+    if (pop < FLOOR) continue;
+    cand.push({ c, pop, on, ramp });
   }
   cand.sort((a,b) => b.pop - a.pop);
+  // Bubble count is what costs frames, and it is wildly uneven across the timeline: 39 cities
+  // are drawn at AD 1 and 14,600 at 2025, so playback is smooth for four thousand years and
+  // then stutters through the part everyone scrubs. maxCities truncates the ranking, which is
+  // already global and by population, so the cap keeps the N largest and nothing else changes.
+  if (cand.length > maxCities){
+    // the selected city survives the cap: its ring and its graph trace are still on screen, and
+    // a trace pointing at an empty patch of map reads as a bug rather than as a hidden bubble
+    const sel = selCity ? cand.find(q => q.c === selCity) : null;
+    cand.length = maxCities;
+    if (sel && cand.indexOf(sel) < 0) cand.push(sel);
+  }
   const n = cand.length;
 
-  // draw smallest-first so bigger bubbles land on top
+  // draw smallest-first so bigger bubbles land on top. A city with no data point near this
+  // year is drawn dimmer -- the same claim the graph makes with line weight: we are
+  // guessing its size from anchors centuries away.
   const v = view();
-  ctx.globalAlpha = 0.65;
   for (let i = n - 1; i >= 0; i--){
     const c = cand[i].c, pop = cand[i].pop;
     const sy = (c.my - v.cyn) * v.ws + H/2;
     if (sy < -40 || sy > H + 40) continue;
-    const r = Math.max(1.0, BASE * Math.pow(pop, expo));
+    // interpW after the cull, not while ranking: it walks the city's control points, and a
+    // bubble scrolled off the top of the viewport never needs its opacity.
+    ctx.globalAlpha = fadeBubbles
+      ? ALPHA_SOLID + (ALPHA_INTERP - ALPHA_SOLID) * interpW(c, year)
+      : ALPHA_SOLID;
+    const r = Math.max(1.0, PIV * Math.pow(10, expo * (sizeLog(c) - PIVOT_LOG)) * cand[i].ramp);
     const col = cityColor(c, pop), baseX = (c.mx - v.cxn) * v.ws + W/2;
     for (let k = -v.kR; k <= v.kR; k++){
       const sx = baseX + k * v.ws;
@@ -459,26 +1196,41 @@ function draw(){
       ctx.arc(sx, sy, r, 0, 6.2832);
       ctx.fillStyle = col;
       ctx.fill();
-      projected.push({ x: sx, y: sy, r, name: c.n, pop, type: c.t });
+      if (cand[i].on) projected.push({ x: sx, y: sy, r, name: c.n, pop, type: c.t, c });
     }
   }
   ctx.globalAlpha = 1;
-  document.getElementById('ncities').textContent = n.toLocaleString() + ' cities ≥ 5,000';
 
-  // largest-cities panel — the bar behind each row is that city's share of the #1 city
-  let rows = '';
-  const top = cand.length ? cand[0].pop : 1;
-  for (let i = 0; i < Math.min(10, cand.length); i++){
+  // selected city: ring (in the trace's colour) + name, so you can see what the line belongs to
+  if (selCity) for (const p of projected){
+    if (p.c !== selCity) continue;
+    ctx.beginPath(); ctx.arc(p.x, p.y, p.r + 3.5, 0, 6.2832);
+    ctx.strokeStyle = selColor(); ctx.lineWidth = 1.6; ctx.stroke();
+    ctx.font = "700 12px Nunito,system-ui,sans-serif";
+    ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+    ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(0,0,0,.85)';
+    ctx.strokeText(p.name, p.x, p.y - p.r - 6);
+    ctx.fillStyle = '#fff'; ctx.fillText(p.name, p.x, p.y - p.r - 6);
+  }
+
+  drawNotes(v);   // last, so a note is never buried under a bubble
+
+  // largest-cities panel — the bar behind each row is that city's share of the #1 city.
+  // Skips the ramping bubbles: they have no figure for this year, so they cannot be ranked
+  // against cities that do, and must never displace one out of the ten.
+  let rows = '', rank = 0, top = 0;
+  curTopSet = new Set();
+  for (let i = 0; i < n && rank < 10; i++){
+    if (!cand[i].on) continue;
     const pop = cand[i].pop;
+    if (!top) top = pop;
     rows += `<li class="rrow"><span class="rbar" style="width:${(pop/top*100).toFixed(1)}%;`+
             `background:${cityColor(cand[i].c, pop)}"></span>`+
-            `<span class="rk">${i+1}</span><span class="rn">${cand[i].c.n}</span>`+
+            `<span class="rk">${++rank}</span><span class="rn">${cand[i].c.n}</span>`+
             `<span class="rp">${fmtPop(pop)}</span></li>`;
+    curTopSet.add(cand[i].c);
   }
   document.getElementById('toplist').innerHTML = rows;
-
-  curTopSet = new Set();
-  for (let i = 0; i < Math.min(10, cand.length); i++) curTopSet.add(cand[i].c);
   drawGraph();
 }
 
@@ -486,6 +1238,156 @@ function draw(){
 // x-axis is time-aligned to the scrubber below (mapped through the same yearToS warp, using
 // the scrub track's actual on-screen geometry); y-axis is log population. Draws the trajectory
 // of every city that is ever in the top 10, so smear/placeholder artifacts stand out as lines.
+// A city's history is cut into stretches that are either DATA (a real control point is close
+// enough that the curve there is measured) or INTERPOLATION (pure guesswork between distant
+// anchors). How close counts depends on the era, because the sources do: a modern census pins a
+// year to within a few, a 17th-century estimate to a couple of decades, an ancient one to a
+// century. Drives both the graph's line weight and the map bubble's opacity.
+function solidTol(y){ return y >= 1900 ? 5 : (y >= 1400 ? 20 : 100); }
+// merged windows of "we have data here", cached per city. Skips the fade-floor fillers build.py
+// plants across long gaps -- those are the absence of data, not a measurement of it.
+function winsFor(c){
+  if (c._W) return c._W;
+  const p = c.p, yA = p[0][0], yB = p[p.length-1][0], wins = [];
+  for (const q of p){
+    if (q[1] < MINPOP) continue;
+    // c.hx: this city's record stops there and build.py holds the last value forward so the
+    // town does not blink out of the modern map. The held run is not a measurement, so it is
+    // kept out of the data windows -- which dims the bubble and thins the line for free.
+    if (c.hx !== undefined && q[0] > c.hx) continue;
+    const t = solidTol(q[0]);
+    const a = Math.max(yA, q[0] - t), b = Math.min(yB, q[0] + t);
+    const last = wins[wins.length - 1];
+    if (last && a <= last[1]) last[1] = Math.max(last[1], b); else wins.push([a, b]);
+  }
+  return (c._W = wins);
+}
+// Continuous version of isInterp, for the map bubbles. The binary form made playback strobe:
+// a bubble snapped between full and dim the instant the year crossed a window edge, and with
+// thousands of cities crossing edges every frame the whole map flickered. Same information,
+// carried by a value that never jumps -- full weight across the inner SOLID_CORE of a window,
+// then a linear ramp to the interpolated level across the rest.
+// The graph still uses the binary winsFor(): a line's weight switches per RUN, not per year, so
+// it never animates and has nothing to flicker.
+const SOLID_CORE   = 0.5;     // fraction of the window held at full opacity
+const ALPHA_SOLID  = 0.65;
+// The dim end, as a fraction of full. Only reached when `fadeBubbles` is on -- see the setting.
+// 0.5 rather than the old 0.65: with the fade now opt-in, someone who turns it on is asking to
+// SEE which bubbles are guesses, so it wants to be unambiguous rather than subtle.
+const ALPHA_INTERP = ALPHA_SOLID * 0.5;
+// Off by default. The fade is honest -- a bubble interpolated from anchors centuries away really
+// is less certain than one sitting on a census -- but at rest it reads as a rendering artifact
+// rather than as information, and in the pre-modern frames, where nearly everything is
+// interpolated, it dims most of the map at once and just looks murky. Kept as a setting because
+// the information is real and worth being able to ask for.
+let fadeBubbles = false;
+function solidPts(c){         // (year, tolerance) of every real figure -- winsFor pre-merge
+  if (c._SP) return c._SP;
+  const out = [];
+  for (const q of c.p){
+    if (q[1] < MINPOP) continue;
+    if (c.hx !== undefined && q[0] > c.hx) continue;
+    out.push([q[0], solidTol(q[0])]);
+  }
+  return (c._SP = out);
+}
+function interpW(c, y){       // 0 = a real figure sits right here, 1 = pure interpolation
+  const sp = solidPts(c);
+  let best = 1;
+  for (let i = 0; i < sp.length; i++){
+    const d = Math.abs(y - sp[i][0]) / sp[i][1];
+    if (d >= 1) continue;
+    const w = d <= SOLID_CORE ? 0 : (d - SOLID_CORE) / (1 - SOLID_CORE);
+    if (w < best){ if (w === 0) return 0; best = w; }
+  }
+  return best;
+}
+function isInterp(c, y){
+  const W = winsFor(c);
+  for (const w of W) if (y >= w[0] && y <= w[1]) return false;
+  return true;
+}
+// The source handover is one year wide (populstat's last row, then WUP's first), so on a track
+// where a year is under two pixels it draws as a vertical cliff. HANDOVER_YEARS spreads that one
+// segment across a wider span and draws it in its own style, so it reads as "the source changes
+// here" rather than as a population collapse.
+//
+// This is a DRAWING change and nothing else -- popAt(), the readout, the bubbles and the tooltip
+// all still use the hard switch, and every value in the data is exactly what build.py emitted.
+// It is emphatically not the geometric blend that §3.7 rejected: that one rewrote the VALUES
+// across 1975-2000 and drew the result solid, so 358 cities were asserted to be declining. Keep
+// the span short and the style distinct and it stays a visual join rather than a claim; widen it
+// and it starts making the same false claim in a new place.
+const HANDOVER_YEARS = 8;
+function mkLine(c){
+  if (c._L) return c._L;
+  const p = c.p, yA = p[0][0], yB = p[p.length-1][0], wins = winsFor(c);
+  // vertices: every control point, every window edge (so the weight switches land exactly on
+  // the boundary), and the AD 1 / 1400 / 1900 kinks in the x warp
+  const ys = new Set();
+  for (const q of p) ys.add(q[0]);
+  for (const w of wins){ ys.add(w[0]); ys.add(w[1]); }
+  for (const b of [1, 1400, 1900]) if (b > yA && b < yB) ys.add(b);
+  let hoA = null, hoB = null;
+  if (c.sw !== undefined && c.sw < yB){
+    hoA = c.sw; hoB = Math.min(c.sw + HANDOVER_YEARS, yB);
+    ys.add(hoA); ys.add(hoB);
+  }
+  let V = [...ys].sort((a,b) => a-b).map(y => [y, popAt(c, y)]);
+  // drop the vertices the handover spans, so it draws as one clean join instead of the cliff
+  // plus the first few WUP points
+  if (hoA !== null && hoB > hoA) V = V.filter(q => !(q[0] > hoA && q[0] < hoB));
+  // walk the vertices, collecting maximal runs of one dash state; a segment with either end
+  // below the display floor is a break (a gap reads truer than a plunge to zero)
+  const runs = [];
+  let cur = null;
+  for (let i = 0; i < V.length - 1; i++){
+    const a = V[i], b = V[i+1];
+    if (a[1] < MINPOP || b[1] < MINPOP){ cur = null; continue; }
+    const mid = (a[0] + b[0]) / 2;
+    let d = 1;
+    for (const w of wins) if (mid >= w[0] && mid <= w[1]){ d = 0; break; }
+    if (hoA !== null && a[0] === hoA && b[0] === hoB) d = 2;     // the handover join
+    if (!cur || cur.d !== d){ cur = { d, v: [a] }; runs.push(cur); }
+    cur.v.push(b);
+  }
+  return (c._L = { c, runs, peak: Math.max(...p.map(q => q[1])) });
+}
+// ---------- smooth path through the vertices ----------
+// The line used to be a raw polyline, which reads as spiky: every control point is a corner, and
+// at this scale most cities are mostly corners. This draws a monotone cubic (Fritsch-Carlson)
+// through the SAME vertices instead. It passes exactly through every one of them, so no value is
+// moved -- only the shape between them changes, and that was an arbitrary straight line anyway.
+//
+// Monotone specifically, not Catmull-Rom: the monotone tangent rule cannot overshoot, so the
+// curve never rises above the higher of two neighbouring points or dips below the lower one. A
+// plain spline would invent peaks the data does not have, which on this map would be indistinguishable
+// from the defects the whole pipeline exists to remove. At a local maximum the tangent is forced
+// to zero, so a spike keeps its exact height and merely stops being a needle.
+function smoothInto(path, v, gx){
+  const n = v.length, X = new Array(n), Y = new Array(n);
+  for (let i = 0; i < n; i++){ X[i] = gx(v[i][0]); Y[i] = gY(v[i][1]); }
+  path.moveTo(X[0], Y[0]);
+  if (n === 2){ path.lineTo(X[1], Y[1]); return; }
+  const d = new Array(n - 1), m = new Array(n);
+  for (let i = 0; i < n - 1; i++){
+    const h = X[i+1] - X[i];
+    d[i] = h === 0 ? 0 : (Y[i+1] - Y[i]) / h;
+  }
+  m[0] = d[0]; m[n-1] = d[n-2];
+  for (let i = 1; i < n - 1; i++) m[i] = d[i-1] * d[i] <= 0 ? 0 : (d[i-1] + d[i]) / 2;
+  for (let i = 0; i < n - 1; i++){
+    if (d[i] === 0){ m[i] = 0; m[i+1] = 0; continue; }
+    const a = m[i] / d[i], b = m[i+1] / d[i], s = a*a + b*b;
+    if (s > 9){ const t = 3 / Math.sqrt(s); m[i] = t * a * d[i]; m[i+1] = t * b * d[i]; }
+  }
+  for (let i = 0; i < n - 1; i++){
+    const h = X[i+1] - X[i];
+    if (h === 0){ path.lineTo(X[i+1], Y[i+1]); continue; }
+    path.bezierCurveTo(X[i] + h/3, Y[i] + m[i]*h/3,
+                       X[i+1] - h/3, Y[i+1] - m[i+1]*h/3, X[i+1], Y[i+1]);
+  }
+}
 function computeTopEver(){
   const SAMPLES = 240, set = new Set();
   for (let i = 0; i <= SAMPLES; i++){
@@ -499,14 +1401,9 @@ function computeTopEver(){
     cand.sort((a,b) => b.pop - a.pop);
     for (let k = 0; k < Math.min(10, cand.length); k++) set.add(cand[k].c);
   }
-  GLINES = [];
-  for (const c of set){
-    const p = c.p, ys = new Set(p.map(q => q[0]));
-    for (const b of [1400, 1900]) if (b > p[0][0] && b < p[p.length-1][0]) ys.add(b);
-    const verts = [...ys].sort((a,b) => a-b).map(y => [y, popAt(c, y)]);
-    GLINES.push({ c, verts, peak: Math.max(...p.map(q => q[1])) });
-  }
+  GLINES = [...set].map(mkLine);
   GLINES.sort((a,b) => a.peak - b.peak);   // biggest drawn last (on top)
+  GALL = GLINES; gKey = '';
 }
 // keep the graph panel spanning exactly from the timebar's left edge to the scrub track's
 // right edge -- so the plot fills it and there's no dead panel area (or stray hover) out past
@@ -524,6 +1421,7 @@ function resizeGraph(){
   gW = r.width; gH = r.height;
   gcv.width = r.width * dpr; gcv.height = r.height * dpr;
   gx2.setTransform(dpr, 0, 0, dpr, 0, 0);
+  gKey = '';
 }
 function gY(pop){
   const l = Math.max(G_LOGLO, Math.min(G_LOGHI, Math.log10(pop)));
@@ -535,8 +1433,15 @@ function gXfn(){   // returns year->x mapped onto the scrub track's screen posit
 }
 function drawGraph(){
   if (!DATA || !GLINES.length || !graphOn) return;
+  // nothing here depends on the map view, so skip the repaint while panning/zooming
+  const key = year + '|' + colorMode + '|' + gW + 'x' + gH +
+              '|' + (hoverLine ? hoverLine.c.n : '') + '|' + (selCity ? selCity.n : '');
+  if (key === gKey) return;
+  gKey = key;
   gx2.clearRect(0, 0, gW, gH);
   const gx = gXfn(), x0 = gx(yStart()), x1 = gx(DATA.yearMax);
+  gLayoutKey = gW + 'x' + gH + '|' + x0.toFixed(1) + '|' + x1.toFixed(1);
+  gx2.lineJoin = 'round'; gx2.lineCap = 'round';
   gx2.font = '11px system-ui,sans-serif'; gx2.textBaseline = 'middle';
   for (const gp of [1e4, 1e5, 1e6, 1e7]){                 // log gridlines + right-aligned labels
     const y = gY(gp);
@@ -545,72 +1450,140 @@ function drawGraph(){
     gx2.fillStyle = '#8a929c'; gx2.textAlign = 'right'; gx2.fillText(fmtPop(gp), x0 - 6, y);
   }
   gx2.textAlign = 'left';
-  // draw one city's trajectory, BREAKING the line wherever it drops below the display floor
-  // (that's a data gap / faded-out span -- a break reads truer than a plunge to zero)
-  const stroke = (L, style, w) => {
-    gx2.strokeStyle = style; gx2.lineWidth = w;
-    gx2.beginPath();
-    let pen = false;
-    for (let i = 0; i < L.verts.length; i++){
-      const pp = L.verts[i][1];
-      if (pp < MINPOP){ pen = false; continue; }
-      const x = gx(L.verts[i][0]), y = gY(pp);
-      pen ? gx2.lineTo(x, y) : gx2.moveTo(x, y);
-      pen = true;
+  // Draw one city's trajectory. Interpolated runs are the same line at QUARTER weight -- solid,
+  // so it doesn't read as a broken line, just as a thinner one where the data thins out. The
+  // floor keeps the faint background lines from vanishing entirely once quartered. The two
+  // weights are each collected into a single path, so it's two strokes per city, not one per run.
+  // Paths are cached per layout rather than rebuilt every frame: the geometry only depends on
+  // the canvas size and the scrub track, not on the year, so scrubbing now reuses them.
+  const paths = (L) => {
+    if (L._pk !== gLayoutKey){
+      L._pk = gLayoutKey;
+      L._paths = [null, null, null];
+      for (let d = 0; d <= 2; d++){
+        let path = null;
+        for (const run of L.runs){
+          if (run.d !== d) continue;
+          if (!path) path = new Path2D();
+          smoothInto(path, run.v, gx);
+        }
+        L._paths[d] = path;
+      }
     }
-    gx2.stroke();
+    return L._paths;
   };
-  for (const L of GLINES) if (L !== hoverLine && !curTopSet.has(L.c))
-    stroke(L, colorMode === 'region' ? rgba(REGION_COLORS[L.c.reg] || '#888', 0.32) : 'rgba(150,162,176,.22)', 0.9);
-  for (const L of GLINES) if (L !== hoverLine && curTopSet.has(L.c))
-    stroke(L, cityColor(L.c, popAt(L.c, year)), 2.0);
-  if (hoverLine) stroke(hoverLine, '#eef3f8', 2.6);        // hovered line: bright, on top
+  const stroke = (L, style, w) => {
+    gx2.strokeStyle = style;
+    const P = paths(L);
+    for (let d = 0; d <= 2; d++){
+      if (!P[d]) continue;
+      // interpolated runs are quarter weight; the handover join is HALF, because the dashes
+      // already carry "not a measurement" and at quarter weight the dashes broke it up so far
+      // that the join stopped reading as a connection at all
+      gx2.lineWidth = d === 0 ? w : Math.max(0.5, w * (d === 2 ? 0.5 : 0.25));
+      if (d === 2) gx2.setLineDash([3, 3]);
+      gx2.stroke(P[d]);
+      if (d === 2) gx2.setLineDash([]);
+    }
+  };
+  const sel = selLine;
+  const MUTE = 0.55;   // how far the rest of the field drops back while a city is selected
+  const dimStyle = (L, a) => colorMode === 'region'
+    ? rgba(REGION_COLORS[L.c.reg] || '#888', a * 0.32) : `rgba(150,162,176,${a * 0.22})`;
+  if (sel){
+    // a selection mutes everything else -- same background style for all of them, no colour and
+    // no extra weight for the current top 10, so the traced city is the only thing to read
+    for (const L of GLINES) if (L !== sel && L !== hoverLine) stroke(L, dimStyle(L, MUTE), 0.9);
+  } else {
+    for (const L of GLINES) if (L !== hoverLine && !curTopSet.has(L.c)) stroke(L, dimStyle(L, 1), 0.9);
+    for (const L of GLINES) if (L !== hoverLine && curTopSet.has(L.c))
+      stroke(L, cityColor(L.c, popAt(L.c, year)), 2.0);
+  }
+  if (hoverLine && hoverLine !== sel) stroke(hoverLine, '#eef3f8', 2.4);   // hovered line: bright
+  if (sel){                                                // selected city: thickest, on top
+    stroke(sel, 'rgba(8,9,11,.8)', 5.4);                   // dark halo lifts it off the pack
+    stroke(sel, selColor(), 3.2);
+  }
   const cx = gx(year);                                     // current-year cursor
   gx2.strokeStyle = '#cfd9e4'; gx2.lineWidth = 1;
   gx2.beginPath(); gx2.moveTo(cx, G_PADT - 4); gx2.lineTo(cx, gH - G_PADB); gx2.stroke();
 }
 
 // ---------- year / scrubber (segmented timeline: warps play so recent years pass slower) ----------
-// slider fraction s in [0,1] maps piecewise-linearly to year across 3 segments that take
-// 50% / 25% / 25% of the track: pre-1400, 1400-1900, 1900-present.
+// slider fraction s in [0,1] maps piecewise-linearly to year across 4 segments: 1400 sits at
+// 50% of the track and 1900 at 75%, and the first half is split at AD 1 so everything before
+// AD 1 runs at twice the years-per-unit of AD 1-1400.
+// This warp is also the project's "adjusted time" -- build.py measures data gaps along it
+// (ADJ_EDGES / _adj_frac there), so segY() and segS() must stay in step with those.
 const scrub = document.getElementById('scrub');
-const SEG_S = [0, 0.5, 0.75, 1];
+const NSEG = 4;
 // start the scrubber at 3500 BC (Eridu/Larak/Uruk) rather than the lone-Eridu 3700 BC point
 function yStart(){ return Math.max(DATA.yearMin, -3500); }
-function segY(){ return [yStart(), 1400, 1900, DATA.yearMax]; }
+function segY(){ return [yStart(), 1, 1400, 1900, DATA.yearMax]; }
+function segS(){
+  const Y = segY(), a = (Y[1] - Y[0]) / 2, b = Y[2] - Y[1];   // pre-AD 1 counted at half rate
+  return [0, 0.5 * a / (a + b), 0.5, 0.75, 1];
+}
 function sToYear(s){
-  const Y = segY(); s = Math.max(0, Math.min(1, s));
-  for (let i = 0; i < 3; i++)
-    if (s <= SEG_S[i+1]){
-      const f = (s - SEG_S[i]) / (SEG_S[i+1] - SEG_S[i]);
+  const Y = segY(), S = segS(); s = Math.max(0, Math.min(1, s));
+  for (let i = 0; i < NSEG; i++)
+    if (s <= S[i+1]){
+      const f = (s - S[i]) / (S[i+1] - S[i]);
       return Y[i] + f * (Y[i+1] - Y[i]);
     }
-  return Y[3];
+  return Y[NSEG];
 }
 function yearToS(y){
-  const Y = segY(); y = Math.max(Y[0], Math.min(Y[3], y));
-  for (let i = 0; i < 3; i++)
+  const Y = segY(), S = segS(); y = Math.max(Y[0], Math.min(Y[NSEG], y));
+  for (let i = 0; i < NSEG; i++)
     if (y <= Y[i+1]){
       const f = (y - Y[i]) / (Y[i+1] - Y[i]);
-      return SEG_S[i] + f * (SEG_S[i+1] - SEG_S[i]);
+      return S[i] + f * (S[i+1] - S[i]);
     }
   return 1;
 }
+// ---------- selection ----------
+function updateGLabel(){
+  const el = document.getElementById('tglabel');
+  el.innerHTML = selCity
+    ? `<b>${selCity.n}</b> · <span class="clear">clear</span>`
+    : 'top-10 cities over time';
+}
+function selectCity(c){
+  if (c === selCity) return;
+  selCity = c;
+  selLine = c ? mkLine(c) : null;
+  GALL = selLine && !GLINES.includes(selLine) ? GLINES.concat([selLine]) : GLINES;
+  if (c && !graphOn) setGraph(true);        // no point selecting into a hidden graph
+  updateGLabel();
+  gKey = '';
+  draw();
+}
+document.getElementById('tglabel').onclick = e => {
+  if (e.target.classList.contains('clear')) selectCity(null);
+};
+addEventListener('keydown', e => { if (e.key === 'Escape') selectCity(null); });
+
+let yearSet = false;
 function setYear(y, fromScrub){
+  const was = year;
   year = Math.max(yStart(), Math.min(DATA.yearMax, y));
+  // the first call landed on a year rather than travelling to it -- see fireNotes
+  fireNotes(yearSet ? was : null, year);
+  yearSet = true;
   document.getElementById('yearbig').textContent = fmtYear(year);
   if (!fromScrub) scrub.value = Math.round(yearToS(year) * 1000);
   draw();
 }
 
 // ---------- play loop (advances the slider fraction at constant speed -> time-warp) ----------
-const PLAY_SPEED = 0.016;   // fractions of the scrubber track per second
-let lastT = null, playS = 0;
+const PLAY_SPEED = 0.016;   // fractions of the scrubber track per second, at 1x
+let lastT = null, playS = 0, speedMul = 1;
 function tick(t){
   if (!playing){ lastT = null; return; }
   if (lastT != null){
     const dt = (t - lastT)/1000;
-    playS += PLAY_SPEED * dt;
+    playS += PLAY_SPEED * speedMul * dt;
     if (playS >= 1){ playS = 1; setYear(DATA.yearMax); setPlaying(false); }
     else { setYear(sToYear(playS)); scrub.value = Math.round(playS * 1000); }
   }
@@ -625,16 +1598,44 @@ function setPlaying(p){
   if (p){
     playS = year >= DATA.yearMax ? 0 : yearToS(year);
     lastT = null; requestAnimationFrame(tick);
-  }
+  } else noteFrames();   // a note still fading when you hit pause needs frames of its own now
 }
 
 // ---------- wire up ----------
 const playbtn = document.getElementById('playbtn');
 playbtn.innerHTML = ICON_PLAY;
 playbtn.onclick = () => setPlaying(!playing);
+// Space toggles play from anywhere. Skipped when a form control or the play button itself has
+// focus: space is that control's own key (it ticks the line-graph checkbox, and it re-fires a
+// focused button, which would toggle twice). preventDefault stops the browser scrolling the page.
+addEventListener('keydown', e => {
+  if (e.code !== 'Space' && e.key !== ' ') return;
+  const t = e.target;
+  if (t){
+    const tag = t.tagName;
+    if (tag === 'TEXTAREA' || tag === 'BUTTON' || tag === 'SELECT' || t.isContentEditable) return;
+    // Range sliders are the exception among inputs: space does nothing for them, so after
+    // clicking the scrubber (or a settings slider) it would otherwise be swallowed for no gain.
+    if (tag === 'INPUT' && t.type !== 'range') return;
+  }
+  e.preventDefault();
+  setPlaying(!playing);
+});
 scrub.oninput = () => { if (playing) setPlaying(false); setYear(sToYear(+scrub.value / 1000), true); };
-document.getElementById('sizeslider').oninput = e => { sizeMul = +e.target.value; draw(); };
+sizeslider.oninput = e => { sizeTouched = true; sizeMul = +e.target.value; draw(); };
 document.getElementById('expslider').oninput  = e => { expo = +e.target.value; draw(); };
+const capval = document.getElementById('capval');
+document.getElementById('capslider').oninput = e => {
+  maxCities = CAP_STOPS[+e.target.value];
+  capval.textContent = maxCities === Infinity ? 'all' : maxCities;
+  draw();
+};
+// Speed only scales the play loop, so nothing needs redrawing -- tick() reads it next frame.
+const speedval = document.getElementById('speedval');
+document.getElementById('speedslider').oninput = e => {
+  speedMul = +e.target.value;
+  speedval.textContent = speedMul.toFixed(1) + 'x';
+};
 
 const settingsPanel = document.getElementById('settings-panel'), settingsBtn = document.getElementById('settingsbtn');
 settingsBtn.onclick = () => {
@@ -646,18 +1647,51 @@ settingsBtn.onclick = () => {
   settingsPanel.classList.toggle('hidden', !show);
   settingsBtn.classList.toggle('active', show);
 };
+const fadetoggle = document.getElementById('fadetoggle');
+fadetoggle.checked = fadeBubbles;
+fadetoggle.onchange = e => { fadeBubbles = e.target.checked; draw(); };
+// Nothing fires retroactively -- a raised level takes effect at the next year crossed, and notes
+// already on screen finish their two seconds. Clearing them on a raise would make the click feel
+// like it deleted something rather than changed what comes next. Dropping to none is the one
+// exception, and it is drawNotes that enforces it: "none" has to mean gone now, not gone soon.
+function setNotes(n){
+  noteLevel = n;
+  document.querySelectorAll('#notelevel span').forEach(x => x.classList.toggle('on', +x.dataset.v === n));
+  draw();
+}
+document.querySelectorAll('#notelevel span').forEach(s => s.onclick = () => setNotes(+s.dataset.v));
+// the legend row explains a colour that is not currently drawn -- follow the flag, so turning
+// SOURCE_CHANGE_ON back on brings its key back with it and neither can be left stranded
+if (!SOURCE_CHANGE_ON) document.getElementById('srckey').style.display = 'none';
 const graphtoggle = document.getElementById('graphtoggle');
 function setGraph(on){
   graphOn = on;
   graphtoggle.checked = on;
   document.getElementById('tgraph').classList.toggle('hidden', !on);
-  if (on){ resizeGraph(); drawGraph(); }
+  if (on){ resizeGraph(); DATA ? draw() : drawGraph(); }   // via draw() so curTopSet is current
 }
 graphtoggle.onchange = e => setGraph(e.target.checked);
+// Taller graph. Height only -- see the .big rule. resizeGraph() re-reads the canvas box and
+// clears gKey, and gH is part of gLayoutKey, so the cached paths rebuild at the new scale.
+const tgsize = document.getElementById('tgsize');
+let graphBig = false;
+function setGraphBig(big){
+  graphBig = big;
+  document.getElementById('tgraph').classList.toggle('big', big);
+  // the timebar widens with it, so the plot has more x to spread over and stays time-aligned
+  document.getElementById('timebar').classList.toggle('big', big);
+  tgsize.textContent = big ? 'shrink' : 'expand';
+  tgsize.title = big ? 'Shorter graph' : 'Taller graph';
+  resizeGraph();
+  DATA ? drawGraph() : null;
+}
+tgsize.onclick = () => setGraphBig(!graphBig);
 document.querySelectorAll('#colormode span').forEach(s => s.onclick = () => {
   colorMode = s.dataset.v;
   document.querySelectorAll('#colormode span').forEach(x => x.classList.toggle('on', x === s));
+  document.getElementById('growthkey').classList.toggle('hidden', colorMode !== 'growth');
   draw();
+  drawGraph();          // the graph colours by mode too, and its cache key includes it
 });
 
 const infoPanel = document.getElementById('info-panel');
@@ -665,8 +1699,11 @@ document.getElementById('info-btn').onclick = () => infoPanel.classList.toggle('
 document.getElementById('info-panel-close').onclick = () => infoPanel.classList.add('hidden');
 
 // hover a trajectory to identify it (uses the shared tooltip) and highlight its whole line.
-// Only within the plot's actual x-range, and preferring the highlighted (current top-10) lines
-// over dim gray ones when both are near the cursor.
+// Only within the plot's actual x-range. Ties go to whichever line is drawn most prominently:
+// the SELECTED city first (generous radius, and it only loses to a line the cursor is clearly
+// sitting on), then the current top 10 -- but only when nothing is selected, because a
+// selection mutes them and preferring an invisible distinction is what made hovering the
+// selected line hand you a neighbour's tooltip instead.
 gcv.addEventListener('mousemove', e => {
   if (!GLINES.length) return;
   const sr = scrub.getBoundingClientRect();
@@ -677,17 +1714,21 @@ gcv.addEventListener('mousemove', e => {
     return;
   }
   const my = e.clientY - gcv.getBoundingClientRect().top, yr = sToYear(frac);
-  let bestTop = null, bdTop = 16, bestAny = null, bdAny = 12;
-  for (const L of GLINES){
+  let bestSel = null, bdSel = 26, bestTop = null, bdTop = 16, bestAny = null, bdAny = 12;
+  for (const L of GALL){
     const p = L.c.p;
     if (yr < p[0][0] || yr > p[p.length-1][0]) continue;
     const pop = popAt(L.c, yr);
     if (pop < MINPOP) continue;                  // in a data gap here -> not hoverable
     const d = Math.abs(gY(pop) - my);
-    if (curTopSet.has(L.c) && d < bdTop){ bdTop = d; bestTop = { L, pop }; }
+    if (L === selLine){ if (d < bdSel){ bdSel = d; bestSel = { L, pop }; } }
+    else if (!selLine && curTopSet.has(L.c) && d < bdTop){ bdTop = d; bestTop = { L, pop }; }
     if (d < bdAny){ bdAny = d; bestAny = { L, pop }; }
   }
-  const best = bestTop || bestAny, nl = best ? best.L : null;
+  // the selected line keeps the tooltip unless another line is more than 10px closer, i.e.
+  // unless you are plainly pointing at that one and not at this
+  const best = (bestSel && bdSel <= bdAny + 10) ? bestSel : (bestTop || bestAny);
+  const nl = best ? best.L : null;
   if (nl !== hoverLine){ hoverLine = nl; drawGraph(); }
   if (best){
     tip.style.display = 'block';
@@ -700,46 +1741,51 @@ gcv.addEventListener('mouseleave', () => {
   tip.style.display = 'none';
   if (hoverLine){ hoverLine = null; drawGraph(); }
 });
+gcv.style.cursor = 'crosshair';
+gcv.addEventListener('click', () => selectCity(hoverLine ? hoverLine.c : null));
 
-function redraw(){ drawLand(); draw(); }
+// The bubble canvas is glued to maplibre by redrawing on its 'render' event, which is the only
+// way to stay in step with the transform mid-animation. With the old empty style that fired
+// only while panning; a real tiled basemap also fires it for every tile fade-in, and draw()
+// costs ~42ms in 2025 (19,145 bubbles), so those extra frames were pure waste -- the transform
+// is not moving during a fade. Skip when the view is identical to the last one drawn. Year
+// changes call draw() directly and so are unaffected.
+let lastView = '';
+function redraw(){
+  const t = map.transform;
+  const sig = t.center.lng + ',' + t.center.lat + ',' + t.zoom + ',' + t.width + ',' + t.height;
+  if (sig === lastView) return;
+  lastView = sig;
+  draw();
+}
 map.on('move', redraw);
 map.on('render', redraw);
 addEventListener('resize', resize);
 
-// load land basemap (drawn on canvas, not a maplibre layer); store normalized-mercator rings
-fetch('data/ne_50m_land.geojson').then(r => r.json()).then(gj => {
-  const rings = [];
-  for (const f of gj.features){
-    const g = f.geometry; if (!g) continue;
-    const polys = g.type === 'Polygon' ? [g.coordinates] : g.coordinates;
-    for (const poly of polys)
-      for (const ring of poly){
-        const flat = new Float32Array(ring.length * 2);
-        let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
-        for (let i = 0; i < ring.length; i++){
-          const m = mercNorm(ring[i][0], ring[i][1]);
-          flat[2*i] = m[0]; flat[2*i+1] = m[1];
-          if (m[0] < x0) x0 = m[0]; if (m[0] > x1) x1 = m[0];
-          if (m[1] < y0) y0 = m[1]; if (m[1] > y1) y1 = m[1];
-        }
-        rings.push({ c: flat, x0, y0, x1, y1 });
-      }
-  }
-  LAND = rings;
-  drawLand();
-});
 
-// hover
+// hover / click
 const tip = document.getElementById('tip');
-map.getCanvas().parentElement.addEventListener('mousemove', e => {
-  const rect = cv.getBoundingClientRect();
-  const mx = e.clientX - rect.left, my = e.clientY - rect.top;
-  // among bubbles whose disk covers the cursor, take the largest — it's the one drawn on top
-  let best = null;
+// among bubbles whose disk covers the cursor, take the largest — it's the one drawn on top.
+// `slack` widens the search for clicking, so the 1px dots are still hittable.
+function bubbleAt(mx, my, slack){
+  let best = null, near = null, nd = (slack + 2) ** 2;
   for (const p of projected){
-    const hit = p.r + 2;
-    if ((p.x-mx)**2 + (p.y-my)**2 <= hit*hit && (!best || p.r > best.r)) best = p;
+    const d2 = (p.x-mx)**2 + (p.y-my)**2, hit = p.r + 2;
+    if (d2 <= hit*hit && (!best || p.r > best.r)) best = p;
+    else if (slack && d2 < nd){ nd = d2; near = p; }
   }
+  return best || near;
+}
+// maplibre's own click, so taps work on touch and a pan never counts as a click
+map.on('click', e => {
+  const hit = bubbleAt(e.point.x, e.point.y, 6);
+  selectCity(hit ? hit.c : null);
+});
+const mapEl = map.getCanvas().parentElement;
+mapEl.addEventListener('mousemove', e => {
+  const rect = cv.getBoundingClientRect();
+  const best = bubbleAt(e.clientX - rect.left, e.clientY - rect.top, 0);
+  map.getCanvas().style.cursor = best ? 'pointer' : '';
   if (best){
     tip.style.display = 'block';
     tip.style.left = best.x + 'px'; tip.style.top = best.y + 'px';
@@ -754,12 +1800,27 @@ fetch('data/cities.json?v=' + Date.now()).then(r => r.json()).then(d => {
   for (const c of d.cities){ const m = mercNorm(c.lo, c.la); c.mx = m[0]; c.my = m[1]; c.reg = regionOf(c.la, c.lo); }
   document.getElementById('loading').remove();
   scrub.min = 0; scrub.max = 1000;
+  document.getElementById('seg-ad1').style.left = (segS()[1] * 100).toFixed(2) + '%';
   computeTopEver();
+  updateGLabel();
+  prepNotes();                                     // no-op until events.json lands too
   const q = new URLSearchParams(location.search);
   setGraph(q.get('graph') !== '0');                // line graph on by default (?graph=0 hides it)
+  if (q.get('fade') === '1'){ fadeBubbles = true; fadetoggle.checked = true; }   // off by default
+  // ?notes=none|few|some|all, defaulting to some. The old spellings still work, because links to
+  // this map are out in the world: ?notes=0 is none and ?notes=key is few.
+  const NOTE_Q = { none: 0, '0': 0, few: 1, key: 1, some: 2, all: 3 };
+  const nq = q.get('notes');
+  setNotes(nq !== null && nq in NOTE_Q ? NOTE_Q[nq] : 2);
   setYear(q.has('year') ? +q.get('year') : 1900);
   if (map.loaded()) draw();
 });
+// Separate fetch, and a missing or broken file is survivable -- the notes are commentary on the
+// map, not part of it, and the map has to come up without them.
+fetch('data/events.json?v=' + Date.now())
+  .then(r => r.ok ? r.json() : null)
+  .then(d => { RAW_EVENTS = (d && d.events) || []; prepNotes(); draw(); })
+  .catch(() => { RAW_EVENTS = []; });
 map.on('load', () => { if (DATA) draw(); });
 resize();
 </script>

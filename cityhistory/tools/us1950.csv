@@ -1,0 +1,108 @@
+# 1950 US census, city proper (incorporated place). Loaded by build.py.
+# Source: US Census Bureau Working Paper 27 (Gibson 1998), "Population of the 100
+#   Largest Urban Places: 1950", table 18, from www2.census.gov. Tables 17 (1940)
+#   and 19 (1960) were fetched too, and used only to VERIFY the unit -- never copied in.
+#
+# Why: populstat has no 1950 row for US cities at all. Its anchors jump 1940 -> 1959,
+#   the viewer needs a real point within 5 years to call a year measured, so 1946-1953
+#   was unmeasured and ~91% of US cities dimmed at exactly 1950.
+#
+# unit check: a row is only here if the TARGET entry's own value agrees with the census
+#   to within 10% -- on 1940 where the entry has one, else on 1959-vs-the-1960 census.
+#   That is what proves the series is city proper and not the metro twin. 5 of the 100
+#   could not be matched or verified and are omitted rather than guessed.
+# merge_from: the co-located twin that currently outranks this entry in dedup. Folded
+#   in via MERGE_INTO so the verified entry is the one drawn (see spec 3.1).
+#
+# key,population,unit_err,basis,merge_from
+New York-New York,7891957,0.0334,1940,New York-United States
+Chicago-Illinois,3620962,0.0120,1940,Chicago-United States
+Philadelphia-Pennsylvania,2071605,0.0165,1940,Philadelphia-United States
+Los Angeles-California,1970358,0.0398,1940,Los Angeles-United States
+Detroit-Michigan,1849568,0.0484,1940,Detroit-United States
+Baltimore-Maryland,949708,0.0078,1940,Baltimore-United States
+Cleveland-Ohio,914808,0.0507,1940,
+Saint Louis-Missouri,856796,0.0126,1940,Saint Louis-United States
+Washington-United States,802178,0.0107,1960,
+Boston-Massachusetts,801444,0.0253,1940,Boston-United States
+San Francisco-United States,775357,0.0705,1940,San Francisco-California
+Pittsburgh-Pennsylvania,676806,0.0639,1940,Pittsburgh-United States
+Milwaukee-Wisconsin,637392,0.0045,1940,
+Houston-United States,596163,0.0251,1960,
+Buffalo-New York,580132,0.0183,1940,
+New Orleans-Louisiana,570445,0.0289,1940,New Orleans-United States
+Minneapolis-Minnesota,521718,0.0254,1940,Minneapolis-United States
+Cincinnati-Ohio,503998,0.0263,1940,Cincinnati-United States
+Seattle-United States,467591,0.0101,1960,
+Kansas City-Missouri,456622,0.0267,1940,
+Newark-New Jersey,438776,0.0111,1940,Newark-United States
+Dallas-United States,434462,0.0238,1960,
+Indianapolis-Indiana,427173,0.0054,1940,
+Denver-United States,415786,0.0124,1960,Denver-Colorado
+San Antonio-Texas,408442,0.0227,1960,
+Memphis-Tennessee,396000,0.0784,1940,
+Oakland-California,384575,0.0694,1940,Oakland-United States
+Columbus-Ohio,375901,0.0996,1940,
+Portland-Oregon,373628,0.0653,1940,Portland-United States
+Louisville-Kentucky,369129,0.0310,1940,
+San Diego-California,334387,0.0269,1960,
+Rochester-New York,332488,0.0032,1940,
+Atlanta-Georgia,331314,0.0255,1940,
+Birmingham-Alabama,326037,0.0498,1940,
+Saint Paul-Minnesota,311349,0.0036,1940,Saint Paul-United States
+Toledo-United States,303616,0.0007,1940,Toledo-Ohio
+Jersey City-New Jersey,299017,0.0153,1940,Jersey City-United States
+Fort Worth-United States,278778,0.0187,1960,
+Akron-Ohio,274605,0.0523,1940,
+Omaha-Nebraska,251117,0.0111,1940,
+Miami-Florida,249276,0.0233,1940,
+Providence-Rhode Island,248674,0.0350,1940,
+Dayton-Ohio,243872,0.0279,1940,
+Oklahoma City-United States,243504,0.0027,1940,Oklahoma City-Oklahoma
+Richmond-United States,230310,0.0534,1940,Richmond-Virginia
+Syracuse-New York,220583,0.0032,1940,
+Norfolk-United States,213513,0.0193,1960,
+Jacksonville-United States,204517,0.0334,1940,Jacksonville-Florida
+Worcester-United States,203486,0.0023,1940,Worcester-Massachusetts
+Tulsa-Oklahoma,182740,0.0021,1940,
+Salt Lake City-Utah,182121,0.0514,1940,Salt Lake City-United States
+Des Moines-United States,177965,0.0061,1940,Des Moines-Iowa
+Hartford-United States,177397,0.0110,1940,
+Grand Rapids-Michigan,176515,0.0001,1940,
+Youngstown-Ohio,168330,0.0606,1940,
+Wichita-United States,168279,0.0238,1960,Wichita-Kansas
+New Haven-United States,164443,0.0969,1940,New Haven-Connecticut
+Flint-United States,163143,0.0350,1940,Flint-Michigan
+Springfield-Massachusetts,162399,0.0264,1940,
+Bridgeport-Connecticut,158709,0.0081,1940,
+Yonkers-United States,152798,0.0271,1940,Yonkers-New York
+Paterson-New Jersey,139336,0.0201,1940,Paterson-United States
+Sacramento-California,137572,0.0696,1940,Sacramento-United States
+Albany-United States,134995,0.0114,1940,Albany-New York
+Charlotte-North Carolina,134042,0.0430,1940,
+Gary-Indiana,133911,0.0196,1940,Gary-United States
+Fort Wayne-Indiana,133607,0.0017,1940,
+Austin-Texas,132459,0.0238,1960,Austin-United States
+Chattanooga-United States,131041,0.0771,1940,Chattanooga-Tennessee
+Erie-Pennsylvania,130803,0.0051,1940,
+El Paso-United States,130485,0.0255,1960,
+Kansas City-Kansas,129553,0.0189,1940,
+Mobile-Alabama,129009,0.0624,1960,
+Evansville-United States,128636,0.0113,1960,Evansville-Indiana
+Trenton-New Jersey,128009,0.0166,1940,
+Shreveport-Louisiana,127206,0.0364,1940,Shreveport-United States
+Baton Rouge-Louisiana,125629,0.0247,1960,Baton Rouge-United States
+Knoxville-United States,124769,0.0115,1940,Knoxville-Tennessee
+Tampa-Florida,124681,0.0008,1940,
+Camden-New Jersey,124555,0.0084,1940,
+Cambridge-United States,120740,0.0360,1940,Cambridge-Massachusetts
+Savannah-Georgia,119638,0.0642,1940,
+Canton-Ohio,116912,0.0678,1940,
+South Bend-Indiana,115911,0.0173,1940,
+Peoria-Illinois,111856,0.0144,1940,Peoria-United States
+Wilmington-United States,110356,0.0372,1940,Wilmington-Delaware
+Reading-Pennsylvania,109320,0.0028,1940,
+New Bedford-Massachusetts,109189,0.0830,1940,
+Corpus Christi-Texas,108287,0.0282,1960,Corpus Christi-United States
+Phoenix-United States,106818,0.0386,1960,Phoenix-Arizona
+Allentown-Pennsylvania,106756,0.0137,1940,

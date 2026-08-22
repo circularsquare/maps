@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>citybrowser</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<!-- Non-blocking: a render-blocking external stylesheet stalls first paint
+     whenever this is opened offline. system-ui is the fallback. -->
+<link rel="stylesheet" media="print" onload="this.media='all'"
+      href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap">
+<link rel="stylesheet" href="css/app.css">
+
+<div id="title">citybrowser
+  <span id="count"></span><span id="shown"></span></div>
+
+<div id="bar">
+  <button class="btn" id="reset" title="Reset view">&#8634;</button>
+  <button class="btn" id="settings" title="Settings">&#9881;</button>
+  <button class="btn" id="create" title="Add a city">+ City</button>
+  <button class="btn" id="rebuild"
+          title="Export a standalone cities.json (not needed for editing)">Export</button>
+</div>
+
+<div id="searchbox">
+  <input id="q" type="search" placeholder="Search cities&hellip;  /" autocomplete="off" spellcheck="false">
+  <div id="results"></div>
+</div>
+
+<canvas id="c"></canvas>
+<div id="card" class="panel"></div>
+<div id="edit" class="panel"></div>
+
+<div id="setpanel" class="panel">
+  <div class="t">Show on map</div>
+  <label class="chk"><input type="checkbox" id="k-city" checked disabled>
+    <span>Cities &amp; towns</span><em id="n-city"></em></label>
+  <label class="chk"><input type="checkbox" id="k-aggregate">
+    <span>Metro &amp; urban areas</span><em id="n-aggregate"></em></label>
+  <label class="chk"><input type="checkbox" id="k-admin">
+    <span>Admin duplicates</span><em id="n-admin"></em></label>
+  <div class="shint">Metro areas duplicate their city &mdash; "New York",
+    "New York metropolitan area" and "New York&ndash;Jersey City&ndash;Newark
+    urban area" are three bubbles for one place.</div>
+
+  <div class="t" style="margin-top:12px">Basemap</div>
+  <select id="basemap"></select>
+  <div class="shint">Tiles need a network connection. With them off &mdash; or
+    before they load &mdash; the built-in coastline is used, which is fixed-scale
+    and gets coarse as you zoom in.</div>
+
+  <div class="t" style="margin-top:12px">Urban centre matches</div>
+  <button class="btn wide" id="review">Review <em id="nreview"></em></button>
+  <div class="shint">Matches GHS was not sure about &mdash; an urban centre with
+    no city claiming it, or one whose population is far from the city it is
+    named after. Reviewing does not mark a city as curated.</div>
+</div>
+
+<div id="reviewpanel" class="panel"></div>
+
+<div id="attrib"></div>
+
+<div id="legend" class="panel">
+  <div class="t">Population</div>
+  <div class="ramp" id="ramp"></div>
+  <div class="lbl"><span>10k</span><span>100k</span><span>1M</span><span>30M</span></div>
+  <div class="note">faded = not yet curated &middot; <b id="touched">0</b> touched</div>
+</div>
+
+<div id="status"></div>
+
+<script type="module" src="js/main.js"></script>

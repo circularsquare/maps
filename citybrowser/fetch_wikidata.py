@@ -29,12 +29,18 @@ response cached to disk so a rerun costs zero requests.
 
 Expect several hours for ~250 countries. That is the intended speed.
 
-What we are fetching is a CANDIDATE POOL, not final data. Populations here are
-only used to disambiguate the later match against the GHS roster. What we
-actually want is the QID, the coordinate a reader would recognise (P625),
-elevation (P2044), the admin subdivision (P131) and the country.
+What we fetch here is THE ROSTER — one row per city on the finished map, keyed
+by QID. (It was originally a candidate pool to be matched against a GHS roster;
+that inverted, because GHS merges Guangzhou/Shenzhen/Foshan/Dongguan into one
+43M blob and we want them as four cities.) GHS now attaches to these rows as
+enrichment rather than defining them.
 
-Stage 2 (matching) and stage 3 (labels/aliases via wbgetentities) are separate.
+Because these rows become map points, the P31 type is fetched and stored so
+non-settlements — administrative divisions, dioceses, "Benelux" — can be
+filtered downstream. See SETTLEMENT_TYPES_QUERY.
+
+Stage 2 (GHS enrichment match) and stage 3 (aliases via wbgetentities) are
+separate.
 
 Usage:
     python fetch_wikidata.py --plan            # print the plan, zero requests
@@ -45,14 +51,20 @@ Usage:
 import argparse
 import json
 import pathlib
+import socket
 import sys
 import time
 import urllib.error
 import urllib.parse
 import urllib.request
 
+# On Python 3.10+ socket.timeout IS TimeoutError; on 3.9 (what this box runs) it
+# is a plain OSError subclass, so `except TimeoutError` does NOT catch it. That
+# gap killed a 53-country run outright. Catch both, explicitly.
+NET_ERRORS = (urllib.error.URLError, TimeoutError, socket.timeout, OSError)
+
 HERE = pathlib.Path(__file__).parent
-CACHE = HERE / "cache" / "wikidata"
+CACHE = HERE / "cache" / f"wikidata_f{10000}"   # keyed by POP_FLOOR
 
 ENDPOINT = "https://query.wikidata.org/sparql"
 
@@ -72,12 +84,57 @@ TIMEOUT = 75            # WDQS itself cuts queries off at 60s
 TRANSIENT_RETRIES = 2   # 502/503/504 only; never for query timeouts
 
 MAX_REQUESTS = 400          # bounds a runaway loop
-MAX_QUERY_SECONDS = 4000    # bounds the resource actually being rationed
+# Bounds the resource actually being rationed. Raised from 4000 when the floor
+# dropped to 10k and P31 was added: the Netherlands went from ~1s to 12.3s, and
+# 323 countries at that rate would trip a 4000s ceiling mid-run. This is a
+# safety stop, not a target — the duty-cycle throttle is what keeps us polite.
+MAX_QUERY_SECONDS = 9000
 
-POP_FLOOR = 15000       # GHS urban centres start at 50k, so this is headroom
+POP_FLOOR = 10000       # low enough to catch small named towns, per Anita
 POP_BANDS = [(1_000_000, None), (200_000, 1_000_000),
              (50_000, 200_000), (POP_FLOOR, 50_000)]
 
+# The subclass closure used to tell a city from an administrative unit, fetched
+# ONCE and cached. Doing the walk globally costs ~0.5s; filtering is then a local
+# set-membership test.
+#
+# TWO ROOTS, and the second one is not optional. "Human settlement" (Q486972)
+# alone looks right and silently deletes Madrid: its ONLY P31 is Q2074737
+# "municipality of Spain", which Wikidata files under administrative territorial
+# entity, not settlement. Same for Marseille (commune of France) and Seville.
+# Sao Paulo survives that filter only by accident, because it happens to ALSO
+# carry Q515 "city". Adding "municipality" (Q15284) rescues 16,240 rows —
+# Italian comuni, French communes, Brazilian/Mexican/Colombian/Dutch
+# municipalities — which ARE the city items in those countries.
+#
+# What stays excluded is still correct: French electoral cantons, Chinese
+# subdistricts/townships/counties, Tanzanian wards, Catholic dioceses, Iranian
+# districts, tambon, gram panchayat, UK parliamentary constituencies.
+#
+# NOTE: we STORE the raw types and filter downstream rather than dropping rows
+# here. If the closure turns out to be wrong we must not have to re-fetch 100k
+# rows — which is exactly what saved us when this bug was found.
+SETTLEMENT_TYPES_QUERY = """
+SELECT DISTINCT ?s WHERE {
+  { ?s wdt:P279* wd:Q486972 } UNION { ?s wdt:P279* wd:Q15284 }
+}
+"""
+
+# Two sources, unioned. Neither alone is sufficient.
+#
+# P297 (ISO 3166-1 alpha-2) gives clean labels but the ISO code does not always
+# sit on the entity that cities point to. The Netherlands is the killer case:
+# the code is on Q29999 "Kingdom of the Netherlands" while Dutch cities carry
+# P17 = Q55 "Netherlands", so querying the ISO holder returned 7 settlements for
+# the entire country against 43 urban centres. Every healthy country returns
+# 6-60 settlements per urban centre, so 0.2 stood out, but only because it was
+# looked for.
+#
+# So we also ask the cities themselves which entity they call their country.
+# That is authoritative by construction. It costs one ~8s aggregate query and
+# turns up ~218 entities the ISO list misses. Most are historical states
+# (Soviet Union, Czechoslovakia, Austria-Hungary) whose cities also exist under
+# a modern country; those dedupe by QID and are harmless.
 COUNTRY_QUERY = """
 SELECT ?country ?iso WHERE {
   ?country wdt:P297 ?iso .
@@ -85,9 +142,21 @@ SELECT ?country ?iso WHERE {
 }
 """
 
+# Population floor is higher here than POP_FLOOR purely to keep this aggregate
+# cheap; we only need it to enumerate country entities, not to find cities.
+P17_COUNTRY_QUERY = """
+SELECT ?country (COUNT(DISTINCT ?c) AS ?n) WHERE {
+  ?c wdt:P17 ?country ; wdt:P625 ?g ; wdt:P1082 ?p . FILTER(?p >= 50000)
+} GROUP BY ?country
+"""
+
+# Below this many settlements a P17-derived entity is not worth a query of its
+# own — it is nearly always a micro-territory already covered by its parent.
+P17_MIN_SETTLEMENTS = 3
+
 # Aggregated in a subquery, labelled in the outer query.
 #
-# THERE IS DELIBERATELY NO TYPE FILTER. The obvious `?city wdt:P31/wdt:P279*
+# NO TRANSITIVE TYPE WALK IN THIS QUERY. The obvious `?city wdt:P31/wdt:P279*
 # wd:Q486972` (human settlement) is catastrophic on WDQS as of 2026 — measured
 # on Gabon, a country with 26 qualifying settlements:
 #
@@ -95,12 +164,14 @@ SELECT ?country ?iso WHERE {
 #     without it                   0.6s
 #     explicit P31 VALUES list     3.1s, and only 9 of the 25 results
 #
-# So the subclass walk is ~70x slower AND the "cheap" enumerated-type
-# alternative silently loses two thirds of the data. Requiring P17 + P625 +
-# P1082 already restricts to populated places almost perfectly; the handful of
-# administrative units that slip through are harmless, because stage 2 matches
-# against the GHS roster and drops anything with no urban centre near it. We
-# were never going to trust Wikidata's classification anyway.
+# So the walk is ~70x slower AND the "cheap" enumerated-type alternative
+# silently loses two thirds of the data.
+#
+# We still need the type, because this pool is now the ROSTER, not a candidate
+# list — non-settlements would become map points. So we fetch the DIRECT P31
+# values here (cheap: one more OPTIONAL inside the existing aggregate) and do
+# the subclass walk once, globally, via SETTLEMENT_TYPES_QUERY above. Filtering
+# then happens locally against that set.
 #
 # The aggregation is load-bearing, not tidiness: P1082 is multi-valued (one per
 # census year) and P2044/P131 are multi-valued too, so a plain SELECT returns
@@ -118,13 +189,14 @@ SELECT ?country ?iso WHERE {
 # Non-Earth items (Mars craters etc. do carry P625) are excluded implicitly by
 # requiring P17, which only Earth countries satisfy.
 CITY_QUERY = """
-SELECT ?city ?cityLabel ?pop ?coord ?elev ?admin ?adminLabel WHERE {
+SELECT ?city ?cityLabel ?pop ?coord ?elev ?admin ?adminLabel ?types WHERE {
   {
     SELECT ?city
            (MAX(?p)    AS ?pop)
            (SAMPLE(?c) AS ?coord)
            (SAMPLE(?e) AS ?elev)
            (SAMPLE(?a) AS ?admin)
+           (GROUP_CONCAT(DISTINCT ?t; separator="|") AS ?types)
     WHERE {
       ?city wdt:P17  wd:%(country)s ;
             wdt:P625 ?c ;
@@ -133,6 +205,7 @@ SELECT ?city ?cityLabel ?pop ?coord ?elev ?admin ?adminLabel WHERE {
       %(hi_filter)s
       OPTIONAL { ?city wdt:P2044 ?e . }
       OPTIONAL { ?city wdt:P131  ?a . }
+      OPTIONAL { ?city wdt:P31   ?t . }
     }
     GROUP BY ?city
   }
@@ -225,10 +298,10 @@ def sparql(query, throttle):
                 continue
             raise
 
-        except (urllib.error.URLError, TimeoutError) as e:
+        except NET_ERRORS as e:
             throttle.after(started)
             delay = 30 * (attempt + 1)
-            print(f"    {e} — sleeping {delay}s", flush=True)
+            print(f"    {type(e).__name__}: {e} - sleeping {delay}s", flush=True)
             throttle.sleep_now(delay)
 
     raise QueryTimeout("still failing after transient retries")
@@ -239,17 +312,36 @@ def qid(uri):
 
 
 def parse_point(wkt):
-    """'Point(12.34 56.78)' -> (lat, lon). Wikidata gives lon first."""
-    inner = wkt[wkt.index("(") + 1:wkt.index(")")]
-    lon, lat = (float(x) for x in inner.split())
+    """'Point(12.34 56.78)' -> (lat, lon). Wikidata gives lon first.
+
+    Returns None for anything that is not a parseable Earth point. Not every
+    P625 value is plain WKT: non-Earth globes come back prefixed with the globe
+    URI, and a few values are malformed outright. An unguarded str.index() here
+    raised ValueError and cost the entire India and Iran fetches — one bad row
+    in 4,000 should never take a country with it.
+    """
+    if not wkt or "(" not in wkt or ")" not in wkt:
+        return None
+    try:
+        inner = wkt[wkt.index("(") + 1:wkt.index(")")]
+        lon, lat = (float(x) for x in inner.split()[:2])
+    except (ValueError, IndexError):
+        return None
+    if not (-180 <= lon <= 180 and -90 <= lat <= 90):
+        return None
     return lat, lon
 
 
 def rows_from(bindings):
     out = {}
+    skipped = 0
     for b in bindings:
         q = qid(b["city"]["value"])
-        lat, lon = parse_point(b["coord"]["value"])
+        pt = parse_point(b.get("coord", {}).get("value"))
+        if pt is None:
+            skipped += 1
+            continue
+        lat, lon = pt
         out[q] = {
             "qid": q,
             "name": b.get("cityLabel", {}).get("value"),
@@ -259,7 +351,12 @@ def rows_from(bindings):
             "elev": float(b["elev"]["value"]) if "elev" in b else None,
             "admin": qid(b["admin"]["value"]) if "admin" in b else None,
             "admin_name": b.get("adminLabel", {}).get("value"),
+            "types": [t.rsplit("/", 1)[-1]
+                      for t in (b.get("types", {}).get("value") or "").split("|")
+                      if t],
         }
+    if skipped:
+        print(f"    skipped {skipped} rows with unparseable coordinates", flush=True)
     return out
 
 
@@ -311,11 +408,20 @@ def main():
     CACHE.mkdir(parents=True, exist_ok=True)
     throttle = Throttle()
 
+    # One global subclass walk, cached. Cheap (0.4s) and it is what lets us
+    # filter non-settlements without the per-item walk that killed the query.
+    types_path = CACHE.parent / "settlement_types.json"
+    if not types_path.exists():
+        print("fetching settlement type closure...", flush=True)
+        ids = sorted(qid(b["s"]["value"]) for b in sparql(SETTLEMENT_TYPES_QUERY, throttle))
+        types_path.write_text(json.dumps(ids), encoding="utf-8")
+        print(f"  {len(ids)} settlement types", flush=True)
+
     countries_path = CACHE / "_countries.json"
     if countries_path.exists():
         countries = json.loads(countries_path.read_text(encoding="utf-8"))
     else:
-        print("fetching country list...", flush=True)
+        print("fetching country list (ISO holders)...", flush=True)
         # Keyed by QID, not ISO: several ISO codes map to two undissolved
         # entities (CY -> Cyprus and Republic of Cyprus, and likewise AQ, SA).
         # Keying cache files by ISO made the second one collide with the first
@@ -323,6 +429,18 @@ def main():
         seen = {}
         for b in sparql(COUNTRY_QUERY, throttle):
             seen.setdefault(qid(b["country"]["value"]), b["iso"]["value"])
+        print(f"  {len(seen)} from ISO codes", flush=True)
+
+        print("fetching country list (as cities declare it)...", flush=True)
+        added = 0
+        for b in sparql(P17_COUNTRY_QUERY, throttle):
+            q = qid(b["country"]["value"])
+            if q in seen or int(b["n"]["value"]) < P17_MIN_SETTLEMENTS:
+                continue
+            seen[q] = q          # no ISO code for these; label with the QID
+            added += 1
+        print(f"  {added} further entities cities point at", flush=True)
+
         countries = sorted(seen.items())
         countries_path.write_text(json.dumps(countries), encoding="utf-8")
     print(f"{len(countries)} countries", flush=True)
@@ -339,7 +457,17 @@ def main():
             total += len(json.loads(done_path.read_text(encoding="utf-8")))
             continue
 
-        rows, complete = fetch_country(cq, label, throttle)
+        # One bad country must never cost the whole run. Anything unexpected is
+        # recorded as partial and retried on the next pass; SystemExit (the
+        # ceilings) is deliberately allowed through.
+        try:
+            rows, complete = fetch_country(cq, label, throttle)
+        except SystemExit:
+            raise
+        except Exception as e:
+            print(f"[{i}/{len(countries)}] {label}: {type(e).__name__}: {e} "
+                  f"- recorded PARTIAL, continuing", flush=True)
+            rows, complete = {}, False
         # A partial result is written to a DIFFERENT filename, so the next run
         # retries it. Otherwise a country that failed every band caches as an
         # empty success and is indistinguishable from one with no settlements.
@@ -347,6 +475,10 @@ def main():
         tmp = target.with_suffix(".tmp")
         tmp.write_text(json.dumps(rows, ensure_ascii=False), encoding="utf-8")
         tmp.replace(target)
+        # Clear any stale partial once the country lands complete, or the run
+        # keeps reporting it as incomplete forever.
+        if complete and part_path.exists():
+            part_path.unlink()
 
         total += len(rows)
         # ASCII only in progress output: the Windows console is cp1252 and

@@ -1,0 +1,335 @@
+/* citybrowser — LIGHT palette.
+   Layout language follows the nycriders house style (one control bar, ghost
+   icon buttons, hairline-bordered panels, no transitions); only the colours
+   differ. Water is the page ground, land is drawn on top of it. */
+
+:root {
+  --water:  #d8e6f2;
+  --land:   #f6f4ef;
+  --coast:  #b9c8d6;
+  --panel:  #ffffff;
+  --line:   #d3dae1;
+  --text:   #1d242c;
+  --muted:  #6d7883;
+  --value:  #3c4650;
+  --accent: #3d6d99;
+  --warn:   #a8541c;
+  --shadow: 0 1px 3px rgba(20,35,55,.10), 0 6px 20px rgba(20,35,55,.07);
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; overflow: hidden; }
+body {
+  background: var(--water);
+  color: var(--text);
+  font-family: 'Nunito', system-ui, -apple-system, sans-serif;
+  font-weight: 400;
+}
+canvas { display: block; cursor: crosshair; }
+body.editing canvas { cursor: pointer; }
+body[data-tool="create"] canvas,
+body[data-tool="move"]  canvas { cursor: copy; }
+
+#title {
+  position: fixed; top: 14px; left: 18px; z-index: 5;
+  font-size: 15px; font-weight: 700; letter-spacing: .02em;
+  pointer-events: none;
+}
+#title span { font-weight: 400; color: var(--muted); margin-left: 8px; font-size: 12px; }
+
+#bar { position: fixed; top: 44px; left: 18px; z-index: 6; display: flex; gap: 6px; }
+
+.btn {
+  min-width: 30px; height: 30px; padding: 0 8px;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 4px;
+  color: var(--value); cursor: pointer; font-family: inherit; font-size: 12px;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.btn:hover { border-color: #a9b6c2; }
+.btn.active { border-color: var(--accent); color: var(--accent); }
+.btn.wide { flex: 1; }
+
+.panel {
+  background: var(--panel); border: 1px solid var(--line);
+  border-radius: 8px; box-shadow: var(--shadow);
+}
+
+#card {
+  position: fixed; z-index: 10; width: 300px; padding: 12px 14px;
+  display: none; pointer-events: none;
+}
+#card h2 { margin: 0 0 1px; font-size: 17px; font-weight: 700; }
+#card .alt { font-size: 11.5px; color: var(--accent); margin-bottom: 2px; }
+#card .sub { font-size: 11px; color: var(--muted); margin-bottom: 9px; }
+#card dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 3px 12px; }
+#card dt {
+  font-size: 10px; text-transform: uppercase; letter-spacing: .09em;
+  color: var(--muted); align-self: center;
+}
+#card dd {
+  margin: 0; font-size: 12.5px; color: var(--value);
+  font-variant-numeric: tabular-nums; text-align: right; font-weight: 700;
+}
+#card .sect {
+  font-size: 10px; text-transform: uppercase; letter-spacing: .09em;
+  color: var(--muted); margin: 10px 0 5px;
+}
+#card .chips { display: flex; flex-wrap: wrap; gap: 4px; }
+#card .chip {
+  font-size: 11px; border: 1px solid var(--line); border-radius: 3px;
+  padding: 1px 6px 1px 4px; display: inline-flex; align-items: center; gap: 4px;
+}
+.sw { width: 8px; height: 8px; border-radius: 2px; display: inline-block; }
+#card .facts { margin: 0; padding-left: 16px; font-size: 12px; color: var(--value); }
+#card .facts li { margin-bottom: 3px; }
+
+/* --- GHS urban centre block */
+#card .ucname { font-size: 12.5px; font-weight: 700; margin: -2px 0 5px; }
+#card .ucname em {
+  font-style: normal; font-weight: 400; font-size: 11px; color: var(--muted);
+}
+/* Right-aligned tabular numbers like the main list, but the basin is prose and
+   has to fall back to left-aligned wrapping or long names run off the card. */
+#card dl.uc dd.txt {
+  font-weight: 400; font-size: 11.5px; text-align: left;
+  white-space: normal; color: var(--muted);
+}
+#card .sparkwrap { margin: 7px 0 2px; }
+#card .spark { display: block; width: 100%; height: 34px; overflow: visible; }
+#card .sparklbl {
+  display: flex; justify-content: space-between; margin-top: 1px;
+  font-size: 9.5px; color: var(--muted); font-variant-numeric: tabular-nums;
+}
+#card .sparklbl em { font-style: normal; color: #a8b2bc; }
+#card .umem {
+  font-size: 10.5px; color: var(--muted); line-height: 1.5; margin-top: 5px;
+}
+
+/* --- climate */
+#card .kop { font-size: 12.5px; margin: -2px 0 4px; }
+#card .kop b { font-weight: 700; }
+#card .kop span { color: var(--muted); font-size: 11.5px; }
+#card .kopshift {
+  font-size: 10.5px; color: var(--muted); margin-top: 5px;
+  padding-top: 5px; border-top: 1px dashed var(--line);
+}
+#card .kopshift em { font-style: normal; color: #a8b2bc; }
+/* A borrowed or contradicted value must not read as a measured one. */
+.src { font-style: normal; font-size: 9.5px; color: #a8b2bc; font-weight: 400; }
+
+/* --- review queue */
+#reviewpanel {
+  position: fixed; z-index: 12; top: 84px; left: 18px; width: 300px;
+  padding: 12px 14px; display: none;
+}
+.rvhead { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.rvhead b { font-size: 12px; }
+.rvn {
+  flex: 1; font-size: 10.5px; color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.rvx { min-width: 22px; height: 22px; font-size: 14px; line-height: 1; }
+.rvcity h3 { margin: 0; font-size: 17px; font-weight: 700; }
+.rvsub { font-size: 11px; color: var(--muted); margin-bottom: 4px; }
+.rvpop {
+  font-size: 15px; font-weight: 700; color: var(--value);
+  font-variant-numeric: tabular-nums;
+}
+.rvpop em {
+  font-style: normal; font-size: 10px; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .09em; margin-left: 6px;
+}
+.rvask {
+  font-size: 11.5px; line-height: 1.5; color: var(--value);
+  background: #fbf7f2; border: 1px solid #ecdfd0; border-radius: 4px;
+  padding: 7px 9px; margin: 9px 0;
+}
+.rvcentre {
+  border: 1px solid var(--line); border-radius: 5px; padding: 8px 10px;
+}
+.rvcname { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+.rvcname em { font-style: normal; font-weight: 400; font-size: 11px; color: var(--muted); }
+.rvcentre dl.uc { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 2px 12px; }
+.rvcentre dt {
+  font-size: 10px; text-transform: uppercase; letter-spacing: .09em;
+  color: var(--muted); align-self: center;
+}
+.rvcentre dd {
+  margin: 0; font-size: 12px; color: var(--value); font-weight: 700;
+  text-align: right; font-variant-numeric: tabular-nums;
+}
+.rvcentre .umem {
+  font-size: 10.5px; color: var(--muted); line-height: 1.5; margin-top: 6px;
+}
+.rvacts { display: flex; gap: 6px; margin: 10px 0 7px; }
+.rvhint { font-size: 10px; color: #9aa4ae; line-height: 1.5; }
+.rvhint b { color: var(--value); font-weight: 700; }
+.rvdone { font-size: 12px; color: var(--muted); line-height: 1.6; padding: 6px 0 2px; }
+.rvdone em { font-style: normal; font-size: 10.5px; color: #9aa4ae; }
+#setpanel .btn.wide em { font-style: normal; color: var(--muted); margin-left: 5px; }
+#card .qid { margin-top: 9px; font-size: 10px; color: #9aa4ae; }
+.missing { color: #b3bbc4; }
+.warn {
+  font-size: 11px; color: var(--warn); background: #fdf3ea;
+  border: 1px solid #f0dcc8; border-radius: 4px; padding: 3px 6px; margin-bottom: 8px;
+}
+.warn-i { color: var(--warn); font-style: normal; font-size: 10px; }
+
+/* --- edit panel */
+#edit {
+  position: fixed; z-index: 11; top: 84px; right: 16px; width: 300px;
+  padding: 12px 14px; display: none; max-height: calc(100vh - 120px);
+  overflow-y: auto;
+}
+.ehead { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.ehead strong { font-size: 14px; }
+.efield { display: block; margin-bottom: 9px; }
+.efield > span {
+  display: block; font-size: 10px; text-transform: uppercase;
+  letter-spacing: .09em; color: var(--muted); margin-bottom: 3px;
+}
+.efield.edited > span { color: var(--accent); }
+.efield input, .efield textarea {
+  width: 100%; font-family: inherit; font-size: 12.5px; color: var(--text);
+  background: #fbfcfd; border: 1px solid var(--line); border-radius: 4px;
+  padding: 5px 7px; resize: vertical;
+}
+.efield input:focus, .efield textarea:focus { outline: none; border-color: var(--accent); }
+.etools { display: flex; gap: 6px; margin: 10px 0 6px; }
+.ehint { font-size: 10.5px; color: var(--muted); }
+
+#legend { position: fixed; bottom: 16px; left: 18px; z-index: 5; padding: 9px 12px; }
+#legend .t {
+  font-size: 10px; text-transform: uppercase; letter-spacing: .09em;
+  color: var(--muted); margin-bottom: 6px;
+}
+#legend .ramp { width: 170px; height: 7px; border-radius: 2px; }
+#legend .lbl {
+  display: flex; justify-content: space-between; font-size: 10px;
+  color: var(--muted); margin-top: 3px; font-variant-numeric: tabular-nums;
+}
+#legend .note { font-size: 10px; color: var(--muted); margin-top: 6px; }
+#legend .note b { color: var(--value); font-weight: 700; }
+
+#status {
+  position: fixed; bottom: 16px; right: 18px; z-index: 5;
+  font-size: 11px; color: var(--muted); text-align: right; line-height: 1.5;
+  max-width: 320px;
+}
+
+/* --- settings */
+#setpanel {
+  position: fixed; z-index: 11; top: 84px; left: 18px; width: 260px;
+  padding: 12px 14px; display: none;
+}
+#setpanel .t {
+  font-size: 10px; text-transform: uppercase; letter-spacing: .09em;
+  color: var(--muted); margin-bottom: 8px;
+}
+.chk {
+  display: flex; align-items: center; gap: 8px; font-size: 12.5px;
+  color: var(--value); margin-bottom: 6px; cursor: pointer;
+}
+.chk input { margin: 0; accent-color: var(--accent); }
+.chk span { flex: 1; }
+.chk em {
+  font-style: normal; font-size: 11px; color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.chk input:disabled + span { color: var(--muted); }
+#setpanel .shint {
+  font-size: 10.5px; color: var(--muted); line-height: 1.45;
+  margin-top: 9px; padding-top: 9px; border-top: 1px solid var(--line);
+}
+#setpanel select {
+  width: 100%; height: 28px; padding: 0 6px;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 4px;
+  color: var(--value); font-family: inherit; font-size: 12.5px; cursor: pointer;
+}
+#setpanel select:focus { outline: none; border-color: var(--accent); }
+
+/* Tile attribution is a licence condition, not decoration — it sits bottom
+   right, above #status, and is empty (and unclickable) when tiles are off. */
+#attrib {
+  position: fixed; bottom: 0; right: 0; z-index: 4;
+  font-size: 9.5px; color: var(--muted); line-height: 1.6;
+  padding: 1px 6px 1px 8px;
+  background: rgba(255,255,255,.72); border-top-left-radius: 4px;
+}
+#attrib:empty { display: none; }
+#attrib a { color: var(--muted); text-decoration: none; }
+#attrib a:hover { text-decoration: underline; }
+/* --- type tags on the card */
+.kinds { display: flex; flex-wrap: wrap; gap: 4px; margin: 2px 0 9px; }
+.ktype {
+  font-size: 10.5px; color: var(--muted);
+  border: 1px solid var(--line); border-radius: 3px; padding: 0 5px;
+}
+.kindtag {
+  font-size: 10.5px; padding: 0 5px; border-radius: 3px;
+  background: #fdf3ea; border: 1px solid #f0dcc8; color: var(--warn);
+}
+
+/* --- search */
+#searchbox { position: fixed; z-index: 12; top: 14px; right: 18px; width: 290px; }
+#q {
+  width: 100%; height: 32px; padding: 0 10px; font-family: inherit;
+  font-size: 13px; color: var(--text); background: var(--panel);
+  border: 1px solid var(--line); border-radius: 6px; box-shadow: var(--shadow);
+}
+#q:focus { outline: none; border-color: var(--accent); }
+#results {
+  margin-top: 5px; background: var(--panel); border: 1px solid var(--line);
+  border-radius: 6px; box-shadow: var(--shadow); overflow: hidden; display: none;
+}
+.res {
+  display: flex; align-items: baseline; gap: 8px; padding: 6px 10px;
+  cursor: pointer; border-bottom: 1px solid #eef1f4; font-size: 12.5px;
+}
+.res:last-child { border-bottom: 0; }
+.res:hover, .res.sel { background: #eef4fa; }
+.res b { font-weight: 700; }
+.res .rsub { color: var(--muted); font-size: 11px; flex: 1; }
+.res .rpop {
+  color: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums;
+}
+.res .rdot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+
+/* --- detail panel extras */
+.esub { font-size: 11px; color: var(--muted); margin: -6px 0 8px; }
+.elinks { display: flex; gap: 6px; margin-bottom: 10px; }
+.elinks .btn { text-decoration: none; }
+.apick { margin: -4px 0 10px; display: flex; flex-wrap: wrap; gap: 4px; }
+.apick .alab {
+  width: 100%; font-size: 10px; text-transform: uppercase;
+  letter-spacing: .09em; color: var(--muted); margin-bottom: 2px;
+}
+.acand {
+  font-family: inherit; font-size: 11.5px; cursor: pointer;
+  background: #fbfcfd; border: 1px solid var(--line); border-radius: 3px;
+  padding: 1px 6px; color: var(--value); display: inline-flex; gap: 5px;
+}
+.acand em { font-style: normal; color: var(--muted); font-size: 9.5px; }
+.acand.on { border-color: var(--accent); color: var(--accent); background: #eef4fa; }
+.acand:hover { border-color: #a9b6c2; }
+
+#card .sect .seed {
+  font-style: normal; text-transform: none; letter-spacing: 0;
+  color: #b3bbc4; font-size: 9.5px; margin-left: 5px;
+}
+#card .chip.dim { border-style: dashed; color: var(--muted); }
+
+.estats {
+  margin: 0 0 12px; display: grid; grid-template-columns: auto 1fr; gap: 2px 10px;
+}
+.estats dt {
+  font-size: 10px; text-transform: uppercase; letter-spacing: .09em;
+  color: var(--muted); align-self: center;
+}
+.estats dd {
+  margin: 0; font-size: 12.5px; color: var(--value); text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.estats .src {
+  font-style: normal; font-size: 9.5px; color: #b3bbc4; margin-left: 4px;
+}
