@@ -100,7 +100,16 @@
     display:flex; flex-direction:column; gap:9px;
   }
   .settings-row { display:flex; align-items:center; gap:10px; }
-  .settings-label { font-size:12px; color:#ccc; flex:none; min-width:96px; }
+  /* The live value sits INSIDE the label, and the slider takes the remaining width -- so a value
+     changing width moved the track. "off" is 15px and "15000" is 36px, which resized the track by
+     22px WHILE YOU WERE DRAGGING IT and slid the thumb out from under the cursor. The fix is to
+     pin the one thing that changes: .val is a fixed 36px box (the widest value, "15000") with
+     tabular figures, so the label is a constant width per row and the track cannot move. Fixing
+     the TRACK instead was tried and is worse -- it forces every label to a uniform box and leaves
+     a ragged puddle of dead space after the short ones. Text stays left-aligned in the box, so
+     the number still reads as part of the label rather than as a right-hand column. */
+  .settings-label { font-size:12px; color:#ccc; flex:none; min-width:96px; white-space:nowrap; }
+  .settings-label .val { display:inline-block; min-width:36px; font-variant-numeric:tabular-nums; }
   .settings-row input[type=range] { flex:1; min-width:0; accent-color:#6889a8; }
   .settings-row input[type=checkbox] { accent-color:#6889a8; margin:0; }
   /* segmented selector (japanrail-style); NB: .seg is taken by the scrubber ticks, so .segsel */
@@ -113,8 +122,11 @@
   .segsel span.on { color:#fff; background:#2a2f38; border-color:#6889a8; }
   /* growth legend. Stop positions are the growth values placed on a linear -2%..+2% axis, so the
      bar matches growthColor() exactly. The axis runs -5%..+8%, so zero sits at 38.5%, not at the
-     midpoint, and the labels are placed absolutely rather than spread evenly. */
-  #growthkey { margin-top:3px; }
+     midpoint, and the labels are placed absolutely rather than spread evenly.
+     It sits in the leaderboard panel, under the top-10 and above the Settings button, so it is
+     on screen whenever the colour it explains is. .hidden is driven by colorMode -- the key is
+     for the growth ramp specifically and means nothing in population or continent mode. */
+  #growthkey { margin-top:9px; }
   #growthkey.hidden { display:none; }
   #growthbar { height:7px; border-radius:3px; background:linear-gradient(90deg,
     #5d60e2 0%, #489cf0 7.692%, #45cf77 23.077%, #c6db55 38.462%, #fde047 46.154%,
@@ -212,6 +224,11 @@
   @media (max-width:640px) {
     #map-title { display:none; }
     #toplist-panel { width:176px; top:8px; right:8px; }
+    /* The growth key stays on at 176px rather than being hidden as desktop-only. It is 22px of
+       bar and labels, which the leaderboard can afford even on a phone -- and since it is no
+       longer duplicated inside Settings, hiding it here would leave the small screen with no
+       key at all, which is worse than the space it costs. To make it desktop-only, add
+       `#growthkey { display:none; }` here AND put a copy back in the settings panel. */
     #timebar, #timebar.big { bottom:8px; gap:7px; padding:8px 10px; width:calc(100vw - 16px); }
     #yearbig { width:82px; font-size:17px; }
     #tgraph { bottom:62px; }
@@ -263,6 +280,18 @@
 <div class="panel" id="toplist-panel">
   <div class="panel-title">Largest cities</div>
   <ol id="toplist"></ol>
+  <!-- The growth ramp lives out here, above the Settings button, rather than inside the panel
+       next to the "colour by" control that sets it: the colour it explains is on the map all the
+       time, so the key has to be too. Moved rather than copied -- the settings popover opens
+       directly under this panel, so a second copy would have sat about 100px below this one,
+       identical, whenever settings were open. -->
+  <div id="growthkey">
+    <div id="growthbar"></div>
+    <!-- the unit rides on the right-hand marker only; on all three it reads as three separate
+         quantities rather than one axis, and the other two are wide enough to crowd -->
+    <div id="growthlabels"><span>−5%</span><span style="left:38.462%">0</span><span>+8%/yr</span></div>
+    <div id="srckey"><i></i>step between two sources, not a real change</div>
+  </div>
   <button id="settingsbtn" title="Settings">
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"/><circle cx="12" cy="12" r="3"/></svg>
     <span>Settings</span>
@@ -286,11 +315,15 @@
     <input type="range" id="expslider" min="0.15" max="0.45" step="0.01" value="0.38">
   </div>
   <div class="settings-row">
-    <span class="settings-label">max cities <span id="capval">4000</span></span>
+    <span class="settings-label">max cities <span class="val" id="capval">4000</span></span>
     <input type="range" id="capslider" min="0" max="17" step="1" value="12">
   </div>
   <div class="settings-row">
-    <span class="settings-label">play speed <span id="speedval">1.0x</span></span>
+    <span class="settings-label">min pop <span class="val" id="minpopval">off</span></span>
+    <input type="range" id="minpopslider" min="0" max="10" step="1" value="0">
+  </div>
+  <div class="settings-row">
+    <span class="settings-label">play speed <span class="val" id="speedval">1.0x</span></span>
     <input type="range" id="speedslider" min="0.5" max="5" step="0.1" value="1">
   </div>
   <div class="seg-group">
@@ -299,11 +332,6 @@
       <span data-v="pop">population</span>
       <span data-v="region">continent</span>
       <span data-v="growth" class="on">growth</span>
-    </div>
-    <div id="growthkey">
-      <div id="growthbar"></div>
-      <div id="growthlabels"><span>−5%</span><span style="left:38.462%">0</span><span>+8%</span></div>
-      <div id="srckey"><i></i>step between two sources, not a real change</div>
     </div>
   </div>
   <div class="seg-group">
@@ -326,7 +354,7 @@
   <div id="yearbig">–</div>
   <button class="btn" id="playbtn" title="Play"></button>
   <div id="scrubwrap">
-    <input type="range" id="scrub" min="0" max="1000" step="1" value="750">
+    <input type="range" id="scrub" min="0" max="1000" step="1" value="650">
     <div class="seg" id="seg-ad1"><span>AD 1</span></div>
     <div class="seg" style="left:50%"><span>1400</span></div>
     <div class="seg" style="left:75%"><span>1900</span></div>
@@ -376,7 +404,10 @@ map.once('load', () => document.querySelector('.maplibregl-ctrl-attrib')
 
 // ---------- state ----------
 const cv = document.getElementById('bubbles'), ctx = cv.getContext('2d');
-let DATA = null, year = 1900, playing = false, sizeMul = 1, expo = 0.38;
+// Where the map opens, unless ?year= says otherwise. -1 is 1 BC -- there is no year 0 on this
+// timeline (spec 3.2b), so the year before AD 1 is -1 and fmtYear renders it "1 BC".
+const YEAR0 = -1;
+let DATA = null, year = YEAR0, playing = false, sizeMul = 1, expo = 0.38;
 const PIVOT_LOG = 6, EXPO_REF = 0.29;   // the contrast exponent pivots on a 1M city -- see draw()
 // Bubble size drifts down as the map runs forward, because the same size is not right at both
 // ends: 39 cities on an empty world at AD 1 want to be seen, 14,600 overlapping ones in 2025
@@ -403,6 +434,17 @@ function autoSizeMul(y){
 // to mean "all of them" on a dataset whose drawn count swings from 39 to 14,600.
 const CAP_STOPS = [0, 25, 50, 100, 200, 300, 500, 750, 1000, 1500, 2000, 3000, 4000, 5000, 7500, 10000, 15000, Infinity];
 let maxCities = 4000;
+// A hand floor, asked for after the first post: "only show me cities over a million". Stops for
+// the same reason CAP_STOPS has them -- the interesting resolution is 20k vs 100k, not 4.1M vs
+// 4.2M -- and 0 means off rather than a floor of zero, because mapFloor() is still underneath.
+// It only ever RAISES the floor (see FLOOR in draw): the era floor exists because below it the
+// modern map is a grey wash of 19,000 unreadable dots and most of draw()'s cost, and a slider
+// that could undo that would just be a way to make the map worse. This is a display filter like
+// mapFloor and hides bubbles only -- the data, the graph traces and the hover readouts are
+// untouched. It does reach the leaderboard, because that is built from the same filtered list,
+// so at a 1M cutoff in 2000 BC the top-10 is legitimately empty: nothing was that big.
+const MINPOP_STOPS = [0, 10e3, 20e3, 50e3, 100e3, 200e3, 500e3, 1e6, 2e6, 5e6, 10e6];
+let minPop = 0;
 // The graph's floor, and the level below which a control point is "not a city here" for the
 // data windows. The MAP's floor is mapFloor(), which starts here and rises with the era.
 const MINPOP = 5000;
@@ -727,8 +769,8 @@ function growthAt(c, y){
 //
 // Running the ramp *after* the first point was the first attempt and it is wrong twice over. It
 // contradicts the record it is drawn from (the figure says 100k at that year and we drew 19k),
-// and because 1900 is the single biggest census year in the sources, the default paused frame
-// came up full of pinprick cities that the data says are cities. Ahead-of-the-record invents
+// and because 1900 is the single biggest census year in the sources, the 1900 frame came up
+// full of pinprick cities that the data says are cities. Ahead-of-the-record invents
 // presence instead, which is the softer claim of the two -- a city with a first census in 1900
 // was there in 1898 -- and interpW already dims a bubble with no figure near it to the most-
 // interpolated opacity for free, so the ramp arrives pre-labelled as a guess.
@@ -873,29 +915,52 @@ function mapFloor(y){
 //    0 yellow-green  a marker: nothing on the map changes yet (Columbus, Dammam No. 7)
 const NOTE_IMPACT = [7, 6, 5, 4, 2, 1, 0].map(i => GROWTH_STOPS[i][1]);
 const noteColor = e => NOTE_IMPACT[(e.im || 0) + 3] || NOTE_IMPACT[3];
-// Headline set in white instead of its impact colour -- on trial. Most notes carry no detail
-// line, and a lone coloured headline with nothing white under it reads oddly. The dot, ring and
-// leader keep the colour, so the impact is still legible; set this false to put it back.
+// The WHOLE note -- headline, dot, ring and leader -- set in white instead of its impact colour.
+// It began as the headline only, on the grounds that a lone coloured headline with nothing white
+// under it reads oddly, and the dot and leader kept the colour so the impact was still legible.
+// They no longer do: seven hues on a map that is already carrying a seven-stop growth ramp on the
+// bubbles themselves was two colour systems arguing, and the note's job is to be read, not
+// classified. Consequence worth knowing: `im` now has NO on-map output at all, so the impact key
+// in Settings is a legend for something the map no longer draws, and check_events' im warnings
+// are checking a field nothing renders. Both still earn their keep as curation discipline -- the
+// warnings are what catch a note whose wording contradicts the bubble under it -- but neither is
+// visible to a reader any more. Set this false to put the whole colour scheme back.
 const NOTE_WHITE = true;
 // A note is FIRED by crossing its year and then lives in wall-clock milliseconds, not in any
 // coordinate on the timeline. The obvious alternative -- a window around the note's year, in
 // years or in scrubber fraction -- fails at both ends of the run: in scrubber fraction the
 // Black Death is legible from 1206 to 1488 (2 seconds of playback there is 280 years), and in
 // either the Ukraine note hangs permanently on the AD 2025 screen, which is where the run stops
-// and where most people end up sitting. Firing on the crossing means a note is up for two
+// and where most people end up sitting. Firing on the crossing means a note is up for three
 // seconds and then gone, whether it was passed at 1x, at 5x, or by dragging the scrubber.
 const NOTE_IN = 120, NOTE_HOLD = 2400, NOTE_OUT = 600;   // ms: fade in, full, fade out
 const NOTE_STACK = 2;         // slots a note may be pushed from its natural spot before it is
                               // dropped instead -- see placeNote
-const NOTE_MAX = 5;           // most fired at once; best pri wins
+// Most fired at once; best pri wins. Raised 5 -> 10 on 2026-08-23. At 5 the tier formula below
+// capped flavour notes at THREE live, against an average of about five on screen, so pri 3 spent
+// most of a run locked out -- 73 of 153 notes never appeared at notes=all. The cap is not there
+// to stop the map looking busy; it is there because placement is frozen and nothing can be
+// evicted, so without it a flavour note fired in 1868 could hold a slot and keep the Industrial
+// Revolution off the screen entirely. That failure needs a cap, not a cap this tight.
+const NOTE_MAX = 10;
+// How many may be live before a note of this rank is refused a slot. Pulled out of fireNotes so
+// it can be measured and tuned in one place -- it is the threshold that actually decides whether
+// a note appears. Measured over a full 1x playthrough at notes=all: placeNote never once failed
+// to find room (80 of 80 calls succeeded), so EVERY note that went missing was refused here,
+// before it ever tried. Tuning the stacking or the leader length cannot help a note that is not
+// allowed to place at all.
+const noteCap = pri => pri === 1 ? NOTE_MAX + 1 : NOTE_MAX + 1 - pri;
 const NOTE_FAR = 0.05;        // scrubber fraction past which a live note is cut, not faded
 const NOTE_F_T = "700 13px Nunito,system-ui,sans-serif";
 const NOTE_F_D = "400 11.5px Nunito,system-ui,sans-serif";
 // How much of the file to use: 1 = the headline events only, 2 = + the strong ones (default),
-// 3 = everything including the flavour tier. events.json holds ~140 notes, which is roughly
-// half again as many as the run has room for -- simulated at 1x, all three tiers leave the
-// screen full 60% of the time and 17 notes that never once get drawn. Two tiers is the level
-// the file was actually built for: 15% full, and everything in it appears.
+// 3 = everything including the flavour tier. events.json holds ~150 notes, more than one run has
+// room for -- at the 2026-08-23 count, 153 notes, and check_events at 1x says all three tiers put
+// 5.1 on screen on average with 17 that never once get drawn. Two tiers is the level the file was
+// built for: 83 notes, 2.8 on screen, and the screen full 5% of the run. Note that "17 never
+// drawn" is an upper bound on the damage, not a count of what a viewer loses -- the simulation
+// charges a slot for every note it fires, but fireNotes only spends one when placeNote actually
+// finds room, so the real screen is emptier than the model and notes it writes off do appear.
 // 0 none / 1 few / 2 some / 3 all. Level 0 is the whole off switch: the firing filter below
 // compares against e.pri, which is never below 1, so nothing fires and drawNotes bails.
 let noteLevel = 2;
@@ -919,13 +984,6 @@ function noteAlpha(e, t){
   if (a < 0 || a > NOTE_HOLD + NOTE_OUT) return 0;
   if (a < NOTE_IN) return a / NOTE_IN;
   if (a > NOTE_HOLD) return 1 - (a - NOTE_HOLD) / NOTE_OUT;
-  return 1;
-}
-// years the play loop covers per second at 1x, at this point in the timeline
-function yearsPerSec(y){
-  const Y = segY(), S = segS();
-  for (let i = 0; i < NSEG; i++)
-    if (y <= Y[i+1]) return (Y[i+1] - Y[i]) / (S[i+1] - S[i]) * PLAY_SPEED;
   return 1;
 }
 // Where a note's anchor lands on screen right now. Unlike a bubble, a label must NOT be drawn
@@ -1001,25 +1059,28 @@ function placeNote(e, v, boxes){
 }
 
 // Everything whose year lies in (from, to] starts its three seconds. Half-open so a note fires on
-// the one frame that crosses it and not on the next. `from` null means we LANDED on a year
-// rather than travelled through it (first load, ?year=): fire whatever is close enough that the
-// run would have shown it, scaled to the era so it means the same everywhere.
+// the one frame that crosses it and not on the next. Never called for the first year, which is
+// landed on rather than travelled to -- see setYear.
 function fireNotes(from, to){
   if (!EVENTS.length) return;
   const t = performance.now();
-  let lo, hi, jump = false;
-  if (from == null){
-    const eps = yearsPerSec(to) * 0.5;
-    lo = to - eps; hi = to + eps;
-  } else {
-    lo = Math.min(from, to); hi = Math.max(from, to);
-    // A fast drag of the scrubber crosses centuries between two frames. Firing everything in
-    // them turns the map into a strobe, so a jump gets one note -- the best one it passed.
-    jump = Math.abs(yearToS(to) - yearToS(from)) > 0.02;
-  }
+  let lo = Math.min(from, to), hi = Math.max(from, to);
+  // A fast drag of the scrubber crosses centuries between two frames. Firing everything in
+  // them turns the map into a strobe, so a jump gets one note -- the best one it passed.
+  let jump = Math.abs(yearToS(to) - yearToS(from)) > 0.02;
   // filtered at FIRING, not at drawing: a note below the level must not take a slot and then
   // be thrown away, and must not stop a note that would have been drawn from firing at all
-  const hits = EVENTS.filter(e => (e.pri || 2) <= noteLevel && e.y > lo && e.y <= hi);
+  // ...and never a note that is ALREADY on screen. Re-firing one re-runs placeNote, and the
+  // boxes it is handed include the note's own current box -- so it collides with itself, gets
+  // pushed past NOTE_STACK on the side it is already on, and lands on the other side. The label
+  // mirrors across its own anchor mid-life, which is exactly the flip storing `k` was meant to
+  // have ended. It showed up on one note only, and the reason it was always that one: replaying
+  // after the run ends sets playS to 0, so the first tick calls fireNotes(2025, -3496) -- a jump,
+  // which fires the single best note it passed, sorted pri then nearest, i.e. Uruk at -3300. One
+  // second later the run genuinely crosses -3300 and fires Uruk a second time while the first is
+  // still up. Anything else the run crosses twice inside three seconds would have done the same.
+  const hits = EVENTS.filter(e => (e.pri || 2) <= noteLevel && e.y > lo && e.y <= hi
+                                  && noteAlpha(e, t) <= 0);
   if (!hits.length) return;
   hits.sort((a, b) => (a.pri || 2) - (b.pri || 2) || Math.abs(a.y - to) - Math.abs(b.y - to));
 
@@ -1043,7 +1104,7 @@ function fireNotes(from, to){
     const pri = e.pri || 2;
     // pri 1 may overflow to one extra slot rather than be lost -- a headline note not appearing
     // at all is worse than six on screen for a moment. Lower tiers keep their headroom.
-    if (live >= (pri === 1 ? NOTE_MAX + 1 : NOTE_MAX + 1 - pri)) continue;
+    if (live >= noteCap(pri)) continue;
     if (!placeNote(e, v, boxes)) continue;
     e.t0 = t; live++; fired = true;
     boxes.push(noteBox(e, v));
@@ -1085,7 +1146,7 @@ function drawNotes(v){
     if (a <= 0.02 || !e.off) continue;
     const an = noteAnchor(e, v, e.off.k);   // the copy it chose when it fired, not a fresh pick
     if (!an) continue;                      // panned off-screen since it fired
-    const col = noteColor(e), dir = e.off.dir;
+    const col = NOTE_WHITE ? '#ffffff' : noteColor(e), dir = e.off.dir;
     const ax = an.ax, sy = an.sy, tx = ax + dir * 26, ty = sy + e.off.dy;
 
     ctx.globalAlpha = a;
@@ -1108,7 +1169,7 @@ function drawNotes(v){
     ctx.strokeStyle = 'rgba(0,0,0,.9)';
     ctx.font = NOTE_F_T; ctx.lineWidth = 3.5;
     ctx.strokeText(e.t, tx, ty + 13);
-    ctx.fillStyle = NOTE_WHITE ? '#fff' : col;
+    ctx.fillStyle = col;
     ctx.fillText(e.t, tx, ty + 13);
     if (e.d){
       ctx.font = NOTE_F_D; ctx.lineWidth = 3;
@@ -1140,7 +1201,7 @@ function draw(){
   // is only the scale anchor -- it fixes the pivot city at the 11.5px it always had, and is
   // deliberately not the default expo, which sits higher now that raising it costs nothing.
   const PIV = BASE * Math.pow(10, EXPO_REF * PIVOT_LOG);
-  const FLOOR = mapFloor(year);
+  const FLOOR = Math.max(mapFloor(year), minPop);   // the era floor, or the hand one if higher
   sizeWindow(year);
 
   // Every city above the floor this year, plus the ones inside an edgeRamp on either side of
@@ -1568,8 +1629,11 @@ let yearSet = false;
 function setYear(y, fromScrub){
   const was = year;
   year = Math.max(yStart(), Math.min(DATA.yearMax, y));
-  // the first call landed on a year rather than travelling to it -- see fireNotes
-  fireNotes(yearSet ? was : null, year);
+  // The first call LANDS on a year instead of travelling to it, so nothing fires: the notes are
+  // captions on a moment being crossed, and a page that opens with three of them already on the
+  // map reads as though something happened when the reader arrived. They start once the reader
+  // moves the timeline, which is the first moment any of them is about anything.
+  if (yearSet) fireNotes(was, year);
   yearSet = true;
   document.getElementById('yearbig').textContent = fmtYear(year);
   if (!fromScrub) scrub.value = Math.round(yearToS(year) * 1000);
@@ -1577,7 +1641,12 @@ function setYear(y, fromScrub){
 }
 
 // ---------- play loop (advances the slider fraction at constant speed -> time-warp) ----------
-const PLAY_SPEED = 0.016;   // fractions of the scrubber track per second, at 1x
+// Fractions of the scrubber track per second, at 1x. Dropped 30% from 0.016 on 2026-08-23, so a
+// playthrough is 89 seconds rather than 62. It is also the note budget: notes hold the screen for
+// a fixed 3s of WALL CLOCK, so slowing the run means fewer years crossed per 3 seconds and fewer
+// notes competing for the same five slots. Keep tools/check_events.py's mirror of this in step --
+// its whole crowding model is built on this number.
+const PLAY_SPEED = 0.0112;
 let lastT = null, playS = 0, speedMul = 1;
 function tick(t){
   if (!playing){ lastT = null; return; }
@@ -1630,6 +1699,17 @@ document.getElementById('capslider').oninput = e => {
   capval.textContent = maxCities === Infinity ? 'all' : maxCities;
   draw();
 };
+// gKey is cleared as well as redrawing: a high cutoff can empty cities out of the top 10, and
+// curTopSet is what the graph highlights, but minPop is not in the graph's cache key.
+const minpopval = document.getElementById('minpopval'), minpopslider = document.getElementById('minpopslider');
+function setMinPop(i){
+  minpopslider.value = i;
+  minPop = MINPOP_STOPS[i];
+  minpopval.textContent = minPop ? fmtPop(minPop) : 'off';
+  gKey = '';
+  if (DATA) draw();
+}
+minpopslider.oninput = e => setMinPop(+e.target.value);
 // Speed only scales the play loop, so nothing needs redrawing -- tick() reads it next frame.
 const speedval = document.getElementById('speedval');
 document.getElementById('speedslider').oninput = e => {
@@ -1651,7 +1731,7 @@ const fadetoggle = document.getElementById('fadetoggle');
 fadetoggle.checked = fadeBubbles;
 fadetoggle.onchange = e => { fadeBubbles = e.target.checked; draw(); };
 // Nothing fires retroactively -- a raised level takes effect at the next year crossed, and notes
-// already on screen finish their two seconds. Clearing them on a raise would make the click feel
+// already on screen finish their three seconds. Clearing them on a raise would make the click feel
 // like it deleted something rather than changed what comes next. Dropping to none is the one
 // exception, and it is drawNotes that enforces it: "none" has to mean gone now, not gone soon.
 function setNotes(n){
@@ -1807,12 +1887,23 @@ fetch('data/cities.json?v=' + Date.now()).then(r => r.json()).then(d => {
   const q = new URLSearchParams(location.search);
   setGraph(q.get('graph') !== '0');                // line graph on by default (?graph=0 hides it)
   if (q.get('fade') === '1'){ fadeBubbles = true; fadetoggle.checked = true; }   // off by default
+  // ?minpop=1000000 (or 1M / 100k) -- snapped UP to the nearest stop, so a link that asks for a
+  // floor never quietly gets a lower one than it named.
+  if (q.has('minpop')){
+    const raw = String(q.get('minpop')).trim().toLowerCase();
+    const mul = raw.endsWith('m') ? 1e6 : raw.endsWith('k') ? 1e3 : 1;
+    const want = parseFloat(raw) * mul;
+    if (want > 0){
+      let i = MINPOP_STOPS.findIndex(s => s >= want);
+      setMinPop(i < 0 ? MINPOP_STOPS.length - 1 : i);
+    }
+  }
   // ?notes=none|few|some|all, defaulting to some. The old spellings still work, because links to
   // this map are out in the world: ?notes=0 is none and ?notes=key is few.
   const NOTE_Q = { none: 0, '0': 0, few: 1, key: 1, some: 2, all: 3 };
   const nq = q.get('notes');
   setNotes(nq !== null && nq in NOTE_Q ? NOTE_Q[nq] : 2);
-  setYear(q.has('year') ? +q.get('year') : 1900);
+  setYear(q.has('year') ? +q.get('year') : YEAR0);
   if (map.loaded()) draw();
 });
 // Separate fetch, and a missing or broken file is survivable -- the notes are commentary on the

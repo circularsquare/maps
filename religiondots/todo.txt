@@ -1,0 +1,27 @@
+religiondots — todo (Anita's file; Claude does not edit this)
+
+
+- tiny dots: rings
+- 2 coor schemes 
+
+
+
+
+THINGS TO LOOK AT
+
+- IPUMS International might have religion + ADM1 for a lot of countries. Biggest single
+  coverage question in the file. sources 8
+- is the World Religion Database reachable through a university login
+- Brazil: IBGE has not published evangelical denominations for 2022 and may never. 2010 has
+  them by municipality. sources 2
+
+
+LATER
+
+- religion genealogy panel, with selection linked both ways to the map. spec 10
+- diversity toggle (effective number of groups per unit). spec 5
+
+
+
+deploy (once there is something to deploy) -- ancestrydots/COMMANDS.txt is the pattern:
+pmtiles to R2, index.html + legend to the website repo.

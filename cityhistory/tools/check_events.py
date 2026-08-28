@@ -3,7 +3,7 @@
 The notes are written by hand (and by agents working a region or an era at a time), so the
 things that go wrong are typos in coordinates, a note pinned to a year the map cannot show,
 overlong text that runs off the screen, and -- the one you cannot see by reading the file --
-six notes all firing inside the same two seconds of playback.
+six notes all firing inside the same three seconds of playback.
 
     python tools/check_events.py             # errors + warnings
     python tools/check_events.py --coverage  # + a century x region table of what is covered
@@ -33,7 +33,7 @@ D_MAX = 66      # detail chars, ~400px at 11.5px Nunito -- a quarter of the map'
 # scrub fraction advances at a constant PLAY_SPEED, so that is exactly a window of
 # NOTE_SECONDS * PLAY_SPEED in s, which is what the crowding and density checks below measure.
 NOTE_SECONDS = 3.0     # NOTE_IN is inside the hold, so it is (NOTE_HOLD + NOTE_OUT) / 1000
-PLAY_SPEED = 0.016
+PLAY_SPEED = 0.0112   # dropped 30% from 0.016 on 2026-08-23; must match index.html
 NOTE_MAX = 5   # a note that cannot find screen room near its anchor is also dropped, which
                # this cannot model -- so the draw counts below are an optimistic bound
 

@@ -718,6 +718,76 @@ one-character label on one point and nothing depends on it, but it is the same j
 
 ---
 
+## 2.11 History notes, after the data moved (2026-08-22)
+
+`data/events.json` was written against the old figures, so the last step was checking whether any
+note had been broken, orphaned or newly earned. `tools/check_events.py` reports **0 errors** before
+and after.
+
+**Nothing had to be removed, and nothing had to be shifted.** Every existing Americas note still
+fires on a year its data supports, and two of them are now better supported than when they were
+written:
+
+* **Teotihuacán burns (550)** — its curator note said "the data does NOT give a sharp break …
+  the bubble is already sagging when this fires", and floated moving it to 622. With Chandler's
+  AD 500 = 125,000 restored, the note now fires 50 years past a sharp peak, on the way down. The
+  suggestion is withdrawn in the note itself; 550 is now the better year of the two.
+* **Maya collapse (800)** — its note said "both Maya curves simply END at 800". They no longer do;
+  Tikal runs to 900 and Caracol to 900, so the Terminal Classic the note wanted to describe is
+  drawable, and it is now five bubbles declining rather than two vanishing.
+
+### Five notes the previous pass said it could not write
+
+The curator notes name their own blockers, and the rebuild removed them. Each new note's `p`
+quotes the sentence that was blocking it.
+
+| year | note | the blocker it clears |
+|---|---|---|
+| −300 | Monte Albán | "starts at 800:30k, roughly 1,300 years late … the data catches only its death" |
+| 90 | Cuicuilco buried by lava | "Cuicuilco … the standard explanation for where Teotihuacan's first population came from" — listed as missing |
+| 650 | Tikal and Calakmul at war | "Calakmul in particular means the Tikal-Calakmul rivalry in the brief cannot be shown at all" |
+| 750 | Wari and Tiwanaku | "absent from the dataset for this region: Wari, Moche … the Andes before 1438 is Tiahuanaco (with a fake curve) … and nothing else" |
+| 1000 | Chichén Itzá at its height | "Copan, Chichen Itza, Uxmal and Calakmul are all absent from the dataset" |
+
+The four stale curator notes (Teotihuacán ×2, Maya collapse, Inca expansion) each carry a dated
+`UPDATE 2026-08-22` block rather than a rewrite — the original reasoning is the record of why the
+note is where it is, and it stays.
+
+Three of the five needed their year moved, all for placement rather than history, and all three
+reasons are in the `p` notes: **Cuicuilco 100 → 90** (at 100 it fired in the same instant as
+`Rome reaches a million`, pri 1, and never won a slot — the block is exactly y=100..120, the
+length of Rome's hold, and it has to move *early* because Cuicuilco's series ends at 100);
+**Wari 800 → 750** and **Tikal/Calakmul 650, anchor moved to Tikal** (both were sitting on their
+anchor city's own peak control point, so `im: 2` had nothing to grow into — the Maya one was
+resolved by re-anchoring rather than re-dating, because moving it to 600 made it invisible behind
+the Plague of Justinian).
+
+### The one thing that is a judgement call, not a fix
+
+**Two of the five cost an existing note its slot**, and no year avoids it — the AD 600–800 band is
+saturated. Measured individually against a 24-note baseline:
+
+| new note | displaces |
+|---|---|
+| Monte Albán (−300) · Cuicuilco (90) · Chichén Itzá (1000) | **nothing** |
+| Tikal and Calakmul at war (650) | `Arab garrison cities founded` (671) |
+| Wari and Tiwanaku (750) | `An Lushan rebellion` (756) |
+
+Swept 562–700 and 600–1000 respectively: the Maya note has **no** zero-cost year anywhere in its
+defensible range, and Wari's only zero-cost years are 975–1000, which is past the point the note
+describes (Wari is collapsing by then, so it would have to become a Tiwanaku note).
+
+Both were kept, on the grounds that the displaced notes are the weaker halves of the trade:
+`Maya collapse` at 800 **never rendered either**, so the Maya had no visible note at all before
+this, and South America had **none anywhere before 1438** — while East Asia already has three in
+the 500–1000 era. Both displaced notes also independently trip the data check (`An Lushan` says
+decline but Xi'an never dips; `Arab garrison cities` says growth but Basrah never rises).
+
+**That reasoning is a preference, not a finding.** Either note reverts by deleting one entry, and
+the displaced note comes straight back.
+
+---
+
 # Part 3 — sub-Saharan Africa
 
 ## 3.1 The answer: no, and the cities are in the source
@@ -869,6 +939,16 @@ Applied in a second round on the same day, after the first was reviewed:
 | ✅ | **Allada** — blanked from 1706; the fade was right, its dates were not | `CF_END` + `DISAPPEARED` |
 | ✅ | **Córdoba** — 500 years held at one number, through the fitna and the Reconquista | `CENSUS` |
 | ❌ | **Córdoba's level at 1000** — deliberately not touched, see 4.9 |  |
+
+And a third round, once the rules freeze (`spec.md` §0) made clear that the right response to
+check G's blind spot was to *work its output by hand* rather than widen it — see 4.10:
+
+| | case | verdict |
+|---|---|---|
+| ✅ | **Chang'an** drawn as an even slide through the fall of the Tang | `CENSUS` |
+| ✅ | **Luoyang** — 300 years of one spline value | `CENSUS` |
+| ✅ | **Basra** — 783 years arriving as two flat blocks | `CENSUS` |
+| ✅ | **Great Zimbabwe** labelled "Zimbabwe" | `RENAME` |
 
 ## 4.1 Baghdad — a hand exemption that invented a collapse
 
@@ -1146,7 +1226,41 @@ Zhu Wen), Basra (`1123..1500`, `/6.0×`), Luoyang and Kano; junk includes `Lille
 to Chandler's **Antwerp** 29km away, `Xianyang-China` matched to **Xi'an**, and `Sololá-Guatemala`
 matched to **Q'umarkaj**. So the radius cannot simply be widened. Design in `spec.md` §6.13.
 
-## 4.8 Two things the checks could have caught, and one they should
+## 4.10 Working the blind spot by hand instead of widening the check
+
+The scan in 4.9 found 16 carry-forward runs that check G cannot see at 5km. Under the rules
+freeze the response is not a better check — it is to read that scan's output once and write down
+what it found. Four cities were worth repairing; the rest were either already hand decisions
+(Gallipoli, Sagaing), cosmetic (Huai'an at 1.4×, Kunming at 1.3×, where Chandler's benchmarks are
+flat so the redraw is the same line), or false matches the wider radius invented (`Lille-Belgium`
+to Chandler's **Antwerp**, `Xianyang` to **Xi'an**, `Sololá` to **Q'umarkaj**).
+
+**Chang'an**, and the best of the four. Stadestér holds 600,000 at 805, 900 *and* 1000, then reads
+45,000 at 1077 — so the strip kept 805 and the map drew the Tang capital sliding evenly across 272
+years, reading **243,000 in the year 900 against Chandler's own 500,000**. His row is the right
+shape and the map had lost it: a ninth century of gentle decline, then a catastrophe — Huang Chao
+took the city in 881 and Zhu Wen dismantled it in 904 and moved the capital to Luoyang. One figure
+is the difference between a slide and an event. Chang'an is now second in the world at AD 900.
+
+**Luoyang**, the receiving end of that same collapse, and the clearest case of the strip
+protecting a non-measurement: stadestér holds **264,157 — a spline value, not anyone's figure** —
+at 700, 800, 900 and 1000. Chandler has 800: 300,000 and 1000: 50,000 inside it. Restored.
+Not restored: his 100: 420,000, which check G also lists. The map draws populstat's 260,000 there,
+so taking Chandler's would override a drawn figure on a 1.6× disagreement — the Guangzhou case,
+declined here as everywhere.
+
+**Basra.** Two runs, 100,000 held 717–1100 and 60,000 held 1123–1500, so 783 years arrived as two
+flat blocks and the map drew two long lines. Chandler has five benchmarks across them and they are
+a real curve: 100,000 through the eighth century, **halved to 50,000 by 1000** (the Zanj revolt of
+869–883 and the silting of the canal country), a recovery to 60,000 across the twelfth, 50,000 at
+1200, and then the fall to his 1525: 10,000 that spans Hulagu's 1258 sack.
+
+**Great Zimbabwe** is a label, not a data fix, and it is here because GAPS §3.6 above is **wrong
+about it**: it says the city "reaches nothing". It is on the map and always was — 1300: 25,000 →
+1450: 40,000, the largest city in southern Africa for those frames. It was just filed under the
+name `Zimbabwe`, which reads as a country. `RENAME` to the source's own `other_names` value.
+
+## 4.11 Three things the checks could have caught — and are not getting
 
 - **`check_events.py` does not compare `im` against the curve.** The 1258 Baghdad note carried a
   −3 collapse colour over a *rising* bubble and it was found by eye. The tool already loads
@@ -1154,6 +1268,17 @@ matched to **Q'umarkaj**. So the radius cannot simply be widened. Design in `spe
   small: measure the anchor city's log-slope over an adjusted-time window forward of the note year
   and warn when the sign contradicts `im`. It would also catch the inverse — a `+2` over a flat or
   falling curve — which is the commoner mistake once a note file gets long. **Not implemented.**
+**Two of the three below are declined under the rules freeze** (`spec.md` §0) and are recorded so
+the reasoning survives, not as a plan.
+
+**The `im`-versus-curve check was built** — Anita added it to `check_events.py` the same day, and
+it is on the right side of the freeze: `tools/` validates prose written by hand, not a threshold
+applied to 22,149 records. First run: **21 notes of 154 whose stated direction the curve does not
+support**, including several worth looking at on their own — `An Lushan rebellion` (756) says
+decline over a Chang'an that is still rising, `Rome reaches a million` (100) says growth over a
+curve already at its peak, and `Plague of Justinian` (542) says decline over a flat Constantinople.
+Those are the same class of defect as the 1258 Baghdad note in 4.1, and now they are findable.
+
 - **Check A's `*` line should print Chandler's value beside the run's.** A `CF_KEEP` entry
   short-circuits both the strip and check G, so the only report that still mentions it is the one
   that has already decided it is deliberate. Printing `1.1M held 932..1100 (Chandler: 1.1M · 125k ·

@@ -23,18 +23,10 @@ DATA WORK, ROUGHLY BY VALUE
 - does praia really die at 1920
 - what is going on with muscat, does it die at 1940
 
-weird events 
-"deng opens the coast" a bit too poetic 
-"latin america moves to the cities" -> urbanizes?
-"columbus landfall -> remove subtitle
-"arab garisosn cities" -> arab garisosn cities founded? no subtitle
-"indus cities empty" -> "indus cities fall"? idk
-"bronze age collapse, cities burn" -> did they really burn? maybe just leave out cities burn
-
-
 
 cp index.html               ../../website/cityhistory/
 cp data/cities.json         ../../website/cityhistory/data/
+cp data/events.json  ../../website/cityhistory/data/
 cp index.png                ../../website/cityhistory/
 cp thumb.png                ../../website/assets/thumbs/cityhistory.png
 

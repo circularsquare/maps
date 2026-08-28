@@ -16,7 +16,7 @@ that found each class of defect, so a regression -- or a fresh one from a source
 shows up as a count going the wrong way. Regenerate coord_fixes.json with the two scripts in
 tools/ (see tools/make_coordfix.py).
 """
-import json, math, os, sys, unicodedata
+import json, math, os, re, sys, unicodedata
 import provenance                      # per-year source attribution; see source_codes()
 from collections import defaultdict
 
@@ -393,6 +393,14 @@ def chandler_benchmark(key, entry, y, v):
 DROP_KEYS = {
     "Kensington and Chelsea-United Kingdom",  # sub-borough carrying Greater London's figure;
                                               # a real "London" entry already exists -> duplicate
+
+    # Same shape as Kensington: "Honolulu CDP" is not a badly-named city but a second copy of
+    # one. "Honolulu-Hawaii" sits at the IDENTICAL coordinate (21.310,-157.858) with the longer
+    # record and the modern graft on top of it (peak 1.01M against the CDP entry's 372,000), so
+    # the CDP is a smaller dot drawn inside a bigger one, and its census-place figure is exactly
+    # the city-proper number the graft is there to replace. Renaming it to "Honolulu" -- the
+    # obvious first instinct -- would produce two identically-labelled dots at one point.
+    "Honolulu CDP-United States",
 
     # Richmond, Virginia, filed a THIRD time and at longitude +77.4667 -- the same lost minus
     # sign as El Tajin and Hamilton, drawing a 526,000-person city in the Taklamakan. Unlike
@@ -1350,6 +1358,43 @@ CENSUS = {
     "Córdoba-Spain": (1001, 1549, {
         1100: 60000, 1200: 60000, 1300: 40000, 1400: 36000, 1500: 30000,
     }),
+    # --- the rest of what check G's 5km join cannot see (spec 6.13) -------------------------
+    # These three came out of measuring that blind spot rather than from the report, and they
+    # are here rather than in a widened check because the measurement already did the finding:
+    # a scan that runs once and produces four table rows is cheaper than a rule that runs every
+    # build and needs a name gate to keep Lille out of Antwerp.
+    #
+    # CHANG'AN. Stadester holds 600,000 at 805, 900 AND 1000 and then reads 45,000 at 1077, so
+    # the strip keeps 805 and the map draws the Tang capital sliding evenly across 272 years --
+    # 243,000 in the year 900, against Chandler's own 500,000. Chandler's row is the right shape
+    # and the map had lost it: 805: 600,000 -> 900: 500,000 (a ninth century of gentle decline)
+    # -> 1077: 45,000 (Huang Chao took the city in 881 and Zhu Wen dismantled it in 904, moving
+    # the capital to Luoyang; it never was one again). One figure restores the difference between
+    # a slide and a catastrophe. Chandler has nothing at 1000, so nothing is planted there.
+    # His row joins 8.5km from the entry -- outside the 5km join, which is the whole reason this
+    # sat unreported.
+    "Xi'an-China": (806, 1076, {900: 500000}),
+    # LUOYANG, and the receiving end of that same collapse. Stadester holds one SPLINE value --
+    # 264,157, not a measurement of anything -- at 700, 800, 900 and 1000, so the strip keeps 700
+    # and the map runs 264,000 (700) to 40,000 (1077) as a single 377-year line. Chandler has two
+    # real benchmarks inside it, 800: 300,000 and 1000: 50,000, which say the Tang eastern capital
+    # was still at its height in 800 and finished by 1000 -- the An Lushan sacks of 756 and 762
+    # are behind the first and the Song move to Kaifeng behind the second.
+    # NOT restored: Chandler's 100: 420,000, which check G also lists. The map draws populstat's
+    # 260,000 there and taking Chandler's would OVERRIDE a drawn figure on a 1.6x disagreement.
+    # That is the Guangzhou case and it is declined, here as elsewhere.
+    "Luoyang-China": (701, 1076, {800: 300000, 1000: 50000}),
+    # BASRA, two runs and the same treatment. Stadester holds 100,000 from 717 to 1100 and then
+    # 60,000 from 1123 to 1500, so 783 years of the city arrive as two flat blocks and the map
+    # draws one line from 717 to 1123 and another to 1525. Chandler has five benchmarks across
+    # them and they are a real curve: 100,000 through the eighth century, HALVED to 50,000 by
+    # 1000 -- the Zanj revolt of 869-883 and the silting of the canal country -- a recovery to
+    # 60,000 across the twelfth, and 50,000 at 1200 before the long fall to his 1525: 10,000,
+    # which spans Hulagu's 1258 sack. 1123 and 1150 are quoted too although the first is already
+    # drawn and the second is collinear, so the whole span is one source rather than a patchwork.
+    "Basrah-Iraq": (718, 1524, {
+        800: 100000, 1000: 50000, 1100: 60000, 1123: 60000, 1150: 60000, 1200: 50000,
+    }),
 }
 
 # --- typed coordinates, for sites the repair machinery structurally cannot reach ----------
@@ -1481,6 +1526,15 @@ RENAME = {
                                                                    # = 50,000; burned 330 BC
     "Zhengzhou-China":                "Zhengzhou (Ao)",        # Chandler Ao (34.767,113.65)
                                                                # BC_1360 = 32,000; Shang capital
+    "Zimbabwe-Zimbabwe":              "Great Zimbabwe",        # the site, and the source's own
+                                                               # other_names value. Drawn 1300:
+                                                               # 25,000 -> 1450: 40,000, so it is
+                                                               # the largest city in southern
+                                                               # Africa for those frames and the
+                                                               # label reads as a country.
+                                                               # (GAPS 3.6 says it "reaches
+                                                               # nothing" -- that is stale; it is
+                                                               # on the map, just unrecognisable.)
     "Xiaguan-China":                  "Dali (Xiaguan)",        # Chandler Dali/Tali (25.606,
                                                                # 100.268), 4km away -- Xiaguan is
                                                                # the modern urban district of Dali
@@ -2141,6 +2195,43 @@ def despike(control, key, seam=None):
 def norm(s):
     return "".join(ch for ch in unicodedata.normalize("NFKD", s)
                    if not unicodedata.combining(ch)).lower().strip()
+
+
+# --- display-name repairs -------------------------------------------------------------------
+# Two source-wide spelling defects, fixed mechanically because they are defects of ENCODING and
+# WORD ORDER, not of naming policy. The map's policy is the local name (see the note above the
+# chandler_modelski_key block in RENAME) and neither of these changes it: "Ni`'znij Novgorod"
+# becomes "Nizhnij Novgorod", not "Nizhny Novgorod", and "Qahirah, Al-" becomes "Al-Qahirah",
+# not "Cairo". Turning an endonym into its English exonym stays a hand decision in RENAME.
+#
+# (1) The source writes a caron with a backtick, in two spellings for the same mark -- "`z" and
+#     "`'z" both mean z-caron, as its own other_names confirm ("Vorone`'z" -> "Voronezh",
+#     "`Cernivci" -> "Chernivtsi"). 481 entries carry it, and untouched they are unreadable.
+#     Restoring the real letter is always right; whether to go further and romanise it depends
+#     on the script the country actually uses, which is why that part is NOT done here. Cyrillic
+#     countries are then romanised by hand where it matters; Latin-script ones must keep the
+#     caron, because Kosice and Siauliai ARE spelled Kosice and Siauliai.
+CARON = {"c": "č", "s": "š", "z": "ž", "C": "Č", "S": "Š", "Z": "Ž",
+         "e": "ě", "r": "ř", "d": "ď", "t": "ť", "n": "ň"}
+_CARON_RE = re.compile(r"`'?(.)")
+
+# (2) Names inverted for alphabetisation, as a printed gazetteer does it: "Qahirah, Al-",
+#     "Havre, Le -", "Sables-d'Olonne, Les -". 94 entries. Nobody writes a city's name that way,
+#     and on a map there is nothing to alphabetise. The article rejoins the front -- hyphenated
+#     for the Arabic ones, spaced for the Romance ones, and tight for "L'" and "'s", which carry
+#     their own punctuation. Entries with a second comma ("Mahallah, Al-, al-Kubra") are left
+#     alone: the tail is part of the name and re-assembling it is a guess.
+_INV_AR = re.compile(r"^([^,]+), (A[dlnrstz]|Ash|El)-? ?-?$")
+_INV_LA = re.compile(r"^([^,]+), (La|Le|Les|De|Den|Het)\s?-$")
+_INV_TIGHT = re.compile(r"^([^,]+), (L'|'s)\s?-$")
+
+def clean_name(s):
+    s = _CARON_RE.sub(lambda m: CARON.get(m.group(1), m.group(1)), s)
+    for rx, joiner in ((_INV_AR, "-"), (_INV_LA, " "), (_INV_TIGHT, "")):
+        m = rx.match(s)
+        if m:
+            return m.group(2) + joiner + m.group(1)
+    return s
 
 
 def load_ghsl():
@@ -3626,7 +3717,17 @@ def main():
                 seed = max(NW_RAMP_START, y0 - 300)
                 if seed < y0:
                     S[seed] = PEAK_FLOOR * 0.4   # below peak+display floors: invisible, never resurrects
-        disp = RENAME.get(key, name)
+        # RENAME wins outright -- its values are already written the way they should read, and
+        # putting them through clean_name() would only risk it re-editing a hand decision.
+        #
+        # This is not purely cosmetic, and the second effect is the useful one. The pass-1
+        # match_centre() above still passes the RAW name, unchanged; but pass 2 matches on
+        # rec["n"], which is this, so a repaired name is also a repaired join against WUP's
+        # centre names. Both repairs move it the right way -- norm() leaves "ni`'znij novgorod"
+        # and "qahirah, al-" as-is, against WUP's "nizhniy novgorod" and "al-qahirah", while the
+        # cleaned forms drop the backticks and put the article back on the front. Expect the
+        # graft counts to move slightly; watch validate.py C and H.
+        disp = RENAME.get(key) or clean_name(name)
         rec = {"n": disp, "la": co[0], "lo": co[1], "t": c.get("type", "?"),
                "S": S, "peak": max(S.values()), "fades": cf_fades, "key": key,
                "country": c.get("country", ""),

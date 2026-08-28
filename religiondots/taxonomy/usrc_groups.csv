@@ -1,0 +1,375 @@
+Group Code,Group Name,path,Congregations,Adherents,counties
+Totals,,,356642.0,161224088.0,
+081,Catholic Church,christianity.catholic.latin.catholic-church,19405.0,61858137.0,2961.0
+500,Non-denominational Christian Churches,christianity.nondenominational.independent,44319.0,21095641.0,2753.0
+419,Southern Baptist Convention,christianity.baptist.sbc,51379.0,17649040.0,2677.0
+449,United Methodist Church,christianity.methodist.umc,30051.0,8018629.0,2989.0
+151,Church of Jesus Christ of Latter-day Saints,christianity.latterday.lds,14567.0,6721031.0,1900.0
+267,Muslim Estimate,islam,2771.0,4453908.0,670.0
+207,Evangelical Lutheran Church in America,christianity.lutheran.elca,8857.0,3139413.0,1698.0
+053,Assemblies of God,christianity.pentecostal.trinitarian.assemblies-of-god,12739.0,3094547.0,2510.0
+272,Jehovah's Witnesses,christianity.witnesses,12285.0,3016924.0,2166.0
+302,"National Missionary Baptist Convention, Inc.",christianity.baptist.national.nmbc,7564.0,2428820.0,1285.0
+283,Lutheran Church--Missouri Synod,christianity.lutheran.lcms,5897.0,1802680.0,1790.0
+193,Episcopal Church,christianity.anglican.episcopal,6353.0,1576611.0,1971.0
+300,"National Baptist Convention, USA, Inc.",christianity.baptist.national.nbcusa,2530.0,1567741.0,616.0
+355,Presbyterian Church (U.S.A.),christianity.reformed.presbyterian.pcusa,8851.0,1491775.0,2224.0
+167,Churches of Christ,christianity.restorationist.churches-of-christ,11881.0,1422331.0,2391.0
+097,Christian Churches and Churches of Christ,christianity.restorationist.christian-churches,4787.0,1379041.0,1524.0
+413,Seventh-day Adventist Church,christianity.adventist.sda,5989.0,1339830.0,1803.0
+019,American Baptist Churches in the USA,christianity.baptist.abcusa,4790.0,1259804.0,978.0
+003,African Methodist Episcopal Church,christianity.methodist.african.ame,3667.0,1059888.0,994.0
+276,Orthodox Judaism,judaism.orthodox,914.0,941480.0,167.0
+443,United Church of Christ,christianity.reformed.congregational.ucc,4793.0,924744.0,1119.0
+141,Church of God in Christ,christianity.pentecostal.trinitarian.cogic,3313.0,920429.0,782.0
+165,Church of the Nazarene,christianity.holiness.nazarene,5155.0,905690.0,1683.0
+127,"Church of God (Cleveland, Tennessee)",christianity.pentecostal.trinitarian.cog-cleveland,5921.0,868446.0,1544.0
+895,Hindu Temples,hinduism.temples,433.0,831229.0,207.0
+271,Reform Judaism,judaism.reform,690.0,662104.0,365.0
+890,Mahayana Buddhist,buddhism.mahayana,969.0,549344.0,252.0
+896,Hindu Yoga and Meditation,UNMAPPED,1378.0,437115.0,396.0
+123,"Church of God (Anderson, Indiana)",christianity.holiness.cog-anderson,1944.0,427038.0,877.0
+270,Conservative Judaism,judaism.conservative,529.0,417316.0,236.0
+089,Christian and Missionary Alliance,christianity.holiness.cma,1776.0,414360.0,666.0
+469,Wisconsin Evangelical Lutheran Synod,christianity.lutheran.wels,1198.0,408259.0,527.0
+093,Christian Church (Disciples of Christ),christianity.restorationist.disciples,3135.0,398072.0,1150.0
+246,Greek Orthodox Archdiocese of America,christianity.orthodox.canonical.greek,533.0,375117.0,348.0
+356,Presbyterian Church in America,christianity.reformed.presbyterian.pca,1873.0,372696.0,747.0
+263,"Foursquare Gospel, International Church of the",christianity.pentecostal.trinitarian.foursquare,1619.0,363626.0,568.0
+031,"Amish Groups, undifferentiated",christianity.anabaptist.amish.undifferentiated,2863.0,320625.0,456.0
+467,Wesleyan Church,christianity.holiness.wesleyan,1463.0,306005.0,701.0
+005,African Methodist Episcopal Zion Church,christianity.methodist.african.amez,1587.0,304704.0,414.0
+891,Theravada Buddhist,buddhism.theravada,566.0,291413.0,248.0
+101,Christian Methodist Episcopal Church,christianity.methodist.african.cme,1608.0,269126.0,542.0
+364,"Progressive National Baptist Convention, Inc.",christianity.baptist.national.pnbc,363.0,254571.0,146.0
+FFR,Full Gospel Christian Assemblies International,christianity.pentecostal.trinitarian.fgcai,722.0,240878.0,495.0
+371,Reformed Church in America,christianity.reformed.continental.rca,912.0,235195.0,237.0
+301,"National Baptist Convention of America, Inc.",christianity.baptist.national.nbca,389.0,225776.0,175.0
+435,Unitarian Universalist Association of Congregations,unitarianuniversalist,1004.0,201541.0,610.0
+892,Vajarayana Buddhist,buddhism.vajrayana,449.0,200039.0,201.0
+255,Lutheran Congregations in Mission for Christ,christianity.lutheran.lcmc,776.0,194144.0,470.0
+186,Coptic Orthodox Church,christianity.oriental.coptic,292.0,179155.0,186.0
+056,Baha'i Faith USA,bahai,983.0,178727.0,2546.0
+223,National Association of Free Will Baptists,christianity.baptist.freewill.nafwb,1930.0,156895.0,622.0
+463,Vineyard USA,christianity.pentecostal.charismatic.vineyard,499.0,155836.0,320.0
+201,Evangelical Covenant Church,christianity.pietist.covenant,863.0,154267.0,345.0
+105,Christian Reformed Church in North America,christianity.reformed.continental.crcna,792.0,149096.0,233.0
+017,American Baptist Association,christianity.baptist.landmark.aba,766.0,146820.0,358.0
+403,Salvation Army,christianity.holiness.salvation-army,1133.0,141098.0,767.0
+232,Full Gospel Baptist Church Fellowship,christianity.pentecostal.trinitarian.fgbcf,817.0,138354.0,287.0
+157,Church of the Brethren,christianity.anabaptist.brethren.cob,921.0,109288.0,371.0
+204,Ethiopian Orthodox,christianity.oriental.ethiopian,197.0,96374.0,87.0
+050,Armenian Church of North America (Catholicosate of Etchmiadzin),christianity.oriental.armenian-etchmiadzin,89.0,95207.0,65.0
+155,"Church of Our Lord Jesus Christ of the Apostolic Faith, Inc.",christianity.pentecostal.oneness.cooljc,527.0,85938.0,242.0
+331,Orthodox Church in America,christianity.orthodox.canonical.oca,560.0,74449.0,317.0
+221,Free Methodist Church--USA,christianity.methodist.free,619.0,71634.0,323.0
+034,"Antiochian Orthodox Christian Archdiocese of North America, The",christianity.orthodox.canonical.antiochian,255.0,71216.0,209.0
+288,Mennonite Church USA,christianity.anabaptist.mennonite.mcusa,550.0,71058.0,263.0
+185,Cumberland Presbyterian,christianity.reformed.presbyterian.cumberland,608.0,64901.0,251.0
+410,Serbian Orthodox Church in North America,christianity.orthodox.canonical.serbian,121.0,59508.0,90.0
+291,Missionary Church,christianity.anabaptist.mennonite.missionary-church,463.0,57638.0,212.0
+D71,Pentecostal Assemblies of the World,christianity.pentecostal.oneness.paw,108.0,54934.0,90.0
+264,International Churches of Christ,christianity.restorationist.icoc,175.0,53612.0,168.0
+181,Conservative Congregational Christian Conference,christianity.reformed.congregational.cccc,312.0,51112.0,193.0
+237,US Conference of Mennonite Brethren Churches,christianity.anabaptist.mennonite.usmb,218.0,43308.0,84.0
+361,Primitive Baptists Associations,christianity.baptist.primitive.associations,448.0,42196.0,231.0
+175,National Association of Congregational Christian Churches,christianity.reformed.congregational.naccc,322.0,41582.0,193.0
+202,Eritrean Orthodox,christianity.oriental.eritrean,64.0,41456.0,43.0
+275,Reconstructionist Judaism,judaism.reconstructionist,90.0,39441.0,74.0
+220,Association of Free Lutheran Congregations,christianity.lutheran.aflc,254.0,35804.0,161.0
+049,Armenian Apostolic Church of America (Catholicosate of Cilicia),christianity.oriental.armenian-cilicia,32.0,35565.0,25.0
+304,"National Primitive Baptist Convention, USA, Inc.",christianity.baptist.primitive.npbc,130.0,35426.0,41.0
+328,Evangelical Friends Church International,christianity.friends.efci,235.0,34960.0,125.0
+231,General Association of General Baptists,christianity.baptist.general,114.0,33916.0,84.0
+171,"Churches of God, General Conference",christianity.holiness.cogc-winebrenner,301.0,31228.0,112.0
+329,Open Bible Churches,christianity.pentecostal.trinitarian.open-bible,242.0,31068.0,145.0
+391,Friends General Conference,christianity.friends.fgc,374.0,27722.0,268.0
+143,"Church of Christ, Mennonite",christianity.anabaptist.mennonite.holdeman,170.0,25897.0,136.0
+336,Convention of Original Free Will Baptist Churches,christianity.baptist.freewill.original,226.0,23490.0,37.0
+401,Russian Orthodox Church Outside of Russia,christianity.orthodox.canonical.rocor,199.0,23360.0,162.0
+F58,United House of Prayer,christianity.pentecostal.trinitarian.house-of-prayer,134.0,21857.0,94.0
+333,Malankara Orthodox Syrian Church,christianity.oriental.malankara-orthodox,110.0,21722.0,69.0
+E54,"Bible Way Church of Our Lord Jesus Christ World Wide, Inc.",christianity.pentecostal.oneness.bibleway,33.0,21718.0,29.0
+438,Church of the United Brethren in Christ USA,christianity.methodist.unitedbrethren.ub,160.0,21222.0,94.0
+040,Apostolic Christian Church of America,christianity.anabaptist.apostolic.acca,87.0,19557.0,73.0
+FJ3,Weaverland Mennonite Conference,christianity.anabaptist.mennonite.weaverland,50.0,18573.0,65.0
+293,Moravian Church in America--Northern Province,christianity.moravian.northern,77.0,18098.0,37.0
+445,"United Holy Church of America, Inc.",christianity.pentecostal.trinitarian.uhca,352.0,17832.0,126.0
+001,Advent Christian Church,christianity.adventist.advent-christian,249.0,17780.0,141.0
+330,Macedonian Orthodox Church: American Diocese,christianity.orthodox.canonical.macedonian,20.0,17325.0,20.0
+209,Evangelical Lutheran Synod,christianity.lutheran.els,133.0,16536.0,98.0
+183,Conservative Mennonite Conference,christianity.anabaptist.mennonite.cmc,109.0,16493.0,73.0
+455,United Reformed Churches in North America,christianity.reformed.continental.urcna,88.0,15541.0,64.0
+431,Ukrainian Orthodox Church of the USA,christianity.orthodox.canonical.ukrainian,89.0,14971.0,73.0
+187,Cumberland Presbyterian Church in America,christianity.reformed.presbyterian.cumberland-america,111.0,14473.0,50.0
+073,Bible Fellowship Church,christianity.anabaptist.mennonite.bible-fellowship,68.0,14333.0,31.0
+295,Moravian Church in America--Southern Province,christianity.moravian.southern,53.0,14291.0,16.0
+225,Friends United Meeting,christianity.friends.fum,186.0,14138.0,83.0
+423,Syriac Orthodox Church of Antioch,christianity.oriental.syriac,47.0,12088.0,38.0
+286,Eastern Pennsylvania Mennonite Church,christianity.anabaptist.mennonite.eastern-pa,72.0,11193.0,55.0
+061,Beachy Amish-Mennonite Churches,christianity.anabaptist.amish.beachy,86.0,10093.0,74.0
+197,"Evangelical Church, The",christianity.methodist.holiness.evangelical-church,110.0,9809.0,64.0
+213,Fellowship of Evangelical Churches,christianity.anabaptist.mennonite.fec,71.0,9777.0,51.0
+400,Patriarchal Parishes of the Russian Orthodox Church in the USA,christianity.orthodox.canonical.patriarchal-parishes,30.0,9773.0,27.0
+FGR,Independent Judaism,judaism.independent,130.0,8486.0,52.0
+369,Protestant Reformed Churches in America,christianity.reformed.continental.prca,30.0,8411.0,16.0
+FJ2,Schmiedeleut Hutterite Group 2,christianity.anabaptist.hutterite.schmiedeleut-2,69.0,8310.0,34.0
+290,Metropolitan Community Churches,christianity.other.mcc,114.0,8156.0,103.0
+393,"Friends General Conference and Friends United Meeting, dually aligned meetings",christianity.friends.dually-aligned,130.0,8102.0,88.0
+FHF,Unaffiliated Conservative Mennonite,christianity.anabaptist.mennonite.unaffiliated-conservative,86.0,7975.0,67.0
+F31,Nationwide Fellowship Mennonite Churches,christianity.anabaptist.mennonite.nationwide,78.0,7508.0,77.0
+022,American Carpatho-Russian Orthodox Diocese,christianity.orthodox.canonical.carpatho-russian,78.0,7171.0,57.0
+334,Malankara Archdiocese of the Syrian Orthodox Church in North America,christianity.oriental.malankara-syriac,48.0,6828.0,41.0
+383,Reformed Presbyterian Church of North America,christianity.reformed.presbyterian.rpcna,91.0,6647.0,77.0
+FF2,Old German Baptist Brethren,christianity.anabaptist.brethren.ogbb,47.0,6644.0,33.0
+FHW,Biblical Mennonite Alliance,christianity.anabaptist.mennonite.bma,76.0,6339.0,60.0
+395,Romanian Orthodox Archdiocese in Americas,christianity.orthodox.canonical.romanian,31.0,6289.0,28.0
+FFK,Church of the Genuine Orthodox Christians,christianity.orthodox.oldcalendarist.goc,43.0,6053.0,39.0
+F28,Malankara Mar Thoma Church,christianity.oriental.marthoma,49.0,5531.0,39.0
+078,"Bulgarian Eastern Orthodox Diocese of the USA, Canada and Australia",christianity.orthodox.canonical.bulgarian,24.0,5386.0,21.0
+176,"Congregational Christian Churches, Additional (not part of any national CCC body)",christianity.reformed.congregational.additional,53.0,5118.0,44.0
+384,Reformed Zion Union Apostolic Church,christianity.methodist.african.rzua,38.0,4784.0,11.0
+FHZ,Lehrerleut Hutterite,christianity.anabaptist.hutterite.lehrerleut,43.0,4754.0,14.0
+415,"Seventh Day Baptist General Conference, USA and Canada",christianity.baptist.seventhday,79.0,4512.0,69.0
+424,Tampico Amish-Mennonite,christianity.anabaptist.amish.tampico,18.0,4092.0,18.0
+414,Stauffer Mennonite Church,christianity.anabaptist.mennonite.stauffer,17.0,3740.0,13.0
+FDZ,Mid-Atlantic Mennonite Fellowship,christianity.anabaptist.mennonite.mid-atlantic,32.0,3740.0,20.0
+373,Reformed Church in the United States,christianity.reformed.continental.rcus,47.0,3550.0,41.0
+F35,"Old German Baptist Brethren, New Conference",christianity.anabaptist.brethren.ogbb-new,35.0,3430.0,32.0
+362,"Primitive Baptists, Eastern District Association of",christianity.baptist.primitive.eastern-district,36.0,3404.0,14.0
+F38,Pilgrim Mennonite Conference,christianity.anabaptist.mennonite.pilgrim,31.0,3096.0,27.0
+FD7,Washington-Franklin Mennonite Conference,christianity.anabaptist.mennonite.washington-franklin,17.0,3096.0,9.0
+082,Central Baptist Association,christianity.baptist.landmark.central,22.0,3009.0,11.0
+121,Church of God General Conference,christianity.adventist.coggc,78.0,2942.0,61.0
+F27,Keystone Mennonite Fellowship,christianity.anabaptist.mennonite.keystone,25.0,2821.0,13.0
+FFL,Knanaya Churches in the USA,christianity.oriental.knanaya,16.0,2817.0,14.0
+282,Mennonite Christian Fellowship,christianity.anabaptist.mennonite.mcf,24.0,2759.0,24.0
+FFP,Ecumenical Catholic Communion,christianity.catholic.independent.ecc-communion,33.0,2757.0,24.0
+FHJ,Agape Christian Fellowship,christianity.anabaptist.mennonite.agape,21.0,2616.0,18.0
+405,Schwenkfelder Church,christianity.other.schwenkfelder,4.0,2471.0,2.0
+FEX,Apostolic Christian Faith,christianity.anabaptist.apostolic.faith,25.0,2453.0,24.0
+338,Independent Yearly Meetings of Friends,christianity.friends.independent-ym,65.0,2417.0,43.0
+432,Unaffiliated Amish-Mennonite (Conservative),christianity.anabaptist.amish.unaffiliated-conservative,34.0,2315.0,31.0
+FFS,Anabaptist Disciples of Christ,christianity.anabaptist.mennonite.adc,15.0,2293.0,12.0
+070,"Bruderhof Communities, Inc.",christianity.anabaptist.hutterite.bruderhof,19.0,2203.0,14.0
+FD1,Midwest Mennonite Fellowship,christianity.anabaptist.mennonite.midwest,23.0,2022.0,21.0
+278,Maranatha Amish-Mennonite,christianity.anabaptist.amish.maranatha,16.0,1983.0,15.0
+390,Conservative Yearly Meeting of Friends,christianity.friends.conservative-ym,32.0,1919.0,29.0
+FFX,Indian Bottom Association of Old Regular Baptists,christianity.baptist.oldregular.indian-bottom,43.0,1861.0,18.0
+FF7,Apostolic Christian Church (Nazarene) - East Conference,christianity.anabaptist.apostolic.nazarean-east,22.0,1820.0,18.0
+FE1,Wisler Mennonite Conference (Ohio-Indiana),christianity.anabaptist.mennonite.wisler-oh-in,10.0,1753.0,9.0
+FHQ,Hoover Old Order Mennonite Church,christianity.anabaptist.mennonite.hoover,10.0,1713.0,10.0
+FDT,Bethel Fellowship Mennonite Churches,christianity.anabaptist.mennonite.bethel,16.0,1600.0,16.0
+FFT,Dunkard Brethren Church,christianity.anabaptist.brethren.dunkard,25.0,1523.0,25.0
+FHH,Unaffiliated Amish-Mennonite (Spring Garden network),christianity.anabaptist.amish.spring-garden,7.0,1421.0,4.0
+FHX,Dariusleut Hutterite,christianity.anabaptist.hutterite.dariusleut,22.0,1409.0,13.0
+FF8,Apostolic Christian Church (Nazarene) - West Conference,christianity.anabaptist.apostolic.nazarean-west,14.0,1322.0,12.0
+F48,Southeastern Mennonite Conference,christianity.anabaptist.mennonite.southeastern,16.0,1307.0,10.0
+242,Georgian Orthodox Parishes in the United States,christianity.orthodox.canonical.georgian,14.0,1215.0,14.0
+FE2,Hope Mennonite Fellowship,christianity.anabaptist.mennonite.hope,10.0,1078.0,10.0
+FD8,Western Conservative Mennonite Fellowship,christianity.anabaptist.mennonite.western-conservative,11.0,997.0,10.0
+FFU,Meadow Springs Old Order Mennonite,christianity.anabaptist.mennonite.meadow-springs,4.0,958.0,4.0
+016,Ambassadors Amish-Mennonite,christianity.anabaptist.amish.ambassadors,8.0,923.0,8.0
+239,Swedenborgian Church,christianity.swedenborgian.swedenborgian-church,29.0,856.0,27.0
+062,Berea Amish-Mennonite,christianity.anabaptist.amish.berea,11.0,824.0,11.0
+FD2,Northeastern Mennonite Conference,christianity.anabaptist.mennonite.northeastern,9.0,823.0,9.0
+FEZ,Believers in Christ,christianity.anabaptist.mennonite.believers-in-christ,6.0,808.0,5.0
+FHM,Reidenbach Mennonite,christianity.anabaptist.mennonite.reidenbach,7.0,806.0,5.0
+248,Heritage Reformed Congregations,christianity.reformed.continental.heritage,6.0,803.0,6.0
+439,United Catholic Church,christianity.catholic.independent.united-catholic,5.0,800.0,4.0
+009,Albanian Orthodox Diocese of America,christianity.orthodox.canonical.albanian,2.0,800.0,2.0
+310,Midwest Beachy Amish-Mennonite,christianity.anabaptist.amish.midwest-beachy,7.0,791.0,7.0
+251,Holy Orthodox Church in North America,christianity.orthodox.oldcalendarist.hocna,16.0,749.0,15.0
+FJ1,Schmiedeleut Hutterite Group 1,christianity.anabaptist.hutterite.schmiedeleut-1,8.0,731.0,7.0
+FDW,Cumberland Valley Mennonite Church,christianity.anabaptist.mennonite.cumberland-valley,7.0,692.0,3.0
+324,Old Order River Brethren,christianity.anabaptist.brethren.river,5.0,688.0,4.0
+FF5,Riverdale Old Order (Virginia) Mennonite Conference,christianity.anabaptist.mennonite.riverdale,2.0,686.0,2.0
+FHV,Stauffer Mennonite (independent groups),christianity.anabaptist.mennonite.stauffer-independent,7.0,674.0,4.0
+FD9,Wisler Mennonite Conference (Ohio),christianity.anabaptist.mennonite.wisler-oh,5.0,644.0,5.0
+FHN,German Apostolic / Christian Apostolic Churches,christianity.anabaptist.apostolic.german,8.0,618.0,5.0
+FFZ,Sardis Association of Old Regular Baptists,christianity.baptist.oldregular.sardis,24.0,587.0,7.0
+FD6,Unaffiliated Conservative Mennonite (Grandview fellowship),christianity.anabaptist.mennonite.grandview,8.0,558.0,8.0
+389,Unaffiliated Friends Meetings,christianity.friends.unaffiliated,6.0,557.0,5.0
+FDY,Little Flock Mennonite Churches,christianity.anabaptist.mennonite.little-flock,7.0,533.0,7.0
+FF3,Original Virginia Conference Old Order Mennonite,christianity.anabaptist.mennonite.original-virginia,2.0,531.0,2.0
+459,United Zion Church,christianity.anabaptist.brethren.united-zion,9.0,523.0,2.0
+FD5,South Atlantic Mennonite Conference,christianity.anabaptist.mennonite.south-atlantic,6.0,494.0,5.0
+FHR,Unaffiliated Mennonite (Wisler Christian Fellowship),christianity.anabaptist.mennonite.wisler-fellowship,3.0,451.0,3.0
+FHT,Old Brethren (Goshen),christianity.anabaptist.brethren.old-brethren-goshen,3.0,427.0,3.0
+FFY,Northern New Salem Association of Old Regular Baptists,christianity.baptist.oldregular.northern-new-salem,22.0,397.0,20.0
+FDX,Haven Mennonite Fellowship,christianity.anabaptist.mennonite.haven,3.0,365.0,3.0
+FDV,Conservative Mennonite Churches of York and Adams Counties PA,christianity.anabaptist.mennonite.york-adams,5.0,327.0,2.0
+FHY,Hutterite Christian Communities,christianity.anabaptist.hutterite.christian-communities,3.0,327.0,3.0
+015,Amana Church Society,christianity.other.amana,1.0,321.0,1.0
+FHK,Independent Conservative Brethren,christianity.anabaptist.brethren.independent-conservative,8.0,312.0,7.0
+FD3,Old Brethren German Baptist,christianity.anabaptist.brethren.old-brethren-german-baptist,2.0,296.0,2.0
+FHS,Old Brethren (California),christianity.anabaptist.brethren.old-brethren-california,5.0,292.0,8.0
+FHP,Nazarene Christian Congregation (Side A or B),christianity.anabaptist.apostolic.nazarene-christian,8.0,289.0,6.0
+FG1,Solid Rock Association of Old Time Baptists,christianity.baptist.oldregular.solid-rock,4.0,289.0,4.0
+FHU,Orthodox Mennonite Church,christianity.anabaptist.mennonite.orthodox,2.0,284.0,3.0
+C51,Old Order German Baptist Church,christianity.anabaptist.brethren.old-order-german-baptist,4.0,283.0,3.0
+FDU,Christian Apostolic Church,christianity.anabaptist.apostolic.christian-apostolic,4.0,253.0,3.0
+FEY,Appalachian Mennonite Church,christianity.anabaptist.mennonite.appalachian,2.0,240.0,2.0
+FF4,Pleasant View Old Order (Virginia) Mennonite Conference,christianity.anabaptist.mennonite.pleasant-view,1.0,222.0,1.0
+FJ4,German Baptist Brethren,christianity.anabaptist.brethren.german-baptist,3.0,177.0,3.0
+FD4,Old Wenger Mennonite Church,christianity.anabaptist.mennonite.old-wenger,3.0,152.0,3.0
+379,Reformed Mennonite Church,christianity.anabaptist.mennonite.reformed,7.0,127.0,7.0
+FF1,Christian Communities,christianity.anabaptist.mennonite.christian-communities,2.0,104.0,2.0
+FFD,Independent Lutheran Diocese,christianity.lutheran.independent-diocese,4.0,100.0,4.0
+FFB,Reformed Congregations of North America,christianity.reformed.continental.rcna,1.0,26.0,1.0
+326,(Original) Church of God,christianity.pentecostal.trinitarian.original-cog,15.0,,12.0
+012,Alliance of Baptists,christianity.baptist.alliance,122.0,,86.0
+FG6,American Anglican Church,christianity.anglican.continuing.american-anglican,12.0,,11.0
+284,American Association of Lutheran Churches,christianity.lutheran.aalc,57.0,,52.0
+904,American Ethical Union,secular.ethicalculture,28.0,,27.0
+030,American Presbyterian Church,christianity.reformed.presbyterian.american,2.0,,2.0
+416,American Sikh Council,sikhism,307.0,,165.0
+F01,Anglican Catholic Church,christianity.anglican.continuing.acc,71.0,,67.0
+FG4,Anglican Church in America,christianity.anglican.continuing.aca,44.0,,42.0
+033,Anglican Church in North America,christianity.anglican.acna,873.0,,471.0
+FG3,Anglican Province of America,christianity.anglican.continuing.apa,56.0,,52.0
+FG2,Anglican Province of Christ the King,christianity.anglican.continuing.apck,39.0,,33.0
+042,"Apostolic Faith Mission of Portland, OR",christianity.pentecostal.trinitarian.afm-portland,54.0,,50.0
+045,Apostolic Lutheran Church of America,christianity.lutheran.apostolic,50.0,,36.0
+051,Armenian Evangelical Churches (Additional),christianity.reformed.congregational.armenian-evangelical,15.0,,6.0
+FGJ,Assemblies of the Lord Jesus Christ,christianity.pentecostal.oneness.aljc,33.0,,25.0
+055,Associate Reformed Presbyterian Church,christianity.reformed.presbyterian.arp,254.0,,126.0
+058,Association of Messianic Congregations,christianity.messianic.amc,12.0,,12.0
+047,Association of Reformed Baptist Churches of America,christianity.baptist.reformed.arbca,13.0,,12.0
+059,Baptist Missionary Association of America,christianity.baptist.landmark.bmaa,1144.0,,326.0
+FFV,Belarusan Autocephalous Orthodox Church,christianity.orthodox.other.belarusan,3.0,,3.0
+063,Berean Fellowship of Churches,christianity.nondenominational.berean,58.0,,49.0
+065,"Bethel Ministerial Association, Inc.",christianity.pentecostal.oneness.bethel,15.0,,12.0
+217,Bible Holiness Church,christianity.holiness.bible-holiness,34.0,,25.0
+FE8,Bible Methodist Connection,christianity.methodist.holiness.bible-methodist,93.0,,77.0
+069,Bible Presbyterian Church (General Synod),christianity.reformed.presbyterian.bpc,26.0,,24.0
+071,"Brethren Church, The (Ashland, Ohio)",christianity.anabaptist.brethren.ashland,106.0,,62.0
+075,Brethren In Christ Church,christianity.anabaptist.brethren.bic,235.0,,85.0
+084,Calvary Chapel Fellowship Churches,christianity.pentecostal.charismatic.calvary-chapel,243.0,,155.0
+086,Canadian and American Reformed Churches,christianity.reformed.continental.canrc,4.0,,3.0
+FFM,Catholic Apostolic Church in North America,christianity.catholic.independent.cacina,15.0,,15.0
+FGS,Chabad Judaism,judaism.chabad,953.0,,275.0
+244,Charis Fellowship,christianity.anabaptist.brethren.charis,268.0,,133.0
+087,Christadelphian,christianity.other.christadelphian,170.0,,131.0
+353,Christian Brethren (Open Plymouth Brethren),christianity.plymouth.open,841.0,,433.0
+F10,Christian Congregation in North America,christianity.pentecostal.trinitarian.ccna,69.0,,59.0
+D83,Christ's Sanctified Holy Church,christianity.holiness.cshc,18.0,,18.0
+F13,Church of Christ,christianity.restorationist.church-of-christ-unspecified,19.0,,18.0
+110,"Church of Christ (Holiness), U.S.A.",christianity.holiness.coch,124.0,,65.0
+111,"Church of Christ, Scientist",christianity.christianscience,314.0,,198.0
+F53,Church of God,christianity.pentecostal.trinitarian.cog-unspecified,204.0,,184.0
+125,Church of God (Apostolic),christianity.pentecostal.oneness.cog-apostolic,18.0,,15.0
+133,Church of God (Seventh Day),christianity.adventist.cog7,214.0,,129.0
+C22,Church of God and Saints of Christ,hebrewisraelite.cogasoc,22.0,,21.0
+122,"Church of God by Faith, Inc.",christianity.pentecostal.trinitarian.cogbf,169.0,,95.0
+145,Church of God of Prophecy,christianity.pentecostal.trinitarian.cogop,1614.0,,790.0
+120,"Church of God of the Apostolic Faith, Inc.",christianity.pentecostal.trinitarian.cogaf,56.0,,31.0
+F16,Church of God of the Firstborn,christianity.pentecostal.oneness.firstborn,2.0,,2.0
+146,"Church of God, Mountain Assembly, Inc.",christianity.pentecostal.trinitarian.cogma,95.0,,63.0
+149,"Church of Jesus Christ, The (Bickertonites)",christianity.latterday.bickertonite,64.0,,56.0
+A47,Church of the Living God (Christian Workers for Fellowship),christianity.pentecostal.trinitarian.colg-cwff,109.0,,72.0
+D59,Church of the Living God: Pillar and Ground of the Truth,christianity.pentecostal.trinitarian.colg-pillar,41.0,,33.0
+163,Church of the Lutheran Brethren of America,christianity.lutheran.clb,86.0,,69.0
+164,Church of the Lutheran Confession,christianity.lutheran.clc,75.0,,69.0
+168,Churches of Christ in Christian Union,christianity.holiness.cccu,186.0,,78.0
+172,Communion of Reformed Evangelical Churches,christianity.reformed.continental.crec,81.0,,77.0
+173,Community of Christ,christianity.latterday.community-of-christ,616.0,,439.0
+FFG,Concordia Lutheran Conference,christianity.lutheran.concordia,5.0,,3.0
+177,Congregational Holiness Church,christianity.pentecostal.trinitarian.congregational-holiness,188.0,,100.0
+180,Congregational Methodist Church,christianity.methodist.holiness.congregational-methodist,139.0,,87.0
+057,Converge Worldwide / Baptist General Conference,christianity.baptist.converge,881.0,,343.0
+FF6,Covenant Presbyterian Church,christianity.reformed.presbyterian.covenant,13.0,,13.0
+184,Covenant Reformed Presbyterian Church,christianity.reformed.presbyterian.covenant-reformed,2.0,,2.0
+FG7,Diocese of the Holy Cross,christianity.anglican.continuing.holy-cross,19.0,,18.0
+FFW,ECO: A Covenant Order of Presbyterians,christianity.reformed.presbyterian.eco,413.0,,261.0
+FGK,Ecumenical Catholic Church,christianity.catholic.independent.ecc,3.0,,3.0
+190,Elim Fellowship,christianity.pentecostal.trinitarian.elim,243.0,,131.0
+FG8,Episcopal Missionary Church,christianity.anglican.continuing.emc,26.0,,23.0
+FJ6,Evangel Presbytery,christianity.reformed.presbyterian.evangel,9.0,,8.0
+198,"Evangelical Association of Reformed, and Congregational Christian Churches",christianity.reformed.congregational.earccc,114.0,,71.0
+199,Evangelical Congregational Church,christianity.methodist.unitedbrethren.ecc,122.0,,28.0
+203,Evangelical Free Church of America,christianity.pietist.efca,1602.0,,729.0
+FFF,Evangelical Lutheran Conference and Ministerium of North America,christianity.lutheran.elcm,12.0,,10.0
+FFE,Evangelical Lutheran Diocese of North America,christianity.lutheran.eldona,31.0,,30.0
+215,Evangelical Methodist Church,christianity.methodist.holiness.evangelical-methodist,83.0,,68.0
+216,Evangelical Presbyterian Church,christianity.reformed.presbyterian.epc,625.0,,400.0
+FGP,Every Nation,christianity.pentecostal.charismatic.every-nation,85.0,,58.0
+210,Federation of Reformed Churches,christianity.reformed.continental.federation,6.0,,6.0
+FGL,Fellowship of Christian Assemblies,christianity.pentecostal.trinitarian.fca,93.0,,56.0
+211,Fellowship of Evangelical Bible Churches,christianity.anabaptist.mennonite.febc,17.0,,15.0
+067,Fellowship of Fundamentalist Bible Churches,christianity.nondenominational.ffbc,15.0,,10.0
+346,Fire-Baptized Holiness Church of the Americas,christianity.pentecostal.trinitarian.fbhca,34.0,,22.0
+224,Free Church of Scotland (Continuing),christianity.reformed.presbyterian.fcsc,5.0,,5.0
+222,Free Presbyterian Church of North America,christianity.reformed.presbyterian.fpcna,12.0,,11.0
+FFA,Free Presbyterian Church of Scotland,christianity.reformed.presbyterian.fpcs,1.0,,1.0
+227,Free Reformed Churches of North America,christianity.reformed.continental.frcna,2.0,,2.0
+F23,Full Gospel Assemblies International,christianity.pentecostal.trinitarian.fgai,49.0,,27.0
+388,General Association of Regular Baptist Churches,christianity.baptist.independent.garbc,939.0,,494.0
+233,General Church of the New Jerusalem,christianity.swedenborgian.general-church,43.0,,38.0
+FGM,Grace Communion International,christianity.adventist.gci,180.0,,171.0
+243,Grace Gospel Fellowship,christianity.nondenominational.grace-gospel,108.0,,80.0
+FGD,Higher Ground Always Abounding Assemblies,christianity.pentecostal.oneness.higher-ground,72.0,,41.0
+247,"Holiness Church Of God, Inc., The",christianity.holiness.hcog,17.0,,14.0
+FG9,Holy Catholic Church Anglican Rite,christianity.anglican.continuing.hccar,6.0,,6.0
+D92,"House of God, Holy Church of the Living God, The Pillar and Ground of the Truth, House of Prayer for All People",christianity.pentecostal.trinitarian.house-of-god,5.0,,5.0
+FE9,International Communion of the Charismatic Episcopal Church,christianity.anglican.continuing.cec,56.0,,54.0
+262,International Council of Community Churches,christianity.nondenominational.iccc,57.0,,46.0
+256,International Fellowship of Bible Churches,christianity.nondenominational.ifbc,36.0,,31.0
+260,International Fellowship of Christian Assemblies,christianity.pentecostal.trinitarian.ifca-assemblies,69.0,,45.0
+265,International Pentecostal Church of Christ,christianity.pentecostal.trinitarian.ipcc,49.0,,41.0
+268,Jain,jainism,79.0,,75.0
+F26,Kentucky Christian Conference,christianity.reformed.congregational.kentucky,35.0,,12.0
+FFJ,Laestadian Lutheran Church,christianity.lutheran.laestadian,29.0,,25.0
+274,Latvian Evangelical Lutheran Church in America,christianity.lutheran.latvian,12.0,,12.0
+D66,Liberal Catholic Church,christianity.catholic.independent.liberal,8.0,,8.0
+279,Lumber River Annual Conference of the Holiness Methodist Church,christianity.methodist.holiness.lumber-river,10.0,,2.0
+292,Moravian Church in America--Alaska Province,christianity.moravian.alaska,24.0,,4.0
+303,National Spiritualist Association of Churches,spiritualism.nsac,63.0,,48.0
+307,Netherlands Reformed Congregations,christianity.reformed.continental.nrc,16.0,,14.0
+309,New Apostolic Church USA,christianity.other.new-apostolic,187.0,,163.0
+308,New Testament Association of Independent Baptist Church,christianity.baptist.independent.ntaibc,119.0,,90.0
+313,North American Baptist Conference,christianity.baptist.nabc,270.0,,161.0
+314,North American Lutheran Church,christianity.lutheran.nalc,441.0,,291.0
+315,North American Old Roman Catholic Church,christianity.catholic.independent.naorcc,9.0,,9.0
+F32,North Carolina Congregational Conference,christianity.reformed.congregational.north-carolina,10.0,,6.0
+FFH,Old Apostolic Lutheran Church of America,christianity.lutheran.old-apostolic,28.0,,25.0
+FGA,Orthodox Anglican Church,christianity.anglican.continuing.oac,19.0,,19.0
+FFC,Orthodox Lutheran Confessional Conference,christianity.lutheran.olcc,2.0,,2.0
+FFN,Orthodox Old Roman Catholic Communion,christianity.catholic.independent.oorcc,6.0,,5.0
+335,Orthodox Presbyterian Church,christianity.reformed.presbyterian.opc,336.0,,262.0
+339,Pentecostal Church of God,christianity.pentecostal.trinitarian.pcg,990.0,,498.0
+347,"Pentecostal Free Will Baptist Church, Inc.",christianity.baptist.freewill.pentecostal,32.0,,18.0
+350,Pillar Ministries,christianity.pentecostal.charismatic.pillar,6.0,,5.0
+352,Polish National Catholic Church,christianity.catholic.independent.pncc,97.0,,60.0
+354,Presbyterian Reformed Church,christianity.reformed.presbyterian.prc,5.0,,5.0
+363,Primitive Methodist Church in the USA,christianity.methodist.primitive,59.0,,30.0
+365,Progressive Primitive Baptists,christianity.baptist.primitive.progressive,33.0,,25.0
+F41,Reformed Baptist Network,christianity.baptist.reformed.rbnet,42.0,,40.0
+FGB,Reformed Bible Church,christianity.reformed.continental.reformed-bible,4.0,,4.0
+375,Reformed Episcopal Church,christianity.anglican.continuing.rec,114.0,,75.0
+380,Reformed Presbyterian Church General Assembly,christianity.reformed.presbyterian.rpcga,12.0,,12.0
+382,"Reformed Presbyterian Church, Hanover Presbytery",christianity.reformed.presbyterian.hanover,15.0,,15.0
+FHG,Remnant: Charity Ministries and related,christianity.anabaptist.mennonite.remnant,32.0,,29.0
+408,Shinto,shinto,9.0,,4.0
+F49,Southern Illinois Christian Conference,christianity.reformed.congregational.southern-illinois,10.0,,3.0
+421,Southern Methodist Church,christianity.methodist.holiness.southern,73.0,,47.0
+F51,Sovereign Grace Churches,christianity.baptist.reformed.sovereign-grace,65.0,,59.0
+F52,Syro-Russian Orthodox Catholic Church,christianity.orthodox.other.syro-russian,8.0,,7.0
+425,Tao,daoism,22.0,,17.0
+F54,The local churches,christianity.other.local-churches,320.0,,221.0
+FGQ,Twelve Tribes,christianity.other.twelve-tribes,29.0,,27.0
+FER,Unification Church,unification,45.0,,44.0
+FGV,Union American Methodist Episcopal Church,christianity.methodist.african.uame,51.0,,20.0
+437,Union of Messianic Jewish Congregations,christianity.messianic.umjc,55.0,,49.0
+F57,"United American Free Will Baptist Denomination, Inc.",christianity.baptist.freewill.uafwb,29.0,,19.0
+FGN,United Church of God,christianity.adventist.ucg,186.0,,185.0
+FG5,United Episcopal Church of North America,christianity.anglican.continuing.uecna,24.0,,23.0
+454,United Pentecostal Church International,christianity.pentecostal.oneness.upci,4549.0,,1692.0
+124,"Unity Churches, Association of",newthought.unity,578.0,,353.0
+461,Unity of the Brethren,christianity.moravian.unity-of-the-brethren,24.0,,15.0
+FFQ,Vanguard Presbytery,christianity.reformed.presbyterian.vanguard,18.0,,17.0
+462,Vedanta Society,hinduism.vedanta,36.0,,34.0
+179,Venture Church Network,christianity.baptist.venture,748.0,,307.0
+FJ5,Westminster Evangelical Presbyterian Church,christianity.reformed.presbyterian.wepc,2.0,,2.0
+490,Zoroastrian,zoroastrianism,33.0,,29.0
+,,,,,1.0

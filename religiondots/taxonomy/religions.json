@@ -1,0 +1,3306 @@
+{
+  "nodes": [
+    {
+      "id": "christianity",
+      "label": "Christianity",
+      "kind": "branch"
+    },
+    {
+      "id": "christianity.catholic",
+      "label": "Catholic",
+      "kind": "branch"
+    },
+    {
+      "id": "christianity.catholic.latin",
+      "label": "Latin Catholic",
+      "kind": "branch"
+    },
+    {
+      "id": "christianity.catholic.independent",
+      "label": "Independent Catholic",
+      "kind": "branch",
+      "note": "Bodies using Catholic orders and rites outside communion with Rome — Polish National, Old Roman, Liberal Catholic and the small ecumenical Catholic jurisdictions. Distinct from Eastern Catholic churches, which ARE in communion."
+    },
+    {
+      "id": "christianity.orthodox",
+      "label": "Eastern Orthodox",
+      "kind": "branch"
+    },
+    {
+      "id": "christianity.orthodox.canonical",
+      "label": "Canonical Orthodox",
+      "kind": "branch",
+      "note": "Jurisdictions in communion with the recognised patriarchates."
+    },
+    {
+      "id": "christianity.orthodox.oldcalendarist",
+      "label": "Old Calendarist",
+      "kind": "branch",
+      "note": "Broke over the 1924 calendar reform; out of communion with the canonical churches."
+    },
+    {
+      "id": "christianity.orthodox.other",
+      "label": "Other Orthodox jurisdictions",
+      "kind": "branch",
+      "note": "Self-declared autocephalous or independent bodies recognised by nobody. Kept separate rather than folded into canonical, because the distinction is the whole content of these groups' identity."
+    },
+    {
+      "id": "christianity.oriental",
+      "label": "Oriental Orthodox",
+      "kind": "branch",
+      "note": "The non-Chalcedonian churches — Coptic, Ethiopian, Eritrean, Armenian, Syriac, Malankara. A separate communion from Eastern Orthodoxy since 451, and conflating the two is the commonest error in religion taxonomies."
+    },
+    {
+      "id": "christianity.anglican",
+      "label": "Anglican",
+      "kind": "branch"
+    },
+    {
+      "id": "christianity.anglican.continuing",
+      "label": "Continuing Anglican",
+      "kind": "branch",
+      "note": "Bodies that left the Episcopal Church, mostly after 1977 and 2003. A crowded field of small jurisdictions, which is why they get their own node rather than sitting beside the Episcopal Church as peers."
+    },
+    {
+      "id": "christianity.lutheran",
+      "label": "Lutheran",
+      "kind": "branch"
+    },
+    {
+      "id": "christianity.reformed",
+      "label": "Reformed",
+      "kind": "branch"
+    },
+    {
+      "id": "christianity.reformed.presbyterian",
+      "label": "Presbyterian",
+      "kind": "branch"
+    },
+    {
+      "id": "christianity.reformed.continental",
+      "label": "Continental Reformed",
+      "kind": "branch",
+      "note": "Dutch, German and related Reformed churches, as against the Scottish Presbyterian line."
+    },
+    {
+      "id": "christianity.reformed.congregational",
+      "label": "Congregational",
+      "kind": "branch"
+    },
+    {
+      "id": "christianity.baptist",
+      "label": "Baptist",
+      "kind": "branch"
+    },
+    {
+      "id": "christianity.baptist.national",
+      "label": "National Baptist conventions",
+      "kind": "branch",
+      "note": "The historically African-American conventions."
+    },
+    {
+      "id": "christianity.baptist.freewill",
+      "label": "Free Will Baptist",
+      "kind": "branch"
+    },
+    {
+      "id": "christianity.baptist.primitive",
+      "label": "Primitive Baptist",
+      "kind": "branch"
+    },
+    {
+      "id": "christianity.baptist.oldregular",
+      "label": "Old Regular Baptist",
+      "kind": "branch"
+    },
+    {
+      "id": "christianity.baptist.landmark",
+      "label": "Landmark Baptist",
+      "kind": "branch",
+      "note": "The ABA/BMA line, holding to Baptist church succession."
+    },
+    {
+      "id": "christianity.baptist.independent",
+      "label": "Independent Fundamental Baptist",
+      "kind": "branch",
+      "note": "The separatist fundamentalist associations."
+    },
+    {
+      "id": "christianity.baptist.reformed",
+      "label": "Reformed Baptist",
+      "kind": "branch"
+    },
+    {
+      "id": "christianity.methodist",
+      "label": "Methodist",
+      "kind": "branch"
+    },
+    {
+      "id": "christianity.methodist.african",
+      "label": "African Methodist",
+      "kind": "branch",
+      "note": "AME, AME Zion, CME and the smaller bodies of the same origin — separated over racial exclusion, not doctrine, which is why they are a branch rather than scattered."
+    },
+    {
+      "id": "christianity.methodist.holiness",
+      "label": "Holiness Methodist",
+      "kind": "branch",
+      "note": "Bodies that left Methodism over the holiness movement, keeping Methodist polity."
+    },
+    {
+      "id": "christianity.methodist.unitedbrethren",
+      "label": "United Brethren and Evangelical",
+      "kind": "branch",
+      "note": "The German-speaking American parallel to Methodism; most of it merged into the UMC."
+    },
+    {
+      "id": "christianity.holiness",
+      "label": "Holiness",
+      "kind": "branch"
+    },
+    {
+      "id": "christianity.pentecostal",
+      "label": "Pentecostal",
+      "kind": "branch"
+    },
+    {
+      "id": "christianity.pentecostal.trinitarian",
+      "label": "Trinitarian Pentecostal",
+      "kind": "branch"
+    },
+    {
+      "id": "christianity.pentecostal.oneness",
+      "label": "Oneness Pentecostal",
+      "kind": "branch",
+      "note": "Rejects the Trinity and baptises in Jesus' name. The 1916 split is the deepest division inside Pentecostalism and is invisible if these sit among the others."
+    },
+    {
+      "id": "christianity.pentecostal.charismatic",
+      "label": "Charismatic and neo-charismatic",
+      "kind": "branch",
+      "note": "Later movements — Vineyard, Calvary Chapel — outside the classical Pentecostal bodies."
+    },
+    {
+      "id": "christianity.restorationist",
+      "label": "Stone-Campbell Restorationist",
+      "kind": "branch",
+      "note": "Churches of Christ, Christian Churches, Disciples. 'Restorationist' is also used for the Latter Day Saints; kept to the Stone-Campbell movement here and the LDS branch named for itself, to avoid the ambiguity."
+    },
+    {
+      "id": "christianity.adventist",
+      "label": "Adventist",
+      "kind": "branch"
+    },
+    {
+      "id": "christianity.latterday",
+      "label": "Latter Day Saints",
+      "kind": "branch"
+    },
+    {
+      "id": "christianity.anabaptist",
+      "label": "Anabaptist",
+      "kind": "branch"
+    },
+    {
+      "id": "christianity.anabaptist.amish",
+      "label": "Amish",
+      "kind": "branch"
+    },
+    {
+      "id": "christianity.anabaptist.mennonite",
+      "label": "Mennonite",
+      "kind": "branch"
+    },
+    {
+      "id": "christianity.anabaptist.hutterite",
+      "label": "Hutterite",
+      "kind": "branch"
+    },
+    {
+      "id": "christianity.anabaptist.brethren",
+      "label": "Schwarzenau Brethren",
+      "kind": "branch",
+      "note": "The German Baptist Brethren line — Church of the Brethren, Old German Baptist, Dunkard, Brethren in Christ. Not to be confused with the Plymouth Brethren, who are unrelated, or with the Moravians, who call themselves Unity of the Brethren."
+    },
+    {
+      "id": "christianity.anabaptist.apostolic",
+      "label": "Apostolic Christian",
+      "kind": "branch",
+      "note": "The Fröhlich line, Swiss Anabaptist in origin."
+    },
+    {
+      "id": "christianity.friends",
+      "label": "Friends (Quakers)",
+      "kind": "branch"
+    },
+    {
+      "id": "christianity.moravian",
+      "label": "Moravian",
+      "kind": "branch"
+    },
+    {
+      "id": "christianity.plymouth",
+      "label": "Plymouth Brethren",
+      "kind": "branch"
+    },
+    {
+      "id": "christianity.pietist",
+      "label": "Pietist",
+      "kind": "branch",
+      "note": "The Scandinavian free-church line — Evangelical Covenant, Evangelical Free."
+    },
+    {
+      "id": "christianity.nondenominational",
+      "label": "Non-denominational",
+      "kind": "branch",
+      "note": "By construction the least satisfying node on the tree, and the second largest in the United States at 21.1M. It is a real answer people give, not a failure to classify."
+    },
+    {
+      "id": "christianity.witnesses",
+      "label": "Jehovah's Witnesses",
+      "kind": "branch",
+      "sources": {
+        "usrc2020": "272"
+      }
+    },
+    {
+      "id": "christianity.christianscience",
+      "label": "Christian Science",
+      "kind": "branch",
+      "sources": {
+        "usrc2020": "111"
+      }
+    },
+    {
+      "id": "christianity.swedenborgian",
+      "label": "Swedenborgian",
+      "kind": "branch"
+    },
+    {
+      "id": "christianity.messianic",
+      "label": "Messianic Judaism",
+      "kind": "branch",
+      "note": "CONTESTED PLACEMENT. Filed under Christianity because the theology is Christian; adherents generally identify as Jewish, and Jewish institutions do not accept the claim. Flagged rather than settled — see review notes in usrc2020.py."
+    },
+    {
+      "id": "christianity.other",
+      "label": "Other Christian",
+      "kind": "branch",
+      "note": "Bodies with no branch to belong to, not a residual. The computed residual is a different thing and is named '…, other or unspecified' — see spec.md §3.2."
+    },
+    {
+      "id": "judaism",
+      "label": "Judaism",
+      "kind": "branch"
+    },
+    {
+      "id": "islam",
+      "label": "Islam",
+      "kind": "branch",
+      "sources": {
+        "usrc2020": "267"
+      },
+      "review": "Muslim Estimate -> islam. Named an estimate by ASARB itself. No internal detail, so Sunni/Shia/Ahmadi are invisible in the US on this source."
+    },
+    {
+      "id": "hinduism",
+      "label": "Hinduism",
+      "kind": "branch"
+    },
+    {
+      "id": "buddhism",
+      "label": "Buddhism",
+      "kind": "branch"
+    },
+    {
+      "id": "sikhism",
+      "label": "Sikhism",
+      "kind": "branch",
+      "sources": {
+        "usrc2020": "416"
+      }
+    },
+    {
+      "id": "jainism",
+      "label": "Jainism",
+      "kind": "branch",
+      "sources": {
+        "usrc2020": "268"
+      }
+    },
+    {
+      "id": "zoroastrianism",
+      "label": "Zoroastrianism",
+      "kind": "branch",
+      "sources": {
+        "usrc2020": "490"
+      }
+    },
+    {
+      "id": "bahai",
+      "label": "Bahá'í",
+      "kind": "branch",
+      "sources": {
+        "usrc2020": "056"
+      }
+    },
+    {
+      "id": "shinto",
+      "label": "Shinto",
+      "kind": "branch",
+      "sources": {
+        "usrc2020": "408"
+      }
+    },
+    {
+      "id": "daoism",
+      "label": "Daoism",
+      "kind": "branch",
+      "sources": {
+        "usrc2020": "425"
+      }
+    },
+    {
+      "id": "unification",
+      "label": "Unification Church",
+      "kind": "branch",
+      "sources": {
+        "usrc2020": "FER"
+      }
+    },
+    {
+      "id": "newthought",
+      "label": "New Thought",
+      "kind": "branch"
+    },
+    {
+      "id": "spiritualism",
+      "label": "Spiritualism",
+      "kind": "branch"
+    },
+    {
+      "id": "unitarianuniversalist",
+      "label": "Unitarian Universalism",
+      "kind": "branch",
+      "note": "Christian in origin, not now in self-description. Top level rather than under Christianity for that reason.",
+      "sources": {
+        "usrc2020": "435"
+      }
+    },
+    {
+      "id": "hebrewisraelite",
+      "label": "Hebrew Israelite",
+      "kind": "branch",
+      "note": "CONTESTED PLACEMENT. Not a branch of Judaism, and Judaism does not recognise the claim; not straightforwardly Christian either. Own family, flagged."
+    },
+    {
+      "id": "secular",
+      "label": "Secular and ethical",
+      "kind": "branch",
+      "note": "Organised non-theistic congregational bodies — Ethical Culture. Distinct from the unaffiliated residual, who are not members of anything."
+    },
+    {
+      "id": "buddhism.mahayana",
+      "label": "Mahayana Buddhist",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "890"
+      }
+    },
+    {
+      "id": "buddhism.theravada",
+      "label": "Theravada Buddhist",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "891"
+      }
+    },
+    {
+      "id": "buddhism.vajrayana",
+      "label": "Vajarayana Buddhist",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "892"
+      }
+    },
+    {
+      "id": "christianity.adventist.advent-christian",
+      "label": "Advent Christian Church",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "001"
+      }
+    },
+    {
+      "id": "christianity.adventist.cog7",
+      "label": "Church of God (Seventh Day)",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "133"
+      }
+    },
+    {
+      "id": "christianity.adventist.coggc",
+      "label": "Church of God General Conference",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "121"
+      }
+    },
+    {
+      "id": "christianity.adventist.gci",
+      "label": "Grace Communion International",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FGM"
+      }
+    },
+    {
+      "id": "christianity.adventist.sda",
+      "label": "Seventh-day Adventist Church",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "413"
+      }
+    },
+    {
+      "id": "christianity.adventist.ucg",
+      "label": "United Church of God",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FGN"
+      }
+    },
+    {
+      "id": "christianity.anabaptist.amish.ambassadors",
+      "label": "Ambassadors Amish-Mennonite",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "016"
+      }
+    },
+    {
+      "id": "christianity.anabaptist.amish.beachy",
+      "label": "Beachy Amish-Mennonite Churches",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "061"
+      }
+    },
+    {
+      "id": "christianity.anabaptist.amish.berea",
+      "label": "Berea Amish-Mennonite",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "062"
+      }
+    },
+    {
+      "id": "christianity.anabaptist.amish.maranatha",
+      "label": "Maranatha Amish-Mennonite",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "278"
+      }
+    },
+    {
+      "id": "christianity.anabaptist.amish.midwest-beachy",
+      "label": "Midwest Beachy Amish-Mennonite",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "310"
+      }
+    },
+    {
+      "id": "christianity.anabaptist.amish.spring-garden",
+      "label": "Unaffiliated Amish-Mennonite (Spring Garden network)",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FHH"
+      }
+    },
+    {
+      "id": "christianity.anabaptist.amish.tampico",
+      "label": "Tampico Amish-Mennonite",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "424"
+      }
+    },
+    {
+      "id": "christianity.anabaptist.amish.unaffiliated-conservative",
+      "label": "Unaffiliated Amish-Mennonite (Conservative)",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "432"
+      }
+    },
+    {
+      "id": "christianity.anabaptist.amish.undifferentiated",
+      "label": "Amish Groups, undifferentiated",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "031"
+      }
+    },
+    {
+      "id": "christianity.anabaptist.apostolic.acca",
+      "label": "Apostolic Christian Church of America",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "040"
+      }
+    },
+    {
+      "id": "christianity.anabaptist.apostolic.christian-apostolic",
+      "label": "Christian Apostolic Church",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FDU"
+      }
+    },
+    {
+      "id": "christianity.anabaptist.apostolic.faith",
+      "label": "Apostolic Christian Faith",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FEX"
+      }
+    },
+    {
+      "id": "christianity.anabaptist.apostolic.german",
+      "label": "German Apostolic / Christian Apostolic Churches",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FHN"
+      }
+    },
+    {
+      "id": "christianity.anabaptist.apostolic.nazarean-east",
+      "label": "Apostolic Christian Church (Nazarene) - East Conference",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FF7"
+      }
+    },
+    {
+      "id": "christianity.anabaptist.apostolic.nazarean-west",
+      "label": "Apostolic Christian Church (Nazarene) - West Conference",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FF8"
+      }
+    },
+    {
+      "id": "christianity.anabaptist.apostolic.nazarene-christian",
+      "label": "Nazarene Christian Congregation (Side A or B)",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FHP"
+      },
+      "review": "Nazarene Christian Congregation -> anabaptist.apostolic. Apostolic Christian (Nazarean) related, not Church of the Nazarene."
+    },
+    {
+      "id": "christianity.anabaptist.brethren.ashland",
+      "label": "Brethren Church, The (Ashland, Ohio)",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "071"
+      }
+    },
+    {
+      "id": "christianity.anabaptist.brethren.bic",
+      "label": "Brethren In Christ Church",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "075"
+      }
+    },
+    {
+      "id": "christianity.anabaptist.brethren.charis",
+      "label": "Charis Fellowship",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "244"
+      }
+    },
+    {
+      "id": "christianity.anabaptist.brethren.cob",
+      "label": "Church of the Brethren",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "157"
+      }
+    },
+    {
+      "id": "christianity.anabaptist.brethren.dunkard",
+      "label": "Dunkard Brethren Church",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FFT"
+      }
+    },
+    {
+      "id": "christianity.anabaptist.brethren.german-baptist",
+      "label": "German Baptist Brethren",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FJ4"
+      }
+    },
+    {
+      "id": "christianity.anabaptist.brethren.independent-conservative",
+      "label": "Independent Conservative Brethren",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FHK"
+      }
+    },
+    {
+      "id": "christianity.anabaptist.brethren.ogbb",
+      "label": "Old German Baptist Brethren",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FF2"
+      }
+    },
+    {
+      "id": "christianity.anabaptist.brethren.ogbb-new",
+      "label": "Old German Baptist Brethren, New Conference",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "F35"
+      }
+    },
+    {
+      "id": "christianity.anabaptist.brethren.old-brethren-california",
+      "label": "Old Brethren (California)",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FHS"
+      }
+    },
+    {
+      "id": "christianity.anabaptist.brethren.old-brethren-german-baptist",
+      "label": "Old Brethren German Baptist",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FD3"
+      }
+    },
+    {
+      "id": "christianity.anabaptist.brethren.old-brethren-goshen",
+      "label": "Old Brethren (Goshen)",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FHT"
+      }
+    },
+    {
+      "id": "christianity.anabaptist.brethren.old-order-german-baptist",
+      "label": "Old Order German Baptist Church",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "C51"
+      }
+    },
+    {
+      "id": "christianity.anabaptist.brethren.river",
+      "label": "Old Order River Brethren",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "324"
+      }
+    },
+    {
+      "id": "christianity.anabaptist.brethren.united-zion",
+      "label": "United Zion Church",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "459"
+      }
+    },
+    {
+      "id": "christianity.anabaptist.hutterite.bruderhof",
+      "label": "Bruderhof Communities, Inc.",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "070"
+      },
+      "review": "Bruderhof -> anabaptist.hutterite. Communal and Anabaptist, was in and out of communion with the Hutterites; not a Hutterite Leut."
+    },
+    {
+      "id": "christianity.anabaptist.hutterite.christian-communities",
+      "label": "Hutterite Christian Communities",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FHY"
+      }
+    },
+    {
+      "id": "christianity.anabaptist.hutterite.dariusleut",
+      "label": "Dariusleut Hutterite",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FHX"
+      }
+    },
+    {
+      "id": "christianity.anabaptist.hutterite.lehrerleut",
+      "label": "Lehrerleut Hutterite",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FHZ"
+      }
+    },
+    {
+      "id": "christianity.anabaptist.hutterite.schmiedeleut-1",
+      "label": "Schmiedeleut Hutterite Group 1",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FJ1"
+      }
+    },
+    {
+      "id": "christianity.anabaptist.hutterite.schmiedeleut-2",
+      "label": "Schmiedeleut Hutterite Group 2",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FJ2"
+      }
+    },
+    {
+      "id": "christianity.anabaptist.mennonite.adc",
+      "label": "Anabaptist Disciples of Christ",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FFS"
+      },
+      "review": "Anabaptist Disciples of Christ -> anabaptist.mennonite. Low confidence."
+    },
+    {
+      "id": "christianity.anabaptist.mennonite.agape",
+      "label": "Agape Christian Fellowship",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FHJ"
+      },
+      "review": "Agape Christian Fellowship -> anabaptist.mennonite. Appears among the Mennonite groups in ASARB's own ordering; low confidence."
+    },
+    {
+      "id": "christianity.anabaptist.mennonite.appalachian",
+      "label": "Appalachian Mennonite Church",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FEY"
+      }
+    },
+    {
+      "id": "christianity.anabaptist.mennonite.believers-in-christ",
+      "label": "Believers in Christ",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FEZ"
+      },
+      "review": "Believers in Christ -> anabaptist.mennonite. Low confidence."
+    },
+    {
+      "id": "christianity.anabaptist.mennonite.bethel",
+      "label": "Bethel Fellowship Mennonite Churches",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FDT"
+      }
+    },
+    {
+      "id": "christianity.anabaptist.mennonite.bible-fellowship",
+      "label": "Bible Fellowship Church",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "073"
+      },
+      "review": "Bible Fellowship Church -> anabaptist.mennonite. Same shape as 291."
+    },
+    {
+      "id": "christianity.anabaptist.mennonite.bma",
+      "label": "Biblical Mennonite Alliance",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FHW"
+      }
+    },
+    {
+      "id": "christianity.anabaptist.mennonite.christian-communities",
+      "label": "Christian Communities",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FF1"
+      },
+      "review": "Christian Communities -> anabaptist.mennonite. Low confidence."
+    },
+    {
+      "id": "christianity.anabaptist.mennonite.cmc",
+      "label": "Conservative Mennonite Conference",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "183"
+      }
+    },
+    {
+      "id": "christianity.anabaptist.mennonite.cumberland-valley",
+      "label": "Cumberland Valley Mennonite Church",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FDW"
+      }
+    },
+    {
+      "id": "christianity.anabaptist.mennonite.eastern-pa",
+      "label": "Eastern Pennsylvania Mennonite Church",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "286"
+      }
+    },
+    {
+      "id": "christianity.anabaptist.mennonite.febc",
+      "label": "Fellowship of Evangelical Bible Churches",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "211"
+      },
+      "review": "Fellowship of Evangelical Bible Churches -> anabaptist.mennonite. Formerly Evangelical Mennonite Brethren."
+    },
+    {
+      "id": "christianity.anabaptist.mennonite.fec",
+      "label": "Fellowship of Evangelical Churches",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "213"
+      },
+      "review": "Fellowship of Evangelical Churches -> anabaptist.mennonite. Formerly Evangelical Mennonite Church."
+    },
+    {
+      "id": "christianity.anabaptist.mennonite.grandview",
+      "label": "Unaffiliated Conservative Mennonite (Grandview fellowship)",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FD6"
+      }
+    },
+    {
+      "id": "christianity.anabaptist.mennonite.haven",
+      "label": "Haven Mennonite Fellowship",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FDX"
+      }
+    },
+    {
+      "id": "christianity.anabaptist.mennonite.holdeman",
+      "label": "Church of Christ, Mennonite",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "143"
+      }
+    },
+    {
+      "id": "christianity.anabaptist.mennonite.hoover",
+      "label": "Hoover Old Order Mennonite Church",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FHQ"
+      }
+    },
+    {
+      "id": "christianity.anabaptist.mennonite.hope",
+      "label": "Hope Mennonite Fellowship",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FE2"
+      }
+    },
+    {
+      "id": "christianity.anabaptist.mennonite.keystone",
+      "label": "Keystone Mennonite Fellowship",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "F27"
+      }
+    },
+    {
+      "id": "christianity.anabaptist.mennonite.little-flock",
+      "label": "Little Flock Mennonite Churches",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FDY"
+      }
+    },
+    {
+      "id": "christianity.anabaptist.mennonite.mcf",
+      "label": "Mennonite Christian Fellowship",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "282"
+      }
+    },
+    {
+      "id": "christianity.anabaptist.mennonite.mcusa",
+      "label": "Mennonite Church USA",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "288"
+      }
+    },
+    {
+      "id": "christianity.anabaptist.mennonite.meadow-springs",
+      "label": "Meadow Springs Old Order Mennonite",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FFU"
+      }
+    },
+    {
+      "id": "christianity.anabaptist.mennonite.mid-atlantic",
+      "label": "Mid-Atlantic Mennonite Fellowship",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FDZ"
+      }
+    },
+    {
+      "id": "christianity.anabaptist.mennonite.midwest",
+      "label": "Midwest Mennonite Fellowship",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FD1"
+      }
+    },
+    {
+      "id": "christianity.anabaptist.mennonite.missionary-church",
+      "label": "Missionary Church",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "291"
+      },
+      "review": "Missionary Church -> anabaptist.mennonite. Origin is Mennonite Brethren in Christ; present identity is broadly evangelical/holiness."
+    },
+    {
+      "id": "christianity.anabaptist.mennonite.nationwide",
+      "label": "Nationwide Fellowship Mennonite Churches",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "F31"
+      }
+    },
+    {
+      "id": "christianity.anabaptist.mennonite.northeastern",
+      "label": "Northeastern Mennonite Conference",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FD2"
+      }
+    },
+    {
+      "id": "christianity.anabaptist.mennonite.old-wenger",
+      "label": "Old Wenger Mennonite Church",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FD4"
+      }
+    },
+    {
+      "id": "christianity.anabaptist.mennonite.original-virginia",
+      "label": "Original Virginia Conference Old Order Mennonite",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FF3"
+      }
+    },
+    {
+      "id": "christianity.anabaptist.mennonite.orthodox",
+      "label": "Orthodox Mennonite Church",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FHU"
+      }
+    },
+    {
+      "id": "christianity.anabaptist.mennonite.pilgrim",
+      "label": "Pilgrim Mennonite Conference",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "F38"
+      }
+    },
+    {
+      "id": "christianity.anabaptist.mennonite.pleasant-view",
+      "label": "Pleasant View Old Order (Virginia) Mennonite Conference",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FF4"
+      }
+    },
+    {
+      "id": "christianity.anabaptist.mennonite.reformed",
+      "label": "Reformed Mennonite Church",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "379"
+      }
+    },
+    {
+      "id": "christianity.anabaptist.mennonite.reidenbach",
+      "label": "Reidenbach Mennonite",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FHM"
+      }
+    },
+    {
+      "id": "christianity.anabaptist.mennonite.remnant",
+      "label": "Remnant: Charity Ministries and related",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FHG"
+      }
+    },
+    {
+      "id": "christianity.anabaptist.mennonite.riverdale",
+      "label": "Riverdale Old Order (Virginia) Mennonite Conference",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FF5"
+      }
+    },
+    {
+      "id": "christianity.anabaptist.mennonite.south-atlantic",
+      "label": "South Atlantic Mennonite Conference",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FD5"
+      }
+    },
+    {
+      "id": "christianity.anabaptist.mennonite.southeastern",
+      "label": "Southeastern Mennonite Conference",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "F48"
+      }
+    },
+    {
+      "id": "christianity.anabaptist.mennonite.stauffer",
+      "label": "Stauffer Mennonite Church",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "414"
+      }
+    },
+    {
+      "id": "christianity.anabaptist.mennonite.stauffer-independent",
+      "label": "Stauffer Mennonite (independent groups)",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FHV"
+      }
+    },
+    {
+      "id": "christianity.anabaptist.mennonite.unaffiliated-conservative",
+      "label": "Unaffiliated Conservative Mennonite",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FHF"
+      }
+    },
+    {
+      "id": "christianity.anabaptist.mennonite.usmb",
+      "label": "US Conference of Mennonite Brethren Churches",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "237"
+      }
+    },
+    {
+      "id": "christianity.anabaptist.mennonite.washington-franklin",
+      "label": "Washington-Franklin Mennonite Conference",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FD7"
+      }
+    },
+    {
+      "id": "christianity.anabaptist.mennonite.weaverland",
+      "label": "Weaverland Mennonite Conference",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FJ3"
+      }
+    },
+    {
+      "id": "christianity.anabaptist.mennonite.western-conservative",
+      "label": "Western Conservative Mennonite Fellowship",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FD8"
+      }
+    },
+    {
+      "id": "christianity.anabaptist.mennonite.wisler-fellowship",
+      "label": "Unaffiliated Mennonite (Wisler Christian Fellowship)",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FHR"
+      }
+    },
+    {
+      "id": "christianity.anabaptist.mennonite.wisler-oh",
+      "label": "Wisler Mennonite Conference (Ohio)",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FD9"
+      }
+    },
+    {
+      "id": "christianity.anabaptist.mennonite.wisler-oh-in",
+      "label": "Wisler Mennonite Conference (Ohio-Indiana)",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FE1"
+      }
+    },
+    {
+      "id": "christianity.anabaptist.mennonite.york-adams",
+      "label": "Conservative Mennonite Churches of York and Adams Counties PA",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FDV"
+      }
+    },
+    {
+      "id": "christianity.anglican.acna",
+      "label": "Anglican Church in North America",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "033"
+      }
+    },
+    {
+      "id": "christianity.anglican.continuing.aca",
+      "label": "Anglican Church in America",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FG4"
+      }
+    },
+    {
+      "id": "christianity.anglican.continuing.acc",
+      "label": "Anglican Catholic Church",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "F01"
+      }
+    },
+    {
+      "id": "christianity.anglican.continuing.american-anglican",
+      "label": "American Anglican Church",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FG6"
+      }
+    },
+    {
+      "id": "christianity.anglican.continuing.apa",
+      "label": "Anglican Province of America",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FG3"
+      }
+    },
+    {
+      "id": "christianity.anglican.continuing.apck",
+      "label": "Anglican Province of Christ the King",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FG2"
+      }
+    },
+    {
+      "id": "christianity.anglican.continuing.cec",
+      "label": "International Communion of the Charismatic Episcopal Church",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FE9"
+      }
+    },
+    {
+      "id": "christianity.anglican.continuing.emc",
+      "label": "Episcopal Missionary Church",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FG8"
+      }
+    },
+    {
+      "id": "christianity.anglican.continuing.hccar",
+      "label": "Holy Catholic Church Anglican Rite",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FG9"
+      }
+    },
+    {
+      "id": "christianity.anglican.continuing.holy-cross",
+      "label": "Diocese of the Holy Cross",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FG7"
+      }
+    },
+    {
+      "id": "christianity.anglican.continuing.oac",
+      "label": "Orthodox Anglican Church",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FGA"
+      }
+    },
+    {
+      "id": "christianity.anglican.continuing.rec",
+      "label": "Reformed Episcopal Church",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "375"
+      }
+    },
+    {
+      "id": "christianity.anglican.continuing.uecna",
+      "label": "United Episcopal Church of North America",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FG5"
+      }
+    },
+    {
+      "id": "christianity.anglican.episcopal",
+      "label": "Episcopal Church",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "193"
+      }
+    },
+    {
+      "id": "christianity.baptist.abcusa",
+      "label": "American Baptist Churches in the USA",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "019"
+      }
+    },
+    {
+      "id": "christianity.baptist.alliance",
+      "label": "Alliance of Baptists",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "012"
+      }
+    },
+    {
+      "id": "christianity.baptist.converge",
+      "label": "Converge Worldwide / Baptist General Conference",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "057"
+      }
+    },
+    {
+      "id": "christianity.baptist.freewill.nafwb",
+      "label": "National Association of Free Will Baptists",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "223"
+      }
+    },
+    {
+      "id": "christianity.baptist.freewill.original",
+      "label": "Convention of Original Free Will Baptist Churches",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "336"
+      }
+    },
+    {
+      "id": "christianity.baptist.freewill.pentecostal",
+      "label": "Pentecostal Free Will Baptist Church, Inc.",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "347"
+      }
+    },
+    {
+      "id": "christianity.baptist.freewill.uafwb",
+      "label": "United American Free Will Baptist Denomination, Inc.",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "F57"
+      }
+    },
+    {
+      "id": "christianity.baptist.general",
+      "label": "General Association of General Baptists",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "231"
+      }
+    },
+    {
+      "id": "christianity.baptist.independent.garbc",
+      "label": "General Association of Regular Baptist Churches",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "388"
+      }
+    },
+    {
+      "id": "christianity.baptist.independent.ntaibc",
+      "label": "New Testament Association of Independent Baptist Church",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "308"
+      }
+    },
+    {
+      "id": "christianity.baptist.landmark.aba",
+      "label": "American Baptist Association",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "017"
+      }
+    },
+    {
+      "id": "christianity.baptist.landmark.bmaa",
+      "label": "Baptist Missionary Association of America",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "059"
+      }
+    },
+    {
+      "id": "christianity.baptist.landmark.central",
+      "label": "Central Baptist Association",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "082"
+      }
+    },
+    {
+      "id": "christianity.baptist.nabc",
+      "label": "North American Baptist Conference",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "313"
+      }
+    },
+    {
+      "id": "christianity.baptist.national.nbca",
+      "label": "National Baptist Convention of America, Inc.",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "301"
+      }
+    },
+    {
+      "id": "christianity.baptist.national.nbcusa",
+      "label": "National Baptist Convention, USA, Inc.",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "300"
+      }
+    },
+    {
+      "id": "christianity.baptist.national.nmbc",
+      "label": "National Missionary Baptist Convention, Inc.",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "302"
+      }
+    },
+    {
+      "id": "christianity.baptist.national.pnbc",
+      "label": "Progressive National Baptist Convention, Inc.",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "364"
+      }
+    },
+    {
+      "id": "christianity.baptist.oldregular.indian-bottom",
+      "label": "Indian Bottom Association of Old Regular Baptists",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FFX"
+      }
+    },
+    {
+      "id": "christianity.baptist.oldregular.northern-new-salem",
+      "label": "Northern New Salem Association of Old Regular Baptists",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FFY"
+      }
+    },
+    {
+      "id": "christianity.baptist.oldregular.sardis",
+      "label": "Sardis Association of Old Regular Baptists",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FFZ"
+      }
+    },
+    {
+      "id": "christianity.baptist.oldregular.solid-rock",
+      "label": "Solid Rock Association of Old Time Baptists",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FG1"
+      }
+    },
+    {
+      "id": "christianity.baptist.primitive.associations",
+      "label": "Primitive Baptists Associations",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "361"
+      }
+    },
+    {
+      "id": "christianity.baptist.primitive.eastern-district",
+      "label": "Primitive Baptists, Eastern District Association of",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "362"
+      }
+    },
+    {
+      "id": "christianity.baptist.primitive.npbc",
+      "label": "National Primitive Baptist Convention, USA, Inc.",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "304"
+      }
+    },
+    {
+      "id": "christianity.baptist.primitive.progressive",
+      "label": "Progressive Primitive Baptists",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "365"
+      }
+    },
+    {
+      "id": "christianity.baptist.reformed.arbca",
+      "label": "Association of Reformed Baptist Churches of America",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "047"
+      }
+    },
+    {
+      "id": "christianity.baptist.reformed.rbnet",
+      "label": "Reformed Baptist Network",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "F41"
+      }
+    },
+    {
+      "id": "christianity.baptist.reformed.sovereign-grace",
+      "label": "Sovereign Grace Churches",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "F51"
+      }
+    },
+    {
+      "id": "christianity.baptist.sbc",
+      "label": "Southern Baptist Convention",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "419"
+      }
+    },
+    {
+      "id": "christianity.baptist.seventhday",
+      "label": "Seventh Day Baptist General Conference, USA and Canada",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "415"
+      }
+    },
+    {
+      "id": "christianity.baptist.venture",
+      "label": "Venture Church Network",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "179"
+      }
+    },
+    {
+      "id": "christianity.catholic.independent.cacina",
+      "label": "Catholic Apostolic Church in North America",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FFM"
+      }
+    },
+    {
+      "id": "christianity.catholic.independent.ecc",
+      "label": "Ecumenical Catholic Church",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FGK"
+      }
+    },
+    {
+      "id": "christianity.catholic.independent.ecc-communion",
+      "label": "Ecumenical Catholic Communion",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FFP"
+      }
+    },
+    {
+      "id": "christianity.catholic.independent.liberal",
+      "label": "Liberal Catholic Church",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "D66"
+      }
+    },
+    {
+      "id": "christianity.catholic.independent.naorcc",
+      "label": "North American Old Roman Catholic Church",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "315"
+      }
+    },
+    {
+      "id": "christianity.catholic.independent.oorcc",
+      "label": "Orthodox Old Roman Catholic Communion",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FFN"
+      }
+    },
+    {
+      "id": "christianity.catholic.independent.pncc",
+      "label": "Polish National Catholic Church",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "352"
+      }
+    },
+    {
+      "id": "christianity.catholic.independent.united-catholic",
+      "label": "United Catholic Church",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "439"
+      }
+    },
+    {
+      "id": "christianity.catholic.latin.catholic-church",
+      "label": "Catholic Church",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "081"
+      }
+    },
+    {
+      "id": "christianity.friends.conservative-ym",
+      "label": "Conservative Yearly Meeting of Friends",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "390"
+      }
+    },
+    {
+      "id": "christianity.friends.dually-aligned",
+      "label": "Friends General Conference and Friends United Meeting, dually aligned meetings",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "393"
+      }
+    },
+    {
+      "id": "christianity.friends.efci",
+      "label": "Evangelical Friends Church International",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "328"
+      }
+    },
+    {
+      "id": "christianity.friends.fgc",
+      "label": "Friends General Conference",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "391"
+      }
+    },
+    {
+      "id": "christianity.friends.fum",
+      "label": "Friends United Meeting",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "225"
+      }
+    },
+    {
+      "id": "christianity.friends.independent-ym",
+      "label": "Independent Yearly Meetings of Friends",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "338"
+      }
+    },
+    {
+      "id": "christianity.friends.unaffiliated",
+      "label": "Unaffiliated Friends Meetings",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "389"
+      }
+    },
+    {
+      "id": "christianity.holiness.bible-holiness",
+      "label": "Bible Holiness Church",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "217"
+      }
+    },
+    {
+      "id": "christianity.holiness.cccu",
+      "label": "Churches of Christ in Christian Union",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "168"
+      }
+    },
+    {
+      "id": "christianity.holiness.cma",
+      "label": "Christian and Missionary Alliance",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "089"
+      }
+    },
+    {
+      "id": "christianity.holiness.coch",
+      "label": "Church of Christ (Holiness), U.S.A.",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "110"
+      }
+    },
+    {
+      "id": "christianity.holiness.cog-anderson",
+      "label": "Church of God (Anderson, Indiana)",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "123"
+      }
+    },
+    {
+      "id": "christianity.holiness.cogc-winebrenner",
+      "label": "Churches of God, General Conference",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "171"
+      },
+      "review": "Churches of God General Conference -> holiness. The Winebrenner body, German Reformed in origin, holiness in practice."
+    },
+    {
+      "id": "christianity.holiness.cshc",
+      "label": "Christ's Sanctified Holy Church",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "D83"
+      }
+    },
+    {
+      "id": "christianity.holiness.hcog",
+      "label": "Holiness Church Of God, Inc., The",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "247"
+      }
+    },
+    {
+      "id": "christianity.holiness.nazarene",
+      "label": "Church of the Nazarene",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "165"
+      }
+    },
+    {
+      "id": "christianity.holiness.salvation-army",
+      "label": "Salvation Army",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "403"
+      }
+    },
+    {
+      "id": "christianity.holiness.wesleyan",
+      "label": "Wesleyan Church",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "467"
+      }
+    },
+    {
+      "id": "christianity.latterday.bickertonite",
+      "label": "Church of Jesus Christ, The (Bickertonites)",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "149"
+      }
+    },
+    {
+      "id": "christianity.latterday.community-of-christ",
+      "label": "Community of Christ",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "173"
+      }
+    },
+    {
+      "id": "christianity.latterday.lds",
+      "label": "Church of Jesus Christ of Latter-day Saints",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "151"
+      }
+    },
+    {
+      "id": "christianity.lutheran.aalc",
+      "label": "American Association of Lutheran Churches",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "284"
+      }
+    },
+    {
+      "id": "christianity.lutheran.aflc",
+      "label": "Association of Free Lutheran Congregations",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "220"
+      }
+    },
+    {
+      "id": "christianity.lutheran.apostolic",
+      "label": "Apostolic Lutheran Church of America",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "045"
+      }
+    },
+    {
+      "id": "christianity.lutheran.clb",
+      "label": "Church of the Lutheran Brethren of America",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "163"
+      }
+    },
+    {
+      "id": "christianity.lutheran.clc",
+      "label": "Church of the Lutheran Confession",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "164"
+      }
+    },
+    {
+      "id": "christianity.lutheran.concordia",
+      "label": "Concordia Lutheran Conference",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FFG"
+      }
+    },
+    {
+      "id": "christianity.lutheran.elca",
+      "label": "Evangelical Lutheran Church in America",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "207"
+      }
+    },
+    {
+      "id": "christianity.lutheran.elcm",
+      "label": "Evangelical Lutheran Conference and Ministerium of North America",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FFF"
+      }
+    },
+    {
+      "id": "christianity.lutheran.eldona",
+      "label": "Evangelical Lutheran Diocese of North America",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FFE"
+      }
+    },
+    {
+      "id": "christianity.lutheran.els",
+      "label": "Evangelical Lutheran Synod",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "209"
+      }
+    },
+    {
+      "id": "christianity.lutheran.independent-diocese",
+      "label": "Independent Lutheran Diocese",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FFD"
+      }
+    },
+    {
+      "id": "christianity.lutheran.laestadian",
+      "label": "Laestadian Lutheran Church",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FFJ"
+      }
+    },
+    {
+      "id": "christianity.lutheran.latvian",
+      "label": "Latvian Evangelical Lutheran Church in America",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "274"
+      }
+    },
+    {
+      "id": "christianity.lutheran.lcmc",
+      "label": "Lutheran Congregations in Mission for Christ",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "255"
+      }
+    },
+    {
+      "id": "christianity.lutheran.lcms",
+      "label": "Lutheran Church--Missouri Synod",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "283"
+      }
+    },
+    {
+      "id": "christianity.lutheran.nalc",
+      "label": "North American Lutheran Church",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "314"
+      }
+    },
+    {
+      "id": "christianity.lutheran.olcc",
+      "label": "Orthodox Lutheran Confessional Conference",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FFC"
+      }
+    },
+    {
+      "id": "christianity.lutheran.old-apostolic",
+      "label": "Old Apostolic Lutheran Church of America",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FFH"
+      }
+    },
+    {
+      "id": "christianity.lutheran.wels",
+      "label": "Wisconsin Evangelical Lutheran Synod",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "469"
+      }
+    },
+    {
+      "id": "christianity.messianic.amc",
+      "label": "Association of Messianic Congregations",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "058"
+      },
+      "review": "Association of Messianic Congregations -> christianity.messianic. Same."
+    },
+    {
+      "id": "christianity.messianic.umjc",
+      "label": "Union of Messianic Jewish Congregations",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "437"
+      },
+      "review": "Union of Messianic Jewish Congregations -> christianity.messianic. See the branch note: Christian theology, Jewish self-description."
+    },
+    {
+      "id": "christianity.methodist.african.ame",
+      "label": "African Methodist Episcopal Church",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "003"
+      }
+    },
+    {
+      "id": "christianity.methodist.african.amez",
+      "label": "African Methodist Episcopal Zion Church",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "005"
+      }
+    },
+    {
+      "id": "christianity.methodist.african.cme",
+      "label": "Christian Methodist Episcopal Church",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "101"
+      }
+    },
+    {
+      "id": "christianity.methodist.african.rzua",
+      "label": "Reformed Zion Union Apostolic Church",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "384"
+      }
+    },
+    {
+      "id": "christianity.methodist.african.uame",
+      "label": "Union American Methodist Episcopal Church",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FGV"
+      }
+    },
+    {
+      "id": "christianity.methodist.free",
+      "label": "Free Methodist Church--USA",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "221"
+      }
+    },
+    {
+      "id": "christianity.methodist.holiness.bible-methodist",
+      "label": "Bible Methodist Connection",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FE8"
+      }
+    },
+    {
+      "id": "christianity.methodist.holiness.congregational-methodist",
+      "label": "Congregational Methodist Church",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "180"
+      }
+    },
+    {
+      "id": "christianity.methodist.holiness.evangelical-church",
+      "label": "Evangelical Church, The",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "197"
+      }
+    },
+    {
+      "id": "christianity.methodist.holiness.evangelical-methodist",
+      "label": "Evangelical Methodist Church",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "215"
+      }
+    },
+    {
+      "id": "christianity.methodist.holiness.lumber-river",
+      "label": "Lumber River Annual Conference of the Holiness Methodist Church",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "279"
+      }
+    },
+    {
+      "id": "christianity.methodist.holiness.southern",
+      "label": "Southern Methodist Church",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "421"
+      }
+    },
+    {
+      "id": "christianity.methodist.primitive",
+      "label": "Primitive Methodist Church in the USA",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "363"
+      }
+    },
+    {
+      "id": "christianity.methodist.umc",
+      "label": "United Methodist Church",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "449"
+      }
+    },
+    {
+      "id": "christianity.methodist.unitedbrethren.ecc",
+      "label": "Evangelical Congregational Church",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "199"
+      }
+    },
+    {
+      "id": "christianity.methodist.unitedbrethren.ub",
+      "label": "Church of the United Brethren in Christ USA",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "438"
+      }
+    },
+    {
+      "id": "christianity.moravian.alaska",
+      "label": "Moravian Church in America--Alaska Province",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "292"
+      }
+    },
+    {
+      "id": "christianity.moravian.northern",
+      "label": "Moravian Church in America--Northern Province",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "293"
+      }
+    },
+    {
+      "id": "christianity.moravian.southern",
+      "label": "Moravian Church in America--Southern Province",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "295"
+      }
+    },
+    {
+      "id": "christianity.moravian.unity-of-the-brethren",
+      "label": "Unity of the Brethren",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "461"
+      }
+    },
+    {
+      "id": "christianity.nondenominational.berean",
+      "label": "Berean Fellowship of Churches",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "063"
+      }
+    },
+    {
+      "id": "christianity.nondenominational.ffbc",
+      "label": "Fellowship of Fundamentalist Bible Churches",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "067"
+      }
+    },
+    {
+      "id": "christianity.nondenominational.grace-gospel",
+      "label": "Grace Gospel Fellowship",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "243"
+      }
+    },
+    {
+      "id": "christianity.nondenominational.iccc",
+      "label": "International Council of Community Churches",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "262"
+      }
+    },
+    {
+      "id": "christianity.nondenominational.ifbc",
+      "label": "International Fellowship of Bible Churches",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "256"
+      }
+    },
+    {
+      "id": "christianity.nondenominational.independent",
+      "label": "Non-denominational Christian Churches",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "500"
+      }
+    },
+    {
+      "id": "christianity.oriental.armenian-cilicia",
+      "label": "Armenian Apostolic Church of America (Catholicosate of Cilicia)",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "049"
+      }
+    },
+    {
+      "id": "christianity.oriental.armenian-etchmiadzin",
+      "label": "Armenian Church of North America (Catholicosate of Etchmiadzin)",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "050"
+      }
+    },
+    {
+      "id": "christianity.oriental.coptic",
+      "label": "Coptic Orthodox Church",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "186"
+      }
+    },
+    {
+      "id": "christianity.oriental.eritrean",
+      "label": "Eritrean Orthodox",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "202"
+      }
+    },
+    {
+      "id": "christianity.oriental.ethiopian",
+      "label": "Ethiopian Orthodox",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "204"
+      }
+    },
+    {
+      "id": "christianity.oriental.knanaya",
+      "label": "Knanaya Churches in the USA",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FFL"
+      },
+      "review": "Knanaya Churches -> oriental. The Knanaya are an endogamous community split across Syro-Malabar Catholic and Syriac Orthodox jurisdictions; ASARB gives one row, so it cannot be resolved to the right side of that line here."
+    },
+    {
+      "id": "christianity.oriental.malankara-orthodox",
+      "label": "Malankara Orthodox Syrian Church",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "333"
+      }
+    },
+    {
+      "id": "christianity.oriental.malankara-syriac",
+      "label": "Malankara Archdiocese of the Syrian Orthodox Church in North America",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "334"
+      }
+    },
+    {
+      "id": "christianity.oriental.marthoma",
+      "label": "Malankara Mar Thoma Church",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "F28"
+      },
+      "review": "Malankara Mar Thoma -> oriental. Reformed Oriental, in communion with the Anglicans; sits between oriental and anglican by any reading."
+    },
+    {
+      "id": "christianity.oriental.syriac",
+      "label": "Syriac Orthodox Church of Antioch",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "423"
+      }
+    },
+    {
+      "id": "christianity.orthodox.canonical.albanian",
+      "label": "Albanian Orthodox Diocese of America",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "009"
+      }
+    },
+    {
+      "id": "christianity.orthodox.canonical.antiochian",
+      "label": "Antiochian Orthodox Christian Archdiocese of North America, The",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "034"
+      }
+    },
+    {
+      "id": "christianity.orthodox.canonical.bulgarian",
+      "label": "Bulgarian Eastern Orthodox Diocese of the USA, Canada and Australia",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "078"
+      }
+    },
+    {
+      "id": "christianity.orthodox.canonical.carpatho-russian",
+      "label": "American Carpatho-Russian Orthodox Diocese",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "022"
+      }
+    },
+    {
+      "id": "christianity.orthodox.canonical.georgian",
+      "label": "Georgian Orthodox Parishes in the United States",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "242"
+      }
+    },
+    {
+      "id": "christianity.orthodox.canonical.greek",
+      "label": "Greek Orthodox Archdiocese of America",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "246"
+      }
+    },
+    {
+      "id": "christianity.orthodox.canonical.macedonian",
+      "label": "Macedonian Orthodox Church: American Diocese",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "330"
+      }
+    },
+    {
+      "id": "christianity.orthodox.canonical.oca",
+      "label": "Orthodox Church in America",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "331"
+      }
+    },
+    {
+      "id": "christianity.orthodox.canonical.patriarchal-parishes",
+      "label": "Patriarchal Parishes of the Russian Orthodox Church in the USA",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "400"
+      }
+    },
+    {
+      "id": "christianity.orthodox.canonical.rocor",
+      "label": "Russian Orthodox Church Outside of Russia",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "401"
+      }
+    },
+    {
+      "id": "christianity.orthodox.canonical.romanian",
+      "label": "Romanian Orthodox Archdiocese in Americas",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "395"
+      }
+    },
+    {
+      "id": "christianity.orthodox.canonical.serbian",
+      "label": "Serbian Orthodox Church in North America",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "410"
+      }
+    },
+    {
+      "id": "christianity.orthodox.canonical.ukrainian",
+      "label": "Ukrainian Orthodox Church of the USA",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "431"
+      }
+    },
+    {
+      "id": "christianity.orthodox.oldcalendarist.goc",
+      "label": "Church of the Genuine Orthodox Christians",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FFK"
+      }
+    },
+    {
+      "id": "christianity.orthodox.oldcalendarist.hocna",
+      "label": "Holy Orthodox Church in North America",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "251"
+      }
+    },
+    {
+      "id": "christianity.orthodox.other.belarusan",
+      "label": "Belarusan Autocephalous Orthodox Church",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FFV"
+      }
+    },
+    {
+      "id": "christianity.orthodox.other.syro-russian",
+      "label": "Syro-Russian Orthodox Catholic Church",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "F52"
+      }
+    },
+    {
+      "id": "christianity.other.amana",
+      "label": "Amana Church Society",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "015"
+      }
+    },
+    {
+      "id": "christianity.other.christadelphian",
+      "label": "Christadelphian",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "087"
+      }
+    },
+    {
+      "id": "christianity.other.local-churches",
+      "label": "The local churches",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "F54"
+      }
+    },
+    {
+      "id": "christianity.other.mcc",
+      "label": "Metropolitan Community Churches",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "290"
+      }
+    },
+    {
+      "id": "christianity.other.new-apostolic",
+      "label": "New Apostolic Church USA",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "309"
+      }
+    },
+    {
+      "id": "christianity.other.schwenkfelder",
+      "label": "Schwenkfelder Church",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "405"
+      }
+    },
+    {
+      "id": "christianity.other.twelve-tribes",
+      "label": "Twelve Tribes",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FGQ"
+      }
+    },
+    {
+      "id": "christianity.pentecostal.charismatic.calvary-chapel",
+      "label": "Calvary Chapel Fellowship Churches",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "084"
+      }
+    },
+    {
+      "id": "christianity.pentecostal.charismatic.every-nation",
+      "label": "Every Nation",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FGP"
+      }
+    },
+    {
+      "id": "christianity.pentecostal.charismatic.pillar",
+      "label": "Pillar Ministries",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "350"
+      }
+    },
+    {
+      "id": "christianity.pentecostal.charismatic.vineyard",
+      "label": "Vineyard USA",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "463"
+      }
+    },
+    {
+      "id": "christianity.pentecostal.oneness.aljc",
+      "label": "Assemblies of the Lord Jesus Christ",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FGJ"
+      }
+    },
+    {
+      "id": "christianity.pentecostal.oneness.bethel",
+      "label": "Bethel Ministerial Association, Inc.",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "065"
+      }
+    },
+    {
+      "id": "christianity.pentecostal.oneness.bibleway",
+      "label": "Bible Way Church of Our Lord Jesus Christ World Wide, Inc.",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "E54"
+      }
+    },
+    {
+      "id": "christianity.pentecostal.oneness.cog-apostolic",
+      "label": "Church of God (Apostolic)",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "125"
+      }
+    },
+    {
+      "id": "christianity.pentecostal.oneness.cooljc",
+      "label": "Church of Our Lord Jesus Christ of the Apostolic Faith, Inc.",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "155"
+      }
+    },
+    {
+      "id": "christianity.pentecostal.oneness.firstborn",
+      "label": "Church of God of the Firstborn",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "F16"
+      },
+      "review": "Church of God of the Firstborn -> pentecostal.oneness. Low confidence."
+    },
+    {
+      "id": "christianity.pentecostal.oneness.higher-ground",
+      "label": "Higher Ground Always Abounding Assemblies",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FGD"
+      }
+    },
+    {
+      "id": "christianity.pentecostal.oneness.paw",
+      "label": "Pentecostal Assemblies of the World",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "D71"
+      }
+    },
+    {
+      "id": "christianity.pentecostal.oneness.upci",
+      "label": "United Pentecostal Church International",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "454"
+      }
+    },
+    {
+      "id": "christianity.pentecostal.trinitarian.afm-portland",
+      "label": "Apostolic Faith Mission of Portland, OR",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "042"
+      }
+    },
+    {
+      "id": "christianity.pentecostal.trinitarian.assemblies-of-god",
+      "label": "Assemblies of God",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "053"
+      }
+    },
+    {
+      "id": "christianity.pentecostal.trinitarian.ccna",
+      "label": "Christian Congregation in North America",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "F10"
+      }
+    },
+    {
+      "id": "christianity.pentecostal.trinitarian.cog-cleveland",
+      "label": "Church of God (Cleveland, Tennessee)",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "127"
+      }
+    },
+    {
+      "id": "christianity.pentecostal.trinitarian.cog-unspecified",
+      "label": "Church of God",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "F53"
+      },
+      "review": "'Church of God', 204 congregations -> pentecostal.trinitarian. Bare name, several bodies use it. NEEDS CHECKING."
+    },
+    {
+      "id": "christianity.pentecostal.trinitarian.cogaf",
+      "label": "Church of God of the Apostolic Faith, Inc.",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "120"
+      }
+    },
+    {
+      "id": "christianity.pentecostal.trinitarian.cogbf",
+      "label": "Church of God by Faith, Inc.",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "122"
+      }
+    },
+    {
+      "id": "christianity.pentecostal.trinitarian.cogic",
+      "label": "Church of God in Christ",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "141"
+      }
+    },
+    {
+      "id": "christianity.pentecostal.trinitarian.cogma",
+      "label": "Church of God, Mountain Assembly, Inc.",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "146"
+      }
+    },
+    {
+      "id": "christianity.pentecostal.trinitarian.cogop",
+      "label": "Church of God of Prophecy",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "145"
+      }
+    },
+    {
+      "id": "christianity.pentecostal.trinitarian.colg-cwff",
+      "label": "Church of the Living God (Christian Workers for Fellowship)",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "A47"
+      }
+    },
+    {
+      "id": "christianity.pentecostal.trinitarian.colg-pillar",
+      "label": "Church of the Living God: Pillar and Ground of the Truth",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "D59"
+      }
+    },
+    {
+      "id": "christianity.pentecostal.trinitarian.congregational-holiness",
+      "label": "Congregational Holiness Church",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "177"
+      }
+    },
+    {
+      "id": "christianity.pentecostal.trinitarian.elim",
+      "label": "Elim Fellowship",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "190"
+      }
+    },
+    {
+      "id": "christianity.pentecostal.trinitarian.fbhca",
+      "label": "Fire-Baptized Holiness Church of the Americas",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "346"
+      }
+    },
+    {
+      "id": "christianity.pentecostal.trinitarian.fca",
+      "label": "Fellowship of Christian Assemblies",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FGL"
+      }
+    },
+    {
+      "id": "christianity.pentecostal.trinitarian.fgai",
+      "label": "Full Gospel Assemblies International",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "F23"
+      }
+    },
+    {
+      "id": "christianity.pentecostal.trinitarian.fgbcf",
+      "label": "Full Gospel Baptist Church Fellowship",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "232"
+      },
+      "review": "Full Gospel Baptist Church Fellowship -> pentecostal.trinitarian. Baptist in name and polity, charismatic in practice; founded 1994 out of Black Baptist churches adopting Pentecostal worship. Could equally sit under baptist."
+    },
+    {
+      "id": "christianity.pentecostal.trinitarian.fgcai",
+      "label": "Full Gospel Christian Assemblies International",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FFR"
+      }
+    },
+    {
+      "id": "christianity.pentecostal.trinitarian.foursquare",
+      "label": "Foursquare Gospel, International Church of the",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "263"
+      }
+    },
+    {
+      "id": "christianity.pentecostal.trinitarian.house-of-god",
+      "label": "House of God, Holy Church of the Living God, The Pillar and Ground of the Truth, House of Prayer for All People",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "D92"
+      }
+    },
+    {
+      "id": "christianity.pentecostal.trinitarian.house-of-prayer",
+      "label": "United House of Prayer",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "F58"
+      }
+    },
+    {
+      "id": "christianity.pentecostal.trinitarian.ifca-assemblies",
+      "label": "International Fellowship of Christian Assemblies",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "260"
+      }
+    },
+    {
+      "id": "christianity.pentecostal.trinitarian.ipcc",
+      "label": "International Pentecostal Church of Christ",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "265"
+      }
+    },
+    {
+      "id": "christianity.pentecostal.trinitarian.open-bible",
+      "label": "Open Bible Churches",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "329"
+      }
+    },
+    {
+      "id": "christianity.pentecostal.trinitarian.original-cog",
+      "label": "(Original) Church of God",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "326"
+      }
+    },
+    {
+      "id": "christianity.pentecostal.trinitarian.pcg",
+      "label": "Pentecostal Church of God",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "339"
+      }
+    },
+    {
+      "id": "christianity.pentecostal.trinitarian.uhca",
+      "label": "United Holy Church of America, Inc.",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "445"
+      }
+    },
+    {
+      "id": "christianity.pietist.covenant",
+      "label": "Evangelical Covenant Church",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "201"
+      }
+    },
+    {
+      "id": "christianity.pietist.efca",
+      "label": "Evangelical Free Church of America",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "203"
+      }
+    },
+    {
+      "id": "christianity.plymouth.open",
+      "label": "Christian Brethren (Open Plymouth Brethren)",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "353"
+      }
+    },
+    {
+      "id": "christianity.reformed.congregational.additional",
+      "label": "Congregational Christian Churches, Additional (not part of any national CCC body)",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "176"
+      }
+    },
+    {
+      "id": "christianity.reformed.congregational.armenian-evangelical",
+      "label": "Armenian Evangelical Churches (Additional)",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "051"
+      },
+      "review": "Armenian Evangelical Churches -> reformed.congregational. Congregational polity, Armenian ethnic body; not Oriental Orthodox."
+    },
+    {
+      "id": "christianity.reformed.congregational.cccc",
+      "label": "Conservative Congregational Christian Conference",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "181"
+      }
+    },
+    {
+      "id": "christianity.reformed.congregational.earccc",
+      "label": "Evangelical Association of Reformed, and Congregational Christian Churches",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "198"
+      }
+    },
+    {
+      "id": "christianity.reformed.congregational.kentucky",
+      "label": "Kentucky Christian Conference",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "F26"
+      }
+    },
+    {
+      "id": "christianity.reformed.congregational.naccc",
+      "label": "National Association of Congregational Christian Churches",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "175"
+      }
+    },
+    {
+      "id": "christianity.reformed.congregational.north-carolina",
+      "label": "North Carolina Congregational Conference",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "F32"
+      }
+    },
+    {
+      "id": "christianity.reformed.congregational.southern-illinois",
+      "label": "Southern Illinois Christian Conference",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "F49"
+      }
+    },
+    {
+      "id": "christianity.reformed.congregational.ucc",
+      "label": "United Church of Christ",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "443"
+      }
+    },
+    {
+      "id": "christianity.reformed.continental.canrc",
+      "label": "Canadian and American Reformed Churches",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "086"
+      }
+    },
+    {
+      "id": "christianity.reformed.continental.crcna",
+      "label": "Christian Reformed Church in North America",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "105"
+      }
+    },
+    {
+      "id": "christianity.reformed.continental.crec",
+      "label": "Communion of Reformed Evangelical Churches",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "172"
+      }
+    },
+    {
+      "id": "christianity.reformed.continental.federation",
+      "label": "Federation of Reformed Churches",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "210"
+      }
+    },
+    {
+      "id": "christianity.reformed.continental.frcna",
+      "label": "Free Reformed Churches of North America",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "227"
+      }
+    },
+    {
+      "id": "christianity.reformed.continental.heritage",
+      "label": "Heritage Reformed Congregations",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "248"
+      }
+    },
+    {
+      "id": "christianity.reformed.continental.nrc",
+      "label": "Netherlands Reformed Congregations",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "307"
+      }
+    },
+    {
+      "id": "christianity.reformed.continental.prca",
+      "label": "Protestant Reformed Churches in America",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "369"
+      }
+    },
+    {
+      "id": "christianity.reformed.continental.rca",
+      "label": "Reformed Church in America",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "371"
+      }
+    },
+    {
+      "id": "christianity.reformed.continental.rcna",
+      "label": "Reformed Congregations of North America",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FFB"
+      }
+    },
+    {
+      "id": "christianity.reformed.continental.rcus",
+      "label": "Reformed Church in the United States",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "373"
+      }
+    },
+    {
+      "id": "christianity.reformed.continental.reformed-bible",
+      "label": "Reformed Bible Church",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FGB"
+      }
+    },
+    {
+      "id": "christianity.reformed.continental.urcna",
+      "label": "United Reformed Churches in North America",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "455"
+      }
+    },
+    {
+      "id": "christianity.reformed.presbyterian.american",
+      "label": "American Presbyterian Church",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "030"
+      }
+    },
+    {
+      "id": "christianity.reformed.presbyterian.arp",
+      "label": "Associate Reformed Presbyterian Church",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "055"
+      }
+    },
+    {
+      "id": "christianity.reformed.presbyterian.bpc",
+      "label": "Bible Presbyterian Church (General Synod)",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "069"
+      }
+    },
+    {
+      "id": "christianity.reformed.presbyterian.covenant",
+      "label": "Covenant Presbyterian Church",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FF6"
+      }
+    },
+    {
+      "id": "christianity.reformed.presbyterian.covenant-reformed",
+      "label": "Covenant Reformed Presbyterian Church",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "184"
+      }
+    },
+    {
+      "id": "christianity.reformed.presbyterian.cumberland",
+      "label": "Cumberland Presbyterian",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "185"
+      }
+    },
+    {
+      "id": "christianity.reformed.presbyterian.cumberland-america",
+      "label": "Cumberland Presbyterian Church in America",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "187"
+      }
+    },
+    {
+      "id": "christianity.reformed.presbyterian.eco",
+      "label": "ECO: A Covenant Order of Presbyterians",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FFW"
+      }
+    },
+    {
+      "id": "christianity.reformed.presbyterian.epc",
+      "label": "Evangelical Presbyterian Church",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "216"
+      }
+    },
+    {
+      "id": "christianity.reformed.presbyterian.evangel",
+      "label": "Evangel Presbytery",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FJ6"
+      }
+    },
+    {
+      "id": "christianity.reformed.presbyterian.fcsc",
+      "label": "Free Church of Scotland (Continuing)",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "224"
+      }
+    },
+    {
+      "id": "christianity.reformed.presbyterian.fpcna",
+      "label": "Free Presbyterian Church of North America",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "222"
+      }
+    },
+    {
+      "id": "christianity.reformed.presbyterian.fpcs",
+      "label": "Free Presbyterian Church of Scotland",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FFA"
+      }
+    },
+    {
+      "id": "christianity.reformed.presbyterian.hanover",
+      "label": "Reformed Presbyterian Church, Hanover Presbytery",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "382"
+      }
+    },
+    {
+      "id": "christianity.reformed.presbyterian.opc",
+      "label": "Orthodox Presbyterian Church",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "335"
+      }
+    },
+    {
+      "id": "christianity.reformed.presbyterian.pca",
+      "label": "Presbyterian Church in America",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "356"
+      }
+    },
+    {
+      "id": "christianity.reformed.presbyterian.pcusa",
+      "label": "Presbyterian Church (U.S.A.)",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "355"
+      }
+    },
+    {
+      "id": "christianity.reformed.presbyterian.prc",
+      "label": "Presbyterian Reformed Church",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "354"
+      }
+    },
+    {
+      "id": "christianity.reformed.presbyterian.rpcga",
+      "label": "Reformed Presbyterian Church General Assembly",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "380"
+      }
+    },
+    {
+      "id": "christianity.reformed.presbyterian.rpcna",
+      "label": "Reformed Presbyterian Church of North America",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "383"
+      }
+    },
+    {
+      "id": "christianity.reformed.presbyterian.vanguard",
+      "label": "Vanguard Presbytery",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FFQ"
+      }
+    },
+    {
+      "id": "christianity.reformed.presbyterian.wepc",
+      "label": "Westminster Evangelical Presbyterian Church",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FJ5"
+      }
+    },
+    {
+      "id": "christianity.restorationist.christian-churches",
+      "label": "Christian Churches and Churches of Christ",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "097"
+      }
+    },
+    {
+      "id": "christianity.restorationist.church-of-christ-unspecified",
+      "label": "Church of Christ",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "F13"
+      },
+      "review": "'Church of Christ', 19 congregations -> restorationist. The bare name is ambiguous and may be a Latter Day Saint body (Temple Lot). NEEDS CHECKING."
+    },
+    {
+      "id": "christianity.restorationist.churches-of-christ",
+      "label": "Churches of Christ",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "167"
+      }
+    },
+    {
+      "id": "christianity.restorationist.disciples",
+      "label": "Christian Church (Disciples of Christ)",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "093"
+      }
+    },
+    {
+      "id": "christianity.restorationist.icoc",
+      "label": "International Churches of Christ",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "264"
+      }
+    },
+    {
+      "id": "christianity.swedenborgian.general-church",
+      "label": "General Church of the New Jerusalem",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "233"
+      }
+    },
+    {
+      "id": "christianity.swedenborgian.swedenborgian-church",
+      "label": "Swedenborgian Church",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "239"
+      }
+    },
+    {
+      "id": "hebrewisraelite.cogasoc",
+      "label": "Church of God and Saints of Christ",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "C22"
+      },
+      "review": "Church of God and Saints of Christ -> hebrewisraelite. Oldest Black Hebrew body (1896), keeps Christian elements. Neither Judaism nor plainly Christian."
+    },
+    {
+      "id": "hinduism.temples",
+      "label": "Hindu Temples",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "895"
+      },
+      "review": "Hindu Temples -> hinduism. The unit is temples, not people; ASARB's adherent figure here is a compiler estimate (spec.md §3.1)."
+    },
+    {
+      "id": "hinduism.vedanta",
+      "label": "Vedanta Society",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "462"
+      },
+      "review": "Vedanta Society -> hinduism. A Hindu missionary order in the West rather than a temple congregation."
+    },
+    {
+      "id": "judaism.chabad",
+      "label": "Chabad Judaism",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FGS"
+      }
+    },
+    {
+      "id": "judaism.conservative",
+      "label": "Conservative Judaism",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "270"
+      }
+    },
+    {
+      "id": "judaism.independent",
+      "label": "Independent Judaism",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "FGR"
+      }
+    },
+    {
+      "id": "judaism.orthodox",
+      "label": "Orthodox Judaism",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "276"
+      }
+    },
+    {
+      "id": "judaism.reconstructionist",
+      "label": "Reconstructionist Judaism",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "275"
+      }
+    },
+    {
+      "id": "judaism.reform",
+      "label": "Reform Judaism",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "271"
+      }
+    },
+    {
+      "id": "newthought.unity",
+      "label": "Unity Churches, Association of",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "124"
+      }
+    },
+    {
+      "id": "secular.ethicalculture",
+      "label": "American Ethical Union",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "904"
+      }
+    },
+    {
+      "id": "spiritualism.nsac",
+      "label": "National Spiritualist Association of Churches",
+      "kind": "leaf",
+      "sources": {
+        "usrc2020": "303"
+      }
+    }
+  ]
+}

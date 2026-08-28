@@ -13,6 +13,51 @@ Build is ~10s, validate ~30s; run both directly, no need to hand off.
 
 ---
 
+## 0. The rules are frozen (2026-08-22)
+
+**No new pipeline stages, no new thresholds, no new tuned constants.** From here every fix is a
+row in a hand table that already exists. This is a decision about where complexity is allowed to
+grow, and it was taken after measuring where it actually lives:
+
+| | size | reach | do they interact? |
+|---|---|---|---|
+| **hand tables** — 28 of them (`DROP_YEARS`, `CENSUS`, `DISAPPEARED`, `RENAME`, …) | 277 entries | a few hundred cities of 22,149 | **no** |
+| **rules and constants** — 38 functions, **50 tuned numbers** | 1,586 lines | thousands each; the graft alone is 6,539 cities | **yes** |
+
+A table entry is one checked fact about one city with a note attached. It never talks to another
+entry, deleting it is local and safe, and two hundred more rows would not make this file harder to
+reason about — only longer. The rules are the opposite: each one touches thousands of cities and
+they compose in ways nobody holds in their head. §3.4a is the proof — one row of *data* in
+`CF_KEEP` silently switched off both `strip_carry_forward` and check G, and the map carried a 110×
+collapse for a day because the only report that still mentioned it had already been told the entry
+was deliberate.
+
+**The other half of the reason: detection is not the bottleneck.** `validate.py` reports **362
+open findings** and `analyze_jumps.py` another **485 unexplained jumps**. Anything that finds more
+defects is adding to a queue nobody is clearing. So a new check has to clear a higher bar than
+"it would have caught X" — it has to be worth more than working an existing finding.
+
+**What this rules out**, concretely, including two things proposed on the day it was written and
+declined under it (recorded in §6.13, which is now a list of things NOT to build): widening
+check G's coordinate join into a three-tier name-gated join, and a per-point source code for
+`CENSUS`-recovered figures.
+
+**What it does not reach: `tools/`.** The freeze is about `build.py` — the thing that turns
+sources into 22,149 drawn cities. `check_events.py` validates prose Anita writes by hand, one
+note at a time, and a wrong `im` is a claim on the screen rather than a threshold applied to
+thousands of records. She added the `im`-versus-curve check there the same day; it reports 21
+notes whose stated direction the curve does not support, which is 21 real findings on a file of
+154. That is the right side of the line.
+
+**What it still allows:** rows in the 28 existing tables, corrections to comments and docs, and
+one-off *scans* — a script run once whose output is a handful of table rows, not a check that runs
+every build. Round 3 of the 2026-08-22 pass is exactly that shape: rather than widen check G, the
+blind spot was measured once and the four cities worth repairing became four table rows.
+
+**The stopping rule is visibility, not the queue.** A finding is worth working if the city is
+large enough, in the years the defect spans, to be seen — `analyze_jumps.py`'s top-N filter is
+already the right instrument. The queue does not end; the visible part of it does.
+
 ## 1. Sources
 
 | | |
@@ -1451,6 +1496,28 @@ count (1,326 → 635/s there, 151 → 44/s across 1500–1800) while making each
 it ever matters is an alpha ramp over a narrow band just above the floor; it was left off because
 it dims a large share of the small end for a problem the map has always had.
 
+#### `minPop` — the hand floor (2026-08-23)
+
+Asked for by a reader after the first post: *let me see only cities over a million*. A stepped
+slider in Settings (`MINPOP_STOPS`, 10k → 10M, plus 0 for off) and `?minpop=1M`, which accepts
+`1000000`, `1M` or `100k` and snaps **up** to the nearest stop so a link never quietly gets a
+lower floor than it asked for.
+
+It composes with the era floor by `Math.max`, and only ever raises it. That direction is the whole
+design: the era floor exists because below it the modern map is a wash of 19,000 unreadable dots
+and most of `draw()`'s cost, so a control that could undo it would only be a way to make the map
+worse. At AD 1600 the era floor is 20k and a hand floor of 10k does nothing; at AD 2000 a hand
+floor of 1M cuts 3,993 bubbles to 512.
+
+It is a display filter exactly like `mapFloor` — data, graph traces and hover readouts are
+untouched. It *does* reach the leaderboard, because that is built from the same filtered list, so
+at a 1M cutoff in 2000 BC the top-10 is legitimately empty: nothing was that big. Its effect is
+also invisible until it bites below `maxCities`: at AD 2000 the 20k, 50k and 100k stops all draw
+the same 3,993 bubbles, because the cap is what is binding at all three.
+
+Measured at AD 2000: off/10k/20k/50k/100k → 3,993 · 200k → 2,571 · 500k → 1,040 · 1M → 512 ·
+2M → 172 · 5M → 56 · 10M → 11.
+
 ---
 
 ### 4.4 History notes (`data/events.json`)
@@ -1461,7 +1528,7 @@ a coloured headline, an optional grey detail line, a leader to the spot. On by d
 settings checkbox and `?notes=0` turn them off. A missing or unparseable `events.json` is
 survivable — they are commentary on the map, not part of it, and the fetch is separate.
 
-**Fired by crossing, then timed in wall clock.** A note starts its two seconds when the run
+**Fired by crossing, then timed in wall clock.** A note starts its three seconds when the run
 crosses its year and lives in milliseconds from there — `NOTE_IN`/`NOTE_HOLD`/`NOTE_OUT`
 (120/2400/600 ms), all three stretched by the note's own `w`. Three seconds rather than two costs
 density: at 2.1s the default level leaves the screen full 15% of the run, at 3s it is 35%, and
@@ -1473,7 +1540,7 @@ everywhere, because the timeline gives 1400–1900 the same track width as 1900�
 scrubber fraction it is a fixed number of seconds — but then the year span balloons in the deep
 past, and the Black Death is legible from 1206 to 1488. And both forms leave the 2022 Ukraine note
 hanging permanently on the AD 2025 screen, which is where the run stops and where most people end
-up sitting. Firing on the crossing gives every note the same two seconds whether it was passed at
+up sitting. Firing on the crossing gives every note the same three seconds whether it was passed at
 1x, at 5x, or by dragging the scrubber, and then takes it away again.
 
 Two cases the crossing model has to handle explicitly. **Landing** on a year rather than
@@ -1505,12 +1572,46 @@ that it is dropped rather than parked somewhere its leader no longer explains. A
 reads costs nothing; one sitting 150px from the city it is about is worse than absent.
 `NOTE_MAX` = 5 caps it regardless, counted over everything still fading, not just what fires now.
 
-**Coloured by what it did to the population, not by what kind of event it was** — and on the
-bubbles' own scale, because `NOTE_IMPACT` is built by indexing `GROWTH_STOPS`. A note about a
-city emptying is the same blue as the bubbles emptying under it. Seven steps: `-3.2%/yr` is not a
-judgement anyone can make by hand about the Black Death, and the yellow stop is skipped so the
-steps stay far enough apart to tell apart in 13px text. The key in Settings paints itself from
-`NOTE_IMPACT` rather than from CSS, so it cannot drift from what the map draws.
+**A note already on screen is never re-fired** — the last way a frozen placement could still come
+unfrozen (fixed 2026-08-23). `fireNotes` re-running `placeNote` on a live note hands it a `boxes`
+list containing *its own current box*, so it collides with itself, gets pushed past `NOTE_STACK`
+on the side it is already on, and lands on the other side: the label mirrors across its own anchor
+mid-life, which looks exactly like the world-copy flip that storing `k` was meant to have ended.
+
+It only ever showed up on one note, and the reason it was always the same one is worth writing
+down. Replaying after the run ends sets `playS` to 0, so the first tick calls
+`fireNotes(2025, −3496)` — a span of the whole timeline, which is a *jump*, and a jump fires the
+single best note it passed, sorted `pri` then nearest-to-destination. That is always Uruk at
+−3300: the earliest `pri` 1 note on the map. One second later the run genuinely crosses −3300 and
+fires it a second time while the first showing is still up. Nothing else is reachable twice inside
+three seconds, so nothing else flipped. The fix is a liveness test in the firing filter rather
+than anything in `placeNote`: `noteAlpha(e, t) <= 0`. It also means a scrub back and forth across
+a live note lets it finish its three seconds instead of restarting them.
+
+**Notes are drawn entirely in white** (`NOTE_WHITE`, 2026-08-23). Set it false to restore the
+scheme below, which is still wired up and still what `im` means.
+
+They were not always. A note used to be **coloured by what it did to the population, not by what
+kind of event it was** — and on the bubbles' own scale, because `NOTE_IMPACT` is built by indexing
+`GROWTH_STOPS`, so a note about a city emptying was the same blue as the bubbles emptying under
+it. Seven steps: `-3.2%/yr` is not a judgement anyone can make by hand about the Black Death, and
+the yellow stop is skipped so the steps stay far enough apart to tell apart in 13px text. The key
+in Settings paints itself from `NOTE_IMPACT` rather than from CSS, so it cannot drift.
+
+It went in two stages, and the second followed from the first. The headline went white early, on
+the grounds that most notes carry no detail line and a lone coloured headline with nothing white
+under it reads oddly — leaving the dot, ring and leader coloured so the impact was still legible.
+That half-measure is what did not survive contact: seven hues of leader on a map already carrying
+a seven-stop growth ramp on the bubbles themselves is two colour systems arguing over the same
+retina, and the reader has to decide which one the colour belongs to before reading the words. The
+note's job is to be read, not classified.
+
+**So `im` now has no on-map output at all.** Two things follow that are easy to trip over. The
+impact key in Settings is a legend for something the map no longer draws — worth deleting or
+hiding, and deliberately left alone for now so the decision is reversible. And `check_events.py`'s
+`im` warnings ("says decline but Halab never dips") are checking a field nothing renders. Keep
+them: they are the check that catches a headline whose wording contradicts the bubble under it,
+which is a correctness problem in the *text* whether or not a colour is riding on it.
 
 | `im` | colour | |
 |---|---|---|
@@ -1530,20 +1631,42 @@ ones (Columbus at San Salvador, Dammam No. 7 in 1938) point at a part of the map
 drawn *yet*.
 
 **The file holds more notes than one run has room for, on purpose.** A playthrough at 1x is
-`1/PLAY_SPEED` = 62 seconds and each note holds the screen for 2.1 of them, so the average number
-on screen is `2.1 × N / 62`. At the file's 138 notes that is 4.6, and simulated at 1x the screen
-is full 60% of the run with 17 notes that never once get drawn. So `noteLevel` — the
-**key / more / all** selector in Settings, and `?notes=key` / `?notes=all` — picks how much of the
-file to use, and the default is `more` (`pri` ≤ 2, 77 notes): 15% full, and everything in it
-appears. The filter is applied at *firing*, not at drawing, so a note below the level never takes
-a slot and never blocks one that would have been drawn.
+`1/PLAY_SPEED` = 89 seconds and each note holds the screen for 3 of them, so the average number on
+screen is `3 × N / 89`. At the file's 153 notes that is 5.1 — the whole of `NOTE_MAX`, spent. That
+budget is what `noteLevel` — the **key / more / all** selector in Settings, and `?notes=key` /
+`?notes=all` — divides up, and the default is `more` (`pri` ≤ 2, 83 notes, a budget of 2.8). The
+filter is applied at *firing*, not at drawing, so a note below the level never takes a slot and
+never blocks one that would have been drawn.
+
+Simulated at 1x the two tiers behave quite differently, and not the way the averages suggest.
+`more` leaves the screen full 5% of the run with 17 notes never drawn; `all` leaves it full only
+**3%** — less, not more — with **72** never drawn. That inversion is the per-tier headroom doing
+its job: a `pri` 3 note may only take a slot if fewer than `NOTE_MAX + 1 - pri` = 3 are live, so
+the flavour tier can never crowd the screen. It queues and is dropped instead. Turning notes up
+past `more` therefore does not buy a busier map; it buys a longer list of notes that lost.
+
+`PLAY_SPEED` is the lever on all of this and not only a speed control. Notes hold the screen for a
+fixed three seconds of **wall clock**, so slowing the run does not slow them down with it — it
+cuts how many years are crossed per three seconds, and therefore how many notes compete for the
+same five slots. Dropping it 30% (0.016 → 0.0112, 2026-08-23) took the default level from 12% full
+with 26 notes never drawn to 5% full with 17 — including, at last, `17 African countries
+independent`, a `pri` 1 note that the model had been writing off. It also bought `NOTE_FAR` some
+headroom: three seconds of playback is now 0.034 of the track against the 0.05 cutoff, where at
+the old speed it was 0.048, so notes stopped being clipped early at any speed above about 1.05x.
+
+**"Never appears" is an upper bound on the damage, not a list of what a viewer loses.** The
+simulation charges a slot to every note it fires; `fireNotes` only spends one when `placeNote`
+actually finds room, and a note that cannot be placed is dropped *without* taking a slot. So the
+real screen is emptier than the model and notes the checker writes off do turn up in the viewer.
+Read the list as "these are the ones competing hardest", ranked by how crowded their neighbourhood
+is — not as a defect list.
 
 Measured, not guessed. `check_events.py` runs the viewer's own loop — steps `s` at `PLAY_SPEED`,
 fires what each step crosses, applies the same sort and `NOTE_MAX` cap — and prints which notes
 never appear and which get under a second. Counting neighbours instead, which is what it did
 first, called 67 notes "crowded" and said nothing about which ones a viewer would actually see.
 The simulation keeps ticking after `s` passes 1, because `setPlaying(false)` hands the fade to
-`noteFrames()` and the last notes of the timeline do get their full two seconds.
+`noteFrames()` and the last notes of the timeline do get their full three seconds.
 
 `pri` also keeps the level reversible: nothing has to be deleted to thin the map, and
 `live.sort` gives the slots to the better-ranked note first, so an over-full file degrades by
@@ -1554,7 +1677,7 @@ moment for each tier.
 `mapFloor`, `regionOf` and the year→`s` warp — and catches what reading the file cannot: a note
 pinned outside the timeline, a coordinate with nothing on the map within 400km (a typo, unless it
 is deliberate), text that will run off the screen, and notes that pile up more than `NOTE_MAX`
-deep in the same two seconds of playback. `--coverage` prints a century × region table, which is
+deep in the same three seconds of playback. `--coverage` prints a century × region table, which is
 how you see what is missing.
 
 ---
@@ -2064,6 +2187,10 @@ visible seam instead — which is the honest one, since it lands in the right er
 collapse and the growth mode now labels it as a handover.
 
 ### 6.13 Open findings from the 2026-08-22 pass
+
+**Everything in this section is a finding, not a plan.** Under §0 none of it gets built; it is
+here so the reasoning is not re-derived, and so that a future scan can turn any of it into table
+rows the way round 3 did.
 
 Ten cases were looked at. Seven were pipeline defects and are fixed — §3.4a, §3.6b, and the
 `DROP_YEARS` / `CLIP_BEFORE` / `CENSUS` / `CF_END` / `DISAPPEARED` entries for Benin City,
