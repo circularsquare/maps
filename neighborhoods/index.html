@@ -1,0 +1,1423 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>neighborhoods</title>
+<link href="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.css" rel="stylesheet">
+<script src="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.js"></script>
+<style>
+/* ONE TYPEFACE, FOUR SIZES, SENTENCE CASE, and no colour written outside this block.
+ *
+ * The first version of this sidebar had a monospace column, uppercase letterspaced
+ * micro-labels and nine distinct font sizes. Every one of those is a legible choice on
+ * its own and together they read as an instrument panel, which is the wrong register for
+ * a map of where people live. So: one family, the four sizes below and nothing between
+ * them, and headings in ordinary sentence case. Weight and colour do the work that
+ * capitals and letterspacing were doing.
+ *
+ * Colours are all variables, because the whole palette swaps with the theme (§6a.7) and
+ * a literal left in a rule below is a colour that stays dark on a light page. The only
+ * hex outside :root belongs to the map layers in JS, which MapLibre owns rather than CSS.
+ */
+:root{
+  color-scheme:dark;
+  --face:ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  --fs-lg:15px; --fs:13px; --fs-sm:11.5px; --fs-xs:10px;
+  --bg:#16171b; --panel:#1c1e23; --line:#2f323a; --ink:#e8e6e2; --dim:#9b978f;
+  --accent:#7fb2e5; --warn:#e0a463;
+  --field:#131418; --hover:#262930; --sel:#323744; --sel-ink:#fbfaf8;
+  --float:rgba(24,26,30,.97); --shadow:0 8px 28px rgba(0,0,0,.5);
+}
+:root[data-theme=light]{
+  color-scheme:light;
+  --bg:#eae6de; --panel:#fbf9f5; --line:#e2dcd1; --ink:#2f2c27; --dim:#7c756a;
+  --accent:#2f6f9f; --warn:#a3661f;
+  --field:#fff; --hover:#f1ece2; --sel:#e5ded0; --sel-ink:#1c1a15;
+  --float:rgba(255,253,249,.97); --shadow:0 8px 28px rgba(80,68,50,.2);
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);
+  font:var(--fs)/1.45 var(--face)}
+#app{display:grid;grid-template-columns:290px 1fr;height:100%}
+#side{background:var(--panel);border-right:1px solid var(--line);overflow-y:auto;
+  display:flex;flex-direction:column}
+#map{height:100%}
+#head{display:flex;align-items:baseline;gap:8px;padding:13px 14px 11px;
+  border-bottom:1px solid var(--line)}
+h1{font-size:var(--fs-lg);margin:0;font-weight:600;letter-spacing:-.01em}
+#theme{margin-left:auto;background:none;border:1px solid var(--line);color:var(--dim);
+  font:var(--fs-sm)/1 var(--face);cursor:pointer;padding:4px 8px;border-radius:99px}
+#theme:hover{background:var(--hover);color:var(--ink)}
+.sec{padding:10px 14px;border-bottom:1px solid var(--line)}
+.sec h2{font-size:var(--fs);color:var(--dim);margin:0 0 8px;font-weight:600}
+#q{width:100%;background:var(--field);border:1px solid var(--line);color:var(--ink);
+  border-radius:6px;padding:6px 8px;font:inherit}
+#q:focus{outline:none;border-color:var(--accent)}
+.city{display:flex;justify-content:space-between;gap:8px;padding:5px 7px;border-radius:5px;
+  cursor:pointer;align-items:baseline}
+.city:hover{background:var(--hover)}
+.city.on{background:var(--sel);color:var(--sel-ink)}
+.city .n{font-variant-numeric:tabular-nums;color:var(--dim);font-size:var(--fs-sm)}
+.lv{display:flex;align-items:center;gap:7px;padding:4px 2px;cursor:pointer}
+input{accent-color:var(--accent)}
+.lv input{margin:0}
+.sw{width:9px;height:9px;border-radius:50%;flex:none}
+/* Raw OSM tags used to be set in monospace. They are still exact strings a reader may
+   want to copy, but the sidebar shows them beside their own plain-English gloss, so the
+   second typeface was carrying no information the row did not already carry. */
+.lv code{font:var(--fs-sm)/1.45 var(--face);color:var(--ink)}
+.lv .meta{margin-left:auto;color:var(--dim);font-size:var(--fs-xs);
+  font-variant-numeric:tabular-nums}
+table.stats{width:100%;border-collapse:collapse;font-size:var(--fs-xs);
+  font-variant-numeric:tabular-nums;margin-top:6px}
+table.stats th{color:var(--dim);font-weight:500;text-align:right;padding:2px 0}
+table.stats td{text-align:right;padding:2px 0;border-top:1px solid var(--line)}
+table.stats td:first-child,table.stats th:first-child{text-align:left}
+.hint{color:var(--dim);font-size:var(--fs-sm);margin:0}
+#card{position:absolute;pointer-events:none;background:var(--float);
+  border:1px solid var(--line);border-radius:7px;padding:8px 10px;max-width:270px;
+  display:none;box-shadow:var(--shadow);z-index:7}
+#card .t{font-weight:600;margin-bottom:3px}
+#card .s{color:var(--dim);font-size:var(--fs-sm)}
+#card dl{display:grid;grid-template-columns:auto 1fr;gap:1px 10px;margin:6px 0 0;
+  font-size:var(--fs-sm)}
+#card dt{color:var(--dim)}
+#card dd{margin:0;font-variant-numeric:tabular-nums}
+.pill{display:inline-block;padding:1px 5px;border-radius:99px;font-size:var(--fs-xs);
+  border:1px solid var(--line);color:var(--dim);margin-right:3px}
+.pill.pin{border-color:color-mix(in srgb,var(--warn) 45%,transparent);color:var(--warn)}
+.pill.borrowed{border-color:color-mix(in srgb,var(--accent) 45%,transparent);
+  color:var(--accent);border-style:dashed}
+a{color:var(--accent)}
+/* The pinned details panel. Sits over the map against the sidebar's edge rather than
+   top-right, where it would cover the zoom control. Unlike #card it takes pointer
+   events: the whole point of it is that its links can be clicked. */
+#detail{position:absolute;left:303px;top:12px;width:300px;max-height:calc(100% - 24px);
+  overflow-y:auto;background:var(--float);border:1px solid var(--line);
+  border-radius:8px;padding:12px 13px 13px;display:none;z-index:6;
+  box-shadow:var(--shadow)}
+#detail .t{font-weight:600;font-size:var(--fs-lg);padding-right:18px;line-height:1.25}
+#detail .s{color:var(--dim);font-size:var(--fs-sm);margin-top:2px}
+#detail .x{position:absolute;top:7px;right:8px;background:none;border:0;color:var(--dim);
+  font:var(--fs-lg)/1 var(--face);cursor:pointer;padding:3px 6px;border-radius:4px}
+#detail .x:hover{background:var(--hover);color:var(--ink)}
+#detail dl{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;margin:10px 0 0;
+  font-size:var(--fs-sm)}
+#detail dt{color:var(--dim)}
+#detail dd{margin:0;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+</style>
+</head>
+<body>
+<div id="app">
+  <aside id="side">
+    <div id="head">
+      <h1>Neighborhoods</h1>
+      <button id="theme" title="switch between the light and dark map">light</button>
+    </div>
+    <div class="sec">
+      <input id="q" placeholder="filter cities…" autocomplete="off">
+    </div>
+    <!-- Capped height with its own scroll, NOT flex:1. As sections were added below it
+         the flex child was squeezed to a single visible row, which looked like the city
+         list had failed to load. -->
+    <div class="sec" id="cities" style="max-height:30vh;overflow-y:auto;flex:none"></div>
+    <div class="sec">
+      <label class="lv"><input type="checkbox" id="dots" checked>
+        <span>show dots</span><span class="meta" id="dotinfo"></span></label>
+      <label class="lv"><input type="checkbox" id="shapes" checked>
+        <span>show shapes</span><span class="meta" id="shapeinfo"></span></label>
+      <label class="lv"><span>duplicates</span><span class="meta" id="dupinfo"></span></label>
+      <label class="lv" style="gap:9px"><span style="white-space:nowrap">min wiki</span>
+        <input type="range" id="fame" min="0" max="20" value="0" style="flex:1">
+        <span class="meta" id="fameinfo" style="min-width:2.5em">0</span></label>
+    </div>
+    <div class="sec" id="tiers"></div>
+    <div class="sec" id="levels"></div>
+    <div class="sec" id="top"></div>
+  </aside>
+  <div id="map"></div>
+</div>
+<div id="card"></div>
+<div id="detail"></div>
+
+<script>
+/* Level colours, and the two palettes they are drawn from.
+ *
+ * Assigned by level KEY, stable across cities, so the same colour means the same kind of
+ * division everywhere and two cities can be compared by eye. What is assigned and
+ * remembered is the INDEX; the theme decides which palette that index reads from, so
+ * switching to the light map recolours everything without renumbering anything and a
+ * level cannot change colour by being looked at in a different theme.
+ *
+ * Two palettes and not one, because a colour that carries on near-black does not carry
+ * on paper. Same eight hues in the same order: light and desaturated for the dark map so
+ * they glow, darker and stronger for the light one so they read as ink.
+ */
+const PALETTES = {
+  dark:  ['#7fb2e5','#e0a463','#8dc98d','#e2879b','#b19ae0','#6fbfb8','#d6c06b','#a8a49e'],
+  light: ['#2f6f9f','#b06a24','#3d7f4a','#b04a63','#6b55a8','#2b7f7a','#8a7420','#6d675e']
+};
+let theme = 'dark';
+const keyIndex = new Map();
+const colorOf = k => {
+  if (!keyIndex.has(k)) keyIndex.set(k, keyIndex.size);
+  const p = PALETTES[theme];
+  return p[keyIndex.get(k) % p.length];
+};
+
+// The map's own two colours, which are not levels and so are not in the palette. `LIT` is
+// the hover and selection outline: "this one, the one under your cursor", which has to
+// beat every palette colour on contrast. `CITY_COL` is the zoomed-out city layer, which
+// is one thing rather than eight and stays deliberately quiet.
+const LIT = {dark: '#ffffff', light: '#16130f'};
+const CITY_COL = {dark: '#9dbdd2', light: '#41708f'};
+
+// A placeholder font stack for the city labels. The real one is read off the basemap in
+// `applyThemePaint`, since a text-font the style has no glyphs for renders as nothing at
+// all. It is a top-level const array so tools/lint_map_expressions can hoist it and still
+// evaluate the layer that uses it.
+const CITY_FONT = ['Noto Sans Regular'];
+
+// Placeholder for a value we do not have. A hyphen and not an em dash: this appears in
+// tables and dl rows a few hundred times per screen, where a long dash reads as a rule
+// rather than as a value.
+const NONE = '-';
+const fmt = n => n == null ? NONE : n.toLocaleString();
+const el = id => document.getElementById(id);
+
+let DATA = null, city = null, off = new Set(), offTier = new Set();
+let minFame = 0;
+// Dots are the default and the shapes are the extra, because 45% of units have no
+// outline at all and the dot is the only thing that can stand for those. Turning them
+// off is for reading the divisions as areas rather than as a scatter (§6a.7).
+let dotsOn = true;
+// Outlines for the selected city only, keyed by unit id. Cleared on every city change so
+// two cities' shapes can never be on screen at once.
+let shapes = {type: 'FeatureCollection', features: []};
+const geomCache = new Map();
+// The lit outline (hover) and the pinned one (click), as unit ids. Held so each can be
+// unlit again without searching the source for it.
+let hoverId = null, selId = null;
+// unit id -> the numeric feature id its outline was given. MapLibre's feature-state is
+// addressed by feature id, and ids must be numbers to be addressable at all, while unit
+// ids are strings like "r1234". Rebuilt per city by `decorate`.
+const featId = new Map();
+// unit id -> that outline's rough area, for picking the smallest shape under the cursor
+// when the dots are off. See `areaOf`.
+const featArea = new Map();
+// Every unit of every city, by id, so a shape or a list row can be turned back into the
+// record the panels want. Ids are OSM type-initial plus id, unique across cities.
+const byId = new Map();
+
+// One outline per city for the zoomed-out view (§6a.6): `raw` as fetched, `cityShapes`
+// once base.json has been joined onto it for the names and counts the layer draws, and
+// `cityPts` the same cities as their centres.
+let rawCities = null, cityShapes = null, cityPts = null;
+// qid -> numeric feature id, the same feature-state trick `featId` plays for outlines.
+const cityFid = new Map();
+
+const EMPTY = {type: 'FeatureCollection', features: []};
+
+// Below this the map shows one shape per city instead of one dot per unit, and stops
+// handing the selection to whatever is under the middle of the screen.
+//
+// It is the zoom at which a whole city stops fitting on the screen, and both rules want
+// that same line. Further out, the dots of the one loaded city are an unreadable smear
+// while the other 180 cities are not drawn at all, which is exactly backwards from the
+// question someone zooming out is asking; and "the city under the centre" stops being a
+// thing anyone is looking at, so a pan across a continent must not rewrite the sidebar.
+const CITY_ZOOM = 8.5;
+
+// Size multiplier from sitelink count. Held separately because it has to be spliced into
+// every output stop of the zoom ramp rather than multiplying the ramp as a whole.
+// The unlinked stop is 0.6, not 1: a unit with no wikidata link draws at 60% of the base
+// radius. It still has to be VISIBLE — absence of a link is not evidence of obscurity,
+// only of an untagged OSM object — but at full size the unlinked majority set the visual
+// weight of the whole map, and the dots that mean something had nothing to stand out from.
+const FAME = ['interpolate', ['linear'], ['sqrt', ['get', 'sl']], 0, 0.6, 3, 1.5, 12, 2.8];
+
+/** Rough area of one outline, in square degrees.
+ *
+ * Compared only against other outlines of the SAME city, where the longitude scaling is
+ * effectively constant, so the missing cos(latitude) factor cancels out of every
+ * comparison and a planar shoelace is enough. Holes are ignored for the same reason.
+ *
+ * It answers one question, and only when the dots are hidden: of the districts stacked
+ * under the cursor, which one does the reader mean? The smallest, always. Levels are
+ * drawn together and a borough contains its neighbourhoods, so the containing shape is
+ * never the more specific answer to "what is this".
+ */
+function ringArea(ring) {
+  let s = 0;
+  for (let i = 0, n = ring.length; i < n; i++) {
+    const a = ring[i], b = ring[(i + 1) % n];
+    s += a[0] * b[1] - b[0] * a[1];
+  }
+  return Math.abs(s) / 2;
+}
+function areaOf(g) {
+  if (!g) return Infinity;
+  if (g.type === 'Polygon') return ringArea(g.coordinates[0] || []);
+  if (g.type === 'MultiPolygon')
+    return g.coordinates.reduce((sum, poly) => sum + ringArea(poly[0] || []), 0);
+  return Infinity;
+}
+
+/** Join the cached outlines for the selected city onto the units index, and draw them.
+ *
+ * Split out of `loadGeom` because the theme switch needs exactly this and none of the
+ * fetch: every feature carries a `col` baked in for the palette that was current when it
+ * was decorated, so a theme change has to redecorate from the cache (§6a.7).
+ */
+function decorate() {
+  const fc = geomCache.get(city);
+  if (!fc) return;
+  featId.clear();
+  featArea.clear();
+  // The GeoJSON carries only an id, so that one file stays valid however the level rule
+  // later changes; level and colour are joined on here.
+  shapes = {type: 'FeatureCollection', features: fc.features.map((f, n) => {
+    const u = byId.get(f.properties.i);
+    featId.set(f.properties.i, n + 1);
+    featArea.set(f.properties.i, areaOf(f.geometry));
+    // `id` is a member of the FEATURE, not of its properties: that is the one place
+    // MapLibre reads a feature id from, and feature-state can address nothing else.
+    return {...f, id: n + 1,
+            properties: {...f.properties, k: u ? u.k : '', col: u ? colorOf(u.k) : '#888',
+                         tr: u && u.tr != null ? u.tr : -1, n: u ? u.n : ''}};
+  })};
+  applyShapes();
+}
+
+/** The selected city's units, and the cache behind them.
+ *
+ * base.json is an INDEX now — cities and the level-key order, no units. Each city's units
+ * arrive on selection, because the map only ever draws one city (`visibleUnits`) and
+ * shipping all 287 up front was a 13.6 MB blocking download to draw a median 27 KB of it.
+ *
+ * `UNITS` empty is a normal state, not an error: it is what every city looks like for the
+ * moment between clicking it and its file landing. Everything downstream already copes,
+ * because it is the same state as a city whose geometry has not arrived.
+ */
+let UNITS = [];
+const unitsCache = new Map();
+
+async function loadUnits(qid) {
+  if (!unitsCache.has(qid)) {
+    try {
+      const r = await fetch(`data/units/${qid}.json`);
+      unitsCache.set(qid, r.ok ? await r.json() : []);
+    } catch { unitsCache.set(qid, []); }
+  }
+  // Same guard as loadGeom: a slow fetch for a city the reader has moved on from must not
+  // replace the units of the one they are looking at now.
+  if (qid !== city) return;
+  UNITS = unitsCache.get(qid);
+  byId.clear();
+  UNITS.forEach(u => byId.set(u.i, u));
+  // Geometry may have arrived first, in which case it was decorated against an empty
+  // byId and every outline took the fallback colour. Re-decorating is what pairs the
+  // shapes back up with their units.
+  decorate();
+  draw();
+}
+
+async function loadGeom(qid) {
+  if (!geomCache.has(qid)) {
+    try {
+      const r = await fetch(`data/geom/${qid}.json`);
+      // A missing file is the normal state for a city the geometry pass has not reached
+      // yet, not an error worth surfacing. Those cities simply stay as pins.
+      geomCache.set(qid, r.ok ? await r.json() : EMPTY);
+    } catch { geomCache.set(qid, EMPTY); }
+  }
+  // A slow fetch for a city the reader has already moved on from must not overwrite the
+  // shapes of the one they are looking at now, nor the id map that goes with them.
+  if (qid !== city) return;
+  decorate();
+}
+
+/** Turn one unit's outline on or off in `shape-hi`, by feature-state.
+ *
+ * Silently does nothing for a unit with no outline. A pin-only unit is the normal case,
+ * not an error, and the dot ring covers it instead.
+ */
+function lite(unitId, key, on) {
+  const fid = unitId == null ? undefined : featId.get(unitId);
+  if (fid === undefined || !map.getSource('shapes')) return;
+  map.setFeatureState({source: 'shapes', id: fid}, {[key]: on});
+}
+
+function applyShapes() {
+  // The sidebar is live before the map finishes loading, so a click can land here first.
+  if (!map.getSource('shapes')) return;
+  const on = el('shapes').checked;
+  const feats = on ? shapes.features.filter(
+    f => !off.has(f.properties.k) && !offTier.has(f.properties.tr)) : [];
+  map.getSource('shapes').setData({type: 'FeatureCollection', features: feats});
+  // setData drops every feature-state on the source, so the lit outlines have to be put
+  // back or a level toggle would silently un-highlight whatever is pinned.
+  lite(selId, 'sel', true); lite(hoverId, 'hi', true);
+  const total = shapes.features.length;
+  el('shapeinfo').textContent = total ? `${feats.length}/${total}` : 'none yet';
+}
+
+/** Show or hide the dots.
+ *
+ * A layout property and not a rebuilt source: the dots stay loaded and stay queryable in
+ * order, so turning them back on is instant and nothing has to be re-joined. What changes
+ * with them is what the pointer is asking about, which `pickAt` handles.
+ */
+function applyDots() {
+  for (const id of ['dots', 'dot-sel'])
+    if (map.getLayer(id))
+      map.setLayoutProperty(id, 'visibility', dotsOn ? 'visible' : 'none');
+}
+
+/** Join base.json onto the city outlines: the name the label draws and the count the
+ *  card shows. The two files arrive in either order, so this runs on whichever is last
+ *  and does nothing until both are in.
+ *
+ *  Also derives a point per city from the same list. An outline is the honest shape but
+ *  it is 2 px wide at zoom 4, so on its own it marks nothing a reader could aim at; the
+ *  point is the marker that is always big enough to see and to hit, and it fades out as
+ *  the outline grows into something worth looking at. The centres come from base.json,
+ *  not from the geometry, because that is the point the whole survey was run around. */
+function decorateCities() {
+  if (!rawCities || !DATA) return;
+  cityFid.clear();
+  const pts = [];
+  cityShapes = {type: 'FeatureCollection', features: rawCities.features
+    .filter(f => DATA.cities[f.properties.q])
+    .map((f, n) => {
+      const c = DATA.cities[f.properties.q];
+      cityFid.set(f.properties.q, n + 1);
+      const props = {...f.properties, name: c.name, n: c.n};
+      // The same numeric id on both sources, so one hover lights the pair.
+      pts.push({type: 'Feature', id: n + 1, properties: props,
+                geometry: {type: 'Point', coordinates: [c.lon, c.lat]}});
+      return {...f, id: n + 1, properties: props};
+    })};
+  cityPts = {type: 'FeatureCollection', features: pts};
+  if (map.getSource('cities')) map.getSource('cities').setData(cityShapes);
+  if (map.getSource('city-pts')) map.getSource('city-pts').setData(cityPts);
+}
+
+/* The basemap swaps with the sidebar, because half of a theme is the map. An overlay
+ * tuned to glow against near-black is washed out on paper and the other way round, so
+ * there is no useful state where one is light and the other dark. Positron is
+ * OpenFreeMap's light style; both are the same tile set with different paint. */
+const BASEMAP = {dark: 'https://tiles.openfreemap.org/styles/dark',
+                 light: 'https://tiles.openfreemap.org/styles/positron'};
+
+// Remembered, because a reader who prefers one of these prefers it every time. Wrapped
+// because storage throws outright in a browser set to block site data, and losing the
+// preference must not take the page down with it.
+try { theme = localStorage.getItem('nbhd-theme') === 'light' ? 'light' : 'dark'; } catch {}
+document.documentElement.dataset.theme = theme;
+
+const map = new maplibregl.Map({
+  container: 'map',
+  style: BASEMAP[theme],
+  center: [0, 20], zoom: 1.4, attributionControl: false
+});
+map.addControl(new maplibregl.AttributionControl({
+  customAttribution: 'OpenStreetMap via Overpass · tiles OpenFreeMap'
+}), 'bottom-right');
+map.addControl(new maplibregl.NavigationControl({showCompass: false}), 'top-right');
+
+/** The theme's colours that live in MapLibre rather than in CSS.
+ *
+ * Kept out of the `addLayer` calls, which hold literal hex for the dark map and are
+ * corrected here immediately afterwards. That is not tidiness: tools/lint_map_expressions
+ * evaluates each addLayer literal in isolation, and a paint value it cannot evaluate is
+ * reported as a failure by design (§6a.1). A layer whose colours come from a lookup would
+ * be a layer that script silently stops checking.
+ */
+function applyThemePaint() {
+  if (!map.getLayer('shape-hi')) return;
+  map.setPaintProperty('shape-hi', 'line-color', LIT[theme]);
+  map.setPaintProperty('dot-sel', 'circle-stroke-color', LIT[theme]);
+  map.setPaintProperty('city-fill', 'fill-color', CITY_COL[theme]);
+  map.setPaintProperty('city-line', 'line-color', CITY_COL[theme]);
+  map.setPaintProperty('city-dot', 'circle-color', CITY_COL[theme]);
+  map.setPaintProperty('city-dot', 'circle-stroke-color', CITY_COL[theme]);
+  map.setPaintProperty('city-label', 'text-color', theme === 'dark' ? '#e8e6e2' : '#2f2c27');
+  map.setPaintProperty('city-label', 'text-halo-color',
+                       theme === 'dark' ? 'rgba(12,13,16,.85)' : 'rgba(255,254,251,.9)');
+  /* The basemap's own font stack, whatever it happens to be, rather than a name hardcoded
+   * here. A `text-font` the style has no glyphs for renders as nothing at all, with only
+   * a console warning, so asking the style is the only way to be sure the labels appear.
+   *
+   * Not simply the first one found: styles carry several, and positron's first is
+   * "Noto Sans Italic" (its water labels), which is a strange voice for a city name. A
+   * plain literal stack only, since `text-font` can itself be an expression. */
+  const fonts = (map.getStyle().layers || [])
+    .map(l => l.layout && l.layout['text-font'])
+    .filter(f => Array.isArray(f) && f.every(x => typeof x === 'string'));
+  const upright = f => !f.some(x => /italic/i.test(x));
+  const pick = fonts.find(f => upright(f) && f.some(x => /regular/i.test(x)))
+            || fonts.find(upright) || fonts[0];
+  if (pick) map.setLayoutProperty('city-label', 'text-font', pick);
+}
+
+/** Stand the basemap's own settlement labels down below CITY_ZOOM, where ours are on.
+ *
+ * Without this every city in the corpus is named twice at those zooms, once by the
+ * basemap and once by us, a few pixels apart. Ours cannot simply be dropped in favour of
+ * the basemap's: the basemap names every city there is, and the whole question the
+ * zoomed-out view answers is which of them this corpus HAS. So below CITY_ZOOM the only
+ * settlement names on the map are the 181, and country and state labels are untouched
+ * because they are context rather than competition.
+ *
+ * Both OpenFreeMap styles are OpenMapTiles, so settlements are the `place` source-layer
+ * and split into layers named for what they hold (`place_city`, `label_town`). Anything
+ * that does not match is left alone, so an unrecognised basemap degrades to the duplicate
+ * labels rather than to a missing map.
+ */
+function quietBasemapLabels() {
+  for (const l of map.getStyle().layers || []) {
+    if (l.type !== 'symbol' || l['source-layer'] !== 'place') continue;
+    if (!/city|town|village|suburb|other/.test(l.id)) continue;
+    if (l.maxzoom !== undefined && l.maxzoom <= CITY_ZOOM) continue;
+    map.setLayerZoomRange(l.id, Math.max(CITY_ZOOM, l.minzoom || 0),
+                          l.maxzoom === undefined ? 24 : l.maxzoom);
+  }
+}
+
+/** Swap the whole theme: the panel, the palette, the basemap and the overlay.
+ *
+ * `setStyle` throws away every source and layer added to the old style, so this is a
+ * teardown and rebuild rather than a recolour, and everything the map was holding has to
+ * be handed back: the city outlines, the dots, the selected city's shapes and the two
+ * feature-states that light one of them up. `decorate` is what re-runs the palette over
+ * the shapes, whose colours are baked into their properties.
+ */
+function setTheme(next) {
+  theme = next;
+  document.documentElement.dataset.theme = next;
+  el('theme').textContent = next === 'dark' ? 'light' : 'dark';
+  try { localStorage.setItem('nbhd-theme', next); } catch {}
+  layersAdded = false;
+  // Whatever is lit is lit by a feature-state on a source that is about to stop existing,
+  // and a stale `hoverId` would leave the next hover of the SAME feature unable to
+  // re-light it, since nothing would look changed.
+  unlight();
+  // `diff: false` forces a full reload instead of MapLibre's attempt to morph one style
+  // into the other. Between two unrelated styles the diff is nearly a full reload anyway,
+  // and its result for OUR layers is the thing at stake here: this way they are certainly
+  // gone and certainly re-added, rather than sometimes surviving in the old theme.
+  map.setStyle(BASEMAP[next], {diff: false});
+  map.once('style.load', () => {
+    addLayers();
+    decorateCities();
+    if (city) { decorate(); draw(); }
+    if (selId) map.setFilter('dot-sel', ['==', ['get', 'i'], selId]);
+    applyThemePaint();
+    quietBasemapLabels();
+    applyDots();
+    // The open details panel has the old palette's colour baked into its level pill. It
+    // is rebuilt from the record rather than from what it is currently showing, so it
+    // comes back in the new palette and not merely in the old text.
+    const u = selId && byId.get(selId);
+    if (u) openDetail(propsOf(u));
+  });
+}
+
+/** The units to draw: level and fame filters, and NOTHING is hidden beyond them.
+ *
+ * DUPLICATES ARE DRAWN, DELIBERATELY. An earlier version collapsed each `dupOf` group to
+ * one dot whenever more than one level was showing, and it was a mistake in a tool whose
+ * whole job is to show what OSM actually holds: a missing unit reads as missing DATA, and
+ * the reader then has to work out whether the gap is OSM's or the browser's. That cost is
+ * paid every time something looks absent, while the benefit — slightly fewer stacked dots
+ * — is now mostly delivered by the tier panel, since duplicate records of one division
+ * usually sit in the same tier and switch off together.
+ *
+ * `dupOf` is still computed in build.py and still matters; it is the QUIZ that must
+ * collapse on it (§0b), so that one place cannot be asked twice. That is a different
+ * consumer with a different requirement, and this is the browser.
+ *
+ * Two independent filters. `off` is level keys, from the raw panel; `offTier` is tier
+ * indices, from the tier panel. They cannot be one set, because a SPLIT level has its
+ * units in two tiers — switching off Tokyo's "cities" must drop the Tama and Saitama
+ * municipalities while keeping the 23 special wards, and both are `admin=7`.
+ */
+function visibleUnits() {
+  if (!city) return [];
+  // UNITS already holds only this city's units, so the `u.c === city` test that used to
+  // do the narrowing is gone. It is still empty until the city's file lands.
+  return UNITS.filter(u =>
+    !off.has(u.k) && !offTier.has(u.tr) && (u.sl || 0) >= minFame);
+}
+
+/** One unit as the map sees it.
+ *
+ * Split out of `features` so the "most linked" list can hand the details panel exactly
+ * what a click on a dot would have handed it. The panel then has one input shape, and a
+ * field added here reaches both routes into it.
+ */
+function propsOf(u) {
+  return {
+    i: u.i, n: u.n, en: u.en || '', k: u.k, p: u.p == null ? -1 : u.p,
+    // Wikidata P1082, kept apart from the OSM tag rather than filling it in — see
+    // popLine. -1 is the sentinel because MapLibre feature properties cannot be null.
+    wp: u.wp == null ? -1 : u.wp, wy: u.wy || 0,
+    q: u.q || '', poly: u.poly, b: u.b || 0, w: u.w || 0, e: u.e || 0,
+    // `src` is not `e`. `e` says the OUTLINE came from the city's own source; `src` says
+    // the whole RECORD did and there is no OSM object behind it (spec 1.7), which is
+    // what the panel needs to explain a unit with no QID, no population and no tags.
+    src: u.src || '',
+    core: u.core == null ? -1 : u.core,
+    sl: u.sl || 0, v: u.v || 0, wt: u.wt || '', dup: u.dupOf ? 1 : 0,
+    self: u.self ? 1 : 0, col: colorOf(u.k)
+  };
+}
+
+function features() {
+  if (!city) return {type: 'FeatureCollection', features: []};
+  return {type: 'FeatureCollection', features: visibleUnits().map(u => ({
+    type: 'Feature',
+    geometry: {type: 'Point', coordinates: [u.x, u.y]},
+    properties: propsOf(u)
+  }))};
+}
+
+function draw() {
+  if (map.getSource('units')) map.getSource('units').setData(features());
+  applyShapes();
+  const c = DATA.cities[city];
+  el('tiers').innerHTML = c ? tierPanel(c) : '';
+  el('levels').innerHTML = c ? levelPanel(c) : '';
+  el('top').innerHTML = c ? topPanel() : '';
+  // Informational only, and phrased so it cannot be read as "hidden". Nothing is being
+  // suppressed: this counts how many of the units ON SCREEN are a second record of a
+  // place another visible dot already covers.
+  const vis = visibleUnits();
+  const ids = new Set(vis.map(u => u.i));
+  const dup = vis.filter(u => u.dupOf && ids.has(u.dupOf)).length;
+  el('dupinfo').textContent = !c ? ''
+    : dup ? `${dup} of ${vis.length} shown are a 2nd record` : `none of ${vis.length} shown`;
+  el('dotinfo').textContent = !c ? '' : dotsOn ? fmt(vis.length) : 'hidden';
+  el('fameinfo').textContent = minFame;
+}
+
+/** The most-linked units in this city.
+ *
+ * This is the fastest test of whether a level is the right one: a level whose famous
+ * members are places anyone has heard of is a neighbourhood level, and one topping out
+ * at "Baumgarten, Arsenal, Lichtental" (Vienna, 9 sitelinks) is a sub-neighbourhood level
+ * no ranking can rescue. Ranked WITHIN the city — globally the list is 76% municipalities
+ * and self-references, which says nothing about neighbourhoods (spec 1.4).
+ */
+function topPanel() {
+  const rows = visibleUnits()
+    .filter(u => (u.sl || 0) > 0)
+    .sort((a, b) => (b.sl || 0) - (a.sl || 0))
+    .slice(0, 14);
+  if (!rows.length) return '<h2>most linked</h2><p class="hint">No wikidata links yet.</p>';
+  return '<h2>most linked</h2>' + rows.map(u => {
+    // `wt` is NOT shown here. It differs for 910 of 12,290 units for entirely benign
+    // reasons (translation, transliteration, "District"/"Municipality" suffixes), so as a
+    // warning it would be wrong ~99% of the time. It stays in the card as information.
+    const self = u.self ? ' <span class="pill pin">is the city</span>' : '';
+    return `<div class="city" data-goto="${u.i}"><span class="name">
+      <span class="sw" style="background:${colorOf(u.k)};display:inline-block"></span>
+      ${u.n}${self}</span><span class="n">${u.sl}${u.v ? ' · ' + fmt(u.v) : ''}</span></div>`;
+  }).join('');
+}
+
+/** The tier toggles: the four categories a reader actually thinks in.
+ *
+ * Sits above the raw `admin=8` / `place=suburb` checkboxes and drives the same `off`
+ * set, so the two stay in sync and either can be used. The raw list is still the truth
+ * about what OSM holds; this is the reading of it (build.py `assign_tiers`).
+ *
+ * Each tier is named with the term the CITY actually uses, taken from Wikidata P31 —
+ * "borough" for New York, "municipal arrondissement" for Paris, "chōchō" for Tokyo —
+ * because "second division" means nothing to a reader and "ward" means something exact.
+ * Only the head noun is shown; the full type string is the tooltip, since
+ * "municipal arrondissement of France" does not fit a sidebar.
+ */
+function tierLabel(t) {
+  if (t.label) return t.label.split(' of ')[0].split(' in ')[0];
+  return {municipality: 'cities & municipalities', neighbourhood: 'neighbourhoods',
+          unclassified: 'unclassified'}[t.id] || t.id;
+}
+
+/** Plain English for what a tier IS.
+ *
+ * The name of a tier is the city's own word — "chōchō", "mahalle", "freguesia" — which
+ * is the right label and tells a reader who has never been to Lisbon nothing at all. So
+ * every row carries a gloss saying where it sits: the local term names it, the gloss
+ * places it. "1st level city divisions" is deliberately plainer than "division-1".
+ */
+const ORD = ['1st', '2nd', '3rd', '4th', '5th'];
+function tierGloss(t, c) {
+  if (t.id === 'municipality') return 'separate cities & towns';
+  if (t.id === 'unclassified') return 'not yet classified';
+  if (t.id === 'neighbourhood') {
+    // Several cities have two informal layers and Wikidata calls both "neighborhood" —
+    // New York's 19 macro-areas (Harlem, Midtown) and its 325 finer ones. The type name
+    // cannot separate them, so the gloss does it by size; tiers arrive coarse-first.
+    const all = c.tiers.filter(x => x.id === 'neighbourhood');
+    const base = all.length > 1 && all.indexOf(t) > 0
+      ? 'finer unofficial areas' : 'unofficial areas';
+    return t.inferred ? base + ' (inferred)' : base;
+  }
+  const n = +t.id.split('-')[1];
+  return `${ORD[n - 1] || n + 'th'} level city divisions`;
+}
+
+function tierPanel(c) {
+  if (!c.tiers || !c.tiers.length) return '';
+  // Trimming to the head noun collides where a city holds two kinds of the same word:
+  // New York has "borough of New Jersey" (its neighbouring municipalities) and "borough
+  // of New York City" (its own five). Two rows both reading "borough" is worse than two
+  // long ones, so on a collision both keep the full type.
+  const seen = {};
+  c.tiers.forEach(t => { const s = tierLabel(t); seen[s] = (seen[s] || 0) + 1; });
+  const nameOf = t => (seen[tierLabel(t)] > 1 && t.label) ? t.label : tierLabel(t);
+  const rows = c.tiers.map((t, i) => {
+    const on = !offTier.has(i);
+    const n = t.n;
+    const sub = tierGloss(t, c) + ' · ' + t.k.join(' ');
+    return `<label class="lv" title="${t.label || 'no wikidata type'}">
+      <input type="checkbox" data-tier="${i}" ${on ? 'checked' : ''}>
+      <span class="sw" style="background:${colorOf(t.k[0])}"></span>
+      <span>${nameOf(t)}<br><span class="meta">${sub}</span></span>
+      <span class="meta" style="margin-left:auto">${fmt(n)}</span></label>`;
+  }).join('');
+  return `<h2>how ${c.name} divides</h2>${rows}`;
+}
+
+function levelPanel(c) {
+  const rows = c.keep.map(k => {
+    const v = c.levels[k] || {};
+    const on = !off.has(k);
+    return `<label class="lv">
+      <input type="checkbox" data-k="${k}" ${on ? 'checked' : ''}>
+      <span class="sw" style="background:${colorOf(k)}"></span>
+      <code>${k}</code><span class="meta">${fmt(v.n)}</span></label>`;
+  }).join('');
+  const stats = c.keep.map(k => {
+    const v = c.levels[k] || {};
+    const pct = x => x == null ? NONE : Math.round(x * 100) + '%';
+    return `<tr><td>${k}</td><td>${fmt(v.n)}</td><td>${fmt(v.meanPop)}</td>
+      <td>${pct(v.polyFrac)}</td><td>${pct(v.wdFrac)}</td><td>${pct(v.coreFrac)}</td></tr>`;
+  }).join('');
+  // ATTRIBUTION IS NOT OPTIONAL. Copenhagen's DAWA layer is CC BY 4.0 and Cairo's is
+  // CC BY 3.0 IGO, both of which require naming the source wherever the data is shown.
+  // It sits under the level table rather than in a credits block nobody opens, because
+  // it is also the answer to "where did this level come from" — these units are not in
+  // OSM (spec 1.7) and a reader has no other way to find that out.
+  const credit = c.keep.map(k => c.levels[k]).filter(v => v && v.external)
+    .map(v => `<p class="hint" style="margin-top:6px">${esc(v.source)}.
+      ${esc(v.attribution)}, ${esc(v.licence)}.${v.nLayer && v.nLayer > v.n
+        ? ` ${fmt(v.n)} of its ${fmt(v.nLayer)} polygons here; the rest are units OSM
+            already names, and the population estimate divides by all ${fmt(v.nLayer)}.`
+        : ''}</p>`).join('');
+  return `<h2>${c.name}, ${fmt(c.n)} units</h2>${rows}
+    <table class="stats"><tr><th>level</th><th>units</th><th>est pop</th>
+    <th>poly</th><th>wiki</th><th>core</th></tr>${stats}</table>
+    ${credit}
+    ${c.hasBoundary ? '' : `<p class="hint" style="margin-top:6px">${boundaryHint(c)}</p>`}`;
+}
+
+/* One quiet line in the city card. No icon and no hover note: a missing boundary is
+ * usually not a fault in the city — Sydney's City of Sydney council and Manila's admin=6
+ * are the CORRECT relations, merely too small to stand for the metro around them, and a
+ * small city proper is a normal fact about cities rather than a defect. The genuinely
+ * wrong picks cannot be told apart automatically anyway (Lagos is wrong at 6.5%, Sydney
+ * right at 7.4%), so §4.4a handles those case by case.
+ *
+ * It still NAMES the rejected relation, because that is the actionable part — it is what
+ * a per-city override would have to replace. That name is a raw OSM tag, hence `esc`. */
+function boundaryHint(c) {
+  // "Not fetched yet" is a state of the pipeline, not a fact about the city, and while
+  // the roster runs ahead of the boundary pass it is the COMMON case. Saying "no usable
+  // boundary" for a city nothing has looked at yet would be plainly untrue.
+  if (c.boundaryState === 'not-fetched') return `Boundary pass has not reached this city yet.`;
+  const r = c.boundaryReject;
+  // Which denominator the size estimate fell back to. The disc is the good case and is
+  // worth naming; the whole radius is the biased one (spec 3.1) and is worth admitting.
+  const tail = `No <code>core</code>; size estimate over `
+    + (c.areaRadiusKm ? `a ${c.areaRadiusKm} km disc of the city's area.`
+                      : `the whole ${c.radiusKm} km radius, so unit size is understated.`);
+  return r
+    ? `No usable boundary: OSM gave "${esc(r.picked)}", `
+      + `only ${(r.covered * 100).toFixed(1)}% of units. ${tail}`
+    : `No usable boundary. ${tail}`;
+}
+
+
+function cityList(filter = '') {
+  const f = filter.trim().toLowerCase();
+  return Object.entries(DATA.cities)
+    .filter(([, c]) => !f || c.name.toLowerCase().includes(f))
+    .sort((a, b) => b[1].n - a[1].n)
+    .map(([qid, c]) => `<div class="city ${qid === city ? 'on' : ''}"
+        data-q="${qid}"><span class="name">${c.name}</span><span class="n">${fmt(c.n)}</span></div>`)
+    .join('');
+}
+
+function selectCity(qid, fly = true) {
+  // Tiers marked `off` by build.py start hidden — showing every layer of every city at
+  // once is the state that made this unreadable. Nothing is dropped: the box is right
+  // there, and the raw level panel below is unaffected.
+  city = qid; off.clear(); offTier.clear();
+  (DATA.cities[qid].tiers || []).forEach((t, i) => { if (t.off) offTier.add(i); });
+  shapes = EMPTY; featId.clear(); hoverId = null; closeDetail();
+  // Drop the outgoing city's units immediately rather than leaving them to be replaced
+  // when the new file lands: for the moment in between, the panels must show nothing
+  // rather than the previous city's contents.
+  UNITS = unitsCache.get(qid) || [];
+  byId.clear();
+  UNITS.forEach(u => byId.set(u.i, u));
+  loadUnits(qid);
+  el('cities').innerHTML = cityList(el('q').value);
+  // 56 rows in a 30vh box, so a city chosen by the MAP is usually scrolled out of sight
+  // in the list; without this the sidebar looks like it ignored the switch.
+  const row = el('cities').querySelector('.city.on');
+  if (row) row.scrollIntoView({block: 'nearest'});
+  loadGeom(qid);
+  const c = DATA.cities[qid];
+  // Frame the query box, not a fixed zoom: radiusKm is what was actually searched, so
+  // this shows exactly the area the data can possibly cover.
+  //
+  // NOT when the map itself made the choice (`fly` false). The reader is already looking
+  // at where they want to be, and re-framing the whole city under them would undo the
+  // very pan that triggered the switch.
+  if (fly) {
+    const dLat = c.radiusKm / 111.32;
+    const dLon = c.radiusKm / (111.32 * Math.max(0.05, Math.cos(c.lat * Math.PI / 180)));
+    quiet(700);
+    map.fitBounds([[c.lon - dLon, c.lat - dLat], [c.lon + dLon, c.lat + dLat]], {padding: 40, duration: 700});
+  }
+  draw();
+}
+
+// ------------------------------------------------------------ following the map's lead
+
+/** Great-circle distance in km. Used only to ask "which city am I over", where a few
+ *  hundred metres of error against a 25 km radius is not a question anyone can see. */
+function kmBetween(aLon, aLat, bLon, bLat) {
+  const rad = Math.PI / 180;
+  const dLat = (bLat - aLat) * rad, dLon = (bLon - aLon) * rad;
+  const h = Math.sin(dLat / 2) ** 2 +
+    Math.cos(aLat * rad) * Math.cos(bLat * rad) * Math.sin(dLon / 2) ** 2;
+  return 2 * 6371 * Math.asin(Math.sqrt(h));
+}
+
+// Our own camera moves end in a `moveend` that is indistinguishable from the reader's,
+// and letting one of those re-run the city test makes flying TO a city able to select a
+// different one. So every programmatic move declares itself first.
+let quietUntil = 0;
+const quiet = ms => { quietUntil = Date.now() + ms + 250; };
+
+/** Hand the selection to whichever city the reader has panned onto.
+ *
+ * The rule is deliberately sticky rather than nearest-wins. Search radii overlap heavily
+ * — 56 cities at 12–35 km, and several pairs sit inside each other's circle — so
+ * "closest centre" would swap the whole sidebar back and forth on a small pan near a
+ * boundary. Leaving the current city's own radius is what hands it over; while the view
+ * is still inside it, nothing moves.
+ */
+function autoSelect() {
+  // Below CITY_ZOOM the map is showing whole cities as single shapes and one of them is
+  // picked by clicking it, so a pan across a continent must not rewrite the sidebar.
+  if (!DATA || Date.now() < quietUntil || map.getZoom() < CITY_ZOOM) return;
+  const at = map.getCenter();
+  const cur = DATA.cities[city];
+  if (cur && kmBetween(at.lng, at.lat, cur.lon, cur.lat) <= cur.radiusKm) return;
+  let best = null, bestD = Infinity;
+  for (const [qid, c] of Object.entries(DATA.cities)) {
+    const d = kmBetween(at.lng, at.lat, c.lon, c.lat);
+    if (d <= c.radiusKm && d < bestD) { best = qid; bestD = d; }
+  }
+  if (best && best !== city) selectCity(best, false);
+}
+map.on('moveend', autoSelect);
+
+// The data fetch and the map's `load` finish in either order, so neither may assume the
+// other. Two flags and a join, rather than a promise chain, because of two failure modes
+// hit while building this:
+//   - registering `map.on('load')` INSIDE the fetch callback loses the event entirely
+//     when the map loads first, leaving the map silently empty;
+//   - `map.loaded()` is not a reliable "has it fired yet" test, and gating on it deadlocks.
+// The sidebar deliberately does NOT wait for the map: if the basemap host is slow or
+// unreachable the city list, level toggles and stats must still render.
+let layersAdded = false;
+
+map.on('load', () => {
+  addLayers();
+  applyThemePaint();
+  quietBasemapLabels();
+  applyDots();
+  // Data may already be in and a city already chosen; draw it now that there is
+  // somewhere to draw it.
+  if (city) { draw(); loadGeom(city); }
+});
+// The button offers the theme you are NOT in, so its label is the other one.
+el('theme').textContent = theme === 'dark' ? 'light' : 'dark';
+
+function addLayers() {
+  if (layersAdded) return;
+  layersAdded = true;
+  {
+    /* ------------------------------------------------ the zoomed-out view (§6a.6)
+     *
+     * One shape per city, drawn only below CITY_ZOOM and hidden above it, where the
+     * per-unit layers take over. Added FIRST so everything else stacks above it; the two
+     * sets never share a zoom, but layer order is the one thing a later reader cannot
+     * infer from the rest of the file.
+     *
+     * `maxzoom` rather than a visibility toggle on zoom events: MapLibre already has the
+     * current zoom on every frame, and a handoff driven by our own `zoomend` would show
+     * both sets, or neither, during the gesture.
+     */
+    map.addSource('cities', {type: 'geojson', data: cityShapes || EMPTY});
+    map.addLayer({
+      id: 'city-fill', type: 'fill', source: 'cities', maxzoom: CITY_ZOOM,
+      paint: {
+        'fill-color': '#9dbdd2',
+        // Lit on hover, so a city reads as something you can click before you click it.
+        'fill-opacity': ['case',
+          ['boolean', ['feature-state', 'hi'], false], 0.45, 0.22]
+      }
+    });
+    map.addLayer({
+      id: 'city-line', type: 'line', source: 'cities', maxzoom: CITY_ZOOM,
+      paint: {'line-color': '#9dbdd2', 'line-width': 1, 'line-opacity': 0.8}
+    });
+    // The marker, and then the name. Both hang off the city CENTRES rather than the
+    // outlines: a label on a polygon lands at its centroid anyway, and putting the two on
+    // one source is what keeps the name beside its own dot instead of over it.
+    map.addSource('city-pts', {type: 'geojson', data: cityPts || EMPTY});
+    map.addLayer({
+      id: 'city-dot', type: 'circle', source: 'city-pts', maxzoom: CITY_ZOOM,
+      paint: {
+        'circle-color': '#9dbdd2',
+        'circle-radius': ['interpolate', ['linear'], ['zoom'], 2, 3.5, 6, 4.5, 8.4, 3],
+        // Fades out over the last zoom before the outline takes over, by which point the
+        // outline is large enough to be the marker itself and the dot is just a blot on
+        // the middle of it.
+        'circle-opacity': ['interpolate', ['linear'], ['zoom'],
+          6, ['case', ['boolean', ['feature-state', 'hi'], false], 1, 0.75], 8.4, 0],
+        'circle-stroke-width': 1,
+        'circle-stroke-color': '#9dbdd2',
+        'circle-stroke-opacity': ['interpolate', ['linear'], ['zoom'], 6, 0.9, 8.4, 0]
+      }
+    });
+    // The names, because hovering 181 blobs one at a time to find out which is which is
+    // not a way to find a city. MapLibre drops labels that collide, and the sort key
+    // spends that budget on the cities with the most units.
+    map.addLayer({
+      id: 'city-label', type: 'symbol', source: 'city-pts', maxzoom: CITY_ZOOM,
+      layout: {
+        'text-field': ['get', 'name'], 'text-font': CITY_FONT, 'text-size': 11,
+        'text-offset': [0, 1], 'text-anchor': 'top',
+        'text-padding': 4, 'symbol-sort-key': ['*', -1, ['get', 'n']]
+      },
+      paint: {'text-color': '#e8e6e2', 'text-halo-color': 'rgba(12,13,16,.85)',
+              'text-halo-width': 1.2}
+    });
+
+    map.addSource('shapes', {type: 'geojson', data: EMPTY});
+    // Fill and outline are separate layers so the fill can stay faint enough to read the
+    // basemap through overlapping districts while the edge stays legible. Overlap is
+    // expected — several levels are drawn at once by design.
+    map.addLayer({
+      id: 'shape-fill', type: 'fill', source: 'shapes', minzoom: CITY_ZOOM,
+      paint: {'fill-color': ['get', 'col'], 'fill-opacity': 0.13}
+    });
+    // Two line layers, not one: a BORROWED outline is this unit's twin at another level,
+    // not a surveyed boundary for this record, so it must not look identical. MapLibre
+    // cannot drive line-dasharray from data, hence the split.
+    map.addLayer({
+      id: 'shape-line', type: 'line', source: 'shapes', minzoom: CITY_ZOOM,
+      filter: ['all', ['!=', ['get', 'b'], 1], ['!=', ['get', 'w'], 1],
+               ['!=', ['get', 'e'], 1]],
+      paint: {'line-color': ['get', 'col'], 'line-width': 1, 'line-opacity': 0.55}
+    });
+    // A city's own official source (fetch_external.py). Third-party geometry, so not a
+    // solid line — but a municipal planning authority's layer for one named city is a
+    // stronger claim than a world gazetteer's, so it dashes longer than Who's On First.
+    map.addLayer({
+      id: 'shape-line-e', type: 'line', source: 'shapes', minzoom: CITY_ZOOM,
+      filter: ['==', ['get', 'e'], 1],
+      paint: {
+        'line-color': ['get', 'col'], 'line-width': 1, 'line-opacity': 0.5,
+        'line-dasharray': [4, 2]
+      }
+    });
+    map.addLayer({
+      id: 'shape-line-b', type: 'line', source: 'shapes', minzoom: CITY_ZOOM,
+      filter: ['==', ['get', 'b'], 1],
+      paint: {
+        'line-color': ['get', 'col'], 'line-width': 1, 'line-opacity': 0.5,
+        'line-dasharray': [2, 2]
+      }
+    });
+    // Who's On First: third-party geometry for a place OSM knows only as a point. The
+    // weakest of the three claims, so the sparsest dash.
+    map.addLayer({
+      id: 'shape-line-w', type: 'line', source: 'shapes', minzoom: CITY_ZOOM,
+      filter: ['==', ['get', 'w'], 1],
+      paint: {
+        'line-color': ['get', 'col'], 'line-width': 1, 'line-opacity': 0.45,
+        'line-dasharray': [1, 3]
+      }
+    });
+    // Hovering a dot lights up that unit's own outline, so the card and the shape on the
+    // map are unambiguously the same thing when districts overlap. A click pins it.
+    //
+    // DRIVEN BY FEATURE-STATE, NOT BY A FILTER. This layer used to be a `setFilter` on
+    // the hovered id, and every mousemove then re-filtered and rebuilt the tile buckets
+    // for a source holding thousands of polygons. That work outran the pointer, so the
+    // white outline crawled through districts the cursor had left several moves ago.
+    // A feature-state write touches one feature's paint attributes and re-filters
+    // nothing; combined with the per-frame coalescing in `flushHover`, only the outline
+    // under the cursor RIGHT NOW is ever drawn.
+    // Written out rather than built by a helper: tools/lint_map_expressions.js evaluates
+    // each addLayer literal on its own, and a layer it cannot evaluate is a failure by
+    // design — an unchecked paint expression is exactly the bug that script exists for.
+    map.addLayer({
+      id: 'shape-hi', type: 'line', source: 'shapes', minzoom: CITY_ZOOM,
+      paint: {
+        'line-color': '#fff',
+        'line-width': ['case',
+          ['boolean', ['feature-state', 'sel'], false], 2.6,
+          ['boolean', ['feature-state', 'hi'], false], 2.2, 0],
+        'line-opacity': ['case',
+          ['boolean', ['feature-state', 'sel'], false], 1,
+          ['boolean', ['feature-state', 'hi'], false], 0.95, 0]
+      }
+    });
+    map.addSource('units', {type: 'geojson', data: features()});
+    map.addLayer({
+      id: 'dots', type: 'circle', source: 'units', minzoom: CITY_ZOOM,
+      paint: {
+        'circle-color': ['get', 'col'],
+        // Radius carries fame: sqrt of sitelink count, so a 200-language article reads
+        // bigger than a 4-language one without swamping the map. Units with no wikidata
+        // link shrink to 0.6 of the base rather than vanishing — see FAME, where the
+        // floor and the reason it is not zero are set.
+        //
+        // `["zoom"]` MUST be the top-level input to the interpolate. Wrapping the zoom
+        // ramp inside a `*` is a style validation error ("zoom expression may only be
+        // used as input to a top-level step or interpolate"), and the whole layer then
+        // fails to add — no dots and no hover, with the failure only visible in the
+        // browser console. So the fame factor multiplies each output stop instead.
+        'circle-radius': [
+          'interpolate', ['linear'], ['zoom'],
+          8, ['*', 2.5, FAME],
+          12, ['*', 5, FAME],
+          16, ['*', 9, FAME]
+        ],
+        // Four states, because they are four different claims: solid = this unit's own
+        // surveyed polygon; half = an outline borrowed from its same-named twin at
+        // another level; then the city's own official source, then Who's On First;
+        // hollow = a pin, no extent known at all.
+        'circle-opacity': [
+          'case',
+          ['==', ['get', 'poly'], 1], 0.85,
+          ['==', ['get', 'b'], 1], 0.45,
+          ['==', ['get', 'e'], 1], 0.40,
+          ['==', ['get', 'w'], 1], 0.35,
+          0.15
+        ],
+        'circle-stroke-width': 1.1,
+        'circle-stroke-color': ['get', 'col'],
+        'circle-stroke-opacity': 0.9
+      }
+    });
+    // A ring around the pinned unit. `shape-hi` cannot show the selection on its own:
+    // 45% of units are pins with no outline to light up, and those are exactly the ones
+    // whose details panel a reader is most likely to open. setFilter is fine here — it
+    // runs on a click, not on every pointer sample.
+    map.addLayer({
+      id: 'dot-sel', type: 'circle', source: 'units', minzoom: CITY_ZOOM,
+      filter: ['==', ['get', 'i'], ''],
+      paint: {
+        'circle-radius': [
+          'interpolate', ['linear'], ['zoom'],
+          8, ['*', 5, FAME], 12, ['*', 8.5, FAME], 16, ['*', 13.5, FAME]
+        ],
+        'circle-color': 'rgba(0,0,0,0)',
+        'circle-stroke-width': 1.6,
+        'circle-stroke-color': '#fff',
+        'circle-stroke-opacity': 0.9
+      }
+    });
+  }
+}
+
+fetch('data/base.json').then(r => r.json()).then(d => {
+  DATA = d;
+  // Warm the colour map in a stable order so colours do not shuffle between cities. The
+  // list is precomputed by build.py now: with units loaded per city there is nothing here
+  // to scan, and deriving it from whichever city opened first is exactly the instability
+  // the sorted warm-up exists to prevent.
+  (d.levelKeys || []).forEach(colorOf);
+  el('cities').innerHTML = cityList();
+  decorateCities();
+  const first = Object.entries(d.cities).sort((a, b) => b[1].n - a[1].n)[0];
+  // Select immediately rather than waiting for the map. The level panel and stats table
+  // are the point of this tool and they do not need WebGL; if the basemap never loads,
+  // everything except the dots should still work.
+  if (first) selectCity(first[0]);
+});
+
+// The city outlines. A missing file is the same non-event as a missing geometry file:
+// build.py writes it, and until it has, the map simply has nothing to draw when it is
+// zoomed out past a city.
+fetch('data/city_shapes.json')
+  .then(r => r.ok ? r.json() : null)
+  .then(fc => { rawCities = fc; decorateCities(); })
+  .catch(() => {});
+
+el('q').addEventListener('input', e => el('cities').innerHTML = cityList(e.target.value));
+el('cities').addEventListener('click', e => {
+  const row = e.target.closest('.city'); if (row) selectCity(row.dataset.q);
+});
+el('theme').addEventListener('click', () => setTheme(theme === 'dark' ? 'light' : 'dark'));
+// A tier toggle drives every level key inside it. Off when ANY of its levels is on, so
+// a half-on tier switches fully off first: the same gesture twice never no-ops.
+el('tiers').addEventListener('change', e => {
+  const i = e.target.dataset.tier; if (i === undefined) return;
+  e.target.checked ? offTier.delete(+i) : offTier.add(+i);
+  draw();
+});
+el('levels').addEventListener('change', e => {
+  const k = e.target.dataset.k; if (!k) return;
+  e.target.checked ? off.delete(k) : off.add(k);
+  draw();
+});
+el('shapes').addEventListener('change', applyShapes);
+el('dots').addEventListener('change', e => {
+  dotsOn = e.target.checked;
+  applyDots();
+  // The card is showing whatever the pointer last resolved to under the old rule, and
+  // that rule has just changed under it.
+  queueHover(null);
+  draw();
+});
+el('fame').addEventListener('input', e => { minFame = +e.target.value; draw(); });
+// Clicking a row in the "most linked" list flies to that unit.
+el('top').addEventListener('click', e => {
+  const row = e.target.closest('[data-goto]'); if (!row) return;
+  const u = byId.get(row.dataset.goto);
+  if (!u) return;
+  quiet(600);
+  map.flyTo({center: [u.x, u.y], zoom: Math.max(map.getZoom(), 13), duration: 600});
+  openDetail(propsOf(u));
+});
+
+// Unit names are OSM free text and reach both panels; the details panel additionally
+// puts them inside href and title attributes, where an unescaped quote would break out.
+const esc = s => String(s == null ? '' : s).replace(
+  /[&<>"]/g, ch => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[ch]));
+
+// The `e` case was missing, so every unit whose outline came from its city's own source
+// read "pin only" while its polygon was on the map beside the label saying it had none.
+// The order matches the four line layers and the four dot opacities: own, borrowed,
+// city source, Who's On First.
+const shapePill = p => p.poly ? '<span class="pill">has shape</span>'
+  : p.b ? '<span class="pill borrowed">borrowed shape</span>'
+  : p.e ? '<span class="pill borrowed">shape from city source</span>'
+  : p.w ? '<span class="pill borrowed">shape from WOF</span>'
+  : '<span class="pill pin">pin only</span>';
+
+// A record with no OSM object behind it (spec 1.7). Worth its own pill rather than
+// being folded into the shape pill: it explains the empty QID, population and tag rows
+// below it, which otherwise read as missing data on a unit OSM simply never had.
+const srcPill = p => p.src
+  ? '<span class="pill borrowed">not in OSM, from city source</span>' : '';
+
+const corePill = p => p.core === 1 ? '<span class="pill">city proper</span>'
+  : p.core === 0 ? '<span class="pill">neighbouring</span>' : '';
+
+/* Population, ALWAYS with its provenance attached. Three claims, never one number:
+   `p` is the OSM `population` tag, `wp` is Wikidata P1082, `wy` is P1082's year.
+   Neither is filled in from the other (spec 1.7).
+
+   OSM first only because it is the tag on the object being displayed. Where both exist
+   they are usually the same figure — median ratio 1.000 over 949 units — so the second
+   line appears only when they disagree by more than 10%, which makes it a signal rather
+   than noise. The year is shown whenever there is one: this corpus spans 2010 to 2025. */
+function popLine(p) {
+  const wiki = p.wp >= 0
+    ? `${fmt(p.wp)} <span class="s">wikidata${p.wy ? ' · ' + p.wy : ''}</span>` : '';
+  if (p.p < 0) return wiki || '<span class="s">no figure in OSM or wikidata</span>';
+  const osm = `${fmt(p.p)} <span class="s">osm tag</span>`;
+  const differs = p.wp >= 0 && Math.abs(p.wp - p.p) > 0.1 * Math.max(p.p, p.wp);
+  return differs ? `${osm}<br>${wiki}` : osm;
+}
+
+// -------------------------------------------------------------------- the hover card
+
+const card = el('card');
+
+/** What the pointer is over, which is a different question at each of the three states
+ *  this map has.
+ *
+ *  - **Zoomed out**, past CITY_ZOOM: a city, and nothing else is drawn.
+ *  - **Dots on**: a dot. The shapes are on screen but the dots are the targets, which is
+ *    what keeps the card from changing every time the pointer crosses a large district
+ *    it is only passing through.
+ *  - **Dots off**: the SMALLEST visible shape under the cursor. Levels are drawn together
+ *    and a borough contains its neighbourhoods, so of the shapes stacked here the
+ *    smallest is the specific answer and every larger one is context. Where there is no
+ *    shape there is nothing to say, and the card closes rather than reaching for the
+ *    nearest dot: a pin-only unit has no extent, and pretending its centroid covers this
+ *    spot would be inventing the one fact §1.3 says we do not have.
+ */
+function pickAt(pt) {
+  /* THE POINT IS PASSED AS AN ARRAY, and it has to be.
+   *
+   * `queryRenderedFeatures(g, opts)` tests `g instanceof Point || Array.isArray(g)`, and
+   * anything else is taken as the OPTIONS argument with the geometry defaulting to the
+   * whole viewport. A plain `{x, y}` therefore does not fail: it silently returns every
+   * rendered feature on screen, so the smallest-shape rule below picked the smallest
+   * shape in LONDON rather than the smallest one under the cursor, and the card named
+   * Chinatown from anywhere in the city. A two-number array is unambiguous. */
+  const at = [pt.x, pt.y];
+  if (map.getZoom() < CITY_ZOOM) {
+    if (!map.getLayer('city-dot')) return null;
+    // The marker first and the outline second, in render order, because at the zooms
+    // where both exist the dot is the thing a reader is aiming at.
+    const f = map.queryRenderedFeatures(at, {layers: ['city-dot', 'city-fill']})[0];
+    return f ? {kind: 'city', c: f.properties} : null;
+  }
+  if (dotsOn) {
+    if (!map.getLayer('dots')) return null;
+    const f = map.queryRenderedFeatures(at, {layers: ['dots']})[0];
+    return f ? {kind: 'unit', p: f.properties} : null;
+  }
+  if (!map.getLayer('shape-fill')) return null;
+  let best = null, bestArea = Infinity;
+  for (const f of map.queryRenderedFeatures(at, {layers: ['shape-fill']})) {
+    // Falls back to the rendered order for a shape whose area we somehow do not have,
+    // rather than skipping it: topmost is a worse answer than smallest, but it is an
+    // answer, and dropping the feature would make the district look unhoverable.
+    const a = featArea.has(f.properties.i) ? featArea.get(f.properties.i) : Infinity;
+    if (best === null || a < bestArea) { best = f; bestArea = a; }
+  }
+  const u = best && byId.get(best.properties.i);
+  return u ? {kind: 'unit', p: propsOf(u)} : null;
+}
+
+/* Hover is resolved and rendered at most once per animation frame, and only for the LAST
+ * pointer sample of that frame. MapLibre delivers a mousemove per sample; drawing all of
+ * them in order meant the card and the lit outline replayed the path the cursor had
+ * already finished, arriving at the right district only after the pointer had stopped.
+ * Everything in between is a frame nobody will see, so it is dropped rather than queued.
+ *
+ * The hit test itself lives on this side of the coalescing too, not in the event handler.
+ * With the dots off it is a polygon query against thousands of outlines, and running one
+ * per pointer sample would put back exactly the lag the coalescing was added to remove. */
+let pendingPt = null, raf = 0;
+const queueHover = pt => { pendingPt = pt; if (!raf) raf = requestAnimationFrame(flushHover); };
+
+// The lit city, as its numeric feature id. The unit equivalent is `hoverId`; they are
+// separate because the two live in different sources and only one can be lit at a time.
+let cityHoverId = null;
+const liteCity = (fid, on) => {
+  if (fid === null) return;
+  // Both sources, because the outline and its marker are one city wearing two layers.
+  for (const src of ['cities', 'city-pts'])
+    if (map.getSource(src)) map.setFeatureState({source: src, id: fid}, {hi: on});
+};
+
+/** Put out whatever is currently lit, in either source. */
+function unlight() {
+  if (hoverId !== null) { lite(hoverId, 'hi', false); hoverId = null; }
+  if (cityHoverId !== null) { liteCity(cityHoverId, false); cityHoverId = null; }
+}
+
+function flushHover() {
+  raf = 0;
+  const pt = pendingPt; pendingPt = null;
+  const hit = pt ? pickAt(pt) : null;
+  map.getCanvas().style.cursor = hit ? 'pointer' : '';
+  if (!hit) { unlight(); card.style.display = 'none'; return; }
+
+  if (hit.kind === 'city') {
+    const fid = cityFid.has(hit.c.q) ? cityFid.get(hit.c.q) : null;
+    if (fid !== cityHoverId) {
+      unlight();
+      cityHoverId = fid;
+      liteCity(cityHoverId, true);
+    }
+    const c = DATA.cities[hit.c.q];
+    card.innerHTML = `<div class="t">${esc(hit.c.name)}</div>
+      ${c ? `<div class="s">${esc(c.country)}</div>` : ''}
+      <dl><dt>units</dt><dd>${fmt(hit.c.n)}</dd></dl>
+      <div class="s" style="margin-top:6px">click to open this city</div>`;
+  } else {
+    const p = hit.p;
+    if (p.i !== hoverId) { unlight(); hoverId = p.i; lite(hoverId, 'hi', true); }
+    card.innerHTML = `<div class="t">${esc(p.n)}</div>
+      ${p.en && p.en !== p.n ? `<div class="s">${esc(p.en)}</div>` : ''}
+      <div style="margin-top:6px">
+        <span class="pill" style="border-color:${p.col};color:${p.col}">${esc(p.k)}</span>
+        ${shapePill(p)}${corePill(p)}
+      </div>
+      ${p.dup ? '<div style="margin-top:4px"><span class="pill">duplicate of another unit</span></div>' : ''}
+      ${p.wt ? `<div style="margin-top:4px"><span class="pill">article: ${esc(p.wt)}</span></div>` : ''}
+      <dl><dt>population</dt><dd>${popLine(p)}</dd>
+        <dt>wiki langs</dt><dd>${p.sl || NONE}</dd>
+        <dt>views/yr</dt><dd>${p.v ? fmt(p.v) : NONE}</dd>
+        <dt>wikidata</dt><dd>${esc(p.q) || NONE}</dd></dl>
+      <div class="s" style="margin-top:6px">click for links</div>`;
+  }
+  card.style.display = 'block';
+  const r = card.getBoundingClientRect();
+  card.style.left = Math.min(pt.x + 306, innerWidth - r.width - 8) + 'px';
+  card.style.top = Math.max(8, pt.y - r.height / 2) + 'px';
+}
+
+// One handler for the whole canvas rather than one per layer. Which layer the pointer is
+// asking about is now a question with three answers (`pickAt`), and layer-scoped handlers
+// can only ever give one of them.
+map.on('mousemove', e => queueHover({x: e.point.x, y: e.point.y}));
+map.on('mouseout', () => queueHover(null));
+
+// ----------------------------------------------------------------- the details panel
+
+const detail = el('detail');
+
+/* Fetched once each, on the first click that needs them, and never before.
+ *
+ *   wiki.json  3 MB — every article title in every language, per QID. base.json carries
+ *                     only the sitelink COUNT, because a count is all the map draws.
+ *   p31.json  280 KB — wikidata's "instance of" per QID, plus label text for the types.
+ *
+ * Putting either in front of the map's first paint would cost every reader a download for
+ * a panel most of them never open, so the cost is moved to whoever asks for it. */
+const inflight = new Map();
+const lazy = url => {
+  if (!inflight.has(url))
+    inflight.set(url, fetch(url).then(r => r.ok ? r.json() : {}).catch(() => ({})));
+  return inflight.get(url);
+};
+
+const OSM_KIND = {n: 'node', w: 'way', r: 'relation'};
+
+// Which wikipedia to open when there is no English article. Ordered by size, so the
+// fallback is an article somebody might actually be able to read; past the list, any
+// article beats none.
+const LANG_RANK = ['en', 'de', 'fr', 'es', 'ru', 'ja', 'zh', 'it', 'pt', 'nl', 'pl',
+                   'sv', 'ar', 'ko', 'tr', 'id', 'uk', 'vi', 'fa', 'he'];
+
+function bestLang(titles, p) {
+  const langs = Object.keys(titles);
+  if (!langs.length) return null;
+  if (titles.en) return 'en';
+  // An article whose title IS the OSM local name is the local-language one, and for a
+  // place with no English article that is nearly always the fullest article there is.
+  const local = langs.find(l => titles[l] === p.n);
+  if (local) return local;
+  const ranked = langs.filter(l => LANG_RANK.includes(l))
+    .sort((a, b) => LANG_RANK.indexOf(a) - LANG_RANK.indexOf(b));
+  return ranked[0] || langs.sort()[0];
+}
+
+// A comma is legal in a path and extremely common in these titles ("Omiya-ku, Saitama"),
+// so it is handed back after encoding rather than left as %2C. Everything else stays
+// encoded — `/ ? # &` in a title would otherwise change which page the URL points at.
+const wpUrl = (lang, title) =>
+  `https://${lang}.wikipedia.org/wiki/` +
+  encodeURIComponent(title.replace(/ /g, '_')).replace(/%2C/g, ',');
+
+// A link is one more identifier of this unit, so it is formatted as one — the same
+// dt/dd row as "osm level  place=suburb", not a box of its own.
+const linkRow = (kind, label, href) =>
+  `<dt>${kind}</dt><dd><a href="${esc(href)}" target="_blank" rel="noopener">${
+    esc(label)}</a></dd>`;
+
+/** Everything known about one unit, with its identifiers followed out to their sources.
+ *
+ * Deliberately not the hover card. The card has to stay cheap enough to rebuild every
+ * frame, and it is `pointer-events:none` — it cannot hold a link at all, because the
+ * cursor would dismiss it on the way to one. So the QID and the article title, which are
+ * only useful if you can follow them, live here instead.
+ *
+ * `w` and `types` are null on the first paint and filled in when the lazy files land, so
+ * the panel opens instantly with what base.json already knows and grows the links after.
+ */
+function detailHTML(p, w, types, loading) {
+  const titles = (w && w.title) || {};
+  const lang = bestLang(titles, p);
+  const t31 = types && types.types && types.types[p.q];
+  const typeName = t31 && [...new Set(t31)]
+    .map(q => (types.labels || {})[q] || q).join(', ');
+  const kind = OSM_KIND[p.i[0]];
+  // wiki.json is authoritative once loaded; base.json's copy can be a build behind.
+  const sl = w ? w.sitelinks : p.sl;
+  const views = w && w.views ? w.views : p.v;
+  return `<button class="x" title="close (esc)">×</button>
+    <div class="t">${esc(p.n)}</div>
+    ${p.en && p.en !== p.n ? `<div class="s">${esc(p.en)}</div>` : ''}
+    <div style="margin-top:8px">
+      <span class="pill" style="border-color:${p.col};color:${p.col}">${esc(p.k)}</span>
+      ${shapePill(p)}${corePill(p)}${srcPill(p)}
+      ${p.self ? '<span class="pill pin">is the city itself</span>' : ''}
+      ${p.dup ? '<span class="pill">2nd record of another unit</span>' : ''}
+    </div>
+    <dl>
+      ${lang ? linkRow(`wikipedia · ${lang}`, titles[lang], wpUrl(lang, titles[lang]))
+        : loading ? '<dt>wikipedia</dt><dd>looking it up…</dd>'
+        : p.q ? '<dt>wikipedia</dt><dd>no article yet</dd>' : ''}
+      ${p.q ? linkRow('wikidata', p.q, `https://www.wikidata.org/wiki/${p.q}`) : ''}
+      ${kind ? linkRow('openstreetmap', `${kind} ${p.i.slice(1)}`,
+                       `https://www.openstreetmap.org/${kind}/${p.i.slice(1)}`) : ''}
+      ${typeName ? `<dt>wikidata says</dt><dd>${esc(typeName)}</dd>` : ''}
+      <dt>osm level</dt><dd>${esc(p.k)}</dd>
+      <dt>population</dt><dd>${popLine(p)}</dd>
+      <dt>wiki langs</dt><dd>${sl || NONE}</dd>
+      <dt>views/yr</dt><dd>${views ? fmt(views) : NONE}</dd>
+    </dl>
+    ${p.wt ? `<p class="hint" style="margin-top:9px">⚠ The linked article is titled
+      “${esc(p.wt)}”, which matches neither name on the OSM object. The
+      <code>wikidata</code> tag may point at the wrong entity.</p>` : ''}`;
+}
+
+function openDetail(p) {
+  if (selId !== p.i) { lite(selId, 'sel', false); selId = p.i; lite(selId, 'sel', true); }
+  if (map.getLayer('dot-sel')) map.setFilter('dot-sel', ['==', ['get', 'i'], p.i]);
+  detail.style.display = 'block';
+  detail.scrollTop = 0;
+  detail.innerHTML = detailHTML(p, null, null, !!p.q);
+  if (!p.q) return;
+  Promise.all([lazy('data/wiki.json'), lazy('data/p31.json')]).then(([w, types]) => {
+    // The reader can click a second dot while 3 MB is in flight; that click owns the
+    // panel now, and this one must not paint over it.
+    if (selId !== p.i) return;
+    detail.innerHTML = detailHTML(p, (w.units || w)[p.q] || null, types, false);
+  });
+}
+
+function closeDetail() {
+  lite(selId, 'sel', false);
+  selId = null;
+  if (map.getLayer('dot-sel')) map.setFilter('dot-sel', ['==', ['get', 'i'], '']);
+  detail.style.display = 'none';
+}
+
+map.on('click', e => {
+  const hit = pickAt(e.point);
+  // A click on bare map is the obvious way to say "done with that one".
+  if (!hit) return closeDetail();
+  // Zoomed out, a click is how a city gets picked: the sidebar list is the other way in,
+  // and the shape under the cursor is the more direct one.
+  if (hit.kind === 'city') return selectCity(hit.c.q);
+  openDetail(hit.p);
+});
+detail.addEventListener('click', e => { if (e.target.closest('.x')) closeDetail(); });
+addEventListener('keydown', e => { if (e.key === 'Escape') closeDetail(); });
+</script>
+</body>
+</html>

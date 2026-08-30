@@ -1,0 +1,28 @@
+{
+  "_doc": [
+    "Hand overrides, per city QID. The level rule (spec 3) is a good default, not an",
+    "authority. Two shapes are accepted:",
+    "   \"Q60\": [\"admin=7\"]                              replace the keep-list",
+    "   \"Q60\": {\"keep\": [...], \"excludeNames\": [...]}   and/or drop units by name",
+    "`excludeNames` are case-insensitive regexes matched against the OSM name, applied at",
+    "ingest so level statistics and the browser agree. Scoped to one city on purpose.",
+    "Either field may be omitted; omitting `keep` leaves the rule's own choice in place."
+  ],
+
+  "Q1353": {
+    "keep": ["admin=9", "place=suburb", "place=neighbourhood"],
+    "excludeNames": ["^\\s*sector\\b"],
+    "_why": [
+      "DELHI. Its admin=9 holds 161 units that are two different things under one",
+      "admin_level: 45 real Delhi areas (Vikaspuri, Karol Bagh, Rohini, Vasant Kunj,",
+      "Saket, Najafgarh) and 116 numbered planned-colony sectors, most of them Noida's",
+      "and Gurgaon's. Nothing general separates them - core cannot, because Dwarka's and",
+      "Rohini's sectors really are in Delhi (28 of 69 core units are 'Sector N'); P31",
+      "cannot, at 3% wikidata; area spread cannot, because legitimate divisions vary more",
+      "(Sydney's LGAs span 34,000x).",
+      "admin=10 is dropped rather than filtered: stripping sectors still leaves 1,106",
+      "units called 'DDA Flats', 'Pkt-B Sec-A', 'B-5', 'Silver Oak Apartments'. Those are",
+      "housing blocks, not areas, and no name rule rescues them."
+    ]
+  }
+}

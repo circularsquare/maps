@@ -1,0 +1,27 @@
+# Overpass responses and derived build products — all regenerable, and large.
+# The hand-maintained files are NOT ignored.
+#
+# All three lines are load-bearing, in this order (same as citybrowser/cityhistory):
+#
+#   !data/   the REPO ROOT .gitignore excludes `data/` as a directory, and git does
+#            not descend into an excluded directory — so without this, no negation
+#            below can reach anything inside and the hand-maintained roster stays
+#            silently untracked.
+#   data/*   re-exclude the CONTENTS, as children rather than as a directory, which
+#            is what leaves the next lines reachable.
+#   !...     the exceptions that actually matter.
+#
+# Verify after any edit — the failure mode here is silence, not an error. Use the
+# EXIT CODE, not the output: `-v` prints the matching rule even when that rule is a
+# negation, so a printed line does not mean the file is ignored.
+#   git check-ignore -q neighborhoods/data/cities_seed.csv   # must exit 1 (not ignored)
+#   git check-ignore -q neighborhoods/data/base.json         # must exit 0 (ignored)
+!data/
+data/*
+!data/cities_seed.csv
+!data/levels_override.json
+!data/tier_map.json
+
+# Overpass cache: one JSON per city per pass. Regenerable, but slowly and at
+# someone else's expense — do not delete casually.
+cache/

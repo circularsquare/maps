@@ -1,0 +1,579 @@
+{
+ "_doc": "P31 type QID -> semantic class, hand-maintained. class: municipality (a separately governed place) | official (an official subdivision of the city) | informal (a recognised name with no administrative standing) | skip (not a division: a negative property, an error, or too generic to classify). The tier NUMBER (first/second division) is NOT stored here - it is derived per city by ordering that city's `official` levels coarse-to-fine, because the same type is a different tier in different cities (Q123705 'neighborhood' is under Amsterdam's stadsdelen but is the only tier Los Angeles has). `byCity` overrides `map` for one city, because a type can be official in one country and not another: Q188509 'suburb' is gazetted in Australia and vernacular everywhere else, and Q4286337 'city district' is Warsaw's dzielnice but Toronto's municipalities dissolved in 1998.",
+ "map": {
+  "Q2755753": {
+   "class": "informal",
+   "label": "area of London"
+  },
+  "Q52154375": {
+   "class": "informal",
+   "label": "district or neighborhood of Los Angeles",
+   "why": "LA has no legal neighbourhood tier - Venice, Sherman Oaks, Eagle Rock"
+  },
+  "Q56046844": {
+   "class": "informal",
+   "label": "former freguesia of Portugal",
+   "why": "freguesias abolished in the 2013 reform; recognised names, no standing"
+  },
+  "Q123705": {
+   "class": "informal",
+   "label": "neighborhood"
+  },
+  "Q1969642": {
+   "class": "informal",
+   "label": "neighborhood in San Francisco"
+  },
+  "Q851517": {
+   "class": "informal",
+   "label": "neighborhood of Buenos Aires"
+  },
+  "Q10267336": {
+   "class": "informal",
+   "label": "neighborhood of Madrid"
+  },
+  "Q20683285": {
+   "class": "informal",
+   "label": "neighbourhood in Rio de Janeiro"
+  },
+  "Q42961155": {
+   "class": "informal",
+   "label": "quarter of Milan",
+   "why": "Milan's traditional/statistical quartieri, not its official NIL or municipi"
+  },
+  "Q2911266": {
+   "class": "municipality",
+   "label": "borough of New Jersey",
+   "why": "independent NJ municipalities; the word 'borough' fooled the keyword pass"
+  },
+  "Q515": {
+   "class": "municipality",
+   "label": "city",
+   "why": "Tel Aviv admin=8 is Ramat Gan, Holon, Bat Yam - separate cities"
+  },
+  "Q1093829": {
+   "class": "municipality",
+   "label": "city in the United States"
+  },
+  "Q494721": {
+   "class": "municipality",
+   "label": "city of Japan"
+  },
+  "Q27676416": {
+   "class": "municipality",
+   "label": "city or town of Quebec"
+  },
+  "Q1840161": {
+   "class": "municipality",
+   "label": "commune of Chile"
+  },
+  "Q484170": {
+   "class": "municipality",
+   "label": "commune of France"
+  },
+  "Q747074": {
+   "class": "municipality",
+   "label": "comune of Italy",
+   "why": "comune: Milan admin=8 is Milano plus Rozzano, Corsico, Segrate"
+  },
+  "Q29946056": {
+   "class": "municipality",
+   "label": "highly urbanized city",
+   "why": "Philippine city class independent of any province, its own LGU"
+  },
+  "Q55558200": {
+   "class": "municipality",
+   "label": "local government area of New South Wales",
+   "why": "'Inner West Council', 'Randwick City Council' - separate LGAs"
+  },
+  "Q1639634": {
+   "class": "municipality",
+   "label": "local government area of Nigeria",
+   "why": "Nigeria's third tier of government with elected chairmen"
+  },
+  "Q1426035": {
+   "class": "municipality",
+   "label": "local government area of Victoria",
+   "why": "'City of Yarra', 'City of Boroondara' - separate LGAs"
+  },
+  "Q3184121": {
+   "class": "municipality",
+   "label": "municipality of Brazil"
+  },
+  "Q33146843": {
+   "class": "municipality",
+   "label": "municipality of Catalonia"
+  },
+  "Q1349648": {
+   "class": "municipality",
+   "label": "municipality of Greece"
+  },
+  "Q1952852": {
+   "class": "municipality",
+   "label": "municipality of Mexico"
+  },
+  "Q2074737": {
+   "class": "municipality",
+   "label": "municipality of Spain"
+  },
+  "Q127448": {
+   "class": "municipality",
+   "label": "municipality of Sweden"
+  },
+  "Q2460358": {
+   "class": "municipality",
+   "label": "municipality of Turkey"
+  },
+  "Q2039348": {
+   "class": "municipality",
+   "label": "municipality of the Netherlands"
+  },
+  "Q116457956": {
+   "class": "municipality",
+   "label": "municipality without town privileges in Germany"
+  },
+  "Q1234255": {
+   "class": "municipality",
+   "label": "regional unit of Greece",
+   "why": "county-level divisions of Attica, not subdivisions of Athens"
+  },
+  "Q17198545": {
+   "class": "municipality",
+   "label": "township of Illinois",
+   "why": "Illinois townships are separate units of government with taxing power"
+  },
+  "Q3327862": {
+   "class": "municipality",
+   "label": "urban commune of Morocco"
+  },
+  "Q2616791": {
+   "class": "municipality",
+   "label": "urban municipality of Poland"
+  },
+  "Q456876": {
+   "class": "official",
+   "label": "Khwaeng"
+  },
+  "Q211690": {
+   "class": "official",
+   "label": "London borough",
+   "why": "London borough - administrative division of Greater London"
+  },
+  "Q253019": {
+   "class": "official",
+   "label": "Ortsteil"
+  },
+  "Q75135432": {
+   "class": "official",
+   "label": "administrative quarter in Barcelona"
+  },
+  "Q56061": {
+   "class": "official",
+   "label": "administrative territorial entity",
+   "why": "generic root class; unspecific but genuinely a division. Overridden by any more specific type"
+  },
+  "Q23925382": {
+   "class": "official",
+   "label": "arrondissement of Morocco"
+  },
+  "Q15079751": {
+   "class": "official",
+   "label": "borough of Amsterdam"
+  },
+  "Q821435": {
+   "class": "official",
+   "label": "borough of Berlin"
+  },
+  "Q578521": {
+   "class": "official",
+   "label": "borough of Montreal"
+  },
+  "Q408804": {
+   "class": "official",
+   "label": "borough of New York City"
+  },
+  "Q17376095": {
+   "class": "official",
+   "label": "cadastral municipality of Austria",
+   "why": "Katastralgemeinden are land-registry units inside Vienna, not governments"
+  },
+  "Q5327369": {
+   "class": "official",
+   "label": "chōchō",
+   "why": "chocho: legally defined block units below ward level, set by municipal ordinance"
+  },
+  "Q4286337": {
+   "class": "official",
+   "label": "city district"
+  },
+  "Q856976": {
+   "class": "official",
+   "label": "city district of Stockholm",
+   "why": "Stockholm's stadsdelsomraden, with elected district councils"
+  },
+  "Q860582": {
+   "class": "official",
+   "label": "community area in Chicago",
+   "why": "Chicago's 77 community areas are city-defined, exhaustive and used for planning"
+  },
+  "Q15634531": {
+   "class": "official",
+   "label": "district of Bangkok"
+  },
+  "Q790344": {
+   "class": "official",
+   "label": "district of Barcelona"
+  },
+  "Q1065118": {
+   "class": "official",
+   "label": "district of China"
+  },
+  "Q3032114": {
+   "class": "official",
+   "label": "district of Madrid"
+  },
+  "Q15634883": {
+   "class": "official",
+   "label": "district of Manila"
+  },
+  "Q4389092": {
+   "class": "official",
+   "label": "district of Moscow"
+  },
+  "Q2179958": {
+   "class": "official",
+   "label": "district of Peru"
+  },
+  "Q15634846": {
+   "class": "official",
+   "label": "district of Seoul"
+  },
+  "Q18559008": {
+   "class": "official",
+   "label": "district of São Paulo"
+  },
+  "Q705296": {
+   "class": "official",
+   "label": "district of Taiwan"
+  },
+  "Q261023": {
+   "class": "official",
+   "label": "district of Vienna"
+  },
+  "Q50256": {
+   "class": "official",
+   "label": "districts of Hong Kong"
+  },
+  "Q490329": {
+   "class": "official",
+   "label": "dong of South Korea"
+  },
+  "Q1131296": {
+   "class": "official",
+   "label": "freguesia of Portugal",
+   "why": "freguesia: civil parish with an elected junta, subdivides a municipio"
+  },
+  "Q3700011": {
+   "class": "official",
+   "label": "kecamatan",
+   "why": "kecamatan: Indonesian district, subdivision of a city/regency"
+  },
+  "Q965568": {
+   "class": "official",
+   "label": "kelurahan",
+   "why": "kelurahan: Indonesian urban village, lowest administrative tier"
+  },
+  "Q35034452": {
+   "class": "official",
+   "label": "locality of Berlin"
+  },
+  "Q17051044": {
+   "class": "official",
+   "label": "mahalle",
+   "why": "mahalle: Turkey's smallest official unit, elected muhtar, subdivides an ilce"
+  },
+  "Q702842": {
+   "class": "official",
+   "label": "municipal arrondissement of France"
+  },
+  "Q75338598": {
+   "class": "official",
+   "label": "municipal part of Prague"
+  },
+  "Q61089180": {
+   "class": "official",
+   "label": "municipal part of the Czech Republic"
+  },
+  "Q525504": {
+   "class": "official",
+   "label": "municipio of Rome",
+   "why": "Rome's 15 municipi, the city's own subdivisions"
+  },
+  "Q104527265": {
+   "class": "official",
+   "label": "planning area of Singapore"
+  },
+  "Q23925379": {
+   "class": "official",
+   "label": "prefecture of arrondissement",
+   "why": "Casablanca's prefectures d'arrondissements subdivide a single urban commune"
+  },
+  "Q2983893": {
+   "class": "official",
+   "label": "quarter",
+   "why": "stadsdel: municipally delimited city district"
+  },
+  "Q15830667": {
+   "class": "official",
+   "label": "quarter of Hamburg"
+  },
+  "Q2091262": {
+   "class": "official",
+   "label": "region of Singapore"
+  },
+  "Q986065": {
+   "class": "official",
+   "label": "subdistrict in China"
+  },
+  "Q188509": {
+   "class": "informal",
+   "label": "suburb",
+   "why": "mostly informal - Johannesburg, Cape Town, Nairobi, London, Mumbai. Australian suburbs ARE state-gazetted, so Sydney and Melbourne override to official"
+  },
+  "Q2734310": {
+   "class": "official",
+   "label": "territorial demarcation of Mexico City",
+   "why": "the 16 alcaldias, Mexico City's own second-level division"
+  },
+  "Q137773": {
+   "class": "official",
+   "label": "ward of Japan"
+  },
+  "Q687188": {
+   "class": "official",
+   "label": "ward of Vietnam"
+  },
+  "Q3575964": {
+   "class": "official",
+   "label": "zone of Rome"
+  },
+  "Q13414757": {
+   "class": "skip",
+   "label": "county of New York",
+   "why": "the five NY counties are coextensive with the boroughs and have no separate government; classing them official would give New York two identical tiers"
+  },
+  "Q41710": {
+   "class": "skip",
+   "label": "ethnic group",
+   "why": "'ethnic group' is not a place type; a stray P31 on Mexico City colonias"
+  },
+  "Q6593031": {
+   "class": "skip",
+   "label": "federal electoral district in Ontario",
+   "why": "federal electoral ridings; electoral geography, not a division of Toronto"
+  },
+  "Q486972": {
+   "class": "skip",
+   "label": "human settlement",
+   "why": "'human settlement' is a catch-all over ~60 city/levels, mostly informal. Too generic to carry a class"
+  },
+  "Q7897276": {
+   "class": "skip",
+   "label": "unparished area",
+   "why": "'unparished area' is a NEGATIVE property (no civil parish exists), not a division"
+  },
+  "Q5327704": {
+   "class": "official",
+   "label": "special ward of Japan",
+   "why": "Tokyo's 23 special wards - the tier admin=7 was burying under 'city of Japan'"
+  },
+  "Q29045252": {
+   "class": "municipality",
+   "label": "city of South Korea",
+   "why": "Gyeonggi si sharing Seoul's admin=6 with its 25 gu"
+  },
+  "Q45242174": {
+   "class": "official",
+   "label": "gazetted locality of Victoria",
+   "why": "gazetted locality of Victoria - gazetted, same call as Australian suburbs"
+  },
+  "Q20871353": {
+   "class": "official",
+   "label": "cadastral area in the Czech Republic",
+   "why": "Czech cadastral area, land-registry unit like Vienna's Katastralgemeinde"
+  },
+  "Q50513": {
+   "class": "official",
+   "label": "administrative territorial entity of Singapore",
+   "why": "administrative territorial entity of Singapore"
+  },
+  "Q252916": {
+   "class": "official",
+   "label": "administrative quarter of Paris",
+   "why": "Paris's 80 quartiers administratifs really are official"
+  },
+  "Q1147395": {
+   "class": "official",
+   "label": "district of Turkey",
+   "why": "Turkish ilce - Istanbul's first division"
+  },
+  "Q475061": {
+   "class": "official",
+   "label": "amphoe",
+   "why": "amphoe, Thai district"
+  },
+  "Q1985797": {
+   "class": "official",
+   "label": "municipal unit of Greece",
+   "why": "municipal unit of Greece, a subdivision of a municipality"
+  },
+  "Q74728036": {
+   "class": "official",
+   "label": "administrative district of Prague",
+   "why": "administrative district of Prague"
+  },
+  "Q28203007": {
+   "class": "official",
+   "label": "administrative sector",
+   "why": "administrative sector, Montreal"
+  },
+  "Q3957": {
+   "class": "municipality",
+   "label": "town",
+   "why": "town"
+  },
+  "Q1549591": {
+   "class": "municipality",
+   "label": "big city",
+   "why": "'big city' - generic, but always a whole city where it appears"
+  },
+  "Q13218391": {
+   "class": "municipality",
+   "label": "charter city",
+   "why": "charter city"
+  },
+  "Q262166": {
+   "class": "municipality",
+   "label": "municipality in Germany",
+   "why": "municipality in Germany"
+  },
+  "Q5770918": {
+   "class": "municipality",
+   "label": "city of Argentina",
+   "why": "city of Argentina"
+  },
+  "Q13218357": {
+   "class": "municipality",
+   "label": "city of California",
+   "why": "city of California"
+  },
+  "Q104782082": {
+   "class": "municipality",
+   "label": "territory outside RCM in Quebec",
+   "why": "territory outside RCM in Quebec"
+  },
+  "Q2974552": {
+   "class": "municipality",
+   "label": "city in New Jersey",
+   "why": "city in New Jersey"
+  },
+  "Q7830213": {
+   "class": "municipality",
+   "label": "township of New Jersey",
+   "why": "township of New Jersey"
+  },
+  "Q532": {
+   "class": "municipality",
+   "label": "village",
+   "why": "village"
+  },
+  "Q3505887": {
+   "class": "municipality",
+   "label": "city council",
+   "why": "city council"
+  },
+  "Q27676420": {
+   "class": "municipality",
+   "label": "village municipality of Quebec",
+   "why": "village municipality of Quebec"
+  },
+  "Q42744322": {
+   "class": "municipality",
+   "label": "urban municipality in Germany",
+   "why": "urban municipality in Germany"
+  },
+  "Q1137833": {
+   "class": "municipality",
+   "label": "core city of Japan",
+   "why": "core city of Japan"
+  },
+  "Q24764": {
+   "class": "municipality",
+   "label": "municipality of the Philippines",
+   "why": "municipality of the Philippines"
+  },
+  "Q19730508": {
+   "class": "informal",
+   "label": "former municipality",
+   "why": "former municipality - dissolved, name still recognised"
+  },
+  "Q17202187": {
+   "class": "skip",
+   "label": "federal electoral district of Canada",
+   "why": "federal electoral district of Canada - electoral geography"
+  },
+  "Q104880945": {
+   "class": "skip",
+   "label": "climate emergency declaration area in Australia",
+   "why": "'climate emergency declaration area' is not a division type"
+  },
+  "Q106935957": {
+   "class": "informal",
+   "label": "City Information System zone in Warsaw",
+   "why": "Warsaw's MSI is a ZDM wayfinding/signage system, and pl.wikipedia says outright it is neither an administrative division nor a division into osiedla; its boundaries disagree with TERYT. Load-bearing: breadth=1 makes it win both place=quarter and admin=10, so `official` would invent two ~145-unit official tiers under the 18 dzielnice"
+  },
+  "Q1074955": {
+   "class": "official",
+   "label": "quartiere of Rome",
+   "why": "second level of Roma Capitale's toponymic division, instituted by municipal deliberation and delimited for statistical and anagrafe use; tiles the urban area. Consistent with Q3575964 'zone of Rome' already being official"
+  },
+  "Q3301053": {
+   "class": "skip",
+   "label": "consolidated city-county",
+   "why": "a general US governance category - 38 of its 39 instances are whole cities (Philadelphia, Denver, Nashville). On New York's admin=7 it ties Q408804 'borough of New York City' exactly on breadth AND count, so the tiebreak is dict order: any non-skip class would re-label the borough tier at random between builds. NOTE for a wider roster: every other instance also carries 'city in the United States' or 'big city' EXCEPT Philadelphia, which would need its own type mapped"
+  },
+  "Q11939023": {
+   "class": "informal",
+   "label": "populated place nucleus",
+   "why": "INE/IDESCAT nucli de poblacio - a delimited built-up cluster used for the Nomenclator, statistical, no governance, and it does not tile the municipality. Currently inert anyway: best share 0.22, under MIN_TYPE_SHARE"
+  },
+  "Q3257686": {
+   "class": "skip",
+   "label": "locality",
+   "why": "bare 'place of human settlement' with no division semantics. Across 12 cities it means four incompatible things: Bogota's governed localidades, Argentine localidades, Australian gazetted localities, and one-off vernacular spots (Kennington Cross, Birkholzaue)"
+  },
+  "Q3502706": {
+   "class": "official",
+   "label": "suburb of Rome",
+   "why": "suburbi, the third toponymic level of Roma Capitale, alongside quartieri and zone. Only 6 units - below every guard, so effectively a label"
+  },
+  "Q2277441": {
+   "class": "official",
+   "label": "osiedle",
+   "why": "osiedle, Poland's genuine sub-district auxiliary unit - not to be confused with the MSI zones above"
+  }
+ },
+ "byCity": {
+  "Sydney": {
+   "Q188509": "official"
+  },
+  "Melbourne": {
+   "Q188509": "official"
+  },
+  "Toronto": {
+   "Q4286337": "informal"
+  },
+  "Bogota": {
+   "Q3257686": "official"
+  }
+ }
+}

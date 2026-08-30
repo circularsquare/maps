@@ -1,0 +1,86 @@
+neighborhoods — todo (Anita's file; Claude does not edit this)
+
+How it works and why is in spec.md, which Claude maintains. Section numbers point there.
+
+Run: python serve.py -> http://localhost:8766/   (not built yet)
+Plain `python` works now (the empty C:\Python314 install is gone). spec 8
+
+
+- get data
+  - city list: 57 seeded, want ~300
+  - overpass survey pass                      DONE (21), backfilling other 36
+  - city boundary pass                        DONE (56)
+  - overpass geometry pass                    DONE (8,887 shapes, 97% of possible)
+  - check san francisco (only 133 units?)
+  - more shapes                               DONE except whos on first
+    - borrow same-name polygons within city   DONE (but see below)
+    - extend borrowing to rejected levels     DONE, +822 shapes
+      (sao paulo 13% -> 38%, shanghai +126, bogota +92, tokyo +51)
+      NOTE: borrowing within KEPT levels was almost all duplicates, not new
+      shapes. only donor levels actually add anything. spec 1.3a
+    - whos on first                           DONE, +1,686 shapes, spec 1.3b
+      BUT it did NOT fix the cities we got it for. copenhagen 2->14%,
+      mumbai 8->12%, hong kong 8->8%, bangkok no change.
+      (350k of wof's 413k neighbourhoods are points, not polygons)
+      it helped london +307, nyc +176, istanbul +175, chicago +121, la +95
+      LICENCE: must link back to the wof licence if we publish these
+  - rivers were being drawn as neighbourhoods    FIXED, spec 1.3c
+    (osm borders follow rivers, so thames ways are boundary=administrative
+     AND waterway=river. 813 such elements, 181 units removed)
+  - shapes now 17,950 outlines = 55% of units, all 56 cities
+  - still under 15%: copenhagen, hong kong, mumbai. would need city open data.
+
+
+- pick levels                                 DONE, spec 3
+  - 10k+ floor, no ceiling                    DONE, all 21 cities keep something
+  - division estimate for levels with no population   spec 3.1
+  - sparse-level check                        DONE, spec 3.2
+    (kontur showed the estimate was 6,370x wrong on seoul's admin=11.
+     fixed with unit counts alone, no downloads needed)
+  - eyeball the picks per city
+  - dedupe near-identical levels               <- main blocker now, spec 4.6
+
+- browser                                     RUNS NOW: python serve.py
+  - 20,131 units across 21 cities, drawn as dots
+  - solid dot = has a real shape, hollow ring = pin only
+  - polygons draw per city, "show shapes" toggles them
+  - eyeball the level picks  <- the next thing worth your time
+  - CHECK THE MAP ACTUALLY DRAWS - i could only verify the sidebar
+    (headless chrome here has no webgl, so the map half is unverified)
+
+- wiki views                                  fetch_wiki.py BUILT, spec 1.4
+  - sitelinks DONE: 97% of qids resolve, 9,536 of 9,826
+  - YOUR CALL: full views run is ~6.5 hours. `python fetch_wiki.py --pass views`
+    (interrupting costs nothing; --limit N buys the most-linked first)
+  - SUMMED ACROSS ALL LANGUAGES - confirmed right, copacabana is only 22% english
+  - rank WITHIN a city, never globally (global top 100 = 76 admin=8)
+  - 3 difficulties (top 500 / top 2500 / all)
+  - it found bad wikidata tags for free: singapore "peng siang" -> "Common year",
+    nyc "bronxdale" -> the bronx's qid
+  - it also says vienna + hanoi kept levels are too small (top out at 9 and 6 sitelinks)
+
+- population                                  fetch_kontur.py BUILT, spec 1.2
+  - YOUR CALL: full kontur is ~2.5 GB of downloads for all cities.
+    5 countries done = 881 MB. `python fetch_kontur.py --plan` shows the breakdown.
+  - it is a MODELLED surface, not a census. fine at borough scale,
+    bad at neighbourhood scale (says amsterdam's port has 115k people).
+    never label it a resident count.
+  - kontur boundaries is ODbL (share-alike), kontur population is CC-BY
+  - reaches 91% of units with a polygon, only 18% of node-only units
+
+- polygons for node-only levels               low prio, spec 1.3
+  - whos on first
+
+- quiz (later)                                spec 7
+  - type the city
+  - pin drop for partial credit
+  - name collisions: drop if >3 cities, multi-answer allowed if 1-3
+      - drop if name isn't really a name, liek "sector n" or "nth arondissement"
+  - what's the right answer for hoboken? spec 4.4
+    - new york metro area
+  - cities should be roughly metro area population weighted, for likelihood. given that they have at least 2 neighborhoods that satisfy the relevance threshold. 
+
+
+show neighborhood names even without hovering? if theres enough space to? 
+
+style pass: light mode 
