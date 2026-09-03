@@ -1,0 +1,109 @@
+RELIGION DOT MAP — COMMAND REFERENCE
+====================================
+
+Design and reasoning: spec.md.  Sources and their gotchas: sources.md.  todo.txt is Anita's.
+
+
+---- DATA (all of data/ is gitignored; this rebuilds it) ----
+
+1. US Religion Census 2020 workbooks -> data/raw/
+
+    curl -sSL -o data/raw/2020_USRC_Group_Detail.xlsx \
+      https://www.usreligioncensus.org/sites/default/files/2023-06/2020_USRC_Group_Detail.xlsx
+    curl -sSL -o data/raw/2020_USRC_Summaries.xlsx \
+      https://www.usreligioncensus.org/sites/default/files/2023-06/2020_USRC_Summaries.xlsx
+
+2. Geography -> data/geo/.  MUST be the 2020 vintage, not the newest: Connecticut replaced
+   its counties with planning regions in 2022, so the 2024 files silently drop the whole
+   state (spec.md §8.1).
+
+    curl -sSL -A "Mozilla/5.0" -o data/geo/cb_2020_us_county_500k.zip \
+      https://www2.census.gov/geo/tiger/GENZ2020/shp/cb_2020_us_county_500k.zip
+    curl -sSL -A "Mozilla/5.0" -o data/geo/cb_2020_us_tract_500k.zip \
+      https://www2.census.gov/geo/tiger/GENZ2020/shp/cb_2020_us_tract_500k.zip
+
+    cd data/geo && unzip -o -q cb_2020_us_tract_500k.zip -d tracts2020
+    cd data/geo && unzip -o -q cb_2020_us_county_500k.zip -d counties2020
+
+   No population data is downloaded and none is needed — tracts are built to ~4,000 people
+   each, so an equal share per tract is already a population weighting (spec.md §8.2).
+
+
+---- TAXONOMY ----
+
+    python taxonomy/build_tree.py
+
+   Validates branches.py + usrc2020.py and writes religions.json, and fills the `path`
+   column in usrc_groups.csv.  Fails loudly on an unmapped group code, a leaf whose parent
+   branch does not exist, or a duplicate code.  Run it after editing either hand file.
+
+
+---- ALLOCATE (optional, per source) ----
+
+   Reunites fine categories with fine geography where a source splits them (spec §3.9/§3.10).
+   Not needed for the US, whose 372 bodies are already by county.
+
+    python allocate.py --source ca --fine csd --coarse province --hierarchy parent \
+      --drop "^Total - Religion"                         # 23 -> 147 categories
+    python allocate.py --source ca --fine ct  --coarse province --hierarchy parent \
+      --drop "^Total - Religion"
+    python allocate.py --source au --fine sa2 --coarse nation --hierarchy prefix
+    python allocate.py --source mx --fine municipio --coarse entidad --hierarchy parent \
+      --parent-file taxonomy/hierarchy/mx.csv
+    python allocate.py --source ie --fine small_area --coarse county --hierarchy parent \
+      --parent-file taxonomy/hierarchy/ie.csv --drop "^(All religions|Total)$"
+
+   Writes data/normalized/<cc>_<fine>_allocated.csv.  Output rows are tagged `derived` and
+   must not become rings (§3.10) — scatter.py enforces this.
+
+
+---- SCATTER ----
+
+   Per-country wiring is in countries.py; everything downstream is country-agnostic.
+
+    python scatter.py --country us                 # 1 dot = 1,000 people
+    python scatter.py --country ca
+    python scatter.py --country us --state 36      # one state, seconds — for iterating
+
+   Writes data/processed/dots_<cc>.geojson and rings_<cc>.geojson.
+
+   CAREFUL: --state overwrites the same output file as a full run.  Re-run without it before
+   tiling, or you will tile one state and not notice.
+
+   No population data is read.  Dots are placed in whatever fine unit the country's agency
+   designs to a population target (US tracts, Canadian dissemination areas, ABS SA1s), an
+   equal share per unit (spec §8.2).
+
+
+---- TILES ----
+
+    python tiles.py --countries us,ca              # one archive, merged across borders
+    python tiles.py --countries us --max-zoom 6    # quick, for iterating
+
+   Writes data/processed/religiondots.pmtiles and counts.json.  Countries go into ONE archive
+   so the merge (spec §4.2) works across a border rather than stopping at it.
+
+   NOT tippecanoe.  Tippecanoe's job at low zoom is to DROP features until the tile fits a
+   byte budget, so which dots survive is close to arbitrary and a small group blinks in and
+   out as you pan.  tiles.py MERGES instead: nearby dots of the same religion become one
+   mark carrying `k`, and the viewer draws area proportional to k (spec.md §4.2).  Nothing
+   is ever dropped.  It also means no WSL, whose C: mount is broken on this machine.
+
+
+---- LOCAL DEV SERVER ----
+
+    npx serve . -p 8080
+    http://localhost:8080
+
+   MUST be `npx serve`, not `python -m http.server`: PMTiles reads the archive with HTTP
+   range requests and Python's SimpleHTTPRequestHandler does not serve them.  The symptom is
+   a map that loads with no dots and no obvious error.
+
+
+---- NOT DONE YET ----
+
+  - any country but the US
+  - the genealogy half of the tree panel (spec.md §10)
+  - residuals are computable from ASARB's own population column but are not drawn
+  - hosting: ancestrydots puts its .pmtiles on Cloudflare R2 because GitHub Pages breaks
+    range requests with gzip encoding.  Same will apply here.

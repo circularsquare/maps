@@ -1,0 +1,10 @@
+# Everything under data/ is downloaded or derived. sources/*.py rebuilds normalized/ from
+# raw/, and sources/*.md records the exact URLs and re-fetch recipe for every raw file, so
+# the recipe is version-controlled even though the bytes are not.
+#
+# This is deliberately the whole directory: normalized/ alone is 252MB across six countries
+# and grows with each one, so a stray `git add -A` would otherwise commit it.
+data/
+
+__pycache__/
+.env

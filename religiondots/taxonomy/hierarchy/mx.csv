@@ -1,0 +1,40 @@
+source_category,parent,note
+# INEGI publishes 24 denominations at entidad and 4 aggregate groups at municipio, with no
+# table joining them (spec §3.9). This is that join, written by hand and verified by
+# arithmetic: every one of the four groups reconciles to the person against the ITER column,
+# so a mis-assignment here cannot hide — it would break the sum.
+#
+#   catolica            97864218  = Catolica alone
+#   protestante         14095307  = the 10 rows below
+#   sin_religion        13314516  = the 3 rows below
+#   otras                 248169  = the 9 rows below
+#   (No especificado       491814  belongs to none; ITER omits it entirely)
+#
+# The groupings are INEGI's, not ours. Two are worth knowing about before this is mapped to
+# the religiondots taxonomy: Testigo de Jehova and the Mormon church are inside INEGI's
+# "protestante/cristiano evangelico", which few taxonomies would agree with, and there is no
+# Orthodox category anywhere in the 24 — Mexican Orthodox Christians are somewhere inside
+# "Otras religiones o movimientos religiosos" (9,094 people in total).
+Católica,Población con religión católica,
+Cristiana,Población con grupo religioso protestante/cristiano evangélico,
+Evangélica,Población con grupo religioso protestante/cristiano evangélico,
+Testigo de Jehová,Población con grupo religioso protestante/cristiano evangélico,INEGI's grouping
+Pentecostal,Población con grupo religioso protestante/cristiano evangélico,
+Adventista del Séptimo Día,Población con grupo religioso protestante/cristiano evangélico,
+Presbiteriana,Población con grupo religioso protestante/cristiano evangélico,
+Iglesia de Jesucristo de los Santos de los Últimos Días (Mormón),Población con grupo religioso protestante/cristiano evangélico,INEGI's grouping
+Otro Protestante/cristiano evangélico,Población con grupo religioso protestante/cristiano evangélico,
+"Iglesia del Dios Vivo, Columna y Apoyo de la Verdad, la Luz del Mundo",Población con grupo religioso protestante/cristiano evangélico,
+Bautista,Población con grupo religioso protestante/cristiano evangélico,
+Ninguna religión,Población sin religión o sin adscripción religiosa,
+Sin adscripción religiosa (creyente),Población sin religión o sin adscripción religiosa,
+Ateos/Agnósticos,Población sin religión o sin adscripción religiosa,
+Judía,Población con otras religiones diferentes a las anteriores,
+Raíces afro,Población con otras religiones diferentes a las anteriores,
+Espiritualista,Población con otras religiones diferentes a las anteriores,
+Raíces étnicas,Población con otras religiones diferentes a las anteriores,
+Origen oriental,Población con otras religiones diferentes a las anteriores,
+Cultos populares,Población con otras religiones diferentes a las anteriores,
+New Age y Escuelas esotéricas,Población con otras religiones diferentes a las anteriores,
+Otras religiones o movimientos religiosos,Población con otras religiones diferentes a las anteriores,
+Islámica,Población con otras religiones diferentes a las anteriores,

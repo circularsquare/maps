@@ -4,11 +4,6 @@ religiondots — todo (Anita's file; Claude does not edit this)
 - tiny dots: rings
 - 2 coor schemes 
 
-
-
-
-THINGS TO LOOK AT
-
 - IPUMS International might have religion + ADM1 for a lot of countries. Biggest single
   coverage question in the file. sources 8
 - is the World Religion Database reachable through a university login
@@ -25,3 +20,10 @@ LATER
 
 deploy (once there is something to deploy) -- ancestrydots/COMMANDS.txt is the pattern:
 pmtiles to R2, index.html + legend to the website repo.
+
+npx serve ~/projects/maps/religiondots -p 8099 --no-clipboard http://localhost:8099
+
+--- AFTER EDITING taxonomy/branches.py OR a *2020.py / *2021.py MAPPING ---
+python taxonomy/build_tree.py
+    Regenerates taxonomy/religions.json. NOT automatic. If you skip it the
+    viewer doesn't know the new nodes and greys out whole countries.

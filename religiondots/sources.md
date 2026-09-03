@@ -127,10 +127,69 @@ where the AREAWATER trick for inland water lives if it turns out to be needed.
 and every ASARB Connecticut FIPS fails to join. See spec.md §8.1; the general rule is that
 boundaries must be the vintage the data was collected on.
 
-**Tract populations: blocked.** The Census API now rejects unkeyed requests — `2020/dec/pl`
-returns a "Missing Key" page rather than JSON, where it previously served modest volumes without
-one. `fetch_tract_pop.py` is written and takes `CENSUS_API_KEY` from the environment or a `.env`;
-it needs a key to run. Free and instant from `api.census.gov/data/key_signup.html`.
+**Tract populations: not needed.** Decided 2026-08-27 — tracts are built to ~4,000 people each, so
+allocating a county's dots equally across its tracts is already a population weighting and no
+population figure is read at all (spec.md §8.2). County population, where it is wanted for the
+residual, is already a column in ASARB's own summaries workbook.
+
+`fetch_tract_pop.py` is kept for the day exact weights are wanted. It needs a free
+`CENSUS_API_KEY` — the Census API now rejects unkeyed requests, returning a "Missing Key" HTML
+page rather than JSON where it used to serve modest volumes without one. Nothing depends on it.
+
+## 5a. A download that returns HTTP 200 is not a download
+
+Found on INEGI 2026-08-27, and general enough to be worth stating once. The widely circulated URL
+for Mexico's Marco Geoestadístico **soft-404s: HTTP 200, `Content-Type` fine, and 2,263 bytes of
+HTML where a 257MB zip should be.** Nothing in the status code says so. The real URLs come from an
+undocumented endpoint (`/app/api/productos/interna_v2/ficha/datos?upc=…`) whose `multiarchivos`
+list is the only place the filename appears.
+
+So every fetch is checked on **size and content**, not status: a zip that does not open, or a file
+two orders of magnitude smaller than expected, is a failed download whatever the server said. The
+same habit catches Cloudflare interstitials, login walls returned as 200, and truncated transfers.
+
+## 5b. Placement layers, per country (spec §8.2)
+
+How good is "equal dots per fine polygon" as a stand-in for population? Measured per country
+against whatever population figure was already free:
+
+| country | placement layer | units | median people | correlation |
+|---|---|---|---|---|
+| Australia | SA1 | 61,845 | **406** (IQR 359–447) | r = 0.923 |
+| United States | census tract | 85,187 | 3,424 (IQR 2,818–4,043) | r = 0.98 |
+| Canada | dissemination area | ~57,900 | ~500–700 by design | not yet measured |
+| Mexico | AGEB | 81,451 | 1,077 (IQR 529–1,886) | r = 0.787 |
+| Ireland | Small Area *is* the count geography | 18,919 | ~330 | n/a — no allocation needed |
+
+Australia is the best case and Mexico the weakest: rural AGEBs have a median area of 93 km², so
+dots there are spread over large empty ground. INEGI's rural locality *points* (`00lpr`, 295,779 of
+them) are the obvious refinement if Mexico ends up looking wrong.
+
+Ireland is the case that needs nothing at all — its religion data is published at Small Area, which
+is already the finest unit, so there is no "inside the unit" problem to solve.
+
+## 5c. Three things about boundary files that are not the join
+
+Found across the geography pass, 2026-08-27. None of these is caught by checking codes match.
+
+- **Do not assume a country has one national grid.** Northern Ireland is on the **Irish Grid
+  (EPSG:29902)** while the rest of the UK is on British National Grid (27700). Assuming BNG for NI
+  puts everything several hundred kilometres out — and the codes still join perfectly, so nothing
+  reports an error. Everything is reprojected to EPSG:4326 with the bounds verified afterwards.
+- **"Clipped to coastline" and "definitive" are different files and lose different things.** New
+  Zealand's clipped SA2 layer has 2,311 polygons against the definitive 2,395: joining the data to
+  the clipped version leaves 84 units homeless, of which 24 are populated (309 people). The
+  definitive layer leaves 16, all published with null geometry and holding 24 people between them —
+  21 of whom are on an oil rig. Clipped is the right choice for a dot map (dots must not land in
+  the sea) but the loss should be counted, not discovered.
+- **A population column in a boundary file may be a different universe.** Scotland's OA shapefile
+  has a `Popcount` that is the *household* population and runs **108,111 (−2.0%)** short of the
+  census table it looks like it should match — spec §3.7's household-versus-total distinction,
+  arriving this time inside a geometry file.
+
+The `ltla` trap in England and Wales is now measured too: against current local-authority
+boundaries, the 17 districts abolished in April 2023 take **1,686,870 people, 2.83% of E&W**, with
+them.
 
 ## 6. Licensing notes
 
@@ -160,6 +219,69 @@ aggregates are all this project wants.
 - DHS / MICS surveys — religion by survey region for much of Africa and South Asia. Sample-based,
   so wide intervals, but they cover the countries §3 says are dark.
 - Afrobarometer, Arab Barometer, Latinobarómetro, WVS/EVS — same shape, useful for the modelled tier.
+
+## 9a. The six acquired 2026-08-27
+
+Acquired in parallel, one agent per country. Each has a `sources/<cc>.py` that rebuilds
+`data/normalized/<cc>.csv` from `data/raw/<cc>/`, and a `sources/<cc>.md` with the exact URLs,
+re-fetch recipe, full category list and per-source gotchas. **All of `data/` is gitignored** —
+252MB of normalized CSV alone — so the `.md` files are the version-controlled record.
+
+Nothing here is mapped to the taxonomy yet: `source_category` is verbatim, per §2.4.
+
+| country | source | finest geography | categories there | rows | basis | reconciliation |
+|---|---|---|---|---|---|---|
+| **Philippines** | PSA CPH 2020 | province / HUC (117 units, exact partition) | **129** | 17,550 | self_id | exact to the person |
+| **Australia** | ABS Census 2021 | SA2 (2,472) | 34 — *150 nationally* | 84,282 | self_id | −111 (−0.0004%) |
+| **Mexico** | INEGI Censo 2020 | municipio (2,469) | 4 — *24 at state* | 10,644 | self_id | exact |
+| **Canada** | StatCan Census 2021 | CSD (5,161), CT (6,247) | 25 — *168 at province/CMA* | 321,757 | self_id, 25% sample | matches *The Daily* exactly |
+| **New Zealand** | Stats NZ Census 2023 | SA2 (2,395) | 11 — *163 nationally, 2018* | 29,975 | self_id | 3 people of 4,993,923 |
+| **Ireland** | CSO Census 2022 | Small Area (18,919) | 5 — *25 at county* | 112,495 | self_id | exact at all four levels |
+| **UK** | 4 separate systems | Output Area / Data Zone | 8–60 | 1.83M | self_id | +0.0006% to +0.068% |
+
+**The single loudest pattern: every one of the seven splits category depth from spatial depth**
+(§3.9). Not one publishes its finest categories at its finest geography. Australia 150 vs 34,
+Canada 168 vs 25, New Zealand 163 vs 11, Mexico 24 vs 4, Ireland 25 vs 5. This is now the expected
+shape rather than a surprise, and it is the central obstacle to R2.
+
+### Per-country notes worth carrying forward
+
+- **Philippines** — `psa.gov.ph` is behind a Cloudflare interstitial; raw files came byte-identical
+  from the Wayback `id_` endpoint (recipe in `ph.md`). **Aglipay and Iglesia Filipina Independiente
+  are the same church offered as two answer options** (818,916 + 640,076 = 1.46M) — a taxonomy
+  decision, not a data error. Household population excludes 368,300 institutional residents (§3.7).
+- **Australia** — ASGS Edition 3; SA2 count went 2,310 → 2,473 since 2016 with ~8% reshaped, so a
+  2016 join "would silently succeed and be wrong". `Pentecostal, nfd` is **89% of all Pentecostals**
+  — the residual *is* the branch. Yezidi went 63 → 4,123 (refugee resettlement). SA1 is Australia's
+  analogue of the US tract trick for placement (§8.2). Attribution must read "Based on Australian
+  Bureau of Statistics data".
+- **Mexico** — **Orthodox Christians are filed under *otras religiones***, not Christianity: source
+  categories sit in different *places* in the tree, not just under different names. INEGI codes 46
+  denominations and publishes 24 — Mennonites, Lutherans, Buddhists, Hindus are in the database and
+  in no released table. One municipality (La Magdalena Tlaltelulco) is 92% unclassified with no
+  flag. geoBoundaries MEX ADM2 is 2012 vintage — see §8.1.
+- **Canada** — base-5 random rounding, verified: 0 of 321,757 counts is not a multiple of 5, so
+  parent/child disagree by ±5–25 by construction (§3.8). **241 CSDs publish religion on ≥50%
+  long-form non-response** — StatCan dropped quality suppression in 2021 (§7). DGUIDs state their
+  own vintage, so no §8.1 hazard.
+- **New Zealand** — **`-999` is an in-band "Confidential" sentinel in the count column**; summed as
+  delivered Islam comes to −36,753 (§3.2). 15.6% of 2023 answers are carried forward or imputed and
+  the not-stated residual is pre-filled to zero in all 2,395 SA2s. Multiple affiliation measured at
+  +0.18%/+0.70% (§3.3). 2023 fine tables need a free key from `portal.apis.stats.govt.nz` — the
+  biggest available upgrade for NZ.
+- **Ireland** — CSO publishes **two national totals**, 5,149,139 (SAPS/FY106) and 5,084,879
+  ("usually resident and present", used for the headline percentages); mixing them loses 64,260
+  people. **Atheist, Agnostic and Lapsed Catholic sit inside *Other religion*, not *No religion***.
+  11% of Small Areas changed code since 2016. The religion question is *not* voluntary here;
+  not-stated is 6.70% with a 4× county spread.
+- **UK** — four statistical systems, kept unmixable by `source_id`. **England & Wales publishes no
+  Christian denominations at all**, while carrying 50 minority write-ins (Alevi 25,672, Jain
+  24,991, Pagan 73,733, Zoroastrian 4,090, Yazidi 413, and *Church of All Religion* at 24) — more
+  granularity on minorities than on the majority, the inverse of the usual pattern. Scotland splits
+  Church of Scotland / Roman Catholic / Other Christian and has **Pagan as a tick box**. Scotland's
+  perturbation drift is +0.068%, about 100× the ONS figure. The E&W `ltla` level is the pre-2023
+  331-district set and will silently drop Cumbria, North Yorkshire and Somerset (§8.1). NI's
+  brought-up-in question is a separate source — see spec §3.1.
 
 ## 9. Ingested sources
 

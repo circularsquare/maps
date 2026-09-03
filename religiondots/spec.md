@@ -172,6 +172,37 @@ These are the R4 answers. All four exist because of a specific failure mode.
 A region's composition is built on **exactly one basis**. Figures on other bases may be used to
 *split* a category (§3.4), never to add to it.
 
+**The US/Canada border is the first place this becomes visible, and the numbers are in — 2026-08-27.**
+The United States is `roll`: ASARB counts congregational membership, and **48.6%** of Americans
+appear on one. Canada is `self_id`: the census asks the person, and **53.3%** call themselves
+Christian, with a further 34.6% reporting no religion. Those two percentages are not comparable
+and their difference is not a fact about religion in North America — one counts institutions'
+records, the other counts self-description, and self-description is always the larger number.
+Canada is also a **25% long-form sample**, not a full count, so it carries sampling error the US
+roll does not.
+
+Drawn naively, the 49th parallel will show a step change that is entirely an artifact of how the
+two countries were measured. §3.1 forbids summing across that boundary; what it cannot do is stop
+a reader comparing the two sides by eye, so the unit panel must name the basis in words, and the
+step is a thing to point at in the about text rather than smooth away.
+
+**Two different questions can both be called "religion", and the famous number is often the wrong
+one — Northern Ireland, 2026-08-27.** NISRA asks "what religion do you belong to?" (MS-B19) and,
+separately, "what religion were you brought up in?" (MS-B23/24). Q14 was **put only to people who
+answered "None" or did not answer the first question**, so the brought-up-in table reassigns
+**181,000 people — 9.5% of Northern Ireland — to a religion they had just said they do not belong
+to.**
+
+The two tables give materially different pictures: **42.3 / 37.4** on current belonging, **45.7 /
+43.5** on upbringing. The second pair is the one in general circulation, including in most
+reporting of the 2021 census.
+
+Neither is wrong; they answer different questions, and the upbringing figure is the meaningful one
+for some purposes. But they cannot be mixed, they cannot be compared with any other country's
+self-identification, and the one a naive ingest would pick up is the one that is not about present
+affiliation. Held as a **separate `source_id`** (`uk_ni_census_2021_brought_up_in`) rather than as
+a variant of the same source, so nothing can group the two together by accident.
+
 **`basis` is a property of the row, not of the source** — found 2026-08-27 in the first dataset
 opened. The US Religion Census is a `roll` dataset throughout except that group code 267 is
 literally named **"Muslim Estimate"**, 4.45M adherents, and codes 890/891/892 ("Mahayana
@@ -212,8 +243,25 @@ zero:
 2. **an overlap** the tree does not model — the case §3.3 opens a syncretic node for;
 3. **a mis-mapped source category**, sitting under the wrong parent.
 
+**Two ways the residual gets defeated, both found 2026-08-27 in New Zealand.**
+
+- **The agency may have filled it in already.** 15.6% of New Zealand's 2023 religion answers are
+  not 2023 answers — 9.2% carried forward from the person's 2018 or 2013 form, 6.5% imputed. The
+  visible consequence is that **"Residual Categories" is zero in all 2,395 SA2s**: the not-stated
+  residual has been silently absorbed. A zero residual therefore does not mean full coverage, it
+  can mean the gap was filled where we cannot see it, and the detector reports nothing precisely
+  where there is most to report. Every adapter should record whether the source imputes, because
+  a pre-filled residual has to be treated as `derived` (§7) rather than measured.
+- **In-band sentinels turn suppression into arithmetic.** Stats NZ writes **`-999` for
+  "Confidential" in the same integer column as the counts** — 1,326 cells across 112 small SA2s.
+  Summed as delivered, Islam comes to **−36,753** and No Religion lands 4% low but entirely
+  plausible, which is the dangerous half: one result is obviously broken and the other quietly
+  wrong. Every adapter must state its source's sentinel values, and the reconciliation check
+  against published national figures is what catches the plausible ones.
+
 So the residual is not only an output, it is **the main automatic detector of §3.1 and §3.2
-violations**, and it is cheap because it comes out of arithmetic the pipeline is doing anyway.
+violations**, and it is cheap because it comes out of arithmetic the pipeline is doing anyway —
+but it is only as good as the two conditions above, and both must be checked per source.
 Negative residuals go to a findings list with the unit, the node, the size of the overshoot and
 the contributing sources. Expect the list to be long; cityhistory's experience is that the queue
 never empties and the useful stopping rule is visibility — work the ones big enough to see.
@@ -245,6 +293,30 @@ and the node name is where the overlap is declared rather than hidden.
 
 The test for opening one: a source reports the combination, or reports categories that sum past
 100%. Not "we suspect overlap".
+
+**Measured for the first time, in New Zealand — 2026-08-27.** The NZ census accepts up to four
+religious affiliations per person, so responses genuinely exceed people, and by how much depends on
+how finely you cut:
+
+| | inflation |
+|---|---|
+| level 1 (11 categories) | **+0.18%** (9,192 responses) |
+| level 3 (163 categories) | **+0.70%** (32,886) |
+| Christian, level 3 | +1.24% |
+| Māori religions, level 3 | +1.64% |
+| Islam, level 3 | +1.28% |
+| **No Religion, level 3** | **+0.01%** |
+
+No Religion is the control and it is what makes the rest trustworthy: nobody holds "no religion"
+*and* something else, so its inflation should be ~0, and it is. The others are real multiple
+affiliation rather than a processing artifact.
+
+Two things follow. The inflation is **small enough to draw without correction** at these
+granularities — under 1% is well inside the disclosure-control noise of §3.8. And it **grows as
+categories get finer**, which is the direction this project keeps pushing, so it is worth
+re-measuring rather than assuming 0.7% is a ceiling. A country where dual practice is the norm
+rather than the exception (Japan, China, Vietnam) will not look like this at all, and that is what
+the syncretic node above is for.
 
 ### 3.4 Structure from the detailed source, totals from the recent one
 
@@ -324,6 +396,231 @@ do not, the dots are placed by population grid inside the unit anyway (§8), so 
 saying "somewhere in this unit" rather than "at this church" — the failure is confined to the
 unit's total, which is exactly where the residual can see it.
 
+### 3.8 Disclosure control biases the rare categories downward — FOUND 2026-08-27
+
+Statistical agencies perturb published cells to protect individuals. The ABS perturbs **every cell
+of every table independently**; StatCan random-rounds; others suppress below a threshold. The
+national totals barely move — Australia's SA2 sums come to 25,422,677 against a published
+25,422,788, off by 111 people, 0.0004%.
+
+**The error is not distributed evenly, and it lands on us.** Measured on the Australian tables, the
+bias runs systematically downward for small categories: Australian Aboriginal Traditional Religions
+**−6.29%**, Brethren **−1.71%**, against −0.0004% for the total. Perturbation is roughly constant in
+absolute terms, so as a group gets smaller the relative distortion grows without bound — and small
+groups are this project's subject. R2 and R3 ask for precisely the categories the disclosure
+control damages most.
+
+**Rounding is the second mechanism, and it manufactures residuals.** StatCan random-rounds every
+count to a multiple of 5 — verified exactly: **0 of 321,757 Canadian counts is not a multiple of
+5**. So a parent and the sum of its children disagree by ±5 to ±25 as a matter of course, two
+StatCan products disagree by ±5 on the same national figure, and **none of it is an error**.
+
+That interacts directly with §3.2's residual detector and with §3.6's threshold. A residual inside
+the rounding envelope is noise and must not be chased; §3.6's absolute floor of 1,000 people
+already covers Canada's ±25, which is why the threshold has an absolute term and not only a
+percentage one. Each source needs its rounding rule recorded so the envelope is known rather than
+guessed.
+
+Nothing can be done to recover the true figure, so the response is to record it: a group's
+published count carries an uncertainty that is a function of its size, not of the source's quality.
+It is also a reason not to over-read a small difference between two rare groups in one place, and a
+reason the presence ring (§4.3) is on firmer ground than a small dot count would be — "present"
+survives perturbation in a way that "4,123 people" does not.
+
+### 3.9 Category detail and spatial detail trade off inside one source — FOUND 2026-08-27
+
+Not the §3.4 case, which is two sources of different vintages. This is **one source, one year,
+where the agency publishes fine categories OR fine geography and refuses to publish both**, because
+the cross-tabulation would identify people.
+
+Australia is the clean example. The ASCRG 2021 classification has **150 religious groups**, and the
+ABS publishes all 150 — nationally. At SA2 the same census gives **34**, and everything small is
+folded into a single `Other Religious Groups` column of 107,127 people that contains Bahá'í,
+Taoism, Shinto, Paganism, Wicca, Jainism, Zoroastrianism, Mandaean, Yezidi, Druze, Caodaism,
+Spiritualism and Rastafari together.
+
+**Mexico is the same shape and confirms it is structural, not an ABS quirk.** INEGI publishes
+**24 denominations × 32 entidades**, or **4 aggregate groups × 2,469 municipios**, and there is no
+table joining the two. Worse, its classification *codes* 46 denominations and publishes 24 —
+Mennonites, Lutherans, Buddhists and Hindus exist in the database and in no released table at all.
+Two of three countries checked so far have this; assume it until shown otherwise.
+
+So for Australia the map can show *where* 34 categories are, or *how many* of 150 there are, and
+the thing R2 actually wants — where the Yezidis are — is withheld by design. Options, in order of
+honesty: take the coarse-geography detail and place it by §3.4's structure-from-elsewhere rule,
+clearly marked as derived; or draw the `Other` bucket as itself, which is truthful and useless; or
+find a custom tabulation. This is the shape to expect wherever a census has good categories, and it
+is worth checking per country rather than assuming the finest geography carries the finest
+categories — it usually does not.
+
+### 3.10 Reuniting fine categories with fine geography — MEASURED 2026-08-27
+
+§3.9 leaves every source split in two: fine categories at coarse geography, coarse categories at
+fine geography. The obvious repair is to combine them. Because our categories nest inside branches,
+the estimate is a within-branch proportional allocation —
+
+```
+est[fine unit, body] = coarse_cat[fine unit, branch] × fine_cat[coarse unit, body]
+                                                     / fine_cat[coarse unit, branch]
+```
+
+— which is what iterative proportional fitting reduces to when the fine categories nest. It assumes
+**a branch's internal composition is the same in every fine unit inside a coarse one**, which is
+false precisely for clustered minorities.
+
+**The US can price that assumption**, because ASARB publishes fine categories *and* fine geography.
+`tools/test_allocation.py` coarsens it to (county × 33 branches) + (state × 216 bodies), runs the
+allocation, and compares against the known county × body truth. 160.6M adherents, 64,568 cells:
+
+| | median misallocated |
+|---|---|
+| bodies over 1M | **12.0%** |
+| 100k – 1M | 28.3% |
+| 10k – 100k | 34.8% |
+| **under 10k** | **41.7%** |
+| **all adherents (total variation distance)** | **5.84%** |
+
+**So it works for what you can already see and fails for what the project is about.** 94% of people
+land in the right body; a body under 10,000 has about 42% of its members put in the wrong county.
+
+Three things sharpen that further, all in the wrong direction:
+
+1. **This is a lower bound.** The test allocates state → county. The real cases are worse jumps:
+   Australia is nation → SA2, Canada province → CSD, New Zealand nation → SA2.
+2. **The headline is flattered by branches with one populated child.** Bahá'í, Episcopal, Mahayana
+   Buddhist and others score 0.0%, not because the method is good but because there is nothing to
+   allocate. The genuine multi-child cases are all worse than 5.84% suggests.
+3. **We cannot reliably predict which bodies it will fail on.** Concentration correlates with error
+   in the right direction — counties-per-state against misallocation gives r = −0.30 — but that
+   explains under 10% of the variance, so "flag the clustered ones" is not available as a fix.
+
+**Decisions.**
+
+- **Do it, and mark it.** An allocated figure is `derived` in §7's terms and draws desaturated, in
+  the same visual class as a modelled country. It carries `structure_year` / `structure_geo` so the
+  unit panel can say where the split came from.
+- **Never let an allocated count reach a ring.** §4.3's ring means "present here", and allocation
+  cannot establish presence — it spreads a coarse total over units that may have none of that body
+  at all. A ring must come from a real count or a location source (§4.4), never from this.
+- **Prefer a proxy where one exists.** Flat proportional allocation is the fallback, not the
+  method. Several censuses publish ancestry, birthplace or language at the fine geography — the ABS
+  gives country of birth at SA2 — and conditioning the split on a correlated variable beats
+  spreading uniformly. Yezidis follow Iraqi birthplace; Jains follow Indian ancestry. Unmeasured so
+  far, and the obvious next experiment, since the same US ground truth can price it.
+
+### 3.10a Built for Australia — and what it does and does not buy
+
+`allocate.py`, run on the ABS data: **30 categories at SA2 become 147**, 363,384 rows, people
+conserved exactly, every category's national sum landing within perturbation of its published
+figure (Paganism +7, Yezidi +2, Greek Orthodox −110).
+
+Three things the build settled:
+
+**The mapping must be validated arithmetically, never trusted from codes.** Australia looks like a
+clean prefix hierarchy and is not: the SA2 column `603 Other Religious Groups` carries its own
+prefix children *and* every other narrow group in broad group 6. A pure prefix join drops 30
+categories and 92,331 people in silence. `allocate.py` therefore sums each fine column's children
+against that column's own total and **refuses to allocate a column that does not reconcile** — which
+caught `000 Religious affiliation not stated` (−94.7%, the two sources define it differently) and
+`601 Australian Aboriginal Traditional Religions` (+6.7%, §3.8 perturbation on a small column).
+Fourteen columns turned out to have a single child, so they are exact and are tagged `measured`
+rather than `derived`.
+
+**The failure mode is visible, not statistical.** Every category inside a bucket receives the *same*
+distribution, so Yezidi and Paganism come out with an identical SA2 ranking differing by a constant
+4.52. The map would assert that Yezidis and Pagans live in the same places in the same proportions.
+That is the 42% figure of §3.10 made concrete, and it is more useful stated this way.
+
+**So allocation rescues the middle, not the tail — which was the point of doing it.** Greek Orthodox
+(390,853), Serbian, Russian and Antiochian Orthodox were hidden inside one `Eastern Orthodox` column
+and are now separable at SA2, and that is a real and defensible gain. But Australia's largest
+bucketed minority peaks at **72.9 allocated Yezidis in one SA2** — far under a 1,000-person dot, and
+barred from a ring because allocation cannot establish presence. The groups R3 cares about stay
+invisible after allocation, and only §4.4's location sources reach them.
+
+A consequence for R1: because a bucket's members all inherit the bucket's footprint, **every SA2 with
+a non-zero `Other` now nominally contains 29 religions**. Counting drawn categories would therefore
+overstate diversity. Allocated categories below the dot floor must not be counted as present.
+
+### 3.10b Canada, and the two checks that earned their place
+
+| | fine geography | before | after | rows |
+|---|---|---|---|---|
+| Australia | SA2 (2,472) | 29 | **148** | 365,856 |
+| Canada | CSD (5,161) | 23 | **147** | 758,667 |
+
+Both conserve people exactly. Canada is the larger prize: Old Order Mennonites, nine Eastern
+Orthodox jurisdictions, Doukhobors and Mar Thoma are now placed at census-subdivision level.
+
+**Sources encode their hierarchy differently and there is no use pretending otherwise.** Australia
+nests by code prefix (ASCRG `2233` under `223`); Canada names each row's parent. `allocate.py`
+takes `--hierarchy prefix|parent`. Two failures worth keeping:
+
+- **Only the coarse tree's *leaves* may be allocated.** Canada's province table contains the whole
+  tree — every aggregate as well as every leaf — so climbing each category to its CSD column summed
+  `Catholic` *and* `Eastern Catholic` *and* `Roman Catholic` into one column and produced children
+  at **2.008× the column**. A structurally wrong mapping shows up as a clean multiple, which is what
+  makes the reconciliation check worth running.
+- **The reconciliation is a check on the mapping, not on the totals**, and getting that backwards
+  cost six Canadian columns. Shares are normalised *within* a column, so a mismatch between the
+  children's sum and the column total cannot affect the answer — only relative composition can. A
+  2% tolerance therefore rejected `Anabaptist` because StatCan's province and CSD products disagree
+  by 2.5–4.4% on the same category, which is a fact about StatCan, not a mapping error — and
+  dropping it would have discarded every Old Order Mennonite group, precisely the granularity this
+  project exists for. The band is now 10%, wide enough for product disagreement and far too tight
+  for a 2× structural error.
+
+**A gap in the normalized format, which is mine.** The source contract fixed the CSV *columns* but
+said nothing about recording the source's own classification hierarchy. Australia and Canada
+encoded it anyway (`ascrg=`/`parent=`) and can be allocated today; **New Zealand, Ireland and Mexico
+did not**, so their hierarchies exist only as prose in the `sources/*.md` files and each needs a
+small hand-written mapping table before it can be allocated — Mexico's is 24 categories onto 4, and
+is self-checking, since a wrong assignment fails the column reconciliation. The normalized format
+should require a machine-readable parent or code for every row, and any future source adapter
+should be asked for it explicitly.
+
+### 3.11 Reducing "other", and the floor under it
+
+The complement of §3.10: rather than splitting a bucket we cannot split, shrink it honestly.
+
+- **An external national estimate can name a category the census refuses to.** Mexico files
+  Orthodox Christians inside *otras religiones*; a published national estimate of Orthodox Christians
+  in Mexico, allocated across the *otras* bucket, converts an anonymous residual into a named group.
+  This is §3.4's structure-from-elsewhere rule applied to categories instead of geography, and it
+  inherits §3.10's error bars — it is `derived`, and it is still better than a bucket labelled
+  "other".
+- **What remains stays named by its source, never merged.** `mexico.otras-religiones` and
+  Australia's `Other Religious Groups` contain different things — one holds Orthodox Christians, the
+  other holds Bahá'í, Jain, Yezidi and Wiccans. A single global `other` node would assert they are
+  the same, which is false and unnecessary. So residual buckets are **per source**, named for it,
+  and a country's "other" is a fact about that country's statistical agency rather than about its
+  people.
+- **The floor is real and will stay high.** Some of it is irreducible — England and Wales publish no
+  Christian denominations at all, and no external estimate reconstructs 60% of a country's
+  population at output-area level. The goal is to shrink the bucket where evidence allows and label
+  it honestly where it does not, not to drive it to zero.
+
+### 3.7 A census counts households, and monasteries are not households — FOUND 2026-08-27
+
+Found in the Philippine census and it is not a Philippine quirk: census religion tables are
+generally tabulated on the **household population**, which excludes the *institutional* population
+— people living in barracks, prisons, hospitals, dormitories, **monasteries and seminaries**.
+
+The Philippines: household population 108,667,043 against a total of 109,035,343. The gap is
+**368,300 people, 0.338%** — small, and composed of exactly the residents this map most wants to
+see. R3 asks for monastic communities to be findable, and **the census-shaped half of our sources
+structurally cannot see them**, no matter how fine the geography or how granular the categories.
+
+This is not a defect to correct; it is a statement about what these sources measure, and it
+sharpens why §4.4's location-by-religion sources are load-bearing rather than a nice extra. The
+institutional population is precisely the gap that an Annuario Pontificio or a monastery register
+fills, and it is the reason those sources cannot simply be dropped in favour of "better censuses".
+
+Every source adapter should record whether its universe is household or total population, and
+`sources.md` should state it per country, because a country reporting *total* population is
+measuring a different thing from one reporting household population and the difference lands
+entirely in this project's subject matter.
+
 ## 4. The size problem — §4.1 and §4.3 DECIDED, §4.2 open
 
 Christianity is ~2.4 billion. A Carthusian charterhouse is ~20 monks. Eight orders of magnitude,
@@ -375,12 +672,87 @@ aggregate rather than the viewer filtering a single flat set. (ancestrydots uses
 `--drop-rate 1.0 --drop-densest-as-needed`, i.e. no per-zoom culling at all. That works for 3.3M
 dots and will not work here.)
 
-**Open:** whether the aggregate marks want a cap on radius in the densest cells, and if so what
-happens visually at the cap. Straight area-proportionality across Tokyo and rural Mongolia in one
-view is a big dynamic range. cityhistory answered the same question with sublinear bubbles, but
-that trade is not available here — there, bubble area is the only encoding of a city's size, while
-here the mark stands for a countable number of atomic dots, and inflating it would break the
-"count the dots" property that §4.1 exists to protect.
+### 4.2a Built 2026-08-27 — `tiles.py`, and why not tippecanoe
+
+The merge is done by **`tiles.py`, which writes PMTiles directly**, and tippecanoe is
+deliberately not in the pipeline even though ancestrydots uses it and it is the obvious tool.
+
+**Tippecanoe's low-zoom job is to drop features** until a tile fits a byte budget
+(`--drop-densest-as-needed`). Which dots survive is close to arbitrary, so a small group blinks in
+and out as you zoom or pan — the stochastic-disappearance failure §4.2 exists to avoid, arriving
+through the back door of the packaging step. Merging is a different operation and no tiler does
+it, because it needs to know that two dots are *the same religion* and may be combined.
+
+So each zoom gets its own aggregate: the tile is divided into 32×32 merge cells (`CELL_BITS = 5`,
+about 16px on a 512px tile), all dots of one religion in one cell become one mark carrying `k`,
+and the mark sits at the **mean position of its members** rather than the cell centre, so marks
+follow the real point cloud instead of snapping to a lattice.
+
+Measured on the US at 1:1,000 — 141,501 dots in, nothing dropped at any zoom:
+
+| zoom | marks | largest merge |
+|---|---|---|
+| 0 | 861 | 11,175 dots |
+| 2 | 3,499 | 7,767 |
+| 4 | 12,907 | 3,406 |
+| 6 | 40,327 | 799 |
+
+A useful side effect: **this removes the WSL dependency entirely**, which matters because WSL's
+C: mount is broken on this machine and tippecanoe was not reachable at all.
+
+**The radius cap, which was §4.2's open question, is now answered.** Merging turns many
+overlapping small dots into one solid circle, and a circle whose area is the *sum* of overlapping
+dots is larger than their union — so strict area-proportionality over-inks the densest cells.
+Radius is `min(r(z)·√k, 8px)`, the cap being half a merge cell so a mark cannot spill over its
+neighbours. **Above the cap a mark has stopped reporting magnitude**, which is the same kind of
+statement a ring makes and should be read the same way: the cell is full. It is a real loss of
+information in exactly the densest cells and it is bounded, visible, and better than the
+alternative of letting one circle swallow a state.
+
+cityhistory answered the same dynamic-range question with sublinear bubbles; that trade is not
+available here, because there bubble area is the only encoding of a city's size, while here the
+mark stands for a countable number of atomic dots and inflating it would break the "count the
+dots" property §4.1 exists to protect. A hard cap loses information honestly; a sublinear curve
+misstates it everywhere.
+
+**Which end of the range to sacrifice is the actual decision, and it is the bottom that must be
+protected.** At z4 the merge spans k = 1 … 3,406, a radius ratio of 58, against the roughly 9×
+that fits between "visible" and "not overlapping the neighbours". Something has to give. The
+first build set the base radius low, so a `k = 1` mark drew at 0.42px and **the countryside
+emptied out** — which is not a rendering artifact but a false claim about where people are. The
+base is now set so a lone dot stays visible and the cap bites from about k ≈ 80. Losing
+resolution among the largest metros costs nothing anyone can read; losing rural America costs the
+map its subject.
+
+### 4.2b Consolidation is toggleable — added 2026-08-27
+
+The merge happens at build time, so switching it off is not a rendering option — the unmerged dots
+have to be *in the archive*. `tiles.py` emits them as an `atomic` layer beside `dots`, and the
+viewer swaps layer visibility (**overlapping dots: merged / separate** in the legend).
+
+The atomic layer is every dot at every zoom, where the merged pyramid collapses them, so it is the
+expensive half of the archive — and much less expensive than expected:
+
+| | archive |
+|---|---|
+| merged only | 11.3 MB |
+| merged + atomic | **17.6 MB** |
+
++6.3MB for 1.56M feature-instances, against an estimate of ~35MB. MVT deduplicates the repeated
+category strings almost completely, so the marginal cost of a point is close to its coordinates
+alone. `--no-atomic` drops it for when that stops being true.
+
+**Both views are honest, and they answer different questions.** Merged: area is proportional to
+people, so you can compare quantities across a view. Separate: one mark per 1,000 people, so you
+read texture and mixing. Separate is also the more familiar dot-map idiom and is what ancestrydots
+does. The reason merged is the default is §4.3 — at 1:1,000 four out of five body-county pairs are
+already rings, and merging is what keeps the remaining marks legible at low zoom.
+
+**One MapLibre trap, which cost a build.** `['zoom']` must be the *outermost* expression of a
+paint property. Wrapping the zoom curve in `['min', …]` to apply the cap fails validation, and
+MapLibre's response is to **drop the entire layer** with the error only on the console — the map
+still renders, with rings and no dots, looking like a data problem rather than a syntax one. The
+cap and the √k factor go inside each interpolation stop's output instead.
 
 ### 4.3 Presence marks: a second grammar that carries no magnitude — DECIDED 2026-08-27
 
@@ -435,6 +807,37 @@ before trusting it.
 The split that matters is therefore three-way, not two-way: **counted** → dots; **uncounted but
 demonstrably substantial** → converted dots, desaturated (§7); **uncounted and small**, the 24
 congregations-only bodies with under 10 congregations, plus the 50 tiny counted ones → rings.
+
+**Built 2026-08-27, and the ring is the dominant symbol — by a lot.** Of roughly 80,680
+(body, county) pairs in the US data:
+
+| dot value | dots | rings | share of pairs that are rings |
+|---|---|---|---|
+| 1 per 100 | 1,576,707 | 32,617 | **40%** |
+| 1 per 1,000 | 141,501 | 64,739 | **80%** |
+
+At the dot value a global build can afford, **four out of five body-county pairs cannot be drawn
+as a dot at all**. That is not a tail, it is the map. Two consequences:
+
+1. **Ring gating is load-bearing, not polish.** 64,739 rings drawn at once at z4 out-ink the
+   141,501 dots they are meant to sit beside, which inverts the entire point of having two
+   symbols. **Decided 2026-08-27: rings are hidden until a group is selected**, and then only
+   that group's are drawn. A zoom threshold was tried first and was still too noisy.
+
+   Two implementation traps, both hit:
+
+   - **A ring must not sit at the unit's centroid.** Placing every ring for a county at one
+     representative point stacks dozens of them on a single coordinate — visually one ring, and a
+     hover answers with whichever is first in the file. Rings are now placed in a random tract of
+     the county, the same rule as dots, so they neither coincide nor claim a location the data
+     does not have.
+   - **Hiding must be a `filter`, not an opacity of 0.** A circle at zero opacity is still
+     hit-tested, so invisible rings went on answering hovers meant for visible ones: with Sikhism
+     selected, mousing over a Sikh ring reported "Wesleyan Church". Anything hidden for a reason
+     the reader can see has to leave the query too.
+2. **The finer the dot value, the more honest the map** — the 1:100 build has four times the
+   dots and half the rings. This is the strongest argument yet for getting tiling working, since
+   the dot value is bounded by what can be shipped, not by anything about religion.
 
 **Rejected, with reasons:**
 
@@ -550,6 +953,30 @@ available.
 viewer builds a MapLibre `match` expression for `circle-color`. Changing palette is a paint
 update. No second dot set, no re-tiling, nothing precomputed per scope.
 
+### 6.1 What building it changed — 2026-08-27
+
+**Hue alone is not enough at overview width.** The overview draws about 40 categories, which is
+9° of hue apart, and two 2px dots 9° apart are the same colour. Fixed by alternating *lightness
+and saturation* between adjacent entries (odd entries light and desaturated, even entries dark
+and saturated) so neighbours differ on three axes rather than one. Hue order still follows the
+tree, so a family stays contiguous on the wheel.
+
+**The overview cannot draw at depth 1.** Christianity is 95% of the US data, so a family-level
+palette renders the country in one colour. Depth 2 is the working default and the depth control
+is how you get back to depth 1 deliberately. Worth re-checking when a country lands whose data
+is not 95% one family — the right default may be per-scope rather than global.
+
+**In focus mode the panel must expand to the scope**, or the legend for what is on screen sits
+hidden behind a collapsed triangle. The first build got this wrong and the fix is `isOpen()`:
+open every ancestor of the scope, plus the scope's own subtree down to the drawn cut, and leave
+everything outside collapsed.
+
+**What it looks like when it works:** selecting Baptist isolates the Bible Belt and splits it into
+Southern Baptist (16,571 dots) against the four National Baptist conventions (3,643), which is a
+real and legible geography — the second is urban and Deep South where the first is everywhere.
+And the overview alone reads Utah as Latter Day Saints, the upper Midwest as Lutheran, the
+Northeast and Southwest as Catholic, without anyone being told to look.
+
 **Still true from before:** sibling groups that are large and adjacent (Sunni/Shia,
 Catholic/Protestant) need separation that survives a 2px dot, while distant tiny leaves can share a
 shade because they never appear in the same view. And **the genealogy tree is the colour key** —
@@ -562,9 +989,17 @@ Three tiers, from the source inventory, per unit per group:
 
 | tier | example | rendering |
 |---|---|---|
-| measured | a census or register question, asked in this unit, any year (§3.4) | full saturation |
+| measured | a census or register question, asked in this unit, any year (§3.4), **and answered** | full saturation |
 | derived | §3.4 structure-from-older-source; a national figure distributed by a proxy | desaturated |
 | modelled | no subnational data; country estimate spread by population | desaturated and, proposed, a visible texture or stipple |
+
+**"Measured" needs a response rate, not just a question — found 2026-08-27.** StatCan dropped its
+quality suppression for 2021, so **241 Canadian census subdivisions publish religion counts built
+on ≥50% long-form non-response**. Those numbers look exactly like every other number in the file.
+Australia's religion question is voluntary with 6.9% non-response nationally, and England, Wales
+and Scotland are voluntary too. So the measured tier is gated on the unit's own response rate,
+which every adapter records per row (`tnr_lf=` in the Canadian rows); a unit over some
+non-response threshold drops to `derived` however good its source is.
 
 The unit panel names the source and year for every line, so "why is Sichuan pale" has an answer
 one click away. §3.5 is the reason this is not optional: the map's honest claim in China is
@@ -602,9 +1037,15 @@ bases, goes to a findings list, not into a fudge.
 awkward. ADM1 everywhere, ADM2 where a source supports it — the level varies by country and that
 is fine, because dots are placed by population weight, not by unit area.
 
-### 8.1 Boundaries must be the vintage the data was collected on — FOUND 2026-08-27
+### 8.1 Boundaries must be the vintage the data was *published on* — FOUND 2026-08-27
 
-Not the newest available. Taking the newest is the obvious default and it silently deletes places.
+Not the newest available, and — refined 2026-08-27 — **not the year it was collected either.**
+
+Taking the newest is the obvious default and it silently deletes places. But "use the collection
+year" is also wrong: **Stats NZ recodes its 2013 and 2018 census addresses forward onto the 2023
+SA2 boundaries**, so New Zealand's older columns want the *newer* geography, the exact mirror of
+Connecticut. The rule that covers both is the vintage the table is published on, which the
+publisher states and which no amount of reasoning from the data's date will recover.
 
 **Connecticut abolished its counties** for statistical purposes in 2022, replacing them with nine
 Councils of Governments planning regions with new FIPS codes (09110–09190). ASARB 2020 reports
@@ -618,6 +1059,34 @@ Connecticut looks identical to a working join everywhere else; nothing is malfor
 wrong, a state is just missing. **So the join is checked in both directions and both sides are
 reported**, always — unmatched data rows *and* unmatched polygons.
 
+**The cost, measured on Australia 2026-08-27:** using the 2016 boundaries against 2021 data
+matches **87.7% of codes** and silently drops **303 SA2s — 3,866,694 people, 15.2% of the
+country**. An 87.7% match rate is exactly the kind of number that looks like success in a log.
+
+**And there is a third direction, which two-way matching does not catch: a code can match and
+still have no geometry.** Australia has 18 special-purpose SA2s — migratory, offshore, no usable
+address — whose codes join perfectly and whose polygons are empty; they hold 52,920 people who
+would be scattered nowhere at all. Worse, their `AREASQKM21` is **NaN rather than 0**, so the
+obvious guard (`area == 0`) matches nothing and keeps them. So the check is three-way: unmatched
+data, unmatched polygons, **and matched-but-empty geometry**.
+
+Canada is the counter-example that shows the good design: StatCan's DGUID embeds its own vintage
+(`2021A0005…`), so joining 2021 data to a wrong-vintage file yields **zero** matches rather than a
+plausible 88%. A loud total failure is a far better property than a quiet partial one, and it is
+worth preferring a vintage-stamped key wherever a source offers one.
+
+**A fourth way to get the vintage wrong: the file format renames the column for you.** Ireland's
+Small Area shapefile carries both the 2022 and the 2016 keys, and **the DBF format truncates field
+names to ten characters**, so `SA_GUID_2022` arrives as `SA_GUID__1` while `SA_GUID_20` — the name
+that looks like the 2022 key — is in fact **the 2016 one**. Joining on the obvious-looking column
+silently gives you the previous census's geography, on which 1,448 of 18,919 codes have changed.
+The rule that survives this: **confirm the key by joining, not by reading its name.** A correct key
+matches 100% and the wrong one does not, which is the only reliable signal available.
+
+And Mexico's own geography clears the geoBoundaries problem noted above — INEGI's Marco
+Geoestadístico 2020 has all 2,469 municipios including Coatetelco, Xoxocotla and Hueyapan, and
+joins 0/0 both ways.
+
 The check also confirms what should be absent: 91 polygons have no ASARB row and all 91 are
 Puerto Rico, American Samoa, Guam, the Northern Marianas and the US Virgin Islands, which ASARB
 does not cover. An expected absence and an accidental one look the same until you name the
@@ -626,19 +1095,73 @@ expected ones.
 This will recur everywhere and worse: municipal mergers in Japan, Brazil and Indonesia run
 continuously, and a census's own geography is the only safe join target for that census.
 
-### 8.2 Placement: the population weight is per-country, and can be the census's own
+**And the global boundary source has the same disease — including the one §8 recommends.**
+geoBoundaries' Mexico ADM2 is **2012 vintage, 2,457 units, against the 2020 census's 2,469**; three
+Morelos municipios (`17034`–`17036`) simply do not exist in it, so the Connecticut failure is
+waiting there in exactly the same silent form. This does not disqualify geoBoundaries — it is still
+the right licence and the right coverage — but it does mean **its vintage is a per-country fact to
+check, not a property of the dataset**, and that where a country publishes its own census
+geography, that is what the join should use. Kept as an explicit pre-flight: for every country,
+compare unit counts and report both directions before scattering a single dot.
 
-Kontur/GHS-POP is the **global fallback**, not the first move. Where a country publishes
-population on a finer unit than its religion data, that finer unit *is* the population grid, and
-it is measured rather than modelled.
+### 8.2 Placement needs no population data — DECIDED 2026-08-27
 
-For the US: religion is by county, and **2020 census tracts** carry the weight inside each one.
-ancestrydots' uniform-random-in-polygon works there because census tracts are small and roughly
-population-equal by construction; counties are neither — San Bernardino is 20,000 square miles of
-mostly desert, and scattering its adherents uniformly would put dots across the Mojave.
+The project does not depend on a population layer, and the reasoning is worth keeping because the
+obvious version of this decision is wrong in both directions.
 
-Tract populations come from the **2020 decennial PL 94-171** file, not ACS, so that the weights
-sum to the same 2020 census count ASARB measured its own county population against.
+**Two jobs get confused.** Population is used for (a) the residual — how many people belong to
+nothing — and (b) placement, deciding where inside a unit the dots go. They are unrelated. (a)
+needs one number per unit; (b) needs relative weight *within* the unit.
+
+**(a) is free wherever the religion source is a census**, because a census reports population too.
+ASARB ships a `2020 Population` column per county in its own summaries workbook. So the US residual
+costs nothing and needs no API. It is computed and kept out of the first render by choice, not by
+necessity.
+
+**(b) is free in the United States too, and this is the useful trick.** Census tracts are *designed*
+to hold about 4,000 people. So allocating a county's dots **equally across its tracts** is already
+a population weighting — the geometry carries the weight, and no population figure is read at all.
+
+Measured, to check the design is actually adhered to rather than merely intended:
+
+| | |
+|---|---|
+| tracts, 2020, nationally | 85,187 across 3,143 counties |
+| people per tract (county means) | median **3,424**, IQR **2,818 – 4,043** |
+| log-log correlation, county population vs tract count | **r = 0.98** |
+
+**What this is not.** The measurement above is *between* counties; the error that matters is
+*within* one, and it cannot be measured without the tract populations we are declining to fetch.
+The honest bound is the design range itself — tracts run roughly 1,200–8,000, so two tracts in the
+same county can differ by about 3×, and a dense tract is under-dotted against a sparse one by up
+to that. Against the alternative it is nothing: uniform-random over a *county* polygon is wrong by
+two orders of magnitude in the western US, where it would scatter San Bernardino's adherents across
+20,000 square miles of Mojave.
+
+**The consequence, stated plainly:** without a population layer the map shows **counts, not
+shares**. A county that is 48% adherent and one that is 90% adherent look the same. That is a real
+limitation, it is reversible, and for a first build it is the right trade.
+
+`fetch_tract_pop.py` is written and kept for the day exact weights are wanted; it needs a free
+`CENSUS_API_KEY`, since the API stopped serving unkeyed requests. Nothing depends on it.
+
+**Where the placement layer ships its own population, use it rather than approximating.** New
+Zealand's SA1 file carries a 2023 population per polygon (median 150, IQR 120–183), so NZ can be
+weighted exactly and the equal-share assumption is not needed at all. The approximation is a
+fallback for the common case where no population travels with the geometry, not a preference.
+
+**It generalises, and Australia is a better case than the US — measured 2026-08-27.** ABS Statistical
+Area 1s hold a median of **406 people, IQR 359–447**, against the US tract median of 3,424 with an
+IQR nearly twice as wide in relative terms; the correlation between SA2 population and SA1 count is
+**r = 0.923**, and every real SA2 has at least one usable SA1. So equal-dots-per-SA1 is a sound
+population weighting, on a unit eight times finer than a US tract. Canada's dissemination areas are
+the same idea. The trick is not a US accident — it is what happens wherever a statistical agency
+designs its smallest unit to a population target, which is nearly everywhere.
+
+**Globally**, the same two observations should mostly hold: a country whose religion data comes
+from a census has that census's population alongside it, and countries publish *some* finer unit
+than their religion tabulation. Kontur/GHS-POP stays the fallback for where neither is true, and
+it moved from "second stage of the pipeline" to "fallback" on the strength of this.
 
 **Placement.** Dots are placed by **population grid**, not uniformly in the polygon.
 ancestrydots' `random_points_in_polygon` is fine for US census tracts, which are small and roughly
@@ -660,6 +1183,11 @@ MapLibre GL JS + PMTiles, the ancestrydots stack, which also means the R2 hostin
 supersedes the general house-style note in `feedback_map_ui_style`. Its tokens: `body` `#111`,
 panels `rgba(20,20,20,0.758)`, hairlines `#2a2a2a`/`#333`, scrollbar thumb `#555`, Nunito, the
 `i` button bottom-left for prose. Dark, like ancestrydots and unlike citybrowser.
+
+**One thing tiling takes away: the viewer can no longer count anything.** With GeoJSON it totalled
+the country by walking features; with tiles it only ever holds the current viewport, so the panel's
+per-religion totals are precomputed into `data/processed/counts.json` by `tiles.py`. Anything else
+the UI wants to state about the whole dataset has to be computed at build time for the same reason.
 
 **And its dot sizing is already the answer to §4.2's dot-size half:**
 

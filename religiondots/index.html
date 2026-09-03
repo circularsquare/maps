@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Religion Dot Map</title>
+  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;700&display=swap" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Nunito', sans-serif; }
+    body { background: #111; }
+    #map { width: 100vw; height: 100vh; }
+    .maplibregl-canvas-container.maplibregl-interactive,
+    .maplibregl-canvas-container.maplibregl-interactive:active { cursor: default; }
+
+    #loading {
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+      font-size: 18px; color: #ccc; z-index: 20; pointer-events: none;
+    }
+
+    #title {
+      position: absolute; top: 10px; left: 12px; z-index: 1000;
+      color: #eee; font-size: 15px; font-weight: 700; text-shadow: 0 1px 3px #000;
+    }
+    #subtitle {
+      position: absolute; top: 30px; left: 12px; z-index: 1000;
+      color: #999; font-size: 11px; text-shadow: 0 1px 3px #000;
+    }
+
+    #panel {
+      position: absolute; top: 8px; right: 8px; z-index: 1000;
+      background: rgba(20,20,20,0.758); border-radius: 8px;
+      font-size: 12px; color: #eee; width: 268px;
+      max-height: calc(100vh - 50px); display: flex; flex-direction: column;
+    }
+    #panel-head {
+      display: flex; align-items: center; gap: 6px;
+      padding: 8px 10px 6px; border-bottom: 1px solid #2a2a2a;
+    }
+    #panel-head b { font-size: 12px; font-weight: 700; flex: 1; }
+    #panel-head button {
+      background: none; border: 1px solid #555; color: #ccc;
+      width: 22px; height: 22px; border-radius: 4px; cursor: pointer;
+      font-size: 12px; line-height: 1;
+    }
+    #panel-head button:hover { background: #333; color: #fff; }
+    #scope-bar {
+      padding: 5px 10px; border-bottom: 1px solid #2a2a2a;
+      color: #888; font-size: 11px; display: flex; align-items: center; gap: 6px;
+    }
+    #scope-bar span { flex: 1; color: #aaa; }
+    #scope-bar a { color: #89b4fa; text-decoration: none; cursor: pointer; }
+    #tree { overflow-y: auto; padding: 4px 0 8px; }
+    #tree::-webkit-scrollbar { width: 6px; }
+    #tree::-webkit-scrollbar-thumb { background: #555; border-radius: 3px; }
+
+    .row {
+      display: flex; align-items: center; gap: 6px;
+      padding: 1px 10px 1px 0; cursor: pointer; line-height: 1.45;
+    }
+    .row:hover { background: #262626; }
+    .row.sel { background: #2f3b47; }
+    .row .tw { width: 12px; color: #777; font-size: 9px; flex: none; text-align: center; }
+    .row .dot { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+    .row .ring { width: 9px; height: 9px; border-radius: 50%; flex: none;
+                 background: none; border: 1.5px solid; }
+    .row .lb { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .row .ct { color: #888; font-variant-numeric: tabular-nums; font-size: 11px; }
+    .kids { display: none; }
+    .kids.open { display: block; }
+
+    #legend-note {
+      padding: 6px 10px; border-top: 1px solid #2a2a2a; color: #888; font-size: 11px;
+    }
+    #legend-note b { color: #ccc; font-weight: 400; }
+
+    #info-btn {
+      position: absolute; bottom: 12px; left: 12px; z-index: 1000;
+      background: #ddd; color: #111; border: none; width: 26px; height: 26px;
+      border-radius: 50%; cursor: pointer; font-weight: bold;
+    }
+    #info-btn:hover { background: #fff; }
+    #about {
+      position: absolute; bottom: 46px; left: 12px; z-index: 1000; display: none;
+      background: rgba(20,20,20,0.92); color: #ccc; border-radius: 8px;
+      padding: 12px 14px; width: 330px; font-size: 12px; line-height: 1.5;
+    }
+    #about.show { display: block; }
+    #about h3 { font-size: 12px; color: #eee; margin-bottom: 6px; }
+    #about p { margin-bottom: 8px; }
+    #about code { font-family: monospace; color: #aaa; }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+  <div id="loading">loading…</div>
+  <div id="title">Religion in North America</div>
+  <div id="subtitle">US Religion Census 2020 · Canadian Census 2021 — measured differently, see <span style="text-decoration:underline;cursor:pointer" id="basis-link">why</span></div>
+
+  <div id="panel">
+    <div id="panel-head">
+      <b>Religions</b>
+      <button id="depth-minus" title="Less detail">&minus;</button>
+      <button id="depth-plus" title="More detail">+</button>
+    </div>
+    <div id="scope-bar"><span id="scope-label">all religions</span><a id="scope-clear">clear</a></div>
+    <div id="tree"></div>
+    <div id="legend-note">1 dot = <b id="dotval">1,000</b> people. Select a group for <span style="display:inline-block;width:8px;height:8px;border-radius:50%;border:1.5px solid #888;vertical-align:middle"></span> where it is present but under one dot.
+      <div style="margin-top:5px">overlapping dots: <a id="merge-btn" style="color:#89b4fa;cursor:pointer" title="Merged: nearby dots of one religion become a single mark, area proportional to how many. Separate: every dot drawn individually.">merged</a></div>
+      <div style="margin-top:3px">no religion: <a id="none-btn" style="color:#89b4fa;cursor:pointer" title="Canada asks the question; the US data has no equivalent, so showing it makes Canada look secular and the US religious for reasons of measurement rather than belief.">hidden</a></div>
+    </div>
+  </div>
+
+  <button id="info-btn"><span style="font-family:'Times New Roman',serif;font-style:italic">i</span></button>
+  <div id="about">
+    <h3>Religion Dot Map</h3>
+    <p>Every dot is <b id="about-dotval">1,000</b> people, the same number for every group, so
+       two colours can be compared by counting. Rings mark a body that is present but too small
+       to reach one dot, or that reported congregations without a membership count — a ring says
+       only "here", never how many.</p>
+    <p>Dots are placed at random within census tracts, not at anyone's address. Tracts hold
+       roughly 4,000 people each, so this places people about where they live without using any
+       population data — but it says nothing about where inside a county a group lives.</p>
+    <p><b>The two countries are not measured the same way, and the border shows it.</b> The US
+       figures are membership rolls — the <code>2020 U.S. Religion Census</code> (ASARB) asks
+       congregations who is on their books, and 48.6% of Americans appear on anyone's. The
+       Canadian figures are self-identification: the 2021 census asks the person, and 53.3% say
+       they are Christian. Those are different quantities, and self-description is always the
+       larger one. Any step you see at the 49th parallel is mostly that, not a change in
+       religion.</p>
+    <p>Canada also reports "no religion" directly — 12.4 million people, its largest single
+       answer. The US data cannot produce that number at all: its residual means "on no
+       membership roll", which is not the same thing.</p>
+    <p>Canadian categories below the province level are <i>derived</i> — the census publishes 168
+       religions by province and 25 by subdivision, never both, so the fine categories are split
+       out proportionally. Where a group is too small to reach one dot it is rolled up to its
+       parent rather than dropped or invented.</p>
+  </div>
+
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<script src="https://unpkg.com/pmtiles@3.2.0/dist/pmtiles.js"></script>
+<script>
+maplibregl.addProtocol('pmtiles', new pmtiles.Protocol().tile);
+
+const DOT_VALUE = 1000;
+const OUT_COLOR = '#1c1c1c';
+
+let NODES = [], BY_ID = {}, KIDS = {}, ROOTS = [];
+let scope = null;          // null = overview palette (spec §6)
+let depth = 2;             // how far below the scope the wheel is divided
+let merged = true;         // §4.2 consolidation: merged marks, or every dot separately
+
+/* "No religion" is hidden by default, and the reason is comparability rather than tidiness.
+   Canada asks the question and 34.6% answer it; the US data has no equivalent, because ASARB
+   counts membership rolls and its 51.4% residual means "on nobody's roll", which is a
+   different quantity (spec §3.1). Drawn together, Canada reads secular and the US reads
+   religious, and most of that gap is measurement rather than belief. Hidden, both countries
+   show religious affiliation only — the thing they both actually measure. */
+const HIDDEN_ROOTS = ['unaffiliated'];
+let showNone = false;
+let colorOf = {};          // leaf id -> css color
+let counts = {};           // node id -> dots drawn, for the panel
+
+// ---------------------------------------------------------------- tree helpers
+function parentOf(id) { const i = id.lastIndexOf('.'); return i < 0 ? null : id.slice(0, i); }
+
+function buildTree(nodes) {
+  NODES = nodes;
+  ROOTS = [];                       // called twice — once to get ids, again to sort by count
+  for (const n of nodes) { BY_ID[n.id] = n; KIDS[n.id] = []; }
+  for (const n of nodes) {
+    const p = parentOf(n.id);
+    if (p && KIDS[p]) KIDS[p].push(n.id); else if (!p) ROOTS.push(n.id);
+  }
+  // stable display order: by drawn size, biggest first
+  const size = id => counts[id] || 0;
+  for (const k in KIDS) KIDS[k].sort((a, b) => size(b) - size(a) || a.localeCompare(b));
+  ROOTS.sort((a, b) => size(b) - size(a) || a.localeCompare(b));
+}
+
+function subtree(id, acc = []) {
+  acc.push(id);
+  for (const k of KIDS[id] || []) subtree(k, acc);
+  return acc;
+}
+
+/* The set of nodes the wheel is divided among: descend `depth` levels below the scope,
+   stopping early at anything with no children. spec §6 — the palette spreads over exactly
+   what is drawn, which is why there is a depth control at all. */
+function drawnSet() {
+  const top = scope ? (KIDS[scope] || []) : ROOTS;
+  const out = [];
+  const walk = (id, d) => {
+    const kids = KIDS[id] || [];
+    if (d >= depth || kids.length === 0) { out.push(id); return; }
+    for (const k of kids) walk(k, d + 1);
+  };
+  for (const t of top) walk(t, 1);
+  return out.length ? out : (scope ? [scope] : ROOTS);
+}
+
+// ---------------------------------------------------------------- colour
+function hsl(h, s, l) { return `hsl(${h.toFixed(1)},${s}%,${l}%)`; }
+
+function recolour() {
+  colorOf = {};
+  const drawn = drawnSet();
+  const inScope = scope ? new Set(subtree(scope)) : null;
+
+  /* Hue runs in tree order so a family stays contiguous on the wheel — Christianity's
+     branches next to each other, then Islam, Judaism and so on. With ~40 drawn categories
+     that is only 9° apart, which is under the threshold at which two 2px dots can be told
+     apart, so adjacent entries are also alternated in lightness and saturation. Neighbours
+     then differ on three axes instead of one. */
+  drawn.forEach((id, i) => {
+    const hue = (i * 360) / drawn.length;
+    const alt = i % 2;
+    const baseS = alt ? 48 : 72;
+    const baseL = alt ? 64 : 45;
+    const members = subtree(id);
+    // and shade within the drawn node so its own children stay separable from each other
+    members.forEach((m, j) => {
+      const t = members.length > 1 ? j / (members.length - 1) : 0;
+      colorOf[m] = hsl(hue, baseS - 16 * t, baseL + (alt ? -18 : 24) * t);
+    });
+  });
+
+  for (const n of NODES) {
+    if (colorOf[n.id]) continue;
+    colorOf[n.id] = (inScope && !inScope.has(n.id)) ? OUT_COLOR : '#666';
+  }
+  if (inScope) for (const n of NODES) if (!inScope.has(n.id)) colorOf[n.id] = OUT_COLOR;
+}
+
+function colorExpr() {
+  const stops = [];
+  for (const n of NODES) if (n.kind === 'leaf' || !(KIDS[n.id] || []).length)
+    stops.push(n.id, colorOf[n.id] || '#666');
+  return stops.length ? ['match', ['get', 'n'], ...stops, '#666'] : '#666';
+}
+
+/* "is this feature inside the current scope" — exact node, or a descendant, which needs the
+   trailing dot so `christianity.catholic` does not also match a sibling starting with it. */
+function inScopeExpr() {
+  return ['any',
+    ['==', ['get', 'n'], scope],
+    ['==', ['slice', ['get', 'n'], 0, scope.length + 1], scope + '.']];
+}
+
+function underAny(roots) {
+  return ['any', ...roots.map(h => ['any',
+    ['==', ['get', 'n'], h],
+    ['==', ['slice', ['get', 'n'], 0, h.length + 1], h + '.']])];
+}
+
+/** Layer filter: drop hidden roots, and in focus mode drop everything outside the scope. */
+function layerFilter(scopeToo) {
+  const parts = [];
+  if (!showNone) parts.push(['!', underAny(HIDDEN_ROOTS)]);
+  if (scopeToo && scope) parts.push(inScopeExpr());
+  return parts.length ? ['all', ...parts] : null;
+}
+
+function applyPaint() {
+  if (!map.getLayer('dots')) return;
+  const expr = colorExpr();
+  for (const l of ['dots', 'atomic']) {
+    map.setPaintProperty(l, 'circle-color', expr);
+    map.setPaintProperty(l, 'circle-opacity',
+      scope ? ['case', inScopeExpr(), 0.9, 0.18] : 0.8);
+    map.setFilter(l, layerFilter(false));
+    map.setLayoutProperty(l, 'visibility',
+      (l === 'dots') === merged ? 'visible' : 'none');
+  }
+  map.setPaintProperty('rings', 'circle-stroke-color', expr);
+
+  /* Rings are hidden until you ask for a group — spec §4.3. There are 64,739 of them against
+     141,501 dots, so drawn all at once they out-ink the dots they are meant to sit beside and
+     invert the point of having two symbols.
+
+     This has to be a FILTER, not opacity. A circle at opacity 0 is still hit-tested, so
+     invisible rings were answering hovers meant for visible ones — select Sikhism, mouse over
+     a Sikh ring, and get told "Wesleyan Church". Filtering removes them from the query. */
+  if (scope) {
+    map.setLayoutProperty('rings', 'visibility', 'visible');
+    map.setFilter('rings', layerFilter(true));
+    map.setPaintProperty('rings', 'circle-stroke-opacity', 0.95);
+  } else {
+    map.setLayoutProperty('rings', 'visibility', 'none');
+    map.setFilter('rings', null);
+  }
+}
+
+// ---------------------------------------------------------------- panel
+/* Which branches start expanded. In focus mode the panel IS the legend for the colours on
+   screen, so the scope's own subtree has to be open down to the drawn cut — otherwise you
+   select Baptist and the key for what you are looking at is hidden behind a triangle. */
+function isOpen(id) {
+  const d = id.split('.').length;
+  if (scope) {
+    if (scope === id || scope.startsWith(id + '.')) return true;      // on the path to it
+    if (id.startsWith(scope + '.')) return d < scope.split('.').length + depth;
+    return false;                                                     // outside: collapsed
+  }
+  return d < depth;
+}
+
+function renderTree() {
+  const el = document.getElementById('tree');
+  const html = [];
+
+  const row = (id, level) => {
+    const open = isOpen(id);
+    const n = BY_ID[id], kids = KIDS[id] || [];
+    const c = counts[id] || 0;
+    const isRing = c === 0;
+    const hidden = !showNone && HIDDEN_ROOTS.some(h => id === h || id.startsWith(h + '.'));
+    const mark = isRing
+      ? `<span class="ring" style="border-color:${colorOf[id]}"></span>`
+      : `<span class="dot" style="background:${colorOf[id]}"></span>`;
+    html.push(
+      `<div class="row${scope === id ? ' sel' : ''}" data-id="${id}" `
+      + `style="padding-left:${6 + level * 11}px${hidden ? ';opacity:.4' : ''}" `
+      + `${hidden ? 'title="hidden — see the no religion control below"' : ''}>`
+      + `<span class="tw" data-tw="${id}">${kids.length ? (open ? '▾' : '▸') : ''}</span>`
+      + mark
+      + `<span class="lb" title="${n.label}">${n.label}</span>`
+      + `<span class="ct">${c ? c.toLocaleString() : ''}</span></div>`);
+    if (kids.length) {
+      html.push(`<div class="kids${open ? ' open' : ''}" data-kids="${id}">`);
+      for (const k of kids) row(k, level + 1);
+      html.push('</div>');
+    }
+  };
+
+  for (const r of ROOTS) row(r, 0);
+  el.innerHTML = html.join('');
+
+  el.querySelectorAll('.tw').forEach(t => t.onclick = e => {
+    e.stopPropagation();
+    const box = el.querySelector(`[data-kids="${t.dataset.tw}"]`);
+    if (!box) return;
+    box.classList.toggle('open');
+    t.textContent = box.classList.contains('open') ? '▾' : '▸';
+  });
+  el.querySelectorAll('.row').forEach(r => r.onclick = () => setScope(
+    scope === r.dataset.id ? null : r.dataset.id));
+
+  document.getElementById('scope-label').textContent =
+    scope ? BY_ID[scope].label : 'all religions';
+  document.getElementById('scope-clear').style.display = scope ? '' : 'none';
+}
+
+function setScope(id) { scope = id; recolour(); applyPaint(); renderTree(); }
+
+// ---------------------------------------------------------------- map
+const map = new maplibregl.Map({
+  container: 'map',
+  style: 'https://tiles.openfreemap.org/styles/dark',
+  center: [-96.0, 45.0],
+  zoom: 3.3,
+  minZoom: 2,
+});
+
+map.on('load', async () => {
+  const [tree, tallies] = await Promise.all([
+    fetch('taxonomy/religions.json').then(r => r.json()),
+    fetch('data/processed/counts.json').then(r => r.json()),
+  ]);
+
+  // Counts are precomputed: with tiles the viewer only ever holds the current viewport,
+  // so it cannot total the country by walking features the way the GeoJSON build did.
+  counts = Object.assign({}, tallies.dots);
+  buildTree(tree.nodes);
+  // roll dot counts up the tree so a branch shows its subtree's total
+  for (const n of [...NODES].sort((a, b) => b.id.length - a.id.length)) {
+    const p = parentOf(n.id);
+    if (p && BY_ID[p]) counts[p] = (counts[p] || 0) + (counts[n.id] || 0);
+  }
+  buildTree(tree.nodes);   // re-sort now that counts exist
+
+  map.addSource('tiles', { type: 'vector', url: 'pmtiles://data/processed/religiondots.pmtiles' });
+
+  /* A mark stands for `k` merged dots and its AREA is proportional to k, so radius goes as
+     sqrt(k) — spec §4.2. The base radius is the ancestrydots curve (1.26 per zoom against a
+     doubling scale, i.e. about sqrt of the map scale).
+
+     The cap is the honest part. Merging turns many overlapping small dots into one solid
+     circle, and a circle whose area is the SUM of overlapping dots is bigger than their
+     union — so strict proportionality over-inks the densest cells. Capping at half a merge
+     cell stops a mark spilling over its neighbours. Above the cap the mark has stopped
+     reporting magnitude, exactly as a ring never did: the cell is simply full.
+
+     MapLibre requires the ['zoom'] interpolation to be the OUTERMOST expression of a paint
+     property — nesting it inside ['min'] or ['*'] fails validation and the whole layer is
+     silently dropped. So the per-feature part goes in each interpolation stop's output
+     instead, and the base radius is folded in as a constant per stop. */
+  const K = ['sqrt', ['max', ['get', 'k'], 1]];
+  const CAP = 8;
+  /* The base is set so a k=1 mark is still visible — a lone rural dot must not vanish just
+     because its neighbours merged. That forces the cap to bite around k≈80: the dynamic
+     range at low zoom is k = 1…3,406, which is a radius ratio of 58 and cannot fit in the
+     ~9x a legible dot size allows. Capping the top is the survivable end of that trade;
+     losing the bottom would empty the countryside, which is a claim about where people are. */
+  const stops = [[0, 0.55], [4, 0.85], [6, 0.95], [8, 1.05], [10, 1.3], [12, 2.6], [14, 5]];
+  const radius = ['interpolate', ['exponential', 1.26], ['zoom'],
+    ...stops.flatMap(([z, r]) => [z, ['min', ['*', r, K], CAP]])];
+
+  map.addLayer({
+    id: 'dots', type: 'circle', source: 'tiles', 'source-layer': 'dots',
+    paint: {
+      'circle-color': '#666', 'circle-opacity': 0.8, 'circle-stroke-width': 0,
+      'circle-radius': radius,
+    },
+  });
+  /* The same dots unmerged, for the consolidation toggle. Constant radius: every feature
+     here is exactly one dot, so there is no k to scale by. */
+  map.addLayer({
+    id: 'atomic', type: 'circle', source: 'tiles', 'source-layer': 'atomic',
+    layout: { visibility: 'none' },
+    paint: {
+      'circle-color': '#666', 'circle-opacity': 0.8, 'circle-stroke-width': 0,
+      'circle-radius': ['interpolate', ['exponential', 1.26], ['zoom'],
+        0, 0.5, 4, 0.8, 6, 1.0, 8, 1.4, 10, 2.2, 12, 4.4, 14, 8],
+    },
+  });
+  map.addLayer({
+    id: 'rings', type: 'circle', source: 'tiles', 'source-layer': 'rings',
+    paint: {
+      'circle-color': 'rgba(0,0,0,0)',
+      'circle-stroke-color': '#888',
+      'circle-stroke-width': 1.1,
+      'circle-opacity': 1,
+      'circle-radius': ['interpolate', ['exponential', 1.26], ['zoom'],
+        3, 2.2, 6, 3, 8, 4, 10, 5.5, 12, 8, 14, 12],
+    },
+  });
+
+  recolour(); applyPaint(); renderTree();
+  document.getElementById('dotval').textContent = DOT_VALUE.toLocaleString();
+  document.getElementById('about-dotval').textContent = DOT_VALUE.toLocaleString();
+  document.getElementById('loading').remove();
+
+  const pop = new maplibregl.Popup({ closeButton: false, closeOnClick: false });
+  for (const layer of ['dots', 'atomic', 'rings']) {
+    map.on('mousemove', layer, e => {
+      const p = e.features[0].properties;
+      const node = BY_ID[p.n];
+      const name = node ? node.label : p.n;
+      let tail = '';
+      if (layer === 'rings') {
+        tail = p.why === 'no_count' ? ' · present, no membership count'
+             : ' · present, under ' + DOT_VALUE.toLocaleString();
+      } else if (p.k > 1) {
+        tail = ' · ~' + (p.k * DOT_VALUE).toLocaleString() + ' people here';
+      }
+      pop.setLngLat(e.lngLat).setHTML(name + tail).addTo(map);
+    });
+    map.on('mouseleave', layer, () => pop.remove());
+  }
+});
+
+document.getElementById('scope-clear').onclick = () => setScope(null);
+document.getElementById('merge-btn').onclick = e => {
+  merged = !merged;
+  e.target.textContent = merged ? 'merged' : 'separate';
+  applyPaint();
+};
+document.getElementById('none-btn').onclick = e => {
+  showNone = !showNone;
+  e.target.textContent = showNone ? 'shown' : 'hidden';
+  applyPaint(); renderTree();
+};
+document.getElementById('depth-plus').onclick = () => {
+  depth = Math.min(4, depth + 1); recolour(); applyPaint(); renderTree();
+};
+document.getElementById('depth-minus').onclick = () => {
+  depth = Math.max(1, depth - 1); recolour(); applyPaint(); renderTree();
+};
+document.getElementById('info-btn').onclick = () =>
+  document.getElementById('about').classList.toggle('show');
+document.getElementById('basis-link').onclick = () =>
+  document.getElementById('about').classList.add('show');
+</script>
+</body>
+</html>

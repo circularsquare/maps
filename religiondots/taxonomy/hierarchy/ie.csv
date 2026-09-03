@@ -1,0 +1,39 @@
+source_category,parent,note
+# CSO publishes 24 religion categories at county (PxStat FY106) and 4 at Small Area (SAPS
+# T2_4), with no table joining them (spec §3.9). This is that join, verified by arithmetic:
+# all four groups reconcile to +0 against the SAPS totals, so a mis-assignment would show.
+#
+#   Catholic         3,540,412  = Roman Catholic alone
+#   No religion        755,455  = No religion alone
+#   Not stated         345,165  = Not stated alone
+#   Other religion     508,107  = the 21 rows below
+#
+# The grouping is the CSO's. Note what "Other religion" contains: Atheist and Agnostic are
+# in it, NOT in "No religion", and so is Lapsed (Roman) Catholic. That is counterintuitive
+# enough that it was checked rather than assumed — the sums confirm it exactly. It matters
+# for this project because "Other religion" at Small Area is therefore not a religious
+# category at all in ~7,000 of its members; it is a mixed bucket.
+Roman Catholic,Catholic,
+No religion,No religion,
+Not stated,Not stated,
+Agnostic,Other religion,CSO files this under Other religion
+Atheist,Other religion,CSO files this under Other religion
+Lapsed (Roman) Catholic,Other religion,CSO files this under Other religion
+Apostolic or Pentecostal,Other religion,
+Baptist,Other religion,
+Born Again Christian,Other religion,
+Buddhist,Other religion,
+Christian (Not Specified),Other religion,
+"Church of Ireland, England, Anglican, Episcopalian",Other religion,
+Evangelical,Other religion,
+Hindu,Other religion,
+Islam,Other religion,
+Jehovah's Witness,Other religion,
+Lutheran,Other religion,
+"Methodist, Wesleyan",Other religion,
+"Orthodox (Greek, Coptic, Russian)",Other religion,
+Other stated religion (nec),Other religion,
+"Pagan, Pantheist",Other religion,
+Presbyterian,Other religion,
+Protestant,Other religion,
+Spiritualist,Other religion,

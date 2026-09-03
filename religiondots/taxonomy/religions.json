@@ -16,6 +16,12 @@
       "kind": "branch"
     },
     {
+      "id": "christianity.catholic.eastern",
+      "label": "Eastern Catholic",
+      "kind": "branch",
+      "note": "The 23 sui iuris churches in communion with Rome — Ukrainian Greek, Maronite, Chaldean, Melkite, Syro-Malabar. Added 2026-08-27 when Canada arrived: ASARB has no category for them, StatCan enumerates nine. Distinct from independent Catholic bodies, which are NOT in communion, and from Eastern Orthodoxy, which is a different communion again."
+    },
+    {
       "id": "christianity.catholic.independent",
       "label": "Independent Catholic",
       "kind": "branch",
@@ -397,7 +403,42 @@
       "id": "secular",
       "label": "Secular and ethical",
       "kind": "branch",
-      "note": "Organised non-theistic congregational bodies — Ethical Culture. Distinct from the unaffiliated residual, who are not members of anything."
+      "note": "Organised non-theistic bodies and stated secular positions — Ethical Culture, and Canada's Atheist / Agnostic / Humanist answers. Distinct from `unaffiliated`, which is the absence of an answer rather than a position."
+    },
+    {
+      "id": "unaffiliated",
+      "label": "No religion",
+      "kind": "branch",
+      "note": "People who report no religion. NOT the same quantity as the US residual, which is 'absent from every membership roll' — see spec §3.1 on the basis clash at the border. Held as a real node because Canada, Australia, NZ, Ireland and the UK all measure it directly and it is the largest single answer in several of them."
+    },
+    {
+      "id": "paganism",
+      "label": "Pagan and nature religions",
+      "kind": "branch",
+      "note": "Wicca, Neopaganism, Druidry, nature religions. StatCan groups these explicitly; the ABS buries them inside Other Religious Groups (§3.9)."
+    },
+    {
+      "id": "chinesefolk",
+      "label": "Chinese religions",
+      "kind": "branch",
+      "note": "Chinese folk religion, Confucianism and the syncretic practice that census categories usually cannot separate — the §3.3 combination node for China's own tradition. Daoism is a sibling top-level family rather than a child, because sources enumerate it separately where they enumerate anything at all."
+    },
+    {
+      "id": "indigenous",
+      "label": "Indigenous and traditional religions",
+      "kind": "branch",
+      "note": "Traditional religions of indigenous peoples, kept as one family with regional children rather than scattered, because sources report them that way."
+    },
+    {
+      "id": "indigenous.northamerican",
+      "label": "North American Indigenous spirituality",
+      "kind": "branch"
+    },
+    {
+      "id": "druze",
+      "label": "Druze",
+      "kind": "branch",
+      "note": "Its own family. Sometimes filed under Islam by sources and by convention; the Druze themselves generally do not accept that placement, and StatCan lists it separately."
     },
     {
       "id": "buddhism.mahayana",
