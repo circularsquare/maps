@@ -340,7 +340,11 @@ maplibregl.addProtocol('pmtiles', new pmtiles.Protocol().tile);
 let DOT_VALUE = 1000;
 let EDITIONS = [''];                       // '' = 1:1,000, '10k' = 1:10,000
 const lp = () => (DOT_VALUE === 10000 ? '10k' : '');
-const dotLayerIds = () => EDITIONS.flatMap(s => ['dots' + s, 'atomic' + s]);
+/* Only the MERGED layers are vector tiles now. The unmerged dots left the archive in §4.2d and
+   are drawn by SCATTER from a flat buffer, so `atomic` is no longer a MapLibre layer and the
+   merged/separate toggle switches between a tile layer and a custom one rather than between
+   two tile layers. */
+const dotLayerIds = () => EDITIONS.map(s => 'dots' + s);
 const ringLayerIds = () => EDITIONS.map(s => 'rings' + s);
 /* Just the CURRENT edition's layers. Painting is per-feature over every loaded tile, so it
    costs the same on a hidden layer as a visible one — the whole point of
@@ -349,8 +353,8 @@ const ringLayerIds = () => EDITIONS.map(s => 'rings' + s);
    nobody is touching at the time. The two edition layers ARE both painted, so switching
    merged/separate stays instant; the other edition is brought up to date when it is switched
    to, which already does a full rebuild. */
-const edDotIds = () => ['dots' + lp(), 'atomic' + lp()];
-const activeDotLayer = () => (merged ? 'dots' : 'atomic') + lp();
+const edDotIds = () => ['dots' + lp()];
+const activeDotLayer = () => 'dots' + lp();
 const activeRingLayer = () => 'rings' + lp();
 
 /* The legend counts in people, not in dots. It used to print the dot count, which is the
@@ -604,6 +608,7 @@ const ROOT_ORDER = [
   'buddhism',
   'secular',           // Secular and ethical
   'unchurched',        // Believing, no church
+  'unrecorded',        // Religion not recorded — register sources only (Germany)
   'other',             // Other, by source
 ];
 const ROOT_RANK = {};
@@ -859,6 +864,31 @@ const ROOT_HSL = {
      one spectrum — reading "secular" as "no religion" is a small error where reading either
      as Islam is not. Every member clears dE 27.7 from the nearest religion, which is the
      threshold that actually matters. */
+  /* ADDED 2026-09-04 with Germany, and it is a SIXTH member of this family. `unrecorded`
+     is the residual of a source that reads religion off an administrative register
+     instead of asking: Germany's "Sonstige, keine, ohne Angabe", 42.8M people, 51.8% of
+     the country. Nobody was asked, so it is not `unaffiliated`; the source named nothing,
+     so it is not `other`. See branches.py.
+
+     It takes `other`'s hue — 228, the one that says nothing — at the ramp's DARKEST
+     lightness, and both halves of that are the rules above applied rather than bent. The
+     ordering principle is how much religion is being reported, and this reports less than
+     any of the five: not even "no religion". The prominence rule points the same way, and
+     harder, because at 42.8M it is the largest node in any one country on the map and a
+     pale mass that size would drown the Catholic/Protestant signal that is the only real
+     information Germany carries.
+
+     Measured with tools/check_palette.py before it was written down: dE 21.1 to
+     `unaffiliated`, its nearest neighbour here, which is WIDER than this family's existing
+     tightest pair (secular/other, 19.9), so a sixth member does not squeeze the ramp. dE
+     51.1 to the nearest religion, against the 27.7 the other five manage. Contrast 2.70,
+     below the 2.9 floor and in DIM_ON_PURPOSE for the same reason `unaffiliated` is.
+
+     NOT GREEN, and the search wanted green: hsl(120,30,43) scores dE 41.8 inside the
+     family, twice this. It was rejected on meaning rather than measurement — Islam is at
+     hue 138, and colouring the one bucket that hides Germany's Muslims a muted green
+     would be the worst available accident (spec §14.2). */
+  unrecorded:            [228,  10, 37],
   unaffiliated:          [234,  26, 41],
   parody:                [ 32,  14, 46],
   secular:               [200,  30, 50],
@@ -1452,13 +1482,18 @@ function copyOverrides() {
 function applyColors(liveOnly) {
   if (!map.getLayer('dots')) return;
   const expr = colorExpr();
-  /* `dots` and `atomic` are the merged and unmerged versions of the same marks and exactly
-     one of them is ever visible (§4.2b); rings are usually off. Setting the property on a
-     hidden layer costs the same re-evaluation as setting it on a visible one, so a live drag
-     pays three times over for two layers nobody is looking at. It touches all three when the
-     drag ends, so whichever layer is switched to next is already right. */
-  for (const l of liveOnly ? [activeDotLayer()] : edDotIds())
-    map.setPaintProperty(l, 'circle-color', expr);
+  /* `dots` is the merged edition's tile layer and is only visible when consolidation is on
+     (§4.2b); rings are usually off. Setting a paint property on a hidden layer costs the same
+     per-feature re-evaluation as setting it on a visible one, so a live drag skips both unless
+     they are the thing on screen, and picks them up when the drag ends. */
+  /* The unmerged dots are a palette-texture write, measured at 0.006ms, so a live drag can
+     have them unconditionally — this is the path `pumpPaint` was built to ration and it no
+     longer needs rationing. What still does is the merged tile layer, whose `circle-color` is
+     re-evaluated per feature; it is only touched when it is the layer on screen. */
+  SCATTER.setPalette();
+  if (merged || !liveOnly)
+    for (const l of liveOnly ? [activeDotLayer()] : edDotIds())
+      map.setPaintProperty(l, 'circle-color', expr);
   if (!liveOnly || showRings)
     map.setPaintProperty(activeRingLayer(), 'circle-stroke-color', expr);
 }
@@ -1467,10 +1502,13 @@ function applyPaint() {
   if (!map.getLayer('dots')) return;
   const expr = colorExpr();
   const live = activeDotLayer();
-  // Visibility on ALL of them (a layout property, no per-feature work); paint and filter on
-  // the current edition's two only — see edDotIds().
+  /* Visibility on ALL of them (a layout property, no per-feature work). The merged layers are
+     shown only when consolidation is ON: `separate` is now SCATTER's job, and the two must
+     never both draw or every dot would be painted twice, once as itself and once inside a
+     merged mark. */
   for (const l of dotLayerIds())
-    map.setLayoutProperty(l, 'visibility', l === live ? 'visible' : 'none');
+    map.setLayoutProperty(l, 'visibility', (merged && l === live) ? 'visible' : 'none');
+  SCATTER.setPalette();                 // colour AND visibility for the unmerged dots
   for (const l of edDotIds()) {
     map.setPaintProperty(l, 'circle-color', expr);
     /* Out of scope is REMOVED, not dimmed. §6 said "everything outside the selection drops
@@ -1577,7 +1615,13 @@ function renderTree() {
       + `${hidden ? 'title="hidden — click the swatch to bring it back"' : ''}>`
       + `<span class="tw" data-tw="${id}">${kids.length ? (open ? '▾' : '▸') : ''}</span>`
       + mark
-      + `<span class="lb" title="${esc(n.label)}">${esc(n.label)}</span>`
+      /* The tooltip is the label, EXCEPT where the label alone would mislead — then it is
+         branches.py's PUBLIC_NOTE. `.lb` is nowrap+ellipsis, so a label long enough to carry
+         a caveat is one that gets cut off mid-caveat; the caveat has to live here instead.
+         `unrecorded` is the case that forced it: "Religion not recorded" is 43m Germans, and
+         a reader who stops at the label concludes they are irreligious, when the category
+         also holds every Muslim, Orthodox Christian and Jew in the country. */
+      + `<span class="lb" title="${esc(n.public_note || n.label)}">${esc(n.label)}</span>`
       + `<span class="ct" title="${c ? popTitle(c) : ''}">${c ? fmtPop(c * DOT_VALUE) : ''}</span></div>`);
     if (kids.length) {
       html.push(`<div class="kids${open ? ' open' : ''}" data-kids="${id}">`);
@@ -2122,19 +2166,476 @@ function radiusFlat(stops, eg = 1) {
   return ['interpolate', ['exponential', 1.26], ['zoom'],
     ...stops.flatMap(([z, r]) => [z, r * dotScale * DOT_GAIN * eg])];
 }
+/* The same curve evaluated on the CPU, for the scatter layer — where the radius is one
+   uniform for two million dots rather than a per-feature expression, so there is nothing for
+   MapLibre to interpolate and the interpolation has to happen here. Kept beside radiusFlat so
+   the two cannot drift: same stops, same base, same gains. */
+function radiusFlatAt(stops, z, eg = 1) {
+  const g = dotScale * DOT_GAIN * eg;
+  if (z <= stops[0][0]) return stops[0][1] * g;
+  if (z >= stops[stops.length - 1][0]) return stops[stops.length - 1][1] * g;
+  for (let i = 0; i < stops.length - 1; i++) {
+    const [z0, r0] = stops[i], [z1, r1] = stops[i + 1];
+    if (z >= z0 && z <= z1) {
+      const t = (Math.pow(1.26, z - z0) - 1) / (Math.pow(1.26, z1 - z0) - 1);
+      return (r0 + (r1 - r0) * t) * g;
+    }
+  }
+}
 function applySizes() {
   document.getElementById('dot-size-val').textContent = dotScale.toFixed(1) + '\u00d7';
   if (!map.getLayer('dots')) return;
   for (const e of EDITIONS) {
     const g = edGain(e);
     map.setPaintProperty('dots' + e, 'circle-radius', radiusMerged(g));
-    map.setPaintProperty('atomic' + e, 'circle-radius', radiusFlat(ATOMIC_STOPS, g));
     map.setPaintProperty('rings' + e, 'circle-radius', radiusFlat(RING_STOPS, g));
     // a ring drawn large with a hairline stroke reads as a smudge; thicken it sublinearly
     map.setPaintProperty('rings' + e, 'circle-stroke-width',
       Math.max(0.6, 1.1 * Math.sqrt(dotScale)));
   }
+  // the scatter reads its radius per frame from radiusFlatAt, so it only needs waking
+  map.triggerRepaint();
 }
+
+// ---------------------------------------------------------------- the scatter layer (§4.2d)
+/* The unmerged dots are NOT vector tiles. They are one flat binary buffer per country per
+   edition, written by buffers.py, drawn by a MapLibre custom layer in a single instanced call.
+   spec §4.2d has the argument; the short form is that a tile pyramid is for data that thins as
+   you zoom out, and §4.2 forbids this data from thinning, so tiling bought an 11x duplication
+   and MapLibre's per-feature cost and nothing else.
+
+   What that per-feature cost was, measured: a colour change re-evaluated an expression over
+   every dot in every loaded tile (>120ms, hence `pumpPaint`), and a FILTER change — every
+   country switch, every scope change — reparsed every loaded tile in the worker, seconds at a
+   time. Here a colour change is a 512-texel upload and a filter change is the same texel's
+   alpha. Both measured at 0.006ms.
+
+   The palette texture is the whole trick: the buffer stores a node INDEX, the texture maps
+   index -> colour and visibility, and everything the legend does to the map is a write to it. */
+const SCATTER = {
+  id: 'scatter', type: 'custom', renderingMode: '2d',
+  data: { fine: {}, '10k': {} },      // edition -> cc -> {n, x, y, nid, buckets, pos, ni}
+  nodes: [], index: {},               // buffer node index <-> taxonomy id
+  paletteN: 0, palette: null, ready: false, dirty: true,
+
+  // ---- geometry: instanced quads, not GL_POINTS.
+  /* GL_POINTS looks like the obvious fit and is a trap twice over. ALIASED_POINT_SIZE_RANGE
+     maxes at 1024 on desktop ANGLE but 63-64 on Mali and Adreno, and this map's worst case is
+     8px x 1.3 DOT_GAIN x 3 slider x 2.5 COARSE_GAIN x 2 DPR = 156 device px. Worse, GLES culls
+     a point whose CENTRE leaves the clip volume, so large dots pop out at the screen edges. */
+  VERT: `
+precision highp float;
+attribute vec2 a_corner;
+attribute float a_xlo, a_xhi, a_ylo, a_yhi, a_ni;
+uniform mat4 u_matrix;
+uniform vec2 u_origin_hi, u_origin_lo, u_pxsize;
+uniform float u_radius, u_palette_n;
+uniform sampler2D u_palette;
+varying vec2 v_corner;
+varying vec4 v_color;
+void main() {
+  /* PRECISION. The origin is subtracted in exact integer arithmetic BEFORE anything is
+     scaled, so only a small local difference ever reaches a float32 multiply. Writing this
+     the obvious way — absolute mercator to float32, let the matrix scale it — measures
+     0.73px of error at z14, 9.7px at z18 and 133px at z22. This form measures 0.0000px at
+     every zoom to 22. The origin must be snapped to a whole uint32 unit (~1cm), not to some
+     coarser grid, or the residual it exists to cancel comes back scaled. */
+  float dx = (a_xhi - u_origin_hi.x) * 65536.0 + (a_xlo - u_origin_lo.x);
+  float dy = (a_yhi - u_origin_hi.y) * 65536.0 + (a_ylo - u_origin_lo.y);
+  vec4 pal = texture2D(u_palette, vec2((mod(a_ni, 16384.0) + 0.5) / u_palette_n, 0.5));
+  v_color = pal;
+  vec4 pos = u_matrix * vec4(vec2(dx, dy) / 4294967296.0, 0.0, 1.0);
+  /* Hidden is a DEGENERATE QUAD, not opacity. §6 settled that out-of-scope must be removed
+     rather than dimmed — a dimmed dot still takes its turn in the draw order and half of them
+     land on top of the selection. Zero size is removal, and it costs no fragments. */
+  gl_Position = pos + vec4(a_corner * u_pxsize * (pal.a > 0.5 ? u_radius : 0.0) * pos.w,
+                           0.0, 0.0);
+  v_corner = a_corner;
+}`,
+  /* MapLibre's translucent pass blends ONE / ONE_MINUS_SRC_ALPHA, i.e. it wants PREMULTIPLIED
+     colour. Emitting straight alpha here washes every dot out over the basemap. */
+  FRAG: `
+precision highp float;
+varying vec2 v_corner;
+varying vec4 v_color;
+uniform float u_radius, u_alpha;
+void main() {
+  float d = length(v_corner) * u_radius;
+  /* The antialiasing band must be min(1, r) wide, not a fixed pixel. At a fixed 1px the band
+     swallows the whole dot once the radius drops under 1 — at z0, r = 0.65px, the CENTRE of
+     every dot came out at alpha 0.50 instead of 0.70, so the entire low-zoom map was ~28%
+     lighter than the tile layer it replaced. Small dots should lose area, not opacity. */
+  float aa = min(1.0, u_radius);
+  float a = (1.0 - smoothstep(u_radius - aa, u_radius, d)) * u_alpha;
+  if (a <= 0.0) discard;
+  gl_FragColor = vec4(v_color.rgb * a, a);
+}`,
+
+  onAdd(m, gl) {
+    this.map = m;
+    this.webgl2 = typeof WebGL2RenderingContext !== 'undefined'
+                  && gl instanceof WebGL2RenderingContext;
+    this.ext = this.webgl2 ? null : gl.getExtension('ANGLE_instanced_arrays');
+    /* No instancing at all is the one context this layer cannot draw in. Rather than throw
+       once a frame forever, fall back to the merged tile layer — which needs nothing special
+       and is a real view of the same data (§4.2b), not an error state. */
+    if (!this.webgl2 && !this.ext) {
+      console.warn('no instancing available — falling back to merged marks');
+      this.unsupported = true;
+      merged = true;
+      if (typeof applyPaint === 'function') applyPaint();
+      return;
+    }
+    const sh = (t, s) => {
+      const o = gl.createShader(t);
+      gl.shaderSource(o, s); gl.compileShader(o);
+      if (!gl.getShaderParameter(o, gl.COMPILE_STATUS))
+        console.error('scatter shader:', gl.getShaderInfoLog(o));
+      return o;
+    };
+    const p = gl.createProgram();
+    gl.attachShader(p, sh(gl.VERTEX_SHADER, this.VERT));
+    gl.attachShader(p, sh(gl.FRAGMENT_SHADER, this.FRAG));
+    gl.linkProgram(p);
+    if (!gl.getProgramParameter(p, gl.LINK_STATUS))
+      console.error('scatter link:', gl.getProgramInfoLog(p));
+    this.p = p;
+    this.loc = {};
+    for (const k of ['a_corner', 'a_xlo', 'a_xhi', 'a_ylo', 'a_yhi', 'a_ni'])
+      this.loc[k] = gl.getAttribLocation(p, k);
+    for (const k of ['u_matrix', 'u_origin_hi', 'u_origin_lo', 'u_pxsize', 'u_radius',
+                     'u_palette', 'u_palette_n', 'u_alpha'])
+      this.loc[k] = gl.getUniformLocation(p, k);
+    this.quad = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.quad);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW);
+    this.tex = gl.createTexture();
+    this.gl = gl;
+    // anything loaded before the layer was added still needs its buffers on the GPU
+    for (const ed of ['fine', '10k'])
+      for (const cc in this.data[ed]) this.upload(gl, this.data[ed][cc]);
+    if (this.palette) this.uploadPalette(gl);
+  },
+
+  /* Kept so a lost context can be restored from the typed arrays we already hold — 24 MB of
+     CPU memory against a refetch of the whole dataset. */
+  onRemove(m, gl) { this.ready = false; },
+
+  upload(gl, d) {
+    if (!gl || d.glPos) return;
+    d.glPos = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, d.glPos);
+    gl.bufferData(gl.ARRAY_BUFFER, d.pos, gl.STATIC_DRAW);
+    d.glNi = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, d.glNi);
+    gl.bufferData(gl.ARRAY_BUFFER, d.ni, gl.STATIC_DRAW);
+  },
+
+  uploadPalette(gl) {
+    if (!gl || !this.palette) return;
+    gl.bindTexture(gl.TEXTURE_2D, this.tex);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this.paletteN, 1, 0, gl.RGBA,
+                  gl.UNSIGNED_BYTE, this.palette);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  },
+
+  /** Which edition is on screen: the finest one that is loaded and not finer than asked for. */
+  edition() {
+    if (DOT_VALUE === 10000) return '10k';
+    return Object.keys(this.data.fine).length ? 'fine' : '10k';
+  },
+
+  /** Countries to draw: the selected one, or every one we have. */
+  active() {
+    const d = this.data[this.edition()];
+    return country ? (d[country] ? [d[country]] : []) : Object.values(d);
+  },
+
+  render(gl, matrix) {
+    if (this.unsupported || !this.p || !this.palette) return;
+    const tr = this.map.transform;
+    const dpr = window.devicePixelRatio || 1;
+
+    /* Fold a local origin into the matrix in float64 on the CPU, then downcast once. The
+       matrix MapLibre hands a custom layer on 4.7.1 is a plain Array, so it arrives at full
+       precision and this cancellation is exact. */
+    const oxu = Math.round(mercXn(tr.center.lng) * U32);
+    const oyu = Math.round(mercYn(tr.center.lat) * U32);
+    const ox = oxu / U32, oy = oyu / U32;
+    const m = Array.from(matrix), out = m.slice();
+    for (let i = 0; i < 4; i++) out[12 + i] = m[i] * ox + m[4 + i] * oy + m[12 + i];
+    const hi = [Math.floor(oxu / 65536), Math.floor(oyu / 65536)];
+    const lo = [oxu - hi[0] * 65536, oyu - hi[1] * 65536];
+
+    gl.useProgram(this.p);
+    gl.uniformMatrix4fv(this.loc.u_matrix, false, new Float32Array(out));
+    gl.uniform2f(this.loc.u_origin_hi, hi[0], hi[1]);
+    gl.uniform2f(this.loc.u_origin_lo, lo[0], lo[1]);
+    gl.uniform2f(this.loc.u_pxsize, 2 / gl.drawingBufferWidth, 2 / gl.drawingBufferHeight);
+    gl.uniform1f(this.loc.u_radius, this.radiusPx() * dpr);
+    gl.uniform1f(this.loc.u_alpha, DOT_ALPHA);
+    gl.uniform1f(this.loc.u_palette_n, this.paletteN);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, this.tex);
+    gl.uniform1i(this.loc.u_palette, 0);
+
+    /* Every piece of state we rely on, every frame. setCustomLayerDefaults() only resets
+       VAO/cullFace/activeTexture/pixelStore and MapLibre's Context caches the rest, so
+       anything changed behind its back leaks into the basemap on the next frame. */
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+    gl.disable(gl.DEPTH_TEST);
+    gl.depthMask(false);
+    gl.disable(gl.CULL_FACE);
+
+    const div = (i, d) => this.webgl2 ? gl.vertexAttribDivisor(i, d)
+                                      : this.ext.vertexAttribDivisorANGLE(i, d);
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.quad);
+    gl.enableVertexAttribArray(this.loc.a_corner);
+    gl.vertexAttribPointer(this.loc.a_corner, 2, gl.FLOAT, false, 0, 0);
+    div(this.loc.a_corner, 0);
+    for (const k of ['a_xlo', 'a_xhi', 'a_ylo', 'a_yhi', 'a_ni']) {
+      gl.enableVertexAttribArray(this.loc[k]);
+      div(this.loc[k], 1);
+    }
+
+    const b = this.viewBounds();
+    let drawn = 0;
+    for (const d of this.active()) {
+      if (!d.glPos) this.upload(gl, d);
+      /* WebGL has no baseInstance, so a draw call always starts at instance 0 and the only way
+         to start partway in is to re-point the attributes. Consecutive visible buckets are
+         merged into runs first: at continental zoom that is one call for a whole country. */
+      const runs = [];
+      for (const bk of d.buckets) {
+        if (bk[2] < b[0] || bk[0] > b[2] || bk[3] < b[1] || bk[1] > b[3]) continue;
+        const last = runs[runs.length - 1];
+        if (last && last[0] + last[1] === bk[4]) last[1] += bk[5];
+        else runs.push([bk[4], bk[5]]);
+      }
+      if (!runs.length) continue;
+      const n = d.n;
+      for (const [start, count] of runs) {
+        gl.bindBuffer(gl.ARRAY_BUFFER, d.glPos);
+        gl.vertexAttribPointer(this.loc.a_xlo, 1, gl.UNSIGNED_SHORT, false, 4, 4 * start);
+        gl.vertexAttribPointer(this.loc.a_xhi, 1, gl.UNSIGNED_SHORT, false, 4, 4 * start + 2);
+        gl.vertexAttribPointer(this.loc.a_ylo, 1, gl.UNSIGNED_SHORT, false, 4, 4 * (n + start));
+        gl.vertexAttribPointer(this.loc.a_yhi, 1, gl.UNSIGNED_SHORT, false, 4, 4 * (n + start) + 2);
+        gl.bindBuffer(gl.ARRAY_BUFFER, d.glNi);
+        gl.vertexAttribPointer(this.loc.a_ni, 1, gl.UNSIGNED_SHORT, false, 2, 2 * start);
+        if (this.webgl2) gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, count);
+        else this.ext.drawArraysInstancedANGLE(gl.TRIANGLE_STRIP, 0, 4, count);
+        drawn += count;
+      }
+    }
+    this.drawn = drawn;
+  },
+
+  radiusPx() {
+    return radiusFlatAt(ATOMIC_STOPS, this.map ? this.map.getZoom() : 4,
+                        this.edition() === '10k' ? COARSE_GAIN : 1);
+  },
+
+  /* Bounds in UINT32 units, padded by a few PIXELS' worth. A pad expressed as a fraction of
+     the world is ~800km at every zoom, which makes most of a country falsely intersect a
+     street-level view — it was the difference between 433,837 dots submitted for one Mumbai
+     junction and 12,288. */
+  viewBounds() {
+    const bb = this.map.getBounds();
+    const perPx = U32 / (512 * Math.pow(2, this.map.getZoom()));
+    const pad = (this.radiusPx() + 2) * perPx;
+    const ya = mercYn(bb.getNorth()) * U32, yb = mercYn(bb.getSouth()) * U32;
+    return [mercXn(bb.getWest()) * U32 - pad, Math.min(ya, yb) - pad,
+            mercXn(bb.getEast()) * U32 + pad, Math.max(ya, yb) + pad];
+  },
+};
+
+const U32 = 4294967296;
+const mercXn = (lng) => (lng + 180) / 360;
+const mercYn = (lat) => {
+  const s = Math.sin(lat * Math.PI / 180);
+  return 0.5 - Math.log((1 + s) / (1 - s)) / (4 * Math.PI);
+};
+
+/* Load the buffers. The COARSE edition comes first and complete: 2.25 MB paints every country
+   at 1:10,000 immediately, and §4.1b makes that an authored edition with its own tallies and
+   its own rings rather than an approximation of the fine one — so the first thing on screen is
+   a whole honest map, not a partial one. The fine edition arrives behind it and only replaces
+   the coarse WHOLESALE, never country by country: drawing the US at 1:10,000 beside India at
+   1:1,000 would put two different dot values in one view, which §4.1 does not allow. */
+SCATTER.loadAll = async function () {
+  const man = await fetch('data/buffers/manifest.json').then(r => r.json()).catch(() => null);
+  if (!man) { console.warn('no data/buffers/manifest.json — run buffers.py'); return; }
+  this.nodes = man.nodes;
+  this.index = {};
+  man.nodes.forEach((id, i) => { this.index[id] = i; });
+  this.paletteN = 1 << Math.ceil(Math.log2(Math.max(2, man.nodes.length)));
+  this.palette = new Uint8Array(this.paletteN * 4);
+
+  const one = async (edKey, cc, ent) => {
+    const buf = await fetch('data/buffers/' + ent.file).then(r => r.arrayBuffer());
+    const n = ent.dots;
+    const d = {
+      cc, n, buckets: ent.buckets,
+      pos: new Uint8Array(buf, 0, 8 * n),
+      ni: new Uint8Array(buf, 8 * n, 2 * n),
+      // kept on the CPU for picking, and to restore the GPU buffers after a context loss
+      x: new Uint32Array(buf, 0, n),
+      y: new Uint32Array(buf, 4 * n, n),
+      nid: new Uint16Array(buf, 8 * n, n),
+    };
+    this.data[edKey][cc] = d;
+    this.upload(this.gl, d);
+  };
+
+  const eds = man.editions || {};
+  if (eds['10k']) {
+    await Promise.all(Object.entries(eds['10k'].countries).map(([cc, e]) => one('10k', cc, e)));
+    this.ready = true;
+    if (typeof recolour === 'function') { recolour(); applyPaint(); }
+    map.triggerRepaint();
+  }
+  if (eds.fine) {
+    /* Staged, then committed together. A country whose fetch fails is simply left out rather
+       than taking the whole edition down with it — the coarse edition is already on screen and
+       stays there, which is a complete map, so a failure degrades to a coarser map instead of
+       to no dots. `allSettled` and not `all` for exactly that reason. */
+    const stage = {};
+    const got = await Promise.allSettled(Object.entries(eds.fine.countries).map(
+      async ([cc, e]) => {
+        const buf = await fetch('data/buffers/' + e.file).then(r => {
+          if (!r.ok) throw new Error(r.status + ' ' + e.file);
+          return r.arrayBuffer();
+        });
+        stage[cc] = { e, buf };
+      }));
+    const failed = got.filter(g => g.status === 'rejected');
+    if (failed.length) {
+      console.warn('scatter: ' + failed.length + ' fine buffer(s) failed, staying coarse for '
+                   + 'those countries', failed.map(f => String(f.reason)));
+      return;                 // partial fine + partial coarse would mix dot values (§4.1)
+    }
+    for (const cc in stage) {
+      const { e, buf } = stage[cc], n = e.dots;
+      const d = { cc, n, buckets: e.buckets,
+        pos: new Uint8Array(buf, 0, 8 * n), ni: new Uint8Array(buf, 8 * n, 2 * n),
+        x: new Uint32Array(buf, 0, n), y: new Uint32Array(buf, 4 * n, n),
+        nid: new Uint16Array(buf, 8 * n, n) };
+      this.data.fine[cc] = d;
+      this.upload(this.gl, d);
+    }
+    this.ready = true;
+    if (typeof recolour === 'function') { recolour(); applyPaint(); }
+    map.triggerRepaint();
+  }
+};
+
+/* The palette texture. RGB is the colour the legend shows; A is whether the dot is drawn at
+   all — hidden nodes and everything outside the current scope go to zero and the vertex shader
+   collapses their quads. This one array is therefore what used to be `circle-color` AND
+   `setFilter`, and writing it costs 0.006ms against the filter's multi-second tile reparse. */
+SCATTER.setPalette = function () {
+  if (!this.palette) return;
+  const inScope = scope ? new Set(subtree(scope)) : null;
+  for (let i = 0; i < this.paletteN; i++) {
+    const id = this.nodes[i];
+    let r = 0x66, g = 0x66, b = 0x66, vis = 0;
+    if (id) {
+      const hex = hslToHex(colorOf[id] || '#666');
+      r = parseInt(hex.slice(1, 3), 16);
+      g = parseInt(hex.slice(3, 5), 16);
+      b = parseInt(hex.slice(5, 7), 16);
+      vis = (!isHidden(id) && (!inScope || inScope.has(id))) ? 255 : 0;
+    }
+    this.palette[i * 4] = r; this.palette[i * 4 + 1] = g;
+    this.palette[i * 4 + 2] = b; this.palette[i * 4 + 3] = vis;
+  }
+  this.uploadPalette(this.gl);
+  if (this.map) this.map.triggerRepaint();
+};
+
+/* Picking. §4.2c makes the dot you can SEE at a pixel the LAST one drawn that covers it, so
+   nearest-centre names a different dot — and `queryRenderedFeatures`'s `features[0]` is the
+   FIRST in tile order, which is a third one again. Since draw order here is buffer order, the
+   visible dot is simply the highest index among those whose disc covers the cursor. A uniform
+   grid makes the candidates cheap; comparing in uint32 rather than calling map.project per
+   candidate is what takes a hover from 4.7ms to 0.03ms. */
+/* The pick index is TWO TYPED ARRAYS, not a Map of Arrays.
+
+   The obvious Map<cell, number[]> cost 76.8 MB of heap for one hover across sixteen countries
+   — 816,858 cells, each a JS Array with its own object header — and tripled the page's memory
+   the first time the mouse moved. This is the same information in `keys` (the cell of each dot,
+   sorted) and `order` (the dot indices in that order): 8 bytes a dot, ~17 MB for everything,
+   and a binary search instead of a hash lookup. */
+const PICK_CELLS = 16384;
+const PICK_SHIFT = 32 - 14;                 // log2(PICK_CELLS) = 14
+const cellOf = (x, y) => (y >>> PICK_SHIFT) * PICK_CELLS + (x >>> PICK_SHIFT);
+
+SCATTER.grid = function (d) {
+  if (d.grid) return d.grid;
+  const n = d.n;
+  const keys = new Uint32Array(n);
+  for (let i = 0; i < n; i++) keys[i] = cellOf(d.x[i], d.y[i]);
+  const order = new Uint32Array(n);
+  for (let i = 0; i < n; i++) order[i] = i;
+  // sort indices by cell; Array.prototype.sort on a typed array of indices needs a comparator,
+  // so go through a plain index sort once and write the result back into typed storage
+  const idx = Array.from(order);
+  idx.sort((a, b) => keys[a] - keys[b]);
+  const sortedKeys = new Uint32Array(n);
+  for (let i = 0; i < n; i++) { order[i] = idx[i]; sortedKeys[i] = keys[idx[i]]; }
+  return (d.grid = { keys: sortedKeys, order });
+};
+
+/** First position in `keys` holding `k` (or where it would go). */
+function lowerBound(keys, k) {
+  let lo = 0, hi = keys.length;
+  while (lo < hi) {
+    const mid = (lo + hi) >> 1;
+    if (keys[mid] < k) lo = mid + 1; else hi = mid;
+  }
+  return lo;
+}
+SCATTER.pick = function (point) {
+  if (!this.ready || !this.palette) return null;
+  const r = this.radiusPx();
+  const c0 = map.unproject([point.x, point.y]), c1 = map.unproject([point.x + r, point.y]);
+  const mx = mercXn(c0.lng) * U32, my = mercYn(c0.lat) * U32;
+  const rad = Math.abs(mercXn(c1.lng) * U32 - mx), rad2 = rad * rad;
+  const cell = U32 / PICK_CELLS;
+  const span = Math.max(1, Math.ceil(rad / cell));
+  const cx0 = Math.floor(mx / cell), cy0 = Math.floor(my / cell);
+  let best = null, bestI = -1;
+  for (const d of this.active()) {
+    /* Skip a country the cursor is nowhere near BEFORE building its index. Without this, one
+       hover in the all-countries view builds all sixteen — the cost is not the lookup, it is
+       that the index exists at all, and India's is by far the largest. */
+    const bb = META[d.cc] && META[d.cc].bbox;
+    if (bb) {
+      const pad = rad / U32 * 360;
+      if (c0.lng < bb[0] - pad || c0.lng > bb[2] + pad ||
+          c0.lat < bb[1] - pad || c0.lat > bb[3] + pad) continue;
+    }
+    const g = this.grid(d);
+    for (let dy = -span; dy <= span; dy++) for (let dx = -span; dx <= span; dx++) {
+      const key = (cy0 + dy) * PICK_CELLS + (cx0 + dx);
+      let p = lowerBound(g.keys, key);
+      for (; p < g.keys.length && g.keys[p] === key; p++) {
+        const i = g.order[p];
+        if (d === best && i <= bestI) continue;
+        // a hidden dot is not on screen, so it must not answer a hover either (§4.3's lesson
+        // about invisible rings being hit-tested, which cost "Sikh ring says Wesleyan Church")
+        if (this.palette[(d.nid[i] & 0x3fff) * 4 + 3] < 128) continue;
+        const ex = d.x[i] - mx, ey = d.y[i] - my;
+        if (ex * ex + ey * ey <= rad2) { best = d; bestI = i; }
+      }
+    }
+  }
+  return best ? { n: this.nodes[best.nid[bestI] & 0x3fff], c: best.cc } : null;
+};
 
 // ---------------------------------------------------------------- map
 const map = new maplibregl.Map({
@@ -2184,16 +2685,10 @@ map.on('load', async () => {
       'circle-radius': radiusMerged(),
     },
   });
-  /* The same dots unmerged, for the consolidation toggle. Constant radius: every feature
-     here is exactly one dot, so there is no k to scale by. */
-  map.addLayer({
-    id: 'atomic', type: 'circle', source: 'tiles', 'source-layer': 'atomic',
-    layout: { visibility: 'none' },
-    paint: {
-      'circle-color': '#666', 'circle-opacity': DOT_ALPHA, 'circle-stroke-width': 0,
-      'circle-radius': radiusFlat(ATOMIC_STOPS),
-    },
-  });
+  /* The same dots unmerged — the default view, and no longer a tile layer (§4.2d). It goes in
+     here, under the rings, so the paint order is unchanged from when it was `atomic`. */
+  map.addLayer(SCATTER);
+  SCATTER.loadAll();
   map.addLayer({
     id: 'rings', type: 'circle', source: 'tiles', 'source-layer': 'rings',
     paint: {
@@ -2217,14 +2712,7 @@ map.on('load', async () => {
         'circle-radius': radiusMerged(),
       },
     });
-    map.addLayer({
-      id: 'atomic10k', type: 'circle', source: 'tiles', 'source-layer': 'atomic10k',
-      layout: { visibility: 'none' },
-      paint: {
-        'circle-color': '#666', 'circle-opacity': DOT_ALPHA, 'circle-stroke-width': 0,
-        'circle-radius': radiusFlat(ATOMIC_STOPS),
-      },
-    });
+    // no atomic10k layer: SCATTER carries both editions and swaps between them itself
     map.addLayer({
       id: 'rings10k', type: 'circle', source: 'tiles', 'source-layer': 'rings10k',
       layout: { visibility: 'none' },
@@ -2288,6 +2776,29 @@ map.on('load', async () => {
     });
     map.on('mouseleave', layer, () => pop.remove());
   }
+
+  /* The scatter is not a MapLibre layer, so it gets no delegated events and needs its own
+     pair. SCATTER.pick answers with the dot that is actually VISIBLE at the cursor — the last
+     one drawn that covers it (§4.2c) — where `e.features[0]` above answers with the first in
+     tile order, which is a different dot wherever dots overlap. */
+  const scatterHover = (e) => {
+    if (merged || !SCATTER.ready) return false;
+    const hit = SCATTER.pick(e.point);
+    if (!hit) { pop.remove(); return false; }
+    const node = BY_ID[hit.n];
+    const where = (!country && hit.c && META[hit.c])
+      ? '<br><span style="color:#999">' + esc(META[hit.c].name) + '</span>' : '';
+    pop.setLngLat(e.lngLat).setHTML((node ? node.label : hit.n) + where).addTo(map);
+    return hit;
+  };
+  map.on('mousemove', scatterHover);
+  map.on('dblclick', (e) => {
+    if (merged || !SCATTER.ready) return;
+    const hit = SCATTER.pick(e.point);
+    if (!hit || !BY_ID[hit.n]) return;
+    e.preventDefault();                    // keeps the gesture off clickZoom, as above
+    setScope(hit.n);
+  });
 
   /* On `idle` as well as `moveend`, and that is not belt and braces — it is the whole thing
      working at all. `moveend` fires the instant the camera stops, before the tiles for where it

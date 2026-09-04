@@ -10,21 +10,20 @@ read back out of `data/od_hourly.npz` -- see `_day()` and `daytype.py`. Two
 flags that had to be kept in step would eventually drift, and a weekday routed
 over a Sunday timetable produces no error, just a thinner weekday.
 
-Riders spawn every 2.5 minutes inside their hour rather than all at once, and
-RAPTOR runs afresh for each of those bins so that riders board the train that
-is actually next, not the one that was next at the top of the hour. That is
-what stops a whole hour of 잠실 piling onto a single midnight train. Each
-origin's bins are offset by dep_phase() so that the whole network does not
-release its crowds on the same tick, and most of those searches never actually
-run -- see spawn_key(). See DEP_BIN.
+The OD gives an hour's riders and no arrival times, so they are spread over the
+hour: one spawn in each gap between departures at the origin, carrying that
+gap's share, with RAPTOR run afresh for each. That is exact rather than
+approximate -- everyone arriving in a gap catches the train that ends it, so
+there is nothing finer to resolve -- and it is what stops a whole hour of 잠실
+piling onto a single midnight train. See spawn_gaps().
 
 Finishes by calling build_shapes.main(), which bends the straight
 station-to-station hops onto the real track. Forgetting that step is what makes
 the trains visibly cut corners, so it is no longer a separate thing to remember.
 
 The routing is one independent search per (origin complex, spawn time), so it
-runs across the cores, leaving JOB_HEADROOM of them alone so the machine stays
-usable. The origins are split into a fixed 64 chunks whichever way it runs, so
+runs across the cores -- half of them by default (JOB_SHARE), so the machine
+stays usable while it runs. The origins are split into a fixed 64 chunks whichever way it runs, so
 --jobs changes how long the build takes and not what comes out of it. About
 three minutes on fourteen workers, at roughly 300 MB each.
 
@@ -88,6 +87,29 @@ def write_json(path, obj):
 
 OD_HOURLY = os.path.join(D, "od_hourly.npz")
 
+# Crowding penalties from the previous pass of crowding.py, if there has been
+# one. One array per pattern, shape (trips, stops): the *cumulative* perceived
+# penalty in seconds from the start of the trip to each stop, so riding from
+# board_si to sj costs pcum[ti][sj] - pcum[ti][board_si].
+#
+# Absent, this file simply does not exist and the build is the uncrowded one.
+# That is the base case crowding.py starts from, and it is still a valid build
+# in its own right -- see "Crowding" in README.md.
+CROWDING = os.path.join(D, "crowding.npz")
+
+
+def load_crowding(quiet=False):
+    if not os.path.exists(CROWDING):
+        return None
+    with np.load(CROWDING, allow_pickle=True) as z:
+        pen = [z["p%d" % i] for i in range(int(z["npat"]))]
+        it = int(z["iteration"]) if "iteration" in z.files else 0
+    if not quiet:
+        worst = max((float(a[:, -1].max()) if a.size else 0.0) for a in pen)
+        print("   crowding penalties from iteration %d "
+              "(worst whole-trip penalty %.1f min)" % (it, worst / 60.0))
+    return pen
+
 
 def _day():
     """Which day build_od.py built, read back out of its own output.
@@ -111,27 +133,13 @@ OD_DATE = DAY.get("date", "")
 SERVICE = DAY["service"]           # 주중주말 code to select in the timetables
 MAX_ROUNDS = 4             # journeys of up to 3 transfers
 TRANSFER_SEC = 180
-DEP_BIN = 150              # spawn riders every 2.5 minutes inside their hour
-# 150 s is the knee, not a guess. Simulated against the real departure times
-# and hourly volumes, the train-to-train load step falls 1.93 -> 1.36 -> 1.02
-# at 600 / 300 / 150 s against a continuous-arrival floor of 0.98. So 150 s
-# closes 95% of the gap and 60 s closes 99% -- there is nothing below here
-# worth paying for. Cost is held down by spawn_key(), not by coarse bins.
 MIN_RIDERS = 0.05          # ignore cells below this many people
 
-# Riders in an hour cell have no arrival time of their own, so they are spread
-# over DEP_BIN-wide spawns. Do that on a shared grid and every station in the
-# network releases its crowd on the same tick -- at 600 s that was :05, :15,
-# :25 and so on -- and whichever train happens to be pulling out just after
-# each tick scoops the lot, so trains a few minutes apart on the same line
-# carry wildly different loads for no reason in the data. Offsetting each
-# origin by a stable fraction of a bin desynchronises them: the network no
-# longer breathes in step, and a line's trains fill at the rate the timetable
-# and the OD say they should.
-# Deterministic, not hash() -- that is salted per process, and the routing runs
-# in a pool, so hash() would give a different map every build.
-def dep_phase(origin):
-    return (int(origin) * 2654435761) % DEP_BIN
+# There is no spawn-interval knob any more, and that is deliberate. Riders in
+# an hour cell have no arrival time of their own, so they have to be spread
+# over the hour -- but spreading them on a fixed grid was an approximation that
+# needed tuning and got it wrong twice. See spawn_gaps(), which puts one spawn
+# in each gap between departures and is exact.
 
 # No trip in the regular Sunday timetable starts at or after 00:00 -- only 105
 # trains are still finishing their runs, and the last one ends at 00:42. Yet
@@ -209,6 +217,10 @@ SOFT_TAKE_FRACTION = 0.5
 # spawns merge into one step; boarding times are left exact so the bubble
 # drops on the same frame the train's own count picks up.
 WAIT_BUCKET_S = 20
+# ... and a gap's riders are spread over this many steps rather than landing
+# together, so the bubble fills the way a platform fills. See
+# spread_arrivals(); the page then ramps between steps over WAIT_TRANSITION.
+WAIT_MAX_SUB = 12
 
 # Bounds on a single train run, as a backstop against a mis-parsed timetable.
 # The longest real run is line 1 end to end at about 2h50m.
@@ -649,20 +661,93 @@ def spawn_seeds(origin_idx, transfers):
     return tuple(sorted(seeds.items()))
 
 
-def spawn_key(seeds, dep_at, t):
-    """What a RAPTOR search from `t` actually depends on.
+def spawn_gaps(seeds, dep_at, lo, hi):
+    """When to spawn this origin's riders for the window, and in what shares.
 
-    A search leaving at `t` is decided entirely by which departure is next at
-    each seeded stop. Nothing else about `t` reaches the answer: every label
-    from round 1 on is an absolute timetable time, so two spawn times with the
-    same key produce bit-identical tau, parent and best -- apart from the round
-    0 labels at the seeds themselves, which the caller never reads. So the
-    result can be reused, and at 150 s bins most of them can: a quiet outer
-    station sees four departures an hour against twenty-four spawns.
+    The OD gives an hour's worth of people and no arrival times, so they have
+    to be spread over the hour somehow. Spreading them on a *grid* -- which is
+    what this did until 2026-09-04 -- is an approximation with a knob on it:
+    too coarse and trains between ticks board nobody, too fine and the routing
+    cost climbs for no gain.
 
-    Cheap enough to be worth it -- a handful of bisects against a RAPTOR run.
+    There is an exact answer, and it is cheaper than a fine grid. A search from
+    time `t` is decided entirely by which departure is next at the origin, so
+    every rider arriving in the gap between two departures catches the same
+    train -- the one that ends the gap. So there is nothing to gain from
+    resolving arrival times more finely than the gaps themselves. Put one
+    representative in each gap, carrying that gap's share of the hour, at the
+    middle of the gap because that is the average arrival within it (and so the
+    average platform wait, which the waiting bubbles read off it).
+
+    This is what `../londonriders/` does by drawing stratified random departure
+    times inside each quarter-hour, made exact: one spawn per gap rather than a
+    sample, and no chunk-size or bin-width to tune.
+
+    The last gap runs from the final departure in the window to the end of it;
+    its riders board the first train of the next hour, which is what really
+    happens to someone who reaches the platform at 09:58.
+
+    Returns [(spawn_time, share, gap_start, gap_end), ...] with the shares
+    summing to 1. The gap bounds are what the platform crowd is drawn from --
+    riders really arrive across the gap, not all at its middle, and the routing
+    only takes the middle because one search has to stand for the lot.
     """
-    return tuple(bisect_left(dep_at[s], t + c) for s, c in seeds)
+    span = float(hi - lo)
+    opps = boarding_opportunities(seeds, dep_at, lo, hi)
+    if not opps:
+        return [((lo + hi) / 2.0, 1.0, lo, hi)]
+
+    out = []
+    prev = lo
+    for t in opps:
+        if t > prev:
+            out.append(((prev + t) / 2.0, (t - prev) / span, prev, t))
+        prev = t
+    if hi > prev:
+        out.append(((prev + hi) / 2.0, (hi - prev) / span, prev, hi))
+    # Floating-point crumbs, so a build cannot quietly lose or gain riders.
+    total = sum(w for _, w, _, _ in out)
+    return [(t, w / total, g0, g1) for t, w, g0, g1 in out]
+
+
+def boarding_opportunities(seeds, dep_at, lo, hi):
+    """Sorted times in [lo, hi) at which a rider standing here could board.
+
+    Seeds all sit in the one complex, so their costs are zero and this is just
+    the complex's departures -- but do the shift anyway, so it stays correct if
+    transfers ever cross complexes.
+    """
+    opps = set()
+    for s, c in seeds:
+        col = dep_at[s]
+        i = bisect_left(col, lo + c)
+        while i < len(col) and col[i] - c < hi:
+            opps.add(col[i] - c)
+            i += 1
+    return sorted(opps)
+
+
+def early_window_start(seeds, dep_at, lo, hi):
+    """When the first hourly bin's riders can really start turning up.
+
+    The first column of the hourly file is `06시이전` -- *everything* before
+    06:00, not 05:00-06:00 -- and it is open-ended at the start of the day
+    exactly as `24시이후` is at the end. But the subway does not open until
+    about 05:30. Spreading that bin across the whole 05:00 hour put more than
+    half of it onto platforms before any train had run, and because the first
+    gap at each origin then stretched from 05:00 to its first departure, all of
+    those riders were spawned at its midpoint and stood there: at 05:20 the
+    network held a platform crowd the size of the morning peak, on a tenth of
+    the traffic. It looked like a real finding and was not.
+
+    So start the window one headway before this origin's first train, which
+    keeps the handful of people who genuinely wait for the first service and
+    drops the rest of the empty hour.
+    """
+    opps = boarding_opportunities(seeds, dep_at, lo, hi)
+    if len(opps) < 2:
+        return lo
+    return max(lo, opps[0] - (opps[1] - opps[0]))
 
 
 def raptor(origin_idx, dep_time, patterns, stop_pats, transfers, n, npat,
@@ -726,13 +811,21 @@ def raptor(origin_idx, dep_time, patterns, stop_pats, transfers, n, npat,
             p = patterns[pi]
             depc, arrr, sidx, srt = p["depc"], p["arrr"], p["sidx"], p["srt"]
             ntr = p["ntr"]
+            pcum = p["pcum"]
             ti = -1
             board_si = -1
             arow = None
+            prow = None
+            pbase = 0.0
             for sj in range(si0, len(sidx)):
                 j = sidx[sj]
                 if arow is not None:
-                    t = arow[sj]
+                    # Perceived arrival: the clock time, plus whatever standing
+                    # in a crush from board_si to here is judged to be worth.
+                    # Labels stay in seconds and stay monotone, so the rest of
+                    # RAPTOR is untouched -- see "How the penalty enters the
+                    # search" in README.md for what that costs.
+                    t = arow[sj] if prow is None else arow[sj] + prow[sj] - pbase
                     if t < best[j]:
                         tk[j] = t
                         best[j] = t
@@ -749,6 +842,9 @@ def raptor(origin_idx, dep_time, patterns, stop_pats, transfers, n, npat,
                         cand = bisect_left(col, prev)
                         if cand < ntr:
                             ti, board_si, arow = cand, sj, arrr[cand]
+                            if pcum is not None:
+                                prow = pcum[cand]
+                                pbase = prow[sj]
                     elif srt:
                         # The column rises with trip index, so an earlier
                         # boardable trip exists only if the one immediately
@@ -757,10 +853,16 @@ def raptor(origin_idx, dep_time, patterns, stop_pats, transfers, n, npat,
                         if ti and col[ti - 1] >= prev:
                             ti = bisect_left(col, prev, 0, ti)
                             board_si, arow = sj, arrr[ti]
+                            if pcum is not None:
+                                prow = pcum[ti]
+                                pbase = prow[sj]
                     elif prev <= col[ti]:
                         cand = bisect_left(col, prev)
                         if cand < ti:
                             ti, board_si, arow = cand, sj, arrr[cand]
+                            if pcum is not None:
+                                prow = pcum[cand]
+                                pbase = prow[sj]
 
         for j in list(newly):
             for m, cost in transfers[j]:
@@ -857,6 +959,10 @@ def build_world(quiet=False):
     ntrips = sum(len(p["trips"]) for p in patterns)
     out("   %d patterns, %d trips" % (len(patterns), ntrips))
 
+    pen = load_crowding(quiet=quiet)
+    for pi, p in enumerate(patterns):
+        p["pcum"] = pen[pi] if pen is not None and pi < len(pen) else None
+
     codes = sorted(set(c for p in patterns for c in p["stops"]))
     codes_idx = CodeIndex(codes)
     stop_pats = build_index(patterns)
@@ -928,6 +1034,24 @@ def world_fingerprint(w):
 # routing
 # --------------------------------------------------------------------------
 
+def spread_arrivals(wait, ci, t0, t1, riders):
+    """Put `riders` onto platform `ci`, arriving evenly over [t0, t1].
+
+    Capped at WAIT_MAX_SUB steps: at the bucket resolution a ten-minute gap
+    would be thirty entries per OD pair, and the timeline is already the
+    biggest thing in trains.json. Twelve is enough for the eye.
+    """
+    if t1 <= t0:
+        wait[ci * WKEY + int(t1) // WAIT_BUCKET_S] += riders
+        return
+    span = t1 - t0
+    n = min(WAIT_MAX_SUB, max(1, int(span // WAIT_BUCKET_S)))
+    per = riders / n
+    for k in range(n):
+        t = t0 + span * (k + 0.5) / n
+        wait[ci * WKEY + int(t) // WAIT_BUCKET_S] += per
+
+
 def _pack(d):
     if not d:
         return (np.zeros(0, np.int64), np.zeros(0, np.float64))
@@ -949,7 +1073,7 @@ def route_origins(w, origins):
     cx_codes, code_cx, codes_idx = w.cx_codes, w.code_cx, w.codes_idx
     X, pairs, hours, by_origin = w.X, w.pairs, w.hours, w.by_origin
     dep_at = w.dep_at
-    reused = searched = 0
+    searched = 0
 
     board = collections.defaultdict(float)
     alight = collections.defaultdict(float)
@@ -971,9 +1095,6 @@ def route_origins(w, origins):
         origin_set = set(oidx)
         ks = by_origin[o]
         seeds = spawn_seeds(oidx, transfers)
-        # One-deep, and that is enough: spawns are walked in time order, so
-        # the runs that share a key are consecutive.
-        last_key, last_res = None, None
 
         for hi, hour in enumerate(hours):
             vol = X[ks, hi]
@@ -982,26 +1103,22 @@ def route_origins(w, origins):
                 continue
 
             span = LATE_BIN_HOURS if int(hour) == 24 else 1
-            nbins = max(1, span * 3600 // DEP_BIN)
-            phase = dep_phase(o)
+            lo_t = int(hour) * 3600
+            hi_t = lo_t + span * 3600
+            if hi == 0:
+                lo_t = early_window_start(seeds, dep_at, lo_t, hi_t)
+            spawns = spawn_gaps(seeds, dep_at, lo_t, hi_t)
             fb = None
-            for b in range(nbins):
-                t = int(hour) * 3600 + b * DEP_BIN + phase
-                key = spawn_key(seeds, dep_at, t)
-                if key == last_key:
-                    tau, parent, best = last_res
-                    reused += 1
-                else:
-                    tau, parent, best = raptor(oidx, t, patterns, stop_pats,
-                                               transfers, n, npat, first_si)
-                    last_key, last_res = key, (tau, parent, best)
-                    searched += 1
+            for b, (t, share, gap0, gap1) in enumerate(spawns):
+                tau, parent, best = raptor(oidx, t, patterns, stop_pats,
+                                           transfers, n, npat, first_si)
+                searched += 1
                 if b == 0:
                     fb = (tau, parent, best)
                 for li in live:
                     k = ks[li]
                     d = int(pairs[k][1])
-                    riders = float(vol[li]) / nbins
+                    riders = float(vol[li]) * share
                     dcodes = [c for c in cx_codes.get(d, []) if c in codes_idx]
                     if not dcodes:
                         unrouted += riders; unrouted_by_hour[int(hour)] += riders
@@ -1026,6 +1143,7 @@ def route_origins(w, origins):
                         continue
                     routed += riders
                     on_platform = t
+                    leg_no = 0
                     for (pi, ti, si, sj) in legs:
                         P = patterns[pi]
                         off = pat_off[pi] + ti * P["ns"]
@@ -1038,17 +1156,63 @@ def route_origins(w, origins):
                         # than let the crowd go negative.
                         vrow = P["vdepr"][ti]
                         board_t = vrow[si]
-                        arrive_t = min(on_platform, board_t)
-                        wait[code_cx[P["stops"][si]] * WKEY
-                             + arrive_t // WAIT_BUCKET_S] += riders
+                        ci = code_cx[P["stops"][si]]
+                        if leg_no == 0:
+                            # Everyone in a gap shares one search, but they do
+                            # not share one moment of arriving -- they trickle
+                            # in across it. Drawn as a single step the bubble
+                            # jumped from empty to full; spread across the gap
+                            # it fills the way a platform fills.
+                            spread_arrivals(wait, ci, gap0,
+                                            min(gap1, board_t), riders)
+                        else:
+                            # A transfer really is a lump: a trainload arrives
+                            # at once. Leave it as one step.
+                            arrive_t = min(on_platform, board_t)
+                            wait[ci * WKEY
+                                 + int(arrive_t) // WAIT_BUCKET_S] += riders
+                        leg_no += 1
                         on_platform = vrow[sj] + TRANSFER_SEC
 
     return {"board": _pack(board), "alight": _pack(alight),
             "wait": _pack(wait), "xtab": dict(xtab),
             "unrouted_by_hour": dict(unrouted_by_hour),
             "routed": routed, "unrouted": unrouted, "late": late,
-            "reused": reused, "searched": searched,
+            "searched": searched,
             "fp": world_fingerprint(w)}
+
+
+LOADS = os.path.join(D, "loads.npz")
+
+
+def dump_loads(w, boardings, alightings, path=LOADS):
+    """Riders on board leaving each stop, per pattern, trip and stop.
+
+    This is what crowding.py turns into next round's penalties, and it is the
+    same quantity write_stats() aggregates -- kept separately because the
+    crowding loop needs it per *trip*, not per hour.
+    """
+    arrays = {}
+    for pi, p in enumerate(w.patterns):
+        ntr, ns = p["ntr"], p["ns"]
+        m = np.zeros((ntr, ns), dtype=np.float32)
+        for ti in range(ntr):
+            bd = boardings.get((pi, ti))
+            if not bd:
+                continue
+            al = alightings.get((pi, ti), {})
+            on = 0.0
+            row = m[ti]
+            for si in range(ns):
+                on = max(0.0, on + bd.get(si, 0.0) - al.get(si, 0.0))
+                row[si] = on
+        arrays["p%d" % pi] = m
+    np.savez_compressed(path, npat=np.array(len(w.patterns)), **arrays)
+    tot = sum(float(a.max()) for a in arrays.values())
+    print("   wrote %s (%d patterns, busiest single train %.0f aboard)"
+          % (os.path.basename(path), len(arrays),
+             max((float(a.max()) for a in arrays.values()), default=0.0)))
+    return tot
 
 
 def merge_chunks(w, chunks):
@@ -1059,7 +1223,7 @@ def merge_chunks(w, chunks):
     xtab = collections.Counter()
     unrouted_by_hour = collections.Counter()
     routed = unrouted = late = 0.0
-    reused = searched = 0
+    searched = 0
     for c in chunks:
         idx, val = c["board"]; board[idx] += val
         idx, val = c["alight"]; alight[idx] += val
@@ -1069,7 +1233,7 @@ def merge_chunks(w, chunks):
         xtab.update(c["xtab"])
         unrouted_by_hour.update(c["unrouted_by_hour"])
         routed += c["routed"]; unrouted += c["unrouted"]; late += c["late"]
-        reused += c.get("reused", 0); searched += c.get("searched", 0)
+        searched += c.get("searched", 0)
 
     boardings, alightings = {}, {}
     for pi, p in enumerate(w.patterns):
@@ -1101,7 +1265,7 @@ def merge_chunks(w, chunks):
             "wait_deltas": wait_deltas, "xtab": xtab,
             "unrouted_by_hour": unrouted_by_hour,
             "routed": routed, "unrouted": unrouted, "late": late,
-            "reused": reused, "searched": searched}
+            "searched": searched}
 
 
 # --------------------------------------------------------------------------
@@ -1114,10 +1278,13 @@ def merge_chunks(w, chunks):
 
 NCHUNK = 64
 
-# Cores left alone by default. A full build is minutes of every core otherwise,
-# which is enough to make the rest of the machine unpleasant to use while it
-# runs -- and it is rarely the only thing running.
-JOB_HEADROOM = 2
+# Half the cores, by default and on purpose. A full build is minutes of every
+# core otherwise, which is enough to make the rest of the machine unpleasant to
+# use while it runs -- and it is rarely the only thing running. The crowding
+# loop in crowding.py makes that worse by a factor of however many iterations
+# it takes, so the default is a share rather than a couple of cores held back.
+# --jobs still overrides it either way.
+JOB_SHARE = 0.5
 
 _W = None
 
@@ -1138,10 +1305,16 @@ def main():
     ap.add_argument("--sample", type=int, default=1,
                     help="use every Nth origin complex (1 = all)")
     ap.add_argument("--jobs", type=int, default=0,
-                    help="worker processes for the routing (0 = one per core "
-                         "bar %d, 1 = stay in this one)" % JOB_HEADROOM)
+                    help="worker processes for the routing (0 = %d%%%% of "
+                         "the cores, 1 = stay in this one)" % (JOB_SHARE * 100))
     ap.add_argument("--no-shapes", action="store_true",
                     help="skip the build_shapes.py pass at the end")
+    ap.add_argument("--loads-out", metavar="PATH", nargs="?", const=LOADS,
+                    help="also dump per-train loads for crowding.py")
+    ap.add_argument("--no-output", action="store_true",
+                    help="skip trains.json/stats.json and the shaping pass. "
+                         "For crowding.py's intermediate rounds, which only "
+                         "want the loads -- it saves about a third of the run")
     args = ap.parse_args()
 
     w = build_world()
@@ -1151,7 +1324,7 @@ def main():
         origins = origins[::args.sample]
         print("   sampling %d origins" % len(origins))
 
-    jobs = args.jobs or max(1, (os.cpu_count() or 1) - JOB_HEADROOM)
+    jobs = args.jobs or max(1, int((os.cpu_count() or 1) * JOB_SHARE))
     jobs = max(1, min(jobs, NCHUNK, len(origins)))
     chunks = [(i, [int(o) for o in c]) for i, c in
               enumerate(np.array_split(np.array(origins), NCHUNK))]
@@ -1209,11 +1382,8 @@ def main():
     net, patterns, complexes = w.net, w.patterns, w.complexes
     coord, code_cx = w.coord, w.code_cx
 
-    ran, saved = acc["searched"], acc["reused"]
-    print("\nRAPTOR searches %s, reused %s (%.0f%% of spawns answered from "
-          "the previous search)"
-          % (format(ran, ","), format(saved, ","),
-             100.0 * saved / max(ran + saved, 1)))
+    print("\nRAPTOR searches: %s (one per gap between departures)"
+          % format(acc["searched"], ","))
     print("\nrouted %s riders, %s unrouted (%.2f%%)"
           % (format(int(routed), ","), format(int(unrouted), ","),
              100.0 * unrouted / max(routed + unrouted, 1)))
@@ -1247,6 +1417,14 @@ def main():
         "unrouted": int(round(unrouted)),
         "shaped": not args.no_shapes,
     }
+    if args.loads_out:
+        dump_loads(w, boardings, alightings, args.loads_out)
+
+    if args.no_output:
+        print("")
+        print("skipping trains.json/stats.json (--no-output)")
+        return
+
     write_output(net, patterns, boardings, alightings, complexes, coord,
                  wait_deltas, code_cx, stamp)
 
@@ -1367,6 +1545,7 @@ def write_stats(patterns, boardings, alightings, complexes, coord, code_cx,
     board = collections.defaultdict(lambda: [0.0] * NSH)   # (ci, line) -> hrs
     alight = collections.defaultdict(lambda: [0.0] * NSH)
     seg = collections.defaultdict(lambda: [0.0] * NSH)     # (line, a, b) -> hrs
+    segx = collections.defaultdict(lambda: [0.0] * NSH)    # 급행 only
 
     for (pi, ti), bd in boardings.items():
         p = patterns[pi]
@@ -1387,6 +1566,30 @@ def write_stats(patterns, boardings, alightings, complexes, coord, code_cx,
             onboard = max(0.0, onboard + b - a)
             if onboard > 0 and si + 1 < len(stops):
                 seg[(line, code, stops[si + 1])][h] += onboard
+                if p["express"]:
+                    segx[(line, code, stops[si + 1])][h] += onboard
+
+    # Trains over each segment per hour, counted over every trip and not only
+    # the ones carrying riders -- an empty train still dilutes the average.
+    # This is what turns riders-per-hour into riders-per-train, which is the
+    # quantity 서울교통공사 publishes as 혼잡도. See validate.py --congestion.
+    #
+    # Kept twice, all trains and 급행 only, because on 9호선 the two are not the
+    # same question. 서울교통공사 publish 일반 and 급행 congestion separately for
+    # good reason: an express train on 9호선 is far fuller than the local it
+    # overtakes, and one blended average describes neither. `hx`/`nx` are the
+    # express subset of `h`/`n`, not a separate total -- subtract for the local.
+    segn = collections.defaultdict(lambda: [0] * NSH)      # (line, a, b) -> hrs
+    segnx = collections.defaultdict(lambda: [0] * NSH)
+    for p in patterns:
+        stops = p["stops"]
+        for vdep in p["vdep"]:
+            for si in range(len(stops) - 1):
+                key = (p["line"], stops[si], stops[si + 1])
+                h = _hour_slot(int(vdep[si]))
+                segn[key][h] += 1
+                if p["express"]:
+                    segnx[key][h] += 1
 
     st_out = []
     by_station = collections.defaultdict(dict)
@@ -1415,10 +1618,23 @@ def write_stats(patterns, boardings, alightings, complexes, coord, code_cx,
             "b": complexes[ib]["name"] if ib is not None else "",
             "ae": complexes[ia].get("name_en", "") if ia is not None else "",
             "be": complexes[ib].get("name_en", "") if ib is not None else "",
+            # platform codes, so a reader can tell 상선 from 하선: Seoul
+            # numbers its stations in the 하행 direction
+            "ca": a, "cb": b,
             "p": [round(ca[0], 5), round(ca[1], 5),
                   round(cb[0], 5), round(cb[1], 5)],
             "h": [round(v, 1) for v in hrs],
+            "n": segn.get((line, a, b), [0] * NSH),
         })
+        # Only carried where there is express service at all, so the file does
+        # not grow two empty arrays per segment across a network that is
+        # overwhelmingly all-stops.
+        hx = segx.get((line, a, b))
+        nx = segnx.get((line, a, b))
+        if hx and max(hx) >= 0.5:
+            seg_out[-1]["hx"] = [round(v, 1) for v in hx]
+        if nx and max(nx) > 0:
+            seg_out[-1]["nx"] = nx
 
     out = {"date": OD_DATE, "day": DAY_NAME, "build": stamp, "hours": STAT_HOURS,
            "line_meta": line_meta, "stations": st_out, "segments": seg_out}

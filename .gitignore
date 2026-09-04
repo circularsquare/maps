@@ -24,3 +24,5 @@ riders/nycriders/data.json
 # street-render experiments / colormap variants:
 nystreets/osm*.png
 nystreets/nystreets.png
+# poster renders + baked dot arrays, regenerable from bake/render/insets:
+posters/*/build/

@@ -7,6 +7,12 @@ Seoul came off `../metroslist.md` as a Tier 1.5 system — measured entry *and*
 exit gates, so the numbers are real rather than inferred, but the published OD
 carries no hour field and has to be disaggregated against hourly station counts.
 
+**The map draws a typical weekday by default.** The OD is measured on one
+Sunday and nothing else; the weekday is that pattern re-levelled onto measured
+weekday station totals. Read "Getting off New Year's Eve" before quoting any
+figure — it is the one modelled step in the pipeline, and `--day nye` still
+builds the fully measured night.
+
 ---
 
 ## Picking this up
@@ -18,21 +24,43 @@ ours**), then the rest of this file for the why behind any given decision.
 
 ```
 python fetch_schedules.py  # ~1 min  -> data/kric_*.xlsx, data/incheon2_*.csv
+python fetch_ridership.py  # ~1 min  -> data/congestion_raw.csv, card_daily_*.csv,
+                           #            congestion_line9.xlsx
 python fetch_osm.py        # ~2 min  -> data/osm_routes.json, osm_stations.json
 python kric.py             # ~40 s   -> data/timetable_extra.csv
 python build_stations.py   # ~40 s   -> data/stations.json
 python build_od.py         # ~4 min  -> data/od_hourly.npz
-python build.py            # ~90 min -> data/trains.json, stats.json,
+python build.py            # ~10 min -> data/trains.json, stats.json,
                            #            link_shapes.json  (--sample 60 for ~50 s)
 python validate.py         # ~40 s   -> checks the build against published figures
 python -m http.server 8000 # then open index.html
 ```
+
+**`crowding.py` is optional and slow.** It re-runs `build.py` several times to
+make crowded trains less attractive — see "Crowding" — and replaces
+`trains.json` with the result. Skip it and the pipeline is exactly as it was;
+`crowding.py --reset` undoes it. Budget ~15 minutes a round.
+
+**Builds use half the cores** (`JOB_SHARE` in `build.py`), so the machine stays
+usable while one runs. `--jobs` overrides.
+
+**Which day is one decision, made once.** `build_od.py --day weekday|saturday|
+sunday|nye` stamps its choice into `data/od_hourly.npz`; `build.py` and
+`validate.py` read it back from there and take no day flag of their own. That
+is deliberate. The timetable day type has to agree with the ridership day type,
+and a mismatch is *silent* — weekday riders routed over a Sunday timetable do
+not error, they just come out looking like a thinner weekday. `daytype.py`
+holds the registry.
 
 **Run `validate.py` after a build.** It compares each line's end-to-end
 journey time, service span and station count against the operators' published
 figures, walks every line's stop order looking for a station that landed far
 from its neighbours, and prints the OD coverage table. It has already caught
 two real bugs that looked like data — see "One bad stop time" below.
+
+`validate.py --congestion` is the newest check and the only one that tests the
+**output**. Everything else here checks an input. See "Checking the build
+against 혼잡도".
 
 The first three steps are what bring in the lines beyond 1–9. They only need
 re-running when a source changes; `fetch_schedules.py` skips files it already
@@ -52,15 +80,13 @@ is idempotent (it drops any waypoints already present before it starts), so
 running it by hand afterwards to re-tune the geometry is still fine and still
 skips the routing. `--no-shapes` opts out.
 
-**As of the end of the 2026-09-03 session:** the pipeline carries all 22 lines,
-but `data/trains.json` on disk is a small `--sample` run made while checking
-them. Re-run `build.py` for the real thing.
+**As of the end of the 2026-09-04 session:** the pipeline carries all 22 lines
+and defaults to a weekday. `data/trains.json` is a full `--day weekday` build.
 
-**How to tell a sample from a full build:** file size will not tell you. Open
-the page and look at the rider counter at 17:30 — a full build over all 22
-lines reads roughly **90,000 riders on ~350 trains**, a `--sample 60` run about
-**1,500 on ~200**. Or check that `build.py`'s output says
-`routed 3,3xx,xxx riders` rather than `40,xxx`.
+**How to tell a sample from a full build:** file size will not tell you. Check
+`build.py`'s output — a full weekday build says `routed 6,3xx,xxx riders`, a
+Sunday one `routed 3,3xx,xxx`, and a `--sample 60` run about `101,xxx`. The
+page's own footer says so too when it is a sample.
 
 **Three traps that cost real time.** All are fixed, all are documented below,
 and all would be easy to reintroduce:
@@ -70,6 +96,9 @@ and all would be easy to reintroduce:
    silently loses riders.
 3. Korean portal signup is **impossible from abroad** — never go down that road.
    See `[[reference_korea_open_data]]` in memory for the anonymous routes.
+4. The map's midday peak is **Sunday, not New Year's Eve**. Do not spend an
+   afternoon on the date; the two are indistinguishable in the hourly profile.
+   See "Getting off New Year's Eve".
 
 **Verify by checking output against source, not by reading code.** Every bug
 found on day one looked completely plausible on the map. `build.py` prints two
@@ -91,14 +120,18 @@ impassable from outside Korea.
 | `data/od_2023-12-31.csv` | Station-to-station OD, one day, 27 lines | 14 MB |
 | `data/hourly_2023_raw.csv` | Daily × hourly counts, every day of 2023, lines 1–8 | 25 MB |
 | `data/daily_hourly_raw.csv` | Same for 2024 | 25 MB |
+| `data/card_daily_2023{11,12}.csv` | Daily counts, every station, **all 27 lines** | 1.2 MB each |
+| `data/congestion_raw.csv` | 혼잡도 by station/direction/half hour, 평일·토·일 | 0.4 MB |
 | `data/osm_stations.json` | 786 rail station nodes, Seoul-area bbox | 0.6 MB |
 | `data/osm_routes.json` | 165 route relations, ordered stops + track geometry | 7 MB |
 
-The Korean files are CP949-encoded; the OSM pulls are UTF-8 JSON. `data/` is
-gitignored repo-wide, so none of it commits.
+The Korean files are CP949-encoded **except `card_daily_*.csv`, which is UTF-8
+with a BOM**; the OSM pulls are UTF-8 JSON. `data/` is gitignored repo-wide, so
+none of it commits.
 
-**The one real limitation is the date.** The OD exists for exactly one day,
-2023-12-31 — a Sunday, and New Year's Eve. Everything else is fine.
+**The one real limitation is still the date.** The OD exists for exactly one
+day, 2023-12-31, and that day is a Sunday. What the map can do about it is
+"Getting off New Year's Eve", below.
 
 ## The data
 
@@ -142,6 +175,11 @@ It reads unmistakably as a holiday Sunday: busiest origins are 잠실, 홍대입
 명동, 혜화, with 강남 only tenth; top pairs are 을지로입구→홍대입구 and 잠실→강남;
 3.46M trips against a normal weekday's ~7M. Nightlife, not commute.
 
+That last sentence is the reason for "Getting off New Year's Eve", and it is
+also the limit on what re-levelling can fix: the volumes can be moved onto a
+weekday, but 강남 ranking tenth is a property of the *pattern*, and the pattern
+is all we have.
+
 ### Hourly counts — every day, lines 1–8
 
 [서울교통공사_역별 일별 시간대별 승하차인원 정보](https://data.seoul.go.kr/dataList/OA-12921/F/1/datasetView.do)
@@ -158,6 +196,55 @@ separate rows via `승하차구분`, not separate columns.
 Coverage is 서울교통공사 관할 only: Line 1 just 청량리–서울역, Line 4 to 남태령,
 Line 8 to 암사역사공원. Narrower than the OD, which is the main scope constraint.
 
+### Daily counts — every day, all 27 lines
+
+[서울시 지하철호선별 역별 승하차 인원 정보](https://data.seoul.go.kr/dataList/OA-12914/S/1/datasetView.do)
+(OA-12914), `CARD_SUBWAY_MONTH_<YYYYMM>.csv`, one file per month back to 2015.
+`fetch_ridership.py` pulls them.
+
+Columns: `사용일자, 노선명, 역명, 승차총승객수, 하차총승객수, 등록일자`. No hours —
+that is the trade for the coverage. **UTF-8 with a BOM**, not CP949 like the
+rest.
+
+- ~19,000 rows a month: one per station per day
+- **622 stations, 27 lines**, including 경부선/경인선/경원선/장항선 (line 1 track),
+  과천선/안산선 (line 4), 일산선 (line 3), 경의선/중앙선, 공항철도, 분당, 수인,
+  신림, 우이신설, 경춘, 경강, 서해
+- Joins to `stations.json` at **99.6%** on name alone
+
+The line names are Korail's routes rather than the through-service riders think
+they are on, so `CARD_LINE_ALIAS` in `build_od.py` translates them. That
+mapping is also what tells 5호선's 양평 from 경의중앙선's — the one name shared
+by two complexes on this network.
+
+**Not covered**, because they settle fares outside Seoul: 인천1/2호선,
+신분당선, 김포골드라인, 서해선's 의정부 sibling, 의정부선, 진접선 and 7호선's
+Incheon extension — 103 of our 626 complexes. In the re-levelling they simply
+get no target and take whatever the Seoul end of their trips implies, which is
+the right answer for lines whose OD is only their traffic *to and from* Seoul
+anyway. See "What the OD actually contains".
+
+### Congestion — 혼잡도, the output check
+
+[서울교통공사_지하철혼잡도정보](https://www.data.go.kr/data/15071311/fileData.do)
+(15071311), an anonymous `data.go.kr` file download, updated quarterly.
+
+Columns: `구분, 호선, 역번호, 역명, 상하구분` then 39 half-hour columns
+`5시30분 … 00시30분`. 1,671 rows = 282 stations × direction × three day types.
+`구분` is 평일 / 토요일 / 일요일; `상하구분` is 상선/하선, or 내선/외선 on 2호선's
+loop.
+
+혼잡도 is riders on board over 정원, as a percentage — so **34% is a full seated
+train**, not 100%. Lines 1–8 within 서울교통공사's boundary only, the same scope
+as the hourly file.
+
+**9호선 is not in this file** — it is not 서울교통공사's line. 서울시메트로9호선
+publish their own at 서울 열린데이터광장 `OA-22197`, `congestion_line9.xlsx`:
+eight sheets, 상선/하선 × 평일/휴일 × 일반/급행, keyed by station name with no
+역번호 at all. Needs `openpyxl`. See "9호선 is checked separately".
+
+See "Checking the build against 혼잡도" for what these are used for.
+
 ### The account wall
 
 The obvious route to hourly counts is the Seoul Open Data API
@@ -171,6 +258,19 @@ Seoul portal's `nio_download.do` both work anonymously, and the OA-12921 archive
 turned out to be strictly better anyway — real single days rather than monthly
 averages. `fetch_hourly.py` is kept only as the sole route to hourly data for
 Line 9 and the Korail lines, and is unusable without a key.
+
+**`nio_download.do` has one trap.** It is a POST with `infId` and `seq`, and
+also `infSeq`, which is **per dataset** — 3 for OA-12914. Get it wrong and the
+server returns HTTP 200 with an HTML page containing
+`alert('잘못된 접근입니다. 파일 목록에서 다시 선택하세요.')`, not an error status.
+`fetch_ridership.py` scrapes the file list from `fileView.do` (which needs no
+login) to map file name → `seq`, and refuses loudly if what comes back starts
+with `<html`.
+
+**T-Data is the same wall.** `t-data.seoul.go.kr` carries 교통카드 대중교통
+이용정보 — raw T-money taps with transfer information, which would be better
+than any of this — but it uses Seoul's integrated login, so it is the same
+account and the same dead end.
 
 ### Geometry — from OSM
 
@@ -197,6 +297,429 @@ direction rather than merging them all.
 nycriders drew straight lines between stops and lists that as a known
 limitation. Seoul gets real track geometry —
 `../londonriders/fetch_track_shapes.py` is the model.
+
+## Getting off New Year's Eve
+
+Read this before quoting any figure off a weekday build. Investigated
+2026-09-04, after the map's midday peak looked wrong.
+
+### It was never New Year's Eve. It was Sunday.
+
+The complaint was that the map peaks around noon instead of at the morning
+rush, and the obvious suspect was the date — 2023-12-31 is New Year's Eve, so
+of course it is strange. It is not strange. Measured against the other 51
+Sundays of 2023, from `hourly_2023_raw.csv`, which holds every day:
+
+```
+               <06 06-07 07-08 08-09 09-10 10-11 11-12 12-13 13-14 14-15 15-16 16-17 17-18 18-19 19-20 20-21 21-22 22-23 23-24   >24
+NYE 12-31      1.1   1.4   1.8   3.0   4.4   5.0   5.3   6.4   6.8   7.0   7.4   8.0   7.9   7.1   6.0   6.0   5.6   4.7   2.0   3.1
+Sundays        1.3   1.7   2.3   3.8   5.2   5.7   5.9   7.1   7.4   7.4   7.7   8.1   7.8   6.9   5.8   5.7   5.0   3.7   1.5   0.0
+Wednesdays     1.4   2.9   8.2   9.9   5.7   3.8   3.7   4.1   4.2   4.4   5.1   6.1   9.0  12.0   5.8   4.5   4.3   3.3   1.4   0.3
+```
+
+2023-12-31 peaks at 16–17 like **48 of the other 51 Sundays**, and its total,
+2.66M boardings on lines 1–8, sits 5% above the Sunday mean of 2.53M. The
+*only* thing about it that is not an ordinary Sunday is the `>24` column, 3.1%
+against zero — the extended service for the Bosingak bell, which is what
+`EXTEND_LAST_HOUR` exists for.
+
+So the broad afternoon hump is what a Seoul Sunday looks like. **Nothing that
+reweights the hours of a Sunday can produce a weekday**, because a weekday's
+8.2% in 07-08 and 12.0% in 18-19 are trips that are not in the file at all.
+Getting a rush hour means changing which day's *volumes* are used, not which
+hours they are spread over.
+
+### There is no weekday OD, and this was checked properly
+
+Searched 2026-09-04, all anonymous, all dead ends:
+
+| Source | What it turned out to be |
+|---|---|
+| `data.go.kr/15113638` | still 2023-12-31, still the only date |
+| `data.go.kr/15135167` 호선별 사용자 유형별 OD | line-to-line, not station-to-station, 100-row sample |
+| `data.go.kr/15134768` 철도역 구간 | static section geometry, no ridership |
+| `OA-20501` 대중교통 O/D | "파일이 없습니다" |
+| T-Data `t-data.seoul.go.kr` | raw T-money taps with transfers — the real prize, behind Seoul's integrated login |
+| `OA-12252` CardSubwayTime | hourly, all operators, **API only** — no file archive, needs a key |
+
+The account wall is the same one as before; see "The account wall". Seoul's
+integrated login covers data.seoul.go.kr and T-Data alike, and it is not
+passable from abroad. `od_request.md` is the remaining route to a real weekday
+OD and is worth sending — the provider's own description says the published
+file was produced 제공요청에 의해.
+
+### The two files that made a weekday possible anyway
+
+Both are anonymous downloads, and `fetch_ridership.py` pulls them.
+
+**`data.go.kr/15071311` 서울교통공사 지하철혼잡도정보** — riders on board as a
+percentage of 정원, per station, per direction, per **30 minutes**, for a
+typical **평일 / 토요일 / 일요일**. Lines 1–8, 282 stations, 1,671 rows.
+
+This is *the quantity the map draws*, published. 서울교통공사 derive it the same
+way we do — their description says 교통카드 데이터 분석 with an optimal-route
+computation — so it is not an independent measurement of ridership so much as
+an independent run of the same idea by the people who hold the raw taps. It is
+the first thing this project has had to check its **output** against; every
+other check in `validate.py` checks an input.
+
+**`OA-12914` CARD_SUBWAY_MONTH, via `nio_download.do`** — daily boardings and
+alightings per station, one file per month back to 2015. No hours, but **all 27
+lines**: 622 stations including the Korail through-running sections, 공항철도,
+분당, 신림, 우이신설, 경춘. It joins to `stations.json` at 99.6% on name alone,
+and every miss is a case already documented under "Known data gaps" (자양,
+불암산, 암사역사공원, 연천, 청산).
+
+That split — level measured everywhere, shape measured on lines 1–8 — is
+exactly the split `build_od.py` was already built to exploit.
+
+### What a weekday build actually is
+
+Two fits, not one.
+
+1. **Re-level the pairs (Furness).** Take the measured pair totals as a seed
+   and scale them, `od[o,d] × a[o] × b[d]`, until each station's daily origin
+   and destination totals match what that station did on a typical weekday.
+   The target is `kept_b[i] × (weekday gate total / 2023-12-31 gate total)` —
+   a **ratio**, so whatever fraction of a station's gate traffic the OD covers
+   on the measured date carries over untouched rather than having to be
+   estimated.
+2. **Split into hours (IPF), as before.** Weekday hourly gate counts are
+   measured, so this half is unchanged in kind.
+
+Reference days are the **Tue–Thu of 2023-11**, minus 2023-11-16 (수능, when
+service is shifted and offices open late — it is the quietest Tue–Thu of the
+month). Thirteen days. Monday runs ~4% below the Tue–Thu mean and Friday ~3%
+above, which is the usual reason for the convention and holds here. 2023-11 is
+the ordinary month nearest the OD date, so level and pair structure come from
+the same season. All of this lives in `daytype.py`.
+
+**The honest limit.** Volumes are measured; *who goes where* is carried over
+from the Sunday. Furness fixes every station's row and column total, which is
+most of the information in an OD matrix, but it cannot invent a commute that
+the Sunday did not contain. A pair that was disproportionately busy on a
+Sunday night — 을지로입구→홍대입구, say — stays disproportionately busy relative
+to the rest of its row.
+
+**This has to be said on the page, not just here.** It sits in the panel as
+`#daynote`, in the same quiet grey as the static-view note, *outside* the
+`about the data` fold — a caveat behind a disclosure triangle is not a caveat.
+One sentence for the claim and one for its limit:
+
+> Passenger numbers are measured. Which journeys make them up is carried over
+> from a Sunday — the only day Seoul publishes station-to-station data for.
+
+It is hidden on `--day nye`, which is the one build with nothing to qualify,
+and shown in both view modes and both languages (`STR.en.dayNote` /
+`STR.ko.dayNote`). The longer version stays in `about`. Anything published from
+this map — a caption, a post, a screenshot — needs the same two sentences.
+
+### Does it matter which ordinary month you pick?
+
+Barely, and the exceptions are real rather than noise. Comparing the per-station
+weekday/2023-12-31 boarding ratio computed from **2023-11** against the same
+thing from **2024-11**, over the 499 stations with more than 500 boardings on
+the OD date:
+
+```
+network-wide weekday ratio   2023-11 x1.853   2024-11 x1.893   (2.2% apart)
+per-station, level removed   median 0.999   p10 0.959   p90 1.058
+                             469 of 499 agree within 10%  (94%)
+```
+
+The stations that do move moved for reasons: **구리 ×0.64** because the 8호선
+별내 extension opened in August 2024 and took its traffic; **구성 ×1.41**
+because GTX-A opened there in March 2024. Those are the network changing, not
+the method wobbling — and they are an argument for keeping the reference month
+close to the OD date, which is why `daytype.REF_MONTH` is 2023-11 rather than
+the more recent file. `build_od.py --month 202411` runs the comparison.
+
+### The check that says the machinery is not doing something silly
+
+`build_od.py --day sunday` re-levels by **×1.02** and reproduces the
+New Year's Eve profile minus the midnight tail:
+
+```
+--day nye     16:00  269.1  ############################################################
+--day sunday  16:00  279.9  ###########################################################
+--day weekday 08:00  736.6  ############################################################
+              12:00  251.3  ####################
+              18:00  728.9  ###########################################################
+```
+
+The Furness step does nothing when the target day is the same kind of day as
+the measured one, which is what it should do, and it does something large when
+it is not. Total trips go 3.40M → 3.42M for Sunday and 3.40M → 6.34M for a
+weekday, against a real weekday's ~7M gate journeys.
+
+### Checking the build against 혼잡도
+
+`python validate.py --congestion` — the only check here that looks at the
+output. For every segment on lines 1–8 it computes riders-per-hour over
+trains-per-hour over the line's 정원 and compares against the published figure
+for that station, direction and hour.
+
+- **Direction** is assigned from the station-number step, on the rule that
+  Seoul numbers its stations in the 하행 direction (2호선's loop is 내선/외선
+  instead, 외선순환 being the increasing one). That rule is an assumption, and
+  a silent swap would leave every correlation positive — both directions are
+  busy at both rushes — just worse. So the check runs it both ways and prints
+  which won.
+- **Read shape before level.** The hourly correlation per line is measured on
+  both sides and independent of any capacity assumption. The level carries our
+  160-per-car 정원 and theirs, so an offset shared by *every* line is a
+  disagreement about what 정원 means, not a routing bug.
+- **A sampled build cannot be read for level at all.** It keeps only the
+  segments near the origins it kept, and those carry their riders in full, so
+  the ratio is neither 1× nor 1/n. `--sample` says so out loud.
+
+The per-segment train count this needs is new in `stats.json` as `"n"`,
+counted over **every** trip and not only those carrying riders — an empty train
+still dilutes the average. Segments also carry `"ca"`/`"cb"`, the platform
+codes, which is what makes the direction test possible.
+
+### 9호선 is checked separately, and split 일반 / 급행
+
+9호선 is not 서울교통공사's line, so it is not in their file. 서울시메트로9호선
+publish their own — 서울 열린데이터광장 `OA-22197`, an xlsx of eight sheets:
+상선/하선 × 평일/휴일 × **일반/급행**. `fetch_ridership.py` pulls it,
+`load_congestion9()` reads it. Only 40 populated rows a sheet; the 15 MB is
+Excel bloat.
+
+**The express split is the point, and it is why `stats.json` grew `hx`/`nx`.**
+Those are the 급행 subset of `h`/`n` — the express riders and express trains on
+that segment — so the local is what is left after subtracting them. Comparing
+our blended average against either published sheet would have been meaningless:
+9호선's 급행 runs at **65.4%** of 정원 against the 일반's **37.1%** in the same
+hours, which is exactly why the operator publishes them apart. One number
+describes neither.
+
+The sheets are keyed by station *name* — no 역번호 anywhere in the file — which
+is safe on 9호선 because it shares no station name with itself. Its day split is
+also coarser than the 1–8 file's: 평일/휴일 only, so a Saturday borrows 휴일.
+That is the file's limit, not ours; `LINE9_DAY` records it.
+
+#### And it immediately found something: RAPTOR over-fills the 급행
+
+The first full run of the split check, 2026-09-04:
+
+```
+line     ours  published  ratio   corr
+9급행    90.6%      78.6%  1.15x   0.98
+9일반    19.4%      41.5%  0.47x   0.95
+```
+
+Both shapes are excellent — 0.98 and 0.95, the best on the network — so the
+*timing* is right on both services. The *split between them* is not. Counting
+riders carried rather than percentages:
+
+```
+              ours      published-implied   ratio
+express  1,945,523              1,898,133   1.02x
+local    1,208,624              2,825,259   0.43x
+express share of riders:  ours 61.7%   published 40.2%
+```
+
+**The express is right and the local is starved.** That is RAPTOR doing exactly
+what it was asked: it minimises journey time, wait included, so every rider who
+*can* take a 급행 does. Real passengers do not behave that way — the express is
+already full, some would rather sit, some will not stand for twenty minutes to
+save six. Nothing in the routing represents that, so 9호선's express carries
+half again the share it should.
+
+This is worth knowing before the express is drawn as its own service on the
+map: doing that would make the most-wrong number in the build the most visible
+one.
+
+**Fixed, or at least attacked, by `crowding.py`** — see "Crowding" below. It is
+a modelling addition rather than a data one, and it is optional: an ordinary
+`build.py` run is still the uncrowded build unless a crowding pass has been
+made. The figures in this section are the *uncrowded* ones, kept because they
+are what the check found and what the fix has to beat.
+
+It also generalises. The same over-assignment must apply to 1호선's 급행, where
+28.8% of riders are on an express in our build; there is no published figure to
+check it against, because 1호선's 서울교통공사 stretch has no express service and
+the Korail sections that do are outside the file.
+
+#### How much express traffic there is at all
+
+Riders carried past a station over the whole day, from the same build:
+
+| line | all riders | express | express share | segments with express |
+|---|---|---|---|---|
+| 1호선 | 8,707,927 | 2,503,839 | **28.8%** | 154 of 207 |
+| 9호선 | 3,154,164 | 1,945,526 | **61.7%** | 30 of 102 |
+| 공항철도 | 743,829 | 3,814 | 0.5% | 4 of 28 |
+| **whole network** | 62,759,371 | 4,453,179 | **7.1%** | |
+
+So express is 7% of the map but a *large* share of two lines and essentially
+absent from the other twenty. That matters for how it should be drawn: anything
+that distinguishes express costs nothing on most of the network, because there
+is nothing there to distinguish.
+
+### What it said, on the first full weekday build
+
+2026-09-04, 545 segments matched against the published 평일 figures.
+
+```
+direction check: 상선/하선 as assigned r=0.801, flipped r=0.374  -> as assigned
+
+ hour     ours  published   ratio        line     ours  published  ratio   corr
+05:00    21.7%      32.7%   0.66x        1       34.7%      34.2%  1.01x   0.87
+07:00    50.7%      58.8%   0.86x        2       43.5%      46.1%  0.94x   0.88
+08:00    55.6%      65.1%   0.85x        3       39.3%      48.0%  0.82x   0.97
+12:00    27.2%      33.3%   0.82x        4       40.3%      49.2%  0.82x   0.94
+17:00    49.3%      59.6%   0.83x        5       43.4%      48.2%  0.90x   0.96
+18:00    56.3%      69.6%   0.81x        6       31.4%      35.9%  0.88x   0.96
+23:00    25.3%      23.7%   1.07x        7       42.9%      53.3%  0.80x   0.96
+00:00    15.2%      10.3%   1.48x        8       43.3%      55.7%  0.78x   0.96
+                                         9급행    90.6%      78.6%  1.15x   0.98
+                                         9일반    19.4%      41.5%  0.47x   0.95
+```
+
+**The shape is right.** Every line correlates 0.87–0.98 against a measurement
+the build has never seen, and the direction rule wins its own test by a mile.
+The morning and evening peaks land in the right hours at the right relative
+heights — which is the whole point of the exercise, since a Sunday build would
+score near zero here.
+
+**The level is 15–20% low, consistently, and that is the known coverage
+limit rather than a bug.** The build routes **6,328,321 riders against
+7,837,194 measured weekday gate boardings — 80.7%**. The missing fifth is
+journeys the OD does not contain at all, for the reason in "What the OD
+actually contains": a trip with neither end on 서울교통공사's network is not in
+the source. Re-levelling deliberately preserves that coverage fraction
+(`row_t = kept_b × ratio`, a ratio of gate totals rather than an absolute), so
+the map under-draws by roughly the amount the OD under-measures. Inflating to
+close the gap would be inventing riders.
+
+**Re-measured after `spawn_gaps()` replaced the spawn grid**, and it moved
+almost nothing: every ratio from 07:00 on is identical to three decimals and
+the per-line correlations shift by at most 0.02. That is the right result
+rather than a disappointing one. The grid rewrite was about *which train inside
+an hour* a rider catches; 혼잡도 is an average over the trains in a half hour,
+so it can see the hourly totals being right and is nearly blind to the
+train-to-train lumpiness the rewrite fixed. The numbers to watch for that are
+the load step and the platform-arrival histogram, under "Spawn times".
+
+Three smaller things the table shows:
+
+- **05:00 at 0.66×** is the other open-ended bin. `06시이전` is *everything*
+  before 06:00, and some of those riders have no train to catch, so the hour
+  under-reads. See "The first hourly bin is open-ended too".
+- **Line 1 at 1.01×** is not a better model, it is better coverage. 혼잡도 for
+  line 1 only covers the ten 서울교통공사 stations, 서울역–청량리, which is exactly
+  the stretch where the OD is most complete.
+- **00:00 at 1.47×** is the tail of `LATE_BIN_HOURS`. The `24시이후` gate column
+  is open-ended and we spread it over one hour on an ordinary day; the
+  published figure thins out faster. It is the last twenty minutes of service
+  and carries almost nobody, so it has been left alone.
+
+## Crowding — why the build iterates against itself
+
+`crowding.py`. Added 2026-09-04, after the 9호선 check found that RAPTOR puts
+half again as many riders on the 급행 as really ride it.
+
+### The problem is not a bug, it is the objective
+
+`build.py` gives every rider the fastest journey, wait included. On a line with
+both 급행 and 일반 that means **everyone who can take the express does**,
+because it always is faster. Real passengers do not behave that way: the
+express is already full, and plenty of people would rather sit on a local for
+twenty minutes than stand on an express for fourteen. Nothing in a shortest-path
+search represents either fact.
+
+### Why a capacity check does not work here
+
+The obvious fix — refuse to board a train that is full — cannot be dropped into
+this code. Whether you can board the 08:05 급행 at 노량진 depends on everyone
+who got on upstream at 김포공항 and 여의도. That is a **shared, global**
+constraint, and the routing is deliberately the opposite: 624 origins routed
+independently across the cores, no worker knowing what any other worker loaded
+onto a train. A live "is this train full" test would serialise the whole build
+and break the parallelism the run time depends on.
+
+### So iterate, and average
+
+The standard transit-assignment answer, method of successive averages:
+
+```
+round 0   build with no penalty              -> loads
+round i   loads -> a penalty per segment
+          build again; riders now avoid the crush
+          average the new loads into the old with weight 1/(i+1)
+```
+
+**The averaging is the part that matters.** Without it round 1 empties the
+express, round 2 finds it empty and refills it, and the loop rings forever.
+Averaging damps that into a fixed point.
+
+Each round is still a fully parallel build, because the penalty is a read-only
+table computed *between* rounds and left in `data/crowding.npz`. `build.py`
+loads it if it exists and ignores it if it does not, so **an ordinary
+`build.py` run is still the uncrowded build** unless a crowding pass has been
+made. `crowding.py --reset` puts it back.
+
+### How the penalty enters the search
+
+Not as a cost array — that would mean a generalised-cost RAPTOR and a rewrite
+of the scan. Instead the *arrival label* is inflated: riding from `board_si` to
+`sj` on a crowded trip lands you at
+
+```
+arrr[ti][sj] + pcum[ti][sj] - pcum[ti][board_si]
+```
+
+so a crush-loaded ride simply looks longer than it is. Labels stay in seconds
+and stay monotone, so the rest of RAPTOR is untouched, and `depc` — catching a
+train — stays on real clock time, which is right: you board when it leaves,
+however full it is.
+
+**The cost of doing it that way**, written down because it is invisible
+otherwise: the labels RAPTOR compares against real departure times are now
+*perceived* times, so a rider who has just ridden a crowded train looks like
+they arrived later than they did and can miss a connection they would really
+make. It is a conservative distortion and a defensible one — someone at the
+back of a crush-loaded train really is slower off it — but it is a distortion,
+and it grows with the penalty. That is why `crowding.py` reports the median and
+p90 penalty and not just the worst: a two-hour tail would wreck the transfers
+while looking like it was only affecting express choice.
+
+### The penalty function, and why 110% would have been wrong
+
+Crowding `c` is riders over 정원. The instinct is to treat 100% as a wall. The
+published figures say otherwise — every station-direction-halfhour on lines
+1–8, weekday:
+
+```
+median    27.9%          cells at or above 100%   1.57%
+p99      108.1%                            120%   0.46%
+max      144.6%   (2호선 사당 외선 08:30)     150%   0.00%
+```
+
+**정원 is a design figure, not a physical limit.** Seoul routinely runs above
+it and never above ~145%. So the penalty is zero up to `C_FREE = 1.00`, and
+rises as a square to `ALPHA` times the segment's own run time at
+`C_CRUSH = 1.45`:
+
+```
+factor(c) = 1 + ALPHA * clamp((c - C_FREE) / (C_CRUSH - C_FREE), 0, 1) ** 2
+```
+
+Square rather than linear so that 110% barely stings and 140% hurts, which is
+what the distribution above implies: almost nothing is over 120%, so a linear
+ramp would spend its whole range on cells that do not exist.
+
+### What can and cannot be checked
+
+**9호선 is the only line with a published express/local split**, so `ALPHA` is
+fitted on one line and applied to all of them. 1호선's 급행 carries 28.8% of
+that line's riders in the uncrowded build, with nothing to check it against —
+서울교통공사's stretch of 1호선 has no express service at all, and the Korail
+sections that do are outside their file. `crowding.py` prints both shares each
+round for exactly this reason: one is a calibration target and the other is a
+number to watch, and they must not be confused.
 
 ## Method
 
@@ -543,10 +1066,13 @@ number is never guessed at.
 
 - ~~Does the timetable cover Korail through-running?~~ **Resolved — yes.**
 - ~~Is the OD file real or a sample?~~ **Resolved — real, 229,365 rows.**
-- **Which day.** 2023-12-31 is all we have and it is New Year's Eve. Either
-  lean into that as the subject, or ask Seoul for an ordinary weekday — we hold
-  hourly counts for every day of 2023 and 2024, so any date they give us pairs
-  immediately. See `od_request.md`.
+- ~~**Which day.** 2023-12-31 is all we have and it is New Year's Eve.~~
+  **Half resolved, 2026-09-04.** It is not New Year's Eve that is the problem,
+  it is Sunday — the two are indistinguishable in the hourly profile. The map
+  now builds a weekday by re-levelling the measured pairs onto measured weekday
+  station totals; see "Getting off New Year's Eve". A real weekday OD would
+  still be better, and `od_request.md` is still the route to one. Nothing else
+  found: the search is written down so it does not get repeated.
 - ~~Station name joins will be the fiddly part.~~ **Resolved, and easier than
   feared.** OD names and hourly names match *exactly* — both use the
   parenthesised style, `잠실(송파구청)`. The timetable uses plain names but shares
@@ -567,6 +1093,12 @@ The IPF-from-marginals approach applies equally to Paris and Bengaluru, which
 `metroslist.md` files under Tier 3 precisely because they have hourly station
 counts but no OD pairs. Both would promote.
 
+The Furness step generalises further, and more usefully: **one measured OD of
+any day, plus station totals for the day you want, gets you that day.** That
+turns a single-snapshot OD — which is what most cities release, if they release
+one at all — from a one-day map into a day-type map. The cost is stated in
+"Getting off New Year's Eve": volumes measured, interaction structure borrowed.
+
 ## Pipeline
 
 ```
@@ -575,14 +1107,19 @@ fetch_hourly.py    # CardSubwayTime -> data/hourly.csv
                    #   abroad. Superseded by the OA-12921 archive for
                    #   everything except lines 9 / Korail hourly counts.
                    #   Kept only because it is the sole route to those.
+fetch_ridership.py # 혼잡도 (lines 1-8 and 9호선) + all-operator daily counts
+daytype.py         # which day the map draws; the one place that decides
+crowding.py        # optional: iterate build.py so crowded trains lose riders
 build_stations.py  # complexes, platforms, coords, track geometry
-build_od.py        # IPF against hourly marginals -> od_hourly.npz
+build_od.py        # Furness onto the day, then IPF into hours -> od_hourly.npz
 build.py           # RAPTOR routing + rider assignment -> trains.json
 build_shapes.py    # bend train paths onto the track (build.py calls this)
 index.html         # MapLibre animation, nycriders house style
 ```
 
-`build.py` takes about **3 minutes** for all 624 origins, shaping included. It
+`build.py` takes about **10 minutes** for all 624 origins on a weekday build,
+shaping included — 7 minutes routing, 3 shaping. A Sunday is roughly half that:
+the work scales with riders, and a weekday carries 6.34M against 3.40M. It
 routes across the cores bar two, which it leaves alone so the machine stays
 usable (`JOB_HEADROOM`); `--jobs` overrides that. Each worker wants ~300 MB, so
 fourteen of them is a bit over 4 GB. `--sample 60` uses 11 origins and takes
@@ -635,9 +1172,14 @@ with nothing on screen to say why. Three things keep that from recurring.
   factor, how many origins and riders went into it. The page prints it under
   *about the data*, and puts an amber warning across the panel when it is
   drawing a sample, saying by how much the counts are low.
+- **Both outputs also carry `day`**, and the page's subtitle reads off it: a
+  weekday build says "a typical weekday" where an `--day nye` one names the
+  date. `date` is empty on every day type but `nye`, because a re-levelled day
+  is a class of days and naming a Wednesday would claim a precision the data
+  has not got.
 
-The quickest check by hand is the file size: a full `trains.json` is ~21 MB.
-Anything much smaller is a sample.
+The quickest check by hand is the file size: a full weekday `trains.json` is
+~35 MB. Anything much smaller is a sample, or a Sunday.
 
 ### One bad stop time, and how far it travelled
 
@@ -716,12 +1258,29 @@ nine people to shift the edge by a twentieth of a pixel, and a busy station
 changes by one person hundreds of times an hour. Writing every one of those
 costs megabytes and draws nothing.
 
+**A gap's riders trickle in, they do not land together.** `spawn_gaps()` gives
+every rider in a gap the same spawn time, because one search has to stand for
+the lot — but that is a routing convenience, not what happens on the platform.
+Drawn literally, the bubble went from empty to full in one step and then
+vanished when the train left, which read as a glitch rather than as a platform
+filling. `spread_arrivals()` therefore splits a first leg's riders across the
+gap they arrived in, up to `WAIT_MAX_SUB` steps. Measured on the rebuilt
+sample, a bubble big enough to see now grows by about **9% of its level per
+step** (p99 28%), and the page ramps between steps over `WAIT_TRANSITION`
+on top of that.
+
+Transfers are left as a single step on purpose: a trainload really does arrive
+at once, and drawing that as a ramp would be the lie.
+
 ### Spawn times
 
 The OD says how many people left a station in an hour, never when inside it.
-`build.py` spreads them over `DEP_BIN`-wide spawns and runs RAPTOR again at
-each, so a rider boards the train that is next *then* rather than the one that
-was next at the top of the hour.
+**This section is history — it ends with the grid being thrown away.** Skip to
+the bold line at the bottom for what `build.py` does now.
+
+`build.py` *used to* spread riders over `DEP_BIN`-wide spawns and run RAPTOR
+again at each, so a rider boarded the train that was next *then* rather than
+the one that was next at the top of the hour.
 
 Two things about that grid were wrong until 2026-09-04, and both showed on the
 map as trains a few minutes apart carrying wildly different loads:
@@ -731,8 +1290,8 @@ map as trains a few minutes apart carrying wildly different loads:
   boarded nobody.
 - **The grid was shared.** Every origin in the network released at `:05`,
   `:15`, `:25` … together, so whichever train pulled out just after each tick
-  scooped the lot. `dep_phase()` now offsets each origin by a stable fraction
-  of a bin, so the network no longer breathes in step.
+  scooped the lot. `dep_phase()` offset each origin by a stable fraction of a
+  bin, so the network no longer breathed in step.
 
 Measured on `--sample 60`, over eight busy stations between 16:00 and 22:00 —
 the mean gap in load between one train and the next, over the mean load:
@@ -745,50 +1304,85 @@ the mean gap in load between one train and the next, over the mean load:
 
 The `:05` spike is the signature of the bug and it is gone.
 
-**Then `DEP_BIN` went to 150 s, and that is the last of it.** Simulating the
-quantisation against the real departure times and the real hourly volumes —
-riders spawn on the grid, each takes the first train after their tick — gives
-the whole curve, against the continuous-arrival floor that no spawn splitting
-can beat:
+Narrowing the grid closes most of the rest of it. Simulating the quantisation
+against the real departure times and the real hourly volumes — riders spawn on
+the grid, each takes the first train after their tick — gives the whole curve,
+against the continuous-arrival floor no grid can beat:
 
 | `DEP_BIN` | load step | share of the achievable gap closed |
 |---|---|---|
-| 600 s | 1.93 | 0% |
-| 300 s | 1.36 | 60% |
-| **150 s** | **1.02** | **95%** |
-| 60 s | 0.99 | 99% |
-| continuous | 0.98 | — |
+| 600 s | 1.96 | 0% |
+| 300 s | 1.42 | 54% |
+| 150 s | 0.99 | 97% |
+| 60 s | 0.97 | 99% |
+| continuous | 0.96 | — |
 
-So 150 s is the knee: 60 s costs 2.5x as much for four more points. What is
-left at 1.02 is the OD's own hour-level lumpiness, which is data, not method.
+**So the grid was thrown away, and there is no `DEP_BIN` any more.** The floor
+is reachable exactly, and for less work than a fine grid. A search from time
+`t` is decided entirely by which departure is next at the origin, so *everyone
+arriving between two departures catches the same train* — the one that ends
+the gap. There is nothing finer to resolve. `spawn_gaps()` therefore puts one
+spawn in each gap, carrying that gap's share of the hour, at the middle of the
+gap because that is both the average arrival within it and the average platform
+wait, which the waiting bubbles read off it.
 
-**And it is not slower.** RAPTOR from an origin at time `t` depends only on
-which departure is next at each stop the search seeds — the origin's platforms
-and whatever a transfer reaches. Between two of those departures every bin
-gives a bit-identical answer, so `spawn_key()` keys the search on exactly that
-and `route_origins()` reuses the previous result when the key has not moved.
-On `--sample 8`, **52% of spawns never run a search**: 18,881 against the
-19,524 the old 300 s grid needed, so the full build stays around 90 minutes
-despite twice the spawns. Quiet outer stations are where it pays — four
-departures an hour against twenty-four spawns.
+This is what `../londonriders/` does — stratified random departure times inside
+each quarter-hour — made exact: one spawn per gap rather than a sample of the
+window, and no bin width or chunk size to tune. Anita asked why Seoul could not
+just spread riders across time the way London does. It can; this is that.
 
-The reuse was verified by building `--sample 60` with and without it and
-diffing: every one of 5,456 trains and 626 stations identical, only the build
-stamp differing. **Re-do that test if you touch `raptor()`'s seeding** — adding
-anything to what round 0 depends on invalidates the key, and the failure mode
-is silent mis-assignment rather than a crash.
+Measured on the rebuilt `--sample 60`: load step **1.03** against a simulated
+floor of **0.96** for the same data, and the platform-arrival histogram flat to
+within half a point across the ten minutes. The residual is model error in the
+floor estimate, not grid quantisation. What is left is the OD's own hour-level
+lumpiness, which is data, not method.
 
 The numbers to watch if this ever looks wrong again: the load step, the share
 of calls with nobody aboard, and the flatness of the platform-arrival
 histogram.
 
+### The first hourly bin is open-ended too
+
+`24시이후` is not the only open-ended column. The **first** one is `06시이전` —
+*everything* before 06:00, not 05:00–06:00 — and it was being spread across the
+whole 05:00 hour as though it were an ordinary one. The subway does not open
+until about 05:30, so more than half of that bin was put on platforms before
+any train ran, and because the first gap at each origin then stretched from
+05:00 to its first departure, all of those riders spawned at its midpoint and
+stood there.
+
+The result looked like a finding: **at 05:19 the network held 33,818 people on
+platforms against 42,147 at the 08:30 peak** — 80% of peak crowding on 10% of
+the traffic, with four trains moving. It is entirely an artefact.
+
+`early_window_start()` now begins that window one headway before each origin's
+own first train. The same measurement afterwards: **68 on platforms at 05:19
+against 1,036 at 08:30** (sample build), 6.6% — and the dawn curve ramps up
+through the hour as service starts instead of spiking at 05:20. The morning
+peak is unchanged, so the fix touched only the artefact.
+
+`24시이후` gets the symmetric treatment from `LATE_BIN_HOURS`. **If a third
+open-ended bin ever appears, it needs the same thought.**
+
+### What the build actually spends its time on
+
+**Not RAPTOR.** That was asserted here without measurement on 2026-09-04 and it
+was wrong — it drove a whole round of optimising the wrong thing. Measured:
+`--sample 8` routes **78 origins in 76 s** on fourteen workers, so all 626
+scale to roughly **ten minutes** of routing. A `--sample 60` run is 36 s end to
+end, nearly all of it setup — loading 600k timetable rows, the jitter and speed
+smoothing pass over 200k segments, then building and writing the output.
+
+So the spawn scheme is a small slice of the build, and the cost of making it
+exact rather than approximate is not worth avoiding. **The full-build wall time
+in "Picking this up" is still unverified** — time it and write the number down.
+
 ### Knobs worth knowing
 
 | | in | what it does |
 |---|---|---|
-| `EXTEND_LAST_HOUR` | `build.py` | reconstructs New Year's Eve late service. The one invented thing in the pipeline; `False` shows the night as the regular timetable would have it |
+| `EXTEND_LAST_HOUR` | `build.py` | reconstructs New Year's Eve late service, and is set from `daytype.py` — on for `--day nye`, off for every other day. The one invented thing in the pipeline |
 | `LATE_BIN_HOURS` | `build.py` | how many hours the open-ended `24시이후` bin is spread across. 2 |
-| `DEP_BIN` | `build.py` | how often riders spawn inside their hour. 150 s, which is the knee — see "Spawn times". Lowering it further costs real time and buys nothing |
 | `MAX_ROUNDS` | `build.py` | trips per journey, so 4 means up to 3 transfers |
 | `SAG_M` | `build_shapes.py` | how far the track must bow before a waypoint is kept |
 | `RENAMES` / `EXCLUDE` | `build_stations.py` | 2026-timetable vs 2023-ridership differences, each with its reason |
@@ -813,15 +1407,27 @@ Spot-checked against known positions: 서울역, 강남, 홍대입구, 잠실, �
 
 ### build_od.py output
 
-`data/od_hourly.npz`: **112,774 pairs × 20 hours**, 3,007,753 riders. 13.2% of
-the day's trips are dropped — one end off lines 1–9, or a same-complex round
-trip that carries no journey.
+`data/od_hourly.npz`: **178,227 pairs × 20 hours**. The rider total depends on
+the day — 3.40M for `--day nye`, 3.42M for `--day sunday`, **6.34M for
+`--day weekday`**. 2.0% of the OD's trips are dropped: one end off the network,
+a same-complex round trip that carries no journey, or an unreachable pair.
 
-The fit converges in 30 rounds and reproduces the measured marginals exactly.
-That is not too good to be true: the hourly profiles are rescaled so each
-station's daily total equals what we actually carry, which makes the three
+The re-levelling reports two numbers worth reading. `day/OD-date ratio` is the
+network-wide weekday-to-Sunday factor, **×1.85**, which is the size of what
+Furness is being asked to do; and `origin totals hit to 0.143%`, which is how
+close it got. Only 522 of 626 complexes have a card total on both days — the
+other 104 are the operators outside Seoul's fare settlement and float, taking
+their scale from the Seoul end of their trips.
+
+The hourly fit converges in 40 rounds and reproduces the measured marginals
+exactly. That is not too good to be true: the hourly profiles are rescaled so
+each station's daily total equals what we actually carry, which makes the three
 constraint families mutually consistent, and IPF on a consistent system has an
 exact solution. Pair totals are preserved to 1e-6.
+
+`measured complexes: 239 of 626` is the hourly file's reach, not a regression —
+서울교통공사 lines 1–8 within their own boundary. Everything else takes its hours
+from its measured partners, which is constraint (c) doing the work.
 
 **The inference does real work.** By volume: 73.0% of trips have both ends
 measured, 24.0% one end, and only 3.0% are seed-only. Unmeasured stations move
@@ -829,18 +1435,23 @@ measurably away from the seed profile, and the ones that move furthest are the
 outer suburban stations — 안산, 신창, 성환, 동두천, 오산 — exactly where trips are
 long enough that the arrival-hour shift carries information.
 
-Cross-checked against the raw hourly file: per-station shapes come through
-intact, and **잠실 shows 11,995 boardings in the midnight hour against 1,378 at
-23:00**, with arrivals peaking again at 23:00 before midnight. The countdown
-crowd arriving and then going home is sitting right there in the data.
+Cross-checked against the raw hourly file on `--day nye`: per-station shapes
+come through intact, and **잠실 shows 11,995 boardings in the midnight hour
+against 1,378 at 23:00**, with arrivals peaking again at 23:00 before midnight.
+The countdown crowd arriving and then going home is sitting right there in the
+data. The system-wide dip at 23:00 on that build is real, not an artefact —
+people are already at whatever they came for.
 
-The system-wide dip at 23:00 is real, not an artefact — people are already at
-whatever they came for.
+None of that survives into a weekday build, and it should not: it is the one
+night's own signature.
 
 ### build.py output
 
-`data/trains.json`. 268 patterns and 3,899 trips make up the Sunday/holiday
-service. Riders spawn every 10 minutes inside their hour and RAPTOR runs afresh
+`data/trains.json`, ~35 MB shaped. **445 patterns and 9,306 trips** make up
+weekday service, against 268 patterns / 3,899 trips on a Sunday; 9,259 of those
+trips end up carrying at least one rider. The file grew from 25 MB when
+`spread_arrivals()` went in — the waiting timelines now have real ramps in them
+rather than single steps. Riders spawn every 10 minutes inside their hour and RAPTOR runs afresh
 per bin, so they board the train that is genuinely next — this is what stops an
 hour of 잠실 piling onto one midnight train.
 
@@ -924,7 +1535,11 @@ Small, but write them down rather than rediscover them:
 
 ## Known limitations of the build
 
-- **The one invented thing: `EXTEND_LAST_HOUR` in `build.py`.** No trip in the
+- **The one invented thing: `EXTEND_LAST_HOUR` in `build.py`.** It applies to
+  `--day nye` and nothing else — on an ordinary day the timetable and the gate
+  counts agree about when service stops, so there is no gap to reconstruct and
+  repeating an hour of departures would be inventing trains that did not run.
+  `daytype.py` decides. On New Year's Eve: no trip in the
   regular Sunday timetable starts at or after 00:00 — only 105 trains are still
   finishing their runs, and the last ends at 00:42. Yet the gate counts record
   roughly 230,000 journeys in the post-midnight bin. That gap is the evidence

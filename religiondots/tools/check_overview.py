@@ -34,7 +34,8 @@ import tempfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
-from check_palette import BG, as_hex, delta_e, luminance, rgb   # noqa: E402
+from check_palette import (BG, DIM_ON_PURPOSE, as_hex, delta_e,  # noqa: E402
+                           luminance, rgb)
 
 HERE = Path(__file__).parent.parent
 sys.path.insert(0, str(HERE / "taxonomy"))
@@ -194,11 +195,17 @@ def main():
                 shown = tuple(round(c) for c in cols[nid])
                 print(f"   {size[nid]:>8,}  {as_hex(cols[nid])}  hsl{shown}  "
                       f"{tree.label[nid]}")
-        dim = [f"{tree.label[n]} ({r:.1f})" for n, r in
-               (((n, (luminance(rgb(cols[n])) + 0.05) / (bgl + 0.05))
-                 for n in cols if size[n] >= args.big)) if r < 2.9]
+        dim_all = [(n, r) for n, r in
+                   ((n, (luminance(rgb(cols[n])) + 0.05) / (bgl + 0.05))
+                    for n in cols if size[n] >= args.big) if r < 2.9]
+        dim = [f"{tree.label[n]} ({r:.1f})" for n, r in dim_all
+               if n not in DIM_ON_PURPOSE]
+        held = [f"{tree.label[n]} ({r:.1f})" for n, r in dim_all
+                if n in DIM_ON_PURPOSE]
         if dim:
             print("   dim against the background: " + ", ".join(dim))
+        if held:
+            print("   dim on purpose, not a finding (spec §6.3a): " + ", ".join(held))
         # two different questions, and one bar cannot ask both -- see `show`
         pairs = sorted((delta_e(cols[a], cols[b]), a, b)
                        for a, b in itertools.combinations(cols, 2)

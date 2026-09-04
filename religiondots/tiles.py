@@ -22,25 +22,32 @@ across a border"). It has to: the viewer now shows and colours one country at a 
 mark merged across the 49th parallel would carry a count that belongs to neither side of it.
 The archive stays shared because the pyramid and the tile boundaries are, not the marks.
 
+The MVT bytes are written by mvt.py rather than mapbox_vector_tile, which is a hand-rolled
+protobuf encoder and is checked by tools/check_tiles.py. Read the head of mvt.py for why:
+the general encoder does 11,400 features/s on features that are all Points, and a --coarse
+build has about 28 million of them.
+
 Usage:
     python tiles.py                    # z0-10 from data/processed/*.geojson
     python tiles.py --max-zoom 8
+    python tiles.py --countries us,ca,cz,br,au,ie,mx,nz,uk,pl,ro,ee,hr,in,de --coarse
 """
 import argparse
+import contextlib
 import gzip
 import json
 import math
-import random
+import os
 import sys
-from collections import defaultdict
+from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
-import mapbox_vector_tile
 from pmtiles.writer import Writer
 from pmtiles.tile import Compression, TileType, zxy_to_tileid
 
+import mvt
 from countries import COUNTRIES
 
 # Windows consoles here are cp1252 and the data is not: source names, categories and country
@@ -55,21 +62,31 @@ OUT = PROC / "religiondots.pmtiles"
 
 CELL_BITS = 5        # 32x32 merge cells per tile -> ~16px cells on a 512px tile
 EXTENT = 4096
-# draw-order shuffle only; fixed so the archive is reproducible build to build
+# draw-order shuffle only; fixed so the archive is reproducible build to build.
+#
+# It genuinely is now, and was not before 2026-09-04: gzip stamps the current time into
+# every member header unless told otherwise, so two builds of identical input differed
+# everywhere. With mtime pinned in _encode_chunk the only bytes that still move are FIVE
+# of them, in the gzip headers pmtiles' own writer puts on the root directory and the
+# metadata (pmtiles/writer.py calls gzip.compress with no mtime and is not ours to fix).
+# Everything that is a tile is now byte for byte the same, --jobs 1 or --jobs 8.
 SHUFFLE_SEED = 20260827
 
 
 def load(path: Path, cc: str):
     with open(path, encoding="utf-8") as f:
         gj = json.load(f)
-    lon, lat, node, extra, tier = [], [], [], [], []
-    for ft in gj["features"]:
-        c = ft["geometry"]["coordinates"]
-        lon.append(c[0]); lat.append(c[1])
-        node.append(ft["properties"]["n"])
-        extra.append(ft["properties"].get("why", ""))
-        tier.append(int(ft["properties"].get("t", 0)))      # spec §7; absent = measured
-    df = pd.DataFrame({"lon": lon, "lat": lat, "n": node, "why": extra, "t": tier, "c": cc})
+    feats = gj["features"]
+    coords = np.array([ft["geometry"]["coordinates"] for ft in feats], dtype=float)
+    props = [ft["properties"] for ft in feats]
+    df = pd.DataFrame({
+        "lon": coords[:, 0] if len(feats) else np.empty(0),
+        "lat": coords[:, 1] if len(feats) else np.empty(0),
+        "n": [p["n"] for p in props],
+        "why": [p.get("why", "") for p in props],
+        # spec §7; absent = measured
+        "t": np.array([p.get("t", 0) for p in props], dtype=np.int64),
+        "c": cc})
     # web mercator, normalised to [0,1]
     df["wx"] = (df["lon"] + 180.0) / 360.0
     s = np.sin(np.radians(df["lat"].clip(-85.05112878, 85.05112878)))
@@ -77,53 +94,90 @@ def load(path: Path, cc: str):
     return df
 
 
-def merge_at_zoom(df: pd.DataFrame, z: int) -> pd.DataFrame:
-    """One row per (merge cell, religion): mean position and how many dots merged."""
+def merge_at_zoom(nc: np.ndarray, cc: np.ndarray, tier: np.ndarray,
+                  wx: np.ndarray, wy: np.ndarray, z: int):
+    """One mark per (merge cell, religion): mean position and how many dots merged.
+
+    The five group keys are packed into one int64 and factorised on that, rather than
+    handed to a five-column pandas groupby. It is the same grouping — cx and cy are
+    bounded by 2^(z+CELL_BITS) and the codes by the vocabularies below, so the packing is
+    injective and asserted to be — and it runs a few times faster on two million rows,
+    which matters because this happens once per zoom per edition.
+
+    `t` is part of the KEY, not an aggregate: a merged mark is one colour, and a cell
+    holding both measured and derived dots of the same religion has to stay two marks or
+    one of the two tiers would be drawn as the other (spec §7). It splits almost nothing —
+    a source is normally one tier throughout a unit — and where it does split, it is
+    splitting exactly the cells whose confidence genuinely differs.
+    """
     n = 1 << (z + CELL_BITS)
-    cx = np.minimum((df["wx"].to_numpy() * n).astype(np.int64), n - 1)
-    cy = np.minimum((df["wy"].to_numpy() * n).astype(np.int64), n - 1)
-    # `t` is part of the KEY, not an aggregate: a merged mark is one colour, and a cell
-    # holding both measured and derived dots of the same religion has to stay two marks or
-    # one of the two tiers would be drawn as the other (spec §7). It splits almost nothing —
-    # a source is normally one tier throughout a unit — and where it does split, it is
-    # splitting exactly the cells whose confidence genuinely differs.
-    g = pd.DataFrame({"cx": cx, "cy": cy, "n": df["n"].to_numpy(), "c": df["c"].to_numpy(),
-                      "t": df["t"].to_numpy(),
-                      "wx": df["wx"].to_numpy(), "wy": df["wy"].to_numpy()})
-    out = g.groupby(["cx", "cy", "n", "c", "t"], sort=False).agg(
-        wx=("wx", "mean"), wy=("wy", "mean"), k=("wx", "size")).reset_index()
-    out["tx"] = out["cx"].to_numpy() >> CELL_BITS
-    out["ty"] = out["cy"].to_numpy() >> CELL_BITS
-    return out
+    cx = np.minimum((wx * n).astype(np.int64), n - 1)
+    cy = np.minimum((wy * n).astype(np.int64), n - 1)
+    cell = cx * n + cy
+    nspace, cspace, tspace = int(nc.max()) + 1, int(cc.max()) + 1, 4
+    assert cell.max() * nspace * cspace * tspace < 2 ** 62, "merge key would overflow"
+    key = ((cell * nspace + nc) * cspace + cc) * tspace + tier
+    codes, uniq = pd.factorize(key)
+    k = np.bincount(codes, minlength=len(uniq))
+    mx = np.bincount(codes, weights=wx, minlength=len(uniq)) / k
+    my = np.bincount(codes, weights=wy, minlength=len(uniq)) / k
+    u = uniq.astype(np.int64)
+    u, o_tier = np.divmod(u, tspace)
+    u, o_cc = np.divmod(u, cspace)
+    u, o_nc = np.divmod(u, nspace)
+    return dict(tx=(u // n) >> CELL_BITS, ty=(u % n) >> CELL_BITS,
+                wx=mx, wy=my, k=k.astype(np.int64), n=o_nc, c=o_cc, t=o_tier)
 
 
-def to_tiles(rows: pd.DataFrame, z: int, layer: str, sink: dict, with_k: bool):
-    """Bucket merged rows into tiles and stash MVT-ready features."""
-    ntiles = 1 << z
-    px = (rows["wx"].to_numpy() * ntiles - rows["tx"].to_numpy()) * EXTENT
-    py = (rows["wy"].to_numpy() * ntiles - rows["ty"].to_numpy()) * EXTENT
-    px = np.clip(px, 0, EXTENT - 1).astype(int)
-    py = np.clip(py, 0, EXTENT - 1).astype(int)
+def tile_pixels(wx: np.ndarray, wy: np.ndarray, tx: np.ndarray, ty: np.ndarray, z: int):
+    """Position within the tile, in MVT extent units."""
+    nt = 1 << z
+    px = np.clip((wx * nt - tx) * EXTENT, 0, EXTENT - 1).astype(np.int64)
+    py = np.clip((wy * nt - ty) * EXTENT, 0, EXTENT - 1).astype(np.int64)
+    return px, py
 
-    tx = rows["tx"].to_numpy(); ty = rows["ty"].to_numpy()
-    node = rows["n"].to_numpy()
-    cc = rows["c"].to_numpy()
-    k = rows["k"].to_numpy() if with_k else np.ones(len(rows), dtype=int)
-    why = rows["why"].to_numpy() if "why" in rows else None
-    tier = rows["t"].to_numpy() if "t" in rows else None
 
-    for i in range(len(rows)):
-        props = {"n": node[i], "c": cc[i]}
-        if tier is not None and tier[i]:        # omitted when measured, as in the geojson
-            props["t"] = int(tier[i])
-        if with_k:
-            props["k"] = int(k[i])
-        elif why is not None and why[i]:
-            props["why"] = why[i]
-        sink[(z, int(tx[i]), int(ty[i]))][layer].append({
-            "geometry": {"type": "Point", "coordinates": [int(px[i]), int(py[i])]},
-            "properties": props,
-        })
+def bucket(tx: np.ndarray, ty: np.ndarray, z: int, rng):
+    """Sort features into tiles, in a shuffled order within each tile.
+
+    The shuffle is spec §4.2's, and it is not cosmetic: MVT features paint in file order,
+    so the last one drawn at a pixel is the one you see. scatter.py emits dots grouped by
+    node in sorted order within each polygon, so unshuffled, the alphabetically-last
+    religion present in an area paints over every other one. Measured in central São
+    Paulo: the last 5% of features emitted was 100% a single node, against a true
+    composition of 58% Catholic — which is why the city read Spiritualist zoomed out and
+    Catholic zoomed in, with 43x fewer Spiritualists.
+
+    Shuffling the whole array ONCE and then sorting into tiles with a STABLE sort gives
+    each tile a uniform permutation of its own features, which is what the old per-tile
+    `random.shuffle` did, at a fraction of the cost. (The permutation itself differs from
+    the pre-2026-09-04 one — a numpy Generator rather than random.Random — so the archive
+    bytes changed once when this landed. It is still seeded and still reproducible.)
+    """
+    key = tx.astype(np.int64) * (1 << z) + ty.astype(np.int64)
+    perm = rng.permutation(len(key))
+    order = perm[np.argsort(key[perm], kind="stable")]
+    return key[order], order
+
+
+def _encode_chunk(tasks):
+    """Encode and gzip a run of tiles. Module level so it survives Windows spawn.
+
+    mtime=0 because gzip stamps the CURRENT TIME into every member header otherwise, and
+    that alone made the archive differ byte for byte between two builds of identical
+    input — the SHUFFLE_SEED above has always said the archive is reproducible and until
+    2026-09-04 it quietly was not. It matters for telling a real change from no change.
+    """
+    return [(tid, gzip.compress(mvt.encode(payload, EXTENT), 6, mtime=0))
+            for tid, payload in tasks]
+
+
+def _chunk(tasks, jobs):
+    """Split a zoom into enough pieces to balance out: tiles are wildly uneven in size,
+    so one chunk per worker leaves whoever drew the dense ones finishing alone."""
+    n = max(1, min(len(tasks), jobs * 8))
+    size = -(-len(tasks) // n)
+    return [tasks[i:i + size] for i in range(0, len(tasks), size)]
 
 
 def main():
@@ -146,6 +200,10 @@ def main():
                     help="comma-separated, e.g. us,ca — one archive, but marks never merge "
                          "across a border: every feature is tagged with its country and the "
                          "viewer draws one country at a time")
+    ap.add_argument("--jobs", type=int, default=max(1, (os.cpu_count() or 4) // 2),
+                    help="processes encoding tiles. Defaults to half the cores; --jobs 1 "
+                         "runs it inline, which is what to do when a traceback out of a "
+                         "worker is hiding where the problem is.")
     args = ap.parse_args()
 
     if args.refresh_meta:
@@ -215,67 +273,203 @@ def main():
     # tallies, so nothing downstream of counts.json changes shape when --coarse is off.
     dots, rings, _ = ed_data[""]
 
-    sink = defaultdict(lambda: defaultdict(list))
+    def _write_counts():
+        """The legend's totals, per country.
+
+        The viewer used to count features itself; with tiles it only ever holds the
+        viewport, so the panel's totals have to be precomputed. Per country, because the
+        legend is now per country: which nodes exist at all differs between sources far
+        more than their sizes do, and a tree showing every node every source has ever had
+        is a tree mostly greyed out.
+
+        A function rather than a straight line of main() so that a build which cannot move
+        the archive into place still writes the counts that match it.
+        """
+        per_country = {}
+        for cc in sorted(set(dots["c"])):
+            d = dots[dots["c"] == cc]
+            r = rings[rings["c"] == cc] if rings is not None else None
+            meta = COUNTRIES.get(cc, {})
+            # The data bbox is where the dots actually are; `view` is where to fly, and
+            # differs only where a country has distant outlying population — fitting the US
+            # to its data bbox spans Hawaii to Maine and shows the reader an ocean.
+            box = [float(d["lon"].min()), float(d["lat"].min()),
+                   float(d["lon"].max()), float(d["lat"].max())]
+            per_country[cc] = {
+                "name": meta.get("name", cc.upper()),
+                "name_in": meta.get("name_in") or meta.get("name", cc.upper()),
+                "source": meta.get("source", ""),
+                "basis": meta.get("basis", ""),
+                "note": meta.get("note_public", ""),
+                "bbox": box,
+                "view": list(meta.get("view") or box),
+                "dots": d["n"].value_counts().to_dict(),
+                "rings": r["n"].value_counts().to_dict() if r is not None else {},
+            }
+            # The legend counts marks, and at 1:10,000 a country has different ones: two of
+            # India's seventeen nodes stop drawing a dot at all and become rings instead. So
+            # the coarse edition needs its own tallies or the legend would report the fine
+            # edition's numbers against the coarse edition's picture.
+            cd = cr = None
+            if args.coarse:
+                cd, cr, _dv = ed_data["_10k"]
+                cd = cd[cd["c"] == cc]
+                cr = cr[cr["c"] == cc] if cr is not None else None
+                per_country[cc]["dots10k"] = cd["n"].value_counts().to_dict()
+                per_country[cc]["rings10k"] = (cr["n"].value_counts().to_dict()
+                                               if cr is not None else {})
+            print(f"  {cc}: {len(d):,} dots over {d['n'].nunique()} nodes, "
+                  f"bbox {[round(v, 1) for v in box]}"
+                  + (f"  |  1:10k {len(cd):,} dots over {cd['n'].nunique()} nodes, "
+                     f"{0 if cr is None else len(cr)} rings" if args.coarse else ""))
+
+        counts = {"dot_value": 1000,
+                  "dot_values": [1000, 10000] if args.coarse else [1000],
+                  "countries": per_country,
+                  "dots": dots["n"].value_counts().to_dict(),
+                  "rings": rings["n"].value_counts().to_dict() if rings is not None else {}}
+        if args.coarse:
+            # The same two tallies for the all-countries view, which reads WORLD rather than
+            # a country entry and would otherwise show fine numbers over a coarse map.
+            cd, cr, _dv = ed_data["_10k"]
+            counts["dots10k"] = cd["n"].value_counts().to_dict()
+            counts["rings10k"] = (cr["n"].value_counts().to_dict() if cr is not None else {})
+        with open(PROC / "counts.json", "w", encoding="utf-8") as f:
+            json.dump(counts, f)
+        print(f"wrote {PROC / 'counts.json'}")
+
+    # ---- VOCABULARIES. An MVT layer refers to its property values by index into its own
+    # value table, so the strings have to be interned. Do it once here, over every edition
+    # at once, and the per-zoom and per-tile work below is integer arithmetic all the way
+    # down to the bytes. mvt.encode() prunes each tile's table to the values that tile
+    # actually uses — interning globally and shipping the whole table in all 28,000 tiles
+    # would add about 100 MB to the archive.
+    node_vocab = pd.Index(sorted({s for ed in ed_data.values() for f in ed[:2]
+                                  if f is not None for s in f["n"].unique()}))
+    cc_vocab = pd.Index(sorted({s for ed in ed_data.values() for f in ed[:2]
+                                if f is not None for s in f["c"].unique()}))
+    why_vocab = pd.Index(sorted({s for ed in ed_data.values() if ed[1] is not None
+                                 for s in ed[1]["why"].unique()}))
+    NODE_T = [mvt.value_str(s) for s in node_vocab]
+    CC_T = [mvt.value_str(s) for s in cc_vocab]
+    WHY_T = [mvt.value_str(s) for s in why_vocab]
+    # `t` is written only when it is 1 or 2 — a missing one reads as measured, and a
+    # property on every dot of every country would cost tile size for the common case.
+    TIER_T = [mvt.value_int(1), mvt.value_int(2)]
+
+    def tier_codes(t):
+        return np.where(t > 0, t - 1, mvt.OMIT)
+
+    # Intern each edition ONCE, not once per zoom. The atomic layer is the whole dot set
+    # at all eleven zooms, so looking the node strings up per zoom is forty-odd million
+    # hash lookups for an answer that cannot have changed.
+    coded = {}
     for suffix, dv in editions:
         ed_dots, ed_rings, _ = ed_data[suffix]
-        lp = "10k" if suffix else ""            # layer-name suffix: dots / dots10k
-        if suffix:
-            print(f"1:{dv} edition -> layers dots{lp} / atomic{lp} / rings{lp}")
-        for z in range(args.min_zoom, args.max_zoom + 1):
-            merged = merge_at_zoom(ed_dots, z)
-            to_tiles(merged, z, f"dots{lp}", sink, with_k=True)
-            biggest = int(merged["k"].max())
-            print(f"  z{z:<2} {len(merged):>9,} marks  (largest merges {biggest:,} dots)")
+        entry = {"n": node_vocab.get_indexer(ed_dots["n"]).astype(np.int64),
+                 "c": cc_vocab.get_indexer(ed_dots["c"]).astype(np.int64),
+                 "t": ed_dots["t"].to_numpy(dtype=np.int64),
+                 "wx": ed_dots["wx"].to_numpy(), "wy": ed_dots["wy"].to_numpy()}
+        if ed_rings is not None and len(ed_rings):
+            entry["rings"] = {
+                "n": node_vocab.get_indexer(ed_rings["n"]).astype(np.int64),
+                "c": cc_vocab.get_indexer(ed_rings["c"]).astype(np.int64),
+                "why": why_vocab.get_indexer(ed_rings["why"]).astype(np.int64),
+                "wx": ed_rings["wx"].to_numpy(), "wy": ed_rings["wy"].to_numpy()}
+        coded[suffix] = entry
 
-            # The unmerged dots as their own layer, so the viewer can switch consolidation
-            # off and get the plain scatter. Every dot at every zoom, so this is the
-            # expensive half of the archive — see the size report at the end.
-            if not args.no_atomic:
-                a = ed_dots.copy()
-                nt = 1 << z
-                a["tx"] = np.minimum((a["wx"] * nt).astype(np.int64), nt - 1)
-                a["ty"] = np.minimum((a["wy"] * nt).astype(np.int64), nt - 1)
-                a["k"] = 1
-                to_tiles(a, z, f"atomic{lp}", sink, with_k=False)
-
-            if ed_rings is not None:
-                r = ed_rings.copy()
-                nt = 1 << z
-                r["tx"] = np.minimum((r["wx"] * nt).astype(np.int64), nt - 1)
-                r["ty"] = np.minimum((r["wy"] * nt).astype(np.int64), nt - 1)
-                r["k"] = 1
-                to_tiles(r, z, f"rings{lp}", sink, with_k=False)
-
-    print(f"encoding {len(sink):,} tiles…")
-    encoded = {}
-    # Shuffle each tile's features before encoding, because MVT features paint in file order and
-    # the last one drawn at a pixel is the one you see. Unshuffled, scatter.py emits dots grouped
-    # by node in sorted order within each polygon, so the alphabetically-last religion present in
-    # an area paints over every other one. Measured in central São Paulo: the last 5% of features
-    # emitted was 100% a single node, against a true composition of 58% Catholic — which is why
-    # the city read Spiritualist zoomed out and Catholic zoomed in, with 43x fewer Spiritualists.
-    #
-    # A uniform shuffle makes the visible dot at any pixel a uniform draw from the dots covering
-    # it, so the zoomed-out picture is a representative sample of the zoomed-in one. Seeded, so
-    # the archive stays reproducible.
-    #
-    # It costs archive size: MVT delta-encodes consecutive points and shuffling maximises the
-    # deltas. The size line at the end of the run is the number to watch.
-    shuffler = random.Random(SHUFFLE_SEED)
-    for (z, x, y), layers in sink.items():
-        for feats in layers.values():
-            shuffler.shuffle(feats)
-        payload = [{"name": name, "features": feats} for name, feats in layers.items()]
-        buf = mapbox_vector_tile.encode(
-            payload, default_options={"extents": EXTENT, "y_coord_down": True})
-        encoded[zxy_to_tileid(z, x, y)] = gzip.compress(buf, 6)
-
-    print("writing pmtiles…")
+    print(f"tiling z{args.min_zoom}-{args.max_zoom}…")
+    rng = np.random.default_rng(SHUFFLE_SEED)
     OUT.parent.mkdir(parents=True, exist_ok=True)
-    with open(OUT, "wb") as f:
+    n_tiles = 0
+    # Build beside the archive and move it into place at the end. A build that dies part
+    # way through used to leave a truncated .pmtiles that the viewer loads and draws
+    # wrong rather than failing; and `npx serve` holds the archive open while the map is
+    # up, which makes truncating it in place an error and replacing it fine.
+    tmp = OUT.with_suffix(OUT.suffix + ".tmp")
+    pool_ctx = (ProcessPoolExecutor(max_workers=args.jobs) if args.jobs > 1
+                else contextlib.nullcontext())
+    with pool_ctx as pool, open(tmp, "wb") as f:
         w = Writer(f)
-        for tid in sorted(encoded):
-            w.write_tile(tid, encoded[tid])
+        # ZOOM IS THE OUTER LOOP, and that is the difference between a 600 MB build and a
+        # 3.5 GB one. Every tile id at zoom z sorts below every tile id at z+1, so a zoom
+        # can be encoded, written and dropped before the next one starts, instead of
+        # holding the whole pyramid in memory until the end.
+        for z in range(args.min_zoom, args.max_zoom + 1):
+            layers, report = [], []
+            for suffix, dv in editions:
+                ed = coded[suffix]
+                lp = "10k" if suffix else ""     # layer-name suffix: dots / dots10k
+                nc, cc_, tr = ed["n"], ed["c"], ed["t"]
+                wx, wy = ed["wx"], ed["wy"]
+
+                m = merge_at_zoom(nc, cc_, tr, wx, wy, z)
+                px, py = tile_pixels(m["wx"], m["wy"], m["tx"], m["ty"], z)
+                kc, k_table = mvt.intern(m["k"], kind="int")
+                key, o = bucket(m["tx"], m["ty"], z, rng)
+                layers.append((f"dots{lp}", key, px[o], py[o], ["n", "c", "t", "k"],
+                               np.stack([m["n"], m["c"], tier_codes(m["t"]), kc],
+                                        axis=1)[o],
+                               [NODE_T, CC_T, TIER_T, k_table]))
+                report.append(f"1:{dv} {len(m['k']):>8,} marks "
+                              f"(largest merges {int(m['k'].max()):,})")
+
+                # The unmerged dots as their own layer, so the viewer can switch
+                # consolidation off and get the plain scatter. Every dot at every zoom, so
+                # this is the expensive half of the archive — see the size report at the end.
+                if not args.no_atomic:
+                    nt = 1 << z
+                    tx = np.minimum((wx * nt).astype(np.int64), nt - 1)
+                    ty = np.minimum((wy * nt).astype(np.int64), nt - 1)
+                    px, py = tile_pixels(wx, wy, tx, ty, z)
+                    key, o = bucket(tx, ty, z, rng)
+                    layers.append((f"atomic{lp}", key, px[o], py[o], ["n", "c", "t"],
+                                   np.stack([nc, cc_, tier_codes(tr)], axis=1)[o],
+                                   [NODE_T, CC_T, TIER_T]))
+
+                if "rings" in ed:
+                    r = ed["rings"]
+                    nt = 1 << z
+                    tx = np.minimum((r["wx"] * nt).astype(np.int64), nt - 1)
+                    ty = np.minimum((r["wy"] * nt).astype(np.int64), nt - 1)
+                    px, py = tile_pixels(r["wx"], r["wy"], tx, ty, z)
+                    key, o = bucket(tx, ty, z, rng)
+                    layers.append((f"rings{lp}", key, px[o], py[o], ["n", "c", "why"],
+                                   np.stack([r["n"], r["c"], r["why"]], axis=1)[o],
+                                   [NODE_T, CC_T, WHY_T]))
+
+            # Every tile touched by any layer at this zoom, in tile-id order — which is
+            # Hilbert order, so the archive comes out clustered.
+            touched = np.unique(np.concatenate([L[1] for L in layers]))
+            nt = 1 << z
+            tids = np.fromiter((zxy_to_tileid(z, int(k // nt), int(k % nt))
+                                for k in touched), dtype=np.int64, count=len(touched))
+            tasks = []
+            for i in np.argsort(tids):
+                key = touched[i]
+                payload = []
+                for name, lkey, lpx, lpy, lkeys, lcodes, ltables in layers:
+                    a = np.searchsorted(lkey, key, "left")
+                    b = np.searchsorted(lkey, key, "right")
+                    if b > a:
+                        payload.append((name, lpx[a:b], lpy[a:b], lkeys,
+                                        lcodes[a:b], ltables))
+                tasks.append((int(tids[i]), payload))
+
+            # Encoding and gzipping a tile needs nothing but that tile, so the zoom is
+            # handed out in contiguous chunks. Contiguous rather than striped because
+            # `tasks` is already in tile-id order and map() returns chunk results in
+            # order, so the archive stays clustered with no re-sort. Nothing is shared:
+            # each chunk carries copies of its own slices.
+            for blobs in (map(_encode_chunk, _chunk(tasks, args.jobs))
+                          if pool is None else
+                          pool.map(_encode_chunk, _chunk(tasks, args.jobs))):
+                for tid, blob in blobs:
+                    w.write_tile(tid, blob)
+            n_tiles += len(touched)
+            print(f"  z{z:<2} {len(touched):>6,} tiles   " + "  |  ".join(report))
+
+        print("writing pmtiles…")
         w.finalize(
             {
                 "tile_type": TileType.MVT,
@@ -308,64 +502,24 @@ def main():
                 ],
             },
         )
-    mb = OUT.stat().st_size / 1e6
-    print(f"wrote {OUT}  ({mb:.1f} MB, {len(encoded):,} tiles)")
+    mb = tmp.stat().st_size / 1e6
+    # THE DEV SERVER HOLDS THE ARCHIVE OPEN. `npx serve` keeps a handle on every file it
+    # has served, and Windows refuses both truncation and rename against it, so a retile
+    # with the map still up used to die on an OSError with no tiles written at all. The
+    # build is finished by this point either way — say which file to move and stop, rather
+    # than throw away sixty seconds of work over a file lock.
+    try:
+        os.replace(tmp, OUT)
+    except OSError as e:
+        _write_counts()
+        raise SystemExit(
+            f"\nbuilt {tmp.name} ({mb:.1f} MB, {n_tiles:,} tiles) but could not put it in "
+            f"place:\n  {e}\n\nSomething has {OUT.name} open — normally the `npx serve` "
+            f"running the local map.\nStop it and run:  mv {tmp} {OUT}\n"
+            f"counts.json is already written and matches the new archive.")
+    print(f"wrote {OUT}  ({mb:.1f} MB, {n_tiles:,} tiles)")
 
-    # The viewer used to count features itself; with tiles it only ever holds the viewport,
-    # so the panel's totals have to be precomputed. Per country, because the legend is now
-    # per country: which nodes exist at all differs between sources far more than their sizes
-    # do, and a tree showing every node every source has ever had is a tree mostly greyed out.
-    per_country = {}
-    for cc in sorted(set(dots["c"])):
-        d = dots[dots["c"] == cc]
-        r = rings[rings["c"] == cc] if rings is not None else None
-        meta = COUNTRIES.get(cc, {})
-        # The data bbox is where the dots actually are; `view` is where to fly, and differs
-        # only where a country has distant outlying population — fitting the US to its data
-        # bbox spans Hawaii to Maine and shows the reader an ocean.
-        box = [float(d["lon"].min()), float(d["lat"].min()),
-               float(d["lon"].max()), float(d["lat"].max())]
-        per_country[cc] = {
-            "name": meta.get("name", cc.upper()),
-            "name_in": meta.get("name_in") or meta.get("name", cc.upper()),
-            "source": meta.get("source", ""),
-            "basis": meta.get("basis", ""),
-            "note": meta.get("note_public", ""),
-            "bbox": box,
-            "view": list(meta.get("view") or box),
-            "dots": d["n"].value_counts().to_dict(),
-            "rings": r["n"].value_counts().to_dict() if r is not None else {},
-        }
-        # The legend counts marks, and at 1:10,000 a country has different ones: two of
-        # India's seventeen nodes stop drawing a dot at all and become rings instead. So
-        # the coarse edition needs its own tallies or the legend would report the fine
-        # edition's numbers against the coarse edition's picture.
-        if args.coarse:
-            cd, cr, _ = ed_data["_10k"]
-            cd = cd[cd["c"] == cc]
-            cr = cr[cr["c"] == cc] if cr is not None else None
-            per_country[cc]["dots10k"] = cd["n"].value_counts().to_dict()
-            per_country[cc]["rings10k"] = (cr["n"].value_counts().to_dict()
-                                           if cr is not None else {})
-        print(f"  {cc}: {len(d):,} dots over {d['n'].nunique()} nodes, "
-              f"bbox {[round(v, 1) for v in box]}"
-              + (f"  |  1:10k {len(cd):,} dots over {cd['n'].nunique()} nodes, "
-                 f"{0 if cr is None else len(cr)} rings" if args.coarse else ""))
-
-    counts = {"dot_value": 1000,
-              "dot_values": [1000, 10000] if args.coarse else [1000],
-              "countries": per_country,
-              "dots": dots["n"].value_counts().to_dict(),
-              "rings": rings["n"].value_counts().to_dict() if rings is not None else {}}
-    if args.coarse:
-        # The same two tallies for the all-countries view, which reads WORLD rather than a
-        # country entry and would otherwise show fine-edition numbers over a coarse map.
-        cd, cr, _ = ed_data["_10k"]
-        counts["dots10k"] = cd["n"].value_counts().to_dict()
-        counts["rings10k"] = (cr["n"].value_counts().to_dict() if cr is not None else {})
-    with open(PROC / "counts.json", "w", encoding="utf-8") as f:
-        json.dump(counts, f)
-    print(f"wrote {PROC / 'counts.json'}")
+    _write_counts()
 
 
 if __name__ == "__main__":

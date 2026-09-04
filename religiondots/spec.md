@@ -695,6 +695,47 @@ find a custom tabulation. This is the shape to expect wherever a census has good
 is worth checking per country rather than assuming the finest geography carries the finest
 categories — it usually does not.
 
+### 3.9a A register does not make the trade at all — FOUND 2026-09-04 with Germany
+
+§3.9 reads like a law about sources. It is a law about **survey** sources, and Germany is the
+case that shows the difference, because it sits at both extremes at once.
+
+**Zensus 2022 does not ask about religion.** There is no question on the form. The published
+figures are read off the *Melderegister*, which records membership of a public-law religious
+society because it determines **church-tax liability**. So the basis is `roll` (§3.1) —
+institutions' records — and it is the first source here that is neither a question nor a
+church's own count, but a **state register kept for a fiscal purpose**.
+
+What falls out is not a trade-off but both endpoints:
+
+| | |
+|---|---|
+| geography | **10,786 Gemeinden**, and the same figures on a **100m grid, 3,088,036 cells** |
+| categories | **three** |
+| suppression | 178 true-zero cells of 32,358; nothing withheld |
+
+A register covers everybody exactly and knows almost nothing, so there is no
+cross-tabulation risk to manage and nothing to withhold — and equally nothing to reveal. The
+finest geography on this map and the coarsest categories on it have **one cause**.
+
+**The rule this gives, and it is the general one: ask what INSTRUMENT produced a category
+list before treating the list as a classification.** Germany's three categories are the set
+of corporations that levy church tax. That is a fact about German public law, not about
+German religion, and no amount of looking for a better table will deepen it — `sources/de.md`
+§2 records why Zensus 2011, which *did* ask, is worse rather than better.
+
+**The half of the country this cannot see.** "Sonstige, keine, ohne Angabe" is 51.8%, and
+destatis is explicit that the register's entries for *other* public-law bodies cannot
+"zuverlässig statistisch abbilden" their membership. So one category holds people in another
+body, people in no body, and people with no entry — Germany's roughly four million Muslims,
+its Orthodox Christians, its Jewish communities, its Freikirchen and its Alt-Katholiken among
+them, unrecoverable.
+
+That is §3.5 ("undercounting is marked, not filled") in its sharpest form so far, and §14.3's
+rule forbids the obvious rescue: estimating those groups from national totals would invent
+both magnitude and location, at a resolution the source does not publish. It gets a node that
+says what it is instead — `unrecorded`, §6.3a — and the about panel carries the rest.
+
 ### 3.10 Reuniting fine categories with fine geography — MEASURED 2026-08-27
 
 §3.9 leaves every source split in two: fine categories at coarse geography, coarse categories at
@@ -1224,11 +1265,147 @@ every delta. That is the price of the map being true, and it is worth paying; if
 clawing back, per-node random *draw keys* would preserve locality at the cost of a property per
 feature and a runtime sort.
 
+**CORRECTION 2026-09-04: 16% is the whole-archive average and it badly understates the cost
+where it matters.** Re-encoding one z3 tile over India — 1,164,088 atomic features — under
+different orderings, gzipped:
+
+| | MB | vs as built |
+|---|---|---|
+| as built (shuffled) | 5.04 | — |
+| sorted by position | 2.58 | **−49%** |
+| extent 4096 → 1024 | 4.23 | −16% |
+| drop `c` and `t` | 4.99 | −1% |
+
+**Sorting halves a dense low-zoom tile.** The average is diluted by high-zoom tiles, where dots
+do not overlap, deltas are large anyway and the shuffle changes little — but the low zooms are
+exactly where the bytes and the overplotting both are. The shuffle is still right and still
+worth paying for; the figure to plan against is ~50%, not 16%.
+
+Two consequences. `c` and `t` are already near-free because MVT interns repeated values, so
+there is nothing to win by dropping them. And the honest MVT-only saving available without
+breaking anything is about 16% (extent 1024; 2 units/px is well past what a dot needs, while
+extent 512 quantises to whole pixels and lattices the scatter when you zoom past a tile's
+native level).
+
+**§4.2d makes the whole cost disappear** rather than reducing it: in a flat binary buffer there
+are no deltas for a shuffle to spoil, so the ordering is free.
+
 **The general form, which will outlive this instance:** any time a renderer resolves overlap by
 "last one wins", the drawing encodes whatever order the data happened to arrive in. If that order
 correlates with a category — and sorted-by-id always does — the map is making a claim about
 category that comes from the sort, not the world. Every future layer that overplots needs this
 same shuffle.
+
+### 4.2d The unmerged dots leave the tile pyramid — BUILT 2026-09-04
+
+**The one sentence:** a tile pyramid is the right structure for data that THINS as you zoom out,
+§4.2 forbids this data from thinning, so tiling the unmerged dots bought an elevenfold
+duplication and MapLibre's per-feature cost and nothing else. They are now one flat binary
+buffer per country per edition (`buffers.py`), drawn by a MapLibre custom layer in a single
+instanced call.
+
+**What it cost before.** Biggest tile at each zoom, feature counts:
+
+| zoom | `dots` (merged) | `atomic` (separate) |
+|---|---|---|
+| 0 | 3,278 | **2,129,793** |
+| 3 | 1,188 | **1,164,088** |
+| 6 | 2,726 | 212,941 |
+| 10 | 2,819 | 15,618 |
+
+The merged pyramid is flat at ~2–3k marks per tile at every zoom, which is the pyramid working.
+`atomic` is 650× that at z0 and was ~85% of a 152 MB archive; the z0 tile alone was 11 MB. And
+`merged = false` is the default (§4.2b), so the expensive layer is the one readers land on.
+
+**The diagnosis is not bytes.** MVT is already about 5 bytes per feature on the wire, so a
+cleverer encoding was never going to be the answer. The 152 MB is the pyramid storing every dot
+eleven times, and the *runtime* cost is per-feature JS:
+
+- a circle is **4 vertices**, and the same dot is resident in every loaded tile at every loaded
+  zoom;
+- each tile carries a JS feature index for `queryRenderedFeatures`;
+- `circle-color` is re-evaluated per feature on every recolour — the >120 ms that `pumpPaint`
+  exists to ration;
+- **`setFilter` is worse and was the hidden one.** Filters are applied when the worker populates
+  a bucket, so changing one reparses every loaded tile. Every country switch, every scope
+  change, every `unaffiliated` toggle paid seconds for it.
+
+**What replaces them.** The buffer stores a node INDEX; a 512-entry palette texture maps index →
+colour and visibility. So `circle-color` becomes the texture's RGB and `setFilter` becomes its
+alpha, and the vertex shader collapses a hidden dot to a degenerate quad — which is §6's
+"removed, not dimmed" enforced for free rather than by taking features out of a layer. Country
+selection is not a filter at all any more: it is which buffers get drawn.
+
+Measured in the viewer, 2.13M dots over sixteen countries: **recolour 0.28 ms, hover 0.25 ms**,
+against a filter change that used to reparse every tile. `pumpPaint` still rations the merged
+tile layer and no longer rations the scatter.
+
+**Format** — struct-of-arrays, 10 bytes a dot: `x uint32`, `y uint32`, `ni uint16` (node index
+in the low 14 bits, §7 tier in the top 2). India is 1,207,981 dots in 12.08 MB, **6.6 bytes a
+dot gzipped**, against ~5 bytes × 11 zooms in MVT. All sixteen countries: 21.3 MB fine, 2.1 MB
+coarse.
+
+**uint32 fixed point, not float32, and the matrix matters more than the positions.** float32
+mercator has an ulp of ~1.2 m — a quarter pixel at z14, four at z18. But the larger error is
+that MapLibre's matrix must be downcast for `uniformMatrix4fv`, and that alone is several pixels
+at z18 no matter how positions are stored. Both are fixed together: subtract a local origin in
+exact integer arithmetic BEFORE anything is scaled, folding the origin into the matrix in
+float64 on the CPU. Replaying both formulations through `Math.fround` against `map.project`:
+
+| zoom | with the local origin | the obvious way |
+|---|---|---|
+| 14 | **0.0000 px** | 0.73 |
+| 18 | **0.0000 px** | 9.74 |
+| 22 | **0.0000 px** | 132.74 |
+
+The obvious way degrades smoothly enough to look fine in testing and be wrong at street zoom.
+**The origin must snap to a whole uint32 unit** (~1 cm), not to a coarser grid — snapping to
+1/65536 of mercator instead left 1.24 px at z20, because the residual the trick exists to cancel
+comes back scaled.
+
+**Instanced quads, never `GL_POINTS`.** `ALIASED_POINT_SIZE_RANGE` maxes at 1024 on desktop
+ANGLE and **63–64 on Mali and Adreno**, and this map's worst case is 8 px × 1.3 `DOT_GAIN` × 3
+slider × 2.5 `COARSE_GAIN` × 2 DPR = 156 device px. Worse, GLES culls a point whose *centre*
+leaves the clip volume, so large dots pop out at the screen edges. Desktop would have passed
+this and phones would not.
+
+**§4.2c is kept, and here it is free.** Dots are Hilbert-sorted, cut into buckets, shuffled
+*within* each bucket, and the buckets are written in random order. Local uniformity is all
+§4.2c actually asks for — dots only overlap locally — while global sorting is what buys
+compression and viewport culling, which a globally shuffled list forbids. Each bucket carries a
+bbox and the viewer draws one run per visible span.
+
+**Culling pad must scale with zoom.** A pad expressed as a fraction of the world is ~800 km at
+every zoom, so most of a country falsely intersects a street-level view: 433,837 dots submitted
+for one Mumbai junction, against 12,288 once the pad is a few pixels' worth.
+
+**Picking is now correct, and it was not before.** §4.2c makes the visible dot at a pixel the
+LAST one drawn that covers it. `queryRenderedFeatures`'s `features[0]` is the FIRST in tile
+order, so in any dense area the old tooltip could name a religion other than the one under the
+cursor. Draw order here is buffer order, so the answer is the highest index among the dots whose
+disc covers the cursor — exact, from a uniform grid, comparing in uint32 rather than projecting
+each candidate (which is 0.03 ms against 4.7 ms).
+
+**Editions do not mix.** The coarse edition loads first and complete — 2.1 MB paints every
+country at 1:10,000 immediately, and §4.1b makes that an authored edition rather than an
+approximation — then the fine edition replaces it **wholesale**, never country by country. The
+US at 1:10,000 beside India at 1:1,000 would put two dot values in one view, which §4.1 forbids.
+
+**What is NOT done.** Context loss re-upload is written (the typed arrays stay resident) but has
+not been exercised. Nothing has been tested on a real mobile GPU. And `render(gl, matrix)` is
+the v4 signature; a MapLibre v5 or globe-projection upgrade would need the shader ported to
+`getProjectionData()`.
+
+**Rejected on the way: a capped merge.** Extend §4.2a's merge with a cap on how many dots one
+mark may absorb — `m = ceil(k / CAP(z))` marks of weight `w = k/m`, drawn at `r√w`, with
+`CAP(z)` falling to 1 at high zoom so it becomes the plain scatter exactly where the scatter is
+readable. It works, and it has the property the merge always had: thinning is driven by each
+religion's OWN local density, so rare groups are never thinned. Measured on a z3 India tile at
+cap 16, Hinduism keeps 6.3% of its dots and Bahá'í keeps 100%. Rejected because it is still
+merging — marks grow above unit size in dense cells at low zoom — and Anita's preference is for
+the plain scatter to stay a plain scatter (2026-09-04). Worth remembering that it exists: it is
+a continuum between `dots` and `atomic` with one parameter, and it would have left the
+elevenfold duplication and the per-feature wall exactly where they were.
 
 ### 4.3 Presence marks: a second grammar that carries no magnitude — DECIDED 2026-08-27
 
@@ -1747,6 +1924,65 @@ must be an answer of the same kind:
 | `unchurched` | Believing, no church | reports religious belief **and** explicitly no institution. Czechia's 960,201; Pew's "spiritual but not religious" |
 | `other.<source>` | Other, by source | the per-source residual containers of §3.11. The greyest of the five, being the one that says nothing |
 | `parody` | Parody and protest answers | Jedi, Pastafarian — a protest, not a belief |
+
+#### 6.3a-i A sixth member, and it is a different kind of thing — ADDED 2026-09-04 with Germany
+
+`unrecorded`, "Religion not recorded". Germany's *Sonstige, keine, ohne Angabe* — 42.8M
+people, **51.8% of the country**, and the largest node any single country contributes after the
+US (§3.9a).
+
+The five above are all **answers**: somebody was asked and said something, including saying no.
+This one is the residual of a source that **never asked** — an administrative register, read for
+church tax, which holds no religious body for these people. Every existing home asserts something
+false: `unaffiliated` is a person reporting no religion; `other.<source>` is a religion the source
+named and could not be placed, and here the source named nothing; `unchurched` is a positive report
+of belief without institution.
+
+**The test that admits it, and it is the test for anything added next: this category's composition
+is a property of the INSTRUMENT rather than of the people in it.** Germany's bucket holds Muslims,
+Orthodox Christians, Jews, Freikirchen and the wholly irreligious together, and which of them are
+in it is decided by German tax law. Any register-basis source of the same shape belongs here;
+Austria is the obvious next one.
+
+**The label had to change, and the legend could not hold the reason — Anita, 2026-09-04.** It was
+"No religious body recorded", which is accurate and still lets a reader conclude that 43 million
+Germans are irreligious. The obvious fix — "…(includes Islam, Orthodox, etc.)" — cannot be done in
+the label, because `.row .lb` is `nowrap` with `text-overflow: ellipsis`: a label long enough to
+carry a caveat is one that gets **cut off mid-caveat**, which is worse than saying nothing.
+
+So the two halves were split. The visible label is **"Religion not recorded"** — shorter than what
+it replaced, and grammatically unable to be read as a statement about belief, because the subject
+is the record. The caveat goes in the row's **tooltip**, which every legend row already had and
+which until now repeated the label it was truncating.
+
+That needed a new field, and it is the general one this project was missing: `branches.py` has
+carried a `note` since the first tree and **nothing in the viewer has ever shown it** — it is for
+whoever maintains the taxonomy. `PUBLIC_NOTE` is the other kind, written for a reader, and
+`build_tree.py` carries it into `religions.json` as `public_note`. **Only add a node when the label
+alone would mislead**: "Lutheran" means Lutheran and needs nothing. The test is whether a reader
+who reads the label and stops comes away believing something false.
+
+It remains a global label rather than a German one, and the tooltip names the groups generically
+for the same reason — the node is not Germany's, it is any register country's, and Austria's bucket
+will hold a different mix. A country-specific version belongs in `note_public`, which the about
+panel already renders and which already leads with the four million Muslims.
+
+**It takes `other`'s hue at the ramp's darkest lightness — `hsl(228, 10, 37)`, `#555968`** — and
+both halves are the rules below applied rather than bent. By the ordering principle it reports less
+than any of the five, not even "no religion". By the prominence rule it must be quiet, and harder
+than `unaffiliated` must, because a pale mass of 42.8M dots would drown the Catholic/Protestant
+signal that is the only real information Germany carries.
+
+Measured with `check_palette.py` before it was written down: **dE 21.1 to `unaffiliated`**, its
+nearest neighbour here, which is *wider* than this family's existing tightest pair (`secular` /
+`other`, 19.9) — so a sixth member does not squeeze the ramp. dE 51.1 to the nearest religion.
+Contrast 2.70, below the 2.9 floor, and in `DIM_ON_PURPOSE` for exactly `unaffiliated`'s reason.
+`check_overview.py` now reads that same list rather than keeping its own.
+
+**It is not green, and the search wanted green.** `hsl(120,30,43)` scores dE 41.8 inside the
+family, twice as well. Rejected on meaning rather than measurement: Islam is at hue 138, and
+colouring the one bucket that hides Germany's Muslims a muted green is the worst available accident
+(§14.2). **A palette search optimises separation and cannot see what a colour would say.**
 
 **Anita, 2026-09-04: these should look like what they are.** `secular` was authored at saturation
 72 and `parody` at 82 — more vivid than most religions, for categories that are the absence of one.
@@ -2492,6 +2728,43 @@ scattered in proportion to total population. Where a source gives a finer unit w
 where it does not, the dots say "this many people of this group live somewhere in this unit". The
 about panel has to say so, because a dot map invites exactly the opposite reading.
 
+### 8.2b Germany is the first country that needs no trick at all — BUILT 2026-09-04
+
+§8.2 and §8.4 are both answers to the same missing thing: **nobody publishes where a religion
+sits inside a unit**, so the map either assumes an equal share over units engineered to a
+population target (§8.2), or fits a model to guess it (§8.4). Germany publishes it.
+
+destatis puts **the same three categories on the 1km INSPIRE grid** it puts in the Gemeinde
+table. So the weight for `christianity.catholic` inside Munich is Munich's own per-cell
+Catholic count, and the placement stops being an approximation:
+
+| | |
+|---|---|
+| placement layer | **209,154** 1km cells, replacing 10,786 Gemeinde polygons |
+| Berlin | **799 cells**, against one polygon holding 3,596,999 people |
+| rows placed on measured weights | **17,215 of 17,215** — no fallback used |
+
+It had to be done, because §8.2's trick fails completely here: Gemeinden are historical units,
+not units built to a population target, and they run from 9 people to 3.6 million. 78 of them
+hold 31.6% of the country, and inside those the old placement said only "somewhere in this
+city" — Neukölln and Zehlendorf came out identical, and dots landed in the Grunewald and the
+Müggelsee.
+
+**Nothing here is fitted, and that is the point.** §8.4's US model has parameters, a residual
+model, and a §7 confidence mark; this has none, because it is a count. §14.4's rule — never
+estimate a magnitude a source does not publish, refine placement only — is satisfied in the
+strongest possible way: the refinement is itself published.
+
+**Why 1km and not the 100m file**, which also exists at 3,088,036 cells: Germany draws 82,710
+dots, so 100m would be 37 cells per dot. **The dot value binds before the grid does.** A finer
+placement layer than the dots it carries is bytes, not information.
+
+The general shape, for the next country that has one: *grid cell → containing admin unit →
+clip to it → per-node weight column*, counts still from the admin table. What does not
+generalise is the good part — most grids carry population only, which is a better proxy but
+still a proxy. Germany is unusual in publishing the **same variable** on the grid as in the
+table (`sources/de_grid.md`).
+
 ### 8.2a India is the first country the trick does not work on — FOUND 2026-09-03
 
 §8.2's whole argument is that **a statistical agency designs its fine unit to a population
@@ -3072,13 +3345,23 @@ read. Keep it to things that *generalise*; a fact about one country belongs in i
 `sources/<cc>.md`. As the list of easy countries shrinks the rate of new tricks will drop,
 which is fine — a short section that stays true is better than a long one that rots.
 
-Twelve countries in, this is what the work actually looks like.
+Seventeen countries in, this is what the work actually looks like.
+
+**Read §14 before starting a country whose state does not publish religion, or whose religious
+minorities are persecuted.** The question of whether a country should be drawn at all, and at
+what resolution, is prior to every technical step below — and §14 asks you to raise it with
+Anita rather than settle it yourself.
 
 ### The order that avoids wasted effort
 
 1. **Find the data and check it goes deep enough**, before anything else. The killer
    question is not "does this country ask about religion" but "does it publish the answer
    at a fine geography" — see §3.9. Look at a sample of the actual table.
+   **And ask what instrument produced the category list**, because it may not be a
+   classification at all: Germany's three categories are the set of corporations that levy
+   church tax, a fact about public law rather than about religion, and no better table
+   exists to find (§3.9a). Where the list comes from a register rather than a question,
+   its ceiling is fixed and hunting for depth is wasted effort.
 2. **Check the boundaries exist and join**, second. A source with no joinable geography is
    not a source. Do this before writing a normaliser, not after.
 3. Then normaliser → taxonomy → `countries.py` → scatter → tile → docs.
@@ -3093,16 +3376,44 @@ Twelve countries in, this is what the work actually looks like.
 - **json-stat2 is a flat cube, not a table.** One `value` array in row-major order over the
   dimensions in `id`, sizes in `size`. Read it as rows and you will silently transpose the
   data. Compute strides.
+- **PxWeb is not a Nordic/Baltic thing.** North Macedonia's `makstat.stat.gov.mk` runs it and
+  was listed as "unchecked" for a day while being one request away. Try `/pxweb/api/v1/en/`
+  and `/api/v1/en/` on any office before concluding anything.
+- **Do not search a PxWeb tree with a depth-limited keyword walk.** North Macedonia's
+  religion table is five levels down and a bounded walk returned ZERO hits on a database that
+  has it. Worse, a *national-only* religion table sits in a sibling folder, so a shallow
+  search finds the wrong one and suggests the country publishes religion with no geography.
+  **The same variable routinely appears at several geographies in different folders** —
+  enumerate the census branch in full and compare before choosing.
+- **Fetch the table in more than one language when the join and the taxonomy want different
+  ones.** North Macedonia needs BOTH: the English edition for the category labels the
+  taxonomy keys on, the Macedonian for the Cyrillic municipality names GISCO carries. Neither
+  edition alone builds the country, and the English one alone silently makes the join
+  impossible.
 - If there is no API, the census results are usually a handful of XLSX behind a "results"
   page. Fetch the page and regex out `href="...xlsx"` **with the link text**, because
   offices routinely name the files `Tabel-2.04.xlsx` and put the title elsewhere (Romania).
 - **A statistical office's shiny data portal is often a shell.** `podaci.dzs.hr`,
   `data.gov.sk` and `data.stat.gov.rs` all return a JavaScript app, not data. The real
   files are usually on the *old* site (`dzs.gov.hr`) linked from a "Popis 2021" page.
-- **Bot protection is a stop sign, not a puzzle.** KSH (Hungary) and census2021.bg return
-  403 to scripted clients. Do not iterate on headers — hand the URL to Anita, who will
-  fetch it in a browser. Same for anything Cloudflare-interstitial (the Philippines came
-  from the Wayback `id_` endpoint instead).
+- **Bot protection is a stop sign, not a puzzle.** census2021.bg returns 403 to scripted
+  clients. Do not iterate on headers — hand the URL to Anita, who will fetch it in a
+  browser. Same for anything Cloudflare-interstitial (the Philippines came from the Wayback
+  `id_` endpoint instead). **But re-test a 403 before believing it**: KSH's was gone by the
+  time anyone tried again, and a stale "blocked" note reads as a dead end for months.
+- **"A JavaScript app with no data endpoint" is a claim about the searcher, not the site.**
+  Two cheap tests before writing one off. **(1) Compare the 404s.** KSH's `/api/anything`
+  returns 88 bytes of `{"timestamp":…,"status":404,"path":…}` while every other unknown path
+  returns the same 2,180-byte HTML shell — a Spring Boot error body IS a live API namespace,
+  and content-type plus length distinguishes a router from a catch-all. **(2) Grep the
+  bundle for `/api`.** KSH's four routes were plain string literals in `app.js`, which one
+  session had already concluded contained nothing. `podaci.dzs.hr`, `data.gov.sk` and
+  `data.stat.gov.rs` were all written off as shells and none has had this done to it.
+- **An SDMX backend gives you the CODELISTS, which may be the thing you actually need.**
+  `/api/structure/<flow>/<version>` returned KSH's category labels in two languages and its
+  full geography hierarchy — parent chain included, so a settlement's county came off the
+  source rather than out of a boundary file. Recognise the shape: `dataflows`, `structure`,
+  `version` in any combination means SDMX.
 
 ### Downloading
 
@@ -3115,6 +3426,12 @@ Twelve countries in, this is what the work actually looks like.
   issuer certificate". That is not a bad URL and not a proxy. Turning verification off for
   one named host *and validating the bytes structurally instead* is the honest fix; say so
   in the script and in COMMANDS.txt.
+- **And it can be YOUR fault, with a near-identical error and the opposite fix.**
+  `urllib.request` cannot reach `ksh.hu` on this machine — "self signed certificate in
+  certificate chain" — while `curl` and `requests` verify it fine. That is a local trust
+  store, not a server omission. **The distinguishing test is one line: try a second client.**
+  All clients failing means the server; one failing means you. Reaching for the `stat.gov.pl`
+  fix on the second case disables verification to route around a problem that is not there.
 
 ### Parsing the table
 
@@ -3125,6 +3442,20 @@ Twelve countries in, this is what the work actually looks like.
 - **Do not assume every sheet in one workbook has the same shape.** Poland's TABL.2/6/7 are
   flat and TABL.5 carries the full 7-level classification; summing it the same way counts
   the Latin rite four times. Where the office publishes a depth column, use it.
+- **A table of CODES is not a table of categories, and the plausible reading is wrong often
+  enough to be dangerous.** Hungary's exports carry `RE_C`, `RE_CA`, `RE_CO`, `RE_OU` and no
+  labels. `RE_CA` is **Calvinist**, not Catholic — Catholic is `RE_C`. `RE_CO` is "Other
+  Christian", not Coptic. `RE_OU` is **Ukrainian** Orthodox, a jurisdiction absent from
+  KSH's own prose list of the five Orthodox churches in Hungary, so domain knowledge would
+  have rejected the correct answer too. **Pin every code against a published national total
+  before writing a row**, and re-derive the pinning in `check()` so a reordered codelist
+  fails the run instead of silently relabelling the map. Where labels exist at all, read
+  them from the source at run time rather than transcribing them.
+- **Arithmetic pins STRUCTURE even when no labels exist.** Hungary's three category
+  groupings were forced to the person by summation — 11,042 + 7,983 + 3,307 + 7,645 = 29,977
+  exactly — before any label was in hand. A hierarchy file deduced that way is stronger than
+  Ireland's or Mexico's hand-written ones, and the deduction is worth doing first: it tells
+  you what the labels have to mean, which is a check on them when they arrive.
 - **Universe rows are not categories.** Every source has some nest of
   total ⊃ answered ⊃ affiliated ⊃ the religions, and drawing an intermediate one doubles
   everything below it. Put them in `EXCLUDED` with a sentence on what they are.
@@ -3162,6 +3493,21 @@ Twelve countries in, this is what the work actually looks like.
   codes as text (`"00"`), the Appendix stores the same codes as numbers, so `str(cell)` yields
   `"00"` and `"0"` for one code. India's own row became a 36th state and the whole tail doubled.
   Put every code through one zero-padding helper at the point of reading, not at the point of use.
+- **It also differs WITHIN one column of one sheet, and then it eats people rather than codes.**
+  Germany's Sonderauswertung stores some counts as numbers and some as text in the same column.
+  An `isinstance(v, (int, float))` filter — the natural way to skip a sentinel — silently dropped
+  **2,228,001 people**, and every national total still looked plausible because the shortfall
+  landed in the largest category. Classify every cell through one function that RAISES on
+  anything it does not recognise; never filter numeric cells by type.
+- **A percentage column is not always count ÷ population, and the difference can be deliberate.**
+  Germany's disclosure method perturbs the count and then *adjusts the published share* where the
+  perturbed count would give an implausible percentage — Ammeldingen an der Our is 18 people with
+  20 Catholics, published as 100.0%. 75 cells disagree by over 0.6pp and every one is a Gemeinde
+  of 9–122 people. **Assert the residual in the units the method works in.** Converting the
+  disagreement back into PEOPLE bounds it at 3.46; a tolerance in percentage points either passes
+  everything or fails the villages, and neither would catch a percentage column read as a count —
+  which is the thing the check exists for, and which would be wrong by hundreds of thousands in
+  every large city.
 - **A source with a publication floor needs its remainder emitted as a category** — *and then that
   category needs mapping.* India's Appendix names a religion only at 100+ adherents nationally,
   leaving 1.9% of the bucket unnamed; without an explicit row for it `allocate.py` normalises
@@ -3196,14 +3542,68 @@ Twelve countries in, this is what the work actually looks like.
   Bucharest 9.8%, Warsaw 4.7%. If the office publishes religion for city districts, use
   them and let them REPLACE the parent (Czechia, Estonia). If it does not, leave one polygon
   and say so — subdividing invents structure the source does not have (§3.10).
+- **When the CENSUS is finer than the boundary file, that is a different problem and it is
+  usually solvable.** Zagreb and Budapest are the same case — religion published per city
+  district, GISCO LAU stopping at the city — and Croatia lost it while Hungary won it,
+  purely because someone looked in a second place. Budapest's 23 kerület are in
+  **geoBoundaries ADM2**, whose Hungarian level is járás and therefore includes them. Check
+  ADM2/ADM3 there before accepting one polygon for a capital; and **check the licence per
+  level**, because geoBoundaries HUN is CC0 at ADM1 and ODbL at ADM2.
+- **Clip a borrowed sub-layer to the parent it subdivides.** Districts from a different
+  vintage agreed with GISCO's Budapest on total area to two decimal places and still
+  overhung the city edge by tens of metres, which would have put Budapest's dots in
+  Budaörs. Intersecting with the parent makes the union exactly the parent; the cost is a
+  thin unfilled ring, which a dot map does not care about and a wrong municipality is.
+- **A residual geography unit that is EMPTY is a proof, and worth asserting rather than
+  filtering.** KSH publishes `Budapest kerületre nem bontható adatai` — figures not
+  divisible by district — and it carries no religion rows at all. That absence is what
+  guarantees the 23 districts account for the whole city. Dropping it silently would have
+  discarded the evidence along with the row; if it ever fills, the assertion fails and the
+  map is short by exactly that many people.
 - **Eurostat GISCO LAU 2021 is the boundary answer for 34 European countries** in one 98MB
   zip, and its companion LAU–NUTS correspondence workbook carries
   `NUTS3 | LAU CODE | LAU NAME NATIONAL` — which is how Romania, whose census has no codes
   at all, was joinable.
+- **Those 34 are NOT the EU27 — candidate countries are in it.** `MK`, `RS` and `AL` all
+  have full LAU coverage, so North Macedonia needed no boundary download at all, and Serbia
+  and Albania are already solved if their counts are ever found. The correspondence WORKBOOK
+  is EU27 and excludes them, which is the asymmetry to remember: polygons yes, code bridge no.
+- **A source's population and a boundary file's population measure different things, and
+  asserting them equal fails on honest data.** North Macedonia's census counts *residents*;
+  GISCO's `POP_2021` does not; the country has lost a fifth of its people to emigration and
+  the two disagree by a median 11.7%, worst in exactly the western emigration municipalities.
+  **Assert the RELATIONSHIP instead**: a correct join keeps every unit's ratio inside a
+  factor of two around a tight median, a scrambled one pairs villages with cities and
+  scatters it over orders of magnitude. That is what the check can actually detect. Written
+  as an equality it either fails on every real difference of definition or gets loosened
+  until it detects nothing.
+- **GISCO's `POP_2021` is 0 for seven of Skopje's ten municipalities**, so the MK column sums
+  to 1,746,833 against a census 1,836,713. §8.2 means nothing here uses it, but it is a live
+  trap for anyone reaching for GISCO population as a weight. Print such holes rather than
+  filtering them.
 - **Diacritics that look identical are not.** `ş` U+015F (cedilla) vs `ș` U+0219
   (comma-below), and `ţ`/`ț`. INS writes one, Eurostat writes the other, for the same names.
   Fold to ASCII on both sides or a third of Romania silently fails to match — and it looks
   exactly like a vintage problem.
+- **"The 2022 boundary file" can be two different files.** BKG publishes a **01.01 and a
+  31.12 edition of every year**, and destatis never states which Gebietsstand it published
+  on. Against the German census: 01.01.2022 leaves 2 unmatched, 01.01.2023 leaves 10,
+  31.12.2022 leaves **none**. Try them all and let the leftovers pick; do not reason about
+  which *ought* to be right.
+- **A longer key can be the safer one, which is the exact reverse of Poland.** Poland's LAU
+  id had to be sliced DOWN to six digits; Germany's 12-digit ARS must not be shortened to
+  the 8-digit AGS. The difference is what the extra digits carry: Poland's were a unit TYPE
+  the boundary file omits, Germany's are the *Verbandsschlüssel*, which changes when a
+  Gemeinde moves between Ämter. Joining Germany on the AGS makes the two leftovers disappear
+  and looks like a fix — while orphaning three populated polygons whose people are counted
+  elsewhere, placing ~3,000 people in the wrong villages **with every count still
+  reconciling**. There is no rule about key length. There is only printing the join both ways
+  and asking what the leftovers *are*.
+- **"N polygons unmatched" and "N polygons unmatched that are all uninhabited" are different
+  findings, and only one is fine.** Germany's 204 leftovers all carry
+  `BEZ == 'Gemeindefreies Gebiet'` — forest, lake and military areas with no residents and so
+  no religion row. Assert the property; a populated polygon landing in that pile is a silent
+  hole in the map.
 
 - **Look for the sub-level before accepting that a unit has no geography.** India publishes units
   called `Area not under any Sub-district` — 17.4M people, including the whole Kolkata
@@ -3237,6 +3637,16 @@ Twelve countries in, this is what the work actually looks like.
   `indigenous`. Likewise `Pagan` in Meghalaya is the colonial-era label for the traditional Khasi
   religion, not the neo-pagan revival. Never map a category on its string alone — look at which
   units it is in first.
+- **A parent published BESIDE two of its own children needs the remainder emitted — and the
+  remainder must exist at every level the allocation touches.** KSH gives `Katolikus`
+  (2,886,619) and, labelled as subsets, Roman Catholic and Greek Catholic, but never their
+  77,629-person difference. Drawing the parent too double-counts 2.8M; drawing only the
+  children drops 77,629. This is the publication-floor rule again (India's 100-adherent
+  threshold) in a shape that does not look like it: nothing is below a threshold, the
+  remainder is simply never printed. **The second half is the one that bites**: emitting it
+  at the fine level alone silently deletes it at the allocation step, because `allocate.py`
+  carries a fine column forward only when some coarse category lands on it — and every
+  reconciliation upstream still passes, exactly as with India's unmapped remainder.
 - **A new top-level family costs more than it looks.** `ROOT_HSL` (§6.3) is hand-authored for
   thirty roots and its indigo→magenta wedge is already at the 4°-apart limit, so a 31st root makes
   every other small family harder to tell apart. India's Nirankaris and Dera Sacha Sauda are real
@@ -3275,3 +3685,90 @@ Twelve countries in, this is what the work actually looks like.
 - **No adherent-count aggregation across bases** (§3.1), however tempting the coverage would be.
 - **No node invented at ingest.** Unmapped source categories go to a file and wait.
 - **No log scale** (§4.1).
+
+## 14. What this map could do harm with — ASSESSED 2026-09-04
+
+Not a legal opinion. It is the standing assessment, so that nobody has to work it out from
+scratch, and so the line is drawn before a country is half-built rather than after.
+
+**IF ANY OF THIS COMES UP FOR REAL, RAISE IT WITH ANITA RATHER THAN DECIDING ALONE.** That is
+an explicit invitation, not a fallback: a judgement call about who gets drawn and how finely is
+hers to make, and flagging one costs a message. It does not need to be a crisis first — "this
+country's situation looks like §14" is enough to start the conversation. The same goes for a
+source whose terms are unclear, or a group whose safety the resolution might affect.
+
+### 14.1 Where the project stands now
+
+Everything ingested so far is aggregate, published, and lawfully obtained — ASARB is free to
+download, US Census and ACS products are government works, CES is CC0. The finest unit anywhere
+is a census tract of about 4,000 people and much of §8.4 is really PUMA-resolution, about
+100,000. No individual is identifiable in anything here, so no data-protection regime is
+engaged. `sources/us_pew.py` scrapes, and is the one input whose terms are worth a second look
+rather than an assumption.
+
+PL 94-521 bars the **Census Bureau** from asking about religion. It does not restrict anyone
+else from estimating it, and §8.4 is not in tension with it.
+
+### 14.2 The three real risks, ranked
+
+1. **§8.4 is substantially a race map wearing religion's labels.** Ethnicity is the strongest
+   input, so in many places the pattern drawn IS the ethnic pattern relabelled. Modelling that
+   correlation is ordinary demography — Pew, PRRI and Brandeis all do it — and the danger is
+   presentational rather than methodological. If a reader takes the inference for an
+   observation, the map quietly teaches that every Black neighbourhood is Black Protestant and
+   every Mexican one Catholic, which is false about individuals and increasingly false about
+   groups. The about-panel text saying so is load-bearing, not boilerplate.
+
+2. **Getting a community wrong is itself a harm, and the failure is asymmetric.** Drawing
+   Borough Park as 58% Catholic did not merely mislead, it erased the most visible Jewish
+   neighbourhood in America (§8.4's language section). In the other direction, overstating a
+   minority somewhere feeds a genre that already exists: "Muslim population maps of Europe" are
+   a staple of the far right. That is not a reason not to draw the map. It is the reason the
+   honesty of the labelling matters more here than on an ordinary data map.
+
+3. **Targeting.** A neighbourhood-resolution map of where Haredi Jews or Muslims live is in
+   principle useful to someone with bad intent. The marginal risk is genuinely low where the
+   map REFLECTS what is already public — Borough Park's character is visible from the street
+   and in every guidebook. It rises where a map would REVEAL: a small, dispersed or deliberately
+   unadvertised minority. Some luck helps here, in that the model is least confident about
+   exactly those groups, but luck is not a policy.
+
+### 14.3 Other countries, and the distinction that actually matters
+
+**What §8.4 did is much weaker than "estimating religion where it is not recorded", and the
+difference is the whole argument.** The US has a real count at county level; §8.4 changed only
+WHERE INSIDE a county the dots sit, and every county total is still exactly ASARB's. Nothing
+was invented, only placed.
+
+France has no count at all. Estimating religion there would mean inventing the magnitude as
+well as the location, most plausibly from surnames, origin or nationality — far less accurate,
+and much closer to the thing France's ban on ethnic statistics exists to prevent. That is a
+categorically larger claim and it would deserve the criticism it attracted. **The rule that
+falls out of this: never model at a finer resolution, or a stronger claim, than the source
+publishes its magnitude at.** A country with no religion data is a country this map does not
+draw, which is what it already does.
+
+On the law, briefly: France's prohibition and GDPR Article 9 both bite on **processing personal
+data**. An estimate about an area, built from published aggregate tables, is probably outside
+them; building the same model from individual-level microdata — the French equivalent of what
+CES supplied for §8.4a — is squarely inside. Germany is the opposite case and publishes religion
+itself, for church tax.
+
+**The genuinely dangerous list is ethical rather than legal**, and it is short: China, Myanmar,
+Iran, Pakistan, and increasingly India, which is already drawn. A fine-grained map of where a
+persecuted minority lives is a different object from a map of American denominations, whatever
+any statute says. For a group facing persecution, do not go below what that state itself
+publishes.
+
+### 14.4 The rules that follow
+
+- Never estimate a magnitude a source does not publish; refine placement only.
+- Never estimate religion from ethnicity in a country with no religion count. Say the data does
+  not exist — the map already handles that by not drawing the country.
+- For a persecuted group, no resolution finer than the state's own publication.
+- Keep the measured / fitted / authored / uniform distinction visible to the reader (§7, §8.4).
+  It is the difference between "counted", "inferred" and "we do not know", and it is the main
+  thing standing between this map and the genre in §14.2.
+- Jurisdictional detail changes and none of the above is legal advice. If this ever becomes
+  commercial or draws institutional attention, that is a lawyer's question — and §14's opening
+  line applies well before then.

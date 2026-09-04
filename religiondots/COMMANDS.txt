@@ -3,6 +3,11 @@ RELIGION DOT MAP — COMMAND REFERENCE
 
 Design and reasoning: spec.md.  Sources and their gotchas: sources.md.  todo.txt is Anita's.
 
+WHO GETS DRAWN, AND HOW FINELY, IS NOT A TECHNICAL QUESTION -- spec.md §14.  Before adding a
+country whose state does not publish religion, or whose religious minorities are persecuted,
+read it.  It ends by asking you to raise the question with Anita rather than decide alone,
+and that is an invitation rather than a last resort.
+
 
 ---- DATA (all of data/ is gitignored; this rebuilds it) ----
 
@@ -41,6 +46,18 @@ Design and reasoning: spec.md.  Sources and their gotchas: sources.md.  todo.txt
     python sources/ee.py --fetch     # Estonia, two PxWeb API calls, seconds
     python sources/hr.py --fetch     # Croatia, one 18MB xlsx, ~1 min
     python sources/in.py --fetch     # India, 38 files scraped off NADA, ~14MB, ~3 min
+    python sources/de.py --fetch     # Germany, one 0.8MB xlsx, seconds
+    python sources/hu.py --fetch     # Hungary, two SDMX structure messages, seconds.
+                                     #   The two DATA exports were made by hand in the
+                                     #   census database UI and cannot be re-fetched --
+                                     #   sources/hu.md 2 says why and what would fix it.
+    python sources/mk.py --fetch     # North Macedonia, two PxWeb POSTs, seconds.
+                                     #   Cheapest country in the project: one table,
+                                     #   no allocation, boundaries already on disk.
+                                     #   Fetches BOTH languages on purpose -- English
+                                     #   for the category labels the taxonomy keys on,
+                                     #   Macedonian for the Cyrillic names GISCO joins
+                                     #   on.  Neither edition alone builds it.
 
    au / ca / ie / mx / nz / ph / uk were acquired earlier and have the same shape.
 
@@ -78,6 +95,19 @@ Design and reasoning: spec.md.  Sources and their gotchas: sources.md.  todo.txt
     python sources/ro_geo.py --fetch # the same zip + the 7MB LAU-NUTS correspondence
     python sources/ee_geo.py --fetch # Maa-amet; does NOT use GISCO, see below
     python sources/hr_geo.py         # GISCO + correspondence again; no --fetch needed
+    python sources/de_geo.py --fetch # BKG VG250, one 69MB zip; does NOT use GISCO
+    python sources/de_grid.py --fetch# THEN this: the 1km grid placement layer, 27MB zip.
+                                     #   Needs de_gemeinden.gpkg to already exist -- it
+                                     #   assigns each cell to a Gemeinde and clips to it.
+                                     #   countries.py reads de_grid_1km.gpkg, NOT
+                                     #   de_gemeinden.gpkg, so skipping this breaks Germany.
+    python sources/hu_geo.py --fetch # GISCO again, PLUS geoBoundaries HUN ADM2 (3.6MB)
+                                     #   for Budapest's 23 kerult, which GISCO lacks
+    python sources/mk_geo.py         # GISCO only, and NO --fetch: the LAU file already
+                                     #   covers North Macedonia.  GISCO LAU is 34
+                                     #   countries, not the EU27 -- MK, RS and AL are
+                                     #   all in it, which also solves Serbia and Albania
+                                     #   if their counts are ever found.
 
    pl_geo.py and ro_geo.py SHARE the GISCO download -- run either one with --fetch and the
    other needs none.  That one file has municipal boundaries for 34 European countries,
@@ -89,6 +119,27 @@ Design and reasoning: spec.md.  Sources and their gotchas: sources.md.  todo.txt
    check passes while the join fails completely.  pl_geo.py derives the key by slicing
    fixed offsets and asserts the id is still 13 digits before doing it.  Romania needs no
    decoding at all: its LAU_ID simply IS the SIRUTA code.  The format is PER COUNTRY.
+
+   GERMANY IS THE OPPOSITE LESSON AND IS WORTH READING BESIDE POLAND: there the key had
+   to be SHORTENED, here it must not be.  BKG publishes a 01.01 and a 31.12 edition of
+   every year and destatis never says which Gebietsstand it published on -- 01.01.2022
+   leaves 2 census rows unmatched, 01.01.2023 leaves 10, and 31.12.2022 leaves NONE, so
+   the vintage was found by trying all three.  Against the 01.01 file the two leftovers
+   are Schwedt/Oder and Pinnow, and they are not a merger: only the Verbandsschluessel
+   moved.  Joining on the 8-digit AGS instead of the 12-digit ARS makes them vanish and
+   looks like a fix, while orphaning three populated polygons and placing ~3,000 people in
+   the wrong villages with every count still reconciling.  de_geo.py joins on the ARS
+   verbatim, 10,786 both ways, and ASSERTS that all 204 leftover polygons are
+   `Gemeindefreies Gebiet` -- uninhabited, so having no religion row is correct.
+
+   GERMANY IS ALSO THE ONLY COUNTRY WHOSE PLACEMENT IS MEASURED, and de_grid.py is what
+   does it.  spec 8.2 splits the magnitude per unit from the placement inside it, and
+   everywhere else the placement weight is a proxy -- an equal share over units built to a
+   population target, or for the US a FITTED demographic model (8.4).  destatis publishes
+   the same three categories on the 1km INSPIRE grid, so a Catholic dot in Munich is placed
+   on Munich's own per-cell Catholic count.  Berlin goes from ONE polygon holding 3,596,999
+   people to 799 cells, and the run reports 17,215 of 17,215 rows placed on measured
+   weights.  Read sources/de_grid.md before changing any of it.
 
    ro_geo.py also writes ro_uat_lookup.csv, because the Romanian census publishes no
    geographic codes -- rows are names only.  RE-RUN IT after re-running sources/ro.py, or
@@ -189,6 +240,9 @@ Design and reasoning: spec.md.  Sources and their gotchas: sources.md.  todo.txt
       --parent-file taxonomy/hierarchy/uk_ni.csv --drop "^All usual residents$"
     python allocate.py --source in --fine subdistrict --coarse state --hierarchy parent \
       --within 2 --drop "^(?:Total|Sect: )"             # 8 -> 91 categories
+    python allocate.py --source hu --fine settlement --coarse county --hierarchy parent \
+      --parent-file taxonomy/hierarchy/hu.csv \
+      --within 5 --drop "^(?:Total|Catholic)$"          # 11 -> 28 categories
 
    Writes data/normalized/<cc>_<fine>_allocated.csv, or <out>_allocated.csv when --out is
    given.  Output rows are tagged `derived` and must not become rings (§3.10) — scatter.py
@@ -379,29 +433,59 @@ Design and reasoning: spec.md.  Sources and their gotchas: sources.md.  todo.txt
 
    Per-country wiring is in countries.py; everything downstream is country-agnostic.
 
-    python scatter.py --country us                 # 1 dot = 1,000 people
-    python scatter.py --country ca
-    python scatter.py --country cz                 # seconds
-    python scatter.py --country ie                 # seconds
-    python scatter.py --country au                 # ~2 min
-    python scatter.py --country mx                 # ~3 min
-    python scatter.py --country nz                 # seconds
-    python scatter.py --country uk                 # ~4 min, 239,023 units
-    python scatter.py --country pl                 # seconds
-    python scatter.py --country ro                 # seconds
-    python scatter.py --country ee                 # seconds, 958 dots -- the smallest
-    python scatter.py --country hr                 # seconds
-    python scatter.py --country br                 # ~8 min
-    python scatter.py --country in                 # ~25 min, THE slow one: 1,207,981 dots
+   ALL OF THEM AT ONCE, which is what to run in practice -- one process per country, and
+   it starts the long ones first so the machine is not finishing India on one core with
+   fifteen idle.  Every child's output is printed in full when it finishes:
+
+    python scatter_all.py                          # 15 countries x 2 editions, ~70 s
+    python scatter_all.py --countries us,in        # a subset
+    python scatter_all.py --dot-values 1000        # the fine edition only
+    python scatter_all.py --jobs 14                # default is half the cores
+
+   Those 30 runs were about fifty minutes serially.  70 s is now the length of the SINGLE
+   LONGEST RUN -- the United Kingdom, 239,023 units -- so more cores will not help and the
+   only way further down is to make that one country faster.
+
+   One at a time, which is what to run when a single country is being worked on:
+
+    python scatter.py --country us                 # 1 dot = 1,000 people, ~40 s
+    python scatter.py --country ca                 # ~43 s
+    python scatter.py --country cz                 # ~3 s
+    python scatter.py --country ie                 # ~7 s
+    python scatter.py --country au                 # ~26 s
+    python scatter.py --country mx                 # ~22 s
+    python scatter.py --country nz                 # ~33 s, and 33 of that is ONE FILE:
+                                                   #   its placement layer is a 140 MB
+                                                   #   GeoJSON, the only one in the project
+                                                   #   not a shapefile or gpkg, and GDAL
+                                                   #   parses it at about 4 MB/s.  Convert
+                                                   #   it once and nz is ~3 s.
+    python scatter.py --country uk                 # ~63 s, 239,023 units
+    python scatter.py --country pl                 # ~2 s
+    python scatter.py --country ro                 # ~2 s
+    python scatter.py --country ee                 # ~1 s, 958 dots -- the smallest
+    python scatter.py --country hr                 # ~1 s
+    python scatter.py --country br                 # ~9 s
+    python scatter.py --country in                 # ~63 s, still the slow one: 1,207,981 dots
+    python scatter.py --country de                 # 82,710 dots on 3 nodes
+    python scatter.py --country hu                 # ~4 s, 5,735 dots on 21 nodes
+    python scatter.py --country mk                 # ~1 s, 1,696 dots -- the smallest
     python scatter.py --country us --state 36      # one state, seconds — for iterating
+
+   THOSE TIMES ARE 4x TO 37x FASTER THAN THEY WERE BEFORE 2026-09-04, and the fix was one
+   line: random_points_in_polygon never called shapely.prepare(), so GEOS answered every
+   candidate point by walking every edge of the polygon.  It was 83% of the whole script on
+   every country.  India went 795s -> 63s, Brazil 313s -> 9s, and every country's output
+   is BYTE-IDENTICAL before and after -- preparing changes how the predicate is answered,
+   not what it answers.  If a scatter ever gets slow again, that is the first thing to check.
 
    THE SECOND EDITION, 1:10,000 (spec §4.1b).  Every country needs one before tiles.py
    --coarse will run.  Output is dots_<cc>_10k.geojson, so it does NOT overwrite the fine
-   build -- both have to be on disk at once.  Ten times fewer dots, so it is fast: the whole
-   set is about 12 min, India 94s.
+   build -- both have to be on disk at once.  Ten times fewer dots, so it is fast; the
+   whole set rides along in scatter_all.py's two minutes.
 
     python scatter.py --country in --dot-value 10000
-    ... and the same for the other thirteen.
+    ... and the same for the other fourteen.
 
    It is a SECOND SCATTER, not a subsample of the first, and that is deliberate: showing one
    dot in ten would make the counts hold only in expectation (breaking §4.1's "count the
@@ -456,10 +540,39 @@ Design and reasoning: spec.md.  Sources and their gotchas: sources.md.  todo.txt
    unrepresented figure, and the ring-candidate count; the second is the one to watch.
 
 
+---- BUFFERS (the unmerged dots; spec sec 4.2d) ----
+
+    python buffers.py --countries au,br,ca,cz,de,ee,hr,hu,ie,in,mx,nz,pl,ro,uk,us --coarse
+
+   Writes data/buffers/<cc>.bin, <cc>_10k.bin and manifest.json -- the flat binary the
+   viewer's WebGL scatter layer draws.  About 40 seconds for all sixteen; the geojson
+   parsing is nearly all of it.
+
+   THIS REPLACES THE `atomic` TILE LAYER.  The unmerged dots are no longer in the pmtiles
+   at all, so tiles.py is now run with --no-atomic (below) and the archive holds only the
+   merged marks and the rings.  Run buffers.py whenever a country's scatter changes -- it
+   reads the same dots_<cc>.geojson tiles.py does, so the two are rebuilt together or the
+   map shows one country's old dots beside another's new ones.
+
+   Needs taxonomy/religions.json to be current: the buffer stores a node INDEX into it, so
+   a stale tree silently mislabels every dot.  Run taxonomy/build_tree.py first if branches
+   have changed.  The run warns if a node in the dots is missing from the tree.
+
+   21.3 MB for all sixteen at 1:1,000 (India 12.1 MB), 2.1 MB at 1:10,000.  The coarse set
+   is what the viewer paints first, so it is not optional in practice: without it the map
+   is blank until the fine buffers land.
+
+
 ---- TILES ----
 
-    python tiles.py --countries us,ca,cz,br,au,ie,mx,nz,uk,pl,ro,ee,hr,in --coarse  # ALL
-    python tiles.py --countries us,ca,cz,br,au,ie,mx,nz,uk,pl,ro,ee,hr,in           # fine only
+    python tiles.py --countries us,ca,cz,br,au,ie,mx,nz,uk,pl,ro,ee,hr,in,de,hu,mk --coarse --no-atomic  # ALL
+    python tiles.py --countries us,ca,cz,br,au,ie,mx,nz,uk,pl,ro,ee,hr,in,de,hu,mk --no-atomic           # fine only
+
+   --no-atomic IS NOW THE NORMAL WAY TO BUILD.  The unmerged dots moved to buffers.py
+   (spec sec 4.2d), so the atomic layers are dead weight in the archive -- they were about
+   85% of it, and the z0 tile alone was 11 MB.  Building without the flag still works and
+   still produces a valid archive; it just makes a 152 MB one where 20 MB would do, and
+   nothing reads the extra layers.
 
    --coarse also packs the 1:10,000 edition as dots10k / atomic10k / rings10k, which is what
    lets the viewer offer "1 dot = 1,000 / 10,000 people" in the legend.  Without it the
@@ -469,6 +582,8 @@ Design and reasoning: spec.md.  Sources and their gotchas: sources.md.  todo.txt
    which one is missing if not.
     python tiles.py --countries us --max-zoom 6    # quick, for iterating
     python tiles.py --refresh-meta                 # counts.json text only, ~1 second
+    python tiles.py --countries ... --jobs 1       # encode inline, when a worker traceback
+                                                   # is hiding where the problem is
 
    THE ARCHIVE IS THE WHOLE PICKER.  --countries is not a filter over an existing archive,
    it REPLACES it, and counts.json with it -- so retiling with a short list silently drops
@@ -477,13 +592,38 @@ Design and reasoning: spec.md.  Sources and their gotchas: sources.md.  todo.txt
    Always pass every country that has a dots_<cc>.geojson, and check the per-country lines
    at the end of the run against what you expected.
 
-   All thirteen at z0-10: about 15 minutes, 52.1 MB, 28,191 tiles, 667,131 dots.  (Nine was
-   47.7 MB / 25,537 tiles / 615,954 dots, so pl+ro+ee+hr cost ~4.4 MB between them.)
+   All fifteen at z0-10 --coarse: about a minute, 156.6 MB, 34,216 tiles, 2.23M dots.
 
-   us,ca at z0-10 takes about 7 minutes and holds ~3.5 GB while it does -- the whole tile
-   sink is in memory until the encode.  --refresh-meta exists so that editing a country's
-   name, source, basis, note or view box does not cost that: it rewrites only those fields
-   in counts.json from countries.py and leaves the tiles and the tallies alone.
+   IT USED TO BE ABOUT FORTY MINUTES AND ~3.5 GB OF MEMORY, and both were the same two
+   causes (fixed 2026-09-04):
+
+     - mapbox_vector_tile.encode does 11,400 features/s, because for every feature it
+       builds a shapely object, checks its validity, enforces a winding order and runs it
+       through shapely.ops.transform.  Every feature here is a POINT, for which all of
+       that is dead weight.  mvt.py writes the bytes directly at 294,000 features/s, and
+       a --coarse build encodes about 28 million of them -- `atomic` is every dot at
+       every zoom, eleven times over, and is most of the archive.
+     - the whole tile sink was built in memory and encoded at the end.  Zoom is now the
+       outer loop and each zoom is written and dropped before the next starts, so the
+       build holds one zoom rather than the whole pyramid.
+
+   --jobs then encodes and gzips several tiles at once, which is worth about 2x on top --
+   less than the core count because z0 is ONE TILE holding every dot in the world and
+   nothing can split it.  --jobs 1 and --jobs 8 produce byte-identical archives.
+
+   mvt.py IS THE ONLY HAND-ROLLED WIRE FORMAT IN THE PROJECT.  tools/check_tiles.py is the
+   check on it and shares no code with it -- see CHECK THE ARCHIVE below.
+
+   --refresh-meta still exists, and is still the right thing for editing a country's name,
+   source, basis, note or view box: it rewrites only those fields in counts.json from
+   countries.py and leaves the tiles and the tallies alone.
+
+   THE DEV SERVER BLOCKS THE LAST STEP.  The archive is built as religiondots.pmtiles.tmp
+   and moved into place at the end, so a build that dies leaves the old archive intact
+   rather than a truncated one.  Windows will not let that move happen while `npx serve`
+   holds the old file open, which it does for as long as the local map has been loaded --
+   so the run ends by telling you to stop the server and `mv` the .tmp yourself.  Nothing
+   is lost when that happens: counts.json is written first and matches the new archive.
 
    Writes data/processed/religiondots.pmtiles and counts.json.  Countries go into ONE archive
    because the tile pyramid is shared, but every feature carries `c` and the merge groups by
@@ -499,6 +639,32 @@ Design and reasoning: spec.md.  Sources and their gotchas: sources.md.  todo.txt
    out as you pan.  tiles.py MERGES instead: nearby dots of the same religion become one
    mark carrying `k`, and the viewer draws area proportional to k (spec.md §4.2).  Nothing
    is ever dropped.  It also means no WSL, whose C: mount is broken on this machine.
+
+
+---- CHECK THE ARCHIVE ----
+
+    python tools/check_tiles.py us --max-zoom 10 --coarse
+    python tools/check_tiles.py us,ca,cz,br,au,ie,mx,nz,uk,pl,ro,ee,hr,in,de,hu,mk --max-zoom 6 --coarse
+    python tools/check_tiles.py cz --archive data/processed/religiondots.pmtiles.tmp
+
+   Rebuilds what every tile SHOULD hold straight from the geojson -- with the old pandas
+   groupby, dict features and mapbox_vector_tile, all reproduced inside the tool -- then
+   decodes the real archive and compares.  This is the check on mvt.py, and it deliberately
+   shares no code with it.  Run it after touching mvt.py or tiles.py.
+
+   PASS THE SAME --countries THE ARCHIVE WAS BUILT WITH.  At low zoom one tile holds several
+   countries, so checking a subset reports every other country's marks as unexpected.  The
+   exception is a country with no neighbour in the set -- in, au, nz, br -- which can be
+   checked alone at any zoom.
+
+   Feature ORDER is not compared and must not be: §4.2's draw-order shuffle is a numpy
+   permutation now rather than random.Random.  Tiles are compared as multisets, which still
+   catches a dropped feature, a duplicate, a coordinate off by one or a property pointing at
+   the wrong value-table entry.
+
+   The reference half is slow -- it is the code the archive stopped using because it was
+   slow -- so a full-zoom check of every country takes far longer than the build does.
+   --max-zoom 6 over everything plus a full-zoom check of one country is the useful pair.
 
 
 ---- CHECK A TAXONOMY MAPPING ----
@@ -628,7 +794,7 @@ Design and reasoning: spec.md.  Sources and their gotchas: sources.md.  todo.txt
     downloaded (nothing in data/geo/ph) and is awkward anyway -- 129 categories is the best
     in the set, but 117 provinces for 109M people is ~930k per unit, three times coarser
     than any unit now on the map.
-  - the other thirteen all scatter and tile.
+  - the other fourteen all scatter and tile.
   - CROATIA'S SHEET 5 IS THE BIGGEST UPGRADE OUTSTANDING ANYWHERE.  DZS names 54 individual
     churches at the same geography Croatia is already drawn at -- four Orthodox
     jurisdictions apart, eleven Jewish communities by city, two Old Catholic churches --

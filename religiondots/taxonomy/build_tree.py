@@ -24,7 +24,7 @@ import pandas as pd
 HERE = Path(__file__).parent
 sys.path.insert(0, str(HERE))
 
-from branches import BRANCHES, LINEAGE             # noqa: E402
+from branches import BRANCHES, LINEAGE, PUBLIC_NOTE   # noqa: E402
 from usrc2020 import MAP, UNMAPPED, REVIEW         # noqa: E402
 import cz2021                                      # noqa: E402
 import br2010                                      # noqa: E402
@@ -261,6 +261,10 @@ def main():
         node = {"id": bid, "label": label, "kind": "branch"}
         if note:
             node["note"] = note
+        # The reader-facing half, which the legend shows as the row's tooltip. `note` is
+        # for whoever maintains the tree and is never rendered; see branches.py.
+        if PUBLIC_NOTE.get(bid):
+            node["public_note"] = PUBLIC_NOTE[bid]
         # A source whose finest granularity IS this branch — ASARB has one "Muslim
         # Estimate" row and no Sunni/Shia below it. Record the mapping on the branch;
         # it is not a leaf and inventing one under it would assert detail nobody has.

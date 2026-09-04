@@ -41,7 +41,9 @@ BG = 0x11 / 255.0          # body background, and openfreemap's dark style is no
 # lightness is prominence, and `unaffiliated` is the largest node anywhere — being quiet is
 # the whole point of its colour, so reporting it as too faint would invite undoing the
 # decision. Nothing else belongs here without the same kind of reason.
-DIM_ON_PURPOSE = {"unaffiliated"}
+# `unrecorded` joins it for the same reason and a stronger one: it is 51.8% of Germany,
+# and a mass that size drawn bright would bury the only signal the German map carries.
+DIM_ON_PURPOSE = {"unaffiliated", "unrecorded"}
 
 
 def read_palette():

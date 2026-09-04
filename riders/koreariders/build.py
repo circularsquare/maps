@@ -186,11 +186,16 @@ def order_stations(spec, g, named, flows):
     return [(km * scale, nm) for km, nm in keep], None
 
 
-def reconstruct(stops, flows, down=True):
-    """Cumulate inward from the anchor end; see README.md."""
+def reconstruct(stops, flows, down=True, rev=False):
+    """Cumulate inward from the anchor end; see README.md.
+
+    `down` means travelling stop 0 -> stop n along the chain. That is 하행 only
+    when the chain runs 기점 -> 종점; `rev` says it does not, and the 승하차
+    column pair has to be swapped to match.
+    """
     n = len(stops) - 1
-    bo = lambda nm: (flows.get(nm, (0, 0, 0, 0))[0:2] if down
-                     else flows.get(nm, (0, 0, 0, 0))[2:4])
+    col = 0 if down != rev else 2
+    bo = lambda nm: flows.get(nm, (0, 0, 0, 0))[col:col + 2]
     loads = [0.0] * n
     b_end, a_end = bo(stops[n][1])
     loads[n - 1] = a_end if down else b_end
@@ -205,8 +210,9 @@ def run(canon, spec, g, named, flows):
     if err:
         return {"line": canon, "error": err}
 
-    down = reconstruct(stops, flows, True)
-    up = reconstruct(stops, flows, False)
+    rev = spec.get("reversed", False)
+    down = reconstruct(stops, flows, True, rev)
+    up = reconstruct(stops, flows, False, rev)
 
     f = lambda nm: flows.get(nm, (0, 0, 0, 0))
     users = down[0] + up[-1] + sum(f(nm)[0] + f(nm)[2] for _, nm in stops[1:-1])
@@ -249,6 +255,10 @@ def run(canon, spec, g, named, flows):
         verdict = "partial"
     else:
         verdict = "good"
+    # reconstruct()'s `down` is the chain's own order, which on a reversed chain
+    # is 상행 -- swap the pair back before anything is labelled 하행.
+    if rev:
+        down, up = up, down
     return {
         "line": canon, "stops": stops, "down": down, "up": up,
         "users": users, "passing": spec["passing"], "shift": shift,

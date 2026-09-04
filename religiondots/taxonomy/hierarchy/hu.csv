@@ -1,0 +1,53 @@
+source_category,parent,note
+# KSH publishes 29 religion categories at vármegye (WBS008) and 11 at settlement (WBS003),
+# with no table joining them (spec §3.9). This is that join.
+#
+# UNLIKE Ireland's and Mexico's, it did not have to be inferred: KSH's own codelists name
+# the groupings, and the arithmetic then confirms every one of them to the person against
+# the settlement table's national figures. sources/hu.py asserts all three sums on every
+# run, so a mis-assignment here cannot hide — it would break an equality, not a tolerance.
+#
+#   Orthodox Christian                     15,578  = the 7 rows below
+#   Other Christian denomination          141,197  = the 9 rows below
+#   Belong to other church, denomination   29,977  = the 4 rows below
+#
+# Everything else is an IDENTITY row — the vármegye table repeats the settlement column
+# unchanged — which allocate.py reads as "this coarse category IS this fine column" and
+# passes through without deriving anything.
+#
+# `Catholic` itself appears in both tables and is in NEITHER side of this file: it is the
+# parent of the two rites plus the derived remainder, and allocate.py is run with
+# --drop '^(Total|Catholic)$' so that it cannot be counted alongside its own children.
+#
+# ---- Orthodox: one column at settlement, six named jurisdictions plus a residual --------
+Greek Orthodox,Orthodox Christian,Ecumenical Patriarchate's Hungarian Exarchate — 3443
+Russian Orthodox,Orthodox Christian,Moscow Patriarchate's Hungarian diocese — 2462
+Serbian Orthodox,Orthodox Christian,the Eparchy of Buda — 1710
+Bulgarian Orthodox,Orthodox Christian,475 — the smallest named jurisdiction
+Romanian Orthodox,Orthodox Christian,the Romanian Orthodox diocese in Hungary — 3618
+Ukrainian Orthodox,Orthodox Christian,1404 — absent from KSH's own prose list of five
+Other Orthodox,Orthodox Christian,KSH's residual — 2466
+# ---- other Christian: one column at settlement, nine bodies -----------------------------
+Unitarian,Other Christian denomination,6552
+Baptist,Other Christian denomination,17662
+Methodist,Other Christian denomination,2776
+Adventist,Other Christian denomination,5011
+Pentecostal,Other Christian denomination,8947
+Anglican,Other Christian denomination,372
+Jehovah's Witnesses,Other Christian denomination,22249
+Faith Church,Other Christian denomination,Hit Gyülekezete — 22647
+Other Christian,Other Christian denomination,54981 — larger than any named free church
+# ---- non-Christian: one column at settlement, three religions plus a residual -----------
+Muslim,"Belong to other church, denomination",7983
+Buddhist,"Belong to other church, denomination",11042
+Hindus,"Belong to other church, denomination",3307
+"Other church, denomination","Belong to other church, denomination",KSH's residual — 7645
+# ---- identity: the vármegye table repeats these settlement columns unchanged ------------
+Roman Catholic among Catholics,Roman Catholic among Catholics,2643855
+Greek Catholic among Catholics,Greek Catholic among Catholics,165135
+"Catholic, rite not stated","Catholic, rite not stated",derived in sources/hu.py at both levels
+Calvinist,Calvinist,943982
+Lutheran,Lutheran,176503
+Jewish,Jewish,7635
+"Not belong to any church, denomination","Not belong to any church, denomination",1549610
+No answer,No answer,"3852533 — excluded by the taxonomy, carried here so the totals tie"

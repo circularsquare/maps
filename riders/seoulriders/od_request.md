@@ -1,8 +1,13 @@
 # Asking Seoul for an ordinary weekday
 
-**This is now an upgrade, not a blocker.** We have a complete OD file and
-matching hourly counts already — see `README.md`. The only problem with what we
-have is *which day it is*.
+**Still worth sending, and still the only route to the real thing.** As of
+2026-09-04 the map builds a weekday without it — see "Getting off New Year's
+Eve" in `README.md` — but that weekday is the measured Sunday pattern
+*re-levelled* onto measured weekday station totals. Volumes are measured; who
+travels to whom is borrowed. One real weekday file would replace the one
+modelled step in the pipeline with a measurement, and nothing else would have
+to change: `build_od.py --day nye` already does exactly the right thing with a
+file that names its own date.
 
 ## The situation
 
@@ -10,17 +15,25 @@ have is *which day it is*.
 labelled "샘플 데이터", but that label is wrong. The published file is the real
 thing: 229,365 rows, 27 lines, 642 stations, the whole 수도권 network.
 
-It is a single date, though — **2023-12-31, a Sunday, and New Year's Eve.** The
-numbers show it plainly: busiest origins are 잠실, 홍대입구, 명동 and 혜화, 강남
-only ranks tenth, and the day totals 3.46M trips against a normal weekday's ~7M.
-It is a night-out map, not a commute map.
+It is a single date, though — **2023-12-31, a Sunday.** New Year's Eve is
+incidental: measured against the other 51 Sundays of 2023 the hourly profile is
+indistinguishable, so what the file cannot show us is a *weekday*, not a normal
+evening. Busiest origins are 잠실, 홍대입구, 명동 and 혜화, 강남 only ranks tenth,
+and the day totals 3.46M trips against a normal weekday's ~7M.
 
 Their own description says that date was produced 제공요청에 의해 — by request —
 so producing another date is demonstrably something they do.
 
+**Everything else has been checked and is a dead end.** 15135167 is line-level
+and a 100-row sample; OA-20501 has no files; T-Data's raw T-money taps are
+behind Seoul's integrated login, which is the same identity wall. The table in
+`README.md` under "There is no weekday OD" has the full list, so nobody has to
+search it twice.
+
 **We can pair any date they give us.** `data/hourly_2023_raw.csv` and
 `data/daily_hourly_raw.csv` between them hold hourly boardings and alightings
-for every single day of 2023 and 2024. So the request is purely "the same file,
+for every single day of 2023 and 2024, and `card_daily_*.csv` holds daily
+counts for all 27 lines back to 2015. So the request is purely "the same file,
 a different date", with no follow-up needed.
 
 **Suggested date: 2024년 11월 13일 (수).** A Wednesday, no Korean public holidays
@@ -53,8 +66,8 @@ email address; the page directs data questions to that number.
 공공데이터포털에 공개된 「서울특별시_지하철 역별 OD」(데이터 번호 15113638)
 데이터를 잘 활용하고 있습니다. 감사합니다.
 
-현재 공개된 파일은 2023년 12월 31일 하루치 자료입니다. 해당 일자는 일요일이자
-연말이어서 평상시의 통행 패턴과는 차이가 있어, 일반적인 평일 하루치 자료를
+현재 공개된 파일은 2023년 12월 31일 하루치 자료입니다. 해당 일자는 일요일이어서
+출퇴근 시간대의 통행 패턴이 나타나지 않아, 일반적인 평일 하루치 자료를
 추가로 요청드리고자 합니다.
 
 데이터 설명에 해당 자료가 "제공요청에 의해" 제공되었다고 안내되어 있어
@@ -83,7 +96,9 @@ email address; the page directs data questions to that number.
 ## What the draft says, in English
 
 Thanks them, notes the published file is 2023-12-31, and explains why that
-particular day is awkward — a Sunday and year-end, so not representative.
+particular day is awkward — it is a Sunday, so there is no commute peak in it
+at all. (Deliberately not "it is New Year's Eve": that turned out to be
+irrelevant, and the sharper ask is the more answerable one.)
 Points out their own description says the file was produced on request, then
 asks for one ordinary weekday in the same format, naming Wednesday 2024-11-13
 but explicitly accepting any non-holiday weekday in 2023 or 2024. States the

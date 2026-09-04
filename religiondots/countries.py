@@ -488,6 +488,189 @@ def _nz_place_unit(g):
     return unit.where(g["LANDWATER"].astype(str) != "21")
 
 
+class _DeGridWeighter:
+    """Place a German dot on where that religion actually is, not on where people are.
+
+    spec §8.2 splits placement from magnitude, and everywhere else on this map the
+    placement weight is a PROXY — an equal share per unit that was engineered to a
+    population target, or, for the US, a demographic model fitted to guess a
+    denomination's position inside a county (§8.4). Germany needs neither: destatis
+    publishes the same three categories on the 1km INSPIRE grid, so the weight for
+    `christianity.catholic` inside Munich is Munich's own per-cell Catholic count.
+
+    That makes this the only country here whose within-unit placement is MEASURED. It is
+    not a model and carries no fitted parameter, so §7's confidence machinery has nothing
+    to mark: a Catholic dot in Neukölln is there because the register put Catholics in
+    that square kilometre.
+
+    Falls back to cell population, and then to equal shares, wherever the node has no
+    column or sums to zero in that unit — the latter happens where the Cell-Key
+    perturbation zeroed a small category across every cell of a small Gemeinde while the
+    Gemeinde table still shows a few people (sources/de.md §3).
+    """
+
+    COLUMN = {
+        "christianity.catholic": "kath",
+        "christianity.protestant": "ev",
+        "unrecorded": "son",
+    }
+
+    def __init__(self, place):
+        self.pop = place["pop"].to_numpy(dtype=float)
+        self.col = {k: place[v].to_numpy(dtype=float) for k, v in
+                    ((n, c) for n, c in self.COLUMN.items() if c in place.columns)}
+        self.n_measured = 0
+        self.n_pop = 0
+        self.n_uniform = 0
+
+    def weights(self, node, idx, count, plain=False):
+        col = self.col.get(node)
+        if col is not None:
+            w = col[idx]
+            if w.sum() > 0:
+                self.n_measured += 1
+                return w
+        pop = self.pop[idx]
+        if pop.sum() > 0:
+            self.n_pop += 1
+            return pop
+        self.n_uniform += 1
+        return None
+
+    def summary(self):
+        return (f"{self.n_measured:,} (unit, node) rows placed on that religion's OWN 1km "
+                f"grid counts, {self.n_pop:,} on cell population where the category is "
+                f"zero across the unit's cells, {self.n_uniform:,} on equal shares "
+                f"(sources/de_grid.py)")
+
+
+def _de_place_weight(place):
+    """countries.py hook. `place` is the 1km grid GeoDataFrame scatter.py has read."""
+    if "kath" not in place.columns:
+        print("  !! de_grid_1km.gpkg has no religion columns — run sources/de_grid.py; "
+              "placing on equal shares (§8.2)")
+        return None
+    return _DeGridWeighter(place)
+
+
+def _de_counts():
+    """Zensus 2022 at Gemeinde: three categories on 10,786 units.
+
+    The shallowest country on the map and the only one where that is a property of the
+    instrument. Zensus 2022 asks nothing about religion; the figures are read off the
+    Melderegister, which records membership of the two churches that levy church tax, so
+    `basis` is `roll` (spec §3.1) and 51.8% of the country lands on one node.
+
+    No allocation step, and none is possible: destatis publishes at no coarser AND no
+    finer CATEGORY than this. What it does publish finer is geography — the same three
+    numbers on a 100m grid — which is a placement upgrade rather than a detail upgrade.
+
+    ONE level. de.csv carries `country` alongside `gemeinde`, which is the same 82.7
+    million people counted twice.
+
+    Every category is positive somewhere and the three partition each Gemeinde, so unlike
+    Czechia there are explicit zeros to strip: 178 cells across the file are the true-zero
+    dash, mostly Catholics in East German villages.
+    """
+    from de2022 import resolve
+
+    df = pd.read_csv(HERE / "data" / "normalized" / "de.csv",
+                     dtype={"geo_id": str}, low_memory=False)
+    df = df[df["geo_level"] == "gemeinde"].copy()
+
+    df["node"] = df["source_category"].map(resolve)
+    df = df[df["node"].notna() & (df["count"] > 0)]
+    df["unit"] = df["geo_id"]
+    df["congregations"] = 0
+    return df[["unit", "node", "count", "congregations"]]
+
+
+def _hu_counts():
+    """Népszámlálás 2022 at settlement: 28 categories on 3,177 units.
+
+    ONE level, and only the allocated file is read. hu.csv carries settlement, county and
+    country — the same 9.6 million people counted three times — and
+    `hu_settlement_allocated.csv` already holds every settlement column untouched plus the
+    three that WBS008 refines, so reading hu.csv as well would double the country.
+
+    98.1% of it is MEASURED. The allocation only touches three of the eleven settlement
+    columns — Orthodox Christian, Other Christian denomination, and the non-Christian
+    bucket, 184,147 people between them — and 160 of the (vármegye, column) pairs have a
+    single category and so come out exact rather than derived. The other eight columns,
+    including all 2.6M Roman Catholics and all 944k Calvinists, are published at the
+    settlement itself.
+
+    ALLOCATED WITHIN EACH VÁRMEGYE, not pooled. Hungary's minority churches are as
+    regional as India's: the Romanian Orthodox are along the Romanian border, the Serbian
+    Orthodox around Szentendre and Lórév, the Greek Catholics overwhelmingly in
+    Szabolcs-Szatmár-Bereg. A pooled national composition would smear each of them evenly
+    across the country, which is the failure --within exists to prevent.
+
+    BUDAPEST IS 23 UNITS, NOT ONE. The capital is 17.9% of Hungary and GISCO stops at the
+    city boundary; sources/hu_geo.py takes the 23 kerület from geoBoundaries ADM2 and clips
+    them to GISCO's Budapest. This is the fix Croatia could not make for Zagreb.
+    """
+    from hu2022 import resolve
+
+    df = pd.read_csv(HERE / "data" / "normalized" / "hu_settlement_allocated.csv",
+                     dtype={"geo_id": str}, low_memory=False)
+
+    lut = pd.read_csv(HERE / "data" / "geo" / "hu" / "hu_lookup.csv",
+                      dtype={"geo_id": str, "kod": str})
+    df["unit"] = df["geo_id"].map(dict(zip(lut["geo_id"], lut["kod"])))
+    missing = df["unit"].isna().sum()
+    if missing:
+        raise SystemExit(f"{missing} hu rows have no settlement code -- re-run "
+                         "sources/hu_geo.py, the lookup is stale")
+
+    df["node"] = df["source_category"].map(resolve)
+    df = df[df["node"].notna() & (df["count"] > 0)]
+    df["congregations"] = 0
+    # spec §3.10: an allocated count may never ring, because a ring asserts presence and
+    # allocation only spreads a total. The Anglicans of Hungary are 372 people in a
+    # country of 3,177 settlements, and a ring in every one of them would be a claim the
+    # source does not make.
+    df["may_ring"] = df["tier"] == "measured"
+    return (df.groupby(["unit", "node"], as_index=False)
+              .agg(count=("count", "sum"), congregations=("congregations", "max"),
+                   may_ring=("may_ring", "max"), tier=("tier", "min")))
+
+
+def _mk_counts():
+    """SSO Popis 2021 at municipality: 13 categories on 80 units.
+
+    ONE level. mk.csv carries `country` as well, which is the same 1.84M people again.
+
+    NO ALLOCATION, and none is possible: SSO publishes these categories at this geography
+    and nothing finer or coarser, so every row is `measured` and may ring. Czechia's shape,
+    for a much shallower table.
+
+    THE DRAWN POPULATION IS 92.5% OF THE COUNTRY. Four categories resolve to nothing —
+    the universe total, the 1,964 who declined, the 894 unknown, and the 132,260 people
+    whose data came from administrative registers and who were never asked. That last one
+    is 7.2% and is a coverage residual rather than a refusal; taxonomy/mk2021.py says why
+    it is not irreligion.
+    """
+    from mk2021 import resolve
+
+    df = pd.read_csv(HERE / "data" / "normalized" / "mk.csv",
+                     dtype={"geo_id": str}, low_memory=False)
+    df = df[df["geo_level"] == "municipality"].copy()
+
+    lut = pd.read_csv(HERE / "data" / "geo" / "mk" / "mk_lookup.csv",
+                      dtype={"geo_id": str, "kod": str})
+    df["unit"] = df["geo_id"].map(dict(zip(lut["geo_id"], lut["kod"])))
+    missing = df["unit"].isna().sum()
+    if missing:
+        raise SystemExit(f"{missing} mk.csv rows have no LAU code -- re-run "
+                         "sources/mk_geo.py, the lookup is stale")
+
+    df["node"] = df["source_category"].map(resolve)
+    df = df[df["node"].notna() & (df["count"] > 0)]
+    df["congregations"] = 0
+    return df[["unit", "node", "count", "congregations"]]
+
+
 COUNTRIES = {
     "us": dict(
         name="United States",
@@ -905,5 +1088,131 @@ COUNTRIES = {
              "which is why `religion not stated` is only 0.24% (spec §3.1). The 0.66% in "
              "`Other religions and persuasions` is allocated within each state, not "
              "pooled nationally (allocate.py --within; spec §3.10).",
+    ),
+    "de": dict(
+        name="Germany",
+        source="Zensus 2022, Sonderauswertung Religionszugehörigkeit (Destatis)",
+        basis="administrative register (church-tax records), not a question",
+        view=[5.4, 47.0, 15.6, 55.3],
+        note_public=(
+            "Nobody was asked. The 2022 census carries no religion question at all, and "
+            "these figures are read off the population register, which records church "
+            "membership because it determines church tax. So the data can see the two "
+            "churches that levy it and nothing else: 51.8% of Germany is one grey "
+            "category holding everyone the register has no religious body for. Germany's "
+            "roughly four million Muslims are in there, with its Orthodox Christians, its "
+            "Jewish communities, its free churches, the Old Catholics, and everyone who "
+            "belongs to nothing — indistinguishable from each other, because the register "
+            "never knew. That is not a judgement about who counts; it is the shape of the "
+            "instrument, and no German source anywhere is deeper. What survives is the "
+            "confessional map itself, at 10,786 municipalities: Catholic Bavaria, the "
+            "Rhineland and the Saarland against a Protestant north, a boundary largely "
+            "settled in the sixteenth century and still legible village by village. The "
+            "sharpest line is not that one. In the former East, 81% belong to no church, "
+            "against 45% in the West, and the Eichsfeld — a Catholic enclave that stayed "
+            "Catholic through forty years of the GDR — still reads at 80% against a "
+            "Thuringia of 74% none."),
+        counts=_de_counts,
+        # Gemeinden are the COUNT layer; the 1km INSPIRE grid is the PLACEMENT layer, and
+        # Germany is the one country on this map where §8.2's approximation is dropped
+        # outright rather than bounded (sources/de_grid.py).
+        #
+        # It had to be. Gemeinden are historical units, not units engineered to a
+        # population target, so §8.2's usual trick does not apply at all: they run from
+        # Dierfeld's 9 people to Berlin's 3,596,999 in ONE polygon, and 78 of them hold
+        # 31.6% of the country. The median is 1,797, finer than a Polish gmina, so two
+        # thirds of Germany was already drawn well — and the other third was drawn as
+        # city-sized blobs, with Neukölln and Zehlendorf identical. Unlike Czechia's
+        # Prague and Estonia's Tallinn there is no district-level religion table to swap
+        # in.
+        #
+        # What replaced it is not a finer proxy, it is the same measurement at 1km:
+        # destatis publishes THE SAME THREE CATEGORIES per grid cell, so `place_weight`
+        # weights each religion by its OWN count in each square kilometre. Berlin goes
+        # from 1 polygon to 799 cells, Hamburg to 655, Munich to 305. The US needs a
+        # fitted demographic model to do this (§8.4); Germany just reads it.
+        #
+        # 34 Gemeinden holding 8,199 people (0.0099%) are too small for any 1km centre to
+        # land inside them and carry their own polygon as a single cell, so the layer
+        # covers all 10,786 units and nothing is unplaceable.
+        units=None,
+        unit_key=None,
+        place=HERE / "data" / "geo" / "de" / "de_grid_1km.gpkg",
+        place_unit=lambda g: g["ars"].astype(str),
+        place_weight=_de_place_weight,
+        note="Basis is `roll`, not `self_id`: this is a register of church-tax "
+             "liability, so it is comparable with the United States and NOT with any "
+             "census that asks the person (spec §3.1). Counts carry Cell-Key "
+             "perturbation, so categories do not sum exactly to the published "
+             "population — by 174 people in 82.7 million (sources/de.md §3).",
+    ),
+    "hu": dict(
+        name="Hungary",
+        source="Népszámlálás 2022, tables WBS003 and WBS008 (KSH)",
+        basis="self-identification",
+        view=[16.0, 45.6, 23.0, 48.7],
+        note_public=(
+            "Two out of every five Hungarians did not answer the religion question in "
+            "2022 — 3.85 million people, the largest non-response on this map by a wide "
+            "margin, and up from 27% in 2011. Answering was voluntary and the share who "
+            "declined has risen at every census since the question came back in 2001, so "
+            "the blank is a fact about the question rather than about belief: nothing "
+            "here says what those people are, and this map does not guess. What is left "
+            "is 60% of the country, and within it the historic pattern is still sharp. "
+            "Catholic Hungary is the west and the north — 55% of the answers west of the "
+            "Danube. East of the Tisza it is 20%, and a third of the answers there are "
+            "Calvinist instead: the Reformation took hold on the plain in the 16th "
+            "century and the Counter-Reformation never fully undid it. The Greek "
+            "Catholics, 165,000 of them, are almost all in the north-east, and their "
+            "historic seat at Hajdúdorog is still four-fifths Greek Catholic. Budapest "
+            "is drawn as its 23 districts rather than as one shape, and they are not "
+            "alike: 27% report no religion in the Castle district and 40% in Csepel."),
+        counts=_hu_counts,
+        units=None,
+        unit_key=None,
+        place=HERE / "data" / "geo" / "hu" / "hu_settlements.gpkg",
+        place_unit=lambda g: g["kod"].astype(str),
+        note="Settlement counts are measured for 98.1% of the population; the Orthodox, "
+             "other-Christian and non-Christian columns are split from vármegye-level "
+             "structure WITHIN each vármegye (allocate.py --within, spec §3.10). "
+             "`Catholic, rite not stated` is derived as Catholic minus its two named "
+             "rites — KSH publishes the parent and the children but never the remainder "
+             "(sources/hu.md §4).",
+    ),
+    "mk": dict(
+        name="North Macedonia",
+        source="Попис 2021 (State Statistical Office)",
+        basis="self-identification",
+        view=[20.4, 40.8, 23.1, 42.4],
+        note_public=(
+            "Two communities and a long thin tail. Orthodox Christians and people who "
+            "answered simply 'Christian' are together 59% of the country and Muslims are "
+            "32%, and both follow the ethnic map almost exactly — Orthodox where the "
+            "population is Macedonian, Serb or Vlach, Muslim where it is Albanian, "
+            "Turkish, Roma, Bosniak or Torbeš. **Read 'Orthodox' and 'Christian' "
+            "together.** The census offered both and the choice between them turns out to "
+            "be regional rather than doctrinal: in the eastern municipalities half the "
+            "population wrote 'Christian' — 76% of Rosoman, 70% of Makedonska Kamenica — "
+            "where in the west and in Skopje almost everyone wrote 'Orthodox'. Taken "
+            "apart they draw a divide in eastern Macedonia that is about how people "
+            "answered, not what they believe. That correlation is the thing to hold in "
+            "mind while reading this one: at 80 municipalities it is close to being an "
+            "ethnic map with religious labels, and the census asks for a religion rather "
+            "than a church, so 847,000 Orthodox arrive with no jurisdiction attached and "
+            "the Sunni and Bektashi of the west are not told apart. One category in nine "
+            "is not a religion at all: 132,260 people, 7.2%, were taken from "
+            "administrative registers rather than enumerated in person and carry no "
+            "answer, so this map draws 92.5% of the country. Irreligion is 0.5%, among "
+            "the lowest anywhere here."),
+        counts=_mk_counts,
+        units=None,
+        unit_key=None,
+        place=HERE / "data" / "geo" / "mk" / "mk_opstini.gpkg",
+        place_unit=lambda g: g["kod"].astype(str),
+        note="80 municipalities is the source's ceiling for religion, not a choice: the "
+             "same census publishes ethnicity by settlement and religion only by "
+             "municipality. Refining religion inside a municipality from that ethnicity "
+             "table is what spec §14.4 forbids, so the coarse grain stands "
+             "(sources/mk.md §2).",
     ),
 }

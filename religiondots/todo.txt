@@ -14,6 +14,8 @@ religiondots — todo (Anita's file; Claude does not edit this)
 - think about overlapping dots
 - parallelize
 
+- dont draw dots over water
+
 LATER
 
 - religion genealogy panel, with selection linked both ways to the map. spec 10

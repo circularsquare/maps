@@ -177,6 +177,7 @@ button.on { background: #2f3f4f; border-color: #4a6076; color: #fff; }
     <div class="stat" id="live-stat"></div>
     <div class="stat hidden" id="static-stat"></div>
     <div class="note hidden" id="static-note"></div>
+    <div class="note hidden" id="daynote"></div>
     <div class="warn hidden" id="samplewarn"></div>
     <details>
         <summary id="t-about-sum">about the data</summary>
@@ -255,6 +256,11 @@ const STR = {
             'routed over the published train timetable. Grey bubbles are ' +
             'riders on the platform waiting to board. Every 수도권 line ' +
             'except 에버라인, which publishes no stop times.',
+        // Shown on every build but `nye`. Short on purpose: the full version
+        // is in `about`, and a caveat nobody reads is not a caveat.
+        dayNote: 'Passenger numbers are measured. Which journeys make them ' +
+            'up is carried over from a Sunday — the only day Seoul ' +
+            'publishes station-to-station data for.',
         legWaiting: 'waiting',
         legPartial: 'to/from Seoul only',
         built: d => 'Built ' + d + '.',
@@ -316,6 +322,9 @@ const STR = {
             '공개된 열차운행시각표 위로 경로를 배정했다. 회색 원은 ' +
             '승강장에서 열차를 기다리는 승객. 정차 시각을 공개하지 않는 ' +
             '에버라인을 제외한 수도권 전 노선.',
+        dayNote: '승객 수는 실측값이다. 다만 어느 역에서 어느 역으로 ' +
+            '가는지는 서울시가 역별 기종점 자료를 공개한 유일한 날짜, ' +
+            '일요일에서 가져온 것이다.',
         legWaiting: '대기',
         legPartial: '서울 방면 통행만',
         built: d => d + ' 생성.',
@@ -639,6 +648,10 @@ function applyLang() {
     $('static-note').textContent = S.staticNote;
     $('t-about-sum').textContent = S.aboutSummary;
     $('about').textContent = S.about(DATA ? DATA.day : 'weekday');
+    // `nye` is the one fully measured build; everything else is re-levelled
+    // and has to say so where it cannot be missed.
+    $('daynote').textContent = S.dayNote;
+    $('daynote').classList.toggle('hidden', !DATA || DATA.day === 'nye');
     applyBuildStamp();
     if (DATA) {
         SUBTITLE_LIVE = S.subLive(whenLabel());
@@ -1200,6 +1213,7 @@ function renderStatic() {
 
 function setStaticMode(on) {
     staticMode = on;
+    clearPins();
     $('t-static').classList.toggle('on', on);
     $('live-stat').classList.toggle('hidden', on);
     $('static-stat').classList.toggle('hidden', !on);
@@ -1303,6 +1317,18 @@ const hoverTip = makePopup();
 let hoverKind = null;        // 'train' | 'station' | null
 let lastMouse = null;        // pixel point, or null when the pointer is off-map
 const pinned = [];           // click to keep a tooltip; it stays live
+
+
+// Every way out of a pinned tooltip goes through here: Escape, a click on
+// empty map, and switching between the live and day views. A pinned *train*
+// cannot survive that switch -- trainPositions stops being refreshed in static
+// mode, so the popup would sit at whatever coordinate it last had, showing a
+// count for a train that is no longer being drawn, and no longer removing
+// itself because its position still looks valid.
+function clearPins() {
+    for (const L of pinned) L.popup.remove();
+    pinned.length = 0;
+}
 
 // Everything under the cursor is moving, so rather than trusting a mouseenter
 // that fired several frames ago, ask each frame what is there now. That also
@@ -1438,10 +1464,7 @@ function wireUI() {
         if (e.code === 'Space' && !staticMode) {
             e.preventDefault(); $('play').click();
         }
-        if (e.code === 'Escape') {
-            for (const L of pinned) L.popup.remove();
-            pinned.length = 0;
-        }
+        if (e.code === 'Escape') clearPins();
     });
 
     // Hover is resolved inside render, so a pointer move has to wake the loop
@@ -1477,7 +1500,11 @@ function wireUI() {
         if (si === null) {
             const sf = map.queryRenderedFeatures(e.point, {
                 layers: ['stations'].filter(l => map.getLayer(l)) });
-            if (!sf.length) return;
+            // Nothing under the cursor. Clicking empty map is how anyone
+            // expects to dismiss these, so do that rather than nothing --
+            // otherwise the only way out is a keyboard shortcut nobody was
+            // told about.
+            if (!sf.length) { clearPins(); return; }
             si = sf[0].properties.si;
             at = sf[0].geometry.coordinates;
         }

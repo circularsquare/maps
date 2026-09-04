@@ -5,6 +5,8 @@ for anita editing only, just to keep track of stuff on high level
 - add more lines
 - try to get better more representative OD data
 
+- add the mroe detailed traffic views to the static view (take from nycridrs)
+  - show express as separate route like 7 tain
 
 - korea-wide map in japan riders style?
 - research other countries that we can make japan riders style maps for

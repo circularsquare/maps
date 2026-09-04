@@ -351,6 +351,25 @@ BRANCHES = [
      "stated non-theistic position. Czechia is the first source to measure it directly and "
      "it is the classic 'believing without belonging' category."),
 
+    # --- added 2026-09-04, when Germany became the first register-only source.
+    ("unrecorded",
+     "Religion not recorded",
+     "The residual of a source that reads religion off an ADMINISTRATIVE REGISTER rather "
+     "than asking anybody: people for whom the register holds no religious body. "
+     "Germany's 'Sonstige, keine, ohne Angabe' — 42,845,220 people, 51.8% of the "
+     "country and the largest single node on the map after the US. It is a sixth member "
+     "of the §6.3a grey family and it is NOT any of the other five. Not `unaffiliated`, "
+     "which is a person reporting no religion — nobody was asked, and this bucket "
+     "contains Germany's roughly four million Muslims, its Orthodox Christians, the "
+     "Jewish communities and the Freikirchen alongside everyone who belongs to nothing. "
+     "Not `other.<source>`, which is a religion the source named but the tree cannot "
+     "place; here the source named nothing. Not `unchurched`, which is a positive report "
+     "of belief without institution. The German register can only see bodies that levy "
+     "church tax, so the category is a property of the INSTRUMENT and not of the people "
+     "in it — which is why it needs its own node rather than a home in one of the "
+     "others. Any register-basis source with the same shape belongs here: Austria and "
+     "the Nordic countries are the obvious next ones."),
+
     ("parody",
      "Parody and protest answers",
      "Jedi, Sith and pastafarianism, tabulated by ČSÚ because respondents wrote them in. "
@@ -498,6 +517,22 @@ BRANCHES = [
      "it plainly means Buddhism, Hinduism and their neighbours, but the tree has no node "
      "for 'some Eastern religion, unspecified' and asserting any one of them would be "
      "inventing a fact. See the REVIEW note in hr2021.py."),
+    ("other.hu",
+     "Other religion (Hungary)",
+     "KSH's `Más vallási közösséghez, felekezethez tartozó` — 29,977 people at settlement "
+     "level, where it is the whole NON-CHRISTIAN remainder and nothing finer exists. At "
+     "vármegye level the same census splits it into Muslim (7,983), Buddhist (11,042), "
+     "Hindu (3,307) and a 7,645 remainder that keeps this node, and those three leave for "
+     "islam / buddhism / hinduism. So unlike Croatia's `Istočne religije` this bucket is "
+     "not opaque — it is measured coarsely and resolved by allocation (spec §3.10), and "
+     "what stays here is only KSH's own residual."),
+    ("other.mk",
+     "Other religion (North Macedonia)",
+     "SSO's `Друго` — 1,221 people, 0.07%, in a census whose named list is otherwise "
+     "entirely Christian bodies plus Islam. Small because North Macedonia's religious "
+     "map really is two large communities and a long thin tail, not because the question "
+     "was coarse: the census names Jehovah's Witnesses and Evangelical Methodists "
+     "separately at four figures and under."),
     ("other.ee",
      "Other religion (Estonia)",
      "Statistics Estonia's `Other religion` (8,100) plus `Religion unknown` (1,530) — the "
@@ -576,6 +611,31 @@ answer that names no body at all are not a lineage and are not pretended to be o
 Anything not listed keeps size order and sorts after everything listed, so a new branch is
 never silently reordered — `build_tree.py` names it instead.
 """
+
+"""
+Reader-facing notes for the legend — added 2026-09-04.
+
+`note` above is for whoever maintains the tree, and nothing in the viewer has ever shown it.
+This is the other kind: one or two sentences written FOR A READER, which the legend hangs on
+the row as its tooltip.
+
+It exists because the legend truncates. `.row .lb` is `nowrap` with `text-overflow: ellipsis`,
+so a label long enough to carry a caveat is a label that gets cut off mid-caveat — the visible
+text has to stay short, and the explanation needs somewhere else to live. Every legend row
+already carries a `title`, which until now repeated the label it was truncating.
+
+Only add a node here when the LABEL ALONE WOULD MISLEAD. Most do not need one: "Lutheran"
+means Lutheran. The test is whether a reader who reads the label and nothing else comes away
+believing something false.
+"""
+
+PUBLIC_NOTE = {
+    "unrecorded":
+        "Not a report of no religion — nobody was asked. The source is an administrative "
+        "register that records only the churches entitled to church tax, so this category "
+        "holds Muslims, Orthodox Christians, Jews and free-church members alongside everyone "
+        "who belongs to nothing, and cannot tell them apart.",
+}
 
 LINEAGE = {
     "christianity": [

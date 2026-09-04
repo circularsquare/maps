@@ -287,18 +287,30 @@ def resolve():
             for st, v in by_type.get(k, {}).items():
                 p = lf.get(st, (0.0, 0.0, 0.0, 0.0))
                 lf[st] = tuple(p[i] + v[i] for i in range(4))
+        # Keep the split as well as the sum. Allocating a shared station between
+        # the lines calling there has to be done a train type at a time -- the
+        # KTX at 광주송정 are 호남고속선's and 광주선's to divide, and have
+        # nothing to do with 호남선's 무궁화 standing at the same platforms.
+        lfk = {k: by_type[k] for k in kinds if k in by_type}
         bad_a, bad_b = (bad_anchor(a, roster, lf), bad_anchor(b, roster, lf))
-        # Put the usable end last, since that is the one the anchor reads.
+        # Put the usable end last, since that is the one the anchor reads. That
+        # can leave the chain running 종점 -> 기점, i.e. against 하행, and the
+        # 승하차 columns are labelled by the line's own 기점 -> 종점 -- so anyone
+        # cumulating along the chain has to know and swap them. 경부선, 중앙선
+        # and 수서고속선 are the three it happens to.
+        rev = False
         if bad_b and not bad_a:
             a, b, bad_a, bad_b = b, a, bad_b, bad_a
+            rev = True
         out[canon] = {
-            "first": a, "last": b, "length_km": km,
+            "first": a, "last": b, "length_km": km, "reversed": rev,
             "clean_end": bad_b is None, "why": bad_b,
             "ways": osm,
             "roster": roster,
             "passing": passing.get(fname, 0.0) if fname else 0.0,
             "types": kinds,
             "flows": lf,
+            "flows_by_kind": lfk,
         }
     return out, flows
 

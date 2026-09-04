@@ -2,6 +2,7 @@
 """Download the two files a weekday build needs. Both are anonymous.
 
   data/congestion_raw.csv     서울교통공사 지하철혼잡도정보, data.go.kr 15071311
+  data/congestion_line9.xlsx  서울시 9호선 혼잡도, 서울 열린데이터광장 OA-22197
   data/card_daily_<YYYYMM>.csv  서울시 지하철 역별 승하차인원, 서울 열린데이터광장
                                 OA-12914, one file per month
 
@@ -51,6 +52,16 @@ UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
 
 CONGESTION_PK = 15071311
 CONGESTION_OUT = os.path.join(D, "congestion_raw.csv")
+
+# 9호선 is not in the 서울교통공사 file -- it is not their line. 서울시메트로9호선
+# publish their own, and in a different shape: an xlsx with one sheet per
+# 상하선 x 평일/휴일 x **일반/급행**. That express split is the point. 9호선's
+# 급행 is the most crowded service in Seoul and a blended average describes
+# neither half of it.
+LINE9_INF = "OA-22197"
+LINE9_INFSEQ = "1"
+LINE9_SEQ = "2"          # "2023년 9호선 역별 시간별 혼잡도 자료.xlsx"
+LINE9_OUT = os.path.join(D, "congestion_line9.xlsx")
 
 CARD_INF = "OA-12914"
 CARD_INFSEQ = "3"
@@ -114,6 +125,29 @@ def fetch_congestion(s):
         f.write(d.content)
     print("congestion: wrote %s  %s bytes   (%s)"
           % (os.path.basename(CONGESTION_OUT), format(len(d.content), ","), orig))
+
+
+def fetch_line9(s):
+    if os.path.exists(LINE9_OUT):
+        print("line9: already have %s, skipping" % os.path.basename(LINE9_OUT))
+        return
+    ref = ("https://data.seoul.go.kr/dataList/%s/F/1/datasetView.do" % LINE9_INF)
+    s.get(ref, timeout=60)
+    d = s.post("https://datafile.seoul.go.kr/bigfile/iot/inf/nio_download.do",
+               params={"useCache": "false"},
+               data={"infId": LINE9_INF, "seq": LINE9_SEQ,
+                     "infSeq": LINE9_INFSEQ},
+               headers={"Referer": ref}, timeout=600)
+    d.raise_for_status()
+    if not d.content.startswith(b"PK"):
+        raise SystemExit(
+            "line9: expected an xlsx, got %d bytes starting %r.\nOpen %s and "
+            "save the 역별 시간별 혼잡도 xlsx to %s by hand."
+            % (len(d.content), d.content[:40], ref, LINE9_OUT))
+    with open(LINE9_OUT, "wb") as f:
+        f.write(d.content)
+    print("line9: wrote %s  %s bytes"
+          % (os.path.basename(LINE9_OUT), format(len(d.content), ",")))
 
 
 def card_archive(s):
@@ -182,6 +216,7 @@ def main():
     s = requests.Session()
     s.headers.update({"User-Agent": UA})
     fetch_congestion(s)
+    fetch_line9(s)
     fetch_card(s, months)
     print("\ndone. Next: python build_od.py --day weekday")
 

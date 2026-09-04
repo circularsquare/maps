@@ -16,14 +16,23 @@ wrong:
                 resolved to the wrong place lands far from its neighbours.
   --od          Is the IPF output sane? Compares fitted per-line daily volume
                 against the OD's own totals, and prints the hourly profile of
-                stations whose shape we can predict -- an airport should not
-                have a commuter peak.
+                stations whose shape we can predict -- on a weekday an office
+                district's *boardings* peak in the evening, not the morning.
   --coverage    What is actually in the OD? Measures how much of each line's
                 traffic the source contains at all. This is the check that
                 found the OD holds only trips touching the Seoul network.
+  --congestion  Does the finished build agree with the operators' own published
+                혼잡도? The only check here that tests the *output*: they
+                measure riders-on-board as a share of 정원 per station, per
+                direction, per half hour, for a typical 평일/토요일/일요일, and
+                so do we. Lines 1-8 from 서울교통공사, 9호선 from its own operator
+                and split 일반/급행 because on that line the two are not the
+                same question. Shape is the part that matters -- a level offset
+                shared by every line is a disagreement about 정원.
 
-    python validate.py               # all three
+    python validate.py               # all of them
     python validate.py --schedules
+    python validate.py --congestion --sample
 
 Reference figures are the operators' own published journey times and service
 spans, rounded to the minute. They are a sanity bound, not ground truth: a
@@ -43,10 +52,25 @@ import sys
 
 import lines as LR
 
+import daytype
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 D = os.path.join(HERE, "data")
 
-SERVICE = "END"          # 2023-12-31 was a Sunday
+
+def _day():
+    """The day build_od.py built, so this file checks the build that exists."""
+    p = os.path.join(D, "od_hourly.npz")
+    if not os.path.exists(p):
+        return "nye", daytype.get("nye")
+    import numpy as np
+    with np.load(p, allow_pickle=True) as z:
+        name = str(z["day"]) if "day" in z.files else "nye"
+    return name, daytype.get(name)
+
+
+DAY_NAME, DAY = _day()
+SERVICE = DAY["service"]
 
 # line id -> (end-to-end minutes, stations, first train, last train)
 # Published by the operators; see the module docstring on how to read a miss.
@@ -77,6 +101,11 @@ HOP_WARN_DEFAULT = 6000
 
 def norm(s):
     return re.sub(r"\s+", "", (s or "").strip())
+
+
+def base(s):
+    """Station name without its trailing 부역명, e.g. 잠실(송파구청) -> 잠실."""
+    return re.sub(r"\(.*?\)$", "", norm(s))
 
 
 def read_cp949(name):
@@ -293,10 +322,20 @@ def check_od(net):
     print()
     print("hourly shape for stations whose profile we can predict:")
     idx = dict((c["name"], i) for i, c in enumerate(complexes))
-    watch = [("인천공항1터미널", "an airport: flat, no commuter peak"),
-             ("잠실", "NYE crowd: a late spike"),
-             ("홍대입구", "nightlife: builds through the evening"),
-             ("여의도", "office: quiet on a Sunday")]
+    # What each of these should look like depends on the day, so say which is
+    # expected rather than leaving a caption that was written for one build and
+    # quietly stops being true in another.
+    WATCH = {
+        "nye": [("인천공항1터미널", "an airport: flat, no commuter peak"),
+                ("잠실", "NYE crowd: a late spike"),
+                ("홍대입구", "nightlife: builds through the evening"),
+                ("여의도", "office: quiet on a Sunday")],
+        "weekday": [("인천공항1터미널", "an airport: flat-ish, no evening rush"),
+                    ("잠실", "residential and commercial: peaks at both ends"),
+                    ("홍대입구", "nightlife: still builds through the evening"),
+                    ("여의도", "office: boardings peak on the way *home*")],
+    }
+    watch = WATCH.get(DAY_NAME, WATCH["weekday"])
     prof = np.zeros((len(complexes), X.shape[1]))
     for k, (o, _d) in enumerate(pairs):
         prof[int(o)] += X[k]
@@ -365,15 +404,341 @@ def check_coverage():
     return problems
 
 
+# --------------------------------------------------------------------------
+# against 혼잡도
+# --------------------------------------------------------------------------
+
+CONGESTION = os.path.join(D, "congestion_raw.csv")
+CONGESTION9 = os.path.join(D, "congestion_line9.xlsx")
+
+# 9호선's file is keyed by station *name* -- it carries no 역번호 -- and its
+# 평일/휴일 split is coarser than the three-way one for lines 1-8. A Saturday
+# has to borrow 휴일, which is the file's own limit, not ours.
+LINE9_DAY = {"평일": "평일", "토요일": "휴일", "일요일": "휴일"}
+
+# 서울교통공사 numbers its stations in the 하행 direction, so the direction of a
+# segment is the sign of the station-number step. 2호선's loop is labelled
+# 내선/외선 instead, and 외선순환 is the one that runs 시청 -> 을지로입구, i.e.
+# increasing. Anything else on the loop's branches keeps 상선/하선.
+DIR_UP, DIR_DOWN = ("상선", "내선"), ("하선", "외선")
+
+
+def load_congestion(day_label):
+    """(line, station number, direction) -> [percent per hour, 05:00-25:00]."""
+    if not os.path.exists(CONGESTION):
+        return None
+    with io.open(CONGESTION, encoding="cp949", errors="replace", newline="") as f:
+        rows = list(csv.DictReader(f))
+    if not rows:
+        return None
+    cols = [c for c in rows[0]
+            if c not in ("구분", "호선", "역번호", "역명", "상하구분")]
+    # '5시30분' .. '00시30분', on the half hour. Fold to the hours the build
+    # uses; the two halves of an hour are equally weighted, which is what an
+    # "average over the trains in the hour" means when headways are even.
+    slot = {}
+    for c in cols:
+        h = int(re.match(r"(\d+)시", c).group(1))
+        slot.setdefault(h if h >= 5 else h + 24, []).append(c)
+
+    out = {}
+    for r in rows:
+        if norm(r["구분"]) != day_label:
+            continue
+        line = norm(r["호선"]).replace("호선", "")
+        num = norm(r["역번호"]).lstrip("0")
+        d = norm(r["상하구분"])
+        per = {}
+        for h, cs in slot.items():
+            v = [float(r[c]) for c in cs if (r[c] or "").strip()]
+            if v:
+                per[h] = sum(v) / len(v)
+        out[(line, num, d)] = per
+    return out
+
+
+def load_congestion9(day_label):
+    """9호선: (station name, direction, express) -> [percent per hour].
+
+    A different shape from the lines 1-8 CSV and it needs its own reader: eight
+    sheets named 상선일반(평일) and so on, stations down the side, half-hour
+    columns across the top, and no station numbers at all. Keyed by name, which
+    is safe here because 9호선 shares none of its station names with itself.
+    """
+    if not os.path.exists(CONGESTION9):
+        return None
+    try:
+        import openpyxl
+    except ImportError:
+        print("congestion: 9호선 needs openpyxl (pip install openpyxl) -- skipped")
+        return None
+
+    want = LINE9_DAY.get(day_label, "평일")
+    wb = openpyxl.load_workbook(CONGESTION9, read_only=True, data_only=True)
+    out = {}
+    for sheet in wb.sheetnames:
+        m = re.match(r"(상선|하선)(일반|급행)\((평일|휴일)\)", norm(sheet))
+        if not m or m.group(3) != want:
+            continue
+        direction, kind = m.group(1), m.group(2)
+        express = kind == "급행"
+        cols = None
+        for row in wb[sheet].iter_rows(values_only=True):
+            if row is None or all(c is None for c in row):
+                continue
+            head = norm(str(row[0] or ""))
+            if head == "구분":
+                # '05:30~05:59' .. fold the two halves of an hour together
+                cols = []
+                for c in row[1:]:
+                    mm = re.match(r"(\d+):", str(c or ""))
+                    cols.append(int(mm.group(1)) if mm else None)
+                continue
+            if cols is None or not head:
+                continue
+            per = collections.defaultdict(list)
+            for c, hh in zip(row[1:], cols):
+                if hh is None or c is None:
+                    continue
+                try:
+                    per[hh if hh >= 5 else hh + 24].append(float(c))
+                except (TypeError, ValueError):
+                    continue
+            out[(head, direction, express)] = dict(
+                (h, sum(v) / len(v)) for h, v in per.items() if v)
+    wb.close()
+    return out or None
+
+
+def check_congestion(stats_path):
+    """Compare the build's train loads against 서울교통공사's published 혼잡도.
+
+    This is the only check here that tests the *output* rather than an input.
+    혼잡도 is riders on board as a percentage of 정원, averaged over the trains
+    passing a station in a window -- exactly what the map draws, published for
+    a typical 평일/토요일/일요일 over lines 1-8 within 서울교통공사's own
+    boundary. Our equivalent is the segment's riders-per-hour over its
+    trains-per-hour, against the line's capacity.
+
+    Read the *shape* first and the level second. The shape is the thing a
+    day-type change is supposed to fix, and it is measured on both sides. The
+    level carries our capacity assumption (160 a car) and theirs, so a
+    consistent 10-20% offset across every line means the two definitions of
+    정원 differ, not that the routing is wrong.
+    """
+    pub = load_congestion(DAY["congestion"])
+    if pub is None:
+        print("congestion: no data/congestion_raw.csv -- run fetch_ridership.py")
+        return []
+    pub9 = load_congestion9(DAY["congestion"])
+    if not os.path.exists(stats_path):
+        print("congestion: no %s -- run build.py" % os.path.basename(stats_path))
+        return []
+    with io.open(stats_path, encoding="utf-8") as f:
+        stats = json.load(f)
+    if "n" not in (stats["segments"][0] if stats["segments"] else {}):
+        print("congestion: %s predates the per-segment train counts -- "
+              "re-run build.py" % os.path.basename(stats_path))
+        return []
+
+    print("comparing train loads against 혼잡도 (%s, %d rows%s) ..."
+          % (DAY["congestion"], len(pub),
+             ", + %d for 9호선" % len(pub9) if pub9 else
+             ", 9호선 absent -- run fetch_ridership.py"))
+    if pub9 and not any("hx" in s for s in stats["segments"]):
+        print("   NOTE: %s predates the express split, so 9호선's 급행 cannot be"
+              % os.path.basename(stats_path))
+        print("   separated from its 일반. Re-run build.py.")
+        pub9 = None
+    if stats["build"].get("sample", 1) > 1:
+        print("   NOTE: --sample %d build. Ignore every level below. A sampled"
+              % stats["build"]["sample"])
+        print("   run keeps only the segments near the origins it kept, and "
+              "those\n   carry their riders in full, so the ratio column is "
+              "neither 1x nor\n   1/%d. The shape correlations are still worth "
+              "reading." % stats["build"]["sample"])
+
+    hours = stats["hours"]
+    cap = dict((k, v.get("capacity") or 0)
+               for k, v in stats["line_meta"].items())
+    seoul_lines = set(str(i) for i in range(1, 9))
+
+    def collect(flip):
+        """(line, hour) -> [(ours %, theirs %, riders), ...]."""
+        out = collections.defaultdict(list)
+        matched = unmatched = 0
+        for s in stats["segments"]:
+            line = s["line"]
+            if line not in seoul_lines or not cap.get(line):
+                continue
+            a, b = norm(s.get("ca", "")), norm(s.get("cb", ""))
+            if not a.isdigit() or not b.isdigit():
+                continue
+            down = (int(b) - int(a)) > 0
+            want = DIR_UP if down == bool(flip) else DIR_DOWN
+            per = None
+            for d in want:
+                per = pub.get((line, a.lstrip("0"), d))
+                if per is not None:
+                    break
+            if per is None:
+                unmatched += 1
+                continue
+            matched += 1
+            for i, h in enumerate(hours):
+                if h not in per or not s["n"][i]:
+                    continue
+                out[(line, h)].append(
+                    (100.0 * (s["h"][i] / s["n"][i]) / cap[line],
+                     per[h], s["h"][i]))
+
+        # 9호선, from its own file, and split the way its operator splits it.
+        # Comparing our blended average against either sheet would be
+        # meaningless: on this line the 급행 is much fuller than the 일반 it
+        # overtakes, which is the whole reason both are published.
+        if pub9:
+            c9 = cap.get("9") or 0
+            for s in stats["segments"]:
+                if s["line"] != "9" or not c9:
+                    continue
+                a, b = norm(s.get("ca", "")), norm(s.get("cb", ""))
+                if not a.isdigit() or not b.isdigit():
+                    continue
+                down = (int(b) - int(a)) > 0
+                dirs = DIR_UP if down == bool(flip) else DIR_DOWN
+                name = base(s.get("a", ""))
+                nx = s.get("nx") or [0] * len(hours)
+                hx = s.get("hx") or [0.0] * len(hours)
+                for express in (True, False):
+                    per9 = None
+                    for d in dirs:
+                        per9 = pub9.get((name, d, express))
+                        if per9 is not None:
+                            break
+                    if per9 is None:
+                        unmatched += 1
+                        continue
+                    matched += 1
+                    label = "9급행" if express else "9일반"
+                    for i, h in enumerate(hours):
+                        # express subset, or what is left after taking it out
+                        n = nx[i] if express else s["n"][i] - nx[i]
+                        r = hx[i] if express else s["h"][i] - hx[i]
+                        if h not in per9 or n <= 0 or r <= 0:
+                            continue
+                        out[(label, h)].append(
+                            (100.0 * (r / n) / c9, per9[h], r))
+        return out, matched, unmatched
+
+    rows, matched, unmatched = collect(False)
+    print("   %d segments matched a published station-direction, %d not"
+          % (matched, unmatched))
+    print("   (the misses are the Korail through-running sections, which are "
+          "outside\n    서울교통공사's boundary and so outside the 혼잡도 file)")
+    if not rows:
+        return []
+
+    # 상선/하선 is assigned from the station-number step, on the rule that Seoul
+    # numbers in the 하행 direction. That rule is an assumption, and a silent
+    # swap would leave every correlation positive -- both directions are busy
+    # at both rushes -- just worse. So try it both ways and say which won.
+    def cellwise_r(rs):
+        o, t = [], []
+        for cells in rs.values():
+            for ours, theirs, w in cells:
+                o.append(ours)
+                t.append(theirs)
+        return _pearson(o, t)
+
+    r_ok = cellwise_r(rows)
+    r_flip = cellwise_r(collect(True)[0])
+    verdict = "as assigned" if r_ok >= r_flip else "SWAPPED -- see DIR_UP/DIR_DOWN"
+    print("   direction check: 상선/하선 as assigned r=%.3f, flipped r=%.3f  -> %s"
+          % (r_ok, r_flip, verdict))
+
+    def agg(keys):
+        """Rider-weighted mean congestion, ours and theirs, over some cells.
+
+        Weighted rather than plain: an empty branch segment at 03% and 시청 at
+        150% are one number each in the file, but they are not one question
+        each. Weighting by the riders we route makes the summary say what the
+        map looks like.
+        """
+        o = t = w = 0.0
+        for k in keys:
+            for ours, theirs, riders in rows.get(k, ()):
+                o += ours * riders
+                t += theirs * riders
+                w += riders
+        return (o / w, t / w, w) if w > 0 else (0.0, 0.0, 0.0)
+
+    all_hours = sorted(set(h for _, h in rows))
+    lines_seen = sorted(set(l for l, _ in rows),
+                        key=lambda l: (1, l) if l.startswith("9")
+                        else (0, LR.order_key(l)))
+
+    print("\n   network profile, weighted by riders (lines 1-8, 서울교통공사)")
+    print("   %5s %8s %10s %7s" % ("hour", "ours", "published", "ratio"))
+    for h in all_hours:
+        o, t, w = agg([(l, h) for l in lines_seen])
+        if w <= 0:
+            continue
+        bar = "#" * int(round(t / 2.0))
+        print("   %02d:00 %7.1f%% %9.1f%% %6.2fx  %s"
+              % (h % 24, o, t, (o / t) if t else float("nan"), bar))
+
+    print("\n   per line, over the whole day")
+    print("   %-4s %8s %10s %7s %8s" % ("line", "ours", "published", "ratio", "corr"))
+    problems = []
+    for l in lines_seen:
+        o, t, w = agg([(l, h) for h in all_hours])
+        if w <= 0 or t <= 0:
+            continue
+        # Correlation of the hourly shapes, which is the part that is measured
+        # on both sides and independent of any capacity assumption.
+        ov, tv = [], []
+        for h in all_hours:
+            oh, th, wh = agg([(l, h)])
+            if wh > 0:
+                ov.append(oh)
+                tv.append(th)
+        corr = _pearson(ov, tv)
+        print("   %-4s %7.1f%% %9.1f%% %6.2fx %7.2f"
+              % (l, o, t, o / t, corr))
+        if corr < 0.85:
+            problems.append((l, "CONGESTION-SHAPE %.2f" % corr))
+
+    if problems:
+        print("\n   A shape correlation below 0.85 means the build's rush hour")
+        print("   is not where 서울교통공사 measures it. That is a real problem;")
+        print("   a level offset shared by every line is a capacity question.")
+    return problems
+
+
+def _pearson(a, b):
+    n = len(a)
+    if n < 3:
+        return float("nan")
+    ma, mb = sum(a) / n, sum(b) / n
+    va = sum((x - ma) ** 2 for x in a) ** 0.5
+    vb = sum((x - mb) ** 2 for x in b) ** 0.5
+    if va == 0 or vb == 0:
+        return float("nan")
+    return sum((x - ma) * (y - mb) for x, y in zip(a, b)) / (va * vb)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--coverage", action="store_true")
     ap.add_argument("--schedules", action="store_true")
     ap.add_argument("--geometry", action="store_true")
     ap.add_argument("--od", action="store_true")
+    ap.add_argument("--congestion", action="store_true")
+    ap.add_argument("--sample", action="store_true",
+                    help="check stats.sample.json instead of stats.json")
     args = ap.parse_args()
     everything = not (args.schedules or args.geometry or args.od or
-                      args.coverage)
+                      args.coverage or args.congestion)
 
     bad = []
     print("loading timetables and network ...")
@@ -409,6 +774,10 @@ def main():
         check_od(net)
     if everything or args.coverage:
         bad += check_coverage()
+    if everything or args.congestion:
+        print()
+        bad += check_congestion(os.path.join(
+            D, "stats.sample.json" if args.sample else "stats.json"))
 
     print()
     print("=" * 78)

@@ -66,10 +66,11 @@ These are the countries where R2 is actually achievable.
 | **Romania** | INS RPL 2021, Tabel 2.4 | **UAT (3,181)** — municipiu / oraş / comună | **23** — the list of state-recognised cults, incl. the Lipovan Old Believers and the Hungarian Unitarians | 2021 | **DRAWN 2026-09-03**, see §9e |
 | **Estonia** | Statistics Estonia Rahvaloendus 2021, PxWeb `RL21452` | **municipality (79) + 8 Tallinn linnaosad** | **21**, and 44 nationally — the only census anywhere that names Maausk and Taarausk | 2021 | **DRAWN 2026-09-03**, see §9e. Universe is **15+**, and everything is rounded to base 10. |
 | **Croatia** | DZS Popis 2021, `gradovi_opcine.xlsx` sheets 2 and 5 | **555 municipalities + 17 Zagreb gradske četvrti** | **12** drawn; **54 named churches** in sheet 5, not yet ingested | 2021 | **DRAWN 2026-09-03**, see §9e. Sheet 5 is the biggest single upgrade outstanding anywhere. |
+| **Germany** | Destatis Zensus 2022, *Sonderauswertung Religionszugehörigkeit* | **Gemeinde (10,786)**, and the same figures on a **100m grid (3,088,036 cells)** | **3** — Roman Catholic, EKD, and "Sonstige, keine, ohne Angabe" at **51.8%** | 2022 | **DRAWN 2026-09-04**, see §9g and `sources/de.md`. `roll`, not `self_id`: the census asks nothing and the figures come off the church-tax register. The finest geography on the map with the coarsest categories on it, and one cause for both. |
 | **Russia** | Sreda "Arena" Atlas | federal subject | unusually good: ROC / Orthodox-unaffiliated / Old Believer / Sunni / Shia / Tengrist… | **2012** | likely. Old, and there is no successor. |
 | **Nepal, Vietnam, Sri Lanka, Bangladesh, Pakistan** | national censuses 2021 / 2019 / 2012 / 2022 / 2023 | district | moderate — Vietnam has Hòa Hảo and Cao Đài as separate categories | various | to verify |
 | **Israel** | CBS | locality | Jewish / Muslim / Christian / Druze; Haredi share is modelled separately | current | to verify |
-| **Switzerland, Germany, Austria, Nordics, Netherlands** | structural survey; church membership registers; Zensus 2022 | canton / Kreis / kommune | varies wildly — register countries give exact denominational membership, survey countries give broad categories | various | to verify. Germany's Landeskirche/diocese statistics are `roll`, the census question is `self_id`; §3.1 says pick one. |
+| **Switzerland, Austria, Nordics, Netherlands** | structural survey; church membership registers | canton / Bezirk / kommune | varies wildly — register countries give exact denominational membership, survey countries give broad categories | various | to verify. **Germany moved to its own row and the note that used to sit here was wrong**: it said "the census question is `self_id`", and there is no census question — see §9g. Expect the same shape in Austria, whose Melderegister works the same way. The register countries' figures are `roll`, so §3.1 says pick one basis, and for a register country that choice is usually made for you. |
 
 ## 3. Not asked, or unusable
 
@@ -1088,6 +1089,264 @@ rather than in principle, and it is worth knowing before a 31st root is ever pro
 
 ---
 
+## 9g. Germany wired — 2026-09-04. The first country where nobody was asked
+
+**82,711,108 people on 10,786 Gemeinden, in three categories.** Full write-up in
+`sources/de.md` and `sources/de_geo.md`; this section is what generalises.
+
+### A country can publish religion without ever asking about it
+
+Every source before this one is a question someone answered, or a roll an institution
+keeps. Germany is neither and is closer to the second: **Zensus 2022 carries no religion
+question at all**, and the published figures are read off the *Melderegister*, which
+records membership of a public-law religious society because it determines **church-tax
+liability**. `basis` is `roll`.
+
+The consequence is not a detail. **The register can only see bodies that levy church tax**,
+so the entire published classification is:
+
+| | | |
+|---|---|---|
+| Römisch-katholische Kirche | 20,746,959 | 25.1% |
+| Evangelische Kirche (EKD) | 19,127,360 | 23.1% |
+| **Sonstige, keine, ohne Angabe** | **42,845,220** | **51.8%** |
+
+That third row is not a residual anybody chose. Destatis says the register's entries for
+*other* public-law bodies "die entsprechenden Zugehörigkeiten nicht zuverlässig
+statistisch abbilden können, weshalb auf den Nachweis verzichtet werden muss" — so it
+holds people in another body, people in no body, and people with no entry, all at once.
+Germany's ~4M Muslims, ~2M Orthodox, its Jewish communities, its Freikirchen and its
+Alt-Katholiken are inside it and cannot be recovered.
+
+**The generalising rule: ask what INSTRUMENT produced a category list before assuming the
+list is a classification.** Here the list is the set of tax-collecting corporations, which
+is a fact about German public law and not about German religion.
+
+### §3.9's trade-off, at both extremes at once
+
+Germany has **the finest geography on the map and the coarsest categories on it**, and the
+same cause produces both: an administrative register covers everybody exactly, and knows
+almost nothing. Destatis publishes these same three numbers on a **100m INSPIRE grid,
+3,088,036 populated cells**, with the geometry derivable from the cell id.
+
+So §3.9 is not a law about sources trading detail for space — it is a law about *survey*
+sources. A register does not make the trade in either direction.
+
+### It needed a new node, and that is the interesting taxonomy question
+
+`unrecorded` — "Religion not recorded" — a sixth member of the §6.3a grey family.
+Every existing home asserts something false: `unaffiliated` is a person reporting no
+religion and nobody was asked; `other.<source>` is a religion the source named and the
+source named nothing; `unchurched` is a positive report of belief without institution.
+
+**The test that separates it from all five: this category's composition is a property of
+the instrument, not of the people in it.** Any register-basis source with the same shape
+belongs here, and Austria is the obvious next one.
+
+### Two boundary findings worth more than the country
+
+- **"The 2022 boundary file" is ambiguous, and the ambiguity is silent.** BKG publishes a
+  **01.01** and a **31.12** edition of every year. Against the census: 01.01.2022 leaves 2
+  unmatched, 01.01.2023 leaves 10, **31.12.2022 leaves 0**. Determined by trying all three
+  — destatis never states the Gebietsstand it published on.
+- **A longer key can be the safer one, which is the reverse of Poland.** Against 01.01.2022
+  the two leftovers are Schwedt/Oder and Pinnow, and they are *not* a merger: only the
+  **Verbandsschlüssel** moved. Joining on the 8-digit AGS instead of the 12-digit ARS makes
+  both leftovers vanish and looks like a fix — while leaving Passow, Berkholz-Meyenburg and
+  Mark Landin as orphan polygons whose people are counted elsewhere, placing ~3,000 people
+  in the wrong villages **with every count still reconciling**. There is no rule about key
+  length; there is only printing the join both ways and asking what the leftovers *are*.
+  All 204 real leftovers here are `Gemeindefreies Gebiet`, which `de_geo.py` asserts.
+
+### And two file-level traps, both new disguises of old rules
+
+- **HTTP 200 with 71,651 bytes of HTML** unless the destatis URL carries
+  `?__blob=publicationFile`. §5a's fifth disguise.
+- **Counts stored as text in some cells and numbers in others, in one column of one sheet.**
+  An `isinstance(v, (int, float))` filter drops **2,228,001 people** and every remaining
+  total still looks plausible. India's Excel-type-inference trap, in a different shape.
+- **A percentage column that is deliberately not count ÷ population.** 75 cells disagree by
+  over 0.6pp and all 75 are in Gemeinden of 9–122 people: the disclosure method perturbs the
+  count and then *adjusts the share* to avoid an implausible percentage. Ammeldingen an der
+  Our is 18 people with 20 Catholics, published as 100.0%. The fix is to assert the residual
+  **in people**, the units the method works in — worst case 3.46 — rather than in points.
+
+### What Germany is still worth drawing for
+
+The median Gemeinde is **1,797 people**, finer than a Polish gmina, and what comes out is the
+sharpest confessional map in Europe: the former East at **81% no church** against **45%** in
+the West, and the Eichsfeld still at 80% Catholic inside a Thuringia that is 74% none.
+
+### And it is the only country whose PLACEMENT is measured — added 2026-09-04
+
+Berlin was 3,596,999 people in **one polygon**, the worst placement unit on the map, with 78
+Gemeinden holding 31.6% of the country. The fix is the same insight as §3.9a from the other
+end: a register publishes coarsely in categories and finely in space, so destatis puts **the
+same three categories on the 1km INSPIRE grid**.
+
+That makes the placement weight a *count* rather than a proxy. §8.2's usual trick is an equal
+share over units engineered to a population target; §8.4 goes further and **fits** a model to
+guess where a US denomination sits inside a county. Germany reads it: the weight for Catholics
+inside Munich is Munich's own per-cell Catholic count. Berlin goes to **799 cells**, and
+**17,215 of 17,215** (unit, node) rows place on measured weights with no fallback.
+
+**The transferable rule: before building a placement model, check whether the source publishes
+the same variable on a grid.** The INSPIRE 1km grid is a European standard and Austria, the
+Nordics and the Netherlands all publish on it — though most such grids carry population only,
+which is a better proxy and still a proxy. See `sources/de_grid.md`.
+
+---
+
+## 9h. Hungary wired — 2026-09-04. The last of the original CEE five but one
+
+9.60M people, 3,177 settlements, 28 categories, **59.8% of the country drawn** — see
+`sources/hu.md` and `sources/hu_geo.md`. Slovakia is now the only one of the five §11
+named that is still stuck, and it is stuck on finding the counts at all.
+
+Four things generalise, and the first two are corrections to what this file already said.
+
+### "A JavaScript app with no static endpoint" is a claim about the searcher
+
+§11a recorded that the census database exposes no data endpoint and that its table codes are
+"not in its bundle either", so the two exports were made by hand in a browser. **The bundle
+is where the API was.** `/adatbazis/app.js` is 1.68 MB and carries four route templates as
+plain string literals — `/api/version`, `/api/index/{v}/{lang}`, `/api/structure/{flow}/{v}`
+and `/api/dataflows/{flow}/{v}` — an SDMX backend behind a React client.
+
+Two cheap tells would have found it without reading 1.68 MB of JavaScript:
+
+- **A JSON 404 and an HTML 404 are different findings.** `/api/anything` returns 88 bytes of
+  `{"timestamp":…,"status":404,"path":…}`; every non-API path returns the same 2,180-byte
+  HTML shell. A Spring Boot error body IS an API namespace, and the size and content-type of
+  a 404 says whether you are talking to a router or to a catch-all.
+- **Grep the bundle for `/api`** before concluding an SPA has no backend. `podaci.dzs.hr`,
+  `data.gov.sk` and `data.stat.gov.rs` were all written off as shells in §11; at least the
+  Slovak one deserves this treatment before it is called blocked again.
+
+The structures were fetched; the data was not, and for a stated reason rather than a vague
+one. `/s/DIM` selects **every** code of a dimension, and WBS003's category dimension holds
+149 variables (age, marital status, education…) of which eleven are religion. The full cube
+passes 60 MB and the server truncates it mid-body every time. A bitmask subset request —
+KSH's own `/s/DIM:<mask>` form — would be about 4 MB. That is the remaining work to make
+Hungary fetchable end to end and it is written up in `sources/hu.md` §2.
+
+### A TLS failure in ONE client is a local problem, and pl.py's fix is the wrong reflex
+
+`urllib.request` cannot reach `ksh.hu` on this machine at all —
+`CERTIFICATE_VERIFY_FAILED: self signed certificate in certificate chain` — while `curl` and
+`requests` both verify the same host fine. That is a trust store on this side, not a server
+omitting an intermediate.
+
+§12's download section carries the `stat.gov.pl` entry, where turning verification off for
+one named host was the honest fix. **The error strings are similar and the diagnoses are
+opposite.** "Unable to get local issuer certificate" from every client is a server that
+omits its intermediate; "self signed certificate in certificate chain" from one client while
+others succeed is interception on the client. Reaching for `verify=False` here would have
+disabled verification to route around a problem that did not exist. The distinguishing test
+is one line: try a second client before concluding anything about the server.
+
+### Codes are not labels, and the plausible reading is wrong often enough to be dangerous
+
+Both KSH exports carry category **codes** only. `RE_CA` is Calvinist, not Catholic — Catholic
+is `RE_C`, four rows above it. `RE_CO` is "Other Christian" and not anything Coptic.
+`RE_OU` is Ukrainian Orthodox, a jurisdiction that does not appear in KSH's *own* prose list
+of the five Orthodox churches in Hungary, so even the domain-knowledge check would have
+rejected the right answer. §11a guessed that "the order is guessable"; six of the twenty
+would have been wrong.
+
+**Pin every code against a published total before writing a row.** `sources/hu.py` reads the
+labels from the SDMX codelists and then re-derives all eleven against the national table, so
+a renamed code or a reordered codelist fails the run instead of relabelling the map. Where
+no codelist exists, the arithmetic alone still pins the *structure*: the three groupings in
+`taxonomy/hierarchy/hu.csv` were forced to the person by summation before any label was in
+hand, which is a stronger position than Ireland's or Mexico's hand-written equivalents.
+
+### A parent published beside two of its children needs the remainder, at BOTH levels
+
+KSH publishes `Katolikus`, and — labelled as subsets — `Roman Catholic among Catholics` and
+`Greek Catholic among Catholics`. It never publishes the 77,629-person difference. Drawing
+the parent as well double-counts 2.8M; drawing only the children drops 77,629. §12 already
+has this rule for a **publication floor** (India's 100-adherent threshold); this is the same
+rule for a remainder that is simply never printed, which looks different and is not.
+
+The new half is the second sentence: **the derived category has to exist at the coarse level
+too, or the allocation deletes it.** `allocate.py` carries a fine column forward only when
+some coarse category lands on it, so emitting the residual at settlement alone would have
+dropped all 78,544 people at the allocation step — while every reconciliation upstream of
+it, and every other column's totals, still passed. Same shape as India's unmapped-remainder
+trap: the row existed, nothing consumed it, and nothing complained.
+
+## 9i. North Macedonia wired — 2026-09-04. The cheapest country in the project
+
+1.84M people, 80 municipalities, 13 categories, **92.6% drawn** — `sources/mk.md` and
+`sources/mk_geo.md`. Two API calls, no download, no allocation, boundaries already on disk.
+Start to finish it was shorter than any previous country by a wide margin, and every part of
+why is a §12 rule that had already been written down and simply had not been applied here.
+
+### §12's PxWeb rule, collecting again
+
+`/pxweb/api/v1/en/MakStat` was live the whole time. §11 checked Serbia, Bulgaria, Lithuania
+and Croatia's portals in 2026-09-03 and listed North Macedonia among the countries that
+"remain unchecked"; it was one request away. **The Nordic/Baltic standard is not
+Nordic/Baltic** — MakStat is PxWeb, and so is Serbia's `data.stat.gov.rs`, probably, though
+that one still serves a 958 KB shell to every path.
+
+### A depth-limited tree walk is a bad way to search a PxWeb tree
+
+The first keyword walk returned **zero hits** and the table was there all along, five levels
+down under `Popisi > Popis2021 > NaselenieVkupno > NaseleniePopis2021 >
+EtnoKulturniKarakteristiki`. Worse, a *national-only* religion table sits in a sibling folder
+(`NaselenieSet/T1010P21`), so a shallower search finds the wrong one and a careless reader
+concludes the country publishes religion with no geography.
+
+**In a PxWeb tree the same variable appears at several geographies in different folders.
+Enumerate the census branch in full and compare, rather than stopping at the first match.**
+
+### Two population figures that measure different things must not be asserted equal
+
+The name join to GISCO matched 80 of 80, which is exactly what a subtly wrong name join also
+looks like, so it was verified against GISCO's `POP_2021` — and the check **failed**, at a
+median 11.7% disagreement, and the check was wrong rather than the join. The 2021 census
+counts **residents**; GISCO's series does not; North Macedonia has lost a fifth of its
+population to emigration since 2002 and the largest gaps are precisely the western emigration
+municipalities (Центар Жупа 0.52, Маврово 0.57, Желино 0.67).
+
+The fix is the generalisable part: **assert the RELATIONSHIP, not the equality.** A correct
+join puts every unit's ratio inside a factor of two with a tight median; a scrambled join
+pairs villages with cities and scatters it over orders of magnitude, which is the thing the
+check can actually detect. Written as equality it either fails on every honest difference of
+definition or has to be loosened until it detects nothing.
+
+### GISCO's POP_2021 is zero for most of Skopje
+
+Seven of the ten Skopje municipalities — Аеродром, Бутел, Кисела Вода, Сопиште, Центар,
+Чаир, Шуто Оризари — carry `POP_2021 = 0`. The MK column of that file sums to 1,746,833
+against a census 1,836,713 for exactly that reason. Nothing here uses it (§8.2), but it is a
+live trap for anyone who reaches for GISCO population as a weight, and `mk_geo.py` prints the
+list every run rather than filtering it away.
+
+### The most misleading thing in the data is a pair of categories, not a number
+
+`Православни` (847,390) and `Христијани` (242,579) are both offered, and **the choice between
+them is regional rather than doctrinal**: 24.7% unspecified east of 22°E against 7.7% west,
+reaching 76% of Росоман. Drawn apart — and they are drawn apart, because merging them would
+invent a category — they put a hard colour boundary through eastern Macedonia that records
+how people filled in a form. It is in `note_public` because a reader cannot possibly infer it.
+
+The other one: **7.2% of the country is a category that is not a religion.** SSO enumerated
+part of the population from administrative registers, and those people carry no answer. Not
+irreligion (0.48%), not a refusal (0.11%). Reading it as either would be the worst available
+error, and it is the number to check before believing any municipal share here.
+
+### And a limit that is ethical rather than technical
+
+SSO publishes **ethnicity by settlement** (~1,700 units) and religion only by municipality
+(80). The two are near-collinear in North Macedonia, so a settlement-level religion map is
+sitting right there — and building it is exactly what §14.4 forbids. It would also destroy
+the only interesting thing the map can say, since a map built that way cannot show a
+Macedonian-speaking Muslim village (Плаcница, Центар Жупа) or an Albanian Catholic one: it
+assumes them away. The coarse grain stands.
+
 ## 10. IPUMS International — the §8 question, answered 2026-09-02
 
 **Confirmed: the RELIGION variable exists for ~70 countries, and GEOLEV2 — second-level harmonised
@@ -1237,14 +1496,90 @@ Checked far enough to know the data exists and roughly what shape it is. None do
 | country | source | geography | categories | status |
 |---|---|---|---|---|
 | ~~**Poland**~~ | GUS NSP 2021 | gmina | 216 / 139 | **DRAWN 2026-09-03 — see §9e.** Was "small file, easy win"; it was. |
-| **Slovakia** | ŠÚ SR SODB 2021 | **obec** | detailed; RC 3.04M, Evangelical 287k, Greek Catholic 218k | **still not found, looked again 2026-09-03.** `scitanie.sk` renders its tables client-side and its JS exposes no data endpoint; `/otvorene-udaje` and `/na-stiahnutie` are both 404. `data.statistics.sk/api/v2/collection` is the general VBD catalogue (677 datasets) and contains **no** SODB or religion table. `datacube.statistics.sk/api/v1/...` is not PxWeb and 404s. `data.gov.sk`'s CKAN API returns an SPA shell, not JSON. The remaining routes are the DATAcube UI's own XHR (needs a browser session to observe) and the per-obec PDF/XLSX products. **Boundaries are already solved** — SK is in the GISCO LAU file with 2,928 obce — so only the counts are missing. **IPUMS does not rescue this one** (§10a): its three Slovak samples are 10% of the census but identify only the 8 kraje. |
-| **Hungary** | KSH Népszámlálás 2022, census database tables **WBS003** + **WBS008** | **settlement (3,403 units incl. Budapest's 23 districts)** for 11 categories; **NUTS3 county (20)** for 29 | **29** | **ACQUIRED 2026-09-04, not yet ingested — files in `data/raw/hu/`, see §11a.** A clean §3.9 split: the county table's categories aggregate exactly into the settlement table's. |
-| ~~Hungary, the earlier note~~ | | | | **The 403 is GONE — re-checked 2026-09-04.** `nepszamlalas2022.ksh.hu` answers 200 to curl with a browser User-Agent; the whole `/en/results/tables` index and its workbooks download without trouble. The 2026-09-03 note called it bot protection and that is no longer the obstacle. **The obstacle is depth:** the only religion table published there, `nsz2022-1.1.7-eng.xlsx` ("1.1.7. Religion"), is **national only** — 9 categories × sex × 1930/1949/2001/2011/2022, no geography whatsoever. Fine geography, if it exists, is behind the **Database** card (`/en/database`), a 1.6MB JavaScript app that builds its exports client-side; no static endpoint was found in the bundle, so it needs a human in a browser. **Whether religion goes below county there is the open question, and it decides whether Hungary is worth ingesting at all** — at county level it is 20 units and Pew-depth. Boundaries are already solved either way: HU is in the GISCO LAU file with 3,156 units. |
+| **Slovakia** | ŠÚ SR SODB 2021 | **obec** | detailed; RC 3.04M, Evangelical 287k, Greek Catholic 218k | **looked again 2026-09-04 with the KSH technique (§9h) and it is now BLOCKED FOR A KNOWN REASON rather than merely not found — see the note under this table.** Previously: **still not found, looked again 2026-09-03.** `scitanie.sk` renders its tables client-side and its JS exposes no data endpoint; `/otvorene-udaje` and `/na-stiahnutie` are both 404. `data.statistics.sk/api/v2/collection` is the general VBD catalogue (677 datasets) and contains **no** SODB or religion table. `datacube.statistics.sk/api/v1/...` is not PxWeb and 404s. `data.gov.sk`'s CKAN API returns an SPA shell, not JSON. The remaining routes are the DATAcube UI's own XHR (needs a browser session to observe) and the per-obec PDF/XLSX products. **Boundaries are already solved** — SK is in the GISCO LAU file with 2,928 obce — so only the counts are missing. **IPUMS does not rescue this one** (§10a): its three Slovak samples are 10% of the census but identify only the 8 kraje. |
+| ~~**Hungary**~~ | KSH Népszámlálás 2022, tables **WBS003** + **WBS008** | settlement (3,177) for 11 categories; vármegye (20) for 29 | **29** | **DRAWN 2026-09-04 — see §9h.** The §3.9 split reconciled exactly and §11a's one open question — the unlabelled codes — turned out to be answerable from KSH's own SDMX codelists, which §11a had concluded did not exist. |
+| ~~Hungary — the 2026-09-03 note~~ | | | | **Both halves of it were wrong by 2026-09-04, and each in a way worth remembering.** It recorded a hard **403 to scripted clients**: gone — a browser User-Agent gets 200, and the whole `/en/results/tables` index downloads fine. **Re-test a 403 before believing it**; a stale "blocked" note reads as a dead end long after it has stopped being one. It also assumed the *published tables* were the source: they are not. `nsz2022-1.1.7-eng.xlsx` ("1.1.7. Religion") is **national only** — 9 categories × sex × 1930–2022, no geography at all — while the census **database** has religion at settlement level. **A statistical office's static tables are not its data**, and checking only the download page understates what exists. |
 | ~~**Romania**~~ | INS RPL 2021 | UAT (3,181) | 23 | **DRAWN 2026-09-03 — see §9e.** The ~15% unknown was real: 13.95%. |
 | **Nepal** | NSO/CBS Census 2021 | **district** (77) | ~10 | `censusnepal.cbs.gov.np/results/downloads/census-dataset` |
 | **Switzerland** | BFS Strukturerhebung / ESRK | canton, commune | detailed | **it is a sample survey**, ~200k persons/year cumulated over 5 years, not a census — so fine geography is limited and figures carry intervals. Different tier from a census, and §3.1 applies. |
 | **South Korea** | KOSIS, Census 2015 | **시군구** (sigungu) | Buddhist / Protestant / Catholic / Won Buddhism / Cheondogyo… | KOSIS has an OpenAPI needing a free key. Religion was dropped after 2015, so this is the last one. |
 | **Indonesia** | BPS Sensus 2020 | kabupaten | 6 official religions | exists but BPS publishes largely as per-regency PDFs; expect real work. **Go via IPUMS instead — see §10a:** the 2010 census sample is 10% / 22.9M persons and identifies regency directly. |
+
+### Slovakia, re-examined 2026-09-04 — three walls, each now named
+
+The §9h technique was applied to all three Slovak hosts. It did not crack it, but "not found"
+has become "found and blocked", which is a better place to leave it.
+
+- **`www.scitanie.sk` — the census results site — actively RESETS the connection.** Not a
+  403, not a challenge page: `curl` exits 56 and `requests` raises `ConnectionResetError`
+  before any body arrives, with or without a browser User-Agent, verified and unverified.
+  That is TLS-level filtering, and §12's rule applies: a stop sign, not a puzzle. **This one
+  is for Anita's browser.**
+- **`datacube.statistics.sk` is a Vaadin 7 application.** Its `/api/*` paths do answer with a
+  Spring Boot JSON 404, so the §9h test flags a real router — and then the router turns out
+  to serve a *server-side* UI framework. Vaadin renders on the server and talks to the
+  browser over stateful UIDL against a session; there is no client-side data endpoint to
+  find because the client never sees data, only a widget tree. **A JSON 404 proves a
+  backend, not a usable one**, which is the limit of that test and is worth knowing.
+- **`data.statistics.sk/api/v2` is real, documented and irrelevant.** It answers
+  `{"status":400,"status_message":"Missing parameter!"}`, its `/collection` is a 597 KB
+  JSON-stat catalogue, and searching that catalogue for `nábož`, `vyznan`, `sčítan`, `SODB`
+  and `religio` returns **zero hits**. §11's conclusion was right and is now verified rather
+  than asserted: the open-data API carries no religion table.
+
+So Slovakia's counts exist only behind the Vaadin cube and the reset-happy census site. Its
+boundaries have been in hand since §9e. Of the original CEE five it is the only one left.
+
+## 11a. Hungary — the files are on disk, 2026-09-04
+
+Downloaded by hand from the census database (`/adatbazis`), which is a JavaScript app with no
+static endpoint found; the table *codes* are not in its bundle either, so this needed a human
+in a browser. `data/` is gitignored, so this section is the only record the files exist.
+
+| file in `data/raw/hu/` | table | shape |
+|---|---|---|
+| `WBS003_settlement.csv` | WBS003 | **11 categories × 3,403 units**, 37,433 rows, no ragged cells. **The one to use.** |
+| `WBS003_settlement_with_total.csv` | WBS003 | the same export with `VALLAS_V1` (the total) in place of `RE_NA`. Redundant; kept as a cross-check. |
+| `WBS008_county.csv` | WBS008 | **29 categories × 20 NUTS3 counties**, 580 rows, no suppression. |
+
+Long format, `;`-separated, UTF-8 BOM, columns `OBS_STATUS;OBS_VALUE;<category dim>;<geo dim>;TIME_PERIOD`.
+
+**Four things found while checking them, all of which would have gone wrong quietly.**
+
+- **`RE_NA` and `RE_NOT` mean the opposite of what the abbreviations suggest.** `RE_NA` is
+  *did not wish to answer* (3,852,533, 40.1%) and `RE_NOT` is *does not belong to any
+  religious community* (1,549,610, 16.1%). Confirmed against the static workbook
+  `nsz2022-1.1.7-eng.xlsx`, whose male-only figures are 1,894,687 and 821,275 — each almost
+  exactly half. Guessing from the codes would have swapped Hungary's non-response with its
+  irreligion, which is the single most consequential number on the map.
+- **WBS003's 3,403 "territorial units" are FIVE NESTED LEVELS, not 3,403 settlements.**
+  `RE_C` sums to 14,433,090 against a true national 2,886,619 — **5.000× exactly**, one copy
+  per level (settlement, county, region, larger region, national). India's C-01 trap again,
+  and caught the same way: sum one category and compare with the published figure. The levels
+  are separable by code SHAPE — settlements are numeric (`001`…), aggregates are NUTS
+  (`HU33`, `HU331`).
+- **~3,877 cells are suppressed**, marked by `OBS_STATUS = Q` and a non-numeric `OBS_VALUE`.
+  In-band, exactly like Romania's `*`; `errors="coerce"` would delete those people silently.
+- **The category dimension in WBS003 is called `TEL_SZ_ADAT`** ("settlement data, population")
+  and its members are the religion columns, while WBS008 uses `VALLAS_V2`. Same data, two
+  dimension names, and the WBS003 one does not mention religion at all.
+
+**Why it is worth ingesting.** The two tables are a textbook §3.9 split and, unlike India's,
+they reconcile exactly: WBS003's `Orthodox Christian` (15,578) is precisely WBS008's six named
+jurisdictions plus Other Orthodox (3,443 + 2,462 + 1,710 + 475 + 3,618 + 1,404 + 2,466). So
+`allocate.py --within` pushes 29 named churches — six Orthodox jurisdictions, Unitarians,
+Baptists — down onto 3,403 settlements. **Budapest already arrives as its 23 districts**,
+which removes the §12 capital-in-one-polygon problem (Budapest is 17.6% of Hungary) for free.
+Boundaries are solved: GISCO LAU has 3,156 Hungarian units, and WBS008's geography is NUTS3,
+which joins with no derivation at all.
+
+**Still missing: a code→label list for WBS008's 29 categories.** `RE_ORO`, `RE_OG`, `RE_OS`,
+`RE_OU`, `RE_OO`, `RE_OB` are evidently the Orthodox jurisdictions and the order is guessable,
+but guessing *which* jurisdiction is which is precisely the kind of thing that ends up wrong on
+a map and is never noticed. Export the displayed table to Excel — that carries the header text
+— and the mapping is pinned.
+
+---
 
 **The Central and Eastern European cluster was the best-value block not yet taken, and four
 of it are now done** — Czechia, Poland, Romania and Estonia, 69M people between them.
@@ -1271,9 +1606,17 @@ Baltic standard and, where it exists, acquisition takes minutes rather than days
 Finland, Sweden, Norway and Denmark all run it — though of those only Latvia and Lithuania
 plausibly ask about religion at all.
 
-Serbia, Bosnia, Montenegro, North Macedonia, Slovenia, Latvia, Georgia and Armenia remain
-unchecked. Slovenia's 2021 census was register-based and **did not ask religion**, so it
-should be moved to §3 rather than kept as a lead.
+Serbia, Bosnia, Montenegro, Georgia and Armenia remain unchecked. Slovenia's 2021 census was
+register-based and **did not ask religion**, so it should be moved to §3 rather than kept as
+a lead.
+
+**Two of that list were resolved 2026-09-04.** *North Macedonia* is **DRAWN — see §9i**; its
+PxWeb was live all along and nobody had walked it. *Latvia* is **out, and permanently**: its
+PxWeb answers cleanly and the only religion table in the whole database is `KUR010`,
+*registered religious congregations by denomination*, which is a count of **congregations
+with no geography at all** — a §4.4 institution layer, not people. Latvia's censuses do not
+ask religion, so the §11 guess that "only Latvia and Lithuania plausibly ask about religion"
+was half wrong. Lithuania still returns 403 to scripted clients and is unexamined.
 
 ---
 

@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>religiondots — WebGL scatter prototype</title>
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" />
+<style>
+  html, body { margin: 0; height: 100%; background: #111; font: 12px/1.5 system-ui, sans-serif; }
+  #map { position: absolute; inset: 0; }
+  #hud { position: absolute; top: 8px; left: 8px; z-index: 2; background: rgba(20,20,20,.85);
+         color: #ddd; padding: 8px 10px; border: 1px solid #333; white-space: pre; }
+  #hud b { color: #89b4fa; font-weight: 500; }
+  #tip { position: absolute; z-index: 3; pointer-events: none; background: rgba(20,20,20,.92);
+         color: #eee; padding: 3px 6px; border: 1px solid #333; display: none; }
+  label { display: block; margin-top: 4px; color: #999; }
+  input[type=range] { width: 150px; vertical-align: middle; }
+</style>
+</head>
+<body>
+<div id="map"></div>
+<div id="hud">loading…</div>
+<div id="tip"></div>
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<script>
+/* religiondots WebGL scatter — PROTOTYPE, not the viewer.
+
+   This exists to settle the four things that decide whether the flat-buffer design is
+   viable, before any of it touches index.html:
+
+     1. precision   — does a dot land where it should at z18, given that MapLibre hands a
+                      custom layer a matrix that has to be downcast to float32?
+     2. geometry    — instanced quads, because GL_POINTS caps at 63px on Mali/Adreno and
+                      culls a point whose CENTRE leaves the clip volume, which pops big dots
+                      out at the screen edges.
+     3. recolour    — a palette texture indexed by node id, so changing a colour is a 512-texel
+                      upload rather than a per-feature expression re-evaluated 2M times.
+     4. picking     — the visible dot at a pixel is the LAST one drawn that covers it (§4.2c),
+                      not the nearest centre. The current viewer's `e.features[0]` is the
+                      FIRST in tile order, which is a different dot and is already wrong.
+
+   `?cc=in` picks the country. Add `&ref=1` to draw a MapLibre circle layer of the same dots
+   underneath in magenta — if the two disagree at high zoom, precision is broken. That is the
+   test that matters; everything else here is visibly right or visibly wrong.
+*/
+const params = new URLSearchParams(location.search);
+const CC = params.get('cc') || 'cz';
+const REF = params.get('ref') === '1';
+
+// from index.html — the tuned curve, do not re-derive (spec §9)
+const ATOMIC_STOPS = [[0,0.5],[4,0.8],[6,1.0],[8,1.4],[10,2.2],[12,4.4],[14,8]];
+const DOT_GAIN = 1.3, DOT_ALPHA = 0.7, BASE = 1.26;
+let dotScale = 1;
+
+/** The MapLibre 'exponential' interpolation, evaluated on the CPU: radius is one uniform
+    for the whole layer, so there is nothing per-feature to evaluate. */
+function radiusAt(z) {
+  const s = ATOMIC_STOPS;
+  if (z <= s[0][0]) return s[0][1] * dotScale * DOT_GAIN;
+  if (z >= s[s.length-1][0]) return s[s.length-1][1] * dotScale * DOT_GAIN;
+  for (let i = 0; i < s.length - 1; i++) {
+    const [z0, r0] = s[i], [z1, r1] = s[i+1];
+    if (z >= z0 && z <= z1) {
+      const t = (Math.pow(BASE, z - z0) - 1) / (Math.pow(BASE, z1 - z0) - 1);
+      return (r0 + (r1 - r0) * t) * dotScale * DOT_GAIN;
+    }
+  }
+}
+
+const map = new maplibregl.Map({
+  container: 'map',
+  style: 'https://tiles.openfreemap.org/styles/dark',
+  center: [78.9, 20.6], zoom: 4, minZoom: 2,
+});
+
+// ------------------------------------------------------------------ shaders
+/* Positions arrive as the SAME uint32 buffer buffers.py writes, bound twice as
+   UNSIGNED_SHORT — offset 0 is the low half, offset 2 the high half, because the file is
+   little-endian. No repacking on the client, and no WebGL2 integer attributes needed.
+
+   The precision trick is here. `a_xhi/a_xlo` are exact small integers in float32. Subtracting
+   the origin's hi/lo BEFORE scaling means the big magnitudes cancel in exact integer
+   arithmetic, and only the small local difference is ever scaled — so error stays a fixed
+   fraction of a pixel at every zoom instead of growing with the world size. Scaling first and
+   subtracting after (the obvious way) is what puts 8px of jitter into a z18 view. */
+const VERT = `
+precision highp float;
+attribute vec2 a_corner;          // -1..1 quad corner, 4 verts, one triangle strip
+attribute float a_xlo, a_xhi, a_ylo, a_yhi;
+attribute float a_ni;             // node index (low 14 bits) | tier (top 2)
+uniform mat4 u_matrix;            // mercator -> clip, with the origin already folded in
+uniform vec2 u_origin_hi, u_origin_lo;
+uniform vec2 u_pxsize;            // one device pixel in clip space
+uniform float u_radius;           // device px
+uniform sampler2D u_palette;
+uniform float u_palette_n;
+varying vec2 v_corner;
+varying vec4 v_color;
+void main() {
+  float dx = (a_xhi - u_origin_hi.x) * 65536.0 + (a_xlo - u_origin_lo.x);
+  float dy = (a_yhi - u_origin_hi.y) * 65536.0 + (a_ylo - u_origin_lo.y);
+  // uint32 units -> mercator [0,1]
+  vec2 d = vec2(dx, dy) / 4294967296.0;
+
+  float idx = mod(a_ni, 16384.0);                       // strip the tier bits
+  vec4 pal = texture2D(u_palette, vec2((idx + 0.5) / u_palette_n, 0.5));
+  v_color = pal;
+
+  vec4 pos = u_matrix * vec4(d, 0.0, 1.0);
+  // a hidden node collapses to a degenerate quad: no fragments, and nothing for the
+  // driver to clamp the way it clamps gl_PointSize
+  float r = pal.a > 0.5 ? u_radius : 0.0;
+  gl_Position = pos + vec4(a_corner * u_pxsize * r * pos.w, 0.0, 0.0);
+  v_corner = a_corner;
+}`;
+
+/* MapLibre's translucent pass blends with (ONE, ONE_MINUS_SRC_ALPHA), i.e. it expects
+   PREMULTIPLIED colour. Emitting straight alpha here is the classic first-day custom-layer
+   bug and shows up as dots that look washed out over the basemap. */
+const FRAG = `
+precision highp float;
+varying vec2 v_corner;
+varying vec4 v_color;
+uniform float u_radius;
+uniform float u_alpha;
+void main() {
+  float d = length(v_corner) * u_radius;
+  float a = (1.0 - smoothstep(u_radius - 1.0, u_radius, d)) * u_alpha;
+  if (a <= 0.0) discard;
+  gl_FragColor = vec4(v_color.rgb * a, a);
+}`;
+
+function compile(gl, type, src) {
+  const s = gl.createShader(type);
+  gl.shaderSource(s, src); gl.compileShader(s);
+  if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s));
+  return s;
+}
+
+// ------------------------------------------------------------------ the layer
+let DATA = null, HUD = {};
+
+const scatter = {
+  id: 'scatter', type: 'custom', renderingMode: '2d',
+
+  onAdd(map, gl) {
+    this.map = map;
+    // Instancing is an extension on WebGL1 and core on WebGL2; both are universal in practice.
+    this.webgl2 = typeof WebGL2RenderingContext !== 'undefined'
+                  && gl instanceof WebGL2RenderingContext;
+    this.ext = this.webgl2 ? null : gl.getExtension('ANGLE_instanced_arrays');
+    if (!this.webgl2 && !this.ext) throw new Error('no instancing available');
+    HUD.gl = this.webgl2 ? 'WebGL2' : 'WebGL1 + ANGLE_instanced_arrays';
+    HUD.maxPointSize = gl.getParameter(gl.ALIASED_POINT_SIZE_RANGE)[1];
+
+    const p = gl.createProgram();
+    gl.attachShader(p, compile(gl, gl.VERTEX_SHADER, VERT));
+    gl.attachShader(p, compile(gl, gl.FRAGMENT_SHADER, FRAG));
+    gl.linkProgram(p);
+    if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p));
+    this.p = p;
+    this.loc = {};
+    for (const n of ['a_corner','a_xlo','a_xhi','a_ylo','a_yhi','a_ni'])
+      this.loc[n] = gl.getAttribLocation(p, n);
+    for (const n of ['u_matrix','u_origin_hi','u_origin_lo','u_pxsize','u_radius',
+                     'u_palette','u_palette_n','u_alpha'])
+      this.loc[n] = gl.getUniformLocation(p, n);
+
+    this.quad = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.quad);
+    gl.bufferData(gl.ARRAY_BUFFER,
+      new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW);
+
+    this.pos = gl.createBuffer();
+    this.ni = gl.createBuffer();
+    this.tex = gl.createTexture();
+    if (DATA) this.upload(gl);
+  },
+
+  /* One buffer for x, one region for y — the file is x[] then y[] then ni[], so the position
+     attributes are just four views into one upload. */
+  upload(gl) {
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.pos);
+    gl.bufferData(gl.ARRAY_BUFFER, DATA.pos, gl.STATIC_DRAW);
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.ni);
+    gl.bufferData(gl.ARRAY_BUFFER, DATA.ni, gl.STATIC_DRAW);
+    this.uploadPalette(gl);
+    this.ready = true;
+  },
+
+  /* The whole point of the palette texture: recolouring is this, not 2M expression
+     evaluations. RGB is the colour, A is visibility — 0 collapses the quad in the vertex
+     shader, which is how "out of scope is removed, not dimmed" (§6) is enforced without a
+     filter and without a tile reload. */
+  uploadPalette(gl) {
+    gl.bindTexture(gl.TEXTURE_2D, this.tex);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, DATA.paletteN, 1, 0, gl.RGBA,
+                  gl.UNSIGNED_BYTE, DATA.palette);
+    for (const [k, v] of [[gl.TEXTURE_MIN_FILTER, gl.NEAREST], [gl.TEXTURE_MAG_FILTER, gl.NEAREST],
+                          [gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE], [gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE]])
+      gl.texParameteri(gl.TEXTURE_2D, k, v);
+  },
+
+  render(gl, matrix) {
+    if (!this.ready) return;
+    const t0 = performance.now();
+    const tr = this.map.transform;
+    const dpr = window.devicePixelRatio || 1;
+
+    /* Fold a local origin into the matrix, in float64 on the CPU. The origin is the viewport
+       centre snapped to a 65536-unit grid so its hi/lo split is exact.
+       m' = m . translate(origin): only the last column changes. JS numbers are float64, so
+       this cancellation happens at full precision and only the small result is downcast. */
+    /* Snap the origin to a whole UINT32 UNIT, not to 1/65536 of mercator. Those differ by
+       65536x, and the coarse version leaves a residual translation in out[12] that is large
+       precisely when the scale is large — measured at 1.24px of error at z20, which is the
+       whole bug this trick exists to avoid, reintroduced by the snapping. A whole uint32 unit
+       is ~1cm, and stays exactly representable as hi*65536 + lo with both integers. */
+    const oxu = Math.round(mercX(tr.center.lng) * U32);
+    const oyu = Math.round(mercY(tr.center.lat) * U32);
+    const ox = oxu / U32, oy = oyu / U32;          // float64; exact, U32 is a power of two
+    const m = Array.from(matrix);
+    const out = m.slice();
+    out[12] = m[0]*ox + m[4]*oy + m[12];
+    out[13] = m[1]*ox + m[5]*oy + m[13];
+    out[14] = m[2]*ox + m[6]*oy + m[14];
+    out[15] = m[3]*ox + m[7]*oy + m[15];
+
+    const hi = [Math.floor(oxu / 65536), Math.floor(oyu / 65536)];
+    const lo = [oxu - hi[0]*65536, oyu - hi[1]*65536];
+
+    this.lastM = out; this.lastHi = hi; this.lastLo = lo;   // for precisionCheck()
+    this.rawM = m;                                          // ditto, the un-folded matrix
+
+    gl.useProgram(this.p);
+    gl.uniformMatrix4fv(this.loc.u_matrix, false, new Float32Array(out));
+    gl.uniform2f(this.loc.u_origin_hi, hi[0], hi[1]);
+    gl.uniform2f(this.loc.u_origin_lo, lo[0], lo[1]);
+    gl.uniform2f(this.loc.u_pxsize, 2 / gl.drawingBufferWidth, 2 / gl.drawingBufferHeight);
+    const r = radiusAt(this.map.getZoom()) * dpr;
+    gl.uniform1f(this.loc.u_radius, r);
+    gl.uniform1f(this.loc.u_alpha, DOT_ALPHA);
+    gl.uniform1f(this.loc.u_palette_n, DATA.paletteN);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, this.tex);
+    gl.uniform1i(this.loc.u_palette, 0);
+
+    /* Set every piece of state we depend on, every frame. MapLibre's setCustomLayerDefaults()
+       only resets VAO/cullFace/activeTexture/pixelStore, and its Context caches the rest — so
+       anything we change without telling it leaks into the basemap on the next frame. */
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+    gl.disable(gl.DEPTH_TEST);
+    gl.depthMask(false);
+    gl.disable(gl.CULL_FACE);
+
+    const div = (i, d) => this.webgl2 ? gl.vertexAttribDivisor(i, d)
+                                      : this.ext.vertexAttribDivisorANGLE(i, d);
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.quad);
+    gl.enableVertexAttribArray(this.loc.a_corner);
+    gl.vertexAttribPointer(this.loc.a_corner, 2, gl.FLOAT, false, 0, 0);
+    div(this.loc.a_corner, 0);
+
+    const n = DATA.n;
+    for (const loc of [this.loc.a_xlo, this.loc.a_xhi, this.loc.a_ylo, this.loc.a_yhi,
+                       this.loc.a_ni]) {
+      gl.enableVertexAttribArray(loc);
+      div(loc, 1);
+    }
+
+    /* WebGL has no baseInstance, so a draw call always starts at instance 0 — the only way to
+       start a bucket partway into the buffer is to re-point the attributes at its offset. That
+       is five vertexAttribPointer calls per run, so consecutive visible buckets are MERGED into
+       one run first: at continental zoom nearly every bucket is visible and this collapses to a
+       single call, and at street zoom only a handful of runs survive culling anyway.
+
+       x[] occupies bytes [0, 4n) and y[] [4n, 8n); each is bound twice as UNSIGNED_SHORT,
+       offset 0 for the low half and 2 for the high half, because the file is little-endian.
+       No repacking, and no WebGL2 integer attributes needed. */
+    const b = viewBoundsMerc(tr);
+    const runs = [];
+    for (const [x0, y0, x1, y1, start, count] of DATA.buckets) {
+      if (x1 < b[0] || x0 > b[2] || y1 < b[1] || y0 > b[3]) continue;
+      const last = runs[runs.length - 1];
+      if (last && last[0] + last[1] === start) last[1] += count;
+      else runs.push([start, count]);
+    }
+
+    let drawn = 0;
+    for (const [start, count] of runs) {
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.pos);
+      gl.vertexAttribPointer(this.loc.a_xlo, 1, gl.UNSIGNED_SHORT, false, 4, 4 * start);
+      gl.vertexAttribPointer(this.loc.a_xhi, 1, gl.UNSIGNED_SHORT, false, 4, 4 * start + 2);
+      gl.vertexAttribPointer(this.loc.a_ylo, 1, gl.UNSIGNED_SHORT, false, 4, 4 * (n + start));
+      gl.vertexAttribPointer(this.loc.a_yhi, 1, gl.UNSIGNED_SHORT, false, 4, 4 * (n + start) + 2);
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.ni);
+      gl.vertexAttribPointer(this.loc.a_ni, 1, gl.UNSIGNED_SHORT, false, 2, 2 * start);
+      if (this.webgl2) gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, count);
+      else this.ext.drawArraysInstancedANGLE(gl.TRIANGLE_STRIP, 0, 4, count);
+      drawn += count;
+    }
+    HUD.drawn = drawn; HUD.calls = runs.length;
+    HUD.ms = (performance.now() - t0).toFixed(1);
+    hud();
+  },
+};
+
+// mercator helpers, float64
+const mercX = (lng) => (lng + 180) / 360;
+const mercY = (lat) => {
+  const s = Math.sin(lat * Math.PI / 180);
+  return 0.5 - Math.log((1 + s) / (1 - s)) / (4 * Math.PI);
+};
+/* In UINT32 units, because that is what the bucket bboxes are in — comparing these against
+   mercator [0,1] floats culls the entire world, which is exactly the bug this comment is
+   standing on the grave of. Padded by a bucket-ish margin so a dot whose centre is just off
+   screen still draws its half. */
+const U32 = 4294967296;
+function viewBoundsMerc(tr) {
+  const b = map.getBounds();
+  /* The pad is a few PIXELS' worth, so it has to scale with the zoom. A fixed fraction of the
+     world (it was 0.02) is ~800km of slop at every zoom, which at z18 means most of the country
+     falsely intersects the view — that alone was the difference between 433,837 dots drawn for
+     one Mumbai junction and the few hundred actually on screen. */
+  const perPx = U32 / (512 * Math.pow(2, map.getZoom()));
+  const pad = (radiusAt(map.getZoom()) + 2) * perPx;
+  const y0 = mercY(b.getNorth()) * U32, y1 = mercY(b.getSouth()) * U32;
+  return [mercX(b.getWest()) * U32 - pad, Math.min(y0, y1) - pad,
+          mercX(b.getEast()) * U32 + pad, Math.max(y0, y1) + pad];
+}
+
+function hud() {
+  document.getElementById('hud').innerHTML =
+    `<b>${CC}</b>  ${DATA ? DATA.n.toLocaleString() : '…'} dots\n` +
+    `${HUD.gl || ''}\nmax GL_POINTS size: ${HUD.maxPointSize}\n` +
+    `zoom ${map.getZoom().toFixed(2)}  r ${radiusAt(map.getZoom()).toFixed(2)}px\n` +
+    `drawn ${(HUD.drawn||0).toLocaleString()} in ${HUD.calls||0} calls, ${HUD.ms||'-'} ms\n` +
+    `<label>size <input id=sz type=range min=0.2 max=3 step=0.1 value=${dotScale}></label>`;
+  const sz = document.getElementById('sz');
+  if (sz) sz.oninput = (e) => { dotScale = +e.target.value; map.triggerRepaint(); };
+}
+
+// ------------------------------------------------------------------ load
+async function load() {
+  const man = await fetch('../data/buffers/manifest.json').then(r => r.json());
+  const ent = man.editions.fine.countries[CC];
+  if (!ent) throw new Error(`no buffer for ${CC} — run: python buffers.py --countries ${CC}`);
+  const buf = await fetch('../data/buffers/' + ent.file).then(r => r.arrayBuffer());
+  const n = ent.dots;
+
+  // A deterministic colour per node index. The real palette (§6.3) plugs in here unchanged —
+  // it is the same 512 texels, just authored rather than generated.
+  const N = 1 << Math.ceil(Math.log2(man.nodes.length));
+  const palette = new Uint8Array(N * 4);
+  for (let i = 0; i < man.nodes.length; i++) {
+    const h = (i * 137.508) % 360, s = 0.65, l = 0.55;
+    const c = (1 - Math.abs(2*l - 1)) * s, x = c * (1 - Math.abs((h/60) % 2 - 1)), m0 = l - c/2;
+    const seg = [[c,x,0],[x,c,0],[0,c,x],[0,x,c],[x,0,c],[c,0,x]][Math.floor(h/60) % 6];
+    palette[i*4]   = Math.round((seg[0]+m0)*255);
+    palette[i*4+1] = Math.round((seg[1]+m0)*255);
+    palette[i*4+2] = Math.round((seg[2]+m0)*255);
+    palette[i*4+3] = 255;                       // 255 = visible, 0 = removed
+  }
+
+  DATA = {
+    n, buckets: ent.buckets, paletteN: N, palette,
+    pos: new Uint8Array(buf, 0, 8 * n),
+    ni:  new Uint8Array(buf, 8 * n, 2 * n),
+    // kept for picking and for re-upload after a context loss
+    x: new Uint32Array(buf, 0, n),
+    y: new Uint32Array(buf, 4 * n, n),
+    nid: new Uint16Array(buf, 8 * n, n),
+    nodes: man.nodes,
+  };
+  if (scatter.p) scatter.upload(map.painter.context.gl);
+  hud();
+}
+
+map.on('load', async () => {
+  await load();
+  map.addLayer(scatter);
+
+  if (REF) {
+    // Ground truth: the same dots through MapLibre's own circle layer. If the magenta and the
+    // coloured dots separate as you zoom to z18, the precision handling is wrong.
+    const step = Math.max(1, Math.floor(DATA.n / 3000));
+    const feats = [];
+    for (let i = 0; i < DATA.n; i += step) {
+      feats.push({ type: 'Feature', properties: {},
+        geometry: { type: 'Point', coordinates: [
+          DATA.x[i] / 4294967296 * 360 - 180,
+          Math.atan(Math.sinh((0.5 - DATA.y[i] / 4294967296) * 2 * Math.PI)) * 180 / Math.PI ] } });
+    }
+    map.addSource('ref', { type: 'geojson', data: { type: 'FeatureCollection', features: feats } });
+    map.addLayer({ id: 'ref', type: 'circle', source: 'ref', paint: {
+      'circle-radius': 3, 'circle-color': 'rgba(0,0,0,0)',
+      'circle-stroke-color': '#f0f', 'circle-stroke-width': 1 } }, 'scatter');
+  }
+
+  map.on('move', hud);
+  map.on('mousemove', pick);
+});
+
+/* PRECISION CHECK — the reason the vertex shader is written the way it is.
+
+   The GPU works in float32, so the question is whether the arithmetic that reaches it is
+   conditioned well enough that float32 is sufficient. That is a question about the MATH, not
+   about the pixels, so it is answered here exactly — by replaying both candidate formulations
+   in JS through Math.fround (which is float32 rounding) and comparing each against
+   `map.project`, MapLibre's own float64 answer.
+
+     shader — subtract the origin in exact integer arithmetic FIRST, so only a small local
+              difference is ever scaled
+     naive  — convert the absolute mercator coordinate to float32 and let the matrix scale it,
+              which is the obvious way to write it
+
+   A visual overlay cannot settle this: at z18 a 1-in-400 reference subsample has no dots on
+   screen at all, and at a zoom where it does have dots the error is too small to see. */
+function precisionCheck(n = 400, stride = 0) {
+  if (!DATA || !scatter.lastM) return 'not rendered yet';
+  const f = Math.fround, M = scatter.lastM, hi = scatter.lastHi, lo = scatter.lastLo;
+  const W = map.getCanvas().clientWidth, H = map.getCanvas().clientHeight;
+  const b = viewBoundsMerc(map.transform);
+  const proj = (m, X, Y) => {              // column-major mat4 . vec4(X, Y, 0, 1), in float32
+    const cx = f(f(f(m[0]) * X) + f(f(m[4]) * Y) + f(m[12]));
+    const cy = f(f(f(m[1]) * X) + f(f(m[5]) * Y) + f(m[13]));
+    const cw = f(f(f(m[3]) * X) + f(f(m[7]) * Y) + f(m[15]));
+    return [(cx / cw * 0.5 + 0.5) * W, (0.5 - cy / cw * 0.5) * H];
+  };
+  let worstShader = 0, worstNaive = 0, tested = 0;
+  // stride 1 walks every dot: needed at high zoom, where subsampling can miss the handful
+  // of dots actually on screen and report "nothing to measure" when there is something.
+  const step = stride || Math.max(1, Math.floor(DATA.n / 40000));
+  for (let i = 0; i < DATA.n && tested < n; i += step) {
+    const X = DATA.x[i], Y = DATA.y[i];
+    if (X < b[0] || X > b[2] || Y < b[1] || Y > b[3]) continue;
+    tested++;
+    const lng = X / U32 * 360 - 180;
+    const lat = Math.atan(Math.sinh((0.5 - Y / U32) * 2 * Math.PI)) * 180 / Math.PI;
+    const t = map.project([lng, lat]);                       // float64 ground truth
+
+    // shader: exact integer subtraction, then scale the small difference
+    const dx = f(f(f(Math.floor(X / 65536) - hi[0]) * 65536) + f((X % 65536) - lo[0]));
+    const dy = f(f(f(Math.floor(Y / 65536) - hi[1]) * 65536) + f((Y % 65536) - lo[1]));
+    const s = proj(M, f(dx / U32), f(dy / U32));
+    worstShader = Math.max(worstShader, Math.hypot(s[0] - t.x, s[1] - t.y));
+
+    // naive: absolute mercator through float32, no origin
+    const nRaw = proj(scatter.rawM || M, f(X / U32), f(Y / U32));
+    worstNaive = Math.max(worstNaive, Math.hypot(nRaw[0] - t.x, nRaw[1] - t.y));
+  }
+  return { zoom: +map.getZoom().toFixed(2), tested,
+           shader_px: +worstShader.toFixed(4), naive_px: +worstNaive.toFixed(4) };
+}
+
+/* Picking. §4.2c says the dot you can SEE at a pixel is the last one drawn that covers it, so
+   nearest-centre is the wrong answer — and it is the answer the current viewer gives, since
+   `e.features[0]` is the first feature in tile order. Here the draw order is the buffer order,
+   so among the dots whose disc covers the cursor the visible one is simply the highest index.
+   A uniform grid over the points makes finding the candidates cheap. */
+let GRID = null;
+const GRID_CELLS = 16384;                   // ~2.4 km cells; only occupied ones are stored
+function buildGrid() {
+  const shift = 32 - Math.log2(GRID_CELLS);
+  const g = new Map();
+  for (let i = 0; i < DATA.n; i++) {
+    const k = (DATA.y[i] >>> shift) * GRID_CELLS + (DATA.x[i] >>> shift);
+    const a = g.get(k);
+    if (a) a.push(i); else g.set(k, [i]);
+  }
+  return g;
+}
+function pick(e) {
+  if (!DATA) return;
+  if (!GRID) GRID = buildGrid();
+  const p = e.point;
+
+  /* Work in uint32 mercator, not screen pixels: `map.project` per candidate was the whole
+     cost of a hover (4.7ms over ~15,000 candidates). The hit radius is measured once by
+     unprojecting a point r pixels away, which also keeps it correct under pitch, where
+     mercator-per-pixel varies across the screen but is locally constant at the cursor. */
+  const r = radiusAt(map.getZoom());
+  const c0 = map.unproject([p.x, p.y]), c1 = map.unproject([p.x + r, p.y]);
+  const mx = mercX(c0.lng) * U32, my = mercY(c0.lat) * U32;
+  const rad = Math.abs(mercX(c1.lng) * U32 - mx);
+  const rad2 = rad * rad;
+
+  const shift = 32 - Math.log2(GRID_CELLS);
+  const cell = U32 / GRID_CELLS;
+  const span = Math.max(1, Math.ceil(rad / cell));     // a big dot can span several cells
+  const cx0 = Math.floor(mx / cell), cy0 = Math.floor(my / cell);
+  let best = -1;
+  for (let dy = -span; dy <= span; dy++) for (let dx = -span; dx <= span; dx++) {
+    const a = GRID.get((cy0 + dy) * GRID_CELLS + (cx0 + dx));
+    if (!a) continue;
+    for (let j = 0; j < a.length; j++) {
+      const i = a[j];
+      if (i <= best) continue;                   // only a LATER dot can win the pixel (§4.2c)
+      const ex = DATA.x[i] - mx, ey = DATA.y[i] - my;
+      if (ex * ex + ey * ey <= rad2) best = i;
+    }
+  }
+  const tip = document.getElementById('tip');
+  if (best < 0) { tip.style.display = 'none'; return; }
+  tip.style.display = 'block';
+  tip.style.left = (p.x + 12) + 'px';
+  tip.style.top = (p.y + 12) + 'px';
+  tip.textContent = DATA.nodes[DATA.nid[best] & 0x3fff];
+}
+</script>
+</body>
+</html>

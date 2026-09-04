@@ -49,9 +49,10 @@ reuses names: 양평 on line 5 and 양평 on 경의중앙선 are 27 km apart, an
 both lines were carried the ambiguity could not arise. build_stations.py records
 which OD 호선 labels belong to each complex; this file uses them.
 
-    python build_od.py                # a typical weekday
-    python build_od.py --day sunday   # a typical Sunday
-    python build_od.py --day nye      # 2023-12-31 exactly, nothing re-levelled
+    python build_od.py                  # a typical weekday
+    python build_od.py --day sunday     # a typical Sunday
+    python build_od.py --day nye        # 2023-12-31 exactly, nothing re-levelled
+    python build_od.py --month 202411   # a second opinion on the reference days
 """
 
 import argparse
@@ -67,6 +68,7 @@ import sys
 import numpy as np
 
 import daytype
+import outside
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 D = os.path.join(HERE, "data")
@@ -302,6 +304,95 @@ def furness(od, po, pd, row_t, col_t, fit, rounds=FURNESS_ROUNDS):
     return x, rounds - 1, delta
 
 
+def deterrence(pair_tot, TT, n, width=180.0):
+    """How readily a trip of a given length happens, measured off this network.
+
+    For every travel-time bin, the measured trips in it over the origin x
+    destination mass available to it -- so it is a rate, not a count, and the
+    fact that there are more short pairs than long ones does not shape it. Bins
+    are `width` seconds wide and the last one absorbs the tail.
+
+    This is the classical deterrence function, and it is fitted to the whole
+    measured OD rather than assumed. It is used for one thing only: seeding the
+    pairs the OD cannot see, in `seed_offcard`.
+    """
+    b = np.zeros(n)
+    a = np.zeros(n)
+    for (o, d), v in pair_tot.items():
+        b[o] += v
+        a[d] += v
+    nb = int(np.nanmax(TT[np.isfinite(TT)]) // width) + 1
+    num = np.zeros(nb)
+    den = np.zeros(nb)
+    fin = np.isfinite(TT)
+    idx = np.zeros(TT.shape, dtype=np.int32)
+    idx[fin] = np.minimum((TT[fin] / width).astype(np.int32), nb - 1)
+    mass = np.outer(b, a)
+    np.fill_diagonal(mass, 0.0)
+    np.add.at(den, idx[fin], mass[fin])
+    for (o, d), v in pair_tot.items():
+        num[idx[o, d]] += v
+    f = np.where(den > 0, num / np.maximum(den, EPS), 0.0)
+    # a bin with no measured trips at all is noise, not a real zero
+    good = f > 0
+    if good.any():
+        f = np.where(good, f, np.interp(np.arange(nb),
+                                        np.flatnonzero(good), f[good]))
+    return f, width
+
+
+def seed_offcard(pair_tot, TT, n, off_b, off_a, kept_b, kept_a, keep_frac,
+                 verbose=True):
+    """Invent the pairs the OD structurally cannot contain, at the right level.
+
+    The OD holds only journeys that touch 서울교통공사's network, so a trip with
+    both ends on another operator -- 계양 to 인천시청, say -- is not in the file
+    at all; such pairs are 0.03% of it. Scaling what is there cannot fix that,
+    because Furness multiplies and a cell that is zero stays zero: without this
+    step, giving 인천1호선 its true weekday total would pile all of it onto the
+    handful of Seoul-bound pairs that do exist and draw Incheon as a commuter
+    funnel with no local life in it.
+
+    So the block is built rather than scaled. Each off-card station's *missing*
+    boardings -- its measured gate count less what the OD already carries for it
+    -- are distributed over the other off-card stations by the deterrence
+    function above, then balanced against the missing alightings so both ends
+    agree. Volumes are measured on both ends; only the split between them is
+    modelled, and the hourly constraints in the IPF below reshape it again with
+    Incheon's own measured peak. This is the one invented thing in the file.
+    """
+    f, width = deterrence(pair_tot, TT, n)
+    off = (off_b > 0) | (off_a > 0)
+    miss_b = np.where(off, np.maximum(off_b * keep_frac - kept_b, 0.0), 0.0)
+    miss_a = np.where(off, np.maximum(off_a * keep_frac - kept_a, 0.0), 0.0)
+
+    idx = np.flatnonzero(off)
+    pairs = [(o, d) for o in idx for d in idx
+             if o != d and np.isfinite(TT[o, d])]
+    if not pairs:
+        return 0.0, 0
+    po = np.array([p[0] for p in pairs])
+    pd_ = np.array([p[1] for p in pairs])
+    bin_i = np.minimum((TT[po, pd_] / width).astype(np.int32), len(f) - 1)
+    seed = miss_b[po] * miss_a[pd_] * f[bin_i]
+    if seed.sum() <= 0:
+        return 0.0, 0
+
+    # balance the block against both sets of missing marginals
+    fit = (miss_b > 0) & (miss_a > 0)
+    seed, rounds, delta = furness(seed, po, pd_, miss_b, miss_a, fit)
+
+    for k, (o, d) in enumerate(pairs):
+        if seed[k] > 0:
+            pair_tot[(o, d)] += float(seed[k])
+    if verbose:
+        print("   %d off-card complexes, %s pairs seeded, %s trips added"
+              % (off.sum(), format(len(pairs), ","),
+                 format(int(seed.sum()), ",")))
+        print("   block furness: %d rounds, last change %.2e" % (rounds + 1, delta))
+    return seed.sum(), len(pairs)
+
+
 def dates_in(month, dows, exclude=()):
     """Every YYYYMMDD in `month` whose weekday is in `dows`."""
     y, m = int(month[:4]), int(month[4:])
@@ -316,9 +407,11 @@ def dates_in(month, dows, exclude=()):
 
 # --------------------------------------------------------------------------
 
-def main(day_name):
+def main(day_name, ref_month):
     day = daytype.get(day_name)
-    print("day: %s -- %s" % (day_name, day["label"]))
+    print("day: %s -- %s%s" % (day_name, day["label"],
+                               "" if ref_month == daytype.REF_MONTH
+                               else "  (reference month %s)" % ref_month))
     print("loading network ...")
     with io.open(STATIONS, encoding="utf-8") as f:
         net = json.load(f)
@@ -393,6 +486,32 @@ def main(day_name):
           % (format(kept, ","), len(pair_tot), format(dropped, ","),
              100.0 * dropped / (kept + dropped)))
 
+    # ----------------------------------------------------------------------
+    # the operators Seoul does not settle
+    # ----------------------------------------------------------------------
+    print("\nseeding the off-card block ...")
+    names = set(by_name)
+    off_b0, off_a0, _ = outside.gate(OD_MONTH, OD_DATE, find, n, names)
+
+    # What share of a station's gate count the pipeline ends up carrying, over
+    # the stations where both numbers are known. The OD drops same-complex
+    # round trips and anything it cannot route, so a measured gate total is
+    # always a little more than the trips we keep; off-card stations are put on
+    # the same footing rather than at their raw gate total.
+    seed_b0 = np.zeros(n)
+    seed_a0 = np.zeros(n)
+    for (o, d), v in pair_tot.items():
+        seed_b0[o] += v
+        seed_a0[d] += v
+    gate0_b, gate0_a, gate0_have, _ = card_totals(
+        read_card(OD_MONTH), [OD_DATE.replace("-", "")], find, n)
+    on = gate0_have & (gate0_b > 0) & (seed_b0 > 0)
+    keep_frac = seed_b0[on].sum() / gate0_b[on].sum()
+    print("   the OD carries %.1f%% of the gate count at the %d complexes it "
+          "settles" % (100 * keep_frac, on.sum()))
+
+    seed_offcard(pair_tot, TT, n, off_b0, off_a0, seed_b0, seed_a0, keep_frac)
+
     pairs = np.array(sorted(pair_tot), dtype=np.int32)
     od = np.array([pair_tot[tuple(p)] for p in pairs], dtype=np.float64)
     po, pd = pairs[:, 0], pairs[:, 1]
@@ -417,32 +536,45 @@ def main(day_name):
               % day_name)
     else:
         print("\nre-levelling the pairs onto %s ..." % day["label"])
-        od_month = read_card(OD_MONTH)
-        ref_month = read_card(daytype.REF_MONTH)
+        od_rows_card = read_card(OD_MONTH)
+        ref_rows_card = read_card(ref_month)
 
         gate_b0, gate_a0, have0, _ = card_totals(
-            od_month, [OD_DATE.replace("-", "")], find, n)
-        want = dates_in(daytype.REF_MONTH, day["dows"], daytype.EXCLUDE_DATES)
-        gate_b1, gate_a1, have1, got = card_totals(ref_month, want, find, n)
+            od_rows_card, [OD_DATE.replace("-", "")], find, n)
+        want = dates_in(ref_month, day["dows"], daytype.EXCLUDE_DATES)
+        gate_b1, gate_a1, have1, got = card_totals(ref_rows_card, want, find, n)
         print("   reference days: %d of %s (%s .. %s)"
-              % (len(got), daytype.REF_MONTH, got[0], got[-1]))
+              % (len(got), ref_month, got[0], got[-1]))
+
+        # The off-card operators' own gates, added to the card's rather than
+        # replacing them: 부평 counts 경인선 boardings in the card file and
+        # 인천1호선 boardings in KRIC, and those are two arrays of gates in one
+        # building. A complex can be in both, in one, or in neither.
+        off_b1, off_a1, off_have1 = outside.gate(
+            ref_month, day["dows"], find, n, names, verbose=True)
+        G0_b = np.where(have0, gate_b0, 0.0) + off_b0
+        G0_a = np.where(have0, gate_a0, 0.0) + off_a0
+        G1_b = np.where(have1, gate_b1, 0.0) + off_b1
+        G1_a = np.where(have1, gate_a1, 0.0) + off_a1
 
         # Per-station ratio between the reference day and the measured date,
         # applied to the trips we actually keep. Doing it as a ratio rather
         # than an absolute means the OD's own coverage -- which trips reach a
         # station we carry, and which are dropped -- carries over untouched.
-        fit = have0 & have1 & (gate_b0 > 0) & (gate_a0 > 0)
+        # The seeded off-card pairs entered at the measured date's level, so
+        # the same ratio lifts them onto the chosen day with everything else.
+        fit = (G0_b > 0) & (G0_a > 0) & (G1_b > 0) & (G1_a > 0)
         row_t = np.zeros(n)
         col_t = np.zeros(n)
-        row_t[fit] = kept_b[fit] * (gate_b1[fit] / gate_b0[fit])
-        col_t[fit] = kept_a[fit] * (gate_a1[fit] / gate_a0[fit])
+        row_t[fit] = kept_b[fit] * (G1_b[fit] / G0_b[fit])
+        col_t[fit] = kept_a[fit] * (G1_a[fit] / G0_a[fit])
         fit_o = fit & (kept_b > 0)
         fit_d = fit & (kept_a > 0)
-        print("   %d of %d complexes have a card total on both days"
-              % (fit.sum(), n))
+        print("   %d of %d complexes have a gate total on both days (%d of "
+              "them off-card)" % (fit.sum(), n, (fit & off_have1).sum()))
         print("   day/OD-date ratio over those: boardings x%.2f, alightings x%.2f"
-              % (gate_b1[fit].sum() / gate_b0[fit].sum(),
-                 gate_a1[fit].sum() / gate_a0[fit].sum()))
+              % (G1_b[fit].sum() / G0_b[fit].sum(),
+                 G1_a[fit].sum() / G0_a[fit].sum()))
 
         od, rounds, delta = furness(
             od, po, pd, row_t, col_t, fit_o & fit_d)
@@ -498,8 +630,20 @@ def main(day_name):
     B /= len(seen)
     A /= len(seen)
 
+    # 인천교통공사 publishes the same thing for its own 68 stations -- station x
+    # hour, 승차 and 하차 -- monthly since 2015, on its 사전정보 공표목록 board.
+    # See outside.py for the month-to-weekday correction that goes with it.
+    # Until this went in, every Incheon station was fitted only through its
+    # Seoul-bound partners, so its hours were Seoul's rather than its own.
+    HB, HA, ict = outside.hourly(ref_month, find, n, names, verbose=True)
+    B[ict] = HB[ict]
+    A[ict] = HA[ict]
+    have_b |= ict
+    have_a |= ict
+
     measured = have_b & have_a
-    print("   measured complexes: %d of %d" % (measured.sum(), n))
+    print("   measured complexes: %d of %d (%d of them from 인천교통공사)"
+          % (measured.sum(), n, ict.sum()))
 
     # The hourly counts include trips to destinations we dropped, so rescale
     # each measured station's profile to the total we actually carry. Shape is
@@ -610,4 +754,10 @@ if __name__ == "__main__":
     ap.add_argument("--day", default=daytype.DEFAULT,
                     choices=sorted(daytype.DAYS),
                     help="which day to draw (default %s)" % daytype.DEFAULT)
-    main(ap.parse_args().day)
+    ap.add_argument("--month", default=daytype.REF_MONTH,
+                    help="YYYYMM the reference days come from; needs a "
+                         "matching data/card_daily_<month>.csv and the same "
+                         "year in the hourly files (default %s)"
+                         % daytype.REF_MONTH)
+    a = ap.parse_args()
+    main(a.day, a.month)

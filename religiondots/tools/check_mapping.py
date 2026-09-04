@@ -28,7 +28,7 @@ sys.path.insert(0, os.path.join(ROOT, "taxonomy"))
 
 MODULES = {"pl": "pl2021", "ro": "ro2021", "ee": "ee2021", "hr": "hr2021", "cz": "cz2021", "au": "au2021", "br": "br2010",
            "ie": "ie2022", "mx": "mx2020", "nz": "nz2023", "uk": "uk2021",
-           "ca": "ca2021", "in": "in2011"}
+           "ca": "ca2021", "in": "in2011", "de": "de2022", "hu": "hu2022"}
 
 
 def main():

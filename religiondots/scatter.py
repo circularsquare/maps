@@ -52,6 +52,19 @@ def random_points_in_polygon(geom, n: int, rng) -> np.ndarray:
     """Rejection-sample n points inside geom. Vectorised contains, as ancestrydots does."""
     if n <= 0:
         return np.empty((0, 2))
+    # PREPARE FIRST. Without this GEOS answers each point by walking every edge of the
+    # polygon, so the cost of one candidate is the polygon's vertex count — and this was
+    # 83% of the whole script, on every country. `prepare` builds an edge index once and
+    # caches it on the geometry, which is exactly the trade a rejection sampler wants:
+    # one polygon, many points. Measured, on the real placement layers:
+    #
+    #   mx AGEBs           59 median vertices    2.66 -> 0.11 ms/polygon    x23
+    #   in sub-districts  777 median vertices   52.0  -> 0.42 ms/polygon   x124
+    #
+    # `scatter.py --country in --dot-value 10000` went 94s -> 9.1s, and the output is
+    # BYTE-IDENTICAL: preparing changes how the predicate is answered, not what it
+    # answers, and the batch sizes are untouched so the rng is drawn in the same order.
+    shapely.prepare(geom)
     minx, miny, maxx, maxy = geom.bounds
     out, got = [], 0
     while got < n:
@@ -208,12 +221,16 @@ def main():
         raise SystemExit(f"unknown confidence tier(s) {unknown}; spec §7 has three")
     df["tier"] = df["tier"].map(rank)
 
-    agg = df.groupby(["unit", "node", "tier"], as_index=False).agg(
-        count=("count", lambda x: x.sum(min_count=1)),
-        congregations=("congregations", "sum"),
-        may_ring=("may_ring", "all") if "may_ring" in df else ("count", "size"))
-    if "may_ring" not in df.columns:
-        agg["may_ring"] = True
+    # min_count=1 keeps "reported nothing" apart from "reported zero" — see `uncounted`
+    # below — and it has to be asked for per column, not through a lambda. A lambda in
+    # .agg() drops pandas onto its pure-Python aggregation path and calls it once per
+    # group: 8.4s of the US run for what the cython sum does in a fraction of it. The
+    # SeriesGroupBy method takes min_count directly and stays in cython.
+    gb = df.groupby(["unit", "node", "tier"])
+    agg = pd.DataFrame({"count": gb["count"].sum(min_count=1),
+                        "congregations": gb["congregations"].sum()})
+    agg["may_ring"] = gb["may_ring"].all() if "may_ring" in df.columns else True
+    agg = agg.reset_index()
 
     # rows with no count at all are a different thing from rows that are merely small: they are
     # a body that reported congregations and no membership, and only §4.3 has anything to say
@@ -359,10 +376,17 @@ def main():
 
     print(f"  {n_dots:,} dots across {len(per_poly):,} polygons")
     if weighter is not None:
-        print(f"  {weighter.n_weighted:,} (unit, node) rows placed on fitted demographic "
-              f"weights, {weighter.n_authored:,} on an authored ethnic tie, "
-              f"{weighter.n_residual:,} on the CES-fitted residual model, "
-              f"{weighter.n_uniform:,} on population alone (§8.4, §8.4a)")
+        # A weighter says how it placed things, because "what were these weights" is the
+        # first question any of them raises and the answer differs per country: the US
+        # fits a demographic model (§8.4) and Germany reads the religion off a grid
+        # (sources/de_grid.py). Older weighters have no summary() and keep the US wording.
+        if hasattr(weighter, "summary"):
+            print("  " + weighter.summary())
+        else:
+            print(f"  {weighter.n_weighted:,} (unit, node) rows placed on fitted demographic "
+                  f"weights, {weighter.n_authored:,} on an authored ethnic tie, "
+                  f"{weighter.n_residual:,} on the CES-fitted residual model, "
+                  f"{weighter.n_uniform:,} on population alone (§8.4, §8.4a)")
     print(f"  {len(rings):,} rings — one per religion that draws no dot anywhere in the country")
     if uncounted_dropped:
         print(f"  {uncounted_dropped:,} (unit, node) pairs had no count at all and are not drawn "
