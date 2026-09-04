@@ -1,19 +1,27 @@
 # Metro Systems with Publicly Available OD or Near-OD Data
 
+## Status
+
+- **Built:** New York (`nycriders/`), London (`londonriders/`), Japan
+  (`japanriders/` — national throughput, not time-of-day OD).
+- **In progress:** Seoul (`seoulriders/`).
+- **Declined:** San Francisco / BART — data is the best on this list, but at
+  ~50 stations the system is too small to carry the visualization.
+
 ## Tier 1 — Real hourly-or-finer OD, openly downloadable
 
 | City | Operator | Granularity | Coverage | Source |
 |---|---|---|---|---|
-| New York | MTA | Hourly (monthly avg) | Full system, ongoing 2020+ | https://data.ny.gov (search "Subway Origin-Destination Ridership") |
-| San Francisco | BART | Hourly, actual measured | Full system, ongoing 2001+ | https://www.bart.gov/about/reports/ridership |
-| London | TfL | 15-min bands | Full Underground, rolling survey | https://data.london.gov.uk (NUMBAT dataset, free registration) |
+| New York ✅ | MTA | Hourly (monthly avg) | Full system, ongoing 2020+ | https://data.ny.gov (search "Subway Origin-Destination Ridership") |
+| ~~San Francisco~~ ❌ | BART | Hourly, actual measured | Full system, ongoing 2001+ | https://www.bart.gov/about/reports/ridership |
+| London ✅ | TfL | 15-min bands | Full Underground, rolling survey | https://data.london.gov.uk (NUMBAT dataset, free registration) |
 | Shanghai | Shanghai Metro | 10-min | 302 stations, May–Aug 2017 only | figshare DOI 10.6084/m9.figshare.28844942 |
 
 ## Tier 1.5 — Has OD but needs station-level disaggregation for hourly
 
 | City | Operator | OD granularity | Station-level hourly? | Source |
 |---|---|---|---|---|
-| Seoul | Seoul Metro + Korail | Monthly | Yes (entry + exit split) | data.seoul.go.kr OA-20501 + hourly entry/exit dataset |
+| Seoul 🚧 | Seoul Metro + Korail | Monthly | Yes (entry + exit split) | data.seoul.go.kr OA-20501 + hourly entry/exit dataset |
 | Shenzhen | Shenzhen Metro | Varies (research release) | Varies | University of Leeds repository DOI 10.5518/599 |
 
 ## Tier 2 — Has OD, coarser time dimension

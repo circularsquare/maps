@@ -66,6 +66,13 @@ NORM = HERE / "data" / "normalized"
 # error; rejecting those would silently drop Anabaptist — and with it every Old Order Mennonite
 # group, exactly the granularity this project exists for. The absolute floor covers base-5
 # rounding on small columns (spec §3.8), the same lesson as §3.6's residual threshold.
+#
+# A SOURCE WHOSE STRUCTURE AND TOTALS ARE DIFFERENT YEARS NEEDS A WIDER BAND STILL, and that
+# is what --tolerance is for. New Zealand is the case: the structure is the 2018 national
+# table and the totals are 2023 SA2 (spec §3.4), so a column's children can miss its total by
+# the amount the group GREW in five years. NZ's Hindu column is -14.7% and its Muslim column
+# -18.2%, which is immigration, not a mis-assignment — both were rejected at 10% and both are
+# correct. Raise the band for a cross-year source; do not lower this default for one.
 TOL_REL = 0.10
 TOL_ABS = 100
 
@@ -111,13 +118,42 @@ def main():
     ap.add_argument("--code", default="ascrg", help="note= key holding the source's own code")
     ap.add_argument("--hierarchy", default="prefix", choices=["prefix", "parent"])
     ap.add_argument("--drop", default="", help="regex of categories to exclude as totals")
+    ap.add_argument("--source-id", help="keep only rows with this source_id. Needed where "
+                    "one normalized file holds several censuses that reuse a geo_level "
+                    "name: uk.csv has England-and-Wales AND Scotland at `output_area`, and "
+                    "allocating without this silently mixes two countries.")
+    ap.add_argument("--out", help="output stem, default <source>_<fine>. Give it when "
+                    "--source-id means one source file produces several allocations.")
+    ap.add_argument("--tolerance", type=float, default=TOL_REL,
+                    help="relative band for the per-column reconciliation, default %(default)s. "
+                         "Raise it only where the structure and the totals are different "
+                         "YEARS (spec §3.4) and the gap is real change — see the note beside "
+                         "TOL_REL. It is not a way to force a broken mapping through.")
     ap.add_argument("--parent-file", help="csv of source_category,parent — for sources that "
                                           "do not encode their own hierarchy (see "
                                           "taxonomy/hierarchy/)")
+    ap.add_argument("--within", type=int, default=0, metavar="N",
+                    help="allocate WITHIN each coarse unit instead of pooling them: a fine "
+                         "unit takes the composition of the coarse unit whose geo_id is "
+                         "the first N characters of its own. Off by default, because for "
+                         "Australia and Canada the coarse table is one unit or near enough "
+                         "and pooling is right. India needs it and would be ruined without "
+                         "it: Donyi-Polo is 98% Arunachal Pradesh and Sanamahi 100% "
+                         "Manipur, so a pooled national share puts both in every "
+                         "sub-district in the country.")
     args = ap.parse_args()
 
     src = NORM / f"{args.source}.csv"
     df = pd.read_csv(src, dtype={"geo_id": str}, low_memory=False)
+
+    if args.source_id:
+        before = len(df)
+        df = df[df["source_id"] == args.source_id]
+        if df.empty:
+            have = sorted(pd.read_csv(src, usecols=["source_id"],
+                                      low_memory=False)["source_id"].unique())
+            raise SystemExit(f"no rows with source_id={args.source_id!r}; have {have}")
+        print(f"  source_id={args.source_id}: {len(df):,} of {before:,} rows")
 
     if args.hierarchy == "prefix":
         df["level"] = tag(df["note"], "level")
@@ -168,7 +204,17 @@ def main():
     print(f"{args.source}: {len(codes)} categories at {args.fine}, "
           f"{coarse['code'].nunique()} at {args.coarse}")
 
-    cat = coarse.groupby(["code", "source_category"])["count"].sum().reset_index()
+    # In --within mode the composition is per coarse unit, so the group key gains the
+    # coarse unit's geo_id. Everything downstream — the home walk, the reconciliation, the
+    # single-child test, the share — then runs per (coarse unit, column) instead of per
+    # column, and the merge back onto the fine rows gains the containing-unit key.
+    gkeys = (["geo_id", "code", "source_category"] if args.within
+             else ["code", "source_category"])
+    cat = coarse.groupby(gkeys)["count"].sum().reset_index()
+    if args.within:
+        cat = cat.rename(columns={"geo_id": "cu"})
+        print(f"  --within {args.within}: {cat['cu'].nunique()} coarse units, each "
+              f"supplying its own composition")
 
     if args.hierarchy == "parent":
         cat["home"] = cat["code"].map(lambda c: climb(c, codes, parent_of))
@@ -232,8 +278,9 @@ def main():
           f"{len(chk) - n_same} across geographies")
     chk["diff"] = chk["children"] - chk["column"]
     chk["rel"] = chk["diff"] / chk["column"]
-    bad = chk[(chk["rel"].abs() > TOL_REL) & (chk["diff"].abs() > TOL_ABS)]
-    print(f"\n  columns reconciling within {TOL_REL:.0%} or {TOL_ABS} people: "
+    tol_rel = args.tolerance
+    bad = chk[(chk["rel"].abs() > tol_rel) & (chk["diff"].abs() > TOL_ABS)]
+    print(f"\n  columns reconciling within {tol_rel:.0%} or {TOL_ABS} people: "
           f"{len(chk) - len(bad)}/{len(chk)}")
     for code, row in bad.iterrows():
         name = fine[fine["code"] == code]["source_category"].iloc[0]
@@ -242,26 +289,56 @@ def main():
     ok = set(chk.index) - set(bad.index)
     cat = cat[cat["home"].isin(ok)]
 
-    # a column with one child needs no allocation and stays exact
-    nkids = cat.groupby("home")["code"].transform("size")
+    # a column with one child needs no allocation and stays exact.
+    #
+    # Under --within this is per (coarse unit, column) and stops being a rarity: a state
+    # where the only named `Other` religion is Sanamahi has nothing to allocate, so its
+    # sub-districts get an EXACT split rather than an estimate. India turns out to be
+    # mostly this case, which is the real argument for --within over pooling — it converts
+    # guesses into measurements rather than merely making better guesses.
+    share_keys = ["cu", "home"] if args.within else ["home"]
+    nkids = cat.groupby(share_keys)["code"].transform("size")
     cat["exact"] = nkids == 1
-    print(f"  {int((nkids == 1).sum())} columns have a single category — exact, not allocated")
+    unit = "(coarse unit, column) pairs" if args.within else "columns"
+    print(f"  {int((nkids == 1).sum())} {unit} have a single category — exact, "
+          f"not allocated")
 
     # 4. allocate
-    share = cat["count"] / cat.groupby("home")["count"].transform("sum")
+    share = cat["count"] / cat.groupby(share_keys)["count"].transform("sum")
     cat = cat.assign(share=share)
 
     f = fine[fine["code"].isin(ok)][
         ["geo_id", "geo_level", "geo_name", "code", "count", "basis", "year", "source_id"]]
-    out = f.merge(cat[["code", "source_category", "home", "share", "exact"]],
-                  left_on="code", right_on="home", suffixes=("_fine", ""))
+
+    # `cat.code` is the LEAF being created; `f.code` is the fine column being split, and it
+    # matches `cat.home`. They are joined on that, and the leaf is carried under its own
+    # name so the two never collide.
+    rhs = cat.rename(columns={"code": "leaf"})
+    keys = (["cu", "home"] if args.within else ["home"])
+    if args.within:
+        f = f.assign(cu=f["geo_id"].str[:args.within])
+        orphan = set(f["cu"]) - set(rhs["cu"])
+        if orphan:
+            n = f[f["cu"].isin(orphan)]["count"].sum()
+            print(f"  !! {len(orphan)} coarse units have no composition at all "
+                  f"({n:,.0f} people in {args.fine} units cannot be split): "
+                  f"{sorted(orphan)[:8]}")
+    out = f.merge(rhs[keys + ["leaf", "source_category", "share", "exact"]],
+                  left_on=(["cu", "code"] if args.within else ["code"]), right_on=keys,
+                  suffixes=("", "_r"))
     out["count"] = out["count"] * out["share"]
+    out = out.rename(columns={"code": "home", "leaf": "code"})
 
     codekey = args.code if args.hierarchy == "prefix" else "cat"
+    # Under --within the note names the coarse unit whose composition was used, not just
+    # the level: "structure_geo=state" is not enough to check a figure when there are 35
+    # different structures in play.
+    geo_of = ((lambda r: f"{args.coarse}:{r['cu']}") if args.within
+              else (lambda r: args.coarse))
     out["note"] = out.apply(
         lambda r: (f"level=leaf; {codekey}={r['code']}; "
                    + ("derivation=exact_single_child; " if r["exact"] else
-                      f"derivation=allocated; structure_geo={args.coarse}; "
+                      f"derivation=allocated; structure_geo={geo_of(r)}; "
                       f"structure_share={r['share']:.6f}; ")
                    + f"parent_column={r['home']}"), axis=1)
     out["tier"] = out["exact"].map({True: "measured", False: "derived"})
@@ -270,7 +347,7 @@ def main():
             "basis", "year", "source_id", "tier", "note"]
     out = out[keep].sort_values(["geo_id", "source_category"])
 
-    dest = NORM / f"{args.source}_{args.fine}_allocated.csv"
+    dest = NORM / f"{args.out or f'{args.source}_{args.fine}'}_allocated.csv"
     out.to_csv(dest, index=False)
 
     # Every bug in this step so far has lost data while reporting success — a self-parent

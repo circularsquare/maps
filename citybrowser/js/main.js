@@ -7,7 +7,7 @@ import * as edit from './edit.js';
 import { popRampCSS } from './colors.js';
 import { KINDS } from './data.js';
 import * as search from './search.js';
-import * as tiles from './tiles.js';
+import * as basemap from './basemap.js';
 import * as review from './review.js';
 import { popColor, fade, rgb } from './colors.js';
 
@@ -115,6 +115,12 @@ load().then(() => {
   KINDS.forEach(k => {
     const el = $('n-' + k);
     if (el) el.textContent = (tally[k] || 0).toLocaleString();
+    // A toggle for a kind nothing is classified as reads as a broken control,
+    // so hide the row rather than show it at zero. `admin` is the live case:
+    // US counties moved to `rural`, which is decided first, and nothing is
+    // left that claims only to be a county seat.
+    const row = $('row-' + k);
+    if (row && k !== 'city') row.hidden = !tally[k];
   });
   map.init($('c'), {
     onHover, onClick,
@@ -201,31 +207,17 @@ KINDS.forEach((k, i) => {
   };
 });
 
-// --- settings: basemap tiles.
-// Persisted like the kind toggles, and for the same reason: which ground you
-// want is a standing preference.
-//
-// Default is ON. With tiles off the zoomed-in coastline is visibly wrong, so
-// off is the worse first impression, not the safer one. Offline still works —
-// the geojson layer underneath is local and paints when no tile arrives.
-const TILE_KEY = 'citybrowser.basemap';
-const TILE_DEFAULT = 'light_nolabels';
+// --- settings: which basemap style.
+// The choice, its persistence and the ?basemap= override all live in
+// basemap.js, which owns the map — this is only the control that drives it.
 const bmEl = $('basemap');
-bmEl.innerHTML = Object.entries(tiles.SOURCES)
+bmEl.innerHTML = Object.entries(basemap.STYLES)
   .map(([id, s]) => `<option value="${id}">${s.label}</option>`).join('');
-
-function applyBasemap(id) {
-  tiles.setSource(id);
-  bmEl.value = tiles.source();
-  localStorage.setItem(TILE_KEY, tiles.source());
-  $('attrib').innerHTML = tiles.attribution();
-  map.scheduleDraw();
-}
-bmEl.onchange = () => applyBasemap(bmEl.value);
-// ?basemap=light_nolabels overrides the stored choice, matching ?city= and ?q=.
-// Same reason as those: it makes the layer checkable without driving the UI.
-applyBasemap(new URLSearchParams(location.search).get('basemap')
-             || localStorage.getItem(TILE_KEY) || TILE_DEFAULT);
+bmEl.value = basemap.styleId();
+bmEl.onchange = () => {
+  basemap.setStyle(bmEl.value);
+  bmEl.value = basemap.styleId();   // snaps back if the id was not a real one
+};
 
 // --- the GHS match review queue, reached from settings.
 // Kept out of the main bar deliberately: it is a batch job you sit down to do,

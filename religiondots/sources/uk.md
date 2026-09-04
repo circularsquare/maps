@@ -17,10 +17,11 @@ with `source_id` and never forms a UK total.
 
 `basis` is `self_id` on every row — all four are census self-declaration.
 
-> ⚠ **`data/normalized/` is not in `.gitignore`.** `data/raw/`, `data/geo/` and
-> `data/processed/` are; `data/normalized/` is not, so a `git add -A` would try to commit
-> a 162 MB `uk.csv`. Not fixed here — `.gitignore` is shared and other agents are working
-> in this tree. Worth adding `data/normalized/` to it.
+> **Correction, 2026-09-03: `data/normalized/` IS ignored** and this file previously said
+> it was not. `religiondots/.gitignore` ignores `data/` — the whole directory, one line,
+> with a comment saying it is deliberately the whole directory because normalized/ alone was
+> already 252 MB. `git check-ignore -v data/normalized/uk.csv` confirms it. There is no
+> 162 MB commit hazard and nothing to add.
 
 ---
 

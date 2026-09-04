@@ -1,29 +1,52 @@
 religiondots — todo (Anita's file; Claude does not edit this)
 
 
-- tiny dots: rings
-- 2 coor schemes 
-
-- IPUMS International might have religion + ADM1 for a lot of countries. Biggest single
-  coverage question in the file. sources 8
+- ipums account
 - is the World Religion Database reachable through a university login
-- Brazil: IBGE has not published evangelical denominations for 2022 and may never. 2010 has
-  them by municipality. sources 2
+- brazil 2010 2022 mapping or something?
 
+- maybe if we have a religion selected, and weare looking at all countries, show an outline or symbol for any conttry that doesn't list that religion at all so we know which ones have like no data and which ones have data for that but just don't have any people of that religion
+  - or the converse. show an outline over any coutnry that actually has this religion.
+
+- consider raising the "n small groups" threshold to dump more small groups there
+  - shouldn't protestant, unspecified be with the other protestants like lutheran? idk
+
+- think about overlapping dots
+- parallelize
 
 LATER
 
 - religion genealogy panel, with selection linked both ways to the map. spec 10
-- diversity toggle (effective number of groups per unit). spec 5
+- diversity toggle (effective number of groups pofer unit). spec 5
 
 
 
-deploy (once there is something to deploy) -- ancestrydots/COMMANDS.txt is the pattern:
-pmtiles to R2, index.html + legend to the website repo.
 
-npx serve ~/projects/maps/religiondots -p 8099 --no-clipboard http://localhost:8099
+npx serve /c/Users/anita/projects/maps/religiondots -p 8099 --no-clipboard
 
 --- AFTER EDITING taxonomy/branches.py OR a *2020.py / *2021.py MAPPING ---
 python taxonomy/build_tree.py
     Regenerates taxonomy/religions.json. NOT automatic. If you skip it the
     viewer doesn't know the new nodes and greys out whole countries.
+
+    deploy (once there is something to deploy) -- ancestrydots/COMMANDS.txt is the pattern:
+pmtiles to R2, index.html + legend to the website repo.
+
+
+
+
+lets go through each religion and come up with a representative color. 
+
+i think liek
+catholic-yellow
+orthodox-orange
+eastern orthodox light orange
+lutheran dark blue
+reformed light blue
+anglican light purple
+hussite indigo
+baptist red
+other baptists red-purpleish
+methodist / pietist / wesleyean bluegreen
+restorationist/adventist green
+nondenominational / unspecified / other white

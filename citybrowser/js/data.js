@@ -16,7 +16,6 @@ export const state = {
   col: [],              // css colour, curation-aware
   touched: null,        // Uint8Array
   kind: null,           // Uint8Array, index into KINDS
-  land: null,
   countries: {},
   ghs: {},          // GHS urban centres, keyed by centre id (see match_ghs.py)
 };
@@ -38,9 +37,35 @@ export const REVIEW_FIELDS = new Set(['ghs', 'ghsConf', 'ghsRole']);
 export const ELEV_CONFLICT_M = 500;
 
 // Kind codes, kept as small ints so the draw loop filters without string
-// compares. Order matters only for the settings panel's display order.
-export const KINDS = ['city', 'aggregate', 'admin'];
+// compares. See kinds.py for what each one means and how it is decided.
+//
+// APPEND ONLY. The chosen set is persisted to localStorage as these integers,
+// so inserting or reordering silently changes what an existing browser has
+// switched on. The settings panel's display order is the order of the markup
+// in index.html, which is free to differ.
+export const KINDS = ['city', 'aggregate', 'admin', 'rural', 'district'];
 export const kindCode = k => Math.max(0, KINDS.indexOf(k));
+
+// What the card and the detail panel call a non-city point. `city` has no
+// label on purpose — a tag saying "city" on a map of cities is noise, and the
+// tag exists to warn that a bubble is NOT one.
+export const KIND_LABEL = {
+  aggregate: 'metro area',
+  admin: 'admin duplicate',
+  rural: 'county / rural district',
+  district: 'district of a city',
+};
+
+// Base dot radius at scale 1, in px. Sublinear so a 20M city does not swamp a
+// 20k one; population clamped so a stray non-settlement with a country-sized
+// figure cannot paint a disc over a continent.
+//
+// The 0.0576 is 1.6x the 0.036 this was drawn at until now. Bubbles were too
+// small to read as a population map at world zoom -- and the density thinning
+// means bigger dots do not simply pile up, since a dot that would collide is
+// dropped rather than drawn over.
+const R_BASE = 0.0576;
+export const radiusFor = pop => R_BASE * Math.pow(Math.min(pop || 1e4, 4e7), 0.30);
 
 export function mercY(lat) {
   const r = Math.max(-85.05, Math.min(85.05, lat)) * Math.PI / 180;
@@ -89,8 +114,10 @@ export function mergeOverrides(base, overrides) {
 }
 
 export async function load() {
-  const [land, base, overrides, countries, ghs] = await Promise.all([
-    fetch('data/ne_50m_land.geojson').then(r => r.json()),
+  // No coastline geojson any more: the basemap is vector tiles (js/basemap.js),
+  // which is sharp at every zoom, so the 1.6 MB fixed-scale fallback that used
+  // to be drawn underneath it is 1.6 MB of nothing.
+  const [base, overrides, countries, ghs] = await Promise.all([
     fetch('data/base.json').then(r => r.json()),
     fetch('data/overrides.json').then(r => r.ok ? r.json() : {}).catch(() => ({})),
     fetch('data/countries.json').then(r => r.ok ? r.json() : {}).catch(() => ({})),
@@ -98,7 +125,6 @@ export async function load() {
     // urban-centre section rather than the load failing.
     fetch('data/ghs_centres.json').then(r => r.ok ? r.json() : {}).catch(() => ({})),
   ]);
-  state.land = land;
   state.countries = countries;
   state.ghs = ghs;
   const cities = mergeOverrides(base, overrides);
@@ -127,10 +153,7 @@ export async function load() {
     state.index.set(key, i);
     state.nx[i] = (c.lon + 180) / 360;
     state.ny[i] = mercY(c.lat);
-    // Sublinear so a 20M city does not swamp a 20k one; population clamped so a
-    // stray non-settlement with a country-sized figure cannot paint a disc over
-    // a continent.
-    state.r[i] = 0.036 * Math.pow(Math.min(c.pop || 1e4, 4e7), 0.30);
+    state.r[i] = radiusFor(c.pop);
     // Country name and language seeds are joined here rather than inlined in
     // base.json — identical for every city in a country, so inlining cost ~4 MB.
     const ci = countries[c.country];
@@ -196,7 +219,7 @@ export function add(key, rec) {
   state.index.set(key, i);
   state.nx[i] = (rec.lon + 180) / 360;
   state.ny[i] = mercY(rec.lat);
-  state.r[i] = 0.036 * Math.pow(Math.min(rec.pop || 1e4, 4e7), 0.30);
+  state.r[i] = radiusFor(rec.pop);
   state.touched[i] = 1;
   state.kind[i] = kindCode(rec.kind);
   state.col[i] = colorFor(rec);

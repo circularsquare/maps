@@ -1,0 +1,24 @@
+for anita editing only, just to keep track of stuff on high level
+
+
+- add like average day static traffic view stuff (see nycriders or london)
+- add more lines
+- try to get better more representative OD data
+
+
+- korea-wide map in japan riders style?
+- research other countries that we can make japan riders style maps for
+
+
+python -m http.server 8000 --directory C:/Users/anita/projects/maps/riders/seoulriders
+
+
+
+done:
+- train + station bubble sizes -> londonriders scale, and they now grow as you
+  zoom in
+- station bubbles for people waiting on the platform
+- default train speed 1x
+- trains follow line paths (build.py runs build_shapes itself now)
+- style pass: tooltips w/ line roundels, dwell + accel/decel easing,
+  jitter + speed smoothing on the drawn timetable, click to pin a tooltip

@@ -1,0 +1,1491 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>seoul riders</title>
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" />
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    background: #0a0a0a; color: #eee;
+    font-family: 'Nunito', system-ui, -apple-system, sans-serif;
+    overflow: hidden;
+}
+#map { width: 100vw; height: 100vh; }
+
+#controls-wrap {
+    position: absolute; top: 10px; right: 10px;
+    max-width: calc(100vw - 24px);
+    display: flex; flex-direction: column; gap: 6px;
+    z-index: 9999; pointer-events: none;
+}
+#controls-wrap > * { pointer-events: auto; }
+#controls, #settings {
+    background: rgba(10,10,10,0.85);
+    border: 1px solid #333; border-radius: 8px;
+    padding: 8px 10px;
+}
+#controls { display: flex; align-items: center; gap: 10px; }
+#settings {
+    display: flex; flex-direction: column; gap: 8px;
+    width: 78%; align-self: flex-end; padding: 10px 12px;
+}
+#settings.hidden { display: none; }
+.row { display: flex; align-items: center; gap: 10px; }
+.label { font-size: 12px; color: #ccc; flex-shrink: 0; }
+.row input[type=range] { flex: 1; min-width: 0; accent-color: #6889a8; }
+#speed-val { width: 58px; text-align: right; font-variant-numeric: tabular-nums; }
+
+#time-label {
+    font-size: 20px; font-weight: 700; color: #ccc;
+    width: 74px; text-align: center; font-variant-numeric: tabular-nums;
+}
+#time-slider {
+    min-width: 170px; height: 14px; background: transparent;
+    -webkit-appearance: none; appearance: none; cursor: pointer;
+}
+#time-slider::-webkit-slider-runnable-track {
+    height: 3px; background: #555; border-radius: 2px;
+}
+#time-slider::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 3px; height: 14px;
+    background: #cfd9e4; border: none; border-radius: 1px; margin-top: -5.5px;
+}
+#time-slider::-moz-range-track { height: 3px; background: #555; border-radius: 2px; }
+#time-slider::-moz-range-thumb {
+    width: 3px; height: 14px; background: #cfd9e4; border: none; border-radius: 1px;
+}
+button {
+    background: #1c1c1c; color: #ddd; border: 1px solid #3a3a3a;
+    border-radius: 5px; padding: 4px 9px; font: inherit; font-size: 13px;
+    cursor: pointer;
+}
+button:hover { background: #262626; }
+button.on { background: #2f3f4f; border-color: #4a6076; color: #fff; }
+
+#panel {
+    position: absolute; left: 10px; top: 10px; z-index: 9999;
+    background: rgba(10,10,10,0.85); border: 1px solid #333;
+    border-radius: 8px; padding: 11px 13px; max-width: 310px;
+}
+#panel h1 { font-size: 15px; font-weight: 700; }
+#panel .hdr {
+    display: flex; align-items: baseline; justify-content: space-between;
+    gap: 12px; margin-bottom: 3px;
+}
+#panel .sub { font-size: 12px; color: #9a9a9a; line-height: 1.45; }
+
+#langtoggle { flex: none; font-size: 11px; white-space: nowrap; }
+#langtoggle span {
+    cursor: pointer; color: #7e7e7e; padding: 1px 5px; border-radius: 4px;
+}
+#langtoggle span.on { color: #fff; background: #2f3f4f; }
+#panel .stat { margin-top: 8px; font-size: 12px; color: #ccc; }
+#panel .stat b { color: #fff; font-variant-numeric: tabular-nums; }
+#panel details { margin-top: 8px; }
+#panel summary {
+    font-size: 11px; color: #7e7e7e; cursor: pointer; outline: none;
+}
+#panel details p {
+    font-size: 11px; color: #8a8a8a; line-height: 1.5; margin-top: 6px;
+}
+#panel a { color: #7e9cbb; }
+#panel .note {
+    margin-top: 7px; font-size: 11px; color: #8a8a8a; line-height: 1.5;
+    border-top: 1px solid #2a2a2a; padding-top: 7px;
+}
+#panel .warn {
+    margin-top: 8px; font-size: 11px; line-height: 1.45;
+    color: #ffb95e; border-left: 2px solid #ffb95e; padding-left: 7px;
+}
+#panel .built { font-size: 11px; color: #6e6e6e; margin-top: 6px; }
+.hidden { display: none !important; }
+#legend .sw.dash {
+    height: 0; border-top: 3px dashed #9a9a9a; background: none; width: 13px;
+}
+
+#legend {
+    position: absolute; left: 10px; bottom: 10px; z-index: 9999;
+    background: rgba(10,10,10,0.85); border: 1px solid #333;
+    border-radius: 8px; padding: 8px 11px;
+    display: flex; gap: 5px 10px; align-items: center; flex-wrap: wrap;
+    max-width: 360px;
+}
+#legend .li { display: flex; align-items: center; gap: 4px; font-size: 11px; color: #bbb; }
+#legend .sw { width: 11px; height: 3px; border-radius: 2px; }
+
+#loading {
+    position: absolute; inset: 0; display: flex;
+    align-items: center; justify-content: center;
+    background: #0a0a0a; z-index: 10000; font-size: 14px; color: #888;
+}
+#loading.hidden { display: none; }
+
+/* The dot overlay is a canvas at z-index 1 inside the map container, and
+   MapLibre leaves its own furniture on auto -- so say where these go, or the
+   dots paint over the tooltips and the attribution. */
+.maplibregl-control-container { z-index: 2; }
+.maplibregl-popup { z-index: 3; }
+
+/* Tooltips. One row: the line roundels, then the count. */
+.train-tooltip .maplibregl-popup-content {
+    background: rgba(10,10,10,0.9);
+    color: #eee;
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-size: 13px;
+    font-family: 'Nunito', system-ui, sans-serif;
+    border: 1px solid #444;
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    max-width: none !important;
+    width: max-content;
+}
+.train-tooltip .maplibregl-popup-tip { display: none; }
+.route-icons { display: inline-flex; align-items: center; gap: 3px; }
+/* Seoul signage puts the line number in a filled circle, so the tooltip does
+   the same rather than borrowing London's name chips. */
+.route-icon {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 18px; height: 18px; border-radius: 50%;
+    font-size: 11px; font-weight: 700; line-height: 1;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    flex-shrink: 0;
+}
+.route-icon.named {
+    width: auto; height: 18px; border-radius: 9px; padding: 0 7px;
+}
+.tip-name { font-weight: 700; white-space: nowrap; }
+.tip-count { white-space: nowrap; color: #fff; }
+.tip-note { color: #9a9a9a; font-size: 11px; white-space: nowrap; }
+</style>
+</head>
+<body>
+<div id="map"></div>
+<div id="loading">loading…</div>
+
+<div id="panel">
+    <div class="hdr">
+        <h1 id="t-h1">seoul riders</h1>
+        <div id="langtoggle"><span id="lang-en">EN</span><span
+            id="lang-ko">한국어</span></div>
+    </div>
+    <div class="sub" id="subtitle"></div>
+    <div class="stat" id="live-stat"></div>
+    <div class="stat hidden" id="static-stat"></div>
+    <div class="note hidden" id="static-note"></div>
+    <div class="warn hidden" id="samplewarn"></div>
+    <details>
+        <summary id="t-about-sum">about the data</summary>
+        <p id="about"></p>
+        <p class="built" id="buildstamp"></p>
+    </details>
+</div>
+
+<div id="legend"></div>
+
+<div id="controls-wrap">
+    <div id="controls">
+        <button id="t-static">day</button>
+        <button id="play">pause</button>
+        <span id="time-label">05:00</span>
+        <input type="range" id="time-slider" min="0" max="1000" value="0">
+        <button id="gear">···</button>
+    </div>
+    <div id="settings" class="hidden">
+        <div class="row">
+            <span class="label" id="t-speed">speed</span>
+            <input type="range" id="speed" min="0" max="15" step="1" value="7">
+            <span class="label" id="speed-val">1×</span>
+        </div>
+        <div class="row">
+            <span class="label" id="t-dotsize">dot size</span>
+            <input type="range" id="dotsize" min="0.4" max="3" step="0.1" value="1.2">
+        </div>
+        <div class="row">
+            <span class="label" id="t-stations-lbl">stations</span>
+            <button id="t-stations" class="on">on</button>
+            <span class="label" id="t-lines-lbl">lines</span>
+            <button id="t-lines" class="on">on</button>
+        </div>
+    </div>
+</div>
+
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<script>
+// ---------------------------------------------------------------- language
+// Every string the page can show, in both languages. Station names come from
+// the data (name / name_en, out of OSM), line names from line_meta
+// (display / display_en, out of lines.py) -- so this table is only the
+// furniture. The counted ones are functions because Korean puts its counter
+// after the number and orders the clauses differently, which a template with
+// holes in it cannot express.
+const STR = {
+    en: {
+        h1: 'seoul riders',
+        subLive: d => 'Subway trains on ' + d + ', sized by how many people ' +
+            'are on board.',
+        subStatic: d => 'Every journey made on ' + d + ', added up rather ' +
+            'than animated.',
+        liveStat: '<span id="onboard">0</span> riders on ' +
+            '<b id="running">0</b> trains, <b id="waiting-count">0</b> ' +
+            'on platforms',
+        staticStat: '<b id="static-total">0</b> boardings ' +
+            '<span id="static-when">all day</span>',
+        staticNote: 'Line thickness is riders carried past that point; ' +
+            'circles are boardings. Dashed lines are the operators outside ' +
+            '서울교통공사 — the origin–destination release only records their ' +
+            'journeys to and from the Seoul network, so what is drawn for ' +
+            'them is that traffic, not their ridership.',
+        aboutSummary: 'about the data',
+        // Two versions, because a weekday is not measured the way New Year's
+        // Eve is and the panel should not imply otherwise.
+        about: d => 'Station-to-station journeys from the Seoul city ' +
+            'origin–destination release, which covers one day: Sunday ' +
+            '31 December 2023. ' + (d === 'nye' ? '' :
+                'Boardings and alightings at every station on ' +
+                'an ordinary day are measured separately, and that journey ' +
+                'pattern is scaled onto them — so the volumes here are ' +
+                'measured and the pattern of who goes where is carried over ' +
+                'from the day that was. ') +
+            'Split into hours against 서울교통공사 hourly gate counts, then ' +
+            'routed over the published train timetable. Grey bubbles are ' +
+            'riders on the platform waiting to board. Every 수도권 line ' +
+            'except 에버라인, which publishes no stop times.',
+        legWaiting: 'waiting',
+        legPartial: 'to/from Seoul only',
+        built: d => 'Built ' + d + '.',
+        builtUnknown: 'Built before the build date was recorded.',
+        sampleWarn: n => 'Sample build — every ' + n + 'th origin only. ' +
+            'Every count on this page is roughly ' + n + '× low. Run ' +
+            'build.py with no --sample for the real thing.',
+        day: 'day',
+        dayTitle: 'the whole day at once',
+        play: 'play',
+        pause: 'pause',
+        on: 'on',
+        off: 'off',
+        speed: 'speed',
+        dotSize: 'dot size',
+        stations: 'stations',
+        lines: 'lines',
+        realTime: 'real time',
+        allDay: 'all day',
+        allDayShort: 'all day',   // goes in the narrow clock slot
+        loading: 'loading…',
+        loadingDay: 'loading the day…',
+        tipRiders: n => n + '&nbsp;riders',
+        tipExpress: 'express',
+        tipCarried: n => n + '&nbsp;carried',
+        tipOnOff: (b, a) => b + '&nbsp;on, ' + a + '&nbsp;off',
+        tipWaiting: n => n + '&nbsp;waiting',
+        tipPartial: 'to/from Seoul only',
+        date: (y, m, d) => d + ' ' + ['January', 'February', 'March', 'April',
+            'May', 'June', 'July', 'August', 'September', 'October',
+            'November', 'December'][m - 1] + ' ' + y,
+        // A weekday build is not a date. The OD is measured on one Sunday and
+        // re-levelled onto the day type, so naming a Wednesday would claim a
+        // precision the data has not got. See README, "Getting off New Year's Eve".
+        dayName: { weekday: 'a typical weekday', saturday: 'a typical Saturday',
+            sunday: 'a typical Sunday' },
+    },
+    ko: {
+        h1: '서울 지하철 승객',
+        subLive: d => d + '의 지하철 열차. 크기는 탑승 인원.',
+        subStatic: d => d + '에 이루어진 모든 통행을 합산한 것.',
+        liveStat: '열차 <b id="running">0</b>대에 ' +
+            '<span id="onboard">0</span>명, 승강장에 ' +
+            '<b id="waiting-count">0</b>명',
+        staticStat: '<span id="static-when">하루 전체</span> 승차 ' +
+            '<b id="static-total">0</b>명',
+        staticNote: '선 굵기는 그 지점을 지나간 승객 수, 원은 승차 인원. ' +
+            '점선은 서울교통공사 밖의 운영기관 — 기종점 통행량 자료는 서울 ' +
+            '지하철망을 오가는 통행만 기록하므로, 그려진 것은 그 노선의 ' +
+            '전체 수송량이 아니라 그 통행뿐이다.',
+        aboutSummary: '자료 설명',
+        about: d => '서울시 지하철 역별 기종점 통행량 자료는 2023년 ' +
+            '12월 31일 일요일 하루치만 공개되어 있다. ' + (d === 'nye' ? '' :
+                '평상시 역별 승하차 인원은 따로 측정된 값이므로, ' +
+                '통행 구조는 그대로 둔 채 그 값에 맞추어 규모를 조정했다. ' +
+                '즉 승객 수는 측정값이고, 어디서 어디로 가는가는 그날의 ' +
+                '구조를 가져온 것이다. ') +
+            '서울교통공사 시간대별 승하차 인원에 맞추어 시간대로 나눈 뒤, ' +
+            '공개된 열차운행시각표 위로 경로를 배정했다. 회색 원은 ' +
+            '승강장에서 열차를 기다리는 승객. 정차 시각을 공개하지 않는 ' +
+            '에버라인을 제외한 수도권 전 노선.',
+        legWaiting: '대기',
+        legPartial: '서울 방면 통행만',
+        built: d => d + ' 생성.',
+        builtUnknown: '생성 시각이 기록되기 전에 만들어진 자료.',
+        sampleWarn: n => '표본 빌드 — 출발역 ' + n + '개 중 1개만 사용. ' +
+            '이 페이지의 모든 수치가 약 ' + n + '배 작다. 실제 수치는 ' +
+            '--sample 없이 build.py를 실행할 것.',
+        day: '하루',
+        dayTitle: '하루 전체를 한 번에',
+        play: '재생',
+        pause: '일시정지',
+        on: '켬',
+        off: '끔',
+        speed: '속도',
+        dotSize: '점 크기',
+        stations: '역',
+        lines: '노선',
+        realTime: '실시간',
+        allDay: '하루 전체',
+        allDayShort: '종일',
+        loading: '불러오는 중…',
+        loadingDay: '하루치 불러오는 중…',
+        tipRiders: n => n + '명 탑승',
+        tipExpress: '급행',
+        tipCarried: n => n + '명 통과',
+        tipOnOff: (b, a) => '승차 ' + b + ', 하차 ' + a,
+        tipWaiting: n => n + '명 대기',
+        tipPartial: '서울 방면만',
+        date: (y, m, d) => y + '년 ' + m + '월 ' + d + '일',
+        dayName: { weekday: '평일', saturday: '토요일', sunday: '일요일' },
+    },
+};
+// Device in Korea → open in Korean. Timezone is the cleanest "where am I"
+// signal: navigator.language is the OS/browser locale, not the location.
+let lang = (() => {
+    try {
+        if (Intl.DateTimeFormat().resolvedOptions().timeZone === 'Asia/Seoul')
+            return 'ko';
+    } catch (e) {}
+    return 'en';
+})();
+// The panel is filled by applyLang() once the data is in; the loading card is
+// on screen before that, so it gets its text now.
+document.getElementById('loading').textContent = STR[lang].loading;
+
+// Names, colours and capacities all come from data.line_meta, which build.py
+// writes out of lines.py -- so adding a line is a Python change, not a change
+// here. These stand in only for a trains.json built before line_meta existed.
+let LINE_NAMES = {
+    '1': '1호선', '2': '2호선', '3': '3호선', '4': '4호선', '5': '5호선',
+    '6': '6호선', '7': '7호선', '8': '8호선', '9': '9호선'
+};
+let LINE_NAMES_EN = {
+    '1': 'Line 1', '2': 'Line 2', '3': 'Line 3', '4': 'Line 4', '5': 'Line 5',
+    '6': 'Line 6', '7': 'Line 7', '8': 'Line 8', '9': 'Line 9'
+};
+let LINE_COLORS = {
+    '1': '#0052A4', '2': '#00A84D', '3': '#EF7C1C', '4': '#00A5DE',
+    '5': '#996CAC', '6': '#CD7C2F', '7': '#747F00', '8': '#E6186C',
+    '9': '#BDB092'
+};
+// Rated capacity (정원), at roughly 160 per car. Trains over their line's
+// figure get a red rim -- a crush load, not an impossible one.
+let LINE_CAPACITY = {
+    '1': 1600, '2': 1600, '3': 1600, '4': 1600,
+    '5': 1280, '6': 1280, '7': 1280,
+    '8': 960, '9': 960,
+};
+let LINE_ORDER = Object.keys(LINE_COLORS);
+
+// The two labels that come out of the data rather than out of STR. Both fall
+// back to the Korean, which is the name that always exists.
+function lineLabel(id) {
+    return (lang === 'en' && LINE_NAMES_EN[id]) || LINE_NAMES[id] || id;
+}
+function stnLabel(s) {
+    if (!s) return '';
+    return (lang === 'en' && s.name_en) || s.name || '';
+}
+
+// Twenty-two operator colours, several of them pale, so work out which want
+// dark numerals rather than keeping a list in step by hand.
+function needsDarkText(hex) {
+    const v = i => {
+        const c = parseInt(hex.slice(i, i + 2), 16) / 255;
+        return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+    };
+    return 0.2126 * v(1) + 0.7152 * v(3) + 0.0722 * v(5) > 0.35;
+}
+
+const map = new maplibregl.Map({
+    container: 'map',
+    style: 'https://tiles.openfreemap.org/styles/dark',
+    center: [126.99, 37.55],
+    zoom: 10.2,
+    minZoom: 8,
+    attributionControl: true,
+});
+
+window.map = map;   // so the page can be driven and checked from a console
+
+let DATA = null;
+let trains = [];
+let waitStations = [];    // only the stations that ever have anyone waiting
+let simTime = 5 * 3600, tMin = 5 * 3600, tMax = 26 * 3600;
+let playing = true, speed = 1, dotScale = 1.2;
+let anchorWall = performance.now(), anchorSim = simTime;
+
+// Bubbles are sized for the opening view; zooming two levels in doubles them,
+// so a dot keeps roughly the same footprint on the ground as you go closer.
+const BASE_ZOOM = 10.2;
+const DWELL = 15;    // how long a train sits at a platform, in sim seconds
+const ACCEL = 15;    // pulling away and braking, in sim seconds
+const WAIT_TRANSITION = 10;  // ramp between two waiting counts, sim seconds
+const START_HOUR = 7;        // where the animation opens, not where it loops
+
+const EMPTY = { type: 'FeatureCollection', features: [] };
+const $ = id => document.getElementById(id);
+// train index -> [lon, lat, riders], refreshed every frame so a pinned
+// tooltip can follow its train instead of hanging where it was clicked.
+const trainPositions = new Map();
+const waitByStation = new Map();   // station index -> its waiting timeline
+
+function fmtTime(t) {
+    const h = Math.floor(t / 3600) % 24, m = Math.floor((t % 3600) / 60);
+    return String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
+}
+function fmtNum(n) { return Math.round(n).toLocaleString('en-US'); }
+
+function darkenHex(hex, f) {
+    const c = i => Math.round(parseInt(hex.slice(i, i + 2), 16) * f)
+        .toString(16).padStart(2, '0');
+    return '#' + c(1) + c(3) + c(5);
+}
+function lightenHex(hex, f) {
+    const c = i => {
+        const v = parseInt(hex.slice(i, i + 2), 16);
+        return Math.round(v + (255 - v) * f).toString(16).padStart(2, '0');
+    };
+    return '#' + c(1) + c(3) + c(5);
+}
+
+// ---------------------------------------------------------------- load
+// A sampled build writes its own filenames so it can never stand in for the
+// real one; ?sample in the URL is how you ask to see it anyway.
+const SAMPLED = new URLSearchParams(location.search).has('sample');
+const TRAINS_URL = SAMPLED ? 'data/trains.sample.json' : 'data/trains.json';
+const STATS_URL = SAMPLED ? 'data/stats.sample.json' : 'data/stats.json';
+
+// When the build was made, and whether it is one worth believing. Both
+// outputs carry the same stamp; a file written before this existed has none,
+// which is worth saying rather than hiding.
+function applyBuildStamp() {
+    const S = STR[lang];
+    const b = DATA && DATA.build;
+    const el = $('buildstamp');
+    const warn = $('samplewarn');
+    if (!el) return;
+    if (!DATA) { el.textContent = ''; return; }
+    el.textContent = b && b.built ? S.built(prettyBuilt(b.built))
+                                  : S.builtUnknown;
+    const n = b && b.sample > 1 ? b.sample : 0;
+    warn.classList.toggle('hidden', !n);
+    if (n) warn.textContent = S.sampleWarn(n);
+}
+
+function prettyBuilt(iso) {
+    const d = new Date(iso);
+    if (isNaN(d)) return iso;
+    const pad = v => String(v).padStart(2, '0');
+    return d.toLocaleDateString(lang === 'ko' ? 'ko-KR' : 'en-GB',
+                                {day: 'numeric', month: 'short',
+                                 year: 'numeric'}) +
+           ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+}
+
+fetch(TRAINS_URL).then(r => r.json()).then(d => {
+    DATA = d;
+    prepare();
+    if (map.loaded()) install(); else map.on('load', install);
+});
+
+function prepare() {
+    const meta = DATA.line_meta;
+    if (meta) {
+        LINE_ORDER = Object.keys(meta);
+        LINE_NAMES = {};
+        LINE_NAMES_EN = {};
+        LINE_COLORS = {};
+        LINE_CAPACITY = {};
+        for (const id of LINE_ORDER) {
+            LINE_NAMES[id] = meta[id].display;
+            LINE_NAMES_EN[id] = meta[id].display_en || '';
+            LINE_COLORS[id] = meta[id].color;
+            LINE_CAPACITY[id] = meta[id].capacity;
+        }
+    }
+
+    trains = DATA.trains.map(tr => {
+        const tl = tr.timeline;
+        const color = tr.color || LINE_COLORS[tr.route] || '#888';
+        return {
+            route: tr.route,
+            color: color,
+            stroke: darkenHex(color, 0.75),
+            over: lightenHex(color, 0.2),
+            cap: LINE_CAPACITY[tr.route] || 0,
+            express: !!tr.express,
+            tl: tl,
+            t0: tl[0][0],
+            t1: tl[tl.length - 1][0],
+            // Drawing in timetable order stacks whole lines on top of each
+            // other where they share track; a fixed random key mixes them.
+            order: Math.random(),
+        };
+    }).filter(t => t.t1 > t.t0);
+    // Sorted once, so the overlay can draw straight down the list and still
+    // get the mixed stacking the circle-sort-key used to give it.
+    trains.sort((a, b) => a.order - b.order);
+
+    waitStations = (DATA.stations || [])
+        .map((s, i) => ({ i: i, name: s.name, name_en: s.name_en,
+                          lat: s.lat, lon: s.lon,
+                          lines: s.lines || [], wait: s.wait || [] }))
+        .filter(s => s.wait.length);
+    waitStations.forEach(s => waitByStation.set(s.i, s));
+
+    tMin = Math.min.apply(null, trains.map(t => t.t0));
+    tMax = Math.max.apply(null, trains.map(t => t.t1));
+    // Open at 07:00. The first two hours of service are nearly empty, and
+    // starting there makes the map look broken before it looks interesting.
+    simTime = Math.min(tMax, Math.max(tMin, START_HOUR * 3600));
+    anchorSim = simTime; anchorWall = performance.now();
+
+    applyLang();
+}
+
+function prettyDate(iso) {
+    const [y, m, d] = iso.split('-').map(Number);
+    return STR[lang].date(y, m, d);
+}
+
+// What the subtitle calls the day. `nye` is the one build with a real date to
+// give; every other day type is a class of days, not one of them.
+function whenLabel() {
+    if (DATA.date) return prettyDate(DATA.date);
+    return STR[lang].dayName[DATA.day] || STR[lang].dayName.weekday;
+}
+
+function buildLegend() {
+    const legend = $('legend');
+    legend.innerHTML = '';
+    if (!DATA) return;
+    const S = STR[lang];
+    // Only lines that actually carry someone today, so the legend describes
+    // the map rather than the registry.
+    const running = new Set(trains.map(t => t.route));
+    LINE_ORDER.filter(k => running.has(k)).forEach(k => {
+        const el = document.createElement('div');
+        el.className = 'li';
+        el.innerHTML = '<span class="sw" style="background:' +
+            LINE_COLORS[k] + '"></span>' + lineLabel(k);
+        legend.appendChild(el);
+    });
+    const wl = document.createElement('div');
+    wl.className = 'li' + (staticMode ? ' hidden' : '');
+    wl.id = 'legend-waiting';
+    wl.innerHTML = '<span class="sw" style="background:#cbcbcb;' +
+        'width:8px;height:8px;border-radius:50%"></span>' + S.legWaiting;
+    legend.appendChild(wl);
+    const pl = document.createElement('div');
+    pl.className = 'li' + (staticMode ? '' : ' hidden');
+    pl.id = 'legend-partial';
+    pl.innerHTML = '<span class="sw dash"></span>' + S.legPartial;
+    legend.appendChild(pl);
+}
+
+// The basemap's own labels. openfreemap's dark style prints latin and
+// non-latin concatenated -- "GYEYANGSAN-RO 계양산로" -- so switching the page's
+// language means rewriting text-field on the layers that draw a name.
+// Motorway shields label from `ref` and are left alone.
+// Not gated on isStyleLoaded(): switching language sets off a round of glyph
+// loading, so the style reads "not loaded" for a second or two afterwards and
+// gating on it silently dropped every other switch. getStyle() throwing is the
+// real "too early" signal. Both expressions below still mention name:latin, so
+// rebuilding the layer list from an already-switched style finds the same set.
+let basemapLabelLayers = null;
+function applyBasemapLang() {
+    let layers;
+    try { layers = (map.getStyle() || {}).layers; } catch (e) { return; }
+    if (!layers || !layers.length) return;
+    if (!basemapLabelLayers || !basemapLabelLayers.length) {
+        basemapLabelLayers = layers
+            .filter(L => L.type === 'symbol' &&
+                JSON.stringify((L.layout || {})['text-field'] || '')
+                    .indexOf('name:latin') >= 0)
+            .map(L => L.id);
+    }
+    const expr = lang === 'ko'
+        ? ['coalesce', ['get', 'name:nonlatin'], ['get', 'name'],
+           ['get', 'name:latin']]
+        : ['coalesce', ['get', 'name:latin'], ['get', 'name_en'],
+           ['get', 'name']];
+    for (const id of basemapLabelLayers) {
+        if (map.getLayer(id)) map.setLayoutProperty(id, 'text-field', expr);
+    }
+}
+
+function applyLang() {
+    const S = STR[lang];
+    document.documentElement.lang = lang;
+    document.title = S.h1;
+    $('t-h1').textContent = S.h1;
+    $('lang-en').classList.toggle('on', lang === 'en');
+    $('lang-ko').classList.toggle('on', lang === 'ko');
+
+    // These two carry the spans the render loop writes into, so they are
+    // rebuilt rather than retitled -- and then refilled below.
+    $('live-stat').innerHTML = S.liveStat;
+    $('static-stat').innerHTML = S.staticStat;
+    $('static-note').textContent = S.staticNote;
+    $('t-about-sum').textContent = S.aboutSummary;
+    $('about').textContent = S.about(DATA ? DATA.day : 'weekday');
+    applyBuildStamp();
+    if (DATA) {
+        SUBTITLE_LIVE = S.subLive(whenLabel());
+        SUBTITLE_STATIC = S.subStatic(whenLabel());
+        $('subtitle').textContent = staticMode ? SUBTITLE_STATIC
+                                               : SUBTITLE_LIVE;
+    }
+
+    $('t-static').textContent = S.day;
+    $('t-static').title = S.dayTitle;
+    $('play').textContent = playing ? S.pause : S.play;
+    $('t-speed').textContent = S.speed;
+    $('t-dotsize').textContent = S.dotSize;
+    $('t-stations-lbl').textContent = S.stations;
+    $('t-lines-lbl').textContent = S.lines;
+    $('t-stations').textContent = showStations ? S.on : S.off;
+    $('t-lines').textContent =
+        $('t-lines').classList.contains('on') ? S.on : S.off;
+    $('speed-val').textContent = speedLabel(speed);
+
+    buildLegend();
+    applyBasemapLang();
+    // prepare() calls this before the layers exist, and there is nothing to
+    // redraw yet; install() calls it again once there is.
+    if (!installed) return;
+    if (staticMode) renderStatic(); else invalidate();
+    refreshTooltips();
+}
+
+// ---------------------------------------------------------------- layers
+let installed = false;
+
+function install() {
+    const lineFeatures = [];
+    (DATA.lines || []).forEach(L => {
+        (L.ways || []).forEach(w => {
+            lineFeatures.push({
+                type: 'Feature',
+                properties: { color: L.color || LINE_COLORS[L.route] || '#888' },
+                geometry: {
+                    type: 'LineString',
+                    coordinates: w.map(p => [p[1], p[0]]),
+                },
+            });
+        });
+    });
+    map.addSource('lines', {
+        type: 'geojson',
+        data: { type: 'FeatureCollection', features: lineFeatures },
+    });
+    map.addLayer({
+        id: 'lines', type: 'line', source: 'lines',
+        paint: {
+            'line-color': ['get', 'color'],
+            'line-width': ['interpolate', ['linear'], ['zoom'], 9, 0.7, 14, 2.6],
+            'line-opacity': 0.45,
+        },
+    });
+
+    map.addSource('stations', {
+        type: 'geojson',
+        data: {
+            type: 'FeatureCollection',
+            features: (DATA.stations || []).map((s, i) => ({
+                type: 'Feature',
+                properties: { si: i },
+                geometry: { type: 'Point', coordinates: [s.lon, s.lat] },
+            })),
+        },
+    });
+    map.addLayer({
+        id: 'stations', type: 'circle', source: 'stations',
+        paint: {
+            'circle-radius': ['interpolate', ['linear'], ['zoom'], 9, 0.9, 14, 2.6],
+            'circle-color': '#7d7d7d',
+            'circle-opacity': 0.75,
+        },
+    });
+
+    // The animated dots -- trains and waiting crowds -- are not MapLibre
+    // layers. See makeOverlay() for why.
+    makeOverlay();
+
+    // Static-view layers sit under the animated ones and start hidden.
+    map.addSource('static-seg', { type: 'geojson', data: EMPTY });
+    map.addLayer({
+        id: 'static-seg-full', type: 'line', source: 'static-seg',
+        filter: ['!', ['get', 'partial']],
+        layout: { visibility: 'none', 'line-cap': 'round',
+                  'line-join': 'round', 'line-sort-key': ['get', 'w'] },
+        paint: {
+            'line-color': ['get', 'color'],
+            'line-width': ['get', 'w'],
+            'line-opacity': 0.85,
+        },
+    });
+    // A separate layer only because line-dasharray cannot be data-driven.
+    map.addLayer({
+        id: 'static-seg-partial', type: 'line', source: 'static-seg',
+        filter: ['get', 'partial'],
+        layout: { visibility: 'none', 'line-cap': 'butt',
+                  'line-join': 'round', 'line-sort-key': ['get', 'w'] },
+        paint: {
+            'line-color': ['get', 'color'],
+            'line-width': ['get', 'w'],
+            'line-opacity': 0.85,
+            'line-dasharray': [2, 1.4],
+        },
+    });
+    map.addSource('static-stn', { type: 'geojson', data: EMPTY });
+    map.addLayer({
+        id: 'static-stn', type: 'circle', source: 'static-stn',
+        layout: { visibility: 'none' },
+        paint: {
+            'circle-radius': ['get', 'r'],
+            'circle-color': '#e8e8e8',
+            'circle-opacity': 0.9,
+            'circle-stroke-width': 0.6,
+            'circle-stroke-color': '#111',
+            'circle-stroke-opacity': 0.6,
+        },
+    });
+
+    $('loading').classList.add('hidden');
+    installed = true;
+    wireUI();
+    applyLang();       // now that the basemap layers are there to relabel
+    invalidate();
+}
+
+// ---------------------------------------------------------------- animation
+
+// Quadratic ease in and out. On a short hop there is not enough time for a
+// full ACCEL at each end, so the ramp is capped at half the segment.
+function ease(frac, travel) {
+    const a = Math.min(ACCEL / travel, 0.5);
+    const denom = 2 * a * (1 - a);
+    if (frac < a) return frac * frac / denom;
+    if (frac > 1 - a) { const d = 1 - frac; return 1 - d * d / denom; }
+    return a / (2 * (1 - a)) + (frac - a) / (1 - a);
+}
+
+function bubbleRadius(count) {
+    return Math.max(1, Math.min(60, Math.sqrt(count) * 0.5));
+}
+
+// Where a train is and how full it is. Timeline rows with 4+ entries are
+// station stops; 3-entry rows are track waypoints from build_shapes.py, which
+// bend the path but are not places anyone gets on or off.
+function posOf(tr, t) {
+    const tl = tr.tl;
+    if (t < tl[0][0] || t > tl[tl.length - 1][0]) return null;
+
+    let lo = 0, hi = tl.length - 1;
+    while (lo < hi) {
+        const mid = (lo + hi + 1) >> 1;
+        if (tl[mid][0] <= t) lo = mid; else hi = mid - 1;
+    }
+    const idx = lo;
+
+    let pi = idx;
+    while (pi > 0 && tl[pi].length < 4) pi--;
+    const prev = tl[pi];
+    let riders = prev.length >= 4 ? prev[3] : 0;
+
+    const after = tl[pi + 1];
+    const dwell = after ? Math.min(DWELL, after[0] - prev[0]) : DWELL;
+    const dwellEnd = prev[0] + dwell;
+
+    if (idx === pi && t < dwellEnd) {
+        // Standing at the platform. Ramp the count over the stop so the
+        // boarding shows as the doors being open, not as a jump.
+        let before = 0;
+        for (let j = pi - 1; j >= 0; j--) {
+            if (tl[j].length >= 4) { before = tl[j][3]; break; }
+        }
+        const f = dwell > 0 ? (t - prev[0]) / dwell : 1;
+        return [prev[1], prev[2], before + f * (riders - before)];
+    }
+
+    let ni = pi + 1;
+    while (ni < tl.length && tl[ni].length < 4) ni++;
+    if (ni >= tl.length) ni = tl.length - 1;
+
+    const travel = tl[ni][0] - dwellEnd;
+    if (travel <= 0 || t < dwellEnd) return [prev[1], prev[2], riders];
+
+    // Ease along the whole platform-to-platform run, measured by distance, so
+    // the waypoints in between bend the path without altering the pace.
+    const eased = ease(Math.min(1, (t - dwellEnd) / travel), travel);
+    const n = ni - pi;
+    let total = 0;
+    const cum = [0];
+    for (let k = 1; k <= n; k++) {
+        const a = tl[pi + k - 1], b = tl[pi + k];
+        total += Math.hypot(b[1] - a[1], b[2] - a[2]);
+        cum.push(total);
+    }
+    const target = eased * total;
+    let seg = n - 1;
+    for (let k = 1; k <= n; k++) {
+        if (cum[k] >= target) { seg = k - 1; break; }
+    }
+    const a = tl[pi + seg], b = tl[pi + seg + 1];
+    const span = cum[seg + 1] - cum[seg];
+    const f = span > 0 ? (target - cum[seg]) / span : 0;
+    return [a[1] + f * (b[1] - a[1]), a[2] + f * (b[2] - a[2]), riders];
+}
+
+function stationWaiting(s) {
+    const tl = s.wait;
+    let lo = 0, hi = tl.length - 1, idx = -1;
+    while (lo <= hi) {
+        const mid = (lo + hi) >> 1;
+        if (tl[mid][0] <= simTime) { idx = mid; lo = mid + 1; }
+        else hi = mid - 1;
+    }
+    if (idx < 0) return 0;
+    let n = tl[idx][1];
+    const since = simTime - tl[idx][0];
+    if (since < WAIT_TRANSITION && idx > 0) {
+        n = tl[idx - 1][1] + (since / WAIT_TRANSITION) * (n - tl[idx - 1][1]);
+    }
+    return n;
+}
+
+let lastRender = 0;
+// Frame budget for the simulation. Now that the dots are drawn on a canvas
+// rather than pushed through a MapLibre source, a frame is cheap and this is a
+// battery choice rather than a necessity -- so run smooth in front, and slow
+// down rather than stop when the window is only in the background.
+const RENDER_MS_FOCUSED = 16, RENDER_MS_BLURRED = 100;
+let RENDER_MS = RENDER_MS_FOCUSED;
+
+// Every render pushes two GeoJSON sources at MapLibre, and each push makes it
+// re-index the data on its worker, rebuild the visible tiles and repaint every
+// layer in the basemap -- so a render is expensive whether or not anything
+// moved. The loop therefore runs only while the clock is moving or something
+// has actually changed, and stands down completely when the window is in the
+// background. Left running flat out it cost about 130% of a core, paused.
+let rafId = null, dirty = true, suspended = false;
+
+function invalidate() {
+    dirty = true;
+    if (rafId === null && !suspended) rafId = requestAnimationFrame(tick);
+}
+
+function suspend() {
+    if (suspended) return;
+    suspended = true;
+    if (rafId !== null) { cancelAnimationFrame(rafId); rafId = null; }
+}
+
+// The clock freezes while we are away rather than running on in the background,
+// so coming back lands where you left off instead of at some arbitrary hour.
+function resume() {
+    if (!suspended) return;
+    suspended = false;
+    anchorSim = simTime; anchorWall = performance.now();
+    invalidate();
+}
+
+function tick(now) {
+    rafId = null;
+    if (playing) {
+        simTime = anchorSim + (now - anchorWall) / 1000 * 60 * speed;
+        if (simTime > tMax) { simTime = tMin; anchorSim = tMin; anchorWall = now; }
+    }
+    if ((playing || dirty) && now - lastRender >= RENDER_MS) {
+        lastRender = now;
+        dirty = false;
+        render();
+    }
+    if (!suspended && (playing || dirty)) rafId = requestAnimationFrame(tick);
+}
+
+let showStations = true;
+
+// ---------------------------------------------------------------- overlay
+// The dots are drawn on a plain 2D canvas over the map rather than as MapLibre
+// circle layers. Feeding a GeoJSON source every frame makes MapLibre re-index
+// the collection on its worker, rebuild the visible tiles and repaint the whole
+// basemap -- measured at ~57 full repaints a second, and about 180% of a core.
+// Drawing a few hundred arcs ourselves costs almost nothing, and MapLibre then
+// sits idle unless the camera actually moves.
+let fx = null, fxCtx = null;
+const TAU = Math.PI * 2;
+// Rebuilt by render() at RENDER_MS; redrawn by drawOverlay() on every camera
+// frame, so panning stays glued to the basemap even between simulation steps.
+let frameTrains = [], frameWaits = [];
+
+function makeOverlay() {
+    fx = document.createElement('canvas');
+    // Above MapLibre's own canvas, below its controls (2) and popups (3).
+    fx.style.cssText =
+        'position:absolute;top:0;left:0;width:100%;height:100%;' +
+        'pointer-events:none;z-index:1';
+    map.getContainer().appendChild(fx);
+    fxCtx = fx.getContext('2d');
+    map.on('move', drawOverlay);
+    map.on('resize', drawOverlay);
+}
+
+function drawOverlay() {
+    if (!fxCtx) return;
+    const dpr = window.devicePixelRatio || 1;
+    const w = map.getContainer().clientWidth, h = map.getContainer().clientHeight;
+    if (fx.width !== Math.round(w * dpr) || fx.height !== Math.round(h * dpr)) {
+        fx.width = Math.round(w * dpr);
+        fx.height = Math.round(h * dpr);
+    }
+    fxCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    fxCtx.clearRect(0, 0, w, h);
+    if (staticMode) return;
+
+    // Radius is recomputed here rather than stored, so a zoom between
+    // simulation steps resizes the dots along with the map.
+    const scale = Math.pow(2, (map.getZoom() - BASE_ZOOM) / 2) * dotScale;
+
+    if (showStations) {
+        fxCtx.globalAlpha = 0.75;
+        fxCtx.fillStyle = '#cbcbcb';
+        for (let i = 0; i < frameWaits.length; i++) {
+            const s = frameWaits[i];
+            const p = map.project([s.lon, s.lat]);
+            s.x = p.x; s.y = p.y; s.r = bubbleRadius(s.n) * scale;
+            if (p.x < -s.r || p.y < -s.r || p.x > w + s.r || p.y > h + s.r) continue;
+            fxCtx.beginPath();
+            fxCtx.arc(p.x, p.y, s.r, 0, TAU);
+            fxCtx.fill();
+        }
+    }
+
+    for (let i = 0; i < frameTrains.length; i++) {
+        const t = frameTrains[i];
+        const p = map.project([t.lon, t.lat]);
+        t.x = p.x; t.y = p.y; t.r = bubbleRadius(t.n) * scale;
+        if (p.x < -t.r || p.y < -t.r || p.x > w + t.r || p.y > h + t.r) continue;
+        fxCtx.beginPath();
+        fxCtx.arc(p.x, p.y, t.r, 0, TAU);
+        fxCtx.globalAlpha = 0.85;
+        fxCtx.fillStyle = t.color;
+        fxCtx.fill();
+        fxCtx.globalAlpha = 0.8;
+        fxCtx.lineWidth = t.sw;
+        fxCtx.strokeStyle = t.stroke;
+        fxCtx.stroke();
+    }
+    fxCtx.globalAlpha = 1;
+}
+
+// Nearest dot under a point, topmost first -- the picking MapLibre used to do
+// with queryRenderedFeatures. Tiny dots get a few pixels of slop so they stay
+// catchable, which matters more on a touchscreen than it did with a mouse.
+function pickDot(pt) {
+    for (let i = frameTrains.length - 1; i >= 0; i--) {
+        const t = frameTrains[i];
+        if (t.x === undefined) continue;
+        const hit = Math.max(t.r, 4);
+        const dx = pt.x - t.x, dy = pt.y - t.y;
+        if (dx * dx + dy * dy <= hit * hit) return { kind: 'train', t: t };
+    }
+    if (showStations) {
+        for (let i = frameWaits.length - 1; i >= 0; i--) {
+            const s = frameWaits[i];
+            if (s.x === undefined) continue;
+            const hit = Math.max(s.r, 4);
+            const dx = pt.x - s.x, dy = pt.y - s.y;
+            if (dx * dx + dy * dy <= hit * hit) return { kind: 'station', si: s.si,
+                                                         lon: s.lon, lat: s.lat };
+        }
+    }
+    return null;
+}
+
+function render() {
+    if (staticMode) { drawOverlay(); refreshTooltips(); return; }
+
+    const tf = [];
+    let onboard = 0, running = 0;
+    trainPositions.clear();
+    for (let i = 0; i < trains.length; i++) {
+        const tr = trains[i];
+        if (simTime < tr.t0 || simTime > tr.t1) continue;
+        const p = posOf(tr, simTime);
+        if (!p) continue;
+        onboard += p[2];
+        if (p[2] < 0.5) continue;   // a train nobody is on is not worth drawing
+        running++;
+        const crowded = tr.cap && p[2] > tr.cap;
+        trainPositions.set(i, [p[1], p[0], Math.round(p[2])]);
+        tf.push({
+            lon: p[1], lat: p[0], n: p[2],
+            color: crowded ? tr.over : tr.color,
+            stroke: crowded ? '#d01818' : tr.stroke,
+            sw: crowded ? 2 : 1,
+            route: tr.route, express: tr.express, ti: i,
+        });
+    }
+    frameTrains = tf;
+
+    let waitingTotal = 0;
+    const wf = [];
+    for (let i = 0; i < waitStations.length; i++) {
+        const s = waitStations[i];
+        const n = stationWaiting(s);
+        if (n < 0.5) continue;
+        waitingTotal += n;
+        wf.push({ si: s.i, lon: s.lon, lat: s.lat, n: n });
+    }
+    frameWaits = wf;
+    drawOverlay();
+
+    $('onboard').innerHTML = '<b>' + fmtNum(onboard) + '</b>';
+    $('running').textContent = fmtNum(running);
+    $('waiting-count').textContent = fmtNum(waitingTotal);
+    $('time-label').textContent = fmtTime(simTime);
+    const sl = $('time-slider');
+    if (document.activeElement !== sl) {
+        sl.value = Math.round(1000 * (simTime - tMin) / (tMax - tMin));
+    }
+    refreshTooltips();
+}
+
+// ---------------------------------------------------------------- static view
+// The animation answers "where is everyone right now". This answers "how much
+// moves through here across the day" — the same routing, summed rather than
+// sampled, so it is one more read of the same numbers and not a second model.
+
+let staticMode = false;
+let staticData = null;      // stats.json, fetched the first time it is needed
+let staticShapes = null;    // link_shapes.json: the curves trains actually take
+let staticHour = 0;         // 0 = the whole day, else 1..N for one hour
+// Two scales, because the all-day view sums the hours and so runs an order of
+// magnitude larger. Each view is fixed to its own busiest value, so stepping
+// between hours makes the quiet ones visibly quiet instead of renormalising.
+let segScaleHour = 0, segScaleAll = 0, stnScaleHour = 0, stnScaleAll = 0;
+
+function hourValue(arr, hour) {
+    if (!arr) return 0;
+    if (hour) return arr[hour - 1] || 0;
+    let t = 0;
+    for (let i = 0; i < arr.length; i++) t += arr[i];
+    return t;
+}
+
+function stationValue(st, hour, key) {
+    let t = 0;
+    for (const line in st.by_line) t += hourValue(st.by_line[line][key], hour);
+    return t;
+}
+
+function staticLabel() {
+    if (!staticHour) return STR[lang].allDay;
+    const h = DATA_STATIC_HOURS[staticHour - 1];
+    return fmtTime(h * 3600) + '–' + fmtTime((h + 1) * 3600);
+}
+let DATA_STATIC_HOURS = [];
+let SUBTITLE_LIVE = '', SUBTITLE_STATIC = '';
+
+function loadStatic() {
+    if (staticData) return Promise.resolve();
+    $('loading').textContent = STR[lang].loadingDay;
+    $('loading').classList.remove('hidden');
+    return Promise.all([
+        fetch(STATS_URL).then(r => r.json()),
+        fetch('data/link_shapes.json').then(r => r.json()).catch(() => ({})),
+    ]).then(([stats, shapes]) => {
+        staticData = stats;
+        staticShapes = shapes || {};
+        DATA_STATIC_HOURS = stats.hours;
+        // Scale to the busiest hour, not to each hour's own maximum, so the
+        // 07:00 map is visibly emptier than the 18:00 one.
+        for (const sg of stats.segments) {
+            let sum = 0;
+            for (let i = 0; i < sg.h.length; i++) {
+                sum += sg.h[i];
+                if (sg.h[i] > segScaleHour) segScaleHour = sg.h[i];
+            }
+            if (sum > segScaleAll) segScaleAll = sum;
+        }
+        for (const st of stats.stations) {
+            const perHour = [];
+            for (const line in st.by_line) {
+                const b = st.by_line[line].b || [];
+                for (let i = 0; i < b.length; i++) {
+                    perHour[i] = (perHour[i] || 0) + b[i];
+                }
+            }
+            let sum = 0;
+            for (const v of perHour) {
+                sum += v;
+                if (v > stnScaleHour) stnScaleHour = v;
+            }
+            if (sum > stnScaleAll) stnScaleAll = sum;
+        }
+        $('loading').classList.add('hidden');
+    });
+}
+
+function shapeFor(sg) {
+    const k = sg.line + '|' + sg.p[0].toFixed(5) + ',' + sg.p[1].toFixed(5) +
+        '|' + sg.p[2].toFixed(5) + ',' + sg.p[3].toFixed(5);
+    const pts = staticShapes && staticShapes[k];
+    if (pts && pts.length > 1) return pts.map(p => [p[1], p[0]]);
+    return [[sg.p[1], sg.p[0]], [sg.p[3], sg.p[2]]];
+}
+
+function renderStatic() {
+    if (!staticData) return;
+    const meta = staticData.line_meta || {};
+    const segScale = staticHour ? segScaleHour : segScaleAll;
+    const stnScale = staticHour ? stnScaleHour : stnScaleAll;
+    const segs = [];
+    let total = 0;
+    for (const sg of staticData.segments) {
+        const v = hourValue(sg.h, staticHour);
+        if (v < 0.5) continue;
+        const m = meta[sg.line] || {};
+        segs.push({
+            type: 'Feature',
+            geometry: { type: 'LineString', coordinates: shapeFor(sg) },
+            properties: {
+                color: LINE_COLORS[sg.line] || '#888',
+                w: Math.max(0.6, 11 * Math.sqrt(v / Math.max(segScale, 1))),
+                partial: !!m.partial,
+                line: sg.line, a: sg.a, b: sg.b,
+                ae: sg.ae || '', be: sg.be || '',
+                riders: Math.round(v),
+            },
+        });
+    }
+    map.getSource('static-seg').setData(
+        { type: 'FeatureCollection', features: segs });
+
+    const stns = [];
+    for (let i = 0; i < staticData.stations.length; i++) {
+        const st = staticData.stations[i];
+        const v = stationValue(st, staticHour, 'b');
+        total += v;
+        if (v < 0.5) continue;
+        stns.push({
+            type: 'Feature',
+            geometry: { type: 'Point', coordinates: [st.lon, st.lat] },
+            properties: {
+                r: Math.max(1.2, 17 * Math.sqrt(v / Math.max(stnScale, 1))),
+                si: i,
+            },
+        });
+    }
+    map.getSource('static-stn').setData(
+        { type: 'FeatureCollection', features: stns });
+
+    $('static-total').textContent = fmtNum(total);
+    $('static-when').textContent = staticLabel();
+    $('time-label').textContent = staticHour ? staticLabel().split('–')[0]
+                                             : STR[lang].allDayShort;
+}
+
+function setStaticMode(on) {
+    staticMode = on;
+    $('t-static').classList.toggle('on', on);
+    $('live-stat').classList.toggle('hidden', on);
+    $('static-stat').classList.toggle('hidden', !on);
+    $('static-note').classList.toggle('hidden', !on);
+    $('play').classList.toggle('hidden', on);
+    $('legend-partial').classList.toggle('hidden', !on);
+    $('legend-waiting').classList.toggle('hidden', on);
+    $('subtitle').textContent = on ? SUBTITLE_STATIC : SUBTITLE_LIVE;
+
+    // The animated dots live on the overlay, which draws nothing in static
+    // mode; drawOverlay() below clears whatever was on it.
+    for (const id of ['static-seg-full', 'static-seg-partial', 'static-stn']) {
+        map.setLayoutProperty(id, 'visibility', on ? 'visible' : 'none');
+    }
+    // The line layer is the animation's backdrop; in static mode the segments
+    // are the lines, so drop it to a faint trace of the parts nobody rides.
+    map.setPaintProperty('lines', 'line-opacity', on ? 0.12 : 0.45);
+
+    const sl = $('time-slider');
+    if (on) {
+        playing = false;
+        sl.min = 0; sl.max = DATA_STATIC_HOURS.length; sl.step = 1;
+        sl.value = staticHour;
+        renderStatic();
+        drawOverlay();          // clears the train and waiting dots
+    } else {
+        sl.min = 0; sl.max = 1000; sl.step = 1;
+        anchorSim = simTime; anchorWall = performance.now();
+        playing = true;
+        $('play').textContent = STR[lang].pause;
+        invalidate();
+    }
+}
+
+// ---------------------------------------------------------------- tooltips
+function routeIcon(line) {
+    const bg = LINE_COLORS[line] || '#888';
+    const fg = needsDarkText(bg) ? '#111' : '#fff';
+    // Seoul signage puts a numbered line in a filled circle; the named lines
+    // get a chip, because 경의중앙선 does not fit in one.
+    const numbered = /^\d$/.test(line);
+    const label = numbered ? line : lineLabel(line);
+    return '<span class="route-icon' + (numbered ? '' : ' named') +
+        '" style="background:' + bg + ';color:' + fg + '">' + label + '</span>';
+}
+
+function trainTip(route, riders, express) {
+    const S = STR[lang];
+    return '<span class="route-icons">' + routeIcon(route) + '</span>' +
+        '<span class="tip-count">' + S.tipRiders(fmtNum(riders)) + '</span>' +
+        (express ? '<span class="tip-note">' + S.tipExpress + '</span>' : '');
+}
+
+function staticSegTip(p) {
+    const S = STR[lang];
+    const partial = (staticData.line_meta[p.line] || {}).partial;
+    const a = (lang === 'en' && p.ae) || p.a;
+    const b = (lang === 'en' && p.be) || p.b;
+    return '<span class="route-icons">' + routeIcon(p.line) + '</span>' +
+        '<span class="tip-name">' + a + ' → ' + b + '</span>' +
+        '<span class="tip-count">' + S.tipCarried(fmtNum(p.riders)) +
+        '</span>' +
+        (partial ? '<span class="tip-note">' + S.tipPartial + '</span>' : '');
+}
+
+function staticStnTip(si) {
+    const S = STR[lang];
+    const st = staticData.stations[si];
+    const b = Math.round(stationValue(st, staticHour, 'b'));
+    const a = Math.round(stationValue(st, staticHour, 'a'));
+    const icons = (st.lines || []).map(routeIcon).join('');
+    const partial = (st.lines || []).every(
+        l => (staticData.line_meta[l] || {}).partial);
+    return '<span class="tip-name">' + stnLabel(st) + '</span>' +
+        (icons ? '<span class="route-icons">' + icons + '</span>' : '') +
+        '<span class="tip-count">' +
+        S.tipOnOff(fmtNum(b), fmtNum(a)) + '</span>' +
+        (partial ? '<span class="tip-note">' + S.tipPartial + '</span>' : '');
+}
+
+function stationTip(si) {
+    const s = DATA.stations[si];
+    if (!s) return '';
+    const icons = (s.lines || []).map(routeIcon).join('');
+    const w = waitByStation.get(si);
+    const n = w ? Math.round(stationWaiting(w)) : 0;
+    return '<span class="tip-name">' + stnLabel(s) + '</span>' +
+        (icons ? '<span class="route-icons">' + icons + '</span>' : '') +
+        '<span class="tip-count">' + STR[lang].tipWaiting(fmtNum(n)) +
+        '</span>';
+}
+
+function makePopup() {
+    return new maplibregl.Popup({
+        closeButton: false, closeOnClick: false,
+        className: 'train-tooltip', offset: 12,
+    });
+}
+
+const hoverTip = makePopup();
+let hoverKind = null;        // 'train' | 'station' | null
+let lastMouse = null;        // pixel point, or null when the pointer is off-map
+const pinned = [];           // click to keep a tooltip; it stays live
+
+// Everything under the cursor is moving, so rather than trusting a mouseenter
+// that fired several frames ago, ask each frame what is there now. That also
+// covers the case the pointer never moves and a train slides underneath it.
+function refreshTooltips() {
+    let hit = null;
+    if (staticMode) {
+        if (lastMouse) {
+            const sf = map.queryRenderedFeatures(lastMouse,
+                { layers: ['static-stn'].filter(l => map.getLayer(l)) });
+            if (sf.length) {
+                hit = 'station';
+                hoverTip.setLngLat(sf[0].geometry.coordinates)
+                    .setHTML(staticStnTip(sf[0].properties.si)).addTo(map);
+            } else {
+                const gf = map.queryRenderedFeatures(lastMouse, {
+                    layers: ['static-seg-full', 'static-seg-partial']
+                        .filter(l => map.getLayer(l)) });
+                if (gf.length) {
+                    hit = 'segment';
+                    hoverTip.setLngLat(map.unproject(lastMouse))
+                        .setHTML(staticSegTip(gf[0].properties)).addTo(map);
+                }
+            }
+        }
+        if (hit !== hoverKind) {
+            map.getCanvas().style.cursor = hit ? 'pointer' : '';
+            if (!hit) hoverTip.remove();
+            hoverKind = hit;
+        }
+        return;
+    }
+    if (lastMouse) {
+        const d = pickDot(lastMouse);
+        if (d && d.kind === 'train') {
+            hit = 'train';
+            hoverTip.setLngLat([d.t.lon, d.t.lat])
+                .setHTML(trainTip(d.t.route, Math.round(d.t.n), d.t.express))
+                .addTo(map);
+        } else if (d) {
+            hit = 'station';
+            hoverTip.setLngLat([d.lon, d.lat])
+                .setHTML(stationTip(d.si)).addTo(map);
+        } else {
+            // The plain station dots are still a MapLibre layer, being static.
+            const sf = map.queryRenderedFeatures(lastMouse, {
+                layers: ['stations'].filter(l => map.getLayer(l)) });
+            if (sf.length) {
+                hit = 'station';
+                hoverTip.setLngLat(sf[0].geometry.coordinates)
+                    .setHTML(stationTip(sf[0].properties.si)).addTo(map);
+            }
+        }
+    }
+    if (hit !== hoverKind) {
+        map.getCanvas().style.cursor = hit ? 'pointer' : '';
+        if (!hit) hoverTip.remove();
+        hoverKind = hit;
+    }
+
+    for (let i = pinned.length - 1; i >= 0; i--) {
+        const L = pinned[i];
+        if (L.kind === 'station') {
+            L.popup.setHTML(stationTip(L.si));
+            continue;
+        }
+        const pos = trainPositions.get(L.ti);
+        if (!pos) {              // the run has ended, so the pin has nothing left
+            L.popup.remove();
+            pinned.splice(i, 1);
+            continue;
+        }
+        const tr = trains[L.ti];
+        L.popup.setLngLat([pos[0], pos[1]])
+            .setHTML(trainTip(tr.route, pos[2], tr.express));
+    }
+}
+
+// ---------------------------------------------------------------- ui
+const SPEED_STOPS = [1 / 60, 0.05, 0.1, 0.2, 0.3, 0.5, 0.7, 1,
+                     1.5, 2, 3, 5, 7, 10, 15, 20];
+
+function speedLabel(s) {
+    return Math.abs(s - 1 / 60) < 1e-9 ? STR[lang].realTime : s + '×';
+}
+
+function wireUI() {
+    $('play').onclick = () => {
+        playing = !playing;
+        $('play').textContent = playing ? STR[lang].pause : STR[lang].play;
+        anchorSim = simTime; anchorWall = performance.now();
+        invalidate();
+    };
+    $('lang-en').onclick = () => { lang = 'en'; applyLang(); };
+    $('lang-ko').onclick = () => { lang = 'ko'; applyLang(); };
+    $('gear').onclick = () => $('settings').classList.toggle('hidden');
+    $('t-static').onclick = () => {
+        if (staticMode) { setStaticMode(false); return; }
+        loadStatic().then(() => setStaticMode(true));
+    };
+    $('time-slider').oninput = e => {
+        if (staticMode) {
+            staticHour = +e.target.value;
+            renderStatic();
+            return;
+        }
+        simTime = tMin + (tMax - tMin) * (+e.target.value / 1000);
+        anchorSim = simTime; anchorWall = performance.now();
+        invalidate();
+    };
+    $('speed').oninput = e => {
+        speed = SPEED_STOPS[+e.target.value];
+        $('speed-val').textContent = speedLabel(speed);
+        anchorSim = simTime; anchorWall = performance.now();
+    };
+    $('speed').value = SPEED_STOPS.indexOf(1);
+    $('speed-val').textContent = speedLabel(speed);
+    $('dotsize').oninput = e => { dotScale = +e.target.value; invalidate(); };
+    $('t-stations').onclick = e => {
+        showStations = e.target.classList.toggle('on');
+        e.target.textContent = showStations ? STR[lang].on : STR[lang].off;
+        map.setLayoutProperty('stations', 'visibility',
+                              showStations ? 'visible' : 'none');
+        invalidate();   // the waiting dots are drawn by the overlay
+    };
+    $('t-lines').onclick = e => {
+        const on = e.target.classList.toggle('on');
+        e.target.textContent = on ? STR[lang].on : STR[lang].off;
+        map.setLayoutProperty('lines', 'visibility', on ? 'visible' : 'none');
+    };
+
+    document.addEventListener('keydown', e => {
+        if (e.code === 'Space' && !staticMode) {
+            e.preventDefault(); $('play').click();
+        }
+        if (e.code === 'Escape') {
+            for (const L of pinned) L.popup.remove();
+            pinned.length = 0;
+        }
+    });
+
+    // Hover is resolved inside render, so a pointer move has to wake the loop
+    // when the clock is stopped -- and the dot radii track zoom, so a camera
+    // move has to as well.
+    map.on('mousemove', e => { lastMouse = e.point; invalidate(); });
+    map.on('mouseout', () => { lastMouse = null; invalidate(); });
+    map.on('move', invalidate);
+
+    // An unfocused window is often still on screen -- a second monitor, or
+    // sitting beside an editor -- so it keeps running, just slowly. Only a
+    // genuinely hidden page stops, and then the clock freezes with it so
+    // coming back lands where you left off rather than at some arbitrary hour.
+    window.addEventListener('blur', () => { RENDER_MS = RENDER_MS_BLURRED; });
+    window.addEventListener('focus', () => {
+        RENDER_MS = RENDER_MS_FOCUSED;
+        invalidate();
+    });
+    document.addEventListener('visibilitychange',
+        () => (document.hidden ? suspend() : resume()));
+
+    map.on('click', e => {
+        const d = pickDot(e.point);
+        if (d && d.kind === 'train') {
+            const popup = makePopup();
+            popup.setLngLat([d.t.lon, d.t.lat])
+                .setHTML(trainTip(d.t.route, Math.round(d.t.n), d.t.express))
+                .addTo(map);
+            pinned.push({ kind: 'train', popup: popup, ti: d.t.ti });
+            return;
+        }
+        let si = d ? d.si : null, at = d ? [d.lon, d.lat] : null;
+        if (si === null) {
+            const sf = map.queryRenderedFeatures(e.point, {
+                layers: ['stations'].filter(l => map.getLayer(l)) });
+            if (!sf.length) return;
+            si = sf[0].properties.si;
+            at = sf[0].geometry.coordinates;
+        }
+        const popup = makePopup();
+        popup.setLngLat(at).setHTML(stationTip(si)).addTo(map);
+        pinned.push({ kind: 'station', popup: popup, si: si });
+    });
+}
+</script>
+</body>
+</html>

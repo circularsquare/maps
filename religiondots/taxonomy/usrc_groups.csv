@@ -1,6 +1,6 @@
 Group Code,Group Name,path,Congregations,Adherents,counties
 Totals,,,356642.0,161224088.0,
-081,Catholic Church,christianity.catholic.latin.catholic-church,19405.0,61858137.0,2961.0
+081,Catholic Church,christianity.catholic.latin,19405.0,61858137.0,2961.0
 500,Non-denominational Christian Churches,christianity.nondenominational.independent,44319.0,21095641.0,2753.0
 419,Southern Baptist Convention,christianity.baptist.sbc,51379.0,17649040.0,2677.0
 449,United Methodist Church,christianity.methodist.umc,30051.0,8018629.0,2989.0
@@ -24,7 +24,7 @@ Totals,,,356642.0,161224088.0,
 141,Church of God in Christ,christianity.pentecostal.trinitarian.cogic,3313.0,920429.0,782.0
 165,Church of the Nazarene,christianity.holiness.nazarene,5155.0,905690.0,1683.0
 127,"Church of God (Cleveland, Tennessee)",christianity.pentecostal.trinitarian.cog-cleveland,5921.0,868446.0,1544.0
-895,Hindu Temples,hinduism.temples,433.0,831229.0,207.0
+895,Hindu Temples,hinduism,433.0,831229.0,207.0
 271,Reform Judaism,judaism.reform,690.0,662104.0,365.0
 890,Mahayana Buddhist,buddhism.mahayana,969.0,549344.0,252.0
 896,Hindu Yoga and Meditation,UNMAPPED,1378.0,437115.0,396.0

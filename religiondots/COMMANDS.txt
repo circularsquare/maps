@@ -25,8 +25,125 @@ Design and reasoning: spec.md.  Sources and their gotchas: sources.md.  todo.txt
     cd data/geo && unzip -o -q cb_2020_us_tract_500k.zip -d tracts2020
     cd data/geo && unzip -o -q cb_2020_us_county_500k.zip -d counties2020
 
-   No population data is downloaded and none is needed — tracts are built to ~4,000 people
-   each, so an equal share per tract is already a population weighting (spec.md §8.2).
+   Tracts are built to ~4,000 people each, so an equal share per tract is already a
+   population weighting and nothing here needs a population file (spec.md §8.2).  The US
+   now does better than that anyway — see US SUB-COUNTY WEIGHTS below, which reads real
+   tract populations out of ancestrydots and still downloads nothing new.
+
+3. Other countries.  Each sources/<cc>.py rebuilds data/normalized/<cc>.csv and prints a
+   full reconciliation; --fetch downloads the raw files first if they are missing.  Exact
+   URLs, category lists and gotchas are in the matching sources/<cc>.md.
+
+    python sources/cz.py --fetch     # Czechia, one 80MB CSV, ~2 min
+    python sources/br.py --fetch     # Brazil, 54+ SIDRA API calls, ~15 min, ~53MB
+    python sources/pl.py --fetch     # Poland, one 3.5MB xlsx, seconds
+    python sources/ro.py --fetch     # Romania, one 0.5MB xlsx, seconds
+    python sources/ee.py --fetch     # Estonia, two PxWeb API calls, seconds
+    python sources/hr.py --fetch     # Croatia, one 18MB xlsx, ~1 min
+    python sources/in.py --fetch     # India, 38 files scraped off NADA, ~14MB, ~3 min
+
+   au / ca / ie / mx / nz / ph / uk were acquired earlier and have the same shape.
+
+   in.py --fetch ALSO TURNS OFF TLS VERIFICATION, for censusindia.gov.in, and for exactly
+   the same reason as stat.gov.pl below: an incomplete certificate chain that curl,
+   requests and certifi all fail on identically.  Payload validated structurally instead
+   (OLE2/zip magic, expected sheet, expected header at the expected column).  Those are
+   the only two hosts in the project that need it.
+
+   in.py is the one to read if you are adding a country with a NESTED GEOGRAPHY in one
+   column set.  India's C-01 puts state, district, sub-district and town in the same rows,
+   distinguished only by which code is non-zero, and town rows are urban-only subsets that
+   double-count if summed.  It is also the cautionary tale about the C-01 Annexure, a
+   table that is a perfect arithmetic partition and still means nothing (sources.md §9f).
+
+   pl.py --fetch TURNS OFF TLS VERIFICATION for stat.gov.pl, which serves an incomplete
+   certificate chain: it omits the intermediate, so curl and requests both fail with
+   "unable to get local issuer certificate" and certifi cannot help, because the missing
+   certificate is the server's to send.  The file is validated structurally instead --
+   size, real xlsx, all eight expected sheets.  Nothing else in the project does this.
+
+   cz.py is the one to read first if you are adding a country: it is the only source so
+   far that publishes its finest categories at its finest geography, so it is the short
+   version.  br.py is the long version — two censuses twelve years apart, a nested
+   category tree carried in the label text, and a sample that does not sum across
+   geographic levels (sources.md §9b).
+
+4. Boundaries.  Each writes the single merged layer countries.py reads, and prints the
+   join both ways.  Details and gotchas in sources/<cc>_geo.md.
+
+    python sources/cz_geo.py         # needs the two ČSÚ gpkgs first, see sources/cz_geo.md
+    python sources/br_geo.py         # downloads 27 per-state zips (~10 min), then merges
+    python sources/uk_geo.py         # merges the three UK census geographies into one
+    python sources/pl_geo.py --fetch # Eurostat GISCO LAU 2021, one 98MB European zip
+    python sources/ro_geo.py --fetch # the same zip + the 7MB LAU-NUTS correspondence
+    python sources/ee_geo.py --fetch # Maa-amet; does NOT use GISCO, see below
+    python sources/hr_geo.py         # GISCO + correspondence again; no --fetch needed
+
+   pl_geo.py and ro_geo.py SHARE the GISCO download -- run either one with --fetch and the
+   other needs none.  That one file has municipal boundaries for 34 European countries,
+   including Slovakia and Hungary if their counts are ever found (sources.md 11).
+
+   THE POLISH JOIN IS NOT THE OBVIOUS ONE and neither script will let you forget it:
+   GISCO's 13-digit LAU_ID and GUS's 7-digit TERYT share no substring, both sides have
+   exactly 2,477 units, and joining as delivered matches ZERO of them -- a unit-count
+   check passes while the join fails completely.  pl_geo.py derives the key by slicing
+   fixed offsets and asserts the id is still 13 digits before doing it.  Romania needs no
+   decoding at all: its LAU_ID simply IS the SIRUTA code.  The format is PER COUNTRY.
+
+   ro_geo.py also writes ro_uat_lookup.csv, because the Romanian census publishes no
+   geographic codes -- rows are names only.  RE-RUN IT after re-running sources/ro.py, or
+   countries.py raises on a stale lookup.
+
+   ee_geo.py deliberately does NOT use GISCO even though Estonia is in it and joins
+   perfectly: Tallinn is 33% of the country in one polygon there.  It takes Maa-amet's 79
+   municipalities and REPLACES Tallinn with the 8 linnaosad that Statistics Estonia also
+   publishes religion for -- cz_geo.py's trick, and the same justification.  Beware
+   linnaosa_shp.zip, which is not a file: that URL returns HTTP 200 and a 282-byte PNG of
+   an error message, so the script checks the bytes are a zip rather than the status code.
+
+   cz_geo.py merges obce with the 142 city districts that subdivide the 8 statutory
+   cities, because Prague as one obec is 12.4% of the country in a single polygon.
+   br_geo.py takes the 2010 mesh, NOT the current one: five municipios were created since
+   2010 by splitting existing ones, so a current mesh joins perfectly and is wrong
+   (spec §8.1).  It also drops two lakes IBGE ships as municipios.
+
+   au / ie / mx / nz / uk boundaries have NO script -- they were fetched by hand and the
+   curl lines are in sources/<cc>_geo.md, which also picks the placement layer and says
+   why.  Nothing needs merging for those, so countries.py points straight at the shapefile.
+   Read the _geo.md before wiring one: Ireland's Small Area file has TWO GUID columns and
+   only SA_GUID__1 joins -- SA_GUID_20 loses 1,082 areas and 286,262 people, as a warning
+   rather than an error.
+
+4. US self-identification, for spec sec 3.5a -> data/normalized/us_pew.csv
+
+    python sources/us_pew.py         # 51 pages, ~50MB cached, ~3 min cold, instant warm
+
+   Pew's 2023-24 Religious Landscape Study by state.  This is the survey half of the US
+   re-basing: it supplies the ROOT TOTALS and ASARB keeps supplying the structure inside
+   them.  It scrapes because Pew's public-use file carries no geography at all -- state
+   identifiers are restricted-use -- so their own state pages are the only public route.
+
+   The pages server-render the whole page state into one <script type="application/json">,
+   and the tree is read out of it as JSON -- weighted population estimates and sample sizes
+   rather than the rounded percentages the page prints, 149 categories NESTED, plus each
+   state's margin of error.  Re-runs parse from data/raw/us_pew/ without re-downloading;
+   delete that directory to force a refresh.
+
+   THE NESTING IS IN THE OUTPUT (`parent`, `depth`, `group`) AND YOU MUST NOT SUM THE FILE
+   FLAT.  `something-else` is the parent of `unitarians-and-other-liberal-faiths`; adding
+   both counts those people twice.  taxonomy/us_pew2024.py is what cuts across it.
+
+   The script checks three identities before writing and they all hold exactly: children sum
+   to their parent, top-level nodes sum to the published adult denominator, and the 51
+   states sum to the national tree category by category.  THAT LAST ONE ESTABLISHES THAT AN
+   ABSENT CELL IS A TRUE ZERO rather than a suppression -- us_pew.md said the opposite until
+   2026-09-03 and invented ~50,000 missing people to go with it.
+
+   It also still checks that no state reports the national figure exactly, which is the old
+   two-trees bug: an earlier regex version matched category names across the markup, fell
+   through the gap where Utah has no `muslim` node, and gave Utah every Muslim adult in
+   America.  Read as JSON the two trees are separate keys and it cannot recur.
+   sources/us_pew.md 4.
 
 
 ---- TAXONOMY ----
@@ -36,6 +153,15 @@ Design and reasoning: spec.md.  Sources and their gotchas: sources.md.  todo.txt
    Validates branches.py + usrc2020.py and writes religions.json, and fills the `path`
    column in usrc_groups.csv.  Fails loudly on an unmapped group code, a leaf whose parent
    branch does not exist, or a duplicate code.  Run it after editing either hand file.
+
+   It also validates branches.py LINEAGE -- the descent order the panel and the hue wheel
+   both follow (spec §6.5).  ADDING A BRANCH UNDER christianity / judaism / buddhism FAILS
+   THE BUILD until it is given a lineage group.  That is deliberate: without the check a new
+   branch drops silently to the end of the panel and the end of the wheel, still drawn and
+   still the right size, just quietly not where it descends.
+
+   Cheap to run and nothing downstream depends on it -- religions.json is read by the viewer
+   directly, so a lineage or label edit is a page reload, not a re-scatter and re-tile.
 
 
 ---- ALLOCATE (optional, per source) ----
@@ -52,9 +178,201 @@ Design and reasoning: spec.md.  Sources and their gotchas: sources.md.  todo.txt
       --parent-file taxonomy/hierarchy/mx.csv
     python allocate.py --source ie --fine small_area --coarse county --hierarchy parent \
       --parent-file taxonomy/hierarchy/ie.csv --drop "^(All religions|Total)$"
+    python allocate.py --source nz --fine sa2 --coarse national --hierarchy parent \
+      --parent-file taxonomy/hierarchy/nz.csv --tolerance 0.25 \
+      --drop "^(Total|Total stated|Total responses|Residual Categories)$"
+    python allocate.py --source uk --source-id uk_ew_census_2021 --out uk_ew \
+      --fine output_area --coarse msoa --hierarchy parent \
+      --parent-file taxonomy/hierarchy/uk_ew.csv --drop "^(Total|Total: All)"
+    python allocate.py --source uk --source-id uk_ni_census_2021 --out uk_ni \
+      --fine data_zone --coarse lgd --hierarchy parent \
+      --parent-file taxonomy/hierarchy/uk_ni.csv --drop "^All usual residents$"
+    python allocate.py --source in --fine subdistrict --coarse state --hierarchy parent \
+      --within 2 --drop "^(?:Total|Sect: )"             # 8 -> 91 categories
 
-   Writes data/normalized/<cc>_<fine>_allocated.csv.  Output rows are tagged `derived` and
-   must not become rings (§3.10) — scatter.py enforces this.
+   Writes data/normalized/<cc>_<fine>_allocated.csv, or <out>_allocated.csv when --out is
+   given.  Output rows are tagged `derived` and must not become rings (§3.10) — scatter.py
+   enforces this.
+
+   Four flags exist for reasons that are easy to trip over:
+
+   --within N    Allocate INSIDE each coarse unit instead of pooling them all into one
+                 national composition.  Off by default because Australia's coarse table IS
+                 the nation and Canada is near enough.  India is neither and would be
+                 ruined without it: Sanamahi is 100% Manipur and Donyi-Polo 98% Arunachal
+                 Pradesh, so a pooled share puts both in every sub-district in India.  A
+                 fine unit takes the composition of the coarse unit whose geo_id is the
+                 first N characters of its own — 2 for India, since sub-district geo_ids
+                 are state(2)+district(3)+subdistrict(5).
+                 THE SIDE EFFECT IS WORTH MORE THAN THE FIX: the single-child test becomes
+                 per (coarse unit, column), so a state whose only named `Other` religion is
+                 Sanamahi gets an EXACT split rather than an estimate.  245 of India's
+                 (state, column) pairs are exact that way.
+
+   --tolerance   The per-column reconciliation band, default 10%.  Raise it ONLY where the
+                 structure and the totals are different YEARS (spec §3.4) and the gap is
+                 real change.  New Zealand's structure is 2018 and its totals are 2023, so
+                 its Hindu column misses by -14.7% and its Muslim column by -18.2% — both
+                 immigration, both correct, both rejected at the default.  It is not a way
+                 to force a broken mapping through.
+   --source-id   uk.csv holds England-and-Wales AND Scotland at geo_level 'output_area'.
+                 Allocating without this silently mixes two countries: no error, no
+                 warning, wrong answer.
+   --out         Because one source file now produces two allocations.
+
+   Three parent files are GENERATED, not hand-written — regenerate after editing either
+   script rather than editing the csv:
+
+    python taxonomy/hierarchy/make_nz.py      # level-3 code prefix -> level-1 column
+    python taxonomy/hierarchy/make_uk.py      # writes both uk_ew.csv and uk_ni.csv
+
+
+---- US SUB-COUNTY WEIGHTS (spec §8.4) ----
+
+    python us_weights.py --build      # tract segments + fit, ~4 min
+    python us_weights.py --refit      # refit only, from the cached segments, ~40 s
+    python us_weights.py --report     # print the validation table, write nothing
+
+   Decides WHERE INSIDE A COUNTY the US dots go.  ASARB is county-level and there is nothing
+   finer — it does not collect congregation addresses — so Cook County is 5.3M people and
+   Los Angeles 10.0M in one polygon each, and §8.2 spread them evenly.  This places them by
+   demographic composition instead, raked to the ASARB county total so no county's number
+   moves.  Reads ancestrydots' ACS tract tables directly; downloads nothing.
+
+   REQUIRES ancestrydots/data/raw to be populated (its `fetch_data.py --all`), plus three
+   files that need NO API KEY -- api.census.gov refuses unkeyed requests now, but the ACS
+   SUMMARY FILE on www2.census.gov is the same data as flat .dat files and is wide open.
+   That is how B16001 (language at home) gets in, and B16001 is what fixes Judaism:
+
+    curl -sSL -o data/geo/cbsa_list1_2023.xlsx \
+      https://www2.census.gov/programs-surveys/metro-micro/geographies/reference-files/2023/delineation-files/list1_2023.xlsx
+    curl -sSL -o data/geo/acsdt5y2023-b16001.dat \
+      https://www2.census.gov/programs-surveys/acs/summary_file/2023/table-based-SF/data/5YRData/acsdt5y2023-b16001.dat
+    curl -sSL -o data/geo/tract_to_puma_2020.txt \
+      https://www2.census.gov/geo/docs/maps-data/data/rel2020/2020_Census_Tract_to_2020_PUMA.txt
+
+   B16001's finest geography is the PUMA (~100,000 people), not the tract, so everything
+   sourced from it is PUMA-resolution however finely the dots are drawn.  A PUMA's speakers
+   are split across its tracts by the ancestry that CARRIES the language (Yiddish by white
+   population, Malayalam by South Asian).  Without that, PUMA 3604303 -- "Bedford-Stuyvesant
+   & Crown Heights North", 6.2% Yiddish because Crown Heights is the centre of Chabad --
+   made Bed-Stuy 1.3x the borough rate for Orthodox Judaism.
+
+   Writes data/geo/us_tract_segments.csv (8.8MB, cached — --refit reuses it) and
+   data/processed/us_weight_model.json.  Both are gitignored; the hand-authored half lives
+   in us_weights.py itself, which is the file to read.
+
+   TWO TRACKS, and the difference matters more than anything else here:
+
+   fitted     26 nodes that clear r >= 0.25 predicting ASARB's own within-metro variation
+              with WHOLE METROS HELD OUT.  Catholic 0.45, Church of God in Christ 0.61,
+              National Baptist 0.57.  Evidence.
+   authored   31 nodes whose ethnicity is constitutive rather than correlated — Armenian
+              Apostolic is Armenian by canon, Mar Thoma is Kerala.  A claim, not a
+              measurement, and flagged `basis: authored` in the model file.  They exist
+              because a body defined by a 0.2%-of-population ethnicity is NOT learnable
+              from between-county variation at any ridge setting (spec §8.4 has the sweep).
+
+   Everything else stays population-uniform.  DO NOT lower R_MIN to catch more: the gate is
+   the design, and the one node that passed it on a meaningless coefficient — Armenian
+   Apostolic at r = 0.35 with no `armenian` term — drew Armenian dots in San Gabriel.
+
+   JUDAISM WAS THE KNOWN BAD CASE and is now the best-placed body on the US map.  Before
+   B16001 it drew Borough Park at 58% CATHOLIC: Orthodox Judaism correctly got no weights,
+   and Catholic, which did, took the space.  A MISSING PREDICTOR IS NOT NEUTRAL -- the
+   bodies that can be placed absorb what the missing one should have held.
+
+    Borough Park   1.0x -> 4.4x      Kew Gardens Hills (Modern Orthodox)  4.3x
+    Williamsburg        -> 2.7x      Pico-Robertson, LA                   5.8x
+    Midwood             -> 2.2x      Beverly-Fairfax, LA                  8.0x
+    Bed-Stuy (no Jews)  -> 1.1x      West Rogers Park, Chicago            2.5x
+
+   It is AUTHORED, not fitted, and will stay that way: r = 0.07 under metro holdout because
+   79% of Orthodox Judaism is in one metro.  The check that earned it is that the top
+   Yiddish PUMAs in the country are Monsey, Borough Park, Kiryas Joel, Williamsburg and
+   Lakewood, in that order -- then Holmes County OH and Lancaster PA, which are Amish,
+   because the census category is "Yiddish, Pennsylvania Dutch or other West Germanic" and
+   both halves of that lump are wanted.
+
+   THE §3.5a RESIDUAL HAS ITS OWN MODEL (spec §8.4a), fitted against CES rather than ASARB,
+   and applied ONLY to `derived` rows.  It must never share the roll model: placing the
+   people on nobody's roll by a model of where the rolls are puts them in the one place
+   they are not.  Seven nodes clear the bar -- hinduism 0.62, christianity 0.51, secular
+   0.46, islam 0.46, judaism 0.45, unaffiliated 0.44, other.us 0.32.
+
+   Needs two more keyless summary-file tables (education and age -- ancestry says who
+   people descend from, not whether they go to church) and the CES microdata:
+
+    curl -sSL -o data/geo/acsdt5y2023-b15003.dat \
+      https://www2.census.gov/programs-surveys/acs/summary_file/2023/table-based-SF/data/5YRData/acsdt5y2023-b15003.dat
+    curl -sSL -o data/geo/acsdt5y2023-b01002.dat \
+      https://www2.census.gov/programs-surveys/acs/summary_file/2023/table-based-SF/data/5YRData/acsdt5y2023-b01002.dat
+    curl -sSL -o data/raw/ces_cumulative_2006-2025.feather \
+      https://dataverse.harvard.edu/api/access/datafile/14076522     # 144MB, ~20s
+
+   PRRI's county file is the obvious ground truth for the residual and is USELESS for it:
+   those estimates are themselves a demographic small-area model, so scoring a demographic
+   model against them proves nothing.  CES is raw microdata with a county FIPS per row.
+
+   WATCH FOR ACS JAM VALUES.  -666666666 means "no estimate", not a number.  Left in,
+   median age had a standard deviation of 2,560, dominated the ridge trace, and shrank
+   EVERY coefficient to zero -- the fit reported no signal while the raw correlations were
+   0.4-0.6.  A null from a fitted model is a claim about the fitter first.
+
+   STILL WEAK: Hindu placement in the South Asian corridors (Jackson Heights 0.9x, Devon
+   Ave 0.8x, where both should be well over 1).
+
+   To see the difference the whole thing makes, scatter twice:
+
+    python scatter.py --country us --state 17 --dot-value 100
+    python scatter.py --country us --state 17 --dot-value 100 --no-weights
+
+   --no-weights writes dots_us_17_unweighted.geojson, so it does not overwrite the real one.
+   County totals per node are identical between the two by construction; only placement
+   inside a county changes.
+
+
+---- US RE-BASING ON SELF-IDENTIFICATION (spec sec 3.5a) ----
+
+    python us_rebase.py --report      # the state table and the overflow record; writes nothing
+
+   NOTHING TO RUN AS A BUILD STEP.  countries.py calls residual_counts() itself, so a US
+   scatter already includes this; --report is the only command and it is for reading.
+
+   What it does: Pew's 2023-24 survey supplies each state's total per religion, ASARB's rolls
+   stay exactly as they are INSIDE that total, and the difference is spread over each county's
+   people who are on nobody's roll -- population minus adherents, which is the same pool the
+   unaffiliated come out of.  The US goes from drawing 48.4% of Americans to 98.6%, and the
+   American non-religious become drawable at all for the first time.
+
+   THE RESIDUAL IS 166.2M PEOPLE, so a little over half the US map is a `derived` row and
+   is tagged `derived` (sec 7).  NOTHING ON SCREEN SHOWS THAT -- the desaturation that used to
+   was removed 2026-09-04, because every colour on the map has to be a colour in the legend.
+   The country note is the only thing that says so.
+
+   Four things that are easy to get backwards:
+
+   - THE ROLL IT SUBTRACTS IS ASARB'S COUNTY SHEET, NOT ITS STATE SHEET.  The state sheet has
+     160,786,973 mapped adherents and the county sheet 160,572,400 -- 214,573 people belong to
+     a state and to no county in it.  Subtract the state figure and those people vanish from
+     the national total.  countries.py passes its own frame in so both read the same thing.
+
+   - _us_counts() IS STILL ASARB-ONLY AND MUST STAY THAT WAY.  us_weights.py fits its sec 8.4
+     model against it, and fitting a model of where ASARB's adherents live against rows that
+     are a survey residual is training on the output.  _us_counts_rebased() is the one
+     COUNTRIES points at.
+   - THE RESIDUAL DOES NOT GO THROUGH THE SEC 8.4 WEIGHTS.  Those betas predict where people
+     ON a roll live; the residual is by definition the people not on one, so it takes tract
+     population alone (`weights(..., plain=True)`).
+   - 30 COUNTIES GET NO RESIDUAL, and that is right.  Those are sec 3.6's counties reporting
+     more adherents than residents, so their pool is negative and clips to zero.  3,113 of
+     3,143 counties receive the spread.
+
+   The overflow record is the part worth reading: 94 (state, root) pairs where a roll beats
+   the survey, 1.63M people, charged to those states' unaffiliated.  Islam is 1.18M of it
+   across 30 states and is NOT a roll beating a survey -- ASARB's figure there is a body
+   named "Muslim Estimate", so it is two estimates disagreeing.  Utah's Christianity is 295k
+   more.  Everything else together is 153k.
 
 
 ---- SCATTER ----
@@ -63,31 +381,235 @@ Design and reasoning: spec.md.  Sources and their gotchas: sources.md.  todo.txt
 
     python scatter.py --country us                 # 1 dot = 1,000 people
     python scatter.py --country ca
+    python scatter.py --country cz                 # seconds
+    python scatter.py --country ie                 # seconds
+    python scatter.py --country au                 # ~2 min
+    python scatter.py --country mx                 # ~3 min
+    python scatter.py --country nz                 # seconds
+    python scatter.py --country uk                 # ~4 min, 239,023 units
+    python scatter.py --country pl                 # seconds
+    python scatter.py --country ro                 # seconds
+    python scatter.py --country ee                 # seconds, 958 dots -- the smallest
+    python scatter.py --country hr                 # seconds
+    python scatter.py --country br                 # ~8 min
+    python scatter.py --country in                 # ~25 min, THE slow one: 1,207,981 dots
     python scatter.py --country us --state 36      # one state, seconds — for iterating
 
-   Writes data/processed/dots_<cc>.geojson and rings_<cc>.geojson.
+   THE SECOND EDITION, 1:10,000 (spec §4.1b).  Every country needs one before tiles.py
+   --coarse will run.  Output is dots_<cc>_10k.geojson, so it does NOT overwrite the fine
+   build -- both have to be on disk at once.  Ten times fewer dots, so it is fast: the whole
+   set is about 12 min, India 94s.
 
-   CAREFUL: --state overwrites the same output file as a full run.  Re-run without it before
-   tiling, or you will tile one state and not notice.
+    python scatter.py --country in --dot-value 10000
+    ... and the same for the other thirteen.
 
-   No population data is read.  Dots are placed in whatever fine unit the country's agency
-   designs to a population target (US tracts, Canadian dissemination areas, ABS SA1s), an
-   equal share per unit (spec §8.2).
+   It is a SECOND SCATTER, not a subsample of the first, and that is deliberate: showing one
+   dot in ten would make the counts hold only in expectation (breaking §4.1's "count the
+   dots") and would make a three-dot group appear or vanish on the seed.  A real run drops it
+   deterministically, and §4.3 then gives it a ring.
+
+   WHAT THE COARSE EDITION LOSES, because it is not only a rendering choice: the floor under a
+   group rises tenfold.  Where a count is `measured` the group becomes a presence ring and is
+   still findable (us +109 rings, cz 31, ee 12).  Where it is `derived` it just goes, because
+   §3.10 forbids an allocated count from asserting presence -- India drops from 17 nodes to
+   15, losing Bahá'í and Judaism with no mark at all.  1:1,000 stays the default for that
+   reason.
+
+   Writes data/processed/dots_<cc>.geojson and rings_<cc>.geojson.  The ring file is now
+   small on purpose: one ring per religion that draws no dot anywhere in the country (spec
+   §4.3).  Rows with no count at all are not drawn -- that needs §4.4, not a ring.
+
+   CONFIDENCE (spec sec 7) rides along.  An adapter may return a `tier` column -- measured /
+   derived / modelled -- and a dot gets `t: 1` or `t: 2` for the last two; measured is the
+   default and is written nowhere.  The viewer does NOT render it -- see sec 7, the fade was
+   removed 2026-09-04 -- but the attribute is carried for whatever replaces it.  THE TIER IS PART OF
+   THE GROUP KEY, not aggregated over it: a (unit, node) pair holding both a census row and
+   an allocated one becomes two rows and its dots divide in proportion.  Taking the weakest
+   tier per pair instead drew 764 of Ireland's 4,295 measured dots as derived, because one
+   tiny allocated row relabelled a large measured one.  spec sec 7.
+
+   CAREFUL: --state writes dots_us_<state>.geojson, which tiles.py does NOT read -- it reads
+   dots_us.geojson.  So the danger is the other way round from what it looks like: a --state
+   run leaves the national file untouched and STALE, and tiling after one builds an archive
+   from whatever the last full run left behind, with no symptom.
+
+   Dots are placed in whatever fine unit the country's agency designs to a population target
+   (US tracts, Canadian dissemination areas, ABS SA1s), an equal share per unit, and for
+   every country but the US no population data is read at all (spec §8.2).  The US is the
+   exception: countries.py gives it a `place_weight` hook, so it uses real ACS tract
+   populations and a demographic estimate on top (spec §8.4, and the section above).  Any
+   country can have one; none of the others does yet.
+
+   Fractions are NOT floored away per unit, and they are NOT handed to the top n either
+   (spec §4.1a).  The carry runs along a HILBERT CURVE through the units: walk them in
+   spatial order, add up the people, and drop a dot wherever the running total passes
+   dot_value.  A group with 400 people in each of a hundred units draws 40 dots instead of
+   nothing, and each one lands among the people who contributed it.
+
+   The largest-remainder version this replaced (2026-09-02 to 2026-09-03) kept every
+   national total exactly right and was wildly wrong in space -- Whitechapel is 22%
+   Christian and drew no Christian dot at all.  If the allocation is ever changed again,
+   check a MINORITY in a place where it is a minority, not the national totals: the totals
+   cannot see this class of bug.
+
+   What is lost is under one dot per node nationally.  The run prints the carry, the true
+   unrepresented figure, and the ring-candidate count; the second is the one to watch.
 
 
 ---- TILES ----
 
-    python tiles.py --countries us,ca              # one archive, merged across borders
+    python tiles.py --countries us,ca,cz,br,au,ie,mx,nz,uk,pl,ro,ee,hr,in --coarse  # ALL
+    python tiles.py --countries us,ca,cz,br,au,ie,mx,nz,uk,pl,ro,ee,hr,in           # fine only
+
+   --coarse also packs the 1:10,000 edition as dots10k / atomic10k / rings10k, which is what
+   lets the viewer offer "1 dot = 1,000 / 10,000 people" in the legend.  Without it the
+   archive has one edition and the control greys itself out -- the viewer reads which
+   editions exist from counts.json `dot_values` rather than assuming, so the two cannot
+   disagree.  It needs every country's --dot-value 10000 scatter to exist first, and says
+   which one is missing if not.
     python tiles.py --countries us --max-zoom 6    # quick, for iterating
+    python tiles.py --refresh-meta                 # counts.json text only, ~1 second
+
+   THE ARCHIVE IS THE WHOLE PICKER.  --countries is not a filter over an existing archive,
+   it REPLACES it, and counts.json with it -- so retiling with a short list silently drops
+   every country not named from the map.  This has already happened once: a rebuild with
+   us,ca,cz removed Brazil and nothing reported anything.  The flag defaults to `us` alone.
+   Always pass every country that has a dots_<cc>.geojson, and check the per-country lines
+   at the end of the run against what you expected.
+
+   All thirteen at z0-10: about 15 minutes, 52.1 MB, 28,191 tiles, 667,131 dots.  (Nine was
+   47.7 MB / 25,537 tiles / 615,954 dots, so pl+ro+ee+hr cost ~4.4 MB between them.)
+
+   us,ca at z0-10 takes about 7 minutes and holds ~3.5 GB while it does -- the whole tile
+   sink is in memory until the encode.  --refresh-meta exists so that editing a country's
+   name, source, basis, note or view box does not cost that: it rewrites only those fields
+   in counts.json from countries.py and leaves the tiles and the tallies alone.
 
    Writes data/processed/religiondots.pmtiles and counts.json.  Countries go into ONE archive
-   so the merge (spec §4.2) works across a border rather than stopping at it.
+   because the tile pyramid is shared, but every feature carries `c` and the merge groups by
+   it, so marks never combine across a border -- the viewer draws one country at a time and a
+   mark merged across the 49th parallel would belong to neither side of it (spec §6.2).
+
+   counts.json is per country: name, source, basis, note, bbox and the dot/ring tallies, all
+   read from countries.py.  A new country that does not fill in `name`/`source`/`basis` shows
+   up in the picker as its bare country code.
 
    NOT tippecanoe.  Tippecanoe's job at low zoom is to DROP features until the tile fits a
    byte budget, so which dots survive is close to arbitrary and a small group blinks in and
    out as you pan.  tiles.py MERGES instead: nearby dots of the same religion become one
    mark carrying `k`, and the viewer draws area proportional to k (spec.md §4.2).  Nothing
    is ever dropped.  It also means no WSL, whose C: mount is broken on this machine.
+
+
+---- CHECK A TAXONOMY MAPPING ----
+
+    python tools/check_mapping.py pl           # or ro / cz / au / br / ie / mx / nz / uk / ca
+
+   Checks a country's taxonomy mapping against its normalised data: every source category
+   either resolves or is explicitly EXCLUDED, every node it points at exists in
+   branches.py, and how many people land on each node.  An unmapped category is NOT an
+   error anywhere downstream -- countries.py drops rows whose node is NaN -- so without
+   this it silently removes people from the map.  build_tree.py has always checked
+   usrc2020.py this way; no other country's mapping had anything until 2026-09-03.
+
+
+---- PALETTE ----
+
+    python tools/check_palette.py
+    python tools/check_palette.py --all        # list every colour and its contrast
+
+   The top-level family colours are hand-written in ROOT_HSL in index.html (spec §6.3).  This
+   reads them back OUT of index.html -- not a copy -- and measures, against counts.json, whether
+   every pair of families that co-occurs in a built country is far enough apart in CIE Lab to be
+   told apart as two 2px dots.  21 of the 30 families share one indigo-magenta wedge, so
+   separation is a property of the table AGAINST a country's tallies and changes whenever a
+   country lands.  Run it after a re-tile, and after editing ROOT_HSL.
+
+   It also names any root with no authored colour.  Those fall back to a generated wheel
+   position, which looks fine and means nothing -- add a line to ROOT_HSL instead.
+
+   READ THE "dim against the map background" LINE, not just the separation pairs.  As of
+   2026-09-03 it says unaffiliated (2.6), daoism (2.3), unification (2.7).  unaffiliated is
+   worth watching because it is 68% of Czechia and 58% of Estonia at HSL(234,26,41), but it
+   IS legible when drawn -- spec 11.6 has the detail, including the mistake of reading a
+   screenshot with the no-religion layer switched off as evidence that it was not.
+
+   WHEN CHECKING WHETHER A COLOUR IS TOO DIM, TURN THE LAYER ON FIRST.  The viewer hides
+   `unaffiliated` by default (HIDDEN_ROOTS in index.html), so a country whose majority
+   answer is "no religion" looks empty for a reason that has nothing to do with the palette.
+
+    python tools/check_overview.py
+    python tools/check_overview.py --all               # list every drawn colour
+    python tools/check_overview.py --depth 3
+    python tools/check_overview.py --focus christianity   # the full-wheel palette instead
+
+   check_palette.py measures the thirty family hues against each other, which is the depth-1
+   question.  This is the depth-2 one, and it is where the collisions actually are: the
+   all-religions view puts every family inside a band around its own hue (spec §6.9), so what a
+   reader compares is Catholic against Baptist inside 46 degrees of yellow.
+
+   It splits its report in two and the split is the point.  Pairs ACROSS families under dE 25
+   are failures -- the first thing a dot has to say is which family it is.  Pairs INSIDE one
+   family are held to dE 12 and listed separately, because the overview MEANS those to be close
+   (spec §6.9's honest limit: 22 Christian branches do not fit in 46 degrees and no allocation
+   fixes that).  One bar would bury the two real failures under three hundred expected ones.
+
+   Needs node on PATH.  The colours come out of index.html itself via tools/palette_dump.js,
+   which slices the allocator's own declarations out of the inline script and runs them -- same
+   rule as check_palette.py reading ROOT_HSL, so the checker cannot drift from the palette.  If
+   index.html stops declaring one of the names it slices, palette_dump.js says which.
+
+    python tools/scan_identities.py
+
+   Finds nodes that are the SAME THING at two depths -- a branch whose single child is the
+   branch, which is what "Hindu Temples" under Hinduism and "Catholic Church" under Latin
+   Catholic both were (spec §2.5).  Lists single-child branches, branches where one side of a
+   split holds under 2%, and which countries put the dots on each side.  Run it when a source
+   lands: this defect is invisible in the taxonomy and obvious on the map.
+
+   Read the second half too.  A branch whose one drawn child holds 96% of it is usually NOT an
+   identity -- the siblings are below the dot floor, presence pruning already draws it as one
+   row, and collapsing it would throw away what the next source reports.
+
+    python tools/scan_congregations.py
+
+   What one congregation is worth, for spec sec 4.4.  155 of ASARB's 373 bodies report
+   congregations and no membership, and this is the check on whether a per-family ratio can
+   convert them.  Prints the spread of adherents per congregation, whether it tracks body
+   size, the spread within each branch, every counted body outside Christianity, and what
+   each congregations-only body would be estimated at and from what.
+
+   The finding is in the docstring: the ratio runs 18 to 3,188, and the largest cut is not a
+   Christian family boundary but Christianity itself -- 134 per congregation against 541
+   outside it, Hindu temples at 1,920.  A fallback that crosses that line is wrong in a fixed
+   direction, so the search stops at the L1 root.  That still carries 144 of the 155 bodies;
+   the 11 left are religions ASARB counted nobody in.
+
+    python tools/scan_selfid_gap.py
+
+   Whether a self-identification total survives subtracting ASARB's rolls -- the feasibility
+   check behind spec sec 3.5a, run before the decision rather than after.  Pew's figures are
+   hand-entered with their URLs beside them rather than read from us_pew.csv, deliberately:
+   this is the check, so it does not share code with the thing it checks.
+
+    python tools/check_pew_mapping.py            # the four checks and the national table
+    python tools/check_pew_mapping.py --states   # every state, every root
+
+   Checks taxonomy/us_pew2024.py, the sec 3.5a cut across Pew's tree.  check_mapping.py
+   cannot do this one: it tests a flat category list against a normalised <cc>.csv, and the
+   thing that goes wrong with a TREE is not an unmapped category but a mis-placed cut --
+   take a node and its child and those people are counted twice, take neither and they are
+   dropped.  So it checks that the cut partitions all 51 states exactly, that nothing is
+   stranded, that every target exists in branches.py, and that every root ASARB counts
+   adherents in has a survey line.
+
+   Then it prints the two tables worth having.  The first is what the cut gives each root.
+   The second is WHERE SEC 3.5a's CAP-AND-RECORD ACTUALLY FALLS, over all 51 states rather
+   than the eight scan_selfid_gap.py checked by hand, with the child conversion applied:
+   62 of 255 (state, root) pairs are negative but they are only 1.69M people, 70% of that
+   is Islam -- the "Muslim Estimate" calibration case sec 3.5a already named -- and
+   CHRISTIANITY IS NEGATIVE IN UTAH AND NOWHERE ELSE, which is the spec's claim confirmed
+   at full coverage.
 
 
 ---- LOCAL DEV SERVER ----
@@ -102,7 +624,39 @@ Design and reasoning: spec.md.  Sources and their gotchas: sources.md.  todo.txt
 
 ---- NOT DONE YET ----
 
-  - any country but the US
+  - THE PHILIPPINES is the only normalised source not drawn.  It needs boundaries
+    downloaded (nothing in data/geo/ph) and is awkward anyway -- 129 categories is the best
+    in the set, but 117 provinces for 109M people is ~930k per unit, three times coarser
+    than any unit now on the map.
+  - the other thirteen all scatter and tile.
+  - CROATIA'S SHEET 5 IS THE BIGGEST UPGRADE OUTSTANDING ANYWHERE.  DZS names 54 individual
+    churches at the same geography Croatia is already drawn at -- four Orthodox
+    jurisdictions apart, eleven Jewish communities by city, two Old Catholic churches --
+    and the drawn map uses 12 categories instead.  It refines two of sheet 2's residual
+    categories rather than replacing the partition, which is a design decision and not a
+    parsing one, so it was deferred rather than guessed.  sources/hr.md 4.
+  - ZAGREB IS ONE POLYGON HOLDING 18.4% OF CROATIA, and it is the only capital in the
+    project where the census DOES publish the split (17 gradske cetvrti) and only the
+    BOUNDARIES are missing.  GISCO stops at the municipality and OSM has nothing at
+    admin_level 9 or 10 inside Zagreb.  One boundary file with 17 polygons fixes it;
+    untried are DGU's Registar prostornih jedinica, data.gov.hr and Zagreb's geoportal.
+  - ESTONIA'S 44-CATEGORY LIST IS NOT ALLOCATED DOWN.  Anglicans, Quakers, Mormons,
+    Wiccans and Theosophists are in ee.csv at settlement_type level and drawn nowhere.
+    allocate.py is not obviously valid there -- settlement type is not a partition a
+    municipality nests inside -- so it needs the county table as the coarse tier instead.
+  - cz, br, pl and hr are not mapped below branch level (see below).  Poland is the best
+    candidate, because its 216 categories are already named institutions.
+  - BRAZIL IS DRAWN AT 2010.  spec §3.4's rescale — 2022 municipal totals split by 2010
+    municipal shares, tagged structure_year/total_year — is the intended end state and is
+    not built.  The hard part is the category correspondence: `Outras religiosidades` means
+    an 11,307-person leftover in 2010 and a 7,079,101-person catch-all in 2022, so the two
+    years cannot be joined on category name (sources/br.md §3).
+  - Brazilian placement is uniform-within-municipio, which in Amazonia spreads a town over
+    an area the size of England.  IBGE's setor censitario (~310,000 units, built to a
+    household target) is the §8.2 fix and is not downloaded (sources/br_geo.md §8).
+  - neither cz nor br is mapped below branch level (spec §2.4), so the viewer shows e.g.
+    one Pentecostal node rather than Assembleia de Deus and Congregacao Crista apart.  The
+    source category name is on every row, so deepening costs nothing and redoes nothing.
   - the genealogy half of the tree panel (spec.md §10)
   - residuals are computable from ASARB's own population column but are not drawn
   - hosting: ancestrydots puts its .pmtiles on Cloudflare R2 because GitHub Pages breaks

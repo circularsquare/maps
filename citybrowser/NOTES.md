@@ -254,58 +254,66 @@ and `card.js` skips both blocks when conf is `none`.
   "Hwang Ho" for the Huang He, "Si" for the Xi. 189 distinct, and 4,575 of
   11,422 centres have none. Worth overriding by hand where it shows.
 
-## Tile basemap: DONE, raster, on by default
+## Basemap: MapLibre vector tiles — `js/basemap.js`
 
-`js/tiles.js`. Settings panel → Basemap. The coarse zoomed-in coastline is
-fixed: at Tokyo you now get the real bay, the reclaimed islands and the Sumida
-instead of one straight-edged polygon.
+Supersedes the hand-rolled raster layer below. Settings → Basemap. The map is
+now a real MapLibre map with the bubbles on a transparent canvas over it, the
+same shape as cityhistory, and pinned to the same `maplibre-gl@5.24.0` so an
+upgrade is one decision rather than two.
 
-**Why it was cheap.** The map's projection already *is* the XYZ tile grid —
-`data.js` stores `nx=(lon+180)/360` and `ny=mercY(lat)`, which is normalised Web
-Mercator, so tile `(z,X,Y)` covers exactly `nx ∈ [X/2^z,(X+1)/2^z]`. Nothing to
-reproject. Level is `round(log2(k/256))` where `k` is world-width in CSS px.
+**What the raster version was, and why it went.** `js/tiles.js` (deleted) drew
+CARTO PNG tiles straight into the bubble canvas, because the map's projection
+already *is* the XYZ tile grid — `nx=(lon+180)/360`, `ny=mercY(lat)` is
+normalised Web Mercator, so tile `(z,X,Y)` covers exactly
+`nx ∈ [X/2^z,(X+1)/2^z]` and there was nothing to reproject. It worked, and it
+kept MapLibre from owning the canvas. But it was a tile client: an LRU, an
+inflight cap, a parent-tile stand-in, a seam-free rounding rule, a Natural Earth
+geojson under-layer for the offline case. All of that is gone, and so is
+`ne_50m_land.geojson` (1.6 MB off every page load).
 
-**Raster, not vector.** Vector tiles mean MapLibre, and MapLibre wants to own
-the canvas — which takes the draw loop, the density thinning and the hit-testing
-with it. Raster is one `drawImage` per tile into the canvas `map.js` already
-owns, and all three of those stay untouched.
+**The bubbles are still not a MapLibre layer**, which is the part worth
+keeping: `js/map.js` still owns the draw loop, the density thinning, the
+curation-aware colours and the "largest dot under the cursor wins" hit test.
+The glue is 40 lines.
 
-**The geojson layer stays** as the under-layer. It is local, so it paints
-instantly and works with no network — that is what stops a slow or absent tile
-fetch from showing bare water. `tiles.covered()` skips it once every visible
-tile is decoded, since it is then invisible anyway and costs ~50k path ops on
-every mousemove of a drag.
+- **Projection.** A flat affine off `map.transform` — `ws = 512·2^zoom`, then
+  `(n − centre)·ws + W/2`. No `map.project()` per point, which is the whole
+  reason the affine exists. It cannot follow bearing or pitch, so **rotation and
+  tilt are disabled** — otherwise right-drag spins the basemap out from under
+  bubbles that stay put.
+- **`view.scale` survives** with its old meaning (1 = one world across the
+  viewport), because the URL hash, `flyTo()` and the radius curve are all
+  written in those terms. `minZoom` is the zoom where scale is 1.
+- **Redraw on `'render'`**, not just `'move'` — that is the only way to stay in
+  step mid-animation. A vector style fires `'render'` for every tile fade-in
+  too, so the handler skips when the transform signature is unchanged.
+- **World copies.** MapLibre repeats the world; the copies a city lands in are
+  solved for rather than looped over, and the copy index is part of the
+  occupancy key or the west copy of a city gets suppressed by its own east copy.
+- **Cursor moved from CSS to JS.** MapLibre writes an inline cursor on its
+  canvas while dragging and an inline style beats a stylesheet. `data-tool` on
+  `<body>` is still the contract for what the pointer means.
 
-Details worth not rediscovering:
+**Styles.** OpenFreeMap. Default is Positron **with the symbol layers stripped**
+— OpenFreeMap ships no labelless variant, and the old raster default was
+`light_nolabels` for a good reason: the basemap's own city names fight the
+bubbles, which are the entire point of the map. Also offered with labels, plus
+Bright, Liberty, and off.
 
-- **Seams.** Round the *shared edge* of adjacent tiles (`round(sx(x/n))` and
-  `round(sx((x+1)/n))`), never a position and a width independently — that way
-  both neighbours agree on the boundary by construction and no hairline gaps
-  appear in the fill.
-- **Parent fallback.** A missing tile is drawn from whatever ancestor is already
-  cached (up to 5 levels), so a zoom reads as "sharpening" rather than "blank,
-  then a flash". The parent level is also prefetched.
-- **No longitude wrap**, deliberately. The city dots do not repeat, so a
-  repeating basemap would show land with no cities on it and read as a bug.
-- `@2x` tiles when DPR > 1; `MAX_INFLIGHT` caps a fast zoom at 16 GETs.
-- Attribution is a **licence condition** on every source here, not decoration.
+Every style is **repainted into the app palette** on `style.load` — `water` and
+`background` are set from `--water` and `--land` read out of the CSS, so the old
+"Positron water is grey, ours is light blue" break is fixed rather than
+tolerated, and `css/app.css` stays the one place those colours are defined.
 
-**Style choice: `light_nolabels` is the one to use.** Positron's greys sit under
-the population ramp without competing. Tested and rejected: **Voyager**, whose
-amber roads are the *same hue* as the mid-size-city dots — the roads read as
-cities. **With labels** works but the basemap's own city names fight the
-bubbles, which are the entire point of the map.
+**No NavigationControl.** The map had no zoom buttons before this change and the
+bottom-right corner belongs to `#status` and the attribution pill. Attribution
+is a licence condition and comes from the style's own sources via
+`AttributionControl`, so it cannot drift out of date with what is drawn.
 
-Known cosmetic break: Positron water is grey (`#d4dadc`), the palette's is light
-blue (`#d8e6f2`). Only visible at the edges and before tiles load. Left alone —
-tinting tiles per-frame is not worth it.
-
-Default is **on** (`light_nolabels`). Off was the first default and it was the
-wrong one: with tiles off the zoomed-in coastline is visibly wrong, so off is
-the worse first impression rather than the safer one. Offline is unaffected —
-the geojson layer underneath is local and paints whenever no tile arrives.
 Choice persists in `localStorage`; `?basemap=<id>` overrides it, the same way
-`?city=` and `?q=` do, which is also how it gets screenshot-tested.
+`?city=` and `?q=` do, which is also how it gets screenshot-tested. A stale
+stored id from the raster era (`light_nolabels`) falls back to the default
+rather than erroring.
 
 ## Decided
 
@@ -744,7 +752,8 @@ the work is on disk but nothing shows it. Currently 4 overrides, all resolve.
 
 ## Point kinds, settings, and the China gap
 
-`kinds.py` classifies every point as **city / aggregate / admin**; settings
+`kinds.py` classifies every point as **city / aggregate / rural / district /
+admin** (the last two sets added later — see "Two more kinds" below); settings
 panel toggles them, cities only by default, choice persisted in localStorage.
 Card shows the type ("city", "borough of New York City", "prefecture of Japan").
 `fetch_type_labels.py` pulls English labels for all 1,449 P31 types in use.
@@ -790,6 +799,76 @@ city status`, `city of Bosnia and Herzegovina`, …), now in
 unevenly imported into Wikidata, dense in Hebei/Shaanxi/Guizhou and thin
 elsewhere. That is a real upstream gap, not ours — but it is below city scale,
 so the city layer is now complete.
+
+## Two more kinds: `rural` and `district`
+
+city 50,675 · rural 7,041 · aggregate 2,114 · district 2,036 · admin 0.
+
+**`rural` is not really about rural.** The framing that survived contact with
+the data is *area versus place*: is the row a settlement, or the administrative
+area a settlement sits in? Los Angeles County was drawing at 10.0M, Cook County
+at 5.3M, Harris County at 4.7M — three of the biggest bubbles in North America,
+none of them a place anyone is from. 2,364 US counties were classified `city`.
+
+The **10,000 population floor already does the "rural" half of the job**, and
+that is what settles the fuzzy cases:
+
+- **French communes are NOT in the set.** Every commune that clears the floor
+  has ten thousand people in it. Nice, Marseille, Nantes and Toulouse are all
+  `commune of France` and **969 of the 1,099 carry no other type**, so flagging
+  the class deletes French cities, not French countryside.
+- Same argument keeps out **Brazilian municipalities** (3,096, plain city names
+  — Abaetetuba, Criciúma) and **Philippine municipalities** (1,397 — Bay,
+  Alaminos, Tanza). In both countries that class *is* the town layer and no
+  other layer is fetched; dropping it would blank the map outside the big
+  cities.
+- What is in: the layer **above** the town. Counties, US civil townships, New
+  York State towns, Mexican municipios (908 of 939 are literally named "X
+  Municipality"), South African local municipalities (236 of 237 likewise),
+  upazilas (492 of 495 named "X Upazila"), Indonesian regencies, Polish gminas.
+
+**The rule is weak, with a NEUTRAL escape hatch.** `rural` fires only when
+nothing in the row argues otherwise — but a set of classes that do not, on their
+own, say "settlement" must not veto it. Without `NEUTRAL` the rule badly
+under-fires: 130 of the 152 New York towns also carry `town in the United
+States`, 359 of the 576 Moroccan rural communes also carry the plain `commune of
+Morocco`, 58 of the 358 Indonesian regencies carry the generic second-level
+class. A class earns a place in `NEUTRAL` only when carrying it *alone* would
+still be correctly a city — `town in the United States` alone is a New England
+town, and stays one.
+
+**`district` is decisive**, like `aggregate`, because none of its classes is
+ever carried by a whole city: `ward of Japan` is only ever a ku, `borough of New
+York City` only ever one of the five. Manhattan and Queens carry `consolidated
+city-county` alongside, and decisiveness is what stops that outvoting the
+borough. Tokyo's 23 special wards, Paris's arrondissements, Moscow's and
+Bangkok's and São Paulo's districts, and the per-city quarter/borough classes
+across Europe.
+
+**China, since it was the stated worry.** A city there can be a whole
+prefecture, and county-level cities sit *inside* prefecture-level ones, so "is a
+subdivision" cannot mean "is not a city". Both Chinese city classes are absent
+from `DISTRICT`, and exactly **one** row in the data carries a district class
+alongside one of them — Beibei District, 835k, a district of Chongqing that used
+to be a county-level city. It is a district today, so the decisive rule gets it
+right, and there is no special case.
+
+**`admin` is now empty**, because its only real member was `county of New York`
+and every US county class moved to `rural`, which is evaluated first. Nothing is
+left that claims *only* to be a county seat. `main.js` hides a toggle whose
+count is zero rather than showing a control that does nothing — the kind is
+still in the code, so it comes back on its own if the data ever produces one.
+
+**Neighbourhoods are deliberately still cities** and are the open question in
+TODO.md, not part of this: `neighborhood` (722), `suburb` (925), `area of
+London` (265), `mahalle` (1,487), `Ortsteil` (155) — ~3.4k points. The *per-city*
+classes (neighborhood of Madrid, locality of Berlin, neighborhood in Brooklyn)
+are official subdivisions of one named city and did go into `district`; those
+five are generic and would sweep up standalone suburbs.
+
+`tools/tally_types.py` is the report these sets were picked from — rerun it
+before editing them, since a class that has grown from 4 rows to 400 is exactly
+what a hand-curated list gets wrong.
 
 ## Build
 

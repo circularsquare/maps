@@ -72,7 +72,11 @@ REVIEW = {
 
 MAP = {
     # ---------------------------------------------------------------- Catholic
-    "081": "christianity.catholic.latin.catholic-church",
+    # spec §2.5. ASARB names the body; ca2021, cz2021 and br2010 all name the branch,
+    # and `…latin` has no other body anywhere to distinguish it from — so the leaf was
+    # the same people as its parent at two depths, drawn in two colours, and the panel
+    # said "Catholic Church" for a row the legend did not hold. Mapped at the branch.
+    "081": "christianity.catholic.latin",
     "352": "christianity.catholic.independent.pncc",
     "315": "christianity.catholic.independent.naorcc",
     "FFP": "christianity.catholic.independent.ecc-communion",
@@ -474,7 +478,11 @@ MAP = {
     "275": "judaism.reconstructionist",
     "FGR": "judaism.independent",
     "267": "islam",
-    "895": "hinduism.temples",
+    # Same shape as 081, spec §2.5: "Hindu Temples" is ASARB's row for Hindus, counted
+    # by temple. It is not a sect, and every other source files Hindus on the branch,
+    # so the leaf was `hinduism` at two depths. Mapped at the branch; the unit and the
+    # estimate stay recorded in REVIEW above.
+    "895": "hinduism",
     "462": "hinduism.vedanta",
     "890": "buddhism.mahayana",
     "891": "buddhism.theravada",

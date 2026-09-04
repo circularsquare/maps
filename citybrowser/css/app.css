@@ -25,10 +25,22 @@ body {
   font-family: 'Nunito', system-ui, -apple-system, sans-serif;
   font-weight: 400;
 }
-canvas { display: block; cursor: crosshair; }
-body.editing canvas { cursor: pointer; }
-body[data-tool="create"] canvas,
-body[data-tool="move"]  canvas { cursor: copy; }
+/* MapLibre's canvas is the interactive surface; the bubble canvas sits on top
+   of it and must not eat the pointer, or panning and zooming stop working.
+   The cursor is set from js/map.js rather than here, because MapLibre writes an
+   inline cursor on its own canvas during a drag and an inline style wins. */
+#map { position: fixed; inset: 0; z-index: 0; }
+#c   { position: fixed; inset: 0; z-index: 1; pointer-events: none; display: block; }
+
+/* MapLibre chrome, restyled to the light panel language rather than its own. */
+.maplibregl-ctrl-attrib {
+  background: rgba(255,255,255,.72) !important;
+  font-size: 9.5px; line-height: 1.6; color: var(--muted);
+}
+.maplibregl-ctrl-attrib a { color: var(--muted); text-decoration: none; }
+.maplibregl-ctrl-attrib a:hover { text-decoration: underline; }
+.maplibregl-ctrl-attrib-button { background-color: rgba(255,255,255,.72); }
+.maplibregl-ctrl-bottom-right { z-index: 3; }
 
 #title {
   position: fixed; top: 14px; left: 18px; z-index: 5;
@@ -211,8 +223,9 @@ body[data-tool="move"]  canvas { cursor: copy; }
 #legend .note { font-size: 10px; color: var(--muted); margin-top: 6px; }
 #legend .note b { color: var(--value); font-weight: 700; }
 
+/* Clear of MapLibre's attribution pill, which owns the bottom-right corner. */
 #status {
-  position: fixed; bottom: 16px; right: 18px; z-index: 5;
+  position: fixed; bottom: 34px; right: 18px; z-index: 5;
   font-size: 11px; color: var(--muted); text-align: right; line-height: 1.5;
   max-width: 320px;
 }
@@ -237,6 +250,9 @@ body[data-tool="move"]  canvas { cursor: copy; }
   font-variant-numeric: tabular-nums;
 }
 .chk input:disabled + span { color: var(--muted); }
+/* `display:flex` above beats the UA's [hidden] rule, so say it explicitly --
+   main.js hides the row for any kind whose count is zero. */
+.chk[hidden] { display: none; }
 #setpanel .shint {
   font-size: 10.5px; color: var(--muted); line-height: 1.45;
   margin-top: 9px; padding-top: 9px; border-top: 1px solid var(--line);
@@ -248,17 +264,6 @@ body[data-tool="move"]  canvas { cursor: copy; }
 }
 #setpanel select:focus { outline: none; border-color: var(--accent); }
 
-/* Tile attribution is a licence condition, not decoration — it sits bottom
-   right, above #status, and is empty (and unclickable) when tiles are off. */
-#attrib {
-  position: fixed; bottom: 0; right: 0; z-index: 4;
-  font-size: 9.5px; color: var(--muted); line-height: 1.6;
-  padding: 1px 6px 1px 8px;
-  background: rgba(255,255,255,.72); border-top-left-radius: 4px;
-}
-#attrib:empty { display: none; }
-#attrib a { color: var(--muted); text-decoration: none; }
-#attrib a:hover { text-decoration: underline; }
 /* --- type tags on the card */
 .kinds { display: flex; flex-wrap: wrap; gap: 4px; margin: 2px 0 9px; }
 .ktype {

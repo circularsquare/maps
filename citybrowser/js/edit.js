@@ -13,7 +13,7 @@
 // link, which is where the hand-written facts actually come from, needs
 // somewhere stable to live.
 
-import { state, refresh, add } from './data.js';
+import { state, refresh, add, KIND_LABEL } from './data.js';
 import * as map from './map.js';
 
 let panel, current = null;
@@ -166,8 +166,8 @@ export function open(i) {
     </div>
     <div class="esub">${esc(c.adminName || '')}</div>
     ${(c.typeNames || []).length
-      ? `<div class="kinds">${(c.kind && c.kind !== 'city')
-          ? `<span class="kindtag">${c.kind === 'aggregate' ? 'metro area' : 'admin area'}</span>` : ''
+      ? `<div class="kinds">${(c.kind && KIND_LABEL[c.kind])
+          ? `<span class="kindtag">${KIND_LABEL[c.kind]}</span>` : ''
         }${c.typeNames.map(t => `<span class="ktype">${esc(t)}</span>`).join('')}</div>`
       : ''}
     ${links(c, key)}
