@@ -398,10 +398,20 @@ BRANCHES = [
      "people on the parent, because the school is knowable and not stated."),
     ("buddhism.mahayana",
      "Mahayana Buddhism",
-     "The northern transmission — China, Korea, Japan, Vietnam. Almost nothing on this map "
-     "reaches it: the Han Buddhist population that would fill it is inside China's undrawn "
-     "97.8% (spec §14.5), and every census that asks about Buddhism at all asks it as one "
-     "word."),
+     "The northern transmission — China, Korea, Japan, Vietnam. **This node was nearly empty "
+     "until 2026-09-08 and is now one of the largest on the map**, because China's Han "
+     "Buddhists arrived: about 55 million people, carved out of China's grey at province "
+     "level from three pooled waves of the Chinese General Social Survey, which asks *which "
+     "religion do you belong to* and gets 佛教 from roughly one adult in twenty (spec "
+     "§14.16). They are heaviest in Zhejiang, Fujian and Jiangxi. "
+     "**It is still an underestimate and by a wide margin, because the question is the "
+     "narrow one.** Ask instead about belief in Buddha or a bodhisattva and the same "
+     "instrument family returns 33% rather than 4%; spec §3.1 requires one basis and this "
+     "map is drawn on self-identification everywhere, so the people who keep the practice "
+     "without claiming the label are in China's `unknown` grey. Note also that most censuses "
+     "which ask about Buddhism at all ask it as one word, so many of the world's Mahayana "
+     "Buddhists sit on the parent node rather than here — Sri Lanka's are Theravada and "
+     "still on the parent for the same reason."),
     ("buddhism.won",
      "Won Buddhism",
      "원불교, 84,141 in South Korea in 2015 — founded 1916 by Sotaesan as a reform of "
@@ -906,7 +916,7 @@ BRANCHES = [
      "write-ins too."),
 
     ("other",
-     "Other, by source",
+     "Other",
      "A CONTAINER, not a claim. spec §3.11: residual buckets are per source and are never "
      "merged, because one country's 'other' holds Orthodox Christians and another's holds "
      "Bahá'í and Wiccans. This node exists only so the per-source residuals below it have a "
@@ -1694,6 +1704,28 @@ BRANCHES = [
      "this much disclosure control is measuring the control as much as the tail. Per "
      "source, per spec §3.11."),
 
+    # --- added 2026-09-08 with Slovakia.
+    ("other.sk",
+     "Other or not stated (Slovakia)",
+     "**THE LABEL IS DELIBERATELY NOT 'OTHER RELIGION', AND THIS NODE IS NOT COMPARABLE "
+     "WITH ITS SIBLINGS.** Every other `other.<cc>` on this map is a residual of religions "
+     "somebody named. Slovakia's `ostatné` is a residual of religions AND of people who did "
+     "not answer, merged before publication, and the non-response is the large half: UNSD "
+     "table 28 publishes the same census with 21 categories and puts `nezistené` at "
+     "**353,797 — 83% of this cell** — against roughly 72,699 in named and unnamed "
+     "religions. 426,496 people, 7.83% of the country. Anita's call, 2026-09-08: drawn "
+     "rather than dropped, because the alternative left 7.8% of Slovakia as a hole in the "
+     "map and a hole reads as an absence of people (§6.12). "
+     "**AND THE MIX IS NOT CONSTANT, WHICH IS WHY THE NATIONAL SPLIT CANNOT BE APPLIED PER "
+     "UNIT.** The cell runs from 0.0% to 58.8% between municipalities (median 3.8%, p90 "
+     "8.9%), and the top of the list is Slovakia's Roma settlements and its two city "
+     "centres — Košice-Luník IX **58.8%**, Pavlovce nad Uhom 28.7%, Jasov 26.9%, Bratislava-"
+     "Staré Mesto 16.4% — against 0.7-2.7% in the Orava and Kysuce villages. Those are "
+     "non-response geographies, not unusual-religion geographies, so this node is mostly "
+     "'did not answer' where it is large and mostly 'some other faith' where it is small. "
+     "**Do not read its density as a religious fact**; read it as the census's own reach. "
+     "Per source, per spec §3.11, and never merged with another country's residual."),
+
     # --- added 2026-09-06 with Malawi.
     ("other.mw",
      "Other religion (Malawi)",
@@ -1922,6 +1954,21 @@ BRANCHES = [
      "`Protestante` as well is invisible. Mapping it across would be an overclaim and an "
      "undercount simultaneously. CAR's traditional religion is not drawn, and saying so is "
      "the only accurate thing available. Per source, per spec §3.11."),
+
+    # --- added 2026-09-07 with Côte d'Ivoire.
+    ("other.ci",
+     "Other religion (Côte d'Ivoire)",
+     "ANStat's `Autres religions` — 53,051 people, 0.18%, and **the smallest residual on "
+     "this map relative to its country**, which is only true because the cell above it is "
+     "doing the work. `Autres religions chrétiennes` is 6,004,781 people, 20.5%, and the "
+     "RGPH 2021's own methodology says the census collected `Evangélique`, `Céleste`, "
+     "`Bouddhiste` and `Témoin de Jehova` as distinct modalities that appear in no printed "
+     "table. So Côte d'Ivoire's Buddhists — who would normally land here — are inside a "
+     "cell labelled *other CHRISTIAN religions*, and this node holds only what was left "
+     "after that: the Bahá'ís, the small Hindu and Lebanese-Druze communities of Abidjan, "
+     "and the syncretic movements that claimed neither a Christian nor a Muslim label. "
+     "**A residual being unusually small is a fact about the table above it, not about the "
+     "country.** Per source, per spec §3.11."),
 
     # --- added 2026-09-07 with Malaysia.
     ("other.my",
@@ -2263,6 +2310,54 @@ BRANCHES = [
      "everywhere else in the country, where it runs at a few tenths of a percent — so it "
      "is a coastal category and a national dustbin at the same time. Per source, per spec "
      "§3.11."),
+
+    # --- added 2026-09-07 with Germany's ESS split.
+    ("other.de",
+     "Other religion (Germany)",
+     "Two ESS answers together — `Östliche Religionsgemeinschaft` and `Andere "
+     "nicht-christliche Religionsgemeinschaft` — 1.04% of Germany between them, and the "
+     "same shape `other.fr` and `other.gr` already hold for the same survey. The tree has "
+     "no node for 'some Eastern religion, unspecified' and choosing one would invent a "
+     "fact.\n\n"
+     "**What is unusual here is that a census once counted what this cell contains, and "
+     "the count is unusable.** Zensus 2011's Frage 8 offered Buddhism and Hinduism as "
+     "their own answers — but it was the only voluntary question on the form, it was put "
+     "only to people who had already said they belonged to no public-law body, and "
+     "destatis' own verdict is that no reliable statement about world religions can be "
+     "made from it (sources/de.md §2). So the boxes existed, were printed, were answered "
+     "by a self-selected fraction, and left nothing this map can use.\n\n"
+     "Its content is largely knowable even though it is not separable: Germany's "
+     "Buddhists, both the Vietnamese and Thai communities and a substantial German "
+     "convert population; the Hindu communities of the Tamil diaspora in Nordrhein-"
+     "Westfalen and the Afghan Hindus; the Yazidis, of whom Germany has the largest "
+     "diaspora anywhere and who are neither Eastern nor Christian and will be scattered "
+     "across both answers; and the Bahá'ís. Per source, per spec §3.11."),
+
+    # --- added 2026-09-07 with Peru.
+    ("other.pe",
+     "Other religion (Peru)",
+     "INEI's `Otra` — 94,150 people, **0.41%**, and one of the smallest residuals on this "
+     "map, because Peru's census does the unusual thing of naming five non-Catholic "
+     "Christian bodies rather than sweeping them into one box. Católica, Evangélica, "
+     "Cristiano, Adventista, Testigo de Jehová and Mormones all have their own answers, so "
+     "what falls into `Otra` is genuinely the remainder rather than the usual mixture of "
+     "'not Catholic' and 'not classified'.\n\n"
+     "**Its geography is one thing and it is not the cities.** Nationally 0.41%; in Yavarí "
+     "**20.7%**, San Pablo 18.9% and Pebas 12.0% — all three Amazon river districts in "
+     "Loreto on the Brazilian and Colombian frontier — and Tournavista 19.2%, Puerto Inca "
+     "9.1% (Huánuco) and Iberia 13.0% (Madre de Dios), which are the Amazon colonisation "
+     "zones. That is a spread of fifty to one against a national figure under half a "
+     "percent, and by §9r's rule a residual that sharp is a **missing category rather than "
+     "a mixture**.\n\n"
+     "Two things are plausibly inside it and NEITHER is acted on. The **Israelitas del "
+     "Nuevo Pacto Universal**, a Peruvian millenarian church founded in 1968 whose "
+     "settlement colonies are concentrated in exactly these Amazon frontier districts, is "
+     "the strongest single candidate; and the **indigenous religions of the Amazon**, which "
+     "the census gives no box to at all — though note that in the Awajún and Asháninka "
+     "districts the answer that rises is `Ninguna` and not `Otra`, which is a real "
+     "difference between two ways of having no listed religion and is worth not flattening. "
+     "INEI publishes no breakdown of the cell, so it stays whole. Per source, per spec "
+     "§3.11 and §14.4."),
 ]
 
 

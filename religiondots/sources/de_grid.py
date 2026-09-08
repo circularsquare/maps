@@ -85,21 +85,71 @@ COLUMNS = {
     "Sonstige_keine_ohneAngabe": "son",
 }
 
+# --- Route B, added 2026-09-07: citizenship on the SAME cells ---------------------------
+# A second destatis grid, identical geometry, thirteen countries. It is a PLACEMENT signal
+# and never a magnitude (spec §8.2): it says where inside a Gemeinde the Turkish- and
+# Romanian-passported residents are, which is a far sharper locator for the modelled Muslim
+# and Orthodox dots than `son` — the residual is half of Germany and includes every secular
+# German, so it puts Muslims all over Berlin instead of in Neukölln and Kreuzberg.
+CTZ_ZIP_NAME = "Staatsangehoerigkeit_gitter.zip"
+CTZ_ZIP_URL = ("https://www.destatis.de/static/DE/zensus/gitterdaten/"
+               "Staatsangehoerigkeit_nach_ausgewaehlten_Laendern.zip")
+CTZ_MIN_BYTES = 25_000_000
+CTZ_CSV_NAME = "Zensus2022_Staatsangehoerigkeit_nach_Laendern_1km-Gitter.csv"
+
+# Which of the thirteen published countries carries which signal. CITIZENSHIP IS NOT
+# ORIGIN and this list is chosen for what it can support, not for completeness:
+#
+#   * Kasachstan is deliberately UNUSED. Kazakh citizens in Germany are heavily
+#     Russlanddeutsche and their families, so the column is neither a Muslim nor an
+#     Orthodox signal — spec §14.12's warning about ancestry standing in for religion,
+#     in the one place here where the ancestry is genuinely mixed.
+#   * Bosnien is filed under Islam. Bosnian citizens in Germany are predominantly
+#     Bosniak; the Orthodox Serbs of Bosnia mostly hold Serbian passports, which this
+#     file does not carry at all.
+#   * Polen, Kroatien, Italien, Oesterreich and Niederlande are Catholic signals and are
+#     unused, because Catholics already have their OWN measured column on this grid.
+CTZ_COLUMNS = {
+    "isl_ctz": ["Tuerkei", "Bosn_u_Herzegowina"],
+    "orth_ctz": ["Griechenland", "Rumaenien", "Russ_Foederation", "Ukraine"],
+}
+
+
+def _download(url, dest, min_bytes):
+    if os.path.exists(dest) and os.path.getsize(dest) >= min_bytes:
+        print("already have", dest)
+        return
+    print("downloading", url)
+    urllib.request.urlretrieve(url, dest)
+    size = os.path.getsize(dest)
+    if size < min_bytes or not zipfile.is_zipfile(dest):
+        raise SystemExit(f"{dest} is {size:,} bytes and "
+                         f"{'is' if zipfile.is_zipfile(dest) else 'is NOT'} a zip -- "
+                         f"expected >= {min_bytes:,} (spec §12)")
+    print(f"  {size:,} bytes")
+
 
 def fetch():
     os.makedirs(RAW, exist_ok=True)
-    dest = os.path.join(RAW, ZIP_NAME)
-    if os.path.exists(dest) and os.path.getsize(dest) >= MIN_BYTES:
-        print("already have", dest)
-        return
-    print("downloading", ZIP_URL)
-    urllib.request.urlretrieve(ZIP_URL, dest)
-    size = os.path.getsize(dest)
-    if size < MIN_BYTES or not zipfile.is_zipfile(dest):
-        raise SystemExit(f"{dest} is {size:,} bytes and "
-                         f"{'is' if zipfile.is_zipfile(dest) else 'is NOT'} a zip -- "
-                         f"expected >= {MIN_BYTES:,} (spec §12)")
-    print(f"  {size:,} bytes")
+    _download(ZIP_URL, os.path.join(RAW, ZIP_NAME), MIN_BYTES)
+    _download(CTZ_ZIP_URL, os.path.join(RAW, CTZ_ZIP_NAME), CTZ_MIN_BYTES)
+
+
+def _extract(zip_name, csv_name):
+    p = os.path.join(RAW, csv_name)
+    if os.path.exists(p):
+        return p
+    src = os.path.join(RAW, zip_name)
+    if not os.path.exists(src):
+        raise SystemExit(f"missing {src} -- run with --fetch first")
+    with zipfile.ZipFile(src) as z:
+        inner = [n for n in z.namelist() if n.endswith(csv_name)]
+        if not inner:
+            raise SystemExit(f"{zip_name} has no {csv_name}")
+        with z.open(inner[0]) as fh, open(p, "wb") as out:
+            shutil.copyfileobj(fh, out)
+    print(f"  extracted {csv_name}")
+    return p
 
 
 def csv_path():
@@ -145,6 +195,33 @@ def main():
         df[dst] = [cell(v, f"{i} {src}") for i, v in zip(df["GITTER_ID_1km"], df[src])]
     df["pop"] = [cell(v, "pop") for v in df["Insgesamt_Bevoelkerung"]]
 
+    # ---- Route B: the citizenship grid, joined on the cell id it shares with this one
+    ctz = pd.read_csv(_extract(CTZ_ZIP_NAME, CTZ_CSV_NAME), sep=";",
+                      encoding="utf-8", dtype=str)
+    print(f"  {len(ctz):,} cells in {CTZ_CSV_NAME}")
+    for dst, srcs in CTZ_COLUMNS.items():
+        missing = [c for c in srcs if c not in ctz.columns]
+        if missing:
+            raise SystemExit(f"citizenship grid has no column(s) {missing}; it carries "
+                             f"{sorted(ctz.columns)}")
+        total = None
+        for c in srcs:
+            v = np.array([cell(x, f"ctz {c}") for x in ctz[c]], dtype=np.int64)
+            total = v if total is None else total + v
+        ctz[dst] = total
+    ctz = ctz.set_index("GITTER_ID_1km")[list(CTZ_COLUMNS)]
+
+    # The two grids are published from the same tabulation and should cover the same cells.
+    # An inner join that silently dropped a third of Berlin would still produce a map.
+    hit = df["GITTER_ID_1km"].isin(ctz.index)
+    print(f"  {'OK ' if hit.all() else 'NOTE'} {hit.sum():,} of {len(df):,} religion cells "
+          f"have a citizenship row"
+          + ("" if hit.all() else f" — {(~hit).sum():,} do not and get zero"))
+    for dst in CTZ_COLUMNS:
+        df[dst] = df["GITTER_ID_1km"].map(ctz[dst]).fillna(0).astype(np.int64)
+    print(f"  citizenship signal: {df['isl_ctz'].sum():,} Turkish and Bosnian, "
+          f"{df['orth_ctz'].sum():,} Greek, Romanian, Russian and Ukrainian")
+
     # The cell id encodes the LOWER-LEFT corner: CRS3035RES1000mN2689000E4337000.
     # It is the authoritative geometry; the x_mp/y_mp columns are the centre and are used
     # only to check the parse, so a change in either is caught rather than assumed.
@@ -168,7 +245,7 @@ def main():
         raise SystemExit("cell id geometry disagrees with the published centre columns")
 
     g = gpd.GeoDataFrame(
-        df[["kath", "ev", "son", "pop"]].copy(),
+        df[["kath", "ev", "son", "pop", "isl_ctz", "orth_ctz"]].copy(),
         geometry=box(x0, y0, x0 + CELL, y0 + CELL), crs=GRID_CRS)
 
     # ---- assign each cell to the Gemeinde containing its CENTRE
@@ -233,11 +310,18 @@ def main():
         for col, label in (("kath", key["kath"]), ("ev", key["ev"]),
                            ("son", key["son"]), ("pop", key["pop"])):
             rows[col] = rows["ars"].map(lambda a: cen[a].get(label, 0))
+        # No citizenship signal for these: the Gemeinde table carries religion and
+        # population, not passports. Zero is right rather than merely convenient — the
+        # weighter falls back to `son` when the signal sums to nothing in a unit, which
+        # is exactly the behaviour these 34 tiny Gemeinden should have.
+        for col in CTZ_COLUMNS:
+            rows[col] = 0
         pop_missing = int(rows["pop"].sum())
         print(f"  {len(missing):,} Gemeinden have NO 1km cell ({pop_missing:,} people, "
               f"{100.0 * pop_missing / sum(v['Einwohnerzahl'] for v in cen.values()):.4f}%)"
               f" -- their own polygon is added as a single cell so nothing is unplaceable")
-        g = pd.concat([g, rows[["ars", "kath", "ev", "son", "pop", "geometry"]]],
+        g = pd.concat([g, rows[["ars", "kath", "ev", "son", "pop",
+                                "isl_ctz", "orth_ctz", "geometry"]]],
                       ignore_index=True)
         g = gpd.GeoDataFrame(g, geometry="geometry", crs=GRID_CRS)
 
@@ -253,7 +337,8 @@ def main():
         n = int((g["ars"] == ars).sum())
         print(f"      {ars}  {n:>6,} cells  ({cen[ars]['Einwohnerzahl']:>10,} people)")
 
-    out = g[["ars", "kath", "ev", "son", "pop", "geometry"]].to_crs(4326)
+    out = g[["ars", "kath", "ev", "son", "pop",
+             "isl_ctz", "orth_ctz", "geometry"]].to_crs(4326)
     out.to_file(OUT, layer="grid1km", driver="GPKG")
     print(f"\nwrote {OUT} ({len(out):,} cells, EPSG:4326)")
 

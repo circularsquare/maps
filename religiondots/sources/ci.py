@@ -128,6 +128,39 @@ UNITS = 33
 CENSUS_HOUSEHOLD_POPULATION = 29_276_660   # ordinary households, the religion universe
 LACS_DUPLICATES = 2
 
+# --- §7a, the évangélique split. Anita's call, 2026-09-07.
+#
+# `Autres religions chrétiennes` is 6,004,781 people, 20.5%, and tome 1 never divides it.
+# The *Résultats Globaux Définitifs* does, in prose above its Tableau 6:
+#
+#   "Parmi les chrétiens, on compte 17% de catholiques, de protestants/méthodistes (2,3%),
+#    de harristes (0,5%) et de 20% d'autres chrétiens, COMPOSÉS PRINCIPALEMENT DES
+#    ÉVANGÉLIQUES (18,6%)."
+#
+# Those percentages are of the TOTAL population — they reproduce Tableau 6's own % column
+# exactly — so 18.6% is 5,445,459 people and évangéliques are about 91% of the cell.
+#
+# WHAT IS AND IS NOT ESTABLISHED. The national magnitude is the source's. The GEOGRAPHY is
+# not: no publication gives évangéliques by région, so the split is applied at one national
+# ratio everywhere and both halves inherit the residual's geography exactly. Evangelicals
+# are very likely more southern and more urban than that, so the per-région shares are wrong
+# in a spatially correlated way even though the national total is right. Every row from the
+# split is `tier="derived"` in countries.py and so can never ring (§3.10), and note_public
+# says it outright.
+#
+# THE DENOMINATOR IS TOME 1'S CELL, NOT THE RÉSULTATS GLOBAUX'. The two publications disagree
+# about where `autres chrétiens` ends and `autres religions` begins by 159,208 people while
+# agreeing on their sum to the person (§7b). Subtracting the stated évangélique count from
+# tome 1's larger cell leaves those disputed people in the REMAINDER, which is where they
+# belong if the Résultats Globaux is right that they are not Christian — so the évangélique
+# figure is unaffected by the disagreement either way.
+SPLIT_EVANGELICAL = True
+EVANGELICAL = "Évangélique"
+OTHER_CHRISTIAN_REST = "Autres chrétiens, hors évangéliques"
+DERIVED_CATEGORIES = {EVANGELICAL, OTHER_CHRISTIAN_REST}
+EVANGELICAL_SHARE = 0.186                       # of the total population, ANStat's figure
+EVANGELICAL_NATIONAL = 5_445_459                # 0.186 x 29,276,660, rounded
+
 PCT = re.compile(r"^\d{1,3},\d$")
 BIG = re.compile(r"^\d{1,3}(?: \d{3})+$")
 
@@ -409,7 +442,15 @@ def check(doc, national, regional, population):
 def emit(drawn, pop_keys, national, population):
     """§3.4: shares from Tableau 4.6, denominators from the annex, magnitudes from
     Tableau 4.1. Each category is then rescaled so the 33 units sum to its published
-    national count, which removes the 1-dp rounding from every national figure."""
+    national count, which removes the 1-dp rounding from every national figure.
+
+    THEN THE EVANGELICAL SPLIT, which is §7a below. `Évangélique` and the remainder of
+    `Autres religions chrétiennes` are given the SAME per-région raw value, so the rescale
+    that follows divides them into their two national totals in a fixed 90.7/9.3 ratio
+    everywhere. The uniform assumption is therefore a consequence of the existing machinery
+    rather than special-case arithmetic, and both halves inherit the residual's geography
+    exactly — which is the honest thing, because that is all the source establishes.
+    """
     raw = {}
     for name, pcts in drawn:
         key = pop_keys[ALIASES.get(norm(name), norm(name))]
@@ -418,27 +459,54 @@ def emit(drawn, pop_keys, national, population):
             v = pcts[T46_COLUMNS.index(c)] / 100.0 * pop
             raw[(name, c)] = v
 
+    cats = list(DRAWN_CATEGORIES)
+    national = dict(national)
+    if SPLIT_EVANGELICAL:
+        src = "Autres religions chrétiennes"
+        rest = national[src] - EVANGELICAL_NATIONAL
+        if rest <= 0:
+            raise SystemExit(
+                f"the stated évangélique count {EVANGELICAL_NATIONAL:,} exceeds "
+                f"`{src}` ({national[src]:,}) — the split is not applicable")
+        for name, _ in drawn:
+            v = raw.pop((name, src))
+            raw[(name, EVANGELICAL)] = v
+            raw[(name, OTHER_CHRISTIAN_REST)] = v
+        national[EVANGELICAL] = EVANGELICAL_NATIONAL
+        national[OTHER_CHRISTIAN_REST] = rest
+        del national[src]
+        i = cats.index(src)
+        cats[i:i + 1] = [EVANGELICAL, OTHER_CHRISTIAN_REST]
+        print(f"\n  évangélique split (§7a): `{src}` {national[EVANGELICAL] + rest:,} "
+              f"-> {EVANGELICAL_NATIONAL:,} évangéliques "
+              f"({100.0 * EVANGELICAL_NATIONAL / (EVANGELICAL_NATIONAL + rest):.1f}%) "
+              f"+ {rest:,} remainder,\n     from ANStat's own prose: \"20% d'autres "
+              f"chrétiens, composés principalement des évangéliques (18,6%)\".")
+
     scale = {}
-    for c in DRAWN_CATEGORIES:
+    for c in cats:
         s = sum(raw[(n, c)] for n, _ in drawn)
         scale[c] = (national[c] / s) if s else 0.0
     print("\n  per-category rescale to the published national count:")
-    for c in DRAWN_CATEGORIES:
-        print(f"    {c:<32} x{scale[c]:.5f}   -> {national[c]:>11,}")
+    for c in cats:
+        print(f"    {c:<34} x{scale[c]:.5f}   -> {national[c]:>11,}")
 
     rows = []
     for name, _ in drawn:
         key = pop_keys[ALIASES.get(norm(name), norm(name))]
-        for c in DRAWN_CATEGORIES:
+        for c in cats:
             n = int(round(raw[(name, c)] * scale[c]))
             if n <= 0:
                 continue
+            note = (f"pct={raw[(name, c)] * 100 / max(population[key][0], 1):.1f}; "
+                    f"pop={population[key][0]}; rescaled_to_national")
+            if c in DERIVED_CATEGORIES:
+                note += ("; DERIVED: national 18.6% évangélique share applied "
+                         "uniformly to `Autres religions chrétiennes`")
             rows.append({
                 "geo_id": key, "geo_level": "region", "geo_name": key,
                 "source_category": c, "count": n, "basis": BASIS,
-                "year": YEAR, "source_id": SOURCE_ID,
-                "note": f"pct={raw[(name, c)] * 100 / max(population[key][0], 1):.1f}; "
-                        f"pop={population[key][0]}; rescaled_to_national",
+                "year": YEAR, "source_id": SOURCE_ID, "note": note,
             })
     return rows
 
@@ -454,11 +522,14 @@ def main():
     rows = emit(drawn, pop_keys, national, population)
 
     total = sum(r["count"] for r in rows)
+    emitted = {}
+    for r in rows:
+        emitted[r["source_category"]] = emitted.get(r["source_category"], 0) + r["count"]
     print(f"\n  {len(drawn)} units drawn, {total:,} people, "
-          f"{total / len(drawn):,.0f} each. Categories, national:")
-    for c in DRAWN_CATEGORIES:
-        n = national[c]
-        print(f"    {n:>11,}  {100.0 * n / total:6.2f}%  {c}")
+          f"{total / len(drawn):,.0f} each. Categories AS EMITTED, national:")
+    for c, n in sorted(emitted.items(), key=lambda kv: -kv[1]):
+        mark = " (derived)" if c in DERIVED_CATEGORIES else ""
+        print(f"    {n:>11,}  {100.0 * n / total:6.2f}%  {c}{mark}")
 
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
     with open(OUT, "w", encoding="utf-8", newline="") as fh:

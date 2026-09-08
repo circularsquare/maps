@@ -12,9 +12,17 @@ OF CLAIM.** That is the change of 2026-09-07 (spec §14.13) and it is what took 
 
 | | categories | people | node | tier |
 |---|---|---|---|---|
-| **religio-ethnic**, spec §14.5 | 15 | ~30.7M | `islam`, `buddhism.vajrayana`, `buddhism.theravada` | `derived` |
+| **religio-ethnic**, spec §14.5 | 14 | ~30.6M | `islam`, `buddhism.vajrayana`, `buddhism.theravada` | `derived` |
 | **mission peoples**, spec §14.9 | 6 | ~0.88M of 1.81M | `christianity.protestant` + remainder | `modelled` |
-| **everyone else** | 40 | ~1.21 billion | `unknown` | `derived` |
+| **everyone else** | 41 | ~1.21 billion | `unknown` | `derived` |
+
+**AND THIS FILE IS NO LONGER THE WHOLE OF CHINA.** From 2026-09-08 a fourth layer is applied
+downstream of it, in `countries.py::_cn_counts` from `sources/cn_cgss.py`: Han Buddhism and
+Protestantism, carved out of the `unknown` residual at province grain from the pooled Chinese
+General Social Survey. That layer is `self_id` — the first thing in this country drawn from
+something people said about themselves rather than derived from their nationality — and it is
+much the largest colour on the Chinese map. Nothing in THIS file changed to accommodate it;
+the residual it eats is the same residual §14.14 built.
 
 **`unknown` asserts nothing and that is why it is allowed to hold a billion people.** It is
 §6.3a-ii's node — the source counted these people and did not establish what they practise.
@@ -43,8 +51,9 @@ _MUSLIM = ["Hui", "Uyghur", "Kazakh", "Dongxiang", "Salar", "Kyrgyz", "Tajik", "
            "Bonan", "Tatar"]
 
 # Tibetan Buddhist by descent, and a much shorter list than spec §12 proposed -- see
-# REVIEW for Mongol and Tu, which are Anita's call of 2026-09-05 and are NOT drawn.
-_VAJRAYANA = ["Tibetan", "Yugur", "Monba", "Pumi"]
+# REVIEW for Mongol and Tu, which are Anita's call of 2026-09-05 and are NOT drawn, and for
+# PUMI, which was drawn until 2026-09-08 and is Anita's call too.
+_VAJRAYANA = ["Tibetan", "Yugur", "Monba"]
 
 # Theravada by descent. The Dai of Xishuangbanna and Dehong are the northern edge of the
 # mainland Southeast Asian Theravada world, not an outpost of Chinese Buddhism.
@@ -248,6 +257,13 @@ NOT_ASSERTED["Mongol"] = (
 NOT_ASSERTED["Tu"] = (
     "241,161 people in Qinghai's Huzhu and Minhe. With Mongol, and for the same reason. "
     "Now drawn on `unknown`.")
+NOT_ASSERTED["Pumi"] = (
+    "33,599 people in Yunnan's Ninglang and Lanping, and the one group this file has ever "
+    "taken BACK off a religion -- Anita's call, 2026-09-08. Pumi religion is Hangui, an "
+    "indigenous tradition held alongside Gelug Buddhism, which is spec §14.5's "
+    "'religiously mixed' row and not its 'religio-ethnic' one. It goes with Mongol and Tu, "
+    "on the same argument, and this REVIEW had flagged it as the one drawn group that "
+    "probably should not be. See REVIEW.")
 
 EXCLUDED = {
     "Total":
@@ -336,13 +352,17 @@ REVIEW = {
         "Qinghai's Huzhu and Minhe, historically Gelug, and a stronger case than Mongol on "
         "the history -- but the same silence in the present.",
     "Pumi":
-        "-> buddhism.vajrayana, and THE ONE DRAWN GROUP THAT PROBABLY SHOULD NOT BE. "
-        "33,599 people in Yunnan's Ninglang and Lanping. Pumi religion is Hangui, an "
-        "indigenous tradition, held alongside Gelug Buddhism -- which is spec §14.5's "
-        "'religiously mixed' row rather than its 'religio-ethnic' one, and by the argument "
-        "used against Mongol above this should be excluded too. It is drawn because spec "
-        "§12's list has it and because it is 34 dots either way; it is flagged here rather "
-        "than quietly kept. Raise it with Anita before the next build.",
+        "-> NO religion asserted; drawn on `unknown`. **UNDRAWN 2026-09-08, Anita's call, "
+        "and it closes the flag this entry used to carry.** Until then it was "
+        "buddhism.vajrayana and this REVIEW called it THE ONE DRAWN GROUP THAT PROBABLY "
+        "SHOULD NOT BE. 33,599 people in Yunnan's Ninglang and Lanping. Pumi religion is "
+        "Hangui, an indigenous tradition, held alongside Gelug Buddhism -- which is spec "
+        "§14.5's 'religiously mixed' row rather than its 'religio-ethnic' one, so the same "
+        "argument that keeps Mongol and Tu out keeps Pumi out. It had been drawn only "
+        "because spec §12's list named it. **A list written to illustrate a rule is not the "
+        "rule** -- the same lesson §14.6 and the Lahu record from the opposite direction, "
+        "where applying the stated test ADDED a group the list had missed. 34 dots either "
+        "way; the point is the consistency, not the size.",
     "Tajik":
         "-> islam, NOT islam.shia, and the restraint is deliberate. China's 41,016 Tajiks "
         "are Sarikoli and Wakhi speakers in Taxkorgan and they are ISMAILI SHIA -- the "

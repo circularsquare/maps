@@ -11,6 +11,13 @@ away. That check caught `own_component` regressing 호남고속선 from -0.5 % t
 -50 % and 태백선 to -37 % in the same run that fixed 영동선, and nothing else in
 the pipeline would have noticed.
 
+Since 2026-09-07 it also checks that two lines calling at the same station are
+drawn in the same *place*. Nothing did before — each line is routed on its own
+metals and only its own segments were ever tested for meeting each other — and
+the first run found two stations that are two stations, sharing a name 189 km
+and 26 km apart. `solve.py` pairs lines at a junction by station name, so a
+collision like that is a junction constraint between lines that never meet.
+
 It is a check on the *output file*, so it runs in a couple of seconds against
 whatever is on disk rather than behind a solve.
 
@@ -47,6 +54,18 @@ TOL_PCT = 3.0           # how far a drawn line may sit from its 영업거리
 # high-speed metals alone. 25 km still catches the 38 and the 92.
 MOVED_TOL_KM = 25.0
 GAP_M = 50.0            # how far consecutive segments may fail to meet
+
+# Two lines calling at the same station should be drawn touching there, and a
+# line's own segments meeting end to end does not test that at all -- each line
+# is routed on its own metals, so nothing has ever checked that the metals meet.
+# On the map a junction that does not join reads as two railways passing.
+#
+# The threshold is generous on purpose. A shared station is one *name*, and the
+# two lines are drawn on their own tracks through it, which at a big station is
+# genuinely a few hundred metres apart -- 서울 has 경부선 and 경부고속선 on
+# different platform faces. What this is looking for is the case where a line
+# was routed somewhere else entirely and the two are kilometres apart.
+JUNCTION_M = 600.0
 
 # Seats on the largest train of each yearbook passenger type, 2022 stock. The
 # occupancy check takes the *largest* type a line runs, so the ceiling assumes
@@ -85,6 +104,38 @@ def polyline_km(coords):
     """Length of a GeoJSON LineString's [lon, lat] coordinate list."""
     return sum(haversine((a[1], a[0]), (b[1], b[0]))
                for a, b in zip(coords, coords[1:]))
+
+
+def junctions(by_line):
+    """Stations two lines both call at: how far apart are they drawn?
+
+    Returns [(station, metres, [(line, point), ...]), ...] worst first.
+
+    Where a line puts a station is not in the file as a point, but it is in the
+    geometry: a segment runs from its `from` stop to its `to` stop, so the first
+    coordinate of the segment leaving a station and the last of the one arriving
+    are both that line's idea of where the station is.
+    """
+    at = collections.defaultdict(dict)      # station -> {line: point}
+    for ln, fts in by_line.items():
+        for ft in fts:
+            g = ft.get("geometry")
+            cs = (g or {}).get("coordinates")
+            if not cs:
+                continue
+            p = ft["properties"]
+            at[p["from"]].setdefault(ln, (cs[0][1], cs[0][0]))
+            at[p["to"]].setdefault(ln, (cs[-1][1], cs[-1][0]))
+
+    out = []
+    for st, byline in at.items():
+        if len(byline) < 2:
+            continue
+        pairs = sorted(byline.items())
+        worst = max(haversine(a[1], b[1]) * 1000.0
+                    for i, a in enumerate(pairs) for b in pairs[i + 1:])
+        out.append((st, worst, pairs))
+    return sorted(out, key=lambda z: -z[1])
 
 
 def mirror(by_line):
@@ -316,6 +367,26 @@ def main():
     else:
         print("consecutive segments meet everywhere (worst gap under %.0f m)"
               % GAP_M)
+
+    # --- and where two lines share a station, do they touch? ---------------
+    jn = junctions(by_line)
+    apart = [j for j in jn if j[1] > JUNCTION_M]
+    print("\n junctions -- %d stations are called at by more than one line"
+          % len(jn))
+    if apart:
+        print(" %d of them are drawn more than %.0f m apart, so the lines do "
+              "not visually\n meet there:" % (len(apart), JUNCTION_M))
+        for st, m, pairs in apart:
+            print("   %-10s %7.0f m   %s"
+                  % (st, m, ", ".join(ln for ln, _ in pairs)))
+    else:
+        print(" every one of them is drawn within %.0f m on every line that "
+              "calls there" % JUNCTION_M)
+    rest = jn[len(apart):]
+    if rest:
+        st, m, pairs = rest[0]
+        print(" widest that passes: %s at %.0f m (%s)"
+              % (st, m, ", ".join(ln for ln, _ in pairs)))
 
     # --- the level, against the published 인거리 --------------------------
     #

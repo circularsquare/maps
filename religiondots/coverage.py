@@ -37,6 +37,9 @@ from pathlib import Path
 
 HERE = Path(__file__).parent
 sys.path.insert(0, str(HERE / "taxonomy"))
+# `sources` too, since 2026-09-08: China's second instrument (spec §14.16) lives in
+# sources/cn_cgss.py and its DRAWN dict is the only place the nodes it can emit are named.
+sys.path.insert(0, str(HERE / "sources"))
 
 # cc -> the module whose mapping countries.py actually uses. **DISCOVERED, not listed** —
 # taxonomy/registry.py walks taxonomy/<cc><YYYY>.py and intersects with COUNTRIES. This was
@@ -52,15 +55,18 @@ def _simple():
     from registry import discover
     return discover()
 
-# CHINA IS THE STRONGEST CASE THIS FILE HAS, and it is worth saying why. Its source counts
-# NATIONALITY, so the religions it can express at all are only the ones some ethnic category
-# implies: spec §14.5's three religio-ethnic groups, §14.9's fractional Protestant share over
-# six Yunnan border peoples, and §14.7's `unknown` for everyone else. Five nodes out of 572.
+# CHINA IS THE STRONGEST CASE THIS FILE HAS, and it is worth saying why. Its census counts
+# NATIONALITY, so the religions THAT instrument can express are only the ones some ethnic
+# category implies: spec §14.5's three religio-ethnic groups, §14.9's fractional Protestant
+# share over six Yunnan border peoples, and §14.7's `unknown` for everyone else. Since
+# 2026-09-08 a second instrument adds two more — §14.16's `buddhism.mahayana` and a Han
+# `christianity.protestant` from the pooled CGSS. **Six nodes out of 572.**
 # **So selecting Judaism, or Hinduism, or Daoism leaves China unlit, and that is exactly
 # right** — an unlit China says "not asked", where a lit one with no dots would have said
 # "asked, and nobody is there", which would be a lie about a very large number of people.
-# China has tens of millions of Christians beyond the six peoples drawn and this map cannot
-# see one of them.
+# Daoism is the sharpest of those now: CGSS *does* ask about it and 80 respondents in 32,495
+# said yes, which is far too thin to place, so China stays unlit for a religion it certainly
+# contains. That is the honest answer and §14.16 records why.
 #
 # **It needs its own branch below because `cn2000.MAP` stopped being the whole answer on
 # 2026-09-07** (spec §14.13): the module now resolves through `shares()`, which returns a
@@ -97,6 +103,18 @@ def coverage():
     cn = importlib.import_module("cn2000")
     cats = set(cn.MAP) | set(cn.MISSION) | set(cn.NOT_ASSERTED) | set(cn.EXCLUDED)
     out["cn"] = _clean(node for c in cats for node, _s, _t in cn.shares(c))
+    # ...and `shares()` stopped being the whole answer on 2026-09-08 (spec §14.16), for the
+    # same reason `MAP` stopped being it on 2026-09-07: China now has a SECOND instrument.
+    # sources/cn_cgss.py carves Han Buddhism and Protestantism out of the `unknown` residual
+    # at province grain from the pooled CGSS, and that layer is applied in
+    # countries.py::_cn_counts, downstream of the taxonomy module — so nothing in cn2000 can
+    # see it. Left out, `buddhism.mahayana` was absent from China's coverage while 54.6M
+    # Chinese Buddhists were drawn, which is the §6.12 wash telling a reader "not asked"
+    # over dots that ARE on screen. This is the third time this file's own moral has bitten:
+    # **a coverage list keyed to a country's sources has to be updated when a source is
+    # added, and nothing about the map's appearance will tell you.**
+    cgss = importlib.import_module("cn_cgss")
+    out["cn"] |= _clean(cgss.DRAWN.values())
 
     # The United States is two instruments (§3.5a): ASARB's 372 bodies, plus Pew for the
     # self-identification re-basing. A Pew category maps to a TUPLE of paths, not one.

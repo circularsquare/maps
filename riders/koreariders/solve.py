@@ -72,6 +72,7 @@ W_JUNCTION = 2.0
 W_SHARESUM = 6.0
 W_MIRROR = 1.0
 W_TAUSYM = 2.0
+W_HOSYM = 30.0   # a handover's two directions, which the same trains make
 W_FREQ = 12.0
 W_NOTRAIN = 12.0
 W_CONTAIN = 20.0
@@ -135,10 +136,17 @@ def build_chains(table, serves, g, named, corridors=None):
             chains[canon] = keep
             shapes[canon] = shape
 
+    # Ends lines.OVER governs, reserved on the first pass so the generic stub
+    # cannot take them before the host corridor exists to be sliced. See the
+    # `over` handling in build.order_stations.
+    reserved = {}
+    for (L, end) in LN.OVER:
+        reserved.setdefault(L, {})[end] = None
+
     for canon, spec in table.items():
         if "error" in spec or spec["passing"] <= 0:
             continue
-        one(canon, spec)
+        one(canon, spec, reserved.get(canon))
 
     for (canon, end), hostname in LN.OVER.items():
         if canon not in shapes or hostname not in shapes:
@@ -540,6 +548,9 @@ class Network(object):
         # 삼랑진, 영동선 at 영주, 경북선 at 김천) still join the radial ones the
         # right way round.
         gain = collections.defaultdict(list)
+        # Each line-end's through flow, kept per direction so a handover's two
+        # can be held equal below.
+        end_through = {}
 
         def add(nm, L, d, val):
             # Reversing the chain also swaps the sense of a step: forwards along
@@ -558,6 +569,7 @@ class Network(object):
                     # arriving ones empty.
                     plat = self._cols(L, d, v)[d if i == 0 else 1 - d]
                     through = prof[(L, d)][i] - plat / SCALE
+                    end_through[(L, nm, d)] = through
                     # A line's through flow at its own end cannot be negative:
                     # at stop 0 it is passengers joining from another line, at
                     # stop n passengers carrying on to one, and neither can be
@@ -582,16 +594,44 @@ class Network(object):
         for key, gs in sorted(gain.items()):
             r.append(W_JUNCTION * sum(gs))
 
+        # A handover's two directions are the same trains making both journeys,
+        # so its through flow cannot depend on which way it is measured. This is
+        # a statement about the railway, not a smoothing prior, which is why it
+        # sits at evidence weight rather than beside W_TAUSYM.
+        #
+        # Without it the handover is an unconstrained ridge and the fit picks an
+        # arbitrary point on it. 태백선 is the case that showed it: six trains a
+        # day run 태백 → 백산 → 동백산 in each direction, and the fit answered
+        # with 하행 16,041/yr against 상행 75,722 — 4.7x, for a service that is
+        # symmetric by construction. The arbitrariness then propagated through
+        # junction conservation and cost 영동선 and 정선선 their mirrors, which
+        # is why that handover had to be reverted rather than kept.
+        #
+        # Only handover ends. An ordinary junction may genuinely step by
+        # different amounts each way, and W_TAUSYM's gentler nudge is the right
+        # instrument there.
+        for (L, nm) in self.handover:
+            a, b = end_through.get((L, nm, 0)), end_through.get((L, nm, 1))
+            if a is not None and b is not None:
+                r.append(W_HOSYM * (a - b))
+
         # The two directions' steps at a junction should match: as many people
         # join the outbound trains there as leave the inbound ones. This is the
         # mirror argument applied to the interchange rather than the platform,
         # and without it the taus are the one free way left to drive 하행 and
         # 상행 apart -- which is what put 경전선 and 동해선 behind where the
         # single-line build already had them.
+        # A handover's receiving step is held far harder than an ordinary
+        # junction's, for the same reason: it is one service, running both ways.
+        # This is the half that shows on the map -- `write_geojson` draws the
+        # run-on segment from the *receiving* line's tau, so constraining only
+        # the handing line's through flow left the drawn 태백-백산 8.7 km as
+        # lopsided as before, at an 80 % segment mirror.
         for (L, nm, d, i) in self.taus:
             if d == 0:
-                r.append(W_TAUSYM * (x[self.idx[("T", L, nm, 0)]]
-                                     - x[self.idx[("T", L, nm, 1)]]))
+                w = W_HOSYM if (L, nm) in self.ho_recv else W_TAUSYM
+                r.append(w * (x[self.idx[("T", L, nm, 0)]]
+                              - x[self.idx[("T", L, nm, 1)]]))
 
         # Junction steps, against the published section counts where there are
         # any. A station the train count runs straight through is not a junction
@@ -765,6 +805,20 @@ def main():
             continue
         ho_step[(Mm, stop)] = (L, end,
                                float(res.x[k0]) * SCALE, float(res.x[k1]) * SCALE)
+
+    # The two directions of each handover, because their *ratio* is the thing
+    # that says whether the fit determined the handover or picked a point on a
+    # ridge. The same trains make both journeys, so anything far from 1.0 is
+    # the fit being unconstrained rather than a finding about the railway --
+    # 태백선 read 4.7 before W_HOSYM existed. Cheap to print and it is the only
+    # place this number is visible.
+    if ho_step:
+        print("\nhandovers, both directions")
+        for (Mm, stop), (L, end, a, b) in sorted(ho_step.items()):
+            lo, hi = sorted((abs(a), abs(b)))
+            print("   %-11s %-9s -> %-9s %-9s %11.0f %11.0f   ratio %.2f"
+                  % (L, end, Mm, stop, a, b, (hi / lo) if lo > 1e-9 else 0.0))
+
     write_geojson(rows, corridors, table, ho_step)
 
 
@@ -1027,7 +1081,13 @@ def write_geojson(rows, corridors, table=None, ho_step=None):
             k_stn = raw.get(end)
             if not hs or poly is None or k_stn is None:
                 continue
-            pts = B.slice_corridor(poly, cum, shape["ran_on"][end], k_stn)
+            # Corridor order, so the stub's far end meets its neighbour: at a
+            # line's head that means junction -> station, at its tail the other
+            # way round. Getting this backwards puts a 6 km hole in 태백선.
+            head = end == r["stops"][0][1]
+            k_far = shape["ran_on"][end]
+            pts = B.slice_corridor(poly, cum, *((k_far, k_stn) if head
+                                                else (k_stn, k_far)))
             if len(pts) < 2:
                 continue
             skm = sum(B.haversine(x, y) for x, y in zip(pts, pts[1:]))
@@ -1042,7 +1102,7 @@ def write_geojson(rows, corridors, table=None, ho_step=None):
                   "geometry": {"type": "LineString",
                                "coordinates": [[round(q[1], 6), round(q[0], 6)]
                                                for q in pts]}}
-            if end == r["stops"][0][1]:
+            if head:
                 feats.insert(line_at, ft)
             else:
                 feats.append(ft)

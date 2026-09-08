@@ -43,6 +43,28 @@ Catholic dot in Neukölln is there because the register put Catholics in that sq
 The run confirms it end to end — **17,215 of 17,215 (unit, node) rows placed on the
 religion's own grid counts**, with no fallback used at all.
 
+**Amended 2026-09-07 (second time): the layer now carries a CITIZENSHIP signal too.**
+`Staatsangehoerigkeit_nach_ausgewaehlten_Laendern.zip` publishes thirteen countries on the
+**same `GITTER_ID_1km` cells**, so it joins on the cell id with no geometry work at all, and
+`de_grid_1km.gpkg` gained `isl_ctz` (Turkish + Bosnian, 1,498,990) and `orth_ctz` (Greek,
+Romanian, Russian, Ukrainian, 1,918,207). It sharpens the placement of the two modelled nodes
+that `son` served worst — in Berlin the top 10% of cells hold 35% of `son` and 63% of
+`isl_ctz`. Full argument, including why the Orthodox blend degenerates, in `de.md` §10.
+
+**Amended 2026-09-07: one node on this map is NOT placed on its own count, and the
+paragraph above does not describe it.** Germany now draws `judaism` from ZWST rather than
+from the Zensus (`de.md` §7), and destatis publishes no Jewish grid — so those rows are
+placed on `son`, the `Sonstige` column they were carved out of. That is a much better
+locator inside a city than total population would be, but it is a **proxy**, and the claim
+that Germany's placement is measured is true of the three Zensus categories and not of this
+one. `_DeGridWeighter` counts the two separately and the run prints them apart:
+
+```
+17,237 rows placed on that religion's OWN 1km grid counts,
+    45 on the `Sonstige` column they were carved out of (ZWST, a proxy),
+     1 on cell population, 0 on equal shares
+```
+
 ## 3. Why 1km and not the 100m file
 
 The 100m grid has 3,088,036 populated cells; Germany draws 82,710 dots. That is 37 cells per

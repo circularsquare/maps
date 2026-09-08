@@ -173,6 +173,15 @@ ENTRY_SHARE = {
 HANDOVER = {
     ("수서고속선", "평택지제"): ("경부고속선", "천안아산"),
     ("호남선", "서대전"): ("경부선", "신탄진"),
+    # 태백선's trains do not terminate at 태백: six 무궁화 a day run 8.7 km on to
+    # 백산, leave the line there and rejoin 영동선 at 동백산, and the published
+    # section counts show the same six arriving (영동선 철암-동백산 4, 동백산-동해
+    # 10). Added, reverted and added again -- the first attempt gave it a 4.7x
+    # directional imbalance for a service that is symmetric by construction, and
+    # the arbitrariness propagated through junction conservation. It is only
+    # safe with solve.W_HOSYM holding the two directions equal; see README.md,
+    # "A handover's two directions are the same trains".
+    ("태백선", "태백"): ("영동선", "동백산"),
 }
 
 # Where a handover physically happens, for drawing only -- the fit still hangs
@@ -198,6 +207,9 @@ HANDOVER = {
 HANDOVER_POINT = {
     ("호남선", "서대전"): (36.3710255, 127.4218344),   # 대전조차장
     ("수서고속선", "평택지제"): (36.95148, 127.07057),  # 평택분기점
+    # 백산 is OSM node 368637144, `railway=service_station` -- which is why the
+    # station pull missed it, exactly as `railway=yard` hid 대전조차장.
+    ("태백선", "태백"): (37.1383871, 129.0337917),      # 백산
 }
 
 # Where each of those lines' own metals stop, which is not where its last
@@ -211,6 +223,10 @@ HANDOVER_POINT = {
 RUN_ON = {
     ("수서고속선", "평택지제"),
     ("호남선", "서대전"),
+    # The 8.7 km on to 백산, which is 태백선's whole -8.4 % gap against its
+    # 영업거리. A run-on has no load without a handover to give it one, so this
+    # only works alongside the HANDOVER entry above.
+    ("태백선", "태백"),
 }
 
 # Lines that reach an end station over another line's metals, and whose corridor
@@ -277,8 +293,14 @@ OVER = {
 # not merely permitted but roughly sized. README.md records that this cannot
 # help 대구선 or 경북선; 호남선 is one of the four lines whose boundaries are
 # informative, and this is the case that wants it.
+#
+# 태백선's 태백 is here on the same evidence: six trains a day run straight
+# through it to 백산 and on to 영동선, so the anchor's assertion that everyone
+# alights at 태백 is false. It was left out until the fit could pin the through
+# flow, which solve.W_HOSYM now does.
 THROUGH_ENDS = {
     "호남고속선": {"광주송정"},
+    "태백선": {"태백"},
 }
 
 # Which train types run on each line. The point is the parallel pairs: 경부선 and
@@ -365,6 +387,37 @@ def _open(member):
     raise SystemExit("no %s in the yearbook zip" % member)
 
 
+# Every reader below wants values and nothing else, and openpyxl spends all of
+# its time on the part none of them read. The yearbook's workbooks are 90 %
+# formatting -- 수송(여객) is 13.2 MB of parts of which `xl/styles.xml` is 11.8,
+# holding 53,810 named styles -- and `apply_stylesheet` expands every one of
+# them on open. Measured on 수송(여객): the open is 10.4 s and iterating the rows
+# afterwards is 0.02 s.
+#
+# `apply_stylesheet` returns quietly when the part is absent (`except KeyError:
+# return wb`), so dropping it from the archive skips the whole expansion. The
+# five readers here go from 20.7 s to 0.28 s and return identical dicts; the fat
+# workbooks are the ones every builder opens, so the same trick is worth having
+# anywhere else in the tree that reads one.
+#
+# Only safe for `read_only=True`, which is why that is not a parameter. Without
+# the stylesheet `wb._cell_styles` holds openpyxl's single default, and a normal
+# load binds every cell to `_cell_styles[style_id]` -- an IndexError against ids
+# running to 53,809. Read-only worksheets never look, so `values_only` rows are
+# unaffected. A caller that needs a font or a number format has to open the
+# workbook the slow way.
+def _book(member):
+    """The workbook, opened read-only with its stylesheet left out."""
+    src = zipfile.ZipFile(_open(member))
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_STORED) as dst:
+        for i in src.infolist():
+            if i.filename != "xl/styles.xml":
+                dst.writestr(i, src.read(i.filename))
+    buf.seek(0)
+    return openpyxl.load_workbook(buf, read_only=True, data_only=True)
+
+
 def _num(v):
     return 0.0 if v in (None, "-", "") or isinstance(v, str) else float(v)
 
@@ -382,6 +435,35 @@ STATION_ALIAS = {
 }
 
 
+# One name, two stations, and the operator cannot separate them because both are
+# Korail's. This is a judgement and it is here rather than in the code so that
+# it is visible and arguable.
+#
+# 양원 is the only case. There is a 양원역 in 봉화 on 영동선 (36.964/129.091,
+# `railway=halt`) and a 양원역 in 서울 중랑구 on the 중앙선 (37.607/127.108,
+# `network=수도권 전철`), 189.5 km apart, and the yearbook has one 양원 row.
+# It is 영동선's, on three grounds:
+#
+#   - The yearbook counts 일반열차 only. Seoul's 양원 is served by the 경의중앙선
+#     광역전철 and by nothing else, so it cannot be the row.
+#   - The row carries 새마을 as well as 무궁화 (643/234 하행, 711/292 상행),
+#     which is the signature its neighbours 분천, 승부 and 석포 have -- all three
+#     within a few km of it on 영동선, and all three in 영동선's roster.
+#   - `serves()` would otherwise give 중앙선 a station 189 km from the one
+#     영동선 has, and `solve.py` keys junctions by name: the two lines were
+#     being made to conserve through flow at a station neither shares.
+#
+# `8. 시설` sheet 2 would settle it and does not -- 양원 is in no line's roster,
+# which is a reminder that the roster misses small halts even where the 승하차
+# table has them. `check.py`'s junction check is what flags a case like this;
+# if it ever reports another, the answer belongs here.
+#
+#     station -> the only line whose station the 승하차 row describes
+STATION_HOME = {
+    "양원": "영동선",
+}
+
+
 def _alias(out, name, v):
     nm = STATION_ALIAS.get(name, name)
     p = out.get(nm)
@@ -390,7 +472,7 @@ def _alias(out, name, v):
 
 def station_flows():
     """역별 승하차 -> {station: (하행승차, 하행하차, 상행승차, 상행하차)}."""
-    wb = openpyxl.load_workbook(_open(PASSENGER), read_only=True, data_only=True)
+    wb = _book(PASSENGER)
     ws = wb["8"]
     out = {}
     for row in ws.iter_rows(min_row=7, max_row=ws.max_row,
@@ -420,7 +502,7 @@ def station_flows_by_type():
     type separates the parallel pair, since only the high-speed services use the
     고속선.
     """
-    wb = openpyxl.load_workbook(_open(PASSENGER), read_only=True, data_only=True)
+    wb = _book(PASSENGER)
     out = {}
     for sheet, fixed in TYPE_SHEETS.items():
         ws = wb[sheet]
@@ -442,7 +524,7 @@ def station_flows_by_type():
 
 def line_passing():
     """선별 통과인원 -> {traffic-table name: 명/년}."""
-    wb = openpyxl.load_workbook(_open(PASSENGER), read_only=True, data_only=True)
+    wb = _book(PASSENGER)
     ws = wb["5"]
     out = {}
     for row in ws.iter_rows(min_row=9, max_row=ws.max_row,
@@ -455,7 +537,7 @@ def line_passing():
 
 def rosters():
     """노선 -> {station, ...} from the facility table."""
-    wb = openpyxl.load_workbook(_open(FACILITY), read_only=True, data_only=True)
+    wb = _book(FACILITY)
     ws = wb["2"]
     out, cur = {}, None
     for row in ws.iter_rows(min_row=6, max_row=ws.max_row,
@@ -471,7 +553,7 @@ def rosters():
 
 def distances():
     """영업선로별 철도거리 -> {name: (from, to, km)}, km summed over track types."""
-    wb = openpyxl.load_workbook(_open(FACILITY), read_only=True, data_only=True)
+    wb = _book(FACILITY)
     ws = wb["4"]
     out = {}
     for row in ws.iter_rows(min_row=8, max_row=ws.max_row,

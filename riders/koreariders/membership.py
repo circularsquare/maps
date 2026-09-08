@@ -106,6 +106,23 @@ def load_stations(LN=None):
     counts 일반열차 only and has no row for them. Dropped only if OSM knows the
     name, no node of that name is Korail's, and neither the 승하차 table nor any
     roster has heard of it.
+
+    That name-wide test has a hole, and it is the one that lets a station be in
+    two places. 좌천 is a Korail station on 동해선 at 35.312/129.245 **and** a
+    부산교통공사 subway station 26 km away at 35.134/129.054, and because the
+    name is in the 승하차 table the whole name survives -- so 경부선 snapped to
+    the subway node and 동해선 to the Korail one, and `check.py` reported the two
+    lines meeting 26 km apart. Worse than the drawing: `solve.py` keys junctions
+    by name, so it was conserving through flow between two lines at a station
+    neither shares.
+
+    A name being in the 승하차 table says *a* station of that name has 일반열차
+    traffic. It does not say every node of that name does. So the operator test
+    is now per node as well as per name: **where a name has a Korail node, the
+    non-Korail nodes of that name are dropped.** The yearbook's row belongs to
+    the Korail one, and the other is a different railway that happens to share a
+    name. Nothing that was kept before by having Korail *somewhere* under its
+    name is affected, since that node is exactly the one this keeps.
     """
     with io.open(STATIONS, encoding="utf-8") as f:
         els = json.load(f)["elements"]
@@ -127,9 +144,13 @@ def load_stations(LN=None):
 
     named = collections.defaultdict(list)
     for n in els:
-        nm = (n.get("tags", {}) or {}).get("name")
-        if nm and nm not in skip:
-            named[nm].append((n["lat"], n["lon"]))
+        t = n.get("tags", {}) or {}
+        nm = t.get("name")
+        if not nm or nm in skip:
+            continue
+        if KORAIL in ops[nm] and (t.get("operator") or "") != KORAIL:
+            continue
+        named[nm].append((n["lat"], n["lon"]))
     return named
 
 
@@ -162,6 +183,13 @@ def serves(LN):
                              for i in (0, 2))
                 if served > 0:
                     keep.add(canon)
+        # Where one name is two stations and both are Korail's, the operator
+        # test above cannot help and lines.STATION_HOME says which one the
+        # 승하차 row is. Only applied when that line is a claimant, so a stale
+        # entry cannot invent membership -- it can only take it away.
+        home = getattr(LN, "STATION_HOME", {}).get(st)
+        if home is not None and home in keep:
+            keep = {home}
         if keep:
             out[st] = sorted(keep)
     return out

@@ -11,16 +11,25 @@ china shows buddhists in arunachal, double counting?
 
 french guiana population distribution looks a little silly psread out, that seems not right
 
-if we have a religion selected liek "daoism" and zoom in on a country that doesn't have any daoism, in auto mode, it just autos to the country and then clears the selected religion cuz theres no daoism to show. would rather have it just not auto to coutnries that dont have any of the religion
-
-show rough like "what percent of the total dots in scope is this religion for" in the legend as a partially filled in bar the same color as the dot... like 80% full bar for 10% of total, 60% bar for 1%, 40% bar for 0.1%, 20% bar for 0.01%. maybe these bars can go over the religion's person count (like above the "9.7m" grey text)
-
-ability to select religions for viewing, like in ancestrydots. people might wanna show just like baptist and catholic or something. i guess we need checkboxes on the right to granularly select what should be shown or not. clear button can be reworded into a select all i guess? and if we have all selected, maybe it turns into a hide all button. also should be able to use the heckbox for a religion group to toggle all children
-
-
 setting to view just *country level* or first admin level statistics of just like percentages of each religion, top 10 style? just one hoverable thing per coutnry/region i guess. no dots. or maybe one different sized dot per religion
 
 a little house per religion, for the holy site / origin site / headquarters of that religion? could be cool to see where all the shintos are
+
+maybe reolor "other" to purple or something?
+maybe get rid of some of the jewish categories? half are only in israel, half are only in usa
+
+
+country	people	units	cats	state
+1	Slovakia	5.45M	2,927	11	verified; data + geometry + grid in one open service
+2	Peru	23.2M	1,874	8	already reopened in §11y, still unbuilt — largest undrawn in the Americas
+3	Samoa	205k	43 or 339	26	data verified, exact partition; boundaries need work
+4	Fiji	~885k	provinces	11	most plural Pacific country (Methodist / Hindu / Muslim); office open, not yet chased
+5	PNG	~7.3M	22 provinces	—	biggest Pacific country; office open, absent from oracle
+6	Solomon Islands	721k	9+1	—	Anglican Church of Melanesia, SSEC — both new
+7	Tonga / Kiribati / Vanuatu	99k–300k	—	22 / 14 / 11	Kiribati confirmed: religion is a census topic, nso.gov.ki/download/<id>/ is an open catalogue
+8	~15 microstates	tiny	1	4–24	unlocked by your call above
+9	Austria	8.0M	Gemeinde	31	deepest undrawn list in Europe, but 2001 and 25 years stale
+10	Bulgaria / Cyprus	6.5M / 923k	—	10 / 13	hosts answer now; not chased further
 
 
 LATER

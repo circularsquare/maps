@@ -57,7 +57,17 @@ REVIEW = {
         "twenty members stayed independent. Splitting the 19.1M across lutheran / reformed "
         "/ united by Landeskirche would be possible — the Landeskirchen have territories — "
         "but destatis publishes one number and the split would be an allocation inventing "
-        "structure the source does not have (spec §3.10).",
+        "structure the source does not have (spec §3.10). RE-EXAMINED AND UPHELD "
+        "2026-09-07, Anita's call, and the reason turned out to be stronger than the one "
+        "written here. The territories are real for eighteen of the twenty — but the "
+        "Evangelisch-reformierte Kirche is NOT a territorial church at all, and EKD's own "
+        "footnote says population cannot be assigned to it: 151,083 members in 141 "
+        "congregations scattered inside Lutheran Hannover's borders and as far as Bavaria. "
+        "The united Landeskirchen are internally mixed by construction too, since the 1817 "
+        "Prussian Union merged administration and left congregations Lutheran or Reformed. "
+        "So a territorial join would draw which church body GOVERNS a place, not what "
+        "confession its people hold — and it would miss the Reformed almost entirely, who "
+        "are ~1.5% of the 19.1M. See sources/de.md §8.",
 
     "Sonstige, keine, ohne Angabe":
         "-> unrecorded, a node added for this source (branches.py, 2026-09-04) and the "
@@ -73,12 +83,99 @@ REVIEW = {
         "body, no entry) and its composition is a fact about the register rather than "
         "about the people. It gets the greyest treatment in the §6.3a family for that "
         "reason.",
+
+    "Jüdische Gemeinde (ZWST-Mitgliedsgemeinde)":
+        "-> judaism, and THIS CATEGORY IS NOT FROM THE ZENSUS. It is the one part of "
+        "`unrecorded` that a second source can count rather than estimate: the "
+        "Zentralwohlfahrtsstelle der Juden in Deutschland publishes membership per "
+        "community, 87,934 people in 2025, and sources/de_zwst.py seats them. It lives in "
+        "this file rather than in a de_zwst2025.py because taxonomy/registry.py discovers "
+        "one module per country and a second vintage for `de` would need an OVERRIDE entry "
+        "to say which one is drawn — when the honest answer is BOTH, one for each source.\n\n"
+        "`judaism` and not a movement below it: ZWST's members are mostly Einheitsgemeinden, "
+        "single communities that span orthodox and liberal on purpose, and the statistic "
+        "names no movement anywhere. Israel's four observance nodes are the wrong axis and "
+        "the wrong question (branches.py, §6.15) and are not reachable from a membership "
+        "roll.\n\n"
+        "THE BASIS IS THE REASON THIS IS ALLOWED AT ALL. Mixing a survey into the Zensus "
+        "columns would break spec §3.1, which is why the ESS split scouted in "
+        "sources/de.md §6 is still unbuilt. ZWST is a register too — an association's own "
+        "membership list, exactly the kind of thing the Melderegister is — so `roll` meets "
+        "`roll` and nothing is mixed. countries.py SUBTRACTS these people from the same "
+        "Gemeinde's `unrecorded` before adding them here, because that is the cell they are "
+        "sitting in today; adding without subtracting would give Germany 87,934 extra "
+        "people.\n\n"
+        "What it does not fix: this is affiliated membership, so the unaffiliated and much "
+        "of the post-2022 Ukrainian arrival stay inside `unrecorded` (spec §3.5 — marked, "
+        "not filled), and a roll counts the institution's location and not the member's "
+        "(§3.6), which here means a regional catchment drawn at its seat.",
+
+    "Muslimisch/Islam":
+        "-> islam, the PARENT, and not islam.sunni the way fr2024.py files the same ESS "
+        "answer for France. Germany's Muslim population is not simply Sunni: the Alevis "
+        "are a large minority of the Turkish-origin community and there is a substantial "
+        "Shia population from Iran, Iraq, Lebanon and Afghanistan. Zensus 2011 knew this — "
+        "its Frage 8 offered Sunni, Shia and Alevi as three separate answers — so naming "
+        "one of them off a survey that offers only `Muslimisch/Islam` would assert exactly "
+        "the distinction the German instrument that DID ask it declined to publish "
+        "usably.",
+
+    "Eine evangelische Freikirche":
+        "-> christianity.evangelical, whose own note says it is 'for sources that collect "
+        "`Evangelical` as an answer distinct from both `Protestant` and a named body' and "
+        "that it is deliberately NOT a parent of anything. The German Freikirche is that "
+        "category exactly: the VEF umbrella spans Baptists, Methodists, Pentecostals, "
+        "Brethren and Mennonites, so it cuts across the tree's families rather than "
+        "sitting inside one. It must NOT go to christianity.protestant — that node is "
+        "already carrying Germany's 19.1M EKD members, and the whole point of the "
+        "Freikirchen is that the register and the ESS both treat them as NOT the EKD "
+        "(destatis' column is 'Evangelische Kirche', ESS's is 'EKD, ohne Freikirchen').",
+
+    "Andere christliche Konfession":
+        "-> christianity, the root, as an unspecified Christian answer — the same call "
+        "fr2024.py makes for ESS's `Other Christian denomination`. NOT christianity.other, "
+        "whose note is explicit that it holds 'bodies with no branch to belong to, not a "
+        "residual', and this answer is a residual. `Christlich, aber fühlt sich keiner "
+        "spezifischen Religionsgemeinschaft zugehörig` joins it here rather than at "
+        "christianity.nondenominational: that node is a positive American answer about "
+        "belonging to a non-denominational church, and this one is the opposite — a person "
+        "saying no denomination fits them.",
+
+    "Östlich-orthodox":
+        "-> christianity.orthodox, the PARENT, and not .canonical the way France files it. "
+        "Germany's Orthodox are mostly the canonical churches of the Greek, Serbian, "
+        "Romanian and Russian diasporas, but it also holds Europe's largest Syriac "
+        "Orthodox community, plus Copts and Armenians — Oriental Orthodox, a different "
+        "branch of the tree, who have no other answer on this form to give. Filing the "
+        "whole cell as canonical would assert something false about tens of thousands of "
+        "people; the parent asserts only what the answer says.",
+
+    "Östliche Religionsgemeinschaft":
+        "-> other.de, together with `Andere nicht-christliche Religionsgemeinschaft`. See "
+        "that node in branches.py: the tree has no home for 'some Eastern religion, "
+        "unspecified', Zensus 2011 did print Buddhism and Hinduism as their own boxes and "
+        "the answers are unusable, and the cell's likely contents are knowable without "
+        "being separable.",
 }
 
 MAP = {
     "Römisch-katholische Kirche (öffentlich-rechtlich)": "christianity.catholic",
     "Evangelische Kirche (öffentlich-rechtlich)": "christianity.protestant",
     "Sonstige, keine, ohne Angabe": "unrecorded",
+    # a SECOND SOURCE, not a fourth Zensus column — see the REVIEW note above
+    "Jüdische Gemeinde (ZWST-Mitgliedsgemeinde)": "judaism",
+    # --- a THIRD source: ESS `rlgdnade`, splitting the residual (sources/de_ess.py).
+    # Verbatim ESS labels. The two register answers and `Jüdisch` are not here on
+    # purpose — they are measured elsewhere and must never be modelled on top.
+    "Muslimisch/Islam": "islam",
+    "Östlich-orthodox": "christianity.orthodox",
+    "Eine evangelische Freikirche": "christianity.evangelical",
+    "Andere protestantische Konfession": "christianity.protestant",
+    "Andere christliche Konfession": "christianity",
+    "Christlich, aber fühlt sich keiner spezifischen Religionsgemeinschaft zugehörig":
+        "christianity",
+    "Östliche Religionsgemeinschaft": "other.de",
+    "Andere nicht-christliche Religionsgemeinschaft": "other.de",
 }
 
 

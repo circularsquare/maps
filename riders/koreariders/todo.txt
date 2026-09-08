@@ -6,4 +6,4 @@
 
 
 
-python -m http.server 8731 --bind 127.0.0.1 --directory C:\Users\anita\projects\maps\riders\koreariders
+python -m http.server 8731 --bind 127.0.0.1 --directory /c/Users/anita/projects/maps/riders/koreariders

@@ -25,6 +25,9 @@ import membership as M
 HERE = os.path.dirname(os.path.abspath(__file__))
 D = os.path.join(HERE, "data")
 RAILWAYS = os.path.join(D, "osm_railways.json")
+# The junction throats, which carry no name and so are absent from the named
+# pull. See `load_network` and fetch_osm.py's UNNAMED.
+UNNAMED = os.path.join(D, "osm_rail_unnamed.json")
 STATIONS = os.path.join(D, "osm_stations.json")
 # Its own file. Both this and solve.py used to write segments.geojson, so
 # whichever ran last silently decided what the map drew -- and only solve.py
@@ -55,14 +58,23 @@ def haversine(a, b):
     return 2 * R * math.asin(math.sqrt(h))
 
 
-def load_network():
+def load_network(unnamed=True):
     """One graph for the whole country: {node: [(node, km, line_name), ...]}.
 
     Built once and reused for every line, with the per-line cost applied at
     search time -- rebuilding it per line was most of the runtime.
+
+    The unnamed ways go in with `nm` None, which is not in any line's target
+    set, so they cost the full foreign-track PENALTY and nothing routes over
+    them that has an alternative. What they buy is connectivity: without them a
+    junction curve is simply missing and a corridor that has to cross one goes
+    the long way round or gives up. `unnamed=False` is there to measure that.
     """
     with io.open(RAILWAYS, encoding="utf-8") as f:
         ways = json.load(f)["elements"]
+    if unnamed and os.path.exists(UNNAMED):
+        with io.open(UNNAMED, encoding="utf-8") as f:
+            ways = ways + json.load(f)["elements"]
     g = collections.defaultdict(list)
     for w in ways:
         nm = (w.get("tags") or {}).get("name")
@@ -117,6 +129,66 @@ STUB_MIN_KM = 1.0       # closer than this and the corridor already reaches
 STUB_MAX_KM = 30.0      # 경부고속선's 서울 stub is 22; nothing legitimate is more
 STUB_MAX_RATIO = 3.0    # track km per straight km, so a stub cannot wander
 
+# Two adjacent tracks in a depot are two nodes a few metres apart with no edge
+# between them, so a route that has to change from one to the other runs to
+# wherever they do join and comes back. 중부내륙선 is the case: its drawn end and
+# the track that reaches 부발 are 17 m apart and only meet 1.55 km south, so the
+# shortest route to a station 1.63 km away is 5.01 km, of which 3.19 is spent
+# going south and returning. `reach_station` refused it at a ratio of 3.07
+# against a bound of 3.00, which was the right call about the wrong quantity --
+# the route is not wandering, it is doubling back.
+#
+# So an excursion that returns to within STUB_JOIN_KM of somewhere it has
+# already been is spliced out before the route is measured. The two kinds of
+# return separate cleanly and are not near each other, which is why a plain
+# threshold does this safely -- measured over every line's stub:
+#
+#     doubling back    3.19 km over 17 m, 3.81 over 28, 20.97 over 21,
+#                      103.89 over 18      -- ratios 136 to 5,772
+#     double track     0.02 km over 24 m, 0.03 over 28  -- ratios about 1
+#
+# The second kind is two parallel tracks weaving, where the route "returns"
+# having gone no further than the gap itself. Cutting those would buy nothing
+# and would litter the drawn line with metre-scale jumps, so the rule takes
+# both a floor and a ratio and the band between 1 and 136 is empty.
+STUB_JOIN_KM = 0.030    # two tracks this close are one place on this map
+STUB_LOOP_MIN_KM = 0.2  # shorter than this is weaving, not an excursion
+STUB_LOOP_RATIO = 10.0  # ... and so is anything not much longer than its gap
+
+
+# A degree of latitude is 111 km and a degree of longitude at least 87 across
+# Korea, so nothing outside this box can be within STUB_JOIN_KM. The scan below
+# is quadratic in the length of the route and a stub search over the national
+# graph can return thousands of nodes, so almost every pair has to be rejected
+# without a haversine: with the box it costs two subtractions instead.
+STUB_JOIN_DEG = STUB_JOIN_KM / 87.0
+
+
+def deloop(path):
+    """Splice out excursions -- track the route covers only to come back."""
+    out, i, n = [], 0, len(path)
+    while i < n:
+        out.append(path[i])
+        cut = i
+        for k in range(n - 1, i, -1):
+            if (abs(path[i][0] - path[k][0]) > STUB_JOIN_DEG
+                    or abs(path[i][1] - path[k][1]) > STUB_JOIN_DEG):
+                continue
+            gap = haversine(path[i], path[k])
+            if gap > STUB_JOIN_KM:
+                continue
+            loop = sum(haversine(a, b)
+                       for a, b in zip(path[i:k], path[i + 1:k + 1]))
+            if loop >= STUB_LOOP_MIN_KM and loop >= STUB_LOOP_RATIO * gap:
+                cut = k
+            break
+        # Resume *at* the returning node, not past it. It is the last point the
+        # excursion shares with the route, so keeping it leaves one joint of at
+        # most STUB_JOIN_KM and every later point exactly on the real track;
+        # skipping it would add that node's own edge to the joint as well.
+        i = cut if cut > i else i + 1
+    return out
+
 
 def reach_station(g, start, pt):
     """Track from a corridor's end to a station that sits off the line.
@@ -127,6 +199,10 @@ def reach_station(g, start, pt):
     directness ratio, since a stub that triples the straight-line distance has
     gone somewhere other than the station. Either bound failing returns nothing
     and the caller leaves the end alone.
+
+    Both bounds are applied to the de-looped route, since an excursion is track
+    the trains do not cover and measuring it as if they did is what made the
+    directness bound refuse routes that are perfectly direct. See `deloop`.
     """
     dst = nearest_node(g, pt)
     if dst == start:
@@ -136,6 +212,9 @@ def reach_station(g, start, pt):
         return None
     path, _ = shortest_path(g, start, dst, set())
     if not path or len(path) < 2:
+        return None
+    path = deloop(path)
+    if len(path) < 2:
         return None
     km = sum(haversine(a, b) for a, b in zip(path, path[1:]))
     if km > STUB_MAX_KM or km > STUB_MAX_RATIO * max(straight, 0.1):
@@ -376,9 +455,20 @@ def order_stations(spec, g, named, flows, corridor=None, over=None,
             continue
         # A named host line wins: lines.OVER says which line's metals carry the
         # trains here, and the caller has already sliced that line's corridor.
-        # The search is the fallback, and refuses more often than it succeeds
-        # because unnamed connecting track is not in the graph at all.
-        stub = (over or {}).get(nm) or reach_station(g, poly[at], pt)
+        # The search is the fallback.
+        #
+        # An end `over` mentions at all is the host's, even before the slice
+        # exists -- a None there means "reserved, leave it short". The caller
+        # builds every corridor once and only then has a host to slice, so on
+        # the first pass 경부고속선's 서울 has no stub yet; letting the search
+        # take it then leaves the corridor already at 서울, and the slice from
+        # there to 서울 is 0.0 km. That is not hypothetical: it is what happened
+        # when de-looping made the search able to reach 서울 at all, and it cost
+        # the line its 18.7 km of 경부선 metals and the network eight junctions.
+        if over is not None and nm in over:
+            stub = over[nm]
+        else:
+            stub = reach_station(g, poly[at], pt)
         if not stub:
             continue
         poly = graft(poly, stub, at)

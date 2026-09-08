@@ -51,6 +51,8 @@ and the surviving part is stated first.
 - 2.3 Source categories are not all the same kind of thing
 - 2.4 The first tree — 428 nodes, and the three checks that earn their place
 - 2.5 The Catholic Church sits at a different depth in the US — DONE
+- 2.6 A school is never assigned from outside the source — RE-CONFIRMED, and the registry that
+  says 99.9% is not the only registry
 
 **§3 Counting rules** — the R4 answers
 - 3.1 Every figure carries a `basis`, and bases are never mixed
@@ -94,7 +96,8 @@ and the surviving part is stated first.
 - 6.7 Out of scope is hidden, not dimmed
 - 6.8 One palette for every country — REVERSES §6.2
 - 6.9 Two palettes again, split by scope and not by country — AMENDS §6.8
-- 6.10 A row too small to be worth a line folds into one
+- 6.10 A row too small to be worth a line folds into one · 6.10a the denominator is the VIEW,
+  not the parent — REVERSED
 - 6.11 The reader gets the hand overrides too — the swatch picker
 - 6.12 An empty map means two opposite things, so say which — the coverage wash
 - 6.13 Christianity's branches are authored, not allocated
@@ -109,6 +112,8 @@ and the surviving part is stated first.
 - 7a-ii The hit test and both hover cards had not followed the roll-up — FIXED
 - 7a-iii A country that measured NOTHING draws nothing — China and Switzerland — BUILT
 - 7b The US residual is `modelled`, not `derived`
+- 7c The header says what kind of map this is, and how much of it we made up — BUILT
+- 7d `fill` names the table each derivation came from; `gap` moves in; the about panel — BUILT
 
 **§8 Pipeline**
 - 8.1 Boundaries must be the vintage the data was *published* on
@@ -122,10 +127,12 @@ and the surviving part is stated first.
 - 8.4 Placing dots by demographic composition — BUILT · 8.4a the residual gets its own model
 
 **§9 Viewer** — MapLibre, the dark ancestrydots style, and what tiling took away ·
-9a Auto's minimum-dots floor made every country under ~150k invisible to it — FIXED
+9a Auto's minimum-dots floor made every country under ~150k invisible to it — FIXED ·
+9b Auto will not enter a country that has none of what is selected
 
 **§10 The tree panel** — 10.0 fixed family order · 10.0a the grey family is contiguous ·
-10.1 what the panel says about itself · 10.2 the settings are segmented pairs
+10.1 what the panel says about itself · 10.2 the settings are segmented pairs ·
+10.3 a share bar per row, and a column of checkboxes
 
 **§11 Open questions** — mine to resolve with a prototype; Anita's are in `todo.txt`
 
@@ -142,7 +149,8 @@ data · downloading · parsing · joining to boundaries · taxonomy · reconcili
 **14.11 France is drawn, and what that does to 14.3** · 14.12 a fractional-share model is not
 uniformly trustworthy (Kazakhstan) · **14.13 CFPS refused — the Han residual is unblocked, and CGSS
 is checked and rejected** · **14.14 China is 100% drawn, and a threshold over an interested source
-is not a rule**
+is not a rule** · **14.15 what is left for China, ranked — and CFPS was the wrong target all
+along, on §3.1 grounds**
 
 ---
 
@@ -318,6 +326,71 @@ maps no other code to either branch, so the per-unit group sums and therefore th
 largest-remainder allocation (§4.1a) are unchanged. `tiles.py` still has to run, since the ids
 are baked into the archive; until it does, those dots carry a node that no longer exists and draw
 grey, the one thing §6.6 says must never happen.
+
+### 2.6 A school is never assigned from outside the source — RE-CONFIRMED 2026-09-07, with evidence this time
+
+**The bare-`buddhism` call has now been made seven times** — `lk2024` (Sri Lanka, 15.2M),
+`mm2014` (Myanmar, 45.2M), `kh2019` (Cambodia, 15.1M), `th2010` (Thailand, 61.7M), `bd2011`
+(Bangladesh, 890k), `in2011` (India, 8.4M) and `kr2015` (South Korea, 7.6M → not Mahayana) —
+and `kr2015.py` closes its note with *"if that trade is ever reversed, Korea is the country to
+reverse it with."* Anita asked the obvious question on 2026-09-07: **is any country so nearly
+one school that the map could just assign it?**
+
+**The state of the map is what makes the question fair.** 176,354 of the 185,000 Buddhist dots
+sit on the undivided parent — **95%** — while `buddhism.theravada` holds 1,550 and
+`buddhism.mahayana` 549. Worse, the fullest school node is filled by the WEAKEST evidence on
+the map: China's Dai, derived from ethnicity under §14.5. So the map currently gets *more*
+specific as the evidence gets *worse*, and `buddhism.theravada`'s own node note names
+"Sri Lanka, Myanmar, Thailand, Laos, Cambodia" before saying Sri Lanka is not drawn there.
+
+#### The evidence that settles it, and it is Thailand's
+
+The argument for assigning was that these are not general-knowledge countries — **the state
+itself registers the sangha by school**, which is a §14.10-shaped documented coefficient. That
+is true and it is about the wrong thing. Thailand's National Office of Buddhism, 30 December
+2023, wats with resident monks:
+
+| | temples |
+|---|---|
+| Maha Nikaya (Theravada) | 38,934 |
+| Dhammayuttika (Theravada) | 4,588 |
+| Chinese Nikaya (Mahayana) | **16** |
+| Annam Nikaya (Mahayana) | **25** |
+| | **43,563** |
+
+41 of 43,563 is **0.094% Mahayana** — the 99.9% the argument wanted. **But the Ministry of the
+Interior separately registers 17 Chinese temples, 19 Vietnamese temples and 682 Chinese
+shrines**, because a Chinese shrine is not a wat and is licensed under a different law. Count
+all Buddhist places of worship and Mahayana infrastructure is **17× larger** than the sangha
+registry shows.
+
+**So the 99.9% was an artefact of which registry you read, and §3.6 already says why: a roll
+counts the institution's location, not the member's.** Neither registry counts a person, and
+**no source anywhere counts Thai Buddhists by school** — not the census, not the surveys.
+
+**The doubt is larger than the node it would fill.** If even 5% of Thailand's 61.7M Buddhists
+are meaningfully Mahayana that is 3.1M people, **twice the entire current
+`buddhism.theravada`**. And the distinction may not be well formed for the population it turns
+on: a Thai Chinese family that visits a wat, a Chinese shrine and keeps Qingming has no school,
+and forcing one invents a boundary the way §14.7 refuses to invent the folk/irreligious one.
+
+#### Decided
+
+**Anita, 2026-09-07: leave it as is.** No country's Buddhists are re-filed, and **China's Dai
+stay on `buddhism.theravada`** — the option of demoting them to the parent for uniformity was
+put and declined, because the Dai case is §14.5's strongest row and the vehicle is part of what
+the ethnonym carries (`cn2000.py`'s `Tibetan` note makes the same point).
+
+**What the next session should not redo:** the four-country ranking, if this ever reopens, is
+**Sri Lanka cleanest, then Cambodia, then Myanmar, and Thailand weakest** — the reverse of the
+order they come to mind in, because the risk scales with the size of the Chinese-descended
+population and Thailand's is by far the largest. Korea remains the Mahayana case `kr2015.py`
+names.
+
+**The general form, and it is worth more than Buddhism:** *an institutional registry
+under-counts a tradition by exactly as much of it as the registry does not register* — and that
+share is invisible from inside the registry. Ask which OTHER register might hold the same
+tradition under a different law before quoting a 99% from one of them.
 
 ## 3. Counting rules — DECIDED
 
@@ -2016,7 +2089,7 @@ must be an answer of the same kind:
 | `unaffiliated` | No religion | the largest single answer in Canada, the US and Czechia |
 | `secular` | Secular and ethical | a stated non-theistic **position** — Ethical Culture, and the Atheist / Agnostic / Humanist answers Canada and Pew both collect. Not the same as `unaffiliated`, which is the absence of one |
 | `unchurched` | Believing, no church | reports religious belief **and** explicitly no institution. Czechia's 960,201; Pew's "spiritual but not religious" |
-| `other.<source>` | Other, by source | the per-source residual containers of §3.11. The greyest of the five, being the one that says nothing |
+| `other.<source>` | Other | the per-source residual containers of §3.11. The greyest of the five, being the one that says nothing |
 | `parody` | Parody and protest answers | Jedi, Pastafarian — a protest, not a belief |
 | `unrecorded` | Religion not recorded | §6.3a-i — the source **never asked** |
 | `unknown` | Religion unknown | §6.3a-ii — the source asked and the answer set was too narrow |
@@ -2479,7 +2552,7 @@ Colours come out of `index.html` itself through `tools/palette_dump.js`, which s
 own declarations out of the inline script and runs them in node — so, like `check_palette.py` reading
 `ROOT_HSL`, **the checker cannot drift from the palette it measures.**
 
-### 6.10 A row too small to be worth a line folds into one — DECIDED 2026-09-03
+### 6.10 A row too small to be worth a line folds into one — DECIDED 2026-09-03, denominator REVERSED 2026-09-07 (§6.10a)
 
 The legend has a fixed budget and the tree does not. At depth 2 the all-religions view drew 28 rows
 under Christianity and five of them — Church of the East, Hussite, Moravian, Plymouth Brethren,
@@ -2504,6 +2577,60 @@ tallies. It sits last under its parent, being the residual of the list above it.
 **It fires where the tail is long and nowhere else**, which is the check that it is measuring the
 right thing: four rows fold in the all-countries view and none in the United States or Czechia. 2e-4
 would also take Maori Christian churches and the Quakers; the constant is one line.
+
+### 6.10a The denominator is the VIEW, not the parent — REVERSED 2026-09-07
+
+§6.10's first bullet is now wrong, and it names its own counter-example: *"Reconstructionist
+Judaism (39 dots, but 1.3% of Judaism) stays"*. Anita looked at that row and said it should not.
+
+> *"i think maybe it works based on percentage of parent like percentage of judaism. thats not
+> right. i want to do as percentage of everything we're looking at (so if we're looking at american
+> christianity, as percentage of american christian count. if we're looking at world all religions,
+> as percentage of world all religions count)."*
+
+**The parent rule is coherent and answers the wrong question, and two rows show it exactly.**
+
+| row | share of its parent | people | dots (world view) | old rule | new rule |
+|---|---|---|---|---|---|
+| Reconstructionist Judaism | **0.292%** of Judaism | 39,000 | 39 | keeps a row | folds |
+| Shia Islam | **0.049%** of Islam | 430,000 | 430 | keeps a row | keeps a row |
+
+Shia's share of its parent is **six times smaller** and it is **eleven times more people**. A share
+of a parent is only comparable between parents that contain comparable things, and these do not:
+Islam's total is 98% `unspecified` (864m of 879m), because almost no source that reports Muslims
+divides them, while Judaism's total is nearly all named denominations. So the same fraction means
+"one of the few named Muslim bodies" under one parent and "a rounding error" under another.
+
+**Measured against the view, both come right**: 39 dots in 5,062,789 folds and 430 does not.
+
+**It is the same denominator the share bars use (§10.3)** — the scope's total, or every root's when
+nothing is selected — and that matters more than the arithmetic does. **A reader watching a row
+vanish into the bucket can see why in the bar beside it: the fold is the point where the bar has
+nothing left to say.** Two mechanisms that both answer "how big is this here" cannot be allowed to
+answer it differently on the same row.
+
+**5e-5 is measured, not picked.** It is the largest cut that folds nothing anyone would look for:
+
+- every one of the 37 rows the parent rule folded **still folds** — Moravian, Plymouth Brethren,
+  Pietist and Hussite among them, which are §6.10's own motivating cases;
+- Shia, Mahayana, Ahmadiyya and Anabaptist all keep their rows;
+- the all-countries legend loses **194 rows into 34 buckets**, against 37 into 9.
+
+Raising the *parent* cut to reach the same two Judaism rows would have needed 3e-3, and at that
+value **Shia Islam, Mahayana Buddhism, Ahmadiyya and Eastern Catholic all fold** — measured, not
+feared. That is the whole argument against the old denominator in one line.
+
+**WHAT IT COSTS, and it is real.** A country's total is a fiftieth of the world's, so the same
+fraction is a far smaller number of dots, and the per-country tails the parent rule folded stop
+folding: **the United Kingdom goes from 7 rows folded to none, Poland from 5.** That is the honest
+consequence of the denominator asked for — a group that is a real part of Poland is not a rounding
+error because Poland is small — and it points the same way as §14's general rule about not letting a
+country's size decide how finely it is drawn. **If the country legends turn out to want it back, the
+fix is one `||` putting the parent test alongside this one, not a different threshold.**
+
+**`FOLD_MIN` was never the blocker and has always been 2.** It is worth writing down because it was
+the first suspect: *"is 2 not enough? lets make the threshold 2 so that 2 is enough."* It was
+already 2, and `small.length >= FOLD_MIN` already admitted a pair. The size cut was the whole of it.
 
 ### 6.11 The reader gets the hand overrides too — DECIDED 2026-09-03
 
@@ -3296,6 +3423,163 @@ can see rather than one they must be told.
 
 Requires a rebuild — `scatter_all.py --countries us`, then `buffers.py` and `tiles.py` for all
 countries, because the manifest and the archive are whole-project files. About four minutes.
+
+### 7c. The header says what kind of map this is, and how much of it we made up — BUILT 2026-09-07
+
+Anita, looking at the France panel: *"i think they maybe contain some not super useful information
+(for a random curious human exploring) and are omitting some things that should really be like the
+main emphasis (these dots are kinda pulled out of our ass / modelled suspiciously)."*
+
+**§7a's readout was in the right project and the wrong place.** It sits under the `inferred dots`
+control at the bottom of the legend, which is correct for somebody who has already found that control
+and useless for somebody meeting a country for the first time. What they met instead was a title, a
+citation and a granularity line — **three descriptions of an instrument, none of which said whether
+the instrument had ever touched the places on screen.** France read as a well-sourced map of French
+religion. It is a 12,678-person survey at the *région*, and nothing on the left of the screen said so.
+
+**Three labelled rows under the title, replacing the granularity line.**
+
+| row | from | says |
+|---|---|---|
+| `data type` | `how`, new in `countries.py` | what kind of instrument, in the same words for all 68 |
+| `data modelled` | live, off the buffers' tier bits | how much of the drawn dots NOBODY counted |
+| `granularity` | `grain`, unchanged but for its label | the size of the count units |
+
+**`data modelled` counts what nobody counted, and the first draft counted the other way.** It shipped
+as `counted: 78%, we filled in the rest from coarser or older counts` — Anita: *"78% ... -> 22% filled
+in from earlier counts"*. Naming the measured share made the reader subtract to reach the number the
+row exists to give them. It now reads `22% filled in from broader counts`, `51%`, `0%`, `100%`. The
+word `modelled` is in the label, so a country whose only inferred tier is `modelled` gives the bare
+number and France reads **100%**; `derived` is a different claim from the label's and always names
+itself. The same `tierWords()` builds the legend's terse caption, so the two can never drift apart.
+
+**"broader counts", and it is the third wording.** `derived` is reached three ways — a coarser unit,
+an earlier census, a wider category — and both shorter phrasings are false of real countries: "earlier"
+of Canada and the UK, whose allocation is same-year and coarser-geography, and "coarser" of Brazil,
+whose 2010 denominations sit inside 2022 totals at the same município. Broader is the one word true of
+all three, and the tooltip spells them out.
+
+**It is the one row allowed to leave the grey.** Past 50% modelled the value goes amber. Everywhere
+else on this map a caveat is grey and waits to be looked for; "none of this was counted" is not a
+caveat about the picture, it *is* the picture. The threshold is the claim and not a taste: the United
+States clears it by a whisker at 51%, and that is the country the warning is most for.
+
+**`how` exists because `source` cannot do this job.** `source` is the citation and has to stay one.
+But *"Sčítání 2021 (Czech Statistical Office)"* and *"Sreda «Arena» Atlas of Religions 2012"* look
+alike on the page and are a full census and a 56,900-person survey. Sixty-eight agencies in five
+languages cannot be ranked by a reader at a glance. `how` says `census, 2021, voluntary question`
+against `survey, 56,900 people, 2012; no census asks`, in one vocabulary, and those *can* be.
+
+### The wording rules, and they are the reason the block was rewritten a day after it shipped
+
+Anita: *"lets try to word this in a way thats not as much ai-smell."* The first draft was correct and
+sounded machine-written, which on a map whose whole subject is whether to trust it is not a small
+defect. Four rules, and they bind `how`, `grain` and everything `tierWords()` builds:
+
+* **No em dashes.** They were doing the work of a comma, a semicolon and a bracket at once, and they
+  are most of what the smell is. `countries.py` asserts on them.
+* **No bold.** With `grain` bolding its whole string and `how` bolding none of its own, emphasis
+  landed on whichever row happened to carry markup. Nothing in the block is bold now, so both fields
+  are plain text and the viewer escapes them.
+* **No article, no "a … question".** `a census question, 2021` became `census, 2021`. Sixty-eight rows
+  in one grammar are read as a column, and the leading article is noise repeated sixty-eight times.
+* **No "we".** The first draft wrote `we filled in the rest` to make sure the arithmetic was owned by
+  the project rather than the source. The label does that already: a statistical office does not
+  describe its own figures as modelled.
+
+**And the block is drawn for a country only.** It carried the `data modelled` row alone in the
+all-countries view for a day, which was one share averaged over sixty-eight different instruments,
+under a title naming none of them. The subtitle there says it in words instead, and this is Anita's
+sentence: *"data from official censuses where available, in many cases modelled, see details"* — where
+the old line said the countries were "measured differently", which is true and is the smaller half of
+it. Differently is a comparability problem; most of a reader's trouble with this map is that a lot of
+it was never measured at all.
+
+**Two things were dropped, both for the same reason: a line nobody reads costs the lines around it.**
+
+* **`basis` left the subtitle.** It is spec §3.1's quantity and it matters, but sixty of the
+  sixty-eight countries begin it with "self-identification" and the rest of the string is a qualifier,
+  so it read as boilerplate, got skipped, and took the citation on the line above it with it. It is
+  unchanged in the about panel, where a reader is already reading prose.
+* **`grain` lost its `religion data granularity:` prefix.** The row's label says what the number is;
+  the string said it again. It only ever carried the prefix because it stood alone with nothing else
+  to identify it.
+
+**Kazakhstan is the one country the trim changed rather than shortened.** Its granularity line said
+*"modelled — the national religion table applied to 17 regions' ethnic composition"*, which is a
+confidence statement wearing a granularity label, because that line was then the only one under the
+title able to carry it. With `data modelled` above it saying 100%, `granularity` is free to answer its
+own question: **17 regions, 1.1m people on average**.
+
+**No rebuild.** `how` and `grain` are display fields (`tiles.py --refresh-meta`, about a second) and
+`data modelled` is counted off buffers that already carry the tier in `ni`'s top two bits (§7a).
+
+### 7d. What the filling-in was done FROM, and the about panel it points at — BUILT 2026-09-07
+
+Three follow-ups to §7c, all of them Anita's, all the same afternoon.
+
+#### `fill`: name the table, because there is one
+
+*"'broader counts' feels weak and maybe in cases where we just used an earlier census we could say
+that it was just another census? sounds more legitimate which it is."* It is. §7c had settled on one
+phrase general enough to cover every `derived` country, and the cost of that generality was the whole
+disclosure: **fifteen countries have derived rows and every one of them draws on a real published
+table.** Brazil's is the 2010 census, Switzerland's the 2000 one, Canada's its own provincial columns,
+Israel's the household-lifestyle table for the same statistical area. Describing all fifteen as
+"broader counts" reads as evasion and understates the work.
+
+So `fill` is a per-country phrase, and the row reads `41% filled in from the 2010 census`. The values
+came from the `allocate.py` invocations in `COMMANDS.txt`, which name each country's coarse level, and
+from the four adapters that never went through `allocate.py`. A country with derived rows and no
+`fill` falls back to the old phrase rather than breaking.
+
+#### `gap` moves into the block
+
+§6.12's coverage note was put in the legend's scope bar on 2026-09-06 because that is beside the map,
+*"where a reader is when the question occurs to them"*. §7c gave the project somewhere better: a block
+where every line is the same kind of statement about the same source. **Who a census left out belongs
+next to how much of it was counted, not next to the religion picker.** Fifteen countries have one, it
+is labelled `not drawn`, and the strings were restyled to read as a thing that is missing rather than
+as a standalone sentence.
+
+Suriname's was never a gap. *"the 2012 and 2024 censuses publish religion nationally only, so this is
+2004"* says why the DATA IS OLD, which is `how`'s job; under a `not drawn` label it would have been
+the one row on the map naming nothing missing. Folded into `how` and deleted.
+
+#### The about panel had been printing raw markdown since it was written
+
+*"i havent looked at the see details link in a while."* Reading it as a reader rather than as its
+author turned up the largest single defect in this map's presentation:
+
+**531 bold runs, 80 italics and 43 code spans across the 69 country notes were on screen as literal
+asterisks and backticks.** France alone showed 106 asterisks. The notes are authored in `countries.py`
+in a markdown-ish voice, because that is what a docstring-shaped constant looks like, and nothing
+between there and the panel ever converted the markers. `md()` now does, and `check_md.py` is the
+check: apply its three regexes to every note and assert no `*` or backtick survives. It found three
+notes that needed a tempered bold pattern — a bold run may contain an italic one — and none after.
+
+**And the bolded topic sentences became paragraph breaks instead.** With the markers finally rendering,
+the notes read as a listicle: a 900-word block of running text with a bold lead every eighty words.
+That structure is real and worth keeping; saying it twice, in bold, is the register Anita means by
+*"so people dont get ick"*. A bold run that is a whole sentence AND starts one now opens a paragraph
+and loses its bold; everything else keeps it, which is the other half of why the notes use the marker
+— `Catholicism is **38.0%** and falling` is emphasis on a figure and survives. **285 paragraphs, 279
+of the 531 bold runs kept.** Sixteen of the shorter notes contain no topic sentence and stay as one
+paragraph, which is what they always were.
+
+**The all-countries half was still making §7c's superseded claim.** It opened *"The countries are not
+measured the same way, and the border shows it"* and then listed all 69 `basis` strings — the exact
+line §7c had just taken out of the subtitle for being boilerplate, printed 69 times. Meanwhile the
+subtitle it is linked from now promises *"in many cases modelled"*. It leads with that instead, in a
+figure counted live off the buffers rather than written down, names the eight countries with no
+religion census, and replaces the basis list with **every country sorted by how much of it was worked
+out rather than counted**. That list is the answer to what the link promises, and the old one was
+sixty-nine variations on "self-identification".
+
+**Still open: the em dashes inside the notes.** §7c's no-em-dash rule binds `how`, `fill`, `grain` and
+`gap`, which are short authored fields with a checker behind them. The notes are 69 long essays and a
+mechanical substitution there would produce comma splices, so they are untouched and the dashes are
+still in the prose.
 
 ## 8. Pipeline
 
@@ -4188,6 +4472,41 @@ says so and no test fails; the feature simply never fires for one class of input
 threshold stands in for "not yet", check what it says about the smallest legitimate case**, and
 prefer a test of the thing you actually mean.
 
+### 9b Auto will not enter a country that has none of what is selected — DECIDED 2026-09-07
+
+> *"if we have a religion selected like daoism and zoom in on a country that doesn't have any
+> daoism, in auto mode, it just autos to the country and then clears the selected religion cuz
+> theres no daoism to show. would rather have it just not auto to countries that dont have any of
+> the religion."*
+
+Exactly what happened, and by design at every step: `setCountry` ends in `rebuild`, `rebuild` drops
+a scope that is not `PRESENT`, and so **a reader loses a selection they never touched, by panning.**
+Daoism is in 4 of the 68 built countries, so 64 of them were a trapdoor.
+
+**The fix is a veto, not a repair**, and the alternative is worth stating because it is the obvious
+one: enter the country and keep the dead scope. That gives a panel naming a religion with no rows
+over a map drawing no dots — a country view that answers nothing. Refusing the country instead
+leaves Auto at **all countries**, where the selection is still live and still drawn everywhere it
+exists, which is the state the reader was already in.
+
+**It is not a lock.** The country menu still switches to it, because going somewhere deliberately to
+find out what it *does* have is a reasonable thing to want, and the veto is about what the camera
+does on its own. §9's rule that Auto is a mode and everything under it is a place survives intact.
+
+**`scopeDrawsIn` mirrors `rebuild` line for line** — the rolled tally under §7a's roll-up and the raw
+one otherwise, rings only while rings are drawn, the same "nothing tallied at all" escape. Anything
+else and Auto would refuse a country whose legend would have shown rows, or enter one it would not.
+
+**The escape is the important half, and §9a is the standing warning.** A country whose `counts.json`
+entry has not arrived must read as *no evidence*, never as *evidence of absence* — otherwise this is
+§9a again exactly: a guard written for "not loaded yet" quietly becoming a guard on a permanent
+property of one class of country.
+
+**The menu carries the other half.** A veto is silent: nothing happens, and a reader watching nothing
+happen cannot learn why. So with a religion selected the figure beside every country in the picker
+is **that religion's**, and the countries with none say so with an em dash and a tooltip. Pick Daoism
+and the menu is the answer to "where is there any".
+
 ## 10. The tree panel, and the genealogy drawn on it
 
 **§6 splits this into two things that were one thing.** The panel is the legend, the selection control
@@ -4289,8 +4608,8 @@ that are. Dimmed, not removed: they are still the way back out.
 
 ### 10.2 The legend's settings are SEGMENTED PAIRS, not blue words — DECIDED 2026-09-07
 
-The block under the tree carries five settings — people per dot, overlapping dots, presence rings, not
-a religion, inferred dots — and a reset. Every one of them was a line of grey label plus a blue word:
+The block under the tree carries five settings — people per dot, dot style, presence rings, show
+non-religions, inferred dots — and a reset. Every one of them was a line of grey label plus a blue word:
 `presence rings: hidden`. The line states the setting correctly and that is all it does. **Nothing in
 it says the word is a switch.** A reader who has not already guessed that the panel is interactive
 reads `presence rings: hidden` as the map telling them a fact about itself, which it also is, and
@@ -4310,8 +4629,9 @@ Three things change at once:
   They are also **set at the legend's own 12px** (Anita, same day). They shipped a size down, on the
   argument that a setting is subordinate to the thing it sets; two sizes below the rows above them
   read as fine print instead, which is what moving off links was meant to stop. The widest row,
-  `overlapping dots [separate][merged]`, measures 222 of the panel's 248px, so the size is not
-  bought on credit — there is 26px spare and nothing truncates.
+  `show non-religions [hidden][shown]`, measures 220 of the panel's 266px of content width, so the
+  size is not bought on credit — 46px spare and nothing truncates. Re-measure after any change to
+  `#panel`'s width, which moved from 268 to 286 the same day.
 - **A fill, not a colour.** A blue word among grey words is exactly what nobody noticed, so the live
   segment is a filled blue-grey (`#7d9cb8`) with near-black type — the one loud thing in a panel that
   is otherwise all low-contrast greys, and deliberately so. Reset is one chip in the same frame,
@@ -4328,6 +4648,130 @@ was the only one of the six that read as prose and it could not join the grid wi
 thing twice. The about panel still opens with the sentence, which is where it was doing the explaining
 anyway. The derived/modelled readout moved off the end of the `inferred dots` line onto its own line
 under it, and lost the em dash it needed there.
+
+### 10.3 A share bar per row, and a column of checkboxes — DECIDED 2026-09-07
+
+Two asks, and they turned out to share a denominator (§6.10a) and nothing else.
+
+#### The bar
+
+> *"show rough like 'what percent of the total dots in scope is this religion for' in the legend as
+> a partially filled in bar the same color as the dot... 80% full bar for 10% of total, 60% bar for
+> 1%, 40% bar for 0.1%, 20% bar for 0.01%."*
+
+The counts were already on every row and they are the *exact* answer. What a column of numbers is
+bad at is the **comparison**: religion sizes run over five orders of magnitude inside one country,
+and `1.2b` above `9.7m` above `342k` gives a reader three figures and no picture.
+
+**The scale is logarithmic and has to be.** Linear, everything under a few per cent is an empty bar
+— which is most of the legend, and exactly the rows nobody can size by eye from the number alone.
+Anita's anchors are a fifth of the bar per decade: `fill = 1 + 0.2·log10(share)`.
+
+**The bottom compresses rather than terminating.** Clamped at zero the scale ran out at 0.001%, and
+with no track behind the bar a zero-length fill is not a short mark, it is **no mark** —
+indistinguishable from a row with no figure at all, which in the all-countries view is a lot of
+rows. So below the 0.01% knee each further decade adds **half** of what the last one did: a
+geometric series converging on 6% and never reaching it (0.001% → 13%, 0.0001% → 9.5%, → 6%).
+Continuous at the knee, still monotonic, and **above the knee the four anchors are untouched**.
+
+**A full bar means "all of it", not "the biggest one here"**, which is why the selected node's own
+row draws full — it is 100% of itself.
+
+**It ignores what is hidden.** Re-scaling to the rows left standing would make the bars mean
+something different after every click, and would put a full bar on the last row a reader had not yet
+unticked. The bar answers "how much of this map is this", which no checkbox changes.
+
+**A rule, not a gauge.** It shipped 3px on a filled track and that was a widget; on sixty rows it was
+the loudest thing in a legend whose job is to stay quieter than the map. At 1px with no track it is
+an underline in the number's own colour, and the eye takes the column as a shape rather than reading
+sixty little meters. What the track was doing — showing the length the fill is a fraction *of* — the
+**column** does instead: rows sit at a fixed 36px, so the longest rule in view is the reference. That
+works because these are always read as a group and would not work for a bar on its own.
+
+**Under the number and filling leftward.** Above it, the rule sat between two rows and the eye had to
+decide which one owned it. Under it, it is an underline, and an underline has never belonged to
+anything but the text above it. The counts are right-aligned, so a bar growing rightward from a fixed
+left edge grew *away* from the number it measures; anchored to the same right edge the two share a
+margin. **No gap between the two**: the number's own line box already leaves descender space under
+the digits, and a gap on top of that read as a detached rule rather than as an underline.
+
+#### The checkboxes
+
+> *"ability to select religions for viewing, like in ancestrydots. people might wanna show just like
+> baptist and catholic or something."*
+
+**`USER_HIDDEN` had to stop being a set of subtree roots**, and "just the Baptists" is why. Under the
+old set, hide everything and re-check one body and there is no way to say what is left:
+`christianity`'s **own** dots come back with it, because one id governed a node and its subtree
+together. Those are the sources that answer "Christian" and name no church below — **46% of the marks
+across the archive and 18% of Canada.** The reader asked for Baptists and got Baptists plus every
+unspecified Christian on the map.
+
+So the set is now **exact**: one entry per node whose own dots are off, and hiding a branch adds
+every id under it. The cost is a bigger set (~570 entries after "hide all" against one) and it is
+paid nowhere that matters — `isHidden` becomes a hash lookup, the WebGL palette is a per-node loop
+either way, and only the merged layers' *filter* wants the old shape, which `hiddenCover` gives back
+minimally at the point of use, as the largest wholly-hidden subtrees plus the residue. `localStorage`
+keeps those two halves under the old key, so a store written before this loads and still means what
+it said.
+
+**The `unspecified` row gets its own box**, and it is the one place a node moves without its subtree.
+That row is the reason the model changed, so it is the row that has to be able to act alone.
+
+**The state is computed over the PRESENT subtree; the action runs over the whole taxonomy.** Hiding
+Christianity in Poland hides the Baptists Poland does not report and the United States does — or
+switching country would bring them back. But the *tick* is computed over the rows in front of the
+reader, because a global count would draw Christianity half-ticked in Poland with every Polish row
+under it ticked, which reads as a broken panel rather than as a fact about a country not on screen.
+
+**A column on the right, not a staircase.** Beside the swatch they would follow the indent, so four
+levels down they sit forty pixels in from where they started and a reader ticking three of them off
+is chasing a diagonal. **The resting state recedes**: every one of 381 boxes is ticked at rest, so a
+ticked box is half-opacity dark steel and an unticked one is full strength — a reader scans this
+column for what they turned **off**. It is deliberately not §10.2's `#7d9cb8`; there are four lit
+segments and 381 of these.
+
+**THE HOVER CUE BELONGS TO THE HIT AREA, NOT TO THE ROW AROUND IT**, and this shipped wrong:
+
+> *"if i hover over the row (like over the religion title, for instance) it makes the checkbox look
+> brighter so it feels like i'm gonna click it. but it actually just focuses the religion."*
+
+The brightening was on `.row:hover`, on the reasoning that the row the pointer is on is the row worth
+lighting. But **a row and the box inside it do two different things** — select the religion, toggle
+its dots — and lighting the box on the row's hover promised the second while the click delivered the
+first. The general rule, which applies to the swatch beside it and to anything else nested in a
+clickable row: **a control may only light up for a pointer that is actually over it.** Hover feedback
+is a promise about what a click will do, and a control inside another control cannot borrow its
+parent's.
+
+**36px for the count column is measured.** The widest string `fmtPop` can produce is four digits and
+an `m`, which is 35.8px in Nunito 11. Every pixel over comes off the label: at 38px with a 15px box
+nine labels truncated against five before the row grew a bar and a box at all; at 36 with 13 it is
+five again, which is the pre-§10.3 legend exactly. *(Those counts are with the scrollbar hidden. The
+tree scrolls in practice, and its 6px takes it to ten either way — the comparison holds, the absolute
+number does not.)*
+
+**The hit area is a square the height of the row**, which is §6.11's argument for the swatch applied
+to the box beside it: *"a 9px circle is a legend mark; it is not a button"*, and an 11px checkbox is
+not one either. `align-self: stretch` gives it the row's full height and a negative right margin
+claws the width back out of the row's own padding — so a 19px square target costs the labels exactly
+what a 13px one did, because the pixels come from padding that was doing nothing. Clicking anywhere
+in the row's right margin toggles the row.
+
+**One link that flips**, and which way is read off the tree rather than remembered: everything shown,
+the only useful offer is `hide all`; anything else, `show all`.
+
+**It shipped stepping aside for `clear` when something was selected, and that was taken back the same
+day.** The argument for hiding it was that two blue words a few pixels apart do unrelated things and
+`clear` is the one wanted at that moment. The argument against is that **both are wanted**, and a
+control that vanishes when a selection is made is one a reader has to discover twice. It also could
+not be applied consistently: `show all` had to keep showing regardless, being the only way back from
+a map with nothing on it, so the bar offered one link or two depending on a state nobody was
+tracking. Both show, always.
+
+**The panel keeps its scroll position across renders.** The tree is thrown away and rebuilt on every
+change, and a checkbox is a control a reader clicks several of in a row — each one used to send them
+back to the top of a scrolling list to find the next.
 
 ## 11. Open questions
 
@@ -4477,6 +4921,24 @@ which of these it is:
    COD's own centroid longitudes, which uses neither of the join keys. Malawi's Anglicans on Likoma,
    Zimbabwe's Vapostori in Mashonaland and Belize's Mennonites in the north can all afford the same
    assertion, and it is one line.
+   **BUT THE WITNESS MUST NOT ENCODE THE FACT THE MAP IS BEING BUILT TO DISCOVER, AND PERU IS WHY
+   THIS SENTENCE EXISTS** (§9bc). The Moravian check was rewritten for Peru's Adventists as *"the
+   most Adventist districts are the Puno altiplano"*, on the well-documented history of the 1898
+   Platería mission — **and it fired on a join that was correct.** Three of the ten came out 800 km
+   north in the Alto Mayo, which is Peru's *other* Adventist region. The tell, available in advance:
+   "the Moravians are one coastline" is a claim that there is **one** cluster, and Nicaragua's data
+   said so; "the Adventists are the altiplano" is a claim about **where** the cluster is, which is
+   exactly what the map was built to show. When you cannot make the weaker claim, use the form that
+   names nowhere at all: **religion shares are spatially smooth**, so correlate each unit's share
+   with its k nearest neighbours' and calibrate the threshold against random re-pairings of the same
+   shares on every run. Peru gets r=0.75 against a best of 0.11 over 200 shuffles, it is a dozen
+   lines, and it cannot be wrong about the country because it asserts nothing about it.
+   **AND "JOIN ON NAME" IS NOT THE RULE — "MEASURE BOTH AND SAY WHICH ONE IS CARRYING IT" IS.**
+   Nicaragua joins on name because its codes were renumbered; Peru joins on **code** because COD's
+   `adm3_pcode` is the census's own ubigeo, 1,870 of 1,872 pairs agree on the name outright, and a
+   name join would be the risky one there — Peru has many districts sharing a name across provinces
+   and disambiguating them would need the code. Two countries wired four days apart sit on opposite
+   answers. Whichever key you use, the other one becomes the check, and the file says so out loud.
 3. **A duplicated or missing level.** An extra tier hides inside the drawn one, or a parent's child
    list is short. Serbia's `Grad`, India's towns, Indonesia's regencies. **Only the parent/child sum
    sees either, and it has to be computed on every column.**
@@ -6370,3 +6832,236 @@ the toggle in one country and not the other, and the only reason is §3.4's carr
 
 **Cost of changing it later: one word in `_cn_counts`, then scatter, tiles and buffers for `cn`.**
 About ten minutes. Nothing else in the pipeline depends on the choice.
+
+### 14.15 What is left for China, ranked — WRITTEN DOWN 2026-09-07 so it is not re-derived
+
+§14.13 and §14.14 record what was built and why. This is the part that was only in the
+session: **what to do next, in what order, and the one reframing that changes which source is
+worth chasing.**
+
+#### THE REFRAMING, AND IT IS THE MOST USEFUL THING HERE: CFPS WAS THE WRONG TARGET ALL ALONG
+
+§14.7 planned the Han layer around CFPS and §14.13 treated its refusal as a loss to be worked
+around. **It was not a loss. CFPS asks the wrong question**, and the evidence was in the same
+Pew sentence that gave §14.13 its 4%-versus-33%:
+
+| survey | what it asks | Buddhism, 2018 | §3.1 basis |
+|---|---|---|---|
+| **CGSS** | *which religion do you belong to* | **4%** | **`self_id`** |
+| CFPS | *do you believe in Buddha or a bodhisattva* | 33% | belief — no basis on this map |
+
+**§3.1 says bases are never mixed, and `self_id` is the basis every other country here is drawn
+on** — Vietnam's census, Korea's, Thailand's, Russia's Arena, Greece's and France's ESS. A
+CFPS-derived Chinese layer could not have sat beside any of them without breaking the one rule
+§3.1 exists to enforce; it would have made China the only country on the map answering a
+different question, in the country where that difference is largest. **So the account refusal
+cost nothing except the time spent designing around it**, and the thing to notice is that
+nobody checked the question wording before applying for the data. *Check what a survey ASKS
+against §3.1 before treating access to it as the blocker.*
+
+**CGSS is the basis-compatible source and always was.** That is the argument for chasing it
+specifically, over and above its being the one that turned out to be openly mirrored.
+
+#### Two survey leads that were never checked at all
+
+Both are bigger than the CGSS wave in hand and neither was searched for an open mirror:
+
+- **CLDS** — China Labor-force Dynamics Survey, Sun Yat-sen University. **~21,000 adults over
+  29 provincial units** in 2014, against CGSS 2021's 8,148 over 19. Pew used it and notes the
+  CLDS restricted their access to the 2016 and 2018 waves, which says the earlier ones are less
+  restricted. **On size and coverage this is a better single target than pooling CGSS**, and it
+  is untouched.
+- **CSLS 2007** — Chinese Spiritual Life Survey, Purdue/Horizon, 7,021 respondents over 56
+  sites. Old and site-based rather than province-representative, so it is the weakest of the
+  three; listed here only so the next session does not rediscover it as new.
+
+Neither has been checked against [[feedback_gated_data_last_resort]]'s mirror list, which is
+the whole of the work: Dataverse, figshare, Zenodo, GitHub, a university library guide.
+
+#### The A-Hmao input is a COUNTY LIST, not a survey — and §14.14 did not say so
+
+§14.14 calls a source that places the A-Hmao by county *"the single highest-value missing input
+for China"* and stops there, which is not actionable. Being precise about what is missing:
+
+**The magnitude is already in hand.** `cn.csv` has Miao by county for all 2,691 counties, and
+Joshua Project has the share (A-Hmao 448,000 at 80%, Gha-Mu 142,000 at 80%). What is missing is
+only **which counties the A-Hmao are the Miao of** — a partition of one nationality's county
+column, not a religion figure at all.
+
+That is an ethnographic fact rather than a statistical one, and it is well documented in a
+literature this project has not touched: **Chinese local gazetteers (地方志), the provincial
+民族志 volumes, and linguistic atlases of the Miao languages**, which distinguish 大花苗
+(A-Hmao) from the Hmu, Ghao-Xong and the rest. The concentration is small and named — Weining,
+Hezhang, Nayong and Zhijin in Guizhou; Wuding, Luquan and Yongshan in Yunnan — so a source
+naming those counties would be enough. **~590,000 people at 80%, and it would put a second
+Christian block on the map as large as the Lisu.** The same route would settle the Yi (Lipo,
+Naluo, Laka).
+
+#### So, ranked
+
+1. **The Koreans, and it is free.** `cn2000.py`'s REVIEW has the argument; Joshua Project puts
+   them at 30%, they are co-located, and it is ~549,000 people in a northeast that currently
+   draws nothing but grey. **One line of taxonomy and a rebuild**, and the only reason it is not
+   done is that it is Anita's call (§14 asks for exactly this to be raised).
+2. **CLDS**, then pooled CGSS. Basis-compatible, province-level, and the mirror hunt is a
+   couple of hours. This is the only route to a Han layer that could sit beside the rest of the
+   map.
+3. **The A-Hmao county list**, above. Different kind of hunt — a library, not a data portal.
+4. **The `unknown` tier question** §14.14 raised and left open: whether a billion grey dots
+   should survive `inferred dots: hidden`. One word in `_cn_counts`, then scatter/tiles/buffers
+   for `cn`.
+
+**And what is NOT worth doing**, so it is not attempted again: any route through CFPS (wrong
+basis, and the terms forbid the tooling); the 2020 census ethnic table (a JPEG scan, §14.6); a
+township-level rebuild (§14.5's ceiling is a limit, not a target); and the registered-venue
+registry as a magnitude source — §2.6 was written the same day about exactly that mistake in
+Thailand, and China's registry omits house churches, which is most of what is there.
+
+### 14.16 China is drawn from self-identification, and the affirmative half of that question is a measurement while the negative half is not — BUILT 2026-09-08
+
+§14.15 ranked the work and this is items 1 and 2 of it, plus the Pumi flag closed. Anita's
+calls throughout. `sources/cn_cgss.py` and `sources/cn_cgss.md` carry the detail; this records
+what generalises.
+
+**China goes from 2.5% coloured to 8.4%**, and for the first time the colour is in the east:
+
+| | people | node | tier | basis |
+|---|---|---|---|---|
+| §14.5 religio-ethnic, 14 nationalities | 30.63M | `islam`, `buddhism.vajrayana`, `buddhism.theravada` | `derived` | ethnicity |
+| §14.9 mission peoples, 6 nationalities | 0.88M | `christianity.protestant` | `modelled` | ethnicity |
+| **§14.16 CGSS, 29 provinces** | **54.60M** | **`buddhism.mahayana`** | **`modelled`** | **`self_id`** |
+| **§14.16 CGSS, 29 provinces** | **20.19M** | **`christianity.protestant`** | **`modelled`** | **`self_id`** |
+| everyone else | 1,153.05M | `unknown` | `derived` | — |
+
+**The Buddhist layer alone is larger than everything China had before it.** The total is
+preserved to the person: the carve eats the `unknown` residual and invents nobody.
+
+#### THE DESIGN FINDING, AND IT IS NOT ABOUT CHINA
+
+Anita, framing it before any data was fetched: *"what **is** religion in china. since its
+vague, maybe we want to find self identification (even if its really low count and only
+reflects like strong believers / priests or whatever) and if we can find that, display those
+small numbers."*
+
+That is the right instinct and it sharpens into a rule §3.1 did not have:
+
+> **The two halves of a self-identification question are not equally trustworthy, and where
+> they come apart, draw the affirmative half and leave the rest UNKNOWN rather than
+> irreligious.**
+
+In China *"yes, I am a Buddhist"* is stable across instruments and waves; *"none"* is not a
+finding about belief but an artefact of the wording — 4% Buddhist by self-id against 33% by
+belief, same population, same year (§14.13). §14.7's *"refusing to draw the boundary is the
+point"* was right about the boundary and wrong to conclude that nothing could be drawn: **the
+affirmative side is a measurement even when the negative side is an artefact.** Carving the
+first out of the grey claims exactly as little as the grey did about everyone else.
+
+**This is not a China special case.** It is the shape of every dual-practice country §6.3a
+names — Japan, Vietnam, Korea, much of West Africa — and it is the reason `unknown` is worth
+having as a node at all. Where a country's "no religion" box is doing work the question did not
+earn, the affirmative rows are still drawable.
+
+#### A SURVEY'S PROVINCIAL CUT CAN BE A LOTTERY, AND THE CENSUS MARGIN IS THE TEST
+
+The most reusable operational finding. CGSS's provincial subsamples come from a handful of
+PSUs, so for a minority concentrated *within* a province the sample lands on it or misses it:
+
+| | census, Muslim nationalities | CGSS pooled self-id Islam | |
+|---|---|---|---|
+| Qinghai | 16.9% | 1.1% | **0.07×** |
+| Gansu | 7.4% | 0.6% | 0.1× |
+| Xinjiang | 58.3% | 92.0% | 1.6× |
+| Ningxia | 34.5% | 93.1% | **2.7×** |
+
+**Fourteenfold out one way and nearly threefold the other is not a bias a weight can correct.**
+So: **before drawing a survey's sub-national cut, check it against a census margin for a
+variable both carry.** Here that variable is ethnicity, and it says plainly that CGSS may be
+used for the evenly-spread religions and not for the concentrated one. Islam therefore stays on
+§14.5's county derivation, which is better at exactly the thing the survey is worst at.
+
+**And nationally the same comparison is the first external check §14.5 has ever had.** CGSS
+self-id Islam runs 1.87%–2.56% against the derivation's 1.83%. The survey finds at least as
+many Muslims as the derivation predicts, so **§14.5's coefficient of ~1.0 is vindicated rather
+than merely asserted** — at national level, and only there.
+
+**It also closes a question Anita raised** — whether Tibetans should be drawn at less than 1.0,
+with the remainder on `unknown`. CGSS cannot answer it: Qinghai's expected 27.3% Buddhist
+against an observed 11.8% looks like support for ~0.4, but the same sample found 7% of
+Qinghai's Muslims, so it is a Han and urban sample that missed the Tibetans for the same reason
+it missed the Hui. **The test fails its own control**, and Tibet is not sampled at all. Written
+down so it is not re-run. Changing the coefficient would need a documented source, and §14.5's
+own test is *documented rather than fitted* — §9z's lesson is that the adjustment which feels
+more careful is usually the error.
+
+#### POOLING BUYS PRECISION AND SPENDS CURRENCY, AND THE DENOMINATOR PICKS THE WAVE
+
+Reported religiosity falls monotonically across the three waves — any religion 14.47% (2012) →
+10.61% (2017) → 7.50% (2021), in every category at once, Islam included. Partly a real decline
+in willingness to report, partly the multi-select→single-choice change at 2021; the 2012→2017
+fall happens with the instrument held constant, so it is not only the instrument.
+
+**So a pooled share is an average over a moving target and the choice of level is real.** The
+rule taken: **the level follows the DENOMINATOR's vintage, not the newest wave.** cn.csv is 2000
+structure on 2010 totals, so the people being coloured are the 2010 census's people; pooled and
+n-weighted CGSS centres on about 2015, where 2021 alone is eleven years downstream of its own
+denominator. Pooled is the closer fit. Cost, stated in `note_public`: this layer is about half
+again larger than 2021 alone would draw.
+
+#### WHAT SURVIVED §14.10 AND WHAT DID NOT
+
+Two categories of six. **Buddhism passes cleanly** — χ² p = 4e-184, Zhejiang 15.7%
+(CI 14.0–17.5) against Anhui 0.9% (0.4–1.4), and the pattern is the southeastern coastal belt
+the literature describes. **Protestantism is drawn on Anita's call with its weakness
+disclosed**: its spatial variation is highly significant (χ² p = 1.3e-84) and Henan comes out
+top unaided, but its 2012↔2021 rank stability is **+0.17** against Buddhism's +0.63.
+
+**A rank correlation is a stability test, not a reality test, and +0.17 on 19 provinces is a
+failure to demonstrate signal rather than a demonstration of noise** — its CI includes zero and
+reaches past +0.55. Some of the instability is likely real: if enforcement varied by province
+while reporting halved, the ordering *should* move. §14.12's disclosure rule applies and
+`note_public` names Protestantism as the layer to trust least, in those words.
+
+**folk, Daoism and Catholicism are not drawn.** Daoism is 80 respondents in 32,495 and
+Catholicism 65, with every province under ten. **folk is the interesting refusal**: 681
+respondents, but its national share collapses 3.43% → 2.11% → 0.27% across the waves and
+Guangdong reads 22.5% against zero in Beijing and Hunan. That is §14.7's artefact category
+proving itself, and it is the strongest evidence yet that `chinesefolk` should stay empty.
+
+#### THE PUMI ARE UNDRAWN, AND A LIST IS STILL NOT A RULE
+
+`cn2000.py`'s REVIEW had flagged them since 2026-09-07 as *"THE ONE DRAWN GROUP THAT PROBABLY
+SHOULD NOT BE"*: 33,599 people whose religion is Hangui held alongside Gelug Buddhism, which is
+§14.5's *religiously mixed* row and not its *religio-ethnic* one. Drawn only because §12's list
+named them. Anita's call to remove them, 2026-09-08. **This is §14.6's lesson arriving from the
+opposite direction** — there, applying the stated test to all 56 nationalities *added* the Lahu
+that the illustrative list had missed; here it *removes* one the list had wrongly included.
+`_VAJRAYANA` is now three nationalities. 34 dots either way; the point is the consistency.
+
+#### THE HUNT, AND WHAT IS STILL OUT THERE
+
+§6b's mirror rule went four for four again. **CGSS 2012 and 2017 are on Harvard Dataverse under
+CC0** (`doi:10.7910/DVN/R1UDF2`, `doi:10.7910/DVN/SZUSBS`), sitting loose in the root
+collection so a collection crawl misses them; `api/search?q=title:CGSS` finds exactly those two.
+With the figshare 2021 wave that is 32,495 respondents over 29 provinces — 99.2% of China's
+population, against §14.13's rejected 8,148 over 19.
+
+Still open, in order:
+
+1. **CLDS is found and behind a login.** Science Data Bank `doi:10.57760/sciencedb.02333`,
+   77.5 MB, advertising **CC BY 4.0 and `conditionsOfAccess: PUBLIC`**, covering the 2011
+   pilot and the 2012/2014/2016/2018 waves — but the listing API answers `70001 无访问权限`.
+   A free ScienceDB account is email-only, which is not the Korean-ID wall
+   ([[reference_korea_open_data]]); this is a cheap ask, not a dead end. Note CLDS's own use
+   agreement forbids redistribution, so §6b's "cite the origin, not the badge" applies hard.
+2. **CGSS 2006 at PKU is CC0 and `restricted: false`, and their file server 500s.**
+   `doi:10.18170/DVN/21HKLB`. Metadata API works; access API does not. Worth one retry.
+3. **CNSDA and `cgss.ruc.edu.cn`** hold 2010, 2011, 2013, 2015 and 2018 behind an ordinary
+   free email registration. The only route to those five waves, and pooling them would let the
+   Protestant layer be re-tested rather than disclosed.
+4. **The A-Hmao county list** — unchanged from §14.15, and now the largest single omission
+   again, since Han Buddhism is drawn and they are not.
+
+**Checked and dead, so it is not reopened:** the PLOS ONE supplementary §14.13 flagged as
+possibly multi-wave (`pone.0318221.s001.sav`) is a single wave and **carries no religion
+variable at all** — its only "religio" string is the ISCO occupation code *religious
+professionals*. Zenodo has neither survey. ICPSR holds only the EASS cross-national sets.

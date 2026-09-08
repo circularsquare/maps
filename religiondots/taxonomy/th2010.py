@@ -52,7 +52,17 @@ REVIEW = {
         "**This is lk2024.py's call and kh2019.py's, made a third time on the same "
         "tradition in the third country running**, and in2011.py makes it a fourth on "
         "India's Buddhists. At some point the tree will have a source that separates the "
-        "vehicles in mainland Southeast Asia; none of these four is it."),
+        "vehicles in mainland Southeast Asia; none of these four is it. "
+        "**RE-CONFIRMED 2026-09-07 with actual evidence — spec §2.6, and Thailand is the "
+        "country the evidence is about.** The case for assigning was that the state itself "
+        "registers the sangha by school: 41 of the National Office of Buddhism's 43,563 "
+        "occupied wats are Mahayana (16 Chinese Nikaya, 25 Annam Nikaya), which is 0.094%. "
+        "**But the Ministry of the Interior separately registers 682 Chinese shrines** plus "
+        "17 Chinese and 19 Vietnamese temples, because a shrine is not a wat — so Mahayana "
+        "infrastructure is 17x what the sangha registry shows, and neither registry counts a "
+        "person. **Nothing anywhere counts Thai Buddhists by school.** Anita's call: leave "
+        "it. If it ever reopens, Thailand is the WEAKEST of the four Theravada candidates, "
+        "not the strongest, because its Chinese-descended population is much the largest."),
     "อิสลาม": (
         "-> islam, with no branch, because the census gives none. 3.26M people, 4.9%, and "
         "**it is the most concentrated religious geography on this map after Israel's**: "

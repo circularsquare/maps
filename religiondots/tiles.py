@@ -218,8 +218,8 @@ def main():
     ap.add_argument("--refresh-meta", action="store_true",
                     help="rewrite only the per-country display fields in counts.json from "
                          "countries.py and exit — the tiles and the tallies are untouched. "
-                         "For editing a name, source, basis, note or view box, which "
-                         "otherwise costs a full retile to change one sentence.")
+                         "For editing a name, source, basis, how, fill, grain, gap, note or view box, "
+                         "which otherwise costs a full retile to change one sentence.")
     ap.add_argument("--countries", default="us",
                     help="comma-separated, e.g. us,ca — one archive, but marks never merge "
                          "across a border: every feature is tagged with its country and the "
@@ -257,6 +257,8 @@ def main():
             entry["source"] = meta.get("source", "")
             entry["basis"] = meta.get("basis", "")
             entry["note"] = meta.get("note_public", "")
+            entry["how"] = meta.get("how", "")
+            entry["fill"] = meta.get("fill", "")
             entry["grain"] = meta.get("grain", "")
             entry["gap"] = meta.get("gap", "")
             # the data bbox stays whatever the build measured; only the framing is editable
@@ -347,6 +349,8 @@ def main():
                 "source": meta.get("source", ""),
                 "basis": meta.get("basis", ""),
                 "note": meta.get("note_public", ""),
+                "how": meta.get("how", ""),
+                "fill": meta.get("fill", ""),
                 "grain": meta.get("grain", ""),
                 "gap": meta.get("gap", ""),
                 "bbox": box,

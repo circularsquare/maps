@@ -6,8 +6,9 @@ order they run in, so the running order has to come from somewhere else. OSM
 route relations carry `stop`-role nodes in running order *and* way members with
 full geometry, so one pull gives both.
 
-    python fetch_osm.py --survey    # list matching relation names, fetch nothing
-    python fetch_osm.py             # write data/osm_routes.json
+    python fetch_osm.py --survey     # list matching relation names, fetch nothing
+    python fetch_osm.py --unnamed    # refresh the unnamed junction track only
+    python fetch_osm.py              # write whichever data/osm_*.json is missing
 """
 
 import argparse
@@ -71,6 +72,25 @@ out body;
 UA = ("koreariders/0.1 (national map of Korean rail throughput; "
       "https://github.com/ - contact via repo)")
 
+# The named pull leaves out the junction throats, which is why a corridor
+# sometimes cannot reach its own end station: 중부내륙선's last 1.63 km routes
+# 5.01 km because the curve on to 경강선 carries no name and is not in the
+# graph, and `reach_station`'s directness bound rightly refuses that.
+#
+# `probe_ways.py` already holds every rail way's tags, so what the addition
+# would cost can be counted rather than guessed: 22,822 rail ways, 14,623 named,
+# and of the 8,199 unnamed **7,753 carry a `service` tag** -- 3,752 yard, 2,654
+# siding, 831 crossover, 516 spur. Those are depot and yard track, and putting
+# them in the graph would offer the corridor search shortcuts through every
+# freight yard in the country. The remaining **446 are plain running track with
+# no name**, which is the junction-throat case and nothing else.
+#
+# So the ids come from that file and the geometry is fetched by id. A national
+# `way[railway=rail][!name][!service]` is a double negation Overpass cannot
+# index, and overpass-api.de answers it with a 504 even for `out count`; by id
+# it is an index lookup and takes a second.
+UNNAMED = "osm_rail_unnamed.json"
+
 
 def overpass(query, what):
     last = None
@@ -102,14 +122,41 @@ def survey():
         print("   %-46s %-18s %3d" % (name[:46], op[:18], c))
 
 
+def unnamed_ids():
+    """Way ids of unnamed rail that is running track rather than yard track."""
+    with io.open(os.path.join(D, "osm_rail_ways.json"), encoding="utf-8") as f:
+        ways = json.load(f)["elements"]
+    return [w["id"] for w in ways
+            if not (w.get("tags") or {}).get("name")
+            and not (w.get("tags") or {}).get("service")]
+
+
+def unnamed():
+    ids = unnamed_ids()
+    q = ("[out:json][timeout:600];\nway(id:%s);\nout geom;\n"
+         % ",".join(str(i) for i in ids))
+    data = overpass(q, "%d unnamed rail ways with geometry" % len(ids))
+    out = os.path.join(D, UNNAMED)
+    with io.open(out, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False)
+    print("   wrote %s (%.1f MB, %d ways)"
+          % (out, os.path.getsize(out) / 1e6, len(data.get("elements", []))))
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--survey", action="store_true",
                     help="list the relation names Overpass returns, write nothing")
+    ap.add_argument("--unnamed", action="store_true",
+                    help="fetch only the unnamed junction track, overwriting it")
     args = ap.parse_args()
 
     if args.survey:
         survey()
+        return
+
+    if args.unnamed:
+        unnamed()
         return
 
     if not os.path.exists(os.path.join(D, "osm_routes.json")):
@@ -127,6 +174,9 @@ def main():
             json.dump(ways, f, ensure_ascii=False)
         print("   wrote %s (%.1f MB, %d ways)"
               % (out, os.path.getsize(out) / 1e6, len(ways.get("elements", []))))
+
+    if not os.path.exists(os.path.join(D, UNNAMED)):
+        unnamed()
 
     nodes = overpass(STATIONS_Q, "station nodes")
     out = os.path.join(D, "osm_stations.json")

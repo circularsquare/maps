@@ -22,14 +22,27 @@
     #title { color: #eee; font-size: 15px; font-weight: 700; text-shadow: 0 1px 3px #000; }
     #subtitle { color: #999; font-size: 11px; text-shadow: 0 1px 3px #000; line-height: 1.4; }
     #subtitle u { cursor: pointer; }
-    /* How fine the COUNTS are, which is not how fine the dots look. Dimmer than the source
-       line and below it: a reader wants the source first, and this second. Hidden entirely
-       in the all-countries view, where there is no single answer to give. */
-    #grain {
-      color: #7b7b7b; font-size: 11px; text-shadow: 0 1px 3px #000; line-height: 1.4;
-      margin-top: 3px;
-    }
-    #grain b { color: #9a9a9a; font-weight: 600; }
+    /* WHERE THE NUMBERS CAME FROM AND HOW MUCH OF THEM IS REAL — spec §7c. Three labelled
+       rows under the title: `data type`, `data modelled`, `granularity`. The label column is
+       fixed-width so the three values line up and can be read down rather than across; it is
+       dimmer than the values, because the labels are the same on every country and the
+       values are the whole point. Drawn only when one country is selected. */
+    #prov { margin-top: 4px; font-size: 11px; line-height: 1.35; text-shadow: 0 1px 3px #000; }
+    #prov .pr { display: flex; gap: 6px; margin-top: 2px; }
+    /* Wide enough for `data modelled` on one line and no wider — a label that wraps reads as
+       a second value. `nowrap` so a future longer label overflows visibly instead of quietly
+       wrapping again. */
+    #prov .pl { flex: 0 0 76px; color: #6a6a6a; white-space: nowrap; }
+    /* One weight, one colour. There is no <b> in here any more (Anita, 2026-09-07): with
+       `grain` bolding its whole string and `how` bolding none of its own, the emphasis was
+       landing on whichever row happened to carry markup rather than on what mattered. */
+    #prov .pv { flex: 1; color: #a5a5a5; }
+    /* The one row that is allowed to shout. Everywhere else on this map a caveat is grey and
+       waits to be looked for; "none of this was counted" is not a caveat, it is what the
+       picture IS, and Anita's reason for the whole block was that a reader could look at
+       France for a long time without ever learning it. */
+    #prov .pr.weak .pv { color: #c9a06a; }
+    #prov .pr[data-tip] { cursor: help; }
 
     /* ---- country picker ------------------------------------------------- */
     #picker { margin-top: 8px; }
@@ -65,6 +78,11 @@
     .cc .n { color: #777; font-size: 10px; font-variant-numeric: tabular-nums; }
     .cc.off { color: #5c5c5c; cursor: default; }
     .cc.off:hover { background: none; }
+    /* A country with none of the selected religion. Still clickable - a reader may want to
+       look at it anyway, and going there is how you find out what it does have - but named
+       quietly, because Auto will not take you there any more (9b). */
+    .cc.none .nm { color: #7a7a7a; }
+    .cc.none .n { color: #555; }
     /* Auto is a mode; everything under it is a place. Without the rule they read as one list
        of six things to choose between, which is the confusion the mode exists to remove. */
     .cc.mode { border-bottom: 1px solid #2a2a2a; padding-bottom: 5px; margin-bottom: 3px; }
@@ -104,7 +122,7 @@
     #panel {
       position: absolute; top: 8px; right: 8px; z-index: 1000;
       background: rgba(20,20,20,0.758); border-radius: 8px;
-      font-size: 12px; color: #eee; width: 268px;
+      font-size: 12px; color: #eee; width: 286px;
       max-height: calc(100vh - 50px); display: flex; flex-direction: column;
     }
     #panel-head {
@@ -135,10 +153,6 @@
       content: ''; display: inline-block; width: 8px; height: 8px; margin-right: 5px;
       vertical-align: 1px; background: #2d2d2d; border: 1px solid #444; border-radius: 2px;
     }
-    /* Same voice as .lit-note and deliberately NOT the same element: this one carries no
-       wash swatch, because it is not about the wash, and no `cursor: help`, because there
-       is nothing further to hover. One line, no tooltip, no affordance. */
-    .gap-note { color: #8a8a8a; margin-top: 2px; }
     #scope-bar a { color: #89b4fa; text-decoration: none; cursor: pointer; flex: none; }
     #tree { overflow-y: auto; padding: 4px 0 8px; }
     #tree::-webkit-scrollbar { width: 6px; }
@@ -171,7 +185,95 @@
     .row .pick { cursor: pointer; }
     .row .pick:hover .dot, .row .pick:hover .ring { box-shadow: 0 0 0 2px #777; }
     .row .lb { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .row .ct { color: #888; font-variant-numeric: tabular-nums; font-size: 11px; }
+    /* THE COUNT CELL IS TWO STOREYS SINCE 10.3 - the share bar over the number it pictures.
+       Fixed width, so the bars line up into a column that can be read down; left to size
+       themselves they would start wherever `1.2b` and `342k` happen to end and compare
+       nothing. The tight line-height is what keeps the row the height it already was: 3px of
+       bar, 1px of gap and a 12.7px line against the row's 17.4px, so no row grew for this. */
+    /* 36px IS MEASURED, NOT CHOSEN. The widest string `fmtPop` can produce is four digits
+       and an `m` - "1193m" is Christianity worldwide, and "9999m" measures the same 35.8px in
+       Nunito 11 - so 36 is the tightest the column goes without the largest number in the
+       archive touching the checkbox. Every pixel over that comes off the label: at 38 with a
+       15px box, nine labels truncated against five before this row grew a bar and a box at
+       all; at 36 with 13 it is five again, which is the pre-§10.3 legend exactly. */
+    .row .ct {
+      flex: none; width: 36px; text-align: right;
+      /* No gap: the number's own line box already leaves descender space under the digits,
+         so a gap on top of that read as a detached rule rather than as an underline. */
+      display: flex; flex-direction: column; align-items: stretch; gap: 0;
+      color: #888; font-variant-numeric: tabular-nums; font-size: 11px; line-height: 1.15;
+    }
+    /* A RULE, NOT A GAUGE - Anita, 2026-09-07: *"lets maybe have the bar be 1px tall instead
+       of 3px. its a little cramped. and also it doesn't need an outline."* Both halves of that
+       are the same correction. At 3px on a filled track it was a widget, and a widget on every
+       one of sixty rows is more furniture than the panel can hold - it read as the loudest
+       thing in a legend whose whole job is to stay quieter than the map. At 1px with no track
+       it is a rule under the number, in the number's own colour, and the eye takes the column
+       as a shape rather than reading sixty little meters.
+
+       WHAT THE TRACK WAS DOING, so nobody puts it back by accident: it drew the length the
+       fill was a fraction OF, which is a real thing to lose - a lone 20% rule is short without
+       saying short-of-what. The column supplies it instead. Rows sit directly above one
+       another at a fixed 38px, so the longest rule in view is the reference, and the cell's
+       right edge is a hard stop every rule is measured against. That works because the bars
+       are always read as a group; it would not work for a bar on its own. */
+    /* UNDER THE NUMBER AND FILLING LEFTWARD - Anita, 2026-09-07. Above it, the rule sat
+       between two rows and the eye had to decide which one it belonged to; under it, it is an
+       underline, and an underline has never belonged to anything but the text above it. And
+       the counts are right-aligned, so a bar growing rightward from a fixed left edge grew
+       AWAY from the number it measures - anchored at the same right edge, the two share a
+       margin and the bar reads as the number drawn out. */
+    .row .bar { height: 1px; display: flex; justify-content: flex-end; }
+    .row .bar i { display: block; height: 100%; flex: none; }
+
+    /* THE CHECKBOXES ARE A COLUMN AND NOT A STAIRCASE - 10.3. Beside the swatch they would
+       follow the indent, so four levels down they sit forty pixels in from where they
+       started and a reader ticking three of them off is chasing a diagonal. On the right
+       they hold one line down the panel whatever the depth, and it is the only part of the
+       row with fixed-width neighbours to line up against. */
+    /* THE HIT AREA IS A SQUARE THE HEIGHT OF THE ROW, and it is the same argument §6.11 made
+       for the swatch: *"a 9px circle is a legend mark; it is not a button."* An 11px checkbox
+       is not one either. `stretch` gives it the row's full height and the negative margins
+       claw the width back out of the row's own right padding, so a target that is 19px square
+       costs the labels the 9px it did at 13 wide - the pixels come from padding that was
+       doing nothing, not from the names. */
+    .row .cb {
+      display: flex; align-items: center; justify-content: center;
+      width: 19px; align-self: stretch; flex: none; margin: -1px -10px -1px 0;
+    }
+    /* A DARK STEEL AND NOT THE SEGMENTS' BLUE. §10.2 gives `#7d9cb8` to the lit segment as
+       "the one loud thing in a panel that is otherwise all low-contrast greys", and there are
+       four of those. There are 381 of these, every one of them ticked at rest, and in that
+       blue they drew a bright stripe down the side of the panel louder than the tree it
+       belongs to - the map is what the reader is meant to be looking at.
+
+       So the RESTING state is quiet and the unusual state is what shows: a ticked box is a
+       dark square barely above the panel, an unticked one is an empty outline, and the half
+       ticked group reads as a dash. That is the right way round - a reader scans this column
+       for what they have turned OFF. */
+    .row .cb input {
+      accent-color: #5b6873; width: 11px; height: 11px; margin: 0; cursor: pointer;
+      opacity: .5;
+    }
+    /* THE UNTICKED BOX IS THE ONE WORTH SEEING, so it is the one at full strength - along
+       with the half-ticked group above it. Everything ticked is the resting state of all 381
+       rows and recedes to half. Without this the column is a stripe of identical bright marks
+       saying "all normal" in the loudest voice on the panel, which is attention spent on the
+       answer nobody needed.
+
+       THE HOVER CUE IS THE BOX'S OWN, NOT THE ROW'S - Anita, 2026-09-07: *"if i hover over the
+       row (like over the religion title) it makes the checkbox look brighter so it feels like
+       i'm gonna click it. but it actually just focuses the religion."* Which is the whole
+       failure: a row and the box inside it do two DIFFERENT things - select the religion,
+       toggle its dots - so lighting the box on the row's hover promised the second and
+       delivered the first. Brightening now tracks `.cb`, which IS the click target, so the
+       thing that lights up is exactly the thing that would act. */
+    .row .cb input:not(:checked), .row .cb:hover input { opacity: 1; }
+    /* A hidden row dims and its checkbox does NOT - the box is the way back and has to stay
+       legible and hittable. That is the whole reason this is a class rather than the
+       `opacity:.4` it replaces, which took the control down with the content. */
+    .row.hid .lb, .row.hid .ct { color: #5c5c5c; }
+    .row.hid .dot, .row.hid .ring, .row.hid .bar { opacity: .35; }
     .kids { display: none; }
     .kids.open { display: block; }
     /* Lineage caption over a run of siblings. Deliberately not a .row: no swatch, no count,
@@ -206,8 +308,9 @@
        the reasoning that a setting is subordinate to the thing it sets. Two sizes below the
        rows above them read as fine print instead, which is the opposite of what §10.2 moved
        these controls away from links to achieve. They fit at 12px with room to spare, measured
-       rather than guessed: the widest is `overlapping dots [separate][merged]` at 222 of the
-       248px available, and no label truncates. 26px is the budget for a longer word. */
+       rather than guessed: the widest row is `show non-religions [hidden][shown]` at 220 of the
+       266px available, and no label truncates. 46px is the budget for a longer word — but the
+       number moves with `#panel`'s width, so re-measure rather than trust it. */
     #legend-note {
       padding: 7px 10px 8px; border-top: 1px solid #2a2a2a; color: #999; font-size: 12px;
     }
@@ -321,6 +424,23 @@
     #about .basis { margin: 0 0 8px; padding-left: 10px; border-left: 2px solid #333; }
     #about .basis div { margin-bottom: 3px; }
     #about .basis b { color: #ddd; font-weight: 700; }
+    /* The country's name and the §3.1 quantity under it, which used to be one line joined by
+       a dash. Two lines, because they are two different kinds of thing and half the `basis`
+       strings are noun phrases that read as a sentence fragment when a dash pretends
+       otherwise. */
+    #about .cty { margin-bottom: 8px; }
+    #about .cty b { color: #eee; display: block; }
+    #about .cty .q { color: #7f7f7f; display: block; }
+    #about .lbl { color: #7f7f7f; margin-bottom: 4px; }
+    /* Sixty-eight rows, so they are a table rather than prose: name left, share right, the
+       number in tabular figures so the column reads as a column. Zero is dimmed because it is
+       the good news and the eye should go to the top of the list, which is sorted worst
+       first. */
+    #about .mod { margin: 0 0 8px; padding-left: 10px; border-left: 2px solid #333; }
+    #about .mod div { display: flex; gap: 8px; margin-bottom: 2px; }
+    #about .mod span { flex: 1; color: #ccc; }
+    #about .mod i { font-style: normal; font-variant-numeric: tabular-nums; color: #c9a06a; }
+    #about .mod i.z { color: #666; }
 
     /* ---- the hover card over a dot --------------------------------------- */
     /* MapLibre ships this white, with a drop shadow and `10px 10px 15px` of padding, and it
@@ -395,7 +515,7 @@
   <div id="left">
     <div id="title">Religion</div>
     <div id="subtitle"></div>
-    <div id="grain"></div>
+    <div id="prov"></div>
     <div id="picker">
       <button id="cc-button">
         <span class="who" id="cc-current">Auto</span><span class="caret">▾</span>
@@ -420,7 +540,7 @@
       <button id="depth-minus" title="Less detail">&minus;</button>
       <button id="depth-plus" title="More detail">+</button>
     </div>
-    <div id="scope-bar"><span id="scope-label">all religions</span><a id="scope-clear">clear</a></div>
+    <div id="scope-bar"><span id="scope-label">all religions</span><a id="vis-all"></a><a id="scope-clear">clear</a></div>
     <div id="tree"></div>
     <div id="legend-note">
       <!-- §4.1a's spatial carry used to be spelled out here and is not any more — Anita,
@@ -441,7 +561,7 @@
       </div>
 
       <div class="ctl" id="ctl-merge" title="Separate: every dot drawn individually. Merged: nearby dots of one religion become a single mark with area proportional to how many, which stays legible when zoomed out.">
-        <span class="cl">overlapping dots</span>
+        <span class="cl">dot style</span>
         <span class="segs" id="merge-seg"><span class="seg" data-v="0">separate</span><span class="seg" data-v="1">merged</span></span>
       </div>
 
@@ -451,7 +571,7 @@
       </div>
 
       <div class="ctl" id="ctl-none">
-        <span class="cl">not a religion</span>
+        <span class="cl">show non-religions</span>
         <span class="segs" id="none-seg"><span class="seg" data-v="0">hidden</span><span class="seg" data-v="1">shown</span></span>
       </div>
       <!-- "inferred" and not "derived": the control hides BOTH non-measured tiers, and calling
@@ -476,7 +596,7 @@
       <div class="ctl-sub" id="tier-share"></div>
 
       <div class="ctl" id="ctl-reset">
-        <span class="cl">your colours</span>
+        <span class="cl">reset colours</span>
         <span class="segs" id="reset-seg"><span class="seg" id="reset-btn">reset</span></span>
       </div>
     </div>
@@ -504,12 +624,12 @@
     <p>Every dot is <b id="about-dotval">1,000</b> people, the same number for every group, so
        two colours can be compared by counting. Fractional dots carry over to the next nearby
        area until there are enough people to draw one. Rings mark a body that is present but
-       too small to reach one dot, or that reported congregations without a membership count —
-       a ring says only "here", never how many.</p>
+       too small to reach one dot, or that reported congregations without a membership count.
+       A ring says only "here", never how many.</p>
     <p>Dots are placed at random within small census units, not at anyone's address. Those units
        are built to a few thousand people each, so this places people about where they live
-       without using any population data — but it says nothing about where inside a unit a
-       group lives.</p>
+       without using any population data. It says nothing about where inside a unit a group
+       lives.</p>
     <div id="about-country"></div>
     </div>
   </div>
@@ -699,7 +819,86 @@ const NOT_A_RELIGION_IDS = ['unaffiliated', 'secular', 'parody',
 const STORE_KEY = 'religiondots.overrides.v1';
 const HIDDEN_DEFAULT = [];
 let USER_COLOR = {};                       // node id -> css colour, wins over both palettes
-let USER_HIDDEN = new Set(HIDDEN_DEFAULT); // node id -> its subtree is off the map
+
+/* WHAT `USER_HIDDEN` HOLDS CHANGED — spec §10.3, 2026-09-07, and the checkboxes are why.
+
+   It used to be a set of SUBTREE ROOTS: an id in it took itself and everything under it off
+   the map, and `isHidden` walked the set testing prefixes. One id governed a node and its
+   descendants together, which is fine while the only way to hide anything is a swatch on a
+   branch, and wrong the moment a reader can tick individual rows.
+
+   THE CASE THAT BREAKS IT IS "SHOW ME JUST THE BAPTISTS". Hide everything, then re-check one
+   body. Under the old set that is `christianity` out, then `christianity` back in with its
+   other children out — and there is no way to say what is left, because `christianity`'s OWN
+   dots come back with it. Those are the sources that answer "Christian" and name no church
+   below it: 46% of the marks across the archive and 18% of Canada. The reader asked for
+   Baptists and got Baptists plus every unspecified Christian on the map.
+
+   A node and its subtree are two different things to hide, and the set now says which: one
+   entry per node whose own dots are off, and hiding a branch means adding every id under it.
+   The cost is a bigger set — ~570 entries after "hide all" against one — and it is paid
+   nowhere that matters. `isHidden` becomes a hash lookup instead of a prefix walk, the WebGL
+   palette is a per-node loop either way, and only the merged layers' FILTER wants the old
+   shape, which `hiddenCover` gives it back, minimally, at the point of use. */
+let USER_HIDDEN = new Set();               // node id -> that node's own dots are off the map
+
+/* The whole taxonomy as a tree, which `KIDS` is not: `buildTree` fills that from `PRESENT`,
+   so it holds only the branches the country on screen reports. Every hide/show ACTION runs
+   over this one instead, or hiding Christianity in Poland would leave the Baptists Poland
+   does not report on the map, and switching to the United States would bring them back. */
+let FULL_KIDS = {}, FULL_ROOTS = [];
+function buildFullTree() {
+  FULL_KIDS = {}; FULL_ROOTS = [];
+  for (const n of NODES) FULL_KIDS[n.id] = [];
+  for (const n of NODES) {
+    const p = parentOf(n.id);
+    if (p && FULL_KIDS[p]) FULL_KIDS[p].push(n.id); else FULL_ROOTS.push(n.id);
+  }
+}
+
+/** Every node at or under `id`, over the whole taxonomy — `subtree()`'s counterpart. */
+function fullSubtree(id, acc = []) {
+  if (!BY_ID[id]) return acc;
+  acc.push(id);
+  for (const k of FULL_KIDS[id] || []) fullSubtree(k, acc);
+  return acc;
+}
+
+/** Show or hide a branch: the node and everything under it. */
+function setSubtreeVisible(id, on) {
+  for (const k of fullSubtree(id)) {
+    if (on) USER_HIDDEN.delete(k); else USER_HIDDEN.add(k);
+  }
+}
+
+/* THE HIDDEN SET AS THE SMALLEST EQUIVALENT STATEMENT: the largest wholly-hidden subtrees,
+   then the nodes hidden on their own inside a subtree that is not. It is what goes to
+   localStorage, what `copyOverrides` pastes into `HIDDEN_DEFAULT`, and what the merged
+   layers' filter is built from — a prefix test over a handful of roots rather than an `in`
+   over five hundred ids, re-evaluated per feature per tile on every filter change. */
+function hiddenCover() {
+  const full = {};
+  const mark = (id) => {
+    let all = USER_HIDDEN.has(id);
+    // every child, always: `&&` would short-circuit and leave siblings unmarked
+    for (const k of FULL_KIDS[id] || []) if (!mark(k)) all = false;
+    return (full[id] = all);
+  };
+  for (const id of FULL_ROOTS) mark(id);
+  const roots = [], only = [];
+  const walk = (id) => {
+    if (full[id]) { roots.push(id); return; }
+    if (USER_HIDDEN.has(id)) only.push(id);
+    for (const k of FULL_KIDS[id] || []) walk(k);
+  };
+  for (const id of FULL_ROOTS) walk(id);
+  return { roots, only };
+}
+
+/* The stored set, waiting for a taxonomy to be expanded against — `loadOverrides` runs before
+   the first paint so a saved colour does not flash as the default, which is long before
+   `religions.json` lands, and a subtree cannot be enumerated before there is a tree. */
+let storedHidden = null;
 
 function loadOverrides() {
   try {
@@ -707,24 +906,43 @@ function loadOverrides() {
     if (!raw) return;
     const o = JSON.parse(raw);
     if (o && typeof o.colors === 'object') USER_COLOR = o.colors || {};
-    if (Array.isArray(o.hidden)) USER_HIDDEN = new Set(o.hidden);
+    /* TWO KEYS, WHICH ARE `hiddenCover`'s TWO HALVES. `hidden` keeps both its name and its
+       old meaning — subtree roots — so a store written before §10.3 loads and still says what
+       it said. `hiddenOnly` is the new half and is usually empty. Writing one flat list of
+       every hidden id instead would be 570 entries after a single "hide all", and would put
+       the same 570 into a `HIDDEN_DEFAULT` meant to be read by a person. */
+    if (Array.isArray(o.hidden) || Array.isArray(o.hiddenOnly))
+      storedHidden = { roots: o.hidden || [], only: o.hiddenOnly || [] };
   } catch (e) { /* private window, cleared storage, corrupt value — defaults are fine */ }
 }
+
+/** Expand the stored (or default) cover into the exact set. Once, after `NODES` lands. */
+function expandHidden(cover) {
+  USER_HIDDEN = new Set();
+  for (const r of cover.roots) setSubtreeVisible(r, false);
+  // ids that are no longer in the taxonomy simply fall out here, which is the right answer
+  for (const id of cover.only) if (BY_ID[id]) USER_HIDDEN.add(id);
+}
+
 function saveOverrides() {
   try {
+    const cov = hiddenCover();
     localStorage.setItem(STORE_KEY,
-      JSON.stringify({ colors: USER_COLOR, hidden: [...USER_HIDDEN] }));
+      JSON.stringify({ colors: USER_COLOR, hidden: cov.roots, hiddenOnly: cov.only }));
   } catch (e) { /* nothing to do; the session still works, it just will not persist */ }
 }
+/* Counted over the COVER and not the raw set, so hiding one family reads as one override
+   rather than as the ninety nodes under it. Only ever used as a boolean — whether `reset`
+   has anything to put back — but a number that means something costs nothing here. */
 function overrideCount() {
-  const def = new Set(HIDDEN_DEFAULT);
+  const cov = hiddenCover(), def = new Set(HIDDEN_DEFAULT);
   return Object.keys(USER_COLOR).length
-    + [...USER_HIDDEN].filter(h => !def.has(h)).length
+    + cov.roots.filter(h => !def.has(h)).length + cov.only.length
     + HIDDEN_DEFAULT.filter(h => !USER_HIDDEN.has(h)).length;
 }
 function resetOverrides() {
   USER_COLOR = {};
-  USER_HIDDEN = new Set(HIDDEN_DEFAULT);
+  expandHidden({ roots: HIDDEN_DEFAULT, only: [] });
   saveOverrides();
   recolour(); applyPaint(); renderTree();
 }
@@ -789,6 +1007,55 @@ let SPLIT = new Set();     // ...of those, the ones that also have a drawn node 
 // ---------------------------------------------------------------- tree helpers
 function parentOf(id) { const i = id.lastIndexOf('.'); return i < 0 ? null : id.slice(0, i); }
 function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
+
+/* `**bold**`, `*italic*` and `` `code` `` in the country notes, AND IT HAD NEVER BEEN DONE —
+   found 2026-09-07 while reading the about panel as a reader rather than as its author.
+   **531 bold runs, 80 italics and 43 code spans across the 69 notes were on screen as raw
+   asterisks and backticks**, in the one panel this map points people at to explain itself.
+   France alone showed 106 asterisks. The notes are authored in `countries.py` in a
+   markdown-ish voice, because that is what a docstring-shaped constant looks like, and
+   nothing between there and the panel ever turned the markers into markup.
+
+   ESCAPE FIRST, THEN CONVERT. `esc` has already turned every `<` into `&lt;`, so the only
+   tags in the result are the ones these three lines put there and no note can inject
+   anything.
+
+   THE BOLD PATTERN IS TEMPERED (`(?!\*\*)`) RATHER THAN `[^*]`, and three notes are why: a
+   bold run may contain an italic one, as in Myanmar's `**They are drawn as *not enumerated*
+   rather than as Muslim**`. `[^*]` refuses that match, which left the outer markers on
+   screen and then let the italic pass mangle the halves. Italics run second so they see the
+   inside of a converted bold run; `tools/` has no check for this, so the verification is
+   `check_md.py`'s: apply these three regexes to every note and assert no `*` or `` ` ``
+   survives. It reported three notes before this shape and none after. */
+function md(s, para) {
+  let t = esc(s);
+  /* A BOLD RUN THAT IS A WHOLE SENTENCE AND STARTS ONE IS A SECTION HEADING, and it becomes a
+     PARAGRAPH BREAK rather than bold type — Anita, 2026-09-07, on the whole panel reading as
+     AI-written. It was, in the specific way that word usually means: the notes are written
+     with a bolded topic sentence every eighty words or so, which is a real and useful
+     structure, but rendered into one 900-word block of running text it turns into the
+     listicle voice instead. A paragraph break already says "new point", so the bold was
+     saying it twice, in the register that grates.
+
+     The rule keeps every bold run that is NOT a topic sentence, which is the other half of
+     why the notes use the marker at all: `Catholicism is **38.0%** and falling` is emphasis
+     on a figure inside a sentence, and it survives. Across the 69 notes this makes 285
+     paragraphs and keeps 279 of the 531 bold runs. Sixteen of the shorter notes contain no
+     topic sentence at all and stay as one paragraph, which is what they always were. */
+  /* NUL IS THE SPLIT MARKER, as an escape and not as a raw byte: writing the character
+     itself works and makes every tool treat this file as binary, which costs more than it
+     saves. It has to be something a note cannot contain (`esc` cannot produce one, and
+     countries.py is source code), because the first draft split on a SPACE and duly made
+     one paragraph per word. */
+  if (para) t = t.replace(/(?:^|(?<=[.!?”"]\s))\*\*((?:(?!\*\*)[\s\S])+?[.!?])\*\*\s*/g,
+                          '\u0000$1 ');
+  t = t.replace(/\*\*((?:(?!\*\*)[\s\S])+?)\*\*/g, '<b>$1</b>')
+       .replace(/\*([^*]+?)\*/g, '<i>$1</i>')
+       .replace(/`([^`]+?)`/g, '<code>$1</code>');
+  if (!para) return t;
+  return t.split('\u0000').map(x => x.trim()).filter(Boolean)
+    .map(x => `<p>${x}</p>`).join('');
+}
 
 // ---------------------------------------------------------------- the tooltip
 /* THE CONTENT LIVES HERE, NOT IN THE ATTRIBUTE, and that is the whole reason this is a
@@ -909,9 +1176,9 @@ function rebuild(keepScope) {
    RINGS DO NOT MOVE. A ring exists only where some row of its node was measured (scatter.py's
    `may_ring`), which is why layerFilter lets them through untouched, so they are carried over
    as they are. */
-function rolledTally(t) {
+function rolledTally(t, cc = country) {
   if (!onlyMeasured || !t) return t;
-  const per = SCATTER.tierTally ? SCATTER.tierTally(country) : null;
+  const per = SCATTER.tierTally ? SCATTER.tierTally(cc) : null;
   // Before the first buffer is parsed there is nothing to split by, and the honest fallback
   // is the unrolled tally: too many rows for a moment, rather than an empty panel. The same
   // trap renderTierControl fell into, and the same answer.
@@ -939,7 +1206,7 @@ function rolledTally(t) {
 
 /* Display order for the top-level families. Anything not listed follows, in branches.py's
    declaration order. Ids, not labels — `secular` is "Secular and ethical", `unaffiliated` is
-   "No religion", `unchurched` is "Believing, no church", `other` is "Other, by source".
+   "No religion", `unchurched` is "Believing, no church", `other` is "Other".
 
    THE SHAPE OF IT — Anita, 2026-09-05, and it moves `unaffiliated` off the top. It used to
    lead, on the reasoning that it is one of the three answers a census actually collects, and
@@ -967,7 +1234,7 @@ const ROOT_ORDER = [
   'unenumerated',      // Not enumerated — never counted at all; the state's own estimate of who it left out (Myanmar)
   'unknown',           // Religion unknown — asked, but the answer set did not reach what they practise (Vietnam)
   'unchurched',        // Believing, no church — asked, and reported belief without institution
-  'other',             // Other, by source — asked, answered, and the tree cannot place it
+  'other',             // Other — asked, answered, and the tree cannot place it
   /* AND THEN EVERY OTHER FAMILY, IN HUE ORDER — added 2026-09-07. Anita: "is the
      ordering in the legend sensible, you think? i cant really discern any patterns when
      viewing all religions L2". There were none to discern. Only the families above were
@@ -1089,18 +1356,51 @@ function subtree(id, acc = []) {
    Plymouth Brethren, Swedenborgian — were 115 dots between them against Christianity's 501,322.
    Each cost a line, a swatch and a hue, and none of them is findable on the map at that size.
 
-   So a child holding less than FOLD_SHARE of its PARENT'S total is folded into one row. The
-   denominator is the parent and not the whole map, which is what makes the rule scale-free:
-   inside Judaism a row is measured against Jews. FOLD_MIN is there because folding one row into
-   a row that says "1 small group" saves nothing — the rule has to buy legend space to be worth
-   the indirection.
+   THE DENOMINATOR IS WHAT YOU ARE LOOKING AT, NOT THE PARENT — Anita, 2026-09-07: *"i think
+   maybe it works based on percentage of parent like percentage of judaism. thats not right. i
+   want to do as percentage of everything we're looking at (so if we're looking at american
+   christianity, as percentage of american christian count)."*
+
+   It used to be the parent, on the argument that this made the rule scale-free — *"inside
+   Judaism a row is measured against Jews"*. That is a coherent rule and it answers the wrong
+   question, and Judaism is where it shows: Reconstructionist Judaism is **0.29% of Judaism**,
+   seven times over the old cut, so it kept a row and a hue for **39,000 people** — 39 dots in
+   the entire world. Meanwhile Shia Islam is **0.049% of Islam**, a share six times SMALLER,
+   for **430,000 people**. The old rule would have folded the second and kept the first, which
+   is exactly backwards, because Islam's total is 98% `unspecified` and Judaism's is not. A
+   share of a parent says nothing about whether a group is findable on the map when parents
+   differ that much in what they contain.
+
+   Measured against the view, both come right: 39 dots in 5.06 million folds, 430 does not.
+
+   IT IS THE SAME DENOMINATOR THE SHARE BARS USE (§10.3) — the scope's total, or every root's
+   when nothing is selected — and that is worth more than the arithmetic. A reader watching a
+   row vanish into the bucket can see why in the bar beside it: the fold is the point where
+   the bar has nothing left to say.
+
+   5e-5 IS MEASURED, NOT PICKED. It is the largest cut that folds nothing anyone would look
+   for: every one of the 37 rows the parent rule folded still folds (Moravian, Plymouth
+   Brethren, Pietist, Hussite among them), and Shia, Mahayana, Ahmadiyya and Anabaptist all
+   keep their rows. In the all-countries view it takes 194 rows off the legend against 37.
+
+   WHAT IT COSTS, because it is a real cost: a country view has a far smaller total than the
+   world does, so the same fraction is a far smaller number of dots, and the per-country tails
+   the parent rule was folding stop folding. The United Kingdom went from 7 rows folded to
+   none, Poland from 5. That is the honest consequence of the denominator Anita asked for — a
+   group that is a real part of Poland is not a rounding error just because Poland is small —
+   and if the country legends turn out to want it back, the fix is one `||` here putting the
+   old parent test back alongside this one, not a different threshold.
+
+   FOLD_MIN is there because folding one row into a row that says "1 small group" saves
+   nothing — the rule has to buy legend space to be worth the indirection. It has always been
+   2 and 2 has always been enough; when Judaism's two rows would not fold, this cut was why.
 
    What is folded is still on the map, still counted, and still selectable: the bucket expands.
    It just stops claiming a colour of its own and takes its family's instead (`paletteFor`).
 
    A node on the path to the current selection is never folded — you cannot select a thing and
    have it disappear into a bucket. */
-const FOLD_SHARE = 4e-4;
+const FOLD_SHARE = 5e-5;
 const FOLD_MIN = 2;
 
 /* A BRANCH WHOSE `unspecified` ROW IS ITS CHILD — Anita, 2026-09-05, and the only entry is
@@ -1143,13 +1443,22 @@ function mergedFrom(id) {
   return null;
 }
 
+/** Everything on screen: the selected subtree, or every root when nothing is selected. One
+    definition for the fold cut and the share bars, so a row folds exactly when its bar runs
+    out. */
+function viewTotal() {
+  return scope ? (counts[scope] || 0)
+               : ROOTS.reduce((a, id) => a + (counts[id] || 0), 0);
+}
+
 function computeFold() {
   FOLDED = new Map();
+  const t = viewTotal();
+  if (!t) return;
   for (const par in KIDS) {
     const ks = KIDS[par];
     if (ks.length < FOLD_MIN) continue;
-    const t = counts[par] || 0;
-    if (!t) continue;
+    if (!(counts[par] || 0)) continue;
     const small = ks.filter(k => (counts[k] || 0) < t * FOLD_SHARE
       && !(scope && (scope === k || scope.startsWith(k + '.'))));
     if (small.length >= FOLD_MIN) FOLDED.set(par, new Set(small));
@@ -2756,7 +3065,15 @@ function underAny(roots) {
 function layerFilter(scopeToo) {
   const parts = [];
   if (country) parts.push(['==', ['get', 'c'], country]);
-  if (USER_HIDDEN.size) parts.push(['!', underAny([...USER_HIDDEN])]);
+  /* §10.3: the exact set, put back into the shape a filter wants. `roots` is the cheap
+     prefix test the old set was, and `only` is the residue that has no prefix form — a
+     branch whose own dots are hidden while something under it is not. */
+  if (USER_HIDDEN.size) {
+    const cov = hiddenCover(), tests = [];
+    if (cov.roots.length) tests.push(underAny(cov.roots));
+    if (cov.only.length) tests.push(['in', ['get', 'n'], ['literal', cov.only]]);
+    if (tests.length) parts.push(['!', tests.length > 1 ? ['any', ...tests] : tests[0]]);
+  }
   /* §7's toggle for the MERGED layers. `t` is written only when it is 1 or 2 (tiles.py's
      `tier_codes`), so a measured dot has no `t` at all and `has` is the whole test. Rings carry
      no `t` either and so pass unaffected, which is right — a ring only exists where some row of
@@ -2785,11 +3102,9 @@ function layerFilter(scopeToo) {
   return parts.length ? ['all', ...parts] : null;
 }
 
-/** Is this node hidden, either directly or because an ancestor is? */
-function isHidden(id) {
-  for (const h of USER_HIDDEN) if (id === h || id.startsWith(h + '.')) return true;
-  return false;
-}
+/** Are this node's own dots off the map? Since §10.3 that is one lookup and not a walk: a
+    hidden branch puts every id under it in the set, so there is no ancestor to climb to. */
+function isHidden(id) { return USER_HIDDEN.has(id); }
 
 // ---------------------------------------------------------------- the swatch editor (§6.11)
 let pickNode = null;
@@ -2898,14 +3213,20 @@ function cpCommit() {
    time it changes and not only when the popover opens. Setting a colour and then looking for
    `reset` used to find it still greyed out, because it was last written at open time — the
    only way back to the default was to close the popover and reopen it. */
+/* `hidden above` IS GONE, and §10.3 is why rather than a change of mind about it. It named
+   the state where a node was visible in itself but an ancestor was hidden — which the old
+   prefix set could produce and the exact set cannot, because hiding a branch now writes every
+   id under it. What is left is the branch's own three states, and the link reads off them:
+   nothing shown is `show`, anything else is `hide`, and both act on the whole subtree, which
+   is what the swatch has always meant by hiding. */
 function cpSyncActions() {
   if (!pickNode) return;
-  const hid = USER_HIDDEN.has(pickNode), inherited = !hid && isHidden(pickNode);
+  const st = visStateOf(pickNode);
   const hide = document.getElementById('sp-hide');
-  hide.textContent = inherited ? 'hidden above' : hid ? 'show' : 'hide';
-  hide.className = inherited ? 'off' : '';
+  hide.textContent = st === 0 ? 'show' : 'hide';
+  hide.className = '';
   const reset = document.getElementById('sp-reset');
-  reset.className = (USER_COLOR[pickNode] || hid) ? '' : 'off';
+  reset.className = (USER_COLOR[pickNode] || st !== 2) ? '' : 'off';
 }
 
 function openPicker(id, el) {
@@ -2944,11 +3265,19 @@ function copyOverrides() {
      pinning the overview band and the focus wheel alike. */
   const lines = Object.entries(USER_COLOR)
     .map(([id, c]) => `  '${id}': [${hexToHsl(hslToHex(c)).join(', ')}],`);
-  const hid = [...USER_HIDDEN].map(h => `'${h}'`).join(', ');
+  /* The COVER, not the raw set — `HIDDEN_DEFAULT` is expanded against the taxonomy at load
+     (§10.3), so it takes the same subtree roots it always did and stays a list a person can
+     read. Its `only` half has no form in that constant and comes out as a comment, which is
+     the honest thing to hand a maintainer: it is a state the viewer can reach and the source
+     cannot yet express. */
+  const cov = hiddenCover();
+  const hid = cov.roots.map(h => `'${h}'`).join(', ');
   const text = '/* set by hand in the viewer — spec §6.11. These lines go in BOTH `PIN` and\n'
     + '   `PIN_OVERVIEW`; an override holds in every scope, so the source has to pin both. */\n'
     + (lines.join('\n') || '  // no colours set') + '\n\n'
-    + `const HIDDEN_DEFAULT = [${hid}];\n`;
+    + `const HIDDEN_DEFAULT = [${hid}];\n`
+    + (cov.only.length
+        ? `// hidden on their own, subtree left on the map: ${cov.only.join(', ')}\n` : '');
   // No button any more — the panel is for readers and this is a maintainer's errand
   // (Anita, 2026-09-03). Call `copyOverrides()` from the console: it copies, and returns the
   // same text for when the clipboard is blocked (no https, no permission).
@@ -3099,9 +3428,120 @@ function isOpen(id) {
   return d < depth;
 }
 
+/* THE CHECKBOX'S THREE STATES, computed once per render — spec §10.3. A `subtree()` walk per
+   row is quadratic down a tree this deep, and the panel redraws on every pan in Auto.
+
+   OVER THE PRESENT SUBTREE, WHICH IS NOT THE SET THE BOX ACTS ON, and the asymmetry is
+   deliberate. The state answers "how much of what I can see here is on the map", so it is
+   computed over `KIDS` — the rows actually in front of the reader. The action runs over the
+   whole taxonomy (`setSubtreeVisible`), so hiding Christianity in Poland also hides the
+   Baptists Poland does not report and the United States does. Computing the state globally
+   instead would draw Christianity half-ticked in Poland with every Polish row under it
+   ticked, which reads as a broken panel rather than as a fact about a country not on screen. */
+let VIS = {};                       // node id -> 2 all shown, 1 some shown, 0 none
+function computeVis() {
+  VIS = {};
+  const walk = (id) => {
+    let shown = USER_HIDDEN.has(id) ? 0 : 1, total = 1;
+    for (const k of KIDS[id] || []) { const r = walk(k); shown += r[0]; total += r[1]; }
+    VIS[id] = shown === 0 ? 0 : shown === total ? 2 : 1;
+    return [shown, total];
+  };
+  for (const r of ROOTS) walk(r);
+}
+/** A node with no row — not present in this country — has nothing to report, so: shown. */
+function visStateOf(id) { return VIS[id] === undefined ? 2 : VIS[id]; }
+
+/* §10.3 — HOW BIG IS THIS, on a scale a legend can carry. The counts are already on the row
+   and they are the exact answer; what a column of numbers is bad at is the COMPARISON, because
+   religion sizes run over five orders of magnitude inside one country. `1.2b` above `9.7m`
+   above `342k` gives a reader three figures and no picture. A bar gives the picture.
+
+   THE SCALE IS LOGARITHMIC AND HAS TO BE. Linear, everything under a few per cent is an empty
+   bar — which is most of the legend, and exactly the rows nobody can size by eye from the
+   number alone. Anita's scale, and it is a fifth of the bar per decade:
+
+       10% fills 80%   1% fills 60%   0.1% fills 40%   0.01% fills 20%
+
+   which is `fill = 1 + 0.2 * log10(share)`. A FULL BAR MEANS "all of it" rather than "the
+   biggest one here", which is why the selected node's own row draws full: it is 100% of
+   itself.
+
+   THE BOTTOM COMPRESSES RATHER THAN RUNNING OUT - Anita, 2026-09-07: *"lets compress the
+   really tiny religion range so that its not possible for a bar to read literally 0
+   length."* Clamped at zero the scale terminated at 0.001%, and with no track behind it
+   (see `.row .bar`) a zero-length bar is not a short mark, it is NO mark - indistinguishable
+   from a row that has no figure at all. In the all-countries view that is a lot of rows,
+   because the denominator is the world.
+
+   So below the 0.01% knee each further decade adds HALF of what the last one did, which
+   makes the tail a geometric series converging on `SHARE_FLOOR` and never reaching it:
+
+       0.01% -> 20%    0.001% -> 13%    0.0001% -> 9.5%    ... -> 6%
+
+   Continuous at the knee, still monotonic, so a smaller group never draws a longer bar, and
+   ABOVE the knee nothing moves - the four anchors Anita set are exactly where they were. */
+const SHARE_DECADE = 0.2;
+const SHARE_KNEE = 0.2;              // the fill at 0.01%, where the compression starts
+const SHARE_FLOOR = 0.06;            // ~2px in a 36px cell: the shortest mark that is a mark
+
+/** Her scale above the knee; a halving series below it. */
+function shareFill(s) {
+  const u = 1 + SHARE_DECADE * Math.log10(s);
+  if (u >= SHARE_KNEE) return Math.min(1, u);
+  const decades = (SHARE_KNEE - u) / SHARE_DECADE;      // how far below the knee, in decades
+  return SHARE_FLOOR + (SHARE_KNEE - SHARE_FLOOR) * Math.pow(0.5, decades);
+}
+
 function renderTree() {
   const el = document.getElementById('tree');
+  /* The panel is thrown away and rebuilt on every change, and a checkbox is a control a
+     reader clicks several of in a row — each one used to send them back to the top of a
+     scrolling list to find the next. Nothing else about the render depends on this. */
+  const keepScroll = el.scrollTop;
+  computeVis();
   const html = [];
+
+  /* THE DENOMINATOR IS THE SCOPE, not the country and not the world, because the scope is
+     what the map is drawing (§6.7): select Christianity and every bar re-reads against
+     Christians. Rows OUTSIDE the scope get no bar at all — their dots are off the map, and a
+     share of a total they are not part of is a number with no referent. They keep their
+     count, which is still true.
+
+     IT IGNORES WHAT IS HIDDEN. Hiding is a viewing choice, and re-scaling every bar to the
+     rows left standing would make the bars mean something different after every click — and
+     would put a full bar on the last row a reader had not yet unticked. The bar answers "how
+     much of this map is this", which no checkbox changes. */
+  const rowCount = (id) => {
+    const mf = mergedFrom(id);
+    return (counts[id] || 0) + (mf ? own[mf] || 0 : 0);
+  };
+  // `viewTotal` is the fold cut's denominator too, so a row folds exactly where its bar runs
+  // out - one definition, and the panel cannot say two different things about one number.
+  const scopeTotal = viewTotal();
+  const ofWhat = scope ? BY_ID[scope].label : 'all religions';
+  const pctText = (s) => s >= 0.1 ? (s * 100).toFixed(0) + '%'
+    : s >= 0.001 ? (s * 100).toFixed(1) + '%'
+      : Number((s * 100).toPrecision(1)) + '%';
+  /* ONE FUNCTION FOR EVERY ROW THAT CARRIES A COUNT — the nodes, the `unspecified` residual
+     and the folded bucket — so the three cannot drift into three different scales. */
+  const countCell = (c, col, withBar) => {
+    if (!c) return '<span class="ct"></span>';
+    const s = scopeTotal ? c / scopeTotal : 0;
+    const bar = (withBar && s > 0)
+      ? `<span class="bar"><i style="width:${(shareFill(s) * 100).toFixed(1)}%;`
+        + `background:${col}"></i></span>`
+      : '';
+    const note = (withBar && s > 0) ? ` · ${pctText(s)} of ${ofWhat}` : '';
+    return `<span class="ct" title="${esc(popTitle(c) + note)}">`
+      + `<span>${fmtPop(c * DOT_VALUE)}</span>${bar}</span>`;
+  };
+  /* `data-vis` moves a whole branch, `data-vis-own` moves one node's own dots and nothing
+     under it, `data-vis-fold` moves every member of a folded bucket. Three attributes rather
+     than one plus a mode, because the wiring below reads as three sentences that way. */
+  const cbox = (attr, id, st) =>
+    `<span class="cb"><input type="checkbox" ${attr}="${esc(id)}"`
+    + `${st === 2 ? ' checked' : ''}${st === 1 ? ' data-mixed="1"' : ''}></span>`;
 
   const row = (id, level) => {
     const open = isOpen(id);
@@ -3147,9 +3587,10 @@ function renderTree() {
     const out = scope && id !== scope && !id.startsWith(scope + '.');
     if (scope === id) html.push('<div class="scope-edge"></div>');
     html.push(
-      `<div class="row${scope === id ? ' sel' : ''}${out ? ' out' : ''}" data-id="${id}" `
-      + `style="padding-left:${6 + level * 11}px${hidden ? ';opacity:.4' : ''}" `
-      + `${hidden ? 'title="hidden — click the swatch to bring it back"' : ''}>`
+      `<div class="row${scope === id ? ' sel' : ''}${out ? ' out' : ''}`
+      + `${hidden ? ' hid' : ''}" data-id="${id}" `
+      + `style="padding-left:${6 + level * 11}px" `
+      + `${hidden ? 'title="hidden — tick it back on, or use the swatch"' : ''}>`
       + `<span class="tw" data-tw="${id}">${kids.length ? (open ? '▾' : '▸') : ''}</span>`
       + mark
       /* The tooltip is the label, EXCEPT where the label alone would mislead — then it is
@@ -3164,7 +3605,13 @@ function renderTree() {
           ? `${n.label} — including the sources that answer "${BY_ID[mf].label}" and name `
             + 'no church below it'
           : n.public_note || n.label)}">${esc(n.label)}</span>`
-      + `<span class="ct" title="${c ? popTitle(c) : ''}">${c ? fmtPop(c * DOT_VALUE) : ''}</span></div>`);
+      /* The bar takes the row's own colour, `colorOf[id]`, including where that is the `#666`
+         a node which is not a drawn category falls back to. It is NOT the blank-swatch case
+         above: that column IS the colour key and a grey circle there would advertise grey
+         dots the map does not contain, whereas this is a magnitude read against a track and
+         nobody hunts the map for the colour of a progress bar. */
+      + countCell(c, colorOf[id], !out)
+      + cbox('data-vis', id, visStateOf(id)) + '</div>');
     if (kids.length) {
       html.push(`<div class="kids${open ? ' open' : ''}" data-kids="${id}">`);
       /* Where the children are in descent order, say which line each one is on. Without
@@ -3185,15 +3632,21 @@ function renderTree() {
          cannot be selected — there is nothing in the tiles to select, these dots carry the
          parent's id. */
       if (SPLIT.has(id) && own[id] && !mergedInto(id)) {
-        html.push(`<div class="row res" style="padding-left:${6 + (level + 1) * 11}px" `
+        html.push(`<div class="row res${USER_HIDDEN.has(id) ? ' hid' : ''}" `
+          + `style="padding-left:${6 + (level + 1) * 11}px" `
           + `title="${esc(n.label)} — the source counted these people here and named no `
           + `body below it">`
           + '<span class="tw"></span>'
           + `<span class="hit pick" data-swatch="${id}" title="set this colour, or hide it">`
           + `<span class="dot" style="background:${colorOf[id]}"></span></span>`
           + '<span class="lb">unspecified</span>'
-          + `<span class="ct" title="${popTitle(own[id])}">`
-          + `${fmtPop(own[id] * DOT_VALUE)}</span></div>`);
+          /* THIS ROW'S BOX IS THE ONE PLACE A NODE MOVES WITHOUT ITS SUBTREE, and it is the
+             row §10.3 was written for: these are the branch's OWN dots, the sources that named
+             the branch and no body below it. Across the archive they are 46% of the marks, so
+             a reader asking for Baptists alone has to be able to put them down without losing
+             Christianity. `data-vis-own`, and it toggles exactly this id. */
+          + countCell(own[id], colorOf[id], !out)
+          + cbox('data-vis-own', id, USER_HIDDEN.has(id) ? 0 : 2) + '</div>');
       }
       // one group present is not a division of anything — Buddhism's three vehicles do not
       // need to be told they are all vehicles
@@ -3218,15 +3671,19 @@ function renderTree() {
       if (fold && fold.size) {
         const ids = [...fold], sum = ids.reduce((a, k) => a + (counts[k] || 0), 0);
         const sw = colorOf[ids[0]] || '#666';
-        html.push(`<div class="row res" data-tw="fold:${id}" `
+        // the bucket's own three states, summed over its members' — all shown, none, or mixed
+        const fsum = ids.reduce((a, k) => a + visStateOf(k), 0);
+        const fst = fsum === 0 ? 0 : fsum === ids.length * 2 ? 2 : 1;
+        html.push(`<div class="row res${fst === 0 ? ' hid' : ''}" data-tw="fold:${id}" `
           + `style="padding-left:${6 + (level + 1) * 11}px" `
-          + `title="Under ${FOLD_SHARE * 100}% of ${esc(n.label)} each — drawn in `
+          + `title="Under ${FOLD_SHARE * 100}% of ${esc(ofWhat)} each — drawn in `
           + `${esc(n.label)}'s own colour rather than taking ${ids.length} more of the legend">`
           + '<span class="tw">▸</span>'
           + `<span class="hit pick" data-swatch="${id}" title="set this colour, or hide it">`
           + `<span class="dot" style="background:${sw}"></span></span>`
           + `<span class="lb">${ids.length} small groups</span>`
-          + `<span class="ct" title="${popTitle(sum)}">${fmtPop(sum * DOT_VALUE)}</span></div>`);
+          + countCell(sum, sw, !out)
+          + cbox('data-vis-fold', id, fst) + '</div>');
         html.push(`<div class="kids" data-kids="fold:${id}">`);
         for (const k of ids) row(k, level + 2);
         html.push('</div>');
@@ -3261,6 +3718,33 @@ function renderTree() {
     openPicker(s.dataset.swatch, s);
   });
 
+  /* §10.3's checkboxes. The cell swallows the click, not the input: the row underneath sets
+     the scope and the bucket row is its own twisty, and a reader aiming at a box and catching
+     its padding must not get a selection change instead of a tick. Stopping the click does not
+     stop the tick — the default action still runs, only the bubble is cut.
+
+     `indeterminate` has no attribute, so the half-ticked state is carried through the markup
+     as `data-mixed` and set here, after `innerHTML`. */
+  const afterTick = () => { saveOverrides(); applyPaint(); renderTree(); };
+  el.querySelectorAll('.cb').forEach(c => c.onclick = e => e.stopPropagation());
+  el.querySelectorAll('.cb input').forEach(cb => {
+    if (cb.dataset.mixed) cb.indeterminate = true;
+  });
+  el.querySelectorAll('.cb input[data-vis]').forEach(cb => cb.onchange = () => {
+    setSubtreeVisible(cb.dataset.vis, cb.checked);       // a branch, and everything under it
+    afterTick();
+  });
+  el.querySelectorAll('.cb input[data-vis-own]').forEach(cb => cb.onchange = () => {
+    const id = cb.dataset.visOwn;                        // this node's own dots, alone
+    if (cb.checked) USER_HIDDEN.delete(id); else USER_HIDDEN.add(id);
+    afterTick();
+  });
+  el.querySelectorAll('.cb input[data-vis-fold]').forEach(cb => cb.onchange = () => {
+    for (const id of (FOLDED.get(cb.dataset.visFold) || []))
+      setSubtreeVisible(id, cb.checked);
+    afterTick();
+  });
+
   /* "Viewing: Adventist subgroups (L3), United States" — the group, the cut, the country.
      "subgroups" only when the drawn rows are actually below the scope: select Islam, whose
      sources report no division anywhere, and the line reads "Islam (L1)" because that is
@@ -3292,29 +3776,40 @@ function renderTree() {
   const litText = litCc.length === 1
     ? `${(META[litCc[0]] || {}).name || litCc[0]} records this`
     : `${litCc.length} of ${BUILT.length} countries record this`;
-  /* THE COVERAGE GAP, one line, under the country's name — Anita, 2026-09-06, looking at
-     Georgia and seeing Abkhazia and South Ossetia drawn empty with nothing to say why.
-
-     A blank on a dot map is ambiguous in the one direction that matters: "nobody here is
-     religious" and "nobody counted here" look identical, and §6.12 has always said so.
-     Everything the project knows about a country's gaps is in `note_public`, which is
-     several hundred words behind the ABOUT panel — true, and not read at the moment the
-     blank is on screen.
-
-     So `gap` is a per-country sentence of at most a few words, carried through counts.json
-     and shown HERE, beside the country's name, because that is where a reader is when the
-     question occurs to them. It is not a summary of `note_public` and must not grow into
-     one: if it needs a second line it belongs in the panel. Absent for most countries, and
-     that is the healthy state — a caption every country carries is a caption nobody reads.
-
-     It cannot collide with the wash note below: `litCc` is only ever non-empty in the
-     all-countries view and `gap` only ever set in a country view. */
-  const gapNote = country ? ((META[country] || {}).gap || '') : '';
+  /* `gap` USED TO HANG HERE, under the country's name, and moved to the §7c block on the left
+     on 2026-09-07. It was put here on 2026-09-06 because this is beside the map, "where a
+     reader is when the question occurs to them" — but §7c gave the project a place where
+     every line is the same kind of statement about the same source, and who a census left out
+     belongs next to how much of it was counted, not next to the religion picker. Nothing else
+     about the note changed: still a few words, still absent for most countries. */
   document.getElementById('scope-label').innerHTML =
     `Viewing: ${esc(what)} <span class="lv">(L${lv})</span>, ${esc(where)}`
-    + (gapNote ? `<div class="gap-note">${esc(gapNote)}</div>` : '')
     + (litCc.length ? `<div class="lit-note" data-tip="coverage">${esc(litText)}</div>` : '');
   document.getElementById('scope-clear').style.display = scope ? '' : 'none';
+
+  /* ONE LINK THAT FLIPS, and which way it flips is read off the tree rather than remembered —
+     Anita's shape: *"clear button can be reworded into a select all i guess? and if we have
+     all selected, maybe it turns into a hide all button."* With everything on the map the only
+     useful offer is taking it off; in any other state the useful offer is putting it back. So
+     there is never a dead control and never two links saying opposite things.
+
+     `hide all` is the way in to "just Baptists and Catholics": clear the map, then tick the
+     two. It acts on the whole taxonomy like every other box (§10.3), so doing it in Poland
+     also clears the branches Poland does not report. */
+  /* BOTH LINKS SHOW, INCLUDING TOGETHER - Anita, 2026-09-07, taking back the same day's
+     decision to hide `hide all` behind a selection. The argument for hiding it was that two
+     blue words a few pixels apart do unrelated things and `clear` is the one wanted at that
+     moment; the argument against is simply that both are wanted, and a control that
+     disappears when a selection is made is one a reader has to discover twice. Hiding it also
+     made the pair inconsistent with itself, since `show all` had to keep showing there - it
+     is the only way back from a map with nothing on it - so the bar offered one link or two
+     depending on a state nobody was tracking. */
+  const allShown = ROOTS.every(id => visStateOf(id) === 2);
+  const va = document.getElementById('vis-all');
+  va.textContent = allShown ? 'hide all' : 'show all';
+  va.title = allShown
+    ? 'Take every religion off the map — then tick back just the ones you want to see'
+    : 'Put every religion back on the map';
 
   segSet('dotval-seg', DOT_VALUE);
   segSet('merge-seg', merged ? 1 : 0);
@@ -3356,6 +3851,9 @@ function renderTree() {
   // greyed when there is nothing to put back, and it carries no tooltip: the word is the
   // whole of it, and a paragraph explaining a one-word control reads like filler
   document.getElementById('reset-seg').classList.toggle('off', !overrideCount());
+
+  // last, after every write that could change the panel's height
+  el.scrollTop = keepScroll;
 }
 
 /* A SEGMENTED CONTROL IS WRITTEN BY NAMING THE LIVE SEGMENT, never by rewriting a label.
@@ -3403,16 +3901,11 @@ function renderTierControl() {
 
      The leading em dash went with the links: the readout used to trail the control on the same
      line and needed something to hold it off the word. It now has a line of its own. */
-  const sh = SCATTER.tierShares(country);
-  const pc = v => (v > 0 && v < 0.005 ? '<1' : Math.round(v * 100)) + '%';
-  let txt = '';
-  if (sh) {
-    const parts = [];
-    if (sh.derived > 0) parts.push(pc(sh.derived) + ' derived');
-    if (sh.modelled > 0) parts.push(pc(sh.modelled) + ' modelled');
-    txt = parts.length ? parts.join(', ') : 'all counted';
-  }
-  document.getElementById('tier-share').textContent = txt;
+  /* Both readouts come out of `tierWords` — this one and the header's `counted` row (§7c).
+     Two places on screen reporting the same shares in different words is fine; two places
+     computing them is how they end up disagreeing after somebody fixes the rounding in one. */
+  const tw = tierWords(SCATTER.tierShares(country));
+  document.getElementById('tier-share').textContent = tw ? tw.terse : '';
   tier.title = 'A derived dot is one nobody counted HERE: the number was measured somewhere '
     + '— a coarser unit, an older census, a broader category — and carried to this '
     + 'place by allocation or rescaling. A modelled dot is weaker still: nothing in that unit '
@@ -3452,27 +3945,127 @@ function fmtList(names) {
   return names.slice(0, -1).join(', ') + ' and ' + names[names.length - 1];
 }
 
+/* §7's three tiers, said twice in two registers, from ONE place so they can never disagree.
+
+   `terse` is the legend control's caption, where the reader is looking at a switch and the
+   question is what it will do. `plain` is the header row, and it is the SAME SHARES READ FROM
+   THE OTHER END: the row is labelled `data modelled`, so it counts what nobody counted rather
+   than what somebody did. Anita, 2026-09-07 — "counted: 78%, we filled in the rest" made the
+   reader subtract to find the number the row exists to give them.
+
+   No bold, no em dash, no "we". The first draft said "we filled in the rest" to make sure the
+   arithmetic was owned; the label already does that, since a source does not describe its own
+   figures as modelled. */
+function tierWords(sh, fill) {
+  if (!sh) return null;
+  const d = sh.derived, n = sh.modelled, m = sh.measured;
+  /* NEITHER END ROUNDS PAST ITSELF. `Math.round` alone printed China as "100% filled in,
+     <1% modelled", which asks the reader to believe two numbers that cannot both be true;
+     the shares are 99.96% and 0.04%. A non-zero share never shows as 0% and a share under 1
+     never shows as 100%, so the terms in a sentence always add up. */
+  const pc = v => v <= 0 ? '0%' : v >= 1 ? '100%'
+    : v < 0.005 ? '<1%' : v > 0.995 ? '>99%' : Math.round(v * 100) + '%';
+  const terse = (d === 0 && n === 0) ? 'all counted'
+    : [d > 0 ? pc(d) + ' derived' : '', n > 0 ? pc(n) + ' modelled' : '']
+        .filter(Boolean).join(', ');
+  /* THE WORD `modelled` IS IN THE LABEL, so a country whose only inferred tier is `modelled`
+     gives the bare number and France reads `100%`. `derived` is a different claim from the
+     label's and always names itself.
+
+     AND IT NAMES THE TABLE IT CAME OUT OF — `fill`, per country, Anita 2026-09-07: *"'broader
+     counts' feels weak and maybe in cases where we just used an earlier census we could say
+     that it was just another census? sounds more legitimate which it is."* It is. Every one
+     of the fifteen derivations here draws on a real published table — Brazil's 2010 census,
+     Switzerland's 2000 one, Canada's own provincial columns, Israel's household-lifestyle
+     table — and one wording general enough to cover all fifteen could only describe them as
+     vaguely as possible, which reads as evasion rather than as the disclosure it is. */
+  const plain = (d === 0 && n === 0) ? '0%'
+    : [d > 0 ? pc(d) + ' filled in ' + (fill || 'from broader counts') : '',
+       n > 0 ? pc(n) + (d > 0 ? ' modelled' : '') : ''].filter(Boolean).join(', ');
+  /* Past half, the map is more this project's work than the source's, and the row stops being
+     grey. The threshold is the claim, not a taste: at 51% the United States clears it by a
+     whisker and that is exactly the country the warning is for. */
+  return { terse, plain, weak: m < 0.5 };
+}
+
+TIPS.counted = 'Counted: the source published this figure, for this place, from a question '
+  + 'somebody answered. Filled in: it was counted, but somewhere coarser, or in an earlier '
+  + 'census, or as a broader category, and this project carried it here by rescaling or '
+  + 'allocation. Modelled: nobody counted it anywhere, and a national figure was spread over '
+  + 'the map from something else. The last two are this project’s arithmetic rather than the '
+  + 'source’s, and the <i>inferred dots</i> control in the legend takes them back off.';
+TIPS.how = 'What kind of instrument produced the numbers. A national census question is the '
+  + 'strongest thing here and most of this map is one; a sample survey is a much weaker '
+  + 'claim about any single place, however good its national figure; a register was never a '
+  + 'question anyone answered; and a country with no religion question at all is inferred '
+  + 'from something else entirely. The full citation is the line above.';
+TIPS.gap = 'Who or what this source leaves out, and it is nearly always people rather than '
+  + 'places: an undercount, a group the tables never break out, a population nobody asked, a '
+  + 'cell the statistics office withholds. A blank on a dot map is ambiguous in the one '
+  + 'direction that matters, because "nobody here is religious" and "nobody counted here" '
+  + 'look identical. Most countries have no row here at all.';
+TIPS.grain = 'The size of the areas the counts are ON, which is not how fine the dots look. '
+  + 'Every dot inside one of these areas is drawn from that area’s single mixture, so a '
+  + 'country counted at 1.7 million people per unit still renders as a fine spray and reads '
+  + 'like measurement at street level. Nothing else on screen tells these apart.';
+
+/* WHERE THE NUMBERS CAME FROM, AND HOW MUCH OF THEM NOBODY COUNTED — spec §7c.
+
+   Three labelled rows, and the middle one is the reason the block exists. §7a put the
+   measured/inferred share in the legend as a control caption, which is the right place for
+   somebody who has already found the control and the wrong one for somebody meeting a country
+   for the first time: they read a title, a source line and a granularity line, all three of
+   which describe an instrument, and nothing at all told them that in France the instrument
+   never touched the places on screen.
+
+   ONE COUNTRY ONLY. The all-countries view carried the `data modelled` row alone for a day and
+   it was the wrong claim in the wrong place — a single share averaged over sixty-eight
+   different instruments, sitting under a title that names none of them, next to a subtitle
+   that now says the same thing in words. Anita, 2026-09-07: leave the section out entirely
+   there. Every row here is about a country, and in that view there is no country. */
+function renderProvenance() {
+  const box = document.getElementById('prov');
+  if (!box) return;
+  const m = country ? META[country] : null;
+  if (!m) { box.innerHTML = ''; return; }
+  const tw = tierWords(SCATTER.tierShares(country), m.fill);
+  const rows = [];
+  if (m.how) rows.push(['data type', m.how, '', 'how']);
+  /* The row is emitted even before the buffers land, with an empty value: the picker sits
+     directly under this block, and letting a row appear a second after load would shift it
+     out from under the reader's cursor. */
+  rows.push(['data modelled', tw ? tw.plain : '', tw && tw.weak ? ' weak' : '', 'counted']);
+  if (m.grain) rows.push(['granularity', m.grain, '', 'grain']);
+  /* §6.12's `gap`, MOVED HERE from the legend's scope bar — Anita, 2026-09-07. It went there
+     first because that is beside the map, "where a reader is when the question occurs to
+     them"; but every other line in this block is the same kind of statement about the same
+     source, and a reader who has just read that a country is 41% filled in is exactly the
+     reader who wants to know who was left out. Fifteen countries have one and that is the
+     healthy state: a row every country carries is a row nobody reads. */
+  if (m.gap) rows.push(['not drawn', m.gap, '', 'gap']);
+  /* esc()'d, all of it. `how` and `grain` used to carry their own <b> and were injected raw;
+     with the bold gone (Anita, 2026-09-07) there is no markup left in either, so nothing has
+     to be trusted. `plain` is built above out of numbers and fixed words. */
+  box.innerHTML = rows.map(([l, v, cls, tip]) =>
+    `<div class="pr${cls}" data-tip="${tip}"><span class="pl">${esc(l)}</span>`
+    + `<span class="pv">${esc(v)}</span></div>`).join('');
+}
+
 function retitle() {
   const t = document.getElementById('title'), s = document.getElementById('subtitle');
-  /* HOW FINE THE COUNTS ARE — and the reason it is worth a line of its own is that the dots
-     do not show it. Every dot inside a count unit is drawn from that unit's single mixture,
-     so a coarse country still renders as a fine spray and reads like measurement at street
-     level. Russia is the extreme case at 79 units for 143 million people; Sri Lanka is the
-     other end at 14,003 for 22 million. Nothing else on screen distinguishes them, so this
-     says it in words. Only when one country is selected: in the all-countries view there is
-     no single answer and a range would be noise. */
-  const g = document.getElementById('grain');
-  const grain = country ? (META[country] || {}).grain : '';
-  /* NOT esc()'d, and deliberately: `grain` is an authored constant in countries.py that
-     carries its own <b> around the unit count, the same way the all-countries subtitle
-     carries its own <u>. It is never user input. */
-  g.innerHTML = grain || '';
-  g.style.display = grain ? '' : 'none';
+  renderProvenance();
 
   if (country) {
     const m = META[country];
     t.textContent = 'Religion in ' + (m.name_in || m.name);
-    s.innerHTML = esc(m.source) + ' · ' + esc(m.basis);
+    /* THE CITATION ONLY, and `basis` no longer trails it — 2026-09-07, spec §7c. The two
+       together ran to five dense grey lines of which the second was near-identical on sixty
+       of the sixty-eight countries ("self-identification", with a qualifier), so it read as
+       boilerplate and got skipped, taking the citation's own line with it. `basis` is the
+       §3.1 quantity and is unchanged in the about panel, where a reader who wants it is
+       already reading prose. What replaces it here is the block below, which says the thing
+       `basis` was never asked to say: how much of this the source counted. */
+    s.innerHTML = esc(m.source);
   } else {
     /* Naming every country stops working at about three — at three it already wraps to
        two lines and pushes the picker down the screen, with the source list under it
@@ -3481,39 +4074,87 @@ function retitle() {
     t.textContent = !names.length ? 'Religion'
       : names.length <= 2 ? 'Religion in ' + fmtList(names)
       : `Religion in ${names.length} countries`;
+    /* THE SUBTITLE CARRIES §7c's WARNING IN THIS VIEW, because the block that carries it in a
+       country view is not drawn here (see `renderProvenance`). Anita's words, 2026-09-07. The
+       old line said the countries were "measured differently", which is true and is the
+       smaller half of it: differently is a comparability problem, and most of a reader's
+       trouble with this map is that a lot of it was never measured at all. */
     s.innerHTML = (BUILT.length <= 2
-      ? BUILT.map(cc => esc(META[cc].source)).join(' · ')
-      : `${BUILT.length} national censuses and registers`)
-      + ' — measured differently, see <u id="basis-link">why</u>';
+      ? BUILT.map(cc => esc(META[cc].source)).join(' · ') + ', '
+      : '')
+      + 'data from official censuses where available, in many cases modelled, '
+      + 'see <u id="basis-link">details</u>';
   }
   document.getElementById('cc-current').textContent =
     autoCountry ? `Auto (${country ? META[country].name : 'all countries'})`
                 : (country ? META[country].name : 'All countries');
 
-  /* The about panel's per-country half. In the all-countries view it is the comparability
-     warning, because that is what a reader is most likely to get wrong; with one country on
-     screen the cross-border question is not being asked, so it gives way to that country's own
-     caveat (countries.py `note_public`). */
+  /* The about panel's second half, and the destination of the all-countries subtitle's `see
+     details` link. With a country selected it is that country's own note; without one it is
+     the answer to the promise the subtitle makes, which since 2026-09-07 is "in many cases
+     modelled" and not "measured differently". Those are not the same claim and the panel was
+     still making the older, smaller one. */
   const box = document.getElementById('about-country');
   if (country) {
     const m = META[country];
-    box.innerHTML = `<p><b style="color:#eee">${esc(m.name)}</b> — ${esc(m.basis)}.</p>`
-      + `<p>${esc(m.note)}</p>`
+    /* The name, then what quantity the figures are, then the note. `basis` came off the
+       subtitle in §7c and this is where it went; it needs a label rather than a dash,
+       because half the strings are noun phrases that no sentence can absorb ("administrative
+       register (church-tax records), not a question"). */
+    box.innerHTML = `<p class="cty"><b>${esc(m.name)}</b>`
+      + `<span class="q">what the figures are: ${esc(m.basis)}</span></p>`
+      + md(m.note, true)
       + '<p>The legend on the right holds only the categories this source actually reports, '
       + 'and the colours are spread over exactly those. They mean something different in '
       + 'another country, because the categories do.</p>';
   } else {
+    /* THE NUMBERS ARE COUNTED, NOT WRITTEN DOWN. An earlier draft of this paragraph said "about
+       two thirds"; the shares move every time a country is added, and a stale fraction in the
+       one panel that exists to be trusted is worse than no fraction. `null` sums every loaded
+       country, and the block simply omits the sentence until the buffers land. */
+    const sh = SCATTER.tierShares(null);
+    const pc = v => Math.round(v * 100) + '%';
+    const counted = sh
+      ? `<b>${pc(sh.measured)} of the dots on this map are a figure some statistics office `
+        + 'published for the place the dot sits in.</b> The rest we worked out. Usually that '
+        + 'means taking a real count from a coarser area, or from an earlier census, and '
+        + 'splitting it down; sometimes it means there was no count anywhere and a national '
+        + 'figure was spread over the map. Select a country and the panel on the left says '
+        + 'which of the two, and what the filling-in was done from.'
+      : '';
+    /* Sorted by how much of a country is not counted, worst first, which is the order a
+       reader wants and the opposite of the alphabetical `basis` list this replaces. That list
+       printed sixty-eight variations on "self-identification" and told nobody anything. */
+    const rows = BUILT.map(cc => [cc, SCATTER.tierShares(cc)])
+      .filter(([, s]) => s)
+      .map(([cc, s]) => [META[cc].name, 1 - s.measured])
+      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
     box.innerHTML =
-      '<p><b style="color:#eee">The countries are not measured the same way, and the border '
-      + 'shows it.</b> Any step you see at a frontier is mostly that, not a change in '
-      + 'religion.</p>'
-      + '<div class="basis">'
-      + BUILT.map(cc => `<div><b>${esc(META[cc].name)}</b> — ${esc(META[cc].basis)}</div>`)
-        .join('') + '</div>'
-      + '<p>A membership roll and a self-description are different quantities, and the second '
-      + 'is always the larger. The categories differ at least as much as the totals do, so '
-      + 'this view can only draw what the sources share. Pick a country to get its own '
-      + 'categories, and a legend built from them alone.</p>';
+      (counted ? `<p>${counted}</p>` : '')
+      /* THE NAMED COUNTRIES ARE THE TOP OF THE LIST BELOW, and the two have to agree or a
+         reader checking one against the other finds a country in the 100% rows that the
+         paragraph never explains. Switzerland is that country: it did ask, in 2000, so it
+         does not belong in the sentence about countries that never do, and it is at 100%
+         anyway because what is drawn is that census resized. It gets its own line. */
+      + '<p>Eight countries here have no religion census at all. France, Italy, Spain and '
+      + 'Greece do not ask; Russia has not since 1937 and the United States never has; China '
+      + 'has never asked either; Kazakhstan asks and then publishes the answer for the '
+      + 'country as a whole and nowhere else. Those eight are drawn from surveys, from '
+      + 'nationality or from ethnicity, and they are the ones to be careful with. '
+      + 'Switzerland is a ninth of a milder kind: it stopped asking everybody in 2000, so '
+      + 'what is drawn is that census resized to today’s totals.</p>'
+      + '<p>The countries are also not measured the same way, and the border shows it. Any '
+      + 'step you see at a frontier is mostly that, not a change in religion. A membership '
+      + 'roll and a self-description are different quantities and the second is always the '
+      + 'larger, so this view can only draw what the sources share. Pick a country to get '
+      + 'its own categories, and a legend built from them alone.</p>'
+      + (rows.length
+        ? '<p class="lbl">How much of each country was worked out rather than counted</p>'
+          + '<div class="mod">'
+          + rows.map(([n, v]) =>
+            `<div><span>${esc(n)}</span><i class="${v ? '' : 'z'}">`
+            + `${v > 0 && v < 0.005 ? '&lt;1%' : pc(v)}</i></div>`).join('') + '</div>'
+        : '');
   }
 }
 
@@ -3592,6 +4233,51 @@ function viewportTally(shrink) {
 /** Is the camera already showing this country — most of it on screen, and not from so far out
     that the country is a detail in the corner. Both halves matter: the continental view holds
     all of the United States and is still not a view *of* the United States. */
+/* AUTO DOES NOT WALK INTO A COUNTRY WITH NONE OF WHAT IS SELECTED — spec §9b, 2026-09-07.
+
+   Anita: *"if we have a religion selected like Daoism and zoom in on a country that doesn't
+   have any Daoism, in auto mode it just autos to the country and then clears the selected
+   religion cuz there's no Daoism to show."* Which is exactly what happened: `setCountry` ends
+   in `rebuild`, `rebuild` drops a scope that is not `PRESENT`, and the reader loses a
+   selection they never touched, by panning.
+
+   The fix is a veto and not a repair, because the alternative — entering and keeping the dead
+   scope — is worse: the panel would name a religion with no rows and the map would draw
+   nothing, which is a country view that answers nothing. Refusing the country leaves Auto at
+   ALL COUNTRIES, where the selection is still live and still drawn everywhere it exists. The
+   reader who does want that country can still pick it from the menu, and that is a choice
+   rather than a side effect of the camera.
+
+   IT MIRRORS `rebuild`, deliberately and line for line — the rolled tally when the roll-up is
+   on, the raw one otherwise, rings only while rings are drawn, and the same "nothing tallied
+   at all" escape. Anything else and Auto would refuse a country the legend would have shown,
+   or enter one it would not.
+
+   THE ESCAPE IS THE IMPORTANT HALF. `counts.json` may not have landed, and §9a is the standing
+   warning about this exact shape: a guard written for *not loaded yet* that turns into a guard
+   on *has none*, silently and for one class of country for ever. So an empty tally is read as
+   no evidence and never as evidence of absence.
+
+   `rolledTally` here is approximate in one respect and it is not worth fixing: its roll table
+   is the current country's, not `cc`'s. It decides where moved dots land, not whether there
+   are any, so it can only be wrong at the margin of a country that measured almost nothing
+   under the selection — and being wrong towards visiting is the safe direction. */
+function scopeDrawsIn(cc) {
+  if (!scope) return true;
+  const raw = tallyFor(cc);
+  if (!raw) return true;
+  const t = onlyMeasured ? rolledTally(raw, cc) : raw;
+  const pre = scope + '.';
+  const any = (src) => {
+    for (const id in (src || {}))
+      if (src[id] && (id === scope || id.startsWith(pre))) return true;
+    return false;
+  };
+  if (any(t.dots)) return true;
+  if (showRings && any(raw.rings)) return true;
+  return !Object.keys(raw.dots || {}).length;
+}
+
 function alreadyFramed(cc) {
   const v = META[cc].view, b = map.getBounds();
   const w = b.getWest(), s = b.getSouth(), e = b.getEast(), n = b.getNorth();
@@ -3991,7 +4677,7 @@ function considerCamera() {
         setCountry(null, { fly: false });
     } else if (z >= AUTO_ZMIN && META[at]
                && viewFill(at) >= AUTO_FILL_IN
-               && !contested(sh, at)) {
+               && !contested(sh, at) && scopeDrawsIn(at)) {
       setCountry(at, { fly: false });     // straight across, with no all-countries frame between
     } else if (country !== null) {
       setCountry(null, { fly: false });   // over somewhere else, so this view is not about it
@@ -4062,7 +4748,8 @@ function considerCamera() {
   if (total < AUTO_MIN) {
     const framed = BUILT.filter(cc => META[cc] && viewFill(cc) >= AUTO_FILL_IN
                                       && viewOverlap(cc) >= AUTO_OVER_IN);
-    if (framed.length === 1 && framed[0] !== country && !contested(sh, framed[0]))
+    if (framed.length === 1 && framed[0] !== country && !contested(sh, framed[0])
+        && scopeDrawsIn(framed[0]))
       setCountry(framed[0], { fly: false });
     return;                           // otherwise nothing is loaded here; `idle` returns us
   }
@@ -4076,7 +4763,7 @@ function considerCamera() {
   // the Philippines framed from the sea each hold every sample that lands on a built country.
   if (best && best !== country && META[best] && out[best] / total >= AUTO_SHARE
       && viewFill(best) >= AUTO_FILL_IN && viewOverlap(best) >= AUTO_OVER_IN
-      && !contested(sh, best))
+      && !contested(sh, best) && scopeDrawsIn(best))
     setCountry(best, { fly: false });
 }
 
@@ -4099,7 +4786,19 @@ function pickCountry(cc) {
 function renderCountryList() {
   const q = document.getElementById('cc-filter').value.trim().toLowerCase();
   const hit = name => !q || name.toLowerCase().includes(q);
-  const total = t => Object.values(t.dots).reduce((a, b) => a + b, 0);
+  /* WITH A RELIGION SELECTED, THE FIGURE BESIDE EACH COUNTRY IS THAT RELIGION'S — §9b's other
+     half, and the menu is the only place the answer can live. Auto now refuses to enter a
+     country with none of the selection, which is right and is also silent: nothing happens,
+     and a reader watching nothing happen has no way to learn why. Here it is legible — pick
+     Daoism and the list reads the Daoists per country, with the countries that have none
+     saying so.
+
+     They stay clickable. The veto is about what the CAMERA does on its own; going somewhere
+     deliberately to find out what it does have is a reasonable thing to want, and taking the
+     click away would make an answer into a locked door. */
+  const pre = scope ? scope + '.' : null;
+  const total = t => Object.entries(t.dots || {}).reduce(
+    (a, [id, n]) => a + ((!scope || id === scope || id.startsWith(pre)) ? n : 0), 0);
   const html = [];
 
   if (hit('auto')) {
@@ -4119,9 +4818,15 @@ function renderCountryList() {
     .filter(r => hit(r.name))
     .sort((a, b) => a.name.localeCompare(b.name));
   for (const r of rows) {
-    html.push(`<div class="cc${!autoCountry && country === r.cc ? ' sel' : ''}" data-cc="${r.cc}">`
+    // an em dash, not `0`: the country has no such row at all, which is not a count of zero
+    html.push(`<div class="cc${!autoCountry && country === r.cc ? ' sel' : ''}`
+      + `${r.n ? '' : ' none'}" data-cc="${r.cc}">`
       + `<span class="nm">${esc(r.name)}</span>`
-      + `<span class="n" title="${popTitle(r.n)}">${fmtPop(r.n * DOT_VALUE)}</span></div>`);
+      + `<span class="n" title="${r.n ? popTitle(r.n)
+          : scope ? 'No ' + esc(BY_ID[scope].label) + ' here — Auto will not switch to it '
+                    + 'while that is what is selected'
+                  : 'Nothing tallied here'}">`
+      + `${r.n ? fmtPop(r.n * DOT_VALUE) : '—'}</span></div>`);
   }
 
   const soon = Object.keys(PENDING)
@@ -4626,6 +5331,8 @@ SCATTER.loadAll = async function () {
     if (typeof recolour === 'function') { recolour(); applyPaint(); }
     // the §7 share is counted off these buffers, so it can only be right once they are here
     if (typeof renderTierControl === 'function') renderTierControl();
+    // and §7c's header row is the same figure — it comes up with an empty value and fills in
+    if (typeof renderProvenance === 'function') renderProvenance();
     if (onlyMeasured && typeof renderTree === 'function') renderTree();
     map.triggerRepaint();
   };
@@ -4809,7 +5516,11 @@ SCATTER.tierShares = function (cc) {
     }
     n += d.n; der += d.tierN[0]; mod += d.tierN[1];
   }
-  return n ? { derived: der / n, modelled: mod / n } : null;
+  /* `measured` is subtracted in INTEGERS and divided once, not computed as `1 - derived -
+     modelled` by the caller. A fully inferred country is the case that matters: der + mod ===
+     n exactly, so this returns exactly 0 and the header can say "none of it", where the
+     float subtraction leaves 1.1e-16 and it says "<1% — we modelled the rest". */
+  return n ? { measured: (n - der - mod) / n, derived: der / n, modelled: mod / n } : null;
 };
 
 /* The same pass, but PER NODE — spec §7a-i-1. `tierShares` answers "how much of this country
@@ -5031,6 +5742,11 @@ map.on('load', async () => {
       for (const id of g.ids) { LINEAGE_RANK[id] = i++; LINEAGE_GROUP[id] = g.label; }
   }
   buildPalette();          // once, from the whole taxonomy — never per country
+  /* §10.3. Both need a taxonomy to walk, so neither could run in `loadOverrides`: the full
+     tree is what every hide/show action is expressed over, and the stored cover is a list of
+     subtree roots that only becomes a set of nodes once there are subtrees. */
+  buildFullTree();
+  expandHidden(storedHidden || { roots: HIDDEN_DEFAULT, only: [] });
 
   map.addSource('tiles', { type: 'vector', url: 'pmtiles://data/processed/religiondots.pmtiles' });
 
@@ -5315,9 +6031,8 @@ document.getElementById('dot-size').oninput = e => {
   applySizes();
 };
 segWire('none-seg', () => NOT_A_RELIGION_IDS.some(id => USER_HIDDEN.has(id)) ? 0 : 1, v => {
-  for (const id of NOT_A_RELIGION_IDS) {
-    if (v) USER_HIDDEN.delete(id); else USER_HIDDEN.add(id);
-  }
+  // §10.3: these are branches, so the control moves whole branches
+  for (const id of NOT_A_RELIGION_IDS) setSubtreeVisible(id, !!v);
   saveOverrides(); applyPaint(); renderTree();
 });
 /* §7. `rebuild()` IS needed, and the comment that used to stand here said the opposite —
@@ -5337,6 +6052,11 @@ segWire('tier-seg', () => onlyMeasured ? 1 : 0, v => {
   map.triggerRepaint();
 });
 document.getElementById('reset-btn').onclick = () => { if (overrideCount()) resetOverrides(); };
+document.getElementById('vis-all').onclick = () => {
+  if (ROOTS.every(id => visStateOf(id) === 2)) for (const n of NODES) USER_HIDDEN.add(n.id);
+  else USER_HIDDEN = new Set();
+  saveOverrides(); applyPaint(); renderTree();
+};
 
 /* Live while dragging (`cpApply` coalesces to one repaint a frame); the full panel rebuild
    and the write to storage wait for the pointer to come up, so a drag does not throw away
@@ -5359,16 +6079,16 @@ document.getElementById('cp-palette').onclick = e => {
   cpApply(); cpCommit();
 };
 document.getElementById('sp-hide').onclick = () => {
-  if (!pickNode || isHidden(pickNode) && !USER_HIDDEN.has(pickNode)) return;  // hidden above
-  if (USER_HIDDEN.has(pickNode)) USER_HIDDEN.delete(pickNode);
-  else USER_HIDDEN.add(pickNode);
+  if (!pickNode) return;
+  // partly hidden counts as shown, so one click clears the rest rather than inverting it
+  setSubtreeVisible(pickNode, visStateOf(pickNode) === 0);
   saveOverrides(); applyPaint(); renderTree();
   closePicker();
 };
 document.getElementById('sp-reset').onclick = () => {
   if (!pickNode) return;
   delete USER_COLOR[pickNode];
-  USER_HIDDEN.delete(pickNode);
+  setSubtreeVisible(pickNode, true);
   saveOverrides(); recolour(); applyPaint(); renderTree();
   closePicker();
 };

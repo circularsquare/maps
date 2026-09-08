@@ -39,12 +39,17 @@ against yours. To measure your own change, re-run with only that change
 reverted, on the tree as it stands, and pass `solve.py --out <scratch>` so
 `data/` is untouched. Check a file's mtime before blaming the code.
 
-**Run order and cost.** `solve.py` is about eight minutes and writes
-`data/segments.geojson`, which is what the page draws; run it yourself rather
-than handing it over. `build.py` writes `segments_singleline.geojson`, which
-nothing reads — it exists to be compared against. The city builds are seconds.
+**Run order and cost.** `solve.py` is **about a minute** on a quiet machine and
+writes `data/segments.geojson`, which is what the page draws; it used to be
+eight, and the reason it is not any more is [in its own
+section](#the-runs-are-slow-for-one-reason-and-it-is-cheap-to-fix). Iterating
+on it is now cheap enough that a change should get a full before/after rather
+than an argument. `build.py` is 29 s and writes
+`segments_singleline.geojson`, which nothing reads — it exists to be compared
+against. The city builds are seconds.
 `check.py`, `check_cities.py` and `compare_builders.py` all read the output
-files and need no solve.
+files and need no solve, and `python -m unittest test_part_types` is under a
+second.
 
 **What is settled, so you do not reopen it.** The map draws `solve.py`, not
 `build.py` — the published train counts overturned the 인거리 verdict that
@@ -54,19 +59,24 @@ so in its own header). None of that needs revisiting.
 
 ### Worth doing next
 
+0. ~~**양원 and 좌천 are each two stations sharing one name.**~~ Found and fixed
+   2026-09-07, by the new cross-line junction check in `check.py` — which is
+   also the first answer to `todo.txt`'s "verify junctions". 45 junctions became
+   42 and only 영천's benign 680 m is still flagged. See [Two lines can share a
+   station name and not a
+   station](#two-lines-can-share-a-station-name-and-not-a-station-2026-09-07).
+
 1. ~~**경부고속선's 서울-광명 stub.**~~ Done 2026-09-07 — the line reaches 서울역
    and 인거리 cover went 86.5 % → 88.6 %. See [Reaching the end station, and
    drawing between
    stations](#reaching-the-end-station-and-drawing-between-stations-2026-09-07).
 
-   What is left of it: **pull unnamed track into the graph.** The reason
-   `reach_station` refuses 광주선's 1.77 km gap and 중부내륙선's 1.63 km is that
-   `way[railway=rail][name]` excludes the junction throats that would connect
-   them, so a 1.77 km gap routes 402 km. One more Overpass query and a graph
-   rebuild would likely let both reach their end stations without naming a host
-   line, and would leave `OVER` for the cases that really are one line running
-   over another's metals. It touches every corridor, so it wants its own
-   session and a full before/after.
+   ~~What is left of it: pull unnamed track into the graph.~~ Done 2026-09-07,
+   and it took two changes rather than one because the two lines it was meant to
+   fix turned out to have different faults. Both are now drawn to their end
+   stations and `check.py` flags no line at all. See [Two ways a corridor fails
+   to reach its end
+   station](#two-ways-a-corridor-fails-to-reach-its-end-station-2026-09-07).
 
 2. ~~**The 호남선 handover split.**~~ Done 2026-09-07 — see [The 호남선 split,
    and one coordinate](#the-호남선-split-and-one-coordinate-2026-09-07).
@@ -86,13 +96,26 @@ so in its own header). None of that needs revisiting.
    deleting that constraint fixes 경원선 and breaks 충북선. Anything further has
    to correct the 7.50M rather than drop it.
 
-4. **Busan lines 1-4, the one city model still uncalibrated.** 부산교통공사 files
+4. ~~**Make a handover's two directions agree.**~~ Done 2026-09-07.
+   `solve.W_HOSYM` constrains both sides of a handover, 태백선's ratio went
+   **4.7 → 1.02**, and the line is back in: 95.4 → 104.2 km against a published
+   104.1, and 통과인원 0.54 → 0.67. The existing handovers were the check and
+   they did not move. See [A handover's two directions are the same
+   trains](#a-handovers-two-directions-are-the-same-trains-2026-09-07).
+
+   **It has a live cost.** 정선선's weighted mirror went 26.5 % → 32.3 % and it
+   is now the worst line that means anything. It carries forty people a day, so
+   that is about fourteen people of disagreement, and it was already second
+   worst — but if anyone wants a next thing to pull on, that is where the
+   handover put its residue.
+
+5. **Busan lines 1-4, the one city model still uncalibrated.** 부산교통공사 files
    `공사에서 관리하지 않는 데이터임` in the yearbook sheet that measures every
    other operator's trip length, so its 20-minute decay is still an assumption
    where the other four are fitted. It is also the largest of the five. Needs a
    trip-length or OD source from somewhere other than the yearbook.
 
-5. **The high-speed 통과인원 undercount is systemic**, not particular: 경부고속선
+6. **The high-speed 통과인원 undercount is systemic**, not particular: 경부고속선
    reaches 0.54 of its published figure and 호남고속선 0.61. Both lines' riders
    board at stations off their own chains. `ENTRY_SHARE` addressed part of it
    and the capacity check cannot falsify what remains — 호남고속선 sits at 396
@@ -100,11 +123,80 @@ so in its own header). None of that needs revisiting.
    published rolling-stock allocation per line, which we do not have. Do not
    invent it from memory of which trains run where.
 
-6. **Passenger sheet 3's attribution rule.** 선별 여객수송 is per line *and* per
+7. **Passenger sheet 3's attribution rule.** 선별 여객수송 is per line *and* per
    train type, which is exactly the shape needed to sharpen the 통과인원 ceiling
    for the nine `partial` lines. It is not usable until someone works out what
    rule assigns a journey to a line: 전라선 reads 3.27M against a published 7.71M
    line total and a 7.88M rebuild. Maybe an hour to characterise, unclear payoff.
+
+### The runs are slow for one reason, and it is cheap to fix
+
+Profiled 2026-09-07 rather than guessed at, because both obvious guesses were
+wrong. `solve.py` on an idle machine is about three minutes, not eight:
+
+```
+   lines.resolve              57.6 s
+   membership.serves          35.8 s
+   load_stations              24.5 s
+   build_chains               27.7 s
+   Network()                  14.4 s
+   load_network                1.6 s
+                             161.5 s  setup
+   the fit                    ~20 s   (296 unknowns, 2050 residuals)
+```
+
+**70 % of the setup is opening Excel workbooks**: **10 opens, 112.5 s**, at
+11.25 s each — 5 in `resolve()`, 3 more in `serves()`, 2 more in
+`load_stations()`.
+
+**Fixed 2026-09-07, and not by memoising them.** The plan above was to cache the
+readers, which would have halved the ten opens to five and left 56 s. Timing one
+open first showed there was nothing to cache: the readers themselves are free.
+
+```
+   load_workbook  수송(여객)     10.37 s      station_flows            10.86 s
+   load_workbook  시설          10.24 s      station_flows_by_type    11.29 s
+   sheet 8, first pass          0.02 s      line_passing             12.16 s
+   sheet 8, second pass         0.02 s      rosters                  11.67 s
+                                            distances                11.32 s
+```
+
+Reading every row of a sheet is 20 ms. The other 11.25 s is `load_workbook`, and
+`cProfile` puts 22.9 of its 23 seconds in `apply_stylesheet`. **The workbooks
+are 90 % formatting.** 수송(여객) is 13.2 MB of parts of which `xl/styles.xml` is
+**11.8 MB, holding 53,810 named styles**, and openpyxl expands every one of them
+on open whether or not anything asks for a font. It is the whole bundle, not
+these two files: 시설 is 11.8 MB of styles out of 13.0, 운전 9.5 out of 10.6,
+영업손익 11.7 out of 11.9.
+
+Nothing here reads a style — every reader calls `iter_rows(values_only=True)`.
+So `lines._book()` drops `xl/styles.xml` from the archive before handing it to
+openpyxl, which returns quietly when the part is absent (`except KeyError:
+return wb`). **The five readers go from 20.7 s to 0.28 s and return identical
+dicts** — every value compared, not spot-checked. `frequency.sections()` went
+11.89 s to 0.09 s, `python -m unittest test_part_types` from a minute to 0.7 s,
+and **`solve.py` end to end is 55 s.**
+
+Two things to know before using `_book` elsewhere. It is only safe for
+`read_only=True`: without the stylesheet `wb._cell_styles` holds openpyxl's
+single default, and a normal load binds every cell to `_cell_styles[style_id]`
+against ids running to 53,809. And a read-only worksheet has no `ws.cell`, so
+`frequency.sections()` had to materialise each sheet and index it instead —
+`_at(grid, r, c)` keeps the sheet's own 1-based numbering so the code still
+reads against the spreadsheet.
+
+**Two things that are not the problem**, so nobody optimises them:
+
+- **The fit.** One `residuals()` call is 3.2 ms and a full dense finite-
+  difference Jacobian is 296 of them — 0.9 s. Even twenty rebuilds is 19 s.
+  Passing `jac_sparsity` would be correct and would buy almost nothing.
+- **The track graph.** `load_network()` parses 25 MB of JSON into 117,250 nodes
+  in **1.6 s**. Caching it as a pickle would save nothing worth having.
+
+**And the runs that took fifteen to twenty minutes were not the code.** More
+than one Claude session works in this tree, and `build.py` was measured getting
+about a fifth of a core with three other Python processes on the box. Check the
+machine before believing a timing.
 
 ### Smaller, and mostly legibility
 
@@ -112,11 +204,11 @@ so in its own header). None of that needs revisiting.
   past without stopping**~~ — both gone 2026-09-07, and neither needed naming:
   `merge_unserved` joins across any station with no 승하차 of the line's types,
   which is what both of them were. 426 features became 247.
-- **중부내륙선 is still drawn 1.9 km short**, the last thing `check.py` flags.
-  It is the same end-station fault as 경부고속선's 서울 and the bounded stub
-  refuses it — 1.63 km straight routes 5.01 km, just over the 3× directness
-  bound, because the junction with 경강선 is unnamed track and not in the graph.
-  Pulling unnamed rail is the fix; see item 1 above.
+- ~~**중부내륙선 is still drawn 1.9 km short**~~ — gone 2026-09-07, and
+  `check.py` now flags no line at all. The stated cause above was wrong: there
+  is no unnamed track at 부발, and the 5.01 km the search found was a real route
+  that doubled back. See [Two ways a corridor fails to reach its end
+  station](#two-ways-a-corridor-fails-to-reach-its-end-station-2026-09-07).
 - **2023 is the newest yearbook on info.korail.com**; we use 2022. The download
   path on the railstat portal has not been found.
 
@@ -136,6 +228,45 @@ so in its own header). None of that needs revisiting.
   the chain, and 경북선's is 점촌 at 5 trains either side.
 - **The console dies on Korean text** under Windows cp1252. Write reports to a
   UTF-8 file and read that back.
+- **A national `way[railway=rail][!name][!service]`** is a double negation
+  Overpass cannot index, and overpass-api.de answers it with a **504 even for
+  `out count`**. Take the ids from `data/osm_rail_ways.json`, which is already a
+  tags-only pull of every rail way, and fetch by id instead.
+
+### The page blanks on a four-level zoom-out, and it is MapLibre's retain window
+
+On `todo.txt` as "map goes blank briefly when zooming out past a certain zoom
+level". Reproduced and measured 2026-09-07 by driving the page over CDP and
+sampling `getRenderableIds()` / `getVisibleCoordinates()` on the basemap's
+source cache every frame. **It is not this page's code and not the data.**
+
+```
+   9 -> 5 cold   21 blank frames, last 349 ms after the jump
+   9 -> 6 cold   none          8 -> 5 cold   none
+   9 -> 7 cold   none          7 -> 5 cold   none
+   9 -> 8 cold   none          6 -> 5 cold   none      6.4 -> 5 cold   none
+   9 -> 5 warm   none
+```
+
+Only a jump of **four or more zoom levels at once, to tiles never fetched
+before**, and the basemap has literally nothing — `renderable=0 visible=0` — so
+it paints the style's background for about a third of a second. MapLibre's
+`SourceCache` will stand in for a missing tile with a loaded parent or a loaded
+child, but only within `maxUnderzooming = 3` levels; the z9 tiles in hand are
+four levels below z5 and are not accepted. Three levels is fine, which is why
+8 → 5 never blanks, and once the z5 tiles are cached nothing blanks at all.
+
+An animated `zoomTo` never triggered it in any test; it takes an instant
+transform change, which a fast wheel flick or a pinch-out can produce. **Not
+fixed.** The honest options are to pre-warm the low-zoom tiles after `idle`
+(public API, costs a few hundred KB on load, and would shrink rather than
+certainly remove the window, since the tile still has to be parsed) or to reach
+into `SourceCache.maxUnderzooming`, which is private. Neither was worth doing
+without asking.
+
+`ne2_shaded` is **not** the cause, though it looks like one: the style declares
+that raster source and it has zero tiles at every zoom, because no layer in the
+style uses it.
 
 ## What Korea publishes
 
@@ -699,14 +830,17 @@ lines.py            yearbook parsing + the line-name table + anchor detection
                     STATION_ALIAS: yearbook spellings -> OSM ones
                     ENTRY_SHARE: what sizes a line fed from another line
                     HANDOVER: where two chains meet at a place neither names
+                    STATION_HOME: whose station a shared name is, where two
+                    Korail stations share one and the operator cannot tell
 build.py            the reconstruction over all lines; --line NAME for one
 solve.py            the whole network fitted at once; --line NAME for one
 build_stations.py   역별 승하차 as map bubbles -> data/stations.geojson
 build_daegu_busan.py  Daegu/Busan-Gimhae gates -> data/daegu_busan_segments.geojson
 build_metro_stations.py  intracity entries + exits -> data/metro_stations.geojson
 check.py            checks data/segments.geojson without re-solving; --line NAME
-                    geometry, the mirror, the level against the published 인거리,
-                    and passengers per train against the published 운행횟수
+                    geometry, whether two lines meet where they share a station,
+                    the mirror, the level against the published 인거리, and
+                    passengers per train against the published 운행횟수
 check_cities.py     the five city models against published trip length and 혼잡도
 compare_builders.py  build.py against solve.py, per line; --line NAME per segment
 fetch_city_track.py  Overpass: city metro track shapes -> data/osm_city_track.json
@@ -714,10 +848,12 @@ city_track.py       fits those metals to each city model's stations
 check_metro_fresh.py  is the seoulriders import stale? exit 1 if so
 yearbook_extra.py   the yearbook sheets nothing else reads: 인거리 by distance
                     band, city trip lengths, city peak-crowding segments
-test_part_types.py  PART_TYPES / THROUGH_ENDS plumbing, yearbook only, ~1 min
+test_part_types.py  PART_TYPES / THROUGH_ENDS plumbing, yearbook only, <1 s
 frequency.py        선구별 운행횟수 — trains/day per section, which pins the junctions
 membership.py       which lines physically serve each station, by track proximity
+                    and by operator, so a metro station cannot shadow a Korail one
 fetch_osm.py        Overpass: route relations, named rail ways, station nodes
+                    --unnamed: the 445 unnamed junction throats, fetched by id
 kric_index.py       scrape the 레일포털 catalogue (475 datasets) to data/kric_index.csv
 prototype.py        the original single-line version, with its workings printed
 probe_ingeori.py    shows 선별 인거리 is not track-attributed
@@ -726,8 +862,9 @@ probe_ways.py       whether Korean rail ways carry line names
 probe_routes.py     how a route relation is assembled
 ```
 
-`data/` holds the 2022 yearbook zip, the OSM pulls (26 MB of named ways, 1,997
-station nodes), the KRIC catalogue index and `segments.geojson`.
+`data/` holds the 2022 yearbook zip, the OSM pulls (26 MB of named ways,
+0.3 MB of unnamed junction track, 1,997 station nodes), the KRIC catalogue index
+and `segments.geojson`.
 
 ## Seoul metro integration (2026-09-05, re-imported 2026-09-06)
 
@@ -1785,6 +1922,387 @@ from the picture. **A number that only ever gets compared with itself will not
 tell you what it means.** It took someone looking at the map to ask why two
 lines that meet were drawn apart.
 
+### 태백선 hands over and the fit will not say how much (2026-09-07)
+
+*Are there other cases where we should be doing the same thing?* — Anita. Two
+sweeps answer it, and they should be re-run rather than re-derived if the
+question comes up again (`scratchpad` only; the queries are below).
+
+**Geometric.** Every line's drawn ends against every other line's drawn track.
+After the run-on fix, exactly one end in the network sits near a line it does
+not touch: **태백선's, 1.85 km from 영동선**. Everything else is either within
+100 m of what it joins or a genuine terminus tens of km from anything —
+백마고지, 춘천, 영덕, 목포, 도라산, 구절리.
+
+**Published.** Each line's 운전 section boundaries against where its chain ends.
+It agrees, and supplies the magnitude:
+
+```
+태백선  제천 → … → 민둥산 → 백산    무궁화 6      the section past 태백
+영동선  영주 → 철암 → 동백산         무궁화 4
+        동백산 → 동해               무궁화 10     +6, the same six trains
+```
+
+So 태백선's trains do not terminate at 태백. They run 8.7 km on to **백산** — OSM
+node 368637144, `railway=service_station`, which is why the station pull missed
+it, exactly as `railway=yard` hid 대전조차장 — leave the line there and rejoin
+영동선 at 동백산 1.8 km further. The anchor's assertion that everything alights
+at 태백 is false, which is also why the line reaches only 54 % of its published
+통과인원. On every published test this is the **best-evidenced handover in the
+file**: six trains matching six trains, on both sides of the junction.
+
+**It was implemented, measured and reverted** — and then put back the same day,
+once `solve.W_HOSYM` could hold the two directions together. Everything below is
+the record of why it could not stand on its own; the resolution is in [A
+handover's two directions are the same
+trains](#a-handovers-two-directions-are-the-same-trains-2026-09-07).
+
+**It was implemented, measured and reverted.** The length fix is exactly right —
+95.4 km → 104.2 against a published 104.1, from −8.4 % to +0.1 %, and nothing
+breaks: no negative segments, no capacity violations, segments meet everywhere,
+network median mirror 1.5 % → 1.4 %. But three lines' mirrors get worse
+(정선선 26.8 → 38.1 %, 영동선 under 5 → 12.3 %, 태백선 under 5 → 8.2 %), and the
+reason is not a matter of taste:
+
+```
+태백 → 영동선   8.61 km   하행 16,041/yr   상행 75,722/yr
+```
+
+**A 4.7× directional imbalance, for six trains a day that run both ways.** The
+fit is not determining the handover; it is picking an arbitrary point on a ridge
+the data does not constrain, and the mirror damage on 영동선 and 정선선 is that
+arbitrariness propagating through junction conservation. `W_TAUSYM` at 2.0 does
+not hold it. Reverting restores the previous output to the byte.
+
+**What would fix it**, and it is worth the next session's time: constrain a
+*handover's* two directions to agree, rather than merely nudging them. The
+service is symmetric by construction — the same six trains make both journeys —
+so this is a statement about the railway and not a smoothing prior. The existing
+handovers would be a check on it: 수서고속선's tau is already near-symmetric, so
+the constraint should barely move 경부고속선. Do not re-add `THROUGH_ENDS`,
+`HANDOVER` or `RUN_ON` for 태백선 before that exists; the entries are left in
+`lines.py` as comments with 백산's coordinate, so the Overpass call does not need
+repeating.
+
+**Two candidates the sweep ruled out**, so they are not rediscovered:
+
+- **동해선's 3.9 km from 부전 to 부산진.** Its sheet does start at 부산진, but the
+  two sections between carry **no trains at all** — nothing runs there, so
+  nothing hands over and there is nothing to draw a load with.
+- **광주선's 1.77 km at 광주송정.** Its published start is 동송정, a junction, but
+  the line already draws longer than its 영업거리; `ENDS` moved the end to
+  광주송정 on purpose. Not this fault. (It was still drawn 1.77 km short of
+  광주송정 itself, which is a different thing and is now fixed — see [Two ways a
+  corridor fails to reach its end
+  station](#two-ways-a-corridor-fails-to-reach-its-end-station-2026-09-07). The
+  line now draws +19.5 % against that 영업거리, still on purpose.)
+
+### Two ways a corridor fails to reach its end station (2026-09-07)
+
+Two lines were drawn short of their own end stations, 광주선 by 1.77 km and
+중부내륙선 by 1.63 km, and this file said both were the same fault: unnamed
+junction track missing from the graph, one Overpass query away from fixed. Half
+of that was right. They are different faults, they needed different fixes, and
+after both **`check.py` flags no line at all** — the first time every line has
+been drawn within tolerance of its 영업거리.
+
+**What the two changes cost and bought**, measured one at a time against the
+tree as it stood, with `solve.py --out` so `data/` was untouched:
+
+| | 광주선 | 중부내륙선 | 중앙선 | mirror | 인거리 | junctions |
+|---|---|---|---|---|---|---|
+| before | 12.2 km | 55.0 / 56.9 | 330.9 | 1.5 % | 88.8 % | 45 |
+| + unnamed track | **14.2 km** | 55.0 / 56.9 | 330.9 | 1.5 % | 88.8 % | 45 |
+| + de-looping | 14.2 km | **56.7 / 56.9** | 327.0 | 1.5 % | 88.8 % | 45 |
+
+No load, no mirror and no junction step moved in either change. That is expected
+and worth stating: loads do not depend on the chainage, so these are changes to
+where the map draws a line and not to what it says about anyone riding it.
+
+#### 광주선: the throat really was unnamed
+
+`data/osm_railways.json` is `way[railway=rail][name]`, so a junction curve with
+no name is not in the graph and a line whose trains use one cannot get to the
+other side. **This is real and it is cheap to fix, but it is much smaller than
+it sounds**, and `data/osm_rail_ways.json` — `probe_ways.py`'s tags-only pull of
+every rail way, already on disk — says so without an Overpass call: 22,822 rail ways, 14,623 named, and of the
+8,199 unnamed **7,753 carry a `service` tag** (3,752 yard, 2,654 siding, 831
+crossover, 516 spur). Putting those in the graph would offer the corridor search
+a shortcut through every freight yard in the country. **The remaining 446 are
+plain unnamed running track**, which is the junction-throat case and nothing
+else.
+
+So `fetch_osm.py --unnamed` takes the ids from the tags file and fetches them by
+id — 445 come back, one having been deleted from OSM since the tags pull, and
+the file is 0.3 MB. `load_network` merges them with `nm` None, which is in no
+line's target set and so pays the full 40× foreign-track penalty. Nothing routes
+over them that has an alternative; what they buy is connectivity.
+
+**광주선 goes 12.2 → 14.2 km and its first stop lands on 광주송정 itself**
+(35.13797, 126.79061 against the station's 35.13771, 126.79011), where it used
+to stop 2 km short. Nothing else in the network changed at all.
+
+Two things to know. **Fetch by id, not by tag**: a national
+`way[railway=rail][!name][!service]` is a double negation Overpass cannot index
+and overpass-api.de answers it with a **504 even for `out count`**, while by id
+it is an index lookup and takes a second. And `data/` is gitignored, as it is for
+every other OSM pull here, so a fresh clone has no such file — `load_network`
+checks before reading it and simply behaves as it did before, and `fetch_osm.py`
+with no arguments fetches whatever is missing.
+
+#### 중부내륙선: no unnamed track there at all
+
+The same query fetched nothing near 부발, because every rail way in that box is
+named — 경강선, 부발기지선, 중부내륙선. The 1.63 km gap still routed 5.01 km, a
+directness ratio of 3.07 against a bound of 3.00, and `reach_station` still
+refused it.
+
+Tracing the route says why. It runs **1.6 km south down 중부내륙선, turns round,
+comes back past where it started, and only then heads north-west to 부발** — 3.19
+of the 5.01 km is spent going nowhere. The drawn end and the track that reaches
+부발 are two depot roads **17 m apart with no edge between them**, and they first
+meet 1.55 km south. The bound was the right call about the wrong quantity: the
+route is not wandering, it is doubling back, and 5.01 km is not the distance a
+train covers.
+
+So `build.deloop` splices out any stretch that returns to within 30 m of
+somewhere the route has already been. **The two kinds of return separate
+cleanly**, which is why a plain threshold is safe here — measured over every
+line's stub:
+
+```
+   doubling back   3.19 km over 17 m   3.81 over 28   20.97 over 21   103.89 over 18
+   double track    0.02 km over 24 m   0.03 over 28
+```
+
+Ratios of 136 to 5,772 against about 1, with nothing in between. The second kind
+is two parallel tracks weaving, where the route "returns" having gone no further
+than the gap itself; cutting those would buy nothing and would litter the drawn
+line with metre-scale jumps. So the rule takes both a floor (0.2 km) and a ratio
+(10×) and the band between them is empty.
+
+**중부내륙선 goes 55.0 → 56.7 km against a 56.9 km line**, −3.4 % to −0.3 %.
+
+#### The de-loop broke 경부고속선 before it fixed anything
+
+First run after de-looping: `경부고속선 reaching 서울 over 경부선: 0.0 km`, 45
+junctions down to 37, 296 unknowns down to 264, weighted mirror 1.5 % to 1.8 %.
+
+`build_chains` builds every corridor once and only then has a host corridor to
+slice for the lines in `lines.OVER`, so on the first pass 경부고속선's 서울 end is
+still unclaimed. It used to stay that way because the generic search refused it
+— that refusal is exactly why `OVER` was written. De-looping made the search able
+to reach 서울, so it took the end, and the second pass then sliced 경부선 from
+서울 to a corridor that already ended at 서울: 0.0 km, and the line lost the
+18.7 km of 경부선 metals its KTX actually run on.
+
+The fix is a sentence of principle rather than a threshold: **an end `lines.OVER`
+governs is the host's, and the generic stub does not get to compete for it.**
+`order_stations` now treats a key present in `over` with a `None` value as
+"reserved, leave it short", and `solve.py` passes those ends on the first pass.
+18.7 km, 45 junctions and a 1.5 % mirror all came straight back.
+
+This is the general shape of the trap, so it is worth naming: a bound that has
+been refusing something for the wrong reason is load-bearing anyway, and
+loosening it can hand a case to the wrong mechanism. Check what *stops* claiming
+a thing, not only what starts.
+
+#### 중앙선 loses 3.9 km and that is the improvement
+
+The only other line the de-loop moves is 중앙선, 330.9 → 327.0 km against a
+332.2 km 영업거리 — which reads like a regression and is not. 중앙선's `ENDS` were
+moved to 경주, so its 영업거리 measures 청량리–모량, different track; the line is
+starred in `check.py` for exactly this reason.
+
+What the 3.9 km actually was: the route from the corridor's end to 경주 ran
+**1.87 km north on 중앙선, 0.33 km round the 경주삼각선 chord, 1.29 km back south
+on the other side of the triangle**, and only then 4.30 km down 동해선 to the
+station — which is *south* of where it started. It passed the old directness
+bound at 2.44, so it was accepted and drawn, and the map carried a 1.5 km spike
+pointing north-east out of 경주. Applying the de-loop criterion to the drawn
+geometry finds it: **`경주 → 아화` doubled back over 3.84 km before, and does not
+after.**
+
+Two segments still double back and both are correct, which is the check that the
+scope is right — `deloop` only ever sees a stub, never a corridor's interior:
+
+- **영동선 동백산 → 도계, 10.07 km.** The 솔안터널 spiral. The train really does
+  come back over itself.
+- **경춘선 김유정 → 춘천, 0.71 km.** A station approach.
+
+### Two lines can share a station name and not a station (2026-09-07)
+
+`todo.txt` asks to "verify junctions / things that dont visually connect that
+should". Nothing in the pipeline had ever checked that. `check.py` tests that a
+line's own consecutive segments meet, which says nothing about whether two
+*different* lines meet where they both call — each is routed on its own metals
+and they are drawn independently. `check.py junctions()` now does: for every
+station name that appears on more than one line, it takes each line's own drawn
+point for it and reports the widest separation.
+
+27 stations are called at by more than one line. Three are drawn more than 600 m
+apart, and two of those are not a drawing fault at all:
+
+```
+   양원      189,471 m   영동선, 중앙선
+   좌천       26,267 m   경부선, 동해선
+   영천          680 m   대구선, 중앙선
+   (widest that passes: 영주 at 510 m, 경북선/영동선/중앙선)
+```
+
+**양원 is two stations.** 양원역 in 봉화 is on 영동선 and 양원역 in 서울 중랑구 is
+on the 중앙선, 189.5 km apart, and OSM has both. Same for **좌천**, 26.3 km apart
+on 경부선 and 동해선. Both lines pass the membership test honestly — each has a
+node of that name near its own track, and each runs a train type with traffic
+there — so `serves()` credits both lines with the station and each corridor
+snaps to its own node.
+
+**This was not only a drawing problem.** `Network.__init__` builds its junctions
+with `on[nm].add(L)`, keyed by name alone, so 양원 and 좌천 were two of the fit's
+45 junctions: conservation imposed between lines that do not meet, and a shared
+station's 승하차 split between them. The traffic is small — 양원 is 3,711
+boardings a year and 좌천 is **three** — so this was a structural error rather
+than a large one.
+
+**Fixed the same day, and the two needed different fixes**, which is the part
+worth keeping: the general rule handles one of them and the other is a
+judgement.
+
+#### 좌천: the operator test was per name and should be per node
+
+`load_stations` already drops non-Korail stations, and its rule was *"drop a
+name if no node of that name is Korail's, and neither the 승하차 table nor any
+roster has heard of it"*. Every clause of that is per **name**. 좌천 is in the
+승하차 table — three passengers a year — so the whole name survived, subway node
+included, and 경부선 snapped to it.
+
+A name being in the 승하차 table says *a* station of that name has 일반열차
+traffic. It does not say every node of that name does. So the test is now per
+node as well: **where a name has a Korail node, the non-Korail nodes of that
+name are dropped.** The yearbook's row belongs to the Korail one; the other is a
+different railway that happens to share a name.
+
+**71 names shed a node**, and every one is a metro or private operator shadowing
+a Korail station — 서울교통공사, 부산교통공사, 대구교통공사, 인천교통공사,
+광주교통공사, the GTX operator, 네오트랜스, and at 매화, 송정, 신원 and 판교 the
+**조선민주주의인민공화국 철도성**, which has same-named stations north of the
+DMZ. Nothing that was kept before by having Korail *somewhere* under its name is
+affected, because that node is exactly the one this keeps.
+
+It moves one thing beyond 좌천, and correctly: 광주송정 had a 광주교통공사 node
+146 m from the Korail one, 광주선 had been snapping to the metro node, and the
+line now runs to the Korail platform. That costs a kilometre of drawn track
+(14.2 → 15.2 km) because the route to the correct platform is less direct; the
+de-loop check confirms it is not a wander.
+
+#### 양원: two Korail stations, so this one is a judgement
+
+There is a 양원역 in 봉화 on 영동선 (`railway=halt`) and a 양원역 in 서울 중랑구
+on the 중앙선 (`network=수도권 전철`), both **한국철도공사**, 189.5 km apart, and
+the yearbook has one 양원 row. The operator test cannot help and neither can the
+roster: **양원 is in no line's roster at all**, which is worth knowing on its own
+— `8. 시설` sheet 2 misses small halts that the 승하차 table has.
+
+So `lines.STATION_HOME` names it, with the argument written out beside it. The
+row is 영동선's on three grounds: the yearbook counts 일반열차 and Seoul's 양원 is
+served only by the 경의중앙선 광역전철; the row carries 새마을 as well as 무궁화,
+which is exactly the signature of 분천, 승부 and 석포, its neighbours a few km
+away on 영동선 and all three in 영동선's roster; and the alternative is 중앙선
+being credited with a station 189 km from the one 영동선 has.
+
+`serves()` applies it only when the named line is already a claimant, so a stale
+entry can take membership away but never invent it.
+
+#### What it cost
+
+45 junctions → 42, 296 unknowns → 278, both false constraints gone, and the
+network's 인거리 (88.8 %) and median mirror (1.5 %) unchanged to the figure.
+경춘선's meaningless mirror went 113.1 % → 100.0 %.
+
+**Two things the check clears, which is as useful as what it flags.** 용산's OSM
+nodes are 233 km apart and it is *not* flagged: 경부선 and 경원선 both snap to the
+Seoul one, so the collision exists in the data and never reaches the answer.
+And 영천 at 680 m is a single OSM node drawn twice, once on each line's own
+alignment through the station — a real 680 m, and the reason the threshold is
+600 m and not 100. It is the only station still flagged.
+
+Names carrying OSM nodes more than 2 km apart are common — 26 of them, 송정 at
+429 km over three nodes, 판교 at 274 km over four. Most are unmapped city
+stations and reach nothing.
+
+### A handover's two directions are the same trains (2026-09-07)
+
+The previous section left 태백선's handover implemented, measured and reverted:
+right on every published test, and answered by the fit with **하행 16,041 a year
+against 상행 75,722** — 4.7×, for six trains a day that run both ways. That is
+not a finding about the railway, it is an unconstrained ridge, and the
+arbitrariness propagated through junction conservation and cost 영동선 and
+정선선 their mirrors. `W_TAUSYM` at 2.0 did not hold it.
+
+`solve.W_HOSYM` now holds it, and 태백선 is back in. **The handover ratios:**
+
+```
+   수서고속선 평택지제 -> 경부고속선 천안아산    7,910,382   7,910,368   ratio 1.00
+   호남선    서대전   -> 경부선    신탄진        746,619     746,815   ratio 1.00
+   태백선    태백     -> 영동선    동백산         41,558      42,323   ratio 1.02
+```
+
+`solve.py` prints that table every run. Its *ratio* is the diagnostic: the same
+trains make both journeys, so anything far from 1.00 is the fit picking a point
+on a ridge rather than determining a handover.
+
+**It has to constrain both sides of the junction, and the first attempt did
+not.** The obvious quantity is the handing line's through flow — `prof[(L,d)][i]`
+less the platform movement — and constraining only that changed almost nothing:
+정선선 went to 34.1 %, 영동선 to 11.9 %, 태백선 to 7.8 %, all of it the old
+damage. The reason is that `write_geojson` draws the run-on segment from the
+**receiving** line's tau, not from the handing line's through flow, so the drawn
+태백-백산 8.7 km stayed as lopsided as before at an 80 % segment mirror. Both are
+constrained now: the through flow directly, and the receiving tau by swapping
+`W_TAUSYM` for `W_HOSYM` at a handover's receiving stop.
+
+Only at a handover. An ordinary junction may genuinely step by different amounts
+each way and `W_TAUSYM`'s gentler nudge is the right instrument there.
+
+**W_HOSYM is 30.0**, which is above the evidence tier rather than beside
+`W_TAUSYM`, because it is a statement about the service and not a smoothing
+prior. 6.0 was tried and left the ratio far from 1.
+
+**The existing handovers are the check, and it passes.** With `W_HOSYM` added
+and 태백선 still out, nothing moved: loads shifted by single figures, every
+mirror by at most 0.2 points, 인거리 unchanged at 88.8 %. 수서고속선 and 호남선
+were already symmetric and the constraint costs them nothing, which is what it
+should do.
+
+#### What 태백선 buys and what it costs
+
+| | before | after |
+|---|---|---|
+| 태백선 drawn | 95.4 km, **−8.4 %** of a 104.1 km line | 104.2 km, **+0.1 %** |
+| 태백선 통과인원 | 0.54 of published | **0.67** |
+| handover ratio | 4.7 | **1.02** |
+| 영동선 mirror | 2.1 % | 2.1 % (was 12.3 % on the first attempt) |
+| 태백선 mirror | 3.9 % | 3.2 % |
+| **정선선 mirror** | **26.5 %** | **32.3 %** |
+| network median mirror | 1.5 % | 1.6 % |
+
+**정선선 is the price and it is real.** It branches off 태백선 at 민둥산, so
+태백선's profile moving moves it, and its weighted mirror goes 26.5 % → 32.3 %
+with a worst segment of 145 %. It was already the second-worst line in the
+network and the README already said why: it carries **forty people a day**, so
+32 % of its traffic is about fourteen people, and it holds a small negative
+segment in `solve.py`'s own report both before and after. Set against 태백선's
+2,000 a day, 8.7 km of geometry that was simply missing, and a length that now
+matches the published figure to a tenth of a per cent, the trade is worth
+taking — but it is a trade and not a free win.
+
+**The obvious alternative is worse, so it does not need retrying.** Keeping
+태백's anchor — the handover without `THROUGH_ENDS` — was measured: 정선선 34.3 %
+rather than 32.3, 태백선's 통과인원 0.58 rather than 0.67, its mirror 4.0 rather
+than 3.2, and the handover itself suppressed to 18,560/19,318. Every column is
+worse. 정선선's damage is the handover, not the lost anchor, and the anchor
+assertion that everyone alights at 태백 is false anyway.
+
 ## What is not done
 
 - **The short lines.** 대구선 (13.0 % weighted mirror) and 경북선 (8.0 %) are
@@ -1807,11 +2325,12 @@ lines that meet were drawn apart.
   with both its ends junctions and nothing but 통과인원 to set the level.
 - **`build.py` and `solve.py` disagree on levels, and the fit wins.** 경부선
   is 33,018 from the single-line build and 17,343 from the network fit, both
-  with clean mirrors. The published 인거리 favours `build.py` (92.8 % against
-  85.0 %) and the published train counts overturn that: `build.py` needs 608
-  people on each 무궁화 through 지천-신동, which seats about 432, over eight
-  consecutive segments, while **every segment of the fit fits inside its
-  trains**. See [Passengers per
+  with clean mirrors. The published 인거리 favours `build.py` (**96.0 % against
+  88.8 %** as of 2026-09-07; it was 92.8 against 85.0 when the verdict was
+  taken, and the ordering has never changed) and the published train counts
+  overturn that: `build.py` needs 608 people on each 무궁화 through 지천-신동,
+  which seats about 432, over eight consecutive segments, while **every segment
+  of the fit fits inside its trains**. See [Passengers per
   train](#passengers-per-train-and-why-the-인거리-verdict-was-backwards).
 
   **So the map should draw `solve.py`, which is what it already draws** —
@@ -1819,6 +2338,16 @@ lines that meet were drawn apart.
   remains open is not which builder but the fit's own worst flag, 수서고속선 at
   1.9×, where the published train count and the published SRT ridership
   disagree with each other before any model is involved.
+
+  **`build.py`'s baseline moved on 2026-09-07 and it is worth knowing why**, or
+  the next comparison reads as a change of method. It does not implement
+  `lines.OVER` at all, so nothing reserves 경부고속선's 서울 end for a host line
+  — and once the de-loop let the generic search reach 서울, `build.py` took it.
+  Its 경부고속선 went from 17 segments to 27 and 10.78 bn passenger-km to 11.58,
+  which is most of its total moving 92.9 % → 96.0 %. `solve.py` is unaffected;
+  it reaches 서울 the same 18.7 km up 경부선 it always did. Whether `build.py`'s
+  28 km search route is the right way there is untested, because that file
+  carries no geometry for anything to check.
 - **Non-Korail stations on the chains.** `solve.py` admits any station whose
   membership test passes, which puts 신용산, 삼각지 and 숙대입구 on 경부선 and a
   string of 부산 도시철도 stops on it through 부산진, plus a duplicate
@@ -1837,7 +2366,11 @@ lines that meet were drawn apart.
   whose sign rule forbids the step outright.
 
   **부발**, where 중부내륙선 starts, is the junction with 경강선, which this build
-  does not model at all.
+  does not model at all — and cannot be given one by `OVER` for that reason,
+  since `OVER` needs a host line whose corridor is already built. The line is
+  nonetheless drawn to 부발 now, over the depot metals that actually carry it;
+  see [Two ways a corridor fails to reach its end
+  station](#two-ways-a-corridor-fails-to-reach-its-end-station-2026-09-07).
 
 - **Lines whose passengers board off-line — mostly addressed, see below.**
   호남고속선 runs 오송–광주송정 and nearly everyone on it boards at 용산, 서울 or

@@ -21,13 +21,29 @@ Run in order.  Every step, every time, even when only one country changed.
    2. python sources/<cc>_geo.py --fetch   # -> data/geo/<cc>/, units + placement grid
    3. write taxonomy/<cc><YYYY>.py         # the mapping, with EXCLUDED and REVIEW
    4. add the entry to countries.py        # counts=, place=, place_weight=, note_public=
-                                           #   AND gap= if part of the country is not
-                                           #   drawn.  One short line, shown under the
-                                           #   country's name in the legend: a blank on a
-                                           #   dot map cannot tell "nobody here is
-                                           #   religious" from "nobody counted here", and
-                                           #   this is the only place that difference is
-                                           #   stated while the blank is on screen.
+                                           #   AND how=, grain=, fill= if anything is
+                                           #   derived, gap= if part of the country is not
+                                           #   drawn.  The last four are the block under
+                                           #   the title (spec 7c/7d): what kind of data
+                                           #   this is, how fine, what the filling-in drew
+                                           #   on, and who is left out.  A blank on a dot
+                                           #   map cannot tell "nobody here is religious"
+                                           #   from "nobody counted here", and that block
+                                           #   is where the difference gets stated.
+                                           #
+                                           #   READ THE FIELD DOCSTRING AT THE TOP OF
+                                           #   countries.py BEFORE WRITING ANY OF THEM, and
+                                           #   before writing or extending a note_public.
+                                           #   It carries Anita's rules on voice -- no em
+                                           #   dashes and no markup in the four short
+                                           #   fields, and in a note, bold only on a figure
+                                           #   inside a sentence.  A bold sentence that
+                                           #   starts one is rendered as a paragraph break
+                                           #   instead, which is how a long note is meant
+                                           #   to be structured.  These are the difference
+                                           #   between prose that reads as written and
+                                           #   prose that reads as generated, on a map
+                                           #   whose whole subject is whether to trust it.
                                            #   Currently ge and cn.  Most countries need
                                            #   none, and that is the healthy state.
    5. python taxonomy/build_tree.py        # NOT automatic.  Skip it and the viewer greys out
@@ -64,6 +80,17 @@ Run in order.  Every step, every time, even when only one country changed.
     and the manifest it replaces loses the 10k edition FOR EVERY COUNTRY -- the 1:10,000
     control then greys itself out map-wide.  Hit 2026-09-06 while adding Bangladesh.
   * country_shapes.py is the one nothing else depends on, so nothing complains.  See step 10.
+
+  AND ONE TO RUN AFTER EDITING ANY `note_public`:
+
+    python tools/check_md.py
+        The notes are authored in markdown-ish (`**bold**`, `*italic*`, `` `code` ``) and the
+        about panel converts the markers.  Nothing did until 2026-09-07, so 531 bold runs, 80
+        italics and 43 code spans had been on screen as literal asterisks -- France alone
+        showed 106.  This applies the viewer's own three regexes to every note and prints
+        anything that survives them.  Says `clean` when there is nothing, exit 1 when there is.
+        It holds a COPY of those regexes, because they live in a <script> block; if the two
+        ever disagree this is measuring something the reader never sees.
 
   AND ONE THAT IS NOT PER-COUNTRY BUT IS WORTH RUNNING WHEN A COUNTRY HAS DERIVED ROWS:
 
@@ -165,6 +192,19 @@ Run in order.  Every step, every time, even when only one country changed.
     python sources/hr.py --fetch     # Croatia, one 18MB xlsx, ~1 min
     python sources/in.py --fetch     # India, 38 files scraped off NADA, ~14MB, ~3 min
     python sources/de.py --fetch     # Germany, one 0.8MB xlsx, seconds
+    python sources/de_zwst.py --fetch# Germany's Jewish communities, one 2MB PDF, seconds.
+                                     #   Needs de.csv to already exist -- it seats each
+                                     #   community in a Gemeinde and checks the join
+                                     #   against that file. Needs PyMuPDF. Reconciles to
+                                     #   the published 87,934 exactly; read sources/de.md
+                                     #   7 before touching the parser, the obvious
+                                     #   arithmetic check does NOT catch the layout trap.
+    python sources/de_ess.py --fetch # Germany's residual split, 10 ESS API calls, ~1 min.
+                                     #   Bundesland-level shares only; countries.py applies
+                                     #   them to the Gemeinde residual AFTER de_zwst. Read
+                                     #   sources/de.md 9 before changing the category list --
+                                     #   the two register answers and Juedisch are excluded
+                                     #   on purpose, they are measured elsewhere.
     python sources/hu.py --fetch     # Hungary, two SDMX structure messages, seconds.
                                      #   The two DATA exports were made by hand in the
                                      #   census database UI and cannot be re-fetched --
@@ -902,6 +942,79 @@ Run in order.  Every step, every time, even when only one country changed.
                                      #   taxonomy/cf2003.py for why that is an overclaim and
                                      #   an undercount at the same time.
 
+    python sources/ci.py --fetch     # Cote d'Ivoire, one CDX query + one 34 MB PDF, ~1 min.
+                                     #   THE OFFICE IS NOT THE ROUTE.  ins.ci is a parked
+                                     #   cPanel page that 404s every document; anstat.ci is
+                                     #   Cloudflare 403 INCLUDING /assets/*.pdf, so 9aa's
+                                     #   "a 403 on a directory is not a 403 on its contents"
+                                     #   does NOT rescue it.  The file is the WAYBACK
+                                     #   MACHINE's copy of ANStat's own URL (11f's technique
+                                     #   on a LIVE walled host, not a dead one).
+                                     #   THE ARCHIVE TRUNCATES AND THE OBVIOUS CAPTURE IS
+                                     #   THE BROKEN ONE: the first-listed capture of these
+                                     #   files delivers exactly 1,048,576 bytes (2^20) with
+                                     #   NO %%EOF, and PyMuPDF opens it and reports a
+                                     #   plausible page count.  fetch() asks the CDX for
+                                     #   every capture, takes the LARGEST, and raises on
+                                     #   both 2^20 and a missing trailer.
+                                     #   THE ORACLE WAS TWO CENSUSES STALE -- UNSD table 28
+                                     #   says 2014 / 22.7M; this is RGPH 2021 / 29.4M.
+                                     #   THREE TABLES, ONE VOLUME (3.4's move): Tableau 4.6
+                                     #   is religion by region in PERCENTAGES to 1 dp,
+                                     #   Tableau 4.1 is the same 9 categories nationally in
+                                     #   COUNTS, the annex is population by region in counts.
+                                     #   Each category is rescaled so the 33 units sum to
+                                     #   its published national count; factors 0.980-1.025,
+                                     #   and the two extremes are the two smallest
+                                     #   categories, which is where 1 dp hurts.
+                                     #   TWO NESTED TIERS IN ONE COLUMN (9p again): 4.6
+                                     #   interleaves 14 districts with their regions and
+                                     #   marks neither.  The separator is the ANNEX, not the
+                                     #   layout -- a row is drawable iff it is in the
+                                     #   population table.  Lands on exactly 33.
+                                     #   `Lacs` IS PRINTED TWICE; the second is Lagunes.
+                                     #   Both are districts so neither is drawn, but the
+                                     #   count is asserted.
+                                     #   TWO THOUSANDS SEPARATORS IN ONE DOCUMENT: Tableau
+                                     #   4.1 uses U+2009 THIN SPACE and the annex uses an
+                                     #   ordinary space.  A regex written against one
+                                     #   matches NOTHING on the other and the symptom reads
+                                     #   as "that table is not on this page".  Every line is
+                                     #   folded through 13 space variants first.
+                                     #   `ND` (2.21%) is a NON-ANSWER and comes off the tree
+                                     #   per 3.5, as Kenya's `Not Stated` does.
+                                     #   THE EVANGELIQUE SPLIT (9az-i, Anita's call):
+                                     #   tome 1 never divides `Autres religions
+                                     #   chretiennes` (6.0M, 20.5%).  The RESULTATS GLOBAUX
+                                     #   DEFINITIFS does, in PROSE above its Tableau 6 --
+                                     #   "20% d'autres chretiens, composes principalement
+                                     #   des evangeliques (18,6%)" -- and those percentages
+                                     #   are of the TOTAL population, so 5,445,459 people.
+                                     #   The MAGNITUDE is the source's; the GEOGRAPHY is
+                                     #   nobody's, so one national ratio is applied to every
+                                     #   region and both halves inherit the residual's
+                                     #   shape.  Those rows are tier=derived and can never
+                                     #   ring (3.10).  Set SPLIT_EVANGELICAL=False to undo.
+                                     #   THE TWO PUBLICATIONS DISAGREE by 159,208 people
+                                     #   about where `autres chretiens` ends and `autres
+                                     #   religions` begins, while agreeing on their SUM to
+                                     #   the person (6,057,832 both ways).  Subtracting the
+                                     #   evangeliques from tome 1's LARGER cell puts the
+                                     #   disputed people in the REMAINDER, so the
+                                     #   evangelique figure is the same either way.
+                                     #   THE RESULTATS GLOBAUX IS A 68-PAGE SCAN WITH NO
+                                     #   TEXT LAYER: get_text() is empty on all 68 pages and
+                                     #   a grep for "religion" returns ZERO on a document
+                                     #   whose contents page lists a Religion section.
+                                     #   Render and look, or OCR.  It also SETTLES the
+                                     #   geography question: Tableaux 1-19 + annex 17-19 +
+                                     #   Cartes 1-3, and only Tableau 6 is religion and it
+                                     #   is national.  33 regions is ANStat's ceiling.
+                                     #   WHAT IS STILL LOST: 559,322 remain in
+                                     #   christianity.other, holding Celeste, Bouddhiste and
+                                     #   Temoin de Jehova.  Benin draws that same Celeste by
+                                     #   name at COMMUNE level (9ai).
+
     python sources/vn.py --fetch     # Vietnam, two PDFs, 13.3 MB, seconds.
                                      #   THE 2009 VOLUME IS THE MAP AND THE 2019 ONE IS THE
                                      #   CHECK.  Both are "Ket qua toan bo"; 2009's Bieu 7 is
@@ -1186,7 +1299,11 @@ Run in order.  Every step, every time, even when only one country changed.
                                      #   village population, deliberately -- read the
                                      #   docstring before touching any join in it.
     python sources/de_geo.py --fetch # BKG VG250, one 69MB zip; does NOT use GISCO
-    python sources/de_grid.py --fetch# THEN this: the 1km grid placement layer, 27MB zip.
+    python sources/de_grid.py --fetch# THEN this: the 1km grid placement layer, TWO 27MB
+                                     #   zips now -- religion AND citizenship by country,
+                                     #   which share cell ids so they join on GITTER_ID_1km.
+                                     #   The citizenship columns sharpen where the modelled
+                                     #   Muslim and Orthodox dots land (sources/de.md 10).
                                      #   Needs de_gemeinden.gpkg to already exist -- it
                                      #   assigns each cell to a Gemeinde and clips to it.
                                      #   countries.py reads de_grid_1km.gpkg, NOT
@@ -1474,6 +1591,27 @@ Run in order.  Every step, every time, even when only one country changed.
                                      #   used for (where INSIDE a commune) is its own
                                      #   measurement and the level is never read.  See
                                      #   sources.md 9av, which generalises this.
+
+    python sources/ci_geo.py --fetch # Cote d'Ivoire.  Needs sources/ci.py first.
+                                     #   geoBoundaries CIV ADM2 is 33 polygons against 33
+                                     #   census units and FITS -- rare here.  ADM1 is the 14
+                                     #   districts and is deliberately not drawn.
+                                     #   The name join folds 30 of 33; three need an alias
+                                     #   (District Autonome d'Abidjan / de Yamoussoukro, and
+                                     #   `Me` for `La Me`).  Each is unambiguous, so an alias
+                                     #   table is enough where 9af needed a SPATIAL check --
+                                     #   but zero-or-multiple matches still raise, so the
+                                     #   table cannot rot into a wrong pairing.
+                                     #   Kontur exists for the NORTH: the 10 largest regions
+                                     #   are 47.6% of the land and 28.9% of the people, and
+                                     #   Bounkani (21,800 km2, 19.6/km2) is exactly where
+                                     #   `Animiste` is 24.7%.  A uniform fill would smear the
+                                     #   sharpest thing this country shows.
+                                     #   RUNS 9av's INDEPENDENCE CHECK AND PASSES IT THE
+                                     #   OTHER WAY: 27.3% of regions within +/-5% of the
+                                     #   median ratio, against CAR's 78.5% and Ethiopia's
+                                     #   34.0%.  A 2021 census vs a 2023 grid SHOULD be
+                                     #   wide.  Warns if it ever exceeds 60%.
 
     python sources/vn_geo.py --fetch # Vietnam, both layers.  Needs sources/vn.py first.
                                      #   ~17 MB: geoBoundaries VNM ADM1 (PINNED to 9469f09)
@@ -2571,7 +2709,7 @@ Run in order.  Every step, every time, even when only one country changed.
    check on it and shares no code with it -- see CHECK THE ARCHIVE below.
 
    --refresh-meta still exists, and is still the right thing for editing a country's name,
-   source, basis, note or view box: it rewrites only those fields in counts.json from
+   source, basis, how, grain, note or view box: it rewrites only those fields in counts.json
    countries.py and leaves the tiles and the tallies alone.
 
    THE DEV SERVER BLOCKS THE LAST STEP.  The archive is built as religiondots.pmtiles.tmp
@@ -2586,7 +2724,7 @@ Run in order.  Every step, every time, even when only one country changed.
    it, so marks never combine across a border -- the viewer draws one country at a time and a
    mark merged across the 49th parallel would belong to neither side of it (spec §6.2).
 
-   counts.json is per country: name, source, basis, note, bbox and the dot/ring tallies, all
+   counts.json is per country: name, source, basis, how, grain, note, bbox and the tallies, all
    read from countries.py.  A new country that does not fill in `name`/`source`/`basis` shows
    up in the picker as its bare country code.
 

@@ -45,8 +45,6 @@ import io
 import os
 import sys
 
-import openpyxl
-
 import lines as LN
 
 URBAN = "2.도시철도/도시철도-3.수송실적_완.xlsx"
@@ -71,8 +69,7 @@ def distance_bands():
     인거리. Both are read, and the 인거리 block is the one that matters -- it is
     published rather than inferred from band midpoints, so the total is exact.
     """
-    wb = openpyxl.load_workbook(LN._open(LN.PASSENGER), read_only=True,
-                                data_only=True)
+    wb = LN._book(LN.PASSENGER)
     ws = wb["14"]
     blocks = []
     for row in ws.iter_rows(values_only=True):
@@ -125,8 +122,7 @@ def urban_trip_lengths():
     Metro and Busan both write "공사에서 관리하지 않는 데이터임" -- are skipped,
     which is why Busan lines 1-4 still have no calibration.
     """
-    wb = openpyxl.load_workbook(openpyxl_source(), read_only=True,
-                                data_only=True)
+    wb = urban_book()
     ws = wb["10"]
     out, org, line, pend = {}, None, None, None
     for row in ws.iter_rows(values_only=True):
@@ -196,8 +192,7 @@ def urban_peak_segments(year=2022):
     to folded into the same cell. Five of this project's city models have no
     check on their output at all; this is one.
     """
-    wb = openpyxl.load_workbook(openpyxl_source(), read_only=True,
-                                data_only=True)
+    wb = urban_book()
     ws = wb["13"]
     rows = list(ws.iter_rows(values_only=True))
     wb.close()
@@ -234,8 +229,9 @@ def urban_peak_segments(year=2022):
     return out
 
 
-def openpyxl_source():
-    return LN._open(URBAN)
+def urban_book():
+    """The 도시철도 수송실적 workbook, read-only and without its stylesheet."""
+    return LN._book(URBAN)
 
 
 def main():

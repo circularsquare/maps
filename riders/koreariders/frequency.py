@@ -21,8 +21,6 @@ we know a junction step at 용산 is wrong however well it fits the 승하차.
 import re
 import sys
 
-import openpyxl
-
 import lines as LN
 
 MEMBER = "1.지역간철도/6. 운전(1~6)_완.xlsx"
@@ -80,37 +78,48 @@ def _flat(v):
     return re.sub(r"\s+", "", str(v)) if v is not None else ""
 
 
+def _at(grid, r, c):
+    """The sheet's own 1-based (row, column), or None off the end of it."""
+    row = grid[r - 1] if 0 < r <= len(grid) else ()
+    return row[c - 1] if 0 < c <= len(row) else None
+
+
 def sections():
     """[(line, from, to, {train type: trains per day}), ...] in sheet order."""
-    wb = openpyxl.load_workbook(LN._open(MEMBER), data_only=True)
+    # `LN._book` is read-only, which has no `ws.cell`, so each sheet is
+    # materialised once and indexed instead. Worth the change: 운전 is 10.6 MB
+    # of parts of which the stylesheet nobody reads is 9.5, and skipping it
+    # takes this open from about eleven seconds to well under one.
+    wb = LN._book(MEMBER)
     out = []
     for name in SHEETS:
-        ws = wb[name]
+        grid = list(wb[name].iter_rows(values_only=True))
         # 2(5) puts 선로용량 one column left of the other two, so find the
         # headings rather than assuming where they sit.
         head = {}
         for c in range(1, 20):
             for r in (4, 5):
-                h = _flat(ws.cell(row=r, column=c).value)
+                h = _flat(_at(grid, r, c))
                 if h in COLUMNS:
                     head[c] = h
         line = ""
-        for r in range(6, ws.max_row + 1):
-            a = _flat(ws.cell(row=r, column=1).value)
+        for r in range(6, len(grid) + 1):
+            a = _flat(_at(grid, r, 1))
             if a:
                 line = ALIAS.get(a, a)
-            sec = _flat(ws.cell(row=r, column=3).value)
+            sec = _flat(_at(grid, r, 3))
             if not sec or "-" not in sec:
                 continue
             # Keyed by the sheet's own column, so a column covering two
             # passenger types is still one set of trains. See COLUMNS.
             runs = {}
             for c, h in head.items():
-                v = ws.cell(row=r, column=c).value
+                v = _at(grid, r, c)
                 if isinstance(v, (int, float)) and v:
                     runs[h] = runs.get(h, 0) + int(v)
             frm, to = sec.split("-", 1)
             out.append((line, frm, to, runs))
+    wb.close()
     return out
 
 

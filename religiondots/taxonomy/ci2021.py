@@ -10,13 +10,18 @@ REVIEW holds calls that are defensible but arguable, with the reason.
 adds the first node this map has ever had for an African Initiated Church named individually
 by a census outside Benin. Everything else here is ordinary; that cell is not.
 
-**AND THE SECOND LARGEST GROUP IN THE COUNTRY IS A RESIDUAL.** `Autres religions chrétiennes`
-is 6,004,781 people, 20.5%, undivided, and the volume's own methodology says the census
-collected `Evangélique`, `Céleste`, `Bouddhiste` and `Témoin de Jehova` as separate
-modalities. None of the four is printed anywhere — not nationally, not by region, not by age.
-So this map draws a Celestial Church geography in Benin (§9ai, 676,032 people at commune
-level) and cannot draw one in the country next door, where the same church is certainly
-present and is inside this cell. §3.9's trade at its worst.
+**AND THE SECOND LARGEST GROUP IN THE COUNTRY WAS A RESIDUAL, UNTIL A SECOND PUBLICATION
+NAMED MOST OF IT.** Tome 1's `Autres religions chrétiennes` is 6,004,781 people, 20.5%, and
+that volume never divides it. The *Résultats Globaux Définitifs* does, in one sentence of
+prose: *"20% d'autres chrétiens, composés principalement des évangéliques (18,6%)"*. So
+5,445,459 of them are **évangéliques**, and sources/ci.py §7a splits the cell on that figure.
+The magnitude is the source's; the geography is not, and the `Évangélique` note below says
+what that costs.
+
+What is left after the split is 559,322 people, and the volume's methodology names three more
+modalities the census collected and no table prints — `Céleste`, `Bouddhiste`, `Témoin de
+Jehova`. **The Celestial Church of Christ is inside that remainder**, and bj2013.py draws
+that same church by name at commune level next door in Benin. §3.9's trade, still.
 """
 
 EXCLUDED = {
@@ -74,23 +79,43 @@ REVIEW = {
         "established, which is that they are Protestant and not further specified. The same "
         "call as mw2018.py's `SDA/Baptist/Apostolic`, made in the direction of the less "
         "specific node because here one of the two halves is already the generic one.",
-    "Autres religions chrétiennes":
-        "-> christianity.other. **6,004,781 people, 20.51% — the second largest religious "
-        "group in Côte d'Ivoire and the largest undivided cell on the African part of this "
-        "map.** The tome's own methodology (p80) lists the modalities the census collected: "
-        "*Catholique, Méthodiste/Protestante, Evangélique, Céleste, Harriste, Musulman, "
-        "Animiste, Bouddhiste et Témoin de Jehova*. Four of those — **Evangélique, Céleste, "
-        "Bouddhiste, Témoin de Jehova** — are given a cell in no table in the volume, so "
-        "they are inside this one, and Bouddhiste is inside it despite not being Christian "
-        "at all under any reading. "
-        "The bulk of it is Côte d'Ivoire's very large evangelical and Pentecostal sector, "
-        "which would go to `christianity.evangelical` or `christianity.pentecostal` if the "
-        "office had printed it; **the Celestial Church of Christ is also in here**, and "
-        "bj2013.py draws that same church by name at commune level next door. It goes to "
-        "`christianity.other` — bodies the source named as Christian and did not place — "
-        "rather than to any of the three, because choosing one would invent a division "
-        "ANStat did not make. Per spec §3.11, and it is the biggest single thing this "
-        "country cannot show.",
+    "Évangélique":
+        "-> christianity.evangelical, DERIVED. **5,445,459 people, 18.60%, and the second "
+        "largest religious group in Côte d'Ivoire.** It is not a cell in tome 1's tables at "
+        "all; it is §7a's split of `Autres religions chrétiennes`, taken from ANStat's own "
+        "prose in the *Résultats Globaux Définitifs*: *\"20% d'autres chrétiens, composés "
+        "principalement des évangéliques (18,6%)\"*. Those percentages are of the total "
+        "population — they reproduce that publication's own % column exactly — so the "
+        "magnitude is the source's rather than this project's. "
+        "**The GEOGRAPHY is not established and the mapping must not be read as if it "
+        "were.** No ANStat publication gives évangéliques by région, so the national ratio "
+        "is applied uniformly and this node inherits the residual's shape exactly. "
+        "Evangelicals in Côte d'Ivoire are very likely more southern and more urban than a "
+        "flat 90.7% of every région's other-Christian cell, so the per-région shares are "
+        "wrong in a spatially correlated way while the national total is right. Every row "
+        "is `tier=\"derived\"` and can never ring (§3.10), and note_public says so. "
+        "It goes to `christianity.evangelical` — the answer-node Kenya added for KNBS's "
+        "`Evangelical Churches` — rather than to `christianity.pentecostal`, because "
+        "ANStat's word is *évangélique* and the Ivorian sector it names covers both the "
+        "classical evangelical missions and the newer Pentecostal assemblies without "
+        "separating them.",
+    "Autres chrétiens, hors évangéliques":
+        "-> christianity.other, and it is what is LEFT after the évangélique split: "
+        "**559,322 people, 1.91%.** Small, and still doing a lot of work. The tome's "
+        "methodology (p80) names four modalities the census collected and no table ever "
+        "prints — *Evangélique, **Céleste**, **Bouddhiste**, **Témoin de Jehova*** — and "
+        "with the évangéliques now lifted out, the other three are the bulk of what "
+        "remains. **The Celestial Church of Christ is in here**, and bj2013.py draws that "
+        "same church by name in every one of Benin's 77 communes, so this map can show a "
+        "Céleste geography in one country and not in the country next door. Bouddhiste is "
+        "in here too, despite not being Christian under any reading. "
+        "**It is also where a disagreement between two ANStat publications lands.** Tome 1 "
+        "puts 159,208 more people in `autres chrétiens` than the Résultats Globaux does, "
+        "and the two agree on `autres chrétiens + autres religions` to the person. Because "
+        "the évangélique count is subtracted from tome 1's larger cell, those disputed "
+        "people fall into this remainder rather than into the évangéliques — which is where "
+        "they belong if the Résultats Globaux is right that they are not Christian. Per "
+        "spec §3.11.",
     "Animiste":
         "-> indigenous.african, the node Ghana added. 629,938 people, 2.15%. **Read it as a "
         "floor**, per §11b's continental rule: the box is exclusive of `Catholique` and "
@@ -121,6 +146,11 @@ MAP = {
     "Catholique": "christianity.catholic",
     "Méthodiste/Protestant": "christianity.protestant",
     "Harriste": "christianity.africaninstituted.harrist",
+    # §7a's split of `Autres religions chrétiennes`. sources/ci.py emits these two in its
+    # place; the undivided category no longer reaches the tree, and is kept below so a
+    # re-run against an older ci.csv still resolves rather than failing silently.
+    "Évangélique": "christianity.evangelical",
+    "Autres chrétiens, hors évangéliques": "christianity.other",
     "Autres religions chrétiennes": "christianity.other",
     "Musulmane": "islam",
     "Animiste": "indigenous.african",
