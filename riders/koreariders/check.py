@@ -409,8 +409,12 @@ def main():
     model_pkm = sum(f["properties"]["km"] * f["properties"]["daily"]
                     for f in feats) * 365.0
     print("\n인거리 -- the model's level against the published total")
-    print("   published (yearbook sheet 14, 2022)  %8.2f bn passenger-km"
-          % (pub_pkm / 1e9))
+    # The year is not decoration here. Reading a 2023 file against the 2022
+    # published total puts the model at 105.3 % and trips the double-counting
+    # warning below, which is a false alarm about an edition mismatch rather
+    # than anything in the data -- so say which edition is being compared.
+    print("   published (yearbook sheet 14, %s)  %8.2f bn passenger-km"
+          % (LN.year(), pub_pkm / 1e9))
     print("   this file                            %8.2f bn   (%.1f %% of it)"
           % (model_pkm / 1e9, 100.0 * model_pkm / pub_pkm))
     if model_pkm > pub_pkm:

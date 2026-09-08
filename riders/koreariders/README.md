@@ -33,12 +33,65 @@ recorded as `reversed` and the columns swapped to match, 경부선 goes from a
 network solve in `solve.py` was built to rescue those four lines and is no
 longer what rescues them — see [What the network solve is for](#what-the-network-solve-is-for).
 
+## The map is built from the 2023 yearbook as of 2026-09-08
+
+It was 2022 until then, and **most numbers in this file are still 2022 ones**.
+That is deliberate rather than neglect: the file is a layered record and
+rewriting three thousand lines of figures would destroy the reasoning they
+carry. Read a figure here as "what the 2022 build did" unless it says
+otherwise. What the map draws today is whatever `check.py` prints.
+
+The switch itself is one line — `lines.YEARBOOK` — and
+
+```
+KOREARIDERS_YEARBOOK=data/korail_yearbook_2022_excel.zip python solve.py --out <scratch>
+```
+
+reproduces the old map exactly, which is how every before/after below was
+measured. The two editions and what it took to make both parse are in [The 2023
+yearbook parses](#the-2023-yearbook-and-everything-the-edition-change-broke-2026-09-08)
+and [What a blank section
+means](#what-a-blank-section-means-and-how-the-other-sheet-answers-it-2026-09-08).
+
+Where 2023 stands against 2022, both checked against their own edition's
+published totals:
+
+```
+                                    2022      2023
+인거리 cover                       90.5 %    93.1 %
+segments over capacity                 0         0
+lines with a negative segment          1         1     (정선선's 2004 stub, both)
+median weighted mirror               1.2 %     1.0 %
+경북선 mirror                       18.4 %    22.1 %
+```
+
+The 2023 column moved on 2026-09-08 when 신경주 was merged onto 경주 and the
+high-speed rows there given to 경부고속선: cover was 91.6 % and the median mirror
+1.3 % before it. The 2022 column did not move, and that was checked rather than
+assumed — see [신경주 is
+경주](#신경주-is-경주-and-the-warning-against-saying-so-was-half-right-2026-09-08).
+
+**The city models are not on this clock.** Busan, Daegu, Daejeon, Gwangju and
+Busan–Gimhae run off their own published gate counts from 2025 and 2026, and
+the Seoul layer is imported from seoulriders. Only the intercity network moved.
+`yearbook_extra.py` stays on 2022 whatever this says, because the sheets it
+reads are `.xlsb` in the 2023 bundle and openpyxl cannot open them.
+
 ## Picking this up
 
 Read this section, then `todo.txt` (Anita's own list — **hers to edit, not
 ours**), then the rest of this file for the why behind any given decision.
-Written 2026-09-07, at the end of a long session; the ordering below is a
+Written 2026-09-07 and revised 2026-09-08; the ordering below is a
 recommendation, not a queue.
+
+**The map is three kinds of layer now**, and knowing which you are touching
+saves an hour. The **intercity network** is `solve.py` fitting every line at
+once from the 철도통계연보 — that is what most of this file is about. The **five
+city models** are separate gravity builders on published gates. And since
+2026-09-08 there are **two Korail commuter layers**, 동해선 광역전철 and
+ITX-청춘, built from a source this project did not know existed until that day
+(`info.korail.com` board 425) and drawn over railways the intercity map already
+carries. A change to one touches none of the others.
 
 **Before you touch anything.** More than one Claude session works in this tree
 at once. `lines.py` changed under this session's feet mid-run, and a
@@ -54,18 +107,42 @@ section](#the-runs-are-slow-for-one-reason-and-it-is-cheap-to-fix). Iterating
 on it is now cheap enough that a change should get a full before/after rather
 than an argument. `build.py` is 29 s and writes
 `segments_singleline.geojson`, which nothing reads — it exists to be compared
-against. The city builds are seconds.
-`check.py`, `check_cities.py` and `compare_builders.py` all read the output
-files and need no solve, and `python -m unittest test_part_types` is under a
-second.
+against. The city builds are seconds. In practice a solve on this machine has
+been running two to three minutes rather than one, because other sessions are
+usually on the box; budget for that rather than assuming something is wrong.
+
+`build_donghae.py` pays the same setup as a solve (it borrows 동해선's chain, so
+it loads the track graph) but does no fit worth the name — call it two minutes.
+`build_gyeongchun.py` needs no graph at all and is **seconds**, because its
+corridor comes out of `data/metro_segments.geojson`.
+
+`check.py`, `check_cities.py`, `check_commuter.py`, `check_orphans.py` and
+`compare_builders.py` all read output files and need no solve —
+`check_orphans.py` is the exception at a setup minute, since it builds the
+chains. `python -m unittest test_part_types` is under a second and covers
+`PART_TYPES`, `TYPE_HOME` and the aliases.
 
 **What is settled, so you do not reopen it.** The map draws `solve.py`, not
 `build.py` — the published train counts overturned the 인거리 verdict that
-favoured the single-line build. The city decays are fitted to published trip
-lengths, not assumed. The train counts are per direction (편도, the sheet says
-so in its own header). None of that needs revisiting.
+favoured the single-line build. The train counts are per direction (편도, the
+sheet says so in its own header). Four of the five city decays, and both
+commuter layers, are fitted to published trip lengths; **부산 1-4 is the one
+model still fitted to an assumption**, and that is a known gap rather than an
+oversight, because 부산교통공사 files `공사에서 관리하지 않는 데이터임` in the
+sheet that would give it one. None of that needs revisiting.
 
 ### Worth doing next
+
+**Start with [What a railfan would
+catch](#what-a-railfan-would-catch-2026-09-08)** if you want the list ranked by
+whether an informed reader could falsify it rather than by how much it improves
+a residual. The two lists overlap but not much, and the railfan one is where the
+map is *wrong* rather than merely imprecise: **17.59M riders a year, 5.4 % of
+everything the yearbook counts, reach no segment at all**, and
+`check_orphans.py` prints them. It was 19.58M and 6.0 % until 신경주 was fixed on
+2026-09-08 — which was billed here as one line of code, took two, and is worth
+reading before starting another item on that list, because the first line alone
+made the map worse in a way the list did not anticipate.
 
 0. ~~**양원 and 좌천 are each two stations sharing one name.**~~ Found and fixed
    2026-09-07, by the new cross-line junction check in `check.py` — which is
@@ -151,6 +228,135 @@ so in its own header). None of that needs revisiting.
    rule assigns a journey to a line: 전라선 reads 3.27M against a published 7.71M
    line total and a 7.88M rebuild. Maybe an hour to characterise, unclear payoff.
 
+   **A rule with that shape is now named**, though not proved to be this
+   sheet's: KRIC's own per-line table says **주운행선**, the principal line of
+   operation, and gives 전라선 13.58M for 2023. It is a third figure rather than
+   a match for either of the two above, so it does not close this item — but
+   anyone characterising the sheet should test 주운행선 first. See [용산's KTX
+   split is
+   published](#용산s-ktx-split-is-published-on-a-site-the-yearbook-never-mentions-2026-09-08).
+
+### What a railfan would catch (2026-09-08)
+
+Everything else in this file measures the map against itself or against a
+published aggregate. This list is the other test: **what could somebody who
+knows Korean railways look at, say "that is not right", and prove?** Ordered by
+how loudly, with what it would cost. Figures are the 2023 edition.
+
+Two of these were found by sweeping rather than by noticing, and the sweep is
+worth re-running after any change to `lines.TYPES` or the chains: for every
+station row with traffic, does it reach any line's cumulation? It misses in two
+different ways and they want different fixes.
+
+**1. 용산's 10.75M KTX a year are invisible. This is the largest hole in the
+map.** 용산 sits on 경부선's and 경원선's chains and neither declares KTX, so
+every passenger on the 호남 and 전라 KTX that terminate there is dropped. It is
+most of why 호남고속선 reaches only 65 % of its published 통과인원, and it dwarfs
+everything below — bigger than every other gap combined. `ENTRY_SHARE` was built
+to size 호남고속선's entry *because* this traffic is unreachable, so the
+machinery already routes around it rather than fixing it.
+
+~~Hard: 용산's KTX are 호남고속선's, 전라선's and 강릉선's together and nothing
+published splits them.~~ **The split was found on 2026-09-08 and the sentence
+above was wrong twice over.** There is no 강릉선 leg — that line is 100 %
+KTX-이음 and 용산 reports none — so the split is two-way; and it is published,
+by KRIC's 노선별 × 차종별 table, at 57.8 / 42.2 호남 to 전라, against 55.4 / 44.6
+recomputed independently from the yearbook already on disk. The traffic is still
+undrawn: what remains is the entry flow, not the number. See [용산's KTX split is
+published](#용산s-ktx-split-is-published-on-a-site-the-yearbook-never-mentions-2026-09-08).
+
+~~**2. 신경주's 1.99M SRT reach no line, and this one is a one-line fix.**~~
+Done 2026-09-08, and it was two lines rather than one. The alias by itself
+*failed* the test written here — 경부고속선 gained 47 a day and 중앙선 took
+3,015 — because being on the high-speed chain is necessary and not sufficient
+when all three lines at the platform declare the type. `lines.TYPE_HOME` names
+the one whose trains they are, on the section counts, and then the high-speed leg
+gains 8,557. 인거리 cover 91.6 % → **93.1 %** and the median weighted mirror
+1.3 % → **1.0 %**, both the best they have been, at a cost of 중앙선's worst
+segment going 28 % → 44 %. See [신경주 is
+경주](#신경주-is-경주-and-the-warning-against-saying-so-was-half-right-2026-09-08).
+
+**3. 3.75M KTX board on 경부선's metals at stations 경부선 does not claim** —
+수원 1.59M, 구포 0.89M, 밀양 0.60M, 영등포 0.54M, 경산 0.13M. Real KTX calls on
+the conventional line. This is the 호남선 `PART_TYPES` problem in a harder
+shape: those trains are already drawn on 경부고속선 over parallel metals, so
+granting 경부선 the type outright would double-count them. What is true is that
+they leave the 고속선 to call here; nothing published says how many.
+
+**4. 행신's 2.08M KTX, and the 2023 build half-fixes it by accident.** 행신 is on
+경의선's chain but 경의선's types are conventional, so its KTX never reached the
+cumulation. In 2023 경의선 is `untyped` and drawn from its published 통과인원 of
+2.089M on 서울-능곡 — which is within 8,000 of 행신's own 2.081M KTX, because that
+traffic is what the line's 통과인원 *is*. So the riders now appear on the right
+segment by a route that never mentions 행신. Worth knowing before someone
+"fixes" it and double-counts.
+
+**5. 0.70M KTX on 영동선 at 동해, 묵호 and 정동진** — the 강릉 KTX continuing
+past 강릉. ~~With no parallel high-speed line to double-count against, this may
+be the tractable one to try the mechanism on.~~ **Tried on 2026-09-08, four
+ways, and it is the least tractable of the lot.** The grant is unarguable and
+the obstacle is elsewhere: those rows are labelled by the *KTX service's*
+direction, which runs against 영동선's own, and correcting that leaves 340k
+riders a year boarding with nowhere to alight, because the alighting is 강릉's
+row and 강릉's KTX are 강릉선's. What it would take is a sized exit step at
+강릉, which is a new constraint rather than a table entry. See [영동선's KTX are
+real and cannot be
+drawn](#영동선s-ktx-are-real-and-cannot-be-drawn-and-the-reason-is-the-columns-2026-09-08),
+and read it before starting item 3, which is the same shape.
+
+**6. Seven stations are on no chain at all**, 0.31M a year between them now
+신경주 is fixed: 영월 (태백선, 191k), 상주 (경북선, 71k), and 탑리, 화본,
+북영천, 신녕 on 중앙선, 41k together. 화본 is a well-known station and someone
+would notice it missing. 판교(경기) is in the list and belongs there — it is the
+경강선 station and no chain here should carry it.
+
+Together that is **17.59M riders a year of 326.21M, 5.4 % of everything the
+yearbook counts**, reaching no segment; it was 19.58M and 6.0 % before 신경주.
+`check_orphans.py` prints exactly this list; re-run it after any change to
+`lines.TYPES`, `lines.TYPE_HOME`, `STATION_ALIAS` or the chains.
+
+#### Whole railways that are not on the map
+
+- ~~**동해선 광역전철, 부전-태화강.**~~ **Drawn since 2026-09-08.** Sixty-five km
+  of electrified commuter railway through 부산 and up to 울산 that no layer
+  reached, because the only file anyone had found covered 2021 and its 울산
+  extension opened at the end of that year. Korail publishes it monthly per
+  station and has since 2017; `build_donghae.py` now draws it at **46,424
+  boardings a day**, peaking at **22,830 between 센텀 and 벡스코**. See [동해선
+  광역전철 is
+  drawn](#동해선-광역전철-is-drawn-and-the-data-was-never-the-hard-part-2026-09-08).
+- **용인 에버라인** is missing from the seoulriders import's 22 lines. Small.
+- ~~**경춘선 is drawn grey with no rider figure at all.**~~ The intercity line
+  still is, and always will be — the yearbook credits it with 1,208 riders a
+  year — but **the ITX-청춘 that rides it is drawn since 2026-09-08**, from
+  Korail's own station counts, at 14,366 boardings a day. The 전동차 on the same
+  rails was already there, in the seoulriders import. So the corridor now
+  carries a figure from end to end even though the yearbook column behind the
+  grey line is still empty; the hover note says so. See [ITX-청춘 is drawn, and
+  the model had to change
+  sign](#itx-청춘-is-drawn-and-the-model-had-to-change-sign-2026-09-08).
+
+#### Line levels that are short against their own published figure
+
+```
+경부고속선     62.1M drawn   100.7M published    62 %
+호남고속선     16.3M          25.4M              64 %
+태백선          0.42M          0.81M             52 %
+영동선          0.93M          1.32M             71 %
+```
+
+경부선 and 호남선 sit at 33-34 % and are **not** in this list: their published
+totals count high-speed traffic on their own metals that the model deliberately
+assigns to the 고속선, so the ratio is not a fair test. See the `partial`
+verdict under [Results](#results).
+
+#### Smaller, but visible
+
+- **영천 is drawn as two stations 680 m apart** on 대구선 and 중앙선, the one
+  junction `check.py` still flags.
+- **김천(구미) carries OSM's spelling**, brackets and all, where the yearbook and
+  every sign say 김천구미.
+
 ### The runs are slow for one reason, and it is cheap to fix
 
 Profiled 2026-09-07 rather than guessed at, because both obvious guesses were
@@ -232,11 +438,10 @@ machine before believing a timing.
   that doubled back. See [Two ways a corridor fails to reach its end
   station](#two-ways-a-corridor-fails-to-reach-its-end-station-2026-09-07).
 - ~~**2023 is the newest yearbook on info.korail.com**; we use 2022.~~
-  Downloaded 2026-09-08 and it parses; `data/` holds both and
-  `KOREARIDERS_YEARBOOK` picks one. **2022 is still the default** and three
-  things stand in the way of adopting 2023 — see [The 2023 yearbook parses, and
-  three things stop it being
-  adopted](#the-2023-yearbook-parses-and-three-things-stop-it-being-adopted-2026-09-08).
+  Downloaded and adopted 2026-09-08. `data/` holds both editions and
+  `KOREARIDERS_YEARBOOK` selects one; **2023 is the default**. See [The 2023
+  yearbook, and everything the edition change
+  broke](#the-2023-yearbook-and-everything-the-edition-change-broke-2026-09-08).
   The download path on the railstat portal, for 2024 onward, is still not found.
 
 ### Things that will waste your time
@@ -844,12 +1049,19 @@ went from 1.4 % to 2.2 % — 경북선, which starts at the other 김천, from 8
 keep the residuals tidy. Isolated by re-running with the entry weight halved,
 which changed neither figure.
 
-**신경주 cannot be aliased**, and this is the trap. OSM's 경주 node *is*
-신경주 — the yearbook's own 경주 row is 164 passengers of residue from the old
-station closing in December 2021 — but that node sits on 동해선's and 중앙선's
-chains and not on 경부고속선's. Aliasing 신경주 to it would hand 1.8M of KTX and
-SRT to two lines whose trains never carried them. It needs the station added to
-the right chain, which is a different job.
+**신경주 could not be aliased when this was written, and now can** — the
+paragraph is kept because the trap it describes is real and still catches the
+2022 build. OSM's 경주 node *is* 신경주, the yearbook's own 경주 row in 2022
+being 164 passengers of residue from the old station closing in December 2021,
+but in that edition the node sits on 동해선's and 중앙선's chains and not on
+경부고속선's, because 2022's roster spells the station 신경주 and OSM has no such
+node. Aliasing there hands 3.6M of KTX and SRT to two lines whose trains never
+carried them.
+
+2023's roster spells it 경주, the chain picks it up, and the alias is right —
+under a year guard, and only alongside `lines.TYPE_HOME`, because being on the
+high-speed chain turned out not to be enough on its own. See [신경주 is
+경주](#신경주-is-경주-and-the-warning-against-saying-so-was-half-right-2026-09-08).
 
 **Snap radius alone is not enough.** 천안아산 is a 경부고속선 KTX station about
 100 m from 아산 on 장항선; snapping by distance pulled its 720k arrivals into the
@@ -901,8 +1113,12 @@ the map at all. Which lines call there comes from the segment table rather than
 from proximity, so the page can light up a line's stations exactly.
 
 Three station names had to be merged by hand (`ALIAS`), the interesting one being
-신경주: OSM's 경주 node *is* 신경주, and the yearbook's own 경주 row is 164
-passengers of residue from the old station closing in December 2021.
+신경주: OSM's 경주 node *is* 신경주, and the yearbook's own 경주 row in 2022 is
+164 passengers of residue from the old station closing in December 2021. Against
+2023 `lines.STATION_ALIAS` has already merged that pair before these totals are
+read, so the entry only does anything on the older edition. A bubble is a station
+total with nothing to attribute it to, so merging is unconditionally right here
+even where the segment side has to weigh which line's trains they rode.
 
 ## Files
 
@@ -914,15 +1130,31 @@ lines.py            yearbook parsing + the line-name table + anchor detection
                     HANDOVER: where two chains meet at a place neither names
                     STATION_HOME: whose station a shared name is, where two
                     Korail stations share one and the operator cannot tell
+                    TYPE_HOME: whose train type a shared platform's row is,
+                    the inverse of PART_TYPES and needed at 경주
 build.py            the reconstruction over all lines; --line NAME for one
 solve.py            the whole network fitted at once; --line NAME for one
 build_stations.py   역별 승하차 as map bubbles -> data/stations.geojson
 build_daegu_busan.py  Daegu/Busan-Gimhae gates -> data/daegu_busan_segments.geojson
+commuter.py         shared by the two Korail commuter layers: the counts
+                    reader, and the trip-length fit in both its signs
+build_donghae.py    동해선 광역전철 부전-태화강, Korail's own station counts,
+                    on 동해선's chain and corridor -> data/donghae_segments.geojson
+build_gyeongchun.py  ITX-청춘 용산-춘천, corridor assembled from the Seoul
+                    layer -> data/gyeongchun_segments.geojson
 build_metro_stations.py  intracity entries + exits -> data/metro_stations.geojson
 check.py            checks data/segments.geojson without re-solving; --line NAME
                     geometry, whether two lines meet where they share a station,
                     the mirror, the level against the published 인거리, and
                     passengers per train against the published 운행횟수
+check_commuter.py   the two Korail commuter layers: joins, negatives, whether
+                    the drawn profile still implies its fitted trip length, and
+                    the station counts against the published line total
+check_orphans.py    riders that reach no line at all -- a station on no chain,
+                    or on one whose types do not cover it. 17.59M a year, 5.4 %
+                    of the sheet. Build the chains, never the drawn geojson.
+                    Says nothing about whether the line that claims them is the
+                    right one, which is the other half of every fix here
 check_cities.py     the five city models against published trip length and 혼잡도
 compare_builders.py  build.py against solve.py, per line; --line NAME per segment
 fetch_city_track.py  Overpass: city metro track shapes -> data/osm_city_track.json
@@ -937,6 +1169,10 @@ membership.py       which lines physically serve each station, by track proximit
 fetch_osm.py        Overpass: route relations, named rail ways, station nodes
                     --unnamed: the 445 unnamed junction throats, fetched by id
 kric_index.py       scrape the 레일포털 catalogue (475 datasets) to data/kric_index.csv
+kric_stats.py       the *other* KRIC site: www.kric.go.kr 철도통계 live tables,
+                    per line and per station crossed with train type, 2022-2026.
+                    --list names the 53 pages; --year <page> <year> walks every
+                    month and page to data/kric/<page>_<year>.csv
 prototype.py        the original single-line version, with its workings printed
 probe_ingeori.py    shows 선별 인거리 is not track-attributed
 probe_geom.py       whether a route relation's geometry is contiguous
@@ -944,7 +1180,7 @@ probe_ways.py       whether Korean rail ways carry line names
 probe_routes.py     how a route relation is assembled
 ```
 
-`data/` holds the 2022 and 2023 yearbook zips (2022 is what everything reads
+`data/` holds the 2022 and 2023 yearbook zips (2023 is what everything reads
 unless `KOREARIDERS_YEARBOOK` says otherwise), the OSM pulls (26 MB of named
 ways, 0.3 MB of unnamed junction track, 1,997 station nodes), the KRIC catalogue
 index and `segments.geojson`.
@@ -2719,7 +2955,7 @@ share-attribution problem. That is now measured rather than assumed, and it
 takes the most plausible remaining explanation off the table for whoever picks
 them up.
 
-### The 2023 yearbook parses, and three things stop it being adopted (2026-09-08)
+### The 2023 yearbook, and everything the edition change broke (2026-09-08)
 
 The download was never the obstacle. `info.korail.com/info/downloadBbsFile.do?
 atchmnflNo=22487` returns the 2023 bundle in one request, 5.93 MB, no login and
@@ -2805,6 +3041,102 @@ median weighted mirror       1.2 %       1.6 %
   it also becomes `untyped`. This one may well be real — that train is the DMZ
   service to 도라산 — but it has not been checked.
 
+#### A fourth thing it broke, found later the same day
+
+`check_cities.py` had been dying on import and nobody had run it. It reads the
+도시철도 volume through `yearbook_extra.py`, that volume is `.xlsb` from 2023 on,
+and openpyxl raises **"File contains no valid workbook part"** — which reads
+like a corrupt download rather than a format change, and comes out of a
+traceback five frames deep in openpyxl with no mention of the edition.
+
+This file already said `yearbook_extra.py` stays on 2022; nothing enforced it.
+`lines._open` and `lines._book` now take an optional bundle and
+`yearbook_extra.BUNDLE_2022` passes the older zip, pinned to the filename rather
+than to `year()` so a later edition returning to xlsx gets adopted deliberately.
+The intercity solve is byte-identical across the change — the parameter is
+optional and nothing else passes it.
+
+**The lesson is about the check, not the parser.** An edition change was
+measured against `check.py`, the mirror, the 인거리 and the capacity test, and
+all of those pass because they read the *intercity* volume, which stayed xlsx.
+The one check covering the other five models was not run at all, so its failure
+was invisible for as long as nobody looked. When a shared input moves, run every
+check that reads it, not the ones you were thinking about.
+
+### What a blank section means, and how the other sheet answers it (2026-09-08)
+
+The three things above that blocked 2023 were all one thing, and it had a
+published answer rather than needing a judgement.
+
+`W_NOTRAIN` reads "no trains of this line's types on the section" off the 운전
+volume and forces the load to nil. A **blank** row reads as no trains. That is
+right where the railway was shut — 경원선 north of 소요산 — and it is the whole
+reason the constraint exists. The 2023 edition leaves rows blank that 2022
+filled in, and taken at face value the tail of 동해선 came out at −28, −3, 19
+and 64 a day, two of them impossible.
+
+**Passengers who boarded had to board something.** The 승하차 sheet is published
+independently of the 운행횟수 one, so a section with no trains must have no
+riders on it, and where it does the sheet is contradicting itself. Twelve blank
+segments across the two editions, and the test splits them with nothing
+ambiguous in the middle:
+
+```
+경원선 ...-백마고지          nobody          really shut, trust the zero
+정선선 아우라지-구절리        nobody          shut since 2004, trust it
+동해선 포항-...-영덕      127,058/yr         the sheet contradicts itself
+정선선 민둥산-...-아우라지  20,256/yr         likewise
+경의선 ...-도라산           4,148/yr         likewise
+```
+
+**Per segment, not per run of them, and that is the whole difficulty.** 광운대
+and 동두천 report 1,762 and 1,466 conventional riders a year — nine a day
+between them, on a stretch the sheet gives no intercity train. A rule that
+frees a whole blank run as soon as any station on it reports somebody frees
+경원선 all the way to the DMZ and reinstates exactly the error the constraint
+was written for. That version was built first and caught by running it. Judged
+one segment at a time, those two free their own segment and nothing beyond it.
+
+The evidence is the station the segment *leads to*: `resolve()` puts the clean
+anchor last, so chain order runs junction-end outward and stops[i+1] is the one
+that can only be reached across this segment. 포항 has three million riders and
+says nothing about 포항-월포.
+
+**It is a no-op on 2022**, which is the strongest thing about it. 31 blank
+segments there, 29 zeros trusted, and the two freed are the 광운대 and 동두천
+residue, which are drawn grey either way. The 2022 build comes out identical to
+the last digit on every line, cost 271.6 both ways.
+
+#### The same blank had three other consumers, and fixing one of them was worse than fixing none
+
+Freeing the constraint and leaving everything else alone drew 동해선's tail at a
+sensible 414–506 a day and labelled it *"no trains ran on this section"*, having
+just concluded that claim was false. Three more places read the section sheet
+and each needed the same correction:
+
+- **the `service` label.** `none` is now only written where the zero is
+  trusted. `commuter` is left alone: 전동차 > 0 is a positive count, so that row
+  was filled in and the intercity zero beside it is real.
+- **`untyped`.** A line whose every row is blank is not a line with no claimable
+  service, it is a line the sheet says nothing about. 정선선 in 2023 has one
+  empty row, was duly declared untyped, took no station allocation and drew nil
+  the length of it — while its own stations reported 20,256 riders. Now read off
+  rows that actually report trains, it reconstructs to 19,396 against a
+  published 19,971, a ratio of 0.97.
+- **where a published total goes.** It was placed on sections running trains of
+  the line's *own declared types*, which worked for 경원선 by luck — 26 of
+  용산-청량리's 44 trains are ITX-청춘, which maps onto one of its types. 경의선
+  in 2023 runs 23 KTX and nothing conventional, so its own types give zero
+  everywhere and the line vanished off the map rather than being drawn at the
+  2.09M it is credited with. `FQ.intercity_along` is the right question and is
+  now what both the placement and the trains-a-day note use.
+
+**A caution about `check.py` that cost ten minutes.** Run against a 2023 file
+with the 2022 edition loaded it reports 105.3 % of the published 인거리 and
+warns of double-counting, and flags 경의선 at 6.6× capacity. Both are edition
+mismatches and neither is real: against 2023's own totals it is 91.6 % and every
+segment fits inside its trains. The header now names the edition it compared.
+
 #### 서대구 has two labels in the same edition, and half of it was going nowhere
 
 Found while diffing the two editions' station keys, and it is a **2022 bug, not
@@ -2821,7 +3153,526 @@ the alternative is discarding real passengers, not because it changes a picture.
 
 The same diff caught **판교**, which 2023 splits into 판교(경기) and 판교(충남).
 장항선's is the 충남 one and is aliased; 판교(경기) is on 경강선, on no chain
-here, and must stay separate — aliasing it would be the 신경주 trap exactly.
+here, and must stay separate. Two stations 200 km apart that share a stem, which
+is the opposite of the 신경주 case below.
+
+### 신경주 is 경주, and the warning against saying so was half right (2026-09-08)
+
+Item 2 of [What a railfan would catch](#what-a-railfan-would-catch-2026-09-08),
+where it is billed as "a one-line fix". It is two, and the second one is the
+whole of it.
+
+**The hole.** The 2023 edition files one station under both its names: sheet 9
+gives `경주` 2,153,350 KTX a year and sheet 10 gives `신경주` 1,987,634 SRT and
+nothing else. Same platform, same trains — 신경주 was renamed 경주 when the old
+경주역 closed in December 2021. Unaliased, the SRT row matched no chain and every
+one of those passengers was worth zero.
+
+**Why the standing warning had to be rechecked rather than believed.**
+[Snap radius alone is not enough](#geometry) says 신경주 cannot be aliased,
+because OSM's 경주 node sat on 동해선's and 중앙선's chains and not on
+경부고속선's. Built the chains under both editions rather than reasoning about
+it, and the two disagree:
+
+```
+2022   경부고속선  22 stops   ... 서대구 동대구 울산 범일 ...
+2023   경부고속선  23 stops   ... 서대구 동대구 경주 울산 범일 ...
+```
+
+The roster is what moved. 2022's `8. 시설` calls the station 신경주, which OSM
+has no node for, so the chain skips it; 2023 calls it 경주 and the chain picks it
+up. So the alias is right from 2023 on and is still the trap against 2022, and
+`lines.STATION_ALIAS` gains it under a `year() >= 2023` guard for that reason.
+
+**Aliasing alone made the map worse, and this is the part the railfan list did
+not see coming.** Its own prescribed test was to "confirm the southern
+high-speed leg gains about 5,400 a day rather than 동해선 and 중앙선 gaining
+anything". It failed:
+
+```
+경부고속선  동대구-경주      64,528 -> 64,575     +47
+중앙선     경주-아화        10,041 -> 13,056  +3,015
+```
+
+Being on 경부고속선's chain is necessary and not sufficient. All three lines
+calling at 경주 declare KTX and SRT — 중앙선 and 동해선 because they really do
+carry high-speed services elsewhere — so the alias created a share group and
+중앙선 took most of it, carrying the rise the length of the line to 안동 and on
+to 단양. The share prior does not stop this the way [The share prior already
+knows a branch line is
+small](#the-share-prior-already-knows-a-branch-line-is-small-2026-09-08) found
+it stopping 경북선 and 대구선: those are a fraction of a per cent of their
+junction's traffic, where 중앙선's 11.75M 통과인원 against 경부고속선's 100.69M
+is a tenth of it, and the fit then moved the share past even that.
+
+**`6. 운전` settles which line's trains they are, and it is not close.**
+
+```
+중앙선  영주-안동      고속열차 9        <- its high-speed ends at 안동
+중앙선  안동-영천      무궁화 5
+중앙선  영천-모량      무궁화 17, 새마을 1
+동해선  북울산-신경주   무궁화 15, 새마을 1
+동해선  신경주-모량     (no train of any type)
+동해선  모량-부조      고속열차 16       <- the 포항 KTX, off 경부고속선 at
+동해선  부조-포항      고속열차 16          건천연결선, never through 경주
+```
+
+Neither line runs a high-speed train within tens of km of 경주. `lines.TYPE_HOME`
+says so — the inverse of `PART_TYPES`, naming the one line a type at a station
+belongs to — and with it the prescribed test passes:
+
+```
+경부고속선  동대구-경주      64,528 -> 73,085  +8,557
+중앙선     경주-아화        10,041 ->  6,933  -3,108
+```
+
+**What each half is worth**, all four measured on the 2023 edition against its
+own published totals:
+
+```
+                        baseline   alias only   + SRT gate   + KTX and SRT gate
+인거리 cover              91.6 %      92.2 %       92.7 %          93.1 %
+median weighted mirror     1.3 %       1.3 %        1.3 %           1.0 %
+경북선                  25.1/34.5   22.1/30.7    25.2/34.7       22.1/31.0
+대구선                  13.1/13.7   11.0/11.8    13.2/13.8       15.4/15.8
+중앙선                   5.9/28.0    off list     5.9/28.0        7.6/44.0
+정선선                  14.0/28.4   13.9/28.0    14.0/28.4       14.3/29.6
+segments over capacity       0           0            0               0
+lines with a negative        1           1            1               1
+```
+
+The last column is what the map draws. **인거리 cover and the median mirror are
+both the best they have ever been**, and the gate is what buys the last of it.
+Taking the SRT and leaving 경주's pre-existing KTX where they were is the tidier
+column and was rejected: the 운전 sheet treats the two types identically at that
+platform, so barring one and not the other is arbitrary, and the KTX half is
+where the mirror gain is.
+
+**An independent check that the gate is right, not merely better-fitting.**
+영천-모량 runs 무궁화 17 + 새마을 1. The pre-gate load put 558 passengers on each
+of those trains, against a 무궁화's roughly 432 seats; the gated one puts 385.
+The capacity check passes either way, because it counts the whole train list, but
+385 is the believable number for a single-track 무궁화 stretch and 558 is not.
+
+**The cost, which is real and is one line's.** 중앙선 goes 5.9 % → 7.6 %
+weighted and 28.0 % → **44.0 %** on its worst segment, 경주-아화, and 대구선
+13.1 % → 15.4 %. That residual is explained rather than merely tolerated.
+경주's 무궁화 row is 하행승차 139,475 and 상행하차 161,072 at what is 중앙선's
+*terminus* — figures that should be near nil there, and are not because most of
+that row is 동해선 through traffic, 경주 being mid-line on 동해선. The two lines
+label the same physical train's direction oppositely, so splitting the row
+between them by share is bound to mis-assign direction. The high-speed traffic
+was symmetric enough to dilute that; take it away and what is left is a
+pre-existing weakness at a shared platform, now visible. **Whoever picks up
+중앙선 should start there and not with the share weights.**
+
+**It is a no-op on 2022.** `resolve()` returns byte-identical flows, types and
+anchors on all 26 lines with the two changes live and with them stripped out, so
+the old build still reproduces exactly. The alias is behind the year guard and
+`TYPE_HOME` never bites there, because in that edition 경주's only row is 164
+무궁화 passengers and the high-speed traffic is all filed under 신경주.
+
+**What it leaves.** `check_orphans.py` goes from 19.58M riders reaching no
+segment to **17.59M**, 6.0 % → 5.4 %, and the "on no chain at all" bucket from
+2.30M to 0.31M. What remains is items 1, 3, 5 and 6 of the railfan list, none of
+which is a spelling.
+
+**The general lesson, which is the reason this section is long.** `check_orphans`
+asks whether *some* line claims a station's traffic, never whether the right one
+does, so clearing a name off it is half a fix and looks like a whole one. Every
+remaining item on the railfan list is a type-attribution at a shared platform,
+which is the half that report cannot see. Diff the segments after each.
+
+### 영동선's KTX are real and cannot be drawn, and the reason is the columns (2026-09-08)
+
+Item 5 of the railfan list, billed there as "the tractable one to try the
+mechanism on" because there is no parallel high-speed line to double-count
+against. It is not tractable, four ways were tried and measured, and **the code
+is reverted; this is the record.** The finding is worth more than the change
+would have been, because it applies to item 3 as well.
+
+**The grant itself is unarguable.** `6. 운전` gives 영동선 동해-청량신호소
+고속열차 8 + 무궁화 8 and no section south of 동해 any high-speed train at all,
+so the 강릉 KTX that carry on past 강릉 run on 영동선's own metals; and no
+modelled line covers them, 강릉선 stopping at 강릉. That is the same pair of
+tests 호남선's span passes. 0.70M KTX a year at 동해, 묵호 and 정동진 reach
+nothing without it.
+
+**What stops it is that the sheet labels a row by the service's direction, not
+the host line's.** 영동선 runs 영주 → 강릉 so its 하행 is seaward; those KTX run
+청량리 → 강릉 → 동해 so theirs is inland over the same stretch. The rows say so
+without ambiguity:
+
+```
+station   type      하행승차   하행하차   상행승차   상행하차
+동해      무궁화      62,912    78,616    74,485    61,410
+동해      KTX              0   179,786   176,860         0
+```
+
+The KTX row is the shape of a *terminus* — everything in 하행하차 and 상행승차,
+nil in the other two — and 동해 is a terminus for those trains and is not for
+영동선. Under 영동선's own 하행 it would mean 179,786 people arrived at 동해 from
+the 영주 side, on a section the 운전 sheet gives no 고속열차. 호남선 never
+exposed this because there the two conventions agree: its span's KTX run
+Seoul → 목포 and 호남선's own 하행 is also toward 목포.
+
+**Four attempts, in the order they were made.**
+
+1. *Span 동해–정동진, 강릉 excluded on the 광주송정 precedent, columns as
+   published.* The KTX cumulate inland. 영동선 came out heaviest at 철암-동백산
+   (1,549 → 2,397 a day) and lightest at 정동진-강릉 (1,620 → **588**), on the
+   one stretch of it they run.
+2. *Same, with 강릉 added to the span and barred by `TYPE_HOME`, to bring
+   `solve.contain` into play.* Identical output to the digit, at a fit cost of
+   32.5 → 79.6. **`contain` cannot help here and it is worth knowing why**: its
+   terms at 동해, 묵호 and 정동진 all came back `idx=-1`, because none of those
+   stations is shared and so none has a share variable, and 신기 is not a
+   junction so no step is free there either. The residual is a constant the fit
+   cannot move — it only adds to the cost.
+3. *Columns swapped into 영동선's sense, 강릉 still barred.* The flow points the
+   right way and the line breaks anyway: a negative segment appears, worst
+   mirror 6.1 % → **57.6 %**, and the 태백선 handover goes from 1.00 to 2.08 with
+   one direction negative. The cause is plain once seen — 340,000 people a year
+   board at 동해, 묵호 and 정동진 and **have nowhere to alight**, because the
+   alightings that balance them are 강릉's row and that row is barred.
+4. *Columns swapped, 강릉 shared.* Giving them somewhere to alight means letting
+   영동선 into the share group at 강릉, and the share prior hands it 35 % of a
+   terminus whose entire traffic is 강릉선's. 강릉선 collapses from a 수송밀도 of
+   8,488 to **3,172**, 영동선's worst mirror goes to 113 %, and the network
+   median mirror 1.0 % → 1.8 %.
+
+**So the two halves cannot both be satisfied with what is here.** The riders
+need an alighting at 강릉 that belongs to 강릉선, which is exactly the junction
+step — and the step at 강릉 is free, has a smallness prior, and nothing sizes it.
+`ENTRY_SHARE` is the machinery for sizing a flow from the train counts and it
+sizes an *entry*, not an exit. Sizing this one would need the share of 강릉선's
+service continuing past 강릉, which the counts do give — 강릉선 남강릉-강릉
+고속열차 22 against 영동선 동해-청량신호소 고속열차 8 — so a fifth attempt is
+available to whoever wants it, and it is a new constraint rather than a table
+entry.
+
+**Why this matters for item 3.** 수원, 구포, 밀양, 영등포 and 경산 are the same
+shape: high-speed rows at stations on a host line, where the trains' own
+direction is that of a service the host does not define, and where the
+passengers' other end is at a station the host may not claim. Anyone reading
+"3.75M KTX board on 경부선's metals" as a `PART_TYPES` entry should expect all
+of this and not only the double-counting the list already warns about.
+
+### 동해선 광역전철 is drawn, and the data was never the hard part (2026-09-08)
+
+A whole railway added: 부전-태화강, 23 stations, 63.6 km of drawn corridor,
+**46,424 boardings a day** and a peak of **22,830 between 센텀 and 벡스코**.
+`build_donghae.py` writes `data/donghae_segments.geojson` and `index.html` loads
+it beside the other estimated layers.
+
+**The blocker was a search failure, not a data gap.** This file said the only
+available counts covered 2021, which was true of the data.go.kr file in
+`data/donghae/counts.csv` and true of nothing else. Korail has published
+per-station monthly 승하차 for every 광역철도 line since 2017, free and without
+a login, on `info.korail.com` board 425 (광역수송 수송통계). The 2023 sheet is
+now `data/donghae/gwangyeok_2023.xlsx`. Two more lines are in the same file that
+this map draws nothing for — **대경선**, Daegu to Gumi, opened December 2024, and
+**ITX-청춘** as a line of its own.
+
+2023 rather than the current sheet on purpose: the commuter service is drawn on
+the same metals as the intercity 동해선, and a reader comparing the two should
+not be comparing different years. The city models stay on their own clock, as
+[the header](#the-map-is-built-from-the-2023-yearbook-as-of-2026-09-08) says.
+
+**Station names matched almost for free**, which is the part that could have
+gone badly. 21 of the file's 23 names are already on 동해선's chain, and the two
+that are not are the disambiguated 교대(부산) and 송정(부산) — both real
+collisions elsewhere in the country, so the sheet is right to qualify them and
+the chain, holding only Korail's, is right not to. `build_donghae.ALIAS` is two
+entries. Every chain stop from 부전 to 태화강 has a row; nothing was dropped.
+
+**The model is the city models', and its decay is fitted to a published number
+rather than assumed** — which is what 부산 1-4 still lack and why they are the
+one uncalibrated model left. The 2022 yearbook's 광역철도 volume, `3. 수송실적`
+sheets 1 and 3, gives 동해선(부산) 16,088 천명 boarding and 293 백만인-km, so
+**18.2 km a trip**. `build_busan.fit_od` does the doubly-constrained fit; this
+line needs none of Busan's shortest-path or transfer machinery, being one
+corridor, so the cost between two stations is simply the distance along it.
+
+Two traps in that yearbook sheet, both cost time:
+
+- The row is labelled **동해선(부산)**, not 동해선, and sits in a different
+  column from the year header, so a plain search finds nothing and reads as
+  "the line is not in the table".
+- **장항선's 인거리 jumps 86.6 to 1590 between 2019 and 2020** under an
+  unchanged 백만인-km header. 동해선's own series is smooth — 111, 116, 127, 108,
+  124, 293 — and so is 경춘선's, so this reading stands, but do not take another
+  line's row off that sheet without checking its series first.
+
+**The source has an external check and it passes to a rounding.** The board
+sheet and the 철도통계연보 are separate publications, and for 2022 they can be
+compared: the 23 stations sum to **16,087,027 승차** against the yearbook's
+**16,088 천명**, which is 0.01 % — the difference is the yearbook publishing in
+thousands. Two independent Korail counts of the same railway agree, so the 2023
+read built on the board sheet is not resting on one document. 승차 and 하차 are
+also exactly equal in both years, which is Korail reconciling a closed line
+rather than a coincidence.
+
+**Every edition of that sheet has a different column layout**, so
+`read_counts` finds 역명, 구분 and 합계 by their header rather than by position.
+2022 is 역명구분 | 역명 | 구분 | months | 합계; 2023 inserts a blank column and
+shifts everything one right; 2026 renames the sheet to 승하차인원 and puts
+노선명 in front. Read 2022 with 2023's offsets and it matches no station at all
+and sums to a confident zero — which is how this was found, and why the reader
+raises rather than returning an empty dict.
+
+**What the output looks like, and why it is believable.** The profile rises from
+7,577 a day at 부전, peaks at 센텀-벡스코, and tapers to 7,308 at 개운포-태화강.
+The peak lands in the 해운대 business district, which is where a 부산 reader
+would put it. Segments join to 0 m, no segment is negative, the drawn 63.6 km
+sits against a published 65.7 for 부전-태화강, and the implied mean trip closes
+at 18.23 km against the 18.21 it was fitted to. 2023's 16.94M boardings against
+the yearbook's 16.09M for 2022 is a 5 % year on year rise, which is the right
+size.
+
+**It is drawn on top of the intercity 동해선 and there is no line offset**, so
+the busier service wins the pixels over 부전-태화강 and the 일반열차 line
+underneath it is hidden there. That is already what happens to 경춘선, whose
+광역전철 comes in with the Seoul import over an intercity line drawn grey, so
+this is the house behaviour rather than a new fault — but it is the first thing
+to fix if two services on one railway ever need to be legible at once.
+
+### ITX-청춘 is drawn, and the model had to change sign (2026-09-08)
+
+The second Korail commuter layer, and the one that turned out to be about
+modelling rather than data. **15 stations over 97.8 km, 14,366 boardings a day,
+peaking at 12,702 between 사릉 and 평내호평.** `build_gyeongchun.py` writes
+`data/gyeongchun_segments.geojson`.
+
+**Why it is a separate builder from `build_donghae.py`.** The train is not on
+경춘선 for a third of its run: it goes 용산-옥수-왕십리-청량리 over 경의중앙선
+first, so five of its fifteen stops are off the intercity 경춘선 chain
+entirely. There is no host chain to borrow. The corridor is assembled instead
+out of the **Seoul layer**, which already draws both railways with geometry —
+경의중앙선 for 용산-청량리, 경춘선 for 청량리-춘천 — and each leg is found by
+breadth-first search rather than by walking segments. That matters: 용산 is
+mid-line on 경의중앙선, the railway carries on west to 문산, and a greedy walk
+out of it goes the wrong way and dies at 홍대입구.
+
+**2025 counts, not 2023, and the reason is a trap avoided.** Only the 2025 and
+later sheets carry a 노선명 column. On 2023's flat list every 경춘선 station has
+*two* rows, one for the ITX and one for the 전동차, and the second carries a
+blank 역명구분 — they are distinguishable by nothing but their position in the
+file. Summing them would have merged two services; splitting them positionally
+is the kind of assumption that breaks silently on the next edition.
+
+**The trip length is the best-attested number in this project.** ITX-청춘 is its
+own line in the yearbook's 광역철도 volume, and 인거리 ÷ 승차인원 barely moves:
+72.4 km in 2019, 70.2 in 2020, 71.0 in 2021, 72.8 in 2022, and 73.3 from KRIC's
+차종별 table for 2023. So the 73 km the fit targets is a five-year series, not
+one reading, and pairing it with 2025 counts costs almost nothing.
+
+#### The gravity model was the wrong family, and the data said so
+
+`build_busan.fit_od` writes the weight as `exp(-cost / decay)` and rejects a
+non-positive decay, so nearer pairs are always likelier. Fitting that to
+ITX-청춘 fails outright, and the error is the interesting part: **no decay
+reproduces a 73 km mean trip, because the most an independence fit gives is 54
+km.** The published figure is not merely hard to reach, it is outside the
+family.
+
+It is outside because the family is wrong. ITX-청춘 shares its rails with the
+경춘선 전동차, which is cheaper and stops everywhere, so the short hops go to
+the stopping train and what boards the ITX has selected itself for distance.
+Written as **`exp(beta * cost)` with the multiplier unsigned** — the same
+maximum-entropy model, `beta = -1/decay` recovering the other form — the fit
+lands at **beta = +0.0478 per km** and reproduces 73.00 km exactly. A positive
+multiplier is not a fudge; it is the selection effect, measured.
+
+`commuter.fit_od_beta` and `commuter.fit_beta` hold that, alongside the
+`fit_decay` 동해선 still uses, because a stopping service really does decay and
+should keep saying so.
+
+**Two numerical traps in the fit**, both of which look like broken data:
+
+- A decay much shorter than the gap between neighbouring stations makes
+  `exp(-cost/decay)` underflow to an all-zero matrix, and the IPF then cannot
+  balance. On a line whose stops are tens of km apart the nominal 0.5 km floor
+  is already degenerate, so `fit_decay` walks its lower bound up until the fit
+  is defined.
+- `beta` multiplies a distance, so fixed bounds are meaningless: ±2 per km is
+  `exp(196)` on a 98 km route. `fit_beta` scales its bounds to the longest pair.
+
+**What the output looks like.** The profile rises from 8,057 a day out of 용산,
+steps up at 청량리 where another 810k a year board, holds near 12,700 across the
+middle, and falls to 3,822 on 남춘천-춘천 — because 남춘천 is the bigger of the
+two Chuncheon stations and most riders are done there. The peak is 88 % of daily
+boardings, which is what an end-to-end service should look like. Segments join
+to 0 m, drawn km matches table km at 97.8, nothing is negative, and the implied
+mean trip closes at 73.00.
+
+**It is drawn violet on purpose.** 중앙선 is `#ff6fb5` and leaves 청량리 beside
+this train; 경춘선 and 경의선 are both teal. The first attempt used a pink close
+enough to 중앙선's that the two corridors could not be told apart on the
+screenshot, which is how this was caught.
+
+**What a reader now sees on that corridor**: the teal 전동차 dominating out to
+가평, the violet ITX taking over from there to 춘천, and the grey intercity
+경춘선 underneath both, still carrying no figure because the yearbook still
+records none. That is three services on one railway and it reads correctly,
+which the 동해선 pair does not — see the offset note in that section.
+
+### 용산's KTX split is published, on a site the yearbook never mentions (2026-09-08)
+
+Railfan item 1 said 용산's 10.75M KTX a year "are 호남고속선's, 전라선's and
+강릉선's together and nothing published splits them". Two thirds of that
+sentence is wrong. **The split is published, the 강릉선 leg does not exist, and
+two independent sources agree on the ratio to within 2.4 points.**
+
+**The source.** `www.kric.go.kr/jsp/industry/rss/*.jsp` is 철도통계, a set of
+live statistical tables on a *different* KRIC site from the `data.kric.go.kr`
+catalogue `kric_index.py` scrapes. No login, no key. `kric_stats.py` fetches
+them. Two tables matter here, both crossing a train-type axis with something
+this project needs:
+
+- **`raillinepassmonList`** — 노선별 × 차종별 수송인원, monthly. The line axis is
+  **주운행선**, the principal line of operation, which is the attribution rule
+  the "Worth doing next" list called unknown for the yearbook's 선별 여객수송.
+- **`railstapassmonList`** — 역별 × 차종별 승차수 and 하차수, monthly.
+
+Four things about the site that look like failure and are not, all of them
+already cost time once:
+
+- a bare fetch gets **403**; send a browser User-Agent.
+- without `q_fdate` *and*, on the monthly pages, `q_month`, the page renders
+  "검색된 자료가 없습니다" and only the field-description table. That reads like
+  an empty dataset and is not one.
+- the table is **paged at 15 rows with no visible pager**. The parameter is
+  `pageNo` and it is named only in `/ext/script/JControl.js`. A 243-row station
+  table stops in the middle of 경부선, and nothing says so.
+- the Excel button is `mode=excel` on the same URL and it redirects to
+  `/ErrorJsp.jsp`. Page through instead.
+
+**The type axis is finer than the yearbook's.** Where the yearbook has one KTX
+column, this has KTX, KTX-산천, KTX-호남, KTX-이음 and KTX-청룡. Those are
+rolling-stock classes and not routes, so they do **not** by themselves say where
+a train went — but one of them settles the 강릉선 question outright.
+
+**Trust it: the arithmetic is exact.** In all twelve months of 2023 the line
+rows sum to the 합계 row to the person. Its 경춘선 total is 5,385,583, which is
+the same figure `build_gyeongchun.py` is anchored on, from a table that
+disagrees with the yearbook's absurd 1,208 for the same line. Its 중부내륙선 is
+117,631 against the yearbook's 통과인원 of 117,559 — 0.06 % — and its 경북선 is
+203,166 against 204,150. Where the two taxonomies describe the same railway they
+agree; where they diverge, it is because 통과인원 counts a rider once per line
+they cross and 주운행선 counts each journey once, which is a real difference of
+quantity and not an error in either. The only row that fails its own sum is
+공항철도, which has a total and zeroes across every type, because its 직통열차 is
+not in Korail's type list.
+
+**Its line axis is services, not metals, and that is a category error waiting to
+happen.** There is no 경부고속선 row, no 호남고속선 row and no 수서고속선 row;
+KRIC's 호남선 bundles what this project splits between 호남고속선 and 호남선,
+and SR is absent entirely because it is a different operator. So the table is
+safe to take **ratios** from and unsafe to take **levels** from. Nobody should
+later read 호남선 19.13M as a target for the line this map calls 호남선.
+
+**The 강릉선 leg does not exist.** 강릉선 is 5,802,554 riders in 2023 and
+**100 % of them are KTX-이음**; 중앙선's high-speed is likewise entirely
+KTX-이음. 용산's station row carries **no KTX-이음 in any of the twelve
+months**. So no 강릉선 or 중앙선 high-speed service touches 용산, and the split
+is two-way rather than three-way. That alone makes the problem materially easier
+than this file said.
+
+The station table corroborates the yearbook on 용산 itself while it is there:
+KTX 6,956,717 + KTX-산천 3,088,140 + KTX-호남 527,703 = **10,572,560** 승하차
+against the yearbook's single-column **10,749,689**, which is 1.65 % apart from
+a source that shares no method with it.
+
+**The ratio, from two sources that do not share a method.**
+
+| | 호남선 | 전라선 | split |
+|---|---|---|---|
+| KRIC 주운행선 journeys, Korail high-speed | 12,102,931 | 8,828,474 | 57.8 / 42.2 |
+| yearbook KTX 승하차, stations past 익산 | 8,162,917 | 6,581,164 | 55.4 / 44.6 |
+
+The second row is the check and it is worth keeping, because it is computed from
+a file already on disk and it tests something neither source states. Every
+전라선 KTX runs 용산–여수엑스포, so each one-way journey has exactly one end at a
+station reachable only by committing to that branch at 익산. Summing the
+yearbook's KTX 승하차 over those stations should therefore land near the
+line's journey count, and it does.
+
+**Hold SRT apart or the check fails.** Summed over KTX *and* SRT the same
+stations give 12,381,437 and 6,746,076 — Honam still lands within 2.3 % but
+Jeolla is 24 % adrift. The reason is that 수서's trains serve the two branches
+very unevenly: 호남선's stations past 익산 take 4,218,520 SRT riders a year and
+전라선's take 164,912, a factor of twenty-six. Those riders terminate at 수서 and
+have nothing to do with 용산, and KRIC's table excludes them for its own reason,
+which is that SR is a different operator and has no row on a Korail page. 광명
+reading 11.7M KTX and exactly zero SRT is the same fact from the other side.
+
+**What this does not settle.** Neither figure is 용산's own split, and both are
+biased in ways whose *sign* is known only for one of them. The KRIC ratio is of
+each line's whole high-speed traffic: some Honam KTX start at 서울 and no
+전라선 KTX does, which pushes 호남선's total up relative to 용산's share, but
+intermediate boardings at 광명, 천안아산, 오송 and 익산 sit on both lines and
+could pull either way. The yearbook ratio misses every rider whose far end is
+익산 itself, which both branches serve.
+
+So do not present either as measured. What is fair to say is that two methods
+sharing no data and no attribution rule land 2.4 points apart, which brackets
+the answer tightly enough that the choice between them moves about **250,000
+riders a year** — against **10.75M currently drawn nowhere at all**. Pick one,
+say which in the hover note, and the residual is a rounding error beside the
+hole it fills.
+
+**The shape of the fix** is an entry flow, the same machinery `ENTRY_SHARE`
+already uses for 호남고속선 at 오송, but sized by a measured split rather than a
+train-count prior. 용산 is not on either receiving line's chain, so extending a
+chain is the wrong move for the reason recorded under `ENTRY_SHARE`: it would
+paint the load over 160 km of track the riders are not on.
+
+#### The Jeolla half cannot be drawn, and this was the plan for an hour
+
+The obvious first move is the 전라선 half: 42 % of the traffic, no `ENTRY_SHARE`
+to retire, a clean test of the split before touching 호남고속선's machinery.
+**It is impossible, and one baseline solve says so before any code is written.**
+
+```
+   line          drawn 통과인원      published      ratio     headroom
+   전라선            8,667,349      8,698,062      0.996        30,713
+   호남고속선        16,250,569     25,441,975      0.639     9,191,406
+   경부고속선        62,123,525    100,690,630      0.617    38,567,105
+```
+
+통과인원 is **a ceiling on every line without exception** — `W_CEILING` is
+one-sided and applies before any of the exemptions. 전라선 sits 0.4 % under
+its own, so the line has **30,713 riders a year of headroom** against a 용산
+Jeolla share of about **2.38M a year in each direction**, seventy-seven times
+what will fit. The fit would not accept the entry flow; it would push it back
+down or break the sharpest residual in the model.
+
+**Why, and it reframes the whole railfan list.** 통과인원 counts everyone
+crossing a line's metals, and the 용산–여수엑스포 KTX cross 전라선's. The
+published figure already includes those riders, and the model has already
+reached it by routing traffic in through the 익산 junction — 호남고속선 sheds
+14,803 a day there and 전라선 picks up 19,943. So **"reaches no segment" and
+"its load is missing" are not the same claim**, and `check_orphans.py` measures
+the first. On 전라선 the riders' load is drawn and only their *identity* is
+lost: the map cannot say they came from 용산, but it is not short of them.
+
+Where the load really is missing, the headroom shows it: 호남고속선 has 9.19M a
+year unused and 경부고속선 38.57M. **That is where 용산's traffic belongs** —
+those riders ride 경부고속선 from 광명 to 오송 before they are anyone's branch
+traffic. And the two are one problem rather than two, because `ENTRY_SHARE`
+makes 호남고속선's entry a *share of 경부고속선's* inflow, so 호남고속선 inherits
+whatever 경부고속선 is short. Fix the feeding line and the branch follows.
+
+Anyone picking this up should re-run the baseline first — `solve.py --out
+<scratch>` — and read the headroom column before choosing a line. It cost one
+minute and saved a change that could not have worked.
+
+**And it unblocks the newer-data item.** These tables serve **2022 through
+2026**, monthly, per line and per station. "What is not done" said 2024 onward
+had moved to the railstat portal and the download path was not found; for these
+two quantities it no longer matters. June 2025 already lists 교외선, reopened
+after the 2023 yearbook was printed, and ITX-마음 carrying real traffic.
 
 ## What is not done
 
@@ -2983,11 +3834,19 @@ here, and must stay separate — aliasing it would be the 신경주 trap exactly
   file catches the Donghae Ulsan extension only in its opening days, so dividing
   it by 365 would produce a misleading current-looking profile. Yongin EverLine
   is also absent from the 22-line seoulriders import.
-- **Newer data.** 2023 is downloaded, parses, and is not adopted — the blockers
-  are three blank section rows and a judgement about what a blank means, all in
-  [The 2023 yearbook parses, and three things stop it being
-  adopted](#the-2023-yearbook-parses-and-three-things-stop-it-being-adopted-2026-09-08).
-  2024 onward moved to the railstat portal and that download path is still not
-  found.
+- **Newer data.** ~~2023 is downloaded, parses, and is not adopted~~ — adopted
+  2026-09-08; the blockers were three blank section rows and a judgement about
+  what a blank means, all in [The 2023 yearbook, and everything the edition
+  change
+  broke](#the-2023-yearbook-and-everything-the-edition-change-broke-2026-09-08).
+
+  ~~2024 onward moved to the railstat portal and that download path is still not
+  found.~~ **The yearbook's path still is not, but two of its quantities no
+  longer need it**: KRIC's 철도통계 serves 노선별 × 차종별 and 역별 × 차종별
+  passenger counts monthly for **2022 through 2026**, keyless, via
+  `kric_stats.py`. That is not the whole yearbook — no 인거리, no 운행횟수, no
+  시설 — so the map's level and capacity checks still ride on the 2023 bundle.
+  See [용산's KTX split is
+  published](#용산s-ktx-split-is-published-on-a-site-the-yearbook-never-mentions-2026-09-08).
 - The honest caveat for the finished map: unlike japanriders, these segment
   values are **derived, not published**. That belongs on the page.

@@ -38,9 +38,15 @@ FAR_KM = 3.0            # a station further than this from any drawn line is off
 # target, so a rename that left the yearbook carrying both spellings adds up
 # rather than dropping one.
 #
-# 신경주 is the 2021 rename: OSM's 경주 node *is* 신경주, and the yearbook's own
-# 경주 row is 164 passengers of residue from the old station closing that
-# December. Not included: 서대구('22.3.31~), 506/일, which sits beside a plain
+# 신경주 is the 2021 rename, and OSM's 경주 node *is* 신경주. Against 2022 this
+# entry is what merges it, the yearbook's own 경주 row there being 164 passengers
+# of residue from the old station closing that December. Against 2023
+# `lines.STATION_ALIAS` has already done it by the time `station_flows()`
+# returns and this is a no-op -- kept because a bubble is a station total with no
+# line to attribute, so merging is unconditionally right here even where the
+# segment side has to be careful.
+#
+# Not included: 서대구('22.3.31~), 506/일, which sits beside a plain
 # 서대구 row of 2,185/일 -- a dated suffix usually marks an opening, but that
 # would leave the undated row describing a station that did not yet exist, so
 # what the pair means is unclear and merging them would invent a number.

@@ -100,3 +100,14 @@ Minya and Asyut are a fifth Christian — is exactly the resolution the rule wit
 I have no view I would defend against yours on this one. If it helps: option 2 is the one that
 follows this project's existing precedents most closely, and it is what I would do if the call
 were mine and I had to make it today.
+
+---
+
+## Ruled 2026-09-08 by Anita
+
+**Draw at governorate — option 1.** Her words: governorates are pretty big.
+
+She asked whether anything finer is even possible. It is not, and that is worth recording so
+nobody re-derives it: the Arab Barometer cuts by `Q1` Governorate and carries no finer
+geography, and CAPMAS deposited a 2017 census file whose 13 variables do not include religion
+at any tier. So governorate is simultaneously the ruling and the ceiling of the instrument.

@@ -266,13 +266,13 @@ const STR = {
         stubNote: 'Past the last platform. These are the passengers still aboard, riding on to join the {n}.',
         throughNote: 'Runs past {n} more stations no intercity train stops at.',
         noSvcTitle: 'No intercity service',
-        noSvcCommuter: 'Commuter rail only — {n} trains a day each way in 2022. Those riders are on the metro layer.',
-        noSvcNone: 'No trains ran on this section in 2022.',
+        noSvcCommuter: 'Commuter rail only — {n} trains a day each way in {y}. Those riders are on the metro layer.',
+        noSvcNone: 'No trains ran on this section in {y}.',
         unrecTitle: 'Riders not recorded',
-        unrecNote: 'Intercity trains do run here — {n} a day each way in 2022 — but the yearbook credits this line with almost no passengers, so there is no rider figure to draw.',
+        unrecNote: 'Intercity trains do run here — {n} a day each way in {y} — but the yearbook credits this line with almost no passengers, so this grey line carries no figure. The ITX-Cheongchun riding the same rails is drawn separately, from Korail station counts.',
         pubTitle: 'Published total, not reconstructed',
-        pubTip: 'Not reconstructed — the line\'s published 통과인원 for 2022, split evenly between the two directions.',
-        pubNote: 'No station on this line reports boardings its own trains can claim, so nothing here is cumulated. The figure is the line\'s 2022 통과인원 from the 철도통계연보, split evenly between the two directions. All of it rode this stretch, the only one with intercity trains on it ({n} a day each way).',
+        pubTip: 'Not reconstructed — the line\'s published 통과인원 for {y}, split evenly between the two directions.',
+        pubNote: 'No station on this line reports boardings its own trains can claim, so nothing here is cumulated. The figure is the line\'s {y} 통과인원 from the 철도통계연보, split evenly between the two directions. All of it rode this stretch, the only one with intercity trains on it ({n} a day each way).',
         legNoSvc: 'no rider figure',
         toggleStations: 'station bubbles',
         tipFlow: 'passengers / day',
@@ -284,10 +284,10 @@ const STR = {
         noGeom: 'segments.geojson has no geometry yet — {n} segments loaded, nothing to draw.',
         aboutTitle: 'about',
         aboutBody: `<h2>what this shows</h2><p>Every segment of Korea's intercity rail network, drawn at a thickness proportional to the passengers who ride it. A <b>line</b> is a named route in Korail's yearbook; a <b>segment</b> is the track between two consecutive stations on it.</p><p><b>Left click</b> to highlight a line, and click it again to drill into one segment. <b>Right click</b> goes straight to a segment. <b>Esc</b> clears.</p>
-<h2>these numbers are reconstructed</h2><p>Korea publishes no per-segment passenger figures. The <b>철도통계연보</b> gives boardings and alightings at each station, split by direction, and passenger totals per line — but nothing per segment.</p><p>Each line's segment loads are rebuilt from those station counts: order the stations along the track, then cumulate boardings minus alightings inward from the far terminus. Where a line junctions at both ends there is no clean anchor, so the level comes from the line's published 통과인원 instead, and only the shape comes from the station counts. Published train counts per section pin down where traffic can and cannot step on or off at a junction.</p><p>One line is drawn from the published total alone. 경원선 runs no train the station counts can be attributed to, so there is nothing to cumulate, and its 용산–청량리 figure is the line's 통과인원 for 2022 rather than a reconstruction. Its segments say so when you hover them.</p><p>So these are <b>derived figures, not measured ones</b>, and they are more reliable on some lines than others. The two directions are built from disjoint columns of the source, so where 하행 and 상행 disagree on a segment, the reconstruction is straining.</p>
+<h2>these numbers are reconstructed</h2><p>Korea publishes no per-segment passenger figures. The <b>철도통계연보</b> gives boardings and alightings at each station, split by direction, and passenger totals per line — but nothing per segment.</p><p>Each line's segment loads are rebuilt from those station counts: order the stations along the track, then cumulate boardings minus alightings inward from the far terminus. Where a line junctions at both ends there is no clean anchor, so the level comes from the line's published 통과인원 instead, and only the shape comes from the station counts. Published train counts per section pin down where traffic can and cannot step on or off at a junction.</p><p>One line is drawn from the published total alone. 경원선 runs no train the station counts can be attributed to, so there is nothing to cumulate, and its 용산–청량리 figure is the line's 통과인원 for {y} rather than a reconstruction. Its segments say so when you hover them.</p><p>So these are <b>derived figures, not measured ones</b>, and they are more reliable on some lines than others. The two directions are built from disjoint columns of the source, so where 하행 and 상행 disagree on a segment, the reconstruction is straining.</p>
 <h2>direction</h2><p><b>both</b> sums the two directions — the usual way a flow map reads. <b>down</b> (하행) is travel away from a line's 기점, <b>up</b> (상행) back towards it. Selecting a segment shows both.</p>
 <h2>line thickness scale</h2><p>The <b>log scale above</b> slider sets where thickness switches from linear to logarithmic. Set it <b>high</b> to separate the busy high-speed lines from each other. Set it <b>low</b> to see the quiet rural lines at all.</p>
-<h2>data sources</h2><p>Passengers: <b>철도통계연보</b> (Korail, 2022) — 역별 승하차, 선별 통과인원, 선구별 운행횟수.</p><p><b>Station bubbles</b> show boardings plus alightings per day, with area proportional to traffic. Intercity bubbles are published yearbook counts. Intracity bubbles use the station margins behind each city's weekday model; Seoul's coverage varies by operator, while Busan, Daejeon and Gwangju use published gates.</p><p>Geometry: OpenStreetMap named <code>railway=rail</code> ways, chained station to station and rescaled to the yearbook's 영업거리.</p><p>Method and its limits: <a href="https://github.com/anitagarden/maps">the project README</a>.</p>`,
+<h2>data sources</h2><p>Passengers: <b>철도통계연보</b> (Korail, {y}) — 역별 승하차, 선별 통과인원, 선구별 운행횟수.</p><p>Two commuter services are not in that yearbook and come from Korail's 광역수송 수송통계 board instead, which publishes boardings and alightings at every station of every 광역철도 line each month. Those are the Donghae Line between Bujeon and Taehwagang, and the ITX-Cheongchun between Yongsan and Chuncheon. Both are modelled the way the city lines are, and both are fitted to a trip length the yearbook publishes for the line.</p><p><b>Station bubbles</b> show boardings plus alightings per day, with area proportional to traffic. Intercity bubbles are published yearbook counts. Intracity bubbles use the station margins behind each city's weekday model; Seoul's coverage varies by operator, while Busan, Daejeon and Gwangju use published gates.</p><p>Geometry: OpenStreetMap named <code>railway=rail</code> ways, chained station to station and rescaled to the yearbook's 영업거리.</p><p>Method and its limits: <a href="https://github.com/anitagarden/maps">the project README</a>.</p>`,
     },
     ko: {
         h1: '한국 철도 수송량',
@@ -308,13 +308,13 @@ const STR = {
         stubNote: '마지막 정차역 이후 구간입니다. {n}으로 직결하기 위해 계속 승차 중인 이용객 수입니다.',
         throughNote: '일반열차가 정차하지 않는 역 {n}개를 통과합니다.',
         noSvcTitle: '일반열차 미운행',
-        noSvcCommuter: '광역전철만 운행 — 2022년 편도 1일 {n}회. 해당 이용객은 수도권 전철 레이어에 표시됩니다.',
-        noSvcNone: '2022년 열차 운행 없음.',
+        noSvcCommuter: '광역전철만 운행 — {y}년 편도 1일 {n}회. 해당 이용객은 수도권 전철 레이어에 표시됩니다.',
+        noSvcNone: '{y}년 열차 운행 없음.',
         unrecTitle: '이용객 수 자료 없음',
-        unrecNote: '일반열차는 운행합니다 — 2022년 편도 1일 {n}회. 다만 연보가 이 노선에 집계한 이용객이 거의 없어 이용객 수를 표시할 수 없습니다.',
+        unrecNote: '일반열차는 운행합니다 — {y}년 편도 1일 {n}회. 다만 연보가 이 노선에 집계한 이용객이 거의 없어 이 회색 선에는 수치가 없습니다. 같은 선로를 달리는 ITX-청춘은 한국철도공사의 역별 승하차 자료로 따로 그렸습니다.',
         pubTitle: '추정값이 아닌 공표 수치',
-        pubTip: '추정값이 아닙니다 — 철도통계연보의 2022년 선별 통과인원을 상하행으로 균등 배분한 값입니다.',
-        pubNote: '이 노선이 자기 열차의 이용객으로 집계할 수 있는 승하차 자료가 없어, 이 구간은 누적 추정을 하지 않았습니다. 표시된 값은 철도통계연보의 2022년 선별 통과인원을 상하행으로 균등 배분한 것입니다. 일반열차가 운행하는 구간은 여기뿐이므로(편도 1일 {n}회) 통과인원 전부가 이 구간을 이용했습니다.',
+        pubTip: '추정값이 아닙니다 — 철도통계연보의 {y}년 선별 통과인원을 상하행으로 균등 배분한 값입니다.',
+        pubNote: '이 노선이 자기 열차의 이용객으로 집계할 수 있는 승하차 자료가 없어, 이 구간은 누적 추정을 하지 않았습니다. 표시된 값은 철도통계연보의 {y}년 선별 통과인원을 상하행으로 균등 배분한 것입니다. 일반열차가 운행하는 구간은 여기뿐이므로(편도 1일 {n}회) 통과인원 전부가 이 구간을 이용했습니다.',
         legNoSvc: '이용객 수 자료 없음',
         toggleStations: '역별 승하차 원',
         tipFlow: '명/일',
@@ -326,10 +326,10 @@ const STR = {
         noGeom: 'segments.geojson에 아직 선형이 없습니다 — 구간 {n}개만 로드됨.',
         aboutTitle: '이 지도에 대하여',
         aboutBody: `<h2>무엇을 그린 지도인가</h2><p>한국 일반철도·고속철도의 모든 역간 구간을, 그 구간을 지나는 이용객 수에 비례한 굵기로 그렸다. <b>노선</b>은 철도통계연보의 선명, <b>구간</b>은 그 위 인접한 두 역 사이의 선로다.</p><p><b>왼쪽 클릭</b>으로 노선을 선택하고, 한 번 더 누르면 그 구간으로 들어간다. <b>오른쪽 클릭</b>은 바로 구간 선택. <b>Esc</b>로 해제.</p>
-<h2>이 수치는 복원한 값이다</h2><p>한국은 구간별 수송량을 공표하지 않는다. <b>철도통계연보</b>에는 역별 승하차(상·하행 구분)와 선별 통과인원이 있을 뿐, 구간별 수치는 없다.</p><p>여기 실린 값은 그 역별 수치로부터 되짚어 만든 것이다. 역을 선로 순서대로 놓고, 반대편 종점에서 안쪽으로 승차－하차를 누적한다. 양 끝이 모두 분기역인 노선은 기준으로 삼을 종점이 없어, 수준은 선별 통과인원에서 가져오고 모양만 역별 수치에서 얻는다. 분기역에서 어느 구간에 열차가 붙고 떨어질 수 있는지는 선구별 운행횟수로 고정했다.</p><p>한 노선만은 공표 수치를 그대로 썼다. 경원선은 역별 승하차로 집계할 수 있는 열차가 없어 누적할 것이 없으므로, 용산–청량리 값은 복원값이 아니라 2022년 선별 통과인원 그 자체다. 해당 구간에 커서를 올리면 그렇게 적혀 있다.</p><p>따라서 이 값들은 <b>측정값이 아니라 유도값</b>이며, 노선에 따라 신뢰도가 다르다. 상행과 하행은 원자료의 서로 다른 열에서 따로 만들어지므로, 두 값이 어긋나는 구간일수록 복원이 무리한 곳이다.</p>
+<h2>이 수치는 복원한 값이다</h2><p>한국은 구간별 수송량을 공표하지 않는다. <b>철도통계연보</b>에는 역별 승하차(상·하행 구분)와 선별 통과인원이 있을 뿐, 구간별 수치는 없다.</p><p>여기 실린 값은 그 역별 수치로부터 되짚어 만든 것이다. 역을 선로 순서대로 놓고, 반대편 종점에서 안쪽으로 승차－하차를 누적한다. 양 끝이 모두 분기역인 노선은 기준으로 삼을 종점이 없어, 수준은 선별 통과인원에서 가져오고 모양만 역별 수치에서 얻는다. 분기역에서 어느 구간에 열차가 붙고 떨어질 수 있는지는 선구별 운행횟수로 고정했다.</p><p>한 노선만은 공표 수치를 그대로 썼다. 경원선은 역별 승하차로 집계할 수 있는 열차가 없어 누적할 것이 없으므로, 용산–청량리 값은 복원값이 아니라 {y}년 선별 통과인원 그 자체다. 해당 구간에 커서를 올리면 그렇게 적혀 있다.</p><p>따라서 이 값들은 <b>측정값이 아니라 유도값</b>이며, 노선에 따라 신뢰도가 다르다. 상행과 하행은 원자료의 서로 다른 열에서 따로 만들어지므로, 두 값이 어긋나는 구간일수록 복원이 무리한 곳이다.</p>
 <h2>방향</h2><p><b>양방향</b>은 두 방향의 합 — 흐름 지도를 읽는 보통의 방식이다. <b>하행</b>은 기점에서 멀어지는 방향, <b>상행</b>은 기점으로 돌아오는 방향. 구간을 선택하면 둘 다 표시된다.</p>
 <h2>선 굵기 스케일</h2><p><b>로그 전환 기준</b> 슬라이더는 굵기가 선형에서 로그로 바뀌는 지점을 정한다. <b>높이면</b> 붐비는 고속선끼리의 차이가 벌어지고, <b>낮추면</b> 한산한 지방 노선도 눈에 보인다.</p>
-<h2>자료</h2><p>이용객: <b>철도통계연보</b>(한국철도공사, 2022) — 역별 승하차, 선별 통과인원, 선구별 운행횟수.</p><p><b>역 버블</b>은 하루 승차＋하차이며 넓이가 이용객에 비례한다. 일반철도 원은 연보 공표값이다. 도시철도 원은 각 평일 모형의 역별 합계로, 부산·대전·광주는 공표 게이트 수치이고 수도권은 운영기관에 따라 측정 범위가 다르다.</p><p>선형: OpenStreetMap의 선명이 붙은 <code>railway=rail</code>, 역과 역을 잇고 연보의 영업거리에 맞춰 보정.</p><p>방법과 그 한계: <a href="https://github.com/anitagarden/maps">프로젝트 README</a>.</p>`,
+<h2>자료</h2><p>이용객: <b>철도통계연보</b>(한국철도공사, {y}) — 역별 승하차, 선별 통과인원, 선구별 운행횟수.</p><p>광역전철 두 노선은 연보에 실리지 않아 한국철도공사 광역수송 수송통계 게시판의 월별 역별 승하차 자료로 그렸다. 동해선 부전－태화강과 ITX-청춘 용산－춘천이다. 두 노선 모두 도시철도 모형과 같은 방식으로 추정했고, 감쇠는 연보가 노선별로 공표한 평균 수송거리에 맞췄다.</p><p><b>역 버블</b>은 하루 승차＋하차이며 넓이가 이용객에 비례한다. 일반철도 원은 연보 공표값이다. 도시철도 원은 각 평일 모형의 역별 합계로, 부산·대전·광주는 공표 게이트 수치이고 수도권은 운영기관에 따라 측정 범위가 다르다.</p><p>선형: OpenStreetMap의 선명이 붙은 <code>railway=rail</code>, 역과 역을 잇고 연보의 영업거리에 맞춰 보정.</p><p>방법과 그 한계: <a href="https://github.com/anitagarden/maps">프로젝트 README</a>.</p>`,
     },
 };
 // device in Korea → default to Korean. Timezone is the cleanest "where am I"
@@ -765,6 +765,7 @@ const dataURL = (name) => `data/${name}?v=${DATA_VERSION}`;
 
 map.on('load', async () => {
     const fc = await fetch(dataURL('segments.geojson')).then(r => r.json());
+    applyYear(fc.year);
     // an EN name table, if one is ever built — otherwise the romanizer stands in
     try {
         const n = await fetch(dataURL('names_en.json')).then(r => r.ok ? r.json() : null);
@@ -831,6 +832,40 @@ map.on('load', async () => {
     } catch (e) {
         console.error(e);
         document.getElementById('t-sub').insertAdjacentHTML('beforeend', '<br>Daegu/Busan-Gimhae estimates unavailable');
+    }
+
+    // 동해선 광역전철, 부전-태화강. Korail's, not a city operator's, and drawn
+    // on the same metals as the intercity 동해선 above it -- the two are
+    // separate services on one railway, the way 경춘선 already is.
+    try {
+        const r = await fetch(dataURL('donghae_segments.geojson'));
+        if (!r.ok) throw new Error('Donghae commuter data: HTTP ' + r.status);
+        const donghae = await r.json();
+        Object.assign(LINES, donghae.line_meta);
+        for (const [ko, en] of Object.entries(donghae.station_names)) {
+            if (!NAMES.stations[ko]) NAMES.stations[ko] = en;
+        }
+        fc.features.push(...donghae.features);
+    } catch (e) {
+        console.error(e);
+        document.getElementById('t-sub').insertAdjacentHTML('beforeend', '<br>Donghae commuter estimates unavailable');
+    }
+
+    // ITX-청춘, 용산-춘천. The yearbook records almost none of these riders, so
+    // the intercity 경춘선 underneath is drawn grey; this is the same railway's
+    // traffic from Korail's own counts.
+    try {
+        const r = await fetch(dataURL('gyeongchun_segments.geojson'));
+        if (!r.ok) throw new Error('ITX-Cheongchun data: HTTP ' + r.status);
+        const itx = await r.json();
+        Object.assign(LINES, itx.line_meta);
+        for (const [ko, en] of Object.entries(itx.station_names)) {
+            if (!NAMES.stations[ko]) NAMES.stations[ko] = en;
+        }
+        fc.features.push(...itx.features);
+    } catch (e) {
+        console.error(e);
+        document.getElementById('t-sub').insertAdjacentHTML('beforeend', '<br>ITX-Cheongchun estimates unavailable');
     }
 
     const total = fc.features.length;
@@ -1420,6 +1455,22 @@ function fmtCompact(v) {
     return String(n);
 }
 
+// The yearbook edition is carried in segments.geojson rather than written into
+// the copy, so switching year does not leave a dozen strings claiming 2022.
+// Substituted in place, once, because these strings are read from the tooltip,
+// the info panel and the about panel and none of them should have to know.
+// Idempotent by construction: after the pass there is no {y} left to replace.
+let dataYear = '';
+function applyYear(y) {
+    if (!y) return;
+    dataYear = String(y);
+    for (const L of Object.keys(STR))
+        for (const k of Object.keys(STR[L]))
+            if (typeof STR[L][k] === 'string')
+                STR[L][k] = STR[L][k].split('{y}').join(dataYear);
+    applyLang();      // the about panel was built before the year was known
+}
+
 function applyLang() {
     const S = STR[lang];
     document.title = S.h1;
@@ -1445,8 +1496,8 @@ function applyLang() {
         ? '<h2>부산: 실험적 추정</h2><p>1–4호선은 2026년 7월 월–금 역별 승하차를 바탕으로 추정했다. OD는 관측값이 아니다. 이동시간에 따른 중력모형을 역별 합계에 맞추고, 환승 5분을 포함한 최단경로에 배정했다. 10·20·30분 감쇠 가정 중 20분을 표시한다. 가정에 따라 구간 수치가 크게 달라지며 툴팁 범위는 신뢰구간이 아니다. 동해선 전철은 제외했다. 부산김해경전철은 별도의 자료 기간과 모형으로 표시한다. 선형은 역 사이 직선이다.</p>'
         : '<h2>Busan: experimental estimates</h2><p>Lines 1–4 use July 2026 Monday–Friday station gate counts. <b>OD pairs are estimated, not observed.</b> A travel-time gravity model is balanced to station totals and routed by shortest time with a five-minute transfer penalty. The map uses a 20-minute decay scale; 10- and 30-minute scenarios give the range in segment tooltips. The median range spans 39% of the central estimate. These are assumption tests, not confidence intervals or independent validation. Donghae suburban rail is excluded; Busan–Gimhae LRT appears as a separate model with a different reference period. Geometry is straight between stations. <a href="https://www.data.go.kr/data/3057229/fileData.do">Gate counts</a> · <a href="https://www.data.go.kr/data/3033564/fileData.do">Distances and times</a></p>');
     document.getElementById('aboutpanel').insertAdjacentHTML('afterbegin', lang === 'ko'
-        ? '<h2>수도권 도시철도</h2><p>seoulriders가 포함하는 22개 노선의 모형 평일 통행량이다. 2023년 OD를 평일 승하차에 맞추고 열차에 배정한 뒤 시간대와 양방향을 합산했다. 급행 이용객도 통과하는 각 완행 역간 구간에 합산했다. 일반철도는 2022년 연평균이므로 기준일이 다르다. 역 원은 평일 OD의 출발·도착 합계이며 환승 때 다시 세지 않는다. 도시철도 방향은 역 코드 순서(2호선 순환 구간 포함)를 따른다. 일부 선형은 직선이다.</p>'
-        : '<h2>Seoul metropolitan rail</h2><p>All 22 lines covered by seoulriders show <b>modelled weekday</b> flows: 2023 OD pairs reweighted to weekday counts, assigned to trains, then summed across hours and directions. Express riders are added to every intermediate local segment they pass. Intercity figures are <b>2022 annual daily averages</b>; the periods differ. Station bubbles show the weekday OD station margins, counting each trip once at its origin and destination rather than again at transfers. Metro directions follow station-code order, including the Line 2 ring closure. Some track shapes fall back to straight lines.</p>');
+        ? '<h2>수도권 도시철도</h2><p>seoulriders가 포함하는 22개 노선의 모형 평일 통행량이다. 2023년 OD를 평일 승하차에 맞추고 열차에 배정한 뒤 시간대와 양방향을 합산했다. 급행 이용객도 통과하는 각 완행 역간 구간에 합산했다. 일반철도는 ${dataYear}년 연평균이므로 기준일이 다르다. 역 원은 평일 OD의 출발·도착 합계이며 환승 때 다시 세지 않는다. 도시철도 방향은 역 코드 순서(2호선 순환 구간 포함)를 따른다. 일부 선형은 직선이다.</p>'
+        : '<h2>Seoul metropolitan rail</h2><p>All 22 lines covered by seoulriders show <b>modelled weekday</b> flows: 2023 OD pairs reweighted to weekday counts, assigned to trains, then summed across hours and directions. Express riders are added to every intermediate local segment they pass. Intercity figures are <b>${dataYear} annual daily averages</b>; the periods differ. Station bubbles show the weekday OD station margins, counting each trip once at its origin and destination rather than again at transfers. Metro directions follow station-code order, including the Line 2 ring closure. Some track shapes fall back to straight lines.</p>');
     const nt = document.getElementById('notice');
     if (nt.classList.contains('show')) nt.textContent = S.noGeom.replace('{n}', noGeomCount);
     buildLegend();

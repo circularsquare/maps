@@ -86,6 +86,11 @@ Almost everything here is reversible, and the record is the deliverable. **These
   date, and what came back.
 - Every word of `note_public`, `how`, `fill`, `grain`, `gap`. Read the field docstring at the top
   of `countries.py` first; the voice rules there are hers and are asserted at import.
+- `gap_share` beside `gap`. **Run `python tools/gap_share.py` instead of working it out** — it
+  computes the share exactly wherever the hole is a column the census printed, and `--write`
+  fills it in. Hand-write it only for people who were never in any table (an age cutoff, a
+  region nobody enumerated), and leave it out entirely where nobody has quantified them: it is
+  the width of a segment on the legend's composition bar (spec §10.4), so a guess is drawn.
 - Running things. In this directory, **run anything you estimate under ~3 hours yourself** rather
   than handing it to Anita ([[feedback_religiondots_run_freely]]). Background the slow ones,
   `tiles.py` included, and keep working while they go.
@@ -191,7 +196,8 @@ something; `spec.md` §12 is meant to be added to.
 - `sources/<cc>.md` written, and a §9-series section appended to `sources.md` (**check the
   existing headings immediately before you write one** — letters are claimed first-come and there
   are already two §9ac's).
-- The `countries.py` entry with `note_public` and `gap=`, and `python tools/check_md.py` clean.
+- The `countries.py` entry with `note_public` and `gap=`, `python tools/gap_share.py <cc>` run
+  and its figure written if it found one, and `python tools/check_md.py` clean.
 - `python tools/built_countries.py --check` naming nothing.
 - The row moved to *Drawn* in `queue.md`, or taken out.
 - `handoff/<cc>.md` deleted if you resumed one.

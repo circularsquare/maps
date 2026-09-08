@@ -73,7 +73,12 @@ Run in order.  Every step, every time, even when only one country changed.
    4. add the entry to countries.py        # counts=, place=, place_weight=, note_public=
                                            #   AND how=, grain=, fill= if anything is
                                            #   derived, gap= if part of the country is not
-                                           #   drawn.  The last four are the block under
+                                           #   drawn, and gap_share= beside it, which
+                                           #   `python tools/gap_share.py --write` fills
+                                           #   in from the normalized file wherever the
+                                           #   hole is a column the census printed
+                                           #   (spec 10.4 draws it on the legend's bar).
+                                           #   The last four are the block under
                                            #   the title (spec 7c/7d): what kind of data
                                            #   this is, how fine, what the filling-in drew
                                            #   on, and who is left out.  A blank on a dot
@@ -342,6 +347,39 @@ Run in order.  Every step, every time, even when only one country changed.
                                      #   30,832,019: GSS publishes no "not stated" cell and
                                      #   drops the 0.26% who did not answer.  NOT scaled up
                                      #   (Chile's rule).  Drawn: 99.74%.
+
+    python sources/mn.py --fetch     # Mongolia, 21 PDFs, ~330 MB, a few minutes. NSO
+    python sources/mn_geo.py --fetch #   PHC 2020, 6 categories on 20 of 22 aimags.
+    python sources/mn_grid.py --fetch#   THERE IS NO NATIONAL TABLE AND NO ABSOLUTE
+                                     #   FIGURE ANYWHERE.  The national report's religion
+                                     #   chapter has NO geography (sex, age, ethnicity,
+                                     #   national only) and neither does 2010's; the aimag
+                                     #   figures are in TWENTY-TWO SEPARATE per-aimag
+                                     #   volumes on downloads.1212.mn, which has no index.
+                                     #   Nineteen share a filename pattern; three do not
+                                     #   and came from a Wayback CDX sweep of the retired
+                                     #   1212.mn/BookLibraryDownload.ashx?url= links,
+                                     #   whose url= parameter IS the static filename.
+                                     #   `Khentii.pdf` is a TRAP: 200, valid, and the 2010
+                                     #   census in a non-Unicode font.  The 2020 one is
+                                     #   CENSUS-2020_KHENTII_MAIN_REPORT.pdf.
+                                     #   EVERY COUNT IS RECONSTRUCTED from two chained
+                                     #   percentage tables (share religious, then share of
+                                     #   the religious by type) times the 15+ population
+                                     #   out of the ENGLISH national report's appendix
+                                     #   table 1.1.  Universe is ages 15+ and is NOT
+                                     #   scaled up (Chile's rule).
+                                     #   NOTHING IS FOUND BY ITS CAPTION -- 22 provincial
+                                     #   offices agree on no table number, caption, column
+                                     #   order or layout, so each table is located by an
+                                     #   ARITHMETIC IDENTITY (shares summing to 100.0).
+                                     #   sources/mn.md 8 has the list; spec 12 has why.
+                                     #   Licensed by the national reconstruction landing
+                                     #   within 0.15 points of NSO's published shares on
+                                     #   all six categories.
+                                     #   Darkhan-Uul and Dundgovi are NOT drawn: their
+                                     #   volumes have the tables as scanned IMAGES.
+                                     #   Drawn: 2,067,841 adults, 20 aimags.
 
     python sources/ke.py --fetch     # Kenya, one 4.9 MB PDF, seconds.  KNBS KPHC 2019
                                      #   Volume IV, TABLE 2.30 ON ONE PAGE: 13 categories

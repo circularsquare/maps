@@ -1,4 +1,9 @@
-"""PART_TYPES plumbing: a type a line runs over only a span of its length.
+"""PART_TYPES and TYPE_HOME plumbing: which of a station's rows a line may claim.
+
+The two are opposite halves of one question and are tested together because they
+compose. A span says how far along a line a train type's *track* runs; TYPE_HOME
+says whose the *rows* at a shared platform are, where several lines call and only
+one of them ran the train.
 
 These read the yearbook but not OSM: about a minute, nearly all of it openpyxl
 on the passenger workbook, against the minutes build.py and solve.py need for
@@ -50,12 +55,46 @@ class PartTypesTest(unittest.TestCase):
     def test_span_stations_are_on_the_line(self):
         # The span is hand-listed because nothing published orders a line's
         # stations, so the one thing worth checking is that it names real ones.
+        #
+        # A line's own two ends would need the exemption `membership` makes --
+        # the roster gives each station one *home* line, so a junction terminus
+        # is on somebody else's roster while still being where this line stops,
+        # as 익산 is for 장항선. No span reaches an end today, so the plain
+        # test is the strict one and stays that way until one does.
         for canon, (_, span) in LN.PART_TYPES.items():
             roster = self.table[canon]["roster"]
             self.assertTrue(roster, "%s has no roster to check against" % canon)
             self.assertLessEqual(span, roster,
                                  "%s: %s not on the line" % (canon,
                                                              span - roster))
+
+    def test_type_home_bars_only_the_named_line(self):
+        # TYPE_HOME drops a row rather than moving it, so every bar has to leave
+        # the traffic with the line it names or those passengers vanish. Both
+        # halves are checked here because only the pair is safe.
+        for nm, byk in LN.TYPE_HOME.items():
+            for k, keeper in byk.items():
+                self.assertTrue(
+                    any(self.table[keeper]["flows_by_kind"].get(k, {})
+                        .get(nm, ())),
+                    "%s at %s went nowhere: %s is meant to keep it"
+                    % (k, nm, keeper))
+                for canon, spec in self.table.items():
+                    if canon == keeper:
+                        continue
+                    self.assertNotIn(
+                        nm, spec["flows_by_kind"].get(k, {}),
+                        "%s at %s still reaches %s" % (k, nm, canon))
+
+    def test_a_barred_type_keeps_the_line_its_other_traffic(self):
+        # The bar is per train type at one platform, never the whole row. 중앙선
+        # loses 경주's KTX and SRT and keeps its 무궁화 there, which is the
+        # traffic its own 17 trains a day on 영천-모량 actually carry.
+        fk = self.table["중앙선"]["flows_by_kind"]
+        self.assertTrue(any(fk["무궁화"].get("경주", ())),
+                        "중앙선 lost 경주's 무궁화 as well")
+        for k in ("KTX", "SRT"):
+            self.assertNotIn("경주", fk.get(k, {}))
 
     def test_alias_lands_on_a_station_that_exists(self):
         # A yearbook spelling that matches no chain is traffic that reaches no

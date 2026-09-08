@@ -22,15 +22,19 @@ import openpyxl
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 D = os.path.join(HERE, "data")
-# Which edition of the 철도통계연보 everything reads. 2022 is what the map is
-# built from and what every figure in README.md refers to, so it stays the
-# default and moving year is a deliberate act rather than a side effect of
-# dropping a file in `data/`. Set KOREARIDERS_YEARBOOK to a zip path to run a
-# different edition -- the readers cope with both, see `_member_key` below and
-# `frequency.SEP`.
+# Which edition of the 철도통계연보 everything reads. **2023 as of 2026-09-08**;
+# it was 2022 until then and much of README.md still quotes 2022 figures, which
+# are marked where they matter. The readers cope with both -- see `_member_key`
+# below and `frequency.SEP` -- so
+#
+#     KOREARIDERS_YEARBOOK=data/korail_yearbook_2022_excel.zip python solve.py
+#
+# reproduces the older map exactly. Anything that quotes the year takes it from
+# `year()` rather than hardcoding it, so switching does not leave the page or
+# the reports describing themselves wrongly.
 YEARBOOK = os.environ.get(
     "KOREARIDERS_YEARBOOK",
-    os.path.join(D, "korail_yearbook_2022_excel.zip"))
+    os.path.join(D, "korail_yearbook_2023_excel.zip"))
 
 
 def year():
@@ -396,6 +400,54 @@ PART_TYPES = {
               {"나주", "다시", "함평", "무안", "몽탄", "일로", "임성리", "목포"}),
 }
 
+# The inverse of PART_TYPES: a station where a train type belongs to exactly one
+# of the lines calling there, whatever the others declare. `STATION_HOME` says
+# that of a whole row; this says it of one type at one platform.
+#
+# 경주 is the case that needs it, and it only became one when 신경주 was aliased
+# on. Three lines call there and all three declare KTX and SRT -- 중앙선 and
+# 동해선 because they really do carry high-speed services, but not within tens of
+# km of 경주, and `6. 운전` says exactly where:
+#
+#     중앙선  영주-안동    고속열차 9      <- its high-speed ends at 안동
+#     중앙선  안동-영천    무궁화 5
+#     중앙선  영천-모량    무궁화 17, 새마을 1
+#     동해선  북울산-신경주 무궁화 15, 새마을 1
+#     동해선  신경주-모량   (no train of any type)
+#     동해선  모량-부조    고속열차 16     <- the 포항 KTX, off 경부고속선 at
+#     동해선  부조-포항    고속열차 16        건천연결선, never through 경주
+#
+# So the only high-speed trains at that platform are 경부고속선's, and the
+# 4.14M KTX and SRT a year there are its passengers outright.
+#
+# Without this the 신경주 alias is a net harm rather than a fix. Measured: the
+# alias alone moved 3,015 riders a day onto 중앙선 경주-아화 and carried the
+# rise the length of the line to 안동 and beyond, while 경부고속선 동대구-경주
+# gained 47. The share prior does not stop it the way README.md's "The share
+# prior already knows a branch line is small" found it stopping 경북선 and
+# 대구선: those lines are a fraction of a per cent of their junction's traffic,
+# where 중앙선's 11.75M 통과인원 against 경부고속선's 100.69M is a tenth of it,
+# and the fit then moved the share well past that prior.
+#
+# This is deliberately one station and not the general per-type gate, which was
+# built and rejected the same day for having no measurable effect anywhere the
+# prior already handled and for overturning curated attributions at 광주송정,
+# 익산 and 순천 where it did. Nothing here is curated: 경주 had no high-speed
+# attribution at all until the alias created one.
+#
+# 강릉 is the second entry and is there for the 광주송정 reason rather than a
+# 운전 one. 영동선's KTX span reaches it, because the eight 고속열차 a day on
+# 동해-청량신호소 really do run to 강릉 -- but 강릉 is where 강릉선 *ends*, and
+# its 2.78M KTX a year are that line's entire traffic against 영동선's eight-train
+# tail of it. Sharing a terminus's whole ridership on those terms is the theft
+# 호남선 is kept away from at 광주송정. The riders who continue to 동해 are not
+# lost by this: they arrive on 영동선 as the junction step at 강릉.
+#
+#     station -> {train type: the only line whose trains carried them}
+TYPE_HOME = {
+    "경주": {"KTX": "경부고속선", "SRT": "경부고속선"},
+}
+
 
 def _member_key(name):
     """A member name reduced to something stable across editions.
@@ -427,9 +479,17 @@ def _member_key(name):
     return "%s/%s" % (part, base)
 
 
-def _open(member):
+def _open(member, book=None):
+    """The member's bytes, out of `book` or the current edition.
+
+    `book` exists for the one reader that must not follow `YEARBOOK`:
+    `yearbook_extra.py` reads the 도시철도 and 광역철도 volumes, and those went
+    `.xlsb` in the 2023 bundle, which openpyxl cannot open at all. Left to
+    follow the edition it fails with "File contains no valid workbook part",
+    which reads as a corrupt download rather than a format change.
+    """
     want = _member_key(member)
-    with zipfile.ZipFile(YEARBOOK) as z:
+    with zipfile.ZipFile(book or YEARBOOK) as z:
         for i in z.infolist():
             n = i.filename
             if not (i.flag_bits & 0x800):
@@ -458,9 +518,9 @@ def _open(member):
 # running to 53,809. Read-only worksheets never look, so `values_only` rows are
 # unaffected. A caller that needs a font or a number format has to open the
 # workbook the slow way.
-def _book(member):
+def _book(member, book=None):
     """The workbook, opened read-only with its stylesheet left out."""
-    src = zipfile.ZipFile(_open(member))
+    src = zipfile.ZipFile(_open(member, book))
     buf = io.BytesIO()
     with zipfile.ZipFile(buf, "w", zipfile.ZIP_STORED) as dst:
         for i in src.infolist():
@@ -503,9 +563,40 @@ STATION_ALIAS = {
     "서대구('22.3.31~)": "서대구",
     # 2023 disambiguates a name 2022 left bare. 판교(충남) is 장항선's, and is
     # the one the chain means; 판교(경기) is the 경강선 station near Seoul, on no
-    # chain here, and must stay separate -- aliasing it would be the 신경주 trap.
+    # chain here, and must stay separate. Two stations 200 km apart that happen
+    # to share a stem, which is the opposite of the 신경주 case below.
     "판교(충남)": "판교",
 }
+
+# One station under two names in the *same* edition, and the largest single hole
+# `check_orphans.py` finds. 신경주 became 경주 when the old 경주역 closed in
+# December 2021, and the 2023 tables took the new name up unevenly: sheet 9
+# files 2.15M KTX a year under 경주 and sheet 10 files 1.99M SRT under 신경주.
+# Same platform, same trains. Unmerged, the SRT row reaches no line at all.
+#
+# **Only safe from 2023 on, and this file used to say it was never safe.** The
+# alias rewrites a flow key, so it is right exactly when OSM's 경주 node sits on
+# the chain of the line those trains ran on -- 경부고속선's. Whether it does
+# depends on the roster, since the roster is what names a chain's stops:
+#
+#   2023  `8. 시설` says 경주 and so does OSM, so 경부고속선's chain has 23 stops
+#         with 경주 between 동대구 and 울산, and the SRT land on the high-speed
+#         leg where they belong.
+#   2022  the roster still says 신경주, which OSM has no node for, so 경부고속선
+#         skips the station outright -- 22 stops, 동대구 straight to 울산 -- and
+#         the 경주 node is on 중앙선's and 동해선's chains alone. Aliasing there
+#         would hand 3.6M of KTX and SRT to two lines whose trains never carried
+#         them. That is the trap README.md's Geometry section describes, and it
+#         is still live against 2022.
+#
+# Both editions were checked by building the chains under each rather than
+# reasoned about, and the stop counts above are what the check printed.
+#
+# `>=` rather than `== 2023` because the rename is permanent. A later edition
+# either spells both rows 경주, in which case this key never occurs and the
+# entry is inert, or repeats 2023's split and needs exactly this.
+if (year() or 0) >= 2023:
+    STATION_ALIAS["신경주"] = "경주"
 
 
 # One name, two stations, and the operator cannot separate them because both are
@@ -706,11 +797,23 @@ def resolve():
         declared = TYPES.get(canon, ALL_TYPES)
         part_kinds, part_stations = PART_TYPES.get(canon, ((), None))
         kinds = list(declared) + [k for k in part_kinds if k not in declared]
+
+        def ours(st, k):
+            """Is this station's traffic of this type on this line's trains?
+
+            Both filters drop a row rather than move it, so a type barred here
+            has to be somebody's at the same platform or its passengers vanish
+            -- see TYPE_HOME, whose every entry names the line that takes them.
+            """
+            if part_stations is not None and k in part_kinds \
+                    and st not in part_stations:
+                return False
+            return TYPE_HOME.get(st, {}).get(k, canon) == canon
+
         lf = {}
         for k in kinds:
             for st, v in by_type.get(k, {}).items():
-                if part_stations is not None and k in part_kinds \
-                        and st not in part_stations:
+                if not ours(st, k):
                     continue
                 p = lf.get(st, (0.0, 0.0, 0.0, 0.0))
                 lf[st] = tuple(p[i] + v[i] for i in range(4))
@@ -722,10 +825,7 @@ def resolve():
         for k in kinds:
             if k not in by_type:
                 continue
-            d = by_type[k]
-            if part_stations is not None and k in part_kinds:
-                d = {st: v for st, v in d.items() if st in part_stations}
-            lfk[k] = d
+            lfk[k] = {st: v for st, v in by_type[k].items() if ours(st, k)}
         bad_a, bad_b = (bad_anchor(a, roster, lf), bad_anchor(b, roster, lf))
         # Put the usable end last, since that is the one the anchor reads. That
         # can leave the chain running 종점 -> 기점, i.e. against 하행, and the

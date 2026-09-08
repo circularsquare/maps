@@ -231,7 +231,9 @@ start there.
   the widest range of anything here: **44.1% of Bukit Timah against 11.5% of Woodlands**,
   twelve kilometres apart. Bukit Timah, Tanglin and River Valley are the private-housing
   districts; they are also where `no religion` runs near 30% against a national 20.0%, and
-  where Taoism falls to 2-3% against 8.8%.
+  where Taoism falls to between 2% and 5% against 8.8% (River Valley 2.08%, Tanglin 3.22%,
+  Bukit Timah 4.79%; the fourth-lowest of the 31 is Downtown Core at 4.01%, which is not a
+  private-housing district, so this trio is not the bottom three).
 * **Hougang has the highest Catholic share of its own Christians**, 43.5% against a national
   37.1%, with Ang Mo Kio and Bedok next. The Church of the Nativity of the Blessed Virgin Mary
   at Hougang dates from 1853 and served a Teochew Catholic village; that is the obvious
@@ -281,8 +283,10 @@ for.
 say that in Bukit Timah, Tanglin and River Valley `Taoism falls to 2-3%`. River Valley is 2.08%
 and Tanglin 3.22%, but **Bukit Timah is 4.79%**, and it is only the fourth-lowest of the 31
 units; Downtown Core at 4.01% sits between them and is not one of the three named. The honest
-phrasing for that set is 2 to 5%. Left unedited on purpose, because it is the builder's prose in
-a reader-facing note and this pass is read-mostly, but it should be corrected in both places.
+phrasing for that set is 2 to 5%. Left unedited by the review because it is the builder's prose
+in a reader-facing note and that pass was read-mostly. **Corrected in both places 2026-09-08**,
+to *"between 2 and 5%"* in `note_public` and to the same with the three figures spelled out in
+section 8; the four shares above all reproduce from `data/normalized/sg.csv`.
 
 **The flatness claim is true but is doing more work than the data supports.** Section 8 and the
 note open with the map being flatter than almost anything else here `and that is policy`,

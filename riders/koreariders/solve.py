@@ -323,10 +323,19 @@ class Network(object):
         # `write_geojson` draws it from the published total instead, since with
         # no allocation left there is nothing to cumulate. Adding the second
         # without the third would have drawn 경원선 at nil.
+        #
+        # A line every one of whose section rows is *blank* is not evidence of
+        # anything and must not land here. 정선선 in 2023 is the case: its one
+        # row is empty, `claimable` duly returns nothing for it, and without
+        # this guard the line is declared to have no claimable service, takes no
+        # station allocation, and draws nil the length of it -- while its own
+        # stations report 20,256 riders. Untyped has to be read off rows that
+        # actually report trains, which is what makes it a finding about 경원선
+        # rather than about the sheet's gaps.
         self.untyped = set()
         for L in self.lines:
             secs = FQ.by_line().get(L)
-            if secs is None:
+            if not secs or not any(runs for _, _, runs in secs):
                 continue
             kinds = table[L]["types"]
             if not any(FQ.claimable(runs, kinds) for _, _, runs in secs):
@@ -970,7 +979,8 @@ def main():
             print("   %-11s %-9s -> %-9s %-9s %11.0f %11.0f   ratio %.2f"
                   % (L, end, Mm, stop, a, b, (hi / lo) if lo > 1e-9 else 0.0))
 
-    write_geojson(rows, corridors, table, ho_step, net.untyped)
+    write_geojson(rows, corridors, table, ho_step, net.untyped,
+                  {L: set(v) for L, v in net.notrain.items()})
 
 
 def split_at_junction(pts, target):
@@ -1077,7 +1087,8 @@ def merge_unserved(feats, table):
     return out
 
 
-def write_geojson(rows, corridors, table=None, ho_step=None, untyped=()):
+def write_geojson(rows, corridors, table=None, ho_step=None, untyped=(),
+                  notrain=None):
     """One LineString per segment, sliced out of the line's own corridor.
 
     `density` is passengers per km per day over the segment, which is what
@@ -1157,17 +1168,22 @@ def write_geojson(rows, corridors, table=None, ho_step=None, untyped=()):
         # An untyped line the sheet *does* report: put the published total on
         # the sections that run intercity trains, since those are the only
         # sections its passengers can have been on.
-        published, inter = None, None
-        if (r["line"] in untyped and not unrecorded and svc
-                and spec.get("passing", 0) > 0 and peak > 0):
+        # Which sections run an intercity train of *any* kind. This is the
+        # right question for placing a published total and for quoting trains a
+        # day, and it is not the same as `svc`, which counts only the line's own
+        # declared types. 경원선 happened not to care -- 26 of 용산-청량리's 44
+        # trains are ITX-청춘, which maps onto one of its types -- but 경의선 in
+        # 2023 runs 23 KTX and nothing conventional, so counting its own types
+        # gives zero everywhere and the line vanishes off the map rather than
+        # being drawn at the 2.09M the yearbook credits it with.
+        inter = FQ.intercity_along(r["line"], order) if svc is not None else None
+        if inter is not None and spec.get("reversed"):
+            inter = inter[::-1]
+        ipeak = max(inter) if inter else 0
+        published = None
+        if (r["line"] in untyped and not unrecorded
+                and spec.get("passing", 0) > 0 and ipeak > 0):
             published = spec["passing"] / 2.0
-            # The note on those segments quotes trains a day, and it has to
-            # quote what runs rather than what the line's own types cover --
-            # 26 of 용산-청량리's 44 are ITX-청춘 and the other 18 are the
-            # 고속열차 the 통과인원 is actually counting.
-            inter = FQ.intercity_along(r["line"], order)
-            if inter is not None and spec.get("reversed"):
-                inter = inter[::-1]
         shape = corridors.get(r["line"]) or {}
         poly, cum, raw = shape.get("poly"), shape.get("cum"), shape.get("raw", {})
         for i in range(len(r["down"])):
@@ -1184,7 +1200,8 @@ def write_geojson(rows, corridors, table=None, ho_step=None, untyped=()):
                 flat += 1
             km = b[0] - a[0]
             dn, up = float(r["down"][i]), float(r["up"][i])
-            live = published is not None and i < len(svc) and svc[i][0] > 0
+            live = (published is not None and inter is not None
+                    and i < len(inter) and inter[i] > 0)
             if published is not None:
                 dn = up = published if live else 0.0
 
@@ -1196,17 +1213,31 @@ def write_geojson(rows, corridors, table=None, ho_step=None, untyped=()):
                     "down": round(d), "up": round(u),
                     "daily": round(daily), "density": round(daily),
                 }
-                if svc is not None and i < len(svc) and svc[i][0] == 0:
+                # `commuter` and `none` are not equally safe. 전동차 > 0 is a
+                # positive count, so the row was filled in and the intercity
+                # zero beside it is a real zero. `none` is the whole row blank,
+                # and a blank is only a zero where the 승하차 sheet agrees --
+                # the same test the fit uses, see `Network.notrain`. Without
+                # this the 2023 build drew 동해선's tail at a sensible 414-506 a
+                # day and labelled it "no trains ran on this section", having
+                # just decided that claim was false.
+                trusted = notrain is None or i in notrain.get(r["line"], ())
+                # A segment carrying a published figure is not a segment
+                # without a rider figure, whatever the section counts say about
+                # this line's own train types. 경의선 in 2023 is the case: its
+                # 서울-능곡 runs 23 KTX and 18 전동차 and no conventional train,
+                # so the commuter test fires on a segment the line's whole
+                # 통과인원 was just placed on. The published level wins.
+                if live:
+                    props["level"] = "passing"
+                    props["intercity_trains"] = inter[i]
+                elif (svc is not None and i < len(svc) and svc[i][0] == 0
+                        and (svc[i][1] > 0 or trusted)):
                     props["service"] = "commuter" if svc[i][1] > 0 else "none"
                     props["commuter_trains"] = svc[i][1]
                 elif unrecorded and svc is not None and i < len(svc):
                     props["service"] = "unrecorded"
                     props["intercity_trains"] = svc[i][0]
-                elif live:
-                    props["level"] = "passing"
-                    props["intercity_trains"] = (inter[i] if inter is not None
-                                                 and i < len(inter)
-                                                 else svc[i][0])
                 if extra:
                     props.update(extra)
                 feats.append({"type": "Feature", "properties": props,

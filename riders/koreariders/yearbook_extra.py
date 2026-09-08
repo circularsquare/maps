@@ -229,9 +229,22 @@ def urban_peak_segments(year=2022):
     return out
 
 
+# The 도시철도 and 광역철도 volumes are `.xlsb` from the 2023 bundle on, and
+# openpyxl cannot open those at all -- it raises "File contains no valid
+# workbook part", which reads as a corrupt download rather than a format change.
+# So this module is pinned to 2022 rather than following `lines.YEARBOOK`. It
+# was not, and after the map moved to 2023 on 2026-09-08 `check_cities.py` died
+# on import for a fortnight of sessions before anyone ran it.
+#
+# Pinned to the file, not to `year()`: a later edition that goes back to xlsx
+# should be adopted deliberately, by changing this line, not silently.
+BUNDLE_2022 = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                           "data", "korail_yearbook_2022_excel.zip")
+
+
 def urban_book():
     """The 도시철도 수송실적 workbook, read-only and without its stylesheet."""
-    return LN._book(URBAN)
+    return LN._book(URBAN, BUNDLE_2022)
 
 
 def main():

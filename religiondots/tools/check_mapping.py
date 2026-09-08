@@ -55,6 +55,12 @@ DEFAULT_LEVELS = {# Austria's drawn tier is 2,358 Gemeinden PLUS Vienna's 23 Gem
                   # fifth of the country, missing with nothing looking wrong.
                   "at": ["gemeinde", "gemeindebezirk"],
                   "gh": ["district", "submetro"],
+                  # Armenia is the other failure mode: the drawn tier is the ELEVEN marzes,
+                  # and am.csv also carries the national religion-by-ethnicity block, which
+                  # is twelve ethnicities and therefore wins "the level with the most
+                  # units". Tallying it reports the country correctly by accident and the
+                  # geography not at all.
+                  "am": ["marz"],
                   # Indonesia's drawn tier is decided per unit, not by rule: a regency's
                   # kecamatan REPLACE it where they sum to it exactly in EVERY
                   # category (403 of 492) and the regency is drawn where they

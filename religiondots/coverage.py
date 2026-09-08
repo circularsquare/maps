@@ -171,8 +171,14 @@ def coverage():
     # one dot each, and the gap surfaced as two failures in a country that had passed.
     # **A coverage list keyed to a country's SOURCES cannot be maintained by watching the
     # map** — anything that changes rounding can expose or hide an entry.
+    # Finland, added 2026-09-08 (§9by). It failed the check on its first coverage run, which
+    # is the outcome this list is supposed to produce: nine nodes drew dots that fi2024.py's
+    # MAP cannot express, all of them the foreign half's — Shia, Buddhism, Hinduism, Alevism
+    # and four national Orthodox churches. Italy's entry was missed here for weeks because
+    # nothing it added happened to round up to a dot; Finland's 271,000 foreign residents are
+    # concentrated enough that they did, so the omission failed loudly the same day.
     for cc, other in (("es", "other.es"), ("gr", "other.gr"), ("fr", "other.fr"),
-                      ("it", "other.it")):
+                      ("it", "other.it"), ("fi", "other.fi")):
         if cc in out:
             out[cc] |= origin.nodes(other)
     return out

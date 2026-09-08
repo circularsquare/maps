@@ -94,9 +94,31 @@ The four groups are far from alike, which is why this buys anything at all:
 | Anglican/Protestant | 0.11% | 0.53% | 7.76% |
 | not stated | 13.7% | 28.8% | 29.3% |
 
-So across the 396 communities the allocation produces Orthodoxy from **62% to 82%**, Islam from
-**0.9% to 7.8%**, Buddhism from 0.3% to 3.6%, Roman Catholicism from 0.6% to 4.6%. That is real
-geography, and it is the geography of who moved to Cyprus.
+So across the 396 communities the allocation produces real spread. **Corrected 2026-09-08**;
+what stood here quoted a percentile band as though it were a min and a max, and did not use the
+same band or the same denominator twice. See §9 for the reproduction. All figures below are on
+the **drawn** denominator, which is the answers given and is what the map shows:
+
+| | all 396 | middle 90% (p5 to p95) | the 102 communities of 1,000 or more |
+|---|---|---|---|
+| Christian Orthodox | 31.69 to 97.36 | 75.28 to 96.19 | 64.97 (Pegeia) to 95.90 (Mammari) |
+| Muslim | 0.52 to 20.74 | 0.83 to 7.06 | 0.93 (Anageia) to 10.20 (Pegeia) |
+| Roman Catholic | 0.33 to 10.92 | 0.55 to 4.22 | 0.62 to 6.03 |
+| Buddhist | 0.03 to 10.00 | 0.19 to 3.25 | 0.24 to 4.79 |
+
+The all-396 extremes are hamlets and are not geography: **Pitargou, population 1**, is the
+97.36% Orthodox, and **Petrofani, population 7**, is both the 20.74% Muslim and the 10.00%
+Buddhist. `note_public` now quotes the last column, because its two ends are places a reader
+can find on the map and check. Note that the four rows nearly share one ordering, Pegeia at one
+end and Anageia or Mammari at the other, which is what a three-group convex combination looks
+like: the spread has close to one degree of freedom, the share of residents who are not
+Cypriot citizens.
+
+**And the spread is bounded by the group table above, not by anything the communities do.**
+Each community's share is a convex combination of the three columns, so on the all-enumerated
+denominator no community can be less than 22.4% or more than 84.0% Orthodox, or more than 14.7%
+Muslim, whatever its citizenship mix. That is real geography, and it is the geography of who
+moved to Cyprus.
 
 This is a **stronger footing than the nationality derivations in `gr`, `es`, `fr` and `it`**,
 which have to assume what a Romanian resident of Greece believes. Cyprus counted.

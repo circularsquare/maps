@@ -261,6 +261,8 @@ def main():
             entry["fill"] = meta.get("fill", "")
             entry["grain"] = meta.get("grain", "")
             entry["gap"] = meta.get("gap", "")
+            # spec §10.4: absent for most countries, and the viewer tests for a number
+            entry["gap_share"] = meta.get("gap_share")
             # the data bbox stays whatever the build measured; only the framing is editable
             entry["view"] = list(meta.get("view") or entry.get("bbox") or [])
             print(f"  {cc}: {entry['name']}  view {[round(v, 1) for v in entry['view']]}")
@@ -365,6 +367,7 @@ def main():
                 "fill": meta.get("fill", ""),
                 "grain": meta.get("grain", ""),
                 "gap": meta.get("gap", ""),
+                "gap_share": meta.get("gap_share"),
                 "bbox": box,
                 "view": list(meta.get("view") or box),
                 "dots": d["n"].value_counts().to_dict(),

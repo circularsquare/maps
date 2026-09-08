@@ -134,6 +134,131 @@ run and it came back empty. **No source published anywhere gives an Alevi share 
 The national figure is stated in the country's `note_public` without a geography, which is
 §14 rule 1 applied rather than worked around.
 
+### The second sweep, same day: one open survey does ask, and it is not enough
+
+Anita, 2026-09-08: *"lets try our best leads that dont involve [email]."* So KONDA was left
+alone and everything reachable as a file was pulled instead. **One source asks the question.**
+
+**ISSP Türkiye 2010** (`access.gesis.org/dbk/46140`) runs D.23a *Sünni Müslüman mısınız?* and
+then **D.23b *Peki, Alevi misiniz?***, and the archived variable keeps the split:
+`TR_RELIG` = **630 Sunni / 660 Alevi / 690 Muslim-unspecified**. Beside it sits `TR_REG`, the
+province of interview recoded to **the Diyanet's own twelve İBBS-1 regions, named
+identically**. Both ship inside the *integrated cross-national file*, so one download per
+module gives the cross-tab and the national datasets are never needed. Fieldwork is Turkish:
+Infakto Research Workshop, İstanbul, face to face; GESIS in Cologne is only the archive.
+
+**`660` means different things in different waves, and `690` is the tell.** A wave that asked
+D.23b sends *not Sunni, not Alevi* to 690, so a wave with 660 and no 690 never asked. Checked
+against the background-variable documentation for every Türkiye wave (module pages fetched
+through the Wayback Machine, since `www.gesis.org` returns 403 to scripts):
+
+| wave | n | sect question |
+|---|---:|---|
+| 2008 | 1,453 | none |
+| 2009 | 1,569 | none |
+| **2010** | **1,665** | **Alevi item** |
+| 2011 | 1,559 | none |
+| 2012 | 1,620 | none |
+| 2013 | 1,666 | Sunni yes/no only, no 690 in the data |
+| 2014 | 1,509 | none (its `660` is dead template text) |
+| 2016 | 1,535 | none |
+| 2018 | 1,511 | **none — and 2018 is the Religion module** |
+
+2015 is not in the integrated file; 2017's module page would not load from any snapshot.
+**One wave in nine, so there is nothing to pool.**
+
+**And one wave buys two regions out of twelve.** ISSP 2010 gives **5.47% nationally**, against
+KONDA's 5.73% — two unrelated instruments a quarter-point apart, which is the best
+corroboration the national figure has. A 20,000-shuffle permutation test says real regional
+structure exists (spread 203.7 against a null median of 9.7, p < 0.0001), but only two regions
+survive it individually:
+
+| region | n | Alevi | share | p |
+|---|---:|---:|---:|---:|
+| TRB Ortadoğu Anadolu | 103 | 35 | **34.0%** | 0.0000 |
+| TR5 Batı Anadolu | 135 | 15 | **11.1%** | 0.005 |
+| TR1 İstanbul | 248 | 18 | 7.3% | 0.12 |
+| TR6 Akdeniz | 246 | 17 | 6.9% | 0.18 |
+| TR7 Orta Anadolu | 123 | 2 | 1.6% | 0.99 |
+| TR9 Doğu Karadeniz | 45 | 0 | 0.0% | 1.00 |
+
+The four zeros are regions of n=35–161, where zero cannot be told from 5.5%. **Orta Anadolu
+reads significantly *low*** — for Sivas and Yozgat. ISSP 2013, measuring *not Sunni* rather
+than *Alevi*, disagrees wholesale (Ortadoğu Anadolu 8.3, Doğu Karadeniz 7.2). The national
+figure replicates; the geography does not ([[reference_check_needs_power]]).
+
+**What the wave does settle: `Hiçbiri` is not a proxy, tested rather than argued.** §3 rules
+it out on Orta Anadolu alone. ISSP 2010 gives an independent Alevi share for all twelve
+regions, so the claim can be measured: **Pearson −0.409, Spearman −0.351, permutation
+p = 0.12**; the whole no-school bucket −0.302; a `Caferi` control −0.170. Not significant at
+n=12, and it is not claimed to be — but the sign is negative and **there is no positive
+relationship anywhere to build a proxy on**. The extremes carry it: Batı Marmara has the
+*highest* `Hiçbiri` at 20.8% and zero Alevis; Ortadoğu Anadolu the *lowest* at 1.5% and 34%.
+
+### The settlement counts, and why they cannot carry a magnitude
+
+The aleviforum compilation quoted by Özcan Öğüt — the one §11ac uses to corroborate Nişanyan —
+is openly published, covers every province, and is the obvious thing to reach for. Its full
+`Tablo I` was read off the image and reconciles exactly to its own printed **3,529** total.
+Aggregated to İBBS-1 and set against ISSP 2010:
+
+| region | settlements | % of all | ISSP % | |
+|---|---:|---:|---:|---|
+| TRB Ortadoğu Anadolu | 733 | 20.8 | 34.0 | ISSP-solid |
+| TR7 Orta Anadolu | 704 | 19.9 | 1.6 | |
+| TR8 Batı Karadeniz | 602 | 17.1 | 0.8 | 3 provinces uncounted |
+| TRA Kuzeydoğu Anadolu | 493 | 14.0 | 0.0 | |
+| TR6 Akdeniz | 367 | 10.4 | 6.9 | |
+| **TR5 Batı Anadolu** | **38** | **1.1** | **11.1** | **ISSP-solid** |
+| **TR1 İstanbul** | **—** | **—** | **7.3** | **"Hesaplanmadı"** |
+
+**It disagrees with ISSP on both of the regions ISSP can actually measure**, and the reason is
+structural rather than fixable. This is an inventory of *villages of origin*, and it is blind
+to cities by construction: **İstanbul's cell reads "Hesaplanmadı"** — not counted — in the
+region holding, on KONDA's own account, **a third of all Alevis**; Batı Anadolu, which is
+Ankara, has 38. Five more provinces read *"Tespit edilmedi"* against twelve that are true
+zeros, so the missing cells cannot even be normalised away.
+
+Converting these counts into people would therefore move Alevis systematically **out of the
+cities and into the eastern countryside**, which is the opposite of the demography KONDA
+measured — only 4 Alevis in 10 still live where they were born, against 6 in 10 nationally.
+[[feedback_proxy_residual_nameable]] is the governing rule and it fails here: the non-matching
+part is urban Alevis, and the only published number for it is one sentence about İstanbul, not
+twelve regional figures to weight by.
+
+The same objection retires **Soner Çağaptay's *Turkey: Alevi Population by Province***
+(Washington Institute, *Policy Focus* #67, 2007, p. 14), which turns up in any search and
+looks authoritative: five printed bands from >50% to <5%. It cites no data, **its own
+footnote 26 calls it "a rough distribution"**, and it is copyright. That is the Filiz/Nişanyan
+category exactly — an authorial partition, not a measurement — and §11ac already decided it.
+
+### Also checked and closed, so nobody repeats them
+
+- **Türkiye Aile Yapısı Araştırması (TAYA)** 2006/2011/2016/2021, n=17k–25k, TÜİK-designed and
+  estimable at İBBS-1 — the most promising-looking thing in Turkish social statistics. It asks
+  *mezhep* **only as an attitude** (*"aynı mezhepten olması"*, whether marrying within your
+  sect matters) and **never asks the respondent's own sect**. Full-text checked in the 2011 and
+  2016 reports.
+- **Türkiye DHS 2018**, n≈12,000, İBBS-1 estimable, open microdata — **the word "religion" does
+  not occur once in the 304-page final report.** It asks no religion question at all.
+- **TÜİK's E-VAM microdata portal** is harder than an ordinary application: pilot-stage,
+  applications accepted only through three protocol-signed Turkish universities, priced by the
+  hour. [[feedback_gated_data_last_resort]].
+- **`Alevi Çalıştayları Nihai Raporu`** (Devlet Bakanlığı, Ankara 2010, 216 pp) — the state's
+  own Alevi-opening report, wholly qualitative. No population table, no cemevi count.
+- **Alevi-Bektaşi Kültür ve Cemevi Başkanlığı**, the state body created November 2022 under
+  Kültür ve Turizm — i.e. *after* §11r closed Türkiye, so worth asking §11ac's question a
+  second time. Its **2024 Faaliyet Raporu counts 2,102 cemevis** and pays the lighting of 853,
+  but the document is a 32-page photographic PR deck with no tables and no provincial
+  breakdown. A cemevi register would have been placement, not magnitude, in any case.
+- **KONDA's own 2006 report read at source** rather than trusted secondhand: the Alevi
+  geography really is one sentence of prose and there is no table in its 59 pages. The Milliyet
+  serialisation does report by the same twelve regions, but its text is mirrored in full at
+  `transanatolie.com` and matches the report; only a printed graphic could add anything, and
+  Milliyet's scanned archive is a login-gated SPA.
+- **EVS** — the "Alevism" category in the 2017 denomination appendix is **Austria's**, not
+  Türkiye's; Türkiye is not in that wave.
+
 ## 4. The other hole: 0.4% is one cell holding three different things
 
 Q10's `Diğer` is described by the report in its own words as *belongs to a religion other than
@@ -187,10 +312,19 @@ Türkiye as a country with no non-Muslims at all.
 ## 7. Open
 
 - **An Alevi layer at any geography**, which is the one thing that would change this country.
-  KONDA holds the data and publishes only the national number; its Barometer records mezhep as
-  a standard demographic every month. That is a question for a person, not a scraper.
+  After two sweeps this is **not a search problem any more**: every open route is named above
+  and checked, and the one survey that asks the question has a single usable wave that can
+  resolve two regions out of twelve. **KONDA is the only body holding a sample big enough** —
+  *Biz Kimiz?* was **48,000 respondents across 79 provinces**, not the 2,600-a-month Barometer,
+  which is where 5.73% comes from and is ample for province level. It publishes prose. That is
+  a question for a person, not a scraper, and Anita's call on 2026-09-08 was **not to write**:
+  *"i'd really rather not email. we have not had good success rates with this."*
 - **TÜİK's microdata service** would give İBBS-2 (26 regions) and the `Diğer (belirtiniz)`
   write-ins, which is where Nusayri and any Alevi write-in would be recoverable. It is an
-  application, and [[feedback_gated_data_last_resort]] applies.
+  application, and [[feedback_gated_data_last_resort]] applies. Its successor portal **E-VAM is
+  worse** — see above.
+- **ISSP 2017**, the one Türkiye wave whose documentation could not be retrieved. Almost
+  certainly carries no sect item, since 2016 and 2018 do not, but it is the last cell in the
+  table that is empty rather than negative.
 - **A newer wave.** Nothing found for 2023 or 2024; the Diyanet's Sayıştay audit reports
   mention no successor survey.

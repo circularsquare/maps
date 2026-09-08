@@ -108,7 +108,6 @@ AIMAGS = {
     "MN42": ("Govisumber", "Govisumber_XAOCT_Negdsen_dun.pdf"),
     "MN43": ("Selenge", "Selenge_XAOCT_Negdsen_dun.pdf"),
     "MN44": ("Dornogovi", "Dornogovi_XAOCT_Negdsen_Dun.pdf"),
-    "MN45": ("Darkhan-Uul", "Darkhan-Uul_XAOCT_Negdsen%20dun.pdf"),
     "MN46": ("Umnugovi", "Umnugovi_XAOCT_Negdsen_Dun.pdf"),
     "MN61": ("Orkhon", "Orkhon_XAOCT_Negdsen_Dun.pdf"),
     "MN62": ("Uvurkhangai", "Uvurkhangai_XAOCT_Negdsen_dun.pdf"),
@@ -122,14 +121,38 @@ AIMAGS = {
     "MN85": ("Uvs", "Uvs_XAOCT_Negdsen_Dun.pdf"),
 }
 
+# KHOVD PUBLISHES NO RELIGIOSITY TABLE AT ALL, only the type-of-religion one, and states
+# the split in a SENTENCE instead (page index 55):
+#
+#   "Арван тав, түүнээс дээш насны нийт хүний 39.3 хувь нь ямар нэг шашингүйчүүд, 60.6
+#    хувь нь хүн шашинтан байгаагийн 49.3 хувь нь Буддын шашинтан байна."
+#
+# — of the population aged 15 and over, 39.3 per cent have no religion and 60.6 per cent
+# have one, of whom 49.3 per cent are Buddhist. Those two figures are taken here rather than
+# dropping the aimag, because Khovd is one of only two with a substantial Muslim population
+# and losing it would misstate where Mongolia's Muslims live.
+#
+# **THE SENTENCE CHECKS ITSELF, which is why this is a transcription and not a guess.** Its
+# third figure, 49.3, is the Buddhist share of ALL adults; the type table on the next page
+# gives Buddhists as 81.3% of the religious; and 0.606 x 0.813 = 0.4927. A row read from the
+# wrong year or the wrong line would not reproduce that. `check()` re-asserts it below.
+OVERRIDE = {
+    "MN84": (39.3, 60.6),
+}
+
 # DUNDGOVI IS PUBLISHED AND IS STILL NOT DRAWN, and the reason is not that it is missing.
 # `https://downloads.1212.mn/Dundgovi.pdf` is the right volume, 2020, 211 pages, 34.8 MB --
 # and it is a SCAN. Its producer is `iLovePDF`, and the only extractable text on any page is
 # the running header and the page number; the tables are pixels. Nothing in this file can
 # read it, and OCR of Mongolian Cyrillic tables is not something to bolt on here. See
 # sources/mn.md §7 for the two ways it could be brought in.
+#
+# DARKHAN-UUL IS THE SAME PROBLEM ONE STEP FURTHER IN. Its volume has a text layer for the
+# prose and the captions, and its TABLES are pasted-in images: the two religion pages carry
+# nine picture objects between them and two extractable data rows. Nothing here can read it.
 MISSING = {
     "MN48": "Dundgovi",
+    "MN45": "Darkhan-Uul",
 }
 
 ALL_AIMAG_NAMES = ({n for n, _ in AIMAGS.values()} | set(MISSING.values()))
@@ -267,16 +290,22 @@ def _col_2020(rows, n_values):
     if col and not any("2020" in l.split() for l, _, _ in rows):
         return None
 
-    # Every volume prints 2010 on the left, so that is the default -- but it is VERIFIED
-    # rather than trusted wherever the bare year labels can be located, and a page that
-    # positively contradicts it flips. Some volumes set the two year labels on separate
-    # baselines instead of on one spanner row, so they are collected from anywhere on the
-    # page rather than from a single line.
+    # Every volume prints 2010 on the left and 2020 on the right, so that is the default.
+    # It is confirmed against the spanner row where there is an unambiguous one: a row whose
+    # WHOLE label is the two years and which carries no figures.
+    #
+    # **THE SPANNER MUST NOT BE LOOKED FOR ANYWHERE ELSE ON THE PAGE**, which was the first
+    # attempt and was wrong in a way that produced numbers rather than an error. Govi-Altai
+    # captions its table `... ДҮНД ЭЗЛЭХ ХУВИАР, 2010 ОН, 2020 ОН`, the caption wraps, and
+    # `2020` therefore begins a line further LEFT than the `2010` above it -- so a page-wide
+    # x comparison concluded the columns were reversed and read Govi-Altai's 2010 figures as
+    # its 2020 ones. Sükhbaatar sets the two year labels on separate baselines, which is
+    # also not a spanner, and is likewise left to the default.
     if col:
-        x10 = [w[0] for _, _, ws in rows for w in ws if w[4] == "2010"]
-        x20 = [w[0] for _, _, ws in rows for w in ws if w[4] == "2020"]
-        if x10 and x20 and min(x20) < min(x10):
-            return 0
+        for label, vals, ws in rows:
+            if not vals and set(label.split()) == {"2010", "2020"}:
+                xs = {w[4]: w[0] for w in ws if w[4] in ("2010", "2020")}
+                return 0 if xs["2020"] < xs["2010"] else 3
     return col
 
 
@@ -459,7 +488,10 @@ def read():
         doc = fitz.open(path)
 
         pop_all, pop15 = pop[name]
-        none_pc, rel_pc = _read_status(doc, path)
+        if pcode in OVERRIDE:
+            none_pc, rel_pc = OVERRIDE[pcode]
+        else:
+            none_pc, rel_pc = _read_status(doc, path)
         types, order = _read_type(doc, path)
 
         counts = {NOT_RELIGIOUS: pop15 * none_pc / 100.0}

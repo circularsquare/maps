@@ -173,19 +173,52 @@
        floor of one pixel would hand thirty specks a third of the bar between them. The
        browser lays flex children out at 1/64px and antialiases, so a sub-pixel segment
        tints its pixel and disappears at the right rate. The tooltip still finds it. */
+    /* THE HIT AREA IS TALLER THAN THE BAR, which is why there are two elements and not one.
+       Anita, 2026-09-08: *"lets make it 2px less wide, but also have the hitbox stay the same
+       size so its not hard to mouse over."* A 5px rule is the right weight beside 11px type —
+       at 7 it was the heaviest thing in a panel whose job is to stay quieter than the map —
+       and it is a miserable target, because unlike every other control here the pointer has
+       to STAY on it while it reads along. So `#mixbar` keeps the 7px it had and holds the
+       pointer; `#mixtrack` inside it is the 5px that is drawn. Same rule as §10.3's checkbox:
+       the target is not the mark. */
+    /* HOW MANY PEOPLE THE BAR IS OF, in the rows' own count format — Anita, 2026-09-08:
+       *"for each religion row we show like '42m' … so lets show this for our new bar too."*
+       The bar is a set of proportions and says nothing about size, so without this the same
+       shape can be Iceland or Indonesia.
+
+       BESIDE THE BAR AND NOT OVER IT, her second call the same day: *"maybe the number should
+       be to the right of the bar rather than on top of it so we dont use a whole row of
+       space."* Over it, in §10.3's number-above-rule shape, it cost a whole line of a panel
+       that is already the tallest thing on screen; beside it costs seven pixels of height and
+       36 of width. `.row .ct`'s tokens exactly, including the 36px, which is MEASURED there —
+       the widest string `fmtPop` can produce is four digits and an `m`. Fixed and not
+       shrink-to-fit, so the bar's right edge does not move between a country reading `29m`
+       and one reading `1335m`; these are compared across countries. */
+    #mixrow {
+      flex: 0 0 100%; margin-top: 5px;
+      display: flex; align-items: center; gap: 5px;
+    }
     #mixbar {
-      flex: 0 0 100%; margin-top: 5px; height: 7px; border-radius: 3px;
-      display: flex; overflow: hidden; background: #2a2a2a; cursor: help;
+      flex: 1; min-width: 0; height: 7px;
+      display: flex; align-items: center; cursor: help;
+    }
+    #mixtotal {
+      flex: none; width: 36px; text-align: right; cursor: help;
+      color: #888; font-variant-numeric: tabular-nums; font-size: 11px; line-height: 1.15;
+    }
+    #mixtrack {
+      width: 100%; height: 5px; border-radius: 3px;
+      display: flex; overflow: hidden; background: #2a2a2a; pointer-events: none;
     }
     /* `<i>` and not `<span>`: `#scope-bar span` above sets `flex: 1` on its children and
        white on every span inside it, and a segment must take exactly the width it is
-       given. `pointer-events: none` keeps the pointer on the container, which is what
-       resolves the hover — a 0.2px child cannot be hovered and does not have to be. */
-    #mixbar i { flex: none; height: 100%; pointer-events: none; }
+       given. `pointer-events: none` keeps the pointer on `#mixbar`, which is what resolves
+       the hover — a 0.2px child cannot be hovered and does not have to be. */
+    #mixtrack i { flex: none; height: 100%; pointer-events: none; }
     /* The undrawn share: people the source never counted, so no colour of the map's own can
        stand for them. Diagonal grey on grey is the one fill here that is visibly NOT a
        religion, and it reads as hatching rather than as a category at any width. */
-    #mixbar i.nd {
+    #mixtrack i.nd {
       background: repeating-linear-gradient(-45deg,
         #4e4e4e 0 2px, #303030 2px 4px);
     }
@@ -199,7 +232,9 @@
       background: repeating-linear-gradient(-45deg, #4e4e4e 0 2px, #303030 2px 4px);
     }
     #tip .mx b { color: #fff; font-weight: 600; }
-    #tip .mx .sub { color: #999; }
+    /* not `.mx .sub`: the total's tooltip is one line of prose with a second, quieter line
+       under it, and it has no card around it to scope the rule to */
+    #tip .sub { color: #999; }
 
     #tree { overflow-y: auto; padding: 4px 0 8px; }
     #tree::-webkit-scrollbar { width: 6px; }
@@ -587,7 +622,7 @@
       <button id="depth-minus" title="Less detail">&minus;</button>
       <button id="depth-plus" title="More detail">+</button>
     </div>
-    <div id="scope-bar"><span id="scope-label">all religions</span><a id="vis-all"></a><a id="scope-clear">clear</a><div id="mixbar" data-tip="mix"></div></div>
+    <div id="scope-bar"><span id="scope-label">all religions</span><a id="vis-all"></a><a id="scope-clear">clear</a><div id="mixrow"><div id="mixbar" data-tip="mix"><i id="mixtrack"></i></div><div id="mixtotal" data-tip="mixtotal"></div></div></div>
     <div id="tree"></div>
     <div id="legend-note">
       <!-- §4.1a's spatial carry used to be spelled out here and is not any more — Anita,
@@ -1144,16 +1179,19 @@ function showTip(el, atX) {
 }
 function hideTip() { document.getElementById('tip').classList.remove('show'); }
 
-document.addEventListener('mouseover', e => {
+/* §10.4's bar is the one trigger whose answer depends on WHERE in it you are, so it is asked
+   for the answer under the pointer rather than for the one it holds. Everything else is a
+   registry lookup and does not care about x. */
+function aimTip(e) {
   const el = e.target.closest && e.target.closest('[data-tip]');
-  if (el) showTip(el); else hideTip();
-});
+  if (!el) { hideTip(); return; }
+  if (el.id === 'mixbar') { if (!aimMix(el, e.clientX)) hideTip(); return; }
+  showTip(el);
+}
+document.addEventListener('mouseover', aimTip);
 /* A touch screen has no hover, so the tap raises it and the next tap anywhere puts it away.
    This is the half the browser's own `title` never had. */
-document.addEventListener('click', e => {
-  const el = e.target.closest && e.target.closest('[data-tip]');
-  if (el) showTip(el); else hideTip();
-});
+document.addEventListener('click', aimTip);
 // a scroll inside the legend moves the trigger out from under a box positioned against it
 document.addEventListener('scroll', hideTip, true);
 
@@ -3773,6 +3811,178 @@ function shareFill(s) {
   return SHARE_FLOOR + (SHARE_KNEE - SHARE_FLOOR) * Math.pow(0.5, decades);
 }
 
+/* §10.4 — THE COMPOSITION BAR. One line of the scope, cut into the colours that are on the
+   map, in the order the rows under it run.
+
+   Anita, 2026-09-08: *"a bar that's filled proportionally with colored segments for each of
+   the religions being shown in the legend currently … ~45% of the bar be gray for no
+   religion, a big chunk be catholic."* §10.3's per-row bars answer "how big is this one" and
+   are read down a column; this answers the question a column of bars cannot, which is what
+   the country ADDS UP TO — the shape of the mixture, in one glance, without summing sixty
+   rows or hunting the map for a colour that is 3% of it.
+
+   THE SEGMENTS ARE THE DRAWN CATEGORIES, NOT THE LEGEND ROWS. The rows nest, so summing them
+   would count every Catholic three times (Christianity, Catholic, Latin Catholic). `DRAWN` is
+   the set that partitions the map — exactly the categories that carry a colour of their own —
+   so its members sum to the scope once each, and the bar is a picture of the picture. A
+   segment's value is its whole subtree MINUS the subtrees of the drawn categories under it,
+   which is the same arithmetic `paletteFor` does in paint: the parent covers its subtree, each
+   drawn child paints over its own part, and what is left holding the parent's colour is the
+   parent's own dots plus anything folded into it (§6.10). `MERGE_OWN` hands its leftover to
+   the child that draws it (§6.15), so the bar and the map agree there too.
+
+   IT IGNORES WHAT IS HIDDEN, for §10.3's reason unchanged: hiding is a viewing choice, and a
+   bar that re-scaled to the ticked rows would read "100% Catholic" of a France that is 37%
+   Catholic. It answers what the place is made of, which no checkbox changes.
+
+   TWO DENOMINATORS, AND EACH SEGMENT NAMES ITS OWN. A religion's tooltip is a share of the
+   SCOPE — the same number the row above it prints, because two figures for one religion six
+   pixels apart would be worse than any tidiness gained. The undrawn stripe is a share of the
+   COUNTRY, because that is the only frame in which "not drawn" is a quantity at all. So with
+   a gap on screen the religion percentages sum to 100 across a bar that is visibly not full;
+   that is the honest reading of it and the stripe's own label says what the rest is. */
+
+/** What the scope is called in a sentence. Used by the row bars and by §10.4's tooltips. */
+function scopeLabel() { return scope ? BY_ID[scope].label : 'all religions'; }
+
+/* THE UNDRAWN SHARE IS AUTHORED, NOT MEASURED, and it has to be: nothing in the pipeline
+   knows how big the hole is. The dots are what the source published, so drawn plus undrawn is
+   a fact about the SOURCE'S UNIVERSE — Peru's census asked nobody under twelve, and the map
+   has no row anywhere that says how many of those there were. `gap_share` in countries.py is
+   that figure, stated once beside the `gap` sentence that explains it, and absent wherever
+   the sentence names something nobody has quantified (Georgia's Abkhazia, Turkey's Alevis).
+
+   ONE COUNTRY, AND ONLY AT THE TOP. In the all-countries view there is no country whose
+   universe this could be a share of, which is renderProvenance's rule for the same reason.
+   And under a selection the hole is not part of what is selected: France's uncounted are not
+   Christians, so a stripe inside a Christianity bar would be claiming they were. Anita's
+   own condition — *"when we dont have specific religions selected"*. */
+function undrawnShare() {
+  if (scope || !country) return 0;
+  const g = (META[country] || {}).gap_share;
+  return (typeof g === 'number' && g > 0 && g < 1) ? g : 0;
+}
+
+let MIX = [];              // what the bar is currently drawing, left to right
+
+function mixSegments() {
+  const total = viewTotal();
+  if (!total) return [];
+  const drawn = [...DRAWN];
+  /* What each drawn category actually paints. The inner test is "is there another drawn
+     category BETWEEN us" — without it a grandparent would subtract a grandchild its own child
+     had already subtracted, and the bar would come up short by exactly the overlap. */
+  const val = {};
+  for (const d of drawn) {
+    let v = counts[d] || 0;
+    for (const e of drawn) {
+      if (e === d || !e.startsWith(d + '.')) continue;
+      let between = false;
+      for (let p = parentOf(e); p && p !== d; p = parentOf(p))
+        if (DRAWN.has(p)) { between = true; break; }
+      if (!between) v -= counts[e] || 0;
+    }
+    val[d] = v;
+  }
+  for (const par in MERGE_OWN) {
+    const kid = mergedInto(par);
+    if (kid && val[par] > 0) { val[kid] = (val[kid] || 0) + val[par]; val[par] = 0; }
+  }
+  const g = undrawnShare();
+  const denom = total / (1 - g);            // the bar's own 100%: drawn plus undrawn
+  const out = [];
+  /* LEGEND ORDER, off the same `KIDS` walk `renderTree` reads down, so a segment sits at the
+     same point in the run its row does. Not size order: the families stay contiguous, which
+     is what makes the bar scannable against the rows beside it (§10.0). */
+  const walk = (id) => {
+    if (DRAWN.has(id) && val[id] > 0)
+      out.push({ id, dots: val[id], frac: val[id] / denom });
+    for (const k of (KIDS[id] || [])) walk(k);
+  };
+  for (const r of (scope ? [scope] : ROOTS)) walk(r);
+  if (g) out.push({ id: null, dots: denom - total, frac: g });
+  return out;
+}
+
+/** The dot card's shape, for a segment of the bar. */
+function mixTip(s) {
+  if (s.id === null) {
+    /* THE SENTENCE CARRIES THE FIGURE, AND THIS CARD DOES NOT REPEAT IT — Anita, 2026-09-08:
+       *"this not drawn tooltip is a bit confusing. we seem to be saying that 21% is not drawn
+       and then another 21% is not drawn for a separate reason."* It read
+       "21% of Peru · under-twelves, 21.1% of the country, who were not asked", which is one
+       fact told twice with two different roundings, and the middle dot made the second half
+       look like a second cause. So the card prints `gap` alone: countries.py asserts that a
+       `gap_share` has a matching percentage in its own sentence, which is what makes this
+       safe — the number cannot go missing, and where a country has a BREAKDOWN (Montenegro's
+       4.7% withheld plus 1.9% declined) the sentence gives it and a composed figure could
+       not. */
+    const m = META[country] || {};
+    return '<span class="mx"><span class="mk nd"></span><span>'
+      + `<b>Not drawn</b><br><span class="sub">${esc(m.gap || pctText(s.frac)
+        + ' of ' + (m.name || 'this country'))}</span></span></span>`;
+  }
+  const n = BY_ID[s.id];
+  const share = s.dots / viewTotal();
+  return '<span class="mx">'
+    + `<span class="mk" style="background:${colorOf[s.id] || '#666'}"></span><span>`
+    + `<b>${esc(n ? n.label : s.id)}</b><br><span class="sub">`
+    + `${fmtPop(s.dots * DOT_VALUE)} people · ${pctText(share)} of ${esc(scopeLabel())}`
+    + `${country ? ' in ' + esc(META[country].name) : ''}</span></span></span>`;
+}
+
+function renderMix() {
+  const el = document.getElementById('mixtrack');
+  if (!el) return;
+  MIX = mixSegments();
+  document.getElementById('mixrow').style.display = MIX.length ? '' : 'none';
+  /* `flex-grow` on a zero basis, not a percentage width. The factors are dot counts, so they
+     sum to something far larger than 1 and the row fills exactly — percentages summing to
+     "1.0000" in floating point leave a hairline of track showing at the right end, which on a
+     bar whose whole claim is that it is full is the one artefact that matters. */
+  el.innerHTML = MIX.map(s => s.id === null
+    ? `<i class="nd" style="flex:${s.dots} 1 0"></i>`
+    : `<i style="flex:${s.dots} 1 0;background:${colorOf[s.id] || '#666'}"></i>`).join('');
+
+  /* THE DRAWN TOTAL, not the bar's. `viewTotal` is the scope, so the figure is the sum of the
+     coloured segments and matches the rows below it; the hatched share sits outside it and the
+     tooltip is where that gets said, because a headline number that quietly included people
+     the map does not contain would be the one figure here nobody could check. */
+  const tot = document.getElementById('mixtotal');
+  const dots = viewTotal();
+  tot.textContent = fmtPop(dots * DOT_VALUE);
+  const g = undrawnShare();
+  TIPS.mixtotal = esc(popTitle(dots)) + ' · ' + esc(scopeLabel())
+    + (country ? ' in ' + esc(META[country].name) : '')
+    + (g ? `<br><span class="sub">and ${pctText(g)} of `
+      + `${esc(META[country].name)} that nobody counted, which this figure leaves out</span>`
+      : '');
+}
+
+/** The segment under a point, as a fraction along the bar. */
+function mixAt(f) {
+  let acc = 0;
+  for (const s of MIX) { acc += s.frac; if (f <= acc) return s; }
+  return MIX.length ? MIX[MIX.length - 1] : null;
+}
+
+/* The bar is one trigger with thirty answers, so the pointer's x decides which. Called from
+   the document's own tooltip listeners rather than from a handler of its own, so that hover,
+   tap and the "anything else puts it away" rule all keep working the way they do everywhere
+   else in the panel. */
+function aimMix(el, clientX) {
+  if (!MIX.length) return false;
+  // the TRACK decides which segment (it is what is drawn); `el`, the taller hit area, decides
+  // where the card hangs
+  const r = document.getElementById('mixtrack').getBoundingClientRect();
+  if (!r.width) return false;
+  const s = mixAt((clientX - r.left) / r.width);
+  if (!s) return false;
+  TIPS.mix = mixTip(s);
+  showTip(el, clientX);
+  return true;
+}
+
 function renderTree() {
   const el = document.getElementById('tree');
   /* The panel is thrown away and rebuilt on every change, and a checkbox is a control a
@@ -4063,6 +4273,7 @@ function renderTree() {
     `Viewing: ${esc(what)} <span class="lv">(L${lv})</span>, ${esc(where)}`
     + (litCc.length ? `<div class="lit-note" data-tip="coverage">${esc(litText)}</div>` : '');
   document.getElementById('scope-clear').style.display = scope ? '' : 'none';
+  renderMix();                                          // §10.4, the same sentence drawn
 
   /* ONE LINK THAT FLIPS, and which way it flips is read off the tree rather than remembered —
      Anita's shape: *"clear button can be reworded into a select all i guess? and if we have
@@ -6347,6 +6558,11 @@ document.addEventListener('click', e => {
 });
 
 document.getElementById('scope-clear').onclick = () => setScope(null);
+/* The document's `mouseover` gets the pointer onto the bar; this keeps the answer following
+   it along the bar, which is the whole of §10.4's hover. Two hundred and sixty-six pixels of
+   different answers cannot be served by an enter event. */
+document.getElementById('mixbar').onmousemove =
+  e => aimMix(e.currentTarget, e.clientX);
 segWire('merge-seg', () => merged ? 1 : 0, v => {
   merged = !!v;
   applyPaint(); renderTree();

@@ -1325,39 +1325,68 @@ BRANCHES = [
      "countable — a national census naming an indigenous breakaway church and following it "
      "down to the ward."),
 
+    # --- note rewritten 2026-09-08. What it said was written when Kenya and then Zimbabwe
+    #     were the whole node; ci, ao, sz and za were each added without touching it, and it
+    #     had drifted to saying the opposite of the dots ("mostly Zimbabwean", "three
+    #     countries supply it, each with one undivided cell"). Every figure below is
+    #     recomputed from the seven contributing countries' counts(), not carried over.
     ("christianity.africaninstituted",
      "African Instituted Churches",
      "The churches founded in Africa by Africans, outside the mission denominations and "
-     "belonging to none of them afterwards — the Aladura churches of West Africa, the "
-     "Zionist and Apostolic churches of southern Africa, and in Kenya the Legio Maria, the "
-     "African Israel Nineveh Church, the Nomiya Luo Church and the Akorino. The same idea "
-     "as `christianity.maori` and `christianity.filipinoindependent`, on a much larger "
-     "scale: **3,292,573 people in Kenya alone, 7.0% of the country**, and it is the third "
-     "largest Christian stream there after the Protestants and the Evangelicals. "
-     "**It exists because Kenya counts it and almost nobody else does.** Ghana's census "
-     "has no cell for the Musama Disco Christo Church or the Twelve Apostles, so all of "
-     "them are inside its `Other Christian` and stay on `christianity.other` — see the "
-     "REVIEW note in gh2021.py, which predicted this node and said where its people would "
-     "be found in the meantime. Mozambique's `Sião/Zione` would land here too if it is "
-     "ever ingested. "
-     "**AND IT IS NOW MOSTLY ZIMBABWEAN, WHICH CHANGES WHAT THE NODE IS.** ZIMSTAT's "
-     "`Apostolic Sect` is **6,112,503 people, 40.3% of Zimbabwe and the largest single "
-     "religious answer in that country** — the Vapostori, the prophetic churches founded "
-     "by Johane Marange and Johane Masowe in the 1930s, white-robed and worshipping in the "
-     "open air rather than in buildings. That is nearly twice Kenya's figure on its own, "
-     "so this node has gone from *a stream some censuses can see* to **the third largest "
-     "Christian branch on the map**, and its centre of mass is southern Africa rather than "
-     "east. Benin's `Chrétien céleste` (676,032, the Celestial Church of Christ) is the "
-     "West African member. **What has NOT changed is how coarse it is**: three countries "
-     "supply it, each with one undivided cell, and the Vapostori alone are dozens of "
-     "distinct churches that no source separates."),
+     "belonging to none of them afterwards. The name is not settled: Independent, "
+     "Initiated, Instituted and Indigenous are all in use and all abbreviate to AIC. The "
+     "same idea as `christianity.maori`, `christianity.filipinoindependent` and "
+     "`christianity.melanesianindependent`, on a much larger scale. "
+     "**Two currents account for nearly all of what is counted here.** The older are the "
+     "Ethiopian churches, secessions from mission churches from the 1880s onwards, made "
+     "over who was allowed to lead a congregation rather than over doctrine, and keeping "
+     "the liturgy they left with. The larger are the prophetic and healing churches, each "
+     "gathered around a named founder and marked by faith healing, dreams, white robes and "
+     "worship in the open air or at a river rather than in a building: the Zionist and "
+     "Apostolic churches of southern Africa, the Aladura churches of Yorubaland, and in "
+     "Kenya the Legio Maria, the African Israel Nineveh Church, the Nomiya Luo Church and "
+     "the Akorino. A third and much newer current is African-founded and Pentecostal in "
+     "practice; this node takes a body on where it was founded rather than on how it "
+     "worships, which is what puts `christianity.africaninstituted.bomdeus` here and not "
+     "on `christianity.pentecostal`. "
+     "**Seven countries supply it and two of them are 78% of it.** Of **25,899,969** "
+     "people on the node and its children, South Africa is **14,158,453 (54.7%)** and "
+     "Zimbabwe **6,112,503 (23.6%)**, then Kenya 3,292,573 (12.7%), Angola 1,099,234 "
+     "(4.2%), Benin 676,032 (2.6%), Eswatini 420,690 (1.6%) and Côte d'Ivoire 140,484 "
+     "(0.5%). Read the other way round it is a large share of a small country as often as "
+     "a small share of a large one: **40.3% of Zimbabwe**, where ZIMSTAT's `Apostolic "
+     "Sect` is the largest single religious answer in the country, **39.3% of Eswatini** "
+     "and **25.8% of South Africa**, against 7.0% of Kenya, 6.8% of Benin, 3.3% of Angola "
+     "and 0.5% of Côte d'Ivoire. "
+     "**It is coarse, and 95.2% of it is coarse in the same way.** That share sits on the "
+     "bare parent, in six census cells that between them cover thousands of separate "
+     "churches: South Africa's `African Independent Church/African Initiated Church`, "
+     "Zimbabwe's `Apostolic Sect` (the Vapostori, founded by Johane Marange and Johane "
+     "Masowe in the 1930s, and dozens of distinct churches that no source separates), "
+     "Kenya's `African Instituted Churches`, Eswatini's `Zionists` and `Apostles` as two "
+     "cells, and Benin's `Chrétien céleste`. The four children hold the remaining 4.8%: "
+     "Côte d'Ivoire's Harrist church and Angola's Kimbanguist, Tocoist and Bom Deus. "
+     "Benin's cell names a single church too, the Celestial Church of Christ, and sits on "
+     "the parent only because it was ingested before this node had any children; the "
+     "Harrist note prices promoting it. "
+     "**The node is still smaller than the thing it is for.** Nigeria, the home of the "
+     "Aladura churches, is not on this map at all, so West Africa reaches it through Benin "
+     "and Côte d'Ivoire only. Ghana's census has no cell for the Musama Disco Christo "
+     "Church or the Twelve Apostles, so they are inside its `Other Christian`, **12.3% of "
+     "the country**, and stay on `christianity.other`; see the REVIEW note in gh2021.py, "
+     "which predicted this node and said where its people would be found in the meantime. "
+     "Malawi's identically shaped `Other Christian Denominations` is **26.6%** and "
+     "mw2018.py records the same problem. Mozambique's `Sião/Zione` would land here if it "
+     "is ever ingested."),
 
     # --- added 2026-09-07 with Côte d'Ivoire. The FIRST child this node has had.
     ("christianity.africaninstituted.harrist",
      "Harrist Church",
      "The church of **William Wadé Harris** — 140,482 people in Côte d'Ivoire, 0.48%, and "
-     "**the only African Initiated Church anywhere on this map that a census names and "
-     "counts as its own cell at a drawn geography.** Harris was a Grebo teacher and "
+     "**the first African Initiated Church anywhere on this map that a census named and "
+     "counted as its own cell at a drawn geography** (Angola's three followed the next "
+     "day, and Benin's Celestial Church of Christ is a fifth still sitting on the parent). "
+     "Harris was a Grebo teacher and "
      "catechist from Liberia who walked the lagoon coast of the Ivory Coast and the Gold "
      "Coast between 1913 and 1915 in a white robe with a bamboo cross, telling people to "
      "burn their fetishes and be baptised. He is usually credited with more conversions "
@@ -1940,6 +1969,13 @@ BRANCHES = [
      "recognised cults. Romania's list of named categories IS the recognition list, so "
      "this residual is a legal artefact rather than a statistical one. Per source, per "
      "spec §3.11."),
+    ("other.md",
+     "Other religion (Moldova)",
+     "BNS's `Alte religii` — 4,720 people, 0.20%, at the 2024 census. Wider than Romania's "
+     "neighbouring residual, because the 2024 list is shorter than the 2014 one: the 2014 "
+     "census named Judaism and the Lutheran church of the Augsburg Confession as their own "
+     "categories and 2024 does not, so both are inside this cell along with everything "
+     "else outside the nine bodies it does name. Per source, per spec §3.11."),
     ("other.pl",
      "Other religion (Poland)",
      "GUS's own residual leaves — 'inne - niesklasyfikowane' (839) and 'własne "
@@ -2024,6 +2060,19 @@ BRANCHES = [
      "the Orthodox all have cells of their own, so this one is not carrying them. What is "
      "inside is the Sikhs and Jains of Nairobi and Kisumu, the Bahá'ís, the Buddhists, and "
      "the tail of small movements. Per source, per spec §3.11."),
+
+    # --- added 2026-09-08 with Mongolia.
+    ("other.mn",
+     "Other religion (Mongolia)",
+     "NSO's `Бусад` (Other) -- 13,699 people, 0.66% of the population aged 15 and over. The "
+     "2020 census offers six answers and five of them are named, so this is the sixth box "
+     "and there is nothing behind it in the published tables: no volume breaks it down and "
+     "the question has no write-in. What is in it is the Bahá'í community, a small Mormon "
+     "and Jehovah's Witness presence built since 1990, and the tail. "
+     "It is not evenly spread, which is the one interesting thing about it: 3.5% of Uvs's "
+     "religious population and 2.7% of Dornogovi's against 0.1% in Övörkhangai. On a cell "
+     "this small at a 10% sample those differences are within reach of sampling noise and "
+     "should not be read as a map of anything."),
 
     # --- added 2026-09-05 with Russia.
     ("other.ru",
@@ -3028,6 +3077,34 @@ BRANCHES = [
      "catch at 0.06% in a country that is 7.69% indigenous.** `taxonomy/ec2023.py` has that "
      "argument. None of it is separable here, so per spec §3.11 it stays whole."),
 
+    # --- added 2026-09-08 with South Africa.
+    ("other.za",
+     "Other religion (South Africa)",
+     "Stats SA's `Other` in Community Survey 2016 table 2.10a — 1,482,210 people, 2.70% of "
+     "the answers given. The survey gives its own box to Islam, Hinduism, Judaism, "
+     "Buddhism, Bahaism and Traditional African religion, and splits Christianity fourteen "
+     "ways besides, so this cell is what is left after an unusually long card. The bodies "
+     "with nowhere else to go are South Africa's Rastafari, who have no box and are the "
+     "largest unlisted group in the country; the Sikh and Jain communities of Durban and "
+     "Johannesburg; Chinese folk religion; and the Zoroastrians of the old Parsi trading "
+     "families.\n\n"
+     "**Do not read it as a small tail, because it is not small and those bodies do not "
+     "fill it.** At 2.70% it is larger than Islam (1.62%) and about the size of Islam, "
+     "Hinduism, Judaism, Buddhism and Bahaism put together (2.79%). Nothing on the list "
+     "above plausibly reaches 1.5 million people, so most of this cell is unaccounted for "
+     "rather than merely unnamed.\n\n"
+     "**Its geography does not help either, and that is worth saying rather than "
+     "glossing.** It runs 3.87% in Gauteng and 2.90% in Mpumalanga against 1.18% in North "
+     "West and 1.27% in Northern Cape, a spread of about three to one, where this map's "
+     "other residuals commonly run ten or twenty to one and point straight at what is "
+     "inside them (§9r's Chittagong rule, and `other.ao` next door). A flat residual names "
+     "nothing — but flatness is also what a cell looks like when it is distributed roughly "
+     "with population, which is what a catch-all does, so it is not evidence either way.\n\n"
+     "**And its size is one of the places the two Stats SA instruments disagree.** Census "
+     "2022's equivalent `Other Faiths` cell is 1.0% of that count against 2.70% here. Six "
+     "years does not move a residual by a factor of two and a half; see `sources/za.md` "
+     "§3. Per spec §3.11, it is drawn whole because nothing separates it."),
+
     # --- added 2026-09-08 with Angola.
     ("other.ao",
      "Other religion (Angola)",
@@ -3080,6 +3157,54 @@ BRANCHES = [
      "religion table is national and every community figure on this map is allocated from "
      "citizenship composition, so `other.cy` reads 0.29% to 0.95% across the island purely "
      "as a function of how many non-Cypriots live there. Per source, per spec §3.11."),
+    ("other.bw",
+     "Other religion, NEC (Botswana)",
+     "Statistics Botswana's `Other religion (NEC)` in the 2011 census — 1,416 people, "
+     "0.10% of everyone who answered, and **one of the smallest residuals on this map**. "
+     "It is a tail rather than a store cupboard because the eight boxes above it are "
+     "unusually generous for an African census: Islam, Hinduism, the Bahá'í Faith and "
+     "Rastafari all have their own row, and so does Badimo, so the answers that usually "
+     "fill a cell like this have somewhere else to go. What is left is Judaism, Buddhism, "
+     "Sikhism and whatever an enumerator could not place. "
+     "**Its geography is the seven towns and very little else**: two thirds of it is in "
+     "Gaborone, Francistown, Lobatse, Selebi Phikwe, Orapa, Jwaneng and Sowa, which "
+     "between them hold a quarter of the people the country draws. Per source, per "
+     "spec §3.11."),
+
+    # --- added 2026-09-08 with Armenia.
+    ("other.am",
+     "Other religion (Armenia)",
+     "Armstat's `Այլ` in the 2022 census — 7,673 people, 0.26%, and it holds the nine "
+     "Transcendental Meditation adherents of Ararat as well, because the tree has no node "
+     "for that movement and nine people do not justify making one. **It is a tail in the "
+     "marzes that print a long list and a store cupboard in the marzes that do not**, which "
+     "is unusual and is a property of how Armstat typeset these tables rather than of "
+     "Armenia: a marz prints only the columns it has people in, so Syunik's list runs to "
+     "five religions and Yerevan's to fourteen, and every answer without a column in a given "
+     "marz falls into that marz's residual. Armenia's 515 Muslims are the clearest case — "
+     "483 are printed in the four marzes with a Muslim column and the other 32 are inside "
+     "this cell somewhere among the other seven. Across all eleven marzes 169 people arrive "
+     "here that the national table counts under a name. "
+     "**Its geography is the Ararat plain**, at 0.66% in Armavir, 0.56% in Aragatsotn and "
+     "0.46% in Ararat against 0.01% in Syunik, and those are the three marzes where "
+     "Armenia's Yazidis live: the national table cuts religion by ethnicity and puts 3,246 "
+     "of the 7,675 in this cell under `Yezidi`, so about two fifths of the residual is a "
+     "Yazidi answer that was neither `Shar-fadinian` nor `Pagan`. Per source, per spec "
+     "§3.11."),
+
+    # --- added 2026-09-08 with Finland.
+    ("other.fi",
+     "Other religion (Finland)",
+     "Two ESS answers together, `Eastern religions` and `Other Non-Christian religions`, "
+     "pooled over rounds 5 to 11. The tree has no node for 'some Eastern religion, "
+     "unspecified' and choosing one would invent a fact, so both sit here as they do for "
+     "Greece and Croatia. **Finland is a country where this cell has a named occupant the "
+     "instrument cannot reach**: the Buddhist and Hindu communities are small and mostly "
+     "immigrant, but Suomenusko, the Finnish native-faith revival, is a registered religious "
+     "community and is exactly the sort of answer that lands in `Other Non-Christian "
+     "religions` rather than in a box of its own. Estonia's census names Maausk and Taarausk "
+     "and this survey cannot, which is the difference between a country with a census "
+     "question and one with only a register. Per source, per spec §3.11."),
 ]
 
 

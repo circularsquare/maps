@@ -389,3 +389,151 @@ The one thing it does inherit is §6's standing caveat in a sharper form: Sanya'
 frozen at 2000 while its size is 2010, and Sanya's growth was overwhelmingly Han in-migration,
 so its 261,297 Li are too many. That is a `unknown`-on-`unknown` error and it is a great deal
 smaller than the 595,912 it replaces.
+
+## 9. Tibet reads as almost entirely Vajrayana, and that is what the census says — audit, 2026-09-08
+
+**Anita's question: almost the whole Tibet Autonomous Region draws Vajrayana; she expected a
+substantial Han population and asks whether they are really only in the cities. The answer is yes
+on both counts, and nothing here needs fixing.** This section is the audit, because "the map is
+right" is only worth having if the numbers behind it are written down.
+
+What the map draws inside the TAR, from `data/normalized/cn.csv` fanned through
+`taxonomy/cn2000.py::shares`:
+
+| node | people | share |
+|---|---|---|
+| `buddhism.vajrayana` | 2,726,052 | **90.89%** |
+| `unknown` (Han, and every other nationality present that claims nothing) | 257,181 | 8.57% |
+| `islam` | 16,015 | 0.53% |
+| `christianity.protestant`, `buddhism.theravada` | 194 | 0.01% |
+
+73 of the region's 74 county-level polygons carry rows. The impression is correct because the
+underlying count is: the TAR was **90.48% Tibetan** at the 2010 census and is **86.01%** at the
+2020 one. There is no third thing the region could be.
+
+### 9a. The counts are the published census, to two people
+
+`cn.py` rescales each nationality onto its 2010 provincial total (§4), so the TAR figures are the
+NBS ones by construction, and they land there:
+
+| | drawn | published 2010 |
+|---|---|---|
+| Tibetan | 2,716,388 | 2,716,389 |
+| Han | **245,261** | **245,263** |
+| TAR total | 3,002,166 | 3,002,166 |
+
+**The universe is `常住人口` (changzhu renkou), usual residents on census night**, and it matters
+here more than anywhere else on the Chinese map, because of what it leaves out:
+
+- **Active-duty military are not in it.** The 7th census communiqué carries `现役军人`
+  (xianyi junren) as a **single national line of 2,000,000** standing beside the 31 provinces,
+  not distributed among them, and its footnote defines the national population as *"the 31
+  provinces, autonomous regions and municipalities of the mainland **and** active-duty military"*.
+  So the garrison in Tibet is in neither the census nor this map, and China publishes no
+  provincial figure for it. Read the drawn Han as a floor for that reason specifically.
+- **Nor is anyone resident under six months.** The seasonal trading and construction workforce
+  that arrives in Tibet for the building season is outside `常住人口` by definition. This is very
+  likely most of the gap between the census figure and what a visitor to Lhasa in July would
+  guess, and it is a fact about the question rather than a defect in the source.
+
+**The one real gap is vintage, and it is §4's known cost showing up at its worst.** The map is on
+2010 magnitudes. The 2020 census puts TAR Han at **443,370, 12.15%** against the drawn 8.17% —
+198,107 more people, about 4 percentage points, roughly 198 further grey dots. §4 justified staying
+on 2010 on the ground that the choice *"moves magnitude and not geography"* and that 2010 → 2020 is
+close to a uniform per-group rescale. **In the TAR it is conspicuously not uniform: Han +80.8%
+against Tibetan +15.5% over the decade.** That does not overturn §4, whose subject is the
+national table, but Tibet and Xinjiang are the two provinces where its assumption is weakest and
+that should be on the record. See §9d.
+
+Source for the 2020 figures: *西藏自治区第七次全国人口普查主要数据公报*, TAR Statistics Bureau,
+2021-05-20 — Tibetan 3,137,901, Han 443,370, other minorities 66,829, total 3,648,100, and the
+communiqué's own stated increases over 2010 reproduce the 2010 vector exactly. **Both government
+hosts (`tjj.xizang.gov.cn`, `www.xizang.gov.cn`) sit behind a bot wall that returns a firewall
+interception page**; the text was read from the `tjgb.hongheiku.com` communiqué mirror, and the
+arithmetic checks internally, so it is not being trusted on its own.
+
+### 9b. The Han are on `unknown`, they are drawn, and Xizang is deliberately outside the survey layer
+
+Han residents of the TAR resolve to `unknown` like Han everywhere else — counted, placed, nothing
+claimed — and `unknown` is a visible warm grey (`#68665a`, Anita's, §6.3a-ii), not a hole. **No
+category in Tibet draws fewer dots than its count deserves.** So the uniformity is not an artefact
+of a population being assigned somewhere invisible.
+
+**One thing is genuinely different about Tibet, and it goes the other way.** §14.16's CGSS layer
+carves Mahayana Buddhists, Protestants and folk-religion adherents out of each province's grey at
+province grain — and **Xizang is dropped from it on purpose**, because CGSS offers no
+`藏传佛教` (Tibetan Buddhism) answer and would file the region's Buddhists as Mahayana in the one
+province §14.5 already reaches through ethnicity. `data/normalized/cn_cgss.csv` covers 30
+provinces and Xizang is not among them. The consequence is that the TAR's Han are 100% grey where
+the same people in Qinghai or Sichuan would have had a few percent carved to `buddhism.mahayana`
+and `christianity.protestant`. That makes Tibet's non-Tibetan population *greyer* than its
+neighbours', never more Vajrayana, so it is not a cause of the effect Anita is asking about. The
+call is right and it is not being reopened.
+
+### 9c. The placement is right, and better than the tier had any need to be
+
+`_cn_place_weight` gives every unit the Kontur H3 r6 (~3 km) hex population from
+`data/geo/cn/cn_grid_3km.gpkg`. **The weighter ignores `node`**: within one county, Han and
+Tibetan dots are spread by the same total-population surface. So the whole of the urban
+concentration has to be carried by the county tier itself — and it is, because Lhasa's urban core
+is its own county-level unit.
+
+| | drawn | area | |
+|---|---|---|---|
+| Chengguan district, Lhasa | 118,449 Han = **48.3% of the region's Han** | 513 km² | **0.045% of the TAR** |
+| top 2 counties | 50% of the region's Han | | 0.80% of the TAR |
+| top 6 counties | 75% | | 3.71% |
+| top 19 counties | 90% | | 16.05% |
+
+Chengguan is drawn at **46.3% Han internally**, and 58 of the 73 units are under 5%.
+
+**The distribution across prefectures reproduces the 2020 census, which is the strongest check
+available**, since the 2000 shape and the 2020 measurement are independent of each other:
+
+| | drawn share of TAR Han | published 2020 | drawn Han % of unit | published 2020 |
+|---|---|---|---|---|
+| Lhasa | 50.8% | **52.6%** | 22.9% | 26.9% |
+| Nyingchi | 15.0% | **13.3%** | 20.2% | 24.7% |
+| Ngari | 2.2% | **3.3%** | 6.2% | 11.9% |
+
+So the *shape* is right to within a point or two and the *level* is uniformly about 4 to 6 points
+low, which is exactly the vintage gap of §9a and not a placement error. Prefecture figures from the
+Lhasa, Nyingchi and Ngari 2020 communiqués (§9d).
+
+**The residual placement caveat, stated so it is not mistaken for a finding.** Because the weighter
+is node-blind, Han inside a large rural county are spread like that county's total population
+rather than like its town. In Chamdo or Nagqu that pushes a handful of grey dots out of the county
+seat and into the valleys. It is on the order of tens of dots across the whole region, against
+2,725 Vajrayana ones, and correcting it would need an urban/rural split the 2000 volume does not
+carry at county level.
+
+### 9d. Why it looks the way it looks, in one line
+
+At 1:1,000 the entire Tibet Autonomous Region is **2,998 dots spread over 1.13 million km²** —
+2,725 Vajrayana, 256 grey, 17 Muslim. **120 of the 256 grey dots are inside Chengguan district**,
+which is one two-thousandth of the region's surface. A reader zoomed out to the region sees one
+dot per ~380 km² and cannot resolve a town. **The map is correct, the impression it gives is also
+correct, and the Han are invisible at that zoom because they live in an area that is a rounding
+error of Tibet's area.** Zooming to Lhasa shows them.
+
+### 9e. What a fix would take, if the vintage is ever judged worth closing
+
+**Not done here, and not to be done inside an audit** — China is 1.26 million dots and a re-scatter
+is not a side effect. Recorded because the input turned out to be easier to reach than §4 assumed.
+
+§4 rejected 2020 because the NBS publishes the national province × 56-nationality table (2020
+yearbook table 1-4) **only as a 3 MB JPEG scan**. That is still true of the full table. But it is
+not true of Tibet: **each of the TAR's seven prefectures publishes a `民族构成` section in HTML in
+its own 2020 census communiqué**, giving Tibetan, Han and other-minority counts. Three were read
+here and all three carry it — Lhasa (867,891 total; Tibetan 608,856; Han 233,082), Nyingchi
+(238,936; 159,783; 58,983) and Ngari (123,281; 107,199; 14,695). Lhasa's also carries a per-county
+population table, Chengguan at 473,586, though without an ethnic split below city level.
+
+So a 2020 Tibet would be a **prefecture-tier** reconciliation, not a county-tier one: keep the 2000
+county shape, rescale to seven prefecture × 3-category margins instead of one province × 56 vector.
+It is more accurate in level and in shape, and it costs a mixed vintage inside one country, which
+is the thing §4 was avoiding. **Whether that trade is worth making is Anita's, not an auditor's,
+and it is filed as an ask rather than taken.** Note also that §6's rejection of an IPF against
+modern county totals does not bear on this: that argument was against inflating a contested
+minority share in a growing city, and this moves in the opposite direction, raising the Han share
+toward its measured value.
