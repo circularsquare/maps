@@ -34,10 +34,45 @@ is sampled by that wave too and is **dropped on purpose**: see DROP_PROVINCES.
 |---|---|---|---|---|---|
 | Buddhism -> `buddhism.mahayana` | 2,793 | 3 / 30 | **+0.711** | +0.633 | drawn |
 | Islam | 1,224 | 19 / 30 | +0.756 | +0.590 | **NOT drawn — see below** |
-| folk | 1,173 | 16 / 30 | +0.565 | +0.446 | not drawn |
+| folk -> `chinesefolk` | 1,173 | 16 / 30 | +0.565 | +0.446 | **drawn, 2026-09-08** |
 | Protestantism -> `christianity.protestant` | 1,016 | 9 / 30 | **+0.559** | +0.166 | drawn |
 | Daoism | 143 | 25 / 30 | +0.408 | +0.064 | not drawn |
 | Catholicism | 129 | 28 / 30 | +0.229 | +0.059 | not drawn |
+
+**Folk religion is drawn on all five waves and is the second largest colour in China.**
+Anita's call, 2026-09-08, on the observation that China had no colour a Chinese reader would
+recognise as Chinese. It clears the bar Protestantism cleared on most axes: more respondents
+(1,173 against 1,016), better rank stability (+0.565 against +0.559), and a gradient the
+literature would predict unaided — **Fujian and Guangdong around 19%**, which is the Mazu and
+Guandi coast the answer option literally names, against under 1% across the north.
+
+**IT IS ALSO THE SOFTEST NUMBER ON THIS MAP AND THE DISCLOSURE MATTERS MORE THAN THE LAYER.**
+Three things, all in `note_public`:
+
+- **Its size moves 16.6x with the question format**, 4.40% to 0.27% across waves, against
+  Buddhism's 1.5x and Protestantism's 1.8x. No other drawn category is close to this.
+- **Sixteen of thirty provinces hold fewer than ten folk respondents**, against
+  Protestantism's nine. They contribute only 1.7M of the drawn total, about 4%, so this is a
+  smaller problem than it sounds, but Jilin's entire folk population rests on one respondent.
+- **About 8.5% of folk respondents also named Buddhism** (75 people), and because the
+  multi-select flags are independent those people are drawn twice, once on each node. In
+  Fujian that is 3.6 points of the province. Bounded, disclosed, not corrected.
+
+**And the gap the layer cannot show is the whole point of it.** The Spiritual Life Study of
+Chinese Residents (2007, ARDA, `sources/cn_slsc.md`) asks both questions of the same 7,021
+people: **15.8% say they have a religious belief, and only 37.6% say they never worship a god,
+spirit or ancestor.** Four times as many people practise as name it. This layer draws the
+naming.
+
+**Daoism and Catholicism stay out on cell size and nothing else.** 143 and 129 respondents,
+25 and 28 provinces under ten. Worth knowing before anyone reopens it: the familiar
+"hundreds of millions of Daoists" figures are BELIEF measures. By self-identification, which
+is the basis this map is drawn on, Daoism really is about 0.3% of China, so the small number
+is the finding rather than a failure to find.
+
+**Confucianism cannot be drawn from this source at any sample size, because it is not an
+answer.** Neither CGSS's list nor CLDS's offers 儒教. Korea and Thailand carry Confucian dots
+because their own censuses ask; China's survey does not, and no processing invents it.
 
 **Rank stability is now a median over TEN wave pairs rather than one**, and that changes the
 reading of the whole file. See the Protestantism section.
@@ -197,7 +232,30 @@ CN2EN = {
 DRAWN = {
     "Buddhism": "buddhism.mahayana",
     "Protestant": "christianity.protestant",
+    "folk": "chinesefolk",
 }
+
+# A category MAY be drawn from fewer waves than the pool. Nothing currently is, and the empty
+# dict is the record of a decision that was taken and then reversed the same day.
+#
+# **民间信仰 does collapse in 2021 and only in 2021**: 2.90 -> 3.43 -> 1.91 -> 2.11 -> 0.27
+# per cent, while Buddhism moves 4.66 -> 3.76 and everything else drifts. 2021 is the
+# SINGLE-CHOICE wave, and it was excluded for folk on the argument that a respondent who
+# tends a Mazu shrine AND calls themselves Buddhist must pick one, so folk loses to Buddhism.
+#
+# **THAT ARGUMENT IS WRONG AND THE DATA SAYS SO.** It predicts Buddhism RISES in 2021 as it
+# absorbs the folk answers. Buddhism falls, 4.66 -> 3.76, and `none` gains 3.1 points. The
+# folk respondents went to NO RELIGION, not to Buddhism. What single choice actually does is
+# make people who tend a shrine say they have no religion, because they do not consider it a
+# 宗教 — so the multi-select waves measure a PERMISSIVE threshold and 2021 a STRICT one, and
+# excluding 2021 was choosing the permissive one.
+#
+# **And it bought almost nothing**: 3.05% pooled over five waves against 3.31% over four,
+# 37.2M dots against 40.4M. A per-category vintage inconsistency for 8% more dots. Anita's
+# call to reverse it, 2026-09-08. *A wave that disagrees is evidence about the question, and
+# dropping it is a claim about which asking is right — which needs a mechanism that survives
+# being tested, not just one that sounds plausible.*
+EXCLUDE_WAVES = {}
 
 # Multi-select waves: one binary per religion. 2021 is single-choice `A5`.
 MULTI = {
@@ -303,13 +361,17 @@ def load():
 def shares(df):
     """Province x drawn category -> weighted share, with the unweighted cells beside it."""
     rows = []
-    for province, g in df.groupby("province"):
+    for province, gall in df.groupby("province"):
         if province in DROP_PROVINCES:
             continue
-        W = g["w"].sum()
-        years = "+".join(str(y) for y in sorted(g["wave"].unique()))
-        unw = sorted({int(y) for y in g.loc[~g["weighted"], "wave"].unique()})
         for cat, node in DRAWN.items():
+            drop = EXCLUDE_WAVES.get(cat, set())
+            g = gall[~gall["wave"].isin(drop)] if drop else gall
+            if not len(g):
+                continue
+            W = g["w"].sum()
+            years = "+".join(str(y) for y in sorted(g["wave"].unique()))
+            unw = sorted({int(y) for y in g.loc[~g["weighted"], "wave"].unique()})
             rows.append({
                 "province": province,
                 "node": node,

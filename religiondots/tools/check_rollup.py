@@ -76,6 +76,8 @@ sys.path.insert(0, os.path.join(ROOT, "taxonomy"))
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
+from rollup import NOWHERE                                        # noqa: E402
+
 
 def parent_of(node):
     i = node.rfind(".")
@@ -115,9 +117,18 @@ def main():
         # what the viewer reads first. A country whose module has no COLUMNS contributes
         # nothing here and falls through to the ancestor walk below, exactly as the viewer
         # does — the two have to agree or this file is checking something else.
+        # `rollup.NOWHERE` is an adapter saying there is no measured ancestor AT THIS UNIT,
+        # so the walk below must not run for that node. Excluded here rather than treated
+        # as a target, because a country-level `measured_nodes` cannot see a gap that
+        # covers only part of a country — Angola's Uíge and Moxico Leste, whose filled
+        # bodies would otherwise find `christianity.pentecostal` measured in the nineteen
+        # provinces that printed it. Such nodes are ORPHANED, which is the truthful column.
         col_target = {}
+        nowhere = set()
         if "roll" in df.columns:
             d = df[(df["tier"] == "derived") & df["roll"].notna()]
+            nowhere = set(d.loc[d["roll"] == NOWHERE, "node"])
+            d = d[d["roll"] != NOWHERE]
             if not d.empty:
                 v = d.groupby(["node", "roll"])["count"].sum()
                 for (node, target), n in v.items():
@@ -133,6 +144,9 @@ def main():
                 continue
             if node in col_target:
                 rolls += n
+                continue
+            if node in nowhere:
+                orphan_nodes[node] += n
                 continue
             anc = parent_of(node)
             while anc and anc not in measured_nodes:

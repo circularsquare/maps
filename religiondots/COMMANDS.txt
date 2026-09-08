@@ -9,6 +9,29 @@ read it.  It ends by asking you to raise the question with Anita rather than dec
 and that is an invitation rather than a last resort.
 
 
+---- IF YOU WERE SPUN UP TO ADD A COUNTRY AND NOBODY IS WATCHING ----
+
+Read AGENT_BRIEF.md first.  It is the standing brief for an unsupervised session: which calls
+are yours (almost all of them), the short list that is Anita's, and WHEN TO STOP -- park at a
+checkpoint with a handoff rather than running to the wall with the findings still in your head.
+
+    python tools/claim.py                 what is claimed, what is PARKED, what is free
+    python tools/claim.py park <cc> --id <sid>     stop cleanly; writes handoff/<cc>.md
+    python tools/ask.py                   the short list of things waiting on Anita
+    python tools/ask.py new <cc> --title  file one -- rare, and never a blocker
+    python tools/review_dump.py [cc ...]  every mapping's REVIEW dict, read together
+    python tools/build_tail.py --id <sid> steps 10-12 under an exclusive lock -- the ONLY three
+                                          steps that rewrite whole-map files, so never run them
+                                          bare while anyone else is working
+
+WebSearch/WebFetch are the source-hunting tools.  A Gemini API route was built and withdrawn
+2026-09-08 -- grounded search is not in the free tier and Anita's call was that paying for it
+was not a sure improvement.  Do not rebuild it.
+
+A PARKED COUNTRY IS THE ONE THING HERE THAT ROTS, so take one before starting a fresh country.
+handoff/<cc>.md says which step below it stopped after and what is already on disk.
+
+
 ---- ADDING A COUNTRY: THE CHECKLIST ----
 
 Anita, 2026-09-06, on finding a half-wired Vietnam drawing a Chinese legend over Hanoi:
@@ -79,6 +102,26 @@ Run in order.  Every step, every time, even when only one country changed.
    7. python coverage.py                   # every drawn node is covered, all countries
    8. python scatter.py --country <cc>                  # 1:1,000
    9. python scatter.py --country <cc> --dot-value 10000  # 1:10,000, needed by --coarse below
+  10-12.  python tools/build_tail.py --id <sid>
+                                           # RUN THIS INSTEAD OF THE THREE COMMANDS BELOW when
+                                           #   anyone else might be working (which is normally).
+                                           #   Steps 10, 11 and 12 are NOT per-country: each one
+                                           #   rewrites a file covering the whole map, and step
+                                           #   11 is --no-atomic, so it writes the archive in
+                                           #   place.  Two agents finishing twenty minutes apart
+                                           #   both run all three over the same files and the
+                                           #   loser reads a .pmtiles mid-write.  The symptom is
+                                           #   not an error, it is a handful of wrong tiles on a
+                                           #   map that looks built.
+                                           #   build_tail.py takes an exclusive lock, derives the
+                                           #   country list, and cannot forget --coarse or
+                                           #   country_shapes.py.  If the lock is held it WAITS,
+                                           #   which is right: the build covers every country, so
+                                           #   their run almost certainly includes yours.
+                                           #   `python tools/build_tail.py` with no --id just
+                                           #   says who holds it.
+                                           #   The three steps it runs, if you need them by hand:
+
   10. python country_shapes.py             # <-- SILENT IF SKIPPED.  Auto's "which country is
                                            #   the camera over" reads this file.  A country
                                            #   missing from it is invisible to Auto, which
@@ -107,6 +150,17 @@ Run in order.  Every step, every time, even when only one country changed.
     and the manifest it replaces loses the 10k edition FOR EVERY COUNTRY -- the 1:10,000
     control then greys itself out map-wide.  Hit 2026-09-06 while adding Bangladesh.
   * country_shapes.py is the one nothing else depends on, so nothing complains.  See step 10.
+
+  AND ONE THAT IS NOT A BUG BUT WILL BE REPORTED AS ONE:
+
+  * --no-atomic REWRITES THE ARCHIVE IN PLACE, so a page that is OPEN while step 11 runs
+    reads a half-written file and draws the country as a LATTICE -- bands of dots with
+    rectangular gaps, which looks exactly like corrupt data.  Anita saw it on Angola
+    2026-09-08 and reported "angola looks garbled"; the build was simply still going.
+    It is not persistent and the fix is a reload once step 12 has finished.  If someone is
+    watching the map, say the rebuild is running BEFORE starting it -- and confirm with
+    `tools/check_tiles.py` rather than by looking, because a screenshot taken mid-write is
+    not evidence either way.
 
   AND ONE TO RUN AFTER EDITING ANY `note_public`:
 
@@ -2855,6 +2909,17 @@ Run in order.  Every step, every time, even when only one country changed.
    rule as check_palette.py reading ROOT_HSL, so the checker cannot drift from the palette.  If
    index.html stops declaring one of the names it slices, palette_dump.js says which.
 
+   A COLOUR CHANGE IS VERIFIED BY THESE TWO AND NOT BY LOOKING.  Anita, 2026-09-08, after a
+   session screenshotted the map to confirm a one-line PIN edit: "you dont need to visually
+   verify if you just tweaked a color ... it seems like something that should intuitively like
+   not be necessary (i can much more easily verify overall color balance in a useful way)."
+   She is right, and the reason is in the paragraph above: these tools read the SHIPPING
+   palette and report the exact hex per country, plus every pair in Lab against that country's
+   own tallies.  That is strictly more than a screenshot shows, and the one thing a screenshot
+   adds -- whether the country draws at all -- is spec 12's check for ADDING A COUNTRY, not for
+   editing a hex.  Judging whether the result looks right across the map is hers; measuring it
+   is this tool's.  Change a colour, run both, say what they measured.
+
     python tools/scan_identities.py
 
    Finds nodes that are the SAME THING at two depths -- a branch whose single child is the
@@ -2976,3 +3041,71 @@ Run in order.  Every step, every time, even when only one country changed.
                                      #   provinces (kpi_stat sheets), exact denominators from
                                      #   Table 1.  65,977,881 people, 98.51% measured.
                                      #   sources/th.md, sources.md 9as.
+
+    python sources/at.py --fetch     # Austria, ten PDFs (~50 MB) + one 48 KB xls, seconds.
+    python sources/at_geo.py --fetch #   STATISTIK AUSTRIA Volkszaehlung 2001, TABELLE 4:
+    python sources/at_grid.py --fetch#   10 categories on 2,380 units (2,357 Gemeinden + the
+                                     #   23 Wiener Gemeindebezirke), 8,032,926 people,
+                                     #   97.99% drawn, every row measured.
+                                     #   www.statistik.at OMITS A TLS INTERMEDIATE, the third
+                                     #   host here to do so after stat.gov.pl and Ghana's
+                                     #   StatsBank.  Reads as a dead host and is not one.
+                                     #   *** THE COLUMN NUMBERS ARE PRINTED OUT OF ORDER AND
+                                     #   THE VOLUMES DISAGREE WITH EACH OTHER.  The eight
+                                     #   Laender volumes head Tabelle 4  1 2 3 5 4 6 7 8 9 10
+                                     #   11 -- Orthodox printed FOURTH and numbered 5,
+                                     #   Evangelisch printed fifth and numbered 4 -- while the
+                                     #   Wien volume numbers the same columns in print order.
+                                     #   Keying on the number swaps Orthodoxy and
+                                     #   Protestantism in eight volumes of nine and NOTHING
+                                     #   CATCHES IT: the swap is consistent inside each
+                                     #   volume, so every total still reconciles.  Columns are
+                                     #   read from the header LABELS by x-position and the
+                                     #   order is asserted.  spec 12.
+                                     #   TABELLE 15 SHARES TABELLE 4'S HEADER (religion by age
+                                     #   and citizenship) and in the Burgenland volume its stub
+                                     #   reads as a Kennziffer, so the table is bounded by its
+                                     #   printed title -- and CONTINUATION PAGES REPEAT THAT
+                                     #   TITLE, so it ends at the next DIFFERENT number.
+                                     #   Bounding on "the next title" returns two pages of a
+                                     #   fifty-page table and every check still passes.
+                                     #   THE 14 STATUTARSTAEDTE ARE PRINTED ONCE, at the Bezirk
+                                     #   tier, never with a Gemeinde code -- 1,044,429 people,
+                                     #   13.0% of Austria and all its big cities, silently
+                                     #   absent unless minted as Bezirk+01.
+                                     #   `-` IS AN IN-BAND ZERO in 7,259 cells.
+                                     #   BOUNDARIES ARE GISCO'S `Communes 2001`, the census's
+                                     #   own Gebietsstand, so Styria's 542->287 merger of 2015
+                                     #   never arises and NO CROSSWALK IS WRITTEN.  2,357 of
+                                     #   2,358 join on the Topographische Kennziffer; names
+                                     #   agree 99.4% and are used only to check it.  That
+                                     #   layer's .cpg claims UTF-8 and its .dbf is not (read
+                                     #   latin-1, take names from COMM_AT_2001.csv), and one
+                                     #   commune is several features -- dissolve on the code.
+                                     #   Stallehr (272 people) has no polygon and is dropped.
+                                     #   VIENNA IS DRAWN AS ITS 23 GEMEINDEBEZIRKE, not as the
+                                     #   single Gemeinde it is: data.wien.gv.at carries
+                                     #   STATAUSTRIA_BEZ_CODE, so the join is an integer
+                                     #   equality against the office's own key.  The 245
+                                     #   Zaehlbezirke are parsed and kept UNDRAWN (the current
+                                     #   OGD layer has 250; the vintages do not correspond).
+                                     #   Rattenberg is 0.10 km2 and gets no hex centroid, so it
+                                     #   is given its own polygon in the placement layer.
+                                     #   UNSD'S 31 NATIONAL ROWS DECOMPOSE THE TEN DRAWN
+                                     #   COLUMNS EXACTLY -- six reproduce a column, the other
+                                     #   25 partition the remaining four with no row used twice
+                                     #   and no remainder.  Strongest check in the file, since
+                                     #   every internal identity survives a column permutation
+                                     #   and this does not.  It also PROVES a split that is
+                                     #   deliberately NOT applied: those figures exist at one
+                                     #   geography, so it would give all 2,380 units the same
+                                     #   mix and turn 88,977 measured people derived.
+                                     #   Vorarlberg's own .xls of the same table checks one
+                                     #   whole Bundesland: 101 rows, 1,111 figures, all equal.
+                                     #   DRAWN AT 2001 AS PUBLISHED.  spec 3.4 was refused: the
+                                     #   only recent source is a Mikrozensus SAMPLE whose
+                                     #   publisher marks cells under 3,000 uninterpretable, and
+                                     #   its categories do not crosswalk (no `Unbekannt`; its
+                                     #   Christentum residual is 5x the 2001 column).
+                                     #   check_mapping needs BOTH levels -- see DEFAULT_LEVELS.
+                                     #   sources/at.md, sources.md 9br.

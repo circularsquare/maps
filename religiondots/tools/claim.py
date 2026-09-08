@@ -7,9 +7,10 @@ spent an hour on Peru while another had already finished it, and overwrote its `
 with a `Write` to a path it had not checked. Nothing was lost (Claude Code's file history had
 it), but the hour was.
 
-    python tools/claim.py                       # what is claimed, and what is free
+    python tools/claim.py                       # what is claimed, parked, and free
     python tools/claim.py take pe --id <sid>    # claim Peru
     python tools/claim.py drop pe --id <sid>    # release it
+    python tools/claim.py park pe --id <sid>    # release it and leave a handoff for the next one
     python tools/claim.py done pe --id <sid>    # release it and note it as built
     python tools/claim.py mine --id <sid>       # what you are holding
 
@@ -44,6 +45,39 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 CLAIMS = os.path.join(ROOT, "data", "claims")
 QUEUE = os.path.join(ROOT, "queue.md")
+
+# Handoffs are NOT under data/, which is gitignored — a parked country is the one piece of
+# state here that rots, and it has to survive a clean checkout and show up in `git status`.
+HANDOFF = os.path.join(ROOT, "handoff")
+
+HANDOFF_TEMPLATE = """# {cc} — parked {date}, session `{sid}`
+
+*Written because I was running out of context, not because anything is wrong.*
+*`AGENT_BRIEF.md` §4: take a parked country before a fresh one, it is cheaper.*
+
+## Last COMMANDS.txt step completed
+
+<!-- The NUMBER, e.g. "step 2, geo fetched" or "checkpoint B: normalized CSV reconciles".
+     This is the single most useful line in the file. -->
+
+## What is on disk
+
+<!-- Paths, and whether each one is trustworthy. data/raw/... , data/normalized/{cc}.csv ,
+     data/geo/{cc}/ , sources/{cc}.py , taxonomy/{cc}YYYY.py .  Say which are stubs. -->
+
+## What I was about to do
+
+<!-- The next concrete action, not the goal. -->
+
+## The one thing that will bite you
+
+<!-- The join that nearly went wrong, the column that lies, the URL that needs a UA. -->
+
+## Everything else
+
+<!-- Anything not yet written into sources/{cc}.md or sources.md. If it IS written there,
+     say so and point at the section instead of repeating it. -->
+"""
 
 # A claim older than this is reported as probably abandoned. It is not auto-released: a long
 # country legitimately takes hours, and silently stealing a live claim would be worse than
@@ -94,6 +128,19 @@ def load_claims():
     return out
 
 
+def parked():
+    """Countries with a handoff note waiting. Resuming one is cheaper than a fresh start."""
+    if not os.path.isdir(HANDOFF):
+        return {}
+    out = {}
+    for f in sorted(os.listdir(HANDOFF)):
+        m = re.fullmatch(r"([a-z]{2})\.md", f)
+        if m:
+            p = os.path.join(HANDOFF, f)
+            out[m.group(1)] = {"path": p, "mtime": os.path.getmtime(p)}
+    return out
+
+
 def read_queue():
     """The candidate list. Rows look like `| pe | Peru | ... |`; anything else is prose."""
     if not os.path.exists(QUEUE):
@@ -121,6 +168,14 @@ def cmd_list(args):
                   f"{str(c.get('note', ''))[:44]}{flag}")
     else:
         print("CLAIMED: nothing")
+
+    park = parked()
+    if park:
+        print(f"\nPARKED ({len(park)}) — TAKE ONE OF THESE FIRST, they are half-built and "
+              f"they rot:")
+        for cc, p in sorted(park.items(), key=lambda kv: kv[1]["mtime"]):
+            state = "drawn now, delete the handoff" if cc in reg else "resumable"
+            print(f"  {cc}  {_age(p['mtime']):>6s} ago  {state}   handoff/{cc}.md")
 
     print(f"\nDRAWN: {len(reg)} registered in countries.py, {len(have)} with dots on disk")
     missing = sorted(reg - have)
@@ -207,6 +262,37 @@ def cmd_drop(args):
     return 0
 
 
+def cmd_park(args):
+    """Stop cleanly mid-country: leave a handoff, then drop the claim.
+
+    AGENT_BRIEF.md §4. This is the move when you are about half through your context — not a
+    failure, and the designed outcome at checkpoint B. What is actually expensive to redo is
+    the fetch and the reconciliation; what is cheap is the mapping written against a CSV that
+    already exists. So parking after the CSV lands costs the next session almost nothing,
+    while running to the wall with the findings still in your head costs it everything.
+    """
+    import datetime
+
+    cc = args.cc.lower()
+    os.makedirs(HANDOFF, exist_ok=True)
+    path = os.path.join(HANDOFF, f"{cc}.md")
+
+    if os.path.exists(path):
+        print(f"handoff/{cc}.md already exists — you are probably resuming a park.")
+        print(f"  UPDATE it in place rather than starting a new one; the next session wants "
+              f"one file,\n  not a stack of them.")
+    else:
+        with open(path, "w", encoding="utf-8") as fh:
+            fh.write(HANDOFF_TEMPLATE.format(
+                cc=cc, sid=args.id, date=datetime.date.today().isoformat()))
+        print(f"wrote handoff/{cc}.md")
+
+    print("\nFILL IT IN NOW, before you stop. The last COMMANDS.txt step you completed is the")
+    print("line that matters; a handoff nobody wrote is a country nobody resumes.")
+    print("Delete it when the country is finished.\n")
+    return cmd_drop(args)
+
+
 def cmd_done(args):
     rc = cmd_drop(args)
     if rc == 0:
@@ -216,6 +302,10 @@ def cmd_done(args):
         print("  - countries.py entry with note_public and gap=")
         print("  - python tools/built_countries.py --check   (both editions present)")
         print(f"  - remove {cc} from queue.md, or mark it drawn there")
+        if os.path.exists(os.path.join(HANDOFF, f"{cc}.md")):
+            print(f"  - DELETE handoff/{cc}.md — you resumed a park and it is now a lie")
+        print("  - anything that generalises into spec §12; a fact about this country into "
+              f"sources/{cc}.md")
     return rc
 
 
@@ -236,6 +326,7 @@ def main():
     sub.add_parser("list", help="what is claimed and what is free (default)")
 
     for name, help_ in (("take", "claim a country"), ("drop", "release a claim"),
+                        ("park", "release it and leave a handoff for the next session"),
                         ("done", "release a claim and print the finishing checklist")):
         s = sub.add_parser(name, help=help_)
         s.add_argument("cc")
@@ -248,7 +339,7 @@ def main():
     m.add_argument("--id", required=True)
 
     args = p.parse_args()
-    fn = {"take": cmd_take, "drop": cmd_drop, "done": cmd_done,
+    fn = {"take": cmd_take, "drop": cmd_drop, "park": cmd_park, "done": cmd_done,
           "mine": cmd_mine, "list": cmd_list, None: cmd_list}[args.cmd]
     sys.exit(fn(args) or 0)
 

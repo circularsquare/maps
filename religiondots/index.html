@@ -139,6 +139,9 @@
     #scope-bar {
       padding: 5px 10px; border-bottom: 1px solid #2a2a2a;
       color: #888; font-size: 11px; display: flex; align-items: center; gap: 6px;
+      /* wraps so §10.4's composition bar can take a full-width line of its own under the
+         label, which is where it belongs: it is the picture of the sentence above it */
+      flex-wrap: wrap;
     }
     /* The one line in the panel that is white. It answers "what am I looking at" — which
        group, cut at which level, in which country — and until it existed the panel said only
@@ -154,6 +157,50 @@
       vertical-align: 1px; background: #2d2d2d; border: 1px solid #444; border-radius: 2px;
     }
     #scope-bar a { color: #89b4fa; text-decoration: none; cursor: pointer; flex: none; }
+
+    /* ---- §10.4, the composition bar --------------------------------------
+       One line of the whole scope, cut into the colours that are on the map, in the order
+       the rows below it run. Its own full-width line under the label, and above the panel's
+       first religion row, because it is the same statement as "Viewing: all religions,
+       France" drawn instead of written.
+
+       `flex: 0 0 100%` and not a block after `#scope-bar`: dropped below the bar's border it
+       would read as the first row of the tree rather than as part of the caption.
+
+       NO MINIMUM SEGMENT WIDTH, and that is the honest choice. A country's smallest drawn
+       group is four decimal places down from its largest — Chinese religions are 4k of
+       France's 68m, 0.006%, which is a sixtieth of a pixel — and giving every segment a
+       floor of one pixel would hand thirty specks a third of the bar between them. The
+       browser lays flex children out at 1/64px and antialiases, so a sub-pixel segment
+       tints its pixel and disappears at the right rate. The tooltip still finds it. */
+    #mixbar {
+      flex: 0 0 100%; margin-top: 5px; height: 7px; border-radius: 3px;
+      display: flex; overflow: hidden; background: #2a2a2a; cursor: help;
+    }
+    /* `<i>` and not `<span>`: `#scope-bar span` above sets `flex: 1` on its children and
+       white on every span inside it, and a segment must take exactly the width it is
+       given. `pointer-events: none` keeps the pointer on the container, which is what
+       resolves the hover — a 0.2px child cannot be hovered and does not have to be. */
+    #mixbar i { flex: none; height: 100%; pointer-events: none; }
+    /* The undrawn share: people the source never counted, so no colour of the map's own can
+       stand for them. Diagonal grey on grey is the one fill here that is visibly NOT a
+       religion, and it reads as hatching rather than as a category at any width. */
+    #mixbar i.nd {
+      background: repeating-linear-gradient(-45deg,
+        #4e4e4e 0 2px, #303030 2px 4px);
+    }
+    /* The mix tooltip is the DOT CARD's shape, deliberately: the key beside the name is what
+       lets a reader carry a colour from the bar to the map without translating it, and the
+       card over a dot already answers the question that way round. */
+    #tip .mx { display: flex; align-items: flex-start; gap: 6px; }
+    #tip .mx .mk { width: 9px; height: 9px; border-radius: 50%; flex: none; margin-top: 2.5px; }
+    #tip .mx .mk.nd {
+      border-radius: 2px;
+      background: repeating-linear-gradient(-45deg, #4e4e4e 0 2px, #303030 2px 4px);
+    }
+    #tip .mx b { color: #fff; font-weight: 600; }
+    #tip .mx .sub { color: #999; }
+
     #tree { overflow-y: auto; padding: 4px 0 8px; }
     #tree::-webkit-scrollbar { width: 6px; }
     #tree::-webkit-scrollbar-thumb { background: #555; border-radius: 3px; }
@@ -540,7 +587,7 @@
       <button id="depth-minus" title="Less detail">&minus;</button>
       <button id="depth-plus" title="More detail">+</button>
     </div>
-    <div id="scope-bar"><span id="scope-label">all religions</span><a id="vis-all"></a><a id="scope-clear">clear</a></div>
+    <div id="scope-bar"><span id="scope-label">all religions</span><a id="vis-all"></a><a id="scope-clear">clear</a><div id="mixbar" data-tip="mix"></div></div>
     <div id="tree"></div>
     <div id="legend-note">
       <!-- §4.1a's spatial carry used to be spelled out here and is not any more — Anita,
@@ -679,6 +726,15 @@ function fmtPop(p) {
 }
 function popTitle(dots) {
   return `${(dots * DOT_VALUE).toLocaleString()} people · ${dots.toLocaleString()} dots`;
+}
+/* ONE PERCENTAGE FORMAT for everything that prints a share of the scope — the row bars'
+   tooltips (§10.3) and the composition bar's (§10.4), which sit six pixels apart and would be
+   read against each other the moment they disagreed. Three digits of precision at the top,
+   one significant figure at the bottom, so 0.006% is a number rather than "0%". */
+function pctText(s) {
+  return s >= 0.1 ? (s * 100).toFixed(0) + '%'
+    : s >= 0.001 ? (s * 100).toFixed(1) + '%'
+      : Number((s * 100).toPrecision(1)) + '%';
 }
 const OUT_COLOR = '#1c1c1c';
 
@@ -1066,7 +1122,11 @@ function md(s, para) {
    and this holds what the key stands for. */
 const TIPS = {};
 
-function showTip(el) {
+/* `atX` is for a trigger whose ANSWER varies along its own width — §10.4's composition bar is
+   the only one, and it is 266 pixels of thirty different answers. Everything else leaves it
+   out and keeps aligning to the trigger's left edge, which is right for a control that means
+   one thing wherever you point at it. */
+function showTip(el, atX) {
   const tip = document.getElementById('tip');
   const html = TIPS[el.dataset.tip];
   if (!html) return;
@@ -1078,7 +1138,8 @@ function showTip(el) {
   const r = el.getBoundingClientRect(), t = tip.getBoundingClientRect();
   let top = r.bottom + 6;
   if (top + t.height > window.innerHeight - 8) top = Math.max(8, r.top - t.height - 6);
-  tip.style.left = Math.max(8, Math.min(r.left, window.innerWidth - t.width - 8)) + 'px';
+  const left = atX === undefined ? r.left : atX - t.width / 2;
+  tip.style.left = Math.max(8, Math.min(left, window.innerWidth - t.width - 8)) + 'px';
   tip.style.top = top + 'px';
 }
 function hideTip() { document.getElementById('tip').classList.remove('show'); }
@@ -2174,14 +2235,185 @@ const PIN = {
      other reading of the request: the two never co-occur (Kenya has no Baptist row, and no
      source with a Baptist row has an Evangelical one), so sharing would be safe on the map
      and still wrong in the all-countries legend, where both rows are listed and two
-     identical swatches read as an error. */
-  'christianity.evangelical':        [88, 54, 67],
+     identical swatches read as an error.
+
+     MOVED OUT OF THE YELLOW-GREEN INTO GREEN, 2026-09-08 — Anita, looking at Guatemala:
+     "evangelical unspecified looks a bit similar to the catholic gold. maybe we could make
+     evangelical unspecified a bit more saturated and more green / less yellow? something
+     like #64cd56 (only for the christian only view, not for the all religions view)."
+     Hence PIN and not PIN_OVERVIEW; the overview band is untouched and Christianity's band
+     still stops short of green for §6.9's reason.
+
+     THE PLACEMENT ABOVE WAS ARGUED FROM WHAT THE NODE *IS* AND NOT FROM WHAT IT SITS BESIDE,
+     and that is why it drifted into Catholic. `Evangelical` is the faith-mission stream, so
+     it went next to the believers' churches — sound as taxonomy, and it put a pale
+     yellow-green at dE 52 from Catholic's gold in the four countries where the two are drawn
+     together at size. Guatemala is now the loudest of them: 9,243 Catholic dots against
+     6,221 Evangelical, and those two ARE the country.
+
+     EVERY PAIR THAT SHARES A MAP WITH IT IMPROVES, AND NOT ONE GETS WORSE. The nodes that
+     actually co-occur with `evangelical` in a built country are Catholic, Latin Catholic,
+     Protestant, Pentecostal, Orthodox, Anglican, Adventist, Latter-day, Witnesses, United
+     and Other Christian — measured off counts.json, not assumed:
+
+       catholic       52.2 -> 70.5   ci 4984/5445, de 20746/1174, gt 9243/6221, py, sb, dm, gd
+       pentecostal    34.2 -> 46.8   gd, vc
+       latterday      49.3 -> 64.4   gt
+       adventist      65.1 -> 77.6   sb
+       witnesses      66.8 -> 85.2   gt
+
+     WHAT IT COSTS IS LEGEND-ONLY, AND THE LEGEND STILL COMES OUT AHEAD. Green is the
+     Pietist-Wesleyan block, so the new colour lands dE 17.6 from Friends, 17.8 from Moravian,
+     19.4 from Plymouth, 20.4 from Holiness, 24.4 from Pietist and 24.6 from Baptist — six
+     pairs under 25, and **not one of those six has ever been drawn on the same map as
+     `evangelical`**. They meet only in the all-countries legend. And there the move is still
+     an improvement, because the colour it is leaving was dE 9.4 from Plymouth and 9.6 from
+     Anabaptist: **the worst Christian pair in that legend goes 9.4 -> 17.6.**
+
+     So the node no longer sits with the believers' churches it descends from. That is the
+     trade, and it is the same one `christianity.protestant` took in the note above: where a
+     node's ancestry and the pair a reader actually compares point in different directions,
+     the pair on screen wins. */
+  'christianity.evangelical':        [113, 54, 57],  // #64cd56 — Anita
+
+  /* MALAWI'S MERGED CELL WAS A SHADE OF `Other Christian`, WHICH IS THE ONE THING IT IS NOT
+     — 2026-09-08. Anita, looking at the Christianity scope over Malawi: "we should maybe make
+     adventist,baptist, or apostolic category (only exists in malawi) green to match the
+     adventist / baptist / apostolic colors?"
+
+     She had found a real contradiction rather than a preference. `christianity.
+     sdabaptistapostolic` is not in this table, so the generated wheel put it in the `No
+     single line` lineage group with `christianity.other` — and in the Christianity scope that
+     group is hue 340, so the two came out **#ba124b and #e74078: the same hue, differing only
+     in lightness.** The node's own entry in branches.py argues at length that sending these
+     1,644,829 people to `christianity.other` "would file them as bodies with no branch when
+     the truth is that they have three". The tree said one thing and the palette said the
+     other, in the only view where the distinction is visible.
+
+     THE OVERVIEW HAD ALREADY GOT IT RIGHT, which is what makes the fix obvious: there the
+     node draws **#b0eb24, hue 78**, a yellow-green, because the overview divides
+     Christianity's own band rather than the full wheel. So the swatch was changing colour
+     between two views of the same dots. This pin is that same #b0eb24, which makes the node
+     view-independent — the one thing a reader can carry from the overview into the scope.
+
+     AND HUE 78 IS WHERE ITS THREE CONSTITUENTS LIVE. On this wheel Baptist is 83, Pentecostal
+     160 (the reading of Malawi's `Apostolic` that is not African-instituted) and Adventist
+     190; 78 sits at the head of that arc, one step below Baptist, in the yellow-greens the
+     believers' churches occupy. It is not the midpoint of the three — the midpoint is 136 and
+     that is Methodist's slot — and it does not need to be: what the colour has to say is
+     *these are Sabbath-and-prophecy churches, not a residual*, and the green end says it.
+
+     NOTHING IT IS DRAWN BESIDE IS NEAR IT. The node exists in one country, and Malawi's scope
+     draws five other categories: Catholic 38, Pentecostal 160, Presbyterian 250, Anglican 255
+     and Other Christian 340. The nearest is Catholic at 40° of hue. Anabaptist (72) and
+     Baptist (83) are 6° and 5° away and neither is drawn in Malawi at all, so the pair a
+     reader compares is never the pair that is close — the same trade `christianity.
+     evangelical` takes in the note above. */
+  'christianity.sdabaptistapostolic':[ 78, 83, 53],  // #b0eb24 — the overview's own swatch
+
+  /* ISLAM'S SUBTREE IS AUTHORED TOO, 2026-09-08 — Anita, after Türkiye: "maybe lets tweak the
+     colors for if we have just islam selected ... maybe have sunni take the yellow-green
+     range." It is Christianity's case at a twentieth of the size, and the second family to
+     come off the generated wheel.
+
+     WHAT THE WHEEL WAS DOING, measured with `check_overview.py --focus islam --all`, in the
+     all-countries view where all nine rows are drawn at once:
+
+         Hanafi        #ba1212   64,815 dots   dark RED, and contrast 2.9 — under the floor
+         Shafi'i       #7dd8d1   10,266        pale teal
+         Ja'fari       #9bde35      846        yellow-green
+         Maliki        #86de35       19        yellow-green, dE 6 from Ja'fari
+         Hanbali       #7935de       44        purple
+         Sunni Islam   #6fba12   14,080        yellow-green
+
+     Level 1 and level 2 are each spread over the FULL wheel across the whole taxonomy, so a
+     family's own members land wherever their global index puts them. That is right for
+     Christianity's 29 branches and absurd for eight nodes that a reader opened *because* they
+     are all Islam: the largest of them came out red, too dim to read, inside a scope called
+     Islam, with its own sibling in teal and its cousin in purple.
+
+     THE LAYOUT IS ANITA'S, and the first version of it was wrong in a way worth recording.
+     That version spread all four schools across the yellow-greens and gave Sunni's own dots a
+     muted olive to keep them out of the way. Her objection, and it is the better reading of
+     what the node MEANS: *"i guess the key thing here is that most countries dont specify
+     islam. but like they're mostly just sunni. so i kinda want sunni unspecified to actually
+     look similar to islam unspecified."*
+
+     She is right, and the numbers say why. `islam`'s own `unspecified` row is **877m people**
+     against Sunni Islam's 89m: nine tenths of the Muslims on this map come from a source that
+     said only `Muslim`, and almost all of them are Sunni. Those two rows are the same answer
+     at two levels of detail, so they should read as two shades of one thing — and the named
+     schools, which are the rare case where somebody actually asked, should be what stands out
+     against them.
+
+     So Sunni's own dots sit beside Islam's green, and the four schools run off it into a warm
+     ramp instead of crowding the same corner:
+
+          86   Sunni Islam   #81cb20  yellow-green   the branch's OWN dots, next to the
+                                                     family green — 14m in this view
+          62   Hanafi        #e6ec3c  chartreuse     the anchor, 65m
+          48   Shafi'i       #c8a519  mustard        10m, and the one Türkiye exists to show
+          35   Maliki        #cb8420  orange         19k
+          16   Hanbali       #cb4d20  red-orange     44k
+
+     Shia goes to blue, 202 and 218, because the succession dispute is the division a reader
+     is most likely to already have a mental colour for, and because nothing else in the scope
+     is blue. Ahmadiyya keeps the pink the wheel gave it — it was never a problem — pinned
+     rather than left generated so it stops moving when the tree grows.
+
+     `islam` ITSELF IS NOT PINNED and keeps ROOT_HSL's #26ba53. The family colour is the one
+     thing a reader already knows on entering the scope.
+
+     MEASURED, and every one of the four hexes round-trips exactly through the HSL the table
+     stores. Contrast on the near-black map runs 14.7 (Hanafi) down to 4.2 (Hanbali), all well
+     over the 2.9 floor. Every pair over dE 25 except Shia against Ja'fari at 13.7, which is a
+     parent and its only child — Ja'fari IS Türkiye's whole Shia figure — and §6's bar inside
+     one family is 12 rather than 25. Shafi'i against Maliki is 22.4 and Maliki is 19 dots.
+
+     THIS IS THE FOCUS TABLE ONLY. In the overview Shafi'i stays green (PIN_OVERVIEW), because
+     there Islam's subtree has to stay inside Islam's own hue band and a mustard would put a
+     school of law in Christianity's yellows. §6.9's stated cost: what you learn in the
+     overview is not what focus shows, and the panel repaints at the same instant. */
+  'islam.sunni':                     [ 86.0, 72.8, 46.1],   // #81cb20 — Anita
+  'islam.sunni.hanafi':              [ 62,   82,   58  ],
+  'islam.sunni.shafii':              [ 48.0, 77.8, 44.1],   // #c8a519 — Anita
+  'islam.sunni.maliki':              [ 35.1, 72.8, 46.1],   // #cb8420 — Anita
+  'islam.sunni.hanbali':             [ 15.8, 72.8, 46.1],   // #cb4d20 — Anita
+  'islam.shia':                      [202, 80, 46],
+  'islam.shia.jaafari':              [218, 68, 66],
+  'islam.ahmadiyya':                 [325, 54, 67],
 };
 
 /* The same escape hatch for the overview band (§6.9). Separate table because the two palettes
    are separate questions: a pin here says "this family's band came out wrong at this position",
    which has nothing to do with where the node sits on the full wheel. */
 const PIN_OVERVIEW = {
+  /* SHAFI'I IS PINNED BECAUSE THE BAND ALONE COULD NOT SEPARATE IT FROM HANAFI — 2026-09-08,
+     with Türkiye. Opening ROOT_BAND for Islam (see there) took the pair from dE 5.6 to 7.6,
+     and the two are 64,815 and 10,266 dots in the one country that draws them, which is
+     `check_overview.py`'s own test for when a pin is worth it: *only a pair that is BIG on
+     both sides*.
+
+     WHY THE BAND CANNOT DO IT. The four schools of law are three levels down — Islam, then
+     the `Branches` lineage group, then Sunni, then the school — so each takes an eighth of
+     half the family's hue however wide the family's hue is. At [100, 132] that is 2°, and at
+     [84, 132], which was tried, 3° and dE 8.7 with Hanafi pushed to hue 86 where it starts
+     reading as chartreuse rather than as Islam. Widening past that trades the family's
+     identity for a separation the band is structurally unable to deliver.
+
+     THE COLOUR, hue 120 at S72 L52. Chosen by maximising the smallest distance to everything
+     it can be drawn beside, with lightness held at Hanafi's own 52 so neither school
+     dominates the other on a dark map: **Hanafi 31, Sunni Islam 28, Islam's own row 29,
+     Bahá'í 46**. Nothing near it is under 27. It is a pure green at the cardinal hue, which
+     is the point — the reader should see two greens and know both mean Islam, and see where
+     one stops.
+
+     WHAT IT IS FOR. Türkiye is the only source on this map that enumerates a school of law,
+     and the Shafi'i share is the whole of what it has to say: 48.7% of Ortadoğu Anadolu,
+     42.0% of the southeast, 0.2% of the eastern Black Sea. Drawn in a green nobody could
+     tell from the Hanafi around it, that measured division rendered as one flat colour. */
+  'islam.sunni.shafii': [120, 72, 52],
+
   /* "OTHER CHRISTIAN" IS THE FAMILY'S OWN YELLOW — Anita, 2026-09-05: it "looks extremely
      green. would rather color it same as yellow unspecified tbh". It sat at the very top of
      the band, hue 98, which is the greenest a Christian row can be, and it is the row least
@@ -2589,6 +2821,34 @@ const ROOT_BAND = {
      DO NOT "fix" the dE number by widening this band. */
   judaism:       [197, 211],
   buddhism:      [340, 352],   // the three vehicles; Shinto is 334 below and its own root 356 above
+
+  /* ISLAM GETS A BAND, 2026-09-08 WITH TÜRKİYE — Anita: "you can expand islam hue band if u
+     want." Until Türkiye the family had three children drawn in two countries and fell
+     through to the ±2° default, which was the right answer for that. Türkiye breaks it the
+     way Mauritius broke Hinduism's, and harder: it is the FIRST source anywhere on this map
+     that enumerates a school of law, so `islam.sunni` acquires four children and
+     `islam.shia` one, and the family goes from three drawn nodes to eight.
+
+     WHAT ±2° MEASURED, at depth 4 over Türkiye, before this line existed:
+
+         Hanafi   hsl(136, 48, 52)   64,815 dots
+         Shafi'i  hsl(137, 54, 46)   10,266 dots      ONE degree apart, dE 5.6
+         Ja'fari  hsl(138, 66, 40)      846 dots      dE 4.9 from Shafi'i
+
+     Those are the country's two largest categories and the whole of what it has to say. The
+     Shafi'i band across the Kurdish southeast — 48.7% of Ortadoğu Anadolu against 0.2% of the
+     eastern Black Sea — was drawn in a green nobody could distinguish from the Hanafi around
+     it, which is §6's failure case in its purest form: a real measured division rendered as
+     one flat colour.
+
+     WHY [100, 132] AND NOT ABOVE THE ROOT. Islam's own hue is 138 and the arc above it is
+     spoken for — Bahá'í at 163 is the bottom of the West and Central Asian minority wedge,
+     and putting the band at [144, 158] would push the schools of law into it. Below is empty:
+     Christianity's band stops at 80 after the 2026-09-06 pull-down, so 80→138 is 58° of
+     unused green with nothing in it. The band takes 32 of those and leaves a 6° gap under
+     the root, which keeps `unspecified` — 8.5m people in Türkiye, the family's own row — off
+     every branch colour, the same arrangement Christianity has at [56, 80] under 50. */
+  islam:         [100, 132],
 
   /* HINDUISM HAS NO BAND AND THAT IS NOW A DECISION — Anita, 2026-09-07: "i think the colors
      of mauritius look fine tbh. they seem quite similar and if people want to see detail they
@@ -3539,10 +3799,7 @@ function renderTree() {
   // `viewTotal` is the fold cut's denominator too, so a row folds exactly where its bar runs
   // out - one definition, and the panel cannot say two different things about one number.
   const scopeTotal = viewTotal();
-  const ofWhat = scope ? BY_ID[scope].label : 'all religions';
-  const pctText = (s) => s >= 0.1 ? (s * 100).toFixed(0) + '%'
-    : s >= 0.001 ? (s * 100).toFixed(1) + '%'
-      : Number((s * 100).toPrecision(1)) + '%';
+  const ofWhat = scopeLabel();
   /* ONE FUNCTION FOR EVERY ROW THAT CARRIES A COUNT — the nodes, the `unspecified` residual
      and the folded bucket — so the three cannot drift into three different scales. */
   const countCell = (c, col, withBar) => {
@@ -3941,9 +4198,34 @@ function renderTierControl() {
 
    Two is right when nothing is selected, because there the first level is thirty families of
    which one is 84% of the map (§6.1), so the unscoped view has to start a level down. */
+/* SCOPES THAT OPEN ONE LEVEL DEEPER THAN THE DEFAULT — Anita, 2026-09-08, with Türkiye:
+   "since theres only 3 children of Islam (and probably wont be that many more), it'd be nice
+   if we could, on selecting islam, actually show the subgroups of sunni and shia expanded and
+   as different colors. special case. like if we expand sunni and shia here we still only have
+   like ~8 things to color."
+
+   WHY THE DEFAULT IS 1 AND WHY THAT IS RIGHT ALMOST EVERYWHERE. Selecting a branch shows its
+   children, and for the family that needs the focus view most that is already a lot:
+   Christianity has 29. Going one deeper there would put well over a hundred rows on screen
+   and spend the wheel on nodes nobody asked about.
+
+   ISLAM IS THE OTHER SHAPE. Three children, of which one is a single node; open all of them
+   and the whole scope is nine rows, which is fewer than Christianity's first level. Left at
+   depth 1 the four schools of law are BELOW the cut, so they take Sunni Islam's colour
+   exactly (see `paletteFor`) and the panel lists four rows that are one colour on the map —
+   which is the thing you selected Islam to look at. Türkiye is the country that made this
+   visible: 64,815 Hanafi dots and 10,266 Shafi'i dots, drawn identically.
+
+   A SIZE RULE WAS CONSIDERED AND NOT WRITTEN — "go deeper when the scope has few children".
+   It reads as principled and it is not: it would move every small family's view at once, on
+   a number that changes whenever a source adds a division, and §6.8's whole argument is that
+   a palette which moves under the reader is not one anybody can learn. A named table changes
+   exactly what it says it changes. */
+const SCOPE_DEPTH = { islam: 2 };
+
 function setScope(id) {
   scope = id;
-  depth = id ? 1 : 2;
+  depth = id ? (SCOPE_DEPTH[id] || 1) : 2;
   recolour(); applyPaint(); renderTree();
 }
 

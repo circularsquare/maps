@@ -49,7 +49,12 @@ def _module_for(cc):
 # most units" would silently tally only part of it. Ghana's 272 drawn units are 255 plain
 # districts plus the 17 sub-metros that REPLACE six metropolitan parents; picking `district`
 # alone reports 255 units and 1.7M too few people, and nothing about that looks wrong.
-DEFAULT_LEVELS = {"gh": ["district", "submetro"],
+DEFAULT_LEVELS = {# Austria's drawn tier is 2,358 Gemeinden PLUS Vienna's 23 Gemeindebezirke.
+                  # Vienna is a single Gemeinde, so `gemeinde` alone reports 2,358 units and
+                  # 1,550,123 too few people -- the whole capital, and the most distinctive
+                  # fifth of the country, missing with nothing looking wrong.
+                  "at": ["gemeinde", "gemeindebezirk"],
+                  "gh": ["district", "submetro"],
                   # Indonesia's drawn tier is decided per unit, not by rule: a regency's
                   # kecamatan REPLACE it where they sum to it exactly in EVERY
                   # category (403 of 492) and the regency is drawn where they

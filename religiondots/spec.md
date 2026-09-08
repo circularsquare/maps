@@ -5264,6 +5264,25 @@ and every one of them nearly wrote off a country that was reachable:
   of the national table and `3` is the **same national table as JSON**. A finer geography and a more
   verbose serialisation both predict a bigger file. **Look at what a response *is* — magic bytes,
   content-type, the first line — before drawing any conclusion about what it *contains*.**
+- **A dead statistics office is not a dead census, and the volumes are as likely to be filed under the
+  ministry that paid for them — found with Eswatini 2026-09-08 (§9bq).** §11w closed Eswatini as *"no
+  reachable host"* on evidence that is all still true: `eswatinistats.org.sz` resolves and times out on
+  both ports with any User-Agent, `swazistats.org.sz` does not resolve, and the Wayback CDX has 61
+  captures of the first hostname and **not one PDF**. There is no route through the office and there
+  never was one. The 2017 census volumes are Joomla articles on `www.gov.sz` under
+  **`/images/FinanceDocuments/`**, the finance ministry's upload folder, and the Census Atlas is under
+  `/images/planningministry/`. No amount of probing the statistics office would have reached either.
+  **So when an office is dead, sweep the WHOLE government domain rather than the office's hostname**:
+  `web.archive.org/cdx/search/cdx?url=<gov domain>&matchType=domain&limit=60000&fl=original` is one
+  GET, grep it locally for `census`, and fetch the last good capture of whatever article id turns up
+  (the `id_` suffix gets the raw body). Ten minutes end to end, and it recovered the highest-ranked
+  undrawn country in Africa. Note the article listing the files 404s today while **every file it links
+  still serves from the live host**, so a dead index is not a dead directory.
+- **Two CDX failure modes that both read as a negative result.** It **refuses port 80** —
+  `http://web.archive.org/cdx/...` is connection-refused, which reads as the archive being down rather
+  than as a scheme problem — and it answers a `filter=` regex it does not like with **HTTP 500 and an
+  empty body**, which reads as zero matches. Ask for the unfiltered list over https and grep locally;
+  it is one request either way.
 
 ### Estimating the work, and downloading
 
@@ -5617,6 +5636,24 @@ route around a problem that is not there.
   booklet that put seven of ten religion labels in a different bin from their own values, and the
   table came back looking as though the office had **changed its category list**. Cluster rows on the
   vertical CENTRE with a tolerance, swept in order, never on a fixed bin.
+- **A SOURCE CAN NUMBER ITS COLUMNS IN A DIFFERENT ORDER FROM THE ONE IT PRINTS THEM IN, AND TWO
+  VOLUMES OF ONE SERIES CAN DISAGREE ABOUT WHICH.** Austria's Volkszählung 2001 heads Tabelle 4
+  `1 2 3 5 4 6 7 8 9 10 11` in all eight Bundesländer volumes — Orthodox is printed **fourth** and
+  numbered **5**, Evangelisch printed fifth and numbered 4 — while the **Wien** volume numbers the
+  same eleven columns in print order. A parser keying on the printed number therefore swaps
+  **Orthodoxy and Protestantism in eight volumes of nine**, and nothing downstream sees it: both are
+  plausible sizes, the categories still sum to the row total, the Gemeinden still sum to their Bezirk,
+  the Bezirke still sum to the nation, and even UNSD's independently forwarded national figures still
+  reconcile — because the swap is *consistent inside each volume*. The country would simply have
+  looked oddly Orthodox. **This is a different species from every other trap in this list**: Malawi's
+  rotated table and Benin's caption band are extraction failures that rendering the page reveals, and
+  this one survives rendering, because the page is right and the *source* is internally inconsistent
+  across its own volumes. It is visible only by comparing two volumes, or by ignoring the numbers.
+  So: **identify a column by its header LABEL, assert the resulting order against a written-out list,
+  and treat a printed column number as decoration.** Two cheap confirmations were available here and
+  usually are — a regional government's re-publication of the same table as a spreadsheet (Vorarlberg
+  prints the same anomaly, so it is the source's), and the volume's own prose, which quoted three
+  figures that pin the label order.
 
 **And one thing the office may have done to the data before you see it.**
 
@@ -5639,6 +5676,19 @@ route around a problem that is not there.
   `countries.py` dropped 149,668 people without a word, while every reconciliation upstream of the
   taxonomy still passed. **Adding a category is a taxonomy change even when it comes out of the
   normaliser.**
+- **A FLAT EXPORT THAT NESTS BY POSITION FAILS SILENTLY ON ONE MISSING SPACE, AND THE VICTIM IS THE ROW
+  ABOVE.** SingStat's subzone population CSV marks a parent as a header row reading `<name> - Total`
+  with its children following unindented and unmarked, so the parent is carried positionally.
+  **`Changi- Total` is printed with no space before the hyphen**, alone among 55. An
+  `endswith(" - Total")` match misses it, Changi is never opened, and its three subzones are
+  attributed to the PREVIOUS header, Central Water Catchment — an uninhabited reservoir catchment
+  that then holds 3,700 people while its own total row says nil. **Nothing else complains**: every
+  other parent still reconciles against its own children and the grand total is untouched, because the
+  rows were merely moved between parents. This is [[reference_name_join_wrong_neighbour]] in
+  positional form, and it is invisible to arithmetic for the same reason. **The defence is to assert
+  the NUMBER OF PARENTS against an independent list — here URA's 55 planning areas — and never
+  against the file's own totals.** Match the separator loosely (`^(.*?)\s*-\s*Total$`) and let the
+  count assertion be the thing that catches you.
 
 ### Joining to boundaries
 
@@ -5958,6 +6008,18 @@ route around a problem that is not there.
   national total against the census as a *ratio band*, never an equality (Kontur 55.0M vs census 47.6M,
   ratio 1.156, four years of growth plus modelling); it is a within-unit weight, so only the shape
   matters.
+
+- **A UNIT MISSING FROM THE `place` LAYER IS NOT DRAWN ON ITS POLYGON INSTEAD; ITS PEOPLE MOVE TO A
+  DIFFERENT UNIT.** Kenya's rule above says *assert every unit gets hexes, because a unit with none
+  silently empties* — and emptying is the optimistic reading. `countries.py` points `place` at ONE
+  layer, so a unit absent from that layer has no geometry at all, and `scatter.py` carries its people
+  into other units of the same node: they are drawn, in the wrong village, with every total still
+  reconciling. Cyprus hit it on **Akrotiri**, 931 people inside the Western Sovereign Base Area, where
+  Kontur models nobody — a military exclusion, not a modelling failure, so no ratio band would ever
+  have caught it. **The fix is for the grid builder to append the unit's own polygon at its census
+  population**, which invents neither geometry nor people, and then to assert the placement layer's
+  unit count equals the counting layer's. Any country with military land, a special zone or an island
+  the model skips wants that assertion; the symptom otherwise is a village that is simply not there.
 - **PICK THE GRID'S RESOLUTION AGAINST THE SMALLEST UNIT, NOT THE COUNTRY.** Russia is placed on
   Kontur's **global r6** file (~36 km² hexes) and that is right for Russia; the same file for Serbia
   gives **1,991 hexes for the whole country and four municipalities with no hex CENTRE at all** —
@@ -6050,6 +6112,55 @@ route around a problem that is not there.
   **draw the fine unit where it reconciles and the coarse one where it does not**, so the drawn tier is
   two `geo_level`s and every drawn row is still `measured`. Reaching for allocation to paper over the
   shortfall would be inventing a magnitude the source does not publish, which §14.4 forbids outright.
+- **A POPULATION GRID CAN BE FINE ENOUGH AND STILL BE THE WRONG INSTRUMENT, BECAUSE RESOLUTION IS NOT
+  THE ONLY TEST. THE OTHER ONE IS WHETHER IT SHARES A UNIVERSE WITH THE COUNTS.**
+  [[reference_kontur_resolution_floor]] asks whether the grid is finer than the counting tier, and
+  Singapore passes that easily: Kontur at 400 m over 31 planning areas. It is refused anyway (§9bp).
+  Kontur counts everybody physically present; Singapore's census counts *residents*, and **1,641,590
+  people in Singapore are non-residents the religion table does not cover**, many of them in worker
+  dormitories. The resident population of Tuas is **70** and of Sungei Kadut **750**, so a
+  presence-weighted surface puts resident dots in both. The grid was never too coarse; it was
+  measuring different people. **So before reaching for the grid, ask what its denominator is and
+  whether the source's own office publishes population at a finer tier on the SAME universe.** Where
+  it does, that beats a modelled surface on universe, vintage and provenance at once, and Singapore is
+  weighted on its census's own 332 subzone resident populations instead (r = 0.99857 against the
+  religion table's own unit totals, and a correlation between two cuts of one census is *allowed* to
+  be tight, unlike every Kontur check on this map). The countries most exposed to this are the ones
+  with large counted-out populations: Gulf states, Singapore, Brunei, and anywhere the census word is
+  `resident` or `citizen` rather than `population`.
+
+- **AND A POPULATION GRID CAN SIMPLY BE WRONG, on its own terms, about a whole region — found with
+  Eswatini 2026-09-08 (§9bq).** Singapore's grid was accurate and counted the wrong people. Kontur's
+  Eswatini extract counts the right people and puts them in the wrong place: normalised by its own
+  national ratio it reads **0.38x on Hhohho and 2.24x on Lubombo**, dropping 43% of the country into a
+  region the census counts at 19%. The cause is what Kontur is built from. **Building footprints
+  inherit where the mapping happened rather than where the people are**, and Eswatini's northern
+  Lowveld sugar estates were mapped house by house in OSM while the Highveld *imiti*, the dispersed
+  homesteads most Swazis live in, are barely mapped at all. In a small country one mapping campaign is
+  enough to tip a whole region, so **this risk goes up as the country gets smaller, not down.**
+
+  Three things follow, and they are cheap.
+
+  **The per-unit band is not a formality and it must be believed when it fires.** It is the only thing
+  in the pipeline that would ever have caught this; every count reconciles, every join is a bijection,
+  and the map would simply have been wrong. A band failure is evidence about the grid at least as
+  often as about the join.
+
+  **Clear the boundaries before blaming them, and in that order.** Point-in-polygon for half a dozen
+  towns whose region you can look up, the polygons' areas against the office's published areas, and a
+  second independent spatial join. All three take ten minutes and all three passed here, which is what
+  turned "our join is broken" into "the grid is wrong" rather than leaving it ambiguous.
+
+  **Two independently built grids agreeing is what makes a modelled weight trustworthy; one grid
+  agreeing with the census is not.** Eswatini is placed on WorldPop's constrained 100 m `maxar_v1`
+  raster (machine-extracted footprints, not volunteered mapping) at 0.95-1.04, with the *unconstrained
+  2017* raster — a different model of the census's own year — carried as a **control rather than a
+  second opinion**, agreeing to within 0.037 on every region and asserted on every run. Any country
+  whose Kontur band looks ugly should get the same two-raster test before anything else is suspected.
+  Prefer the **constrained** release for placement even at the cost of a worse year: unconstrained
+  spreads people across open country, which is the failure §8.2 exists to avoid. (WorldPop ships
+  constrained rasters as **BigTIFF**, `II+\0`, and unconstrained ones as classic TIFF, `II*\0`, so a
+  §5a magic check accepting only `II*\0` rejects the file the country is built on.)
 
 ### Taxonomy
 
@@ -6165,6 +6276,25 @@ route around a problem that is not there.
   (600,861 people double-counted) was caught only because two different counties' `Păuleşti` happened to
   collide into one key. Had they not, the run would have passed. **Prefer checks that would fail
   *loudly* on a structural error, not just a lucky one.**
+- **AN ALLOCATION REPRODUCES EXACTLY THE CONCENTRATIONS THAT LIVE IN THE DIMENSION IT ALLOCATES ON,
+  AND IS BLIND TO EVERY CONCENTRATION INSIDE ONE OF ITS OWN CELLS.** Where a country publishes a
+  variable nationally and a splitter subnationally, the arithmetic
+  `SUM_g P(religion | g) x N(g, unit)` reconciles perfectly to the national totals by construction —
+  which means **reconciliation says nothing at all about whether the geography is right**, and the
+  output looks equally confident whether it is or not. What decides it is whether the thing being
+  drawn varies *within* a cell of the splitter. Cyprus is the worked example and the one case where
+  it could be measured: 2021 religion allocated on four citizenship groups, checked against 2001's
+  Table 29, the only religion-by-district table any Cypriot census published. Orthodoxy came back
+  right across all five districts (it is the modal answer of every group); the British Anglicans of
+  Pafos came back at half strength (Britain is non-EU, so the splitter half-sees them, but non-EU also
+  holds Syrians, Filipinos and Sri Lankans and the average flattens the peak); and the **Armenians and
+  Maronites came back completely flat, 1.0x against a measured 1.88x and 2.07x in Lefkosia**, because
+  both sit inside `Cypriots` and a group with one national profile has one profile everywhere.
+  **So the error is bounded by how concentrated a group is inside a splitter cell, and that is usually
+  something you can look up BEFORE deciding to draw** — no historic table required. Where one does
+  exist, an older measured cut is worth parsing purely as a check even when it is far too stale to
+  draw: an upper bound on the error is not a measurement of it, but it is the difference between a
+  named cost and an unexamined one. `sources/cy_2001.py` is the shape of that check.
 
 ### Finishing
 
@@ -7809,3 +7939,464 @@ you.* The check that caught it was reading the top-five line of the module's own
 level: 2015 exists only as a 0.5 MB subset, 2018 and 2023 not at all. **2023 is the one worth
 an application**, being newer than anything drawn for China anywhere on this map, and the only
 thing that could say whether the fall through 2021 continued or bottomed out.
+
+### 14.22 China gets a Chinese religion — folk practice is drawn, and the reason it had been refused was one wave's questionnaire — BUILT 2026-09-08
+
+Anita, looking at a finished China: *"i feel like its a bit sad that we dont have any
+'confucian' or 'daoist' or anything other than protestant/islam/buddhist dots."* She is right,
+and it was fixable from data already on disk. **44.4 million `chinesefolk` dots**, the second
+largest colour in the country, above Protestantism.
+
+#### THE CATEGORY HAD BEEN JUDGED ON A NUMBER THAT ONE WAVE'S INSTRUMENT PRODUCED
+
+§14.16 tested 民间信仰 against §14.10 and refused it. On five waves it clears the same bar
+Protestantism clears, and on most axes it clears it better:
+
+| | respondents | provinces cell <10 | median rank stability |
+|---|---|---|---|
+| folk | **1,173** | 16 / 30 | **+0.565** |
+| Protestantism (drawn since §14.16) | 1,016 | 9 / 30 | +0.559 |
+
+**The thing that had made it look unusable was the 2021 wave.** Its national share runs
+2.90 → 3.43 → 1.91 → 2.11 → **0.27** per cent while Buddhism moves 4.66 → 3.76 and everything
+else drifts. 2021 is the **single-choice** wave.
+
+##### THE FIRST EXPLANATION WAS WRONG AND TESTING IT IS THE LESSON — CORRECTED SAME DAY
+
+This section first argued that single choice makes a respondent who tends a Mazu shrine *and*
+calls themselves Buddhist pick one, and that folk religion is the answer that loses **to
+Buddhism**. 2021 was excluded for folk on that basis.
+
+**That argument makes a prediction and the prediction fails.** If folk answers were being
+absorbed by Buddhism, Buddhism would RISE in 2021. It falls, 4.66 → 3.76, and `none` gains 3.1
+points. **The folk respondents went to NO RELIGION.** What single choice actually does is make
+people who tend a shrine say they have no religion at all, because they do not consider it a
+宗教 — so the multi-select waves measure a **permissive** threshold and 2021 a **strict** one,
+and excluding 2021 was silently choosing the permissive reading.
+
+**And it bought almost nothing**: 3.05% pooled over five waves against 3.31% over four, 37.2M
+dots against 40.4M. A per-category vintage inconsistency, and the appearance of dropping the
+inconvenient wave, for 8% more dots. Anita's call to reverse it, 2026-09-08, on being asked
+whether the layer was honest. **`EXCLUDE_WAVES` stays in `cn_cgss.py` as machinery and is
+empty**, with the reversal written next to it.
+
+***A wave that disagrees is evidence about the QUESTION, and dropping it is a claim about
+which asking is right.*** That claim needs a mechanism that survives being tested, not one
+that merely sounds plausible — and the test is usually one line, because a mechanism that
+moves a category has to move some other category too.
+
+#### WHAT IT LOOKS LIKE, AND WHY IT IS THE RIGHT COLOUR FOR THIS COUNTRY
+
+**Guangdong 18.5%, Fujian 16.7%**, Hainan 8.7%, Guangxi 5.3%, against under 1% across most of
+the north. That is the Mazu and Guandi coast, which is exactly what the answer option names
+(`民间信仰（拜妈祖、关公等）`) and exactly what the literature would predict unaided. The
+gradient was not fitted; it fell out, and it is the same gradient with or without 2021.
+
+**China now has a colour that is not an imported religion**, which was the complaint. 40.9M
+dots, the second largest layer in the country; grey falls 91.0% → **88.1%**.
+
+The `chinesefolk` node already existed and was drawn in seven countries — Indonesia's 117 dots,
+plus the Canadian, Spanish, French, Italian and Mauritian diasporas. **China was the hole in
+the middle of its own diaspora.**
+
+#### WHAT STAYS OUT, AND THE TWO REASONS ARE DIFFERENT
+
+- **Daoism: 143 respondents, 25 of 30 provinces under ten.** Fails on cell size alone. Worth
+  recording so it is not reopened as an oversight: **the familiar "hundreds of millions of
+  Daoists" figures are BELIEF measures.** On `self_id`, which is the basis this whole map is
+  drawn on, Daoism is about 0.3% of China, so the small number IS the finding. §3.1 forbids
+  reaching for the belief figure to make the layer bigger.
+- **Catholicism: 129 respondents, 28 of 30 under ten.** Same failure, no nuance.
+- **Confucianism cannot be drawn at any sample size, because it is not an ANSWER.** Neither
+  CGSS's list nor CLDS's offers 儒教. Korea draws 75 Confucian dots and Thailand 16 because
+  those censuses ask; China's survey does not. *Check the answer set before treating a missing
+  category as a data problem.*
+
+#### THE DISCLOSURE, WHICH IS THE COST OF DRAWING IT
+
+Anita asked the right question about this layer before it had been asked internally: *"do you
+think this folk religion map is honest? idk."* The answer is that the geography is and the
+magnitude is the softest on the Chinese map, so `note_public` leads with the magnitude:
+
+- **16.6x instrument sensitivity**, 4.40% to 0.27% across waves, against Buddhism's 1.5x,
+  Protestantism's 1.8x and Islam's 3.1x. **No other drawn category on this map is within a
+  factor of five of that**, and it is the reason the note calls these the least certain dots
+  on it and the number a floor rather than a count.
+- **Sixteen of thirty provinces hold fewer than ten folk respondents.** They contribute 1.7M
+  of the total, about 4%, so this is smaller than it sounds; Jilin's entire folk population
+  rests on one respondent and is ten dots.
+- **75 respondents named both folk religion and Buddhism**, 8.5% of the folk cell, and the
+  multi-select flags are independent so those people are drawn on both nodes. 3.6 points of
+  Fujian. Bounded, disclosed, not corrected.
+
+#### AND THE MEASUREMENT THAT MAKES THE WHOLE LAYER LEGIBLE — SLSC 2007
+
+Anita fetched the **Spiritual Life Study of Chinese Residents** from ARDA the same day
+(`sources/cn_slsc.md`, free, no application). It is not drawable — 56 sampling points is
+§14.16's lottery design — and it is worth more than most drawable things, because it is **the
+only survey here that asks the naming question and the practice question of the same 7,021
+people**:
+
+| | | |
+|---|---|---|
+| *Do you have any religious belief?* | yes | **15.8%** |
+| *Have you worshipped God or gods/spirits in the past year?* | "I never worship" | **37.6%** |
+
+***About four times as many Chinese people practise as will name it.*** §14.14 and §14.16 both
+asserted that gap from Pew's summary; this measures it, in one survey, on one sample, and
+`note_public` now carries it in those terms. It is the honest frame for every grey dot in China
+as well as for the folk ones.
+
+It also answers the Confucianism question from the respondents' own side: asked *do you think
+Confucianism is a religion*, **58% said no** and 24% said hard to say. So the reason it is not
+drawn is not merely that the answer sets omit it.
+
+### 14.23 Hainan had 3.34 million people in the wrong county, and the guard that was supposed to prevent it only guards against a different failure — FIXED 2026-09-08
+
+Anita, on a finished China: *"osme things i think we should take care of are — hainan
+placement"*. She was right, and it was much worse than a blank hole. **38.5% of the province
+was being drawn in the wrong county.**
+
+#### THE HOLE WAS KNOWN SINCE THE FIRST BUILD AND THE WRONG THING WAS CONCLUDED FROM IT
+
+`sources/cn.py` has reported from day one that the 31 provincial volumes fall exactly
+3,159,377 short of the published 2000 total, and that *"the shortfall IS Hainan, exactly"* —
+whose file carries 14 of its 24 county-level units as a name, a tab, and nothing else. That
+check was correct and is still there. What was concluded from it was that the gap cost the map
+nothing, because Sanya holds the Utsul Muslims and Sanya is present. **Both halves of that
+sentence are true and the conclusion does not follow**, because it is a statement about colour
+and the failure was about placement.
+
+| | drawn before | actually held, 2010 |
+|---|---|---|
+| the ten Hainan units in the volume | 8,671,485 | 5,334,323 |
+| the eleven that are missing | 0 | 3,336,751 |
+
+Danzhou was drawn at **3,268,523 against a real 932,362** — which would have made it one of
+the larger county-level units in China. Wuzhishan at 472,425 against 104,122. Sanya was given
+**595,912 Li where the 2000 census counted 183,865**. Every Hainan county's Han was inflated ×1.841 and its Li
+×3.241, and Baisha, Changjiang, Ledong, Lingshui, Baoting, Qiongzhong, Dongfang, Chengmai,
+Lingao, Dingan and Tunchang — the whole centre and west of the island — drew nothing.
+
+#### THE GENERALISABLE PART: A GUARD AGAINST SPREADING ONLY GUARDS THE CASE IT WAS WRITTEN FOR
+
+`cn.py`'s rescale carries a comment that has been right about itself and silent about this:
+
+> Denominator is the sum over ALL county rows in the file, not just the resolved ones. Using
+> the resolved subset would silently redistribute an unresolved county's people into its
+> neighbours, which is spec §8.1's Connecticut failure wearing a different hat.
+
+That is exactly correct **for a county whose name failed to resolve** — it is in the file, so
+the denominator sees it, so its people are dropped rather than spread. §14.17 leaned on this
+and was entitled to. But Hainan's eleven are *not in the file at all*, so the denominator never
+sees them, and the province's whole 2010 nationality vector went to the ten survivors. **The
+guard was load-bearing against one failure mode and mute about its twin, and the comment
+asserting it read as though it covered both.**
+
+The lesson is §14.17's again in a new shape and it is worth stating as a rule: **a
+reconciliation constraint is only as good as the completeness of the thing in its
+denominator.** When a margin is enforced — a provincial total — against a structure that is
+missing rows, the enforcement does not fail loudly. It silently pushes the missing rows' mass
+into whatever remains. §14.17 was this error with the rows present but unjoined; this is the
+rows absent. Both were invisible because the totals reconciled perfectly, which is the point:
+**arithmetic consistency is not evidence of meaning** (§3.10d), and reconciling to a margin is
+arithmetic consistency.
+
+#### THE GAP IS IN THE VOLUME, WHICH WAS CHECKED RATHER THAN ASSUMED
+
+The Hainan dataset on the Harvard Dataverse holds **111 tables**, not the one A0106 we use. All
+111 were pulled and all 111 carry the same 24 unit rows with only 9 or 10 carrying data. There
+is no other table to reach for and no other digitisation of this volume in the open. **Pulling
+a source's whole dataset before concluding it is short is cheap and worth doing** — it is what
+established that `J46A0201` through `J46L0814` had nothing to add.
+
+#### THE FIX: ONE PROVINCE RECONCILES TO COUNTY TOTALS, AND IT IS FORCED
+
+You cannot divide a provincial nationality total across counties when 42% of the counties are
+absent from the structure source. So Hainan — and only Hainan — is reconciled to its own
+published 2010 county totals:
+
+- **the ten present units keep their 2000 nationality shares**, which is the only thing the
+  volume tells us about them, and are scaled by their own `county_2010 / county_2000`. Factors
+  run ×1.033 to ×1.421 against the ×1.841 and ×3.241 they carried. Haikou's four census rows
+  share 海口市's single 2010 figure in proportion to their 2000 populations, because 琼山市
+  merged into the city in 2002.
+- **the eleven missing counties are written at their published 2010 total** on one category,
+  `Unpublished`, which claims no nationality because none was published. `taxonomy/cn2000.py`
+  sends it to `unknown` alongside Han and Li, with the argument recorded in `NOT_ASSERTED`.
+
+Hainan now draws **8,671,074 of a published 8,671,518**; the 444 missing are 西南中沙群岛,
+which `sources/cn_geo.py` leaves blank as islands the 2000 census had no county for. The
+national figure lands 428 people from the census, of which 411 are those islanders.
+
+**And coloured dots move as well as grey ones, which was not obvious in advance.** §14.16's
+CGSS layer carves a province's Buddhist, folk and Protestant shares out of each unit's
+`unknown` residual, so it could only ever colour units that had rows: **229,000 Mahayana
+Buddhists and 290,000 folk-religion adherents were being drawn on Hainan's coast and now
+appear in its interior**, where the people they represent live. A placement error in a grey
+layer propagates into every layer computed on top of it.
+
+#### TWO PUBLISHED TABLES AND A GROWTH RATE AGREE, WHICH IS WHY THE CONSTANTS ARE TRUSTED
+
+The eleven counties' 2000 totals come from the NBS *第五次人口普查公报——海南* in 万人 to two
+decimals, so each is exact to ±50. **They sum to 3,159,600 against the 3,159,377 shortfall
+`cn.py` has reported since the first build — 223 apart, inside ±50 × 11.** Independently, the
+2010 communiqué publishes a per-county average annual growth rate, and it reproduces the pair:
+Dongfang at 1.31%/yr takes 358,000 to 408,100 against a published 408,309. A single figure
+recovered from a rounded table would have been a guess; three sources agreeing is the check.
+
+`cn.py` also re-reads the volume each run to confirm the eleven are *still* blank, so if
+Harvard ever completes the digitisation it reports that instead of writing published totals
+over real data.
+
+#### WHAT IS GIVEN UP, AND WHY IT IS A LABEL RATHER THAN A DOT
+
+Hainan's per-nationality provincial reconciliation. It is now **reported as a residual rather
+than enforced**, which is the honest form of a constraint that cannot be met: 2.49M Han, 777k
+Li and 45k Miao sit inside `Unpublished`.
+
+**Li, Han, Miao and Zhuang all resolve to `unknown`, so not one dot changes colour and not one
+person is lost.** What is lost is the word `Li` on rows that were never drawn as Li. All of
+Hainan's religio-ethnic population is about 13,600 people and every one of them is in a county
+the volume covers; **the Hui reconcile to within 200**, because the county growth factors
+happen to bracket the provincial one. The entire claiming residual is **Kazakh 1,535 and Dai
+779**, which is §6's migration case — 14 Kazakhs in Hainan in 2000 against 1,553 in 2010 is a
+×110 factor, and the old code was applying it. Two dots, now dropped rather than invented
+(§3.5).
+
+#### THIS IS NOT §6'S REJECTED IPF AND IS NOT OFFERED FOR THE OTHER THIRTY PROVINCES
+
+`sources/cn.md` §6 records that constraining to modern county totals was considered and
+rejected, because urban growth in Xinjiang and Tibet was disproportionately Han and the method
+would inflate the Uyghur and Tibetan share of exactly the cities where that figure is most
+contested. **That argument is about a contested minority share in a growing city, and the only
+group this moves at any size is the Li, who claim nothing.** The other thirty provinces
+reconcile provincially and should go on doing so; this is a forced local exception, recorded so
+it is not read as a new default.
+
+What it does inherit is §6's standing caveat in a sharper form: Sanya's composition is frozen
+at 2000 while its size is 2010, and Sanya's growth was overwhelmingly Han in-migration, so its
+261,297 Li are too many. That is an `unknown`-on-`unknown` error, and it is a great deal
+smaller than the 595,912 it replaces.
+
+### 14.24 Hong Kong is drawn, its coefficients come from this map's own countries, and the figure everybody quotes is refused with evidence — BUILT 2026-09-08
+
+Anita: *"hong kong religion coverage"*, and then, once the options were laid out, *"self
+identification at territory grain seems like a good way to go... i think supplementing it with
+ethnicity / verifying it with ethnicity would be nice."* Both halves of that are built.
+
+**Hong Kong, Macau and Taiwan were all excluded from the mainland by `cn_geo.py`'s
+`NOT_MAINLAND` and none of the three had ever been considered** — `hk` appears nowhere in
+spec.md, sources.md or queue.md before today. So 7.4 million people sat blank against a fully
+drawn China. `sources/hk.md` is the record; this is the reasoning.
+
+#### IT IS CHINA'S PROBLEM AGAIN AND IT GETS CHINA'S ANSWER
+
+The 2021 Population Census publishes the 46 topics it covered and religion is not among them,
+in that round or any before it, and Hong Kong is absent from UNSD table 28. So it is built in
+the same two layers as the mainland and in the same order: §14.5's ethnic derivation at the 18
+District Council districts, and a `self_id` survey for the territory carved out of the
+`unknown` residual, which is `_cn_counts`'s arithmetic unchanged.
+
+| layer | source | grain | tier |
+|---|---|---|---|
+| Indonesian and Pakistani → `islam`, Filipino → `christianity.catholic.latin` | 2021 census ethnicity | 18 districts | `modelled` |
+| Buddhism, Protestantism, Catholicism, Daoism, Hinduism, Sikhism | Hong Kong Political Culture Survey 2021 | territory | `modelled` |
+| everyone else | the census counted them | 18 districts | `derived` |
+
+#### THE GENERALISABLE FINDING: A COEFFICIENT CAN COME FROM THE MAP'S OWN COUNTRIES
+
+§14.5 wants a derivation coefficient "documented rather than fitted", and §14.12 is the
+standing warning about laying a national share over a selected subpopulation. Hong Kong's
+three coefficients are **Indonesia's, Pakistan's and the Philippines' own census figures as
+this project already draws them**:
+
+    id  islam                        87.51%
+    pk  islam                        96.47%
+    ph  christianity.catholic.latin  78.88%
+
+recomputable at any time with `countries.COUNTRIES[cc]["counts"]()` grouped on node. What that
+buys is real but narrow: the coefficient **inherits every correction ever made to the source
+country** and cannot drift away from the rest of the map, where a number transcribed from a
+webpage does both.
+
+**AND THE FIRST DRAFT OF THIS SECTION OVERCLAIMED IT — Anita, 2026-09-08:** *"i think doing
+diaspora coefficients from maps own drawn countries is probably pretty bad for large origin
+countries cuz the people migrating are probably skewed in some way."* She is right, and the
+overclaim was saying this "should be the default for any diaspora derivation". **Sourcing the
+number well does nothing about the thing that actually breaks it, which is §14.12: migration
+selects, and it selects on region, class and ethnicity, which are exactly the axes religion
+varies on.** A national share is the right number for the origin country and the wrong number
+for the stream that left it, and the bigger and more religiously varied the origin, the worse
+it gets — Nigeria's or India's national share would be close to meaningless applied to a
+particular diaspora.
+
+So the rule is a permission with conditions, not a default. **A national coefficient over a
+migrant stream is admissible when at least one of these holds, and it should say which:**
+
+1. **The origin share is near 1**, so no plausible selection moves it much. Pakistan at 96.47%
+   is this case: a Pakistani migrant stream is Muslim almost whatever it selects on.
+2. **The direction of the selection is known and stated.** Hong Kong's Indonesians are ~93%
+   domestic workers from Central and East Java, which is *more* Muslim than Indonesia as a
+   whole, so 87.51% is a floor; its Filipinos come from Luzon and the Visayas rather than
+   Muslim Mindanao, so 78.88% Catholic is also a floor. Both are named in `hk2021.py`'s REVIEW
+   as floors rather than adjusted upward, per §14.12's own lesson.
+3. **There is an independent check on the result.** Here there is: the census's ethnic counts
+   and the survey agree to within 20% on the Muslim total.
+
+**And when none of them holds, the derivation should be refused rather than sourced better** —
+which is exactly what happened to Hong Kong's Indians and Nepalese two sections below. They
+were refused for the selection problem, and no amount of good provenance for India's or
+Nepal's national share would have fixed them. That is the honest summary of this technique:
+it improves the *provenance* of a coefficient and does nothing for its *applicability*.
+
+China's Joshua Project coefficients could not use it at all, because no country on the map
+publishes a Lisu share; a migrant-origin derivation usually can, and should still pass the test
+above before it does.
+
+#### THE REFUSAL, WHICH IS THE MOST USEFUL THING HERE
+
+**`gov.hk`'s *Hong Kong: The Facts — Religion* is where every published figure about religion
+in Hong Kong comes from, and it is not drawn.** Over 1 million Buddhists, over 1 million
+Taoists, 1,040,000 Protestants, 390,000 Catholics, 300,000 Muslims, 100,000 Hindus, 15,000
+Sikhs. Every one is the religious body's own estimate of itself; the sheet says so outright for
+Islam (*"according to the Incorporated Trustees of the Islamic Community Fund"*) and Sikhism.
+
+That alone would make it a basis this map has nowhere else and §3.1 would forbid mixing it. But
+it also **fails the only external checks there are, in both directions**:
+
+| | gov.hk | what checks it |
+|---|---|---|
+| Protestants | **1,040,000** (Jan 2026) | the same office said **480,000** in July 2022; over those years the churches' own 2024 Hong Kong Church Survey counted **255,091 congregants and 197,935 at weekly worship, down 26% in five years** |
+| Muslims | 300,000 | census ethnicity ~148,000; the survey ~176,000 |
+| Hindus | 100,000 | census ethnicity ~72,000 as an *upper* bound; the survey ~44,000 |
+
+**The government's Protestant figure more than doubled over exactly the period in which the
+only measurement of it fell by a quarter.** And the rule that decides the other two rows is
+worth stating on its own: **when two sources with no lineage in common agree with each other
+and a third disagrees with both, the third is the one to leave out.** A census of 7.4 million
+and a survey of 3,740 have nothing to do with one another; their agreeing to within 20% is
+evidence, and it is the evidence Anita asked for when she said verifying it with ethnicity
+would be nice.
+
+#### THE SECOND FINDING: A MIGRANT DERIVATION'S GEOGRAPHY MAY BE AN EMPLOYMENT GEOGRAPHY
+
+The expectation going in was an enclave map. It is not one. The Muslim share runs from **3.00%
+in Wan Chai to 1.51% in Kwun Tong** and the Catholic share from 11.33% to 4.95%, with both
+**highest in the wealthiest districts on Hong Kong Island**. The reason is that Hong Kong's
+Indonesian and Filipino residents are ~93% live-in domestic workers, so what the census's
+ethnicity column locates is not where a community settled but **where the households that
+employ them are**.
+
+The enclave geography does exist, and it belongs to the two nationalities this map refuses to
+derive from: Yau Tsim Mong holds 42.3% of Hong Kong's Nepalese and 18.8% of its Indians against
+4.9% of its Pakistanis. **So the layer with the flat geography is the one that could be drawn
+and the layer with the sharp geography is the one that could not** — worth knowing before
+reading any diaspora-derived layer as a settlement map.
+
+#### WHY INDIAN AND NEPALESE ARE COUNTED AND LEFT GREY
+
+They are the obvious next candidates, 42,569 and 29,701 people, and both are §14.12 in clean
+form. Hong Kong's Indian community is disproportionately Sindhi Hindu and Punjabi Sikh rather
+than a cross-section of India; its Nepalese are the families of Gurkha soldiers, recruited from
+the Gurung, Magar, Rai and Limbu, who are far more Buddhist and Kirat than Nepal's 81% Hindu
+average. **The selection runs along exactly the axis the coefficient would have to be stable
+on.** Thai is the close call and is argued in `taxonomy/hk2021.py`'s REVIEW; it is 12 dots.
+
+Hinduism and Sikhism therefore come from the survey, where they rest on 22 and 2 respondents,
+drawn at territory grain with no geographic claim. That is Guatemala's rule (§9bi): nobody is
+deleted, only the claim to know where they are.
+
+#### ISLAM IS TAKEN FROM THE CENSUS AND NOT FROM THE SURVEY, WHICH IS CHINA'S RULE
+
+89 Muslim respondents in a 72-cluster design carry no geography; the census counts 142,065
+Indonesians and 24,385 Pakistanis exactly and by district. §14.16 refuses CGSS's Islam for the
+mainland on the same reasoning. The two agree on the magnitude to within 16%, which is what
+makes either believable.
+
+#### HONG KONG MEASURES §14.22'S GAP IN ONE INSTRUMENT, WHICH THE MAINLAND CANNOT
+
+65.83% of Hong Kong reports no religious affiliation and it is emphatically not drawn as
+irreligion, because **the same table records that 2,097 of those respondents — 56.07% of the
+whole sample — practise folk religion anyway.** China has to borrow that finding from Pew and
+from the 2007 Spiritual Life Study, across instruments and across years; here one survey asked
+both questions of the same people in the same interview. It is the cleanest statement of the
+naming-versus-doing gap anywhere on this map.
+
+**Nothing in Hong Kong is drawn on `chinesefolk` all the same**, and that is §3.1 rather than
+timidity: what the 56% measures is practice, and the naming layer beside it cannot be mixed
+with it. The 1988 and 1995 surveys the same table prints *did* offer folk religion as an
+affiliation and found 23.0% and 15.3%; the 2021 instrument dropped the answer box. Carrying
+15.3% forward thirty years is available and is almost certainly the wrong thing to do.
+
+#### THE CHECKS, AND ONE THRESHOLD THAT WAS WRONG AND WAS FIXED RATHER THAN LOOSENED
+
+Table 8.1 of the census's thematic report is parsed out of a PDF whose rows print ten numbers
+*before* the district's name, so a slipped column would be silent. Two independent things have
+to hold and neither is a tolerance: its Filipino and Indonesian columns must reproduce
+`DC_21C.CSV`'s exact counts (worst 0.05 pp over 36 comparisons), and its South Asian subtotal
+must equal the weighted mean of its own four South Asian columns (worst 0.07 pp over 18
+districts).
+
+**The Kontur correlation check was written at r ≥ 0.95 and failed at 0.87, and the fix was to
+correct what it was measuring rather than to move the number.** Hong Kong is the hardest place
+on earth for a footprint-derived population grid: it reads a 40-storey housing estate much as
+it reads a village, so it undercounts the vertical districts (Wong Tai Sin 0.60×, Sham Shui Po
+0.75×) and overcounts the spread-out ones (North 1.61×). **The disagreement has a shape, and a
+scrambled join has no shape** — it pairs a large district with a small one and the correlation
+collapses toward zero. The check also cannot affect the output at all, because dots per
+district come from the census and Kontur only decides which street inside a district they land
+on. It now asserts against a scramble and reports the band, which is §9i's principle and
+`cn_geo.py`'s.
+
+#### A SIDE EFFECT WORTH KNOWING: HONG KONG IS WHERE DAOISM GETS DRAWN AT ALL
+
+**287 of the 302 Daoism dots on this map are now Hong Kong's**, the other fifteen being
+diaspora counts in Australia, Canada, the UK and New Zealand, whose censuses carry a Daoist
+box. Mainland China draws none: CGSS asks, and 80 respondents in 32,495 said Daoism, which
+§14.16 judged too thin to place. So selecting Daoism now shows Hong Kong and a scatter of
+migrant communities, which is an honest picture of **where the question has been asked** rather
+than of where Daoists are. Hong Kong's own figure rests on 151 respondents.
+
+#### THE BIGGEST WEAKNESS, AND IT IS SPATIAL: HONG KONG IS ALMOST ONE UNIT
+
+Anita, 2026-09-08, on the finished country: *"hong kong being 1 spatial component is pretty
+bad, so we should mark that theres definitely room for improvement here if future agents want
+to pick it up."* **She is right and this is the thing to fix next.** Hong Kong is registered at
+18 districts, but almost nothing varies across them:
+
+| layer | share of the country | varies by district? |
+|---|---:|---|
+| the survey: Buddhism, Protestantism, Catholicism, Daoism, Hinduism, Sikhism | 31.8% of every district | **no — identical shares everywhere** |
+| the ethnic derivation: Islam, part of Catholicism | 4.1% | yes, but only 1.51%–3.00% Muslim across all 18 |
+| `unknown` | 65.4% | only as the two above move |
+
+So a reader zooming around Hong Kong sees the same mixture everywhere, and the 18 districts do
+almost no work. **§3.9b removed the granularity floor, so a coarse country is drawn rather than
+skipped — but "coarse" is a fact to state, not a resting place**, and Hong Kong is by some
+distance the least spatially informative country of its size on this map.
+
+**Four routes, roughly in order of what they would buy:**
+
+1. **A survey with district-level religion.** This is the one that matters, because it would
+   give the 31.8% a geography instead of a constant. The Hong Kong Panel Study of Social
+   Dynamics and the Asian Barometer both carry religion and finer location; both are behind an
+   application, which §11b's rule says to attempt only after the open routes are exhausted.
+2. **The 2024 Hong Kong Church Survey's district tables** — 1,318 congregations and their
+   attendance by district, which would give Protestantism a real geography on a
+   `congregations` basis. The report is a paid publication; only the summary figures used above
+   are public. Worth an email to the Hong Kong Church Renewal Movement.
+3. **The Catholic Diocese of Hong Kong's parish statistics**, same shape for Catholicism.
+4. **452 District Council constituency areas**, with boundaries and population on data.gov.hk.
+   They are not used because the ethnicity detail the derived layer needs is published only at
+   the 18 districts, so adopting them would mix grains inside one layer. They would help only
+   in combination with (1).
+
+Until one of those lands, **read Hong Kong as a national pie chart with a population-weighted
+scatter**, which is what it is. The `grain` field says so and `note_public` says so.
+
+#### WHAT IS LEFT ELSEWHERE
+
+- **Macau and Taiwan**, still blank and still excluded by `NOT_MAINLAND`. **Taiwan is much the
+  larger prize**: a religion-carrying social survey with county geography and a Ministry of the
+  Interior register of religious bodies, and a census that does not ask either.

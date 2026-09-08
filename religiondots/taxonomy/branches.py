@@ -121,6 +121,60 @@ BRANCHES = [
     ("christianity.methodist.unitedbrethren",
      "United Brethren and Evangelical",
      "The German-speaking American parallel to Methodism; most of it merged into the UMC."),
+    # --- added 2026-09-08 with Tonga. FOUR SIBLING CHURCHES, ALL FOUR A CENSUS CELL, and
+    #     together 53.4% of the country. Grouped rather than filed flat under
+    #     `christianity.methodist` so that four Tonga-only children do not sit permanently
+    #     in the Methodist legend of every other country.
+    ("christianity.methodist.tongan",
+     "Tongan Methodist churches",
+     "**Tonga is 53.4% Methodist and the census counts that as four separate churches.** "
+     "The Wesleyan mission arrived in 1826 and converted the kingdom; every division since "
+     "has been about who controls the church rather than about doctrine, and each one left "
+     "a body that is still here two centuries later. Nothing else on this map divides a "
+     "single Protestant tradition into four countable national churches, which is why they "
+     "are grouped here instead of collapsing onto `christianity.methodist`: on the branch "
+     "they would draw as one colour over half the country and Tonga's actual religious "
+     "geography would disappear.\n\n"
+     "The line runs: the **Free Church of Tonga** was created in 1885 by King George Tupou "
+     "I and his adviser Shirley Baker, to be free of the Wesleyan conference in Australia; "
+     "**Queen Sālote Tupou III reunited most of it with the Wesleyan remnant in 1924** as "
+     "the Free Wesleyan Church, and those who refused the union carried the Free Church "
+     "name on; a further separation in the later 1920s produced the **Church of Tonga**, "
+     "and the **Constitutional Church of Tonga** is of the same family. Accounts of the "
+     "1920s disagree about which body is the continuation of which, so what is asserted "
+     "here is only what they agree on: one mission, one 1885 break, one 1924 reunion that "
+     "did not hold, and four churches now.\n\n"
+     "Not a home for the later revival breakaways. The Tokaikolo Christian Church (1978) "
+     "and Mo'ui Fo'ou 'ia Kalaisi left the Free Wesleyan Church but are charismatic in "
+     "practice, and §2.1's containment is a fact about people now — see the REVIEW notes "
+     "in `taxonomy/to2021.py`."),
+    ("christianity.methodist.tongan.freewesleyan",
+     "Free Wesleyan Church of Tonga",
+     "**33,953 people, 34.2%, the largest church in Tonga and the church of the monarchy** "
+     "(Siasi Uēsiliana Tau'atāina 'o Tonga). Formed by Queen Sālote Tupou III's 1924 "
+     "reunion of the Free Church with the Wesleyan Methodist remnant.\n\n"
+     "**Its geography is that it has none, which is the point.** It is 34.1% of Tongatapu, "
+     "34.6% of Vava'u, 33.1% of Ha'apai, 36.3% of 'Eua and 30.7% of the Niuas — a spread of "
+     "six points across a country whose other churches swing by thirty. Every other body "
+     "here has a stronghold; the national church is the one that is the same everywhere."),
+    ("christianity.methodist.tongan.free",
+     "Free Church of Tonga",
+     "**11,244 people, 11.3%** (Siasi 'o Tonga Tau'atāina). Carries the name of the church "
+     "King George Tupou I founded in 1885, kept by the part that refused the 1924 reunion. "
+     "Strongest in Vava'u (16.0%) and on 'Eua (17.6%) against 10.0% on Tongatapu, and it is "
+     "**51.3% of Ha'atafu and 48.4% of Tufuvai**."),
+    ("christianity.methodist.tongan.tonga",
+     "Church of Tonga",
+     "**6,782 people, 6.8%** (Siasi 'o Tonga), out of a further separation in the later "
+     "1920s. **It is the Ha'apai church**: 20.1% of that division against 6.8% nationally, "
+     "**37.1% of Lulunga district and 29.8% of Ha'ano**, reaching 44.3% of Ha'afeva. Those "
+     "are the small outer islands between Tongatapu and Vava'u, and no other body on this "
+     "map is concentrated there."),
+    ("christianity.methodist.tongan.constitutional",
+     "Constitutional Church of Tonga",
+     "**1,152 people, 1.2%** (Siasi Konisitūtone Tau'atāina 'o Tonga), the smallest of the "
+     "four and of the same 1920s family. Thinly spread, with local pockets: 21.8% of Hunga "
+     "in Vava'u and 16.2% of Faleloa in Ha'apai."),
 
     ("christianity.holiness", "Holiness", ""),
 
@@ -140,7 +194,43 @@ BRANCHES = [
      "the Latter Day Saints; kept to the Stone-Campbell movement here and the LDS branch "
      "named for itself, to avoid the ambiguity."),
 
+    # --- added 2026-09-08 with Angola.
+    ("christianity.newapostolic",
+     "New Apostolic Church",
+     "The Irvingite line: the Catholic Apostolic Church of the 1830s, reorganised at "
+     "Hamburg in 1863 around a living apostolate that the older body would not renew. It "
+     "is neither Pentecostal, evangelical nor Stone-Campbell restorationist, and until "
+     "Angola no source here counted enough of it to be worth its own node. "
+     "**Angola counts 515,929, 1.50% of the country** -- and its geography is the "
+     "argument for the node as much as its size. The peaks are Moxico Leste 8.0%, Moxico "
+     "5.4% and Cuando 4.9%, running to 23.8% in Ninda and 17.2% in Lumbala Nguimbo: the "
+     "Zambian border, and Zambia is one of the church's largest countries anywhere. A "
+     "church that had arrived through Lisbon would sit in Luanda; this one came overland "
+     "from the east. "
+     "**Two counted peers are elsewhere on the tree and were deliberately not moved.** "
+     "`ee2021.py` files Estonia's New Apostolic Church on `christianity.restorationist`, "
+     "which is the wrong restorationism, and `au2021.py` files Australia's on "
+     "`christianity.other`; both predate this node. Each is a one-line change plus a "
+     "re-scatter of that country, and doing it while adding Angola would alter two "
+     "countries nobody asked about -- the same restraint `christianity.africaninstituted."
+     "harrist` showed towards Benin."),
+
     ("christianity.adventist", "Adventist", ""),
+    # --- added 2026-09-08 with Samoa. The smallest kind of thing this map exists to show:
+    #     a church that one census names and no other census on earth does.
+    ("christianity.adventist.sisdac",
+     "Samoa Independent Seventh Day Adventist Church",
+     "`Aso Fitu` — Samoan for *the seventh day* — is SBS's own column for the **Samoa "
+     "Independent Seventh Day Adventist Church, 1,962 people, 0.95% of Samoa**. It broke "
+     "from the Seventh-day Adventist Church in Samoa and kept the Adventist sabbath and "
+     "doctrine, which is why it sits under `christianity.adventist` rather than beside it.\n\n"
+     "**It is counted here because Samoa counts it, and nowhere else because nobody else "
+     "does.** No other census on this map, and no census the UNSD Yearbook holds for any "
+     "other country, has a cell for it. Merging it into `christianity.adventist` would lose "
+     "the only place it is visible, and the precedent for a node this size is Ekalesia Niue "
+     "at 981 people. It is 11.7% of Safune on Savai'i and 20.1% of Eva, against 3.0% of the "
+     "largest district, so it is a village-scale body: at the 25-district grain Samoa is "
+     "drawn on it will not show a geography of its own."),
     ("christianity.latterday", "Latter Day Saints", ""),
 
     ("christianity.anabaptist", "Anabaptist", ""),
@@ -322,6 +412,47 @@ BRANCHES = [
      "`Qadiani` is the state's term and is used by others pejoratively; it is kept in "
      "`source_category` because that is what the census prints (§2.4) and is not used as a "
      "label here."),
+
+    # --- the four Sunni schools and the Ja'fari, added 2026-09-08 with Türkiye, which is
+    #     the first source on this map to enumerate a madhhab at all (sources.md §11ac).
+    #     `islam.sunni`'s own note said the school is "almost never enumerated: a census
+    #     that asks about religion at all normally stops at 'Muslim'", and it stayed true
+    #     for eighty-one countries. The Diyanet's Q11 asks it outright.
+    ("islam.sunni.hanafi",
+     "Hanafi",
+     "The oldest and largest of the four Sunni schools of law, from Abu Hanifa in 8th-century "
+     "Kufa, and the school the Ottoman state ran on. **77.5% of Muslims in Türkiye** and the "
+     "plurality in eleven of its twelve statistical regions, running above 90% in Doğu "
+     "Karadeniz and Orta Anadolu. Where it thins is the southeast, and what replaces it there "
+     "is Shafi'i rather than anything non-Sunni."),
+    ("islam.sunni.shafii",
+     "Shafi'i",
+     "From al-Shafi'i, d. 820. **11.1% of Muslims in Türkiye, and the country's sharpest "
+     "religious geography by a distance**: 48.7% in Ortadoğu Anadolu, which is the one region "
+     "of the country where it leads Hanafi, 42.0% in Güneydoğu Anadolu and 35.2% in Kuzeydoğu "
+     "Anadolu, against 0.2% in Doğu Karadeniz and 1.0% in Batı Karadeniz. That is the Kurdish "
+     "southeast, and it is drawn here from the state's own survey rather than inferred from "
+     "who lives there, which is the difference §14.5 turns on."),
+    ("islam.sunni.maliki",
+     "Maliki",
+     "From Malik ibn Anas, d. 795; the school of North and West Africa and the Gulf. **0.03% "
+     "of Muslims in Türkiye**, which is the whole of what any source on this map has ever "
+     "measured about it. Drawn because the column is real and published, not because the "
+     "number is large."),
+    ("islam.sunni.hanbali",
+     "Hanbali",
+     "From Ahmad ibn Hanbal, d. 855; the smallest of the four and the school of the Arabian "
+     "peninsula. **0.1% of Muslims in Türkiye.** As with `maliki`, a real published column "
+     "and a very small one."),
+    ("islam.shia.jaafari",
+     "Ja'fari (Twelver)",
+     "The school of the Twelver Shia, named for Ja'far al-Sadiq, d. 765. **1.0% of Muslims in "
+     "Türkiye, and 4.6% in Kuzeydoğu Anadolu** — Iğdır and Kars, on the Azerbaijani and "
+     "Iranian border, which is where Turkey's Azeri Shia are and has been since the Safavids. "
+     "The same shape Russia's Shia figure has in Dagestan (`islam.shia`). "
+     "**It is not a count of Alevis and must not be read as one.** The Turkish questionnaire "
+     "offers Caferi as one of its options and offers no Alevi option at all; Alevis are not in "
+     "this node, and the country's note says where they are instead."),
 
     ("hinduism", "Hinduism", ""),
     # --- added 2026-09-06 with Vietnam, which counts it as one of its sixteen recognised
@@ -622,6 +753,17 @@ BRANCHES = [
      "form offers `Traditionalist` as one box against four Christian ones, and traditional "
      "practice very often coexists with a Christian or Muslim affiliation rather than "
      "replacing it — so the people who would answer both are counted in the other column. "
+     "**Angola is the extreme case, and it shows where the missing people went.** INE's "
+     "`Animista` is 44,370, **0.13% of the country** — five times below Kenya, the next "
+     "lowest of the seven African sources here, and twenty-five times below Ghana. Beside "
+     "it Angola's `Sem religião` is 12.10%, the second highest on the continent after Côte "
+     "d'Ivoire, and **its geography is pastoralist rather than urban**: Iona 60.6%, Virei "
+     "53.3% and Curoca 48.6% in Namibe and Cunene, against 14.9% in Luanda province. Those "
+     "are Kuvale, Himba and Mucubal transhumance districts and some of the least "
+     "missionised ground in the country. A herder who keeps the ancestors appears to be "
+     "answering *no religion* rather than *animist*, so for Angola the floor is a long way "
+     "below the number. Nothing is moved between the two cells, because the census "
+     "publishes no split and any transfer would be invented; see ao2024.py. "
      "**One child, added for Benin, which is the first source here to name an African "
      "tradition individually** (spec §2: a node earns its place by being countable "
      "somewhere). Everything else sits on this node, including Benin's own `Autres "
@@ -1237,6 +1379,62 @@ BRANCHES = [
      "this node existed. Promoting it is a one-line change in bj2013.py plus a re-scatter of "
      "Benin, and it was deliberately NOT done here rather than silently altering a country "
      "nobody asked about."),
+
+    # --- added 2026-09-08 with Angola, which triples this node's named children in one go.
+    #     Ordered by founding: Kimbangu 1921, Toco 1949, Lutumba 1981.
+    ("christianity.africaninstituted.kimbanguist",
+     "Kimbanguist Church",
+     "L'Église de Jésus-Christ sur la Terre par son envoyé Simon Kimbangu — **409,254 "
+     "people in Angola, 1.19%**, and the oldest of the three prophetic churches this node "
+     "gained with that country. Simon Kimbangu was a Baptist catechist at Nkamba in the "
+     "Belgian Congo who began healing and preaching in April 1921; the colonial "
+     "administration arrested him that September and he died in prison at Elisabethville "
+     "in 1951, having spent thirty years inside. The church organised around his sons and "
+     "was legalised in 1959. "
+     "**Angola's count is the church's spread across a border it never recognised.** "
+     "Nkamba is in Bas-Congo, a few kilometres from Angolan territory, and the Angolan "
+     "figures fall away from it exactly as distance would predict: Zaire province 9.43% "
+     "and Uíge 7.45% against 1.19% nationally, peaking at **Lufíco 34.7%, Nova Esperança "
+     "33.1%, Alto Zaza 29.6% and Nóqui 28.1%** — Nóqui and Lufíco sit on the Congo river "
+     "opposite Matadi. One people, the Bakongo, with a colonial line drawn through them, "
+     "and the census drawing the line's irrelevance. "
+     "The DRC holds far more Kimbanguists than Angola does and publishes no census "
+     "religion figures, so **this is a large minority of the church, seen from the only "
+     "side that counts it**."),
+
+    ("christianity.africaninstituted.tocoist",
+     "Tocoist Church",
+     "A Igreja do Nosso Senhor Jesus Cristo no Mundo — **350,936 people in Angola, "
+     "1.02%**, and the largest church founded by an Angolan. **Simão Gonçalves Toco** "
+     "(1918-1984) was a Baptist mission pupil and choirmaster from Sadi Zulumongo in "
+     "Maquela do Zombo, northern Uíge; the church dates itself to the descent of the Holy "
+     "Spirit on his choir at Léopoldville on **25 July 1949**, and the Belgian and "
+     "Portuguese authorities deported and then confined him for most of the following "
+     "quarter-century, first to the Azores and then to southern Angola. It is prophetic "
+     "and Bakongo in idiom, out of the Baptist mission rather than the Catholic one, and "
+     "it is the closest thing Angola has to a national church of its own. "
+     "**The census puts it back where it started.** Uíge province is 6.22% against 1.02% "
+     "nationally, peaking at Nsosso 22.9%, Bungo 16.7% and Mucaba 15.4% — and **Maquela "
+     "do Zombo, the municipality Toco was born in, is 11.1%**. Luanda holds the largest "
+     "absolute number, 99,447, at 1.19%, which is the twentieth-century migration rather "
+     "than the origin. A prophet's birthplace, legible in a 2024 census."),
+
+    ("christianity.africaninstituted.bomdeus",
+     "Bom Deus",
+     "A Igreja Fraternidade Evangélica de Pentecostes na África em Angola — **339,044 "
+     "people, 0.98%**. Begun by **Simão Lutumba in 1981** as the Angolan arm of the "
+     "Congolese Nzambe Malamu and separate from it since the 1990s. Pentecostal in "
+     "practice and African-founded in origin; this node is defined by the second, which is "
+     "the same reason Zimbabwe's Vapostori sit here rather than on "
+     "`christianity.pentecostal`. "
+     "**It is the modern one of the three, and it looks it.** Kimbanguism and Tocoism are "
+     "still sitting on the prophetic map of the 1920s and 1940s, each with a province "
+     "above 6% and municipalities above 20%. Bom Deus has no region at all: Cuanza Norte "
+     "2.55%, Icolo e Bengo 2.02%, Lunda Norte 1.85%, Malanje 1.82%, and not one "
+     "municipality in the country above 6.4%. A church founded in Luanda in the 1980s and "
+     "grown nationally through the war and after it, rather than one that spread out from "
+     "a prophet's village."),
+
     ("christianity.evangelical",
      "Evangelical, unspecified",
      "For sources that collect `Evangelical` as an answer distinct from both `Protestant` "
@@ -1349,6 +1547,72 @@ BRANCHES = [
      "custom is the whole answer and not the much larger number who keep it alongside a "
      "church."),
 
+    # --- added 2026-09-08 with Laos. UNLIKE every sibling above, no source PRINTS this
+    #     category: it is the census's `no religion` cell, filed here on the evidence set
+    #     out below. The argument is Anita's to reverse in one line of taxonomy/la2015.py.
+    ("indigenous.laos",
+     "Traditional religions of Laos",
+     "**2,038,393 people, 31.45% of Laos, and the census calls this cell `no religion`.** "
+     "It is the largest single decision on the Laos map and the only node on this map filed "
+     "against its source's own English label, so the whole case is here.\n\n"
+     "**The 2005 census defined religion as any spiritual system with WRITTEN DOCTRINES.** "
+     "That is the *Socio-Economic Atlas of the Lao PDR*'s account of the instrument, in "
+     "Section F.5: *\"According to this definition only Buddhism, Christianity, Baha'i and "
+     "Islam are therefore identified as religions.\"* Animism was not measured and found "
+     "absent; it was defined out of the category `religion` and had nowhere to go but the "
+     "residual. The atlas then says what the residual is: *\"it might be suggested that a "
+     "more appropriate term for the 'other' category would be Animism. The majority of "
+     "non-Lao ethnic groups are essentially Animists.\"* The 2015 census kept the shape and "
+     "renamed the cell; **the report's own summary calls it *\"no religion or being "
+     "animist\"***, and the Lao subtitle on LSB's own map service reads *\"following other "
+     "religions or not following any religion\"*.\n\n"
+     "**Its geography is the opposite of irreligion's.** Dakcheung in Xekong is 96.5%, "
+     "Samuoi in Salavan 93.1%, Ta Oi 92.1%, May in Phongsaly 92.0%. Vientiane Capital, the "
+     "urban and educated end of the country and where a secular answer would concentrate, "
+     "is **5.9%** and Champasak is **2.0%**. A category that runs 96% in the Katuic uplands "
+     "and 2% on the Mekong is tracking the ethno-linguistic map, not schooling or "
+     "urbanisation.\n\n"
+     "**And it tracks it in the data as well as on the eye.** LSB publishes the ten "
+     "ethno-linguistic categories on the same 8,499 villages, and the rate inside them is "
+     "**9.2% for Lao-Tai against 65.1% Mon-Khmer, 79.1% Hmong-Mien and 77.4% "
+     "Sino-Tibetan** — an ecological split, so read it as the shape and not as a "
+     "measurement of individuals. The fact that needs no assumption at all: **84.5% of the "
+     "2.04 million are in villages that are less than half Lao-Tai.**\n\n"
+     "**The external estimate that names what the census will not is Pew's**, and it is "
+     "unusually clean. *How the Global Religious Landscape Changed From 2010 to 2020* "
+     "(2025) puts Laos's religiously unaffiliated at **under 0.1%** and its `other "
+     "religions` at **34.2%, 2,510,000 people**, which makes Laos the tenth-largest `other "
+     "religions` population in the world. That is spec §3.11's first bullet exactly: an "
+     "external national estimate naming a category the census refuses to, and it bounds the "
+     "genuinely non-religious part of this cell at a few thousand people nationally.\n\n"
+     "**THE STRONGEST EVIDENCE CAME LAST AND IT IS THE 2005 CENSUS.** Anita asked whether "
+     "31% irreligion is realistic at national level, and the previous census answers it: "
+     "**2005 called this same cell `another religion` and it was 31.04%.** The box was "
+     "renamed and the people did not change, which is checkable rather than asserted — the "
+     "2005 `another religion` share against the 2015 `no religion` share, across the **137 "
+     "districts present in both censuses, correlates at r = 0.9714 with the median district "
+     "moving -0.0 points.** A census does not relabel a box and find the new label "
+     "distributed exactly like the old one across 137 districts unless it is the same "
+     "population, and in 2005 that population was recorded as *following another religion*. "
+     "**And the urban gradient runs backwards inside Vientiane Capital**, the one place a "
+     "secular population could be: Xaythany on the northern hill fringe is 11.99%, and "
+     "**Chanthabuly, the historic city centre, is 2.41%** with Hadxaifong at 0.89%. A "
+     "thirteen-fold gradient inside one municipality, at its minimum in the core.\n\n"
+     "**What the node does NOT claim.** No tradition is named under it, because no source "
+     "names one: this is the Khmu, Hmong, Akha, Katu, Ta Oi, Brao and Lamet religions and "
+     "several dozen others in one box, and depth follows what a source counts (§2.4). "
+     "**Read it as a ceiling rather than a floor**, which reverses the reading every other "
+     "node in this family carries: `indigenous.myanmar` and `indigenous.vanuatu` are boxes "
+     "that stood BESIDE the churches, so they undercount people who keep both, while this "
+     "one is a residual that also holds however many Lao really do report no religion. The "
+     "5.9% in Vientiane Capital is where to look for them.\n\n"
+     "**The alternative was `unknown`** (§6.3a-ii), which Vietnam uses next door for a "
+     "residual of the same kind, and it was rejected because the evidence above is a good "
+     "deal more specific than *\"what they practise is not determinable\"* — four "
+     "independent sources agree on what the cell is, one of them being the census's own "
+     "report. Filing it there would render the Lao uplands as one grey block and say "
+     "nothing about a religious geography that is among the sharpest on this map."),
+
     ("alevism",
      "Alevism",
      "The Anatolian tradition of Turkey's Alevi and Kurdish Alevi communities. Usually "
@@ -1414,6 +1678,44 @@ BRANCHES = [
      "any country on this map.** Its sibling is the Cook Islands Christian Church, and "
      "Samoa's own CCCS would be a third if Samoa is drawn."),
 
+    # --- added 2026-09-08 with Samoa, which `.ekt`'s note above had already named as the
+    #     fourth of this set: "Samoa's own CCCS would be a third if Samoa is drawn".
+    # --- added 2026-09-08 with Kiribati, the fifth and last of the Pacific Congregational set.
+    ("christianity.reformed.congregational.kpc",
+     "Kiribati Protestant Church",
+     "**34,464 people, 31.3% of Kiribati at the 2015 census**, and the second body in the "
+     "country after the Catholics. Founded as the Gilbert Islands Protestant Church out of "
+     "**two Congregational missions rather than one**: the American Board of Commissioners "
+     "for Foreign Missions from 1857, by way of Hawaiian pastors, and the London Missionary "
+     "Society from 1870, by way of Samoan and Tuvaluan ones. Both parents are Congregational, "
+     "which is what puts it here beside `.cccs`, `.cicc`, `.ekt` and `.niue` rather than on a "
+     "node of its own kind. Renamed from Gilbert Islands to Kiribati Protestant Church in "
+     "1979 with the country.\n\n"
+     "**Its geography is the mission partition of the Gilberts and it is still almost "
+     "perfect.** The chain runs Catholic in the north and Protestant in the south, and the "
+     "two ends invert: **Butaritari is 82.5% Catholic and 13.2% Protestant; Arorae, 600 km "
+     "south, is 98.0% Protestant and 1.4% Catholic.** Tamana beside it is 95.8%. Nothing in "
+     "between is mixed by accident — the share falls almost monotonically down the chain.\n\n"
+     "**THE 2014 UNION IS NOT IN THIS NODE AND THE CENSUS YEAR IS WHY.** In 2014 the church "
+     "reconstituted itself as the **Kiribati Uniting Church**, a union of Congregationalists, "
+     "Evangelicals, Anglicans and Presbyterians, and roughly ten thousand members — mainly "
+     "Congregationalists — refused and re-formed a separate Kiribati Protestant Church. The "
+     "2015 census still counts one cell called `KPC`; the 2020 census counts KUC at 21% and "
+     "KPC at 8% separately. This map draws 2015, because 2015 is the newest year Kiribati "
+     "publishes religion with a geography, so it draws the body whole. `christianity.united` "
+     "would be the right home for the KUC half if a year that separates them is ever drawn."),
+    ("christianity.reformed.congregational.cccs",
+     "Congregational Christian Church of Samoa",
+     "The Ekalesia Fa'apotopotoga Kerisiano Samoa, **55,411 people and 27.0% of Samoa** — "
+     "the largest of the London Missionary Society's Pacific daughters and the mother of "
+     "the rest of them. John Williams landed the LMS mission at Sapapali'i on Savai'i in "
+     "1830, and the Samoan teachers it trained carried it on to the Cook Islands, Tuvalu, "
+     "Niue and the Gilberts, which is why `.cicc`, `.ekt` and `.niue` are its siblings here "
+     "rather than its parents.\n\n"
+     "**Malua, its theological college village on Upolu, is 100.0% Congregational** — 424 "
+     "of 424 people, with not one person in any other category. It reaches 55.2% of "
+     "Aleipata Itupa i Luga and 50.0% of Lepa, and it is the largest body in every one of "
+     "Samoa's four statistical regions."),
     ("christianity.reformed.congregational.niue",
      "Ekalesia Niue",
      "The Congregational church of Niue, LMS-descended from 1846 through Samoan and "
@@ -1546,6 +1848,24 @@ BRANCHES = [
      "Other religion (Montserrat)",
      "`Other Religions`, 251 people, 5.8%, in the 2001 census taken six years after the "
      "Soufriere Hills eruption that removed two thirds of the island's population."),
+
+    # --- added 2026-09-08 with Laos, on the other.mu / other.sk pattern: a printed row
+    #     that pools an answer with a non-answer.
+    ("other.la",
+     "Other or not stated (Laos)",
+     "**133,296 people, 2.06%, and it is a residual of a residual.** LSB's Table 3.5 prints "
+     "one row, `Others/not stated`, at 137,640; the village-level services separate the "
+     "Muslims (1,603) and the Baha'is (2,121) out of it, and what is left is this. It is "
+     "not published as a category anywhere at any geography, and `sources/la.py` derives it "
+     "as each village's population less its five published categories.\n\n"
+     "**Its shape says non-response rather than religion.** It is 1-5% in 3,934 of the "
+     "8,499 villages and under 0.1% in 944 of them, which is a thin national film and not a "
+     "community anywhere; only 12 villages are more than half, and all twelve are small. "
+     "Compare `indigenous.laos` beside it, which runs 96% in one district and 2% in "
+     "another. **So read this as the census's own reach and not as Laos's other faiths**, "
+     "the more so because the four religions the instrument recognised are all drawn "
+     "separately already (§3.11, and the same call as `other.mu`).\n\n"
+     "Per source, and never merged with another country's residual."),
     ("other.bm",
      "Other religion (Bermuda)",
      "**Two columns, not one**: `Other Religions` (4,399) and `Other` (1,527), which the "
@@ -1581,6 +1901,23 @@ BRANCHES = [
      "Umbanda, Reyukai, Shinto and the Bahai separately, so what falls out of the bottom "
      "is genuinely a tail. The cell that deserves suspicion in Paraguay is not this one, "
      "it is `Otras - Evangelica` at 186,107 (taxonomy/py2002.py)."),
+    # --- added 2026-09-08 with Türkiye.
+    ("other.tr",
+     "Other religion or none (Türkiye)",
+     "**The odd one out in this family, and the name says why: it is not only a religion "
+     "cell.** The Diyanet's question 10 offers Islam, Christianity, Judaism, other religions "
+     "and 'I belong to no religion', and the report publishes the answers as three numbers — "
+     "İslamiyet 99.2%, this 0.4%, no answer 0.5% — describing the middle one in its own words "
+     "as *belongs to a religion other than Islam or belongs to no religion*. So one cell of "
+     "about 341,000 people holds Türkiye's Christians, its Jews and its irreligious together, "
+     "and nothing in 293 pages separates them. "
+     "**It is also national.** There is no regional religion table anywhere in the report, so "
+     "this share sits at the same rate in all twelve regions and carries no geography at all; "
+     "it must not be read as saying Türkiye's Christians are evenly spread, when in fact "
+     "almost all of them are in Istanbul. KONDA's independent 2006 national survey splits the "
+     "same space as Orthodox 0.06%, Catholic 0.01%, Protestant and others 0.057%, Jewish "
+     "0.013%, other religion 0.04% and no religion 0.47% — which is not drawn here, because "
+     "mixing two instruments to decompose a cell is exactly what §14 rule 1 forbids."),
     ("other.bg",
      "Other religion (Bulgaria)",
      "NSI's `Друго` — 6,451 people, 0.10%, and a genuine tail rather than a coarse cell: "
@@ -2133,6 +2470,21 @@ BRANCHES = [
      "0.3% in Mashonaland Central — the same halves of the country that hold the mission "
      "churches and the highest `None`. Per source, per spec §3.11."),
 
+    # --- added 2026-09-08 with Eswatini.
+    ("other.sz",
+     "Other religion (Eswatini)",
+     "The CSO's `Other` in Table 3.2.1 — 3,363 people, 0.31%, and small for the same reason "
+     "`other.zw` is: the 2017 census gives boxes of their own to Islam, Hinduism, the "
+     "Baha'i Faith and Judaism, at 0.33%, 0.02%, 0.04% and 0.01%, so nothing large is "
+     "hiding in here. What is left is the tail a Southern African census usually collects "
+     "under this heading: Rastafari, the Greek Orthodox and Muslim traders' congregations "
+     "of Mbabane and Manzini that did not use their own box, and the handful of Buddhist "
+     "and Sikh households that came with Indian and Chinese migration. "
+     "**It has no geography and nothing here claims one.** The CSO publishes Table 3.2.1 "
+     "nationally only, so every dot on this node in Eswatini is `derived`: drawn at the "
+     "national rate inside each region's own measured non-Christian total. Per source, per "
+     "spec §3.11."),
+
     # --- added 2026-09-07 with the Central African Republic.
     ("other.cf",
      "Other religion (Central African Republic)",
@@ -2572,6 +2924,33 @@ BRANCHES = [
      "INEI publishes no breakdown, so it stays whole. Per source, per spec §3.11 and §14.4."),
 
     # --- added 2026-09-08 with Fiji.
+    ("other.ki",
+     "Other religion (Kiribati)",
+     "Two cells of Kiribati's 2015 table, **918 people between them, 0.83%**. NSO's own "
+     "`Other` is 832 of that, printed after thirteen named answers including the Baha'is "
+     "(2,314), the Muslims (139) and `No religion`, so it is a genuine tail rather than a "
+     "place the non-Christian religions were put.\n\n"
+     "**The other 86 are `Te Ran`, and nothing published says what it is.** It is a printed "
+     "census cell in 2015 and again in the 2020 census (89 people), so the office treats it "
+     "as a body worth naming, but no census report, no Census Atlas note and no reachable "
+     "secondary source identifies it; the name is Gilbertese. It is here rather than on "
+     "`christianity.other` because filing it as Christian would be a claim this project "
+     "cannot support (§14.4 rule 1), and it is not merged silently — the REVIEW note in "
+     "`taxonomy/ki2015.py` says the search that failed. At 0.08% it draws no dot at 1 dot = "
+     "1,000 people either way."),
+    ("other.to",
+     "Other religion (Tonga)",
+     "TSD's `Other minor religious groups` — **714 people, 0.72%**, and it is a genuine tail "
+     "rather than a place the non-Christian religions were put. G 20 prints the **Baha'i "
+     "Faith (730), Hinduism (78), Islam (60) and Buddhist (58) as four lines of their own**, "
+     "which very few censuses of a country this size do, and it also names the Salvation "
+     "Army, the Anglicans and the Jehovah's Witnesses at three to six hundred people each. "
+     "So the list was already twenty-one deep before anything reached this cell.\n\n"
+     "Its geography says the same. The strongest district anywhere is **'Eua Fo'ou at "
+     "2.26%** against 0.72% nationally, and that is 48 people; no district reaches three "
+     "percent and most round to nothing. A residual hiding a real body would not look like "
+     "that. Tonga is **99.88% drawn** — only 119 people in the country refused the "
+     "question."),
     ("other.fj",
      "Other religion (Fiji)",
      "FBoS's `Other religion` — **1,294 people, 0.15%**, and one of the smallest residuals on "
@@ -2587,6 +2966,120 @@ BRANCHES = [
      "Chinese in the same census); and whatever iTaukei respondents meant who did not choose "
      "one of the eighteen named churches or `No religion`. FBoS publishes no breakdown of the "
      "cell, so it stays whole. Per source, per spec §3.11 and §14.4."),
+
+    # --- added 2026-09-08 with Guatemala, the first country here drawn from LAPOP.
+    ("other.gt",
+     "Other religion (Guatemala)",
+     "**Two LAPOP answers land here and neither is a residual in the usual sense**: `Otro` "
+     "(1.14%) and `Religiones Orientales no Cristianas` (0.31%). They are kept apart in "
+     "`source_category` so a later source can move either, and they are merged in the tree "
+     "because nothing in the survey separates what is in them.\n\n"
+     "This cell is small for the opposite reason to Peru's. `other.pe` is 0.41% because "
+     "INEI names five non-Catholic Christian bodies; `other.gt` is 1.45% because LAPOP's "
+     "card is a WORLDWIDE instrument, so it carries boxes for Judaism, Islam, Hinduism and "
+     "the Witnesses that almost nobody in Guatemala ticks, while the categories a Guatemalan "
+     "questionnaire would have printed are absent. **The bucket is small and the hole is "
+     "somewhere else**: `Religiones Tradicionales` at 0.22% in a country that is 43.6% "
+     "indigenous by its own census. sources.md §11ad measured that instrument failure "
+     "against Suriname's census and `taxonomy/gt2023.py` carries the argument.\n\n"
+     "What is plausibly inside it: the Baha'i community, which has a documented Guatemalan "
+     "presence; the small Chinese and Korean populations of the capital; and respondents who "
+     "would have said *costumbre* to an interviewer who had a box for it. None of that is "
+     "separable here, so per spec §3.11 it stays whole."),
+
+    # --- added 2026-09-08 with El Salvador, the second LAPOP country.
+    ("other.sv",
+     "Other religion (El Salvador)",
+     "The same two LAPOP answers as `other.gt` — `Otro` (0.93%) and `Religiones Orientales "
+     "no Cristianas` (1.42%) — kept apart in `source_category` and merged here because "
+     "nothing in the survey separates what is in them.\n\n"
+     "**At 2.35% this is the largest `other` cell of any LAPOP country in Central America**, "
+     "and nearly two-thirds of it is the Eastern-religions box rather than the residual one, "
+     "which is the reverse of Guatemala. What can be said about the contents is one thing "
+     "and it is a reading rather than a measurement: **El Salvador has the region's oldest "
+     "Palestinian and Lebanese communities**, arrived from the 1890s, and while the "
+     "Levantine Christians among them would answer Orthodox or Catholic, a Salvadoran Muslim "
+     "has no box on this card at all and `Religiones Orientales no Cristianas` is where an "
+     "interviewer working from it would most likely land. No source here can split the cell, "
+     "so per spec §3.11 and §14.4 it stays whole."),
+
+    # --- added 2026-09-08 with Ecuador, the third AmericasBarometer country.
+    ("other.ec",
+     "Other religion (Ecuador)",
+     "The same two LAPOP answers as `other.gt` and `other.sv` — `Otro` (2.05%) and "
+     "`Religiones Orientales no Cristianas` (0.35%) — kept apart in `source_category` and "
+     "merged here because nothing in the survey separates what is in them.\n\n"
+     "**This cell is not comparable with the other two, because in Ecuador's pool the "
+     "`Otro` box did not exist for half the waves and then changed meaning.** Code 77 is "
+     "exactly zero in the 2010, 2012 and 2014 rounds across all 28 countries of the merge, "
+     "on 29,374 / 27,254 / 36,725 valid answers, and appears from 2016. Meanwhile codes 6, "
+     "10 and 12 — Mormons, Jews and Jehovah's Witnesses — are exactly zero in 2018 and 2023 "
+     "on 15,107 and 25,649 answers. Zero Witnesses among 25,649 Latin Americans is a "
+     "withdrawn box and not a measurement. So **this node is inflated at the late end of the "
+     "pool by people who would have had their own answer earlier**, and "
+     "`christianity.witnesses` and `christianity.latterday` are correspondingly floors. "
+     "Ecuador's `Otro` runs 0%, 0%, 3.22%, 5.02% across its four rounds, and the 1.80-point "
+     "rise between the last two is close to the 1.81% those three withdrawn cells hold — "
+     "suggestive, on n=1,545, rather than a decomposition.\n\n"
+     "What is plausibly inside it beyond that: Ecuador's Baha'i community, which is among "
+     "the larger ones in South America; the Chinese and Lebanese populations of Guayaquil; "
+     "and — the reason this cell is worth watching rather than dismissing — **the "
+     "Kichwa, Shuar, Achuar and Waorani practice that `Religiones Tradicionales` fails to "
+     "catch at 0.06% in a country that is 7.69% indigenous.** `taxonomy/ec2023.py` has that "
+     "argument. None of it is separable here, so per spec §3.11 it stays whole."),
+
+    # --- added 2026-09-08 with Angola.
+    ("other.ao",
+     "Other religion (Angola)",
+     "INE's `Outra religião` — 435,663 people, 1.26% of the 2+ population, and a small "
+     "residual because the twenty boxes above it are unusually many. "
+     "**Its geography names most of what is in it**, on §9r's Chittagong rule. Zaire "
+     "province is **7.62%** against 1.26% nationally, peaking at **Luvo 13.9%, Mbanza "
+     "Kongo 11.0% and Cuimba 10.3%** — Mbanza Kongo is the old capital of the Kongo "
+     "kingdom and Luvo is the border post on the road to Matadi. That corner of Angola "
+     "carries dozens of small Kongo prophetic churches, and the census names only three "
+     "African-founded bodies, so the northern half of this cell is "
+     "`christianity.africaninstituted` that could not be brought out. A second cluster in "
+     "interior Cuanza Sul (Ebo 12.0%, Condé 10.8%) has no such obvious reading. "
+     "Per source, per spec §3.11."),
+    ("other.sg",
+     "Other religion (Singapore)",
+     "SingStat's `Other Religions` — 9,827 people, 0.28%, and one of the smallest residuals "
+     "on this map because the eight boxes above it are unusually many. **Sikhism, which most "
+     "censuses fold into a cell like this one, has its own at 12,051**, so this is a tail "
+     "and not a store cupboard: Singapore's Jewish, Baha'i, Jain and Zoroastrian communities "
+     "are the bodies with nowhere else to go, and none is separately counted anywhere. "
+     "**Its geography is the wealthy central belt and nothing else.** 1.13% in the "
+     "un-named `Others` planning areas, 0.96% in River Valley, 0.88% in Marine Parade and "
+     "0.78% in Tanglin, against 0.15% in Ang Mo Kio — three times the national rate in the "
+     "private-housing districts, which is where a small expatriate and old-mercantile "
+     "population would be. Per source, per spec §3.11."),
+    ("other.at",
+     "Andere nichtchristliche Gemeinschaften (Austria)",
+     "The Volkszählung 2001's cell for every non-Christian answer that is not Jewish or "
+     "Muslim — 19,750 people, 0.25%. **It is a mixture and not a tail**, and UNSD's national "
+     "table decomposes it exactly: Buddhists 10,402, Hindus 3,629, Sikhs 2,794, `other "
+     "religions` 1,745, Bahá'í 760, Unification 297, Shinto 123. Buddhism is more than half "
+     "of it, which is worth saying because Austria recognised Buddhism as a public-law "
+     "Religionsgesellschaft in 1983, the first state in Europe to do so. Those figures exist "
+     "at national level ONLY, so the cell is drawn whole rather than split; "
+     "`taxonomy/at2001.py` has that argument. **Its geography is Vienna and almost nothing "
+     "else**: 0.67% across the city against 0.09% in Burgenland, peaking at 1.18% in "
+     "Mariahilf and 1.17% in Margareten, the dense inner districts inside the Gürtel. "
+     "Per source, per spec §3.11."),
+    ("other.cy",
+     "Other religion (Cyprus)",
+     "CYSTAT's `Other Religion` in the 2021 census — 4,545 people, 0.49%. **A tail rather "
+     "than a store cupboard**, because Cyprus names Buddhism, Sikhism and Hinduism as their "
+     "own answers, so the usual contents of a cell like this are already out of it. What is "
+     "left is Bahá'í, Yazidi, and any Alevi or Ahmadi answer that did not go in the Muslim "
+     "cell — and, oddly, **Judaism, which the census has no row for at all**: the same "
+     "census counts a Jewish community in its ethnic/religious-group table and 885 Hebrew "
+     "speakers in its language table, but the religion question's twelve categories do not "
+     "include one. **It has no geography of its own**, because nothing in Cyprus does: the "
+     "religion table is national and every community figure on this map is allocated from "
+     "citizenship composition, so `other.cy` reads 0.29% to 0.95% across the island purely "
+     "as a function of how many non-Cypriots live there. Per source, per spec §3.11."),
 ]
 
 
@@ -2695,6 +3188,13 @@ LINEAGE = {
             # 19th-century America and the claim to restore the apostolic church or to read
             # the end of the age. Jehovah's Witnesses come out of the Millerite adventists,
             # which is why they follow them here.
+            #
+            # The New Apostolic Church is the one that is not American: Edward Irving's
+            # London congregation of the 1830s, restoring the apostolate rather than the
+            # apostolic congregation, and reorganised at Hamburg in 1863. Same claim, same
+            # decade, different continent, so it sits at the head of the group beside
+            # Stone-Campbell rather than getting a group of its own for one node.
+            "christianity.newapostolic",
             "christianity.restorationist",
             "christianity.latterday",
             "christianity.adventist",
@@ -2821,5 +3321,21 @@ LINEAGE = {
         # Ahmadiyya movement is a 19th-century messianic renewal, so it descends from
         # Islam as a whole rather than from either side of a 7th-century succession.
         ("Later movements", ["islam.ahmadiyya"]),
+    ],
+
+    # Added 2026-09-08 with Türkiye, the first source here that asks which school. Ordered
+    # by the founder's death — Abu Hanifa 767, Malik 795, al-Shafi'i 820, Ibn Hanbal 855 —
+    # which is the order they are always given in and is not size order: Shafi'i is second
+    # in Türkiye and Maliki, second-largest worldwide, is a rounding error there.
+    "islam.sunni": [
+        ("Schools of law", [
+            "islam.sunni.hanafi",
+            "islam.sunni.maliki",
+            "islam.sunni.shafii",
+            "islam.sunni.hanbali",
+        ]),
+    ],
+    "islam.shia": [
+        ("Schools of law", ["islam.shia.jaafari"]),
     ],
 }

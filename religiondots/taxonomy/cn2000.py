@@ -195,6 +195,18 @@ NOT_ASSERTED = {
     "Naturalised":
         "941 foreign nationals who took Chinese citizenship. Too few to say anything "
         "about, and nothing about their religion follows from the category.",
+    "Unpublished":
+        "3,336,751 PEOPLE IN ELEVEN HAINAN COUNTIES, AND THE ONE CATEGORY HERE THAT IS NOT "
+        "A NATIONALITY -- added 2026-09-08, spec §14.23. The Harvard digitisation of the "
+        "Hainan volume carries 澄迈, 临高, 定安, 屯昌, 东方, 乐东, 陵水, 昌江, 白沙, 琼中 "
+        "and 保亭 as a name and a tab and nothing else, in all 111 of its tables, so for "
+        "these eleven counties there is a published population and no nationality at all. "
+        "`sources/cn.py` writes them at their own 2010 county total under this name rather "
+        "than guessing a composition. **Nothing is lost by it.** Li, Han, Miao and Zhuang -- "
+        "which is essentially everyone there -- all resolve to `unknown` anyway, and every "
+        "one of Hainan's ~13,600 religio-ethnic people is in a county the volume does cover. "
+        "So this row draws the same colour a full nationality table would have drawn, and "
+        "the alternative was 3.34 million people in the wrong county.",
 }
 
 # The nationalities for which no religion is asserted: religiously mixed, religiously

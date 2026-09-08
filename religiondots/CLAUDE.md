@@ -1,5 +1,10 @@
 # religiondots — notes for agents
 
+**If you were spun up to add a country and nobody is watching this session turn by turn, read
+`AGENT_BRIEF.md`.** It is the standing brief: which calls are yours (almost all of them), the
+short list that is Anita's, and when to stop — `python tools/claim.py park <cc> --id <sid>`
+leaves a handoff so the next session resumes instead of restarting.
+
 `spec.md` is the load-bearing record and later sections reverse earlier ones; read the one
 that applies before changing behaviour it describes. `COMMANDS.txt` has the new-country
 checklist and every command in build order.

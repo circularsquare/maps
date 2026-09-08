@@ -64,8 +64,14 @@ REVIEW = {
         "the card. That is exactly INEGI's `Sin adscripción religiosa (creyente)`, which is "
         "why `unchurched` exists (mx2020.py, spec §6.3a). Folding it into `unaffiliated` "
         "would move 865,000 believing Guatemalans into irreligion. "
-        "Its split-half is **+0.21**, under the +0.43 bar, so like the Protestant cell it is "
-        "drawn without its own geography.",
+        "**It IS drawn on its own department shares, and it is the one category here that is "
+        "under the split-half bar** — +0.21 against +0.43. Anita's call, 2026-09-08, on the "
+        "evidence the split-half does not look at: the departments differ overwhelmingly "
+        "(chi-square p=3.6e-16), so +0.21 means the ORDERING is not pinned rather than that "
+        "the variation is fake, which is spec §14.16's China at +0.17 exactly. The stable "
+        "half is also the legible half: the capital tops both wave halves at 8.2% then 8.6%, "
+        "and Quiché, Alta Verapaz, Huehuetenango and Sololá sit stably at the bottom around "
+        "1-2%. `sources/gt.py`'s `OVERRIDE` carries the reason and prints it on every run.",
     "Agnóstico o ateo (no cree en Dios)":
         "-> secular, following mx2020.py's `Ateos/Agnósticos` exactly. 0.64%, which is the "
         "smallest irreligion figure of any LAPOP country in the region and about a "

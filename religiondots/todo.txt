@@ -3,11 +3,9 @@ religiondots — todo (Anita's file; Claude does not edit this)
 
 - ipums account, hope they email back
 - other sources? anything blocked on human accoutn or something
-
 - think about overlapping dots
 
-
-china shows buddhists in arunachal, double counting?
+capmas
 
 french guiana population distribution looks a little silly psread out, that seems not right
 
@@ -18,25 +16,13 @@ a little house per religion, for the holy site / origin site / headquarters of t
 maybe reolor "other" to purple or something?
 maybe get rid of some of the jewish categories? half are only in israel, half are only in usa
 
-
-country	people	units	cats	state
-1	Slovakia	5.45M	2,927	11	verified; data + geometry + grid in one open service
-2	Peru	23.2M	1,874	8	already reopened in §11y, still unbuilt — largest undrawn in the Americas
-3	Samoa	205k	43 or 339	26	data verified, exact partition; boundaries need work
-4	Fiji	~885k	provinces	11	most plural Pacific country (Methodist / Hindu / Muslim); office open, not yet chased
-5	PNG	~7.3M	22 provinces	—	biggest Pacific country; office open, absent from oracle
-6	Solomon Islands	721k	9+1	—	Anglican Church of Melanesia, SSEC — both new
-7	Tonga / Kiribati / Vanuatu	99k–300k	—	22 / 14 / 11	Kiribati confirmed: religion is a census topic, nso.gov.ki/download/<id>/ is an open catalogue
-8	~15 microstates	tiny	1	4–24	unlocked by your call above
-9	Austria	8.0M	Gemeinde	31	deepest undrawn list in Europe, but 2001 and 25 years stale
-10	Bulgaria / Cyprus	6.5M / 923k	—	10 / 13	hosts answer now; not chased further
+find further breakdowns on all the "indigenous religions" generic groups? 
 
 
 LATER
 
 - religion genealogy panel, with selection linked both ways to the map. spec 10
 - diversity toggle (effective number of groups pofer unit). spec 5
-
 
 
 

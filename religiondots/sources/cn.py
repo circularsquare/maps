@@ -36,9 +36,17 @@ WHAT THE PROVINCE SUMS PROVE, AND THE ONE HOLE.
 The 31 files sum to 1,239,452,849 against the published 2000 provincial sum of
 1,242,612,226. The whole 3,159,377 difference is **Hainan**, whose file carries 14 of its 24
 county-level units as name-only rows with no data at all. Every other province is exact to
-the person, which is a stronger check than any tolerance would have been. Hainan's missing
-units are Li and Miao autonomous counties plus the disputed island groups, and hold
-essentially none of the drawn population -- Sanya, which holds the Utsul Muslims, is present.
+the person, which is a stronger check than any tolerance would have been.
+
+**AND THAT HOLE WAS RELOCATING 3.34 MILLION PEOPLE UNTIL 2026-09-08 -- spec §14.23.** The
+missing eleven counties are the Li heartland, so the per-group rescale below was handing the
+province's entire 2010 nationality vector to the ten counties that survived: Danzhou drawn at
+3,268,523 against a real 932,362, Sanya given 595,912 Li where the 2000 census counted 183,865, every Hainan
+county's Han inflated x1.841 and its Li x3.241, and the centre and west of the island blank.
+Hainan is now reconciled to its own published 2010 COUNTY totals instead, and the eleven are
+drawn at theirs on a category that claims no nationality. See HAINAN_2010 / HAINAN_MISSING
+below for the whole argument. Nothing about it changes a colour: Sanya, which holds the Utsul
+Muslims, was always present, and all of Hainan's religio-ethnic population is ~13,600 people.
 
 Usage:
     python sources/cn.py --fetch    # 31 Dataverse tables + one NBS page, ~90 MB
@@ -81,6 +89,98 @@ NBS_2010_FILE = "nbs2010_A0106a.htm"
 CENSUS_2000_PROVINCES = 1_242_612_226
 HAINAN_2000 = 7_559_035
 EXPECTED_COUNTIES = 2_859
+
+# ==================================================================================
+# HAINAN, WHICH IS RECONCILED TO COUNTY TOTALS BECAUSE ITS VOLUME CANNOT BE
+# RECONCILED TO A PROVINCIAL ONE -- spec §14.23
+# ==================================================================================
+#
+# THE HAINAN VOLUME IS SHORT BY ELEVEN COUNTIES AND THE RESCALE USED TO RELOCATE 3.34
+# MILLION PEOPLE BECAUSE OF IT. Every other province in this file is scaled per group by
+# `province_2010[g] / file_sum[g]`, and the docstring on that step says the file-sum
+# denominator is what stops an unresolved county's people being spread over its
+# neighbours. It does -- for counties whose NAME failed to resolve. Hainan's eleven are
+# not in the file at all, so the denominator never sees them, and the province's whole
+# 2010 nationality vector was being divided among the ten counties that survived:
+#
+#   the ten units in the volume     drawn 8,671,485   actually held 5,334,323
+#   the eleven that are missing     drawn         0   actually held 3,336,751
+#
+# Danzhou was drawn at 3,268,523 against a real 932,362, Wuzhishan at 472,425 against
+# 104,122, and Sanya was given 595,912 Li where the 2000 census counted 183,865 -- every Hainan county's
+# Han inflated x1.841 and its Li x3.241, while the whole centre and west of the island
+# drew nothing. **38.5% of the province was in the wrong county.**
+#
+# THE GAP IS IN THE VOLUME, NOT IN OUR TABLE CHOICE. The Hainan dataset on the Dataverse
+# holds 111 tables; all 111 carry the same 24 unit rows with only 9 or 10 of them
+# carrying data, the rest present as a name and a tab and nothing else. There is no
+# other table to reach for and no other digitisation of this volume in the open.
+#
+# SO HAINAN IS RECONCILED TO ITS OWN PUBLISHED COUNTY TOTALS INSTEAD, and the arithmetic
+# below is the whole of it. You cannot distribute a provincial nationality total across
+# counties when 42% of the counties are absent from the structure source; the choice is
+# between reconciling to a margin that is knowable and reconciling to one that is not.
+#
+#   * the ten present units keep their 2000 NATIONALITY SHARES -- which is the only
+#     thing the volume actually tells us about them -- and are scaled by their own
+#     `county_2010_total / county_2000_total`.
+#   * the eleven missing counties are written at their published 2010 total on one
+#     category, `Unpublished`, which claims no nationality because none was published.
+#     taxonomy/cn2000.py sends it to `unknown`, like Li and Han and Miao before it.
+#
+# WHAT IT COSTS IS A LABEL AND NOT A DOT. Hainan's Li are drawn at about 456,000 as `Li`
+# in the counties the volume covers, and the other ~810,000 inside the eleven as
+# `Unpublished` -- and Li, Han, Miao and Zhuang all resolve to `unknown`, so **not one
+# dot changes colour and not one person is lost.** All of Hainan's religio-ethnic colour
+# is about 13,600 people (the Utsul of Sanya and a few hundred others) and every one of
+# them is in a county the volume covers. Hainan's per-group provincial reconciliation is
+# therefore given up and reported as a residual rather than enforced; main() prints it.
+#
+# spec §6's rejection of an IPF against modern county totals does NOT apply here. That
+# argument is about inflating a contested minority share in a growing city -- Han
+# in-migration to Urumqi and Lhasa pushing up the Uyghur and Tibetan count. The only
+# group this moves at any size is the Li, who claim nothing.
+
+# 海南省2010年第六次人口普查主要数据公报, table 八 分市县总人口, Hainan Statistics
+# Bureau, 2011-05-10. Exact to the person; the 19 units plus 西南中沙群岛's 444 sum to
+# the published provincial 8,671,518. Keyed by the 2010 unit, listing the adcodes the
+# 2000 volume's rows resolve to -- 琼山市 merged into 海口市 in 2002, so four census
+# rows share one 2010 figure and split it in proportion to their 2000 populations.
+HAINAN_2010 = {
+    "海口市":   (2_046_189, ["460105", "460106", "460107", "460108"]),
+    "三亚市":   (  685_408, ["460204"]),
+    "五指山市": (  104_122, ["469001"]),
+    "琼海市":   (  483_217, ["469002"]),
+    "儋州市":   (  932_362, ["460400"]),
+    "文昌市":   (  537_428, ["469005"]),
+    "万宁市":   (  545_597, ["469006"]),
+}
+
+# The eleven the volume never digitised. `census2000` is the NBS 五普 communiqué for
+# Hainan (第五次人口普查公报——海南, table 各市县人口数), published in 万人 to two
+# decimals, so each is exact to ±50 people -- and their sum, 3,159,600, lands 223 from
+# the 3,159,377 shortfall this file has always reported. **That is the check that says
+# these eleven and nothing else are the hole.** The 2010 column is the same table as
+# HAINAN_2010 above, and the communiqué's own per-county growth rates reproduce the pair
+# (东方 1.31%/yr: 358,000 -> 408,100 against 408,309).
+#
+# 西南中沙群岛 is NOT here: 444 people over 西沙区 and 南沙区, which sources/cn_geo.py
+# leaves blank as islands the 2000 volume had no county for. 444 people is 0 dots.
+HAINAN_MISSING = {
+    # adcode      2010      2000   census romanisation, which cn.csv uses as geo_name
+    "469007": (408_309, 358_000, "DONGFANG"),                      # 东方市
+    "469021": (284_616, 279_600, "DINGAN"),                        # 定安县
+    "469022": (256_931, 252_700, "TUNCHANG"),                      # 屯昌县
+    "469023": (467_161, 434_700, "CHENGMAI"),                      # 澄迈县
+    "469024": (427_873, 389_300, "LINGAO"),                        # 临高县
+    "469025": (167_918, 164_500, "BAISHALIZUZHZHIXIAN"),           # 白沙黎族自治县
+    "469026": (223_839, 219_500, "CHANGJIANGLIZUZHZHIXIAN"),       # 昌江黎族自治县
+    "469027": (458_876, 446_300, "LEDONGLIZUZHZHIXIAN"),           # 乐东黎族自治县
+    "469028": (320_468, 303_100, "LINGSHUILIZUZHZHIXIAN"),         # 陵水黎族自治县
+    "469029": (146_684, 140_300, "BAOTINGLIZUMIAOZUZHZHIXIAN"),    # 保亭黎族苗族自治县
+    "469030": (174_076, 171_600, "QIONGZHONGLIZUMIAOZUZHZHIXIAN"), # 琼中黎族苗族自治县
+}
+HAINAN_MISSING_CATEGORY = "Unpublished"
 
 # --- the 59 columns, in GB/T 3304 census order ------------------------------------
 # Verified rather than assumed: Ningxia comes out 33.9% Hui, Xinjiang 45.2% Uyghur and
@@ -196,6 +296,31 @@ def read_2000():
                 rows.append((p[0].strip(), [_int(p[2 + 3 * i]) for i in range(N_GROUPS)]))
         out[code] = rows
     return out
+
+
+def hainan_blank_names():
+    """The Hainan unit names that appear in J46A0106.tab carrying no data at all.
+
+    The eleven counties HAINAN_MISSING fills are in the volume as a name and a tab and
+    nothing else, so `read_2000` -- which requires the full 179 columns -- never sees
+    them. Reading them here rather than trusting the constant means that if Harvard ever
+    completes the digitisation, main() says so instead of writing the published totals
+    over real data.
+    """
+    path = os.path.join(RAW, "J46A0106.tab")
+    named, with_data = [], set()
+    with open(path, encoding="utf-8", errors="replace") as fh:
+        fh.readline()
+        for line in fh:
+            p = line.rstrip("\n").split("\t")
+            nm = p[0].strip()
+            if not nm:
+                continue
+            if nm not in named:
+                named.append(nm)
+            if any(c.strip() for c in p[1:]):
+                with_data.add(nm)
+    return [n for n in named if n not in with_data]
 
 
 def read_2010():
@@ -957,6 +1082,73 @@ def main():
                     suspicious.append((prov, GROUPS[i], f"factor {r:.2f}"))
         factor[prov] = f
 
+    # ---- Hainan, which is reconciled to county totals instead -------------------
+    # See HAINAN_2010 / HAINAN_MISSING at the top of the file for the whole argument.
+    # `row_factor` overrides `factor[prov]` for one census row, and Hainan is the only
+    # province that uses it. Each present unit gets ONE factor across all 59 groups,
+    # which is what "keep the 2000 nationality shares, fix the magnitude" means.
+    row_factor = {}
+    hn_rows = by_prov.get(460000, [])
+    hn_code = {ri: resolved.get((460000, ri)) for ri in range(len(hn_rows))}
+    print(f"\nHainan: reconciled to published 2010 COUNTY totals, not to the "
+          f"provincial vector")
+    blanks = hainan_blank_names()
+    want_blank = {v[2] for v in HAINAN_MISSING.values()}
+    if not want_blank <= set(blanks):
+        print(f"  !! these are no longer blank in the volume — do NOT overwrite them: "
+              f"{sorted(want_blank - set(blanks))}")
+    claimed, hn_present = set(), 0
+    for unit, (t2010, codes) in HAINAN_2010.items():
+        ris = [ri for ri, c in hn_code.items() if c in codes]
+        if not ris:
+            print(f"  !! {unit}: none of {codes} resolved")
+            continue
+        base = sum(hn_rows[ri][1][0] for ri in ris)
+        fac = t2010 / base
+        for ri in ris:
+            row_factor[(460000, ri)] = [fac] * N_GROUPS
+        claimed |= set(ris)
+        hn_present += t2010
+        print(f"  {unit:9s} {base:>9,} (2000) -> {t2010:>9,} (2010)  x{fac:.4f}  "
+              f"{len(ris)} census row{'s' if len(ris) > 1 else ''}")
+    stray = sorted(set(hn_code) - claimed)
+    if stray:
+        print(f"  !! Hainan census rows not claimed by any 2010 unit: "
+              f"{[hn_rows[ri][0] for ri in stray]}")
+    hn_missing = sum(v[0] for v in HAINAN_MISSING.values())
+    gap2000 = sum(v[1] for v in HAINAN_MISSING.values())
+    print(f"  the eleven the volume never digitised: {gap2000:,} in 2000 against a "
+          f"reported shortfall of {HAINAN_2000 - hainan:,} "
+          f"(off by {abs(gap2000 - (HAINAN_2000 - hainan)):,}, "
+          f"inside +/-50 x 11 rounding)")
+    print(f"  Hainan drawn: {hn_present:,} + {hn_missing:,} = "
+          f"{hn_present + hn_missing:,} of a published 8,671,518")
+
+    # WHAT RECONCILING TO COUNTY TOTALS GIVES UP, stated rather than hidden. Everywhere
+    # else in China a province's drawn total for a group equals its 2010 provincial
+    # figure; Hainan's now does not, because the eleven counties' share of every group is
+    # inside `Unpublished`. For the groups that claim a religion this is the honest
+    # undercount -- there is no county to put them in -- and it is small, because Hainan's
+    # Muslims are the Utsul of Sanya and Sanya is in the volume.
+    hn_want = prov_2010.get(460000)
+    hn_drawn = [0.0] * N_GROUPS
+    for ri in claimed:
+        fr = row_factor[(460000, ri)]
+        for i in range(N_GROUPS):
+            hn_drawn[i] += hn_rows[ri][1][i] * fr[i]
+    resid = [(hn_want[i] - hn_drawn[i], i) for i in range(N_GROUPS)]
+    print("  per-group provincial residual, now reported instead of enforced:")
+    for d, i in sorted(resid, reverse=True)[:4] + [(d, i) for d, i in resid
+                                                   if i in drawn_ix and abs(d) > 200]:
+        tag = "  <- claims a religion" if i in drawn_ix else ""
+        print(f"    {GROUPS[i]:12s} 2010 {hn_want[i]:>9,}  drawn "
+              f"{hn_drawn[i]:>11,.0f}  residual {d:>9,.0f}"
+              f"{'  (inside Unpublished)' if i not in drawn_ix else tag}")
+
+    # Hainan's per-group factors are computed above and then not used, so the 0.5-2.0
+    # check must not report them -- Li at x3.241 is exactly the number this fix removes.
+    suspicious = [s for s in suspicious if s[0] != 460000]
+
     print(f"\nspec 3.4 rescale: 2000 county structure x 2010 provincial totals")
     if suspicious:
         print(f"  !! {len(suspicious)} (province, group) factors outside 0.5–2.0 "
@@ -982,15 +1174,16 @@ def main():
                 code = resolved.get((prov, ri))
                 if code is None:
                     continue
+                fr = row_factor.get((prov, ri), f)
                 for i, g in enumerate(GROUPS):
                     if vals[i] == 0 and g != "Total":
                         continue
-                    n = int(round(vals[i] * f[i]))
+                    n = int(round(vals[i] * fr[i]))
                     if n == 0 and g != "Total":
                         continue
                     note = (f"province={pname}; structure_year={STRUCTURE_YEAR}; "
                             f"total_year={TOTAL_YEAR}; census2000={vals[i]}; "
-                            f"scale={f[i]:.4f}")
+                            f"scale={fr[i]:.4f}")
                     if g == "Total":
                         note += "; unit population, not a category"
                     w.writerow([code, "county", name, g, n, BASIS, TOTAL_YEAR,
@@ -998,6 +1191,22 @@ def main():
                     written += 1
                     if i in drawn_ix:
                         drawn_written += n
+
+        # ---- Hainan's eleven, which are in no volume ----------------------------
+        # One category per county and it claims nothing. `structure_year` says 2010
+        # rather than 2000 because for these eleven the geography IS the 2010 county --
+        # there is no 2000 structure to carry. `Total` is written beside it exactly as
+        # for every other county, so the file's shape does not change.
+        for code, (t2010, t2000, romanised) in sorted(HAINAN_MISSING.items()):
+            note = (f"province=Hainan; structure_year={TOTAL_YEAR}; "
+                    f"total_year={TOTAL_YEAR}; census2000={t2000}; scale=1.0000; "
+                    f"nationality not published in the 2000 volume")
+            for cat, extra in ((HAINAN_MISSING_CATEGORY, ""),
+                               ("Total", "; unit population, not a category")):
+                w.writerow([code, "county", romanised, cat, t2010, BASIS,
+                            TOTAL_YEAR, SOURCE_ID, note + extra])
+                written += 1
+
     print(f"\nwrote {OUT}")
     print(f"  {written:,} rows over {len({c for c in resolved.values()})} adcodes")
     print(f"  drawn population written: {drawn_written:,}")

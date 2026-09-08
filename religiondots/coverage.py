@@ -127,6 +127,24 @@ def coverage():
     cgss = importlib.import_module("cn_cgss")
     out["cn"] |= _clean(cgss.DRAWN.values())
 
+    # Hong Kong is China's shape and needs China's branch, for both of China's reasons. It
+    # resolves through `shares()` rather than a `MAP`, and it has a second instrument the
+    # taxonomy module cannot see: `SURVEY_NODES` is applied in countries.py::_hk_counts,
+    # downstream of here. Left out, Buddhism, Daoism, Protestantism, Catholicism, Hinduism
+    # and Sikhism would all be absent from Hong Kong's coverage while dots sat on every one
+    # of them — §6.12's wash saying "not asked" over a religion that is on screen.
+    #
+    # **Selecting Judaism or chinesefolk therefore leaves Hong Kong unlit, and that is
+    # right.** Hong Kong has both. Its census does not ask, and the one survey drawn here
+    # offers no folk answer at all, so an unlit Hong Kong says "not asked" where a lit one
+    # with no dots would say "asked, and nobody is there" — which for folk religion in Hong
+    # Kong would be the most misleading thing this map could say, since the same survey finds
+    # 56% of the territory practising it.
+    hk = importlib.import_module("hk2021")
+    hk_cats = set(hk.DERIVED) | set(hk.NOT_ASSERTED) | set(hk.EXCLUDED)
+    out["hk"] = _clean(node for c in hk_cats for node, _s, _t in hk.shares(c))
+    out["hk"] |= _clean(hk.SURVEY_NODES.values())
+
     # The United States is two instruments (§3.5a): ASARB's 372 bodies, plus Pew for the
     # self-identification re-basing. A Pew category maps to a TUPLE of paths, not one.
     usrc = importlib.import_module("usrc2020")

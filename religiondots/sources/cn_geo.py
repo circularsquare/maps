@@ -466,11 +466,16 @@ ABSORB = {
 # NOT absorbed, and each for a different reason — see spec §14.19.
 #
 # **HAINAN'S ELEVEN ARE A SOURCE GAP, NOT A SPLIT.** 澄迈, 临高, 定安, 屯昌, 东方, 乐东,
-# 陵水, 昌江, 白沙, 琼中 and 保亭 are ordinary counties that have existed throughout; they
-# draw nothing because the Hainan volume of the 2000 census is INCOMPLETE — `main()` reports
-# the shortfall as *"the shortfall IS Hainan, exactly"*, 3,159,377 people. Absorbing them
-# into 五指山 or 儋州 would invent a geography the source never had. They stay blank, which
-# is §3.5's rule: an undercount is marked, not filled.
+# 陵水, 昌江, 白沙, 琼中 and 保亭 are ordinary counties that have existed throughout, and the
+# Hainan volume of the 2000 census is INCOMPLETE for all eleven — `main()` reports the
+# shortfall as *"the shortfall IS Hainan, exactly"*, 3,159,377 people. Absorbing them into
+# 五指山 or 儋州 would invent a geography the source never had, so they must stay out of
+# ABSORB.
+#
+# **They are no longer blank, though — spec §14.23, 2026-09-08.** `sources/cn.py` writes each
+# of the eleven at its own published 2010 county total on the category `Unpublished`, which
+# claims no nationality because none was published. So these adcodes now need their hexes,
+# and leaving them out of ABSORB is what makes sure they keep them.
 #
 # **金门县 is administered by Taiwan** and belongs with §14.18's de-facto rule rather than
 # here; NE's disputed layer does not carry it, so it is named explicitly.

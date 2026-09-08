@@ -57,6 +57,12 @@ if hasattr(sys.stdout, "reconfigure"):
 OUT = HERE / "data" / "processed" / "rollup.json"
 
 
+# An adapter writes this into `roll` to mean "this country measured NO ancestor of this node
+# at this unit, so do not walk the tree for one". Distinct from an absent roll, which means
+# "I did not record a column; walk". Added 2026-09-08 with Angola; see `table_for`.
+NOWHERE = "__nowhere__"
+
+
 def parent_of(node):
     i = node.rfind(".")
     return node[:i] if i > 0 else None
@@ -69,6 +75,17 @@ def table_for(cc, df):
     wins. Everything else falls back to the ancestor walk §7a-i shipped with, which is still
     right wherever a country measured a coarser level of the same branch — Israel's Haredim
     under Judaism, which is the case that prompted the whole control.
+
+    **AND `roll == NOWHERE` MEANS THE WALK MUST NOT RUN**, which nothing could say before
+    2026-09-08. `measured` is a set for the WHOLE COUNTRY, so a country that counted a
+    branch in most of its territory and not in the rest gets the wrong answer from the walk
+    in the part that did not: Angola's Uíge and Moxico Leste have their Assembleias de Deus
+    filled in from a province total (sources/ao.py `fill()`), the walk finds
+    `christianity.pentecostal` measured — in the nineteen OTHER provinces, from a body those
+    two never printed — and 116,174 people who should disappear under `inferred dots: not
+    shown` would draw as Pentecostals instead. That is exactly the failure §7a-i-1 added the
+    column control for, one level up. An adapter that knows a derived row has no measured
+    ancestor AT ITS OWN UNIT says so with this sentinel and the walk is skipped.
     """
     if "tier" not in df.columns:
         return {}, [], 0.0, 0.0
@@ -81,13 +98,18 @@ def table_for(cc, df):
     # People per (node, target). `roll` may be absent entirely for a country whose adapter
     # does not record it, which is not an error — it means "walk the tree".
     votes = defaultdict(lambda: defaultdict(float))
+    nowhere = set()
     if "roll" in der.columns:
         for node, roll, n in zip(der["node"], der["roll"], der["count"]):
-            if isinstance(roll, str) and roll:
+            if roll == NOWHERE:
+                nowhere.add(node)
+            elif isinstance(roll, str) and roll:
                 votes[node][roll] += float(n)
 
     out, conflicts = {}, []
     for node in sorted(set(der["node"])):
+        if node in nowhere and node not in votes:
+            continue                     # the adapter says there is no measured ancestor
         cand = votes.get(node)
         if cand:
             ranked = sorted(cand.items(), key=lambda kv: -kv[1])

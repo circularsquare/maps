@@ -272,3 +272,108 @@ the reason §11d wrote Vietnam off in the first place.
 `GET /wp-json/wp/v2/search?search=kết quả toàn bộ&per_page=50` returned both census volumes as
 its top two hits after the site search and two web searches had missed the 2009 one. Search the
 publication's name, not the variable — `search=tôn giáo` returns nothing useful.
+
+## 9. What was tried on the 81.8%, 2026-09-08, and what came of it
+
+Anita, having just seen Laos next door: *"is there anything else we can do here? most of it is
+in the `unknown` category."*
+
+**The short answer is that the 81.8% is not a defect to be fixed, the two routes for reducing
+it are both closed, and the search turned up something better than either.**
+
+### 9a. PAPI does not ask religion
+
+Vietnam's **Provincial Governance and Public Administration Performance Index** is the obvious
+candidate and it looked ideal: province-representative across **all 63 provinces**, 14,000 to
+19,000 respondents a year since 2011, raw data published, and this project already has the
+pooled-survey machinery for exactly this shape from Guatemala and El Salvador (§11ad's
+split-half test for which categories may carry a geography).
+
+**It collects ethnicity and not religion.** The demographic module is gender, age, education,
+occupation, party membership and Kinh-versus-minority ethnicity; the 2014 report's 130 pages
+contain the string `religio` **zero times** while giving ethnicity a figure of its own and a
+comparison against the 2009 census. Ruled out.
+
+`papi.org.vn` is behind a **Cloudflare challenge** and returns 403 to everything including
+`wp-content` and the WordPress REST API, so the raw data was not opened. The reports are
+mirrored unwalled on `vietnam.un.org` and that is where the check was done.
+
+### 9b. Pew's modelled composition cannot name this residual, and Laos is why we know
+
+Spec §3.11's first bullet lets an external national estimate name a category a census refuses
+to. It is what settled Laos on 2026-09-08: *How the Global Religious Landscape Changed From
+2010 to 2020* (Pew, 2025) puts Laos at **religiously unaffiliated `<0.1%`** and **other
+religions 34.2%**, so the Lao census's `no religion` cell could be filed as traditional
+religion on a published magnitude.
+
+**The same table, the same page, gives Vietnam 67.7% unaffiliated and 0.9% other religions.**
+Applied here it would file some 82% of the country on `unaffiliated`, which is precisely the
+node §6.3a-ii created `unknown` to avoid, and which §3 of this file rejects at length.
+
+Two neighbours with the same instrument problem, one source, opposite answers. **Read that as
+evidence about the source rather than about the two countries**: Pew's Vietnam figure is built
+from surveys that ask about affiliation, and in Vietnamese usage *tôn giáo* means an organised
+religion, so those surveys reproduce the census's artefact rather than correcting it. Do not
+use Pew to name this residual.
+
+### 9c. What did work: Pew measured Vietnam directly in 2024
+
+*Religion and Spirituality in East Asian Societies* (Pew, 17 June 2024) surveyed Vietnam rather
+than modelling it, and it is the first citable measurement of what is inside the grey:
+
+| | |
+|---|---|
+| identity | **48%** no religion, **38%** Buddhist, **10%** Christian |
+| ancestor offering in the past year, among the **unaffiliated** | **92%** |
+| keeps an altar at home | **95%** of all adults, at much the same rate among Buddhists, Christians and the unaffiliated |
+| burned incense in a veneration ritual in the past year | **96%** |
+
+Set the identity row against this census's **18.2%** in any religion at all and the size of the
+instrument gap is visible: asked in the ordinary way, 52% of Vietnamese claim a religion; asked
+which registered organisation they belong to, 18.2% do.
+
+**This changes no dot** — it has no geography below the national — but §3's argument for
+`unknown` had been carried by assertion and is now carried by a measurement, and
+`countries.py`'s `note_public` says so with the figures.
+
+### 9d. Both statistics hosts refused connections on the day
+
+`nso.gov.vn` returned an SSL connect error and `gso.gov.vn` **ECONNREFUSED on
+210.245.31.100:443**, where §8 above records `nso` working and `gso` timing out. Probably
+transient, and it is why the one genuinely open lead below was not chased.
+
+### 9e. The 2024 mid-term census is a weak lead, and the reason generalises
+
+Vietnam ran a **mid-term population and housing census** at 0:01 on 1 April 2024 and published
+results in January 2025: 20% of enumeration areas (39,340), representative at **district**
+level for population size and **province** level for other indicators, population 101,112,656.
+Nobody has established whether it carries religion, and both hosts were unreachable on the day
+(§9d).
+
+**It was written up here as the open lead and that was an overstatement, corrected the same
+session.** Even in the best case it uses **the same instrument**: the question is which
+state-recognised organisation a person belongs to, so a 2024 table would leave the residual
+exactly where it is. It cannot reduce the 81.8% by a single person. What it could do is move
+the drawn 18.2% to a newer year, and §2 has already argued that newer is *worse* here, because
+the 2019 volume shows the instrument narrowing (Buddhist, Hòa Hảo and Cao Đài each down about a
+third in a decade while Catholics hold and Protestants grow).
+
+**The same correction applies to the IPUMS route in §7**, and it is the more useful half.
+IPUMS's `RELIGION` for Vietnam 2019 **is the census's own question**, not an independent
+measurement, so unblocking §10a's account would buy finer geography for the coloured 18% and
+would leave the grey at 81.8%. §7's tier question would still have to be answered before using
+it, but the prize behind that question is smaller than §7 implies.
+
+### 9f. The conclusion: nothing that would change this map exists
+
+Every source with Vietnamese geography runs the same narrow instrument, and every source that
+measures self-described religion (Pew 2024, §9c; WVS's old waves) has no geography below the
+national. **That is not a gap in what has been searched; it is a gap in what exists.** The
+81.8% is drawn correctly, is now sourced rather than asserted, and should be left alone.
+
+**What would reopen it**: a Vietnamese survey asking self-described religion with province
+detail and a usable sample. PAPI is the natural shape and does not ask (§9a). If one appears,
+the Guatemala and El Salvador machinery (§11ad, pooled waves with a split-half test on which
+categories may carry a geography) is the pattern to reach for, and it would be a **second
+Vietnam on a different basis**, in the way `cn_cgss` and `de_ess` sit beside their censuses,
+rather than a replacement for this one. spec §3.1 forbids mixing the bases in one map.
