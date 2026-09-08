@@ -1,0 +1,7 @@
+Licence and readmes for asia1m/Unifontexmono-2vrqo.ttf (UnifontEX).
+
+license: GPL (see LICENSE)
+link: https://www.fontspace.com/unifontex-font-f26370
+
+README.md, README-alt1.md, README-alt2.md are the upstream readmes from
+three different UnifontEX releases; they say near-identical things.

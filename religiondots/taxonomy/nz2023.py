@@ -257,10 +257,10 @@ MAP = {
     "Chinese Religions nfd": "chinesefolk",
     "Chinese Religions nec": "chinesefolk",
     "Falun Gong": "chinesefolk",
-    "Mahikari": "japanesenew",
-    "Tenrikyo": "japanesenew",
-    "Japanese Religion nfd": "japanesenew",
-    "Japanese Religion nec": "japanesenew",
+    "Mahikari": "eastasiannew.japanese",
+    "Tenrikyo": "eastasiannew.japanese",
+    "Japanese Religion nfd": "eastasiannew.japanese",
+    "Japanese Religion nec": "eastasiannew.japanese",
 
     # ---------------------------------------------------------------- pagan / esoteric
     "Pagan": _PAGAN,
@@ -295,6 +295,52 @@ MAP = {
     "Marxism": "other.nz",
     "Maoism": "other.nz",
     "Libertarianism": "other.nz",
+}
+
+# The SA2 COLUMN each allocated category was split out of -> the node that column names
+# (spec §7a-i-1). Stats NZ publishes its eight broad groups at SA2 and the 159 narrow ones
+# only nationally, so every narrow row is derived and rolls back to its group.
+#
+# `Christian` is 1.61M of the 2.08M and rolls cleanly: Anglicans, Roman Catholics and
+# Presbyterians were all counted as Christian at their own SA2, and only the denomination
+# came from the national table.
+#
+# `Spiritualism and New Age Religions` — 21,180 spanning Spiritualist, Pagan, Wiccan,
+# Rastafari, Satanist and Scientologist — goes to `other.nz`, which therefore now means
+# STATS NZ'S RESIDUAL GROUPS rather than one named cell: the groups it tabulates apart from
+# the six religions it names. That is true of this cell and of `Other Religions, Beliefs and
+# Philosophies` alike, and asserts nothing about anybody beyond "Stats NZ did not put these
+# people with the named religions", which is the fact. No single family covers the cell —
+# Spiritualist is 42% of it and Pagan and its relatives another 33% — so a specific node
+# would have to invent a category neither the agency nor this tree has.
+#
+# `MĀORI RELIGIONS, BELIEFS AND PHILOSOPHIES` IS DELIBERATELY ABSENT — 65,151 people, and
+# the one cell on this map with no answer at all. Anita's call, 2026-09-07. This tree has
+# already split it, on purpose and in writing: 59,656 are Rātana, Ringatū and Pai Mārire,
+# which sit under `christianity.maori` because they are Christian in theology, and
+# `indigenous.maori` defines ITSELF as "the part of Stats NZ's Māori Religions, Beliefs and
+# Philosophies that is not one of the named prophetic churches... the remainder, 5,496".
+#
+#   `indigenous.maori`   contradicts its own definition, and tells 59,656 Rātana and
+#                        Ringatū adherents that they are not Christian.
+#   `christianity.maori` is 91.6% accurate by people, and tells 5,496 followers of the
+#                        pre-Christian religion that they are in a Christian church.
+#   `other.nz`           files Māori religion under "Other" on a map of New Zealand.
+#
+# The accurate-by-mass answer is the second and it is still not taken, because the roll-up's
+# whole promise is "this is the category your source counted you in" and Stats NZ did not
+# count these people as Rātana. It counted them as Māori religions, and this tree has no
+# node for that — which is a fact about the tree and is better stated by an absence than
+# papered over. 1.4% of New Zealand, against a country the readout already calls 44%
+# derived, so the gap is not silent.
+COLUMNS = {
+    "Christian": "christianity",
+    "Buddhism": "buddhism",
+    "Hinduism": "hinduism",
+    "Islam": "islam",
+    "Judaism": "judaism",
+    "Other Religions, Beliefs and Philosophies": "other.nz",
+    "Spiritualism and New Age Religions": "other.nz",
 }
 
 

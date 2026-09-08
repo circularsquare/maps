@@ -123,6 +123,12 @@ def main():
     ap.add_argument("--max-zoom", type=int, default=10)
     ap.add_argument("--min-zoom", type=int, default=0)
     ap.add_argument("--coarse", action="store_true")
+    ap.add_argument("--no-atomic", action="store_true",
+                    help="the archive was built with tiles.py --no-atomic, so expect no "
+                         "`atomic` layer. PASS THIS WHENEVER tiles.py GOT IT — COMMANDS.txt "
+                         "step 11 does, so without it every tile reports as DIFFERENT with "
+                         "the whole atomic layer 'missing' and 0 unexpected, which looks "
+                         "like a catastrophe and is a flag mismatch.")
     ap.add_argument("--archive", default=os.path.join(PROC, "religiondots.pmtiles"))
     args = ap.parse_args()
 
@@ -143,11 +149,12 @@ def main():
         for z in range(args.min_zoom, args.max_zoom + 1):
             to_tiles(merge_at_zoom(dots, z), z, f"dots{lp}", sink, with_k=True)
             nt = 1 << z
-            a = dots.copy()
-            a["tx"] = np.minimum((a["wx"] * nt).astype(np.int64), nt - 1)
-            a["ty"] = np.minimum((a["wy"] * nt).astype(np.int64), nt - 1)
-            a["k"] = 1
-            to_tiles(a, z, f"atomic{lp}", sink, with_k=False)
+            if not args.no_atomic:
+                a = dots.copy()
+                a["tx"] = np.minimum((a["wx"] * nt).astype(np.int64), nt - 1)
+                a["ty"] = np.minimum((a["wy"] * nt).astype(np.int64), nt - 1)
+                a["k"] = 1
+                to_tiles(a, z, f"atomic{lp}", sink, with_k=False)
             if rings is not None and len(rings):
                 r = rings.copy()
                 r["tx"] = np.minimum((r["wx"] * nt).astype(np.int64), nt - 1)

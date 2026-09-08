@@ -34,7 +34,7 @@ from PIL import Image, ImageDraw
 from pyproj import CRS, Transformer
 
 from dotraster import splat, over
-from insets import CITIES, KM_PER_IN_MAIN
+from insets import CITIES, KM_PER_IN_MAIN, MAG
 
 HERE = Path(__file__).parent
 BUILD = HERE / "build"
@@ -51,17 +51,36 @@ LAT_S, LAT_N, LON_W, LON_E = 24.55, 53.55, -125.24, -59.75
 # top and bottom rails are a single row. Two columns on the right shortens that
 # rail from 16.1 in to about 11, which is what pays for trimming the Atlantic.
 RAILS = [
-    ("left",   "v", [["alaska"], ["seattle"], ["sf"], ["la"], ["honolulu"],
-                     ["hawaii"]]),
-    ("right",  "v", [["newfoundland"], ["boston", "nyc"], ["philly", "dc"],
+    ("left",   "v", [["alaska"], ["vancouver"], ["seattle"], ["sf"],
+                     ["honolulu"], ["hawaii"]]),
+    ("right",  "v", [["nyc", "boston"], ["philly", "dc"],
                      ["atlanta", "miami"], ["pr"]]),
-    ("top",    "h", [["chicago", "detroit", "toronto", "montreal"]]),
+    ("top",    "h", [["minneapolis", "chicago", "detroit", "toronto",
+                      "montreal"]]),
+    # LA and Phoenix sit right of the left rail, over northern Mexico and the
+    # Pacific off Baja — out of scope for the data, so nothing is hidden.
+    ("southwest", "h", [["la", "phoenix"]]),
     ("bottom", "h", [["dallas", "houston"]]),
 ]
 
 CELLS_PER_IN = 20
 STEP_IN = 0.1
 GAP_IN = 0.15
+# strip reserved under every inset for its name + top ancestries. Packing has
+# to account for it or the rails overflow: six of these on the left rail is
+# 3.7 in, against 20.13 in of edge.
+# 8 pt caption needs: 0.10 pad + 0.095 name + 0.055 gap + 0.336 for three
+# rows + 0.10 pad = 0.686. Anything above that is wasted, and waste here comes
+# straight out of the map windows and pushes the rails onto land.
+CAPTION_IN = 0.72
+MIN_WIN_IN = 0.80
+# Manual offset along a rail's own axis, after the density fit has chosen its
+# position. The top rail reads better a little west of where the fit puts it.
+# 0.333 in = 100 px at 300 ppi.
+RAIL_NUDGE = {"top": -0.333, "bottom": 0.133}
+# Rails pinned flush against another rail instead of being placed by the fit,
+# so the corner reads as one block with even gaps rather than a stray gap.
+RAIL_SNAP_AFTER = {"southwest": "left"}
 
 
 def extent(tf):
@@ -71,6 +90,20 @@ def extent(tf):
         np.concatenate([lons, lons, np.full(400, LON_W), np.full(400, LON_E)]),
         np.concatenate([np.full(400, LAT_S), np.full(400, LAT_N), lats, lats]))
     return x.min(), x.max(), y.min(), y.max()
+
+
+def locator_box(name, tf, x0, x1, y1, m_per_in, where, w_in, h_in):
+    """Where this inset's window really is on the main map, in sheet inches.
+    Divided by the magnification, so a 5x window 3 in wide marks 0.6 in of map.
+    None for Alaska/Hawaii/PR, which are outside the frame entirely."""
+    if name not in where:
+        return None
+    ax, ay = tf.transform(*where[name])
+    mag = MAG.get(name, 5.0)
+    lw, lh = w_in / mag, h_in / mag
+    return [round((ax - x0) / m_per_in - lw / 2, 3),
+            round((y1 - ay) / m_per_in - lh / 2, 3),
+            round(lw, 3), round(lh, 3)]
 
 
 def box_sum(sat, r0, c0, r1, c1):
@@ -85,11 +118,22 @@ def main():
     # 4 in is too far — it pushes the rail's inner column onto the New England
     # coast and costs 10,496 dots. Losing St John's here is deliberate:
     # Newfoundland gets its own 1x inset instead.
+    # Back to 1.0 once Alaska shrank to 3.17 in to stay off the antimeridian:
+    # Hawaii now sets the left rail's width, the rail clears the California
+    # coast again, and the sheet returns to 34 in. (At Alaska's earlier 4.2 in
+    # this had to be 2.0, and trimming the right to compensate was not an
+    # option — 4.0 in puts Boston on 56,327 dots.)
     ap.add_argument("--extend-left", type=float, default=1.0)
     ap.add_argument("--trim-right", type=float, default=3.0)
+    # The north edge carried a lot of near-empty Canada, which pushed every
+    # city inset far from where it actually is. 1.0 in = 300 px at 300 ppi.
+    ap.add_argument("--trim-top", type=float, default=1.0)
     ap.add_argument("--band", type=float, default=3.87)
     ap.add_argument("--margin", type=float, default=0.25,
                     help="inset inset from the sheet edge, inches")
+    ap.add_argument("--clearance", type=float, default=0.35,
+                    help="inches of breathing room around a box that dots are "
+                         "still charged for, so boxes stop hugging coastlines")
     ap.add_argument("--pull", type=float, default=25.0,
                     help="cost per grid cell of a rail sitting away from the "
                          "mean position of the cities it shows")
@@ -101,6 +145,7 @@ def main():
     m_per_in = (x1 - x0) / args.width_in
     x0 -= args.extend_left * m_per_in
     x1 -= args.trim_right * m_per_in
+    y1 -= args.trim_top * m_per_in
     map_w_in, map_h_in = (x1 - x0) / m_per_in, (y1 - y0) / m_per_in
     sheet_h_in = map_h_in + args.band
     print(f"map   {map_w_in:.2f} x {map_h_in:.2f} in  ({KM_PER_IN_MAIN:.0f} km/inch)")
@@ -143,10 +188,10 @@ def main():
     print(f"density grid {W_c} x {H_c} cells, {grid.sum():,} dots\n")
 
     # --- pack each rail ---------------------------------------------------
-    gap_c = int(GAP_IN * CELLS_PER_IN)
-    margin_c = int(args.margin * CELLS_PER_IN)
-    step = max(1, int(STEP_IN * CELLS_PER_IN))
-    placed, blocked = [], []
+    gap_c = round(GAP_IN * CELLS_PER_IN)
+    margin_c = round(args.margin * CELLS_PER_IN)
+    step = max(1, round(STEP_IN * CELLS_PER_IN))
+    placed, blocked, rail_right = [], [], {}
 
     for rail, axis, rows in RAILS:
         # Normalise so each rail squares off. On a side rail every box takes the
@@ -161,10 +206,22 @@ def main():
         else:
             row_h = max(size[n][2] for n in flat)
             dims = {n: (size[n][1], row_h) for n in flat}
+        # The caption comes out of the box, not on top of it. Growing every box
+        # by 0.62 in pushed the right rail onto Newfoundland and Nova Scotia
+        # (10,449 dots) and shoved Dallas/Houston away from Texas; taking the
+        # strip from the inset's own window costs a little inset area instead,
+        # which is far cheaper than covering the main map.
+        # Puerto Rico is the exception: its box is only 0.80 in tall, so
+        # subtracting the caption would leave a 0.18 in sliver. Below MIN_WIN_IN
+        # the box grows instead — which here costs the right rail 0.62 in.
+        win_h = {n: max(dims[n][1] - CAPTION_IN, MIN_WIN_IN) for n in flat}
+        dims = {n: (w, win_h[n] + CAPTION_IN) for n, (w, h) in dims.items()}
 
-        row_w = [sum(int(dims[n][0] * CELLS_PER_IN) for n in row)
+        # round, not truncate: 2.38 + 0.72 lands at 3.0999999 and int() turns
+        # that into 61 cells (3.05 in), losing 0.05 in off every such box
+        row_w = [sum(round(dims[n][0] * CELLS_PER_IN) for n in row)
                  + gap_c * (len(row) - 1) for row in rows]
-        row_h_c = [int(dims[row[0]][1] * CELLS_PER_IN) for row in rows]
+        row_h_c = [round(dims[row[0]][1] * CELLS_PER_IN) for row in rows]
         if axis == "v":
             run = sum(row_h_c) + gap_c * (len(rows) - 1)
             limit, lo, hi = H_c, margin_c, H_c - run - margin_c
@@ -187,6 +244,10 @@ def main():
         else:
             mean_c = mean_r = None
 
+        snap = RAIL_SNAP_AFTER.get(rail)
+        if snap and snap in rail_right:
+            lo = hi = min(max(rail_right[snap] + gap_c, margin_c), hi)
+
         best, best_cost = None, np.inf
         for off in range(lo, hi + 1, step):
             boxes, cursor = [], off
@@ -196,7 +257,7 @@ def main():
                     c_start = margin_c if rail == "left" else W_c - margin_c - rw
                     cx_ = c_start
                     for n in row:
-                        wc = int(dims[n][0] * CELLS_PER_IN)
+                        wc = round(dims[n][0] * CELLS_PER_IN)
                         boxes.append((n, cursor, cx_, rh, wc))
                         cx_ += wc + gap_c
                     cursor += rh + gap_c
@@ -204,14 +265,20 @@ def main():
                     r0 = inner if rail == "top" else H_c - margin_c - rh
                     cx_ = off
                     for n in row:
-                        wc = int(dims[n][0] * CELLS_PER_IN)
+                        wc = round(dims[n][0] * CELLS_PER_IN)
                         boxes.append((n, r0, cx_, rh, wc))
                         cx_ += wc + gap_c
             if any(not (b[2] + b[4] + gap_c <= t[1] or t[1] + t[3] + gap_c <= b[2] or
                         b[1] + b[3] + gap_c <= t[0] or t[0] + t[2] + gap_c <= b[1])
                    for b in boxes for t in blocked):
                 continue
-            cost = sum(box_sum(sat, r, c, r + h, c + w) for _, r, c, h, w in boxes)
+            # Score an *expanded* box. Counting only dots strictly inside lets
+            # a box hug a coastline for free — which is how Boston ended up
+            # touching Long Island. Clearance makes near-misses cost something.
+            cl = int(args.clearance * CELLS_PER_IN)
+            cost = sum(box_sum(sat, max(0, r - cl), max(0, c - cl),
+                               min(H_c, r + h + cl), min(W_c, c + w + cl))
+                       for _, r, c, h, w in boxes)
             if mean_c is not None:
                 mid = off + run / 2
                 cost += args.pull * abs(mid - (mean_r if axis == "v" else mean_c))
@@ -221,6 +288,11 @@ def main():
         if best is None:
             print(f"  {rail:6s} NO ROOM (collides with an already-placed rail)")
             continue
+        nudge = int(RAIL_NUDGE.get(rail, 0.0) * CELLS_PER_IN)
+        if nudge:
+            best = [(n, r, c + nudge, h, w) if axis == "h"
+                    else (n, r + nudge, c, h, w) for n, r, c, h, w in best]
+        rail_right[rail] = max(c + w for _, _, c, _, w in best)
         total = 0
         for n, r, c, h, w in best:
             covered = int(box_sum(sat, r, c, r + h, c + w))
@@ -230,8 +302,23 @@ def main():
                            "x_in": round(c / CELLS_PER_IN, 2),
                            "y_in": round(r / CELLS_PER_IN, 2),
                            "w_in": round(w / CELLS_PER_IN, 2),
-                           "h_in": round(h / CELLS_PER_IN, 2),
-                           "covers_dots": covered})
+                           # h_in is the map window; the box also carries a
+                           # caption strip below it. box_h_in is derived from
+                           # those two rather than from the cell count, because
+                           # int() truncation there made the frame a few px
+                           # shorter than window + caption and the caption ran
+                           # tight against the bottom rule.
+                           "h_in": round(win_h[n], 3),
+                           "box_h_in": round(win_h[n] + CAPTION_IN, 3),
+                           "caption_in": CAPTION_IN,
+                           "mag": MAG.get(n, 5.0),
+                           "covers_dots": covered,
+                           # thin box on the main map showing this window's
+                           # true footprint, in sheet inches
+                           "locator_in": locator_box(n, tf, x0, x1, y1,
+                                                     m_per_in, where,
+                                                     w / CELLS_PER_IN,
+                                                     win_h[n])})
         print(f"  {rail:6s} {len(best)} insets, {run / CELLS_PER_IN:5.1f} in run, "
               f"covers {total:6,} dots")
         for p in placed[-len(best):]:
@@ -246,7 +333,11 @@ def main():
         {"map_in": [round(map_w_in, 2), round(map_h_in, 2)],
          "sheet_in": [round(map_w_in, 2), round(sheet_h_in, 2)],
          "band_in": args.band, "km_per_inch": KM_PER_IN_MAIN,
-         "insets": placed},
+         # render.py reads these so the main map is drawn on the same frame
+         # the rails were planned against
+         "extend_left": args.extend_left, "trim_right": args.trim_right,
+         "trim_top": args.trim_top,
+         "caption_in": CAPTION_IN, "insets": placed},
         indent=2), encoding="utf-8")
 
     # --- draw -------------------------------------------------------------

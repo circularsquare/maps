@@ -274,7 +274,7 @@
       "id": "christianity.pietist",
       "label": "Pietist",
       "kind": "branch",
-      "note": "The Scandinavian free-church line — Evangelical Covenant, Evangelical Free."
+      "note": "The Scandinavian free-church line — Evangelical Covenant, Evangelical Free. **Widened 2026-09-06 with Switzerland**, whose census counts *Neupietistisch-evangelikale Gemeinden* as a category of its own: the Freie Evangelische Gemeinden, the Chrischona congregations and the Darbysts of the Bernese Jura are the same pietist free-church descent on the continent rather than in Scandinavia, and BFS groups them under a name that says so. Kept distinct from `christianity.pentecostal`, which BFS counts separately, and from `christianity.evangelical`, which holds an answer rather than a family."
     },
     {
       "id": "christianity.nondenominational",
@@ -339,6 +339,36 @@
       "kind": "branch"
     },
     {
+      "id": "judaism.karaite",
+      "label": "Karaite Judaism",
+      "kind": "branch",
+      "note": "Jews who hold the written Torah alone and not the rabbinic oral law, separated in the eighth or ninth century — a thousand years before any of the movements beside it here, which is why LINEAGE puts it first. Lithuania's census offers `Karaimų` as its own answer and 255 people took it: the Karaims of Trakai, a Turkic-speaking community brought from Crimea in 1397 and one of the smallest recognised religious communities in Europe. **Many Lithuanian Karaims describe themselves as a distinct people and not as Jews**, and filing them under Judaism is a claim about the religion rather than about the community — see the REVIEW note in lt2021.py, which is where to argue with it. No other source on this map separates them from `judaism`."
+    },
+    {
+      "id": "judaism.haredi",
+      "label": "Haredi",
+      "kind": "branch",
+      "note": "Ultra-Orthodox. The one category here that is unambiguous across sources and the one the census measures best: Bene Beraq returns 83.8% and Israel as a whole 6.4%. Note that Haredi is Orthodox in doctrine — the reason it is not filed under `judaism.orthodox` is that this whole group answers a different question (see above), not that anyone disputes the theology."
+    },
+    {
+      "id": "judaism.dati",
+      "label": "Religious (dati)",
+      "kind": "branch",
+      "note": "Observant and largely, though not only, the Religious Zionist stream. CBS's own English is 'Religious / Very religious', collapsing two answers into one cell. In movement terms most of these people are Orthodox too, which is again why the axis is kept separate rather than merged into it."
+    },
+    {
+      "id": "judaism.masorti",
+      "label": "Traditional (masorti)",
+      "kind": "branch",
+      "note": "**A FALSE FRIEND, AND THE MOST LIKELY THING ON THIS BRANCH TO BE GOT WRONG.** In Israel *masorti* means traditional-but-not-strictly-observant — keeping some practice, not committed to full halakhic observance — and it is the largest single answer among Mizrahi Jews. Everywhere ELSE in the Jewish world 'Masorti' is the name of the Conservative movement, which is `judaism.conservative` and is a different object with a different history. Mapping an Israeli masorti row to `judaism.conservative` would be wrong in the same way §12's `animismus` example is wrong: the string is shared and the place decides the meaning."
+    },
+    {
+      "id": "judaism.hiloni",
+      "label": "Secular (hiloni)",
+      "kind": "branch",
+      "note": "Israel's largest Jewish answer, 53.2% nationally. **This is not irreligion in the sense the grey family means** (§6.3a), and the difference is a fact about the source rather than a judgement: Israel's population register has no irreligion box at all, so a secular Israeli Jew is registered as a Jew and appears on this map inside Judaism however they describe themselves. Drawing them grey would assert something the register never asked. What the label carries is the household's observance, which is the only thing anyone measured."
+    },
+    {
       "id": "islam",
       "label": "Islam",
       "kind": "branch",
@@ -346,6 +376,24 @@
         "usrc2020": "267"
       },
       "review": "Muslim Estimate -> islam. Named an estimate by ASARB itself. No internal detail, so Sunni/Shia/Ahmadi are invisible in the US on this source."
+    },
+    {
+      "id": "islam.sunni",
+      "label": "Sunni Islam",
+      "kind": "branch",
+      "note": "The larger branch, roughly nine tenths of Muslims worldwide, and almost never enumerated: a census that asks about religion at all normally stops at 'Muslim'. 2.50M in Russia, and 48.6% of Dagestan."
+    },
+    {
+      "id": "islam.shia",
+      "label": "Shia Islam",
+      "kind": "branch",
+      "note": "313,477 in Russia, concentrated where the tradition actually is — Dagestan's 2.0% is the Azeri community around Derbent, which has been Shia since the Safavids. Note that a source offering Sunni and Shia as answers does NOT thereby measure them well: most Russian Muslims chose neither, and 4.66% of the country — nearly twice the Sunni figure — answered 'I profess Islam, but am neither Sunni nor Shia', which stays on the parent `islam`."
+    },
+    {
+      "id": "islam.ahmadiyya",
+      "label": "Ahmadiyya",
+      "kind": "branch",
+      "note": "The movement founded by Mirza Ghulam Ahmad in Qadian, 1889. **Placed under `islam` deliberately, and the placement is the whole content of the node.** Ahmadis identify as Muslim; Pakistan's constitution declares them non-Muslim, its penal code makes it a criminal offence for them to say otherwise, and its census accordingly prints `Qadiani/Ahmadi` as a PEER of `Muslim` rather than a subdivision of it. spec §2 says this tree is containment as it holds for people now, not as a state's law defines it, so filing them outside Islam would be adopting Pakistan's legal classification as this map's taxonomy. It is not neutral to do that. **The count is a floor by a large and unknown margin**, for reasons that are specific and documented rather than general: registering as Ahmadi has legal consequences — a separate electoral roll, and a declaration disavowing the movement's founder required to obtain a passport — and the community has organised census boycotts on exactly that ground since 1974. 191,737 in Pakistan 2017 and 0.09% of the country; every independent estimate is several times that. Read it the way §11b says to read an African `Traditionalist` cell. `Qadiani` is the state's term and is used by others pejoratively; it is kept in `source_category` because that is what the census prints (§2.4) and is not used as a label here."
     },
     {
       "id": "hinduism",
@@ -357,9 +405,102 @@
       "review": "Hindu Temples -> hinduism. The unit is temples, not people; ASARB's adherent figure here is a compiler estimate (spec.md §3.1)."
     },
     {
+      "id": "hinduism.tamil",
+      "label": "Tamil Hindu",
+      "kind": "branch",
+      "note": "**63,950 in Mauritius, 5.2% of the country** — the second largest Hindu community there and the only place on this map that counts it. Shaivite and Murugan-centred, with its own kovils and its own priesthood, and the Cavadee at Thai Poosam is a public holiday. Mauritian Tamils arrived partly before the indenture system and are concentrated in Port Louis and the Plaines Wilhems towns rather than in the cane districts. Nothing here separates Tamil Hindus anywhere else — India's census asks religion and language in different tables and crosses them at no useful geography."
+    },
+    {
+      "id": "hinduism.telugu",
+      "label": "Telugu Hindu",
+      "kind": "branch",
+      "note": "**25,216 in Mauritius, 2.0%.** Andhra-origin, arrived under indenture, and organised since 1947 around the Andhra Maha Sabha; Ugadi is its new year and is separately recognised. Kept apart from `hinduism.tamil` because Mauritius keeps them apart, and because the two communities' temples, languages and festivals are different — reading them as one 'South Indian' block is the error this node exists to avoid."
+    },
+    {
+      "id": "hinduism.marathi",
+      "label": "Marathi Hindu",
+      "kind": "branch",
+      "note": "**19,052 in Mauritius, 1.5%.** Maharashtrian-origin, organised around the Mauritius Marathi Mandali Federation, with Ganesh Chaturthi as its principal festival — the immersion at Grand Baie and along the north coast is the largest Marathi public observance outside India."
+    },
+    {
+      "id": "hinduism.aryasamaj",
+      "label": "Arya Samaj",
+      "kind": "branch",
+      "note": "**7,422 in Mauritius, 0.6%**, where the census calls it `Vedic/Hindu Vedic & Aryan`. **The one of Mauritius's four Hindu cells that is a MOVEMENT rather than a community**: Dayananda Saraswati's 1875 reform, holding the Vedas alone as authority and rejecting image worship, caste birth-right and priestly mediation. It reached Mauritius in 1910 and the split with the Sanatanist majority was bitter enough to run through Mauritian politics for decades. It is doctrinal, so it sits beside the three community nodes rather than inside any of them, and a Bhojpuri-speaking Arya Samajist is in this node and not in the parent."
+    },
+    {
+      "id": "hinduism.chambalamon",
+      "label": "Cham Balamon",
+      "kind": "branch",
+      "note": "Chăm Bà la môn — the Hindu religion of the Cham of Ninh Thuận and Bình Thuận, 56,427 in 2009 and 64,547 in 2019, and **the last living Hindu tradition of Southeast Asia's Indianised kingdoms**. Descended from the Shaivism of Champa, and a thousand years separated from Indian practice: its Basaih priesthood is hereditary, its Kate festival follows the Cham calendar, and it has absorbed the local goddess Po Nagar. Filed under Hinduism because that is what it descends from and what Vietnam's own category calls it (`Bà La Môn` = Brahmanism), and given a node rather than the parent because reading it as Indian Hinduism would be wrong about almost everything except the ancestry. **Distinct from Cham Bani**, the syncretic Cham Islam of the same two provinces, which Vietnam's census counts inside `Hồi giáo` and which nothing here can separate out — see taxonomy/vn2009.py."
+    },
+    {
       "id": "buddhism",
       "label": "Buddhism",
       "kind": "branch"
+    },
+    {
+      "id": "buddhism.theravada",
+      "label": "Theravada Buddhism",
+      "kind": "branch",
+      "note": "The southern transmission — Sri Lanka, Myanmar, Thailand, Laos, Cambodia, and in China the Dai of Xishuangbanna and Dehong, who are the tradition's northern edge rather than an outpost of Chinese Buddhism. Note that Sri Lanka is NOT drawn here: its census offers one cell labelled `Buddhist` and lk2024.py keeps those 15.2M people on the parent, because the school is knowable and not stated.",
+      "sources": {
+        "usrc2020": "891"
+      }
+    },
+    {
+      "id": "buddhism.mahayana",
+      "label": "Mahayana Buddhism",
+      "kind": "branch",
+      "note": "The northern transmission — China, Korea, Japan, Vietnam. Almost nothing on this map reaches it: the Han Buddhist population that would fill it is inside China's undrawn 97.8% (spec §14.5), and every census that asks about Buddhism at all asks it as one word.",
+      "sources": {
+        "usrc2020": "890"
+      }
+    },
+    {
+      "id": "buddhism.won",
+      "label": "Won Buddhism",
+      "kind": "branch",
+      "note": "원불교, 84,141 in South Korea in 2015 — founded 1916 by Sotaesan as a reform of Buddhism for the modern world: no temple statuary, a single Irwonsang circle in place of images, laity and clergy on the same footing, women ordained from the start. **It is filed under Buddhism because that is what it says it is** — the movement's own self-description is Buddhist reform, and spec §2.1's relation is containment, so the claim its adherents make about themselves is the one that decides. Scholars routinely class it instead with the Korean new religions, and that reading is not wrong; if the tree ever needs to follow it, the node is `eastasiannew.korean.won` and nothing else changes. It sits beside the three vehicles rather than inside Mahayana because it is a 20th-century founding, not a transmission."
+    },
+    {
+      "id": "buddhism.vajrayana",
+      "label": "Vajrayana Buddhism",
+      "kind": "branch",
+      "note": "Tibetan Buddhism and its Himalayan and Mongolian extensions. Counted inside Mahayana historically and beside it here, which is spec §2.1's two relations showing up in one node. **China is essentially all of it** — 6.3M, derived from Tibetan, Yugur, Monba and Pumi nationality (taxonomy/cn2000.py), covering the plateau, western Sichuan, Qinghai and southern Gansu. Mongols and Tu are NOT in it: see cn2000.py's REVIEW.",
+      "sources": {
+        "usrc2020": "892"
+      }
+    },
+    {
+      "id": "buddhism.hoahao",
+      "label": "Hòa Hảo Buddhism",
+      "kind": "branch",
+      "note": "Phật giáo Hòa Hảo — 1,433,252 in 2009 and Vietnam's third largest religion. Founded 1939 at Hòa Hảo village in An Giang by Huỳnh Phú Sổ, and the last and much the largest of the Bửu Sơn Kỳ Hương line: lay practice at home rather than in temples, no images, no ordained clergy, and the Four Debts of Gratitude in place of monastic vows. It is **intensely local even by this map's standards** — 936,974 of it, 65%, is in An Giang alone, where it is 44% of the province. Filed under Buddhism because that is what it calls itself, which is `buddhism.won`'s reason."
+    },
+    {
+      "id": "buddhism.tuan",
+      "label": "Tứ Ân Hiếu Nghĩa",
+      "kind": "branch",
+      "note": "Đạo Tứ Ân Hiếu Nghĩa, 41,280 in 2009 — 'the Four Debts and Filial Righteousness', founded 1867 by Ngô Lợi in the Bảy Núi hills of An Giang out of the Bửu Sơn Kỳ Hương teaching, and organised as much as an anti-colonial settlement movement as a religion. Almost all of it is still in An Giang."
+    },
+    {
+      "id": "buddhism.buuson",
+      "label": "Bửu Sơn Kỳ Hương",
+      "kind": "branch",
+      "note": "10,824 in 2009 — 'Strange Fragrance from the Precious Mountain', founded 1849 by Đoàn Minh Huyên during a cholera epidemic in the Mekong Delta, and **the root of the line that produced Tứ Ân Hiếu Nghĩa and Hòa Hảo**. What survives under the name is the small remnant that followed neither, so the node is the body and not the lineage; the lineage is in LINEAGE below."
+    },
+    {
+      "id": "buddhism.talon",
+      "label": "Hiếu Nghĩa Tà Lơn",
+      "kind": "branch",
+      "note": "Phật giáo Hiếu Nghĩa Tà Lơn, 401 people — recognised by Vietnam in 2010 and therefore **counted in the 2019 census and not the 2009 one**, so it has a national figure and no geography anywhere. Named for Tà Lơn (Bokor mountain, in Cambodia), where its founder is held to have received the teaching; the last of the Bửu Sơn Kỳ Hương line to be registered."
+    },
+    {
+      "id": "buddhism.tinhdo",
+      "label": "Tịnh Độ Cư Sĩ",
+      "kind": "branch",
+      "note": "Tịnh Độ Cư Sĩ Phật Hội Việt Nam — the Pure Land Buddhist Home-practice Association of Vietnam, 11,093 in 2009 — founded 1934 in Sa Đéc by Minh Trí as a lay Pure Land association, and unusual in running free herbal-medicine clinics as its central practice rather than as charity beside it. **Not part of the Bửu Sơn Kỳ Hương line** — it is a Pure Land body and so Mahayana by descent — and it is a node of its own rather than sitting on `buddhism.mahayana`, because that node is the generic answer and would then be labelled, in the legend, by the only body that ever landed on it."
     },
     {
       "id": "sikhism",
@@ -394,6 +535,12 @@
       }
     },
     {
+      "id": "bon",
+      "label": "Bon",
+      "kind": "branch",
+      "note": "Yungdrung Bon, the religion of the Tibetan plateau that predates Buddhism's arrival there in the seventh century, with its own canon, monasteries, lineages and abbots. **A root of its own and deliberately not a child of `buddhism`.** Modern Bon and Tibetan Buddhism have converged far enough that Bon is sometimes counted as a fifth Tibetan school, and the Dalai Lama has recognised it alongside the four — but Bonpos do not describe themselves as Buddhists, the two trace to different founders (Tonpa Shenrab against the Buddha), and NSO Nepal puts `Bon` in a cell beside `Bouddha` rather than inside it. Filing it under Buddhism would contradict the only source that counts it. **67,223 people in Nepal, and the only Bon this map DRAWS.** India's census does name it — 697 people — but only as a C-01 Annexure write-in under `Buddhist`, and `in2011.py` excludes the whole Annexure because each of its sects undercounts the real community by one to three orders of magnitude (sources/in.md §4). So India's Bon are recorded in `in.csv` and drawn nowhere, and Nepal is the only source here that puts Bon on the map at all. Tibet is the population that would really fill this node, and China's source cannot see religion at all (§14.6); Bhutan is not drawn. **Its geography is NOT the Tibetan border, which is the thing worth knowing about this cell.** The expectation is Mustang, Dolpa and Humla — the trans-Himalayan districts with Yungdrung Bon monasteries — and the census says otherwise: **Gandaki province holds 2.17% against 0.09% in Bagmati**, and the top districts are Manang (6.1%), Gorkha (5.7%), Lamjung (4.7%), Syangja (3.3%) and Kaski (2.6%). Those are the Gurung (Tamu) middle hills, not the Tibetan plateau. The likeliest reading is that most of the cell is the **Tamu shamanic tradition** — the *pye-ta lhu-ta*, served by *pachyu* and *klepri* priests — which Gurung communities describe as Bon and which is related to, but not the same institution as, the monastic Yungdrung Bon of Dolpa. Shey Phoksundo in Dolpa, which is the Yungdrung heartland, is 12.4% and is a much smaller number of people. **The census offers one box and this map cannot separate the two**; the note is here so the cluster over Gorkha is not misread as an error."
+    },
+    {
       "id": "shinto",
       "label": "Shinto",
       "kind": "branch",
@@ -408,6 +555,12 @@
       "sources": {
         "usrc2020": "425"
       }
+    },
+    {
+      "id": "confucianism",
+      "label": "Confucianism",
+      "kind": "branch",
+      "note": "Added 2026-09-05 with South Korea, which is **the only source on this map that counts it as a religion** — 유교, 75,703 people in 2015, with a cell of its own beside Buddhism and the two Christianities. Everywhere else it is either not asked or folded into a folk-religion residual: `chinesefolk`'s note names it as one of the things that category carries, and China's census asks nothing at all. A root rather than a child of anything, on Anita's call 2026-09-05, because there is nothing on the tree for it to descend from — the alternative was `chinesefolk`, which would be wrong twice over for a Korean answer. **What the number means is narrower than the word.** Confucian practice — ancestral rites, the lineage hall — is near-universal in Korea and is not what these 75,703 people are reporting; they are reporting Confucianism as their RELIGION, which is a much smaller and more deliberate claim, and most of them are the membership of Seonggyungwan and the local hyanggyo. Read it as the institutional core, not the practice."
     },
     {
       "id": "unification",
@@ -484,6 +637,24 @@
       "kind": "branch"
     },
     {
+      "id": "indigenous.northeurasian",
+      "label": "North Eurasian traditional religions",
+      "kind": "branch",
+      "note": "One Arena answer — 'I practice the traditional religion of my ancestors, worship the gods and the forces of nature' — and 1.76M people. Regional child of `indigenous`, on the pattern of `indigenous.african` and `indigenous.indian`. **It holds two different populations and the smaller one is the famous one.** Concentrated, in the ethnic republics: North Ossetia 29.4% (Uatsdin, the Ossetian faith), Sakha 13.0%, the Altai Republic 13.0%, Karachay-Cherkessia 12.2%, Tuva 8.0%, Mari El 5.6% — the Mari native religion being one of the last indigenous religions of Europe with a continuous practice. Those are real, distinct traditions with nothing in common but their position, and no Russian source separates them. **But that is only 27% of the node, and the correction matters.** This entry first claimed the category was 'the surviving ethnic religions of Russia's non-Russian peoples' with Rodnovery 'a small part of the total'. Measured against the 2021 census: the share of peoples who HAVE such a tradition explains only **R² = 0.27** of the answer across the 79 measured subjects — against R² = 0.96 for ethnicity and the Islam answer — and **73% of the people giving it live in subjects where those peoples are under 10% of the population**, at a median 0.69%. So most of this node is ethnic Russians answering a question whose wording ('worship the gods and the forces of nature') invites a broad reading: Rodnovery, the Slavic neo-pagan reconstruction, which belongs nearer `paganism`, plus a general nature-religion answer. The geographic label is therefore doing real work — it covers both halves without asserting either, which naming a people would not."
+    },
+    {
+      "id": "indigenous.african",
+      "label": "African traditional religions",
+      "kind": "branch",
+      "note": "The traditional religions of sub-Saharan Africa — Akan, Ewe, Ga and Dagomba practice in Ghana, and their neighbours across the region. A regional child of `indigenous` on the pattern already set by India, the Philippines, Aotearoa and Australia, and not a family of its own: §12 says a new top-level root costs the whole palette a degree, and nothing here needs one. 999,319 people in Ghana, 3.25%. **The count is a floor and the reason is the same everywhere in Africa.** Ghana's form offers `Traditionalist` as one box against four Christian ones, and traditional practice very often coexists with a Christian or Muslim affiliation rather than replacing it — so the people who would answer both are counted in the other column. **One child, added for Benin, which is the first source here to name an African tradition individually** (spec §2: a node earns its place by being countable somewhere). Everything else sits on this node, including Benin's own `Autres traditionnelles` — 260,448 people whose geography is not Vodun's at all, being the Atacora highlands in the north-west rather than the southern plateau: Boukoumbé 54.1%, Cobly 42.1%, Tanguiéta 36.6%. Those are the traditions of the Bètammaribè (Otammari) and their neighbours, and INStaD's cell exists because Benin has two large and unrelated traditional-religion complexes and its census can see both."
+    },
+    {
+      "id": "indigenous.african.vodun",
+      "label": "Vodun",
+      "kind": "branch",
+      "note": "The religion of the Fon, Adja, Ewe and Yoruba-speaking peoples of the Bight of Benin — the *vodun* themselves, the deities, and the priesthoods and initiatory societies that serve them. **1,160,279 people in Benin, 11.6% of the country, and it is the first time any source on this map has counted an African tradition under its own name.** INStaD spells it `Vodoun`, which is the Beninese official spelling; `Vodou` is the Haitian descendant of the same religion and `Voodoo` is a term this map does not use. **Benin is the one place where the census can ask this, and the reason is political rather than statistical.** Vodun was suppressed under Kérékou's Marxist government and then recognised outright in 1996; 10 January is a national holiday. Where every other African census on this map offers one undifferentiated `Traditionalist` box, RGPH-4 offers `Vodoun` and `Autres traditionnelles` as separate answers, and the two land in different halves of the country. **Its heartland is the Adja country and not, as usually assumed, Abomey.** The six highest communes are Djakotomey 69.1%, Toviklin 66.1%, Lalo 56.2%, Aplahoué 55.3% and Klouékanmè 50.5% — the whole of the Couffo department, which is 56.5% Vodun — with Athiémé 42.8% in the Mono beside it. The Fon plateau that the kingdom of Dahomey ruled from Abomey is lower: Agbangnizoun 39.2%, Abomey itself 23.5%. It falls to 0.1% in the Muslim north. **And the count is a floor for the usual reason** — the box is exclusive of `Catholique` and `Islam`, and in Benin more than almost anywhere the same person is commonly both. See the REVIEW note in bj2013.py, and `sources/bj.md` §7, which has the one piece of direct evidence this map has ever had for that."
+    },
+    {
       "id": "indigenous.indian",
       "label": "Adivasi and tribal religions (India)",
       "kind": "branch",
@@ -518,6 +689,24 @@
       "label": "Niam Khasi and Niamtre",
       "kind": "branch",
       "note": "The traditional religion of the Khasi and Jaintia hills of Meghalaya, in a state that is 75% Christian. Niam Khasi (`Khasi`, 138,512) and Niamtre (84,276, the Jaintia/Pnar form) are sister traditions and are kept in one node because the census names them at the same level and no source separates their adherents further."
+    },
+    {
+      "id": "indigenous.himalayan",
+      "label": "Himalayan traditional religions",
+      "kind": "branch",
+      "note": "The traditional religions of Nepal's Janajati peoples, named on the census form and counted separately from Hinduism and Buddhism. 1,026,252 people between the two children, which puts this family within a hundred people of `indigenous.indian.gondi` and behind only `indigenous.indian.sarna`. **Unlike India's, it is not a write-in under `Other`: Nepal prints these as boxes on the form**, which is why they arrive as counts rather than as a residual to be split."
+    },
+    {
+      "id": "indigenous.himalayan.kirat",
+      "label": "Kirat Mundhum",
+      "kind": "branch",
+      "note": "The religion of the Kirati peoples of eastern Nepal — Limbu, Rai, Yakkha, Sunuwar — whose scripture, the *Mundhum*, is an oral corpus recited by *phedangma* and other ritual specialists. 924,204 people, 3.17% of Nepal: the third-largest count of a named indigenous religion on this map, after Sarna (4.96M) and Gondi (1.03M), and the only one of the three a census asked about directly. **Its geography is the sharpest of any category in Nepal.** Koshi province is 16.8% Kirat against 0.01% in Sudurpashchim, Karnali and Lumbini alike; Panchthar district is **55.7%** and Taplejung 44.2%; and Mahakulung in Solukhumbu reaches **87.3%**. That is Limbuwan and the Rai hills of the far east, and the boundary against the Hindu middle hills is abrupt rather than gradual. The Kirat count has risen at every census since 1991, which is a revival movement asserting a distinct identity against enumeration as Hindu — the same dynamic `indigenous.indian.sanamahi` records for Manipur."
+    },
+    {
+      "id": "indigenous.himalayan.prakriti",
+      "label": "Prakriti",
+      "kind": "branch",
+      "note": "Literally *nature*. The census box for nature worship. 102,048 people, 0.35%, and **it is one region rather than a scatter**: Rukum East is 16.6% and Rolpa 8.2%, with Thawang in Rolpa at 45.0% and Sunchhahari at 30.7%. That is the **Kham Magar** country of the mid-western hills — not the Tharu Terai, which is the other place a reader might expect it and where it is near zero. **It is a self-description rather than a named tradition**, which is why it sits beside Kirat rather than under it: no single ritual system, priesthood or corpus is meant by it, and NSO offers no gloss. Kept on the tree anyway, and not folded into a residual, because the census names it and a residual would lose the one thing it says — that these people answered the question and answered it with something other than the five world religions on the form."
     },
     {
       "id": "druze",
@@ -555,6 +744,19 @@
       "kind": "branch",
       "note": "The residual of a source that reads religion off an ADMINISTRATIVE REGISTER rather than asking anybody: people for whom the register holds no religious body. Germany's 'Sonstige, keine, ohne Angabe' — 42,845,220 people, 51.8% of the country and the largest single node on the map after the US. It is a sixth member of the §6.3a grey family and it is NOT any of the other five. Not `unaffiliated`, which is a person reporting no religion — nobody was asked, and this bucket contains Germany's roughly four million Muslims, its Orthodox Christians, the Jewish communities and the Freikirchen alongside everyone who belongs to nothing. Not `other.<source>`, which is a religion the source named but the tree cannot place; here the source named nothing. Not `unchurched`, which is a positive report of belief without institution. The German register can only see bodies that levy church tax, so the category is a property of the INSTRUMENT and not of the people in it — which is why it needs its own node rather than a home in one of the others. Any register-basis source with the same shape belongs here: Austria and the Nordic countries are the obvious next ones.",
       "public_note": "Not a report of no religion — nobody was asked. The source is an administrative register that records only the churches entitled to church tax, so this category holds Muslims, Orthodox Christians, Jews and free-church members alongside everyone who belongs to nothing, and cannot tell them apart."
+    },
+    {
+      "id": "unknown",
+      "label": "Religion unknown",
+      "kind": "branch",
+      "note": "**A SEVENTH member of the §6.3a grey family, and it is the one that reports nothing at all.** People the source counted and whose religion it did not establish. Not a report of no religion; not a religion the tree could not place; not a positive report of belief outside an institution. The claim is only that these people are here.\n\n**Vietnam is the first, at 70,195,530 people — 81.8% of the country.** Its census asks which of the state-recognised religious organisations a person belongs to, and that many answered none of them. The answer is real and it does not mean irreligion: ancestor veneration is close to universal, the village đình and the mother-goddess rites of đạo Mẫu are everywhere, and most of the people who would call themselves Buddhist in conversation are in here rather than in the 4.6 million the census counts. The bucket's composition is decided by Vietnam's list of registered organisations, which is a fact about the question.\n\n**Why not `unrecorded`, which is the near neighbour.** That node is the residual of a source that never asked — Germany's church-tax register — and §6.3a-i's argument for splitting it from `unaffiliated` was precisely that being asked and not being asked are different. Vietnam's respondents WERE asked; the answer set was too narrow for their answer to mean what it says. Folding the two together would blur the distinction that ramp exists to draw, and §14.7 says so outright: *`unrecorded` means 'the register only ever saw church-tax bodies' and is Germany-shaped*.\n\n**The test for admitting anything else here**, and it is deliberately narrower than 'we are not sure': the source COUNTED these people, and what they practise is not determinable from it at any geography. Not a small residual — that is `other.<source>` — and not a suppressed cell. **China is the case it was specified for** (§14.7), and it was BUILT on 2026-09-07 (§14.13): **1.21 billion people, 97.5% of the country**, being the 1.14 billion Han plus every nationality no religion is claimed for. That makes this node much the largest on the map — bigger than every other node put together — and it is worth naming why that is allowed. China's census never asked about religion at all, so unlike Vietnam this is not the residual of an answer; it is the residual of a question that was never put. The test above still passes on the letter of it — the source counted these people and what they practise is not determinable from it at any geography — and the alternative was the map's previous state, in which a billion people did not appear.\n\n**The colour is Anita's, 2026-09-06: `#68665a`** — a neutral grey with a warm cast, which is what §14.7's *slightly yellow* was asking for. It is the THIRD quietest of the seven rather than the first, which departs from §6.3a's 'the biggest node is the darkest' on purpose: at 70,195 dots this is Vietnam's settlement pattern, and §14.7's argument for drawing the residual at all is that the people are visible as people. See spec §6.3a-ii, including the two earlier attempts and why an HSL lightness cannot be compared across hues.\n\n**And it is NOT in the viewer's `no religion` control** (`NO_RELIGION_IDS`), for `unrecorded`'s reason and more strongly: hiding it behind a switch labelled 'no religion' asserts in one click the exact thing the node exists to avoid asserting.",
+      "public_note": "Not a report of no religion. These people were counted and the source does not establish what they practise — in Vietnam because the census asks only which state-registered organisation someone belongs to, so this holds ancestor veneration, folk religion and most Buddhist practice alongside the genuinely irreligious, and cannot tell them apart."
+    },
+    {
+      "id": "unenumerated",
+      "label": "Not enumerated",
+      "kind": "branch",
+      "note": "**AN EIGHTH member of the §6.3a grey family, and the only one where the source did not COUNT the people.** Every other member is a residual of some answer: `unaffiliated` said none, `secular` stated a position, `parody` refused the question, `unchurched` reported belief without institution, `other.<source>` gave a religion the tree cannot place, `unrecorded` was never asked because the instrument is a register, and `unknown` was asked from too narrow a list. **This one was never reached at all.** The number is the state's own estimate of how many people it did not enumerate, and no religion is published for them at any geography.\n\n**Myanmar is the first, at 1,206,353 people — and Rakhine State is 1,090,000 of them, 34% of that state's population.** The 2014 census report says why in its own words: *\"In Rakhine, an estimated 1.09 million people were not enumerated in the Census because they were not allowed to self-identify using a name not recognized by the Government.\"* That is the Rohingya. The other two entries are Kayin (69,753) and Kachin (46,600), areas that were not enumerated because they were not under government control.\n\n**Why not `unknown`, which is the near neighbour.** §6.3a-ii admits a category there on a deliberately narrow test: *the source COUNTED these people, and what they practise is not determinable from it.* Vietnam's 70 million were counted. Myanmar's 1.2 million were not — they are an estimate of a headcount, which is a weaker claim than any other figure on this map, and the distinction between *counted, religion unclear* and *not counted at all* is exactly the kind §6.3a-i created this family to keep.\n\n**And why not `islam`, which the source itself suggests.** The report states its own assumption — *\"It is assumed that the non-enumerated population in Rakhine is mainly affiliated with the Islamic faith\"* — and applies it at the Union level to publish a second set of national percentages (Islam 2.3% → 4.3%). It publishes no such breakdown at State level, which is where this map draws. Assigning them to `islam` would be inventing a magnitude the source does not publish at the resolution it is used, which is §14 rule 1. The assumption is quoted in Myanmar's `note_public` instead, so a reader is told what the state itself concluded and this node claims only what is certain.\n\n**The alternative was not drawing them, and it is much worse.** Enumerated Rakhine is 2,098,807 people of whom 28,731 are Muslim, so a map built from the enumerated columns alone renders Rakhine **96.2% Buddhist** — the census's own exclusion reproduced as a finding, which is §14.2's second risk in its purest form.\n\n**Every row on this node is `modelled` (§7).** The tiers are about whether anybody was counted, and here nobody was; 1,090,000 is a round number in the source because it is an estimate. So `inferred dots: hidden` empties this node completely, which is the honest test — it shows the census exactly as the state published it, with the hole where the hole is.\n\n**It is NOT in the viewer's `no religion` control** (`NO_RELIGION_IDS`), for `unrecorded`'s and `unknown`'s reason and more strongly still: these people were not asked and did not decline, and hiding them behind a switch labelled 'no religion' would assert in one click the thing this node exists to refuse to assert."
     },
     {
       "id": "parody",
@@ -599,16 +801,130 @@
       "note": "The older and more directly Yoruba/Fon/Bantu of the two, 167,366 in 2010. Umbanda is the larger by a factor of 2.4 and the two are often reported together — IBGE's own parent category is 'Umbanda e Candomblé' — but they are distinct traditions."
     },
     {
-      "id": "japanesenew",
+      "id": "afrodiasporic.revival",
+      "label": "Revival Zion and Pukkumina",
+      "kind": "branch",
+      "note": "STATIN's `Revivalist` — **36,296 people, 1.35% of Jamaica**, and the third Afro-diasporic tradition this map can name. Revival Zion and Pukkumina (Pocomania) came out of the **Great Revival of 1860-61**, when a Christian revival met the surviving Afro-Jamaican Myal practice and produced something that is neither: Christian scripture and hymnody, spirit possession, drumming, water rites and a hierarchy of messenger spirits. Jamaicans distinguish Zion (the 'heavenly' side, closer to the churches) from Pukkumina (the 'ground' side, closer to the ancestors); the census does not, and one node is therefore the honest grain.\n\n**Filed beside Umbanda and Candomblé rather than under Christianity, and the parallel is exact.** All three are New World religions in which an African inheritance and a Christian one fused rather than one absorbing the other, and spec §3.3 says the syncretism gets a node instead of being split across its ingredients. Putting Revival under `christianity` would make the same mistake in Jamaica that filing Umbanda under `christianity.catholic` would make in Brazil.\n\n**It is separate from `rastafari`**, which STATIN also counts separately and which is a different and later thing — 1930s, Ethiopianist, and not a possession religion. And it is the tradition Jamaican popular music came out of, which is the reason a 1.35% category is worth a node at all."
+    },
+    {
+      "id": "afrodiasporic.orisha",
+      "label": "Orisha (Shango)",
+      "kind": "branch",
+      "note": "CSO's `Orisha` — **11,918 people, 0.90% of Trinidad and Tobago, and the first census count of an orisha religion under its own name anywhere on this map.** Yoruba orisha worship carried to Trinidad in the nineteenth century, largely by liberated Africans settled after 1838, and long known locally as **Shango** for the orisha of thunder. It is the direct sibling of Candomblé and Santería: the same West African pantheon, the same drumming and possession, the same overlay of Catholic saints on individual orishas.\n\n**Read the number as a floor, not a count.** In Trinidad, Orisha practice and Spiritual Baptist practice overlap heavily — many people take part in both, and much of the literature treats them as one religious complex — while a census offers one box. So this counts people who chose Orisha *over* the alternatives. The same caution `rastafari` carries in Jamaica, for a different reason.\n\n**Its geography is the eastern and southern coast**: Mayaro/Rio Claro 2.1%, Point Fortin 1.8%, Port of Spain 1.6%, against 0.3% in Penal/Debe. Legally recognised in Trinidad and Tobago since the Orisa Marriage Act of 1999."
+    },
+    {
+      "id": "afrodiasporic.spiritualbaptist",
+      "label": "Spiritual Baptist (Shouter)",
+      "kind": "branch",
+      "note": "CSO's `Baptist-Spiritual Shouter` — **75,002 people, 5.67%, more numerous than Trinidad's Anglicans and nearly five times its ordinary Baptists**, which the census counts separately as `Baptist-Other`.\n\nA Trinidadian religion in which Baptist Protestantism and West African — mainly Yoruba and Kongo — practice fused rather than one absorbing the other: scripture, hymnody and baptism alongside spirit possession, the *mourning* ground, bell-ringing, candles, water rites and head-tying.\n\n**Filed beside Revival Zion, Umbanda and Candomblé rather than under Christianity, and the parallel with Jamaica's Revivalists is structural.** Both are New World religions with a genuinely double descent, and spec §3.3 says the syncretism gets a node instead of being split across its ingredients. Putting this under `christianity.baptist` would make the same mistake in Trinidad that filing Umbanda under `christianity.catholic` would make in Brazil — and it would additionally throw away a distinction CSO went to the trouble of publishing.\n\n**The objection is recorded rather than dismissed**: Spiritual Baptists overwhelmingly describe themselves as Christians and as Baptists, and many would reject this placement. What decides it is that the tree is a genealogy of traditions and not a register of self-description. The same call, made the same way, as `afrodiasporic.revival`.\n\n**Trinidad treats it as a matter of history, not of ethnography.** The Shouters Prohibition Ordinance banned the religion outright from 1917 to 1951 — the drumming and bell-ringing were the stated offence — and **30 March is a public holiday, Spiritual Baptist / Shouter Liberation Day.** Its geography is Afro-Trinidadian: 13.0% in Point Fortin, 10.6% in Tobago, 9.6% in San Juan/Laventille, against 2.6% in Penal/Debe."
+    },
+    {
+      "id": "eastasiannew",
+      "label": "East Asian new religions",
+      "kind": "branch",
+      "note": "The 19th- and 20th-century foundings of Japan, Korea and China — shinshūkyō and sinheung jonggyo — studied together because they are one phenomenon: charismatic founders, syncretic of Buddhism, Confucianism, folk practice and Christianity, and often millenarian. **Was `japanesenew`, a root, until 2026-09-05, when Korea arrived counting three of these separately and the Japanese-only name stopped fitting.** Renaming rather than adding a second root was the cheap move (§12): the wedge this sits in is at 3° spacing and a new family costs every other small group a degree. It also FIXED something: IBGE's own category is `Novas religiões orientais` — new ORIENTAL religions — and its residual `Outras novas religiões orientais` was landing on the Japanese node for want of a parent. It now lands on the parent, which is what the source actually says. Distinct from `shinto`, the shrine tradition, and from `buddhism`, though individual bodies here derive from one or the other. **Two existing roots arguably belong under this and are deliberately left alone**: `unification` is Korean (Sun Myung Moon, 1954) and `caodaism` Vietnamese (1926), so both are East Asian new religions by any reading. Moving them would restructure four drawn countries at once for no gain today, and Anita's call on 2026-09-05 was that this is not a blocker and can change later. If it does, they become `eastasiannew.korean.unification` and `eastasiannew.vietnamese`."
+    },
+    {
+      "id": "eastasiannew.japanese",
       "label": "Japanese new religions",
       "kind": "branch",
-      "note": "Sekai Kyūsei Kyō (Igreja Messiânica Mundial), Seicho-no-Ie, Perfect Liberty, Tenrikyo, Soka Gakkai. Brazil has the largest Japanese diaspora in the world and enumerates them: 103,716 Messiânica alone in 2010. Distinct from `shinto`, which is the shrine tradition, and from `buddhism`, though individual bodies here derive from one or the other. Japan itself will need this node heavily (sources.md §2)."
+      "note": "Sekai Kyūsei Kyō (Igreja Messiânica Mundial), Seicho-no-Ie, Perfect Liberty, Tenrikyo, Soka Gakkai. Brazil has the largest Japanese diaspora in the world and enumerates them: 103,716 Messiânica alone in 2010. Australia and New Zealand name Tenrikyo and Mahikari. Japan itself will need this node heavily (sources.md §2)."
+    },
+    {
+      "id": "eastasiannew.korean",
+      "label": "Korean new religions",
+      "kind": "branch",
+      "note": "Added 2026-09-05 with South Korea, which is the only census on this map that counts any of them — and counts three separately, at sigungu level, for 110,241 people. The 2015 census is the last one to ask, so this is the only measurement there will be for the foreseeable future."
+    },
+    {
+      "id": "eastasiannew.korean.cheondogyo",
+      "label": "Cheondogyo",
+      "kind": "branch",
+      "note": "천도교, 65,964 in 2015. The institutional continuation of Donghak — the 1860 movement whose peasant rebellion of 1894 triggered the Sino-Japanese War, and whose leaders wrote and signed the 1919 Declaration of Independence. Not a sect of anything: its doctrine of innaecheon, that each person bears the divine, was formulated against both Confucian hierarchy and Catholic missionary teaching."
+    },
+    {
+      "id": "eastasiannew.korean.daesun",
+      "label": "Daesun Jinrihoe",
+      "kind": "branch",
+      "note": "대순진리회, 41,176 in 2015 — the largest of the Jeungsanist bodies, which descend from Kang Jeungsan (1871-1909) and hold that he reordered the cosmos. Counted here because KOSIS gives it a cell of its own; the census figure is far below the movement's own claims, which is ordinary for new religions and is not adjudicated here (§3.1)."
+    },
+    {
+      "id": "eastasiannew.korean.daejong",
+      "label": "Daejonggyo",
+      "kind": "branch",
+      "note": "대종교, 3,101 in 2015. The Dangun religion — revived in 1909 around the founding ancestor of the Korean nation, suppressed by the Japanese colonial authorities, and central to the independence movement in Manchuria. An ethnic-national religion rather than a syncretic new one, and the weakest fit in this family; it is here rather than under `indigenous` because it is a 20th-century founding with a doctrine and a hierarchy, not a continuous folk tradition."
+    },
+    {
+      "id": "eastasiannew.vietnamese",
+      "label": "Vietnamese new religions",
+      "kind": "branch",
+      "note": "Added 2026-09-06 with Vietnam, and it is the third national grouping in this family after Japan's and Korea's. Holds the two surviving **Minh đạo** bodies — the Vietnamese branches of the Chinese Xiantiandao / vegetarian-hall tradition, transplanted to Cochinchina in the 19th century — which Vietnam's census counts separately for 1,075 people between them. **`caodaism` belongs here and is deliberately still a root.** It is 807,915 people, it is the largest Vietnamese new religion by two orders of magnitude, and the Minh đạo halls below are among the traditions it drew its séance practice from. Anita's call on 2026-09-05 was that moving it is not a blocker; it stays out because four drawn countries map to `caodaism` by id and the gain today is nil. **If it moves, the id is `eastasiannew.vietnamese.caodai`** — which supersedes the suggestion in this family's own note above, written before there was a Vietnamese grouping node to be a child of. The Vietnamese bodies here are NOT the Mekong Delta Buddhist reform lineage, which is under `buddhism` because those five say they are Buddhist and these two do not."
+    },
+    {
+      "id": "eastasiannew.vietnamese.minhsu",
+      "label": "Minh Sư Đạo",
+      "kind": "branch",
+      "note": "Giáo hội Phật đường Nam Tông Minh Sư Đạo, 709 in 2009 and 260 in 2019 — the Vietnamese Xiantiandao (先天道) line, brought south by Ming loyalist refugees and organised into vegetarian halls (Phật đường) from the 1860s. The oldest of the five Minh branches and the direct ancestor of much of Caodaist ritual."
+    },
+    {
+      "id": "eastasiannew.vietnamese.minhly",
+      "label": "Minh Lý Đạo",
+      "kind": "branch",
+      "note": "Hội thánh Minh Lý đạo - Tam Tông Miếu, 366 in 2009 and 193 in 2019 — founded 1924 in Saigon, two years before Caodaism and out of the same Minh-branch séance milieu. `Tam Tông` is the three teachings: Buddhism, Daoism and Confucianism, held together rather than chosen between."
     },
     {
       "id": "christianity.maori",
       "label": "Maori Christian churches",
       "kind": "branch",
-      "note": "Ratana and Ringatu — churches founded by Maori prophets, Christian in theology and Maori in authority and practice, and belonging to neither the missionary denominations that preceded them nor to `indigenous`. 3,246 in Australia; New Zealand, where they were founded, counts far more."
+      "note": "Ratana and Ringatu — churches founded by Maori prophets, Christian in theology and Maori in authority and practice, and belonging to neither the missionary denominations that preceded them nor to `indigenous`. 3,246 in Australia; New Zealand, where they were founded, counts far more. **Of the three `Locally founded churches` this is the closest kin to the African Instituted Churches** — both prophet-founded, both healing-centred, and both religious and anti-colonial political movements at once; Ratana and Kimbanguism are a standard comparison. See the group's note in LINEAGE."
+    },
+    {
+      "id": "christianity.filipinoindependent",
+      "label": "Filipino independent churches",
+      "kind": "branch",
+      "note": "Churches founded in the Philippines, outside every tradition the missionaries brought, and belonging to none of them afterwards. The same idea as `christianity.maori` and a far larger population: Iglesia ni Cristo alone is 2.8M, the third largest religious body in the country. WHAT IS NOT HERE MATTERS AS MUCH AS WHAT IS. The Aglipayan church is Filipino, independent and larger than everything below this node except INC, and it sits on `christianity.catholic.independent` instead, because it kept Catholic orders, rites and self-description and that node exists for exactly that. Nor is this a home for every church a Filipino founded: Jesus Is Lord, Christ's Commission Fellowship and Victory are Filipino-founded and are squarely inside the global evangelical and charismatic streams, so they are filed there. What is left, and what this node is for, are the bodies whose theology is their own — nontrinitarian restorationist, or gathered around a Filipino founder — and which no classification outside the Philippines has a shelf for."
+    },
+    {
+      "id": "christianity.filipinoindependent.inc",
+      "label": "Iglesia ni Cristo",
+      "kind": "branch",
+      "note": "Founded 1914 by Felix Manalo; 2,806,524 in the 2020 census, 2.6% of the country and its third largest religious body after the Catholics and the Muslims. Nontrinitarian — it holds Christ to be man and not God — which is why it is not filed among the Protestant families it is otherwise sometimes grouped with. `Church of Christ` is INC's own English name AND A SEPARATE CENSUS CATEGORY of 429,921 people that is not it; see the REVIEW note in ph2020.py before assuming either way."
+    },
+    {
+      "id": "christianity.filipinoindependent.mcgi",
+      "label": "Members Church of God International",
+      "kind": "branch",
+      "note": "The census calls it `Most Holy Church of God in Christ Jesus`, its registered name; the Philippines knows it as MCGI or `Ang Dating Daan` after its television programme, the longest-running religious broadcast in the country. 9,585 in 2020. Nontrinitarian, and descended from the same 1920s Manila milieu as INC — its parent body was a 1928 split from it — which is why the two sit together here."
+    },
+    {
+      "id": "christianity.africaninstituted",
+      "label": "African Instituted Churches",
+      "kind": "branch",
+      "note": "The churches founded in Africa by Africans, outside the mission denominations and belonging to none of them afterwards — the Aladura churches of West Africa, the Zionist and Apostolic churches of southern Africa, and in Kenya the Legio Maria, the African Israel Nineveh Church, the Nomiya Luo Church and the Akorino. The same idea as `christianity.maori` and `christianity.filipinoindependent`, on a much larger scale: **3,292,573 people in Kenya alone, 7.0% of the country**, and it is the third largest Christian stream there after the Protestants and the Evangelicals. **It exists because Kenya counts it and almost nobody else does.** Ghana's census has no cell for the Musama Disco Christo Church or the Twelve Apostles, so all of them are inside its `Other Christian` and stay on `christianity.other` — see the REVIEW note in gh2021.py, which predicted this node and said where its people would be found in the meantime. Mozambique's `Sião/Zione` would land here too if it is ever ingested. **AND IT IS NOW MOSTLY ZIMBABWEAN, WHICH CHANGES WHAT THE NODE IS.** ZIMSTAT's `Apostolic Sect` is **6,112,503 people, 40.3% of Zimbabwe and the largest single religious answer in that country** — the Vapostori, the prophetic churches founded by Johane Marange and Johane Masowe in the 1930s, white-robed and worshipping in the open air rather than in buildings. That is nearly twice Kenya's figure on its own, so this node has gone from *a stream some censuses can see* to **the third largest Christian branch on the map**, and its centre of mass is southern Africa rather than east. Benin's `Chrétien céleste` (676,032, the Celestial Church of Christ) is the West African member. **What has NOT changed is how coarse it is**: three countries supply it, each with one undivided cell, and the Vapostori alone are dozens of distinct churches that no source separates."
+    },
+    {
+      "id": "christianity.evangelical",
+      "label": "Evangelical, unspecified",
+      "kind": "branch",
+      "note": "For sources that collect `Evangelical` as an answer distinct from both `Protestant` and a named body. Like `christianity.protestant` it holds an ANSWER rather than a church, and it is deliberately NOT a parent of anything — evangelicalism cuts across the Baptist, Holiness, Pentecostal and independent families rather than containing them. Added for Kenya, where KNBS puts `Evangelical Churches` beside `Protestant` and it is **9,648,690 people, 20.4% of the country** — the Africa Inland Church, the Baptists, the Pentecostal Assemblies of God, Deliverance Church and the rest of the Evangelical Alliance of Kenya, against the mainline ACK, PCEA and Methodists in the Protestant cell. `mk2021.py` wanted this node for 678 Macedonian `Евангелисти` and was right not to add it then; spec §2's rule is that a node earns its place by being countable, and Kenya makes it countable fourteen thousand times over."
+    },
+    {
+      "id": "christianity.sdabaptistapostolic",
+      "label": "Adventist, Baptist or Apostolic",
+      "kind": "branch",
+      "note": "NSO Malawi's `SDA/Baptist/Apostolic` — **1,644,829 people, 9.4% of the country**, and the only cell on this map that merges three traditions the tree keeps in three different places. Seventh-day Adventists belong to `christianity.adventist`, Baptists to `christianity.baptist`, and Malawi's Apostolic churches — the African Apostolic Church, the Apostolic Faith Mission and the Zion-adjacent bodies of the Shire valley — to `christianity.africaninstituted` or `christianity.pentecostal` depending on the body. **The census merged them and this node holds the merge**, because sending 1.6 million people to any one of those four asserts a division NSO did not make, and sending them to `christianity.other` would file them as bodies with no branch when the truth is that they have three. It holds an ANSWER rather than a church, like `christianity.protestant` and `christianity.evangelical` beside it, and like them it is deliberately NOT a parent of anything. **Why NSO grouped them is not recorded, and the grouping is not arbitrary**: all three are Sabbath-or-prophecy churches outside the Presbyterian/Anglican/Catholic mission settlement that shaped Malawi. Its geography backs that up — the cell is **29.1% in Neno, 21.5% in Thyolo, 21.0% in Mwanza and 17.6% in Chikwawa**, against 9.4% nationally and 2.2% in Machinga: one contiguous block over the Shire highlands and valley, which is where the Seventh-day Adventist Malamulo mission has been since 1902 and where the Apostolic churches are strongest. A merge of three unrelated things would look like noise; this does not. Read the cell as a category, not as an arithmetic sum. If a Malawian source ever separates them the rows still carry their `source_category` and can be moved (spec §2.4)."
+    },
+    {
+      "id": "indigenous.philippine",
+      "label": "Philippine indigenous religions",
+      "kind": "branch",
+      "note": "The census's `Tribal religion`, 251,548 people, and one cell is all it gives them: the traditional religions of the Cordillera peoples of northern Luzon, the Lumad of Mindanao, the Mangyan, the Aeta and the Palawan groups are a single answer with no names under it. Compare India, which the tree runs five children deep because the census Appendix names 83 traditions. Depth follows what a source counts (spec §2.4), and the Philippines counts one."
+    },
+    {
+      "id": "indigenous.myanmar",
+      "label": "Myanmar indigenous religions",
+      "kind": "branch",
+      "note": "DOP's `Animist`, **408,045 people**, 0.8% of the enumerated population — and one cell is all the census gives them. **Its geography is almost entirely Shan State, which holds 383,072 of the 408,045 — 93.9% of the national figure and 6.6% of that state.** Kayah is next at 1.9%, and no other state reaches 0.2%. That is the eastern uplands and the traditional religions of the hill populations there, which the census does not name individually.\n\n**Read the figure as a floor**, for the reason `indigenous.african` carries for the whole of that continent: the box is exclusive of the Buddhist one, and **nat propitiation is close to universal in Myanmar and is practised alongside Buddhism rather than instead of it.** A census that offers one religion per person counts a nat shrine keeper who calls himself Buddhist as Buddhist. So this cell is the people for whom the traditional religion is the WHOLE answer, not the people who practise one.\n\n`Animist` is DOP's word and is kept in `source_category` per §2.4. §12's rule applies here — the same string means opposite things in different countries, and the units it sits in are what decide: this one is concentrated in the upland minority states, so it is an outsider's label for tribal religion and belongs on `indigenous`, not the Western neo-animist self-description that sends Czechia's to `paganism`. No child nodes: no source on this map names a Myanmar tradition individually."
     },
     {
       "id": "alevism",
@@ -674,7 +990,7 @@
       "id": "other.nz",
       "label": "Other religion (New Zealand)",
       "kind": "branch",
-      "note": "Stats NZ's `Other Religions, Beliefs and Philosophies` nfd/nec, plus the POLITICAL IDEOLOGIES it tabulates as religious affiliations because people wrote them in — Socialism, Marxism, Maoism, Libertarianism, 47 people between them. Not `secular`: a political programme is not a stated non-theistic position."
+      "note": "Stats NZ's `Other Religions, Beliefs and Philosophies` nfd/nec, plus the POLITICAL IDEOLOGIES it tabulates as religious affiliations because people wrote them in — Socialism, Marxism, Maoism, Libertarianism, 47 people between them. Not `secular`: a political programme is not a stated non-theistic position. WIDENED 2026-09-07 for §7a-i-1: as a roll-up target it stands for Stats NZ's RESIDUAL GROUPS generally — the ones tabulated apart from the six religions the SA2 table names — so `Spiritualism and New Age Religions` (21,180) rolls here too. That group spans Spiritualist, Pagan, Wiccan, Rastafari and Scientologist with no family covering it, and this node claims only what is true of it: Stats NZ did not put these people with the named religions. `Māori Religions, Beliefs and Philosophies` pointedly does NOT roll here — see nz2023.COLUMNS."
     },
     {
       "id": "other.mx",
@@ -737,28 +1053,280 @@
       "note": "Pew's two irreducible lines, and only Pew's — ASARB names every body it counts and has never needed a residual. First, what is left of `Other world religions` (776,032 adults) after the ASARB rolls of the roots it covers are subtracted; Sikhs, Daoists, Bahá'ís and Zoroastrians are one published line at n=36,908 and cannot be separated (spec §3.5a, §4.4). Second, `Other in the Unitarian and other liberal faiths family` (221,896), a write-in residual whose siblings run from Unitarian Universalism to humanism, so no root can claim it. Per source, per spec §3.11; see taxonomy/us_pew2024.py."
     },
     {
-      "id": "buddhism.mahayana",
-      "label": "Mahayana Buddhist",
-      "kind": "leaf",
-      "sources": {
-        "usrc2020": "890"
-      }
+      "id": "other.cl",
+      "label": "Other religion (Chile)",
+      "kind": "branch",
+      "note": "INE's `Otras religiones o credos` — 89,856 people, 0.59% of the 15+ universe. Unusual among the residuals here in having been REDUCED by the source before publication: it is question 31's option 11, a free-text write-in, minus the answers INE then recoded into `Otros cristianos y tradiciones relacionadas con Cristo` (199,426). So what is left is genuinely non-Christian and genuinely unclassified, rather than the usual mixture of the two. Chile's Mapuche religion is somewhere inside it, and there is no way to bring it out: the census asks about religion and about indigenous belonging in separate questions and does not cross them."
     },
     {
-      "id": "buddhism.theravada",
-      "label": "Theravada Buddhist",
-      "kind": "leaf",
-      "sources": {
-        "usrc2020": "891"
-      }
+      "id": "other.lk",
+      "label": "Other religion (Sri Lanka)",
+      "kind": "branch",
+      "note": "DCS's `Other` — 63,494 people, 0.29% — and the only residual on this map that is NOT purely a residual. The 2024 census moves any religion with fewer than 10 people in a GN division into this cell, so it holds genuine other-religion answers mixed with the suppressed tail of Buddhist, Hindu, Islam, Roman Catholic and Other Christian, in an unknown proportion. Sri Lanka's real small groups — the Malay Muslims, the Bahá'ís, the Parsis of Colombo, the Veddas' own practice — are somewhere inside it and cannot be brought out at this geography. That the bucket is this small is a fact about the question, which offers six answers, and not about the country. See spec §3.8 and sources/lk.py."
     },
     {
-      "id": "buddhism.vajrayana",
-      "label": "Vajarayana Buddhist",
-      "kind": "leaf",
-      "sources": {
-        "usrc2020": "892"
-      }
+      "id": "other.ph",
+      "label": "Other religion (Philippines)",
+      "kind": "branch",
+      "note": "PSA's `Other religious affiliations` — 1,893,134 people, 1.74%, and the fourth largest category in the country. It is a residual of an unusually lopsided kind. The census names 129 bodies and 126 of them are Christian; the entire non-Abrahamic world gets three cells — Islam, Buddhist, and Tribal religion — and there is no Hindu, Jewish, Sikh, Chinese folk or Bahá'í option anywhere on the form. So every Filipino Hindu, every Chinese Filipino who practises the folk religion, and every Jew in the country is inside this number, together with the tail of small Christian bodies that did not make the list of 129. The bucket is not large because the country is unclassifiable; it is large because the question was written for Philippine Christianity and asked in four levels of detail there and none anywhere else (sources/ph.md §7). Per source, per spec §3.11."
+    },
+    {
+      "id": "other.gh",
+      "label": "Other religion (Ghana)",
+      "kind": "branch",
+      "note": "GSS's `Other Religion` — 328,721 people, 1.07%. Everything that is not one of the four Christian boxes, Islam, Traditionalist or No Religion, which in Ghana means the Bahá'í community, the Hindu Monastery of Africa at Odorkor, the Buddhists, the Jewish community of Sefwi Wiawso, Eckankar and the Rastafari. None of them is separable at any geography: the form has one cell for all of it. Per source, per spec §3.11."
+    },
+    {
+      "id": "other.ke",
+      "label": "Other religion (Kenya)",
+      "kind": "branch",
+      "note": "KNBS's `Other Religion` — 467,083 people, 0.99%. Smaller in scope than most residuals here, because Kenya's list is unusually generous at the top: Hindus, Traditionists and the Orthodox all have cells of their own, so this one is not carrying them. What is inside is the Sikhs and Jains of Nairobi and Kisumu, the Bahá'ís, the Buddhists, and the tail of small movements. Per source, per spec §3.11."
+    },
+    {
+      "id": "other.ru",
+      "label": "Other religion (Russia)",
+      "kind": "branch",
+      "note": "Two of Arena's answers, 875,000 people between them and neither placeable. `Other` (0.61%) is the survey's own residual. The second is `I follow Eastern religions and spiritual practices (Hinduism, Krishnaism, other)` (0.06%, 90,990 people) and it is filed here for exactly the reason hr2021.py files Croatia's `Istočne religije` here: it plainly means Hinduism, Buddhism and their neighbours, the tree has no node for 'some Eastern religion, unspecified', and choosing one of them would be inventing a fact. Note that Arena asks about Buddhism separately and 659,032 people took it, so this category is the remainder AFTER the one Eastern religion Russia has in numbers — which makes 'Krishnaism' in the answer text a fair guide to what is actually in it. Per source, per spec §3.11."
+    },
+    {
+      "id": "other.lt",
+      "label": "Other religion (Lithuania)",
+      "kind": "branch",
+      "note": "Statistics Lithuania's `Kitų` — 15,353 people, 0.55%, and unusually large for a residual on a form this detailed. Roman and Greek Catholic, Orthodox, Old Believer, Lutheran, Reformed, Baptist, Pentecostal, Adventist, New Apostolic, Sunni, Jewish and Karaim all have cells of their own, so this one is what is left after sixteen answers: the Baltic-faith revival (Romuva, state-recognised since 2025 after two decades of refusals), the Jehovah's Witnesses, the Latter-day Saints, and the Buddhist and Hindu communities of Vilnius. None is separable at any geography. Per source, per spec §3.11."
+    },
+    {
+      "id": "other.rs",
+      "label": "Other religion (Serbia)",
+      "kind": "branch",
+      "note": "RZS's two smallest cells put together — `Источњачке вероисповести` (Eastern religions, 1,207) and `Остале вероисповести` (other religions, 500). 1,707 people, 0.026%, the thinnest tail of any country on this map. Orthodox, Catholic, Protestant, other Christian, Muslim and Jewish all have cells of their own, so this one carries Serbia's Buddhists and Hindus, its Bahá'ís, and whatever else the form left nowhere else to go. Per source, per spec §3.11."
+    },
+    {
+      "id": "other.id",
+      "label": "Other religion (Indonesia)",
+      "kind": "branch",
+      "note": "BPS's `Lainnya` — 292,889 people, 0.12%. **The most understated residual on this map, and knowably so.** Indonesia's census offers the six religions the state recognises and this one cell for everything else, so `Lainnya` has to hold Judaism, Sikhism, Bahá'í and Shinto TOGETHER WITH the whole of Aliran Kepercayaan — the indigenous belief systems, Kejawen, Sunda Wiwitan, Parmalim, Kaharingan, Marapu. In 2010 those had no legal standing on the form (registration came only with the 2017 Constitutional Court ruling), so their adherents overwhelmingly recorded one of the six instead; Kaharingan was administratively counted as Hinduism outright, which is most of why Central Kalimantan draws Hindu. The number is therefore a FLOOR by a large and unknown margin, in the same way every African `Traditionalist` cell is (sources.md §11b). Not mapped to an indigenous node despite that, because the cell is genuinely mixed and the source gives no composition. Per source, per spec §3.11."
+    },
+    {
+      "id": "other.kr",
+      "label": "Other religion (South Korea)",
+      "kind": "branch",
+      "note": "KOSIS's `기타` — 98,185 people, 0.20%. Small, because the list above it is unusually generous: Buddhism, both Christianities, Won Buddhism, Confucianism, Cheondogyo, Daesun Jinrihoe and Daejonggyo all have cells of their own, so this residual is not carrying any of the things a Korean religion map is about. What is in it is the rest of the Jeungsanist and Donghak tail, the Unification Church (which the census does not name), Islam, and the small foreign-resident communities. Per source, per spec §3.11."
+    },
+    {
+      "id": "other.gy",
+      "label": "Other religion (Guyana)",
+      "kind": "branch",
+      "note": "The Bureau of Statistics' `Other` — 6,324 people, 0.85%. Unusually SMALL for a residual, because the thirteen categories above it are unusually generous: Hindus, Muslims, Rastafarians and Bahá'ís all have cells of their own, so this one is not carrying any of them. What it does carry is the Chinese community's Buddhists and the tail of small bodies. **What it does not carry, and should, is Amerindian traditional religion** — the 2012 form offers no box for it, so the nine Amerindian nations of Regions 1, 7, 8 and 9 answered one of the Christian categories instead. That is Ghana's exclusive-category undercount (sources.md §11b) in South America, and it is why Guyana's interior draws almost entirely Catholic and Anglican. Not corrected, because correcting it would mean inventing a magnitude (§14.4). Per source, per spec §3.11."
+    },
+    {
+      "id": "other.et",
+      "label": "Other religion (Ethiopia)",
+      "kind": "branch",
+      "note": "The 2007 census's `Other` — 470,682 people, 0.64%. The residual of a six-cell question, so it is doing more work than its size suggests: with only Orthodox, Protestant, Catholic, Islam and Traditional above it, this one cell holds Ethiopia's **Beta Israel** remnant, the Jehovah's Witnesses, the Bahá'ís, the Latter-day Saints and the small Hindu and Buddhist communities of Addis Ababa — none of them separable at any geography, because the form has one box for all of it. Unlike Kenya's and Guyana's residuals, which are small because the lists above them are generous, this one is small despite a short list, which is the more interesting fact: it says the five named categories really do cover Ethiopia. Per source, per spec §3.11."
+    },
+    {
+      "id": "other.pk",
+      "label": "Other religion (Pakistan)",
+      "kind": "branch",
+      "note": "PBS's `Others` — 43,253 people, 0.021%, and **the smallest residual on this map by an order of magnitude**, both absolutely against the country's size and as a share. That is not because the 2017 form was generous: it offers six cells and no `not stated` at all. It is what a residual looks like when 96.5% of a country answers the first box. Inside it are Pakistan's Sikhs, Parsis, Bahá'ís, Buddhists, Kalasha and Jews — the Sikhs and Parsis being the notable loss, since both are historic Pakistani communities with real geographies (Nankana Sahib, Peshawar; Karachi) that this cell cannot show. **The 2023 census fixed exactly that** and gives Sikh and Parsi cells of their own, so this residual is a fact about the 2017 form rather than about Pakistan; see sources/pk.md §6. Per source, per spec §3.11."
+    },
+    {
+      "id": "other.bd",
+      "label": "Other religion (Bangladesh)",
+      "kind": "branch",
+      "note": "BBS's `Other religion` — 202,167 people, 0.14%, the residual of a five-cell question and the smallest share of any residual on this map bar Pakistan's. **Its geography is the interesting thing and it is not evenly spread at all.** Nationally 0.14%, but it reaches **15.3% in Ruma upazila**, 7.8% in Thanchi and 5.1% in Rowangchhari — all in the Chittagong Hill Tracts, all among the least Muslim units in the country, and all sitting beside the Christian and Buddhist peaks rather than instead of them. A five-cell question cannot express what that is, and the near-certain answer is the **indigenous religion of the Hill Tracts peoples** — the Mru, Khumi, Khyang, Bawm and Pankhua traditions, which are neither of the two Buddhisms nor Christianity and have no box on the form. This is the same pattern §9u found in Bore woreda, where Ethiopia's `Other` spikes to 21.8% and is almost certainly Waaqeffanna: **a residual with a sharp geography is a missing category, not a mixture.** Elsewhere the cell holds Bangladesh's Bahá'ís, its small Sikh and Jain communities, and the Santal and Oraon traditional practice of the northwest — Patnitala in Rajshahi at 3.9% is that one showing through. None of it is separable at any geography. Per source, per spec §3.11."
+    },
+    {
+      "id": "other.pt",
+      "label": "Other non-Christian religion (Portugal)",
+      "kind": "branch",
+      "note": "INE's `Outra não cristã` — 24,366 people, 0.28%. The residual of the NON-CHRISTIAN half of an eleven-cell question, which is a narrower job than most residuals here have: Buddhists, Hindus, Jews and Muslims each have a cell, so this one is not carrying any of them. **And its geography is sharp enough to name what is in it.** Nationally 0.28%, but 2.99% in Odemira and 3.84% in the freguesia of São Teotónio — the same Alentejo coastal strip where the Hindu share reaches 17.1% and the Buddhist 9.3%, and nowhere else in the country comes close. That is the intensive berry-and-greenhouse belt and its South Asian and Southeast Asian workforce, so the near-certain content is **Sikhism**, which has a real Portuguese community (Lisbon and the Odemira farms) and no box on the form — with Bahá'ís and the Chinese community's folk practice behind it. §9u's Bore woreda and §9r's Chittagong Hill Tracts again: **a residual with a sharp geography is a missing category, not a mixture.** Not mapped to Sikhism despite that, because the cell is genuinely mixed and INE publishes no composition (§14.4). Per source, per spec §3.11."
+    },
+    {
+      "id": "other.xk",
+      "label": "Other religion (Kosovo)",
+      "kind": "branch",
+      "note": "ASK's `Others` — 7,175 people, 0.45%, the residual of a four-religion question. With Islam, Orthodoxy and Catholicism named and nothing else, this cell carries **the Kosovo Protestant Evangelical Church** — the country's fourth legally recognised community, and the only substantial body with no box of its own — together with the Bahá'ís and the small Jewish community of Prizren. Its geography is unremarkable (Prishtinë 1.14%, Suharekë 1.07%), which by §9r's rule is itself the finding: a residual spread evenly is a mixture rather than a missing category, unlike Bangladesh's and Ethiopia's. Per source, per spec §3.11."
+    },
+    {
+      "id": "other.ge",
+      "label": "Other religion (Georgia)",
+      "kind": "branch",
+      "note": "Geostat's `Other` — 1,429 people, 0.04%, **the smallest residual on this map in both absolute and relative terms**, and it is small because the list above it is unusually generous for a twelve-cell form: Orthodox, Muslim, Armenian Apostolic, Catholic, Jehovah's Witnesses, Yazidi, Protestant and Jewish all have cells of their own. What is left is Georgia's Bahá'ís, its Hare Krishna community, and the tail. One of the eleven regions has it withheld as '0-10' — Geostat's disclosure control, bounded by its own codelist, so the shortfall is at most ten people. Per source, per spec §3.11."
+    },
+    {
+      "id": "other.es",
+      "label": "Believer of another religion (Spain)",
+      "kind": "branch",
+      "note": "CIS's `Creyente de otra religión` — one cell for every religion that is not Catholicism, offered to Spanish citizens in every monthly barómetro, and never followed by a question asking which. **The widest residual on this map after Vietnam's, and the only one that is a residual of a single named religion rather than of a list.** 3.2% of Spanish citizens, ~1.36 million people. It does not arrive here whole: sources/es.py first takes UCIDE's province-level count of Spanish-citizen Muslims out of it, because leaving Ceuta and Melilla — majority Muslim and majority Spanish-citizen — drawn as an unnamed grey would be a false statement about the two most Muslim places in Spain rather than an honest silence. What remains is Spain's own evangelical Protestants, the Orthodox who have naturalised, roughly 110,000 Jehovah's Witnesses, ~45,000 Jews and a Buddhist tail — and none of it is separable, because the question that would separate it is not asked. Its geography is flat once the Muslim share is out, which by §9r's rule is the finding: this part of it is a mixture, not a missing category. Per source, per spec §3.11."
+    },
+    {
+      "id": "other.gr",
+      "label": "Other religion (Greece)",
+      "kind": "branch",
+      "note": "Two ESS answers together — `Eastern religions` and `Other Non-Christian religions` — which is 0.2% of Greek citizens and a few dozen respondents across three pooled rounds. The tree has no node for 'some Eastern religion, unspecified' and choosing one would invent a fact, so both sit here, as ru2012.py and hr2021.py do for the same shape. **Its content is largely knowable even though it is not separable**: Greece's Bahá'ís, its small Hindu and Sikh communities from the South Asian labour migration to Attica, and the Hellenic-polytheist revival, which is legally recognised and is the one of the three that is specific to this country. Per source, per spec §3.11."
+    },
+    {
+      "id": "other.ba",
+      "label": "Other religion (Bosnia and Herzegovina)",
+      "kind": "branch",
+      "note": "BHAS's `Ostali` — 40,655 people, 1.15%, the residual of a question that names only Islam, Catholicism and Orthodoxy. That is a narrow list for a European census, so this cell is doing more work than most residuals here: it holds **the Jewish community of Sarajevo**, which is Sephardic and dates from the 1560s and whose surviving few hundred are among the oldest continuously present communities in the Balkans; the Protestant and evangelical bodies, the Adventists and the Jehovah's Witnesses; and everyone who wrote in something the three boxes could not take. **Its geography is sharp, and by §9r's rule that means a missing category rather than a mixture — but this one does not resolve.** Velika Kladuša is **7.42%** `Ostali`, 2,998 people and six times the national rate, with Tuzla second at 3.51%; no other unit above 2,000 people passes 3.3%. Velika Kladuša is a 96%-Muslim municipality in the Cazin Krajina, so the peak is not a Christian minority, and BHAS publishes no composition of the cell at any geography. **Named here as an open question rather than guessed at (§14.4)**: something specific is in it and this source cannot say what. Per source, per spec §3.11."
+    },
+    {
+      "id": "other.me",
+      "label": "Other religion (Montenegro)",
+      "kind": "branch",
+      "note": "MONSTAT's `Ostale vjere` — **310 people, 0.05%, the smallest per-source residual on this map** and smaller in relative terms than Georgia's, which held the record. It is small because the 2023 form is generous for a country of 620,000: Orthodoxy, Catholicism, Islam, Protestantism, Jehovah's Witnesses, other Christian, Buddhism, atheist and agnostic all have cells of their own, so a Montenegrin has to be some distance from all of those to land here. What is in it is the Jewish community — recognised by the state in 2012 and numbering a few hundred — the Bahá'ís, and the tail. **Read it against the suppression rather than on its own**: `Ostale vjere` is withheld as `z` in 17 of the 23 municipalities, so the 310 drawn is a floor and the true figure is unknowable from this table. A residual this small in a country with this much disclosure control is measuring the control as much as the tail. Per source, per spec §3.11."
+    },
+    {
+      "id": "other.mw",
+      "label": "Other religion (Malawi)",
+      "kind": "branch",
+      "note": "NSO's `Other Denomination` — 992,304 people, 5.65%, and **the only residual on this map whose contents are partly known and still cannot be drawn apart.** Table E5 gives it as one column at district; Table 3.4, on page 19 of the same report, splits the identical national figure into **Buddhism 5,506, Hinduism 3,211 and Other non-Christian 983,587**. So 8,717 Buddhists and Hindus are inside this node and there is no geography anywhere in the report that would let them out of it — §3.9's category/geography trade, made across two tables of one publication rather than inside one. The remaining 983,587 is the third-largest residual here in relative terms, and it is large because the question is a DENOMINATION question: the ten cells are eight Christian groupings, Islam and No Religion, so a Malawian Bahá'í, Rastafarian, Sikh or Jew has nowhere else to go, and neither does anyone whose answer the coder could not place. Per source, per spec §3.11."
+    },
+    {
+      "id": "other.mu",
+      "label": "Other religion (Mauritius)",
+      "kind": "branch",
+      "note": "Statistics Mauritius's `Other & Not stated` — 6,931 people, 0.56%, and **it is the only residual on this map that knowingly mixes an answer with a non-answer.** Every other source here keeps `not stated` in a cell of its own and this project takes it off the tree (§3.5); Mauritius pools the two and publishes no split at any geography, so the choice is between drawing an unknown number of non-responders as a religion or deleting an unknown number of real adherents. It is drawn, and this note is the marking §3.5 asks for: **read 6,931 as a ceiling on Mauritius's other religions, not a count of them.** What is genuinely inside it is small and knowable in kind if not in number: the Bahá'ís, who have been in Mauritius since the 1950s, the few hundred Sikhs, and the island's tiny Jewish community — the Beau Bassin detainees of 1940-45 were interned here and most left after the war. Per source, per spec §3.11."
+    },
+    {
+      "id": "other.ch",
+      "label": "Other church or religious community (Switzerland)",
+      "kind": "branch",
+      "note": "BFS's `Übrige Kirchen und Religionsgemeinschaften` — 14,226 people, 0.19%. **Small because the list above it is the longest any European census on this map offers**: seven Protestant cells, two Catholic, Orthodox, other Christian, Jewish, Islamic, Buddhist and Hindu all have boxes of their own, so a Swiss respondent has to be outside eighteen named answers to land here. What is in it is the Sikh gurdwaras of the Zurich and Geneva regions, the Bahá'ís — whose European Continental House of Worship stands at Langenhain rather than here, but whose Swiss community is old — the Yazidis, and the small esoteric and new religious movements Switzerland has an unusual number of. **Read it as 2000's residual carrying a 2024 magnitude**, per `ch_rescale.py`: the group it sits in has grown, and which parts of it grew is not knowable from this source. Per source, per spec §3.11."
+    },
+    {
+      "id": "other.jm",
+      "label": "Other religion (Jamaica)",
+      "kind": "branch",
+      "note": "STATIN's `Other religion` — **169,014 people, 6.30%**, and **the largest residual on this map relative to the length of the list above it**. Seventeen named bodies get a cell, including four Church of God bodies separately, and one in sixteen Jamaicans still lands outside all of them. That is a fact about how many small churches Jamaica has rather than about how coarse the question is.\n\n**What is NOT in it, and this is the trap the country turns on.** It does not hold Jamaica's Bahá'ís, Hindus, Muslims or Jews: STATIN excluded those four religions from the parish tables altogether — 4,124 people — so they are absent from the drawn universe rather than pooled here (`sources/jm.md` §3). A reader who assumes a residual catches everything the list misses would be wrong about exactly those four.\n\n**What is in it** is the long tail of Jamaican Christianity — the independent and storefront churches, the Church of God bodies too small for their own cell, the Disciples of Christ, the Salvation Army — together with the Kumina societies, whose Kongo-derived practice has no box anywhere on the form.\n\n**AND ITS GEOGRAPHY IS SHARP, WHICH BY §9r's RULE MAKES IT A MISSING CATEGORY RATHER THAN A MIXTURE.** 6.31% nationally, but **2.92% in Kingston and 14.18% in Westmoreland** — a fivefold spread, with the peak at the western end of the island and the trough in the capital. That is the opposite of what a genuine grab-bag looks like and it says something specific is inside. STATIN publishes no composition of the cell, so **what** is not determinable from this source, and it is left as an open question rather than guessed at (§14.4) — the same shape as Bosnia's Velika Kladuša peak in `other.ba`, found the same day. Per source, per spec §3.11."
+    },
+    {
+      "id": "other.li",
+      "label": "Other religious community (Liechtenstein)",
+      "kind": "branch",
+      "note": "The Amt für Statistik's `Other religious communities` — **128 people, 0.34%, and the smallest residual on this map in absolute terms by two orders of magnitude.** In a country of 37,622 that is not a rounding cell but a countable group of individuals, and the census publishes it down to single people in a commune. **What matters about it is what the form does NOT ask.** There is no Jewish cell anywhere in Liechtenstein's religion question, so the country's Jewish residents are in here — which is why `coverage.py` leaves Liechtenstein unlit for Judaism rather than lit-with-no-dots: the question was not put (§6.12). The Bahá'ís, the Hindu and Sikh residents of the industrial communes, and the small new religious movements are here too. A residual this small in a country this small is a list of people rather than a category, and nothing separates them. Per source, per spec §3.11."
+    },
+    {
+      "id": "other.vc",
+      "label": "Other religion (Saint Vincent)",
+      "kind": "branch",
+      "note": "Two cells together — the SVG Statistical Office's `Other religion` (4,672 people, 4.28%) and its `Traditional` (74, 0.07%). Seventeen bodies are named above them, including Presbyterian at 294 people and Salvation Army at 287, so this is the tail of an unusually generous list rather than a coarse bucket.\n\n**`Traditional` is folded in here, and what it is NOT was established rather than assumed.** The obvious reading is the Kalinago (Carib) population's practice — Saint Vincent has the largest surviving indigenous community in the eastern Caribbean — and the data rules it out. The same sheet carries ethnicity, so §12's Philippines co-location technique applies directly: Traditional's share correlates with the Indigenous share at **r = -0.03** across the 219 populated enumeration districts, and **every one of the eight most-indigenous districts has zero Traditional**, including the three Sandy Bay districts at 79-86% Indigenous. Its own largest cells sit in Georgetown, the Northern Grenadines and Kingstown, which are 75-83% Black and 0-1% Indigenous.\n\nThe plausible remaining readings are African-derived practice and the **Spiritual Baptist / 'Converted'** tradition for which Saint Vincent is the home — criminalised here from 1912 to 1965 — but the form's separate `Baptist` cell may already absorb the Shakers, and 74 people across 25 districts carries no signal either way. **`afrodiasporic` is the node that would be wanted if a source ever resolved it**, beside Jamaica's Revival Zion; recorded per §2.4 so the fix is a lookup. Not asserted now (§14.4). Per source, per spec §3.11."
+    },
+    {
+      "id": "other.fr",
+      "label": "Other religion (France)",
+      "kind": "branch",
+      "note": "Two ESS answers together — `Eastern religions` and `Other Non-Christian religions` — 0.55% of French citizens, and **the residual on this map that is most clearly hiding a specific large group rather than a tail.** France has the largest Buddhist population in Europe: the Vietnamese, Cambodian and Lao communities who arrived as refugees after 1975, their pagodas in Île-de-France and around Bordeaux, and a sizeable French-convert Zen and Tibetan following. Pew puts French Buddhists at 0.71% of the country and this map draws 0.13%, almost all of it from the foreign half — **because a Buddhist who holds a French passport has nowhere to go on the ESS form.** The tree has no node for 'some Eastern religion, unspecified' and choosing one would invent a fact (§14.4), so both answers sit here, as gr2024.py, ru2012.py and hr2021.py do for the same shape.\n\n**What else is in it is knowable and also not separable**: France's Sikhs, concentrated in Bobigny and the Seine-Saint-Denis; its Hindus, largely Tamil from Sri Lanka and the former comptoirs, whose Ganesha temple in La Chapelle draws the largest Hindu procession in Europe; the Bahá'ís; and the neo-druid and Wiccan revival. **The cell is a limitation of the instrument and not of the country**, which is the opposite of Bosnia's and worth distinguishing: a census with three boxes has decided what it will not see, whereas ESS offers eight denominations to a sample of two thousand and simply cannot resolve what is under one percent.\n\n**AND IT HOLDS A SECOND, UNRELATED THING IN ONE PLACE.** France's five overseas régions are drawn from Pew rather than from ESS (§9ag), and Pew's `Other religions` lands here too — which in **Guyane is 9.2%, about 26,700 people, by a distance the largest single thing this residual holds anywhere in France.** It is not a tail: it is the traditional practice of the Businenge (Maroon) communities of the Maroni, descended from people who escaped the Surinamese plantations in the seventeenth and eighteenth centuries, and of the Kalina, Wayana, Teko, Wayampi and Palikur. `afrodiasporic` and `indigenous` are the two nodes that would be wanted and Pew publishes no split between them, so the proportions would have to be guessed and the guess would be the only fact that mattered (§14.4). **Recorded here rather than resolved**, per §2.4, so that a source which ever separates them is a lookup and not an excavation. Per source, per spec §3.11."
+    },
+    {
+      "id": "other.it",
+      "label": "Other religion (Italy)",
+      "kind": "branch",
+      "note": "Two ESS answers together — `Eastern religions` and `Other Non-Christian religions` — 0.44% of Italian citizens across the pooled rounds, and **the smallest residual on the map that is hiding the clearest single thing.** Italy has the largest Soka Gakkai membership in Europe: the Istituto Buddista Italiano Soka Gakkai signs a state *intesa*, takes 91,006 otto per mille choices, and claims roughly 90,000 members, which is on its own larger than everything this node draws. Beside it sit the Unione Buddhista Italiana's Theravada and Tibetan sanghas, the Unione Induista Italiana, and the Bahá'í community — **all four of which the Italian state recognises by name and funds by name, while the only survey that asks Italians their religion offers them one box marked `Eastern religions`.** The tree has no node for 'some Eastern religion, unspecified' and choosing one would invent a fact (§14.4), so both answers sit here, as gr2024.py, fr2024.py, ru2012.py and hr2021.py do for the same shape.\n\n**It is the instrument's limitation and not the country's**, and Italy makes that unusually easy to prove: the confessions in this cell are individually enumerated in the 8x1000 returns, so a reader can see the categories the state counts and the single box the survey offers, side by side, in the same country. What that return cannot do is supply a magnitude — it counts spending votes, not adherents, and overstates the Waldensians twentyfold while understating the Orthodox by forty (sources.md §11l-ii). So the names are knowable, the numbers are not, and the two facts do not meet. Per source, per spec §3.11."
+    },
+    {
+      "id": "other.bj",
+      "label": "Other religion (Benin)",
+      "kind": "branch",
+      "note": "INStaD's `Autres religions` — 259,446 people, 2.59%, and it is a genuine tail rather than a hidden large group, because RGPH-4 has already given its own cells to the two things that would otherwise be buried in it: `Vodoun` and `Chrétien céleste` are counted by name. What is left is small and mixed — the Bahá'ís, who have been in Benin since the 1950s and are one of the country's recognised confessions; the Eckankar following, unusually visible in Cotonou; a Hindu and a Buddhist presence measured in thousands; and the smaller prophetic and syncretic movements that neither `Autres chrétiens` nor `Chrétien céleste` claims. **Its geography says it is not noise, and also not one thing**: it peaks at 7.5% in Houéyogbé, 6.9% in Djidja and 6.8% in Ouèssè, and falls to 0.0% in Karimama — a southern, Fon-and-Adja distribution that tracks neither the Christian nor the Muslim pattern. Some of what makes it southern is very likely the Orisha and Egungun societies that a respondent might not file under `Vodoun`, and the census cannot say. Per source, per spec §3.11."
+    },
+    {
+      "id": "other.zw",
+      "label": "Other religion (Zimbabwe)",
+      "kind": "branch",
+      "note": "ZIMSTAT's `Other` — 124,017 people, 0.82%, and an unusually SMALL residual for a census with only eleven boxes, because the box that would normally swallow everything is `Apostolic Sect` and it is counted by name. Zimbabwe already gives cells to Islam, Judaism and Hinduism at 0.58%, 0.05% and 0.02%, so the tail this holds is genuinely the tail: the Bahá'ís, the Rastafari of Harare and Bulawayo, the small Greek and Armenian Orthodox communities of the old settler cities, and the Buddhist and Sikh presence that arrived with Indian and Chinese migration. **Its geography is Matabeleland**, at 2.6% in the South and 1.9% in the North against 0.3% in Mashonaland Central — the same halves of the country that hold the mission churches and the highest `None`. Per source, per spec §3.11."
+    },
+    {
+      "id": "other.cf",
+      "label": "Other religion (Central African Republic)",
+      "kind": "branch",
+      "note": "ICASEES's `Autre réligion` — 171,441 people, 4.47%, and **the residual on this map that most clearly has the geography of a category the form does not offer.** RGPH03 asks five things — Catholique, Protestante, Musulmane, Autre réligion, Sans réligion — and **there is no traditional or animist box at all**, where Ghana, Kenya, Ethiopia, Malawi and Benin all have one. **Where this cell peaks says what is in it.** 23.7% in Topia, 21.0% in Moboma and Baleloko, 20.2% in Carnot, 19.5% in Lésse — every one of them in Lobaye or Mambéré-Kadéï, the south-western forest, which is the Aka homeland and the Gbaya and Ngbaka country. A fivefold concentration against the national 4.47%, in exactly the part of the country where traditional practice is strongest. **`Sans réligion` peaks in the same communes**, which is what a census with no traditional box does to two of its cells at once. **And it is still not mapped to `indigenous.african`**, for the reason taxonomy/cf2003.py argues at length: the cell genuinely also holds CAR's Bahá'ís, Jehovah's Witnesses, Kimbanguists and the Orthodox merchants of Bangui, so sending all of it to the tradition would miscount them — and at the same time the tradition's real size is larger than this cell, because whoever answered `Catholique` or `Protestante` as well is invisible. Mapping it across would be an overclaim and an undercount simultaneously. CAR's traditional religion is not drawn, and saying so is the only accurate thing available. Per source, per spec §3.11."
+    },
+    {
+      "id": "other.my",
+      "label": "Other religion (Malaysia)",
+      "kind": "branch",
+      "note": "DOSM's `Lain-lain` — 285,152 people, 0.88%, and **the most crowded residual on this map**, because the footnote printed on every sheet of Table 7 says exactly what is in it: *\"Others include Sikhism, Taoism, Confucianism, Bahai, Tribal/ folk/ other traditional Chinese religion, Animisme and Others.\"* Six named traditions in one cell. **Its geography is sharp, and unusually it resolves into TWO different missing categories rather than one.** §9r's Chittagong rule says a residual with a sharp geography is a missing category; Malaysia's has two peaks that are nothing like each other. **The Chinese one.** Timur Laut — George Town, the most Chinese district in the country and 52.5% Buddhist — is 3.65%, with Barat Daya 2.22% and Seberang Perai Selatan 1.99% behind it. That is **Chinese folk religion, Taoism and Confucianism**, and it is the sharpest loss in this cell: the tree HAS a `chinesefolk` node, Malaysia's Chinese population is roughly a fifth of the country, and DOSM's form gives temple practice no box, so a tradition this map draws in China, Vietnam and Singapore cannot be brought out here at all. **And the indigenous one.** Song, Sarawak reaches **10.14%**, and behind it comes a belt of peninsular interior districts — Cameron Highlands 4.36%, Batang Padang 2.73%, Kuala Langat 2.47%, Gua Musang 2.38%, Raub 2.35%, Lipis 2.24%. Those are the **Orang Asli** districts and the interior Iban country, and the near-certain content is indigenous religion, which the footnote calls `Animisme`. **What makes the reading solid is where the cell is EMPTY.** Sabah has the largest indigenous population in Malaysia and its `Lain-lain` is essentially zero — Nabawan and Telupid record 0 people, Tambunan and Kalabakan 1 each — because Sabah's indigenous communities had overwhelmingly become Christian or Muslim by 2020. A residual that is 10% in interior Sarawak and 0.00% in interior Sabah is not measuring remoteness; it is measuring which traditions survived, which is a real finding rather than an artefact. Not split, because DOSM publishes no composition and the two contents overlap in no district (§14.4). Per source, per spec §3.11."
+    },
+    {
+      "id": "other.bz",
+      "label": "Other religion (Belize)",
+      "kind": "branch",
+      "note": "SIB's `Other` — 25,117 people, **6.32%**, and a wide residual because the list above it is short: nine Christian bodies and nothing else at all. No cell for Hinduism, none for Islam, none for any indigenous or Afro-Caribbean tradition, in a country that has all four. **Its geography is sharp, which by §9r's rule makes it a missing category rather than a mixture** — 11.9% in Orange Walk against 2.7% in Stann Creek, a 4.4x spread — **but unlike Bosnia's it does not resolve to one thing, and it is not guessed at.** The peak is the two northern districts, which are also the Mennonite and Mestizo north; the second is Toledo at 8.4%, which is the Maya south and where indigenous practice would be if it were anywhere. What is known to exist in Belize and has no box on this form: a Hindu and Muslim population concentrated in Belize City and the north, a Bahá'í community, Rastafari, Maya traditional practice in Toledo, and the Garifuna *dugu* of the Stann Creek coast. **The Garifuna case is the one that shows why nothing is assigned.** Stann Creek is the Garifuna district and it has the LOWEST `Other` in the country, 2.7% — which is consistent with the well-documented pattern of Garifuna practising dugu alongside Catholicism and answering a census with the church. So a tradition that certainly exists is probably not in this cell at all, and is instead invisible inside `christianity.catholic`. Naming that possibility is the honest thing this node can do; splitting on it would be §14.4. Per source, per spec §3.11."
+    },
+    {
+      "id": "other.tt",
+      "label": "Other religion (Trinidad and Tobago)",
+      "kind": "branch",
+      "note": "CSO's `Other` — 96,166 people, **7.27%**, which is wide for a question that already names fourteen bodies including three the rest of this map has never counted. **Its geography is sharp, and by §9r's rule that means a missing category rather than a mixture** — 14.4% in Point Fortin, 9.5% in Chaguanas, 9.0% in Siparia, against 4.5% in Port of Spain. It does not resolve onto one population: Point Fortin is Afro-Trinidadian and Chaguanas is Indo-Trinidadian, so whatever is in this cell has at least two different contents. **What is known to exist in Trinidad and has no box on this form**: the Baptist and evangelical bodies CSO's `Baptist-Other` does not reach, the Lutheran and Salvation Army congregations, Bahá'ís, the Sikh and Buddhist communities that came with later Indian and Chinese migration, and the Chinese temple practice of Port of Spain and San Fernando. **The Indo-Trinidadian peaks may also be sectarian Hindu answers** — the Kabir Panth, the Arya Samaj and the Sai movement all have a Trinidadian presence and none of them has a cell, so a respondent who names one may have been coded here rather than to `Hinduism`. That is a guess about a coding practice CSO does not publish, and it is written down as a guess. Per source, per spec §3.11."
+    },
+    {
+      "id": "other.kz",
+      "label": "Other religion (Kazakhstan)",
+      "kind": "branch",
+      "note": "BNS's `Другое` — **23,247 people, 0.12%**, and the smallest per-country residual on this map. The census offers Islam, Christianity (split three ways), Judaism, Buddhism, `other`, `refused to state` and `non-believer`, so this cell is what is left of a very full form: the Baha'i, Hare Krishna and new religious movements that Kazakhstan's registration law names separately, plus whatever else was written in. **Unlike every other `other.*` node here, these dots are MODELLED rather than counted** — Kazakhstan publishes religion nationally only, and its geography here is each region's ethnic composition applied to the national share (sources/kz.py). At 0.12% of a modelled country it is the faintest claim on the map, and it is drawn because dropping it would silently move 23,247 people into nothing rather than marking them (§3.5)."
+    },
+    {
+      "id": "other.kh",
+      "label": "Other religion (Cambodia)",
+      "kind": "branch",
+      "note": "NIS's `Other` — 82,332 people, 0.53%, and **the sharpest residual geography on this map**: Ratanak Kiri is 23.2% and Mondul Kiri 21.2%, the two of them holding 70,000 of the 82,332 between them, against **0.0% in fifteen of the twenty-five provinces**. By §9r's rule a residual that sharp is a missing category rather than a mixture, and unlike Belize's or Trinidad's it resolves onto essentially ONE thing. **NIS says what it is, in the paragraph above the table**: *\"The category of 'Others' mainly refers to the local religious system of the highland tribal groups and a few minority religious groups from other countries.\"* That is the animist traditions of the north-eastern highlands — the Bunong of Mondul Kiri, the Tampuan, Jarai, Kreung, Brao and Kavet of Ratanak Kiri — spirit forests, buffalo sacrifice and ancestor practice, and the largest surviving non-Abrahamic, non-Buddhist tradition in mainland Southeast Asia outside the Vietnamese highlands. **It is NOT filed on `indigenous`, and the reason is the other 15%.** The cell is not empty away from the highlands: Kampong Chhnang has 4,739 (0.9%) with no highland population at all, Phnom Penh 2,282 and Kandal 1,202. Whatever those are — Chinese temple practice, Bahá'ís, Cao Đài along the Vietnamese border — they are not Bunong animism, and NIS's own wording (*\"mainly… and a few…\"*) says the cell has at least two contents. Filing the whole of it as indigenous would assert the magnitude of a category the source does not publish, and splitting it would invent one (§14.4). **So the node that is wanted is an `indigenous` child for the Cambodian highland traditions, and this records that it is wanted** (§2.4) — the moment any source counts them separately this becomes a lookup rather than an investigation. Until then the map can show that a fifth of two provinces answers none of the three named religions, and cannot show what they answer instead. Per source, per spec §3.11."
+    },
+    {
+      "id": "other.sr",
+      "label": "Traditional religion and other (Suriname)",
+      "kind": "branch",
+      "note": "ABS's `Traditional Religion +Others` — 28,549 people, 5.79%, and **the only residual on this map whose label names a tradition and then pools a remainder into the same cell.** That shape is why it sits here rather than at `indigenous.african`, where Ethiopia's and Ghana's `Traditional` cells go: mapping it there would assert that all 28,549 practise a traditional religion, and the later census shows they do not.\n\n**Census 8 (2012) prints the equivalent district cell as `Andere godsdienst Jodendom Winti Jehova's Getuigen`** — Winti pooled with Judaism and the Jehovah's Witnesses — which is direct evidence from the same office that this cell mixes an Afro-Surinamese religion with two unrelated things.\n\n**What is certainly inside it.** *Winti*, the Afro-Surinamese religion of the Maroon and Creole populations — sibling to Vodou, Candomblé and Trinidad's Orisha, and the one this map would most want to name. It was **criminalised in Suriname until 1971** and is still widely practised alongside a church affiliation, so a single-answer census cell undercounts it twice over. Also the *indigenous* religion of the Kalina, Lokono, Trio and Wayana. And then the actual residual: Judaism — Paramaribo's Sephardic and Ashkenazi congregations are among the oldest in the Americas — the Bahá'ís, and the Jehovah's Witnesses.\n\n**Not split.** ABS publishes no composition of it at any geography, and the 2012 national denominational figures cannot be pushed down onto 62 ressorten without inventing their entire spatial structure — §14 rule 1, and the same refusal §11r made for Saudi Arabia. A Census 9 build would very likely be able to name Winti properly, and that is the thing to want here (§2.4). Per source, per spec §3.11."
+    },
+    {
+      "id": "other.mm",
+      "label": "Other religion (Myanmar)",
+      "kind": "branch",
+      "note": "DOP's `Other religion` — **82,825 people, 0.16% of the enumerated population**, and one of the smallest residuals on this map, because the 2014 census already gives boxes to Buddhist, Christian, Islam, Hindu, Animist and No religion. What is left is genuinely the tail.\n\n**Its geography is the minority states, by share rather than by count.** Kayah 1.20%, Chin 1.11%, Kayin 0.68% and Shan 0.46%, against 0.10% in Yangon and 0.11% in Ayeyawady — while in absolute terms the largest blocks are Shan (27,036), Bago (12,687) and Kayin (10,194). §9r's rule says a residual with a sharp geography is a missing category, and this one has two different peaks that do not resolve onto a single thing, so nothing is assigned.\n\n**What is known to exist in Myanmar and has no box on this form**: a Bahá'í community, the Sikh and Chinese temple populations that came with colonial-era migration and are concentrated in Yangon, Mandalay and the Bago plantation districts (where the census's Hindu count is also unusually high at 2.0%), and a very small Jewish remnant. **The upland peaks may instead be traditional practice that respondents or enumerators did not code to `Animist`** — Chin and Kayah are the two states with the highest share here AND high Christian shares, so a category boundary rather than a population is a real possibility. That is a guess about coding practice DOP does not publish, and it is written down as a guess. Per source, per spec §3.11."
+    },
+    {
+      "id": "other.bs",
+      "label": "Other religion (Bahamas)",
+      "kind": "branch",
+      "note": "**TWO CELLS, AND THEY ARE NOT THE SAME KIND OF THING.** Together 2,171 people, 0.55% of the country.\n\n**1. BNSI's `Other Non-Christian Religion` — 1,799 people, 0.45%, and a NARROW residual.** The 2022 form already gives boxes to Bahá'í, Hindu, Muslim, Jewish and Rastafari, so this is the tail after five non-Christian answers rather than a bucket standing in for them. **Its geography is flat, which by §9r's rule makes it a mixture rather than a missing category**: 0.72% on Grand Bahama and Bimini, 0.66% on Andros, 0.45% on New Providence, 0.35% on Eleuthera, 0.23% on Abaco — a threefold spread across the only six islands that report it at all, with no peak to point at. Nothing is assigned to it.\n\n**What is known to exist in the Bahamas and has no box on this form**: Obeah, the Bahamian folk practice, which is a set of practices carried alongside a church affiliation rather than an answer to `what is your religion`; Haitian Vodou, which matters here more than the 0.45% suggests, because the Bahamas has the largest Haitian-descended population of any country in the region outside Hispaniola and this cell plainly does not hold it — the same single-box undercount `tt2011.py` records for Trinidadian Orisha and `sr` for Winti; the Buddhist and Chinese temple practice of the Nassau Chinese community; and a small Sikh presence.\n\n**2. The per-island suppression residual, `Other Religion` — 372 people, 0.093%, and it is a disclosure artefact rather than a religion.** Only New Providence prints all 24 named bodies; the other seventeen islands fold their smallest answers into one cell, with a starred footnote under each table naming exactly which. So this half's contents differ island by island and are mostly CHRISTIAN — Roman Catholics and Pentecostals on Ragged Island, Greek Orthodox and Jews on Long Island, Hindus and Muslims on Cat Island. It is pooled here because there is no node meaning `some religion, and which one depends where you are standing`, and because the alternative — dropping it — would delete 30.4% of Ragged Island and 11.8% of Mayaguana from the map rather than misfiling them.\n\n**On those same two islands the footnote says `None` was folded in**, so up to 41 non-religious Bahamians are drawn here as a religion, and Mayaguana and Ragged Island show no irreligion at all. Recorded, not corrected (§14.4); `sources/bs.py` prints every island's residual and footnote on each run. Per source, per spec §3.11."
+    },
+    {
+      "id": "other.ky",
+      "label": "Other religion (Cayman Islands)",
+      "kind": "branch",
+      "note": "ESO's `Other` — 2,679 people, **3.89%**, and a NARROW residual: the 2021 form already names Hindu, Muslim, Jewish and Rastafari separately, so the non-Christian population of the territory is not pooled here.\n\n**Its geography is flat, which by §9r's rule makes it a mixture rather than a missing category** — 6.03% in East End, 4.19% in George Town, 3.62% in Bodden Town, 3.50% in West Bay, 3.36% on the Sister Islands, 2.26% in North Side. A twofold spread with no peak to point at, in a country where every OTHER category's geography tracks foreign birth sharply. Nothing is assigned to it.\n\n**What is known to exist in the Cayman Islands and has no box on this form**: the Bahá'í community, which has been established here since the 1960s; Buddhist practice among the Filipino, Chinese and other Asian workforce — over half the resident population was born abroad, and this is the one large migrant religion the form does not name; the Salvation Army and the Brethren assemblies, which are named cells in neighbouring Jamaica's census and not here; and the Church of Christ and smaller independent congregations. **Its highest share is East End**, the smallest and least expatriate district on Grand Cayman, which does not fit the migrant-religion reading and is not explained. Per source, per spec §3.11."
+    },
+    {
+      "id": "other.bb",
+      "label": "Other religion (Barbados)",
+      "kind": "branch",
+      "note": "BSS's `Other Non-Christian` — 622 people, **0.27%, the narrowest residual on this map**. That is not because Barbados is uniform but because the 2010 form is generous: it names Bahá'í, Hindu, Jewish, Muslim and Rastafari as separate answers, so the non-Christian field is almost entirely accounted for before this cell is reached. Fifteen Christian bodies are named too, and their leftovers go to `christianity.other` rather than here.\n\n**Six hundred people is too few to have a geography worth reading**, and none is claimed: the parish shares run 0.10% to 0.47% with the largest single cell at 275 people in St. Michael, which is where a fifth of Barbados lives. §9r's rule needs a peak to point at and there is not one.\n\n**What is known to exist in Barbados and has no box on this form**: Buddhist practice among the small Chinese and Guyanese-Chinese community, the Sikh presence that came with Indian migration alongside the counted Hindus and Muslims, and the Spiritual Baptist / Tie-head churches — though those last would more likely answer `Baptist` or `Other Christian`, which is where Trinidad's own Shouter Baptists would land if CSO did not give them a cell of their own (`tt2011.py`). Per source, per spec §3.11."
+    },
+    {
+      "id": "other.th",
+      "label": "Other religion (Thailand)",
+      "kind": "branch",
+      "note": "NSO's `อื่น ๆ` — 55,545 people, **0.08%, and the narrowest residual on this map after Barbados's** — from a form that names Buddhism, Islam, Christianity, Hinduism, Confucianism and Sikhism as separate answers and keeps `no religion` in a cell of its own beside this one.\n\n**What is most likely in it is the animist practice of the highland peoples, and unlike Cambodia's cell that gets no argument here** — because NSO says nothing about what the category contains. `other.kh` could be read as Bunong and Tampuan animism because NIS wrote the sentence explaining it; nothing equivalent exists in the Thai volumes, and §3.11's floor is what stops the guess from being made anyway. The difference is worth stating rather than smoothing over: two neighbouring censuses produce the same-shaped residual and only one of them can be read.\n\n**Its geography cannot be read either, and that is a property of this country's build rather than of the cell.** Thailand is a spec §3.10 allocation — only Buddhist and Muslim are published per province — so every province's share of this node is its own region's share, and the four regions run 0.04% to 0.13%. Nothing finer is measured, so nothing finer is claimed. Per source, per spec §3.11."
+    },
+    {
+      "id": "other.lc",
+      "label": "Other religion (Saint Lucia)",
+      "kind": "branch",
+      "note": "CSO's `Other` — 3,854 people, **2.24%**, and it is the last of question 1.5's 22 options rather than a residual the tabulator invented. The form already names Bahá'í, Buddhism, Hindu, Islam and Rastafari, so the non-Christian field is largely accounted for before this cell is reached; what it mostly holds is Christian bodies the twelve-name Christian list does not reach.\n\n**Its geography is flat, which by §9r's rule makes it a mixture rather than a missing category** — 2.85% in Gros Islet down to 1.15% in Canaries, a 2.5-fold spread across ten districts with no peak to point at, in a country where every large category has a sharp north-south gradient. Nothing is assigned to it.\n\n**What is known to exist in Saint Lucia and has no box on this form**: the Spiritual Baptist / Converted churches, which neighbouring Saint Vincent (`vc2012.py`) and Trinidad (`tt2011.py`) both count separately and which are present here — though many would answer `Baptist`, a named option, so this cell cannot be read as them; the Church of God bodies, which Barbados, Jamaica, the Bahamas, Cayman and Grenada all name and Saint Lucia does not; the Baptist-adjacent independent congregations; and Kali worship and other Indo-Caribbean practice alongside the counted Hindus. Per source, per spec §3.11."
+    },
+    {
+      "id": "other.gd",
+      "label": "Other religion (Grenada)",
+      "kind": "branch",
+      "note": "CSO's `OTHER (SPECIFY)` — 1,716 people, **1.58%**, and one of the narrowest residuals here relative to how much the form names: **25 answers**, including `SPIRITUAL BAPTIST`, `MENNONITE`, `LUTHERAN`, `MORAVIAN`, `PRESBYTERIAN`, `INDEPENDENT BAPTISTE`, `EVANGELICAL`, `CHURCH OF GOD`, `BUDDHIST`, `BAHAI`, `HINDU`, `MUSLIM` and `RASTAFARIAN` — so both the Christian and the non-Christian fields are unusually well covered before this cell.\n\n**It is written-in, and Grenada does not publish what people wrote.** `(SPECIFY)` is in the category's own name: the form asked, so the answers exist in the microdata and are simply not tabulated. That makes this the one residual on the map whose contents are known to a statistics office and not to anyone else, which is worth recording as a thing that could be asked for rather than guessed at.\n\n**Its geography has a peak and it is not read as one.** St. John 4.19% and St. Mark 4.01% against 0.48% in St. Andrew — an eightfold spread, and §9r's rule would make that a missing category rather than a mixture. But the two peaks are also the two parishes with the most `PRESBYTERIAN` (St. Mark 3.17%, seventeen times the national rate) and the most `SPIRITUAL BAPTIST` (St. Mark 4.77%), so whatever is being written in there is written in *beside* those and not instead of them, and nothing in the report says what it is. Per source, per spec §3.11."
+    },
+    {
+      "id": "other.ni",
+      "label": "Other religion (Nicaragua)",
+      "kind": "branch",
+      "note": "INIDE's `Otra` — 74,101 people, **1.63%**, against a question that names only seven things: Catholic, Evangelical, Moravian, Jehovah's Witness, Judaism, Islam and none. **That list is short in a specific direction — it names no Anglicans, no Baptists, no Adventists and no Latter-day Saints**, all four of which have a documented Nicaraguan presence, and it is the only census on this map that names the Moravians while naming none of the other Protestant bodies beside them.\n\n**Its geography is not merely sharp, it is one coastline, and by §9r's rule that makes it a missing category rather than a mixture.** Corn Island **44.05%**, Laguna de Perlas 21.44%, Bluefields 17.48%, Desembocadura de Río Grande 13.74%, Puerto Cabezas 10.19%, Kukra-Hill 8.46% — against 1.63% nationally and **0.02% in San José de Cusmapa and Ciudad Antigua**, a spread of more than two thousand to one. Every municipality above 8% is on the Caribbean, and Corn Island is the largest single `Otra` share of any unit in any country drawn here.\n\n**What is known to be there and has no box**: the Anglican church of the Mosquito Coast, which arrived with the British protectorate alongside the Moravians and is still the second historic church of Bluefields and the Corn Islands; the Jamaican Baptist mission that worked the same Creole coast from the 1840s, and for which Corn Island is the obvious candidate; Adventists, who are numerous on the coast; and the Rama and Garífuna communities of the southern lagoons. **The Anglican and Baptist reading is the strong one and it is still not acted on** — the cell is not split, because INIDE publishes no composition for it and §14.4 forbids inventing one. A residual that resolves this cleanly onto one region is worth saying out loud and is not worth guessing at.\n\nNote that this cell also has to hold everything the seven named boxes miss everywhere else in the country, where it runs at a few tenths of a percent — so it is a coastal category and a national dustbin at the same time. Per source, per spec §3.11."
     },
     {
       "id": "christianity.adventist.advent-christian",
@@ -3675,24 +4243,48 @@
         ]
       },
       {
+        "label": "Locally founded churches",
+        "ids": [
+          "christianity.maori",
+          "christianity.africaninstituted",
+          "christianity.filipinoindependent"
+        ]
+      },
+      {
         "label": "No single line",
         "ids": [
           "christianity.united",
           "christianity.nondenominational",
-          "christianity.maori",
           "christianity.messianic",
           "christianity.protestant",
+          "christianity.evangelical",
+          "christianity.sdabaptistapostolic",
           "christianity.other"
         ]
       }
     ],
     "judaism": [
       {
+        "label": "Non-rabbinic",
+        "ids": [
+          "judaism.karaite"
+        ]
+      },
+      {
         "label": "Traditional",
         "ids": [
           "judaism.orthodox",
           "judaism.chabad",
           "judaism.conservative"
+        ]
+      },
+      {
+        "label": "By observance",
+        "ids": [
+          "judaism.haredi",
+          "judaism.dati",
+          "judaism.masorti",
+          "judaism.hiloni"
         ]
       },
       {
@@ -3716,6 +4308,37 @@
           "buddhism.theravada",
           "buddhism.mahayana",
           "buddhism.vajrayana"
+        ]
+      },
+      {
+        "label": "Bửu Sơn Kỳ Hương lineage",
+        "ids": [
+          "buddhism.buuson",
+          "buddhism.tuan",
+          "buddhism.hoahao",
+          "buddhism.talon"
+        ]
+      },
+      {
+        "label": "Modern reform movements",
+        "ids": [
+          "buddhism.won",
+          "buddhism.tinhdo"
+        ]
+      }
+    ],
+    "islam": [
+      {
+        "label": "Branches",
+        "ids": [
+          "islam.sunni",
+          "islam.shia"
+        ]
+      },
+      {
+        "label": "Later movements",
+        "ids": [
+          "islam.ahmadiyya"
         ]
       }
     ]

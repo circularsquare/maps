@@ -51,12 +51,23 @@ problems = []
 
 
 def check_duplicate_keys(path: Path, dict_name: str):
-    """A Python dict literal silently keeps the last of a duplicated key. Read the text."""
+    """A Python dict literal silently keeps the last of a duplicated key. Read the text.
+
+    **The scan STOPS at the dict's closing brace.** It used to run to end of file, which
+    made every key in any later top-level dict look like a duplicate of one in this one —
+    a false positive that fires exactly when a source file grows a second lookup table.
+    `uk2021.py` gaining a `COLUMNS` alongside `MAP`, both legitimately keyed `No religion`,
+    is what surfaced it (2026-09-07); `br2010.py` had the same shape. These files close
+    their dicts with `}` in column 0, which is what bounds the body here.
+    """
     src = path.read_text(encoding="utf-8")
     start = src.find(f"{dict_name} = {{")
     if start < 0:
         return
     body = src[start:]
+    end = re.search(r"^\}", body, re.M)
+    if end:
+        body = body[:end.start()]
     keys = re.findall(r'^\s{4}"([^"]+)":', body, re.M)
     seen, dupes = set(), []
     for k in keys:

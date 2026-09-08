@@ -1,0 +1,21 @@
+# Thailand — which province column each of the 2010 census's nine region categories
+# belongs to.  Read by `allocate.py --hierarchy parent --parent-file taxonomy/th_parents.csv`
+# (spec §3.10).
+#
+# The province sheets publish only Buddhist and Muslim, so those two are IDENTITY ROWS —
+# a category that is its own parent, which allocate.py reads as "this coarse category IS
+# this fine column" and leaves unsplit.  The other seven share one parent, the residual
+# sources/th.py computes as population minus Buddhist minus Muslim.
+#
+# The residual is deliberately NOT named `อื่น ๆ`: that is one of the nine, and a parent
+# sharing a name with one of its own children would make the hierarchy circular.
+source_category,parent
+พุทธ,พุทธ
+อิสลาม,อิสลาม
+คริสต์,อื่น ๆ ไม่มีศาสนา และไม่ทราบ
+ฮินดู,อื่น ๆ ไม่มีศาสนา และไม่ทราบ
+ขงจื้อ,อื่น ๆ ไม่มีศาสนา และไม่ทราบ
+ซิกข์,อื่น ๆ ไม่มีศาสนา และไม่ทราบ
+อื่น ๆ,อื่น ๆ ไม่มีศาสนา และไม่ทราบ
+ไม่มีศาสนา,อื่น ๆ ไม่มีศาสนา และไม่ทราบ
+ไม่ทราบ,อื่น ๆ ไม่มีศาสนา และไม่ทราบ

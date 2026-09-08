@@ -60,7 +60,7 @@ plt.savefig('nystreets/subway.png', bbox_inches='tight', pad_inches=0,
 facecolor='white')
 print('plot saved!')
 
-#lines_gdf[['objectid', 'service_na', 'service', 'shape_stle']].to_csv('subway_lines_data.csv', index=False)
+#lines_gdf[['objectid', 'service_na', 'service', 'shape_stle']].to_csv('nystreets/subway_lines_data.csv', index=False)
 print('meow')
 
 

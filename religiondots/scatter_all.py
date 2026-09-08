@@ -1,6 +1,6 @@
 """Run every country's scatter at once, one process each.
 
-    python scatter_all.py                        # all 14 countries, both editions
+    python scatter_all.py                        # all 20 countries, both editions
     python scatter_all.py --countries us,in      # a subset
     python scatter_all.py --dot-values 1000      # the fine edition only
     python scatter_all.py --jobs 14
@@ -8,7 +8,7 @@
 A scatter is a whole process reading its own inputs and writing its own two files, so
 there is nothing to coordinate and no shared state to get wrong: this just runs
 scatter.py the same way COMMANDS.txt does, several at a time.  It exists because the set
-is 28 runs (fourteen countries at two dot values, §4.1b) and they were serial.
+is 40 runs (twenty countries at two dot values, §4.1b) and they were serial.
 
 LONGEST FIRST.  The runs are wildly uneven — India's fine edition is minutes and Estonia's
 coarse one is a second — so they are started in descending order of their last known cost.

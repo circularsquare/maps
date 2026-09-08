@@ -281,6 +281,21 @@ _ANNEXURE_REASON = (
 
 EXCLUDED.update({f"Sect: {s}": _ANNEXURE_REASON for s in _ANNEXURE_SECTS})
 
+# The sub-district COLUMN each allocated category was split out of -> the node that column
+# names (spec §7a-i-1). India has exactly one: the six census religions are published at the
+# sub-district and are already `measured`, and only `Other religions and persuasions` is
+# split from state structure.
+#
+# THIS IS THE ONE THAT LOOKS LIKE A LOSS AND IS NOT. Rolled up, 4.96M Sarna, 1.03M Gondi,
+# 506k Sari Dharma, 331k Donyi-Polo and the rest all become one colour — because ORGI
+# counted them as one cell. Their names come from the STATE table, and drawing them at the
+# sub-district while claiming they were counted there is the thing this control exists to
+# refuse. The named map is still the default; this is what is left when the reader asks
+# what was measured.
+COLUMNS = {
+    "Other religions and persuasions": "other.in",
+}
+
 
 def resolve(category):
     """religiondots branch for a Census of India category, or None if off the tree."""

@@ -60,6 +60,11 @@ LINES = {
 
 # The distance table's endpoints are the legal extent of the line, which is not
 # always where trains run to or what OSM calls the place. Overrides win.
+#
+# Moving an end also moves what the line's 영업거리 measures, and the yearbook
+# publishes no station-to-station distances to replace it with -- so a line whose
+# ends are overridden keeps OSM's own chainage instead of being rescaled to a
+# figure describing a different piece of track. See `scaled` in resolve().
 ENDS = {
     # 영동선 legally ends at a signal box; 강릉 is where the track and the
     # station data stop.
@@ -90,6 +95,190 @@ ENDS = {
     # line's largest single source of traffic -- dropping it cost a third of the
     # reconstruction.
     "경부고속선": ("서울", "부산"),
+    # 호남고속선 is deliberately NOT extended north to 용산, though that is where
+    # its passengers board and it was tried. Two reasons, the second decisive.
+    # `pick()` anchors the corridor search on the line's own track, so 용산 lands
+    # on the nearest 호남고속선 metal, which is at 오송: the chain came out with
+    # 용산 drawn 0.74 km from 오송 against a real 106, and a zero-length first
+    # segment. Forcing it would need `pick()` loosened, which is the one thing
+    # stopping 영동선 setting off down 중앙선.
+    #
+    # And it should not be forced, because those passengers are not on this line
+    # yet -- they ride 경부선 and 경부고속선 as far as 오송. Extending the chain
+    # would paint 호남고속선's load over 160 km of track its riders are not on.
+    # The line's extent is already right; only its level is wrong, so the fix
+    # belongs in the entry flow -- see ENTRY_SHARE.
+}
+
+
+# What sizes a line's entry flow, where its passengers join it from another line
+# and never touch a station of its own.
+#
+# 호남고속선 is the case. It runs 오송-광주송정 and nearly everyone on it boards
+# at 용산, 서울 or 광명, none of which is on it, so the reconstruction sees 4.2M
+# of a published 22.4M and the entry flow has nothing to size it -- the
+# smallness prior simply pushes it down. The published counts do size it:
+# 경부고속선 runs 177 trains a day into 오송 and 127 out the far side, and the 50
+# that vanish are exactly 호남고속선's own 오송-익산 count. So the entry is that
+# share of what the feeding line carries in.
+#
+# Trains rather than seats, so this is a prior and not a measurement -- a Honam
+# KTX-산천 seats 363 against a Gyeongbu KTX-1's 935. The independent check is
+# the published line totals: 호남고속선's 통과인원 is 23.6% of 경부고속선's,
+# against a 28.2% share of trains, so the two disagree by a fifth and not by a
+# factor. The fit had it at 12.4%.
+#
+#     line -> (the line it joins, the junction it joins at)
+ENTRY_SHARE = {
+    "호남고속선": ("경부고속선", "오송"),
+}
+
+
+# Where a line hands its traffic to another at a place the receiving line's
+# chain does not name.
+#
+# Junction conservation pairs lines by station name, so it only works where the
+# handover point is a stop on both chains. Where it is not, the traffic does not
+# go anywhere -- it stops existing. 수서고속선 ends at 평택지제, where the SRT
+# join 경부고속선, and 평택지제 is 2.93 km from 경부고속선's corridor against a
+# 0.30 km snap radius, so it never will be a stop on it. The line delivers
+# 47,006 passengers a day to that end and every one of them vanishes:
+# 경부고속선 reads 105,490 a day on 광명-천안아산 and *less*, 101,907, on
+# 천안아산-오송, when the SRT should have joined in between.
+#
+# The receiving stop is 천안아산 rather than 광명 because the SRT join south of
+# 광명: a step at 천안아산 puts them on 천안아산-오송 and not on 광명-천안아산,
+# which is right. It does leave them off the short stretch between the real
+# junction and 천안아산, which nothing published can fix -- 평택분기점 is not a
+# station and has no 승하차 row.
+#
+#     (line, its own end) -> (receiving line, the stop that takes the step)
+#
+# 호남선's start is the same fault. It legally begins at 대전조차장, a freight
+# yard with no station and no 승하차 row, so ENDS moves it to 서대전 -- which no
+# other chain names, leaving the traffic that branches off 경부선 there with no
+# line to have come from.
+#
+# The receiving stop is 신탄진, not 대전, and 대전 is the one that looks right:
+# 대전조차장 sits between them, so a step at 대전 would put the traffic on
+# 대전-신탄진 where most of it belongs, while 신탄진 leaves that segment short.
+# Two things rule 대전 out. It is called by 경부고속선 as well, so the pool would
+# be three-way and the fit could take the traffic off the high-speed line
+# instead of the conventional one; and 대전 has a published count of its own,
+# 41 to 49 in chain order, whose sign rule penalises a negative step at weight
+# 12 -- the exact opposite of what a handover needs. The 31 trains that actually
+# branch do so at 대전조차장, whose own boundary is 80 to 49, and that station
+# cannot be drawn. 신탄진 has no published boundary, so the sign rule does not
+# apply, and only 경부선 calls there.
+HANDOVER = {
+    ("수서고속선", "평택지제"): ("경부고속선", "천안아산"),
+    ("호남선", "서대전"): ("경부선", "신탄진"),
+}
+
+# Where a handover physically happens, for drawing only -- the fit still hangs
+# the step on HANDOVER's receiving stop, because that is the only place with
+# rows to fit against. `write_geojson` cuts the receiving segment here and gives
+# the far side the through flow, so the map does not credit a whole segment with
+# traffic that joins partway along it.
+#
+# Without an entry the cut point is the giving line's own end station, which is
+# right for 수서고속선 -- 평택지제 is 1.4 km from 평택분기점 and the cut lands
+# where the SRT really join. It is wrong for 호남선. Its end is 서대전, which
+# sits 3 km *southwest* of 대전, so the nearest point on 경부선's 대전-신탄진 is
+# that segment's own first point; `split_at_junction` then refuses the cut for
+# landing inside a kilometre of the end, and the whole 14.5 km segment was drawn
+# short of the 호남선 traffic that rides its northern 10 km.
+#
+# 대전조차장 is not in `data/osm_stations.json` because that pull filtered to
+# `railway=station|halt` and a marshalling yard is neither; it is OSM node
+# 7640162489, `railway=yard`, `wikidata=Q188837`. One coordinate is cheaper to
+# record here than a second pull is to maintain.
+#
+#     (line, its own end) -> (lat, lon) of the junction
+HANDOVER_POINT = {
+    ("호남선", "서대전"): (36.3710255, 127.4218344),   # 대전조차장
+    ("수서고속선", "평택지제"): (36.95148, 127.07057),  # 평택분기점
+}
+
+# Where each of those lines' own metals stop, which is not where its last
+# station is. Both handover lines run on past their last platform to the
+# junction, and the corridor -- routed between the two end *stations* -- stopped
+# at the platform, so the map drew the line ending in mid-air pointing at
+# nothing. 수서고속선 was 7.9 km short of its 영업거리 and 호남선 5.8 km, and both
+# gaps are exactly this.
+#
+#     (line, its own end) -> draw on to this line's HANDOVER_POINT
+RUN_ON = {
+    ("수서고속선", "평택지제"),
+    ("호남선", "서대전"),
+}
+
+# Lines that reach an end station over another line's metals, and whose corridor
+# has to be extended along that line to get there.
+#
+# 경부고속선 is the case. Its high-speed track begins near 금천구청 and KTX reach
+# 서울 over 경부선's rails, so the corridor stopped 14.29 km short of 서울역 and
+# the station was drawn at the metals' end instead -- giving 서울-광명 a length
+# of 2.9 km where the two stations are 22 km apart, and crediting 79,545 riders
+# a day with an eighth of the distance they travel. It is about 2 % of the
+# network's passenger-km.
+#
+# **Why this needs naming rather than searching.** `data/osm_railways.json` is
+# `way[railway=rail][name]`, so unnamed track -- junction throats, crossovers,
+# the connections between lines -- is not in the graph at all. Routing from the
+# high-speed metals to 서울역 therefore takes 111.96 km for a 14.29 km gap, and
+# 광주선's 1.77 km gap routes 402 km. A generic bounded stub is in `build.py`
+# and correctly refuses all of these; it earns its keep on 영동선's 강릉 and
+# 중앙선's 경주, where the approach happens to be named track. Where it cannot
+# reach, the honest fix is to say which line carries the trains and take that
+# line's own corridor, which is already built and already trusted.
+#
+# The two lines then overlap on the shared stretch, which is what they do in
+# life -- japanriders draws shared track the same way, one geometry per line,
+# stacked.
+#
+#     (line, its own end) -> the line whose metals carry it there
+OVER = {
+    ("경부고속선", "서울"): "경부선",
+}
+
+# End stations the roster calls this line's own, where trains nonetheless run
+# straight through onto another line. The anchor asserts that everything
+# alights at the last stop, and at these it is false.
+#
+# 광주송정 is 호남고속선's on the facility roster, so it passed the anchor test
+# and the fit was told that every high-speed passenger empties out there. They
+# do not: `6. 운전` has 42 high-speed trains a day arriving 익산-광주송정 and 28
+# leaving it again on 호남선 towards 목포.
+#
+# Suppressing it does not by itself put those passengers on the right line: the
+# fit carries them north up 호남선's conventional metals instead, lifting
+# 서대전-계룡 from 16,574 a day to 24,904. Both builders rise by the same 8,330,
+# which is the leaking traffic and not a change of method.
+#
+# This removes a false assertion; on its own it does not change the answer, and
+# the reason is worth keeping. Suppressing the anchor was expected to let the
+# 목포 traffic PART_TYPES gives 호남선 arrive the way it really does, down
+# 호남고속선 and through the junction. It does not, because nothing then pushes
+# the through flow *up*: the smallness prior pushes it to zero, carrying the
+# traffic north up 호남선's conventional metals instead, and both answers
+# satisfy junction conservation equally. Cost, every line's mirror and every
+# figure in the report came back identical to four decimal places.
+#
+# Treating the end as a junction outright does move it, by handing the line's
+# level to 통과인원 -- 호남고속선 goes to a plausible 40,697 from 5,774. But it
+# overcorrects: a hard 22.4M target pulls on every neighbour through 오송 and
+# 익산, and the network's median weighted mirror went from 1.9% to 4.1% and its
+# cost from 82 to 190, with 광주선 at 43.6% and 장항선 at 30.1%.
+#
+# What would settle it is the section counts' *magnitude* rather than their
+# sign. The KTX count across 광주송정 drops 19 to 2, so the great majority of
+# the high-speed service south of it does not continue north, and the step is
+# not merely permitted but roughly sized. README.md records that this cannot
+# help 대구선 or 경북선; 호남선 is one of the four lines whose boundaries are
+# informative, and this is the case that wants it.
+THROUGH_ENDS = {
+    "호남고속선": {"광주송정"},
 }
 
 # Which train types run on each line. The point is the parallel pairs: 경부선 and
@@ -109,7 +298,6 @@ TYPES = {
     "강릉선": ["KTX"],
     "중부내륙선": ["KTX"],
     "경부선": CONVENTIONAL,
-    "호남선": CONVENTIONAL,
     "경의선": CONVENTIONAL,
     "경원선": CONVENTIONAL,
     "경춘선": CONVENTIONAL,
@@ -120,12 +308,49 @@ TYPES = {
     "태백선": CONVENTIONAL,
     "영동선": CONVENTIONAL,
     "장항선": CONVENTIONAL,
+    "호남선": CONVENTIONAL,     # plus high-speed south of 광주송정 -- see PART_TYPES
     # These carry high-speed services over their own conventional metals.
     "전라선": ALL_TYPES,
     "중앙선": ALL_TYPES,
     "경전선": ALL_TYPES,
     "동해선": ALL_TYPES,
     "광주선": ALL_TYPES,
+}
+
+# A train type a line carries over only part of its length, and the stations at
+# which it may be counted.
+#
+# 호남선 south of 광주송정 is the one stretch of conventional metals in the
+# country with no high-speed line beside it. 호남고속선 *ends* at 광주송정, and
+# the KTX and SRT that carry on to 목포 run on 호남선's own track -- `6. 운전`
+# says so outright, 광주송정-목포 being KTX 19 + SRT 9 against 무궁화 7 +
+# 새마을 4. With the line restricted to conventional types none of them reached
+# the map: 목포's 1.55M KTX and 0.59M SRT a year were dropped and the segment
+# was drawn at 743 a day.
+#
+# Granting the types line-wide instead does far more damage than the bug it
+# fixes, and both mechanisms are worth recording. The types then reach 서대전,
+# 익산 and 정읍, whose high-speed traffic is 호남고속선's; and worse, the line's
+# type set becomes the complete one, which flips its 통과인원 residual from a
+# one-sided ceiling to two-sided equality -- so the fit is actively driven to
+# reach a published 16.8M that counts the through traffic as well. It duly took
+# it from the only place available. 호남선 went to a 수송밀도 of 28,009, ahead
+# of 경부선, and 호남고속선 collapsed from 5,774 to 2,412 with 정읍-광주송정 at
+# zero and a negative segment. `full_types` below keeps the ceiling one-sided.
+#
+# 광주송정 itself is deliberately *not* in the span. Its 1.95M KTX alightings
+# are people off 호남고속선, and letting 호남선 into the share group there is a
+# smaller version of the same theft. The passengers who ride through it to 목포
+# never appear in its 승하차 at all -- they arrive as the junction step, which
+# is exactly what the step is for and which the section count licenses, 21
+# trains dropping to 11 across the station.
+#
+# The span is listed rather than derived because nothing published orders a
+# line's stations; if a station is ever added south of 광주송정 it has to be
+# added here too, or it will quietly carry no high-speed traffic.
+PART_TYPES = {
+    "호남선": (["KTX", "SRT"],
+              {"나주", "다시", "함평", "무안", "몽탄", "일로", "임성리", "목포"}),
 }
 
 
@@ -144,6 +369,25 @@ def _num(v):
     return 0.0 if v in (None, "-", "") or isinstance(v, str) else float(v)
 
 
+# The passenger tables and OSM do not always spell a station the same way, and
+# a name that does not match is a station whose traffic reaches no line at all.
+# 김천구미 is the plain case -- OSM writes 김천(구미), the station is already on
+# 경부고속선's chain, and 1.2M high-speed passengers a year were falling down
+# the gap between the two spellings.
+#
+# Merged rather than overwritten, since a target name may already have a row of
+# its own. Anything not listed is passed through untouched.
+STATION_ALIAS = {
+    "김천구미": "김천(구미)",
+}
+
+
+def _alias(out, name, v):
+    nm = STATION_ALIAS.get(name, name)
+    p = out.get(nm)
+    out[nm] = v if p is None else tuple(p[i] + v[i] for i in range(4))
+
+
 def station_flows():
     """역별 승하차 -> {station: (하행승차, 하행하차, 상행승차, 상행하차)}."""
     wb = openpyxl.load_workbook(_open(PASSENGER), read_only=True, data_only=True)
@@ -155,7 +399,7 @@ def station_flows():
         if not st or not str(st).strip() or str(st).strip() == "합계":
             continue
         v = [_num(x) for x in row[1:]]
-        out[str(st).strip()] = (v[0], v[1], v[4], v[5])
+        _alias(out, str(st).strip(), (v[0], v[1], v[4], v[5]))
     wb.close()
     return out
 
@@ -190,7 +434,8 @@ def station_flows_by_type():
             if not st or not str(st).strip() or str(st).strip() == "합계":
                 continue
             v = [_num(x) for x in row[col:col + 7]]
-            out.setdefault(kind, {})[str(st).strip()] = (v[0], v[1], v[4], v[5])
+            _alias(out.setdefault(kind, {}), str(st).strip(),
+                   (v[0], v[1], v[4], v[5]))
     wb.close()
     return out
 
@@ -277,21 +522,55 @@ def resolve():
         if dname not in dist:
             out[canon] = {"error": "no distance row named %r" % dname}
             continue
-        a, b, km = dist[dname]
-        a, b = ENDS.get(canon, (a, b))
+        legal_a, legal_b, km = dist[dname]
+        a, b = ENDS.get(canon, (legal_a, legal_b))
+        # 영업거리 measures the legal extent. Where ENDS moves an end it stops
+        # describing the track this build draws -- 대구선's row is 가천-영천,
+        # 26.1 km, while trains run 동대구-영천 and OSM draws 32.3. Rescaling the
+        # chainage to it then shrinks every segment by 24 %, and the rescale is
+        # what hides that: the stations stay in the right proportion of the line
+        # and only the kilometres are wrong. Nothing published replaces it, so
+        # these lines keep OSM's chainage, which the lines that *do* match show
+        # to be good to a few tenths of a per cent.
+        #
+        # OVER is the same fault arriving the other way. 경부고속선's legal ends
+        # really are 서울-부산, so this test passes and it used to be rescaled --
+        # but its 영업거리 of 398.2 km measures the high-speed metals only, and
+        # once the corridor is extended 18.7 km up 경부선 to reach 서울역 it draws
+        # 417.3 km, which is the distance a KTX actually runs. Rescaling then
+        # squeezed 417 km of railway into 398 and took the difference out of
+        # every other segment, so 서울-광명 came out right and 대전-동대구 came
+        # out short. Same rule: a corridor covering track the 영업거리 does not
+        # keeps OSM's own chainage.
+        scaled = ((a, b) == (legal_a, legal_b)
+                  and not any(L == canon for L, _ in OVER))
         roster = rost.get(rname, set()) if rname else set()
-        # Sum only the train types that use this line's metals.
-        kinds = TYPES.get(canon, ALL_TYPES)
+        # Sum only the train types that use this line's metals, and a type the
+        # line runs over only part of its length only at the stations on that
+        # part -- see PART_TYPES.
+        declared = TYPES.get(canon, ALL_TYPES)
+        part_kinds, part_stations = PART_TYPES.get(canon, ((), None))
+        kinds = list(declared) + [k for k in part_kinds if k not in declared]
         lf = {}
         for k in kinds:
             for st, v in by_type.get(k, {}).items():
+                if part_stations is not None and k in part_kinds \
+                        and st not in part_stations:
+                    continue
                 p = lf.get(st, (0.0, 0.0, 0.0, 0.0))
                 lf[st] = tuple(p[i] + v[i] for i in range(4))
         # Keep the split as well as the sum. Allocating a shared station between
         # the lines calling there has to be done a train type at a time -- the
         # KTX at 광주송정 are 호남고속선's and 광주선's to divide, and have
         # nothing to do with 호남선's 무궁화 standing at the same platforms.
-        lfk = {k: by_type[k] for k in kinds if k in by_type}
+        lfk = {}
+        for k in kinds:
+            if k not in by_type:
+                continue
+            d = by_type[k]
+            if part_stations is not None and k in part_kinds:
+                d = {st: v for st, v in d.items() if st in part_stations}
+            lfk[k] = d
         bad_a, bad_b = (bad_anchor(a, roster, lf), bad_anchor(b, roster, lf))
         # Put the usable end last, since that is the one the anchor reads. That
         # can leave the chain running 종점 -> 기점, i.e. against 하행, and the
@@ -304,11 +583,23 @@ def resolve():
             rev = True
         out[canon] = {
             "first": a, "last": b, "length_km": km, "reversed": rev,
+            "legal_ends": (legal_a, legal_b), "scaled": scaled,
             "clean_end": bad_b is None, "why": bad_b,
+            # The last stop is this line's own, but trains run through it -- so
+            # it may not anchor, while the level still comes from the profile
+            # rather than from 통과인원. See THROUGH_ENDS.
+            "through_end": b in THROUGH_ENDS.get(canon, ()),
             "ways": osm,
             "roster": roster,
             "passing": passing.get(fname, 0.0) if fname else 0.0,
             "types": kinds,
+            # Whether 통과인원 -- which counts everyone on the line's metals --
+            # is comparable with the rebuild, which sums only this line's types.
+            # A part type does not make a line fully typed: 호남선 runs the
+            # high-speed services over a fifth of its length and the published
+            # figure still counts through traffic the rebuild cannot see, so it
+            # stays a ceiling rather than an equality.
+            "full_types": set(declared) == set(ALL_TYPES) and not part_kinds,
             "flows": lf,
             "flows_by_kind": lfk,
         }
@@ -325,10 +616,17 @@ def main():
         if "error" in r:
             print("%-11s  %s" % (canon, r["error"]))
             continue
+        # A line whose ends were moved is not measured by its own 영업거리 any
+        # more, so say what the figure actually covers rather than printing it
+        # beside a pair of stations it does not run between.
+        note = r["why"] or ""
+        if not r["scaled"]:
+            moved = "영업거리 covers %s-%s" % r["legal_ends"]
+            note = "%s; %s" % (note, moved) if note else moved
         print("%-11s %8.1f %8s %-9s %-9s %8d %12.0f  %s"
               % (canon, r["length_km"], "clean" if r["clean_end"] else "junction",
                  r["first"][:9], r["last"][:9], len(r["roster"]), r["passing"],
-                 r["why"] or ""))
+                 note))
 
 
 if __name__ == "__main__":

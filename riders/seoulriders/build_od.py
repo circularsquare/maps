@@ -67,6 +67,7 @@ import sys
 
 import numpy as np
 
+import airport
 import daytype
 import outside
 
@@ -304,7 +305,7 @@ def furness(od, po, pd, row_t, col_t, fit, rounds=FURNESS_ROUNDS):
     return x, rounds - 1, delta
 
 
-def deterrence(pair_tot, TT, n, width=180.0):
+def deterrence(pair_tot, TT, n, inside, width=180.0):
     """How readily a trip of a given length happens, measured off this network.
 
     For every travel-time bin, the measured trips in it over the origin x
@@ -312,13 +313,28 @@ def deterrence(pair_tot, TT, n, width=180.0):
     fact that there are more short pairs than long ones does not shape it. Bins
     are `width` seconds wide and the last one absorbs the tail.
 
-    This is the classical deterrence function, and it is fitted to the whole
-    measured OD rather than assumed. It is used for one thing only: seeding the
-    pairs the OD cannot see, in `seed_offcard`.
+    **Fitted over pairs with a 서울교통공사 gate at both ends, and nowhere else.**
+    Fitting it over every pair looks more general and is badly wrong. The
+    denominator is demand read off the measured OD, and for an outside station
+    that demand is exactly the broken number this file exists to repair: at
+    long travel times nearly every pair has an outside end, so the denominator
+    comes out too small and the curve too high, while at short times the
+    outside-outside pairs contribute demand and no trips and pull it down. The
+    two biases together flatten the decay -- measured, it stopped falling past
+    about 40 minutes and ran level to two hours, so a 100-minute journey scored
+    as readily as a 50-minute one. Seeded with that, the invented trips came
+    out at a 41-minute median against the measured 20, and the extra length
+    turned into transfers: 1.82 legs a journey, and Incheon carrying 122% of
+    its published 수송인원.
+
+    Inside-inside pairs have a consistent numerator and denominator. They run
+    out past about 70 minutes, which is what `_smooth_tail` is for.
     """
     b = np.zeros(n)
     a = np.zeros(n)
     for (o, d), v in pair_tot.items():
+        if not (inside[o] and inside[d]):
+            continue
         b[o] += v
         a[d] += v
     nb = int(np.nanmax(TT[np.isfinite(TT)]) // width) + 1
@@ -329,50 +345,134 @@ def deterrence(pair_tot, TT, n, width=180.0):
     idx[fin] = np.minimum((TT[fin] / width).astype(np.int32), nb - 1)
     mass = np.outer(b, a)
     np.fill_diagonal(mass, 0.0)
+    mass = np.where(np.outer(inside, inside), mass, 0.0)
     np.add.at(den, idx[fin], mass[fin])
     for (o, d), v in pair_tot.items():
-        num[idx[o, d]] += v
+        if inside[o] and inside[d]:
+            num[idx[o, d]] += v
     f = np.where(den > 0, num / np.maximum(den, EPS), 0.0)
-    # a bin with no measured trips at all is noise, not a real zero
-    good = f > 0
-    if good.any():
-        f = np.where(good, f, np.interp(np.arange(nb),
-                                        np.flatnonzero(good), f[good]))
-    return f, width
+    return _smooth_tail(f, width), width
 
 
-def seed_offcard(pair_tot, TT, n, off_b, off_a, kept_b, kept_a, keep_frac,
-                 verbose=True):
+def _smooth_tail(f, width, min_share=1e-4):
+    """Carry the fitted decay past where the measured pairs run out.
+
+    Inside-inside pairs thin out past about 70 minutes and the raw bins there
+    are noise -- a couple of long pairs with a handful of riders between them.
+    Left as they are the curve wanders back up, which is what the seed then
+    over-produces. So: fit a straight line to log f against log t where the
+    bins are solid, use the fit beyond that, and require the whole thing to be
+    non-increasing. A longer journey is never readier than a shorter one.
+    """
+    nb = len(f)
+    t = (np.arange(nb) + 0.5) * width / 60.0
+    solid = f > f.max() * min_share
+    if solid.sum() >= 4:
+        k = np.flatnonzero(solid)
+        A = np.polyfit(np.log(t[k]), np.log(f[k]), 1)
+        fit = np.exp(A[1] + A[0] * np.log(t))
+        last = k[-1]
+        f = np.where(np.arange(nb) <= last, np.where(solid, f, fit), fit)
+    else:
+        f = np.where(f > 0, f, f.max() if f.max() > 0 else 1.0)
+    return np.minimum.accumulate(np.maximum(f, EPS))
+
+
+# The card file names the operator of every station it settles, and that is
+# what says whether the OD can see a station's own trips: 서울교통공사's lines
+# are numbered, everyone else's are named -- Korail's route (경부선, 경인선,
+# 일산선, 안산선 ...), 공항철도 1호선, 신림선, 우이신설선. 1호선 appears under
+# both, because 서울역-청량리 is 서울교통공사's and the rest of the corridor is
+# Korail's, which is exactly the distinction wanted.
+SEOUL_METRO_CARD = re.compile("^[1-9]호선(2~3단계)?$")
+
+
+def card_gates(card_rows, dates, find, n):
+    """Gate counts at each complex, split by who settles the gate.
+
+    Returns (seoul_b, seoul_a, other_b, other_a) as mean daily counts over
+    `dates`. The OD holds a journey if either end passed a 서울교통공사 gate and
+    drops it otherwise, and the file bears that out: over the complexes with a
+    numbered-line row the OD carries 97.0% of their gate count -- the
+    pipeline's own keep rate -- against 37.7% over the rest.
+
+    **The split is per gate, not per complex, and that distinction is the
+    whole point.** 강남 has 2호선 gates that 서울교통공사 settles and 신분당선
+    gates that 네오트랜스 does, in one building. A 강남 to 양재 trip on 신분당
+    touches neither 서울교통공사 gate and is missing from the OD exactly as a
+    수원 to 안산 trip is. Treating 강남 as simply "inside" left it at 77.5% of
+    its gate count while every pure-Korail station was fixed.
+    """
+    sb, sa, ob, oa = (np.zeros(n) for _ in range(4))
+    dates = set(dates)
+    seen = set()
+    for r in card_rows:
+        d = norm(r["사용일자"])
+        if d not in dates:
+            continue
+        seen.add(d)
+        raw = norm(r["노선명"])
+        i = find(base(r["역명"]), raw)
+        if i is None:
+            continue
+        b, a = float(r["승차총승객수"] or 0), float(r["하차총승객수"] or 0)
+        if SEOUL_METRO_CARD.match(raw):
+            sb[i] += b
+            sa[i] += a
+        else:
+            ob[i] += b
+            oa[i] += a
+    k = max(len(seen), 1)
+    return sb / k, sa / k, ob / k, oa / k
+
+
+def seed_outside(pair_tot, TT, n, gate_b, gate_a, kept_b, kept_a, keep_frac,
+                 has_outside, keep_share=0.995, verbose=True):
     """Invent the pairs the OD structurally cannot contain, at the right level.
 
     The OD holds only journeys that touch 서울교통공사's network, so a trip with
-    both ends on another operator -- 계양 to 인천시청, say -- is not in the file
-    at all; such pairs are 0.03% of it. Scaling what is there cannot fix that,
-    because Furness multiplies and a cell that is zero stays zero: without this
-    step, giving 인천1호선 its true weekday total would pile all of it onto the
-    handful of Seoul-bound pairs that do exist and draw Incheon as a commuter
-    funnel with no local life in it.
+    both ends anywhere else -- 계양 to 인천시청, 부천 to 부평, 수원 to 안산 -- is
+    not in the file at all. Scaling what is there cannot fix that, because
+    Furness multiplies and a cell that is zero stays zero: without this step,
+    giving 인천1호선 its true weekday total would pile all of it onto the handful
+    of Seoul-bound pairs that do exist and draw Incheon as a commuter funnel
+    with no local life in it.
 
-    So the block is built rather than scaled. Each off-card station's *missing*
-    boardings -- its measured gate count less what the OD already carries for it
-    -- are distributed over the other off-card stations by the deterrence
+    So the block is built rather than scaled. Each outside station's *missing*
+    boardings -- its measured gate count less what the OD already carries for
+    it -- are distributed over the other outside stations by the deterrence
     function above, then balanced against the missing alightings so both ends
     agree. Volumes are measured on both ends; only the split between them is
-    modelled, and the hourly constraints in the IPF below reshape it again with
-    Incheon's own measured peak. This is the one invented thing in the file.
-    """
-    f, width = deterrence(pair_tot, TT, n)
-    off = (off_b > 0) | (off_a > 0)
-    miss_b = np.where(off, np.maximum(off_b * keep_frac - kept_b, 0.0), 0.0)
-    miss_a = np.where(off, np.maximum(off_a * keep_frac - kept_a, 0.0), 0.0)
+    modelled, and the hourly constraints in the IPF below reshape it again
+    wherever an hourly profile exists. This is the one invented thing here.
 
-    idx = np.flatnonzero(off)
-    pairs = [(o, d) for o in idx for d in idx
-             if o != d and np.isfinite(TT[o, d])]
-    if not pairs:
+    **It is not only the 도시철도 operators.** The first version of this covered
+    the lines with no card row at all -- 인천, 신분당, 김포골드, 의정부, 진접 --
+    and left the Korail 광역 lines alone because they *are* in the card file.
+    Being in the card file was never the point. 수원 held 14.6% of its gate
+    count and 동인천 19.5%, for the same reason and with the same fix; Incheon's
+    own 유입 came out at 27% against a measured 33%, because the riders
+    transferring in at 부평 off 경인선 were among the missing.
+
+    Pairs are pruned to the `keep_share` of seeded volume that matters. The
+    full outside block is ~127,000 pairs and its tail is 수원 to 동두천 at two
+    riders a day; carrying those to `build.py` costs routing time and changes
+    nothing that can be seen.
+    """
+    f, width = deterrence(pair_tot, TT, n, ~has_outside)
+    miss_b = np.where(has_outside,
+                      np.maximum(gate_b * keep_frac - kept_b, 0.0), 0.0)
+    miss_a = np.where(has_outside,
+                      np.maximum(gate_a * keep_frac - kept_a, 0.0), 0.0)
+
+    idx = np.flatnonzero(has_outside & ((miss_b > 0) | (miss_a > 0)))
+    grid_o, grid_d = np.meshgrid(idx, idx, indexing="ij")
+    po = grid_o.ravel()
+    pd_ = grid_d.ravel()
+    ok = (po != pd_) & np.isfinite(TT[po, pd_])
+    po, pd_ = po[ok], pd_[ok]
+    if not len(po):
         return 0.0, 0
-    po = np.array([p[0] for p in pairs])
-    pd_ = np.array([p[1] for p in pairs])
     bin_i = np.minimum((TT[po, pd_] / width).astype(np.int32), len(f) - 1)
     seed = miss_b[po] * miss_a[pd_] * f[bin_i]
     if seed.sum() <= 0:
@@ -382,15 +482,23 @@ def seed_offcard(pair_tot, TT, n, off_b, off_a, kept_b, kept_a, keep_frac,
     fit = (miss_b > 0) & (miss_a > 0)
     seed, rounds, delta = furness(seed, po, pd_, miss_b, miss_a, fit)
 
-    for k, (o, d) in enumerate(pairs):
-        if seed[k] > 0:
-            pair_tot[(o, d)] += float(seed[k])
+    order = np.argsort(-seed)
+    cut = np.searchsorted(np.cumsum(seed[order]), keep_share * seed.sum()) + 1
+    keep = order[:cut]
+    added = {}
+    for k in keep:
+        key = (int(po[k]), int(pd_[k]))
+        pair_tot[key] += float(seed[k])
+        added[key] = added.get(key, 0.0) + float(seed[k])
     if verbose:
-        print("   %d off-card complexes, %s pairs seeded, %s trips added"
-              % (off.sum(), format(len(pairs), ","),
-                 format(int(seed.sum()), ",")))
-        print("   block furness: %d rounds, last change %.2e" % (rounds + 1, delta))
-    return seed.sum(), len(pairs)
+        print("   %d complexes with non-서울교통공사 gates, %s pairs in the block"
+              % (has_outside.sum(), format(len(po), ",")))
+        print("   block furness: %d rounds, last change %.2e"
+              % (rounds + 1, delta))
+        print("   kept %s pairs (%.1f%% of the volume), %s trips added"
+              % (format(len(keep), ","), 100 * seed[keep].sum() / seed.sum(),
+                 format(int(seed[keep].sum()), ",")))
+    return added
 
 
 def dates_in(month, dows, exclude=()):
@@ -489,31 +597,57 @@ def main(day_name, ref_month):
     # ----------------------------------------------------------------------
     # the operators Seoul does not settle
     # ----------------------------------------------------------------------
-    print("\nseeding the off-card block ...")
+    print("\nseeding the journeys the OD cannot hold ...")
     names = set(by_name)
     off_b0, off_a0, _ = outside.gate(OD_MONTH, OD_DATE, find, n, names)
+    od_card = read_card(OD_MONTH)
+    s_b, s_a, o_b, o_a = card_gates(
+        od_card, [OD_DATE.replace("-", "")], find, n)
+    # KRIC's operators are all outside 서울교통공사 by construction
+    other_b, other_a = o_b + off_b0, o_a + off_a0
+    gate0_b, gate0_a = s_b + other_b, s_a + other_a
+    has_outside = (other_b > 0) | (other_a > 0)
 
-    # What share of a station's gate count the pipeline ends up carrying, over
-    # the stations where both numbers are known. The OD drops same-complex
-    # round trips and anything it cannot route, so a measured gate total is
-    # always a little more than the trips we keep; off-card stations are put on
-    # the same footing rather than at their raw gate total.
     seed_b0 = np.zeros(n)
     seed_a0 = np.zeros(n)
     for (o, d), v in pair_tot.items():
         seed_b0[o] += v
         seed_a0[d] += v
-    gate0_b, gate0_a, gate0_have, _ = card_totals(
-        read_card(OD_MONTH), [OD_DATE.replace("-", "")], find, n)
-    on = gate0_have & (gate0_b > 0) & (seed_b0 > 0)
-    keep_frac = seed_b0[on].sum() / gate0_b[on].sum()
-    print("   the OD carries %.1f%% of the gate count at the %d complexes it "
-          "settles" % (100 * keep_frac, on.sum()))
 
-    seed_offcard(pair_tot, TT, n, off_b0, off_a0, seed_b0, seed_a0, keep_frac)
+    # What share of the OD's own trips the pipeline carries -- everything not
+    # dropped above for having an end off the network, being a same-complex
+    # round trip, or being unroutable. About 98%. Off-card stations are put on
+    # the same footing rather than at their raw gate total.
+    #
+    # **Measured against the file, never against gate counts.** The obvious
+    # version of this -- trips kept over the gate count at the stations we
+    # settle -- comes out at 80%, and the missing fifth is not the pipeline
+    # dropping anything. It is the source's own coverage hole on the Korail
+    # lines, where a 수인선 complex holds 7.4% of its gate count because a trip
+    # that stays on 수인선 never touches 서울교통공사 and so was never in the
+    # file. Folding that into this ratio would shrink every off-card line by a
+    # fifth on the strength of a different line's missing data -- 인천1호선
+    # built at 163k against a measured 203k. It did, until this was caught.
+    keep_frac = kept / float(kept + dropped)
+    print("   the OD's trips reach the network at %.1f%%" % (100 * keep_frac))
+    pure = ~has_outside
+    print("   %d complexes are 서울교통공사 gates only; the OD carries %.1f%% of "
+          "their gate count against %.1f%% where another operator has gates too"
+          % (pure.sum(),
+             100 * seed_b0[pure].sum() / max(gate0_b[pure].sum(), 1),
+             100 * seed_b0[has_outside].sum()
+             / max(gate0_b[has_outside].sum(), 1)))
+
+    seeded_vol = seed_outside(pair_tot, TT, n, gate0_b, gate0_a,
+                              seed_b0, seed_a0, keep_frac, has_outside)
 
     pairs = np.array(sorted(pair_tot), dtype=np.int32)
     od = np.array([pair_tot[tuple(p)] for p in pairs], dtype=np.float64)
+    # What share of each pair was seeded rather than measured. Furness scales
+    # both halves of a pair by the same factor, so this fraction survives it.
+    modelled = np.array([seeded_vol.get(tuple(p), 0.0) for p in pairs],
+                        dtype=np.float64)
+    modelled = np.divide(modelled, np.maximum(od, EPS))
     po, pd = pairs[:, 0], pairs[:, 1]
     npairs = len(pairs)
 
@@ -635,7 +769,10 @@ def main(day_name, ref_month):
     # See outside.py for the month-to-weekday correction that goes with it.
     # Until this went in, every Incheon station was fitted only through its
     # Seoul-bound partners, so its hours were Seoul's rather than its own.
-    HB, HA, ict = outside.hourly(ref_month, find, n, names, verbose=True)
+    ict_month = OD_MONTH if day["dows"] is None else ref_month
+    ict_dows = day.get("date", OD_DATE) if day["dows"] is None else day["dows"]
+    HB, HA, ict = outside.hourly(ict_month, ict_dows, find, n, names,
+                                 verbose=True)
     B[ict] = HB[ict]
     A[ict] = HA[ict]
     have_b |= ict
@@ -659,13 +796,49 @@ def main(day_name, ref_month):
     sys_profile = B[measured].sum(axis=0)
     sys_profile = sys_profile / sys_profile.sum()
 
+    # An airport is not a commuter station, and nothing in this fit would ever
+    # discover that. Every 공항철도 complex is unmeasured, so a 서울역 ->
+    # 인천공항 pair has an hourly constraint at neither end and whatever it is
+    # seeded with survives untouched into the output. Seeded with sys_profile
+    # it came out with an 08:00/18:00 commuter double peak on the 직통, which
+    # is not a service any commuter can use -- it stops only at 서울역 and the
+    # two terminals. See "The airport train has a commuter rush hour" in
+    # README.md, and `airport.py` for what replaces it.
+    air = airport.profiles(ict_month)
+    air_set = set()
+    from_air, to_air = None, {}
+    if air is not None:
+        board_at, reach = air
+        air_set = set(by_name[nm][0] for nm in airport.AIRPORT_COMPLEXES
+                      if by_name.get(nm))
+    if air_set:
+        # Both in origin-departure time, which is what `seed` is indexed by.
+        # Leaving the airport reads straight off; going to it has to be pulled
+        # back by the train ride, which is the same per-pair `shift` the
+        # destination constraint uses.
+        from_air = np.array([board_at[h % 24] for h in HOURS])
+        from_air = from_air / from_air.sum()
+        for sh in np.unique(shift):
+            v = np.array([reach[(h + int(sh)) % 24] for h in HOURS])
+            to_air[int(sh)] = v / v.sum()
+
     seed = np.empty((npairs, NH))
+    n_air = 0
     for k in range(npairs):
-        o = po[k]
-        if measured[o] and B[o].sum() > 0:
+        o, d = po[k], pd[k]
+        if d in air_set:
+            seed[k] = to_air[int(shift[k])]
+            n_air += 1
+        elif o in air_set:
+            seed[k] = from_air
+            n_air += 1
+        elif measured[o] and B[o].sum() > 0:
             seed[k] = B[o] / B[o].sum()
         else:
             seed[k] = sys_profile
+    if air_set:
+        print("   %d pairs have an 인천공항 end, seeded from the airport's "
+              "own hours rather than the network's" % n_air)
     X = seed * od[:, None]
 
     # index helpers for the marginal scalings
@@ -736,6 +909,7 @@ def main(day_name, ref_month):
         OUT,
         pairs=pairs, hours=np.array(HOURS, dtype=np.int32),
         x=X.astype(np.float32), shift=shift,
+        modelled=modelled.astype(np.float32),
         tt=TT[po, pd].astype(np.float32),
         names=np.array([c["name"] for c in complexes]),
         # build.py and validate.py take the day from here rather than from a

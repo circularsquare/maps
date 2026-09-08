@@ -1,20 +1,27 @@
 religiondots — todo (Anita's file; Claude does not edit this)
 
 
-- ipums account
-- is the World Religion Database reachable through a university login
-- brazil 2010 2022 mapping or something?
-
-- maybe if we have a religion selected, and weare looking at all countries, show an outline or symbol for any conttry that doesn't list that religion at all so we know which ones have like no data and which ones have data for that but just don't have any people of that religion
-  - or the converse. show an outline over any coutnry that actually has this religion.
-
-- consider raising the "n small groups" threshold to dump more small groups there
-  - shouldn't protestant, unspecified be with the other protestants like lutheran? idk
+- ipums account, hope they email back
+- other sources? anything blocked on human accoutn or something
 
 - think about overlapping dots
-- parallelize
 
-- dont draw dots over water
+
+china shows buddhists in arunachal, double counting?
+
+french guiana population distribution looks a little silly psread out, that seems not right
+
+if we have a religion selected liek "daoism" and zoom in on a country that doesn't have any daoism, in auto mode, it just autos to the country and then clears the selected religion cuz theres no daoism to show. would rather have it just not auto to coutnries that dont have any of the religion
+
+show rough like "what percent of the total dots in scope is this religion for" in the legend as a partially filled in bar the same color as the dot... like 80% full bar for 10% of total, 60% bar for 1%, 40% bar for 0.1%, 20% bar for 0.01%. maybe these bars can go over the religion's person count (like above the "9.7m" grey text)
+
+ability to select religions for viewing, like in ancestrydots. people might wanna show just like baptist and catholic or something. i guess we need checkboxes on the right to granularly select what should be shown or not. clear button can be reworded into a select all i guess? and if we have all selected, maybe it turns into a hide all button. also should be able to use the heckbox for a religion group to toggle all children
+
+
+setting to view just *country level* or first admin level statistics of just like percentages of each religion, top 10 style? just one hoverable thing per coutnry/region i guess. no dots. or maybe one different sized dot per religion
+
+a little house per religion, for the holy site / origin site / headquarters of that religion? could be cool to see where all the shintos are
+
 
 LATER
 
@@ -34,21 +41,3 @@ python taxonomy/build_tree.py
     deploy (once there is something to deploy) -- ancestrydots/COMMANDS.txt is the pattern:
 pmtiles to R2, index.html + legend to the website repo.
 
-
-
-
-lets go through each religion and come up with a representative color. 
-
-i think liek
-catholic-yellow
-orthodox-orange
-eastern orthodox light orange
-lutheran dark blue
-reformed light blue
-anglican light purple
-hussite indigo
-baptist red
-other baptists red-purpleish
-methodist / pietist / wesleyean bluegreen
-restorationist/adventist green
-nondenominational / unspecified / other white

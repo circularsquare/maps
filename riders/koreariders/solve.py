@@ -73,31 +73,93 @@ W_SHARESUM = 6.0
 W_MIRROR = 1.0
 W_TAUSYM = 2.0
 W_FREQ = 12.0
+W_NOTRAIN = 12.0
+W_CONTAIN = 20.0
+W_ENTRY = 2.0    # 1.0 loses a third of 호남고속선 and buys no mirror back
 W_TAU = 0.15
 W_SHARE = 0.30
 
 SCALE = 1e6         # work in millions of passengers/year, so residuals compare
 
 
-def build_chains(table, serves, g, named):
-    """Each line's stops in running order, keeping every station that calls."""
-    chains = {}
-    for canon, spec in table.items():
-        if "error" in spec or spec["passing"] <= 0:
-            continue
+def host_slice(shape, station, reach):
+    """The host line's own metals from `reach` back to `station`.
+
+    Returned running outward from `reach` -- the borrowing line's corridor end --
+    towards the station, which is the orientation `build.graft` wants.
+    """
+    poly, cum, raw = shape.get("poly"), shape.get("cum"), shape.get("raw") or {}
+    if not poly or station not in raw:
+        return None
+    d, k_join = B.project(reach, poly, cum)
+    if d > 1.0:                 # the host does not actually pass the junction
+        return None
+    seg = B.slice_corridor(poly, cum, k_join, raw[station])
+    return seg if len(seg) >= 2 else None
+
+
+def build_chains(table, serves, g, named, corridors=None):
+    """Each line's stops in running order, keeping every station that calls.
+
+    Two passes. `lines.OVER` names lines whose corridor has to be extended along
+    another line's metals to reach an end station, and that host corridor only
+    exists once it has been built -- so everything is built once, and the
+    borrowers are then rebuilt with the slice in hand.
+    """
+    chains, shapes = {}, {}
+
+    # A handover line runs on past its last platform to the junction, and
+    # lines.RUN_ON says which; the point is the one HANDOVER_POINT already
+    # records for drawing the receiving line's step.
+    beyond = {}
+    for L, end in LN.RUN_ON:
+        jpt = LN.HANDOVER_POINT.get((L, end))
+        if jpt:
+            beyond.setdefault(L, {})[end] = jpt
+
+    def one(canon, spec, over=None):
         # Membership by track proximity plus a train type that stops there,
         # rather than the roster's one-home-line-per-station.
         spec = dict(spec)
         spec["roster"] = set()
-        stops, err = B.order_stations(spec, g, named, spec["flows"])
+        shape = {}
+        stops, err = B.order_stations(spec, g, named, spec["flows"], shape,
+                                      over, beyond.get(canon))
         if err:
             print("%-11s %s" % (canon, err))
-            continue
+            return
         keep = [(km, nm) for km, nm in stops
                 if canon in serves.get(nm, [canon]) or nm in (spec["first"],
                                                               spec["last"])]
         if len(keep) >= 3:
             chains[canon] = keep
+            shapes[canon] = shape
+
+    for canon, spec in table.items():
+        if "error" in spec or spec["passing"] <= 0:
+            continue
+        one(canon, spec)
+
+    for (canon, end), hostname in LN.OVER.items():
+        if canon not in shapes or hostname not in shapes:
+            continue
+        poly = shapes[canon].get("poly")
+        if not poly:
+            continue
+        # Which end of this corridor is the one that stops short.
+        at = 0 if end == table[canon]["first"] else -1
+        seg = host_slice(shapes[hostname], end, poly[at])
+        if not seg:
+            print("%-11s no %s corridor to reach %s over" % (canon, hostname,
+                                                             end))
+            continue
+        print("%-11s reaching %s over %s: %.1f km"
+              % (canon, end, hostname,
+                 sum(B.haversine(a, b) for a, b in zip(seg, seg[1:]))))
+        one(canon, table[canon], {end: seg})
+
+    if corridors is not None:
+        corridors.update(shapes)
     return chains
 
 
@@ -122,13 +184,45 @@ class Network(object):
                 self.freq[L] = {nm: ((b, a) if self.rev[L] else (a, b))
                                 for nm, (a, b) in ch.items()}
 
+        # And the count per segment, not just the change across a station. A
+        # section running no trains of this line's types carries no passengers
+        # of them either -- 경원선 north of 청량리 is 전동차 only and north of
+        # 소요산 is shut altogether, so the 16,694 a day the fit drew all the way
+        # to 백마고지 on the DMZ was not a small error.
+        self.runs = {}
+        for L in self.lines:
+            order = [nm for _, nm in chains[L]]
+            rr = FQ.runs_along(L, table[L]["types"],
+                               order[::-1] if self.rev[L] else order)
+            if rr is not None:
+                self.runs[L] = rr[::-1] if self.rev[L] else rr
+
         # Which lines call at each station, restricted to those actually mapped.
         on = collections.defaultdict(set)
         for L, stops in chains.items():
             for _, nm in stops:
                 on[nm].add(L)
         self.on = on
-        self.shared = sorted(nm for nm, ls in on.items() if len(ls) > 1)
+        shared = set(nm for nm, ls in on.items() if len(ls) > 1)
+
+        # Handovers at a place the receiving chain does not name -- see
+        # lines.HANDOVER. Both ends have to be brought into play: the handing
+        # line's own end so it may carry a through flow at all, and the
+        # receiving stop so a step exists there to take it. Neither becomes a
+        # share group, since only one line calls at either.
+        self.handover = {}
+        for (L, end), (Mm, stop) in LN.HANDOVER.items():
+            if L not in chains or Mm not in chains:
+                continue
+            order = [nm for _, nm in chains[Mm]]
+            if end not in (chains[L][0][1], chains[L][-1][1]):
+                continue
+            if stop not in order or not 0 < order.index(stop) < len(order) - 1:
+                continue
+            self.handover[(L, end)] = (Mm, stop)
+            shared.update((end, stop))
+        self.ho_recv = set(v for v in self.handover.values())
+        self.shared = sorted(shared)
 
         # Parameter layout.
         self.idx, n = {}, 0
@@ -194,6 +288,67 @@ class Network(object):
                     if v and any(v):
                         self.alloc[(L, nm)].append(
                             (self.idx.get(("S", nm, k, L), -1), v))
+
+        # A part type runs over only a span of its line, so its passengers ride
+        # only that span: whatever boards inside it has to leave at the
+        # boundary rather than carry on up the rest of the line. That is a
+        # consequence of lines.PART_TYPES rather than a new assumption, and
+        # nothing else in the fit says it. 호남선's 목포 KTX and SRT rode north
+        # past 광주송정 instead of transferring to 호남고속선, lifting
+        # 서대전-계룡 by 8,330 a day; suppressing 호남고속선's false anchor there
+        # frees the transfer but does not compel it, and the smallness prior
+        # then leaves it at zero.
+        #
+        # Held as the index of the last segment inside the span, against which
+        # the first one outside is compared. Only a span reaching one end of
+        # the chain is handled -- 호남선's runs 나주 to 목포 -- since a span in
+        # the middle would have two boundaries and no line needs that yet.
+        self.contain = []
+        for L in self.lines:
+            kinds, span = LN.PART_TYPES.get(L, ((), None))
+            if not kinds:
+                continue
+            order = [nm for _, nm in chains[L]]
+            inside = [i for i, nm in enumerate(order) if nm in span]
+            if len(inside) < 2:
+                continue
+            lo, hi = min(inside), max(inside)
+            if hi != len(order) - 1 or lo < 2:
+                continue
+            terms = []
+            for i in inside:
+                for k in kinds:
+                    v = self.fk[L].get(k, {}).get(order[i])
+                    if v and any(v):
+                        terms.append(
+                            (self.idx.get(("S", order[i], k, L), -1), v))
+            if terms:
+                self.contain.append((L, lo - 1, terms))
+
+        # Entry flows sized from the published train counts -- see
+        # lines.ENTRY_SHARE. Held as the feeding line's segment arriving at the
+        # junction and the share of its service that turns off there.
+        #
+        # The share comes from the feeding line's own count either side of the
+        # junction, not from dividing one line's count by the other's. Per
+        # segment the counts do not line up: 천안아산-오송 spans SR분기, where
+        # the SRT join, so runs_along gives it the 117 from the near side while
+        # 177 arrive at 오송 -- which would have made 호남고속선's share 50/117
+        # rather than 50/177, half again too big. Read at the station the split
+        # actually happens at, 177 to 127, the 50 that leave are its own count
+        # and the arithmetic closes.
+        self.entry = []
+        for L, (M, J) in LN.ENTRY_SHARE.items():
+            if L not in chains or M not in chains:
+                continue
+            order = [nm for _, nm in chains[M]]
+            if J not in order or order.index(J) < 1:
+                continue
+            step = FQ.match(J, self.freq.get(M) or {})
+            if not step or step[0] <= step[1]:
+                continue
+            self.entry.append((L, M, order.index(J) - 1,
+                               float(step[0] - step[1]) / float(step[0])))
 
     def x0(self):
         """Start from the single-line answer, with every tau at zero."""
@@ -286,7 +441,14 @@ class Network(object):
             # the line's share of the platform, not all of it: 익산's conventional
             # alightings are 호남선's, 전라선's and 장항선's together, and handing
             # every line the whole figure anchors each of them to all three.
-            if spec["clean_end"]:
+            # A through end is the line's own station but not a terminus: 28 of
+            # the 42 high-speed trains a day reaching 광주송정 carry straight on
+            # to 목포, so asserting that everything alights there is false, and
+            # it is the assertion that blocks them. Junction conservation then
+            # carries the level instead -- the end segment's load less the
+            # platform alightings is the through flow, and it balances against
+            # the step 호남선 takes at the same station.
+            if spec["clean_end"] and not spec["through_end"]:
                 v = self._flow(x, L, stops[-1][1])
                 r.append(W_ANCHOR * (down[-1] - self._cols(L, 0, v)[1] / SCALE))
                 r.append(W_ANCHOR * (up[-1] - self._cols(L, 1, v)[0] / SCALE))
@@ -297,6 +459,14 @@ class Network(object):
 
             # mirror
             r.extend(W_MIRROR * (down - up))
+
+            # No trains of this line's types on the section, no passengers.
+            rr = self.runs.get(L)
+            if rr:
+                for i, n in enumerate(rr):
+                    if n == 0:
+                        r.append(W_NOTRAIN * down[i])
+                        r.append(W_NOTRAIN * up[i])
 
             # 통과인원. It counts everyone who touched the line's metals, while
             # the reconstruction sums only the train types that line runs, so a
@@ -315,9 +485,41 @@ class Network(object):
                 users = down[0] + up[-1] + interior
                 over = users - spec["passing"] / SCALE
                 r.append(W_CEILING * max(over, 0.0))
-                if (not spec["clean_end"]
-                        or set(spec["types"]) == set(LN.ALL_TYPES)):
+                # Dropping this term for lines whose 통과인원 counts 광역전철
+                # riders the 승하차 cannot see was tried and does not pay --
+                # see README.md, "경원선's level is contaminated, and taking
+                # the contamination out costs more than it buys".
+                if not spec["clean_end"] or spec["full_types"]:
                     r.append(W_PASSING * over)
+
+        # A part type's passengers stay inside its span. Everything of those
+        # types that boards within the span is riding the last segment inside
+        # it, so the first segment outside must be lighter by at least that
+        # much -- one-sided, since the conventional step at the same station is
+        # free to take more on top.
+        for (L, i_in, terms) in self.contain:
+            for d in (0, 1):
+                sgn = 1.0 if d == 0 else -1.0
+                p = 0.0
+                for j, v in terms:
+                    s = 1.0 if j < 0 else x[j]
+                    b, a = self._cols(L, d, v)
+                    p -= sgn * s * (b - a)
+                drop = prof[(L, d)][i_in] - prof[(L, d)][i_in - 1]
+                r.append(W_CONTAIN * min(drop - p / SCALE, 0.0))
+
+        # A line whose riders join it from another and never use a station of
+        # its own has nothing to set its entry flow, and the smallness prior
+        # then puts it on the floor. The published counts set it: the share of
+        # the feeding line's service that turns off at the junction. Paired by
+        # the direction a passenger actually travels, since a reversed chain's
+        # d == 0 is 상행 and scaling that against the other line's 하행 relates
+        # nothing.
+        for (L, M, seg, share) in self.entry:
+            for d in (0, 1):
+                dm = d ^ self.rev[L] ^ self.rev[M]
+                r.append(W_ENTRY * (x[self.idx[("E", L, d)]]
+                                    - share * prof[(M, dm)][seg]))
 
         # Junction conservation, per direction: every line meeting there
         # contributes the through flow it gains, and the total must be nil --
@@ -370,7 +572,11 @@ class Network(object):
                     # free, which is what licensed 경부선's step at 용산: the
                     # traffic had somewhere to go, so taking it cost nothing.
                     r.append(W_TAU * through)
-                    add(nm, L, d, sign * through)
+                    # A handover balances against the receiving line's step,
+                    # which is at a different station -- the pool is keyed by
+                    # where the traffic lands, not by where it leaves.
+                    ho = self.handover.get((L, nm))
+                    add(ho[1] if ho else nm, L, d, sign * through)
         for (L, nm, d, i) in self.taus:
             add(nm, L, d, x[self.idx[("T", L, nm, d)]])
         for key, gs in sorted(gain.items()):
@@ -396,6 +602,14 @@ class Network(object):
             ch = self.freq.get(L)
             step = FQ.match(nm, ch) if ch is not None else None
             flat = ch is not None and (step is None or step[0] == step[1])
+            # Except where the stop is standing in for a junction that is not a
+            # station. 경부고속선's count changes at SR분기, which has no 승하차
+            # row and no platform, so read at 천안아산 it looks flat -- 177 both
+            # sides -- and the rule would forbid the very step the SRT need in
+            # order to join at all. The count is not flat; the station it
+            # changes at is simply not one this build can draw.
+            if (L, nm) in self.ho_recv:
+                flat = False
             r.append((W_FREQ if flat else W_TAU) * x[k])
             if not flat and step is not None:
                 # The count also gives the direction. Trains leaving cannot put
@@ -510,19 +724,22 @@ def report(net, x, only=None):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--line")
+    # More than one session works in this tree, so a run that overwrites
+    # data/segments.geojson makes every other session's diff meaningless.
+    # A scratch path lets a change be measured against the committed output.
+    ap.add_argument("--out", help="write the geojson here instead of data/")
     args = ap.parse_args()
+    if args.out:
+        global OUT
+        OUT = os.path.abspath(args.out)
 
     table, _ = LN.resolve()
     serves = M.serves(LN)
-    with io.open(B.STATIONS, encoding="utf-8") as f:
-        named = collections.defaultdict(list)
-        for n in json.load(f)["elements"]:
-            nm = (n.get("tags", {}) or {}).get("name")
-            if nm:
-                named[nm].append((n["lat"], n["lon"]))
+    named = M.load_stations(LN)
     print("loading the national track graph ...")
     g = B.load_network()
-    chains = build_chains(table, serves, g, named)
+    corridors = {}
+    chains = build_chains(table, serves, g, named, corridors)
     flows = {L: table[L]["flows"] for L in chains}
     net = Network(table, chains, serves, flows)
     print("   %d lines, %d junctions, %d unknowns"
@@ -537,29 +754,306 @@ def main():
           % (res.cost, res.nfev, res.message.split(".")[0].lower()))
 
     rows = report(net, res.x, args.line)
-    write_geojson(rows)
+    # The step a handover puts on the receiving line is the through flow that
+    # arrives, and it belongs at the junction rather than at the station the
+    # model had to hang it on. Pull it out so write_geojson can put it there.
+    ho_step = {}
+    for (L, end), (Mm, stop) in LN.HANDOVER.items():
+        k0 = net.idx.get(("T", Mm, stop, 0))
+        k1 = net.idx.get(("T", Mm, stop, 1))
+        if k0 is None or k1 is None:
+            continue
+        ho_step[(Mm, stop)] = (L, end,
+                               float(res.x[k0]) * SCALE, float(res.x[k1]) * SCALE)
+    write_geojson(rows, corridors, table, ho_step)
 
 
-def write_geojson(rows):
-    feats = []
+def split_at_junction(pts, target):
+    """Cut a segment's drawn points where they come nearest `target`.
+
+    Returns (before, after) point lists sharing the cut point, or None if the
+    cut would land within a kilometre of either end -- there is nothing to show
+    in that case and two near-zero-length features are worse than one.
+    """
+    if not pts or len(pts) < 3 or target is None:
+        return None
+    best_i, best_d = None, None
+    for i, p in enumerate(pts):
+        d = B.haversine(p, target)
+        if best_d is None or d < best_d:
+            best_i, best_d = i, d
+    if best_i in (None, 0, len(pts) - 1):
+        return None
+    head = sum(B.haversine(a, b) for a, b in zip(pts[:best_i], pts[1:best_i + 1]))
+    tail = sum(B.haversine(a, b) for a, b in zip(pts[best_i:], pts[best_i + 1:]))
+    if head < 1.0 or tail < 1.0:
+        return None
+    return pts[:best_i + 1], pts[best_i:]
+
+
+MERGE_TOL = 0.01        # how far two loads may differ and still be one segment
+
+
+def merge_unserved(feats, table):
+    """Join segments across a station where nothing of this line's gets on.
+
+    A drawn segment claims to be a piece of railway carrying a measured number.
+    Where the station between two of them has no 승하차 of the line's own train
+    types, there is no measurement at that station and no reason for a break --
+    both sides carry the same load because they are the same segment. 경부선's
+    수원 to 안양 is eight features all reading 29,471, because the stations
+    between are Seoul line 1's and no 무궁화 stops at them; hovering any of the
+    eight gives a piece of railway that was never measured as a piece.
+
+    This also disposes of the 부산 도시철도 stops on 경부선 through 부산진 and the
+    범일/부산진 pair on 경부고속선's approach, which the map has been splitting at
+    stations that line's trains run past. They are the same fault: a break
+    without a measurement behind it.
+
+    Four things stop a merge, and each is a real break:
+      - a station with flow of the line's types, which is most of them
+      - a change in `service`, so grey never absorbs drawn track or vice versa
+      - a `junction` feature, which write_geojson split there on purpose
+      - the two loads disagreeing by more than MERGE_TOL, which means the fit
+        put a step at that station even though no passengers are recorded --
+        it is a junction the model believes in, and hiding it would be a lie
+        of a different kind
+
+    Purely a drawing change: no load moves, and a merged segment's load is the
+    length-weighted mean of parts that agree to within a per cent anyway.
+    """
+    out, i = [], 0
+    while i < len(feats):
+        run = [feats[i]]
+        while i + 1 < len(feats):
+            a, b = run[-1], feats[i + 1]
+            pa, pb = a["properties"], b["properties"]
+            if pa["line"] != pb["line"] or pa["to"] != pb["from"]:
+                break
+            if pa.get("service") != pb.get("service"):
+                break
+            if pa.get("junction") or pb.get("junction"):
+                break
+            if not a["geometry"] or not b["geometry"]:
+                break
+            flows = (table or {}).get(pa["line"], {}).get("flows") or {}
+            if sum(abs(v) for v in flows.get(pa["to"], (0, 0, 0, 0))):
+                break
+            hi = max(abs(pa["daily"]), abs(pb["daily"]), 1)
+            if abs(pa["daily"] - pb["daily"]) / hi > MERGE_TOL:
+                break
+            run.append(b)
+            i += 1
+        i += 1
+        if len(run) == 1:
+            out.append(run[0])
+            continue
+        km = sum(f["properties"]["km"] for f in run)
+        w = km or 1.0
+        coords = list(run[0]["geometry"]["coordinates"])
+        for f in run[1:]:
+            c = f["geometry"]["coordinates"]
+            coords.extend(c[1:] if c and c[0] == coords[-1] else c)
+        props = dict(run[0]["properties"])
+        props["to"] = run[-1]["properties"]["to"]
+        props["km"] = round(km, 3)
+        for k in ("down", "up"):
+            props[k] = round(sum(f["properties"][k] * f["properties"]["km"]
+                                 for f in run) / w)
+        props["daily"] = round((props["down"] + props["up"]) / 365.0)
+        props["density"] = props["daily"]
+        # So a reader can tell a long segment from a missing one.
+        props["through"] = len(run) - 1
+        out.append({"type": "Feature", "properties": props,
+                    "geometry": {"type": "LineString", "coordinates": coords}})
+    return out
+
+
+def write_geojson(rows, corridors, table=None, ho_step=None):
+    """One LineString per segment, sliced out of the line's own corridor.
+
+    `density` is passengers per km per day over the segment, which is what
+    japanriders draws thickness from; `daily` is the headcount on the segment
+    itself. Both are written so the map can choose.
+
+    A segment with no intercity trains gets `service`, and the map draws those
+    apart rather than as a very thin line. The zero-train rule already holds
+    them near nil in the fit, but "held near nil" and "drawn as carrying
+    fourteen people" are different claims, and the second one is false. 경원선
+    is the case: north of 청량리 the map was drawing 14-120 a day along Seoul's
+    line 1, where the metro layer separately and correctly draws 190,000. Two
+    reasons, and the label has to say which -- `commuter` where the 광역전철
+    runs and only the intercity service is absent, `none` where the sheet shows
+    nothing running at all, which for 소요산-백마고지 in 2022 it does.
+
+    There is a third reason a rider figure cannot be drawn, and 경춘선 is the
+    only line it applies to: the trains run and their passengers are not in the
+    source. The 운전 sheet gives it 26 ITX-청춘 a day each way; the 통과인원 sheet
+    gives the whole line 2,399 passengers for the year, which is 춘천's own
+    승하차 and nothing else -- no other 경춘선 station has an intercity row at
+    all. The fit reproduces the sheet faithfully and draws nine people a day
+    over a railway running fifty-two trains, which is a false statement about
+    ridership in exactly the way the 경원선 hairline was.
+
+    The test is `published 통과인원 / trains < 1 passenger per train`, both
+    figures published and neither modelled. 경춘선 comes to 0.13; the next
+    lowest line in the network is 정선선 at 21.9, so this is not a threshold
+    dividing a continuum. Under a passenger a train the sheet is not reporting
+    a quiet railway, it is not reporting the railway.
+
+    A handover's step is also drawn where it happens rather than where the fit
+    had to hang it. The SRT reach 경부고속선 at 평택분기점, which has no platform,
+    so the model steps the line up at 천안아산 instead -- and the map then drew
+    102,429 a day over the whole 74 km from 광명 when the last 24 km of it carry
+    the SRT too. The junction's position is known even though its passenger
+    rows are not, so the segment is cut there and the step applied to the far
+    side. `ho_step` carries the through flow per direction; note it is not the
+    difference between the two segments' loads, because the receiving station's
+    own boardings and alightings are mixed into that.
+    """
+    feats, flat = [], 0
     for r in rows:
+        line_at = len(feats)        # where this line's features begin
+        spec = (table or {}).get(r["line"], {})
+        svc = None
+        if spec.get("types"):
+            # service_along wants the line's own 기점 -> 종점 order, which is
+            # the chain reversed where resolve() swapped the ends.
+            order = [s[1] for s in r["stops"]]
+            if spec.get("reversed"):
+                order = order[::-1]
+            svc = FQ.service_along(r["line"], spec["types"], order)
+            if svc is not None and spec.get("reversed"):
+                svc = svc[::-1]
+        # Both counts are 편도, so the trains a segment sees in a day are twice
+        # the sheet's, and the published year is spread over 365 of them.
+        peak = max((s[0] for s in svc), default=0) if svc else 0
+        unrecorded = (peak > 0 and spec.get("passing", 0) > 0
+                      and spec["passing"] / 365.0 / (2.0 * peak) < 1.0)
+        shape = corridors.get(r["line"]) or {}
+        poly, cum, raw = shape.get("poly"), shape.get("cum"), shape.get("raw", {})
         for i in range(len(r["down"])):
             a, b = r["stops"][i], r["stops"][i + 1]
-            feats.append({
-                "type": "Feature",
-                "properties": {
+            geom, pts = None, None
+            ka, kb = raw.get(a[1]), raw.get(b[1])
+            if poly and ka is not None and kb is not None:
+                pts = B.slice_corridor(poly, cum, ka, kb)
+                if len(pts) >= 2:
+                    geom = {"type": "LineString",
+                            "coordinates": [[round(p[1], 6), round(p[0], 6)]
+                                            for p in pts]}
+            if geom is None:
+                flat += 1
+            km = b[0] - a[0]
+            dn, up = float(r["down"][i]), float(r["up"][i])
+
+            def emit(g, kmv, d, u, extra=None):
+                daily = (d + u) / 365.0
+                props = {
                     "line": r["line"], "from": a[1], "to": b[1],
-                    "km": round(b[0] - a[0], 3),
-                    "down": round(float(r["down"][i])),
-                    "up": round(float(r["up"][i])),
-                    "daily": round(float(r["down"][i] + r["up"][i]) / 365.0),
-                },
-                "geometry": None,
-            })
+                    "km": round(kmv, 3),
+                    "down": round(d), "up": round(u),
+                    "daily": round(daily), "density": round(daily),
+                }
+                if svc is not None and i < len(svc) and svc[i][0] == 0:
+                    props["service"] = "commuter" if svc[i][1] > 0 else "none"
+                    props["commuter_trains"] = svc[i][1]
+                elif unrecorded and svc is not None and i < len(svc):
+                    props["service"] = "unrecorded"
+                    props["intercity_trains"] = svc[i][0]
+                if extra:
+                    props.update(extra)
+                feats.append({"type": "Feature", "properties": props,
+                              "geometry": g})
+
+            # Where this segment ends at a handover's receiving stop, the step
+            # really happens partway along it, at a junction with no platform.
+            # Cut there and give the far side the through flow.
+            cut = None
+            hs = (ho_step or {}).get((r["line"], b[1]))
+            if hs and geom and pts:
+                give, gend, tdn, tup = hs
+                # The giving line's end stands in for the junction unless
+                # lines.HANDOVER_POINT names it outright, which it has to do
+                # where the end is nowhere near the metals being cut.
+                jpt = LN.HANDOVER_POINT.get((give, gend))
+                if jpt is None:
+                    jshape = corridors.get(give) or {}
+                    jraw = (jshape.get("raw") or {}).get(gend)
+                    if jshape.get("poly") is not None and jraw is not None:
+                        jpt = B.point_at(jshape["poly"], jshape["cum"], jraw)
+                if jpt is not None:
+                    cut = split_at_junction(pts, jpt)
+                    if cut:
+                        head, tail = cut
+                        hkm = sum(B.haversine(x, y)
+                                  for x, y in zip(head, head[1:]))
+                        tkm = sum(B.haversine(x, y)
+                                  for x, y in zip(tail, tail[1:]))
+                        scale = km / (hkm + tkm) if (hkm + tkm) else 1.0
+                        ln = lambda ps: {"type": "LineString",
+                                         "coordinates": [[round(q[1], 6),
+                                                          round(q[0], 6)]
+                                                         for q in ps]}
+                        emit(ln(head), hkm * scale, dn, up)
+                        # `junction` is the giving line's last stop, which is
+                        # where the traffic was last seen and not where it
+                        # joins -- 평택지제 is a station 3 km short of the
+                        # flying junction. Carry the line's name too, since
+                        # what joins is a service and not a station, and the
+                        # page has no other way to say so.
+                        emit(ln(tail), tkm * scale, dn + tdn, up + tup,
+                             {"junction": gend, "join_line": give})
+            if not cut:
+                emit(geom, km, dn, up)
+
+        # The piece that runs on past the last platform to the junction. Its
+        # load is the handover's own tau -- everyone still aboard at 평택지제
+        # rides it, and they are exactly the people who step onto 경부고속선 at
+        # 평택분기점. Without it the line ends in mid-air pointing at nothing,
+        # 7.5 km short of the railway it joins, which is also the whole of
+        # 수서고속선's 12.9 % gap against its 영업거리.
+        #
+        # Drawn in corridor order -- junction first, so its far end meets the
+        # next feature's start and the gap check still means something -- and
+        # inserted where it belongs geographically rather than appended. Its
+        # passengers are not double-counted: the same people ride 경부고속선's
+        # own segments, but over different track on the far side of the
+        # junction.
+        for (L, end), (Mm, stop) in LN.HANDOVER.items():
+            if L != r["line"] or end not in (shape.get("ran_on") or {}):
+                continue
+            hs = (ho_step or {}).get((Mm, stop))
+            k_stn = raw.get(end)
+            if not hs or poly is None or k_stn is None:
+                continue
+            pts = B.slice_corridor(poly, cum, shape["ran_on"][end], k_stn)
+            if len(pts) < 2:
+                continue
+            skm = sum(B.haversine(x, y) for x, y in zip(pts, pts[1:]))
+            _, _, tdn, tup = hs
+            ft = {"type": "Feature",
+                  "properties": {
+                      "line": L, "from": end, "to": Mm, "stub": Mm,
+                      "km": round(skm, 3),
+                      "down": round(tdn), "up": round(tup),
+                      "daily": round((tdn + tup) / 365.0),
+                      "density": round((tdn + tup) / 365.0)},
+                  "geometry": {"type": "LineString",
+                               "coordinates": [[round(q[1], 6), round(q[0], 6)]
+                                               for q in pts]}}
+            if end == r["stops"][0][1]:
+                feats.insert(line_at, ft)
+            else:
+                feats.append(ft)
+
+    raw = len(feats)
+    feats = merge_unserved(feats, table)
     with io.open(OUT, "w", encoding="utf-8") as f:
         json.dump({"type": "FeatureCollection", "features": feats}, f,
                   ensure_ascii=False)
-    print("\nwrote %s (%d segments)" % (os.path.relpath(OUT, HERE), len(feats)))
+    print("\nwrote %s (%d segments from %d, %d without geometry)"
+          % (os.path.relpath(OUT, HERE), len(feats), raw, flat))
 
 
 if __name__ == "__main__":

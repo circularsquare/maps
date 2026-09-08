@@ -140,8 +140,12 @@ MAP = {
     "Islamismo": "islam",
     "Hinduísmo": "hinduism",
     "Budismo": "buddhism",
-    "Novas religiões orientais - Igreja Messiânica Mundial": "japanesenew",
-    "Novas religiões orientais - Outras novas religiões orientais": "japanesenew",
+    "Novas religiões orientais - Igreja Messiânica Mundial": "eastasiannew.japanese",
+    # Moved off the Japanese child onto the PARENT 2026-09-05, when Korea forced
+    # `japanesenew` to become `eastasiannew`. IBGE's bucket is "new ORIENTAL religions" and
+    # this is its residual, so it was only ever on the Japanese node for want of a parent to
+    # put it on. Nothing in the source says these people are Japanese-tradition.
+    "Novas religiões orientais - Outras novas religiões orientais": "eastasiannew",
     "Outras religiões orientais": "other.br",
     "Tradições esotéricas": "esoteric",
     "Tradições indígenas": "indigenous",
@@ -165,6 +169,38 @@ def leaf_categories(category_parent, names_by_code):
     has_child = {p for p in category_parent.values() if p}
     return {names_by_code[c] for c in category_parent if c not in has_child
             and c in names_by_code}
+
+
+# The 2022 GROUP each rescaled row was carried inside -> the node that group names
+# (spec §7a-i-1). Brazil is not an allocate.py country, but the shape is identical: the 2022
+# município total for a group is a measurement AT THE DRAWN UNIT, and what `br_rescale.py`
+# derives is only which 2010 denomination inside it. Keyed by `br_rescale.GROUPS`' own keys,
+# which is what the rescaled file records as `group22=`.
+#
+# The three groups that map to a single 2010 leaf — Católica Apostólica Romana, Espírita,
+# Tradições indígenas — pass through as `measured` and never roll, so they are not here.
+#
+# `Evangélicas` -> `christianity.protestant` and not `christianity.evangelical`. Anita's call,
+# 2026-09-07, after trying the other one: it is 47.4M people, the largest single roll-up
+# target on the map. `christianity.evangelical` exists for sources that name Evangelical
+# BESIDE Protestant — Kenya, where KNBS publishes both cells — and IBGE does not: `Evangélicas`
+# is its ONLY non-Catholic Christian cell and holds the mission churches and the Pentecostals
+# together. That is exactly what `christianity.protestant` is for, and its own note says so:
+# "for sources that collect 'Protestant' or 'Evangelical' as an answer without naming a body".
+# The cost is that the Brazilian legend says Protestant where the census said Evangélicas.
+#
+# `Outras religiosidades` -> `other.br` collapses Judaism, Islam, Buddhism, Hinduism,
+# Orthodoxy, the Witnesses and the Latter-day Saints into one colour. That is unflattering
+# and it is exactly what IBGE published at município in 2022: one cell, 7.08M people, no
+# breakdown. Their 2010 names are the model, not the measurement.
+COLUMNS = {
+    "Evangélicas": "christianity.protestant",
+    "Sem religião": "unaffiliated",
+    "Outras religiosidades": "other.br",
+    # The one 2022 group that is a family rather than an answer. IBGE published it whole at
+    # município — 1,849,835 — and 2010 supplies the split into Umbanda and Candomblé.
+    "Umbanda e Candomblé": "afrodiasporic",
+}
 
 
 def resolve(category):

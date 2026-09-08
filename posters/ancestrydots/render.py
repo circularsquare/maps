@@ -116,7 +116,23 @@ def main():
 
     t0 = time.time()
     tf = Transformer.from_crs("EPSG:4326", MAIN, always_xy=True)
-    x0, x1, y0, y1 = box = extent(tf)
+    x0, x1, y0, y1 = extent(tf)
+
+    # The frame belongs to layout.py — the rails were planned against it, so
+    # drawing the map on a different one would silently misalign every inset.
+    lay_path = BUILD / "layout.json"
+    if lay_path.exists():
+        lay = json.loads(lay_path.read_text(encoding="utf-8"))
+        m_per_in = (x1 - x0) / args.width_in
+        x0 -= lay.get("extend_left", 0.0) * m_per_in
+        x1 -= lay.get("trim_right", 0.0) * m_per_in
+        y1 -= lay.get("trim_top", 0.0) * m_per_in
+        args.width_in = round((x1 - x0) / m_per_in, 4)
+        print(f"frame from layout.json: extend_left="
+              f"{lay.get('extend_left', 0)} trim_right={lay.get('trim_right', 0)}"
+              f" trim_top={lay.get('trim_top', 0)}"
+              f" -> {args.width_in:.2f} x {(y1 - y0) / m_per_in:.2f} in")
+    box = (x0, x1, y0, y1)
     aspect = (x1 - x0) / (y1 - y0)
 
     km_in = (x1 - x0) / 1000 / args.width_in

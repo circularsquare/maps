@@ -73,6 +73,30 @@ EXTENT = 4096
 SHUFFLE_SEED = 20260827
 
 
+def _rollup_tables():
+    """§7a-i-1's per-country `node -> the level this country COUNTED it at` table.
+
+    Read from `data/processed/rollup.json` rather than recomputed, because building it means
+    calling every country's `counts()` — minutes of CSV, where a retile is already the long
+    pole and `--refresh-meta` is supposed to be the cheap path. `rollup.py` writes it; this
+    only carries it into counts.json.
+
+    A missing file is not fatal and must not be. Every country then falls back to the
+    ancestor walk the viewer shipped with in §7a-i, which is the behaviour before this
+    existed — a worse answer, not a broken one.
+    """
+    path = PROC / "rollup.json"
+    if not path.exists():
+        print(f"  !! no {path.name} — run: python rollup.py\n"
+              "     every country falls back to §7a-i's ancestor walk, so the UK's 22.1M "
+              "unaffiliated go back to vanishing when inferred dots are not shown")
+        return {}
+    tables = json.loads(path.read_text(encoding="utf-8"))
+    print(f"  rollup.json: {len(tables)} countries, "
+          f"{sum(len(v) for v in tables.values())} nodes")
+    return tables
+
+
 def load(path: Path, cc: str):
     with open(path, encoding="utf-8") as f:
         gj = json.load(f)
@@ -211,7 +235,19 @@ def main():
         if not path.exists():
             raise SystemExit(f"no {path.name} to refresh — run a full build first")
         counts = json.loads(path.read_text(encoding="utf-8"))
+        # Coverage is editable in the same sense the notes are: it comes from the taxonomy
+        # mapping, not from the dots, so a mapping fix should reach the viewer without
+        # re-tiling 36,000 tiles to say so (spec §6.12).
+        import coverage as _coverage
+        covers = _coverage.coverage()
+        counts["regions"] = _coverage.regions()
+        rolls = _rollup_tables()
         for cc, entry in counts.get("countries", {}).items():
+            entry["covers"] = sorted(covers.get(cc, ()))
+            # §7a-i-1's fallback table, refreshable for coverage.py's reason: it comes from
+            # the taxonomy mapping rather than from the dots, so fixing a column's node must
+            # not cost a retile. `rollup.py` is what writes it.
+            entry["roll"] = rolls.get(cc, {})
             meta = COUNTRIES.get(cc)
             if not meta:
                 print(f"  {cc}: not in countries.py — left as it was")
@@ -221,6 +257,8 @@ def main():
             entry["source"] = meta.get("source", "")
             entry["basis"] = meta.get("basis", "")
             entry["note"] = meta.get("note_public", "")
+            entry["grain"] = meta.get("grain", "")
+            entry["gap"] = meta.get("gap", "")
             # the data bbox stays whatever the build measured; only the framing is editable
             entry["view"] = list(meta.get("view") or entry.get("bbox") or [])
             print(f"  {cc}: {entry['name']}  view {[round(v, 1) for v in entry['view']]}")
@@ -285,6 +323,14 @@ def main():
         A function rather than a straight line of main() so that a build which cannot move
         the archive into place still writes the counts that match it.
         """
+        # What each source CAN see, as against what it happens to report — coverage.py, and
+        # spec §6.11. Carried per country so the viewer can tell "asked, and nobody said it"
+        # from "never asked", which are the same empty map otherwise.
+        import coverage as _coverage
+        covers = _coverage.coverage()
+        regions = _coverage.regions()
+        rolls = _rollup_tables()
+
         per_country = {}
         for cc in sorted(set(dots["c"])):
             d = dots[dots["c"] == cc]
@@ -301,10 +347,14 @@ def main():
                 "source": meta.get("source", ""),
                 "basis": meta.get("basis", ""),
                 "note": meta.get("note_public", ""),
+                "grain": meta.get("grain", ""),
+                "gap": meta.get("gap", ""),
                 "bbox": box,
                 "view": list(meta.get("view") or box),
                 "dots": d["n"].value_counts().to_dict(),
                 "rings": r["n"].value_counts().to_dict() if r is not None else {},
+                "covers": sorted(covers.get(cc, ())),
+                "roll": rolls.get(cc, {}),
             }
             # The legend counts marks, and at 1:10,000 a country has different ones: two of
             # India's seventeen nodes stop drawing a dot at all and become rings instead. So
@@ -326,6 +376,10 @@ def main():
         counts = {"dot_value": 1000,
                   "dot_values": [1000, 10000] if args.coarse else [1000],
                   "countries": per_country,
+                  # What the coverage wash draws (§6.12). Usually one region per country;
+                  # the UK is three, because its three censuses classify differently and one
+                  # lit shape would claim England asks what only Scotland asks.
+                  "regions": regions,
                   "dots": dots["n"].value_counts().to_dict(),
                   "rings": rings["n"].value_counts().to_dict() if rings is not None else {}}
         if args.coarse:

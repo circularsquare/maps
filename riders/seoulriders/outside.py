@@ -5,7 +5,7 @@
 things the fit actually wants, on the same terms as the Seoul sources:
 
   gate(month, dows, find, n)   mean daily boardings/alightings per complex
-  hourly(month, find, n)       station x hour shape, weekday-corrected
+  hourly(month, dows, find, n) station x hour shape, day-type corrected
 
 103 of the 626 complexes have no row in `card_daily_*.csv` at all, because
 their fares settle outside Seoul. Until now they took whatever their Seoul-bound
@@ -27,10 +27,11 @@ mean and is the place that borrow is most likely to cost something.
 **A month's hours are not a weekday's hours.** 인천교통공사's 시간대별 file is a
 monthly aggregate, so its peaks are flattened by the weekends inside it, where
 서울교통공사's OA-12921 is per day. The correction is measured rather than
-assumed: for the same month, build Seoul's hourly shape twice -- once over
-Tue/Wed/Thu only, once over every day -- and the ratio between them is what a
-month does to a weekday. Applied per hour to Incheon's shape, separately for
-boardings and alightings.
+assumed: for the same month, build Seoul's hourly shape twice -- once over the
+days the build actually wants, once over every day -- and the ratio between
+them is what the month did to that day. A weekday's 07-08 comes back x1.17; a
+Sunday build asks for the opposite and gets it. Applied per hour to Incheon's
+shape, separately for boardings and alightings.
 
 Only the shape of an hourly profile is used downstream (`build_od.py` rescales
 every station to its own kept total), so this correction moves the peak, not
@@ -394,15 +395,25 @@ def gate(month, dows, find, n, complex_names, verbose=False):
 # hourly shape
 # --------------------------------------------------------------------------
 
-def seoul_month_to_weekday(month):
-    """Per hour, what a whole month does to a weekday's shape, from Seoul.
+def seoul_month_to_day(month, dows):
+    """Per hour, what a whole month does to the chosen day's shape, from Seoul.
 
-    Returns (cb, ca), each a length-20 multiplier normalised to mean 1.
+    Incheon publishes a month; the build wants a day type. Seoul publishes
+    both, so the difference between them is measured rather than assumed:
+    build 서울교통공사's hourly shape over just the days we want and again over
+    every day in the month, and the ratio is what the month did to that day.
+    A weekday's peaks come back (07-08 x1.17), a Sunday's do not.
+
+    `dows` is a tuple of weekday numbers, or one ISO date for a named day.
+    Returns (cb, ca), each a length-20 multiplier.
     """
     days = month_days(month)
-    wd = set(d.strftime("%Y-%m-%d") for d in days
-             if day_class(d) == "wd"
-             and d.isoformat() not in daytype.EXCLUDE_DATES)
+    if isinstance(dows, str):
+        wd = {dows}
+    else:
+        wd = set(d.strftime("%Y-%m-%d") for d in days
+                 if d.weekday() in dows
+                 and d.isoformat() not in daytype.EXCLUDE_DATES)
     alld = set(d.strftime("%Y-%m-%d") for d in days)
     tot = {"wd": [np.zeros(NH), np.zeros(NH)],
            "all": [np.zeros(NH), np.zeros(NH)]}
@@ -431,11 +442,12 @@ def seoul_month_to_weekday(month):
     return out
 
 
-def hourly(month, find, n, complex_names, correct=True, verbose=False):
+def hourly(month, dows, find, n, complex_names, correct=True, verbose=False):
     """Station x hour boardings and alightings for the Incheon operator.
 
     Level is the month's; only the shape is used downstream. With `correct`,
-    the month's flattened peak is pulled back to a weekday's using Seoul.
+    the month's flattened peak is pulled onto the day type `dows` names, using
+    Seoul as the yardstick -- see `seoul_month_to_day`.
     """
     resolve = resolver(find, complex_names)
     B = np.zeros((n, NH))
@@ -461,11 +473,12 @@ def hourly(month, find, n, complex_names, correct=True, verbose=False):
             A[i, H_INDEX[h]] += float(r["count"] or 0)
             have_a[i] = True
     if correct:
-        cb, ca = seoul_month_to_weekday(month)
+        cb, ca = seoul_month_to_day(month, dows)
         B *= cb[None, :]
         A *= ca[None, :]
         if verbose:
-            print("   month->weekday correction, boardings: "
+            print("   %s month->day correction, boardings: "
+                  % month
                   + " ".join("%d:%.2f" % (h, cb[H_INDEX[h]])
                              for h in (7, 8, 9, 12, 18, 19)))
     if verbose:
@@ -514,7 +527,7 @@ def _check(month):
           % (m.sum(), B[m].sum() / B0[m].sum()))
 
     print("\nhourly shape from 인천교통공사:")
-    HB, HA, hh = hourly(month, find, n, names, verbose=True)
+    HB, HA, hh = hourly(month, WEEKDAY_DOWS, find, n, names, verbose=True)
     tot = HB[hh].sum(axis=0)
     tot = tot / tot.sum()
     print("   corrected boarding shape: "

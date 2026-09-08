@@ -327,7 +327,13 @@ def main():
                   left_on=(["cu", "code"] if args.within else ["code"]), right_on=keys,
                   suffixes=("", "_r"))
     out["count"] = out["count"] * out["share"]
-    out = out.rename(columns={"code": "home", "leaf": "code"})
+    # The join was an equality on it, so rhs's `home` only repeats f's `code`. Leaving it
+    # in makes TWO columns called `home` the moment `code` is renamed, and `r['home']` in
+    # the note below then returns a Series rather than the column name — which is what
+    # `in` and `hu` carry today: `parent_column=home    Other religions and persuasions
+    # \nhome    Other religions...\nName: 6, dtype: object`. Nothing reads that field yet,
+    # so it went unnoticed; §7a-i-1's roll-up is the thing that will need it.
+    out = out.drop(columns=["home"]).rename(columns={"code": "home", "leaf": "code"})
 
     codekey = args.code if args.hierarchy == "prefix" else "cat"
     # Under --within the note names the coarse unit whose composition was used, not just

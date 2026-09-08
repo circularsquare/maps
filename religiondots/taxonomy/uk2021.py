@@ -193,6 +193,26 @@ MAP = {
     "Other Religions: Other Religions": "other.uk",
 }
 
+# The fine COLUMN each allocated category was split out of -> the node that column names
+# (spec §7a-i-1). Two agencies appear here and Scotland does not: NRS publishes its 13
+# categories at Output Area already, so no Scottish row is derived and none rolls.
+#
+# `No religion` is the single largest entry in this file across the whole project —
+# **22.1 million people**, and until §7a-i-1 they left the map entirely whenever a reader
+# asked to see what was counted. They were counted: ONS published `No religion` at the
+# Output Area itself, and the MSOA write-ins only decided which of them are Agnostic,
+# Atheist or Humanist. The overwhelming majority already resolve to `unaffiliated`, so for
+# them the roll-up is a relabelling from `derived` to `measured` and the dot does not move.
+COLUMNS = {
+    # ONS, England and Wales
+    "No religion": "unaffiliated",
+    "Other religion": "other.uk",
+    # NISRA, Northern Ireland. `christianity` and not `christianity.other`, for hu2022's
+    # reason: NISRA's column is a residual and that node is explicitly not one.
+    "Other Christian (including Christian related)": "christianity",
+    "Other religions": "other.uk",
+}
+
 
 def resolve(category):
     """religiondots branch for a UK category, or None if deliberately off the tree."""

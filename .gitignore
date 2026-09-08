@@ -26,3 +26,5 @@ nystreets/osm*.png
 nystreets/nystreets.png
 # poster renders + baked dot arrays, regenerable from bake/render/insets:
 posters/*/build/
+# hand-edit backup written by posters/nycriders/nudge/serve.py on each save:
+posters/*/nudge/nudges.backup.json

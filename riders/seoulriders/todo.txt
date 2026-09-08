@@ -3,6 +3,7 @@ for anita editing only, just to keep track of stuff on high level
 
 - add like average day static traffic view stuff (see nycriders or london)
 - add more lines
+  - 12 seohae line stations (sosa-wonsi) no measured volume anywhere? 
 - try to get better more representative OD data
 
 - add the mroe detailed traffic views to the static view (take from nycridrs)

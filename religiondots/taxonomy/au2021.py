@@ -226,10 +226,10 @@ MAP = {
     "Ancestor Veneration": "chinesefolk",
     "Chinese Religions, nec": "chinesefolk",
     "Chinese Religions, nfd": "chinesefolk",
-    "Sukyo Mahikari": "japanesenew",
-    "Tenrikyo": "japanesenew",
-    "Japanese Religions, nec": "japanesenew",
-    "Japanese Religions, nfd": "japanesenew",
+    "Sukyo Mahikari": "eastasiannew.japanese",
+    "Tenrikyo": "eastasiannew.japanese",
+    "Japanese Religions, nec": "eastasiannew.japanese",
+    "Japanese Religions, nfd": "eastasiannew.japanese",
 
     # ---------------------------------------------------------------- indigenous
     "Australian Aboriginal Traditional Religions": "indigenous.australian",
@@ -263,6 +263,42 @@ MAP = {
     "Multi Faith": "other.au",
     "Religious Groups, nec": "other.au",
     "Secular Beliefs and Other Spiritual Beliefs and No Religious Affiliation, nfd": "other.au",
+}
+
+# The SA2 COLUMN each allocated category was split out of -> the node that column names
+# (spec §7a-i-1). KEYED BY ASCRG CODE, not by name, because the SA2 table's columns are
+# codes and that is what `allocate.py --hierarchy prefix` records as `parent_column`.
+#
+# `29 Other Christian` goes to `christianity` rather than `christianity.other`: that node is
+# "bodies with no branch to belong to, not a residual" (spec §3.2), and ABS's column is a
+# residual holding Quakers, Christian Scientists and Rātana as well.
+#
+# TWO ALLOCATED COLUMNS ARE DELIBERATELY ABSENT:
+#
+#   `28 Other Protestant` — 112,378, half of it Methodists, Plymouth Brethren, Holiness and
+#   Congregationalists. The only candidate is `christianity.protestant`, which says of
+#   itself that it holds an ANSWER and is "deliberately NOT a parent of the Protestant
+#   families". Using it here would make it one.
+#
+#   `73 Other Spiritual Beliefs` IS mapped, to `unchurched`, and it is the one call in this
+#   dict worth arguing with: 32,739 of its 45,888 are `Own Spiritual Beliefs` and `Theism`,
+#   which this file already sends to `unchurched` for exactly the reason the node exists —
+#   a spiritual belief with no affiliation. The 826 Unitarian Universalists in the same ABS
+#   group are a church and are the known cost.
+COLUMNS = {
+    "201": "christianity.anglican",
+    "207": "christianity.catholic",
+    "211": "christianity.restorationist",
+    "215": "christianity.latterday",
+    "221": "christianity.oriental",
+    "222": "christianity.churchofeast",
+    "223": "christianity.orthodox",
+    "225": "christianity.reformed",
+    "24": "christianity.pentecostal",
+    "29": "christianity",
+    "603": "other.au",
+    "72": "secular",
+    "73": "unchurched",
 }
 
 

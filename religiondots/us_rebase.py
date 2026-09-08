@@ -41,17 +41,29 @@ shares to the whole population scales the survey by about 1.28x, and that assume
 their household's religion. Catholic then clears its roll by 1.1M, under 2%; applied to adults
 only it is negative by 12.8M. What this map says about American Catholics rests on it.
 
-CONFIDENCE. The rows this file emits are `derived` (§7). NOTHING ON SCREEN SHOWS THAT — the
-desaturation that did was removed 2026-09-04, because every colour on the map has to be a colour
-in the legend — so the tier is recorded and carried and the country note is the only place a
-reader learns that half the American map is a survey residual. §7 has what a replacement would
-have to look like. The tier is still `derived` rather than `modelled` because §7's
-`derived` is "a national figure distributed by a proxy" and this is a state figure distributed
-by a proxy, while `modelled` is for a country estimate where there is no subnational data at
-all. It is the weak end of derived and it is worth saying why — the coarse total here is a
-survey of 36,908 people cut 51 ways, with a state margin of error of 3 to 8 points, converted
-by the child assumption above, where Ireland's equivalent coarse total is a census count. The
-ASARB rows keep `measured`, which is what a register read in the county is.
+CONFIDENCE. The rows this file emits are `modelled` (§7) — Anita's call, 2026-09-05, and it
+REVERSES the `derived` this file carried from the start. Both readings are written down because
+the argument is close and somebody will want to reopen it.
+
+The old argument: §7's `derived` is "a national figure distributed by a proxy" and this is a
+STATE figure distributed by a proxy, while `modelled` is for "a country estimate where there is
+no subnational data at all". By the letter of that, state-level structure is subnational data
+and these rows are derived.
+
+Why it lost. §7's tiers are not really about which administrative level the coarse total sits
+at, they are about whether anybody was COUNTED. `derived` reads as "somebody counted this and
+the number was carried to a finer place" — Ireland's coarse total is a census count, India's six
+religions are counted at sub-district, and only their placement is inferred. Nothing here was
+counted at any level: the coarse total is a survey of 36,908 people cut 51 ways, with a state
+margin of error of 3 to 8 points, converted by the child assumption above, and then spread over
+3,143 counties by a proxy. This file's own previous paragraph called it "the weak end of
+derived", which is the tell — a tier with an end that weak is two tiers.
+
+What it costs to be honest about it: 166,291 dots, HALF of every non-measured dot on the map and
+6.7% of the whole thing, move from derived to modelled. §7a's toggle takes them off screen and
+the legend's split readout names them. That is the point rather than a side effect.
+
+The ASARB rows keep `measured`, which is what a register read in the county is.
 
 Run: python us_rebase.py --report     prints the state table and the overflow record, writes
                                       nothing. countries.py calls residual_counts() directly.
@@ -248,7 +260,7 @@ def residual_counts(roll=None):
     df = df.groupby(["unit", "node"], as_index=False)["count"].sum()
     df["congregations"] = 0
     df["may_ring"] = False          # §3.10: a spread total cannot establish presence
-    df["tier"] = "derived"          # §7; see the module docstring for why not `modelled`
+    df["tier"] = "modelled"         # §7; see the module docstring for why not `derived`
     return df[["unit", "node", "count", "congregations", "may_ring", "tier"]]
 
 

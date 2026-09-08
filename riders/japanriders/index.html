@@ -599,7 +599,16 @@ const casingWidth = (m = effMul()) => ['interpolate', ['exponential', ZOOM_BASE]
 // minimum — every feature, however faint, gets a usable target, while fat lines
 // stay clickable across their whole width (the floor never shrinks them).
 const HIT_LINE_MIN = 11;   // px — min clickable line band
-const HIT_DOT_MIN  = 9;    // px — min clickable bubble radius
+// Bubble hit floor. A flat floor is wrong zoomed out: a station drawn at a
+// fraction of a pixel still claimed a 9px grab radius, so hovering a line near
+// any station showed that station's tooltip instead of the segment's — and at
+// national zoom that is most of the map, with the bubble too small to see and
+// nothing to explain why the wrong thing appeared. So the floor is a curve of
+// its own, generous where the dots are big enough to aim at and nearly off
+// where they are not. Lines keep their flat floor: a hairline is unclickable
+// at any zoom, and there is no second thing competing for the cursor.
+const HIT_DOT_MIN_LO = 3;  // px — at zoom 3, where the dots are specks
+const HIT_DOT_MIN_HI = 9;  // px — at zoom 13, finger-friendly
 // Floor is baked into each zoom stop, not wrapped around the interpolate —
 // ['zoom'] may only sit at the top level of a step/interpolate, never nested
 // inside max(). Width grows monotonically with zoom and the floor is constant,
@@ -713,8 +722,8 @@ const circleRadius = (m = stationMul) => ['interpolate', ['exponential', ZOOM_BA
     3,  ['*', ['get', 'r'], m * ZF_LO],
     13, ['*', ['get', 'r'], m * ZF_HI]];
 const hitRadius = (m = stationMul) => ['interpolate', ['exponential', ZOOM_BASE], ['zoom'],
-    3,  ['max', HIT_DOT_MIN, ['*', ['get', 'r'], m * ZF_LO]],
-    13, ['max', HIT_DOT_MIN, ['*', ['get', 'r'], m * ZF_HI]]];
+    3,  ['max', HIT_DOT_MIN_LO, ['*', ['get', 'r'], m * ZF_LO]],
+    13, ['max', HIT_DOT_MIN_HI, ['*', ['get', 'r'], m * ZF_HI]]];
 
 function applyStationSize() {
     if (map.getLayer('station-dots'))

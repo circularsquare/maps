@@ -98,6 +98,36 @@ MAP = {
     "Otras religiones o movimientos religiosos": "other.mx",
 }
 
+# The municipio COLUMN each allocated category was split out of -> the node that column
+# names (spec §7a-i-1). INEGI publishes four groups at municipio and the 23 named religions
+# only at entidad, so everything except Católica is derived.
+#
+# THE THIRD COLUMN IS THE ONE THAT COSTS SOMETHING, and it is worth writing down what.
+# `Población sin religión o sin adscripción religiosa` is 13,314,516 people at municipio and
+# holds THREE answers INEGI keeps apart at entidad:
+#
+#     Ninguna religión                        9,488,671   71%   -> unaffiliated
+#     Sin adscripción religiosa (creyente)    3,103,464   23%   -> unchurched
+#     Ateos/Agnósticos                          722,381    5%   -> secular
+#
+# There is no node for the union, so rolling it anywhere relabels somebody. `unaffiliated` —
+# Anita's call, 2026-09-07 — costs the 3.1M believers-without-a-church, who draw as "No
+# religion"; `unchurched` would have cost the other 10.2M, including the atheists, which is
+# three times worse. Leaving it out cost all 13.3M their place on the map whenever a reader
+# asked what was counted, which is the error §7a-i exists to fix.
+#
+# THE 23% IS A REAL LOSS AND NOT A ROUNDING ONE: `unchurched` was added to hold exactly the
+# distinction INEGI drew with the word `creyente`, and here it is being folded away. It is
+# folded away only in the rolled state — the default map still draws all three separately —
+# and it would be undone by a node holding INEGI's own combined answer, the way
+# `christianity.protestant` holds Czechia's. That remains the better fix if this ever matters
+# enough to make one.
+COLUMNS = {
+    "Población con grupo religioso protestante/cristiano evangélico": "christianity.protestant",
+    "Población con otras religiones diferentes a las anteriores": "other.mx",
+    "Población sin religión o sin adscripción religiosa": "unaffiliated",
+}
+
 
 def resolve(category):
     """religiondots branch for an INEGI category, or None if deliberately off the tree."""

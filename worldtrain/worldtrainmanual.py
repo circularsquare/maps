@@ -84,4 +84,4 @@ image = Image.open('data/NE1_HR_LC.tif')
 shrunk_image = image.resize((10000, 5000))
 
 # Save the image as a PNG
-shrunk_image.save('worldtrainheight.png', format='PNG')
+shrunk_image.save('worldtrain/worldtrainheight.png', format='PNG')

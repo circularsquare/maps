@@ -14,8 +14,8 @@ const ROOT = path.join(__dirname, '..');
 const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
 const script = html.match(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/)[1];
 
-const WANT = ['hsl', 'parentOf', 'ROOT_HSL', 'PIN', 'PIN_OVERVIEW', 'TIERS',
-              'ROOT_BAND', 'BAND_TIERS', 'buildPalette', 'buildOverview'];
+const WANT = ['hsl', 'parentOf', 'ROOT_HSL', 'PIN', 'PIN_OVERVIEW', 'OVERVIEW_ARC', 'TIERS',
+              'OVERVIEW_FLAT', 'FLAT_SHARE', 'ROOT_BAND', 'BAND_TIERS', 'buildPalette', 'buildOverview'];
 const decls = [...script.matchAll(/^(?:const|let|function)\s+([A-Za-z_$][\w$]*)/gm)]
   .map(m => ({ name: m[1], at: m.index }));
 const found = new Set();

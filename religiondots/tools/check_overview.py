@@ -28,10 +28,17 @@ import argparse
 import collections
 import itertools
 import json
+import re
 import subprocess
 import sys
 import tempfile
 from pathlib import Path
+
+# §12's rule, which this tool did not have: the Windows console is cp1252 and dies on a
+# node label rather than on the data. Vietnam is what found it — `Tứ Ân Hiếu Nghĩa` in the
+# dim-against-the-background line killed the run after the measurement had succeeded.
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 sys.path.insert(0, str(Path(__file__).parent))
 from check_palette import (BG, DIM_ON_PURPOSE, as_hex, delta_e,  # noqa: E402
@@ -44,6 +51,12 @@ from branches import LINEAGE                                    # noqa: E402
 FOLD_SHARE = 1e-4          # keep in step with index.html §6.10
 FOLD_MIN = 2
 HIDDEN_ROOTS = ("unaffiliated",)
+# index.html's OVERVIEW_LEAF: families the overview draws as one category at any depth.
+# Read out of the viewer rather than copied, for the reason the module docstring gives.
+OVERVIEW_LEAF = set(
+    re.findall(r"'([^']+)'",
+               re.search(r"const OVERVIEW_LEAF = new Set\(\[(.*?)\]\)",
+                         (HERE / "index.html").read_text(encoding="utf-8"), re.S).group(1)))
 
 
 def load_palette():
@@ -130,7 +143,9 @@ class Tree:
 
         def walk(nid, d):
             ks = self.vis(nid)
-            if d >= depth or not ks:
+            leaf = nid in OVERVIEW_LEAF and not (
+                scope and (scope == nid or scope.startswith(nid + ".")))
+            if d >= depth or not ks or leaf:
                 out.append(nid)
                 return
             if self.own[nid]:

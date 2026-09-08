@@ -39,6 +39,16 @@ ALIAS = {
 # Sheet column heading -> the yearbook passenger types it covers. 전동차 is
 # 광역전철 and has no 승하차 row of its own, so it is left out; ITX-청춘 is a
 # different service from ITX-새마을 and only runs on 경춘선.
+#
+# A column can cover more than one passenger type, and that is why counts are
+# kept per *column* rather than exploded to types. The sheet has one 새마을
+# column carrying both 새마을 and ITX-새마을 services, so a line whose types are
+# CONVENTIONAL used to add those trains twice -- 경부선 서울-금천구청 came out
+# at 92 trains against the 새마을 26 + 무궁화 40 = 66 that actually run, a 40 %
+# inflation, and every conventional line was affected. It never showed, because
+# the only things read off these counts were whether a total was zero and which
+# way it stepped, and a consistent double-count changes neither. It matters the
+# moment a count is used as a denominator.
 COLUMNS = {
     "KTX": ["KTX"],
     "SRT": ["SRT"],
@@ -47,7 +57,23 @@ COLUMNS = {
     "ITX-청춘": ["ITX-새마을"],
     "무궁화": ["무궁화"],
     "통근": ["통근"],
+    # 전동차 is 광역전철 and has no 승하차 row, so it never joins an intercity
+    # total -- "전동차" is not in any line's TYPES, so `total()` cannot pick it
+    # up. It is read anyway because it is the one thing that tells a section
+    # with no intercity service apart from a section with no service at all,
+    # and the map has to say which. 경원선 청량리-광운대 runs 184 commuter trains
+    # a day and no intercity ones; 소요산-신탄리 runs nothing whatever.
+    "전동차": ["전동차"],
 }
+
+COMMUTER = "전동차"
+
+
+def total(runs, kinds):
+    """Trains a day over the columns serving any of `kinds`, each counted once."""
+    want = set(kinds)
+    return sum(n for col, n in runs.items()
+               if want.intersection(COLUMNS.get(col, (col,))))
 
 
 def _flat(v):
@@ -76,12 +102,13 @@ def sections():
             sec = _flat(ws.cell(row=r, column=3).value)
             if not sec or "-" not in sec:
                 continue
+            # Keyed by the sheet's own column, so a column covering two
+            # passenger types is still one set of trains. See COLUMNS.
             runs = {}
             for c, h in head.items():
                 v = ws.cell(row=r, column=c).value
                 if isinstance(v, (int, float)) and v:
-                    for k in COLUMNS[h]:
-                        runs[k] = runs.get(k, 0) + int(v)
+                    runs[h] = runs.get(h, 0) + int(v)
             frm, to = sec.split("-", 1)
             out.append((line, frm, to, runs))
     return out
@@ -115,12 +142,67 @@ def changes(canon, kinds):
     secs = by_line().get(canon)
     if not secs:
         return None
-    want = set(kinds)
-    tot = [sum(n for k, n in runs.items() if k in want) for _, _, runs in secs]
+    tot = [total(runs, kinds) for _, _, runs in secs]
     out = {}
     for i in range(len(secs) - 1):
         if secs[i][1] == secs[i + 1][0]:        # contiguous, so a real boundary
             out[secs[i][1]] = (tot[i], tot[i + 1])
+    return out
+
+
+def runs_along(canon, kinds, stops):
+    """Trains a day on the section each segment falls in.
+
+    `stops` must be in the line's own 기점 -> 종점 order, the order the sheet
+    lists its sections in. Returns one count per segment, so one fewer than
+    there are stops, or None where the line has no section data.
+
+    The zero counts are the point. 경원선 north of 소요산 has been shut for the
+    전철 works and the sheets show nothing running on either of its last two
+    sections -- no trains means no passengers, and that is a far harder thing to
+    say than any prior on a junction step.
+    """
+    secs = by_line().get(canon)
+    if not secs:
+        return None
+    tot = [total(runs, kinds) for _, _, runs in secs]
+    starts = {}
+    for i, (frm, _, _) in enumerate(secs):
+        starts.setdefault(frm, i)
+    out, cur = [], 0
+    for nm in stops[:-1]:
+        hit = match(nm, starts)
+        if hit is not None:
+            cur = hit
+        out.append(tot[cur])
+    return out
+
+
+def service_along(canon, kinds, stops):
+    """Per segment, (intercity trains, commuter trains) a day each way.
+
+    Same walk as `runs_along`, but it also carries 전동차 so a caller can tell
+    "no intercity service here, but the 광역전철 runs" from "nothing runs here
+    at all". The map draws both cases the same way and needs to label them
+    differently -- 경원선 north of 청량리 is Seoul's line 1, busy and fully
+    drawn by the metro layer, while 소요산-백마고지 was shut.
+
+    Counts are one way; the sheet's own header says 작성기준: 편도.
+    """
+    secs = by_line().get(canon)
+    if not secs:
+        return None
+    inter = [total(runs, kinds) for _, _, runs in secs]
+    comm = [runs.get(COMMUTER, 0) for _, _, runs in secs]
+    starts = {}
+    for i, (frm, _, _) in enumerate(secs):
+        starts.setdefault(frm, i)
+    out, cur = [], 0
+    for nm in stops[:-1]:
+        hit = match(nm, starts)
+        if hit is not None:
+            cur = hit
+        out.append((inter[cur], comm[cur]))
     return out
 
 

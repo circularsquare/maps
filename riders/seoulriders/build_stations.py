@@ -672,6 +672,10 @@ def main():
                                "color": l.color,
                                "capacity": l.capacity,
                                "within_share": coverage[l.id],
+                               # Superseded: build.py overwrites `partial`
+                               # with `modelled >= 0.5`, measured off the built
+                               # OD rather than off the source. `within_share`
+                               # below is still a true fact about the file.
                                "partial": coverage[l.id] < PARTIAL_BELOW})
                        for l in LR.LINES),
                    "complexes": out_complexes,

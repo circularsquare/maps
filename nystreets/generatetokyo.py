@@ -81,10 +81,10 @@ def findUsage(num_iterations = 10000000):
 
     # G_directed = ox.graph_from_bbox(bbox = bbox, network_type='drive')
     # G_proj = ox.project_graph(G_directed, to_crs=TARGET_CRS)
-    # with open('graph_tokyo.pkl', 'wb') as f:
+    # with open('nystreets/graph_tokyo.pkl', 'wb') as f:
     #     pickle.dump(G_proj, f)
 
-    with open('graph_tokyo.pkl', 'rb') as f:
+    with open('nystreets/graph_tokyo.pkl', 'rb') as f:
         G_proj = pickle.load(f)
 
     G_initial = nx.Graph(G_proj)
@@ -424,7 +424,7 @@ def findUsage(num_iterations = 10000000):
     print("Final combined GeoDataFrame created successfully.")
     
     # save!
-    df.to_file('tokyo_gdf.gpkg', driver='GPKG')
+    df.to_file('nystreets/tokyo_gdf.gpkg', driver='GPKG')
     print('File saved.')
 
 if __name__ == '__main__':
@@ -432,7 +432,7 @@ if __name__ == '__main__':
     findUsage(4000000)
 
     print('loading file...')
-    df = gpd.read_file('tokyo_gdf.gpkg')
+    df = gpd.read_file('nystreets/tokyo_gdf.gpkg')
 
 
 

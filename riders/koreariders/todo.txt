@@ -1,0 +1,9 @@
+- verify junctions / things that dont visually connect that should
+
+- consider showing japan flow and korea flow on same map
+
+- map goes blank briefly when zooming out past a certian zoom level
+
+
+
+python -m http.server 8731 --bind 127.0.0.1 --directory C:\Users\anita\projects\maps\riders\koreariders

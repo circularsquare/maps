@@ -88,13 +88,48 @@ def station_lines(grid, stations):
     return out
 
 
-def load_stations():
+KORAIL = "한국철도공사"
+
+
+def load_stations(LN=None):
+    """{name: [(lat, lon), ...]} for every OSM station node.
+
+    Pass `LN` to keep only the ones Korail actually serves. Snapping by distance
+    alone drags in whatever railway happens to run alongside: the 부산 도시철도
+    follows the old 경부선 alignment through 개금 and 주례, Seoul's line 4 sits
+    over it at 신용산 and 삼각지, and 서울역 is a second node for 서울. Left in,
+    they carry no traffic but split the corridor at places no train stops.
+
+    The test is the operator, because nothing else separates them. A 광역전철
+    station is still Korail's -- 노량진, 구로, 금천구청, all of 경춘선 -- and
+    people really travel between those, so they stay even though the yearbook
+    counts 일반열차 only and has no row for them. Dropped only if OSM knows the
+    name, no node of that name is Korail's, and neither the 승하차 table nor any
+    roster has heard of it.
+    """
     with io.open(STATIONS, encoding="utf-8") as f:
-        named = collections.defaultdict(list)
-        for n in json.load(f)["elements"]:
-            nm = (n.get("tags", {}) or {}).get("name")
-            if nm:
-                named[nm].append((n["lat"], n["lon"]))
+        els = json.load(f)["elements"]
+
+    ops = collections.defaultdict(set)
+    for n in els:
+        t = n.get("tags", {}) or {}
+        if t.get("name"):
+            ops[t["name"]].add(t.get("operator") or "")
+
+    skip = set()
+    if LN is not None:
+        flows = LN.station_flows()
+        roster = set()
+        for _, sts in LN.rosters().items():
+            roster |= set(sts)
+        skip = {nm for nm, o in ops.items()
+                if KORAIL not in o and nm not in flows and nm not in roster}
+
+    named = collections.defaultdict(list)
+    for n in els:
+        nm = (n.get("tags", {}) or {}).get("name")
+        if nm and nm not in skip:
+            named[nm].append((n["lat"], n["lon"]))
     return named
 
 
@@ -109,7 +144,7 @@ def serves(LN):
     장항선 one has 무궁화 passengers.
     """
     grid = build_index()
-    sl = station_lines(grid, load_stations())
+    sl = station_lines(grid, load_stations(LN))
     by_type = LN.station_flows_by_type()
 
     wanted = collections.defaultdict(list)

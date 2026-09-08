@@ -43,6 +43,12 @@ BG = 0x11 / 255.0          # body background, and openfreemap's dark style is no
 # decision. Nothing else belongs here without the same kind of reason.
 # `unrecorded` joins it for the same reason and a stronger one: it is 51.8% of Germany,
 # and a mass that size drawn bright would bury the only signal the German map carries.
+# `unknown` was added here on 2026-09-06 and TAKEN OUT AGAIN the same day: authored dark for
+# the same reason (81.8% of Vietnam), it was then lightened to #68665a on Anita's call and now
+# measures 3.3, above the floor. A node that is not dim does not belong on a list of nodes that
+# are dim on purpose — leaving it would have made the checker say "dim on purpose: unknown
+# (3.3)", which is a sentence that trains a reader to skip the line. If it is ever darkened
+# back below 2.9 it belongs here again, and the checker will say so.
 DIM_ON_PURPOSE = {"unaffiliated", "unrecorded"}
 
 

@@ -78,6 +78,21 @@ MAP = {
     "Other stated religion (nec)": "other.ie",
 }
 
+# The Small Area COLUMN each allocated category was split out of -> the node that column
+# names. spec §7a-i-1: `inferred dots: not shown` rolls a derived dot up to what its source
+# COUNTED, and for an allocate.py country that is the fine table's own column, measured at
+# the drawn unit — not an ancestor in this tree. The two are different things and Ireland is
+# the clearest case: `christianity.anglican` is not under `other.ie` anywhere in the tree.
+#
+# WHAT IRELAND'S SMALL AREAS ACTUALLY COUNT, and it is worth saying plainly: Catholic, and
+# then one cell for everything else. The 508,107 people below — 126,658 Church of Ireland,
+# 105,827 Orthodox, 83,272 Muslims — were counted only as `Other religion` at the Small
+# Area; their denominations come from the county table. So rolled up they are all one
+# colour, which looks like a loss of detail and is in fact the CSO's own grain.
+COLUMNS = {
+    "Other religion": "other.ie",
+}
+
 
 def resolve(category):
     """religiondots branch for a CSO category, or None if deliberately off the tree."""

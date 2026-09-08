@@ -145,6 +145,22 @@ MAP = {
     "Other church, denomination": "other.hu",
 }
 
+# The settlement COLUMN each allocated category was split out of -> the node that column
+# names (spec §7a-i-1). Only three of KSH's eleven settlement columns are refined by WBS008,
+# so only three appear here; the other eight — including all 2.6M Roman Catholics — are
+# published at the settlement itself and never roll.
+#
+# `Other Christian denomination` goes to `christianity`, NOT to `christianity.other`. That
+# node is "bodies with no branch to belong to, not a residual" (spec §3.2), and KSH's column
+# is precisely a residual: Baptists, Adventists, Methodists and the Faith Church are in it.
+# What the settlement table counted was "Christian, denomination not one of the named ones",
+# and the honest node for that is the family.
+COLUMNS = {
+    "Other Christian denomination": "christianity",
+    "Orthodox Christian": "christianity.orthodox",
+    "Belong to other church, denomination": "other.hu",
+}
+
 
 def _key(cat):
     return " ".join(str(cat).split())

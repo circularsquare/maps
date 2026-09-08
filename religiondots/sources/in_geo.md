@@ -120,28 +120,39 @@ The population figure is the coarsest count unit on the map. The area figure is 
 a Brazilian município's, so **at national and state zoom the grain is comparable to a
 country already drawn; it is at city zoom that India is blockier than anywhere else.**
 
-**The fix, recorded because it is specific and now unblocked:** `Census_Villages.parquet` in
-the same release carries **645,828 village POINTS with `t_pop2011`**, summing to
-828,886,066 — India's entire rural population — and the towns file supplies the urban half.
-Weighting placement by that would put rural dots on actual settlements instead of spreading
-them across a polygon.
+**That was true until 2026-09-07 and is no longer.** The paragraphs above describe the count
+layer, which has not moved: religion is still read on 5,988 sub-districts and this file still
+builds them. What changed is placement, and `sources/in_place.py` is where it now happens —
+read its docstring for the joins and the traps, of which the sharp one is that **3,892
+six-digit codes name both a village and a town.**
 
-`scatter.py` grew a **`place_weight`** hook for the US (spec §8.4) and it is exactly the
-right shape: `place_weight(place)` returns a weighter, and `weighter.weights(node, idx,
-count)` supplies a weight per placement polygon. So what is missing is not a capability but
-two pieces of wiring:
+The resolution of §8.2a's objection is that the answer was never an equal share per village.
+It is a share **weighted by the settlement's own population**, and that is published:
+`Census_Villages.parquet` carries 645,828 village points with `t_pop2011` summing to
+828,886,066, and C-01's own 8,067 town rows carry the urban half. `scatter.py`'s
+`place_weight` hook, built for the US in spec §8.4, takes it unchanged.
 
-1. a placement layer of villages and towns keyed to their sub-district — `pc11_s_id +
-   pc11_d_id + pc11_sd_id` is already on every row of `shrug-village-pc11.parquet`;
-2. a weighter returning each settlement's population, joined from `Census_Villages`
-   (`t_pop2011`, rural) and C-01's own town rows (urban).
+| | |
+|---|---|
+| placement layer | **544,615** villages and towns, replacing 5,988 sub-district polygons |
+| per unit | 91 placement polygons, against one |
+| weight on a real settlement | **94.3%** — 64.3% village, 30.0% town |
+| weight on the sub-district fallback | 5.7% |
 
-**India does not use `place_weight` today only because its placement layer IS its count
-layer** — one polygon per unit, so there is nothing inside a unit to weight. India is the
-obvious second customer for that hook after the US, and this is the single biggest
-available improvement to how it looks.
+**Every unit's weights sum to its census total**, because each also carries its own outline
+holding whatever its settlements do not account for. That fallback is not a patch, it is
+§8.2a's own placement kept for exactly the people §8.2a is still the best answer for — so
+no sub-district is drawn worse than it was, and 3,103 of the 5,988 use it for some part of
+their population.
+
+**The one place it buys nothing is Assam.** The points file carries 353 non-zero village
+populations for the entire state and sums to 449,486 people against a rural Assam of about
+26.8 million. The names match exactly, so it is a hole in the file rather than a failed join.
+Assam's towns are placed properly from C-01 and its villages fall back to the sub-district.
 
 ## 5. Re-fetch
 
     python sources/in_geo.py --fetch     # ~397MB, then builds
     python sources/in_geo.py             # build from what is already in data/geo/in/
+    python sources/in_place.py --fetch   # +29MB for Census_Villages.parquet, then builds
+                                         # the placement layer (needs in_subdistricts.gpkg)

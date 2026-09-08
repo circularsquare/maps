@@ -88,6 +88,10 @@ def main():
                          "equally across its placement polygons (spec §8.2). The before "
                          "picture, and the way to check that weighting moved dots INSIDE "
                          "units without changing any unit's total.")
+    ap.add_argument("--no-water", action="store_true",
+                    help="skip water.py: leave the sea inside the placement polygons, so "
+                         "dots can land in rivers and harbours. The before picture — 3.0%% "
+                         "of the dots in the New York bbox were in open water without it.")
     args = ap.parse_args()
     cfg = COUNTRIES[args.country]
     dot_value = args.dot_value
@@ -135,6 +139,14 @@ def main():
         print(f"  !! {int(empty.sum()):,} placement polygons have empty geometry — dropped")
         place = place[~empty]
     place = place.reset_index(drop=True)
+
+    # Subtract the sea (water.py). AFTER the empty-geometry drop and the reset_index, so the
+    # positional row identity everything below depends on is already final, and before the
+    # Hilbert keys and the place_weight hook, both of which should see the shape that will
+    # actually be sampled.
+    if not args.no_water:
+        import water
+        place = water.clip(place, args.country, cfg["place"])
 
     if args.state:
         place = place[place["unit"].str[:2] == args.state].reset_index(drop=True)

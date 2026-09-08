@@ -33,6 +33,11 @@ Per §3.4 the intended use is: take the 2022 municipal total, split it by 2010 m
 shares, and record `structure_year: 2010, total_year: 2022` on every resulting figure.
 `br.py` does not do that — it is a normaliser, and the interpolation is a downstream step.
 
+**That step exists as of 2026-09-04: `br_rescale.py`, writing
+`data/normalized/br_municipio_rescaled.csv`, which is what `countries.py` now reads.** See
+§12 below. `br.py` is unchanged and still writes both censuses side by side, because the
+rescale needs both and because the raw years should stay available.
+
 ## 2. The 2022 universe is 10+, and the gap is not a residual
 
 **The single easiest mistake available here.** The 2022 religion question was asked only of
@@ -261,3 +266,132 @@ IBGE data is public and free to reuse with attribution ("IBGE, Censo Demográfic
 - The metadata advertises 65 categories; 9 of them are the 2000 census's and never appear.
 - Minas Gerais alone is big enough to trip the API's value cap.
 - Zero disclosure suppression in a 190M-person sample tabulation.
+
+---
+
+## 12. The §3.4 rescale — built 2026-09-04
+
+`br_rescale.py` reads `br.csv` and writes `br_municipio_rescaled.csv`:
+
+    est[m, leaf] = total_2022[m, group(leaf)]
+                   x count_2010[m, leaf] / sum(count_2010[m, l] for l in group(leaf))
+
+**Per município, not per nation.** Each município's 2022 group total is split by *its own*
+2010 mix, so Assembleia de Deus keeps the regional shape it has in the north-east instead of
+being smeared to a national average. Fallback where a município has no 2010 people in that
+group: its state, then the nation.
+
+### How often the local shape was missing
+
+| 2022 category | 2010 leaves | people | state fallback | national |
+|---|---|---|---|---|
+| Católica Apostólica Romana | 1 | 100,216,170 | — | — |
+| Evangélicas | 20 | 47,417,990 | 5 | 0 |
+| Sem religião | 3 | 16,385,362 | 80 | 0 |
+| Espírita | 1 | 3,257,448 | — | — |
+| **Umbanda e Candomblé** | 3 | 1,849,835 | **3,972** | 0 |
+| Tradições indígenas | 1 | 99,434 | — | — |
+| Outras religiosidades | 17 | 7,079,124 | 261 | 0 |
+
+**Umbanda e Candomblé needs the state fallback in 3,972 of 5,570 municípios**, and that is
+not a defect — it is §3's finding restated. The tradition tripled, so in most municípios
+there was nobody in 2010 to take a shape from, and the Umbanda/Candomblé split there is the
+state's rather than the town's. Anyone reading that split at município level should know it.
+
+### The category map, and the one entry that inverts
+
+`GROUPS` in `br_rescale.py` is written out by hand and asserted to cover all 23 of 2010's
+root categories exactly once. Six entries are one-to-one. The seventh is the trap from §3:
+2022's `Outras religiosidades` is **fifteen** 2010 roots — Outras religiosidades cristãs,
+Testemunhas de Jeová, Não determinada e multiplo pertencimento, Católica Apostólica
+Brasileira, Budismo, os Santos dos Últimos Dias, Novas religiões orientais, Católica
+Ortodoxa, Judaísmo, Tradições esotéricas, Espiritualista, Islamismo, Outras religiosidades,
+Outras religiões orientais, Hinduísmo — and **not** the identically-named 2010 one.
+
+The largest judgement in that list is `Não determinada e multiplo pertencimento` (643,624).
+It is an answer rather than a non-response — 2010 keeps `Não sabe` and `Sem declaração`
+separate and much smaller — so it belongs in a religion category, and 2022's catch-all is
+the only cell it can be in. IBGE does not say. Arguable, and flagged in the script.
+
+### Tier: 58.7% measured, 41.3% derived
+
+Three 2022 categories map to a single 2010 leaf, so nothing is split and the 2022 count
+passes through untouched: **Católica Apostólica Romana, Espírita, Tradições indígenas —
+103,573,052 people, `measured`**. Everything else is `derived` and, per §3.10, may never
+become a presence ring. Tier is per row here, exactly as `basis` is per row in §3.1.
+
+### What it changed about the drawn map
+
+| | before (2010 as it stood) | after (§3.4) |
+|---|---|---|
+| totals | 2010 | **2022** |
+| universe | everyone, 190.8M | **10+, 176.3M drawn** |
+| Catholic share | 64.6% | **56.7%** |
+| Evangelical share | 22.2% | **26.9%** |
+| Umbanda + Candomblé | 588,810 | **1,849,835** |
+| dots at 1:1,000 | 190,498 | 176,291 |
+| boundaries | malha 2010, 5,565 | **malha 2022, 5,570** |
+
+Every município's rescaled rows sum to that município's own 2022 drawn total exactly (worst
+gap 0.0000 over 5,570 units), and every 2022 category's national total is preserved exactly.
+
+### The boundary vintage moved with it
+
+The drawn geography is now 2022, so `countries.py` reads `br_municipios_2022.gpkg` and
+`sources/br_geo.py --year 2022` builds it from IBGE's single national file (194 MB, one
+`.zip`, unlike 2010's 27 per-state files). Keeping the 2010 mesh would have been the mirror
+image of the trap `br_geo.py` was written to avoid: the five municípios created since 2010
+would have had no polygon at all and their 49,483 people would have been dropped, while
+their five parents were drawn holding territory that is no longer theirs. The 2010 mesh is
+still built by the default invocation and is still correct for the 2010 census as it stands.
+
+The two IBGE lagoon pseudo-municípios (`4300001` Lagoa Mirim, `4300002` Lagoa dos Patos)
+recur in the 2022 mesh and are dropped by the same rule.
+
+---
+
+## 13. Placement moved to setores — 2026-09-05
+
+The counts are still municipal and cannot be finer; what changed is where inside a município
+the dots sit. **`sources/br_setores.py` builds a placement layer of 466,996 census setores
+weighted by setor population**, and `countries.py` reads it instead of the municipal mesh.
+Full notes in `sources/br_setores.md`; the general lesson is spec §8.2d.
+
+The case in one number: São Paulo is a single município holding 11.5M people, so its ~11,500
+dots were being spread evenly over the Serra da Cantareira, the Billings and Guarapiranga
+reservoirs and Avenida Paulista alike.
+
+```
+                         before              after
+  placement polygons     5,565 municípios    466,996 setores
+  dots                   176,291             176,291   <- unchanged, by construction (§4.1)
+  polygons holding a dot 5,565               150,088
+  fallbacks to equal shares                  0
+```
+
+**It is a population weight, not a religion one.** Nothing measures which setor a given
+church's members live in, so a Catholic dot and an Assembleia de Deus dot spread identically
+inside a município, and every municipal total is exactly IBGE's either way. §14.4 permits
+refining placement and forbids inventing magnitude; this is the first half only.
+
+Two traps from that build are in `br_setores.md` and are worth knowing here: **914 setores
+arrive as several rows each** (river islands), so a population joined by código gives them
+several times their weight unless the parts are dissolved first; and **the lagoon
+pseudo-municípios appear a third time**, now as setores with a null `CD_MUN`.
+
+## 14. IBGE has the denominational detail and is not publishing it
+
+Found 2026-09-05 while looking for setor population.
+`ftp.ibge.gov.br/Censos/Censo_Demografico_2022/Religioes/` contains exactly one file:
+`Banco_descritor-Resultados_preliminares_de_Religiao.xlsx`, **4,327 rows** mapping the
+free-text answers people gave to the nine published GRANDE GRUPO categories — CARMELITA,
+CATOLICA MARONITA and CATOLICA MELQUITA all folding into *Católica Apostólica Romana*;
+dozens of named Lutheran and Presbyterian bodies folding into *Evangélicas*.
+
+It is a coding dictionary, not data, and it publishes no counts at all. What it does is
+settle the question §1 leaves open: **the detail was collected and coded at four-figure
+granularity, and only the nine-way roll-up was released.** So the 2010 structure is not
+standing in for something that was never measured; it is standing in for something that
+exists and is withheld. That does not change what this map can draw, and it does change how
+long the §3.4 rescale is likely to be needed — if IBGE ever releases the coded detail, the
+rescale becomes unnecessary rather than merely improvable.

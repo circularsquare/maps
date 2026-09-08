@@ -26,9 +26,49 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 sys.path.insert(0, os.path.join(ROOT, "taxonomy"))
 
-MODULES = {"pl": "pl2021", "ro": "ro2021", "ee": "ee2021", "hr": "hr2021", "cz": "cz2021", "au": "au2021", "br": "br2010",
-           "ie": "ie2022", "mx": "mx2020", "nz": "nz2023", "uk": "uk2021",
-           "ca": "ca2021", "in": "in2011", "de": "de2022", "hu": "hu2022"}
+# cc -> mapping module. **DISCOVERED, not listed** — taxonomy/registry.py walks
+# taxonomy/<cc><YYYY>.py. This was a hand-maintained dict, duplicated in coverage.py, and
+# keeping the two in step was forgotten three times on 2026-09-06 alone.
+# drawn_only=False so a mapping can be checked BEFORE its country is registered in
+# countries.py, which is the order the two usually get written in.
+def _module_for(cc):
+    from registry import SPECIAL, discover
+    reg = discover(drawn_only=False)
+    if cc in SPECIAL:
+        raise SystemExit(
+            f"{cc!r} is handled specially and this tool does not cover it — "
+            f"{SPECIAL[cc]}  (taxonomy/registry.py SPECIAL). For the US, build_tree.py "
+            f"validates usrc2020.py; for Canada, nothing does yet.")
+    if cc not in reg:
+        raise SystemExit(
+            f"no taxonomy module for {cc!r}: expected taxonomy/{cc}<YYYY>.py. "
+            f"Known: {', '.join(sorted(reg))}")
+    return reg[cc]
+
+# A country whose drawn tier is more than one geo_level, so the default "the level with the
+# most units" would silently tally only part of it. Ghana's 272 drawn units are 255 plain
+# districts plus the 17 sub-metros that REPLACE six metropolitan parents; picking `district`
+# alone reports 255 units and 1.7M too few people, and nothing about that looks wrong.
+DEFAULT_LEVELS = {"gh": ["district", "submetro"],
+                  # Indonesia's drawn tier is decided per unit, not by rule: a regency's
+                  # kecamatan REPLACE it where they sum to it exactly in EVERY
+                  # category (403 of 492) and the regency is drawn where they
+                  # do not (89). `regency_covered` and
+                  # `kecamatan_partial` are the two record-only halves of that split and
+                  # must not be tallied -- either one would double-count.
+                  "id": ["kecamatan", "regency"],
+                  # Pakistan's drawn tier is NOT the finest one in its file. pk.csv carries
+                  # 585 tehsils and 155 districts, and countries.py draws districts because
+                  # PBS publishes religion at district and not below (spec §14.4). The
+                  # default "level with the most units" would tally the tehsils, which are
+                  # a tier this map deliberately does not draw.
+                  "pk": ["district"],
+                  # Israel's drawn tier is two levels by construction: CBS splits 142
+                  # localities into statistical areas and publishes the other 1,043 whole,
+                  # so a locality that HAS statistical areas is not drawn itself (drawing
+                  # both would double the country). The default "level with the most units"
+                  # would take `statarea` alone and lose every rural locality in the state.
+                  "il": ["statarea", "locality"]}
 
 
 def main():
@@ -38,10 +78,11 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("cc")
     ap.add_argument("--level", default=None,
-                    help="geo_level to tally over (default: the one with most units)")
+                    help="geo_level(s) to tally over, comma-separated (default: the "
+                         "country's drawn tier, else the level with most units)")
     args = ap.parse_args()
 
-    mod = importlib.import_module(MODULES.get(args.cc, f"{args.cc}2021"))
+    mod = importlib.import_module(_module_for(args.cc))
     resolve = mod.resolve
     excluded = set(getattr(mod, "EXCLUDED", {}))
     # A mapping may normalise labels before lookup (Poland strips GUS's trailing "w tym:"),
@@ -49,14 +90,26 @@ def main():
     # a deliberately excluded universe row is reported as an unmapped category.
     key = getattr(mod, "_key", lambda c: " ".join(str(c).split()))
 
+    # keep_default_na=False because a source category can BE one of pandas' NA strings.
+    # The Philippines has a category literally called "None" -- 43,931 people reporting no
+    # religion -- and with default parsing it arrives as NaN, fails to resolve, and is
+    # dropped by countries.py without a word. Read the file the way the data is written.
     df = pd.read_csv(os.path.join(ROOT, "data", "normalized", f"{args.cc}.csv"),
-                     dtype={"geo_id": str}, low_memory=False)
+                     dtype={"geo_id": str}, low_memory=False,
+                     keep_default_na=False, na_values=[""])
 
-    level = args.level
-    if level is None:
-        level = df.groupby("geo_level")["geo_id"].nunique().idxmax()
-    sub = df[df["geo_level"] == level]
-    print(f"{args.cc}: level {level!r}, {sub['geo_id'].nunique():,} units, "
+    if args.level is not None:
+        levels = [s.strip() for s in args.level.split(",") if s.strip()]
+    elif args.cc in DEFAULT_LEVELS:
+        levels = DEFAULT_LEVELS[args.cc]
+    else:
+        levels = [df.groupby("geo_level")["geo_id"].nunique().idxmax()]
+    unknown_levels = sorted(set(levels) - set(df["geo_level"].unique()))
+    if unknown_levels:
+        raise SystemExit(f"{args.cc}.csv has no geo_level {unknown_levels} -- it has "
+                         f"{sorted(df['geo_level'].unique())}")
+    sub = df[df["geo_level"].isin(levels)]
+    print(f"{args.cc}: level {'+'.join(levels)}, {sub['geo_id'].nunique():,} units, "
           f"{len(sub):,} rows")
 
     # ---- 1. coverage
@@ -65,15 +118,27 @@ def main():
     print(f"\n  {len(cats)} distinct source categories")
     print(f"  {'OK ' if not unmapped else 'BAD'} unmapped and not EXCLUDED: {len(unmapped)}")
     for c in unmapped:
-        n = df[(df["source_category"] == c) & (df["geo_level"] == level)]["count"].sum()
+        n = df[(df["source_category"] == c) & df["geo_level"].isin(levels)]["count"].sum()
         print(f"      {n:>10,}  {c}")
 
     # ---- 2. every target node exists
-    branch_ids = {b[0] for b in BRANCHES}
+    # branches.py alone is NOT the set of nodes. Leaves are contributed by source maps --
+    # usrc2020.py creates christianity.oriental.ethiopian for a US diaspora of 66,000 --
+    # and another country may legitimately map onto one: et2007.py sends Ethiopia's 32.1M
+    # Orthodox to exactly that leaf. Checking against BRANCHES rejected a correct mapping,
+    # so the authority is the built tree, with branches.py as the fallback before it exists.
+    node_ids = {b[0] for b in BRANCHES}
+    tree = os.path.join(ROOT, "taxonomy", "religions.json")
+    if os.path.exists(tree):
+        import json
+        with open(tree, encoding="utf-8") as fh:
+            node_ids |= {n["id"] for n in json.load(fh)["nodes"]}
+    else:
+        print("  note: religions.json not built, checking targets against branches.py only")
     targets = {resolve(c) for c in cats} - {None}
-    unknown = sorted(t for t in targets if t not in branch_ids)
+    unknown = sorted(t for t in targets if t not in node_ids)
     print(f"\n  {len(targets)} distinct target nodes")
-    print(f"  {'OK ' if not unknown else 'BAD'} targets not declared in branches.py: "
+    print(f"  {'OK ' if not unknown else 'BAD'} targets that are not nodes of the tree: "
           f"{len(unknown)}")
     for t in unknown:
         srcs = [c for c in cats if resolve(c) == t]
