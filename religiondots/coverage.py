@@ -90,7 +90,18 @@ def coverage():
         if not hasattr(mod, "MAP"):
             raise SystemExit(f"coverage: {name} has no MAP — its shape changed, "
                              "add it to coverage.py explicitly")
-        out[cc] = _clean(mod.MAP.values())
+        # A `COLUMNS` TARGET IS BY DEFINITION A NODE THE SOURCE MEASURED (spec §7a-i-1): it
+        # names the coarser category a derived row was split out of, at the unit it is drawn
+        # on. So it belongs in coverage even when nothing draws a dot on it, because the
+        # roll-up puts dots there whenever a reader hides inferred ones.
+        #
+        # This was invisible until Bulgaria, 2026-09-08, and only because bg is the first
+        # country whose COLUMNS targets are in NO other dict: its 2021 census measures
+        # `Християнско` and `Мюсюлманско` at all 265 municipalities and publishes the
+        # denominations nationally, so `christianity` and `islam` are measured, replaced by
+        # bg_split.py, and absent from MAP. Hungary's and Ireland's COLUMNS targets happen to
+        # sit in their MAP as well, which is why the union has never mattered before.
+        out[cc] = _clean(mod.MAP.values()) | _clean(getattr(mod, "COLUMNS", {}).values())
 
     # Canada: resolve() walks StatCan's own parent chain, so the targets are spread over two
     # dicts rather than one. NODE carries `None` for the universe row; _clean drops it.

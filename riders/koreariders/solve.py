@@ -205,6 +205,59 @@ class Network(object):
             if rr is not None:
                 self.runs[L] = rr[::-1] if self.rev[L] else rr
 
+        # A blank section row is not the same claim as a zero, and the
+        # passenger sheet can tell them apart.
+        #
+        # The rule above reads "no trains of this line's types" off the 운전
+        # volume, and a blank cell reads as no trains. That is right where the
+        # railway really was shut -- 경원선 north of 소요산, closed for the 전철
+        # works -- and it is the whole reason the rule exists. It is wrong where
+        # the sheet simply did not report, and the 2023 edition does that: it
+        # leaves 동해선's 포항-영덕 blank where 2022 gave it 무궁화 5, and blanks
+        # 정선선 outright. Taken at face value the tail of 동해선 collapses to
+        # -28, -3, 19 and 64 a day, two of them impossible.
+        #
+        # The other sheet settles it. Passengers who boarded had to board
+        # something, so a section with no trains must have no riders on it, and
+        # the 승하차 rows are published independently of the 운행횟수 ones.
+        # Across both editions there are twelve blank segments and the test
+        # splits them cleanly, with no ambiguous case:
+        #
+        #   경원선 ...-백마고지          nobody         really shut, trust it
+        #   정선선 아우라지-구절리        nobody         shut since 2004, trust it
+        #   동해선 포항-...-영덕      127,058/yr        the sheet contradicts itself
+        #   정선선 민둥산-...-아우라지  20,256/yr        likewise
+        #
+        # Per segment, not per run of them, and that distinction is the whole
+        # difficulty. 광운대 and 동두천 report 1,762 and 1,466 conventional
+        # riders a year -- nine a day between them, on a stretch the sheet gives
+        # no intercity train -- so a rule that frees a whole blank run as soon
+        # as any station on it reports somebody frees 경원선 all the way to the
+        # DMZ and reinstates exactly the error this constraint was written for.
+        # Judged one segment at a time, those two free their own segment and
+        # nothing beyond it, which is both harmless and arguably right: the
+        # stations are drawn grey with no rider figure either way, since that
+        # flag is read off the section counts and not off this.
+        #
+        # The evidence is the station the segment *leads to* along the chain.
+        # `resolve()` puts the clean anchor last, so chain order runs from the
+        # junction end outward and stops[i+1] is the one further out -- the one
+        # that can only be reached across this segment. The near end is shared
+        # with the section before, which may be running trains perfectly well;
+        # 포항 has three million riders and says nothing about 포항-월포.
+        self.notrain = {}
+        for L, rr in self.runs.items():
+            stops, f = chains[L], flows_by_line[L]
+            idx = []
+            for i, n in enumerate(rr):
+                if n:
+                    continue
+                v = f.get(stops[i + 1][1])
+                if v and sum(abs(x) for x in v):
+                    continue
+                idx.append(i)
+            self.notrain[L] = idx
+
         # Which lines call at each station, restricted to those actually mapped.
         on = collections.defaultdict(set)
         for L, stops in chains.items():
@@ -232,6 +285,53 @@ class Network(object):
         self.ho_recv = set(v for v in self.handover.values())
         self.shared = sorted(shared)
 
+        # Lines whose published 통과인원 counts trains the model cannot claim.
+        #
+        # 통과인원 counts everyone who used a line's metals. The 승하차 sheets
+        # record six train types, and a line is modelled with the subset that
+        # runs on it -- so where the 운전 volume shows a line carrying a type
+        # that is *not* in that subset, the published figure includes passengers
+        # no station row can ever supply to this line, and it is a ceiling
+        # however clean the terminus is.
+        #
+        # 경원선 is the case. Its only intercity section is 용산-청량리, running
+        # ITX-청춘 26 and 고속열차 18 a day, and its types are CONVENTIONAL. The
+        # 18 고속열차 are 7.50M passengers a year -- 571 a train, against a
+        # KTX-1's 935 seats -- and they board at 용산, whose KTX row is 9.0M of
+        # 호남선 and 전라선 traffic that never touches 경원선. There is no
+        # published way to separate them, so the fit was being driven to a
+        # number it cannot construct, and it took the difference out of the
+        # 용산-청량리 entry flow one direction harder than the other. That was
+        # 경원선's 24.5 % mirror.
+        #
+        # The test is whether the line has *any* claimable intercity service at
+        # all, not whether some train is unclaimed. Firing on any unclaimed
+        # train was tried and is far too blunt: 영동선 runs 33 claimable trains
+        # a day against 7 it cannot claim, its 통과인원 is mostly reachable, and
+        # freeing its level took it from a 2.1 % mirror to 19.0 % and put a
+        # negative segment on the network. 경원선 has **no** claimable service on
+        # any section -- the 고속열차 are not its types and the ITX-청춘 have no
+        # 승하차 row (FQ.NO_FLOW) -- so its 7.50M is entirely unreachable.
+        #
+        # Fires on 경원선 and 경춘선; 경춘선 has a clean terminus so its
+        # 통과인원 was already a one-sided ceiling and nothing moves there.
+        #
+        # The set now does three jobs, and they are the same statement said
+        # three ways. It exempts the line from the 통과인원 target below; it
+        # bars the line from every share group and from `alloc`, because a line
+        # that can claim no train can claim no passenger either; and
+        # `write_geojson` draws it from the published total instead, since with
+        # no allocation left there is nothing to cumulate. Adding the second
+        # without the third would have drawn 경원선 at nil.
+        self.untyped = set()
+        for L in self.lines:
+            secs = FQ.by_line().get(L)
+            if secs is None:
+                continue
+            kinds = table[L]["types"]
+            if not any(FQ.claimable(runs, kinds) for _, _, runs in secs):
+                self.untyped.add(L)
+
         # Parameter layout.
         self.idx, n = {}, 0
         for L in self.lines:
@@ -258,14 +358,34 @@ class Network(object):
         # 경부선's alone however many KTX also terminate there. Dividing per line
         # instead let 광주선 -- which carries every type -- bridge the two, and
         # scaled the high-speed lines down against traffic that was never theirs.
+        #
+        # An `untyped` line takes no share of anything. It runs no train any
+        # station row can be attributed to -- that is what put it in the set --
+        # so every share it held was traffic belonging to whichever line at the
+        # platform *does* run those trains. 경원선 was taking about a third of
+        # 용산's 새마을, ITX-새마을 and 무궁화, 1.1M passengers a year, off
+        # 경부선, on a section the 운전 volume gives 고속열차 18 and ITX-청춘 26
+        # and no conventional train at all. Where that leaves one line holding
+        # the platform the group disappears and it takes the row outright, which
+        # is the right answer and not a fallback.
         self.kinds = {L: list(table[L]["types"]) for L in self.lines}
         self.fk = {L: table[L].get("flows_by_kind", {}) for L in self.lines}
+
+        # Gating a share *per train type* on what the section table says runs
+        # at that platform was tried on 2026-09-08 and is not worth having --
+        # see README.md, "The share prior already knows a branch line is
+        # small". It bars 19 memberships, and 경북선, 대구선, 정선선 and 충북선
+        # come out identical to the passenger, because the traffic-weighted
+        # prior below already gives a branch line a fraction of a per cent of a
+        # trunk junction's rows. Its only live effect is on 광주송정, 익산 and
+        # 순천, where it would overturn curated high-speed attributions on the
+        # strength of one sheet's line naming.
         self.groups = []
         for nm in self.shared:
             for k in LN.ALL_TYPES:
                 ls = [L for L in sorted(on[nm])
-                      if k in self.kinds[L] and any(self.fk[L].get(k, {})
-                                                    .get(nm, (0,) * 4))]
+                      if k in self.kinds[L] and L not in self.untyped
+                      and any(self.fk[L].get(k, {}).get(nm, (0,) * 4))]
                 if len(ls) > 1:
                     self.groups.append((nm, k, ls))
 
@@ -288,8 +408,16 @@ class Network(object):
 
         # Precomputed allocation terms, so a residual pass is a short walk over
         # a list rather than a dictionary lookup per station per train type.
+        #
+        # Dropping a line from the groups above is not enough on its own, and
+        # getting it wrong is worse than leaving it alone: a station with no
+        # group falls through to a share of 1.0, so 경원선 would have gone from
+        # a third of 용산 to all of it. A line that may not share a row may not
+        # allocate it either, and the two tests have to be the same one.
         self.alloc = collections.defaultdict(list)
         for L in self.lines:
+            if L in self.untyped:
+                continue
             for _, nm in chains[L]:
                 for k in self.kinds[L]:
                     v = self.fk[L].get(k, {}).get(nm)
@@ -468,13 +596,11 @@ class Network(object):
             # mirror
             r.extend(W_MIRROR * (down - up))
 
-            # No trains of this line's types on the section, no passengers.
-            rr = self.runs.get(L)
-            if rr:
-                for i, n in enumerate(rr):
-                    if n == 0:
-                        r.append(W_NOTRAIN * down[i])
-                        r.append(W_NOTRAIN * up[i])
+            # No trains of this line's types on the section, no passengers --
+            # except where the 승하차 sheet says otherwise, see `self.notrain`.
+            for i in self.notrain.get(L, ()):
+                r.append(W_NOTRAIN * down[i])
+                r.append(W_NOTRAIN * up[i])
 
             # 통과인원. It counts everyone who touched the line's metals, while
             # the reconstruction sums only the train types that line runs, so a
@@ -493,11 +619,16 @@ class Network(object):
                 users = down[0] + up[-1] + interior
                 over = users - spec["passing"] / SCALE
                 r.append(W_CEILING * max(over, 0.0))
-                # Dropping this term for lines whose 통과인원 counts 광역전철
-                # riders the 승하차 cannot see was tried and does not pay --
-                # see README.md, "경원선's level is contaminated, and taking
-                # the contamination out costs more than it buys".
-                if not spec["clean_end"] or spec["full_types"]:
+                # And not where the published figure counts trains this line's
+                # types cannot claim -- see `self.untyped`. An earlier version
+                # of this exemption keyed on 광역전철 sections instead, on the
+                # belief that 통과인원 counts 전동차 riders; the 광역철도 volume
+                # says it does not (경원선's 전동차 alone carry 141M against a
+                # 통과인원 of 7.5M), and that version fired on lines this one
+                # leaves alone. See README.md, "경원선's 통과인원 is a KTX
+                # figure".
+                if ((not spec["clean_end"] or spec["full_types"])
+                        and L not in self.untyped):
                     r.append(W_PASSING * over)
 
         # A part type's passengers stay inside its span. Everything of those
@@ -718,10 +849,23 @@ def report(net, x, only=None):
              "수송밀도", "min load"))
     print("-" * 90)
     for r in sorted(rows, key=lambda z: -z["density"]):
-        print("%-11s %5d %7.1f %11.0f %11.0f %6.1f%% %6.1f%% %9.0f %10.0f"
+        print("%-11s %5d %7.1f %11.0f %11.0f %6.1f%% %6.1f%% %9.0f %10.0f%s"
               % (r["line"], len(r["stops"]), r["length"], r["users"],
                  r["passing"], 100 * r["weighted"], 100 * r["mirror"],
-                 r["density"], r["worst"]))
+                 r["density"], r["worst"],
+                 "  *" if r["line"] in net.untyped else ""))
+    # These rows are the fit's own answer and it is nil, which is correct: the
+    # line runs no train any 승하차 row can be attributed to, so there is
+    # nothing to cumulate. It is not what the map draws. 경원선's published
+    # 통과인원 is an ordinary 395 a train and `write_geojson` puts it on the
+    # sections that run intercity trains, 용산-청량리 and nothing else;
+    # 경춘선's is 0.13 a train and stays undrawn. Do not read a zero 수송밀도
+    # here as a line the map leaves blank.
+    if net.untyped:
+        print("* no claimable service on any section, so the fit has nothing "
+              "to cumulate.\n  Where the published 통과인원 is a credible "
+              "figure the map draws that instead\n  of this row -- see "
+              "write_geojson")
 
     # The junction steps, largest first. These are the part of the answer with
     # the least evidence behind them, so they are where a wrong profile shows
@@ -737,9 +881,16 @@ def report(net, x, only=None):
                   % (L, nm, "하행" if (d ^ net.rev[L]) == 0 else "상행", signed,
                      100 * v / max(net.table[L]["passing"], 1)))
 
-    bad = [r for r in rows if r["worst"] < -1000]
-    print("\n%d of %d lines still carry a negative segment"
-          % (len(bad), len(rows)))
+    # An untyped line's profile is not drawn, so a negative in it is not a
+    # negative on the map -- `check.py` reads the written file and is the
+    # figure to quote. Counted separately rather than dropped, because a fit
+    # going deeply negative somewhere is still worth seeing.
+    bad = [r for r in rows if r["worst"] < -1000 and r["line"] not in net.untyped]
+    hid = [r for r in rows if r["worst"] < -1000 and r["line"] in net.untyped]
+    print("\n%d of %d lines still carry a negative segment%s"
+          % (len(bad), len(rows),
+             (", plus %s in the fit only" % ", ".join(r["line"] for r in hid))
+             if hid else ""))
     ratios = [r["users"] / r["passing"] for r in rows if r["passing"] > 0]
     print("통과인원 ratio: median %.3f, worst %.3f / %.3f"
           % (float(np.median(ratios)), min(ratios), max(ratios)))
@@ -819,7 +970,7 @@ def main():
             print("   %-11s %-9s -> %-9s %-9s %11.0f %11.0f   ratio %.2f"
                   % (L, end, Mm, stop, a, b, (hi / lo) if lo > 1e-9 else 0.0))
 
-    write_geojson(rows, corridors, table, ho_step)
+    write_geojson(rows, corridors, table, ho_step, net.untyped)
 
 
 def split_at_junction(pts, target):
@@ -866,7 +1017,8 @@ def merge_unserved(feats, table):
 
     Four things stop a merge, and each is a real break:
       - a station with flow of the line's types, which is most of them
-      - a change in `service`, so grey never absorbs drawn track or vice versa
+      - a change in `service` or in `level`, so grey never absorbs drawn track
+        and a published figure never absorbs a reconstructed one
       - a `junction` feature, which write_geojson split there on purpose
       - the two loads disagreeing by more than MERGE_TOL, which means the fit
         put a step at that station even though no passengers are recorded --
@@ -885,6 +1037,8 @@ def merge_unserved(feats, table):
             if pa["line"] != pb["line"] or pa["to"] != pb["from"]:
                 break
             if pa.get("service") != pb.get("service"):
+                break
+            if pa.get("level") != pb.get("level"):
                 break
             if pa.get("junction") or pb.get("junction"):
                 break
@@ -923,7 +1077,7 @@ def merge_unserved(feats, table):
     return out
 
 
-def write_geojson(rows, corridors, table=None, ho_step=None):
+def write_geojson(rows, corridors, table=None, ho_step=None, untyped=()):
     """One LineString per segment, sliced out of the line's own corridor.
 
     `density` is passengers per km per day over the segment, which is what
@@ -955,6 +1109,22 @@ def write_geojson(rows, corridors, table=None, ho_step=None):
     dividing a continuum. Under a passenger a train the sheet is not reporting
     a quiet railway, it is not reporting the railway.
 
+    경원선 is the fourth case and it is the one where a number *can* be drawn.
+    It is `untyped` -- no station row anywhere can be attributed to any train it
+    runs -- so the reconstruction has nothing to work from and the fit now
+    correctly puts it at nil. But its 통과인원 is not 경춘선's: 7.50M against 44
+    intercity trains a day is 395 a train, a perfectly ordinary figure, and the
+    운전 volume says where every one of those passengers is. Intercity trains
+    run on 용산-청량리 and on no other section of the line, so all 7.50M rode
+    that stretch and nothing else. `level` records that the number came from the
+    published line total rather than from the cumulation, because it is a
+    different kind of claim and the map should say so.
+
+    Split evenly between the directions, which is an assumption and the only one
+    available -- 통과인원 is a single figure with no direction in it. It makes
+    the line's mirror 0.0 % by construction, so `check.py` reports it as no
+    test rather than as a pass.
+
     A handover's step is also drawn where it happens rather than where the fit
     had to hang it. The SRT reach 경부고속선 at 평택분기점, which has no platform,
     so the model steps the line up at 천안아산 instead -- and the map then drew
@@ -984,6 +1154,20 @@ def write_geojson(rows, corridors, table=None, ho_step=None):
         peak = max((s[0] for s in svc), default=0) if svc else 0
         unrecorded = (peak > 0 and spec.get("passing", 0) > 0
                       and spec["passing"] / 365.0 / (2.0 * peak) < 1.0)
+        # An untyped line the sheet *does* report: put the published total on
+        # the sections that run intercity trains, since those are the only
+        # sections its passengers can have been on.
+        published, inter = None, None
+        if (r["line"] in untyped and not unrecorded and svc
+                and spec.get("passing", 0) > 0 and peak > 0):
+            published = spec["passing"] / 2.0
+            # The note on those segments quotes trains a day, and it has to
+            # quote what runs rather than what the line's own types cover --
+            # 26 of 용산-청량리's 44 are ITX-청춘 and the other 18 are the
+            # 고속열차 the 통과인원 is actually counting.
+            inter = FQ.intercity_along(r["line"], order)
+            if inter is not None and spec.get("reversed"):
+                inter = inter[::-1]
         shape = corridors.get(r["line"]) or {}
         poly, cum, raw = shape.get("poly"), shape.get("cum"), shape.get("raw", {})
         for i in range(len(r["down"])):
@@ -1000,6 +1184,9 @@ def write_geojson(rows, corridors, table=None, ho_step=None):
                 flat += 1
             km = b[0] - a[0]
             dn, up = float(r["down"][i]), float(r["up"][i])
+            live = published is not None and i < len(svc) and svc[i][0] > 0
+            if published is not None:
+                dn = up = published if live else 0.0
 
             def emit(g, kmv, d, u, extra=None):
                 daily = (d + u) / 365.0
@@ -1015,6 +1202,11 @@ def write_geojson(rows, corridors, table=None, ho_step=None):
                 elif unrecorded and svc is not None and i < len(svc):
                     props["service"] = "unrecorded"
                     props["intercity_trains"] = svc[i][0]
+                elif live:
+                    props["level"] = "passing"
+                    props["intercity_trains"] = (inter[i] if inter is not None
+                                                 and i < len(inter)
+                                                 else svc[i][0])
                 if extra:
                     props.update(extra)
                 feats.append({"type": "Feature", "properties": props,
@@ -1110,8 +1302,12 @@ def write_geojson(rows, corridors, table=None, ho_step=None):
     raw = len(feats)
     feats = merge_unserved(feats, table)
     with io.open(OUT, "w", encoding="utf-8") as f:
-        json.dump({"type": "FeatureCollection", "features": feats}, f,
-                  ensure_ascii=False)
+        # The edition is carried in the file rather than written into the
+        # page's copy, so switching yearbook does not leave the map calling
+        # itself 2022. `index.html` substitutes it into every string that
+        # quotes a year.
+        json.dump({"type": "FeatureCollection", "year": LN.year(),
+                   "features": feats}, f, ensure_ascii=False)
     print("\nwrote %s (%d segments from %d, %d without geometry)"
           % (os.path.relpath(OUT, HERE), len(feats), raw, flat))
 

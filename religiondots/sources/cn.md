@@ -8,12 +8,21 @@ is that change and spec §14.13/§14.14 are the decisions.** `sources/cn.py` reb
 |---|---|
 | structure | *2000 Population Census Data Assembly* (中国2000年人口普查统计资料汇编), 31 provincial volumes, table A0106 |
 | totals | 2010 census, NBS *中国2010年人口普查资料* table 1-6, province × sex × nationality |
-| geography | **county (县级行政区), 2,691 drawn units**, mean 470,000 people |
+| geography | **county (县级行政区), 2,768 drawn units**, mean 481,000 people |
 | categories | 59 — the 56 nationalities plus unidentified, naturalised and the unit total |
 | basis | `ethnicity_derived`. **Nobody in China has ever been asked about religion in a census** |
 | tier | **`derived` on 99.86% of rows, `modelled` on the rest; nothing is `measured`** (spec §7) |
 | licence | CC0 on the Dataverse volumes; the NBS table is a government work. Joshua Project's PGIC file is free and keyless |
-| drawn | **1,259,340,530 — 100%**, of which 97.50% is `unknown` |
+| drawn | **1,332,807,363 — 100%**, of which 91.65% is `unknown` |
+
+> **Two changes on 2026-09-08 and the numbers below predate both.** spec §14.16 added a
+> `self_id` layer from the pooled Chinese General Social Survey — 58.4M Mahayana Buddhists and
+> 21.3M Protestants carved out of the grey at province grain, which took China from 2.5%
+> coloured to 8.4% (see `sources/cn_cgss.md`). spec §14.17 repaired the county join: **168
+> census county names matched no adcode and were being read and then discarded, 67.8M people,
+> 5.47% of the country, 142 of them urban districts.** Zhongshan alone was 2.36M, absent
+> because the volume romanises 中山 as ZHONGZHAN. Every province now reconciles to its 2010
+> total and the national figure lands 17 people from the published census.
 
 ## 1. Why this country exists at all, and the rule that lets it
 
@@ -33,7 +42,7 @@ nothing and are drawn on `unknown`:
 | `islam` | Hui, Uyghur, Kazakh, Dongxiang, Salar, Kyrgyz, Tajik, Uzbek, Bonan, Tatar | 23,068,296 |
 | `buddhism.vajrayana` | Tibetan, Yugur, Monba, Pumi | 6,345,861 |
 | `buddhism.theravada` | Dai | 1,259,298 |
-| `christianity.protestant` | a share of Lisu, Lahu, Va, Jingpo, Nu, Derung | 875,255 |
+| `christianity.protestant` | a share of Lisu, Lahu, Va, Jingpo, Nu, Derung — **and the Korean nationality since 2026-09-08** | 875,255 + ~549,000 |
 | `unknown` | Han and 39 others — counted, nothing claimed | 1,227,791,820 |
 
 **The load-bearing argument is reflect-versus-reveal, not obscurity.** The only input is the
@@ -208,6 +217,17 @@ spec §14.13 and §14.14 are the decisions; this is what the files now hold.
 | §14.9 mission peoples, 6 nationalities | 875,255 | 0.07% | `christianity.protestant` | `modelled` |
 | everyone else, 40 categories | 1,227,791,820 | **97.50%** | `unknown` | `derived` |
 
+**Superseded twice on 2026-09-08.** Pumi left the religio-ethnic list (§14.16), so it is 14
+nationalities and 30.75M; the CGSS layer took 58.4M Mahayana Buddhists and 21.3M Protestants out
+of `unknown`; and §14.17's join repair added 73.5M people to every row's denominator. Current:
+
+| | people | share | node | tier |
+|---|---|---|---|---|
+| §14.5 religio-ethnic, 14 nationalities | 30,706,864 | 2.30% | `islam`, `buddhism.vajrayana`, `buddhism.theravada` | `derived` |
+| §14.16 CGSS, 29 provinces | **58,392,846** | 4.38% | `buddhism.mahayana` | `modelled` |
+| §14.16 CGSS + §14.9 mission peoples | **22,148,236** | 1.66% | `christianity.protestant` | `modelled` |
+| everyone else | 1,221,559,417 | **91.65%** | `unknown` | `derived` |
+
 `taxonomy/cn2000.py` now exposes **`shares(cat) -> [(node, share, tier)]`** rather than a single
 node, and `countries.py::_cn_counts` fans one source row out to several rows. `resolve()` is kept
 for `tools/check_mapping.py`, which therefore reports each mission nationality's WHOLE population
@@ -227,6 +247,14 @@ over the people-groups the Chinese state classifies under each nationality — w
 JP's**: a mechanical threshold over JP returns 121 million Han Christians in the Wu- and Min-speaking
 southeast, so the groups are chosen on evidence outside the missionary literature and only the
 number comes from JP. §14.14 has the full argument.
+
+**A seventh nationality joined them on 2026-09-08 (spec §14.18): the Korean, at JP's 30%,
+~549,000 people, concentrated in Yanbian.** It is the only one of the seven whose selection rests
+on attestation that is analogical rather than local, and its coefficient lands within two points
+of South Korea's own self-identified Christian share (2015 census, 27.6%) — which may be
+convergence or may be that figure carried across the border. If it is the latter the split is
+wrong too, since a third of South Korea's Christians are Catholic and this row is Protestant-only.
+`taxonomy/cn2000.py`'s REVIEW keeps the whole pre-decision argument.
 
 **The Lisu row is the one to distrust**, and it is 560,283 people, two thirds of the Christian
 layer: JP says 80% where the figure usually cited as official — 300,000 Christian Lisu in Yunnan —

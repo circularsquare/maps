@@ -14,6 +14,14 @@ line with 2,399 passengers a year against 26 trains a day each way. It is drawn
 grey and says so; see [The thin lines, and which of them are
 wrong](#the-thin-lines-and-which-of-them-are-wrong-2026-09-07).
 
+And one is not reconstructed at all. 경원선 runs no train the 승하차 sheets can
+be attributed to — 18 고속열차 and 26 ITX-청춘 a day on 용산-청량리, and 전동차
+or nothing everywhere else — so there is nothing to cumulate, and the line is
+drawn from its published 통과인원 instead, 20,554 a day on those 13 km. Its
+segments carry `level: passing` and the page says so on hover; see [경원선 has
+no traffic of its own to
+count](#경원선-has-no-traffic-of-its-own-to-count-2026-09-08).
+
 The trunk lines used to fail too, and the cause turned out to be a bug rather
 than the data. `resolve()` swaps a line's ends to put the clean anchor last, and
 for 경부선, 중앙선 and 수서고속선 that leaves the chain running 종점 → 기점 while
@@ -81,20 +89,34 @@ so in its own header). None of that needs revisiting.
 2. ~~**The 호남선 handover split.**~~ Done 2026-09-07 — see [The 호남선 split,
    and one coordinate](#the-호남선-split-and-one-coordinate-2026-09-07).
 
-3. **경원선's 24.6 % weighted mirror**, now the largest that means anything —
-   경춘선's 113 % turned out to be the source not counting the line at all and
-   정선선 at 26.8 % carries forty people a day. 경원선's *profile* is right; what
-   disagrees is the level, by about 660k a year on the trunk, and it is all one
-   step: the whole line's traffic moves onto 경춘선 at 청량리, the largest step in
-   the network, and the two directions do not settle on the same size for it.
-   `W_TAUSYM` already pushes them together and loses.
+3. ~~**경원선's 24.6 % weighted mirror.**~~ Done 2026-09-07, and the diagnosis
+   this file carried was wrong in both halves — 통과인원 does not count 전동차,
+   and the split it said "nothing published gives" is in the 광역철도 volume.
+   The 7.50M turns out to be a KTX figure for the 18 고속열차 a day on
+   용산-청량리, on a line modelled with conventional types only. Its 통과인원 is
+   now a ceiling rather than a target, on a derivable test: the line has no
+   intercity service its own 승하차 can supply. Network median mirror 1.6 % →
+   1.3 % and 인거리 88.8 % → 89.5 %, both the best they have been. See
+   [경원선's 통과인원 is a KTX
+   figure](#경원선s-통과인원-is-a-ktx-figure-2026-09-07).
 
-   **The cause is known and the obvious fix is measured and rejected** — see
-   [경원선's level is
-   contaminated](#경원선s-level-is-contaminated-and-taking-the-contamination-out-costs-more-than-it-buys).
-   Its published 통과인원 counts 광역전철 riders the 승하차 cannot see, and
-   deleting that constraint fixes 경원선 and breaks 충북선. Anything further has
-   to correct the 7.50M rather than drop it.
+   **What it left behind.** 경북선 10.3 % → 17.3 %, 대구선 12.7 % → 14.6 %, and
+   three negative segments where there were none — two of them invisible
+   (`service`-flagged, drawn without a rider figure) and one, 정선선's
+   아우라지-구절리 at −4 명/일, on a section closed to trains since 2004.
+
+   ~~**And the bigger thing it exposed**: 경원선 is *credited* with a share of
+   용산's 무궁화 traffic although the 운전 volume gives it no 무궁화 at all.~~
+   Done 2026-09-08, at the whole-line grain: a line with no claimable service
+   anywhere claims no station's passengers anywhere. The per-station, per-type
+   version was tried the same day and is not worth having — see [The share prior
+   already knows a branch line is
+   small](#the-share-prior-already-knows-a-branch-line-is-small-2026-09-08).
+3a. ~~**경원선's level, now that its mirror is fixed.**~~ Done 2026-09-08, and
+   not by finding a level for the reconstruction. There is nothing on that line
+   to reconstruct, and saying so turned out to fix 경부선 as well. See [경원선
+   has no traffic of its own to
+   count](#경원선-has-no-traffic-of-its-own-to-count-2026-09-08).
 
 4. ~~**Make a handover's two directions agree.**~~ Done 2026-09-07.
    `solve.W_HOSYM` constrains both sides of a handover, 태백선's ratio went
@@ -209,8 +231,13 @@ machine before believing a timing.
   is no unnamed track at 부발, and the 5.01 km the search found was a real route
   that doubled back. See [Two ways a corridor fails to reach its end
   station](#two-ways-a-corridor-fails-to-reach-its-end-station-2026-09-07).
-- **2023 is the newest yearbook on info.korail.com**; we use 2022. The download
-  path on the railstat portal has not been found.
+- ~~**2023 is the newest yearbook on info.korail.com**; we use 2022.~~
+  Downloaded 2026-09-08 and it parses; `data/` holds both and
+  `KOREARIDERS_YEARBOOK` picks one. **2022 is still the default** and three
+  things stand in the way of adopting 2023 — see [The 2023 yearbook parses, and
+  three things stop it being
+  adopted](#the-2023-yearbook-parses-and-three-things-stop-it-being-adopted-2026-09-08).
+  The download path on the railstat portal, for 2024 onward, is still not found.
 
 ### Things that will waste your time
 
@@ -228,12 +255,27 @@ machine before believing a timing.
   the chain, and 경북선's is 점촌 at 5 trains either side.
 - **The console dies on Korean text** under Windows cp1252. Write reports to a
   UTF-8 file and read that back.
+- **A yearbook edition can change punctuation and take a whole table with it.**
+  2023 writes section names with **U+223C** where 2022 used a hyphen, and the
+  parser skipped all 117 rows without a word. Nothing in the pipeline errors
+  when `by_line()` comes back empty — the junction constraints simply stop
+  existing. If a run against a new edition looks *too* clean, check the section
+  count first. `frequency.SEP` now takes the whole tilde family.
+- **Driving the page over CDP needs `--remote-allow-origins=*`.** Without it
+  Chrome answers the websocket handshake with a bare **403 Forbidden** and the
+  body is the only place it says why. Nothing to do with the page. And
+  `showSegTip` is not a global — it closes over the map's `tip` element inside
+  the init function — so a tooltip has to be provoked with a real
+  `Input.dispatchMouseEvent`. Select the line first with `setLineSelection`,
+  which *is* global: 수도권 경의중앙선 runs over 경원선's metals and is on top
+  of the hit-band, and the page's rule is that the selected line wins under the
+  cursor. The tooltip element is `#tooltip`, the panel is `#info`.
 - **A national `way[railway=rail][!name][!service]`** is a double negation
   Overpass cannot index, and overpass-api.de answers it with a **504 even for
   `out count`**. Take the ids from `data/osm_rail_ways.json`, which is already a
   tags-only pull of every rail way, and fetch by id instead.
 
-### The page blanks on a four-level zoom-out, and it is MapLibre's retain window
+### The page blanked on a four-level zoom-out, and it was MapLibre's retain window
 
 On `todo.txt` as "map goes blank briefly when zooming out past a certain zoom
 level". Reproduced and measured 2026-09-07 by driving the page over CDP and
@@ -257,32 +299,62 @@ four levels below z5 and are not accepted. Three levels is fine, which is why
 8 → 5 never blanks, and once the z5 tiles are cached nothing blanks at all.
 
 An animated `zoomTo` never triggered it in any test; it takes an instant
-transform change, which a fast wheel flick or a pinch-out can produce. **Not
-fixed.** The honest options are to pre-warm the low-zoom tiles after `idle`
-(public API, costs a few hundred KB on load, and would shrink rather than
-certainly remove the window, since the tile still has to be parsed) or to reach
-into `SourceCache.maxUnderzooming`, which is private. Neither was worth doing
-without asking.
+transform change, which a fast wheel flick or a pinch-out can produce.
+
+**Fixed** by widening that window. `index.html` sets
+`SourceCache.maxUnderzooming` to 10 once the style has loaded. A/B on two fresh
+Chrome profiles, so each arm had a cold tile cache:
+
+```
+   maxUnderzooming 3     9 -> 5 cold   16 of 303 frames blank
+   maxUnderzooming 10    9 -> 5 cold    0 of 302
+                        12 -> 5 cold    0 of 302   seven levels
+                         5 -> 12 cold   0 of 302
+```
+
+Three things about it worth keeping. It is **private API** — there is no public
+setting, `maxUnderzooming` is a static on SourceCache reachable only through a
+live instance — so it is guarded, and if a MapLibre upgrade renames it the guard
+skips and the only cost is the flash returning. It is **not exponential**:
+`findLoadedChildren` only ever considers tiles already in the cache, so a wider
+window lets what is loaded cover more, it does not go hunting for 4^n tiles. And
+**one patch covers every source**, basemap and geojson alike, because they share
+the class — which matters, since it was the lines and the bubbles going blank as
+well as the map.
+
+The pre-warm alternative — fetching low-zoom tiles after `idle` — was not taken:
+it costs a few hundred KB on every load and would only shrink the window, since
+a cached tile still has to be parsed before it can be drawn.
 
 `ne2_shaded` is **not** the cause, though it looks like one: the style declares
 that raster source and it has zero tiles at every zoom, because no layer in the
-style uses it.
+style uses it. It reads as permanently blank in any probe that counts renderable
+tiles per source, before and after this fix. Ignore it.
 
 ## What Korea publishes
 
 From the **철도통계연보** (Korail, annual, free, no login — `data/` holds the 2022
-Excel bundle; 2023 is the newest on info.korail.com, later editions moved to
+and 2023 Excel bundles and **everything below is the 2022 one**, which is the
+default; 2023 is the newest on info.korail.com, later editions moved to
 [railstat.korail.com](https://railstat.korail.com/statPortal/)):
 
 | table | granularity | what it is |
 |---|---|---|
 | `4. 수송(여객)` sheet 8 | **station** | 역별 승하차, split 상행 / 하행, 253 stations |
 | `4. 수송(여객)` sheets 9–13 | **station × train type** | the same, split KTX / SRT / 새마을 / ITX-새마을 / 무궁화 / 통근 |
-| `4. 수송(여객)` sheet 5 | **line** | 선별 통과인원 — passengers who used each line |
+| `4. 수송(여객)` sheet 5 | **line** | 선별 통과인원 — 일반열차 users of each line |
 | `4. 수송(여객)` sheet 4 | **line** | 선별 인거리 — see the warning below |
 | `6. 운전` sheets 2(5)–2(7) | **segment** | 선구별 열차종별 운행횟수 — 117 sections, trains/day + 선로용량 |
 | `8. 시설` sheet 2 | **station** | 노선 → 역명 roster (each station's *home* line, one only) |
 | `8. 시설` sheet 4 | **line** | 기점, 종점, 영업거리 |
+| `3.광역철도` vol. 3 | **line × year** | 광역전철 승차 / 수송인원, 2006 onward |
+| `3.광역철도` vol. 2 | **line** | each 광역철도 line's extent, stations, headway |
+
+**통과인원 counts 일반열차 with a 승하차 row and nothing else** — not 전동차 and
+not the ITX-청춘. The 광역철도 volume is how that was settled: 경원선's 전동차
+carry 141M a year against a 통과인원 of 7.5M, and 경춘선, whose only intercity
+service is the ITX-청춘, is credited with 2,399. See [경원선's 통과인원 is a KTX
+figure](#경원선s-통과인원-is-a-ktx-figure-2026-09-07).
 
 Passenger volume exists only per line; the only thing published per segment is
 train frequency. The per-segment *passenger* numbers have to be built.
@@ -671,6 +743,16 @@ traffic steps off at 청량리 onto 경춘선, which the section counts confirm 
 (26 trains to 0), and it is the largest step in the network; the two directions
 simply do not settle on the same size for it.
 
+**Both paragraphs are superseded, and the whole list with them.** They read as
+current and are not: this is the 2026-09-06 state. 경원선 no longer has a
+reconstructed profile at all — the 13,198 was built partly out of 경부선's 용산
+passengers, and the line is now drawn from its published 통과인원 at 20,554 a
+day on 용산–청량리 and nothing elsewhere. The current figures are whatever
+`check.py` prints; as of 2026-09-08 the median weighted mirror is 1.2 % and the
+list is 경춘선 (no rider figure), 경북선 18.4 %, 대구선 14.9 %, 정선선 11.0 %,
+경의선 8.9 %, 중앙선 7.7 %, 광주선 5.0 %. See [경원선 has no traffic of its own
+to count](#경원선-has-no-traffic-of-its-own-to-count-2026-09-08).
+
 ## Geometry
 
 Station order is the other thing the yearbook does not give — its rosters are
@@ -862,9 +944,10 @@ probe_ways.py       whether Korean rail ways carry line names
 probe_routes.py     how a route relation is assembled
 ```
 
-`data/` holds the 2022 yearbook zip, the OSM pulls (26 MB of named ways,
-0.3 MB of unnamed junction track, 1,997 station nodes), the KRIC catalogue index
-and `segments.geojson`.
+`data/` holds the 2022 and 2023 yearbook zips (2022 is what everything reads
+unless `KOREARIDERS_YEARBOOK` says otherwise), the OSM pulls (26 MB of named
+ways, 0.3 MB of unnamed junction track, 1,997 station nodes), the KRIC catalogue
+index and `segments.geojson`.
 
 ## Seoul metro integration (2026-09-05, re-imported 2026-09-06)
 
@@ -1721,6 +1804,12 @@ since the fit was built. There was never anything there to fix.
 
 ### 경원선's level is contaminated, and taking the contamination out costs more than it buys
 
+**Superseded 2026-09-07 — the premise below is false.** 통과인원 does not
+count 전동차 riders; the 광역철도 volume shows 경원선's carrying 141M a year
+against a 통과인원 of 7.5M. Kept because the *measurement* of the rejected
+fix is still the record of what that code path costs. See [경원선's 통과인원
+is a KTX figure](#경원선s-통과인원-is-a-ktx-figure-2026-09-07).
+
 Worth recording as a dead end, because the reasoning is sound and the result is
 not. 통과인원 counts everyone on a line's metals, 광역전철 included, while the
 승하차 sheets record intercity types only. Usually that just makes the published
@@ -2303,6 +2392,437 @@ than 3.2, and the handover itself suppressed to 18,560/19,318. Every column is
 worse. 정선선's damage is the handover, not the lost anchor, and the anchor
 assertion that everyone alights at 태백 is false anyway.
 
+### 경원선's 통과인원 is a KTX figure (2026-09-07)
+
+The section above diagnosed 경원선's mirror as its published 통과인원 counting
+광역전철 riders the 승하차 cannot see, and said a fix "needs a defensible split
+of the 7.50M between intercity and 광역전철, and nothing published gives one".
+**Both halves are wrong**, and the yearbook says so in a volume nothing here had
+opened: `3.광역철도`.
+
+#### 통과인원 does not count 전동차, and the numbers are not close
+
+`3.광역철도/3. 수송실적` gives Korail's 광역철도 ridership per line per year, in
+천명. For 2022:
+
+```
+   line     승차인원 (M)   수송인원 (M)      intercity 통과인원 (M)
+   경부선        160.2        217.5                    105.1
+   경인선         90.5        133.9                      0.0
+   경원선         81.8        141.2                      7.5
+   중앙선         22.9         35.2                     10.5
+```
+
+**경원선's 전동차 carry 141M a year against a 통과인원 of 7.5M.** If the
+published figure counted them it would be at least twenty times larger. It is
+not a contaminated intercity figure; it is a clean one.
+
+경춘선 settles it from the other end. Its only intercity service is the ITX-청춘,
+26 trains a day each way, and its 통과인원 is **2,399** — so ITX-청춘 riders are
+not counted either, which is the same fact this file already records as
+경춘선 being drawn grey. The published series counts 일반열차 with a 승하차 row,
+and nothing else.
+
+#### So what is the 7.50M?
+
+`6. 운전` gives 경원선 exactly one intercity section:
+
+```
+   용산   -> 청량리    ITX-청춘 26, 고속열차 18, 전동차 72
+   청량리  -> 광운대    전동차 184
+   광운대  -> 동두천    전동차 111
+   동두천  -> 소요산    전동차 38
+   소요산  -> 신탄리    (nothing)
+   신탄리  -> 백마고지   (nothing)
+```
+
+Ninety-one of its ninety-four kilometres carry no intercity train at all. The
+7.50M rides the first three, and since the ITX-청춘 is not counted, it is the 18
+고속열차: 13,140 train-journeys a year, **571 passengers a train**, against a
+KTX-1's 935 seats. It is a KTX figure.
+
+And `lines.TYPES` gives 경원선 `CONVENTIONAL`. The line is modelled with four
+train types, none of which runs on it. That is why the rebuild reaches 2.87M of
+7.50M — not contamination, a type mismatch — and the fit took the difference out
+of the 용산-청량리 entry flow one direction harder than the other, which is the
+24.5 % mirror.
+
+#### The obvious fix is theft, and the numbers say so before it is tried
+
+`PART_TYPES` exists for a line carrying a type over part of its length, and
+`PART_TYPES["경원선"] = (["KTX"], {"용산", "청량리"})` is the natural move. It
+would be a disaster, for the reason the 호남선 entry already gives:
+
+```
+   용산   KTX  4,490,691 하행승차  4,553,637 상행하차     ~9.0M/yr
+   청량리  KTX  1,688,964 하행승차  1,724,223 상행하차     ~3.4M/yr
+```
+
+용산's KTX are 호남선 and 전라선 services departing southward; they never touch
+경원선. No modelled line claims KTX at 용산 — 경부선 is conventional and
+호남고속선's chain deliberately stops at 오송 — so 경원선 would take **all** of
+it, 12.4M against a 7.50M target. Ruled out on the arithmetic, not tried.
+
+#### What was done instead
+
+There is no published way to split 용산's KTX, so the rebuild genuinely cannot
+construct 7.50M and being driven to it is what breaks the line. The 통과인원
+becomes a **ceiling** for 경원선 rather than a target — which is the same code
+path the previous attempt took, and it is worth being clear about what changed,
+because the earlier one was measured and rejected:
+
+- **Its condition was wrong.** It keyed on "lines with 광역전철-only sections",
+  from the belief that 통과인원 counts 전동차. That belief is false, and the
+  condition fired on lines that do not have this problem.
+- **The condition now is derivable and narrow**: a line whose own published
+  sections carry an intercity train type the model does not give it. 전동차 is
+  excluded — it has no 승하차 row anywhere, `W_NOTRAIN` already handles it, and
+  including it would fire on every line with a commuter section.
+
+**The first version of the condition was still too blunt**, and the way it
+failed is the useful part. "A line running any train type the model does not
+give it" fires on four lines — 경부선 (KTX 206/day), 경의선 (고속열차 48),
+경원선 (고속열차 18), 영동선 (고속열차 7) — and changes two, because 경부선 and
+경의선 have clean termini and were already on a one-sided ceiling. Measured:
+
+```
+                    before        after
+경원선 mirror        24.5 %      off the list      the fix works
+정선선 mirror        32.3 %       10.4 %
+network median       1.6 %        1.3 %
+인거리 cover        88.8 %       89.2 %
+영동선 mirror         2.1 %       19.0 %           and this is the price
+경북선 mirror        10.3 %       24.7 %
+negative segments        0            3            a hard break
+```
+
+영동선 is what it gets wrong. It runs **33 claimable trains a day against 7 it
+cannot claim**, so its 통과인원 is mostly reachable and holding it to that figure
+is right; freeing it took the line from 2.1 % to 19.0 % and put negative
+segments on the network, which is the failure mode positivity exists to catch.
+
+**The condition that works asks whether the line has any claimable service at
+all**, not whether some train is unclaimed:
+
+```
+   line     claimable/day   total/day   fires
+   경원선            0          26       yes
+   경춘선            0          26       yes
+   영동선           12          12       no
+   경북선            5           5       no
+   경부선           66          66       no
+```
+
+And "claimable" has to exclude the **ITX-청춘**, which is the subtlety that makes
+this work. `frequency.COLUMNS` maps that column onto ITX-새마을, which is right
+for counting trains and wrong for counting passengers: there is no ITX-청춘 row
+in sheets 9–13, so no station flow can ever be attributed to it. With that
+exclusion 경원선 has *no* intercity service its own data can supply — its
+고속열차 are not its types and its ITX-청춘 have no rows — while 영동선 has
+twelve trains a day of ordinary 무궁화 and 새마을. `frequency.NO_FLOW` and
+`frequency.claimable()` carry the distinction.
+
+The rule fires on **경원선 and 경춘선** and changes **one**: 경춘선 has a clean
+terminus, so its 통과인원 was already a ceiling and nothing moves. That 경춘선 is
+on the list at all is a good sign — it is the other line this file already
+describes as having a published figure that means nothing, for the same reason.
+
+And 경부선 is the check that it does not over-fire. Its 206 KTX a day are on
+경부고속선's account by design and the whole parallel-pair separation depends on
+경부선 not claiming them — but it runs 66 claimable trains a day besides, so the
+final rule never touches it, where the blunt version would have.
+
+#### What it costs, and why it was kept anyway
+
+```
+                        before        after
+경원선 mirror            24.5 %    off the list      the fix works
+정선선 mirror            32.3 %       11.0 %
+network median mirror     1.6 %        1.3 %         best it has been
+인거리 cover             88.8 %       89.5 %         best it has been
+경북선 mirror            10.3 %       17.3 %         and this is the price
+대구선 mirror            12.7 %       14.6 %
+중앙선 mirror             5.9 %        7.3 %
+negative segments             0            3
+```
+
+Both headline network figures improve and the target line is fixed; four small
+lines get worse and the positivity invariant breaks. Taken, but it is a
+judgement and here is the whole of it.
+
+**The negatives are two different things.** 경원선's are −1 명/일 on
+동두천-소요산 and 소요산-백마고지, both carrying `service` — the flag that tells
+the map to draw a constant width and **no rider figure**, precisely because
+those numbers are the fit's noise. They are invisible. 정선선's
+아우라지-구절리 at −4 명/일 is not flagged and is drawn with a figure, so it is
+the one real negative in the network, on a section that has in fact been closed
+to trains since 2004.
+
+**The lines that worsen are the ones already known to be weak.** 경북선 carries
+525 a day and 대구선 3,900, and "What is not done" already names both as lines
+where one junction carries most of the traffic and the step size is a guess.
+Their mirrors moving several points is a smaller claim than the network median
+moving half a point the other way.
+
+#### What this opens up, which is not small
+
+경원선's drawn profile is now 3,056 a day on 용산-서빙고-청량리 and essentially
+nothing beyond, which is the right shape — those three kilometres are the only
+ones any intercity train runs on. But **the 3,056 is itself over-attributed**.
+The 운전 volume gives 경원선 no 무궁화 or 새마을 at all, yet the line takes a
+share of 용산's 981k 무궁화 승차 and 1.07M 하차 because it calls there and its
+declared types include 무궁화. Those passengers are 장항선's and 전라선's.
+
+So the type mismatch this section is about cuts both ways: 경원선 is denied the
+KTX it does carry and credited with 무궁화 it does not. The same `claimable()`
+test that gates the 통과인원 could gate share-group membership — a line should
+not join the share for a type its own sections show it never runs — and that is
+a bigger and more interesting change than this one. It would want its own
+session and a full before/after.
+
+### 경원선 has no traffic of its own to count (2026-09-08)
+
+The section above ends by saying the 3,056 a day it left on 용산-청량리 is
+itself over-attributed, and that following that thread is a bigger change. It
+is, and it is also the answer to the 6x understatement, which was not obvious
+from either end: **there is nothing on 경원선 to reconstruct, and the fix is to
+stop trying.**
+
+The 운전 volume, in full, for every section of the line:
+
+```
+용산   - 청량리    고속열차 18   ITX-청춘 26   전동차 72
+청량리 - 광운대                              전동차 184
+광운대 - 동두천                              전동차 111
+동두천 - 소요산                              전동차 38
+소요산 - 신탄리    nothing
+신탄리 - 백마고지   nothing
+```
+
+The line's types are `CONVENTIONAL`. The 18 고속열차 are not in that set. The 26
+ITX-청춘 are in `frequency.NO_FLOW` — the yearbook has no ITX-청춘 row anywhere,
+which is the whole of 경춘선's story. The 전동차 are 광역전철 and have no 승하차
+row either. So **not one train on 경원선 is a train any station row can be
+attributed to**, which is exactly the test `frequency.claimable()` already
+applies and exactly why `Network.untyped` already contained the line.
+
+Where the 3,056 was coming from is then plain. 경원선 calls at 용산 and its
+declared types include 무궁화, so it joined the share group for 용산's 2.05M
+무궁화, 0.58M ITX-새마을 and 0.46M 새마을 and took about a third of them — off
+경부선, which is where those trains actually run. The map was drawing 1.1M
+passengers a year on the wrong railway.
+
+**Two changes, both falling out of `untyped`.**
+
+*A line with no claimable service claims no station's passengers.* Dropping it
+from the share groups is not enough on its own and getting that wrong is worse
+than leaving it alone: `alloc` falls through to a share of 1.0 where a station
+has no group, so 경원선 would have gone from a third of 용산 to all of it. Both
+tests have to be the same test.
+
+*And it is drawn from its published 통과인원 instead.* 경원선's is not 경춘선's.
+7.50M against 44 intercity trains a day each way is 395 a train, an ordinary
+figure, and the 운전 volume says where every one of those passengers was: trains
+run on 용산-청량리 and on no other section, so all 7.50M rode that stretch and
+nothing else. The segments carry `level: passing` so the tooltip, the info panel
+and `check.py` all say the figure is published rather than derived. It is split
+evenly between the directions, which is an assumption and the only one going —
+통과인원 has no direction in it — so the line's mirror is 0.0 % by construction
+and `check.py` now excludes it from the median and says why.
+
+```
+경원선 용산-서빙고-청량리    3,056/day  ->  20,554/day    published: 20,554
+경원선 north of 청량리        -1 to 5   ->  0             already flagged `service`
+경부선 수송밀도               20,783    ->  22,844        +9.9 %
+인거리 cover                  89.5 %    ->  90.4 %        best it has been
+negative segments                  3    ->  1
+median weighted mirror         1.3 %    ->  1.2 %
+```
+
+경부선's gain is +2,700 to +2,900 a day the whole way from 용산 down to 동대구,
++96 on to 삼랑진 and +15 beyond, which is the shape 용산's long-distance
+conventional traffic should have — nearly all of it off the train by 동대구. It is the largest correction on the map that no mirror
+could ever have caught, and it is a reminder that the mirror does not see a
+level error.
+
+The one external check in the project passes on it, which is worth having on a
+figure that bypasses the fit: 20,554 a day over 44 trains each way is 234 people
+a train, and `check.py`'s 승차율 test still reports every segment fitting inside
+its trains.
+
+**The corroboration is `build.py`.** The single-line builder has had 20,548 on
+경원선 since the beginning, because with no clean anchor it takes the level from
+통과인원 outright. What it could not do was the shape: it drew that figure flat
+across all 94 km, out to 백마고지 on the DMZ, and the zero-train rule in
+`solve.py` was written to stop it. So one builder had the level and not the
+shape and the other had the shape and not the level, and neither was wrong about
+its own half.
+
+**What it costs**, on the same lines as last time and for the same reason —
+these are small lines whose share of a trunk junction shifted:
+
+```
+경북선 mirror   17.3 %  ->  18.4 %
+경의선 mirror    6.7 %  ->   8.9 %
+중앙선 mirror    7.3 %  ->   7.7 %
+대구선 mirror   14.6 %  ->  14.9 %
+광주선 mirror   under 5 %  ->   5.0 %
+```
+
+경의선's is the largest move and the least meaningful: the line is drawn at a
+수송밀도 of 79, so its whole disagreement is a few dozen people.
+
+### The share prior already knows a branch line is small (2026-09-08)
+
+The obvious generalisation of the change above is to do it per station and per
+train type rather than per line: 대구선 and 경부선 both call at 동대구, the 운전
+sheet gives 대구선 무궁화 and nothing else there, so 동대구's 0.96M ITX-새마을
+should be 경부선's outright. Built and measured the same day, barring a
+membership only where some other line at the platform *does* run the type, so
+that it can never delete a passenger — it only ever moves a row.
+
+It bars 19 memberships, including every one that looked promising:
+
+```
+김천    ITX-새마을, 새마을      not 경북선        경북선 is the worst mirror on the map
+동대구  ITX-새마을, 새마을      not 대구선        대구선 is the second worst
+민둥산  무궁화                 not 정선선
+조치원  ITX-새마을, 새마을      not 충북선
+영주    ITX-새마을, 새마을      not 경북선
+광주송정 KTX, SRT, 통근        not 경전선, 광주선
+익산    SRT                   not 전라선
+순천    KTX                   not 경전선
+서울    무궁화                 not 경의선
+```
+
+**And 경북선, 대구선, 정선선 and 충북선 come out identical to the passenger.**
+Not close — the same integers on every segment. Fit cost 271.6 against 271.5,
+median weighted mirror 1.4 % either way.
+
+The reason is `share_prior`, which weights a shared station's rows by each
+line's published 통과인원. 경북선's is 191,638 against 경부선's 105,147,594, so
+its prior share of 김천 is **0.18 %**; 대구선's 1.62M against the same makes it
+1.5 % of 동대구. Barring a line from a share it was already getting almost none
+of does nothing, and the fit had no reason to move off the prior. The mechanism
+that was supposed to be the finer instrument had already been applied, more
+bluntly, by a tie-breaker nobody thought of as evidence.
+
+The only places it bites are the high-speed ones, and those are the places to be
+careful: 호남고속선 +1.5 %, 광주선 −2.0 %, 경의선 −6.9 %. Taking them would
+overturn `lines.py`'s stated reasoning that 광주송정's KTX are 호남고속선's and
+광주선's to divide, on the strength of how one sheet names the sections of an
+11.9 km branch. No measurable gain, contestable claims, more machinery: **not
+taken.** The code is reverted and this is the record.
+
+**What it is worth knowing for**: 경북선's and 대구선's mirrors are *not* a
+share-attribution problem. That is now measured rather than assumed, and it
+takes the most plausible remaining explanation off the table for whoever picks
+them up.
+
+### The 2023 yearbook parses, and three things stop it being adopted (2026-09-08)
+
+The download was never the obstacle. `info.korail.com/info/downloadBbsFile.do?
+atchmnflNo=22487` returns the 2023 bundle in one request, 5.93 MB, no login and
+no bot wall — the attachment number was already written down. `data/` now holds
+both editions and `lines.YEARBOOK` reads `KOREARIDERS_YEARBOOK` if it is set,
+so a 2023 run is one environment variable and touches nothing:
+
+```
+KOREARIDERS_YEARBOOK=data/korail_yearbook_2023_excel.zip python solve.py --out <scratch>
+```
+
+**2022 remains the default and every figure in this file is still 2022.**
+
+**Every filename in the bundle changed without a sheet moving.**
+
+```
+2022  1.지역간철도/4. 수송(여객)_완.xlsx      2023  1. 지역간 철도/4. 수송(여객).xlsx
+2022  2.도시철도/도시철도-3.수송실적_완.xlsx   2023  2. 도시철도/3. 수송실적.xlsb
+```
+
+Spaces come and go, `_완` is gone, the 도시철도 files stopped repeating their
+section in the basename, and **four workbooks changed from xlsx to xlsb**, which
+openpyxl cannot open at all. None of the four is on the map's path — they are
+the 도시철도 and 광역철도 volumes, and only `yearbook_extra.py` reads one, so
+that tool is 2022-only until somebody wants `pyxlsb`. `lines._member_key`
+matches on the section and sheet numbers with the title, spaces and extension
+stripped, so both editions resolve and the next rename costs nothing. Matching
+on the numbers alone would be simpler and is wrong: part 1 has two sheet 6s.
+
+**The section table returned zero rows, and said nothing about it.** This is the
+one to remember. 2022 writes `금천구청-SR분기` with an ASCII hyphen; 2023 writes
+`금천구청∼SR분기` with **U+223C**. `sections()` tested `"-" not in sec` and
+skipped every row, so `by_line()` came back empty — 117 rows to 0 — and the
+whole junction apparatus went quiet rather than failing. `frequency.SEP` now
+takes any of `-~∼～〜`. Two smaller ones alongside it: 2023 drops the 선 suffix
+on part of the column (`경부고속` for 경부고속선), handled by
+`frequency._line_name`, and it pads station names with spaces, which `_flat`
+already stripped.
+
+**2023 splits the busy lines by track pair**, and only one pair of each is this
+railway. 경부1선 is the conventional trunk with the KTX, 새마을 and 무궁화 on it;
+경부2선 is 지하서울-구로-병점-천안 carrying 전동차 and nothing else, and 경부3선
+is 서울-용산-구로. Without an alias for 경부1선 the 2023 sheet has no 경부선 at
+all and the busiest line on the map loses every flat-step and zero-train
+constraint. The other two pairs are deliberately not aliased: their trains are
+the metro layer's.
+
+**One validation worth having.** `ENTRY_SHARE`'s whole argument reproduces in
+2023 with different numbers. 경부고속선 runs **239** trains into 오송 and **170**
+out the far side, and the 69 that vanish are exactly 호남고속선's own 오송-익산
+count of KTX 49 + SRT 20. The 2022 version of that identity was 177, 127 and 50.
+Whatever else changed, the sheet is still internally coherent in the way the
+model relies on.
+
+#### What a 2023 build looks like
+
+It runs end to end and most of it is plausible post-pandemic growth — 통과인원 up
+5 % to 16 % across the network, 영업거리 identical to a tenth on every line,
+rosters and distances parsing to the same 59 and 99 rows.
+
+```
+                          2022        2023
+경부고속선 수송밀도         80,651      97,227
+호남고속선 통과인원 cover     0.58        0.65
+경부선 수송밀도             22,753      22,641
+median weighted mirror       1.2 %       1.6 %
+```
+
+**Three things stop it, and one of them is a judgement rather than a fix.**
+
+- **동해선 breaks**: worst-segment mirror 8.4 % → **99.7 %** and a −6,221
+  segment. Two of its section rows are **blank** in 2023 where 2022 had 무궁화 15
+  and 5. The zero-train rule reads a blank as "no trains ran", which is a strong
+  claim, and one of the two blanks is *interior* — 신경주-모량, sitting between
+  두 sections that both carry trains. Trains cannot skip a section, so that one
+  is missing data rather than a closure. **Whether a blank cell means zero or
+  means unknown, and whether an interior blank should be read differently from a
+  terminal one, is not something to settle quietly**: the zero-train rule is
+  load-bearing and 경원선's genuinely-shut 신탄리-백마고지 is blank in both years.
+- **정선선 goes blank too** (민둥산-아우라지 was 새마을 1), which makes it
+  `untyped`, and 2023 truncates the station to 아우라.
+- **경의선 loses its single 새마을**, leaving only KTX its types cannot claim, so
+  it also becomes `untyped`. This one may well be real — that train is the DMZ
+  service to 도라산 — but it has not been checked.
+
+#### 서대구 has two labels in the same edition, and half of it was going nowhere
+
+Found while diffing the two editions' station keys, and it is a **2022 bug, not
+a migration one**. Sheet 9 (KTX) writes `서대구`; sheet 10 (SRT) writes
+`서대구('22.3.31~)`, annotating the day the station opened. Only the first
+matches 경부고속선's chain, so **184,595 SRT passengers a year reached no line at
+all** — the 김천구미 fault again with a date in place of a bracket. 2023 spells
+both plainly, which is the only reason it surfaced.
+
+`lines.STATION_ALIAS` now merges it. The effect is honest and small: 경부고속선
++0.1 %, 인거리 cover 90.4 % → **90.5 %**, and nothing else moves by a digit —
+184,595 against that line's 53.6 M is a third of a per cent. Worth doing because
+the alternative is discarding real passengers, not because it changes a picture.
+
+The same diff caught **판교**, which 2023 splits into 판교(경기) and 판교(충남).
+장항선's is the 충남 one and is aliased; 판교(경기) is on 경강선, on no chain
+here, and must stay separate — aliasing it would be the 신경주 trap exactly.
+
 ## What is not done
 
 - **The short lines.** 대구선 (13.0 % weighted mirror) and 경북선 (8.0 %) are
@@ -2463,7 +2983,11 @@ assertion that everyone alights at 태백 is false anyway.
   file catches the Donghae Ulsan extension only in its opening days, so dividing
   it by 365 would produce a misleading current-looking profile. Yongin EverLine
   is also absent from the 22-line seoulriders import.
-- **Newer data.** 2023 is the last year on info.korail.com; the download path on
-  the railstat portal has not been found.
+- **Newer data.** 2023 is downloaded, parses, and is not adopted — the blockers
+  are three blank section rows and a judgement about what a blank means, all in
+  [The 2023 yearbook parses, and three things stop it being
+  adopted](#the-2023-yearbook-parses-and-three-things-stop-it-being-adopted-2026-09-08).
+  2024 onward moved to the railstat portal and that download path is still not
+  found.
 - The honest caveat for the finished map: unlike japanriders, these segment
   values are **derived, not published**. That belongs on the page.

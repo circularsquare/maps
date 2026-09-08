@@ -44,6 +44,10 @@ ALLOCATED = {
 UK = HERE.parent / "data" / "normalized" / "uk.csv"
 UK_EW = HERE.parent / "data" / "normalized" / "uk_ew_allocated.csv"
 UK_NI = HERE.parent / "data" / "normalized" / "uk_ni_allocated.csv"
+# England's five denominations are not in any census table -- uk_split.py derives them and
+# countries.py swaps them in for England's `Christian` rows. Without this the check below
+# reports them as typos, which is what it did on 2026-09-07.
+UK_SPLIT = HERE.parent / "data" / "normalized" / "uk_split.csv"
 CSV = HERE / "usrc_groups.csv"
 OUT = HERE / "religions.json"
 
@@ -233,7 +237,8 @@ def main():
         if target not in branch_ids:
             problems.append(f"uk2021: {cat!r} -> {target!r}, which is not in branches.py")
     uk_cats, missing_file = set(), False
-    for path, where in [(UK_EW, None), (UK_NI, None), (UK, "uk_sc_census_2022")]:
+    for path, where in [(UK_EW, None), (UK_NI, None), (UK_SPLIT, None),
+                        (UK, "uk_sc_census_2022")]:
         if not path.exists():
             missing_file = True
             continue

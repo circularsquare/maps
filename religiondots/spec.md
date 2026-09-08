@@ -61,6 +61,7 @@ and the surviving part is stated first.
 - 3.4 Structure from the detailed source, totals from the recent one — BUILT (Brazil)
 - 3.5 Undercounting is marked, not filled — and say which way the hole leans
 - 3.5a The United States is re-based on self-identification — BUILT
+- 3.5b England, and a source whose COVERAGE varies along the axis you are mapping — BUILT
 - 3.6 A roll counts the institution's location, not the member's
 - 3.7 A census counts households, and monasteries are not households
 - 3.8 Disclosure control biases rare categories downward — perturbation, rounding, suppression
@@ -802,6 +803,78 @@ county's drawn total comes to **98.60%** of its population; the share runs 0.09%
 to 4.88% in Alaska, a 54-fold spread, so it is not a uniform haircut. And **atheist and agnostic
 go to `secular`, "nothing in particular" to `unaffiliated`** — the line `branches.py` already drew
 for Canada's identical answers.
+
+### 3.5b England, and a source whose COVERAGE varies along the axis you are mapping — BUILT 2026-09-07
+
+§3.5a's mechanism, run one level down: not a survey's roots over a roll's structure, but a
+**census's Christian total over a church register's geography**. England's 26.2M Christians were
+one flat node — the largest unresolved block on the map, §3.11's floor made literal — because
+ONS asks one tick box and Wales, Scotland, Northern Ireland and Ireland all split theirs.
+They now draw as `anglican` 64.6%, `catholic` 18.2%, `methodist` 4.6%, `baptist` 2.4%,
+`reformed` 2.2%, and **8.0% deliberately unplaced**. Three sources, each doing only what it can:
+the census keeps every magnitude, a current church register says where each denomination is, the
+English Church Census 2005 says how large its congregations are, and the British Election Study
+says how many people belong to each. `sources.md` has the build; this is the transferable part.
+
+**THE FAILURE MODE, AND IT IS NOT ABOUT ENGLAND.** Two bugs, both of which produced a precise,
+plausible, wrong map with no error anywhere: every total reconciled, every category resolved,
+every check the project already had passed.
+
+1. The English Church Census took bulk data from *"ten Church of England and eight Roman Catholic
+   Dioceses"*, so its coverage is near-total in some counties and a postal response rate in
+   others. Its Anglican response runs **25.9% in Norfolk against 92.5% in Greater Manchester**.
+   Placing denominations by its attendance totals, corrected by the national 55% its own user
+   guide publishes, drew **a Merseyside that was 72% Anglican and 16% Catholic**.
+2. Its settlement code is missing for 37% of churches and the missingness is denominational —
+   68% of Anglicans carry one against 54% of Catholics and 6% of Orthodox. Reading a cell's mix
+   off the coded subset made every English conurbation twelve points more Anglican.
+
+Both are the same shape: **a source whose coverage varies along the very axis the map is
+about.** A source can be complete enough, recent enough, fine enough, on the right basis, and
+still be unusable for geography because *what it missed, it missed unevenly.* §3.8 is the
+disclosure-control version of this and §3.6 the location version; this is the response-rate one.
+
+**THE TEST THAT CAUGHT IT, WHICH IS THE THING TO REUSE.** Neither bug is visible from inside
+the data. What found them was **holding the source against an independent register of the same
+thing**: the Church of England publishes a complete list of its own churches, so the church
+census's Anglican count per county divided by the real number *is* its response rate, county by
+county. It reproduced the published national 55% — which is what says the method works — and
+then showed the 3.5-fold spread underneath it.
+
+So: **any `roll` or `attendance` source being used to place people deserves a denominator from
+somewhere else.** Ask what a complete count of the same institutions would look like and go and
+find one. Where no register exists the source may still be fine, but that is an assumption and
+should be written down as one.
+
+**THE REPAIRS, both of which are "use the part that survives".** A mean congregation size
+survives an uneven response where a total does not, because losing half a county's chapels
+changes how many you saw and not how big they were. And a settlement profile taken *within* a
+denomination survives a coding gap that varies *between* denominations, because the coding rate
+cancels. In both cases the fix was not to correct the biased quantity but to stop using it.
+
+**WHERE NO REGISTER REACHES, A CENSUS VARIABLE CAN — SOMETIMES.** Pentecostal, New church and
+Orthodox had national anchors and no usable geography: a 2005 church census and a map of
+buildings both miss congregations that rent halls and parishes founded after 2004.
+OpenStreetMap has **355 Pentecostal and 129 Orthodox churches in all of England**; using them
+put 6.0% of Norfolk's Christians on Orthodoxy.
+
+**Orthodoxy was rescued by a proxy and the other two were not, and the difference is the
+general point.** Country of birth places Orthodoxy well because the mapping from origin to
+religion is tight and, crucially, *correctable where it is not*: Romania is 85% Orthodox and
+Albania 7%, so weighting each origin by its own census turns a variable about migration into
+one about religion, and it moves Albania from 5.9% of the shape to 0.6%. Ethnic group does not
+place Pentecostalism, because Black African in England is heavily Anglican and Catholic as
+well, and no weighting fixes that — the proxy would say where the Black-majority congregations
+are, which is a different question with the same answer in some places and not others. Anita's
+call, 2026-09-08: Orthodoxy yes, Pentecostal no.
+
+**So the test for a proxy is not correlation, it is whether the residual is nameable.** An
+origin's non-Orthodox share is a number somebody has published. An ethnicity's
+non-Pentecostal share is a question nobody has asked. The first can be weighted away and the
+second cannot, and a proxy you cannot weight is a proxy you are asserting rather than using.
+
+What is still unplaced stays on the census's own `Christian` category — §3.2's residual, and
+§14.4's refusal to invent a magnitude, applied to two legs the map would visibly like to have.
 
 ### 3.6 A roll counts the institution's location, not the member's — FOUND 2026-08-27
 
@@ -1605,6 +1678,32 @@ span.
 **Culling pad must scale with zoom.** A pad expressed as a fraction of the world is ~800 km at every
 zoom, so most of a country falsely intersects a street-level view: 433,837 dots submitted for one
 Mumbai junction, against 12,288 once the pad is a few pixels' worth.
+
+**THIS LAYER HAS TO DRAW ITS OWN WORLD COPIES, AND UNTIL 2026-09-08 IT DID NOT.** MapLibre calls a
+custom layer's `render()` **once per frame**, not once per visible world copy the way it draws its
+own layers — so every dot lived in exactly one copy of the world and **the antimeridian cut the map
+in half**. Anita, the day Fiji landed: *"if i'm on one side it doesnt show dots on the other side."*
+Fiji is 176°E–179°W, so at any zoom showing the whole country half of it was missing; Kiribati and
+Tonga would have been worse. Two things were wrong and both are §9bd's lesson that geometry fails
+without complaining:
+
+- **`viewBounds()` returned an inverted range.** `getBounds()` on a straddling view can give a west
+  *greater* than its east, so the bucket test `bk[2] < x0 || bk[0] > x1` rejected **every** bucket
+  and Fiji went blank on both sides at once. The range is now unwrapped by adding a world to the
+  east end when it comes back inverted.
+- **Only one copy was ever drawn.** The dots' mercator x is absolute and the origin is folded into
+  the matrix on the CPU, so a copy is just the same geometry with ±1 world added to that origin —
+  no shader change, no second buffer. Which copies to draw falls straight out of which whole worlds
+  the unwrapped range spans.
+
+**The perf guard is the interesting half.** Extra copies are drawn **only while the viewport is
+narrower than the world**. Zoomed out past that, every dot is already on screen in the central copy,
+the side copies are duplicate scenery, and three passes would be a straight multiple of the most
+expensive frame this map draws — z0 submits all 5.1M dots. So the wide case keeps exactly its old
+cost, and the fix is nearly free where it is needed, because a view narrow enough to straddle 180
+has only a handful of buckets in it. Measured after: **z1 world view 5,170,886 instances — the
+reference total exactly, each dot once**; Peru 23,193, its dot count exactly; Fiji straddling 180
+draws both copies from either side.
 
 **Picking is now correct, and it was not before.** §4.2c makes the visible dot at a pixel the LAST
 one drawn that covers it. `queryRenderedFeatures`'s `features[0]` is the FIRST in tile order, so in
@@ -4835,6 +4934,23 @@ rather than as something to investigate or stop for:
   dots.** `buffers.py`'s `WARNING: n node(s) not in religions.json` is the only signal, and it
   means "some country needs re-scattering", not "re-run `build_tree.py`".
 
+**SO CLAIM THE COUNTRY BEFORE YOU START, AND CHECK BEFORE YOU WRITE.** `queue.md` is the
+candidate list and `tools/claim.py` is a one-file-per-country advisory lock:
+
+    python tools/claim.py                       # what is claimed, what is free
+    python tools/claim.py take <cc> --id <sid> --note "what you are doing"
+    python tools/claim.py done <cc> --id <sid>
+
+`<sid>` is your session id — the last component of the scratchpad path in your system prompt.
+Claims are one file each under `data/claims/` created with `O_CREAT|O_EXCL`, so a race has
+exactly one winner; a shared list everyone edits would be `index.html` again. It is advisory
+and cannot stop anyone. **The thing that actually works is the habit: before `Write` to any
+`sources/<cc>*`, `taxonomy/<cc>*` or `data/` path, look at whether it already exists.**
+Added 2026-09-08, after a session spent an hour building Peru that another had already
+finished and overwrote its `sources/pe.py` with a `Write` to a path it had not checked
+(recovered from Claude Code's `~/.claude/file-history/`, which snapshots a file immediately
+before it is overwritten — worth knowing).
+
 None of this needs raising with Anita. Getting a fright and stopping costs more than the collision
 would have.
 
@@ -4945,6 +5061,20 @@ which of these it is:
 4. **A response that is not what it claims.** HTTP 200 with a PNG, a JS alert, a stray byte, the wrong
    file format, a zero-feature read. **Assert size, type and count, never the absence of an
    exception.**
+   **AND FOR GEOMETRY, COUNT IS NOT ENOUGH — ASSERT THE MAGNITUDE. Fiji is why** (§9bd). It
+   straddles the 180th meridian, and three separate steps produced a file that opened, had exactly
+   the right feature count and exactly the right names while being geometrically absurd:
+   reprojecting the provinces to EPSG:4326 tore Cakaudrove, Lau and Macuata into **360-degree**
+   polygons; **nine of Kontur's own hexes ship torn** across the EPSG:3857 plane, so their
+   centroids computed to longitude ~0 and landed in the Atlantic and the Sahara at Fiji's
+   latitude; and "fix it by projecting into a Pacific CRS" **does not work, because pyproj does
+   not wrap longitude** — it moves the tear somewhere less recognisable. A centroid-in-polygon
+   join against any of those silently drops or mispairs units and every total still reconciles.
+   **The check that catches all three is two lines: compare the layer's bounding box against how
+   big the country actually is.** Fiji is about 5° wide; the first attempt came out 28,670 km
+   across. Add it wherever a country is near 180°, near a pole, or spans a UTM zone — and note
+   that the fix is arithmetic in degrees (shift negative longitudes +360 and join there), not a
+   cleverer projection.
 5. **A category that does not mean its label.** India's Annexure, Kenya's "Evangelical", Germany's
    three church-tax boxes. **Nothing inside the data catches this. Read the whole list and check one
    number you already know.**
@@ -7065,3 +7195,617 @@ Still open, in order:
 possibly multi-wave (`pone.0318221.s001.sav`) is a single wave and **carries no religion
 variable at all** — its only "religio" string is the ISCO occupation code *religious
 professionals*. Zenodo has neither survey. ICPSR holds only the EASS cross-national sets.
+
+### 14.17 73.5 million Chinese people were being read and then thrown away, and the check that should have caught it was measuring the wrong denominator — FIXED 2026-09-08
+
+Anita, looking at the finished §14.16 map: *"it seems like kontur (if thats what we're using)
+kinda sucks in china. it says here no people in zhongshan."*
+
+**It was not Kontur.** Kontur has 3,361,377 people in Zhongshan. `cn.csv` had none, and
+Zhongshan was one of **168 counties — 67,805,092 people, 5.47% of China — that `sources/cn.py`
+read out of the census volumes and then discarded** because the romanised name matched no
+adcode. With Hainan's separate source gap that is 71.0M, against an observed shortfall of 73.5M
+(the rest is drift in the §3.4 rescale factors).
+
+**It was never a boundary problem, which is the first thing to say because it is where an hour
+went.** The instinct was to hunt for 2000-vintage county boundaries. The geometry has 2,848
+polygons against the volumes' 2,859 counties and every code that resolved found one; the
+missing people were in `data/raw/cn/` the whole time. *Check whether the join failed before
+concluding the geography is the wrong vintage.*
+
+#### THE FINDING WORTH KEEPING: A CHECK'S DENOMINATOR CAN GO STALE
+
+`cn.py` has always printed this, and it has always looked healthy:
+
+```
+drawn population stranded: 69,728 of 26,950,708 = 0.26%
+```
+
+**That number was true and it was about the wrong people.** It counts §14.5's religio-ethnic
+population, because when it was written those were the only people drawn — China was 2.2% of
+itself and the minorities were the whole map. §14.13 put all 1.24 billion on `unknown`, and
+from that moment the meaningful figure was the *total* stranded: **5.47%, twenty times larger.**
+
+**The check did not become wrong. It became irrelevant, and nothing said so.** Nothing could:
+it was still measuring exactly what it claimed to measure. This is the third time in two days
+that a correct-looking artefact went stale because the country underneath it changed — §14.16's
+`covers` list omitted `buddhism.mahayana` while 54.6M Buddhists were drawn, and §14.14's `gap`
+line still said *"Han majority not shown"* after the Han were shown.
+
+> **When a country's DRAWN POPULATION changes, re-read every check that has a denominator.
+> A ratio whose numerator you fixed can keep reporting on a population that is no longer the
+> one at risk.**
+
+`cn.py` now prints the total alongside the drawn figure, and flags outright that stranded people
+are dropped rather than redistributed.
+
+#### THE 168, AND THEY FALL INTO FIVE CLEAN CLASSES
+
+Both the census file and DataV's index run in GB/T 2260 code order within a province, so an
+unresolved county lies in a known interval between its resolved neighbours and the successor is
+the modern unit in that interval. That is the same argument `cn.py`'s `ordered` tier already
+used, applied to the residue. **`free` was not used as a filter** — a 2000 unit is more often
+absorbed than renamed, so the target is frequently a code another census county already claims,
+which the file has always allowed.
+
+| class | n | example |
+|---|---|---|
+| **市辖区 / 郊区 dissolved into modern districts** | ~90 | 无锡市郊区 → 滨湖区; 苏州沧浪+平江+金阊 → 姑苏区 |
+| **a character's place-name reading** | 29 | 番禺 written FANYU not PANYU; 鄱阳 BOYANG not POYANG; 乐清 LEQING not YUEQING |
+| **a county sharing its prefecture's name** | ~30 | 遵义县 → 播州区; 毕节市 → 七星关区 |
+| **the suffix dropped** | 14 | KAI = 开县, DA = 达县, HENG = 横县, HU = 户县 |
+| **the source is simply wrong** | 3 | **中山市 is romanised ZHONGZHAN**, and two Hubei names arrive byte-corrupted |
+
+**Zhongshan is the single biggest miss and it is a typo.** 2,363,322 people absent from a map
+of the Pearl River Delta because the volume wrote ZHONGZHAN. The two corrupted Hubei names —
+硚口区 and 猇亭区, both rare characters — are keyed in `OVERRIDES` by their mojibake literal,
+since no romanisation rule can ever reach them and the adcode interval identifies both without
+the name.
+
+**市中区 is the sharpest case of the generic name**: Sichuan has three, in 遂宁, 内江 and 乐山.
+`OVERRIDES` takes a list there and the nth occurrence in file order takes the nth code, which is
+the mechanism §12 built for 伊宁市/伊宁县 and which turns out to generalise.
+
+#### THE VERIFICATION, AND IT IS UNUSUALLY STRONG
+
+Not "it looks better" — the census is its own held-out test, because the per-province 2010
+totals were never used to place anybody:
+
+```
+county -> adcode: 2859/2859 resolved       (was 2691/2859)
+unresolved: 0                              (was 168)
+TOTAL population stranded: 0 = 0.00%       (was 67,805,092 = 5.47%)
+national total: 1,332,810,852              against the census's 1,332,810,869
+```
+
+**Seventeen people out of 1.33 billion**, and **every one of the 31 provinces now reconciles to
+100.0%** — where before Hainan was at 82.4%, Zhejiang 86.6%, Jiangxi 88.3%, Guangxi 88.4%. China
+draws 1,332,805 dots, up from 1,259,338.
+
+#### THE RESIDUAL, WHICH IS A PLACEMENT ERROR AND NO LONGER A COUNTING ONE
+
+80 modern polygons still carry no rows, holding 27.7M people by Kontur (down from 194 and
+95.2M). **Nobody is missing** — the province totals prove it — but where a 2000 county was
+*split* into two modern districts, the whole of its population is drawn inside whichever
+successor the override names. 潮南区's people are drawn in 潮阳区, 相城区's in 吴中区. The
+displacement is between adjacent districts of one city and never crosses a prefecture.
+
+Fixing it properly means mapping one census county onto *several* polygons and splitting by
+Kontur population, which is a change to the shape of `OVERRIDES` rather than more entries. Left
+undone deliberately; the counting error was the serious one.
+
+**And Yichun is the one group placed only approximately even at prefecture grain.** 伊春 was 15
+districts in 2000 and became 4 districts + 4 counties in 2019, so thirteen census units map onto
+seven modern ones; the pairings follow the reorganisation but a 2000 district that was split
+goes whole to the successor holding its seat. ~500,000 people, all inside Yichun. 大兴安岭's
+松岭, 新林 and 呼中 are 林业局 areas with no GB/T 2260 code at all in DataV and go to the
+adjacent county that administers them — 131,000 people, and the weakest placement in the block.
+
+#### WHAT IT DOES TO §14.16's NUMBERS
+
+The recovered 73.5M are disproportionately urban — **142 of the 168 were 市辖区** — so the CGSS
+layer, which carves the `unknown` residual at province grain, gains most of them:
+
+| | before | after |
+|---|---|---|
+| `buddhism.mahayana` | 54.60M | **58.39M** |
+| `christianity.protestant` | 21.07M | **22.15M** |
+| `islam` | 23.07M | 23.14M |
+| `unknown` | 1,153.05M | 1,221.56M |
+| coloured share | 8.44% | 8.35% |
+
+**And it removes a bias §14.16 could not have seen.** A layer whose coefficients are provincial
+but whose denominator was missing 5.5% of the province — concentrated in its cities — was
+applying urban-inclusive shares to a rural-skewed population. That is fixed as a side effect,
+and it is the reason this was worth doing before anything else on the China list.
+
+### 14.18 Arunachal goes to India, the Koreans are drawn, and the `unknown` toggle question is closed — DECIDED 2026-09-08
+
+Three of §14.15's open items and one new defect, all Anita's calls in one sitting.
+
+#### THE MAP WAS DRAWING 197,000 CHINESE PEOPLE INSIDE INDIA
+
+`todo.txt` had carried *"china shows buddhists in arunachal, double counting?"* since before
+§14.16, and §14.16 made it visible by putting colour in eastern China. It is real, and the
+mechanism is worth stating because it is not the obvious one.
+
+**DataV's county boundaries follow the PRC's territorial claim.** Tibet's Cona, Lhünzê, Mêdog,
+Zayü and nine neighbours extend south of the McMahon line over Arunachal Pradesh, which India
+administers and which India's own census draws. `cn_geo.py` assigns each Kontur hex to the
+county containing it, so **1,516,251 Arunachal residents' hexes were assigned to Chinese
+counties** — and `scatter.py` then places a county's dots in proportion to Kontur population.
+
+**So the dots were not invented people. They were real people, counted by China on land China
+administers, dragged south onto land it does not.** Anita: *"the people come from land in china
+right? and not in arunachal."* Exactly that. Of the 333,234 the census puts in those counties,
+**about 197,000 — 59% — were drawn inside India.** Cona is the pure case: 17,530 census people,
+and Kontur put *none* of its population on the Chinese side and a million on the Indian side, so
+every one of its dots landed in Arunachal.
+
+**The rule taken is DE FACTO ADMINISTRATION** — Anita: *"i think we give arunachal to india, i
+thin thats the usual stance and its de facto right."* Implemented from data rather than a hand
+list: `sources/cn_geo.py::clip_to_de_facto` subtracts every polygon in
+`ne_10m_admin_0_disputed_areas` whose `NOTE_BRK` says China claims it and somebody else
+administers it. **Natural Earth records exactly this distinction** — "Admin. by India; Claimed by
+China" — which is why that layer is the right one and why `country_shapes.py` already used it for
+Abkhazia.
+
+That removes Arunachal (87,238 km²), Demchok, the Samdu, Tirpani and Bara Hotii valleys and the
+two Bhutanese salients — **and keeps Aksai Chin and the Shaksam Valley, which China administers
+and India and Pakistan claim.** The clip runs on the counties *before* the grid is built from
+them, so the hexes are clipped by construction and a future rebuild cannot forget.
+
+| | before | after |
+|---|---|---|
+| Arunachal residents assigned to Chinese counties | 1,516,251 | 265,446 |
+| China dots inside Natural Earth's India (1:10k) | 28 | **4** |
+| India dots inside Natural Earth's China | 0 | 0 |
+
+The residual 4 dots are boundary-precision noise between two outlines that disagree by a few
+hundred metres — the same order as the mx/us and de/fr borders below.
+
+#### AND THE GENERAL CHECK, WHICH SAYS THIS IS THE ONLY CASE
+
+Before fixing it, every country's dots were binned to a 0.05° grid and cells claimed by two
+countries counted. **The map has essentially no double-drawn ground**: cn/in was one shared
+cell; everything else is 1–6 cells of ordinary border noise (mx/us 16, ca/us 4, de/fr 3, ch/it
+3). So this was not a class of bug, it was one country's boundary source following a claim.
+
+**It did surface one piece of litter**: a stray `dots_in_32_10k.geojson` overlapping India's
+national file across 866 cells in Kerala. It is not in `tools/built_countries.py`, so it never
+reached the tiles — a leftover from a per-state build, and safe to delete.
+
+#### THE KOREANS ARE DRAWN, AND THE DOUBT IS DRAWN WITH THEM
+
+§14.14 flagged them, §14.15 ranked them first, and §14.16 postponed them. Now built: **1.83M
+Korean nationals at Joshua Project's 30%, ~549,000 people on `christianity.protestant`,
+`modelled`** — the second-largest Christian block in China and the first colour in a northeast
+that had nothing but grey.
+
+**What is being traded is stated rather than buried.** Of the seven MISSION rows this is the only
+one whose coefficient has no local corroboration: for the Lisu, Lahu, Jingpo, Wa, Nu and Derung
+the Christian pattern is attested in Chinese state and academic reporting on Nujiang, Dehong and
+Lancang, and for the Korean-Chinese the outside attestation is largely analogical. **And JP's 30%
+sits within two points of South Korea's own self-identified Christian share** (2015 census: 19.7%
+Protestant + 7.9% Catholic = 27.6%). That may be a real convergence — the Yanbian church is
+genuinely well documented — or it may be a South Korean figure carried across the border, and
+nothing available here distinguishes them. **If it is the analogy, then the split is wrong as
+well as the level**, because a third of South Korea's Christians are Catholic and this row is
+Protestant-only. `cn2000.py`'s REVIEW keeps the whole pre-decision argument for that reason.
+
+The visible effect is narrower than "the northeast": Koreans are 3.8% of Jilin, 0.9% of
+Heilongjiang and 0.6% of Liaoning, but **47–58% of Yanji, Longjing, Tumen and Helong**. So it is
+one prefecture lighting up and a faint dusting over three provinces.
+
+#### THE `unknown` TIER QUESTION IS CLOSED, AND THE ANSWER IS THE ONE ALREADY BUILT
+
+§14.14 raised it and §14.15 ranked it fourth: should `inferred dots: hidden` keep China's grey
+standing, on the ground that those people *were* counted and the row makes no religious claim?
+
+**No.** Anita: *"if they didnt vanish we would just show all of china as brown which is kinda
+silly."* A control whose purpose is to show what was measured about RELIGION should not leave a
+billion dots standing that say nothing about religion — it would replace an honest emptiness with
+an uninformative mass. §14.6 called China emptying under that toggle the honest test of the
+country and it stays. No change to `_cn_counts`; the §3.4 tier reasoning it already rests on is
+sufficient and Vietnam's differing behaviour is a consequence of Vietnam's geography being
+measured at its own grain, not an inconsistency to repair.
+
+#### CLOSED WITHOUT ACTION
+
+**`tools/check_palette` tests only authored ROOT colours, and that is deliberate.** §14.16 noted
+that Mahayana and Theravada are dE 13.2 apart, under the floor, and proposed extending the tool
+to child shades. Anita: *"i dont think we actually want this to test child colors."* Right — the
+child shades are generated from the root hue *in order to* read as one family, so a within-branch
+distance under the floor is the design working. Not a gap.
+
+#### STILL OPEN AFTER THIS
+
+- **The 80 split-county polygons** (§14.17), 27.7M people. Anita found one unaided —
+  *"nansha is empty of people on our map"* — and Nansha is exactly the shape: created 2005 out
+  of 番禺市, which the 2000 census knows only as `FANYU`, so all 1.63M of old Panyu draws inside
+  modern 番禺区 and Nansha's 652,857 residents' ground draws nothing. **Nobody is missing** — the
+  national total is 17 people off the census — but 2.0% of China lives on ground that draws
+  nothing. The fix is letting one census county map onto several polygons, split by Kontur.
+- **CLDS**, behind a free ScienceDB registration (§14.16).
+- **CGSS 2010/2011/2013/2015/2018** behind CNSDA registration — the only route to re-testing the
+  Protestant layer rather than disclosing its weakness.
+- **The A-Hmao county list** (§14.15).
+
+### 14.19 The split counties are filled, and chasing them turned up 5.9 million people drawn in the wrong place entirely — FIXED 2026-09-08
+
+Anita asked for §14.17's 80 orphan polygons. Doing them surfaced a worse class of error that
+nothing in the pipeline could see, so this section is mostly about that.
+
+#### THE ERROR NOTHING COULD SEE: A REAL ADCODE IN THE WRONG PREFECTURE
+
+`sources/cn.py` joins the census volumes to DataV by romanised NAME, and China has many
+counties that romanise identically. When the resolver picks the wrong one **it still returns
+a real adcode in the right province**, so every check downstream passes — the county total is
+right, the province reconciles, the national figure is exact to 17 people, `check_mapping` is
+happy. The only thing wrong is that half a million people are drawn 400 km from home.
+
+**Two shapes of it, ~5.9M people:**
+
+| | people | |
+|---|---|---|
+| **same romanisation, several real counties** | ~2.48M | Hebei's three Wei counties — 魏县 (Handan), 威县 (Xingtai), 蔚县 (Zhangjiakou) — are all `WEIXIAN`, and all three were drawn as one. Two real counties drew nothing. |
+| **wrong prefecture outright** | ~3.42M | 郧县's 584,315 residents drawn in 云梦县; 南宁新城区's 426,346 in 忻城县, another prefecture; 安庆市郊区's 264,670 in 铜陵's 郊区. |
+
+**And two of them were OVERRIDES entries whose COMMENT named the right county while the
+digits named another** — `ZHONGDIAN` pointed at 533422 (德钦县) under a comment reading
+*"中甸县 -> 香格里拉市"*, and `WEILI` at 652927 (乌什县) under *"尉犁县"*. Nothing about
+reading the file would ever have caught those; only the arithmetic could.
+
+#### THE CHECK, AND IT IS ONE SENTENCE OF REASONING
+
+`tools/check_cn_prefecture.py`, new. **Both the census file and DataV's index run in GB/T
+2260 code order within a province, so a county's NEIGHBOURS IN THE FILE are its neighbours in
+code space.** A resolution landing in a prefecture that neither neighbour is in is almost
+always the wrong same-named county.
+
+It flags 35. **Twenty-five are legitimate** — a county really did change prefecture (简阳 to
+Chengdu, 无为 to Wuhu, 寿县 to Huainan, 公主岭 to Changchun, 枞阳 to Tongling, 海原 to
+Zhongwei), or is provincially administered (济源, 儋州, 石河子, 嘉峪关), or is a
+prefecture-level city with no counties (东莞, 中山). Those are in an allowlist **with the
+reason written next to each**, so that anything not on the list is a finding rather than
+noise. Ten were real; all ten are fixed and the check now reports zero unexplained.
+
+**The general lesson, and it is the same one §14.17 recorded from the other side.** §14.17's
+stranded-population check went stale because its denominator stopped being the population at
+risk. This is the complementary failure: **a join that fails LOUDLY is safe, and a join that
+fails into a plausible neighbour is not.** Every totals-based check in this project would
+pass on a map that has swapped two counties. Where a join is by name and names repeat, the
+check has to be about POSITION, not about totals.
+
+#### THE ORIGINAL TASK: 80 ORPHAN POLYGONS, AND WHAT EACH ONE ACTUALLY WAS
+
+Anita found the symptom unaided: *"nansha is empty of people on our map... seems like our
+population coverage is actually in general still very spotty."* **The coverage is not spotty
+— nobody is missing** (the national total is 17 people off the census) — but 2.0% of China
+lived on ground that drew nothing.
+
+The 80 turned out to be four different problems:
+
+| | n | what |
+|---|---|---|
+| name collisions and wrong-prefecture errors | 11 | fixed in `OVERRIDES`, above — these were never splits |
+| **genuine post-2000 splits** | **55** | fixed by `ABSORB`, below |
+| Hainan's incomplete census volume | 11 | **left blank on purpose** |
+| not administered by the PRC, or created after 2000 over empty islands | 3 | 金门县, 西沙区, 南沙区 |
+
+**`ABSORB` in `sources/cn_geo.py` is the fix and it changes no count anywhere.** Where a 2000
+county was split, `OVERRIDES` names one successor and the whole population draws inside it,
+leaving the sibling's ground blank. The hexes are already clipped to the sibling's polygon,
+so **relabelling the hex to the parent's adcode** makes `scatter.py` spread that county's dots
+over its original 2000 territory, weighted by Kontur — which is what the county's population
+always meant. Nansha's 652,857 residents' ground now draws Panyu's dots, because in 2000 that
+is precisely what it was.
+
+1,547 hexes moved, 19.5M people's ground. **Units with a polygon and no rows: 80 → 14**, and
+the dot count is identical before and after, which is the proof that this was placement and
+not counting.
+
+**Hainan's eleven are left blank deliberately**, and the distinction matters: 澄迈, 临高,
+定安, 屯昌, 东方, 乐东, 陵水, 昌江, 白沙, 琼中 and 保亭 are ordinary counties that have
+existed throughout. They draw nothing because **the Hainan volume of the 2000 census is
+incomplete** — `cn.py` has always reported it, *"the shortfall IS Hainan, exactly"*, 3,159,377
+people. Absorbing them into 五指山 or 儋州 would invent a geography the source never had, and
+§3.5 says an undercount is marked rather than filled. **Hainan is now the one place on the
+Chinese map where blank ground means "not in the source" rather than "nobody lives here"**,
+and that is worth a `note_public` sentence if it is ever drawn on.
+
+#### WHAT IS LEFT, AND IT IS SMALL
+
+- **The parent of a split is chosen by longest shared boundary inside the prefecture,
+  hand-corrected where the administrative history is known.** The residual risk is naming a
+  sibling rather than the true parent, which moves people between two adjacent districts of
+  one city. Bounded, and far smaller than the blank it replaces.
+- **Hainan's 3.16M** still needs a complete 2000 volume, or another source.
+- The 14 remaining blanks, above, all deliberate.
+
+### 14.20 CLDS arrived, and it replicates the layer China's weakest colour rests on — FOUND 2026-09-08, and DECIDED the same day: it is EVIDENCE, not dots
+
+Anita registered a ScienceDB account and retrieved `CLDS2016.rar`, which is the lead §14.16
+ranked first and could not walk itself. `sources/cn_clds.md` is the full record and
+`sources/cn_clds.py` reproduces every number here. **Nothing is wired into `countries.py`;
+what to do with it is below and it is Anita's call.**
+
+21,086 respondents, 29 provinces, 402 communities, one wave (2016). The religion variable is
+`I7_1 宗教信仰`, single choice, and it is `self_id` — so unlike CFPS this one can sit beside
+the rest of the map, which is §14.15's reframing paying off exactly as predicted.
+
+#### THE FINDING WORTH THE MOST: A SURVEY CAN BE CHECKED AGAINST A BUILDING
+
+CLDS's community questionnaire asks the interviewer whether the community has a church, a
+temple, a mosque, a Daoist temple or an ancestral hall. §14.15 ruled out the registered-venue
+registry as a *magnitude* source and that stands — §2.6, and China's registry omits house
+churches. **But a venue observed in the same community whose residents answered the question
+is a coherence check, and it is the first one this country has ever had that is not another
+survey:**
+
+| interviewer found | communities | matching self-report | |
+|---|---|---|---|
+| a church | 37 of 398 | **6.46%** Protestant vs 1.53% | **4.2x** |
+| a temple | 106 | 11.97% Buddhist vs 4.31% | 2.8x |
+| a mosque | 16 | 51.73% Muslim vs 0.88% | 59x |
+| an ancestral hall | 69 | 12.96% Buddhist vs 4.97% | 2.6x |
+
+**The church row is the one that matters**, because §14.16 drew Protestantism flagged and
+`cn_cgss.py` calls its evidence *"a failure to demonstrate signal"*. People who call themselves
+Protestant live, four times over, where the churches are. That is not a survey agreeing with a
+survey.
+
+**The general rule, and it generalises past China:** when a self-report layer is thin, look for
+a variable in the SAME instrument that was recorded by the interviewer rather than answered by
+the respondent. It is not a magnitude and §2.6 still forbids using it as one, but it is
+independent of every bias that makes the self-report thin.
+
+#### AND THE SECOND: RANK STABILITY ACROSS WAVES IS NOT RANK STABILITY ACROSS SURVEYS
+
+§14.10's fifth condition asks whether a geography is stable, and §14.16 could only test CGSS
+against itself, getting **+0.17** for Protestantism and drawing it anyway with a disclosure.
+CLDS answers the question the condition was actually asking:
+
+| | CGSS 2012 vs 2021 | **CLDS 2016 vs CGSS pooled** |
+|---|---|---|
+| `buddhism.mahayana` | +0.63 | **+0.596** |
+| `christianity.protestant` | **+0.17** | **+0.595** |
+
+CLDS independently puts **Henan first at 10.9%**, the largest Protestant cell in either survey
+(97 respondents). **A wave-to-wave wobble measures the temporal instability of REPORTING; it is
+not evidence that there is no geography.** Two surveys sharing no fieldwork, no house and no
+questionnaire agreeing at +0.60 is. §14.16's disclosure in `note_public` is now stronger than
+the evidence requires, and that is worth fixing whichever way the drawing decision goes.
+
+#### THE COMMUNITY COUNT IS THE THING TO CONDITION ON, PROVED FROM BOTH SIDES
+
+§14.16 showed CGSS's provincial cut of Islam was a lottery. CLDS fails the same census-margin
+test in the *opposite* direction, which promotes a suspicion about one survey into a rule about
+survey design:
+
+| | census | CGSS | CLDS | CLDS communities |
+|---|---|---|---|---|
+| Xinjiang | 58.3% | 92.0% | **61.3%** | 17 |
+| Ningxia | 34.5% | 90.4% | **1.1%** | **4** |
+| Qinghai | 16.9% | 1.1% | 20.5% | **4** |
+
+**Ningxia's four communities returned four Muslims between them** in a province a third Hui —
+and those same four communities produce its **18.4% Buddhist** figure, third on the drawn list
+and pure accident. Where the count is high the margin is reproduced almost exactly: Xinjiang
+1.05x, Beijing 1.02x, Gansu 1.15x. **Neither survey is better; the design is.** `cn_clds.py`
+names the six thin provinces on every run.
+
+#### WHAT DOES NOT EXPLAIN THE LEVEL GAP, SO IT IS NOT RE-PROPOSED
+
+CLDS puts Zhejiang at 36.1% Buddhist against CGSS's 14.8%, and Fujian 32.1% against 11.5%.
+Three explanations were tested and all three fail:
+
+- **CLDS offers no folk-religion option, so folk believers pick 佛教.** No: the gap correlates
+  with CGSS's folk share at **+0.10**, adding folk to CGSS *lowers* agreement (+0.662 ->
+  +0.492), and Guangdong has the highest folk share in the country with **no gap at all** while
+  Zhejiang has almost the lowest with the largest gap.
+- **Different universes.** No: restricting CLDS to CGSS's 18+ moves Buddhism 6.50% -> 6.51%,
+  and CLDS's age gradient is flat (12.1 / 13.0 / 12.0 / 11.7% across four bands), which also
+  quietly contradicts the assumption that the old are more religious.
+- **A few lucky communities.** No: Zhejiang's 36% is spread over all seventeen of them, at 74,
+  65, 62, 59, 52, 49, 41, 38, 35, 23, 22, 16, 16, 9, 8, 3 and 3 per cent.
+
+**So the shapes agree and the levels do not, for reasons nobody here can name.** That is §3.4's
+split arriving as a choice rather than a vintage, and it is why this cannot simply be averaged
+in.
+
+#### THE COST, WHICH IS NOT TECHNICAL
+
+The archive's own use agreement, clause 2(3): the data **may not be used for any commercial or
+political purpose**, and 2(2) forbids releasing raw data to a third party. ScienceDB advertises
+CC BY 4.0; §6b's rule is that the badge is the depositor's claim and the terms are the
+origin's, and here the two flatly disagree. **CGSS is CC0 and has no such clause.** So drawing
+CLDS trades a commercially clean country for a better-evidenced one, and
+[[reference_poster_commercial_licences]] gains a second religiondots blocker. A citation is
+also mandated verbatim and is in `sources/cn_clds.md`.
+
+#### THE DECISION: EVIDENCE ONLY, NO DOTS — ANITA, 2026-09-08
+
+*"yeah we dont have to place dots."* And, asked as a question rather than a claim: **are the
+percentages mostly the same as what we already have? THE ORDERING IS. THE LEVELS ARE NOT, AND
+THE FIRST DRAFT OF THIS SECTION SAID OTHERWISE — corrected 2026-09-08.**
+
+| | drawn (CGSS pooled) | CLDS 2016 | |
+|---|---|---|---|
+| Buddhism, population-weighted | 4.44% | **5.93%** | CLDS **+34%** |
+| Protestantism | 1.63% | **2.55%** | CLDS **+56%** |
+| provinces within ±50% of the drawn share | | 13 / 29 and 6 / 29 | |
+| median absolute deviation per province | | **42%** and **67%** | |
+| Spearman on the ordering | | **+0.596 / +0.595** | |
+
+**In dots that is 58.4M Buddhists against 78.1M, and 21.3M Protestants against 33.3M.** So the
+two surveys agree on which provinces are Buddhist and disagree by a third to a half on how
+many people that is. "A source that agrees adds confidence, not information" is the wrong
+summary and is not why the decision goes this way.
+
+**The decision holds on two other grounds.** First, nobody can say which level is right: the
+gap survives every explanation tested (folk absorption, universe, clustering, vintage — CLDS
+2016 sits ~32% above what CGSS's own 2012→2017 slope predicts for 2016), so swapping would
+trade one unexplained level for another. Second, **CLDS cannot add geography at all**: it is a
+21,086-person survey whose county codes are randomised by the depositor and whose prefecture
+cells are too thin to use, with 11 of 157 cities reaching ten Protestant respondents. Province
+is its ceiling, which is exactly where CGSS already sits. So there is no redraw it enables,
+and drawing it would cost clause 2(3).
+
+**What it does tell us, and this should not be buried: the drawn levels may be low by a third.**
+That is a live input to the levels decision below, not a reason to redraw today.
+
+**This is the same shape as §14.13's finding about CFPS and it is worth naming as a rule: a
+survey is worth chasing for what it can CHECK, not only for what it can DRAW.** CLDS was ranked
+first in §14.16 as the route to a better Han layer. It is not that. It is the first external
+check the Han layer has ever had, which is more useful and was not what anyone was looking for.
+
+What the decision leaves standing:
+
+- **`note_public` is NOT to mention any of this. Anita, 2026-09-08: *"lets ntot note it
+  publically. its whtaever."*** A draft rewrite of the Protestant disclosure was offered,
+  citing the second survey and the church check, and declined. The disclosure therefore still
+  says the provincial ordering is unsteady, which remains true of CGSS on its own and is now
+  known to be an incomplete account. **A deliberate understatement of the project's own
+  confidence, not an oversight to fix later.**
+
+  The commercial-licence argument originally recorded here for that choice **is withdrawn**.
+  Anita, same day: *"im not gonna make this map commercial, so i dont care."* Clause 2(3) is
+  moot for religiondots, and it was never the reason not to draw CLDS anyway — see the two
+  real reasons above, which are that it adds no geography and that its levels are unexplained.
+  **The licence was the third reason and it was given too much weight when this section was
+  first written.** With it gone, *pooling* CLDS into the CGSS layer is blocked only by the
+  level gap and the missing folk category, which is a smaller objection than it looked.
+- **`cn_cgss.py`'s docstring** calls the Protestant evidence *"a failure to demonstrate
+  signal"*. That was accurate when only CGSS existed. Leave the sentence, add the cross-survey
+  result beside it.
+- **Islam stays on the ethnic derivation.** Nothing here changes that and CLDS's Ningxia is a
+  second demonstration of why.
+
+#### STILL OPEN, AND INDEPENDENT OF ALL OF THE ABOVE
+
+1. **Shape from pooled waves, level from the most recent** — the §3.4 pattern China already
+   uses for ethnicity, which `cn_cgss.md` raised and left as *"a decision, not a default"*.
+   Worth 58.4M Buddhist dots against ~32.7M, and unmade with or without CLDS. **CLDS is mild
+   evidence for the pooled end**: its 2016 level sits above what CGSS's own decline predicts
+   for 2016, so the most recent wave is the low reading of the three rather than the true one.
+2. **The remaining CLDS waves.** The ScienceDB deposit advertises 2012, 2014 and 2018; the
+   archive retrieved is 2016 only. A second wave would give the cross-survey check a time
+   dimension, and the account now exists.
+3. **CNSDA HOLDS THIRTEEN CGSS WAVES AND THE CATALOGUE IS OPEN — swept 2026-09-08.**
+   `www.cnsda.org` is up (`cnsda.ruc.edu.cn` does not resolve; use the .org). The catalogue is
+   **826 datasets over 166 pages, readable with no account**, and the pagination parameter is
+   `Projects_page`. It lists **CGSS 2003, 2005, 2006, 2008, 2010, 2011, 2012, 2013, 2015, 2017,
+   2018, 2021 and 2023**, plus a merged 2003+2013 file and CLDS at `id=75023529`. §14.16 said
+   five waves were behind this wall; it is thirteen, and **2023 is newer than anything drawn
+   anywhere on this map for China**.
+
+   Each dataset page carries `index.php?r=projects/download&id=<...>` links, five of them for
+   CGSS 2023. **[[reference_cms_download_id_sweep]]'s open-download trick does not work here**
+   — every one 302s to `site/login`, checked. The gate is real and the account is the only way
+   through. Registration is `index.php?r=users/create`, labelled 免费注册, and its first step is
+   an agreement checkbox behind a JS `fn_next()`, so the field list cannot be read from outside.
+   Nothing on the visible page asks for 手机 or 身份证.
+
+   **The thing to read at signup is the 数据使用协议, and the question is whether it bans
+   commercial use the way CLDS's clause 2(3) does.** The dataset pages themselves show only an
+   attribution requirement, which would make CGSS-via-CNSDA strictly better than CLDS on terms
+   as well as on coverage. Unconfirmed, and it decides whether China stays sellable.
+
+   Sweep gotcha, since it cost a run: the catalogue's hrefs are `index.php?...` on page 1 and
+   `/index.php?...` on every paginated page, so a regex anchored to the bare form silently
+   returns page 1 over and over and reports five datasets instead of 826.
+
+   **What is NOT there: the China Religion Survey (CRS) 2015.** It appears on the homepage only
+   as a *report* announcement (`site/article&id=126`); there is no CRS dataset in the
+   catalogue. Do not go looking for it here.
+3. **The A-Hmao county list** (§14.15), unchanged and still the largest known omission.
+
+### 14.21 The evidence for China's weakest layer was judged on a single pair of waves, and five waves say it was the worst pair — BUILT 2026-09-08
+
+Anita registered at CNSDA to reach the CGSS waves §14.20 ranked. **The free account does not
+clear the gate: every download needs a separate reviewed data application**, which for an
+unaffiliated applicant abroad is the shape that already refused this project once
+([[reference_cfps_terms]]). She said it looked hopeless. It was not.
+
+#### §6b'S MIRROR RULE WENT FIVE FOR FIVE
+
+**CGSS 2010, 2011 and 2013 are sitting unrestricted in a replication package** —
+`doi:10.7910/DVN/R1S5RP`, *"Meritocracy as Authoritarian Co-Optation"* — which also carries a
+second copy of 2012. `sources/cn_cgss_fetch.py` pulls them.
+
+**A replication package is normally a variable SUBSET and that is why nobody had looked.**
+These are not: 963, 592 and 650 variables, and all three keep `s41` (province of interview)
+*and* the religion block. Checking that was the whole of the work, and the DDI endpoint
+(`/api/access/datafile/<id>/metadata/ddi`) answers it **without downloading the file**, which
+is the cheap move worth remembering: Dataverse exposes variable names and labels for any
+ingested table.
+
+*Two-thirds of a walled archive's most wanted holdings were in other people's replication
+packages.* Search the file level, not the dataset level, and search for the FILENAME a
+researcher would have used (`cgss2013`), not the project title.
+
+#### THE FINDING: A PAIRWISE STATISTIC ON ONE PAIR IS A SAMPLE OF SIZE ONE
+
+§14.16 drew Protestantism flagged, and `cn_cgss.py` called its evidence *"a failure to
+demonstrate signal"*, on a 2012↔2021 rank correlation of **+0.17**. With three waves there was
+exactly **one** pair to compute. Five waves give ten:
+
+    2010 vs 2017  +0.857     2012 vs 2013  +0.702     2013 vs 2021  +0.409
+    2010 vs 2012  +0.742     2012 vs 2017  +0.682     2017 vs 2021  +0.320
+    2012 vs 2013  +0.702     2013 vs 2017  +0.572     2010 vs 2021  +0.214
+    2010 vs 2013  +0.545                              2012 vs 2021  +0.166
+
+**Median +0.559, and the pair the old conclusion rested on is the worst of the ten.** Every
+weak pair involves 2021, the wave with 19 provinces and the smallest cells, so what read as an
+unstable geography is mostly one unstable WAVE. CLDS 2016 independently ranks the provinces at
++0.595 against this pool (§14.20), which is the same answer from outside.
+
+**The general rule, and it is not about China.** Where a §14.10 condition is computed from a
+statistic over PAIRS, count the pairs before believing the number. Three waves feel like
+enough data and give one degree of freedom. This project came within one decision of
+disclosing a layer as unreliable on the strength of a single unlucky comparison.
+
+#### WHAT IS DRAWN NOW
+
+Anita's call: pool 2010 and 2013, hold 2011 back as an independent check because it is small
+(5,620) and carries no weight column.
+
+| | 3 waves | 5 waves |
+|---|---|---|
+| respondents | 32,495 | **55,637** |
+| provinces | 29 | **30** |
+| Buddhist respondents | 1,592 | 2,793 |
+| Protestant respondents | 585 | **1,016** |
+| provinces with <10 Protestants | 13 / 29 | **9 / 30** |
+| `buddhism.mahayana` | 58.4M | **62.4M** |
+| `christianity.protestant` | 22.1M | **24.7M** |
+
+The dots barely move, by design: national levels rise 6% and 10%. **The gain is evidential, not
+cartographic**, and that is the honest way to describe it.
+
+#### TWO THINGS THAT HAD TO BE HANDLED, AND ONE IS A TRAP
+
+**2013 is pooled UNWEIGHTED**, because the open copy has no weight column. Measured rather than
+assumed: on the waves that DO have weights, weighting moves a province's drawn share by a
+median 0.15 points and preserves the provincial ordering at +0.98 (2012) and +0.93 (2017). A
+disclosable cost, recorded in each row's `note`.
+
+**Xizang is read and then DROPPED, and this is the trap.** CGSS 2010 is the only wave that
+samples Tibet, 79 respondents, **53 of whom answer 佛教 — 58.5%, which would have made Tibet
+the top `buddhism.mahayana` province in China.** CGSS's answer set has no 藏传佛教 row (CLDS's
+does), so those 53 are Tibetan Buddhists about to be filed as Mahayana, in the one province
+§14.5 already draws as Vajrayana from ethnicity. `cn_cgss.py`'s own docstring had justified
+reading CGSS 佛教 as "Han Mahayana practice" **on the premise that Xizang is not sampled at
+all** — a premise that was true of the old wave set and silently false of the new one.
+`DROP_PROVINCES` enforces it instead of assuming it.
+
+*Adding data can falsify a premise that an existing argument rests on, and nothing will warn
+you.* The check that caught it was reading the top-five line of the module's own output.
+
+#### STILL WALLED, AND NOW PRECISELY
+
+**CGSS 2015, 2018 and 2023.** Searched hard on Dataverse and figshare, file level and dataset
+level: 2015 exists only as a 0.5 MB subset, 2018 and 2023 not at all. **2023 is the one worth
+an application**, being newer than anything drawn for China anywhere on this map, and the only
+thing that could say whether the fall through 2021 continued or bottomed out.

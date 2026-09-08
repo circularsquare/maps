@@ -1153,6 +1153,36 @@ BRANCHES = [
 
     # --- added 2026-09-05 with Kenya, whose census is the first anywhere on this map to
     #     count either of these as a category of its own.
+    # --- added 2026-09-08 with the Solomon Islands, as the Melanesian member of the
+    #     `christianity.maori` / `christianity.filipinoindependent` /
+    #     `christianity.africaninstituted` set: churches founded in the islands by islanders,
+    #     outside every tradition the missions brought and belonging to none of them after.
+    ("christianity.melanesianindependent",
+     "Melanesian independent churches",
+     "The same idea as `christianity.maori`, `christianity.filipinoindependent` and "
+     "`christianity.africaninstituted`, for Melanesia. **What is NOT here defines it:** the "
+     "South Sea Evangelical Church is a Solomon Islands body and 17.3% of that country, and "
+     "it sits on `christianity.evangelical` instead, because it descends from the Queensland "
+     "Kanaka Mission rather than from a break with one. Vanuatu's Neil Thomas Ministries is "
+     "ni-Vanuatu-founded and squarely inside the global charismatic stream, so it is filed "
+     "there. This node is for the churches that came out of a mission and then stopped "
+     "belonging to it."),
+    ("christianity.melanesianindependent.cfc",
+     "Christian Fellowship Church",
+     "**Silas Eto's church, 16,179 people, 2.2% of the Solomon Islands — and it is one "
+     "island group.** 13,629 of those 16,179 are in Western Province, where it is 14.5%, "
+     "and it reaches **77.2% of Kusaghe ward, 62.6% of Roviana Lagoon and 57.2% of "
+     "Kolombaghea**. Everywhere else in the country it rounds to nothing.\n\n"
+     "Eto was a Methodist teacher and catechist on New Georgia who was known as the **Holy "
+     "Mama**; he broke with the Methodist mission in 1960 and took much of the New Georgia "
+     "membership with him. The church kept a Methodist shape and added a devotion to Eto "
+     "himself that the mission would not have, which is why it belongs here and not under "
+     "`christianity.methodist`: containment is a fact about people now (§2.1), and its "
+     "members are not Methodists.\n\n"
+     "SINSO prints it as its own cell at ward level in 2019, which is what makes it "
+     "countable — a national census naming an indigenous breakaway church and following it "
+     "down to the ward."),
+
     ("christianity.africaninstituted",
      "African Instituted Churches",
      "The churches founded in Africa by Africans, outside the mission denominations and "
@@ -1281,6 +1311,44 @@ BRANCHES = [
      "Western neo-animist self-description that sends Czechia's to `paganism`. No child "
      "nodes: no source on this map names a Myanmar tradition individually."),
 
+    # --- added 2026-09-08 with Vanuatu, on the indigenous.philippine / indigenous.myanmar
+    #     precedent: a national child where a source gives its own country's traditions
+    #     exactly one cell. Vanuatu's differs from both in one important way — see below.
+    ("indigenous.vanuatu",
+     "Vanuatu customary beliefs (kastom)",
+     "VNSO's `Customary beliefs`, **9,080 people, 3.09%** — and unlike almost every other "
+     "node under `indigenous` this one is **a printed census category standing beside the "
+     "churches on equal terms, not an outsider's residual**. Vanuatu has counted it in every "
+     "census since 1989 (6,484 → 10,365 → 8,600 → 9,080), so it is also the only indigenous "
+     "religion on this map with a four-census time series.\n\n"
+     "**Its geography is one island.** 7,757 of the 9,080 are in Tafea province — 17.3% of "
+     "it — and within Tafea it is Tanna: **South West Tanna 30.3%, Middle Bush Tanna 25.3%, "
+     "North Tanna 19.1%, West Tanna 16.7%**. That is the highest indigenous-religion share "
+     "of any unit on this map outside India, and it is where the **John Frum** movement and "
+     "the Prince Philip movement are. The census does not name either, so neither is a node: "
+     "`kastom` is what it counts and kastom is what this holds.\n\n"
+     "**Read it as a floor, for the reason `indigenous.african` and `indigenous.myanmar` "
+     "carry.** The box is exclusive of the church boxes, and customary practice in Vanuatu "
+     "runs alongside church membership rather than instead of it, so this is the people for "
+     "whom kastom is the WHOLE answer and not the people who keep it."),
+
+    # --- added 2026-09-08 with the Solomon Islands, on the same precedent as
+    #     `indigenous.vanuatu`: a census that gives its own country's traditions one cell.
+    ("indigenous.solomon",
+     "Solomon Islands custom beliefs",
+     "SINSO's `Custom Beliefs or Animism`, **4,115 people, 0.57%** — a printed census "
+     "category standing beside the churches, as in Vanuatu, but a tenth of the share. The "
+     "Solomons are 96% Christian on the 2019 count and this is what is left beside it.\n\n"
+     "**It is not spread thinly; it is a few places.** `Waneagu/Taelanasina` in Malaita is "
+     "21.5% and `Tetekanji` in Guadalcanal 21.2%, with `Gulalofou` (12.3%) and `Vulolo` "
+     "(9.8%) behind them. That is the Kwaio interior of east Malaita and the Weather Coast "
+     "of Guadalcanal, the two parts of the country where the missions reached least, and "
+     "the ward tier is what makes them visible at all — at province level Malaita is 1.2%.\n\n"
+     "**Read it as a floor**, for the reason `indigenous.african` and `indigenous.vanuatu` "
+     "carry: the box is exclusive of the church boxes, so this counts the people for whom "
+     "custom is the whole answer and not the much larger number who keep it alongside a "
+     "church."),
+
     ("alevism",
      "Alevism",
      "The Anatolian tradition of Turkey's Alevi and Kurdish Alevi communities. Usually "
@@ -1312,6 +1380,45 @@ BRANCHES = [
      "syncretism is the tradition and splitting it across its ingredients would describe "
      "nobody. 677 in Australia; Vietnam's own census counts it in the millions and "
      "sources.md §2 flags it as a reason Vietnam is worth having."),
+
+    ("modekngei",
+     "Modekngei",
+     "**Palau's own religion, and the only one on this map indigenous to Micronesia.** "
+     "Founded around 1915 by Temedad on Babeldaob, it fuses Palauan *chelid* spirit belief "
+     "with Christian elements and a healing practice, and was suppressed by the Japanese "
+     "administration in the 1930s and 40s. **1,733 people in the 2005 census, 8.7% of "
+     "Palau**, which makes it a larger share of its country than any other indigenous "
+     "religion drawn here. "
+     "**A root rather than a child of `indigenous`, on caodaism's precedent** (spec §3.3): "
+     "it is a named, organised, founded religion whose syncretism IS the tradition, not a "
+     "diffuse body of traditional practice like `indigenous.philippine` or "
+     "`indigenous.myanmar`. Filing it under `indigenous` would group it with things it does "
+     "not resemble; splitting it across Christianity and Palauan tradition would describe "
+     "nobody."),
+
+    ("christianity.reformed.congregational.cicc",
+     "Cook Islands Christian Church",
+     "The national church of the Cook Islands and the direct descendant of the London "
+     "Missionary Society mission of 1821. **7,356 people, 49.1% of the country**, the "
+     "largest single body there. Filed under `congregational` with the LMS's other Pacific "
+     "daughters rather than at the parent, because these are three distinct national "
+     "churches in three countries and nothing else on the map files them elsewhere; "
+     "ge2014.py's caution about adding a child for one country does not bite here, since no "
+     "other source counts these bodies at all."),
+
+    ("christianity.reformed.congregational.ekt",
+     "Ekalesia Kelisiano Tuvalu",
+     "The Congregational Christian Church of Tuvalu, LMS-descended by way of Samoan "
+     "missionaries from 1861, and the established church under Tuvalu's constitution. "
+     "**9,023 people, 85.9% of the country — the largest share any single church holds in "
+     "any country on this map.** Its sibling is the Cook Islands Christian Church, and "
+     "Samoa's own CCCS would be a third if Samoa is drawn."),
+
+    ("christianity.reformed.congregational.niue",
+     "Ekalesia Niue",
+     "The Congregational church of Niue, LMS-descended from 1846 through Samoan and "
+     "Rarotongan teachers. **981 people, 61.7% of Niue**, which is the smallest population "
+     "any node on this map is built from."),
 
     ("indigenous.maori",
      "Maori traditional religion",
@@ -1387,6 +1494,101 @@ BRANCHES = [
      "map really is two large communities and a long thin tail, not because the question "
      "was coarse: the census names Jehovah's Witnesses and Evangelical Methodists "
      "separately at four figures and under."),
+    # ---- THE MICROSTATE TIER, all nine from UNSD table 28 (sources/micro.py) ------------
+    # Every one of these is a residual the Demographic Yearbook prints, at national level,
+    # in a country small enough that the whole map is 20 to 80 dots. They are grouped here
+    # rather than scattered because they share one instrument and one caveat: the DYB's
+    # category names are the OFFICE'S, but the classification into them is UNSD's, so an
+    # `Other` here is not necessarily the office's own word.
+    ("other.pw",
+     "Other religion (Palau)",
+     "1,613 people, 8.1%, beside a list that already names Modekngei, the Adventists, the "
+     "Witnesses and the Latter-day Saints separately. Palau's 2005 tail is large for a "
+     "country of 20,000 and is not opaque so much as unenumerated: the census names nine "
+     "categories where the 1995 one named twelve, and the Baha'i, Assembly of God and "
+     "Church of Christ counted in 1995 are inside this cell in 2005."),
+    ("other.ck",
+     "Other religion (Cook Islands)",
+     "`Other Religions`, 1,201 people, 8.0%, beside seven named churches. Distinct from "
+     "`Unknown` (323), which the same table keeps separate and which is off the tree."),
+    ("other.tv",
+     "Other religion (Tuvalu)",
+     "270 people, 2.6%, in a country where one church holds 85.9%. The named tail around "
+     "it is unusually specific for its size: Brethren, Adventists, Baha'i, Assembly of God, "
+     "Witnesses, Latter-day Saints and 53 Catholics."),
+    ("other.nu",
+     "Other religion (Niue)",
+     "131 people, 8.2%. Niue's whole population is 1,591, so this node is built from fewer "
+     "people than any other on the map and draws nothing at 1 dot = 1,000; it exists so the "
+     "category is not silently dropped."),
+    ("other.sb",
+     "Other religion (Solomon Islands)",
+     "SINSO's `Other religions`, **14,953 people, 2.1%**, printed beside thirteen named "
+     "bodies plus `Custom Beliefs or Animism`, `No Religion or Atheism` and a refusal cell. "
+     "The census names the Baha'i Faith (3,104) and Muslims (1,100) separately, which most "
+     "censuses on this map do not, so this residual is genuinely what was left after a long "
+     "list rather than a place where the non-Christian religions were put. Its geography is "
+     "unremarkable, which is the tell that it is a tail and not a hidden body."),
+    ("other.vu",
+     "Other religion (Vanuatu)",
+     "**35,270 people, 12.0% — the third-largest cell in Vanuatu, ahead of the Anglicans.** "
+     "Table 3.5 heads the column `Other churches`, which would put it on `christianity`; "
+     "Volume 2 of the same census heads it plainly `Other` and then says what is in it: "
+     "**\"the category 'Other' includes 88 different religions ranging from one member to "
+     "more than 2,000 members\"**. *Religions*, not churches, and 88 of them. So the "
+     "Christian reading is the volume-1 header's and is not supported by the volume that "
+     "describes the contents, and the cell goes where a residual that cannot be shown to be "
+     "Christian belongs. §14.4 rule 1: the Baha'i, the Muslims and the Jehovah's Witnesses "
+     "Vanuatu certainly has are inside this number, and nothing published says in what "
+     "proportion. The one body big enough to name is unnamed too — 'more than 2,000 "
+     "members' is the largest of the 88 and the census does not say which it is."),
+    ("other.ms",
+     "Other religion (Montserrat)",
+     "`Other Religions`, 251 people, 5.8%, in the 2001 census taken six years after the "
+     "Soufriere Hills eruption that removed two thirds of the island's population."),
+    ("other.bm",
+     "Other religion (Bermuda)",
+     "**Two columns, not one**: `Other Religions` (4,399) and `Other` (1,527), which the "
+     "Demographic Yearbook prints side by side without saying how they differ. Both are "
+     "residuals and both land here, 5,926 people or 9.2%. Bermuda's named list is the "
+     "deepest in this tier at 23 categories and already separates the Muslims, Jews, "
+     "Baha'is, Rastafari and Ethiopian Orthodox, so whatever the distinction was, it is not "
+     "one of those."),
+    ("other.ag",
+     "Other religion (Antigua and Barbuda)",
+     "116 people, 0.15%, and the smallest residual in this tier as a share, because the "
+     "2001 census names 21 categories including the Moravians, the Spiritualists and the "
+     "Rastafari separately."),
+    ("other.dm",
+     "Other religion (Dominica)",
+     "252 people, 0.37%. Kept apart from `Other Evangelical Churches` (4,882), which names "
+     "a family and goes to `christianity.evangelical` rather than here."),
+    ("other.mh",
+     "Other religion (Marshall Islands)",
+     "5,632 people, **11.1%, and by far the least satisfying node in this tier**: the 1999 "
+     "census publishes four categories in total, so this cell is everything that is not "
+     "Protestant, Assembly of God or Catholic. It certainly contains the country's "
+     "Bukot nan Jesus and Baha'i communities and probably its Latter-day Saints, none of "
+     "which the source names. Read Marshall Islands' colours as a four-way split and "
+     "nothing finer."),
+    ("other.py",
+     "Other religion (Paraguay)",
+     "Two of CPV2002's fifty-four categories, kept together because neither names a body: "
+     "`Relig. no incluidas en las anteriores` (1,208) and `Otra religion No Especificada` "
+     "(6,139), 7,347 people between them and **0.19% of the universe**. That is a small "
+     "residual by the standards of this tier, and the reason is the length of the list it "
+     "is left over from: Paraguay names fifteen Protestant bodies, three Orthodox cells, "
+     "Umbanda, Reyukai, Shinto and the Bahai separately, so what falls out of the bottom "
+     "is genuinely a tail. The cell that deserves suspicion in Paraguay is not this one, "
+     "it is `Otras - Evangelica` at 186,107 (taxonomy/py2002.py)."),
+    ("other.bg",
+     "Other religion (Bulgaria)",
+     "NSI's `Друго` — 6,451 people, 0.10%, and a genuine tail rather than a coarse cell: "
+     "the 2021 census puts it beside Judaism and beside four named Christian bodies, so it "
+     "is what is left after those and not a bucket standing in for them. Bulgaria's real "
+     "opacity is elsewhere and is much larger, in a `Християнско` column that merges "
+     "4.2M Orthodox, Protestants, Catholics and Armenians at municipal level "
+     "(taxonomy/bg2021.py)."),
     ("other.ee",
      "Other religion (Estonia)",
      "Statistics Estonia's `Other religion` (8,100) plus `Religion unknown` (1,530) — the "
@@ -2349,15 +2551,42 @@ BRANCHES = [
      "zones. That is a spread of fifty to one against a national figure under half a "
      "percent, and by §9r's rule a residual that sharp is a **missing category rather than "
      "a mixture**.\n\n"
-     "Two things are plausibly inside it and NEITHER is acted on. The **Israelitas del "
-     "Nuevo Pacto Universal**, a Peruvian millenarian church founded in 1968 whose "
-     "settlement colonies are concentrated in exactly these Amazon frontier districts, is "
-     "the strongest single candidate; and the **indigenous religions of the Amazon**, which "
-     "the census gives no box to at all — though note that in the Awajún and Asháninka "
-     "districts the answer that rises is `Ninguna` and not `Otra`, which is a real "
-     "difference between two ways of having no listed religion and is worth not flattening. "
-     "INEI publishes no breakdown of the cell, so it stays whole. Per source, per spec "
-     "§3.11 and §14.4."),
+     "**ONE CANDIDATE WAS LISTED HERE AND HAS BEEN MEASURED AWAY.** This node first offered "
+     "the *indigenous religions of the Amazon* as plausible content, on the grounds that the "
+     "census gives them no box — hedged with the observation that in the Awajún and "
+     "Asháninka districts the answer that rises is `Ninguna` and not `Otra`. INEI serves the "
+     "self-identified ethnicity variable `C5P25` over the same universe, so the hedge was "
+     "testable, and `sources/pe_ethnicity.py` tested it: **`Otra` is 0.40% among people who "
+     "identify as native or indigenous of the Amazon against 0.41% nationally — 0.98x, and "
+     "a district correlation of r=0.07.** Flat. Whatever is in this cell, it is not them, "
+     "and the `Ninguna`/`Otra` distinction is a real difference between two ways of having "
+     "no listed religion rather than a coincidence of geography.\n\n"
+     "**What is left is a better-shaped answer.** The **Israelitas del Nuevo Pacto "
+     "Universal**, a Peruvian millenarian church founded in 1968 whose settlement colonies "
+     "are concentrated in exactly these Amazon frontier districts and whose members are "
+     "Andean migrants rather than Amazonian peoples, fit the geography and the ethnicity "
+     "together. And the cell's most concentrated groups by share are the **Tusán (5.51%) "
+     "and Nikkei (3.50%)** — Peru's Chinese and Japanese populations, where Buddhism, Daoism "
+     "and Shinto have no box either — though at 22,534 and 14,307 people they are only 1.7% "
+     "of the cell between them; its bulk is Mestizo (49,126) and Quechua (25,046). "
+     "INEI publishes no breakdown, so it stays whole. Per source, per spec §3.11 and §14.4."),
+
+    # --- added 2026-09-08 with Fiji.
+    ("other.fj",
+     "Other religion (Fiji)",
+     "FBoS's `Other religion` — **1,294 people, 0.15%**, and one of the smallest residuals on "
+     "this map for a reason worth stating: Fiji's 2007 census does not sweep non-Christians "
+     "into it. **Hindu (232,103), Moslem (52,594) and Sikh (2,548) each have a printed line "
+     "of their own**, which is why this cell is a rounding error rather than the 28% of the "
+     "country that is not Christian. Very few censuses anywhere name Sikhs separately; Fiji "
+     "does, because the Punjabi minority within the indenture-era migration is old enough and "
+     "distinct enough to have been counted since the colonial censuses.\n\n"
+     "What is left in it is genuinely small and genuinely unclassified: the **Bahá'í** "
+     "community, which has a documented Fijian presence; **Buddhists and Chinese religion** "
+     "among the small Chinese-Fijian population (4,704 people identified as full or part "
+     "Chinese in the same census); and whatever iTaukei respondents meant who did not choose "
+     "one of the eighteen named churches or `No religion`. FBoS publishes no breakdown of the "
+     "cell, so it stays whole. Per source, per spec §3.11 and §14.4."),
 ]
 
 
@@ -2509,6 +2738,11 @@ LINEAGE = {
             "christianity.maori",
             "christianity.africaninstituted",
             "christianity.filipinoindependent",
+            # Added 2026-09-08 with the Solomon Islands. The Christian Fellowship Church is
+            # Silas Eto's 1960 break with the Methodist mission on New Georgia, which is the
+            # `maori` and `africaninstituted` shape exactly: a mission-church breakaway led
+            # by a local prophet, belonging to nothing imported afterwards.
+            "christianity.melanesianindependent",
         ]),
         ("No single line", [
             # Bodies that are a union of several traditions, congregations that decline the

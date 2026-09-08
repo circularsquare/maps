@@ -27,37 +27,65 @@ THE SECOND AXIS IS WHY THIS IS WORTH DOING AT ALL. 47 counties alone would draw 
 patches. `envnmcde` classifies each church's address into eight settlement types, and the
 denominational difference across them is nearly as large as the difference across
 counties: Anglicans are 57% of rural attendance and 24% on council estates, Catholics run
-the opposite way, 14% to 54%. Collapsed to the three classes ONS's own Rural Urban
-Classification can reproduce for a 2021 Output Area, the within-county spread of the
-Catholic share still has a median of 17 points and reaches 54 in Staffordshire.
+the opposite way, 14% to 54%.
 
-**The collapse is to three and not eight because eight is not reproducible.** Brierley's
-coders assigned `inner city`, `council estate`, `suburb-suburban fringe` and `city centre`
-by eye from the address; ONS's RUC21 separates conurbation from town from countryside and
-nothing inside a conurbation. Mapping eight onto three loses the socio-economic axis and
-keeps the settlement one, and it is the only part that can be joined to a census geography
-without inventing a classifier. It also makes the cells sturdier: 128 of 144 cells hold at
-least 20 churches and 98.4% of the weight, against 174 of 365 at the finer grain.
+**THE COLLAPSE IS TO TWO -- urban and rural -- AND THAT IS FORCED BY ONS, NOT CHOSEN.**
+Brierley's coders assigned `inner city`, `council estate`, `suburb-suburban fringe` and
+`city centre` by eye from the address, and nothing published for a 2021 Output Area can
+reproduce that. The 2021 Rural Urban Classification, which is the only one keyed on
+`OA21CD`, has six categories that are three settlement sizes (urban, larger rural, smaller
+rural) crossed with proximity to a major town -- ONS calls the change from 2011 a
+"streamlining of the taxonomy", and what it streamlined away is exactly the settlement
+detail this file would have used. The 2011 RUC does carry major conurbation / minor
+conurbation / city and town, but only for 2011 Output Areas, and joining it forward is
+sources/uk.md §4's live trap: 2021 OAs reuse 2011 codes wherever the area was unchanged,
+so a wrong-vintage join partly succeeds and only the split and merged areas go missing.
 
-RESPONSE WAS 50% AND IT WAS NOT EVEN ACROSS DENOMINATIONS, so raw attendance is not a
-denominational share. The user guide publishes the rate per denomination and this file
-divides by it. The spread is the whole reason it matters:
+What two classes still buy, and what the third would have: rural attendance is 53.4%
+Anglican and 14.9% Catholic against urban's 31.8% and 34.8% -- the Catholic share more
+than doubles and the Anglican share falls 22 points, which is the bulk of the signal. The
+tier given up is Brierley's `separate town`, whose mix (28.5 Anglican / 29.4 Catholic /
+42.1 other) differs from a conurbation's mainly in the `other` leg -- the chapel towns --
+and `other` is the least trustworthy leg in this join for an unrelated reason. So the
+third tier would have refined the weakest number on the map. Worth revisiting only if ONS
+publishes a settlement-type classification on 2021 Output Areas.
 
-    Baptist 67 · smaller denominations 57 · Anglican 55 · Catholic 54 · Independents 50
-    New Churches 49 · United Reformed 44 · Methodist 37 · Pentecostal 30 · **Orthodox 7**
+**THIS FILE EMITS MEAN CONGREGATION SIZE AND NOT ATTENDANCE TOTALS, AND THAT IS A
+CORRECTION.** It used to emit totals, response-corrected by the national rate the user
+guide publishes per denomination. That produced a map on which Merseyside was 72% Anglican
+and 16% Catholic, which is not Liverpool.
 
-Uncorrected, Methodism is understated by a third and Pentecostalism by half. The
-correction is national -- it assumes response did not vary by county within a
-denomination, which is untestable here and is the largest assumption in this file.
+The reason is in the user guide and it defeats any national correction. Alongside the
+postal returns the census took bulk data from "ten Church of England and eight Roman
+Catholic Dioceses, the Baptist Union of Great Britain, the Fellowship of Independent
+Evangelical Churches, the Salvation Army and 91 Methodist Circuits". The Baptist Union,
+FIEC and Salvation Army supplied nationally, so their coverage is even. **The Anglican,
+Catholic and Methodist supplies were diocese by diocese, so their coverage is not.**
+Measured against the Church of England's own complete register of its churches, the
+Anglican response rate is:
 
-**IT DOES NOT REPRODUCE THE PUBLISHED TOTAL AND MUST NOT BE MADE TO.** The user guide is
+    nationally     56.2%   (the user guide says 55%, so the measurement is sound)
+    Norfolk        25.9%   Durham 35.5%   Tyne & Wear 37.3%
+    Merseyside     91.4%   Gloucestershire 92.3%   Greater Manchester 92.5%
+
+A factor of three and a half, and the high counties are the ten dioceses. So a county's
+total is partly a fact about English religion and partly a fact about which bishop's office
+had a spreadsheet, and nothing in this file can separate them.
+
+**A mean survives that; a total does not.** Losing half a county's Methodist chapels to
+non-response changes how many you saw, not how big they were. So the quantity emitted is
+attendance per church, and `sources/uk_churches.py` supplies the church counts from a
+current register — the CofE's own list for Anglicans, OpenStreetMap for the rest, validated
+against it at r = 0.97. `uk_split.py` multiplies the two.
+
+The published per-denomination response rates are kept in `RESPONSE` below, unapplied,
+because they document the bias rather than fix it.
+
+**IT NEVER REPRODUCED THE PUBLISHED TOTAL AND NOW DOES NOT TRY.** The user guide is
 explicit: "all publications based on the census contain estimates of the total churchgoing
 population and cannot be derived directly from this dataset, which includes only half of
-the churches in the country... A sophisticated set of assumptions and constraints was used
-to produce the published totals." Response-correcting gives 3.94M against Brierley's
-published 3.17M. That gap is not a bug to close -- his grossing-up used per-county and
-per-size constraints this file does not have. **Nothing downstream uses the magnitude.**
-`uk_split.py` reads shares within a cell and throws the level away.
+the churches in the country." Brierley's grossing-up used per-county and per-size
+constraints this file does not have. Nothing downstream reads a total from here.
 
 WHAT IT CANNOT DO, AND THE ONE LEG THAT HAS TO GO ELSEWHERE. The census is twenty years
 old and its blind spot is exactly the denominations that arrived afterwards. **Orthodoxy
@@ -104,8 +132,9 @@ SOURCE_ID = "uk_en_ecc_2005"
 BASIS = "attendance"          # people present at services, spec §3.1
 YEAR = 2005
 
-# Denominational response rates, English Church Census 2005 user guide p.4. The key is the
-# ECC's own `denom` label; anything not named here took the "smaller denominations" rate.
+# Denominational response rates, English Church Census 2005 user guide p.4. **NOT APPLIED.**
+# Kept because they document why totals from this source are unusable: a national rate
+# cannot describe a response that varied threefold between counties. See the docstring.
 RESPONSE = {
     "Baptists": 67,
     "Anglicans": 55,
@@ -153,15 +182,16 @@ LEG = {
 # has no tick box for any of these bodies, so it cannot be anchored on its own line.
 LEG_DEFAULT = "other"
 
-# Brierley's eight settlement types -> the three ONS's RUC21 can reproduce for a 2021
-# Output Area. See the module docstring for why this is a collapse and not a mapping.
+# Brierley's eight settlement types -> the two ONS's RUC21 can reproduce for a 2021 Output
+# Area. See the module docstring for why this is a collapse and not a mapping, and why it
+# is two rather than three.
 SETTLEMENT = {
-    "City centre": "conurbation",
-    "Inner city": "conurbation",
-    "Council estate": "conurbation",
-    "Suburb-suburban fringe": "conurbation",
-    "Separate town": "town",
-    "Other built up area": "town",
+    "City centre": "urban",
+    "Inner city": "urban",
+    "Council estate": "urban",
+    "Suburb-suburban fringe": "urban",
+    "Separate town": "urban",
+    "Other built up area": "urban",
     "Commuter rural": "rural",
     "Remote rural": "rural",
 }
@@ -232,46 +262,58 @@ def structure():
     df["attendance"] = df["totagecl"].fillna(0.0)
     df["leg"] = df["denom"].map(lambda d: LEG.get(d, LEG_DEFAULT))
     df["settlement"] = df["envnmcde"].map(SETTLEMENT)
-    df["weight"] = df["attendance"] / df["denom"].map(
-        lambda d: RESPONSE.get(d, RESPONSE_DEFAULT)) * 100.0
+
+    # A church that met and reported nobody is a real zero and belongs in the mean; a
+    # church that did not meet on 8 May is not a congregation size and does not. The user
+    # guide's §3 describes the second case -- 973 churches, mostly linked rural benefices
+    # whose service was held elsewhere that Sunday and whose people were counted there.
+    meeting = df[(df["attendance"] > 0) | (df["vcntsrv"].fillna(0) == 0)]
+    congregations = df[df["attendance"] > 0]
 
     def agg(frame, keys):
         g = frame.groupby(keys, as_index=False).agg(
             churches=("churchno", "count"),
-            attendance=("attendance", "sum"),
-            weight=("weight", "sum"))
-        return g[g["weight"] > 0]
+            attendance=("attendance", "sum"))
+        g["mean_congregation"] = g["attendance"] / g["churches"]
+        return g[g["churches"] > 0]
 
-    county = agg(df, ["cntycde", "leg"])
-    coded = df[df["settlement"].notna()]
+    county = agg(congregations, ["cntycde", "leg"])
+    coded = congregations[congregations["settlement"].notna()]
     settlement = agg(coded, ["cntycde", "settlement", "leg"])
 
     diag = {
         "churches_read": n_all,
         "churches_offshore_dropped": n_offshore,
         "churches_used": len(df),
+        "churches_with_attendance": len(congregations),
+        "churches_no_service": len(df) - len(meeting),
         "churches_with_settlement": len(coded),
-        "settlement_coded_pct": 100.0 * len(coded) / len(df),
-        "counties": df["cntycde"].nunique(),
+        "settlement_coded_pct": 100.0 * len(coded) / len(congregations),
+        "counties": congregations["cntycde"].nunique(),
         "settlement_cells": settlement.groupby(["cntycde", "settlement"]).ngroups,
         "attendance_raw": float(df["attendance"].sum()),
-        "attendance_corrected": float(df["weight"].sum()),
     }
     return county, settlement, diag
 
 
 def _rows(county, settlement):
+    """`count` is MEAN CONGREGATION SIZE, not a number of people in the county.
+
+    Every consumer multiplies it by a church count from sources/uk_churches.py. A reader
+    who sums this column has computed nothing.
+    """
     for r in county.itertuples(index=False):
         yield {
             "geo_id": r.cntycde,
             "geo_level": "county",
             "geo_name": r.cntycde,
             "source_category": r.leg,
-            "count": round(r.weight, 1),
+            "count": round(r.mean_congregation, 2),
             "basis": BASIS,
             "year": YEAR,
             "source_id": SOURCE_ID,
-            "note": f"{r.churches} churches; {r.attendance:.0f} attenders as returned",
+            "note": (f"mean congregation over {r.churches} churches; "
+                     f"{r.attendance:.0f} attenders as returned"),
         }
     for r in settlement.itertuples(index=False):
         yield {
@@ -279,12 +321,12 @@ def _rows(county, settlement):
             "geo_level": "county_settlement",
             "geo_name": f"{r.cntycde}, {r.settlement}",
             "source_category": r.leg,
-            "count": round(r.weight, 1),
+            "count": round(r.mean_congregation, 2),
             "basis": BASIS,
             "year": YEAR,
             "source_id": SOURCE_ID,
-            "note": (f"{r.churches} churches with a settlement code; "
-                     f"{r.attendance:.0f} attenders as returned"),
+            "note": (f"mean congregation over {r.churches} churches with a settlement "
+                     f"code; {r.attendance:.0f} attenders as returned"),
         }
 
 
@@ -303,27 +345,24 @@ def check(county, settlement, diag):
         print(f"  ! expected 47 English counties, got {diag['counties']}")
         fails += 1
 
-    total = county["weight"].sum()
-    print("\n  leg              churches  corrected   share | counties  settlement cells")
-    print("                                                 |  >=3 ch   >=3 ch (of weight)")
+    print("\n  leg            churches   mean congregation   counties  cells")
+    print("                            England  urban  rural    >=3 ch  >=3 ch")
     for leg in sorted(county["leg"].unique()):
         c = county[county["leg"] == leg]
         s = settlement[settlement["leg"] == leg]
-        thick_c = (c["churches"] >= 3).sum()
-        thick_s = s[s["churches"] >= 3]
-        cover = 100.0 * thick_s["weight"].sum() / s["weight"].sum() if len(s) else 0.0
-        print(f"  {leg:14s} {c['churches'].sum():9d} {c['weight'].sum():10,.0f} "
-              f"{100*c['weight'].sum()/total:6.1f}% | {thick_c:7d}   "
-              f"{len(thick_s):4d} ({cover:5.1f}%)")
+        nat = c["attendance"].sum() / c["churches"].sum()
+        by_s = (s.groupby("settlement")["attendance"].sum()
+                / s.groupby("settlement")["churches"].sum())
+        print(f"  {leg:13s} {c['churches'].sum():8d} {nat:9.0f} "
+              f"{by_s.get('urban', float('nan')):6.0f} {by_s.get('rural', float('nan')):6.0f}"
+              f"    {(c['churches'] >= 3).sum():7d} {(s['churches'] >= 3).sum():7d}")
 
-    # The coding gap, restated per leg, because it is the reason for the two tables.
+    # The coding gap, restated per leg. It no longer biases anything -- a mean is a
+    # within-leg quantity -- but it still decides how many cells have their own mean.
     print("\n  settlement coding rate by leg (share of that leg's churches with a code):")
     rates = (settlement.groupby("leg")["churches"].sum()
              / county.groupby("leg")["churches"].sum() * 100.0)
     print("   " + "  ".join(f"{k} {v:.0f}%" for k, v in rates.sort_values().items()))
-    if rates.max() - rates.min() < 20:
-        print("  ! the coding gap has closed -- uk_split.py's within-leg construction was "
-              "written for a 60-point spread and could be simplified")
 
     # Orthodoxy is expected to fail this and uk_split.py routes around it; the check is
     # here so that the day it stops failing, somebody notices.

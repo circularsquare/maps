@@ -186,6 +186,16 @@ def pack(cc: str, suffix: str, vocab: dict, rng: np.random.Generator):
         st = int(starts[b])
         en = min(st + BUCKET, n)
         cnt = en - st
+        # A COUNTRY CAN NOW HAVE NO DOTS AT ALL IN AN EDITION, and before the microstate
+        # tier (sources/micro.py) none ever did. Niue's largest religion is 981 people and
+        # Montserrat's is 937, so at 1 dot = 1,000 every category is sub-dot and the whole
+        # country draws as rings; at 1:10,000 five of the nine are. `nb` is floored at 1, so
+        # an empty country still enters this loop once with cnt == 0, and `.min()` on the
+        # empty slice raised `zero-size array to reduction operation minimum`. Emitting no
+        # bucket is the right answer: the manifest then carries `dots: 0, buckets: []` and
+        # the viewer has nothing to paint, which is exactly the intent.
+        if cnt == 0:
+            continue
         out_x[at:at + cnt] = xi[st:en]
         out_y[at:at + cnt] = yi[st:en]
         out_n[at:at + cnt] = ni[st:en]

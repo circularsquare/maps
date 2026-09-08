@@ -334,15 +334,27 @@ def main():
         rolls = _rollup_tables()
 
         per_country = {}
-        for cc in sorted(set(dots["c"])):
+        # A COUNTRY CAN DRAW NO DOTS AT ALL AND STILL EXIST. Before the microstate tier
+        # (sources/micro.py) none did, so iterating the dot countries was the whole list.
+        # Niue's largest religion is 981 people and Montserrat's is 937, and one dot is
+        # 1,000, so both are rings-only in BOTH editions — and being absent from counts.json
+        # is not "no dots", it is the country vanishing from the picker, the about panel and
+        # `covers` entirely. That is the §4.3 ring saying a religion is present, undone one
+        # step later.
+        with_rings = set(rings["c"]) if rings is not None else set()
+        for cc in sorted(set(dots["c"]) | with_rings):
             d = dots[dots["c"] == cc]
             r = rings[rings["c"] == cc] if rings is not None else None
             meta = COUNTRIES.get(cc, {})
             # The data bbox is where the dots actually are; `view` is where to fly, and
             # differs only where a country has distant outlying population — fitting the US
             # to its data bbox spans Hawaii to Maine and shows the reader an ocean.
-            box = [float(d["lon"].min()), float(d["lat"].min()),
-                   float(d["lon"].max()), float(d["lat"].max())]
+            # With no dots the rings are the only geometry there is, so they set the bbox.
+            geom = d if len(d) else r
+            if geom is None or not len(geom):
+                continue
+            box = [float(geom["lon"].min()), float(geom["lat"].min()),
+                   float(geom["lon"].max()), float(geom["lat"].max())]
             per_country[cc] = {
                 "name": meta.get("name", cc.upper()),
                 "name_in": meta.get("name_in") or meta.get("name", cc.upper()),

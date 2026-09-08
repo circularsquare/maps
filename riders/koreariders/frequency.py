@@ -27,11 +27,23 @@ MEMBER = "1.지역간철도/6. 운전(1~6)_완.xlsx"
 SHEETS = ("2(5)", "2(6)", "2(7)")
 
 # The sheets name their lines a little differently from the passenger tables,
-# and a few of ours are too new to appear at all (강릉선, 중부내륙선) -- those
-# simply get no constraint.
+# and in the 2022 edition a few of ours are too new to appear at all (강릉선,
+# 중부내륙선) -- those simply get no constraint. 2023 lists both.
+#
+# 2023 also splits the busiest lines by track pair, and only one pair of each is
+# the railway this map draws. 경부1선 is the conventional trunk, 서울 to 부산
+# with the KTX, 새마을 and 무궁화 on it. 경부2선 is 지하서울-구로-병점-천안,
+# which is Seoul line 1 and carries 전동차 and nothing else, and 경부3선 is
+# 서울-용산-구로. Aliasing 경부1선 is what keeps 경부선 constrained at all: with
+# no alias the 2023 sheet has no 경부선 row, `by_line()` returns nothing for the
+# busiest line on the map, and every flat-step and zero-train rule that depends
+# on it goes quiet without erroring. The other two pairs are deliberately not
+# aliased -- their trains are the metro layer's, and folding them in would
+# reinstate exactly the commuter counts the model spent so long excluding.
 ALIAS = {
     "수서평택선": "수서고속선",
     "경의1선": "경의선",
+    "경부1선": "경부선",
 }
 
 # Sheet column heading -> the yearbook passenger types it covers. 전동차 is
@@ -66,6 +78,30 @@ COLUMNS = {
 
 COMMUTER = "전동차"
 
+# Columns whose services have no 승하차 row anywhere in the passenger volume, so
+# no station flow can ever be attributed to them. COLUMNS maps ITX-청춘 onto
+# ITX-새마을 because that is the right home for it when *counting trains* -- but
+# there is no ITX-청춘 row in sheets 9-13, and lumping it with ITX-새마을 for
+# passengers would credit 경춘선's traffic to whichever line runs the real
+# ITX-새마을. The proof is 경춘선, whose only intercity service is 26 ITX-청춘 a
+# day each way and whose published 통과인원 is 2,399 for the year.
+#
+# 전동차 is the same thing for 광역전철 and is already handled by W_NOTRAIN.
+NO_FLOW = {"ITX-청춘", COMMUTER}
+
+
+def claimable(runs, kinds):
+    """Trains a day this line's own types can actually take passengers from.
+
+    `total()` answers "how many trains run"; this answers "how many of them the
+    승하차 sheets can supply riders for", which is a different question and the
+    one that says whether a published 통과인원 is reachable at all.
+    """
+    want = set(kinds)
+    return sum(n for col, n in runs.items()
+               if col not in NO_FLOW
+               and want.intersection(COLUMNS.get(col, (col,))))
+
 
 def total(runs, kinds):
     """Trains a day over the columns serving any of `kinds`, each counted once."""
@@ -74,8 +110,31 @@ def total(runs, kinds):
                if want.intersection(COLUMNS.get(col, (col,))))
 
 
+# What separates the two ends of a section name. 2022 writes 금천구청-SR분기 with
+# an ASCII hyphen and 2023 writes 금천구청∼SR분기 with U+223C, so a parser that
+# knows only the hyphen reads the 2023 sheets as having no sections at all --
+# 117 rows to zero, silently, because every row simply fails the test. The
+# other three are the tilde's usual companions and cost nothing to allow.
+SEP = re.compile(r"[-~∼～〜]")
+
+
 def _flat(v):
     return re.sub(r"\s+", "", str(v)) if v is not None else ""
+
+
+def _line_name(raw):
+    """The sheet's line name mapped to the canonical one.
+
+    2023 drops the 선 suffix on part of the column -- 경부고속 where 2022 wrote
+    경부고속선 -- so try the suffixed form as well. ALIAS still covers the names
+    that are a different word rather than a shorter one, and it is consulted on
+    both forms so 수서평택 reaches 수서고속선 the same way 수서평택선 does.
+    """
+    for cand in (raw, raw + "선"):
+        n = ALIAS.get(cand, cand)
+        if n in LN.LINES:
+            return n
+    return ALIAS.get(raw, raw)
 
 
 def _at(grid, r, c):
@@ -106,9 +165,10 @@ def sections():
         for r in range(6, len(grid) + 1):
             a = _flat(_at(grid, r, 1))
             if a:
-                line = ALIAS.get(a, a)
+                line = _line_name(a)
             sec = _flat(_at(grid, r, 3))
-            if not sec or "-" not in sec:
+            ends = SEP.split(sec, 1) if sec else []
+            if len(ends) != 2 or not ends[0] or not ends[1]:
                 continue
             # Keyed by the sheet's own column, so a column covering two
             # passenger types is still one set of trains. See COLUMNS.
@@ -117,8 +177,7 @@ def sections():
                 v = _at(grid, r, c)
                 if isinstance(v, (int, float)) and v:
                     runs[h] = runs.get(h, 0) + int(v)
-            frm, to = sec.split("-", 1)
-            out.append((line, frm, to, runs))
+            out.append((line, ends[0], ends[1], runs))
     wb.close()
     return out
 
@@ -212,6 +271,33 @@ def service_along(canon, kinds, stops):
         if hit is not None:
             cur = hit
         out.append((inter[cur], comm[cur]))
+    return out
+
+
+def intercity_along(canon, stops):
+    """Per segment, every train a day that is not the 광역전철.
+
+    `service_along` counts the line's *own* types, which is what decides
+    whether it has a service its 승하차 can be attributed to. This counts what
+    runs, which is what a note quoting trains a day has to say: 경원선
+    용산-청량리 is 26 ITX-청춘 and 18 고속열차 a day each way, and only the 26
+    are the line's own types. Quoting 26 there would understate the railway by
+    nearly half while claiming to describe the traffic on it.
+    """
+    secs = by_line().get(canon)
+    if not secs:
+        return None
+    tot = [sum(n for c, n in runs.items() if c != COMMUTER)
+           for _, _, runs in secs]
+    starts = {}
+    for i, (frm, _, _) in enumerate(secs):
+        starts.setdefault(frm, i)
+    out, cur = [], 0
+    for nm in stops[:-1]:
+        hit = match(nm, starts)
+        if hit is not None:
+            cur = hit
+        out.append(tot[cur])
     return out
 
 

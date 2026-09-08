@@ -344,6 +344,12 @@ reason to cite where it actually came from rather than repeating the badge it ar
 - DHS / MICS surveys — religion by survey region for much of Africa and South Asia. Sample-based,
   so wide intervals, but they cover the countries §3 says are dark.
 - Afrobarometer, Arab Barometer, Latinobarómetro, WVS/EVS — same shape, useful for the modelled tier.
+- ~~**LAPOP AmericasBarometer**~~ — **answered 2026-09-08, see §11ad.** The barometer family's first
+  member actually opened here, and it is better than "the modelled tier" implies: religion at ADM1
+  for nine countries this map lacks, **validated against three censuses already drawn**. Its limit
+  is its answer card rather than its sample, so it supplies the Christian split and not the tail.
+  Read §11ad before opening one of the others — the flattened value-label trap it documents is a
+  property of every pooled multi-wave merge, not of LAPOP.
 
 ## 9a. The six acquired 2026-08-27
 
@@ -780,8 +786,10 @@ concrete. The three that are drawn disagree about what a religion classification
   million people.** ONS asks one tick-box question and the write-in box is only reached by
   people who tick "Any other religion" — so all 50 write-in categories are *outside*
   Christianity (Pagan 73,723, Alevi 25,657, Jain 24,992, Ravidassia 9,583, Yazidi, Vodun,
-  Thelemite, Eckankar) while `Christian` stays one undifferentiated node. **This is the
+  Thelemite, Eckankar) while `Christian` stays one undifferentiated node. **This was the
   largest single unresolved block on the map** and §3.11's irreducible floor made literal.
+  **England is no longer drawn that way** — see the next section — but the census gap itself
+  is unchanged and Wales still is.
 - **Scotland** names the Church of Scotland and the Roman Catholics and stops — 13 categories,
   no allocation needed because NRS publishes them at Output Area directly.
 - **Northern Ireland**, where the denomination is the political fact, names twenty-two
@@ -793,6 +801,61 @@ concrete. The three that are drawn disagree about what a religion classification
 The three code namespaces are disjoint — E00/W00, S00, N20 — so `sources/uk_geo.py`
 concatenates the three boundary files into one `unit` column without a prefix, and *checks*
 that rather than assuming it.
+
+### England's denominations come from three non-census sources — BUILT 2026-09-07
+
+**§3.5a's mechanism, applied inside a religion rather than at the root.** England's 26.2M
+Christians are split into `anglican` 64.6%, `catholic` 18.2%, `methodist` 4.6%, `baptist`
+2.4% and `reformed` 2.2%, with 8.0% left unplaced. The census supplies every magnitude and
+none of the structure:
+
+| file | supplies | why it alone is not enough |
+|---|---|---|
+| `sources/uk_churches.md` | how many churches of each denomination are in each county, now | counts buildings, not people |
+| `sources/uk_ecc.md` | how big a congregation of that denomination is there | attendance is not identity: 12% of England's Christians were in church |
+| `sources/uk_bes.md` | how many English adults belong to each | no geography below the region worth using |
+
+**Two bugs found on the way, and both produced a confident wrong map rather than an error.**
+
+1. **A national response-rate correction cannot fix a response that varied by county.** The
+   English Church Census took bulk data from "ten Church of England and eight Roman Catholic
+   Dioceses", so its Anglican response rate runs **25.9% in Norfolk and 92.5% in Greater
+   Manchester** — measured against the CofE's own register, which also reproduces the
+   published national 55%, so the measurement is sound. Placing denominations by its
+   attendance totals drew **a Merseyside that was 72% Anglican and 16% Catholic.** The fix is
+   that a *mean congregation size* survives an uneven response and a *total* does not, so
+   church counts now come from a current register and only the size comes from 2005.
+2. **`envnmcde` is missing for 37% of churches and the missingness is denominational** — 68%
+   of Anglicans carry a settlement code against 54% of Catholics and 6% of Orthodox. Reading a
+   cell's mix off the coded subset made every English conurbation about twelve points more
+   Anglican. Settlement profiles are therefore taken *within* a leg, where the coding rate
+   cancels.
+
+**The general lesson, and it is not about England.** Both bugs are the same shape: a source
+whose coverage varies along the very axis the map is about. Neither shows up in a total, a
+reconciliation or a category check — the numbers add up perfectly either way. What caught both
+was **holding the source against an independent register of the same thing**: the Church of
+England's list of its own churches. Any `roll` or `attendance` source being used for geography
+deserves that test, and §3.6's rule about where a roll counts people is the sibling of it.
+
+**A proxy rescued one leg and could not rescue two.** Pentecostal, New church and Orthodox all
+had anchors and no geography, because a 2005 church census and a map of buildings both miss
+congregations that rent halls and parishes founded after 2004. OSM has **355 Pentecostal and
+129 Orthodox churches in all of England**; using them put 6.0% of Norfolk's Christians on
+Orthodoxy.
+
+**Orthodoxy is now placed by country of birth** at MSOA (`sources/uk_orthodox.md`), each origin
+weighted by its own country's Orthodox share — which is the step that makes it work, since
+unweighted, Albania would carry 5.9% of England's Orthodox geography while being 7% Orthodox.
+Weighted it carries 0.6%. Outer London comes out 6.5% Orthodox and Cornwall 0.7%.
+
+**Ethnic group was tried the same way for Pentecostalism and rejected** (Anita, 2026-09-08).
+The general rule is in spec §3.5b: **the test for a proxy is not correlation, it is whether the
+residual is nameable.** An origin's non-Orthodox share is a published number, so it can be
+weighted away. An ethnicity's non-Pentecostal share is a question nobody has asked — Black
+African England is heavily Anglican and Catholic too — so the proxy would have to be asserted
+rather than used. Those people stay on the census's own `Christian` category, which is what
+§3.2's residual looks like when the residual is honest.
 
 ### New Zealand does §3.4 and §3.9 at once, and counts responses rather than people
 
@@ -7092,6 +7155,38 @@ drawn on this map and all absent from this table** — they were built from surv
 (§14.5), or tabulations the office never forwarded. The oracle proves *"no census religion
 tabulation"*, which is exactly what it was used for here. It never proves *"nothing to draw"*.
 
+#### THE COLUMN SET ABOVE RETURNS NO NUMBERS, AND THE ONE THAT DOES WAS FOUND ON 2026-09-08
+
+`c=0,1,2,3,4,5,6` is **Table Code, Country, Year, Reference Date, Area Code, Area** — an index
+of *which* tabulations exist, with the counts stripped out. That is why everything above is
+phrased as a yes/no, and it is why §11p and §11w recorded category counts by counting rows
+rather than reading a figure. **The oracle can hand over the actual census counts** (Bulgaria,
+§9be):
+
+```
+http://data.un.org/Handlers/DownloadHandler.ashx?DataFilter=tableCode:28
+    &DataMartId=POP&Format=csv&c=0,2,3,6,8,10,15,16
+    -> Country | Year | Area | Sex | Religion | Source Year | Value | Value Footnotes
+```
+
+**Column 16 is `Value`.** 222 KB zipped, every country, every reported census year, and
+`Area` carries **Total / Urban / Rural** so a national figure arrives with its urban-rural
+split attached. Three traps, each of which looks like something other than what it is:
+
+* asking for **17 columns or more returns a zero-byte body with HTTP 200**, which reads as a
+  network fault rather than a rejected request;
+* narrowing with `DataFilter=tableCode:28;countryCode:100` also returns zero bytes, so the
+  filter is effectively table-code only and the whole file must be pulled and filtered
+  locally;
+* the country name is column **2**. Filtering on `row[0]` matches nothing and is
+  indistinguishable from *"this country is absent from the oracle"*, which is the single
+  conclusion this section warns is expensive to get wrong. It happened on the first attempt
+  at Bulgaria, which is present with 2001, 2011 and 2021.
+
+This is worth re-running against every country closed on a row count rather than a figure —
+`sk.py` had to reconstruct Slovakia's category tail by hand from a table this would have
+printed, and Bulgaria's whole cross-check is one GET of it.
+
 ### The three Maghreb countries, and the reason is doubled
 
 | country | office | reachable? | verdict |
@@ -12516,13 +12611,18 @@ who were looking at the other two. It names no body, so it lands on the bare `ch
 node; its geography is Lima-Callao and not the evangelical countryside.
 
 **`Ninguna` is 5.09% and peaks in indigenous Amazonia** — Puerto Bermúdez 37.7%, Awajún 30.5%,
-Raymondi 26.9%. The census gives Amazonian indigenous religion no box, and "none" is where a
-form with no box for your religion puts you. Drawn as given, said in the open in `note_public`.
+Raymondi 26.9%. This section first explained that by the census giving Amazonian indigenous
+religion no box; **§9bc-a measured it and the explanation was the third fact rather than the
+first** — `Ninguna` is 3.68x the national rate among Amazonian indigenous respondents, but
+`Evangélica` is 41.5% and ~81% give a Christian answer. Drawn as given either way, and
+`note_public` now leads with the conversion.
 
 **And the smallest category has the sharpest geography.** `Otra` is 0.41% nationally and 20.7%
 in Yavarí, 19.2% in Tournavista, 18.9% in San Pablo — Amazon river and colonisation districts,
 a spread of fifty to one, which by §9r makes it a missing category rather than a mixture. The
-**Israelitas del Nuevo Pacto Universal** are the strongest candidate and it is not split.
+**Israelitas del Nuevo Pacto Universal** are the strongest candidate and it is not split —
+and §9bc-a removes the other candidate the tree had listed, because `Otra` turns out to be
+**flat across ethnicity** (0.98x among Amazonian indigenous), so it is not them.
 
 > Note the two different ways of having no listed religion, because they separate cleanly on
 > the map: in the Awajún and Asháninka districts the answer that rises is **`Ninguna`**, and
@@ -12535,3 +12635,1439 @@ ethnicity question, at the same 1,874 districts. **Peru can therefore cross indi
 identity with religion at district level**, which is what would turn the `Ninguna` reading
 above from an inference into a measurement. The 2007 census also asked religion and is not on
 this server.
+
+### 9bc-a. The ethnicity crosstab, run 2026-09-07 — the check changed the claim
+
+`sources/pe_ethnicity.py`. Anita asked for it after the build, and it earns its place: **the
+map was asserting something in `note_public` that the same server could measure.**
+
+`C5P25` — self-identified ethnicity — is asked of the **same 23,196,391 people** as the
+religion variable, so the two cross exactly, with no modelling. **Nothing it touches is drawn**:
+`pe.csv` carries no ethnicity and no dot is placed by it. It is a separate module from `pe.py`
+because crossing religion with ethnicity is a different act from drawing religion (spec §14).
+
+> The documented syntax fails. `AS CROSSTABLE ... BY ...` returns **HTTP 500**; `AS FREQUENCY
+> OF <a> BY <b>` is what works, and the engine labels its own output *"Crosstab"*. Worth
+> knowing for the eight other REDATAM instances still unchased.
+
+**The claim was that `Ninguna` peaks in Amazonia because the form has no box for Amazonian
+indigenous religion. Verdict: real, large, and overstated.** Among the 210,612 who identify as
+`Nativo o indígena de la amazonía`, `Ninguna` is **18.74% against 5.09% nationally — 3.68x**,
+so the association holds. But **`Evangélica` is 41.54% (2.95x) and about 81% give a Christian
+answer**, so the story there is *evangelical conversion* with a large no-box minority, not the
+other way round. `note_public`, `taxonomy/pe2017.py` and this file's §9bc all led with the
+wrong one until it was measured.
+
+**It also refuted a candidate the tree had written down.** `other.pe` listed "the indigenous
+religions of the Amazon" as plausible content for `Otra`. Measured, **`Otra` is flat across
+ethnicity** — 0.40% among Amazonian indigenous against 0.41% nationally, district correlation
+r=0.07. That leaves the Israelitas del Nuevo Pacto Universal fitting the geography *and* the
+ethnicity together, since AEMINPU's members are Andean migrants and not Amazonian peoples; and
+the cell's most concentrated groups turn out to be the **Tusán (5.51%) and Nikkei (3.50%)**.
+
+**And one thing nobody was looking for: the two Adventist regions are two peoples.** Adventists
+are **6.58% of Aymara Peru (4.32x)** and 4.34% of Amazonian indigenous Peru, while **Quechua
+Peru — four times larger and largely the same highlands — sits at 1.60%, the national
+average**. The altiplano cluster is Aymara rather than merely southern.
+
+### The rule this adds
+
+**If a country's own source can test a sentence the map is publishing, test it before
+publishing it.** Every claim in §9bc's "what it shows" was defensible from the religion table
+alone, and one of them was still leading with the wrong fact. The cost here was two queries
+against a server already wired, and it corrected a user-facing note, removed a wrong candidate
+from a taxonomy node, and found a result better than the one being checked. **The tell that a
+sentence needs this is that it explains a number rather than reporting one** — "`Ninguna` peaks
+in Amazonia" is a report, "because the form has no box for their religion" is a mechanism, and
+mechanisms are where the map is most likely to be confidently wrong.
+
+---
+
+## 9bd. Fiji wired — 2026-09-08. §11aa's Pacific list opened, and the first antimeridian country
+
+`sources/fj.md` is the full write-up; `sources/fj.py`, `fj_geo.py`, `fj_grid.py`,
+`taxonomy/fj2007.py`. **837,271 people on 15 provinces, 23 drawn categories, 99.89% drawn.**
+
+§11aa swept Oceania for the first time and left four bigger countries unchased, Fiji among
+them: *"oracle row is 2007, 11 categories. The most religiously plural country in the Pacific
+(Methodist / Hindu / Muslim), which is the one thing Samoa and Tonga cannot show. Its 2017
+census's religion release was not located."* All three of those are right, and the last is
+right for a reason: **the 2017 census does not publish religion at all** — Release 3 is 484
+pages and mentions it zero times.
+
+### §11aa was wrong about the API, and the correction is one GET
+
+§11aa recorded that only Samoa and Kiribati expose WordPress REST search and *"the other five
+sites are WordPress with `wp/v2/search` disabled or 404"*. **`statsfiji.gov.fj`'s is open**, and
+searching it for `religion` returns the 2007 tables directly. The files are not in
+`wp/v2/media` — they sit in a **WP File Download** plugin whose own AJAX route is
+unauthenticated and hands over the whole library as JSON:
+
+```
+admin-ajax.php?juwpfisadmin=false&action=wpfd&task=category.getFiles&id=<int>
+admin-ajax.php?juwpfisadmin=false&action=wpfd&task=files.getFiles&id=<int>
+admin-ajax.php?juwpfisadmin=false&action=wpfd&task=file.download&wpfd_category_id=..&wpfd_file_id=..
+```
+
+Sweeping the integer id space maps the office's entire catalogue — the CMS download-id sweep in
+a politer form. `task=categories.getCategories` returns HTTP 500, which is the tell that the
+tree must be walked by id rather than listed. **Worth trying `wpfd` on the other Pacific
+WordPress sites before concluding their search is shut.**
+
+### The tier is a trade-off, and it went the opposite way from Peru
+
+Fiji publishes religion twice from the same census, and the two are exclusive:
+
+| | units | people/unit | categories |
+|---|---:|---:|---:|
+| **drawn** — FBoS Table P01-3 | **15** provinces | 56,000 | **23** |
+| not used — SPC PopGIS | **86** tikina | 9,700 | **6** |
+
+PopGIS is 5.7x finer and collapses all eighteen Christian bodies into one `Christians` column.
+**That deletes Methodist, which is 290,555 people — 34.7% of Fiji and its largest body — and
+leaves the most plural country in the Pacific looking like every other Pacific census here.**
+So the categories won. §9k's trade-off again, decided the other way from §9bc's Peru, and the
+difference is simply that **Peru had both and Fiji does not**. What it costs is said out loud:
+the cane belt is a tikina-scale pattern drawn at province scale.
+
+### SPC runs PopGIS instances, and they are the Pacific's REDATAM
+
+`fiji.popgis.spc.int` is a **GeoClip Observatory (PopGIS 3)** over FBoS microdata: 12
+geographic levels down to 2017 enumeration areas, 65 datasets, three census trees. Its API is
+open and was recovered by grepping `js/libs/gco5/gc_core.js` after `GC_init.php` answered —
+`GC_listIndics.php`, `GC_coldata.php`, `GC_refdata.php`. **This is §11x's rule on a third
+continent: ask whether the office, or its regional agency, runs a tabulation server before
+reading its PDFs.** §11aa checked SPC's `.Stat` hub and found no religion; it did not check for
+PopGIS, and PopGIS is where the religion is.
+
+Not used for the counts, but it is the **independent witness**, and a good one: total, Hindu
+and Moslem come back *exactly*, and it names the same 15 provinces.
+
+### The printed table does not print its own residual, and PopGIS is what identifies it
+
+Table P01-3 states 837,271 and prints six top-level rows summing to **836,376** — 895 people
+unaccounted on the page. PopGIS's `other religion` equals the printed `Sikh + Other religion +
+exactly those 895`. **A residual put where residuals go, not where religions go**, which is what
+justifies carrying them as `Not stated` and not drawing them (§3.5) rather than guessing. The
+remaining disagreement is 1,929 people, 0.23%, on the Christian/no-religion boundary — a coding
+difference between two publications of one census.
+
+### The first antimeridian country, and it broke two things that look nothing alike
+
+**This is the finding most likely to bite the next Pacific country.** Fiji straddles 180°.
+
+1. **Reprojecting the provinces to EPSG:4326 tears three of them** into 360° polygons —
+   Cakaudrove, Lau, Macuata. The file opens, the count is right, the names are right, and a
+   point-in-polygon join against it is nonsense while every total reconciles.
+2. **Nine of Kontur's own hexes are stored torn** across the EPSG:3857 plane, x-span
+   40,075,017 m. Their centroids therefore compute to longitude ≈ 0: this extract put six of
+   them in the Atlantic, the Sahara and the Indian Ocean at Fiji's latitude, where a
+   centroid-in-polygon join drops them silently.
+
+> **PROJECTING INTO A PACIFIC CRS DOES NOT FIX EITHER — IT RELOCATES THE PROBLEM.** The first
+> attempt moved everything into EPSG:3832 (PDC Mercator, 150°E) and asserted the result was
+> Fiji-sized. **It fired, correctly**: pyproj does not wrap longitude, so a point at 179.9°W is
+> 329.5° *west* of the origin and lands ~36,000 km away. The centroids spanned 28,670 km.
+
+**What works is doing the arithmetic in degrees**: repair the torn hexes in the tiling CRS by
+shifting negative-x vertices one plane width, then take everything to 4326, add 360 to every
+negative longitude so the country is a continuous 176–181 band, and join there. The assertion
+that the country comes out ~5° wide is what caught the first attempt, and it is kept.
+
+### The rule this adds
+
+**An assertion that a country is the size of that country is cheap and catches a whole class of
+silent geometry failure.** Every step here — the province reprojection, the Kontur read, the
+Pacific-CRS "fix" — produced a file that opened, counted right and named right while being
+geometrically absurd, and the only thing that noticed was comparing a bounding box against a
+number anyone already knows. It is two lines. **Add it wherever a country is near 180°, near a
+pole, or spans a UTM zone.**
+
+### And a smaller one, from `fj_geo.py`
+
+**When the check with power is somewhere else, say so instead of inventing a weak one.** Peru's
+spatial-smoothness witness needs enough units to calibrate against random re-pairings; Fiji has
+fifteen, scattered over 500 km of ocean. `fj_geo.py` therefore asserts *no* geographic witness
+and says in the file that the population correlation in `fj_grid.py` is carrying the join
+(r=0.9896 on 15 units, best of 0.8884 over 2,000 shuffles). §9ay's *"say which one is carrying
+it"* applies when the answer is "not this one".
+
+### What it shows
+
+**The two halves of Fiji are different islands, not a mixture.** Methodist is **83.7% of Lau
+and 81.7% of Kadavu** — the outer eastern islands, mission ground since the 1830s. Hindu is
+**44.3% of Macuata and 39.7% of Ba** — northern Vanua Levu and western Viti Levu, which is
+where the cane is and where the indentured labourers were sent from 1879. **The plantation
+economy is legible on the map.**
+
+**Methodism is bigger here than in any country that invented it** — 34.7%, the highest
+Methodist share anywhere on this map. **Assembly of God is 5.7%**, the third-largest church,
+ahead of the Anglicans, Presbyterians, Baptists, Adventists and Salvationists combined. **Two of
+the eighteen named bodies are Fijian foundations** rather than imported missions: Christian
+Mission Fellowship, started in Suva in 1990 and now in a hundred countries, and All Nations
+Christian Fellowship. **And the census names Sikhs** — 2,548 of them, which very few censuses
+anywhere do.
+
+## 9be. Bulgaria wired — 2026-09-08. The last hole in the Balkans, and the oracle's real column set
+
+6,519,789 people, **265 obshtini**, Census 2021. The Balkans were otherwise complete, and
+Bulgaria closes them.
+
+### The queue's entry was a false positive, and the shape of it is worth carrying
+
+§11o recorded Bulgaria as *"re-tested and it answers"* and named two hosts. Both answer and
+**neither is the route**:
+
+* `nsi.bg/en/content/6704/population-religion` returns **200 with the NSI homepage**. The
+  content id is dead and the site falls through to the front page rather than 404ing, so a
+  status probe scores it live. **The tell is the `<title>`**: the organisation's name where
+  the page's own should be. `infostat.nsi.bg` does the same thing on every path tried, which
+  is why Infostat is recorded here as unopened rather than as empty.
+* `censusresults.nsi.bg` is live and is the **2011** census, religion by oblast only.
+
+The route is the site's own search box, `nsi.bg/search?q=<вероизповедание>`, and `/sitemap` —
+287 KB of static links, where every content page's navigation is JavaScript and greps as
+nothing. **Search before concluding a Drupal-shaped office is walled.**
+
+Sheet 4 of `Census2021_Ethnocultural characteristics_BG.xlsx` (78 KB) is religion by
+municipality: two administrative tiers finer than the 2011 portal, an exact partition in
+every one of the 265 obshtini, and NSI's published headline shares reproduce from it to two
+decimals.
+
+### The oracle returns values, and every country closed on a row count should be re-asked
+
+The finding is written up under §11r rather than here, because it is not about Bulgaria:
+**`c=0,2,3,6,8,10,15,16` returns the counts**, where §11r's documented `c=0,1,2,3,4,5,6`
+returns an index with the numbers stripped. Column 16 is `Value`. Asking for 17 or more gives
+a **zero-byte body with HTTP 200**, and the country name is column 2, so filtering on column 0
+matches nothing and looks exactly like absence.
+
+### Geometry and placement both cost nothing, which is rare
+
+GISCO LAU 2021 carries Bulgaria as 265 units whose `LAU_ID` **is** NSI's obshtina code, so the
+crosswalk is the identity function. Placement is `POPGRID2021_1000M`, Census 2021 aggregated
+from the point location of every record — the third measured placement layer here after
+Germany and Slovakia. It holds 6,461,591 of 6,519,789, and the 0.9% gap is NSI's own published
+*unallocated on map* figure rather than a loss. Its licence permits mapping products built on
+it but **not** publishing individual cell values.
+
+### The denominations are derived, and this reverses the first build
+
+Built as published, Bulgaria drew one flat Christianity colour between Romania, Serbia,
+Greece and North Macedonia, all on `christianity.orthodox.canonical`. Anita, seeing it:
+*"bulgaria looks kinda out of place ... is there any way we could get the orthodox
+proportion?"*, then *"yes 2011 oblast composition is ideal."*
+
+The 2021 census publishes its Christian breakdown **nationally only**; the 2011 census
+publishes it **per oblast** and additionally splits Sunni from Shia. `bg_split.py` seeds a
+28x5 table from 2011, rakes it onto two measured 2021 margins, and splits each obshtina by
+largest remainder. **The first build had refused this on §14.4 rule 1 and that reading was too
+narrow**: every magnitude in the output is NSI's, and only its distribution is modelled, which
+is §14.10's amendment rather than rule 1's prohibition.
+
+**Eastern Orthodox is 97.44% of Christians in 2011 and 97.30% in 2021** — the premise of the
+method, asserted every build. The Shia total, unconstrained by anything, lands at 29,470
+against the **27,579** UNSD could not code out of Bulgaria's 2021 Muslims: corroboration from
+a publication the model never saw.
+
+### Two traps in the 2011 report
+
+**`..` is not `-`.** `-` is a true zero and `..` is disclosure control. Nine oblasti withhold
+at least one religion; reading them alike made Blagoevgrad's eleven rows sum to 253,199
+against a stated 253,200. Seven recover exactly from the row total; two oblasti withhold two
+cells each and 4 people nationally stay unresolved.
+
+**The Sunni row is misspelled at source** — `Мюсюлмаснко-сунитско`, `с` and `н` transposed —
+and is keyed verbatim per §2.4.
+
+### What is left undrawn, and why none of it is recoverable
+
+20.7%: `Не мога да определя` 259,235, `Не желая да отговоря` 472,606 (the question has been
+voluntary since 1992), and `Непоказано` 616,681 who were never asked at all and came from
+administrative registers — mk2021.py's coverage-residual case. **This is the opposite of
+Slovakia's `ostatné`**: `Друго` is its own column beside them, so nothing is hidden inside.
+Non-response runs 3.1% to 64.3% between municipalities and the five highest are all Rhodope
+municipalities with large Bulgarian-speaking Muslim populations.
+
+## 9bf. The microstate tier — nine countries in one pass, 2026-09-08, and no office opened
+
+`pw` `ck` `tv` `nu` `ms` `bm` `ag` `dm` `mh`. 311,888 people. Full write-up in
+`sources/micro.md`; this section is the part that generalises.
+
+### The oracle was the source, not the check
+
+§11r's find, corrected earlier in this file: the documented column set returns an index with
+the values stripped, and **`c=0,2,3,6,8,10,15,16` returns the counts**. Run against the queue,
+**33 of its 37 countries** are present with figures. For anything big enough to need a
+subnational source that is a *check*; for a country of 20,000 it is the *whole source*.
+
+`tools/oracle.py` caches the table and exposes `oracle(country, year)`. **Run it before
+scouting**, exactly as §11r said, but now read the numbers rather than the row count.
+
+### The permission is Anita's and it is what retires two floors
+
+*"for the really small island countries we might not even need any divisions. like for
+instance if we do palau, it has 17000 people so itll just be 17 dots."* At 1 dot = 1,000 the
+placement inside such a country asserts nothing, so a national-only table is **complete**
+rather than coarse: §3.9b's unit-count floor and §3.9c's variety floor do not apply to this
+tier. Palau draws **seventeen** dots, which is the sentence coming out right to the dot.
+
+Several of queue.md's blockers were never solved, only bypassed: `mfem.gov.ck/statistics`
+still 404s and `rmi-data.sprep.org` is still a 403.
+
+### A country that draws NO dots is a state nothing had handled
+
+Niue's largest religion is 981 people, Montserrat's is 937, and one dot is a thousand. Both
+countries are §4.3 rings and nothing else, in both editions. That is correct rendering, and it
+broke two things that had been latent since the project began:
+
+* **`buffers.py` raised `zero-size array to reduction operation minimum`.** `nb` is floored at
+  1, so an empty country still entered the bucket loop once with `cnt == 0`.
+* **`tiles.py` silently dropped both from `counts.json`**, because the per-country loop was
+  `for cc in sorted(set(dots["c"]))`. The effect is not "no dots" — the country disappears
+  from the picker, the about panel and `covers`, which undoes the ring one step later.
+
+**Generalise this: a check that iterates the dots is not a check on the countries.** The same
+shape is why `country_shapes.py` needs its own step in COMMANDS.txt.
+
+### One partition in nine does not close, and it is the publisher's
+
+Antigua and Barbuda's 21 categories sum to **76,889** against a stated **76,886**. `micro.py`
+pins an allowed slack per country, 3 for `ag` and 0 for the other eight, so the discrepancy is
+declared rather than absorbed and a real break still fails the build. It also pins each
+country's expected total and category count, so a re-publication cannot quietly move the map.
+
+### What the tier is not allowed to be
+
+Every row is national. Bermuda is the only one where the Yearbook also publishes urban and
+rural, and it is not read: a two-way split is not a geography. Placement is Kontur population
+only, so all religions in a country spread identically. Census years run **1999 to 2017** and
+the Marshall Islands' four categories are the shallowest table drawn anywhere on this map.
+
+## 11ab. Papua New Guinea scouted properly — 2026-09-08. The office is wide open and religion stops at the national total
+
+Anita: *"could you tackle papua new guinea for religiondots? earlier agent said can maybe copy
+approach of fiji"*. **The Fiji approach worked exactly as advertised and the answer it returned
+is that the table does not exist.** `nso.gov.pg` runs the same WordPress plugin Fiji does, its
+file API is open in the same way, the whole library came back — and **PNG has never published
+religion below the national total.** Not in 2000, not in 2011, not in the 2022 SDES, not in
+2024.
+
+The country is **not closed**, because the microdata exists and is catalogued: see *The route
+that does work* below. It is IPUMS-gated, which makes PNG the second thing on this map waiting
+on the account in `todo.txt`.
+
+**And the queue's headline number is stale.** PNG is **10,185,363** people (2024 census final
+figures, Bougainville included), not the ~7.3M the row carries, which is 2011.
+
+### The office, and the sweep that settled it
+
+`nso.gov.pg` is WordPress with an open REST API — `wp/v2/search` answers, no wall anywhere in
+this section — and the files sit in **WP File Download**, the same plugin as `statsfiji.gov.fj`
+(§9bd §1). The AJAX route is unauthenticated in the same way:
+
+```
+/wp-admin/admin-ajax.php?juwpfisadmin=false&action=wpfd&task=category.getFiles&id=<cat>
+/wp-admin/admin-ajax.php?juwpfisadmin=false&action=wpfd&task=files.getFiles&id=<cat>
+```
+
+Three differences from Fiji worth writing down, because each one silently truncates a sweep:
+
+* **`category.getFiles` returns the category tree with `count` 0 for every node here.** It maps
+  the library (49 categories) and lists no files at all. Fiji's `count` was real. Use
+  `files.getFiles` for the contents and `category.getFiles` only for names and parents.
+* **`files.getFiles` is capped at ten files and the cap is invisible** — no total, no flag.
+  `limit`, `perpage`, `offset`, `start` and `length` are all ignored; **`page` is the one that
+  works**. Six categories returned exactly ten and were all truncated, including the 23 per-
+  province population files in category 118.
+* **`id=0` returns the entire library in one paged listing — 287 files.** That is the whole
+  office, and it is what makes the negative below a sweep rather than a sample.
+
+The download route is `/download/<catid>/<catslug>/<fileid>/<anything>.pdf`. The **slug is
+free** but the category id and slug must be the file's own, so the id space alone is not a
+catalogue here the way §11v's CMS sweep was.
+
+### All 287 files, and the four that carry religion
+
+```
+  2151  PNG National Report 2000 Census    22.4 MB  109 pp  SCANNED, no text layer
+  2152  PNG National Report 2011 Census    11.5 MB  100 pp
+  4394  02_2022_PNG_SDES_Demographic Characteristics.xlsx   sheet T2.4
+  4310  2024 National Population Census - Final Figures      7.9 MB  35 pp   (no religion)
+```
+
+**Every one of them is national.**
+
+**2011, Table 2.4 and Figure 2.1** (p33): the four-way top level as percentages —
+Christian 95.6, Non-Christian 1.4, No Religion 0.0, Not Stated 3.1 — and eleven named bodies
+as a bar chart, **percentages only, no counts**: Roman Catholic 26.0, Evangelical Lutheran
+18.4, Seventh Day Adventist 12.9, Pentecostals 10.4, United Church 10.3, Other Christian 9.7,
+Evangelical Alliance 5.9, Anglican 3.2, Baptist 2.8, Salvation Army 0.4, Kwato Church 0.2.
+
+**2000** is the same document a decade earlier, and the same shape: Table 2.4 national, Figure
+2.1 the same eleven bodies. It is a **scan with no text layer on all 109 pages** and was read
+as rendered images.
+
+**2022 SDES, sheet T2.4** — *Percent distribution of population by religious denomination, sex
+and area* — is the deepest and newest list PNG has, thirteen rows including `Kwato Church`
+0.06% and a `*` convention for cells under 0.1%. **Its `area` is Total / Urban / Rural.** A
+two-way split is not a geography (§9bf made the same call for Bermuda).
+
+### The per-province figure that exists, and why it cannot be drawn
+
+Both National Reports carry a **Summary Indicators** block over all 22 provinces, and religion
+appears in it as exactly one line:
+
+```
+                         Western  Gulf     Central  NCD      MBP      Northern
+                         Evan.All U/Church U/Church U/Church U/Church Anglican
+  Main religion (%)      37.1     30.1     40.0     23.0     54.9     60.6
+```
+
+**One label and one share per province: the plurality, not a partition.** The 2011 text spends
+a paragraph on it — *"major concentrations of particular Christian denominations in some
+provinces… AROB (Roman Catholic, 68%), Morobe province (Evangelical Lutheran, 67%) and
+Northern Province (Anglican, 61%)"* — which is exactly the geography that makes PNG worth
+drawing, and it is published as three sentences rather than a table.
+
+Building from it would mean inventing the other 40–77% of every province. §14.4 rule 1.
+
+### What else was checked, so nobody re-derives it
+
+* **`png.popgis.spc.int` exists and is dead.** It resolves and Cloudflare answers, but with
+  **530** — origin unreachable — on `/` and on `GC_init.php` alike, so this is a down server
+  and not a 404. **The Wayback CDX has zero captures for the whole domain**, so §11's
+  archived-bundle trick has nothing to work on. Fiji's independent witness (§9bd §5) has no PNG
+  equivalent. `vanuatu.popgis.spc.int` *is* live, which is a `vu` lead, not a `pg` one.
+* **The `dotstat` post type is a false lead, and this retires the queue's guess.** The row said
+  a .Stat instance is *"probably behind it"*. The plugin is installed — its bootstrap CSS is
+  enqueued on every page — but `wp/v2/dotstat` returns **an empty array**, and no `.Stat` or
+  SDMX endpoint appears anywhere in the site's HTML or its 46 same-host JS assets. It is an
+  unused plugin.
+* **The 22 per-province `Population Estimate Results` PDFs (category 118, 2023) are two pages
+  each and population-only.** Morobe was opened and searched: zero hits for religion, Lutheran
+  or denomination.
+* **`Census Figures by Wards`** (four regional PDFs) is population by ward. No religion.
+* **DHS 2016-18 asks religion and never crosses it with province.** The final report (FR364,
+  519 pp, the same file the NSO serves as 2181) has eleven religion categories in Table 3.1,
+  national. Religion appears elsewhere only as a *row* variable — crossed with circumcision,
+  with health-seeking — never with the 22 provinces, which the survey does report on.
+* **UNSD table 28 has no PNG row**, which per §11r proves nothing on its own; here the office
+  confirms it.
+* **Two Cloudflare walls, both unopened and both probably low-value**: `png-data.sprep.org`
+  (403 to every UA and to WebFetch; search engines index `2000_PNG_Census_Key_stats_1.pdf` and
+  a `2011-census-report` dataset, which look like copies of the two National Reports) and
+  `microdata.pacificdata.org` (403). Browser jobs if anyone wants certainty.
+
+### The route that does work, and what it would cost
+
+**IPUMS International holds the PNG census microdata, and it is the good version of this
+country.** Catalogued openly at `microdata.worldbank.org/catalog/7780` and
+`datacatalog.ihsn.org/catalog/13393`:
+
+```
+  PNG_2000_PHC_v01_M_v7.6_A_IPUMS    520,609 person records, every tenth dwelling, weight 10
+                                     164 variables
+                                     lowest geography identified: DISTRICT
+  RELIGION / RELIGIOND               universe ALL PERSONS for both 1990 and 2000
+                                     (1980 is urban persons 10+ only, so 1980 is not usable)
+```
+
+So PNG is not a country with no religion geography. It is a country whose religion geography
+was never published as a table and **sits in the microdata at district level** — 89 districts
+against the 22 provinces the queue assumed, which would make it one of the better-resolved
+countries in the region rather than one of the worst. IPUMS's own note on the variable: *"The
+census asked each person what church or religion they belong to. Persons who do not belong to
+a church are considered to have 'no religion'."*
+
+**The blocker is the IPUMS account in `todo.txt`, not PNG.** Nothing else in this section is in
+the way: the boundaries are on HDX (`cod-ab-png`, ADM0–ADM3), Kontur covers the country, and
+the taxonomy already has every body the eleven-category list names except Kwato Church.
+
+**Two things to weigh before spending the extract, both Anita's call:**
+
+1. **A 10% dwelling sample at district level.** 89 districts averaging ~114,000 people in 2024
+   means ~11,000 sampled persons each on the 2000 base. Fine for the eight bodies above 2%;
+   thin for Salvation Army and Kwato Church, which are 0.4% and 0.2% nationally and would be
+   tens of people in a district.
+2. **The counts would be 2000 and the country is now 10.2M.** A twenty-five-year gap, worse
+   than Fiji's eighteen (§9bd §8) and the largest on the map. The 2011 national shares moved
+   little from 2000 — Roman Catholic 27.6 → 26.0 — which is some comfort that the *shares* are
+   stable even though the *population* nearly doubled.
+
+**What is NOT recommended is drawing PNG nationally.** The microstate tier (§9bf) was justified
+because at 17 dots the placement carries no claim; PNG is ten thousand dots over 460,000 km²,
+and a single national mix would paint Anglicans evenly across the Highlands while the census's
+own summary says Oro is 61% Anglican and the Highlands are not. That is the one thing the
+source explicitly contradicts.
+
+## 9bg. Vanuatu wired — 2026-09-08. §11aa's Pacific list again, and the tier was eleven times finer than the queue priced it
+
+Anita, after Papua New Guinea came back blocked (§11ab): *"darn okay. we can look at vanuatu"*.
+**It is the best-resolved country in the Pacific on this map**, and every objection anyone had
+priced in turned out not to exist. The full record is `sources/vu.md`; this section is what the
+next country should take from it.
+
+```
+  293,963 people        66 units (64 area councils + Port Vila + Luganville)
+  12 drawn categories   99.85% drawn      ~4,500 people a unit
+  VNSO 2020 NPHC, Basic Tables Vol 1, Table 3.5
+```
+
+### The queue said six provinces. It is 66 units, and nobody had opened the table
+
+The `vu` row read *"234,023 | 6 provinces | 11 cats | Not chased"*. Two of those four are
+wrong: the population is the **2009** figure, and **Table 3.5's `Region` column is the whole
+census hierarchy** — nation, urban/rural, six provinces, and then **64 rural area councils**
+underneath, with the same fourteen columns printed at every one.
+
+**So §9k's trade-off simply does not arise here.** Fiji (§9bd §3) had to choose between 15
+provinces with 23 categories and 86 tikina with 6, and the argument took a section. Vanuatu
+publishes the deep list and the fine geography in the same table. Worth stating as a habit:
+**the queue's `units` column is a guess made from outside the source, and on this occasion it
+was out by a factor of eleven.**
+
+### The route, which shares nothing with §9bd's
+
+`vnso.gov.vu` is **Joomla, not WordPress**, so none of §11v's or §9bd's CMS routes work. Three
+things about it:
+
+* **`curl` fails with exit 60 before anything else** — the TLS chain does not verify. `verify=
+  False` plus a `%PDF`/`%%EOF` payload check is the answer, not a workaround.
+* **Its search component returns HTTP 500 on every query**, single words included. The library
+  cannot be searched at all.
+* **What works is walking the menu.** Files sit in a static tree under
+  `/images/Public_Documents/Census_Surveys/Census/<year>/`; a crawl of nineteen pages found
+  417 files. No Excel anywhere, so the PDF is the source.
+
+**SPC's PopGIS was checked first, on §9bd's precedent, and it is not the route.**
+`vanuatu.popgis.spc.int` is live and serves the 2020 census down to enumeration area with
+**1,687 indicators and no religion theme in any of its three trees**. Recorded because Fiji's
+PopGIS *was* the witness and the reflex to reach for it is now established; here it is only a
+geography fallback.
+
+### Three parse traps, each of which fails silently
+
+The table is split across four pages (62-63 the first nine columns, 64-65 the rest, same rows).
+Numbers are right-aligned and run into the labels, so rows are rebuilt from word geometry and
+columns from the **right edge** of each numeric token. What breaks a naive read:
+
+1. **`Canal - Fanafo` contains a hyphen, and the hyphen is this table's symbol for zero.**
+2. **`Central Pentecost 1` and `Central Pentecost 2` end in digits** — two real area councils.
+   Both are cured by the same rule: a value token must begin right of the label column.
+3. **The header band is not at a fixed height.** Page 62 puts `Region` at y=117, page 63 at
+   y=105. A cutoff tuned on page 62 swallows **SHEFA** at y=118 — the largest province in the
+   country — and the parse returns 74 rows instead of 75 while every other check still passes.
+   **Anchor on the header row, never on a constant.** This one was live for two runs.
+
+### THE PUBLISHED TABLE DOES NOT ADD UP, AND THAT IS THE SOURCE
+
+**41 of 75 rows have their fourteen categories missing the printed `Total`**: `-2` on 4 rows,
+`-1` on 19, `+1` on 16, `+2` on 2, and nothing worse. It was assumed to be a parse bug and is
+not — six rows were rendered at 200 dpi and read digit by digit, and **East Santo prints 5,788
+beside categories summing to 5,786**. The page is wrong. Volume 2 independently reproduces all
+thirteen national figures.
+
+Consistent with each cell being rounded on its own. **The category sum is therefore each unit's
+universe and the printed `Total` is carried for reporting**, with the bound asserted: a row
+missing by more than 2 stops the build.
+
+**The general lesson is the cheap one:** when a total does not reconcile, render the page before
+touching the parser. Half an hour of assuming the reader was wrong was spent on a source that
+was.
+
+### `Other churches` is 12% and the two volumes disagree about what it is
+
+| | header | implies |
+|---|---|---|
+| Vol 1, Table 3.5 | `Other churches` | Christian |
+| Vol 2, Table 30 | `Other` | nothing |
+
+And Volume 2 says what is in it: **"the category 'Other' includes 88 different religions ranging
+from one member to more than 2,000 members."** *Religions*, 88 of them. Vanuatu's Baha'i, Muslim
+and Witness communities have nowhere else in this table to be.
+
+**So 35,270 people go to `other.vu` rather than to `christianity`** — §14.4 rule 1, and the
+least comfortable call in `taxonomy/vu2020.py`. **Read the other volume before trusting a column
+header**, which is the same instinct as §11's census-questionnaire rule applied to a table.
+
+### `indigenous.vanuatu`, a new node, and why it is not a residual
+
+**`Customary beliefs`, 9,080 people, 3.09% — a printed census category standing beside the
+churches, counted in four consecutive censuses** (6,484 → 10,365 → 8,600 → 9,080). That is
+unusual enough to earn its own node rather than a fold into `other`. Added on the
+`indigenous.philippine` / `indigenous.myanmar` precedent: a national child where a source gives
+its own country's traditions exactly one cell.
+
+**Its geography is one island.** 7,757 of 9,080 are in Tafea, and inside Tafea it is Tanna:
+**South West Tanna 30.3%, Middle Bush Tanna 25.3%, North Tanna 19.1%, West Tanna 16.7%.** That
+is where the **John Frum** movement is; the census names no movement, so neither does the tree.
+**The highest indigenous-religion share of any unit on this map outside India.** A floor, for
+the reason `indigenous.african` carries.
+
+### The join is free, so it got a witness the names cannot fake
+
+COD-AB's **ADM2 is the census's own tier**: 66 against 66, **every name matching outright**,
+nothing spare, no aliases, and no published id on either side.
+
+**A name join that matches everything is the one nobody checks**, and what it cannot see is the
+wrong twin. So `vu_geo.py` asserts something independent: **OCHA files each ADM2 under an ADM1,
+and the census files each council under a province by where it prints in Table 3.5.** Two
+organisations, agreeing on **all 64**. That is the check §9ay asked for, in the form available
+when there is no id to join on.
+
+No antimeridian problem (3.7° wide), and asserted anyway.
+
+### 13% of Kontur fell outside every unit, and dropping it would have been a direction
+
+**645 hexes, 44,347 people, 13.25%** — double Fiji's 6%. Measured:
+
+```
+  within 100 m   45.1% of the strays        within 500 m   99.9%
+  within 250 m   82.6%                      max 6,032 m, one cell
+```
+
+Coastal cells just seaward of a detailed coastline on a 400 m grid, **and the largest are 15 to
+150 m out and clustered on Port Vila and Luganville** — where the people are. §9bd dropped its
+6% and could afford to; **dropping 13% here would weight every shoreline light and pull the dots
+inland, which is a direction and not a rounding.** So strays within 500 m are **snapped to the
+nearest council**; 6 cells and 51 people (0.015%) remain unplaced.
+
+**Snapping is measurably right, not just arguable**: the correlation rose **0.9607 → 0.9738**
+and the worst per-unit ratios tightened from 0.50–1.92 to 0.65–1.75. The rule for the next
+archipelago: **measure the distance distribution before choosing to drop.**
+
+And with 66 units the correlation is finally a real check on the join, which §9bd's fifteen
+provinces could not support: r = 0.9738 against a best of 0.4119 over 2,000 random pairings.
+
+### What the map shows
+
+**Three missions divided the group in the 1850s and the boundaries have barely moved.**
+Anglican is **77.3% of Torba** and **44.9% of Penama** against **0.2% of Tafea** — the
+Melanesian Mission worked the Banks and Torres islands and northern Pentecost and essentially
+nowhere else. Presbyterian is 43.9% of Malampa and 40.7% of Shefa and 0.5% of Torba. Churches
+of Christ are 16.1% of Penama and 0.9% of Malampa. Sanma is the mixed one, and the analytical
+report says so.
+
+**No church is close to a majority**, which is rare in this region: the largest is 27.2%,
+against Fiji's 34.7% Methodists and the far higher national churches of Tonga and Tuvalu.
+
+### Still on the table
+
+- The **1999 census publishes religion by ISLAND** (tables 2.10–2.12), a different category
+  list, male and female separately. Finer in one sense and twenty-six years old.
+- The 2009 basic tables are **province and urban/rural only**, so 2020 is newer *and* eleven
+  times finer; there is no reason to prefer 2009.
+- The **2016 mini census does not ask religion** — searched, zero hits.
+- 2020 also crosses religion with **sex** (tables 3.6, 3.7) and **five-year age group** (3.8).
+
+
+## 11ac. Türkiye is drawable, and §11r's central claim about it was wrong — 2026-09-08. The state DOES publish sect, by region, and the interesting source is the state's own
+
+Anita, with the Filiz/Nişanyan sect map from Reddit: *"could you look into getting turkey onto
+religion dots? i foudn this map on reddit, maybe we can try to use this source?"* — then, on being
+shown that source's terms: *"tbh i'd rather not use this data if they dont want anyone recreating
+it. are there any other sources? perhaps, what sources did nisanyan use?"* **Asking the second
+question is what found the answer**, and the answer was never in Nişanyan's bibliography.
+
+### CORRECTION TO §11r, and it is the headline
+
+§11r wrote: *"Türkiye's own publication of religion is nothing since 1965."* **That is false.** The
+**Diyanet İşleri Başkanlığı and TÜİK jointly published `Türkiye'de Dinî Hayat Araştırması` (Ankara
+2014)** — 293 pages, fieldwork 15 May to 20 September 2013, **21,632 respondents**, CAPI, three-stage
+stratified cluster sample off the UAVT address frame, weighted and calibrated. Its **Table 4 is
+`ameli mezhep mensubiyeti` by İBBS Düzey 1 — sect membership across all twelve statistical
+regions**, and every row partitions to 100 within rounding.
+
+The mistake §11r made is a general one worth naming: **it looked for religion in the statistical
+office and in the census, and religion in Türkiye is published by the religious affairs directorate
+instead.** TÜİK ran the fieldwork; the Diyanet published the book. Neither `tuik.gov.tr` nor the
+UNSD oracle will ever show it.
+
+**So §14.4's rule 2 is satisfied outright rather than argued around.** *No resolution finer than
+the state's own publication* — twelve regions IS the state's own publication, and the state says so
+in its own methodology (*"the sample size was calculated to produce estimates at Türkiye total,
+urban/rural and İBBS-1 region totals"*). The Egypt-shaped objection §11r raised does not arise.
+
+**What it costs: this instrument cannot see Alevis, and the questionnaire proves it.** See *The hole
+in it* below. That is now the only real question about drawing Türkiye, and it is a §14.2 question
+rather than a sourcing one.
+
+### And the source Anita was shown, which is out on her call
+
+**The country also has a settlement-level ethno-religious inventory outside the state, it is
+excellent, and it is not usable.** Three findings, and the third decided it:
+
+1. **The source exists and is technically wide open** — `nisanyanyeradlari.com` (Sevan Nişanyan's
+   *Index Anatolicus*), 56,382 Türkiye settlements, a **community** field per settlement with 77
+   categories, point coordinates on all but three, and an unauthenticated tRPC API.
+2. **It publishes no magnitude at all**, and its coverage is **inversely correlated with the thing
+   being mapped** — 87.6% of Şanlıurfa's settlements carry a sect label against **0.2% of
+   Kastamonu's**.
+3. **Its terms of service forbid precisely this use, in as many words** — and the clause that bites
+   is the retrieval one, not the commercial one, so Anita's 2026-09-08 *"im not gonna make this map
+   commercial, so i dont care"* does not dispose of it. See *The terms* below.
+
+**Anita ruled it out on 2026-09-08** — *"i'd rather not use this data if they dont want anyone
+recreating it"* — **so do not write to Nişanyan and do not build from it.** The scratch dump was
+deleted. What follows about it is kept because it is the best description anywhere of what that
+database contains, and because the next agent shown that map will otherwise redo all of it.
+
+1. **The source exists and is technically wide open** — `nisanyanyeradlari.com` (Sevan Nişanyan's
+   *Index Anatolicus*), 56,382 Türkiye settlements, a **community** field per settlement with 77
+   categories, point coordinates on all but three, and an unauthenticated tRPC API.
+2. **It publishes no magnitude at all**, and its coverage is **inversely correlated with the thing
+   being mapped** — 87.6% of Şanlıurfa's settlements carry a sect label against **0.2% of
+   Kastamonu's**.
+3. **Its terms of service forbid precisely this use, in as many words** — and the clause that bites
+   is the retrieval one, not the commercial one, so Anita's 2026-09-08 *"im not gonna make this map
+   commercial, so i dont care"* does not dispose of it. See *The terms* below. **This is a
+   §14-opening item and it is Anita's call, not an agent's.**
+
+### The map Anita found, and what it is
+
+*Türkiye'de Dinler — Mezhepler Bazında, 2024*, © Bilal Selim Filiz & Sevan Nişanyan. Its legend
+claims a national partition: **86.9% Sunni (71.2 Hanafi, 15.7 Shafi'i), 12.2% Alevi (11.1
+Alevi-Bektashi, 1.1 Nusayri), 0.5% Shia-Jaafari, 0.3% Christian (Syriac, Armenian and Greek), 0.1%
+Yazidi**, with the footnote that 80–90% of the population is religious.
+
+**Those percentages are the authors' own and no survey supports the headline.** KONDA's large
+surveys put self-identified Alevis at **4–5.7%** (5.73% for *Milliyet* in 2007, 5% in 2018, 4% in
+2021, all as reported in the Turkish press rather than read at source here). The Alevi
+organisations' own figure is **12.5 million**, about 15%. The map's 12.2% sits at the community end
+of a range that spans a factor of three. **It is not a contradiction so much as two different
+quantities**: the map counts *settlements of origin*, self-identification surveys count *people who
+say so now*, and spec §3.1 says pick one. The map she found is not on the `basis` this map uses for
+almost every other country.
+
+**And the green is a default, not a measurement.** The unlabelled majority of the inventory is
+painted Hanafi, and plain `Kürt` with no sect is painted Shafi'i. Both are authorial rules, and
+they are how a partition gets printed from a source that contains no partition.
+
+### The database, seen with my own eyes
+
+The site is a SvelteKit app over tRPC at `/api/trpc`, no auth, no key, no rate limit encountered.
+`location.advancedSearch.getSelectValues` returns the whole controlled vocabulary and
+`location.getLocations` returns records. `location.getMetrics` says **70,079 locations, 56,382 of
+them in Türkiye, last updated the same day.**
+
+**`skip` is a PAGE INDEX, not a record offset.** Passing 250 returns nothing and reports
+`totalCount: 0`, which reads exactly like a wall and is not one. That cost one wasted pass here.
+
+A record carries `name`, `locationType`, `subdivisions` (country/province/district/partOf),
+`coordinates`, `oldNames` with dates and sources, free-text `note`, `tribes`, and the field that
+matters:
+
+```
+"communities": {"before": {"items": [...], "isPartial": false},
+                "after":  {"items": [...], "isPartial": false}}
+```
+
+`before` is roughly 1900, `after` is today. The 77 categories are **explicitly religio-ethnic where
+it counts** — `Alevi Kürt`, `Alevi Türk`, `Zaza-Alevi`, `Arap Alevi` (Nusayri), `Kürt-Sünni`,
+`Kürt-Hanefi`, `Zaza-Sünni`, `Sünni Türk`, `Arap Sünni`, `Êzidi`, `Yarsan (Ehl-i Hak)`, `Süryani`,
+`Ermeni`, `Rum Ortodoks`, `Yahudi`, `Pomak` — alongside bare ethnonyms that say nothing about sect
+at all (`Türk`, `Kürt`, `Çerkes`, `Laz`, `Manav`, `Yörük`, `Türkmen`).
+
+**The historical layer is the strongest thing in it and the map cannot use it.** `before` holds
+**2,673 Armenian settlements, 1,779 Greek Orthodox, 377 Syriac, 193 Bulgarian Orthodox, 111
+Yazidi**; `after` holds **2, 4, 26, 0 and 26** of the same. That is 1915 and 1924 rendered as a
+table. It is also 1900, which is not a religion map of a living country.
+
+### What the coverage actually looks like — 53,920 inhabited settlements
+
+Counted over the settlement types that hold people (`köy`, `mahalle`, `merkez mahalle`,
+`bağlı birim`, `mezra`, `belediye`, `ilçe merkezi`, `şehir`, `yayla`):
+
+| | settlements | share |
+|---|---:|---:|
+| any present-day community label | 30,853 | 57.2% |
+| **a label that names a religion or sect** | **19,200** | **35.6%** |
+| an Alevi label | 3,820 | 7.1% |
+| an Alevi label alongside a non-Alevi one | 253 | |
+| flagged `isPartial` | 1,865 | |
+
+**Two thirds of the country's settlements have no sect attached, and the two thirds are not
+scattered at random.** By province:
+
+| province | settlements | sect-labelled |
+|---|---:|---:|
+| Şanlıurfa | 2,306 | **87.6%** |
+| Diyarbakır | 1,611 | 76.2% |
+| Erzurum | 1,445 | 68.9% |
+| Sivas | 1,624 | 66.9% |
+| Ankara | 1,054 | 14.2% |
+| Samsun | 1,492 | 11.5% |
+| Konya | 1,056 | 10.8% |
+| **Kastamonu** | **1,833** | **0.2%** |
+
+**That is the disqualifying finding, and it is not a resolution problem.** The inventory records a
+sect where the sect is *marked* — the Kurdish southeast, the Alevi belt from Sivas to Tunceli — and
+records a bare ethnonym in the Sunni-Turkish heartland, where being Hanafi is not a fact worth
+noting. This is entirely rational for a place-names scholar and fatal for a dot map: the
+missingness runs inversely to the variable. Drawing the labelled part and greying the rest, which is
+China's shape (§14.7, `unknown`), would render **Kastamonu 99.8% grey and Şanlıurfa 12% grey** —
+a map of where Nişanyan wrote something down. `unknown`'s own admission test in `branches.py` is
+*"the source COUNTED these people"*, and this source counts nobody.
+
+The per-province Alevi settlement counts do **corroborate** independently, which is worth recording
+because it says the data is good even though the coverage is not. Against the aleviforum
+compilation quoted by Özcan Öğüt: Sivas 553 here / 534 there, Tunceli 361 / 388, Erzincan 330 / 317,
+Tokat 247 / 225, Çorum 223 / 211, Amasya 131 / 113.
+
+### The terms — the actual blocker
+
+`nisanyanyeradlari.com/terms-of-service`, verbatim:
+
+> "The Content and Marks are provided in or through the Services "AS IS" for your **personal,
+> non-commercial use only**."
+
+> "No part of the Services and no Content or Marks may be copied, reproduced, **aggregated**,
+> republished, uploaded, posted, publicly displayed, encoded, translated, transmitted, distributed,
+> sold, licensed, or otherwise exploited **for any commercial purpose whatsoever, without our
+> express prior written permission**."
+
+And the **first** listed prohibited activity:
+
+> "**Systematically retrieve data or other content from the Services to create or compile, directly
+> or indirectly, a collection, compilation, database, or directory without written permission from
+> us.**"
+
+**The third quote describes a religiondots country build exactly, and it carries no commercial
+qualifier.** That matters, because Anita's call of 2026-09-08 — *"im not gonna make this map
+commercial, so i dont care"* — retires the first two quotes as blockers for this project and
+explicitly says not to let a no-commercial clause rule a source out. It does not reach the third.
+This is not the usual ambiguity where a licence is silent and a robots.txt is permissive; it is a
+specific prohibition of the specific act, whatever the act is for.
+
+The terms name **`info@nisanyansozluk.com`** for permission requests, and the site's own developer
+announced it as *"reklamsız, bedava, herkese açık"* — ad-free, free, open to everybody — so the
+boilerplate and the intent may well not agree. **Finding out which is a message, not a guess.**
+
+### What was pulled, and what happened to it
+
+A full province-by-province dump ran before the terms were found: 56,363 of the 56,382 records,
+in the session scratchpad only. **Anita ruled the source out the same day and it was deleted.**
+Nothing was ever written into the repo. The coverage figures above were computed from it before
+it went, which is why they can be quoted; nothing else from it survives.
+
+### The build this would have been, kept only as a rejected design
+
+Written before Anita's call and left standing because it is the shape any *future* private
+settlement inventory should be used in, not because this one will be. **Never the Filiz map's
+shape**: its national partition is authored and its default fill is an assumption, and reproducing
+either would put the map's largest unmarked claim on screen. The alternative was placement-only,
+which is §14 rule 1's own carve-out — *"never estimate a magnitude a source does not publish; refine
+placement only"* — a published magnitude at its own geography, the inventory used only to decide
+where inside a region the dots sit, `derived` throughout. **Moot now, and the Diyanet route above is
+better anyway**, because its magnitude is the state's own rather than a survey's.
+
+### The Diyanet source, table by table
+
+**`Türkiye'de Dinî Hayat Araştırması`, Diyanet İşleri Başkanlığı, Ankara 2014.** 293 pages. The
+Presidency's own foreword says it was carried out *"with the contributions of the Turkish
+Statistical Institute"* and names the two presidents; the methodology chapter is TÜİK's in style and
+in substance.
+
+- **Fieldwork** 15 May to 20 September 2013, CAPI on tablets, face to face.
+- **Universe** everyone 18+ in households inside Türkiye. Institutional population (dormitories,
+  hotels, care homes, hospitals, prisons, barracks) excluded, and **settlements too small to yield a
+  sample cluster were excluded from the frame** — small villages, *oba*, *mezra*.
+- **Design** three-stage stratified cluster. 2,019 clusters (1,330 urban, 689 rural), 20 households
+  per urban cluster and 16 per rural, one eligible adult per household drawn at random. Target
+  37,624 households; **21,632 persons achieved**.
+- **Frame** the Ulusal Adres Veri Tabanı of February 2013, the same address base ADNKS runs on.
+- **Strata** İBBS-1's twelve regions crossed with urban/rural at a 20,000 threshold.
+- **Weighting** inverse selection probabilities, non-response correction, then integrated
+  calibration to projected populations at the midpoint of fieldwork.
+- **Stated estimation level**, in its own words: *"the sample size was calculated to produce
+  estimates for Türkiye total, Türkiye urban/rural, and İBBS-1 region totals."* **Twelve regions is
+  the source's own ceiling, not a choice made here.**
+
+**Table 4 — `Ameli mezhep mensubiyetine göre kişi oranı (İBBS, 1. Düzey)`, page 42.** Percentages of
+those who answered Islam at Q10, which is 99%+ of the sample. Columns are Hanefi, Şafi, Maliki,
+Hanbeli, Caferi, Diğer, Hiçbiri, Bilmiyorum, Cevap vermeyen. Transcribed off the page by word
+position, and **every row sums to 100 within the report's own rounding note**:
+
+| İBBS-1 | Hanefi | Şafi | Maliki | Hanbeli | Caferi | Diğer | Hiçbiri | Bilmiyorum | Cevap vermeyen |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| TR Türkiye | 77.5 | 11.1 | 0.0 | 0.1 | 1.0 | 0.8 | 6.3 | 2.4 | 0.9 |
+| TR1 İstanbul | 81.1 | 10.1 | 0.0 | 0.1 | 2.1 | 0.7 | 2.9 | 1.8 | 1.2 |
+| TR2 Batı Marmara | 71.8 | 1.9 | - | - | 0.4 | 0.5 | **20.8** | 3.7 | 0.9 |
+| TR3 Ege | 74.2 | 5.9 | 0.1 | 0.1 | 0.7 | 1.1 | 11.9 | 5.0 | 1.1 |
+| TR4 Doğu Marmara | 86.9 | 3.5 | - | 0.0 | 0.9 | 0.3 | 5.2 | 2.7 | 0.6 |
+| TR5 Batı Anadolu | 88.5 | 2.7 | 0.1 | - | 0.7 | 1.0 | 3.2 | 2.4 | 1.5 |
+| TR6 Akdeniz | 81.0 | 7.6 | - | 0.0 | 0.9 | **2.0** | 6.1 | 2.0 | 0.4 |
+| TR7 Orta Anadolu | 91.1 | 1.2 | 0.0 | - | 0.5 | 0.2 | 6.5 | 0.3 | 0.2 |
+| TR8 Batı Karadeniz | 82.3 | 1.0 | 0.0 | 0.1 | 0.7 | 0.4 | 10.8 | 3.1 | 1.5 |
+| TR9 Doğu Karadeniz | 92.1 | 0.2 | - | - | 0.1 | 0.3 | 6.4 | 0.6 | 0.5 |
+| TRA Kuzeydoğu Anadolu | 55.7 | 35.2 | - | 0.2 | **4.6** | 0.1 | 2.9 | 1.4 | 0.1 |
+| TRB Ortadoğu Anadolu | **45.7** | **48.7** | - | - | 0.3 | 1.3 | 1.5 | 2.1 | 0.4 |
+| TRC Güneydoğu Anadolu | 53.6 | 42.0 | 0.0 | 0.1 | 0.3 | 0.3 | 2.2 | 1.1 | 0.4 |
+
+**What that draws, and none of it is anywhere else on this map.** `branches.py`'s own note on
+`islam.sunni` says the madhhab is *"almost never enumerated: a census that asks about religion at
+all normally stops at 'Muslim'."* This enumerates it. **Ortadoğu Anadolu is the one region in the
+country where Shafi'i leads Hanafi**, 48.7 to 45.7, and Güneydoğu is 42.0 and Kuzeydoğu 35.2 — the
+Kurdish provinces, drawn from the state's own numbers rather than from an ethnic inference. And
+**Caferi peaks at 4.6% in Kuzeydoğu Anadolu**, which is Iğdır and Kars, the Azeri Shia border.
+
+**Two internal checks that pass.** `Diğer` peaks at 2.0% in Akdeniz — Hatay and Adana, which is
+where the Nusayris are, and Nusayri is option 6 on the card but absent from the published columns,
+so it has been folded into `Diğer`. And `Şafi` is near zero across the whole Black Sea and Aegean
+and enormous in the southeast, which is the distribution every account of Turkish Islam describes.
+
+**The disclaimer the report prints under its own tables** is worth carrying: *"NOT 1: in some tables
+and graphs the totals may not give 100 because of rounding. NOT 2: the information is given
+provisionally, for the pre-print."*
+
+**Provenance is the one loose end.** `diyanet.gov.tr` no longer serves it. The 293-page file used
+here is `ceidizleme.org/ekutuphaneresim/dosya/914_1.pdf`, complete and with a valid `%%EOF`; the
+Ankara University open-courseware copy that also turns up in search is **a 23-page summary deck, not
+the report**, and does not contain Table 4. Worth finding a state-hosted copy before citing it as
+`source`.
+
+### The hole in it, and the questionnaire proves it rather than implies it
+
+**There is no Alevi box.** The report reprints its own instrument, and question 11 reads:
+
+> **11. Kendinizi hangi mezhebe ait hissediyorsunuz?** — Hanefi (1), Şafi (2), Maliki (3), Hanbeli
+> (4), Caferi (5), **Nusayri (6)**, Bilmiyorum (7), Diğer (belirtiniz…) (98), Hiçbiri (90), Cevap
+> vermek istemiyorum (99).
+
+Four Sunni schools, Ja'fari, Nusayri, and nothing else. **The word `Alevi` does not appear once in
+293 pages** — searched, zero hits, against 15 pages carrying `Hanefi`. An Alevi respondent's only
+honest answers are *Hiçbiri*, *Diğer*, *Bilmiyorum* or a refusal.
+
+**And the regional pattern says those answers did not go where you would expect either.** `Hiçbiri`
+is 20.8% in Batı Marmara and 11.9% in the Aegean, but only **6.5% in Orta Anadolu** — the region
+holding Sivas and Yozgat, which is the Alevi heartland by every settlement count there is. So
+`Hiçbiri` is not a proxy for Alevism; it reads much more like *"Muslim, no school"*, and there is no
+way to separate the two inside this table. **Do not model one out of the other.** That is §14 rule 1
+exactly, and §14.12 already found that a fractional split over a bucket like this fails in a
+predictable direction.
+
+**So a Türkiye built on this source renders with no Alevi dots at all**, in the country that has
+more Alevis than the rest of the world combined, and where `alevism` is already a node on the tree
+carrying 25,657 people from England and Wales. **That is §14.2's second risk in its purest form —
+getting a community wrong by omission — and it is Anita's call, not an agent's.** The mitigation
+that does not overclaim: keep `Hiçbiri` on the parent `islam` (Russia's precedent, §6.3a, where
+*"Muslim, neither Sunni nor Shia"* stays on `islam`) and put `Bilmiyorum` and `Cevap vermeyen` on
+`unknown`, so **roughly 9% of Türkiye draws as Muslim-with-no-school-stated rather than as Hanafi**,
+and the note says in plain words that the state's own card had no Alevi option. The space is left
+visible without a number being invented for it.
+
+### The other routes, checked and ranked below the Diyanet
+
+- **KONDA** — the route §11r and §12 both named. Its self-identified Alevi share is **5.73% (2007,
+  for *Milliyet*), 5% (2018), 4% (2021)**, all read in the Turkish press rather than at source. It
+  **does have the Alevi box the Diyanet lacks**, which is exactly what would fix the hole above, and
+  its regional tables were not located. **This is the one thing left worth chasing for Türkiye.**
+- **World Values Survey** — `Q289CS` is a country-specific denomination list and Türkiye's plausibly
+  carries Alevi, but the Türkiye samples are ~1,200–2,400 against İBBS-1's twelve regions, so the
+  cells are 100–200 and it cannot carry a regional magnitude. Free, and worth opening only to see
+  whether the Alevi category exists.
+- **European Social Survey** — Türkiye is in rounds 2 and 4 only, `rlgdnm` is a coarse
+  world-religions list, and 2008 is the last of it.
+- **Peter Alford Andrews and Rüdiger Benninghaus, `Ethnic Groups in the Republic of Turkey`**
+  (Reichert, Wiesbaden 1989; volume 2 with a village index, 2002) — the academic compilation
+  underneath most of this field, **Kurdish and Alevi villages specifically** in volume 2, much of it
+  contributed by the communities themselves. It is a printed book from a commercial academic press,
+  it is 1989, and it has no magnitude either. Recorded so nobody has to find it twice.
+- **The 1927–1965 census religion tables**, by province. Real, state-published, and describing a
+  non-Muslim population that the 1955 pogrom and the 1964 expulsions ended. §11r's judgement stands.
+
+### What Nişanyan actually used, since that was the question
+
+**Not what the ethnic field is built on.** The database attaches citations to `oldNames`, not to
+`communities` — 411 distinct works behind 66,718 name citations, and **no per-record source on the
+community attribution at all**. The bibliography is a toponymy bibliography: the 1928 *Köylerimizin
+Adları*, the General Staff 1:200,000 sheets of 1909–27, Kiepert's *Karte von Kleinasien*, the
+Ottoman *tahrir* and *temettü* registers, the vilayet *salnames*, Eprigyan's Armenian geographical
+dictionary of 1902–07, the Armenian National Central Administration report of 1872–73, the 1893
+Tiflis Transcaucasus tables, and DİE's censuses 1940–2000.
+
+**Every one of those is historical**, which is the point: they are what `communities.before` rests
+on, and they are why the `before` column is so much better evidenced than `after`. The present-day
+attribution is Nişanyan's own synthesis from fieldwork, community publications and user
+contributions, uncited record by record. **Even with permission it would have been an uncited
+compilation**, which is worth knowing and did not change the answer.
+
+### Retired here
+
+- **A statistical office is not the only state publisher of religion.** §11r asked TÜİK, asked the
+  census, found nothing and closed the country. The data was at the **religious affairs
+  directorate**, and TÜİK had run the fieldwork for it. **Before closing any country on "the office
+  does not publish it", ask which ministry would.** Türkiye's Diyanet, Egypt's Awqaf, and any state
+  with an established church or an official religious body are the same shape.
+- **`skip` is a page index** on the Nişanyan API. Anything else reads as a wall.
+- **The UNSD oracle has no row for Türkiye at all**, confirmed again this session. It proves that no
+  census tabulation was forwarded, and it is silent about everything else the state prints — which
+  is exactly the gap the Diyanet report fell into.
+- **Do not re-derive the census side.** §11r did that properly and nothing has moved: 1965 is still
+  the last census whose religion tables were printed. What was wrong was the sentence that
+  generalised from the census to the state.
+- **Nişanyan is closed by Anita's call**, not by an unanswered question. Do not write to him.
+
+---
+
+## 11ad. LAPOP's AmericasBarometer — 2026-09-08. Nine countries §11x closed are buildable after all, the provincial cut is validated against three censuses, and the ANSWER SET rather than the sample is what limits it
+
+Anita, with the file in `~/Downloads`: *"LAPOP data hopefully for many coutnries in latin
+america?"* It is, for nine of them. **§11x closed Panama, Guatemala, Honduras, El Salvador,
+Costa Rica and Ecuador on the finding that no census in any of them asks religion, and that
+finding still stands** — this does not reopen the censuses. It is a different tier arriving
+for the same countries.
+
+`Grand_Merge_2004-2023_LAPOP_AmericasBarometer_v1.0_FREE.dta`, 62 MB zipped and **1.12 GB
+open, 301,156 respondents × 1,408 variables**, 26 countries, ten waves. Extracted to
+`data/raw/lapop/`, which is gitignored like the rest of `data/`. Read the metadata with
+`pyreadstat.read_dta(..., metadataonly=True)` and the columns you want with `usecols=` — the
+seventeen that matter come out in about a minute and slim to a 5.8 MB feather. A full read is
+never necessary and costs several GB of RAM.
+
+### What it carries
+
+**Religion is `q3c`, with `q3cn` as the second instrument, and it is only asked from 2010.**
+The 2004–2008 waves have nothing, and **the 2021 wave has neither religion nor geography** —
+it is the COVID phone round. So the usable span is 2010, 2012, 2014, 2016, 2018 and 2023,
+six waves, not ten.
+
+Fourteen substantive categories, and the three that matter here are separate answers:
+
+```
+  1 Católico | 5 Evangélica y Pentecostal | 2 Protestante, Protestante Tradicional
+  4 Ninguna (cree en un Ser Superior pero no pertenece a ninguna religión)
+  11 Agnóstico o ateo | 12 Testigos de Jehová | 6 Mormones | 7 Religiones Tradicionales
+  3 Religiones Orientales | 10 Judío | 77 Otro
+  1501 Espírita Kardecista (BR) | 2701/4113 Musulmán | 2702 Hindú (SR) | 4114 Ortodoxo (CA)
+```
+
+**Catholic, Evangelical/Pentecostal and traditional Protestant being three separate options is
+the reason this file is worth having** — that is the split that carries Central America, and
+it is finer than several censuses already on this map. And **category 4 against category 11 is
+exactly §6.3a's grey ramp**: Mexico's census draws the same distinction in its own words,
+`Sin adscripción religiosa (creyente)` against `Ateos/Agnósticos`.
+
+**Geography is `prov`, which is ADM1 and is named.** `municipio` exists and is **not a
+partition** — it is the ~50 sampled municipalities per country, a PSU list, and it must not be
+mistaken for a finer tier. `estratopri` is LAPOP's own design stratum (4 to 8 per country),
+which is the level the survey is actually *designed* to represent; ADM1 is finer than the
+design and is what the validation below is about.
+
+### The nine countries, pooled 2010–2023, `weight1500`
+
+| code | country | n | ADM1 in file | Catholic | Evang+Pent | trad. Prot | none | agn/ath |
+|---|---|---:|---:|---:|---:|---:|---:|---:|
+| `gt` | Guatemala | 8,919 | **22 of 22** | 52.0% | 34.5% | 5.4% | 4.9% | 0.6% |
+| `hn` | Honduras | 9,293 | *18, see below* | 45.5% | 29.7% | 9.6% | 10.2% | 0.4% |
+| `sv` | El Salvador | 9,063 | **14 of 14** | 46.7% | 29.1% | 8.0% | 12.4% | 0.4% |
+| `do` | Dominican Republic | 8,904 | 29 of 32 | 53.2% | 20.2% | 5.1% | 17.7% | 0.3% |
+| `ec` | Ecuador | 7,387 | 23 of 24 | 75.5% | 11.0% | 2.6% | 6.0% | 0.7% |
+| `ht` | Haiti | 7,252 | **10 of 10** | 49.0% | 6.7% | **26.9%** | 8.0% | 0.6% |
+| `pa` | Panama | 6,105 | 10 of 15 | 64.4% | 21.1% | 3.3% | 6.7% | 0.5% |
+| `cr` | Costa Rica | 5,903 | **7 of 7** | 63.1% | 13.8% | 9.5% | 9.1% | 1.5% |
+| `uy` | Uruguay | 4,318 | **19 of 19** | 37.0% | 8.8% | 2.7% | 32.4% | **16.0%** |
+
+Colombia and Paraguay are also in the file and are **not on this list**: both were claimed by
+another session on the same day, and Paraguay came out of CPV2002, which beats a survey. Eleven
+more LAPOP countries are already drawn from their own censuses. Bolivia, Chile, Argentina and
+Venezuela appear only in the pre-2010 waves and therefore carry **no religion at all**.
+
+**Uruguay is the outlier worth noticing**: 48% of it is on the grey ramp, split two ways, and
+nothing else in the Americas looks like that.
+
+### The validation, which is §14.16's test run three times
+
+**Before drawing a survey's sub-national cut, check it against a census margin for a variable
+both carry.** Here the variable is religion itself, because three LAPOP countries are already
+drawn from a census. Provincial-share correlations, LAPOP pooled against the census:
+
+| | Mexico (32 states, INEGI 2020) | Peru (25 depts, INEI 2017) | national ratio |
+|---|---:|---:|---|
+| Catholic | **+0.918** (spearman +0.897) | **+0.692** (+0.773) | 1.00 / 0.99 |
+| Evangelical + Protestant | **+0.819** (+0.828) | **+0.776** (+0.702) | 0.82 / 0.85 |
+| none + agnostic/atheist | **+0.863** (+0.811) | — | 0.90 / 1.10 |
+| Jehovah's Witnesses | +0.263 | **−0.214** | noise |
+| Latter-day Saints | +0.115 | +0.511 | noise |
+
+**Suriname is the sharp one**, because Hinduism and Islam are their own category on both sides
+and both are strongly localised — this is the Qinghai/Ningxia failure mode §14.16 found in
+CGSS, tested where it would show:
+
+| | pearson | spearman | national ratio |
+|---|---:|---:|---:|
+| Hindu | **+0.981** | +0.952 | 0.98 |
+| Muslim | **+0.955** | +0.891 | 0.89 |
+
+Nickerie reads 43.2% Hindu in the census and 51.6% in LAPOP; Brokopondo reads 0.4% and 0.0%.
+**The survey finds a minority concentrated inside one district, at the right level, in the right
+district.** §14.16's lottery does not happen here, and the reason is structural rather than
+lucky: LAPOP runs 1,500 interviews in a country of under a million, against CGSS's national
+sample spread over 1.4 billion people.
+
+> **So the provincial cut is sound for any category that is a real share of a province, and it
+> is noise for any category under about 1%.** Jehovah's Witnesses at 0.5%–1.2% national is the
+> boundary and it fails on both sides of it: Mexico +0.26, Peru −0.21.
+
+### The finding worth the most: what limits this source is its ANSWER SET, not its sample
+
+Suriname again, and the two rows that were left out of the table above:
+
+| | census | LAPOP | ratio | spearman |
+|---|---:|---:|---:|---:|
+| Traditional Religion + Others | 5.8% | 1.2% | **0.21** | **+0.973** |
+| Christianity | 40.7% | 61.0% | **1.50** | +0.864 |
+
+**The spatial ordering of traditional religion is near-perfect and its level is wrong by a
+factor of five, and the missing people turn up in Christianity.** Sipaliwini is 26.8% in the
+census and 3.2% in LAPOP, and its Christian share reads 2.37× the census. LAPOP's card has no
+Winti option, so Maroon respondents answer the nearest thing on it. That is §3.1a exactly: the
+same basis, the same population, incompatible answer sets.
+
+**This is the general limit, and it decides how the nine get drawn.** LAPOP is an instrument
+built to measure Latin American Christianity and it does that well. Every non-Christian
+category in it is a residual of a card that never offered the right word:
+
+- **Haiti's 4.4% `Religiones Tradicionales` is a self-identification floor.** Catholic and
+  Vodou are not exclusive identities in Haiti and the question forces a single answer, so this
+  measures *what people put first on a card*, not who practises. Whether the map should draw
+  4.4% or something else needs a Haitian source and has not been researched here.
+- **Guatemala's 0.22% Maya spirituality is small enough to be inside the noise floor the
+  validation just established**, in a country that is 43.6% indigenous by its own 2018 census.
+  It may also be roughly right; nothing in this file can tell the two apart, which is the
+  problem.
+- `Religiones Orientales no Cristianas` is one bucket for everything from Buddhism to Hinduism,
+  and it never exceeds 2% anywhere.
+
+> **THE RULE, Anita 2026-09-08: for non-Christian religions, supplement from somewhere else.
+> LAPOP supplies the Christian split and the grey ramp; it does not supply the tail, and a
+> country drawn from it alone is drawn with its tail missing rather than with a small tail.**
+
+Leads for the supplement, **none of them verified yet, listed so the next session starts from a
+list rather than from nothing**: INEC Ecuador published a religious-affiliation module around
+2012 outside the census; Uruguay's INE has carried a religion question on a household survey;
+Pew's 2014 *Religion in Latin America* is national-only but has a much deeper card and is the
+obvious check on the tail's *size*; Latinobarómetro and WVS/EVS are the same shape as LAPOP and
+would mostly replicate its blind spot rather than fix it. The Nicaraguan precedent (§9ay) is the
+encouraging one: the office printed 17 units and served 153, and nobody had asked.
+
+### The geography gotchas, and one of them is disqualifying
+
+**`prov` in the grand merge carries ONE flattened value-label set across every country-year.**
+Where a country renumbered its provinces between waves, the label attached to a code is
+whichever wave's label won. This is invisible and it bites four ways:
+
+1. **Honduras is not usable from this file as it stands.** 22 codes for 18 departments, with
+   **Choluteca, Copán, Olancho and Valle each appearing under two codes in the same waves**.
+   Worse, the sample sizes do not match the country: the largest code is labelled `Copán` and
+   holds **17.9% of the national sample**, while `Francisco Morazán`, the department containing
+   Tegucigalpa and about a fifth of Honduras, holds **4.7%**. Something is shifted, and joining
+   on either the code or the label would produce a map that looks fine and is wrong.
+   **Reconcile against the per-wave releases or LAPOP's country questionnaires before drawing
+   Honduras.** Everything else in its column above is national and stands.
+2. **Two codes have an empty label and are identifiable only by position** in the alphabetical
+   run: Peru `1117` (n=47) is **Madre de Dios**, Uruguay `1407` (n=55) is **Flores**. Guyana's
+   ten codes are *all* blank, which does not matter because Guyana is drawn from its census.
+3. **Unsampled units are real holes, not zeroes.** Ecuador `920` **Galápagos** is never sampled
+   in any wave (0.2% of the country). Panama has 10 of its 15 first-level units: the comarcas
+   **Guna Yala** and **Emberá** are absent, and **Panamá Oeste**, split off in 2014, is still
+   inside `708 Panamá`. The Dominican Republic has 29 of 32.
+4. **Trinidad, the Bahamas and Jamaica change code scheme between waves** (Trinidad is `2501`
+   in 2014 and `251` in 2023). Key on the label, not the code — except in Honduras, where the
+   label is the broken half.
+
+**And the name join to any boundary file needs aliases.** Mexico: LAPOP says `Distrito
+Federal`, `Estado de México`, `Coahuila`, `Michoacán`, `Veracruz` where INEGI says `Ciudad de
+México`, `México`, `Coahuila de Zaragoza`, `Michoacán de Ocampo`, `Veracruz de Ignacio de la
+Llave` — **five of thirty-two**. Peru: `Callao` against the census's `Prov. Constitucional del
+Callao`. A join that silently drops five states passes every total check, per
+[[reference_name_join_wrong_neighbour]].
+
+### Pooling, and which wave the level belongs to
+
+§14.16's rule applies unchanged: **the level follows the denominator's vintage, not the newest
+wave.** Catholic share falls in every country at once across the span:
+
+| | 2010 | 2012 | 2014 | 2016 | 2018 | 2023 |
+|---|---:|---:|---:|---:|---:|---:|
+| Guatemala | 55.3 | 55.9 | 49.0 | 51.4 | 50.5 | 49.8 |
+| El Salvador | 51.5 | 47.1 | 44.9 | 48.9 | 45.4 | 42.1 |
+| Dominican Republic | 60.4 | 56.4 | 51.7 | 54.9 | 49.2 | 46.5 |
+| Ecuador | 79.7 | 80.4 | — | 74.3 | — | 67.6 |
+| Panama | 68.6 | 61.1 | 73.6 | — | — | 54.3 |
+
+Pooling all six waves buys the province-level precision the validation above depends on and
+centres the level around 2016. **A single wave is 1,500 people over 22 departments and cannot
+carry ADM1 at all** — that is 68 respondents a department, and it is why this source is only
+worth having pooled. The cost is a Catholic share several points above what 2023 alone would
+say, and it belongs in `note_public` in those words.
+
+### Marking a LAPOP-only country — Anita's call, 2026-09-08
+
+*"in general for any coutnries that just lapop, we should mark that as countries that would
+probably benefit a lot from further refinement."*
+
+**A country drawn from LAPOP alone is the thinnest tier on this map** and must say so on its
+own face rather than only here. Concretely, for each of the nine when it is built:
+
+- **`tier` is not `measured`.** These are survey estimates read at a geography the survey was
+  not designed for; `derived` is the honest tier and it draws desaturated, which is the whole
+  point of §7.
+- **`gap` names the tail**, in the plain-text voice `countries.py` requires, no em dashes and
+  no markup. Something of the shape *"folk and non-Christian practice, which the survey's
+  answer card does not offer"*.
+- **`note_public` says it is a survey, at what n, pooled over which years, and that the
+  non-Christian tail is a floor.** Not a hedge sentence; the specific numbers.
+- **The queue keeps a standing list of them** so the refinement is a job somebody can pick up
+  rather than a regret, and a country leaves that list only when a second source has actually
+  been wired into it.
+
+**None of the nine is built yet.** This section is the scouting record and the data is on disk.
+
+---
+
+## 11ae. Paraguay DRAWN, and South America closed properly — 2026-09-08. Anita asked for Colombia, Venezuela or Ecuador and all three are dead; the country next to them had the longest religion list on the map
+
+Anita: *"could you look into adding mroe countries to religiondots? maybe some south american
+ones like colombia venezuela or ecuador"*.
+
+**All three are negative, at three different depths, and two of those negatives are new.** The
+continent's one live country was the one nobody had opened.
+
+| | state before | state now |
+|---|---|---|
+| **Ecuador** | closed in §11x on the REDATAM variable dictionary | unchanged and correct: `redecu` serves six bases, 98-100 person variables, no religion |
+| **Venezuela** | **"unchecked"** in §9k's table, for the life of the project | **CLOSED.** Its own live REDATAM, base `CPV2011`, **67 person variables and none is religion** |
+| **Colombia** | "OUT, no religion in the census" (§9k), on reputation | **CONFIRMED from DANE's own dictionary**: CNPV 2018 = 116 variables, Censo 1985 = 71, GEIH 2023-26 = 760, none religion-shaped |
+| **Paraguay** | "§11t resolved the row and never opened the office" | **DRAWN. 229 districts, 54 categories, exact partition.** `sources/py.md` |
+
+### Venezuela, checked at last
+
+`sources.md` has carried Venezuela as *unchecked* since §9k. It is checked now.
+`redatam.ine.gob.ve` is alive and the reason a probe misses it is that **the root serves the
+XAMPP default page**; the app is at `/redatam/`, whose iframe names `/vencgibin/`. One base,
+`CPV2011`. Its `Dictionary?ITEM=DICPOB` returns the person entity in full: **67 variables**,
+covering birthplace, nationality, indigenous people, nine disability items, migration,
+education, marital status and fertility, and **not religion**. INE's own 24-page
+`Meta_Persona.pdf` defines every person question and has none either.
+
+**The false positive to know by sight**: `Comunidad religiosa` appears in the VIVIENDA
+metadata, as a *collective dwelling type*. Paraguay's 2022 dictionary produces exactly the
+same hit for exactly the same reason (`sources/py.md` §3). A grep for `religi` finds it in
+both and it is a building, not a person.
+
+### Colombia, and the API that returns a false negative
+
+DANE's NADA catalogue answers *"does any DANE study carry a religion variable"* in a few GETs,
+which is the §11x rule applied to a NADA rather than a REDATAM. Fourteen studies match the
+word; in every one it is help received from religious organisations, book-trade subsectors or
+similar. **The only religion variable in the whole catalogue is in ELCA**, Universidad de los
+Andes' longitudinal panel (~10,000 households, five regions), which is neither official nor
+finer than LAPOP.
+
+> **The trap: NADA's variable API keys on IDNO, not the numeric study id.** `/api/catalog/643/variables`
+> returns `{"status":"failed","message":"IDNO-NOT-FOUND"}` with HTTP 400, which reads exactly
+> like *"this study has no variables"*. The first pass over all fourteen studies reported zero
+> religion variables everywhere, and that was the API refusing the key, not the studies being
+> empty. Use `/api/catalog/DANE-DCD-CNPV-2018/variables`.
+
+### Paraguay, and the one character
+
+Full notes in `sources/py.md`. The two findings that outlive the country:
+
+**§11t's negative was true of the published output and the microdata tabulator is a different
+thing.** INE's 2002 library serves 52 national tables and 20 district ones; religion is in
+exactly one of them, CUADRO P11, national with an urban/rural split and four categories. The
+REDATAM instance has `P17` itself at 229 districts with **54 categories** - fifteen named
+Protestant bodies, three Orthodox cells, five syncretic `Indigena + church` codes, Umbanda,
+Reyukai and Shinto. That is the longest religion list on this map, ahead of Austria's 31.
+
+**`<iframe>` is not `<frame>`, and that is what hid it.** `prod.redatam.org/binpry/RpWebEngine.exe/Portal?BASE=CPV2002`
+returns 4,611 bytes that look like an empty shell. A frame-walker written for the older R+SP
+servers finds nothing, because those emit `<frame>` and Redatam 7 emits `<iframe>`. **A
+headless browser was launched to prove the deployment was dead, and it proved the opposite** -
+four iframes loading their tempo files perfectly. The instrument was right and the reader was
+wrong. Two further 500s on the same engine also read as a dead host and are neither:
+`FORMAT`/`Submit` missing (`Error 1 en funcion : setOutputFormats`) and posting the form
+without first calling `Portal` to mint the session.
+
+### And the two hosts that answer the same question in opposite directions
+
+`redatam.ine.gov.py` runs **"Redatam Online"**, a SPA whose `config.js` names an
+unauthenticated REST backend: `/redxrest/v1/databases` lists the mounted `.rxdb` files and
+`/redxrest/v1/dictionary/<alias>` returns the whole dictionary as JSON. That is a much better
+interface than the CGI, and it carries **only the 2022 census, which has no religion**. The
+old CGI on CELADE's shared host carries the 2002 census, which does. **The newer, cleaner,
+better-documented endpoint is the one with nothing in it.** Probed for the same backend:
+`prod.redatam.org`, and the Venezuelan, Colombian, Peruvian, Nicaraguan and Dominican hosts.
+None of them runs it.
+
+### Where this leaves the continent
+
+**South America is exhausted.** Brazil, Chile, Peru, Guyana, Suriname and now Paraguay are
+drawn; Bolivia, Colombia, Argentina, Uruguay, Ecuador and Venezuela do not ask the question in
+any census. What is left for those six is the survey tier, and §11ad has already priced it:
+**LAPOP covers Colombia, Ecuador and Uruguay at ADM1 and does not cover Venezuela at all** -
+Venezuela appears only in the pre-2010 waves, which carry no religion. So Venezuela is the one
+country on this continent with no route of any kind currently known.
+
+## 9bh. Solomon Islands wired — 2026-09-08. The finest tier in the Pacific, and the only table on this map that reconciles to the person
+
+Anita, after Vanuatu landed: *"cool! snapping is good. data is interesting :D lets move onto
+solomon islands"*. It is the best of the three Pacific countries drawn this week. Full record
+in `sources/sb.md`; this is what carries forward.
+
+```
+  720,956 people        183 wards, 3,940 each — the finest tier of any Pacific country here
+  16 drawn categories   99.98% drawn
+  SINSO 2019 NPHC, Report Vol 2 Basic Tables, Table P8.3
+```
+
+### The WP File Download plugin, for the third office in three days
+
+`statistics.gov.sb` is WordPress, and its **media library is a decoy**: 455 items, all from a
+2025-26 site rebuild, with no census report among them. The reports are in the same **WP File
+Download** plugin as Fiji (§9bd) and PNG (§11ab), and the way in was a news post linking
+`/download/45/press-releases/921/...` — the plugin's own URL shape. `id=0` then returns the
+whole 330-file library.
+
+**That is three Pacific offices on one plugin now, so it is worth stating as a first move:
+when a Pacific statistics office is WordPress and `wp/v2/media` looks thin, try the WPFD AJAX
+route before concluding anything.** `reference_wpfd_sweep` has the three traps.
+
+**SPC's PopGIS was checked first and is a near miss.** `solomons.popgis.spc.int` is live and
+its config declares a **`p11_religion` dataset**, but the theme is in no indicator tree,
+`GC_listIndics.php` returns an empty list for every theme, and **`GC_coldata.php` answers
+"Unavailable service"** where Fiji's answers with data. So the 2009 religion figures sit behind
+a disabled endpoint on a live host. Recorded because that is a third distinct PopGIS outcome:
+Fiji served the data, Vanuatu has no religion theme at all, and this one has the dataset with
+the door shut.
+
+### THE TABLE RECONCILES TO THE PERSON, WHICH NOTHING ELSE HERE DOES
+
+P8.3's **183 ward rows sum to the printed national row exactly on all eighteen columns**; so do
+the ten province rows; and every ward's own categories sum to its own total. **No tolerance is
+used anywhere in this country.** Against Vanuatu three days earlier, whose published table
+misses its own totals on 41 of 75 rows (§9bg §4), that is worth saying out loud: it is possible,
+and when it does not happen the source is telling you something.
+
+Volume 1's Table 8.3.1, typeset separately, reproduces every figure.
+
+### Parsing it needed the column COUNT, because three better ideas fail
+
+Eighteen right-aligned columns, landscape, and:
+
+1. **a fixed x map fails** — each page sizes its columns to its own widest figure;
+2. **pooling all pages and clustering fails** — that drift merges neighbours, eighteen become
+   seventeen;
+3. **per-page clustering on a gap threshold fails on the last page**, which holds twelve wards;
+   too few samples, and the within-column spread swallows the between-column gaps.
+4. **What works is the one thing known for certain: there are eighteen columns.** Sort the
+   right edges and cut at the seventeen largest gaps. On the full pages that is a 21-point gap
+   against a 7-point spread, so it is not close.
+
+**Generalise this.** Vanuatu (§9bg §3) and this one between them say: rebuild a PDF table from
+word geometry, never text order; anchor the header row rather than a y constant; and when a
+threshold is unreliable, **cut on rank using the known column count** instead of tuning the
+threshold.
+
+**And bound the table.** Page 163 carries the tail of P8.3 *and the whole of P8.4* (ethnicity,
+13 columns), which has **its own `Province` header** — so taking the last header on the page
+anchors to the wrong table and its rows smear the edges until nothing separates. Bound by the
+table's own title above and the next `P8.n` below.
+
+### The join is on the office's own ward id, and the names would have failed
+
+COD-AB's ADM3 **is SINSO's ward layer** (HDX says so) and carries **`SINSO_WID`**. The census
+prints a ward number that restarts inside each province; the id is the province number followed
+by it, padded. **183/183, nothing spare.**
+
+**A name join would have matched 154 of 183**, and this is the good example of why
+`reference_name_join_wrong_neighbour` matters. Twenty-eight misses are orthography — Solomon
+Islands English writes prenasalised stops both ways, so `Mbilua`/`Bilua` and `Ndovele`/`Dovele`
+are the same wards.
+
+> **The twenty-ninth is not a spelling: Isabel ward 02 is `Baolo` in the census and `Havulei`
+> in COD.** Neither name appears on the other side. Every other Isabel ward pairs on both id
+> and name, so it is a renamed ward and not a mispairing — but **a name join would have paired
+> Baolo with whatever was nearest alphabetically and said nothing.**
+
+The witness is the province: OCHA's ADM1 against the census's own province blocks, from two
+organisations, **agreeing on all 183**. Then Kontur at r = 0.897 over 183 wards, which none of
+2,000 random pairings comes near (best 0.27). Three independent confirmations.
+
+### Two new nodes, and one placement that had no good answer
+
+**`christianity.melanesianindependent.cfc`** — the **Christian Fellowship Church**, Silas Eto's
+1960 break with the Methodist mission on New Georgia; his followers called him the **Holy
+Mama**. 16,179 people, **13,629 of them in Western Province**, and **77.2% of Kusaghe ward**.
+Added to the `Locally founded churches` lineage group beside the Maori, Filipino and
+African-instituted churches, which is the same shape exactly: a mission-church breakaway under
+a local prophet, belonging to nothing imported afterwards.
+
+**`indigenous.solomon`** — `Custom Beliefs or Animism`, 4,115 people, 0.57%, and **the clearest
+case on this map of the tier deciding whether something is visible at all**: at province level
+Malaita is 1.2% and the pattern is invisible; at ward level `Waneagu/Taelanasina` is **21.5%**
+and `Tetekanji` on Guadalcanal 21.2%. That is the Kwaio interior and the Weather Coast, the two
+places the missions reached least.
+
+**The South Sea Evangelical Church, 17.3% and the third-largest body, had no home in the tree
+and went to `christianity.evangelical`.** It descends from the **Queensland Kanaka Mission**
+(1886), which evangelised Solomon Islanders working the Queensland cane fields — **the church
+came home with the labour trade**, and Malaita, which sent most of those labourers, is 28.1%
+SSEC against Isabel's 0.4%. So it has no confessional family: not Baptist, Methodist, Reformed
+or Pentecostal, and autonomous since 1964. A named child is impossible because
+`christianity.evangelical` is deliberately not a parent. **The precedent for the node itself is
+Kenya**, whose `Evangelical Churches` cell carries the Africa Inland Church — the same kind of
+body, faith-mission-descended and now autonomous. It is explicitly NOT
+`melanesianindependent`, which is for churches founded outside the missions. In REVIEW.
+
+### Placement: snapping again, plus one lagoon, one atoll and one ward too small to see
+
+**17.1% of Kontur's people fall outside every ward** (higher than Vanuatu's 13%), **99.7%
+within 500 m**, snapped on §9bg's rule; 403 people dropped.
+
+**Two wards stay outliers and both are the grid's blind spot, not the join's fault** —
+`Sulufou/Kwarande` is the **Lau Lagoon, where people live on artificial islands built of
+coral** (2,747 counted, 482 modelled), and `Sikaiana` is an atoll 210 km out (359 against 7).
+A building-footprint model under-detects both. Together 0.43% of the population. Named and
+allowed; more than four would fail the build. **The rule: when a modelled grid loses a unit,
+ask what kind of settlement it is before blaming the join.**
+
+**And `Naha` in Honiara is 0.08 km² with 464 people — smaller than one 400 m hex**, so no
+centroid lands in it. That is the Kontur resolution floor
+(`reference_kontur_resolution_floor`) hitting a single unit. Snapping it to a neighbour would
+put its dots in the wrong ward and dropping it would remove the ward from the map, because here
+the hexes *are* the geography. It gets **its own polygon as a single cell** (§8.2's equal share
+over the unit) and is excluded from the band and the correlation, having nothing to be scored
+against.
+
+### What the map shows
+
+**The mission map of the 1800s, still drawn.** Anglicans took the east and the small islands,
+the Methodists the west, the Catholics Guadalcanal, and the South Sea Evangelicals came home to
+Malaita with the labour trade.
+
+```
+  Isabel 89.1% CoM   Temotu 85.1% CoM   Central 82.3% CoM
+  Choiseul 53.5% United Church          Western 38.8% United, 26.4% SDA, 14.5% CFC
+  Guadalcanal 36.2% Roman Catholic      Malaita 28.8/28.1/24.0 CoM/SSEC/RC, a three-way split
+  Rennell-Bellona 47.8% SDA and 37.3% SSEC — the only province where neither national
+    leader is close to first, and the only Polynesian one
+```
+
+**133 people in the entire country refused the question**, 0.018%, the smallest residual
+anywhere on this map. And the census **names Baha'is (3,104) and Muslims (1,100) as their own
+cells at ward level**, which very few do.
+
+### Still on the table
+
+- The **2009 census** basic tables and national report are open and carry religion at the same
+  ward tier. 2019 is newer; no reason to prefer 2009. Vol 1 prints a 1999/2009/2019 series.
+- **P8.4 and P8.5 are ethnicity** by province and sex (Melanesian 95.5%, Polynesian 2.8%,
+  Micronesian 1.2%) and would answer whether Rennell-Bellona's Adventist majority tracks its
+  Polynesian population.
+- The nine **2009 provincial profiles** were not opened.
+- **`solomons.popgis.spc.int`'s `p11_religion`** is one enabled endpoint away from being a
+  2009 witness at ward level.

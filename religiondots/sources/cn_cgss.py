@@ -21,17 +21,26 @@ any other country here. The 2026-09-07 refusal of the CFPS application cost noth
 
 ## WHAT IS DRAWN, AND THE TWO THAT ARE NOT
 
-Pooled n = 32,495 over 29 of 31 provinces — 99.2% of China's population. Only Hainan and
-Xizang are uncovered; CGSS has never sampled Tibet and §14.5 already draws it from ethnicity.
+**Five waves since 2026-09-08: 2010, 2012, 2013, 2017, 2021.** Pooled n = 55,637 over 30 of 31
+provinces. 2010 and 2013 came from the open replication mirror `doi:10.7910/DVN/R1S5RP` rather
+than from CNSDA, whose every download needs a reviewed application; `sources/cn_cgss_fetch.py`
+pulls them and `cn_cgss.md` is the record. **2011 is deliberately not pooled** — it is small
+(5,620) and unweighted, and Anita's call was to keep it back as an independent check.
 
-| | respondents | provinces, cell <10 | rank stability 2012<->2021 | |
-|---|---|---|---|---|
-| Buddhism -> `buddhism.mahayana` | 1,592 | 3 / 29 | +0.63 | drawn |
-| Protestantism -> `christianity.protestant` | 585 | 13 / 29 | **+0.17** | drawn, flagged |
-| Islam | 698 | 21 / 29 | +0.64 | **NOT drawn — see below** |
-| folk | 681 | 18 / 29 | +0.45 | not drawn |
-| Daoism | 80 | 28 / 29 | +0.52 | not drawn |
-| Catholicism | 65 | **29 / 29** | +0.16 | not drawn |
+**Hainan is now covered**, from CGSS 2010, which is the only wave that samples all 31. Xizang
+is sampled by that wave too and is **dropped on purpose**: see DROP_PROVINCES.
+
+| | respondents | provinces, cell <10 | median rank stability | worst pair | |
+|---|---|---|---|---|---|
+| Buddhism -> `buddhism.mahayana` | 2,793 | 3 / 30 | **+0.711** | +0.633 | drawn |
+| Islam | 1,224 | 19 / 30 | +0.756 | +0.590 | **NOT drawn — see below** |
+| folk | 1,173 | 16 / 30 | +0.565 | +0.446 | not drawn |
+| Protestantism -> `christianity.protestant` | 1,016 | 9 / 30 | **+0.559** | +0.166 | drawn |
+| Daoism | 143 | 25 / 30 | +0.408 | +0.064 | not drawn |
+| Catholicism | 129 | 28 / 30 | +0.229 | +0.059 | not drawn |
+
+**Rank stability is now a median over TEN wave pairs rather than one**, and that changes the
+reading of the whole file. See the Protestantism section.
 
 **Buddhism passes §14.10 cleanly.** chi-square homogeneity across provinces p = 4e-184;
 Zhejiang 15.7% (CI 14.0-17.5) against Anhui 0.9% (0.4-1.4), nowhere near overlapping. The
@@ -40,19 +49,33 @@ Jiangxi 9.0, Shanghai 7.0 — against Shanxi 1.0, Shandong 1.1, Anhui 1.1, Chong
 a gradient, not sampling noise, which is exactly what §14.13 said the 2021 wave alone could not
 deliver.
 
-**Protestantism is drawn and it is the weakest thing in this country.** Anita's call,
-2026-09-08, on the argument that its SPATIAL variation is highly significant (chi-square
-p = 1.3e-84) even though its TEMPORAL stability is poor. Henan comes out top at 6.4%
-(CI 5.2-7.6) — China's Protestant heartland, found by the data unaided — with Heilongjiang,
-Jiangsu, Zhejiang and Jilin behind it. But the 2012<->2021 rank correlation is **+0.17**, so
-the map is less sure this is the CURRENT geography than that it is A geography.
-§14.12's disclosure rule says name the weakest drawn cell rather than declaring the country
-modelled, and `note_public` does.
+**Protestantism is drawn, and the case for it got much stronger on 2026-09-08.** It was drawn
+on Anita's call on the argument that its SPATIAL variation is highly significant (chi-square
+p = 1.3e-84) even though its TEMPORAL stability looked poor. Henan comes out top at 6.8% —
+China's Protestant heartland, found by the data unaided — with Heilongjiang, Zhejiang, Jiangsu
+and Jilin behind it.
 
-**A rank correlation of +0.17 on 19 overlapping provinces is a FAILURE TO DEMONSTRATE SIGNAL,
-not a demonstration of noise** — its confidence interval includes zero and also reaches past
-+0.55. Some of the instability is likely real: reported Protestantism fell 2.31% -> 1.03%
-across the period, and if enforcement varied by province the ordering SHOULD move.
+***THE +0.17 WAS ONE UNLUCKY PAIR, NOT THE TRUTH, AND THIS IS THE LESSON OF THE WHOLE FILE.***
+With three waves there was exactly ONE pair to correlate, 2012<->2021, and it returned +0.17.
+Five waves give ten pairs:
+
+    2010 vs 2017  +0.857      2012 vs 2013  +0.702      2013 vs 2021  +0.409
+    2010 vs 2012  +0.742      2012 vs 2017  +0.682      2017 vs 2021  +0.320
+    2012 vs 2013  +0.702      2013 vs 2017  +0.572      2010 vs 2021  +0.214
+    2010 vs 2013  +0.545                                2012 vs 2021  +0.166
+
+**Median +0.559, and the pair the old conclusion rested on is the WORST of the ten.** Every
+weak pair involves 2021 — the wave with 19 provinces and the smallest cells — so what was read
+as an unstable geography is mostly one unstable WAVE. An independent survey agrees: CLDS 2016
+ranks the provinces at +0.595 against this pool (`sources/cn_clds.md`).
+
+**A single correlation is a sample of size one.** §14.10's fifth condition was applied to one
+pair and read as a property of the data; it was a property of the pair. Where a condition is
+computed from a pairwise statistic, count how many pairs there are before believing it.
+
+Some real instability remains: reported Protestantism fell 2.31% -> 1.03% across the period,
+and if enforcement varied by province the ordering SHOULD move. §14.12's disclosure rule still
+applies and `note_public` still names this as the layer to trust least.
 
 ### ISLAM IS NOT DRAWN FROM THIS SOURCE, AND FINDING OUT WHY IS WORTH MORE THAN THE LAYER
 
@@ -143,7 +166,16 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RAW = os.path.join(ROOT, "data", "raw", "cn", "cgss")
 OUT = os.path.join(ROOT, "data", "normalized", "cn_cgss.csv")
 
-SOURCE_ID = "cn_cgss_2012_2017_2021"
+SOURCE_ID = "cn_cgss_pooled"
+
+# Xizang is READ and then DROPPED, and the reason is a wrong LABEL rather than a thin cell.
+# CGSS 2010 is the only wave that samples Tibet, 79 respondents, 53 of whom answer 佛教. Its
+# answer set has no separate 藏传佛教 row (CLDS's does), so those 53 are Tibetan Buddhists
+# about to be written to `buddhism.mahayana` at 58.5% — in the one province where §14.5
+# already draws Vajrayana from ethnicity. This module's own docstring justifies calling CGSS
+# 佛教 "Han Mahayana practice" on the premise that "Xizang is not sampled at all"; 2010
+# breaks that premise, so the premise is enforced here instead of assumed.
+DROP_PROVINCES = {"Xizang": "CGSS cannot separate Vajrayana; §14.5 draws Tibet from ethnicity"}
 
 # CGSS province labels -> the English names cn.csv's `note` column carries.
 CN2EN = {
@@ -182,45 +214,82 @@ SINGLE = {
 CATS = list(dict.fromkeys(list(MULTI.values()) + ["none"]))
 
 WAVES = [
-    # file, the "no religion" column, the weight column, year
-    ("cgss2012_14.dta", "a501", "weight", 2012),
-    ("cgss2017.dta", "a51", "weight", 2017),
-    ("CGSS2021.dta", None, "weight_raking", 2021),
+    # 2010 and 2013 added 2026-09-08 from the open replication mirror; 2011 is deliberately
+    # NOT here and is Anita's call, see cn_cgss.md. `weight=None` means the open copy of that
+    # wave carries no weight column and the wave is pooled UNWEIGHTED, which is measured
+    # rather than waved at: check() reports what it costs.
+    dict(file="cgss2010.dta", year=2010, kind="single",
+         prov="s41", rel="a5", weight="WEIGHT"),
+    dict(file="cgss2012_14.dta", year=2012, kind="multi",
+         prov="s41", none="a501", weight="weight"),
+    dict(file="cgss2013.dta", year=2013, kind="multi",
+         prov="s41", none="a501", weight=None),
+    dict(file="cgss2017.dta", year=2017, kind="multi",
+         prov="s41", none="a51", weight="weight"),
+    dict(file="CGSS2021.dta", year=2021, kind="single",
+         prov="provinces", rel="A5", weight="weight_raking"),
 ]
 
 
+def _single(label):
+    """One answer string to a category name, across two different single-choice sets.
+
+    2021 writes the answers bare (`佛教`). **2010 prefixes every religious answer with
+    `信仰宗教-`** (`信仰宗教-佛教`) while leaving `不信仰宗教` bare, so a straight lookup in
+    SINGLE silently matches nothing but the no-religion row and the wave loads as 100%
+    irreligious. Strip the prefix, then look up.
+    """
+    s = str(label).strip()
+    if s in SINGLE:
+        return SINGLE[s]
+    for sep in ("-", "－", "—", "–"):
+        if sep in s:
+            tail = s.split(sep, 1)[1].strip()
+            if tail in SINGLE:
+                return SINGLE[tail]
+    return None
+
+
 def load():
-    """The three waves, harmonised to one row per respondent with binary category flags."""
+    """Every pooled wave, harmonised to one row per respondent with binary category flags."""
     frames = []
-    for fn, nonecol, wcol, year in WAVES:
-        path = os.path.join(RAW, fn)
+    for w in WAVES:
+        path = os.path.join(RAW, w["file"])
         if not os.path.exists(path):
             raise SystemExit(f"missing {path} — see sources/cn_cgss.md for the fetch")
-        if year == 2021:
-            s = pd.read_stata(path, columns=["provinces", "A5", wcol],
+        wcol = w["weight"]
+
+        if w["kind"] == "single":
+            s = pd.read_stata(path, columns=[w["prov"], w["rel"]],
                               convert_categoricals=True)
             d = pd.DataFrame({
-                "prov": s["provinces"].astype(str).values,
-                "w": pd.to_numeric(s[wcol], errors="coerce").fillna(1.0).values,
-                "wave": year,
+                "prov": s[w["prov"]].astype(str).values,
+                "wave": w["year"],
             })
-            lab = s["A5"].astype(str).map(SINGLE)
+            lab = s[w["rel"]].map(_single)
             for c in CATS:
                 d[c] = (lab == c).astype(int).values
         else:
-            num = pd.read_stata(path, columns=[nonecol] + list(MULTI) + [wcol],
+            num = pd.read_stata(path, columns=[w["none"]] + list(MULTI),
                                 convert_categoricals=False)
-            # s41 has to be read separately: converting categoricals for the whole frame
-            # turns the religion flags into "是"/"否" labels and silently zeroes every count.
-            cat = pd.read_stata(path, columns=["s41"], convert_categoricals=True)
+            # the province column has to be read separately: converting categoricals for the
+            # whole frame turns the religion flags into "是"/"否" and silently zeroes every
+            # count.
+            cat = pd.read_stata(path, columns=[w["prov"]], convert_categoricals=True)
             d = pd.DataFrame({
-                "prov": cat["s41"].astype(str).values,
-                "w": pd.to_numeric(num[wcol], errors="coerce").fillna(1.0).values,
-                "wave": year,
+                "prov": cat[w["prov"]].astype(str).values,
+                "wave": w["year"],
             })
             for col, name in MULTI.items():
                 d[name] = (pd.to_numeric(num[col], errors="coerce") == 1).astype(int).values
-            d["none"] = (pd.to_numeric(num[nonecol], errors="coerce") == 1).astype(int).values
+            d["none"] = (pd.to_numeric(num[w["none"]], errors="coerce") == 1).astype(int).values
+
+        if wcol:
+            wv = pd.read_stata(path, columns=[wcol], convert_categoricals=False)
+            d["w"] = pd.to_numeric(wv[wcol], errors="coerce").fillna(1.0).values
+        else:
+            d["w"] = 1.0
+        d["weighted"] = bool(wcol)
         frames.append(d)
 
     df = pd.concat(frames, ignore_index=True)
@@ -235,7 +304,11 @@ def shares(df):
     """Province x drawn category -> weighted share, with the unweighted cells beside it."""
     rows = []
     for province, g in df.groupby("province"):
+        if province in DROP_PROVINCES:
+            continue
         W = g["w"].sum()
+        years = "+".join(str(y) for y in sorted(g["wave"].unique()))
+        unw = sorted({int(y) for y in g.loc[~g["weighted"], "wave"].unique()})
         for cat, node in DRAWN.items():
             rows.append({
                 "province": province,
@@ -246,8 +319,9 @@ def shares(df):
                 "waves": int(g["wave"].nunique()),
                 "basis": "self_id",
                 "source_id": SOURCE_ID,
-                "note": f"CGSS pooled 2012/2017/2021; {int(g[cat].sum())} of {len(g)} "
-                        f"respondents; {int(g['wave'].nunique())} waves",
+                "note": f"CGSS {years}; {int(g[cat].sum())} of {len(g)} respondents; "
+                        f"{int(g['wave'].nunique())} waves"
+                        + (f"; {','.join(str(u) for u in unw)} unweighted" if unw else ""),
             })
     out = pd.DataFrame(rows).sort_values(["node", "share"], ascending=[True, False])
     return out.reset_index(drop=True)
@@ -257,16 +331,21 @@ def check(df, out):
     """The three things that would silently break this file."""
     ok = True
 
-    # 1. the multi-select collapse (§3.1a) — overlap must stay negligible
+    # 1. the multi-select collapse (§3.1a) — overlap must stay negligible.
+    # Measured PER WAVE and on the multi-select waves only. Testing `wave != 2021` was right
+    # when 2021 was the only single-choice wave; 2010 is single-choice too, and pooling it in
+    # would dilute the overlap toward zero and hide a wave that had drifted.
     rel = [c for c in CATS if c != "none"]
-    mw = df[df["wave"] != 2021]
-    k = mw[rel].sum(axis=1)
-    overlap = (k >= 2).sum() / max(1, (k >= 1).sum())
-    print(f"  multi-select overlap 2012+2017: {overlap*100:.1f}% of religious respondents "
-          f"name >1 religion")
-    if overlap > 0.05:
-        print("    !! over 5% — the collapse to a single category is no longer safe")
-        ok = False
+    multi_years = [w["year"] for w in WAVES if w["kind"] == "multi"]
+    for year in multi_years:
+        mw = df[df["wave"] == year]
+        k = mw[rel].sum(axis=1)
+        overlap = (k >= 2).sum() / max(1, (k >= 1).sum())
+        flag = "  !! over 5%, the collapse is no longer safe" if overlap > 0.05 else ""
+        print(f"  multi-select overlap {year}: {overlap*100:4.1f}% of religious "
+              f"respondents name >1 religion{flag}")
+        if overlap > 0.05:
+            ok = False
 
     # 2. the national Islam reconciliation against §14.5's derivation (1.83%)
     for year, g in df.groupby("wave"):

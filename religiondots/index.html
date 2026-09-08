@@ -2238,7 +2238,7 @@ const PIN_OVERVIEW = {
      green at once; still not done, because it moves rows nobody has complained about. */
   /* Takes the Reformation group's swatch EXACTLY, which is the point of the pin — see
      OVERVIEW_FLAT, where the colour and the reason for its new value both live. */
-  'christianity.protestant':          [48, 40, 77],
+  'christianity.protestant':          [46.4, 89.5, 73.9],  // #f8dd81 — Anita, with the group
   'christianity.evangelical':         [61, 98, 48],
 };
 
@@ -2385,7 +2385,27 @@ const OVERVIEW_FLAT = {
      colour exists for. Hue stays beside the family's own 50: `evangelisch` in Germany and
      `Protestant` in Kenya's mainline sense ARE the generic Christian answer, so being a
      shade of the family colour is the right reading. */
-  'christianity / Reformation':                        [ 48, 40, 77],
+  /* SATURATED, 2026-09-08, and it is England that forced it. Anita: "lets move anglican
+     (and lutheran and reformed and protestant unspecified) to #f8dd81".
+
+     Until 2026-09-07 this group was almost never large. Then §3.5b split England's
+     Christians and `anglican` became **17 million people, the biggest Christian row on the
+     map** — and at [48,40,77] it drew as a pale warm grey next to `unaffiliated`, which is
+     25 million. The two largest categories in England were reading as one mass. The old
+     note below is right that lightness was this group's only free axis and that it had
+     taken the top of it; what it did not anticipate was the group needing to hold its own
+     against a neutral rather than against its Christian neighbours.
+
+     So the axis is saturation instead: 40 -> 89.5 at roughly the same lightness. That is
+     the move the old note explicitly declined ("a free search wanted to go further and
+     returned a desaturated khaki ... rejected, because a near-neutral warm grey is the 'not
+     a religion' family's job"), taken in the opposite direction and for the same reason.
+
+     DECIMALS, UNUSUALLY. Every other authored triple in this file renders its commented hex
+     exactly; #f8dd81 has no integer HSL, and [46,89,74] lands on #f8dc82. Keeping the
+     comment honest is worth the decimals. `hsl()` prints h to one place and passes s and l
+     through, so this renders `hsl(46.4,89.5%,73.9%)`. */
+  'christianity / Reformation':                        [ 46.4, 89.5, 73.9],  // #f8dd81 — Anita
   "christianity / Separatist and believers' churches": [ 61, 98, 48],
   'christianity / Pietist and Wesleyan revival':       [ 66, 80, 62],
   'christianity / Restorationist and adventist':       [ 72, 92, 34],
@@ -5195,32 +5215,68 @@ void main() {
     }
 
     const b = this.viewBounds();
+
+    /* WORLD COPIES, AND WHY THIS LAYER HAS TO DRAW THEM ITSELF.
+       MapLibre calls a custom layer's render() ONCE per frame, not once per visible world
+       copy the way it draws its own layers — so every dot here lived in exactly one copy of
+       the world. Pan across the antimeridian and the far half of the country simply was not
+       there. Fiji is 176E to 179W (Anita, 2026-09-08: "if i'm on one side it doesnt show
+       dots on the other side"), and Kiribati and Tonga will want this too.
+
+       The dots' mercator x is absolute, so a copy is just the same geometry with one world
+       added to the origin folded into the matrix. `viewBounds()` returns an UNWRAPPED range,
+       so which copies to draw falls straight out of which whole worlds that range spans.
+
+       ONLY WHEN THE VIEWPORT IS NARROWER THAN THE WORLD. Zoomed out past that every dot is
+       already on screen in the central copy, the side copies are duplicate scenery, and the
+       extra passes would be a straight multiple of the most expensive frame this map draws —
+       z0 submits all 5.1M dots. So the wide case keeps exactly its old behaviour and cost,
+       and the fix is free where it is needed, because a view narrow enough to straddle 180
+       has only a handful of buckets in it. */
+    const worlds = [];
+    if (b[2] - b[0] >= U32) worlds.push(0);
+    else for (let k = Math.floor(b[0] / U32); k <= Math.floor(b[2] / U32); k++) worlds.push(k);
+
     let drawn = 0;
-    for (const d of this.active()) {
-      if (!d.glPos) this.upload(gl, d);
-      /* WebGL has no baseInstance, so a draw call always starts at instance 0 and the only way
-         to start partway in is to re-point the attributes. Consecutive visible buckets are
-         merged into runs first: at continental zoom that is one call for a whole country. */
-      const runs = [];
-      for (const bk of d.buckets) {
-        if (bk[2] < b[0] || bk[0] > b[2] || bk[3] < b[1] || bk[1] > b[3]) continue;
-        const last = runs[runs.length - 1];
-        if (last && last[0] + last[1] === bk[4]) last[1] += bk[5];
-        else runs.push([bk[4], bk[5]]);
+    for (const k of worlds) {
+      if (k !== 0) {
+        const shifted = m.slice();
+        for (let i = 0; i < 4; i++) {
+          shifted[12 + i] = m[i] * (ox + k) + m[4 + i] * oy + m[12 + i];
+        }
+        gl.uniformMatrix4fv(this.loc.u_matrix, false, new Float32Array(shifted));
+      } else {
+        gl.uniformMatrix4fv(this.loc.u_matrix, false, new Float32Array(out));
       }
-      if (!runs.length) continue;
-      const n = d.n;
-      for (const [start, count] of runs) {
-        gl.bindBuffer(gl.ARRAY_BUFFER, d.glPos);
-        gl.vertexAttribPointer(this.loc.a_xlo, 1, gl.UNSIGNED_SHORT, false, 4, 4 * start);
-        gl.vertexAttribPointer(this.loc.a_xhi, 1, gl.UNSIGNED_SHORT, false, 4, 4 * start + 2);
-        gl.vertexAttribPointer(this.loc.a_ylo, 1, gl.UNSIGNED_SHORT, false, 4, 4 * (n + start));
-        gl.vertexAttribPointer(this.loc.a_yhi, 1, gl.UNSIGNED_SHORT, false, 4, 4 * (n + start) + 2);
-        gl.bindBuffer(gl.ARRAY_BUFFER, d.glNi);
-        gl.vertexAttribPointer(this.loc.a_ni, 1, gl.UNSIGNED_SHORT, false, 2, 2 * start);
-        if (this.webgl2) gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, count);
-        else this.ext.drawArraysInstancedANGLE(gl.TRIANGLE_STRIP, 0, 4, count);
-        drawn += count;
+      // The dots do not move; the view does. Test them against this copy's slice of it.
+      const bx0 = b[0] - k * U32, bx1 = b[2] - k * U32;
+
+      for (const d of this.active()) {
+        if (!d.glPos) this.upload(gl, d);
+        /* WebGL has no baseInstance, so a draw call always starts at instance 0 and the only
+           way to start partway in is to re-point the attributes. Consecutive visible buckets
+           are merged into runs first: at continental zoom that is one call for a country. */
+        const runs = [];
+        for (const bk of d.buckets) {
+          if (bk[2] < bx0 || bk[0] > bx1 || bk[3] < b[1] || bk[1] > b[3]) continue;
+          const last = runs[runs.length - 1];
+          if (last && last[0] + last[1] === bk[4]) last[1] += bk[5];
+          else runs.push([bk[4], bk[5]]);
+        }
+        if (!runs.length) continue;
+        const n = d.n;
+        for (const [start, count] of runs) {
+          gl.bindBuffer(gl.ARRAY_BUFFER, d.glPos);
+          gl.vertexAttribPointer(this.loc.a_xlo, 1, gl.UNSIGNED_SHORT, false, 4, 4 * start);
+          gl.vertexAttribPointer(this.loc.a_xhi, 1, gl.UNSIGNED_SHORT, false, 4, 4 * start + 2);
+          gl.vertexAttribPointer(this.loc.a_ylo, 1, gl.UNSIGNED_SHORT, false, 4, 4 * (n + start));
+          gl.vertexAttribPointer(this.loc.a_yhi, 1, gl.UNSIGNED_SHORT, false, 4, 4 * (n + start) + 2);
+          gl.bindBuffer(gl.ARRAY_BUFFER, d.glNi);
+          gl.vertexAttribPointer(this.loc.a_ni, 1, gl.UNSIGNED_SHORT, false, 2, 2 * start);
+          if (this.webgl2) gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, count);
+          else this.ext.drawArraysInstancedANGLE(gl.TRIANGLE_STRIP, 0, 4, count);
+          drawn += count;
+        }
       }
     }
     this.drawn = drawn;
@@ -5235,13 +5291,21 @@ void main() {
      the world is ~800km at every zoom, which makes most of a country falsely intersect a
      street-level view — it was the difference between 433,837 dots submitted for one Mumbai
      junction and 12,288. */
+  /* THE RANGE IS UNWRAPPED, AND IT HAS TO BE. `getBounds()` on a view that crosses the
+     antimeridian returns west 179.5 / east -179.5 — a west GREATER than its east — so the
+     naive form below returned x0 > x1 and the bucket test `bk[2] < x0 || bk[0] > x1` then
+     rejected every bucket in the country. Fiji went blank on both sides of 180 rather than
+     one. Adding a world to the east end puts the range back in order and lets `render()`
+     work out which world copies it covers. */
   viewBounds() {
     const bb = this.map.getBounds();
     const perPx = U32 / (512 * Math.pow(2, this.map.getZoom()));
     const pad = (this.radiusPx() + 2) * perPx;
     const ya = mercYn(bb.getNorth()) * U32, yb = mercYn(bb.getSouth()) * U32;
-    return [mercXn(bb.getWest()) * U32 - pad, Math.min(ya, yb) - pad,
-            mercXn(bb.getEast()) * U32 + pad, Math.max(ya, yb) + pad];
+    const x0 = mercXn(bb.getWest()) * U32 - pad;
+    let x1 = mercXn(bb.getEast()) * U32 + pad;
+    if (x1 < x0) x1 += U32;
+    return [x0, Math.min(ya, yb) - pad, x1, Math.max(ya, yb) + pad];
   },
 };
 

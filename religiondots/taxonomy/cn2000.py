@@ -144,6 +144,16 @@ MAP.update({g: "buddhism.theravada" for g in _THERAVADA})
 # the Christian share and the remainder is what the coefficient decides.
 MISSION = {
     # nationality: (share, [Joshua Project groups], census 2010, centroid gap km)
+    # ADDED 2026-09-08, Anita's call, and it closes the flag REVIEW has carried since
+    # 2026-09-07 -- see REVIEW["Korean"] for the argument on both sides. 1.83M people,
+    # concentrated in Yanbian and spread through Jilin, Heilongjiang and Liaoning; JP has
+    # them as ONE group, so condition (b) is trivial. It is the only row here whose
+    # condition (a) rests on attestation outside the missionary literature that is
+    # ANALOGICAL rather than local -- the Yanbian church is well documented in Chinese and
+    # Korean academic work, but the 30% itself is JP's and sits suspiciously close to South
+    # Korea's own self-identified Christian share (~28% in its 2015 census). Drawn with
+    # that stated, not hidden.
+    "Korean": (0.3000, ["Korean 30%"], 1_830_929, 0),
     "Lisu":   (0.7972, ["Lisu 80%", "Lemo 0%"], 702_839, 1),
     "Lahu":   (0.4195, ["Lahu 55%", "Lahu Shi 10%"], 485_966, 23),
     "Derung": (0.2806, ["Drung 25%", "Rawang 60%"], 6_930, 5),
@@ -192,7 +202,7 @@ NOT_ASSERTED = {
 # 2026-09-07 this list was an EXCLUSION and these people were not on the map at all;
 # they are now drawn as `unknown`, which claims exactly as little and shows them.
 _NOT_RELIGIO_ETHNIC = [
-    "Miao", "Yi", "Zhuang", "Bouyei", "Korean", "Manchu", "Dong", "Yao", "Bai", "Tujia",
+    "Miao", "Yi", "Zhuang", "Bouyei", "Manchu", "Dong", "Yao", "Bai", "Tujia",
     "Hani", "Li", "She", "Gaoshan", "Sui", "Naxi", "Daur", "Mulao", "Qiang", "Blang",
     "Maonan", "Gelao", "Xibe", "Achang", "Russian", "Evenk", "De'ang", "Gin", "Oroqen",
     "Hezhen", "Lhoba", "Jino", "Mongol", "Tu",
@@ -219,19 +229,8 @@ NOT_ASSERTED["Yi"] = (
     "Naluo (49,000 at 32%) and Laka (7,900 at 41%) are Christian and are officially Yi; "
     "together they are about 2% of the nationality, so Christianity is nowhere near the "
     "pattern of the Yi, and they are a distinct geographic subset besides.")
-NOT_ASSERTED["Korean"] = (
-    "1.83M people, and THE ONE CALL IN THIS FILE MOST LIKELY TO BE WRONG -- see REVIEW, "
-    "and raise it with Anita. The old reason for leaving them out was spec §14.5's test: "
-    "Korean identity is not defined by Christianity the way Hui identity is defined by "
-    "Islam, so the category was not constituted religiously. **§14.9 withdrew that as a "
-    "ban**, and under the fractional-share regime the objection no longer disqualifies "
-    "anybody. Joshua Project puts the Korean group in China at 30%, which would be about "
-    "549,000 people in Yanbian, Jilin and Heilongjiang -- the second-largest Christian "
-    "block in the country after the Lisu. They are left out for now because MISSION's "
-    "condition (a) asks for attestation outside the missionary literature and the Korean "
-    "case rests more thinly on it than Nujiang does, and because the community is the most "
-    "urbanised and most migratory of the candidates, so a single nationality-wide share is "
-    "doing more work than it does for a people who all live in one prefecture.")
+# NOTE: `Korean` used to sit here. It moved to MISSION on 2026-09-08 (Anita's call) and is
+# now drawn at christianity.protestant 30%. See MISSION and REVIEW.
 NOT_ASSERTED["Manchu"] = (
     "10.68M people, and the clearest case of a group whose religio-ethnic past does not "
     "survive into its present. Manchu shamanism was a real institution with a state cult "
@@ -314,9 +313,19 @@ REVIEW = {
         "direction: **a list written to illustrate a rule is not the rule**, and applying "
         "the stated test to all 56 nationalities found a group the list had missed.",
     "Korean":
-        "-> NO religion asserted; drawn on `unknown`. **RAISE THIS ONE WITH ANITA -- it is "
-        "the largest open judgement in China after the Han, and the 2026-09-07 build left "
-        "it where it was rather than reversing an earlier decision quietly.** 1.83M people "
+        "-> christianity.protestant at 30%, ~549,000 people. **DRAWN 2026-09-08 on Anita's "
+        "call, and this entry is kept in full because the argument against is still live "
+        "and a reader should be able to see what was traded.** What follows was written "
+        "while it was still `unknown`. "
+        "**The one thing to add now that it is drawn**: of the seven MISSION rows this is "
+        "the only one whose coefficient is not corroborated locally, and JP's 30% sits "
+        "within two points of South Korea's own self-identified Christian share (2015 "
+        "census: 19.7% Protestant + 7.9% Catholic). That may be a real convergence or it "
+        "may be an estimate carried across the border; nothing here can tell. It also "
+        "means the row is Protestant-only where a third of South Korea's Christians are "
+        "Catholic, so if the analogy IS the source then the split is wrong as well as the "
+        "level. note_public says the northeast is the least certain block on the map. "
+        "1.83M people "
         "in 2010, concentrated in Yanbian and spread through Jilin, Heilongjiang and "
         "Liaoning. Joshua Project puts them at 30% Christian, they pass the co-location "
         "condition trivially (JP has them as one group), and 30% of 1.83M is ~549,000 "

@@ -2,6 +2,11 @@
 
 `sources/uk.py` → `data/normalized/uk.csv` (1.83M rows, **162 MB**).
 
+> **This is not the only file behind the UK any more.** England's Christians are split into
+> denominations by three further sources and a rescale, none of which is a census:
+> `uk_ecc.md` (congregation size), `uk_churches.md` (where the churches are), `uk_bes.md`
+> (how many belong to each), combined by `uk_split.py`. §2 has the summary and the reason.
+
 **The UK has no census.** It has four, and treating them as one country's data is the
 first available mistake. They differ in date, in question wording, in whether the
 question is voluntary, in category depth, in the finest geography published, and — in
@@ -91,9 +96,37 @@ Christian denominations.** 27,522,672 Christians, 46.2% of the population, and T
 detail hangs entirely off `No religion` and `Other religion`. There is no Anglican, no
 Catholic, no Methodist, no Baptist row anywhere in the E&W census. Every other part of
 these islands has that split — Scotland has three Christian categories, Northern Ireland
-has 26, the Republic has fourteen. On the dot map, England and Wales will be one flat Christian
-colour while Scotland, NI and Ireland are not, and that is a property of the *source*, not
-of English religion.
+has 26, the Republic has fourteen.
+
+> **ENGLAND IS NO LONGER DRAWN FLAT — 2026-09-07, and Wales still is.** The census gap above
+> is unchanged and permanent; what changed is that the map stopped accepting it. `uk_split.py`
+> divides England's 26,167,899 Christians into **Anglican 64.6%, Roman Catholic 18.2%,
+> Methodist 4.6%, Baptist 2.4%, Reformed 2.2%, Orthodox 2.2%** and an unplaced 5.8% remainder, using spec
+> §3.5a's mechanism inside a religion rather than at the root: **the census keeps every
+> magnitude**, a current register of churches says where each denomination is
+> (`sources/uk_churches.md`), the English Church Census 2005 says how big its congregations
+> are (`sources/uk_ecc.md`), and the British Election Study says how many people belong to
+> each (`sources/uk_bes.md`). Those five categories exist in no census of England, are marked
+> `derived`, and roll back to `Christian` when a reader turns inferred dots off.
+>
+> **Wales gets none of it.** The English Church Census stopped at the border, and Wales has
+> had **no church attendance census since 1995** — the 2007 Gweini *Faith in Wales* survey
+> reached all 22 unitary authorities but reports congregation counts and total churchgoing,
+> not denomination. So Welsh Christians stay one node, and the England/Wales border is now
+> visible on the map as a step in the data. Motivating this, Anita, 2026-09-07: *"england just
+> looks different from everywhere else in europe cuz everyone else breaks down christianity at
+> least a little bit."* Wales now is that flat patch instead, at a fifteenth of the size.
+>
+> **Orthodoxy is placed by country of birth** (`sources/uk_orthodox.md`, 2026-09-08), because
+> neither a 2005 church census nor a map of buildings can see a population that arrived after
+> both — 49 churches at a 7% response rate on one side, 129 buildings on the other, against an
+> anchor of 567,000 people. It is the one `modelled` leg on England.
+>
+> **Pentecostal and New church are still unplaced**, and stay that way. Ethnic group was
+> considered as a proxy the way country of birth was used for Orthodoxy and rejected (Anita,
+> 2026-09-08): Black African in England is heavily Anglican and Catholic as well as
+> Pentecostal, so it would place where the Black-majority congregations are rather than where
+> the Pentecostals are. Their 5.8% stays on the census's own `Christian` category.
 
 **TS031 is hierarchical, and `uk.py` keeps the hierarchy in `source_category`.** ONS writes
 its columns as `Religion (detailed): Other religion: Pagan`; `uk.py` strips only the

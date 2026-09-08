@@ -150,6 +150,19 @@ CHRISTIAN = set(LEG)
 # something in, and cannot be separated. This is why `other` is the weakest leg in the join
 # -- see uk_ecc.py, whose `other` holds the Salvation Army, Quakers, Adventists and
 # Lutherans, none of which has a tick box here.
+#
+# **`other` IS KNOWN TO BE UNDERSTATED AND IS DRAWN ANYWAY, ON `christianity.other`.**
+# Sixteen respondents, all of them Brethren, put the leg at 0.19% of England's Christians --
+# about 42,000 people -- while uk_ecc.py's matching churches are 7.2% of English
+# churchgoing, 2,075 congregations. The Salvation Army alone claims around 30,000 UK
+# members and the Adventists about 35,000, so the true figure is some multiple of this one.
+# Anita's call, 2026-09-07, over dropping the leg or inferring a size from the gap between
+# BES's "Other" and the census's non-Christian "Other religion": use the residual category
+# the map already has. `christianity.other` is what Scotland's `Other Christian`, Northern
+# Ireland's `Other Christian denominations`, Canada's and Australia's all resolve to, so
+# England gains a category its neighbours already display rather than a bespoke one, and
+# the number stays traceable to a source instead of being estimated into existence. The
+# undercount is real, it is one-directional, and it belongs in note_public.
 
 _LABEL = {
     1: "no religion", 2: "Church of England/Anglican", 3: "Roman Catholic",

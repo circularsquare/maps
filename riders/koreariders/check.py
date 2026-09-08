@@ -420,27 +420,42 @@ def main():
 
     # --- 하행 against 상행, without re-solving ------------------------------
     mir = mirror(by_line)
-    # np.median, which is what solve.py's own report uses: the mean of the two
-    # middle values on an even count, so the two agree to the last tenth.
-    vals = sorted(r[0] for r in mir)
-    n = len(vals)
-    med = vals[n // 2] if n % 2 else (vals[n // 2 - 1] + vals[n // 2]) / 2.0
-    print("\nmirror -- 하행 against 상행, weighted by the traffic it applies to")
-    print("   median line %.1f %%, worst %.1f %% (%s)"
-          % (100 * med, 100 * mir[0][0], mir[0][2]))
     # A line the map draws no rider figure on cannot have a meaningful mirror:
     # both directions are the fit's residual noise around a published total that
     # is not describing the railway. Say so beside the percentage rather than
     # leaving 경춘선's 113 % looking like a modelling failure to chase.
     greyed = set(f["properties"]["line"] for f in feats
                  if f["properties"].get("service") == "unrecorded")
+    # And a line whose level is the published 통과인원 split evenly has a mirror
+    # of 0.0 % because it was written that way, not because anything agrees. It
+    # is the opposite failure to 경춘선's and needs saying just as plainly --
+    # left in, 경원선's constructed zero drags the network median down and looks
+    # like the best-fitted line on the map.
+    pub = set(f["properties"]["line"] for f in feats
+              if f["properties"].get("level") == "passing")
+    # np.median, which is what solve.py's own report uses: the mean of the two
+    # middle values on an even count, so the two agree to the last tenth.
+    vals = sorted(r[0] for r in mir if r[2] not in pub)
+    n = len(vals)
+    med = vals[n // 2] if n % 2 else (vals[n // 2 - 1] + vals[n // 2]) / 2.0
+    print("\nmirror -- 하행 against 상행, weighted by the traffic it applies to")
+    print("   median line %.1f %%, worst %.1f %% (%s)"
+          % (100 * med, 100 * mir[0][0], mir[0][2]))
+    if pub:
+        print("   %s excluded: level from the published 통과인원, so the two "
+              "directions\n   agree by construction and the mirror is no test "
+              "there" % ", ".join(sorted(pub)))
     rough = [r for r in mir if r[0] > 0.05]
     if rough:
         print("   %-11s %9s %9s" % ("line", "weighted", "worst seg"))
         for w, worst, ln, _ in rough:
+            note = ""
+            if ln in greyed:
+                note = "   (drawn without a rider figure)"
+            elif ln in pub:
+                note = "   (level from the published 통과인원)"
             print("   %-11s %8.1f%% %8.1f%%%s"
-                  % (ln, 100 * w, 100 * worst,
-                     "   (drawn without a rider figure)" if ln in greyed else ""))
+                  % (ln, 100 * w, 100 * worst, note))
 
     # --- passengers per train, against what a train holds ------------------
     over, mean_occ, per_line = occupancy(by_line, table)

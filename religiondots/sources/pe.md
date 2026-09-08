@@ -304,7 +304,87 @@ spec §14.4.
 
 > Note the difference between the two ways of having no listed religion: in the Awajún and
 > Asháninka districts the answer that rises is **`Ninguna`**, and in the colonist frontier
-> districts it is **`Otra`**. That is a real distinction and worth not flattening.
+> districts it is **`Otra`**. That is a real distinction and worth not flattening. §10a
+> measures it.
+
+## 10a. The ethnicity crosstab — a check on a sentence, and it changed two of them
+
+`sources/pe_ethnicity.py`. **Nothing in this section is drawn**: `pe.csv` contains no
+ethnicity, no dot is placed by it, and the module exists only to test claims §10 makes. It is
+a separate file from `pe.py` on purpose, because crossing religion with ethnicity is a
+different act from drawing religion and spec §14 says so.
+
+`C5P25` — *"P12a+: Por sus costumbres y sus antepasados Ud. se considera"* — is asked of the
+**same 23,196,391 people** as `C5P26`, with the same 6,185,493 under-twelves as `No Aplica`.
+So the two cross exactly, with no modelling and no allocation. The crosstab's religion margin
+reproduces INEI's published figures, which is what makes it the same table rather than a new
+one.
+
+> **The syntax is not the documented one.** `AS CROSSTABLE ... BY ...` returns **HTTP 500** on
+> this build. `AS FREQUENCY OF <a> BY <b>` is what works, and the engine labels its own output
+> *"Crosstab"*.
+
+### The claim under test, and the verdict
+
+§10 asserted that `Ninguna` peaks in Amazonia *because the form has no box for Amazonian
+indigenous religion*. Among the 210,612 who self-identify as `Nativo o indígena de la amazonía`:
+
+| | share | national | ratio |
+|---|---:|---:|---:|
+| **Evangélica** | **41.54%** | 14.07% | **2.95x** |
+| Católica | 34.14% | 76.03% | 0.45x |
+| **Ninguna** | **18.74%** | 5.09% | **3.68x** |
+| Adventista | 4.34% | 1.52% | 2.85x |
+| Otra | 0.40% | 0.41% | 0.98x |
+
+**The association is real and large — and it was the third fact, not the first.** `Ninguna`
+really does run at 3.68x the national rate, so the sentence was not wrong. But **41.5% are
+evangelical and about 81% give a Christian answer of some kind**, so the dominant fact about
+religion among Amazonian indigenous Peruvians is evangelical conversion — the documented
+history of the Awajún, Wampís and Asháninka missions — with a large minority the form has no
+box for. `note_public` and `taxonomy/pe2017.py` both said otherwise until this was run and
+now say both.
+
+The same thing holds geographically, which it need not have — an ecological correlation can
+survive an individual-level one being absent:
+
+```
+  corr(Amazonian-indigenous share, Ninguna    share) =  0.3821
+  corr(Amazonian-indigenous share, Evangélica share) =  0.3474
+  corr(Amazonian-indigenous share, Católica   share) = -0.4362
+  corr(Amazonian-indigenous share, Otra       share) =  0.0659
+
+  13 districts >50% Amazonian indigenous:  Ninguna 18.2%  Evangélica 46.1%  Otra 0.59%
+  1053 districts <2%:                      Ninguna  5.0%  Evangélica 13.4%  Otra 0.38%
+```
+
+### It also refuted a candidate this map had written down
+
+`taxonomy/branches.py`'s `other.pe` offered *"the indigenous religions of the Amazon"* as
+plausible content for the `Otra` cell. **Measured, `Otra` is flat across ethnicity** — 0.40%
+among Amazonian indigenous against 0.41% nationally, r=0.07 across districts. Whatever is in
+that cell, it is not them. That strengthens the Israelitas reading, because AEMINPU's members
+are Andean migrants rather than Amazonian peoples, so the church fits the geography *and* the
+ethnicity together. And the cell's most concentrated groups turn out to be the **Tusán
+(5.51%)** and **Nikkei (3.50%)** — Peru's Chinese and Japanese populations, for whom Buddhism,
+Daoism and Shinto have no box either — though at 1,576 people between them that is 1.7% of the
+cell; its bulk is Mestizo (49,126) and Quechua (25,046).
+
+### And one thing nobody was looking for: the two Adventist regions are two peoples
+
+§8 found Peru's Adventists are the Puno altiplano *and* the Alto Mayo, geographically. At the
+person level the same split is ethnic, and sharper:
+
+```
+  Adventista among Aimara ................. 6.58%   4.32x the national rate
+  Adventista among Amazonian indigenous ... 4.34%   2.85x
+  Adventista among Quechua ................ 1.60%   1.05x   <- the national average
+  Adventista among Mestizo ................ 1.34%   0.88x
+```
+
+**Quechua Peru is four times the size of Aymara Peru and largely the same highlands, and it is
+at the national average.** So the altiplano cluster is *Aymara*, not merely southern — the
+1898 Platería mission showing up in a variable it has nothing to do with.
 
 ## 11. What else is on this server, unused
 

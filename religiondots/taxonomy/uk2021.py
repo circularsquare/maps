@@ -18,8 +18,17 @@ THE THING TO UNDERSTAND ABOUT THIS SOURCE. **England and Wales publish no Christ
 denomination, at any geography, for 27.5 million people.** ONS asks one tick-box question
 and the write-in box is only reached by people who tick "Any other religion", so the 50
 write-in categories below are all *outside* Christianity — Pagan, Alevi, Jain, Ravidassia,
-Yazidi, Vodun, Thelemite — while `Christian` stays one undifferentiated 27.5M node. This is
-spec §3.11's irreducible floor, and it is the largest single unresolved block on the map.
+Yazidi, Vodun, Thelemite — while `Christian` stays one undifferentiated 27.5M node.
+
+**ENGLAND IS NO LONGER DRAWN THAT WAY, AND WALES STILL IS.** Since 2026-09-07 England's
+26.2M Christians are divided into five denominations by `uk_split.py`, which is spec §3.5a's
+mechanism applied inside a religion rather than at the root: the census keeps every
+magnitude, a current register of churches says where each denomination is, and a survey says
+how many belong to each. **None of those five categories comes from a census of England**,
+they are marked `derived`, and they roll back to this file's `Christian` when a reader turns
+inferred dots off. Wales has no equivalent — the English Church Census stopped at the
+border and Wales has had no church census since 1995 — so Welsh Christians stay one node and
+the England/Wales edge is now visible on the map. That is a property of the sources.
 
 The other two do better and differently. Scotland names the Church of Scotland and Roman
 Catholics and stops. Northern Ireland, where the denomination is the political fact, names
@@ -73,6 +82,27 @@ REVIEW = {
     "Church of Scotland":
         "-> reformed.presbyterian. The national church of Scotland is Presbyterian in "
         "polity and doctrine; 1,107,708 people, the largest single denomination NRS names.",
+    "Christian: Reformed":
+        "-> reformed, the family and not `reformed.presbyterian`. England's leg pools the "
+        "United Reformed Church, the Presbyterians and the Congregationalists, because the "
+        "British Election Study names all three and the URC is a union of the other two. "
+        "Filing it under Presbyterian would put English Congregationalists on a polity "
+        "they left in 1972. 567,818 people.",
+    "Christian: Orthodox":
+        "-> orthodox, the EASTERN family, and it also carries England's Oriental Orthodox "
+        "because neither of its two sources can separate them. The British Election Study "
+        "offers one option, `Orthodox Christian`, and the placement proxy is country of "
+        "birth, in which Armenia, Ethiopia and Eritrea are Oriental and Romania, Greece and "
+        "Bulgaria are Eastern. Those three contribute 2.1% of the proxy's weight against "
+        "Romania's 53.3%, so the leg is Eastern Orthodox in all but a rounding, and filing "
+        "it on `oriental` instead would be wrong for 98%. The only leg on this map placed "
+        "by a proxy rather than by a count; `modelled`, not `derived` (spec §7).",
+    "Christian: Anglican":
+        "-> anglican, and the label is `Anglican` rather than `Church of England` on "
+        "purpose. The anchor's option reads 'Church of England/Anglican/Episcopal', so it "
+        "collects the Anglican-identifying who are not Church of England members, and the "
+        "placement counts every church on the CofE's register. 16.9M people, 64.6% of "
+        "England's Christians and the single largest figure this file maps.",
     "Christian: Free Presbyterian":
         "-> reformed.presbyterian, with Presbyterian Church in Ireland, Reformed "
         "Presbyterian and Non-Subscribing Presbyterian. Four Presbyterian bodies in one "
@@ -88,6 +118,22 @@ _PROT = "christianity.protestant"
 MAP = {
     # ================================================================ England and Wales
     "Christian": "christianity",
+
+    # --- England's denominational split, from uk_split.py rather than from ONS.
+    # These five categories do not exist in any census of England. They are the census's
+    # own `Christian` count divided by a placement (which churches are where, from the
+    # Church of England's register and OpenStreetMap, sized by the English Church Census
+    # 2005) and a national anchor (the British Election Study). uk_split.py's docstring
+    # carries the argument; sources/uk_churches.md carries the sources.
+    #
+    # Anything not on this list stays on the census's own `Christian` above, which is
+    # 8.0% of England and holds the Pentecostal, New church, Orthodox and residual legs
+    # until a census-proxy placement exists for them.
+    "Christian: Anglican": "christianity.anglican",
+    "Christian: Roman Catholic": "christianity.catholic.latin",
+    "Christian: Methodist": "christianity.methodist",
+    "Christian: Reformed": "christianity.reformed",
+    "Christian: Orthodox": "christianity.orthodox",
     "Muslim": "islam",
     "Hindu": "hinduism",
     "Sikh": "sikhism",
@@ -207,6 +253,10 @@ COLUMNS = {
     # ONS, England and Wales
     "No religion": "unaffiliated",
     "Other religion": "other.uk",
+    # uk_split.py's five denominations all carry `parent_column=Christian`, so a reader who
+    # turns inferred dots off sees them roll back to the census's own Christian count --
+    # which is exactly what ONS published and the only thing about them that was measured.
+    "Christian": "christianity",
     # NISRA, Northern Ireland. `christianity` and not `christianity.other`, for hu2022's
     # reason: NISRA's column is a residual and that node is explicitly not one.
     "Other Christian (including Christian related)": "christianity",

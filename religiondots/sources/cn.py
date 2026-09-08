@@ -262,6 +262,232 @@ SUFFIX = re.compile(
 # prefecture was upgraded to a city and its seat county became a district under a new
 # name. Ordered by how much drawn population each carries.
 OVERRIDES = {
+    # ==============================================================================
+    # THE 168 THAT WERE SILENTLY DROPPED UNTIL 2026-09-08 — spec §14.17
+    # ==============================================================================
+    # **These 168 counties are 67,805,092 people, 5.47% of China, and until this block
+    # existed they were read out of the census volumes and then thrown away**, because the
+    # romanised name matched no adcode. They are not a boundary problem: the geometry has
+    # 2,848 polygons against the volumes' 2,859 counties, and every code that DID resolve
+    # found a polygon. The people were in `data/raw/cn/` the whole time.
+    #
+    # WHY THIS WAS INVISIBLE, AND IT IS THE MORE USEFUL HALF. main() prints
+    # `drawn population stranded: 0.26%`, which reads as fine — but it counts only the
+    # RELIGIO-ETHNIC population, because when that check was written only spec §14.5's
+    # minorities were drawn. §14.13 made everyone drawn on `unknown` and nobody updated the
+    # check, so the number that mattered became the TOTAL stranded, twenty times larger.
+    # **The check did not become wrong, it became irrelevant, and nothing said so.**
+    # main() now reports both.
+    #
+    # THE SHORTFALL IS SYSTEMATICALLY URBAN, which is why it bit hardest exactly where the
+    # map is most interesting: 142 of the missing units are 市辖区. Between 2000 and now
+    # China converted a great many counties into districts and renamed the results, so the
+    # provinces that urbanised fastest lost the most — Hainan 82.4% of its census total
+    # drawn, Zhejiang 86.6%, Jiangxi 88.3%, Guangxi 88.4%, Sichuan 90.3% — against exactly
+    # 100.0% in Xinjiang, Ningxia, Xizang, Qinghai and Beijing, which barely reorganised.
+    #
+    # HOW EACH ONE WAS RESOLVED, so the next person can check rather than trust. Both the
+    # census file and DataV run in GB/T 2260 code order within a province, so an unresolved
+    # county lies in a known interval between its resolved neighbours; the successor is the
+    # modern unit in that interval. `free` was NOT used as a filter — a 2000 unit is often
+    # not renamed but ABSORBED, so the target is frequently a code another census county
+    # already claims, which sources/cn.py has always allowed and reports.
+    #
+    # -- the biggest single miss, and it is a romanisation typo in the source -------
+    (440000, "ZHONGZHAN"): "442000",          # 中山市 — the volume writes ZHONGZHAN, not
+                                              # ZHONGSHAN. 2.36M people, and the reason
+                                              # Zhongshan drew ZERO dots between two of the
+                                              # densest deltas on the map.
+    # -- characters with a place-name reading the romaniser did not use -------------
+    (440000, "FANYU"): "440113",              # 番禺区 — 番 is pān here, not fān
+    (360000, "BOYANG"): "361128",             # 鄱阳县 — 鄱 is pó
+    (330000, "LEQING"): "330382",             # 乐清市 — 乐 is yuè
+    (130000, "LETING"): "130225",             # 乐亭县 — 乐 is lào
+    (140000, "CHANGZI"): "140428",            # 长子县 — 长 is zhǎng
+    (360000, "QIANSHAN"): "361124",           # 铅山县 — 铅 is yán
+    (510000, "JIANWEI"): "511123",            # 犍为县 — 犍 is qián
+    (440000, "DAPU"): "441422",               # 大埔县 — 埔 is bù
+    (410000, "NANLE"): "410923",              # 南乐县 — 乐 is lè
+    (320000, "XIXIA"): "320113",              # 南京栖霞区 — 栖 is qī
+    (370000, "XIXIA"): "370686",              # 栖霞市, the same character one province over
+    (620000, "MINLE"): "620722",              # 民乐县
+    (610000, "WUBAO"): "610829",              # 吴堡县 — 堡 is bǔ
+    (370000, "DONGA"): "371524",              # 东阿县
+    (430000, "XIANGYIN"): "430624",           # 湘阴县
+    (610000, "FUPING"): "610528",             # 富平县
+    (360000, "JINXIAN"): "360124",            # 进贤县
+    (420000, "GONGAN"): "421022",             # 公安县
+    (130000, "JINGXING"): "130121",           # 井陉县 — blocked by 井陉矿区
+    (130000, "JINGXIAN"): "131127",           # 景县
+    (350000, "LICHENG"): "350502",            # 泉州鲤城区
+    (350000, "MAWEI"): "350105",              # 福州马尾区
+    (510000, "NAXI"): "510503",               # 泸州纳溪区
+    (510000, "MIANZHU"): "510683",            # 绵竹市
+    (420000, "JINGSHAN"): "420882",           # 京山市
+    (420000, "SHENNONGJIALIN"): "429021",     # 神农架林区
+    (360000, "GUANGFENG"): "361103",          # 广丰区
+    (150000, "BAIYUNKUANGQU"): "150206",      # 白云鄂博矿区
+    # -- suffix dropped by the romaniser -------------------------------------------
+    (500000, "KAI"): "500154",                # 开县 -> 开州区 (2016)
+    (510000, "DA"): "511703",                 # 达县 -> 达川区 (2013)
+    (450000, "HENG"): "450127",               # 横县 -> 横州市 (2021)
+    (510000, "AN"): "510705",                 # 安县 -> 安州区 (2016)
+    (610000, "HU"): "610118",                 # 户县 -> 鄠邑区 (2016)
+    (610000, "YAO"): "610204",                # 耀县 -> 耀州区 (2002)
+    (610000, "BIN"): "610482",                # 彬县 -> 彬州市 (2018)
+    (610000, "HUA"): "610503",                # 华县 -> 华州区 (2015)
+    (410000, "SHANXIAN"): "411203",           # 陕县 -> 陕州区 (2016)
+    (320000, "WUXIAN"): "320506",             # 吴县市 -> 吴中区 + 相城区 (2001); the larger
+    (330000, "YINXIAN"): "330212",            # 鄞县 -> 鄞州区 (2002)
+    (130000, "LUANXIAN"): "130284",           # 滦县 -> 滦州市 (2018)
+    (130000, "RENXIAN"): "130505",            # 任县 -> 任泽区 (2020)
+    (330000, "QUXIAN"): "330803",             # 衢县 -> 衢江区 (2001)
+    # -- a county of the same name as its prefecture, absorbed into the seat --------
+    (520000, "ZUNYI"): "520304",              # 遵义县 -> 播州区 (2016)
+    (520000, "BIJIE"): "520502",              # 毕节市 -> 七星关区 (2011)
+    (520000, "TONGREN"): "520602",            # 铜仁市 -> 碧江区 (2011)
+    (450000, "LAIBIN"): "451302",             # 来宾县 -> 兴宾区 (2002)
+    (450000, "HEZHOU"): "451102",             # 贺州市 -> 八步区 (2002)
+    (450000, "BAISE"): "451002",              # 百色市 -> 右江区 (2002)
+    (450000, "HECHI"): "451202",              # 河池市 -> 金城江区 (2002)
+    (450000, "CHONGZUO"): "451402",           # 崇左县 -> 江州区 (2003)
+    (610000, "BAOJI"): "610304",              # 宝鸡县 -> 陈仓区 (2003)
+    (620000, "QINGYANG"): "621021",           # 庆阳县 -> 庆城县 (2002)
+    (360000, "JIUJIANG"): "360404",           # 九江县 -> 柴桑区 (2017)
+    (360000, "SHANGRAO"): "361104",           # 上饶县 -> 广信区 (2019)
+    (420000, "YICHANG"): "420506",            # 宜昌县 -> 夷陵区 (2001)
+    (430000, "ZHUZHOU"): "430212",            # 株洲县 -> 渌口区 (2018)
+    (340000, "TONGLING"): "340706",           # 铜陵县 -> 义安区 (2015)
+    (340000, "WUHU"): "340210",               # 芜湖县 -> 湾沚区 (2020)
+    (330000, "SHAOXING"): "330603",           # 绍兴县 -> 柯桥区 (2013)
+    (330000, "JINHUA"): "330703",             # 金华县 -> 金东区 (2000)
+    (330000, "HUZHOU"): "330502",             # 湖州市区 -> 吴兴区 (2003)
+    (510000, "YIBIN"): "511504",              # 宜宾县 -> 叙州区 (2018)
+    (130000, "HANDAN"): "130402",             # 邯郸县 -> 邯山区 (2016)
+    (130000, "XINGTAI"): "130503",            # 邢台县 -> 信都区 (2020)
+    (140000, "DATONG"): "140215",             # 大同县 -> 云州区 (2018)
+    (140000, "CHANGZHI"): "140404",           # 长治县 -> 上党区 (2018)
+    (410000, "ANYANG JIAOQU"): "410506",      # 安阳市郊区 -> 龙安区 (2002)
+    (360000, "XINGZI"): "360483",             # 星子县 -> 庐山市 (2016)
+    (370000, "JIAONAN"): "370211",            # 胶南市 -> 黄岛区 (2012)
+    (370000, "CHANGDAO"): "370614",           # 长岛县 -> 蓬莱区 (2020)
+    (460000, "TONGSHEN"): "469001",           # 通什市 -> 五指山市 (2001)
+    (310000, "NANHUI"): "310115",             # 南汇区 -> 浦东新区 (2009)
+    (220000, "BADAOJIANG"): "220602",         # 八道江区 -> 浑江区 (2010)
+    # -- 市辖区 and 郊区 dissolved into their city's modern districts ---------------
+    # The generic ones — 郊区, 城区, 市中区 — are the largest class and the reason a
+    # province-wide name lookup cannot place them: dozens of prefectures had one.
+    (130000, "SHIJIAZHUANG JIAOQU"): "130108",   # -> 裕华区 (2001)
+    (130000, "XINQU"): "130209",                 # 唐山市新区 -> 曹妃甸区 (2012)
+    (130000, "TANGHAI"): "130209",               # 唐海县 -> 曹妃甸区 (2012), same target
+    (140000, "DATONG NANJIAOQU"): "140214",      # 大同市南郊区 -> 云冈区 (2018)
+    (140000, "CHANGZHI JIAOQU"): "140403",       # 长治市郊区 -> 潞州区 (2018)
+    (230000, "JIAMUSHI JIAOQU"): "230811",       # 佳木斯市郊区
+    (230000, "BEILIN"): "231202",                # 绥化市北林区
+    (230000, "YONGHONG"): "230803",              # 佳木斯永红区 -> 向阳区 (2006)
+    (320000, "WUXI JIAOQU"): "320211",           # 无锡市郊区 -> 滨湖区 (2001)
+    (320000, "MASHAN"): "320211",                # 无锡马山区 -> 滨湖区 (2001)
+    (320000, "CHONGAN"): "320213",               # 无锡崇安区 -> 梁溪区 (2015)
+    (320000, "NANCHANG"): "320213",              # 无锡南长区 -> 梁溪区 (2015)
+    (320000, "BEITANG"): "320213",               # 无锡北塘区 -> 梁溪区 (2015)
+    (320000, "JIULI"): "320312",                 # 徐州九里区 -> 铜山区 (2010)
+    (320000, "QISHUYAN"): "320402",              # 常州戚墅堰区 -> 天宁区 (2015)
+    (320000, "CHANGZHOU JIAOQU"): "320411",      # 常州市郊区 -> 新北区 (2002)
+    (320000, "CANGLANG"): "320508",              # 苏州沧浪区 -> 姑苏区 (2012)
+    (320000, "PINGJIANG"): "320508",             # 苏州平江区 -> 姑苏区 (2012)
+    (320000, "JINCHANG"): "320508",              # 苏州金阊区 -> 姑苏区 (2012)
+    (320000, "GANGZHA"): "320602",               # 南通港闸区 -> 崇川区 (2020)
+    (320000, "YUNTAI"): "320706",                # 连云港云台区 -> 海州区 (2001)
+    (320000, "XINPU"): "320706",                 # 连云港新浦区 -> 海州区 (2014)
+    (320000, "QINGPU"): "320812",                # 淮安清浦区 -> 清江浦区 (2016)
+    (320000, "YANCHENG CHENGQU"): "320902",      # 盐城市城区 -> 亭湖区 (2004)
+    (320000, "YANGZHOU JIAOQU"): "321003",       # 扬州市郊区 -> 邗江区 (2000)
+    (330000, "HANGZHOU XIACHENG"): "330105",     # 杭州下城区 -> 拱墅区 (2021)
+    (330000, "JIANGGAN"): "330102",              # 杭州江干区 -> 上城区 (2021)
+    (330000, "JIANGDONG"): "330212",             # 宁波江东区 -> 鄞州区 (2016)
+    (340000, "JINJIAZHUANG"): "340503",          # 马鞍山金家庄区 -> 花山区 (2012)
+    (340000, "TONGGUANSHAN"): "340705",          # 铜陵铜官山区 -> 铜官区 (2015)
+    (340000, "SHIZISHAN"): "340705",             # 铜陵狮子山区 -> 铜官区 (2015)
+    (340000, "JUCHAO"): "340181",                # 巢湖居巢区 -> 巢湖市 (2011)
+    (350000, "GULANGYU"): "350203",              # 厦门鼓浪屿区 -> 思明区 (2003)
+    (350000, "XINGLIN"): "350211",               # 厦门杏林区 -> 集美区 (2003)
+    (350000, "MEILIE"): "350403",                # 三明梅列区 -> 三元区 (2021); DataV keeps
+                                                 # the old 三元 code 350403, not 350404
+    (360000, "WANLI"): "360112",                 # 南昌湾里区 -> 新建区 (2019)
+    (360000, "NANCHANG JIAOQU"): "360111",       # 南昌市郊区 -> 青山湖区 (2002)
+    (370000, "SIFANG"): "370203",                # 青岛四方区 -> 市北区 (2012)
+    (410000, "MANGSHANQU"): "410108",            # 郑州邙山区 -> 惠济区 (2004)
+    (410000, "JILIQU"): "410306",                # 洛阳吉利区 -> 孟津区 (2021)
+    (410000, "TIEXIQU"): "410505",               # 安阳铁西区 -> 殷都区 (2002)
+    (410000, "HEBI JIAOQU"): "410611",           # 鹤壁市郊区 -> 淇滨区
+    (410000, "BEIZHANQU"): "410704",             # 新乡北站区 -> 凤泉区 (2003)
+    (410000, "XINXIANG JIAOQU"): "410711",       # 新乡市郊区 -> 牧野区 (2003)
+    (420000, "SHIHUIYAO"): "420203",             # 黄石石灰窑区 -> 西塞山区 (2001)
+    (430000, "JIANGDONG"): "430405",             # 衡阳江东区 -> 珠晖区 (2001)
+    (430000, "CHENGNAN"): "430406",              # 衡阳城南区 -> 雁峰区 (2001)
+    (430000, "CHENGBEI"): "430407",              # 衡阳城北区 -> 石鼓区 (2001)
+    (430000, "HENGYANG JIAOQU"): "430408",       # 衡阳市郊区 -> 蒸湘区 (2001)
+    (430000, "ZHISHAN"): "431102",               # 永州芝山区 -> 零陵区 (2005)
+    (440000, "DONGSHAN"): "440104",              # 广州东山区 -> 越秀区 (2005)
+    (440000, "FANGCUN"): "440103",               # 广州芳村区 -> 荔湾区 (2005)
+    (440000, "BEIJIANG"): "440204",              # 韶关北江区 -> 浈江区 (2004)
+    (440000, "DAHAO"): "440512",                 # 汕头达濠区 -> 濠江区 (2003)
+    (440000, "HEPU"): "440512",                  # 汕头河浦区 -> 濠江区 (2003)
+    (440000, "JINYUAN"): "440511",               # 汕头金园区 -> 金平区 (2003)
+    (440000, "SHENGPING"): "440511",             # 汕头升平区 -> 金平区 (2003)
+    (440000, "SHIWAN"): "440604",                # 佛山石湾区 -> 禅城区 (2002)
+    (450000, "NANNING CHENGBEI"): "450102",      # 南宁城北区 -> 兴宁区 (2005)
+    (450000, "NANNING YONGXIN"): "450107",       # 南宁永新区 -> 西乡塘区 (2005)
+    (450000, "NANNING SHIJIAO"): "450107",       # 南宁市郊区 -> 西乡塘区 (2005)
+    (450000, "LIUZHOUJIAOQU"): "450203",         # 柳州市郊区 -> 鱼峰区 (2002)
+    (450000, "DIESHAN"): "450403",               # 梧州蝶山区 -> 万秀区 (2013)
+    (450000, "WUZHOUJIAOQU"): "450405",          # 梧州市郊区 -> 长洲区 (2003)
+    (460000, "ZHENDONG"): "460108",              # 海口振东区 -> 美兰区 (2002)
+    (460000, "XINHUA"): "460106",                # 海口新华区 -> 龙华区 (2002)
+    (500000, "WANSHENG"): "500110",              # 重庆万盛区 -> 綦江区 (2011)
+    (500000, "SHUANGQIAO"): "500111",            # 重庆双桥区 -> 大足区 (2011)
+    (510000, "YUANBA"): "510811",                # 广元元坝区 -> 昭化区 (2013)
+    (510000, "ZIZHONG"): "511025",               # 资中县
+    (520000, "XIAOHE"): "520111",                # 贵阳小河区 -> 花溪区 (2012)
+    (520000, "WANSHANTE"): "520603",             # 万山特区 -> 万山区 (2011)
+    (650000, "NANQUAN"): "650107",               # 乌鲁木齐南山矿区 -> 达坂城区 (2002)
+    # **市中区 IS THE SHARPEST CASE OF THE GENERIC NAME** — Sichuan has three, in file
+    # order 遂宁, 内江, 乐山, so this is a LIST and the nth occurrence takes the nth code.
+    (510000, "SHIZHONG"): ["510903", "511002", "511102"],
+    # -- Yichun's forestry districts, and the one group placed only APPROXIMATELY ---
+    # 伊春 was 15 districts in 2000 and was reorganised into 4 districts + 4 counties in
+    # 2019, so thirteen census units map onto seven modern ones. The pairings below follow
+    # the 2019 reorganisation; where a 2000 district was split rather than absorbed whole,
+    # the whole of it goes to the successor that took its seat. **Everyone lands inside
+    # Yichun** — about 500,000 people — and the residual error is which of two adjacent
+    # districts of one small city a dot sits in.
+    (230000, "YICHUN"): "230717",             # 伊春区 -> 伊美区
+    (230000, "MEIXI"): "230717",              # 美溪区 -> 伊美区
+    (230000, "WUMAHE"): "230718",             # 乌马河区 -> 乌翠区
+    (230000, "CUILUAN"): "230718",            # 翠峦区 -> 乌翠区
+    (230000, "XILIN"): "230751",              # 西林区 -> 金林区
+    (230000, "JINSHANTUN"): "230751",         # 金山屯区 -> 金林区
+    (230000, "SHANGGANLING"): "230719",       # 上甘岭区 -> 友好区
+    (230000, "XINQING"): "230723",            # 新青区 -> 汤旺县
+    (230000, "TANGWANGHE"): "230723",         # 汤旺河区 -> 汤旺县
+    (230000, "WUYILING"): "230723",           # 乌伊岭区 -> 汤旺县
+    (230000, "WUYING"): "230724",             # 五营区 -> 丰林县
+    (230000, "HONGXING"): "230724",           # 红星区 -> 丰林县
+    (230000, "DAILING"): "230725",            # 带岭区 -> 大箐山县
+    # 大兴安岭's three forestry districts have NO GB/T 2260 code of their own in DataV —
+    # 松岭, 新林 and 呼中 are 林业局 areas the index does not carry. They go to the
+    # adjacent county that administers them, which keeps 131,000 people inside the right
+    # prefecture; this is the weakest placement in the block and is flagged as such.
+    (230000, "SONGLING"): "232718",           # -> 加格达奇区 (adjacent)
+    (230000, "XINLIN"): "232718",             # -> 加格达奇区 (adjacent)
+    (230000, "HUZHONG"): "232722",            # -> 塔河县 (adjacent)
+    # -- two names the source itself is byte-corrupted for -------------------------
+    # The Hubei volume mis-encodes two rare characters — 硚 and 猇 — so the name that
+    # arrives is mojibake and no romanisation rule can ever reach it. The adcode interval
+    # identifies both without needing the name at all.
+    (420000, "�~��"): "420104",   # 硚口区, 686,318 people
+    (420000, "�Vͤ"): "420505",         # 猇亭区, 52,827 people
+    # ==============================================================================
     # -- prefecture seats renamed on upgrade ---------------------------------------
     (640000, "GUYUAN"): "640402",             # 固原县 -> 固原市原州区
     (650000, "TULUFAN"): "650402",            # 吐鲁番市 -> 吐鲁番市高昌区
@@ -283,7 +509,10 @@ OVERRIDES = {
     (640000, "ZHONGWEI"): "640502",           # 中卫县 -> 中卫市沙坡头区
     (530000, "QILIN"): "530302",              # 曲靖市麒麟区 (pinyin qulin/qilin)
     # -- renamed counties ----------------------------------------------------------
-    (530000, "ZHONGDIAN"): "533422",          # 中甸县 -> 香格里拉市 (2001)
+    # (530000, "ZHONGDIAN") was here with the WRONG code 533422 (德钦县) — corrected to
+    # 533401 further down, 2026-09-08. Left as a comment because the mistake is instructive:
+    # the entry's own comment named 香格里拉市 correctly and only the digits were wrong, so
+    # nothing in the file read as suspicious.
     (650000, "MIQUAN"): "650109",             # 米泉市 -> 乌鲁木齐市米东区
     (650000, "DONGSHAN"): "650109",           # 乌鲁木齐东山区 -> 米东区 (merged)
     (620000, "ANXI"): "620922",               # 安西县 -> 瓜州县 (2006)
@@ -292,7 +521,8 @@ OVERRIDES = {
     (520000, "PAN"): "520281",                # 盘县 -> 盘州市
     (410000, "KAIFENG"): "410212",            # 开封县 -> 开封市祥符区
     (510000, "BEICHUAN"): "510726",           # 北川县 -> 北川羌族自治县
-    (650000, "WEILI"): "652927",              # 尉犁县 (pinyin yuli)
+    # (650000, "WEILI") was here with the WRONG code 652927 (乌什县) — corrected to 652823
+    # further down, 2026-09-08. Same shape as ZHONGDIAN above.
     (540000, "LANGKAZI"): "540531",           # 浪卡子县 (DataV pinyin langqiazi)
     # -- word order differs from DataV's -------------------------------------------
     (620000, "JISHISHANDONGXIANGZUBAOANZUSALAZUZHZHIXIAN"): "622927",
@@ -330,7 +560,61 @@ OVERRIDES = {
     (130000, "XINSHI"): "130602",             # 保定市新市区 -> 竞秀区
     (130000, "NANSHI"): "130606",             # 保定市南市区 -> 莲池区
     (130000, "BEISHI"): "130606",             # 保定市北市区 -> 莲池区
-    (130000, "WEIXIAN"): "130533",            # 邢台市威县 (not 张家口市蔚县)
+    # ---- WRONG PREFECTURE ENTIRELY, FOUND BY tools/check_cn_prefecture.py ---------
+    # **The worst errors in this file, and none of them was visible.** Each of these had
+    # resolved to a real adcode in a DIFFERENT PREFECTURE — often a different corner of the
+    # province — so the county's whole population was drawn hundreds of kilometres from
+    # home while the true county drew nothing. ~3.4M people. Two were pre-existing
+    # OVERRIDES whose comment named the right county and whose code named another.
+    #
+    # The check that finds them is one line of reasoning: both the census file and DataV
+    # run in GB/T 2260 order, so a county's file NEIGHBOURS are its neighbours in code
+    # space. A resolution landing in a prefecture that neither neighbour is in is almost
+    # always the wrong same-named county. It flags 35, of which 25 are legitimate — a
+    # county really did move prefecture (簡阳 to Chengdu, 无为 to Wuhu, 寿县 to Huainan,
+    # 公主岭 to Changchun, 枞阳 to Tongling, 海原 to Zhongwei) or is provincially
+    # administered (济源, 儋州, 石河子, 嘉峪关) — and these ten are real.
+    (420000, "YUN"): "420304",                # 郧县 -> 郧阳区. Was landing on 云梦县 in
+                                              # XIAOGAN, 400 km away. 584,315 people.
+    (370000, "SHIZHONG"): "370402",           # 枣庄市中区. Was landing on 济南市中区.
+    (370000, "JINING SHIZHONG"): "370811",    # 济宁市中区 -> 任城区 (2013). Was on 枣庄.
+    (140000, "DATONG KUANGQU"): "140214",     # 大同矿区 -> 云冈区 (2018, with 南郊区).
+                                              # Was landing on YANGQUAN's 矿区.
+    (450000, "NANNING XINCHENG"): "450103",   # 南宁新城区 -> 青秀区 (2005). Was landing
+                                              # on 忻城县 in LAIBIN.
+    (440000, "FOSHAN CHENGQU"): "440604",     # 佛山城区 -> 禅城区 (2002, with 石湾区).
+                                              # Was landing on SHANWEI's 城区.
+    (340000, "ANQING JIAOQU"): "340811",      # 安庆市郊区 -> 宜秀区 (2005). Was landing
+                                              # on TONGLING's 郊区.
+    (360000, "LUSHAN"): "360402",             # 九江庐山区 -> 濂溪区 (2016). Was landing on
+                                              # 庐山市, which is 星子县 and is XINGZI's.
+    # -- and two OVERRIDES that were simply typed wrong; the comments were right ----
+    (530000, "ZHONGDIAN"): "533401",          # 中甸县 -> 香格里拉市 (2001). The old entry
+                                              # said 533422, which is 德钦县.
+    (650000, "WEILI"): "652823",              # 尉犁县 (pinyin yuli). The old entry said
+                                              # 652927, which is 乌什县 in AKSU.
+    # ---- NAME COLLISIONS: ONE ROMANISATION, SEVERAL REAL COUNTIES -----------------
+    # **Found 2026-09-08 and worth more than the 168 of §14.17, because these errors cross
+    # PREFECTURES rather than districts.** Where the same romanisation names two or three
+    # genuinely different counties, the resolver piled all of them onto one adcode: Hebei's
+    # three Wei counties — 魏县 in Handan, 威县 in Xingtai, 蔚县 in Zhangjiakou, all
+    # `WEIXIAN` — were drawn as one, putting 1.27M people up to 300 km from home while two
+    # real counties drew nothing at all. ~2.48M people across the five entries below.
+    #
+    # A LIST TAKES THE nth OCCURRENCE IN FILE ORDER, which is the mechanism §12 built for
+    # 伊宁市/伊宁县 and which is exactly right here: both the census file and DataV run in
+    # GB/T 2260 order, so the nth `WEIXIAN` is the nth Wei county by adcode. Each was placed
+    # from its file neighbours, not from the name — 魏县 sits between 馆陶县 and 曲周县,
+    # which no romanisation could tell you.
+    (130000, "WEIXIAN"): ["130434", "130533", "130726"],   # 魏县 / 威县 / 蔚县
+    (130000, "QIAODONG"): ["130102", "130502", "130702"],  # 桥东区 x3: 石家庄 (-> 长安区,
+                                                           # merged 2014), 邢台 (-> 襄都区),
+                                                           # 张家口 (still 130702)
+    (530000, "LUXI"): ["532527", "533103"],       # 泸西县 (红河) / 潞西市 (德宏 -> 芒市)
+    (410000, "XINHUAQU"): ["410402", "410703"],   # 新华区 x2: 平顶山, and 新乡 -> 卫滨区
+    (340000, "XIANGSHAN"): ["340504", "340603"],  # 马鞍山向山区 (-> 雨山区) / 淮北相山区
+    # `XUANHUA` x2 is NOT here and is not a bug: 宣化区 and 宣化县 were two real counties in
+    # 2000 and genuinely merged into one 宣化区 in 2016, so both landing on 130705 is right.
     (320000, "BAIXIA"): "320104",             # 南京市白下区 -> 秦淮区 (2013)
     (320000, "XIAGUAN"): "320106",            # 南京市下关区 -> 鼓楼区 (2013)
     (370000, "LANSHAN"): "371302",            # 临沂市兰山区 (not 日照市岚山区)
@@ -614,6 +898,17 @@ def main():
           f"({how['ambiguous']} of them because the name matched two adcodes)")
     print(f"  drawn population stranded: {drawn_lost:,} of {drawn_total:,} "
           f"= {drawn_lost / drawn_total:.2%}")
+    # **AND THE SAME NUMBER FOR EVERYBODY, WHICH IS THE ONE THAT MATTERS NOW.** The line
+    # above counts only spec §14.5's religio-ethnic groups, because when it was written
+    # they were the only people drawn. §14.13 put the whole country on `unknown`, and from
+    # that day the meaningful figure was the TOTAL stranded — which was 5.47% while this
+    # check reported 0.26% and looked healthy. The check did not become wrong, it became
+    # irrelevant, and nothing said so. spec §14.17.
+    total_pop = sum(v[0] for rows in by_prov.values() for _, v in rows)
+    lost_pop = sum(u[3] for u in unresolved)
+    print(f"  TOTAL population stranded: {lost_pop:,} of {total_pop:,} "
+          f"= {lost_pop / total_pop:.2%}"
+          f"{'' if not lost_pop else '   !! these people are dropped, not redistributed'}")
     carrying = [u for u in sorted(unresolved, reverse=True) if u[0] > 0]
     print(f"  every unresolved county carrying drawn people ({len(carrying)}):")
     for d, prov, name, pop in carrying:

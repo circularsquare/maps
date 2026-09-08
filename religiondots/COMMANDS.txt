@@ -17,6 +17,33 @@ the last three steps FAIL SILENTLY -- no error, no warning, and a map that looks
 
 Run in order.  Every step, every time, even when only one country changed.
 
+   0. python tools/claim.py                # WHAT IS ALREADY BEING BUILT.  Two or three agents
+                                           #   work this directory at once; on 2026-09-08 one
+                                           #   spent an hour on Peru that another had already
+                                           #   finished, and clobbered its sources/pe.py.
+                                           #   Pick from queue.md, then claim it:
+                                           #     python tools/claim.py take <cc> --id <sid>
+                                           #   <sid> is the last component of your scratchpad
+                                           #   path.  Release with `done <cc> --id <sid>`.
+                                           #   ADVISORY -- it cannot stop you.  The habit that
+                                           #   works is: check a path exists before Write.
+   0.5 python tools/oracle.py <Country>    # WHAT THE UN ALREADY HAS, WITH ITS COUNTS.
+                                           #   UNSD Demographic Yearbook table 28: every
+                                           #   census religion tabulation any office forwarded,
+                                           #   national + urban/rural, WITH THE NUMBERS.
+                                           #   sources.md §11r documented a column set that
+                                           #   returns an index with the values stripped, so
+                                           #   for months this was only ever asked "does this
+                                           #   office tabulate religion at all".  It answers
+                                           #   three things now:
+                                           #     * what categories to expect, before writing
+                                           #       a line of the mapping;
+                                           #     * an independent cross-check on the office's
+                                           #       own file, to the person (sk, bg);
+                                           #     * for a country small enough, THE SOURCE --
+                                           #       see sources/micro.py, nine of them.
+                                           #   `--list` prints every country, its latest year
+                                           #   and whether its categories partition.
    1. python sources/<cc>.py --fetch       # -> data/normalized/<cc>.csv, with its own checks
    2. python sources/<cc>_geo.py --fetch   # -> data/geo/<cc>/, units + placement grid
    3. write taxonomy/<cc><YYYY>.py         # the mapping, with EXCLUDED and REVIEW

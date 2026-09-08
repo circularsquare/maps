@@ -84,14 +84,25 @@ REVIEW = {
         "indigenous Amazonia: Puerto Bermúdez 37.7% (Pasco), Awajún 30.5% and Pinto Recodo "
         "27.8% (San Martín), Raymondi 26.9% (the Asháninka district of Ucayali), Río "
         "Santiago 26.3%, Urarinas 24.6% (Loreto). **Reading that as secularity would be "
-        "wrong.** The census gives Amazonian indigenous religions no box, and `Ninguna` is "
-        "where a form with no box for your religion puts you. It is drawn as given and the "
-        "country note says this in the open; §14.4 forbids splitting it on a reading.",
+        "wrong, and the census itself says what it is instead.** `C5P25` (self-identified "
+        "ethnicity) crosses with this variable exactly — same universe, no modelling — and "
+        "`sources/pe_ethnicity.py` runs it: among Amazonian indigenous respondents `Ninguna` "
+        "is **18.74% against 5.09% nationally, 3.68x**, so the association is real. But "
+        "**`Evangélica` is 41.54% there and about 81% give a Christian answer**, so 'the "
+        "form has no box for their religion' is the third fact and not the first. This "
+        "REVIEW entry and the country note both said otherwise until it was measured. Drawn "
+        "as given either way; §14.4 forbids splitting it on a reading.",
     "Adventista":
         "-> christianity.adventist. The call is not in doubt; it is here because the SIZE "
         "of what it buys is easy to miss, and because sources.md §11y overstated the "
         "national figure as '1.5M' when it is 353,430 — a percentage (1.52%) misread as "
-        "millions. The case never rested on the total. See the module docstring.",
+        "millions. The case never rested on the total. See the module docstring. **And the "
+        "ethnicity crosstab sharpens it further than the geography could**: Adventists are "
+        "6.58% of Aymara Peru (4.32x the national rate) and 4.34% of Amazonian indigenous "
+        "Peru, while Quechua Peru — four times larger and largely the same highlands — sits "
+        "at 1.60%, the national average. The altiplano cluster is AYMARA rather than merely "
+        "southern, which is the 1898 Platería mission showing up in a variable it has "
+        "nothing to do with.",
     "Mormones":
         "-> christianity.latterday. 113,659 people, 0.49%, and the first time a census on "
         "this map names the Latter-day Saints as a category of their own rather than "
@@ -104,9 +115,12 @@ REVIEW = {
         "-> other.pe. Only 94,150 people, 0.41% — small because this census names five "
         "non-Catholic Christian bodies rather than sweeping them into one box. Its "
         "geography is the Amazon frontier and it is very sharp (Yavarí 20.7%, Tournavista "
-        "19.2%, San Pablo 18.9%). The Israelitas del Nuevo Pacto Universal are the strongest "
-        "candidate for what is in it and it is NOT split — see the node's own text in "
-        "branches.py, and §14.4.",
+        "19.2%, San Pablo 18.9%) — but **it is NOT the indigenous Amazonians, which is "
+        "measured and not assumed**: 0.40% among them against 0.41% nationally, a district "
+        "correlation of r=0.07. That refutes a candidate branches.py had listed and leaves "
+        "the Israelitas del Nuevo Pacto Universal, an Andean-migrant church, fitting both "
+        "the geography and the ethnicity. Most concentrated among the Tusán (5.51%) and "
+        "Nikkei (3.50%). NOT split — see the node's own text in branches.py, and §14.4.",
 }
 
 MAP = {

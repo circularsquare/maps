@@ -270,6 +270,9 @@ const STR = {
         noSvcNone: 'No trains ran on this section in 2022.',
         unrecTitle: 'Riders not recorded',
         unrecNote: 'Intercity trains do run here — {n} a day each way in 2022 — but the yearbook credits this line with almost no passengers, so there is no rider figure to draw.',
+        pubTitle: 'Published total, not reconstructed',
+        pubTip: 'Not reconstructed — the line\'s published 통과인원 for 2022, split evenly between the two directions.',
+        pubNote: 'No station on this line reports boardings its own trains can claim, so nothing here is cumulated. The figure is the line\'s 2022 통과인원 from the 철도통계연보, split evenly between the two directions. All of it rode this stretch, the only one with intercity trains on it ({n} a day each way).',
         legNoSvc: 'no rider figure',
         toggleStations: 'station bubbles',
         tipFlow: 'passengers / day',
@@ -281,7 +284,7 @@ const STR = {
         noGeom: 'segments.geojson has no geometry yet — {n} segments loaded, nothing to draw.',
         aboutTitle: 'about',
         aboutBody: `<h2>what this shows</h2><p>Every segment of Korea's intercity rail network, drawn at a thickness proportional to the passengers who ride it. A <b>line</b> is a named route in Korail's yearbook; a <b>segment</b> is the track between two consecutive stations on it.</p><p><b>Left click</b> to highlight a line, and click it again to drill into one segment. <b>Right click</b> goes straight to a segment. <b>Esc</b> clears.</p>
-<h2>these numbers are reconstructed</h2><p>Korea publishes no per-segment passenger figures. The <b>철도통계연보</b> gives boardings and alightings at each station, split by direction, and passenger totals per line — but nothing per segment.</p><p>Each line's segment loads are rebuilt from those station counts: order the stations along the track, then cumulate boardings minus alightings inward from the far terminus. Where a line junctions at both ends there is no clean anchor, so the level comes from the line's published 통과인원 instead, and only the shape comes from the station counts. Published train counts per section pin down where traffic can and cannot step on or off at a junction.</p><p>So these are <b>derived figures, not measured ones</b>, and they are more reliable on some lines than others. The two directions are built from disjoint columns of the source, so where 하행 and 상행 disagree on a segment, the reconstruction is straining.</p>
+<h2>these numbers are reconstructed</h2><p>Korea publishes no per-segment passenger figures. The <b>철도통계연보</b> gives boardings and alightings at each station, split by direction, and passenger totals per line — but nothing per segment.</p><p>Each line's segment loads are rebuilt from those station counts: order the stations along the track, then cumulate boardings minus alightings inward from the far terminus. Where a line junctions at both ends there is no clean anchor, so the level comes from the line's published 통과인원 instead, and only the shape comes from the station counts. Published train counts per section pin down where traffic can and cannot step on or off at a junction.</p><p>One line is drawn from the published total alone. 경원선 runs no train the station counts can be attributed to, so there is nothing to cumulate, and its 용산–청량리 figure is the line's 통과인원 for 2022 rather than a reconstruction. Its segments say so when you hover them.</p><p>So these are <b>derived figures, not measured ones</b>, and they are more reliable on some lines than others. The two directions are built from disjoint columns of the source, so where 하행 and 상행 disagree on a segment, the reconstruction is straining.</p>
 <h2>direction</h2><p><b>both</b> sums the two directions — the usual way a flow map reads. <b>down</b> (하행) is travel away from a line's 기점, <b>up</b> (상행) back towards it. Selecting a segment shows both.</p>
 <h2>line thickness scale</h2><p>The <b>log scale above</b> slider sets where thickness switches from linear to logarithmic. Set it <b>high</b> to separate the busy high-speed lines from each other. Set it <b>low</b> to see the quiet rural lines at all.</p>
 <h2>data sources</h2><p>Passengers: <b>철도통계연보</b> (Korail, 2022) — 역별 승하차, 선별 통과인원, 선구별 운행횟수.</p><p><b>Station bubbles</b> show boardings plus alightings per day, with area proportional to traffic. Intercity bubbles are published yearbook counts. Intracity bubbles use the station margins behind each city's weekday model; Seoul's coverage varies by operator, while Busan, Daejeon and Gwangju use published gates.</p><p>Geometry: OpenStreetMap named <code>railway=rail</code> ways, chained station to station and rescaled to the yearbook's 영업거리.</p><p>Method and its limits: <a href="https://github.com/anitagarden/maps">the project README</a>.</p>`,
@@ -309,6 +312,9 @@ const STR = {
         noSvcNone: '2022년 열차 운행 없음.',
         unrecTitle: '이용객 수 자료 없음',
         unrecNote: '일반열차는 운행합니다 — 2022년 편도 1일 {n}회. 다만 연보가 이 노선에 집계한 이용객이 거의 없어 이용객 수를 표시할 수 없습니다.',
+        pubTitle: '추정값이 아닌 공표 수치',
+        pubTip: '추정값이 아닙니다 — 철도통계연보의 2022년 선별 통과인원을 상하행으로 균등 배분한 값입니다.',
+        pubNote: '이 노선이 자기 열차의 이용객으로 집계할 수 있는 승하차 자료가 없어, 이 구간은 누적 추정을 하지 않았습니다. 표시된 값은 철도통계연보의 2022년 선별 통과인원을 상하행으로 균등 배분한 것입니다. 일반열차가 운행하는 구간은 여기뿐이므로(편도 1일 {n}회) 통과인원 전부가 이 구간을 이용했습니다.',
         legNoSvc: '이용객 수 자료 없음',
         toggleStations: '역별 승하차 원',
         tipFlow: '명/일',
@@ -320,7 +326,7 @@ const STR = {
         noGeom: 'segments.geojson에 아직 선형이 없습니다 — 구간 {n}개만 로드됨.',
         aboutTitle: '이 지도에 대하여',
         aboutBody: `<h2>무엇을 그린 지도인가</h2><p>한국 일반철도·고속철도의 모든 역간 구간을, 그 구간을 지나는 이용객 수에 비례한 굵기로 그렸다. <b>노선</b>은 철도통계연보의 선명, <b>구간</b>은 그 위 인접한 두 역 사이의 선로다.</p><p><b>왼쪽 클릭</b>으로 노선을 선택하고, 한 번 더 누르면 그 구간으로 들어간다. <b>오른쪽 클릭</b>은 바로 구간 선택. <b>Esc</b>로 해제.</p>
-<h2>이 수치는 복원한 값이다</h2><p>한국은 구간별 수송량을 공표하지 않는다. <b>철도통계연보</b>에는 역별 승하차(상·하행 구분)와 선별 통과인원이 있을 뿐, 구간별 수치는 없다.</p><p>여기 실린 값은 그 역별 수치로부터 되짚어 만든 것이다. 역을 선로 순서대로 놓고, 반대편 종점에서 안쪽으로 승차－하차를 누적한다. 양 끝이 모두 분기역인 노선은 기준으로 삼을 종점이 없어, 수준은 선별 통과인원에서 가져오고 모양만 역별 수치에서 얻는다. 분기역에서 어느 구간에 열차가 붙고 떨어질 수 있는지는 선구별 운행횟수로 고정했다.</p><p>따라서 이 값들은 <b>측정값이 아니라 유도값</b>이며, 노선에 따라 신뢰도가 다르다. 상행과 하행은 원자료의 서로 다른 열에서 따로 만들어지므로, 두 값이 어긋나는 구간일수록 복원이 무리한 곳이다.</p>
+<h2>이 수치는 복원한 값이다</h2><p>한국은 구간별 수송량을 공표하지 않는다. <b>철도통계연보</b>에는 역별 승하차(상·하행 구분)와 선별 통과인원이 있을 뿐, 구간별 수치는 없다.</p><p>여기 실린 값은 그 역별 수치로부터 되짚어 만든 것이다. 역을 선로 순서대로 놓고, 반대편 종점에서 안쪽으로 승차－하차를 누적한다. 양 끝이 모두 분기역인 노선은 기준으로 삼을 종점이 없어, 수준은 선별 통과인원에서 가져오고 모양만 역별 수치에서 얻는다. 분기역에서 어느 구간에 열차가 붙고 떨어질 수 있는지는 선구별 운행횟수로 고정했다.</p><p>한 노선만은 공표 수치를 그대로 썼다. 경원선은 역별 승하차로 집계할 수 있는 열차가 없어 누적할 것이 없으므로, 용산–청량리 값은 복원값이 아니라 2022년 선별 통과인원 그 자체다. 해당 구간에 커서를 올리면 그렇게 적혀 있다.</p><p>따라서 이 값들은 <b>측정값이 아니라 유도값</b>이며, 노선에 따라 신뢰도가 다르다. 상행과 하행은 원자료의 서로 다른 열에서 따로 만들어지므로, 두 값이 어긋나는 구간일수록 복원이 무리한 곳이다.</p>
 <h2>방향</h2><p><b>양방향</b>은 두 방향의 합 — 흐름 지도를 읽는 보통의 방식이다. <b>하행</b>은 기점에서 멀어지는 방향, <b>상행</b>은 기점으로 돌아오는 방향. 구간을 선택하면 둘 다 표시된다.</p>
 <h2>선 굵기 스케일</h2><p><b>로그 전환 기준</b> 슬라이더는 굵기가 선형에서 로그로 바뀌는 지점을 정한다. <b>높이면</b> 붐비는 고속선끼리의 차이가 벌어지고, <b>낮추면</b> 한산한 지방 노선도 눈에 보인다.</p>
 <h2>자료</h2><p>이용객: <b>철도통계연보</b>(한국철도공사, 2022) — 역별 승하차, 선별 통과인원, 선구별 운행횟수.</p><p><b>역 버블</b>은 하루 승차＋하차이며 넓이가 이용객에 비례한다. 일반철도 원은 연보 공표값이다. 도시철도 원은 각 평일 모형의 역별 합계로, 부산·대전·광주는 공표 게이트 수치이고 수도권은 운영기관에 따라 측정 범위가 다르다.</p><p>선형: OpenStreetMap의 선명이 붙은 <code>railway=rail</code>, 역과 역을 잇고 연보의 영업거리에 맞춰 보정.</p><p>방법과 그 한계: <a href="https://github.com/anitagarden/maps">프로젝트 README</a>.</p>`,
@@ -572,7 +578,21 @@ const ZF_HI = Math.pow(ZOOM_BASE, 13 - 7);
 // map's trains do not run here or that the source does not count the people on
 // them, and a constant width says that instead.
 const NOSVC_W = 1.5;
+// Except where nothing ran at all, which is not the same kind of statement.
+// `commuter` and `unrecorded` are both unknowns — a busy railway whose riders
+// are on the other layer, or trains whose passengers the source does not count
+// — and a constant width is the honest way to draw an unknown. `none` is a
+// known zero: the 운전 sheet shows no train of any kind on the section. Drawing
+// a known zero at the same width as an unknown overstates it, and on the one
+// segment this applies to, 경원선's 소요산-백마고지, it is 38.6 km of the map's
+// most conspicuous grey. Nothing else draws that track either — the metro layer
+// stops at 소요산 too, exactly as the sheet says — so this stripe is the only
+// thing on those kilometres and it was reading as traffic. A hairline still
+// says the railway is there, which is true and worth saying: it was shut for
+// the 전철 works, not abandoned.
+const NONE_W = 0.5;
 const wExpr = (m) => ['case',
+    ['==', ['get', 'service'], 'none'], NONE_W,
     ['has', 'service'], NOSVC_W,
     ['+', MIN_W, ['*', m * W_RANGE, tExpr()]]];
 
@@ -693,6 +713,40 @@ const map = new maplibregl.Map({
     attributionControl: true,
 });
 map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
+
+// A fast zoom-out that crosses four or more zoom levels at once goes blank for
+// about a third of a second — basemap, lines, bubbles, everything. It is
+// MapLibre's tile retain window and not anything on this page.
+//
+// SourceCache stands in for a tile it has not loaded yet with a loaded parent
+// or child, but only within `maxUnderzooming` levels, which is 3. Flick from
+// z9 to z5 and the z9 tiles in hand are four levels down, so nothing covers the
+// viewport and the style's background paints through until z5 arrives.
+// Measured on a cold cache, 300 frames across the jump: 16 blank frames at the
+// default, 0 with the window widened; 8→5 never blanks, being three levels.
+//
+// It only bites when the destination tiles have never been fetched, which is
+// why it looks rare to anyone who has had the page open a while and constant to
+// a first-time visitor — the case that matters.
+//
+// The widening is not exponential: `findLoadedChildren` only ever considers
+// tiles already in the cache, so a bigger window lets existing tiles cover more,
+// it does not go looking for 4^n of them.
+//
+// There is no public setting for this. `maxUnderzooming` is a static on
+// SourceCache, reachable only through a live instance, so it is private API and
+// guarded as such — one patch covers every source, since they share the class.
+// If a MapLibre upgrade renames it the guard simply skips and the only cost is
+// the flash coming back.
+map.once('style.load', () => {
+    try {
+        const caches = map.style._sourceCaches || map.style.sourceCaches || {};
+        const one = Object.values(caches)[0];
+        if (!one) return;
+        const SourceCache = Object.getPrototypeOf(one).constructor;
+        if (typeof SourceCache.maxUnderzooming === 'number') SourceCache.maxUnderzooming = 10;
+    } catch (e) { /* private API; worst case is the flash returns */ }
+});
 
 let allFeats = [];
 let fcData = null;              // the loaded FeatureCollection — re-fed on colour-mode switch
@@ -888,6 +942,11 @@ map.on('load', async () => {
             // dot on the map. Name the line instead.
             (p.junction ? `<div class="meta">${S.joinNote.replace('{n}',
                 p.join_line ? lineLabel(p.join_line) : stnLabel(p.junction))}</div>` : '') +
+            // The one figure on the map that is published rather than derived,
+            // so it has to say so — the rest of the page's numbers come with
+            // an implied "reconstructed" that would be wrong here. One line in
+            // the tooltip; the panel has room for the argument.
+            (p.level === 'passing' ? `<div class="meta">${S.pubTip}</div>` : '') +
             // A merged segment runs past stations that have bubbles on the map,
             // so it has to say why there is no break at them.
             (p.through ? `<div class="meta">${S.throughNote.replace('{n}', Number(p.through).toLocaleString())}</div>` : '') +
@@ -1161,13 +1220,22 @@ function renderInfo() {
                        ? S.unrecTitle : S.noSvcTitle}</div>`
                 : `<div class="iprow"><span>${S.panelRange}</span>` +
                       `<b>${Math.round(segValue(selected)).toLocaleString()}</b></div>` +
-                  split);
+                  split +
+                  // Down and up are equal here because the published total was
+                  // halved, not because they were built separately and agreed.
+                  // The panel is where that has room to be said.
+                  (selected.level === 'passing'
+                      ? `<div class="ipseg">${S.pubTitle}</div>` +
+                        `<div class="ipnote">${S.pubNote.replace('{n}',
+                            Number(selected.intercity_trains).toLocaleString())}</div>`
+                      : ''));
     } else {
         const parts = allFeats.filter(f => f.properties.line === selected.line);
         let km = 0, dmin = Infinity, dmax = -Infinity;
         // Grey end to end means there is no range to quote. Only end to end:
-        // 경원선 is greyed north of 청량리 and its 13k on the trunk is real, so a
-        // partly-grey line still gets its numbers.
+        // 경원선 is greyed north of 청량리 and its 20.5k on 용산-청량리 is the
+        // line's published 통과인원, so a partly-grey line still gets its
+        // numbers.
         const allGrey = parts.length > 0 && parts.every(f => f.properties.service);
         const unrec = allGrey && parts[0].properties.service === 'unrecorded';
         for (const f of parts) {
@@ -1328,8 +1396,9 @@ function buildLegend() {
 // one row per line actually present in the data, coloured as the map colours it
 // A line drawn grey end to end has no rider figure to lead with — 경춘선's peak
 // is 13 a day, which is the fit's residual and not a readership. It sorts last
-// and shows a dash. Partly-grey lines keep their number: 경원선's 13k on
-// 용산–청량리 is real, and only the stretch past 청량리 is greyed.
+// and shows a dash. Partly-grey lines keep their number: 경원선's 20.5k on
+// 용산–청량리 is the line's published 통과인원, and only the stretch past
+// 청량리 is greyed.
 function rosterRows() {
     const by = new Map();
     for (const f of allFeats) {

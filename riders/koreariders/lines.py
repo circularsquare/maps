@@ -14,6 +14,7 @@ build_names.py. Everything else here is read out of the workbook.
 
 import io
 import os
+import re
 import sys
 import zipfile
 
@@ -21,7 +22,27 @@ import openpyxl
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 D = os.path.join(HERE, "data")
-YEARBOOK = os.path.join(D, "korail_yearbook_2022_excel.zip")
+# Which edition of the 철도통계연보 everything reads. 2022 is what the map is
+# built from and what every figure in README.md refers to, so it stays the
+# default and moving year is a deliberate act rather than a side effect of
+# dropping a file in `data/`. Set KOREARIDERS_YEARBOOK to a zip path to run a
+# different edition -- the readers cope with both, see `_member_key` below and
+# `frequency.SEP`.
+YEARBOOK = os.environ.get(
+    "KOREARIDERS_YEARBOOK",
+    os.path.join(D, "korail_yearbook_2022_excel.zip"))
+
+
+def year():
+    """The edition's year, off the filename.
+
+    The page and the reports quote it in a dozen places -- "no trains ran on
+    this section in 2022" and so on -- and hardcoding it there means changing
+    edition silently leaves the map describing itself as the wrong year.
+    `write_geojson` puts this in the file and `index.html` substitutes it.
+    """
+    m = re.search(r"(19|20)\d{2}", os.path.basename(YEARBOOK))
+    return int(m.group(0)) if m else None
 
 PASSENGER = "1.지역간철도/4. 수송(여객)_완.xlsx"
 FACILITY = "1.지역간철도/8. 시설_완.xlsx"
@@ -376,13 +397,44 @@ PART_TYPES = {
 }
 
 
+def _member_key(name):
+    """A member name reduced to something stable across editions.
+
+    Every filename in the bundle changed between 2022 and 2023 without a single
+    sheet moving:
+
+        2022  1.지역간철도/4. 수송(여객)_완.xlsx
+        2023  1. 지역간 철도/4. 수송(여객).xlsx
+        2022  2.도시철도/도시철도-3.수송실적_완.xlsx
+        2023  2. 도시철도/3. 수송실적.xlsb
+
+    Spaces come and go, the `_완` suffix was dropped, the 도시철도 files stopped
+    repeating their section in the basename, and four workbooks changed from
+    xlsx to xlsb. So match on what is actually stable: the section and sheet
+    numbers with their titles, spaces and suffix and extension removed.
+
+    Matching on the numbers alone would be simpler and is wrong -- part 1 has
+    two sheet 6s, `6. 운전(1~6)` and `6. 운전(7~9)`.
+    """
+    part, _, base = name.replace("\\", "/").rpartition("/")
+    base = base.rsplit(".", 1)[0]                     # drop the extension
+    part = re.sub(r"\s+", "", part)
+    base = re.sub(r"\s+", "", base).replace("_완", "")
+    # 2022 repeats the section name inside each basename; 2023 does not.
+    section = re.sub(r"^\d+\.", "", part)
+    if section:
+        base = re.sub(r"^%s-" % re.escape(section), "", base)
+    return "%s/%s" % (part, base)
+
+
 def _open(member):
+    want = _member_key(member)
     with zipfile.ZipFile(YEARBOOK) as z:
         for i in z.infolist():
             n = i.filename
             if not (i.flag_bits & 0x800):
                 n = n.encode("cp437").decode("cp949")
-            if n == member:
+            if _member_key(n) == want:
                 return io.BytesIO(z.read(i.filename))
     raise SystemExit("no %s in the yearbook zip" % member)
 
@@ -432,6 +484,27 @@ def _num(v):
 # its own. Anything not listed is passed through untouched.
 STATION_ALIAS = {
     "김천구미": "김천(구미)",
+    # A typo in the 2023 edition, not a different station: 여수엑수포 for
+    # 여수엑스포. It matters more than a typo should, because that station is
+    # 전라선's clean terminus and therefore its anchor -- unmatched, the one
+    # line in the network that passes every test would silently anchor on
+    # nothing. Harmless against 2022, which spells it correctly and so never
+    # has this key to rewrite.
+    "여수엑수포": "여수엑스포",
+    # One station, two labels, in the *same* edition. 2022's sheet 9 (KTX)
+    # writes 서대구 and its sheet 10 (SRT) writes 서대구('22.3.31~), annotating
+    # the day the station opened -- so the KTX row reaches 경부고속선's chain and
+    # the SRT row does not, and 184,595 passengers a year have been going
+    # nowhere. It is the 김천구미 fault again with a date instead of a bracket.
+    # 2023 spells both plainly, which is how this was found at all.
+    #
+    # Listed rather than derived: stripping any bracketed annotation would also
+    # merge 판교(경기) into 판교, and those really are two stations 200 km apart.
+    "서대구('22.3.31~)": "서대구",
+    # 2023 disambiguates a name 2022 left bare. 판교(충남) is 장항선's, and is
+    # the one the chain means; 판교(경기) is the 경강선 station near Seoul, on no
+    # chain here, and must stay separate -- aliasing it would be the 신경주 trap.
+    "판교(충남)": "판교",
 }
 
 

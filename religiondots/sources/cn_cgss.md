@@ -132,11 +132,19 @@ never sampled Tibet, and §14.5 already draws it from ethnicity).
 
 | | pooled level | 2021 level |
 |---|---|---|
-| Mahayana Buddhists | **55.4M** (55,407 dots) | 31.0M (31,035 dots) |
-| Protestants | 20.4M (20,372 dots) | 10.4M (10,438 dots) |
+| Mahayana Buddhists | **58.4M** (58,393 dots) | ~32.7M |
+| Protestants | **21.3M** (+0.88M §14.9 mission peoples) | ~11.0M |
 
-For scale, **all colour currently on China is 31.5M** (30.67M derived + 0.88M modelled). The
-Buddhist layer alone is between one and two times everything now drawn.
+For scale, **all colour on China before this layer was 31.5M** (30.67M derived + 0.88M
+modelled). The Buddhist layer alone is nearly twice everything that was drawn before it.
+
+**These figures are ~5% larger than this layer first drew, because of spec §14.17 the same
+day.** The county join was repaired — 168 census counties holding 67.8M people had been read
+out of the volumes and discarded — and since these shares are applied to the `unknown` residual,
+a bigger residual draws more. That also removes a bias this layer could not have seen: **142 of
+the 168 missing counties were urban districts (市辖区)**, so a provincial share was being applied
+to a denominator missing 5.5% of the province, concentrated in its cities. China's drawn
+population went from 1,259,316,206 to 1,332,810,852, within 17 people of the published census.
 
 The 2× spread between the two columns is the levels problem above, stated as dots. The obvious
 resolution is the one China already uses for ethnicity under §3.4 — **shape from the pooled
@@ -180,4 +188,54 @@ Per [[feedback_nothing_is_truly_dead]], what was searched, so it is not re-searc
 - **CNSDA (`cnsda.org`) and `cgss.ruc.edu.cn`** are the official archives and want a free
   account. Not attempted, per [[feedback_gated_data_last_resort]] — but note this is an
   ordinary email registration, not the Korean-ID wall, so it is a cheap ask rather than a dead
-  end, and it is the only route to the 2010, 2011, 2013, 2015 and 2018 waves.
+  end. **It is NOT the only route to 2010, 2011 and 2013 — that sentence was wrong and is
+  corrected below.** It remains the only route to 2015, 2018, 2023 and the household files.
+
+## 2010, 2011 AND 2013 ARE OPEN AFTER ALL — FOUND 2026-09-08
+
+Anita registered at CNSDA and hit a wall the free account does not clear: **every download
+needs a separate data APPLICATION**, reviewed, which for an unaffiliated applicant abroad is
+the shape of thing that already refused this project once (see [[reference_cfps_terms]]).
+
+So §6b's mirror rule got one more run, and went five for five. **Three of the walled waves are
+sitting unrestricted in a replication package**: `doi:10.7910/DVN/R1S5RP`, *"Meritocracy as
+Authoritarian Co-Optation"*, which carries `cgss2010.tab`, `cgss2011.tab`, `cgss2013.tab` and a
+second copy of 2012. `sources/cn_cgss_fetch.py` pulls them and its docstring is the record.
+
+**These are near-complete waves, not the variable subsets a replication package usually is** —
+963, 592 and 650 variables — and all three keep the two columns that matter, which is what had
+to be checked rather than hoped:
+
+| | n | provinces | religion variable | weight |
+|---|---|---|---|---|
+| 2010 | 11,783 | **31** | `a5`, single choice, 8 categories | `WEIGHT` |
+| 2011 | 5,620 | 26 | `a501` + `a511`–`a521`, multi-select | **none** |
+| 2013 | 11,438 | 28 | `a501` + `a511`–`a521`, multi-select | **none** |
+
+**CGSS 2010 IS THE ONLY WAVE ANYWHERE HERE THAT COVERS ALL 31 PROVINCES.** It has Hainan (100
+respondents) and Xizang (79), the two this file has always listed as uncovered. Tibet's cell is
+far too thin to draw and §14.5 draws it from ethnicity anyway; Hainan's is thin but is the only
+survey reading that province has ever had.
+
+Pooling all six waves would take the sample from **32,495 to 61,336**, and roughly double both
+drawn categories: Buddhism 1,592 → ~3,133 respondents, Protestantism **585 → ~1,145**. That is
+aimed squarely at the thing §14.10 called marginal, which was 13 of 29 provinces holding fewer
+than ten Protestant respondents.
+
+**Three things to settle before any of that is drawn**, and they are why it has not been:
+
+- **2011 and 2013 carry no weight column in these copies.** Unweighted provincial shares are
+  biased by the sample design, and this project has never drawn one. Either find the weights,
+  or draw those waves unweighted and say so, or use them for the cross-wave stability test only.
+- **2013's multi-select overlap is 4.0% of religious respondents**, against the 5% ceiling
+  `cn_cgss.py::check` enforces for collapsing multi-select to one category. Inside the rule, but
+  it is the closest any wave has come.
+- **Adding three older waves moves the pooled level UP**, because reported religiosity falls
+  across the whole period. Pooling six waves centred on ~2014 is a different object from pooling
+  three centred on ~2017, and it makes the unmade levels decision (§14.20) sharper rather than
+  softer.
+
+Cite **CNSDA / Renmin University** as the origin, never the replication package. Its own terms
+are *"not to be distributed/posted outside of the Harvard Dataverse"*, which is a
+no-redistribution clause and not a no-use one; `cn_cgss_fetch.py` downloads from Harvard
+directly, as it asks.

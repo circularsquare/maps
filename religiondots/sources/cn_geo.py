@@ -203,10 +203,85 @@ def build_counties():
         print(f"  repairing {int(invalid.sum())} invalid polygons with buffer(0)")
         g.loc[invalid, "geometry"] = g.loc[invalid, "geometry"].buffer(0)
 
+    g = clip_to_de_facto(g)
+
     os.makedirs(GEO, exist_ok=True)
     g.to_file(COUNTIES_OUT, layer="counties", driver="GPKG")
     print(f"  wrote {COUNTIES_OUT}  {len(g)} counties")
     return g
+
+
+# Natural Earth's disputed-areas layer, which country_shapes.py already uses for Abkhazia.
+# Its NOTE_BRK field records DE FACTO administration — "Admin. by India; Claimed by China" —
+# which is exactly the distinction this needs.
+DISPUTED = os.path.join(ROOT, "data", "geo", "ne_10m_admin_0_disputed_areas.geojson")
+
+
+def clip_to_de_facto(g):
+    """Remove ground China CLAIMS but does not ADMINISTER. spec §14.18, Anita's call.
+
+    **DataV's county boundaries follow the PRC's territorial claim**, so Tibet's Cona,
+    Lhünzê, Mêdog and ten neighbours extend south of the McMahon line over Arunachal
+    Pradesh, which India administers and which India's own census draws. Unclipped, three
+    things went wrong at once:
+
+      * Kontur's Arunachal population — 1,516,251 people — was assigned to Chinese counties,
+        so it pulled those counties' dots south. **59% of the 333,234 people the census
+        puts in those counties, about 197,000 of them, were drawn inside India.**
+      * the §6.12 coverage wash claimed Arunachal for China;
+      * and India drew the same ground from its own census, so the map asserted two
+        different populations on one piece of land.
+
+    **The rule is DE FACTO administration and it is applied from the data, not a hand list**:
+    subtract every disputed polygon that China claims but somebody else administers. That
+    removes Arunachal, Demchok, the Samdu, Tirpani and Bara Hotii valleys and the two
+    Bhutanese salients — and **keeps Aksai Chin and the Shaksam Valley**, which China
+    administers and India and Pakistan claim. Natural Earth's plain country layer agrees on
+    both directions, which is the check.
+
+    Doing it here rather than in water.py or scatter.py is deliberate: the grid is built
+    from these polygons a few lines below, so clipping the counties clips the hexes too, and
+    a future rebuild cannot forget.
+    """
+    import geopandas as gpd
+
+    if not os.path.exists(DISPUTED):
+        print(f"  !! {DISPUTED} missing — NOT clipping; China will claim Arunachal")
+        return g
+
+    d = gpd.read_file(DISPUTED).to_crs(4326)
+    note = d.get("NOTE_BRK", "").fillna("") if "NOTE_BRK" in d else None
+    if note is None:
+        print("  !! disputed layer has no NOTE_BRK — NOT clipping")
+        return g
+    drop = d[note.str.contains("Claimed by China", case=False, na=False)
+             & ~note.str.contains("Admin. by China", case=False, na=False)]
+    if drop.empty:
+        print("  !! no 'claimed by China, administered by another' polygons found")
+        return g
+
+    names = ", ".join(sorted(str(n) for n in drop.get("BRK_NAME", drop.index)))
+    area = drop.to_crs(3395).area.sum() / 1e6
+    print(f"  de-facto clip: subtracting {len(drop)} disputed areas ({area:,.0f} km2)")
+    print(f"    {names}")
+
+    cut = drop.geometry.union_all() if hasattr(drop.geometry, "union_all") \
+        else drop.geometry.unary_union
+    touched = g.geometry.intersects(cut)
+    if not touched.any():
+        print("    (no county touches them)")
+        return g
+    before = g.loc[touched].to_crs(3395).area.sum() / 1e6
+    g.loc[touched, "geometry"] = g.loc[touched, "geometry"].difference(cut)
+    after = g.loc[touched].to_crs(3395).area.sum() / 1e6
+    emptied = g.geometry.is_empty | g.geometry.isna()
+    print(f"    {int(touched.sum())} counties clipped, "
+          f"{before - after:,.0f} km2 removed ({before:,.0f} -> {after:,.0f})")
+    if emptied.any():
+        print(f"    {int(emptied.sum())} counties are now EMPTY and are dropped: "
+              f"{sorted(g.loc[emptied, 'unit'])}")
+        g = g[~emptied].copy()
+    return g.reset_index(drop=True)
 
 
 def build_grid(counties):
@@ -297,10 +372,129 @@ def build_grid(counties):
         hexes = hexes.rename(columns={"pop": "population"})
 
     hexes = hexes.rename(columns={"population": "pop"})[["unit", "pop", "geometry"]]
+    hexes = absorb_post_2000_splits(hexes)
     os.makedirs(GEO, exist_ok=True)
     hexes.to_file(GRID_OUT, layer="grid", driver="GPKG")
     print(f"  wrote {GRID_OUT}  {len(hexes):,} hexes")
     check_against_census(hexes, counties)
+
+
+# A modern unit created AFTER 2000 by splitting a census county -> that county's adcode.
+# spec §14.19.
+#
+# **THE PROBLEM THIS SOLVES IS PLACEMENT, NOT COUNTING.** After §14.17 every census person
+# is drawn and every province reconciles, but where a 2000 county was SPLIT into two modern
+# districts, `OVERRIDES` names one of them and the whole county's population is drawn inside
+# it — so the sibling's ground draws nothing. Anita spotted it as *"nansha is empty of
+# people on our map"*: Guangzhou's Nansha was carved out of Panyu in 2005, the census knows
+# only `FANYU`, and 652,857 people live on ground the map left blank.
+#
+# **Relabelling the hex is the whole fix.** The hexes are already clipped to the orphan's
+# polygon, so giving them the parent's `unit` makes scatter.py spread the parent's dots over
+# the ORIGINAL 2000 territory, weighted by Kontur — which is what the county's population
+# always meant. No count changes anywhere.
+#
+# HOW EACH PARENT WAS CHOSEN. The default is the data-bearing neighbour sharing the longest
+# boundary inside the same prefecture, corrected by hand wherever the administrative history
+# is known (Nansha from Panyu, Longhua from Bao'an, Xiangcheng and Wuzhong both from 吴县市).
+# **The residual risk is naming a sibling rather than the true parent**, which would move
+# people between two adjacent districts of one city — bounded, and much smaller than the
+# blank it replaces.
+ABSORB = {
+    # -- Guangdong ---------------------------------------------------------------
+    "440514": "440513",   # 潮南区 <- 潮阳市 (2003)
+    "440309": "440306",   # 深圳龙华区 <- 宝安区 (2011)
+    "440311": "440306",   # 深圳光明区 <- 宝安区 (2018)
+    "440310": "440307",   # 深圳坪山区 <- 龙岗区 (2009)
+    "440115": "440113",   # 广州南沙区 <- 番禺 (2005) -- Anita's case
+    "440404": "440403",   # 珠海金湾区 <- 斗门县 (2001)
+    # -- Jiangsu / Zhejiang ------------------------------------------------------
+    "320507": "320506",   # 苏州相城区 <- 吴县市, as 吴中区 was (2001)
+    "320206": "320205",   # 无锡惠山区 <- 锡山市, as 锡山区 was (2000)
+    "320214": "320205",   # 无锡新吴区 <- 锡山区 (2015)
+    "330113": "330110",   # 杭州临平区 <- 余杭区 (2021)
+    "330114": "330109",   # 杭州钱塘区 <- 江干+萧山 (2021); 萧山 is the larger share
+    "330503": "330502",   # 湖州南浔区 <- 湖州市区 (2003)
+    "330383": "330327",   # 龙港市 <- 苍南县 (2019)
+    # -- everywhere else ---------------------------------------------------------
+    "230109": "230102",   # 哈尔滨松北区 <- 道里区 (2004)
+    "350305": "350304",   # 莆田秀屿区 <- 莆田县 (2002)
+    "350205": "350211",   # 厦门海沧区 <- 杏林区, as 集美区 was (2003)
+    "350213": "350212",   # 厦门翔安区 <- 同安区 (2003)
+    "421321": "421303",   # 随县 <- 随州曾都区 (2009)
+    "420804": "420802",   # 荆门掇刀区 <- 东宝区 (2001)
+    "360113": "360112",   # 南昌红谷滩区 <- 新建区 (2019)
+    "360482": "360425",   # 共青城市 <- 永修/德安/星子 (2010)
+    "510904": "510903",   # 遂宁安居区 <- 市中区, as 船山区 was (2003)
+    "511903": "511902",   # 巴中恩阳区 <- 巴州区 (2013)
+    "511603": "511602",   # 广安前锋区 <- 广安区 (2013)
+    "450108": "450109",   # 南宁良庆区 <- 邕宁县 (2005)
+    "450804": "450802",   # 贵港覃塘区 <- 贵港市郊 (2003)
+    "450903": "450902",   # 玉林福绵区 <- 玉州区 (2013)
+    "450406": "450421",   # 梧州龙圩区 <- 苍梧县 (2013)
+    "451103": "451102",   # 贺州平桂区 <- 八步区 (2011)
+    "520303": "520302",   # 遵义汇川区 <- 红花岗区 (2004)
+    "520115": "520113",   # 贵阳观山湖区 <- 白云区 (2012)
+    "411104": "411103",   # 漯河召陵区 <- 郾城区 (2004)
+    "371103": "371102",   # 日照岚山区 <- 东港区 (2004)
+    "530702": "530721",   # 丽江古城区 <- 丽江纳西族自治县 (2003)
+    "340506": "340521",   # 马鞍山博望区 <- 当涂县 (2012)
+    "341504": "341522",   # 六安叶集区 <- 霍邱县 (2015)
+    "150703": "150781",   # 扎赉诺尔区 <- 满洲里市 (2001)
+    "150603": "150627",   # 康巴什区 <- 伊金霍洛旗 (2016)
+    "540630": "540629",   # 双湖县 <- 尼玛县 (2012)
+    "632803": "632801",   # 茫崖市 <- 海西州 (2018)
+    "632825": "632801",   # 海西州直辖 <- 格尔木市
+    "654004": "654023",   # 霍尔果斯市 <- 霍城县 (2014)
+    "652702": "652701",   # 阿拉山口市 <- 博乐市 (2012)
+    # -- Sanya's 2014 four-way split --------------------------------------------
+    "460202": "460204",   # 海棠区 <- 三亚市
+    "460203": "460204",   # 吉阳区 <- 三亚市
+    "460205": "460204",   # 崖州区 <- 三亚市
+    # -- XPCC (兵团) cities, carved out of the surrounding county after 2000 -----
+    "659002": "652901",   # 阿拉尔市 <- 阿克苏 (2002)
+    "659003": "653130",   # 图木舒克市 <- 巴楚县 (2002)
+    "659004": "652301",   # 五家渠市 <- 昌吉市 (2004)
+    "659005": "654323",   # 北屯市 <- 福海县 (2011)
+    "659006": "652801",   # 铁门关市 <- 库尔勒市 (2012)
+    "659007": "652701",   # 双河市 <- 博乐市 (2014)
+    "659008": "654022",   # 可克达拉市 <- 察布查尔锡伯自治县 (2015)
+    "659009": "653223",   # 昆玉市 <- 皮山县 (2016)
+    "659010": "654202",   # 胡杨河市 <- 乌苏市 (2019)
+}
+
+# NOT absorbed, and each for a different reason — see spec §14.19.
+#
+# **HAINAN'S ELEVEN ARE A SOURCE GAP, NOT A SPLIT.** 澄迈, 临高, 定安, 屯昌, 东方, 乐东,
+# 陵水, 昌江, 白沙, 琼中 and 保亭 are ordinary counties that have existed throughout; they
+# draw nothing because the Hainan volume of the 2000 census is INCOMPLETE — `main()` reports
+# the shortfall as *"the shortfall IS Hainan, exactly"*, 3,159,377 people. Absorbing them
+# into 五指山 or 儋州 would invent a geography the source never had. They stay blank, which
+# is §3.5's rule: an undercount is marked, not filled.
+#
+# **金门县 is administered by Taiwan** and belongs with §14.18's de-facto rule rather than
+# here; NE's disputed layer does not carry it, so it is named explicitly.
+#
+# **三沙市's 西沙区 and 南沙区** were created in 2012 over islands with 53 people between
+# them by Kontur and no 2000 census at all. Nothing to absorb them into.
+NOT_ABSORBED = {
+    "469021", "469022", "469023", "469024", "469025", "469026",
+    "469027", "469028", "469029", "469030", "469007",   # Hainan's incomplete volume
+    "350527",                                            # 金门县, administered by Taiwan
+    "460301", "460302",                                  # 三沙市, created 2012
+}
+
+
+def absorb_post_2000_splits(hexes):
+    """Relabel hexes of post-2000 splits to the census county they were carved from."""
+    before = hexes["unit"].isin(ABSORB).sum()
+    if not before:
+        return hexes
+    moved_pop = hexes.loc[hexes["unit"].isin(ABSORB), "pop"].sum()
+    hexes["unit"] = hexes["unit"].replace(ABSORB)
+    print(f"  absorbed {before:,} hexes of {len(ABSORB)} post-2000 splits into their "
+          f"2000 parent ({moved_pop:,.0f} people's ground)")
+    return hexes
     return hexes
 
 
