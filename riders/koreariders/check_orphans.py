@@ -83,6 +83,14 @@ def sweep():
             # and treating a station outside the span as a miss would flag
             # every 호남선 stop north of 광주송정 as lost when the traffic is
             # 호남고속선's and correctly drawn there.
+            # lines.OFF_CHAIN carries a type from a station no chain of its
+            # line reaches to the stop where its riders actually join, so
+            # those are drawn and are not orphans. Without this the sweep
+            # reports 용산's 10.75M KTX as unreachable **after** they have
+            # been put on 경부고속선 at 광명 -- the reading that started this
+            # whole line of work, and it would start it again.
+            if (st, k) in LN.OFF_CHAIN:
+                continue
             if not any(k in table[L]["types"] for L in ls):
                 miss += kn
                 kinds.append("%s=%d" % (k, kn))
@@ -100,6 +108,15 @@ def main():
 
     print("riders the %s yearbook counts that reach no line: %.2fM of %.2fM, "
           "%.1f %%" % (LN.year(), lost / 1e6, total / 1e6, 100.0 * lost / total))
+
+    # Say what was rescued, or the number above reads as the whole story and
+    # the largest item on it looks untouched.
+    fk = LN.station_flows_by_type()
+    for (st, k), (L, join) in sorted(LN.OFF_CHAIN.items()):
+        n = sum(fk.get(k, {}).get(st, (0,) * 4))
+        if n:
+            print("   not counted above: %s's %s, %.2fM, drawn on %s at %s "
+                  "(lines.OFF_CHAIN)" % (st, k, n / 1e6, L, join))
 
     print("\non no chain at all -- a name nothing carries")
     print("   %-14s %12s" % ("station", "riders/yr"))

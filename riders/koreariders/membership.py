@@ -150,8 +150,31 @@ def load_stations(LN=None):
             continue
         if KORAIL in ops[nm] and (t.get("operator") or "") != KORAIL:
             continue
-        named[nm].append((n["lat"], n["lon"]))
+        named[_bare(nm, ops)].append((n["lat"], n["lon"]))
     return named
+
+
+def _bare(nm, ops):
+    """OSM's name with the 역 suffix stripped, where that is safe.
+
+    The yearbook never writes 역 and OSM almost never does: of 1,811 distinct
+    station names in the pull, **five** carry it. Four are 서울역, 부산역,
+    대전역 and 대구역, and each of those also exists as a bare node, so they
+    match already and are left alone -- merging them would fix the duplicate
+    서울역/서울 pair README.md lists under 경부선, but that is a change to
+    경부선's geometry and wants its own before/after rather than a free ride
+    here.
+
+    The fifth is **영월역, and it is the whole reason this function exists**.
+    It is the only station in the country whose sole node carries the suffix,
+    so the name never matched, so 태백선's chain never picked it up and its
+    191,449 riders a year reached no segment -- 52 % of the busiest segment on
+    the line they belong to. `check_orphans.py` reported it as "on no chain at
+    all", which reads as a missing station and was a missing character.
+    """
+    if len(nm) > 1 and nm.endswith(u"역") and nm[:-1] not in ops:
+        return nm[:-1]
+    return nm
 
 
 def serves(LN):

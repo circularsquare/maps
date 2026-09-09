@@ -159,6 +159,39 @@ ENTRY_SHARE = {
 }
 
 
+# A station whose riders of one train type ride a line that does not call
+# there, joining it at a station that does.
+#
+# 용산 is the case, and it is the largest single hole in the map: 10.75M KTX a
+# year, 3.3 % of everything the yearbook counts, reaching no segment at all.
+# The station sits on 경부선's and 경원선's chains and neither declares KTX, so
+# `check_orphans.py` reports the whole row as unreachable. The row itself is
+# fine and unfiltered -- every KTX-declaring line's `flows_by_kind` already
+# holds it -- and only solve.py's chain test keeps it out.
+#
+# Where they go is not in doubt. Every KTX out of 용산 is a 호남 or 전라
+# service; it runs down 경부선's metals to 광명, rides 경부고속선 from there to
+# 오송, and turns off. So the passengers join 경부고속선 at 광명 and the
+# injection belongs at that stop rather than at the chain's start -- they never
+# ride 서울-광명.
+#
+# The type is not in doubt either, which took a second source to establish.
+# KRIC's 노선별 table (see kric_stats.py) shows 강릉선's and 중앙선's high-speed
+# traffic is *entirely* KTX-이음, and its 역별 table shows 용산 taking no
+# KTX-이음 in any of the twelve months of 2023. So no 강릉선 or 중앙선 service
+# touches 용산 and there is no third destination to divide against. README.md,
+# "용산's KTX split is published".
+#
+# Extending 경부고속선's chain to 용산 is the wrong move and OVER cannot do it
+# anyway: 서울 and 용산 are two termini on different approaches, and a linear
+# chain cannot fork.
+#
+#     (station, train type) -> (the line that carries them, where they join it)
+OFF_CHAIN = {
+    ("용산", "KTX"): ("경부고속선", "광명"),
+}
+
+
 # Where a line hands its traffic to another at a place the receiving line's
 # chain does not name.
 #

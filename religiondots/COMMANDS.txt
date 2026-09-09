@@ -3084,8 +3084,22 @@ Live at https://anita.garden/religiondots/ once the website repo is pushed.
 ONE RULE FOR WHAT GOES WHERE: everything under data/ goes to Cloudflare R2, and index.html
 plus taxonomy/religions.json go to the website repo.  The archive is 84 MB and data/buffers/
 another 76 MB across 249 files, both rewritten by every build, so committing them would add a
-fresh 160 MB to that repo's history every time.  index.html reads DATA_BASE off the hostname,
-so the SAME FILE works locally and published and there is no deploy-time edit to forget.
+fresh 160 MB to that repo's history every time.  The SAME index.html works in both places and
+there is no deploy-time edit to forget.
+
+HOW IT DECIDES: `resolveDataBase()` asks for `data/buffers/manifest.json` relative to the page
+and falls back to R2 when that is absent or is not the manifest.  ***NOT A HOSTNAME TEST.***
+It was one for an hour and the case it got wrong is the one you will actually hit: the Jekyll
+site served locally at localhost:4000/religiondots/ is ALSO localhost, so the page hunted for a
+data/ the website repo does not have and sat on "loading..." for ever.  Three cases, and only
+one of them has a data/ next to index.html:
+
+    maps tree, npx serve      -> data/          local build, test before uploading
+    website, jekyll serve     -> R2             no data/ in that repo
+    anita.garden, published   -> R2
+
+A GET and a parse rather than a HEAD, because a server answering 200 with an HTML error page
+would pass a status check and then fail further in, where it reads as corrupt data.
 
 R2 AND NOT PAGES FOR THE ARCHIVE IS NOT ABOUT SIZE.  PMTiles reads with HTTP range requests,
 and GitHub Pages fronted by Cloudflare re-encodes the response and breaks them; the symptom is
@@ -3093,12 +3107,42 @@ the dangerous kind, a map that loads with a basemap and a legend and no dots at 
 them correctly.  `--verify` asks for `bytes=0-99` afterwards and it must answer 206.
 
 THE API TOKEN IS THE ONE THING THAT WILL STOP YOU.  rclone's `r2:` remote is already
-configured for the right account, but a 403 on ListBuckets or HeadObject means the stored
-token is dead or too narrowly scoped.  Cloudflare dashboard > R2 > API > Create API token,
-Object Read & Write, scoped to the `anita-maps` bucket, then put the new access key id and
-secret into %APPDATA%\rclone\rclone.conf under [r2].  Check with:
+configured for the right account; only the credentials go stale.  Cloudflare dashboard >
+R2 > API > Create API token, Object Read & Write, then put the new access key id and secret
+into %APPDATA%\rclone\rclone.conf under [r2].
 
-    rclone ls r2:anita-maps --max-depth 1
+*** THE BUCKET IS `anitamaps`, WITH NO HYPHEN. ***  ancestrydots/COMMANDS.txt calls it
+"anita-maps" and that name does not exist; it is the only record of the bucket anywhere and it
+is wrong.  Objects live at the root for the first two maps and under a per-map prefix since
+londonriders, which is the convention religiondots follows.
+
+*** A 403 ON ListBuckets IS NOT EVIDENCE OF ANYTHING. ***  Listing buckets is an ADMIN
+operation, so an Object Read & Write token is supposed to be refused it, and `rclone lsd r2:`
+therefore fails even when everything is fine.  That also means a wrong bucket name cannot be
+found by listing; it has to be read off the dashboard.  The test that means something names
+the bucket:
+
+    rclone ls r2:anitamaps --max-depth 1
+
+That is ListObjectsV2, which an object-scoped token IS allowed.  Read the error, because the
+four failures are different things:
+
+  SignatureDoesNotMatch          a bad paste of the secret.  It is 64 hex chars and the access
+                                 key id is 32; the "Token value" Cloudflare shows above them
+                                 is neither, and is not what rclone wants.
+  directory not found            the token WORKS and the bucket name is wrong.
+  403 naming CreateBucket        see below -- also not the token.
+  403 AccessDenied, named bucket expired, revoked, or scoped to some other bucket.
+
+*** UPLOADS NEED `--s3-no-check-bucket` AND WITHOUT IT THE 403 READS AS A DEAD TOKEN. ***
+Before its first upload rclone calls CreateBucket to confirm the destination exists.  That is
+an ADMIN operation, so an Object Read & Write token is refused and the whole copy dies with
+`403 AccessDenied` naming CreateBucket -- after reads have already worked, which is what makes
+it confusing.  `deploy.py` passes the flag; pass it on any hand-rolled rclone upload too.
+
+TOKENS EXPIRE.  The TTL dropdown defaults to a year and there is a Forever option; a token
+made with the default simply stops one day, and the failure arrives as a 403 with nothing to
+say it was ever different.  If you take a TTL, write its expiry date here.
 
 CORS IS ALREADY RIGHT AND DOES NOT NEED TOUCHING.  The bucket answers with
 Access-Control-Allow-Origin for both https://anita.garden and https://circularsquare.github.io,

@@ -434,6 +434,32 @@ class Network(object):
                         self.alloc[(L, nm)].append(
                             (self.idx.get(("S", nm, k, L), -1), v))
 
+        # Riders whose station is on no chain of the line they ride, allocated
+        # where they actually join it -- see lines.OFF_CHAIN.
+        #
+        # At a fixed share of 1.0 rather than a fitted one. A share variable
+        # would need a group, and a group needs two lines calling at the
+        # station that both declare the type; 용산 has neither, which is
+        # exactly why the row was orphaned. Nothing else can claim these
+        # passengers, so there is nothing to divide.
+        # Kept per direction as well, because the entry-share residual below
+        # has to know how much of a feeding line's load is this traffic: it is
+        # measured and it all turns off at the junction, so it is not part of
+        # what the train-count share divides. See the residual for what
+        # happens without that.
+        self.offchain = collections.defaultdict(float)
+        for (st, k), (L, join) in LN.OFF_CHAIN.items():
+            if L not in chains or k not in self.kinds[L]:
+                continue
+            if join not in set(nm for _, nm in chains[L]):
+                continue
+            v = self.fk[L].get(k, {}).get(st)
+            if v and any(v):
+                self.alloc[(L, join)].append((-1, v))
+                for d in (0, 1):
+                    b, a = self._cols(L, d, v)
+                    self.offchain[(L, d)] += abs(b - a) / SCALE
+
         # A part type runs over only a span of its line, so its passengers ride
         # only that span: whatever boards inside it has to leave at the
         # boundary rather than carry on up the rest of the line. That is a
@@ -663,11 +689,22 @@ class Network(object):
         # the direction a passenger actually travels, since a reversed chain's
         # d == 0 is 상행 and scaling that against the other line's 하행 relates
         # nothing.
+        # Off-chain traffic is exempt from the share and added whole. The share
+        # describes how the feeding line's *generic* load divides at the
+        # junction; lines.OFF_CHAIN's traffic is measured, and all of it turns
+        # off -- every KTX out of 용산 is a 호남 or 전라 service and none
+        # continues to 부산. Dividing it by the train-count share instead caps
+        # the transfer at 28 %, and the measured version of this run showed
+        # exactly that: of 23,000 a day injected at 광명, 4,615 reached
+        # 호남고속선 and 6,212 rode on to 대전 and 동대구 where none belong,
+        # while the fit stopped converging at all -- 400 evaluations against a
+        # baseline 26. See README.md, "용산's KTX are drawn".
         for (L, M, seg, share) in self.entry:
             for d in (0, 1):
                 dm = d ^ self.rev[L] ^ self.rev[M]
-                r.append(W_ENTRY * (x[self.idx[("E", L, d)]]
-                                    - share * prof[(M, dm)][seg]))
+                off = self.offchain.get((M, dm), 0.0)
+                want = share * (prof[(M, dm)][seg] - off) + off
+                r.append(W_ENTRY * (x[self.idx[("E", L, d)]] - want))
 
         # Junction conservation, per direction: every line meeting there
         # contributes the through flow it gains, and the total must be nil --
@@ -928,6 +965,18 @@ def main():
     # data/segments.geojson makes every other session's diff meaningless.
     # A scratch path lets a change be measured against the committed output.
     ap.add_argument("--out", help="write the geojson here instead of data/")
+    # Was 400, which was enough until lines.OFF_CHAIN and is not now: the fit
+    # took 26 evaluations before that change and takes 482 after it. Both of
+    # the first two attempts stopped at the old cap while still descending,
+    # and the wreckage looked like a modelling failure -- 호남선 collapsing,
+    # 충북선 and 경원선 and 경춘선 all disturbed -- when it was a search cut
+    # off partway. Raising the cap alone brought every one of them back.
+    #
+    # It costs nothing when the fit converges early, since `ftol` stops it
+    # either way. **Read `res.message` before believing any number**: a run
+    # that ends on the cap is a snapshot of a search, not an answer.
+    ap.add_argument("--max-nfev", type=int, default=2000,
+                    help="evaluation cap for least_squares (default 2000)")
     args = ap.parse_args()
     if args.out:
         global OUT
@@ -949,7 +998,8 @@ def main():
     print("   initial cost %.1f" % (0.5 * float((net.residuals(x0) ** 2).sum())))
     lo, hi = net.bounds()
     res = least_squares(net.residuals, np.clip(x0, lo, hi), bounds=(lo, hi),
-                        method="trf", xtol=1e-10, ftol=1e-10, max_nfev=400)
+                        method="trf", xtol=1e-10, ftol=1e-10,
+                        max_nfev=args.max_nfev)
     print("   solved: cost %.1f, %d evaluations, %s"
           % (res.cost, res.nfev, res.message.split(".")[0].lower()))
 

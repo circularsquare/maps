@@ -31,7 +31,13 @@ or, as another case, if we select daoism (which like almost no coutnry has drawa
 or if we select "muslim" and we mouse over a country (i guess like, hover over any empty space non dot in the country for longer than 0.25 seconds without moving or something) which *does* draw muslim dots but doesn't have enough detail to actually break down muslim into sunni vs shia vs whatever, we can actually also show nation level statistics for like 34% of this countries muslims are shia, 66% are sunni, but they cant be placed
 idk. this might help with presenting a slightly more honest sense of like "there are this  many of this religion in the world". 
 
+add progress bar to loading when loading (takes quite a few seconds)
 
+initial page load time takes like 30 seconds... any way we could speed thi sup
+
+first time usage guide:
+    arrow pointing at christianity like "try clicking christianity row!"
+        consider hwo it should look on mobile
 
 
 LATER
