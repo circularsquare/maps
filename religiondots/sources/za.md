@@ -472,10 +472,36 @@ no-religion figures in `note_public` are both biased in the same direction by it
 against the 4.2-point instrument gap in §3, but it is the one correction §3.5 asks for by
 name and it is free.
 
-*Not applied here.* `countries.py` moved 71 lines under this session while it was being read,
-so another agent is in it; and the wording of a `gap` and of a §3.5 lean sentence is the
-builder's or Anita's, not a reviewer's. It is a two-line change plus `check_md.py` and
+*Not applied by the review.* `countries.py` moved 71 lines under that session while it was
+being read, so another agent was in it; and the wording of a `gap` and of a §3.5 lean sentence
+is the builder's or Anita's, not a reviewer's. It is a two-line change plus `check_md.py` and
 `tiles.py --refresh-meta`; no re-scatter and no build tail.
+
+**Applied 2026-09-08**, and every figure above was reproduced first rather than carried over.
+The nine table-2.10a exclusion footnotes were re-extracted from the PDFs in `data/raw/za/`:
+eight print them and sum to **640,083**, Western Cape prints none and comes to **67,213** by
+difference against table 2.1's 6,279,730, and table 2.1's national 55,653,654 less the
+normalised file's own 54,946,360 is **707,294**. The two routes still agree to within the
+rounding in the weighted totals. `tools/gap_share.py za` refuses this country ("the mapping
+excludes nothing"), which is correct and is the hand-written case the field docstring
+describes: these people are in no row of any table the parse reads, so no residual in
+`data/normalized/za.csv` can see them.
+
+The entry now carries `gap="707,294 people, 1.3%, recorded as 'Do not know' or 'Unspecified'
+and left out of the survey's own religion totals"` and `gap_share=0.0127` (707,294 / 55,653,654
+= 0.012709). `basis` is left as it stands: with a `not drawn` row beside it, "whole survey
+population" reads as the age universe it means, which is the point that distinguished this
+country from Peru's and Botswana's in the first place.
+
+**The §3.5 lean is in `note_public` as its own paragraph.** Recomputed here rather than taken
+from the table above, and it lands on the same numbers: non-response by province runs Northern
+Cape 0.417%, North West 0.766%, KwaZulu-Natal 0.878%, Free State 0.916%, Eastern Cape 0.985%,
+Western Cape 1.070%, Limpopo 1.384%, Mpumalanga 1.472%, Gauteng 2.017%, and against the drawn
+shares the exact permutation over all 9! orderings gives **r = +0.7183 with the no-religion
+share** (two-sided p = 0.0280, one-sided 0.0162) and **r = −0.6273 with Christianity**
+(two-sided p = 0.0681). The note says the direction, names the two ends and the correlation,
+states that the 79.0% and the 10.9% are both biased the same way, and says the correction is
+not made, which is §3.5's Serbia treatment.
 
 ### 10.2 The `africaninstituted` node note is now the stalest thing about this country
 
@@ -488,8 +514,25 @@ node plus Côte d'Ivoire's Harrist.
 
 **This is not South Africa's fault alone** — the note was last revised when Zimbabwe landed,
 and ci, ao and sz have each been added to the node since without touching it. But South
-Africa is the addition that makes it wrong rather than merely incomplete, and it is the one
-place on this map where a reader is told the opposite of what the dots show. Flagged rather
+Africa is the addition that makes it wrong rather than merely incomplete. Flagged rather
 than rewritten: it is a shared file with live builders in it, the rewrite needs
 `taxonomy/build_tree.py` after it, and the sentence about what the node *is* now is worth
 Anita writing.
+
+**Rewritten 2026-09-08, and one thing in the paragraph above is wrong.** It says this is a
+legend row every reader sees. It is not. `BRANCHES`'s third element is the **maintainer** note,
+and `taxonomy/build_tree.py` puts it on the node as `note` with the comment *"`note` is for
+whoever maintains the tree and is never rendered"*; the reader-facing tooltip is
+`PUBLIC_NOTE[bid]`, which has exactly two entries (`unrecorded` and `unknown`) and no
+`africaninstituted`. `index.html` reads `n.public_note || n.label` for the legend row and never
+touches `n.note`. So no reader was ever told the opposite of the dots — **the audience for this
+note is the next builder deciding where to file an AIC cell**, which is why it still had to be
+fixed rather than left. Composition recomputed through each country's own `counts()`: node
+25,899,969 over seven countries, za 54.67%, zw 23.60%, ke 12.71%, ao 4.24%, bj 2.61%, sz 1.62%,
+ci 0.54%; 95.21% on the bare parent in six cells and 4.79% on four named-church children. The
+old note's *"third largest Christian branch on the map"* was also stale and is gone: against
+`data/processed/counts.json` the node is eighth among the `christianity.*` branches, behind
+catholic, protestant, bare christianity, orthodox, pentecostal, oriental, baptist and
+evangelical. The `.harrist` note's *"the only African Initiated Church anywhere on this map
+that a census names and counts as its own cell"* was stale in the same way and now reads
+*"the first"*, with Angola's three and Benin's named.

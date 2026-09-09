@@ -60,6 +60,68 @@ BRANCHES = [
      "The non-Chalcedonian churches — Coptic, Ethiopian, Eritrean, Armenian, Syriac, "
      "Malankara. A separate communion from Eastern Orthodoxy since 451, and conflating the "
      "two is the commonest error in religion taxonomies."),
+    ("christianity.oriental.armenian",
+     "Armenian Apostolic Church",
+     "Added 2026-09-08 on Anita's ruling in ask/004-am, whose words are RECORD WHATEVER THE "
+     "SOURCE ACTUALLY SAYS. So the rule for this node is a rule about the source's category "
+     "and not about the people: a census cell that NAMES the Armenian church files here, and "
+     "a cell that can only say Oriental Orthodox stays on the parent above. Ten sources name "
+     "it (am2022, au2021, bg2021, cy2021, cz2021, ee2021, ge2014, pl2021, ro2021 and ASARB) "
+     "and four deliberately do not: ca2021's `Oriental Orthodox`, au2021's COLUMNS 221, "
+     "pl2021's `rozne inne chrzescijanskie koscioly wschodnie` and es_origin's African "
+     "residual. THOSE FOUR ARE A CORRECT OUTCOME AND NOT A GAP TO CLOSE, so do not harmonise "
+     "them up or down to make the branch look tidy. Armenia's 2,793,041 is 95% of what hangs "
+     "here; before this the same church drew two ways on one map, at the bare parent in "
+     "Armenia and Georgia and on ASARB's US diocese in France and Spain."),
+    ("christianity.oriental.armenian.etchmiadzin",
+     "Catholicosate of Etchmiadzin",
+     "The senior of the two Armenian catholicosates, at Vagharshapat. This node is the "
+     "JURISDICTION and not a diocese of it, which is the correction the 004-am review asked "
+     "for: it was `christianity.oriental.armenian-etchmiadzin` labelled 'Armenian Church of "
+     "North America (Catholicosate of Etchmiadzin)' off ASARB's group name, so Armenians in "
+     "Lyon were being filed on a North American diocese. Two sources reach it, each about "
+     "its own country: ASARB 050 and Poland's separately registered `Ormianski Kosciol "
+     "Apostolski Katolikosatu Eczmiadzynskiego`. Anything that names the Armenian church "
+     "WITHOUT naming a catholicosate belongs one level up."),
+    ("christianity.oriental.armenian.cilicia",
+     "Catholicosate of Cilicia",
+     "The Antelias catholicosate, in Lebanon since 1930 and out of communion with "
+     "Etchmiadzin from 1956 over the Soviet-era episcopal appointments. Kept apart from its "
+     "sibling rather than merged into the parent because ASARB counts the two separately "
+     "(049 against 050) and merging would lose a division a source actually makes, which is "
+     "the test the 004-am ruling sets. Currently ASARB alone, 38 dots."),
+    # The other three churches on this branch, PROMOTED FROM ASARB LEAVES TO BRANCHES on
+    # 2026-09-08 so that sources other than ASARB can reach them. Their labels are the
+    # unchanged ASARB group names, deliberately: unlike the two Armenian nodes, none of the
+    # three was named for an American jurisdiction, so there was nothing to correct and a
+    # reader sees the same rows as before. A leaf here can only be claimed by one ASARB
+    # code (build_tree.py: "leaf claimed by several codes"), and any other mapping module
+    # that points at a non-branch id is refused outright, which is what made this necessary.
+    ("christianity.oriental.coptic",
+     "Coptic Orthodox Church",
+     "The Church of Alexandria, and the largest Oriental Orthodox church after Ethiopia's. "
+     "Four sources name it and file here: ASARB 186, au2021's `Coptic Orthodox Church` "
+     "(33,091, Australia's largest Oriental Orthodox body by some way), nz2023's `Coptic "
+     "Orthodox` (546) and pl2021's registered `Kosciol koptyjski` (38). Egypt itself does "
+     "NOT reach this node and that is not an oversight: eg2022's survey cell says only "
+     "`Christian`, so its people stay on the bare `christianity` family node, which is "
+     "spec §2.7's rule cutting the other way on the country where the church is from."),
+    ("christianity.oriental.syriac",
+     "Syriac Orthodox Church of Antioch",
+     "The West Syriac (historically 'Jacobite') church. TWO SOURCES, and the second is the "
+     "one that needs the warning: ASARB 423, and au2021's `Syrian Orthodox Church` "
+     "(13,089), which is ABS's older name for this same church and is NOT its neighbouring "
+     "`Antiochian Orthodox` cell. That one is the Greek Orthodox Patriarchate of Antioch, "
+     "Chalcedonian and Eastern, and au2021 sends it to `christianity.orthodox`. Two "
+     "churches of Antioch, two communions, adjacent rows in one census table."),
+    ("christianity.oriental.ethiopian",
+     "Ethiopian Orthodox",
+     "The Ethiopian Orthodox Tewahedo Church, and the largest thing on this whole branch: "
+     "et2007 files 32,092,182 here, against about 3,300 on the bare parent. Also ASARB 204, "
+     "au2021's `Ethiopian Orthodox Church` (5,888) and origin_religion's ET row at 0.66. "
+     "The label is ASARB's and stays short; et2007.py's REVIEW is where the reasoning "
+     "lives, including why Ethiopia's bare `Orthodox` may be read as this church while "
+     "Kenya's identically-worded cell may not."),
 
     ("christianity.churchofeast",
      "Church of the East",
@@ -391,6 +453,26 @@ BRANCHES = [
      "Russian Muslims chose neither, and 4.66% of the country — nearly twice the Sunni "
      "figure — answered 'I profess Islam, but am neither Sunni nor Shia', which stays on "
      "the parent `islam`."),
+    # --- added 2026-09-08 with Albania, the only census on this map that asks.
+    ("islam.bektashi",
+     "Bektashi",
+     "The Sufi order founded on Haji Bektash Veli in thirteenth-century Anatolia, whose "
+     "world headquarters moved to Tirana after Atatürk abolished the tekkes in 1925. "
+     "**Albania's is the only census on this map that counts it apart from other "
+     "Muslims**: "
+     "INSTAT's 2023 table 1.13 prints `Mysliman - Bektashi` as a row of its own beside "
+     "`Mysliman`, 115,644 people and 4.81% of the country. "
+     "**Filed under `islam` because that is where the census files it and where Albanian "
+     "Bektashis file themselves** — the row reads *Muslim - Bektashism* in INSTAT's own "
+     "English, and the order is one of Albania's four recognised faith communities "
+     "alongside the Sunni Muslim Community and the Catholic and Orthodox churches. It is "
+     "NOT under `islam.shia`, which is the Twelver community and a different thing, and "
+     "not under `alevism`, which is held apart for the reason that node's own text gives: "
+     "Alevism is the Anatolian community identity that many Alevis decline to file inside "
+     "Islam at all, where the Bektashiyyah is an initiatic order that does not. The two are "
+     "twinned in Turkey and named together there; in Albania the order is institutionally "
+     "separate and has been since 1929."),
+
     # --- added 2026-09-06 with Pakistan.
     ("islam.ahmadiyya",
      "Ahmadiyya",
@@ -1161,6 +1243,33 @@ BRANCHES = [
      "13.0% in Point Fortin, 10.6% in Tobago, 9.6% in San Juan/Laventille, against 2.6% in "
      "Penal/Debe."),
 
+    # --- added 2026-09-08 with Haiti.
+    ("afrodiasporic.vodou",
+     "Vodou",
+     "Haitian Vodou, the religion this whole family is usually named after, and the last of "
+     "its major traditions to get a node here. Dahomean and Kongo inheritances carried by "
+     "the enslaved population of Saint-Domingue, organised around the *lwa* and served "
+     "through possession, drumming, initiation and the *houngan* and *manbo* priesthoods, "
+     "with a Catholic overlay that is structural rather than decorative.\n\n"
+     "**Every number this map can put on it is a floor and the gap is unusually wide.** "
+     "Haiti's own instruments, asking people to pick one religion, return 2.11% in the 2003 "
+     "census, 2.1% in IHSI's ECVH 2001 and 1.51% in IHSI's ECVMAS 2012. The reason is not "
+     "sampling: Vodou is overwhelmingly served alongside Catholicism rather than instead of "
+     "it, the Haitian saying being that Haiti is 90% Catholic and 100% Vodou, and a "
+     "questionnaire offering one box collects the church rather than the *lakou*. Add to "
+     "that a century of *rejete* campaigns against it, the last state-backed one in 1941, "
+     "and an answer that has carried real cost. So this node counts the people who chose "
+     "Vodou over the alternatives, which is a much smaller and differently distributed "
+     "group than the people who serve the lwa.\n\n"
+     "**Its geography is one department and not a gradient.** Both IHSI surveys put "
+     "Artibonite far ahead of everywhere else, 7.3% in 2001 and 5.7% in 2012 against 2.0% "
+     "and 1.2% for the next highest, and both put Nord-Est at the bottom. Drop Artibonite "
+     "and the national spread collapses from 5.7 points to 1.2, so the honest reading is "
+     "one heartland in the Artibonite valley and no reliable ordering below it.\n\n"
+     "**Filed beside Candomblé and Santería rather than under Christianity**, the same call "
+     "spec §3.3 makes for Revival Zion and the Spiritual Baptists: a genuinely double "
+     "descent gets its own node instead of being split across its ingredients."),
+
     ("eastasiannew",
      "East Asian new religions",
      "The 19th- and 20th-century foundings of Japan, Korea and China — shinshūkyō and "
@@ -1825,6 +1934,15 @@ BRANCHES = [
      "map really is two large communities and a long thin tail, not because the question "
      "was coarse: the census names Jehovah's Witnesses and Evangelical Methodists "
      "separately at four figures and under."),
+    ("other.fm",
+     "Other religion (Micronesia)",
+     "1,167 people, 1.5%, beside ten named categories in the FSM 2023 census's Table B6. "
+     "Read at municipality in Yap and Pohnpei, which is what makes it interesting: it is "
+     "**4.4% of Yap** against 0.9% of Pohnpei and 1.3% of Chuuk, and inside Yap it runs to "
+     "12.3% of Fanif and 10.5% of Rull while eleven of the state's twenty municipalities "
+     "have none at all. The census names nothing in it. Unlike the microstate tier below "
+     "this one is the office's own workbook rather than UNSD table 28, which has no "
+     "Micronesia row at any year."),
     # ---- THE MICROSTATE TIER, all nine from UNSD table 28 (sources/micro.py) ------------
     # Every one of these is a residual the Demographic Yearbook prints, at national level,
     # in a country small enough that the whole map is 20 to 80 dots. They are grouped here
@@ -2099,6 +2217,22 @@ BRANCHES = [
      "decades of refusals), the Jehovah's Witnesses, the Latter-day Saints, and the "
      "Buddhist and Hindu communities of Vilnius. None is separable at any geography. Per "
      "source, per spec §3.11."),
+
+    # --- added 2026-09-08 with Slovenia.
+    ("other.si",
+     "Other religion (Slovenia)",
+     "SURS's `druge veroizpovedi` at občina — 3,831 people, 0.20%. **Its composition is "
+     "known exactly and only for the country**, because Popis 2002 published fourteen "
+     "categories nationally and five per municipality: other Christian 1,877, Oriental "
+     "religions 1,026, other religions 558, agnostics 271 and Jewish 99, which is this "
+     "cell to the person. So the residual is mostly Christians the form gave nowhere else "
+     "to go, and the Jewish community of Slovenia (99 people at the 2002 census, against "
+     "199 in 1991) is inside it rather than drawn. "
+     "The 271 agnostics are inside it too, which makes this the one "
+     "`other.<source>` node holding a stated position rather than a religion; they are "
+     "0.014% of the country and separating them at national level while the geography "
+     "cannot would be a split the map could not draw. Nothing is allocated out of the "
+     "cell (spec §3.5, §14.4). Per source, per spec §3.11."),
 
     # --- added 2026-09-05 with Serbia.
     ("other.rs",
@@ -3077,6 +3211,46 @@ BRANCHES = [
      "catch at 0.06% in a country that is 7.69% indigenous.** `taxonomy/ec2023.py` has that "
      "argument. None of it is separable here, so per spec §3.11 it stays whole."),
 
+    # --- added 2026-09-08 with Panama, the fourth AmericasBarometer country.
+    ("other.pa",
+     "Other religion (Panama)",
+     "The same two LAPOP answers as `other.gt`, `other.sv` and `other.ec` — `Otro` (1.56%) "
+     "and `Religiones Orientales no Cristianas` (1.20%) — kept apart in `source_category` and "
+     "merged here because nothing in the survey separates what is in them.\n\n"
+     "**Panama's pool shows `other.ec`'s withdrawn-box problem in its clearest form**, "
+     "because three of its four rounds are early and one is late. `Otro` is **exactly zero** "
+     "in 2010, 2012 and 2014 and **6.25% in 2023**; `Testigos de Jehová` runs 1.12%, 0.77%, "
+     "0.53% and then **exactly zero** in 2023, and `Mormones` does the same. So this node is "
+     "a quarter of what the box it depends on actually reads in the one round that offered "
+     "it, and `christianity.witnesses` and `christianity.latterday` are floors. INEC's own "
+     "April 2022 module, on a card that does have the boxes, puts Jehovah's Witnesses at 1% "
+     "and Adventists at 2%, against 0.60% and no box at all here.\n\n"
+     "What is plausibly inside it: **Panama's Bahá'í community, which built one of the eight "
+     "continental Houses of Worship above Panama City**; the Chinese-Panamanian population, "
+     "which dates from the railway labour of the 1850s; the Hindu and Muslim "
+     "communities of Colón and Panama City, neither of which has a box on this card; and the "
+     "Adventists, who have one on INEC's card and not on LAPOP's. None of that is separable "
+     "here, so per spec §3.11 and §14.4 it stays whole."),
+
+    # --- added 2026-09-08 with Costa Rica.
+    ("other.cr",
+     "Other religion (Costa Rica)",
+     "The same two LAPOP answers as `other.gt`, `other.sv`, `other.ec` and `other.pa`, "
+     "namely `Otro` (0.61%) and `Religiones Orientales no Cristianas` (0.67%), kept apart in "
+     "`source_category` and merged here because nothing in the survey separates what is in "
+     "them. 64,710 people between them.\n\n"
+     "**Costa Rica has `other.ec`'s withdrawn-box problem in the same shape as Panama**, "
+     "three early rounds and one late one, so both halves of the instrument change land at "
+     "once. `Otro` is **exactly zero** in 2010, 2012 and 2014 and **2.40% in 2023**, so this "
+     "node is one round's answer divided by four; `Testigos de Jehová` runs 1.90%, 1.10% and "
+     "1.83% and then **exactly zero** in 2023, and `Mormones` and `Judío` do the same. Those "
+     "three are floors.\n\n"
+     "What is plausibly inside it, none of it separable and so whole per spec §3.11 and "
+     "§14.4: Costa Rica's Chinese community, which dates from the Atlantic railway labour of "
+     "the 1870s and is concentrated in Puntarenas and Limón; the Bahá'ís, who have had a "
+     "national assembly since the 1930s; and the Muslim and Hindu communities of the Central "
+     "Valley, none of which has a box on this card."),
+
     # --- added 2026-09-08 with South Africa.
     ("other.za",
      "Other religion (South Africa)",
@@ -3205,6 +3379,241 @@ BRANCHES = [
      "religions` rather than in a box of its own. Estonia's census names Maausk and Taarausk "
      "and this survey cannot, which is the difference between a country with a census "
      "question and one with only a register. Per source, per spec §3.11."),
+
+    # --- added 2026-09-08 with Albania.
+    ("other.al",
+     "Other religion or faith (Albania)",
+     "INSTAT's `Tjetër besim fetar` in the 2023 census, 3,670 people and 0.15% of Albania, "
+     "which is the smallest residual of any census on this map that prints one. It is "
+     "small because the form is not: Bektashis, evangelicals, atheists and believers of no "
+     "denomination all have boxes of their own here, so the answers that fill a cell like "
+     "this elsewhere are already counted. No breakdown of it is published. Per source, per "
+     "spec §3.11."),
+
+    # --- added 2026-09-08 with Rwanda.
+    ("other.rw",
+     "Other religion (Rwanda)",
+     "NISR's `Other religion` in RPHC-5 2022 — 264,319 people, 2.00%, and **the same size "
+     "as Rwanda's Muslim cell**, which is what makes it worth a note. A residual that "
+     "matches a named religion in size usually means the form is missing a box, and this "
+     "one sits beside boxes for Islam, for traditional practice, for the Adventists, for "
+     "the Witnesses and for ADEPR by name, so the answers that normally fill a cell like "
+     "this are already elsewhere. NISR publishes no breakdown of it, in the district "
+     "profiles or in its return to the UN, and nothing here invents one. "
+     "**What can be said is where it is.** Highest in Rubavu at 3.81%, then the eastern "
+     "districts — Kayonza 3.66%, Nyagatare 3.62%, Ngoma 3.18% — and lowest in the Catholic "
+     "south and centre, 0.49% in Gisagara and 0.59% in Gakenke. Close to the "
+     "`Other Christians` map but not the same one, which peaks in Kicukiro rather than in "
+     "Rubavu. Per source, per spec §3.11."),
+
+    # --- added 2026-09-08 with Uruguay.
+    ("other.uy",
+     "Other religion (Uruguay)",
+     "INE's `Otra` in the Encuesta Nacional de Hogares Ampliada 2006, 10,065 people and "
+     "0.32% of the drawn population. **The one `other` cell on this map whose contents can "
+     "be read**: `e29_2` is a free-text follow-up asking what the other religion was, and "
+     "the transcriptions are in the microdata.\n\n"
+     "A third of the cell is blank and another fifth is `NO SABE`, `SIN DEFINICION`, `NO "
+     "DEFINIDO` or `NO SE DEFINE`, so half of this node is people who chose `Otra` and then "
+     "did not name anything. The named half is led by BUDISTA at 6.7% of the cell, then "
+     "ESPIRITISTA, METAFISICA, PANTEISTA, MORMON, MUSULMAN and TESTIGO DE JEHOVA at "
+     "between 1.4% and 2.5% each, with BAHAI, SEICHO-NO-IE, DEISTA and ORTODOXO RUSO below "
+     "them. Nothing is split off: the largest named group is 682 people, 0.02% of Uruguay, "
+     "which is under one dot at every value this map offers.\n\n"
+     "**It is small for the reason the three LAPOP `other` cells are large.** Those run "
+     "1.45% to 2.35% because the AmericasBarometer card has no box below Christianity "
+     "except `Religiones Orientales no Cristianas` and `Otro`, so Judaism and Afro-American "
+     "religion fall into them. Uruguay's card gives both their own answer, and they are "
+     "drawn on `judaism` and `afrodiasporic` where they belong."),
+
+    # --- added 2026-09-08 with the Dominican Republic.
+    ("other.do",
+     "Other religion (Dominican Republic)",
+     "ONE's `OTRA RELIGIÓN (Especifique)` in the ENHOGAR-MICS6 2019 household questionnaire, "
+     "1.36% of the country and the sixth of the six answers on `HC1A`.\n\n"
+     "**This is a national card and it is short.** MICS6's household question names "
+     "Católica, Evangélica, Adventista and Testigo de Jehová and then stops, so a Dominican "
+     "Muslim, Buddhist, Jew, Mormon or Rastafarian all land here, and so does anyone whose "
+     "answer the interviewer could not fit. It is the mirror image of the three LAPOP "
+     "`other` cells beside it: those are 1.45% to 2.35% because a WORLDWIDE card carries "
+     "boxes nobody in Central America ticks while omitting the local ones, and this one is "
+     "1.36% because a LOCAL card carries the four Dominican answers and omits the world.\n\n"
+     "**The specify text is not in the public microdata**, so unlike `other.uy` nothing here "
+     "can be read. What the cell's geography suggests is one thing and it is a reading "
+     "rather than a measurement: it is highest in Barahona at 3.6%, then the Distrito "
+     "Nacional at 2.4%, Santo Domingo at 2.1% and Monte Cristi at 2.1%, and lowest across "
+     "the Cibao, where six provinces are at 0.2% and Hermanas Mirabal draws nothing at all. "
+     "The capital end is what a city with Middle Eastern, Chinese and "
+     "Japanese communities looks like; the Barahona end is the poorest part of the "
+     "south-west, on the Haitian border, and it is also where this survey finds the "
+     "country's largest no-religion share. Neither is separable here, so per spec §3.11 it "
+     "stays whole.\n\n"
+     "**Dominican Vodú has no box on any of it.** It is practised in the same south-western "
+     "and border provinces and its practitioners overwhelmingly answer Catholic, which is "
+     "the Haitian and Cuban pattern this map has met before. Nothing in this source can "
+     "count it, and `other.do` should not be read as a place where it is hiding."),
+
+    # --- added 2026-09-08 with Cabo Verde.
+    ("other.cv",
+     "Other religion (Cabo Verde)",
+     "INE's `Outra` in the 2021 census — 4,090 people, 1.16% of the population aged 15 and "
+     "over, and a small residual because the twelve named boxes above it are unusually "
+     "many for a country of half a million.\n\n"
+     "**The form has no `Protestante` box of its own**, which is what makes this cell "
+     "different from most of the others in this list. INE names the Church of the "
+     "Nazarene, the Adventists, the Assembly of God, the New Apostolic Church, the "
+     "Universal Church of the Kingdom of God, Deus é Amor, the Jehovah's Witnesses and the "
+     "Latter-day Saints individually, so a Cape Verdean Protestant who belongs to none of "
+     "them has nowhere to go but here. That is the opposite failure to `other.gt` and its "
+     "siblings, which are large because a worldwide card omits the local answers.\n\n"
+     "**Its geography does not name what is inside it**, and that is worth saying rather "
+     "than glossing. It runs 2.73% in Boa Vista, 1.73% in Santa Cruz, 1.62% in Praia and "
+     "1.60% in São Miguel against 0.16% in São Lourenço dos Órgãos — about seventeen to "
+     "one, which is the range in which §9r's Chittagong rule usually points at something, "
+     "and here it points at two unrelated things at once: the tourist islands and the "
+     "capital, where Cabo Verde's Chinese, Indian and West African communities are, and "
+     "two rural Santiago concelhos, where they are not. Nothing separates the two "
+     "readings, so per spec §3.11 it is drawn whole."),
+
+    # --- added 2026-09-08 with Timor-Leste.
+    ("other.tl",
+     "Other religion (Timor-Leste)",
+     "INETL's `Seluk` in the 2022 census — 1,020 people, 0.082% of the population aged 3 "
+     "and over, and one of the smallest residuals in this list.\n\n"
+     "**It is small because the question is not short.** The form names Catholicism, "
+     "Protestantism/Evangelicalism, Islam, Buddhism, Hinduism and indigenous religion, and "
+     "puts `no religion` in a box of its own below this one, so nothing large has been "
+     "swept in here for want of somewhere to go. What is left is the Baha'is, the "
+     "Jehovah's Witnesses, the Latter-day Saints and whatever an enumerator could not "
+     "place, none of them named.\n\n"
+     "**Its geography points at one municipality and does not say why.** Manatuto is "
+     "0.516% and Lautém 0.245% against 0.008% in Oecusse, about sixty to one, which is well "
+     "inside the range where §9r's Chittagong rule usually means something is hiding. "
+     "Manatuto is also the municipality with the country's highest indigenous-religion "
+     "share, 0.154%, so the two cells may be reading the same thing twice; nothing "
+     "published separates them and it is 245 people, so it is drawn whole."),
+
+    # --- added 2026-09-08 with Haiti.
+    ("other.ht",
+     "Other religion (Haiti)",
+     "IHSI's `Autre` in the ECVMAS 2012 individual questionnaire, 1.11% of Haitians aged 10 "
+     "and over, and the eleventh of twelve answers.\n\n"
+     "**The card above it is long and almost entirely Christian.** Catholic, Baptist, "
+     "Adventist, Pentecostal, Methodist, Episcopal, Jehovah's Witness, other Protestant, "
+     "Vodou, Muslim, then this, then `Aucune`. So what is left here is a Haitian Mormon, "
+     "Baha'i, Buddhist, Jew or Rastafarian and anyone the interviewer could not place; the "
+     "Latter-day Saints are the largest single body it is likely to hold, since the 2003 "
+     "census counted them separately at 5,683 people and ECVMAS has no box for them.\n\n"
+     "**The specify text exists but is not attached to this variable.** ECVMAS publishes a "
+     "`precisions_autres_individus` file of free-text clarifications, and it does not carry "
+     "the religion question, so unlike `other.uy` nothing here can be read.\n\n"
+     "**It is one of the two answers this map does not place** (`sources/ht.py`): its "
+     "split-half rank correlation is -0.25 across ECVMAS's sampling clusters, the only "
+     "negative among the twelve, so every department is drawn at the national 1.11% "
+     "instead of where the survey found it."),
+
+    # --- added 2026-09-08 with Liberia.
+    ("other.lr",
+     "Other religion (Liberia)",
+     "LISGIS's `Other` in the 2022 census, and **the smallest cell of this kind on the "
+     "map: 3,431 people, 0.065% of Liberia**, three dots at 1:1,000.\n\n"
+     "It is small because the card above it is short rather than long. The 2022 census "
+     "offers five boxes — Christian, Islam, Traditional Religion, Other, No Religion — and "
+     "the report defines this one by example: *\"religions other than those captured above "
+     "(examples include Eckankar, Baha'i, Shintoism...)\"*. Eckankar being the first name "
+     "LISGIS reaches for is worth noticing: it has a Monrovia temple and a visible "
+     "Liberian following, which is not true of many countries.\n\n"
+     "**Its geography is not drawn**, because nothing measures it. The census publishes "
+     "this figure nationally and no finer, and the Afrobarometer pool that supplies "
+     "Liberia's county pattern holds 33 respondents here across six rounds — below the 1% "
+     "eligibility floor §11ad set, so it is spread at the national rate rather than where "
+     "those 33 people happened to be interviewed."),
+
+    # --- added 2026-09-08 with São Tomé and Príncipe.
+    ("other.st",
+     "Other religion (São Tomé and Príncipe)",
+     "INE's `Outras` in the IV RGPH 2012 — 8,990 people, **5.03% of the country and its "
+     "third largest answer**, after Catholics and no religion and ahead of every named "
+     "church.\n\n"
+     "It is large because the card is a list of nine individual churches with no family "
+     "boxes at all. The 2012 form names the Adventists, the Assembly of God, the Roman "
+     "Catholic Church, Deus é Amor, the Jehovah's Witnesses, Maná, the New Apostolic "
+     "Church, the World Messianic Church and the Universal Church of the Kingdom of God, "
+     "and then stops. **There is no Protestant box and no Islam box**, so a Baptist and a "
+     "Muslim land in the same cell, and so does anyone whose church is simply not one of "
+     "the nine.\n\n"
+     "**Djambi is not in here either.** The Forro communal possession ritual, and the "
+     "ritual specialists who do healing and protection work on the roças, have no box on "
+     "any São Tomé census, and the people who take part in them answer Catholic — the same "
+     "pattern `other.do` records for Dominican Vodú and `other.ht` for Haitian Vodou. "
+     "Nothing in this source counts it and `other.st` is not where it is hiding.\n\n"
+     "**The next census says how little of it is Islam.** The V RGPH 2024 added an "
+     "`Islâmico/Muçulmano` box and 354 people ticked it, 0.17% of the country, against an "
+     "`Outra religião` of 5,348 that stayed at 2.6%. So the Muslim reading accounts for "
+     "perhaps a twentieth of this cell and the rest is Christian bodies the form does not "
+     "name.\n\n"
+     "**Its geography names nothing**, which is the honest thing to report. It runs 6.16% "
+     "in Príncipe, 5.71% in Água-Grande and 5.70% in Caué against 3.07% in Lobata: a two "
+     "to one spread across seven districts with the capital, the autonomous island and the "
+     "empty south all at the top together. §9r's Chittagong rule wants a cluster before it "
+     "will read a residual, and there is none here, so per spec §3.11 it is drawn whole."),
+
+    # --- added 2026-09-08 with Kyrgyzstan.
+    ("other.kg",
+     "Other religion (Kyrgyzstan)",
+     "The `OTHER` box on the EBRD Life in Transition Survey III card — **four respondents "
+     "in 1,500**, 0.19% of the weighted sample, about 13,700 people at the office's 2026 "
+     "population. Kyrgyzstan has no census religion question of any kind, so there is no "
+     "counted figure anywhere to put beside it.\n\n"
+     "It is small because the card in front of it is unusually generous for a survey: "
+     "Muslim, Orthodox Christian, Catholic, other Christian including Protestant, Jewish, "
+     "Buddhist and atheist/agnostic/none all have boxes of their own, so `OTHER` is the "
+     "eighth box after seven named ones. Three of the four respondents are in Chui oblast "
+     "and one in Issyk-Kul.\n\n"
+     "**What is not in it is the thing worth saying.** Kyrgyz shamanic and ancestor "
+     "practice — the *bübü* and *bakshy* healers, spring and grave veneration, the *mazar* "
+     "pilgrimage sites that are visited across the country — has no box on this card and "
+     "the people who take part answer Muslim, which is also how most of them would "
+     "describe themselves. That is the pattern `other.do` records for Dominican Vodú and "
+     "`other.st` for São Toméan djambi, and it is why 0.19% is a residual rather than a "
+     "measurement of anything. Per source, per spec §3.11."),
+
+    # --- added 2026-09-09 with Uganda.
+    ("other.ug",
+     "Other religion (Uganda)",
+     "UBOS's `Other` in Table B7 of the 2002 census, **741,589 people, 3.04%**, and the "
+     "residual with the widest declared contents in this list. The table's own footnote "
+     "says it holds `Orthodox, Bahai, Other Christian, Non-Christian, and Traditional` in "
+     "one column, so a Ugandan Baptist, a Ugandan Orthodox Christian, a Bahá'í and a "
+     "practitioner of Kiganda or Karimojong religion are all inside it together. Only five "
+     "boxes stand above it (Catholic, Anglican, Moslem, Pentecostal, SDA) and one below "
+     "(None), which is why it carries so much.\n\n"
+     "What is in it is known nationally and cannot be split by district. The 2002 "
+     "Population Composition report gives nine national categories where Table B7 gives "
+     "seven, and its extra four are Orthodox **35,400**, Other Christian **282,300**, "
+     "Bahá'í **18,500** and a further **380,400** of `Other Non-Christians, Traditional "
+     "and None`. That report excludes Kotido district; take Kotido out of Table B7 and its "
+     "`Other` plus `None` is 716,629 against those four totalling 716,600, so the two "
+     "tables are the same numbers cut two ways. `sources/ug.py` asserts it. But the split "
+     "exists only for the nation, and applying it per district would put a quarter of "
+     "Kotido's cell into `Other Christian` when Kotido is Karamoja, so §14.4's first rule "
+     "applies and nothing is estimated.\n\n"
+     "Its geography is two unrelated things and the map shows both. The top of the list is "
+     "the three Karamoja districts, **28.2%** in Kotido, 25.0% in Nakapiripirit and 19.7% "
+     "in Moroto, where the cell is traditional religion answering a form that offered five "
+     "churches and Islam; `None` peaks in exactly the same three districts, so one "
+     "population is being recorded in two boxes. Then, well clear of everywhere else, "
+     "**13.6%** in Kibaale and **12.9%** in the adjoining Kyenjojo, against 0.1% in Yumbe "
+     "and 0.3% in Kabale.\n\n"
+     "That second cluster is a reading and it is offered as one. UBOS names "
+     "`Ow'obushobozi` among the contents of the equivalent cell in its 2024 report, the "
+     "only Ugandan new religious movement it names anywhere; the Faith of Unity was "
+     "founded in 1980 at Kapyemi in Muhorro, and Table C1 of this same census prints "
+     "`Muhoro` and `Kagadi` as sub-counties of Kibaale district, so the place is inside "
+     "the cell without anything being inferred. The cluster is contiguous across two "
+     "districts, which is the shape §9r's Chittagong rule reads as something rather than "
+     "noise. Nothing in the 2002 tabulations names it, so it stays inside this node whole, "
+     "per spec §3.11."),
 ]
 
 
@@ -3446,6 +3855,10 @@ LINEAGE = {
         # Ahmadiyya movement is a 19th-century messianic renewal, so it descends from
         # Islam as a whole rather than from either side of a 7th-century succession.
         ("Later movements", ["islam.ahmadiyya"]),
+        # Added 2026-09-08 with Albania. A tariqa rather than a branch or a movement: the
+        # Bektashiyyah descends from a Sufi lineage that cuts across the succession dispute
+        # entirely, so it sits beside the pair rather than under either.
+        ("Sufi orders", ["islam.bektashi"]),
     ],
 
     # Added 2026-09-08 with Türkiye, the first source here that asks which school. Ordered

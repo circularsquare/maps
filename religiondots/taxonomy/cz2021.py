@@ -101,7 +101,13 @@ MAP = {
     "Pravoslavná církev v českých zemích": "christianity.orthodox.canonical",
     "Ruská pravoslavná církev, podvorje patriarchy moskevského a celé Rusi v České republice":
         "christianity.orthodox.canonical",
-    "Církev Svatého Řehoře Osvětitele": "christianity.oriental",
+    # The Czech branch of the Armenian Apostolic Church, registered under its patron saint
+    # rather than under a nationality: the Ministry of Culture refused the name "Arménská
+    # apoštolská pravoslavná církev" in 2006 and registered this in 2013. So the category
+    # names a BODY and not a communion, which is why it moved to the Armenian node on
+    # 2026-09-08 (ask/004-am) and why it stops there -- it is served from the Patriarchal
+    # Representation in Vienna, an Etchmiadzin post, but ČSÚ prints none of that. 3 people.
+    "Církev Svatého Řehoře Osvětitele": "christianity.oriental.armenian",
 
     # ---------------------------------------------------------------- Protestant
     "Českobratrská církev evangelická": "christianity.reformed",

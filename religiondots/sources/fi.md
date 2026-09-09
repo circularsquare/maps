@@ -302,8 +302,17 @@ it catches a category that appeared and cannot catch one that vanished, which is
 no-Muslims failure. The symmetric assertion is free and holds exactly today — the pooled
 category set over seven rounds is all fifteen `MAP` keys, verified — so
 `assert set(pool["cat"]) == set(fi2024.MAP)` would fail loudly on the regression the docstring
-describes. Not applied here: `fi.py` is the builder's and this is a behaviour change, not a
-typo.
+describes. Not applied by the review: `fi.py` is the builder's and this is a behaviour change,
+not a typo.
+
+**Applied 2026-09-08.** `_citizen_shares()` now runs the check both ways: the existing
+`set(pool) - set(MAP)` for a category that appeared, and a new `set(MAP) - set(pool)` for one
+that vanished, each with its own message. `python sources/fi.py` was re-run to confirm it
+passes on today's raw files, and it does: 167 rows, 15 source categories, and
+`data/normalized/fi.csv` and `fi_foreign.csv` came out byte-identical to the shipped ones, so
+the assertion is free in the literal sense. The comment above it says what to do if ESS ever
+retires a category for real, which is to drop it from `MAP` in the same commit rather than to
+weaken the check.
 
 ### `coverage.py`'s foreign list is now complete, checked both ways
 

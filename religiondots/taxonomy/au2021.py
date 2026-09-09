@@ -112,10 +112,18 @@ MAP = {
     "Albanian Orthodox": _ORTHODOX,
     "Eastern Orthodox, nfd": _ORTHODOX,
     "Eastern Orthodox, nec": _ORTHODOX,
-    "Coptic Orthodox Church": _ORIENTAL,
-    "Syrian Orthodox Church": _ORIENTAL,
-    "Armenian Apostolic": _ORIENTAL,
-    "Ethiopian Orthodox Church": _ORIENTAL,
+    # ALL FOUR NAME A CHURCH, so all four file at that church's node (ask/004-am,
+    # 2026-09-08, whose ruling is RECORD WHATEVER THE SOURCE ACTUALLY SAYS; spec §2.7).
+    # ABS group 221 divides into exactly these four plus a residual, which is finer than
+    # most censuses manage on this communion. `Syrian Orthodox Church` is ABS's name for
+    # the Syriac Orthodox Church of Antioch and is NOT `Antiochian Orthodox` fifteen lines
+    # up: that one is the Greek Orthodox Patriarchate of Antioch, Eastern and Chalcedonian.
+    "Coptic Orthodox Church": "christianity.oriental.coptic",
+    "Syrian Orthodox Church": "christianity.oriental.syriac",
+    "Armenian Apostolic": "christianity.oriental.armenian",
+    "Ethiopian Orthodox Church": "christianity.oriental.ethiopian",
+    # The residual pair stays at the bare parent, as does COLUMNS' coarse 221, because
+    # neither can distinguish. That is the finished answer and not a gap to close.
     "Oriental Orthodox, nec": _ORIENTAL,
     "Oriental Orthodox, nfd": _ORIENTAL,
     "Assyrian Church of the East": _EAST,

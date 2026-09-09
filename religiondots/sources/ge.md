@@ -167,6 +167,7 @@ map that just looks slightly wrong.
 ## 9. What is left
 
 The 2014 vintage is now eleven years old and Georgia has run no census since. `Armenian
-apostolic` is filed at `christianity.oriental` with au2021.py and ee2021.py; at 109,041 it is
-the largest such count on the map and a `.armenian` child is arguable, but taking it would
-need those two re-pointed at the same time (`taxonomy/ge2014.py` REVIEW).
+apostolic` moved from `christianity.oriental` to `christianity.oriental.armenian` on
+2026-09-08, when Armenia's 2,793,041 reopened the question as `ask/004-am` and Anita ruled
+that a source is recorded as it answers. Australia and Estonia were re-pointed at the same
+time, along with seven others; spec §2.7 and `taxonomy/ge2014.py` REVIEW have it.

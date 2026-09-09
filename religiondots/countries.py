@@ -2103,6 +2103,232 @@ def _gt_counts():
     return df[["unit", "node", "count", "congregations", "tier"]]
 
 
+def _cr_place_weight(place):
+    """countries.py hook. `place` is the 400m hex layer scatter.py has read.
+
+    SEVEN UNITS OVER 51,169 km2 IS 7,310 km2 APIECE, the loosest ratio of any country drawn
+    from this survey, and 8.2 binds in both directions at once. Guanacaste, Puntarenas and
+    Limon are 30,668 km2 between them -- the whole Pacific coast, the Osa peninsula and
+    Corcovado, Talamanca and the Caribbean lowland -- and hold 27% of the country, so an
+    equal share per polygon paints a religion across rainforest. At the other end the Valle
+    Central is most of Costa Rica's people on a plateau about 60 km across that crosses four
+    provincial lines rather than sitting inside one, and Heredia is a narrow strip running
+    from that plateau to the Nicaraguan border with all its people at the southern end
+    (sources/cr_grid.py).
+    """
+    return _kontur_place_weight(place, "cr_hexes.gpkg", "sources/cr_grid.py")
+
+
+def _cr_counts():
+    """LAPOP AmericasBarometer, waves 2010-2023 pooled, at provincia: 11 categories, 7 units,
+    and EVERY ROW IS `modelled` IN 7.
+
+    The fifth country drawn from the AmericasBarometer, after Guatemala, El Salvador, Ecuador
+    and Panama, and the one whose office was tested hardest before the survey was touched.
+    INEC's own microdata catalogue at sistemas.inec.cr/pad5 serves 183 studies with 45,364
+    variables between them and EXACTLY ONE is a religious affiliation question: `HC1A`, the
+    religion of the household head, in the Encuesta de Mujeres, Ninez y Adolescencia 2018,
+    Costa Rica's MICS round 6. The Censo 2011's own dictionary is 116 variables that include
+    indigenous identity, indigenous language and Afrodescendant self-identification and no
+    religion. ENAHO runs to 594 variables in 2023 and 596 in 2025 with none. The EMNA's
+    341-page report tabulates its own religion question nowhere.
+
+    BUT THE CATALOGUE PUBLISHED THE NATIONAL LEVEL WITHOUT MEANING TO. `HC1A`'s variable-level
+    metadata carries its weighted frequency distribution -- 8,490 households, 65.16% Catolica
+    -- which is the only independent reading of Costa Rica's level that exists, and the second
+    such reading any country in this module has. sources/cr.md 4 compares the two cards box
+    by box, because they do not line up.
+
+    AND THE POPULATION IS INEC'S OWN 2022 ESTIMATE, NOT COD-PS, which is Ecuador's call
+    (9bn): COD-PS ships a 2021 UNFPA projection built on INEC's superseded 2013 revision and
+    it runs +11.24% on Heredia and -3.25% on Guanacaste against INEC's own count.
+    """
+    from cr2023 import resolve
+
+    df = pd.read_csv(HERE / "data" / "normalized" / "cr.csv",
+                     dtype={"geo_id": str}, low_memory=False,
+                     keep_default_na=False, na_values=[""])
+
+    lut = pd.read_csv(HERE / "data" / "geo" / "cr" / "cr_lookup.csv", dtype=str)
+    df["unit"] = df["geo_id"].map(dict(zip(lut["geo_id"], lut["unit"])))
+    missing = sorted(df.loc[df["unit"].isna(), "geo_id"].unique())
+    if missing:
+        raise SystemExit(f"cr.csv provinces with no polygon: {missing} -- re-run "
+                         "sources/cr_geo.py, the lookup is stale")
+    # All seven, unlike Panama and Ecuador: LAPOP names every Costa Rican province and
+    # samples every one of them in every wave, so this country has no `gap=`.
+    if df["unit"].nunique() != 7:
+        raise SystemExit(f"{df['unit'].nunique()} provinces, expected 7")
+
+    df["node"] = df["source_category"].map(resolve)
+    unmapped = sorted(df.loc[df["node"].isna(), "source_category"].unique())
+    if unmapped:
+        raise SystemExit(f"cr.csv categories with no node: {unmapped}")
+    df = df[df["count"] > 0]
+    # EVERY row, without exception -- there is no measured tier in this country (7).
+    df["tier"] = "modelled"
+    df["congregations"] = 0
+    return df[["unit", "node", "count", "congregations", "tier"]]
+
+
+def _pa_place_weight(place):
+    """countries.py hook. `place` is the 400m hex layer scatter.py has read.
+
+    Panama needs this for §8.2's EMPTINESS reason more than any LAPOP country so far.
+    Darien is 12,030 km2 of forest holding 54,235 people, and the unit that carries half the
+    map -- Panama with Panama Oeste, 2.09 million people over 11,690 km2 -- is a strip along
+    the canal and the Pacific coast with the Chagres watershed and the Darien approaches
+    behind it. An equal share per polygon paints a religion across roadless country and takes
+    it off the city (sources/pa_grid.py).
+    """
+    return _kontur_place_weight(place, "pa_hexes.gpkg", "sources/pa_grid.py")
+
+
+def _pa_counts():
+    """LAPOP AmericasBarometer, waves 2010-2023 pooled, at provincia: 11 categories, 10
+    units, and EVERY ROW IS `modelled` IN §7.
+
+    The fourth country drawn from the AmericasBarometer, after Guatemala, El Salvador and
+    Ecuador. sources.md §11x closed Panama's censuses the hardest way anything here has been
+    closed -- the person-variable dictionaries of all five censuses INEC serves on its own
+    REDATAM, 1980 through 2023, 252 variables, not one of them religion -- and this build
+    re-confirmed it and then went further: INEC has asked the question TWICE on household
+    surveys and published neither answer at the geography it holds. The MICS 2013 household
+    listing asks it of every member of 11,100 households; the Encuesta de Propositos
+    Multiples of April 2022 asked it of 11,776 household informants and its own slide deck
+    says results can be had by province and comarca. What is published is one national bar
+    chart. sources/pa.md has the search.
+
+    TEN UNITS OF THIRTEEN. LAPOP's `prov` value labels name ten Panamanian units and there is
+    no code for Comarca Guna Yala or Comarca Embera-Wounaan in any wave, so neither is drawn:
+    44,374 people, 1.09% of the country, in `gap=`. That is Ecuador's Galapagos rule (§9bn),
+    and it costs more here, because those are two of the three indigenous comarcas. They keep
+    their polygons and their hexes and draw no religion.
+
+    PANAMA OESTE IS NOT A GAP, IT IS A MERGE. It became a province in 2014 out of the western
+    districts of Panama and LAPOP never adopted it; the 2023 round still codes every one of
+    its respondents to `708`. sources/pa_geo.py dissolves the two polygons, so one unit of
+    2,092,955 people is 51.5% of the country.
+
+    THE CODE JOIN IS A TRAP AND IT IS EL SALVADOR'S AGAIN. LAPOP's `prov` is 700 plus the
+    official province number; COD's `PA` pcodes are alphabetical. Two of ten coincide, and
+    the worst of the other eight pairs `708` Panama, 2.09 million people, onto `PA08` Kuna
+    Yala, which has 32,016. sources/pa_geo.py joins on the NAME, taken from LAPOP's own value
+    labels rather than inferred, and asserts that the code join still mispairs.
+
+    AND THE HELD-OUT PERMUTATION TEST IS RUN EXHAUSTIVELY RATHER THAN SAMPLED. lapop.py's
+    version fails if any of 20,000 sampled orderings reaches the observed r, and here 3 did.
+    Enumerating all 3,628,800 says why: 468 orderings reach r=+0.996 and ALL 468 keep the
+    51%-of-the-country unit in place, so it is leverage and not unit count, and "zero of
+    20,000" is a bar no correct decode could clear. The exact p is 1.29e-4, and 1.29e-3 with
+    the dominant unit dropped. sources/pa.py::held_out_exact has the argument.
+    """
+    from pa2023 import resolve
+
+    df = pd.read_csv(HERE / "data" / "normalized" / "pa.csv",
+                     dtype={"geo_id": str}, low_memory=False,
+                     keep_default_na=False, na_values=[""])
+
+    lut = pd.read_csv(HERE / "data" / "geo" / "pa" / "pa_lookup.csv", dtype=str)
+    df["unit"] = df["geo_id"].map(dict(zip(lut["geo_id"], lut["unit"])))
+    missing = sorted(df.loc[df["unit"].isna(), "geo_id"].unique())
+    if missing:
+        raise SystemExit(f"pa.csv provinces with no polygon: {missing} -- re-run "
+                         "sources/pa_geo.py, the lookup is stale")
+    # 10 of the 12 polygons. Guna Yala and Embera-Wounaan are deliberately absent -- see the
+    # docstring and `gap=`; they keep their polygons and their hexes and draw no religion.
+    if df["unit"].nunique() != 10:
+        raise SystemExit(f"{df['unit'].nunique()} provinces, expected 10")
+    drawn_comarcas = {"PA06", "PA08"} & set(df["unit"])
+    if drawn_comarcas:
+        raise SystemExit(f"{sorted(drawn_comarcas)} are in pa.csv and must not be -- LAPOP "
+                         "has no code for either; re-run sources/pa.py")
+
+    df["node"] = df["source_category"].map(resolve)
+    unmapped = sorted(df.loc[df["node"].isna(), "source_category"].unique())
+    if unmapped:
+        raise SystemExit(f"pa.csv categories with no node: {unmapped}")
+    df = df[df["count"] > 0]
+    # EVERY row, without exception -- there is no measured tier in this country (§7).
+    df["tier"] = "modelled"
+    df["congregations"] = 0
+    return df[["unit", "node", "count", "congregations", "tier"]]
+
+
+def _kg_place_weight(place):
+    """countries.py hook. `place` is the 400m hex layer scatter.py has read.
+
+    KYRGYZSTAN NEEDS THIS MORE THAN ALMOST ANY COUNTRY HERE. Nine units over 199,951 km2 is
+    22,217 km2 apiece and the country is 94% mountain: Naryn oblast is 45,200 km2 of Tien
+    Shan pasture holding 316,182 people strung along the Naryn river and the Torugart road,
+    and Issyk-Kul's people are a ring around a lake that is itself 6,236 km2 of water. An
+    equal share of dots per polygon puts most of the country's colour on ice and rock.
+    sources/kg_grid.py.
+    """
+    return _kontur_place_weight(place, "kg_hexes.gpkg", "sources/kg_grid.py")
+
+
+def _kg_counts():
+    """EBRD Life in Transition Survey III, 2015-16, at oblast: 8 categories, 9 units, and
+    EVERY ROW IS `modelled` IN §7.
+
+    NO KYRGYZ CENSUS HAS EVER ASKED THE QUESTION, and that was established against the
+    QUESTIONNAIRE rather than against the publications, which is §9cd's rule. Book I of the
+    2022 census prints Form 2 in full as an annex: seventeen questions, nationality at 7 and
+    native language at 10.1, and no religion item on any of the five forms. The office's own
+    download catalogue was harvested across all 22 subject pages (806 entries, zero religion)
+    and its bare-integer `dynamic` route swept as well (546 named files, zero); data.gov.kg
+    was paged out in full (1,410 CKAN packages, religion only as a register of BUILDINGS).
+    sources/kg.md has the record and sources.md §9co the write-up.
+
+    THE SPLIT-HALF BAR IS A PERMUTATION HERE AND NOT `1.96/sqrt(n-1)`, AND IT CHANGES THE
+    ANSWER. LiTS III is one wave, so the split is on PSUs and the statistic is the median over
+    400 random halves; `1.96/sqrt(n-1)` is the standard error of ONE correlation, so on nine
+    units it sits at +0.693 while the shuffled-label null's own 95th percentile is +0.450.
+    Islam's median is +0.548: the fixed bar would have rejected a category the data separates
+    from chance at p=0.020. sources/lits.py has the argument.
+
+    THE POPULATION CHECK CANNOT SEPARATE ISSYK-KUL FROM BATKEN AND SAYS SO. Observed r =
+    +0.9866 against all 362,879 other orderings of the nine units; exactly one beats it, the
+    Issyk-Kul/Batken swap, at +0.9870. Those two are 0.69pp apart on a share the survey
+    measures to +/-1.33pp, so no correlation on it can tell them apart. `lits.held_out`
+    forgives a beating ordering only when every unit it moves goes to one inside 1.96 standard
+    errors, and names the pair on every run. The join is pinned by two other witnesses that
+    are not correlations: the office's own SOATE code IS COD's pcode (417NN -> KGNN), and the
+    Russian oblast names agree independently of the codes.
+
+    THE POPULATION IS THE OFFICE'S OWN AND NOT COD-PS, whose Kyrgyz file is dated 2018 and
+    totals 6,140,200 against the National Statistical Committee's 7,404,329 at 1 January 2026.
+    That is a 20.6% gap and eight years of real growth, not a projection disagreement; §9bn
+    took the office's own over a COD error of 3.4%. COD-PS is still read for its age bands,
+    which are used as a ratio for the §3.5 lean and for nothing else.
+    """
+    from kg2016 import resolve
+
+    df = pd.read_csv(HERE / "data" / "normalized" / "kg.csv",
+                     dtype={"geo_id": str}, low_memory=False,
+                     keep_default_na=False, na_values=[""])
+
+    lut = pd.read_csv(HERE / "data" / "geo" / "kg" / "kg_lookup.csv", dtype=str)
+    df["unit"] = df["geo_id"].map(dict(zip(lut["geo_id"], lut["unit"])))
+    missing = sorted(df.loc[df["unit"].isna(), "geo_id"].unique())
+    if missing:
+        raise SystemExit(f"kg.csv oblasts with no polygon: {missing} -- re-run "
+                         "sources/kg_geo.py, the lookup is stale")
+    if df["unit"].nunique() != 9:
+        raise SystemExit(f"{df['unit'].nunique()} oblasts, expected 9")
+
+    df["node"] = df["source_category"].map(resolve)
+    unmapped = sorted(df.loc[df["node"].isna(), "source_category"].unique())
+    if unmapped:
+        raise SystemExit(f"kg.csv categories with no node: {unmapped}")
+    df = df[df["count"] > 0]
+    # EVERY row, without exception -- there is no measured tier in this country (§7).
+    df["tier"] = "modelled"
+    df["congregations"] = 0
+    return df[["unit", "node", "count", "congregations", "tier"]]
+
+
 def _sv_place_weight(place):
     """countries.py hook. `place` is the 400m hex layer scatter.py has read.
 
@@ -2165,6 +2391,81 @@ def _sv_counts():
     unmapped = sorted(df.loc[df["node"].isna(), "source_category"].unique())
     if unmapped:
         raise SystemExit(f"sv.csv categories with no node: {unmapped}")
+    df = df[df["count"] > 0]
+    # EVERY row, without exception -- there is no measured tier in this country (§7).
+    df["tier"] = "modelled"
+    df["congregations"] = 0
+    return df[["unit", "node", "count", "congregations", "tier"]]
+
+
+def _do_place_weight(place):
+    """countries.py hook. `place` is the 400m hex layer scatter.py has read.
+
+    32 provinces over 48,671 km2 is 1,521 km2 a unit, so the Dominican Republic is not drawn
+    for §8.2's emptiness reason. It is drawn for the concentration one. **Santo Domingo
+    province is 2.77 million people ringing a capital it does not contain**, and its polygon
+    runs from that ring north-east into the empty Sierra de Yamasa; the Distrito Nacional is
+    another 1.03 million in 91 km2, so a third of the country sits inside a 40 km circle. The
+    other end is the Haitian border, where Pedernales, Independencia and Elias Pina string
+    their people along a few roads with the Sierra de Bahoruco and Lago Enriquillo in between,
+    and those three are also where the map's no-religion share peaks (sources/do_grid.py).
+    """
+    return _kontur_place_weight(place, "do_hexes.gpkg", "sources/do_grid.py")
+
+
+def _do_counts():
+    """ONE ENHOGAR-MICS6 2019, at provincia: 6 categories, 32 units, and EVERY ROW IS
+    `modelled` IN §7.
+
+    THE QUEUE PRICED THIS COUNTRY FROM LAPOP AND §9bn REFUSED IT -- three provinces never
+    sampled, seven more in one wave-half only, so a third of the country would have been
+    drawn at the national rate. The office's own survey answers instead. ENHOGAR is the
+    Dominican household series, run since 2005, and its 2019 round was fielded as MICS6 with
+    UNICEF; the household questionnaire carries `HC1A`, "a cual religion pertenece el jefe o
+    la jefa del hogar", and ONE published the microdata openly. 31,488 households and 96,968
+    people in them, against LAPOP's 8,904, and all 32 provinces against 29. sources/do.md is
+    this country's record and sources.md §9cf is the write-up.
+
+    THE CENSUS HALF IS CLOSED AND WAS CHECKED TWICE. CELADE hosts ONE's own REDATAM instance
+    at prod.redatam.org/bindom/, and the published CPV2010 dictionary has no religion
+    variable; the 2022 census person microdata's codebook runs P25 to P67 with no religion
+    question either (P64 is self-identification by skin colour and culture, which is not the
+    same thing). The UNSD oracle has no Dominican row, which on its own proves only that
+    nothing was forwarded.
+
+    IT IS THE HOUSEHOLD HEAD'S RELIGION, applied to everyone in the household, which is what
+    MICS's own tabulations do and is a modelling step rather than a measurement. note_public
+    says so to the reader.
+
+    THE POPULATION IS THE 2022 CENSUS AND NOT COD-PS, and the reason is stronger than
+    Ecuador's. COD-PS 2023 is a projection and is only 0.56% under ONE's census nationally,
+    which is better than the 3.4% that made sources/ec_geo.py reject Ecuador's; per province
+    it runs -23.7% in San Jose de Ocoa to +10.3% in Santo Domingo. A national agreement says
+    nothing about the split.
+
+    FIVE OF THE SIX CATEGORIES CARRY THEIR OWN GEOGRAPHY, decided by a split-half on cluster
+    parity across ENHOGAR's 1,747 sampling units (§14.16). `TESTIGO DE JEHOVA` returns -0.02
+    against a bar of +0.35 and is drawn at the national 0.99% in every province.
+    """
+    from do2019 import resolve
+
+    df = pd.read_csv(HERE / "data" / "normalized" / "do.csv",
+                     dtype={"geo_id": str}, low_memory=False,
+                     keep_default_na=False, na_values=[""])
+
+    lut = pd.read_csv(HERE / "data" / "geo" / "do" / "do_lookup.csv", dtype=str)
+    df["unit"] = df["geo_id"].map(dict(zip(lut["geo_id"], lut["unit"])))
+    missing = sorted(df.loc[df["unit"].isna(), "geo_id"].unique())
+    if missing:
+        raise SystemExit(f"do.csv provinces with no polygon: {missing} -- re-run "
+                         "sources/do_geo.py, the lookup is stale")
+    if df["unit"].nunique() != 32:
+        raise SystemExit(f"{df['unit'].nunique()} provinces, expected 32")
+
+    df["node"] = df["source_category"].map(resolve)
+    unmapped = sorted(df.loc[df["node"].isna(), "source_category"].unique())
+    if unmapped:
+        raise SystemExit(f"do.csv categories with no node: {unmapped}")
     df = df[df["count"] > 0]
     # EVERY row, without exception -- there is no measured tier in this country (§7).
     df["tier"] = "modelled"
@@ -2292,6 +2593,294 @@ def _ec_counts():
     unmapped = sorted(df.loc[df["node"].isna(), "source_category"].unique())
     if unmapped:
         raise SystemExit(f"ec.csv categories with no node: {unmapped}")
+    df = df[df["count"] > 0]
+    # EVERY row, without exception -- there is no measured tier in this country (§7).
+    df["tier"] = "modelled"
+    df["congregations"] = 0
+    return df[["unit", "node", "count", "congregations", "tier"]]
+
+
+def _uy_place_weight(place):
+    """countries.py hook. `place` is the 400m hex layer scatter.py has read.
+
+    Uruguay is the most lopsided ADM1 country in the Americas here. Montevideo is 0.3% of the
+    land and 37% of the people; the seventeen interior departments run 20 to 40 people per km2
+    and their population sits almost entirely in one departmental capital each, with grazing
+    country between. The second reason is the coast: Maldonado and Rocha are long thin
+    departments whose people are on a 200 km Atlantic strip and whose interiors are nearly
+    empty, and those two also carry the highest unaffiliated shares in the country, so getting
+    their dots onto the shoreline is getting the map's most striking claim into the right
+    place (sources/uy_grid.py).
+    """
+    return _kontur_place_weight(place, "uy_hexes.gpkg", "sources/uy_grid.py")
+
+
+def _uy_counts():
+    """INE's Encuesta Nacional de Hogares Ampliada 2006 at departamento: 7 categories, 19
+    units, and EVERY ROW IS `modelled` IN §7.
+
+    THE QUEUE PRICED THIS COUNTRY FROM LAPOP AND THE STATISTICS OFFICE HAS SOMETHING FIFTY
+    TIMES BIGGER. INE put a religion question on the 2006 ENHA -- the year the continuous
+    household survey was widened to cover small localities and rural areas -- and asked it of
+    every household member over six. 230,898 people answered, against the AmericasBarometer's
+    4,318 pooled over three waves, on the same nineteen departments. Every department has
+    between 3,252 and 80,196 respondents, so the thinnest is +/-1.7 points on a share near
+    46% and nothing anywhere is drawn at a national rate.
+
+    THE CENSUS NEGATIVE IS REAL AND OLD. Uruguay is absent from the UNSD oracle and the last
+    census to ask about religion was 1908, nine years before the 1917 constitution
+    separated church and state; 2011 and 2023 do not carry the question. So this is a survey
+    standing where no census has stood for over a century, and every row is `modelled`.
+
+    THE UNIVERSE IS AGES 7 AND OVER, AND THE METADATA GETS IT WRONG. ANDA's data dictionary
+    says "personas mayores de 6 anos" and then glosses it as "6 anos y mas", which are two
+    different universes. The microdata settles it: the not-applicable code covers ages 0 to 6
+    exactly and completely, all 4,225 six-year-olds included, and nobody 7 or over carries it.
+    8.99% of Uruguay is therefore children and is in `gap=`. There is no non-response cell at
+    all -- every person in the universe has one of the seven answers, which is rare here.
+
+    THE CODE JOIN IS EL SALVADOR'S TRAP, HARDER TO SEE. INE numbers departments with
+    Montevideo first and the other eighteen alphabetically; COD-AB's UY01..UY19 are
+    alphabetical with no exception, so `UY{dpto:02d}` shifts the first ten by one place and
+    leaves the last nine alone. NINE OF NINETEEN COINCIDE, and they are the last nine, so a
+    spot check on Salto or Treinta y Tres passes while Montevideo's 1.3 million people are
+    drawn in Artigas. sources/uy_geo.py joins on the NAME -- all 19 matching with no aliases
+    -- and asserts that the code join still mispairs exactly ten.
+
+    THE POPULATION IS INE'S OWN POST-CENSUS ESTIMATE, NOT COD-PS. Uruguay counted in 2023 and
+    COD-PS's Uruguay file is a projection off the 2011 census, so §9bn's rule applies. INE's
+    Estimaciones y proyecciones revision 2025 gives 3,496,400 at 30 June 2023 by department
+    and five-year age band, of whom 3,181,996 are 7 or over. The 7+ cut needs three fifths of
+    the 5-9 band because nothing INE publishes for Uruguay is by single year of age; that
+    interpolation is worth at most 0.05% of the country and sources/uy_geo.py says so.
+
+    TWO CHECKS, AND ONE IS A SECOND SURVEY. The ENHA's own weighted department distribution
+    tracks INE's 2006 population distribution at r=+1.0000 over 19, which none of 20,000
+    random pairings comes near (best random +0.996) -- compared against 2006 and not 2023,
+    because seventeen years of internal migration is not a test of a join. AND THE
+    AMERICASBAROMETER MEASURED THE SAME COUNTRY FOUR TO EIGHT YEARS LATER WITH A DIFFERENT
+    INSTRUMENT, which is a witness no LAPOP-only country can have: non-Catholic Christian
+    r=+0.86 with 0 of 20,000 random pairings reaching it, atheist/agnostic +0.73 with 3, both
+    no-religion cells together +0.56 with 118. Catholic is +0.34 and NOT significant, which is
+    a fact about the pair of cards rather than about either survey -- LAPOP finds 37.0%
+    Catholic and 32.4% believing-without-a-religion where INE finds 46.0% and 26.9%, and that
+    boundary is exactly where wording moves people. LAPOP also has 45 respondents in Rivera
+    against INE's 9,322.
+
+    FIVE OF THE SEVEN CATEGORIES CLEAR THE SPLIT-HALF, run across the two halves of 2006
+    rather than across waves: Catholic +0.92, believer-without-religion +0.88,
+    atheist/agnostic +0.88, non-Catholic Christian +0.85, Umbanda +0.78, on a bar of +0.46.
+    `Judio` (+0.26) and `Otra` (+0.26) are drawn anyway, named in sources/uy.py's `UNDER_BAR`
+    with the reasons and their chi-squares. The Jewish one matters: the rank test is ranking
+    eighteen departments whose true share is near zero, while the fact the map draws is that
+    Montevideo is 0.92% Jewish against 0.06% elsewhere and holds nine tenths of the cell, on
+    80,196 Montevideo respondents. Spreading that at the national rate would be a stronger
+    claim than the test declines to license, and a false one.
+    """
+    from uy2006 import resolve
+
+    df = pd.read_csv(HERE / "data" / "normalized" / "uy.csv",
+                     dtype={"geo_id": str}, low_memory=False,
+                     keep_default_na=False, na_values=[""])
+
+    lut = pd.read_csv(HERE / "data" / "geo" / "uy" / "uy_lookup.csv", dtype=str)
+    df["unit"] = df["geo_id"].map(dict(zip(lut["geo_id"], lut["unit"])))
+    missing = sorted(df.loc[df["unit"].isna(), "geo_id"].unique())
+    if missing:
+        raise SystemExit(f"uy.csv departments with no polygon: {missing} -- re-run "
+                         "sources/uy_geo.py, the lookup is stale")
+    if df["unit"].nunique() != 19:
+        raise SystemExit(f"{df['unit'].nunique()} departments, expected 19")
+
+    df["node"] = df["source_category"].map(resolve)
+    unmapped = sorted(df.loc[df["node"].isna(), "source_category"].unique())
+    if unmapped:
+        raise SystemExit(f"uy.csv categories with no node: {unmapped}")
+    df = df[df["count"] > 0]
+    # EVERY row, without exception -- there is no measured tier in this country (§7).
+    df["tier"] = "modelled"
+    df["congregations"] = 0
+    return df[["unit", "node", "count", "congregations", "tier"]]
+
+
+def _eg_place_weight(place):
+    """countries.py hook. `place` is the 400m hex layer scatter.py has read.
+
+    Egypt is the extreme case of §8.2's emptiness argument and the country the grid exists
+    for. **About 96% of Egypt is uninhabited desert** and effectively everyone lives on the
+    Nile valley and delta, a green ribbon a few kilometres wide for a thousand kilometres. The
+    governorates contain that ribbon and then run east and west into nothing: New Valley is
+    429,151 km2, 43% of Egypt's land and 0.25% of its people. Drawn flat, the Coptic
+    concentration in Minya, Asyut and Sohag would be painted mostly onto the Eastern Desert
+    (sources/eg_grid.py).
+    """
+    return _kontur_place_weight(place, "eg_hexes.gpkg", "sources/eg_grid.py")
+
+
+def _eg_counts():
+    """Arab Barometer waves III, IV, V and VII pooled, at governorate: 2 categories, 24 of 27.
+
+    THE COUNTRY IS A SURVEY ON CAPMAS'S OWN PROJECTION AND EVERY ROW IS `modelled` (§7b).
+    `Q1012` gives a governorate share; CAPMAS's api/GovernoratePopulation gives the number of
+    people it applies to, pinned to 2026-01-01. No magnitude is invented: every person drawn
+    is a person CAPMAS counts in that governorate, and the survey only decides the column
+    (§14.4 rule 1, the construction sources/kz.py uses).
+
+    DRAWING EGYPT AT GOVERNORATE IS ANITA'S CALL, 2026-09-08, on ask/answered/001-eg. §14.4
+    rule 2 is about exactly this case -- a persecuted minority mapped finer than its own state
+    publishes -- and Egypt collected religion in 1986, 1996, 2006 and 2017 and published it
+    from 1986 only. Her ruling was to draw at governorate, on the ground that governorates are
+    pretty big. She also asked whether anything finer was possible and it is not: the survey
+    cuts by governorate and carries nothing below it, and the microdata extract CAPMAS
+    deposited for the 2017 census has thirteen variables and religion is not among them. So
+    governorate is simultaneously the ruling and the ceiling.
+
+    THREE GOVERNORATES ARE NOT DRAWN AT ALL. New Valley, North Sinai and South Sinai have no
+    respondents in any wave, so they have no share to apply and get no dots. That is 870,398
+    people, 0.80% of Egypt, and 48% of its land; `gap=` says so. Filling them at the national
+    rate would assert that the Western Desert oases and the Sinai look like Egypt's average,
+    which nothing supports.
+
+    BOTH ANSWERS CARRY THEIR OWN GEOGRAPHY AND THERE IS NO TAIL, which is unique here. The
+    card has two boxes that anybody in Egypt chose, both clear the 1% eligibility floor, and
+    both clear the split-half bar (+0.52 weighted against +0.42 on the 23 governorates present
+    in both wave halves). So the governorate shares are a closed partition and nothing is
+    spread at a national rate.
+
+    THE WEIGHTED AND UNWEIGHTED READINGS DISAGREE ABOUT WHICH GOVERNORATE IS TOP, and the file
+    draws the weighted one. Unweighted, Sohag is 16.9% and Minya 16.1%; weighted, which is
+    what sources/eg.py applies, Minya is 16.41% and Sohag 13.90%. The weights are the survey's
+    own and they are what makes the national reading agree with the census (5.93% weighted
+    against 6.68% unweighted, and the 1986 census published 5.7%), so they are used. The three
+    top governorates are within each other's 95% intervals either way, and note_public says to
+    read them as a group.
+
+    THE UNIVERSE IS ADULTS AND THE DOTS ARE EVERYBODY. The Arab Barometer interviews people
+    aged 18 and over in every wave; the shares are applied to the whole population, which
+    assumes Egypt's children are distributed like its adults. Drawing only the adults would
+    leave a third of a young country blank, and §6.12 is about how badly a blank reads on a
+    dot map.
+    """
+    from eg2022 import resolve
+
+    df = pd.read_csv(HERE / "data" / "normalized" / "eg.csv",
+                     dtype={"geo_id": str}, low_memory=False,
+                     keep_default_na=False, na_values=[""])
+
+    lut = pd.read_csv(HERE / "data" / "geo" / "eg" / "eg_lookup.csv", dtype=str)
+    df["unit"] = df["geo_id"].map(dict(zip(lut["geo_id"], lut["unit"])))
+    missing = sorted(df.loc[df["unit"].isna(), "geo_id"].unique())
+    if missing:
+        raise SystemExit(f"eg.csv governorates with no polygon: {missing} -- re-run "
+                         "sources/eg_geo.py, the lookup is stale")
+    # 24 of Egypt's 27. The three unsampled ones keep their polygons and their hexes and draw
+    # no religion; see the docstring and `gap=`.
+    if df["unit"].nunique() != 24:
+        raise SystemExit(f"{df['unit'].nunique()} governorates, expected 24")
+    unsampled = {"EG32", "EG34", "EG35"}
+    if unsampled & set(df["unit"]):
+        raise SystemExit(f"{sorted(unsampled & set(df['unit']))} is in eg.csv and must not be "
+                         "-- the Arab Barometer never sampled it; re-run sources/eg.py")
+
+    df["node"] = df["source_category"].map(resolve)
+    unmapped = sorted(df.loc[df["node"].isna(), "source_category"].unique())
+    if unmapped:
+        raise SystemExit(f"eg.csv categories with no node: {unmapped}")
+    df = df[df["count"] > 0]
+    # EVERY row, without exception -- there is no measured tier in this country (§7).
+    df["tier"] = "modelled"
+    df["congregations"] = 0
+    return df[["unit", "node", "count", "congregations", "tier"]]
+
+
+def _jo_place_weight(place):
+    """countries.py hook. `place` is the 400m hex layer scatter.py has read.
+
+    Jordan is Egypt's problem at a tenth of the scale. Ma'an, Mafraq and Aqaba are 66,288 km2
+    between them, 74.7% of the country's land, and hold 9.5% of its people; the badia east and
+    south of the highlands is empty. Drawn flat, the difference between Madaba and Mafraq gets
+    painted onto basalt desert instead of onto the towns (sources/jo_grid.py).
+    """
+    return _kontur_place_weight(place, "jo_hexes.gpkg", "sources/jo_grid.py")
+
+
+def _jo_counts():
+    """Arab Barometer waves II to VIII pooled, at governorate: 2 categories, all 12 units.
+
+    THE COUNTRY IS A SURVEY ON DOS'S OWN ESTIMATE AND EVERY ROW IS `modelled` (§7b). `Q1012`
+    gives a governorate share; the Department of Statistics' Table 2.2 gives the number of
+    people it applies to, at end-2025. No magnitude is invented: every person drawn is a
+    person DOS counts in that governorate, and the survey only decides the column (§14.4 rule
+    1, the construction sources/kz.py uses).
+
+    JORDAN ASKED THE QUESTION TWICE AND PUBLISHED NEITHER ANSWER. DOS prints its own
+    questionnaires and both carry a religion item: the 2015 form's person block runs 201-216
+    with 208 `Religion`, `1.mustim 2.chistian 3.other` in DOS's own spelling, and the 2004
+    private household register asks `al-diyana` with Islam, Christianity and other in the same
+    position. The 2015 census's published tables number 133 across ten sections and the 2004
+    census's 165 across eight; religion is in neither set, the jorinfo.dos.gov.jo databank's
+    520 tables carry no religion variable, and Jordan is absent from the UNSD Demographic
+    Yearbook's religion table. So the answers exist and nobody outside DOS has seen them.
+
+    DRAWN AT GOVERNORATE, following Anita's Egypt ruling rather than re-asking it. §14.4 rule
+    2 is the same question here as it was in ask/answered/001-eg -- a religious minority
+    mapped finer than its own state publishes -- and her answer there was to draw at
+    governorate because governorates are big units. Jordan's are bigger in every sense that
+    matters: twelve of them for 11.9 million people, the smallest holding 120,300, against
+    Egypt's twenty-seven. And Jordan's Christians are not situated as Egypt's Copts are; the
+    constitution reserves parliamentary seats for them and the community is publicly counted
+    by its own churches. Nothing finer exists anyway, because the survey cuts by governorate
+    and carries nothing below it.
+
+    ALL TWELVE GOVERNORATES ARE SAMPLED IN ALL NINE WAVES, so there is no gap: every one of
+    DOS's 11,937,000 people is drawn. Eleven respondents refused the question and leave the
+    survey's universe rather than the country's, which is why there is no `gap_share`.
+
+    BOTH ANSWERS CARRY THEIR OWN GEOGRAPHY AND THERE IS NO TAIL, as in Egypt, and for the same
+    reason: the card has two boxes, both clear the 1% eligibility floor and both clear the
+    split-half. THE PASS IS THIN AND SAYING SO IS PART OF THE ENTRY. Spearman +0.617 against a
+    bar of +0.591 on twelve units, and dropping Balqa alone takes it to +0.509. It is §14.16's
+    test applied as written, and three things the test cannot see stand behind it: the twelve
+    governorates differ at p=2.6e-18, Balqa with Madaba and Ajloun read 3.50% Christian
+    against 1.41% elsewhere at p=4.1e-10, and the ordering the survey returns is the one
+    Jordan's own Christian geography would predict. The alternative is not a more careful map:
+    with neither answer carrying, every governorate would be drawn at the national rate, which
+    the data contradicts at p=2.6e-18.
+
+    THE SURVEY IS MOSTLY A SURVEY OF CITIZENS AND THE DENOMINATOR COUNTS EVERYBODY. Roughly
+    three residents in ten are not Jordanian nationals; the 2015 census counted 9,531,712
+    people of whom 2,918,125 were non-Jordanian. Wave IV is the only wave that sampled them
+    (303 Syrians in 1,500 respondents) and it measures them as different: 0 of 303 Christian
+    against 28 of 1,197 among Jordanian- and Palestinian-origin respondents in the same wave,
+    p=0.014. So applying the pooled share to the whole resident population makes the Christian
+    figure a ceiling. Nothing corrects for it, because no published source gives the religion
+    of Jordan's non-citizens at any geography and §14.4 rule 1 forbids inventing one.
+
+    THE UNIVERSE IS ADULTS AND THE DOTS ARE EVERYBODY. The Arab Barometer interviews people
+    aged 18 and over in every wave; the shares are applied to the whole population, which
+    assumes Jordan's children are distributed like its adults. Drawing only the adults would
+    leave a third of a young country blank, and §6.12 is about how badly a blank reads on a
+    dot map.
+    """
+    from jo2024 import resolve
+
+    df = pd.read_csv(HERE / "data" / "normalized" / "jo.csv",
+                     dtype={"geo_id": str}, low_memory=False,
+                     keep_default_na=False, na_values=[""])
+
+    lut = pd.read_csv(HERE / "data" / "geo" / "jo" / "jo_lookup.csv", dtype=str)
+    df["unit"] = df["geo_id"].map(dict(zip(lut["geo_id"], lut["unit"])))
+    missing = sorted(df.loc[df["unit"].isna(), "geo_id"].unique())
+    if missing:
+        raise SystemExit(f"jo.csv governorates with no polygon: {missing} -- re-run "
+                         "sources/jo_geo.py, the lookup is stale")
+    if df["unit"].nunique() != 12:
+        raise SystemExit(f"{df['unit'].nunique()} governorates, expected 12")
+
+    df["node"] = df["source_category"].map(resolve)
+    unmapped = sorted(df.loc[df["node"].isna(), "source_category"].unique())
+    if unmapped:
+        raise SystemExit(f"jo.csv categories with no node: {unmapped}")
     df = df[df["count"] > 0]
     # EVERY row, without exception -- there is no measured tier in this country (§7).
     df["tier"] = "modelled"
@@ -2646,6 +3235,60 @@ def _ki_counts():
     return df[["unit", "node", "count", "congregations"]]
 
 
+def _fm_place_weight(place):
+    """countries.py hook. `place` is the 400m hex layer scatter.py has read.
+
+    A Micronesian unit is mostly ocean. Chuuk is drawn whole and reaches from Houk in the
+    Western Islands to Ta in the Lower Mortlocks, about 1,000 km, so an area weight would put
+    a third of the country in open water instead of on Weno; Yap's outer municipalities are
+    single atolls a kilometre or two across (sources/fm_grid.py).
+    """
+    return _kontur_place_weight(place, "fm_hexes.gpkg", "sources/fm_grid.py")
+
+
+def _fm_counts():
+    """FSM 2023 census Table B6: 11 categories on 33 units at TWO tiers.
+
+    NOTHING IS ALLOCATED, SPREAD OR MODELLED -- every row is `measured` at the unit it is
+    drawn on, which is the municipality in Yap and Pohnpei and the state in Chuuk and Kosrae.
+    That mix is spec 12's Ghana answer: draw the fine unit where it reconciles and the coarse
+    one where it does not, rather than dropping the whole country to its worst tier.
+
+    THE REASON IT IS MIXED IS THE SOURCE AND NOT A JUDGEMENT. FSM publishes a per-state
+    basic-tables workbook beside the national one; Yap's and Pohnpei's carry `Table B6.
+    Religion by Municipality`, Chuuk's workbook does not exist and Kosrae's stops at Table B5.
+    sources/fm.py asserts Kosrae's missing table on every run, so if it ever appears the build
+    fails and says to draw Kosrae finely.
+
+    THE ONE CHECK THAT CROSSES TWO PUBLICATIONS: each per-state workbook's own state column
+    reproduces the national table's column for that state on all eleven categories exactly.
+    """
+    from fm2023 import resolve
+
+    df = pd.read_csv(HERE / "data" / "normalized" / "fm.csv",
+                     dtype={"geo_id": str}, low_memory=False,
+                     keep_default_na=False, na_values=[""])
+
+    lut = pd.read_csv(HERE / "data" / "geo" / "fm" / "fm_lookup.csv", dtype=str)
+    known = set(lut["geo_id"])
+    df["unit"] = df["geo_id"].where(df["geo_id"].isin(known))
+    missing = sorted(df.loc[df["unit"].isna(), "geo_id"].unique())
+    if missing:
+        raise SystemExit(f"fm.csv units with no polygon: {missing} -- re-run "
+                         "sources/fm_geo.py, the lookup is stale")
+    if df["unit"].nunique() != 33:
+        raise SystemExit(f"{df['unit'].nunique()} units, expected 33")
+
+    df["node"] = df["source_category"].map(resolve)
+    unmapped = sorted(df.loc[df["node"].isna(), "source_category"].unique())
+    if unmapped:
+        raise SystemExit(f"fm categories with no node: {unmapped}")
+    df = df[df["count"] > 0]
+    df = df.groupby(["unit", "node"], as_index=False)["count"].sum()
+    df["congregations"] = 0
+    return df[["unit", "node", "count", "congregations"]]
+
+
 def _ws_place_weight(place):
     """countries.py hook. `place` is the 400m hex layer scatter.py has read.
 
@@ -2811,39 +3454,35 @@ def _kz_place_weight(place):
 
 
 def _kz_counts():
-    """MODELLED (spec §14.10): 8 drawn nodes on 17 regions, and not one is a count.
+    """COUNTED: 9 drawn nodes on 17 regions, every one of them BNS's own cross-tabulation.
 
-    KAZAKHSTAN PUBLISHES RELIGION NATIONALLY ONLY -- established four ways in sources.md
-    §11u -- so the choice was a modelled country or no country. The model is the census's
-    own ethnicity-by-region crossed with the census's own religion-by-ethnicity:
+    THIS WAS A MODELLED COUNTRY FOR ONE DAY AND IS NOT ONE NOW (2026-09-08). sources.md
+    §11u established four ways that no BNS PUBLICATION cuts religion by region, and all four
+    checks were correct. None of them was about the census dashboard, which is served by a
+    Qlik Sense engine at qap.stat.gov.kz whose data model is the census microdata itself --
+    35,195,612 person rows carrying `Вероисповедание` beside `Область`. The engine is open to
+    anonymous callers and cross-tabulates on request, so religion x oblast is a query rather
+    than a document. sources/kz.py has the route and the four margin checks that prove the
+    pull is the census: every national religion total reproduces the published volume to the
+    person, and the urban and rural margins are the volume's own constants.
 
-        count(region, religion) = SUM_ethnicity pop(region, eth) x share(religion | eth)
+    THE MODEL IS KEPT, IN sources/kz_model.py, BECAUSE IT CAN NOW BE SCORED. It is the only
+    ethnicity->religion model on this map with a truth to check against, and it misplaces
+    1,439,367 people, 7.50% of the country. Islam and Orthodoxy come back within 4.5%, so the
+    north-south pattern it drew was real; `Отказались указать` is 27.8% misplaced and
+    `Неверующие` 22.9%, so its refusal layer was an artefact. Spec §14.25 is written from
+    that, and it is the reason to distrust the same construction elsewhere.
 
-    NOTHING IS INVENTED. §14.4 rule 1 -- never estimate a magnitude a source does not
-    publish -- holds by identity: every person placed is a person BNS counted in that
-    region, and the model only decides the column. Both margins come back EXACT, which is
-    arithmetic and not luck, and sources/kz.py asserts them.
+    THE 11.01% WHO REFUSED TO STATE ARE DRAWN, on `unknown` (Anita, 2026-09-07). The census
+    form decides it: Question 11 offers seven options and the sixth is `Отказываюсь указать`
+    -- "I decline to state", printed, numbered, chosen. That is an answer, not the derived
+    residual §3.5 and tt2011.py are written about, and drawing it redistributes nobody.
+    Kazakhstan is 100.00% drawn. taxonomy/kz2021.py has the argument.
 
-    EVERY ROW IS `modelled` IN §7. There is no measured tier here at all; this is the first
-    country on the map of which that is true (China derives from ethnicity too, but §14.5's
-    religio-ethnic categories are a different and stronger claim than a fractional share).
-
-    AND IT HAS THE HELD-OUT TEST §14.10's fifth condition asks for, which most modelled
-    countries do not. The volume publishes religion x nationality separately for URBAN and
-    RURAL Kazakhstan -- the model's own assumption, stated as a testable claim about a
-    partition the model never sees. Predicting it from the national coefficients puts
-    313,745 people, 1.64% of the country, on the wrong side of the town/country line. Islam
-    and Orthodoxy come back to within 3%; `Неверующие` misses by -13% urban and +42% rural,
-    because non-belief is an urban behaviour inside every ethnic group and ancestry cannot
-    see it. The urban/rural coefficients are deliberately NOT used -- spending the check to
-    improve the fit would leave the country with no independent evidence at all.
-
-    THE 11.01% WHO REFUSED TO STATE *ARE* DRAWN, on `unknown`, which reverses this file's
-    first version (Anita, 2026-09-07). The census form decides it: Question 11 offers seven
-    options and the sixth is `Отказываюсь указать` -- "I decline to state", printed, numbered,
-    chosen. That is an answer, not the derived residual §3.5 and tt2011.py are written about,
-    and drawing it redistributes nobody. Kazakhstan is 100.00% drawn. taxonomy/kz2021.py has
-    the argument; it is the model's SECOND-worst cell and note_public says so.
+    AND IT IS THE LAYER THE MEASURED DATA CHANGES MOST. Modelled, refusal came out almost
+    flat, every region between 9.35% and 12.19%; counted, it runs from 1.19% in East
+    Kazakhstan to 22.07% in Mangystau. note_public says so, and says that nothing BNS
+    publishes explains the spread.
     """
     from kz2021 import resolve
 
@@ -2862,10 +3501,11 @@ def _kz_counts():
 
     df["node"] = df["source_category"].map(resolve)
     df = df[df["node"].notna() & (df["count"] > 0)]
-    # EVERY row, without exception — there is no measured tier in this country (§7).
-    df["tier"] = "modelled"
+    # No `tier` column: every row is BNS's own count of that religion in that oblast, which
+    # is `measured` by default (§7). The column used to be pinned to `modelled` for every
+    # row in the country and was dropped when the counts arrived.
     df["congregations"] = 0
-    return df[["unit", "node", "count", "congregations", "tier"]]
+    return df[["unit", "node", "count", "congregations"]]
 
 
 def _np_place_weight(place):
@@ -3729,7 +4369,7 @@ def _cn_counts():
     Until 2026-09-07 only 2.2% of China was drawn at all and the eastern half of the map
     was blank; spec §6.12's coverage wash was the only thing standing between that blank
     and a reader concluding nobody in eastern China believes anything. §14.7 decided to
-    fill it and §14.13 unblocked it. The 1.14 billion Han are now on `unknown` — counted,
+    fill it and §14.25 unblocked it. The 1.14 billion Han are now on `unknown` — counted,
     located, and nothing claimed — because Han religion is §14.5's religiously-mixed row
     and the folk-religion / irreligious boundary is mostly an artefact of how the question
     is asked. **Refusing to draw that boundary is the decision; showing the people is not
@@ -3747,7 +4387,7 @@ def _cn_counts():
     one as a JPEG scan and the 2010 one as HTML. So each group's county figures are
     scaled to its 2010 provincial total, which moves magnitude and not shape.
 
-    ---- REWRITTEN 2026-09-07, spec §14.13, and the country went from 2.2% to 100% ----
+    ---- REWRITTEN 2026-09-07, spec §14.25, and the country went from 2.2% to 100% ----
 
     EVERYBODY IS DRAWN NOW, AT THREE STRENGTHS OF CLAIM, AND ONE SOURCE ROW CAN BECOME
     TWO. `cn2000.shares()` returns a list of (node, share, tier) per nationality instead
@@ -4303,6 +4943,107 @@ class _CfHexWeighter(_KeHexWeighter):
                 f"(sources/cf_geo.py)")
 
 
+def _cv_place_weight(place):
+    """countries.py hook. `place` is the Kontur 400 m hex layer scatter.py has read.
+
+    22 concelhos over 4,033 km2 is 183 km2 a unit, so Cabo Verde is not drawn for §8.2's
+    emptiness reason at the national scale. It is drawn for it inside the units. Santa
+    Catarina do Fogo IS the caldera of Pico do Fogo; Porto Novo is 558 km2 of Santo Antao
+    with its people in the port and one ribeira; Boa Vista and Maio are dune. An equal-area
+    spread would put a fifth of the country's dots on lava.
+    """
+    return _kontur_place_weight(place, "cv_hexes.gpkg", "sources/cv_grid.py")
+
+
+def _cv_counts():
+    """INE RGPH-2021 at concelho: 14 nodes on 22 units.
+
+    ONE level, no allocation, nothing modelled -- every row is `measured` and may ring.
+
+    **THE CONCELHO IS THE FINEST TIER THAT HAS RELIGION AND THAT WAS ESTABLISHED RATHER
+    THAN ASSUMED.** INE's census area publishes four things for 2021: the 22 `Quadros por
+    Concelho` workbooks, which carry it; the general and thematic volumes, which are
+    national; and `Agregados e População por Zonas e Lugares`, nine island workbooks that go
+    down to the locality and carry households and population and no religion at all. The 32
+    freguesias have boundaries in COD-AB and no religion table anywhere.
+
+    **THE UNIVERSE IS THE POPULATION AGED 15 AND OVER**, 352,494 of 491,233, so 28.24% of
+    Cabo Verde was never asked. That is `gap` rather than a category, and it is the reason
+    the country's dots are 351,183 people and not half a million.
+    """
+    from cv2021 import resolve
+
+    df = pd.read_csv(HERE / "data" / "normalized" / "cv.csv",
+                     dtype={"geo_id": str}, low_memory=False,
+                     keep_default_na=False, na_values=[""])
+    df = df[df["geo_level"] == "concelho"].copy()
+    df["count"] = df["count"].astype(int)
+    if df["geo_id"].nunique() != 22:
+        raise SystemExit(f"{df['geo_id'].nunique()} concelhos, expected 22 -- re-run "
+                         "sources/cv.py")
+
+    df["node"] = df["source_category"].map(resolve)
+    unmapped = sorted(df.loc[df["node"].isna() & (df["count"] > 0), "source_category"]
+                      .unique())
+    if set(unmapped) - {"Não sabe / Não respondeu"}:
+        raise SystemExit(f"cv.csv categories with no node: {unmapped}")
+    df = df[df["node"].notna() & (df["count"] > 0)]
+    df = df.rename(columns={"geo_id": "unit"})
+    df["congregations"] = 0
+    return df.groupby(["unit", "node"], as_index=False)[["count", "congregations"]].sum()
+
+
+def _st_place_weight(place):
+    """countries.py hook. `place` is the Kontur 400 m hex layer scatter.py has read.
+
+    Seven districts over 1,001 km2 is 143 km2 a unit, but the areas run from 16.5 km2 for
+    Agua-Grande to 267 km2 for Caue and the empty ones are empty for a reason: Caue is the
+    southern massif and the Obo national park at 28 people per km2, and Lemba is the
+    western slope. An equal-area spread would put dots up Pico de Sao Tome.
+    """
+    return _kontur_place_weight(place, "st_hexes.gpkg", "sources/st_grid.py")
+
+
+def _st_counts():
+    """INE IV RGPH-2012 at district: 11 nodes on 7 units.
+
+    ONE level, no allocation, nothing modelled -- every row is `measured` and may ring.
+
+    **THE DISTRICT IS NOT THE FINEST TIER THAT HAS RELIGION, AND IT IS STILL THE RIGHT ONE.**
+    INE's 2016 `Publicacao dos Resultados sobre Localidades` prints religion for every
+    locality in the country, hundreds of them, in Tabela 3 -- but folded to SEVEN columns,
+    with `Outras religioes` swallowing Mana, the Universal Church, the Witnesses, Deus e
+    Amor and the World Messianic Church, and `Nao tem` swallowing both non-response rows.
+    The seven district reports carry all THIRTEEN. Dots are 1,000 people, so a locality of
+    200 never earns one and the finer geography would buy nothing visible while costing six
+    of the eleven nodes. sources/st.py's check() reconciles the two tables against each
+    other, exactly, so the coarser one is a witness rather than a road not taken.
+
+    **THE UNIVERSE IS EVERYBODY**, all 178,739 people of every age, unlike Cabo Verde's
+    15-and-over. The only hole is the 1,756 who did not declare or did not know.
+    """
+    from st2012 import resolve
+
+    df = pd.read_csv(HERE / "data" / "normalized" / "st.csv",
+                     dtype={"geo_id": str}, low_memory=False,
+                     keep_default_na=False, na_values=[""])
+    df = df[df["geo_level"] == "district"].copy()
+    df["count"] = df["count"].astype(int)
+    if df["geo_id"].nunique() != 7:
+        raise SystemExit(f"{df['geo_id'].nunique()} districts, expected 7 -- re-run "
+                         "sources/st.py")
+
+    df["node"] = df["source_category"].map(resolve)
+    unmapped = sorted(df.loc[df["node"].isna() & (df["count"] > 0), "source_category"]
+                      .unique())
+    if set(unmapped) - {"Não declarou", "Não sabe"}:
+        raise SystemExit(f"st.csv categories with no node: {unmapped}")
+    df = df[df["node"].notna() & (df["count"] > 0)]
+    df = df.rename(columns={"geo_id": "unit"})
+    df["congregations"] = 0
+    return df.groupby(["unit", "node"], as_index=False)[["count", "congregations"]].sum()
+
+
 def _cf_place_weight(place):
     """countries.py hook. `place` is the hex layer scatter.py has read."""
     if "pop" not in place.columns:
@@ -4551,6 +5292,230 @@ def _my_counts():
     df = df.rename(columns={"geo_id": "unit"})
     df["congregations"] = 0
     return df[["unit", "node", "count", "congregations"]]
+
+
+def _tl_place_weight(place):
+    """countries.py hook. `place` is the Kontur 400 m hex layer scatter.py has read."""
+    return _kontur_place_weight(place, "tl_hexes.gpkg", "sources/tl_grid.py")
+
+
+def _tl_counts():
+    """INETL 2022 census religion at municipality: 8 nodes on 14 units.
+
+    ONE level, no allocation, nothing modelled, and the join is an identity: `sources/tl.py`
+    writes COD-AB p-codes into `geo_id` and `sources/tl_geo.py` builds the polygons on the
+    same p-codes.
+
+    **THIRTEEN OF THE FOURTEEN UNITS ARE `measured` AND ATAURO IS `derived`.** The 2022
+    census tabulates fourteen municipalities and publishes a religion table for none of them;
+    what exists is a `<Municipality> em Números 2022` volume per municipality, and thirteen
+    were written. Atauro, which became a municipality in time for the census, has no volume,
+    so its row here is main report table 4.07 minus the thirteen. That is exact arithmetic on
+    two published tables rather than a spread or a model, and every category comes out
+    non-negative with Islam, Buddhism and indigenous religion at exactly zero. But no
+    publication anywhere prints it, so it draws desaturated, which is the honest signal:
+    a reader who wants to check Atauro against a source cannot.
+    """
+    from tl2022 import resolve
+
+    df = pd.read_csv(HERE / "data" / "normalized" / "tl.csv",
+                     dtype={"geo_id": str}, low_memory=False,
+                     keep_default_na=False, na_values=[""])
+    df = df[df["geo_level"] == "municipality"].copy()
+    df["count"] = df["count"].astype(int)
+    if df["geo_id"].nunique() != 14:
+        raise SystemExit(f"{df['geo_id'].nunique()} municipalities, expected 14 -- re-run "
+                         "sources/tl.py")
+    df["node"] = df["source_category"].map(resolve)
+    df = df[df["node"].notna() & (df["count"] > 0)]
+    df["tier"] = df["note"].str.contains("residual=yes").map(
+        {True: "derived", False: "measured"})
+    df = df.rename(columns={"geo_id": "unit"})
+    df["congregations"] = 0
+    g = df.groupby(["unit", "node"], as_index=False).agg(
+        count=("count", "sum"),
+        congregations=("congregations", "sum"),
+        tier=("tier", lambda s: "derived" if (s == "derived").any() else "measured"))
+    return g[["unit", "node", "count", "tier", "congregations"]]
+
+
+def _al_place_weight(place):
+    """countries.py hook. `place` is the Kontur 400 m hex layer scatter.py has read."""
+    return _kontur_place_weight(place, "al_hexes.gpkg", "sources/al_grid.py")
+
+
+def _al_counts():
+    """INSTAT 2023 census table 1.13 at qark: 8 nodes on 12 units.
+
+    ONE level, no allocation, nothing modelled — every row is `measured` and may ring.
+
+    **THE TWELVE QARQE ARE THE CEILING AND IT WAS ESTABLISHED RATHER THAN ASSUMED.** INSTAT's
+    PxWeb Census 2023 branch has folders for the nation, the 12 qarqe, the 61 bashki and the
+    373 njësi administrative; `Besimi fetar` is in the first two and in neither of the other
+    two. The published XLS set has the same shape and the 2011 prefecture booklets, which do
+    carry a whole second section of tables by bashki/komunë, stop before religion as well.
+    200,176 people per unit, which is coarser than Armenia's marzes and finer than Georgia's
+    regions, both drawn.
+
+    **WHAT DOES EXIST FINER IS FOUR OF THE TEN CATEGORIES, FOR 2011**, as ArcGIS layers in
+    INSTAT's own organisation: Muslim, Bektashi, Catholic and Orthodox on all 373
+    administrative units. Not drawn. `sources/al.md` §3 is the argument in full and the short
+    version is that those four are 75.6% of the 2011 census, so taking them would put a
+    quarter of Albania into one undifferentiated hole, drop the atheists and the believers of
+    no denomination entirely, and trade the current census for one twelve years older.
+    """
+    from al2023 import resolve
+
+    df = pd.read_csv(HERE / "data" / "normalized" / "al.csv",
+                     dtype={"geo_id": str}, low_memory=False,
+                     keep_default_na=False, na_values=[""])
+    df = df[df["geo_level"] == "qark"].copy()
+    df["count"] = df["count"].astype(int)
+    if df["geo_id"].nunique() != 12:
+        raise SystemExit(f"{df['geo_id'].nunique()} qarqe, expected 12 -- re-run "
+                         "sources/al.py")
+
+    df["node"] = df["source_category"].map(resolve)
+    df = df[df["node"].notna() & (df["count"] > 0)]
+    df = df.rename(columns={"geo_id": "unit"})
+    df["congregations"] = 0
+    return df.groupby(["unit", "node"], as_index=False)[["count", "congregations"]].sum()
+
+
+def _ht_place_weight(place):
+    """countries.py hook. `place` is the 400m hex layer scatter.py has read.
+
+    Ten departments over 27,750 km2 is 2,775 km2 a unit, nearly twice the Dominican
+    Republic's ratio on the same island. **Ouest is the reason**: 3.98 million people, a
+    third of Haiti, in a polygon running from Port-au-Prince across the Chaine des Matheux
+    and up onto the Plateau, with the agglomeration itself a strip along the bay. Grand'Anse
+    and Nippes have the reverse problem, a mountain spine with the people on the coastal
+    shelf either side. And there is a third reason specific to Haiti: the population base is
+    a 2003 census carried forward by projection with no sub-departmental detail at all, so
+    Kontur's buildings are the only thing in this build that has seen the country since 2010
+    (sources/ht_grid.py).
+    """
+    return _kontur_place_weight(place, "ht_hexes.gpkg", "sources/ht_grid.py")
+
+
+def _ht_counts():
+    """IHSI ECVMAS 2012, at departement: 12 categories, 10 units, and EVERY ROW IS
+    `modelled` IN §7.
+
+    THE QUEUE REACHED HAITI THROUGH LAPOP AND THE OFFICE HAS BETTER. §11ad offered 7,252
+    AmericasBarometer respondents; IHSI's own ECVMAS 2012 has 17,977 on the same ten
+    departments with a twelve-answer Haitian card, and IHSI published the microdata openly.
+    sources/ht.py has the record, including that `www.ihsi.ht` is now a squatted domain and
+    the file comes from the Wayback Machine.
+
+    THE UNIVERSE IS PEOPLE AGED TEN AND OVER, applied to the whole department population.
+    The 2003 census tabulated religion by age group, so the cost is measured rather than
+    assumed: no category moves a full point and the largest movement is `Aucune religion`,
+    10.22% of everyone against 9.40% of the 10-and-overs.
+
+    THE POPULATION IS A PROJECTION AND THERE IS NO ALTERNATIVE. Haiti last counted in
+    January 2003 and the fifth census has not been held, so COD-PS 2024 is the base and
+    sources/ht_geo.py prints how far it has moved the departmental shares since the census.
+
+    SEVEN OF THE TWELVE CATEGORIES CARRY THEIR OWN GEOGRAPHY. On ten units the split-half
+    bar is +0.65 and the test has almost no power, so four of the seven are OVERRIDE entries
+    resting on ECVH 2001, a different IHSI survey eleven years earlier, ranking the same
+    departments the same way. `Aucune`, `Autre`, `Episcopale`, `Temoin de Jehovah` and
+    `Musulman` are drawn at the national rate inside each department's residual.
+    """
+    from ht2012 import resolve
+
+    df = pd.read_csv(HERE / "data" / "normalized" / "ht.csv",
+                     dtype={"geo_id": str}, low_memory=False,
+                     keep_default_na=False, na_values=[""])
+
+    lut = pd.read_csv(HERE / "data" / "geo" / "ht" / "ht_lookup.csv", dtype=str)
+    df["unit"] = df["geo_id"].map(dict(zip(lut["geo_id"], lut["unit"])))
+    missing = sorted(df.loc[df["unit"].isna(), "geo_id"].unique())
+    if missing:
+        raise SystemExit(f"ht.csv departments with no polygon: {missing} -- re-run "
+                         "sources/ht_geo.py, the lookup is stale")
+    if df["unit"].nunique() != 10:
+        raise SystemExit(f"{df['unit'].nunique()} departments, expected 10")
+
+    df["node"] = df["source_category"].map(resolve)
+    unmapped = sorted(df.loc[df["node"].isna(), "source_category"].unique())
+    if unmapped:
+        raise SystemExit(f"ht.csv categories with no node: {unmapped}")
+    df = df[df["count"] > 0]
+    # EVERY row, without exception -- there is no measured tier in this country (§7).
+    df["tier"] = "modelled"
+    df["congregations"] = 0
+    return df[["unit", "node", "count", "congregations", "tier"]]
+
+
+def _lr_place_weight(place):
+    """countries.py hook. `place` is the 400m hex layer scatter.py has read.
+
+    Fifteen counties over 95,845 km2 of land is 6,390 km2 a unit, coarser than any other
+    country drawn from a barometer here, and Liberia's people are nowhere near evenly spread
+    inside them. **Montserrado is 36.6% of the country on 1.9% of its land and 92% urban**:
+    drawn flat, Greater Monrovia's colour would land on the Bong Range foothills. Gbarpolu,
+    Grand Gedeh and Sinoe are the opposite, about 10,000 km2 apiece holding under 220,000
+    people each, strung along a road or a river with rainforest between (sources/lr_grid.py).
+    """
+    return _kontur_place_weight(place, "lr_hexes.gpkg", "sources/lr_grid.py")
+
+
+def _lr_counts():
+    """LISGIS 2022 census on an Afrobarometer county pattern: 5 categories, 15 counties, and
+    EVERY ROW IS `modelled` IN §7.
+
+    TWO EXACT CENSUS MARGINS AND A SURVEY BETWEEN THEM. Table A4 gives each county's
+    population and Table A13 gives each religion's national total; both sum to 5,250,187, the
+    2022 census night count, so the county-by-religion table is fitted to them by iterative
+    proportional fitting and the survey supplies only the interaction. No magnitude is
+    invented (§14.4 rule 1): every person drawn is a person the census counted, in a county
+    the census counted them in, under a religion label the census printed a total for.
+
+    IT IS STILL `modelled` AND NOT `derived`. §7b's rule is whether anybody was counted, and
+    nobody counted the cell -- LISGIS has never published religion below the national line in
+    any census. What the census pins is the two margins, which is why the national figures on
+    this map are a full enumeration and the county figures are not.
+
+    THE DENOMINATIONS ARE VISIBLE IN THE SURVEY AND ARE NOT DRAWN. Afrobarometer's card names
+    twenty-odd Christian bodies and Liberia's 7,163 pooled respondents fill them, but the
+    share who answer `Christian only` instead of naming one runs from 23.1% to 72.0% between
+    rounds. That is the fieldwork's probing depth, not Liberia, so the answers are grouped up
+    to the census's own five before anything is placed. sources/lr.py has the argument.
+
+    TWO OF THE FIVE CARRY THEIR OWN GEOGRAPHY. Christian (+0.789) and Muslim (+0.756) clear
+    the split-half bar of +0.524 on fifteen counties; No religion is tested and fails at
+    +0.114, and Traditional and Other are under the 1% eligibility floor. So irreligion,
+    traditional religion and the residual are drawn at the national rate in every county.
+
+    RIVERCESS IS DRAWN WITH NO MUSLIMS. None of its 142 pooled respondents was one, and §3.5
+    drops rather than invents; on that sample the true share could be anything up to about 2%.
+    """
+    from lr2022 import resolve
+
+    df = pd.read_csv(HERE / "data" / "normalized" / "lr.csv",
+                     dtype={"geo_id": str}, low_memory=False,
+                     keep_default_na=False, na_values=[""])
+
+    lut = pd.read_csv(HERE / "data" / "geo" / "lr" / "lr_lookup.csv", dtype=str)
+    df["unit"] = df["geo_id"].map(dict(zip(lut["geo_id"], lut["unit"])))
+    missing = sorted(df.loc[df["unit"].isna(), "geo_id"].unique())
+    if missing:
+        raise SystemExit(f"lr.csv counties with no polygon: {missing} -- re-run "
+                         "sources/lr_geo.py, the lookup is stale")
+    if df["unit"].nunique() != 15:
+        raise SystemExit(f"{df['unit'].nunique()} counties, expected 15")
+
+    df["node"] = df["source_category"].map(resolve)
+    unmapped = sorted(df.loc[df["node"].isna(), "source_category"].unique())
+    if unmapped:
+        raise SystemExit(f"lr.csv categories with no node: {unmapped}")
+    df = df[df["count"] > 0]
+    # EVERY row, without exception -- there is no measured tier in this country (§7).
+    df["tier"] = "modelled"
+    df["congregations"] = 0
+    return df[["unit", "node", "count", "congregations", "tier"]]
 
 
 def _am_place_weight(place):
@@ -6234,6 +7199,52 @@ def _sg_counts():
     return df[["unit", "node", "count", "congregations", "tier"]]
 
 
+def _si_place_weight(place):
+    """countries.py hook. `place` is the 400m hex layer scatter.py has read.
+
+    Slovenia is 58% forest and its municipalities do not know it. Kočevje is 556 km2 with
+    the Kočevski Rog uninhabited inside it, Bovec and Bohinj are the Julian Alps, and the
+    Kras units are limestone with the villages on the poljes. An equal share per polygon
+    would put a serious part of the country on forest and rock; it also removes Lake Bohinj
+    and Lake Cerknica, which sit inside their municipalities rather than between them.
+    """
+    return _kontur_place_weight(place, "si_hexes.gpkg", "sources/si_grid.py")
+
+
+def _si_counts():
+    """SURS Popis 2002 at občina: 7 nodes on 192 units.
+
+    ONE level, no allocation, nothing modelled. Every drawn row is `measured` and may ring.
+    si.csv also carries a country row and the fourteen-category national table, which are
+    the same people twice more and are check levels rather than tiers.
+
+    THE UNITS ARE THE 192 MUNICIPALITIES OF 2002 AND THE POLYGONS ARE GISCO'S COMMUNES
+    2001, which is the enumeration's own boundary set: Slovenia stood at 192 from 1998 to
+    2006 and is at 212 now, so a current file would put twenty holes in the map. No
+    crosswalk is written because none is needed.
+
+    THE DRAWN POPULATION IS 77.1% OF THE COUNTRY. 307,973 people (15.68%) did not want to
+    answer a voluntary question and 139,097 (7.08%) were never asked one, because questions
+    29 and 30 of the P-3 form had to be answered by the person themselves and no household
+    member could answer them by proxy. A further 2,317 are in cells SURS withheld. None of
+    the three is filled in (spec §3.5) and taxonomy/si2002.py records which way the hole
+    leans.
+    """
+    from si2002 import resolve
+
+    df = pd.read_csv(HERE / "data" / "normalized" / "si.csv",
+                     dtype={"geo_id": str}, low_memory=False)
+    df = df[df["geo_level"] == "municipality"].copy()
+    if df["geo_id"].nunique() != 192:
+        raise SystemExit(f"{df['geo_id'].nunique()} Slovenian units, expected 192")
+
+    df["node"] = df["source_category"].map(resolve)
+    df = df[df["node"].notna() & (df["count"] > 0)]
+    df = df.rename(columns={"geo_id": "unit"})
+    df["congregations"] = 0
+    return df[["unit", "node", "count", "congregations"]]
+
+
 def _at_place_weight(place):
     """countries.py hook. `place` is the 400m hex layer scatter.py has read.
 
@@ -6391,6 +7402,130 @@ def _fi_place_weight(place):
         print("  !! fi_lau.gpkg has no `pop` column — run sources/fi_geo.py")
         return None
     return _GrLauWeighter(place)
+
+
+def _rw_place_weight(place):
+    """countries.py hook. `place` is the hex layer scatter.py has read.
+
+    Rwanda's grid is not the usual one. It is Kontur's 400 m hexes RE-LEVELLED SECTOR BY
+    SECTOR onto the census's own count, which NISR publishes for all 416 sectors even
+    though religion stops at the 30 districts (sources/rw_grid.py). So the weight inside a
+    district is measured rather than modelled down to about 15 km² and 32,000 people, and
+    only the shape inside a sector comes from Kontur.
+
+    It is worth the trouble because Rwanda's density is uneven at a scale a district hides:
+    537 people per km² nationally, sectors in Kigali past 20,000 and sectors in the Akagera
+    and Nyungwe belts under 100. An equal share per district would put dots in the national
+    parks.
+    """
+    return _kontur_place_weight(place, "rw_hexes.gpkg", "sources/rw_grid.py")
+
+
+def _rw_counts():
+    """NISR RPHC-5 2022 at district: 10 drawn categories on 30 districts.
+
+    ONE level, no allocation, nothing modelled — every row is `measured` and may ring.
+
+    30 UNITS AND NOT 5, WHICH IS THE WHOLE POINT OF THE COUNTRY. sources.md §11p priced
+    Rwanda at five provinces off the RPHC-5 *Social-cultural characteristics* thematic
+    report, which is where religion sits in the thematic series and which works at
+    province. NISR's thirty DISTRICT PROFILES, released May 2025 and outside that series,
+    each carry the same eleven categories as their Table 2.2. 441k per unit instead of
+    2.6M. Botswana's shape exactly (§9bu).
+
+    THE JOIN IS PROVED AND NOT ASSERTED. The polygons are NISR's own `Population_2002_2022`
+    ArcGIS layer, which carries the census count on every one of its 416 sector polygons,
+    and dissolved to district all 30 populations equal the booklets' own to the person on
+    30 distinct values. See sources/rw_geo.py.
+
+    `Not stated` IS THE ONLY THING LEFT OUT: 17,785 people, 0.13%, the smallest §3.5
+    residual of any census here that prints one.
+    """
+    from rw2022 import resolve
+
+    df = pd.read_csv(HERE / "data" / "normalized" / "rw.csv",
+                     dtype={"geo_id": str}, low_memory=False,
+                     keep_default_na=False, na_values=[""])
+    df = df[df["geo_level"] == "district"].copy()
+
+    lut = pd.read_csv(HERE / "data" / "geo" / "rw" / "rw_lookup.csv", dtype=str)
+    df["unit"] = df["geo_id"].map(dict(zip(lut["geo_id"], lut["unit"])))
+    missing = sorted(df.loc[df["unit"].isna(), "geo_id"].unique())
+    if missing:
+        raise SystemExit(f"rw.csv districts with no polygon: {missing} -- re-run "
+                         "sources/rw_geo.py, the lookup is stale")
+    if df["unit"].nunique() != 30:
+        raise SystemExit(f"{df['unit'].nunique()} districts, expected 30")
+
+    df["node"] = df["source_category"].map(resolve)
+    df = df[df["node"].notna() & (df["count"] > 0)]
+    df["congregations"] = 0
+    return df[["unit", "node", "count", "congregations"]]
+
+
+def _ug_place_weight(place):
+    """countries.py hook. `place` is the 400m hex layer scatter.py has read.
+
+    Uganda needs this for §8.2's emptiness reason: 56 districts over about 200,500 km2 of
+    land is roughly 3,600 km2 a unit, and the country is not evenly habitable at that
+    scale. Karamoja is a fifth of the area and a twentieth of the people; Lake Kyoga's
+    swamp runs through the middle of four districts at once; Murchison Falls sits inside
+    Masindi and Gulu and Queen Elizabeth inside Kasese and Bushenyi. An equal share per
+    polygon puts Uganda's dots in national parks and papyrus.
+
+    THE GRID IS 2023 AND THE COUNTS ARE 2002, which is stated rather than hidden: it is a
+    within-district weight, so the level does not matter, but a 2023 surface places a
+    district's dots where its people live now (sources/ug_grid.py).
+    """
+    return _kontur_place_weight(place, "ug_hexes.gpkg", "sources/ug_grid.py")
+
+
+def _ug_counts():
+    """UBOS 2002 census Table B7 at district: 7 drawn categories on the 56 districts of 2002.
+
+    ONE level, no allocation, nothing modelled — every row is `measured` and may ring.
+
+    56 UNITS AND NOT 4, AND THE GEOGRAPHY IS THE ONLY THING UGANDA HAS. The 2024 census
+    has the best religion category list in Africa, ten cells separating the Adventists,
+    the Orthodox and the Witnesses, and it publishes them for the nation and for
+    urban/rural and nowhere else; so do 2014 and the whole NPHC 2024 portal, which reaches
+    PARISH level on fifteen other tables. The 2002 analytical report reaches four regions.
+    Table B7, an annex table on the retired ubos.org tree, is the only religion tabulation
+    ever published beside a Ugandan geography. sources/ug.py lists what was checked.
+
+    THE BOUNDARIES ARE REBUILT AND THE REBUILD IS PROVED. No 2002-vintage boundary file
+    exists, so the 56 districts are dissolved out of COD-AB's 135 of 2020 using the 2002
+    census's own district/county/sub-county tree, and the result reproduces all 56 of
+    Table B1's 1991 populations exactly, on 56 distinct values, from a table published in
+    a different census twelve years later. See sources/ug_geo.py.
+
+    `None` IS THE LITERAL STRING AND PANDAS DELETES IT — §12's Philippine trap, fourth
+    sighting after `ph`, `gy` and `zw`. 212,388 irreligious Ugandans, and in Uganda they
+    are not where a reader would guess: half of that cell is in Karamoja.
+    """
+    from ug2002 import resolve
+
+    df = pd.read_csv(HERE / "data" / "normalized" / "ug.csv",
+                     dtype={"geo_id": str}, low_memory=False,
+                     keep_default_na=False, na_values=[""])
+    if "None" not in set(df["source_category"]):
+        raise SystemExit("ug.csv has no `None` category -- it has been read as NaN, and "
+                         "212,388 people are about to disappear (§12, the Philippine trap)")
+    df = df[df["geo_level"] == "district_2002"].copy()
+
+    lut = pd.read_csv(HERE / "data" / "geo" / "ug" / "ug_lookup.csv", dtype=str)
+    df["unit"] = df["geo_id"].map(dict(zip(lut["geo_id"], lut["unit"])))
+    missing = sorted(df.loc[df["unit"].isna(), "geo_id"].unique())
+    if missing:
+        raise SystemExit(f"ug.csv districts with no polygon: {missing} -- re-run "
+                         "sources/ug_geo.py, the lookup is stale")
+    if df["unit"].nunique() != 56:
+        raise SystemExit(f"{df['unit'].nunique()} districts, expected 56")
+
+    df["node"] = df["source_category"].map(resolve)
+    df = df[df["node"].notna() & (df["count"] > 0)]
+    df["congregations"] = 0
+    return df[["unit", "node", "count", "congregations"]]
 
 
 COUNTRIES = {
@@ -8274,6 +9409,379 @@ COUNTRIES = {
              "sources.md §11ad assesses LAPOP across all nine countries it could serve here; "
              "sources/gt.md is Guatemala's own record.",
     ),
+    "cr": dict(
+        name="Costa Rica",
+        source="AmericasBarometer, four rounds 2010 to 2023 (LAPOP Lab, Vanderbilt "
+               "University), against INEC's Estimación de Población y Vivienda 2022",
+        basis="self-identification, adults 18 and over",
+        view=[-86.2, 7.9, -82.3, 11.4],
+        note_public=(
+            "**Costa Rica's census does not ask about religion, and neither does its "
+            "household survey.** INEC's own microdata catalogue is the evidence for that "
+            "rather than a search: it serves 183 studies with **45,364** variables between "
+            "them, and exactly one of those variables is a question about which religion "
+            "somebody belongs to. The 2011 census asks every person whether they consider "
+            "themselves indigenous, which indigenous people they belong to, and how they "
+            "identify by race, and asks nothing about belief. The Encuesta Nacional de "
+            "Hogares runs to 594 variables in 2023 and 596 in 2025 with none. So the map is "
+            "drawn from the LAPOP AmericasBarometer instead, **5,903** people across four "
+            "rounds between 2010 and 2023, pooled and applied to INEC's 2022 population "
+            "estimate. The dots are drawn desaturated to say that. "
+            "**The one survey INEC does ask it on published the answer without publishing a "
+            "table.** The Encuesta de Mujeres, Niñez y Adolescencia of 2018, Costa Rica's "
+            "round of the UNICEF household survey programme, asked **8,490** households the "
+            "religion of the head of the household, and its 341-page report tabulates none "
+            "of it; the distribution survives in the variable metadata of INEC's own "
+            "catalogue. It reads **65.16%** Catholic, 25.50% Christian of some other kind "
+            "and 7.40% with no religion. That is the only independent reading of Costa "
+            "Rica's level that exists, and this map lands close to it on two of the three. "
+            "Catholic is **63.2%** here. INEC's second box names Mormons inside itself and "
+            "has no Protestant, Adventist or Witness box, so what it should be compared "
+            "against is this map's evangelical, Protestant, Latter-day Saint and Jehovah's "
+            "Witness cells added together, which come to **24.5%**. The third does not "
+            "agree: 10.7% here against 7.4%, and the two are not asking the same question, "
+            "because INEC asks about the household head and the barometer asks a randomly "
+            "chosen adult. "
+            "**Cartago and Puntarenas are the two ends of the country.** Cartago is "
+            "**79.5%** Catholic, 6.2% Evangelical and 3.6% believing without a religion. "
+            "Puntarenas is 52.2%, **23.7%** and 12.3%. "
+            "**The largest answer on the map is the one it does not claim to place.** "
+            "Catholicism is 63.2% of Costa Rica and it is the only answer here whose "
+            "ranking across the provinces does not survive being asked twice: ranked in the "
+            "early rounds and again in the later ones it comes back at **+0.79** against a "
+            "bar of +0.80, almost entirely because Guanacaste falls from the fourth most "
+            "Catholic province to the seventh as its Catholic share drops from 63.4% to "
+            "48.2%. So Catholicism is drawn as what is left once the four answers that did "
+            "replicate are placed, which moves it by at most 2.5 points in any province and "
+            "swaps two pairs that were within a point and a half of each other anyway. "
+            "**This survey never offers a plain no religion box.** It offers a believer who "
+            "belongs to no religion and a person who does not believe in God as two separate "
+            "answers, and here the first is **9.2%** of the country and the second 1.5%, six "
+            "to one. Guanacaste is 15.3% believers without a religion against 3.6% in "
+            "Cartago. "
+            "**Three answers are floors, because the answer card changed between the "
+            "rounds.** Jehovah's Witnesses read 1.9%, 1.1% and 1.8% in 2010, 2012 and 2014 "
+            "and then exactly zero in 2023; Latter-day Saints and Jews do the same. `Otro` "
+            "is the mirror image, absent until 2023 and 2.4% of that round alone. Nobody "
+            "stopped being a Jehovah's Witness in Costa Rica between 2014 and 2023. Costa "
+            "Rica is still the only country drawn from this survey whose Witnesses are "
+            "placed on their own provincial shares rather than spread at the national rate, "
+            "**1.2%** of the country and 2.3% of Puntarenas against 0.35% of Cartago. "
+            "**Traditional indigenous religion is a floor as well.** It comes back at "
+            "**0.31%**, eighteen respondents in thirteen years, from a card that offers one "
+            "worldwide box for it, in a country whose census asks every person which of its "
+            "indigenous peoples they belong to. The same card read a fifth of a census on "
+            "that cell in Suriname."),
+        how="survey, four rounds 2010 to 2023 pooled",
+        grain="provinces, 721,000 people on average",
+        counts=_cr_counts,
+        units=None,
+        unit_key=None,
+        place=HERE / "data" / "geo" / "cr" / "cr_hexes.gpkg",
+        place_unit=lambda g: g["unit"].astype(str),
+        place_weight=_cr_place_weight,
+        note="THE COUNTRY IS A SURVEY ON AN OFFICIAL POPULATION ESTIMATE AND EVERY ROW IS "
+             "`modelled` (7b), the same construction as Guatemala, El Salvador, Ecuador and "
+             "Panama: LAPOP's `q3c` gives a province share, the magnitude comes from INEC's "
+             "own table, and no magnitude is invented. "
+             "THE OFFICE WAS TESTED BEFORE THE SURVEY WAS TOUCHED, and harder than for any "
+             "other country in this set. sistemas.inec.cr/pad5 is INEC's own NADA microdata "
+             "catalogue: 183 studies, 45,364 variables read, and ONE affiliation question in "
+             "all of them, `HC1A` in the EMNA 2018. Censo 2011's dictionary is 116 variables "
+             "with no religion; ENAHO has none in any year; the EMNA's own 341-page report "
+             "tabulates its own question nowhere. But the catalogue's variable metadata "
+             "carries `HC1A`'s weighted frequencies, which is the level check note_public "
+             "quotes, and the microdata itself is behind a login at INEC, at UNICEF and at "
+             "the World Bank alike. sources/cr.md has the sweep. "
+             "THE POPULATION IS INEC'S OWN 2022 ESTIMATE AND NOT COD-PS, which is Ecuador's "
+             "call (9bn). COD-PS ships a 2021 UNFPA projection built on INEC's superseded "
+             "2013 projection revision; against INEC's own count it runs +11.24% on Heredia "
+             "and -3.25% on Guanacaste, a 14.5-point spread in both directions across seven "
+             "units, and it is the older vintage of the two. sources/cr_geo.py prints the "
+             "comparison every run and checks the typed table against the growth-rate column "
+             "printed beside it. "
+             "SEVEN UNITS AND ALL SEVEN MEASURED, so there is no `gap=`. LAPOP's `prov` "
+             "value labels name every Costa Rican province in Spanish and every one is "
+             "sampled in every wave. The join is on the NAME with no alias needed. Costa "
+             "Rica is also the one country in this set where `prov - 600` -> `CRn` would "
+             "have been right, which is exactly why it is not used: the same arithmetic "
+             "mispairs twelve of fourteen in El Salvador and eight of ten in Panama, and "
+             "sources/cr_geo.py asserts the code join AGREES so that OCHA re-cutting the "
+             "pcodes fails loudly. "
+             "NEITHER PRE-REGISTERED HELD-OUT TEST PASSED, AND NEITHER BAR HAS BEEN MOVED. "
+             "Two were written to a file before the data was loaded, and that file's mtime "
+             "precedes every Costa Rican artefact on disk (sources/cr.md 7). The primary, a "
+             "population permutation check, gives an exact p of 6.95e-3 over all 5,040 "
+             "orderings against a bar of 1e-3. "
+             "It is reported and never asserted on, because it is measured to have "
+             "no power here: Costa Rica is San Jose, Alajuela and then five provinces "
+             "between 412,808 and 545,092, all 35 beating orderings only shuffle those five, "
+             "a correct decode fails that bar 82% of the time at this country's own sampling "
+             "noise, and the observed correlation of +0.9686 is El Salvador's +0.9685 to "
+             "four decimals on a country with twice the units. What is asserted instead is a "
+             "joint test that adds urbanisation as a second held-out variable, at 5.95e-4, "
+             "and it is POST HOC and labelled as such in sources/cr.py. What the decode "
+             "actually rests on is the value labels. "
+             "AND THE SECOND PRE-REGISTERED TEST WAS REPORTED NOWHERE UNTIL 2026-09-09, "
+             "which is Panama's 6.1 failure one level in: the provenance file is real and the "
+             "record did not reconcile with it. It is an unweighted Spearman of the same two "
+             "vectors over the same 5,040 orderings at a bar of 1e-2, it returns rho +0.5714 "
+             "and an exact p of 9.98e-2, and it fails by a factor of ten. The power argument "
+             "above covers it a fortiori, because Spearman throws the magnitudes away and all "
+             "five ranks that disagree are the five shelf provinces the levels test could not "
+             "order either; sources/cr.md 3 has it in full. Pre-registering two tests and "
+             "reporting the one that did better is worse than not pre-registering at all. "
+             "AND THE LARGEST CATEGORY DOES NOT CARRY ITS OWN GEOGRAPHY. Catolico returns "
+             "+0.79 on a split-half bar of +0.80, the only country in this module where that "
+             "happens, and it is applied as written rather than overridden. Nine of the "
+             "twelve rank-difference points are Guanacaste alone, falling from 4th to 7th "
+             "between the wave halves. Evangelica +1.00, Protestante +0.86, Ninguna +0.86 "
+             "and Testigos de Jehova +0.81 do carry theirs; the last of those is the "
+             "smallest cell any country in this module places, and the late half of its "
+             "split-half is carried by 2014 alone because the box was off the 2023 card. "
+             "LEAVE-ONE-OUT SURVIVES ONLY PARTLY, which is the honest cost of seven "
+             "units. Dropping each province in turn and re-running over six: Evangelica "
+             "holds at +1.00 throughout; Protestante and Ninguna fall to +0.77 at worst, "
+             "exactly the exact-null six-unit bar; Testigos de Jehova falls to +0.71 "
+             "against +0.77 and does NOT survive. It stays drawn because the stated test "
+             "is the split-half on all seven and it passed, and withdrawing it after the "
+             "fact would be moving a bar to fit an answer. sources/cr.md 5 has the table. "
+             "AND THE 3.5 LEAN IS NOT ESTABLISHED. Costa Rica excludes nothing, so the "
+             "hole is the survey's own 2.62% non-response, which the build ABSORBS at the "
+             "answerers' rate. Correlated against every drawn share over seven provinces "
+             "the largest value is -0.63 against a 5% critical value of about 0.75, and "
+             "leave-one-out shows Cartago driving all of them, so no direction is claimed.",
+    ),
+    "pa": dict(
+        name="Panama",
+        source="AmericasBarometer, four rounds 2010 to 2023 (LAPOP Lab, Vanderbilt "
+               "University), against OCHA COD-PS 2023 province and comarca populations",
+        basis="self-identification, adults 18 and over",
+        view=[-83.2, 6.9, -76.9, 9.9],
+        note_public=(
+            "**Panama's censuses do not ask about religion, and its statistics office has "
+            "asked the question twice on household surveys without publishing either "
+            "answer.** INEC runs a public microdata server carrying all five of its "
+            "censuses, 1980 to 2023, and the 252 variables it records per person across them "
+            "include "
+            "indigenous group and Afrodescendant group and nothing about belief. The 2013 "
+            "MICS asked every member of 11,100 households what religion they profess and its "
+            "230-page report tabulates none of it. The April 2022 Encuesta de Propósitos "
+            "Múltiples asked 11,776 household informants, and INEC's own slide deck says the "
+            "survey can be read by province and comarca; what it published was one national "
+            "bar chart. So the map is drawn from the LAPOP AmericasBarometer instead, "
+            "**6,105 people** across four rounds between 2010 and 2023, pooled and applied "
+            "to the 2023 census population. The dots are drawn desaturated to say that. "
+            "**That one bar chart is the only independent check on the level, and this "
+            "survey passes it.** INEC read 65% Catholic and 8% with no religion in April "
+            "2022, against **63.1%** and 7.4% here. Its evangelical figure needs one "
+            "adjustment before it can be compared, because INEC's card has no Protestant box: "
+            "its 22% evangelical and 2% Adventist together, **24%**, are the comparator for "
+            "this map's evangelical and Protestant cells together, which come to **25.5%**. "
+            "All three land within two points. No other country drawn from this survey has a "
+            "state reading to be checked against. "
+            "Those national shares are an average of provinces that are a long way apart. "
+            "Veraguas is **93.6%** Catholic and 4.7% "
+            "Evangelical. The Comarca Ngäbe-Buglé is 29.5% Catholic and **58.8%** "
+            "Evangelical, the only unit on the map where Evangelicals outnumber Catholics, "
+            "and one in seven of Panama's Evangelicals lives there among one in twenty of "
+            "its people. "
+            "**Bocas del Toro is where people leave a church without leaving belief.** "
+            "**21.7%** of it says it believes in a higher being and belongs to no religion, "
+            "against 1.4% in Veraguas and in Herrera. This survey never offers a plain "
+            "no-religion box: it offers the believer without an affiliation and the "
+            "non-believer as separate answers, and the second is 0.5% of Panama. "
+            "**Half the map is a single unit.** Panamá Oeste became a province in 2014 and "
+            "the survey never adopted it, so its respondents are still coded to Panamá; the "
+            "two are drawn together as one unit of **2,092,955** people, 51.5% of the "
+            "country, and nothing here distinguishes the capital from the province west of "
+            "the canal. "
+            "**Traditional indigenous religion is a floor and the map cannot show where it "
+            "would be.** It comes back at 0.4% of Panama, against the 9.4% of INEC's own "
+            "2022 informants who identify as indigenous, and the two comarcas that would "
+            "carry it, Guna Yala and Emberá-Wounaan, are the two the survey never sampled. "
+            "**The level is a thirteen-year average of rounds that disagree with each "
+            "other.** Catholic identification reads 68.6% in 2010, 61.1% in 2012, 73.6% in "
+            "2014 and **54.3%** in 2023. Pooling is what buys the province detail, since a "
+            "single round is about 1,500 people over ten provinces, and it is also why this "
+            "map sits closer to INEC's 2022 reading than the last round alone would. Two "
+            "answers exist in only part of the pool: `Otro` was not on the card before 2023, "
+            "and Jehovah's Witnesses and Latter-day Saints were taken off it for 2023, so "
+            "both of those are floors."),
+        how="survey, four rounds 2010 to 2023 pooled",
+        grain="provinces and one comarca, 402,000 people on average",
+        gap=("Comarca Guna Yala and Comarca Emberá-Wounaan, 44,374 people, 1.09% of Panama, "
+             "which the survey has no code for in any round"),
+        gap_share=0.0109,
+        counts=_pa_counts,
+        units=None,
+        unit_key=None,
+        place=HERE / "data" / "geo" / "pa" / "pa_hexes.gpkg",
+        place_unit=lambda g: g["unit"].astype(str),
+        place_weight=_pa_place_weight,
+        note="THE COUNTRY IS A SURVEY ON A CENSUS COUNT AND EVERY ROW IS `modelled` (§7b), "
+             "the same construction as Guatemala, El Salvador and Ecuador: LAPOP's `q3c` "
+             "gives a province share, the population it applies to comes from OCHA's COD-PS "
+             "2023 table, and no magnitude is invented. COD-PS is used here rather than "
+             "INEC's own census, unlike Ecuador, because for Panama they are the same count: "
+             "the 2023 table sums to 4,064,445 against INEC's published 4,064,780, a "
+             "difference of 335 people. "
+             "TEN UNITS OF THIRTEEN. LAPOP's `prov` value labels name ten Panamanian units "
+             "and there is no code for Guna Yala or Embera-Wounaan in any wave, so 44,374 "
+             "people are in `gap=` rather than estimated -- Ecuador's Galapagos rule (§9bn), "
+             "and it costs more here because those are two of the three indigenous comarcas. "
+             "They keep their polygons and their hexes and draw no religion. Panama Oeste is "
+             "a different case and not a gap: LAPOP never adopted the 2014 split, so "
+             "sources/pa_geo.py dissolves it into Panama. "
+             "THE CODE JOIN IS EL SALVADOR'S TRAP AGAIN. `prov` is 700 plus the official "
+             "province number and COD's `PA` pcodes are alphabetical; two of ten coincide, "
+             "and the worst of the other eight would draw Panama's 2.09 million people in "
+             "Kuna Yala, which has 32,016. The join is on the NAME, read out of LAPOP's own "
+             "value-label set rather than inferred from a numbering, and sources/pa_geo.py "
+             "asserts that the code join still mispairs so nobody restores it. "
+             "AND THE HELD-OUT PERMUTATION TEST IS EXHAUSTIVE HERE RATHER THAN SAMPLED. "
+             "sources/lapop.py fails if any of 20,000 sampled orderings reaches the observed "
+             "r, and 3 did. All 3,628,800 orderings say why: 468 reach r=+0.996 and every "
+             "one of them keeps the unit that is half the country in place, so it is leverage "
+             "rather than unit count, and a correct decode clears that bar only on the 7.6% "
+             "of seeds where the sampler draws none of the 468. The exact p is 1.29e-4, on a "
+             "bar of 1e-3 that is deliberately looser than the sampled rule it replaces. The "
+             "same test with the dominant unit dropped returns 1.29e-3, which is a consistency "
+             "check rather than a second witness: it is the same 468 orderings restricted to "
+             "nine units, so it cannot fail while the first passes. "
+             "THE THREE CATEGORIES DRAWN ON THEIR OWN PROVINCE SHARES SURVIVE LEAVE-ONE-OUT. "
+             "Catholic +0.85, Evangelical +0.87 and the believers-without-a-religion +0.82 "
+             "against a bar of +0.65 on ten units; dropping any single unit leaves all three "
+             "between +0.75 and +0.93, above the nine-unit bar of +0.69. No one unit, "
+             "Ngabe-Bugle included, manufactures any of them.",
+    ),
+    "kg": dict(
+        name="Kyrgyzstan",
+        source="Life in Transition Survey III, 2015 to 2016 (European Bank for "
+               "Reconstruction and Development), against the National Statistical "
+               "Committee's 1 January 2026 oblast populations",
+        basis="self-identification, adults 18 and over",
+        view=[69.0, 39.0, 80.5, 43.4],
+        note_public=(
+            "**No Kyrgyz census has ever asked about religion, so this is a survey standing "
+            "where a census would be.** The 2022 census printed its own questionnaire in the "
+            "back of the results volume, and it runs seventeen questions, with nationality "
+            "at 7 and native language at 10, and no religion item anywhere on any of the "
+            "five forms. The statistics committee's catalogue of **806** downloadable tables has "
+            "none either, and the national open data portal's **1,410** datasets carry "
+            "religion only as a quarterly register of religious buildings. The map is drawn "
+            "from the EBRD Life in Transition Survey: **1,500 people** interviewed across all "
+            "nine oblasts in 2015 and 2016, applied to the committee's 1 January 2026 "
+            "population of 7,404,329. The dots are drawn desaturated to say that. "
+            "**Two of the eight answers are drawn where the survey found them.** Islam and "
+            "Orthodoxy are **96.1%** of the country between them. Splitting the 75 "
+            "interview clusters in half at random four hundred times and re-ranking the nine "
+            "oblasts returns +0.55 for Islam and +0.75 for Orthodoxy, and shuffling which "
+            "oblast each cluster belongs to shows that an answer with no geography at all "
+            "gets to +0.45 on this many units. The other six go at the national rate inside "
+            "each oblast's remainder, so those people are still drawn and only the claim to "
+            "know where they live is withdrawn. "
+            "**Orthodoxy is Bishkek, the Chui valley and almost nowhere else.** Of "
+            "Kyrgyzstan's 509,117 Orthodox Christians, **331,243** are in the capital, where "
+            "they are 24.4% of the population against 6.9% nationally; Chui, the oblast that "
+            "wraps Bishkek along the Kazakh border, is 10.1%. In Osh and Batken oblasts not "
+            "one of the 460 people interviewed answered Orthodox, so the map draws none "
+            "there, and zero out of that many still leaves room for about one percent. "
+            "**The Buddhist figure is a ceiling rather than a measurement.** Sixteen people "
+            "ticked it, and six of them were in Osh oblast and four in Batken, the two most "
+            "rural and most uniformly Muslim parts of the country, while Bishkek returned "
+            "one. Nothing about Kyrgyzstan makes that a geography, and the stability test "
+            "ranks it worst of any answer here. Its **66,738** people are left in because "
+            "dropping them would only move them somewhere else, but the number should be "
+            "read as the largest Buddhism could be. "
+            "**Talas is sixty interviews.** It is the thinnest oblast, and after Islam and "
+            "Orthodoxy are placed, **8.8%** of it is left for the other six answers against "
+            "4.0% nationally. Most of that gap is sixty people rather than Talas. "
+            "**Everyone interviewed was an adult, and that tilts the whole map slightly.** A "
+            "third of Kyrgyzstan is under 18, and the share runs from 31.3% in Bishkek to "
+            "41.0% in Talas, so the places with the most Orthodox Christians are the places "
+            "with the fewest children. Across the nine oblasts the under-18 share correlates "
+            "**-0.85** with the Orthodox share drawn here, and leaving any single oblast out "
+            "keeps it between -0.74 and -0.96. Applying an adult composition to everybody "
+            "therefore draws Kyrgyzstan a little more Orthodox and a little less Muslim than "
+            "it is. "
+            "**And the survey has no answer for the mazar.** Kyrgyz shrine pilgrimage, spring "
+            "and grave veneration, and the healers who work at them are practised widely and "
+            "have no box on this card; the people who take part answer Muslim, which is also "
+            "how most of them would describe themselves. Nothing here counts that separately "
+            "and the 0.2% other cell is not where it is hiding."),
+        how="survey, one round of 1,500 interviews in 2015 and 2016",
+        grain="oblasts and republican cities, 823,000 people on average",
+        counts=_kg_counts,
+        units=None,
+        unit_key=None,
+        place=HERE / "data" / "geo" / "kg" / "kg_hexes.gpkg",
+        place_unit=lambda g: g["unit"].astype(str),
+        place_weight=_kg_place_weight,
+        note="THE COUNTRY IS A SURVEY ON A REGISTER AND EVERY ROW IS `modelled` (§7b), the "
+             "same construction as Guatemala and El Salvador: LiTS III's `q922` gives an "
+             "oblast share, the National Statistical Committee's own 1 January 2026 resident "
+             "population gives the people it applies to, and no magnitude is invented. "
+             "sources/lits.py holds the shared half, because Tajikistan is the next queue row "
+             "on this file. "
+             "THE CENSUS WAS RULED OUT ON THE QUESTIONNAIRE AND THE OFFICE ON AN ENUMERATION, "
+             "not on a search (§9cd, §11aj). Form 2 of the 2022 census is printed in Book I "
+             "and has seventeen questions with no religion item; the office's 22 subject "
+             "pages were harvested for all 806 of their downloads and its bare-integer "
+             "`dynamic` route swept to 1,400 for the 546 that return a named file; "
+             "data.gov.kg was paged out for all 1,410 CKAN packages. Zero religion tables of "
+             "people in any of them. No stat.gov.kg page carries an iframe and there is no "
+             "Qlik, Power BI, Tableau or ArcGIS anywhere on the domain, which is where "
+             "Kazakhstan's figures turned out to be. `census.stat.gov.kg` resolves and drops "
+             "every port tried, and nothing is known about what is behind it. "
+             "THE PERMUTATION BAR IS BUILT RATHER THAN ASSUMED, AND IT CHANGES THE ANSWER. "
+             "The split-half statistic is the median over 400 random PSU halves, which cannot "
+             "be compared with 1.96/sqrt(n-1) because that is the error of ONE correlation. "
+             "On nine units the fixed bar is +0.693 and Islam's own shuffled-label null puts "
+             "its 95th percentile at +0.450, so the fixed bar would have thrown out Islam at "
+             "+0.548, p=0.020. This is [[reference_check_needs_power]] pointing the other "
+             "way: the fix is to measure the null, never to move a bar so something passes. "
+             "THERE IS NO SINGLE NEW BAR. SEVEN TESTABLE CATEGORIES GET SEVEN NULLS AND TWO "
+             "OF THEM ARE STRICTER THAN THE FIXED BAR THEY REPLACED: MUSLIM +0.450, ORTHODOX "
+             "+0.468, BUDDHIST +0.460, ATHEISTIC/AGNOSTIC/NONE +0.524, OTHER CHRISTIAN "
+             "+0.550, then OTHER at +0.750 and JEWISH at +1.000 against the fixed +0.693. "
+             "That is the answer to `is this just weaker', and it is the strongest form of it: "
+             "the permutation is looser exactly where a category is dense enough for a "
+             "median-of-400 to be stable and stricter exactly where it is not, which is what "
+             "a calibrated null does and what a moved bar cannot do. OTHER fails at p=0.34 "
+             "because its own null sits at +0.750, not because +0.450 was applied to it and "
+             "missed. THE LEVEL WAS NOT TOUCHED, ONLY THE INSTRUMENT: `alpha` is "
+             "`lits.stability`'s inherited 0.05 default, the same 95% that 1.96/sqrt(n-1) "
+             "already encoded, so nobody picked a significance level here. And the size is "
+             "measured rather than assumed: the second read took 200 datasets with the "
+             "geography destroyed by that same shuffle, ran each through `lits.stability` as "
+             "if it were observed data with its own null, and the 1,400 p-values reject at "
+             "0.046 against a nominal 0.05, with MUSLIM at 0.040 and ORTHODOX at 0.055. That "
+             "calibration is a one-off review run and not something the build prints; its "
+             "method and its per-category table are in sources/kg.md §9.1 and §9.2. "
+             "THE HELD-OUT CHECK NAMES THE PAIR IT CANNOT SEPARATE. r=+0.9866 against all "
+             "362,879 other orderings of the nine units, and the single ordering that beats "
+             "it swaps Issyk-Kul and Batken, which are 0.69pp apart on a share measured to "
+             "+/-1.33pp. lits.held_out forgives only orderings that move units inside 1.96 "
+             "standard errors of each other, prints them, and stops the build on anything "
+             "else. THE WITNESS THAT PINS THE DECODE IS THE ABBREVIATION AND NOT THE "
+             "ARITHMETIC. The SOATE-to-pcode identity and the Russian names pin the OFFICE to "
+             "COD; the join the held-out check actually tests is LiTS's own region label to "
+             "the pcode, which is hand-written in kg_geo.LITS_REGION, and §9.5 showed the "
+             "swapped pairing passing the held-out check MORE cleanly than the true one. So "
+             "kg_geo.lits_decode_witness requires each LiTS label to abbreviate exactly one "
+             "of COD's nine Russian names token for token (`И` begins `Иссык`, `КУЛЬСКАЯ` "
+             "equals `Кульская`), and exactly one of the 362,880 pairings satisfies it. No "
+             "correlation and no population figure is involved. "
+             "THE BUDDHIST CELL IS AN ARTEFACT AND THE STABILITY TEST FOUND IT. Six of "
+             "sixteen respondents are in Osh oblast and four in Batken, against one in "
+             "Bishkek; median split-half -0.151 with 68% of halves negative, the worst here. "
+             "Spread at the national rate and called a ceiling rather than dropped. "
+             "taxonomy/kg2016.py has it, along with why Islam is drawn on the bare family "
+             "node in a country that is Hanafi Sunni throughout: the card asks one Muslim "
+             "question and §14.3 forbids putting 6.6 million people on a node this source "
+             "cannot see.",
+    ),
     "sv": dict(
         name="El Salvador",
         source="AmericasBarometer, six rounds 2010 to 2023 (LAPOP Lab, Vanderbilt "
@@ -8355,6 +9863,116 @@ COUNTRIES = {
              "1932 matanza made Nahua-Pipil identity dangerous to state, so §11ad's Suriname "
              "finding -- a card with no local option in a country with a large indigenous "
              "population -- does not apply in its second half. taxonomy/sv2023.py has it.",
+    ),
+    "do": dict(
+        name="Dominican Republic",
+        name_in="the Dominican Republic",
+        source="Encuesta Nacional de Hogares de Propósitos Múltiples ENHOGAR-MICS6 2019 "
+               "(Oficina Nacional de Estadística), against the X Censo Nacional de Población "
+               "y Vivienda 2022 province populations",
+        basis="self-identification, religion of the household head",
+        view=[-72.2, 17.3, -68.2, 20.1],
+        note_public=(
+            "**No Dominican census has ever asked about religion, so this is a survey "
+            "standing where a census would be.** The 2010 census dictionary carries no "
+            "religion variable, the 2022 census microdata carries none either, and the UN's "
+            "register of census religion tabulations has no Dominican row. What the "
+            "statistics office does have is its own household survey: the 2019 round of "
+            "ENHOGAR was fielded as MICS6 with UNICEF and asked which religion the head of "
+            "each household belonged to. That is **96,968 people in 31,488 households**, "
+            "across all 32 provinces, and the dots are drawn desaturated to say the numbers "
+            "are survey respondents rather than a count. "
+            "**The question was asked once per household, about its head.** Everyone living "
+            "in that household is drawn in the head's column, which is what the survey's own "
+            "tables do and what a map of people needs, but it is the honest limit of this "
+            "map: 52.7% Catholic means 52.7% of Dominicans living in a Catholic-headed "
+            "household, not 52.7% of Dominicans asked one by one. A Catholic mother with a "
+            "son who reports no religion is drawn here as two Catholics, and the same survey "
+            "series says how much that costs: ENHOGAR 2018 asked women aged 15 to 19 for "
+            "their own religion, and they answered **37.1%** Catholic and **34.8%** no "
+            "religion where this map draws that group at 49.8% and 21.6%. The evangelical "
+            "share is the one the household question gets right, to within a tenth of a "
+            "point, and the ranking of the provinces is the same either way, so what the "
+            "head's answer moves here is the level and not the shape. "
+            "**Catholic identification runs from 25.3% of La Romana to 82.8% of Hermanas "
+            "Mirabal**, which is fifty-seven points across a country you can drive over in a "
+            "day. It is under half in **thirteen of the thirty-two provinces**, and those "
+            "thirteen hold 50.9% of the population, so a Dominican is now marginally more "
+            "likely than not to live in a province where Catholics are a minority. The "
+            "Catholic end is the Cibao, the northern farming interior, and six of its "
+            "provinces are above 76%: Hermanas Mirabal, La Vega, Sánchez Ramírez, Espaillat, "
+            "Monseñor Nouel and Duarte. "
+            "**The two ways of not being Catholic are 200 kilometres apart and do not look "
+            "alike.** In the eastern sugar belt the answer is evangelical: La Romana is "
+            "**49.3%**, the highest in the country and more than twice the national rate, "
+            "then Samaná at 43.3%, La Altagracia at 33.1% and San Pedro de Macorís at 32.4%. "
+            "Those are the provinces of the old mills and the Anglophone Afro-Caribbean "
+            "*cocolo* migration. On the "
+            "Haitian border in the south-west the answer is no religion at all: **42.9% of "
+            "Pedernales** and 42.7% of Baoruco, against 4.9% of La Vega. Nationally the two "
+            "are 22.4% and 20.6%. "
+            "**Evangelicals outnumber Catholics in five provinces**: La Romana, Samaná, La "
+            "Altagracia and San Pedro de Macorís in the east, and Pedernales, which is the "
+            "far south-western corner and gets there by having so few of either. "
+            "**Adventists are 2.0% of the country**, three times their share in Mexico and a "
+            "little above Peru's 1.5%, and they get their own geography here: 5.1% of Hato "
+            "Mayor and 4.1% of San Cristóbal against 0.15% of San José de Ocoa. "
+            "**Jehovah's Witnesses are the one answer not drawn where the survey found "
+            "them.** Splitting the survey's 1,747 neighbourhoods into two half-samples and "
+            "re-ranking the provinces returns +0.94 for Catholic and +0.91 for no religion, "
+            "and **-0.02** for the Witnesses, so their 107,147 people go at the national "
+            "0.99% in every province instead. Nobody is deleted; only the claim to know "
+            "where they are is withdrawn. "
+            "**The level is 2019 and the population is 2022.** Dominican religious "
+            "affiliation has been moving fast, so a round fielded today would very likely "
+            "find fewer Catholics; this map says where they were seven years ago, on the "
+            "population the census counted three years later."),
+        how="household survey, one round in 2019",
+        grain="provinces, 337,000 people on average",
+        counts=_do_counts,
+        units=None,
+        unit_key=None,
+        place=HERE / "data" / "geo" / "do" / "do_hexes.gpkg",
+        place_unit=lambda g: g["unit"].astype(str),
+        place_weight=_do_place_weight,
+        note="THE QUEUE PRICED THIS COUNTRY FROM LAPOP AND §9bn REFUSED IT. §11ad offered "
+             "8,904 AmericasBarometer respondents over 29 of 32 provinces, with three never "
+             "sampled and seven more in one wave-half only, several on n under 20; Anita's "
+             "call on 2026-09-08 was that a third of the units at the national rate is "
+             "inference wearing the same colours as measurement. **The office's own survey "
+             "answers instead**: ENHOGAR-MICS6 2019 carries `HC1A`, the religion of the "
+             "household head, with 31,488 households and 96,968 people in them across all "
+             "32 provinces. That is §9ce's Uruguay lesson applied to the country where it "
+             "mattered most. "
+             "THE CENSUS HALF IS CLOSED AND WAS CHECKED TWICE RATHER THAN ASSUMED. CELADE "
+             "hosts ONE's own REDATAM instance at prod.redatam.org/bindom/ and the published "
+             "CPV2010 dictionary has no religion variable; the 2022 census person microdata's "
+             "codebook runs P25_ORDEN to P67_ANO with no religion question, P64 being "
+             "self-identification by skin colour and culture. The UNSD oracle's silence "
+             "proves only that nothing was forwarded (§12). "
+             "THE POPULATION IS ONE'S 2022 CENSUS AND NOT COD-PS, and the argument is "
+             "stronger than Ecuador's. COD-PS 2023 is a projection and lands 0.56% under the "
+             "census nationally, better than the 3.4% error that made sources/ec_geo.py "
+             "reject Ecuador's; per province it runs -23.7% in San Jose de Ocoa to +10.3% in "
+             "Santo Domingo, a 34-point spread under a national agreement of half a point. "
+             "It would have put 285,000 people in Santo Domingo who are not there. "
+             "THE PROVINCES ARE COD'S ADM2 AND NOT ITS ADM1, which is the trap for whoever "
+             "copies this country. Every other Latin American country here reads ADM1; the "
+             "Dominican ADM1 is the ten planning regions and reading it gives ten polygons "
+             "and no error. The join is on the NAME, with one alias (ENHOGAR writes "
+             "Bahoruco where COD and the census write Baoruco), and sources/do_geo.py "
+             "asserts that the positional code join still gets only 3 of 32 right. "
+             "THE HELD-OUT CHECK IS A PERMUTATION TEST. The survey's weighted province "
+             "distribution tracks the 2022 census at r=+0.9988 and **none of 20,000 random "
+             "pairings of the same 32 provinces reaches that** (best random +0.933). "
+             "AND THE CROSS-CHECK IS THE ONE URUGUAY INVENTED. LAPOP's `prov` for this "
+             "country is 2100 plus ONE's official province number, the same numbering "
+             "ENHOGAR uses, so the two instruments can be laid side by side on 29 provinces: "
+             "Catholic r=+0.84, non-Catholic Christian +0.76, no religion +0.76, none of "
+             "20,000 random pairings reaching any of them, and national levels of 52.8/53.2, "
+             "25.3/25.9 and 20.6/18.0. Two unrelated surveys eight years apart agree about "
+             "this country. It also names §9bn's three unsampled provinces for the first "
+             "time: 2110, 2116 and 2131 are Independencia, Pedernales and San Jose de Ocoa.",
     ),
     "ec": dict(
         name="Ecuador",
@@ -8475,6 +10093,308 @@ COUNTRIES = {
              "box, not a collapse. GUATEMALA AND EL SALVADOR ARE AFFECTED THE SAME WAY and "
              "neither file mentions it; it was found while building this country. "
              "taxonomy/ec2023.py carries the measurement and sources/ec.md the write-up.",
+    ),
+    "uy": dict(
+        name="Uruguay",
+        source="Encuesta Nacional de Hogares Ampliada 2006 (INE), against INE's own "
+               "departmental population estimates for 2023",
+        basis="self-identification, people aged 7 or over",
+        note_public=(
+            "**Uruguay's census has not asked about religion since 1908, so this map is a "
+            "household survey standing where a census would be.** The question is the "
+            "statistics office's own, put to every household member over six in the Encuesta "
+            "Nacional de Hogares Ampliada of 2006, and **230,898 people** answered it. These "
+            "are survey respondents rather than a count of the country, and the dots are "
+            "drawn desaturated to say so; but it is not a thin survey. The smallest "
+            "department, Flores, rests on 3,252 answers and Montevideo on 80,196, so every "
+            "department here carries its own measured composition rather than a national "
+            "average. Children under seven were not asked and are not drawn. "
+            "**42.5% of Uruguayans over six claim no religious affiliation, against 46.2% "
+            "Catholic.** That is far more than any other Latin American country on this map, "
+            "and the survey splits it where it matters: **26.9%** say they believe in God but "
+            "belong to no religion, and **15.6%** call themselves atheist or agnostic. Most "
+            "Uruguayans who have left the church have not left belief. The separation goes "
+            "back a long way, to an 1861 law taking the cemeteries out of church hands and "
+            "the 1917 constitution that finished the job. "
+            "**The two halves of the no-religion answer have opposite maps.** Atheists and "
+            "agnostics are a Montevideo and Atlantic-coast phenomenon, **21.7%** of the "
+            "capital and 16.6% of Maldonado against 3.9% of Artigas on the Brazilian border. "
+            "Believers without a religion are the interior and the north, 41.9% of Tacuarembó "
+            "and 41.6% of Rocha against 13.6% of Colonia. Put together they run from 20.5% of "
+            "Paysandú to **58.1% of Rocha**. "
+            "**Catholicism is the other side of that and its range is nearly as wide**, 67.7% "
+            "of Paysandú against 30.3% of Rivera. Non-Catholic Christians are 10.0% of the "
+            "country and are one box: the question folds evangelicals, Pentecostals, "
+            "Baptists, Protestants, Adventists and the Armenian Apostolic Church into a "
+            "single answer, so nothing separates them here. They are 27.9% of Rivera and 5.6% "
+            "of Maldonado. The Waldensians who founded Colonia Valdense in 1858, the oldest "
+            "Protestant body in the country, are inside that box and cannot be taken out of "
+            "it. "
+            "**Two small answers get their own box here that most surveys in the region do "
+            "not offer.** Judaism is **0.38%** of the country and Montevideo holds nine "
+            "tenths of it, 0.92% of the city against 0.06% of everywhere else. Umbanda and "
+            "Afro-American religion together are 0.63%, highest in Montevideo at 0.93% and in "
+            "Rivera at 0.78%, which is the capital and the Brazilian border town. That second "
+            "figure is people who define themselves that way first, and Uruguayan practice of "
+            "those religions is wider than the number. "
+            "**The level is 2006 and the country has kept moving.** The AmericasBarometer "
+            "asked a similar question between 2010 and 2014 and found 37% Catholic, so what "
+            "is drawn here is several points more Catholic than Uruguay is now. What the two "
+            "surveys agree on is the shape: their department orderings for non-Catholic "
+            "Christians and for atheists match closely, and the ordering is what a map is "
+            "for."),
+        how="national household survey, 2006, ages 7 and over",
+        grain="departamentos, 167,000 people on average",
+        gap="children under 7, 9.0% of Uruguay, who were not asked the question",
+        gap_share=0.0899,
+        counts=_uy_counts,
+        units=None,
+        unit_key=None,
+        place=HERE / "data" / "geo" / "uy" / "uy_hexes.gpkg",
+        place_unit=lambda g: g["unit"].astype(str),
+        place_weight=_uy_place_weight,
+        note="THE QUEUE PRICED THIS COUNTRY FROM LAPOP AND INE HAS SOMETHING FIFTY TIMES "
+             "BIGGER. queue.md's §11ad row is 4,318 AmericasBarometer respondents pooled over "
+             "three waves; the 2006 ENHA carries a religion question answered by 230,898 "
+             "people on the same nineteen departments, 3,252 to 80,196 apiece. So Uruguay is "
+             "the first country in this Latin American set drawn from the national statistics "
+             "office rather than from the survey, and the only one where nothing is drawn at "
+             "a national rate. THE CENSUS NEGATIVE IS REAL: absent from the UNSD oracle, and "
+             "the last census to ask was 1908. Every row is still `modelled` (§7b). "
+             "THE UNIVERSE IS AGES 7 AND OVER AND ANDA'S METADATA GETS IT WRONG -- the data "
+             "dictionary says `personas mayores de 6 anos` and then glosses it `6 anos y "
+             "mas`. The microdata settles it: the not-applicable code covers ages 0 to 6 "
+             "completely, all 4,225 six-year-olds included. 8.99% of Uruguay is in `gap=` and "
+             "there is no non-response cell at all. "
+             "THE CODE JOIN IS EL SALVADOR'S TRAP AND HARDER TO SEE. INE numbers departments "
+             "Montevideo first then alphabetically; COD-AB's UY01..UY19 are alphabetical with "
+             "no exception, so `UY{dpto:02d}` gets the LAST NINE right and shifts the first "
+             "ten by one place. A spot check on Salto or Treinta y Tres passes while "
+             "Montevideo's 1.3 million are drawn in Artigas. sources/uy_geo.py joins on the "
+             "name, all 19 with no aliases, and asserts that the code join still mispairs ten. "
+             "THE POPULATION IS INE'S OWN 2023 ESTIMATE, not COD-PS, because Uruguay counted "
+             "in 2023 and COD-PS projects off 2011 (§9bn). 3,496,400 people of whom 3,181,996 "
+             "are 7 or over; the 7+ cut takes three fifths of the 5-9 band because nothing INE "
+             "publishes for Uruguay is by single year of age, which is worth at most 0.05% of "
+             "the country. "
+             "THE SECOND CHECK IS A SECOND SURVEY, which no LAPOP-only country can have. "
+             "LAPOP measured the same nineteen departments four to eight years later with a "
+             "different instrument: non-Catholic Christian r=+0.86 with 0 of 20,000 random "
+             "pairings reaching it, atheist/agnostic +0.73 with 3, both no-religion cells "
+             "+0.56 with 118. Catholic is +0.34 and not significant, which is about the pair "
+             "of cards -- LAPOP finds 37.0% Catholic and 32.4% believing-without-a-religion "
+             "where INE finds 46.0% and 26.9% -- and about LAPOP having 45 respondents in "
+             "Rivera against INE's 9,322. The population check is r=+1.0000 over 19 against "
+             "INE's 2006 estimate, best random pairing +0.996. "
+             "FIVE OF SEVEN CATEGORIES CLEAR THE SPLIT-HALF, run across the two halves of "
+             "2006 rather than across waves. `Judio` and `Otra` come in at +0.26 and are drawn "
+             "anyway under sources/uy.py's `UNDER_BAR`: for a category near zero in eighteen "
+             "of nineteen units the rank test is ranking noise, while the thing the map draws "
+             "is Montevideo at 0.92% Jewish against 0.06% elsewhere on 80,196 respondents. "
+             "Both exceptions carry a chi-square as their precondition and the bar was not "
+             "moved. sources/uy.md is the write-up and taxonomy/uy2006.py the mapping.",
+    ),
+    "eg": dict(
+        name="Egypt",
+        source="Arab Barometer, four waves 2013 to 2022 (Arab Barometer, Princeton "
+               "University), against CAPMAS's own governorate population estimates for "
+               "January 2026",
+        basis="self-identification, adults 18 and over",
+        note_public=(
+            "**Egypt has asked about religion in four censuses and published the answer from "
+            "one of them, in 1986.** So this map is a survey standing where a census would "
+            "be. It is drawn from the Arab Barometer: **6,840 people** interviewed across "
+            "four rounds between 2013 and 2022, pooled, with each governorate's answers "
+            "applied to CAPMAS's own estimate of that governorate's population. Nobody "
+            "counted this, and the dots are drawn desaturated to say so. "
+            "**Christians are 6.02% of the country as drawn, and Upper Egypt is where they "
+            "are.** Minya is **16.41%**, Sohag 13.90% and Asyut 13.58%, against **1.06% of "
+            "Sharqia** and 1.83% of Beheira in the Delta. Those top three rest on about 350 "
+            "interviews each and sit inside one another's margins, so read them as a group "
+            "and not as an order; what the survey does pin down is that the middle Nile is "
+            "several times more Christian than the Delta is. "
+            "**The reason this map was drawn at all is that the survey agrees with the last "
+            "census that published.** The 1986 census, the last one whose religion table was "
+            "released, put Christians at 5.7% of Egypt, and this map's national figure is "
+            "**6.02%**. Cairo is drawn at **8.19%** against the 8.57% recorded for Cairo in "
+            "1996, a governorate figure that reached the academic literature and that CAPMAS "
+            "has never published itself. Those two are the only Egyptian numbers there are "
+            "to check a survey against, and it clears both. How many Christians Egypt has is "
+            "an old argument in which the Coptic Orthodox Church's own count is the higher "
+            "one, and this map lands on the census side of it. "
+            "**Three governorates rest on almost nothing.** Matrouh has **16 interviews**, "
+            "the Red Sea 28 and Port Said 44, against a median of 271. The Red Sea is drawn "
+            "as entirely Muslim because none of its 28 respondents answered Christian, which "
+            "on that sample is consistent with anything up to about 11%; it is not a finding "
+            "that no Copts live in Hurghada. "
+            "**New Valley, North Sinai and South Sinai are not on the map.** The survey "
+            "interviewed nobody in any of them across all four rounds, so they have no share "
+            "to apply and take no dots: **870,398 people**, 0.8% of Egypt on 48% of its "
+            "land. "
+            "**No irreligion is drawn, and that is a fact about the questionnaire rather "
+            "than about Egypt.** Two of the 6,840 answered atheist, on a card that only one "
+            "of the four rounds carried; two rounds offered no such box at all and the "
+            "fourth offered a differently worded one. In a country where saying it to a "
+            "stranger with a clipboard carries a real risk, two is a floor of unknown depth, "
+            "and nothing published says what the right number would be. The card is shallow "
+            "the other way too: one Muslim box and one Christian box, so this map says "
+            "nothing about the Sunni share, and nothing about which church Egypt's "
+            "Christians belong to even though most of them are Coptic Orthodox."),
+        how="survey, four rounds 2013 to 2022 pooled",
+        grain="governorates, 4.5 million people on average",
+        gap="New Valley, North Sinai and South Sinai, 0.8% of Egypt, where the survey "
+            "interviewed nobody",
+        gap_share=0.0080,
+        counts=_eg_counts,
+        units=None,
+        unit_key=None,
+        place=HERE / "data" / "geo" / "eg" / "eg_hexes.gpkg",
+        place_unit=lambda g: g["unit"].astype(str),
+        place_weight=_eg_place_weight,
+        note="DRAWN AT GOVERNORATE ON ANITA'S CALL, 2026-09-08 (ask/answered/001-eg). Egypt "
+             "collected religion in the 1986, 1996, 2006 and 2017 censuses and published it "
+             "from 1986 only, which is spec §14.4 rule 2's central example: a persecuted "
+             "minority mapped finer than its own state publishes. Her ruling was to draw at "
+             "governorate. Nothing finer is available anyway -- the survey cuts by "
+             "governorate and carries nothing below it, and the microdata extract CAPMAS "
+             "deposited for the 2017 census has thirteen variables (governorate, station, "
+             "marital status, sex, age, work status, education) and religion is not one of "
+             "them. "
+             "THE POPULATION IS CAPMAS'S OWN AND NOT COD-PS. HDX's cod-ps-egy is the 2012 "
+             "COMPAS estimate, 81,395,541 people, and Egypt passed 100 million in 2020; "
+             "drawing on it would put a quarter of the country nowhere and unevenly. "
+             "sources/eg_geo.py pulls CAPMAS's api/GovernoratePopulation instead, pinned to "
+             "2026-01-01 so the build is reproducible. That endpoint is on port 8080 of "
+             "capmas.gov.eg and was found by grepping the React bundle -- §11d and §11af both "
+             "concluded CAPMAS had no API, having probed the 443 host, which returns the same "
+             "1,421-byte shell for every path including nonsense ones. "
+             "SIXTY WAVE III RESPONDENTS ARE DROPPED. Their governorate label is `The West "
+             "Bank`, on a code that appears on no non-Egyptian row. It is almost certainly "
+             "Gharbia -- wave III's codes reproduce Egypt's own governorate numbering, "
+             "position 10 in that numbering is Gharbia, Gharbia is otherwise absent from wave "
+             "III alone, and al-Gharbiyya means 'the western', which a translator renders as "
+             "the West Bank the same way it renders al-Buhayra as `The Lake` two rows above. "
+             "It is not mapped anyway: sources/eg.py's BOGUS has the argument, and it is that "
+             "0.9% of the pool is not worth risking a silent permutation for. "
+             "COD-AB'S LUXOR IS THE CITY, NOT THE GOVERNORATE. Its Arabic name is literally "
+             "'City of Luxor' and its polygon is 596 km2 against CAPMAS's 5,428, with Esna "
+             "and Armant falling inside COD's Qena. Luxor's 1,459,385 dots are therefore "
+             "packed into the city and the rest of its territory takes Qena's colours. The "
+             "counts are right and the placement inside two adjacent governorates is not; "
+             "both read 8 to 9% Christian, so the visible cost is small.",
+    ),
+    "jo": dict(
+        name="Jordan",
+        source="Arab Barometer, nine waves 2010 to 2024 (Arab Barometer, Princeton "
+               "University), against the Department of Statistics' own governorate population "
+               "estimates for end-2025",
+        basis="self-identification, adults 18 and over",
+        note_public=(
+            "**Jordan has asked about religion in its last two censuses and published the "
+            "answer from neither.** The Department of Statistics prints its own forms, and "
+            "both carry the question: item 208 on the 2015 census schedule is `Religion`, "
+            "with boxes for Muslim, Christian and other, and the 2004 household register asks "
+            "the same thing in the same place. Neither census's published tables include it, "
+            "the department's online databank has no religion table among its 520, and Jordan "
+            "has never reported one to the UN. So this map is a survey standing where a "
+            "census would be: **14,906 people** who named a religion across nine rounds of "
+            "the Arab Barometer between 2010 and 2024, pooled, with each governorate's "
+            "answers applied "
+            "to the department's own end-2025 estimate of that governorate's population. "
+            "Nobody counted this, and the dots are drawn desaturated to say so. "
+            "**Christians are 1.40% of the country as drawn, and Balqa is where they are "
+            "densest.** Balqa reads **4.33%**, then Ajloun at 3.67% and Karak at 2.32%, "
+            "against 0.66% in Zarqa and 0.25% in Ma'an. Balqa contains Fuheis, Mahis and "
+            "Salt, three of the best known Christian towns in the country, although the "
+            "survey asks nobody which town they live in and the 4.33% is the governorate's. "
+            "Amman is "
+            "only 1.57% and still holds **78,590** of the 166,950 Christians on this map, "
+            "which is nearly half of them, so the highest share and the largest community are "
+            "not in the same place. The whole ordering rests on **245 Christian interviews** "
+            "spread across twelve governorates and fourteen years, so read the top three as a "
+            "group rather than as a ranking. "
+            "**Two governorates are drawn with no Christians at all, and that is the sample "
+            "rather than the country.** None of Jerash's 480 respondents and none of "
+            "Tafilah's 386 answered Christian, which on those samples is consistent with "
+            "anything up to about 0.6% and 0.8%. Jerash has a Christian community and this "
+            "survey did not reach it. Madaba is the other one to read carefully: it is drawn "
+            "at **0.51%**, the lowest of the settled governorates, and Madaba town is one of "
+            "the oldest Christian centres in the country, its mosaics included. 455 "
+            "interviews cannot tell 0.5% from 2%. "
+            "**The survey is mostly a survey of citizens and the population it is applied to "
+            "is everybody.** About three residents in ten are not Jordanian nationals, mostly "
+            "Syrians, and only one of the nine rounds sampled them: in that round, fielded in "
+            "2016, none of the **303 Syrians** interviewed was Christian, against 2.34% of "
+            "the 1,197 Jordanians and Palestinians beside them. Applying one set of shares to "
+            "the whole resident population therefore makes 1.40% a ceiling rather than a "
+            "middle estimate. Nothing here corrects for it, because no published source gives "
+            "the religion of Jordan's non-citizens at any geography. "
+            "**The card has two boxes and that is the limit of what this map can say.** One "
+            "Muslim box and one Christian box, in all nine rounds, so nothing here separates "
+            "Sunni from anything else, and nothing separates the Greek Orthodox from the "
+            "Melkite Greek Catholics, the Latins, the Syriacs and the Protestants, even "
+            "though that split is a real feature of Jordanian Christianity. Every one of the "
+            "**14,917** people interviewed answered Muslim or Christian or declined to "
+            "answer: the five most recent rounds offered a box for having no religion, and "
+            "not one of their 8,034 respondents ticked it."),
+        how="survey, nine rounds 2010 to 2024 pooled",
+        grain="governorates, 995,000 people on average",
+        counts=_jo_counts,
+        units=None,
+        unit_key=None,
+        place=HERE / "data" / "geo" / "jo" / "jo_hexes.gpkg",
+        place_unit=lambda g: g["unit"].astype(str),
+        place_weight=_jo_place_weight,
+        note="THE STATE ROUTE WAS TESTED FIRST AND IS CLOSED, NOT MISSING. Jordan's 2015 and "
+             "2004 censuses both ask religion -- DOS publishes both questionnaires and the "
+             "item is there, three boxes, in the person block -- and neither census's table "
+             "set contains it (2015: 133 tables in ten sections; 2004: 165 in eight). The "
+             "jorinfo.dos.gov.jo PxWeb databank was enumerated in full, 520 tables, and the "
+             "thirteen that mention a religion word are all ISIC division 94, activities of "
+             "religious organisations, in economic tables. Jordan is absent from the UNSD "
+             "Demographic Yearbook's religion table. There is no HDX COD for Jordan at all, "
+             "so the boundaries are geoBoundaries and the populations are DOS's own, which is "
+             "better than COD-PS would have been anyway. "
+             "DRAWN AT GOVERNORATE FOLLOWING ANITA'S EGYPT RULING (ask/answered/001-eg) "
+             "rather than re-asking it. queue.md's §11ag row records her unblocking this "
+             "group with `build them, and decide what to show once there is something to "
+             "show`; Lebanon is the one she asked to have raised with her and Jordan is not. "
+             "Twelve governorates for 11.9 million people is coarser than Egypt's "
+             "twenty-seven, and Jordan reserves parliamentary seats for Christians, so rule "
+             "2's concern is weaker here in both directions. "
+             "WAVE II WAS INVISIBLE TO THE ARAB BAROMETER MODULE UNTIL THIS COUNTRY. It "
+             "spells its country labels `8. Jordan`, `5. Egypt`, `17. Saudi Arabia`, so "
+             "ab.load's exact-match filter found no rows and skipped the wave in silence for "
+             "every country ever built from this survey. It is 1,188 of Jordan's respondents "
+             "and 39 of its 245 Christians. Egypt is NOT rebuilt on it: that would move an "
+             "already-drawn country's numbers, which is Anita's call and not a side effect of "
+             "a shared-module fix, so sources/eg.py now pins its four waves with the reason. "
+             "Wave II reads 5.83% Christian for Egypt against the drawn 5.93%, so nothing "
+             "about it looks like a correction waiting to happen. "
+             "WAVE I IS LEFT OUT FOR THE GEOGRAPHY AND NOT THE DECODE. It asks religion as "
+             "`q711` rather than `Q1012` because it predates the questionnaire renumbering, "
+             "and 1,142 of its 1,143 Jordanians answered -- but the file has 181 columns and "
+             "not one of them is subnational, so it cannot enter a pool cut by governorate. "
+             "Unweighted it reads 1.57% Christian, inside the band the other nine occupy. "
+             "THE GOVERNORATE CODE MEANS THREE DIFFERENT THINGS AND IS THEREFORE A WITNESS. "
+             "Waves II and III number Jordan's governorates 3501 to 3512 in the official "
+             "order; waves V, VII and VIII use 800 followed by Jordan's own governorate "
+             "number, so 80011 is Amman and 80034 is Aqaba; waves IV and VI use an arbitrary "
+             "1 to 12 order that is not even shared between them. So the code can never be "
+             "the pooling key, and in the six waves where it decodes it checks the harmonised "
+             "names instead: 10,175 respondents, all agreeing, which no permutation of the "
+             "name table could survive. "
+             "THE SPLIT-HALF PASSES THINLY AND THE ENTRY SAYS SO. Spearman +0.617 against "
+             "§14.16's bar of +0.591 on twelve units; leave-one-out ranges +0.509 to +0.717 "
+             "and dropping Balqa alone takes it under. The bar is applied as written and was "
+             "not moved. What stands behind the verdict is that the governorates differ at "
+             "p=2.6e-18 and that Balqa, Madaba and Ajloun together read 3.50% against 1.41% "
+             "elsewhere at p=4.1e-10. "
+             "THE HELD-OUT DECODE IS PINNED at r = +1.000 between the survey's governorate "
+             "shares of respondents and DOS's governorate populations, which none of 20,000 "
+             "random pairings reaches. The Arab Barometer quota-samples by governorate, so a "
+             "high correlation is expected; what it tests is that the names were joined to "
+             "the right polygons.",
     ),
     "pe": dict(
         name="Peru",
@@ -8859,6 +10779,130 @@ COUNTRIES = {
         gap_share=0.0002,
         gap="Religion Faith/Refuse to Answer is a §3.5 residual and is not drawn: 133 "
             "people, 0.02%, the smallest on this map. The Solomon Islands are 99.98% drawn.",
+    ),
+    "fm": dict(
+        name="Micronesia",
+        source="2023 Population and Housing Census, Table B6 (FSM Statistics)",
+        basis="self-identification, whole enumerated population",
+        note_public=(
+            "**The census draws one mission boundary and very little else.** Roman "
+            "Catholics are **55.5%** of Micronesia and the Congregational and other "
+            "Protestant churches **37.1%**, and the two invert completely across the "
+            "2,800 km from Yap to Kosrae. Kosrae is **88.7%** Congregational and 1.7% "
+            "Catholic; Yap at the other end is **79.6%** Catholic and 4.6% "
+            "Congregational. Twelve of Yap's twenty municipalities record no "
+            "Congregational answer at all and six of those are entirely Catholic, while "
+            "four of Pohnpei's outer atolls record no Catholic one and are entirely "
+            "Congregational. The American Board's Congregational missionaries reached "
+            "Kosrae and Pohnpei in 1852 and Chuuk in 1879 and the Catholic missions came "
+            "from the west through the Spanish and then German Carolines; where they met "
+            "is what the map still shows. "
+            "**Just under half the country is drawn municipality by municipality, and "
+            "Chuuk is not.** Yap and Pohnpei each publish religion by municipality in "
+            "their own 2023 workbooks, so they are drawn on 20 and 11 units of about "
+            "1,200 people. Chuuk's workbook does not exist and Kosrae's has no religion "
+            "table, so each of those is a single unit, and **44.8%** of everyone on this "
+            "map is inside one Chuuk polygon drawn at 54.8% Catholic and 41.8% "
+            "Congregational throughout. That is where the census stops rather than a "
+            "choice made here, but it does mean the picture is much sharper at the two "
+            "ends of the country than in the middle. "
+            "**The small churches are island-sized, and only the finer half shows it.** "
+            "Fais, an outer island of 463 people in Yap, is **29.4%** Assembly of God "
+            "and **28.5%** Baptist against national shares of 0.7% and 1.2%. Sapwuahfik "
+            "in Pohnpei is **20.3%** Seventh-day Adventist against 0.6%, and Sokehs "
+            "holds 282 of the country's 463 Apostolic. At state level every one of those "
+            "rounds away to about one percent. "
+            "**Saying you have no religion is a Yapese answer.** The 2023 census merges "
+            "no religion with refusal into one cell worth 0.7% of the country, but it is "
+            "3.7% of Yap against 0.1% of Chuuk, and inside Yap it reaches **28.9%** of "
+            "Kanifay and 33.3% of Rumung, a municipality of 36 people. The 2010 census "
+            "asked the two apart, printing 723 with no religion against 72 who refused, "
+            "and found the same concentration in Yap, so this is people saying they have "
+            "none rather than people declining to answer. "
+            "**Micronesia has lost a quarter of its people since the previous census.** "
+            "The same table counted 102,843 in 2010 and 75,817 in 2023, and emigration "
+            "to the United States under the Compact of Free Association is most of the "
+            "difference. The one outside reading of any of this is the UN Statistics "
+            "Division's, which carries the 2000 census on eight categories rather than "
+            "eleven; fold these figures down to that set and every share sits within "
+            "**three points** of it, with Catholics up and Congregationalists down by "
+            "about the same amount over the twenty-three years."),
+        how="census, 2023, whole enumerated population",
+        grain="municipalities in Yap and Pohnpei (1,200 people); whole states in Chuuk "
+              "and Kosrae",
+        gap="0.3% of the country, 241 people in cells too small for the census to print "
+            "at municipality level; it falls on the smallest churches, taking 17.7% of "
+            "Yap's and Pohnpei's Adventists and none of their Catholics",
+        gap_share=0.00318,
+        counts=_fm_counts,
+        units=None,
+        unit_key=None,
+        place=HERE / "data" / "geo" / "fm" / "fm_hexes.gpkg",
+        place_unit=lambda g: g["unit"].astype(str),
+        place_weight=_fm_place_weight,
+        note="THE TIER IS MIXED AND THAT IS THE COUNTRY'S BIGGEST CALL. FSM publishes a "
+             "per-state basic-tables workbook beside the national one. Yap's and Pohnpei's "
+             "carry `Table B6. Religion by Municipality`; CHUUK'S WORKBOOK DOES NOT EXIST "
+             "and KOSRAE'S STOPS AT TABLE B5. So the map is 20 Yap municipalities + 11 "
+             "Pohnpei municipalities + Chuuk whole + Kosrae whole = 33 units, 48.4% of the "
+             "people at ~1,200 each and 51.6% at ~19,500. This is spec 12's Ghana answer "
+             "stated exactly -- draw the fine unit where it reconciles and the coarse one "
+             "where it does not, so the drawn tier is two geo_levels and every drawn row is "
+             "still `measured`. It is NOT Albania's trade (sources/al.md 3a): the finer half "
+             "here is the same census year, the same office and the same eleven categories, "
+             "so it costs no vintage and no category. sources/fm.md 4 prices the alternative. "
+             "KOSRAE'S MISSING TABLE IS A TRIPWIRE, NOT AN ASSUMPTION. sources/fm.py reads "
+             "Kosrae's 2023 workbook on every run and raises if a Table B6 ever appears in "
+             "it, naming the four municipalities to draw. Chuuk's absence cannot be checked "
+             "from a file that does not exist and rests on the `id=0` library sweep instead. "
+             "THE OFFICE MOVED AND THE QUEUE'S HOST IS GONE. fsmstatistics.fm returns HTTP "
+             "200 and serves a LiteSpeed directory index holding cgi-bin, dasdas.png and a "
+             "stray htaccess; its Wayback captures hold no census tables at all, because the "
+             "old site served them through wpDataTables and the archive kept only the shell. "
+             "The office is stats.gov.fm, WP File Download, 71 files over nine pages of ten "
+             "at task=files.getFiles&id=0 -- the sixth Pacific office here on that plugin. "
+             "TWO PUBLICATIONS AGREE EXACTLY, WHICH IS THE STRONGEST CHECK THIS COUNTRY HAS. "
+             "Each per-state workbook's own state column reproduces the national table's "
+             "column for that state on all eleven categories with zero difference. A whole "
+             "column read into the wrong place survives every within-table margin and dies "
+             "there. THE OUTSIDE WITNESS EXISTS AND THE RECORD SAID IT DID NOT (review, "
+             "2026-09-08). UNSD table 28 DOES carry `Micronesia (Federated States of)` 2000, "
+             "8 categories, 107,008, an exact partition. `tools/oracle.py` takes UNSD'S OWN "
+             "NAME and not a country code, so `oracle.py fm` returns the ABSENT line for "
+             "every cc ever passed to it; the build read that as a negative. Folded to the "
+             "2000 category set every share agrees within 3 points, and 2000 prints "
+             "`No Religion` 753 against `Refused to answer` 57, a SECOND independent "
+             "confirmation of the merged-cell call the 2010 census settled at 90.9%. "
+             "THE PUBLISHER PERTURBS ITS OWN MARGINS BY ONE OR TWO. The four printed state "
+             "totals sum to 75,818 against a printed national 75,817; Table B1's age rows "
+             "give a third set, each within one; Pohnpei's eleven municipalities sum to "
+             "26,104 against its own printed 26,102. MARGIN_SLACK absorbs it and every run "
+             "prints it. An equality assert would refuse a correct read. "
+             "`*` MEANS SUPPRESSED OR ZERO AND IT BITES THE SMALL CHURCHES. 58 of Yap "
+             "proper's 132 cells and 73 of Pohnpei's are starred. impute() fills only a cell "
+             "that is the single unknown in its line and never apportions, which leaves 241 "
+             "people, 0.32%. Per category the loss is 17.7% of Adventists and 12.3% of "
+             "Witnesses against 0.0% of Roman Catholics, so the fine tier understates the "
+             "minorities and the gap line says so. Per UNIT there is NO lean: the residual "
+             "share correlates +0.47 with the irreligion share over 31 units, which sounds "
+             "like something and is one municipality -- drop Kanifay and it is -0.01 "
+             "(permutation p=0.046 with it, [[reference_check_needs_power]]). "
+             "THE JOIN IS BY NAME INSIDE THE STATE AND THE P-CODE TESTS IT AFTER (Benin's "
+             "rule). COD-AB's FM101..FM120 and FM301..FM311 run in EXACTLY the census's own "
+             "print order, so a name that matched the wrong municipality would move a rank; "
+             "31/31 join, two via an alias (COD writes Mwokilloa and Sapwuafik for the "
+             "census's Mwoakilloa and Sapwuahfik). And COD's MAIN_OUTER flag independently "
+             "reproduces the workbook's own YAP PROPER / OUTER ISLANDS split, 10 and 10. "
+             "KONTUR READS 1.50x THE CENSUS AND THAT IS THE COUNTRY, NOT THE GRID. Its "
+             "2023-11 extract has 113,340 people, which is the 2010 level; FSM lost nearly a "
+             "third of its people in between. The grid is only ever a within-unit weight and "
+             "is normalised by that ratio, and the per-unit band is what actually tests it: "
+             "all 30 non-synthetic units inside a factor of 5 (0.39 Gilman to 1.95 Elato), "
+             "r=0.9760 against a best of 0.5465 over 2,000 random pairings, 0 reaching it. "
+             "30% of Kontur's people fall outside every unit and are SNAPPED, not dropped, "
+             "on Vanuatu's rule -- an atoll is a strip of land a few hundred metres wide. "
+             "Faraulep, Ifalik and Ngulu are smaller than one 400 m hex and get their own "
+             "polygon as a single cell.",
     ),
     "ki": dict(
         name="Kiribati",
@@ -9406,125 +11450,121 @@ COUNTRIES = {
     ),
     "kz": dict(
         name="Kazakhstan",
-        source="National Population Census 2021 (Bureau of National Statistics) — ethnicity "
-               "by region × religion by ethnicity, modelled",
-        basis="ethnicity-derived from the census's own religion × nationality table",
+        source="National Population Census 2021 (Bureau of National Statistics), religion by "
+               "region from the census dashboard's own data service",
+        basis="self-identification, whole enumerated population",
         view=[46.0, 40.5, 87.5, 55.5],
         # No `gap` line: every one of the seven answers Kazakhstan's Question 11 offers is on
         # the tree, refusal included, so 100.00% of the census is drawn. It had one until
         # 2026-09-07 (see taxonomy/kz2021.py's note on `Отказались указать`).
         note_public=(
-            "**Every dot in Kazakhstan is modelled, and no dot is a count of anybody where "
-            "it is drawn.** Kazakhstan asks about religion and publishes the answer for the "
-            "country as a whole and **nowhere else** — not by oblast, not in 2021 and not "
-            "in 2009. What is drawn here is the census's own ethnic map of the country, "
-            "recoloured by the census's own national table of which religions each "
-            "nationality reported. **Read it as 'this is what this region's ancestry "
-            "implies', never as 'this many Muslims live here'.** "
-            "**The one thing the model is certainly right about is the big pattern**, "
-            "because in Kazakhstan religion really does track ancestry closely: Kazakhs are "
-            "89.2% Muslim and Russians 85.5% Christian, and the north-south gradient the "
-            "map shows is the Slavic settlement of the northern steppe under the Empire and "
-            "the Virgin Lands campaign. North Kazakhstan is 49% Christian against "
-            "Kyzylorda's 2%, and that contrast is real. "
-            "**What it cannot see is anything that is about a person rather than their "
-            "descent.** There is a check on this, and it is worth stating because it is "
-            "unusual: the census publishes its religion-by-nationality table separately for "
-            "town and country, which is the model's own assumption written down as "
-            "something testable. Tested that way the model puts **1.6% of the country on "
-            "the wrong side of the town/country line** — Islam and Orthodoxy come back "
-            "within 3%, but **non-believers are out by 42% in rural Kazakhstan**, because "
-            "not believing is an urban habit inside every ethnic group at once and ancestry "
-            "cannot see it. Wherever this map draws non-belief, treat the location as the "
-            "weakest thing on the page. "
-            "**A ninth of the country declined to answer, and they are on the map.** 2.1 "
-            "million people, 11.0%, chose *I decline to state* — **which is option 6 of the "
-            "seven the census form actually offers**, printed and numbered, not a blank "
-            "somebody left. So it is an answer, and it is drawn as one, in its own colour: "
-            "nobody is quietly shared out among the religions. Where those dots cluster is "
-            "worth looking at on its own. "
+            "**Kazakhstan counts religion, and these are the counts.** The 2021 census asked "
+            "everyone, and BNS printed the answer for the country as a whole in a volume "
+            "whose 542 pages do not name a single oblast. The regional figures drawn here "
+            "come from the same census by a different door: the census dashboard is backed "
+            "by the 19,186,015 individual records themselves and will cut religion by "
+            "region on request. Every national total here reproduces the printed volume to "
+            "the person. "
+            "**The north and the south are two different countries on this question.** "
+            "North Kazakhstan region is **55.2%** Christian and **38.7%** Muslim; Turkistan, "
+            "on the Uzbek border, is **1.6%** Christian and **92.4%** Muslim. Those two are "
+            "the most and the least Christian of the seventeen regions, and the line between "
+            "them is the Slavic settlement of the northern steppe, first under the Empire "
+            "and again under the Virgin Lands campaign of the 1950s. Islam is highest in "
+            "Kyzylorda at **96.2%** and lowest in Kostanay at **37.0%**. "
+            "**A ninth of the country declined to answer, and they are on the map.** "
+            "2,112,653 people, **11.0%**, chose *I decline to state*, which is option 6 of "
+            "the seven the census form offers, printed and numbered, not a blank somebody "
+            "left. So it is an answer and it is drawn as one, in its own colour; nobody is "
+            "quietly shared out among the religions. "
+            "**Where people decline varies more than anything else here, and nothing "
+            "published explains it.** East Kazakhstan is **1.2%** and Mangystau **22.1%**, "
+            "which is an eighteenfold spread across the same form and the same nine "
+            "options. It does not follow the north-south line, it barely moves between town "
+            "and country, and it does not follow ethnicity: Mangystau is one of the most "
+            "Kazakh regions in the country and Kazakhs decline at close to the national "
+            "rate. A range that wide between neighbouring administrative units can be "
+            "fieldwork practice as easily as reticence, so read this layer as a real "
+            "pattern with an unknown cause rather than as a map of how guarded a region is. "
             "**Some part of that refusal is probably about the law.** Kazakhstan requires "
             "religious groups to register, refuses registration to Jehovah's Witnesses and "
-            "to Ahmadi Muslims, and prosecutes unregistered worship; the Protestant house "
-            "churches that bear the most of it are inside the 9,419 Protestants drawn here. "
-            "Read that number, and the Muslim one, as floors. "
-            "**But do not read a pattern into where they are.** Those dots come out almost "
-            "evenly spread — every region between 9.4% and 12.2% — and **that flatness is "
-            "the model's, not Kazakhstan's.** Refusal is placed here by ancestry, and "
-            "Kazakhs (9.3%) and Russians (7.5%) decline at similar rates, so every region "
-            "lands near the national 11%. The real variation is by town and country, which "
-            "is exactly what ancestry cannot see: tested against the census's own "
-            "urban/rural figures the model is out by −8% in towns and +15% in villages. "
-            "**The national total is exact; the map of it is the weakest thing here after "
-            "non-belief.** "
+            "to Ahmadi Muslims, and prosecutes unregistered worship. The **9,419** "
+            "Protestants here are the country's entire Protestant count, house churches "
+            "included; read that number, and the Muslim one, as floors. "
             "**Do not read the Russian border.** Kazakhstan looks vastly less secular than "
-            "Russia 200 km away — 3.6% non-believers in North Kazakhstan against 52% of "
-            "Omsk reporting no religious institution — and **almost all of that cliff is "
-            "the questionnaire.** Russia's survey offers *believes in God, professes no "
-            "religion*, which **24.9% of Russians choose and which Kazakhstan's census does "
-            "not offer at all**. A Russian in Petropavl who believes vaguely and attends "
-            "nothing has to pick something else, and 85.3% of Kazakhstan's Russians are "
-            "recorded Orthodox against 43% of Russia's population. Russia's largest "
+            "Russia 200 km away, **1.9%** non-believers in North Kazakhstan against **52%** "
+            "of Omsk reporting no religious institution, and almost all of that cliff is "
+            "the questionnaire. Russia's survey offers *believes in God, professes no "
+            "religion*, which **24.9%** of Russians choose and which Kazakhstan's census "
+            "does not offer at all. A Russian in Petropavl who believes vaguely and attends "
+            "nothing has to pick something else, and **85.3%** of Kazakhstan's Russians are "
+            "recorded Orthodox against **43%** of Russia's population. Russia's largest "
             "non-institutional answer has not vanished at the border; it is inside "
-            "Kazakhstan's Orthodox count — and the 11% who declined to state, drawn here in "
-            "their own colour, are the rest of it. "
-            "**Kazakhstan splits Christianity three ways, which most censuses here do not** "
-            "— Orthodox, Catholic and Protestant as separate boxes. 99.1% of Kazakhstani "
-            "Christians are Orthodox; the Catholics are the descendants of Poles and "
-            "Germans deported to the steppe in the 1930s and 40s, which is why Karaganda "
-            "has a cathedral; and **82% of the country's Buddhists are Koreans**, deported "
-            "from the Soviet Far East in 1937."),
-        how="census, 2021, but religion asked only nationally; spread by ethnicity",
-        # The `counted` row above it already says none of this was counted, so this one is
-        # free to answer the question it is labelled with. It used to carry the modelling
-        # warning instead, because it was then the only line under the title that could.
-        grain=("17 regions, 1.1m people on average; the religion table behind them is national, "
-               "not regional"),
+            "Kazakhstan's Orthodox count, and the 11% who declined to state are the rest of "
+            "it. "
+            "**Kazakhstan splits Christianity three ways, which most censuses here do "
+            "not**, into Orthodox, Catholic and Protestant. **99.1%** of Kazakhstani "
+            "Christians are Orthodox. The Catholics sit where the deportations left them, "
+            "**0.9%** of North Kazakhstan region and **0.5%** of Akmola against almost none "
+            "in the south: they are mostly the descendants of Germans and Poles moved to "
+            "the steppe in the 1930s and 40s, which is why Karaganda has a cathedral. And "
+            "**82%** of the country's Buddhists are Koreans, deported from the Soviet Far "
+            "East in 1937."),
+        how="census, 2021, whole enumerated population",
+        grain="17 regions, 1.1m people on average",
         counts=_kz_counts,
         units=None,
         unit_key=None,
         place=HERE / "data" / "geo" / "kz" / "kz_hexes.gpkg",
         place_unit=lambda g: g["unit"].astype(str),
         place_weight=_kz_place_weight,
-        note="THE FIRST COUNTRY HERE WITH NO MEASURED TIER AT ALL. Every row is `modelled` "
-             "(§7, §14.10). Kazakhstan publishes religion nationally only — sources.md §11u "
-             "establishes that four ways, including that not one of the 542 pages of the "
-             "2021 religion volume names an oblast while the LANGUAGE chapter of the same "
-             "volume has a regional cut. "
-             "THE MODEL IS THE CENSUS CROSSED WITH ITSELF: ethnicity by region (workbook "
-             "sheet 2.1) times share(religion | ethnicity) (volume ch.12, national). Both "
-             "inputs are the same census, the same office and the same round, which makes "
-             "the coefficients better attested than any other modelled country here — "
-             "Greece, Spain and France all multiply a state count by a THIRD PARTY's "
-             "composition. "
-             "NO MAGNITUDE IS ESTIMATED (§14.4 rule 1). Every person placed is a person BNS "
-             "counted in that region; the model only decides the column. Both margins are "
-             "reproduced EXACTLY — every religion's national total to the person, every "
-             "region's population to the person — and that is arithmetic rather than luck, "
-             "because the coefficients are conditional on ethnicity and the two "
-             "publications' ethnic margins agree to the person on all eighteen groups. "
-             "THERE IS A REAL HELD-OUT TEST, which §14.10's fifth condition asks for and "
-             "most modelled countries cannot supply. The volume publishes religion × "
-             "nationality separately for urban and rural Kazakhstan; predicting that from "
-             "the national coefficients misplaces 313,745 people, 1.64%. Islam +1.7%/-2.3%, "
-             "Orthodoxy +0.9%/-2.4%, but `Неверующие` -13.0%/+41.8% and the refusal cell "
-             "-7.8%/+15.0%. THE URBAN/RURAL COEFFICIENTS ARE DELIBERATELY NOT USED: fitting "
-             "to them would improve the map and destroy the only independent evidence the "
-             "country has. "
-             "11.01% IS NOT DRAWN. `Отказались указать`, 2,112,653 people, is the largest "
-             "cell this map declines to draw anywhere — §3.5 and tt2011.py's precedent on "
-             "Trinidad's 11.10%. It is also the cell the held-out test predicts worst. "
+        note="COUNTED, and it was `modelled` for one day. sources.md §11u established four "
+             "ways that no BNS PUBLICATION cuts religion by region, and every one of those "
+             "checks is still correct: not one of the 542 pages of the 2021 religion volume "
+             "names an oblast, while the LANGUAGE chapter of the same volume has a regional "
+             "cut. All four were about documents. §9cd found the figures somewhere no "
+             "document check reaches. "
+             "THE SOURCE IS THE CENSUS DASHBOARD'S ENGINE, NOT A FILE. "
+             "stat.gov.kz/ru/instuments/dashboards/28424/ embeds sheets from a Qlik Sense "
+             "server at qap.stat.gov.kz, and a Qlik app ships its DATA MODEL rather than "
+             "its charts. This one's model is the census: 35,195,612 person rows (2009 plus "
+             "2021, to the person) carrying `Вероисповедание` beside `Область`, `КАТО "
+             "РАЙОН`, `Тип местности` and `Национальность`. The JSON API is open to "
+             "anonymous callers. sources/kz.py holds the route. "
+             "FOUR MARGINS PROVE THE PULL IS THE CENSUS: all nine national religion totals "
+             "reproduce volume ch.12 to the person; they sum to 19,186,015 with no "
+             "residual; the urban and rural margins are the volume's own 11,741,342 and "
+             "7,444,673; and the two censuses' row counts are their published populations. "
+             "THE JOIN IS ON POPULATION, NOT NAMES. The engine labels oblasts in caps and "
+             "carries no KATO code for them; names pair sixteen of seventeen and fail on "
+             "the capital, which the census enumerated as Nur-Sultan and the dashboard "
+             "calls Astana. kz.py asserts the seventeen populations distinct, joins on "
+             "them, then checks the names and allows exactly that one disagreement. "
+             "THE MODEL IS KEPT AND SCORED (sources/kz_model.py, spec §14.25). It "
+             "misplaces 1,439,367 people, 7.50% of the country: Islam 4.4% and Orthodoxy "
+             "4.5%, so its north-south pattern was real, but `Отказались указать` 27.8% and "
+             "`Неверующие` 22.9%. Its near-flat refusal layer was an artefact; counted, "
+             "refusal runs 1.19% (East Kazakhstan) to 22.07% (Mangystau). "
+             "11.01% IS DRAWN, on `unknown` — `Отказались указать` is printed option six of "
+             "seven on Question 11, so it is a chosen answer and not Trinidad's derived "
+             "residual (§3.5, tt2011.py). Kazakhstan is 100.00% drawn. "
              "17 REGIONS IS THE 2021 VINTAGE AND THE BOUNDARY FILE IS 2023. COD-AB ships 20 "
              "ADM1 polygons because Kazakhstan created Abay, Jetisu and Ulytau in 2022; "
              "kz_geo.py dissolves the three pairs back. No polygon is cut and the reform "
              "split no rayon, so the ADM2 count (218, which the census also publishes) "
              "checks it, and Kontur's per-region band checks it again. "
-             "218 UNITS WERE AVAILABLE AND WERE NOT TAKEN. The census publishes ethnicity "
-             "at 218 rayons as an exact partition and COD has exactly 218 ADM2 polygons. "
-             "Two reasons: 218 units of inference is a much stronger claim than 17 for a "
-             "country where nothing is counted, and the join would be 218 fuzzy "
-             "Russian-to-English transliteration matches with no shared code, which is "
-             "§12's shape 2 with 218 chances to fire.",
+             "218 RAYONS ARE NOW AVAILABLE AS COUNTS AND ARE STILL NOT TAKEN. The engine "
+             "returns religion × `КАТО РАЙОН` for 218 units summing to 19,186,015, and the "
+             "app carries the rayon boundaries too (table `карта_район`, 190 rows with a "
+             "`Район.Line` geometry), so the old objection — 218 fuzzy transliteration "
+             "matches, and 218 units of pure inference — is gone on both counts. It was "
+             "left for a session that can build the finer geography properly rather than "
+             "bolted onto this one; queue.md carries the row and data/raw/kz/ has the pull. "
+             "THAT ROW NEEDS AN ASK FIRST. Going to 218 is a §14 resolution question that 17 "
+             "never raised: Kazakhstan prosecutes unregistered worship and refuses "
+             "registration to Jehovah's Witnesses and Ahmadi Muslims, and at 218 the 9,419 "
+             "Protestants and the refusal cell stop being a wash over a million-person unit. "
+             "Counted rather than modelled makes that sharper, not safer.",
     ),
     "np": dict(
         name="Nepal",
@@ -10416,7 +12456,7 @@ COUNTRIES = {
         place_unit=lambda g: g["unit"].astype(str),
         place_weight=_cn_place_weight,
         note="**100% of the census population is drawn and 88.1% of it is `unknown`** — "
-             "rewritten 2026-09-07, spec §14.13, after CFPS refused the data access §14.7 "
+             "rewritten 2026-09-07, spec §14.25, after CFPS refused the data access §14.7 "
              "had planned a Han Buddhist share around. Nothing is measured: the derived "
              "rows are §14.5's ethnic derivation and the modelled rows are §14.9's "
              "fractional Christian share over six Yunnan border peoples, whose "
@@ -14357,6 +16397,99 @@ COUNTRIES = {
              "a second WorldPop release of the census's own year agrees with it to within "
              "0.04. sources/sz_grid.py has all three tables of numbers.",
     ),
+    "si": dict(
+        name="Slovenia",
+        source="Popis prebivalstva 2002, table 05W1006S (Statistical Office of the "
+               "Republic of Slovenia)",
+        basis="self-identification, whole resident population",
+        view=[13.3, 45.4, 16.7, 46.95],
+        note_public=(
+            "**This is the 2002 census, and Slovenia has not asked since.** The 2021 "
+            "census was register-based and carried no religion question, so there is no "
+            "figure for Slovenia after 2002 at any geography, the national one included. "
+            "Read every share here as a quarter of a century old. How fast it was moving "
+            "when the counting stopped is at least on the record, because SURS published "
+            "1991 beside 2002 on identical categories: Catholic identification fell from "
+            "**71.6%** to **57.8%** in those eleven years, the atheist answer went from "
+            "4.4% to **10.2%**, and Islam from 1.5% to **2.4%**. "
+            "**More than a fifth of the country is not drawn, and that is the first thing "
+            "to know about this map.** 307,973 people, **15.68%**, did not want to answer, "
+            "and another 139,097, **7.08%**, were never established. Both are the "
+            "question's doing rather than the country's. Declaring a religion is voluntary "
+            "under article 41 of the constitution and the form said so; and questions 29 "
+            "and 30 had to be answered by the person themselves, aged 14 or over, with no "
+            "household member permitted to answer for them, so an enumerator who found "
+            "nobody in left a prepaid envelope and 7.08% of Slovenia never sent it back. "
+            "Between 1991 and 2002 the refusal nearly quadrupled, from 4.25% to 15.68%, "
+            "while the never-established half halved, from 14.56% to 7.08%. "
+            "**The hole is not spread evenly.** It runs from **3.1%** of Hodoš to "
+            "**38.3%** of Žetale, and across the 192 municipalities it tracks the share "
+            "reporting belief without a church (**+0.55**) and the atheist share "
+            "(**+0.38**) while barely touching the Catholic share (+0.04). So the map "
+            "understates those two answers slightly and overstates Protestantism, which is "
+            "the one strong negative at −0.47. Nothing here corrects for that; the "
+            "correction would be a number nobody published. "
+            "**Protestantism in Slovenia is one corner of the country and very little "
+            "else.** 16,135 people, **0.82%**, of whom the Evangelical Lutheran Church "
+            "holds 14,736. On the map they are Prekmurje, along the Hungarian border: "
+            "Hodoš is **84.9%** Protestant of what is drawn there, Gornji Petrovci "
+            "**67.3%** and Puconci **59.8%**, and eight municipalities hold 11,432 of the "
+            "15,855 the map can place. Prekmurje was Hungarian until 1919 and the "
+            "Counter-Reformation never reached it the way it reached the rest of Slovenia. "
+            "The same corner answered the census most fully, at 3.1% and 3.2% non-response "
+            "in Hodoš and Gornji Petrovci. "
+            "**The highest Muslim share and the highest Orthodox share in the country are "
+            "the same municipality, and it is a steel town in the Alps.** Jesenice reads "
+            "**22.7%** Muslim and **10.1%** Orthodox of what is drawn there, against 3.1% "
+            "and 3.0% nationally, and 47.3% Catholic against 75.0%. Velenje's coal basin "
+            "and the Zasavje towns are the same shape at 10.9%, 8.7% and 7.5% Muslim. At "
+            "the other end of the range Piran is **26.0%** not-a-believer and Ljubljana "
+            "**25.8%**, against 13.2% nationally, while Osilnica, 332 people on the Kolpa, "
+            "is the one municipality where everyone the map draws is Catholic. "
+            "**Two of the five religion boxes are catch-alls, and what is inside them was "
+            "published for the country and for nowhere in it.** The Protestant cell is "
+            "14,736 Evangelical Lutherans plus 1,399 others. `Other religions` is 3,831 "
+            "people: 1,877 other Christians, 1,026 in a single box called Oriental "
+            "religions, 558 other, 271 agnostics and **99** Jews, against 199 Jews at the "
+            "1991 census. Both cells are drawn whole rather than split, because nothing "
+            "published says which municipality any of those people were in."),
+        how="census, 2002",
+        grain="municipalities as they stood in 2002, 10,200 people on average",
+        gap_share=0.2288,
+        gap="447,070 people, 22.8%, who declined the religion question or whose answer was "
+            "never established; and 2,222 more in cells the office withheld to protect "
+            "small numbers",
+        counts=_si_counts,
+        units=None,
+        unit_key=None,
+        place=HERE / "data" / "geo" / "si" / "si_hexes.gpkg",
+        place_unit=lambda g: g["unit"].astype(str),
+        place_weight=_si_place_weight,
+        note="THIS COUNTRY WAS CLOSED TWICE, CORRECTLY, ON THE WRONG TIER. sources.md §11c "
+             "and §11k both struck Slovenia off because the 2021 census is register-based "
+             "and does not ask religion, which is true and is why there is no recent "
+             "figure. §11k downloaded the SURS PxWeb catalogue, recorded that it is 908 KB "
+             "and live, and concluded there was nothing to draw; that catalogue contains "
+             "05W1006S.px, religion by občina from Popis 2002. Finland was the same shape "
+             "the same day. §9cg records it, and the check that would have caught both is "
+             "free: tools/oracle.py's row for Slovenia already said 2002. "
+             "THE MUNICIPALITY CODES IN THE RELIGION TABLE ARE NOT SLOVENIA'S MUNICIPALITY "
+             "CODES. Its OBČINA dimension is an alphabetical sequence 001-193 in which 001 "
+             "is SLOVENIJA, so joining on it shifts every unit by one place and every "
+             "total still reconciles. sources/si.py recovers the real codes from a second "
+             "table of the same census, 05W0405S.px, whose settlement labels carry them, "
+             "and checks the name join on population: the two tables agree to the person "
+             "on all 192 municipalities. "
+             "THE FOURTEEN-CATEGORY TABLE IS NATIONAL AND DOES NOT EXIST AT OBČINA, so it "
+             "is used as a check instead, and a strong one: every shared cell of "
+             "05W1606S.px matches the drawn table exactly and its extra rows decompose "
+             "both catch-alls to the person. "
+             "AND THE HOLE IS ABOUT THE RELIGION QUESTION AND NOT ABOUT THE CENSUS. The "
+             "same form asked ethnicity under the same voluntary, answer-for-yourself "
+             "rule, and 05W1002S.px puts that non-response at 174,913 people, 8.9%, "
+             "against 22.76% for religion. That comparison is not in si.csv and so is "
+             "kept out of note_public.",
+    ),
     "at": dict(
         name="Austria",
         source="Volkszählung 2001, Tabelle 4 (Statistik Austria)",
@@ -14488,8 +16621,8 @@ COUNTRIES = {
             "descended from people exiled and enslaved from the Dutch East Indies. "
             "**707,294 people answered no religion question at all, and they are not "
             "drawn.** Eight of the nine provincial reports print them under their own "
-            "table as 'Do not know' or 'Unspecified' and leave them out of the total "
-            "published above; that is **1.3%** of the country. They are not spread "
+            "table as 'Do not know' or 'Unspecified' and leave them out of the total that "
+            "table publishes; that is **1.3%** of the country. They are not spread "
             "evenly. Non-response runs from 0.42% in Northern Cape to 2.02% in Gauteng, "
             "and across the nine provinces it tracks the no-religion share (r = +0.72, "
             "permutation p = 0.028), so the people left out come disproportionately from "
@@ -14775,6 +16908,815 @@ COUNTRIES = {
              "carries all 310 Finnish municipalities with their NUTS 3 code and their "
              "population, so the join is 310 of 310 in both directions with no download at "
              "all. Portugal was the other one.",
+    ),
+
+    "rw": dict(
+        name="Rwanda",
+        source="RPHC-5 2022 district profiles, Table 2.2 (NISR)",
+        basis="self-identification, whole census population",
+        note_public=(
+            "**One in five Rwandans belongs to a single named church, and the census "
+            "counts it under that name.** ADEPR, the Association des Églises de Pentecôte "
+            "du Rwanda, is **21.3%** of the country, 2,820,813 people, and the "
+            "second-largest religious answer after Catholicism at **39.9%**. Nothing else "
+            "on this map has one denomination counted as a census category at that size; "
+            "the UN's own copy of these figures prints the cell as plain *Pentecostal* and "
+            "loses the church. It grew out of the Swedish Free Mission that reached Rwanda "
+            "from the Belgian Congo in 1940, and eighty years on the map still shows where "
+            "the mission landed. Rusizi, on the Congo border, is its strongest district at "
+            "**33.9%**, Nyamasheke next door is **30.7%**, and it thins eastward across "
+            "the Catholic plateau to **11.1%** in Nyamagabe. "
+            "**Rwanda is drawn on 30 districts, and the thematic report that carries "
+            "religion only goes down to five provinces.** NISR published a separate "
+            "profile for every district in May 2025 and each one repeats the religion "
+            "question in full. One column shows what that is worth more than any other: "
+            "Adventists are **12.2%** of Rwanda and run from **33.9%** in Nyanza to "
+            "**2.4%** in Gicumbi, a belt across the middle of the country that the "
+            "province figures flatten to a range of 9.5% to 14.6%. "
+            "**Catholicism is the largest answer in 27 of the 30 districts**, and where it "
+            "is strongest is the White Fathers' mission field of a century ago: **65.0%** "
+            "in Muhanga, 62.5% in Rulindo, 60.8% in Gakenke, against **21.1%** in Karongi "
+            "on Lake Kivu. Protestant Rwanda is close to the mirror image of that, highest "
+            "in Nyamagabe at 27.7% and lowest in Rulindo at 4.8%, which is 62.5% Catholic. "
+            "**Islam is 2.0% of the country and most of it is in one district.** "
+            "Nyarugenge, which contains Nyamirambo, is **11.3%** Muslim; the next highest "
+            "is Kicukiro at 4.0%, and Nyamasheke is 0.2%. "
+            "**Traditional religion is recorded as 2,112 people, 0.02%, and that is a "
+            "floor rather than a count.** The box is exclusive of the Christian ones, and "
+            "*kubandwa*, the Ryangombe possession cult, has for a century been something "
+            "people do alongside church membership rather than instead of it. The cell is "
+            "largest in Kigali, at 0.03% in Gasabo and Kicukiro, which is one more reason "
+            "not to read it as a measure of practice."),
+        how="census, 2022",
+        grain="districts, 442,000 people on average",
+        gap_share=0.001343,
+        gap="the 17,785 people, 0.13% of the country, who did not state a religion",
+        counts=_rw_counts,
+        units=None,
+        unit_key=None,
+        place=HERE / "data" / "geo" / "rw" / "rw_hexes.gpkg",
+        place_unit=lambda g: g["unit"].astype(str),
+        place_weight=_rw_place_weight,
+        note="THE QUEUE ROW PRICED THIS COUNTRY AT FIVE PROVINCES AND IT IS THIRTY "
+             "DISTRICTS. sources.md §11p read the RPHC-5 thematic report on social and "
+             "cultural characteristics, which is where religion sits in the thematic "
+             "series and which works at province. NISR's thirty DISTRICT PROFILES, "
+             "released May 2025 on /district-statistics/<province> and outside that "
+             "series, each carry the same eleven categories as Table 2.2. 441,546 people "
+             "per unit instead of 2.65M. This is Botswana's shape exactly (§9bu): the "
+             "national report stops at the nation and the per-district booklet series, "
+             "outside the report set the sweep tested, carries the fine geography. "
+             "THE JOIN IS PROVED TO THE PERSON AND NOT ASSERTED. The polygons are NISR's "
+             "own `Population_2002_2022` ArcGIS Online layer, which carries the census "
+             "count on each of its 416 SECTOR polygons; dissolved to district, all 30 "
+             "populations equal the booklets' own exactly, on 30 distinct values, so no "
+             "other pairing of these names to these polygons reproduces them. The layer's "
+             "`province` field is checked against the province each booklet prints before "
+             "the counts are looked at. "
+             "THE PLACEMENT GRID IS RE-LEVELLED ONTO THOSE SECTORS, which is unusual here "
+             "and is possible because Rwanda counted finer than it published religion: "
+             "Kontur's hexes are scaled per sector so each sector sums to its census "
+             "count, so everything coarser than ~15 km2 comes from the census and only the "
+             "shape inside a sector is modelled. The Kontur-versus-census check is run on "
+             "the RAW ratios before that scaling, because afterwards every ratio is 1.000 "
+             "by construction; r = 0.9113 on 416 sectors against a best of 0.1507 over "
+             "2,000 random pairings. "
+             "THE OUTSIDE WITNESS IS THE UNSD DEMOGRAPHIC YEARBOOK. Table 28's eleven "
+             "Rwanda 2022 figures are NISR's return to the UN, a separate publication from "
+             "these booklets, and all eleven reproduce to the person from the thirty "
+             "district tables. It also shows what the booklets add: the UN prints "
+             "`Pentecostal` where NISR prints `ADEPR`. "
+             "TWO PARSE TRAPS, BOTH SILENT. Table 2.1 (nationality) shares the page in "
+             "several booklets and one of ITS column headers is the word `Rwanda`, so a "
+             "reader anchoring on that lands in the wrong table. And Gakenke prints the "
+             "URBAN cell of `Traditional/Animist` BLANK rather than as a zero, so a plain "
+             "line read gives that district 0.01 traditionalists and shifts its "
+             "percentages one column left, on a row of 51 people that nothing would query. "
+             "The columns are cut on position off the `Catholic` row instead. "
+             "NYABIHU IS THE ONE FILE A PATTERN-GUESSING FETCH MISSES: the other 29 are "
+             "/sites/default/files/2025-05/<District>.pdf and it is at "
+             "/2025-10/Nyabihu_RPHC2022.pdf. The /2025-06/ files on the same pages are the "
+             "RPHC-4 (2012) profiles and must not be read for this.",
+    ),
+    "tl": dict(
+        name="Timor-Leste",
+        source="Population and Housing Census 2022, the thirteen municipal em Números 2022 "
+               "volumes and main report table 4.07 (INETL)",
+        basis="self-identification, population aged 3 and over in private households",
+        note_public=(
+            "**Timor-Leste is 97.5% Catholic, the highest Catholic share of any country on "
+            "this map**, ahead of Paraguay at 90.5% and Poland at 90.1%. Twelve of the "
+            "fourteen municipalities are above 96% and Covalima reaches **99.8%**, so "
+            "almost the whole country is one colour and what is worth looking at is the "
+            "one place it is not. "
+            "**That place is Atauro.** The island north of Dili was a posto of the capital "
+            "until 2022 and is now a municipality of its own, with 9,622 people in the "
+            "census's religion universe. It is **55.4%** Protestant against **44.5%** "
+            "Catholic, and it is the only unit in the country where Catholicism is not the "
+            "answer of at least nine people in ten. Everywhere else the Protestants are "
+            "thin and scattered: Aileu is second at **7.9%** and nothing else reaches 4%. "
+            "**Atauro's numbers are the only ones here that nobody published.** The census "
+            "asked about religion and printed the answer for the nation alone, so what "
+            "carries the municipalities is a separate series, one `em Números` volume "
+            "each, written by the municipal statistics services and issued three years "
+            "after the count. Thirteen volumes exist and Atauro, the fourteenth, has "
+            "none, so its row is the national table minus the other thirteen. That is "
+            "subtraction between two published tables rather than a model, and the three "
+            "categories the island plainly has none of come out at exactly zero without "
+            "being told to, but it is drawn desaturated because no source states it. "
+            "**Below Christianity everything is very small, and two of the cells should be "
+            "read carefully.** Islam is 3,202 people, 0.26%, with **1,964** of them in "
+            "Dili and, less obviously, **363** at the far eastern end of the island in "
+            "Lautém. Indigenous religion is 240 people, 0.019%, and the census's own report "
+            "notes that the count was just over 900 in 2015 and that this kind of religion "
+            "looks close to disappearing. Read that as a floor rather than a measurement of "
+            "practice: the box counts people who gave the ancestral tradition instead of a "
+            "church, not the far larger number who keep both. "
+            "**No religion was a new box in 2022** and 797 people ticked it, 0.064%. Only "
+            "the Philippines at 0.040%, Kiribati at 0.046% and Myanmar at 0.060% are lower "
+            "among the countries here that record any such answer at all; the many that "
+            "read as zero mostly do so because their source never asked. "
+            "**Both of the holes in this map were tested for lean and neither moves "
+            "anything.** The 239 people who gave no answer sit a little more in Dili than "
+            "elsewhere, correlating **+0.78** with the Hindu share across the fourteen "
+            "municipalities, which is a statement about the capital rather than about "
+            "religion. The much larger hole, the people the question never reached, runs "
+            "from **6.5%** of Dili to **7.7%** of Aileu, about a point of spread in a "
+            "figure that is mostly the under-three population."),
+        how="census, 2022",
+        grain="municipalities, 89,000 people on average",
+        fill="from the national census table, after the other thirteen municipalities",
+        gap="children under 3 and people not in private households, who were never asked, "
+            "and the 239 who gave no answer; 7.0% of the country between them",
+        gap_share=0.06951,
+        counts=_tl_counts,
+        units=None,
+        unit_key=None,
+        place=HERE / "data" / "geo" / "tl" / "tl_hexes.gpkg",
+        place_unit=lambda g: g["unit"].astype(str),
+        place_weight=_tl_place_weight,
+        note="THE MAIN REPORT PUBLISHES RELIGION NATIONALLY AND NOWHERE ELSE, AND THE "
+             "GEOGRAPHY IS IN A DIFFERENT PUBLICATION SERIES ENTIRELY. Table 4.07 of the "
+             "2022 census main report is religion by age and sex for the whole country; "
+             "none of the 24 basic tables and none of the eight thematic reports crosses it "
+             "with geography. What does is `<Municipality> em Números`, an annual volume "
+             "written by each of the thirteen Serviços de Estatística Municipais, whose "
+             "2022 edition prints 2010, 2015 and 2022 side by side under Proteção Social. "
+             "This is Botswana's and Rwanda's shape again (§9bu, §9cd): the national report "
+             "stops at the nation and a per-unit booklet series outside it carries the "
+             "fine geography. "
+             "THE VOLUMES ARE TYPED BY HAND AND FOUR CELLS OF THEIR 2015 COLUMN ARE WRONG. "
+             "Every volume reprints 2015, which was published centrally as table 11 of "
+             "Census 2015 Volume 2, so sources/tl.py checks all 252 cells of it, male, "
+             "female and total. Ainaro prints the municipality's whole population as its "
+             "Catholic total and Manatuto's `Seluk` total is four people over, in both "
+             "cases with the male and female figures beside them exactly right; Oecusse "
+             "mistypes a female cell and carries the error into its total, which no "
+             "internal check can see. So a 2022 row whose sexes do not sum to its own total "
+             "is refused, and the 2022 column is reconciled against table 4.07 category by "
+             "category rather than trusted. "
+             "ATAURO IS THE FOURTEENTH MUNICIPALITY AND IT FALLS OUT OF THAT "
+             "RECONCILIATION. It became a municipality in time for the 2022 census, which "
+             "lists it separately at 10,295 people, and no volume was ever written for it. "
+             "The thirteen sum to 1,239,083 against table 4.07's 1,248,705; the 9,622 left "
+             "over is 0.935 of Atauro's census population where the country's religion "
+             "universe is 0.931 of its own, and 5,332 of them are Protestant, which is the "
+             "island's known signature. Islam, Buddhism and indigenous religion all come "
+             "out at exactly zero. It is drawn `derived`. "
+             "COD-AB IS ONE MUNICIPALITY BEHIND AND THE FIX IS A TIER DOWN, NOT ANOTHER "
+             "FILE. The OCHA bundle is valid_on 2020-09-11 with 13 ADM1 polygons, but "
+             "Atauro is already in it as ADM2 TL0604 at 139.91 km2 against the census's "
+             "140.55, so sources/tl_geo.py subtracts that polygon from Dili's ADM1 and adds "
+             "it as the fourteenth unit. All fourteen come within 1.8% of the census's own "
+             "area column. Nothing joins on a name anywhere in this country: every unit is "
+             "a p-code on both sides. "
+             "THE UNSD DEMOGRAPHIC YEARBOOK IS THE OUTSIDE WITNESS AND IT AGREES TO THE "
+             "PERSON. Table 28 carries Timor-Leste for 2004, 2015 and 2022; all seven of "
+             "its 2015 figures reproduce from Volume 2 table 11's thirteen municipalities "
+             "and all five of its named 2022 figures from main report table 4.07, and both "
+             "are asserted in sources/tl.py. Ask it BY NAME: oracle.py matches UNSD's own "
+             "country string, so `oracle.py tl` comes back as a miss that reads like an "
+             "absence (the fm review, 2026-09-08). Its 2022 row is NOT usable as a source, "
+             "though: it names five categories and puts everything else in one `Other` cell "
+             "of 95,328 against a total of 1,341,737, which is the resident population "
+             "rather than the religion universe, so that residual is mostly the "
+             "under-threes and drawing it would put 7.1% of the country into an "
+             "unclassified cell that does not exist. "
+             "FINER RELIGION DOES NOT EXIST, and it was looked for in four places: the "
+             "2015 census Volume 4 suco tables (twelve indicators, no religion), the 452 "
+             "Sensu Fó Fila Fali suco reports launched in July 2024 (never put online), "
+             "the REDATAM population dashboard INETL links from its own census page "
+             "(20.6.104.113, which answers on no port at all), and the 2021, 2023 and 2024 "
+             "editions of all thirteen volumes. Only Viqueque ever prints religion below "
+             "the municipality, and only for 2010 and 2015; Covalima's `Posto "
+             "Administrativo` table on the same page as its religion table is Bolsa da Mãe "
+             "recipients, and the two are told apart on column count.",
+    ),
+    "al": dict(
+        name="Albania",
+        source="Population and Housing Census 2023, table 1.13 (INSTAT)",
+        basis="self-identification, whole enumerated population",
+        note_public=(
+            "**No other census on this map counts Bektashis apart from other Muslims, and "
+            "the geography that comes out of it is the reason Albania is worth having.** "
+            "The Bektashi order is a Sufi tariqa whose "
+            "world headquarters moved to Tirana after Turkey closed the tekkes in "
+            "1925, and INSTAT gives it a row of its own: **115,644** people, 4.81% of the "
+            "country and 9.5% of its Muslims. Those people are not spread evenly. Across "
+            "the twelve qarqe the Bektashi share of the population runs from 0.20% in "
+            "Shkoder up to **21.04%** in Gjirokaster, where 59.4% of all Muslims are "
+            "Bektashi, and the gradient is clean: the south and the Tomorr highlands "
+            "against the Catholic and Sunni north. "
+            "**The other nine categories are a real form too.** Believers of no "
+            "denomination get a box, atheists get a separate one, and the two are not "
+            "merged: **332,155** people answered that they believe and belong to no "
+            "denomination, which is 13.8% of Albania and its second largest answer of any "
+            "kind, while 85,311 called themselves atheists. That second figure is small "
+            "for the state that declared itself the world's first officially atheist "
+            "country in 1967 and closed every mosque, church and tekke in it, and both "
+            "categories have a geography of their own: no denomination runs from 1.87% of "
+            "Lezhe to 21.73% of Vlore, atheism from 0.35% of Shkoder to 8.30% of Vlore. "
+            "**The map is twelve prefectures because that is where the religion table "
+            "stops, and it stops there on purpose.** INSTAT publishes 2023 census tables "
+            "at four levels: the nation, the 12 prefectures, the 61 municipalities and the "
+            "373 administrative units. Religion appears at the first two and at neither of "
+            "the others, where the tables are age, education, disability, households and "
+            "dwellings. The office does map four of the ten answers, Muslim, Bektashi, "
+            "Catholic and Orthodox, right down to the 373 administrative units, but only "
+            "for the 2011 census; that is not drawn here, because those four are three "
+            "quarters of a census and would leave the rest of the country blank. "
+            "**One in six people is not on this map, and where they are missing from is "
+            "not random.** 244,331 preferred not to answer and INSTAT records another "
+            "134,451 as not available, together 15.8% of the census. Berat is the extreme: "
+            "35.4% of the prefecture gave no usable answer, against 4.5% in Lezhe. So the "
+            "eight categories drawn cover 95.5% of Lezhe and 64.6% of Berat, and a "
+            "comparison between two prefectures is partly a comparison of how many people "
+            "in each of them answered. Which way that leans is measurable: across the "
+            "twelve prefectures the missing share tracks the no-denomination share of "
+            "those who did answer (r = +0.68, permutation p = 0.009) and runs against the "
+            "Catholic one, so every figure drawn here is slightly more Catholic and "
+            "slightly less unchurched than Albania is, and the correction is not made."),
+        how="census, 2023, full enumeration",
+        grain="qarqe (prefectures), 200,000 people on average",
+        gap="378,782 people, 15.8% of the census, who preferred not to answer or whose "
+            "answer INSTAT records as not available",
+        gap_share=0.1577,
+        counts=_al_counts,
+        units=None,
+        unit_key=None,
+        place=HERE / "data" / "geo" / "al" / "al_hexes.gpkg",
+        place_unit=lambda g: g["unit"].astype(str),
+        place_weight=_al_place_weight,
+        note="THE HOST WAS NEVER DOWN AND THE DATABASE IS ON PORT 8083. queue.md closed "
+             "Albania on three consecutive days on `instat.gov.al did not resolve`; with an "
+             "ordinary browser User-Agent it answers 200, and its own census microsite "
+             "links databaza.instat.gov.al:8083/pxweb/en/DST/, a live PxWeb 21.1 with a "
+             "Census 2023 branch. TWO MORE THINGS A SWEEP MISSES THERE: the ENGLISH "
+             "database lists no tables at all under Census 2023 while the Albanian one "
+             "lists 105, and the PxWeb search index does not cover the 2023 branch, so "
+             "searching it for `religion` or `fetare` returns 2011 and nothing else "
+             "(sources/al.md §1). "
+             "THE JOIN IS PROVED TO THE PERSON AND TWICE. INSTAT's own ArcGIS Online "
+             "organisation carries the 12 prefecture polygons with the 2023 census "
+             "population on them, and all twelve match the printed Total of that qark's "
+             "worksheet exactly and are distinct from one another; then its four 2023 "
+             "religion-share layers reproduce count/total from al.csv to 7e-15 percentage "
+             "points on all 48 pairs (sources/al_geo.py). "
+             "The dots are spread across 22,289 Kontur 400 m hexagons weighted by hex "
+             "population (sources/al_grid.py); Tirana qark is 22 times denser than "
+             "Gjirokaster and an equal-area spread would empty the city. "
+             "FINER RELIGION EXISTS FOR 2011 ONLY, AND ONLY FOR FOUR CATEGORIES: "
+             "administrativeunit_p_{muslim,bekta,cathol,orthod}_2011_view, 373 units each, "
+             "in the same ArcGIS organisation. sources/al.md §3 says why it is not drawn "
+             "and exactly what it would cost.",
+    ),
+    "cv": dict(
+        name="Cabo Verde",
+        source="V Recenseamento Geral da População e Habitação 2021, Cabo Verde em Números "
+               "(INE)",
+        basis="self-identification, population aged 15 and over",
+        note_public=(
+            "**Cabo Verde's census names nine Christian churches one by one, and asks "
+            "about a tenth thing that is barely a religion anywhere else.** Racionalismo "
+            "Cristão is **6,129** people, **1.74%** "
+            "of everyone the census asked, and the fourth largest named religion in the "
+            "country after the Catholics, the Adventists and the Nazarenes. Christian "
+            "Rationalism is a spiritualist doctrine founded in Santos, in Brazil, in 1910; "
+            "it reached the islands the next year, carried back by a Cape Verdean who had "
+            "been a medium in Rio. **3,988** of the 6,129 are in São Vicente alone, "
+            "**6.86%** of the adults there, and after that come Tarrafal de São Nicolau at "
+            "4.41%, Boa Vista at 3.54%, Paul at 3.17% and Sal at 2.38%. In São Salvador do "
+            "Mundo and Santa Catarina do Fogo it draws nobody at all. That is the northern "
+            "and eastern islands and not Santiago, which is the island list the movement's "
+            "own centres give for their own history. "
+            "**Catholicism is 72.49% of the country and the concelhos run from 97.53% to "
+            "42.98%.** The top of that range is rural interior Santiago, São Salvador do "
+            "Mundo and São Lourenço dos Órgãos, where no religion is 0.77% and 1.20%. The "
+            "bottom is two very different places. São Vicente, the northern port island, "
+            "is **46.36%** Catholic and **38.20%** no religion, by far the most secular "
+            "concelho in Cabo Verde. Santa Catarina do Fogo, **3,204** adults inside the "
+            "caldera of the volcano, is **42.98%** Catholic because the missions got there "
+            "instead: 13.42% Adventist, 11.52% New Apostolic and 7.65% Latter-day Saint, "
+            "each of them the highest figure in the country. "
+            "**The Church of the Nazarene is the Protestant church here, and it is on the "
+            "emigration islands.** It came from New England in 1901 with returning "
+            "sailors, and it is 8.10% of Brava and 3.90% of Mosteiros against 0.07% in "
+            "São Lourenço dos Órgãos. INE gives it one box labelled *Igreja do Nazareno / "
+            "Protestante*, with no separate Protestant option anywhere on the form. "
+            "**Islam is 1.31%, and where it is says what it is.** Boa Vista is 6.63% and "
+            "Sal is 4.37%, the two islands the resorts were built on, then Praia at 1.88%; "
+            "six concelhos are under a fifth of one per cent. This is West African "
+            "labour migration of the last twenty years rather than a Cape Verdean "
+            "community. At the other end of the table, **23** people gave their religion "
+            "as Jewish, across seven concelhos and never more than seven in one, which is "
+            "the smallest answer the Cape Verdean census printed. "
+            "**Everyone here is aged 15 or over.** The religion question was not put to "
+            "children, so the map draws the **352,494** adults the census asked and the "
+            "not drawn row carries the rest. That cut is not spread evenly: the concelhos "
+            "with the most children are the rural ones on Santiago and Fogo and the one "
+            "with the fewest is São Vicente, so an adults-only map tilts a little towards "
+            "São Vicente's no-religion and Racionalismo Cristão shares and away from rural "
+            "Santiago's Catholics and Fogo's Adventists. Nothing here corrects for that."),
+        how="census, 2021, ages 15 and over",
+        grain="concelhos, 16,000 people on average",
+        gap=("28.5% of Cabo Verde: the 28.2% who are under 15 and were never asked the "
+             "religion question, and the 0.3% who were asked and did not answer"),
+        gap_share=0.28510,
+        counts=_cv_counts,
+        units=None,
+        unit_key=None,
+        place=HERE / "data" / "geo" / "cv" / "cv_hexes.gpkg",
+        place_unit=lambda g: g["unit"].astype(str),
+        place_weight=_cv_place_weight,
+        note="THE QUEUE PRICED THIS COUNTRY AS NATIONAL-ONLY AND IT IS 22 UNITS. §11w had "
+             "Cabo Verde at 'open office, not chased past the catch-all', off the UNSD "
+             "oracle, whose rows are national and urban/rural. INE publishes one workbook "
+             "per municipality, CABO VERDE EM NÚMEROS, twenty-two of them plus a national "
+             "one, filed under the census area's `Quadros por Concelho 2021` rather than "
+             "under its publications, and every one carries the religion table. "
+             "ine.cv IS AN ANGULAR APP AND ITS PAGES CARRY NO LINKS; the workbooks are "
+             "reached through the API its own bundle names, bdmi.ine.cv/site_deploy_api "
+             "([[reference_spa_hidden_apis]]). sources/cv.md §1 has the four calls. "
+             "THE RECONCILIATION IS THE TWENTY-TWO AGAINST THE TWENTY-THIRD: summing the "
+             "municipal workbooks reproduces all fifteen of the national workbook's "
+             "figures and its 352,494 total to the person, and the UNSD Demographic "
+             "Yearbook, an independent transcription INE forwarded to New York, "
+             "reproduces them again. The oracle's sixteenth category, `Unknown`, is "
+             "138,739 people and is exactly the under-15 population; it is an age cut and "
+             "not a non-response. "
+             "THREE PAIRS OF CONCELHOS SHARE A NAME AND THE SHEET TITLES USE THE SHORT "
+             "FORM. Ribeira Grande is on Santo Antão and Ribeira Grande de Santiago is "
+             "not; Santa Catarina is on Santiago and Santa Catarina do Fogo is not; "
+             "Tarrafal is on Santiago and Tarrafal de São Nicolau is not. A name join "
+             "would pair each of the three with a coin flip and every total would still "
+             "reconcile, so sources/cv_geo.py asserts the pairing three ways and tests "
+             "each swap explicitly ([[reference_name_join_wrong_neighbour]]). "
+             "THE DOTS ARE SPREAD ACROSS 2,156 KONTUR 400 M HEXAGONS weighted by hex "
+             "population (sources/cv_grid.py), which also carries the magnitude check on "
+             "that join: r = 0.96 over 22 units against a best of 0.66 in 2,000 random "
+             "pairings. 123 hexes fall just seaward of the shoreline and are snapped to "
+             "the nearest concelho rather than dropped, because on these islands the loss "
+             "is seaward and dropping them walks the dots uphill onto empty volcano "
+             "([[reference_archipelago_grid_snap]]). "
+             "FINER RELIGION DOES NOT EXIST. INE's 2021 census area publishes the 22 "
+             "concelho workbooks, national general and thematic volumes, and nine "
+             "`Agregados e População por Zonas e Lugares` island workbooks that reach the "
+             "locality with households and population and no religion. The 32 freguesias "
+             "have COD-AB boundaries and no religion table.",
+    ),
+    "st": dict(
+        name="São Tomé and Príncipe",
+        source="IV Recenseamento Geral da População e da Habitação 2012, Resultados "
+               "Distritais (INE)",
+        basis="self-identification, whole resident population",
+        note_public=(
+            "**São Tomé's census asks which of nine churches you belong to, and offers "
+            "nothing else.** The 2012 form names the Roman Catholics, the Adventists, the "
+            "Assembly of God, the New Apostolic Church, Maná, the Universal Church of the "
+            "Kingdom of God, the Jehovah's Witnesses, Deus é Amor and the World Messianic "
+            "Church, and then one box for anything else. There is no Protestant option, no "
+            "Islam and no traditional religion, which is why **5.03%** of the country ends "
+            "up in that last box, more people than any single church except the Catholics. "
+            "Catholicism is **55.71%**, and the seven districts run from **68.31%** in "
+            "Cantagalo down to **38.22%** in Caué. "
+            "**No religion is 21.22%, and its two ends are an island apart.** Lembá, on the "
+            "north-western coast of São Tomé, is **33.61%**, then Mé-Zóchi at 27.66% and "
+            "Caué at 27.19%. The Região Autónoma do Príncipe, the smaller island about 150 "
+            "km to the north-east, is **4.60%**, a seventh of Lembá's figure inside a "
+            "country of 179,000 people. Príncipe is the most Adventist district too, 9.63% "
+            "against a national 4.05%. When the 2024 census offered *sem religião* and "
+            "*ateu* as separate boxes for the first time, thirteen of every fourteen people "
+            "who took one took the absence rather than the label. "
+            "**Caué is 6,031 people and it is where the newer churches have taken the most "
+            "ground.** It is the southern district, the old plantation country below the "
+            "forest, and the emptiest in the country. It is also the least Catholic, and "
+            "the reason is not that it is secular: the Assembly of God is **10.08%** there "
+            "against 3.35% nationally, the New Apostolic Church **8.41%** against 2.90%, "
+            "and the Universal Church of the Kingdom of God **5.50%** against 2.00%. All "
+            "three are at their highest in Caué. "
+            "**Maná is 4,191 people, 2.34%, and no other census on this map counts it.** "
+            "The Igreja Maná was founded in Lisbon in 1984 by Jorge Tadeu and runs its own "
+            "television and radio in São Tomé. It is at its strongest in the capital, "
+            "3.01% of Água-Grande and 2.79% of Cantagalo against "
+            "0.62% in Lembá; the New Apostolic Church is its mirror image, 0.89% in the "
+            "capital and its best figures in Caué and Príncipe. And **688** people, 0.38%, "
+            "gave the Igreja Messiânica Mundial, the Japanese religion founded at Atami in "
+            "1935 and carried to the Portuguese-speaking world from Brazil. That is a "
+            "larger share of São Tomé than it is of Brazil, where it is 0.05%. "
+            "**1,756 people, 0.98%, did not declare a religion or did not know**, and are "
+            "not drawn. They are commonest in Caué at 2.01% and rarest in Príncipe at "
+            "0.60%, but leaving them out moves no share on this map by more than six tenths "
+            "of a point. The date is the larger caveat. São Tomé counted itself again in "
+            "2024 and published religion by district for that year as well, but **26.9%** "
+            "of the 2024 answers are recorded as undeclared, against 0.98% in 2012, so this "
+            "map draws the older census."),
+        how="census, 2012, all ages",
+        grain="districts, 26,000 people on average",
+        gap=("1.0% of São Tomé and Príncipe: the 0.7% who did not know their religion and "
+             "the 0.3% who did not declare one"),
+        gap_share=0.00982,
+        counts=_st_counts,
+        units=None,
+        unit_key=None,
+        place=HERE / "data" / "geo" / "st" / "st_hexes.gpkg",
+        place_unit=lambda g: g["unit"].astype(str),
+        place_weight=_st_place_weight,
+        note="THE OFFICE PUBLISHES A WHOLE CENSUS REPORT PER DISTRICT AND EVERY ONE CARRIES "
+             "THE RELIGION TABLE. §11w priced São Tomé off the UNSD oracle, whose rows are "
+             "national and urban/rural, and closed the row as 'not chased'. www.ine.st has "
+             "a folder `Dados Distritais e Nacional Recenseamento 2012` holding eight PDFs, "
+             "one per district plus a national one, each reprinting Quadros 1-26 for that "
+             "district alone. Same shape as Cabo Verde's municipal workbooks a day earlier: "
+             "ask whether the office publishes a volume per unit of the tier below. "
+             "THE ROUTE IS AN OPEN AUTOINDEX. ine.st is Joomla with Phoca Download, but "
+             "LiteSpeed serves /phocadownload/userupload/Documentos/ with directory listing "
+             "left on, so the whole 223-file tree walks recursively. No plugin id sweep and "
+             "no REST base needed; /phocadownload/ itself is NOT an index and the sweep has "
+             "to start one level down. "
+             "THE PARSE CLOSES FOUR WAYS. Each district's thirteen categories sum to its "
+             "own printed total; the seven districts sum to the national report in every "
+             "category; INE's 2016 locality publication, typeset separately and folded to "
+             "seven columns, reproduces all of it (its `Outras religiões` is exactly the "
+             "five categories it swallows and its `Não tem` exactly the three); and the "
+             "UNSD Demographic Yearbook, INE's own return to New York, reproduces all "
+             "thirteen national figures to the person. "
+             "2024 EXISTS AND IS NOT DRAWN. The V RGPH of November 2024 was published in "
+             "July 2025 and tabulates religion by district in sixteen categories, adding "
+             "Islam and a separate Ateu row. 56,200 of its 209,161 people, 26.9%, are `ND`, "
+             "against 1,756 non-responses in 2012, and unlike Cabo Verde the residual "
+             "cannot be shown to be an age cut: it is 1.026 to 1.037 times each district's "
+             "under-10 population, close but never exact, and the report never says who was "
+             "asked. Its labels have also been round-tripped through machine translation, "
+             "so `Messiânica Mundial` prints as `Copa do Mundo`, `Quadro` as `Pintura` and "
+             "`idade de união` as `idade sindical`. It is used as a witness and not as a "
+             "source. See sources/st.md §4. "
+             "THE JOIN HAS NO TWINS, which is worth saying because the two before it did. "
+             "Seven distinct district names, six folding to COD-AB's spelling and the "
+             "seventh being COD's English gloss for the autonomous region. sources/st_geo.py "
+             "confirms it on the areas the 2024 census prints per district and on the growth "
+             "between the two censuses; the area witness pins five of the seven outright and "
+             "CANNOT separate Cantagalo from Mé-Zóchi, which the file asserts rather than "
+             "glosses. COD-AB calls this tier ADM1 and COD-PS calls it ADM2 with a different "
+             "pcode scheme, so the two COD files do not join to each other at all. "
+             "THE DOTS ARE SPREAD ACROSS 546 KONTUR 400 M HEXAGONS weighted by hex "
+             "population (sources/st_grid.py), r = 0.99 over 7 units. 49 hexes carrying "
+             "7.4% of the grid's people fall just outside the shoreline and are snapped to "
+             "the nearest district rather than dropped, which matters more here than "
+             "anywhere: every district but Mé-Zóchi is coastal and dropping them walks the "
+             "dots uphill into the Obô forest ([[reference_archipelago_grid_snap]]). "
+             "THE LOCALITY TABLE IS FINER AND SHALLOWER. INE's 2016 `Publicação dos "
+             "Resultados sobre Localidades` has religion for every locality in the country, "
+             "in seven columns rather than thirteen, and localities average a few hundred "
+             "people against a 1,000-person dot. Drawing on it would cost six of the eleven "
+             "nodes and buy nothing visible, so it is the check and not the source.",
+    ),
+    "ht": dict(
+        name="Haiti",
+        source="Enquête sur les Conditions de Vie des Ménages Après le Séisme ECVMAS 2012 "
+               "(Institut Haïtien de Statistique et d'Informatique), against COD-PS 2024 "
+               "department populations",
+        basis="self-identification, own religion, people aged ten and over",
+        note_public=(
+            "**Haiti's census asks about religion and has never published the answer below "
+            "the national line.** IHSI's 2003 tables give twelve religions for the whole "
+            "country and stop, so this map comes from the office's other instrument: "
+            "ECVMAS 2012 asked **17,977** Haitians aged ten and over what their religion "
+            "was, across all ten departments, and IHSI published the microdata openly. The "
+            "dots are drawn desaturated because these are survey respondents rather than a "
+            "count, and the population underneath them is a projection, since Haiti has not "
+            "counted anybody since January 2003. "
+            "**Haiti is not Catholic the way the other half of the island is.** Catholicism "
+            "is **47.6%** here against 52.7% in the Dominican Republic, and the churches "
+            "that are not Catholic come to **43.0%** against 25.4% there. Catholics are "
+            "under half in four of the ten departments, and those four hold **60.1%** of "
+            "the population, so most Haitians live somewhere Catholicism is the largest "
+            "answer rather than the majority one. In Artibonite, Centre and Ouest the "
+            "Protestant churches together outnumber it outright. "
+            "**That Protestant half is not one thing, and its pieces have separate maps.** "
+            "The Baptists are the largest of them at **17.5%** and they are a northern "
+            "church: **25.0% of Nord** and 24.3% of Nord-Ouest against **7.8% of "
+            "Grand'Anse**. The Adventists are strongest in the same corner, **7.2% of "
+            "Nord-Ouest** against 0.7% of Grand'Anse. Pentecostals run the other way and "
+            "are a capital answer, **16.2% of Ouest** against 3.7% of Nord-Ouest. The "
+            "Methodists are 1.3% of the country and 4.5% of Artibonite. A further **9.2%** "
+            "answered `other Protestant`, which the survey does not break down; IHSI's 2001 "
+            "round, which did offer a Church of God box, found 9.4% of Haitians in it, so "
+            "most of this is likely to be that church. "
+            "**The Vodou figure is a floor, and it is the number on this map to be most "
+            "careful with.** ECVMAS finds **1.5%**, the 2003 census found 2.1% and IHSI's "
+            "2001 survey found 2.1%. All three ask for one religion, and Vodou in Haiti is "
+            "overwhelmingly served alongside Catholicism rather than instead of it, so what "
+            "these numbers count is the people who named it first. That group is "
+            "concentrated in one department: Artibonite is **5.9%**, holding **105,171** of "
+            "the country's **178,476**, about five times the share of anywhere else. Both "
+            "IHSI surveys agree on Artibonite and on Nord-Est at the bottom and on nothing "
+            "in between, so read the two ends of the Vodou colour and not the ordering. "
+            "**One large answer is drawn flat.** **6.8%** of Haitians report no religion, "
+            "and this map puts that share in every department rather than where the survey "
+            "found it. Splitting ECVMAS's 500 neighbourhoods into two half-samples and "
+            "re-ranking the departments returns +0.56 against a bar of +0.65, and the 2001 "
+            "survey offered no no-religion box at all, so there is no second instrument to "
+            "check it against. Nobody is deleted; only the claim to know where they are is "
+            "withdrawn. The same is done with the Episcopalians, the Jehovah's Witnesses "
+            "and the small `other` cell. "
+            "**The level is 2012 and the population is 2024.** Both the 2010 earthquake and "
+            "the displacement out of Port-au-Prince since 2021 fall in that gap, and the "
+            "projection has moved a fair amount of Haiti with them: Ouest was 37.0% of the "
+            "country at the 2003 census and is 33.4% of the 2024 estimate. What this map "
+            "says is where each department stood in 2012, drawn on the number of people the "
+            "UN and IHSI think live there now."),
+        how="household survey, one round in 2012, people aged ten and over",
+        grain="departments, 1.19 million people on average",
+        gap="the six people who did not know or would not say, 0.03% of those asked",
+        gap_share=0.000334,
+        counts=_ht_counts,
+        units=None,
+        unit_key=None,
+        place=HERE / "data" / "geo" / "ht" / "ht_hexes.gpkg",
+        place_unit=lambda g: g["unit"].astype(str),
+        place_weight=_ht_place_weight,
+        note="THE QUEUE REACHED HAITI THROUGH LAPOP AND THE OFFICE HAS BETTER. §11ad "
+             "offered 7,252 AmericasBarometer respondents over ten departments, with "
+             "Anita's note that the 4.4% Vodou figure is a self-identification floor "
+             "wanting a second source. Asking what IHSI publishes instead turns up three "
+             "of its own instruments nobody here had opened: **ECVMAS 2012** (17,977 "
+             "respondents aged 10+, ten departments, twelve answers), **ECVH 2001** "
+             "(32,840 people, nine departments, published as a table in IHSI's own volume) "
+             "and the **4eme RGPH 2003** census (8,373,750 people, twelve categories, "
+             "national only). The build is ECVMAS and the other two are cross-checks. "
+             "THE HOST IS GONE AND THE FILE IS NOT. IHSI published the whole ECVMAS "
+             "database openly with no account at `www.ihsi.ht`; that domain now answers "
+             "301 and lands on an unrelated commercial page, and `rgph-haiti.ht`, the fifth "
+             "census's own site, answers 200 with a betting site. The office moved to "
+             "`ihsi.gouv.ht` and did not bring the microdata, so the zip comes from the "
+             "Wayback Machine and the 2003 census tables from the live host. "
+             "THE DEPARTMENT JOIN IS ZERO FOR TEN IF DONE ON THE CODE. ECVMAS numbers the "
+             "departments 1-10 in French alphabetical order and COD's pcodes run HT01-HT10 "
+             "in Haiti's traditional order; both are dense 1..10 sequences over the same "
+             "ten units, so the obvious pairing runs clean and mispairs every one of them "
+             "([[reference_name_join_wrong_neighbour]]). sources/ht_geo.py asserts the "
+             "count is still zero and joins on the French name, with one alias, Grand'Anse "
+             "for COD's Grande'Anse. The decode is pinned by the held-out population check "
+             "at r = +0.996 over ten, which no random pairing of 20,000 reaches. "
+             "THE SPLIT-HALF HAS ALMOST NO POWER ON TEN UNITS, so four of the seven placed "
+             "categories are OVERRIDE entries. The bar is +0.65 and `Catholique`, with a "
+             "24-point spread and a chi-square of 1e-117, lands within 0.003 of it. What "
+             "the overrides rest on is ECVH 2001 ranking the same departments with a "
+             "different questionnaire eleven years earlier: Catholic +0.85, Baptist +0.78, "
+             "Adventist +0.95, and the Pentecostal bloc +0.90 once the two cards' different "
+             "cuts are pooled. sources/ht.py prints all of it on every run. "
+             "THE UNIVERSE IS 10 AND OVER and the cost is measured rather than assumed, "
+             "because the 2003 census tabulated religion by age group: recomputed over the "
+             "10-and-overs no category moves a full point, the largest being `Aucune "
+             "religion` from 10.22% to 9.40%. "
+             "LAPOP IS NOT WIRED AS A CROSS-CHECK AND THE REASON IS WORTH KEEPING. §11ad's "
+             "Haiti row is `pais=22`, and its `prov` cannot be decoded from the merged "
+             "file: the official department numbering gives r = +0.23 against COD-PS and "
+             "puts 40.7% of Haiti in Centre. It is Honduras's problem in §11ad's own table. "
+             "Separately, `pais=41` is CANADA and has ten first-order units with prov codes "
+             "4101-4110, so an agent guessing that 41 is Haiti gets a clean-looking ten-unit "
+             "join to the wrong country; it only fails visibly because Canada's rows carry "
+             "no religion answer.",
+    ),
+
+    "lr": dict(
+        name="Liberia",
+        source="2022 Population and Housing Census (LISGIS), with the county pattern from "
+               "six pooled rounds of the Afrobarometer, 2008 to 2022",
+        basis="self-identification, whole census population",
+        note_public=(
+            "**Liberia's census asks about religion and publishes the answer only for the "
+            "country as a whole.** The 2022 census counted **5,250,187** people and printed "
+            "one religion table: five categories, national, split by sex and nothing else. "
+            "The same report gives residence, household size, education, literacy and "
+            "employment by county. The 2008 census did the same thing, and so did the "
+            "analytical monographs that followed it. So the county pattern on this map comes "
+            "from somewhere else, six rounds of the Afrobarometer pooled, **7,163** people "
+            "interviewed between December 2008 and September 2022. What the census fixes is "
+            "the two margins, each county's population and each religion's national total, "
+            "both to the person; the survey decides only how a county's people divide "
+            "between the five columns. The dots are drawn desaturated because nobody counted "
+            "that. "
+            "**Islam is 11.98% of Liberia and nearly all of it is in the north-west.** Grand "
+            "Cape Mount is **78.4%** Muslim and Bomi **56.5%**, with Gbarpolu at 24.1% and "
+            "Lofa at 23.3% behind them, against **1.5%** of Nimba and 2.3% of Grand Bassa. "
+            "That is the Vai and Mandingo country along the Sierra Leone and Guinea borders, "
+            "one contiguous block rather than a scatter. The largest number of Muslims is in "
+            "Montserrado all the same, **223,400** of them, because Montserrado holds more "
+            "than a third of the country. "
+            "**There is one published Liberian statement about religion by county, and it "
+            "says the same thing.** LISGIS's 2011 Census Atlas mapped the urban population "
+            "of the 2008 census and reported that Cape Mount was the only county with a "
+            "Muslim majority and the other fourteen were Christian-majority. Pooled over "
+            "rounds running a decade later, the survey makes exactly one county "
+            "Muslim-majority and it is that one. That is the whole of the outside evidence "
+            "for this map's geography. "
+            "**River Cess is drawn with no Muslims at all**, because none of the 142 people "
+            "interviewed there across six rounds was one. On a sample that size the true "
+            "share could be anything up to about 2%, so read it as a county where the survey "
+            "found none rather than as a county with none. "
+            "**Christianity is a single colour here because no Liberian census has ever "
+            "split it.** The 2022 questionnaire defines its Christian box as all Christian "
+            "denomination churches and stops there, and so did 2008. The Afrobarometer does "
+            "name denominations, and Liberians fill twenty of them, but the share who name "
+            "one rather than answering Christian runs from **23.1%** to **72.0%** between "
+            "rounds. That is a fact about how hard each round's fieldwork probed and not "
+            "about Liberia, so the split is not drawn. "
+            "**Traditional religion is 0.48% here and is a floor rather than a count.** The "
+            "census offers it as an alternative to Christianity and Islam, so it cannot see "
+            "anyone who is both, and the Poro and Sande societies of the interior are not an "
+            "alternative to church membership. The 2008 census counted **20,134** "
+            "traditionalists in a smaller Liberia, 0.58%, so the two enumerations agree with "
+            "each other; what neither of them is measuring is practice. "
+            "**Irreligion is drawn at the national rate, near 2.56% everywhere.** The survey "
+            "cannot show that it has a geography: ranked across the fifteen counties, the "
+            "earlier rounds and the later rounds agree at **+0.11** against a bar of +0.52, "
+            "so the map does not give it one. The little spread that remains, **2.0%** in "
+            "Grand Cape Mount against 2.7% in Nimba, is a residue of fitting the table to the "
+            "census totals rather than anything the survey found."),
+        how="census totals, 2022, given a county pattern by a pooled survey",
+        grain="counties, 350,000 people on average",
+        counts=_lr_counts,
+        units=None,
+        unit_key=None,
+        place=HERE / "data" / "geo" / "lr" / "lr_hexes.gpkg",
+        place_unit=lambda g: g["unit"].astype(str),
+        place_weight=_lr_place_weight,
+        note="LISGIS HAS NEVER PUBLISHED RELIGION BELOW THE NATIONAL LINE. The 2022 census "
+             "prints it as Table A13, five categories, national, split by sex; the 2008 "
+             "census prints it nationally in the Final Report and nationally plus "
+             "urban/rural in the 2012 analytical monographs; the 2011 Census Atlas has one "
+             "county map, of the URBAN population only, and no table behind it. UNSD table "
+             "28 holds the 2008 national row and nothing finer. The fifteen 2022 thematic "
+             "reports, released August 2024, have no religion volume. sources/lr.md lists "
+             "what was searched and where each route ended. "
+             "THE BUILD IS AN IPF ON TWO EXACT CENSUS MARGINS. Table A4 gives the county "
+             "populations and Table A13 the national religion totals; both sum to 5,250,187, "
+             "so the county-by-religion table is fitted to them and the Afrobarometer "
+             "supplies only the interaction. This is NOT §6's rejected IPF, which forced a "
+             "2000 composition onto 2010 totals: both margins here are the same census, the "
+             "same night, from the same report. "
+             "THE POPULATION IS THE CENSUS AND NOT COD-PS, uniquely because the religion "
+             "margin comes from the same table set. Substituting a projection for one margin "
+             "would make the two disagree by whatever it had drifted, and the fitted table "
+             "would absorb that drift as though it were religion. "
+             "THE DENOMINATIONS ARE IN THE SURVEY AND ARE NOT DRAWN. Afrobarometer's card "
+             "names twenty-odd Christian bodies and Liberia's pooled respondents give "
+             "Pentecostal 9.6%, Methodist 7.0%, Lutheran 5.8%, Baptist 5.3% and Roman "
+             "Catholic 4.3%, which no Liberian census has ever published. It is not taken "
+             "because the share answering `Christian only` instead of naming a denomination "
+             "runs 28.0%, 44.4%, 23.1%, 67.4%, 72.0%, 61.6% across rounds 4 to 9, which is "
+             "the fieldwork's probing depth rather than the country. Grouping up to the "
+             "census's own five removes the effect entirely, because a Methodist and a "
+             "`Christian only` are both Christian in every round. sources/lr.py asserts the "
+             "swing still exists on every build, so a future release that fixes the probing "
+             "fails the build rather than quietly leaving this decision in place. "
+             "THE COUNTY LABELS ARE [[reference_pooled_survey_labels]]: 33 REGION strings "
+             "over six rounds for fifteen counties, with Rivercess spelled two ways, three "
+             "counties losing their `Grand` in round 8 and the whole set upper-cased in "
+             "round 9. Harmonised in sources/lr.py's NORM before any test touches them. "
+             "THE DECODE IS PINNED at r = +0.996 between the survey's county shares of "
+             "respondents and the census's county populations, which none of 20,000 random "
+             "pairings reaches. "
+             "AFROBAROMETER READS 0.81x THE CENSUS ON MUSLIMS AND 0.48x ON IRRELIGION, and "
+             "the fit corrects both. That offset is why the margins are worth having: drawn "
+             "on the survey's own levels Liberia would be 9.7% Muslim against a census that "
+             "counted 11.98%.",
+    ),
+
+    "ug": dict(
+        name="Uganda",
+        source="2002 Population and Housing Census, Table B7 (Uganda Bureau of Statistics)",
+        basis="self-identification, whole census population",
+        view=[29.4, -1.6, 35.2, 4.4],
+        note_public=(
+            "**Uganda's best religion question and its only religious geography are "
+            "twenty-two years apart, and this map is the older one.** The 2024 census "
+            "separates ten answers, including the Adventists, the Orthodox and the "
+            "Jehovah's Witnesses, and publishes them for the nation and for town against "
+            "country and nowhere else. So does 2014. The census portal that carries the "
+            "2024 results down to parish level carries fifteen tables and religion is in "
+            "none of them. The one time the Bureau ever printed religion beside a place "
+            "was an annex table of the 2002 census, seven categories on the 56 districts "
+            "of the day, and that is what is drawn here. "
+            "**Catholic and Anglican Uganda are close to each other's negative, and the "
+            "line is where two missions met in the 1890s.** Catholicism is the largest "
+            "answer in 29 of the 56 districts and the Church of Uganda in 25. The Catholic "
+            "north runs to **82.5%** in Adjumani and 78.2% in Gulu; the Anglican south and "
+            "west to **60.8%** in Nakasongola and 60.6% in Ntungamo. A map of four "
+            "regions, which is as fine as the Bureau's own 2002 analysis ever got, shows "
+            "almost none of it. "
+            "**Yumbe is 76.2% Muslim and the districts around it are not.** Islam is 12.1% "
+            "of the country and the sharpest column in the table: Yumbe, which is Aringa "
+            "county in West Nile, against 0.4% in Kotido and in Pader. The other Muslim "
+            "Uganda is the Busoga lakeshore and the old Buganda trading towns, Mayuge at "
+            "36.2% and Iganga at 33.8%, and the two have nothing to do with each other. "
+            "**Pentecostal Uganda is the thing this map is too old to show.** It is 4.6% "
+            "here, strongest in Sebei and Teso rather than in Kampala, and 14.3% by the "
+            "2024 census, which is the largest movement in Ugandan religion in living "
+            "memory and has no published geography at all. Read every share here as 2002: "
+            "Catholicism is 41.9% on this map and 36.2% in the 2024 census, and the Church "
+            "of Uganda 35.9% here and 29.0% there. "
+            "**In Karamoja the census offered five churches and Islam to people who "
+            "practise neither, and recorded the answer twice.** `Other`, which the table's "
+            "footnote says holds the Orthodox, the Baha'is, other Christians and "
+            "traditional religion together, is **28.2%** of Kotido; no religion is 12.0% "
+            "of Nakapiripirit, and the three Karamoja districts hold 52% of the whole "
+            "country's no-religion cell between them. Neither figure should be read the "
+            "way the same box is read in Europe. "
+            "**And Kotido's own numbers are ones the Bureau later withdrew.** This table "
+            "gives the district 591,870 people; the 2014 census report, redistributing the "
+            "same census onto later boundaries, gives the same ground **377,102**, and for "
+            "the other 55 districts the two publications agree to the person. Kotido holds "
+            "22.5% of the national `Other` cell and 33.1% of the no-religion cell, so both "
+            "are affected: without it the country reads 2.41% `Other` and 0.60% no "
+            "religion instead of 3.04% and 0.87%. It is drawn as published, because the "
+            "Bureau revised a population and never revised a religion table, and inventing "
+            "seven numbers to fit would be worse than showing the seven it printed."),
+        how="census, 2002",
+        grain="districts, 436,000 people on average",
+        gap_share=0.00036625,
+        gap="the 8,952 people, 0.037% of the country, enumerated in hotels, whom the "
+            "religion table leaves out",
+        counts=_ug_counts,
+        units=None,
+        unit_key=None,
+        place=HERE / "data" / "geo" / "ug" / "ug_hexes.gpkg",
+        place_unit=lambda g: g["unit"].astype(str),
+        place_weight=_ug_place_weight,
+        note="THE QUEUE ROW SAID `regions` AND IT IS 56 DISTRICTS, FROM A TABLE NO UBOS "
+             "PAGE LINKS TO. sources.md §11b established that the 2024 census publishes "
+             "religion nationally only and priced Uganda as needing DHS or a microdata "
+             "email for any geography. Both halves of that stand for 2024; what §11b did "
+             "not reach is that the 2002 census published `Table B7: Religion by District "
+             "for the Population` as a loose annex PDF in "
+             "ubos.org/onlinefiles/uploads/ubos/census_tabulations/, one of fifteen such "
+             "tables on the retired tree, reachable now only through the Wayback Machine. "
+             "436k people a unit against the four regions the 2002 analytical report stops "
+             "at. Rwanda's shape exactly: the report set everyone reads is coarse and a "
+             "separate series outside it is not. "
+             "WHAT WAS CHECKED FOR 2024 BEFORE FALLING BACK TWENTY-TWO YEARS, because a "
+             "later table would beat this one outright: Final Report Volume 1 (434 pages, "
+             "religion on fourteen of them, never with a geography); the NPHC 2024 "
+             "statistics portal, which is a real query API reaching parish and serves "
+             "fifteen tables, none of them religion, with `format=all` returning the same "
+             "fifteen; all seventeen sub-region profile reports; the sub-county profiles "
+             "workbook; the community module report, whose 200 pages of `Religious` "
+             "columns are facility OWNERSHIP; 703 documents swept off ubos.org's own "
+             "publications catalogue, none of which mentions religion; and the 2014 Area "
+             "Specific Profiles. sources/ug.md has the list. "
+             "THE BOUNDARY REBUILD IS THE RISKY PART AND IT IS PROVED ON POPULATION. No "
+             "2002 boundary file exists anywhere, so the 56 districts are dissolved out of "
+             "COD-AB's 135 of 2020 by matching COD-AB's counties and sub-counties against "
+             "the 995 place names Table C1 prints under each 2002 district. Grouping the "
+             "2014 census report's Table A3 by that concordance reproduces all 56 of Table "
+             "B1's 1991 figures EXACTLY, on 56 distinct values, from a different "
+             "publication of a different census. The first attempt failed it: a dropped "
+             "district header sent all of Bugiri's sub-counties to Wakiso, and the 1991 "
+             "test is what caught it. "
+             "KOTIDO IS DRAWN AS PUBLISHED AND THE CALL WAS REVIEWED. Running the same "
+             "test on the 2002 column instead leaves 55 districts exact and Kotido 214,787 "
+             "people short, which is the entire national difference between the two "
+             "publications. Scaling its seven cells by 0.6371 was considered and refused "
+             "under §14.4 rule 1: UBOS revised a population, not a religion split, and the "
+             "factor would invent seven counts in the one district where `Other` and "
+             "`None` are least like the rest of the country. A reviewer agent was asked "
+             "and reached the same answer, and found no drawn country where this map has "
+             "ever altered a published census figure. What changes instead is that "
+             "note_public carries both national shares, with and without Kotido. "
+             "KONTUR IS 2023 AND THE COUNTS ARE 2002. It is a within-district weight so "
+             "the level is irrelevant, but the shape has moved; sources/ug_grid.py says "
+             "so, and its per-district ratios are a third witness on Kotido, which comes "
+             "out at 1.07x against a national middle near 1.9x. "
+             "RE-LEVELLING ONTO THE 940 SUB-COUNTIES TABLE C1 COUNTS was considered and "
+             "refused: unlike the district concordance there is no second publication "
+             "giving sub-county population on both vintages, so the join could not be "
+             "proved and would move dots on a surface nobody could audit. "
+             "THE §3.5 LEAN CHECK RUNS AND SAYS ALMOST NOTHING, which is the right answer "
+             "for a 0.037% hole. The excluded hotel population correlates +0.269 with the "
+             "Adventist share across the 56 districts and +0.353 with Kalangala dropped, "
+             "so it leans urban as hotels would, but if every one of the 8,952 belonged to "
+             "a single faith no national share would move by more than 0.04 points.",
     ),
 }
 

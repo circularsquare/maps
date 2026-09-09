@@ -168,9 +168,22 @@ MAP = {
     "Staroprawosławna Cerkiew Staroobrzędowców": "christianity.orthodox.oldbeliever",
 
     # chrześcijańskie kościoły orientalne
-    "Ormiański Kościół Apostolski": "christianity.oriental",
-    "Ormiański Kościół Apostolski Katolikosatu Eczmiadzyńskiego": "christianity.oriental",
-    "Kościół koptyjski": "christianity.oriental",
+    # GUS REGISTERS THE TWO ARMENIAN BODIES SEPARATELY and one of them names a
+    # catholicosate, so the two go to different nodes -- 2026-09-08, ask/004-am, whose rule
+    # is that a source is recorded as it answers. 361 people on the generic body and 135 on
+    # the Etchmiadzin one. Poland is the only source outside ASARB that reaches a
+    # catholicosate at all, and it is why those two nodes are the WORLDWIDE jurisdictions
+    # rather than ASARB's American dioceses: a Warsaw parish cannot sit on a node called
+    # "Armenian Church of North America".
+    "Ormiański Kościół Apostolski": "christianity.oriental.armenian",
+    "Ormiański Kościół Apostolski Katolikosatu Eczmiadzyńskiego":
+        "christianity.oriental.armenian.etchmiadzin",
+    # NAMES A CHURCH, so it files at that church's node, same rule and same day as the two
+    # Armenian rows above (ask/004-am; spec §2.7). 38 people, and a body GUS registers by
+    # name, which is the whole test.
+    "Kościół koptyjski": "christianity.oriental.coptic",
+    # THIS one stays at the parent, and that is the correct outcome rather than an
+    # unfinished job: `różne inne` names nothing at all and can never leave.
     "różne inne chrześcijańskie kościoły wschodnie": "christianity.oriental",
 
     # ================================================================ Reformation

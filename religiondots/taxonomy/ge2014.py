@@ -5,7 +5,7 @@ an unusually well-chosen list, and the geography is the point rather than the gr
 
     83.41%  Orthodox                  -> christianity.orthodox.canonical
     10.74%  Muslim                    -> islam
-     2.94%  Armenian apostolic        -> christianity.oriental
+     2.94%  Armenian apostolic        -> christianity.oriental.armenian
      0.92%  Not stated                -> EXCLUDED (non-response)
      0.52%  Catholic                  -> christianity.catholic
      0.51%  None                      -> unaffiliated
@@ -56,15 +56,15 @@ REVIEW = {
         "country. Nothing in the table permits the split and doing it from ethnicity would "
         "be §14.5's derivation on a religiously mixed group.",
     "Armenian apostolic":
-        "-> christianity.oriental, which is au2021.py's and ee2021.py's call for the same "
-        "body. **109,041 people — by far the largest Armenian Apostolic count on this map**, "
-        "and 40% of Samtskhe-Javakheti, the Armenian-majority south where Akhalkalaki and "
-        "Ninotsminda are. A `christianity.oriental.armenian` child is now arguable on the "
-        "numbers, and it is NOT taken here because Australia and Estonia file Coptic, "
-        "Syriac, Ethiopian and Armenian all at the parent: adding the child for Georgia "
-        "alone would put one country below a node the others sit on, which reads as a "
-        "distinction the sources do not make. Doing it properly means re-pointing "
-        "au2021.py and ee2021.py at the same time.",
+        "-> christianity.oriental.armenian. **109,041 people**, 40% of Samtskhe-Javakheti, "
+        "the Armenian-majority south where Akhalkalaki and Ninotsminda are. This file "
+        "argued for the bare parent from 2026-09-08 back, on the grounds that Australia and "
+        "Estonia filed Armenian bodies there too and moving one country alone would assert "
+        "a distinction the others do not make. Armenia's 2,793,041 reopened it as "
+        "`ask/004-am` and Anita's ruling was **record whatever the source actually says**: "
+        "Geostat's category names the Armenian church, so it files at an Armenian node, and "
+        "so do Australia's and Estonia's, because they name it too. Georgia and Armenia now "
+        "read as one church across the border, which they are.",
     "Yazidis":
         "-> yazidism, a root and not a branch of Islam or Zoroastrianism, which is how the "
         "node was already written for Australia. **8,591 people, and 8,124 of them — 95% — "
@@ -85,7 +85,7 @@ REVIEW = {
 MAP = {
     "Orthodox": "christianity.orthodox.canonical",
     "Muslim": "islam",
-    "Armenian apostolic": "christianity.oriental",
+    "Armenian apostolic": "christianity.oriental.armenian",
     "Catholic": "christianity.catholic",
     "Jehovah’s Witnesses": "christianity.witnesses",
     "Yazidis": "yazidism",

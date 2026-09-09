@@ -157,8 +157,22 @@ def main():
     for name in args:
         got = oracle(name)
         if got is None:
-            print(f"{name}: ABSENT from the oracle "
-                  f"(proves no census tabulation was forwarded, nothing more)")
+            # A MISS IS NOT AN ABSENCE UNTIL THE NAME IS RIGHT. This lookup is an exact match
+            # on UNSD's own country string, so a country CODE misses every time whatever the
+            # oracle holds, and the old unconditional "proves nothing was forwarded" line was
+            # read as a negative and shipped in Micronesia's note (spec §12, review 2026-09-08).
+            near = [k for k in table() if name.lower() in k.lower()]
+            if len(name) == 2 and name.isalpha():
+                print(f"{name!r} looks like a country CODE, and this tool matches UNSD's own "
+                      f"country NAME. A cc misses here whatever the oracle holds, so this is "
+                      f"NOT evidence of absence. Run `oracle.py --list` and pass the name it "
+                      f"prints, e.g. \"Micronesia (Federated States of)\".")
+            elif near:
+                print(f"{name}: no exact match, but the oracle has "
+                      + "; ".join(repr(k) for k in sorted(near)[:5]))
+            else:
+                print(f"{name}: ABSENT from the oracle "
+                      f"(proves no census tabulation was forwarded, nothing more)")
             continue
         for y in sorted(got, key=int, reverse=True):
             for area in ("Total", "Urban", "Rural"):

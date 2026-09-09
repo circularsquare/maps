@@ -1,84 +1,63 @@
-"""Kazakhstan — BNS, National Population Census 2021. **A MODELLED COUNTRY** (spec §14.10).
+"""Kazakhstan — BNS, National Population Census 2021. **Religion by oblast, COUNTED.**
 
-Reads (or fetches) data/raw/kz/ and writes data/normalized/kz.csv.
+Writes data/normalized/kz.csv from BNS's own religion × oblast figures. Kazakhstan was drawn
+as a modelled country from 2026-09-07 to 2026-09-08; it is not one any more.
 
-**KAZAKHSTAN PUBLISHES RELIGION AND PUBLISHES IT NOWHERE BUT NATIONALLY.** `sources.md` §11u
-established that four ways: the 2021 religion volume's three chapters are religion ×
-nationality, × age and × education and **not one of its 542 pages names an oblast**; the 2009
-volume is the same and contains `область` zero times; the 2009 per-region series (16 regions ×
-3 volumes) has no religion on any page; and there is no 2021 regional series. So a Kazakhstan
-drawn from a religion table does not exist, and the choice is between a modelled country and
-no country.
+**WHERE THE FIGURES COME FROM, AND WHY NOBODY FOUND THEM.** `sources.md` §11u established
+four ways that no BNS *publication* cuts religion by region, and all four checks were right.
+What none of them touched is the census's own **interactive dashboard**, which is not a
+picture: `stat.gov.kz/ru/instuments/dashboards/28424/` embeds sheets served by a **Qlik Sense
+server at `qap.stat.gov.kz`**, and a Qlik app carries its data model, not its charts. This
+one's data model is the census itself —
 
-**WHAT IS MODELLED, AND WHAT IS NOT.** Both inputs are the same census, published by the same
-office, in the same round:
+    table `Население 2009_2021`   35,195,612 rows   = 16,009,597 (2009) + 19,186,015 (2021)
 
-    magnitude     ethnicity × oblast          sheet 2.1 of the ethnos workbook, 17 regions
-    coefficients  share(religion | ethnicity) volume ch.12, national, 18 nationalities
-    output        religion × oblast           this file, basis `modelled`
+one row per enumerated person, keyed on a hashed IIN, carrying `Вероисповедание` on the same
+row as `Область`, `КАТО РАЙОН`, `Тип местности`, `Национальность` and a hundred more. The
+engine will cross-tabulate any pair of them, so **religion × oblast is a query, not a
+publication.** The engine's JSON API is open to `anonymous` (`mustAuthenticate: false`); no
+key, no login, no terms gate.
 
-    count(oblast, religion) = Σ_ethnicity  pop(oblast, ethnicity) × share(religion|ethnicity)
+**FOUR MARGINS PROVE IT IS THE CENSUS AND NOT SOMEBODY'S MODEL.**
 
-**NOTHING IS INVENTED AND NOTHING IS SCALED.** §14.4's rule 1 — never estimate a magnitude a
-source does not publish — is satisfied by identity: every person placed is a person BNS counted
-in that oblast, and the model only decides which column they go in. Both margins come back
-exact, and that is arithmetic rather than luck: because the coefficients are conditional on
-ethnicity and the ethnic margins agree between the two publications, **every religion's
-national total is reproduced to the person and every oblast's population is reproduced to the
-person.** check() asserts both.
+  1. every one of the nine religion totals reproduces the published volume **to the person**
+     — Ислам 13,297,775, Православие 3,269,143, ... Иудаизм 7,192;
+  2. they sum to 19,186,015, the census population, with no residual;
+  3. the urban and rural margins are 11,741,342 and 7,444,673, the volume's own constants;
+  4. the 2009 and 2021 row counts sum to the two censuses' published populations exactly.
 
-**THE COEFFICIENTS ARE THE BEST ANY MODELLED COUNTRY HERE HAS.** Greece, Spain and France
-multiply a state count by a THIRD PARTY's national composition — Pew's. Kazakhstan's
-coefficients are its own census's own cross-tabulation of the two variables, an exact
-partition, collected from the same people in the same interview. §14.10's condition 2
-(documented and attributable, not fitted) is met about as strongly as it can be.
+And it **disagrees** with the ethnicity model that used to draw this country by 7.50% of the
+country, which is the fifth proof: a table that matched the published national figures to the
+person while differing regionally from anything derived from them can only be their source.
 
-**AND THERE IS A REAL HELD-OUT TEST, WHICH IS §14.10's CONDITION 5 AND IS USUALLY THE WEAK
-ONE.** The volume publishes religion × nationality separately for URBAN and RURAL Kazakhstan.
-That is the model's own assumption — that share(religion|ethnicity) does not vary by place —
-stated as a testable claim about a partition the model never sees. So:
+**THE JOIN IS PROVED ON POPULATION, NOT ON NAMES.** The engine labels oblasts in caps
+(`СЕВЕРО-КАЗАХСТАНСКАЯ`) and carries no KATO code for them, while the geography is keyed on
+KATO. Names would join sixteen of seventeen and fail on the capital, which the census
+enumerated as Nur-Sultan and the dashboard calls Astana — the silent single-row miss
+`[[reference_name_join_wrong_neighbour]]` is about. So the seventeen oblast populations are
+asserted distinct and the join is made **on the population to the person**, with the names
+checked afterwards and the one legitimate disagreement named in `CAPITAL_RENAME`.
 
-  * **the model is built from the NATIONAL coefficients only.** Using the urban/rural sets
-    would fit better and would consume the only independent check this country has, which is
-    a bad trade — spec §14.10's fifth condition is about what the output was checked against,
-    and a check you have spent is not one.
-  * predicting religion × urban/rural from ethnicity × urban/rural and the national
-    coefficients puts **313,745 people — 1.64% of the country — on the wrong side of the
-    town/country line**, and the error is not spread evenly:
+**WHAT CHANGED ON THE MAP.** The model put 1,439,367 people — 7.50% of Kazakhstan — in the
+wrong (oblast, religion) cell. Islam and Orthodoxy were within 4.5% of the truth, so the
+north-south pattern was real; refusal (27.8% misplaced) and non-belief (23.0%) were not, and
+the model's near-flat refusal layer was an artefact. Measured, refusal runs from 1.19% in
+East Kazakhstan to 22.07% in Mangystau. See `sources/kz_model.py`, which still builds the
+model and now scores it, and spec §14.25.
 
-        Ислам        +1.7% urban / -2.3% rural     Православие   +0.9% / -2.4%
-        Неверующие  -13.0% / +41.8%                Отказались    -7.8% / +15.0%
-        Католицизм  +43.5% / -34.3%                Протестантизм -17.1% / +105.6%
-
-    **The three cells that are 86% of the country come back within three percent. The two
-    that are about ATTITUDE rather than ancestry do not**, because non-belief and refusal are
-    urban behaviours inside every ethnic group at once — Kazakhs are 1.4% non-believing in
-    town and 0.6% in the country, Koreans 17.3% and 10.7%. Ethnicity cannot see that and this
-    model does not claim to. **Catholics and Protestants are wrong by a third to a double**,
-    which matters less than it reads: they are 18,988 and 9,419 people, so the whole error is
-    ~9,000 either way, and it is the same effect (Kazakhstan's Catholics are a rural
-    Polish-and-German population, its Protestants an urban one).
-
-**AND THE REFUSAL IS DRAWN, WHICH REVERSES THIS FILE'S FIRST VERSION.** `Отказались указать`
-— 2,112,653 people, **11.01%** — was excluded on §3.5 and tt2011.py's Trinidad precedent until
-Anita asked whether it could be drawn (2026-09-07). **The census form settles it.** Question 11
-of `Переписной лист 3-И` offers seven options and the sixth is `Отказываюсь указать` — *"I
-decline to state"*, printed, numbered, first person. **It is a chosen answer, not a blank**,
-which is exactly what Trinidad's derived `Not Stated` residual is not. It goes to `unknown`,
-the node branches.py defines as *the one that reports nothing at all… the claim is only that
-these people are here*, and drawing it is §3.5 satisfied rather than bent: nobody is
-redistributed into a religion, they are marked in place. **Kazakhstan is 100.00% drawn.**
-`Неверующие` goes to `secular` on ru2012.py's precedent. See taxonomy/kz2021.py for both.
+**THE CATEGORIES ARE THE SAME NINE** the volume prints, so taxonomy/kz2021.py is unchanged;
+the engine spells them lowercase and `NORMALISE` restores the volume's forms. The refusal
+cell is drawn on `unknown` for the reason kz2021.py gives (Question 11 offers it as printed
+option six, so it is an answer and not a blank) and Kazakhstan is 100.00% drawn.
 
 Usage:
-    python sources/kz.py --fetch    one 7.2 MB xlsx and one 24.3 MB PDF, ~1 min
-    python sources/kz.py            re-model from data/raw/kz/
+    python sources/kz.py --fetch    query the engine, ~30 s, caches to data/raw/kz/
+    python sources/kz.py            rebuild data/normalized/kz.csv from the cache
 """
 
 import csv
 import json
 import os
-import re
 import sys
 
 if hasattr(sys.stdout, "reconfigure"):
@@ -91,362 +70,316 @@ OUT = os.path.join(ROOT, "data", "normalized", "kz.csv")
 
 SOURCE_ID = "kz_census_2021"
 YEAR = 2021
-BASIS = "modelled"
+BASIS = "counted"
 
 COLUMNS = ["geo_id", "geo_level", "geo_name", "source_category", "count",
            "basis", "year", "source_id", "note"]
 
-# Both files hang off stat.gov.kz/ru/national/2021/ as Bitrix object routes. The anchor TEXT
-# on that page is the catalogue — there is no Content-Disposition to read (sources.md §11u).
-XLSX_URL = ("https://stat.gov.kz/upload/medialibrary/93d/msehzbw870uc729ejpv5eynfszawxgep/"
-            "%D0%A7%D0%B8%D1%81%D0%BB%D0%B5%D0%BD%D0%BD%D0%BE%D1%81%D1%82%D1%8C%20"
-            "%D0%BD%D0%B0%D1%81%D0%B5%D0%BB%D0%B5%D0%BD%D0%B8%D1%8F%20"
-            "%D0%A0%D0%B5%D1%81%D0%BF%D1%83%D0%B1%D0%BB%D0%B8%D0%BA%D0%B8%20"
-            "%D0%9A%D0%B0%D0%B7%D0%B0%D1%85%D1%81%D1%82%D0%B0%D0%BD%20%D0%BF%D0%BE%20"
-            "%D1%8D%D1%82%D0%BD%D0%BE%D1%81%D0%B0%D0%BC%2C%20"
-            "%D0%BD%D0%B0%D1%81%D0%B5%D0%BB%D0%B5%D0%BD%D0%BD%D1%8B%D0%BC%20"
-            "%D0%BF%D1%83%D0%BD%D0%BA%D1%82%D0%B0%D0%BC%20%D0%B8%20%D0%BF%D0%BE%20"
-            "%D0%B2%D0%BE%D0%B7%D1%80%D0%B0%D1%81%D1%82%D0%B0%D0%BC%20(1).xlsx")
-XLSX_NAME = "kz2021_ethnos_settlement.xlsx"
-PDF_URL = "https://stat.gov.kz/api/iblock/element/100842/file/ru/"
-PDF_NAME = "kz2021_ethnic_religion_language.pdf"
+# ---- the engine ------------------------------------------------------------------------
+HOST = "qap.stat.gov.kz"
+APP = "4c82a5bb-b3c9-49ba-bf4a-2eceb365084f"    # "Итоги переписи населения 2021"
+SHEET_RELIGION = "063175c3-9502-4a72-a506-69ec3d5f3a99"   # tab 28443, Вероисповедание
+UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
+      "Chrome/128.0.0.0 Safari/537.36")
 
+# Rows in the person table are one per person, so the measure counts rows. Set analysis
+# rather than a selection: an anonymous session has its own state, and a query that carries
+# its own filter cannot be left holding a stale selection between calls.
+MEASURE = "Sum({<[Год переписи]={'%d'}>} 1)" % YEAR
+
+F_OBLAST = "Область"
+F_RELIGION = "Вероисповедание"
+F_LOCALITY = "Тип местности"
+
+F_RAYON = "КАТО РАЙОН"
+
+CACHE_OBLAST = os.path.join(RAW, "kz_qlik_oblast_religion.csv")
+CACHE_URBAN = os.path.join(RAW, "kz_qlik_oblast_locality_religion.csv")
+CACHE_META = os.path.join(RAW, "kz_qlik_meta.json")
+# Not used by the build. The engine will cut religion at 218 rayons as readily as at 17
+# oblasts, and the app carries the rayon boundaries as well (`карта_район`, 190 rows with a
+# `Район.Line` geometry), so the finer country is a geography job rather than a data hunt.
+# Cached so the next session starts from a file instead of rediscovering the engine.
+CACHE_RAYON = os.path.join(RAW, "kz_qlik_rayon_religion.csv")
+
+# ---- the volume's own national table, ch.12 p506. Every one of these must come back from
+# the engine to the person or the pull is not the census and the build stops (spec §12).
+PUBLISHED = {
+    "Ислам": 13_297_775, "Православие": 3_269_143, "Католицизм": 18_988,
+    "Протестантизм": 9_419, "Иудаизм": 7_192, "Буддизм": 15_458, "Другое": 23_247,
+    "Отказались указать": 2_112_653, "Неверующие": 432_140,
+}
 NATIONAL = 19_186_015
 URBAN = 11_741_342
 RURAL = 7_444_673
 EXPECTED_REGIONS = 17          # the 2021 vintage: 14 oblasts + Astana, Almaty, Shymkent
 
-# ---- the coefficient table's eleven numeric columns, by x-band on the page. The PDF's
-# header is bilingual and split across five lines, so the columns are taken by POSITION and
-# the labels below are this project's canonical names for them, not verbatim strings.
-COLS = [("total", 165, 225), ("Ислам", 226, 275), ("Христианство", 276, 340),
-        ("Православие", 341, 405), ("Католицизм", 406, 470),
-        ("Протестантизм", 471, 530), ("Иудаизм", 531, 580), ("Буддизм", 581, 625),
-        ("Другое", 626, 675), ("Отказались указать", 676, 745),
-        ("Неверующие", 746, 800)]
-# `Христианство` is the parent of the next three and is not a category of its own.
-PARTS = ["Ислам", "Христианство", "Иудаизм", "Буддизм", "Другое",
-         "Отказались указать", "Неверующие"]
-CHRISTIAN_SUB = ["Православие", "Католицизм", "Протестантизм"]
+# The engine lowercases the volume's labels and uses the masculine singular for the
+# non-believers. taxonomy/kz2021.py is keyed on the volume's forms, so restore them here
+# rather than touching the mapping.
+NORMALISE = {
+    "ислам": "Ислам", "православие": "Православие", "католицизм": "Католицизм",
+    "протестантизм": "Протестантизм", "иудаизм": "Иудаизм", "буддизм": "Буддизм",
+    "другое": "Другое", "отказались указать": "Отказались указать",
+    "неверующий": "Неверующие",
+}
 DRAWN = ["Ислам", "Православие", "Католицизм", "Протестантизм", "Иудаизм", "Буддизм",
          "Другое", "Отказались указать", "Неверующие"]
 
-# The volume names 18 nationalities and a residual; the workbook names 44 ethnicities. The
-# pairing is Kazakh label -> Russian column and is ASSERTED ON THE COUNTS in check(), which
-# is what makes it evidence: two separate publications of the same census have to agree to
-# the person on all eighteen before any coefficient is used.
-PAIR = {
-    "Қазақтар": "Казахи", "Орыстар": "Русские", "Украиндар": "Украинцы",
-    "Белорустар": "Белорусы", "Өзбектер": "Узбеки", "Әзірбайжандар": "Азербайджанцы",
-    "Қырғыздар": "Кыргызы", "Тәжіктер": "Таджики", "Татарлар": "Татары",
-    "Шешендер": "Чеченцы", "Дүнгендер": "Дунгане", "Кәрістер": "Корейцы",
-    "Күрттер": "Курды", "Немістер": "Немцы", "Поляктар": "Поляки",
-    "Түріктер": "Турки", "Ұйғырлар": "Уйгуры",
-}
-RESIDUAL = "Басқа ұлттар"
-
-# BNS types some workbook headers with LATIN lookalikes -- `Hемцы` begins with U+0048, not
-# Cyrillic U+041D, so a plain dict lookup on the ethnicity name misses Germans and only
-# Germans. Folded before anything is matched by name. (§12: a mixed-script header is
-# invisible in every printout and fails exactly one row.)
-CONFUSABLE = str.maketrans({
-    "A": "А", "B": "В", "C": "С", "E": "Е", "H": "Н", "K": "К", "M": "М", "O": "О",
-    "P": "Р", "T": "Т", "X": "Х", "a": "а", "c": "с", "e": "е", "o": "о", "p": "р",
-    "x": "х", "y": "у", "i": "і",
-})
+# The one oblast whose name legitimately differs between the two files. The census enumerated
+# the capital on 1 September 2021, when it was Nur-Sultan; it was renamed Astana on 17
+# September 2022 and the dashboard uses the current name. Both are the same 1,234,042 people
+# and the population join is what actually pairs them; this only stops the name check firing.
+CAPITAL_RENAME = {"Г.АСТАНА": "г.Нур-Султан"}
 
 
 def fold(s):
-    return " ".join(str(s).translate(CONFUSABLE).split())
+    """Latin/Cyrillic confusables -> Cyrillic. BNS mixes them inside single headers.
+
+    sources/kz.md records the case that cost half an hour: the ethnos workbook types the
+    German column as `Hемцы` with a Latin H. Any Cyrillic source can do this and a name
+    lookup misses exactly one row without printing differently.
+    """
+    return (str(s).replace("A", "А").replace("E", "Е")
+            .replace("H", "Н").replace("K", "К")
+            .replace("M", "М").replace("O", "О")
+            .replace("P", "Р").replace("C", "С")
+            .replace("T", "Т").replace("X", "Х")
+            .replace("a", "а").replace("e", "е")
+            .replace("область", " ").strip())
+
+
+def norm_oblast(s):
+    """Fold to a comparable oblast key: caps, no `область`, no `г.`, no punctuation."""
+    s = fold(str(s).upper())
+    for junk in ("ОБЛАСТЬ", "Г.", "Г ", "  "):
+        s = s.replace(junk, " ")
+    return " ".join(s.split())
+
+
+# ---- fetch -------------------------------------------------------------------------------
+def _cube(call, doc, dims, page_rows=5000):
+    """A straight hypercube over `dims`, measure = people counted in YEAR."""
+    o = call(doc, "CreateSessionObject", [{
+        "qInfo": {"qType": "religiondots-cube"},
+        "qHyperCubeDef": {
+            "qDimensions": [{"qDef": {"qFieldDefs": [d]}, "qNullSuppression": False}
+                            for d in dims],
+            "qMeasures": [{"qDef": {"qDef": MEASURE}}],
+            "qInitialDataFetch": [],
+            "qSuppressZero": False,
+            "qSuppressMissing": False,
+            "qMode": "S",
+        },
+    }])["result"]["qReturn"]["qHandle"]
+    size = call(o, "GetLayout", [])["result"]["qLayout"]["qHyperCube"]["qSize"]
+    w, h = size["qcx"], size["qcy"]
+    rows, top = [], 0
+    while top < h:
+        pg = call(o, "GetHyperCubeData", ["/qHyperCubeDef", [{
+            "qTop": top, "qLeft": 0, "qWidth": w,
+            "qHeight": max(1, min(page_rows // max(w, 1), h - top))}]])
+        mat = pg["result"]["qDataPages"][0]["qMatrix"]
+        if not mat:
+            break
+        for r in mat:
+            rows.append([c.get("qText") for c in r[:-1]] + [int(r[-1].get("qNum") or 0)])
+        top += len(mat)
+    if len(rows) != h:
+        raise SystemExit(f"engine returned {len(rows)} of {h} rows for {dims}")
+    return rows
 
 
 def fetch():
+    """Query the engine and cache two cross-tabs. Needs `websocket-client` and `requests`."""
     import requests
+    import websocket
+
+    s = requests.Session()
+    s.headers["User-Agent"] = UA
+    # The single/ page is what mints the X-Qlik-Session cookie the socket needs.
+    r = s.get(f"https://{HOST}/single/?appid={APP}&sheet={SHEET_RELIGION}", timeout=60)
+    if r.status_code != 200:
+        raise SystemExit(f"{HOST}/single/ -> {r.status_code}; the dashboard has moved")
+    cookie = "; ".join(f"{k}={v}" for k, v in s.cookies.get_dict().items())
+
+    ws = websocket.create_connection(f"wss://{HOST}/app/{APP}", timeout=300,
+                                     header=[f"User-Agent: {UA}"], cookie=cookie,
+                                     origin=f"https://{HOST}")
+    hello = json.loads(ws.recv())
+    auth = hello.get("params", {})
+    if auth.get("mustAuthenticate"):
+        raise SystemExit("the engine now demands authentication; this route is closed")
+    print(f"engine open as {auth.get('userId', '?')} ({auth.get('userDirectory')})")
+
+    counter = [0]
+
+    def call(handle, method, params):
+        counter[0] += 1
+        ws.send(json.dumps({"jsonrpc": "2.0", "id": counter[0], "handle": handle,
+                            "method": method, "params": params}))
+        while True:
+            m = json.loads(ws.recv())
+            if m.get("id") == counter[0]:
+                if "error" in m:
+                    raise SystemExit(f"{method}: {m['error']}")
+                return m
+
+    doc = call(-1, "OpenDoc", [APP, "", "", "", False])["result"]["qReturn"]["qHandle"]
+
+    ob = _cube(call, doc, [F_OBLAST, F_RELIGION])
+    ur = _cube(call, doc, [F_OBLAST, F_LOCALITY, F_RELIGION])
+    pop = _cube(call, doc, [F_OBLAST])
+    ry = _cube(call, doc, [F_OBLAST, F_RAYON, F_RELIGION])
+    ws.close()
 
     os.makedirs(RAW, exist_ok=True)
-    for url, name, magic, floor in ((XLSX_URL, XLSX_NAME, b"PK", 1_000_000),
-                                    (PDF_URL, PDF_NAME, b"%PDF", 5_000_000)):
-        dest = os.path.join(RAW, name)
-        if os.path.exists(dest) and os.path.getsize(dest) > floor:
-            print("already have", dest)
-            continue
-        print("GET", url[:110])
-        r = requests.get(url, timeout=1800, stream=True,
-                         headers={"User-Agent": "Mozilla/5.0"})
-        r.raise_for_status()
-        with open(dest, "wb") as fh:
-            for chunk in r.iter_content(1 << 20):
-                fh.write(chunk)
-        # sources.md §5a: assert the type, never the absence of an exception.
-        with open(dest, "rb") as fh:
-            got = fh.read(len(magic))
-        if got != magic:
-            raise SystemExit(f"{dest} does not start {magic!r} -- got {got!r}, "
-                             f"{os.path.getsize(dest):,} bytes")
-        print(f"  {os.path.getsize(dest):,} bytes")
+    _write(CACHE_OBLAST, ["oblast", "religion", "n"], ob)
+    _write(CACHE_URBAN, ["oblast", "locality", "religion", "n"], ur)
+    _write(CACHE_RAYON, ["oblast", "rayon_kato", "religion", "n"], ry)
+    with open(CACHE_META, "w", encoding="utf-8") as fh:
+        json.dump({"host": HOST, "app": APP, "sheet": SHEET_RELIGION, "measure": MEASURE,
+                   "user": auth.get("userId"), "oblast_pop": {r[0]: r[1] for r in pop},
+                   "rayon_units": len({r[1] for r in ry}),
+                   "rayon_people": sum(r[-1] for r in ry)},
+                  fh, ensure_ascii=False, indent=1)
+    print(f"cached {len(ob)} oblast rows, {len(ur)} oblast x locality rows and {len(ry)} "
+          f"rayon rows ({len({r[1] for r in ry})} rayons, not used by the build)")
 
 
-def read_magnitude():
-    """sheet 2.1 -> (national row, [17 region rows]), ethnicity columns folded."""
-    import openpyxl
-
-    src = os.path.join(RAW, XLSX_NAME)
-    if not os.path.exists(src):
-        raise SystemExit(f"missing {src} -- run with --fetch first")
-    wb = openpyxl.load_workbook(src, read_only=True, data_only=True)
-    if "2.1" not in wb.sheetnames:
-        raise SystemExit(f"no sheet '2.1' in {src} -- found {wb.sheetnames}")
-    rows = list(wb["2.1"].iter_rows(values_only=True))
-    wb.close()
-
-    hdr = next((i for i, r in enumerate(rows[:10])
-                if r and str(r[0]).strip() == "Уровень"), None)
-    if hdr is None:
-        raise SystemExit("sheet 2.1 has no `Уровень` header row")
-    names = [fold(c) if c is not None else "" for c in rows[hdr]]
-    eth = [(j, names[j]) for j in range(3, len(names)) if names[j]]
-    if not any(n == "Казахи" for _, n in eth):
-        raise SystemExit(f"sheet 2.1's ethnicity header changed: {[n for _, n in eth][:8]}")
-
-    out = []
-    for r in rows[hdr + 2:]:
-        if not r or r[0] in (None, ""):
-            continue
-        try:
-            lvl = int(str(r[0]).strip())
-        except ValueError:
-            continue
-        rec = {"level": lvl, "kato": str(r[1]).strip(), "name": str(r[2]).strip()}
-        for j, n in eth:
-            v = r[j] if j < len(r) else None
-            rec[n] = int(v) if isinstance(v, (int, float)) else 0
-        out.append(rec)
-
-    nat = [r for r in out if r["level"] == 0]
-    reg = [r for r in out if r["level"] == 1]
-    if len(nat) != 1:
-        raise SystemExit(f"{len(nat)} level-0 rows, expected 1")
-    if len(reg) != EXPECTED_REGIONS:
-        raise SystemExit(f"{len(reg)} level-1 regions, expected {EXPECTED_REGIONS} -- "
-                         "has the 2022 three-oblast reform reached this file?")
-    return nat[0], reg, [n for _, n in eth]
+def _write(path, header, rows):
+    with open(path, "w", encoding="utf-8", newline="") as fh:
+        w = csv.writer(fh)
+        w.writerow(header)
+        w.writerows(rows)
 
 
-def read_coefficients():
-    """volume ch.12 -> {'total'|'urban'|'rural': {nationality: {category: count}}}."""
-    import fitz
-
-    src = os.path.join(RAW, PDF_NAME)
-    if not os.path.exists(src):
-        raise SystemExit(f"missing {src} -- run with --fetch first")
-    doc = fitz.open(src)
-    if doc.page_count == 0:
-        raise SystemExit(f"{src} opened with ZERO pages -- truncated at source")
-
-    def merge(ws, lo, hi):
-        toks = [w[4] for w in ws if lo <= w[0] < hi]
-        if not toks:
-            return None
-        s = "".join(toks)
-        if s in ("-", "—", "–"):
-            return 0
-        return int(s) if re.fullmatch(r"\d+", s) else None
-
-    recs, sex, pending = [], None, ""
-    for pno in range(505, 515):
-        bands = {}
-        for w in doc[pno].get_text("words"):
-            bands.setdefault(round(w[1] / 3.0), []).append(w)
-        for k in sorted(bands):
-            ws = sorted(bands[k], key=lambda w: w[0])
-            whole = " ".join(w[4] for w in ws)
-            label = " ".join(w[4] for w in ws if w[0] < 165).strip()
-            # the panel marker is CENTRED, not in the label column
-            if re.search(r"Оба\s*пола|Екі\s*жыныс", whole):
-                sex = "both"
-                continue
-            if re.search(r"Мужчины|Ерлер", whole):
-                sex = "male"
-                continue
-            if re.search(r"Женщины|Әйелдер", whole):
-                sex = "female"
-                continue
-            vals = {n: merge(ws, lo, hi) for n, lo, hi in COLS}
-            vals = {n: v for n, v in vals.items() if v is not None}
-            if len(vals) >= 8:
-                name = label or pending
-                pending = ""
-                if name and sex == "both":
-                    recs.append({"label": name, **vals})
-            elif label and not vals:
-                # a nationality whose name sits on its own line above its figures
-                pending = label
-
-    # three blocks in print order: whole country, urban, rural. Segmented on the `Барлығы`
-    # rows and then ASSERTED against the three published totals, so a missed block is loud.
-    blocks, cur = [], None
-    for r in recs:
-        if r["label"].startswith("Барлығы"):
-            cur = {}
-            blocks.append(cur)
-        if cur is None:
-            raise SystemExit("a nationality row before the first `Барлығы` row")
-        cur[r["label"]] = r
-    if len(blocks) != 3:
-        raise SystemExit(f"{len(blocks)} blocks in chapter 12, expected total/urban/rural")
-    named = dict(zip(("total", "urban", "rural"), blocks))
-    for key, want in (("total", NATIONAL), ("urban", URBAN), ("rural", RURAL)):
-        got = named[key]["Барлығы"]["total"]
-        if got != want:
-            raise SystemExit(f"the {key} block totals {got:,}, expected {want:,} -- the "
-                             "three panels are not in the order this parse assumes")
-    return named
-
-
-def model(nat, regions, coef):
-    """The whole of it. See the module docstring."""
-    groups = list(PAIR) + [RESIDUAL]
-    total = coef["total"]
-    shares = {g: {c: total[g][c] / total[g]["total"] for c in DRAWN} for g in groups}
-
-    named_ru = set(PAIR.values())
-    rest = [c for c in nat if c not in named_ru and c not in ("level", "kato", "name",
-                                                              "Всего")]
-
-    def by_group(row):
-        out = {kk: row[ru] for kk, ru in PAIR.items()}
-        out[RESIDUAL] = sum(row[c] for c in rest)
-        return out
-
+# ---- read and check ----------------------------------------------------------------------
+def read_cache():
+    if not os.path.exists(CACHE_OBLAST):
+        raise SystemExit(f"missing {CACHE_OBLAST} -- run with --fetch first")
     out = {}
-    for r in regions:
-        pop = by_group(r)
-        out[r["kato"]] = {
-            "name": r["name"],
-            "pop": r["Всего"],
-            "counts": {c: sum(pop[g] * shares[g][c] for g in groups) for c in DRAWN},
-        }
-    return out, shares, rest
+    with open(CACHE_OBLAST, encoding="utf-8") as fh:
+        for r in csv.DictReader(fh):
+            cat = NORMALISE.get(r["religion"].strip().lower())
+            if cat is None:
+                raise SystemExit(f"unmapped religion label {r['religion']!r} -- the engine's "
+                                 "category list changed; check it against volume ch.12 "
+                                 "before touching NORMALISE")
+            out.setdefault(r["oblast"].strip(), {})[cat] = int(r["n"])
+    if len(out) != EXPECTED_REGIONS:
+        raise SystemExit(f"{len(out)} oblasts, expected {EXPECTED_REGIONS} -- has the 2022 "
+                         "three-oblast reform reached the dashboard? See sources/kz_geo.md")
+    for ob, cats in out.items():
+        missing = [c for c in DRAWN if c not in cats]
+        if missing:
+            raise SystemExit(f"{ob} is missing {missing}")
+    return out
 
 
-def _largest_remainder(vals, target):
-    """Integers that sum to `target` exactly, closest to `vals` (spec §4.1a's rule)."""
-    floors = {k: int(v) for k, v in vals.items()}
-    short = target - sum(floors.values())
-    order = sorted(vals, key=lambda k: (vals[k] - floors[k]), reverse=True)
-    for k in order[:short]:
-        floors[k] += 1
-    return floors
-
-
-def check(nat, regions, coef, modelled, shares, rest):
-    ok = True
-    total = coef["total"]
-
-    print("  --- the ethnicity pairing, asserted on the counts of two publications ---")
+def check_national(measured):
+    """Every published national total, to the person. This is the whole proof (spec §12)."""
     bad = []
-    for kk, ru in PAIR.items():
-        if total[kk]["total"] != nat[ru]:
-            bad.append((kk, ru, total[kk]["total"], nat[ru]))
-    rest_sum = sum(nat[c] for c in rest)
-    if total[RESIDUAL]["total"] != rest_sum:
-        bad.append((RESIDUAL, "(the other 26)", total[RESIDUAL]["total"], rest_sum))
-    ok &= not bad
-    print(f"  {'OK ' if not bad else 'BAD'} all {len(PAIR) + 1} nationalities agree to the "
-          f"person between the volume and the workbook ({len(bad)} failures)")
-    for kk, ru, a, b in bad[:6]:
-        print(f"      {kk} / {ru}: volume {a:,} vs workbook {b:,}")
+    for cat, want in PUBLISHED.items():
+        got = sum(v[cat] for v in measured.values())
+        if got != want:
+            bad.append(f"  {cat}: engine {got:,} vs volume ch.12 {want:,}")
+    total = sum(sum(v.values()) for v in measured.values())
+    if total != NATIONAL:
+        bad.append(f"  TOTAL: engine {total:,} vs census {NATIONAL:,}")
+    if bad:
+        raise SystemExit("the engine no longer reproduces the published table:\n"
+                         + "\n".join(bad))
+    print(f"national margins: all {len(PUBLISHED)} categories reproduce volume ch.12 "
+          f"to the person, and sum to {NATIONAL:,}")
 
-    print("\n  --- the source's own identities ---")
-    bad = [g for g in list(PAIR) + [RESIDUAL, "Барлығы"]
-           if sum(total[g][c] for c in PARTS) != total[g]["total"]]
-    ok &= not bad
-    print(f"  {'OK ' if not bad else 'BAD'} the 7 top-level cells sum to the row total on "
-          f"all {len(PAIR) + 2} rows ({len(bad)} failures) {bad[:3]}")
-    bad = [g for g in list(PAIR) + [RESIDUAL, "Барлығы"]
-           if sum(total[g][c] for c in CHRISTIAN_SUB) != total[g]["Христианство"]]
-    ok &= not bad
-    print(f"  {'OK ' if not bad else 'BAD'} Orthodox + Catholic + Protestant == Christian "
-          f"on all rows ({len(bad)} failures)")
+    if os.path.exists(CACHE_URBAN):
+        loc = {}
+        with open(CACHE_URBAN, encoding="utf-8") as fh:
+            for r in csv.DictReader(fh):
+                loc[r["locality"]] = loc.get(r["locality"], 0) + int(r["n"])
+        if loc.get("Город") != URBAN or loc.get("Село") != RURAL:
+            raise SystemExit(f"urban/rural margins {loc} != published {URBAN:,}/{RURAL:,}")
+        print(f"urban/rural margins: {URBAN:,} / {RURAL:,}, the volume's own constants")
 
-    print("\n  --- the model's margins, which are exact by construction ---")
-    for c in DRAWN:
-        got = sum(m["counts"][c] for m in modelled.values())
-        want = total["Барлығы"][c]
-        good = abs(got - want) < 0.5
-        ok &= good
-        print(f"  {'OK ' if good else 'BAD'} {c:<20} model {got:>12,.0f}  "
-              f"published {want:>12,}  diff {got - want:>+7,.0f}")
-    got = sum(m["pop"] for m in modelled.values())
-    good = got == nat["Всего"] == NATIONAL
-    ok &= good
-    print(f"  {'OK ' if good else 'BAD'} {'population':<20} model {got:>12,}  "
-          f"published {NATIONAL:>12,}")
 
-    # ---- §14.10 condition 5: the held-out test. The urban/rural coefficient sets are NOT
-    # used by the model; they are the only thing that can falsify its assumption.
-    print("\n  --- HELD-OUT TEST: national coefficients -> urban / rural ---")
-    print("      the model never sees the urban and rural coefficient sets")
-    groups = list(PAIR) + [RESIDUAL]
-    tot_abs = 0
-    print(f"      {'category':<20} {'area':<6} {'predicted':>12} {'published':>12} "
-          f"{'rel err':>9}")
-    for area in ("urban", "rural"):
-        blk = coef[area]
-        for c in DRAWN:
-            pred = sum(blk[g]["total"] * shares[g][c] for g in groups)
-            obs = blk["Барлығы"][c]
-            tot_abs += abs(pred - obs)
-            print(f"      {c:<20} {area:<6} {pred:>12,.0f} {obs:>12,} "
-                  f"{(pred - obs) / obs if obs else 0:>+8.1%}")
-    share = tot_abs / 2 / NATIONAL
-    print(f"\n      {tot_abs / 2:,.0f} people misallocated between town and country "
-          f"= {share:.2%} of the population")
-    print("      Islam and Christianity — 86% of the country — come back within 3%.")
-    print("      `Неверующие` and `Отказались указать` do not, because they are about")
-    print("      ATTITUDE rather than ancestry. BOTH ARE DRAWN, and they are the two cells")
-    print("      note_public tells the reader to hold most loosely (sources/kz.md §5).")
-    if share > 0.06:
-        raise SystemExit(f"the held-out error is {share:.1%}, which is too large for this "
-                         "model to be worth drawing -- see sources/kz.md")
+def join_to_kato(measured):
+    """oblast label -> (KATO geo_id, the geo_name the geography is keyed on).
 
-    # Every one of the seven answers Question 11 offers now lands on the tree, including
-    # `Отказываюсь указать` (option 6), so nobody is left off. taxonomy/kz2021.py argues it.
-    drawn = sum(total["Барлығы"][c] for c in DRAWN)
-    good = drawn == NATIONAL
-    ok &= good
-    print(f"\n  {'OK ' if good else 'BAD'} drawn: {drawn:,} of {NATIONAL:,} = "
-          f"{drawn / NATIONAL:.2%} — every answer on the form is on the tree")
-    ref = total["Барлығы"]["Отказались указать"]
-    print(f"      of which `Отказались указать` {ref:,} ({ref / NATIONAL:.2%}) -> `unknown`, "
-          "and it is\n      the model's SECOND-worst cell (-7.8% urban / +15.0% rural above)")
+    Proved on the population and not on the name. The seventeen oblast populations are
+    asserted distinct first, which is what makes a population join a proof rather than a
+    coincidence; the names are then checked for agreement and are allowed to differ only
+    where CAPITAL_RENAME says so.
+    """
+    sys.path.insert(0, HERE)
+    from kz_model import read_magnitude          # the ethnos workbook: KATO, name, Всего
 
-    if not ok:
-        raise SystemExit("reconciliation FAILED")
+    _, regions, _ = read_magnitude()
+    ref = {r["kato"]: (r["name"], r["Всего"]) for r in regions}
+    if len(ref) != EXPECTED_REGIONS:
+        raise SystemExit(f"{len(ref)} KATO regions in the workbook")
+
+    pops = [p for _, p in ref.values()]
+    if len(set(pops)) != len(pops):
+        raise SystemExit("two oblasts share a population; the population join is not a "
+                         "proof any more and this needs a real key (spec §12)")
+    by_pop = {p: (k, n) for k, (n, p) in ref.items()}
+
+    out, unmatched = {}, []
+    for ob, cats in measured.items():
+        pop = sum(cats.values())
+        if pop not in by_pop:
+            unmatched.append(f"  {ob}: {pop:,} matches no oblast in the workbook")
+            continue
+        kato, name = by_pop[pop]
+        out[ob] = (kato, name)
+    if unmatched:
+        raise SystemExit("the population join failed:\n" + "\n".join(unmatched))
+    if len(set(out.values())) != EXPECTED_REGIONS:
+        raise SystemExit("the population join is not one-to-one")
+
+    # now the names, as a second opinion on a join that is already proved
+    for ob, (kato, name) in sorted(out.items()):
+        want = CAPITAL_RENAME.get(ob)
+        if want is not None:
+            if name != want:
+                raise SystemExit(f"{ob} paired with {name!r}, expected {want!r}")
+            print(f"  {kato}  {ob:<24} -> {name}   (renamed since the census; population "
+                  f"{sum(measured[ob].values()):,} pairs them)")
+            continue
+        if norm_oblast(ob) != norm_oblast(name):
+            raise SystemExit(
+                f"population pairs {ob!r} with {name!r} but the names disagree. One of them "
+                "is wrong and the totals will not show it "
+                "([[reference_name_join_wrong_neighbour]]); resolve it before building.")
+    print(f"join: {EXPECTED_REGIONS} oblasts paired on population to the person, "
+          f"{EXPECTED_REGIONS - len(CAPITAL_RENAME)} confirmed by name")
+    return out
 
 
 def main():
     if "--fetch" in sys.argv:
         fetch()
-    nat, regions, eth_cols = read_magnitude()
-    coef = read_coefficients()
-    modelled, shares, rest = model(nat, regions, coef)
-    check(nat, regions, coef, modelled, shares, rest)
+    measured = read_cache()
+    check_national(measured)
+    pairing = join_to_kato(measured)
+
+    note = ("level=region; COUNTED. BNS's own religion x oblast cross-tabulation of the 2021 "
+            "census, taken from the census dashboard's Qlik engine (qap.stat.gov.kz, app "
+            f"{APP}), whose data model is the 19,186,015 enumerated person records "
+            "themselves. Every national religion total reproduces the published volume's "
+            "chapter 12 to the person")
 
     rows = []
-    for kato, m in modelled.items():
-        ints = _largest_remainder(m["counts"], m["pop"])
-        note = ("level=region; MODELLED (spec §14.10) = this oblast's ethnic composition "
-                "(census, sheet 2.1) x the national share of each religion within each "
-                "ethnicity (census, volume ch.12). No magnitude is estimated: the oblast's "
-                "population is BNS's own count and the model only splits it")
-        rows.append({"geo_id": kato, "geo_level": "region", "geo_name": m["name"],
-                     "source_category": "Всего", "count": m["pop"], "basis": BASIS,
-                     "year": YEAR, "source_id": SOURCE_ID,
+    for ob, (kato, name) in sorted(pairing.items(), key=lambda kv: kv[1][0]):
+        cats = measured[ob]
+        rows.append({"geo_id": kato, "geo_level": "region", "geo_name": name,
+                     "source_category": "Всего", "count": sum(cats.values()),
+                     "basis": BASIS, "year": YEAR, "source_id": SOURCE_ID,
                      "note": note + "; universe total, not a religion category"})
         for c in DRAWN:
-            rows.append({"geo_id": kato, "geo_level": "region", "geo_name": m["name"],
-                         "source_category": c, "count": ints[c], "basis": BASIS,
+            rows.append({"geo_id": kato, "geo_level": "region", "geo_name": name,
+                         "source_category": c, "count": cats[c], "basis": BASIS,
                          "year": YEAR, "source_id": SOURCE_ID, "note": note})
 
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
@@ -454,7 +387,8 @@ def main():
         w = csv.DictWriter(fh, fieldnames=COLUMNS)
         w.writeheader()
         w.writerows(rows)
-    print(f"\nwrote {OUT} ({len(rows):,} rows)")
+    print(f"\nwrote {OUT} ({len(rows):,} rows, {EXPECTED_REGIONS} oblasts, "
+          f"{len(DRAWN)} categories, basis {BASIS})")
 
 
 if __name__ == "__main__":

@@ -4,7 +4,7 @@ Sixteen named religions plus a residual, a no-religion answer and a refusal, at 
 list is long and the country is not plural: one church is 95.2% of it, and everything worth
 looking at is in the other 5%.
 
-    95.24%  Armenian apostolic        -> christianity.oriental
+    95.24%  Armenian apostolic        -> christianity.oriental.armenian
      1.68%  Refused to answer         -> EXCLUDED (non-response)
      0.61%  Catholic                  -> christianity.catholic
      0.60%  No religion               -> unaffiliated
@@ -49,22 +49,21 @@ EXCLUDED = {
 
 REVIEW = {
     "Armenian apostolic":
-        "-> christianity.oriental, the Oriental Orthodox parent, and **this is the call in "
-        "the file most worth a second look.** 2,793,041 people, 95.24% of Armenia and by an "
-        "enormous margin the largest count `christianity.oriental` has ever had: Georgia's "
-        "109,041 was the previous largest and ge2014.py already recorded that a "
-        "`christianity.oriental.armenian` child was becoming arguable on it. Armenia settles "
-        "that argument on the numbers and does not act on it, for the reason ge2014.py gave "
-        "and which has not changed: **au2021.py, ee2021.py, cy2021.py, pl2021.py and "
-        "ro2021.py all file Coptic, Syriac, Ethiopian and Armenian bodies at the parent**, "
-        "so adding the child for Armenia alone would put one country below a node the "
-        "others sit on and assert a distinction those sources do not make. Doing it "
-        "properly means re-pointing six mapping files and re-scattering six drawn "
-        "countries, which is spec §3's *changes an already-drawn country's numbers* and is "
-        "Anita's. Filed as `ask/` so the country ships either way. **The cost of the parent "
-        "is real and is worth naming**: at 95% of one country the node stops reading as a "
-        "branch and starts reading as `Armenia`, and the Copts and the Ethiopians are now a "
-        "rounding error inside a colour that is mostly Armenian.",
+        "-> christianity.oriental.armenian. 2,793,041 people, 95.24% of Armenia. **This "
+        "line was `christianity.oriental`, the bare parent, until 2026-09-08**, when Anita "
+        "ruled on `ask/004-am` in these words: *record whatever the source actually says*. "
+        "Armstat's `Հայ առաքելական` names the Armenian church, so it files at an Armenian "
+        "node; a source whose category can only say Oriental Orthodox stays on the parent, "
+        "and that is a correct outcome rather than an inconsistency to iron out. The "
+        "argument the first version gave for the parent, that au2021, ee2021, cy2021, "
+        "pl2021 and ro2021 sit there too, turned out to be an argument for moving all of "
+        "them: every one of those five NAMES the Armenian church in its own language, so "
+        "nine sources moved together and only the four that genuinely cannot distinguish "
+        "were left behind (ca2021's `Oriental Orthodox`, au2021's coarse column 221, "
+        "pl2021's `różne inne chrześcijańskie kościoły wschodnie`, es_origin's African "
+        "residual). The other half of the review's finding was that the branch already had "
+        "ten children and two of them were Armenian, so this added one legend row rather "
+        "than the first.",
     "Catholic":
         "-> christianity.catholic, the parent, and NOT `christianity.catholic.eastern`. "
         "17,855 people, and **the geography says exactly which church it is**: Lori 7,019 "
@@ -170,7 +169,7 @@ REVIEW = {
 }
 
 MAP = {
-    "Armenian apostolic": "christianity.oriental",
+    "Armenian apostolic": "christianity.oriental.armenian",
     "Catholic": "christianity.catholic",
     "Orthodox": "christianity.orthodox.canonical",
     "Nestorian": "christianity.churchofeast",

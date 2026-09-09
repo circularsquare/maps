@@ -205,6 +205,24 @@ def held_out(df, pop, country, unit_col="geo_id", n_perm=20000, seed=0, pop_sour
     pins the decode. `sources/kz.py` used the same construction (`r=0.897 over 183 wards,
     which none of 2,000 random pairings comes near`) and it is the right shape here too.
 
+    ## AND IT IS THE WRONG SHAPE BELOW ABOUT TEN UNITS — UNCHANGED HERE, DELIBERATELY
+
+    "Fail if ANY sampled pairing reaches the observed r" assumes the possible orderings vastly
+    outnumber the draws, and stops being true on a small country. `n` units give `n!`
+    orderings, one of which is the CORRECT one, so 20,000 draws return the right answer back
+    with probability about `20000/n!` and the check then hard-fails a perfect decode on
+    nothing but unit count: at 8 units that is roughly every other run. `sources/arabbarometer.py`
+    hit it (Lebanon has about eight governorates), and `held_out` there now excludes the
+    observed ordering from the null and enumerates every ordering exhaustively when there are
+    few enough of them. Read that one before copying this one.
+
+    **Not ported, because nothing this module draws is anywhere near it.** El Salvador is the
+    smallest at 14 units, and 14! = 8.7e10 against 20,000 draws is a probability of 2e-7;
+    Guatemala has 22 and Ecuador 23. Changing a file three built countries import, to fix a
+    failure none of them can have, is the worse trade. **A future LAPOP country with under
+    about ten first-level units — Costa Rica has 7 provinces, Panama 10 — will hit it on its
+    first run**, and the fix is arabbarometer's, sitting there written.
+
     ## AND THE AGE CHECK IS REPORTED, NEVER ASSERTED, BECAUSE IT HAS NO POWER
 
     An earlier version of this ran a SECOND test — mean adult age per unit against COD-PS's

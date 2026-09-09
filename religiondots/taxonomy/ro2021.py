@@ -81,7 +81,9 @@ MAP = {
     # The Lipovans of the Danube delta — the largest Old Believer population any census
     # anywhere publishes.
     "Crestina de Rit Vechi": "christianity.orthodox.oldbeliever",
-    "Armeana (Arhiepiscopia Bisericii Armene)": "christianity.oriental",
+    # INS names the archdiocese of the Armenian Church itself, so this goes to the Armenian
+    # node rather than the Oriental Orthodox parent (ask/004-am, 2026-09-08). 806 people.
+    "Armeana (Arhiepiscopia Bisericii Armene)": "christianity.oriental.armenian",
 
     # ---------------------------------------------------------------- Catholic
     "Romano-Catolica": "christianity.catholic.latin",

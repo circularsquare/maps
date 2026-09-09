@@ -55,11 +55,16 @@ REVIEW = {
         "and it is what ca2021, de2022, hu2022, ie2022, mk2021, me2023, kz2021 and at2001 "
         "all use for the same shaped cell.",
     "Armenian church":
-        "-> christianity.oriental, the Oriental Orthodox branch. The tree's only Armenian "
-        "leaves are the two American catholicosates, which are US jurisdictions and not this. "
-        "Cyprus's Armenians are the Armenian Apostolic community of Nicosia and Larnaca, "
-        "under the Catholicosate of Cilicia, and the same call is made by bg2021, ee2021, "
-        "ge2014, pl2021 and ro2021 for their own national Armenian churches. 2,025 people.",
+        "-> christianity.oriental.armenian. 2,025 people. The objection this note used to "
+        "raise is fixed rather than argued around: the tree's only Armenian nodes WERE two "
+        "ASARB rows labelled for American dioceses, and 2026-09-08 put a general "
+        "`christianity.oriental.armenian` above them with the two catholicosates under it "
+        "(ask/004-am). **It stops at the general node and does not go to "
+        "`.armenian.cilicia`**, even though the Armenian Prelature of Cyprus is a Cilician "
+        "jurisdiction, because CYSTAT's cell says `Armenian church` and nothing about a "
+        "catholicosate. What is known about the community goes in this note; what the source "
+        "printed is what gets drawn. bg2021, ee2021, ge2014, pl2021 and ro2021 land at the "
+        "same node for the same reason.",
     "Maronite church":
         "-> christianity.catholic.eastern. The Maronite Church is one of the 23 sui iuris "
         "churches in full communion with Rome, which is exactly what that node holds, and "
@@ -104,7 +109,7 @@ REVIEW = {
 
 MAP = {
     "Christian Orthodox": "christianity.orthodox",
-    "Armenian church": "christianity.oriental",
+    "Armenian church": "christianity.oriental.armenian",
     "Maronite church": "christianity.catholic.eastern",
     "Roman Catholic": "christianity.catholic.latin",
     "Muslim": "islam",

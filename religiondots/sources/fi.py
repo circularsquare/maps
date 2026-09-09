@@ -399,9 +399,21 @@ def _citizen_shares():
     pool = pool[pool["cat"] != REFUSAL]
     raw = raw[raw["cat"] != REFUSAL]
 
+    # THE ASSERTION IS SYMMETRIC AND THAT IS THE POINT, added 2026-09-08 (sources/fi.md §8).
+    # `set(pool) - set(MAP)` alone catches a category that APPEARED and cannot catch one that
+    # VANISHED, which is exactly the failure this file already had once: `rlgdnafi`'s codeList
+    # is positional and an off-by-one on the axis silently emptied Islam. The pooled set over
+    # the seven rounds is all fifteen MAP keys today, so requiring equality costs nothing and
+    # fails loudly on the regression rather than drawing a country with a religion missing.
+    # If ESS ever legitimately retires a category, delete it from MAP in the same commit.
     unknown = sorted(set(pool["cat"]) - set(fi2024.MAP))
     if unknown:
         sys.exit(f"!! source categories with no mapping: {unknown}")
+    vanished = sorted(set(fi2024.MAP) - set(pool["cat"]))
+    if vanished:
+        sys.exit(f"!! fi2024.MAP categories that no round produced: {vanished} — a mapped "
+                 "answer with nobody on it means the denomination axis moved under the "
+                 "parse, not that Finland lost a religion")
 
     tab = pool.groupby(["region", "cat"])["count"].sum().unstack(fill_value=0.0)
     if len(tab) != N_UNITS:

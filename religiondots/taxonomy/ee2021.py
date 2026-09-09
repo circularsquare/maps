@@ -87,7 +87,9 @@ MAP = {
     "Lutheran": "christianity.lutheran",
     "Orthodox": "christianity.orthodox.canonical",
     "Old Believer": "christianity.orthodox.oldbeliever",
-    "Armenian Apostolic Church": "christianity.oriental",
+    # Named, so it files at the Armenian node rather than the Oriental Orthodox parent
+    # (ask/004-am, 2026-09-08). Statistics Estonia's own English label is the church's name.
+    "Armenian Apostolic Church": "christianity.oriental.armenian",
     "Roman Catholic": "christianity.catholic.latin",
     "Calvinist": "christianity.reformed",
     "Anglican": "christianity.anglican",

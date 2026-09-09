@@ -109,8 +109,12 @@ MAP = {
     "186": "christianity.oriental.coptic",
     "204": "christianity.oriental.ethiopian",
     "202": "christianity.oriental.eritrean",
-    "050": "christianity.oriental.armenian-etchmiadzin",
-    "049": "christianity.oriental.armenian-cilicia",
+    # Both ASARB rows are US dioceses of a worldwide catholicosate, so they map AT the
+    # catholicosate branch rather than at a leaf carrying ASARB's own "of North America"
+    # name -- 2026-09-08, ask/004-am. Moved rather than merged: 049 and 050 are the one
+    # division of the Armenian church any source here makes.
+    "050": "christianity.oriental.armenian.etchmiadzin",
+    "049": "christianity.oriental.armenian.cilicia",
     "423": "christianity.oriental.syriac",
     "333": "christianity.oriental.malankara-orthodox",
     "334": "christianity.oriental.malankara-syriac",

@@ -151,7 +151,16 @@ CHRISTIAN = {
     "MD": {"christianity.orthodox.canonical.romanian": 0.60, ORTH: 0.37, PROT: 0.03},
     "BY": {ORTH: 0.82, CATH: 0.16, PROT: 0.02},
     "GE": {"christianity.orthodox.canonical.georgian": 0.93, ORIENT: 0.05, CATH: 0.02},
-    "AM": {"christianity.oriental.armenian-etchmiadzin": 0.94, CATH: 0.04, PROT: 0.02},
+    # THE GENERAL ARMENIAN NODE AND NOT A CATHOLICOSATE. Until 2026-09-08 this line read
+    # `christianity.oriental.armenian-etchmiadzin`, which was ASARB's NORTH AMERICAN diocese
+    # -- so an Armenian in Lyon or Thessaloniki was being filed on a US jurisdiction. Nothing
+    # about a migrant's origin country says which of the two catholicosates they follow, and
+    # the model must not invent one. ask/004-am.
+    # The neighbouring ORIENT rows stay on the bare parent on purpose. GE, TR and AZ are
+    # mostly Armenian and LY, SD, DJ mostly Coptic, but each is a MIXED residual in a model
+    # rather than a category anybody published, and the ruling is about not asserting a
+    # division the source makes no claim about.
+    "AM": {"christianity.oriental.armenian": 0.94, CATH: 0.04, PROT: 0.02},
     "GR": {"christianity.orthodox.canonical.greek": 0.97, CATH: 0.02, PROT: 0.01},
     "EL": {"christianity.orthodox.canonical.greek": 0.97, CATH: 0.02, PROT: 0.01},
     "CY": {"christianity.orthodox.canonical.greek": 0.95, CATH: 0.04, PROT: 0.01},

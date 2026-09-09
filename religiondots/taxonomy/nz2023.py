@@ -121,7 +121,11 @@ MAP = {
     "Greek Orthodox": _ORTH,
     "Russian Orthodox": _ORTH,
     "Serbian Orthodox": _ORTH,
-    "Coptic Orthodox": "christianity.oriental",
+    # NAMES A CHURCH, so it files at that church's node rather than the Oriental Orthodox
+    # parent (ask/004-am, 2026-09-08; spec §2.7). 546 people, and Stats NZ's only Oriental
+    # Orthodox cell -- there is no `Oriental Orthodox nfd` here to hold anybody it misses,
+    # so an Armenian or an Ethiopian in New Zealand is inside `Orthodox nfd/nec` above.
+    "Coptic Orthodox": "christianity.oriental.coptic",
     "Assyrian Orthodox": "christianity.churchofeast",
 
     # ---------------------------------------------------------------- Anglican / Reformed

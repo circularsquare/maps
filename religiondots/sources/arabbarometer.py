@@ -35,6 +35,12 @@ code silently merges three different answers, and nothing about the result looks
 pooled, and the label string is the category from then on.** The same applies to `Q1`, where
 the same file gives one country 45 spellings of 27 units.
 
+**And the label string is then guarded in its turn**, because the same failure exists one
+column across: pooling on a raw wording splits an answer that two waves spell differently.
+`assert_one_wording()` runs at the foot of `load()` and refuses to return a pool in which one
+answer arrives under two spellings. Lebanon is the measured case — `Other` in three waves,
+`other` in a fourth — and that function's docstring is where it is written up.
+
 **And the answer card is not the same card twice either**, which the decode cannot fix and
 the country module has to decide about. Only wave V offers `Atheist`; only wave VII offers
 `No religion`; waves III and IV offer neither. A share pooled across all four for an option
@@ -60,9 +66,13 @@ redistribution clause, no stated citation requirement. Read before anything was 
 because of Nişanyan (§11ac).
 """
 
+import itertools
+import math
 import os
+import re
 import ssl
 import sys
+import unicodedata
 import urllib.request
 import warnings
 import zipfile
@@ -99,6 +109,13 @@ WAVES = [
     ("VIII", 8, "ArabBarometer_WaveVIII_English_v2.zip",
      "ArabBarometer_WaveVIII_English_v3.sav"),
 ]
+
+WAVE_ORDER = {name: i for i, (name, _o, _z, _s) in enumerate(WAVES)}
+WAVE_NAMES = [name for name, _o, _z, _s in WAVES]
+
+# Below this many possible orderings of a country's units, `held_out` checks every one of them
+# instead of sampling. 8! = 40,320 is under it and 9! = 362,880 is over. See `held_out`.
+EXACT_PERM_MAX = 50_000
 
 # A category is ELIGIBLE for its own geography if it is at least this much of the country.
 # The floor is `sources/lapop.py`'s and the reasoning is §11ad's: that instrument's
@@ -164,7 +181,300 @@ def _col(df, *names):
     return None
 
 
-def load(country, expect_waves=None):
+# `8. Jordan`, `5. Egypt`, `17. Saudi Arabia` — wave II, and only wave II, prints the country's
+# position in its own code list inside the label. See `country_key`.
+_ORDINAL_PREFIX = re.compile(r"^\s*\d+\s*[.)]\s*")
+
+# The `country` column is a per-wave label set exactly as the answers are, so a country spelled
+# two ways loses whole waves without failing anything. `country_key` folds the one difference
+# that is mechanical (wave II's ordinal) and stops; this names the differences that are not.
+# A country named here is matched on ALL of its spellings, and the key may be any of them.
+#
+# **Saudi Arabia is the only case in waves I to VIII**, swept 2026-09-09 over every `country`
+# value label declared in all ten files: wave II spells it `17. Saudi Arabia` and wave V's
+# label set spells it `Kingdom of Saudi Arabia`, so after the ordinal strip those are two keys
+# and asking for either one finds half the file. `assert_no_near_miss` is what found it and is
+# what will find the next one; this dictionary is where the answer gets written down.
+#
+# It buys nothing for Saudi Arabia itself, and that is worth knowing before anyone tries:
+# **Saudi Arabia cannot be drawn from this survey at all.** Its 1,404 wave II respondents have
+# a governorate and a weight and an entirely empty `Q1012`, and wave V declares the label
+# against zero rows. The alias is here so that the next country with two spellings is a line
+# of dictionary rather than a silent half-pool.
+COUNTRY_ALIASES = {
+    "saudi arabia": ["Saudi Arabia", "Kingdom of Saudi Arabia"],
+}
+
+# Words that name a form of state, or join two words that do, and never name a place.
+# `near_miss_keys` uses them to tell `Kingdom of Saudi Arabia` against `Saudi Arabia`, which is
+# one country under two labels, from `South Sudan` against `Sudan`, which is two countries: the
+# extra words in the first pair are all in here and `south` is not. Widening this asserts that
+# two more labels are one country, so it is a written decision and not a convenience.
+_FORM_OF_STATE = {
+    "and", "arab", "democratic", "federal", "federation", "great", "hashemite", "islamic",
+    "jamahiriya", "kingdom", "of", "people", "peoples", "people's", "popular", "republic",
+    "socialist", "state", "states", "sultanate", "the", "union", "united",
+}
+
+# WAVES A COUNTRY LEAVES OUT OF ITS POOL ALTHOUGH THE FILES OFFER THEM, AND WHY.
+#
+# `load` refuses a pool that is quietly narrower than the files, because that is the exact
+# shape of the wave II failure `country_key` writes up: a wave present in the file, absent from
+# the pool, and nothing on screen. Leaving a wave out is often right; leaving it out in silence
+# never is. A country module normally states its own with `omit=` at the call.
+#
+# Egypt's is here instead of in `sources/eg.py`, for one reason. It is a decision about an
+# ALREADY-DRAWN country and the pin is Anita's to rule on, so the country module is not to be
+# edited while that is open; `sources/jo.md` §9.3 costs the rebuild out. Move this into
+# `sources/eg.py` beside its `WAVES` whenever the ruling lands.
+OMITTED = {
+    "egypt": {
+        "II": "Egypt was drawn on 2026-09-08 from a pool that could not see wave II, and "
+              "fixing the country filter is not a reason to move a published map. Adding the "
+              "wave takes the national Christian share from 6.024% to 5.831% and puts Asyut "
+              "above Minya as the most Christian governorate on the strength of 70 "
+              "interviews; sources/jo.md §9.3 has the measurement. Anita's to rule on.",
+    },
+}
+
+
+def country_key(label):
+    """Fold a `country` value label to something two waves' spellings of it share.
+
+    ## WAVE II WAS SILENTLY MISSING FROM EVERY COUNTRY BUILT HERE UNTIL 2026-09-08
+
+    `load()` selected a country by `label.lower() == country.lower()`, which is right for nine
+    of the ten waves and wrong for wave II, whose `country` value labels read **`8. Jordan`,
+    `5. Egypt`, `17. Saudi Arabia`** — the numeric code repeated inside the label. So the
+    comparison failed for every country, `load()` found no rows, and the wave was skipped by
+    the `continue` that is there for a country a wave did not field. **No error, no warning,
+    and a smaller pool than the file contains**: 1,188 Jordanians and 1,219 Egyptians, with
+    `q1012 Religion` and `q1 Province/Governorate/State` both present and a weight.
+
+    That is `[[reference_pooled_survey_labels]]` on a THIRD column of this same survey. The
+    module docstring has it on the religion answers, `assert_one_wording` has it on their
+    wordings, and this is it on the country itself. All three are the same mechanism: a pooled
+    file keyed on a label that one wave spells its own way.
+
+    Stripping the ordinal is deliberately the ONLY thing done here. `casefold` and a strip
+    handle wave I's lower-cased names; nothing else is folded, because two Arab Barometer
+    countries with similar names are a real possibility and a fuzzy country key would be the
+    worst possible place to be clever. **`COUNTRY_ALIASES` is where the differences that are
+    not mechanical get written down**, and `near_miss_keys` is what finds them: the same
+    stripping leaves wave II's `17. Saudi Arabia` and wave V's `Kingdom of Saudi Arabia` as
+    two keys, which is this failure again one release later.
+
+    **A country module that does not want wave II must say so with `waves=` AND `omit=`**,
+    which is what `OMITTED` does for `sources/eg.py` and why Egypt's numbers did not move when
+    this was fixed. `waves=` alone is no longer enough: a pool narrower than the files without
+    a stated reason is the failure this docstring is about.
+    """
+    return _ORDINAL_PREFIX.sub("", str(label)).strip().casefold()
+
+
+def country_spellings(country):
+    """Every `country` label this country may arrive under, as `country_key`s.
+
+    One spelling is the normal case. The lookup is symmetric, so a module that asks for
+    `Kingdom of Saudi Arabia` gets the same waves as one that asks for `Saudi Arabia`.
+    """
+    want = country_key(country)
+    for k, group in COUNTRY_ALIASES.items():
+        keys = {country_key(n) for n in list(group) + [k]}
+        if want in keys:
+            return keys
+    return {want}
+
+
+def near_miss_keys(key, others):
+    """The keys in `others` that are the same country name as `key` under a form-of-state word.
+
+    ONE COUNTRY UNDER TWO LABELS IS THE THIRD PLACE THIS SURVEY LOSES A WAVE IN SILENCE. The
+    module docstring has the first (a code re-used for a different answer), `assert_one_wording`
+    the second (an answer spelled two ways), and `country_key` the third, which it fixes only
+    as far as wave II's ordinal. It stops there on purpose: two Arab Barometer countries with
+    similar names are a real possibility and a fuzzy country key would be the worst place in
+    this module to be clever.
+
+    So this DETECTS rather than resolves, the same division of labour as `assert_one_wording`.
+    Two keys are a near miss when the words of one are a strict subset of the words of the
+    other and **every extra word is a form of state**: `saudi arabia` inside `kingdom of saudi
+    arabia`, `egypt` inside `arab republic of egypt`, `emirates` inside `united arab emirates`.
+    `sudan` inside `south sudan` is not one, and must not be, because those are two countries.
+    """
+    mine = set(str(key).split())
+    hits = []
+    for other in others:
+        theirs = set(str(other).split())
+        if mine == theirs:
+            continue
+        small, big = (mine, theirs) if len(mine) < len(theirs) else (theirs, mine)
+        if small < big and (big - small) <= _FORM_OF_STATE:
+            hits.append(other)
+    return hits
+
+
+def assert_no_near_miss(country, declared):
+    """Refuse to pool a country whose name also appears in this file under a second spelling.
+
+    `declared` is `wave_coverage`'s second return: every `country` value label declared
+    anywhere in the ten files, folded, against the waves declaring it. The check is against
+    the DECLARED labels rather than the observed ones, because a label with no rows in the
+    wave you looked at is precisely the label that has rows in the wave you did not; wave V
+    declares `Kingdom of Saudi Arabia` over zero rows, and that is the only reason the case
+    was findable before somebody built the country on half its waves.
+    """
+    want = country_spellings(country)
+    hits = sorted({o for k in want for o in near_miss_keys(k, [d for d in declared
+                                                             if d not in want])})
+    if not hits:
+        return
+    lines = [f"    {k!r} is declared in waves "
+             f"{', '.join(declared.get(k, [])) or '(none)'}" for k in sorted(want)]
+    lines += [f"    {o!r} is declared in waves {', '.join(declared[o])}" for o in hits]
+    raise SystemExit(
+        f"{country} resolves to {sorted(want)}, and this file declares another country label "
+        "that is the same name under a form-of-state word:\n" + "\n".join(lines)
+        + "\n  Either those are one country spelled two ways, in which case the pool you are "
+        "about to build is missing the waves on the other line and nothing downstream would "
+        "have said so, or they are two countries whose names nest. This module cannot tell "
+        "which and does not guess (see `country_key`). If they are one country, name every "
+        "spelling in COUNTRY_ALIASES; if they are two, `_FORM_OF_STATE` is what has to "
+        "change, with the reason written beside it.")
+
+
+def wave_coverage(country):
+    """WHAT THE FILES HOLD FOR THIS COUNTRY, read before anything is pooled.
+
+    Returns `(available, declared)`:
+
+      * **`available`** — the waves, in file order, holding at least one respondent of this
+        country with a non-null `Q1012`. This is what `expect_waves` is asserted against, and
+        reading it here rather than off the pooled frame is the whole point of the function.
+        `load` computed that assertion from a frame it had ALREADY filtered by `waves=`, so a
+        wave the pool never asked for could not appear in it, and the guard whose docstring
+        promises to catch a re-release adding a wave was blind to exactly that. An assertion
+        that cannot fail is worse than none.
+      * **`declared`** — every `country` value label declared in any wave, folded by
+        `country_key`, against the waves declaring it. Declared is not present: wave V declares
+        `Kingdom of Saudi Arabia` and holds no rows under it. `assert_no_near_miss` reads this.
+
+    It costs about a second and a half over all ten waves, because it reads the metadata on its
+    own and then two columns of the data, never the whole file.
+    """
+    import pyreadstat
+
+    want = country_spellings(country)
+    available, declared = [], {}
+    for name, _ordinal, _zipname, savname in WAVES:
+        p = os.path.join(AB_DIR, savname)
+        if not os.path.exists(p):
+            raise SystemExit(f"{p} missing — run the country module with --fetch")
+        meta = pyreadstat.read_sav(p, metadataonly=True)[1]
+        names = pd.DataFrame(columns=list(meta.column_names))
+        c, rel = _col(names, "country"), _col(names, "q1012")
+        if c is None:
+            raise SystemExit(f"wave {name} has no country column")
+        clab = meta.variable_value_labels.get(c, {})
+        for lab in clab.values():
+            declared.setdefault(country_key(lab), []).append(name)
+        # Wave I is the one wave with no `Q1012` at all; it offers no country a religion
+        # answer and so is in no country's `available`. `load` explains it where a module
+        # asks for it anyway.
+        if rel is None:
+            continue
+        df, _m = pyreadstat.read_sav(p, usecols=[c, rel])
+        cname = df[c].map(clab).fillna(df[c].astype(str)).astype(str).str.strip()
+        hit = cname.map(country_key).isin(want)
+        if hit.any() and df.loc[hit, rel].notna().any():
+            available.append(name)
+    return available, declared
+
+
+def fold(label):
+    """The differences between two wordings that carry no meaning: case, spacing, edge marks.
+
+    Deliberately narrow, and the narrowness is the point. `Other` and `other` fold together
+    because nothing but the shift key separates them. `Other` and `Something else:
+    SPECIFY_______` do NOT, and neither do `Refused to answer` and `refused`, because deciding
+    that two different sentences are one box on one showcard is a reading of the questionnaires
+    and belongs to whoever builds that country. This function exists to DETECT a collision, not
+    to resolve one; see `assert_one_wording`.
+
+    **The one addition, 2026-09-08: a leading `<n>.` is stripped.** Wave II spells its `Q1012`
+    answers `1. muslim`, `2. christian`, `99999. declined to answer` — the numeric code
+    repeated inside the label, exactly as it does for the country (see `country_key`). Without
+    this, `1. muslim` and `Muslim` are two categories that DO NOT COLLIDE, so
+    `assert_one_wording` says nothing and the pool silently carries Islam twice with every
+    total still adding up, which is the failure that function exists to catch. Stripping the
+    ordinal is mechanical and cannot merge two different answers: it is the same character
+    class the country column needed, and it leaves `Something else: SPECIFY_______` and `Other`
+    as far apart as they were.
+    """
+    s = unicodedata.normalize("NFKC", str(label))
+    s = _ORDINAL_PREFIX.sub("", " ".join(s.split()))
+    return s.strip(" .,:;!?_-").casefold()
+
+
+def assert_one_wording(df, country, cat_col="category"):
+    """ONE ANSWER, ONE SPELLING, or this refuses to pool and hands the call back.
+
+    The twin of the module docstring's code-re-use guard, one column across, and the failure
+    it catches is the one the codes' guard cannot see. `load()` decodes each wave through that
+    wave's own labels, so no numeric code survives into the frame — but from then on the
+    pooling key is the label STRING, and nothing about `pd.concat` notices that wave V spells
+    an answer differently from wave IV.
+
+    Lebanon is the measured case and it is one shift key wide: `Other` in waves IV, VI-2 and
+    VIII (194 respondents) and `other` in wave V (190). One box on one card, arriving as two
+    categories. What that costs, in order of how quietly it happens:
+
+      * `national()` reports two answers where the questionnaire has one;
+      * each is ranked by `stability()` on half the respondents, so the test that decides
+        whether a category carries its own geography runs at half power;
+      * each is measured against `ELIGIBLE_FLOOR` separately, so an answer that clears 1%
+        whole can be dropped as too small to place, twice;
+      * `taxonomy/<cc>*.py`'s `MAP` needs both spellings or one silently resolves to `None`.
+
+    **Every one of those preserves the totals**, which is why nothing downstream catches it.
+
+    THIS DOES NOT FOLD THE DATA, and that is not an oversight. Merging the two spellings is
+    almost certainly right for Lebanon and is still a judgement: it asserts that two waves used
+    one wording for one answer, which is a reading of two showcards rather than a typo, and the
+    module cannot tell that case from two waves using similar wordings for two different
+    answers. So it raises, names both spellings and the waves each came from, and leaves the
+    merge to the country module, where it can be written down next to the reason.
+
+    Note what is NOT asserted: that every wave offers the same answers. It does not, the module
+    docstring says why, and Egypt would fail such a check on wave V's `Atheist` alone. A
+    missing answer is a different card; two spellings of one answer are the same card twice.
+    """
+    seen = {}
+    for (lab, wave), n in df.groupby([cat_col, "wave"], sort=False).size().items():
+        seen.setdefault(fold(lab), {}).setdefault(lab, []).append((wave, int(n)))
+    clashes = {f: v for f, v in seen.items() if len(v) > 1}
+    if not clashes:
+        return
+    lines = []
+    for f, spellings in sorted(clashes.items()):
+        lines.append(f"    {f!r} arrives as {len(spellings)} categories:")
+        for lab, waves in sorted(spellings.items()):
+            waves.sort(key=lambda wn: WAVE_ORDER.get(wn[0], 99))
+            where = ", ".join(f"wave {w} n={n}" for w, n in waves)
+            lines.append(f"      {lab!r}  {sum(n for _w, n in waves)} respondents  ({where})")
+    raise SystemExit(
+        f"{country}'s pooled waves spell one answer more than one way, so the pool would "
+        "carry it as two categories with the totals still adding up:\n"
+        + "\n".join(lines)
+        + "\n  Nothing is folded here on purpose: whether those really are one box on one "
+        "showcard is a reading of the questionnaires, and this module cannot tell it from "
+        "two similar wordings for two different answers. Decide it in the country module, "
+        "re-word the `category` column there with the reason written down, and call "
+        "`ab.assert_one_wording` again on the result. See the docstring for what pooling "
+        "them unnoticed would cost.")
+
+
+def load(country, expect_waves=None, waves=None, recode=None, omit=None):
     """One country's respondents, decoded wave by wave through that wave's own labels.
 
     Returns [`wave`, `wave_no`, `category`, `geo_raw`, `geo_code`, `w`], one row per
@@ -173,11 +483,85 @@ def load(country, expect_waves=None):
 
     `expect_waves` is the list of wave names the country is known to appear in, asserted so a
     re-release that adds or drops a wave is a failure here rather than a quiet re-levelling.
+    **It is checked against `wave_coverage`, which reads the files, and not against the pooled
+    frame.** Until 2026-09-09 it was checked against the frame — after that frame had been
+    filtered by `waves=` — so a wave the pool never asked for could not appear on either side
+    of the comparison and the "adds" half of that sentence could not fail. `wave_coverage`'s
+    docstring is the write-up.
+
+    ## `waves` — WHICH WAVES THE COUNTRY MODULE CHOSE, AND THE DIFFERENCE FROM `expect_waves`
+
+    `expect_waves` asserts what the FILES contain. `waves` decides what the POOL contains, and
+    a wave left out of it is a decision the country module has to justify. Two reasons a
+    country needs it, both real:
+
+      * **the wave asked something else.** Wave I's religion item is `q711` and not `q1012`,
+        and it is the only wave whose questionnaire is numbered the old way; more to the point
+        wave I carries **no subnational variable at all** — 181 columns, `country` and nothing
+        finer — so it cannot enter a pool that is cut by governorate however it is decoded.
+        Left out with `waves=`, it is a stated choice; left to the `rel is None` check below,
+        it is a hard failure that reads as a broken file.
+      * **the country is already drawn from a pool that did not have it.** Egypt was built
+        before `country_key` made wave II visible, so `sources/eg.py` pins its four waves and
+        Egypt's numbers do not move underneath a published map.
+
+    ## `omit` — AND WHY A WAVE THE FILES OFFER CANNOT JUST BE LEFT OUT
+
+    Only the first of those two reasons is visible in `waves=` on its own. Wave I is absent
+    from every country's `available` because it has no `Q1012`, so leaving it out states
+    nothing that the files do not already say. The second is different: wave II is in the
+    files, with a religion answer, and Egypt's pool does not have it. That is the wave II
+    failure's own shape, and a pool is not allowed to be quietly narrower than the files.
+
+    So every wave in `wave_coverage`'s `available` must be either in `waves=` or named in
+    `omit`, which is `{wave: "the reason"}` and is asserted the way `recode` is: a wave named
+    here that the files do not offer is a failure, not a stale line to ignore. `OMITTED`
+    carries Egypt's, for the reason written beside it.
+
+    ## `recode` — TWO SPELLINGS OF ONE ANSWER, MERGED WHERE THE REASON CAN BE WRITTEN DOWN
+
+    `{raw label: replacement}`, applied to `category` immediately before `assert_one_wording`,
+    which is the point that function's own error message asks the country module to act at.
+    Every key must occur in the pool or this raises, so a re-release that fixes a spelling
+    turns a stale entry into a failure rather than into silence.
+
+    It is deliberately NOT a widening of `fold`. Jordan needs `refused` (wave V) and
+    `Refused to answer` (waves VI-2 and VII) to be one answer; a fold loose enough to merge
+    that pair on its own would also merge Lebanon's `Something else: SPECIFY_______` into its
+    `Other`, which is two answers and not one. A dictionary in the country module, beside the
+    sentence saying why, is the difference.
     """
     import pyreadstat
 
+    want = None if waves is None else list(dict.fromkeys(waves))
+    known = list(WAVE_NAMES)
+    if want is not None:
+        unknown = [w for w in want if w not in known]
+        if unknown:
+            raise SystemExit(f"waves= names {unknown}, which are not Arab Barometer waves; "
+                             f"the file list is {known}")
+    omitted = dict(OMITTED.get(country_key(country), {}))
+    omitted.update(omit or {})
+    unknown = [w for w in omitted if w not in known]
+    if unknown:
+        raise SystemExit(f"omit names {unknown}, which are not Arab Barometer waves; "
+                         f"the file list is {known}")
+
+    # Read the files before pooling anything: which waves offer this country a religion answer,
+    # and whether the file also spells the country a second way. Both are questions the pooled
+    # frame cannot answer about itself, which is why the old `expect_waves` could not fail.
+    available, declared = wave_coverage(country)
+    assert_no_near_miss(country, declared)
+    spellings = sorted(country_spellings(country))
+    print(f"  the files offer {country} a religion answer in waves "
+          f"{', '.join(available) or 'NONE'}"
+          + (f"  (matched on {spellings})" if len(spellings) > 1 else ""))
+
+    country_keys = country_spellings(country)
     frames = []
     for name, ordinal, _zipname, savname in WAVES:
+        if want is not None and name not in want:
+            continue
         p = os.path.join(AB_DIR, savname)
         if not os.path.exists(p):
             raise SystemExit(f"{p} missing — run the country module with --fetch")
@@ -190,11 +574,15 @@ def load(country, expect_waves=None):
             raise SystemExit(f"wave {name} has no country column")
         clab = meta.variable_value_labels.get(c, {})
         cname = df[c].map(clab).fillna(df[c].astype(str)).astype(str).str.strip()
-        sub = df[cname.str.lower() == country.lower()]
+        sub = df[cname.map(country_key).isin(country_keys)]
         if not len(sub):
             continue
         if rel is None:
-            raise SystemExit(f"wave {name} has {country} rows but no Q1012")
+            raise SystemExit(
+                f"wave {name} has {country} rows but no Q1012. Wave I asks religion as "
+                "`q711` and carries no subnational variable at all, so it cannot be pooled "
+                "with the others; if that is the wave here, leave it out with `waves=` and "
+                "say why, rather than reaching for q711.")
         rlab = meta.variable_value_labels.get(rel, {})
         glab = meta.variable_value_labels.get(geo, {}) if geo else {}
         undecoded = sorted(set(sub[rel].dropna()) - set(rlab))
@@ -216,11 +604,65 @@ def load(country, expect_waves=None):
     out = pd.concat(frames, ignore_index=True)
     out = out[out["category"].notna()].copy()
     out["w"] = out["w"].fillna(1.0)
+    if out.empty:
+        raise SystemExit(
+            f"{country} has rows in these files and not one of them answered Q1012, so there "
+            "is nothing to pool. Saudi Arabia is the measured case and it is a fact about the "
+            "survey rather than a fault here: 1,404 wave II respondents with a governorate "
+            "and a weight and an entirely empty religion column, and no rows at all under "
+            "wave V's `Kingdom of Saudi Arabia`. Mauritania's 3,200 respondents in waves VII "
+            "and VIII are the same. Those countries cannot be drawn from this instrument.")
 
-    waves = [w for w in dict.fromkeys(n for n, _o, _z, _s in WAVES) if w in set(out["wave"])]
-    if expect_waves is not None and waves != list(expect_waves):
-        raise SystemExit(f"{country} now appears in waves {waves}, expected "
-                         f"{list(expect_waves)} — a re-release has changed the pool")
+    got = [w for w in WAVE_NAMES if w in set(out["wave"])]
+    # Two code paths reading the same files: `available` from `wave_coverage`'s two-column
+    # scan, `got` from the full read. They must agree on the selection actually asked for.
+    should = [w for w in available if want is None or w in want]
+    if got != should:
+        raise SystemExit(f"the pool holds waves {got} for {country} and the file scan says "
+                         f"{should} — the two reads of the same files disagree, so one of "
+                         "them is wrong and the pool cannot be trusted. STOP.")
+
+    hidden = [w for w in available if w not in should and w not in omitted]
+    if hidden:
+        raise SystemExit(
+            f"the files offer {country} a religion answer in waves {hidden} and `waves=` "
+            f"leaves them out of the pool, saying nothing. That is the wave II failure's own "
+            "shape (see `country_key`): a wave in the file, absent from the pool, and no "
+            "warning. If leaving them out is right, name each one in `omit={wave: reason}` "
+            "and the reason is then on the page beside the pool; if it is not right, add "
+            "them to `waves=`.")
+    stale = [w for w in omitted if w not in available]
+    if stale:
+        raise SystemExit(
+            f"omit names waves {stale}, which the files do not offer {country} at all. "
+            "Either a re-release has changed the pool or the entry was never right; do not "
+            "delete it without reading what it was for.")
+    if omitted:
+        for w in WAVE_NAMES:
+            if w in omitted:
+                print(f"  wave {w} is in the files and deliberately out of the pool: "
+                      f"{omitted[w]}")
+
+    if expect_waves is not None:
+        claim = [w for w in WAVE_NAMES if w in set(expect_waves) | set(omitted)]
+        if available != claim:
+            raise SystemExit(
+                f"the files offer {country} a religion answer in waves {available}; "
+                f"`expect_waves` plus the declared omissions account for {claim}. A "
+                "re-release has added or dropped a wave, which is a re-levelling of the pool "
+                "and not a detail — read what changed before rebuilding anything.")
+
+    for raw, replacement in (recode or {}).items():
+        n = int((out["category"] == raw).sum())
+        if not n:
+            raise SystemExit(
+                f"recode names {raw!r}, which {country}'s pool does not contain. Either a "
+                "re-release has changed the wording or the entry was never right; do not "
+                "delete it without reading what it was for.")
+        print(f"  recoded {n} respondent(s) from {raw!r} to {replacement!r}")
+        out.loc[out["category"] == raw, "category"] = replacement
+
+    assert_one_wording(out, country)
     return out
 
 
@@ -243,6 +685,33 @@ def held_out(df, pop, country, unit_col="geo_id", n_perm=20000, seed=0,
     A survey that quota-samples by governorate will do very well here and that is fine — the
     question this answers is whether the NAMES were joined to the right polygons, which a
     permutation is exactly the test for.
+
+    ## A SMALL COUNTRY IS CHECKED EXHAUSTIVELY, NOT SAMPLED
+
+    `sources/lapop.py`'s version, which this was copied from, samples `n_perm` orderings and
+    fails if ANY of them reaches the observed r. That rule is right where the orderings vastly
+    outnumber the draws — its own countries have 14, 22 and 23 units, so 14! = 8.7e10 against
+    20,000 draws — and it breaks quietly where they do not. Lebanon's Arab Barometer cut is
+    about eight governorates, 8! = 40,320, so 20,000 draws return the CORRECT ordering about
+    every other run and a perfect decode hard-fails on nothing but unit count.
+
+    Two things follow, and neither of them is a loosened bar:
+
+      * **the observed ordering is not part of the null.** The null is the wrong joins; the
+        right one is what is being tested. It is excluded by VALUE rather than by index, which
+        also excludes the orderings that only swap units of equal population — those reproduce
+        the observed r exactly and no correlation can tell them from the truth, so counting
+        them as beating it is a false alarm rather than a catch.
+      * **below `EXACT_PERM_MAX` orderings, every one of them is checked.** At eight units the
+        result is then a proof and not a sample: *none of the 40,319 other ways of pairing
+        these units reaches this r.* That is a stronger statement than 20,000 draws can make,
+        and it costs about a second.
+
+    The ceiling on that statement is printed, because it is the thing a reader should judge:
+    `n` units can express at best 1 in n!-1, so seven units is 1 in 5,039 and five is 1 in
+    119. **Below about seven units this check cannot carry a join on its own** however cleanly
+    it passes, and the country needs a second witness — the argument is §11ad's and it is the
+    same one that stopped lapop's age check being asserted.
     """
     print("\n  held-out check (nothing here touches the religion column):")
     share_s = df.groupby(unit_col)["w"].sum() / df["w"].sum()
@@ -251,6 +720,12 @@ def held_out(df, pop, country, unit_col="geo_id", n_perm=20000, seed=0,
     if len(j) != len(share_s):
         raise SystemExit(f"{len(share_s) - len(j)} sampled units have no population")
     r = np.corrcoef(j["survey"], j["pop"])[0, 1]
+    # A nan r would compare False against every permuted one and the check would pass in
+    # silence. It means one of the two columns is constant, or there is one unit.
+    if not np.isfinite(r):
+        raise SystemExit(f"the survey/{pop_source} correlation over {country}'s {len(j)} "
+                         "units is undefined, so this check cannot say anything; one of the "
+                         "two shares does not vary across the units")
     ratio = (j["survey"] / j["pop"]).sort_values()
     print(f"    unit share of respondents vs {pop_source}:  r = {r:+.3f} over {len(j)} units")
     print(f"      thinnest sampled {ratio.index[0]} at {ratio.iloc[0]:.2f}x its population "
@@ -258,15 +733,37 @@ def held_out(df, pop, country, unit_col="geo_id", n_perm=20000, seed=0,
 
     rng = np.random.default_rng(seed)
     a, b = j["survey"].to_numpy(), j["pop"].to_numpy()
-    perm = np.array([np.corrcoef(a, rng.permutation(b))[0, 1] for _ in range(n_perm)])
-    beaten = int((perm >= r).sum())
-    print(f"      against {n_perm:,} random pairings of the same units: best random "
-          f"r = {perm.max():+.3f}, and {beaten} reach the observed one")
+    n = len(j)
+    total = math.factorial(n)
+    exact = total <= EXACT_PERM_MAX
+    if exact:
+        pairings = [b[list(p)] for p in itertools.permutations(range(n))]
+        how = f"all {total - 1:,} other orderings of the same units"
+    else:
+        pairings = [rng.permutation(b) for _ in range(n_perm)]
+        how = f"{n_perm:,} random pairings of the same units"
+    perm = np.array([np.corrcoef(a, p)[0, 1] for p in pairings])
+    # By value, not by index: this drops the observed ordering and any that only swaps units of
+    # equal population, which reproduce the observed r and are not wrong answers.
+    same = np.array([np.array_equal(p, b) for p in pairings])
+    beaten = int(((perm >= r) & ~same).sum())
+    print(f"      against {how}: best r = {perm[~same].max():+.3f}, and {beaten} reach the "
+          f"observed one")
+    if not exact and same.sum():
+        print(f"      {int(same.sum())} of those draws WERE the observed ordering and are not "
+              f"part of the null ({n} units allow only {total:,} of them)")
+    # Only where it constrains anything: at 24 units the ceiling is a 24-digit number and
+    # saying it out loud is noise. Under a million orderings it is the thing to judge.
+    if total <= 1_000_000:
+        print(f"      {n} units allow {total:,} orderings, so the strongest this check can "
+              f"say is 1 in {total - 1:,}"
+              + ("" if n >= 7 else " — too weak to carry the join on its own, see the "
+                                   "docstring"))
     if beaten:
         raise SystemExit(
-            f"{beaten} of {n_perm} random pairings of {country}'s units match or beat the "
-            f"observed r={r:+.3f}. The population check does not pin this decode, so the "
-            "join needs a witness that does before anything is drawn.")
+            f"{beaten} of {how} match or beat the observed r={r:+.3f} for {country}. The "
+            "population check does not pin this decode, so the join needs a witness that "
+            "does before anything is drawn.")
     return r
 
 
@@ -313,6 +810,14 @@ def stability(df, nat, n_units, unit_col="geo_id", cat_col="category", override=
                 include_groups=False)
 
         j = pd.concat([share(early).rename("e"), share(late).rename("l")], axis=1).dropna()
+        # The overlap does not depend on the category — it is the units that have respondents
+        # in both halves — so a change in it is a change in the pool and the bar is now the
+        # wrong bar. §11af's Egypt run is the cautionary case: it reported a bar computed on
+        # one unit count and a correlation computed on another.
+        if len(j) != n_units:
+            raise SystemExit(f"{len(j)} units appear in both wave halves, not the {n_units} "
+                             f"the bar was computed for — re-read the pool before trusting "
+                             "any correlation below")
         with np.errstate(invalid="ignore"), warnings.catch_warnings():
             warnings.simplefilter("ignore")
             sp = j["e"].corr(j["l"], method="spearman")

@@ -149,3 +149,91 @@ The review section above stands as the implementation note: the clean version ne
 `christianity.oriental.armenian` node, with the two ASARB US jurisdictions merged under it or
 moved below it, because those two are labelled for American dioceses rather than the worldwide
 church.
+
+---
+
+## Implemented 2026-09-08, session `967ffe99-93b1-4ff9-8169-4a6d5ffa084e-armnode`
+
+**Done. Three nodes, thirteen mapping lines, fifteen countries re-scattered, one build tail.**
+The durable record is spec **§2.7** and `sources.md` **§9ca**; this is only what changed.
+
+**The nodes.** `christianity.oriental.armenian` (*Armenian Apostolic Church*), and under it
+`.armenian.etchmiadzin` (*Catholicosate of Etchmiadzin*) and `.armenian.cilicia`
+(*Catholicosate of Cilicia*). The last two are the old `armenian-etchmiadzin` and
+`armenian-cilicia`, **moved and relabelled, not merged.** Merging was ruled out on the ruling's
+own test: ASARB counts the two catholicosates separately at codes 049 and 050, so folding them
+would lose a division a source actually makes. `build_tree.py` would also have refused it, with
+*leaf claimed by several codes*. Relabelling came with the move because those were the tree's
+only Armenian nodes and their ASARB names say *of North America* and *of America*, which is
+exactly what made `origin_religion.py:154` a stretch for a French Armenian.
+
+**The list in the ask was six and the real list was nine, plus two more places.** Verified from
+the files rather than taken: `am2022`, `ge2014`, `cy2021`, `au2021`, `ee2021`, `pl2021`,
+`ro2021` were all correct, and two the ask did not have were **`bg2021`** (`Арменско
+апостолическо`, 5,002, derived through `bg_split.py`) and **`cz2021`** (`Církev Svatého Řehoře
+Osvětitele`, 3 people, the Armenian church registered under its patron saint after the Ministry
+of Culture refused the name *Arménská apoštolská pravoslavná církev* in 2006). Plus
+`usrc2020.py` and `origin_religion.py`. **Poland turned out to have two Armenian cells, not
+one**, and the second names a catholicosate, so it is the only source outside ASARB that
+reaches `.armenian.etchmiadzin`.
+
+**Left at the parent, on purpose.** `ca2021`'s `Oriental Orthodox`; `au2021`'s `COLUMNS` entry
+for ABS group 221 and its `Oriental Orthodox, nec/nfd`; `pl2021`'s `różne inne chrześcijańskie
+kościoły wschodnie`; `es_origin`'s `Resto de África` residual. None can distinguish.
+`origin_religion`'s other `ORIENT` rows (GE, TR, AZ, LY, SD, DJ, IR, IQ, SY, LB and the Gulf)
+also stayed: several are mostly Armenian or mostly Coptic, but each is a mixed residual in a
+model rather than a category anyone published. `at2001` and `uk2021` were checked and are not
+this question at all: both have Armenians folded inside an undivided *Orthodox* cell and both
+already say so.
+
+**Also left, and worth naming so it is a decision rather than an oversight:** `au2021`'s
+`Coptic Orthodox Church`, `Syrian Orthodox Church` and `Ethiopian Orthodox Church`, `nz2023`'s
+`Coptic Orthodox` and `pl2021`'s `Kościół koptyjski` all name a church and all sit at the
+parent while `.coptic`, `.syriac` and `.ethiopian` exist. That is the same defect this fixed
+for the Armenians and it is out of this brief's scope; it is four lines and a re-scatter of
+three countries for whoever wants it.
+
+**Does a reader see a different legend? At the default view, no.** `depth` starts at 2 and
+`drawnSet` stops there, so `christianity.oriental` is the drawn category, `paletteFor` paints
+its whole subtree in its colour, and `counts[]` is a subtree total, so the row's label, colour
+and number are all unchanged. `isOpen` also keeps a drawn node with no drawn children closed,
+so the new rows sit behind the same twisty the other ten children were already behind. The
+change is visible at depth 3 or with Oriental Orthodox selected: one new row, *Armenian
+Apostolic Church*, and the two American diocese labels replaced by the catholicosates. The
+overview band for `christianity.oriental` is re-sliced among nine children instead of ten, so
+those deeper colours shift; nothing at depth 1 or 2 moves, and no root or `PIN`/`OVERVIEW_FLAT`
+entry was touched.
+
+**The trap, for whoever does the Coptic version.** Five countries (`es`, `fi`, `fr`, `gr`,
+`it`) carry the node id **baked into `data/normalized/<cc>_foreign.csv`** — `origin_religion.py`
+resolves the node at fetch time, not at scatter time. Editing that file alone leaves the CSVs
+pointing at a node that no longer exists, and the only symptom is `coverage.py` naming the dead
+id. Re-run `python sources/<cc>.py` for each (no `--fetch`, it works off cached raw files)
+before re-scattering.
+
+---
+
+## Finished 2026-09-08, session `967ffe99-93b1-4ff9-8169-4a6d5ffa084e-orientalrest`
+
+**The five cells the section above named as out of scope are done, and nothing else on the
+branch was left at the parent by mistake.** Five mapping lines, three countries re-scattered,
+three nodes promoted from ASARB leaf to branch. The record is `sources.md` §9ca's last
+subsection and spec §2.7; this is the two-line version.
+
+`au2021`'s `Coptic Orthodox Church`, `Syrian Orthodox Church` and `Ethiopian Orthodox Church`,
+`nz2023`'s `Coptic Orthodox` and `pl2021`'s `Kościół koptyjski` now file at `.coptic`,
+`.syriac` and `.ethiopian`. **Those three nodes had to become branches in `branches.py`
+first** — they were drawn already but only ASARB could reach them, because `build_tree.py`
+refuses any other mapping module that targets a non-branch id. Their labels are unchanged, so
+no legend row is renamed: unlike the two Armenian nodes, none of the three was named for an
+American diocese.
+
+**A sweep of every mapping module and `origin_religion.py` found nothing else.** Staying at the
+parent, on top of the four already recorded: `au2021`'s `Oriental Orthodox, nec` and `nfd`,
+and all of `origin_religion.py`'s `ORIENT` rows. `origin_religion.py` needed no edit at all,
+so the five `_foreign.csv` files with baked-in node ids were never at risk; their ids were
+checked and all are live.
+
+**What a reader sees is still nothing at the default depth.** At depth 3 with Australia in
+view there is one difference the earlier pass could not have seen: the bare `Oriental
+Orthodox` row disappears from Australia's legend, because Australia now has no dots on it.

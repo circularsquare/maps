@@ -1,19 +1,27 @@
 """BNS Kazakhstan, National Census 2021, volume ch.12 -> religiondots taxonomy.
 
-Nine categories plus two subtotals, on 17 regions, and **every one of them is MODELLED** —
-Kazakhstan publishes religion nationally only, and `sources/kz.py` distributes it across the
-regions by their ethnic composition (spec §14.10). Nothing here is a count of anybody in the
-region it is drawn in.
+Nine categories plus two subtotals, on 17 regions, and **every one of them is COUNTED**.
 
-**THE CATEGORY LIST IS UNUSUALLY GOOD FOR A COUNTRY WITH NO GEOGRAPHY.** Kazakhstan splits
-Christianity three ways on the form — Orthodox, Catholic, Protestant — which most censuses on
-this map do not, and it offers `non-believer` and `refused to state` as separate boxes rather
-than folding them together. The whole thing is an exact partition.
+**MOST OF THE PROSE BELOW WAS WRITTEN WHEN THIS WAS A MODELLED COUNTRY** and still discusses
+the model, because the mapping decisions were taken then and the reasons for them have not
+changed. What HAS changed is the basis: from 2026-09-08 the figures are BNS's own religion ×
+oblast cross-tabulation, taken from the census dashboard's Qlik engine (`sources/kz.py`,
+sources.md §9cd), and nothing here is inferred any more. The model's held-out urban/rural
+errors, quoted throughout, are now a property of `sources/kz_model.py` rather than of the map
+— and where they are quoted as a reason to distrust a cell, the measured data mostly agrees:
+`Неверующие` and `Отказались указать` really are the two the model got worst, by 22.9% and
+27.8% of their own totals (spec §14.25).
+
+**THE CATEGORY LIST IS UNUSUALLY GOOD.** Kazakhstan splits Christianity three ways on the
+form — Orthodox, Catholic, Protestant — which most censuses on this map do not, and it offers
+`non-believer` and `refused to state` as separate boxes rather than folding them together.
+The whole thing is an exact partition.
 
 **THE LABELS BELOW ARE THIS PROJECT'S, NOT VERBATIM STRINGS.** The volume's header is
-bilingual Kazakh/Russian and split over five lines, so `sources/kz.py` takes the columns by
-x-POSITION on the page and names them; the names here are the Russian ones from that header.
-A mapping keyed on a verbatim string would be keyed on nothing.
+bilingual Kazakh/Russian and split over five lines, so the names here are the Russian ones
+from that header. The engine spells the same nine categories in lower case and `sources/kz.py`
+normalises them back to these forms rather than rekeying the mapping. A mapping keyed on a
+verbatim string would be keyed on nothing.
 
 EXCLUDED holds categories that are deliberately not on the tree.
 REVIEW holds calls that are defensible but arguable, with the reason.
@@ -31,8 +39,8 @@ EXCLUDED = {
 REVIEW = {
     "Ислам":
         "-> islam, with no branch, because the census gives none. **13,297,775 people, "
-        "69.31%** — modelled onto regions, so read every regional figure as 'this is what "
-        "this region's ethnic mix implies', never as a count. Kazakhstan's Muslims are "
+        "69.31%**, and since 2026-09-08 every regional figure is BNS's own count rather "
+        "than a share of the region's ethnic mix. Kazakhstan's Muslims are "
         "overwhelmingly Sunni of the Hanafi school; there is a small Shia Azerbaijani "
         "population and the Ahmadiyya are refused registration. Nothing in the census "
         "separates any of them. "
@@ -59,7 +67,7 @@ REVIEW = {
         "9,419 people. In Kazakhstan this is chiefly Baptists, Lutherans of German descent, "
         "Presbyterians and Pentecostals — **and it is the group Kazakhstan's registration "
         "law bears on hardest**, with unregistered house churches prosecuted. Read 9,419 as "
-        "a floor for that reason as well as for the modelling.",
+        "a floor for that reason.",
     "Неверующие":
         "-> secular, NOT `unaffiliated`, and this is Russia's precedent exactly. "
         "branches.py draws the line at whether a POSITION is stated: `unaffiliated` is a "
@@ -76,11 +84,12 @@ REVIEW = {
     "Иудаизм":
         "-> judaism. 7,192 people. Kazakhstan's Jewish population is what is left of a "
         "community built by wartime evacuation and the Gulag; it has fallen by roughly an "
-        "order of magnitude since 1989 through emigration. The model puts it where Jews "
-        "live, which the census does record — the ethnicity `Евреи` is inside the residual "
-        "group here, so this cell's geography comes from the residual's composition and is "
-        "the weakest of the drawn religions. Its held-out error is -21% urban / +127% "
-        "rural on 7,192 people.",
+        "order of magnitude since 1989 through emigration. It is now counted per oblast "
+        "rather than inferred, which matters more here than for any other cell: the "
+        "ethnicity `Евреи` sat inside the model's residual group, so the modelled version "
+        "took this geography from the residual's composition and was 31.1% misplaced, the "
+        "worst of the nine (spec §14.25). Almaty city and Astana are 0.11% each and "
+        "Turkistan is 0.00%.",
     "Буддизм":
         "-> buddhism, the PARENT, not a vehicle. 15,458 people, and unusually for this map "
         "the group is identifiable: **82% of Kazakhstan's Buddhists are Koreans** (12,702 "

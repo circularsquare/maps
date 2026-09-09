@@ -3147,3 +3147,52 @@ Run in order.  Every step, every time, even when only one country changed.
                                      #   Christentum residual is 5x the 2001 column).
                                      #   check_mapping needs BOTH levels -- see DEFAULT_LEVELS.
                                      #   sources/at.md, sources.md 9br.
+
+    python sources/tl.py --fetch     # Timor-Leste, thirteen municipal yearbook PDFs (~60 MB)
+    python sources/tl_geo.py --fetch #   plus two official workbooks, seconds.  9 categories on
+    python sources/tl_grid.py --fetch#   14 municipalities, 1,248,705 people (the population
+                                     #   aged 3 and over in private households), 99.98% drawn.
+                                     #   *** THE 2022 MAIN REPORT PUBLISHES RELIGION FOR THE
+                                     #   NATION AND NOTHING ELSE.  Table 4.07 is religion by
+                                     #   age and sex; none of the 24 basic tables and none of
+                                     #   the eight thematic reports crosses it with geography.
+                                     #   The municipalities are in `<Municipality> em Numeros
+                                     #   2022`, one volume per municipality written by that
+                                     #   municipality's own statistics service and issued from
+                                     #   June 2025, three years after the count.  Botswana's
+                                     #   and Rwanda's shape a third time; spec 12.
+                                     #   ATAURO IS THE FOURTEENTH MUNICIPALITY AND HAS NO
+                                     #   VOLUME.  It was a posto of Dili until 2022.  Its row
+                                     #   is table 4.07 minus the thirteen: 9,622 people, 0.935
+                                     #   of its census population where the country is 0.931,
+                                     #   every category non-negative, Islam/Buddhism/indigenous
+                                     #   at exactly zero, and 55.4% Protestant against a
+                                     #   national 2.0%.  Drawn `derived`.  It is also the only
+                                     #   unit in the country that is not overwhelmingly
+                                     #   Catholic, so folding it into Dili loses the map.
+                                     #   THE VOLUMES ARE TYPED BY HAND AND FOUR CELLS OF THEIR
+                                     #   2015 COLUMN ARE WRONG.  Every volume reprints 2015,
+                                     #   published centrally as Volume 2 table 11, so all 252
+                                     #   cells of it are checked male, female and total.  Two
+                                     #   of the four are TOTAL cells whose own male and female
+                                     #   figures are right (Ainaro pastes in the municipality's
+                                     #   whole population; Manatuto is four over), which is why
+                                     #   a 2022 row whose sexes do not sum to its total is
+                                     #   refused.  Oecusse mistypes a female cell and carries
+                                     #   it into the total, which only the workbook catches.
+                                     #   ASK THE ORACLE BY NAME: oracle.py tl is a miss that
+                                     #   reads like an absence.  `oracle.py "Timor-Leste"` has
+                                     #   2004, 2015 and 2022 and all twelve of its checkable
+                                     #   figures reproduce.  Its 2022 TOTAL is the resident
+                                     #   population, not the religion universe, so its `Other`
+                                     #   of 95,328 is mostly the under-threes.
+                                     #   COD-AB IS ONE MUNICIPALITY BEHIND AND ATAURO IS
+                                     #   ALREADY IN IT AS ADM2 TL0604, so tl_geo.py subtracts
+                                     #   that polygon from Dili's ADM1 rather than hunting a
+                                     #   newer file.  No name join anywhere: p-codes both
+                                     #   sides.  spec 12.
+                                     #   FINER DOES NOT EXIST: 2015 Volume 4's suco tables have
+                                     #   no religion, the 452 Sensu Fo Fila Fali suco reports
+                                     #   were never put online, and the REDATAM dashboard INETL
+                                     #   links (20.6.104.113) answers on no port at all.
+                                     #   sources/tl.md, sources.md 9cj.

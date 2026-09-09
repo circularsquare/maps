@@ -15,7 +15,7 @@ before they get here.
      1.07% Протестантско            -> christianity.protestant               69,852
      0.59% Католическо              -> christianity.catholic                 38,709
      0.21% Друго християнско        -> christianity.other                    13,927
-     0.08% Арменско апостолическо   -> christianity.oriental                  5,002
+     0.08% Арменско апостолическо   -> christianity.oriental.armenian         5,002
 
     derived — 2011 oblast composition only, no 2021 national target exists
      9.3%  Мюсюлманско сунитско     -> islam.sunni                          604,875
@@ -114,11 +114,12 @@ REVIEW = {
         "among people who gave their ethnicity as Roma, 12.4% of that group, against 0.7% "
         "of ethnic Bulgarians.",
     "Арменско апостолическо":
-        "-> christianity.oriental, the PARENT, which is au2021.py's, ee2021.py's and "
-        "ge2014.py's call for the same body. 5,002 people. A "
-        "`christianity.oriental.armenian` child is arguable on Georgia's 109,041 and would "
-        "have to re-point all four countries at once; ge2014.py records why it was not "
-        "taken.",
+        "-> christianity.oriental.armenian. 5,002 people. This read `christianity.oriental`, "
+        "the parent, until 2026-09-08, when Anita ruled on `ask/004-am` that a source is "
+        "recorded as it answers: NSI's national breakdown names the Armenian church, so it "
+        "files at the Armenian node, and the four countries this note said would have to "
+        "move together all moved. The geography is still the 2011 oblast shape and nothing "
+        "about that changed.",
     "Друго християнско":
         "-> christianity.other. 13,927 people, and the one category here with no 2011 "
         "counterpart at all, so it is seeded at its national share in every oblast and "
@@ -169,7 +170,7 @@ MAP = {
     "Източноправославно": "christianity.orthodox.canonical",
     "Католическо": "christianity.catholic",
     "Протестантско": "christianity.protestant",
-    "Арменско апостолическо": "christianity.oriental",
+    "Арменско апостолическо": "christianity.oriental.armenian",
     "Друго християнско": "christianity.other",
     "Мюсюлманско сунитско": "islam.sunni",
     "Мюсюлманско шиитско": "islam.shia",

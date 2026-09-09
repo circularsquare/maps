@@ -343,7 +343,13 @@ reason to cite where it actually came from rather than repeating the badge it ar
   variable to actually extract and which countries are worth it.
 - DHS / MICS surveys — religion by survey region for much of Africa and South Asia. Sample-based,
   so wide intervals, but they cover the countries §3 says are dark.
-- Afrobarometer, Arab Barometer, Latinobarómetro, WVS/EVS — same shape, useful for the modelled tier.
+- ~~**Afrobarometer**~~ — **answered 2026-09-08, see §11ai**, and it is the family's third
+  member after LAPOP and the Arab Barometer. Six merged rounds, no account, `REGION` at ADM1
+  in every one of them, and a religion card deeper than almost any African census. Its limit
+  is a new one: the card is deep and the PROBING is not, so a pooled denominational share
+  measures which rounds are in the pool. `lr` is the first country built on it (§9cl).
+- Arab Barometer (answered, §11af), Latinobarómetro, WVS/EVS — same shape, useful for the
+  modelled tier.
 - ~~**LAPOP AmericasBarometer**~~ — **answered 2026-09-08, see §11ad.** The barometer family's first
   member actually opened here, and it is better than "the modelled tier" implies: religion at ADM1
   for nine countries this map lacks, **validated against three censuses already drawn**. Its limit
@@ -2473,6 +2479,11 @@ Serbia, Bosnia, Montenegro, Georgia and Armenia remain unchecked. Slovenia's 202
 register-based and **did not ask religion**, so it should be moved to §3 rather than kept as
 a lead.
 
+> **CORRECTED 2026-09-08 — Slovenia is DRAWN, see §9cg.** The sentence above is true about
+> the 2021 census and false about the country. Popis **2002** asked, and published religion
+> for 192 municipalities; the table is `05W1006S.px` in the same SURS PxWeb this section was
+> looking at. The oracle's row for Slovenia already said `2002`.
+
 **Two of that list were resolved 2026-09-04.** *North Macedonia* is **DRAWN — see §9i**; its
 PxWeb was live all along and nobody had walked it. *Latvia* is **out, and permanently**: its
 PxWeb answers cleanly and the only religion table in the whole database is `KUR010`,
@@ -2492,7 +2503,7 @@ are more work than Ghana was, for different reasons.**
 | country | religion published? | geography reached | verdict |
 |---|---|---|---|
 | ~~**Kenya**~~ | yes, KPHC 2019 Volume IV **Table 2.30** | **county only — 47 units** | **DRAWN 2026-09-05 — see §9o.** The categories are the best in Africa and the geography the worst, and the categories won. |
-| **Uganda** | yes, NPHC 2024 | **national only** in the Final Report; nothing subnational published | the best unclaimed category list in Africa, and no geography attached to it. See below. |
+| ~~**Uganda**~~ | yes, NPHC 2024 | **national only** in the Final Report; nothing subnational published | **DRAWN 2026-09-09 — see §9cr.** This row is right about 2024 and wrong about Uganda: the **2002** census published religion by DISTRICT, as a loose annex table on the retired ubos.org tree, and the country is on 56 units. |
 | **South Africa** | yes, Census 2022 — but only 12 broad categories | municipality, via a 10% sample | **checked and downgraded.** Shallow, not walled. See below. |
 
 **Kenya — drawn, see §9o.** Kept here for the record of what was checked: religion appears on
@@ -2516,6 +2527,18 @@ children, and not religion. The microdata catalogue
 (`microdata.ubos.org:7070/index.php/catalog/74`) has the 2024 unit records and is
 **access-restricted**, by application to ubos@ubos.org. So Uganda is: excellent categories,
 no subnational publication, and an email as the only route. Worth the email.
+
+**CORRECTED 2026-09-09, §9cr: the last sentence was wrong and Uganda is drawn.** Everything
+above about 2024 holds and was re-tested harder (the sub-county workbook's fifteen tables are
+also all the NPHC portal's API serves, at parish, and there are 703 documents on ubos.org
+none of which mentions religion). What this section never asked is what the **earlier**
+censuses published. The 2002 census printed `Table B7: Religion by District for the
+Population`, seven categories on 56 districts, as one of fifteen loose annex PDFs in
+`ubos.org/onlinefiles/uploads/ubos/census_tabulations/` — a directory on the **retired** tree
+that the live site 301s away and that nothing links to. The generalisable half is the route:
+pull every archived `.pdf` URL under a domain from the Wayback CDX API and list the
+**directories**, not the filenames. Also corrected: the microdata is **login-gated, not
+application-gated**, a free account rather than an email, and `ask/008-ug` is that question.
 
 **South Africa was the one to want, and it is shallow rather than walled — CHECKED
 2026-09-05 and the earlier note was wrong twice.** It said StatsSA's religion code list page
@@ -2684,7 +2707,7 @@ and one is a wall that turned out to be passable and empty behind it.**
 | ~~**Lithuania**~~ | **DRAWN 2026-09-05 — see §9q.** The Cloudflare wall is on `osp.stat.gov.lt`, the web UI; `osp-rs.stat.gov.lt` is an open SDMX endpoint and the earlier probe was one path segment short of it. | **free (60)** |
 | **Switzerland** | reachable, and a slow crawl. See below. | **free (2,242)** |
 | **Albania** | 2023 census religion is published as **per-prefecture PDFs**; the 2011 XLS tables are by qarku (12 units). `databaza.instat.gov.al` does not resolve at all. Cheap if a bashki-level table is ever found. | **free (61)** |
-| **Slovenia** | SURS PxWeb is live and its catalogue is 908 KB, but the 2021 census was register-based and did not ask religion. §11's note to move it to §3 stands. | free (212) |
+| ~~**Slovenia**~~ | **DRAWN 2026-09-08 — see §9cg, and this row is the mistake it is about.** SURS PxWeb is live and its catalogue is 908 KB, and `05W1006S.px` inside that catalogue is religion by občina from Popis **2002**, 192 units. The 2021 register census indeed does not ask; the country was never the same thing as its latest census. Boundaries came from GISCO Communes 2001, 192 for 192, not the 212 of today. | **free (192, GISCO 2001)** |
 | **Bosnia** | reachable, not quick. `popis.gov.ba` is a React SPA with no data endpoint found; the 2013 final results are **12–19 MB PDF books** at `popis.gov.ba/popis2013/doc/`. Not in GISCO, so the boundaries are also unsolved. | no |
 | **Montenegro** | `monstat.org` is a `page.php?id=` site; nine census subpages walked and none carries an XLSX. Not in GISCO. | no |
 | **Nepal** | `censusnepal.cbs.gov.np` answers with **18 bytes** at the root and 404s the documented dataset path. `data.cbs.gov.np` does not resolve. | no |
@@ -4908,7 +4931,7 @@ answer withheld. **Do not re-scout the Nordics without a specific new release to
 | **Slovakia** | re-tested once more. `data.gov.sk`'s CKAN answers a 524-byte shell; `scitanie.sk/api/v1/tables` returns the same 26,519-byte SODB 404 page as every other path; `data.statistics.sk/api/v2/dataset` is a bare parameter error. **Four sweeps, no change.** It is Anita's browser or nothing. |
 | **Moldova** | *not* closed. `statbank.statistica.md` is live and its `20 Populatia si procesele demografice` database has seven folders and **no census or religion folder** — the 2014 census lives on a separate host. Unresolved rather than absent, and the `dbid` finding above means the earlier walk of it proved nothing. |
 | **Montenegro, Bosnia** | unchanged from §11c. |
-| **France, Spain, Italy, Belgium, Greece, Luxembourg, Slovenia, Latvia, Belarus, Ukraine** | no religion question. Not a wall — genuinely not asked. §3 is where these belong. |
+| **France, Spain, Italy, Belgium, Greece, Luxembourg, ~~Slovenia~~, Latvia, Belarus, Ukraine** | no religion question in the CURRENT census. Not a wall — genuinely not asked. §3 is where these belong. **Slovenia is off this list, DRAWN 2026-09-08 from Popis 2002 at 192 municipalities (§9cg); France and Italy were built later too.** A row like this one is about a census year and reads as being about a country, which is the trap §9cg is written up as. |
 
 ### The thing that generalises, and it is about catalogues
 
@@ -6361,6 +6384,12 @@ Belgium, Netherlands, Sweden, Luxembourg, Slovenia, Latvia, Belarus and Ukraine 
 §9z's two-half pattern (ESS citizens + `cens_21ctz_r3` foreigners x Pew) is the only route to
 any of them, and France is the one worth the trouble.
 
+> **CORRECTED 2026-09-08: Slovenia is off that list and is DRAWN from its own census (§9cg).**
+> Austria's row two sentences up is the tell nobody followed: this section already knew that a
+> country's LAST census can be the one with the question, and applied it to Austria and not to
+> its neighbour. Slovenia's Popis 2002 asked and published 192 municipalities. France and Italy
+> were subsequently built as well, so of the ten only the remaining seven are still open.
+
 ---
 
 ## 11q. Japan scouted — 2026-09-07. Wide open, and not a count of people
@@ -7312,7 +7341,7 @@ larger than this file has been treating it as. **Ranked by what they would add:*
 |---|---|---|
 | **Malaysia** | 2000, 2010, **2020** | **verified live and open this session — the pick.** See below. |
 | **Nepal** | 2001, 2011, **2021** | **DRAWN 2026-09-07 — §9ao.** ~29M, and the row was wrong in both directions: the geography is **local level (753), not district**, and there are **ten** categories, not four. `censusnepal.cbs.gov.np` "answers but thinly" because it is a dead placeholder — CBS is now the **National Statistics Office** and the results live on `censusresults.nsonepal.gov.np`. |
-| **Kazakhstan** | 2009, **2021** | **SCOUTED 2026-09-07 — §11u, and religion is NATIONAL ONLY in both censuses**, established four ways rather than assumed. `stat.gov.kz` is wide open and has no oblast religion table; the 2009 per-region series (16 regions × 3 volumes) has no religion on any page. **Not closed**: ethnicity is published at **9,622 settlements with КАТО codes** and religion × ethnicity is published nationally as an exact partition, so a §14.5/§14.10 modelled route exists and is better founded than China's. **Anita's call.** |
+| **Kazakhstan** | 2009, **2021** | **DRAWN 2026-09-08 — §9cd, at 17 oblasts, COUNTED.** §11u's four checks (2026-09-07) correctly established that no BNS *publication* cuts religion by region, and the country was built as a model on that basis for one day. The counts were in the census dashboard's **Qlik engine** (`qap.stat.gov.kz`), whose data model is the 35,195,612 person records and which is open to anonymous callers; every national total reproduces the printed volume to the person. **218 rayons are available from the same engine and are not yet drawn** (queue.md). |
 | **Mauritius** | 2000, 2011, **2022** | §11p already called it *"the one to want"*; `statsmauritius.govmu.org` up. |
 | **Thailand** | 2000, 2010 | ~70M; the Buddhist/Muslim south is the content. |
 | **Cambodia** | 1998, 2008, **2019** | ~17M. |
@@ -9684,6 +9713,15 @@ and non-believer cells drawn as their own categories rather than redistributed.*
 > `secular`, per ru2012.py. The model turned out to have a real falsification test — the
 > volume publishes its coefficient table separately for town and country — and that test is
 > now spec §14.12.
+>
+> **SUPERSEDED 2026-09-08 — §9cd. The measured route was never closed, only the printed one.**
+> All four checks above are still correct and all four are about **documents**. BNS serves
+> religion by oblast, by rayon and by settlement from the census dashboard's **Qlik engine**
+> (`qap.stat.gov.kz`), whose data model is the 35,195,612 person records themselves and which
+> is open to anonymous callers. Kazakhstan is drawn from those counts, the model is scored
+> against them in spec §14.25, and the general lesson is §9cd's closing note: **an office that
+> has published no table has not necessarily been asked.** Its dashboards, map servers and BI
+> tools sit on the database.
 
 ---
 
@@ -9808,6 +9846,13 @@ backticks. **The cheap diagnostic is worth having**: extract the inline `<script
 ---
 
 ## 9aq. Kazakhstan wired — 2026-09-07. The first country here with no measured tier, and it brought its own falsification test
+
+> **SUPERSEDED 2026-09-08 by §9cd: Kazakhstan is drawn from BNS's own religion × oblast
+> counts and no row is `modelled` any more.** Everything below is still an accurate
+> account of the model, which is kept in `sources/kz_model.py` and is now scored against
+> those counts rather than drawn (spec §14.25: 7.50% of the country in the wrong cell).
+> The 88.99% figure below is also stale twice over; the refusal cell was drawn later the
+> same day and the country is 100.00% drawn.
 
 **19,186,015 people, 17 regions, 8 drawn nodes, 88.99% drawn, and EVERY ROW `modelled`.**
 `sources/kz.py`, `sources/kz_geo.py`, `sources/kz_grid.py`, `taxonomy/kz2021.py`,
@@ -10792,9 +10837,9 @@ http://data.un.org/Handlers/DownloadHandler.ashx?DataFilter=tableCode:28
 |---|---|---:|---:|---|
 | ~~Mauritius~~ | 2022 | 1.2M | 53 | **drawn, §9af** |
 | **Eswatini** | 2017 | 1.09M | **20** | **Zion Christian Church 33.6%.** Office unreachable — see below. |
-| **Cabo Verde** | 2021 | 491k | 16 | open office, not chased past the catch-all |
+| **Cabo Verde** | 2021 | 491k | 16 | open office, not chased past the catch-all. **DRAWN 2026-09-08 at 22 concelhos, §9ci**, and the 16th category is the under-15s. |
 | **Togo** | 2022 | 8.06M | 15 | **religion published nowhere** — see below |
-| **São Tomé** | 2012 | 179k | 13 | not chased |
+| ~~São Tomé~~ | 2012 | 179k | 13 | not chased. **DRAWN 2026-09-08 at 7 districts, §9cn**, off a whole census report per district; and a 2024 census with 16 categories that this table cannot see |
 | ~~Kenya~~ | 2019 | 47.2M | 12 | drawn, §9o |
 | **South Africa** | 2022 | 62.0M | 12 | Christian undivided; DataFirst account (§11b) |
 | **Côte d'Ivoire** | 2014 | 22.7M | 11 | **Harriste 117k + Celestial 100k**; office renamed, Cloudflare |
@@ -10811,7 +10856,7 @@ http://data.un.org/Handlers/DownloadHandler.ashx?DataFilter=tableCode:28
 | **Burkina Faso** | 2006 | 14.0M | 6 | §11p: 13 regions |
 | **Guinea** | 2014 | 10.5M | 6 | full RGPH-3 thematic series, no religion volume |
 | **Guinea-Bissau** | 2009 | 1.44M | 6 | regional booklets, no religion — see below |
-| **Liberia** | 2008 | 3.48M | 5 | not chased |
+| ~~Liberia~~ | 2008 | 3.48M | 5 | **DRAWN 2026-09-08 at 15 counties, §9cl.** The five are real; the office publishes them nationally and nothing finer, in 2008 and 2022 alike. |
 | ~~Malawi~~ | 2018 | 17.6M | 4 | drawn, §9bb |
 
 **Benin and Zimbabwe are drawn and are ABSENT from the oracle**, which is §11r's caveat
@@ -15522,6 +15567,42 @@ of religion, and where it has no religion sheet there is nothing else.
   and only its Arabic sibling was swept. IPUMS holds `eg1986a`/`eg1996a`/`eg2006a` with RELIGION
   and remains blocked (`[[reference_ipums_account]]`).
 
+**Added 2026-09-09, from `sources/jo.md` §9.1 and §10: WHICH COUNTRIES THIS SURVEY ACTUALLY
+OFFERS A RELIGION ANSWER FOR.** Measured on the rows of all ten waves rather than on the code
+lists, per country per wave, and it is a much shorter list than the code lists suggest.
+
+| | waves with a non-null `Q1012` |
+|---|---|
+| Jordan, Tunisia | II to VIII, nine each |
+| Lebanon | II to VIII but not VI-1, eight |
+| Algeria | II to VII, eight |
+| Morocco | III to VIII, eight |
+| Iraq | II, III, V, VI-3, VII, VIII |
+| Libya | III, V, VI-1, VI-2, VI-3, VII |
+| Palestine | II, III, IV, V, VII, VIII |
+| Egypt | II, III, IV, V, VII |
+| Sudan | II, III, V, VII |
+| Kuwait | III, VII, VIII |
+| Yemen | III, V |
+| Qatar | IV only, 518 respondents |
+| **Saudi Arabia, Mauritania, Bahrain** | **none at all** |
+| **Comoros, Djibouti, Somalia, Syria, Oman, Emirates** | **no rows anywhere** |
+
+**Saudi Arabia and Mauritania are the ones to know before someone spends an afternoon.** Saudi
+Arabia has 1,404 wave II respondents with a governorate and a weight and an entirely empty
+religion column, and wave V declares `Kingdom of Saudi Arabia` at code 17 against zero rows;
+Mauritania has 3,200 in waves VII and VIII, same empty column. Neither is drawable from this
+instrument. Bahrain's 435 are all in wave I, the one wave with no `Q1012`.
+
+**`sources/arabbarometer.py` gained three guards on the same day**, all from `sources/jo.md`
+§10, and any Arab Barometer country built after this date meets them: `expect_waves` is now
+asserted against what the FILES hold rather than against the already-filtered frame (the old
+form could not fail, which is why it never caught the wave II bug it was written for); a pool
+narrower than the files must name each missing wave in `omit={wave: reason}`, which is where
+Egypt's pin is now stated out loud at build time; and `assert_no_near_miss` refuses a country
+whose name also appears under a form-of-state word, which is what `Kingdom of Saudi Arabia`
+against `Saudi Arabia` is, with `COUNTRY_ALIASES` as the place the answer gets written down.
+
 ---
 
 ## 9bl. Kiribati wired — 2026-09-08. The antimeridian check that has to be inverted, and a Yearbook label that is simply wrong
@@ -16424,7 +16505,7 @@ reason the wall matters.
 |---|---|---|
 | **Nigeria** | census *"does not ask"* (§11p), absent from the oracle | **the prize.** 230M people, the Muslim/Christian line is the most consequential unmapped religious boundary on earth, and §11b already called NDHS 2018 state-representative |
 | **Tanzania** | religion dropped after **1967**, absent from the oracle | the only route of any kind |
-| **Uganda** | 2024 census has **the best unclaimed category list in Africa**, published national-only (§11b, §11w) | geography for categories that already exist; UBOS microdata is an email request |
+| ~~**Uganda**~~ | **DRAWN 2026-09-09 without DHS — §9cr.** The 2024 half of this row stands; the 2002 census turned out to publish religion by district and Uganda is on 56 units. UDHS 2022 would still be worth having, for the current vintage and the ten-category list, but it would be **15 sub-regions against these 56** | a current vintage, not a finer one |
 | **Mozambique** | 2017 census, 8 categories incl. **Sião/Zione 16.3%**, microdata by request (§11d, §11w) | a second route to §11b's *"most interesting untried source"* |
 | **Zambia** | 2010 census 8 categories, 2022 published 5 (§11w) | geography |
 | **DRC** | **already refused** — §11h's *Enquête 1-2-3* cells are 31,755 *heads of household sampled*, not people | a real person-level source where the refused one was not |
@@ -17162,14 +17243,11 @@ peaks in Armavir at 0.36% and not in Yerevan at 0.03%. Those rows are carried in
 are not drawn. Reassigning them was refused under §14.5: the census offered both boxes at the
 same question.
 
-**One ask filed.** `christianity.oriental` now carries 2,793,041 Armenians, 95.2% of one
-country, against the 109,041 Georgians that were previously its largest count. `ge2014.py` had
-already flagged that a `christianity.oriental.armenian` child was becoming arguable. Armenia
-settles it on the numbers and does not act, because `au2021`, `ee2021`, `cy2021`, `pl2021` and
-`ro2021` all file Coptic, Syriac, Ethiopian and Armenian bodies at the parent; taking the
-child for Armenia alone puts one country below a node the other five sit on. Doing it properly
-edits six mapping files and re-scatters six drawn countries, which is §3's *changes an
-already-drawn country's numbers*.
+**One ask filed, and ruled the same day.** `christianity.oriental` carried 2,793,041
+Armenians, 95.2% of one country, against the 109,041 Georgians that were previously its
+largest count, and Armenia shipped at that parent because `au2021`, `ee2021`, `cy2021`,
+`pl2021` and `ro2021` sat there too. **Anita's ruling on `ask/004-am` was *record whatever the
+source actually says*** — see §9ca below for what that took and spec §2.7 for the rule.
 
 ## 9by. Finland wired — 2026-09-08. §11k's Nordic closure was right about the register and wrong about the country
 
@@ -17297,3 +17375,3418 @@ would be worth real accuracy in Helsinki-Uusimaa (8.96% foreign) and Åland (11.
 
 **Boundaries cost nothing**: the GISCO LAU 2021 bundle already on disk carries all 310 kunnat
 with their NUTS 3 code and population, 310 of 310 both directions, no download.
+
+---
+
+## 9bz. Egypt wired — 2026-09-08. §14's first ruled country, and A STATISTICAL OFFICE'S API CAN BE ON A DIFFERENT PORT
+
+Full write-up: `sources/eg.md`. **107,658,120 people over 24 of 27 governorates**, two
+categories, three governorates undrawn, every row `modelled`. The largest country added to
+this map since Russia, and the first from the Arab world.
+
+### 1. It is the first country here whose resolution was decided by a person
+
+Every other country's grain was a technical answer: the finest tier the source publishes. Egypt
+is the case spec §14.4 rule 2 was written for and `ask/answered/001-eg` is the ask that came of
+it. CAPMAS **collected** religion in 1986, 1996, 2006 and 2017 and **published** it once, in
+1986. The governorate figures in the academic literature are there because a researcher got
+them, not because the state released them.
+
+**Anita ruled for governorate on 2026-09-08**, on the ground that governorates are pretty big,
+and asked whether anything finer was possible. It is not, on two independent counts, and this
+is worth carrying because it is the answer to the same question anywhere in the region:
+
+* Arab Barometer's `Q1` is Governorate and no wave carries anything below it;
+* CAPMAS's own deposited 2017 census extract has **thirteen variables** and religion is not
+  one of them, so there is no state microdata route at any tier (§11af read the catalogue
+  record off Wayback).
+
+**The transferable part of the ask is its shape.** It stated the decision already taken, priced
+the reversal at about a day, and left the country buildable either way, so what went to Anita
+was a choice rather than a blockage. AGENT_BRIEF §3 asks for that and this is the worked
+example.
+
+### 2. A STATISTICAL OFFICE'S API CAN BE ON A DIFFERENT PORT, AND THE 443 HOST WILL NOT SAY SO
+
+**The finding most likely to be worth somebody else's hour.** §11d and §11af both concluded
+CAPMAS has no API, on a test that was sound and run against the wrong thing:
+`www.capmas.gov.eg` is a React shell returning the same 1,421 bytes with HTTP 200 for every
+path, `/api/Language` and `/nonsense-path-xyz-123` alike. A path sweep of that host cannot
+find anything and its negative is indistinguishable from a dead portal.
+
+`[[reference_spa_hidden_apis]]` says grep the bundle, and `/static/js/main.81637733.js` has:
+
+```
+API_ENDPOINT_URL:                "https://www.capmas.gov.eg:8080"
+SEARCH_API_ENDPOINT_URL:         "https://www.capmas.gov.eg:8087"
+API_EXTERNAL_TRADE_ENDPOINT_URL: "https://www.capmas.gov.eg:8090"
+```
+
+**Port 8080, no key, 120 routes**, including `api/Governorate` (27 governorates with Arabic and
+English names, ids and statute areas) and `api/GovernoratePopulation`, which takes
+`governorateId` and `date` and returns CAPMAS's own estimate. So the memory note's *"compare
+the 404s and grep the JS bundle"* needs *"and read the host out of it, not just the path"*: the
+constants block is where a non-standard port hides, and nothing on 443 hints at it.
+
+Three checks before using a live endpoint as a denominator, all of which any population clock
+needs:
+
+* **deterministic for a fixed date** — same governorate, same date, same integer, so `POP_DATE`
+  is pinned and the response cached. A clock left unpinned re-levels the country on every run.
+* **per-governorate rather than a national clock apportioned** — the shares move between 2018
+  and 2026 (Cairo 10.039% → 9.647%, Minya 5.819% → 6.093%), which fixed weights cannot do.
+* **anchored where it should be** — the 2018-01-01 total is 96,364,295 against the 2017
+  census's 94.8M two months earlier.
+
+**And this is a bigger COD-PS override than Ecuador's.** `cod-ps-egy` is the 2012 COMPAS
+estimate, 81,395,541 people, against CAPMAS's 108,528,518 for 2026-01-01. §9bn preferred INEC
+over a COD-PS error of 3.4%; this one is 34%, and it is uneven across the governorates.
+
+### 3. A SURVEY'S NUMERIC ANSWER CODES ARE NOT THE SAME QUESTION TWICE
+
+`[[reference_pooled_survey_labels]]` on the **religion** column, which the memory note has only
+ever been about geography. Arab Barometer's `Q1012` re-uses its value codes between waves:
+
+| code | III | IV | V | VII |
+|---|---|---|---|---|
+| 3 | Other | Other | **Jewish** | Other |
+| 4 | Jewish (Yemen only) | Jewish | **Atheist** | **No religion** |
+
+A pooled frame keyed on the code merges three different answers and nothing about the result
+looks wrong. `sources/arabbarometer.py` decodes each wave through **that wave's own** label set
+before anything is pooled. Egypt escaped it because only codes 1, 2 and 4 occur here; Lebanon
+and Iraq will not.
+
+**And the card is not the same card twice either, which decoding cannot fix.** Only wave V
+offers `Atheist`; only wave VII offers `No religion`; III and IV offer neither. Egypt's two
+atheists are therefore **dropped from the universe rather than spread at a national rate**,
+which is the opposite of what `sources/gt.py` does with its one Guatemalan Jew — because
+LAPOP's card is stable across its waves and this one is not. A share pooled over four rounds
+for a box that existed on one of them measures the questionnaire.
+
+### 4. §11af's numbers reproduce, and the two that do not are accounted for
+
+The brief was to re-run rather than cite, and it is worth recording what that caught.
+
+* **Split-half +0.495 vs +0.518.** §11af's was **unweighted**; this build weights, because the
+  weighted share is what it draws. Putting the weights back reproduces +0.495 exactly. Same 23
+  units, same +0.418 bar, same verdict.
+* **Kafr El Sheikh 1.9% vs 1.56%.** §11af's harmoniser had `"kafir el-sheikh"` as a lookup key
+  while its own key function stripped hyphens first, so wave III's 40 Kafr El Sheikh
+  respondents never matched and were dropped as unmapped. **A normaliser and its own key table
+  have to be written against each other**, and the failure is silent in the direction that
+  loses units, which is the direction that breaks a split-half. Removing those 40 reproduces
+  1.85%.
+
+Everything else reproduces: weighted national 5.93% against the 1986 census's 5.7–5.8%, Cairo
+8.51% against the 1996 census's 8.57%, Upper Egypt 11.9% against 4.7%, and the whole pooled
+ordering.
+
+### 5. Weighting can change which unit is top, so a superlative needs saying which
+
+Egypt's headline fact is which governorate is most Christian, and the two readings disagree:
+**Sohag 16.9% / Minya 16.1% unweighted, Minya 16.41% / Sohag 13.90% weighted.** The weighted
+one is drawn (the survey's own weights are what make the national figure agree with the
+census), so the map's answer is Minya, and `ask/001-eg` and §11af both say Sohag because both
+were quoting the unweighted table.
+
+The resolution in `note_public` is not to pick harder: at ±3.7 pp on samples of 317–392 the
+top three sit inside one another's intervals, so it names Minya as the figure the map carries
+and tells the reader to take the three as a group. **A superlative that flips between two
+defensible constructions is a fact about the sample, not about the country.**
+
+### 6. Four witnesses on the join, and one of them was written the wrong way round
+
+COD and CAPMAS transliterate Egypt's governorates differently on nine of twenty-seven, so
+English is not a key. `sources/eg_geo.py` requires an authored table, the **Arabic** names
+folded for alef/ya/ta-marbuta, **CAPMAS's statute areas against COD's polygon areas** (ρ=+0.950,
+0 of 5,000 random pairings reach it), and the five desert governorates coming out sparsest.
+
+**The area witness is a rank correlation and not a per-unit tolerance**, because two of the
+twenty-seven genuinely disagree: COD's Luxor is the **city** (`مدينة الأقصر`, 596 km²) rather
+than the governorate (5,428 km²), with Esna and Armant falling inside COD's Qena. A band tight
+enough to catch a permutation fails on that; one loose enough to pass it catches nothing.
+
+**And the density witness was written as "New Valley sparsest, Cairo densest", which is false.**
+Cairo governorate carries 3,085 km² of desert expansion east of the city and Qalyubia is 1,336
+km² containing Shubra El Kheima, so Qalyubia is denser. **An assertion that encodes a plausible
+belief rather than a measured fact fails on correct data**, and the time it costs is spent
+hunting a join error that is not there. Assert the thing you measured.
+
+### 7. Two other things worth carrying
+
+* **A country can have no tail.** Both answers clear the eligibility floor and the split-half,
+  so the governorate shares are a closed partition and nothing is spread at a national rate.
+  `lapop.build()` treats a zero residual as *"no room for the tail"* and exits; the Arab
+  Barometer twin handles the empty-`small` case explicitly.
+* **Kontur is the difference between a map and a Sahara.** About 96% of Egypt is uninhabited
+  and New Valley alone is 43% of the land and 0.25% of the people. The per-governorate ratios
+  come out 0.80x–1.08x for everything except Luxor and the Sinais, which is the best shape
+  check any country here has had.
+
+### Not chased
+
+* `dialogueacrossborders.com/.../AWRpapers/paper52.pdf` is **403 to every client**, here and in
+  §11af, and `web.archive.org` is unreachable from this harness. Browser job. It is where the
+  Cairo census series (10.1% 1976, 9.3% 1986, 8.57% 1996) comes from and nobody here has opened
+  it.
+* IPUMS holds `eg1986a`/`eg1996a`/`eg2006a` with `RELIGION` and would settle the governorate
+  series outright. `[[reference_ipums_account]]`: still blocked.
+* **`sources/arabbarometer.py` now exists and Lebanon, Iraq, Jordan and Yemen are one country
+  module each.** §11af never swept east of Egypt; `queue.md` carries the four rows and the
+  construction they need is written.
+
+## 9ca. The Armenian Apostolic Church gets a node — 2026-09-08. Anita's ruling on `ask/004-am`, and a branch is allowed to have children at different depths
+
+Not a country. A taxonomy change across fifteen already-drawn ones, and the general rule is in
+spec **§2.7**, which is the thing to read; this section is the audit trail.
+
+**The ask.** Armenia's census puts 2,793,041 people, 95.2% of the country, on a cell naming the
+Armenian Apostolic Church, and `am2022.py` filed them at the bare `christianity.oriental`
+parent so that Armenia would agree with Australia, Cyprus, Estonia, Poland and Romania. The ask
+priced the alternative at six mapping files and six re-scatters.
+
+**The review found the ask's premise wrong in two ways, and both mattered.** First, the branch
+was not childless: `christianity.oriental` already had ten children, all drawn, and Ethiopia's
+32,092,182 sat on `.ethiopian` while the *bare parent* held 3,351 dots. So a home country's own
+national church below the parent was already the largest thing on the branch, and adding one
+more child added no legend row that was not there. Second, **the same church was being drawn
+two ways at once**: Armenians in Armenia, Georgia, Bulgaria, Canada, Cyprus, Czechia, Poland
+and Romania on the parent, and Armenians in the United States, France, Spain, Greece and
+Finland on `.armenian-etchmiadzin`, because `origin_religion.py` sent `AM` there at 0.94.
+
+**The ruling was *record whatever the source actually says*,** and it arrives at the ask's
+option 2 from the opposite direction: not to make the map consistent, but to stop it asserting
+a distinction Armenia's own census does make.
+
+**What was built.** Three branch nodes. `christianity.oriental.armenian` (*Armenian Apostolic
+Church*), with `.armenian.etchmiadzin` and `.armenian.cilicia` under it. The last two are the
+old `christianity.oriental.armenian-etchmiadzin` and `-cilicia`, **moved rather than merged**,
+for the reason the ruling itself gives: ASARB counts the two catholicosates separately (codes
+049 and 050) and a merge would lose a division a source actually makes. Their labels changed
+too, from ASARB's *Armenian Church of North America* and *Armenian Apostolic Church of America*
+to the worldwide jurisdictions, because those were the only Armenian nodes on the tree and were
+being used for people nowhere near North America.
+
+**Nine sources moved and four stayed.** Moved: `am2022`, `au2021`, `bg2021`, `cy2021`,
+`cz2021`, `ee2021`, `ge2014`, `pl2021`, `ro2021`, plus ASARB and `origin_religion`'s `AM` row.
+Stayed at the parent, and **this is a correct outcome and not an unfinished job**: `ca2021`'s
+`Oriental Orthodox`, `au2021`'s coarse column 221, `pl2021`'s `różne inne chrześcijańskie
+kościoły wschodnie` and `es_origin`'s African residual. None of those four can distinguish.
+
+**Two cases worth carrying, because they are the rule's edges.**
+
+* **Cyprus stops at the general node.** `cy2021.py`'s own note already recorded that the
+  Armenian Prelature of Cyprus is a Cilician jurisdiction, and the cell still does not go to
+  `.armenian.cilicia`, because CYSTAT printed `Armenian church` and nothing about a
+  catholicosate. What is known about a community goes in the note; what the source printed is
+  what gets drawn.
+* **Poland is the same test from the other side.** GUS registers `Ormiański Kościół Apostolski`
+  (361) and `Ormiański Kościół Apostolski Katolikosatu Eczmiadzyńskiego` (135) as two bodies,
+  so they go to two different nodes. Poland is the only source outside ASARB that reaches a
+  catholicosate at all, and it is why those two nodes had to stop being American dioceses.
+* Czechia's cell names **no** nationality: `Církev Svatého Řehoře Osvětitele`, 3 people. The
+  Ministry of Culture refused the name *Arménská apoštolská pravoslavná církev* in 2006 and
+  registered it under its patron saint in 2013; the Czech Academy of Sciences' Religionistická
+  encyklopedie is what establishes it is the Armenian Apostolic Church. **A category can name a
+  church without naming a communion or a country**, and the encyclopedia entry is evidence
+  about the body, not a licence to guess at its catholicosate.
+
+**What a reader sees: nothing, at the default view.** `christianity.oriental` is the drawn
+category at depth 2, so its whole subtree carries its colour and its legend row still shows the
+same count. The new rows only appear at depth 3 or with Oriental Orthodox selected, which is
+where the two ASARB labels were misleading in the first place. Anyone re-opening this should
+check that before assuming a taxonomy change is visible.
+
+**The one thing that bites.** Five countries (`es`, `fi`, `fr`, `gr`, `it`) carry the node id
+**baked into `data/normalized/<cc>_foreign.csv`**, because `origin_religion.py` resolves the
+node at fetch time rather than at scatter time. Editing `origin_religion.py` alone leaves those
+five files pointing at a node that no longer exists, and the only symptom is `coverage.py`
+naming the dead id. Re-run `python sources/<cc>.py` (no `--fetch` needed, it works off the
+cached raw files) before re-scattering.
+
+### The rest of the branch — 2026-09-08, session `967ffe99-93b1-4ff9-8169-4a6d5ffa084e-orientalrest`
+
+The Armenian pass named five cells it was leaving behind, and this is them. **Five mapping
+lines across three countries, three nodes promoted, one country's dots actually moved.**
+
+**What moved.** `au2021`'s `Coptic Orthodox Church` (33,091), `Syrian Orthodox Church`
+(13,089) and `Ethiopian Orthodox Church` (5,888) to `.coptic`, `.syriac` and `.ethiopian`;
+`nz2023`'s `Coptic Orthodox` (546) and `pl2021`'s `Kościół koptyjski` (38) to `.coptic`. Every
+one of the five names a church, so §2.7 files it at that church's node.
+
+**THE THING THE ASK'S FOUR-LINE PRICE MISSED, and it is the general finding here: those three
+nodes existed, were drawn, and could not be reached.** `.coptic`, `.syriac` and `.ethiopian`
+were ASARB *leaves* in `religions.json`, and `build_tree.py`'s check 6-9 refuses any mapping
+module whose target is not in `branches.py`, so the first `build_tree.py` run failed four
+times over. They are now branch nodes, which is what the Armenian nodes had already had to
+become. **Their labels are unchanged on purpose.** The Armenian pass relabelled because ASARB
+had named those two for American dioceses; `Coptic Orthodox Church`, `Syriac Orthodox Church
+of Antioch` and `Ethiopian Orthodox` are the worldwide churches already, so there was nothing
+to correct and the legend rows read exactly as they did before.
+
+**`Syrian Orthodox Church` is the one to be careful with.** It is ABS's older name for the
+Syriac Orthodox Church of Antioch, and it sits seven rows below `Antiochian Orthodox` in the
+same census table, which is the *Greek* Orthodox Patriarchate of Antioch and Eastern. Two
+churches of Antioch in two communions, adjacent in one classification; `au2021.py` has always
+had them on different branches and now says why in the file.
+
+**Left at the parent, and swept for rather than assumed.** Every mapping module and
+`origin_religion.py` were checked. Nothing else names an Oriental Orthodox church at the bare
+parent. What stays, on top of the Armenian pass's four: `au2021`'s `Oriental Orthodox, nec`
+and `nfd` (841 people, the residual of a division ABS otherwise makes completely) and every
+`ORIENT` row in `origin_religion.py`, which were already documented as mixed model residuals
+rather than published categories. Three near-misses are worth naming because they look like
+this defect and are not: **Egypt** puts its Christians on the bare `christianity` family node
+because its survey cell says only `Christian`, which is §2.7 cutting the other way on the
+country the Coptic church is from; **Kenya** and **Austria** each have a single undivided
+`Orthodox` cell that mixes the two communions, so both sit at `christianity.orthodox`; and
+**India**'s `Jacobite` and `Marthomite` are C-01 Annexure write-ins, recorded in `in.csv` and
+drawn nowhere at all.
+
+**On the map, only Australia changed.** 50 dots left the bare parent for the three church
+rows; the subtree total is 57 either way. New Zealand's 546 people and Poland's 38 are both
+under one dot in both editions, so neither country's picture changes by a pixel — and
+Poland's cell cannot even ring, because GUS publishes `Kościół koptyjski` no finer than
+powiat while Poland is drawn at gmina, which makes every gmina row of it derived and §3.10
+suppresses the ring. That is worth knowing before anyone reads its absence as a bug.
+
+**The Armenian pass's trap did not bite, and a different one did.** `origin_religion.py`
+needed no edit at all: `EG`, `ER` and `ET` were already at `.coptic`, `.eritrean` and
+`.ethiopian`, so the five `_foreign.csv` files with node ids baked in were left alone (their
+ids were checked and all five are live). **What did bite is `rollup.json`.** Moving a cell to
+a different node renames a key in that country's roll table, and `rollup.py` is not part of
+`build_tail.py`. Skip it and New Zealand's table still names `christianity.oriental`, a node
+New Zealand no longer uses, while Australia's three new nodes have no fallback for
+`inferred dots: not shown`. Nothing errors. **So: after moving a mapping cell between nodes,
+run `python rollup.py --countries <cc>` and `python tiles.py --refresh-meta`,** the same pair
+`COMMANDS.txt` already requires after editing a `COLUMNS` dict, and for the same reason.
+
+**What a reader sees, and this pass found one thing the Armenian pass did not.** At the
+default view, nothing: `depth` starts at 2, `drawnSet` pushes `christianity.oriental` as the
+drawn category and its whole subtree paints in its colour, so the row's label, colour and
+number are all unchanged. No row appears or disappears anywhere on the map, because all ten
+children already existed and already had dots. **But at depth 3 with Australia in view, the
+bare `Oriental Orthodox` row now vanishes from Australia's legend**, because `drawnSet` pushes
+a branch beside its children only when `own[id]` is non-zero and Australia's is now zero. That
+is the correct outcome and is the change working: the ABS named four churches, and the only
+Australians left in a cell that could not distinguish are 841 people who are under one dot.
+
+---
+
+## 9cb. Rwanda wired — 2026-09-08. §11p PRICED THE THEMATIC REPORT AND NOT THE COUNTRY, and the boundary layer carried the census count
+
+`sources/rw.md`, `sources/rw.py`, `sources/rw_geo.py`, `sources/rw_grid.py`,
+`taxonomy/rw2022.py`. NISR, RPHC-5 2022, **thirty district profiles**, Table 2.2 in each.
+13,246,394 people, **30 districts**, 11 categories, 10 drawn, **99.87%**.
+
+### The queue said five provinces. It is thirty districts
+
+§11p swept thirty African offices and derived a rule on the way out: *the predictor is
+whether the country runs a thematic report series, and which theme religion got.* It then
+applied that rule to Rwanda correctly and priced the country wrong. Religion **is** Chapter 4
+of the RPHC-5 thematic report *Social-cultural characteristics of the population*, and that
+report **does** work at province, so the queue row read **5 provinces, 2.65M each**.
+
+**What the rule cannot see is a series that is not the thematic series.** In May 2025 NISR
+published a **district profile for each of the thirty districts**, 80 to 140 pages, filed
+under `/district-statistics/<province>` rather than under the census pages, and **every one
+carries the religion question in full as its Table 2.2** — the same eleven categories, counts
+and percentages, Total / Urban / Rural. 441,546 people per unit.
+
+This is the **third** country in three days to land finer than its row promised for this exact
+reason (§9bt Mongolia's 22 provincial volumes, §9bu Botswana's per-district booklets, now
+Rwanda's district profiles), so it is no longer an anecdote. The form for spec §12: **a
+national report that stops at the nation is not evidence about the country. Before accepting a
+tier, ask whether the office publishes anything PER UNIT of the tier below it** — a profile
+series, a monograph series, a booklet per district. Those are usually not filed with the
+census results and are usually not what a search for the census returns.
+
+**What the finer tier actually buys, in one column.** Adventists are 12.17% of Rwanda and run
+from **33.94% in Nyanza to 2.38% in Gicumbi**, a belt across the middle of the country. At
+province level the same figures run **9.48% to 14.58%** and the belt does not exist.
+
+### The boundary layer carried the census count, so the join is proved rather than asserted
+
+§9bv found this on Moldova's own GIS server three countries ago. Rwanda is the same finding
+on ArcGIS Online, and the access shape is worth recording because **the office's `gis.`
+hostname is a decoy**:
+
+* `gis.statistics.gov.rw` is a DNS alias of the Drupal site. `/Portal/sharing/rest`,
+  `/server/rest/services` and `/arcgis/rest/services` all return a 61 KB Drupal 404 page with
+  HTTP 404 — indistinguishable from an office with no GIS at all.
+* The content is an **ArcGIS Online organisation**, reachable only through
+  `https://www.arcgis.com/sharing/rest/search`: `q=tags:nisr` returns 95 items,
+  `owner:NISR_Publisher` 58, `owner:GIS@NISR` 57, `owner:NisrProject` 12, all public.
+* **`Population_2002_2022`** (`91890b6718b549c89efee8c4757a34c4`) is 1,248 features — **416
+  sector polygons × three census years** — carrying `tot_pop`, `pop_ur`, `pop_ru`,
+  `hh_number`, `area_sqkm`, `district`, `district_id`, `province`.
+
+Filtered to 2022 it sums to **13,246,394, the census population exactly**. Dissolved to
+district, **all thirty populations equal their own booklet's total to the person**, and the
+thirty are distinct (318,126 to 879,505), so equality alone determines the pairing. The
+transferable point is not "use the office's GIS": it is that **a population field on a polygon
+layer converts a name join from a thing you assert into a thing you prove**, and
+`[[reference_name_join_wrong_neighbour]]` has nowhere to hide once it is there.
+
+**So: when an office runs a GIS, check its polygon layers for an attribute table before
+reaching for COD-AB.** COD-AB Rwanda is `rwa_adm_2006_NISR_WGS1984_20181002` and would have
+served perfectly; it just cannot prove anything.
+
+### The placement grid is re-levelled onto the census sectors
+
+New here, and possible because **Rwanda counted finer than it published religion**. Religion
+stops at 30 districts; the population count exists for all 416 sectors. So `rw_grid.py` scales
+Kontur's hexes per sector so each sector sums to its census count: everything coarser than
+about 15 km² and 32,000 people becomes measured, and only the shape inside a sector stays
+modelled.
+
+**The check has to be run on the raw ratios BEFORE the scaling**, because afterwards every
+ratio is 1.000 by construction and the file proves nothing. Kontur 14,067,721 vs census
+13,246,394, ratio 1.062; per sector 0.45x-2.07x, median 0.99; **r = 0.9113 on 416 sectors
+against a best of 0.1507 over 2,000 random pairings**. That is `zw_grid.py`'s pair of tests
+with the answer the other way round — ten provinces correlate by luck and the band
+discriminates, 416 sectors do not and the correlation does.
+
+**Any country whose office publishes population below its religion tier can do this**, and
+several already on the map could.
+
+### Two parse traps, both silent, and one of them is new
+
+* **A table sharing the page can have a column header that is a row label in yours.** Table
+  2.1 is nationality: `Total / Rwanda / Foreigners`. So the first line saying `Rwanda` is in
+  the wrong table, and a reader anchored there takes `Foreigners` as a figure.
+* **Gakenke prints a BLANK cell instead of a zero.** Its `Traditional/Animist` row is 51
+  people, all rural, urban left empty, so the text layer gives `51 / 51 / 0.01 / 0.01` and a
+  line read hands the district **0.01 traditionalists** and shifts its percentages one column
+  left. On a row of 51 people in one district of thirty, no total would ever query it. Columns
+  are cut on position off the `Catholic` row instead ([[reference_pdf_table_geometry]]).
+
+The general form of the second one is worth having: **a blank cell is invisible to a line
+read and shifts every figure after it.** Any source where a small category can be empty in one
+column needs geometry, not tokens — and the category that goes blank is by definition the one
+too small for a total to catch.
+
+### The outside witness, and what the booklets add to it
+
+`tools/oracle.py Rwanda` gives UNSD Demographic Yearbook table 28's eleven 2022 figures, which
+are NISR's own return to the UN and a wholly separate publication from these booklets. **All
+eleven reproduce to the person** from the thirty district tables, which is a check on the read
+rather than on the arithmetic.
+
+It also shows what the booklets add. **The UN prints `Pentecostal` where NISR prints
+`ADEPR`** — the Association des Églises de Pentecôte du Rwanda, **2,820,813 people, 21.29%,
+the second-largest religious answer in the country and a single named denomination**. Nothing
+else on this map has one church counted as a census category at a fifth of a country. Its
+first congregation was in Rusizi, on the Congo border, in 1940; Rusizi is still its strongest
+district at 33.90%. So **the oracle is a floor on the categories as well as on their
+existence**: a generic label in the Yearbook does not mean the office published a generic
+label.
+
+### Fetch notes
+
+Thirty PDFs at `/sites/default/files/2025-05/<District>.pdf` **except Nyabihu**, at
+`/2025-10/Nyabihu_RPHC2022.pdf` — the one file a pattern-guessing fetch misses. Three names are
+shouted (`BURERA`, `BUGESERA`, `KIREHE`). The `/2025-06/` and `/2025-08/` files on the same
+pages are the **RPHC-4 (2012) and RPHC-3 (2002) profiles** and must not be read for this.
+`www.statistics.gov.rw` **fails TLS** (the cert's altnames list the bare host only), so a
+strict client errors where a browser follows the redirect; use `statistics.gov.rw`.
+
+The RPHC-5 microdata (`microdata.statistics.gov.rw`, catalogue 109, variable `V266`,
+*Religious affiliation (p13)*, 13 categories, 1,313,015 valid cases) is a **10% sample behind
+a Login/Register wall**. Not chased, and not a loss: it would trade a complete count for a
+sample to reach a tier this map does not need.
+
+
+## 9cc. Albania wired — 2026-09-08. THE HOST WAS NEVER DOWN; and an office can publish its own census finer on a MAP SERVER than in any table it prints
+
+**Albania is drawn: 2023 census, twelve qarqe, ten categories, 2,402,113 people, and the only
+Bektashi count in the world.** `sources/al.md` has the whole thing. Three findings generalise.
+
+### The queue row was wrong about the host, and there are three separate reasons it looked right
+
+The row read **"`instat.gov.al` did not resolve on 2026-09-06, -07 or -08 — connection layer,
+not a 403"**, and §11k and §11o said the same. With `User-Agent: Mozilla/5.0` the site answers
+**200 with a 119 KB page** and always did. That is §12's retry rule again and it is getting
+monotonous, so what is worth recording is the three things that sit *behind* the front page,
+because any one of them alone convinces a sweep that an open office publishes nothing:
+
+1. **The statistical database is on port 8083 and only the census microsite links it.**
+   `databaza.instat.gov.al` on 443 is dead — which is exactly what §11d, §11k and §11o all
+   tested. The live system is `https://databaza.instat.gov.al:8083/pxweb/en/DST/`, PxWeb
+   21.1, and the single link to it anywhere on `instat.gov.al` is on `/en/census-2023/`.
+   Second sighting of a non-standard port after Egypt's 8080 (§9bz). **Both were named in the
+   office's own HTML.** The lesson is narrower than "try ports": it is that a dead
+   `<subdomain>` is not a finding until you have grepped the office's own pages for it.
+2. **The ENGLISH database lists zero tables under Census 2023; the Albanian one lists 105.**
+   `/pxweb/en/DST/START__Census2023__Census_Bashki/` returns 200 and resolves its breadcrumb
+   to *Municipality level data* with an empty table list. `/pxweb/sq/DST/` on the identical
+   path lists 24. This is §9bx's Armenian finding with the failure mode inverted: there the
+   English tree was a strict subset, here it is a set of **empty folders that render
+   perfectly**, so nothing looks broken. A folder that resolves and lists nothing is a
+   translation gap, not an absence.
+3. **PxWeb's own search index does not cover the 2023 branch.** Searching the database for
+   `religion` returns two hits and both are 2011; for `fetare`, five hits, none newer than
+   2013; for `2023`, three population projections. Every Census 2023 table is reachable only
+   by walking the tree. **A statistical database's search box is not a catalogue.**
+
+### The finding worth carrying: an office can publish its census FINER on its map server than in any table
+
+This is `[[reference_gis_server_census]]` and §9bv's Moldova finding, and Albania is the
+strongest instance yet, because here the map server is not merely *a* route to the data — it
+is the **only** route to a tier the office never tabulated.
+
+`arcgis.com/sharing/rest/search?q=owner:INSTAT` returns **739 items** on
+`services7.arcgis.com/E9FE1JuiACmTPbPv`, one hosted view per indicator per geography per
+census. Sixteen of them are religion, and the shape is the finding:
+
+| tier | units | 2011 | 2023 |
+|---|---:|---|---|
+| prefecture | 12 | Muslim, Bektashi, Catholic, Orthodox | same four |
+| municipality | 61 | same four | — |
+| administrative unit | **373** | same four | — |
+
+**INSTAT's printed tables stop at 12 units. Its map server goes to 373.** Nothing in the
+PxWeb database, the XLS series, the 2011 prefecture booklets (which do have a whole
+per-commune section, tables 2.1.1 to 2.5.6, and it stops before religion) or the open 2011
+microdata (`ind.sav`, `IND_40 Besimi fetar`, geography `Prefektura` and urban/rural only) goes
+below the prefecture. The 373-unit religion layers exist nowhere else.
+
+**They are not drawn, and the reason is a shape worth naming: a GIS server publishes what an
+ATLAS needed, not what a table would contain.** Those four categories are 75.6% of the 2011
+census. The other 24.4% — evangelicals, other faiths, believers of no denomination, atheists,
+refusals, unknowns — has no layer at any tier, because nobody makes a choropleth of a refusal
+cell. So the fine tier is not a finer version of the table; it is four of its ten columns,
+from a twelve-year-old census, with the rest unrecoverable. Drawing it would trade the current
+census and six categories for thirty times the units. **That trade is Anita's to make and not
+an agent's**, so it is written up in `sources/al.md` §3 with the layer names, rather than
+taken or dismissed. The general rule: **when the map server is finer than the table, check
+which columns it has before pricing the tier — an atlas layer is a selection, not an extract.**
+
+### The join is proved to the person, off the polygon layer's own population field
+
+Same instrument as §9bv and §9cb. `prefecture_p_distrib_2023_view` carries `P_DISTRIB`, the
+qark's 2023 census population as an **absolute number**, and all twelve match the printed
+`Gjithsej Total` of that qark's worksheet exactly. `sources/al_geo.py` also asserts that the
+twelve values are **distinct**, which is the part that makes it a test rather than a
+coincidence: a code swapped between two qarqe fails on the population. Then the four religion
+share layers reproduce `count / total` from `data/normalized/al.csv` to **7.1e-15 percentage
+points** across all 48 pairs. No name matching happens anywhere in this country.
+
+### Two smaller things
+
+**The `.xls` INSTAT serves is SpreadsheetML 2003 XML.** `xlrd` fails with *"Expected BOF
+record; found b'<?xml ve'"* and `pandas.read_excel` cannot pick an engine, which reads like a
+corrupt download. Parsed as XML it is fine — but the row labels sit inside an `<ss:Data>`
+element with an html40 namespace and `<B>`/`<I>` children, so `.text` on the Data element is
+`None` and **a parser reading it sees a clean table of numbers with no row names at all**.
+That does not raise. `itertext()` is the fix and matching each label by regex rather than by
+printed position is the guard.
+
+**`islam.bektashi` is a new node**, under `islam` because that is where INSTAT files it
+(`Mysliman - Bektashi`, glossed *Muslim - Bektashism* in the office's own English) and where
+Albanian Bektashis file themselves; not under `alevism`, which is held apart for a reason its
+own note gives, and not under `islam.shia`. 115,644 people, 4.81% of Albania, **21.04% of
+Gjirokastër**, where 59.4% of all Muslims are Bektashi, against 0.20% in Shkodër. §7247's note
+that a Bektashi/Alevi split would matter most in Türkiye now has the one source that makes it.
+
+---
+
+## 9cd. Kazakhstan REDRAWN as a counted country — 2026-09-08. §11u's four checks were all correct and all about DOCUMENTS; the figures were in the dashboard's engine
+
+Kazakhstan was wired on 2026-09-07 as the first country on this map with **no measured tier at
+all** (§9aq): every row `modelled`, religion spread across the oblasts by their ethnic
+composition, because §11u had established four independent ways that BNS publishes religion
+nationally and nowhere else. **It is now a counted country.** `sources/kz.py`,
+`sources/kz_model.py`, `taxonomy/kz2021.py`, `sources/kz.md`. 19,186,015 people, 17 regions,
+9 drawn nodes, 100.00% drawn, **basis `counted`**.
+
+### §11u was not wrong. It asked the wrong kind of question
+
+Its four checks, restated, and every one of them still holds:
+
+1. not one of the 542 pages of the 2021 religion volume names an oblast, while chapter 7.2 of
+   the same volume cuts **language** by region;
+2. the 2009 volume contains `область` zero times;
+3. the 2009 per-region series, 16 regions × 3 volumes, has no religion on any page;
+4. there is no 2021 regional series at any of four candidate paths.
+
+**All four are about documents, and the finding they support is a finding about documents.**
+The office was never asked whether it holds the cross-tabulation, only whether it had printed
+one. It holds it, and it serves it.
+
+### Where it actually is
+
+`stat.gov.kz/ru/national/2021/` links two **interactive dashboards** alongside the eleven
+volumes. §11u listed the volumes and did not open the dashboards. The dashboard page is a
+Bitrix tab strip whose thirteen tabs (`Население`, `Национальный состав`, `Языки`,
+**`Вероисповедание`**, …) each hold an iframe pointing at
+
+```
+    https://qap.stat.gov.kz/single/?appid=4c82a5bb-b3c9-49ba-bf4a-2eceb365084f
+                                  &sheet=063175c3-9502-4a72-a506-69ec3d5f3a99
+```
+
+`qap.stat.gov.kz` is a **Qlik Sense server**, and this is the thing worth carrying: **a Qlik
+app ships its data model, not its charts.** The published sheets show whatever BNS chose to
+show; the engine underneath will cross-tabulate any pair of fields in the model, on request,
+to anyone who can open a socket. And this model is not a summary table:
+
+```
+    table `Население 2009_2021`   35,195,612 rows   = 16,009,597 (2009) + 19,186,015 (2021)
+    key    HASH_IIN              one row per enumerated person
+    fields 124, including  Вероисповедание · Область · КАТО РАЙОН · Тип местности ·
+                           Национальность · Возраст · Образование · Состояние в браке · …
+```
+
+**It is the census microdata.** Religion sits on the same row as the oblast, the rayon, the
+settlement tier, urban/rural, nationality and a hundred other variables.
+
+### The engine, concretely, because the next person should not have to work it out
+
+Anonymous access is enabled — the socket's first frame is
+`OnAuthenticationInformation` with `"userId": "anonymous…"`, `"userDirectory": "NONE"` and
+**`"mustAuthenticate": false`**. No key, no login, no terms gate.
+
+```
+    GET   https://qap.stat.gov.kz/single/?appid=<app>      -> sets the X-Qlik-Session cookie
+    WSS   wss://qap.stat.gov.kz/app/<app>                  -> JSON-RPC, that cookie + Origin
+          {"method":"OpenDoc","handle":-1,"params":[<app>,"","","",false]}
+          {"method":"CreateSessionObject", ... qHyperCubeDef ...}  -> GetHyperCubeData
+```
+
+Two things that are not obvious. **Ask for the field list first** (`qFieldListDef` with
+`qShowSrcTables`) and `GetTablesAndKeys` after it: together they tell you what the app can
+answer before you write a single query, and they are how the person-level table announced
+itself. And **filter with set analysis rather than a selection** — `Sum({<[Год переписи]=
+{'2021'}>} 1)` — because an anonymous session carries its own selection state and a query that
+holds its own filter cannot be left holding a stale one.
+
+`python -c "import websocket"` is the only dependency (`websocket-client`, already present).
+
+### Four margins prove the pull is the census and not somebody's model
+
+1. **all nine national religion totals reproduce the printed volume to the person** — Ислам
+   13,297,775, Православие 3,269,143, Католицизм 18,988, Протестантизм 9,419, Иудаизм 7,192,
+   Буддизм 15,458, Другое 23,247, Отказались указать 2,112,653, Неверующие 432,140;
+2. they sum to **19,186,015**, the census population, with no residual;
+3. the urban and rural margins are **11,741,342 / 7,444,673**, the volume's own constants;
+4. the 2009 and 2021 row counts are the two censuses' published populations exactly.
+
+And a fifth, which is the one that makes it conclusive: **it disagrees regionally with the
+ethnicity model by 7.50% of the country.** A table that reproduces the published national
+figures to the person while differing from everything derivable from them can only be their
+source. `sources/kz.py` asserts 1, 2 and 3 on every run and stops the build if any fails.
+
+### THE JOIN IS PROVED ON POPULATION, AND THAT MATTERS HERE
+
+The engine labels oblasts in caps (`СЕВЕРО-КАЗАХСТАНСКАЯ`) and **carries no KATO code for
+them** — its `ОБЛАСТЬ КАТО` field is another name string, not a code, which is the sort of
+thing that is only visible once you look. The geography is keyed on KATO. So a name join is
+the obvious move and it fails on exactly one row: the census enumerated the capital as
+**Nur-Sultan** and the dashboard calls it **Astana**. Sixteen of seventeen match, one silently
+does not, and no total moves — `[[reference_name_join_wrong_neighbour]]` exactly.
+
+`kz.py` instead asserts the seventeen oblast populations **distinct**, joins on the population
+to the person, and only then checks the names, allowing the single documented disagreement.
+The distinctness assertion is what turns a population match into a proof rather than a
+coincidence, and it is cheap to write.
+
+### What changed on the map, and what did not
+
+| | model | census | |
+|---|---:|---:|---|
+| Ислам | 13,297,775 | 13,297,775 | **4.4%** of it in the wrong oblast |
+| Православие | 3,269,143 | 3,269,143 | **4.5%** |
+| Отказались указать | 2,112,652 | 2,112,653 | **27.8%** |
+| Неверующие | 432,142 | 432,140 | **22.9%** |
+| Католицизм | 18,988 | 18,988 | 20.9% |
+| Протестантизм | 9,418 | 9,419 | 23.8% |
+| Иудаизм | 7,193 | 7,192 | 31.1% |
+
+**1,439,367 people, 7.50% of Kazakhstan, were in the wrong (oblast, religion) cell.** Every
+national total was right, because the model was built to reproduce them; every error was
+geography.
+
+**The north-south story survives intact and was never the risk.** Measured, North Kazakhstan
+is 55.16% Christian and Turkistan 1.57%, against the model's 49.12% and 1.91%: the same map,
+somewhat sharper.
+
+**The refusal layer was an artefact and is now the most interesting thing in the country.**
+The model drew `Отказались указать` almost flat — every region between 9.35% and 12.19% — and
+`sources/kz.md` §4 said in terms that the flatness was the model's and not Kazakhstan's, which
+was the right call and is now confirmed. Counted, it runs
+
+```
+    Mangystau 22.07  Shymkent 21.29  Almaty city 19.94  Almaty obl 19.41  Akmola 14.97
+    Kostanay 13.92  Karaganda 11.05  Atyrau 10.88  Astana 7.92  Jambyl 6.94
+    Turkistan 5.76  Aktobe 4.33  N Kazakhstan 4.05  W Kazakhstan 3.92  Pavlodar 2.68
+    Kyzylorda 1.60  East Kazakhstan 1.19
+```
+
+an **eighteenfold spread on one census form**. It does not follow the north-south line, it
+barely moves between town and country (12.18% urban against 9.84% rural), and it does not
+follow ethnicity: Mangystau is one of the most Kazakh oblasts and Kazakhs decline at 9.3%
+nationally. **Nothing BNS publishes explains it**, and a range that wide between neighbouring
+administrative units is as consistent with fieldwork practice as with reticence. `note_public`
+says exactly that rather than reaching for a story.
+
+### The one that generalises, and it is not about Kazakhstan
+
+**A statistics office's dashboard is an interface to a database, and the database is usually
+wider than the dashboard.** Three offices in three days have now published more through a
+service than in any document they printed: Moldova's own GIS server with the census population
+on every polygon (§9bv), Albania's map server finer than any of its tables (§9cc), and now
+Kazakhstan's BI engine serving the microdata. The pattern is the same one and it is worth
+stating as a rule: **when an office has ruled out a cross-tabulation on the evidence of its
+publications, that is a finding about its publications.** Ask what its dashboards, map servers
+and BI tools are sitting on before writing the country off. Qlik, Power BI, Tableau and
+ArcGIS all expose a queryable model behind an embedded view, and all four announce themselves
+in the embedding page's HTML — which `WebFetch` strips, so fetch the raw HTML and grep the
+iframe `src`. That single step is what found this.
+
+### 218 rayons are now available AS COUNTS and are deliberately still not drawn
+
+§9aq refused 218 units for two reasons and **both are gone**: it is no longer inference (the
+engine returns religion × `КАТО РАЙОН` for 218 units summing to 19,186,015, cached in
+`data/raw/kz/kz_qlik_rayon_religion.csv`), and there is no fuzzy name join (the same app
+carries the rayon boundaries, table `карта_район`, 190 rows with a `Район.Line` geometry, on
+the app's own key). What is left is a real geography build — extract the boundaries, rebuild
+the hex grid, redo the lookup — which is a session's work rather than a rider on this one.
+**`queue.md` carries the row.** Anyone taking it should note that the 218 rayon labels are
+bare numbers in this field and the oblast is a separate dimension, so the unit key is the
+pair.
+
+### Licence and vintage unchanged
+
+Census enumerated 1 September 2021; the engine's data is that round. BNS publications carry a
+Civil Code attribution notice and no other restriction, and the engine is open with no terms
+gate of its own. The three oblasts created in 2022 postdate the census and the dashboard, like
+the volume, still uses the 17; `sources/kz_geo.md` §1 has the dissolve.
+
+---
+
+## 9ce. Uruguay wired — 2026-09-08. THE QUEUE PRICED THE INTERNATIONAL SURVEY AND NEVER ASKED WHAT THE OFFICE HAD; a household survey fifty times bigger, at the same tier
+
+`queue.md` §11ad priced Uruguay at **4,318 AmericasBarometer respondents pooled over three
+waves, 19 of 19 departments**, and flagged it as the standout in the Americas. The row is
+accurate about LAPOP. It is not the best source available, and the gap is not marginal:
+
+    LAPOP AmericasBarometer 2010-2014 pooled     4,318 respondents,  19 departments
+    INE Encuesta Nacional de Hogares Ampliada  230,898 respondents,  19 departments
+
+**INE asked the religion question itself, in 2006**, the year the continuous household survey
+was widened from localities of 5,000 and over to the whole national territory, and put it to
+every household member over six. Variable `e29_1`, seven answers, open microdata behind a
+click-through with no login.
+
+The census half is genuinely closed and was checked rather than assumed: Uruguay is **absent
+from the UNSD oracle**, and the last Uruguayan census to ask about religion was **1908**,
+nine years before the 1917 constitution separated church and state. So this is a survey
+standing where no census has stood for a century, and every row is `modelled`.
+
+**The generalisable part.** §11ad's nine-country LAPOP list is a list of what one international
+instrument has. It is not a list of what those nine offices have, because nobody asked. Uruguay
+was the first of the nine to be checked against its own statistics office and the office won by
+a factor of fifty-three at the same tier. The other five undrawn rows (`do`, `cr`, `pa`, `ht`,
+`hn`) have not been checked that way, and the Dominican Republic is the one where it would
+matter most, since §9bn refused to build it from LAPOP alone. **Before building any of them,
+ask what the office's household survey series carries.** The question is not "does the census
+ask" but "does anything the office runs ask", and a household survey with a religion module is
+exactly the kind of thing that gets published once, in one year, and then never repeated.
+
+### Three findings worth carrying
+
+**1. COD-AB's pcodes can be alphabetical while the office's numbering is not, and the overlap
+can be MOSTLY RIGHT.** This is §9bl's El Salvador trap in a harder form. INE numbers the
+departments Montevideo first and the other eighteen alphabetically; COD-AB's `UY01`..`UY19` are
+alphabetical with no exception. So `UY{dpto:02d}` shifts the first ten by one place and gets
+**the last nine right**:
+
+    INE  1 Montevideo  -> UY01, which COD says is Artigas
+    INE 10 Maldonado   -> UY10, which COD says is Montevideo
+    INE 11 Paysandú    -> UY11, which is Paysandú          and so are 12 to 19
+
+Nine of nineteen coincide, and they are exactly the ones a spot check lands on, because a
+reviewer scanning a lookup checks a name near the end of the list. Montevideo's 1.3 million
+people, 37% of the country, would have been drawn in Artigas with every total reconciling.
+El Salvador got two of fourteen right, which is enough to fool a spot check; Uruguay gets nine
+of nineteen, which is enough to fool a careful one. Joined on the name, with the mispairing
+asserted, and with **LAPOP's own `prov_es` labels as a third witness** — they agree with INE's
+numbering on 18 of 19, and the nineteenth, `1407`, carries an EMPTY label rather than a wrong
+one. That is what §11ad's noted blank on Flores turns out to be.
+
+**2. A CENSUS QUESTIONNAIRE BEATS ITS OWN DATA DICTIONARY, and the microdata settles it.**
+ANDA's dictionary for `e29_1` gives the question as *"PARA MAYORES DE 6 AÑOS…"* and then
+glosses the universe as *"solo se preguntará a personas de 6 años y más"*. Those are different
+universes. The not-applicable code covers ages 0 to 6 exactly and completely, all 4,225
+six-year-olds included, and nobody 7 or over carries it: the questionnaire is right and the
+gloss is wrong. `[[reference_census_questionnaire]]` again, with the twist that here the
+*data* was the arbiter and both documents were available. Worth 4,225 respondents and a point
+of the population base, and asserted in both directions on every run.
+
+**3. WHERE A SECOND SURVEY EXISTS, THE CROSS-CHECK IS BETTER THAN THE POPULATION CHECK — and
+it measures the other survey too.** Every survey-built country here runs a held-out population
+check, which tests the join and nothing else. Uruguay can do something no LAPOP-only country
+can: LAPOP measured the same nineteen departments four to eight years later with a different
+instrument, a different sample and a different sponsor.
+
+    non-Catholic Christian / Ev+Prot    r = +0.86    0 of 20,000 random pairings reach it
+    atheist / agnostic                  r = +0.73    3 of 20,000
+    no religion, both cells             r = +0.56  118 of 20,000
+    Catholic                            r = +0.34  1,574 of 20,000   NOT significant
+
+**The Catholic row failing is a finding about the pair of cards.** LAPOP prints *Ninguna (cree
+en un Ser Superior pero no pertenece a ninguna religión)* and INE prints *Creyente sin
+confesión*; same idea, different words, and the boundary between that answer and *Católico* is
+where wording moves people. LAPOP finds 37.0% Catholic and 32.4% in that cell where INE finds
+46.0% and 26.9%. Read the other way this is a measurement OF LAPOP, and the useful form of it
+is: on the one country where a large national instrument can be laid beside it, the
+AmericasBarometer's departmental cut reproduces the ordering of a clean categorical difference
+well and the ordering of its own ambiguous boundary cell badly. That is a caution for
+`gt`, `sv` and `ec`, whose `Ninguna (creyente)` geographies rest on the same cell.
+
+**Reviewed 2026-09-08, and the caution is real but points at the other cell.** `sources/uy.md`
+§11.2 has the working. The mechanism holds — the two cells either side of the line agree badly
+alone (Catholic +0.34, `Creyente sin confesión` against LAPOP's cell **+0.25**) and well summed
+(**+0.69**, 12 of 20,000), with the per-department errors running r = -0.84, which noise cannot
+produce. So **the weak cell is `Ninguna (cree en un Ser Superior)` and not Católico**, which is
+the half that matters for the three. Correcting for LAPOP's own binomial noise moves the failing
+pairs least (+0.34 to +0.46, +0.25 to +0.32, against +0.86 to +0.93 and +0.73 to +0.79), so
+"most of the scatter is LAPOP's sampling error" is not the explanation and the arithmetic runs
+the other way. This does **not** overturn `sv` (+0.74) or `ec` (+0.63) on their own split-halves,
+and it converges with `gt`, which got **+0.21** for that cell and draws it on `OVERRIDE`. The
+statement that survives: a cell can pass its internal split-half and still not hold the people
+another instrument's version of the same answer holds.
+
+### Two smaller traps
+
+**A five-year age band cannot be cut at 7, and Uruguay has nothing by single year.** The
+drawn universe is 7 and over, and INE's 2025 revision publishes only five-year bands — the
+`(100ymas)` files are five-year bands too, the phrase meaning the open top band. So `pop7` is
+`total − (0-4) − 0.6 × (5-9)`, which is worth at most 0.05% of the country and is stated
+rather than hidden, because it is arithmetic on a published band and not a published number.
+
+**One sheet of nineteen writes its year header as a string.** `A.1.2 Departamentos.xlsx` has
+one sheet per department; eighteen write the 2023 column header as the integer `2023` and
+**Paysandú writes `2023*`**, a footnote marker nothing in the workbook explains. A parser that
+types the header cell loses the year the whole map is drawn on, for one department, and
+reports it as a missing column rather than a wrong number. Parse the header, do not type it.
+
+### What was drawn
+
+3,181,997 people on 19 departments, 7 categories, every row `modelled`. Off
+`data/normalized/uy.csv`:
+
+    46.19%  Catolico                  26.90%  Creyente sin confesion
+    15.57%  Ateo/agnostico            10.02%  Cristiano no catolico
+     0.63%  Umbandista/afroamericano   0.38%  Judio           0.32%  Otra
+
+**42.47% claim no religious affiliation** and 63% of those still say they believe in God, which
+is far more than any other Latin American country on this map. The two halves have opposite
+geographies: `secular` is Montevideo and the Atlantic coast (21.7% of the capital, 16.6% of
+Maldonado, against 3.9% of Artigas), `unchurched` is the interior and the north (41.9% of
+Tacuarembó and 41.6% of Rocha against 13.6% of Colonia). Together they run 20.5% of Paysandú
+to 58.1% of Rocha.
+
+**Uruguay's card gives Judaism and Afro-American religion their own boxes**, which no LAPOP
+card does, so `other.uy` is 0.32% against `other.gt`/`other.sv`/`other.ec` at 1.45% to 2.35%.
+And `e29_2` is a transcribed free-text follow-up, so this is the one `other` cell on the map
+whose contents can be read: a third blank, a fifth *NO SABE* / *SIN DEFINICION* / *NO
+DEFINIDO*, then BUDISTA at 6.7% of the cell, ESPIRITISTA, METAFISICA, PANTEISTA, MORMON,
+MUSULMAN, TESTIGO DE JEHOVA, BAHAI, SEICHO-NO-IE, DEISTA, ORTODOXO RUSO. Largest named group
+682 people, under one dot at every value this map offers, so nothing is split (§3.11).
+
+**Five of seven categories clear the split-half**, run across the two halves of 2006 rather
+than across waves — a one-year survey has no waves, but a monthly panel with semester weights
+has two samples of the same country. `Judio` (+0.26) and `Otra` (+0.26) are drawn anyway under
+`sources/uy.py`'s `UNDER_BAR`, with the chi-square as the precondition and the bar not moved.
+The Jewish case is the one worth reading: for a category near zero in eighteen of nineteen
+units the rank test ranks noise, while the fact the map draws is that **Montevideo is 0.92%
+Jewish against 0.06% elsewhere and holds nine tenths of the cell**, on 80,196 Montevideo
+respondents. Drawing it at the national rate would be the stronger claim, and the false one.
+
+### Open
+
+**Montevideo can be split 62 ways and probably should be.** The ENHA person file carries `ccz`
+(18 Centros Comunales Zonales) and `barrio`/`nombarrio` (62 neighbourhoods) beside `dpto`,
+fully populated for all 88,917 Montevideo rows, with barrio samples of **381 to 4,780, median
+1,192**. Montevideo is 37% of the drawn country and holds the map's sharpest contrast, so this
+is the largest single improvement available. Three things to settle first, none a blocker: the
+weights are calibrated at department and Montevideo-stratum level rather than at barrio; there
+is no replication split inside Montevideo other than the two halves of 2006; and the polygons
+have to come from Intendencia de Montevideo's open data rather than from INE, whose *Mapas de
+Unidades Geoestadísticas 2023* are nineteen RARs of print maps. `sources/uy.md` §10 has it.
+Outside Montevideo the ENHA offers nothing finer: `locagr` has 19 values nationwide and they
+are strata labels (*Agrp. Localidades Menores*, *CANELONES Rural*) rather than places.
+
+**The level is nineteen years old** and nothing since 2006 has asked. Latinobarómetro and the
+WVS carry Uruguay with religion at national level only, so they would date the level rather
+than place it.
+
+**`Umbandista/afroamericano` at 0.63% is probably a floor.** Practice runs ahead of
+identification, as in Brazil. Uruguay's 2011 census asked about Afro-descent by department and
+INE publishes it; that is not religion and must not be used as if it were, but it would say
+whether the floor is a factor of two or of ten.
+
+## 11ah. Burundi chased to the end — 2026-09-08. §11w's *"not chased"* is now closed on what the offices publish, and the OFFICE HAS A KEYLESS API WHILE ITS OLD DOMAIN SELLS SEO
+
+§11w listed Burundi at 8 categories and *"not chased"*. It has now been chased through both
+offices, four platforms, the census's own eight published workbooks, the twelve thematic
+volumes and every survey that reaches the country. **Burundi is closed and the long version is
+`sources/bi.md`.** The 2008 census asked religion of every household member, code list
+`1 Catholique / 2 Protestante / 3 Musulmane / 4 Adventiste / 5 Témoin de Jéhovah /
+6 Traditionnelle / 7 Autre religion / 0 Sans religion`, and published it at **national and
+urban-against-rural only**. Nothing in either office's catalogue cuts religion by province or
+commune.
+
+### The office renamed, and its old domain returns 200 with a real page
+
+`isteebu.bi` resolves, returns HTTP 200 and serves 5.6 KB of marketing copy for a Romanian SEO
+agency. It is a squatted domain. **A liveness check that reads the status code, the byte count
+or even the page title records ISTEEBU as alive** — the title is `Isteebu.bi / Nova Network`.
+The institute is now the **Institut National de la Statistique du Burundi (INSBU)**, at
+`insbu.bi`, and this is `[[reference_dead_stats_office]]` in the one shape that reference does
+not cover: not a bot wall, not a move to a new path, but a *lapsed registration* where the new
+occupant serves a plausible 200.
+
+### INSBU's entire catalogue is one keyless GET, found in the SPA bundle
+
+`insbu.bi` is a React SPA — `<div id="root">` and nothing else. Grepping absolute URLs out of
+`/static/js/main.*.js`, which is `[[reference_spa_hidden_apis]]` applied to a *live* host,
+returns the API and three platforms in one pass:
+
+```
+https://api.insbu.bi/api/publications?page=N       496 documents, no key, no referer check
+https://api.insbu.bi/storage/documents/<ULID>.pdf  every file, direct
+https://insbu.bi/nada/index.php/home               NADA
+http://41.79.224.140/redbdi/                       "IMIS Burundi", a REDATAM system
+https://burundi.opendataforafrica.org/             AfDB/Knoema
+```
+
+496 rows swept and read by title and description. **The RGPH 2008 is not in the catalogue at
+all** — INSBU has published no census volume of any kind. The oldest thing in it is a 1987 DHS
+uploaded the day before this sweep.
+
+Of the three platforms: **NADA is installed and empty** (`api/catalog/search?ps=200` returns
+`found: 0`); **Knoema is behind a Cloudflare interstitial** including its `/api/1.0/` routes, a
+browser job with low expected value; and **the REDATAM IMIS is up and firewalled**. That last
+one is worth the detail, because the two failure modes look identical in a log and are not:
+port 80 times out from three independent network paths, while **port 443 returns ECONNREFUSED**,
+which only a live host does. It is not dead, it is not reachable from outside Burundi, and it is
+the one place a religion-by-commune tabulation could still be run.
+
+### THE CENSUS BUREAU IS A DIFFERENT AGENCY, ON A DIFFERENT DOMAIN, ON PORT 8405
+
+`bcr.bi` 302s to **`https://app.rusansuma.bi:8405/`** — the Bureau Central du Recensement,
+running **RGPHAE 2024** (population, habitat, agriculture and livestock), with its own
+publications, its own 60-table data browser and its own cross-tab tool. Nothing on `insbu.bi`
+links to it and no search for the statistics office reaches it; it was found in a search result
+for the census, not for the office. **Ask separately what the census bureau publishes**: in
+francophone Africa the BCR is frequently a standing agency under the interior ministry rather
+than a department of the statistics institute, and it keeps its own site.
+
+What BCR has, all checked: 16 publications, being the preliminary-results report plus Volumes I
+to VIII, **all of them the community and agricultural modules**; 60 statistical tables at
+`/donnees/rgph` filterable to **47 provincial and 26 communal**, across six themes, **none of
+them religion**; a `croisement` tool that only crosses variables inside those same tables; and
+`/plateforme-dissemination`, which says *"Quelque chose d'important arrive bientôt."*
+
+**So Burundi has a reopen trigger with an address.** The 152-page preliminary report never says
+"religion", but its stated objective is population structure by *"la nationalité et les
+caractéristiques socio-économiques et socioculturelles"*, the usual francophone wrapper. If
+RGPHAE 2024 asked, the provincial table will appear on that dissemination platform.
+
+### The oracle's Burundi row is arithmetically wrong, and the office's own reprint is what shows it
+
+`oracle.py` reports Burundi 2008 as *"partition: does NOT sum to the total"*, 8 categories
+overshooting 8,053,574 by exactly 10,000, in both the Total and Rural rows. That reads as a real
+residual and it is a **transcription error**: UNSD's `Other Religions 494,533` should be
+**484,533**, which is the census's `Autre religion` 261,081 plus its `ND` 223,452. INSBU's
+*Annuaire Statistique 2015* table 1.09 reprints the same census table with all ten columns and
+it closes on 8,053,574 to the person.
+
+**The rule: where the office prints the same table the oracle carries, the office wins, and a
+10,000-shaped miss is a digit rather than a category.** `[[reference_unsd_religion_oracle]]`
+already says absence proves little; this is the other half — a *present* row can be wrong in its
+values while being right about the country, the year and the category list.
+
+### The per-unit-publication heuristic was applied and came back empty, which is worth recording
+
+Rwanda's district profiles and Botswana's per-district booklets were both found by asking
+whether the office publishes one document per unit of the tier below the one you expect. Burundi
+has exactly that series — **`PROFIL SOCIO-ÉCONOMIQUE DE LA PROVINCE X, ÉDITION 2019-2020`** — and
+it does not pay. Two were opened in full (Bujumbura 212 pp, Bururi 175 pp) and the only hits for
+"religi" are faith-run clinics and diocesan schools. The series also stops at **10 provinces of
+18**. The heuristic is still the highest-yield question to ask; it is not a guarantee, and a
+negative on it is cheap to record and expensive to re-derive.
+
+### What else was asked
+
+Every INSBU yearbook and Tableau de Bord Social that could carry the table (2015 and 2024, 2009
+and 2023); the eight archived RGPH 2008 workbooks in full, whose religion tables are 1.13,
+2.13-2.15, 7.8 and 7.14 and are all national or urban/rural **while the same workbooks cut
+migration, disability and household type by province and commune repeatedly**; the twelve
+thematic volumes, of which *état et structure de la population* is **broken at source** — one
+Wayback capture, `x-archive-orig-content-length` equal to the delivered size, 177 of 357 objects
+present, unopenable by PyMuPDF or pypdf and unrecoverable by a hand-rebuilt xref; DHS EDSB-III
+2016-2017 (religion is a row characteristic in the 252-page tables volume, never a column
+against province; the keyless DHS API has no religion indicator for `BU`; the microdata would
+answer it and needs an account); the World Bank Microdata Library, which **holds no RGPH 2008 at
+all**; HDX, zero packages; and ArcGIS Online, where **no Burundi statistical body owns an org**,
+in contrast to Rwanda's NISR one section earlier.
+
+`sources/bi.md` §6 costs out the one buildable fallback — commune urban/rural populations from
+table 1.5 crossed with the urban and rural religion profiles from table 1.13 — and declines it,
+because it is a modelled country of 8.05M resting on a single binary and that is a shared-rule
+call rather than a build agent's.
+
+## 9cf. Dominican Republic wired — 2026-09-08. §9ce's QUESTION ASKED OF THE COUNTRY IT MATTERED MOST FOR, and it answered; plus a national COD-PS agreement hiding a 34-point provincial error
+
+§9ce asked the generalisable question and named the country: *"the other five undrawn rows
+(`do`, `cr`, `pa`, `ht`, `hn`) have not been checked that way, and the Dominican Republic is
+the one where it would matter most, since §9bn refused to build it from LAPOP alone."* It was
+checked and the office won, again.
+
+    LAPOP AmericasBarometer 2010-2023 pooled     8,904 respondents,  29 of 32 provinces
+    ONE ENHOGAR-MICS6 2019                      31,488 households,   32 of 32 provinces
+                                                96,968 people in them
+
+**ENHOGAR is the Dominican household survey series and its 2019 round was fielded as MICS6**,
+so its household questionnaire carries the MICS `HC1A`: *"¿A cuál religión pertenece el jefe o
+la jefa del hogar?"*, six answers, published microdata. Eleven times LAPOP's sample, every
+province, and a card that names Adventists and Jehovah's Witnesses where LAPOP's withdrew both
+after 2016 (§9bn). The thinnest province, San José de Ocoa at 1,759 people, is a fifth of
+LAPOP's entire national pool and is one of the three provinces LAPOP never sampled.
+
+The census half was closed twice rather than assumed. **CELADE hosts ONE's own REDATAM
+instance** at `prod.redatam.org/bindom/`, which §11's sweep had named as `reddom` and never
+opened; `CPV2010`'s downloadable dictionary has no religion variable, the only `religi` hits
+in 121 KB being a dwelling type and a shelter question. And ONE publishes the **2022 census
+person microdata openly**, whose codebook runs `P25_ORDEN` to `P67_ANO` with no religion
+question at all (`P64` is self-identification by skin colour and culture, which is not the same
+thing). So every row is `modelled`.
+
+### Four findings worth carrying
+
+**1. A NATIONAL AGREEMENT BETWEEN COD-PS AND A CENSUS SAYS NOTHING ABOUT THE SUBNATIONAL
+SPLIT, and it is the countries where COD-PS looks safe that nobody checks.** §9bn rejected
+COD-PS for Ecuador because its 2020 projection was 3.4% out against the 2022 census. The
+Dominican COD-PS 2023 is **0.56% out**, six times better, and would have been far worse to use:
+
+    San José de Ocoa   census    69,082   COD-PS    52,687   -23.7%
+    La Altagracia      census   446,060   COD-PS   375,872   -15.7%
+    Hato Mayor         census   100,133   COD-PS    85,738   -14.4%
+    Distrito Nacional  census 1,029,110   COD-PS 1,062,476    +3.2%
+    Santo Domingo      census 2,769,588   COD-PS 3,054,470   +10.3%
+
+**A 34-point spread underneath a national agreement of half a point.** The projection carried
+forward the concentration into the capital that the 2010 census had been seeing and the 2022
+count did not find; it would have drawn 285,000 people in Santo Domingo province who are not
+there and taken a quarter of San José de Ocoa away. HDX's own methodology field describes it
+as *"Projection from 2015 census"*, and the Dominican Republic has no 2015 census, so the
+vintage statement is wrong as well as the numbers. **The check is one line and nobody was
+running it**: compare COD-PS per unit against the country's own latest count, not in total.
+
+**2. A COUNTRY'S FIRST-ORDER UNITS ARE NOT ALWAYS COD'S ADM1.** The Dominican ADM1 is the
+**ten planning regions** (`DO01 Región Cibao Nordeste` …) and the 32 provinces are ADM2. An
+agent copying `sources/sv_geo.py` and reading `dom_admin1.shp` gets ten polygons, no error,
+and a country drawn three times coarser than its own survey measured it. Worth checking
+before writing the join, because everything downstream still reconciles.
+
+**3. A CLOUDFLARE WALL ON AN OFFICE'S WHOLE DOMAIN IS NOT A CLOSED SOURCE, AND THE WAY IN IS
+THE FILE TREE RATHER THAN THE CATALOGUE.** `one.gob.do` and `anda.one.gob.do` answer **403 to
+curl AND to WebFetch**, on HTML, on PDFs and on microdata alike, so [[reference_dead_stats_office]]'s
+browser-UA retry does not help. But ONE publishes its microdata as a plain directory tree at
+`one.gob.do/catalogo-datos/` rather than through ANDA, and a **Wayback CDX prefix sweep of
+that path** returns everything the archive ever saw there: 18 ENHOGAR rounds with their SPSS
+bases, questionnaires and HTML codebooks, the 2022 census microdata, ENIGH, ENI, ENESIM, the
+vital statistics. Fetching all 129 archived `.htm` codebooks and grepping them for
+`religi|creenc|culto|confesi` is what found `HC1A`, and it is one script. The generalisation:
+**when a catalogue is walled, sweep the directory the catalogue points at.**
+
+> **And a truncated `.sav` still has all its labels.** The archive's copy of the household file
+> stops at exactly 1,048,576 bytes, its capture cap. SPSS writes the label dictionary into the
+> header, so `pyreadstat.read_sav(..., metadataonly=True)` reads all 298 variables' labels and
+> value sets out of a file whose cases are unreachable. `sources/do.py` takes its DATA from the
+> published CSV, which carries codes and no labels, and its LABELS from that header, and
+> asserts both. Same shape as [[reference_pdf_truncated_at_source]] with the opposite outcome.
+
+**4. A COUNTRY WITH EXACTLY ONE FAILING CATEGORY CANNOT USE `lapop.build()`'S RESIDUAL
+CONSTRUCTION.** That function divides each unit's residual among the failing categories at
+their national relative proportions, which is right for several and **a no-op for one**: with
+a single failing category the residual *is* that category's own measured share, so "national
+rate inside the residual" draws it exactly where the survey put it, which is the thing the
+split-half just declined to license. It also divides by zero wherever a unit measured the
+category at zero, which Hato Mayor does. `sources/do.py` sets the tail to its national share
+directly and rescales the stable shares to fill the rest. Worth knowing before the next
+country with one weak cell.
+
+### The checks
+
+**Held-out, r = +0.9988 over 32 provinces**, and none of 20,000 random pairings reaches it
+(best random +0.933). **Split-half on CLUSTER PARITY**, not on persons: two halves drawn
+person-by-person out of the same 1,747 neighbourhoods would agree far better than two real
+samples and the test would pass everything.
+
+    CATÓLICA           52.78%  +0.94      ADVENTISTA          1.94%  +0.55
+    EVANGÉLICA         22.34%  +0.94      OTRA RELIGIÓN       1.38%  +0.54
+    NINGUNA RELIGIÓN   20.57%  +0.91      ---------------------------------- bar +0.35
+                                          TESTIGO DE JEHOVÁ   0.99%  -0.02
+
+The Witnesses are drawn at the national 0.99% everywhere and there is **no `UNDER_BAR` in this
+file**. Their chi-square is p=4e-27 and it is not a licence: it is computed on unweighted
+persons inside clusters and ignores the design, so at 1% it measures household clustering as
+much as geography.
+
+**And the cross-check §9ce invented comes back strongly.** LAPOP's `prov` for this country is
+**2100 plus ONE's official province number**, which is exactly what ENHOGAR's `HH7A` holds, so
+the comparison costs one subtraction:
+
+    Catholic                 r = +0.84   0 of 20,000    ENHOGAR 52.8%   LAPOP 53.2%
+    non-Catholic Christian   r = +0.76   0 of 20,000    ENHOGAR 25.3%   LAPOP 25.9%
+    no religion              r = +0.76   0 of 20,000    ENHOGAR 20.6%   LAPOP 18.0%
+
+Two unrelated instruments, eight years apart, different sponsors, agreeing on the level to
+within 2.6 points and on the provincial ordering at p well under 1/20,000 on all three. **Read
+the other way this is the best news LAPOP's provincial cut has had on this map** — Uruguay's
+comparison failed on Catholic (§9ce, +0.34) because the two cards split the believer-without-
+a-church boundary differently, and the Dominican cards do not have that boundary to disagree
+about: MICS6 prints a bare `NINGUNA RELIGIÓN` with no belief qualifier and no atheist box. It
+also identifies §9bn's three unsampled provinces by name for the first time: `2110`, `2116` and
+`2131` are Independencia, Pedernales and San José de Ocoa.
+
+### What was drawn
+
+10,771,504 people on 32 provinces, 6 categories, every row `modelled`. Off
+`data/normalized/do.csv`:
+
+    52.71%  CATÓLICA              1.97%  ADVENTISTA
+    22.39%  EVANGÉLICA            1.36%  OTRA RELIGIÓN (Especifique)
+    20.58%  NINGUNA RELIGIÓN      0.99%  TESTIGO DE JEHOVÁ
+
+**Catholic identification runs 25.31% in La Romana to 82.77% in Hermanas Mirabal**, and it is
+under half in **thirteen of the thirty-two provinces, which hold 50.9% of the population**.
+The Catholic end is the Cibao, the northern farming interior. The other end is two different
+places that are not alike: the eastern sugar belt answers **evangelical** (La Romana 49.3%,
+the only province where the cell beats Catholic by more than a few points, then Samaná 43.3%,
+La Altagracia 33.1%, San Pedro de Macorís 32.4%; five provinces in all where evangelicals
+outnumber Catholics), and the south-western Haitian border answers **no religion** (Pedernales
+42.9%, Baoruco 42.7%, Barahona 41.5%, against 4.9% of La Vega).
+
+**Adventists at 1.97% carry their own geography**: 5.1% of Hato Mayor and 4.1% of San
+Cristóbal against 0.15% of San José de Ocoa. That is three times Mexico's share and a little
+above Peru's 1.52%, and it is far below the Anglophone Caribbean on this map (Grenada 13.3%,
+Antigua 12.5%, Jamaica 12.3%), which is the comparison a first draft of this section got
+backwards.
+
+### The limitation, and it is stated to the reader
+
+**`HC1A` is asked once per household, about its head**, and every member is drawn in the head's
+column. That is what MICS's own tabulations do and what a map of people needs, and it is a
+modelling step: a Catholic mother with an evangelical son is drawn as two Catholics, and
+nothing in this source says how often that happens or which way it leans. `note_public` says
+so in the second paragraph.
+
+### Open, and four located sources nobody has wired
+
+**`Estadísticas Vitales — Matrimonios 2001-2023` carries a religion variable**, found by the
+same sweep. It is the *rite* of the marriage (`Católico`, `Evangelico`, `Adventista del Séptimo
+día`, `Testigo de Jehová`, `Otro religioso`, civil) rather than anyone's religion, so it is not
+a population measure and cannot build a country. But it is a **register rather than a sample,
+annual, and published per province**, which makes it the natural outside witness on exactly
+the two small cells this build is weakest on. It is the first thing to try if anyone wants to
+reopen the Witnesses.
+
+**`ENHOGAR 2014` (MICS5)** carries the same question on a three-way card, which would give a
+trend and a split-half across waves. **`ENHOGAR 2018` asked adolescents directly** (`AD118`),
+the only located Dominican source that asks a person rather than a household head, and it is
+the obvious way to price the limitation above. **`ENI 2017`, the immigrant survey, asks
+`¿Cuál es su religión?`** with a church-attendance follow-up, which is the Haitian-origin
+population asked directly and is the only thing found that could speak to the group this map's
+south-western provinces are largely about.
+
+**ENHOGAR 2021, 2022 and 2024 are all published and none carries religion** — it belongs to
+the MICS rounds, so the level here is 2019 and the next MICS is the next chance.
+
+---
+
+## 9cg. Slovenia wired — 2026-09-08. §11c and §11k both closed it, both were right about the register, and the census they did not test was in the catalogue §11k downloaded
+
+**192 municipalities, 1,964,036 people, 1,514,744 drawn.** `sources/si.md` has the detail.
+This section is about the closure, because the closure is the transferable part.
+
+### Two sweeps, one tier
+
+`queue.md` said, in its own words, *"§11c and §11k both closed it — correctly — on the 2021
+register census, which does not ask."* Both sweeps were right. Slovenia's 2021 census is
+register-based and religion is not in the register, so there is no recent Slovenian religion
+figure at any geography, the national one included. §11k went further than a reachability
+check: it fetched the SURS PxWeb catalogue, recorded that it *"is live and its catalogue is
+908 KB"*, and concluded that Slovenia belonged in §3 with the countries that do not ask.
+
+**That catalogue contains `05W1006S.px`, `Prebivalstvo po veroizpovedi, občine, Slovenija,
+popis 2002`.** Ten religion answers on 192 municipalities. It also contains `05W1606S.px`,
+the same question at fourteen categories for 1991 and 2002 nationally, and two more.
+
+So the failure was not reaching the data and not reading it wrong. It was searching a
+catalogue that spans forty years of censuses for the answer to *"does the current census ask
+religion"* and then filing the answer under the country. §9by's Finland was the identical
+shape on the identical day, and the two together are enough to make it a rule rather than a
+coincidence:
+
+> **A closure is about a TIER, and a country usually has more than one.** Write down which
+> tier was tested. "Slovenia does not ask" and "Slovenia's 2021 register census does not ask"
+> are different sentences and only the second one is true.
+
+### The thing that would have caught it in ten seconds, and it was already on disk
+
+`tools/oracle.py`'s row for Slovenia reads **`2002  14 cats  1964036  exact`**. The oracle
+names the YEAR of the tabulation an office forwarded to the UN. §11c and §11k were both
+testing 2021. **Nobody compared the two numbers.** That is a free check on every closure
+this project has recorded and it costs one command:
+
+```
+python tools/oracle.py --list | grep -i <country>
+```
+
+If the oracle's year is older than the census the sweep tested, the sweep has not tested the
+country. Slovenia's queue row had actually spotted this and written *"the oracle's row is
+2002, which did. Nobody has looked at the 2002 tables"*, which is why this run took a
+morning and not a week; the scouting note was better than the sweep it corrected.
+
+### The 2002 microsite is still up, and WebFetch cannot read it
+
+`www.stat.si/popis2002/` has served since 2003 and still answers. The religion table is
+`si/rezultati/rezultati_red.asp?ter=OBC&st=6`, which is a **frameset**, and the data is in
+the middle frame at `si/rezultati_html/OBC-T-06SLO.htm`, with an XLS beside it. **WebFetch
+returns the frameset and nothing else**, so the page reads as empty; `curl` on the raw HTML
+shows the frame targets immediately. Same lesson as the iframe note from Kazakhstan the same
+day, on the older technology: **fetch raw HTML whenever a page claims to contain something
+you cannot see.**
+
+Use the API anyway. The HTML prints a withheld cell as the bare letter `z`, indistinguishable
+from anything else in a text table; json-stat2's `status` map separates `z` (zaupno) from `-`
+(ni pojava, a true zero) and the difference is 2,317 people.
+
+### The join trap, and it is a new shape of an old one
+
+**The religion table's `OBČINA` dimension is not Slovenia's municipality code.** It is
+`001`-`193` with `001` = SLOVENIJA and the rest an alphabetical sequence. Slovenia's real
+codes are alphabetical for `001`-`147` only, assigned in 1994, with `148`-`193` given to the
+municipalities created in 1998. So Ajdovščina is `002` here and `001` in GISCO, and **every
+unit is one place out while every total still reconciles.**
+
+`[[reference_name_join_wrong_neighbour]]` says the wrong same-named place is invisible to
+every totals check. This is the version where there is no name involved at all: a dimension
+whose values LOOK like the national code, are the right length, are zero-padded the same way,
+cover the right range, and are a different quantity. The general form is worth stating:
+
+> **A code dimension that starts at `001` with the COUNTRY in it is a sequence, not a code.**
+> The tell is free: if position 1 is the national total, every subsequent code is displaced by
+> one from anything that numbers only the units.
+
+The real codes came from a second table of the same census, `05W0405S.px`, whose settlement
+labels carry them (`001  AJDOVŠČINA`). The join between the two is by name and the CHECK is
+population: 192 municipalities, 192 distinct populations, and they agree to the person. That
+is the shape a name join needs — not a count of matches, but an independent quantity that
+cannot survive being crossed.
+
+### What else the country turned out to carry
+
+- **Boundaries were free.** Slovenia stood at 192 municipalities from 1998 to 2006 and is at
+  212 now, so the census's own Gebietsstand is GISCO **Communes 2001**, the file already on
+  disk for Austria (§9br). 192 for 192, joined on `NSI_CODE`, no crosswalk.
+- **A fourteen-category national table that decomposes both drawn catch-alls to the person**,
+  and carries 1991 beside 2002 on identical categories. Catholic identification fell 71.6% to
+  57.8% in eleven years; the refusal went 4.25% to 15.68%; the never-established half went
+  14.56% to 7.08%.
+- **A 22.88% hole with a documented cause.** Declaring a religion is voluntary under article
+  41 of the constitution, and questions 29 and 30 had to be answered by the person themselves
+  with no proxy permitted. The questionnaire page says so and is the only thing that does.
+- **A control on that hole nobody else on this map has.** The SAME form asked ethnicity under
+  the SAME voluntary, answer-for-yourself rule, and `05W1002S.px` puts its non-response at
+  **8.9%** against religion's 22.76%. One form, one population, 2.6x the refusal on one
+  question. Where a census asks two sensitive questions under one rule, the other one is a
+  free measurement of how much of the hole is the SUBJECT rather than the instrument.
+
+### Vintage, honestly
+
+2002 is twenty-four years old and the queue was right to ask. The comparison that settles it
+is not "old versus new", because there is no new: the register does not ask, and the only
+modern alternative is the European Social Survey, whose Slovenian geography is **two NUTS-2
+regions**. 192 counted municipalities at twenty-four years old against two sampled regions at
+current is not close. Austria (§9br) is the same trade already taken, at 2001. It is not
+the Albanian case reviewed the same day, where a finer but staler layer was rejected: there the stale layer was competing with a newer one covering the same country.
+
+## 9ch. Micronesia wired — 2026-09-08. THE FINER TIER EXISTS FOR HALF THE COUNTRY AND IS DRAWN ANYWAY, on spec §12's Ghana rule; plus a merged irreligion cell settled by the previous census
+
+Resumed from a checkpoint-B park. `data/normalized/fm.csv` was already on disk at four states
+and the parked note had costed a municipality build and declined it. **It was reopened and went
+the other way**, and the interesting part of this country is why.
+
+Full notes in `sources/fm.md`; the mapping is `taxonomy/fm2023.py`.
+
+| | |
+|---|---|
+| source | FSM Statistics, 2023 Population and Housing Census, *Basic Tables*, `Table B6` |
+| drawn | **75,576 of 75,817, 99.68%**, 11 categories, nothing excluded |
+| tier | **33 units, two `geo_level`s**: 20 Yap municipalities, 11 Pohnpei, Chuuk whole, Kosrae whole |
+| new nodes | `other.fm` only |
+| outside witness | ~~none~~ **UNSD table 28, `Micronesia (Federated States of)` 2000, 8 cats, 107,008, exact** — corrected by review 2026-09-08; the build said "none" because `oracle.py` matches UNSD's NAME and `oracle.py fm` returns ABSENT for every cc (spec §12). Folded to 2000's 8 categories every share agrees within **3 points**, and 2000 prints `No Religion` 753 against `Refused` 57, confirming the merged-cell call a second time. `sources/fm.md` §7 |
+
+### The tier, which is the whole country
+
+FSM publishes a per-state workbook beside the national one. **Yap's and Pohnpei's carry
+`Table B6. Religion by Municipality`. Chuuk's workbook does not exist and Kosrae's stops at
+Table B5** — the parked note said Kosrae had one, and it does not; its List of Tables runs B1 to
+B5 and then the household tables. So the finer half is 36,841 people, **48.6% of the country**,
+and Chuuk alone is 44.7% at one polygon.
+
+**The rule that decides it was already written, and it is not the one Albania applied that
+morning.** spec §12, from the Indonesia finding: *"Do not take the finer tier just because it
+exists. Measure it against the coarser one you already trust, per parent, and where it falls
+short prefer Ghana's answer: draw the fine unit where it reconciles and the coarse one where it
+does not, so the drawn tier is two `geo_level`s and every drawn row is still `measured`."*
+Measured per parent, Yap's twenty and Pohnpei's eleven reconcile to their own state totals within
+2 and to the national table exactly. Chuuk's and Kosrae's do not exist. That is Ghana's answer.
+
+**§9cc (Albania) is the case that looks identical and is not, and the difference is worth
+carrying.** Albania's finer layer cost **24.4% of the categories** and **twelve years of
+vintage**, and would have left half the country in a unit more than a quarter grey. Micronesia's
+costs **0.32% of the people and no category at all**: same census year, same office, same eleven
+categories, same table number, and the only loss is cells below the disclosure floor. *A
+partial finer tier is not one kind of trade. Ask what the finer half costs in categories and in
+vintage before asking how much of the country it covers* — Albania failed on the first two
+questions and Micronesia passes both while doing worse on the third.
+
+The objection the parked session raised was comparability: two halves at different grain would
+not be comparable. **That is the rule §9as-ii already overturned** — France's mixed build showed
+that the premise ("mixing puts the sharper geography on the half with the weaker claim to it")
+does not hold when neither half has a weaker claim.
+
+What it buys, none of it visible at four states: inside Pohnpei island the Catholic share runs
+**86.3% (Nett) to 39.3% (Sokehs)** against a state 57.1%; **Fais**, an outer island of 463
+people, is **29.4% Assembly of God and 28.5% Baptist** against national 0.7% and 1.2%;
+**Sapwuahfik** is **20.3% Adventist** against 0.6%; twelve of Yap's twenty municipalities record
+no Congregational answer at all and four of Pohnpei's outer atolls record no Catholic one.
+
+### A MERGED IRRELIGION CELL SETTLED BY THE PREVIOUS CENSUS, AND WHY IT WAS WORTH THE DOWNLOAD
+
+2023 prints one cell, `No religion/Refused`, 0.7% of the country. At four states that is a
+footnote. **At municipality it is 28.9% of Kanifay and 33.3% of Rumung, both in Yap, against
+0.1% of Chuuk** — a range wide enough to read as enumeration behaviour rather than belief, and
+mapping it to `unaffiliated` would then be a false claim about a real place.
+
+**The 2010 census of the same country asked them apart.** Table B09 of the 2010 workbook prints
+`No religion` **723** against `Refused` **72**, and in Yap 281 against 12. So 90.9% of a merged
+cell of this kind here is genuine irreligion, 95.9% in the state that carries it, and 2010 found
+the same Yapese concentration (2.5% against Chuuk's 0.05%) with refusals held out separately.
+
+This is `pw2005.py`'s method — Palau's 1995 split of 1,577 `None` against 7 `Refused` — applied
+to the neighbour. **The generalisable part: where a census merges a non-response cell into a
+substantive one, the SAME office's PREVIOUS round often asked them apart, and that split is a
+free measurement of what is inside the merge.** Palau's was recorded when the number could not
+matter (222 people, no dot either way). Micronesia's mattered, because a finer tier turned a
+national footnote into a quarter of a drawn unit.
+
+### The checks, and one that nearly went in wrong
+
+**Two separately published workbooks agree exactly.** Yap's and Pohnpei's own state columns
+reproduce the national table's column for that state on all eleven categories with a difference
+of zero. That is what replaces the missing UNSD witness, and it is the check a column
+permutation cannot survive.
+
+**COD-AB's p-code order is the census's print order**, FM101..FM120 and FM301..FM311, so the
+name join (31/31, two via a one-letter alias) is tested by a sequence neither file shares with
+the other. And **COD's `MAIN_OUTER` flag independently reproduces the workbook's own
+`YAP PROPER` / `OUTER ISLANDS` split**, ten and ten.
+
+**§3.5's lean, run by the builder, and the leave-one-out that killed half of it.** Per category
+the hole is real and directional: the disclosure floor takes **17.7% of Yap's and Pohnpei's
+Adventists and 12.3% of their Witnesses against 0.0% of their Roman Catholics**, so the fine tier
+understates the small churches, and `gap` says so in those words. Per **unit** the residual share
+correlates **+0.469** with the irreligion share over 31 units, permutation p = 0.046 — which
+reads as a second finding. **Drop Kanifay, the single extreme on both axes, and it is −0.011.**
+It is one municipality. [[reference_check_needs_power]] is about power; this is its neighbour:
+*a marginal correlation on thirty-odd units needs a leave-one-out before it is written down, and
+the point to drop is the one that is extreme on both axes.*
+
+### Two smaller things
+
+**A grid that reads 1.50x the census can be correct.** Kontur's FM extract has 113,340 people
+against a census 75,817, because FSM lost a quarter of its people between 2010 and 2023 and the
+grid is built on older inputs. The national ratio is not the test; the per-unit band is, and all
+30 non-synthetic units sit inside a factor of 5 with r = 0.9760 against a best shuffle of 0.5465.
+**Before widening a national tolerance, check whether the country changed size.**
+
+**`Congregation/Protestant`, 37.1%, goes to `christianity.protestant` and not to
+`christianity.reformed.congregational`**, which keeps the American Board's United Church of
+Christ in one colour across Micronesia, the Marshall Islands (`mh1999.py`, 54.8%) and Palau
+(`pw2005.py`, 23.2%). Filing FSM's differently because its census printed one extra word would
+have drawn a religious boundary between three adjacent countries where none exists. A second
+agent was pointed at the files without being told the intended answer and reached the same node
+independently; it is also what sent this to the 2010 workbook.
+
+## 9ci. Cabo Verde wired — 2026-09-08. §11w PRICED THE ORACLE AND NOT THE OFFICE, and the tier below was a category in an API nobody had opened
+
+`sources/cv.py`, `sources/cv_geo.py`, `sources/cv_grid.py`, `taxonomy/cv2021.py`,
+`other.cv` in `branches.py`. **14 nodes on 22 concelhos, 351,183 people.** Full record in
+`sources/cv.md`.
+
+§11w ranked Cabo Verde third of Africa's undrawn countries on `tools/oracle.py`'s category
+depth and closed the row *"open office, not chased past the catch-all"*. The oracle's rows are
+national and urban/rural, so that sentence was about the oracle. **INE publishes religion for
+every one of the 22 concelhos**, in one *CABO VERDE EM NÚMEROS* workbook per municipality,
+filed under the census area's `Quadros por Concelho 2021` rather than under its publications.
+
+### The route in, because the office looks like it has no pages
+
+`ine.cv` is an Angular SPA and every path answers 200 with the same 10 KB shell, so `WebFetch`
+returns the word "INE" and a probe cannot tell a real page from a 404. Its `main.<hash>.js`
+names `https://bdmi.ine.cv/site_deploy_api/api`, which needs no key even though `bdmi.ine.cv`
+itself redirects to `Account/LogOn` ([[reference_spa_hidden_apis]]). Four calls:
+
+    /api/Census                       -> Censo 2010 = 1, Censo 2021 = 2
+    /api/Census/2                     -> the four content categories, of which 3 is
+                                         "Quadros por Concelho 2021"
+    /api/Census/content/paginated/3   -> 23 workbooks: 22 concelhos + Cabo Verde
+    /api/GenericFile/GetFile?codePublication=<id>&publicationType=censo   -> the .xlsx
+
+**And the API says so in words.** The description INE attaches to its own `População e Censo`
+statistic reads *"São volumes estatísticos sobre Cabo Verde, **cada um dos municípios**, e
+Zonas e Lugares"* — for the 2000 and 2010 censuses, three lines above a 2021 category doing
+the same thing. §11ab's question in one more country: **ask whether the office publishes a
+volume per unit of the tier below the one you expect.**
+
+### THE ORACLE'S CATEGORY COUNT CAN INCLUDE A ROW THAT IS NOT A CATEGORY
+
+`tools/oracle.py "Cabo Verde"` prints 16 rows partitioning 491,233 exactly, and the second
+largest is `Unknown` at **138,739**. It is not a non-response. Tabela 1 of the same workbook
+prints 0-4, 5-9 and 10-14 as 45,540 + 46,619 + 46,580 = **138,739**, and 491,233 − 352,494 is
+the same number to the person: **INE asked religion only of the population aged 15 and over**,
+and forwarded the children as `Unknown`. The published list is fifteen.
+
+That is the same trap as §11p's Zambia in the other direction. A count of oracle rows is a
+count of *rows*; whether each one is a religion, a universe, a refusal or an age band is a
+question the counts themselves answer, and here the answer is a subtraction that closes to
+the person. **Any queue row priced on an oracle category count is worth re-reading against
+the numbers, not just the row count.**
+
+### The three pairs of concelhos that share a name, and a witness that tests each swap
+
+    Ribeira Grande (Santo Antão)  |  Santa Catarina (Santiago)  |  Tarrafal (Santiago)
+    Ribeira Grande de Santiago    |  Santa Catarina do Fogo     |  Tarrafal de São Nicolau
+
+COD-AB prints the short name for the first of each pair, **and so does the table title inside
+each workbook** — *concelho de Ribeira Grande*, with nothing to say which island. A name join
+on the sheet pairs all three with a coin flip and every total still reconciles
+([[reference_name_join_wrong_neighbour]]). The pairing therefore keys on INE's own content id
+from the API listing, whose titles are unambiguous, and `cv_geo.py` asserts it three ways:
+19 of 22 names fold exactly and the 3 that do not are precisely the ambiguous ones; Spearman
+0.9650 against COD-PS; and **each swap is computed and must fail** (Ribeira Grande's true
+pairing is −1.5% and its swap is +75% / +92%; Santa Catarina's swap is +635% / +913%).
+
+**COD-PS 2022 is 16% above the 2021 census nationally and Boa Vista is +72%** — it projects
+2010 forward and the tourist islands outran it. Rank only. Kontur 2023 carries the magnitude
+check instead, r = 0.9638 over 22 units against a best of 0.6631 in 2,000 shuffles.
+
+### The §3.5 lean, and it is the age cut rather than the refusals
+
+Both holes were correlated against every drawn share across the 22 concelhos, each with a
+leave-one-out, because 22 units is few enough for one outlier to manufacture a lean.
+
+The 1,311 refusals lean towards the less Catholic end (+0.49 with `Sem religião`, +0.59 with
+`Racionalismo Cristão`, −0.29 with Catholic, all surviving leave-one-out) and are 0.37% of the
+table, so the direction is real and the magnitude is nil. **The 138,739 children are 28% of
+the country and their direction is measurable, because INE publishes the age bands per
+concelho.** The child share runs 33.31% in Santa Cruz to 22.29% in Paul, and against the drawn
+shares it is **−0.62 with Racionalismo Cristão** (LOO −0.69 to −0.55), −0.41 with `Sem
+religião`, and **+0.51 with Adventista** (LOO +0.44 to +0.54). So an adults-only map tilts
+towards São Vicente's secular and Christian Rationalist shares and away from rural Santiago's
+Catholics and Fogo's Adventists. `note_public` says so; nothing corrects for it.
+
+**The transferable half is that an age cut has a lean and is usually testable.** Peru's
+under-twelves and Angola's under-twos were both recorded as unquantifiable in direction. Where
+the source prints its own age bands per unit — and a census that publishes a per-unit
+population pyramid usually does — that hole's direction is one correlation away.
+
+### And the reason to want the country
+
+**`Racionalismo Cristão` is 6,129 people, 1.74%, the fourth largest named religion in Cabo
+Verde.** Christian Rationalism is a spiritualist doctrine founded in Santos in 1910 by Luís de
+Mattos, out of a Kardecist group and then explicitly against Kardec on mediumship; it reached
+the islands in 1911 and this is the only country where it is a mass movement. 3,988 of the
+6,129 are in São Vicente (6.86% of its adults), then Tarrafal de São Nicolau 4.41%, Boa Vista
+3.54%, Paul 3.17% and Sal 2.38%, and nobody at all in São Salvador do Mundo or Santa Catarina
+do Fogo — which is the island list the centres' own histories give. It goes on `spiritualism`
+rather than a node of its own; `taxonomy/cv2021.py`'s REVIEW says why, and says what the
+one-line change would be if Anita would rather see it named.
+
+
+---
+
+## 9cj. Timor-Leste wired — 2026-09-08. THE MAIN REPORT PUBLISHES RELIGION FOR THE NATION AND NOBODY ELSE; the geography is in thirteen municipal yearbooks written by thirteen different offices, and the fourteenth municipality falls out of the arithmetic
+
+**Drawn: 1,248,705 people on 14 municipalities, 8 nodes, 2022 census.** `sources/tl.md` has it
+in full; `sources/tl.py`, `sources/tl_geo.py`, `sources/tl_grid.py`, `taxonomy/tl2022.py`.
+
+### The queue row said 6 categories and it was the oracle's row, not the country's
+
+`queue.md` priced Timor-Leste off UNSD table 28: *1,341,737 | ? units | 6 cats*. Both halves of
+that are wrong in the same direction. The census's own religion table has **nine** categories,
+and the total is **1,248,705** and not 1,341,737, because the religion universe is the population
+**aged 3 and over in private households** and the oracle's total is everybody. The oracle's sixth
+cell, `Other` at 95,328, is therefore mostly the under-threes and not a religious category at
+all; a country drawn from that row would show 7.1% of Timor-Leste as unclassified.
+
+**Use it as the witness it is.** All seven of its 2015 figures reproduce from Volume 2's thirteen
+municipalities and all five of its named 2022 figures from main report table 4.07, both asserted
+in `sources/tl.py`. And ask it **by name** — `oracle.py tl` is a miss that reads like an absence
+(the `fm` review, same day).
+
+### The main report has no religion geography, and that is not the end of the country
+
+`Final-Main-Report_TLPHC-Census_WEB.pdf` gives religion its own numbered section and exactly one
+table: 4.07, religion by five-year age group and sex, national. None of the 24 basic tables and
+none of the eight thematic reports crosses religion with any geography.
+
+**What does is `<Municipality> em Números`**, an annual volume written by each of the thirteen
+Serviços de Estatística Municipais and issued from June 2025 onward, three years after the count
+and by a different directorate. Every 2022 edition prints, under *Proteção Social*, the 2010,
+2015 and 2022 censuses side by side by sex. Thirteen volumes, one table each.
+
+**This is the third country in a week with exactly this shape** — Botswana's eighteen district
+booklets (§9bu), Rwanda's thirty district profiles (§9cb), and now this. The generalisation is in
+spec §12 and is worth stating as a first move rather than a rescue: *ask whether the office
+publishes something per unit of the tier below the one you expect, filed away from the main
+census results and often released years later.*
+
+### The fourteenth municipality has no volume, and comes out of the subtraction
+
+The census tabulates **fourteen** municipalities: Atauro, the island north of Dili, was a posto of
+the capital until 2022 and is listed separately in table 4.03 at 10,295 people. Nobody wrote it a
+yearbook.
+
+So the thirteen volumes sum to 1,239,083 against table 4.07's 1,248,705, and **the 9,622 left
+over is Atauro**. Four things say so rather than one: the residual is 0.935 of Atauro's census
+population where the country's religion universe is 0.931 of its own; every category is
+non-negative; Islam, Buddhism and indigenous religion come out at **exactly zero** without being
+told to; and **5,332 of the 9,622 are Protestant**, 55.4%, against 7.9% in the next-highest
+municipality anywhere in the country.
+
+It is drawn `derived` and renders desaturated. The arithmetic is exact and the number is unique,
+but no publication prints it, and that is what the tier is for.
+
+**And it is the whole reason the country is interesting.** Timor-Leste is 97.5% Catholic, the
+highest Catholic share on this map, ahead of Paraguay's 90.5%; twelve of the fourteen units are
+above 96%. Fold Atauro back into Dili to keep the count at thirteen and the one place where that
+is not true disappears into a municipality nine times its size.
+
+### COD-AB was a municipality behind and the fix was a tier down in the same file
+
+The HDX bundle is `valid_on 2020-09-11` with 13 ADM1. Atauro is already in it as ADM2 `TL0604`
+at 139.91 km² against the census's 140.55, so `tl_geo.py` subtracts that polygon from Dili's ADM1
+and adds it as the fourteenth unit; all fourteen land within 1.8% of the census's own area
+column. Cheaper than [[reference_agol_statute_boundaries]]'s case, and worth checking for before
+hunting a newer boundary file: **when the drawn tier is newer than COD-AB, the new line is often
+already in the old file one level down.**
+
+### The volumes are typed by hand, and the 2015 column is what proves it
+
+They disagree about section numbering, header language, category labels (Baucau writes the last
+two in Tetum), whether a `Total` row exists, and Ermera heads its 2022 column `Censo 2020`. But
+every one reprints 2015, and 2015 was published centrally as Volume 2 table 11, so all **252**
+cells of that column are checked, male, female and total.
+
+**Four are wrong, in three volumes, and they are two different mistakes.** Ainaro pastes the
+municipality's whole population into its Catholic total and Manatuto's `Seluk` total is four
+people over, in both cases **with the male and female cells beside them exactly right**; Oecusse
+mistypes a female cell (31,962 for 33,962) and carries it into the total, so that row is
+internally consistent and only the workbook catches it.
+
+The first kind is why every 2022 row is required to have its sexes sum to its own total. The
+second kind is why the 2022 column is reconciled against table 4.07 category by category rather
+than trusted. **The general lesson: a per-unit booklet series that reprints an older census is
+carrying its own test, and a 1.6% cell error rate is what a hand-typed municipal publication
+looks like.**
+
+### Finer religion does not exist, and here is what was asked
+
+* **2015 Volume 4, the Suco Reports** — twelve worksheets at suco level, none of them religion.
+* **The 452 Sensu Fó Fila Fali suco reports** — launched nationally on 26 July 2024 by the Prime
+  Minister, one per suco. INETL's news item about the launch is on the site; the reports are not,
+  in a media library of 735 documents.
+* **The REDATAM population dashboard** INETL links from its own menu, `http://20.6.104.113/
+  redatam/` — answers on **no port at all** (80, 443, 8080, 8083, 8000 all time out). Not a bot
+  wall, not an SPA, just off. **Worth retrying**: a REDATAM server over the 2022 microdata is
+  religion by suco.
+* **The 2021, 2023 and 2024 editions of all thirteen yearbooks**, downloaded and scanned. Only
+  **Viqueque** publishes religion below the municipality, and only for 2010 and 2015, by
+  administrative post.
+
+### The §3.5 lean check, both holes
+
+`No answer` is 239 people, 0.019%, and correlates **+0.776** with the Hindu share (permutation
+p = 0.006); that is Dili and so is the hole, so what it measures is that non-response is urban.
+The larger hole, the 93,032 the question never reached, runs 6.52% in Dili to 7.66% in Aileu, a
+1.1-point spread, with only a −0.488 Hindu correlation (p = 0.045) that is the same Dili effect
+with the sign flipped. **Neither leans in a way that moves a drawn share**, and `note_public`
+says so with the figures.
+
+**The leave-one-out earned its keep at fourteen units.** §12 added it with Cabo Verde's 22, and
+here it removed a second finding: `No answer` against the Buddhist share is +0.570 over all
+fourteen and **−0.201 without Dili**, so it is one city and not a pattern, and it is not quoted.
+The Hindu one runs +0.454 to +0.914 across the fourteen refits and never changes sign.
+
+## 9ck. Haiti wired — 2026-09-08. §9ce's QUESTION ASKED OF A COUNTRY WHOSE OFFICE STILL PUBLISHES ITS MICRODATA AND WHOSE OLD DOMAIN HAS BEEN SOLD; plus a split-half with no power, and a second survey standing in for it
+
+`queue.md` reached Haiti through §11ad: **7,252 AmericasBarometer respondents** over ten
+departments, with Anita's note that the 4.4% Vodou figure is a self-identification floor and
+wanted a second source before it was drawn. §9ce and §9cf's question was asked first instead —
+what does the statistics office itself have — and it turned up three sources nobody here had
+opened.
+
+    LAPOP AmericasBarometer 2010-2016 pooled      7,252 respondents, 10 departments, 18+
+    IHSI ECVMAS 2012                            17,977 respondents, 10 departments, 10+
+    IHSI ECVH 2001                              32,840 respondents,  9 departments, all ages
+    IHSI 4eme RGPH 2003 (census)             8,373,750 people,   NATIONAL ONLY, all ages
+
+**The build is ECVMAS 2012**, IHSI's post-earthquake living-conditions survey, whose
+individual module asks *"Quelle est votre religion ?"* of everyone aged ten and over on a
+twelve-answer Haitian card: Catholique, Baptiste, Adventiste, Pentecôtiste, Méthodiste,
+Episcopale, Témoin de Jéhovah, Autre protestant, Vaudou, Musulman, Autre, Aucune. The other
+two are cross-checks and both earn their place. `sources/ht.md` is the record.
+
+### THE CENSUS ASKS AND HAS NEVER PUBLISHED IT BELOW THE NATION, AND THAT WAS ESTABLISHED RATHER THAN ASSUMED
+
+The 4ème RGPH 2003 has a twelve-category religion question and `ihsi.gouv.ht` prints the
+national shares in prose. Everything below that was checked: the 111 table images and six
+thematic PDFs on the current site are all headed `ENSEMBLE DU PAYS`; a Wayback CDX **prefix**
+sweep of `ihsi.ht/tableau/*` returns 173 files and the same six PDFs with no departmental
+variant; and the ten printed departmental volumes of 2005 exist on abebooks as paper and
+nowhere in either domain's archived file tree. **Haiti has no REDATAM instance** — eight
+candidate CGI directories under `prod.redatam.org` 404, the root install is the CELADE
+`Nueva Miranda` demo stub, and `celade.cepal.org/redatam/` redirects out. And **Haiti is one
+of the twenty-six of thirty-four USCB HDX geodatabases with no religion layer**
+([[reference_uscb_country_gdb]]), which is a two-minute check that closes a whole route.
+
+### TWO SQUATTED HAITIAN DOMAINS IN ONE COUNTRY, AND ONE OF THEM IS THE CENSUS'S OWN SITE
+
+**`www.ihsi.ht` now answers 301 and lands on `znaki.fm`**, an unrelated commercial site.
+**`rgph-haiti.ht`, the site of Haiti's fifth census, answers 200 with a real page and it is a
+betting site.** The office is alive at `ihsi.gouv.ht` and did not bring its microdata across.
+
+What the old host published — openly, no account, no request form — was the entire ECVMAS
+database as a 9 MB zip of 32 SPSS files. It is fetched from the Wayback Machine's
+byte-identical copy, which is `sources/do.py`'s route put to a different use: **there the
+office is alive and blocking, here the office is alive and the file is not.** The
+generalisable form is that a dead office URL has three shapes and only one of them is the
+office being down — a bot wall, a move, or a sale — and a Wayback CDX prefix sweep
+distinguishes all three in one call.
+
+### THE CODE JOIN IS ZERO FOR TEN AND EVERY TOTAL SURVIVES IT
+
+ECVMAS numbers the departments **1 to 10 in French alphabetical order**; COD's pcodes run
+**HT01 to HT10 in Haiti's traditional order**, which starts at Ouest. Two dense 1..10
+sequences over the same ten units, so `DEPT -> HT{n:02d}` runs clean and **mispairs all ten**
+— Artibonite's respondents to Ouest, Nord's to Artibonite — with every national figure
+intact. El Salvador's equivalent got two of fourteen right and the Dominican Republic's three
+of thirty-two; **this one gets none, which is the safest kind of wrong and still has to be
+asserted**, because a re-cut that made it mostly right is the direction that kills you
+([[reference_name_join_wrong_neighbour]]). The join is on the FRENCH name, since COD's
+`adm1_name` is English and would lose six of the ten. One alias: `Grand'Anse` for
+`Grande'Anse`. Held-out: r = **+0.9961** over ten against COD-PS, unreached by 20,000 random
+pairings.
+
+### THE SPLIT-HALF HAS NO POWER ON TEN UNITS, AND SAYING SO IS BETTER THAN MOVING THE BAR
+
+The bar is 1.96/sqrt(n−1), which is **+0.65 on ten departments** against +0.35 on the
+Dominican Republic's thirty-two. Split on the parity of ECVMAS's 500 sampling clusters,
+**`Catholique` returns +0.59** — with a 24-point spread across the country and a chi-square of
+**1e-117**. Taken literally the test would draw Adventists and Methodists on their own
+geography and spread Catholics, Baptists, Pentecostals and Vodou flat, which is 78% of the
+country.
+
+Two things were done about that and neither is moving the bar.
+
+**One, the test was made a less noisy estimate of the same thing.** A single parity split is
+one draw, and on ten units the draw matters: `stability()` reports the parity split and the
+**median over 400 random cluster half-splits** beside it, and takes the verdict off the
+median. That flips `Autre protestant` from +0.45 to +0.68 and `Aucune` from +0.84 to +0.56,
+which is the point — the parity number was noise in both directions.
+
+**Two, the evidence was taken from outside.** ECVH 2001 is a different IHSI household survey,
+a different questionnaire, a different sample and eleven years earlier, and it ranks the same
+departments:
+
+| answer | ECVH 2001 | ECVMAS 2012 | spearman on 9 | of 20,000 pairings |
+|---|---:|---:|---:|---:|
+| Catholique | 59.05% | 47.53% | **+0.85** | 29 reach it |
+| Baptiste | 16.59% | 17.46% | **+0.78** | 35 |
+| Adventiste | 2.94% | 3.25% | **+0.95** | 0 |
+| Pentecostal bloc | 14.08% | 20.06% | **+0.90** | 8 |
+| Vodou | 1.94% | 1.51% | +0.47 | 522 |
+| Témoin de Jéhovah | 0.40% | 0.46% | +0.08 | 2,043 |
+
+> **A SPLIT-HALF IS A PROXY FOR REPLICATION, AND WHERE A SECOND INSTRUMENT EXISTS IT IS THE
+> BETTER TEST.** Splitting one sample asks whether that sample can rank the country twice.
+> Two surveys eleven years apart asks whether the country ranks that way. On twenty or thirty
+> units the first is a good stand-in for the second; on ten it is not, and §9bi's `override`
+> mechanism is exactly the right shape for saying so, because it names the category and
+> prints the reason on every run instead of quietly redrawing every other country by shifting
+> a threshold.
+
+Four overrides, all on that evidence: Catholique, Baptiste, Pentecôtiste and Vaudou.
+`Aucune`, `Autre`, `Episcopale`, `Témoin de Jéhovah` and `Musulman` are drawn at the national
+rate inside each department's residual, 8.87% of the country in all.
+
+### THE TWO CARDS DIFFER AND THE COMPARISON HAS TO BE CUT TO WHAT BOTH CAN SAY
+
+ECVH 2001 offered **`Eglise de Dieu`, which is 9.4% of Haiti and larger than its own
+`Pentecôtiste` box**, and `Eglise wesleyenne`. ECVMAS offers neither, and offers `Autre
+protestant`, `Méthodiste` and `Aucune`, which ECVH does not. So the Pentecostal row above is
+run as the bloc both cards can express (ECVH's Pentecôtiste + Église de Dieu + Église
+wesleyenne against ECVMAS's Pentecôtiste + Autre protestant) and it comes back at +0.90.
+**`Aucune` has no outside witness at all, because ECVH's card had no no-religion answer**,
+which is why the largest unplaced category on this map is unplaced.
+
+### VODOU: THREE INSTRUMENTS, ONE FLOOR, AND A LEAN CHECK THAT FIRES
+
+Anita's queue note asked for a second source before Vodou was drawn. There are three, and
+they agree:
+
+    IHSI ECVH 2001                2.1%
+    IHSI 4eme RGPH 2003 census    2.11%
+    IHSI ECVMAS 2012              1.51%
+    LAPOP, pooled                 4.39%   (a generic `Religiones Tradicionales` box)
+
+**Every one is a floor and the reason is not sampling.** Vodou in Haiti is overwhelmingly
+served alongside Catholicism rather than instead of it, so a questionnaire offering one box
+collects the church; `afrodiasporic.vodou`'s note in `branches.py` says so at length, and the
+node was added with this country because the family's best-known tradition had none.
+
+**The §3.5 lean check fires hard and the firing is the finding.** Drop the single most
+extreme department and the national Vodou spread collapses from **5.9 points to 1.2**. The
+whole geography is Artibonite — and Artibonite is where ECVH 2001 put it too, 7.3% against
+2.0% for the next highest, with Nord-Est at the bottom in both. So what replicates is one
+heartland and one floor and no ordering in between, which is §9bi's Guatemala wording applied
+to a category a twentieth of its size: `note_public` tells the reader to read the two ends of
+the Vodou colour and not the ranking.
+
+### LAPOP IS NOT WIRED, AND FINDING OUT WHY PRODUCED TWO TRAPS WORTH KEEPING
+
+**§11ad's Haiti row is `pais=22`, and its `prov` cannot be decoded from the merged file.**
+Mapping `prov − 2200` onto Haiti's own department numbering, which is exactly what worked for
+the Dominican Republic in §9cf, gives **r = +0.23** against COD-PS and puts **40.7% of Haiti
+in Centre**, a department with 8.5% of the population. Rank-matching the respondent shares to
+the population shares and then validating on the population shares is circular, so there is
+no honest decode available. **Haiti belongs beside Honduras in §11ad's table as a broken
+`prov`, not beside Costa Rica as a clean one.**
+
+**And `pais=41` is CANADA.** Canada has ten first-order units and its LAPOP `prov` codes are
+`4101` to `4110`, so an agent who guesses that Haiti is 41 gets ten units, plausible codes,
+and a join that looks clean. It failed visibly here only because the Canadian rows carry no
+religion answer; had they carried one, the cross-check would have compared Haiti against
+Canada with every unit count correct. **A country code that produces the right NUMBER of
+units is not a country code that has been checked.**
+
+### AND THE TWO THINGS THAT GENERALISE BEYOND THE COUNTRY
+
+**An adult-only survey's universe can be priced, if the census crossed religion with age.**
+`I_H04`'s universe is 10 and over — 5,714 of the 5,792 blanks are children under ten — and
+the shares are applied to the whole population, which is what `sources/lapop.py` does with an
+18+ survey everywhere on this map and nowhere quantifies. Haiti's 2003 census tabulated
+religion **by age group**, so recomputing it over the 10-and-overs gives the answer directly:
+no category moves a full point and the largest is `Aucune religion` from 10.22% to 9.40%.
+Worth looking for before writing that caveat as unquantifiable.
+
+**A projection's drift can go the way nobody expects.** Haiti last counted in January 2003,
+the fifth census has not been held, and COD-PS 2024 is the base with no census to prefer to
+it. Its departmental shares have moved: **Ouest was 37.0% of Haiti in 2003 and is 33.4% of
+the 2024 estimate**, so the model has Port-au-Prince's department growing more slowly than
+the country. The comparison runs on nine units, because **Nippes was created out of
+Grand'Anse in September 2003, eight months after enumeration** — which is also why ECVH 2001
+has nine departments and ECVMAS 2012 has ten.
+
+### WHAT WOULD IMPROVE IT
+
+The ten departmental census volumes of 2005 are the only known source of religion by commune
+for Haiti, 140 units instead of 10, and they exist on paper with no scan online. EMMUS-VI
+2016-17 is newer and larger and asks religion, but wants a DHS Program account and its report
+does not cross religion with department.
+
+## 11ai. The Afrobarometer opened — 2026-09-08. The barometer family's third member, and the one that covers the continent §11w and §11b left dark
+
+`sources/afrobarometer.py`, on the pattern of `sources/lapop.py` (§11ad) and
+`sources/arabbarometer.py` (§11af). `sources/lr.md` is the first country built on it.
+
+**Six merged rounds, R4 to R9, are plain files on `afrobarometer.org` with no form and no
+account**, 280 MB of SPSS between them, linked straight off `/data/merged-data/`. The data
+usage and access policy gates only early access and the geocoded extracts; the merged public
+releases ask for a citation and nothing else. R9 alone is 39 countries and 53,444 respondents.
+
+Every round carries **`REGION`, which is ADM1 and is named**, and a religion question. That is
+the same shape LAPOP's `prov` has, and it means the continent §11w swept with the oracle and
+§11b priced by category depth has a second tier available for **every country Afrobarometer
+fields** — which is most of the ones with no census religion table at all: Tanzania, Uganda,
+Zambia, Mozambique, Guinea, Burkina Faso, Niger, Côte d'Ivoire, Senegal, Mali, Nigeria, Togo,
+Benin, Cameroon, Gabon, Madagascar, Sierra Leone, The Gambia, Sudan, Angola and the rest.
+**This does not reopen the censuses** — §11w's findings about what each office publishes all
+still stand. It is a different tier arriving for the same countries, exactly as §11ad was for
+Latin America.
+
+### THE ANSWER CARD IS DEEP AND THE PROBING IS NOT, WHICH IS THE FINDING
+
+§11ad's *"what limits this source is its ANSWER SET, not its sample"* has a second form here,
+and it is nastier because the card is not the problem. Afrobarometer offers **`Christian only`
+beside about twenty named denominations** — Catholic, Anglican, Lutheran, Methodist,
+Presbyterian, Baptist, Quaker, Mennonite, Evangelical, Pentecostal, Independent, Jehovah's
+Witness, Adventist, Mormon, Orthodox, Coptic, Zionist Christian Church, Church of Christ,
+Dutch Reformed, Calvinist — plus Sunni, Shia, Ismaili and three Sufi brotherhoods on the
+Muslim side, traditional religion, Hindu, Bahá'í, atheist and agnostic. **That is finer than
+almost any African census.**
+
+**And the share who land in `Christian only` is set by how hard that round's fieldwork
+probed.** Liberia, same question, same country, six rounds:
+
+    R4 2008-12  28.0%    R5 2012-06  44.4%    R6 2015-05  23.1%
+    R7 2018-06  67.4%    R8 2020-10  72.0%    R9 2022-08  61.6%
+
+A 48.9-point range, not monotone in time, over fourteen years in which the country's Christian
+total moved four points. **So a pooled denominational share measures which rounds are in the
+pool**, and the split-half will not catch it: a denomination can rank the units the same way in
+both halves while its level is set by the questionnaire. §14.16's test is about geography and
+this is about level.
+
+> **Group the answers up to a level the probing cannot move, then argue for anything finer.**
+> `Christian` is such a level and `Methodist` is not, because a Methodist and a `Christian
+> only` are both Christian in every round.
+
+`sources/lr.py` asserts the swing still exists on every build, so a release that fixes the
+probing fails rather than leaving the decision standing by inertia. **A country that wants the
+denominations needs an outside witness to their level**, which is the same bar §11ad set for
+Suriname's traditional religion.
+
+**Added on review, 2026-09-08: the finding was measured on one country and it is general.**
+The `Christian only` share was recomputed over all six rounds and every country in them, on
+the same weights. It swings by more than fifteen points in **ten of the twenty-eight countries
+that appear in three or more rounds**, and the median country swings 10.2 points. Botswana is
+worse than Liberia:
+
+| | R4 | R5 | R6 | R7 | R8 | R9 | range |
+|---|---|---|---|---|---|---|---|
+| **Botswana** | 5.0% | 25.6% | 28.9% | 56.9% | 54.6% | 70.7% | **65.7p** |
+| **Liberia** | 28.0% | 44.4% | 23.1% | 67.4% | 72.0% | 61.6% | **48.9p** |
+| **Nigeria** | 32.3% | 19.4% | 28.0% | 44.9% | 47.3% | 41.1% | **27.9p** |
+| **Kenya** | 9.5% | 11.4% | 16.7% | 24.8% | 30.7% | 37.2% | **27.7p** |
+| **Gabon** | | | 20.9% | 24.9% | 45.1% | 40.4% | **24.2p** |
+| **Zambia** | 12.7% | 11.7% | 15.3% | 23.1% | 3.7% | 7.7% | **19.5p** |
+| **Ghana** | 21.8% | 18.2% | 8.9% | 20.3% | 20.3% | 28.0% | **19.1p** |
+| **South Africa** | 34.6% | 30.8% | 33.6% | 48.4% | 49.0% | 38.5% | **18.1p** |
+| **Namibia** | 10.4% | 13.3% | 8.8% | 22.1% | 16.2% | 26.8% | **18.0p** |
+| **Tanzania** | 8.4% | 3.6% | 6.4% | 15.3% | 14.1% | 21.3% | **17.7p** |
+
+**And the obvious rescue does not work.** If this were one questionnaire change it would be a
+round effect and a per-round correction would remove it. It is not: between R7 and R8 Zambia
+falls 23.1% to 3.7% while Kenya rises 24.8% to 30.7% and Botswana barely moves, so it varies
+by country AND round and there is nothing to divide out. It is the fieldwork team rather than
+the release, which is why the rule above is to group up rather than to adjust.
+
+**What is country-specific is the number, not the rule.** Mali swings 1.3 points and
+Madagascar 2.0, so a country that hardly uses the catch-all can still argue for its
+denominations. Print the by-round share before deciding, and assert it afterwards.
+
+### THREE TRAPS THAT ARE PROPERTIES OF THE FILE
+
+- **The religion variable moves name every other round**: `Q90`, `Q98A`, `Q98A`, **`Q98`**,
+  `Q98A`, `Q95`. Round 7 has a `Q98A` and it is a different question, so a module that tries
+  one name and falls back to another reads the wrong column with no error. `ROUNDS` names it
+  per round and `load()` asserts the variable LABEL says *Religion of respondent*.
+- **The weight changes name and meaning at round 8.** `withinwt` becomes `withinwt_ea` and
+  `withinwt_hh` when the frame moves from enumeration areas to households, and `Combinwt` is
+  the cross-country weight, which would re-level the unit shares by country size. Asserted by
+  requiring the weight to average 1 over the country.
+- **Round 6's `.sav` is not valid UTF-8** and `pyreadstat.read_sav` raises `Unable to convert
+  string to the requested encoding`. `encoding="LATIN1"` reads it.
+
+And one that is `[[reference_pooled_survey_labels]]` and will hit every country:
+**`REGION` is a per-round label set.** Liberia's fifteen counties arrive as 33 distinct
+strings — `Rivercess`/`River Cess`, `Bassa` for Grand Bassa, `Cape Mount` for Grand Cape
+Mount, and the whole set upper-cased in round 9. Pooled on the raw string a country has twice
+the units it has, and the split-half is then run on halves that share almost nothing (§11af's
+Egypt lesson, arriving again).
+
+**And so is `COUNTRY`, which is worse, because that failure is silent.** Found on review,
+2026-09-08. `load()` selects one country by name and three of them are not one name across the
+six rounds: **Côte d'Ivoire** is `Cote d’Ivoire` in R5, `Cote d'Ivoire` in R6 and `Côte
+d'Ivoire` in R7-R9; **Eswatini** is `Swaziland` in R5-R6, `eSwatini` in R7 and `Eswatini` in
+R8-R9; **Cabo Verde** is `Cape Verde` in R4-R6. A curly apostrophe, an accent, a lower-case
+first letter and two renames. The REGION trap at least shows up as too many units; this one
+produces a pool that looks perfectly well formed and is missing half its respondents and, far
+worse given the probing finding above, **the wrong mix of rounds** — asking for `Cabo Verde`
+gets 3,587 respondents from R7-R9 instead of 7,216 from all six. `COUNTRY_ALIASES` in
+`sources/afrobarometer.py` now names every spelling, the match runs through `fold()`, and a
+round that returns nothing while holding a label differing only by an accent is an error. All
+three countries are on the queue this section opened.
+
+### WHERE IT SITS AGAINST THE OTHER TWO
+
+|  | LAPOP | Arab Barometer | **Afrobarometer** |
+|---|---|---|---|
+| unit | `prov`, ADM1, named | `Q1`, governorate, named | **`REGION`, ADM1, named** |
+| religion | `q3c`, 14 answers | `Q1012`, 3-5 answers | **~30 answers** |
+| card stability | stable across waves | **codes re-used between waves** | stable card, **unstable probing** |
+| n per country | 4,000-9,000 pooled | 2,000-7,000 pooled | **~7,200 pooled over six rounds** |
+
+The Afrobarometer has the deepest card of the three and the least usable depth, for the reason
+above. What it does supply reliably is the coarse split at ADM1, which is what most of Africa
+is missing.
+
+## 9cl. Liberia wired — 2026-09-08. §11w's *"not chased"* closed, and TWO EXACT CENSUS MARGINS WITH A SURVEY BETWEEN THEM
+
+`sources/lr.md` is the record. 15 counties, 5 categories, 5,250,187 people, every row
+`modelled`.
+
+**§11w priced Liberia at five categories off the oracle's 2008 row and the five are real.** The
+2022 census asks the same five and defines them in its own §2.20; there is no Cabo Verde here,
+no row that turns out to be the under-15s. What §11w never asked is the other question, and the
+answer is the reason this section exists: **LISGIS has asked religion in every modern census
+and has never published it below the national line.**
+
+| release | religion | tier |
+|---|---|---|
+| 2022 PHC *Final Results* | Table A13, 5 categories, by sex | **national** |
+| 2022 PHC, 15 thematic reports (Aug 2024) | the same national five, against 2008 | **national** |
+| 2008 PHC *Final Report* | table 4.3, by age and sex | **national** |
+| 2008 analytical monographs (2012) | *Population Size and Composition* §4.4 | national + urban/rural |
+| 2011 Census Atlas | Fig 9-58, a map, **urban population only**, no table | county, qualitative |
+
+The 2022 report gives residence, household size, sex of head, education, literacy and
+employment by county. Religion is the one table that stops at Liberia. **This is §11ab's Papua
+New Guinea shape and §11w's Togo shape, met a third time.**
+
+### THE OFFICE'S OWN SITE IS A PLACEHOLDER AND THE PREDECESSOR DOMAIN IS A REDIRECT LOOP
+
+`lisgis.gov.lr` serves a one-page *"A new lisgis.gov.lr is on its way"* over IIS, and every
+deep path from the old PHP tree 404s — including the report URLs still in Google's index.
+`lisgis.net`, the predecessor, is behind Cloudflare in an infinite redirect. **Both trees exist
+in the Wayback CDX**: 280 documents under `lisgis.gov.lr`, 171 under `lisgis.net`, and every
+census-shaped one was opened. That is `[[reference_dead_stats_office]]` with the twist that the
+office is alive and its archive is not.
+
+**The tier-below-the-tier trick was tried and does not apply.** `lisgis.net/pg_img/` holds
+fifteen per-county PDFs, one per county, which is exactly the shape that has landed four
+countries finer than their queue row today. **They are maps.**
+
+**And LISGIS runs a NADA at `microdata.lisgislr.org` that nothing here had found.** 17 studies,
+a working variable search, and it answers **406 to a bare curl and 200 to a browser UA**
+([[reference_overpass_user_agent]]). Its variable search settles a question no amount of PDF
+reading would: religion appears in the DHS 1986, 2007, 2013 and 2019-20 and the MIS 2008, 2011
+and 2016, and **in none of the HIES or agriculture-census waves**. Every file is behind a free
+account, so none was used.
+
+### THE CONSTRUCTION, AND IT IS BETTER THAN EITHER SOURCE ALONE
+
+    row margin      county populations        2022 census Table A4     EXACT
+    column margin   the five religion totals  2022 census Table A13    EXACT
+    the interaction the county pattern        Afrobarometer R4-R9      n=7,163
+
+Both census margins sum to **5,250,187** to the person, so the 15 x 5 table is fitted to them
+by IPF and the survey decides only how a county's people divide between the columns. Every
+person drawn is a person the census counted, in a county it counted them in, under a label it
+printed a total for (§14.4 rule 1).
+
+**This is not §6's rejected IPF**, which forced a 2000 composition onto 2010 totals: both
+margins here are the same census, taken the same night, from the same report. And it is the
+reason the population base is the census rather than COD-PS, uniquely among the countries here
+— substituting a projection for one margin would make the two disagree by whatever it had
+drifted, and the fitted table would absorb that drift as though it were religion.
+
+**It is still `modelled` and not `derived`.** §7b's rule is whether anybody was counted, and
+nobody counted the cell. What the census pins is the two margins, which is why the national
+figures on this map are a full enumeration and the county figures are not.
+
+### THE MARGIN RATIOS ARE THE ARGUMENT FOR THE FIT
+
+| | survey | census | ratio |
+|---|---:|---:|---:|
+| Christian | 88.14% | 84.92% | 1.04 |
+| **Muslim** | 9.70% | **11.98%** | **0.81** |
+| **No religion** | 1.24% | **2.56%** | **0.48** |
+| Traditional African Religion | 0.45% | 0.48% | 0.93 |
+| Other religion | 0.46% | 0.07% | 7.09 |
+
+Drawn on the survey's own levels Liberia would be 9.7% Muslim against a census that counted
+11.98%. **A country with a national census margin should be fitted to it rather than checked
+against it**, which is the generalisable half of this build and is available to any country
+whose office publishes religion nationally and nothing finer — which §11w says is most of the
+continent.
+
+### THE ONE EXTERNAL WITNESS TO THE GEOGRAPHY, AND IT IS A SENTENCE IN AN ATLAS
+
+There is no county religion table to validate against. There is one published county-level
+*statement*: the 2011 Census Atlas, Fig 9-58, on the 2008 census —
+
+> *"with the exception of Cape Mount County which was predominantly Muslims, all of the other
+> 14 counties revealed a predominance of Christians."*
+
+That is a testable claim about which county is the Muslim one, made by the office, thirteen
+years before the last Afrobarometer round. Pooled, the survey makes **exactly one** county
+Muslim-majority and it is **Grand Cape Mount**, at 78.4%. `sources/lr.py` asserts it rather
+than quoting it. **A qualitative sentence in a report is a validation set** when nothing
+quantitative exists, and it is worth reading the prose of an atlas for one.
+
+Beside it: the decode is pinned at **r = +0.996** between the survey's county share of
+respondents and the census's county populations, which **none of 20,000** random pairings
+reaches; and the split-half gives Christian **+0.789** and Muslim **+0.756** against a +0.524
+bar, with No religion failing at **+0.114** and drawn flat.
+
+### WHAT IS NOT DRAWN, AND IT IS THE INTERESTING PART
+
+Afrobarometer's Liberian respondents fill twenty Christian denominations — Pentecostal 9.6%,
+Methodist 7.0%, Lutheran 5.8%, Baptist 5.3%, Roman Catholic 4.3% — a split no Liberian census
+has ever published. It is not drawn, because the `Christian only` share swings from 23.1% to
+72.0% between rounds. §11ai is the general form of that finding.
+
+### AND ONE HOLE WORTH NAMING
+
+**River Cess draws zero Muslims**, because none of its 142 pooled respondents was one. §3.5
+drops rather than invents, and the 95% upper bound on that sample is about 2%, so the map says
+the survey found none there rather than that there are none. It is the only cell in Liberia
+where the map asserts an absence.
+
+## 11aj. Uzbekistan closed — 2026-09-08. §9cd's route run in full on an office that genuinely does not hold it, and LiTS closed on both rounds for two different reasons
+
+`sources/uz.md`. **NOT DRAWN.** Uzbekistan was taken with §9cd's instruction in hand: an
+office that has ruled out a cross-tabulation on the evidence of its *publications* has ruled
+out nothing, so ask what its dashboards and BI tools are sitting on. That was done here, and
+the answer is that there is nothing to sit on. This is what a clean negative looks like after
+the Kazakhstan lesson, and it is worth the section for that reason rather than for Uzbekistan.
+
+### The country changed under the queue and nobody had noticed
+
+`queue.md` §B carries Uzbekistan as a country with no census since 1989. **That stopped being
+true seven months ago.** Uzbekistan ran its first post-independence census from 15 January to
+28 February 2026, 37 years after the Soviet one, with 15 January 2026 as the census moment;
+82.3% of the population completed the online stage through OneID, post-enumeration coverage
+was 97.3%, and preliminary results were presented in Tashkent on 30 June 2026. The queue row
+was written before that and describes a country that no longer exists.
+
+**It does not help, because the census does not ask religion.** `aholi.stat.uz` publishes the
+National Committee's own 75-page **«Инструкция о порядке заполнения форм переписных
+вопросников через сеть Интернет»**, which walks every question on all four forms. Form 2, the
+individual questionnaire, runs 1 to 23: question 11 citizenship, **12 nationality**, **13
+native language**, 14 other languages, 15 to 17 education and income, 18 to 23 labour.
+«Вероисповедание» occurs **once** in the
+whole 133,000-character document, in the definition of refugee status under question 11a.
+`[[reference_census_questionnaire]]` is the general rule and this is the cheapest possible
+instance of it: one PDF, one grep, and the country's census tier is settled either way.
+
+### The office's database was queried rather than read, and that is the §9cd move
+
+`stat.uz`'s demography page links its figures to
+`api.siat.stat.uz/media/uploads/sdmx/sdmx_data_<n>.{xlsx,csv,json,xml}`, which names **SIAT**
+(`siat.stat.uz`), the Committee's statistical information-analytical system. It is a Vue SPA;
+its bundle names the routes (`[[reference_spa_hidden_apis]]`):
+
+```
+    https://siat.stat.uz/api/sdmx/last-layer/   every leaf indicator, paginated
+    https://siat.stat.uz/api/sdmx/search/       elasticsearch-backed full text
+    https://siat.stat.uz/api/common/counters/   {"indicators":3231,"sdmxs":91,"downloads":750919}
+```
+
+No key, no login, no terms gate. `last-layer` returns **all 3,231 indicators** with names in
+uz, uzc, ru and en. Grepped over all four name fields:
+`вероиспов|религиозн|конфесси|diniy|e'tiqod|religio|confession|faith` -> **zero**.
+`национальн(ый|ости)|этническ|millat|milliy tarkib|ethnic|nationalit` -> **two**, both "share
+of women/men playing national sports". So this is not "the document has not been found". The
+office's own database, asked directly, has no religion and no ethnicity in it.
+
+**And there is no BI engine behind anything.** Raw HTML rather than WebFetch (§9cd: WebFetch
+strips iframes) on `stat.uz` in three languages, `aholi.stat.uz`, `siat.stat.uz`,
+`gender.stat.uz`, `nsdp.stat.uz`, `gov.uz/ru/pages/2026` and `gov.uz/ru/religions`. Every
+`<iframe src>` on all of them is YouTube. No Qlik, Power BI, Tableau, Superset or ArcGIS.
+
+> **The single `qlik` hit was the Uzbek word ochiqlik, "openness", which is in stat.uz's main
+> menu twice.** A bare substring grep for BI vendors has false positives in Uzbek. Anchor the
+> pattern or read the match before getting excited.
+
+### A host where a port scan says EVERY port is open is a geo-fence, not a host with nine services
+
+`census.stat.uz`, `module.stat.uz` and `hudud.stat.uz` resolve, all on `89.249.62.139/140`, a
+different block from `stat.uz`'s `185.74.7.250`. From here each of them accepts a TCP
+connection on **80, 443, 3000, 5000, 8000, 8080, 8443, 8083 and 9000** and then resets the TLS
+handshake: `curl` exit 35, `requests` `ConnectionResetError`, WebFetch `ECONNRESET` from a
+different continent. Legacy TLS versions and cipher levels change nothing.
+
+**That pattern is the diagnostic and it generalises.** A real host does not listen on nine
+unrelated ports; a firewall that answers every SYN and completes no handshake does. Read
+alongside `[[reference_dead_stats_office]]` (a bot wall returns 418 and reads as down) and
+`[[reference_spa_hidden_apis]]` (compare the 404s): the port-scan shape distinguishes a
+geo-fence from a dead host in one cheap step, and the follow-up is Wayback rather than more
+TLS tricks. Nothing was lost here: `census.stat.uz` is the React SPA for filling in the census
+form, not a results site. Separately, `data.egov.uz`, the national open-data portal linked
+from every stat.uz footer, resolves to `195.158.28.138` and that host *refuses* TCP on 80 and
+443, which reads as retired rather than fenced.
+
+### LiTS is closed for Uzbekistan, and it takes both rounds to see it
+
+§11ag opened the Life in Transition Survey as the whole case for Central Asia. Both rounds
+were pulled here (`data/raw/lits/lits_iii.dta`, 170,487,994 bytes;
+`data/raw/lits/lits_iv_csv.zip`, 23,580,948 bytes) and both are exactly as open as §11ag said.
+
+**LiTS III (2015-16) has the question and not the country.** `q922`, *Religion of the
+respondent*, n = 1,506: 1,440 Muslim, 46 Orthodox, 10 atheist/agnostic/none, 5 other
+Christian, 3 Buddhist, 1 Jewish, 1 refusal. But its 75 PSUs fall in **ten of fourteen
+regions**, and the four with no PSU at all are Fergana (4,061,500), Kashkadarya (3,560,600),
+Andijan (3,394,400) and Surkhandarya (2,877,100): **13,893,600 of 36,799,800, or 37.8% of
+Uzbekistan** at the office's own 1 January 2024 figures. `weight_population` sums to
+20,370,978 and the missing four contribute nothing to it. They are also the worst four to
+lose, being the two southern provinces and two of the three Fergana Valley provinces.
+
+**LiTS IV (2022-23) has the country and not the question, and this closes §11ag's open item.**
+n = 1,006 across **all fourteen regions**. §11ag left it open whether LiTS IV kept the religion
+question. **It did not.** Its 1,319 columns contain no religion variable at all. The only
+religious content is the country-specific identity battery `q811`, in which `q811522`,
+`q811523` and `q811524` are *Uzbekistan - Muslim*, *- Orthodox Christian* and *- Other
+religious identity*, yes/no ticks sitting beside *Uzbek*, *Tajik*, *Central Asian*, *Slavic*,
+*Soviet* and eleven more. **274 of 1,006 tick Muslim, 2 tick Orthodox, 1 ticks other.** It is
+a question about which identities matter to a respondent, not about their religion, and 27%
+is not Uzbekistan's Muslim share.
+
+So **pooling cannot rescue it**, which was §11ag's plan for getting the sample respectable:
+the round that asks is missing a third of the country and the round that covers the country
+does not ask.
+
+### The split-half, run anyway, and the reason it is not the binding constraint
+
+On the ten regions LiTS III does cover, splitting on PSUs rather than rows because the design
+is clustered, 400 random halves, weighted shares, Spearman across the ten:
+
+```
+    MUSLIM                       median rho  0.279    12% of halves negative
+    ORTHODOX CHRISTIAN           median rho  0.585     1% of halves negative
+    ATHEISTIC/AGNOSTIC/NONE      median rho -0.300    87% of halves negative
+```
+
+Orthodoxy passes and it is worth saying why it passes, because the number flatters it: 28 of
+the 46 Orthodox respondents are in Tashkent city. The split-half reproduces the ranking
+because one city is in both halves every time, which is `[[reference_check_needs_power]]` seen
+from the other side. The survey supports "Tashkent has Russians in it" and nothing finer.
+
+The §3.5 lean check has nothing to bite on: the excluded residual is `Refusal`, **one
+respondent**, in Tashkent city, so leave-one-out either drops the only informative row or
+returns zero for all ten. No measurable non-response lean, because no measurable
+non-response.
+
+### Tajikistan and Kyrgyzstan are NOT closed by this, and here is the coverage they have
+
+The same pull answers the other two queue rows for free, and they are in better shape:
+
+| | LiTS III regions | PSUs | n | religion column |
+|---|---|---:|---:|---|
+| **Uzbekistan** | **10 of 14** | 75 | 1,506 | 1,440 Muslim / 46 Orthodox / 10 none / 5 other Chr / 3 Buddhist / 1 Jewish |
+| **Tajikistan** | **5 of 5** (Khatlon, Sughd, RRP, Dushanbe, GBAO) | 75 | 1,510 | **1,502 Muslim**, 2 other, 2 other Chr, 2 refusal, 1 Catholic, 1 Buddhist |
+| **Kyrgyz Rep.** | **9 of 9** (7 oblasts + Bishkek + Osh city) | 75 | 1,500 | 1,331 Muslim / 107 Orthodox / 24 none / 16 Buddhist / 14 other Chr / 4 other / 2 Jewish / 1 Catholic |
+| Kazakhstan | 16 of 17 | 75 | 1,505 | 870 Muslim / 467 Orthodox / 75 none / 31 other / 30 refusal / ... |
+
+**Kyrgyzstan is the one worth taking.** Full regional coverage at nine units, 107 Orthodox
+against 1,331 Muslim, and the Muslim/Orthodox line is exactly the thing LiTS's six codes are
+shaped for. GBAO carries 60 interviews in Tajikistan and every one of them answers `MUSLIM`,
+so `queue.md`'s guess was right in the worst way: **the Ismaili cell is not thin, it is
+absent**, because the question offers no code that could hold it.
+
+### What reopens Uzbekistan, and it is dated
+
+**The 2026 census collected nationality by region and has not published it.** Question 12 went
+to 39 million people and the individual record carries region; the July 2026 release covered
+population, sex and age only. The Committee's stated plan, from the 30 June 2026 conference,
+is final results in 2027; presidential decree UP-173 of 19 September 2025 sets the field dates
+and no publication deadline, so the year is the Committee's word rather than a statutory one,
+and the Cabinet resolution that would carry a schedule is an image-only scan.
+
+When that table lands Uzbekistan is a **§9aq** country, and it is a better §9aq country than
+Kazakhstan was. §9cd measured what the ethnicity model gets wrong: Islam and Orthodoxy landed
+within 4.5% region by region, and the large errors were **refusal** (27.8% of it misplaced)
+and **non-belief** (22.9%). **Uzbekistan has no refusal or non-belief layer to get wrong,
+because nobody asked.** The model's one proven failure mode does not exist here and its proven
+strength is the whole of what the country needs.
+
+The fragments already published are not enough. The Committee's July 2026 release gave the
+national composition (Uzbeks 34.9M / 89.4%, Tajiks 1.28M, Karakalpaks 841,400, Kazakhs
+707,300, Russians 606,500, Turkmens 194,800) and the largest regional cells for four groups
+only. A fourteen-by-N matrix cannot be built from six numbers, and assembling one out of
+press-release cells would be inventing the rest of it.
+
+### The one that generalises
+
+§9cd's rule was **ask what the office's dashboards and BI tools are sitting on before writing
+the country off**, and the right way to record a case where that was done and came back empty
+is to say what was asked rather than to say "nothing found". Here the answer is a specific
+one: *the office's own indicator database was enumerated in full, all 3,231 of them, and
+neither religion nor ethnicity is a variable in it.* That is a different and much stronger
+statement than "the publications do not carry it", and it is the statement §11u could not
+make about Kazakhstan. **A country closed on an enumerated database stays closed until the
+database changes; a country closed on documents was never closed at all.**
+
+---
+
+## 9cm. Panama wired — 2026-09-08. §9ce's QUESTION ASKED OF A COUNTRY THAT ASKS AND DOES NOT PUBLISH; plus a held-out permutation test a correct decode fails twelve seeds in thirteen
+
+§9ce's rule — ask what the office's own census AND SURVEY series carry before treating an
+international survey as the route — was applied to Panama and came back with the third kind of
+answer. Uruguay's office had the question on a household survey and had published it. The
+Dominican Republic's had. Haiti's had. **Panama's office has asked it twice, holds the
+provincial tabulation, and has published one national bar chart.**
+
+### What INEC has
+
+**The censuses stay closed and the negative is unchanged.** `www.inec.gob.pa/redpan/` still
+serves exactly five bases (1980, 1990, LP2000, LP2010, LP2023) and §11x's reading of all five
+variable pickers holds: none of the 252 person-variables is religion.
+
+**MICS 2013 asks it of every person and tabulates none of it.** INEC's own *Encuesta de
+Indicadores Múltiples por Conglomerados 2013* is 11,100 households representative of all twelve
+provinces and comarcas, and page 125 of `archivos/MICS_FINAL.pdf` is the household listing
+form carrying `HC1.A ¿QUÉ RELIGIÓN PROFESA (nombre)?` with a card of ten-plus options, beside
+`HC1.D` on indigenous group. **Grep the 230-page report for `religi` and there are two hits,
+both on that questionnaire page.** Roughly forty thousand people's religion sits in microdata
+that is free but behind a UNICEF account (`ask/` filed).
+
+**EPM April 2022 asks it, and INEC's own deck says the province table exists.** The *módulo de
+percepción* of the Encuesta de Propósitos Múltiples, 11,776 household informants, published as
+a 14-page deck: page 4 is a bar chart, *Religión que profesa el informante*, reading **65%
+Católica, 22% Evangélica, 2% Adventista, 1% Testigo de Jehová, 2% otras, 8% ninguna**. Page 2
+says, in INEC's words, *"Se pueden obtener resultados a nivel de provincia/comarca, área
+urbana/rural y distritos para Panamá y Panamá Oeste."* The office's director then quoted the
+provincial numbers to a television reporter — Bocas del Toro least Catholic at 22%, the
+comarcas leaning Evangelical — and the table itself has never appeared. `sources/pa.md` has
+the citations.
+
+> **So a new shape for the §9ce question, and it is the one that most rewards asking.** Not
+> *does the office ask*, and not *does the office publish*, but **does the office's own
+> methodology page admit a tabulation it has not printed**. Panama's does, in a sentence on
+> page 2 of a slide deck about euthanasia and abortion.
+
+### What is drawn, and the two things worth carrying
+
+LAPOP `pais=7`, four waves, 6,105 respondents, ten units of thirteen, against COD-PS 2023 —
+which here is not a compromise, because it sums to **4,064,445 against INEC's published census
+total of 4,064,780**, a difference of 335 people. Guna Yala and Emberá-Wounaan have no `prov`
+code in any wave and are in `gap=` at 1.09%; Panamá Oeste is not a gap but a merge, because
+LAPOP never adopted the 2014 split and the 2023 round still codes its respondents to `708`.
+
+**1. The decode is READ rather than inferred, and that is available to every LAPOP country.**
+`pyreadstat.read_dta(..., metadataonly=True)` returns `variable_value_labels`, and the Grand
+Merge's `prov` label set names all ten Panamanian units in Spanish. Guatemala's `prov - 200`
+arithmetic and El Salvador's alphabetical-pcode trap were both solved the hard way against a
+file that has been carrying the names all along. **Read the label set first.** (Panama's own
+code join would have put Panamá's 2.09 million people in Kuna Yala, which has 32,016.)
+
+**2. A HELD-OUT PERMUTATION RULE A CORRECT DECODE FAILS TWELVE SEEDS IN THIRTEEN, AND IT IS
+LEVERAGE RATHER THAN UNIT COUNT.** `sources/lapop.py` fails if any of 20,000 sampled orderings reaches the
+observed r. Panama's first run: 3 did. Its docstring predicts this for a ten-unit country and
+`sources/arabbarometer.py` carries the fix — exclude the observed ordering from the null by
+value — **and that fix does not repair it.** Only one of the three draws was the observed
+ordering. Enumerating all 3,628,800:
+
+    observed r = +0.9957;  468 of the 3,628,799 OTHER orderings reach it  ->  exact p = 1.29e-4
+    ALL 468 keep Panamá y Panamá Oeste, 51% of the country, in place
+    with that unit dropped: nine units, r = +0.9206, 468 of 362,879      ->  exact p = 1.29e-3
+
+One unit is half the population and half the sample, so the correlation is pinned above +0.99
+by a single point however the other nine are shuffled. **The expected number of hits in 20,000
+draws is 2.6, so a correct decode clears "zero of 20,000" only on the 7.6% of seeds where the
+sampler draws none of the 468** — one in thirteen. A test a right answer fails twelve times in
+thirteen is not a test.
+
+`sources/pa.py::held_out_exact` keeps the statistic and the null and computes the p-value
+exactly instead, on a bar of 1e-3 — **a looser bar than the sampled rule by about 6.7x, and
+deliberately so**, since the old one is unattainable here — plus the same test with the
+dominant unit dropped on 1e-2, which is a consistency check rather than a second witness: its
+468 beating orderings are the first test's, restricted to nine units, so p9/p10 = 10 exactly
+and it cannot fail while the first passes.
+`lapop.py` is deliberately NOT changed: three built countries import it and none can hit this.
+**The general rule: "none of N random pairings reach it" is a statement about N, not about the
+join, and it stops being achievable once one unit dominates the leverage.** Costa Rica (seven
+provinces, San José about a third) is the next country in this module that will meet it.
+
+### And the leave-one-out, because ten units is few
+
+The three categories that carry their own geography — Catholic +0.85, Evangelical +0.87,
+believer-without-a-religion +0.82 against a bar of +0.65 — were re-run dropping each unit in
+turn. All three stay between **+0.75 and +0.93** against a nine-unit bar of +0.69, for every
+unit removed. **No single unit manufactures any of them**, Ngäbe-Buglé included, which is the
+one that would have: it is 58.8% Evangelical against 29.5% Catholic and the only unit on the
+map where Evangelicals outnumber Catholics.
+
+### The trap that cost an hour
+
+**`www.inec.gob.pa` bans on volume.** A sequential sweep of `publicaciones/Default3.aspx` at
+0.15 s intervals ran clean for about 120 requests, then served a 25 KB *Firewall Captcha
+Authentication* page **with HTTP 200** (§5a again), and then refused TLS outright — curl exit
+35 and a bare `000`, which reads as a dead host. It cleared by itself in about forty minutes.
+The publication sweep therefore covers IDs 1-121 and 1150-1200 only, and `sources/pa.md` says
+so rather than claiming the tree was searched.
+
+---
+
+## 9cn. São Tomé and Príncipe wired — 2026-09-08. §11w's *"not chased"* closed for the third time today, and the office serves its whole download tree as a DIRECTORY LISTING
+
+§11w ranked São Tomé fifth of Africa's undrawn countries on `tools/oracle.py`'s category
+depth, 13 categories over 178,739 people, and closed the row as **"not chased"**. It is now
+drawn at **10 nodes on 7 districts, 176,983 people, 99.02% of the country**. Full record in
+`sources/st.md`.
+
+**This is the same finding as §9ci's, on a different office, one day later, and that is now a
+pattern worth stating flatly.** Cabo Verde publishes religion in one workbook per municipality;
+São Tomé publishes a whole census report per district, eight PDFs in a folder called `Dados
+Distritais e Nacional Recenseamento 2012`, each of them reprinting Quadros 1 to 26 for that
+district alone. Three countries in two days have come in finer than their queue row because
+somebody asked *does this office publish a volume per unit of the tier below the one I expect*.
+The oracle's rows are national and urban/rural; **an oracle row is a statement about what the
+office forwarded to New York, never about what it publishes.**
+
+### The route is an open autoindex, and there is a trap in where it starts
+
+`www.ine.st` is Joomla with Phoca Download, which is the CMS family §11p's rule-1 id sweep and
+§11w's Togo finding were both written for. Neither is needed. **LiteSpeed serves the download
+tree with directory listing left on**, so
+
+    https://www.ine.st/phocadownload/userupload/Documentos/
+
+walks recursively and prints all 223 files with sizes and dates in 68 requests.
+
+**`/phocadownload/` and `/phocadownload/userupload/` are NOT indexes.** Both answer 200 with an
+ordinary Joomla page rather than an `Index of` listing, so a walker that starts at the component
+root concludes the tree is closed and stops. The autoindex begins one level further down, at
+`.../userupload/Documentos/`. This is §5a's shape again in a new place: **the wrong path returns
+a valid page rather than a 404, and the probe reads "closed" instead of "wrong path".** Worth a
+minute on any Joomla or WordPress office before reaching for an id sweep: ask for the upload
+directory itself, not the component.
+
+### The parse closes four ways, and the fourth is the locality publication folding
+
+`sources/st.py` reads Quadro 8's first data row from each district report. The checks:
+
+1. each district's thirteen categories sum to its own printed total, seven times;
+2. the seven districts sum to the national report in every category, 178,739;
+3. **INE's 2016 locality publication reproduces it**, folded to seven columns, with
+   `Outras religiões` 17,503 being exactly `Outras + Maná + Jeová + Deus é amor + Messiânica
+   Mundial` and `Não tem` 39,691 being exactly `Não tem + Não sabe + Não declarou`;
+4. UNSD table 28 reproduces all thirteen national figures to the person.
+
+**The oracle's thirteen rows here really are thirteen categories**, which is only worth saying
+because Cabo Verde's sixteen were fifteen the day before. Quadro 6 prints the religion table by
+five-year band starting at 0-4 and those bands sum to the same total, so São Tomé asked
+everybody and there is no age cut. The rule from §9ci holds in both directions: **check what
+each row is, then believe the count.**
+
+### THE FINER TABLE IS THE SHALLOWER ONE, which is the opposite of the usual trade
+
+INE's 2016 *Publicação dos Resultados sobre Localidades* has religion **for every locality in
+the country** (Tabela 3, hundreds of units), and it is not drawn. It prints **seven** columns
+where the district reports print thirteen, and its two catch-alls swallow Maná, the Witnesses,
+Deus é Amor, the World Messianic Church and both non-response rows. Drawing on it would cost
+four of the ten nodes and fold non-response into no religion.
+
+The second reason is arithmetic that applies to every micro-state on this map. `scatter.py`
+sets each node's dot count from its **national** total and spreads it by a Hilbert carry, so
+the unit grain changes where 171 dots land and not how many there are. Over 1,001 km² and seven
+districts a locality-level composition is invisible. **A finer tier is not automatically
+better; price what it costs in categories before taking it.**
+
+### The 2024 census exists, has religion by district, and is not drawn
+
+The V RGPH was taken in November and December 2024 and published in July 2025. It tabulates
+religion by district and sex in **sixteen** categories, deeper than 2012: it adds
+`Islâmico/Muçulmano` (354 people, 0.17%) and splits `Ateu` (1,473) out of `Sem religião`
+(20,075). It is **not in `tools/oracle.py`**, which has São Tomé at 2012 and 2001 only, so this
+is a second instance of the oracle being behind an office.
+
+**It is not drawn because 56,200 of its 209,161 people, 26.87%, are `ND`.** That is Cabo
+Verde's shape and it gets the opposite answer. Cabo Verde's 28% closed to the person as the
+under-15 population, on all 22 concelhos separately. São Tomé's does not close: `ND` is
+**1.026 to 1.037 times each district's under-10 population**, close but never exact, and the
+report never says who was asked. **A residual that ALMOST matches an age band is not an age
+band**, and the honest reading of a 26.9% hole nobody can characterise is that it is worse than
+a 0.98% hole that reconciles.
+
+### And the 2024 report has been round-tripped through machine translation
+
+Worth recording as a category of hazard, because the numbers are fine and the labels are not.
+The report prints `Pintura1.8` for *Quadro 1.8* (Portuguese *quadro* to English "picture" and
+back), **`Copa do Mundo` for `Messiânica Mundial`** (*Mundial* read as the World Cup),
+`A vontade de Jeová` for the Jehovah's Witnesses, `Reino Universal de` for the Universal Church
+truncated, `POR FAVOR` for the total row (*Junto* to "together" to "please"), and *população em
+idade sindical* for *idade de união*, marriageable age turned into trade-union age. The
+magnitudes identify every mangled row against 2012 unambiguously. **A statistical report can be
+machine-translated end to end and still be the office's own publication**; read the figures,
+distrust the labels, and pair them against the previous census.
+
+### An area check pins most of a small join and can leave a named pair open
+
+São Tomé has no name twins, unlike Cabo Verde's three pairs the day before, so the join is the
+name join. The confirmations are worth carrying anyway.
+
+**The 2024 report prints each district's area in km² beside its population**, which is a
+witness most offices do not offer: measuring each COD-AB polygon in UTM 32N reproduces all
+seven to within 8.8%, over a sixteenfold range from Água-Grande's 16.5 km² to Caué's 267. That
+looks like a geometric proof and is not quite one. **Cantagalo and Mé-Zóchi are inside each
+other's error** (128.9 and 120.8 measured, 118.5 and 122.0 printed), so swapping them fits the
+printed areas *slightly better* than the truth: exactly 1 of the 5,039 other permutations beats
+the identity and it is that swap. `sources/st_geo.py` enumerates all of them and asserts that
+everything beating the truth moves only `{ST22, ST26}`, so a third district joining that set
+stops the file rather than passing quietly. The 2012-to-2024 growth band then separates the
+pair by a factor of three.
+
+**The generalisable form: on a small unit set, score every permutation and report which units
+the witness cannot separate, rather than reporting a pass.** A Spearman of 1.0 over seven units
+sounds strong and survives swapping the two smallest.
+
+### COD-AB and COD-PS disagree about what LEVEL a tier is, and their pcodes do not join
+
+The 2026 COD-AB bundle publishes São Tomé's seven districts as **ADM1**, pcodes `ST11` and
+`ST21`-`ST26`. The 2022 COD-PS bundle publishes the same seven as **ADM2**, under an ADM1 of
+two provinces, pcodes `ST0101` and `ST0201`-`ST0206`. Neither file mentions the other's scheme.
+**Joining the two on `adm1_pcode` silently pairs a district with a province**; joining on any
+pcode at all returns an empty frame. `st_geo.py` uses COD-AB's throughout and does not read
+COD-PS, because the 2024 census is a better witness than a projection of the 2012 one. Related
+to [[reference_agol_statute_boundaries]] and worth the same habit: **check what tier a COD file
+calls a tier before joining two of them.**
+
+### What the country adds
+
+`Maná` is **the only census category on this map that names the Igreja Maná** (a sweep of every
+file in `data/normalized/` finds it in `st.csv` and nowhere else): 4,191 people, 2.34%, a
+Lisbon church founded in 1984 by Jorge Tadeu and strongest here in the capital, which is a
+broadcast church's shape and not a mission's. `Messiânica Mundial` is 688 people, **0.38% of
+São Tomé against 0.054% of Brazil**, so a Japanese new religion is seven times more concentrated
+in the Gulf of Guinea than in the country it came through. The New Apostolic Church is 2.90%,
+its largest share of the three countries on that node, and it is the one category on the form
+that is weakest in the capital.
+
+And the content: no religion is 21.22% and runs **33.61% in Lembá to 4.60% in Príncipe**, a
+sevenfold spread inside 179,000 people with the two ends on different islands. **Caué**, 6,031
+people in the plantation country under the southern forest, is the least Catholic district at
+38.22% and the reason is not secularism: the Assembly of God is 10.08% there, the New Apostolic
+Church 8.41% and the Universal Church 5.50%, each its highest figure in the country.
+
+New node `other.st`, 8,990 people and 5.03%, the country's third largest answer, because the
+form is nine individual churches with no Protestant, Islam or traditional-religion box at all.
+The 2024 census prices the Muslim part of it at about a twentieth.
+
+---
+
+## 9co. Kyrgyzstan wired — 2026-09-08. §9cd's ROUTE RUN IN FULL ON AN OFFICE THAT NEVER ASKED, and a split-half bar that was rejecting a real category because it was built for a different statistic
+
+`sources/kg.py`, `sources/kg_geo.py`, `sources/kg_grid.py`, **`sources/lits.py`** (new, shared),
+`taxonomy/kg2016.py`, `sources/kg.md`. 7,404,329 people, 9 units, 8 drawn nodes, 100% drawn,
+basis `self_id`, **every row `modelled`**. New node `other.kg`.
+
+§11aj promoted Kyrgyzstan over Uzbekistan on coverage: LiTS III reaches **9 of 9** Kyrgyz units
+against Uzbekistan's 10 of 14. The instruction was to run Kazakhstan's §9cd route first anyway,
+because an office that has ruled out a cross-tabulation on the evidence of its *publications*
+has ruled out nothing. It was run in full, and Kyrgyzstan is the case where the answer is
+genuinely upstream of the office.
+
+### THE QUESTIONNAIRE IS PRINTED IN THE BACK OF THE RESULTS VOLUME
+
+Kyrgyzstan has run three censuses since independence, 1999, 2009 and 2022, and the 2009 page
+lists eleven volumes with a nationality-and-language one and no religion one. That is a fact
+about publications. **Book I of the 2022 census settles it properly, because it prints Form 2
+as an annex** (`publicationarchive/5cf96b00-ef31-4c8c-845c-ec7f38bbc670.pdf`, 101 pages,
+`вероисповед` and `религи` zero times):
+
+```
+    1 родственные отношения       10 владение языками (10.1-10.5)
+    2 пол                         11 миграция (11.1-11.7)
+    3 временное отсутствие        12 образование и обучение (12.1-12.6)
+    4 дата рождения               13 функциональные ограничения (13.1-13.6)
+    5 свидетельство о рождении    14 источники средств к существованию
+    6 семейное положение          15 занятость и безработица (15.1-15.6)
+    7 НАЦИОНАЛЬНОСТЬ              16 современные средства связи
+    8 страна рождения             17 рождаемость
+    9 гражданство
+```
+
+Seventeen questions on the individual form and none of them is religion.
+`[[reference_census_questionnaire]]`. The Cabinet resolution that ordered the census names
+religion once, and it is an instruction to the State Commission for Religious Affairs to help
+enumerate people in its own institutions.
+
+### THE OFFICE'S CATALOGUE WAS ENUMERATED THREE WAYS, WHICH IS §11aj'S RULE WITHOUT AN SDMX ENDPOINT
+
+§11aj's closing line was that *a country closed on an enumerated database stays closed until the
+database changes; a country closed on documents was never closed at all* — and it could say that
+because `siat.stat.uz` served all 3,231 Uzbek indicators through an API. **`stat.gov.kg` has no
+API.** It is a server-rendered Django site whose only JavaScript is jQuery, Bootstrap and
+Chart.js. It is still enumerable, three different ways:
+
+1. **The 22 subject pages carry their whole download list as HTML.** `/ru/statistics/<topic>/`,
+   each linking `download/dynamic/<n>/`, `download/operational/<n>/` and
+   `download/methodology/<n>/`. Harvesting all 22 gives **806 entries with titles**, and the
+   religion pattern returns **zero**. Ethnicity returns exactly one real table, `5.01.00.15
+   Внешняя миграция населения по этническому составу`; there is **no nationality-by-oblast
+   stock table in the catalogue at all**, which matters for the last section below.
+2. **The `dynamic` route takes a bare integer**, so `[[reference_cms_download_id_sweep]]`
+   applies: ids 1 to 1,400 swept, filename read out of `Content-Disposition`, **546 return a
+   named file** and none of them names religion or ethnicity. So the 806 are not merely the
+   linked subset.
+3. **`data.gov.kg` is CKAN.** `package_search` paged out **all 1,410 packages**. Four match
+   religion and all four are the State Commission's quarterly register of religious
+   **organisations and buildings**, which `[[feedback_proxy_residual_nameable]]` rules out as a
+   proxy for people.
+
+No `stat.gov.kg` page carries an `<iframe>` at all, in any language, and there is no Qlik, Power
+BI, Tableau, Superset, Metabase or ArcGIS token anywhere on the domain. `census.stat.gov.kg`
+resolves to 212.42.101.110 and **times out** on 80, 443, 3000, 5000, 8000, 8080, 8083, 8443,
+9000, 22, 1433 and 5432 — a drop rule, and a different signature from §11aj's Uzbek geo-fence,
+which *accepted* every SYN and reset the handshake.
+
+> **The site search is broken and is not evidence.** `/ru/search/?q=` returns a page of identical
+> size for `население` and for `zzzqqq`, differing only in the echoed query string. That is why
+> the catalogue was harvested rather than searched, and it is worth checking on any office whose
+> search returns a plausible-looking page: run a nonsense query as the control.
+
+### THE SPLIT-HALF BAR WAS BUILT FOR A DIFFERENT STATISTIC, AND IT WAS REJECTING A REAL CATEGORY
+
+`sources/lapop.py`'s test splits waves in half, re-ranks the units, and compares the Spearman
+against `1.96/sqrt(n-1)`. **Neither half of that survives contact with LiTS.** There is one wave,
+so the split has to be on **PSUs** (two respondents in a PSU are the same twenty-household
+cluster); and one random split of 75 PSUs is noisy enough that the verdict changes run to run, so
+the statistic has to be the **median over 400 random halves**.
+
+At which point the bar is measuring the wrong thing. `1.96/sqrt(n-1)` is the standard error of
+**one** Spearman correlation under the null. Comparing it with a median-of-400 is a category
+error, and on nine units it is a large one:
+
+```
+    category                                 national   median rho   fixed bar   null 95th        p
+    MUSLIM                                     89.23%       +0.548      +0.693      +0.450    0.020
+    ORTHODOX CHRISTIAN                          6.76%       +0.752      +0.693      +0.468    0.008
+    ATHEISTIC / AGNOSTIC / NONE                 1.94%       +0.188      +0.693      +0.524    0.337
+    BUDDHIST                                    0.91%       -0.151      +0.693      +0.460    0.758
+    OTHER CHRISTIAN, INCLUDING PROTESTANT       0.78%       +0.394      +0.693      +0.550    0.167
+    OTHER                                       0.19%       +0.540      +0.693      +0.750    0.344
+    JEWISH                                      0.14%       -0.125      +0.693      +1.000    0.973
+```
+
+**The fixed bar would have thrown out Islam, which is 89% of the country.** The null was built
+instead: shuffle which oblast each PSU belongs to, recompute the whole median-of-400, four
+hundred times. A null category's median reaches +0.450 at the 95th percentile, so Islam's +0.548
+is p=0.020 and Orthodoxy's +0.752 is p=0.008.
+
+**This is not a licence to move bars, and the difference matters.** Moving a bar to make
+something pass fits the test to the answer and silently changes every other category. Building
+the null does the opposite: it also *raises* the bar where the fixed one is too generous, and it
+did here — `OTHER` at +0.540 clears +0.450 and still fails, because its own null runs to +0.750
+on four respondents. `[[reference_check_needs_power]]`, pointing in the direction that note had
+not yet needed.
+
+**The strongest form of that, and the one to quote: there is no single new bar. Seven categories
+get seven nulls, and TWO ARE STRICTER than the +0.693 they replaced.** Read the `null 95th`
+column above rather than the +0.450: five sit between +0.450 and +0.550, then `OTHER` at +0.750
+and `JEWISH` at +1.000. A permutation null is looser exactly where a category is dense enough
+for a median-of-400 to be stable and stricter exactly where it is not, which is what a
+calibrated null does and what a moved bar cannot do. Two things beside it, both established on
+the second read: **the level was never chosen**, since `alpha` is `lits.stability`'s inherited
+0.05 default and the same 95% that `1.96/sqrt(n-1)` already encoded, so only the instrument
+changed; and **the size is measured**, since 200 datasets with the geography destroyed by that
+same shuffle, each re-tested with a null of its own, give 1,400 p-values rejecting at 0.046
+against a nominal 0.05, with MUSLIM at 0.040 and ORTHODOX at 0.055. That calibration was a
+one-off run rather than something the build prints; `sources/kg.md` §9.1 has its method and its
+per-category table.
+
+### THE HELD-OUT CHECK NAMES THE PAIR IT CANNOT SEPARATE INSTEAD OF FAILING ON IT
+
+`arabbarometer.held_out` already enumerates every ordering rather than sampling when there are
+few enough; nine units is 362,880, so all of them were checked. Observed r = **+0.9866**, and
+**exactly one** of the 362,879 others beats it at +0.9870: the ordering that **swaps Issyk-Kul
+and Batken**.
+
+Those two are 7.49% and 8.17% of Kyrgyzstan. The quantity being correlated is each unit's share
+of the whole 1,500-respondent sample, a multinomial proportion, so the error on it is computed
+on 1,500 and not on either oblast's own interviews: near 7.5% that is **±1.33 percentage
+points**. They are **0.69pp apart** on it, half the criterion. No correlation computed on that
+quantity can distinguish them, and reporting the swap as a catch would be reporting sampling
+noise as a finding. (The two oblasts are n=100 and n=140; an error computed on about 120
+interviews would be roughly ±4.9pp, which is not the number this criterion uses. The
+whole-sample denominator is the conservative one, since clustering and weighting both inflate
+the true error and a narrower `se` forgives less.)
+
+So `lits.held_out` forgives a beating ordering **only** when every unit it moves goes to a unit
+inside 1.96 standard errors of its own population share, prints exactly which pairs those are on
+every run, and stops the build on anything else. **That is a computed criterion and not a widened
+bar**: it does not move where the check fails, it says which pairs the check has no power over.
+It is also not a substitute for a witness, and `kg_geo.py` supplies three that are not
+correlations. Two of them close a **different** join from the one this check tests: the office's
+own 14-digit SOATE code **is** COD's pcode (`417NN` is `KGNN`, all nine, arithmetic with no
+names in it), and the Russian oblast names agree independently of the codes, but both of those
+pin the OFFICE to COD and neither says which pcode the survey's `И-КУЛЬСКАЯ` goes to.
+
+**That gap was found on the second read and it is worth carrying to every survey country.** The
+join this check runs on is the survey's own region label, decoded by a hand-written dict, and
+swapping `И-КУЛЬСКАЯ` with `БАТКЕНСКАЯ` makes the check pass **more cleanly than the truth**:
++0.9870 with none of the 362,879 orderings reaching it, against +0.9866 with one. So no
+correlation here separates the two units in either direction, and the third witness is the
+abbreviation itself. `kg_geo.lits_decode_witness` drops the noise words, splits both the LiTS
+label and COD's Russian name on `-`, `.` and space, and requires every LiTS token to equal or to
+begin the name's token in the same position (`И` begins `Иссык`, `КУЛЬСКАЯ` equals `Кульская`);
+each label then abbreviates exactly one of the nine names, so **exactly 1 of the 362,880
+pairings satisfies it** and the swapped one fails on the token count. The general rule, now in
+`lits.py`: a survey country needs a witness on the label decode itself and not on some other
+join nearby. `[[reference_name_join_wrong_neighbour]]`.
+
+### THE BUDDHIST CELL IS AN ARTEFACT AND THE STABILITY TEST FOUND IT
+
+Sixteen of 1,500 respondents answer `BUDDHIST`, and **six are in Osh oblast and four in Batken**
+— the two most rural and most uniformly Muslim oblasts in the country — while Bishkek, which has
+whatever Buddhist community Kyrgyzstan has, returns one. There is no reading of the country in
+which that is a geography. Its median split-half is **-0.151 with 68% of halves negative**, the
+worst of any category here.
+
+It is spread at the national rate and its 66,738 people are drawn, because dropping them would
+move them somewhere else; `taxonomy/kg2016.py` calls the national figure a **ceiling** rather
+than a measurement. **The general point is that this is what a keying error looks like from
+inside a thin survey**, and the stability test found it without being pointed at it. That is the
+argument for running it on every category rather than on the ones that look wrong.
+
+### §3.5, AND THE HOLE IS THE AGE CUT RATHER THAN THE REFUSALS
+
+The excluded residual is **one respondent**, in Chui. With a single non-zero unit there is no
+correlation to compute and the check says so, exactly as in §11aj's Uzbekistan.
+
+**The real exclusion is children, and it has a measurable direction.** LiTS interviews adults;
+Kyrgyzstan is one of the youngest countries in the former Soviet Union, COD-PS 2018 puts the
+average oblast at **37.3% under 18**, and the share runs **31.3% in Bishkek to 41.0% in Talas**.
+So the oblasts with the most Orthodox Christians are the ones with the fewest children:
+
+```
+    under-18 share vs the drawn ORTHODOX share    r = -0.846   leave-one-out -0.960 to -0.740
+    under-18 share vs the drawn MUSLIM share      r = +0.724   leave-one-out +0.372 to +0.893
+```
+
+**The leave-one-out range is the part worth carrying.** Serbia's +0.60 (§3.5) was computed over
+168 municipalities; the same number over nine can be one city, and only the leave-one-out says
+which. Orthodoxy's never gets weaker than -0.74, so the lean is the country and not Bishkek.
+Islam's swings from +0.37 to +0.89, which is a much shakier statement about the same fact.
+Nothing is corrected (§14.4); `note_public` says the map is drawn slightly more Orthodox and
+slightly less Muslim than Kyrgyzstan is.
+
+### WHAT THE COUNTRY LOOKS LIKE, AND WHAT IT COST TO DRAW IT
+
+Two of eight answers carry their own oblast geography and six are spread at the national rate
+inside each oblast's residual, so the tail's *weight* still varies (7.9% of Bishkek against 2.3%
+of Osh oblast) even though its composition does not.
+
+```
+    Bishkek      67.7% Muslim   24.4% Orthodox    331,243 of the country's 509,117 Orthodox
+    Chui         85.3%          10.1%
+    Issyk-Kul    86.4%           7.0%
+    Osh city     96.9%           2.7%
+    Jalal-Abad   97.4%           1.5%
+    Talas        90.1%           1.1%   n=60, the thinnest oblast
+    Naryn        95.8%           1.0%
+    Osh          97.7%           0.0%   no Orthodox respondent in 320
+    Batken       97.5%           0.0%   no Orthodox respondent in 140
+```
+
+**Two oblasts are drawn with no Orthodox Christians at all**, which is the honest output of 460
+interviews returning none and is also certainly a little too low: zero out of 460 leaves room for
+about one percent. `note_public` says so rather than filling it in.
+
+### THE POPULATION IS THE OFFICE'S OWN, AND THE MARGIN IS 21%
+
+COD-PS for Kyrgyzstan is dated **2018** and totals 6,140,200; the National Statistical
+Committee's own resident register is **7,404,329 at 1 January 2026**, published down to the
+individual village. That is a 20.6% gap and it is eight years of real growth. §9bn took the
+office's own over a COD error of 3.4% and this is six times larger, so it was not close.
+
+Two parser traps came with it. **Talas oblast's SOATE code is written `41707 000 000 00 0`**,
+with spaces, on a sheet where the other eight have none, so digits are extracted rather than
+strings compared. And **COD-PS's own delivered CSV is cp1251**, not UTF-8, and raises on the
+first oblast name; its pcode column is also typed as a float, so `41702000000000` arrives as
+`4.1702E+13` and is unusable as a key. The English ADM1 name is the key instead, and COD-PS
+spells the oblast `Osh` and the city `Osh (city)`, so a `.split("(")` rule pairs the oblast with
+the city.
+
+### `sources/lits.py` IS NEW AND SHARED, BECAUSE TAJIKISTAN IS NEXT
+
+The load, the coverage check, the held-out permutation, the PSU split-half with its permutation
+null, the residual build and the §3.5 lean all live there. §11aj priced Tajikistan at 5 of 5
+regions with 1,502 of 1,510 respondents answering Muslim and **no Ismaili code on the card**, so
+whoever takes it inherits the machinery and has to decide only whether a five-unit map that is
+99.5% one colour is worth drawing.
+
+**One correction to §11ag while passing.** It read the printed questionnaire and recorded **six**
+codes; the delivered `q922` value labels carry **eight** — `BUDDHIST` and `CATHOLIC` as well —
+and both are used in the Kyrgyz sample. Recorded in `lits.py` rather than edited into the older
+note.
+
+### WHAT WOULD IMPROVE KYRGYZSTAN
+
+- **A nationality-by-oblast table from the 2022 census.** Question 7 collected it, the office's
+  catalogue does not carry it, and the nine regional volumes (Book III, December 2023 to January
+  2024) were not opened. With it Kyrgyzstan becomes a §9aq ethnicity model that could be
+  **scored against this survey**, the way §9cd scored Kazakhstan's against the truth, and the two
+  together would be much stronger than either alone.
+- **The Life in Kyrgyzstan panel** (DIW Berlin, 2010-2019, about 3,000 households, oblast
+  representative). Not tested; it sits behind a registration form.
+- **`census.stat.gov.kg`**, if it answers from anywhere that is not here.
+
+---
+
+## 11ak. Tajikistan closed, and the Central Asia Barometer opened — 2026-09-08. THE CENSUS ASKS RELIGION AND HAS PUBLISHED NOTHING; and a survey card that HAS an Ismaili code still records Gorno-Badakhshan as three-quarters Sunni
+
+`sources/tj.md`. **NOT DRAWN.** Tajikistan was taken with §9co's instruction to run the state
+route before the survey, as Kyrgyzstan did. Kyrgyzstan's came back empty because no Kyrgyz
+census has ever carried a religion item. **Tajikistan's comes back empty for the opposite
+reason, and it is the more interesting one: the 2020 census asks, and the Agency has published
+no answer at any geography, including the nation.**
+
+### The questionnaire settles it in the affirmative, which is the direction it is rarely used in
+
+`[[reference_census_questionnaire]]` is normally the thing that closes a country. Here it opens
+one. **Form 2, ПЕРЕПИСНОЙ ЛИСТ**, *Утверждена Приказом Агентства по статистике при Президенте
+Республики Таджикистан от "6" августа 2019 года, № 30*:
+
+```
+    5. Национальность     1 таджик  2 узбек  3 русский  4 киргиз  5 другое (указать)
+    7. ВЕРОИСПОВЕДАНИЕ    1 ислам   2 христианство   3 неверующий
+                          4 отказ от ответа          5 другое (указать)
+```
+
+A five-box card with a write-in and *refusal* printed as a code. Fergana and Radio Ozodi both
+reported the change in July 2019, quoting Kiyomiddin Davlatzoda of the Agency that no previous
+Tajik census had asked; the news was the lead and **the printed form is the evidence**.
+
+The form lives at `stat.ww.tj/pages/Переписные формы 2020 года_рус.pdf`, now 403 from that
+host. **Its 2021 Wayback capture is truncated at exactly 1,048,576 bytes and PyMuPDF opens it
+with `page_count = 0`** (`[[reference_pdf_truncated_at_source]]`); the 2022 capture is the whole
+5,639,924-byte file. When the CDX API lists several captures of one PDF at wildly different
+lengths, take the largest and check the trailer — the short one is not a different edition.
+
+### Four enumerations of the office, and the tenth volume is an empty accordion
+
+§11aj's rule applied to an office with no SDMX endpoint:
+
+| route | enumerated | religion |
+|---|---:|---|
+| WordPress media library, `wp-json/wp/v2/media`, paged in full | **3,484 attachments** | none |
+| `data.stat.tj`, linked catalogue (all 15 subject pages return the same document) | **265 indicators** | none |
+| `data.stat.tj`, integer route `/Home/show/<n>` swept 1-700 | **417 live, so 152 linked from nowhere** | none |
+| `catalog.stat.tj` reporting forms, `/Home/Form/<n>` swept 1-1100 | **252 forms, no hidden tier** | 2, both on *religious associations* |
+| Wayback CDX for `stat.tj*` and `old.stat.tj*` | **30,204 captured URLs** | no file named for it |
+
+**And the census release itself says where the hole is.** The ten volumes link 75 PDFs, and
+**Volume III, *Национальный состав, владение языками и гражданство*, is an empty `<details>`
+element** — the heading renders and the table list is `<p></p>`. The Agency's own 33-page
+dissemination presentation, held by CISSTAT, walks every volume's contents and contains
+`religio|faith|confess` zero times; its Volume III page names nine tables, all national.
+So the release programme is visibly *unfinished*, not closed.
+
+`old.stat.tj` answers every path with a Laravel *Whoops* 500 and the archive is the working copy
+of it. **`nada.stat.tj` is linked from the current homepage and 404s at `/`, `/index.php`,
+`/catalog` and `/index.php/catalog`** — that hostname is the conventional address of a NADA
+microdata catalogue and is the single best thing that could appear on this domain.
+
+### LiTS III returns an exact zero where the country's largest minority faith is
+
+Coverage is fine: 1,510 respondents, 75 PSUs, **5 of 5 regions**. Composition is not.
+
+```
+    Khatlon   543 = 543 MUSLIM          Dushanbe  82 = 79 MUSLIM, 1 CATHOLIC, 2 Refusal
+    Sughd     502 = 499 MUSLIM, 2 OTHER, 1 OTHER CHRISTIAN
+    RRP       323 = 321 MUSLIM, 1 BUDDHIST, 1 OTHER CHRISTIAN
+    GBAO       60 =  60 MUSLIM
+```
+
+**Zero Orthodox.** The same instrument, same round, same 75-PSU design and same ~1,500
+respondents returned **107 Orthodox in Kyrgyzstan and 467 in Kazakhstan**. Tajikistan has a
+functioning Russian Orthodox diocese; at n=1,510 even a 0.5% population has an expected count
+near eight. That zero is the survey not reaching a group, not a fact about the group.
+
+What `lits.build` would draw instead is `buddhism` at 0.083% off **one rural respondent in
+RRP** — the identical signature §9co diagnosed as a keying artefact in Kyrgyzstan, where
+sixteen `BUDDHIST` answers landed in the two most rural and most uniformly Muslim oblasts.
+There the split-half caught it. **Here it cannot: a category present in one PSU has no split,
+so `lits.stability` returns *no test possible* and the artefact ships at face value.**
+A drawn Tajikistan would carry more Buddhists than Christians of any kind, and no Orthodox.
+
+### THE CENTRAL ASIA BAROMETER — a new open source for the region, and its own limit
+
+Run twice a year since 2017 in Kazakhstan, Kyrgyzstan, Tajikistan, Uzbekistan and (waves 4-6)
+Turkmenistan, about 1,500 per country per wave, with a `Region` variable in every wave.
+`ca-barometer.org` gates downloads behind a name/email/institution form. **The Discuss Data
+mirror does not** — dataset `1d10e56e-540b-4751-96b6-885309cb4b1d`, *CAB Survey Waves 1-14
+v1.1*, Open Access, and `/dataset/<uuid>/files/<file-uuid>/` returns the archive body with no
+account, no cookie and no form. All fourteen are on disk at `data/raw/cab/`, ~167 MB, waves 1-9
+`.zip` and 10-14 `.rar`, each with Stata, SPSS, Excel, an English and a local questionnaire and
+a methods report per country. `[[feedback_gated_data_last_resort]]` — the mirror was found
+before the form was filled in.
+
+**But the religion question is withheld from Tajikistan by design, and the instrument says so.**
+Scanning all fourteen Tajik files for any variable whose name or label mentions religion:
+waves 1 and 2 carry `TelReligion_M` (531 and 441 answered) and wave 1 alone the Sunni/Shia/
+Ismaili follow-up `TelMuslim`; **waves 3 to 14 carry nothing.** Wave 1's master questionnaire
+heads the block *"D-4a. (Excluding Tajikistan)"* and *"D-4b. (Excluding Uzbekistan and
+Tajikistan)"*, and nine waves later wave 14's Stata variable label reads verbatim **"[KAZ, KGZ,
+TUR] What is your religious affiliation?"** with all 1,500 Tajik rows at code 95, *Not Asked*.
+
+Those `Tel*` columns are the **same respondents** re-contacted by phone, not a second sample
+stacked positionally: `IDNO` matches `TelIDNO` in 100% of the 531 rows, `Educ` matches `TelEduc`
+in 99.4%, and the `EducLevel_M` × `TelEducLevel_M` cross-tab is perfectly diagonal, while month
+and interview length differ. So the region does belong to the phone answers. **Check that before
+joining, because a `Tel`-prefixed duplicate variable set is exactly the shape of a positional
+stack** (`[[reference_pooled_survey_labels]]`).
+
+#### And the card that CAN name Ismailis records Gorno-Badakhshan as three-quarters Sunni
+
+```
+                            Sunni  Shia  Ismaili  Don't know  Refused   Muslims asked
+    Gorno-Badakhshan           40     3        3           5        0        51
+    Khatlon                   126    14        6          36        1       183
+    Sughd                     133     6        6          24        2       171
+    RRP                        75     7        1          15        3       101
+    Dushanbe                   10     1        0           1        0        12
+    all Tajikistan            384    31       16          81        6       518
+```
+
+Gorno-Badakhshan is the seat of the Nizari Ismaili community in Central Asia and its Pamiri
+population is Ismaili almost entirely. **This survey puts 40 of its 51 Badakhshani Muslims on
+Sunni and three on Ismaili**, seats fourteen Shia in Khatlon and seven in RRP against three in
+the one region where Shia Islam is the majority, and loses 15.6% of Muslims to *Don't Know*.
+
+**§11aj found that the LiTS card has no Ismaili code. This is the stronger version of the same
+fact and it generalises past this country: the code existed and the answers still came back
+wrong.** A card audit is necessary and not sufficient — the test that catches this is asking
+whether a category's own home region returns it.
+
+### Why it is not drawn, and what reopens it
+
+Three instruments ask and none carries a map. The census asks the right question of 9.5 million
+people and has published nothing. LiTS has the geography and a composition with an exact zero in
+it. The Barometer excludes the question in twelve of fourteen waves and mismeasures the school
+of Islam in the one wave that asked. §14.3 is satisfied by mapping `MUSLIM` to bare `islam` the
+way `kg2016.py` does — but it does not license the other half, which is drawing four minority
+nodes whose levels rest on six respondents and one known-zero cell. **A blank Tajikistan says
+nothing; a drawn one says something false.** `[[feedback_no_granularity_floor]]` is not the
+issue: five units would have been fine, and the composition inside them is what is missing.
+
+- **The 2020 census religion table.** Collected from everyone on a printed form; the release is
+  nine volumes of ten. One region × religion table makes Tajikistan a five-category census
+  country outright. The site licence is **CC BY 4.0**, so nothing about asking is unusual.
+- **`nada.stat.tj`**, if it ever answers.
+- **Volume III when it lands.** Nationality by region would allow a §9aq model, with a stated
+  ceiling: the census's nationality card is таджик / узбек / русский / киргиз / другое with no
+  Pamiri code, and in CAB wave 1 **all 150 Gorno-Badakhshan respondents are coded ethnically
+  Tajik while 37 give Shughni as the language spoken at home.** The language question is the
+  only place in any of these instruments where the Pamiri population is visible at all.
+
+
+## 9cp. Costa Rica wired — 2026-09-08. §9ce's QUESTION ASKED OF AN OFFICE WHOSE WHOLE VARIABLE DICTIONARY IS OPEN, and TWO pre-registered held-out bars that both FAILED and were not moved
+
+`sources/cr.py`, `sources/cr_geo.py`, `sources/cr_grid.py`, `taxonomy/cr2023.py`,
+`sources/cr.md`. 5,044,197 people, 7 provinces, 10 drawn nodes, 100% drawn, basis `self_id`,
+**every row `modelled`**. New node `other.cr`. One ask filed, `ask/007-cr`, and it is about a
+rule everyone shares rather than about Costa Rica.
+
+§11x closed Costa Rica with *"403 on every path"* and the note that `admin.inec.cr` answers
+200 and *"was not chased"*. Both halves of that turned out to be worth an hour.
+
+### THREE DIFFERENT WALLS ON ONE OFFICE, AND EACH IS A DIFFERENT §12 CAUSE
+
+| host | symptom | what it actually is |
+|---|---|---|
+| `inec.cr` | 403 to curl AND to a browser user-agent | **Akamai, keyed on header COMPLETENESS.** Send `Accept`, `Accept-Language`, `Sec-Fetch-Dest/Mode/Site` and `Upgrade-Insecure-Requests` as well and it returns 200 with 125 KB. A UA string alone is not enough, which is why §11x's probe recorded it as dead. |
+| `admin.inec.cr` | answers everything | the **Drupal 10 backend** behind a Next.js front end. `/jsonapi` is off, `/graphql` answers. Not needed in the end. |
+| `sistemas.inec.cr` | curl exit 60, "unable to get local issuer certificate" | a **broken certificate chain**. `-k` and it is a full NADA microdata catalogue. |
+
+The lesson is §5a's again with a new instance: *a 403 is not a wall and a TLS failure is not a
+dead host*. But the specific new thing is the first row. **A bot wall that keys on header
+completeness rather than on the UA defeats the standard "retry with a browser UA" move** that
+`[[reference_dead_stats_office]]` prescribes, and it looks identical to a hard block.
+
+### THE OFFICE'S ENTIRE VARIABLE DICTIONARY IS OPEN, AND IT ANSWERS THE QUESTION IN ONE SWEEP
+
+`sistemas.inec.cr/pad5` is INEC's NADA 5. Keyless. **And its two API routes take different
+keys**, which is the trap: `/api/catalog/search` lists studies by numeric id, and
+`/api/catalog/<id>/variables` returns **HTTP 400 for every study in the catalogue** and reads
+exactly like a closed endpoint. The variable route takes the **IDNO string**
+(`/api/catalog/IDD-CRI-INEC-EMNA-2019/variables`) and returns the full dictionary. A sweep that
+stops at the 400 concludes the office publishes no dictionaries; a sweep that tries the IDNO
+gets all of them.
+
+```
+183 studies   159 with a dictionary served   45,364 variables read
+```
+
+**Exactly one of those 45,364 is a religious affiliation question.** `HC1A`, *"Religión del
+jefe del hogar"*, in the **Encuesta de Mujeres, Niñez y Adolescencia 2018**, Costa Rica's MICS
+round 6. Everything else is closed from its own dictionary rather than from absence:
+
+* **Censo 2011**, 116 variables, carrying `P07_INDIGENA`, `P08_PUEBLO_INDIGENA`,
+  `P09_HABLA_INDIGENA` and `P10_AFRODESCENDIENTE` and nothing about belief. Costa Rica asks
+  identity questions of every person and not that one. It has held **no census since**, so
+  there is no later dictionary; 2022 was an *Estimación*, not an enumeration.
+* **ENAHO**, 594 variables in 2023 and 596 in 2025, none.
+* **Encuesta Nacional de Cultura 2016-2017**, 731 variables, which asks about religious radio,
+  religious books and religious *activities* and never about affiliation. A near miss worth
+  recording, because a title like that is exactly what a sweep would chase.
+
+> **So the §9cm rule generalises and gets cheaper.** Panama's negative took five REDATAM
+> variable pickers; Costa Rica's took one sweep of a NADA and covers the office's whole
+> catalogue including surveys nobody would have thought to name. **Ask whether the office runs
+> a NADA before reading its PDFs**, exactly as §11x said to ask about REDATAM, and read the
+> *variable* dictionaries rather than the study list.
+
+### AND THE CATALOGUE PUBLISHED THE NATIONAL LEVEL THAT THE REPORT WITHHOLDS
+
+EMNA 2018 is 10,000 households, its own metadata naming *"el nivel nacional, la zona
+urbana-rural y las 7 provincias del país"* as the sample design's study domains. **Its
+341-page results report tabulates religion nowhere** — grep it for `religi` and the twelve
+hits are the questionnaire annex, a discrimination item, church-run food aid and a question
+about books in the home.
+
+**But NADA stores per-variable summary statistics, and `HC1A`'s survived.**
+`/api/catalog/IDD-CRI-INEC-EMNA-2019/variable/V23` returns the weighted frequency distribution:
+
+```
+Católica 65.16%   Religión cristiana (evangélica, pentecostal, mormona, otra) 25.50%
+No tiene religión 7.40%   Otra religión 1.01%
+Religión no cristiana (animista, judía, islámica, otra) 0.45%   NS/NR 0.48%
+                                  8,490 households unweighted, 1,566,018 weighted
+```
+
+That is the **second state reading of a level any country in the LAPOP module has**, after
+Panama's press deck, and a better one. **A metadata endpoint is a publication.** Where a
+report withholds a table, the catalogue that documents the microdata may carry the marginal
+anyway, and it is free.
+
+The microdata itself is behind a login at INEC, at UNICEF and at the World Bank alike, so
+**no new ask was filed**: `ask/006-pa` already requests a free UNICEF MICS account and the
+same account serves this survey.
+
+### WHAT IS DRAWN, AND THE POPULATION IS INEC'S OWN
+
+LAPOP `pais=6`, waves 2010, 2012, 2014, 2023, **5,903** respondents, all seven provinces
+measured in every wave so there is no `gap=`. The decode is read from the Grand Merge's own
+`prov` value labels (601 San José through 607 Limón) and joined to COD-AB on the name **with
+no alias at all**.
+
+**Costa Rica is the one country in this module where the code join is also correct**, and that
+is exactly why it is not used. `cr_geo.py::check_code_join` asserts the two joins AGREE and
+fails loudly if they stop, which is the only way OCHA re-cutting the pcodes becomes visible.
+Guatemala's code join is right, El Salvador's mispairs twelve of fourteen, Panama's would put
+2.09 million people in a comarca of 32,016, and none of the four looks different from outside.
+
+**The population is INEC's Estimación 2022, not COD-PS** — Ecuador's call (§9bn), and easier
+here. COD-PS ships a 2021 UNFPA projection on INEC's superseded 2013 revision: **+11.24% on
+Heredia, -3.25% on Guanacaste**, a 14.5-point spread in both directions over seven units, and
+it is the older vintage. A trick worth stealing: **Cuadro 4.4 prints a growth-rate column
+beside its two population columns, and `cr_geo.py` recomputes the rate from the populations
+and asserts it matches the printed rate.** A digit typed wrong in either population column
+shows up as a rate that does not. A published table that carries a derived column has brought
+its own transcription check.
+
+### BOTH PRE-REGISTERED HELD-OUT BARS FAILED, AND NEITHER WAS MOVED
+
+`lapop.held_out`'s "zero of 20,000 sampled orderings" is unreachable at seven units — 5,040
+orderings in total, smallest attainable exact p 1.98e-4, against a rule demanding under
+1.50e-4 — which lapop.py's own docstring predicted for exactly this country. So the bar was
+set at **1e-3** from that arithmetic alone and **written to a file before `lapop.load` was
+called for `pais=6`**, which is §6.1 of `sources/pa.md` acted on rather than repeated.
+
+**Then it failed: exact p = 6.95e-3, seven times the bar.** The bar was not moved, and three
+measurements say the failure is POWER rather than decode:
+
+1. Costa Rica is San José, Alajuela and then **five provinces between 412,808 and 545,092**.
+   All 35 beating orderings keep the top two in place and only shuffle that shelf.
+2. Perturbing the true shares by lognormal noise and re-enumerating: at Costa Rica's own
+   observed deviation (sd of log(LAPOP share / population share) = **0.214**) a **correct**
+   decode fails a 1e-3 bar **82% of the time**, median p 4.8e-3. The observed 6.95e-3 is where
+   a correct decode is expected to land.
+3. And the same statistic across the module, whose decodes were settled independently:
+
+```
+   gt 22 units r=+0.9649 p<5e-05    sv 14 units r=+0.9685 p<5e-05
+   cr  7 units r=+0.9686 p=6.95e-3  pa 10 units r=+0.9957 p=1.29e-4    ec 23 units r=+0.9938 p<5e-05
+```
+
+**Costa Rica's correlation is El Salvador's to four decimal places and Guatemala's to three,
+and both of those clear the shared rule overwhelmingly. The only thing that differs is n.**
+Costa Rica also has the closest-to-proportional allocation of the five (0.214 against 0.254 to
+0.836), so its sample is the best in the set and its test is the only one that fails.
+
+> **The generalisable finding: at fewer than about ten units, a permutation test against
+> POPULATION cannot pin a decode, and the reason is the country's shape rather than the
+> survey.** What kills it is not unit count on its own but a population profile with a shelf —
+> several units of near-identical size. Panama, at ten units, failed for the opposite reason,
+> leverage from one dominant unit. Both are the same lesson: **enumerate, then look at WHICH
+> orderings beat, because the set of them says which failure you have.**
+
+**AND THE SAME FILE PRE-REGISTERED A SECOND BAR THAT WAS REPORTED NOWHERE UNTIL 2026-09-09.**
+Its secondary is an unweighted-by-size exact test, a Spearman of LAPOP's province share against
+the population share over the same 5,040 orderings at a bar of **1e-2**, written down because
+Panama had just shown that re-running a levels test with the dominant unit dropped is not an
+independent witness. It returns **rho = +0.5714, 503 of the 5,039 other orderings, exact p =
+9.98e-2**, and fails by a factor of ten. `cr.py`, `cr.md` §3 and `countries.py` all said *"the
+pre-registered test"* in the singular until a reviewer read the provenance file itself.
+**That is §6.1's failure one level in: the file is real, its mtime genuinely precedes every
+Costa Rican artefact on disk, and the record did not reconcile with it.** The conclusion
+survives — the power argument above was made about the levels test and covers a rank test *a
+fortiori*, since Spearman throws the magnitudes away and all five ranks that disagree are the
+five shelf provinces — and the correction is a paragraph in `cr.md` §3 rather than a rebuild.
+
+> **The rule worth carrying: a provenance file is only worth what the record reconciles with.**
+> Write the bars down first, then **read the file back at write-up time and report every test it
+> names, the failures included.** Pre-registering two tests and reporting the one that did
+> better fits the test to its answer using the very document written to prove that it was not,
+> which is strictly worse than pre-registering nothing.
+
+`sources/cr.py` therefore **reports** the population test and asserts on a joint test that
+adds **urbanisation** as a second held-out variable — LAPOP's `ur` flag against Kontur hex
+density, between-province variance 126x the sampling variance on it, so it has power exactly
+where population has none. 35 orderings beat on population, 71 on urbanisation, **3 on both**,
+exact p 5.95e-4. **It is POST HOC and is labelled as such in the module, in `countries.py` and
+in `cr.md`**, because it was built after the pre-registered levels test came back undecisive
+and before anyone had noticed the pre-registered secondary was outstanding too. What the decode
+rests on is the value labels.
+
+### AND THE LARGEST CATEGORY IN THE COUNTRY DOES NOT CARRY ITS OWN GEOGRAPHY
+
+Split-half bar `1.96/sqrt(6) = +0.80`, the highest in the module. `Católico`, **63.06% of
+Costa Rica, returns +0.7857 and fails**, while `Evangélica` (+1.00), `Protestante` (+0.86),
+`Ninguna` (+0.86) and `Testigos de Jehová` (+0.81) pass. Applied as written, no override.
+
+The failure is real rather than a near miss: **nine of the twelve rank-difference points are
+Guanacaste alone**, falling from the 4th most Catholic province to the 7th as its Catholic
+share goes 63.41% to 48.22% between the wave halves. And it costs little, because `Católico`
+is 94.9% of the tail `lapop.build` spreads through each province's residual, so it is drawn as
+very nearly one minus the four that passed: **at most 2.54 points from its measured share in
+any province**, 1.47 on average.
+
+**`Testigos de Jehová` at 1.20% is the smallest cell this module has ever placed on its own
+geography**, and it is simultaneously a floor, because the box was off the 2023 card — 1.90%,
+1.10%, 1.83%, then exactly zero — so the late half of its split-half is carried by 2014 alone.
+Both facts are in `note_public`.
+
+### AND LEAVE-ONE-OUT SURVIVES ONLY PARTLY, WHICH IS WHAT SEVEN UNITS COSTS
+
+Panama ran leave-one-out at ten units and all three of its geographies held. Costa Rica's do
+not, and the section says so rather than reporting the full-sample numbers alone:
+
+```
+  category                  full(7)   LOO min   fixed 6-unit bar +0.88   exact-null 6-unit +0.77
+  Evangélica y Pentecostal   +1.00     +1.00    survives                 survives
+  Protestante Tradicional    +0.86     +0.77    falls under              exactly on it
+  Ninguna (creyente)         +0.86     +0.77    falls under              exactly on it
+  Testigos de Jehová         +0.81     +0.71    falls under              FALLS UNDER
+```
+
+**Two bars, because the fixed one RISES as units are removed** — `1.96/sqrt(n-1)` is +0.80 at
+seven and +0.88 at six — so leave-one-out against it takes data away and raises the requirement
+at the same time. Against the exact null (+0.7714 at six units) only `Testigos de Jehová`
+genuinely fails, which is consistent with it being both the smallest cell this module places
+and one whose late wave-half is carried by 2014 alone. **It stays drawn**, because the stated
+test is the split-half on all seven and it passed, and withdrawing a category after seeing a
+robustness diagnostic is the same error as moving a bar to make one pass.
+
+> **The rule worth carrying: report leave-one-out against a bar that does not move with n, or
+> report both.** A fixed `1.96/sqrt(n-1)` makes every leave-one-out look worse than it is, and
+> the effect is largest exactly where the check matters most.
+
+### AND THE §3.5 LEAN LIVES SOMEWHERE UNUSUAL WHEN A COUNTRY EXCLUDES NOTHING
+
+Costa Rica has no `gap=` and `gap_share.py` refuses it outright, so §3.5's residual does not
+exist in its usual form. **The hole is one level up, in the survey**: `lapop.load` drops the
+2.62% of respondents with no usable religion answer and `lapop.build` then applies the
+answerers' shares to the whole population, which **absorbs** the non-response rather than
+excluding it. Absorbing is only neutral if the non-responders resemble the responders, so it
+is a §3.5 question wearing different clothes and it was asked: the per-province non-response
+rate runs 1.58% in Alajuela to 4.75% in Cartago, its largest correlation with any drawn share
+is **-0.63** against a 5% critical value of about 0.75 on seven points, and leave-one-out shows
+**Cartago driving every one of them** (dropping it takes Catholic from +0.40 to -0.31). So the
+direction is not established and `note_public` claims none. **A country that excludes nothing
+still has a §3.5 question if its source dropped anybody.**
+
+### THE BAR ITSELF IS STRICTER THAN IT SAYS, AND THAT IS `ask/007-cr`
+
+`lapop.stability`'s docstring says the bar is *"what it takes to be distinguishable from zero
+at 95%"*. `1.96/sqrt(n-1)` is the asymptotic standard error and it is not that at any unit
+count this module uses. Enumerating the exact null:
+
+```
+    n    fixed bar   exact null 95th   the fixed bar is really
+    7      0.8002        0.6786        a 0.017-level test
+   10      0.6533        0.5515        a 0.022-level test
+   14      0.5436        0.4593        a 0.023-level test
+   22      0.4277        0.3586        a 0.024-level test
+   23      0.4179        0.3508        a 0.024-level test
+```
+
+Checked against all five countries, **exactly two categories sit in the gap**: Costa Rica's
+`Católico` (+0.7857) and El Salvador's `Protestante Tradicional` (+0.5165). Nothing else in the
+module moves at any of the three thresholds. That is a rule everyone shares and it would
+re-draw two countries, so it is Anita's (§3) and the country shipped on the bar as written.
+
+**This is §9co's finding arriving from the other direction on the same day**, and the two
+should be read together: Kyrgyzstan found the fixed bar wrong for a DIFFERENT statistic and
+built its own null; Costa Rica finds it wrong for the STANDARD statistic, where the exact null
+is enumerable in closed form. Neither is a licence to move a bar to make something pass.
+
+---
+
+## 9cq. Jordan wired — 2026-09-09. THREE COLUMNS OF ONE SURVEY POOLED ON A LABEL THAT ONE WAVE SPELLS ITS OWN WAY, and a whole wave that was invisible to every country built from it
+
+`sources/jo.md` is the full record; `taxonomy/jo2024.py` is the mapping. **11,937,000 people,
+twelve governorates, two nodes, every row `modelled`, no gap** — all twelve governorates are
+sampled in all nine waves, so every person the Department of Statistics counts gets a dot.
+Muslim **98.60%**, Christian **1.40%**. Second country on the Arab Barometer after Egypt
+(§9bz), and the first of §11ag row A's four.
+
+### The state route is CLOSED and not missing, and the questionnaires are why
+
+§11r's oracle says Jordan has never forwarded a religion tabulation to the UN, which is a floor
+and not a fact. What settles it is DOS's own paper. **Both of Jordan's last two censuses ask
+religion.** The 2015 form's household-members block runs items 201-216 and **item 208 is
+`Religion`, `1.mustim 2.chistian 3.other`** in DOS's own spelling; the 2004 Private Household
+Register asks **`الديانة`, `1. الإسلام 2. المسيحية 3. أخرى`** in the same position. Both PDFs are
+linked from the census pages on `dosweb.dos.gov.jo`.
+
+**And neither answer is published anywhere.** The 2015 census's table set is 133 tables in ten
+sections and the 2004 set is 165 in eight; religion is in neither. The `jorinfo.dos.gov.jo`
+PxWeb databank was enumerated in full — **520 tables** — and the thirteen that mention a
+religion word are all ISIC division 94, *activities of religious organisations*, inside economic
+tables. `[[reference_census_questionnaire]]` is the whole method here: the questionnaire is what
+turns *"I could not find it"* into *"they asked and did not publish"*.
+
+Two reusable notes on that office. **The PxWeb API is at `/Databank/api/v1/en/` and not under
+`/pxweb/`** — Ghana's trap on a different host, and `/Databank/pxweb/api/v1/en/` returns **HTTP
+500**, which reads as a broken API rather than a wrong path. And it **rate-limits at about
+thirty requests with a 429 carrying no `Retry-After`**; the first pass of the sweep here
+returned 48 tables and looked complete. **There is no COD for Jordan at all** — `cod-ab-jor`,
+`cod-ps-jor` and `cod-em-jor` all 404 and the HDX Jordan group has no administrative or
+population COD of any kind — so boundaries are geoBoundaries and populations are DOS's own
+end-2025 estimate, which is the better source anyway and is the freshest denominator on this map.
+
+### THE FIND, AND IT IS ABOUT EVERY ARAB BAROMETER COUNTRY RATHER THAN ABOUT JORDAN
+
+**Wave II was silently absent from every country ever built from this survey.** Wave II, and
+only wave II, prints its `country` value labels as **`8. Jordan`, `5. Egypt`, `17. Saudi
+Arabia`** — the numeric code repeated inside the label. `ab.load` selected a country with
+`label.lower() == country.lower()`, matched nothing, and fell through the `continue` that exists
+for a wave which did not field the country. No error, no warning, a smaller pool than the file
+contains. Wave II carries `q1012 Religion`, `q1 Province/Governorate/State` and a weight:
+**1,188 Jordanians over all twelve governorates and 1,219 Egyptians over twenty-one.**
+
+That is `[[reference_pooled_survey_labels]]` on a **third** column of this one survey, and the
+three together are the shape of the trap:
+
+| column | how it moves between waves | what catches it |
+|---|---|---|
+| the religion CODE | code 3 is `Other` in three waves and `Jewish` in wave V (§9bz) | `ab.load` decodes through each wave's own labels |
+| the religion WORDING | `Other`/`other`, `refused`/`Refused to answer` | `ab.assert_one_wording` |
+| the COUNTRY | `8. Jordan` in wave II alone | **nothing, until now** — `ab.country_key` |
+
+**`ab.fold` could not see wave II's answers either.** `1. muslim` and `Muslim` do not collide
+under a fold that strips only case, spacing and edge punctuation, so `assert_one_wording` said
+nothing and the pool would have carried Islam as **two categories with every total still adding
+up**. `fold` now strips a leading `<n>.` on the same narrow argument as `country_key`. It is
+deliberately not a fold wide enough to merge `Refused to answer` with `refused`, because one
+that wide would also merge Lebanon's `Something else: SPECIFY_______` into its `Other`; that
+pair is resolved instead by a new `recode=` argument to `ab.load`, applied before
+`assert_one_wording` and raising on a key the pool does not contain, so a merge is a written
+decision in the country module rather than a loosened rule in the shared one.
+
+**EGYPT IS NOT REBUILT ON THE DEEPER POOL.** Adding wave II would move an already-drawn
+country's numbers, which is Anita's call and not a side effect of a shared-module fix
+(AGENT_BRIEF §3). `sources/eg.py` now pins `waves=["III","IV","V","VII"]` with the reason at the
+point of use, and `data/normalized/eg.csv` is **byte-identical** after the change (sha256
+verified before and after). For whoever picks it up: wave II reads **5.83% Christian for Egypt
+against the 5.93% Egypt is drawn on**, so it does not look like a correction waiting to happen;
+what it would change is every governorate cell, the split-half and the `2013-2022` vintage.
+**The same applies to Lebanon, Iraq and Yemen, which are not yet drawn and should simply take
+the wave.**
+
+### WAVE I ASKS THE QUESTION AND STILL CANNOT BE USED, WHICH ARE TWO DIFFERENT FACTS
+
+§11ag left this open on purpose. `ab.load` raises on a wave with the country's rows and no
+`Q1012`, and wave I is that wave for every country. The answer is neither of the two obvious
+ones. **Wave I asks religion**, as `q711. religion`, `1 muslim 2 christian 3 sunni muslim
+(lebanon & bahrain) 4 shiite muslim (lebanon & bahrain) 5 druze (lebanon)`, answered by 1,142 of
+Jordan's 1,143 — it simply predates the renumbering that moved the demographics block to
+`q10xx`. **And it still cannot enter a pool cut by governorate, because wave I has 181 columns
+and not one of them is subnational.** No `q1`, no region, no district, no PSU; `country` is the
+finest geography in the file. So it is excluded through a new `waves=` argument, which states
+the choice, rather than being left to fail as though the file were broken. It is worth one line
+as an external check and gets one: **unweighted, wave I reads 1.57% Christian for Jordan**,
+inside the band the other nine waves occupy.
+
+### THE GOVERNORATE CODE MEANS THREE DIFFERENT THINGS, WHICH MAKES IT A WITNESS
+
+`Q1`'s numeric code across the nine Jordanian waves:
+
+* waves **II and III**: `3501` to `3512`, Jordan's governorates in their official order;
+* waves **V, VII and VIII**: `800` + Jordan's own governorate number, so `80011` is Amman and
+  `80034` is Aqaba;
+* waves **IV, VI-1, VI-2 and VI-3**: an arbitrary `8001..8012` that is **not even the same
+  between IV and VI**.
+
+So the code can never be the pooling key. In the six waves where it decodes it is instead an
+independent test of the harmonised names, and that is the check
+`[[reference_name_join_wrong_neighbour]]` asks for: **10,175 respondents, every one landing on
+the same governorate by name and by code, zero disagreements.** A permutation of the name table
+preserves every total and is invisible to arithmetic; it cannot survive this. **Try the same on
+Lebanon, Iraq and Yemen before trusting a name join there.**
+
+Two labels are the mechanism rather than untidiness, and both are §9bz's `The Lake` again:
+**`The capital` and `العاصمة` are Amman** (Muhafazat al-Asima; DOS itself prints العاصمة against
+`Amman` in English), and **wave VII prints Jordan's governorates in Arabic** while the other
+eight print them in English. 44 distinct `Q1` strings for twelve units.
+
+### THE SPLIT-HALF PASSES THINLY AND THE BAR WAS NOT MOVED
+
+    Muslim      98.59%   spearman +0.617   bar +0.591 on 12 units
+    Christian    1.41%   spearman +0.617   bar +0.591 on 12 units
+
+The two are identical **by construction, not by corroboration**: a two-box card makes the Muslim
+share one minus the Christian share, so the rankings are exact reverses. Leave-one-out gives
+**+0.509 to +0.717**, and **dropping Balqa alone takes it to +0.509**. §14.16's bar is shared and
+was applied as written; what the fragility bought is a sentence in `note_public` and this
+paragraph, not a different verdict.
+
+**And `ask/007-cr` was checked against this country rather than assumed irrelevant, which is
+the transferable bit.** That ask (2026-09-08) shows `1.96/sqrt(n-1)` is stricter than the exact
+permutation null at every unit count and worst where units are fewest. On its own script, at
+Jordan's counts, the exact 95th percentile is **+0.4965 at twelve units** and **+0.5273 at
+eleven**, so the fixed bar is a **0.023-level** test here rather than the advertised 0.05.
+**Jordan's +0.617 clears the fixed bar, the exact 95th AND the exact 97.5th (+0.5804)**, so
+this country does not move whichever way that ask is ruled and the pass is more comfortable on
+the honest null than on the applied one. The ask's blast-radius list is five LAPOP countries;
+**this is the first Arab Barometer country checked against it, and it adds nothing to that
+list.** What no choice of bar addresses is Balqa's leverage: +0.509 on eleven units fails all
+three bars. Standing behind it: the twelve governorates differ at
+**p=2.6e-18**, and Balqa, Madaba and Ajloun together read **3.50% against 1.41%** elsewhere at
+**p=4.1e-10**. The alternative is not a more careful map — with neither answer carrying,
+`ab.build` draws every governorate at the national rate, which the data contradicts at
+p=2.6e-18.
+
+**Why it is as thin as it is, and this is the part that transfers.** The wave cut falls after
+wave IV, so the early half is II, III and IV, and it contains **wave III, whose Jordanian
+Christian share is 0.34% weighted against 1.0-2.1% in every other wave** — ten Christians in
+1,795. One anomalous wave is a third of the early half and most of its noise. The wave is kept:
+dropping a wave because its answer is inconvenient is the one move this construction must not
+make.
+
+### A §3.5 LEAN CHECK HAS TO RUN ON HARMONISED UNITS, AND THE SIGN FLIPPED WHEN IT DID
+
+Eleven Jordanians refused `Q1012` and are dropped. §3.5 asks which way that tilts the country,
+so the refused share per unit is correlated against the Christian share per unit. Run against
+the **raw `Q1` label** it reported 44 units and **r = −0.051**; run against the harmonised
+twelve it reports **r = +0.361**. Eleven refusals spread over forty-four spellings of twelve
+places is not a measurement of anything, and the sign is the tell.
+
+**Leave-one-out is what actually settles it: +0.031 to +0.683** depending on which single
+governorate is dropped. That range is what a correlation looks like when eleven people are
+asked to carry it across twelve units, and it is the reason the direction is reported and not
+acted on. §14.16's stability test already carries a loud warning that it must be run after
+harmonisation (§9bz's Egypt reported noise as a negative for exactly this reason); **the lean
+check needs the same warning and did not have one.**
+
+### THE UNIVERSE IS NOT THE SAME UNIVERSE IN EVERY WAVE, AND ONE WAVE MEASURES THE DIFFERENCE
+
+Jordan's 2015 census counted 9,531,712 residents of whom **2,918,125 were non-Jordanian**, so
+roughly three in ten are not citizens. DOS's denominator counts all of them; the survey mostly
+does not. **Wave IV is the only wave that sampled them** — its `q1020jo` records **303 Syrians
+among 1,500 respondents**, 20.2%, about the country's own non-citizen share — and it measures
+them as different: **0 of 303 Syrian-origin respondents are Christian against 28 of 1,197
+Jordanian- and Palestinian-origin ones in the same wave**, chi-square p=0.014.
+
+Nothing corrects for it (§14.4 rule 1: no published source gives the religion of Jordan's
+non-citizens at any geography). What §3.5 asks for is done instead: the shares are applied to
+the whole resident population and `note_public` says the Christian figure is a **ceiling**.
+`sources/jo.py::origins` re-reads the measurement out of the `.sav` on every build and raises if
+wave IV stops carrying either variable, so it cannot be quoted after it has stopped being true.
+**This is a question to ask of Lebanon and Iraq too**, where the non-citizen populations are
+large and differently composed.
+
+### Content, and the one figure that reads wrong
+
+**Christians 1.40%.** Balqa **4.33%** (Fuheis, Mahis, Salt), Ajloun 3.67%, Karak 2.32%, against
+Zarqa 0.66% and Ma'an 0.25%. **Amman is only 1.57% and holds 47.1% of all the Christians drawn**,
+so the highest share and the largest community are not the same place. Jerash and Tafilah draw
+**no Christians at all**, which is the sample rather than the country: none of their 480 and 386
+respondents answered Christian, consistent with anything up to about 0.6% and 0.8%.
+
+**Madaba is the figure that reads wrong and it is flagged rather than adjusted.** It draws at
+**0.51%**, lowest of the settled governorates, and Madaba town is one of the oldest Christian
+centres in Jordan. Five Christians in 455 interviews gives ±0.65 points, so the survey cannot
+separate Madaba from 2%. `note_public` says so.
+
+**Against the outside**, the pooled weighted share is **1.41%** where the only external estimate
+— Eissa Masarweh's 197,000 resident Jordanian Christians at mid-2021, 2.7% of Jordanians, which
+is about 1.8% of residents — implies more. So this instrument reads about **0.8x** the outside
+number. §11ad's warning case is LAPOP at **0.21x** a census on a comparable cell in Suriname and
+Egypt's equivalent ratio was about 1.0x, so 0.8x is a different order of thing from §11ad's; it
+is stated in the record and not corrected.
+
+### Drawn at governorate without a new ask
+
+`ask/answered/001-eg` settled §14.4 rule 2 for Egypt at governorate, *because governorates are
+pretty big*, and queue.md §11ag row A records Anita unblocking this group directly: **build them,
+and decide what to show once there is something to show**, with **Lebanon** named as the one to
+raise with her. Jordan is the weakest case in the group for rule 2 and the call was not close:
+**twelve governorates for 11.9 million people** against Egypt's twenty-seven, the smallest
+holding 120,300; Jordan reserves parliamentary seats for Christians and its churches publish
+their own counts, so the community's geography is not withheld the way Egypt's is; and
+governorate is the instrument's ceiling anyway. `sources/jo.md` §7 has it, and says what
+reversing it costs, which is two lines.
+
+---
+
+## 9cr. Uganda wired — 2026-09-09. THE BEST CATEGORY LIST IN AFRICA HAS NO GEOGRAPHY AND THE 2002 CENSUS DID; plus an office that revised one district by 36% and never revised its religion table
+
+`queue.md` priced Uganda at *"regions"*, off §11b's finding that the 2024 census publishes
+religion nationally only, with DHS or a UBOS microdata email as the routes to any
+geography. §11b was right about 2024 and it is right today. **It is wrong about Uganda,
+because the 2002 census published religion by DISTRICT and the file is not on any current
+UBOS page.** Drawn on **56 districts, 7 categories, 24,433,132 people**, 436k a unit.
+Full record in `sources/ug.md`.
+
+### The table, and where a retired office tree hides things
+
+`Table B7: Religion by District for the Population` is **Annex 2** of the 2002 census,
+published as its own two-page PDF in
+`ubos.org/onlinefiles/uploads/ubos/census_tabulations/` — a directory of fifteen loose
+annex tables on the **retired** ubos.org tree. The live site 301s that path away, none of
+the 703 documents in the current publications catalogue is any of them, and the only way
+in is the Wayback Machine's `id_` replay.
+
+**The route that found it generalises and is worth stealing.** Pull every `.pdf` URL ever
+archived under a domain from the **Wayback CDX API** (`url=ubos.org&matchType=domain&
+filter=original:.*\.pdf&collapse=urlkey` gave 8,751), then list the DIRECTORIES those URLs
+sit in rather than reading the filenames. `census_tabulations/` and
+`census_2014_regional_reports/` and `2009_HLG_ Abstract_printed/` fall straight out, and
+none of them is reachable from anything the office publishes now. That is
+[[reference_dead_stats_office]] pointed at a live office's dead tree.
+
+### What was checked for 2024 first, because a current table would have won outright
+
+Nine things, all opened rather than searched for, and the negative is much stronger than
+§11b's:
+
+* **Final Report Volume 1**, 434 pages. Religion on fourteen of them, never with a
+  geography. Table 3.4 in the same chapter gives birth registration **by sub-region**, so
+  the omission is a choice.
+* **`statistics.ubos.org/nphc` is a real query engine, not a document set** —
+  `api/get_profile_data.php`, `api/get_geospatial_data.php` and six location endpoints,
+  reaching **parish**. It serves **fifteen tables** and religion is in none of them.
+  `format=all` and `format=summary` return the same fifteen; the map page's indicator
+  dropdown has sixteen options and no religion; the dashboard's `Religion Statistics` tab
+  exists and its chart script, `scripts/social.js`, is **a zero-byte file**.
+* **All seventeen sub-region profile reports** (Acholi is 412 pages, district by district
+  to sub-county): the same fifteen tables.
+* **The Community Module Report, 1,335 pages**, which looked like the find of the day:
+  `religio` matches 343 of them. Every one is `Religious` or `Religious/NGO` as an
+  **ownership class** for a school or a clinic. `worship`, `church` and `mosque` match
+  **zero** pages. A word count is not a finding.
+* **703 documents** swept off `ubos.org` by paging `?pagename=explore-publications&p_id=`
+  1 to 139. None mentions religion.
+* 2014 Main Report (national only), the 2014 Area Specific Profiles (one per district, no
+  religion), the 2009 district statistical abstracts (133 archived, no religion), and the
+  2002 analytical report, which stops at **four regions**.
+
+**`ubosgis.ubos.org`, the office's ArcGIS portal, answers 502 to every path** as of
+2026-09-09 and is the obvious place a religion layer could still be. Worth a retry.
+
+### The boundary rebuild, which is the transferable method here
+
+**No 2002-vintage boundary file for Uganda exists anywhere** — COD-AB is 2020 (135
+districts), geoBoundaries is current, HDX has no older vintage, and the office GIS is
+down. Uganda has gone 56 → 112 → 135 → 146 districts since. spec §8.1 still wants the
+vintage the data was published on.
+
+So the 56 are dissolved out of the 135, and **which of the 135 belongs to which of the 56
+comes out of the census itself**: Table C1 of the same annex series prints the whole 2002
+hierarchy, district → county → sub-county, for **995 named places**, and each name votes
+for the district it is printed under. COD-AB's 208 counties and 1,520 sub-counties are
+matched against those names.
+
+**The proof is what makes it usable, and it is exact.** Table B1 gives the 1991 census
+redistributed onto the 56 districts of 2002; Table A3 of the **2014** Main Report gives
+the 1991 census redistributed onto the 112 districts of 2014. Both national totals are
+16,671,705, so it is one universe. Grouping A3 by the concordance reproduces **all 56 of
+B1's 1991 figures exactly, on 56 distinct values**, from a different publication of a
+different census. `sources/ug_geo.py` refuses to write if that stops holding.
+
+**It caught a real error on the first run.** Detecting C1's district headers by indent
+alone failed twice: C1 prints a sub-county called `Sembabule T.C.` AT the district indent
+and spells the district `Ssembabule`, and Bugiri's header lost its figures to a line wrap.
+The result was that every one of Bugiri's sub-counties voted for **Wakiso**, the district
+printed above it — invisible in any list of names, and exactly
+[[reference_name_join_wrong_neighbour]]. The 1991 identity failed on two districts and
+named them both. Headers are now matched by NAME against the 56 Table B7 prints, first
+occurrence winning.
+
+### The finding worth carrying: the same proof, run on the other column, audits the office
+
+Run the identical test on the **2002** column and 55 districts still agree to the person.
+**Kotido does not: 591,889 in the 2002 tabulations against 377,102 in the 2014 report**, a
+cut of 214,787 people, 36% of the district — and that single district is the ENTIRE
+national difference between the two publications (24,442,084 against 24,227,297). Kotido's
+1991 figure agrees, so it is a revision of one count and not a boundary artefact.
+
+**A third witness with no lineage in common agrees.** Kontur's 2023 population grid reads
+**1.07x** Kotido's 2002 census figure where the national middle is about 1.9x and no other
+district is under 0.78x. On the revised 377,102 it would be 1.68x, in the normal range.
+A placement grid is not usually evidence about anything; per-unit ratios against the source
+are cheap and this is the second time today's tree has had one say something.
+
+**Kotido matters out of all proportion to its size**: it holds 22.5% of the national
+`Other` cell and **33.1%** of the no-religion cell, so both national shares depend on a
+count UBOS withdrew (3.04% / 0.87% with it, 2.41% / 0.60% without).
+
+**It is drawn as published, every row `measured`,** and this is the decision to argue with
+if anyone wants to. Scaling the seven cells by 0.6371 was considered and refused under
+**§14.4 rule 1** — *never estimate a magnitude a source does not publish* — because UBOS
+revised a **population** and never revised a religion split, and the factor would invent
+seven counts in the one district whose composition is least like the country's. A reviewer
+agent was given the files and not the reasoning and reached the same answer; it found the
+nearest precedent to be **§9az-i's Côte d'Ivoire**, where two ANStat releases of one census
+disagree by 159,208 people and one release was used whole, and confirmed that **no drawn
+country on this map has ever had a published census figure altered** (Estonia's typo is
+deliberately reproduced; §14.23's Hainan rescale marks every row `derived`). `note_public`
+carries both national figures instead.
+
+### Two smaller things
+
+**`None` is a literal category name and pandas deletes it — fourth sighting** after `ph`,
+`gy` and `zw`, and it cost twenty minutes here before the module existed. 212,388
+irreligious Ugandans, and in Uganda they are not where a reader would guess: **half of that
+cell is in Karamoja**, where `Other` peaks in the same three districts. A census offering
+five churches and Islam to a population that practises neither records the answer in two
+boxes.
+
+**`www.ubos.org` serves an incomplete certificate chain.** `curl` without `-k` exits 60 on
+every URL and the host reads as dead; it is not, it is just slow. `requests` needs
+`verify=False`. Add it to the list of things a 000 means.
+
+### The ask, and the thing about it that is not just a registration
+
+`ask/008-ug` — `microdata.ubos.org:7070` has NPHC 2024 and 2014 behind *"user must be
+logged in… register for a free account"*, and the 2024 unit records at parish level with
+ten categories would replace this whole country and be the finest religion geography in
+Africa on this map. That is an account, so it is Anita's (§3).
+
+**But the gate is also not enforced**, and that half is why it is an ask rather than a
+note. Sweeping `catalog/74/download/<int>` for ids 1-400 with `HEAD` returns 200 and a
+`Content-Disposition` filename, with no cookie and no referer, for about 200 files —
+including `cpro_extract_Population_record_data.rar` (429 MB) and the 10% file (840 MB) — and
+a 512-byte `Range` request on the last returns a valid `<stata_dta>` header, so it is the
+file and not a login page. **Nothing beyond those 512 bytes was taken**, and nothing from
+that route is on disk except two PDFs that `ubos.org` publishes openly anyway. The portal
+asked for a login and meant it, whatever its web server does. This is
+[[reference_cms_download_id_sweep]] landing on a case where the right answer is to stop.

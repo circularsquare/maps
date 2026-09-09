@@ -320,6 +320,11 @@ file "Maronite Catholic" to the eastern-Catholic node, and `bg2021`, `ee2021`, `
 and `ro2021` do all use `christianity.oriental` for their national Armenian churches. The
 screenshot is clean, with dots on land, the four cities where they should be and the north empty.
 
+*(That Armenian sentence stopped being true on 2026-09-08. All six, Cyprus included, moved to
+the new `christianity.oriental.armenian` when Anita ruled on `ask/004-am`; spec §2.7. Cyprus
+stops at the general node and does NOT go to `.armenian.cilicia`, even though the Prelature of
+Cyprus is Cilician, because CYSTAT prints `Armenian church` and no catholicosate.)*
+
 **The one thing to fix is the spread figures in §3 above and in `note_public`.** They do not
 reproduce from `data/normalized/cy.csv`, and they are presented as a range when they are a
 trimmed band.
@@ -359,5 +364,18 @@ in §3's table, the true community min and max are pinned to that table's own co
 the honest phrasing is available without any new computation, either as "across the middle 90% of
 communities" with one denominator stated, or by naming the group shares the spread is bounded by.
 
-Not fixed here, because choosing the band and the denominator is a wording call that belongs to
-whoever owns the note rather than to a reviewer, and `note_public` is asserted at import.
+Not fixed by the review, because choosing the band and the denominator is a wording call that
+belongs to whoever owns the note rather than to a reviewer, and `note_public` is asserted at
+import.
+
+**Fixed 2026-09-08.** Every figure in the table above was recomputed from
+`data/normalized/cy.csv` and reproduces to the digit. The band chosen is **the 102 communities
+of 1,000 people or more, on the drawn denominator**, in preference to a percentile: a
+percentile band is what caused this, and a population threshold has ends that are named places.
+`note_public` now reads *"Across the 102 communities of a thousand people or more, Islam runs
+from 0.9% of the answers given up to 10.2% at Pegeia on the Pafos coast and Buddhism from 0.2%
+to 4.8%"*, with a clause saying the smaller villages reach further and are single-figure
+populations. §3 carries the full table, including the true all-396 min and max, and the
+convex-combination bound that pins any community's share inside the citizenship-group columns.
+The three communities the review named as passing the old ceiling, Pegeia 10.20%, Tala 8.67%
+and Pissouri 8.07%, are now inside the stated band rather than outside it.

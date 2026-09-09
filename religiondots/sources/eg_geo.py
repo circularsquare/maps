@@ -50,7 +50,7 @@ hold them constant.
 
 The two sides transliterate differently and neither is wrong: COD says `Suhag`, `Kalyoubia`,
 `Kafr El-Shikh`, `Sharkia`, `Behera`; CAPMAS says `Sohag`, `Qalyubia`, `Kafr ElSheikh`,
-`ElSharqeya`, `Behaira`. **So the English is not a key here**, and this file uses three
+`ElSharqeya`, `Behaira`. **So the English is not a key here**, and this file uses four
 witnesses instead:
 
   1. an authored `GOVERNORATES` table, pcode -> (CAPMAS id, display name), so a change on
@@ -58,11 +58,21 @@ witnesses instead:
   2. the **Arabic** name on each pcode against the Arabic name CAPMAS returns for that id,
      normalised for alef and ya and ta-marbuta only, which is a signal completely independent
      of the authored table;
-  3. density: New Valley must come out the sparsest governorate and Cairo the densest.
+  3. **CAPMAS's own area against COD's**, per governorate. Egypt's run from 964 km2 to
+     429,151 km2, a factor of 445, so a permutation cannot survive it even loosely;
+  4. the five desert governorates (New Valley, Matrouh, Red Sea, North and South Sinai) must
+     come out the five sparsest, because everyone else lives in the valley and the delta.
 
-`sources/ni_geo.py` is why there are three. Nicaragua's code join looked perfect, matched 145
+`sources/ni_geo.py` is why there are four. Nicaragua's code join looked perfect, matched 145
 of 153, and silently sent Waspam's Moravians inland. A permutation preserves every total, so
 no arithmetic check can find one; two independent keys can.
+
+**Witness 4 was written the wrong way round first and it is worth the line.** The obvious
+form is *"New Valley sparsest, Cairo densest"*, and Cairo is not the densest governorate in
+Egypt: the Cairo governorate carries 3,085 km2 of desert expansion east of the city, while
+Qalyubia is 1,336 km2 containing Shubra El Kheima. An assertion that encodes a plausible
+belief rather than a measured fact fails on correct data, and the ten minutes it costs are
+spent looking for a join error that is not there.
 
 Usage:
     python sources/eg_geo.py --fetch    one ~15 MB zip from HDX, then 27 small API calls
@@ -155,6 +165,11 @@ def ar(s):
     return s.replace("مدينه", "", 1) if s.startswith("مدينه") else s
 
 
+def _area(s):
+    """CAPMAS prints areas with the ARABIC decimal separator U+066B, so `float()` refuses."""
+    return float(str(s).replace("٫", ".").replace(",", ""))
+
+
 def _ctx():
     ctx = ssl.create_default_context()
     # capmas.gov.eg:8080 serves the API behind a chain this machine does not complete. The
@@ -207,7 +222,7 @@ def fetch():
             raise SystemExit(f"api/GovernoratePopulation gave {pop!r} for id={g['id']}")
         en = g["governorateTranslations"][0]["name"] if g.get("governorateTranslations") else ""
         rows.append({"id": g["id"], "name_ar": g["name"], "name_en": en,
-                     "population": int(round(pop))})
+                     "area_sqkm": _area(g.get("area")), "population": int(round(pop))})
         print(f"    {g['id']:>3}  {en:<16} {int(round(pop)):>12,}")
     with open(POP_CACHE, "w", encoding="utf-8") as f:
         json.dump({"date": POP_DATE, "source": CAPMAS, "governorates": rows}, f,
@@ -268,18 +283,53 @@ def main():
     g["geo_id"] = g["pcode"]
     g["name"] = g["pcode"].map(lambda p: GOVERNORATES[p][1])
     g["pop"] = g["pcode"].map(lambda p: by_id[GOVERNORATES[p][0]]["population"]).astype("int64")
-    print(f"  witness 3 pending — CAPMAS {POP_DATE}: {g['pop'].sum():,} people")
 
-    # ---- witness 3: the shape of the population, which a permutation would break ----
+    # ---- witness 3: CAPMAS's own AREA against COD's, which neither of the first two saw ----
+    # Egypt's governorates run from 964 km2 (Damietta) to 429,151 km2 (New Valley), a factor
+    # of 445, so a permuted pairing cannot survive this even loosely. It is a third signal
+    # rather than a fourth reading of the same one: COD measures its polygons and CAPMAS
+    # publishes the statute areas, and the two agree only if the ids are paired right.
+    #
+    # It is a RANK correlation with a permutation behind it rather than a per-unit tolerance,
+    # because two of the twenty-seven genuinely disagree and neither is an error: Luxor
+    # became a governorate in 2009 out of Qena, CAPMAS gives it 5,428 km2 of the desert
+    # hinterland and COD's polygon is the 596 km2 river strip, with the difference sitting
+    # inside COD's Qena. A per-unit band tight enough to catch a permutation fails on that,
+    # and one loose enough to pass it catches nothing.
+    import numpy as np
+    from scipy import stats
+
+    g["cap_area"] = g["pcode"].map(lambda p: by_id[GOVERNORATES[p][0]]["area_sqkm"])
+    g["area_ratio"] = g["cap_area"] / g["area_sqkm"]
+    rho = stats.spearmanr(g["cap_area"], g["area_sqkm"]).statistic
+    rng = np.random.default_rng(0)
+    a, b = g["cap_area"].to_numpy(), g["area_sqkm"].to_numpy()
+    perm = np.array([stats.spearmanr(a, rng.permutation(b)).statistic for _ in range(5000)])
+    beaten = int((perm >= rho).sum())
+    off = g.reindex((g["area_ratio"] - 1).abs().sort_values(ascending=False).index).head(3)
+    print(f"  witness 3 — CAPMAS area vs COD area over 27: rho = {rho:+.3f}, and {beaten} of "
+          f"5,000 random pairings reach it (best random {perm.max():+.3f})")
+    for _i, r in off.iterrows():
+        print(f"      {r['name']:<16} CAPMAS {r['cap_area']:>10,.0f} km2   COD "
+              f"{r['area_sqkm']:>10,.0f} km2   {r['area_ratio']:.2f}x")
+    if beaten:
+        raise SystemExit("COD's areas and CAPMAS's do not pin this pairing — a permutation "
+                         "of the ids would do as well. STOP.")
+
+    # ---- witness 4: and the shape of the population on the ground ----
+    # Everybody in Egypt lives in the Nile valley and the delta. The five governorates that
+    # are mostly desert must be the five sparsest, and nothing else can be.
     g["density"] = g["pop"] / g["area_sqkm"]
-    lo = g.loc[g["density"].idxmin(), "name"]
-    hi = g.loc[g["density"].idxmax(), "name"]
-    print(f"    sparsest {lo!r} at {g['density'].min():.2f}/km2, densest {hi!r} at "
-          f"{g['density'].max():,.0f}/km2")
-    if lo != "New Valley" or hi != "Cairo":
-        raise SystemExit("New Valley is not the sparsest governorate or Cairo is not the "
-                         "densest — the population join is permuted")
-    print("  witness 3 — New Valley sparsest, Cairo densest")
+    frontier = {"New Valley", "Matrouh", "Red Sea", "South Sinai", "North Sinai"}
+    order = g.sort_values("density")
+    print(f"  witness 4 — sparsest five: "
+          f"{', '.join(f'{n} {d:.1f}/km2' for n, d in zip(order['name'][:5], order['density'][:5]))}"
+          f"; next is {order['name'].iloc[5]} at {order['density'].iloc[5]:.1f}/km2")
+    if set(order["name"][:5]) != frontier:
+        raise SystemExit(f"the five sparsest governorates are {sorted(order['name'][:5])}, "
+                         f"not the five desert ones — the population join is permuted")
+    print(f"    densest {order['name'].iloc[-1]!r} at {order['density'].iloc[-1]:,.0f}/km2, "
+          f"CAPMAS {POP_DATE}: {g['pop'].sum():,} people")
 
     g["unit"] = g["pcode"]
     os.makedirs(OUT_DIR, exist_ok=True)

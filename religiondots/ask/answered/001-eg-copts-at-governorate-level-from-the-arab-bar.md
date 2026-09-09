@@ -111,3 +111,25 @@ She asked whether anything finer is even possible. It is not, and that is worth 
 nobody re-derives it: the Arab Barometer cuts by `Q1` Governorate and carries no finer
 geography, and CAPMAS deposited a 2017 census file whose 13 variables do not include religion
 at any tier. So governorate is simultaneously the ruling and the ceiling of the instrument.
+
+---
+
+## Built 2026-09-08, at governorate
+
+`sources.md` §9bz and `sources/eg.md`. 24 of 27 governorates, **107,658,120 people**, Muslim
+and Christian, every row `modelled`.
+
+Every check in this ask reproduced, and **two numbers moved for reasons worth knowing**:
+
+* the **+0.495** split-half was the unweighted one. The build weights, because the weighted
+  share is what it draws, and reports **+0.518** against the same +0.418 bar on the same 23
+  units. Putting the weights back reproduces +0.495 exactly.
+* **the ordering in this ask is the unweighted one, and the map's top governorate is Minya at
+  16.41%, not Sohag.** Weighted, Sohag reads 13.90% and Asyut 13.58%. The three sit inside one
+  another's 95% intervals either way, so `note_public` names Minya, which is the figure in
+  `data/normalized/eg.csv`, and tells the reader to take the three as a group.
+
+The magnitude did not come from COD-PS, whose Egypt file is the **2012 COMPAS estimate at
+81.4M**. It comes from **CAPMAS's own governorate population API**, which §11d and §11af had
+both concluded did not exist: it is on **port 8080**, not on a path of the 443 host, and the
+port is named in the React bundle's constants block.

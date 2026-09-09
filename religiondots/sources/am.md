@@ -176,17 +176,24 @@ It is recorded in `taxonomy/am2022.py`'s REVIEW instead, and in the public note,
 reader looking at the Ararat plain should know the two colours there are largely one
 community.
 
-## 6. The one thing sent to Anita
+## 6. The one thing sent to Anita — ruled 2026-09-08, and Armenia moved
 
-`christianity.oriental` now has **2,793,041 Armenians on it, 95.2% of one country**, against
-the 109,041 Georgians that were previously its largest count. `ge2014.py` had already recorded
-that a `christianity.oriental.armenian` child was becoming arguable; Armenia settles the
-argument on the numbers and does not act on it, because `au2021`, `ee2021`, `cy2021`, `pl2021`
-and `ro2021` all file Coptic, Syriac, Ethiopian and Armenian bodies at the parent, and moving
-one country below a node the others sit on asserts a distinction those five sources do not
-make. Doing it properly means editing six mapping files and re-scattering six drawn countries,
-which is spec §3's *changes an already-drawn country's numbers*. Filed as an ask; Armenia
-ships at the parent either way.
+`christianity.oriental` had **2,793,041 Armenians on it, 95.2% of one country**, against the
+109,041 Georgians that were previously its largest count, and Armenia shipped at that parent
+because `au2021`, `ee2021`, `cy2021`, `pl2021` and `ro2021` all sat there too. Filed as
+`ask/004-am`.
+
+**Anita ruled: record whatever the source actually says.** Armstat's cell names the Armenian
+church, so Armenia now files at `christianity.oriental.armenian`, a new node, and so do the
+eight other sources that name it in their own languages. The premise the ask rested on was
+wrong in two ways and the review caught both: the five European censuses do not file *Armenian*
+bodies at the parent by choice, they name them, so they moved too; and the branch already had
+ten children, two of them ASARB's American Armenian dioceses, so this added one legend row
+rather than the first. The two ASARB rows are now the worldwide catholicosates
+(`.armenian.etchmiadzin`, `.armenian.cilicia`) instead of nodes called *of North America* that
+`origin_religion.py` was sending French and Spanish Armenians to. spec §2.7 carries the general
+rule; four Oriental Orthodox cells stay at the parent on purpose because their sources cannot
+distinguish.
 
 ## 7. Smaller calls, all recorded in `taxonomy/am2022.py`
 
@@ -236,9 +243,21 @@ Both mechanisms are written up properly in §3, in `countries.py`'s internal `no
 `am2022.py`'s docstring, and none of them reaches the reader: `tiles.py:259` and `:365` export
 `note_public` and nothing else, so `note` is internal. The reader meets only the figures, and
 their precision to the person is what invites the check against a table that says something
-else. Not applied because the wording is the builder's or Anita's and `countries.py` had a live
-builder in it; the smallest honest fix is to stop the sentence asserting a national total, not
-to swap the number, since 17,855 is what is drawn. The 77% and every share are unaffected.
+else. Not applied by the review because the wording is the builder's or Anita's and
+`countries.py` had a live builder in it; the smallest honest fix is to stop the sentence
+asserting a national total, not to swap the number, since 17,855 is what is drawn. The 77% and
+every share are unaffected.
+
+**Applied 2026-09-08**, as three rewordings and no number changed. The marz sums, the country
+table and the two sub-national figures were all re-derived from `data/normalized/am.csv` first
+and reproduce exactly: marz Catholic 17,855 against country 17,884, marz Molokai 1,982 against
+2,000, marz refusals 49,359 against 49,353; Lori 7,019 plus Shirak 6,813 is 77.47% of 17,855,
+Lori holds 1,578 of the Molokans and Yerevan 38,931 of the refusals. `note_public` now says
+*"77% of the 17,855 Catholics the marz tables print"*, *"1,578 of the 1,982 Molokans counted in
+the marz tables"* and *"38,931 of the 49,359 refusals recorded across the eleven marzes"*. The
+three phrasings differ on purpose so the hedge does not read as a tic, and none of them explains
+the 29-, 18- and 6-person gaps, which is deliberate: the mechanism is §3's and is not something
+a reader of the panel could check.
 
 **`gap` is honest and complete.** Drawn 2,883,372, undrawn 49,359, and the undrawn are exactly
 the refusals with nothing else missing; `gap_share=0.0168` is right on either publication's

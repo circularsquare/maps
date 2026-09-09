@@ -55,6 +55,11 @@ DEFAULT_LEVELS = {# Austria's drawn tier is 2,358 Gemeinden PLUS Vienna's 23 Gem
                   # fifth of the country, missing with nothing looking wrong.
                   "at": ["gemeinde", "gemeindebezirk"],
                   "gh": ["district", "submetro"],
+                  # Micronesia is drawn at municipality in Yap and Pohnpei, whose own 2023
+                  # workbooks publish religion that finely, and at STATE in Chuuk and
+                  # Kosrae, whose do not. `municipality` alone reports 31 units and 38,975
+                  # too few people -- 51.6% of the country, including all of Chuuk.
+                  "fm": ["municipality", "state"],
                   # Armenia is the other failure mode: the drawn tier is the ELEVEN marzes,
                   # and am.csv also carries the national religion-by-ethnicity block, which
                   # is twelve ethnicities and therefore wins "the level with the most
