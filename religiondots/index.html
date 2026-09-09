@@ -53,7 +53,14 @@
     }
     #cc-button:hover { border-color: #444; }
     #cc-button .who { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    #cc-button .caret { color: #888; font-size: 9px; }
+    /* 13px, WHICH IS `.row .tw`'s SIZE — Anita, 2026-09-09: *"the little triangle icons for
+       dropdown are too small … the dropdown icons should be at least the size of the dropdown
+       icons of the religion groups in the legend."* It was 9px, which draws a glyph about three
+       pixels across, and that is the same complaint §6's note on the legend's own twisty already
+       records: *"a hit target and an affordance both below what anyone can see."* The twisty was
+       fixed and this was not, so the page had two sizes of the same mark and the smaller one was
+       on the control a reader meets first. One size for every triangle now. */
+    #cc-button .caret { color: #888; font-size: 13px; line-height: 1; }
     #cc-menu {
       display: none; margin-top: 4px;
       background: rgba(20,20,20,0.92); border: 1px solid #2a2a2a; border-radius: 6px;
@@ -92,32 +99,6 @@
       border-top: 1px solid #222; margin-top: 3px;
     }
 
-    /* ---- settings, under the picker; built to take more rows than this one -- */
-    #settings {
-      margin-top: 6px; background: rgba(20,20,20,0.758);
-      border: 1px solid #2a2a2a; border-radius: 6px; padding: 6px 9px;
-    }
-    .set {
-      display: flex; align-items: center; gap: 8px;
-      font-size: 11px; color: #999; line-height: 1.4;
-    }
-    .set + .set { margin-top: 6px; }
-    .set label { flex: none; }
-    .set .val { flex: none; color: #ccc; font-variant-numeric: tabular-nums; width: 30px;
-                text-align: right; }
-    .set input[type=range] {
-      flex: 1; -webkit-appearance: none; appearance: none; height: 3px;
-      background: #3a3a3a; border-radius: 2px; outline: none; margin: 0;
-    }
-    .set input[type=range]::-webkit-slider-thumb {
-      -webkit-appearance: none; appearance: none; width: 11px; height: 11px;
-      border-radius: 50%; background: #ccc; cursor: pointer;
-    }
-    .set input[type=range]::-moz-range-thumb {
-      width: 11px; height: 11px; border: none; border-radius: 50%;
-      background: #ccc; cursor: pointer;
-    }
-
     /* ---- religion tree --------------------------------------------------- */
     #panel {
       position: absolute; top: 8px; right: 8px; z-index: 1000;
@@ -136,6 +117,8 @@
       font-size: 12px; line-height: 1;
     }
     #panel-head button:hover { background: #333; color: #fff; }
+    /* The sheet's disclosure. There is no sheet above 700px, so there is nothing to disclose. */
+    #sheet-grip { display: none; }
     #scope-bar {
       padding: 5px 10px; border-bottom: 1px solid #2a2a2a;
       color: #888; font-size: 11px; display: flex; align-items: center; gap: 6px;
@@ -434,6 +417,32 @@
        hand the gap on itself — including when it is empty and drawing nothing. */
     .ctl-sub + .ctl { margin-top: 5px; }
 
+    /* THE ONE CONTINUOUS CONTROL IN A COLUMN OF SEGMENTED PAIRS, and it takes the row's shape
+       rather than keeping the one it had under the picker. Every other row here is
+       `label … [chip][chip]`, so the label holds the left edge and the reading holds the right;
+       this one is `label … slider … reading`, with the track taking the width the chips would
+       have. `.cl` gives up its `flex: 1` because here the middle is a control and not a gap.
+
+       The reading is 30px and right-aligned against the same edge the chips end on, so the
+       column of settings still reads down a straight right margin. */
+    #ctl-dotsize .cl { flex: none; }
+    #ctl-dotsize .val {
+      flex: none; width: 30px; text-align: right;
+      color: #ccc; font-variant-numeric: tabular-nums; font-size: 11px;
+    }
+    #ctl-dotsize input[type=range] {
+      flex: 1; min-width: 0; -webkit-appearance: none; appearance: none; height: 3px;
+      background: #3a3a3a; border-radius: 2px; outline: none; margin: 0; cursor: pointer;
+    }
+    #ctl-dotsize input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none; appearance: none; width: 11px; height: 11px;
+      border-radius: 50%; background: #ccc; cursor: pointer;
+    }
+    #ctl-dotsize input[type=range]::-moz-range-thumb {
+      width: 11px; height: 11px; border: none; border-radius: 50%;
+      background: #ccc; cursor: pointer;
+    }
+
     /* THE SWATCH EDITOR, ported from ancestrydots — Anita's call, 2026-09-03, because that
        one is already known to be pleasant to use and this map had no reason to invent a
        second idiom. Three gradient sliders and a preset grid rather than the browser's own
@@ -495,6 +504,12 @@
     #about.show { display: block; }
     /* the scroll lives on the body, so the close control stays put while the text moves */
     #about-body { max-height: calc(100vh - 124px); overflow-y: auto; }
+    /* The same thin thumb `#tree` and `#cc-list` already use, and the last scroll container
+       here that did not. The browser's own 15px bar is a light slab down the edge of a dark
+       panel, and the close control sits on top of it — over the phone's taller scroll it read
+       as a broken glyph rather than an ×. */
+    #about-body::-webkit-scrollbar { width: 6px; }
+    #about-body::-webkit-scrollbar-thumb { background: #555; border-radius: 3px; }
     #about-close {
       position: absolute; top: 7px; right: 10px; color: #777; cursor: pointer;
       font-size: 15px; line-height: 1; padding: 2px 3px;
@@ -596,6 +611,196 @@
       box-shadow: 0 4px 14px rgba(0,0,0,0.55); pointer-events: none;
     }
     #tip.show { display: block; }
+
+    /* ---- the phone, §9c --------------------------------------------------
+       Anita, 2026-09-09, with a screenshot of the page at 390px: the legend covered the map
+       and the title ran underneath it.
+
+       THE DESKTOP LAYOUT IS TWO PANELS WITH A MAP BETWEEN THEM, and that is what fails. They
+       are 258 and 286 wide, so they need about 570px before there is anything between them at
+       all; at 390 they are stacked on top of each other and the map is whatever shows through.
+       Making them narrower does not help, because the legend's rows are already cut off at 286
+       and the point of the map is the part in the middle.
+
+       So under 700px they stop being panels beside a map and become a STRIP above it and a
+       SHEET below it, with the map as the band in between. The band is thin while the sheet is
+       open, which is why the sheet closes: tapping its header drops it to its own title bar and
+       hands the reader back two thirds of the screen. Nothing about what is drawn changes —
+       this is the same panel, in a different place, at a size a thumb can hit.
+
+       700px AND NOT 480: the breakpoint is where the desktop layout runs out of map, not where
+       phones are. A 768px tablet in portrait still has 184px between the two panels, which is
+       a real view of the map; a 700px window does not. It also leaves a landscape phone
+       (844×390) on the desktop layout, where it belongs — that window is short, not narrow,
+       and the rule for it is the `max-height` one below. */
+    @media (max-width: 700px) {
+      /* The sheet is translated below the fold when shut and would otherwise take the page
+         with it. Nothing here has ever scrolled the body — the map is 100vh and the panels are
+         positioned — so this only ever removes a scrollbar. */
+      body { overflow: hidden; }
+
+      #left {
+        position: fixed; top: 0; left: 0; right: 0; width: auto;
+        /* Full width so the scrim is, and the text held off the info button with padding
+           instead — inset to `right: 44px` the gradient stopped short of the corner and drew a
+           seam down the top right of the map. */
+        padding: 7px 44px 14px 10px;
+        /* The title used to sit on the map and rely on its own text-shadow, which works over
+           an empty ocean and not over a city. A scrim fading to nothing is the cheapest thing
+           that makes the top of the map safe to put type on, and it does not draw an edge the
+           way a panel would. */
+        background: linear-gradient(rgba(17,17,17,0.92) 40%, rgba(17,17,17,0));
+      }
+      #title { font-size: 14px; }
+      /* Two lines and then an ellipsis. The subtitle is a caption, and a caption that takes
+         four lines of a phone is costing the map more than it is worth; the About panel has
+         the same sentence at length. */
+      #subtitle {
+        font-size: 10.5px; display: -webkit-box; -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2; overflow: hidden;
+      }
+      #picker { max-width: 300px; }
+      #cc-list { max-height: 46vh; }
+
+      /* ---- the sheet ---- */
+      #panel {
+        position: fixed; top: auto; bottom: 0; left: 0; right: 0; width: auto;
+        /* 52 is about half the screen, which is a lot to spend on a legend and is what it
+           costs: the sheet is the key to the map and the map is unreadable without it. The
+           other half is bought back by the header tapping it away, not by making it shorter.
+           `panelPadding` reserves the same fraction, so the two move together. */
+        max-height: 52vh;
+        max-height: 52dvh;             /* the visual viewport, so the URL bar is not counted */
+        border-radius: 10px 10px 0 0;
+        border-top: 1px solid #2f2f2f;
+        /* OPAQUE, where the desktop panel is `rgba(20,20,20,0.758)`. Same argument the tooltip
+           makes for itself: a little of the map through a panel at the edge of the screen is
+           part of the look, and a little of the map through half the screen is a legend you
+           have to read against moving dots. */
+        background: #151515;
+        /* THE WHOLE SHEET SCROLLS AS ONE DOCUMENT, rather than the tree scrolling inside fixed
+           chrome. On a phone the controls are 206px of a 439px sheet — two thirds of it spent
+           on five switches — and putting them past the end of the rows gives that height back
+           to the legend, which is what the sheet is for. `rowBudget` knows the difference. */
+        /* `block` AND NOT THE DESKTOP'S `flex`, and it is not a tidy-up. A column flex box
+           shrinks its items to fit rather than overflowing, and the header has no content floor
+           to stop at, so it came out 37px against the 42 it is set to — five pixels of the
+           scope bar showing under a shut sheet, and a header that got shorter the longer the
+           legend was. */
+        display: block;
+        overflow-y: auto;
+        overscroll-behavior: contain;  /* a flick past the end must not pan the map */
+      }
+      /* The scroll moved from `#tree` to the panel and the thin thumb has to move with it, or
+         the sheet gets the browser's own 15px bar drawn across its rounded corner. */
+      #panel::-webkit-scrollbar { width: 6px; }
+      #panel::-webkit-scrollbar-thumb { background: #555; border-radius: 3px; }
+      #tree { overflow: visible; }
+      /* Its own height, exactly, because `.shut` below translates the sheet by everything but
+         this and a calc cannot measure. */
+      #panel-head {
+        position: sticky; top: 0; z-index: 2; background: #151515; height: 42px;
+        padding: 0 10px; cursor: pointer;
+      }
+      /* SHUT IS A HEIGHT, AND IT WAS A TRANSFORM FIRST — Anita, 2026-09-09: *"once i close the
+         legend / collapse it i think the buttons to reexpand it are off screen so i can never
+         open it again."*
+
+         `translateY(calc(100% - 42px))` measures 41px of visible header in headless Chrome at
+         every phone size tried, and on her browser it left a sliver. It is easy to see why it
+         is fragile even without knowing which browser did it: the panel is ~476px tall and is
+         pushed 434px down, so the header's position is a large number minus another large
+         number, and anything that disagrees about either — a layout viewport taller than the
+         visual one, which is the normal state of a phone browser with its URL bar showing —
+         comes off the 42px that is left. A control that can only be reached by that subtraction
+         landing right is a control that strands the reader when it does not.
+
+         Capped instead, the shut sheet IS the header: a 42px box anchored to `bottom: 0`, with
+         nothing below it to be pushed off. There is no arithmetic to get wrong.
+
+         WHAT THE TRANSFORM WAS BUYING is a real thing and is now bought elsewhere. `rowBudget`
+         reads this panel's `max-height` and the blocks around the tree, so a shut sheet would
+         report a budget of nothing and the next country change would fold the whole legend into
+         one row to fit a panel that is about to open again. It now caches those measurements
+         while the sheet is open and reuses them while it is shut, which is a smaller and more
+         obvious mechanism than making the panel lie about its height. */
+      #panel.shut { height: 42px; max-height: 42px; overflow: hidden; }
+      #sheet-grip { display: block; color: #9a9a9a; font-size: 14px; padding: 0 2px; }
+      /* The head is the target — a chevron is 8px of glyph and this is the one control on the
+         page a reader uses before any other. The two depth buttons take their own taps out of
+         it, which they do by stopping the click. */
+      #panel-head button { width: 30px; height: 30px; }
+
+      /* THE ROWS ARE TIGHTER HERE THAN ON THE DESKTOP, not looser — Anita, 2026-09-09, looking
+         at the sheet: *"i think row height can be reduced"*. They were 25px, six more than the
+         desktop's 19, on the reasoning that a thumb is a blunter pointer than a mouse and every
+         row is a target. That is true of the CONTROLS and it is not true of the list, which is
+         mostly read: the sheet holds about 320px of rows, so six pixels a row is four fewer
+         religions on screen, and scrolling to find a name costs more taps than a slightly
+         smaller name costs misses. 1.3 line-height with the desktop's own padding, so 18px —
+         seven rows back, and a row shorter than the desktop's own.
+
+         The targets do not shrink with the text. `.hit` and `.cb` are `align-self: stretch`, so
+         they are the row's full height whatever it is, and they keep their 18 and 19px widths —
+         an 18px row still gives a 19×18 box to aim at, which is the part a thumb needs. And
+         `ROW_PX` is measured off the rendered row rather than assumed, so the budget knows the
+         phone fits more of them. */
+      .row { line-height: 1.3; }
+      .seg { padding: 6px 10px 7px; }
+      .ctl + .ctl, .ctl-sub + .ctl { margin-top: 8px; }
+
+      /* Top right, above the sheet rather than under it, and `#left` is inset to clear it. */
+      #info-btn { top: 8px; right: 8px; bottom: auto; left: auto; width: 28px; height: 28px; }
+      #about {
+        top: 44px; right: 8px; left: 8px; bottom: auto; width: auto;
+      }
+      #about-body { max-height: 62vh; max-height: 62dvh; }
+      /* Anchored from viewport coordinates by `openPicker`, which is what `fixed` means; it
+         only agreed with `absolute` while the body could not scroll. */
+      #swatch-pop { position: fixed; }
+      #tip { max-width: calc(100vw - 16px); }
+      /* Above the shut sheet, so the credit is on screen in the state the map is read in —
+         flush with the bottom it sits behind the sheet's header and cannot be read at all.
+         MapLibre draws it as a half-white pill, which at this width wraps to two lines and
+         becomes the brightest thing on a dark map; the panels' own tokens instead. It is moved
+         and restyled, not shrunk: every name in it is still there at the same size. */
+      .maplibregl-ctrl-bottom-left, .maplibregl-ctrl-bottom-right { bottom: 44px; }
+      /* Two class names, because MapLibre's own rule for the open state carries two and a
+         single-class override loses to it — the pill stayed white and the text stayed black. */
+      .maplibregl-ctrl-attrib,
+      .maplibregl-ctrl-attrib.maplibregl-compact-show {
+        background: rgba(20,20,20,0.82); border-radius: 4px;
+      }
+      .maplibregl-ctrl-attrib-inner, .maplibregl-ctrl-attrib-inner a { color: #8f8f8f; }
+      /* The collapse toggle's glyph is a dark shape inside a background image, so `color` does
+         nothing to it and on the dark pill it read as a smudge. Inverted it is a light glyph on
+         nothing, which is what every other control on this page is. */
+      .maplibregl-ctrl-attrib .maplibregl-ctrl-attrib-button {
+        background-color: transparent; filter: invert(1) opacity(0.6);
+      }
+    }
+
+    /* A WINDOW THAT IS SHORT RATHER THAN NARROW — a phone in landscape, 844×390. The layout is
+       fine there and the panel is not: 340px of it, less 206px of controls, leaves seven rows
+       of legend under a set of switches taller than the list they belong to. Same answer as the
+       sheet's, and the same one line does it — the controls go past the end of the rows and the
+       legend takes the height back. */
+    @media (max-height: 520px) {
+      #panel { display: block; overflow-y: auto; }
+      #panel::-webkit-scrollbar { width: 6px; }
+      #panel::-webkit-scrollbar-thumb { background: #555; border-radius: 3px; }
+      #panel-head { position: sticky; top: 0; z-index: 2; background: #151515; }
+      #tree { overflow: visible; }
+    }
+
+    /* A tap leaves `:hover` stuck on whatever was tapped until something else is, and on a list
+       whose selected row is also a filled background that reads as a selection that did not
+       take. Only the two list hovers: the rest are borders and fills on controls, where a
+       lingering highlight says "this is the one you touched", which is true. */
+    @media (hover: none) {
+      .row:hover, .cc:hover { background: none; }
+      .row.sel:hover { background: #2f3b47; }
+    }
   </style>
 </head>
 <body>
@@ -616,13 +821,6 @@
         <div id="cc-list"></div>
       </div>
     </div>
-    <div id="settings">
-      <div class="set">
-        <label for="dot-size">dot size</label>
-        <input type="range" id="dot-size" min="0" max="100" value="50" />
-        <span class="val" id="dot-size-val">1.0×</span>
-      </div>
-    </div>
   </div>
 
   <div id="panel">
@@ -630,6 +828,9 @@
       <b>Religions</b>
       <button id="depth-minus" title="Less detail">&minus;</button>
       <button id="depth-plus" title="More detail">+</button>
+      <!-- The sheet's disclosure, and only on the phone layout, where the panel is a sheet
+           that can be put away. Hidden by the stylesheet at every other width. -->
+      <span id="sheet-grip">▾</span>
     </div>
     <div id="scope-bar"><span id="scope-label">all religions</span><a id="vis-all"></a><a id="scope-clear">clear</a><div id="mixrow"><div id="mixbar" data-tip="mix"><i id="mixtrack"></i></div><div id="mixtotal" data-tip="mixtotal"></div></div></div>
     <div id="tree"></div>
@@ -654,6 +855,19 @@
       <div class="ctl" id="ctl-merge" title="Separate: every dot drawn individually. Merged: nearby dots of one religion become a single mark with area proportional to how many, which stays legible when zoomed out.">
         <span class="cl">dot style</span>
         <span class="segs" id="merge-seg"><span class="seg" data-v="0">separate</span><span class="seg" data-v="1">merged</span></span>
+      </div>
+
+      <!-- IT USED TO SIT UNDER THE COUNTRY PICKER — Anita, 2026-09-09: *"maybe we should move
+           the dot size slider into the settings (the other 5 settings for like shown / not
+           shown toggles)."* It was in a box of its own on the left because it arrived before
+           this block existed, and a panel with one row in it reads as the start of a list that
+           never came. It belongs with the other three that decide how a dot is DRAWN — how many
+           people it stands for, how big it is, and whether nearby ones merge — so it goes third
+           in that run rather than at the end of the block. -->
+      <div class="ctl" id="ctl-dotsize" title="How large every mark is drawn, from 0.3x to 3x. It changes nothing about what the map contains, only how much of it can be told apart at one zoom: small marks separate two colours inside a crowded city, large ones keep a thinly populated country visible from far out.">
+        <label class="cl" for="dot-size">dot size</label>
+        <input type="range" id="dot-size" min="0" max="100" value="50" />
+        <span class="val" id="dot-size-val">1.0×</span>
       </div>
 
       <div class="ctl" id="ctl-rings">
@@ -1136,7 +1350,7 @@ let counts = {};           // node id -> dots in its whole subtree, for the pane
 let own = {};              // node id -> dots tallied ON it, which is a different question
 let DRAWN = new Set();     // the categories the wheel is currently divided among
 let FOLDED = new Map();    // parent -> children too small to be worth a legend row (§6.10)
-let ROOT_FOLD = new Set(); // ...and the same cut applied to the families themselves (§6.10a)
+let ROOT_FOLD = new Set(); // ...and the same cut applied to the families themselves (§6.10c)
 let SPLIT = new Set();     // ...of those, the ones that also have a drawn node beneath them
 
 // ---------------------------------------------------------------- tree helpers
@@ -1543,7 +1757,7 @@ function subtree(id, acc = []) {
 
    A node on the path to the current selection is never folded — you cannot select a thing and
    have it disappear into a bucket. */
-/* THE CUT IS CHOSEN AGAINST THE LEGEND'S HEIGHT, NOT FIXED — Anita, 2026-09-09: *"lets try to
+/* §6.10b — THE CUT IS CHOSEN AGAINST THE LEGEND'S HEIGHT, NOT FIXED. Anita, 2026-09-09: *"lets try to
    make this collapsing aware of the total number of rows we'd actually want to show … if we
    can just fit everything without any collapsing we can drop the threshold … if we can't fit
    everything maybe we should raise the threshold to whatever it needs to be so that the
@@ -1559,9 +1773,14 @@ function subtree(id, acc = []) {
 
    So the threshold is now the OUTPUT and the row budget is the input. `computeFold` walks the
    ladder from the gentlest cut up and stops at the first one whose legend fits; if none fits,
-   the harshest is used and the legend simply runs long. The ladder is 1-2-5 over three
-   decades, which is fine enough that the chosen cut is never much harsher than it needed to be
-   and coarse enough that the search is eight steps rather than a bisection nobody can predict.
+   the harshest is used and the legend simply runs long.
+
+   THE LADDER IS 1-1.5-2-3-5-7 PER DECADE, and the fineness was bought rather than guessed. On
+   a 1-2-5 ladder the all-countries view stepped from 71 rows straight past a budget of 64 to
+   53, folding eleven rows more than it had to and taking Bahá'í, Shinto and Daoism with them;
+   the same view on this ladder lands at 62. A cut this rule reaches is one nobody chose, so
+   overshooting it is not a rounding error, it is rows deleted for no reason. Fifteen rungs is
+   still fifteen tree walks at most, on an action a reader takes a few times a minute.
 
    THE FLOOR IS 2e-5 AND IT IS NOT ZERO. A view that fits without folding anything still folds
    at the floor, and it should: at 1:1,000 a group under 2e-5 of the all-countries view is 118
@@ -1574,7 +1793,11 @@ function subtree(id, acc = []) {
    Anglicans — so the ladder stops there and lets the legend overflow instead. A budget that
    could demand any threshold would, on a short enough window, fold everything into one row and
    report that as success. Overflowing is the honest failure. */
-const FOLD_LADDER = [2e-5, 5e-5, 1e-4, 2e-4, 5e-4, 1e-3, 2e-3, 5e-3];
+const FOLD_LADDER = [
+  2e-5, 3e-5, 5e-5, 7e-5,
+  1e-4, 1.5e-4, 2e-4, 3e-4, 5e-4, 7e-4,
+  1e-3, 1.5e-3, 2e-3, 3e-3, 5e-3,
+];
 /* What the last `computeFold` settled on. Read by the bucket's own tooltip, which has to say
    the number that was actually applied rather than the one the file was written with. */
 let FOLD_SHARE = FOLD_LADDER[0];
@@ -1650,7 +1873,7 @@ function pinned(id) {
   return !!scope && (scope === id || scope.startsWith(id + '.'));
 }
 
-/* §6.10a — THE FAMILIES FOLD TOO, and the ask was specific. Anita, 2026-09-09: *"we should
+/* §6.10c — THE FAMILIES FOLD TOO, and the ask was specific. Anita, 2026-09-09: *"we should
    also consider moving some of the tiny top level religions (like scientology, modekngei,
    shinto, mandaeism, all under 60k) into a '4 small religions' collapsed group at the
    bottom."* All four are under 100 dots in the all-countries view, and each was costing a
@@ -1669,8 +1892,26 @@ function pinned(id) {
    hues would be the one thing this panel is not allowed to do (a colour in the key that is not
    a colour on the map). Blank is the file's existing mark for a row that is a heading rather
    than a category, and that is exactly what this row is. */
+/* THE SIX NEVER FOLD, and it is ROOT_ORDER's own argument rather than a new one. Those six are
+   already hoisted out of hue order up there because *"they are what a reader looks up, and
+   lookup beats ramp for those"* — and a lookup that fails is exactly what folding them causes.
+   On a phone, where the budget is eighteen rows, the cut reached 0.3% and took Judaism off the
+   top level of the all-countries view: a reader scanning for it found Christianity, Islam,
+   Hinduism, Sikhism and Buddhism and no fifth-largest religion on earth, with no way to know it
+   was one line inside a bucket called "26 small religions".
+
+   It costs at most six rows and it is the same six in every country, which is the property the
+   fixed order was introduced for. Everything else at the top level folds on its size, including
+   families larger than these are in a given country — Chinese religions keeps its row in the
+   all-countries view while Judaism keeps its by name. That asymmetry is deliberate: the six are
+   a reader's index into the legend, not a ranking. */
+const ROOT_KEEP = new Set([
+  'christianity', 'islam', 'judaism', 'hinduism', 'sikhism', 'buddhism',
+]);
+
 function foldRoots(share, t) {
-  const small = ROOTS.filter(id => (counts[id] || 0) < t * share && !pinned(id));
+  const small = ROOTS.filter(id => (counts[id] || 0) < t * share
+    && !ROOT_KEEP.has(id) && !pinned(id));
   return small.length >= FOLD_MIN ? new Set(small) : new Set();
 }
 
@@ -1708,7 +1949,10 @@ function splitOver(drawn) {
 
    It counts rows the reader can SEE — a row inside a closed twisty costs nothing, which is why
    a folded bucket is one row rather than none: the bucket's own members render closed. */
-function legendRows(drawn, split) {
+/* `split` is passed because it is derived from the drawn set and both are mid-flight while the
+   ladder runs; `isOpen`, `drawnKids` and `mergedInto` read the globals, which is exactly the
+   point — they are the render's own answers, asked before the render. */
+function legendRows(split) {
   let n = 0;
   const walk = (id) => {
     n++;
@@ -1725,7 +1969,7 @@ function legendRows(drawn, split) {
     const f = FOLDED.get(id);
     if (f && f.size) n++;
   };
-  for (const r of ROOTS) if (!ROOT_FOLD.has(r)) walk(r);
+  for (const r of drawnRoots()) walk(r);
   if (ROOT_FOLD.size) n++;
   return n;
 }
@@ -1743,16 +1987,30 @@ function legendRows(drawn, split) {
    `#legend-note` counts against the budget only where it is OUTSIDE the scroll. On the mobile
    sheet the whole panel scrolls as one document and the controls sit past the end of the rows,
    so they cost the legend no height it could have used. */
+/* The last measurement taken while the sheet was open. A shut sheet is 42px of header and
+   measures as a budget of nothing, and folding the legend to fit a panel that is about to be
+   opened again would be the wrong answer to the wrong question — the reader is going to see it
+   at its open size. The sheet starts open, so there is always a reading to fall back on. */
+let openMetrics = null;
 function rowBudget() {
   const panel = document.getElementById('panel');
   const tree = document.getElementById('tree');
   if (!panel || !tree) return BUDGET_MIN * BUDGET_SCREENS;
-  const h = id => document.getElementById(id)?.offsetHeight || 0;
-  const cap = parseFloat(getComputedStyle(panel).maxHeight);
-  if (!isFinite(cap)) return BUDGET_MIN * BUDGET_SCREENS;
-  const treeScrolls = getComputedStyle(tree).overflowY !== 'visible';
-  const space = cap - h('panel-head') - h('scope-bar')
-    - (treeScrolls ? h('legend-note') : 0) - 12;
+  if (!panel.classList.contains('shut')) {
+    const h = id => document.getElementById(id)?.offsetHeight || 0;
+    const cap = parseFloat(getComputedStyle(panel).maxHeight);
+    if (isFinite(cap)) openMetrics = {
+      cap,
+      vh: window.innerHeight,   // so a resize taken while shut can be noticed on the way open
+      head: h('panel-head'),
+      scope: h('scope-bar'),
+      // `#legend-note` costs the rows nothing where it scrolls past the end of them
+      note: getComputedStyle(tree).overflowY !== 'visible' ? h('legend-note') : 0,
+    };
+  }
+  if (!openMetrics) return BUDGET_MIN * BUDGET_SCREENS;
+  const m = openMetrics;
+  const space = m.cap - m.head - m.scope - m.note - 12;
   return Math.max(BUDGET_MIN, Math.floor(space / ROW_PX)) * BUDGET_SCREENS;
 }
 
@@ -1775,7 +2033,7 @@ function computeFold() {
     FOLDED = foldKids(share, t);
     ROOT_FOLD = foldRoots(share, t);
     DRAWN = new Set(drawnSet());
-    if (legendRows(DRAWN, splitOver(DRAWN)) <= budget) break;
+    if (legendRows(splitOver(DRAWN)) <= budget) break;
   }
 }
 
@@ -1785,7 +2043,7 @@ function drawnKids(id) {
   return f ? ks.filter(k => !f.has(k)) : ks;
 }
 
-/** The families minus the ones §6.10a has collapsed into the bucket at the foot of the panel.
+/** The families minus the ones §6.10c has collapsed into the bucket at the foot of the panel.
     The LEGEND's roots and not the map's: `drawnSet` still walks all of `ROOTS`, because a
     folded root keeps its own colour and its own dots. */
 function drawnRoots() {
@@ -4202,6 +4460,8 @@ function aimMix(el, clientX) {
   return true;
 }
 
+// guards the one-shot re-fold at the foot of `renderTree`; see the note there
+let refolding = false;
 function renderTree() {
   const el = document.getElementById('tree');
   /* The panel is thrown away and rebuilt on every change, and a checkbox is a control a
@@ -4382,7 +4642,9 @@ function renderTree() {
         const fst = fsum === 0 ? 0 : fsum === ids.length * 2 ? 2 : 1;
         html.push(`<div class="row res${fst === 0 ? ' hid' : ''}" data-tw="fold:${id}" `
           + `style="padding-left:${6 + (level + 1) * 11}px" `
-          + `title="Under ${FOLD_SHARE * 100}% of ${esc(ofWhat)} each — drawn in `
+          // `pctText` and not `FOLD_SHARE * 100`: the ladder's rungs are binary fractions, and
+          // 2e-5 printed raw reads "0.0020000000000000005% of all countries"
+          + `title="Under ${pctText(FOLD_SHARE)} of ${esc(ofWhat)} each — drawn in `
           + `${esc(n.label)}'s own colour rather than taking ${ids.length} more of the legend">`
           + '<span class="tw">▸</span>'
           + `<span class="hit pick" data-swatch="${id}" title="set this colour, or hide it">`
@@ -4400,8 +4662,43 @@ function renderTree() {
     if (scope === id) html.push('<div class="scope-edge"></div>');
   };
 
-  for (const r of ROOTS) row(r, 0);
+  for (const r of drawnRoots()) row(r, 0);
+  /* §6.10c's bucket, at the foot of the families and outside all of them, because that is what
+     it is the residual of. It is the §6.10 bucket's markup with two differences, and both are
+     the same difference: its members kept their own colours. So the mark is BLANK rather than a
+     swatch — there is no one colour it could show that would be true — and there is no
+     `data-swatch` on it, because there is no colour on it to set. The rows inside it are full
+     `row()` calls at level 0, so each brings its own swatch, its own count and its own subtree
+     down with it and nothing is lost by folding but the space. */
+  if (ROOT_FOLD.size) {
+    const ids = [...ROOT_FOLD];
+    const sum = ids.reduce((a, k) => a + (counts[k] || 0), 0);
+    const fsum = ids.reduce((a, k) => a + visStateOf(k), 0);
+    const fst = fsum === 0 ? 0 : fsum === ids.length * 2 ? 2 : 1;
+    html.push(`<div class="row res${fst === 0 ? ' hid' : ''}" data-tw="rootfold" `
+      + 'style="padding-left:6px" '
+      + `title="Under ${pctText(FOLD_SHARE)} of ${esc(ofWhat)} each, collapsed to one line. `
+      + 'They keep their own colours on the map; open this to see them">'
+      + '<span class="tw">▸</span>'
+      + '<span class="hit"><span class="dot"></span></span>'
+      + `<span class="lb">${ids.length} small religions</span>`
+      + countCell(sum, '#666', false)
+      + cbox('data-vis-rootfold', 'rootfold', fst) + '</div>');
+    html.push('<div class="kids" data-kids="rootfold">');
+    for (const k of ids) row(k, 1);
+    html.push('</div>');
+  }
   el.innerHTML = html.join('');
+  /* The seed for the next budget (`ROW_PX`), and the only check that `legendRows` still counts
+     what this function draws. They are two copies of one walk and they drift silently — a row
+     type added here and not there just makes every legend a little too tall. */
+  const r0 = el.querySelector('.row');
+  if (r0 && r0.offsetHeight) ROW_PX = r0.offsetHeight;
+  const shown = [...el.querySelectorAll('.row, .lin')]
+    .filter(n => !n.closest('.kids:not(.open)')).length;
+  const modelled = legendRows(SPLIT);
+  if (shown !== modelled)
+    console.warn(`legendRows drift: drew ${shown}, counted ${modelled}`);
 
   const twist = hit => e => {
     e.stopPropagation();
@@ -4448,6 +4745,11 @@ function renderTree() {
   el.querySelectorAll('.cb input[data-vis-fold]').forEach(cb => cb.onchange = () => {
     for (const id of (FOLDED.get(cb.dataset.visFold) || []))
       setSubtreeVisible(id, cb.checked);
+    afterTick();
+  });
+  // §6.10c's bucket holds families rather than children, so it has its own set to walk
+  el.querySelectorAll('.cb input[data-vis-rootfold]').forEach(cb => cb.onchange = () => {
+    for (const id of ROOT_FOLD) setSubtreeVisible(id, cb.checked);
     afterTick();
   });
 
@@ -4561,6 +4863,22 @@ function renderTree() {
 
   // last, after every write that could change the panel's height
   el.scrollTop = keepScroll;
+
+  /* ONE CORRECTION PASS, because the budget is measured off a panel this render then changes.
+     `computeFold` runs before any of this and reads `#scope-bar`'s CURRENT height, and the
+     scope bar is the one piece of chrome whose height moves: selecting Christianity wraps
+     "Christianity subgroups (L2), all countries" onto a second line and takes four rows off
+     the budget the fold was chosen against. That put the Christianity view at 63 rows under a
+     budget of 60 — 2.1 screens where the rule says 2.
+
+     It terminates, and the argument is short: a tighter budget only ever picks a rung further
+     up the ladder, which only ever removes rows, and the second render leaves the scope bar
+     where the first one put it — so the third pass would measure the same budget against
+     fewer rows and is not run. `refolding` makes that a guarantee rather than an expectation. */
+  if (!refolding && shown > rowBudget()) {
+    refolding = true;
+    try { recolour(); applyPaint(); renderTree(); } finally { refolding = false; }
+  }
 }
 
 /* A SEGMENTED CONTROL IS WRITTEN BY NAMING THE LIVE SEGMENT, never by rewriting a label.
@@ -4931,8 +5249,8 @@ function viewportTally(shrink) {
   if (!SCATTER.ready) return { out, total };
   const data = SCATTER.data[SCATTER.edition()];
   if (!data) return { out, total };
-  const b = map.getBounds();
-  let w = b.getWest(), s = b.getSouth(), e = b.getEast(), n = b.getNorth();
+  const b = viewBounds();
+  let w = b.w, s = b.s, e = b.e, n = b.n;
   if (shrink && shrink < 1) {
     const mx = (e - w) * (1 - shrink) / 2, my = (n - s) * (1 - shrink) / 2;
     w += mx; e -= mx; s += my; n -= my;
@@ -5011,8 +5329,8 @@ function scopeDrawsIn(cc) {
 }
 
 function alreadyFramed(cc) {
-  const v = META[cc].view, b = map.getBounds();
-  const w = b.getWest(), s = b.getSouth(), e = b.getEast(), n = b.getNorth();
+  const v = META[cc].view, b = viewBounds();
+  const w = b.w, s = b.s, e = b.e, n = b.n;
   const area = Math.max((v[2] - v[0]) * (v[3] - v[1]), 1e-6);
   const ix = Math.max(0, Math.min(e, v[2]) - Math.max(w, v[0]));
   const iy = Math.max(0, Math.min(n, v[3]) - Math.max(s, v[1]));
@@ -5024,13 +5342,86 @@ function alreadyFramed(cc) {
    otherwise put Australia's east coast and all of New Zealand under the legend. The percentage
    caps are what make it work on a phone: fixed pixels would ask for more padding than a 390 px
    window has, which MapLibre refuses outright. */
+/* THE PHONE PUTS THEM SOMEWHERE ELSE, so the padding has to go somewhere else — and until it
+   did, picking a country on a phone did not work at all. The desktop table reserves 22% of the
+   width on the left and 25% on the right, which on a 390px window is 47% of the screen for two
+   panels that are not there any more; a country flown to landed in the middle 207px and scored
+   0.53 on `viewFill`, under AUTO_FILL_OUT. Auto read that as "the view is no longer about this
+   country" and put the legend straight back to all countries. Choosing the United States from
+   the picker flew there and un-chose it, every time.
+
+   So on the phone layout the reservation is the strip and the sheet: almost nothing left and
+   right, `#left`'s own measured height on top, and a bottom that is deliberately NOT the open
+   sheet's. Framing to the open sheet would leave a tall country filling 0.32 of the screen and
+   losing itself the same way; framing to roughly the shut one puts every country in the band
+   between 0.6 and 0.85, which is the hysteresis band the thresholds already provide — an
+   explicit pick stays picked, and Auto does not fight it. The lower part of a tall country is
+   behind the sheet until the reader taps it away, which is what the sheet is for. */
 function panelPadding(el) {
+  const w = el.clientWidth, h = el.clientHeight;
+  if (matchMedia('(max-width: 700px)').matches) {
+    const strip = document.getElementById('left');
+    return {
+      left: 8, right: 8,
+      top: Math.min(h * 0.20, (strip ? strip.offsetHeight : 130) + 6),
+      /* THE OPEN SHEET, ALWAYS, AND NOT THE SHEET AS IT IS. It is 52dvh by the stylesheet and
+         that is what this has to say, whether or not it is open at the moment: `viewFill` below
+         divides by these same numbers, so a padding that followed the live sheet would change
+         what a country SCORES every time the sheet was tapped, and tapping it away would push a
+         framed country under AUTO_FILL_OUT and drop the legend. Fixed, both readings are
+         stable and shutting the sheet simply reveals more map around the same frame. */
+      bottom: h * 0.54,
+    };
+  }
   return {
-    left: Math.min(250, el.clientWidth * 0.22),
-    right: Math.min(290, el.clientWidth * 0.25),
-    top: Math.min(90, el.clientHeight * 0.13),
-    bottom: Math.min(50, el.clientHeight * 0.08),
+    left: Math.min(250, w * 0.22),
+    right: Math.min(290, w * 0.25),
+    top: Math.min(90, h * 0.13),
+    bottom: Math.min(50, h * 0.08),
   };
+}
+
+/* WHAT THE READER CAN SEE, as bounds — the canvas minus whatever a panel is sitting on.
+
+   EVERY "WHERE IS THE CAMERA" TEST BELOW ASKS THIS RATHER THAN `map.getBounds()`, so that they
+   all agree about where the reader is looking, and on the desktop layout it returns
+   `map.getBounds()` unchanged — the AUTO_FILL and AUTO_OVER thresholds were tuned against the
+   whole canvas with the two side panels in the frame, and re-basing them on a band 65% as wide
+   would move every one of them by half again. Retuning Auto is not this change's business.
+
+   The phone cannot be left alone the same way, because there the occlusion is not a margin at
+   the edges, it is most of the screen. Framed into the band between the strip and the sheet, a
+   country was failing three different tests at once, and each failure read like a different
+   bug: it filled 0.28 of the canvas and was released by AUTO_FILL_OUT; the pixel at the centre
+   of the CANVAS sat below it, so `countryAt` answered Lithuania for a framed Estonia and Mexico
+   for a framed United States; and the middle-half box the tallies use straddled the sheet.
+   Measured against the band all three come right, and a country flown to scores 1 exactly as it
+   does on a desktop.
+
+   Mercator, not degrees, for the vertical: a pixel is a constant step in `mercY` and is not a
+   constant step in latitude, and the padding here is in pixels. */
+function unmercY(y) {
+  return (Math.atan(Math.exp(y * Math.PI / 180)) - Math.PI / 4) * 360 / Math.PI;
+}
+function viewBounds() {
+  const b = map.getBounds();
+  const w = b.getWest(), e = b.getEast(), s = b.getSouth(), n = b.getNorth();
+  if (!matchMedia('(max-width: 700px)').matches) return { w, e, s, n };
+  const el = map.getCanvas(), p = panelPadding(el);
+  const cw = el.clientWidth || 1, ch = el.clientHeight || 1;
+  const ys = mercY(s), yn = mercY(n);
+  const dx = (e - w) / cw, dy = (yn - ys) / ch;
+  return {
+    w: w + p.left * dx,
+    e: e - p.right * dx,
+    s: unmercY(ys + p.bottom * dy),
+    n: unmercY(yn - p.top * dy),
+  };
+}
+/** The point the map is about: the middle of what can be seen of it. */
+function viewCentre() {
+  const v = viewBounds();
+  return { lng: (v.w + v.e) / 2, lat: unmercY((mercY(v.s) + mercY(v.n)) / 2) };
 }
 
 function flyToCountry(cc) {
@@ -5087,10 +5478,32 @@ function setCountry(cc, opts = {}) {
    It reads the SOURCE rather than the rendered layers, so it still sees a country whose dots the
    current filter is hiding; otherwise selecting Canada would make the US invisible to the
    detector and panning south could never switch back. */
-const AUTO_FILL_IN = 0.85, AUTO_FILL_OUT = 0.6, AUTO_ZMIN = 3,
+/* THE FLOOR IS A SPAN AND NOT A ZOOM, since 2026-09-09, and it is the same correction the note
+   above already makes about fill: the threshold has to be a fact about the VIEW.
+
+   It was `zoom < 3`, and a zoom number is not a view — it is a view divided by how wide the
+   window is. At 1541px zoom 3 puts 135° of longitude on screen; at 390px it puts 34°, which is
+   a view of Spain, and the rule was throwing it out as continental range. Picking the United
+   States on a phone flew there, landed at zoom 2.17 with the country filling 96% of the screen,
+   and Auto dropped it on the next frame for being zoomed out. Every country did this; the
+   picker did not work on a phone at all.
+
+   130° IS THE OLD FLOOR RESTATED, not a new one: it is what zoom 3 showed on the window this
+   was tuned on, so a desktop reader sees no change (the floor moves from zoom 3.00 to 3.06 at
+   1541px), and a phone gets the rule that was meant rather than the number that expressed it.
+   What it is protecting against is unchanged — Russia's box spans 161°, so at global range it
+   would score a full `viewFill` and win a legend for a view of the northern hemisphere. */
+const AUTO_FILL_IN = 0.85, AUTO_FILL_OUT = 0.6, AUTO_SPAN_MAX = 130,
       AUTO_OVER_IN = 0.5, AUTO_OVER_OUT = 0.25,
       AUTO_SHARE = 0.85, AUTO_MIN = 150, AUTO_BOX = 0.5;
 let lastLook = '';
+
+/** Continental range: too much of the world on screen for any one country to be its subject.
+    Clamped, because `getBounds` runs past a full turn once the camera is wide enough. */
+function tooWide() {
+  const b = viewBounds();
+  return Math.min(360, Math.abs(b.e - b.w)) > AUTO_SPAN_MAX;
+}
 
 /** Latitude as a Mercator y, in degrees of longitude, so a north-south span can be measured
     against an east-west one: 10° of latitude is a much taller piece of screen over Estonia than
@@ -5106,8 +5519,8 @@ function mercY(lat) {
 function viewFill(cc) {
   const v = META[cc] && META[cc].view;
   if (!v) return 0;
-  const b = map.getBounds();
-  const vw = b.getEast() - b.getWest(), vh = mercY(b.getNorth()) - mercY(b.getSouth());
+  const b = viewBounds();
+  const vw = b.e - b.w, vh = mercY(b.n) - mercY(b.s);
   if (!(vw > 0) || !(vh > 0)) return 0;
   return Math.max((v[2] - v[0]) / vw, (mercY(v[3]) - mercY(v[1])) / vh);
 }
@@ -5129,8 +5542,8 @@ function viewFill(cc) {
 function viewOverlap(cc) {
   const v = META[cc] && META[cc].view;
   if (!v) return 0;
-  const b = map.getBounds();
-  let w = b.getWest(), e = b.getEast(), s = mercY(b.getSouth()), n = mercY(b.getNorth());
+  const b = viewBounds();
+  let w = b.w, e = b.e, s = mercY(b.s), n = mercY(b.n);
   const dx = (e - w) * (1 - AUTO_BOX) / 2, dy = (n - s) * (1 - AUTO_BOX) / 2;
   w += dx; e -= dx; s += dy; n -= dy;
   // getBounds runs past ±180 once you pan around the world; put the box on the same lap
@@ -5271,8 +5684,8 @@ const AUTO_GRID = 7, AUTO_HOLD = 0.35, AUTO_RIVAL = 0.4, AUTO_OUTWEIGH = 0.25;
     sample counts, how many samples landed in ANY built country, and the grid size. */
 function centreShares() {
   if (!SHAPES) return null;
-  const b = map.getBounds();
-  let w = b.getWest(), e = b.getEast(), s = b.getSouth(), n = b.getNorth();
+  const b = viewBounds();
+  let w = b.w, e = b.e, s = b.s, n = b.n;
   const dx = (e - w) * (1 - AUTO_BOX) / 2, dy = (n - s) * (1 - AUTO_BOX) / 2;
   w += dx; e -= dx; s += dy; n -= dy;
   const cand = SHAPES.filter(p => !(p.s > n || p.n < s));
@@ -5360,7 +5773,9 @@ function outweighed(sh, cc) {
 function considerCamera() {
   if (!autoCountry || autoLock || !map.getLayer('dots')) return;
   const z = map.getZoom();
-  const c = map.getCenter();
+  // the middle of the map you can SEE, which on the phone layout is not the middle of the
+  // canvas — see `viewBounds`
+  const c = viewCentre();
 
   /* Where the shapes can name the ground under the camera, THAT is the answer and the dots do
      not get a vote — see the SHAPES note above. Still gated on FILL, because "which country is
@@ -5397,17 +5812,17 @@ function considerCamera() {
   const at = countryAt(c.lng, c.lat);
   if (at !== null) {
     if (at === country) {
-      if (z < AUTO_ZMIN || viewFill(at) < AUTO_FILL_OUT)
+      if (tooWide() || viewFill(at) < AUTO_FILL_OUT)
         setCountry(null, { fly: false });
     } else if (country !== null && stillHolds(sh, country)) {
       // The centre pixel has crossed into a neighbour but the selected country still holds a
       // real share of the middle of the screen, so this is drift rather than a departure.
       // It is still made to answer the OUT thresholds, or zooming out over a border would
       // keep it for ever.
-      if (z < AUTO_ZMIN || viewFill(country) < AUTO_FILL_OUT
+      if (tooWide() || viewFill(country) < AUTO_FILL_OUT
           || viewOverlap(country) < AUTO_OVER_OUT)
         setCountry(null, { fly: false });
-    } else if (z >= AUTO_ZMIN && META[at]
+    } else if (!tooWide() && META[at]
                && viewFill(at) >= AUTO_FILL_IN
                && !contested(sh, at) && scopeDrawsIn(at)) {
       setCountry(at, { fly: false });     // straight across, with no all-countries frame between
@@ -5454,10 +5869,10 @@ function considerCamera() {
   /* The country has become a detail of a wider view, or we have simply left it. This runs ahead
      of the tally on purpose: over a country nobody has built, the tally comes back empty and
      bails, and whatever was selected would otherwise sit there for good. */
-  if (country !== null && (z < AUTO_ZMIN || viewFill(country) < AUTO_FILL_OUT
+  if (country !== null && (tooWide() || viewFill(country) < AUTO_FILL_OUT
                            || viewOverlap(country) < AUTO_OVER_OUT))
     setCountry(null, { fly: false });
-  if (z < AUTO_ZMIN) return;          // continental range: nothing is the subject, however large
+  if (tooWide()) return;          // continental range: nothing is the subject, however large
   // the middle of the screen, falling back to the whole of it where the middle is empty —
   // over open country the centre box can hold nothing at all
   let { out, total } = viewportTally(AUTO_BOX);
@@ -6472,9 +6887,9 @@ SCATTER.pick = function (point) {
    Australia's east coast.
 
    minZoom drops to 1 because 2 cannot hold the world on a narrow window — 512·2² px of world
-   against a 390 px phone is 68° of longitude, which is a view of the Mediterranean. Nothing
-   below zoom 3 can take the legend anyway (AUTO_ZMIN), and every radius stop table already
-   runs down to z0. */
+   against a 390 px phone is 68° of longitude, which is a view of the Mediterranean. A view with
+   more than 130° of longitude in it cannot take the legend anyway (`tooWide`), and every radius
+   stop table already runs down to z0. */
 const map = new maplibregl.Map({
   container: 'map',
   style: 'https://tiles.openfreemap.org/styles/dark',
@@ -6893,6 +7308,53 @@ document.getElementById('depth-plus').onclick = () => {
 document.getElementById('depth-minus').onclick = () => {
   depth = Math.max(1, depth - 1); recolour(); applyPaint(); renderTree();
 };
+/* THE FOLD READS THE WINDOW, so the window changing is a reason to fold again — §6.10's cut is
+   chosen against how many rows fit, and after a rotation or a drag that number is different.
+   Same three calls as the depth buttons, because it is the same kind of change: a fold moves
+   colours as well as rows, and `applyPaint` is what puts them on the map.
+
+   Debounced, because a drag-resize fires this per frame and each one is fifteen tree walks and
+   a repaint. 200ms is past the end of a drag and under the pause after a rotation. */
+let resizeFold = 0;
+addEventListener('resize', () => {
+  clearTimeout(resizeFold);
+  resizeFold = setTimeout(() => { recolour(); applyPaint(); renderTree(); }, 200);
+});
+/* THE SHEET OPENS AND SHUTS, and on the phone layout that is the control the map depends on:
+   the legend is half the screen and the map is the other half, so a reader who wants to look at
+   the map has to be able to put the legend away in one tap.
+
+   IT STARTS OPEN. A dot map with no key is a field of coloured specks, and a reader arriving on
+   a phone should be told what they are looking at before being handed room to look — the sheet
+   is the sentence, not the furniture. The chevron says which way it goes, and the whole header
+   is the target, because a chevron on a phone is eight pixels of glyph.
+
+   The two depth buttons live in that header and would open and shut the sheet on their way to
+   changing the depth, so they take their clicks out of it. */
+const sheet = document.getElementById('panel');
+document.getElementById('panel-head').onclick = e => {
+  if (e.target.closest('button')) return;
+  if (!matchMedia('(max-width: 700px)').matches) return;
+  const shut = sheet.classList.toggle('shut');
+  document.getElementById('sheet-grip').textContent = shut ? '▴' : '▾';
+  // a sheet put away half way down its own list should come back at the top of it
+  if (shut) sheet.scrollTop = 0;
+  /* A window that changed size while the sheet was shut left `rowBudget` holding a reading
+     from before it, and the fold that came off that reading is about to be looked at. Only
+     when the height actually moved, so opening the sheet is normally free. */
+  else if (openMetrics && openMetrics.vh !== window.innerHeight) {
+    recolour(); applyPaint(); renderTree();
+  }
+};
+/* Leaving the phone layout has to leave the class behind with it, or a rotation into landscape
+   lands on a desktop panel translated off the bottom of the window with nothing to click. */
+matchMedia('(max-width: 700px)').addEventListener('change', e => {
+  if (!e.matches) {
+    sheet.classList.remove('shut');
+    document.getElementById('sheet-grip').textContent = '▾';
+  }
+});
+
 document.getElementById('info-btn').onclick = e => {
   e.stopPropagation();               // the closer above must not undo the toggle that opened it
   document.getElementById('about').classList.toggle('show');

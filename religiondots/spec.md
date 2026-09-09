@@ -100,7 +100,8 @@ and the surviving part is stated first.
 - 6.8 One palette for every country — REVERSES §6.2
 - 6.9 Two palettes again, split by scope and not by country — AMENDS §6.8
 - 6.10 A row too small to be worth a line folds into one · 6.10a the denominator is the VIEW,
-  not the parent — REVERSED
+  not the parent — REVERSED · **6.10b the cut is chosen against the legend’s HEIGHT** ·
+  6.10c the families fold too
 - 6.11 The reader gets the hand overrides too — the swatch picker
 - 6.12 An empty map means two opposite things, so say which — the coverage wash
 - 6.13 Christianity's branches are authored, not allocated
@@ -131,13 +132,15 @@ and the surviving part is stated first.
 
 **§9 Viewer** — MapLibre, the dark ancestrydots style, and what tiling took away ·
 9a Auto's minimum-dots floor made every country under ~150k invisible to it — FIXED ·
-9b Auto will not enter a country that has none of what is selected
+9b Auto will not enter a country that has none of what is selected ·
+**9c the phone gets a strip and a sheet, and Auto had to be told where the map is**
 
 **§10 The tree panel** — 10.0 fixed family order · 10.0a the grey family is contiguous ·
 10.1 what the panel says about itself · 10.2 the settings are segmented pairs ·
 10.3 a share bar per row, and a column of checkboxes ·
 **10.4 one bar for the whole scope, and a hatched segment for what nobody counted** ·
-10.4a half of the undrawn share is computed, and subtracting from a modern population is not
+10.4a half of the undrawn share is computed, and subtracting from a modern population is not ·
+**10.5 one size for every triangle, and the dot-size slider joins the block**
 
 **§11 Open questions** — mine to resolve with a prototype; Anita's are in `todo.txt`
 
@@ -2801,6 +2804,110 @@ fix is one `||` putting the parent test alongside this one, not a different thre
 the first suspect: *"is 2 not enough? lets make the threshold 2 so that 2 is enough."* It was
 already 2, and `small.length >= FOLD_MIN` already admitted a pair. The size cut was the whole of it.
 
+### 6.10b The cut is chosen against the legend's HEIGHT, not fixed — REVERSED 2026-09-09
+
+§6.10a's last claim was that the threshold is *"measured, not picked"*. It was measured, on the
+all-countries view, on a laptop. Anita, looking at the same view two days later:
+
+> *"we have a gate where we hide any religion thats like < 0.1% of the people in scope or
+> something. i think it's not enough, as you can see like the entire legend is filled with
+> christian stuff on my screen. lets try to make this collapsing aware of the total number of rows
+> we'd actually want to show."*
+
+**One number cannot do this job, because the two things it balances move independently.** The
+denominator moves with the country — 5e-5 of the all-countries view is 296,000 people and 5e-5 of
+Estonia is 66 — and the budget moves with the window. Fixed at 5e-5 the all-countries legend came
+out **3.1 screens tall**, nine tenths of it out of sight, while Estonia folded nothing and had room
+for more.
+
+**So the threshold is now the output and the row budget is the input.** The rule Anita gave for the
+budget is about reading rather than pixels:
+
+> *"if we can just fit everything without any collapsing (cuz we have a country selected that
+> doesn't have many religions) we can drop the threshold to like 0.002%. if we can't fit everything
+> maybe we should raise the threshold to whatever it needs to be so that the legend is at most 2
+> times as wide as the visible portion — so if you scroll to the top then the bottom, you should be
+> able to see everything within those 2 views."*
+
+`computeFold` walks a ladder of thresholds from the gentlest up and stops at the first legend that
+fits two screenfuls of rows. What it settles on, against a 64-row budget on a 1541×964 window:
+
+| view | threshold | rows | screens (was 3.11) |
+|---|---|---|---|
+| all countries, L2 | 0.03% | 59 | 1.86 |
+| all countries, L3 | 0.2% | 60 | 1.89 |
+| United States | 0.002% | 48 | 1.52 |
+| Brazil | 0.002% | 32 | 1.02 |
+| Poland | 0.002% | 17 | 1.00 |
+| Estonia | 0.002% | 13 | 1.00 |
+
+**Every country view lands on the floor**, which is the half of the ask that §6.10a's fixed cut
+could not give: a country with few religions now folds almost nothing, and the per-country tails
+§6.10a knowingly gave up come back.
+
+**The floor is 2e-5 and it is not zero.** A view that fits without folding anything still folds at
+the floor, and should: at 1:1,000 a group under 2e-5 of the all-countries view is 118 dots on the
+whole earth. Below that the question stops being about legend space and becomes "does the mark
+exist at all", which is `presence rings`'.
+
+**The ceiling is 5e-3 and it is a real ceiling.** Half a per cent of the view already reaches
+Anglicans in the all-countries legend, so the ladder stops there and lets the legend overflow. A
+budget that could demand any threshold would, on a short enough window, fold everything into one row
+and report that as success. **Overflowing is the honest failure.**
+
+**The ladder is 1-1.5-2-3-5-7 per decade**, and the fineness was bought rather than guessed: on a
+1-2-5 ladder the all-countries view stepped from 71 rows straight past a budget of 64 to 53, folding
+eleven rows more than it had to and taking Bahá'í, Shinto and Daoism with them. A cut nobody chose
+is not a place to overshoot.
+
+**The row count is modelled, not measured, and that is unavoidable** — the fold has to be decided
+before the palette and the palette before the render, so at the moment the question is asked there
+is nothing on screen to measure. `legendRows` is a second copy of `renderTree`'s walk. The
+protection is that `renderTree` counts the rows it actually drew and warns to the console when the
+two disagree; if a row type is added to one, add it to the other.
+
+**One correction pass, because the budget is measured off a panel the render then changes.**
+Selecting Christianity wraps the scope bar onto a second line and takes four rows off the budget the
+fold was chosen against — 63 rows under a budget of 60. So a render that overruns re-folds once and
+redraws. It terminates: a tighter budget only picks a rung further up, which only removes rows, and
+the second render leaves the scope bar where the first put it.
+
+**The budget follows the window, so a resize re-folds** (debounced). A fold moves colours as well as
+rows, so that is a repaint, not just a redraw.
+
+### 6.10c The families fold too, and this one is a legend fold only — DECIDED 2026-09-09
+
+> *"we should also consider moving some of the tiny top level religions (like scientology,
+> modekngei, shinto, mandaeism, all under 60k) into a '4 small religions' collapsed group at the
+> bottom."*
+
+All four are under 100 dots in the all-countries view and each was costing a **top-level** row,
+which is the most expensive row in the panel: the top level is the part a reader scans rather than
+searches. Twenty-two of the thirty-eight families fold there now, into one line at the foot of the
+list.
+
+**It is a legend fold only, and that is the difference from §6.10.** A folded child gives up its
+colour and takes its family's, which is most of what makes folding worth doing. A root has no family
+to fall back into, so **a folded root keeps its own authored hue and its own dots** — `drawnSet` is
+not told, `paletteFor` is not told, and nothing about the map changes when this fires. The bucket
+expands to the members with their own swatches beside them.
+
+That is also why the bucket draws a **blank mark** where §6.10's draws a swatch: §6.10's members
+really are all one colour by then and these are not, and a single swatch over twenty-two hues is the
+one thing this panel may not do. Blank is already the file's mark for a row that is a heading rather
+than a category.
+
+**The six named religions never fold**, and it is §10.0's own argument rather than a new one. Those
+six are hoisted out of hue order up there because *"they are what a reader looks up, and lookup
+beats ramp for those"* — and a lookup that fails is exactly what folding them causes. On a phone,
+where the budget is eighteen rows, the cut reached 0.3% and took **Judaism** off the top level of
+the all-countries view: a reader scanning for it found Christianity, Islam, Hinduism, Sikhism and
+Buddhism and no fifth-largest religion on earth. It costs at most six rows and it is the same six in
+every country, which is the property §10.0's fixed order exists to provide. Everything else at the
+top level folds on its size, **including families larger than these are in a given country** —
+Chinese religions keeps its row in the all-countries view while Judaism keeps its by name. The
+asymmetry is deliberate: the six are a reader's index into the legend, not a ranking.
+
 ### 6.11 The reader gets the hand overrides too — DECIDED 2026-09-03
 
 §6 said "hand overrides are expected, and bounded to a few scopes", and meant Anita editing a table
@@ -4676,6 +4783,90 @@ happen cannot learn why. So with a religion selected the figure beside every cou
 is **that religion's**, and the countries with none say so with an em dash and a tooltip. Pick Daoism
 and the menu is the answer to "where is there any".
 
+### 9c The phone gets a strip and a sheet, and Auto had to be told where the map is — BUILT 2026-09-09
+
+The viewer had no responsive rule of any kind. Anita sent a screenshot of it at 390px: the legend
+covered the map, the title ran underneath the legend, and the two were stacked on each other.
+
+**The desktop layout is two panels with a map between them, and that is what fails.** They are 258
+and 286 wide, so they need about 570px before there is anything between them at all. Narrowing them
+does not help — the legend's rows are already cut off at 286 — and the part of the map that matters
+is the part in the middle. So under **700px** they stop being panels beside a map and become a
+**strip above it and a sheet below it**, with the map as the band between.
+
+700 and not 480: the breakpoint is where the desktop layout runs out of map, not where phones are. A
+768px tablet in portrait still has 184px between the two panels, which is a real view; a 700px
+window does not. It also leaves a landscape phone (844×390) on the desktop layout, where it belongs
+— that window is short, not narrow, and has its own `max-height: 520px` rule.
+
+- **The sheet is 52dvh and the header taps it away**, down to its own 42px title bar. Half the
+  screen is a lot to spend on a legend and is what it costs: the sheet is the key to the map. The
+  other half is bought back by putting it away, not by making it shorter. It starts **open** — a dot
+  map with no key is a field of coloured specks, and a reader arriving should be told what they are
+  looking at before being handed room to look.
+- **Shut is a height, and it was a transform first — CORRECTED the same day.** Anita: *"once i close
+  the legend / collapse it i think the buttons to reexpand it are off screen so i can never open it
+  again."* `translateY(calc(100% - 42px))` measured 41px of visible header in headless Chrome at
+  every phone size tried, and on her browser it left a sliver. It is easy to see why it is fragile
+  even without knowing which browser did it: the panel is ~476px tall and is pushed 434px down, so
+  the header's position is a large number minus another large number, and anything that disagrees
+  about either — a layout viewport taller than the visual one, which is the normal state of a phone
+  browser with its URL bar showing — comes off the 42px that is left. **A control that can only be
+  reached by that subtraction landing right is a control that strands the reader when it does not.**
+  Capped instead, the shut sheet *is* the header: a 42px box anchored to `bottom: 0`, with nothing
+  below it to be pushed off.
+  What the transform was buying is real and is now bought elsewhere. `rowBudget` reads the panel's
+  `max-height` and the blocks around the tree, so a shut sheet would report a budget of nothing and
+  fold the whole legend into one row to fit a panel that is about to open again. It caches those
+  measurements while the sheet is open and reuses them while it is shut, and re-folds on the way
+  open if the window changed size in between — a smaller and more obvious mechanism than making the
+  panel lie about its height.
+- **The whole sheet scrolls as one document.** On a phone the controls are 206px of a 439px sheet —
+  two thirds of it spent on five switches — so they go past the end of the rows and the legend takes
+  the height back. The same one line fixes the landscape case.
+- **The rows are TIGHTER than the desktop's, not looser** — 18px against 19. They were 25 first, on
+  the reasoning that a thumb is a blunter pointer than a mouse. That is true of the controls and not
+  of the list, which is mostly read: six pixels a row is four fewer religions on screen. The targets
+  do not shrink with the text — `.hit` and `.cb` are the row's full height at whatever height it is.
+
+**What actually broke was not the layout.** Three separate camera assumptions took the whole canvas
+for the map, and on a phone most of the canvas is a panel. Each failed differently and each read
+like its own bug:
+
+| assumption | what happened on a phone |
+|---|---|
+| `panelPadding` reserves 22% left and 25% right | 47% of a 390px window reserved for panels that are not there; a country flown to landed in the middle 207px |
+| `AUTO_ZMIN = 3` — a **zoom**, which is a view divided by a window width | the United States fitted at zoom 2.17, and the rule threw it out as continental range |
+| `viewFill`, `viewOverlap`, `centreShares`, `viewportTally` and `countryAt` all measure the **canvas** | the centre pixel sat below the framed country: Lithuania for a framed Estonia, Mexico for a framed United States |
+
+Together these meant **the country picker did not work on a phone at all** — choosing the United
+States flew there and un-chose it, every time. Three corrections, and all three restate a rule
+rather than retune one:
+
+- **The padding follows the layout**: almost nothing left and right, `#left`'s measured height on
+  top, and a bottom reserving the open sheet — always the open sheet, because `viewBounds` divides
+  by the same numbers and a padding that followed the live sheet would change what a country
+  **scores** every time the sheet was tapped.
+- **The floor is a span, not a zoom.** `AUTO_ZMIN = 3` becomes `AUTO_SPAN_MAX = 130°`, which is what
+  zoom 3 showed on the window it was tuned on — the desktop floor moves from zoom 3.00 to 3.06 at
+  1541px, and a phone gets the rule that was meant rather than the number that expressed it. What it
+  protects against is unchanged: Russia's box spans 161°, so at global range it would score a full
+  `viewFill` and win a legend for a view of the northern hemisphere.
+- **One `viewBounds`, and every camera test asks it.** On the desktop layout it returns
+  `map.getBounds()` unchanged, deliberately: the AUTO_FILL and AUTO_OVER thresholds were tuned
+  against the whole canvas with the side panels in the frame, and re-basing them on a band 65% as
+  wide would move every one of them by half again. Retuning Auto was not this change's business.
+
+Checked on the phone layout afterwards: the United States, Chile, Estonia and Indonesia all frame
+into the visible band and hold, at `viewFill` 1.00, and shutting the sheet does not release them.
+On the desktop layout `viewBounds()` is byte-identical to `map.getBounds()` and `viewCentre()`
+matches `map.getCenter()` to 1e-13.
+
+**The attribution moves above the shut sheet**, because flush with the bottom it sits behind the
+sheet's header and cannot be read at all. MapLibre draws it as a half-white pill, which at this
+width wraps to two lines and becomes the brightest thing on a dark map, so it takes the panels'
+own tokens. It is moved and restyled, never shrunk — every name in it is still there at full size.
+
 ## 10. The tree panel, and the genealogy drawn on it
 
 **§6 splits this into two things that were one thing.** The panel is the legend, the selection control
@@ -5135,6 +5326,45 @@ asked the religion question`, and the missing second figure is the point.
 **The bar is one trigger with thirty answers**, so `showTip` grew an optional `atX` and the tooltip
 follows the pointer along it. It is the only trigger on the page that needs it; everything else means
 one thing wherever you point at it and keeps aligning to its own left edge.
+
+### 10.5 One size for every triangle, and the dot-size slider joins the block — DECIDED 2026-09-09
+
+Two small things, both of them Anita's, and both of them the same kind of tidy: a control that was
+where it was for historical reasons rather than for a reason.
+
+**Every dropdown triangle is 13px**, which is `.row .tw`'s size:
+
+> *"the little triangle icons for dropdown are too small. for hiding the legend, and for expanding
+> the country selector. the dropdown icons should be at least the size of the dropdown icons of the
+> religion groups in the legend."*
+
+The country picker's caret was **9px**, which draws a glyph about three pixels across — and that is
+the same complaint §6.11's note on the legend twisty already records, *"a hit target and an
+affordance both below what anyone can see."* The twisty was fixed at the time and the caret was not,
+so the page carried two sizes of the same mark and the smaller one was on the control a reader meets
+first. The phone sheet's own chevron goes to 14px: it is the control the map depends on there, and
+the header around it is the target either way.
+
+**The dot-size slider moves into the legend's settings block.**
+
+> *"maybe we should move the dot size slider into the settings (the other 5 settings for like shown
+> / not shown toggles)."*
+
+It sat in a bordered box of its own under the country picker, because it arrived before §10.2's
+block existed — and a panel with one row in it reads as the start of a list that never came. It goes
+**third**, after `people per dot` and `dot style`, not at the end: those three are the run that
+decides how a dot is *drawn* — how many people it stands for, how big it is, and whether neighbours
+merge — and `presence rings` onwards are about what is drawn at all.
+
+It is the one **continuous** control in a column of segmented pairs, so it takes the row's shape
+rather than keeping its old one: the label holds the left edge, the track takes the width the chips
+would have, and the reading is 30px right-aligned against the same edge the chips end on, so the
+block still reads down a straight right margin.
+
+**What it cost, and it is worth writing down because it is §6.10b's input:** the block is one row
+taller, so `#legend-note` takes 19px more of the panel and the desktop row budget falls from 64 to
+60. The all-countries view moves from 1.86 screens to 1.92, still inside §6.10b's two. The strip on
+the phone loses 36px, which goes back to the map.
 
 ## 11. Open questions
 
