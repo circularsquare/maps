@@ -157,6 +157,15 @@ is checked and rejected** · **14.14 China is 100% drawn, and a threshold over a
 is not a rule** · **14.15 what is left for China, ranked — and CFPS was the wrong target all
 along, on §3.1 grounds**
 
+**§15 Magnitude without location — the national estimate layer** — DECIDED, NOT BUILT. The fourth
+cell of the dot/ring 2×2: a country outline carrying a quoted national figure for a religion the
+archive cannot place. 15.2 the symbol, and why the dwell was wrong · **15.3 an estimate never
+restates a node the country's own source measured**, which is the whole contradiction class ·
+**15.4 a claim carries its own denominator**, which is what lets several sources stack ·
+15.4a the candidate compilers · 15.5 specificity wins and specificity is the interested party ·
+15.6 the tint — OPEN · 15.7 all 201, and the title needs two numbers · 15.8 the world total ·
+15.9 §14 clearance · 15.10 shape, and what is open
+
 ---
 
 ## 1. What the map has to do
@@ -7744,6 +7753,174 @@ the split-half and catches a class of failure the split-half cannot: **a categor
 identically in both halves while its LEVEL is set by the card**, so a stability test on a
 mismeasured category is stable and wrong.
 
+### A SPLIT-HALF CANNOT SEE A QUOTA, AND A QUOTA IS WHAT IT LOOKS LIKE WHEN IT PASSES BEST — Lebanon, 2026-09-09
+
+The entry above is about a category whose LEVEL is set by the card. This one is about a category
+whose whole GEOGRAPHY is set by the fieldwork, and it is worse, because the check that is supposed
+to catch exactly this returns its strongest possible verdict on it.
+
+**Arab Barometer's Lebanese sample is a fixed sect-by-governorate quota.** The contractor is told
+how many Sunni, Shia, Maronite, Orthodox, Catholic and Druze interviews to collect in each
+governorate and collects them. Wave V (2018-19) and wave VII (2021-22) come back with the same
+Christian count in **all eight governorates** — Akkar 30 of 160, Beirut 90 of 250, Mount Lebanon
+650 of 960, South 10 of 260 — and Kesrwan-Jbeil is **100% Christian in all three parts of wave
+VI**. §11al and `sources/lb.md` have the tables and the country is not drawn.
+
+**§14.16's split-half asks whether a category's ranking across units replicates between the early
+and the late waves. A quota replicates by construction.** It is the same grid applied twice, so
+the correlation goes to +1 and the category is licensed to carry its own geography — a geography
+that is the pollster's assumption about where the groups live. Every other guard agrees with it:
+the held-out population check passes trivially, because a survey that quota-samples units matches
+the population's unit shares by design; the totals reconcile; the build returns a closed
+partition. **Nothing prints a warning.** A country that fails a check is a good outcome compared
+with this.
+
+**The general rule: replication is evidence only where the two halves COULD have disagreed.**
+Before believing any test that compares two samples, ask what fixed the composition of each one.
+Two waves agreeing to the interview is not corroboration, it is one measurement reported twice,
+and it is a fact about the sampling design rather than about the country.
+
+**The test, which is cheap and belongs beside the split-half in any survey module.** For each pair
+of waves and each unit both sampled, over the answers both cards offered, compute the exact
+probability that two independent samples of those sizes would land on the *same rational share*,
+and read the number of exact agreements against the Poisson-binomial tail. It separates by orders
+of magnitude rather than by a threshold: Lebanon comes in at an adjusted **1.4e-4** while Jordan,
+Egypt and Iraq have no exact agreement outside the degenerate cells at all.
+`sources/arabbarometer.py`'s `quota_agreement` is the implementation and `assert_not_quota` runs
+it before `stability`; anyone adding a country from a different pooled survey should port it.
+
+**And run it on every religion column the file offers, not only the one you mean to draw.** The
+quota is a property of the fieldwork. Lebanon's sect column, pooled over the waves that carry it,
+comes in a hair the *safe* side of the same bar purely because its pool excludes the wave that
+makes the pair — so a pass on the narrower column would have licensed the wider one.
+
+
+### FITTING A COLUMN MARGIN TO THE SURVEY'S OWN NATIONAL SHARE UNDOES THE ROW MARGIN — Nigeria, 2026-09-09
+
+The Liberia construction (§9cl) is: seed a unit-by-category table with the survey's pattern, then
+IPF it to two exact margins, unit populations down the side and category totals across the top.
+It is correct there because **both margins are the same census counting the same 5,250,187
+people**. Reached for on a country with no census, it goes wrong in a way that raises nothing and
+looks reasonable in the diff.
+
+Nigeria's row margin is COD-PS 2022 by state. The obvious column margin, when no census exists,
+is the survey's own pooled national shares. That is wrong:
+
+> A survey's national share is its unit shares **weighted by the pool's own unit mix.** If the
+> row margin is a population table, the fit is being asked to reconcile two different weightings
+> of the same units, and it does so by bending every unit's measured share. The population
+> reweighting the row margin just performed is undone.
+
+**The two mixes differ for reasons that are normal rather than pathological**, which is why this
+is worth a spec entry instead of a country note:
+
+- **A pooled survey is missing units in some rounds.** Afrobarometer round 6 sampled no Adamawa,
+  Borno or Yobe, because it was in the field in Borno in December 2014. That is 14 million
+  mostly-Muslim people absent from a sixth of the pool and present in the population table.
+- **Pooling across years averages over internal migration and differential growth.** Each round
+  was allocated proportional to *its own year's* population. Nigeria's northern states grew at
+  x1.79 against the south-east's x1.28 over the same span, so a 2008-to-2022 pool under-weights
+  the north against any 2022 population table, however good each round's weights are.
+
+The size here was **4.6 points on the national Christian share**, 56.0% to 51.4%, which on 217
+million people is ten million of them, and it moved the country from one side of even to nearer
+the middle of the published range.
+
+**THE RULE.** Fit a column margin only to a source that counted the same people the row margin
+counted. Where there is no such source, do not fit at all: draw each unit at its own measured
+composition and let the national level fall out. `lapop.build` and `afrobarometer.build` already
+do this, so the failure is only available to someone who reaches for the IPF because a tail
+category has no residual to sit in — which is the actual trigger, and the fix for that is to add
+the tail additively at its national rate rather than to change the margin.
+
+**And the diagnostic is free and already printed.** `held_out` compares each unit's share of
+respondents with its share of the population table, for a different purpose. A unit at 0.63x and
+another at 1.37x is that check telling you the two weightings differ, before anything about
+religion has been read.
+
+### A ZERO IN A CROSSTAB IS A FACT ABOUT RESPONDENTS; THE VALUE LABELS ARE THE SHOWCARD — Nigeria, 2026-09-09
+
+An answer with zero respondents in a round supports *"nobody chose it"*. It does not support
+*"it was not offered"*, and the two carry different weight in an argument about whether a pooled
+share is measuring the questionnaire.
+
+**The card is in the file and costs seconds to read.** `pyreadstat.read_sav(path,
+metadataonly=True)` returns `variable_value_labels` without touching the respondents, so on a
+280 MB merged file the check is free even after a full load. Nigeria's `report_card()` is twenty
+lines and prints, per answer, the rounds whose label set carried it.
+
+Run on six Afrobarometer rounds it confirmed the guess it was written to check and found two
+more, one of which matters: **`Shia only` and `Shia` are the same box renamed between rounds
+4-5 and 6-9.** `ab.assert_one_wording` cannot see that, because the guard compares folded
+strings and these two do not fold together; a country drawing the Muslim card would have had one
+answer as two categories with every total still adding up, which is
+`[[reference_pooled_survey_labels]]` arriving through the ANSWER column instead of the unit one.
+
+Worth running on any pooled instrument before arguing from a zero.
+
+### A GATED INSTRUMENT'S CATEGORY LIST AND ITS TIER ARE BOTH FREE TO READ — Papua New Guinea, 2026-09-09
+
+A survey whose microdata is behind a registration still ships a final report, and the report
+carries the two things that decide whether the account is worth asking for. Neither costs an
+account, and reading them can retire a route or reorder two of them.
+
+**Appendix A gives the tier.** PNG's DHS 2016-18 says *"representative at the national level, for
+urban and rural areas and each of the 22 provinces"*, so the geography is settled before anything
+is downloaded — and a survey designed for four regions is a different proposition from one
+designed for twenty-two provinces.
+
+**The questionnaire appendix gives the answer set, and Table 3.1 prices it.** PNG's DHS card has
+**eleven religion codes and no Baptist code**, though the census counts Baptists at 2.8–3.0%. The
+cost shows up as the residual: DHS reports `Other Christian church` at **21.3%** where the 2011
+census's `Other Christian` is **9.7%** and the 2022 SDES's is **0.89%**. An instrument whose
+residual is more than double the census's on the same population is measurably coarser than the
+thing it would stand in for, and one fifth of every unit would be drawn as *other*.
+
+That comparison is the general move: **put the gated instrument's residual beside the census's
+before valuing the route.** It is the same reasoning as §3.1a's answer sets, applied one step
+earlier — to whether to ask for access at all rather than to whether two sources can be compared.
+Here it reordered PNG's two blocked routes: IPUMS at 89 districts, all persons, 9.7% residual
+beats DHS at 22 provinces, ages 15-49, 21.3% residual on every axis except vintage.
+
+**And check the universe while the report is open.** PNG's DHS asks religion in the Woman's and
+Man's questionnaires, of respondents 15-49; Nigeria's carries it on the household roster. Same
+programme, different universe, and only one of them is a population composition.
+
+### A BOUNDARY FILE'S ERROR HIDES INSIDE ITS CORRECT TOTAL — Iraq, 2026-09-09
+
+geoBoundaries' `gbOpen/IRQ/ADM1` has the right number of features, the right ISO codes, and a
+country area within **0.2%** of the office's own published figure. **Its Baghdad polygon is
+912 km² against Iraq's published 4,555 and COD-AB's 5,100**: it draws roughly the built-up
+city and hands the rest of the governorate to Babil, Diyala and Salah al-Din, whose polygons
+are 1.55×, 1.13× and 1.08× their statute areas to compensate. Baghdad is **21.2% of Iraq's
+population**, so building on that file puts a fifth of the country's dots inside a fifth of
+the right polygon and draws the overflow in three neighbours. Nothing errors; the totals
+reconcile; the map looks built.
+
+**The check is one rank correlation and it is per unit, never on the total.** Most offices
+publish a governorate/province area table beside the population one — Iraq's is Table 1/1 A of
+the same statistical abstract the census chapter is in — and comparing it against the polygon
+areas separates a re-cut unit from a re-projected one immediately. `sources/iq_geo.py`'s
+witness 2 is the implementation: ρ = +0.994 for COD-AB, 0 of 5,000 permutations reaching it,
+and the per-unit ratio column printed beside it so a single bad unit is visible.
+`[[reference_agol_statute_boundaries]]` is the same worry one file across.
+
+### A COMPOSED CATEGORY CAN COLLIDE WITH ITSELF, AND THE WORDING GUARD CANNOT SEE IT — Iraq, 2026-09-09
+
+`assert_one_wording` catches one answer arriving under two spellings. The inverse exists and is
+worse: **two different answers arriving under one spelling.** Iraq's Arab Barometer build
+composes `category` from the religion question and the sect follow-up, and `Other` is a box on
+**both** cards — a religion that is neither Islam nor Christianity, and a Muslim denomination
+that is none of those offered. Composed naively they merge into a single category with every
+total still adding up, and no guard fires, because the two strings are identical rather than
+merely similar.
+
+**The rule: any time one column is built from two, list the answer sets of both and intersect
+them.** A non-empty intersection is a decision, not a coincidence, and the two sides need
+qualifying labels with the reason written down (`sources/iq.py`'s `COMPOSED`). This is the same
+family as `[[reference_pooled_survey_labels]]` and the one member of it that no automatic check
+can reach.
+
 ## 13. Things deliberately not being done
 
 - **No world-history time slider.** cityhistory is that map. Religion over time at this granularity is a
@@ -10382,3 +10559,285 @@ country's 213 municipalities it is **r = +0.3063, p = 0.00005, leave-one-out +0.
 +0.3273**. Half the correlation and three orders of magnitude more evidence, from the same
 people. A large r on nine units is mostly noise ([[reference_check_needs_power]]); read the
 direction, not the magnitude, and re-run it if a finer tier ever arrives.
+
+**A STATISTICAL OFFICE'S CUSTOM-TABLE SHELF IS NOT IN ITS CATALOGUE — the Netherlands,
+2026-09-09, §9cu.** CBS's OData catalogue answers a title filter over every StatLine table
+and its best religion geography is twelve provinces, which is why §11k closed the country as
+national-only and why `queue.md` had it priced as a twelve-province ESS build. The country is
+actually drawn on **403 gemeenten**, from `maatwerk` — a tabulation made for an outside
+requester and left up afterwards, published on the website and indexed by neither the
+catalogue nor the StatLine table it was cut from. On cbs.nl the query is
+`zoeken?q=<term>&type=maatwerk`. The equivalent shelves elsewhere: Destatis
+*Sonderauswertungen*, SCB *beställd statistik*, SSB *oppdrag*, INSEE *données détaillées*.
+This is [[reference_spa_hidden_apis]] one shelf up — the catalogue is not the library — and it
+is worth ten minutes against any European office before a country is built from a pooled
+survey instead. **The tell that such a table exists is a paper that maps the variable at a
+geography and publishes no table**: CBS's *De religieuze kaart van Nederland, 2010–2015* draws
+choropleths per gemeente and prints none of the numbers, which is evidence the figures exist
+and is not itself a source.
+
+**A DISTANCE COLUMN OUT OF A GEOGRAPHIC-CRS SPATIAL JOIN IS NOT A DISTANCE, AND THE FAILURE
+MODE IS A THRESHOLD THAT ALWAYS PASSES — same country.** `gpd.sjoin_nearest(..., distance_col=)`
+on EPSG:4326 returns degrees, so every cap from 200 m to 20 km selected the identical rows and
+the check reported all 2,525 outside hexes as *within 200 m*. geopandas emits a `UserWarning`
+about the geographic CRS and returns numbers anyway. It matters because the cap was doing real
+work: Kontur's NL extract carries Brugge, Knokke and Zeebrugge, 371,100 Belgians whose nearest
+Dutch gemeente is Sluis, and a nearest-join with no working cap hangs all of them on a gemeente
+of 24,000 people. **Project before any join whose output you are going to compare to a number.**
+
+## 15. Magnitude without location — the national estimate layer — DECIDED 2026-09-09, NOT BUILT
+
+> Anita, `todo.txt`: *"for this given country and this religion, this is our best national level
+> estimate of how many peopple are this religion … this might help with presenting a slightly more
+> honest sense of like 'there are this many of this religion in the world'."*
+
+**The grammar already had a hole shaped exactly like this, and that is the argument for building it.**
+The map has two marks and they sit on a 2×2 of *magnitude* against *location*:
+
+| | location known | location unknown |
+|---|---|---|
+| **magnitude known** | a dot: N people, here (§4.1) | **this section**: N people, somewhere in this country |
+| **magnitude unknown** | a ring: present here (§4.3) | unlit (§6.12) — not asked, and not evidence |
+
+Three of those four are built. The missing cell is the one every compiler source in `sources.md` §1
+actually occupies, and until now the only thing done with a national figure was to check a country's
+subnational figures against it. **The reader never sees it**, so a religion the archive cannot place
+reads as a religion that is not there.
+
+### 15.1 Three cases, and they are one feature
+
+All three of Anita's, in her order:
+
+1. **A country whose source stops above the selected node.** Select Shia; a census that printed only
+   `Muslim` draws nothing, and yet somebody has published a Shia share for it.
+2. **A religion almost nowhere draws.** Select Daoism and the map is very nearly empty, because the
+   censuses that name it are a handful. Its national estimates exist for dozens of countries.
+3. **A country that DOES draw the selected node and cannot divide it.** Select Islam over Indonesia:
+   the dots are right and the source has no Sunni/Shia column, while a compiler does.
+
+They differ only in where the estimate sits relative to what was drawn. One data layer answers all
+three, and §15.2 makes one *symbol* answer all three as well.
+
+### 15.2 The symbol is an outline, and case 3 gets one too
+
+The first sketch was a dwell: hover empty ground inside a country for 0.25 s without moving. **It is
+the right instinct and the wrong mechanism**, and Anita killed it on the second reading: *"dwell
+wouldnt work on mobile"*. Two further reasons it was wrong:
+
+- **The map already answers hovers over that ground.** A second hover grammar on the same pixels,
+  distinguished only by a timer, is a rule nobody can see.
+- **Case 3 would be undiscoverable.** Nothing about a fully drawn Indonesia suggests a card exists,
+  so the feature would only ever be found by the reader who already knew.
+
+**So a country with an estimate below what it draws gets the outline too**, and the outline then means
+one thing everywhere: *there is more here than the dots say*. The hover target is always a mark, never
+a region of emptiness, which is how every other hover on this map works.
+
+**The target is not the mark** — §10.4's rule about `#mixbar`, and it applies unchanged. Draw a
+hairline; hit-test a fat invisible stroke on top of it. A one-pixel border is a miserable thing to
+point at and the pointer has to stay on it while the card is read.
+
+**Hatching is available and it already means this.** §10.4's undrawn segment is diagonal grey and is
+the one fill on the composition bar that is visibly *not a religion*, for the reason that no colour of
+the map's own can stand for people the map does not contain. A hatched or dashed border is the same
+sentence at country scale, and a reader who has read the legend once has already learned it.
+
+### 15.3 An estimate never restates a node the country's own source measured
+
+**The one invariant, and it removes the whole contradiction class before anyone sees it.** An estimate
+may speak *below* a node the country drew, or about a node the country's source never offered. It may
+never restate the same node.
+
+WRP putting a country at 40% Christian where its census drew 55% is then not a conflict the reader has
+to arbitrate; it is refused at build time. Shia below a drawn `islam` is allowed. Daoism in a country
+whose census never listed it is allowed. **All three of §15.1's cases pass and the failure mode does
+not arise**, which is a better outcome than any precedence rule between a census and a compiler could
+have produced.
+
+Anita, 2026-09-09: *"i agree we should not state conflicting numbers. we can think about them case by
+case tbh, but these general guidelines make sense."* So the invariant is the default and a country may
+be argued out of it in `sources.md`, not silently in code.
+
+**§6.12's asymmetry carries over verbatim.** A country covers a node if it targets that node or
+anything below it, and **mapping to an ancestor is not coverage**. Same here: an estimate that says
+`islam.shia` earns an outline when Shia is selected and earns nothing when Twelver is. The estimate
+layer's own coverage set is computed the same way and by the same rule, or the two layers will
+disagree about which countries light up for what.
+
+### 15.4 A claim carries its own denominator, and that is what lets several sources stack
+
+Anita's call, and it is the part that makes this more than a second Pew import: *"we might even want to
+compile like multiple sources … on top of a generic 30 category ARDA or something we might want to
+integrate another 'muslim schools' source that says like oh 60% of the muslims here are hanafi or
+whatever. or like some other 'alevi only' soruce that just estimates the alevis in one country."*
+
+**Stored as bare percentages of the population, those sources fight. Stored with the parent node
+attached, they compose**, because §3.2 makes the tree a partition and each source is then filling in
+one level of it:
+
+| claim | share | of |
+|---|---|---|
+| a 30-category compiler | 0.90 | the country |
+| a madhhab source | 0.60 | `islam` |
+| a single-group study | 0.15 | the country |
+
+So a row is `(source_id, cc, node, share, of_node, low, high, year, basis)` and the card multiplies
+along the chain: the country's population, times the backbone's `islam` share, times the madhhab
+source's Hanafi-within-Islam share.
+
+**That is arithmetic this project already calls `measured` when it happens inside one source.** Benin
+is a published share times a published total (§9ai), Cambodia is Table 2.5.1's percentages times
+Table 2.1.1's population (§9an), and both reconcile. What is new is that the factors come from
+*different compilers with different population bases*, so two rules bound it:
+
+- **Each link's denominator must be the node directly above it in the tree.** A chain that skips a
+  level is multiplying two things that are not nested, which is §3.10d's failure — arithmetic
+  consistency is not evidence of meaning.
+- **Round the product to the weakest link.** Two rounded percentages do not produce "1,247,332
+  Alevis". The card prints the figure at the precision the chain can carry and names every source in
+  it, rather than presenting one blended number with one citation.
+
+**And the basis vocabulary already has the slot.** §3.1's `estimate` is defined as *"a compiler's
+judgement"* and names Pew, WRD/WCD and ARDA as the reporters. Every row here is `estimate`, every dot
+on the map is `self_id` or `roll`, and §13's ban on aggregating adherent counts across bases is what
+keeps the two from ever being added. **They are shown beside each other and never summed.**
+
+**Where a source publishes a range, carry the range.** Pew's *Mapping the Global Muslim Population*
+gives Shia shares as bounds for exactly the countries where the answer is contested. §14 rule 1
+forbids estimating a magnitude a source does not publish, and **a midpoint of a published range is an
+invention** — the same reflex `gap_share` refuses in its kind-2 case, where subtracting two national
+totals measures the vintage difference rather than the hole.
+
+**Never recompute the percentage against the drawn total.** The compiler's population base and the
+census's are different vintages and different universes. Quote the compiler's own percent beside the
+compiler's own denominator, and let the two disagree visibly rather than reconciling them silently.
+
+#### 15.4a The sources worth pursuing, and the one that cannot do this
+
+**Pew's country file answers neither of Anita's examples and it is the obvious first guess.** It is
+seven categories — Christian, Muslim, Hindu, Buddhist, Jewish, other, unaffiliated — so Daoism is
+inside `other` and there is no Sunni or Shia row in it anywhere. It stays what `sources.md` §1 already
+calls it: the backbone and the denominator, not a source of depth.
+
+| candidate | what it gives | cost |
+|---|---|---|
+| **ARDA / Correlates of War World Religion Project** | ~30 categories, national, free. **Verify the exact list before committing** — the reason to look is that it is believed to name Sunni and Shia apart and to give Taoism, Confucianism and Shinto rows of their own rather than folding them into `other` | stops at **2010**. `sources.md` §1 calls it "too old to lead", which is right for dots and is a caption here rather than a disqualification |
+| **US State Department International Religious Freedom reports** | annual, every country, public domain, and they routinely print the exact sentence this feature wants about a country's Sunni and Shia split | prose, so per country by hand. The natural home for the overrides §15.5 governs |
+| **Pew, *Mapping the Global Muslim Population*** | Sunni/Shia by country, as ranges | 2009, and Muslims only |
+| **World Religion Database (Brill)** | the deepest of them | paywalled, confirmed |
+
+**Joshua Project is not a candidate for this layer**, and the reason is on its `sources.md` §1 row: its
+shares are not comparable across its own rows. §14.14 permitted it for groups selected on outside
+evidence and refused it as a threshold; a layer whose whole output is a magnitude is the threshold
+case.
+
+### 15.5 Precedence is specificity, and specificity is usually the interested party
+
+A single-group study beats a 30-category global compiler for the node it is about. That is the obvious
+rule and it is also the dangerous one: **the body that has counted one group most carefully is very
+often that group, or its opponent.** §14.14 settled the general form of this — a threshold over an
+interested source is not a rule — and the answer there was to keep the source and record what it is.
+
+So every estimate source carries a phrase in **fixed vocabulary**, doing for compilers what `how` does
+for countries (`countries.py`'s field docstring): *what kind of thing this number is*, in the same
+words each time, so a reader can rank a Pew estimate against a community federation's own count
+without parsing forty compilers in five languages. A citation cannot do this job, for the reason `how`
+exists at all: two citations that look alike can be a census and an advocacy figure.
+
+### 15.6 The tint, and the two things it collides with — OPEN
+
+Anita's call is to tint the outline in the religion's hue and iterate on screen: *"color is not super
+important to get right on the frist try, we can iterate once we see it."* Recorded here so the two
+known collisions are not rediscovered as bugs.
+
+- **It has a legend consequence, and it runs against §7a-i.** §6's rule is that every colour drawn
+  appears in the legend, and the legend is built from drawn tallies — §7a-i decided in as many words
+  that *a node that only ever holds rolled dots is absent from the legend until you roll them*. Select
+  Daoism and there may be no Daoism row for a tinted outline to be read off. **Tinting therefore means
+  the legend gains rows for nodes that draw no dots**, which is a decision about the legend and not
+  only about the outline.
+- **A hairline in a dark hue on near-black land is the hardest contrast case the palette has.**
+  §6.12's wash hit this and its finding was that on a basemap painting land `rgb(12,12,12)` the
+  distinction has to run *lighter*, not darker, because there is no headroom to dim into.
+  `check_palette.py` already flags `daoism` at **2.3** against the basemap and `unaffiliated` at 2.6 —
+  and Daoism and Shia are precisely the two selections this feature exists for. Expect a lightness
+  floor of its own, or a dark halo under the stroke.
+
+### 15.7 All 201 countries, and what the title has to say instead
+
+Anita, 2026-09-09: *"yes i think we can cahgne what the titles country count means. not dots in all of
+them. ideally we cover all 201 countries with this, or try to."*
+
+**This is the decision that changes what the map is**, and it is the right one: restricting the layer
+to built countries would leave the Daoism view almost as empty as it is now, which is the case the
+feature was asked for.
+
+- **`country_shapes.geojson` holds built countries only** and has to widen. `country_shapes.py` reads
+  Natural Earth 10m and intersects with `COUNTRIES`; §6.12 measured 3.3 MB across twenty. **Measure
+  the whole-world file before committing to one cached fetch** rather than assuming it scales.
+- **Estimate-only countries can take a coarser simplify than drawn ones.** §6.12's finding was that a
+  reader cannot tell a deliberately coarse boundary from a broken one, and what exposed 110m was dots
+  landing on both sides of a straight line through the Visayas. A country with no dots has nothing to
+  be caught out against, so its coastline is never examined at that resolution. This is the one place
+  the two tiers may legitimately differ, and it is worth taking, because it is most of the bytes.
+- **The title now needs two numbers**, not a re-pointed one. "Religion in N countries" currently means
+  drawn, and `todo.txt` already wants that N to stop counting territories. Drawn and counted are
+  different claims and the header should carry both. Wording is Anita's.
+
+**The count still does not go in this file** — see the note under *Which file is which*. `counts.json`
+is what the archive holds; 201 is Pew's country list, quoted from `sources.md` §1.
+
+### 15.8 The world total is the point, and it is cheaper than the outlines
+
+The motive in `todo.txt` is a global figure, not a per-country hover, and the archive cannot state one
+today: with a religion selected it knows what it drew and nothing about what it did not.
+
+With the layer built, the panel can say, for the selected node:
+
+> drawn: 412 m in 38 countries · estimated worldwide: 1.9 bn (WRP 2010)
+
+**Two numbers, two provenances, never added** — §3.1 and §13, and the second number is computed
+entirely within one compiler rather than by topping the dots up. It is the cheapest part of this
+section to build and does most of the honesty work; the outlines are what make it findable per
+country.
+
+### 15.9 §14 clears this more easily than anything else in the project
+
+Worth stating plainly, because "the Shia share of Saudi Arabia" *sounds* like it needs a §14
+conversation and structurally does not.
+
+- **Rule 1** — never estimate a magnitude a source does not publish — is satisfied by construction:
+  the layer quotes and does not model. Its one real exposure is §15.4's chain, which is bounded there,
+  and the range rule.
+- **Rule 2** — for a persecuted group, no resolution finer than the state's own publication — is
+  satisfied trivially. **This layer adds no spatial resolution at all.** A national figure is the
+  coarsest statement possible, and the outline deliberately places nothing.
+
+**The case to look at before shipping is Daoism, not Saudi Arabia.** For a religion with near-zero
+dots the outlines are the entire picture, and the reader's takeaway becomes one compiler's judgement
+with the map's authority behind it. That is close to the genre §14.2 defines this project against. The
+mitigations are that the outline is never a fill, never carries a dot's weight, and names its compiler
+every time.
+
+**And Turkey is the flagship, so build toward it deliberately.** Its `gap` names the Alevis as a hole
+nobody has quantified, which is why `gap_share` is deliberately absent for it. Dots that do not contain
+them, plus an outline that says how many there are and who says so, is the clearest single picture of
+what this section is for.
+
+### 15.10 Shape, and what is not decided
+
+**Proposed, not decided:** one file per source under `estimates/`, a root `estimates.py` that resolves
+§15.5's precedence and emits a per-country table, and `tiles.py --refresh-meta` shipping it inside
+`counts.json` beside `covers` and the roll-up table. That mirrors `coverage.py` and `rollup.py`
+exactly, and it means **a corrected estimate ships without re-encoding a single tile**.
+
+Open:
+
+1. **The outline at high zoom.** §6.12's wash runs full strength to z6.5 and is gone by z8.5, because
+   its question stops being interesting once you are inside one country. Case 3's question does not
+   stop being interesting there. Whether the outline fades on the same curve, a later one, or not at
+   all, is unresolved.
+2. **Whether an estimate-only country is reachable by Auto** (§6.2, §9b). It has no dots to sample, so
+   the current picker cannot see it.
+3. **What the unit-composition panel does when clicked in an estimate-only country.** There is no unit
+   and no composition; there is a country and a list of quoted shares.

@@ -104,3 +104,21 @@ geography and needs no concordance at all, so that whole construction disappears
 `microdata.ubos.org:7070` at all. The builder's decision to establish the fact with a 512-byte
 range request and stop was the right one, and it is the only reason the ask can state the fact
 without having acted on it.
+
+---
+
+## Ruled 2026-09-09 by Anita
+
+**Yes — she registered with UBOS and downloaded the file.** So the question the ask actually put
+(register, email, or leave it) is answered by route 1: the login is real and honoured, and the
+open `/download/<int>` route is beside the point. **Nothing was ever taken from that route** beyond
+the original 512-byte probe.
+
+`NPHC 2024-Users  File using cpro_extract_Population_record_data.rar` is in her Downloads,
+428,614,937 bytes, matching the size the ask recorded. Note the two spaces in the filename.
+
+**The size inside is the thing nobody knew.** Windows bundled `tar` reads the archive without any
+extra tool, and the single member is a Stata file of **22,480,546,172 bytes — 22.5 GB**, the full
+count rather than a sample. She has 58.4 GB free, so it fits, but her instruction is explicit:
+**extract, take what is needed, delete.** The compact aggregate stays, the 22.5 GB file does not,
+and the RAR in Downloads is hers to keep or bin.

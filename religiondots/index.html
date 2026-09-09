@@ -523,6 +523,15 @@
     #about .mod span { flex: 1; color: #ccc; }
     #about .mod i { font-style: normal; font-variant-numeric: tabular-nums; color: #c9a06a; }
     #about .mod i.z { color: #666; }
+    /* The panel had no anchor style because it had no links until the credits arrived; the
+       browser default is a saturated blue with an underline, which is the one piece of
+       light-mode chrome the hover card was already fixed for. Same accent as #scope-bar. */
+    #about a { color: #89b4fa; text-decoration: none; }
+    #about a:hover { text-decoration: underline; }
+    /* The credits sit under the country note rather than above it, so the thing a reader
+       opened the panel for is still the first thing in it. Dimmer than the prose for the same
+       reason: this is a licence obligation being met, not something to read. */
+    #about .credits { color: #8a8a8a; margin-top: 10px; padding-top: 8px; border-top: 1px solid #2c2c2c; }
 
     /* ---- the hover card over a dot --------------------------------------- */
     /* MapLibre ships this white, with a drop shadow and `10px 10px 15px` of padding, and it
@@ -708,11 +717,25 @@
        area until there are enough people to draw one. Rings mark a body that is present but
        too small to reach one dot, or that reported congregations without a membership count.
        A ring says only "here", never how many.</p>
-    <p>Dots are placed at random within small census units, not at anyone's address. Those units
-       are built to a few thousand people each, so this places people about where they live
-       without using any population data. It says nothing about where inside a unit a group
-       lives.</p>
+    <p>Dots are placed at random within small census units, not at anyone's address. Where those
+       units are built to a few thousand people each, as they are in the United States and
+       Australia, that is already enough to put people about where they live. Where they are not,
+       a population grid decides where inside the unit the dots fall, so that a large and mostly
+       empty district does not wash evenly in colour. Either way it says nothing about where
+       inside a unit a group lives.</p>
     <div id="about-country"></div>
+    <p class="credits">Administrative boundaries come from the OCHA Common Operational Datasets on
+       the <a href="https://data.humdata.org/" target="_blank" rel="noopener">Humanitarian Data
+       Exchange</a> and from <a href="https://www.geoboundaries.org/" target="_blank"
+       rel="noopener">geoBoundaries</a>, both under CC BY 4.0, and coastlines from Natural Earth.
+       Where a country's own agency publishes the units its census was counted on, those are used
+       instead and named with the country. The population grid is
+       <a href="https://data.humdata.org/organization/kontur" target="_blank" rel="noopener">Kontur
+       Population</a> under CC BY 4.0, and <a href="https://www.worldpop.org/" target="_blank"
+       rel="noopener">WorldPop</a> under CC BY 4.0 for Eswatini. The basemap is
+       <a href="https://openfreemap.org/" target="_blank" rel="noopener">OpenFreeMap</a>, rendered
+       from OpenStreetMap data. Each country's religion figures are cited under the title when
+       that country is selected.</p>
     </div>
   </div>
 
@@ -720,6 +743,26 @@
 <script src="https://unpkg.com/pmtiles@3.2.0/dist/pmtiles.js"></script>
 <script>
 maplibregl.addProtocol('pmtiles', new pmtiles.Protocol().tile);
+
+/* WHERE `data/` IS SERVED FROM, and the one line that has to change between the working tree
+   and the published site. Locally it is the working tree; published it is the R2 bucket, for
+   the reason ancestrydots found first: GitHub Pages fronted by Cloudflare re-encodes the
+   response and breaks the byte-range requests PMTiles is built on, while R2 serves them
+   correctly. Checked with `curl -r 0-99`, which must answer 206.
+
+   EVERYTHING UNDER `data/` GOES TO R2 AND NOTHING UNDER IT GOES TO THE WEBSITE REPO. That is
+   one rule rather than a per-file judgement, and the sizes are why: the archive is 84 MB and
+   `data/buffers/` another 76 MB across 249 files, both rewritten by every build, so committing
+   them would put a fresh 160 MB into that repo's history every time. `index.html` and
+   `taxonomy/religions.json` are the two files that do go in the repo — small, and the pair
+   that decides what the viewer can draw at all.
+
+   THE HOSTNAME TEST AND NOT A BUILD STEP, so the same file works in both places and there is
+   no deploy-time edit to forget. `npx serve` puts local dev on `localhost`, which is the case
+   this catches; anything else is treated as published. */
+const DATA_BASE = (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
+  ? 'data/'
+  : 'https://pub-ae551368cea941f39101e13c84d60bde.r2.dev/religiondots/data/';
 
 /* People per dot, and it is a SETTING rather than a constant (§4.1b). The archive carries two
    editions — 1:1,000 and 1:10,000 — as separate layer triples, because a coarse dot is not a
@@ -1093,6 +1136,7 @@ let counts = {};           // node id -> dots in its whole subtree, for the pane
 let own = {};              // node id -> dots tallied ON it, which is a different question
 let DRAWN = new Set();     // the categories the wheel is currently divided among
 let FOLDED = new Map();    // parent -> children too small to be worth a legend row (§6.10)
+let ROOT_FOLD = new Set(); // ...and the same cut applied to the families themselves (§6.10a)
 let SPLIT = new Set();     // ...of those, the ones that also have a drawn node beneath them
 
 // ---------------------------------------------------------------- tree helpers
@@ -1499,8 +1543,58 @@ function subtree(id, acc = []) {
 
    A node on the path to the current selection is never folded — you cannot select a thing and
    have it disappear into a bucket. */
-const FOLD_SHARE = 5e-5;
+/* THE CUT IS CHOSEN AGAINST THE LEGEND'S HEIGHT, NOT FIXED — Anita, 2026-09-09: *"lets try to
+   make this collapsing aware of the total number of rows we'd actually want to show … if we
+   can just fit everything without any collapsing we can drop the threshold … if we can't fit
+   everything maybe we should raise the threshold to whatever it needs to be so that the
+   legend is at most 2 times as wide as the visible portion."*
+
+   A single number could not do that job, because the two things it has to balance move
+   independently. The DENOMINATOR moves with the country: 5e-5 of the all-countries view is
+   296,000 people and 5e-5 of Estonia is 66, so one threshold folds thirty rows in one view and
+   none in the other. And the BUDGET moves with the window: the same legend that scrolls twice
+   on a laptop scrolls six times on a phone. Fixed at 5e-5 the all-countries view came out
+   3.1 screens tall, which is the state this replaced — nine tenths of the rows out of sight,
+   and no way to see the shape of the thing you are reading.
+
+   So the threshold is now the OUTPUT and the row budget is the input. `computeFold` walks the
+   ladder from the gentlest cut up and stops at the first one whose legend fits; if none fits,
+   the harshest is used and the legend simply runs long. The ladder is 1-2-5 over three
+   decades, which is fine enough that the chosen cut is never much harsher than it needed to be
+   and coarse enough that the search is eight steps rather than a bisection nobody can predict.
+
+   THE FLOOR IS 2e-5 AND IT IS NOT ZERO. A view that fits without folding anything still folds
+   at the floor, and it should: at 1:1,000 a group under 2e-5 of the all-countries view is 118
+   dots on the whole earth, and a row with a colour of its own for something nobody can find is
+   a worse legend than one without it. Below the floor the rule stops being about legend space
+   and starts being about whether the mark exists at all, which is `presence rings`' question.
+
+   THE CEILING IS 5e-3 AND IT IS A REAL CEILING. Half a per cent of the view is already large
+   enough to fold things a reader would look for — in the all-countries view it reaches
+   Anglicans — so the ladder stops there and lets the legend overflow instead. A budget that
+   could demand any threshold would, on a short enough window, fold everything into one row and
+   report that as success. Overflowing is the honest failure. */
+const FOLD_LADDER = [2e-5, 5e-5, 1e-4, 2e-4, 5e-4, 1e-3, 2e-3, 5e-3];
+/* What the last `computeFold` settled on. Read by the bucket's own tooltip, which has to say
+   the number that was actually applied rather than the one the file was written with. */
+let FOLD_SHARE = FOLD_LADDER[0];
 const FOLD_MIN = 2;
+
+/* THE LEGEND MAY BE TWICE THE HEIGHT OF ITS OWN VIEWPORT — Anita's number, and it is a
+   statement about reading rather than about pixels: *"if you scroll to the top then the
+   bottom, you should be able to see everything within those 2 views."* Two screenfuls is the
+   most a person can hold as one list; past that the legend stops being a thing you have read
+   and becomes a thing you search. */
+const BUDGET_SCREENS = 2;
+/* A floor under the budget, for the window that is too short to hold a legend at all — a phone
+   in landscape leaves about seven rows of sheet. Without it the budget goes to nothing, the
+   ladder runs to its ceiling and every family collapses into a bucket, which is not a smaller
+   legend so much as no legend. At 18 the harshest views still list the families themselves. */
+const BUDGET_MIN = 18;
+/* One row's height, measured off the first row of the last render rather than computed from
+   the type — the mobile sheet sets a taller row, and a budget that did not know it would hand
+   a phone a desktop's worth of rows. 19 is the desktop value and is only the seed. */
+let ROW_PX = 19;
 
 /* A BRANCH WHOSE `unspecified` ROW IS ITS CHILD — Anita, 2026-09-05, and the only entry is
    the one that provoked it: "if we select catholic it has two categories for latin catholic
@@ -1550,17 +1644,138 @@ function viewTotal() {
                : ROOTS.reduce((a, id) => a + (counts[id] || 0), 0);
 }
 
-function computeFold() {
-  FOLDED = new Map();
-  const t = viewTotal();
-  if (!t) return;
+/** Never fold what is selected, or what the selection sits inside — you cannot pick a thing
+    and have it disappear into a bucket, and you cannot lose the row you are reading against. */
+function pinned(id) {
+  return !!scope && (scope === id || scope.startsWith(id + '.'));
+}
+
+/* §6.10a — THE FAMILIES FOLD TOO, and the ask was specific. Anita, 2026-09-09: *"we should
+   also consider moving some of the tiny top level religions (like scientology, modekngei,
+   shinto, mandaeism, all under 60k) into a '4 small religions' collapsed group at the
+   bottom."* All four are under 100 dots in the all-countries view, and each was costing a
+   top-level row — the most expensive row in the panel, because the top level is the part a
+   reader scans rather than searches.
+
+   IT IS A LEGEND FOLD ONLY, AND THAT IS THE DIFFERENCE FROM §6.10. A folded CHILD gives up its
+   colour and takes its family's, which is what makes folding worth doing: 115 dots of Hussites
+   stop costing a hue as well as a line. A root has no family to fall back into, so a folded
+   root KEEPS its own authored hue and its own dots, and only the row moves. Nothing about the
+   map changes when this fires — `drawnSet` is not told, `paletteFor` is not told, and the
+   bucket expands to the members with their own swatches beside them.
+
+   That is also why the bucket draws a BLANK mark where §6.10's draws a swatch: §6.10's members
+   really are all one colour by then, and these are not. A single swatch over four different
+   hues would be the one thing this panel is not allowed to do (a colour in the key that is not
+   a colour on the map). Blank is the file's existing mark for a row that is a heading rather
+   than a category, and that is exactly what this row is. */
+function foldRoots(share, t) {
+  const small = ROOTS.filter(id => (counts[id] || 0) < t * share && !pinned(id));
+  return small.length >= FOLD_MIN ? new Set(small) : new Set();
+}
+
+/** §6.10's cut at one threshold, as a parent -> folded-children map. */
+function foldKids(share, t) {
+  const m = new Map();
   for (const par in KIDS) {
     const ks = KIDS[par];
     if (ks.length < FOLD_MIN) continue;
     if (!(counts[par] || 0)) continue;
-    const small = ks.filter(k => (counts[k] || 0) < t * FOLD_SHARE
-      && !(scope && (scope === k || scope.startsWith(k + '.'))));
-    if (small.length >= FOLD_MIN) FOLDED.set(par, new Set(small));
+    const small = ks.filter(k => (counts[k] || 0) < t * share && !pinned(k));
+    if (small.length >= FOLD_MIN) m.set(par, new Set(small));
+  }
+  return m;
+}
+
+/** The branches whose colour has moved to an `unspecified` row, given a drawn set. Pulled out
+    of `recolour` so the row count below can ask the same question before the render. */
+function splitOver(drawn) {
+  const s = new Set();
+  for (const id of drawn)
+    for (let p = parentOf(id); p; p = parentOf(p)) if (drawn.has(p)) s.add(p);
+  return s;
+}
+
+/* HOW MANY ROWS THE PANEL WOULD DRAW, without drawing them.
+
+   THIS WALK MIRRORS `renderTree`'s AND HAS TO — same `isOpen` test, same `drawnKids`, same
+   `unspecified` and bucket and lineage-caption rows. It is a second copy of that structure and
+   there is no way around it: the fold has to be decided BEFORE the palette, and the palette
+   before the render, so nothing measurable exists at the moment the question is asked. The one
+   protection is a cheap one and it is worth keeping — `renderTree` counts the rows it actually
+   emitted and the two are asserted equal in the console when they disagree. If you add a row
+   type to the renderer, add it here.
+
+   It counts rows the reader can SEE — a row inside a closed twisty costs nothing, which is why
+   a folded bucket is one row rather than none: the bucket's own members render closed. */
+function legendRows(drawn, split) {
+  let n = 0;
+  const walk = (id) => {
+    n++;
+    const kids = KIDS[id] || [];
+    if (!kids.length || !isOpen(id)) return;
+    const vis = drawnKids(id);
+    if (split.has(id) && own[id] && !mergedInto(id)) n++;
+    // the lineage captions are not rows but they take a row's worth of height
+    if (id === scope) {
+      const g = new Set(vis.map(k => LINEAGE_GROUP[k]).filter(Boolean));
+      if (g.size > 1) n += g.size;
+    }
+    for (const k of vis) walk(k);
+    const f = FOLDED.get(id);
+    if (f && f.size) n++;
+  };
+  for (const r of ROOTS) if (!ROOT_FOLD.has(r)) walk(r);
+  if (ROOT_FOLD.size) n++;
+  return n;
+}
+
+/* THE HEIGHT THE ROWS HAVE, in rows, times `BUDGET_SCREENS`.
+
+   MEASURED OFF THE PANEL'S CAP AND NOT OFF `#tree`, and the difference matters. `#tree`'s
+   `clientHeight` is the space available only while the content overflows it; the moment a fold
+   makes the legend short enough to fit, `clientHeight` collapses onto the content and the
+   budget collapses with it — the cut that just succeeded would re-read as a cut that is still
+   needed, and the panel would ratchet itself down to nothing. The cap and the three fixed
+   blocks around the tree do not move with the content, so they are what the budget is built
+   from.
+
+   `#legend-note` counts against the budget only where it is OUTSIDE the scroll. On the mobile
+   sheet the whole panel scrolls as one document and the controls sit past the end of the rows,
+   so they cost the legend no height it could have used. */
+function rowBudget() {
+  const panel = document.getElementById('panel');
+  const tree = document.getElementById('tree');
+  if (!panel || !tree) return BUDGET_MIN * BUDGET_SCREENS;
+  const h = id => document.getElementById(id)?.offsetHeight || 0;
+  const cap = parseFloat(getComputedStyle(panel).maxHeight);
+  if (!isFinite(cap)) return BUDGET_MIN * BUDGET_SCREENS;
+  const treeScrolls = getComputedStyle(tree).overflowY !== 'visible';
+  const space = cap - h('panel-head') - h('scope-bar')
+    - (treeScrolls ? h('legend-note') : 0) - 12;
+  return Math.max(BUDGET_MIN, Math.floor(space / ROW_PX)) * BUDGET_SCREENS;
+}
+
+/* The ladder walk. Gentlest cut first, stop at the first legend that fits.
+
+   IT SETS THE GLOBALS AS IT GOES because the question it is asking cannot be answered without
+   them: `isOpen` reads `DRAWN`, `drawnKids` and `mergedInto` read `FOLDED`, and those are the
+   same functions the render will use. Every rung leaves them consistent with the fold it is
+   testing, so the rung that wins leaves them consistent with the fold that was chosen —
+   `recolour` recomputes `DRAWN` immediately afterwards anyway, from the same `drawnSet`. */
+function computeFold() {
+  FOLDED = new Map();
+  ROOT_FOLD = new Set();
+  FOLD_SHARE = FOLD_LADDER[0];
+  const t = viewTotal();
+  if (!t) return;
+  const budget = rowBudget();
+  for (const share of FOLD_LADDER) {
+    FOLD_SHARE = share;
+    FOLDED = foldKids(share, t);
+    ROOT_FOLD = foldRoots(share, t);
+    DRAWN = new Set(drawnSet());
+    if (legendRows(DRAWN, splitOver(DRAWN)) <= budget) break;
   }
 }
 
@@ -1568,6 +1783,13 @@ function computeFold() {
 function drawnKids(id) {
   const ks = KIDS[id] || [], f = FOLDED.get(id);
   return f ? ks.filter(k => !f.has(k)) : ks;
+}
+
+/** The families minus the ones §6.10a has collapsed into the bucket at the foot of the panel.
+    The LEGEND's roots and not the map's: `drawnSet` still walks all of `ROOTS`, because a
+    folded root keeps its own colour and its own dots. */
+function drawnRoots() {
+  return ROOT_FOLD.size ? ROOTS.filter(r => !ROOT_FOLD.has(r)) : ROOTS;
 }
 
 /* The categories drawn at the moment: descend `depth` levels below the scope, stopping early
@@ -3264,10 +3486,7 @@ function recolour() {
      grey it replaces. This is spec §3.2's `…, other or unspecified` residual, done in the
      viewer against what the tallies already say, rather than materialised by reconcile.py. */
   DRAWN = new Set(drawnSet());
-  SPLIT = new Set();
-  for (const id of DRAWN)
-    for (let p = parentOf(id); p; p = parentOf(p))
-      if (DRAWN.has(p)) SPLIT.add(p);
+  SPLIT = splitOver(DRAWN);
   const inScope = scope ? new Set(subtree(scope)) : null;
   for (const n of NODES) {
     if (colorOf[n.id]) continue;
@@ -4957,7 +5176,7 @@ function viewOverlap(cc) {
 let SHAPES = null;          // [{cc, ring, w, e, s, n}] — one entry per part, null until loaded
 
 async function loadShapes() {
-  const gj = await fetch('data/processed/country_shapes.geojson')
+  const gj = await fetch(DATA_BASE + 'processed/country_shapes.geojson')
     .then(r => r.json()).catch(() => null);
   if (!gj) return;
   const src = map.getSource('country-shapes');
@@ -5841,7 +6060,7 @@ function doneLoading() {
    at 1:10,000 beside India at 1:1,000 would put two different dot values in one view, which
    §4.1 does not allow. */
 SCATTER.loadAll = async function () {
-  const man = await fetch('data/buffers/manifest.json').then(r => r.json()).catch(() => null);
+  const man = await fetch(DATA_BASE + 'buffers/manifest.json').then(r => r.json()).catch(() => null);
   if (!man) {
     console.warn('no data/buffers/manifest.json — run buffers.py');
     doneLoading();
@@ -5861,7 +6080,7 @@ SCATTER.loadAll = async function () {
   this.palette = new Uint8Array(this.paletteN * 2 * 4);
 
   const one = async (edKey, cc, ent) => {
-    const buf = await fetch('data/buffers/' + ent.file).then(r => r.arrayBuffer());
+    const buf = await fetch(DATA_BASE + 'buffers/' + ent.file).then(r => r.arrayBuffer());
     const n = ent.dots;
     const d = {
       cc, n, buckets: ent.buckets,
@@ -5903,7 +6122,7 @@ SCATTER.loadAll = async function () {
     const stage = {};
     const got = await Promise.allSettled(Object.entries(eds.fine.countries).map(
       async ([cc, e]) => {
-        const buf = await fetch('data/buffers/' + e.file).then(r => {
+        const buf = await fetch(DATA_BASE + 'buffers/' + e.file).then(r => {
           if (!r.ok) throw new Error(r.status + ' ' + e.file);
           return r.arrayBuffer();
         });
@@ -6271,7 +6490,7 @@ map.on('load', async () => {
   loadOverrides();          // before the first paint, or a saved colour flashes as the default
   const [tree, tallies] = await Promise.all([
     fetch('taxonomy/religions.json').then(r => r.json()),
-    fetch('data/processed/counts.json').then(r => r.json()),
+    fetch(DATA_BASE + 'processed/counts.json').then(r => r.json()),
   ]);
 
   // Counts are precomputed: with tiles the viewer only ever holds the current viewport, so it
@@ -6305,7 +6524,7 @@ map.on('load', async () => {
   buildFullTree();
   expandHidden(storedHidden || { roots: HIDDEN_DEFAULT, only: [] });
 
-  map.addSource('tiles', { type: 'vector', url: 'pmtiles://data/processed/religiondots.pmtiles' });
+  map.addSource('tiles', { type: 'vector', url: 'pmtiles://' + DATA_BASE + 'processed/religiondots.pmtiles' });
 
   /* THE COVERAGE WASH (spec §6.12) — which countries can SEE what is selected, under the
      dots and under everything else this file draws.

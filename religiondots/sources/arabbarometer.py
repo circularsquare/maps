@@ -47,6 +47,20 @@ the country module has to decide about. Only wave V offers `Atheist`; only wave 
 that was on one of the four cards is measuring which questionnaire was used. `sources/eg.py`
 has the worked case.
 
+## AND THE FIELDWORK CAN SET THE ANSWER, WHICH IS A DIFFERENT FAILURE FROM ALL THREE ABOVE
+
+The three guards above are about a pooled file spelling one thing two ways. This one is about
+the file being right and the sample being built to a specification. **Arab Barometer's Lebanese
+sample is a fixed sect-by-governorate quota** — waves V and VII return the same Christian count
+in all eight governorates three years apart, and Kesrwan-Jbeil comes back 100% Christian in all
+three parts of wave VI. Nothing in the frame is wrong; the composition is simply not a
+measurement of Lebanon.
+
+**`stability` cannot see it, and passes it at its strongest**, because a quota replicates
+between the wave halves by construction. So `assert_not_quota` runs first, `quota_agreement` is
+the statistic, and Lebanon is not drawn: `sources/lb.md` and `sources.md` §11al. Jordan, Egypt
+and Iraq were measured against it and are clean.
+
 ## The construction, in one paragraph
 
 Pool the waves that asked, weight by `wt`, cut by `Q1`. That gives a share per unit. The
@@ -125,6 +139,15 @@ EXACT_PERM_MAX = 50_000
 # sub-national cut was measured failing below about 1% against two censuses. Eligibility is
 # not permission — `stability()` is the stricter test and it decides.
 ELIGIBLE_FLOOR = 0.01
+
+# THE BAR ON `assert_not_quota`, PRE-REGISTERED AND NOT TO BE TUNED. The smallest pairwise
+# agreement p-value, Bonferroni-multiplied by the number of wave pairs compared, must exceed
+# this. Measured 2026-09-09 on the four countries this file has been read for: **Lebanon
+# 1.2e-4** (wave V against wave VII, four free cells and four exact agreements), against
+# **Jordan 21, Egypt 7.2 and Iraq 3.0** — the three of those are Bonferroni products above 1,
+# i.e. nothing at all. There is no country anywhere near the bar; it separates a quota from a
+# survey by four orders of magnitude. `quota_agreement`'s docstring is the write-up.
+QUOTA_P_BAR = 1e-3
 
 
 def _ctx():
@@ -477,10 +500,11 @@ def assert_one_wording(df, country, cat_col="category"):
         "them unnoticed would cost.")
 
 
-def load(country, expect_waves=None, waves=None, recode=None, omit=None):
+def load(country, expect_waves=None, waves=None, recode=None, omit=None, extra=None):
     """One country's respondents, decoded wave by wave through that wave's own labels.
 
-    Returns [`wave`, `wave_no`, `category`, `geo_raw`, `geo_code`, `w`], one row per
+    Returns [`wave`, `wave_no`, `category`, `geo_raw`, `geo_code`, `w`] plus one column per
+    entry in `extra`, one row per
     respondent who answered `Q1012`. `category` is the ANSWER'S OWN WORDING (spec §2.4) and
     never a numeric code; see the module docstring for why that is not a style preference.
 
@@ -533,6 +557,27 @@ def load(country, expect_waves=None, waves=None, recode=None, omit=None):
     that pair on its own would also merge Lebanon's `Something else: SPECIFY_______` into its
     `Other`, which is two answers and not one. A dictionary in the country module, beside the
     sentence saying why, is the difference.
+
+    ## `extra` — A SECOND ANSWER COLUMN, DECODED THE SAME WAY, ADDED 2026-09-09 FOR IRAQ
+
+    `{column name: (alias, alias, ...)}`. For each wave the first alias present is decoded
+    through **that wave's own labels** and lands in the frame under `column name`; a wave with
+    none of the aliases contributes NaN and is named in the printed line, because "this wave
+    did not ask" and "this wave asked and nobody answered" are different facts and only the
+    first is visible here.
+
+    It exists because `Q1012` is not the finest religion answer everywhere. Iraq's is the sect
+    follow-up: `Q1012A` in waves V and VI-3, renamed `Q1012A_MUSLIM` in VII and VIII, and it
+    is what puts Sunni and Shia on the map. Reading it in the country module instead would
+    mean re-implementing the per-wave decode this function exists to centralise, and the
+    module docstring's first section is about what happens when that decode is skipped.
+
+    **It decodes and nothing else.** Which answers on the second column belong together, which
+    leave the universe, and how the two columns compose into one `category` are all the
+    country module's, because they are readings of two questionnaires rather than of a file.
+    `assert_one_wording` is NOT re-run afterwards for the same reason: the composed category is
+    the country module's construction, so that module calls it again on the result, which is
+    what this one's error message asks for anyway.
     """
     import pyreadstat
 
@@ -591,17 +636,32 @@ def load(country, expect_waves=None, waves=None, recode=None, omit=None):
         undecoded = sorted(set(sub[rel].dropna()) - set(rlab))
         if undecoded:
             raise SystemExit(f"wave {name}: Q1012 codes with no label: {undecoded}")
-        frames.append(pd.DataFrame({
+        frame = pd.DataFrame({
             "wave": name,
             "wave_no": ordinal,
             "category": sub[rel].map(rlab),
             "geo_code": sub[geo] if geo is not None else np.nan,
             "geo_raw": (sub[geo].map(glab) if geo is not None else np.nan),
             "w": pd.to_numeric(sub[wt], errors="coerce") if wt else 1.0,
-        }))
+        })
+        note = ""
+        for col, aliases in (extra or {}).items():
+            src = _col(df, *aliases)
+            if src is None:
+                frame[col] = np.nan
+                note += f"  [{col}: not asked in this wave]"
+                continue
+            xlab = meta.variable_value_labels.get(src, {})
+            bad = sorted(set(sub[src].dropna()) - set(xlab))
+            if bad:
+                raise SystemExit(f"wave {name}: {src} codes with no label: {bad}")
+            frame[col] = sub[src].map(xlab)
+            note += (f"  [{col}={src}, {int(sub[src].notna().sum())} answered]")
+        frames.append(frame)
         print(f"  wave {name:<5} n={len(sub):>6}  Q1012 answered by "
               f"{int(sub[rel].notna().sum()):>6}  "
-              f"{'' if geo is None else str(sub[geo].map(glab).nunique()) + ' Q1 labels'}")
+              f"{'' if geo is None else str(sub[geo].map(glab).nunique()) + ' Q1 labels'}"
+              + note)
     if not frames:
         raise SystemExit(f"no {country} rows in any wave")
     out = pd.concat(frames, ignore_index=True)
@@ -770,13 +830,191 @@ def held_out(df, pop, country, unit_col="geo_id", n_perm=20000, seed=0,
     return r
 
 
-def stability(df, nat, n_units, unit_col="geo_id", cat_col="category", override=None):
+def _binom_pmf(n, p):
+    """The binomial pmf over 0..n, in log space so a long tail does not underflow."""
+    k = np.arange(n + 1)
+    if p <= 0.0:
+        out = np.zeros(n + 1)
+        out[0] = 1.0
+        return out
+    if p >= 1.0:
+        out = np.zeros(n + 1)
+        out[n] = 1.0
+        return out
+    lg = np.array([math.lgamma(i + 1) for i in range(n + 2)])
+    logc = lg[n] - lg[k] - lg[n - k]
+    return np.exp(logc + k * np.log(p) + (n - k) * np.log1p(-p))
+
+
+def _p_equal_share(a, na, b, nb):
+    """P(two INDEPENDENT samples of size na and nb return the same share), at the pooled rate.
+
+    The exact probability, summed over every pair of counts whose shares coincide: `k/na` and
+    `j/nb` are equal iff `k*nb == j*na`, so only the k that make `k*nb` divisible by `na`
+    contribute. This is what makes `quota_agreement` a test rather than a threshold: the
+    chance of an exact tie is a computable number and it depends on how big the two samples
+    are, which no fixed "how many cells agree" rule can know.
+    """
+    p = (a + b) / (na + nb)
+    pa, pb = _binom_pmf(na, p), _binom_pmf(nb, p)
+    tot = 0.0
+    for k in range(na + 1):
+        num = k * nb
+        if num % na == 0:
+            j = num // na
+            if 0 <= j <= nb:
+                tot += pa[k] * pb[j]
+    return float(min(max(tot, 1e-12), 1.0))
+
+
+def _poisson_binomial_tail(ps, k):
+    """P(at least k of these independent Bernoullis succeed), by convolution."""
+    dist = np.array([1.0])
+    for p in ps:
+        dist = np.convolve(dist, [1.0 - p, p])
+    return float(dist[k:].sum())
+
+
+def quota_agreement(df, unit_col="geo_id", cat_col="category", verbose=True):
+    """DID THE FIELDWORK SET THE ANSWER? Every pair of waves, compared cell by cell.
+
+    ## THE FAILURE THIS EXISTS FOR, AND WHY §14.16 CANNOT SEE IT
+
+    **Lebanon, 2026-09-09.** Arab Barometer's Lebanese sample is a fixed sect-by-governorate
+    quota: the contractor is given a number of Sunni, Shia, Maronite, Orthodox, Catholic and
+    Druze interviews to fill in each governorate, and fills it. Wave V (2018-19) and wave VII
+    (2021-22) return **the same Christian count in all eight governorates** — Akkar 30 of 160,
+    Beirut 90 of 250, North 100 of 330, South 10 of 260, Mount Lebanon 650 of 960, Baalbek 0 of
+    150, Nabatieh 0 of 140 — three years and two fieldwork rounds apart. Waves VI-1, VI-2 and
+    VI-3 share a second grid: Kesrwan-Jbeil comes back **100% Christian three times**, Akkar
+    exactly 10 Christians in 70 three times. `sources/lb.md` has the tables.
+
+    **The split-half test passes such a country perfectly and that is exactly the problem.**
+    §14.16 asks whether a category's ranking across units REPLICATES between the early and the
+    late waves. A quota replicates by construction — it is the same grid applied twice — so the
+    one test this project uses to decide whether a category carries its own geography returns
+    its strongest possible verdict on the one input where the geography is not a measurement at
+    all. A country drawn that way would be a map of the pollster's assumption about where the
+    sects live, at the resolution the pollster assumed it at, and nothing downstream would
+    disagree with it. THIS IS THE CHECK THAT HAS TO RUN FIRST.
+
+    ## THE STATISTIC
+
+    For each pair of waves, take the units both sampled and the answers both cards offered,
+    keeping a unit only where the shared answers cover at least 95% of that unit's respondents
+    in both waves — otherwise a wave whose card had no `Druze` box is being compared with one
+    that had. Within a unit, drop the largest answer: the shares sum to one, so the last cell
+    is not a free comparison. What is left is a set of cells where two independent samples each
+    measured a share, and `_p_equal_share` gives the exact probability that they would land on
+    the same rational number. The number of exact agreements is then read against the
+    Poisson-binomial tail of those probabilities.
+
+    Returns `(p, wave_a, wave_b, hits, cells)` for the most extreme pair, or `None` if no pair
+    was comparable. The p-value is per pair; `assert_not_quota` applies the Bonferroni.
+
+    ## RUN IT ON EVERY RELIGION COLUMN THE FILE OFFERS, NOT ONLY THE ONE YOU MEAN TO DRAW
+
+    Lebanon's religion column comes in at an adjusted **1.4e-4** and its sect column at
+    **1.1e-3**, which is the wrong side of the bar by a hair — not because the sect column is
+    cleaner, but because the waves that carry it do not include wave VII, and wave VII is half
+    of the most damning pair. **The quota is a property of the FIELDWORK and not of a column.**
+    A country that fails this on any of its religion columns has failed it, and a pass on the
+    narrower pool is not evidence about the wider one.
+    """
+    tabs = {w: pd.crosstab(d[unit_col], d[cat_col]) for w, d in df.groupby("wave")}
+    order = [w for w in WAVE_NAMES if w in tabs]
+    worst, n_pairs = None, 0
+    if verbose:
+        print("\n  quota check: does any pair of waves return the SAME composition per unit?")
+    for i in range(len(order)):
+        for jx in range(i + 1, len(order)):
+            wa, wb = order[i], order[jx]
+            A, B = tabs[wa], tabs[wb]
+            units = sorted(set(A.index) & set(B.index))
+            cats = sorted(set(A.columns) & set(B.columns))
+            if len(units) < 3 or len(cats) < 2:
+                continue
+            AA, BB = A.loc[units, cats], B.loc[units, cats]
+            keep = [u for u in units
+                    if AA.loc[u].sum() >= 0.95 * A.loc[u].sum()
+                    and BB.loc[u].sum() >= 0.95 * B.loc[u].sum()]
+            if len(keep) < 3:
+                continue
+            AA, BB = AA.loc[keep], BB.loc[keep]
+            use = [c for c in cats if c != AA.sum().idxmax()]
+            ps, hits = [], 0
+            for u in keep:
+                na, nb = int(AA.loc[u].sum()), int(BB.loc[u].sum())
+                if na < 5 or nb < 5:
+                    continue
+                for c in use:
+                    a, b = int(AA.loc[u, c]), int(BB.loc[u, c])
+                    if (a == 0 and b == 0) or (a == na and b == nb):
+                        continue          # degenerate: agreeing on nobody says nothing
+                    ps.append(_p_equal_share(a, na, b, nb))
+                    hits += int(a * nb == b * na)
+            if len(ps) < 4:
+                continue
+            n_pairs += 1
+            p = _poisson_binomial_tail(ps, hits)
+            if verbose and (p < 0.05 or worst is None or p < worst[0]):
+                print(f"    {wa:>5} vs {wb:<5} {len(keep):>2} units, {len(ps):>3} free cells, "
+                      f"{hits:>3} identical to the interview   p={p:.3g}")
+            if worst is None or p < worst[0]:
+                worst = (p, wa, wb, hits, len(ps))
+    if worst is None:
+        if verbose:
+            print("    no two waves are comparable, so this says nothing")
+        return None, 0
+    if verbose:
+        print(f"    most extreme pair: {worst[1]} vs {worst[2]}, {worst[3]}/{worst[4]} cells "
+              f"identical, p={worst[0]:.3g} over {n_pairs} pairs")
+    return worst, n_pairs
+
+
+def assert_not_quota(df, country, unit_col="geo_id", cat_col="category", quota_ok=None):
+    """Refuse to run the split-half on a country whose per-unit composition is fieldwork.
+
+    `quota_ok` is a written sentence, not a flag, and it is the same escape hatch as
+    `stability`'s `override`: a country that fails this and is drawn anyway must say why on the
+    page. **There is no such country yet, and the one that failed is not drawn.**
+    """
+    worst, n_pairs = quota_agreement(df, unit_col, cat_col)
+    if worst is None:
+        return
+    p, wa, wb, hits, cells = worst
+    adjusted = min(1.0, p * max(n_pairs, 1))
+    print(f"    Bonferroni over {n_pairs} pairs: p={adjusted:.3g}, bar {QUOTA_P_BAR:g}")
+    if adjusted > QUOTA_P_BAR:
+        return
+    if quota_ok:
+        print(f"    UNDER THE BAR and drawn anyway: {quota_ok}")
+        return
+    raise SystemExit(
+        f"{country}'s waves {wa} and {wb} return the same composition in {hits} of {cells} "
+        f"free cells, p={p:.3g} ({adjusted:.3g} after Bonferroni over {n_pairs} pairs). Two "
+        "independent samples do not do that. This is a sect-by-unit QUOTA in the fieldwork, "
+        "which means the per-unit shares are the survey firm's own assumption about where the "
+        "groups live and not a measurement of it — and `stability` cannot tell you so, because "
+        "a quota replicates between the wave halves perfectly. Lebanon is the measured case "
+        "and is NOT drawn from this survey; `sources/lb.md` and sources.md §11al have the "
+        "tables. If you believe this country is different, say so in `quota_ok=` with the "
+        "reason, which puts it on the page where a reader can disagree with it.")
+
+
+def stability(df, nat, n_units, unit_col="geo_id", cat_col="category", override=None,
+              quota_ok=None):
     """WHICH CATEGORIES CARRY THEIR OWN GEOGRAPHY — the split-half decides it.
 
     Spec §14.16's test. Each category is ranked across the units in the earlier half of the
     waves and again in the later half, and the two orderings are compared. A category whose
     ranking does not replicate has not demonstrated that it HAS a geography, whatever its
     pooled spread looks like.
+
+    **`assert_not_quota` RUNS FIRST AND THAT ORDER IS THE POINT.** Replication is evidence only
+    where the two halves could have disagreed. If the fieldwork fills a fixed number of each
+    answer in each unit, the halves are the same grid twice and this test passes at its
+    strongest on a geography nobody measured. Lebanon is the measured case, 2026-09-09.
 
     ## THE BAR IS THE EXACT NULL — `sources/spearman_null.py` — AND IT USED TO BE AN SE
 
@@ -804,6 +1042,10 @@ def stability(df, nat, n_units, unit_col="geo_id", cat_col="category", override=
     `sources/lapop.py`'s docstring for when it is even available.
     """
     override = override or {}
+    # BEFORE ANY CORRELATION. A quota replicates between the halves perfectly, so this test
+    # returns its strongest verdict on the one input where the per-unit shares are not a
+    # measurement at all; `assert_not_quota`'s docstring is the Lebanon case that found it.
+    assert_not_quota(df, "this country", unit_col, cat_col, quota_ok=quota_ok)
     bar, how = spearman_null.critical_rho(n_units)
     waves = sorted(df["wave_no"].unique())
     cut = waves[len(waves) // 2]

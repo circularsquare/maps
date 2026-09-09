@@ -146,6 +146,46 @@ BRANCHES = [
     ("christianity.reformed.continental",
      "Continental Reformed",
      "Dutch, German and related Reformed churches, as against the Scottish Presbyterian line."),
+
+    # --- added 2026-09-09 with the Netherlands (§9cu). CBS's own gemeente table publishes
+    # `Nederlands hervormd`, `Gereformeerd` and `PKN` as three separate answers, and they
+    # have three different maps: Staphorst is 47% hervormd, Urk 52% gereformeerd and
+    # Dongeradeel 32% PKN. Collapsing them onto the parent would leave the map with one
+    # Reformed colour over the country that invented the distinction. The subtree already
+    # carries thirteen leaves, and most of them — the RCA, the CRCNA, the Netherlands
+    # Reformed Congregations, the Free Reformed Churches — are the American branches of
+    # exactly these three answers, so this is the Dutch side of a division the tree already
+    # draws. Flagged to Anita as
+    # ask/009-nl-three-dutch-reformed-nodes-hervormd-gereform.md: three legend rows no other
+    # country uses is the thing §3 of AGENT_BRIEF says is hers.
+    ("christianity.reformed.continental.pkn",
+     "Protestant Church in the Netherlands",
+     "The Protestantse Kerk in Nederland, formed on 1 May 2004 by the union of the "
+     "Nederlandse Hervormde Kerk, the Gereformeerde Kerken in Nederland and the "
+     "Evangelisch-Lutherse Kerk. The largest Protestant body in the country. It is a "
+     "church rather than a tradition, which is what separates it from the two nodes below: "
+     "a Dutch respondent who answers `PKN` is naming the merged church by its new name, "
+     "and one who answers `hervormd` or `gereformeerd` is naming the tradition they came "
+     "from, whether or not they ended up inside the union."),
+    ("christianity.reformed.continental.hervormd",
+     "Hervormd",
+     "The Dutch Reformed tradition: the Nederlandse Hervormde Kerk, which was the public "
+     "church of the Republic and the largest church in the country until the twentieth "
+     "century, and the people who still describe themselves by its name. After 2004 they "
+     "are mostly the hervormde gemeenten inside the PKN, together with the Hersteld "
+     "Hervormde Kerk, which refused the union. Its geography is the Bible Belt proper, the "
+     "strip from Zeeland through the Alblasserwaard and the Veluwe to north-west "
+     "Overijssel."),
+    ("christianity.reformed.continental.gereformeerd",
+     "Gereformeerd",
+     "The seceded Dutch Reformed tradition, descending from the Afscheiding of 1834 and "
+     "the Doleantie of 1886: the Gereformeerde Kerken in Nederland, which entered the PKN "
+     "in 2004, and the bodies that did not — the Gereformeerde Kerken vrijgemaakt, the "
+     "Christelijke Gereformeerde Kerken and the Gereformeerde Gemeenten. The last of those "
+     "is the bevindelijk gereformeerde core, and it is why this answer peaks where it "
+     "does: Urk, Bunschoten, Reimerswaal, Hattem. CBS asks the word rather than the body, "
+     "so this node is the tradition and not any one church in it."),
+
     ("christianity.reformed.congregational", "Congregational", ""),
 
     ("christianity.baptist", "Baptist", ""),
@@ -3614,6 +3654,75 @@ BRANCHES = [
      "districts, which is the shape §9r's Chittagong rule reads as something rather than "
      "noise. Nothing in the 2002 tabulations names it, so it stays inside this node whole, "
      "per spec §3.11."),
+
+    # --- added 2026-09-09 with the Netherlands.
+    ("other.nl",
+     "Other denomination (the Netherlands)",
+     "CBS's `andere gezindte`, the last box on a card that names Roman Catholic, "
+     "gereformeerd, Nederlands hervormd, PKN, Islam, Hindu, Buddhist and Jewish. **4.4% of "
+     "the country, about 745,000 people**, and it is the second largest religious answer "
+     "in the Netherlands after Catholicism.\n\n"
+     "It is mixed by construction and CBS does not split it. Everything Christian outside "
+     "the four named answers is in it: the evangelical and pentecostal churches, the "
+     "Baptist gemeenten, the Orthodox parishes, the Old Catholic Church of the "
+     "Utrecht Union, the Remonstrants, the Doopsgezinden and the Jehovah's Witnesses. So "
+     "is everything non-Christian outside the four named religions, and so are the people "
+     "who describe a personal belief with no body behind it. Nothing in the maatwerk "
+     "table, and nothing in the StatLine series it was cut from, separates any of that.\n\n"
+     "**Its geography says most of it is the Protestant free churches.** The top of the "
+     "list is Urk at 12.9%, then Elburg, Nunspeet, Oldebroek, Staphorst, Woudenberg and "
+     "Barneveld, which is the Bible Belt in order; the bottom is Tubbergen, Deurne and "
+     "Heeze-Leende at 0.2%, which is Catholic Brabant and Twente. Across the 394 drawn "
+     "gemeenten it correlates +0.49 with `PKN`, +0.49 with `Gereformeerd`, +0.48 with "
+     "`Hervormd` and **-0.66 with `Katholiek`**. The four big cities are above the "
+     "national rate but not near the top (Rotterdam 6.9%, Amsterdam 6.1%, Den Haag 5.8%), "
+     "so the urban immigrant and unattached-believer end is in here too and is the smaller "
+     "part of it. That is a reading of a residual and it is offered as one. Per source, "
+     "per spec §3.11."),
+
+    # --- added 2026-09-09 with Nigeria.
+    ("other.ng",
+     "Other religion (Nigeria)",
+     "The Afrobarometer's `Other`, the last box on a card that names about twenty Christian "
+     "denominations, Sunni, Shia, Ismaili, Izala and three Sufi brotherhoods, traditional "
+     "religion, Hindu, Bahá'í, atheist and agnostic. **0.20% of the pooled Nigerian "
+     "respondents, 26 people over six rounds and fourteen years.**\n\n"
+     "It is small because the card above it is long rather than short, which is the "
+     "opposite of `other.lr`'s situation on the same instrument. A Nigerian who is none of "
+     "the thirty-odd named answers is in here: the Bahá'í community, the Grail Movement, "
+     "Eckankar, the Hindu and Buddhist congregations of Lagos, and anyone the interviewer "
+     "could not place. The survey attaches **no specify text**, so unlike `other.uy` there "
+     "is nothing to read behind it and that list is what the card leaves out rather than "
+     "what these 26 people said.\n\n"
+     "**Its geography is not drawn.** Nigeria has published no religion count since 1963, "
+     "so nothing measures this at any level, and 0.20% is under the 1% eligibility floor "
+     "§11ad set for placing a category on survey evidence. It is spread at the national "
+     "rate in all 37 states rather than where those 26 people happened to be interviewed."),
+
+    # --- added 2026-09-09 with Iraq.
+    ("other.iq",
+     "Other religion (Iraq)",
+     "The Arab Barometer's `Other` and `Something else`, the box for a religion that is "
+     "neither Islam nor Christianity. **27 respondents in 8,335 over four waves, 0.29% "
+     "weighted, drawn as 134,000 people.** Iraq's own state has published no religion "
+     "figure of any kind since the 1987 census, so nothing measures this.\n\n"
+     "What is inside it is nameable even though the survey attaches no specify text: the "
+     "**Yazidis** of Sinjar and Shekhan, the **Sabean-Mandaeans** of Baghdad and the "
+     "southern marsh towns, the **Kaka'i** or Yarsani of Kirkuk and Halabja, and small "
+     "Zoroastrian and Bahá'í communities. Iraq's Jews, ~150,000 in 1947, are a few "
+     "individuals.\n\n"
+     "**The number is a floor by a wide margin and the margin is roughly known.** Every "
+     "serious estimate puts the Yazidis alone at 400,000 to 500,000, about 1% of Iraq and "
+     "more than three times this whole cell, and they are the largest of the four. A "
+     "general-population sample of 8,335 would expect about 83 of them and found 27 of "
+     "everybody; the Yazidis were displaced en masse from Sinjar in 2014 and a large part "
+     "of the community has been in camps in Duhok, in Europe or unreachable ever since, "
+     "which is exactly the population a household survey misses.\n\n"
+     "**Its geography is deliberately not drawn.** 0.29% is under the 1% eligibility floor "
+     "§11ad set for placing a category on survey evidence, so it is spread at the national "
+     "rate over all eighteen governorates rather than put where those 27 people were "
+     "interviewed. That is also the answer §14.4 rule 2 wants here: the map says these "
+     "communities exist and says nothing about where they live."),
 ]
 
 

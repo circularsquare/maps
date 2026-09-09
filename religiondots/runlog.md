@@ -302,3 +302,143 @@ is now counted.
 2026-09-09 | za2 | redrawn | 213 local and metropolitan municipalities at ~258,000 people each, replacing 9 provinces at 6.1M, from the CS2016 person microdata Anita downloaded; same survey, same year, same 24 categories, and NOT ONE changed taxonomy node; 3,328,867 records, 54,946,339 drawn and 707,295 not; the build refuses to write unless every published province cell reproduces and 215 of 216 agree to within half a person, the 216th being the finding: North West Report 03-01-11 prints an Other denomination cell of 21,873, which is the Do not know figure from its own footnote, and its fourteen rows fall 336,482 short, while the microdata puts that cell at 358,355 = 21,873 + 336,482 exactly, so the row was mis-set and the province build alternative story was wrong; the gap is now a column rather than a hand-written figure and reproduces the printed footnotes exactly including Western Cape inferred 67,213; the 3.5 lean re-ran at 213 units, r +0.3063 at permutation p 0.00005 with LOO +0.265 to +0.327, against +0.72 at p 0.028 over nine provinces, which is half the correlation and three orders of magnitude more evidence; Stata truncates label-set names to eight characters so this file has MN_CODE (234, the 2011 demarcation) and MN_COD_A (213, 2016) and neither is named after its variable, the wrong one resolving silently to the wrong municipalities with every total reconciling; every row now carries cell_n since nothing else distinguishes a 40-record share from a 40,000-record one | ask none
 2026-09-09 | bar | rule change | Anita's ruling on ask/007-cr implemented: the split-half bar is now the exact null of the Spearman statistic, not 1.96/sqrt(n-1), which was a 0.017-level test at seven units and 0.022 to 0.024 from ten to twenty-three; new sources/spearman_null.py enumerates all n! orderings at n<=10 and samples 10,000,000 at a fixed seed above, and returns the smallest ATTAINABLE rho with one-sided exact p<=0.05, wired into lapop.stability and arabbarometer.stability, which had copied the same line; the rule was written down before anything was computed and both amendments to it are recorded, one because d2 is always even so an unsnapped bar names a value no correlation can equal (+0.6964 rather than +0.7143 at n=7) and one because at 2,000,000 draws the snapped bar moved with the seed at n=11 and n=23 while every seed-0 value stayed identical at 10,000,000; the ask's own np.quantile column turns out a shade too generous everywhere, its +0.6786 at seven units having an upper tail of 0.0548, so the shipped bar is stricter than the number Anita was shown and the two flips are the same either way; the guard fires on a constructed rejection, n=3 where a perfect ordering is p=1/6 so the bar comes back +inf and rho=+1.000 is refused, and it caught both amendments on their first run; exactly two categories moved as predicted, cr Catolico +0.7857 at p=0.024 and sv Protestante Tradicional +0.5165 at p=0.031, cr and sv re-scattered and retiled while gt ec pa eg and jo are byte-identical by sha256; ties were surfaced by the new output and measured rather than assumed, every eligible category in all seven countries re-run against the conditional null with no verdict changing anywhere and sv Religiones Orientales moving from p=0.054 to p=0.071; afrobarometer.py and the STABILITY_BAR constants in do.py ht.py and uy.py deliberately NOT changed, since their countries were not re-measured and Haiti sits 0.003 from its bar, and lits.py deliberately not changed because a median over 400 PSU splits needs its own null; sources.md 9ct, spec.md 12, cr.md 8, sv.md, and both module docstrings updated | ask none
 2026-09-09 | za | review | Second pass on the 213-municipality rebuild, reviewer session 967ffe99...-za2-rev. All checks clean and the screenshot clean. The reconciliation was REPRODUCED INDEPENDENTLY: all nine profile PDFs re-parsed with a parser sharing nothing with za_profiles.py (the religion table is numbered 2.10a/b in five provinces, 2.9a/b in Eastern Cape and Gauteng and written "Table 2.9 a:" with a space in Gauteng, 2.7/2.8 in Limpopo, 2.11a/b in Western Cape), 221 published cells compared, EXACTLY ONE differs by more than 12 people and it is North West's Other; 4's arithmetic is exact to the person and North West is confirmed the only province whose 2.10b footnote carries a third exclusion. There is NO fifteenth denomination, read off the .dta: CHRISTIA carries 17 labels, codes 1-14 the published fourteen with 13 being Just a christian, plus Do not know 15, Not applicable 88, Unspecified 99; sources.md 9bw still said 15 and was corrected in place. 3.5 lean reproduces exactly (r +0.3063, permutation p 0.00005 on 20,000 with zero hits, LOO +0.2649 to +0.3273, weighted +0.3986) and note_public quotes the new figure. Every note_public figure reproduces and none rests on a thin cell. THE JUDGEMENT CALL: drawing uPhongolo and Swellendam as returned is RIGHT and I would not change it, but 2.3's reason for uPhongolo is contradicted by the file, since its no-religion cell is short by 5.52 points against an atheism excess of 4.63 and its overall Christianity share is ABOVE its province, so the movement is inside the religion card's 8/9/10 block rather than out of the named denominations, which relocates the loss from christianity.* to unaffiliated/secular; "adjacent on the card" is unsupported in both cases and "both are large" is wrong for Swellendam at 1,685 records. Two figures corrected in place: 7's Judaism 78% is 73.0%, and 2.3's 7.06% is of the province's answers not its Christians. Also found: Swellendam's Denomination not reported is 5.28% against a provincial 0.74%, a second anomaly in the same municipality that nothing had noted. Full record in sources/za.md 12. Nothing rebuilt, no ask filed | ask none
+
+---
+
+# HANDOFF 3 — 2026-09-09, session `967ffe99-93b1-4ff9-8169-4a6d5ffa084e`
+
+**Read this in place of HANDOFF 2 above**, which is still accurate about the day's findings and
+its "what this session learned" and "operational notes" sections are the durable part — but its
+state block and its ask list are stale. Everything below supersedes those.
+
+Anita paused the session and shut the machine down. Nothing was interrupted mid-write.
+
+## State now
+
+**121 countries drawn**, 121 with dots on disk, both editions. Nothing claimed. **Two asks open.**
+Queue 87 candidates, ~23 free and undrawn. Working tree was committed by her at `c183dfd`.
+
+`za` is still one of the 121 — it was **redrawn** rather than added.
+
+## What changed after HANDOFF 2
+
+- **`002-za` ruled and carried out.** She registered with DataFirst (self-service, four fields, no
+  approval) and downloaded the CS 2016 person file. **South Africa is redrawn at 213 local and
+  metropolitan municipalities**, ~258,000 people each, replacing 9 provinces at 6.1M — same
+  survey, same year, same 24 categories, no changed taxonomy node. Reviewed clean. The microdata
+  is at `data/raw/za/cs-2016-person.dta`.
+  - It resolved the North West defect outright: the published `Other` cell of 21,873 is that
+    report's own *Do not know* footnote figure, its fourteen rows fall 336,482 short, and the
+    microdata gives 358,355 = 21,873 + 336,482 exactly. The province build's rival explanation
+    was wrong.
+- **`005-rw` ruled: leave ADEPR on generic `christianity.pentecostal`.** Her reasoning: it reads
+  as the Pentecostal church *of* Rwanda rather than a distinct body, and the UNSD Yearbook filing
+  it the same way is further support. No node added, Rwanda not re-scattered.
+- **`007-cr` ruled: make it a real 95% test — and it is done.** `1.96/sqrt(n-1)` is replaced by an
+  exact permutation null in a new `sources/spearman_null.py`, enumerated at n ≤ 10 and sampled at
+  10M draws above, with the cutover an explicit constant. Applied in `sources/lapop.py` and
+  `sources/arabbarometer.py`. **Exactly the two predicted categories moved** — `cr Católico` and
+  `sv Protestante Tradicional` — and only `cr.csv` and `sv.csv` changed; the other five barometer
+  countries verified byte-identical by sha256. Both movers re-scattered and retiled.
+- **`nl` and `mz` were started and stopped** at her request when she shut down. Neither got past
+  reading the brief; nothing was written and both claims are released. Both are free to take.
+
+## The two open asks
+
+1. **`006-pa`** A free UNICEF MICS account would give Panama religion per person across all twelve
+   provinces and comarcas, ~40,000 people against LAPOP's 6,105, **including the two comarcas that
+   currently draw nothing**. It also covers Costa Rica's microdata, so it is two countries for one
+   registration. **She said she would do this the next day.**
+2. **`008-ug`** UBOS microdata, parish tier, ten categories, would replace Uganda's 56-district
+   2002 build with 45.9M people on current geography — the finest religion geography in Africa
+   here — and retires three caveats at once (the 22-year vintage, Kotido's 214,787 withdrawn
+   people, and a concordance proved for only 112 of 135 districts). Needs a free account. **The
+   awkward part is that the office's download route answers without one**; a builder established
+   that with a 512-byte probe and stopped, and nothing from that route is on disk. Registering
+   makes the question moot. **She said she would do this together with Panama.**
+
+## Pending decisions that are not asks yet
+
+- **Four modules still carry the old `1.96/sqrt(n-1)` bar**, deliberately left outside the ruling
+  because changing them would redraw countries she was not shown: `sources/afrobarometer.py`
+  (computes it live) and `do.py`, `ht.py`, `uy.py` (as `STABILITY_BAR` constants). **Haiti's
+  largest category sits 0.003 from its bar on ten departments and would very likely move.**
+  Named in `spearman_null.py`, `sources.md` §9ct and `spec.md` §12. Anyone extending the ruling
+  should produce the same before-and-after list first.
+- **`cr.py` states its secondary pre-registered test's numbers in a comment rather than computing
+  them**, so a future data release would not recompute. Making it run on every build is small and
+  probably right; it changes a drawn country's printed output, so it was left for a decision.
+- **Egypt is knowingly drawn on ~18% less sample than exists** — see HANDOFF 2. Unchanged. The
+  supervisor's recommendation was to fold the wave in, keep the note's existing "read these three
+  as a group" phrasing, and resolve or drop the three unmappable geography labels first.
+- **São Tomé: Caué draws 3 dots against the 6 its population implies.** Suspected enclave-boundary
+  effect. Offered to her twice and not taken up; nobody has diagnosed it.
+- **Nigeria (~230M) remains the largest single addition available** and is untouched, deliberately.
+  Its census has not asked religion since 1963 because the question is politically explosive
+  there, so it is a §14 call rather than a technical one, and it should reach her attached to
+  someone actually proposing the work.
+
+## For a fresh supervisor
+
+HANDOFF 2's **"What this session actually learned"** and **"Operational notes"** sections still
+stand in full and are the most useful thing in this file — read them before spawning anything.
+The three highest-yield habits, in short: ask what the office publishes *per unit of the tier
+below*; ask what the office's **own household survey** carries before reaching for a barometer;
+and treat any "dead host" or sweep negative as unproven until enumerated.
+
+## Closing note — 2026-09-09, same session
+
+Appended after HANDOFF 3. **The ask queue is now empty**; everything below is what changed.
+
+**Both remaining asks were ruled and closed.** Anita registered with UNICEF MICS and with UBOS and
+downloaded both files. Rulings and the terms she accepted are recorded in
+`ask/answered/006-pa-…md` and `ask/answered/008-ug-…md`.
+
+**Both rebuilds were started and deliberately stopped** when she wrapped up. Neither wrote
+anything to a drawn country; both claims are released; `built_countries.py --check` and
+`check_md.py` are clean at 121 countries. `pa` and `ug` are on the map exactly as they were.
+
+### The two files, and where they are
+
+- **Panama** — `C:\Users\anita\Downloads\PAN_2013_MICS5_v01_M.zip`, 3,213,686 bytes. Nested: the
+  datasets are at `PAN_2013_MICS5_v01_M/PAN_2013_MICS5_Datasets/Panama 2013 MICS_Datasets.zip`.
+  Partly extracted to `data/raw/pa/mics2013/` before the stop; small, left in place.
+  **Terms bind the build**: no redistribution of the dataset in any format, use tied to the
+  registered objective (a public dot map presenting aggregate counts), UNICEF and MICS credited.
+- **Uganda** — `C:\Users\anita\Downloads\NPHC 2024-Users  File using cpro_extract_Population_record_data.rar`,
+  428,614,937 bytes. **Note the two spaces in the filename.** No RAR tool is installed and none is
+  needed: Windows' bundled libarchive tar reads it —
+  `& "$env:SystemRoot\System32\tar.exe" -tvf "<path>"` to list, `-xf … -C` to extract.
+  **The single member is a Stata file of 22,480,546,172 bytes (22.5 GB)** — the full count, not a
+  sample. It was extracted here, then **deleted per her standing instruction (extract, take,
+  delete)**; disk is back to 58.5 GB free. Re-extract from the RAR when the rebuild resumes, and
+  free it again the same way.
+
+### What the two rebuilds were for
+
+- **`pa`**: MICS 2013 asks religion of every member of 11,100 households, ~40,000 people,
+  representative of **all twelve provinces and comarcas**. It would make Guna Yala and
+  Emberá-Wounaan measured rather than blank, stop `Religiones Tradicionales` being a floor, and
+  replace Ngäbe-Buglé's n=138 — the only unit on the map where Evangelicals lead Catholics. It
+  does **not** fix Panamá Oeste, which postdates the survey. Demote the LAPOP build to a
+  cross-check rather than discarding it.
+- **`ug`**: the 2024 census replaces a 2002 build and retires three caveats at once — the 22-year
+  vintage, Kotido's 214,787 withdrawn people, and a concordance proved for only 112 of 135
+  districts. **Settle the tier before committing**: the ask assumed parish (~10,000 units) and a
+  religion table at a tier with no polygons is useless, so check what boundaries exist and take
+  the finest tier that has both. `ubosgis.ubos.org` was 502 for a whole session and is worth a
+  retry. Keep the 2002 module as a cross-check.
+
+### Order of work when this resumes
+
+For Uganda specifically: check free space, extract, read the header only first and read the real
+categories rather than assuming the ask's ten, stream in chunks to a compact counts table, **prove
+that table reconciles against the published national figures before deleting the source**, delete
+the 22.5 GB file on both the success and the failure path, and only then build.
+2026-09-09 | nl | drawn | CBS maatwerk shelf gave 403 gemeenten x 9 denominations, beating the 12-province ESS plan | ask 009
+2026-09-09 | lb | closed | Arab Barometer sect item is a fieldwork quota per governorate, not a measurement; added quota check to shared AB code, iq/jo/eg clean | no ask
+2026-09-09 | nl | review | figures recompute exactly from the CSV; fixed a skipped gemeente in note_public's ranked list and four dead ask/ pointers; ask 009's three nodes are L4, so one legend row at the default depth, not three | no ask
+2026-09-09 | ng | drawn | 37 states from six pooled Afrobarometer rounds on COD-PS 2022; per-state composition replaced an IPF that shifted the national balance 4.6 points | ask 010 (§14)
+2026-09-09 | pg | closed | subnational religion is IPUMS/DHS-gated only; retired five more routes, and PNG DHS 2016-18 is the worse gated route (no Baptist code) | no ask
+2026-09-09 | nr | parked at A | office moved to stats.gov.nr; SPC PopGIS open but has no religion question; census table unlocated, next step stats.gov.nr/documents/ | no ask
+2026-09-09 | iq | drawn | 18 governorates, first Sunni/Shia geography on the map; rejected geoBoundaries ADM1 on a per-unit area check (Baghdad 912 vs 4,555 km2) | no ask

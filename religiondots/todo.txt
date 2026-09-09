@@ -18,6 +18,8 @@ maybe get rid of some of the jewish categories? half are only in israel, half ar
 
 find further breakdowns on all the "indigenous religions" generic groups? 
 
+recolor african churches to pink?
+
 "religion in n countries" project title should not count territories in the n, just so peopel dont get confused why tehre are so many missing as we approach ~196
 
 explain what granularity means: points randomly distributed within region
@@ -30,7 +32,6 @@ or if we select "muslim" and we mouse over a country (i guess like, hover over a
 idk. this might help with presenting a slightly more honest sense of like "there are this  many of this religion in the world". 
 
 
-do unicef mics account for panama
 
 
 LATER

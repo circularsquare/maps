@@ -102,7 +102,7 @@ These are the countries where R2 is actually achievable.
 | where | situation | what we can do |
 |---|---|---|
 | **China** | no religion question; CFPS/CGSS and the Chinese Spiritual Life Survey are the evidence base; temple and mosque registries exist | modelled tier (§7), one `china.folk` node (§3.3), heavily desaturated |
-| **Nigeria** | census does not ask, deliberately, and the Christian/Muslim balance is politically explosive | modelled, and the about panel should say why |
+| **Nigeria** | census does not ask, deliberately, and the Christian/Muslim balance is politically explosive | **DRAWN 2026-09-09, §9cv** — 37 states, 216,798,930 people, from six pooled Afrobarometer rounds on COD-PS 2022. `modelled` throughout. The 1973 census asked and was annulled; nothing has been published since 1963. The national balance drawn, 51.4% Christian against 47.9% Muslim, is one of four published figures spanning 8.2 points and the note prints all of them. `ask/010-ng` is the §14 question |
 | **France** | the census does not ask, and collecting religion in official statistics is tightly restricted; INSEE's Trajectoires et Origines survey is the usual source | **DRAWN 2026-09-07, §9ag** — and not on TeO2, which is access-controlled and coarser. ESS asks the question directly and publishes it on the 21 anciennes régions; the foreign half is Eurostat × Pew. `modelled` throughout, 3.10M people per unit, 96.43% of the country. |
 | **Gulf states, Lebanon, Iraq** | no usable census; Lebanon's last was 1932 | modelled; Lebanon needs a note of its own |
 | **Taiwan** | **the census has never asked.** MOI registers religious *corporations* instead: 27 religion categories nationally, **6 by county**, and 1.6M certified believers — **6.9% of the population**, on a `roll` whose county pattern is registration practice (Matsu registers 56% of its residents). TSCS's religion module is 130 villages | **confirmed 2026-09-06, §11i.** No magnitude source at any geography. The open temple registry (教別 + 主祀神祇 + WGS84) is a §4 location source; weighting a national share by temple density is §8.3's rejected model with the proxy supplying the magnitude as well |
@@ -13167,6 +13167,107 @@ and a single national mix would paint Anglicans evenly across the Highlands whil
 own summary says Oro is 61% Anglican and the Highlands are not. That is the one thing the
 source explicitly contradicts.
 
+### Re-checked 2026-09-09 — five more routes retired, and the DHS half of the block turns out to be the cheaper one
+
+A second pass at the same country, attacking the routes §11ab left open rather than re-reading
+what it settled. **Nothing found changes the verdict: PNG publishes no religion below the
+national total.** What moved is the price of the two account-gated routes, and it moved in
+opposite directions.
+
+**The office is unchanged and the sweep reproduces.** `files.getFiles` with `id=0` still returns
+**287 files over 29 pages**. One thing to write down for the next WP File Download office: the
+file record's key is **`ID`, upper case**, and a dedup keyed on `id` collapses every page to a
+single row while the page counter keeps advancing — which looks exactly like a working sweep that
+found nothing.
+
+**The 2022 SDES has no province dimension anywhere, not only in T2.4.** The workbook
+`02_2022_PNG_SDES_Demographic Characteristics.xlsx` was opened and all five of its tables — T2.1
+household heads, T2.2 relationship to head, T2.3 marital status, T2.4 religion, T2.5 parental
+survival — are cut by **Total / Urban / Rural and nothing else**. The religion table is not a
+table that lost its geography; the survey's whole published output is national. The two Key
+Indicators volumes carry no religion at all: file **3676** (34 MB, 53 pp) and file **4202** (7 MB,
+7 pp) return zero hits for *religio*, *denomination*, *Lutheran* or *Adventist*.
+
+**And the SDES base is not the census.** Every SDES percentage sits on a stated base of
+**12,353,430** people — a 2021 *Population Modelled Estimate*, built from household surveys and
+satellite imagery and adjusted to 2022 — which is **21% above the 2024 census's 10,185,363**.
+Anything built from SDES shares has to choose a base, and the survey's own is the one that
+disagrees with the count.
+
+**The 2011 National Report was re-read rather than taken on trust**, and it says what §11ab says
+it says: religion is on pp 32–34 (Table 2.4 national, Figures 2.1 and 2.2) and in the Summary
+Indicators on pp 26–29 as one line, `Main religion (% of population)`, whose 2011, 2000 and 1990
+columns are the label `R/Cath.` and a single share.
+
+#### Five routes retired, one of them regional
+
+* **The Pacific Data Hub's .Stat is open and carries no religion at all.** `stats.pacificdata.org`
+  serves only the SPA shell, but the NSI service behind it answers with no key:
+  `https://stats-nsi-stable.pacificdata.org/rest/dataflow/SPC/all/latest` returns **127
+  dataflows**, and `stats-sdmx-disseminate.pacificdata.org` returns the same bytes. Not one of
+  them is religion, for PNG or for any other Pacific country, so this **retires SPC's .Stat for
+  the whole region** rather than only here.
+* **`png.prism.spc.int` does not resolve.** Nauru's PopGIS answers on `nauru.prism.spc.int`, so
+  the obvious guess was that §11ab had tried the wrong sub-domain. It had not: the `prism`
+  pattern has no PNG member either, and `png.popgis.spc.int` is still a 530.
+* **The USCB country geodatabases have no PNG.** `[[reference_uscb_country_gdb]]`'s one CKAN
+  query returns the same **34 datasets** and PNG is not among them, so the route that drew
+  Ethiopia and priced Bangladesh does not reach the Pacific at all.
+* **HDX has nothing.** `package_search` for `"papua new guinea" religion` returns **zero**
+  datasets.
+* **ArcGIS Online has nothing.** A public-item search for religion and Papua New Guinea returns
+  **six items** — four student StoryMaps, an anthropology syllabus and an Oregon church's
+  activity map — so `[[reference_gis_server_census]]`'s route, where a variable published
+  nationally survives as a map-layer attribute, has no PNG instance in the public index.
+
+The three Cloudflare walls §11ab named are unchanged, re-tried with full browser headers (UA,
+`Accept-Language`, `Sec-Fetch-*`): `pacificdata.org/data` CKAN, `microdata.pacificdata.org` and
+`png-data.sprep.org` all return **403 with a `Just a moment...` challenge**. `sdd.spc.int`
+answers **200 at its root and 403 on `/search`**, the same wall applied selectively. They stay
+browser jobs.
+
+#### The DHS route, priced properly, and it is the WORSE of the two gated ones
+
+§11ag's DHS block names eight countries the registration would reopen and PNG is not one of them.
+**It belongs on that list**, and the two facts that put it there are both free to check from the
+final report, with no account.
+
+**PNG DHS 2016-18 is province-representative by design.** FR364 Appendix A: *"a nationally
+representative sample of approximately 19,200 households"*, *"representative at the national
+level, for urban and rural areas and each of the 22 provinces"*, stratified with every province
+split into urban and rural strata. So the geography is ADM1 — coarser than IPUMS's 89 districts,
+but the tier the queue originally assumed PNG would be drawn at.
+
+**Its instrument is measurably coarser than the census, and that is the finding.** The
+questionnaire in Appendix E offers **eleven codes** — Anglican, Evangelical Alliance, Pentecostal,
+Evangelical Lutheran, Roman Catholic, Salvation Army, Seventh Day Adventist, United Church, Other
+Christian Church, Non-Christian, No Religion — and **there is no Baptist code**, though the
+census counts Baptists at 2.8% in 2011 and the SDES at 2.98% in 2022. What that costs is visible
+in Table 3.1 without opening a single record: DHS puts **`Other Christian church` at 21.3%** of
+women 15-49, against `Other Christian` **9.7%** in the 2011 census and `Other Christian Churches`
+**0.89%** in the 2022 SDES. A fifth of every province would be drawn as an undifferentiated
+residual.
+
+**And its universe is not the population.** Religion is asked in the Woman's and Man's
+questionnaires, of respondents **aged 15-49** (15,198 women and 7,333 men weighted); it is not on
+the household roster, which is where §11b found it in Nigeria. A DHS build for PNG would be a
+composition of adults of reproductive age.
+
+**So for PNG the ordering is IPUMS first, DHS only if IPUMS stays dead**: 89 districts against 22
+provinces, all persons against 15-49, a 9.7% residual against 21.3%. The one axis DHS wins is
+vintage, 2016-18 against 2000.
+
+**One claim §11ag flagged as unconfirmed is now settled the other way.** DHS did **not** suspend
+new user applications: the New User Registration form at
+`dhsprogram.com/data/new-user-registration.cfm` was live on **2026-09-09**, carries no notice of
+any kind, and its `Institution/University/Organization Type` menu offers **`Individual
+Researchers`** and **`Private Agencies/Researchers`** beside the university and government
+options. §11ag priced the registration as *"institutional rather than a personal email signup"*;
+it is not — it wants an organisation *string*, and an individual is an accepted answer. It still
+wants Anita's name, her country of residence and a stated research purpose, so it is still hers,
+and redistribution is still barred outright.
+
+
 ## 9bg. Vanuatu wired — 2026-09-08. §11aa's Pacific list again, and the tier was eleven times finer than the queue priced it
 
 Anita, after Papua New Guinea came back blocked (§11ab): *"darn okay. we can look at vanuatu"*.
@@ -16497,6 +16598,8 @@ applications on 2025-02-07**. It could not be confirmed against DHS's own pages 
 as **unconfirmed** — check it before Anita spends any time on a registration, because if it is
 true the entire DHS block is closed rather than merely walled.
 
+**Checked 2026-09-09 and it is false** (§11ab, PNG re-check). The New User Registration form is live, carries no notice, and `Institution/University/Organization Type` offers `Individual Researchers` and `Private Agencies/Researchers`, so the registration is not institution-only either. The DHS block is walled, not closed.
+
 **Also worth stating so nobody assumes otherwise, and this was checked on the biggest one:** a
 DHS *final report* is not a shortcut. **Nigeria's NDHS 2018 report, FR359, carries 734 table
 captions and exactly one of them mentions religion** — and there, religion is a **row block
@@ -16510,7 +16613,7 @@ reason the wall matters.
 
 | country | current state | what DHS would change |
 |---|---|---|
-| **Nigeria** | census *"does not ask"* (§11p), absent from the oracle | **the prize.** 230M people, the Muslim/Christian line is the most consequential unmapped religious boundary on earth, and §11b already called NDHS 2018 state-representative |
+| ~~**Nigeria**~~ | **DRAWN 2026-09-09 WITHOUT DHS — §9cv**, from the pooled Afrobarometer at 37 states. The rest of this row stands: NDHS 2018 is state-representative on ~40k households and would be strictly better than the 11,909 respondents drawn, so this is the country where the registration is worth most | a better instrument at the same tier, not a finer one |
 | **Tanzania** | religion dropped after **1967**, absent from the oracle | the only route of any kind |
 | ~~**Uganda**~~ | **DRAWN 2026-09-09 without DHS — §9cr.** The 2024 half of this row stands; the 2002 census turned out to publish religion by district and Uganda is on 56 units. UDHS 2022 would still be worth having, for the current vintage and the ten-category list, but it would be **15 sub-regions against these 56** | a current vintage, not a finer one |
 | **Mozambique** | 2017 census, 8 categories incl. **Sião/Zione 16.3%**, microdata by request (§11d, §11w) | a second route to §11b's *"most interesting untried source"* |
@@ -16518,6 +16621,7 @@ reason the wall matters.
 | **DRC** | **already refused** — §11h's *Enquête 1-2-3* cells are 31,755 *heads of household sampled*, not people | a real person-level source where the refused one was not |
 | **Guinea** | 2014 census has 6 categories in the oracle, **no religion volume** in the RGPH-3 series (§11w) | geography |
 | **South Africa** | see below; SADHS is far thinner than CS2016 and is not the route here | nothing |
+| **Papua New Guinea** | §11ab: religion published nationally and nowhere else in 2000, 2011, the 2022 SDES and 2024 alike; the only other route is IPUMS, which is separately dead | the second route where there is otherwise one, at **22 provinces** on ~19,200 households — but the card has **no Baptist code** and a **21.3%** *Other Christian church* residual against the census's 9.7%, and its universe is ages 15-49, so it is coarser than the census it would stand in for (added 2026-09-09) |
 
 **One methodological caution to carry into any of these, and it is not new.** A DHS is a
 household survey of ~5-40k households designed to be representative at the survey region, which
@@ -21031,3 +21135,643 @@ over 400 random PSU halves, so **no bar for one correlation is the right compari
 corrected arithmetic included. Its docstring now says that in those terms, and
 `spearman_null.py` lists the three constructions side by side so a future builder picks one on
 purpose rather than by copying whichever file is open.
+
+---
+
+## 11al. Lebanon CLOSED — 2026-09-09. THE SECT COLUMN IS REAL AND THE GEOGRAPHY UNDER IT IS A FIELDWORK QUOTA, which §14.16's split-half passes at its strongest
+
+`sources/lb.md` is the full record. **Lebanon is not drawn**, and the reason is a property of
+the instrument that no check in this project could see until today.
+
+### The prize was real
+
+Arab Barometer carries `Q1012A`, a **sect** item, for Lebanon and for no other country here:
+Maronite, Orthodox, Catholic, Armenian, Sunni, Shia, Druze, `Just a Muslim`, and in wave III a
+tail of Chaldean, Anglican, Latin, Assyrian and Syriac. It is answered by **6,600 Lebanese over
+five waves** (III, V, VI-1, VI-2, VI-3), it partitions everybody rather than following up on one
+answer, and it nests exactly inside `Q1012` — with **Druze arriving under `other`, `Something
+else` or `No religion`** depending on the wave's card, which is where wave V's 190 `other` go.
+Wave IV's `Q1012A` was asked of Muslims only (615 of 1,500) and cannot be pooled. Wave VI-1 has
+`Q1012A` and an entirely empty `Q1012`, so it is a wave the religion pool cannot see and the
+sect pool can.
+
+### And the geography under it is set before anybody is interviewed
+
+Christian interviews over total interviews, per governorate, unweighted, on `Q1012`:
+
+```
+                     II      III       IV        V     VI-2     VI-3      VII     VIII
+AKKAR                 -        -        -   30/160   10/ 70   10/ 70   30/160   32/170
+BEIRUT           51/159   50/130   50/130   90/250   40/100   40/100   90/250   74/251
+BEKAA            45/201   20/150   20/250   60/150   20/ 60   20/ 60   60/149   48/150
+MOUNT LEBANON   355/451  300/480  314/555  650/960  270/400  270/404  650/960  568/851
+NORTH           103/290   80/240   94/315  100/330   40/140   40/140  100/330   75/341
+SOUTH            15/179   20/130   20/150   10/260   10/110   10/106   10/260    0/350
+```
+
+**Waves V and VII agree in every governorate**, three years and two fieldwork rounds apart.
+Waves VI-2 and VI-3 are a second such pair. On the sect column it is starker: **Kesrwan-Jbeil
+comes back 100% Christian in all three parts of wave VI** (60, 60 and 40 interviews, not one
+Muslim), **Akkar is exactly 10 Maronite and 60 Sunni three times** with no Orthodox, Shia or
+Druze at all, and Baalbek-Hermel is exactly 60 Shia three times. The numbers are round because
+they are quota cells being filled.
+
+Ruled out first, each on a measurement: **not a panel** (wave VI-1 and VI-2 share 877 `ID`s and
+only 165 of them agree on governorate, so `ID` is a within-file serial and the parts are
+independent samples); **not the weights** (every figure above is unweighted, and weighting moves
+the per-governorate share by one to three points); **not the name harmonisation** (the agreeing
+labels are character-identical within each pair).
+
+### THE PART THAT IS ABOUT THIS PROJECT AND NOT ABOUT LEBANON
+
+**A quota replicates between the wave halves perfectly, so §14.16's split-half returns its
+strongest possible verdict on the one input whose geography is not a measurement at all.** Run
+on Lebanon it would clear the +0.6429 eight-unit bar for every answer and license drawing
+Maronites, Sunnis, Shia and Druze on their own governorate shares. `held_out` passes trivially
+for the same reason — the governorate allocation is a quota too, so the survey's unit shares
+match the population's by design. The totals reconcile, `ab.build` returns a closed partition,
+and **nothing anywhere prints a warning.** That is worse than a country that fails a check.
+
+So the check is now shared code rather than a note. **`sources/arabbarometer.py` gains
+`quota_agreement` and `assert_not_quota`, and `ab.stability` calls the second one before it
+computes anything.** For every pair of waves it takes the units both sampled and the answers
+both cards offered, keeps a unit only where the shared answers cover 95% of it in both, drops
+the largest answer because the shares sum to one, and computes the **exact probability that two
+independent samples of those sizes land on the same rational share** — then reads the number of
+exact agreements against the Poisson-binomial tail. The bar is 1e-3 on the Bonferroni-adjusted
+minimum, pre-registered, and there is nothing near it:
+
+    Lebanon   Q1012    V vs VII       4/4  cells identical   p = 6.6e-06   -> 1.4e-04 adjusted
+    Lebanon   Q1012A   VI-2 vs VI-3   8/26 cells identical   p = 1.1e-04   -> 1.1e-03 adjusted
+    Jordan             III vs VI-3    1/8                    p = 0.888     -> 1 (nothing)
+    Egypt              IV vs VII      1/17                   p = 0.925     -> 1 (nothing)
+    Iraq               V vs VII       0/5                    p = 1.0       -> 1 (nothing)
+
+**IRAQ IS CLEAN BY THIS TEST AND SO IS YEMEN'S PAIR OF WAVES**, so §11ag row A's other rows are
+not closed by this and should be taken as they stand. `data/normalized/eg.csv` and
+`data/normalized/jo.csv` are **byte-identical** after the change, verified by sha256 before and
+after; both drawn countries now print the check and pass it.
+
+**And read the second line of that table before trusting a pass.** Lebanon's SECT pool on its
+own comes in at 1.1e-3 and would have squeaked past the bar — not because that column is
+cleaner but because its pool has no wave VII in it, and wave VII is where the evidence is. The
+quota is a property of the fieldwork, not of a column. Run the check on every religion column
+the file offers.
+
+### The state route, which is where Lebanon actually stands
+
+No census since **1932**; Lebanon is **absent from the oracle**. **§9cd's route was run on the
+Central Administration of Statistics and it is empty.** `cas.gov.lb` sits behind a Cloudflare
+interstitial and 403s every client, so the office was enumerated from the Wayback CDX API
+instead — **about 6,000 archived URLs with a 200, and not one mentions religion, sect,
+confession, طائفة or مذهب**; the only hits on `sect` are `Financial sector`. CAS did run a
+**DevInfo 7 instance** (`/di7web/`, `/di7uilibservices/diuilib/1.1/` and `1.8/`), which is
+exactly the BI engine §9cd says to open, and the archive shows it **compromised** —
+`Janissaries.Shell.php` and SEO-spam pages under `di7web/stock/users/`, all captured with a 200
+— which is very likely what the wall in front of the host is now for. The **Directorate General
+of Personal Status holds the civil register, in which every Lebanese person's sect is
+recorded**,
+and publishes a caza-level statistics map for 2009-2026 — **registered voters by sex, births,
+deaths, marriages, divorces, and no sect**. The page was downloaded and searched rather than
+eyeballed: 412 KB, no API constant, and its sixteen hits on `Sect` are the word `Section` in CSS
+class names.
+
+**The electoral register is the only sect-by-place data Lebanon has**, the Ministry of Interior
+issues counts by sect and caza before each election, and no open machine-readable national file
+was found. **It is also probably the wrong geography**, and that is the thing to read before
+chasing it: a Lebanese voter is registered where their family's civil record sits, not where
+they live — which is why the register is organised by *qada al-qayd* and why letting people vote
+where they live needs its own name, the *megacentres*, and has never happened. A dot map built
+on it draws Greater Beirut's Shia in Nabatieh and Baalbek and its Sunnis in Akkar, and roughly
+half the country lives in Greater Beirut. Nothing published converts it, and inventing the
+conversion is §14.4 rule 1.
+
+### The denominator a future Lebanese build would use, since it turned up on the way
+
+§9cq's universe question is much larger here than in Jordan, and it has a published answer.
+**OCHA Lebanon's `lebanon-population-estimates-and-displacement-figures` on HDX**, resource
+`05.-2026-lrp-population-package.xlsx`, updated 2026-03-17, gives eight governorates with the
+four populations kept apart: **Lebanese 3,864,296, Syrians 1,120,000, Palestinians 224,791,
+migrants 164,097, total 5,373,184**, each with sex and five-year age bands, and its methodology
+sheet names **CAS's own Labour Force and Household Living Conditions Survey** as the source for
+the Lebanese figure. So a Lebanese-only build draws 3,864,296 of 5,373,184 and its **`gap_share`
+is 0.281**, with the gap being three populations that same file counts. Its `Within 332` sheet
+is a facilities count, not a finer tier; Lebanon's 1,132 cadastres are not in this package.
+**`cod-ps-lbn` 404s and `cod-ab-lbn` is a 200** — Jordan's shape exactly, and the OCHA package is
+the better denominator anyway. What none of this supplies is the religion column.
+
+## 9cu. The Netherlands wired — 2026-09-09. A STATISTICAL OFFICE'S CUSTOM-TABLE SHELF IS NOT IN ITS OWN CATALOGUE, and the country queued as a twelve-province survey build had 403 gemeenten sitting on it
+
+`queue.md` had the Netherlands at the top of §11ai's ESS block, priced as *"NUTS-2 (12
+provinces)"* off `rlgdnanl`, with §11k's note that CBS `82904NED` is national only. **§11k
+was right about that table and the ESS pricing was right about ESS.** Both were beaten by a
+CBS file that is not in CBS's own OData catalogue. Drawn on **394 gemeenten, 10 categories,
+16,794,120 people**, 42,600 a unit, which is the finest religion geography in western Europe
+on this map after Germany. Full record in `sources/nl.md`.
+
+### The shelf
+
+CBS publishes three kinds of thing and only two of them are indexed. StatLine tables are in
+the OData catalogue at `opendata.cbs.nl/ODataCatalog/Tables`; articles and papers are on the
+site; and **`maatwerk`, custom tabulations produced for an outside requester and left up
+afterwards, are on the site and in neither index**. A title filter on `eligi` over the whole
+OData catalogue returns four tables and the best of them is twelve provinces:
+
+| id | geography |
+|---|---|
+| `82904NED` Religieuze betrokkenheid; persoonskenmerken | national only, §11k's |
+| `83288NED` Religieuze betrokkenheid; kerkelijke gezindte; regio; 2010-2015 | landsdeel and provincie |
+| `70794ned` Religie; naar regio; 2000/2002 of 2003 | regional, and twenty years stale |
+| `82868ENG` Caribbean Netherlands | Bonaire, Saba, Sint Eustatius |
+
+The file that draws the country is `cbs.nl/nl-nl/maatwerk/2015/20/`
+**`religie-en-kerkbezoek-naar-gemeente-2010-2014`**. 110 kB of `.xls`, no login, no form,
+nine denominations for every one of the 403 gemeenten of the 2014 classification, from a
+pool of about **460,000 adults** interviewed in the Enquête Beroepsbevolking between 2010
+and 2014.
+
+**The generalisation, and it is cheap to apply.** *Ask a European statistical office's
+custom-table shelf before concluding it publishes religion nationally only.* It is
+[[reference_spa_hidden_apis]]'s rule one shelf up: the catalogue is not the library. On
+cbs.nl the query is `zoeken?q=<term>&type=maatwerk`. The equivalent shelves are worth
+naming for the next agent: Destatis has *Sonderauswertungen*, Statistics Sweden has
+*beställd statistik*, SSB has *oppdrag*, INSEE has *données détaillées*. §11ai's whole ESS
+block for Belgium, Sweden, Norway, Denmark and Latvia should have this run against it before
+any of them is built from a survey pooled at NUTS 2.
+
+**And there was a sign it existed.** CBS's own paper *De religieuze kaart van Nederland,
+2010–2015* (2016/51) prints choropleths of onkerkelijkheid and church attendance **per
+gemeente** and quotes individual gemeente figures in its text, while publishing no table at
+all. A paper that maps a variable at a geography is evidence that the figures exist at that
+geography; it is not itself a source, and the thing to do with it is go looking for the
+table rather than read numbers out of the prose.
+
+### Three Reformed answers, three new nodes, and one ask
+
+CBS's card offers `Nederlands hervormd` (7.30% nationally), `Gereformeerd` (3.58%) and
+`PKN` (5.85%) as separate boxes, and their maps have nothing in common: Staphorst is 47.5%
+hervormd, Urk 52.2% gereformeerd, Dongeradeel 32.4% PKN. Three leaves were added under
+`christianity.reformed.continental` and **that is the one thing put to Anita**
+(`ask/009-nl`): three legend rows no other country uses is AGENT_BRIEF §3's fourth bullet.
+The country ships on them; reversing is three lines of `taxonomy/nl2014.py` and a retile.
+The argument for shipping is that the same subtree already holds thirteen leaves, almost all
+of them the American emigrant branches of exactly these three answers (`.rca`, `.crcna`,
+`.nrc`, `.frcna`), so the tree already draws this division and drew it in Michigan first.
+
+`Anders`, 4.43%, went to `other.nl` whole. Its geography is the finding: **+0.49 with PKN,
++0.49 with gereformeerd, +0.48 with hervormd and -0.66 with Katholiek** across the 394
+gemeenten, topping out in Urk, Elburg and Nunspeet. It is mostly the Protestant free
+churches, not the urban unattached, which is the opposite of the guess.
+
+### Two traps in the geography, one of which would not have shown up as an error
+
+**PDOK's CBS boundary WFS takes the year as a path component.**
+`service.pdok.nl/cbs/gebiedsindelingen/2014/wfs/v1_0` answers with the 2014 classification;
+2015, 2016, 2021 and 2025 answer too. That solves the vintage problem outright, and the
+vintage problem here is real: the Netherlands went 403 gemeenten in 2014 to 352 in 2021, and
+Molenwaard, Ferwerderadiel, Dongeradeel, Menterwolde, Graft-De Rijp and Zederik, several of
+which are the extremes in this country's own table, are gone by then. Only
+`_gegeneraliseerd` exists for the older years; `_niet_gegeneraliseerd` is on 2023 and 400s
+on 2014.
+
+**KONTUR'S NL EXTRACT CARRIES A SLAB OF BELGIUM.** 2,525 hexes with 492,914 people fall
+outside every gemeente, and **371,100 of those are nearest to Sluis and 5 to 25 km away from
+it**: Brugge, Knokke and Zeebrugge, across the border from Zeeuws-Vlaanderen. This is the
+case where [[reference_archipelago_grid_snap]]'s *snap, do not drop* and the plain fact that
+foreign hexes must be dropped point in opposite directions, and a distance cap separates
+them, because a generalisation rim is a few hundred metres and Belgium is not: 948 hexes and
+94,337 people inside 300 m are snapped, the other 1,577 are dropped. Without the cap a
+nearest-join hangs Bruges on a gemeente of 24,000 people and every Sluis dot moves to the
+Belgian coast, with no error anywhere.
+
+**The nearest-join has to be done in a projected CRS and geopandas only warns.** Run in
+EPSG:4326 the distances are degrees, so every cap from 200 m to 20 km passed identically and
+the check reported all 2,525 hexes as *"within 200 m"*. `sjoin_nearest` emits a
+`UserWarning` about geographic CRS and returns numbers anyway. Worth adding to §12: **a
+distance column out of a geographic-CRS spatial join is not a distance, and the failure mode
+is a threshold that always passes.**
+
+### The decade, which is the caveat rather than a problem
+
+The religion question left the EBB after 2015 and CBS's live instrument is *Sociale
+samenhang en welzijn*, published at COROP with four categories. Its current maatwerk,
+`Religie naar regio, 2021/2025` (2026/11, March 2026), puts **42.9%** of the country in some
+denomination against this pool's **52.8%**. The fall is not even: Limburg 77.2% to 57.9%,
+Groningen 36.3% to 33.7%. `sources/nl.py` fetches that file and prints the province table at
+the end of every build, and **nothing is re-levelled onto it**: two CBS surveys, different
+wordings, different age bases, and CBS's own 2023 longread sets them side by side rather
+than splicing them. Re-levelling would in any case be impossible below `Protestants`, which
+is the split the country turns on.
+
+**What would replace this build.** SSW's questionnaire asks Christians which denomination,
+about thirteen options including PKN, CGK and the Reformed churches, over an 85,000-person
+pool for 2012–2022. If that is ever published crossed with region the Netherlands should be
+rebuilt on it: 40 COROP regions is ten times coarser, but the vintage would be current, and
+a maatwerk request is exactly how the table this country is drawn from came to exist.
+
+---
+
+## 9cv. Nigeria wired — 2026-09-09. THE LARGEST COUNTRY ON THE MAP, DRAWN WITH NO COUNT BEHIND IT AT ALL; and a fit that silently undid the population reweighting it had just been given
+
+`sources/ng_geo.py`, `sources/ng_grid.py`, `sources/ng.py`, `taxonomy/ng2022.py`,
+`taxonomy/branches.py` (`other.ng`), `countries.py`, `ask/010-ng`. **37 states, 5 categories,
+216,798,930 people, every row `modelled`.** `sources/ng.md` is the full record. This closes
+`queue.md`'s *"the prize, and the largest single addition available to this map anywhere"*.
+
+### 1. NIGERIA IS THE ONLY LARGE COUNTRY HERE WITH NO COUNT OF ANY KIND
+
+§3's row has said *"census does not ask, deliberately"* since the file was started and §11p
+repeated it for the continent. Both are right, and the detail is worse than either says:
+
+| census | religion | what happened |
+|---|---|---|
+| 1963 | asked, published by region | the last public figure of any kind |
+| **1973** | **asked** | annulled in 1975 with nothing released, amid falsification allegations |
+| 1991, 2006 | not asked | 2006 gazetted at 140,431,790 on 2009-02-02 |
+| 2023 | announced, postponed, not held | NPC has said it would carry no religion question |
+
+Nigeria is **absent from the UNSD oracle**, consistent with all of that. So there is no census
+margin to fit to, and this is `sources/lr.py`'s instrument with the census taken away.
+
+**The one thing §11ai got exactly right and it is confirmed to the page.** NDHS 2018's report
+FR359 was downloaded and read: 748 pages, religion in **one** table, 3.1 on p. 51, as a row
+block beside the Age block and the State block rather than crossed with either. 41,821 women
+and 11,867 men aged 15-49, national only. It is a comparison, and §4 below is why it is not a
+margin.
+
+**And the office's own negative was found and read, which turns an unresolved lead into a
+closed one.** NBS's *Religion and Related Activities Statistics* (`nigerianstat.gov.ng/download/27`,
+6 pp) is the document a search surfaces as though it were a table, and it is **a proposal for a
+database that does not exist**: ISIC division 94, twenty-five proposed items and about 500
+variables, of which `4301 Registered Members of Christian Religion by States` is one. Its own
+concluding remarks say *"presently, virtual nothing is being done in terms of data collection by
+the various agencies concerned with managing religious matters in the country"*, and its §4 says
+what does exist is *"kept in disparate locations as hard copies in files"* at the Corporate
+Affairs Commission and the Ministry of Internal Affairs. **The access is §9cp's Costa Rica
+finding a second time**: `nigerianstat.gov.ng` returns `RemoteDisconnected` to a bare urllib GET
+and times out at 60 s in a browser fetch, both of which read as a dead host, and answers 200 to
+`requests` with a COMPLETE browser header set. The wall is keyed on header completeness rather
+than on the User-Agent, so the usual UA retry does not open it.
+
+### 2. THE FINDING THAT GENERALISES: A FIT CAN UNDO THE REWEIGHTING IT WAS JUST GIVEN
+
+The first version fitted the state-by-religion table to two margins by IPF, on §9cl's Liberia
+pattern, with the column margin taken from **the Afrobarometer's own pooled national shares**.
+That is wrong, and it looks harmless:
+
+> With a population table as the row margin, fitting the columns back to the survey's own
+> national total **undoes the reweighting the row margin just did.** The pool's state mix is
+> not the population table's, so those are two different weightings of the same states, and
+> the fit bends every state's measured share to reconcile them.
+
+Two documented mechanisms put the pool's state mix out of line with COD-PS 2022:
+
+- **Round 6 sampled no Adamawa, Borno or Yobe.** It was in the field in December 2014 and
+  January 2015, when Borno and Yobe were substantially outside federal control. About 14
+  million mostly-Muslim people are missing from one of the six rounds.
+- **Pooling fourteen years averages over a period in which the north grew fastest.** Against
+  2006, COD-PS 2022 has Katsina and Bauchi at x1.79 while Akwa Ibom is x1.28 and Osun x1.30.
+  Each round was allocated against its own year's population, so the pool under-weights the
+  north relative to 2022.
+
+`held_out` reports the consequence without touching the religion column: Yobe sampled at
+**0.63x** its COD-PS population share, Bayelsa at 1.37x. Composing per state instead moves the
+drawn national balance **4.6 points**, 56.0% Christian to **51.4%**.
+
+**`ab.build` and `lapop.build` already compose per unit**, so no country drawn from LAPOP, the
+Arab Barometer or the Afrobarometer is affected and nothing needs rechecking; the IPF was this
+file's own deviation. Liberia's IPF stays correct, because both of its margins are census
+totals over the same 5,250,187 people. The rule to carry: **fit a column margin only to a
+source that counted the same people the row margin counted.** A survey's own national share is
+not that, however good the survey is.
+
+### 3. WHAT IS DRAWN, AND THE FOUR FIGURES THAT DISAGREE
+
+    row margin      state populations       COD-PS 2022 (UNFPA/NPC)      EXACT
+    the composition each state's own mix    Afrobarometer R4-R9 pooled   measured, n=11,909
+    the national level                      neither                      computed
+
+| | Christian | Muslim |
+|---|---|---|
+| **this map, as drawn** | **51.4%** | **47.9%** |
+| Afrobarometer R4-R9, its own pooled weighting | 56.0% | 43.3% |
+| NDHS 2018 FR359 Table 3.1, women 15-49 | 46.0% | 53.5% |
+| Pew Research Center, 2020 | 43.4% | 56.1% |
+
+An 8.2-point spread on the Muslim share, which over 217 million people is 18 million of them.
+All four are printed on every build and all four reach the reader in `note_public`, because on
+this country the national number is the disputed one and pretending otherwise would be the
+dishonest move.
+
+### 4. BOTH EXTERNAL MARGINS WERE CONSIDERED AND BOTH WERE REFUSED, FOR DIFFERENT REASONS
+
+- **Pew 2020** is `estimate` in §3.1's own table, and §3.1 lets another basis *split* a
+  category and never set its magnitude. Beyond the rule: Pew's Nigeria figure is a synthesis
+  over the DHS and this same survey, so fitting this survey's geography to it would be
+  laundering one witness through the other.
+- **NDHS 2018** is the tempting one, 53,688 respondents against 11,909 and state-representative
+  by design. **Its universe kills it.** Table 3.1 is ages 15-49 and nothing else, so it sees
+  neither the under-15s (about 43% of Nigeria) nor anyone over 49, and the row margin here is a
+  whole-population state table, so fitting to it would *require* the scale-up **§3.4 refused
+  for Brazil**. §11ah priced exactly this gap for Haiti against a census that crossed religion
+  with age; Nigeria has no such census, so here it cannot be priced at all.
+
+### 5. THE ONLY OUTSIDE EVIDENCE IS A LEGAL RECORD, AND HALF OF IT IS ONLY A SMOKE TEST
+
+Twelve northern states extended the Sharia penal code to criminal matters between 1999 and 2001
+and twenty-five did not. The survey makes **every one of the twelve Muslim-majority** without
+having been told which twelve they are; a random assignment of the fifteen Muslim-majority
+labels it produces would cover a named twelve about once in four million. That leg is real
+evidence.
+
+**The second leg is billed honestly as a smoke test and it took three attempts to get there.**
+Two sharper forms were written and both failed on this data, and neither was tuned to pass:
+
+- *"Kaduna is the least Muslim of the twelve"*, which its local-government-by-local-government
+  application implies, fails because Gombe comes in **1.1 points** below it, and Gombe's
+  Tangale and Waja south is a real Christian district.
+- *"the twelve are separated from every non-adopting state with no overlap"* fails because
+  Adamawa, on 200 pooled respondents, comes in at 68.0% against Gombe's 66.3%.
+
+What shipped is a median-to-median gap, 93.4% against 9.2% on a 40-point bar, and
+`check_sharia()`'s docstring says in terms that this catches a north/south join swap and
+nothing subtler. **§14.16's *"the bar is never moved to make something pass"* is about a bar,
+and this is about a claim**, but the failure mode is the same one and writing down the two
+forms that died is what stops the next person re-deriving them.
+
+### 6. A ZERO IN A CROSSTAB IS A FACT ABOUT RESPONDENTS, NOT ABOUT THE SHOWCARD
+
+An early draft of `sources/ng.py` said Izala *"is on the card in R4, R5 and R7 and absent from
+the other three"*, which was inferred from three zero columns. A reviewer flagged that the
+value-label set **is** the card and is readable in one line. `report_card()` now reads it with
+`pyreadstat.read_sav(..., metadataonly=True)`, which costs seconds because it does not touch
+the 280 MB of respondents, and prints every answer against the rounds whose card carried it.
+The inference happened to be right and it turned up two more:
+
+```
+    calvinist    on the card in R5-R9      NOT offered in R4
+    izala        on the card in R4, R5, R7 NOT offered in R6, R8, R9
+    shia         on the card in R6-R9      NOT offered in R4, R5
+    shia only    on the card in R4, R5     NOT offered in R6-R9
+```
+
+**`Shia only` and `Shia` are one box renamed between rounds**, which `ab.assert_one_wording`
+cannot see because the two strings do not fold together. Nothing is lost here, because both go
+to `islam` in the grouping, but a country that wanted to draw the Muslim card would have had
+one answer as two categories with every total still adding up. **This function is worth copying
+into any future Afrobarometer country.**
+
+### 7. THREE STATES ARE DRAWN WITH NO MUSLIMS
+
+Abia, Cross River and Ebonyi. None of the 198 to 256 people interviewed in each across six
+rounds was Muslim, and §3.5 drops rather than invents. `note_public` tells the reader to read
+those as states where the survey found none rather than as states with none, because every
+large Nigerian town has a northern trading quarter. This is §9cl's River Cess three times over
+and on states of three to four million people.
+
+### 8. THE POPULATION IS A PROJECTION OFF A DISPUTED CENSUS AND THERE IS NOTHING BETTER
+
+COD-PS 2022, 216,798,930, which is NPC's own projection off 2006 carried by UNFPA. The 2006
+state totals were disputed on the north/south axis, which is the same axis this map runs along:
+Lagos ran a parallel count and put itself at roughly twice its gazetted 9,113,605.
+`sources/ng_geo.py` prints the whole 2006-to-2022 comparison on every run, transcribed from the
+gazette PDF and asserted against the national total the notice states in words.
+
+**And Kontur is a third opinion on the same dispute, which is worth noticing rather than
+using.** `ng_grid.py`'s per-state ratio check runs 0.85x in Jigawa, 0.87x in Zamfara and
+Katsina against 1.30x in Akwa Ibom, 1.20x in Osun and 1.15x in Delta and Imo: a
+building-footprint surface with no stake in Nigerian revenue allocation puts more people in the
+south and fewer in the far north than the 2006-derived projection does. It is used only as a
+within-state placement weight and nothing is drawn from that observation.
+
+### 9. THE SPLIT-HALF BAR HERE IS THE OLD ONE, WHICH §9ct LEFT ON PURPOSE
+
+`afrobarometer.stability` still computes `1.96/sqrt(n-1)`, one of the four places §9ct
+deliberately did not change. **Nigeria does not care and neither does Liberia**: both drawn
+categories clear +0.95 against a +0.327 bar, the exact bar at 37 units is lower still, and the
+three categories that do not carry a geography are excluded by the 1% eligibility floor before
+any bar is applied. So this country inherits the open item and does not move it; whoever does
+still owes Anita the before-and-after list §9ct asks for.
+
+### 10. AND ONE ASK, WHICH IS §14 AND NOT A METHOD QUESTION
+
+`ask/010-ng`: whether this map should publish a state-level Christian and Muslim picture for a
+country whose state declines to count it *because* the count allocates revenue and offices. The
+decision taken is to draw it, at the coarsest tier on the map, with a note that opens on why
+Nigeria stopped counting and prints all four national figures. §14.3's genuinely dangerous list
+does not include Nigeria and the north/south pattern is in every atlas, so nothing is revealed;
+what is new is that the map lands Christian-majority where two of the three other published
+figures do not.
+
+## 11am. Nauru scouted to checkpoint A — 2026-09-09. THE OFFICE MOVED AND ITS POPGIS IS OPEN AND HAS NO RELIGION; the census table is one page away
+
+Taken after §11ab's Papua New Guinea closed, parked at checkpoint A on the coordinator's
+instruction to wind down rather than because anything failed. **Nothing is claimed here about
+what Nauru does or does not publish.** The full record is `sources/nr.md`; this is the part that
+generalises.
+
+**The office moved and the queue row's hostname is now a redirect.** `nauru.prism.spc.int`
+**301s to `stats.gov.nr`**, which is the Nauru Bureau of Statistics on its own domain, plain
+WordPress with a live unauthenticated REST API. Its `wp/v2/media` was swept and is **48 items on
+one page — page 2 returns 400 — with exactly one non-image file**, a GDP bulletin. That is
+`[[reference_wordpress_media_api]]`'s stated case rather than a wall: the library is not a
+superset of `wp-content/uploads`, and the census PDFs are somewhere else. **The uncrawled place
+is the site's own `/documents/` page**, which is where the next session should start; there is no
+WP File Download plugin here, so the Fiji and PNG AJAX route does not apply.
+
+**SPC's PopGIS for Nauru is live, fully open, and does not carry religion — and it is a fourth
+distinct PopGIS outcome.** Fiji served the data (§9bd §5), Solomon Islands declared the dataset
+and disabled the endpoint (§9bh), Vanuatu had no religion theme (§9bg), and this one answers
+everything and simply never had the question. `GC_listIndics.php?obs=main&lang=en` returns
+**3.4 MB and 4,437 indicators over 168 datasets, all 2011 Census**, at three levels — Country,
+Enumeration Area 2011 and District. The indicator ids are the census's own question numbers, `p1`
+to `p43` and `h1` to `h51`, and religion is not among them; the only *religio* string in the
+whole file is `P38 … Activities of religious organizations (15+)`, an industry of work. **A
+PopGIS carries a subset of its census, so this does not settle whether the 2011 census asked the
+question** — the widely-quoted *2011 est.* shares say it did — but it does retire PopGIS as the
+route.
+
+**The parameter pair is worth writing down, because it is not Fiji's and it fakes a dead
+endpoint.** On this instance **`GC_init.php` wants `lang` and NOT `obs`** — `GC_init.php?lang=en`
+returns the 69 KB config, while `GC_init.php?obs=main&lang=en` returns a **426-byte *Unavailable
+service* exception**, which is byte-for-byte the shape §9bh read as a disabled endpoint on the
+Solomons. **`GC_listIndics.php` is the opposite and wants `obs=main`.** So on a GeoClip host,
+*Unavailable service* means *"wrong parameters for this endpoint"* at least as often as it means
+*"switched off"*, and both endpoints should be tried both ways before either is called dead.
+
+**Two live hosts not yet probed**, both linked from the office's own front page:
+`https://stats-nr.pacificdata.org/`, a **per-country .Stat instance** — the regional SPC agency
+has no religion dataflow anywhere (§11ab) but a national instance can carry what the regional one
+does not — and `https://naurufinance.info/`.
+
+---
+
+## 9cw. Iraq wired — 2026-09-09. THE COLUMN §11af REJECTED FOR THE MAGHREB IS THE ONE THIS COUNTRY IS FOR; plus the first geoBoundaries file this map has thrown out on a measurement
+
+Full write-up: `sources/iq.md`. **46,118,793 people over 18 governorates**, seven source
+categories on five nodes, every row `modelled`. The third country drawn from the Arab
+Barometer after Egypt (§9bz) and Jordan (§9cq), and **the first Sunni/Shia geography on this
+map** — Russia and Bulgaria carry the two nodes, and in neither is the division the organising
+fact of the country.
+
+### 1. §11af rejected `Q1012A` and was right, and Iraq is the exception it named
+
+§11af tested the sect follow-up across Morocco, Algeria, Tunisia, Libya and Sudan and threw it
+out: *just a Muslim* is the modal answer in all five (44.9% in Morocco, 81.8% in Sudan) and
+**wholly-Maliki Morocco returns 16.2% Maliki**, so there the variable records which label a
+person volunteers. It ended with the open question — *"whether the same variable behaves better
+in Iraq and Lebanon, where sect is a salient public identity rather than an unmarked default"*.
+
+**In Iraq it does, and it is three measurements rather than an argument.**
+
+1. **The undifferentiated share is 24.5%**, against 44.9–81.8% across the five.
+2. **60.9% of the Iraqis who name a branch say Shia.** Every published estimate puts Iraq at
+   61–64% Shia and 29–34% Sunni of the whole population, which is 64–68% of the named.
+3. **The geography reproduces Iraq's and nobody told it to.** All nine southern and
+   mid-Euphrates governorates come out majority Shia among the branch-namers and all six
+   western and Kurdish ones majority Sunni, **98.2% against 1.5%**, with Baghdad, Diyala and
+   Kirkuk between at 68.1%. `sources/iq.py`'s `sect_geography` asserts this rather than
+   printing it, because it is the check the country's whole claim rests on.
+
+Najaf 92.8%, Karbala 89.2%, Dhi Qar 88.5%; Erbil 97.0% Sunni, Sulaymaniyah 93.1%, Duhok 92.5%,
+Anbar 62.6%; Baghdad 58.9% Shia against 14.2% Sunni.
+
+**The generalisable form: a variable that is a label in one country can be a measurement in
+another, and the test is the size of the residual.** §11af's rejection was correct for the
+Maghreb and would have been wrong here, and the thing that separates them is a number the
+source prints about itself.
+
+### 2. THE UNDIFFERENTIATED QUARTER IS DRAWN AS ITSELF, AND ITS LEVEL IS FIELDWORK WHILE ITS GEOGRAPHY IS NOT
+
+**23.7% of Iraq as drawn sits on the bare `islam` node** and nothing shares it out: `Just a
+Muslim` (21.9%), the sect card's `Other` (0.94%), and the people who refused the follow-up
+after answering Muslim (0.83%). Russia is the precedent and it is exact — 4.66% of Russia
+answered *"I profess Islam, but am neither Sunni nor Shia"* and stayed on the parent.
+
+Apportioning them at each governorate's observed Sunni:Shia ratio is the tempting operation: it
+preserves every total and gives a tidier map. It is §14.4 rule 1 — it would state, in Baghdad,
+that the people who would not name a sect divide 81:19 the way the people who would do.
+
+**And the level of the residual moves with the wave by a factor of 2.4**: 17.7% in wave V
+(2018–19), **42.7%** in VI-3 (spring 2021), 27.1% in VII, 21.2% in VIII. Nothing here is built
+on that level.
+
+**What is not fieldwork is where those people are, and it is the most interesting thing this
+country draws.** `Just a Muslim` cleared the split-half in its own right at **+0.766** and runs
+45.9% in Diyala, 40.1% in Salah al-Din, 39.6% in Nineveh, 33.2% in Kirkuk and 30.5% in Anbar,
+against 2.6% in Erbil and Duhok and 7.0% in Najaf. **Declining to name a sect is a Baghdad and
+mixed-belt behaviour** and is rare where one branch holds nearly everybody. So the drawn Sunni
+share in Baghdad, Diyala, Kirkuk and Nineveh is a floor, and the plain-Islam dots are not
+scattered noise, they are where the two communities meet.
+
+### 3. geoBoundaries DRAWS BAGHDAD AT A FIFTH OF ITS AREA, AND THIS IS THE FIRST TIME THAT FILE HAS BEEN REJECTED HERE ON A MEASUREMENT
+
+`gbOpen/IRQ/ADM1` has eighteen features with ISO 3166-2 codes and is the easy download that
+most of this map uses. **Its Baghdad polygon is 912 km² against Iraq's own published 4,555 and
+COD-AB's 5,100**, handing the rest of the governorate to Babil (1.55× its statute area there),
+Diyala (1.13×) and Salah al-Din (1.08×). **Baghdad is 21.2% of Iraq's population**, so drawing
+on that file would have crammed a fifth of the country's dots into a fifth of the right polygon
+and put the overflow in three neighbours.
+
+**The rule that generalises: check a boundary file's polygon areas against the office's own
+published area table before using it, and do it per unit rather than on the total.**
+geoBoundaries' Iraq total is within 0.2% of COSIT's; the error is entirely inside it. That is
+the same shape as `[[reference_agol_statute_boundaries]]`'s warning one file across, and it is
+cheap — COSIT prints the areas, so it is one rank correlation.
+
+COD-AB's `irq_admin1.shp` is the Central Statistical Organisation's own layer with the official
+`IQG01`–`IQG18` p-codes and Arabic names. The join is checked four ways: the authored table
+covers all eighteen p-codes and both COSIT name sets; **COSIT's published areas against COD-AB's
+geometry, ρ = +0.994 with 0 of 5,000 random pairings reaching it**; the three sparsest coming
+out Anbar 16/km², Muthanna 20 and Najaf 49 against a next-sparsest of 71, and Baghdad densest at
+1,918; and the name fold, which is **only 9 of 18** and is printed as the weak witness it is.
+Iraqi governorate names romanise badly enough that the English is never a key — COSIT's own two
+tables, in one publication, spell six of the eighteen differently from each other.
+
+### 4. TWO TRAPS IN COSIT'S PDFs, AND ONE OF THEM IS NEW
+
+**The area table is printed three times in three vintages on consecutive pages** — `FOR 2024`,
+then `FOR 2022`, then `FOR 2023`. Reading "the area table" by page number or by the first
+caption match gets one of them at random, and they differ. `[[reference_pdf_table_geometry]]`
+with the year in the header anchor.
+
+**And the census page's column header extracts as `Total الذكور/`**, which folds to `total` and
+is read as the table's own Total row with one value in front of it. The fix is a rule about
+what can be a row label at all: **on a bilingual Arabic/English table, a line is a label only if
+it carries no Arabic and no digits.** Every real label on these pages is a bare Latin string on
+its own line, and every real value line either ends in a digit or is glued to the Arabic name.
+The general form: in a right-to-left PDF the header cells arrive *interleaved with* their
+translations, so a header fragment folds to exactly the same key as a data row's label.
+
+### 5. FOUR READINGS OF THE QUESTIONNAIRE, AND THE MADHHAB FOLD IS THE ONE TO ARGUE WITH
+
+1. **Waves II and III are omitted on the card.** The files offer Iraq a religion answer in six
+   waves; wave II (2011) has **no `q1012a` column at all** and wave III's (2013) is **empty for
+   every Iraqi in it**. Pooling them would put 2,449 Iraqi Muslims into the undifferentiated
+   bucket because of the questionnaire they were handed. Named in `omit=`, per §9cq's rule that
+   a pool may not be quietly narrower than the files.
+2. **The madhhab answers are folded up.** 105 `Shafi'i`, 19 `Hanbali`, 2 `Maliki` → Sunni; 221
+   `Ja'fari`, 2 `Alawi` → Shia. **`branches.py` HAS `islam.sunni.shafii` and
+   `islam.shia.jaafari`**, added with Türkiye, so this is a choice and not a gap in the tree.
+   Shafi'i runs 0.1%, 0.2%, 1.7%, 2.6% across the four waves and Ja'fari 1.6% to 4.2%, which is
+   the fieldwork; Türkiye's schools come from the Diyanet's own survey, which asks the madhhab
+   outright and does not put Sunni and Shia on the same card. And unfolded they break the
+   machinery: Iraq's Shafi'is are overwhelmingly Kurds and five of the 105 are in the early wave
+   half, so the split-half would rank them on noise, fail them, and `ab.build` would spread
+   Kurdish Shafi'is across Basra. **`Alawi` is two people and is the judgement call**, argued at
+   `SECT_FOLD`.
+3. **A sect refusal stays in the universe where a religion refusal does not.** Jordan's eleven
+   refusals were of the religion question and dropping them was right; Iraq's 83 have already
+   said Muslim and declined only the branch, so they are Muslims of unstated denomination.
+   Composed into `Muslim, denomination not given` on `islam`.
+4. **`Other` is a box on BOTH cards and they are different answers.** Left with their printed
+   wording the two merge into one category **with every total still adding up** — and unlike
+   Lebanon's `Other`/`other`, `assert_one_wording` cannot see it, because the two spellings are
+   identical rather than similar. This is the function's own failure mode one column across, and
+   the only defence is knowing that a composed category can collide with itself.
+
+### 6. §14, and why this is not an ask
+
+`queue.md` said *"Yazidis and Christians make §14.4 rule 2 acute"* and would have been right if
+they were drawn with a geography. **They are not, and it falls out of the instrument.**
+`ask/answered/001-eg` ruled that a religious minority may be drawn at governorate because
+governorates are big, and §11af recorded before any of these four were built that Jordan,
+Lebanon, Iraq and Yemen inherit that ruling; Iraq's eighteen average **2.56 million** people,
+more than twice Egypt's twenty-seven, and the survey carries nothing finer anyway. **25
+Christians and 27 others in 8,335 respondents are both far under §11ad's 1% floor**, so they
+fail the split-half and `ab.build` spreads them at the national rate over all eighteen
+governorates: the map says these communities exist and says nothing about where they live. What
+*is* drawn with a geography is the Sunni/Shia distribution, which is the organising fact of
+Iraqi politics and is in every atlas — §14.2's reflect case.
+
+`other.iq` is a new node on the established per-source-residual pattern and its own text says
+the figure is a floor of roughly a third: 27 respondents draw 135,000 people, and the Yazidis
+alone are usually put at 400,000 to 500,000. A household survey does not reach a population that
+has been in camps since 2014.
+
+### 7. The checks, and this is the least fragile survey pass on the map
+
+* **the `Q1` code means the same thing in all four waves**, which is true of no other country in
+  this survey — `70000 + n` in V, VII and VIII and `7000 + n` in VI-3. Still not the pooling
+  key; it witnesses the names, **8,335 respondents, zero disagreements**. Three labels need
+  reading rather than transliterating and **`Diwaniyah` is the one that matters: it is
+  Al-Qadisiyyah under its capital's name**, in wave VI-3 alone, and no spelling of Qadisiyah
+  reaches it. `Dhi War` is wave V's typo for Dhi Qar, 163 people.
+* **held-out decode r = +0.985**, 0 of 20,000 random pairings.
+* **Lebanon's quota check run here and clean**: no wave pair returns an identical composition in
+  any free cell, Bonferroni p = 1 against a bar of 0.001, where Lebanon comes in at 1.4e-4.
+* **split-half +0.917 Shia, +0.965 Sunni, +0.766 Just a Muslim** against §9ct's exact-null bar
+  of **+0.4014** on eighteen units, and leave-one-out never goes below +0.737. Jordan's was
+  +0.617 against +0.5035.
+* **Duhok is the one governorate to read carefully**: sampled at 0.15× its population share, 58
+  branch-namers, and waves V and VIII do not sample it at all.
+
+### 8. `ab.load` gained a second answer column
+
+`sources/arabbarometer.py` now takes `extra={column: (alias, ...)}`, which decodes a named
+column through **each wave's own labels** the way `Q1012` is decoded and lands it in the frame.
+Iraq needs it because `Q1012` is not the finest religion answer here and the sect column is
+renamed between waves (`Q1012A` → `Q1012A_MUSLIM`). It decodes and nothing else: which answers
+belong together, which leave the universe, and how two columns compose into one `category` stay
+in the country module, and `assert_one_wording` is re-run there on the composed result. Yemen
+will want the same hook.

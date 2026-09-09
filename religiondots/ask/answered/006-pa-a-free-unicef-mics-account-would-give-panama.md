@@ -62,3 +62,27 @@ it twice on household surveys and published neither answer at the geography it h
 
 **What it would NOT fix.** Panamá Oeste. MICS 2013 predates the 2014 province split as well,
 so the 2.09 million people currently drawn as one unit would stay one unit.
+
+---
+
+## Ruled 2026-09-09 by Anita
+
+**Yes — she registered with UNICEF MICS and downloaded the Panama file.**
+`PAN_2013_MICS5_v01_M.zip` is in her Downloads, 3,213,686 bytes, valid, with the datasets in a
+nested inner archive `PAN_2013_MICS5_Datasets/Panama 2013 MICS_Datasets.zip`.
+
+**The registration terms she accepted, verbatim from the form:** *"As a registered user, I agree
+to utilize MICS data solely for the research objectives outlined during registration. I understand
+and agree not to edit, distribute or share datasets with others in any format. Should I seek to
+repurpose the datasets for new research objectives, I commit to informing the MICS program via
+email at mics@unicef.org."*
+
+So: **no redistribution of the dataset in any form**, and the use is bound to the objective she
+registered, which describes a public dot-density map presenting aggregate counts by unit and
+religion, with the dataset kept on her own machine and UNICEF/MICS credited. Publishing aggregate
+results is inside that; passing the file or a derived dataset to anyone is not. If the purpose
+ever changes — a sold print edition, for instance — the terms have their own route, an email to
+`mics@unicef.org`, and that should be taken before rather than after.
+
+The fuller terms on `mics.unicef.org` could not be read from here (403 to an automated fetch, and
+the archive is unreachable), so the checkbox text above is the record.

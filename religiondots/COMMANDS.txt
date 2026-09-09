@@ -3073,6 +3073,45 @@ Run in order.  Every step, every time, even when only one country changed.
    a map that loads with no dots and no obvious error.
 
 
+---- DEPLOY ----
+
+    python tools/deploy.py --dry-run    say what would move, touch nothing
+    python tools/deploy.py              upload, copy, and STOP before git
+    python tools/deploy.py --verify     range-check the published archive on its own
+
+Live at https://anita.garden/religiondots/ once the website repo is pushed.
+
+ONE RULE FOR WHAT GOES WHERE: everything under data/ goes to Cloudflare R2, and index.html
+plus taxonomy/religions.json go to the website repo.  The archive is 84 MB and data/buffers/
+another 76 MB across 249 files, both rewritten by every build, so committing them would add a
+fresh 160 MB to that repo's history every time.  index.html reads DATA_BASE off the hostname,
+so the SAME FILE works locally and published and there is no deploy-time edit to forget.
+
+R2 AND NOT PAGES FOR THE ARCHIVE IS NOT ABOUT SIZE.  PMTiles reads with HTTP range requests,
+and GitHub Pages fronted by Cloudflare re-encodes the response and breaks them; the symptom is
+the dangerous kind, a map that loads with a basemap and a legend and no dots at all.  R2 serves
+them correctly.  `--verify` asks for `bytes=0-99` afterwards and it must answer 206.
+
+THE API TOKEN IS THE ONE THING THAT WILL STOP YOU.  rclone's `r2:` remote is already
+configured for the right account, but a 403 on ListBuckets or HeadObject means the stored
+token is dead or too narrowly scoped.  Cloudflare dashboard > R2 > API > Create API token,
+Object Read & Write, scoped to the `anita-maps` bucket, then put the new access key id and
+secret into %APPDATA%\rclone\rclone.conf under [r2].  Check with:
+
+    rclone ls r2:anita-maps --max-depth 1
+
+CORS IS ALREADY RIGHT AND DOES NOT NEED TOUCHING.  The bucket answers with
+Access-Control-Allow-Origin for both https://anita.garden and https://circularsquare.github.io,
+which is what lets the viewer fetch the buffers cross-origin.  Confirmed 2026-09-09 with
+`curl -D - -H "Origin: https://anita.garden" -r 0-9 <public url>`.
+
+`deploy.py` will not commit or push; it prints the git commands and stops.
+
+`--prune` swaps rclone copy for sync on data/buffers, DELETING remote .bin files the manifest
+no longer names.  Not routine: a stale buffer costs storage and nothing else, because the
+viewer only ever asks for what the manifest names.
+
+
 ---- NOT DONE YET ----
 
   - THE PHILIPPINES is the only normalised source not drawn.  It needs boundaries
@@ -3110,8 +3149,8 @@ Run in order.  Every step, every time, even when only one country changed.
     source category name is on every row, so deepening costs nothing and redoes nothing.
   - the genealogy half of the tree panel (spec.md §10)
   - residuals are computable from ASARB's own population column but are not drawn
-  - hosting: ancestrydots puts its .pmtiles on Cloudflare R2 because GitHub Pages breaks
-    range requests with gzip encoding.  Same will apply here.
+  - hosting: BUILT 2026-09-09, see DEPLOY above.  data/ on Cloudflare R2 under the
+    religiondots/ prefix, index.html and the taxonomy in the website repo.
 
     python sources/th.py --fetch     # Thailand, ~90 files from the WAYBACK MACHINE plus one
     python sources/th_geo.py --fetch #   1.9 MB HDX xlsx, ~3 min.  RUN th.py FIRST -- th_geo.py
