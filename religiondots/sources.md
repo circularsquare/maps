@@ -14703,11 +14703,18 @@ third is the grey ramp** — 796,542 people on `unchurched`, 18.3% of Usulután 
 Morazán against 6.2% of La Paz. Guatemala had to spread the same cell flat. That is the first
 time in this set that a no-religion geography is a measurement.
 
-**`Protestante Tradicional` misses the bar by 0.02** (+0.52 against +0.54 on 14 units) and was
+**`Protestante Tradicional` missed the bar by 0.02** (+0.52 against +0.54 on 14 units) and was
 left alone. The bar is 1.96/√(n−1); moving it because a value landed just underneath is fitting
 the test to the answer, and §9z's lesson is that the adjustment which feels more careful is
 usually the error. It is 7.97% of the country, the largest such cell in Central America, and
 `note_public` says it is drawn flat and why.
+
+**Superseded by §9ct, 2026-09-09.** The bar itself was wrong: `1.96/√(n−1)` is the null's
+standard deviation and not its 95th percentile, so it was a 0.023-level test on fourteen units.
+Anita ruled to replace it with the exact null, +0.4637 at n=14, and `Protestante Tradicional`
+passes at an exact p of 0.031. El Salvador now draws **four** categories where the survey found
+them, and the paragraph above it is left as written because it was a correct application of a
+rule that turned out to be arithmetically wrong.
 
 ### `sources/lapop.py`, and the reason to factor before the third country
 
@@ -17042,8 +17049,12 @@ When an office does that, no amount of further searching in its published report
 up the finer table, because the omission is a decision. Stop and price the microdata instead.
 
 Which is: **CS 2016 microdata, DataFirst catalogue 611**, 3,328,867 persons × 99 variables,
-`ReligionBelief` (13 codes) and `Christianity` (**15** denominations) beside `DC_MDB_C_2016`
-and `MN_CODE_2016`. Same year, same instrument, **~234 local municipalities instead of 9**.
+`ReligionBelief` (13 codes) and `Christianity` (**17 value labels**, corrected by review
+2026-09-09 from the 15 written here: the fourteen published denominations, which already
+include *Just a Christian/non-denominational*, plus `Do not know`, `Not applicable` and
+`Unspecified`; there is no fifteenth substantive denomination, see §9cs) beside
+`DC_MDB_C_2016` and `MN_CODE_2016`. Same year, same instrument, **213 local municipalities
+on the 2016 demarcation instead of 9** (234 on the 2011 one; §9cs says why 2016 was taken).
 Free account plus a signed confidentiality declaration, so it is Anita's — `ask/002-za`.
 
 ### 3. THE STATS SA WALL IS REAL AND §11ag PUT IT IN THE WRONG PLACE
@@ -17470,7 +17481,9 @@ The brief was to re-run rather than cite, and it is worth recording what that ca
 
 * **Split-half +0.495 vs +0.518.** §11af's was **unweighted**; this build weights, because the
   weighted share is what it draws. Putting the weights back reproduces +0.495 exactly. Same 23
-  units, same +0.418 bar, same verdict.
+  units, same +0.418 bar, same verdict. (The bar became the exact null's **+0.3528** on
+  2026-09-09, §9ct. Egypt's +0.518 has an exact p of 0.006 and `eg.csv` is byte-identical
+  after the change; the old +0.418 was a 0.024-level test on 23 units.)
 * **Kafr El Sheikh 1.9% vs 1.56%.** §11af's harmoniser had `"kafir el-sheikh"` as a lookup key
   while its own key function stripped hyphens first, so wave III's 40 Kafr El Sheikh
   respondents never matched and were dropped as unmapped. **A normaliser and its own key table
@@ -20357,6 +20370,10 @@ rests on is the value labels.
 
 ### AND THE LARGEST CATEGORY IN THE COUNTRY DOES NOT CARRY ITS OWN GEOGRAPHY
 
+*Superseded by §9ct, 2026-09-09: the bar was corrected to the exact null and `Católico` is now
+drawn on its own province shares. The paragraphs below are what was true on the day and are what
+`ask/007-cr` was ruled on; they are not edited to match the outcome.*
+
 Split-half bar `1.96/sqrt(6) = +0.80`, the highest in the module. `Católico`, **63.06% of
 Costa Rica, returns +0.7857 and fails**, while `Evangélica` (+1.00), `Protestante` (+0.86),
 `Ninguna` (+0.86) and `Testigos de Jehová` (+0.81) pass. Applied as written, no override.
@@ -20390,7 +20407,13 @@ not, and the section says so rather than reporting the full-sample numbers alone
 seven and +0.88 at six — so leave-one-out against it takes data away and raises the requirement
 at the same time. Against the exact null (+0.7714 at six units) only `Testigos de Jehová`
 genuinely fails, which is consistent with it being both the smallest cell this module places
-and one whose late wave-half is carried by 2014 alone. **It stays drawn**, because the stated
+and one whose late wave-half is carried by 2014 alone. (**Corrected 2026-09-09**: the exact
+95% bar at six units is **+0.8286**, not +0.7714. +0.7714 is the `np.quantile` interpolation
+and its own upper tail is 0.0514, just over 0.05, so it is not a 95% bar; six units allow only
+720 orderings and the next attainable value up is +0.8286 at a tail of 0.0167. Against the real
+one, no category clears every drop except `Evangélica`, and the honest reading is the one in
+`cr.md` §5: five of seven drops for `Protestante` and `Ninguna`, four for `Católico`, three for
+`Testigos de Jehová`.) **It stays drawn**, because the stated
 test is the split-half on all seven and it passed, and withdrawing a category after seeing a
 robustness diagnostic is the same error as moving a bar to make one pass.
 
@@ -20431,6 +20454,9 @@ Checked against all five countries, **exactly two categories sit in the gap**: C
 `Católico` (+0.7857) and El Salvador's `Protestante Tradicional` (+0.5165). Nothing else in the
 module moves at any of the three thresholds. That is a rule everyone shares and it would
 re-draw two countries, so it is Anita's (§3) and the country shipped on the bar as written.
+
+**Ruled 2026-09-09 and implemented; §9ct is the change.** The prediction held exactly: those two
+categories and no others, verified by sha256 on all seven normalized CSVs across both modules.
 
 **This is §9co's finding arriving from the other direction on the same day**, and the two
 should be read together: Kyrgyzstan found the fixed bar wrong for a DIFFERENT statistic and
@@ -20568,7 +20594,18 @@ this country does not move whichever way that ask is ruled and the pass is more 
 the honest null than on the applied one. The ask's blast-radius list is five LAPOP countries;
 **this is the first Arab Barometer country checked against it, and it adds nothing to that
 list.** What no choice of bar addresses is Balqa's leverage: +0.509 on eleven units fails all
-three bars. Standing behind it: the twelve governorates differ at
+three bars.
+
+**Ruled and implemented 2026-09-09 (§9ct), and Jordan did not move, verified rather than
+assumed.** The shipped bar is now the exact null's smallest attainable value at p ≤ 0.05, which
+is **+0.5035 at twelve units** and **+0.5364 at eleven** — a shade stricter than the +0.4965 and
++0.5273 quoted above, because those came from `np.quantile` and interpolate between values the
+statistic cannot take. `jo.csv` is byte-identical after the change. The one thing that reads
+differently is `leave_one_out`, which now prints 12/12 drops clearing the twelve-unit bar and
+10/12 clearing the eleven-unit one; the warning it raises is unchanged, because +0.509 still
+fails at eleven.
+
+Standing behind it: the twelve governorates differ at
 **p=2.6e-18**, and Balqa, Madaba and Ajloun together read **3.50% against 1.41%** elsewhere at
 **p=4.1e-10**. The alternative is not a more careful map — with neither answer carrying,
 `ab.build` draws every governorate at the national rate, which the data contradicts at
@@ -20790,3 +20827,207 @@ file and not a login page. **Nothing beyond those 512 bytes was taken**, and not
 that route is on disk except two PDFs that `ubos.org` publishes openly anyway. The portal
 asked for a login and meant it, whatever its web server does. This is
 [[reference_cms_download_id_sweep]] landing on a case where the right answer is to stop.
+
+---
+
+## 9cs. South Africa REDRAWN at 213 local municipalities — 2026-09-09. A COUNTRY BUILT FROM PUBLISHED TABLES, REBUILT FROM THE MICRODATA UNDERNEATH THEM, AND THE OLD TABLES BECAME THE CHECK; plus a printed cell that was mis-set and 336,482 people who move because of it
+
+Full record in `sources/za.md`. South Africa went from **9 provinces at 6.1M people each, the
+coarsest counting geography on this map, to 213 local and metropolitan municipalities at
+~258,000**, on the same survey, the same year, the same 24 categories and not one changed
+taxonomy node. `ask/answered/002-za` is Anita's ruling; she registered with DataFirst and
+downloaded catalogue 611, the CS 2016 person file, 3,328,867 records.
+
+**THE GENERAL POINT IS WHAT HAPPENS TO THE OLD BUILD.** The nine published provincial profiles
+were the source; they are now `sources/za_profiles.py`, and `sources/za.py` will not write
+`data/normalized/za.csv` unless every published province cell reproduces from the microdata.
+**215 of 216 agree to within half a person.** That is a correctness check almost nothing here
+gets — same survey, same office, a second tabulation done by different people, parsed by code
+that shares nothing with the reader — and it cost nothing, because the parser already existed.
+A country that gets a finer source should keep its old one wired up as an assertion rather than
+deleting it.
+
+**AND THE 216th IS WHY IT WAS WORTH RUNNING RATHER THAN CLAIMING.** North West's Report
+03-01-11 prints fourteen denomination rows summing to 90.1% of its own total, with an `Other`
+cell reading `21 873` — character for character the `Do not know` figure in that table's own
+footnote. The province build had two stories for the missing 336,482 people and neither closed,
+so it parked them on bare `christianity` and said so. The microdata puts that cell at
+**358,355, which is 21,873 + 336,482 exactly**: the row was mis-set, the second hypothesis (a
+`Not applicable` universe, which missed by 18,453) is wrong, and those people are Christians of
+another denomination. Two national figures move with it, `christianity.other` 3,509,156 →
+3,845,643 and bare `christianity` 567,039 → 230,558, and both provinces' outlier cells become
+ordinary. **A residual you refuse to guess at is not a dead end; it is a claim the next source
+can settle.**
+
+Four things that generalise beyond this country:
+
+- **STATA TRUNCATES VALUE-LABEL SET NAMES TO EIGHT CHARACTERS AND THEY STOP MATCHING THEIR
+  VARIABLES.** This file has `MN_CODE` (234 labels, the 2011 demarcation) and `MN_COD_A` (213,
+  the 2016 one), for variables called `MN_CODE_2011` and `MN_CODE_2016`, and **the names do not
+  say which is which**. Take the wrong one and 213 codes still resolve, to different
+  municipalities, and every national and provincial total still reconciles because the codes are
+  a subset either way. `sources/za.py` picks by size and then confirms on the label **text**,
+  which differs by one space (`WC011 : Matzikama` against `WC011: Matzikama`). Same family as
+  [[reference_stata_cjk_labels]]: the metadata of a .dta lies quietly rather than loudly.
+- **A SURVEY DRAWN AT A FINE TIER SHOULD QUOTE ITS OWN DESIGN, NOT AN ASSERTION ABOUT IT.**
+  CS 2016's Report 03-01-07 §1.2.2 says *"all in-scope EAs were included in the sample and a
+  sample of dwelling units was taken within each EA (i.e. there was no subsampling of EAs)"* —
+  every enumeration area in the country is in, so no municipality is represented by a
+  neighbour's households. That single sentence is better evidence than any post-hoc adequacy
+  argument, and it took ten minutes to find in a PDF already on disk.
+- **PUT THE CELL'S OWN SAMPLE SIZE IN THE NORMALISED FILE.** Every row of `data/normalized/za.csv`
+  carries `cell_n` and `unit_n`. Nothing else in that file distinguishes a share resting on 40
+  records from one resting on 40,000, and every municipal superlative anyone later quotes needs
+  that number. Here it also proved the reassuring thing: 882 of 4,472 non-empty cells rest on
+  fewer than ten records but they hold **0.107%** of the people, and the heaviest cell resting on
+  five records or fewer is 317 people.
+- **A FINE TIER EXPOSES FIELDWORK, AND THE HONEST MOVE IS TO NAME IT AND DRAW IT ANYWAY.**
+  uPhongolo, rural KwaZulu-Natal, returns 4.76% atheists against 0.096% nationally and holds
+  **12.6% of every atheist counted in South Africa**; Swellendam returns 57.34% of its answers
+  as `Just a Christian` against its province's 7.06%. Neither is one household's weight — 384
+  and 965 records — and in both the adjacent categories fall short by about as much as those
+  rise, which is the shape of one enumeration team's habit with a CAPI answer list. §14.4 rule 1
+  forbids inventing the magnitude and §3.5 says mark rather than fill, so both are drawn as
+  returned and named in `note_public`. **The province tabulation hid both**, which is the general
+  cost of averaging six million people, and it hides real places the same way.
+
+**And the §3.5 lean got its power test for free.** The province build measured the non-response
+lean at r = +0.72 over nine units, p = 0.028. At 213 units it is **r = +0.3063, permutation
+p = 0.00005, leave-one-out +0.2649 to +0.3273** — half the correlation and three orders of
+magnitude more evidence, which is exactly what [[reference_check_needs_power]] predicts and is
+worth seeing once on a country where both tiers exist.
+
+Two smaller notes. **The join is a code join**, because the microdata and COD-AB ADM3 carry the
+same MDB municipality codes, 213/213 both ways with nothing spare; it still gets three
+independent checks (district 213/213 over 52, province 213/213 over 9, name 210 of 211) because
+a code join's failure is a reissue with shifted codes, not a missed match. And **Kontur is 8.8x
+wrong in one municipality** (Matatiele, 1,919,300 modelled against 218,000 drawn) with no
+duplicate hexes and a correctly-sized polygon; it does not reach the map because the weighter
+normalises inside each unit, but nobody should read that layer as a population estimate there.
+
+**The wall was the cheap kind and the queue had priced it as the expensive kind.** DataFirst
+registration is self-service, no approval step, and 611 is a public-use file needing a login and
+a signed declaration. `queue.md` had `za` closed on *"behind a DataFirst account"* for months.
+[[reference_gated_data_last_resort]] is right that gated data is a last resort; this is the
+counter-case worth remembering, which is that "an account" covers everything from a web form to
+a national ID, and one look tells you which.
+
+
+## 9ct. The split-half bar replaced with the exact null — 2026-09-09. Anita's ruling on `ask/007-cr`, and A STANDARD ERROR IS NOT A CRITICAL VALUE
+
+`sources/spearman_null.py` (new), `sources/lapop.py`, `sources/arabbarometer.py`,
+`sources/lits.py` (docstring only), `sources/cr.py`, `sources/sv.py`, `sources/jo.py`,
+`countries.py`. **Two categories moved and no country was added.**
+
+### What was wrong
+
+`lapop.stability` set the bar at `1.96/sqrt(n_units - 1)` and its docstring said this was
+*"what it takes to be distinguishable from zero at 95%"*. `1/sqrt(n-1)` is the exact standard
+DEVIATION of Spearman's rho under the null, which is why the line looks right — but the null at
+these unit counts is a short-tailed discrete distribution over `n!` orderings and not a normal,
+so 1.96 SDs is far out in its tail. Enumerated, the line was a **0.017-level test on seven
+units** and 0.022 to 0.024 from ten to twenty-three: stricter than advertised everywhere, worst
+where there are fewest units. `sources/arabbarometer.py` had copied the same line.
+
+Costa Rica (§9cp) found it while applying it as written and filed `ask/007-cr` rather than
+overriding. **Anita's ruling: make it a real 95% test.** She explicitly declined the
+conservatism argument, that a false pass is worse than a false fail, on the ground that *"the
+docstring makes an arithmetic claim about what the bar is, and the fix is to make the claim true
+rather than to keep an accidental strictness that nobody chose. Where the project wants a
+stricter-than-95% test it should say so and pick the level deliberately."*
+
+### The bar now
+
+`spearman_null.critical_rho(n)`: the smallest ATTAINABLE rho whose one-sided exact p-value under
+the permutation null is at most 0.05. Enumerated exhaustively at `n <= 10` (10! = 3,628,800),
+sampled above at 10,000,000 draws with a fixed seed. The level did not change and the statistic
+did not change.
+
+```
+    n    old 1.96/sqrt(n-1)   new exact bar   true size of the old   used by
+    7          0.8002            0.7143             0.017            cr
+   10          0.6533            0.5636             0.022            pa
+   11          0.6198            0.5364             0.022            jo leave-one-out
+   12          0.5910            0.5035             0.023            jo
+   14          0.5436            0.4637             0.023            sv
+   20          0.4497            0.3805             0.024            ec (units in both halves)
+   22          0.4277            0.3608             0.024            gt
+   23          0.4179            0.3528             0.024            eg
+```
+
+### THREE THINGS WORTH CARRYING, AND THE FIRST IS THE GENERAL ONE
+
+**1. An asymptotic standard error is not a critical value, and at these unit counts the
+difference is a whole category.** Anywhere this project compares a statistic to `k` standard
+errors, ask what the statistic's actual null looks like at the `n` in hand. §9co found the same
+bar misbehaving on the same day for a *different* statistic and built its own null; the two are
+the same lesson arriving from opposite directions.
+
+**2. WORK ON THE LATTICE, BECAUSE A BAR BETWEEN TWO ATTAINABLE VALUES IS A BAR NOTHING LANDS
+ON.** `d2 = 2*sum(i^2) - 2*sum(i*s(i))` is always even, so rho takes only `1 - 6*d2/(n(n^2-1))`
+for even `d2`. **`np.quantile(null, 0.95)` interpolates between those**, and the ask's own
+"exact 95th percentile" column is a shade too generous everywhere as a result: at seven units it
+gives +0.6786, whose own upper tail is **0.0548**, so adopting it literally would have been a
+5.5% test. Snapping to the attainable value gives +0.7143 at a tail of 0.0441. At SIX units the
+gap is dramatic, +0.7714 having a tail of 0.0514 and the next value up, +0.8286, a tail of
+0.0167, with nothing in between; that is what discreteness looks like when there are only 720
+orderings. The shipped bar is stricter than the ask's column at every unit count, and **the two
+flips are the same either way**, which was verified by re-running rather than argued.
+
+**3. A GUARD THAT CANNOT FAIL IS NOT A GUARD, AND THIS ONE FAILED TWICE ON ITS FIRST RUN.**
+`spearman_null._check()` asserts that the bar is attainable, that its own tail is at or under
+0.05, that the next attainable value BELOW it is over 0.05 (so the bar is not needlessly
+strict), that three seeds agree, and that at `n = 3`, where a perfect ordering has p = 1/6, the
+bar comes back `+inf` and a rho of +1.000 is rejected. It caught the missing lattice snap on the
+first run, and it caught the sampled bar moving with the seed at 2,000,000 draws, which is why
+`NULL_SAMPLES` is 10,000,000. **Both are recorded rather than quietly patched**, which is the
+half of §9cp's pre-registration lesson that is easy to skip: writing the rule down first is only
+worth something if the amendments to it are written down too. Both are in
+`spearman_null.py`'s ## THE RULE WAS PRE-REGISTERED, AND IT WAS AMENDED TWICE, with what changed
+and why it changed no verdict.
+
+### The blast radius, predicted before the run and confirmed by sha256 after it
+
+Exactly two categories flipped fail to pass, which is what the ask predicted and what Anita
+ruled on:
+
+```
+  cr  Católico                    63.06%   rho +0.7857   old +0.8002   new +0.7143   p=0.024
+  sv  Protestante Tradicional      7.97%   rho +0.5165   old +0.5436   new +0.4637   p=0.031
+```
+
+`cr.csv` and `sv.csv` changed. **`gt.csv`, `ec.csv`, `pa.csv`, `eg.csv` and `jo.csv` are
+byte-identical**, checked by sha256 rather than by reading output. The nearest misses that did
+not move are Ecuador's `Testigos de Jehová` (+0.34 against +0.3805), El Salvador's `Religiones
+Orientales` (+0.4472 against +0.4637, p=0.054) and Panama's `Protestante Tradicional` (+0.46
+against +0.5636). Ecuador runs on **20** units and not 23, which is the correction `cr.md` §7
+made to the ask's table and which is why it moves nothing.
+
+### AND THE TIES THE NEW OUTPUT SURFACED ARE HARMLESS, MEASURED RATHER THAN ASSUMED
+
+The exact null assumes `n` distinct ranks. Several categories tie, because a category that is
+zero in more than one unit of a wave-half has tied shares: El Salvador's `Religiones Orientales`
+ties **twelve of fourteen** departments, Egypt's two answers tie five of twenty-three, Jordan's
+tie two of twelve. `stability` now prints a tie flag per category. Every eligible category in all
+seven countries was re-run against the CONDITIONAL null, the observed late-half average-rank
+vector permuted against the observed early-half one, exhaustively at n=7 and over 400,000
+orderings above, and **no verdict changed anywhere**. The closest call moves the safe way:
+`Religiones Orientales` goes from p=0.054 to p=0.071. So the untied null ships, and the flag is
+there so a future country's tied near-boundary category gets checked instead of assumed.
+
+### THE OLD BAR IS STILL IN FOUR OTHER PLACES AND WAS DELIBERATELY LEFT THERE
+
+**`sources/afrobarometer.py::stability` computes `1.96/sqrt(n_units - 1)` live**, and
+`sources/do.py`, `sources/ht.py` and `sources/uy.py` carry it as hard-coded `STABILITY_BAR`
+constants. None of them was touched. The ruling was made on a blast radius measured across the
+LAPOP and Arab Barometer countries, and switching a bar under already-drawn countries that
+nobody has re-measured is exactly what AGENT_BRIEF §3 sends to Anita. **Whoever changes one of
+them owes her the same before-and-after list first.** For Haiti in particular, where §9ck
+already records the bar sitting 0.003 from the largest category on ten departments, the change
+is likely to move something. `spearman_null.py`'s docstring names all four so they are findable.
+
+`sources/lits.py` is the deliberate non-change of a different kind: its statistic is a median
+over 400 random PSU halves, so **no bar for one correlation is the right comparison for it**,
+corrected arithmetic included. Its docstring now says that in those terms, and
+`spearman_null.py` lists the three constructions side by side so a future builder picks one on
+purpose rather than by copying whichever file is open.

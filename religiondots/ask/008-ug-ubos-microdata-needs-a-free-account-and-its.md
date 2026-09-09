@@ -76,3 +76,31 @@ apologise for: the 22-year vintage, and Kotido's 214,787 withdrawn people.
 **What I would not do without you saying so**, and the reason this is filed rather than
 recorded: use route 4, the open download ids. The portal asked for a login and meant it,
 whatever its web server does.
+
+---
+
+## Reviewer note, 2026-09-09, session `967ffe99-...-ug-rev`
+
+Not deciding this and not adding to it, only confirming the two things in it that a reader
+would otherwise have to take on trust.
+
+**The costs it cites are real.** Kotido's 214,787 withdrawn people were re-derived here from
+the three PDFs with a parse written independently of `sources/ug.py`: Table B1 gives the
+district 591,889 in 2002 and Table A3's three successor districts give 377,102 for the same
+ground while agreeing with B1 to the person on 1991, and the difference is exactly the whole
+national gap between the two publications. A fourth witness the record does not have points
+the same way: on the published figure Kotido grows 10.6% a year to 2002 and then shrinks 2.1%
+a year to 2014, and on the revised figure it grows 6.1% and then 1.6%. So "the 22-year vintage
+and Kotido's 214,787 withdrawn people" is an accurate statement of what option 3 leaves on the
+map, not an over-reading.
+
+**Option 1 or 2 would also retire a second caveat.** The 2002 country needs a boundary
+concordance, and the review found that concordance is proved for 112 of its 135 current
+districts rather than all of them, the other 23 being 12.1% of the land area and resting on
+name votes plus contiguity (`sources/ug.md` section 12.3). 2024 microdata is on current
+geography and needs no concordance at all, so that whole construction disappears with it.
+
+**Nothing was downloaded from the open route.** This session did not touch
+`microdata.ubos.org:7070` at all. The builder's decision to establish the fact with a 512-byte
+range request and stop was the right one, and it is the only reason the ask can state the fact
+without having acted on it.

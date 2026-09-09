@@ -297,3 +297,167 @@ three orders of magnitude larger.
 5. **Afrobarometer**, which is open and already hardened in `sources/afrobarometer.py`.
    Not used and not close: a census at 56 districts beats a 2,400-person survey at four
    regions, and the whole reason to want Uganda is the category list.
+
+---
+
+## 12. Review, 2026-09-09, session `967ffe99-...-ug-rev`
+
+**Nothing needs rebuilding and no dot moved.** `check_md`, `built_countries --check` and
+`check_rollup ug` (24,433,132, all `measured`, 0 orphaned) are clean; the screenshot draws
+the country full, dots on land, none in Lake Victoria, dense through Buganda and Busoga
+and thin across Karamoja. The audit in section 5 was re-derived from the three PDFs with
+a parse written independently of `sources/ug.py`, and it holds.
+
+### 12.1 The audit reproduces, and there is a fourth witness the record does not use
+
+Read straight off the files rather than through the modules:
+
+| | 1991 | 2002 | 2014 |
+|---|---|---|---|
+| Table B1, Kotido (2002 tabulations) | 196,006 | **591,889** | |
+| Table A3, Kotido + Kaabong + Abim (2014 report) | **196,006** | **377,102** | 456,895 |
+
+The 1991 figures are equal to the person, so the three 2014 districts really are 2002
+Kotido and the geography is not in question. 591,889 - 377,102 = 214,787, and
+24,442,084 - 24,227,297 = 214,787, so the one district is the whole national difference.
+Rebuilding the concordance without writing anything: 135 current districts onto 56, the
+1991 column exact on all 56 of 56 distinct values, the 2002 column 55 of 56 with Kotido
+alone at -36.3%. All as recorded.
+
+**The fourth witness is in the same two tables and is not in the record.** On the
+published figure Kotido goes 196,006 to 591,889 to 456,895: **+10.6% a year for eleven
+years and then -2.1% a year for twelve**, a district that triples and then loses a
+quarter of itself, and the 2014 census reports no decline there. On the revised figure it
+goes 196,006 to 377,102 to 456,895, **+6.1% then +1.6%**, high for the first stretch and
+ordinary for the second, which is what a Karamoja district looks like. This needs no
+external model at all, which makes it a cleaner witness than Kontur's 1.07x, and it points
+the same way.
+
+### 12.2 The Kotido call: agreed, and the recorded reason is not the strongest one
+
+The reason in section 5 and in `countries.py` is that UBOS revised a population and never
+revised a religion split, so section 14.4 rule 1 forbids the factor. True, and it is a
+fact about what was printed. The substantive reason is one level down and worth having in
+the record, because the next country with this shape will need it:
+
+**A uniform rescale is not the neutral option. It is a specific claim about the shape of
+the overcount, made in the one district where the composition is least like anywhere
+else.** Kotido is 28.2% `Other` and 11.9% `None` against a national 3.0% and 0.9%. If the
+214,787 people who were removed were mostly the mobile pastoralist population, which is
+the obvious story for a 2002 Karamoja overcount and is presumably why the correction
+exists, then they sat disproportionately in exactly those two cells, and multiplying every
+cell by 0.6371 would leave both far too high while looking like it had fixed them. If they
+were spread evenly across the seven, the factor is right. Nothing available distinguishes
+those two, and the distance between them is most of the national `Other` cell and a third
+of the national `None`. Drawing the printed table claims only that the table says this,
+which `note_public` then qualifies with both national shares; the factor would claim
+something nobody measured. So rule 1 gives the right answer here for a reason beyond the
+formal one.
+
+**The tier is right by elimination and that should be written down.** Kotido's seven cells
+are `measured`, the same tier as 55 districts on which two independent publications agree
+to the person, and that is not quite what `measured` means everywhere else on this map:
+every other `measured` row is a figure no publication of the office contradicts, and this
+one is contradicted by 36%. There is no better tier available. `derived` means this project
+computed it and `modelled` means this project estimated it, and neither happened, so a
+fourth tier would be needed and that is a change to shared vocabulary which
+`AGENT_BRIEF.md` section 3 sends to Anita and which one district does not justify. Left
+alone deliberately, recorded so the next reader does not re-open it. The disclosure lives
+in `note_public`, which is the only place it can live.
+
+### 12.3 One real gap in the proof: it constrains 112 of the 135, not all of them
+
+**Table A3 is on the 112 districts of 2014 and the concordance is on the 135 of 2020, so
+the 23 districts created between those two vintages contribute nothing to either grouped
+column and the 1991 equality is silent about where they went.** Brute force says so
+exactly: of the 7,425 single-district misassignments available, 6,160 break the 1991 proof
+and **1,265 slip past it**, which is 23 x 55 and not one district more. Those 23 are
+**12.1% of Uganda's land area**.
+
+Nothing is actually wrong. Every one of the 23 is assigned to the historically correct
+parent (Kagadi and Kakumiro to Kibaale, Karenga to Kotido through Kaabong, Rubanda and
+Rukiga to Kabale, Bugweri to Iganga, Kwania to Apac, and so on for the rest); all 23
+border a *proved* district inside their own 2002 group, so none of them is holding a group
+together on its own; and the 56 dissolved polygons are all single connected pieces, with
+no second fragment over 5 km2 anywhere. Three independent reasons to believe it, none of
+them the population proof.
+
+Worth stating because the claim in `sources/ug_geo.py`, in `sources.md` 9cr and in spec 12
+is that the concordance is proved, and what is proved is the 112 of it that the
+redistribution table covers. **The general form: a concordance proved on a redistributed
+census is proved only for the units that census was redistributed onto, so the unproved
+share is the vintage gap between the redistribution table and the boundary file.** Uganda
+is a good case rather than a bad one; the next COD-AB edition is 146 districts and the
+unproved share grows with every split.
+
+### 12.4 The Bugiri guard fires again, and there is now an earlier one
+
+Reconstructed rather than assumed: 2002 Bugiri is current Bugiri plus Namayingo, and
+sending both to Wakiso breaks the 1991 equality on two districts, Wakiso 802,194 against
+Table B1's 562,887 and Bugiri 0 against 239,307. `ug_geo.py` raises on that list. There is
+also now a guard that fires before it, which the original run did not have: `c1_votes`
+matches district headers by name against B7's 56 and raises if it finds fewer, which is
+the exact thing that failed. Both fire.
+
+### 12.5 Everything reader-facing recomputed from `data/normalized/ug.csv`, by people
+
+Every figure in `note_public` reproduces: Adjumani 82.52% and Gulu 78.15% Catholic,
+Nakasongola 60.76% and Ntungamo 60.57% Anglican, Yumbe 76.23%, Mayuge 36.20% and Iganga
+33.81% Moslem against 0.39% in Kotido and 0.45% in Pader, Kotido 28.23% `Other`,
+Nakapiripirit 11.97% `None`, the three Karamoja districts holding 52.3% of the national
+no-religion cell, Kotido holding 22.5% of `Other` and 33.1% of `None`, 3.04%/0.87% with
+Kotido and 2.41%/0.60% without, and 41.61% Catholic on the widely quoted ex-Kotido base.
+The leads are 29 Catholic, 25 Anglican and 2 Moslem (Yumbe and Mayuge), summing to 56.
+Pentecostal peaks at Kapchorwa 18.0%, then Kaberamaido 11.8% and Soroti 11.4%, against
+Kampala's 9.0%, so "strongest in Sebei and Teso rather than in Kampala" is right. Grain
+436,306 people a district.
+
+**The section 3.5 lean reproduces exactly and the note is right not to carry it.** 8,952
+people, 0.0366%, nonzero in 55 of the 56 districts and never negative; Adventist share
+r = +0.269 and +0.353 on leave-one-out with Kalangala dropped, the largest residual share
+at 0.193%; Kampala, Mbale and Jinja next, so it does lean urban. If all 8,952 went to one
+faith the largest national move is **0.0363 points**, on `None`. It is stated in section 9
+and in `countries.py`'s internal note as saying almost nothing, and it is kept out of
+`note_public`, which is the correct call: at 0.04 points it would compete for a reader's
+attention with a finding three orders of magnitude larger.
+
+### 12.6 Dots, mapping and voice, none of which needed anything
+
+* **Dots.** 24,429 at 1,000 people each; the seven node counts are the national figures
+  divided by 1,000 to the unit; 21 dots, 0.09%, fall outside a 2002 district polygon,
+  which is hex clipping on the lakeshore; Kotido draws 593. Per-district dot counts against
+  people/1000 are within 2.5% everywhere except Kalangala at -4.9%, which is 33 dots
+  standing for 34.7 and is rounding on the smallest district.
+* **`Anglican` to `christianity.anglican`** matches `mw2018` and `za2016`, both of which
+  send a literal census `Anglican` cell to the same node, and the evidence here is better
+  than either: the analytical report's separate national `Other Christian` of 282,300, 1.16%
+  of the country, is where the Baptists, Presbyterians, Methodists and the Salvation Army
+  went, and 1.16% is the right size for them. The `Anglican /Protestant` label does not
+  make the cell a Protestant cell.
+* **`other.ug`** is the 111th `other.<cc>` node and is the standing convention rather than
+  a new legend row to argue about. `christianity.adventist.sda` is shared with `ca2021`,
+  `md2024` and `usrc2020`.
+* **Voice.** `note_public` has six bold sentence openers, which is the structure
+  `countries.py`'s own field docstring documents (a bold sentence starting a sentence
+  becomes a paragraph break and loses its bold) and which 104 of the 121 countries use, and
+  it carries **zero em dashes** where 69 of 121 do. Nothing to fix.
+* **Two figures that look like a discrepancy and are not.** `note_public` says Kotido is
+  591,870 while section 5 and `countries.py`'s internal note say 591,889. The first is
+  Table B7's own total, which excludes the hotel population and is what is drawn; the
+  second is Table B1's. The 19 people between them are the hotel residual. Likewise
+  `gap_share` 0.00036625 is 8,952/24,442,084 rather than 8,952/24,433,132 (0.00036639),
+  and the field docstring asks for the share of the whole population the source is about,
+  so the smaller figure is the right one.
+
+### 12.7 The Wayback directory route, and the ask
+
+**Spec 12's record of the route is reusable as written** and did not need widening. It
+states the rule for any office with history rather than for UBOS, gives the CDX call with
+the three parameters that matter (`matchType=domain`, `filter=original:.*\.pdf`,
+`collapse=urlkey`), names the move itself (strip every hit to its containing directory and
+count), says why it works where a search does not (a keyword search over filenames finds
+none of these), and names the three directories that fell out.
+
+**`ask/008-ug` was not touched beyond appending a reviewer paragraph.** Nothing was
+downloaded from `microdata.ubos.org:7070`, no ask was filed, and the builder's decision to
+stop at a 512-byte range probe was right.

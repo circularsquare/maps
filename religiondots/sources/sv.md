@@ -75,41 +75,64 @@ have power is not a check.**
 ## Which categories carry their own geography
 
 The split-half (§14.16): rank the 14 departments on 2010–2014, rank them again on 2016–2023,
-correlate. The bar is 1.96/√(n−1) = **+0.54**, higher than Guatemala's +0.43 because there are
-fewer units.
+correlate. The bar is the exact null's smallest attainable value at p ≤ 0.05, **+0.4637** on
+fourteen units, higher than Guatemala's +0.3608 because there are fewer units.
+`sources/spearman_null.py` computes it. **It was 1.96/√(n−1) = +0.5436 until 2026-09-09**, and
+that is the one thing about this country that changed; see the note below the table.
 
-| category | national | spearman | |
-|---|---:|---:|---|
-| Católico | 46.65% | **+0.88** | own geography |
-| Evangélica y Pentecostal | 29.05% | **+0.82** | own geography |
-| Ninguna (creyente) | 12.44% | **+0.74** | own geography |
-| Protestante Tradicional | 7.97% | **+0.52** | national rate — misses by 0.02 |
-| Religiones Orientales | 1.42% | +0.45 | national rate |
-| the six under 1% | | | national rate (§11ad) |
+| category | national | spearman | exact p | |
+|---|---:|---:|---:|---|
+| Católico | 46.65% | **+0.88** | 0.000 | own geography |
+| Evangélica y Pentecostal | 29.05% | **+0.82** | 0.000 | own geography |
+| Ninguna (creyente) | 12.44% | **+0.74** | 0.002 | own geography |
+| Protestante Tradicional | 7.97% | **+0.52** | 0.031 | own geography, from 2026-09-09 |
+| Religiones Orientales | 1.42% | +0.45 | 0.054 | national rate |
+| the six under 1% | | | | national rate (§11ad) |
 
 **Every value is higher than Guatemala's equivalent**, which is what 647 respondents a
 department buys over 405: Catholic +0.88 against +0.57, and `Ninguna` passing at +0.74 where
 Guatemala's failed at +0.21. **So El Salvador is the first country in this set that can draw
 its grey ramp where the survey found it**, and the cell is 796,542 people.
 
-**`Protestante Tradicional` misses by 0.02 and was left alone.** The bar is what it takes to be
-distinguishable from zero at 95%; moving it because a value landed just underneath is fitting
-the test to the answer. Recorded so the next reader knows the call was close rather than clear.
+### `Protestante Tradicional` missed by 0.02 until the bar was corrected, and now clears it
+
+It was left alone when this country was built, on the stated rule that a bar is not moved to
+make something pass. Costa Rica hit the same bar from the other side — its `Católico`, 63% of
+the country, at +0.7857 against +0.8002 — looked at what the bar actually was, and filed
+`ask/007-cr`. **`1.96/sqrt(n-1)` is the null's standard deviation, not its 95th percentile**, and
+at fourteen units it is a 0.023-level test rather than the 0.05 the docstring claimed. Anita
+ruled on 2026-09-09 to replace it with the exact null, on the ground that the fix for a wrong
+arithmetic claim is to make the claim true rather than to keep an accidental strictness.
+
+`Protestante Tradicional`'s +0.5165 has an exact one-sided p of **0.031** and is drawn on its own
+department shares. It and Costa Rica's `Católico` are the only two categories in the five LAPOP
+countries that moved; `gt.csv`, `ec.csv` and `pa.csv` are byte-identical after the change, as are
+`eg.csv` and `jo.csv` in the Arab Barometer module that had copied the same line.
+
+**It is still the closest call in this country.** Nothing about the evidence changed; what
+changed is that the test now rejects at the level it always said it did. `Religiones Orientales`
+at +0.4472 is the next one down at p=0.054, one lattice step outside, and it stays out — it is
+also the most heavily tied series here, twelve of its fourteen early-half shares being equal, and
+against the conditional null that ties call for it goes to p=0.071, further out rather than in.
 
 ## What was drawn
 
-    2,925,233  christianity.catholic.latin      46.1%
+    2,925,226  christianity.catholic.latin      46.1%
     1,876,197  christianity.evangelical         29.5%
       796,542  unchurched                       12.5%
-      505,958  christianity.protestant           8.0%
-      149,171  other.sv                          2.4%
-       46,825  christianity.witnesses            0.7%
-       25,797  christianity.latterday            0.4%
-       22,481  secular                           0.4%
-        2,079  indigenous                        0.03%
-          686  judaism                           0.01%
+      506,196  christianity.protestant           8.0%
+      149,028  other.sv                          2.3%
+       46,782  christianity.witnesses            0.7%
+       25,771  christianity.latterday            0.4%
+       22,460  secular                           0.4%
+        2,080  indigenous                        0.03%
+          687  judaism                           0.01%
 
-6,346 dots at 1:1,000 over 21,384 Kontur hexes. **Santa Ana is the only department where
+Re-run 2026-09-09 with `Protestante Tradicional` on its own department shares; the national
+totals move by at most a few hundred people, because the four measured categories and the tail
+they leave still have to close on the same population.
+
+6,347 dots at 1:1,000 over 21,384 Kontur hexes. **Santa Ana is the only department where
 Evangelicals outnumber Catholics** (37.6% against 32.7%); San Vicente is 76.6% Catholic and
 11.0% Evangelical. `unchurched` runs 18.3% of Usulután to 6.2% of La Paz.
 
@@ -130,5 +153,7 @@ does not hold here. Drawn as given.
   list rather than a partition. COD-AB ships ADM2 (2019 vintage, 262 municipalities) and
   El Salvador consolidated to 44 in 2023, so a future finer source would also need a decision
   about which vintage it is on.
-- **`Protestante Tradicional`'s +0.52.** If a later wave lands and it clears +0.54, the country
-  gains a fourth measured layer.
+- ~~**`Protestante Tradicional`'s +0.52.** If a later wave lands and it clears +0.54, the
+  country gains a fourth measured layer.~~ Closed 2026-09-09, not by a new wave but by the bar
+  being corrected to the exact null: +0.5165 against +0.4637 is p=0.031 and the fourth measured
+  layer is drawn. `Religiones Orientales` at +0.4472, p=0.054, is now the row to watch.

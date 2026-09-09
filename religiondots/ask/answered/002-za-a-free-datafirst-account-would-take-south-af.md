@@ -78,3 +78,51 @@ coarsest on the map.
 **IPUMS International also has RELIGION for South Africa 1996, 2001 and 2016** and is
 separately dead for this project (`[[reference_ipums_account]]`), so it is not an
 alternative route to the same thing.
+
+---
+
+## Ruled 2026-09-09 by Anita
+
+**Yes — she registered and downloaded the file.** DataFirst registration turned out to be
+self-service (name, institution, email, password, no approval step), and catalogue 611 is a
+public-use file needing only a login. The download stalled twice at ~83MB and completed on a
+later attempt.
+
+`data/raw/za/cs-2016-person.dta` is on disk: 3,328,867 person records, 99 variables. Verified
+header-only before use — `ReligionBelief` carries the 13 published codes, `Christianity` carries
+**15 substantive denominations** rather than the 14 in the provincial profiles (it adds "just a
+christian/non-denominational", which the published table folds away), and province, district and
+local municipality codes are present for **both** the 2011 and 2016 vintages.
+
+South Africa is to be redrawn from it at local-municipality level. The nine provincial profiles
+already on disk are the aggregation check.
+
+---
+
+## Carried out 2026-09-09
+
+South Africa is drawn at **213 local and metropolitan municipalities**, 54,946,339 people,
+25 categories, from `data/raw/za/cs-2016-person.dta`. `sources.md` §9cs and `sources/za.md`
+are the record. Nothing in the ruling was reversed and nothing new was asked.
+
+Four things worth knowing back here:
+
+- **The ask's category count was wrong and it does not matter.** `Christianity`'s 17 value
+  labels are the **fourteen published denominations** plus `Do not know`, `Not applicable` and
+  `Unspecified` — not fifteen substantive ones. *Just a Christian/non-denominational* was
+  already in the published fourteen. So there was no new category, no new node, and
+  `taxonomy/za2016.py`'s `MAP` is unchanged from the province build.
+- **The reconciliation the ask promised was run and it paid.** 215 of the 216 published
+  province x category cells reproduce to within half a person. The 216th is North West's
+  `Christian: Other`, and the microdata settles Report 03-01-11's defect outright: its cell
+  should read 358,355 and prints 21,873, a shortfall of exactly 336,482, so those people are
+  Christians of another denomination rather than the unattributable residual the province build
+  had to park them as.
+- **The account was the cheap kind.** Self-service registration, no approval, public-use file.
+  `queue.md` had this country closed on *"behind a DataFirst account"* for months, and one look
+  would have said which kind of account it was.
+- **The 2001 census microdata is behind the same account, which is now open.** It splits the
+  African Independent Churches six ways nationally (ZCC 4,971,932, Other Apostolic 5,609,070,
+  Shembe 248,824), and a §3.4 rescale of the 2016 AIC cell by 2001 shares would put those
+  churches on 213 units. That is now the largest improvement available to this country and it
+  needs no new permission.

@@ -61,3 +61,19 @@ office was more specific than the UN.
 child of `christianity.pentecostal` rather than under `.trinitarian`, which keeps the US
 branch what it is. Your ruling on `ask/004-am` (sources.md §9ca) already established that a
 branch is allowed to have children at different depths.
+
+---
+
+## Ruled 2026-09-09 by Anita
+
+**Leave it on the generic `christianity.pentecostal` node. No new node.**
+
+Her reasoning, in her words: if it is mostly just Pentecostal then it should stay Pentecostal —
+ADEPR reads as the Pentecostal church *of Rwanda* rather than a distinct body, and the fact that
+the UNSD Yearbook prints the identical figure as generic `Pentecostal` is further support for
+filing it that way.
+
+Note for whoever meets this again: the yearbook agreeing is evidence about how the body is
+classified, but it is not independent evidence about what the body *is* — the yearbook is a
+return from the same office. Both point the same way here, so nothing turns on it. The mapping
+is unchanged and Rwanda is not re-scattered.

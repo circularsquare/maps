@@ -36,12 +36,16 @@ decides the column** (spec §14.4 rule 1, the construction `sources/kz.py` uses)
 """
 
 import os
+import sys
 import warnings
 
 os.environ.setdefault("OMP_NUM_THREADS", "6")
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import numpy as np
 import pandas as pd
+
+import spearman_null
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
@@ -304,8 +308,26 @@ def stability(df, nat, n_units, unit_col="geo_id", override=None):
     not survive being asked twice. Size is eligibility; stability is evidence, and only the
     second one is about whether a map should be drawn.
 
-    The bar is not a taste. A Spearman correlation over `n` units has a standard error of
-    about 1/sqrt(n-1), so the bar is what it takes to be distinguishable from zero at 95%.
+    ## THE BAR IS THE EXACT NULL, AND IT USED TO BE `1.96/sqrt(n-1)`, WHICH WAS NOT 95%
+
+    `sources/spearman_null.py` computes it: the smallest attainable rho whose one-sided exact
+    p-value under the permutation null is at most 0.05, enumerated exhaustively at ten units or
+    fewer and sampled above. It is a real 0.05-level test at every unit count.
+
+    **What was here before was not.** `1.96/sqrt(n-1)` is the exact standard DEVIATION of the
+    null, not its 95th percentile, and the null is a short-tailed discrete distribution rather
+    than a normal one at these unit counts. Enumerated, the old line was a **0.017-level test on
+    Costa Rica's seven provinces** and a 0.023-level test on El Salvador's fourteen departments:
+    stricter than its own docstring claimed, everywhere, and worst where there are fewest units.
+    `ask/answered/007-cr` has the measurement and Anita's ruling of 2026-09-09, which was to
+    make the claim true rather than keep an accidental strictness nobody chose. Two categories
+    changed from failing to passing: Costa Rica's `Católico` (+0.7857, old bar +0.8002, new
+    +0.7143) and El Salvador's `Protestante Tradicional` (+0.5165, old +0.5436, new +0.4637).
+    Nothing else in the five countries moved.
+
+    **The level did not change and is not a place to express caution.** It was 0.05 before and
+    it is 0.05 now; only the arithmetic changed. A stricter test is available and would be a
+    deliberate choice of `alpha`, made once, in `spearman_null.py`, by a person.
 
     A low value is a FAILURE TO DEMONSTRATE SIGNAL rather than a demonstration of noise
     (§14.16, in those words). What it earns a category is the national rate inside each
@@ -325,18 +347,24 @@ def stability(df, nat, n_units, unit_col="geo_id", override=None):
     spatial chi-square of p=1.3e-84, and Anita's call was to draw it with the weakness named.
 
     **So the bar is never moved to make something pass.** Moving it would be fitting the test
-    to the answer, and it would silently change every other category too. An override is one
+    to the answer, and it would silently change every other category too. That is not what
+    happened in 2026-09-09's correction: the LEVEL stayed at 0.05 and the arithmetic that
+    implemented it was wrong, which is why the change was measured across all five countries
+    and ruled on before it shipped rather than applied to the country that noticed. An override
+    remains the only way to draw a category the test rejects. An override is one
     named category, with a written reason, decided by a person. Before proposing one, run the
     chi-square: if the units do NOT differ significantly, there is nothing to draw and the
     override is not available.
     """
     override = override or {}
-    bar = 1.96 / np.sqrt(n_units - 1)
+    bar, how = spearman_null.critical_rho(n_units)
     waves = sorted(df["wave"].unique())
     cut = waves[len(waves) // 2]
     early, late = df[df["wave"] < cut], df[df["wave"] >= cut]
-    print(f"\n  split-half stability across waves (§14.16), bar = +{bar:.2f} at 95% on "
-          f"{n_units} units:")
+    print(f"\n  split-half stability across waves (§14.16), bar = +{bar:.4f} at 95% on "
+          f"{n_units} units ({how}; the old 1.96/sqrt(n-1) was "
+          f"+{1.96 / np.sqrt(n_units - 1):.4f}, a "
+          f"{spearman_null.exact_p(1.96 / np.sqrt(n_units - 1), n_units):.3f}-level test):")
     print(f"    {waves[0]}-{waves[len(waves) // 2 - 1]} n={len(early):,}   "
           f"{cut}-{waves[-1]} n={len(late):,}")
     print(f"    {'category':<44}{'national':>9}{'spearman':>10}{'pearson':>9}  verdict")
@@ -354,6 +382,15 @@ def stability(df, nat, n_units, unit_col="geo_id", override=None):
                 include_groups=False)
 
         j = pd.concat([share(early).rename("e"), share(late).rename("l")], axis=1).dropna()
+        # The overlap does not depend on the category — it is the units that have respondents
+        # in both halves — so a change in it is a change in the pool, and the bar computed for
+        # `n_units` is then the wrong bar. `arabbarometer.stability` has the same guard and
+        # §11af's Egypt run is why: it reported a bar for one unit count beside a correlation
+        # for another.
+        if len(j) != n_units:
+            raise SystemExit(f"{len(j)} units appear in both wave halves, not the {n_units} "
+                             f"the bar was computed for — re-read the pool before trusting "
+                             "any correlation below")
         with np.errstate(invalid="ignore"), warnings.catch_warnings():
             warnings.simplefilter("ignore")
             sp = j["e"].corr(j["l"], method="spearman")
@@ -365,13 +402,22 @@ def stability(df, nat, n_units, unit_col="geo_id", override=None):
         if passed or forced:
             carries.append(c)
         shown = f"{sp:+10.2f}{pe:+9.2f}" if np.isfinite(sp) else f"{'undefined':>10}{'':>9}"
+        p = spearman_null.exact_p(sp, n_units)
         if passed:
-            verdict = "own geography"
+            verdict = f"own geography (p={p:.3f})"
         elif forced:
             verdict = "own geography — UNDER THE BAR, drawn on Anita's call"
         else:
-            verdict = "NOT distinguishable from zero"
+            verdict = ("NOT distinguishable from zero"
+                       + (f" (p={p:.3f})" if np.isfinite(sp) else ""))
         print(f"    {CATEGORY[c][:42]:<44}{nat[c] * 100:8.2f}%{shown}  {verdict}")
+        # The exact null has no ties; average-ranked shares need the conditional one. Several
+        # categories here do tie, the conditional null was run for every one of them on
+        # 2026-09-09, and no verdict changed — see `spearman_null`'s ## TIES. This flag is so
+        # the next country's tied near-boundary category gets checked rather than assumed.
+        tied = spearman_null.ties_note(j["e"], j["l"])
+        if tied:
+            print(f"       {tied}")
         if forced and not passed:
             print(f"        reason: {override[c]}")
     stale = sorted(set(override) - set(nat.index))

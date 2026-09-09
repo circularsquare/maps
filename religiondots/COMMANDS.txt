@@ -631,6 +631,58 @@ Run in order.  Every step, every time, even when only one country changed.
                                      #   log-populations correlate by luck).  Both measured;
                                      #   sources/zw_geo.md says which one carries it.
 
+    python sources/za.py             # South Africa, ONE 498 MB .dta THAT CANNOT BE FETCHED,
+    python sources/za_geo.py --fetch #   ~4 min.  Stats SA Community Survey 2016 PERSON
+    python sources/za_grid.py --fetch#   MICRODATA, DataFirst catalogue 611: 3,328,867
+                                     #   records, 25 categories on 213 LOCAL MUNICIPALITIES,
+                                     #   54,946,339 people, 98.73% drawn.
+                                     #   THE .dta IS ACCOUNT-WALLED AND za.py SAYS SO RATHER
+                                     #   THAN PRETENDING -- catalogue 611 needs a free
+                                     #   DataFirst login plus a signed declaration, which is
+                                     #   ask/answered/002-za and is Anita's, already given.
+                                     #   Put it at data/raw/za/cs-2016-person.dta; the script
+                                     #   asserts its record count and its weighted total.
+                                     #   THE NINE PUBLISHED PROVINCIAL PROFILES ARE THE CHECK
+                                     #   AND NOT THE SOURCE.  sources/za_profiles.py is the
+                                     #   old province build's parser, kept, and za.py REFUSES
+                                     #   TO WRITE unless every published province cell
+                                     #   reproduces: 215 of 216 agree to within half a person.
+                                     #   `python sources/za_profiles.py --fetch` pulls the
+                                     #   nine PDFs (~58 MB) if they are missing.
+                                     #   THE 216th IS THE PAYOFF.  North West's Report
+                                     #   03-01-11 prints an `Other` denomination cell of
+                                     #   21 873 -- the `Do not know` figure from its own
+                                     #   footnote -- and its 14 rows fall 336,482 short of
+                                     #   its own total.  The microdata puts that cell at
+                                     #   358,355 = 21,873 + 336,482 EXACTLY, so the row was
+                                     #   mis-set and those people move off bare `christianity`
+                                     #   onto `christianity.other`.  Both assertions fire on
+                                     #   a reissue rather than quietly changing the map.
+                                     #   STATA TRUNCATES LABEL-SET NAMES TO 8 CHARS: the file
+                                     #   has `MN_CODE` (234, the 2011 demarcation) and
+                                     #   `MN_COD_A` (213, 2016) for MN_CODE_2011 and
+                                     #   MN_CODE_2016, and NEITHER IS NAMED AFTER ITS
+                                     #   VARIABLE.  The wrong one resolves silently to the
+                                     #   wrong municipalities with every total still
+                                     #   reconciling.  za.py picks by size then confirms on
+                                     #   the label text (`WC011 : X` vs `WC011: X`).
+                                     #   THE JOIN IS A CODE JOIN, 213/213 both ways on the MDB
+                                     #   municipality code against COD-AB ADM3, checked
+                                     #   independently on district (52), province (9) and name
+                                     #   (210 of 211).  Two names come from COD: LIM345 is
+                                     #   labelled the literal word `New` (it is Collins
+                                     #   Chabane) and NC067's label is corrupt in the .dta.
+                                     #   EVERY ROW CARRIES cell_n AND unit_n in its note, the
+                                     #   unweighted records behind that cell and that
+                                     #   municipality.  This is a survey at a fine tier and
+                                     #   nothing else in the file tells a 40-record share from
+                                     #   a 40,000-record one.  882 of 4,472 non-empty cells
+                                     #   rest on under 10 records and hold 0.107% of people.
+                                     #   1.27% NOT DRAWN: `Do not know` (704,355) and
+                                     #   `Unspecified` (2,940) are EMITTED and EXCLUDED in the
+                                     #   mapping, so tools/gap_share.py computes the gap from
+                                     #   the file instead of it being authored.
+
     python sources/kz.py --fetch     # Kazakhstan, one 7.2 MB xlsx + one 24.3 MB PDF, ~1
     python sources/kz_geo.py --fetch #   min.  ***A MODELLED COUNTRY -- spec 14.10/14.12.***
     python sources/kz_grid.py --fetch#   EVERY ROW IS `modelled`; there is no measured tier

@@ -150,32 +150,43 @@ BAR_JOINT = 1e-3
 # What the split-half returns, asserted so a change in the data is a failure here rather than
 # a silent re-drawing of the country.
 #
-#   2 = Protestante Tradicional (+0.86)   4 = Ninguna, creyente (+0.86)
-#   5 = Evangélica y Pentecostal (+1.00)  12 = Testigos de Jehová (+0.81)
+#   1 = Católico (+0.79)                  2 = Protestante Tradicional (+0.86)
+#   4 = Ninguna, creyente (+0.86)         5 = Evangélica y Pentecostal (+1.00)
+#  12 = Testigos de Jehová (+0.81)
 #
-# **AND CATÓLICO IS NOT IN THAT LIST**, at +0.79 against a bar of +0.80. The largest category
-# in the country, 63.06% of it, is the one that does not carry its own province shares, and the
-# four that do are all smaller. That is applied as written: `lapop.stability`'s own docstring
-# says the bar is never moved to make something pass, and an `override` is a person's call
-# rather than an agent's. Two things about it are worth knowing and are in `sources/cr.md` §5:
-# the failure is REAL rather than an artefact of a coarse statistic, and the decision costs
-# the map little.
+# **CATÓLICO WAS NOT IN THAT LIST UNTIL 2026-09-09, AND THE BAR IS WHY.** This country shipped
+# with Católico — 63.06% of it, the largest category — drawn at the national rate inside each
+# province's residual, because +0.7857 fell short of a bar of +0.8002. That bar was
+# `1.96/sqrt(n-1)`, which is the null's standard DEVIATION and not its 95th percentile, and on
+# seven provinces it was a **0.017-level** test rather than the 0.05 its docstring claimed.
+# Filed as `ask/007-cr` rather than worked around; Anita ruled to make it a real 95% test, and
+# `sources/spearman_null.py` now enumerates all 5,040 orderings and puts the bar at **+0.7143**.
+# Católico's exact one-sided p is **0.024**, so it carries its own province shares. It is one of
+# exactly two categories in the five LAPOP countries that the correction moved; El Salvador's
+# `Protestante Tradicional` is the other.
 #
-# Real: Católico's rank sum-of-squared-differences between the wave halves is 12, and NINE of
-# those 12 are Guanacaste alone, which falls from 4th most Catholic province to 7th as its
-# Catholic share goes 63.4% in 2010-2012 to 48.2% in 2014-2023. That is a fifteen-point move
-# in one province, not a pair of near-ties changing places. (Spearman is quantised at seven
-# units — sum d² is always even, so the attainable values around the +0.80 bar are +0.8214 at
-# sum d²=10 and +0.7857 at 12, and there is nothing in between. Testigos de Jehová is at
-# +0.81, which is off that lattice because its shares tie in one wave-half.)
+# **The failure it used to record was real, and that is still worth knowing**, because it is the
+# reason the ask was a genuine judgement rather than a typo. Católico's rank sum-of-squared-
+# differences between the wave halves is 12, and NINE of those 12 are Guanacaste alone, which
+# falls from 4th most Catholic province to 7th as its Catholic share goes 63.4% in 2010-2012 to
+# 48.2% in 2014-2023. That is a fifteen-point move in one province, not a pair of near-ties
+# changing places. What the corrected bar says is that a single province moving that far, on
+# seven provinces, is within what chance produces more than 2% of the time but not more than 5%
+# — which is what a 95% test is for. `sources/cr.md` §5 has the fuller argument.
 #
-# Little: Católico is 94.9% of the tail `lapop.build` spreads through each province's residual,
-# so it is drawn as very nearly one minus the four measured categories. Per province the drawn
-# share differs from the measured one by at most 2.54 points (Cartago, 82.09% measured against
-# 79.55% drawn) and 1.47 on average. It does reorder two adjacent pairs — San José above
-# Heredia and Limón above Guanacaste, both within about 1.5 points either way — which is
-# exactly the claim the split-half withdrew.
-CARRIES = [2, 4, 5, 12]
+# (Spearman is quantised at seven units: sum d² is always even, so the attainable values around
+# the old +0.80 bar were +0.8214 at sum d²=10 and +0.7857 at 12, with nothing in between. The
+# new bar is +0.7143, sum d²=16, and is itself an attainable value rather than a number between
+# two of them. Testigos de Jehová is at +0.81, off that lattice because its shares tie in one
+# wave-half.)
+#
+# **What changed on the map**: Católico used to be 94.9% of the tail `lapop.build` spread
+# through each province's residual, so it was already drawn as very nearly one minus the four
+# measured categories — at most 2.54 points from its measured share in any province (Cartago,
+# 82.09% measured against 79.55% drawn) and 1.47 on average, with two adjacent pairs of the
+# province ordering swapped. It is now drawn on the measured share itself, so those two
+# reorderings go away and the tail is the four small categories only.
+CARRIES = [1, 2, 4, 5, 12]
 
 
 def _exact(a, b, label):

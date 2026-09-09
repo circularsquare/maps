@@ -38,17 +38,21 @@ the sample cannot be grown. That is the fact the split-half has to be read again
 ## THE SPLIT-HALF IS ON PSUs AND IS TESTED AGAINST A PERMUTATION NULL
 
 `sources/lapop.py` splits its waves in half and compares each category's ordering across the
-two halves against a bar of `1.96/sqrt(n-1)`. **Neither half of that construction transfers.**
+two halves against an `n`-only bar. **Neither half of that construction transfers.**
 
   * There is one wave, so the split has to be on something else. It is on PSUs, which is also
     the right unit: two respondents in the same PSU are the same twenty-household cluster and
     splitting on rows would split a cluster in half and count it twice.
   * A single random split of 75 PSUs is noisy enough that the answer changes run to run, so
-    the statistic is the **median over 400 random PSU halves**. And `1.96/sqrt(n-1)` is the
-    standard error of **one** Spearman correlation under the null, so comparing it with a
-    median-of-400 is a category error — in the conservative direction, but a category error.
-    At nine units the bar is +0.693 and the permutation null's own 95th percentile is +0.45,
-    so the bar rejects categories the data can actually distinguish from chance.
+    the statistic is the **median over 400 random PSU halves**. Any bar for ONE Spearman
+    correlation is the wrong comparison for a median-of-400, which has far less draw-to-draw
+    variance. That was true of `1.96/sqrt(n-1)`, which is what lapop used when this module was
+    written and which at nine units sits at +0.693 against a permutation null's own 95th
+    percentile of +0.45; it is **still true of the exact null that replaced it on 2026-09-09**
+    (`sources/spearman_null.py`, +0.600 at nine units, enumerated over all 362,880 orderings,
+    and still well clear of this module's own +0.45). Correcting the arithmetic of the
+    single-correlation bar did not make it the right instrument for this statistic, and this
+    module was deliberately left alone in that change.
 
 So the null is built rather than assumed: **the PSU-to-region labels are shuffled** and the
 whole median-of-400 statistic recomputed, 400 times. A category carries its own geography when
@@ -330,8 +334,12 @@ def _median_rho(W, assign, splits, n_units):
 def stability(df, nat, units, unit_col="geo_id", n_split=400, n_perm=400, seed=0, alpha=0.05):
     """WHICH CATEGORIES CARRY THEIR OWN GEOGRAPHY — a permutation null, not a fixed bar.
 
-    Read the module docstring for why `1.96/sqrt(n-1)` is not the right comparison here. The
-    statistic is the median Spearman across `n_split` random halves of the PSUs; the null is
+    Read the module docstring for why a bar for ONE Spearman correlation — `1.96/sqrt(n-1)`,
+    or the exact null in `sources/spearman_null.py` that replaced it — is not the right
+    comparison here, and why this module was not switched to the second one when lapop and
+    arabbarometer were. Being wrong about the null's shape and being wrong about which
+    statistic you are testing are two different errors, and only the first one got fixed.
+    The statistic is the median Spearman across `n_split` random halves of the PSUs; the null is
     the same statistic with the PSU-to-region labels shuffled, `n_perm` times. A category
     passes when fewer than `alpha` of the null medians reach its observed one.
 

@@ -407,36 +407,43 @@ card would predict. `note_public` says exactly that rather than claiming three a
 
 ## 5. What the map says, and the two split-half decisions
 
-Bar `1.96/sqrt(6) = +0.80`, the highest in this module, because seven units is the fewest.
+Bar `+0.7143` — the exact null over all 5,040 orderings of seven provinces, the highest in this
+module because seven units is the fewest. **It was `1.96/sqrt(6) = +0.80` until 2026-09-09 and
+Católico was not drawn on its own shares**; §8 below is the change and its authority.
 
 ```
-  Católico                              63.06%   +0.79   national rate    <- FAILS
-  Evangélica y Pentecostal              13.77%   +1.00   own geography
-  Protestante Tradicional                9.49%   +0.86   own geography
-  Ninguna (creyente)                     9.10%   +0.86   own geography
-  Testigos de Jehová                     1.20%   +0.81   own geography    <- smallest ever
-  Agnóstico o ateo                       1.49%   +0.27   national rate
+  Católico                              63.06%   +0.79   own geography    p=0.024
+  Evangélica y Pentecostal              13.77%   +1.00   own geography    p=0.000
+  Protestante Tradicional                9.49%   +0.86   own geography    p=0.012
+  Ninguna (creyente)                     9.10%   +0.86   own geography    p=0.012
+  Testigos de Jehová                     1.20%   +0.81   own geography    p=0.017  <- smallest ever
+  Agnóstico o ateo                       1.49%   +0.27   national rate    p=0.278
   the five under 1%                                      national rate (§11ad)
 ```
 
-### Católico fails, and it is applied as written
+### Católico used to fail, and what the failure was is still worth knowing
 
-**The largest category in the country does not carry its own province shares, and the four
-smaller ones do.** No override was added: `lapop.stability`'s docstring says the bar is never
-moved to make something pass and that an override is a person's call rather than an agent's,
-and the brief's rule is to apply a stated test as written.
+**The largest category in the country did not carry its own province shares while the four
+smaller ones did**, on a bar of +0.8002 that Costa Rica applied as written and filed as
+`ask/007-cr` rather than overriding. Anita ruled on 2026-09-09 that the bar was the wrong
+arithmetic; §8 has it. What follows is the reasoning as it stood, because the ask turned on it
+and because it is what a reader should weigh against a p of 0.024.
 
-**The failure is real, not a quantised near-miss.** Spearman's sum of squared rank differences
+**The near-miss was not quantisation.** Spearman's sum of squared rank differences
 is 12, and **nine of the twelve are Guanacaste alone**, which falls from the 4th most Catholic
 province to the 7th as its Catholic share goes 63.41% in 2010-2012 to 48.22% in 2014-2023, a
 fifteen-point move in one province. (Spearman is also quantised at n=7 — sum d² is always even,
-so the attainable values around the bar are +0.8214 at 10 and +0.7857 at 12 and there is
-nothing between. Testigos de Jehová is at +0.8108, off that lattice because its
-shares tie in one wave-half. Católico's failure does not depend on any of this.)
+so the attainable values around the old bar were +0.8214 at 10 and +0.7857 at 12 and there is
+nothing between. The corrected bar, +0.7143, is sum d²=16 and is itself attainable. Testigos de
+Jehová is at +0.8108, off that lattice because its shares tie in one wave-half.) **What the
+corrected bar says about that fifteen-point move is that one province going that far, out of
+seven, happens by chance between 2% and 5% of the time** — which is what a 95% test is for, and
+is a narrower claim than "the ordering is safe".
 
-**And it costs the map little.** Católico is 94.9% of the tail `lapop.build` spreads through
-each province's residual, so it is drawn as very nearly one minus the four measured
-categories:
+**Drawing it changes the map little, because it was already nearly right.** Católico was 94.9%
+of the tail `lapop.build` spread through each province's residual, so it was drawn as very
+nearly one minus the four measured categories. It is now drawn on the measured share itself and
+the table below is the size of the correction rather than the size of a doubt:
 
 | province | measured | as drawn | diff |
 |---|---:|---:|---:|
@@ -448,13 +455,15 @@ categories:
 | Heredia | 61.69% | 60.97% | -0.73 |
 | Guanacaste | 55.84% | 56.15% | +0.31 |
 
-At most 2.54 points, 1.47 on average. It does swap two adjacent pairs of the ordering, San
+At most 2.54 points, 1.47 on average, and it swapped two adjacent pairs of the ordering, San
 José above Heredia and Limón above Guanacaste, both pairs within about a point and a half
-either way — which is exactly the claim the split-half withdrew.
+either way. On the corrected bar the "as drawn" column is the "measured" column and those two
+swaps are gone.
 
 ### Testigos de Jehová passes, and is the smallest cell this module has ever placed
 
-1.20% of the country, above §11ad's 1% eligibility floor, +0.81 against +0.80. **The caveat is
+1.20% of the country, above §11ad's 1% eligibility floor, +0.81 against the old +0.80 and the
+corrected +0.7143, so it passes on either. **The caveat is
 that the box was withdrawn from the 2023 card**: it reads 1.90%, 1.10% and 1.83% in the three
 early rounds and **exactly zero** in 2023, so the split-half's late half is carried by 2014
 alone. It is still a real two-sample comparison, with less data behind it than the column
@@ -466,29 +475,38 @@ Panama ran this at ten units and everything survived. **Costa Rica's does not su
 cleanly, and that is the honest cost of seven units.** Dropping each province in turn and
 re-running the split-half over the remaining six:
 
-| category | full (7) | LOO min | LOO max | against the fixed 6-unit bar +0.88 | against the exact-null 6-unit bar +0.77 |
-|---|---:|---:|---:|---|---|
-| Evangélica y Pentecostal | +1.00 | +1.00 | +1.00 | survives every drop | survives every drop |
-| Protestante Tradicional | +0.86 | +0.77 | +0.94 | falls under | exactly on it |
-| Ninguna (creyente) | +0.86 | +0.77 | +0.94 | falls under | exactly on it |
-| Testigos de Jehová | +0.81 | +0.71 | +0.87 | falls under | **falls under** |
-| Católico, not drawn | +0.79 | +0.66 | +1.00 | would pass for one drop | would pass for several |
+Recomputed 2026-09-09 against the corrected bar; the drop counts are how many of the seven
+single-province drops still clear a **six**-unit bar.
 
-Two bars are shown because the fixed one **rises** as units are removed (`1.96/sqrt(n-1)` is
-+0.80 at seven and +0.88 at six), so leave-one-out against it takes data away and raises the
-requirement at the same time, which is doubly harsh. The exact null's 95th percentile is
-+0.6786 at seven units and +0.7714 at six, and `ask/007-cr` is about that gap.
+| category | full (7) | LOO min | LOO max | clears fixed +0.8765 | clears exact-null +0.8286 | worst drop |
+|---|---:|---:|---:|---:|---:|---|
+| Evangélica y Pentecostal | +1.0000 | +1.0000 | +1.0000 | 7/7 | 7/7 | none, it is pinned |
+| Protestante Tradicional | +0.8571 | +0.7714 | +0.9429 | 3/7 | 5/7 | Alajuela, San José |
+| Ninguna (creyente) | +0.8571 | +0.7714 | +0.9429 | 3/7 | 5/7 | Alajuela, Cartago |
+| Testigos de Jehová | +0.8108 | +0.7143 | +0.8697 | 0/7 | 3/7 | Cartago, Guanacaste |
+| Católico | +0.7857 | +0.6571 | +1.0000 | 1/7 | 4/7 | Alajuela, Cartago, Heredia |
+| Agnóstico o ateo, not drawn | +0.2703 | −0.1160 | +0.4058 | 0/7 | 0/7 | Puntarenas, San José |
 
-**So the answer to "does the lean survive leave-one-out" is: partly.** Evangelical's geography
-is robust to dropping any single province and is the strongest reading of that cell anywhere
-in this module. `Protestante Tradicional` and the believers-without-a-religion sit exactly on
-the exact-null bar at their worst single drop, so they are real but they use all seven
-provinces. **`Testigos de Jehová` does not survive**: at its worst drop it is +0.71 against
-+0.77, which is consistent with it being both the smallest cell placed here and a cell whose
-late wave-half is carried by 2014 alone. It stays drawn, because the stated test is the
-split-half on the full seven and it passed, and because withdrawing it would be moving a bar
-after seeing the answer. But it is the weakest thing on this map and `note_public` already
-names it as a floor.
+Two bars are shown because the bar **rises** as units are removed, on either arithmetic
+(`1.96/sqrt(n-1)` is +0.8002 at seven and +0.8765 at six; the exact null is +0.7143 at seven
+and **+0.8286** at six), so leave-one-out takes data away and raises the requirement at the
+same time, which is doubly harsh.
+
+**Six units is where the discreteness bites hardest, and it is worth seeing why the exact bar
+barely falls there.** At six units there are only 720 orderings, so the attainable values are
+far apart: +0.8286 has an upper tail of 0.0167 and the very next one down, +0.7714, has 0.0514.
+Nothing in between exists, so the honest 95% bar has to be the strict one. That is the
+discreteness the fixed bar was papering over, not a stricter policy.
+
+**So the answer to "does the lean survive leave-one-out" is: only Evangelical survives every
+drop, and the rest survive a majority of them.** Evangelical's geography is robust to dropping
+any single province and is the strongest reading of that cell anywhere in this module.
+`Protestante Tradicional` and the believers-without-a-religion clear a six-unit bar on five
+drops of seven, Católico on four, and `Testigos de Jehová` on three, which makes it the weakest
+of the five drawn cells — as it already was for two other reasons, being the smallest cell
+placed here and having a late wave-half carried by 2014 alone. `note_public` names it as a
+floor. None of this is a verdict: leave-one-out at n=7 removes 14% of the evidence and raises
+the requirement at the same time, and the stated test is the split-half on the full seven.
 
 ### The §3.5 lean, which lives somewhere unusual here
 
@@ -694,9 +712,11 @@ Guatemala's 4.85% override) and not of the project, where a census places far sm
   quoted 0.75 critical value is right (t₅ = 2.571 gives r = 0.7545). No direction is claimed
   and none can be.
 * **`Católico` is applied as written.** `cr.py` has no `OVERRIDE`, calls `lapop.stability`
-  without one (`gt.py` is the only module in the set that passes one), and `CARRIES` is
+  without one (`gt.py` is the only module in the set that passes one), and `CARRIES` was
   `[2, 4, 5, 12]`. No threshold was adjusted. The failure and its cost are in `note_public`,
-  which is where a reader meets them.
+  which is where a reader meets them. (Superseded by §8: the bar itself was corrected on
+  2026-09-09 and `CARRIES` is now `[1, 2, 4, 5, 12]`. The review's finding, that this country
+  applied the rule as written rather than around it, is what §8 rests on.)
 * **The exact nulls quoted in §5 are right**: 95th percentile +0.6786 at seven units and
   +0.7714 at six, against fixed bars of +0.8002 and +0.8765.
 * **The map.** One screenshot at the country's own `view`. Dots on land, none in the sea,
@@ -748,3 +768,46 @@ so Ecuador still moves nothing. The row to watch if the rule ever changes is El 
 Checks run clean: `check_md.py`, `built_countries.py --check`, `check_rollup.py cr`
 (5,044,197, all modelled, nothing orphaned), `review_dump.py cr` (11 entries, all reasoned).
 No ask filed; four are already open, which is the hand-back threshold.
+
+---
+
+## 8. Ruled, 2026-09-09 — the bar is now the exact null and `Católico` is drawn on its own shares
+
+*Appended by session `967ffe99-93b1-4ff9-8169-4a6d5ffa084e-bar`, which implemented Anita's
+ruling on `ask/007-cr` across both modules that carried the old line. §5 and §7 above are left
+as they stood, because the ask turned on them.*
+
+**Anita's ruling, in her words: make it a real 95% test.** The asymptotic `1.96/sqrt(n-1)` is
+replaced by the exact null of the Spearman statistic, enumerated where that is feasible and
+sampled above. The conservatism argument in the ask — that a false pass is worse than a false
+fail — was considered and not taken: *"the docstring makes an arithmetic claim about what the
+bar is, and the fix is to make the claim true rather than to keep an accidental strictness that
+nobody chose. Where the project wants a stricter-than-95% test it should say so and pick the
+level deliberately."*
+
+**What the bar is now.** `sources/spearman_null.py`, the smallest ATTAINABLE rho whose
+one-sided exact p is at most 0.05. Costa Rica's is **+0.7143** on seven provinces, enumerated
+over all 5,040 orderings, against the +0.8002 this country shipped under. `Católico`'s +0.7857
+has an exact p of **0.024** and is in `CARRIES`.
+
+**One thing the implementation found that the ask did not, and it makes the bar stricter rather
+than looser.** The ask sized the problem with `np.quantile(null, 0.95)`, which interpolates
+between lattice points, and its "exact 95th percentile" column is a shade too generous
+everywhere: at seven units it gives +0.6786, whose own upper tail is **0.0548**, so adopting
+that number literally would have been a 5.5% test. The shipped bar snaps to a value the
+statistic can actually take and is stricter than the ask's column at every unit count in use.
+**The two categories the ruling names are the same either way**, which was verified by re-running
+all seven countries rather than argued.
+
+**Nothing else moved, confirmed by sha256 rather than by reading the output.** `gt.csv`,
+`ec.csv`, `pa.csv`, `eg.csv` and `jo.csv` are byte-identical after the change; only `cr.csv` and
+`sv.csv` differ. Ecuador's `Testigos de Jehová` at +0.34 against a corrected +0.3805 and
+Panama's `Protestante Tradicional` at +0.46 against +0.5636 are the two nearest misses and both
+still fail comfortably.
+
+**And the ties this country has are harmless, which was measured and not assumed.** The new
+output flags a category whose unit shares tie, because the exact null assumes distinct ranks.
+Costa Rica's `Testigos de Jehová` and `Agnóstico o ateo` each tie one province. Every eligible
+category in all seven countries was re-run against the conditional null — the observed late-half
+average-rank vector permuted against the observed early-half one, exhaustively at n=7 — and no
+verdict changed anywhere; `Testigos de Jehová` goes from p=0.0171 to p=0.0190.

@@ -105,6 +105,7 @@ import pandas as pd
 from scipy import stats
 
 import arabbarometer as ab
+import spearman_null
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
@@ -147,20 +148,24 @@ CHRISTIAN_BAND = (0.008, 0.030)
 # construction. They pass or fail together and it is not a coincidence to be read as
 # corroboration. Egypt (§9bz) is the same shape.
 #
-# **AND THE PASS IS THIN: +0.617 against a bar of +0.591.** `leave_one_out` below prints what
+# **AND THE PASS IS THIN: +0.617 against a bar of +0.504.** `leave_one_out` below prints what
 # it costs — without Balqa, the most Christian governorate, it is +0.509. The bar is §14.16's
 # and is applied as written; moving it, in either direction, would silently change every other
 # country and is not this file's call (AGENT_BRIEF §3).
 #
-# **THIN AGAINST THE FIXED BAR IS NOT THE SAME AS MARGINAL, AND `ask/007-cr` IS WHY THAT IS
-# WORTH SAYING HERE.** That ask (filed the day before this build) shows `1.96/sqrt(n-1)` is not
-# the 0.05-level test its docstring claims: it is stricter than the exact permutation null
-# everywhere, and worst at small n. Asked of Jordan's unit counts, the exact null puts the 95th
-# percentile at **+0.4965** on twelve units where the fixed bar sits at +0.5910, so the fixed
-# bar is a **0.023-level** test here. Jordan's +0.617 therefore clears the fixed bar, the exact
-# 95th, **and the exact 97.5th (+0.5804)**. So this country does not move whichever way that
-# ask is ruled, and the pass is more comfortable on the honest null than on the one applied.
-# The fragility that remains is entirely Balqa's leverage, which no choice of bar addresses.
+# **THIN AGAINST THE FIXED BAR IS NOT THE SAME AS MARGINAL, AND `ask/007-cr` IS WHY THAT WAS
+# WORTH SAYING HERE.** That ask, filed the day before this build, showed `1.96/sqrt(n-1)` is
+# not the 0.05-level test its docstring claimed: it is stricter than the exact permutation null
+# everywhere, and worst at small n. This build's own run appended the evidence at Jordan's unit
+# counts — a **0.023-level** test on twelve units — and Anita ruled on 2026-09-09 to replace
+# it. The bar is now `sources/spearman_null.py`'s exact null, **+0.5035 on twelve units**
+# against the +0.5910 this file was built under. **Jordan did not move**: +0.617 cleared the
+# fixed bar, the exact 95th and the exact 97.5th (+0.5804) alike, and the pass is more
+# comfortable on the honest null than on the one originally applied.
+# The fragility that remains is entirely Balqa's leverage, which no choice of bar addresses —
+# and on the corrected bar `leave_one_out` reads slightly differently, because +0.509 without
+# Balqa now clears the twelve-unit bar while still failing the eleven-unit one it should be
+# judged against. The warning it prints is unchanged.
 #
 # What the fragility buys is a sentence
 # in `note_public` rather than a different verdict, and three things sit behind the verdict
@@ -541,7 +546,7 @@ def refusal_lean(df, cat):
 def leave_one_out(g, nat, large, names):
     """Re-run the split-half twelve times, dropping one governorate each time.
 
-    The split-half over twelve units has a bar of +0.591 and twelve points, so one leveraged
+    The split-half over twelve units has a bar of +0.504 and twelve points, so one leveraged
     governorate can carry it or sink it on its own. §9cm's Panama is the precedent in the other
     direction: 468 of 3.6 million orderings reached its held-out r and every one of them kept
     the same 51% unit in place, which was leverage rather than evidence. This prints what the
@@ -552,8 +557,12 @@ def leave_one_out(g, nat, large, names):
     made on 2026-09-09 rather than the original behaviour; `sources/jo.md` §9.4 has the
     finding. Jordan's minimum is a tie and the difference matters to how the fragility reads.
     """
-    bar12 = 1.96 / np.sqrt(N_UNITS_BOTH_HALVES - 1)
-    bar11 = 1.96 / np.sqrt(N_UNITS_BOTH_HALVES - 2)
+    # The exact null, the same bar `ab.stability` uses. It was `1.96/sqrt(n-1)` until
+    # 2026-09-09 (+0.591 at 12 units, +0.620 at 11); `sources/spearman_null.py` has why that
+    # was a 0.023-level test rather than a 0.05 one. Jordan's verdict is unchanged either way,
+    # and this function decides nothing in any case — it prints.
+    bar12, _ = spearman_null.critical_rho(N_UNITS_BOTH_HALVES)
+    bar11, _ = spearman_null.critical_rho(N_UNITS_BOTH_HALVES - 1)
     waves = sorted(g["wave_no"].unique())
     cut = waves[len(waves) // 2]
     early, late = g[g["wave_no"] < cut], g[g["wave_no"] >= cut]

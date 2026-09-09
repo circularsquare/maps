@@ -42,16 +42,16 @@ does the join on the name and asserts that the code join still mispairs, so nobo
 **The Catholic share is the lowest in Central America** and the `Ninguna (creyente)` cell at
 12.44% is two and a half times Guatemala's.
 
-## THREE CATEGORIES CARRY THEIR OWN GEOGRAPHY, WHICH IS ONE MORE THAN GUATEMALA MANAGED
+## FOUR CATEGORIES CARRY THEIR OWN GEOGRAPHY, WHICH IS TWO MORE THAN GUATEMALA MANAGED
 
-The split-half, on a bar of +0.54 (14 units, against Guatemala's +0.43 on 22):
+The split-half, on a bar of +0.4637 (14 units, against Guatemala's +0.3608 on 22):
 
-    Católico                       46.65%   +0.88   own geography
-    Evangélica y Pentecostal       29.05%   +0.82   own geography
-    Ninguna (creyente)             12.44%   +0.74   own geography
+    Católico                       46.65%   +0.88   own geography, p=0.000
+    Evangélica y Pentecostal       29.05%   +0.82   own geography, p=0.000
+    Ninguna (creyente)             12.44%   +0.74   own geography, p=0.002
+    Protestante Tradicional         7.97%   +0.52   own geography, p=0.031
     ------------------------------------------------------------------
-    Protestante Tradicional         7.97%   +0.52   national rate — MISSES BY 0.02
-    Religiones Orientales           1.42%   +0.45   national rate
+    Religiones Orientales           1.42%   +0.45   national rate, p=0.054
     the six under 1%                                national rate (§11ad)
 
 **Every one of these is higher than Guatemala's equivalent**, which is what 647 respondents a
@@ -60,11 +60,19 @@ department buys over 405: Guatemala's Catholic cell managed +0.57 where this is 
 country in this set that can draw its grey ramp where the survey found it**, and that matters
 because the cell is 790,000 people here.
 
-**`Protestante Tradicional` misses the bar by 0.02 and is NOT drawn on its own shares.** That
-is uncomfortable and it is left alone deliberately: the bar is 1.96/sqrt(n-1), which is what it
-takes to be distinguishable from zero at 95%, and moving it because a value landed just under
-is fitting the test to the answer. It is recorded here so the next reader knows the call was
-close rather than clear, and `note_public` says so.
+**`Protestante Tradicional` used to miss the bar by 0.02 and was NOT drawn on its own shares
+until 2026-09-09.** The bar it missed was `1.96/sqrt(n-1)` = +0.5436, which is the null's
+standard DEVIATION rather than its 95th percentile: on fourteen departments that is a
+**0.023-level** test and not the 0.05 its docstring claimed. Costa Rica filed it as
+`ask/007-cr`, Anita ruled to make it a real 95% test, and the bar is now
+`sources/spearman_null.py`'s exact null at **+0.4637**. `Protestante Tradicional` clears it at
+an exact one-sided p of **0.031** and is drawn on its own department shares. It and Costa Rica's
+`Católico` are the only two categories in the five LAPOP countries that the correction moved.
+
+**It is still the closest call in this country and `note_public` says so.** Nothing about the
+underlying evidence changed; what changed is that the test now rejects at the level it always
+said it did. `Religiones Orientales` at +0.45 is the next one down, one lattice step under the
+bar at p=0.054, and it stays out.
 
 Usage:
     python sources/sv.py --fetch    rebuild the slim extract from the 1.1 GB LAPOP .dta
@@ -97,8 +105,10 @@ N_UNITS = 14
 
 # What the split-half returns, asserted so a change in the data is a failure here rather
 # than a silent re-drawing of the country.
-#   1 = Católico (+0.88), 5 = Evangélica y Pentecostal (+0.82), 4 = Ninguna, creyente (+0.74)
-CARRIES = [1, 4, 5]
+#   1 = Católico (+0.88), 5 = Evangélica y Pentecostal (+0.82), 4 = Ninguna, creyente (+0.74),
+#   2 = Protestante Tradicional (+0.52, added 2026-09-09 when the bar became the exact null;
+#       see the module docstring and `sources/spearman_null.py`)
+CARRIES = [1, 2, 4, 5]
 
 
 def main():

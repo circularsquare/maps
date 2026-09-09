@@ -1,480 +1,491 @@
-"""South Africa — religion and Christian denomination, Community Survey 2016, by province.
+"""South Africa — religion and Christian denomination, Community Survey 2016, by LOCAL
+MUNICIPALITY, from the person microdata.
 
-Writes data/normalized/za.csv.
+Writes data/normalized/za.csv: 213 municipalities x 27 categories.
 
-**THE RELEASE THIS BUILDS FROM IS NOT THE CENSUS, AND THAT IS THE WHOLE POINT.** Stats SA's
-Census 2022 statistical release P0301.4 publishes religion for all nine provinces over
-eleven substantive categories plus `Not Specified`, openly, and its `Christianity` is one
-undivided cell holding 83.6% of the country. The **Community Survey 2016** provincial
-profiles publish the same eleven *and* a second table splitting Christianity into fourteen
-denominations. So: **24 usable categories here against the census's 11**, counting only the
-substantive ones on both sides. On a country that is the historic centre of the African
-Independent Church movement, that second table is the country.
+**THIS COUNTRY WAS DRAWN AT NINE PROVINCES UNTIL 2026-09-09 AND THIS FILE IS THE REPLACEMENT.**
+The province build read the nine published CS 2016 provincial profiles, which are the finest
+open tabulation of this variable anywhere; `sources/za_profiles.py` is that parser, kept.
+6.1 million people per unit was the coarsest counting geography on the map. Anita registered
+with DataFirst and downloaded catalogue 611, so the same survey is now read per person:
+**3,328,867 person records, 213 municipalities, ~261,000 people per unit, the same 24
+published categories.** ask/answered/002-za is the ruling.
 
-The cost is six years and a survey rather than a census, and §3.1 forbids mixing the two.
-The two releases are NOT interchangeable even where their category lists match verbatim:
-CS 2016 puts `No religious affiliation/belief` at 10.9% of answers and Census 2022 at 2.9%,
-and `Traditional African religion` moves 4.5% -> 7.8% the other way. Six years does not do
-that; the question was administered differently. So nothing here is rescaled onto 2022
-totals, and §3.1a is why.
+THE RELEASE IS STILL THE SURVEY AND NOT THE 2022 CENSUS, DELIBERATELY. Stats SA's Census 2022
+publishes religion for the nine provinces over eleven categories with `Christianity` as one
+undivided cell holding 83.6% of the country. CS 2016 splits Christianity fourteen ways, which
+on the country that is the historic home of the African Independent Churches is the whole
+reason to draw it. §3.1 forbids mixing the two and they are not interchangeable even where
+their category lists match verbatim: CS 2016 puts `No religious affiliation/belief` at 10.9%
+of answers and Census 2022 at 2.9%. See sources/za.md §3.
 
-**NINE PROVINCES IS THE OPEN CEILING FOR THIS VARIABLE AND IT WAS CHECKED, not assumed.**
-See sources/za.md §2 for the full sweep. In short: Report 03-01-84 *Cultural dynamics in
-South Africa*, named as the likely home of a finer cut, is province-only and **coarser**
-(8 categories); Census 2011 asked no religion question at all, which kills Wazimap and every
-2011 municipal product; and Stats SA's own keyless Census 2022 dissemination API serves 24
-topics down to Main Place with religion among none of them. In the Census 2022 provincial
-profiles essentially every other variable is tabulated by district and local municipality
-and religion alone is not, which reads as a decision rather than an oversight. The finer
-data does exist in the CS 2016 microdata (district and local municipality, same tables) and
-that is account-walled; see ask/ and sources/za.md §2.
+THE SURVEY IS DESIGNED FOR THIS TIER AND SAYS SO IN ITS OWN WORDS. Report 03-01-07 §1.2:
+*"This household-based survey is one of the few available data sources providing data at
+municipal level."* §1.2.3: *"it became clear that there is an increased demand for data at
+municipal level."* And §1.2.2 is the sampling fact that matters more than either: *"The sample
+design for CS 2016 was a stratified single-stage sample design. At enumeration area (EA)
+level, all in-scope EAs were included in the sample and a sample of dwelling units was taken
+within each EA (i.e. there was no subsampling of EAs)."* Every EA in the country is in the
+sample, so no municipality is represented by a neighbour's households. The smallest unweighted
+municipal sample is 529 people (Prince Albert) against a median of 7,890; the effective sample
+sizes after weighting are printed by this script and are in sources/za.md §2.2.
 
-FIVE THINGS THIS PARSER HAD TO SURVIVE, all of them silent failures:
+**THE NINE PUBLISHED PROVINCIAL PROFILES ARE THE RECONCILIATION AND THIS SCRIPT WILL NOT
+WRITE WITHOUT THEM.** Same survey, same 24 categories, tabulated independently by Stats SA
+and parsed by different code. Every published province cell must reproduce from the microdata
+to within TOLERANCE people. It does, on 215 of 216 cells; the exception is North West's
+`Christian: Other`, which is a defect in Report 03-01-11 that the microdata settles —
+see below.
 
-  * **The table NUMBER is not stable across the nine reports.** Free State, KwaZulu-Natal,
-    Mpumalanga, North West and Northern Cape use 2.10a/2.10b; Eastern Cape and Gauteng use
-    2.9a/2.9b; Limpopo uses 2.7/2.8 with no letter at all; Western Cape uses 2.11a/2.11b.
-    Gauteng writes its own caption as `Table 2.9 a:` with a space inside the number. So the
-    anchor is the caption TEXT (`religious affiliation`, `Christian denomination`) and the
-    number is never matched on.
-  * **The TOTAL row is usually labelled with the PROVINCE NAME, not "Total".** Eastern Cape,
-    KwaZulu-Natal, Limpopo, Mpumalanga and North West all do this. Read as a data row it
-    doubles the table and every share is halved, with no error anywhere.
-  * **Northern Cape prints Bahaism as a bare dash** in both columns rather than as 0. Skip
-    it and the province quietly has ten categories where the other eight have eleven.
-  * **Gauteng spells it `Buddism`** and KwaZulu-Natal and Limpopo write `Seventh-Day
-    Adventist` against everyone else's `Seventh Day Adventist`. Folded, and the fold is
-    asserted to leave exactly 11 and 14 distinct categories.
-  * **Both "Other" rows exist and mean different things** -- one is a non-Christian religion,
-    one is a Christian denomination. Every category is therefore emitted prefixed,
-    `Religion: ...` / `Christian: ...`, which is `sources/sz.py`'s convention. A bare join
-    on "Other" would put 1.5M people of other faiths inside Christianity.
+TWO THINGS THE MICRODATA RESOLVED THAT THE PROVINCE BUILD COULD ONLY DESCRIBE:
 
-**NORTH WEST'S TABLE 2.10b DOES NOT ADD UP AND IT IS THE REPORT THAT IS WRONG, not the
-parse.** Its fourteen printed rows sum to 3,072,039 against its own printed total of
-3,408,521, and its printed percentages sum to 90.1 rather than 100.0; 336,482 people, 9.9%
-of the province's Christians, are in no denomination row. Report 03-01-11's `Other` cell
-reads 21 873, which is character for character the `Do not know` figure in that same table's
-own footnote, so the likeliest story is that the wrong number was set in the Other row. That
-is a guess and it is not acted on. Instead the residual joins the same
-`Christian: Denomination not reported` row that all nine provinces already carry (see
-below), where it is visible rather than invented.
+  * **North West's table 2.10b.** Report 03-01-11's fourteen rows sum to 90.1% of its own
+    printed total, leaving 336,482 people in no denomination row, and its `Other` cell reads
+    `21 873` -- character for character the `Do not know` figure in that table's own footnote.
+    The province build had two stories for that and neither closed, so it parked the 336,482
+    on bare `christianity` rather than guessing. **The microdata puts North West's `Other` at
+    358,355, which is 21,873 + 336,482 exactly**, so the row was mis-set and the second story
+    (an excluded `Not applicable` universe) is wrong. Those people are Christians of another
+    denomination and are now drawn as such.
+  * **The residual.** `Christian: Denomination not reported` was the arithmetic gap between
+    table 2.10a's Christianity cell and table 2.10b's rows, 567,039 people. It is now the
+    survey's own answer: `Do not know` (227,585) plus `Unspecified` (2,976) on the
+    denomination question, 230,561 people, measured per person. The other 336,478 were North
+    West's defect.
 
-THE DENOMINATION-NOT-REPORTED ROW IS NOT AN INVENTION, it is the reconciliation. Table
-2.10b excludes its own `Do not know` and `Unspecified` and prints both, and the difference
-between 2.10a's Christianity cell and 2.10b's total reproduces them. Checked against the
-printed footnote in all nine reports: **exact in four** (Northern Cape 7,989, Free State
-8,998, KwaZulu-Natal 18,874, Limpopo 8,346), **within one person in three** (Eastern Cape,
-Gauteng, Mpumalanga), **unverifiable in one** because Report 03-01-07 prints no exclusion
-note under Western Cape's table at all, and **broken in one**, North West, above. So Western
-Cape's 46,055 is inferred rather than confirmed and is the largest residual of the eight
-sound provinces. Those people are Christians whose denomination was not established, so
-they are emitted rather than dropped, and they resolve to bare `christianity`.
+AND THE HOLE IS NOW A COLUMN RATHER THAN A FOOTNOTE. 707,296 people answered `Do not know`
+(704,358) or nothing at all (2,938) to the religion question. The province build could only
+read those out of eight printed footnotes and infer Western Cape's by difference; here they
+are two rows per municipality. They are EXCLUDED in taxonomy/za2016.py rather than dropped
+before the file, so `tools/gap_share.py` computes the country's gap from the normalised file
+instead of it being authored. §3.5 is why they are not drawn and not spread.
+
+FOUR THINGS THIS READER HAS TO GET RIGHT:
+
+  * **THE VINTAGE.** Every record carries geography twice, 2011 and 2016, and the two
+    demarcations are different: `MN_CODE_2011` has 234 municipalities, `MN_CODE_2016` has 213
+    after the August 2016 boundary reform. The 2016 set is used, because OCHA's COD-AB ADM3
+    is the 213 and joins to it 213/213 on the MDB code with nothing left over on either side.
+    The 2011 set is 10% finer in unit count and there is no boundary file on disk for it.
+  * **THE LABEL SET IS NOT THE VARIABLE NAME.** Stata truncates label-set names to eight
+    characters, so the file carries `MN_CODE` (234 labels, the 2011 demarcation) and
+    `MN_COD_A` (213, the 2016 one) and neither is named after the variable it belongs to.
+    Take the wrong one and 213 codes still resolve, to the wrong municipalities, and every
+    national total still reconciles. The set is chosen by its size and then asserted against
+    the label text, which differs: the 2016 set writes `WC011 : Matzikama` with a space before
+    the colon and the 2011 set writes `WC011: Matzikama` without one.
+  * **`Christianity` IS ASKED ONLY OF CHRISTIANS.** Code 88 `Not applicable` is 12,229,937
+    people and is exactly the non-Christian population; it must not be emitted, or every
+    non-Christian is counted twice. Asserted both ways.
+  * **BOTH ANSWER SETS HAVE A ROW CALLED `Other`** and they mean different things. Every
+    category is emitted prefixed `Religion: ` / `Christian: `, which is `sources/sz.py`'s
+    convention; a bare join on the label would move 1,482,210 people of other faiths into
+    Christianity. `countries.py` asserts the prefixes are still there.
+
+THE CODEBOOK'S LABELS ARE FOLDED ONTO THE PUBLISHED ONES, not used raw. The microdata writes
+`Buddism`, `Jehovahs Witness`, `Traditional african religion (e.g. ancestral; tribal; animis`
+and `Just a christian/non-denominational`; the published tables and therefore
+`taxonomy/za2016.py` write `Buddhism`, `Jehovah's Witness`, `Traditional African religion` and
+`Just a Christian/non-denominational`. `za_profiles.CANON` is the single fold, shared with the
+PDF parser, and every code is asserted to land on a canonical label -- so a re-release that
+renames a category fails the build instead of silently emitting a category nothing maps.
 
 Usage:
-    python sources/za.py --fetch    nine PDFs, ~58 MB total, from cs2016.statssa.gov.za
-    python sources/za.py            rebuild from data/raw/za/
+    python sources/za.py            rebuild from data/raw/za/cs-2016-person.dta
+    python sources/za.py --fetch    same; the .dta is account-walled and cannot be fetched
 """
 
 import csv
 import os
-import re
-import ssl
 import sys
-import urllib.request
+
+os.environ.setdefault("OMP_NUM_THREADS", "6")
 
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
+sys.path.insert(0, HERE)
+
+import za_profiles as prof
+
 RAW = os.path.join(ROOT, "data", "raw", "za")
+DTA = os.path.join(RAW, "cs-2016-person.dta")
 OUT = os.path.join(ROOT, "data", "normalized", "za.csv")
 
-SOURCE_ID = "za_cs2016"
+SOURCE_ID = "za_cs2016_micro"
 YEAR = 2016
 BASIS = "self_id"
 
-# cs2016.statssa.gov.za serves the nine provincial profiles as static WordPress uploads.
-#
-# ACCESS, AND IT IS NOT WHAT sources.md §11ag ASSUMED. The Stats SA hosts sit behind
-# Imperva and their HTML pages are unreachable from a script -- `?page_id=` and `?p=`
-# listings come back as a ~1 KB `_Incapsula_Resource` stub for curl AND for WebFetch, and a
-# browser User-Agent does not help. But these PDF uploads are NOT walled. What blocks a
-# plain `curl` on this host is the TLS chain, not the bot wall: it presents a self-signed
-# intermediate and curl exits 60 before it ever sends the request, which reads exactly like
-# a dead host. Downloading them needs the certificate check relaxed and nothing else.
-#
-# So the working method for anything on statssa.gov.za is: find the PDF URL (search, or a
-# known pattern like this one), then fetch the PDF directly. Do not try to read the listing.
-BASE = "https://cs2016.statssa.gov.za/wp-content/uploads/2018/07/"
-UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-      "(KHTML, like Gecko) Chrome/124.0 Safari/537.36")
+EXPECTED_RECORDS = 3_328_867
+EXPECTED_UNITS = 213
+EXPECTED_POP = 55_653_654          # CS 2016's own weighted total, table 2.1
 
-# geo_id is minted from the OFFICIAL Stats SA province code (1-9), which is the order every
-# Stats SA release prints provinces in and is NOT the order the nine PDFs happen to sit in a
-# directory listing. sources/za_geo.py checks it against the COD boundary file independently.
-#
-# THE REPORT NUMBERS ARE READ OUT OF THE PDFs AND ASSERTED, not trusted from here. They do
-# not run in province-code order and they are not guessable: Western Cape is 03-01-07 and
-# Mpumalanga is 03-01-13, which is the number an alphabetical or a code-order guess gives
-# to Western Cape. Getting one wrong would mis-cite a report in the CSV's `note` column and
-# nothing downstream would notice, so `read_province` checks each one against the running
-# header of the file it just opened.
-PROVINCES = [
-    ("ZA01", "WesternCape",  "Western Cape",  "03-01-07"),
-    ("ZA02", "EasternCape",  "Eastern Cape",  "03-01-08"),
-    ("ZA03", "NorthernCape", "Northern Cape", "03-01-14"),
-    ("ZA04", "FreeState",    "Free State",    "03-01-12"),
-    ("ZA05", "KZN",          "KwaZulu-Natal", "03-01-10"),
-    ("ZA06", "NorthWest",    "North West",    "03-01-11"),
-    ("ZA07", "Gauteng",      "Gauteng",       "03-01-09"),
-    ("ZA08", "Mpumalanga",   "Mpumalanga",    "03-01-13"),
-    ("ZA09", "Limpopo",      "Limpopo",       "03-01-15"),
-]
+# Every published province cell must reproduce from the microdata to this many people. The
+# published figures are weighted sums rounded by Stats SA and re-rounded here, so a cell can
+# differ by a person or two and that is arithmetic, not a parse. Measured: the largest
+# disagreement on the 215 sound cells is 2.
+TOLERANCE = 2
 
-CAPTION = re.compile(r"^Table\s+\d+\.\d+\s*[ab]?\s*:\s*(.*)$")
-COUNT = re.compile(r"^-?[\d][\d\s   ]*$")
-PCT = re.compile(r"^\d{1,3},\d$")
-DASH = {"-", "–", "—"}
+# The one cell that does NOT reconcile, and by exactly how much. Report 03-01-11's `Other`
+# row was mis-set to the `Do not know` figure from its own footnote; see the module docstring
+# and sources/za.md §4.1. Asserted as an equality, so a reissued report fails the build.
+NW_OTHER_DEFECT = ("North West", "Christian: Other", prof.NW_SHORTFALL)
 
-# Header cells that would otherwise be glued onto the first row's label -- PyMuPDF emits a
-# table's header as ordinary lines, so `Christian domination` / `Catholic` reads as one
-# two-line label.
-#
-# THE SET HAS TO BE PER-TABLE AND THAT IS NOT FUSSiness. Northern Cape heads its
-# denomination table with the bare word `Christianity`, which is ALSO a real row label in
-# the religion table; a single shared set either loses Northern Cape's Catholic row or
-# deletes every province's Christianity row, and each failure is silent. Western Cape's
-# `Christian domination` is Report 03-01-07's own typo, kept verbatim so the match works.
-_HEADER_COMMON = {"number", "n", "%", "percentage", "religious affiliation",
-                  "religious affiliation/belief"}
-HEADER = {
-    "a": _HEADER_COMMON | {"religion"},
-    "b": _HEADER_COMMON | {"christian denomination", "christian denominations",
-                           "christian domination", "denomination", "christianity"},
-}
+# Rounding 213 x 27 float cells independently drifts each province total off the published
+# figure by a few people. Measured: the worst province x category drift is 6. A wider drift
+# means the weights or the label fold have changed, not the rounding.
+MAX_ROUNDING_DRIFT = 12
 
-# The canonical answer sets. Asserted after folding, per province, both tables.
-RELIGIONS = [
-    "Christianity", "Islam", "Traditional African religion", "Hinduism", "Buddhism",
-    "Bahaism", "Judaism", "Atheism", "Agnosticism", "No religious affiliation/belief",
-    "Other",
-]
-DENOMINATIONS = [
-    "Catholic", "Anglican/Episcopalian", "Baptist", "Lutheran", "Methodist",
-    "Presbyterian", "Pentecostal/Evangelistic",
-    "African Independent Church/African Initiated Church", "Jehovah's Witness",
-    "Seventh Day Adventist", "Mormon", "Reformed church",
-    "Just a Christian/non-denominational", "Other",
-]
+RELIGION_VAR = "ReligionBelief"
+CHRISTIAN_VAR = "Christianity"
+# DC_MDB_C_2016 is carried only so it can reach the `note` column, where `sources/za_geo.py`
+# reads it back as the join's independent evidence: the district each municipality belongs to
+# according to Stats SA, checked against the district COD's polygon belongs to. A code join
+# that had paired two municipalities the wrong way round would have to have paired them
+# inside the same district to survive that.
+COLS = ["PR_CODE_2016", "MN_CODE_2016", "DC_MDB_C_2016", RELIGION_VAR, CHRISTIAN_VAR,
+        "pers_pstrwgt"]
 
-# Spelling variants seen across the nine reports, folded to the canonical label above.
-# `buddism` is Gauteng's typo and is in the CS 2016 microdata codebook too, so it is the
-# survey's own spelling rather than a typesetting slip in one report.
-VARIANTS = {
-    "buddism": "Buddhism",
-    "seventh-day adventist": "Seventh Day Adventist",
-    "african independent church/african initiated church": (
-        "African Independent Church/African Initiated Church"),
-    "african independent church/african initiated church": (
-        "African Independent Church/African Initiated Church"),
-    "african independent church/african initiated church": (
-        "African Independent Church/African Initiated Church"),
-    "jehovahs witness": "Jehovah's Witness",
-    "reformed church": "Reformed church",
-    "just a christian/non-denominational": "Just a Christian/non-denominational",
-}
-
+# The two ReligionBelief codes that are not an answer. Emitted, EXCLUDED in the mapping, and
+# read by tools/gap_share.py -- §3.5, and see the module docstring.
+REL_NOT_ANSWERED = {12: "Do not know", 99: "Unspecified"}
+# The two Christianity codes that are a Christian whose denomination was not established.
+CHR_NOT_REPORTED = {15: "Do not know", 99: "Unspecified"}
+CHR_NOT_APPLICABLE = 88
 NOT_REPORTED = "Denomination not reported"
 
+PROVINCE_CODES = {1: "Western Cape", 2: "Eastern Cape", 3: "Northern Cape", 4: "Free State",
+                  5: "KwaZulu-Natal", 6: "North West", 7: "Gauteng", 8: "Mpumalanga",
+                  9: "Limpopo"}
 
-def fold(label):
-    """Strip the parenthesised exemplar list, the smart apostrophes and the case.
+# The Stats SA municipality labels are not all usable as names, and both exceptions are named
+# rather than repaired by a rule, because a rule loose enough to fix either is loose enough to
+# rename a municipality that is merely spelt differently
+# ([[reference_name_join_wrong_neighbour]]). `sources/za_geo.py` asserts that these two are
+# the ONLY two of 213 whose Stats SA and COD names disagree.
+#
+#   LIM345 -- the microdata label is the literal word `New`. The municipality was created in
+#     the August 2016 demarcation out of Thulamela and Makhado and had no name when the file
+#     was coded; it is Collins Chabane. COD-AB names it, so COD's name is used.
+#   NC067 -- the label reads `Kh+ói-Ma`, which is not an encoding artefact: those are the
+#     bytes in the .dta. It is Khâi-Ma, in the Namakwa district, and COD spells it correctly.
+NAME_OVERRIDE = {
+    "LIM345": "Collins Chabane",
+    "NC067": "Khâi-Ma",
+}
+# mdb code -> the label Stats SA actually prints, filled in as the file is read. The two
+# overridden ones are recorded in the CSV's own `note` column so a reader of
+# data/normalized/za.csv can see that a name was changed and by whom.
+RAW_LABEL = {}
 
-    The exemplar lists are long and differ between reports -- Free State prints
-    `Pentecostal/Evangelistic (e.g. Assemblies of God; ...)` where North West prints the
-    bare word -- so they cannot be part of the key. They are preserved verbatim in the
-    per-province `note` column instead, because they are what tells a reader what the
-    African Independent Church row actually contains.
+
+def _label_sets(reader):
+    """Pick the 2016 municipality label set out of the file's own value labels.
+
+    STATA TRUNCATES LABEL-SET NAMES TO EIGHT CHARACTERS, so this file carries `MN_CODE` and
+    `MN_COD_A` and neither says which of MN_CODE_2011 / MN_CODE_2016 it belongs to. Picking
+    the wrong one is silent: 213 codes still resolve, to different municipalities, and every
+    national and provincial total still reconciles because the codes are a subset either way.
+    So the set is picked by SIZE and then confirmed on the label TEXT, which differs -- the
+    2016 set writes `WC011 : Matzikama` and the 2011 set writes `WC011: Matzikama`.
     """
-    s = str(label)
-    s = s.replace("‘", "'").replace("’", "'").replace("�", "'")
-    s = re.sub(r"\((?:e\.?g\.?|eg)[^)]*\)?", " ", s, flags=re.I)
-    s = re.sub(r"\(.*?\)", " ", s)
-    s = " ".join(s.split()).strip(" .:,")
-    return s
+    vls = reader.value_labels()
+    cands = {k: v for k, v in vls.items() if k.startswith("MN_CO")}
+    if len(cands) != 2:
+        raise SystemExit(f"expected two MN_ label sets, found {sorted(cands)}")
+    by_size = sorted(cands.items(), key=lambda kv: len(kv[1]))
+    mn16, mn11 = by_size[0], by_size[1]
+    if len(mn16[1]) != EXPECTED_UNITS or len(mn11[1]) != 234:
+        raise SystemExit(f"municipality label sets are {len(mn16[1])} and {len(mn11[1])}, "
+                         f"expected {EXPECTED_UNITS} (2016) and 234 (2011)")
+    spaced = sum(1 for v in mn16[1].values() if " :" in v)
+    tight = sum(1 for v in mn11[1].values() if " :" not in v)
+    if spaced != len(mn16[1]) or tight != len(mn11[1]):
+        raise SystemExit(
+            f"the two municipality label sets can no longer be told apart on their text: "
+            f"{mn16[0]} has {spaced}/{len(mn16[1])} written `CODE : Name` and {mn11[0]} has "
+            f"{tight}/{len(mn11[1])} written `CODE: Name`. Do NOT guess -- the wrong set "
+            "resolves silently to the wrong municipalities.")
+    print(f"  municipality labels: {mn16[0]} ({len(mn16[1])}, 2016 demarcation), "
+          f"{mn11[0]} ({len(mn11[1])}, 2011) not used")
+    return mn16[1], vls[RELIGION_VAR.upper()[:8]], vls[CHRISTIAN_VAR.upper()[:8]]
 
 
-def key(label):
-    s = fold(label).lower().replace("'", "").replace("’", "")
-    return re.sub(r"\s+", " ", s).strip()
+def _canon(label, allowed):
+    """Fold a codebook label onto the published canonical one, or refuse."""
+    c = prof.CANON.get(prof.key(label))
+    if c is None or c not in allowed:
+        raise SystemExit(f"CS 2016 codebook label {label!r} folds to "
+                         f"{prof.key(label)!r}, which is not one of the published "
+                         f"categories. Stats SA has renamed a category; fix "
+                         "sources/za_profiles.py's CANON, do not widen this check.")
+    return c
 
 
-CANON = {}
-for _c in RELIGIONS + DENOMINATIONS:
-    CANON[key(_c)] = _c
-for _k, _v in VARIANTS.items():
-    CANON[_k] = _v
+def read_microdata():
+    import pandas as pd
 
+    if not os.path.exists(DTA):
+        raise SystemExit(
+            f"missing {DTA}.\nCS 2016 catalogue 611 is behind a free DataFirst account plus "
+            "a signed confidentiality declaration and cannot be fetched from a script; see "
+            "ask/answered/002-za.")
 
-def to_int(s):
-    return int(re.sub(r"[\s   ]", "", s))
+    with pd.io.stata.StataReader(DTA) as r:
+        mn_lbl, rel_lbl, chr_lbl = _label_sets(r)
 
-
-def fetch():
-    os.makedirs(RAW, exist_ok=True)
-    ctx = ssl.create_default_context()
-    # See the note on BASE. The chain, not the content, is what a plain client trips on.
-    ctx.check_hostname = False
-    ctx.verify_mode = ssl.CERT_NONE
-    for _gid, stem, name, _rep in PROVINCES:
-        dest = os.path.join(RAW, stem + ".pdf")
-        if os.path.exists(dest) and os.path.getsize(dest) > 1_000_000:
-            print(f"have {stem}.pdf ({os.path.getsize(dest):,} bytes)")
+    # Canonicalise the two answer sets up front, so a renamed category fails before a single
+    # record is read rather than after twenty minutes of aggregation.
+    rel_canon, chr_canon = {}, {}
+    for code, lab in rel_lbl.items():
+        code = int(code)
+        if code in REL_NOT_ANSWERED:
             continue
-        url = BASE + stem + ".pdf"
-        print("GET", url)
-        req = urllib.request.Request(url, headers={"User-Agent": UA})
-        body = urllib.request.urlopen(req, context=ctx, timeout=600).read()
-        # §5a: a 200 is not a download. The Imperva stub is a ~1 KB HTML body served with a
-        # 200, so the magic and the trailer are both checked ([[reference_pdf_truncated_at_source]]).
-        if not body.startswith(b"%PDF"):
-            raise SystemExit(f"{url} did not return a PDF -- {len(body):,} bytes "
-                             f"starting {body[:40]!r}")
-        if b"%%EOF" not in body[-4096:]:
-            raise SystemExit(f"{url} has no %%EOF trailer -- truncated at source, "
-                             f"{len(body):,} bytes")
-        tmp = dest + ".part"
-        with open(tmp, "wb") as fh:
-            fh.write(body)
-        os.replace(tmp, dest)
-        print(f"  {name}: {len(body):,} bytes")
-
-
-def find_table(doc, needle):
-    """Return the lines following the caption whose TITLE contains `needle`.
-
-    Skips the front matter, because the contents page carries the same caption text with a
-    dot leader and a page number after it.
-    """
-    for i, page in enumerate(doc):
-        if i < 10:
+        rel_canon[code] = _canon(lab, set(prof.RELIGIONS))
+    for code, lab in chr_lbl.items():
+        code = int(code)
+        if code in CHR_NOT_REPORTED or code == CHR_NOT_APPLICABLE:
             continue
-        lines = page.get_text().split("\n")
-        for j, line in enumerate(lines):
-            m = CAPTION.match(line.strip())
-            if not m or needle not in m.group(1).lower() or "......" in line:
-                continue
-            return i, line.strip(), lines[j + 1:]
-    return None, None, None
+        chr_canon[code] = _canon(lab, set(prof.DENOMINATIONS))
+    if sorted(rel_canon.values()) != sorted(prof.RELIGIONS):
+        raise SystemExit(f"ReligionBelief carries {sorted(rel_canon.values())}, expected the "
+                         f"{len(prof.RELIGIONS)} published categories")
+    if sorted(chr_canon.values()) != sorted(prof.DENOMINATIONS):
+        raise SystemExit(f"Christianity carries {sorted(chr_canon.values())}, expected the "
+                         f"{len(prof.DENOMINATIONS)} published denominations")
+    print(f"  {len(rel_canon)} religion categories and {len(chr_canon)} denominations fold "
+          "onto the published labels")
 
+    parts, n = [], 0
+    for chunk in pd.read_stata(DTA, columns=COLS, convert_categoricals=False,
+                               chunksize=400_000):
+        n += len(chunk)
+        chunk["w2"] = chunk["pers_pstrwgt"] ** 2
+        parts.append(chunk.groupby(
+            ["PR_CODE_2016", "DC_MDB_C_2016", "MN_CODE_2016", RELIGION_VAR, CHRISTIAN_VAR],
+            dropna=False)[["pers_pstrwgt", "w2"]].agg(["sum", "size"]))
+        print(f"    read {n:,}")
+    if n != EXPECTED_RECORDS:
+        raise SystemExit(f"{n:,} person records, expected {EXPECTED_RECORDS:,} -- this is "
+                         "not DataFirst catalogue 611's person file")
 
-def parse(lines, province, tab):
-    """Rows are label / count / percent, one per line, the label sometimes wrapping.
-
-    Terminates on a row whose label is `Total` OR the province's own name -- see the module
-    docstring; five of the nine reports use the latter.
-    """
-    ends = {"total", province.lower(), province.lower().replace("-", " ")}
-    rows, label, total = [], [], None
-    i = 0
-    while i < len(lines):
-        line = lines[i].strip()
-        if not line:
-            i += 1
-            continue
-        if line in DASH and label:
-            rows.append({"label": " ".join(" ".join(label).split()), "n": 0,
-                         "pct": 0.0, "dash": True})
-            label = []
-            if i + 1 < len(lines) and lines[i + 1].strip() in DASH:
-                i += 1
-        elif COUNT.match(line) and label:
-            name = " ".join(" ".join(label).split())
-            n = to_int(line)
-            pct = None
-            if i + 1 < len(lines) and PCT.match(lines[i + 1].strip()):
-                pct = float(lines[i + 1].strip().replace(",", "."))
-                i += 1
-            if name.lower().strip(" .:") in ends:
-                total = n
-                i += 1
-                break
-            rows.append({"label": name, "n": n, "pct": pct, "dash": False})
-            label = []
-        elif not COUNT.match(line):
-            if line.lower().strip(" .:") in HEADER[tab]:
-                i += 1
-                continue
-            label.append(line)
-        i += 1
-    return rows, total
-
-
-def read_province(stem, name, report):
-    import fitz
-
-    path = os.path.join(RAW, stem + ".pdf")
-    if not os.path.exists(path):
-        raise SystemExit(f"missing {path} -- run with --fetch first")
-    doc = fitz.open(path)
-    # PyMuPDF reports page_count=0 on a file damaged at source rather than raising
-    # ([[reference_pdf_truncated_at_source]]).
-    if doc.page_count == 0:
-        raise SystemExit(f"{path}: PyMuPDF reports zero pages -- damaged download")
-
-    # Every page carries the running header `Provincial profile: <name> [Community Survey
-    # 2016], Report <nnn>`, so the province AND its report number are both checkable
-    # against the file actually opened. Eastern Cape's bibliography cites 03-01-63 as well,
-    # so the test is that the expected number is the one in the running header -- i.e. the
-    # most frequent -- rather than merely present somewhere.
-    seen = {}
-    for i in range(min(40, doc.page_count)):
-        for m in re.findall(r"0\d-\d\d-\d\d", doc[i].get_text()):
-            seen[m] = seen.get(m, 0) + 1
-    if not seen:
-        raise SystemExit(f"{path}: no report number anywhere in the first 40 pages")
-    top = max(seen, key=lambda k: seen[k])
-    if top != report:
-        raise SystemExit(f"{path}: running header says report {top}, PROVINCES says "
-                         f"{report} -- the wrong province's PDF is at this filename, or "
-                         "Stats SA has renumbered")
-    head = "".join(doc[i].get_text() for i in range(min(5, doc.page_count)))
-    if name.lower() not in head.lower():
-        raise SystemExit(f"{path}: {name!r} does not appear in the first five pages")
-
-    out = {}
-    for tab, needle, expect in (("a", "religious affiliation", RELIGIONS),
-                                ("b", "christian denomination", DENOMINATIONS)):
-        pg, cap, lines = find_table(doc, needle)
-        if lines is None:
-            raise SystemExit(f"{name}: no table captioned {needle!r} -- the report's table "
-                             "numbering or wording has changed")
-        rows, total = parse(lines, name, tab)
-        if total is None:
-            raise SystemExit(f"{name} 2.10{tab}: no total row found (looked for 'Total' "
-                             f"and {name!r})")
-        got = {}
-        for r in rows:
-            k = key(r["label"])
-            canon = CANON.get(k)
-            if canon is None:
-                raise SystemExit(f"{name} 2.10{tab}: unrecognised category "
-                                 f"{r['label']!r} (folded to {k!r})")
-            if canon in got:
-                raise SystemExit(f"{name} 2.10{tab}: {canon!r} appears twice")
-            got[canon] = r
-        missing = [c for c in expect if c not in got]
-        extra = [c for c in got if c not in expect]
-        if missing or extra:
-            raise SystemExit(f"{name} 2.10{tab}: missing={missing} extra={extra}")
-        out[tab] = {"page": pg, "caption": cap, "rows": got, "total": total}
-    doc.close()
-    return out
+    agg = pd.concat(parts).groupby(level=[0, 1, 2, 3, 4]).sum().reset_index()
+    agg.columns = ["pr", "dc", "mn", "rel", "chr", "w", "n", "w2", "_n2"]
+    agg = agg[["pr", "dc", "mn", "rel", "chr", "w", "w2", "n"]]
+    return agg, mn_lbl, rel_canon, chr_canon
 
 
 def main():
-    if "--fetch" in sys.argv:
-        fetch()
+    import numpy as np
+    import pandas as pd
 
-    print("South Africa - Community Survey 2016 provincial profiles, Stats SA")
-    print(f"  {len(PROVINCES)} reports from {RAW}\n")
+    print("South Africa - Community Survey 2016 person microdata, DataFirst catalogue 611")
+    print(f"  {DTA} ({os.path.getsize(DTA):,} bytes)\n")
 
-    data, notes = {}, {}
-    for gid, stem, name, rep in PROVINCES:
-        rec = read_province(stem, name, rep)
-        data[gid] = rec
-        notes[gid] = rep
-        a, b = rec["a"], rec["b"]
-        sa = sum(r["n"] for r in a["rows"].values())
-        sb = sum(r["n"] for r in b["rows"].values())
-        chr_ = a["rows"]["Christianity"]["n"]
-        resid = chr_ - sb
-        print(f"  {gid} {name:15s} {rep}  2.10a p{a['page']:<3d} {sa:>10,}  "
-              f"2.10b p{b['page']:<3d} {sb:>10,}  residual {resid:>9,} "
-              f"({100.0 * resid / chr_:5.2f}% of Christians)")
-        # The published totals are weighted and rounded; a row sum can be one or two people
-        # off its own printed total and that is the report, not the parse.
-        if abs(sa - a["total"]) > 2:
-            raise SystemExit(f"{name} 2.10a: rows sum to {sa:,}, printed total "
-                             f"{a['total']:,}")
-        if resid < 0:
-            raise SystemExit(f"{name}: table 2.10b holds MORE people ({sb:,}) than table "
-                             f"2.10a's Christianity cell ({chr_:,}) -- the two tables are "
-                             "not about the same universe and nothing here is safe")
+    agg, mn_lbl, rel_canon, chr_canon = read_microdata()
+    agg["prov"] = agg["pr"].map(PROVINCE_CODES)
+    if agg["prov"].isna().any():
+        raise SystemExit(f"unknown province codes {sorted(set(agg.loc[agg['prov'].isna(), 'pr']))}")
+    agg["mdb"] = agg["mn"].map(lambda k: mn_lbl[k].split(":")[0].strip())
+    agg["mname"] = agg["mn"].map(lambda k: mn_lbl[k].split(":", 1)[1].strip())
+    RAW_LABEL.update(dict(zip(agg["mdb"], agg["mname"])))
+    missing = sorted(set(NAME_OVERRIDE) - set(RAW_LABEL))
+    if missing:
+        raise SystemExit(f"NAME_OVERRIDE names municipalities that are not in the file: "
+                         f"{missing} -- the demarcation or the codes have changed")
+    agg["mname"] = [NAME_OVERRIDE.get(c, nm) for c, nm in zip(agg["mdb"], agg["mname"])]
 
-    # ---- the one province whose own table does not add up (§ docstring) ----
-    nw = data["ZA06"]
-    nw_rows = sum(r["n"] for r in nw["b"]["rows"].values())
-    if nw_rows >= nw["b"]["total"] - 2:
-        raise SystemExit("North West's table 2.10b now reconciles. That is good news and "
-                         "it means Stats SA has reissued Report 03-01-11, so re-read the "
-                         "module docstring before trusting the residual treatment.")
-    print(f"\n  KNOWN DEFECT, Report 03-01-11 (North West): table 2.10b's fourteen rows sum "
-          f"to\n    {nw_rows:,} against its own printed total of {nw['b']['total']:,}; its "
-          f"printed percentages sum to\n    "
-          f"{sum(r['pct'] or 0 for r in nw['b']['rows'].values()):.1f}, not 100.0. The "
-          f"{nw['b']['total'] - nw_rows:,} unaccounted people go to "
-          f"'{NOT_REPORTED}'\n    with everybody else's, rather than being assigned to a "
-          "denomination on a guess.")
+    total = float(agg["w"].sum())
+    print(f"\n  {int(agg['n'].sum()):,} records, {total:,.0f} weighted people, "
+          f"{agg['mdb'].nunique()} municipalities")
+    if agg["mdb"].nunique() != EXPECTED_UNITS:
+        raise SystemExit(f"{agg['mdb'].nunique()} municipalities, expected {EXPECTED_UNITS}")
+    if abs(total - EXPECTED_POP) > 2:
+        raise SystemExit(f"weighted total {total:,.0f}, expected CS 2016's published "
+                         f"{EXPECTED_POP:,} (Report 03-01-07 table 2.1)")
+
+    # A municipality must sit in exactly one province, or the geography is not nested and the
+    # reconciliation below is comparing sums of different things.
+    span = agg.groupby("mdb")[["prov", "dc"]].nunique()
+    bad_span = span[(span["prov"] > 1) | (span["dc"] > 1)]
+    if len(bad_span):
+        raise SystemExit("municipalities in more than one province or district: "
+                         f"{list(bad_span.index)}")
+    district = dict(zip(agg["mdb"], agg["dc"]))
+
+    # `Christianity` is asked only of Christians. Code 88 is `Not applicable` and must be
+    # exactly the non-Christian population; emitting it would double-count 12.2M people.
+    na = float(agg.loc[agg["chr"] == CHR_NOT_APPLICABLE, "w"].sum())
+    non_christian = total - float(agg.loc[agg["rel"] == 1, "w"].sum())
+    if abs(na - non_christian) > 2:
+        raise SystemExit(f"Christianity=`Not applicable` is {na:,.0f} people but "
+                         f"{non_christian:,.0f} are not Christian. The denomination question "
+                         "is no longer nested inside the religion question and nothing here "
+                         "is safe.")
+    stray = agg[(agg["rel"] != 1) & (agg["chr"] != CHR_NOT_APPLICABLE)]
+    if len(stray):
+        raise SystemExit(f"{len(stray)} cells give a denomination to a non-Christian")
+    print(f"  Christianity=Not applicable is {na:,.0f}, the non-Christian population exactly")
+
+    # ---- long form: (municipality, category) -> weight ----
+    def _slice(mask, cat):
+        sel = agg[mask].groupby(["mdb", "mname", "prov"])[["w", "n"]].sum().reset_index()
+        sel["cat"] = cat
+        return sel
+
+    rows = []
+    for code, canon in rel_canon.items():
+        if canon == "Christianity":
+            continue                      # replaced by the fourteen denominations
+        rows.append(_slice(agg["rel"] == code, f"Religion: {canon}"))
+    for code, lab in REL_NOT_ANSWERED.items():
+        rows.append(_slice(agg["rel"] == code, f"Religion: {lab}"))
+    for code, canon in chr_canon.items():
+        rows.append(_slice(agg["chr"] == code, f"Christian: {canon}"))
+    rows.append(_slice(agg["chr"].isin(CHR_NOT_REPORTED), f"Christian: {NOT_REPORTED}"))
+
+    long = pd.concat(rows, ignore_index=True)
+    long = long.groupby(["mdb", "mname", "prov", "cat"], as_index=False)[["w", "n"]].sum()
+
+    # ---- THE RECONCILIATION: every published province cell, from the PDFs ----
+    print("\n  reconciling against the nine published provincial profiles "
+          "(sources/za_profiles.py):")
+    pub = prof.read_all(verbose=False)
+    byprov = long.groupby(["prov", "cat"])["w"].sum()
+    bad, worst = [], 0.0
+    for pname, rec in pub.items():
+        for canon, n in rec["a"].items():
+            if canon == "Christianity":
+                continue
+            got = byprov.get((pname, f"Religion: {canon}"), 0.0)
+            d = got - n
+            worst = max(worst, abs(d))
+            if abs(d) > TOLERANCE:
+                bad.append((pname, f"Religion: {canon}", n, got))
+        for canon, n in rec["b"].items():
+            got = byprov.get((pname, f"Christian: {canon}"), 0.0)
+            d = got - n
+            if (pname, f"Christian: {canon}") == NW_OTHER_DEFECT[:2]:
+                if round(d) != NW_OTHER_DEFECT[2]:
+                    raise SystemExit(
+                        f"North West's `Christian: Other` is {got:,.0f} in the microdata "
+                        f"against {n:,} printed, a difference of {d:,.0f}. The build expects "
+                        f"exactly {NW_OTHER_DEFECT[2]:,}, which is Report 03-01-11's own "
+                        "shortfall. Either Stats SA has reissued the report or the "
+                        "microdata has been revised; read sources/za.md §4.1.")
+                continue
+            worst = max(worst, abs(d))
+            if abs(d) > TOLERANCE:
+                bad.append((pname, f"Christian: {canon}", n, got))
+    if bad:
+        for pname, cat, n, got in bad[:25]:
+            print(f"    {pname:15s} {cat:56s} published {n:>10,}  microdata {got:>12,.1f}")
+        raise SystemExit(f"{len(bad)} published province cells do not reproduce from the "
+                         "microdata. The build is comparing two different universes; do not "
+                         "widen TOLERANCE to make this pass.")
+    print(f"    216 province x category cells, 215 agree to within {worst:.1f} "
+          f"people; the 216th is")
+    print(f"    North West's `Christian: Other`, {NW_OTHER_DEFECT[2]:,} higher than Report "
+          "03-01-11 prints,")
+    print("    which is that report's own shortfall to the person -- the row was mis-set, "
+          "and\n    the 336,482 are drawn as Christians of another denomination rather than "
+          "as a residual.")
+
+    # ---- rounding ----
+    long["count"] = np.rint(long["w"]).astype(np.int64)
+    drift = (long.groupby(["prov", "cat"])["count"].sum()
+             - long.groupby(["prov", "cat"])["w"].sum()).abs().max()
+    if drift > MAX_ROUNDING_DRIFT:
+        raise SystemExit(f"rounding the municipal cells moves a province total by {drift:.0f} "
+                         f"people, over the measured {MAX_ROUNDING_DRIFT}")
+    print(f"\n  rounding 213 x {long['cat'].nunique()} cells moves the worst province total "
+          f"by {drift:.1f} people")
+
+    # ---- per-municipality sample sizes, for the note column and for sources/za.md ----
+    per = agg.groupby("mdb").agg(w=("w", "sum"), w2=("w2", "sum"), n=("n", "sum"))
+    per["neff"] = per["w"] ** 2 / per["w2"]
+    print(f"  unweighted records per municipality: min {int(per['n'].min()):,} "
+          f"median {int(per['n'].median()):,} max {int(per['n'].max()):,}")
+    print(f"  Kish effective n per municipality:   min {per['neff'].min():,.0f} "
+          f"median {per['neff'].median():,.0f} max {per['neff'].max():,.0f}")
+    print(f"  people per municipality:             min {per['w'].min():,.0f} "
+          f"median {per['w'].median():,.0f} max {per['w'].max():,.0f} "
+          f"mean {per['w'].mean():,.0f}")
+
+    # ---- how thin does it get, and where does that matter ----
+    # THE COST OF DRAWING A SURVEY AT A FINE TIER, stated rather than assumed. The units are
+    # sound (§1.2.2: every EA is in the sample), but a small category in a small municipality
+    # can rest on a handful of records, and a share computed from four households carries a
+    # weight of several thousand people. This is the number to look at before quoting any
+    # municipal superlative, which is why `cell_n` goes into the file.
+    drawn_cells = long[~long["cat"].isin(
+        [f"Religion: {v}" for v in REL_NOT_ANSWERED.values()])]
+    nz = drawn_cells[drawn_cells["w"] > 0]
+    thin = nz[nz["n"] < 10]
+    print(f"\n  {len(nz):,} non-empty (municipality, category) cells; "
+          f"{len(thin):,} rest on fewer than 10 records "
+          f"({100.0 * thin['w'].sum() / nz['w'].sum():.3f}% of the people drawn)")
+    heavy = nz.sort_values("w", ascending=False)
+    heavy = heavy[heavy["n"] <= 5].head(5)
+    if len(heavy):
+        print("  the heaviest cells resting on five records or fewer, which is where a "
+              "municipal\n    share can be an artefact of one household's weight:")
+        for r in heavy.itertuples(index=False):
+            print(f"    {r.mname:26s} {r.cat:46s} {r.w:>9,.0f} people from "
+                  f"{int(r.n)} record(s)")
 
     # ---- write ----
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
-    rows_out = []
-    for gid, stem, name, rep in PROVINCES:
-        rec = data[gid]
-        for canon in RELIGIONS:
-            if canon == "Christianity":
-                continue                       # replaced by the fourteen denominations
-            r = rec["a"]["rows"][canon]
-            rows_out.append((gid, "province", name, f"Religion: {canon}", r["n"],
-                             f"level=province; Report {rep} table 2.10a"
-                             + ("; printed as a dash, read as zero" if r["dash"] else "")))
-        for canon in DENOMINATIONS:
-            r = rec["b"]["rows"][canon]
-            src = fold(r["label"])
-            exemplar = ""
-            m = re.search(r"\((?:e\.?g\.?|eg)[^)]*\)?", r["label"], flags=re.I)
-            if m:
-                exemplar = "; " + " ".join(m.group(0).split())
-            rows_out.append((gid, "province", name, f"Christian: {canon}", r["n"],
-                             f"level=province; Report {rep} table 2.10b{exemplar}"))
-        chr_ = rec["a"]["rows"]["Christianity"]["n"]
-        short = rec["b"]["total"] - sum(r["n"] for r in rec["b"]["rows"].values())
-        resid = chr_ - sum(r["n"] for r in rec["b"]["rows"].values())
-        note = (f"level=province; Report {rep} table 2.10a Christianity less table "
-                "2.10b's rows")
-        # North West's residual is mostly a defect in its own report, and the REVIEW dict
-        # is not on the map. Say so in the row itself, or this province reads as a finding.
-        if short > 2:
-            note += (f"; {short:,} of this is Report {rep}'s own shortfall, its 14 rows "
-                     "summing to 90.1% of its printed total, see taxonomy/za2016.py")
-        rows_out.append((gid, "province", name, f"Christian: {NOT_REPORTED}", resid, note))
+    exemplars = {}
+    for rec in pub.values():
+        for canon, label in rec["exemplars"].items():
+            import re as _re
+            m = _re.search(r"\((?:e\.?g\.?|eg)[^)]*\)?", label, flags=_re.I)
+            if m and canon not in exemplars:
+                exemplars[canon] = "; " + " ".join(m.group(0).split())
 
+    long = long.sort_values(["mdb", "cat"])
     with open(OUT, "w", encoding="utf-8", newline="") as fh:
         w = csv.writer(fh)
         w.writerow(["geo_id", "geo_level", "geo_name", "source_category", "count",
                     "basis", "year", "source_id", "note"])
-        for gid, lvl, name, cat, n, note in rows_out:
-            w.writerow([gid, lvl, name, cat, n, BASIS, YEAR, SOURCE_ID, note])
+        for r in long.itertuples(index=False):
+            canon = r.cat.split(": ", 1)[1]
+            # `cell_n` is the number of unweighted CS 2016 person records behind THIS cell,
+            # and it is in the file because this is a survey drawn at a fine tier. A share
+            # computed from a municipality with 691 records is a real measurement and a wide
+            # one, and nothing else in data/normalized/za.csv would let a reader tell a
+            # 40-record cell from a 40,000-record one. `unit_n` is the whole municipality's.
+            note = (f"level=municipality; province={r.prov}; district={district[r.mdb]}; "
+                    f"CS 2016 person microdata (DataFirst 611), "
+                    f"unit_n={int(per.loc[r.mdb, 'n']):,} records, cell_n={int(r.n):,}"
+                    + exemplars.get(canon, ""))
+            if r.mdb in NAME_OVERRIDE:
+                note += (f"; Stats SA's own label for this municipality is "
+                         f"'{RAW_LABEL[r.mdb]}', see sources/za.py NAME_OVERRIDE")
+            w.writerow([r.mdb, "municipality", r.mname, r.cat, r.count, BASIS, YEAR,
+                        SOURCE_ID, note])
 
-    total = sum(r[4] for r in rows_out)
-    cats = sorted({r[3] for r in rows_out})
+    drawn = long.loc[~long["cat"].isin(
+        [f"Religion: {v}" for v in REL_NOT_ANSWERED.values()]), "count"].sum()
+    gap = long.loc[long["cat"].isin(
+        [f"Religion: {v}" for v in REL_NOT_ANSWERED.values()]), "count"].sum()
     print(f"\nwrote {OUT}")
-    print(f"  {len(rows_out)} rows, {len(PROVINCES)} provinces, {len(cats)} categories, "
-          f"{total:,} people")
-    if len(cats) != len(RELIGIONS) - 1 + len(DENOMINATIONS) + 1:
-        raise SystemExit(f"expected {len(RELIGIONS) - 1 + len(DENOMINATIONS) + 1} "
-                         f"categories, got {len(cats)}")
+    print(f"  {len(long):,} rows, {long['mdb'].nunique()} municipalities, "
+          f"{long['cat'].nunique()} categories")
+    print(f"  {drawn:,} people drawn, {gap:,} not ({100.0 * gap / (drawn + gap):.3f}%, "
+          "the two rows taxonomy/za2016.py excludes)")
 
-    # ---- what the country looks like, for the record ----
-    nat = {}
-    for _g, _l, _n, cat, n, _note in rows_out:
-        nat[cat] = nat.get(cat, 0) + n
-    print(f"\n  national, {total:,} people who gave an answer:")
-    for cat in sorted(nat, key=lambda c: -nat[c]):
-        print(f"    {cat:52s} {nat[cat]:>11,}  {100.0 * nat[cat] / total:5.2f}%")
+    nat = long.groupby("cat")["count"].sum().sort_values(ascending=False)
+    print(f"\n  national, {drawn:,} answers:")
+    for cat, n in nat.items():
+        if cat.split(": ", 1)[1] in REL_NOT_ANSWERED.values():
+            print(f"    {cat:56s} {n:>11,}  {100.0 * n / (drawn + gap):5.2f}% of the "
+                  "survey population, NOT DRAWN")
+        else:
+            print(f"    {cat:56s} {n:>11,}  {100.0 * n / drawn:5.2f}%")
 
 
 if __name__ == "__main__":

@@ -78,9 +78,12 @@ import warnings
 import zipfile
 
 os.environ.setdefault("OMP_NUM_THREADS", "6")
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import numpy as np
 import pandas as pd
+
+import spearman_null
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
@@ -773,9 +776,23 @@ def stability(df, nat, n_units, unit_col="geo_id", cat_col="category", override=
     Spec §14.16's test. Each category is ranked across the units in the earlier half of the
     waves and again in the later half, and the two orderings are compared. A category whose
     ranking does not replicate has not demonstrated that it HAS a geography, whatever its
-    pooled spread looks like. The bar is 1.96/sqrt(n-1), which is what a Spearman correlation
-    over `n` units needs to be distinguishable from zero at 95%; it is never moved to make
-    something pass, because moving it would silently change every other category too.
+    pooled spread looks like.
+
+    ## THE BAR IS THE EXACT NULL — `sources/spearman_null.py` — AND IT USED TO BE AN SE
+
+    The smallest attainable rho whose one-sided exact p-value under the permutation null is at
+    most 0.05, enumerated at ten units or fewer and sampled above. **This module previously
+    copied `1.96/sqrt(n-1)` out of `sources/lapop.py`, and that is a standard deviation rather
+    than a 95th percentile.** On Jordan's twelve governorates it was a 0.023-level test and on
+    Egypt's twenty-three units a 0.024-level one — stricter than it claimed everywhere.
+    Corrected 2026-09-09 on Anita's ruling in `ask/answered/007-cr`, which was filed against
+    lapop and to which Jordan's build appended the evidence that this module had inherited the
+    same line. **Neither country moved**: Egypt's two answers come in at +0.495 against a bar
+    that fell from +0.4179 to +0.3528, Jordan's at +0.617 against one that fell from +0.5910 to
+    +0.5035, and both passed before and after. The level is 0.05 and did not change.
+
+    It is still never moved to make something pass; correcting the arithmetic that implements a
+    level is a different act from choosing a different level, and the second one is Anita's.
 
     **HARMONISE THE UNITS BEFORE CALLING THIS.** §11af ran it on Egypt's raw `Q1` labels and
     got +0.416 against a +0.566 bar, a clear failure — because only 13 of 27 units appeared in
@@ -787,12 +804,14 @@ def stability(df, nat, n_units, unit_col="geo_id", cat_col="category", override=
     `sources/lapop.py`'s docstring for when it is even available.
     """
     override = override or {}
-    bar = 1.96 / np.sqrt(n_units - 1)
+    bar, how = spearman_null.critical_rho(n_units)
     waves = sorted(df["wave_no"].unique())
     cut = waves[len(waves) // 2]
     early, late = df[df["wave_no"] < cut], df[df["wave_no"] >= cut]
-    print(f"\n  split-half stability across waves (§14.16), bar = +{bar:.3f} at 95% on "
-          f"{n_units} units:")
+    print(f"\n  split-half stability across waves (§14.16), bar = +{bar:.4f} at 95% on "
+          f"{n_units} units ({how}; the old 1.96/sqrt(n-1) was "
+          f"+{1.96 / np.sqrt(n_units - 1):.4f}, a "
+          f"{spearman_null.exact_p(1.96 / np.sqrt(n_units - 1), n_units):.3f}-level test):")
     print(f"    waves {sorted(set(early['wave']))} n={len(early):,}   "
           f"waves {sorted(set(late['wave']))} n={len(late):,}")
     print(f"    {'answer':<28}{'national':>10}{'spearman':>10}{'pearson':>9}  verdict")
@@ -827,13 +846,21 @@ def stability(df, nat, n_units, unit_col="geo_id", cat_col="category", override=
         if passed or forced:
             carries.append(c)
         shown = f"{sp:+10.3f}{pe:+9.3f}" if np.isfinite(sp) else f"{'undefined':>10}{'':>9}"
+        p = spearman_null.exact_p(sp, n_units)
         if passed:
-            verdict = f"own geography  ({len(j)} units in both halves)"
+            verdict = f"own geography  ({len(j)} units in both halves, p={p:.3f})"
         elif forced:
             verdict = "own geography — UNDER THE BAR, drawn on Anita's call"
         else:
-            verdict = "NOT distinguishable from zero"
+            verdict = ("NOT distinguishable from zero"
+                       + (f" (p={p:.3f})" if np.isfinite(sp) else ""))
         print(f"    {str(c)[:26]:<28}{nat[c] * 100:9.2f}%{shown}  {verdict}")
+        # The exact null has no ties; average-ranked shares need the conditional one. Egypt
+        # ties five units and Jordan two, both were run against the conditional null on
+        # 2026-09-09, and neither verdict changed. See `spearman_null`'s ## TIES.
+        tied = spearman_null.ties_note(j["e"], j["l"])
+        if tied:
+            print(f"       {tied}")
         if forced and not passed:
             print(f"        reason: {override[c]}")
     stale = sorted(set(override) - set(nat.index))

@@ -154,3 +154,19 @@ eleven units. So on this country the leverage question and the bar question are 
 only the first one changed anything. If it helps in ruling: **a correction to the bar makes
 some passes safer without making the leveraged ones any safer**, which argues for treating it
 as a correction to an arithmetic claim rather than as a loosening.
+
+---
+
+## Ruled 2026-09-09 by Anita
+
+**Make it a real 95% test.** Replace the asymptotic `1.96/sqrt(n-1)` with the exact null of the
+Spearman statistic, enumerated where that is feasible and sampled above.
+
+So the two categories the ask identifies change from failing to passing and are drawn on their
+own unit shares: `cr` `Catolico` and `sv` `Protestante Tradicional`. Nothing else in the module
+moves, per the check run across all five countries and re-verified twice.
+
+The conservatism argument in the ask (a false pass is worse than a false fail) was considered and
+not taken: the docstring makes an arithmetic claim about what the bar is, and the fix is to make
+the claim true rather than to keep an accidental strictness that nobody chose. Where the project
+wants a stricter-than-95% test it should say so and pick the level deliberately.

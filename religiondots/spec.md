@@ -5287,8 +5287,23 @@ which of these it is:
    Egyptians, all with the religion variable, the geography variable and a weight. Nothing
    downstream disagrees, because a missing wave is a smaller pool and not a wrong one.
    **The rule: where "no rows" is a meaningful outcome rather than an error, count the outcomes
-   and assert the count.** `expect_waves=` does exactly that and cost nothing; the same shape is
-   any *"skip the years/regions/files this source does not have"* loop.
+   and assert the count.** The same shape is any *"skip the years/regions/files this source does
+   not have"* loop.
+   **AND THE COUNT HAS TO BE TAKEN BEFORE THE FILTER, WHICH IS WHERE THE FIRST ATTEMPT AT THIS
+   WENT WRONG** (§9cq, `sources/jo.md` §10). `expect_waves=` was written as exactly that guard
+   and was recorded here as costing nothing. It also could not fail: it counted the waves in the
+   frame it had **already filtered to the waves the module asked for**, so it compared the
+   selection against itself. It could catch a wave vanishing from a list it was reading anyway,
+   and never a wave sitting in the file that the pool did not ask for — which is the wave II
+   failure itself, and the re-release its own docstring promised to catch. Repaired 2026-09-09 by
+   reading the files a second time, cheaply and independently, before any filter runs, and by
+   requiring a pool narrower than the files to name what it leaves out and why.
+   **The general form: a check is only as good as the widest thing it reads, and if the check
+   and the thing checked come from the same filtered object it is a tautology however carefully
+   it is worded.** A tautology where a guard should be is worse than no guard, because it is
+   read as coverage by everyone downstream — this project has now written three of them.
+   **So construct the failure the guard exists for and watch it fire.** If it cannot be made to
+   fire, that is the finding, and it takes about ten minutes.
    **THE SECOND HALF OF IT IS THAT A GUARD BUILT ON A NORMALISER IS BLIND WHERE THE NORMALISER IS
    NARROW.** That survey already had an assertion against one answer arriving under two spellings,
    and it works by folding both and comparing — so it can only see collisions its fold can
@@ -10214,6 +10229,32 @@ day and built its own null; read the two together. **The general point is that a
 standard error is not a critical value, and at the unit counts this project works at the
 difference is a whole category.**
 
+**RULED AND IMPLEMENTED 2026-09-09 — §9ct, and two further things fell out of doing it.**
+Anita's call was to make it a real 95% test rather than keep an accidental strictness nobody
+chose, so `sources/spearman_null.py` now supplies the bar to `lapop.stability` and
+`arabbarometer.stability`. Exactly the two predicted categories moved and five of the seven
+normalized CSVs are byte-identical. The two additions:
+
+* **Snap a discrete critical value to the lattice.** `np.quantile(null, 0.95)` interpolates
+  between values the statistic cannot take, and the number it returns can have a tail over
+  0.05 — at seven units it gives +0.6786, whose own tail is 0.0548, so the "fix" would itself
+  have been a 5.5% test. `d2` is always even; take the largest ATTAINABLE `d2` with
+  `P(d2 <= D) <= alpha`. At six units this is the difference between +0.7714 (tail 0.0514) and
+  +0.8286 (tail 0.0167), because 720 orderings is not many.
+* **The bar's own guard has to be able to fail, and this one did, twice, on its first run.** It
+  caught the missing snap, and it caught the sampled bar depending on the seed at two million
+  draws. The constructed rejection is `n = 3`: six orderings, a perfect one at p = 1/6, so the
+  bar must come back unattainable and reject `rho = +1.000`.
+* **And pre-registering a rule means recording its amendments, not just its first draft.** Both
+  of the above were changes to a rule written down before any number was computed, and both are
+  in `spearman_null.py`'s own docstring with what changed and why no verdict moved. A
+  pre-registration that only ever gets quoted when it was right is a press release.
+
+**Four modules still carry the old bar deliberately** — `afrobarometer.py` live, and
+`do.py`, `ht.py` and `uy.py` as constants — because their countries were not re-measured and
+moving a bar under a drawn country is §3's territory. Haiti's entry above is the one to watch:
+its largest category sits 0.003 from the bar it was judged on.
+
 **ASK WHAT THE OFFICE PUBLISHED THREE CENSUSES AGO, NOT ONLY WHAT IT PUBLISHES NOW — added
 2026-09-09 with Uganda (§9cr).** §11b closed Uganda on the 2024 census, correctly, and a
 whole further pass over 2024 confirmed it: the Final Report, the parish-level query API, the
@@ -10259,8 +10300,85 @@ split, so the factor would invent seven counts. `note_public` carries both natio
 instead. **No drawn country on this map has ever had a published census figure altered**, and
 that is worth keeping true.
 
+**BUT THE PROOF ONLY REACHES THE UNITS THE REDISTRIBUTION TABLE COVERS — added by the ug
+review, 2026-09-09.** A3 is on the 112 districts of 2014 and the concordance is on the 135 of
+2020, so the 23 districts created between those two vintages contribute nothing to either
+grouped column and the equality is silent about where they went. Brute force gives the exact
+figure: of 7,425 single-district misassignments, 6,160 break the 1991 proof and **1,265 slip
+past it**, which is 23 x 55 and not one more; those 23 are 12.1% of Uganda's land area. All 23
+turned out to be right, on three grounds that are not the population test — each is assigned to
+its historically correct parent, each borders a *proved* district inside its own group, and all
+56 dissolved polygons are single connected pieces with no second fragment over 5 km2. **The
+general rule: a concordance proved on a redistributed census is proved only for the vintage
+that census was redistributed onto, and the unproved share is the gap between that table's
+vintage and the boundary file's. Report it as a fraction of area, and settle it on contiguity
+and on parentage instead.** The gap grows with every split: Uganda's next COD-AB edition is 146.
+
 **AN INCOMPLETE TLS CHAIN READS AS A DEAD HOST.** `www.ubos.org` fails `curl` with **exit 60**
 on every URL and returns nothing; it is not down, it is serving an incomplete certificate
 chain and is slow. `curl -k` and `requests(verify=False)` both work. Add it to
 [[reference_dead_stats_office]]'s list of things a `000` can mean, beside the bot wall, the
 SPA and the sold domain.
+
+**KEEP THE OLD SOURCE WIRED AS AN ASSERTION WHEN A FINER ONE ARRIVES — added by the za rebuild,
+2026-09-09.** South Africa was built from nine published Community Survey 2016 provincial
+profiles and then rebuilt from the person microdata underneath them at 213 municipalities. The
+old parser was not deleted: it became `sources/za_profiles.py`, and the new reader refuses to
+write `data/normalized/za.csv` unless every published province cell reproduces from the
+microdata. **215 of 216 agree to within half a person, and the 216th is the whole payoff.**
+North West's Report 03-01-11 prints an `Other` denomination cell of 21 873 — character for
+character the `Do not know` figure in that table's own footnote — and its fourteen rows fall
+336,482 short of its own total; the microdata puts that cell at **358,355, which is 21,873 +
+336,482 exactly**, so the row was mis-set and the province build's alternative story (an
+excluded `Not applicable` universe, which missed by 18,453) is wrong. 336,482 people move off
+bare `christianity` onto `christianity.other`. **The rule: a residual you refused to guess at is
+not a dead end, it is a claim the next source can settle — and the cheapest way to be ready for
+that is to keep the old build as a check rather than as history.** It costs nothing, because the
+parser already exists.
+
+**STATA TRUNCATES VALUE-LABEL SET NAMES TO EIGHT CHARACTERS AND THEY STOP NAMING THEIR
+VARIABLES — same rebuild.** The CS 2016 person file carries label sets `MN_CODE` (234 labels)
+and `MN_COD_A` (213) for variables `MN_CODE_2011` and `MN_CODE_2016`, and **nothing in the
+names says which belongs to which.** Take the wrong one and 213 codes still resolve, to
+different municipalities, and every national and provincial total still reconciles, because the
+codes are a subset either way — a silent country-wide transposition with no symptom. Pick by
+size where the sizes differ, then **confirm on the label text**, which here differs by one
+space (`WC011 : Matzikama` against `WC011: Matzikama`), and refuse to build if the two ever
+become indistinguishable. Family resemblance to [[reference_stata_cjk_labels]]: a .dta's
+metadata misleads quietly rather than raising.
+
+**PUT THE CELL'S OWN SAMPLE SIZE IN THE NORMALISED FILE WHEN A SURVEY IS DRAWN AT A FINE TIER —
+same rebuild.** Every row of `data/normalized/za.csv` carries `cell_n` (unweighted records
+behind that cell) and `unit_n` (behind that municipality). Nothing else in a normalised file
+distinguishes a share resting on 40 records from one resting on 40,000, and every municipal
+superlative anyone quotes afterwards — in a REVIEW entry, in `note_public`, in a review — needs
+that number to be checkable without opening a 498 MB microdata file. It also answers the
+question the tier itself raises: 882 of South Africa's 4,472 non-empty cells rest on fewer than
+ten records and they hold **0.107%** of the people, so the weight artefact was worth checking
+for and is not there.
+
+**AND STATE A SURVEY'S ADEQUACY IN THE DESIGN'S OWN WORDS — same rebuild.** CS 2016's Report
+03-01-07 §1.2.2: *"all in-scope EAs were included in the sample and a sample of dwelling units
+was taken within each EA (i.e. there was no subsampling of EAs)."* Every enumeration area in the
+country is in the sample, so no municipality is represented by a neighbour's households and
+there is no cluster-selection stage to argue about. One sentence out of a PDF already on disk
+beats any post-hoc adequacy argument, and it is what §3.9's fine-tier question actually wants
+answered.
+
+**A FINE TIER EXPOSES FIELDWORK, AND THE ANSWER IS TO NAME IT AND DRAW IT — same rebuild.**
+uPhongolo, a rural KwaZulu-Natal municipality, returns 4.76% atheists against 0.096% nationally
+and holds **12.6% of every atheist counted in South Africa**; Swellendam returns 57.34% of its
+answers as `Just a Christian` against its province's 7.06%. Neither is one household's weight
+(384 and 965 records), and in both the categories adjacent on the CAPI answer list fall short by
+about as much as those rise, which is what one enumeration team's habit looks like. §14.4 rule 1
+forbids inventing the magnitude and §3.5 says mark rather than fill, so both are drawn as
+returned and named in `note_public`. **The province tabulation hid both**, which is the same
+averaging that hides real places — so this is a cost of the coarse tier, not of the fine one.
+
+**AND §3.5's LEAN IS A CHECK THAT NEEDS POWER LIKE ANY OTHER — same rebuild, and it is the
+cleanest demonstration available because both tiers exist.** South Africa's non-response lean
+was r = +0.72 with the no-religion share over 9 provinces, permutation p = 0.028. Over the same
+country's 213 municipalities it is **r = +0.3063, p = 0.00005, leave-one-out +0.2649 to
++0.3273**. Half the correlation and three orders of magnitude more evidence, from the same
+people. A large r on nine units is mostly noise ([[reference_check_needs_power]]); read the
+direction, not the magnitude, and re-run it if a finer tier ever arrives.
