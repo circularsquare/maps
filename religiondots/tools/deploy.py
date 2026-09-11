@@ -76,6 +76,15 @@ REPO_FILES = ["index.html", "taxonomy/religions.json"]
 RCLONE = ["rclone", "--s3-no-check-bucket", "--checksum", "--progress"]
 GZ_HEADER = ["--header-upload", "Content-Encoding: gzip"]
 
+# *** CLOUDFLARE 403s `Python-urllib/3.x`, AND THAT LOOKS EXACTLY LIKE A FAILED UPLOAD. ***
+# The first gzip deploy finished cleanly and then reported both verification checks as
+# `HTTP Error 403: Forbidden`; curl fetched the same two URLs perfectly at the same moment.
+# r2.dev is behind Cloudflare's bot rules, and the default urllib agent trips them. A checker
+# that fails on a healthy deploy is worse than no checker, because the next person spends the
+# afternoon re-uploading. Same lesson as a statistics office that answers 418 to a bare curl.
+UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+      "(KHTML, like Gecko) Chrome/141.0 Safari/537.36")
+
 
 def run(cmd, dry):
     print("   " + " ".join(cmd))
@@ -128,8 +137,11 @@ def stage_gzip(dry):
             done += 1
         raw += os.path.getsize(src)
         comp += os.path.getsize(dst)
-    print(f"   compressed {done} of {len(jobs)} files "
-          f"({raw/1e6:.1f} MB -> {comp/1e6:.1f} MB, {comp/raw:.0%})")
+    # "compressed 0" is the healthy steady state, not a failure: nothing changed since the last
+    # deploy, so nothing needed recompressing. Say that, rather than leaving a zero to be read
+    # as one.
+    what = f"compressed {done} of {len(jobs)} files" if done else f"all {len(jobs)} already current"
+    print(f"   {what} ({raw/1e6:.1f} MB -> {comp/1e6:.1f} MB, {comp/raw:.0%})")
     return stage
 
 
@@ -191,7 +203,7 @@ def verify():
     ok = True
 
     url = f"{PUBLIC}/processed/religiondots.pmtiles"
-    req = urllib.request.Request(url, headers={"Range": "bytes=0-99"})
+    req = urllib.request.Request(url, headers={"Range": "bytes=0-99", "User-Agent": UA})
     try:
         with urllib.request.urlopen(req, timeout=30) as r:
             code, n, enc = r.status, len(r.read()), r.headers.get("Content-Encoding")
@@ -211,7 +223,7 @@ def verify():
     # `Accept-Encoding: gzip` explicitly: urllib does not send one by default, and without it
     # a correctly gzipped object answers uncompressed and reads as a failure.
     url = f"{PUBLIC}/buffers/manifest.json"
-    req = urllib.request.Request(url, headers={"Accept-Encoding": "gzip"})
+    req = urllib.request.Request(url, headers={"Accept-Encoding": "gzip", "User-Agent": UA})
     try:
         with urllib.request.urlopen(req, timeout=30) as r:
             enc = r.headers.get("Content-Encoding")

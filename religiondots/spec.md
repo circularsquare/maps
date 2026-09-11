@@ -133,7 +133,9 @@ and the surviving part is stated first.
 **§9 Viewer** — MapLibre, the dark ancestrydots style, and what tiling took away ·
 9a Auto's minimum-dots floor made every country under ~150k invisible to it — FIXED ·
 9b Auto will not enter a country that has none of what is selected ·
-**9c the phone gets a strip and a sheet, and Auto had to be told where the map is**
+**9c the phone gets a strip and a sheet, and Auto had to be told where the map is** ·
+**9d fill alone is an aspect-ratio trap** · 9d-i OPEN: fill measures the canvas, framing uses the band ·
+**9e the phone sheet, after using it** — a tap gets a 12px reach, the shut header wears the scope line, 40dvh
 
 **§10 The tree panel** — 10.0 fixed family order · 10.0a the grey family is contiguous ·
 10.1 what the panel says about itself · 10.2 the settings are segmented pairs ·
@@ -4803,7 +4805,8 @@ window does not. It also leaves a landscape phone (844×390) on the desktop layo
   screen is a lot to spend on a legend and is what it costs: the sheet is the key to the map. The
   other half is bought back by putting it away, not by making it shorter. It starts **open** — a dot
   map with no key is a field of coloured specks, and a reader arriving should be told what they are
-  looking at before being handed room to look.
+  looking at before being handed room to look. (**52 became 40 on 2026-09-10 — §9e.** The rest of
+  this bullet stands; it was the number that was wrong, not the argument.)
 - **Shut is a height, and it was a transform first — CORRECTED the same day.** Anita: *"once i close
   the legend / collapse it i think the buttons to reexpand it are off screen so i can never open it
   again."* `translateY(calc(100% - 42px))` measured 41px of visible header in headless Chrome at
@@ -4866,6 +4869,138 @@ matches `map.getCenter()` to 1e-13.
 sheet's header and cannot be read at all. MapLibre draws it as a half-white pill, which at this
 width wraps to two lines and becomes the brightest thing on a dark map, so it takes the panels'
 own tokens. It is moved and restyled, never shrunk — every name in it is still there at full size.
+
+### 9d Fill alone is an aspect-ratio trap — `AUTO_COVER_IN` — DECIDED 2026-09-09
+
+> *"the auto select country seems to be a bit eager to select like horizontally wide countries. i
+> think our auto mode criteria are kinda calibrated for horizontal screens and maybe they dont work
+> well for vertical ones?"*
+
+She is right, and the mechanism is the `Math.max` in `viewFill`: **a country has to fill only one
+axis.** On a tall window the horizontal axis is the cheap one, so a wide country spans it while
+occupying a strip across the middle. Measured over all 124 countries, the share of the visible map a
+country actually covers at the moment it latches is `AUTO_FILL_IN² × (shape match)`, where the match
+is how near the country's box is to the band's own aspect:
+
+| window | band aspect | median cover at latch | worst |
+|---|---|---|---|
+| 1541×964 | 1.21 | 0.50 | Chile 0.12, Israel 0.23 |
+| 1100×900 | 0.77 | 0.50 | Canada 0.19, Malaysia 0.20, Indonesia 0.21 |
+| 900×1000 | 0.55 | 0.40 | Canada 0.14, Indonesia 0.15, Türkiye 0.17 |
+| 760×1100 | 0.42 | 0.31 | Canada 0.11, Indonesia 0.11, Türkiye 0.13 |
+
+**Note which countries are in the tail.** On a *wide* window it is the tall ones, on a *tall* window
+the wide ones. It was never a bias towards wide countries — it is a bias towards countries shaped
+like the window, and since hers is the tall kind, wide countries are what she saw.
+
+**No measure fixes this without giving something up**, which is worth stating because the obvious
+repairs all fail the same way. Any score that reads 1 for a framed country on every aspect is a
+monotone function of `viewFill` and therefore ranks countries identically — "cover as a share of the
+best cover achievable at this aspect" works out to `viewFill²` exactly. A country whose shape fights
+the window genuinely cannot cover much of it, so the choice is between latching at 11% cover and not
+latching at all.
+
+`AUTO_COVER_IN` takes the second, **and only for choosing.** 0.2 is read off the table: on a 1541×964
+window it removes exactly one country from Auto's reach (Chile, 0.12) and on a tall window it removes
+the tail. Everything it blocks is one tap away in the picker and holds once picked, because the
+release test is `AUTO_FILL_OUT` and is untouched. That asymmetry is `contested`'s, and the same
+argument: *"IT GATES SELECTING, NOT KEEPING … it is harder to change the legend than to set it."*
+
+**It is not applied to the `total < AUTO_MIN` branch**, and that is the one branch it must not be.
+The countries reaching that line are too small to be tallied at all, and small countries are exactly
+where an odd box shape is cheapest to hit — the Cayman Islands' box is 2.8× wider than tall, Antigua's
+2.4× taller than wide — so a cover floor would strand them on some window shapes for the same reason
+`AUTO_MIN` once stranded Saint Vincent (§9a). That branch already demands exactly ONE built country
+framed, nothing else framed, and no rival holding the middle, which is a stronger statement about the
+view than any coverage number.
+
+#### 9d-i OPEN: `viewFill` measures the CANVAS while `flyToCountry` frames the BAND
+
+Found while measuring the above, not yet acted on, because the fix trades directly against the
+complaint that prompted §9d.
+
+On the desktop layout `viewBounds()` returns `map.getBounds()` — the whole canvas — while
+`panelPadding` frames a country into the band the two side panels leave. **The two disagree by
+whatever the panels take, so a country flown to does not score 1; it scores the band's share of the
+canvas**, and how far that is from 1 depends entirely on the window's shape:
+
+| window | `viewFill` after picking the United States | held? |
+|---|---|---|
+| 1541×964 | 0.65 | yes, by 0.05 |
+| 1280×1024 | 0.58 | **no** |
+| 900×1000 | 0.53 | **no** |
+
+`AUTO_FILL_OUT` is 0.6, so on a 5:4 or 4:3 monitor **choosing a country from the picker flies there
+and Auto un-chooses it on the next frame.** It survives on a 16:9 window by five hundredths. This is
+the same bug §9c fixed for the phone, still live on ordinary desktop shapes.
+
+The fix is to make `viewBounds()` return the band on every layout, and then framing, fill, cover, the
+centre pixel and the tallies all describe one rectangle. **What stops it being obvious** is that
+band-fill after a fly is 1.0 rather than 0.65, so `AUTO_FILL_IN` at 0.85 would latch a country
+slightly *before* its natural framing zoom where today it latches about 30% past it — Auto gets more
+eager on a 16:9 window, which is the thing Anita has just asked to be less of. `AUTO_COVER_IN` guards
+that, but by how much is a question about feel rather than measurement.
+
+A narrower version exists: use the band for the **release** test only, keeping the canvas for
+latching. Picks then stick on every window shape with no change to eagerness at all, at the cost of
+a country being held about 1.5× further out when zooming away from it — which points the same way as
+the file's own rule that it should be harder to change the legend than to set it. **Anita's call.**
+
+### 9e The phone sheet, after using it — DECIDED 2026-09-10
+
+Three corrections from Anita after a while with the built thing. None of them changes what §9c
+decided; they are the sizes and the wording that only show up in the hand.
+
+**A finger is not a cursor, so a tap gets a reach.**
+
+> *"on mobile i'd like to have a bit more grace room to tap on dots. if i see a dot it's quite hard
+> to tap on it precisely enough to actually see the tooltip."*
+
+`SCATTER.pick` used the dot's own drawn radius, which at street zoom is under two pixels. Exact is
+right for a mouse and useless for a thumb. It now reaches 12px — a 24px target — **as a fallback,
+not as a bigger dot**, and that distinction is the whole of it. A dot that actually covers the point
+still wins by §4.2c's rule, the last one drawn, which is the one you can see; only when *nothing*
+covers the point does the reach come into play, and then the **nearest centre** answers, because
+"which of these did you mean" has a different right answer from "which one is on top". Measured over
+an identical patch of Nebraska at z8, taps landing on a dot go from **30% to 93%**, and 200 picks
+still cost 2ms.
+
+12 and not more: past that it stops being grace. A tap on empty sea would name a dot the reader was
+not pointing at, which is worse than no card.
+
+**The scan is capped, and that is not a detail.** The neighbourhood searched is `(2·span+1)²` cells
+per buffer and `span` grows as the cells shrink — at zoom 0 a cell is a thirtieth of a pixel, so a
+12px reach is 450 cells and one tap is 800,000 lookups. `PICK_SPAN_MAX` holds it at 48, so low zoom
+keeps the exact radius it always had. That is the right answer there anyway: dots at world zoom are
+packed and a tap lands on one unaided. The cap can never degrade the exact pick, which floors the
+span separately.
+
+**A shut sheet says which legend it is holding, not that it is a legend.**
+
+> *"when the legend is minimized i'd like to see the 'viewing: all religions, all countries' … this
+> can actually just replace the title word 'Religions'."*
+
+With the body gone, "Religions" names a panel that is not on screen. The header now wears
+`#scope-label`'s own sentence — *Viewing: all religions (L2), United States* — written by the same
+line that writes the scope bar, so the two cannot drift. The coverage note does not come with it: it
+is a second line about the wash and the header is one line tall by construction.
+
+**And the chevron gets a button's width.** *"i'd also like the drop down arrow to be given as much
+horizontal space as the - and + buttons."* It was a 14px glyph with 2px of padding beside two 30px
+squares, so the row read as two controls and a decoration. It is a 30px box now, with **no border** —
+it is not a button in its own right, the whole header is its target, and a third outline would claim
+otherwise.
+
+**40dvh, down from 52.**
+
+> *"when the legend is open i'd like to give it a little less vertical space. maybe like 40% of
+> screen height rather than 50%?"*
+
+Half the screen was set before there was a sheet to look at. On an 844px phone the band between the
+strip and the sheet goes from 275px to 376px. The legend loses about five rows, which §6.10b spends
+by folding one rung harder rather than by scrolling further — the budget is an input to the fold, so
+a shorter sheet is a shorter legend rather than a longer scroll. `panelPadding` reserves the same
+fraction, so framing and `viewFill` move with it.
 
 ## 10. The tree panel, and the genealogy drawn on it
 

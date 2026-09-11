@@ -39,6 +39,9 @@ first time usage guide:
     arrow pointing at christianity like "try clicking christianity row!"
         consider hwo it should look on mobile
 
+start view centered on meridian
+
+for japanrail: make station bubbles below a min size still hoverable to see passenger count (also handle stations that have like round down to 0 passenger count?)
 
 LATER
 
