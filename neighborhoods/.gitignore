@@ -22,6 +22,49 @@ data/*
 !data/levels_override.json
 !data/tier_map.json
 
+# ---------------------------------------------------------------- machine transfer
+# TRACKED SO THE WORK CAN MOVE BETWEEN MACHINES. Everything below is regenerable in
+# principle and ruinous to regenerate in practice — together these are ~15 hours of
+# fetching and ~1.4 GB of downloads, in ~143 MB of files.
+#
+# The rule for what belongs here: track the DISTILLATE, never the cache it came from.
+# build.py reads only these data/*.json files; it never opens cache/kontur (881 MB),
+# cache/wof (521 MB) or cache/external (19 MB). Those three exist solely to produce the
+# four small files below and can be deleted without affecting a build.
+#
+#   kontur_pop.json      0.7 MB  <- 881 MB of downloads
+#   wof_shapes.json     12.8 MB  <- 521 MB
+#   external_shapes.json 6.6 MB  <-  19 MB
+#   wiki.json            3.0 MB  <- the sitelinks pass
+#
+# NOT derived output. base.json, units/, geom/ and city_shapes.json stay ignored: they
+# rebuild from the caches below in about three minutes, and they change every build.
+!data/wof_shapes.json
+!data/external_shapes.json
+!data/wiki.json
+!data/kontur_pop.json
+!data/p31.json
+!data/pop.json
+!data/city_area.json
+!data/city_candidates.json
+
 # Overpass cache: one JSON per city per pass. Regenerable, but slowly and at
 # someone else's expense — do not delete casually.
-cache/
+#
+# Same directory trap as data/ above: git will not descend into an excluded directory,
+# so `!cache/` has to come first or no negation below it can reach anything.
+!cache/
+cache/*
+# survey (74 MB) and boundary (32 MB) are the Overpass passes worth carrying. Boundary is
+# the slow one despite its size: 38% of cities miss the QID match and cost three requests
+# including a global is_in() lookup (spec 8).
+!cache/survey/
+!cache/boundary/
+# views.jsonl is the ~6.5 h pageviews pass and is append-only; sitelinks.jsonl is read
+# directly by build.py as a ledger supplement.
+!cache/wiki/
+#
+# cache/geom is DELIBERATELY NOT HERE. It is 527 MB and covers only 61 of 287 cities, and
+# the geometry pass has to be re-run for the other 226 anyway — refetching 61 alongside
+# them is noise. Move it out of band if you want it, but do not put it in git.
+cache/geom/
