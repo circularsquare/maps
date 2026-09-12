@@ -7,6 +7,8 @@
      whenever this is opened offline. system-ui is the fallback. -->
 <link rel="stylesheet" media="print" onload="this.media='all'"
       href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap">
+<link href="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.css" rel="stylesheet">
+<script src="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.js"></script>
 <link rel="stylesheet" href="css/app.css">
 
 <div id="title">citybrowser
@@ -25,27 +27,36 @@
   <div id="results"></div>
 </div>
 
+<div id="map"></div>
 <canvas id="c"></canvas>
 <div id="card" class="panel"></div>
 <div id="edit" class="panel"></div>
 
 <div id="setpanel" class="panel">
   <div class="t">Show on map</div>
-  <label class="chk"><input type="checkbox" id="k-city" checked disabled>
+  <label class="chk" id="row-city"><input type="checkbox" id="k-city" checked disabled>
     <span>Cities &amp; towns</span><em id="n-city"></em></label>
-  <label class="chk"><input type="checkbox" id="k-aggregate">
+  <label class="chk" id="row-aggregate"><input type="checkbox" id="k-aggregate">
     <span>Metro &amp; urban areas</span><em id="n-aggregate"></em></label>
-  <label class="chk"><input type="checkbox" id="k-admin">
+  <label class="chk" id="row-rural"><input type="checkbox" id="k-rural">
+    <span>Counties &amp; rural districts</span><em id="n-rural"></em></label>
+  <label class="chk" id="row-district"><input type="checkbox" id="k-district">
+    <span>Districts of cities</span><em id="n-district"></em></label>
+  <label class="chk" id="row-admin"><input type="checkbox" id="k-admin">
     <span>Admin duplicates</span><em id="n-admin"></em></label>
-  <div class="shint">Metro areas duplicate their city &mdash; "New York",
-    "New York metropolitan area" and "New York&ndash;Jersey City&ndash;Newark
-    urban area" are three bubbles for one place.</div>
+  <div class="shint">All three hidden layers are bubbles for a place that
+    already has one. Metro areas duplicate their city &mdash; "New York", "New
+    York metropolitan area" and "New York&ndash;Jersey City&ndash;Newark urban
+    area" are three bubbles for one place. Counties and rural districts are the
+    <i>area</i> a town sits in, not the town: Los Angeles County, Savar Upazila,
+    Bogor Regency. Districts of cities are one piece of a city &mdash; wards,
+    arrondissements, boroughs.</div>
 
   <div class="t" style="margin-top:12px">Basemap</div>
   <select id="basemap"></select>
-  <div class="shint">Tiles need a network connection. With them off &mdash; or
-    before they load &mdash; the built-in coastline is used, which is fixed-scale
-    and gets coarse as you zoom in.</div>
+  <div class="shint">Vector tiles, so they stay sharp at every zoom. They need
+    a network connection; with none, or with the basemap off, the bubbles still
+    draw over bare water.</div>
 
   <div class="t" style="margin-top:12px">Urban centre matches</div>
   <button class="btn wide" id="review">Review <em id="nreview"></em></button>
@@ -55,8 +66,6 @@
 </div>
 
 <div id="reviewpanel" class="panel"></div>
-
-<div id="attrib"></div>
 
 <div id="legend" class="panel">
   <div class="t">Population</div>

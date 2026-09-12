@@ -1,0 +1,676 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>nycriders — nudge</title>
+<style>
+  :root { --ink: #1b2027; --panel: #ffffffdd; --line: #c9c3b6; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden;
+               font: 13px/1.45 ui-sans-serif, system-ui, -apple-system, sans-serif;
+               color: var(--ink); background: #e9e6df; }
+  canvas { display: block; cursor: crosshair; }
+  #ui { position: fixed; top: 12px; left: 12px; width: 258px; padding: 12px 14px;
+        background: var(--panel); border: 1px solid var(--line); border-radius: 6px;
+        backdrop-filter: blur(6px); }
+  #ui h1 { margin: 0 0 8px; font-size: 13px; letter-spacing: .06em;
+           text-transform: uppercase; font-weight: 600; }
+  .row { display: flex; align-items: center; gap: 8px; margin: 7px 0; }
+  .row label { flex: 0 0 54px; color: #5c6570; }
+  input[type=range] { flex: 1; min-width: 0; }
+  .val { flex: 0 0 54px; text-align: right; font-variant-numeric: tabular-nums; }
+  button { font: inherit; padding: 4px 9px; border: 1px solid var(--line);
+           background: #fff; border-radius: 4px; cursor: pointer; }
+  button:hover { background: #f2efe8; }
+  button.on { background: #1b2027; color: #fff; border-color: #1b2027; }
+  button:disabled { opacity: .45; cursor: default; }
+  #status { margin-top: 9px; padding-top: 8px; border-top: 1px solid var(--line);
+            color: #5c6570; min-height: 3.4em; }
+  #status b { color: var(--ink); }
+  kbd { font: 11px ui-monospace, monospace; background: #efece5; border: 1px solid var(--line);
+        border-radius: 3px; padding: 0 4px; }
+  #hint { position: fixed; bottom: 12px; left: 12px; color: #6b7480;
+          background: var(--panel); border: 1px solid var(--line);
+          border-radius: 6px; padding: 8px 12px; }
+  #badge { position: fixed; top: 12px; right: 12px; padding: 6px 12px;
+           background: var(--panel); border: 1px solid var(--line);
+           border-radius: 6px; font-weight: 600; letter-spacing: .04em; }
+</style>
+
+<canvas id="c"></canvas>
+
+<div id="ui">
+  <h1>nudge</h1>
+  <div class="row">
+    <label>spread</label>
+    <input id="radius" type="range" min="0" max="500" step="10" value="0">
+    <span class="val" id="radiusV">point</span>
+  </div>
+  <div class="row">
+    <label>show</label>
+    <button id="togglePoints" class="on">points</button>
+    <button id="toggleBase" class="on">map</button>
+  </div>
+  <div class="row">
+    <label>solo</label>
+    <button id="soloBtn">off</button>
+    <button id="clearNode">reset here</button>
+  </div>
+  <div class="row">
+    <button id="undo" disabled>undo</button>
+    <button id="save">save</button>
+  </div>
+  <div id="status">loading…</div>
+</div>
+
+<div id="badge">—</div>
+
+<div id="hint">
+  drag a point to move <b>that route only</b> · right-click a line to <b>add</b> a point,
+  a point to <b>delete</b> it · <kbd>space</kbd>+drag or right-<i>drag</i> to pan · scroll to zoom ·
+  <kbd>[</kbd> <kbd>]</kbd> spread · <kbd>s</kbd> solo · <kbd>ctrl</kbd>+<kbd>z</kbd> undo
+</div>
+
+<script>
+// ---------------------------------------------------------------------------
+// Each route owns its own line. A control point belongs to one route and moving
+// it moves that route and nothing else — which is the whole reason the geometry
+// got baked down into per-route chains upstream (see chains.py). A route's line
+// is one polyline through its own points, so it cannot tear at a junction; and
+// where a route genuinely splits, its branches share the junction point and are
+// independent everywhere else, which is a Y with a corner rather than a gap.
+//
+// A chain carries EVERY vertex the route passes through; `ctrl` says which of
+// them currently shape the curve. So adding a control point is promoting a
+// vertex that was already there, and deleting one is demoting it — both are the
+// automatic thinning, run by hand, and both keep a stable GTFS key.
+//
+// The drawn curve is a centripetal Catmull-Rom through the control points, not
+// the control polygon, so the shape is derived from the points every frame.
+// There is no stored micro-shape to preserve: move a point and the curve
+// re-derives over its neighbours.
+// ---------------------------------------------------------------------------
+
+const cv = document.getElementById('c');
+const ctx = cv.getContext('2d');
+const statusEl = document.getElementById('status');
+const badge = document.getElementById('badge');
+
+let D = null;
+let moves = new Map();          // "route|nodeKey" -> [dx, dy] metres
+let added = new Set();          // vertices promoted to control points by hand
+let dropped = new Set();        // control points demoted by hand
+let undoStack = [];
+let baseImg = null;
+let showPoints = true, showBase = true, solo = null;
+let dirty = false;
+let SAMPLES = 10;
+
+let view = { cx: 0, cy: 0, k: 0.02 };
+const smoothstep = t => (t = Math.max(0, Math.min(1, t))) * t * (3 - 2 * t);
+
+// Editing-only, NOT how the sheet prints: half-opacity lines let you see what
+// is underneath the one you are dragging, which is most of the job at a place
+// where four routes overlap. The sheet draws them solid.
+const LINE_ALPHA = 0.5;
+const DIM_ALPHA = 0.08;         // a route that solo is hiding
+
+// ---------------------------------------------------------------------------
+// geometry — a port of chains.spline / chains.draw_pieces
+// ---------------------------------------------------------------------------
+
+const keyOf = (c, i) => c.route + '|' + c.keys[i];
+
+function ptOf(c, i) {
+  const p = c.pos[i], d = moves.get(keyOf(c, i));
+  return d ? [p[0] + d[0], p[1] + d[1]] : p;
+}
+
+let ctrlCache = [];
+function ctrlIdx(ci) {
+  if (ctrlCache[ci]) return ctrlCache[ci];
+  const c = D.chains[ci], n = c.keys.length;
+  const set = new Set(c.ctrl);
+  if (added.size || dropped.size) {
+    for (let i = 0; i < n; i++) {
+      const k = keyOf(c, i);
+      if (added.has(k)) set.add(i);
+      // never drop a chain's own ends: that would shorten the line
+      if (dropped.has(k) && i > 0 && i < n - 1) set.delete(i);
+    }
+  }
+  return (ctrlCache[ci] = [...set].sort((a, b) => a - b));
+}
+
+function spline(P) {
+  const n = P.length;
+  if (n < 2) return { pts: P, owner: [0] };
+  if (n === 2) {
+    const pts = [], owner = [];
+    for (let j = 0; j <= SAMPLES; j++) {
+      const t = j / SAMPLES;
+      pts.push([P[0][0] + t * (P[1][0] - P[0][0]), P[0][1] + t * (P[1][1] - P[0][1])]);
+      owner.push(0);
+    }
+    return { pts, owner };
+  }
+  const ext = [[2 * P[0][0] - P[1][0], 2 * P[0][1] - P[1][1]], ...P,
+               [2 * P[n - 1][0] - P[n - 2][0], 2 * P[n - 1][1] - P[n - 2][1]]];
+  const pts = [], owner = [];
+  const knot = (a, b, t) => t + Math.max(Math.pow(Math.hypot(b[0] - a[0], b[1] - a[1]), 0.5), 1e-6);
+  for (let i = 0; i < n - 1; i++) {
+    const p0 = ext[i], p1 = ext[i + 1], p2 = ext[i + 2], p3 = ext[i + 3];
+    const t0 = 0, t1 = knot(p0, p1, t0), t2 = knot(p1, p2, t1), t3 = knot(p2, p3, t2);
+    const steps = i === n - 2 ? SAMPLES : SAMPLES - 1;
+    for (let j = 0; j <= steps; j++) {
+      const t = t1 + (t2 - t1) * j / SAMPLES;
+      const mix = (a, b, ta, tb) => [
+        (tb - t) / (tb - ta) * a[0] + (t - ta) / (tb - ta) * b[0],
+        (tb - t) / (tb - ta) * a[1] + (t - ta) / (tb - ta) * b[1]];
+      const a1 = mix(p0, p1, t0, t1), a2 = mix(p1, p2, t1, t2), a3 = mix(p2, p3, t2, t3);
+      const b1 = mix(a1, a2, t0, t2), b2 = mix(a2, a3, t1, t3);
+      pts.push(mix(b1, b2, t1, t2));
+      owner.push(i);
+    }
+  }
+  return { pts, owner };
+}
+
+function drawPieces(ci) {
+  const c = D.chains[ci], idx = ctrlIdx(ci);
+  const P = idx.map(i => ptOf(c, i));
+  const { pts, owner } = spline(P);
+  // a span's width is the width on its first underlying edge
+  const spanW = idx.slice(0, -1).map(i => c.w[i]);
+  const pieces = [];
+  let start = 0;
+  for (let i = 1; i <= owner.length; i++) {
+    const wa = spanW[owner[start]];
+    const wb = i < owner.length ? spanW[owner[i]] : null;
+    if (i === owner.length || wb !== wa) {
+      if (wa > 0 && i - start >= 2) {
+        pieces.push({ pts: pts.slice(start, Math.min(i + 1, pts.length)), w: wa });
+      }
+      start = i;
+    }
+  }
+  return pieces;
+}
+
+let chainPieces = [], drawOrder = [];
+function rebuild(idxs) {
+  for (const i of (idxs || D.chains.keys())) { ctrlCache[i] = null; chainPieces[i] = drawPieces(i); }
+}
+function buildOrder() {
+  drawOrder = [];
+  D.chains.forEach((c, i) => chainPieces[i].forEach((_, k) => drawOrder.push([i, k])));
+  drawOrder.sort((A, B) => {
+    const a = D.chains[A[0]], b = D.chains[B[0]];
+    return (a.priority - b.priority) || (chainPieces[A[0]][A[1]].w - chainPieces[B[0]][B[1]].w);
+  });
+}
+
+// key -> [[chainIdx, denseIdx], ...]; a junction vertex is shared by the
+// branches of the same route, which is what keeps a Y attached
+let byKey = new Map();
+function indexPoints() {
+  byKey = new Map();
+  D.chains.forEach((c, i) => c.keys.forEach((k, j) => {
+    const id = c.route + '|' + k;
+    if (!byKey.has(id)) byKey.set(id, []);
+    byKey.get(id).push([i, j]);
+  }));
+}
+
+// ---------------------------------------------------------------------------
+// drawing
+// ---------------------------------------------------------------------------
+
+function resize() {
+  const r = window.devicePixelRatio || 1;
+  cv.width = Math.floor(innerWidth * r);
+  cv.height = Math.floor(innerHeight * r);
+  cv.style.width = innerWidth + 'px';
+  cv.style.height = innerHeight + 'px';
+  ctx.setTransform(r, 0, 0, r, 0, 0);
+  draw();
+}
+const sx = x => (x - view.cx) * view.k + innerWidth / 2;
+const sy = y => (view.cy - y) * view.k + innerHeight / 2;
+const wx = px => (px - innerWidth / 2) / view.k + view.cx;
+const wy = py => view.cy - (py - innerHeight / 2) / view.k;
+
+function draw() {
+  ctx.fillStyle = D && D.theme === 'dark' ? '#15171a' : '#f5f2ec';
+  ctx.fillRect(0, 0, innerWidth, innerHeight);
+  if (!D) return;
+
+  if (showBase && baseImg) {
+    const f = D.frame;
+    ctx.drawImage(baseImg, sx(f.x0), sy(f.y1),
+                  (f.x1 - f.x0) * view.k, (f.y1 - f.y0) * view.k);
+  }
+
+  ctx.lineJoin = 'round';
+  ctx.lineCap = 'round';
+  for (const [i, k] of drawOrder) {
+    const c = D.chains[i], pc = chainPieces[i][k];
+    ctx.globalAlpha = solo && c.route !== solo ? DIM_ALPHA : LINE_ALPHA;
+    ctx.strokeStyle = c.color;
+    ctx.lineWidth = Math.max(pc.w * view.k, 0.4);
+    ctx.beginPath();
+    ctx.moveTo(sx(pc.pts[0][0]), sy(pc.pts[0][1]));
+    for (let j = 1; j < pc.pts.length; j++) ctx.lineTo(sx(pc.pts[j][0]), sy(pc.pts[j][1]));
+    ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+
+  ctx.fillStyle = D.theme === 'dark' ? 'rgba(230,235,242,.75)' : 'rgba(255,255,255,.7)';
+  for (const s of D.stations) {
+    const r = s[2] * view.k;
+    if (r < 0.6) continue;
+    ctx.beginPath(); ctx.arc(sx(s[0]), sy(s[1]), r, 0, 6.2832); ctx.fill();
+  }
+
+  if (showPoints && view.k > 0.06) {
+    for (let i = 0; i < D.chains.length; i++) {
+      const c = D.chains[i];
+      if (solo && c.route !== solo) continue;
+      for (const j of ctrlIdx(i)) {
+        const p = ptOf(c, j);
+        const X = sx(p[0]), Y = sy(p[1]);
+        if (X < -12 || Y < -12 || X > innerWidth + 12 || Y > innerHeight + 12) continue;
+        const k = keyOf(c, j);
+        const isNew = added.has(k), isMoved = moves.has(k);
+        // fill is the route's own colour, so a point says which line it belongs
+        // to without having to hover it; the ring carries the edit state
+        ctx.beginPath(); ctx.arc(X, Y, isMoved || isNew ? 4.2 : 2.9, 0, 6.2832);
+        ctx.fillStyle = c.color;
+        ctx.fill();
+        ctx.lineWidth = isMoved || isNew ? 1.8 : 1;
+        ctx.strokeStyle = isMoved ? '#d0021b' : isNew ? '#1f7a3f' : 'rgba(20,28,40,.85)';
+        ctx.stroke();
+      }
+    }
+  }
+
+  if (drag && drag.group.length > 1) {
+    ctx.strokeStyle = 'rgba(40,90,200,.5)'; ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.arc(sx(drag.origin[0]), sy(drag.origin[1]), spread * view.k, 0, 6.2832);
+    ctx.stroke();
+  }
+}
+
+// ---------------------------------------------------------------------------
+// picking
+// ---------------------------------------------------------------------------
+
+function nearestPoint(mx, my, maxPx) {
+  const X = wx(mx), Y = wy(my), lim = maxPx / view.k;
+  let best = null, bd = lim * lim;
+  for (let i = 0; i < D.chains.length; i++) {
+    const c = D.chains[i];
+    if (solo && c.route !== solo) continue;
+    for (const j of ctrlIdx(i)) {
+      const p = ptOf(c, j);
+      const dx = p[0] - X, dy = p[1] - Y, d = dx * dx + dy * dy;
+      if (d < bd) { bd = d; best = [i, j]; }
+    }
+  }
+  return best;
+}
+
+function segDist2(px, py, ax, ay, bx, by) {
+  const vx = bx - ax, vy = by - ay;
+  const L = vx * vx + vy * vy;
+  const t = L > 0 ? Math.max(0, Math.min(1, ((px - ax) * vx + (py - ay) * vy) / L)) : 0;
+  const dx = px - (ax + t * vx), dy = py - (ay + t * vy);
+  return dx * dx + dy * dy;
+}
+
+// Which drawn line is under the cursor — walked back to front, so the one that
+// is visually on top is the one you get, as it would be if you clicked a pixel.
+function lineUnder(mx, my, slackPx) {
+  const X = wx(mx), Y = wy(my);
+  for (let n = drawOrder.length - 1; n >= 0; n--) {
+    const [i, k] = drawOrder[n];
+    if (solo && D.chains[i].route !== solo) continue;
+    const pc = chainPieces[i][k];
+    const reach = pc.w / 2 + slackPx / view.k;
+    const r2 = reach * reach;
+    for (let j = 1; j < pc.pts.length; j++) {
+      if (segDist2(X, Y, pc.pts[j - 1][0], pc.pts[j - 1][1],
+                   pc.pts[j][0], pc.pts[j][1]) <= r2) return i;
+    }
+  }
+  return -1;
+}
+
+// Nearest vertex on one chain that is NOT already a control point — the thing a
+// right-click promotes. Skipping the ones already promoted matters: vertices sit
+// every 60 m or so, so the closest one to a click is often an existing point
+// that is simply too far away to have been picked as a hit, and offering
+// "already a point here" instead of adding one would make the tool feel broken.
+function nearestFreeVertex(ci, mx, my) {
+  const c = D.chains[ci], X = wx(mx), Y = wy(my);
+  const taken = new Set(ctrlIdx(ci));
+  let best = -1, bd = Infinity;
+  for (let j = 0; j < c.keys.length; j++) {
+    if (taken.has(j)) continue;
+    const p = ptOf(c, j);
+    const d = (p[0] - X) ** 2 + (p[1] - Y) ** 2;
+    if (d < bd) { bd = d; best = j; }
+  }
+  return best;
+}
+
+// ---------------------------------------------------------------------------
+// interaction
+// ---------------------------------------------------------------------------
+
+let spread = 0;
+let drag = null, panning = null, spaceDown = false;
+let cursor = { x: innerWidth / 2, y: innerHeight / 2 };
+addEventListener('pointermove', e => { cursor = { x: e.clientX, y: e.clientY }; });
+
+// Spread walks ALONG THIS ROUTE'S OWN CHAIN, over its control points. It never
+// leaves the route, so there is no way to drag a neighbour on the same corridor
+// by accident.
+function groupFor(ci, pj, radius) {
+  const c = D.chains[ci];
+  const out = [[keyOf(c, pj), 1]];
+  if (radius <= 0) return out;
+  const idx = ctrlIdx(ci);
+  const at = idx.indexOf(pj);
+  if (at < 0) return out;
+  for (const dir of [-1, 1]) {
+    let d = 0;
+    for (let n = at + dir; n >= 0 && n < idx.length; n += dir) {
+      const a = ptOf(c, idx[n - dir]), b = ptOf(c, idx[n]);
+      d += Math.hypot(b[0] - a[0], b[1] - a[1]);
+      if (d >= radius) break;
+      out.push([keyOf(c, idx[n]), smoothstep(1 - d / radius)]);
+    }
+  }
+  return out;
+}
+
+function chainsForKeys(keys) {
+  const s = new Set();
+  for (const k of keys) for (const [i] of (byKey.get(k) || [])) s.add(i);
+  return [...s];
+}
+
+function pushUndo() {
+  undoStack.push({ moves: new Map([...moves].map(([k, v]) => [k, v.slice()])),
+                   added: new Set(added), dropped: new Set(dropped) });
+  if (undoStack.length > 100) undoStack.shift();
+  document.getElementById('undo').disabled = false;
+}
+
+cv.addEventListener('contextmenu', e => e.preventDefault());
+
+cv.addEventListener('pointerdown', e => {
+  if (!D) return;
+  try { cv.setPointerCapture(e.pointerId); } catch (err) { /* synthetic pointer */ }
+  if (e.button === 2) {
+    // right button: a drag pans, a click adds or deletes a point
+    panning = { x: e.clientX, y: e.clientY, cx: view.cx, cy: view.cy, right: true };
+    return;
+  }
+  if (spaceDown) {
+    panning = { x: e.clientX, y: e.clientY, cx: view.cx, cy: view.cy };
+    return;
+  }
+  const hit = nearestPoint(e.clientX, e.clientY, 12);
+  if (!hit) {
+    panning = { x: e.clientX, y: e.clientY, cx: view.cx, cy: view.cy };
+    return;
+  }
+  pushUndo();
+  const c = D.chains[hit[0]];
+  const group = groupFor(hit[0], hit[1], spread);
+  drag = {
+    x: e.clientX, y: e.clientY, route: c.route,
+    origin: ptOf(c, hit[1]).slice(), group,
+    base: new Map([...moves].map(([k, v]) => [k, v.slice()])),
+    chains: chainsForKeys(group.map(g => g[0])),
+  };
+  badge.textContent = c.route;
+  setStatus(`<b>${c.route}</b> · ${group.length} point${group.length > 1 ? 's' : ''}`);
+});
+
+cv.addEventListener('pointermove', e => {
+  if (panning) {
+    view.cx = panning.cx - (e.clientX - panning.x) / view.k;
+    view.cy = panning.cy + (e.clientY - panning.y) / view.k;
+    draw();
+    return;
+  }
+  if (!drag) return;
+  const dx = (e.clientX - drag.x) / view.k, dy = -(e.clientY - drag.y) / view.k;
+  for (const [key, w] of drag.group) {
+    const b = drag.base.get(key) || [0, 0];
+    const nx = b[0] + dx * w, ny = b[1] + dy * w;
+    if (Math.abs(nx) < 1e-6 && Math.abs(ny) < 1e-6) moves.delete(key);
+    else moves.set(key, [nx, ny]);
+  }
+  rebuild(drag.chains); buildOrder();
+  dirty = true;
+  draw();
+});
+
+function endDrag(e) {
+  if (panning && panning.right) {
+    const moved = Math.hypot(e.clientX - panning.x, e.clientY - panning.y);
+    panning = null;
+    if (moved < 4) { rightClick(e.clientX, e.clientY); return; }
+  }
+  if (drag) {
+    const d = Math.hypot(e.clientX - drag.x, e.clientY - drag.y) / view.k;
+    setStatus(`<b>${drag.route}</b> moved ${d.toFixed(0)} m · ${countEdits()} edits`);
+  }
+  drag = null; panning = null;
+  draw();
+}
+cv.addEventListener('pointerup', endDrag);
+cv.addEventListener('pointercancel', endDrag);
+
+// Right-click on a control point deletes it; anywhere else on a line, adds one.
+// "Add" promotes the nearest vertex the route already passes through, so a new
+// point lands exactly on the line and carries a stable key.
+function rightClick(mx, my) {
+  const hit = nearestPoint(mx, my, 11);
+  if (hit) {
+    const c = D.chains[hit[0]];
+    const idx = ctrlIdx(hit[0]);
+    if (hit[1] === idx[0] || hit[1] === idx[idx.length - 1]) {
+      setStatus(`<b>${c.route}</b> · that is an end of the line, cannot delete it`);
+      return;
+    }
+    if (byKey.get(keyOf(c, hit[1])).length > 1) {
+      setStatus(`<b>${c.route}</b> · that point is a junction of this route, kept`);
+      return;
+    }
+    pushUndo();
+    const k = keyOf(c, hit[1]);
+    moves.delete(k);
+    // deleting a point you added is just an undo of the add; only a point the
+    // automatic pass would put back needs recording as a deletion
+    if (added.has(k)) added.delete(k);
+    else dropped.add(k);
+    rebuild([hit[0]]); buildOrder();
+    dirty = true;
+    badge.textContent = c.route;
+    setStatus(`deleted a point on <b>${c.route}</b> · ${countEdits()} edits`);
+    draw();
+    return;
+  }
+  const ci = lineUnder(mx, my, 3);
+  if (ci < 0) { setStatus('no line under the cursor'); return; }
+  const c = D.chains[ci];
+  const j = nearestFreeVertex(ci, mx, my);
+  if (j < 0) { setStatus(`<b>${c.route}</b> · every vertex here is already a point`); return; }
+  const k = keyOf(c, j);
+  pushUndo();
+  dropped.delete(k); added.add(k);
+  rebuild([ci]); buildOrder();
+  dirty = true;
+  badge.textContent = c.route;
+  setStatus(`added a point on <b>${c.route}</b> · ${countEdits()} edits`);
+  draw();
+}
+
+cv.addEventListener('wheel', e => {
+  e.preventDefault();
+  const X = wx(e.clientX), Y = wy(e.clientY);
+  view.k *= Math.exp(-e.deltaY * 0.0015);
+  view.k = Math.max(0.0008, Math.min(4, view.k));
+  view.cx = X - (e.clientX - innerWidth / 2) / view.k;
+  view.cy = Y + (e.clientY - innerHeight / 2) / view.k;
+  draw();
+}, { passive: false });
+
+addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT') return;
+  if (e.code === 'Space') { spaceDown = true; cv.style.cursor = 'grab'; e.preventDefault(); }
+  if (e.key === '[') setSpread(spread - 20);
+  if (e.key === ']') setSpread(spread + 20);
+  if (e.key.toLowerCase() === 's') toggleSolo();
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); doUndo(); }
+});
+addEventListener('keyup', e => {
+  if (e.code === 'Space') { spaceDown = false; cv.style.cursor = 'crosshair'; }
+});
+
+// ---------------------------------------------------------------------------
+// ui
+// ---------------------------------------------------------------------------
+
+const countEdits = () => moves.size + added.size + dropped.size;
+
+function setStatus(msg) {
+  statusEl.innerHTML = msg + (dirty ? ' · <b>unsaved</b>' : '');
+}
+function setSpread(v) {
+  spread = Math.max(0, Math.min(500, v));
+  document.getElementById('radius').value = spread;
+  document.getElementById('radiusV').textContent = spread ? spread + ' m' : 'point';
+}
+document.getElementById('radius').oninput = e => setSpread(+e.target.value);
+
+const tp = document.getElementById('togglePoints');
+tp.onclick = () => { showPoints = !showPoints; tp.classList.toggle('on', showPoints); draw(); };
+const tb = document.getElementById('toggleBase');
+tb.onclick = () => { showBase = !showBase; tb.classList.toggle('on', showBase); draw(); };
+
+// Solo locks editing to one route, so a dense trunk stops being a lucky dip.
+function toggleSolo() {
+  if (solo) solo = null;
+  else {
+    const hit = nearestPoint(cursor.x, cursor.y, 1e9);
+    solo = hit ? D.chains[hit[0]].route : null;
+  }
+  const b = document.getElementById('soloBtn');
+  b.textContent = solo || 'off';
+  b.classList.toggle('on', !!solo);
+  badge.textContent = solo || '—';
+  draw();
+}
+document.getElementById('soloBtn').onclick = toggleSolo;
+
+function doUndo() {
+  if (!undoStack.length) return;
+  const s = undoStack.pop();
+  moves = s.moves; added = s.added; dropped = s.dropped;
+  document.getElementById('undo').disabled = !undoStack.length;
+  rebuild(); buildOrder();
+  dirty = true;
+  setStatus(`${countEdits()} edits`);
+  draw();
+}
+document.getElementById('undo').onclick = doUndo;
+
+document.getElementById('clearNode').onclick = () => {
+  const hit = nearestPoint(cursor.x, cursor.y, 40);
+  if (!hit) { setStatus('nothing under the cursor'); return; }
+  pushUndo();
+  const c = D.chains[hit[0]];
+  const keys = groupFor(hit[0], hit[1], Math.max(spread, 1)).map(g => g[0]);
+  for (const k of keys) { moves.delete(k); added.delete(k); dropped.delete(k); }
+  rebuild(chainsForKeys(keys)); buildOrder();
+  dirty = true;
+  setStatus(`reset <b>${c.route}</b> here · ${countEdits()} edits`);
+  draw();
+};
+
+document.getElementById('save').onclick = async () => {
+  const move = {}, base = {};
+  for (const [k, d] of moves) {
+    move[k] = [Math.round(d[0] * 100) / 100, Math.round(d[1] * 100) / 100];
+    // where the automatic pass had put this point when it was moved. A move is
+    // a delta from that, so recording it is what lets a later run say "this
+    // edit is now measured from geometry that has since shifted".
+    const at = (byKey.get(k) || [])[0];
+    if (at) {
+      const p = D.chains[at[0]].pos[at[1]];
+      base[k] = [Math.round(p[0] * 10) / 10, Math.round(p[1] * 10) / 10];
+    }
+  }
+  const body = { move, base, add: [...added].sort(), drop: [...dropped].sort() };
+  try {
+    const r = await fetch('save', { method: 'POST',
+      headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
+    if (!r.ok) throw new Error(await r.text());
+    dirty = false;
+    setStatus(`saved ${moves.size} moved, ${added.size} added, ${dropped.size} deleted`);
+  } catch (err) {
+    setStatus('save failed: ' + err.message + ' — is serve.py running?');
+  }
+};
+
+// ---------------------------------------------------------------------------
+// boot
+// ---------------------------------------------------------------------------
+
+(async () => {
+  D = await (await fetch('../build/nudge_data.json')).json();
+  SAMPLES = (D.spline && D.spline.samples) || 10;
+  try {
+    const saved = await (await fetch('nudges.json?' + Date.now())).json();
+    const mv = saved.move || (saved.add || saved.drop ? {} : saved);
+    for (const [k, d] of Object.entries(mv || {})) moves.set(k, d.slice());
+    for (const k of (saved.add || [])) added.add(k);
+    for (const k of (saved.drop || [])) dropped.add(k);
+  } catch (e) { /* none saved yet */ }
+
+  indexPoints();
+  rebuild(); buildOrder();
+
+  const f = D.frame;
+  view.cx = (f.x0 + f.x1) / 2;
+  view.cy = (f.y0 + f.y1) / 2;
+  view.k = Math.min(innerWidth / (f.x1 - f.x0), innerHeight / (f.y1 - f.y0)) * 0.92;
+  setSpread(spread);
+
+  baseImg = new Image();
+  baseImg.onload = draw;
+  baseImg.src = D.base.png;
+
+  resize();
+  const ctrl = D.chains.reduce((s, c, i) => s + ctrlIdx(i).length, 0);
+  const dense = D.chains.reduce((s, c) => s + c.keys.length, 0);
+  setStatus(`${D.chains.length} route chains · ${ctrl.toLocaleString()} points ` +
+            `of ${dense.toLocaleString()} vertices · ${countEdits()} edits`);
+})();
+
+addEventListener('resize', resize);
+
+// There is no autosave: edits live in the page until Save writes them. Closing
+// or reloading with unsaved work would lose it silently, which after an hour of
+// hand-placing is not a thing to find out about afterwards.
+addEventListener('beforeunload', e => {
+  if (!dirty) return;
+  e.preventDefault();
+  e.returnValue = '';
+});
+</script>

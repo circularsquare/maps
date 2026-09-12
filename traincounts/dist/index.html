@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#07090d">
+<meta name="description" content="Passenger train frequency by railway corridor. Explore published country and operator schedule snapshots.">
+<title>train counts — passenger trains per day</title>
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
+<link rel="stylesheet" href="style.css">
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js" defer></script>
+<script src="app.js" defer></script>
+</head>
+<body>
+<main id="map" aria-label="Map of passenger train frequency"></main>
+<header class="panel title"><h1>train counts <span id="country-name">finland</span></h1><p>Average passenger trains per day · both directions</p><div class="dataset-row"><label for="dataset-select">Network</label><select id="dataset-select" disabled><option>Finland</option></select></div><p id="dataset-scope" class="dataset-scope">Fintraffic passenger rail</p><div class="title-bottom"><span id="period">14–20 September 2026</span><button id="about" aria-label="About the data">?</button></div></header>
+<div id="status" class="panel status" role="status">Loading railway schedules…</div>
+<section class="panel controls" aria-label="Map controls and legend">
+<div class="control-heading"><h2>TRAINS / DAY</h2><button id="home" title="Fit map">Fit map ↗</button></div>
+<label for="period-select">Average over</label>
+<select id="period-select"><option value="all">Full week</option><option value="weekday">Weekdays</option><option value="weekend">Weekend</option></select>
+<div id="legend" aria-label="Line thickness legend"></div>
+<label class="range-label" for="thickness">Line thickness <output id="thickness-value">1×</output></label>
+<input id="thickness" type="range" min="0.5" max="2.5" step="0.1" value="1">
+<div class="key"><span><i class="intercity"></i>Intercity / regional</span><span><i class="commuter"></i>Mostly commuter</span><span><i class="other"></i>Heritage</span></div>
+<p class="small">Square-root width scale<br>Dashed lines: approximate geometry</p>
+<p id="coverage" class="coverage">Loading coverage</p>
+</section>
+<aside id="detail" class="panel detail" aria-label="Selected railway segment" hidden><button class="close" id="close-detail" aria-label="Close segment details">×</button><div id="detail-content"></div></aside>
+<dialog id="about-dialog"><button class="close" id="close-about" aria-label="Close information">×</button><h2>Counting trains, segment by segment</h2><p>The line width represents scheduled passenger train journeys across a corridor, summed in both directions and divided by the number of selected service days. These are trains, not passengers or seats.</p><h3 id="scope-title">Coverage</h3><p id="scope"></p><p>Dates follow the feed’s <span id="timezone">local</span> service days. An overnight train belongs to its departure service day. This is a timetable snapshot, not a count of trains that actually ran; short-notice changes and cancellations are not applied.</p><h3>How the lines are made</h3><p id="methodology"></p><p id="geometry-note"></p><p id="fallback-note"></p><h3>Sources</h3><p id="source-attribution" hidden></p><p><a id="source-link" href="https://www.digitraffic.fi/en/railway-traffic/" target="_blank" rel="noreferrer">Fintraffic / Digitraffic</a> · <a id="license-link" href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noreferrer">CC BY 4.0</a><br><span id="feed-version"></span></p><p>Basemap: <a href="https://openfreemap.org/" target="_blank" rel="noreferrer">OpenFreeMap</a> and OpenStreetMap contributors. Map renderer: MapLibre GL JS. Visual reference: <a href="https://anita.garden/japanrail/" target="_blank" rel="noreferrer">japan rail flow</a>.</p><p>World coverage will grow country by country. Unmapped countries have not yet been processed; blank areas do not imply no passenger service.</p></dialog>
+</body>
+</html>

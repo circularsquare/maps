@@ -1,0 +1,2566 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>seoul riders</title>
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" />
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    background: #0a0a0a; color: #eee;
+    font-family: 'Nunito', system-ui, -apple-system, sans-serif;
+    overflow: hidden;
+}
+#map { width: 100vw; height: 100vh; }
+
+#controls-wrap {
+    position: absolute; top: 10px; right: 10px;
+    max-width: calc(100vw - 24px);
+    display: flex; flex-direction: column; gap: 6px;
+    z-index: 9999; pointer-events: none;
+}
+#controls-wrap > * { pointer-events: auto; }
+#controls, #settings, #static-settings {
+    background: rgba(10,10,10,0.85);
+    border: 1px solid #333; border-radius: 8px;
+    padding: 8px 10px;
+}
+#controls {
+    display: flex; flex-wrap: nowrap; align-items: center; gap: 5px 10px;
+}
+#settings, #static-settings {
+    display: flex; flex-direction: column; gap: 8px;
+    width: 78%; align-self: flex-end; padding: 10px 12px;
+}
+#settings.hidden, #static-settings.hidden { display: none; }
+.row { display: flex; align-items: center; gap: 10px; }
+.label { font-size: 12px; color: #ccc; flex-shrink: 0; }
+.row input[type=range] { flex: 1; min-width: 0; accent-color: #6889a8; }
+#speed-val {
+    width: 58px; text-align: right; font-variant-numeric: tabular-nums;
+    font-size: 12px; color: #ccc; flex-shrink: 0;
+}
+#dot-size-wrap { display: flex; align-items: center; gap: 6px; flex: 1; min-width: 0; }
+#toggle-wrap {
+    display: flex; gap: 10px; font-size: 12px; color: #ccc;
+    flex-shrink: 0; line-height: 1.2;
+}
+#toggle-wrap label {
+    cursor: pointer; white-space: nowrap;
+    display: inline-flex; align-items: center; gap: 6px;
+}
+#toggle-wrap input { accent-color: #6889a8; margin: 0; }
+
+/* The button cluster on the left of the bar, and the mode toggle on its
+   right, are square icon buttons rather than the text buttons the settings
+   rows use -- same shape as nycriders, so the two maps read as one family. */
+#speed-buttons, #static-speed-buttons { display: flex; gap: 4px; flex-shrink: 0; }
+#speed-buttons button, #static-speed-buttons button, #t-static {
+    background: none; border: 1px solid #555; color: #ccc;
+    border-radius: 4px; width: 30px; height: 30px; padding: 0;
+    font: inherit; font-size: 13px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; line-height: 1;
+    flex-shrink: 0;
+}
+@media (hover: hover) {
+    #speed-buttons button:hover, #static-speed-buttons button:hover,
+    #t-static:hover { border-color: #6889a8; color: #eee; background: none; }
+}
+#speed-buttons button.active, #static-speed-buttons button.active,
+#t-static.active { border-color: #6889a8; color: #6889a8; }
+#gear, #static-gear { margin-right: 5px; }
+
+#time-label {
+    font-size: 20px; font-weight: 700; color: #ccc;
+    width: 78px; text-align: center; font-variant-numeric: tabular-nums;
+}
+#time-slider {
+    min-width: 170px; height: 14px; background: transparent;
+    -webkit-appearance: none; appearance: none; cursor: pointer;
+}
+#time-slider::-webkit-slider-runnable-track {
+    height: 3px; background: #555; border-radius: 2px;
+}
+#time-slider::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 3px; height: 14px;
+    background: #cfd9e4; border: none; border-radius: 1px; margin-top: -5.5px;
+}
+#time-slider::-moz-range-track { height: 3px; background: #555; border-radius: 2px; }
+#time-slider::-moz-range-thumb {
+    width: 3px; height: 14px; background: #cfd9e4; border: none; border-radius: 1px;
+}
+button {
+    background: #1c1c1c; color: #ddd; border: 1px solid #3a3a3a;
+    border-radius: 5px; padding: 4px 9px; font: inherit; font-size: 13px;
+    cursor: pointer;
+}
+button:hover { background: #262626; }
+
+#panel {
+    position: absolute; left: 10px; top: 10px; z-index: 9999;
+    background: rgba(10,10,10,0.85); border: 1px solid #333;
+    border-radius: 8px; padding: 11px 13px; max-width: 310px;
+}
+#panel h1 { font-size: 15px; font-weight: 700; }
+#panel .hdr {
+    display: flex; align-items: baseline; justify-content: space-between;
+    gap: 12px; margin-bottom: 3px;
+}
+#panel .sub { font-size: 12px; color: #9a9a9a; line-height: 1.45; }
+
+#langtoggle { flex: none; font-size: 11px; white-space: nowrap; }
+#langtoggle span {
+    cursor: pointer; color: #7e7e7e; padding: 1px 5px; border-radius: 4px;
+}
+#langtoggle span.on { color: #fff; background: #2f3f4f; }
+#panel .stat { margin-top: 8px; font-size: 12px; color: #ccc; }
+#panel .stat b { color: #fff; font-variant-numeric: tabular-nums; }
+#panel details { margin-top: 8px; }
+#panel summary {
+    font-size: 11px; color: #7e7e7e; cursor: pointer; outline: none;
+}
+#panel details p {
+    font-size: 11px; color: #8a8a8a; line-height: 1.5; margin-top: 6px;
+}
+#panel a { color: #7e9cbb; }
+#panel .note {
+    margin-top: 7px; font-size: 11px; color: #8a8a8a; line-height: 1.5;
+    border-top: 1px solid #2a2a2a; padding-top: 7px;
+}
+#panel .warn {
+    margin-top: 8px; font-size: 11px; line-height: 1.45;
+    color: #ffb95e; border-left: 2px solid #ffb95e; padding-left: 7px;
+}
+#panel .built { font-size: 11px; color: #6e6e6e; margin-top: 6px; }
+.hidden { display: none !important; }
+
+#legend {
+    position: absolute; left: 10px; bottom: 10px; z-index: 9999;
+    background: rgba(10,10,10,0.85); border: 1px solid #333;
+    border-radius: 8px; padding: 8px 11px;
+    display: flex; gap: 5px 10px; align-items: center; flex-wrap: wrap;
+    max-width: 360px;
+}
+#legend .li { display: flex; align-items: center; gap: 4px; font-size: 11px; color: #bbb; }
+#legend .sw { width: 11px; height: 3px; border-radius: 2px; }
+
+/* Narrow screens: the bar now carries two clusters of icon buttons, so let
+   it wrap and give the slider the whole second line. */
+@media (max-width: 620px) {
+    #controls-wrap { top: 6px; right: 6px; }
+    #controls { padding: 10px 12px; gap: 3px 10px; flex-wrap: wrap; }
+    #speed-buttons, #static-speed-buttons { order: 0; }
+    #t-static { order: 1; margin-left: auto; }
+    #controls::before { content: ''; order: 2; flex-basis: 100%; height: 0; }
+    #time-slider { order: 3; min-width: 0; flex: 1; }
+    #time-label { order: 4; }
+    #settings, #static-settings { width: 100%; }
+}
+
+#loading {
+    position: absolute; inset: 0; display: flex;
+    align-items: center; justify-content: center;
+    background: #0a0a0a; z-index: 10000; font-size: 14px; color: #888;
+}
+#loading.hidden { display: none; }
+
+/* The dot overlay is a canvas at z-index 1 inside the map container, and
+   MapLibre leaves its own furniture on auto -- so say where these go, or the
+   dots paint over the tooltips and the attribution. */
+.maplibregl-control-container { z-index: 2; }
+.maplibregl-popup { z-index: 3; }
+
+/* Tooltips. One row: the line roundels, then the count. */
+.train-tooltip .maplibregl-popup-content {
+    background: rgba(10,10,10,0.9);
+    color: #eee;
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-size: 13px;
+    font-family: 'Nunito', system-ui, sans-serif;
+    border: 1px solid #444;
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    max-width: none !important;
+    width: max-content;
+}
+.train-tooltip .maplibregl-popup-tip { display: none; }
+.route-icons { display: inline-flex; align-items: center; gap: 3px; }
+/* Seoul signage puts the line number in a filled circle, so the tooltip does
+   the same rather than borrowing London's name chips. */
+.route-icon {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 18px; height: 18px; border-radius: 50%;
+    font-size: 11px; font-weight: 700; line-height: 1;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    flex-shrink: 0;
+}
+.route-icon.named {
+    width: auto; height: 18px; border-radius: 9px; padding: 0 7px;
+}
+.tip-name { font-weight: 700; white-space: nowrap; }
+.tip-count { white-space: nowrap; color: #fff; }
+.tip-note { color: #9a9a9a; font-size: 11px; white-space: nowrap; }
+
+/* ---------------------------------------------------- drill-down panel
+   The day view's second read: a clicked segment or station, broken out by
+   line and by hour. Ported from nycriders, widened because a Seoul line
+   label is a word rather than a single letter. */
+#drill-panel {
+    position: absolute; bottom: 16px; left: 50%;
+    transform: translateX(-50%); z-index: 9999;
+    /* A shade more opaque than nycriders': this panel lands on top of a
+       22-line legend, and at 0.92 the legend read straight through it. */
+    background: rgba(10,10,10,0.96);
+    border: 1px solid #333; border-radius: 8px;
+    padding: 10px 14px;
+    width: min(580px, calc(100vw - 24px));
+    color: #ccc; font-family: inherit; font-size: 12px;
+}
+#drill-panel.hidden { display: none; }
+.drill-close {
+    position: absolute; top: 4px; right: 6px;
+    background: none; border: none; color: #888;
+    cursor: pointer; font-size: 16px; line-height: 1; padding: 4px 6px;
+}
+.drill-close:hover { color: #fff; background: none; }
+.drill-header {
+    display: flex; align-items: baseline; gap: 8px; margin-bottom: 8px;
+}
+.drill-station-name {
+    color: #eee; font-weight: 700; font-size: 13px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.drill-station-name.right { margin-left: auto; margin-right: 22px; text-align: right; }
+.drill-sep {
+    flex: 1; border-bottom: 1px dashed #444; margin: 0 4px; align-self: center;
+}
+.drill-rows { display: flex; flex-direction: column; gap: 2px; margin-bottom: 4px; }
+.drill-row { display: flex; align-items: center; gap: 6px; height: 31px; }
+/* One fixed-width cell for the roundel, the 급행 tag and the direction
+   arrow, so every row's chart starts at the same x however long the line's
+   name is -- 경의중앙선 is a chip, not a letter. */
+.drill-lead {
+    width: 124px; flex-shrink: 0;
+    display: flex; align-items: center; gap: 4px; overflow: hidden;
+}
+/* The roundels sit against the left edge the way nycriders' do; the arrow
+   is pushed to the far end of the cell so the arrows line up as a column
+   however long the line names next to them are. */
+.drill-lead-icons {
+    flex: 1 1 auto; min-width: 0; overflow: hidden;
+    display: flex; align-items: center; gap: 4px;
+}
+.drill-lead .route-icon {
+    height: 15px; font-size: 9.5px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.drill-lead .route-icon:not(.named) { flex: 0 0 15px; width: 15px; }
+.drill-lead .route-icon.named {
+    border-radius: 8px; padding: 0 6px;
+    flex: 0 1 auto; min-width: 0; display: block; line-height: 15px;
+}
+.drill-tag {
+    font-size: 9.5px; color: #9a9a9a; border: 1px solid #4a4a4a;
+    border-radius: 3px; padding: 0 3px; line-height: 14px; flex-shrink: 0;
+}
+.drill-arrow {
+    color: #ccc; font-size: 15px; font-weight: 700;
+    width: 11px; text-align: center; flex-shrink: 0; line-height: 1;
+}
+.drill-chart { flex: 1; height: 31px; display: block; min-width: 0; }
+.drill-chart rect { transition: opacity 80ms; }
+.drill-chart rect:hover { opacity: 1 !important; }
+.drill-axis {
+    position: relative;
+    margin-left: 130px;   /* 124px lead + the row's 6px gap */
+    margin-right: 62px;   /* matches .drill-row-total + the row's 6px gap */
+    height: 14px; color: #777; font-size: 10px;
+    font-variant-numeric: tabular-nums;
+}
+.drill-axis span { position: absolute; transform: translateX(-50%); top: 1px; }
+.drill-row-total {
+    flex-shrink: 0; width: 56px; text-align: right;
+    color: #ccc; font-size: 11px; font-variant-numeric: tabular-nums;
+    line-height: 1;
+}
+.drill-metric-buttons {
+    display: flex; align-items: center; gap: 4px; margin-bottom: 6px;
+}
+.drill-total {
+    margin-left: auto; margin-right: 22px;   /* clear of the close button */
+    color: #aaa; font-size: 11px; font-variant-numeric: tabular-nums;
+}
+.drill-btn {
+    background: none; border: 1px solid #555; color: #ccc;
+    border-radius: 3px; height: 22px; padding: 0 8px;
+    cursor: pointer; font-size: 11px; font-family: inherit; line-height: 1;
+}
+@media (hover: hover) {
+    .drill-btn:hover { border-color: #6889a8; color: #eee; background: none; }
+}
+.drill-btn.active { border-color: #6889a8; color: #6889a8; }
+.drill-note {
+    color: #7e7e7e; font-size: 10.5px; line-height: 1.45; margin-top: 6px;
+    border-top: 1px solid #2a2a2a; padding-top: 6px;
+}
+#drill-tooltip {
+    position: fixed; z-index: 10001;
+    background: rgba(10,10,10,0.92); border: 1px solid #444;
+    border-radius: 4px; color: #eee; padding: 4px 8px;
+    font-size: 11px; font-family: inherit; pointer-events: none;
+    white-space: nowrap; font-variant-numeric: tabular-nums;
+}
+#drill-tooltip.hidden { display: none; }
+@media (max-width: 620px) {
+    #drill-panel { font-size: 11px; bottom: 8px; padding: 8px 10px; }
+    .drill-lead { width: 86px; }
+    .drill-axis { margin-left: 92px; margin-right: 52px; }
+    .drill-row-total { width: 46px; }
+}
+</style>
+</head>
+<body>
+<div id="map"></div>
+<div id="loading">loading…</div>
+
+<div id="panel">
+    <div class="hdr">
+        <h1 id="t-h1">seoul riders</h1>
+        <div id="langtoggle"><span id="lang-en">EN</span><span
+            id="lang-ko">한국어</span></div>
+    </div>
+    <div class="sub" id="subtitle"></div>
+    <div class="stat" id="live-stat"></div>
+    <div class="stat hidden" id="static-stat"></div>
+    <div class="note hidden" id="static-note"></div>
+    <div class="note hidden" id="daynote"></div>
+    <div class="warn hidden" id="samplewarn"></div>
+    <details>
+        <summary id="t-about-sum">about the data</summary>
+        <p id="about"></p>
+        <p class="built" id="buildstamp"></p>
+    </details>
+</div>
+
+<div id="legend"></div>
+
+<div id="controls-wrap">
+    <div id="controls">
+        <div id="speed-buttons">
+            <button id="gear"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"/><circle cx="12" cy="12" r="3"/></svg></button>
+            <button id="play" data-speed="0"><svg width="10" height="12" viewBox="0 0 10 12"><rect x="0" y="0" width="3" height="12" fill="currentColor"/><rect x="7" y="0" width="3" height="12" fill="currentColor"/></svg></button>
+            <button data-speed="1" class="active">1×</button>
+            <button data-speed="2">2×</button>
+        </div>
+        <div id="static-speed-buttons" class="hidden">
+            <button id="static-gear"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"/><circle cx="12" cy="12" r="3"/></svg></button>
+            <button id="static-play" data-static-speed="0" class="active"><svg width="10" height="12" viewBox="0 0 10 12"><rect x="0" y="0" width="3" height="12" fill="currentColor"/><rect x="7" y="0" width="3" height="12" fill="currentColor"/></svg></button>
+            <button data-static-speed="1">1×</button>
+        </div>
+        <input type="range" id="time-slider" min="0" max="1000" value="0">
+        <span id="time-label">05:00</span>
+        <button id="t-static"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="3" y1="14" x2="14" y2="3"/><line x1="7" y1="18" x2="18" y2="7"/><line x1="11" y1="22" x2="22" y2="11"/></svg></button>
+    </div>
+    <div id="settings" class="hidden">
+        <div class="row">
+            <span class="label" id="t-speed">speed</span>
+            <input type="range" id="speed" min="0" max="15" step="1" value="7">
+            <span id="speed-val">1×</span>
+        </div>
+        <div class="row">
+            <div id="dot-size-wrap">
+                <span class="label" id="t-dotsize">dot size</span>
+                <input type="range" id="dotsize" min="0.4" max="3" step="0.1" value="1.2">
+            </div>
+            <div id="toggle-wrap">
+                <label><input type="checkbox" id="cb-stations" checked><span
+                    id="t-stations-lbl">stations</span></label>
+                <label><input type="checkbox" id="cb-lines" checked><span
+                    id="t-lines-lbl">lines</span></label>
+            </div>
+        </div>
+    </div>
+    <div id="static-settings" class="hidden">
+        <div class="row">
+            <span class="label" id="t-static-size">size</span>
+            <input type="range" id="static-size" min="40" max="220" step="1" value="100">
+        </div>
+        <div class="row">
+            <span class="label" id="t-board-lbl">boardings</span>
+            <button id="b-all" class="drill-btn active">all</button>
+            <button id="b-first" class="drill-btn">starting</button>
+            <button id="b-xfer" class="drill-btn">changing</button>
+        </div>
+    </div>
+</div>
+
+<div id="drill-panel" class="hidden"></div>
+<div id="drill-tooltip" class="hidden"></div>
+
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<script>
+// ---------------------------------------------------------------- language
+// Every string the page can show, in both languages. Station names come from
+// the data (name / name_en, out of OSM), line names from line_meta
+// (display / display_en, out of lines.py) -- so this table is only the
+// furniture. The counted ones are functions because Korean puts its counter
+// after the number and orders the clauses differently, which a template with
+// holes in it cannot express.
+const STR = {
+    en: {
+        h1: 'seoul riders',
+        subLive: d => 'Subway trains on ' + d + ', sized by how many people ' +
+            'are on board.',
+        subStatic: d => 'Every journey made on ' + d + ', added up rather ' +
+            'than animated.',
+        liveStat: '<span id="onboard">0</span> riders on ' +
+            '<b id="running">0</b> trains, <b id="waiting-count">0</b> ' +
+            'on platforms',
+        staticStat: '<b id="static-total">0</b> boardings ' +
+            '<span id="static-when">all day</span>',
+        staticNote: 'Line thickness is riders carried past that point; ' +
+            'circles are boardings, counted again where a rider changes ' +
+            'train. How many people ride each line is measured everywhere. ' +
+            'Which journeys they make is modelled on some lines, because ' +
+            'the origin–destination release records a journey only if one ' +
+            'end passed a 서울교통공사 gate; hover a line or a station and ' +
+            'the tooltip says how much of it is modelled.',
+        aboutSummary: 'about the data',
+        // Two versions, because a weekday is not measured the way New Year's
+        // Eve is and the panel should not imply otherwise.
+        about: d => 'Station-to-station journeys from the Seoul city ' +
+            'origin–destination release, which covers one day: Sunday ' +
+            '31 December 2023. ' + (d === 'nye' ? '' :
+                'Boardings and alightings at every station on ' +
+                'an ordinary day are measured separately, and that journey ' +
+                'pattern is scaled onto them — so the volumes here are ' +
+                'measured and the pattern of who goes where is carried over ' +
+                'from the day that was. ') +
+            'Split into hours against 서울교통공사 hourly gate counts, then ' +
+            'routed over the published train timetable. Grey bubbles are ' +
+            'riders on the platform waiting to board. Every 수도권 line ' +
+            'except 에버라인, which publishes no stop times.',
+        // Shown on every build but `nye`. Short on purpose: the full version
+        // is in `about`, and a caveat nobody reads is not a caveat.
+        dayNote: 'Passenger numbers are measured. Which journeys make them ' +
+            'up is carried over from a Sunday — the only day Seoul ' +
+            'publishes station-to-station data for.',
+        legWaiting: 'waiting',
+        built: d => 'Built ' + d + '.',
+        builtUnknown: 'Built before the build date was recorded.',
+        sampleWarn: n => 'Sample build — every ' + n + 'th origin only. ' +
+            'Every count on this page is roughly ' + n + '× low. Run ' +
+            'build.py with no --sample for the real thing.',
+        dayTitle: 'the whole day at once',
+        play: 'play',
+        pause: 'pause',
+        speed: 'speed',
+        dotSize: 'dot size',
+        stations: 'stations',
+        lines: 'lines',
+        realTime: 'real time',
+        allDay: 'all day',
+        allDayShort: 'all day',   // goes in the narrow clock slot
+        loading: 'loading…',
+        loadingDay: 'loading the day…',
+        tipRiders: n => n + '&nbsp;riders',
+        tipExpress: 'express',
+        tipCarried: n => n + '&nbsp;carried',
+        tipOnOff: (b, a) => b + '&nbsp;on, ' + a + '&nbsp;off',
+        tipChanging: n => n + '&nbsp;of them changing trains',
+        boardLbl: 'boardings',
+        boardAll: 'all',
+        boardFirst: 'starting',
+        boardXfer: 'changing',
+        settingsTitle: 'settings',
+        playTitle: 'play',
+        pauseTitle: 'pause',
+        size: 'size',
+        // The drill panel: one clicked segment or station, hour by hour.
+        mRiders: 'riders',
+        mCrowd: 'crowdedness',
+        expressTag: 'exp',
+        express: 'express',
+        allStops: 'all stops',
+        drillCarried: n => n + ' riders',
+        drillFull: (p, n) => p + '% full · ' + n + ' per train',
+        drillBoard: { b: n => n + ' boardings', b0: n => n + ' starting',
+                      x: n => n + ' changing' },
+        drillCapNote: 'The dashed line is the line’s rated capacity — ' +
+            'about 160 seated and standing per car. Bars above it are a ' +
+            'crush load, not an impossible one.',
+        drillNoSplitNote: 'Both services are counted together here. The ' +
+            'non-stop airport express takes a separate ticket outside the ' +
+            'integrated fare system, and no hourly split between it and the ' +
+            'all-stops trains is published, so this map does not claim one.',
+        drillNoData: 'nothing recorded here',
+        tipWaiting: n => n + '&nbsp;waiting',
+        tipModelled: n => n + '% of journeys modelled',
+        date: (y, m, d) => d + ' ' + ['January', 'February', 'March', 'April',
+            'May', 'June', 'July', 'August', 'September', 'October',
+            'November', 'December'][m - 1] + ' ' + y,
+        // A weekday build is not a date. The OD is measured on one Sunday and
+        // re-levelled onto the day type, so naming a Wednesday would claim a
+        // precision the data has not got. See README, "Getting off New Year's Eve".
+        dayName: { weekday: 'a typical weekday', saturday: 'a typical Saturday',
+            sunday: 'a typical Sunday' },
+    },
+    ko: {
+        h1: '서울 지하철 승객',
+        subLive: d => d + '의 지하철 열차. 크기는 탑승 인원.',
+        subStatic: d => d + '에 이루어진 모든 통행을 합산한 것.',
+        liveStat: '열차 <b id="running">0</b>대에 ' +
+            '<span id="onboard">0</span>명, 승강장에 ' +
+            '<b id="waiting-count">0</b>명',
+        staticStat: '<span id="static-when">하루 전체</span> 승차 ' +
+            '<b id="static-total">0</b>명',
+        staticNote: '선 굵기는 그 지점을 지나간 승객 수, 원은 승차 인원(환승 ' +
+            '시 다시 계산). 노선별 이용객 수는 모두 실측값이다. 다만 어느 역에서 ' +
+            '어느 역으로 가는지는 일부 노선에서 추정한 것 — 기종점 자료는 ' +
+            '서울교통공사 개찰구를 지난 통행만 기록하기 때문이다. 노선이나 역에 ' +
+            '마우스를 올리면 추정 비율이 표시된다.',
+        aboutSummary: '자료 설명',
+        about: d => '서울시 지하철 역별 기종점 통행량 자료는 2023년 ' +
+            '12월 31일 일요일 하루치만 공개되어 있다. ' + (d === 'nye' ? '' :
+                '평상시 역별 승하차 인원은 따로 측정된 값이므로, ' +
+                '통행 구조는 그대로 둔 채 그 값에 맞추어 규모를 조정했다. ' +
+                '즉 승객 수는 측정값이고, 어디서 어디로 가는가는 그날의 ' +
+                '구조를 가져온 것이다. ') +
+            '서울교통공사 시간대별 승하차 인원에 맞추어 시간대로 나눈 뒤, ' +
+            '공개된 열차운행시각표 위로 경로를 배정했다. 회색 원은 ' +
+            '승강장에서 열차를 기다리는 승객. 정차 시각을 공개하지 않는 ' +
+            '에버라인을 제외한 수도권 전 노선.',
+        dayNote: '승객 수는 실측값이다. 다만 어느 역에서 어느 역으로 ' +
+            '가는지는 서울시가 역별 기종점 자료를 공개한 유일한 날짜, ' +
+            '일요일에서 가져온 것이다.',
+        legWaiting: '대기',
+        built: d => d + ' 생성.',
+        builtUnknown: '생성 시각이 기록되기 전에 만들어진 자료.',
+        sampleWarn: n => '표본 빌드 — 출발역 ' + n + '개 중 1개만 사용. ' +
+            '이 페이지의 모든 수치가 약 ' + n + '배 작다. 실제 수치는 ' +
+            '--sample 없이 build.py를 실행할 것.',
+        dayTitle: '하루 전체를 한 번에',
+        play: '재생',
+        pause: '일시정지',
+        speed: '속도',
+        dotSize: '점 크기',
+        stations: '역',
+        lines: '노선',
+        realTime: '실시간',
+        allDay: '하루 전체',
+        allDayShort: '종일',
+        loading: '불러오는 중…',
+        loadingDay: '하루치 불러오는 중…',
+        tipRiders: n => n + '명 탑승',
+        tipExpress: '급행',
+        tipCarried: n => n + '명 통과',
+        tipOnOff: (b, a) => '승차 ' + b + ', 하차 ' + a,
+        tipChanging: n => '그 중 환승 ' + n + '명',
+        boardLbl: '승차',
+        boardAll: '전체',
+        boardFirst: '최초',
+        boardXfer: '환승',
+        settingsTitle: '설정',
+        playTitle: '재생',
+        pauseTitle: '일시정지',
+        size: '크기',
+        mRiders: '수송량',
+        mCrowd: '혼잡도',
+        expressTag: '급행',
+        express: '급행',
+        allStops: '일반',
+        drillCarried: n => n + '명 통과',
+        drillFull: (p, n) => '혼잡도 ' + p + '% · 열차당 ' + n + '명',
+        drillBoard: { b: n => '승차 ' + n + '명', b0: n => '최초 승차 ' + n + '명',
+                      x: n => '환승 ' + n + '명' },
+        drillCapNote: '점선은 해당 노선의 정원 — 1량당 약 160명. ' +
+            '이를 넘는 막대는 혼잡한 것이지 불가능한 것은 아니다.',
+        drillNoSplitNote: '직통열차와 일반열차를 합산한 값이다. 직통은 통합 ' +
+            '요금제 밖의 별도 승차권을 쓰고, 시간대별 직통·일반 구분은 ' +
+            '공표되지 않으므로 이 지도는 그 구분을 주장하지 않는다.',
+        drillNoData: '기록 없음',
+        tipWaiting: n => n + '명 대기',
+        tipModelled: n => '통행 ' + n + '% 추정',
+        date: (y, m, d) => y + '년 ' + m + '월 ' + d + '일',
+        dayName: { weekday: '평일', saturday: '토요일', sunday: '일요일' },
+    },
+};
+// Device in Korea → open in Korean. Timezone is the cleanest "where am I"
+// signal: navigator.language is the OS/browser locale, not the location.
+let lang = (() => {
+    try {
+        if (Intl.DateTimeFormat().resolvedOptions().timeZone === 'Asia/Seoul')
+            return 'ko';
+    } catch (e) {}
+    return 'en';
+})();
+// The panel is filled by applyLang() once the data is in; the loading card is
+// on screen before that, so it gets its text now.
+document.getElementById('loading').textContent = STR[lang].loading;
+
+// Names, colours and capacities all come from data.line_meta, which build.py
+// writes out of lines.py -- so adding a line is a Python change, not a change
+// here. These stand in only for a trains.json built before line_meta existed.
+let LINE_NAMES = {
+    '1': '1호선', '2': '2호선', '3': '3호선', '4': '4호선', '5': '5호선',
+    '6': '6호선', '7': '7호선', '8': '8호선', '9': '9호선'
+};
+let LINE_NAMES_EN = {
+    '1': 'Line 1', '2': 'Line 2', '3': 'Line 3', '4': 'Line 4', '5': 'Line 5',
+    '6': 'Line 6', '7': 'Line 7', '8': 'Line 8', '9': 'Line 9'
+};
+let LINE_COLORS = {
+    '1': '#0052A4', '2': '#00A84D', '3': '#EF7C1C', '4': '#00A5DE',
+    '5': '#996CAC', '6': '#CD7C2F', '7': '#747F00', '8': '#E6186C',
+    '9': '#BDB092'
+};
+// Rated capacity (정원), at roughly 160 per car. Trains over their line's
+// figure get a red rim -- a crush load, not an impossible one.
+let LINE_CAPACITY = {
+    '1': 1600, '2': 1600, '3': 1600, '4': 1600,
+    '5': 1280, '6': 1280, '7': 1280,
+    '8': 960, '9': 960,
+};
+let LINE_ORDER = Object.keys(LINE_COLORS);
+
+// The two labels that come out of the data rather than out of STR. Both fall
+// back to the Korean, which is the name that always exists.
+function lineLabel(id) {
+    return (lang === 'en' && LINE_NAMES_EN[id]) || LINE_NAMES[id] || id;
+}
+function stnLabel(s) {
+    if (!s) return '';
+    return (lang === 'en' && s.name_en) || s.name || '';
+}
+
+// Twenty-two operator colours, several of them pale, so work out which want
+// dark numerals rather than keeping a list in step by hand.
+function needsDarkText(hex) {
+    const v = i => {
+        const c = parseInt(hex.slice(i, i + 2), 16) / 255;
+        return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+    };
+    return 0.2126 * v(1) + 0.7152 * v(3) + 0.0722 * v(5) > 0.35;
+}
+
+const map = new maplibregl.Map({
+    container: 'map',
+    style: 'https://tiles.openfreemap.org/styles/dark',
+    center: [126.99, 37.55],
+    zoom: 10.2,
+    minZoom: 8,
+    attributionControl: true,
+});
+
+window.map = map;   // so the page can be driven and checked from a console
+
+let DATA = null;
+let trains = [];
+let waitStations = [];    // only the stations that ever have anyone waiting
+let simTime = 5 * 3600, tMin = 5 * 3600, tMax = 26 * 3600;
+let playing = true, speed = 1, dotScale = 1.2;
+let anchorWall = performance.now(), anchorSim = simTime;
+
+// Bubbles are sized for the opening view; zooming two levels in doubles them,
+// so a dot keeps roughly the same footprint on the ground as you go closer.
+const BASE_ZOOM = 10.2;
+const DWELL = 15;    // how long a train sits at a platform, in sim seconds
+const ACCEL = 15;    // pulling away and braking, in sim seconds
+const WAIT_TRANSITION = 10;  // ramp between two waiting counts, sim seconds
+const START_HOUR = 7;        // where the animation opens, not where it loops
+
+// The backdrop of every line, ridden or not. Faint in the animation so the
+// dots carry the picture, fainter still in the day view where the drawn
+// segments *are* the lines and this is only the parts nobody rides.
+const LINE_OPACITY_LIVE = 0.3;
+const LINE_OPACITY_STATIC = 0.12;
+
+const EMPTY = { type: 'FeatureCollection', features: [] };
+const $ = id => document.getElementById(id);
+// train index -> [lon, lat, riders], refreshed every frame so a pinned
+// tooltip can follow its train instead of hanging where it was clicked.
+const trainPositions = new Map();
+const waitByStation = new Map();   // station index -> its waiting timeline
+
+function fmtTime(t) {
+    const h = Math.floor(t / 3600) % 24, m = Math.floor((t % 3600) / 60);
+    return String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
+}
+function fmtNum(n) { return Math.round(n).toLocaleString('en-US'); }
+
+function darkenHex(hex, f) {
+    const c = i => Math.round(parseInt(hex.slice(i, i + 2), 16) * f)
+        .toString(16).padStart(2, '0');
+    return '#' + c(1) + c(3) + c(5);
+}
+function lightenHex(hex, f) {
+    const c = i => {
+        const v = parseInt(hex.slice(i, i + 2), 16);
+        return Math.round(v + (255 - v) * f).toString(16).padStart(2, '0');
+    };
+    return '#' + c(1) + c(3) + c(5);
+}
+
+// ---------------------------------------------------------------- load
+// A sampled build writes its own filenames so it can never stand in for the
+// real one; ?sample in the URL is how you ask to see it anyway.
+const SAMPLED = new URLSearchParams(location.search).has('sample');
+const TRAINS_URL = SAMPLED ? 'data/trains.sample.json' : 'data/trains.json';
+const STATS_URL = SAMPLED ? 'data/stats.sample.json' : 'data/stats.json';
+
+// When the build was made, and whether it is one worth believing. Both
+// outputs carry the same stamp; a file written before this existed has none,
+// which is worth saying rather than hiding.
+function applyBuildStamp() {
+    const S = STR[lang];
+    const b = DATA && DATA.build;
+    const el = $('buildstamp');
+    const warn = $('samplewarn');
+    if (!el) return;
+    if (!DATA) { el.textContent = ''; return; }
+    el.textContent = b && b.built ? S.built(prettyBuilt(b.built))
+                                  : S.builtUnknown;
+    const n = b && b.sample > 1 ? b.sample : 0;
+    warn.classList.toggle('hidden', !n);
+    if (n) warn.textContent = S.sampleWarn(n);
+}
+
+function prettyBuilt(iso) {
+    const d = new Date(iso);
+    if (isNaN(d)) return iso;
+    const pad = v => String(v).padStart(2, '0');
+    return d.toLocaleDateString(lang === 'ko' ? 'ko-KR' : 'en-GB',
+                                {day: 'numeric', month: 'short',
+                                 year: 'numeric'}) +
+           ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+}
+
+fetch(TRAINS_URL).then(r => r.json()).then(d => {
+    DATA = d;
+    prepare();
+    if (map.loaded()) install(); else map.on('load', install);
+});
+
+function prepare() {
+    const meta = DATA.line_meta;
+    if (meta) {
+        LINE_ORDER = Object.keys(meta);
+        LINE_NAMES = {};
+        LINE_NAMES_EN = {};
+        LINE_COLORS = {};
+        LINE_CAPACITY = {};
+        for (const id of LINE_ORDER) {
+            LINE_NAMES[id] = meta[id].display;
+            LINE_NAMES_EN[id] = meta[id].display_en || '';
+            LINE_COLORS[id] = meta[id].color;
+            LINE_CAPACITY[id] = meta[id].capacity;
+        }
+    }
+
+    trains = DATA.trains.map(tr => {
+        const tl = tr.timeline;
+        const color = tr.color || LINE_COLORS[tr.route] || '#888';
+        return {
+            route: tr.route,
+            color: color,
+            stroke: darkenHex(color, 0.75),
+            over: lightenHex(color, 0.2),
+            cap: LINE_CAPACITY[tr.route] || 0,
+            express: !!tr.express,
+            tl: tl,
+            t0: tl[0][0],
+            t1: tl[tl.length - 1][0],
+            // Drawing in timetable order stacks whole lines on top of each
+            // other where they share track; a fixed random key mixes them.
+            order: Math.random(),
+        };
+    }).filter(t => t.t1 > t.t0);
+    // Sorted once, so the overlay can draw straight down the list and still
+    // get the mixed stacking the circle-sort-key used to give it.
+    trains.sort((a, b) => a.order - b.order);
+
+    waitStations = (DATA.stations || [])
+        .map((s, i) => ({ i: i, name: s.name, name_en: s.name_en,
+                          lat: s.lat, lon: s.lon,
+                          lines: s.lines || [], wait: s.wait || [] }))
+        .filter(s => s.wait.length);
+    waitStations.forEach(s => waitByStation.set(s.i, s));
+
+    tMin = Math.min.apply(null, trains.map(t => t.t0));
+    tMax = Math.max.apply(null, trains.map(t => t.t1));
+    // Open at 07:00. The first two hours of service are nearly empty, and
+    // starting there makes the map look broken before it looks interesting.
+    simTime = Math.min(tMax, Math.max(tMin, START_HOUR * 3600));
+    anchorSim = simTime; anchorWall = performance.now();
+
+    applyLang();
+}
+
+function prettyDate(iso) {
+    const [y, m, d] = iso.split('-').map(Number);
+    return STR[lang].date(y, m, d);
+}
+
+// What the subtitle calls the day. `nye` is the one build with a real date to
+// give; every other day type is a class of days, not one of them.
+function whenLabel() {
+    if (DATA.date) return prettyDate(DATA.date);
+    return STR[lang].dayName[DATA.day] || STR[lang].dayName.weekday;
+}
+
+function buildLegend() {
+    const legend = $('legend');
+    legend.innerHTML = '';
+    if (!DATA) return;
+    const S = STR[lang];
+    // Only lines that actually carry someone today, so the legend describes
+    // the map rather than the registry.
+    const running = new Set(trains.map(t => t.route));
+    LINE_ORDER.filter(k => running.has(k)).forEach(k => {
+        const el = document.createElement('div');
+        el.className = 'li';
+        el.innerHTML = '<span class="sw" style="background:' +
+            LINE_COLORS[k] + '"></span>' + lineLabel(k);
+        legend.appendChild(el);
+    });
+    const wl = document.createElement('div');
+    wl.className = 'li' + (staticMode ? ' hidden' : '');
+    wl.id = 'legend-waiting';
+    wl.innerHTML = '<span class="sw" style="background:#cbcbcb;' +
+        'width:8px;height:8px;border-radius:50%"></span>' + S.legWaiting;
+    legend.appendChild(wl);
+}
+
+// The basemap's own labels. openfreemap's dark style prints latin and
+// non-latin concatenated -- "GYEYANGSAN-RO 계양산로" -- so switching the page's
+// language means rewriting text-field on the layers that draw a name.
+// Motorway shields label from `ref` and are left alone.
+// Not gated on isStyleLoaded(): switching language sets off a round of glyph
+// loading, so the style reads "not loaded" for a second or two afterwards and
+// gating on it silently dropped every other switch. getStyle() throwing is the
+// real "too early" signal. Both expressions below still mention name:latin, so
+// rebuilding the layer list from an already-switched style finds the same set.
+let basemapLabelLayers = null;
+function applyBasemapLang() {
+    let layers;
+    try { layers = (map.getStyle() || {}).layers; } catch (e) { return; }
+    if (!layers || !layers.length) return;
+    if (!basemapLabelLayers || !basemapLabelLayers.length) {
+        basemapLabelLayers = layers
+            .filter(L => L.type === 'symbol' &&
+                JSON.stringify((L.layout || {})['text-field'] || '')
+                    .indexOf('name:latin') >= 0)
+            .map(L => L.id);
+    }
+    const expr = lang === 'ko'
+        ? ['coalesce', ['get', 'name:nonlatin'], ['get', 'name'],
+           ['get', 'name:latin']]
+        : ['coalesce', ['get', 'name:latin'], ['get', 'name_en'],
+           ['get', 'name']];
+    for (const id of basemapLabelLayers) {
+        if (map.getLayer(id)) map.setLayoutProperty(id, 'text-field', expr);
+    }
+}
+
+function applyLang() {
+    const S = STR[lang];
+    document.documentElement.lang = lang;
+    document.title = S.h1;
+    $('t-h1').textContent = S.h1;
+    $('lang-en').classList.toggle('on', lang === 'en');
+    $('lang-ko').classList.toggle('on', lang === 'ko');
+
+    // These two carry the spans the render loop writes into, so they are
+    // rebuilt rather than retitled -- and then refilled below.
+    $('live-stat').innerHTML = S.liveStat;
+    $('static-stat').innerHTML = S.staticStat;
+    $('static-note').textContent = S.staticNote;
+    $('t-about-sum').textContent = S.aboutSummary;
+    $('about').textContent = S.about(DATA ? DATA.day : 'weekday');
+    // `nye` is the one fully measured build; everything else is re-levelled
+    // and has to say so where it cannot be missed.
+    $('daynote').textContent = S.dayNote;
+    $('daynote').classList.toggle('hidden', !DATA || DATA.day === 'nye');
+    applyBuildStamp();
+    if (DATA) {
+        SUBTITLE_LIVE = S.subLive(whenLabel());
+        SUBTITLE_STATIC = S.subStatic(whenLabel());
+        $('subtitle').textContent = staticMode ? SUBTITLE_STATIC
+                                               : SUBTITLE_LIVE;
+    }
+
+    // The bar is icons now, so its labels are titles rather than captions.
+    $('t-static').title = S.dayTitle;
+    $('gear').title = S.settingsTitle;
+    $('static-gear').title = S.settingsTitle;
+    $('play').title = playing ? S.pause : S.play;
+    $('static-play').title = staticPlay ? S.pause : S.play;
+    $('t-speed').textContent = S.speed;
+    $('t-dotsize').textContent = S.dotSize;
+    $('t-static-size').textContent = S.size;
+    $('t-board-lbl').textContent = S.boardLbl;
+    $('b-all').textContent = S.boardAll;
+    $('b-first').textContent = S.boardFirst;
+    $('b-xfer').textContent = S.boardXfer;
+    $('t-stations-lbl').textContent = S.stations;
+    $('t-lines-lbl').textContent = S.lines;
+    $('speed-val').textContent = speedLabel(speed);
+
+    buildLegend();
+    applyBasemapLang();
+    // prepare() calls this before the layers exist, and there is nothing to
+    // redraw yet; install() calls it again once there is.
+    if (!installed) return;
+    if (staticMode) renderStatic(); else invalidate();
+    refreshDrill();
+    refreshTooltips();
+}
+
+// ---------------------------------------------------------------- layers
+let installed = false;
+
+// The backdrop: every line, ridden or not. It used to be OSM's own ways, and
+// OSM maps a four-track mainline track by track -- 940 ways for 1호선 alone
+// against 62 for 3호선, twenty of them within 250 m of 영등포 -- so the
+// corridor drew as a bundle of parallel lines rather than as a line. The
+// trains run one path per link, and build_shapes.py already wrote that path
+// into their timelines, so lift it from there instead: one polyline per link,
+// whichever way round the train ran it.
+//
+// Coverage is every link a rider-carrying train traverses, which is the whole
+// network bar a line with no such train at all -- build.py prints those as
+// NO TRAINS WITH RIDERS, and there are none.
+function backdropFeatures() {
+    // An unshaped build has no waypoints to lift and its timelines are
+    // chords, so fall back to OSM's ways, bundles and all.
+    if (DATA.build && DATA.build.shaped === false) {
+        const out = [];
+        (DATA.lines || []).forEach(L => (L.ways || []).forEach(w => out.push({
+            type: 'Feature',
+            properties: { color: L.color || LINE_COLORS[L.route] || '#888' },
+            geometry: { type: 'LineString',
+                        coordinates: w.map(p => [p[1], p[0]]) },
+        })));
+        return out;
+    }
+
+    // Rows with four or more entries are station stops; three-entry rows are
+    // the track waypoints, which is exactly the shape of the link between.
+    const links = new Map();
+    for (const tr of trains) {
+        const tl = tr.tl;
+        let s = -1;
+        for (let i = 0; i < tl.length; i++) {
+            if (tl[i].length < 4) continue;
+            if (s >= 0) {
+                const ka = tl[s][1] + ',' + tl[s][2];
+                const kb = tl[i][1] + ',' + tl[i][2];
+                const key = tr.route + '|' +
+                    (ka < kb ? ka + '|' + kb : kb + '|' + ka);
+                const have = links.get(key);
+                // An express that skips a station draws a line no train
+                // follows -- 공항철도's 직통 is fifty kilometres of it -- so an
+                // all-stops run's path always wins, and a link nothing but an
+                // express uses is dropped below.
+                if (!have || (have.express && !tr.express)) {
+                    const pts = [];
+                    for (let j = s; j <= i; j++) pts.push([tl[j][2], tl[j][1]]);
+                    links.set(key, { route: tr.route, pts: pts,
+                                     express: !!tr.express, a: ka, b: kb });
+                }
+            }
+            s = i;
+        }
+    }
+
+    const kept = [...links.values()].filter(L => !L.express);
+    // Which link continues at each end, so the spline can carry a tangent
+    // across a station and the bend there comes out smooth as well.
+    const atNode = new Map();
+    for (const L of kept) {
+        for (const k of [L.route + '|' + L.a, L.route + '|' + L.b]) {
+            const a = atNode.get(k);
+            if (a) a.push(L); else atNode.set(k, [L]);
+        }
+    }
+    const inward = (L, nodeKey) => {
+        const first = L.route + '|' + L.a === nodeKey;
+        return first ? L.pts[1] : L.pts[L.pts.length - 2];
+    };
+    const beyond = (L, nodeKey) => {
+        for (const M of atNode.get(nodeKey) || []) {
+            if (M !== L) return inward(M, nodeKey);
+        }
+        return null;
+    };
+
+    return kept.map(L => ({
+        type: 'Feature',
+        properties: { color: LINE_COLORS[L.route] || '#888' },
+        geometry: {
+            type: 'LineString',
+            coordinates: splineThrough(L.pts,
+                beyond(L, L.route + '|' + L.a),
+                beyond(L, L.route + '|' + L.b)),
+        },
+    }));
+}
+
+function install() {
+    map.addSource('lines', {
+        type: 'geojson',
+        data: { type: 'FeatureCollection', features: backdropFeatures() },
+    });
+    map.addLayer({
+        id: 'lines', type: 'line', source: 'lines',
+        layout: { 'line-cap': 'round', 'line-join': 'round' },
+        paint: {
+            'line-color': ['get', 'color'],
+            'line-width': ['interpolate', ['linear'], ['zoom'], 9, 0.7, 14, 2.6],
+            'line-opacity': LINE_OPACITY_LIVE,
+        },
+    });
+
+    map.addSource('stations', {
+        type: 'geojson',
+        data: {
+            type: 'FeatureCollection',
+            features: (DATA.stations || []).map((s, i) => ({
+                type: 'Feature',
+                properties: { si: i },
+                geometry: { type: 'Point', coordinates: [s.lon, s.lat] },
+            })),
+        },
+    });
+    map.addLayer({
+        id: 'stations', type: 'circle', source: 'stations',
+        paint: {
+            'circle-radius': ['interpolate', ['linear'], ['zoom'], 9, 0.9, 14, 2.6],
+            'circle-color': '#7d7d7d',
+            'circle-opacity': 0.75,
+        },
+    });
+
+    // The animated dots -- trains and waiting crowds -- are not MapLibre
+    // layers. See makeOverlay() for why.
+    makeOverlay();
+
+    // Static-view layers sit under the animated ones and start hidden.
+    // The highlight is two layers around the segments: a wider white line
+    // underneath that reads as a halo, and the same width on top at low
+    // opacity so a picked stripe lightens rather than only gaining a rim.
+    map.addSource('static-hl', { type: 'geojson', data: EMPTY });
+    map.addLayer({
+        id: 'static-hl-under', type: 'line', source: 'static-hl',
+        layout: { visibility: 'none', 'line-cap': 'round', 'line-join': 'round' },
+        paint: {
+            'line-color': '#ffffff',
+            'line-width': ['get', 'wo'],
+            'line-opacity': 0.55,
+        },
+    });
+
+    map.addSource('static-seg', { type: 'geojson', data: EMPTY });
+    map.addLayer({
+        id: 'static-seg', type: 'line', source: 'static-seg',
+        layout: { visibility: 'none', 'line-cap': 'round',
+                  'line-join': 'round', 'line-sort-key': ['get', 'w'] },
+        paint: {
+            'line-color': ['get', 'color'],
+            'line-width': ['get', 'w'],
+            'line-opacity': 0.85,
+        },
+    });
+    map.addLayer({
+        id: 'static-hl-over', type: 'line', source: 'static-hl',
+        layout: { visibility: 'none', 'line-cap': 'round', 'line-join': 'round' },
+        paint: {
+            'line-color': '#ffffff',
+            'line-width': ['get', 'w'],
+            'line-opacity': 0.22,
+        },
+    });
+    map.addSource('static-stn', { type: 'geojson', data: EMPTY });
+    map.addLayer({
+        id: 'static-stn', type: 'circle', source: 'static-stn',
+        layout: { visibility: 'none' },
+        paint: {
+            'circle-radius': ['get', 'r'],
+            'circle-color': '#cbcbcb',
+            'circle-opacity': 0.85,
+        },
+    });
+
+    $('loading').classList.add('hidden');
+    installed = true;
+    wireUI();
+    applyLang();       // now that the basemap layers are there to relabel
+    invalidate();
+}
+
+// ---------------------------------------------------------------- animation
+
+// Quadratic ease in and out. On a short hop there is not enough time for a
+// full ACCEL at each end, so the ramp is capped at half the segment.
+function ease(frac, travel) {
+    const a = Math.min(ACCEL / travel, 0.5);
+    const denom = 2 * a * (1 - a);
+    if (frac < a) return frac * frac / denom;
+    if (frac > 1 - a) { const d = 1 - frac; return 1 - d * d / denom; }
+    return a / (2 * (1 - a)) + (frac - a) / (1 - a);
+}
+
+// Trains and waiting crowds both. Area with riders, so the coefficient is on
+// the square root; 0.4 rather than the 0.5 it opened at, which was 20% too
+// big once the whole 수도권 was on the map and the trunks started merging into
+// one blob. The dot-size slider multiplies this.
+function bubbleRadius(count) {
+    return Math.max(1, Math.min(48, Math.sqrt(count) * 0.4));
+}
+
+// Where a train is and how full it is. Timeline rows with 4+ entries are
+// station stops; 3-entry rows are track waypoints from build_shapes.py, which
+// bend the path but are not places anyone gets on or off.
+function posOf(tr, t) {
+    const tl = tr.tl;
+    if (t < tl[0][0] || t > tl[tl.length - 1][0]) return null;
+
+    let lo = 0, hi = tl.length - 1;
+    while (lo < hi) {
+        const mid = (lo + hi + 1) >> 1;
+        if (tl[mid][0] <= t) lo = mid; else hi = mid - 1;
+    }
+    const idx = lo;
+
+    let pi = idx;
+    while (pi > 0 && tl[pi].length < 4) pi--;
+    const prev = tl[pi];
+    let riders = prev.length >= 4 ? prev[3] : 0;
+
+    const after = tl[pi + 1];
+    const dwell = after ? Math.min(DWELL, after[0] - prev[0]) : DWELL;
+    const dwellEnd = prev[0] + dwell;
+
+    if (idx === pi && t < dwellEnd) {
+        // Standing at the platform. Ramp the count over the stop so the
+        // boarding shows as the doors being open, not as a jump.
+        let before = 0;
+        for (let j = pi - 1; j >= 0; j--) {
+            if (tl[j].length >= 4) { before = tl[j][3]; break; }
+        }
+        const f = dwell > 0 ? (t - prev[0]) / dwell : 1;
+        return [prev[1], prev[2], before + f * (riders - before)];
+    }
+
+    let ni = pi + 1;
+    while (ni < tl.length && tl[ni].length < 4) ni++;
+    if (ni >= tl.length) ni = tl.length - 1;
+
+    const travel = tl[ni][0] - dwellEnd;
+    if (travel <= 0 || t < dwellEnd) return [prev[1], prev[2], riders];
+
+    // Ease along the whole platform-to-platform run, measured by distance, so
+    // the waypoints in between bend the path without altering the pace.
+    const eased = ease(Math.min(1, (t - dwellEnd) / travel), travel);
+    const n = ni - pi;
+    let total = 0;
+    const cum = [0];
+    for (let k = 1; k <= n; k++) {
+        const a = tl[pi + k - 1], b = tl[pi + k];
+        total += Math.hypot(b[1] - a[1], b[2] - a[2]);
+        cum.push(total);
+    }
+    const target = eased * total;
+    let seg = n - 1;
+    for (let k = 1; k <= n; k++) {
+        if (cum[k] >= target) { seg = k - 1; break; }
+    }
+    const a = tl[pi + seg], b = tl[pi + seg + 1];
+    const span = cum[seg + 1] - cum[seg];
+    const f = span > 0 ? (target - cum[seg]) / span : 0;
+    return [a[1] + f * (b[1] - a[1]), a[2] + f * (b[2] - a[2]), riders];
+}
+
+function stationWaiting(s) {
+    const tl = s.wait;
+    let lo = 0, hi = tl.length - 1, idx = -1;
+    while (lo <= hi) {
+        const mid = (lo + hi) >> 1;
+        if (tl[mid][0] <= simTime) { idx = mid; lo = mid + 1; }
+        else hi = mid - 1;
+    }
+    if (idx < 0) return 0;
+    let n = tl[idx][1];
+    const since = simTime - tl[idx][0];
+    if (since < WAIT_TRANSITION && idx > 0) {
+        n = tl[idx - 1][1] + (since / WAIT_TRANSITION) * (n - tl[idx - 1][1]);
+    }
+    return n;
+}
+
+let lastRender = 0;
+// Frame budget for the simulation. Now that the dots are drawn on a canvas
+// rather than pushed through a MapLibre source, a frame is cheap and this is a
+// battery choice rather than a necessity -- so run smooth in front, and slow
+// down rather than stop when the window is only in the background.
+const RENDER_MS_FOCUSED = 16, RENDER_MS_BLURRED = 100;
+let RENDER_MS = RENDER_MS_FOCUSED;
+
+// Every render pushes two GeoJSON sources at MapLibre, and each push makes it
+// re-index the data on its worker, rebuild the visible tiles and repaint every
+// layer in the basemap -- so a render is expensive whether or not anything
+// moved. The loop therefore runs only while the clock is moving or something
+// has actually changed, and stands down completely when the window is in the
+// background. Left running flat out it cost about 130% of a core, paused.
+let rafId = null, dirty = true, suspended = false;
+
+function invalidate() {
+    dirty = true;
+    if (rafId === null && !suspended) rafId = requestAnimationFrame(tick);
+}
+
+function suspend() {
+    if (suspended) return;
+    suspended = true;
+    if (rafId !== null) { cancelAnimationFrame(rafId); rafId = null; }
+}
+
+// The clock freezes while we are away rather than running on in the background,
+// so coming back lands where you left off instead of at some arbitrary hour.
+function resume() {
+    if (!suspended) return;
+    suspended = false;
+    anchorSim = simTime; anchorWall = performance.now();
+    invalidate();
+}
+
+function tick(now) {
+    rafId = null;
+    if (playing) {
+        simTime = anchorSim + (now - anchorWall) / 1000 * 60 * speed;
+        if (simTime > tMax) { simTime = tMin; anchorSim = tMin; anchorWall = now; }
+    }
+    if ((playing || dirty) && now - lastRender >= RENDER_MS) {
+        lastRender = now;
+        dirty = false;
+        render();
+    }
+    if (!suspended && (playing || dirty)) rafId = requestAnimationFrame(tick);
+}
+
+let showStations = true;
+
+// ---------------------------------------------------------------- overlay
+// The dots are drawn on a plain 2D canvas over the map rather than as MapLibre
+// circle layers. Feeding a GeoJSON source every frame makes MapLibre re-index
+// the collection on its worker, rebuild the visible tiles and repaint the whole
+// basemap -- measured at ~57 full repaints a second, and about 180% of a core.
+// Drawing a few hundred arcs ourselves costs almost nothing, and MapLibre then
+// sits idle unless the camera actually moves.
+let fx = null, fxCtx = null;
+const TAU = Math.PI * 2;
+// Rebuilt by render() at RENDER_MS; redrawn by drawOverlay() on every camera
+// frame, so panning stays glued to the basemap even between simulation steps.
+let frameTrains = [], frameWaits = [];
+
+function makeOverlay() {
+    fx = document.createElement('canvas');
+    // Above MapLibre's own canvas, below its controls (2) and popups (3).
+    fx.style.cssText =
+        'position:absolute;top:0;left:0;width:100%;height:100%;' +
+        'pointer-events:none;z-index:1';
+    map.getContainer().appendChild(fx);
+    fxCtx = fx.getContext('2d');
+    map.on('move', drawOverlay);
+    map.on('resize', drawOverlay);
+}
+
+function drawOverlay() {
+    if (!fxCtx) return;
+    const dpr = window.devicePixelRatio || 1;
+    const w = map.getContainer().clientWidth, h = map.getContainer().clientHeight;
+    if (fx.width !== Math.round(w * dpr) || fx.height !== Math.round(h * dpr)) {
+        fx.width = Math.round(w * dpr);
+        fx.height = Math.round(h * dpr);
+    }
+    fxCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    fxCtx.clearRect(0, 0, w, h);
+    if (staticMode) return;
+
+    // Radius is recomputed here rather than stored, so a zoom between
+    // simulation steps resizes the dots along with the map.
+    const scale = Math.pow(2, (map.getZoom() - BASE_ZOOM) / 2) * dotScale;
+
+    if (showStations) {
+        fxCtx.globalAlpha = 0.75;
+        fxCtx.fillStyle = '#cbcbcb';
+        for (let i = 0; i < frameWaits.length; i++) {
+            const s = frameWaits[i];
+            const p = map.project([s.lon, s.lat]);
+            s.x = p.x; s.y = p.y; s.r = bubbleRadius(s.n) * scale;
+            if (p.x < -s.r || p.y < -s.r || p.x > w + s.r || p.y > h + s.r) continue;
+            fxCtx.beginPath();
+            fxCtx.arc(p.x, p.y, s.r, 0, TAU);
+            fxCtx.fill();
+        }
+    }
+
+    for (let i = 0; i < frameTrains.length; i++) {
+        const t = frameTrains[i];
+        const p = map.project([t.lon, t.lat]);
+        t.x = p.x; t.y = p.y; t.r = bubbleRadius(t.n) * scale;
+        if (p.x < -t.r || p.y < -t.r || p.x > w + t.r || p.y > h + t.r) continue;
+        fxCtx.beginPath();
+        fxCtx.arc(p.x, p.y, t.r, 0, TAU);
+        fxCtx.globalAlpha = 0.85;
+        fxCtx.fillStyle = t.color;
+        fxCtx.fill();
+        fxCtx.globalAlpha = 0.8;
+        fxCtx.lineWidth = t.sw;
+        fxCtx.strokeStyle = t.stroke;
+        fxCtx.stroke();
+    }
+    fxCtx.globalAlpha = 1;
+}
+
+// Nearest dot under a point, topmost first -- the picking MapLibre used to do
+// with queryRenderedFeatures. Tiny dots get a few pixels of slop so they stay
+// catchable, which matters more on a touchscreen than it did with a mouse.
+function pickDot(pt) {
+    for (let i = frameTrains.length - 1; i >= 0; i--) {
+        const t = frameTrains[i];
+        if (t.x === undefined) continue;
+        const hit = Math.max(t.r, 4);
+        const dx = pt.x - t.x, dy = pt.y - t.y;
+        if (dx * dx + dy * dy <= hit * hit) return { kind: 'train', t: t };
+    }
+    if (showStations) {
+        for (let i = frameWaits.length - 1; i >= 0; i--) {
+            const s = frameWaits[i];
+            if (s.x === undefined) continue;
+            const hit = Math.max(s.r, 4);
+            const dx = pt.x - s.x, dy = pt.y - s.y;
+            if (dx * dx + dy * dy <= hit * hit) return { kind: 'station', si: s.si,
+                                                         lon: s.lon, lat: s.lat };
+        }
+    }
+    return null;
+}
+
+function render() {
+    if (staticMode) { drawOverlay(); refreshTooltips(); return; }
+
+    const tf = [];
+    let onboard = 0, running = 0;
+    trainPositions.clear();
+    for (let i = 0; i < trains.length; i++) {
+        const tr = trains[i];
+        if (simTime < tr.t0 || simTime > tr.t1) continue;
+        const p = posOf(tr, simTime);
+        if (!p) continue;
+        onboard += p[2];
+        if (p[2] < 0.5) continue;   // a train nobody is on is not worth drawing
+        running++;
+        const crowded = tr.cap && p[2] > tr.cap;
+        trainPositions.set(i, [p[1], p[0], Math.round(p[2])]);
+        tf.push({
+            lon: p[1], lat: p[0], n: p[2],
+            color: crowded ? tr.over : tr.color,
+            stroke: crowded ? '#d01818' : tr.stroke,
+            sw: crowded ? 2 : 1,
+            route: tr.route, express: tr.express, ti: i,
+        });
+    }
+    frameTrains = tf;
+
+    let waitingTotal = 0;
+    const wf = [];
+    for (let i = 0; i < waitStations.length; i++) {
+        const s = waitStations[i];
+        const n = stationWaiting(s);
+        if (n < 0.5) continue;
+        waitingTotal += n;
+        wf.push({ si: s.i, lon: s.lon, lat: s.lat, n: n });
+    }
+    frameWaits = wf;
+    drawOverlay();
+
+    $('onboard').innerHTML = '<b>' + fmtNum(onboard) + '</b>';
+    $('running').textContent = fmtNum(running);
+    $('waiting-count').textContent = fmtNum(waitingTotal);
+    $('time-label').textContent = fmtTime(simTime);
+    const sl = $('time-slider');
+    if (document.activeElement !== sl) {
+        sl.value = Math.round(1000 * (simTime - tMin) / (tMax - tMin));
+    }
+    refreshTooltips();
+}
+
+// ---------------------------------------------------------------- static view
+// The animation answers "where is everyone right now". This answers "how much
+// moves through here across the day" — the same routing, summed rather than
+// sampled, so it is one more read of the same numbers and not a second model.
+
+let staticMode = false;
+let staticData = null;      // stats.json, fetched the first time it is needed
+let staticShapes = null;    // link_shapes.json: the curves trains actually take
+let staticHour = 0;         // 0 = the whole day, else 1..N for one hour
+// Two scales, because the all-day view sums the hours and so runs an order of
+// magnitude larger. Each view is fixed to its own busiest value, so stepping
+// between hours makes the quiet ones visibly quiet instead of renormalising.
+let segScaleHour = 0, segScaleAll = 0, stnScaleHour = 0, stnScaleAll = 0;
+
+function hourValue(arr, hour) {
+    if (!arr) return 0;
+    if (hour) return arr[hour - 1] || 0;
+    let t = 0;
+    for (let i = 0; i < arr.length; i++) t += arr[i];
+    return t;
+}
+
+function stationValue(st, hour, key) {
+    let t = 0;
+    // 'x' is not a stored series: a transfer boarding is any boarding that is
+    // not the rider's first, so it is b minus b0. A station whose boardings
+    // are *all* transfers has no b0 key, so a missing key means zero -- only
+    // build.split_boardings can say the file predates the split, in which
+    // case nothing is known and every boarding reads as a first one.
+    if (key === 'x' || key === 'b0') {
+        const split = !!(staticData.build && staticData.build.split_boardings);
+        for (const line in st.by_line) {
+            const L = st.by_line[line];
+            const all = hourValue(L.b, hour);
+            const b0 = split ? hourValue(L.b0, hour) : all;
+            t += key === 'b0' ? b0 : all - b0;
+        }
+        return Math.max(0, t);
+    }
+    for (const line in st.by_line) t += hourValue(st.by_line[line][key], hour);
+    return t;
+}
+
+// which boardings the static view draws: all, first leg only, or transfers
+let staticBoard = 'b';
+
+function staticLabel() {
+    if (!staticHour) return STR[lang].allDay;
+    const h = DATA_STATIC_HOURS[staticHour - 1];
+    return fmtTime(h * 3600) + '–' + fmtTime((h + 1) * 3600);
+}
+let DATA_STATIC_HOURS = [];
+let SUBTITLE_LIVE = '', SUBTITLE_STATIC = '';
+
+// ------------------------------------------------------- express folding
+// `write_stats` keys a segment by the *pattern's* consecutive stops, so an
+// express that skips a station gets a key of its own -- its own stripe, its
+// own crude 서울역→인천공항1터미널 straight line, and no way to see the local
+// running underneath it. Where the express happens to stop at both ends of a
+// local link the two share a key instead, which is why 1호선 mostly grouped
+// and 9호선 never did.
+//
+// So put the express back on the track it runs on: walk each express-only
+// link over the local graph and add its riders and its trains to every link
+// it passes, as the `hx`/`nx` express subset the drill panel already reads.
+// The skipping record is then dropped -- its riders are not lost, they have
+// been spread along the way they actually travel.
+//
+// Doing it here rather than in build.py because it is a question about how
+// the map reads, not about what the numbers are, and it costs one pass over
+// 1,534 segments at load.
+
+// Every train over the link is an express: nothing local runs this way, so
+// this is a skip rather than a shared stretch of track.
+function expressOnly(s) {
+    if (!s.nx || !s.n) return false;
+    for (let i = 0; i < s.n.length; i++) if (s.n[i] !== (s.nx[i] || 0)) return false;
+    return true;
+}
+
+const FOLD_MAX_HOPS = 24;     // 공항철도's 직통 is twelve
+const FOLD_MAX_DETOUR = 2.5;  // reject a path that has gone the wrong way
+
+function foldExpressIntoLocal() {
+    const segs = staticData.segments;
+    const skips = segs.filter(expressOnly);
+    if (!skips.length) return;
+
+    // the graph the local service runs on, out of everything that is not a skip
+    const out = new Map();
+    for (const s of segs) {
+        if (expressOnly(s)) continue;
+        const k = s.line + '|' + s.ca;
+        const a = out.get(k);
+        if (a) a.push(s); else out.set(k, [s]);
+    }
+
+    const metres = (la1, lo1, la2, lo2) => {
+        const dy = (la1 - la2) * 111320;
+        const dx = (lo1 - lo2) * 111320 * LON_SQUEEZE;
+        return Math.hypot(dx, dy);
+    };
+    const spanOf = s => metres(s.p[0], s.p[1], s.p[2], s.p[3]);
+
+    // Shortest hop count wins. Seoul's branches do not rejoin, so the only
+    // path that reaches the far end is the one the express actually takes --
+    // the detour check below is a belt-and-braces guard on that.
+    function pathBetween(line, from, to) {
+        const seen = new Set([from]);
+        let frontier = [[from, []]];
+        for (let d = 0; d < FOLD_MAX_HOPS && frontier.length; d++) {
+            const next = [];
+            for (const [at, path] of frontier) {
+                for (const s of out.get(line + '|' + at) || []) {
+                    if (seen.has(s.cb)) continue;
+                    const p2 = path.concat([s]);
+                    if (s.cb === to) return p2;
+                    seen.add(s.cb);
+                    next.push([s.cb, p2]);
+                }
+            }
+            frontier = next;
+        }
+        return null;
+    }
+
+    const folded = new Set();
+    let stranded = 0;
+    for (const x of skips) {
+        const path = pathBetween(x.line, x.ca, x.cb);
+        if (!path) { stranded++; continue; }
+        const straight = Math.max(spanOf(x), 1);
+        let walked = 0;
+        for (const s of path) walked += spanOf(s);
+        if (walked > straight * FOLD_MAX_DETOUR) { stranded++; continue; }
+        for (const s of path) {
+            if (!s.hx) s.hx = x.h.map(() => 0);
+            if (!s.nx) s.nx = x.n.map(() => 0);
+            for (let i = 0; i < s.h.length; i++) {
+                s.h[i] = Math.round((s.h[i] + (x.h[i] || 0)) * 10) / 10;
+                s.hx[i] = Math.round((s.hx[i] + (x.h[i] || 0)) * 10) / 10;
+                s.n[i] += x.n[i] || 0;
+                s.nx[i] += x.n[i] || 0;
+            }
+        }
+        folded.add(x);
+    }
+    if (folded.size) {
+        staticData.segments = segs.filter(s => !folded.has(s));
+    }
+    if (stranded) {
+        console.warn('express folding: %d skip segments had no local path ' +
+                     'and are still drawn on their own', stranded);
+    }
+}
+
+function loadStatic() {
+    if (staticData) return Promise.resolve();
+    $('loading').textContent = STR[lang].loadingDay;
+    $('loading').classList.remove('hidden');
+    return Promise.all([
+        fetch(STATS_URL).then(r => r.json()),
+        fetch('data/link_shapes.json').then(r => r.json()).catch(() => ({})),
+    ]).then(([stats, shapes]) => {
+        staticData = stats;
+        staticShapes = shapes || {};
+        DATA_STATIC_HOURS = stats.hours;
+        foldExpressIntoLocal();      // before the scales, which it changes
+        buildSegIndex();
+        // Scale to the busiest hour, not to each hour's own maximum, so the
+        // 07:00 map is visibly emptier than the 18:00 one.
+        for (const sg of stats.segments) {
+            let sum = 0;
+            for (let i = 0; i < sg.h.length; i++) {
+                sum += sg.h[i];
+                if (sg.h[i] > segScaleHour) segScaleHour = sg.h[i];
+            }
+            if (sum > segScaleAll) segScaleAll = sum;
+        }
+        for (const st of stats.stations) {
+            const perHour = [];
+            for (const line in st.by_line) {
+                const b = st.by_line[line].b || [];
+                for (let i = 0; i < b.length; i++) {
+                    perHour[i] = (perHour[i] || 0) + b[i];
+                }
+            }
+            let sum = 0;
+            for (const v of perHour) {
+                sum += v;
+                if (v > stnScaleHour) stnScaleHour = v;
+            }
+            if (sum > stnScaleAll) stnScaleAll = sum;
+        }
+        $('loading').classList.add('hidden');
+    });
+}
+
+// ------------------------------------------------------------- geometry
+// link_shapes.json is built for the animation, where a train reads a
+// position off the polyline and build_shapes' 25 m sag tolerance is
+// invisible. Drawn ten pixels wide it is not: a bend between two stations
+// arrives as a corner, and `line-join: round` only fillets it by half the
+// line's width. So the day view runs the same points through a centripetal
+// Catmull-Rom spline, which passes through every original point and rounds
+// off everything between them. The end tangents come from the neighbouring
+// segment on the same line, so a line that bends *at* a station comes out
+// smooth across that join too.
+
+const shapeCache = new Map();
+let segByStart = null, segByEnd = null;   // 'line|platform code' -> segments
+
+function buildSegIndex() {
+    shapeCache.clear();
+    segByStart = new Map();
+    segByEnd = new Map();
+    const push = (m, k, v) => {
+        const a = m.get(k);
+        if (a) a.push(v); else m.set(k, [v]);
+    };
+    for (const sg of staticData.segments) {
+        push(segByStart, sg.line + '|' + sg.ca, sg);
+        push(segByEnd, sg.line + '|' + sg.cb, sg);
+    }
+}
+
+function rawShape(sg) {
+    const k = sg.line + '|' + sg.p[0].toFixed(5) + ',' + sg.p[1].toFixed(5) +
+        '|' + sg.p[2].toFixed(5) + ',' + sg.p[3].toFixed(5);
+    const pts = staticShapes && staticShapes[k];
+    if (pts && pts.length > 1) return pts.map(p => [p[1], p[0]]);
+    return [[sg.p[1], sg.p[0]], [sg.p[3], sg.p[2]]];
+}
+
+// The point just before this segment starts and just after it ends, taken
+// off whichever segment continues the line the same way. A segment running
+// the other way would fold the tangent back on itself, so anything that
+// starts where this one ends is skipped.
+function neighbourPoints(sg) {
+    let prev = null, next = null;
+    for (const c of segByEnd.get(sg.line + '|' + sg.ca) || []) {
+        if (c.ca === sg.cb) continue;
+        const p = rawShape(c);
+        prev = p[p.length - 2];
+        break;
+    }
+    for (const c of segByStart.get(sg.line + '|' + sg.cb) || []) {
+        if (c.cb === sg.ca) continue;
+        next = rawShape(c)[1];
+        break;
+    }
+    return [prev, next];
+}
+
+const SPLINE_STEPS = 8;      // samples per span; more is smoother and heavier
+const LON_SQUEEZE = Math.cos(37.55 * Math.PI / 180);   // Seoul's latitude
+
+// Knot spacing for the centripetal parameterisation: the square root of the
+// (roughly metric) distance between two control points.
+function knotStep(a, b) {
+    const dx = (b[0] - a[0]) * LON_SQUEEZE, dy = b[1] - a[1];
+    return Math.sqrt(Math.sqrt(dx * dx + dy * dy)) || 1e-6;
+}
+
+// Shared with the backdrop above, which runs its own links through the same
+// curve. `prev` and `next` are the points just outside each end, for the
+// tangent there; either may be null.
+function splineThrough(pts, prev, next) {
+    if (pts.length < 2) return pts;
+    const first = pts[0], second = pts[1];
+    const last = pts[pts.length - 1], penult = pts[pts.length - 2];
+    // A terminus has nothing to borrow a tangent from, and a neighbour that
+    // lands exactly on the endpoint would collapse a knot interval to zero;
+    // both cases mirror the first span instead.
+    const near = (a, b) => a && Math.abs(a[0] - b[0]) < 1e-9 &&
+                                Math.abs(a[1] - b[1]) < 1e-9;
+    if (!prev || near(prev, first)) {
+        prev = [2 * first[0] - second[0], 2 * first[1] - second[1]];
+    }
+    if (!next || near(next, last)) {
+        next = [2 * last[0] - penult[0], 2 * last[1] - penult[1]];
+    }
+    const P = [prev].concat(pts, [next]);
+
+    const out = [];
+    for (let i = 1; i + 2 <= P.length - 1; i++) {
+        const p0 = P[i - 1], p1 = P[i], p2 = P[i + 1], p3 = P[i + 2];
+        const t0 = 0;
+        const t1 = t0 + knotStep(p0, p1);
+        const t2 = t1 + knotStep(p1, p2);
+        const t3 = t2 + knotStep(p2, p3);
+        for (let s = 0; s < SPLINE_STEPS; s++) {
+            const t = t1 + (t2 - t1) * (s / SPLINE_STEPS);
+            const q = [0, 0];
+            for (let d = 0; d < 2; d++) {
+                const a1 = ((t1 - t) * p0[d] + (t - t0) * p1[d]) / (t1 - t0);
+                const a2 = ((t2 - t) * p1[d] + (t - t1) * p2[d]) / (t2 - t1);
+                const a3 = ((t3 - t) * p2[d] + (t - t2) * p3[d]) / (t3 - t2);
+                const b1 = ((t2 - t) * a1 + (t - t0) * a2) / (t2 - t0);
+                const b2 = ((t3 - t) * a2 + (t - t1) * a3) / (t3 - t1);
+                q[d] = ((t2 - t) * b1 + (t - t1) * b2) / (t2 - t1);
+            }
+            out.push(q);
+        }
+    }
+    out.push(pts[pts.length - 1]);
+    return out;
+}
+
+function smoothShape(sg) {
+    const [prev, next] = neighbourPoints(sg);
+    return splineThrough(rawShape(sg), prev, next);
+}
+
+function shapeFor(sg) {
+    const k = sg.line + '|' + sg.ca + '|' + sg.cb;
+    let s = shapeCache.get(k);
+    if (!s) { s = smoothShape(sg); shapeCache.set(k, s); }
+    return s;
+}
+
+// A multiplier on every drawn width and radius in the day view, off the
+// size slider. The live view has its own, `dotScale`.
+let staticScale = 1;
+
+function renderStatic() {
+    if (!staticData) return;
+    const segScale = staticHour ? segScaleHour : segScaleAll;
+    const stnScale = staticHour ? stnScaleHour : stnScaleAll;
+    const segs = [];
+    let total = 0;
+    for (let gi = 0; gi < staticData.segments.length; gi++) {
+        const sg = staticData.segments[gi];
+        const v = hourValue(sg.h, staticHour);
+        if (v < 0.5) continue;
+        segs.push({
+            type: 'Feature',
+            geometry: { type: 'LineString', coordinates: shapeFor(sg) },
+            properties: {
+                color: LINE_COLORS[sg.line] || '#888',
+                w: Math.max(0.6, 11 * staticScale *
+                                 Math.sqrt(v / Math.max(segScale, 1))),
+                line: sg.line, a: sg.a, b: sg.b,
+                ae: sg.ae || '', be: sg.be || '',
+                riders: Math.round(v),
+                gi: gi,
+            },
+        });
+    }
+    map.getSource('static-seg').setData(
+        { type: 'FeatureCollection', features: segs });
+
+    const stns = [];
+    for (let i = 0; i < staticData.stations.length; i++) {
+        const st = staticData.stations[i];
+        const v = stationValue(st, staticHour, staticBoard);
+        total += v;
+        if (v < 0.5) continue;
+        stns.push({
+            type: 'Feature',
+            geometry: { type: 'Point', coordinates: [st.lon, st.lat] },
+            properties: {
+                r: Math.max(1.2, 17 * staticScale *
+                                 Math.sqrt(v / Math.max(stnScale, 1))),
+                si: i,
+            },
+        });
+    }
+    map.getSource('static-stn').setData(
+        { type: 'FeatureCollection', features: stns });
+
+    $('static-total').textContent = fmtNum(total);
+    $('static-when').textContent = staticLabel();
+    $('time-label').textContent = staticHour ? staticLabel().split('–')[0]
+                                             : STR[lang].allDayShort;
+    renderHighlight();
+}
+
+function setStaticMode(on) {
+    staticMode = on;
+    clearPins();
+    if (!on) closeDrill();
+    setStaticPlay(0);
+    $('t-static').classList.toggle('active', on);
+    $('live-stat').classList.toggle('hidden', on);
+    $('static-stat').classList.toggle('hidden', !on);
+    $('static-note').classList.toggle('hidden', !on);
+    $('legend-waiting').classList.toggle('hidden', on);
+    $('subtitle').textContent = on ? SUBTITLE_STATIC : SUBTITLE_LIVE;
+
+    // One button cluster per mode: playback speeds for the animation, hour
+    // stepping for the day. Whichever settings drawer is open closes with it.
+    $('speed-buttons').classList.toggle('hidden', on);
+    $('static-speed-buttons').classList.toggle('hidden', !on);
+    $('settings').classList.add('hidden');
+    $('static-settings').classList.add('hidden');
+    $('gear').classList.remove('active');
+    $('static-gear').classList.remove('active');
+
+    // The animated dots live on the overlay, which draws nothing in static
+    // mode; drawOverlay() below clears whatever was on it.
+    for (const id of ['static-hl-under', 'static-seg',
+                      'static-hl-over', 'static-stn']) {
+        map.setLayoutProperty(id, 'visibility', on ? 'visible' : 'none');
+    }
+    // The line layer is the animation's backdrop; in static mode the segments
+    // are the lines, so drop it to a faint trace of the parts nobody rides.
+    map.setPaintProperty('lines', 'line-opacity',
+                         on ? LINE_OPACITY_STATIC : LINE_OPACITY_LIVE);
+
+    const sl = $('time-slider');
+    if (on) {
+        playing = false;
+        sl.min = 0; sl.max = DATA_STATIC_HOURS.length; sl.step = 1;
+        sl.value = staticHour;
+        renderStatic();
+        drawOverlay();          // clears the train and waiting dots
+    } else {
+        sl.min = 0; sl.max = 1000; sl.step = 1;
+        setSpeed(speed);   // restarts the clock and re-lights the bar
+    }
+}
+
+// ---------------------------------------------------------- day playback
+// The day view's own clock: step an hour a second, wrapping round the
+// service day. Hour 0 is the all-day total, which is not part of the cycle.
+let staticPlay = 0, staticTimer = null;
+
+function setStaticPlay(s) {
+    staticPlay = s;
+    if (staticTimer) { clearInterval(staticTimer); staticTimer = null; }
+    const step = () => {
+        staticHour = staticHour >= DATA_STATIC_HOURS.length ? 1 : staticHour + 1;
+        $('time-slider').value = staticHour;
+        renderStatic();
+    };
+    if (s > 0) {
+        if (!staticHour) { staticHour = 1; $('time-slider').value = 1; renderStatic(); }
+        staticTimer = setInterval(step, 1000);
+    }
+    for (const b of document.querySelectorAll('#static-speed-buttons button[data-static-speed]')) {
+        b.classList.toggle('active', +b.dataset.staticSpeed === s);
+    }
+    $('static-play').title = s ? STR[lang].pause : STR[lang].play;
+}
+
+// ---------------------------------------------------------- drill panel
+// The map says how much; this says when, and which service. Click a segment
+// for every train running between those two stations hour by hour, or a
+// station for what boards there. Ported from nycriders, with the express
+// split out as its own row -- on 1호선 and 9호선 the 급행 and the 일반 are
+// not the same question, which is why 서울교통공사 publish their 혼잡도
+// separately.
+
+let drillSeg = null;        // index into staticData.segments, or null
+let drillStn = null;        // index into staticData.stations, or null
+let segMetric = 'riders';   // 'riders' | 'crowd'
+
+const DRILL_W = 300, DRILL_H = 31;   // the row chart's own viewBox; it stretches
+
+function esc(s) {
+    return String(s).replace(/[&<>"]/g,
+        c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+}
+
+function lineRank(id) {
+    const i = LINE_ORDER.indexOf(id);
+    return i < 0 ? 999 : i;
+}
+
+// One line's day: a bar per hour, a dashed reference line where one is
+// wanted, and a solid baseline so the bars look grounded rather than
+// floating over the row below.
+function drillRow(line, arrow, tag, valFn, maxVal, tipFn, refRatio, totalText) {
+    const N = DATA_STATIC_HOURS.length;
+    const W = DRILL_W, H = DRILL_H;
+    const slot = W / N;
+    const barW = Math.max(1, slot - 1.6);
+    const color = LINE_COLORS[line] || '#888';
+    let bars = '';
+    for (let h = 0; h < N; h++) {
+        const v = valFn(h);
+        if (v <= 0 || maxVal <= 0) continue;   // no bar, and no hover target
+        const barH = Math.max(1, (v / maxVal) * (H - 2));
+        const x = h * slot + (slot - barW) / 2;
+        bars += '<rect data-tip="' + esc(tipFn(h)) + '" x="' + x.toFixed(1) +
+            '" y="' + (H - barH).toFixed(1) + '" width="' + barW.toFixed(1) +
+            '" height="' + barH.toFixed(1) + '" fill="' + color +
+            '" opacity="0.8"/>';
+    }
+    let ref = '';
+    if (refRatio != null && refRatio > 0 && refRatio <= 1) {
+        const y = (H - refRatio * (H - 2)).toFixed(1);
+        ref = '<line x1="0" y1="' + y + '" x2="' + W + '" y2="' + y +
+            '" stroke="#aaa" stroke-width="0.5" stroke-dasharray="2,2" ' +
+            'opacity="0.7" pointer-events="none"/>';
+    }
+    const base = '<line x1="0" y1="' + (H - 0.5) + '" x2="' + W + '" y2="' +
+        (H - 0.5) + '" stroke="#555" stroke-width="0.5" pointer-events="none"/>';
+    const lead = '<div class="drill-lead"><span class="drill-lead-icons">' +
+        routeIcon(line, true) +
+        (tag ? '<span class="drill-tag">' + tag + '</span>' : '') +
+        '</span><span class="drill-arrow">' + (arrow || '') + '</span></div>';
+    return '<div class="drill-row">' + lead +
+        '<svg class="drill-chart" viewBox="0 0 ' + W + ' ' + H +
+        '" preserveAspectRatio="none">' + base + bars + ref + '</svg>' +
+        (totalText != null
+            ? '<span class="drill-row-total">' + totalText + '</span>' : '') +
+        '</div>';
+}
+
+// Ticks every three hours, in the 24-hour clock the rest of the page uses.
+// The service day runs to 25:00, so the last two read 00 and 01.
+function drillAxis() {
+    const HS = DATA_STATIC_HOURS, N = HS.length;
+    let out = '';
+    for (let i = 0; i < N; i++) {
+        if (HS[i] % 3) continue;
+        out += '<span style="left:' + (((i + 0.5) / N) * 100).toFixed(2) +
+            '%">' + String(HS[i] % 24).padStart(2, '0') + '</span>';
+    }
+    return '<div class="drill-axis">' + out + '</div>';
+}
+
+function hourRange(i) {
+    const h = DATA_STATIC_HOURS[i];
+    return fmtTime(h * 3600) + '–' + fmtTime((h + 1) * 3600);
+}
+
+function showDrill(html) {
+    const p = $('drill-panel');
+    p.innerHTML = '<button class="drill-close" id="drill-close">&#10005;</button>' +
+        html;
+    p.classList.remove('hidden');
+    $('drill-close').onclick = closeDrill;
+    for (const b of p.querySelectorAll('.drill-btn')) {
+        b.addEventListener('mousedown', e => e.preventDefault());
+    }
+}
+
+function closeDrill() {
+    drillSeg = null;
+    drillStn = null;
+    $('drill-panel').classList.add('hidden');
+    $('drill-tooltip').classList.add('hidden');
+    clearHighlight();
+}
+
+// ------------------------------------------------------- segment drill
+// Which segments count as "the same place". Platform codes are not shared
+// between operators, so the pair is matched on station names -- and then on
+// position, because Seoul has two 양평 and two 신촌 and they are nowhere
+// near each other.
+const SAME_PLACE_DEG = 0.011;    // ~1.2 km at this latitude
+
+function nearPt(lat1, lon1, lat2, lon2) {
+    return Math.abs(lat1 - lat2) < SAME_PLACE_DEG &&
+           Math.abs(lon1 - lon2) < SAME_PLACE_DEG * 1.26;
+}
+
+function segMatches(gi) {
+    const c = staticData.segments[gi];
+    if (!c) return [];
+    const out = [];
+    for (const s of staticData.segments) {
+        let fwd;
+        if (s.a === c.a && s.b === c.b) fwd = true;
+        else if (s.a === c.b && s.b === c.a) fwd = false;
+        else continue;
+        const ok = fwd
+            ? nearPt(s.p[0], s.p[1], c.p[0], c.p[1]) &&
+              nearPt(s.p[2], s.p[3], c.p[2], c.p[3])
+            : nearPt(s.p[0], s.p[1], c.p[2], c.p[3]) &&
+              nearPt(s.p[2], s.p[3], c.p[0], c.p[1]);
+        if (ok) out.push(s);
+    }
+    return out;
+}
+
+// Lines whose express is folded back into the total rather than drawn as its
+// own row. Only 공항철도, and the reason is not that the split is uncertain --
+// most of this map is uncertain -- but that it is a *claim we cannot source*.
+//
+// The 직통 is non-stop 서울역 <-> 인천공항 and takes a separate ticket outside
+// the integrated fare system, which the router does not model: it sees a
+// faster train and nothing stopping anyone boarding it. So the split it
+// produces is driven by how full the 일반 is, and comes out inverted against
+// the airport's own hourly figures -- 직통 to the airport peaking in the
+// evening when real departures peak at 10:00. Nobody publishes an hourly
+// 직통/일반 split to correct it against.
+//
+// The *total* is fine and stays drawn: 공항철도's own measured hourly shape,
+// from KRIC's `citytimepassList.jsp`, correlates 0.987 with what the build
+// uses. It is only the split between the two services that is unsupported.
+// See "The airport train has a commuter rush hour" in README.md.
+const NO_EXPRESS_SPLIT = new Set(['AR']);
+
+// One row per service, not per segment: where a line runs an express, `hx`
+// is the express subset of `h`, so the local is the difference.
+function segServices(matches) {
+    const rows = [];
+    for (const s of matches) {
+        const hasX = s.hx && s.hx.some(v => v > 0.5) &&
+                     !NO_EXPRESS_SPLIT.has(s.line);
+        if (hasX) {
+            const nx = s.nx || [];
+            const hl = s.h.map((v, i) => Math.max(0, v - (s.hx[i] || 0)));
+            const nl = s.n.map((v, i) => Math.max(0, v - (nx[i] || 0)));
+            if (hl.some(v => v > 0.5)) rows.push({ s, tag: '', h: hl, n: nl });
+            rows.push({ s, tag: 'x', h: s.hx, n: nx });
+        } else {
+            rows.push({ s, tag: '', h: s.h, n: s.n });
+        }
+    }
+    return rows;
+}
+
+function openSegmentDrill(gi) {
+    drillSeg = gi;
+    drillStn = null;
+    renderSegmentDrill();
+}
+
+function renderSegmentDrill() {
+    if (!staticData || drillSeg === null) return;
+    const S = STR[lang];
+    const c = staticData.segments[drillSeg];
+    const matches = segMatches(drillSeg);
+    if (!c || !matches.length) { closeDrill(); return; }
+
+    // Left of the panel is the western end, an arbitrary but stable choice
+    // that keeps the two directions telling each other apart.
+    const aLeft = c.p[1] <= c.p[3];
+    const leftKo = aLeft ? c.a : c.b;
+    const leftName = aLeft ? ((lang === 'en' && c.ae) || c.a)
+                           : ((lang === 'en' && c.be) || c.b);
+    const rightName = aLeft ? ((lang === 'en' && c.be) || c.b)
+                            : ((lang === 'en' && c.ae) || c.a);
+
+    const rows = segServices(matches);
+    rows.sort((p, q) => (lineRank(p.s.line) - lineRank(q.s.line)) ||
+        ((p.s.a === leftKo ? 0 : 1) - (q.s.a === leftKo ? 0 : 1)) ||
+        (p.tag < q.tag ? -1 : p.tag > q.tag ? 1 : 0));
+
+    const crowd = segMetric === 'crowd';
+    const N = DATA_STATIC_HOURS.length;
+    const valOf = r => {
+        if (!crowd) return h => r.h[h] || 0;
+        const cap = LINE_CAPACITY[r.s.line] || 1000;
+        return h => (r.n[h] > 0 ? (r.h[h] / r.n[h]) / cap : 0);
+    };
+
+    let maxVal = 0;
+    for (const r of rows) {
+        const f = valOf(r);
+        for (let h = 0; h < N; h++) if (f(h) > maxVal) maxVal = f(h);
+    }
+    // In crowd mode hold the axis at 100% or above, so the capacity line is
+    // always on the chart; a segment that runs over it grows the chart and
+    // pushes the line down instead of off the top.
+    if (crowd) maxVal = Math.max(1, maxVal);
+    const refRatio = crowd ? 1 / maxVal : null;
+
+    const tipOf = r => {
+        if (!crowd) {
+            return h => hourRange(h) + ' · ' + S.drillCarried(fmtNum(r.h[h] || 0));
+        }
+        const cap = LINE_CAPACITY[r.s.line] || 1000;
+        return h => {
+            const avg = r.n[h] > 0 ? r.h[h] / r.n[h] : 0;
+            return hourRange(h) + ' · ' +
+                S.drillFull(Math.round((avg / cap) * 100), fmtNum(avg));
+        };
+    };
+
+    // Totals stay rider counts whichever way the bars are drawn: a crowding
+    // percentage does not add up into a meaningful figure for the day.
+    let grand = 0;
+    const rowsHTML = rows.map(r => {
+        let t = 0;
+        for (let h = 0; h < N; h++) t += r.h[h] || 0;
+        grand += t;
+        const arrow = r.s.a === leftKo ? '&gt;' : '&lt;';
+        return drillRow(r.s.line, arrow, r.tag === 'x' ? S.expressTag : '',
+            valOf(r), maxVal, tipOf(r), refRatio, fmtNum(t));
+    }).join('');
+
+    const btn = (k, label) => '<button class="drill-btn' +
+        (segMetric === k ? ' active' : '') + '" data-sm="' + k + '">' +
+        label + '</button>';
+
+    showDrill(
+        '<div class="drill-header">' +
+            '<span class="drill-station-name left">' + esc(leftName) + '</span>' +
+            '<span class="drill-sep"></span>' +
+            '<span class="drill-station-name right">' + esc(rightName) + '</span>' +
+        '</div>' +
+        '<div class="drill-metric-buttons">' + btn('riders', S.mRiders) +
+            btn('crowd', S.mCrowd) +
+            '<span class="drill-total">' + fmtNum(grand) + '</span></div>' +
+        '<div class="drill-rows">' + rowsHTML + '</div>' + drillAxis() +
+        // Only when something was actually folded -- a segment the 직통 does
+        // not run over has nothing to explain away.
+        (rows.some(r => NO_EXPRESS_SPLIT.has(r.s.line) && r.s.hx &&
+                        r.s.hx.some(v => v > 0.5))
+            ? '<div class="drill-note">' + S.drillNoSplitNote + '</div>' : '') +
+        (crowd ? '<div class="drill-note">' + S.drillCapNote + '</div>' : ''));
+
+    for (const b of $('drill-panel').querySelectorAll('.drill-btn[data-sm]')) {
+        b.onclick = () => { segMetric = b.dataset.sm; renderSegmentDrill(); };
+    }
+    renderHighlight();
+}
+
+// ------------------------------------------------------- station drill
+function openStationDrill(si) {
+    drillStn = si;
+    drillSeg = null;
+    clearHighlight();
+    renderStationDrill();
+}
+
+function renderStationDrill() {
+    if (!staticData || drillStn === null) return;
+    const S = STR[lang];
+    const st = staticData.stations[drillStn];
+    if (!st) { closeDrill(); return; }
+    const lines = Object.keys(st.by_line).sort((a, b) => lineRank(a) - lineRank(b));
+    const N = DATA_STATIC_HOURS.length;
+    const split = !!(staticData.build && staticData.build.split_boardings);
+
+    const cell = (L, h) => {
+        const all = (L.b || [])[h] || 0;
+        const b0 = split ? ((L.b0 || [])[h] || 0) : all;
+        if (staticBoard === 'b0') return b0;
+        if (staticBoard === 'x') return Math.max(0, all - b0);
+        return all;
+    };
+    // The scale is locked to all boardings, so picking a subset only ever
+    // shrinks the bars -- the rows stay comparable across the three views.
+    let maxVal = 0;
+    for (const l of lines) {
+        const b = st.by_line[l].b || [];
+        for (let h = 0; h < N; h++) if (b[h] > maxVal) maxVal = b[h];
+    }
+
+    const word = S.drillBoard[staticBoard] || S.drillBoard.b;
+    let grand = 0;
+    const rowsHTML = lines.map(l => {
+        const L = st.by_line[l];
+        let t = 0;
+        for (let h = 0; h < N; h++) t += cell(L, h);
+        grand += t;
+        return drillRow(l, '', '', h => cell(L, h), maxVal,
+            h => hourRange(h) + ' · ' + word(fmtNum(cell(L, h))),
+            null, fmtNum(t));
+    }).join('');
+
+    const btn = (k, label) => '<button class="drill-btn' +
+        (staticBoard === k ? ' active' : '') + '" data-bd="' + k + '">' +
+        label + '</button>';
+
+    showDrill(
+        '<div class="drill-header"><span class="drill-station-name left">' +
+            esc(stnLabel(st)) + '</span></div>' +
+        '<div class="drill-metric-buttons">' + btn('b', S.boardAll) +
+            btn('b0', S.boardFirst) + btn('x', S.boardXfer) +
+            '<span class="drill-total">' + fmtNum(grand) + '</span></div>' +
+        '<div class="drill-rows">' + (rowsHTML ||
+            '<div class="drill-note">' + S.drillNoData + '</div>') + '</div>' +
+        drillAxis());
+
+    for (const b of $('drill-panel').querySelectorAll('.drill-btn[data-bd]')) {
+        b.onclick = () => setBoard(b.dataset.bd);
+    }
+}
+
+// All boardings / only the rider's first / only the changes of train. One
+// setting, reachable from the drill panel and from the day settings, and
+// the map's circles follow it either way.
+function setBoard(key) {
+    staticBoard = key;
+    for (const [id, k] of [['b-all', 'b'], ['b-first', 'b0'], ['b-xfer', 'x']]) {
+        $(id).classList.toggle('active', k === key);
+    }
+    clearPins();
+    renderStatic();
+    if (drillStn !== null) renderStationDrill();
+}
+
+function refreshDrill() {
+    if (drillSeg !== null) renderSegmentDrill();
+    else if (drillStn !== null) renderStationDrill();
+}
+
+// ----------------------------------------------------------- highlight
+// The picked segments, lifted out of the map: a white halo under them and a
+// wash of white over, so the stripe lightens rather than only gaining a rim.
+function clearHighlight() {
+    const src = map.getSource && map.getSource('static-hl');
+    if (src) src.setData(EMPTY);
+}
+
+function renderHighlight() {
+    if (!map.getSource('static-hl')) return;
+    if (!staticMode || drillSeg === null) { clearHighlight(); return; }
+    const segScale = staticHour ? segScaleHour : segScaleAll;
+    const feats = [];
+    for (const s of segMatches(drillSeg)) {
+        const v = hourValue(s.h, staticHour);
+        const w = Math.max(0.6, 11 * staticScale *
+                                Math.sqrt(v / Math.max(segScale, 1)));
+        feats.push({
+            type: 'Feature',
+            geometry: { type: 'LineString', coordinates: shapeFor(s) },
+            properties: { w: w, wo: w + 3.5 },
+        });
+    }
+    map.getSource('static-hl').setData(
+        { type: 'FeatureCollection', features: feats });
+}
+
+// ---------------------------------------------------------------- tooltips
+// `short` is for the drill panel, where the chip has a fixed width to keep
+// every row's chart starting at the same place: the English names all end
+// in the same word, and the coloured chip has already said "line".
+function routeIcon(line, short) {
+    const bg = LINE_COLORS[line] || '#888';
+    const fg = needsDarkText(bg) ? '#111' : '#fff';
+    // Seoul signage puts a numbered line in a filled circle; the named lines
+    // get a chip, because 경의중앙선 does not fit in one.
+    const numbered = /^\d$/.test(line);
+    const full = lineLabel(line);
+    const label = numbered ? line
+        : (short && lang === 'en' ? full.replace(/ Line$/, '') : full);
+    return '<span class="route-icon' + (numbered ? '' : ' named') +
+        '" title="' + esc(full) + '" style="background:' + bg + ';color:' +
+        fg + '">' + esc(label) + '</span>';
+}
+
+function trainTip(route, riders, express) {
+    const S = STR[lang];
+    return '<span class="route-icons">' + routeIcon(route) + '</span>' +
+        '<span class="tip-count">' + S.tipRiders(fmtNum(riders)) + '</span>' +
+        (express ? '<span class="tip-note">' + S.tipExpress + '</span>' : '');
+}
+
+function staticSegTip(p) {
+    const S = STR[lang];
+    const lm = staticData.line_meta[p.line] || {};
+    const mod = Math.round(100 * (lm.modelled || 0));
+    const a = (lang === 'en' && p.ae) || p.a;
+    const b = (lang === 'en' && p.be) || p.b;
+    return '<span class="route-icons">' + routeIcon(p.line) + '</span>' +
+        '<span class="tip-name">' + a + ' → ' + b + '</span>' +
+        '<span class="tip-count">' + S.tipCarried(fmtNum(p.riders)) +
+        '</span>' +
+        (mod >= 5 ? '<span class="tip-note">' + S.tipModelled(mod)
+                    + '</span>' : '');
+}
+
+function staticStnTip(si) {
+    const S = STR[lang];
+    const st = staticData.stations[si];
+    const b = Math.round(stationValue(st, staticHour, 'b'));
+    const a = Math.round(stationValue(st, staticHour, 'a'));
+    const x = Math.round(stationValue(st, staticHour, 'x'));
+    const icons = (st.lines || []).map(routeIcon).join('');
+    const mod = Math.round(100 * (st.m || 0));
+    return '<span class="tip-name">' + stnLabel(st) + '</span>' +
+        (icons ? '<span class="route-icons">' + icons + '</span>' : '') +
+        '<span class="tip-count">' +
+        S.tipOnOff(fmtNum(b), fmtNum(a)) + '</span>' +
+        (x > 0 ? '<span class="tip-note">' + S.tipChanging(fmtNum(x))
+                 + '</span>' : '') +
+        (mod >= 5 ? '<span class="tip-note">' + S.tipModelled(mod)
+                    + '</span>' : '');
+}
+
+function stationTip(si) {
+    const s = DATA.stations[si];
+    if (!s) return '';
+    const icons = (s.lines || []).map(routeIcon).join('');
+    const w = waitByStation.get(si);
+    const n = w ? Math.round(stationWaiting(w)) : 0;
+    return '<span class="tip-name">' + stnLabel(s) + '</span>' +
+        (icons ? '<span class="route-icons">' + icons + '</span>' : '') +
+        '<span class="tip-count">' + STR[lang].tipWaiting(fmtNum(n)) +
+        '</span>';
+}
+
+function makePopup() {
+    return new maplibregl.Popup({
+        closeButton: false, closeOnClick: false,
+        className: 'train-tooltip', offset: 12,
+    });
+}
+
+const hoverTip = makePopup();
+let hoverKind = null;        // 'train' | 'station' | null
+let lastMouse = null;        // pixel point, or null when the pointer is off-map
+const pinned = [];           // click to keep a tooltip; it stays live
+
+
+// Every way out of a pinned tooltip goes through here: Escape, a click on
+// empty map, and switching between the live and day views. A pinned *train*
+// cannot survive that switch -- trainPositions stops being refreshed in static
+// mode, so the popup would sit at whatever coordinate it last had, showing a
+// count for a train that is no longer being drawn, and no longer removing
+// itself because its position still looks valid.
+function clearPins() {
+    for (const L of pinned) L.popup.remove();
+    pinned.length = 0;
+}
+
+// Everything under the cursor is moving, so rather than trusting a mouseenter
+// that fired several frames ago, ask each frame what is there now. That also
+// covers the case the pointer never moves and a train slides underneath it.
+function refreshTooltips() {
+    let hit = null;
+    if (staticMode) {
+        if (lastMouse) {
+            const sf = map.queryRenderedFeatures(lastMouse,
+                { layers: ['static-stn'].filter(l => map.getLayer(l)) });
+            if (sf.length) {
+                hit = 'station';
+                hoverTip.setLngLat(sf[0].geometry.coordinates)
+                    .setHTML(staticStnTip(sf[0].properties.si)).addTo(map);
+            } else {
+                const gf = map.queryRenderedFeatures(lastMouse, {
+                    layers: ['static-seg'].filter(l => map.getLayer(l)) });
+                if (gf.length) {
+                    hit = 'segment';
+                    hoverTip.setLngLat(map.unproject(lastMouse))
+                        .setHTML(staticSegTip(gf[0].properties)).addTo(map);
+                }
+            }
+        }
+        if (hit !== hoverKind) {
+            map.getCanvas().style.cursor = hit ? 'pointer' : '';
+            if (!hit) hoverTip.remove();
+            hoverKind = hit;
+        }
+        return;
+    }
+    if (lastMouse) {
+        const d = pickDot(lastMouse);
+        if (d && d.kind === 'train') {
+            hit = 'train';
+            hoverTip.setLngLat([d.t.lon, d.t.lat])
+                .setHTML(trainTip(d.t.route, Math.round(d.t.n), d.t.express))
+                .addTo(map);
+        } else if (d) {
+            hit = 'station';
+            hoverTip.setLngLat([d.lon, d.lat])
+                .setHTML(stationTip(d.si)).addTo(map);
+        } else {
+            // The plain station dots are still a MapLibre layer, being static.
+            const sf = map.queryRenderedFeatures(lastMouse, {
+                layers: ['stations'].filter(l => map.getLayer(l)) });
+            if (sf.length) {
+                hit = 'station';
+                hoverTip.setLngLat(sf[0].geometry.coordinates)
+                    .setHTML(stationTip(sf[0].properties.si)).addTo(map);
+            }
+        }
+    }
+    if (hit !== hoverKind) {
+        map.getCanvas().style.cursor = hit ? 'pointer' : '';
+        if (!hit) hoverTip.remove();
+        hoverKind = hit;
+    }
+
+    for (let i = pinned.length - 1; i >= 0; i--) {
+        const L = pinned[i];
+        if (L.kind === 'station') {
+            L.popup.setHTML(stationTip(L.si));
+            continue;
+        }
+        const pos = trainPositions.get(L.ti);
+        if (!pos) {              // the run has ended, so the pin has nothing left
+            L.popup.remove();
+            pinned.splice(i, 1);
+            continue;
+        }
+        const tr = trains[L.ti];
+        L.popup.setLngLat([pos[0], pos[1]])
+            .setHTML(trainTip(tr.route, pos[2], tr.express));
+    }
+}
+
+// ---------------------------------------------------------------- ui
+const SPEED_STOPS = [1 / 60, 0.05, 0.1, 0.2, 0.3, 0.5, 0.7, 1,
+                     1.5, 2, 3, 5, 7, 10, 15, 20];
+
+function speedLabel(s) {
+    return Math.abs(s - 1 / 60) < 1e-9 ? STR[lang].realTime : s + '×';
+}
+
+// Playing and speed are one control on the bar: the 1× and 2× buttons pick
+// a speed and start the clock, the pause button stops it without forgetting
+// which speed it was on.
+function setSpeed(s) {
+    if (s > 0) { speed = s; playing = true; }
+    else playing = false;
+    anchorSim = simTime; anchorWall = performance.now();
+    for (const b of document.querySelectorAll('#speed-buttons button[data-speed]')) {
+        const v = +b.dataset.speed;
+        b.classList.toggle('active', v === 0 ? !playing : (playing && v === speed));
+    }
+    $('speed').value = Math.max(0, SPEED_STOPS.indexOf(speed));
+    $('speed-val').textContent = speedLabel(speed);
+    $('play').title = playing ? STR[lang].pause : STR[lang].play;
+    invalidate();
+}
+
+function wireUI() {
+    $('lang-en').onclick = () => { lang = 'en'; applyLang(); };
+    $('lang-ko').onclick = () => { lang = 'ko'; applyLang(); };
+    for (const [gear, panel] of [['gear', 'settings'],
+                                 ['static-gear', 'static-settings']]) {
+        $(gear).addEventListener('mousedown', e => e.preventDefault());
+        $(gear).onclick = () => {
+            const open = $(panel).classList.toggle('hidden');
+            $(gear).classList.toggle('active', !open);
+        };
+    }
+    for (const b of document.querySelectorAll('#speed-buttons button[data-speed]')) {
+        b.addEventListener('mousedown', e => e.preventDefault());
+        b.onclick = () => {
+            const s = +b.dataset.speed;
+            setSpeed(s === 0 ? (playing ? 0 : speed) : s);
+        };
+    }
+    for (const b of document.querySelectorAll('#static-speed-buttons button[data-static-speed]')) {
+        b.addEventListener('mousedown', e => e.preventDefault());
+        b.onclick = () => {
+            const s = +b.dataset.staticSpeed;
+            setStaticPlay(s === 0 ? (staticPlay > 0 ? 0 : 1) : s);
+        };
+    }
+    // all boardings / only the rider's first / only the changes of train
+    for (const [id, key] of [['b-all', 'b'], ['b-first', 'b0'],
+                             ['b-xfer', 'x']]) {
+        $(id).addEventListener('mousedown', e => e.preventDefault());
+        $(id).onclick = () => setBoard(key);
+    }
+    $('t-static').addEventListener('mousedown', e => e.preventDefault());
+    $('t-static').onclick = () => {
+        if (staticMode) { setStaticMode(false); return; }
+        loadStatic().then(() => setStaticMode(true));
+    };
+    $('time-slider').oninput = e => {
+        if (staticMode) {
+            setStaticPlay(0);
+            staticHour = +e.target.value;
+            renderStatic();
+            return;
+        }
+        simTime = tMin + (tMax - tMin) * (+e.target.value / 1000);
+        anchorSim = simTime; anchorWall = performance.now();
+        invalidate();
+    };
+    $('speed').oninput = e => setSpeed(SPEED_STOPS[+e.target.value]);
+    $('dotsize').oninput = e => { dotScale = +e.target.value; invalidate(); };
+    $('static-size').oninput = e => {
+        staticScale = +e.target.value / 100;
+        if (staticData) renderStatic();
+    };
+    $('cb-stations').onchange = e => {
+        showStations = e.target.checked;
+        map.setLayoutProperty('stations', 'visibility',
+                              showStations ? 'visible' : 'none');
+        invalidate();   // the waiting dots are drawn by the overlay
+    };
+    $('cb-lines').onchange = e => {
+        map.setLayoutProperty('lines', 'visibility',
+                              e.target.checked ? 'visible' : 'none');
+    };
+    setSpeed(1);
+
+    // The bars in the drill panel are hover targets; the tooltip is one
+    // element the whole panel writes into rather than one per bar.
+    const dp = $('drill-panel'), dt = $('drill-tooltip');
+    dp.addEventListener('mousemove', e => {
+        const tip = e.target && e.target.dataset && e.target.dataset.tip;
+        if (!tip) { dt.classList.add('hidden'); return; }
+        dt.textContent = tip;
+        dt.style.left = (e.clientX + 12) + 'px';
+        dt.style.top = (e.clientY - 26) + 'px';
+        dt.classList.remove('hidden');
+    });
+    dp.addEventListener('mouseleave', () => dt.classList.add('hidden'));
+
+    document.addEventListener('keydown', e => {
+        if (e.code === 'Space' && !staticMode) {
+            e.preventDefault();
+            setSpeed(playing ? 0 : speed);
+        }
+        if (e.code === 'Escape') { clearPins(); closeDrill(); }
+    });
+
+    // Hover is resolved inside render, so a pointer move has to wake the loop
+    // when the clock is stopped -- and the dot radii track zoom, so a camera
+    // move has to as well.
+    map.on('mousemove', e => { lastMouse = e.point; invalidate(); });
+    map.on('mouseout', () => { lastMouse = null; invalidate(); });
+    map.on('move', invalidate);
+
+    // An unfocused window is often still on screen -- a second monitor, or
+    // sitting beside an editor -- so it keeps running, just slowly. Only a
+    // genuinely hidden page stops, and then the clock freezes with it so
+    // coming back lands where you left off rather than at some arbitrary hour.
+    window.addEventListener('blur', () => { RENDER_MS = RENDER_MS_BLURRED; });
+    window.addEventListener('focus', () => {
+        RENDER_MS = RENDER_MS_FOCUSED;
+        invalidate();
+    });
+    document.addEventListener('visibilitychange',
+        () => (document.hidden ? suspend() : resume()));
+
+    map.on('click', e => {
+        // In the day view a click opens the drill panel rather than pinning
+        // a tooltip: the station bubbles are boardings, not a crowd waiting,
+        // and there is a whole day behind each of them.
+        if (staticMode) {
+            const q = ids => map.queryRenderedFeatures(e.point,
+                { layers: ids.filter(l => map.getLayer(l)) });
+            const sf = q(['static-stn']);
+            if (sf.length) { openStationDrill(sf[0].properties.si); return; }
+            const gf = q(['static-seg']);
+            if (gf.length) { openSegmentDrill(gf[0].properties.gi); return; }
+            closeDrill();
+            return;
+        }
+        const d = pickDot(e.point);
+        if (d && d.kind === 'train') {
+            const popup = makePopup();
+            popup.setLngLat([d.t.lon, d.t.lat])
+                .setHTML(trainTip(d.t.route, Math.round(d.t.n), d.t.express))
+                .addTo(map);
+            pinned.push({ kind: 'train', popup: popup, ti: d.t.ti });
+            return;
+        }
+        let si = d ? d.si : null, at = d ? [d.lon, d.lat] : null;
+        if (si === null) {
+            const sf = map.queryRenderedFeatures(e.point, {
+                layers: ['stations'].filter(l => map.getLayer(l)) });
+            // Nothing under the cursor. Clicking empty map is how anyone
+            // expects to dismiss these, so do that rather than nothing --
+            // otherwise the only way out is a keyboard shortcut nobody was
+            // told about.
+            if (!sf.length) { clearPins(); return; }
+            si = sf[0].properties.si;
+            at = sf[0].geometry.coordinates;
+        }
+        const popup = makePopup();
+        popup.setLngLat(at).setHTML(stationTip(si)).addTo(map);
+        pinned.push({ kind: 'station', popup: popup, si: si });
+    });
+}
+</script>
+</body>
+</html>

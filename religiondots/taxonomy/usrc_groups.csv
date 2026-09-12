@@ -1,6 +1,6 @@
 Group Code,Group Name,path,Congregations,Adherents,counties
 Totals,,,356642.0,161224088.0,
-081,Catholic Church,christianity.catholic.latin.catholic-church,19405.0,61858137.0,2961.0
+081,Catholic Church,christianity.catholic.latin,19405.0,61858137.0,2961.0
 500,Non-denominational Christian Churches,christianity.nondenominational.independent,44319.0,21095641.0,2753.0
 419,Southern Baptist Convention,christianity.baptist.sbc,51379.0,17649040.0,2677.0
 449,United Methodist Church,christianity.methodist.umc,30051.0,8018629.0,2989.0
@@ -24,7 +24,7 @@ Totals,,,356642.0,161224088.0,
 141,Church of God in Christ,christianity.pentecostal.trinitarian.cogic,3313.0,920429.0,782.0
 165,Church of the Nazarene,christianity.holiness.nazarene,5155.0,905690.0,1683.0
 127,"Church of God (Cleveland, Tennessee)",christianity.pentecostal.trinitarian.cog-cleveland,5921.0,868446.0,1544.0
-895,Hindu Temples,hinduism.temples,433.0,831229.0,207.0
+895,Hindu Temples,hinduism,433.0,831229.0,207.0
 271,Reform Judaism,judaism.reform,690.0,662104.0,365.0
 890,Mahayana Buddhist,buddhism.mahayana,969.0,549344.0,252.0
 896,Hindu Yoga and Meditation,UNMAPPED,1378.0,437115.0,396.0
@@ -59,7 +59,7 @@ FFR,Full Gospel Christian Assemblies International,christianity.pentecostal.trin
 232,Full Gospel Baptist Church Fellowship,christianity.pentecostal.trinitarian.fgbcf,817.0,138354.0,287.0
 157,Church of the Brethren,christianity.anabaptist.brethren.cob,921.0,109288.0,371.0
 204,Ethiopian Orthodox,christianity.oriental.ethiopian,197.0,96374.0,87.0
-050,Armenian Church of North America (Catholicosate of Etchmiadzin),christianity.oriental.armenian-etchmiadzin,89.0,95207.0,65.0
+050,Armenian Church of North America (Catholicosate of Etchmiadzin),christianity.oriental.armenian.etchmiadzin,89.0,95207.0,65.0
 155,"Church of Our Lord Jesus Christ of the Apostolic Faith, Inc.",christianity.pentecostal.oneness.cooljc,527.0,85938.0,242.0
 331,Orthodox Church in America,christianity.orthodox.canonical.oca,560.0,74449.0,317.0
 221,Free Methodist Church--USA,christianity.methodist.free,619.0,71634.0,323.0
@@ -77,7 +77,7 @@ D71,Pentecostal Assemblies of the World,christianity.pentecostal.oneness.paw,108
 202,Eritrean Orthodox,christianity.oriental.eritrean,64.0,41456.0,43.0
 275,Reconstructionist Judaism,judaism.reconstructionist,90.0,39441.0,74.0
 220,Association of Free Lutheran Congregations,christianity.lutheran.aflc,254.0,35804.0,161.0
-049,Armenian Apostolic Church of America (Catholicosate of Cilicia),christianity.oriental.armenian-cilicia,32.0,35565.0,25.0
+049,Armenian Apostolic Church of America (Catholicosate of Cilicia),christianity.oriental.armenian.cilicia,32.0,35565.0,25.0
 304,"National Primitive Baptist Convention, USA, Inc.",christianity.baptist.primitive.npbc,130.0,35426.0,41.0
 328,Evangelical Friends Church International,christianity.friends.efci,235.0,34960.0,125.0
 231,General Association of General Baptists,christianity.baptist.general,114.0,33916.0,84.0

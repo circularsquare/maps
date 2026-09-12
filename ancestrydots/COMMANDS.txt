@@ -52,7 +52,9 @@ Build tippecanoe (WSL Ubuntu, one-time):
 ---- DEPLOY TO WEBSITE ----
 
 1. Upload PMTiles to Cloudflare R2:
-    - Go to https://dash.cloudflare.com > R2 Object Storage > "anita-maps" bucket
+    - Go to https://dash.cloudflare.com > R2 Object Storage > "anitamaps" bucket
+      (this line said "anita-maps" until 2026-09-09; there is no bucket by that name, and it
+       was the only written record of it -- religiondots/COMMANDS.txt DEPLOY has the rest)
     - Upload dots_all_1per100.pmtiles (overwrites the old one)
     - Public URL: https://pub-ae551368cea941f39101e13c84d60bde.r2.dev/dots_all_1per100.pmtiles
 

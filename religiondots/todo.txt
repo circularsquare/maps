@@ -1,27 +1,62 @@
 religiondots — todo (Anita's file; Claude does not edit this)
 
 
-- tiny dots: rings
-- 2 coor schemes 
+- ipums account, hope they email back
+- other sources? anything blocked on human accoutn or something
+- think about overlapping dots
 
+capmas
 
+french guiana population distribution looks a little silly psread out, that seems not right
 
+setting to view just *country level* or first admin level statistics of just like percentages of each religion, top 10 style? just one hoverable thing per coutnry/region i guess. no dots. or maybe one different sized dot per religion
 
-THINGS TO LOOK AT
+a little house per religion, for the holy site / origin site / headquarters of that religion? could be cool to see where all the shintos are
 
-- IPUMS International might have religion + ADM1 for a lot of countries. Biggest single
-  coverage question in the file. sources 8
-- is the World Religion Database reachable through a university login
-- Brazil: IBGE has not published evangelical denominations for 2022 and may never. 2010 has
-  them by municipality. sources 2
+maybe reolor "other" to purple or something?
+maybe get rid of some of the jewish categories? half are only in israel, half are only in usa
 
+find further breakdowns on all the "indigenous religions" generic groups? 
+
+recolor african churches to pink?
+
+"religion in n countries" project title should not count territories in the n, just so peopel dont get confused why tehre are so many missing as we approach ~196
+
+explain what granularity means: points randomly distributed within region
+
+consider changing "currently looking at these countries" gray out overlay to be different color so it doesnt look the same color as wtaer 
+
+when selecting a religion, we maybe want to be able to somehow show liek "for this given country and this religion, this is our best national level estimate of how many peopple are this religion" for cases where we have country-level estimates but nothing granular enough to draw as dots. so for instance. when selecting shia i wanan show the countries that have shia dots normally. but for any country that just reports "muslim" but we can find a national-level estimate that like 1% of the country is shia, we can show a sort of outline around the coutnry that indicates that a viewer can mouse over the country to see country level statistics: like 500k shias (3% of country) or something.
+or, as another case, if we select daoism (which like almost no coutnry has drawable as dots) we should maybe be able to pull nation level statistics for how many people identify as daoist.
+or if we select "muslim" and we mouse over a country (i guess like, hover over any empty space non dot in the country for longer than 0.25 seconds without moving or something) which *does* draw muslim dots but doesn't have enough detail to actually break down muslim into sunni vs shia vs whatever, we can actually also show nation level statistics for like 34% of this countries muslims are shia, 66% are sunni, but they cant be placed
+idk. this might help with presenting a slightly more honest sense of like "there are this  many of this religion in the world". 
+
+add progress bar to loading when loading (takes quite a few seconds)
+
+initial page load time takes like 30 seconds... any way we could speed thi sup
+
+first time usage guide:
+    arrow pointing at christianity like "try clicking christianity row!"
+        consider hwo it should look on mobile
+
+start view centered on meridian
+
+for japanrail: make station bubbles below a min size still hoverable to see passenger count (also handle stations that have like round down to 0 passenger count?)
 
 LATER
 
 - religion genealogy panel, with selection linked both ways to the map. spec 10
-- diversity toggle (effective number of groups per unit). spec 5
+- diversity toggle (effective number of groups pofer unit). spec 5
 
 
 
-deploy (once there is something to deploy) -- ancestrydots/COMMANDS.txt is the pattern:
+npx serve /c/Users/anita/projects/maps/religiondots -p 8099 --no-clipboard
+
+--- AFTER EDITING taxonomy/branches.py OR a *2020.py / *2021.py MAPPING ---
+python taxonomy/build_tree.py
+    Regenerates taxonomy/religions.json. NOT automatic. If you skip it the
+    viewer doesn't know the new nodes and greys out whole countries.
+
+    deploy (once there is something to deploy) -- ancestrydots/COMMANDS.txt is the pattern:
 pmtiles to R2, index.html + legend to the website repo.
+

@@ -6,7 +6,7 @@
 
 import { languageColor, elevColor, gdpColor, popColor, rgb } from './colors.js';
 import { sparkline, compact } from './charts.js';
-import { GHS_YEARS, GHS_PROJ_FROM } from './data.js';
+import { GHS_YEARS, GHS_PROJ_FROM, KIND_LABEL } from './data.js';
 import { koppenLabel } from './koppen.js';
 
 const esc = s => String(s ?? '').replace(/[&<>"]/g,
@@ -153,8 +153,8 @@ export function render(c, key) {
     ${alt.length ? `<div class="alt">${alt.map(esc).join(' &middot; ')}</div>` : ''}
     <div class="sub">${esc(subtitle(c))}</div>
     ${(c.typeNames || []).length ? `<div class="kinds">${
-      (c.kind && c.kind !== 'city')
-        ? `<span class="kindtag ${esc(c.kind)}">${c.kind === 'aggregate' ? 'metro area' : 'admin area'}</span>` : ''
+      (c.kind && KIND_LABEL[c.kind])
+        ? `<span class="kindtag ${esc(c.kind)}">${KIND_LABEL[c.kind]}</span>` : ''
       }${(c.typeNames || []).map(t => `<span class="ktype">${esc(t)}</span>`).join('')}</div>` : ''}
     ${stale}${unsure}
     <dl>

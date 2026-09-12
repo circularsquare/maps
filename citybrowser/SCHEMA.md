@@ -46,7 +46,8 @@ edit mode and never reused. Everything else about them is identical.
     "admin":     "Q1489",           // P131
     "adminName": "Tokyo Metropolis",
     "country":   "Q17",             // P17 -- NOT reliable for dependencies,
-    "types":     ["Q1137012"],      // raw P31; filter via settlement_types.json
+    "kind":      "city",            // city|aggregate|rural|district|admin
+    "typeNames": ["prefecture of Japan", "megacity"],   // up to 3, for the card
     "ghs":       673,               // ID_UC_G0 if matched, else null
     "ghsConf":   "high",            // high | low | none    (see Matching)
     "ghsRole":   "centre",          // centre | member | near
@@ -58,6 +59,12 @@ edit mode and never reused. Everything else about them is identical.
 The urban centre's OWN fields — name, population, area, member list, history —
 are deliberately **not** here. They live in `ghs_centres.json` and are joined on
 `ghs` in the browser.
+
+The **raw P31 list is not here either.** `assemble_base.py` consumes it — that
+is what the settlement-type filter and `kinds.py::classify` run on — and keeps
+only the two derived fields above. The QIDs stay in `cache/wikidata_f*/`, which
+is where `tools/tally_types.py` reads them from. Anything that wants to
+reclassify has to go back to the cache; it cannot work from `base.json`.
 
 Fields added later by their own stage, all nullable: `aliases`, `gdpPc`,
 `gdpSrc`, `climate`.
@@ -204,8 +211,8 @@ same way `mergeOverrides` and `build.py::merge` must.
 |---|---|
 | `js/colors.js` | the four ramps + language palette. Pure, no deps. |
 | `js/data.js` | loading, indexing, projection |
-| `js/map.js` | canvas draw loop, density thinning |
-| `js/tiles.js` | raster basemap: tile cache, level choice, attribution |
+| `js/basemap.js` | the MapLibre map: style list, palette tinting, attribution |
+| `js/map.js` | bubble canvas draw loop, density thinning, hit-testing |
 | `js/card.js` | hover card rendering |
 | `js/charts.js` | sparkline / pie / climate band. Pure renderers. |
 | `js/koppen.js` | Köppen code → label. A lookup table, nothing else. |

@@ -61,10 +61,10 @@ def findUsage(num_iterations = 10000000):
 
     # G_directed = ox.graph_from_bbox(bbox = bbox, network_type='drive')
     # G_proj = ox.project_graph(G_directed, to_crs=TARGET_CRS)
-    # with open('g_proj_d.pkl', 'wb') as f:
+    # with open('nystreets/g_proj_d.pkl', 'wb') as f:
     #     pickle.dump(G_proj, f)
 
-    with open('g_proj_d.pkl', 'rb') as f:
+    with open('nystreets/g_proj_d.pkl', 'rb') as f:
         G_proj = pickle.load(f)
 
     G_initial = nx.Graph(G_proj)
@@ -307,15 +307,15 @@ def findUsage(num_iterations = 10000000):
     print("Final combined GeoDataFrame created successfully.")
     
     # save!
-    df.to_file('usage_map_ds.gpkg', driver='GPKG')
+    df.to_file('nystreets/usage_map_ds.gpkg', driver='GPKG')
     print('File saved.')
 
 
 findUsage(2000000)
 
 print('loading file...')
-df = gpd.read_file('usage_map_ds.gpkg')
-#df = gpd.read_file('usage_map_s_big.gpkg')
+df = gpd.read_file('nystreets/usage_map_ds.gpkg')
+#df = gpd.read_file('nystreets/usage_map_s_big.gpkg')
 
 print("Plotting final map...")
 imageSize = 80

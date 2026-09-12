@@ -1,8 +1,14 @@
-// Canvas map: projection, draw loop, density thinning, pan/zoom, hit-testing.
+// The bubble layer: projection, draw loop, density thinning, hit-testing.
 // Emits hover/click via callbacks; knows nothing about cards or editing.
+//
+// MapLibre owns pan, zoom and the pointer (see basemap.js). This file owns a
+// transparent canvas glued on top of it. The bubbles are NOT a MapLibre layer,
+// and that is the point: density thinning, the curation-aware colours and the
+// "largest dot under the cursor wins" hit test are all ours, and a style swap
+// has nothing to re-add afterwards.
 
 import { state, mercY } from './data.js';
-import * as tiles from './tiles.js';
+import { map as gl, vpW, vpH, worldFitZoom } from './basemap.js';
 
 const CELL = 10;        // target cell size for the occupancy test, px
 const BIG_R = 3.2;      // dots this size or larger are never suppressed
@@ -14,23 +20,35 @@ const MAX_DRAW = 26000; // ceiling so a pathological view still stays smooth
 // made a zoom of 100x swell dots 12.6x; 0.30 makes it 4x.
 const ZOOM_EXP = 0.30;
 
-export const view = { scale: 1, x: 0.5, y: 0.5 };
+const mercX = lon => (lon + 180) / 360;
+const worldPx = () => 512 * Math.pow(2, gl.getZoom());
+
+// The same three numbers the old hand-rolled pan/zoom kept in a mutable object,
+// now read straight off MapLibre's transform so the two can never drift. Kept
+// under the old names and the old meaning -- scale 1 is one world copy across
+// the viewport -- because the URL hash, flyTo() and the radius curve are all
+// written in those terms.
+export const view = {
+  get x() { return mercX(gl.getCenter().lng); },
+  get y() { return mercY(gl.getCenter().lat); },
+  get scale() { return worldPx() / Math.min(vpW(), vpH() * 2); },
+};
 
 let cv, ctx, W = 0, H = 0, DPR = 1;
 const occ = new Set();
 let vis, visX, visY, visR, visN = 0;
 let onHover = () => {}, onClick = () => {}, onCounts = () => {};
 let deleted = new Set();
-// Which kind codes are drawn. Aggregates (metro/urban areas) and admin
-// duplicates are OFF by default: three near-identical bubbles for "New York"
-// is noise, not information.
+// Which kind codes are drawn. Everything except plain cities is OFF by default:
+// three near-identical bubbles for "New York" is noise, and a county, a ward or
+// an upazila is not a place anyone is from. See kinds.py.
 let showKinds = new Set([0]);
 
-export const sx = nx => (nx - view.x) * view.scale * Math.min(W, H * 2) + W / 2;
-export const sy = ny => (ny - view.y) * view.scale * Math.min(W, H * 2) + H / 2;
+export const sx = nx => (nx - view.x) * worldPx() + vpW() / 2;
+export const sy = ny => (ny - view.y) * worldPx() + vpH() / 2;
 export const unproject = (px, py) => {
-  const k = view.scale * Math.min(W, H * 2);
-  return { nx: view.x + (px - W / 2) / k, ny: view.y + (py - H / 2) / k };
+  const k = worldPx();
+  return { nx: view.x + (px - vpW() / 2) / k, ny: view.y + (py - vpH() / 2) / k };
 };
 export const toLatLon = (nx, ny) => {
   const lon = nx * 360 - 180;
@@ -42,7 +60,6 @@ export const toLatLon = (nx, ny) => {
 export function init(canvas, handlers) {
   cv = canvas;
   ctx = cv.getContext('2d');
-  Object.assign({ onHover, onClick }, handlers);
   onHover = handlers.onHover || onHover;
   onClick = handlers.onClick || onClick;
   onCounts = handlers.onCounts || onCounts;
@@ -51,9 +68,6 @@ export function init(canvas, handlers) {
   visY = new Float32Array(MAX_DRAW);
   visR = new Float32Array(MAX_DRAW);
   addEventListener('resize', resize);
-  // Tiles arrive one at a time and a screenful is ~30 of them. Redrawing per
-  // arrival is 30 full redraws in one frame; coalescing makes it one.
-  tiles.setOnLoad(scheduleDraw);
   wire();
   resize();
 }
@@ -71,50 +85,26 @@ export function setKinds(codes) { showKinds = new Set(codes); draw(); }
 export function kindsShown() { return showKinds; }
 
 export function resize() {
-  DPR = window.devicePixelRatio || 1;
-  W = innerWidth; H = innerHeight;
+  DPR = Math.min(window.devicePixelRatio || 1, 2);
+  W = vpW(); H = vpH();
   cv.width = W * DPR; cv.height = H * DPR;
   cv.style.width = W + 'px'; cv.style.height = H + 'px';
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  gl.setMinZoom(worldFitZoom());   // keep the cap tied to the current width
   draw();
-}
-
-// The fixed-scale ne_50m coastline. Still the ONLY ground when tiles are off,
-// and the fallback under them: it is local, so it paints instantly and works
-// with no network, which is what stops a slow or absent tile fetch from
-// showing bare water.
-function drawLand(css) {
-  ctx.fillStyle = css.getPropertyValue('--land').trim() || '#f5f3ee';
-  ctx.strokeStyle = css.getPropertyValue('--coast').trim() || '#c9d3dc';
-  ctx.lineWidth = 0.7;
-  ctx.beginPath();
-  for (const f of state.land.features) {
-    const polys = f.geometry.type === 'Polygon'
-      ? [f.geometry.coordinates] : f.geometry.coordinates;
-    for (const poly of polys) for (const ring of poly) {
-      for (let i = 0; i < ring.length; i++) {
-        const X = sx((ring[i][0] + 180) / 360), Y = sy(mercY(ring[i][1]));
-        i ? ctx.lineTo(X, Y) : ctx.moveTo(X, Y);
-      }
-      ctx.closePath();
-    }
-  }
-  ctx.fill();
-  ctx.stroke();
 }
 
 export function draw() {
   if (!state.n) return;
-  const k = view.scale * Math.min(W, H * 2);
-  const css = getComputedStyle(document.documentElement);
-  ctx.fillStyle = css.getPropertyValue('--water').trim() || '#dbe7f0';
-  ctx.fillRect(0, 0, W, H);
+  W = vpW(); H = vpH();
+  // Transparent, not filled: the basemap is underneath now, and a water-coloured
+  // rect over it would be an opaque sheet hiding the thing we just added.
+  ctx.clearRect(0, 0, W, H);
 
-  // Once every visible tile is decoded the geojson is painted over completely,
-  // so drawing it is ~50k invisible path ops per frame — and this runs on every
-  // mousemove of a drag. Skipping it there is most of the cost of the layer.
-  if (!tiles.covered(k, W, H, sx, sy)) drawLand(css);
-  tiles.draw(ctx, k, W, H, sx, sy, DPR);
+  const c = gl.getCenter();
+  const ws = worldPx(), cxn = mercX(c.lng), cyn = mercY(c.lat);
+  const k = ws;                        // world width in px
+  const scale = ws / Math.min(W, H * 2);
 
   // --- pass 1: density thinning.
   //
@@ -126,7 +116,7 @@ export function draw() {
   // selection shimmers. Quantising the cell size to a power of two makes the
   // grid identical for any pan at a given zoom — it only changes in discrete
   // steps as you zoom, which reads as detail appearing rather than as noise.
-  const zk = Math.max(0.35, Math.pow(view.scale, ZOOM_EXP));
+  const zk = Math.max(0.35, Math.pow(scale, ZOOM_EXP));
   const level = Math.max(0, Math.round(Math.log2(Math.max(k / CELL, 1))));
   const g = Math.pow(2, level);        // cells per world unit, per axis
   occ.clear();
@@ -136,15 +126,28 @@ export function draw() {
     if (deleted.has(state.keys[i])) continue;
     const r = state.r[i] * zk;
     if (r < 0.45) continue;
-    const X = sx(state.nx[i]), Y = sy(state.ny[i]);
-    if (X < -30 || X > W + 30 || Y < -30 || Y > H + 30) continue;
-    if (r < BIG_R) {
-      const cell = ((state.ny[i] * g) | 0) * g + ((state.nx[i] * g) | 0);
-      if (occ.has(cell)) continue;
-      occ.add(cell);
+    const Y = (state.ny[i] - cyn) * ws + H / 2;
+    if (Y < -30 || Y > H + 30) continue;
+    // MapLibre repeats the world east and west of the prime copy, so a city can
+    // be on screen in more than one of them near the antimeridian. Solve for
+    // which copies land on screen rather than looping a fixed range: at the
+    // minimum zoom one world already fills the viewport, so this is almost
+    // always exactly one iteration.
+    const X0 = (state.nx[i] - cxn) * ws + W / 2;
+    const c0 = Math.ceil((-30 - X0) / ws), c1 = Math.floor((W + 30 - X0) / ws);
+    for (let cp = c0; cp <= c1; cp++) {
+      if (r < BIG_R) {
+        // Copy index is part of the key, or the west copy of a city would be
+        // suppressed by its own east copy having claimed the world cell.
+        const cell = (((state.ny[i] * g) | 0) * g + ((state.nx[i] * g) | 0)) * 4
+                   + (cp & 3);
+        if (occ.has(cell)) continue;
+        occ.add(cell);
+      }
+      vis[nvis] = i; visX[nvis] = X0 + cp * ws; visY[nvis] = Y; visR[nvis] = r;
+      if (++nvis >= MAX_DRAW) break;
     }
-    vis[nvis] = i; visX[nvis] = X; visY[nvis] = Y; visR[nvis] = r;
-    if (++nvis >= MAX_DRAW) break;
+    if (nvis >= MAX_DRAW) break;
   }
   visN = nvis;
 
@@ -174,45 +177,50 @@ function pick(px, py) {
 }
 
 function wire() {
-  let drag = null, moved = false;
-  cv.addEventListener('mousedown', e => {
-    drag = { x: e.clientX, y: e.clientY, vx: view.x, vy: view.y };
-    moved = false;
-  });
-  addEventListener('mouseup', e => {
-    if (drag && !moved) onClick(pick(e.clientX, e.clientY), e);
-    drag = null;
-  });
-  addEventListener('mousemove', e => {
-    if (drag) {
-      if (Math.abs(e.clientX - drag.x) + Math.abs(e.clientY - drag.y) > 3) moved = true;
-      const k = view.scale * Math.min(W, H * 2);
-      view.x = drag.vx - (e.clientX - drag.x) / k;
-      view.y = drag.vy - (e.clientY - drag.y) / k;
-      onHover(-1, e);
-      draw();
-      return;
-    }
-    onHover(pick(e.clientX, e.clientY), e);
-  });
-  cv.addEventListener('wheel', e => {
-    e.preventDefault();
-    const k = view.scale * Math.min(W, H * 2);
-    const mx = view.x + (e.clientX - W / 2) / k, my = view.y + (e.clientY - H / 2) / k;
-    view.scale = Math.max(1, Math.min(4000, view.scale * Math.exp(-e.deltaY * 0.0016)));
-    const k2 = view.scale * Math.min(W, H * 2);
-    view.x = mx - (e.clientX - W / 2) / k2;
-    view.y = my - (e.clientY - H / 2) / k2;
+  // Glued to MapLibre by redrawing on its 'render' event, which is the only way
+  // to stay in step with the transform mid-animation. A tiled basemap also
+  // fires 'render' for every tile fade-in, and draw() walks 61k cities, so
+  // those extra frames would be pure waste -- the transform is not moving
+  // during a fade. Skip when the view is identical to the last one drawn.
+  let lastView = '';
+  const redraw = () => {
+    const t = gl.transform;
+    const sig = `${t.center.lng},${t.center.lat},${t.zoom},${t.width},${t.height}`;
+    if (sig === lastView) return;
+    lastView = sig;
     draw();
-    onHover(pick(e.clientX, e.clientY), e);
-  }, { passive: false });
+  };
+  gl.on('move', redraw);
+  gl.on('render', redraw);
+
+  // MapLibre's own click, so taps work on touch and a pan never counts as a
+  // click. edit.js reads clientX/clientY off the event for the create and move
+  // tools, so it gets the underlying DOM event rather than MapLibre's wrapper.
+  gl.on('click', e => onClick(pick(e.point.x, e.point.y), e.originalEvent));
+
+  const el = gl.getCanvasContainer();
+  el.addEventListener('mousemove', e => {
+    if (gl.isMoving()) { onHover(-1, e); return; }
+    const rect = cv.getBoundingClientRect();
+    const i = pick(e.clientX - rect.left, e.clientY - rect.top);
+    // The cursor used to be pure CSS on the canvas. It cannot be any more:
+    // MapLibre writes an inline cursor on its own canvas while dragging, and an
+    // inline style beats a stylesheet. `data-tool` is set by edit.js and stays
+    // the contract for what the pointer means.
+    const tool = document.body.dataset.tool;
+    gl.getCanvas().style.cursor = tool ? 'copy' : (i >= 0 ? 'pointer' : '');
+    onHover(i, e);
+  });
+  el.addEventListener('mouseleave', e => onHover(-1, e));
 }
 
-export function reset() { view.scale = 1; view.x = 0.5; view.y = 0.5; draw(); }
+export function reset() {
+  gl.jumpTo({ center: [0, 20], zoom: worldFitZoom() });
+}
 
+// Instant, not animated -- this is how you land on a search result, and an
+// arc-and-swoop across the world is a wait, not a feature.
 export function flyTo(lat, lon, scale = 220) {
-  view.x = (lon + 180) / 360;
-  view.y = mercY(lat);
-  view.scale = scale;
-  draw();
+  const ws = scale * Math.min(vpW(), vpH() * 2);
+  gl.jumpTo({ center: [lon, lat], zoom: Math.log2(ws / 512) });
 }

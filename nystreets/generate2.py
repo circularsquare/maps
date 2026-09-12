@@ -110,10 +110,10 @@ def findUsage(num_iterations = 10000000):
     # --- 1. Get data by uncommenting below 4 lines! ---
     # G_directed = ox.graph_from_bbox(bbox = bbox, network_type='drive')
     # G_proj = ox.project_graph(G_directed, to_crs=TARGET_CRS)
-    # with open('g_proj_d.pkl', 'wb') as f:
+    # with open('nystreets/g_proj_d.pkl', 'wb') as f:
     #     pickle.dump(G_proj, f)
 
-    with open('g_proj_d.pkl', 'rb') as f:
+    with open('nystreets/g_proj_d.pkl', 'rb') as f:
         G_proj = pickle.load(f)
 
     true_lengths = {}
@@ -510,7 +510,7 @@ def findUsage(num_iterations = 10000000):
     print("Final combined GeoDataFrame created successfully.")
 
     # save!
-    df.to_file('usage_map2.gpkg', driver='GPKG')
+    df.to_file('nystreets/usage_map2.gpkg', driver='GPKG')
     print('File saved.')
 
 if __name__ == '__main__':
@@ -518,8 +518,8 @@ if __name__ == '__main__':
     findUsage(80000 * 100) 
 
     print('loading file...')
-    df = gpd.read_file('usage_map2.gpkg')
-    #df = gpd.read_file('usage_map.gpkg')
+    df = gpd.read_file('nystreets/usage_map2.gpkg')
+    #df = gpd.read_file('nystreets/usage_map.gpkg')
 
     print("Plotting final map...")
     imageSize = 100
@@ -642,8 +642,8 @@ if __name__ == '__main__':
 #     nodes_gdf.plot(ax=ax, column='degree', cmap='spring', markersize=8, legend=True,
 #                 legend_kwds={'label': "Node Degree (Number of Connections)"}, alpha=0.4)
 
-#     plt.savefig('debug_grand_central.png', bbox_inches='tight', pad_inches=0, facecolor='white', dpi=300)
-#     print("Diagnostic plot saved to 'debug_grand_central.png'")
+#     plt.savefig('nystreets/debug/debug_grand_central.png', bbox_inches='tight', pad_inches=0, facecolor='white', dpi=300)
+#     print("Diagnostic plot saved to 'nystreets/debug/debug_grand_central.png'")
 
 
     # # PLOTTING
@@ -704,6 +704,6 @@ if __name__ == '__main__':
     #     special_nodes_gdf.plot(ax=ax, markersize=10, alpha=0.4, 
     #         column = 'degree', cmap='viridis')
 
-    # plt.savefig('debug_4train_special_nodes.png', bbox_inches='tight', pad_inches=0, facecolor='white', dpi=300)
-    # print("Diagnostic plot saved to 'debug_4train_special_nodes.png'")
+    # plt.savefig('nystreets/debug/debug_4train_special_nodes.png', bbox_inches='tight', pad_inches=0, facecolor='white', dpi=300)
+    # print("Diagnostic plot saved to 'nystreets/debug/debug_4train_special_nodes.png'")
     # exit()

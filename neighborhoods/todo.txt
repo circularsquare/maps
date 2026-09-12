@@ -84,3 +84,6 @@ Plain `python` works now (the empty C:\Python314 install is gone). spec 8
 show neighborhood names even without hovering? if theres enough space to? 
 
 style pass: light mode 
+
+make more like seterra... stat with 1 city level quiz. see list of cities, pick one, be able to pick one level of divisions to see (or quiz). 
+maybe show outlines (or pinpoints) that are candidates, show a name, you have to pick which one is the name

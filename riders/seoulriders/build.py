@@ -1,0 +1,2078 @@
+# -*- coding: utf-8 -*-
+"""Route riders over the real timetable and write data/trains.json.
+
+Reads the hourly OD from build_od.py, finds each pair a journey with RAPTOR
+over the timetable for that day type, boards the riders onto specific trains,
+and writes one timeline per train run.
+
+**There is no --day flag here.** The day is whatever `build_od.py` last built,
+read back out of `data/od_hourly.npz` -- see `_day()` and `daytype.py`. Two
+flags that had to be kept in step would eventually drift, and a weekday routed
+over a Sunday timetable produces no error, just a thinner weekday.
+
+The OD gives an hour's riders and no arrival times, so they are spread over the
+hour: one spawn in each gap between departures at the origin, carrying that
+gap's share, with RAPTOR run afresh for each. That is exact rather than
+approximate -- everyone arriving in a gap catches the train that ends it, so
+there is nothing finer to resolve -- and it is what stops a whole hour of 잠실
+piling onto a single midnight train. See spawn_gaps().
+
+Finishes by calling build_shapes.main(), which bends the straight
+station-to-station hops onto the real track. Forgetting that step is what makes
+the trains visibly cut corners, so it is no longer a separate thing to remember.
+
+The routing is one independent search per (origin complex, spawn time), so it
+runs across the cores -- half of them by default (JOB_SHARE), so the machine
+stays usable while it runs. The origins are split into a fixed 64 chunks whichever way it runs, so
+--jobs changes how long the build takes and not what comes out of it. About
+three minutes on fourteen workers, at roughly 300 MB each.
+
+    python build.py             # full build
+    python build.py --sample 20 # every 20th origin, for a quick check
+    python build.py --jobs 4    # leave some of the machine alone
+    python build.py --no-shapes # skip the track-shaping step
+"""
+
+import argparse
+import collections
+import csv
+import io
+import json
+import math
+import os
+import random
+import re
+import sys
+import time
+from bisect import bisect_left
+from datetime import datetime
+
+import numpy as np
+
+import daytype
+import lines as LR
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+D = os.path.join(HERE, "data")
+OUT = os.path.join(D, "trains.json")
+
+# A sampled run is a real build of a fake question -- every count in it is low
+# by the sampling factor. It gets its own filenames so that checking the
+# pipeline can never quietly replace the build the page is showing, which is
+# exactly how an afternoon went missing once.
+SAMPLE_OUT = os.path.join(D, "trains.sample.json")
+STATS_OUT = os.path.join(D, "stats.json")
+STATS_SAMPLE_OUT = os.path.join(D, "stats.sample.json")
+
+
+def out_paths(sample):
+    """(trains, stats) to write for this run."""
+    if sample > 1:
+        return SAMPLE_OUT, STATS_SAMPLE_OUT
+    return OUT, STATS_OUT
+
+
+def write_json(path, obj):
+    """Write a whole file or none of it.
+
+    Half a gigabyte of JSON takes long enough to serialise that a Ctrl-C in the
+    middle is a real possibility, and a truncated trains.json is a blank map
+    with no clue as to why. Write beside the target and rename over it: the
+    rename is atomic, so a reader sees either the old file or the new one.
+    """
+    tmp = path + ".part"
+    with io.open(tmp, "w", encoding="utf-8") as f:
+        json.dump(obj, f, ensure_ascii=False, separators=(",", ":"))
+    os.replace(tmp, path)
+
+OD_HOURLY = os.path.join(D, "od_hourly.npz")
+
+# Crowding penalties from the previous pass of crowding.py, if there has been
+# one. One array per pattern, shape (trips, stops): the *cumulative* perceived
+# penalty in seconds from the start of the trip to each stop, so riding from
+# board_si to sj costs pcum[ti][sj] - pcum[ti][board_si].
+#
+# Absent, this file simply does not exist and the build is the uncrowded one.
+# That is the base case crowding.py starts from, and it is still a valid build
+# in its own right -- see "Crowding" in README.md.
+CROWDING = os.path.join(D, "crowding.npz")
+
+
+def load_crowding(quiet=False):
+    if not os.path.exists(CROWDING):
+        return None
+    with np.load(CROWDING, allow_pickle=True) as z:
+        pen = [z["p%d" % i] for i in range(int(z["npat"]))]
+        it = int(z["iteration"]) if "iteration" in z.files else 0
+    if not quiet:
+        worst = max((float(a[:, -1].max()) if a.size else 0.0) for a in pen)
+        print("   crowding penalties from iteration %d "
+              "(worst whole-trip penalty %.1f min)" % (it, worst / 60.0))
+    return pen
+
+
+def _day():
+    """Which day build_od.py built, read back out of its own output.
+
+    Resolved at import, not in main(), and that is not an accident. The pool
+    workers re-import this module and call build_world() for themselves, so a
+    value set inside main() would reach the parent and not the children --
+    weekday riders would be routed over a Sunday timetable in every worker.
+    build.py deliberately takes no --day flag of its own for the same reason:
+    one decision, made in build_od.py, recorded in the file.
+    """
+    if not os.path.exists(OD_HOURLY):
+        raise SystemExit("missing %s.\nRun: python build_od.py" % OD_HOURLY)
+    with np.load(OD_HOURLY, allow_pickle=True) as z:
+        name = str(z["day"]) if "day" in z.files else "nye"
+    return name, daytype.get(name)
+
+
+DAY_NAME, DAY = _day()
+OD_DATE = DAY.get("date", "")
+SERVICE = DAY["service"]           # 주중주말 code to select in the timetables
+MAX_ROUNDS = 4             # journeys of up to 3 transfers
+TRANSFER_SEC = 180
+MIN_RIDERS = 0.05          # ignore cells below this many people
+
+# There is no spawn-interval knob any more, and that is deliberate. Riders in
+# an hour cell have no arrival time of their own, so they have to be spread
+# over the hour -- but spreading them on a fixed grid was an approximation that
+# needed tuning and got it wrong twice. See spawn_gaps(), which puts one spawn
+# in each gap between departures and is exact.
+
+# No trip in the regular Sunday timetable starts at or after 00:00 -- only 105
+# trains are still finishing their runs, and the last one ends at 00:42. Yet
+# the gate counts record roughly 230,000 journeys in the post-midnight bin.
+# That gap is the evidence: Seoul extends subway service on New Year's Eve for
+# the Bosingak bell, and the 2026 timetable we have does not carry those trains.
+#
+# So repeat the last two hours of departures, shifted forward, to stand in for
+# the extra service. It is a reconstruction, not a record, and it is the one
+# invented thing in the pipeline -- set this False to see the night as the
+# regular timetable would have it, with the midnight exodus mostly stranded.
+#
+# **It applies to --day nye and to nothing else.** On any ordinary day the
+# timetable and the gate counts agree about when service stops, so there is no
+# gap to reconstruct and repeating an hour of departures would be inventing
+# trains that did not run.
+EXTEND_LAST_HOUR = DAY["extend_late"]
+
+# The "24시이후" column is open-ended: everything after midnight, not
+# 00:00-01:00. Compressing it into a single hour put ~90,000 riders onto the
+# handful of trains still running and made the dots balloon. Spread it across
+# the window the extended service actually covers instead -- two hours on New
+# Year's Eve, one on a day when the last train is the last train.
+LATE_BIN_HOURS = 2 if DAY["extend_late"] else 1
+
+LINE_COLORS = LR.COLORS
+
+# --------------------------------------------------------------------------
+# animation times
+#
+# Routing uses the timetable exactly as published. Everything below applies
+# only to the times written into trains.json for the animation to draw, held
+# separately as pattern["vdep"]. Keeping the two apart matters: a rider should
+# be put on the train the timetable says they caught, not on one we nudged.
+# --------------------------------------------------------------------------
+
+# The published stop times land on twelve distinct second values, 60% of them
+# on :00 or :30. Drawn as-is, trains scheduled to the same minute sit exactly
+# on top of each other and the map pulses instead of flowing. A small
+# deterministic per-stop offset breaks that up; the speed smoothing below then
+# absorbs any segment the offset made too fast.
+JITTER_S = 10
+
+# Speed ceilings, km/h, by what the line is rather than what it is called.
+# Line 1 shares Korail track out to 인천 / 소요산 and really does run at 100+
+# between the far-out stops; so do the commuter lines kric.py adds. City metro
+# is built for about 80, and the light rail lines are slower still. The
+# published timetables are already almost clean against these -- roughly one
+# segment in a thousand is over -- so this pass is mostly here to clean up
+# after JITTER_S, and to catch the 30-second hops that are artefacts of coarse
+# rounding.
+SPEED_THRESHOLDS = {
+    # 서울 도시철도
+    "2": 90, "3": 90, "4": 90, "5": 90,
+    "6": 90, "7": 90, "8": 90, "9": 90,
+    # Korail 광역전철: long outer stretches on main-line track
+    "1": 110, "SB": 110, "GJ": 110, "GC": 110, "SH": 110, "GG": 110,
+    # 공항철도 직통 is the fastest thing on the map at 110 design speed
+    "AR": 130,
+    "SN": 110,          # 신분당선 runs 90-110 between its widely spaced stops
+    "I1": 90, "I2": 90,
+    # rubber-tyred and light rail
+    "UI": 80, "SL": 80, "GP": 90, "UJ": 80,
+}
+DEFAULT_SPEED_THRESHOLD = 90
+SMOOTH_DWELL_S = 20                  # time at a platform, not moving
+SMOOTH_ACCEL_DECEL_S = 20            # time lost pulling away and braking
+SMOOTH_OVERHEAD_S = SMOOTH_DWELL_S + SMOOTH_ACCEL_DECEL_S
+SMOOTH_PASSES = 3                    # chains of fast segments need repeats
+SOFT_RESCUE_PASSES = 2               # then let donors drift slightly over
+SOFT_DONOR_FACTOR = 1.18
+SOFT_TAKE_FRACTION = 0.5
+
+# Waiting bubbles. Arrivals at a platform are bucketed so near-simultaneous
+# spawns merge into one step; boarding times are left exact so the bubble
+# drops on the same frame the train's own count picks up.
+WAIT_BUCKET_S = 20
+# ... and a gap's riders are spread over this many steps rather than landing
+# together, so the bubble fills the way a platform fills. See
+# spread_arrivals(); the page then ramps between steps over WAIT_TRANSITION.
+WAIT_MAX_SUB = 12
+
+# Bounds on a single train run, as a backstop against a mis-parsed timetable.
+# The longest real run is line 1 end to end at about 2h50m.
+MAX_RUN_S = 6 * 3600
+MAX_END_S = 30 * 3600
+
+
+def norm(s):
+    return re.sub(r"\s+", "", (s or "").strip())
+
+
+def base(s):
+    return re.sub(r"\(.*?\)$", "", norm(s))
+
+
+def read_cp949(path):
+    with io.open(path, encoding="cp949", errors="replace", newline="") as f:
+        return list(csv.DictReader(f))
+
+
+def hhmmss(s):
+    s = (s or "").strip()
+    if not s or s.count(":") != 2:
+        return None
+    h, m, sec = (int(x) for x in s.split(":"))
+    return h * 3600 + m * 60 + sec
+
+
+# --------------------------------------------------------------------------
+# timetable -> patterns
+# --------------------------------------------------------------------------
+
+def load_patterns(net, quiet=False):
+    """Group the day's trips by their stop sequence."""
+    out = (lambda s: None) if quiet else (lambda s: print(s))
+    keep = set()
+    for c in net["complexes"]:
+        for p in c["platforms"]:
+            keep.add(p["code"])
+
+    rows = read_cp949(os.path.join(D, "timetable_raw.csv"))
+    extra = os.path.join(D, "timetable_extra.csv")
+    if os.path.exists(extra):
+        more = read_cp949(extra)
+        out("   +%s rows from timetable_extra.csv" % format(len(more), ","))
+        rows += more
+    else:
+        out("   timetable_extra.csv not found -- lines 1-9 only. "
+            "Run kric.py to add the rest.")
+    trips = collections.defaultdict(list)
+    for r in rows:
+        if norm(r["주중주말"]) != SERVICE:
+            continue
+        line = norm(r["호선"])
+        if line not in LINE_COLORS:
+            continue
+        code = norm(r["역사코드"])
+        if code not in keep:
+            continue
+        arr, dep = hhmmss(r["열차도착시간"]), hhmmss(r["열차출발시간"])
+        # 00:00:00 is this file's null marker for a terminus that only arrives
+        # or only departs -- not a train at midnight. Genuine after-midnight
+        # times are written 24:xx and up. Read as a real time it puts a zero in
+        # the arrival matrix, which then looks like the earliest possible way
+        # to reach that stop and drags riders onto the first train of the day.
+        if arr == 0:
+            arr = None
+        if dep == 0:
+            dep = None
+        if arr is None and dep is None:
+            continue
+        if arr is None:
+            arr = dep
+        if dep is None:
+            dep = arr
+        key = (line, norm(r["방향"]), norm(r["열차코드"]))
+        trips[key].append((dep, arr, code, norm(r["급행여부"]) == "1"))
+
+    # Most after-midnight times are written 24:12, but not all -- some trips
+    # wrap to 00:12 instead. Sorting those by raw time turns a 90-minute run
+    # into a 23-hour one that sits on the map all day, so unwrap first.
+    wrapped = 0
+    for key, stops in trips.items():
+        ts = [s[0] for s in stops] + [s[1] for s in stops]
+        if max(ts) - min(ts) > 12 * 3600:
+            trips[key] = [(d + 86400 if d < 4 * 3600 else d,
+                           a + 86400 if a < 4 * 3600 else a, c, x)
+                          for (d, a, c, x) in stops]
+            wrapped += 1
+    if wrapped:
+        out("   unwrapped %d trips written past midnight as 00:xx" % wrapped)
+
+    # Runs that cover ground faster than the line can physically move.
+    #
+    # 신림선's file carries 30 two-row trips a day -- 관악산 06:37 -> 샛강 06:40,
+    # the whole 7.8 km line in three minutes with none of the nine stations
+    # between. They are summary rows, not trains. Left in they are drawn as a
+    # dot rocketing the length of the line at 400 km/h, and worse, RAPTOR
+    # boards riders onto them *because* they are the fastest thing going --
+    # 434 riders were teleported on the 2026-09-04 full build.
+    #
+    # The speed smoothing cannot save these: it borrows seconds from slower
+    # neighbouring segments, and a two-stop run has no neighbours. So drop
+    # them here, on end-to-end straight-line speed against the line's own
+    # ceiling with a wide margin. Real service is nowhere near it -- straight
+    # line understates the track, and dwells are included -- so the fastest
+    # genuine run on the map, 공항철도 직통, comes out at less than half its
+    # threshold.
+    coord_of = {}
+    for c in net["complexes"]:
+        for p in c["platforms"]:
+            coord_of[p["code"]] = (c["lat"], c["lon"])
+
+    impossible = collections.Counter()
+    for key in list(trips):
+        stops = sorted(trips[key])
+        a, b = coord_of.get(stops[0][2]), coord_of.get(stops[-1][2])
+        dt = stops[-1][1] - stops[0][0]
+        if not a or not b or dt <= 0:
+            continue
+        dy = (a[0] - b[0]) * 111320.0
+        dx = (a[1] - b[1]) * 111320.0 * math.cos(math.radians(a[0]))
+        kmh = math.hypot(dx, dy) / dt * 3.6
+        ceiling = SPEED_THRESHOLDS.get(key[0], DEFAULT_SPEED_THRESHOLD)
+        if kmh > ceiling * 1.5:
+            impossible[(key[0], len(stops))] += 1
+            del trips[key]
+    if impossible:
+        out("   dropped %d trip(s) faster than their line can run:"
+            % sum(impossible.values()))
+        for (line, nstops), n in sorted(impossible.items()):
+            out("      line %-4s %d x %d-stop run" % (line, n, nstops))
+
+    if EXTEND_LAST_HOUR:
+        added = 0
+        for key in list(trips):
+            stops = trips[key]
+            first = min(s[0] for s in stops)
+            # 23:00 hour repeated at +1h, and the whole 22:00-24:00 block at
+            # +2h, so service thins out past midnight the way a real late
+            # night does rather than stopping dead at 01:00.
+            for lo, hi, shift, tag in ((23, 24, 3600, "+X1"),
+                                       (22, 24, 7200, "+X2")):
+                if lo * 3600 <= first < hi * 3600:
+                    trips[(key[0], key[1], key[2] + tag)] = [
+                        (d + shift, a + shift, c, x) for (d, a, c, x) in stops]
+                    added += 1
+        out("   +%d reconstructed late trips (EXTEND_LAST_HOUR)" % added)
+
+    patterns = {}
+    for key, stops in trips.items():
+        stops.sort()
+        codes = tuple(s[2] for s in stops)
+        if len(codes) < 2:
+            continue
+        pkey = (key[0], key[1], codes)
+        p = patterns.setdefault(pkey, {
+            "line": key[0], "dir": key[1], "stops": list(codes),
+            "express": stops[0][3], "trips": [],
+        })
+        p["trips"].append({
+            "id": "%s-%s-%s" % key,
+            "arr": [s[1] for s in stops],
+            "dep": [s[0] for s in stops],
+        })
+
+    out = []
+    for pkey, p in patterns.items():
+        p["trips"].sort(key=lambda t: t["dep"][0])
+        p["dep"] = np.array([t["dep"] for t in p["trips"]], dtype=np.int32)
+        p["arr"] = np.array([t["arr"] for t in p["trips"]], dtype=np.int32)
+        out.append(p)
+    return out
+
+
+def build_index(patterns):
+    stop_pats = collections.defaultdict(list)
+    for pi, p in enumerate(patterns):
+        for si, code in enumerate(p["stops"]):
+            stop_pats[code].append((pi, si))
+    return stop_pats
+
+
+# --------------------------------------------------------------------------
+# animation times: jitter, then smooth away impossible speeds
+#
+# Ported from londonriders, where minute-rounded PDF timetables make this
+# essential. Seoul's timetable is cleaner -- it carries seconds, and only about
+# one segment in a thousand was over its line's ceiling before we touched it --
+# so the smoothing here is mostly cleaning up after our own jitter.
+# --------------------------------------------------------------------------
+
+def metres(a, b):
+    """Flat-earth distance between two (lat, lon) pairs. Fine at city scale."""
+    dy = (a[0] - b[0]) * 111320.0
+    dx = (a[1] - b[1]) * 111320.0 * math.cos(math.radians(a[0]))
+    return math.hypot(dx, dy)
+
+
+def cruise_kmh(dist_m, dt_s):
+    """Speed while actually moving, i.e. after the dwell and the accel taper."""
+    cruise = dt_s - SMOOTH_OVERHEAD_S
+    if cruise <= 0:
+        return 9999.0
+    return dist_m / cruise * 3.6
+
+
+def _time_for_speed(dist_m, kmh):
+    return dist_m / (kmh / 3.6) + SMOOTH_OVERHEAD_S
+
+
+def _smooth_once(times, dists, hard, target_factor=1.0, take_fraction=1.0,
+                 donor_factor=1.0):
+    """One smoothing pass over a single trip's stop times, in place.
+
+    Any segment above target_factor * hard borrows seconds from whichever
+    neighbours still have slack, which slows it without changing when the trip
+    starts or ends. A donor may only give up time it can spare while staying
+    under donor_factor * hard itself, so fixing one segment never breaks the
+    next one.
+
+    Returns (n_over, n_fixed): how many segments were too fast, and how many
+    got all the time they asked for.
+    """
+    n = len(times)
+    seg_target = hard * target_factor
+    donor_cap = hard * donor_factor
+    n_over = n_fixed = 0
+    for j in range(n - 1):
+        d = dists[j]
+        if d is None:
+            continue
+        dt = times[j + 1] - times[j]
+        if dt <= 0:
+            continue
+        if cruise_kmh(d, dt) <= seg_target:
+            continue
+        n_over += 1
+        want = max(1, int(math.ceil(
+            (math.ceil(_time_for_speed(d, seg_target)) - dt) * take_fraction)))
+
+        before = 0
+        if j > 0 and dists[j - 1] is not None:
+            spare = (times[j] - times[j - 1]) - int(math.ceil(
+                _time_for_speed(dists[j - 1], donor_cap)))
+            before = max(0, spare)
+        after = 0
+        if j + 2 < n and dists[j + 1] is not None:
+            spare = (times[j + 2] - times[j + 1]) - int(math.ceil(
+                _time_for_speed(dists[j + 1], donor_cap)))
+            after = max(0, spare)
+
+        avail = before + after
+        if avail == 0:
+            continue
+        take = min(want, avail)
+        take_before = int(round(take * before / float(avail)))
+        take_after = take - take_before
+        if take_before:
+            times[j] -= take_before
+        if take_after:
+            times[j + 1] += take_after
+        if take >= want:
+            n_fixed += 1
+    return n_over, n_fixed
+
+
+def build_visual_times(patterns, coord, quiet=False):
+    """Fill pattern["vdep"]: the departure times the animation draws.
+
+    Same shape as pattern["dep"], which is left untouched for RAPTOR. Each
+    trip is jittered by a few seconds per stop, then smoothed until no segment
+    claims a speed its line cannot do.
+    """
+    if not quiet:
+        print("preparing animation times (jitter +/-%ds, then speed "
+              "smoothing) ..." % JITTER_S)
+    rng = random.Random(7)
+
+    over_before = over_after = total_segs = 0
+    for p in patterns:
+        stops = p["stops"]
+        hard = SPEED_THRESHOLDS.get(p["line"], DEFAULT_SPEED_THRESHOLD)
+        # Distances depend only on the stop sequence, so one list serves every
+        # trip on the pattern.
+        dists = []
+        for i in range(len(stops) - 1):
+            a, b = coord.get(stops[i]), coord.get(stops[i + 1])
+            dists.append(metres(a, b) if a and b else None)
+
+        vdep = p["dep"].astype(np.int64).copy()
+        for ti in range(vdep.shape[0]):
+            times = [int(x) for x in vdep[ti]]
+
+            for j in range(len(times) - 1):
+                if dists[j] is not None and times[j + 1] > times[j]:
+                    total_segs += 1
+                    if cruise_kmh(dists[j], times[j + 1] - times[j]) > hard:
+                        over_before += 1
+
+            prev = -10 ** 9
+            for j in range(len(times)):
+                times[j] += rng.randint(-JITTER_S, JITTER_S)
+                if times[j] <= prev:
+                    times[j] = prev + 1
+                prev = times[j]
+
+            for _ in range(SMOOTH_PASSES):
+                n_over, _ = _smooth_once(times, dists, hard)
+                if n_over == 0:
+                    break
+            for _ in range(SOFT_RESCUE_PASSES):
+                n_over, _ = _smooth_once(times, dists, hard,
+                                         donor_factor=SOFT_DONOR_FACTOR,
+                                         take_fraction=SOFT_TAKE_FRACTION)
+                if n_over == 0:
+                    break
+
+            for j in range(len(times) - 1):
+                if dists[j] is not None and times[j + 1] > times[j]:
+                    if cruise_kmh(dists[j], times[j + 1] - times[j]) > hard:
+                        over_after += 1
+            vdep[ti] = times
+        p["vdep"] = vdep
+
+    if not quiet:
+        print("   segments over their line ceiling: %s -> %s of %s"
+              % (format(over_before, ","), format(over_after, ","),
+                 format(total_segs, ",")))
+
+
+# --------------------------------------------------------------------------
+# waiting bubbles
+# --------------------------------------------------------------------------
+
+def build_waiting_timelines(deltas, ncomplex):
+    """Turn per-complex {time: +/- riders} into [[t, count], ...] step curves.
+
+    An entry only goes in when the crowd changes by enough to move the bubble
+    on screen. The page draws radius = sqrt(count) * k, so at 2,000 waiting it
+    takes about nine people to shift the edge by a twentieth of a pixel -- and
+    a busy station changes by one person hundreds of times an hour. Writing
+    every one of those costs megabytes and draws nothing.
+    """
+    out = [[] for _ in range(ncomplex)]
+    entries = 0
+    for ci, bucket in deltas.items():
+        cum = 0.0
+        last = 0.0
+        tl = []
+        for t in sorted(bucket):
+            cum += bucket[t]
+            if cum < 0.0:
+                cum = 0.0
+            step = max(1.0, 0.2 * math.sqrt(max(cum, last)))
+            if abs(cum - last) >= step or (cum < 0.5) != (last < 0.5):
+                tl.append([int(t), int(round(cum))])
+                last = cum
+        out[ci] = tl
+        entries += len(tl)
+    nonempty = sum(1 for tl in out if tl)
+    print("   waiting timelines: %d stations, %s entries (avg %d each)"
+          % (nonempty, format(entries, ","), entries // max(1, nonempty)))
+    return out
+
+
+# --------------------------------------------------------------------------
+# RAPTOR
+# --------------------------------------------------------------------------
+
+INF = 1 << 30
+
+
+def prepare_scan(patterns, stop_pats, transfers, codes_idx):
+    """Re-shape the routing tables into plain Python lists.
+
+    RAPTOR is a tight interpreted loop over scalars, and numpy is the wrong
+    container for that: every deps[ti, sj] builds a boxed scalar, and every
+    np.searchsorted on a column view costs about 2.7us of dispatch before it
+    does any work. The same data as lists of ints is roughly ten times faster
+    to walk, and the arrays stay on the pattern for everything else.
+
+    Departure times are kept column-major (one list per stop, across trips)
+    because that is what the "which trip can I catch here" search bisects;
+    arrivals are kept row-major (one list per trip) because that is read along
+    a trip once boarded.
+    """
+    n = len(codes_idx)
+    for p in patterns:
+        dep, arr = p["dep"], p["arr"]
+        p["sidx"] = [codes_idx[c] for c in p["stops"]]
+        p["depc"] = [[int(v) for v in dep[:, s]] for s in range(dep.shape[1])]
+        p["arrr"] = [[int(v) for v in row] for row in arr]
+        p["ntr"] = int(dep.shape[0])
+        p["ns"] = len(p["stops"])
+        # Drawn departure times, read a trip at a time when riders are
+        # booked onto one -- the same reason arrivals are row-major.
+        p["vdepr"] = [[int(v) for v in row] for row in p["vdep"]]
+        # Trips are sorted by their first departure, which normally leaves
+        # every later column sorted too -- but three patterns have a train
+        # overtaking another partway along, and the bisect shortcut below only
+        # holds where the column really does rise.
+        p["srt"] = bool(np.all(dep[:-1, :] <= dep[1:, :])) if dep.shape[0] > 1 \
+            else True
+
+    stop_pats_i = [()] * n
+    for code, v in stop_pats.items():
+        if code in codes_idx:
+            stop_pats_i[codes_idx[code]] = tuple(v)
+    transfers_i = [()] * n
+    for i, v in transfers.items():
+        transfers_i[i] = tuple(v)
+
+    # Every departure at each stop, sorted. Only used to tell whether two
+    # spawn times can share one RAPTOR result -- see spawn_key().
+    dep_at = [[] for _ in range(n)]
+    for p in patterns:
+        for s, si in enumerate(p["sidx"]):
+            dep_at[si].extend(p["depc"][s])
+    dep_at = [sorted(v) for v in dep_at]
+    return stop_pats_i, transfers_i, dep_at
+
+
+def spawn_seeds(origin_idx, transfers):
+    """The stops RAPTOR seeds, and the walk cost to reach each.
+
+    The origin's own platforms at zero, plus whatever a transfer reaches, at
+    its cost. A stop reachable both ways keeps the cheaper offset, which is
+    what the seeding loop in raptor() settles on too.
+    """
+    seeds = {}
+    for i in origin_idx:
+        seeds[i] = 0
+    for i in origin_idx:
+        for j, cost in transfers[i]:
+            if cost < seeds.get(j, 1 << 30):
+                seeds[j] = cost
+    return tuple(sorted(seeds.items()))
+
+
+# Seconds. Two departures closer together than this share one search, so the
+# riders between them are put on whichever of the two the merged gap points at.
+# 0 restores one search per gap, which is exact -- see spawn_gaps().
+#
+# Measured on a sample stratified by search count, because the big interchanges
+# own nearly all the short gaps and a flat sample badly understates this:
+#
+#     60s   -31% searches   1.43x faster   1.5% of boardings move train
+#    120s   -45%            1.93x          4.1%
+#    180s   -54%            2.45x          6.2%
+#
+# 60 is the knee. A minute is well inside the headway of every line on the map,
+# so the pair being merged is almost always the same line's two consecutive
+# trains rather than two different lines, and the load lands on one or the
+# other of them.
+MIN_SPAWN_GAP = 60
+
+
+def spawn_gaps(seeds, dep_at, lo, hi):
+    """When to spawn this origin's riders for the window, and in what shares.
+
+    The OD gives an hour's worth of people and no arrival times, so they have
+    to be spread over the hour somehow. Spreading them on a *grid* -- which is
+    what this did until 2026-09-04 -- is an approximation with a knob on it:
+    too coarse and trains between ticks board nobody, too fine and the routing
+    cost climbs for no gain.
+
+    There is an exact answer, and it is cheaper than a fine grid. A search from
+    time `t` is decided entirely by which departure is next at the origin, so
+    every rider arriving in the gap between two departures catches the same
+    train -- the one that ends the gap. So there is nothing to gain from
+    resolving arrival times more finely than the gaps themselves. Put one
+    representative in each gap, carrying that gap's share of the hour, at the
+    middle of the gap because that is the average arrival within it (and so the
+    average platform wait, which the waiting bubbles read off it).
+
+    This is what `../londonriders/` does by drawing stratified random departure
+    times inside each quarter-hour, made exact: one spawn per gap rather than a
+    sample, and no chunk-size or bin-width to tune.
+
+    Exact, but not free -- being exact is 3x the searches the old 10-minute
+    grid did, and the searches are the build. MIN_SPAWN_GAP trades a little of
+    it back by merging gaps shorter than it, which is the one bin width left to
+    tune; at its default of 60s that is 1.5% of boardings landing on the
+    adjacent train, for a 1.43x build. Set it to 0 for the exact answer.
+
+    The last gap runs from the final departure in the window to the end of it;
+    its riders board the first train of the next hour, which is what really
+    happens to someone who reaches the platform at 09:58.
+
+    Returns [(spawn_time, share, gap_start, gap_end), ...] with the shares
+    summing to 1. The gap bounds are what the platform crowd is drawn from --
+    riders really arrive across the gap, not all at its middle, and the routing
+    only takes the middle because one search has to stand for the lot.
+    """
+    span = float(hi - lo)
+    opps = boarding_opportunities(seeds, dep_at, lo, hi)
+    if MIN_SPAWN_GAP:
+        # Off by default, and it costs the exactness argued for above: two
+        # departures this close get one search between them, so the riders in
+        # the shorter gap are nudged onto the other train. At a big interchange
+        # most gaps are short, which is why it buys so much -- see README.
+        thin = []
+        for t in opps:
+            if not thin or t - thin[-1] >= MIN_SPAWN_GAP:
+                thin.append(t)
+        opps = thin
+    if not opps:
+        return [((lo + hi) / 2.0, 1.0, lo, hi)]
+
+    out = []
+    prev = lo
+    for t in opps:
+        if t > prev:
+            out.append(((prev + t) / 2.0, (t - prev) / span, prev, t))
+        prev = t
+    if hi > prev:
+        out.append(((prev + hi) / 2.0, (hi - prev) / span, prev, hi))
+    # Floating-point crumbs, so a build cannot quietly lose or gain riders.
+    total = sum(w for _, w, _, _ in out)
+    return [(t, w / total, g0, g1) for t, w, g0, g1 in out]
+
+
+def boarding_opportunities(seeds, dep_at, lo, hi):
+    """Sorted times in [lo, hi) at which a rider standing here could board.
+
+    Seeds all sit in the one complex, so their costs are zero and this is just
+    the complex's departures -- but do the shift anyway, so it stays correct if
+    transfers ever cross complexes.
+    """
+    opps = set()
+    for s, c in seeds:
+        col = dep_at[s]
+        i = bisect_left(col, lo + c)
+        while i < len(col) and col[i] - c < hi:
+            opps.add(col[i] - c)
+            i += 1
+    return sorted(opps)
+
+
+def early_window_start(seeds, dep_at, lo, hi):
+    """When the first hourly bin's riders can really start turning up.
+
+    The first column of the hourly file is `06시이전` -- *everything* before
+    06:00, not 05:00-06:00 -- and it is open-ended at the start of the day
+    exactly as `24시이후` is at the end. But the subway does not open until
+    about 05:30. Spreading that bin across the whole 05:00 hour put more than
+    half of it onto platforms before any train had run, and because the first
+    gap at each origin then stretched from 05:00 to its first departure, all of
+    those riders were spawned at its midpoint and stood there: at 05:20 the
+    network held a platform crowd the size of the morning peak, on a tenth of
+    the traffic. It looked like a real finding and was not.
+
+    So start the window one headway before this origin's first train, which
+    keeps the handful of people who genuinely wait for the first service and
+    drops the rest of the empty hour.
+    """
+    opps = boarding_opportunities(seeds, dep_at, lo, hi)
+    if len(opps) < 2:
+        return lo
+    return max(lo, opps[0] - (opps[1] - opps[0]))
+
+
+def raptor(origin_idx, dep_time, patterns, stop_pats, transfers, n, npat,
+           _first=None):
+    """RAPTOR with one arrival label per round.
+
+    Keeping a single overwritten parent pointer does not work: a later round
+    can improve a stop that an earlier leg was chained through, and the
+    backtrace then follows a state that no longer exists. Labels are per round
+    (tau[k] = earliest arrival using at most k trips) so the trace can walk
+    k downwards and always land on a state that really happened.
+
+    Stops are addressed by index throughout; stop_pats and transfers are the
+    lists prepare_scan() built, not the dicts.
+    """
+    tau = [[INF] * n for _ in range(MAX_ROUNDS + 1)]
+    parent = [{} for _ in range(MAX_ROUNDS + 1)]
+    best = [INF] * n
+    # Earliest stop each pattern was reached at. Entries are cleared as the
+    # round consumes them, so the caller can hand the same scratch list to
+    # every search instead of allocating one per round.
+    first_si = _first if _first is not None else [-1] * npat
+
+    t0 = tau[0]
+    marked = set()
+    for i in origin_idx:
+        t0[i] = dep_time
+        best[i] = dep_time
+        marked.add(i)
+    for i in list(marked):
+        for j, cost in transfers[i]:
+            t = dep_time + cost
+            if t < t0[j]:
+                t0[j] = t
+                best[j] = t
+                parent[0][j] = ("walk", i)
+                marked.add(j)
+
+    for k in range(1, MAX_ROUNDS + 1):
+        tk = tau[k]
+        tprev = tau[k - 1]
+        tk[:] = tprev
+        pk = parent[k]
+
+        order = []
+        for i in marked:
+            for pi, si in stop_pats[i]:
+                f = first_si[pi]
+                if f < 0:
+                    first_si[pi] = si
+                    order.append(pi)
+                elif si < f:
+                    first_si[pi] = si
+        if not order:
+            break
+
+        newly = set()
+        for pi in order:
+            si0 = first_si[pi]
+            first_si[pi] = -1
+            p = patterns[pi]
+            depc, arrr, sidx, srt = p["depc"], p["arrr"], p["sidx"], p["srt"]
+            ntr = p["ntr"]
+            pcum = p["pcum"]
+            ti = -1
+            board_si = -1
+            arow = None
+            prow = None
+            pbase = 0.0
+            for sj in range(si0, len(sidx)):
+                j = sidx[sj]
+                if arow is not None:
+                    # Perceived arrival: the clock time, plus whatever standing
+                    # in a crush from board_si to here is judged to be worth.
+                    # Labels stay in seconds and stay monotone, so the rest of
+                    # RAPTOR is untouched -- see "How the penalty enters the
+                    # search" in README.md for what that costs.
+                    t = arow[sj] if prow is None else arow[sj] + prow[sj] - pbase
+                    if t < best[j]:
+                        tk[j] = t
+                        best[j] = t
+                        pk[j] = ("ride", pi, ti, board_si, sj, sidx[board_si])
+                        newly.add(j)
+                # Could we have caught an earlier trip by boarding here? Only
+                # worth a search when we are not already on a trip that leaves
+                # this stop no later than we could reach it -- that guard is
+                # what keeps the scan near O(stops) instead of O(stops log n).
+                prev = tprev[j]
+                if prev < INF:
+                    col = depc[sj]
+                    if ti < 0:
+                        cand = bisect_left(col, prev)
+                        if cand < ntr:
+                            ti, board_si, arow = cand, sj, arrr[cand]
+                            if pcum is not None:
+                                prow = pcum[cand]
+                                pbase = prow[sj]
+                    elif srt:
+                        # The column rises with trip index, so an earlier
+                        # boardable trip exists only if the one immediately
+                        # before ours is still catchable. One lookup answers
+                        # that, and it skips most of the bisects.
+                        if ti and col[ti - 1] >= prev:
+                            ti = bisect_left(col, prev, 0, ti)
+                            board_si, arow = sj, arrr[ti]
+                            if pcum is not None:
+                                prow = pcum[ti]
+                                pbase = prow[sj]
+                    elif prev <= col[ti]:
+                        cand = bisect_left(col, prev)
+                        if cand < ti:
+                            ti, board_si, arow = cand, sj, arrr[cand]
+                            if pcum is not None:
+                                prow = pcum[cand]
+                                pbase = prow[sj]
+
+        for j in list(newly):
+            for m, cost in transfers[j]:
+                t = tk[j] + cost
+                if t < tk[m] and t < best[m]:
+                    tk[m] = t
+                    best[m] = t
+                    pk[m] = ("walk", j)
+                    newly.add(m)
+        marked = newly
+        if not marked:
+            break
+    return tau, parent, best
+
+
+def trace(dest_i, tau, parent, origin_set):
+    """Ride legs from origin to destination, earliest first."""
+    k = min(range(len(tau)), key=lambda r: tau[r][dest_i])
+    if tau[k][dest_i] >= INF:
+        return None
+    legs = []
+    cur = dest_i
+    for _ in range(64):
+        if cur in origin_set:
+            legs.reverse()
+            return legs
+        P = parent[k].get(cur)
+        if P is None:
+            if k == 0:
+                return None
+            k -= 1                      # label was carried forward unchanged
+            continue
+        if P[0] == "walk":
+            cur = P[1]
+            continue
+        _, pi, ti, si, sj, board_i = P
+        legs.append((pi, ti, si, sj))
+        cur = board_i
+        k -= 1
+        if k < 0:
+            return None
+    return None
+
+
+# --------------------------------------------------------------------------
+
+class CodeIndex(object):
+    def __init__(self, codes):
+        self._f = dict((c, i) for i, c in enumerate(codes))
+        self.inv = list(codes)
+
+    def __getitem__(self, c):
+        return self._f[c]
+
+    def __contains__(self, c):
+        return c in self._f
+
+    def __len__(self):
+        return len(self.inv)
+
+
+# --------------------------------------------------------------------------
+# the routing world
+#
+# Everything the origin loop reads and nothing it writes. Worker processes
+# rebuild it from disk rather than being handed a copy: the scan tables are a
+# few million small Python ints, which parse faster than they unpickle, and
+# every step that makes them is deterministic, so a worker's pattern indices
+# come out matching the parent's. world_fingerprint() is the proof of that,
+# checked once per worker rather than assumed.
+# --------------------------------------------------------------------------
+
+# Riders waiting on a platform are keyed by (complex, arrival bucket) packed
+# into one int, so a chunk's contribution ships as two flat arrays. The
+# multiplier only has to clear the largest bucket index, and the timetable ends
+# before 30:00.
+WKEY = 1 << 20
+
+
+class World(object):
+    pass
+
+
+def build_world(quiet=False):
+    out = (lambda s: None) if quiet else (lambda s: print(s))
+
+    out("loading network ...")
+    with io.open(os.path.join(D, "stations.json"), encoding="utf-8") as f:
+        net = json.load(f)
+    complexes = net["complexes"]
+
+    out("loading timetable patterns (%s service) ..." % SERVICE)
+    patterns = load_patterns(net, quiet=quiet)
+    ntrips = sum(len(p["trips"]) for p in patterns)
+    out("   %d patterns, %d trips" % (len(patterns), ntrips))
+
+    pen = load_crowding(quiet=quiet)
+    for pi, p in enumerate(patterns):
+        p["pcum"] = pen[pi] if pen is not None and pi < len(pen) else None
+
+    codes = sorted(set(c for p in patterns for c in p["stops"]))
+    codes_idx = CodeIndex(codes)
+    stop_pats = build_index(patterns)
+    out("   %d platforms served" % len(codes))
+
+    # platform -> complex, and transfers within a complex
+    code_cx = {}
+    cx_codes = collections.defaultdict(list)
+    for i, c in enumerate(complexes):
+        for p in c["platforms"]:
+            if p["code"] in codes_idx:
+                code_cx[p["code"]] = i
+                cx_codes[i].append(p["code"])
+
+    coord = {}
+    for c in complexes:
+        for p in c["platforms"]:
+            coord[p["code"]] = (c["lat"], c["lon"])
+
+    build_visual_times(patterns, coord, quiet=quiet)
+
+    transfers = collections.defaultdict(list)
+    for i, cl in cx_codes.items():
+        for a in cl:
+            for b in cl:
+                if a != b:
+                    transfers[codes_idx[a]].append((codes_idx[b], TRANSFER_SEC))
+
+    stop_pats_i, transfers_i, dep_at = prepare_scan(
+        patterns, stop_pats, transfers, codes_idx)
+
+    # Which platform indices a complex owns, and which complex each of a
+    # pattern's stops sits in. Both are fixed for the whole build, and both
+    # used to be rebuilt inside the innermost loop.
+    cx_dis = {}
+    for i, cl in cx_codes.items():
+        v = [codes_idx[c] for c in cl if c in codes_idx]
+        cx_dis[i] = v or None
+    for p in patterns:
+        p["cx"] = [code_cx[c] for c in p["stops"]]
+
+    out("loading hourly OD ...")
+    z = np.load(os.path.join(D, "od_hourly.npz"), allow_pickle=True)
+    X, pairs, hours = z["x"], z["pairs"], z["hours"]
+    # Share of each pair that seed_outside invented rather than measured.
+    # Absent from an od_hourly.npz built before that step existed.
+    modelled = (z["modelled"] if "modelled" in z.files
+                else np.zeros(len(pairs), np.float32))
+    out("   %d pairs x %d hours, %s riders"
+        % (len(pairs), len(hours), format(int(X.sum()), ",")))
+
+    by_origin = collections.defaultdict(list)
+    for k, (o, d) in enumerate(pairs):
+        by_origin[int(o)].append(k)
+
+    w = World()
+    w.net, w.complexes, w.coord = net, complexes, coord
+    w.patterns = patterns
+    w.codes_idx, w.n, w.npat = codes_idx, len(codes), len(patterns)
+    w.stop_pats, w.transfers = stop_pats_i, transfers_i
+    w.dep_at = dep_at
+    w.cx_codes, w.code_cx = cx_codes, code_cx
+    w.cx_dis = cx_dis
+    w.X, w.pairs, w.hours, w.by_origin = X, pairs, hours, by_origin
+    w.modelled = modelled
+
+    # (pattern, trip, stop) -> one slot in a flat array, so a chunk of origins
+    # can hand its boardings back as numbers rather than nested dicts.
+    off = 0
+    w.pat_off = []
+    for p in patterns:
+        w.pat_off.append(off)
+        off += p["ntr"] * p["ns"]
+    w.nslot = off
+    return w
+
+
+def world_fingerprint(w):
+    """Enough of the world to catch a worker that built a different one."""
+    return (w.npat, w.n, w.nslot,
+            int(sum(int(p["vdep"].sum()) for p in w.patterns)))
+
+
+# --------------------------------------------------------------------------
+# routing
+# --------------------------------------------------------------------------
+
+def spread_arrivals(wait, ci, t0, t1, riders):
+    """Put `riders` onto platform `ci`, arriving evenly over [t0, t1].
+
+    Capped at WAIT_MAX_SUB steps: at the bucket resolution a ten-minute gap
+    would be thirty entries per OD pair, and the timeline is already the
+    biggest thing in trains.json. Twelve is enough for the eye.
+    """
+    if t1 <= t0:
+        wait[ci * WKEY + int(t1) // WAIT_BUCKET_S] += riders
+        return
+    span = t1 - t0
+    n = min(WAIT_MAX_SUB, max(1, int(span // WAIT_BUCKET_S)))
+    per = riders / n
+    for k in range(n):
+        t = t0 + span * (k + 0.5) / n
+        wait[ci * WKEY + int(t) // WAIT_BUCKET_S] += per
+
+
+def _pack(d):
+    if not d:
+        return (np.zeros(0, np.int64), np.zeros(0, np.float64))
+    return (np.fromiter(d.keys(), np.int64, len(d)),
+            np.fromiter(d.values(), np.float64, len(d)))
+
+
+def route_origins(w, origins):
+    """Board every rider leaving these origin complexes.
+
+    Returns the chunk's contribution as flat (index, value) arrays rather than
+    the nested dicts the output pass wants: a worker has to ship this back down
+    a pipe, and a hundred thousand nested float entries pickle for longer than
+    the routing itself took.
+    """
+    patterns, pat_off = w.patterns, w.pat_off
+    stop_pats, transfers = w.stop_pats, w.transfers
+    n, npat = w.n, w.npat
+    cx_codes, code_cx, codes_idx = w.cx_codes, w.code_cx, w.codes_idx
+    cx_dis = w.cx_dis
+    X, pairs, hours, by_origin = w.X, w.pairs, w.hours, w.by_origin
+    modelled = w.modelled
+    dep_at = w.dep_at
+    searched = 0
+
+    board = collections.defaultdict(float)
+    # Boardings on the *first* leg only -- the rider entering the system, as
+    # against changing trains inside it. Both are real boardings and both are
+    # drawn; keeping them apart is what lets the static view separate a station
+    # busy with people starting journeys from one busy with people changing.
+    board0 = collections.defaultdict(float)
+    # Boardings whose journey came from the seeded block, so the map can say
+    # how much of a line is measured and how much is modelled.
+    boardm = collections.defaultdict(float)
+    alight = collections.defaultdict(float)
+    # complex -> {arrival bucket: riders}, positive side only. The matching
+    # negative -- the moment the train takes them away -- is exactly the
+    # boarding, so merge_chunks() reads it back off the board array rather than
+    # sending the same numbers twice.
+    wait = collections.defaultdict(float)
+    xtab = collections.Counter()
+    unrouted_by_hour = collections.Counter()
+    routed = unrouted = late = 0.0
+    first_si = [-1] * npat
+
+    for o in origins:
+        ocodes = [c for c in cx_codes.get(o, []) if c in codes_idx]
+        if not ocodes:
+            continue
+        oidx = [codes_idx[c] for c in ocodes]
+        origin_set = set(oidx)
+        ks = by_origin[o]
+        seeds = spawn_seeds(oidx, transfers)
+
+        for hi, hour in enumerate(hours):
+            vol = X[ks, hi]
+            live = np.where(vol > MIN_RIDERS)[0]
+            if len(live) == 0:
+                continue
+
+            span = LATE_BIN_HOURS if int(hour) == 24 else 1
+            lo_t = int(hour) * 3600
+            hi_t = lo_t + span * 3600
+            if hi == 0:
+                lo_t = early_window_start(seeds, dep_at, lo_t, hi_t)
+            spawns = spawn_gaps(seeds, dep_at, lo_t, hi_t)
+            # Same destinations at every spawn time in this hour, so resolve
+            # them once. A None platform list is a complex no train serves.
+            h = int(hour)
+            targets = [(cx_dis.get(int(pairs[ks[li]][1])), float(vol[li]),
+                        float(modelled[ks[li]])) for li in live]
+            fb = None
+            for b, (t, share, gap0, gap1) in enumerate(spawns):
+                tau, parent, best = raptor(oidx, t, patterns, stop_pats,
+                                           transfers, n, npat, first_si)
+                searched += 1
+                if b == 0:
+                    fb = (tau, parent, best)
+                for dis, v, mfrac in targets:
+                    riders = v * share
+                    if dis is None:
+                        unrouted += riders; unrouted_by_hour[h] += riders
+                        continue
+
+                    legs = None
+                    di = dis[0] if len(dis) == 1 else \
+                        min(dis, key=best.__getitem__)
+                    if best[di] < INF:
+                        legs = trace(di, tau, parent, origin_set)
+                    if legs is None and fb is not None and b > 0:
+                        # No train left at this spawn time. Put the rider on
+                        # the last one that did run rather than delete them.
+                        ftau, fparent, fbest = fb
+                        di = dis[0] if len(dis) == 1 else \
+                            min(dis, key=fbest.__getitem__)
+                        if fbest[di] < INF:
+                            legs = trace(di, ftau, fparent, origin_set)
+                            if legs:
+                                late += riders
+                    if not legs:
+                        unrouted += riders; unrouted_by_hour[h] += riders
+                        continue
+                    routed += riders
+                    on_platform = t
+                    leg_no = 0
+                    for (pi, ti, si, sj) in legs:
+                        P = patterns[pi]
+                        off = pat_off[pi] + ti * P["ns"]
+                        board[off + si] += riders
+                        if not leg_no:
+                            board0[off + si] += riders
+                        if mfrac:
+                            boardm[off + si] += riders * mfrac
+                        alight[off + sj] += riders
+                        xtab[(h, P["depc"][si][ti] // 3600)] += riders
+                        # Wait on the platform from arriving there until the
+                        # train pulls out. A rider who fell back to an earlier
+                        # train boards before they spawned, so clamp rather
+                        # than let the crowd go negative.
+                        vrow = P["vdepr"][ti]
+                        board_t = vrow[si]
+                        ci = P["cx"][si]
+                        if leg_no == 0:
+                            # Everyone in a gap shares one search, but they do
+                            # not share one moment of arriving -- they trickle
+                            # in across it. Drawn as a single step the bubble
+                            # jumped from empty to full; spread across the gap
+                            # it fills the way a platform fills.
+                            spread_arrivals(wait, ci, gap0,
+                                            min(gap1, board_t), riders)
+                        else:
+                            # A transfer really is a lump: a trainload arrives
+                            # at once. Leave it as one step.
+                            arrive_t = min(on_platform, board_t)
+                            wait[ci * WKEY
+                                 + int(arrive_t) // WAIT_BUCKET_S] += riders
+                        leg_no += 1
+                        on_platform = vrow[sj] + TRANSFER_SEC
+
+    return {"board": _pack(board), "board0": _pack(board0),
+            "boardm": _pack(boardm), "alight": _pack(alight),
+            "wait": _pack(wait), "xtab": dict(xtab),
+            "unrouted_by_hour": dict(unrouted_by_hour),
+            "routed": routed, "unrouted": unrouted, "late": late,
+            "searched": searched,
+            "fp": world_fingerprint(w)}
+
+
+LOADS = os.path.join(D, "loads.npz")
+
+
+def dump_loads(w, boardings, alightings, path=LOADS):
+    """Riders on board leaving each stop, per pattern, trip and stop.
+
+    This is what crowding.py turns into next round's penalties, and it is the
+    same quantity write_stats() aggregates -- kept separately because the
+    crowding loop needs it per *trip*, not per hour.
+    """
+    arrays = {}
+    for pi, p in enumerate(w.patterns):
+        ntr, ns = p["ntr"], p["ns"]
+        m = np.zeros((ntr, ns), dtype=np.float32)
+        for ti in range(ntr):
+            bd = boardings.get((pi, ti))
+            if not bd:
+                continue
+            al = alightings.get((pi, ti), {})
+            on = 0.0
+            row = m[ti]
+            for si in range(ns):
+                on = max(0.0, on + bd.get(si, 0.0) - al.get(si, 0.0))
+                row[si] = on
+        arrays["p%d" % pi] = m
+    np.savez_compressed(path, npat=np.array(len(w.patterns)), **arrays)
+    tot = sum(float(a.max()) for a in arrays.values())
+    print("   wrote %s (%d patterns, busiest single train %.0f aboard)"
+          % (os.path.basename(path), len(arrays),
+             max((float(a.max()) for a in arrays.values()), default=0.0)))
+    return tot
+
+
+def merge_chunks(w, chunks):
+    """Fold the chunks back into the nested form the output pass wants."""
+    board = np.zeros(w.nslot)
+    board0 = np.zeros(w.nslot)
+    boardm = np.zeros(w.nslot)
+    alight = np.zeros(w.nslot)
+    wait = collections.defaultdict(float)
+    xtab = collections.Counter()
+    unrouted_by_hour = collections.Counter()
+    routed = unrouted = late = 0.0
+    searched = 0
+    for c in chunks:
+        idx, val = c["board"]; board[idx] += val
+        idx, val = c["board0"]; board0[idx] += val
+        idx, val = c["boardm"]; boardm[idx] += val
+        idx, val = c["alight"]; alight[idx] += val
+        idx, val = c["wait"]
+        for key, v in zip(idx.tolist(), val.tolist()):
+            wait[key] += v
+        xtab.update(c["xtab"])
+        unrouted_by_hour.update(c["unrouted_by_hour"])
+        routed += c["routed"]; unrouted += c["unrouted"]; late += c["late"]
+        searched += c.get("searched", 0)
+
+    boardings, alightings, boardings0, boardingsm = {}, {}, {}, {}
+    for pi, p in enumerate(w.patterns):
+        off, ns, ntr = w.pat_off[pi], p["ns"], p["ntr"]
+        bb = board[off:off + ntr * ns].reshape(ntr, ns)
+        b0 = board0[off:off + ntr * ns].reshape(ntr, ns)
+        bm = boardm[off:off + ntr * ns].reshape(ntr, ns)
+        aa = alight[off:off + ntr * ns].reshape(ntr, ns)
+        for ti in np.nonzero(bb.any(1) | aa.any(1))[0].tolist():
+            rb, ra, r0, rm = bb[ti], aa[ti], b0[ti], bm[ti]
+            boardings[(pi, ti)] = dict(
+                (int(si), float(rb[si])) for si in np.nonzero(rb)[0])
+            boardings0[(pi, ti)] = dict(
+                (int(si), float(r0[si])) for si in np.nonzero(r0)[0])
+            boardingsm[(pi, ti)] = dict(
+                (int(si), float(rm[si])) for si in np.nonzero(rm)[0])
+            alightings[(pi, ti)] = dict(
+                (int(si), float(ra[si])) for si in np.nonzero(ra)[0])
+
+    wait_deltas = collections.defaultdict(dict)
+    for key, v in wait.items():
+        ci, bkt = divmod(key, WKEY)
+        dd = wait_deltas[ci]
+        t = bkt * WAIT_BUCKET_S
+        dd[t] = dd.get(t, 0.0) + v
+    for (pi, ti), bd in boardings.items():
+        p = w.patterns[pi]
+        vrow, stops = p["vdepr"][ti], p["stops"]
+        for si, r in bd.items():
+            dd = wait_deltas[w.code_cx[stops[si]]]
+            t = vrow[si]
+            dd[t] = dd.get(t, 0.0) - r
+
+    return {"boardings": boardings, "alightings": alightings,
+            "boardings0": boardings0, "boardingsm": boardingsm,
+            "wait_deltas": wait_deltas, "xtab": xtab,
+            "unrouted_by_hour": unrouted_by_hour,
+            "routed": routed, "unrouted": unrouted, "late": late,
+            "searched": searched}
+
+
+# --------------------------------------------------------------------------
+# worker side
+#
+# Origins are cut into the same fixed number of chunks whichever way the build
+# runs, and merged back in chunk order, so --jobs changes how long it takes and
+# not what comes out.
+# --------------------------------------------------------------------------
+
+NCHUNK = 64
+
+# Half the cores, by default and on purpose. A full build is minutes of every
+# core otherwise, which is enough to make the rest of the machine unpleasant to
+# use while it runs -- and it is rarely the only thing running. The crowding
+# loop in crowding.py makes that worse by a factor of however many iterations
+# it takes, so the default is a share rather than a couple of cores held back.
+# --jobs still overrides it either way.
+JOB_SHARE = 0.5
+
+_W = None
+
+
+def _worker_init():
+    global _W
+    sys.stdout = io.open(os.devnull, "w")
+    _W = build_world(quiet=True)
+
+
+def _worker_chunk(job):
+    ci, origins = job
+    return ci, route_origins(_W, origins)
+
+
+def main(argv=None):
+    """Run a build. `argv` lets crowding.py drive this in-process.
+
+    That matters on Windows and is not a style choice. crowding.py used to
+    shell out to `python build.py` per round, which put the multiprocessing
+    pool three levels deep -- shell, crowding.py, build.py, workers -- and
+    partway through a long round the pool's attempt to replace a worker died
+    with `PermissionError: [WinError 5]` out of `DuplicateHandle` in
+    spawn_main. Calling this directly puts the pool back at the depth every
+    successful build today has run at.
+    """
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--sample", type=int, default=1,
+                    help="use every Nth origin complex (1 = all)")
+    ap.add_argument("--jobs", type=int, default=0,
+                    help="worker processes for the routing (0 = %d%%%% of "
+                         "the cores, 1 = stay in this one)" % (JOB_SHARE * 100))
+    ap.add_argument("--no-shapes", action="store_true",
+                    help="skip the build_shapes.py pass at the end")
+    ap.add_argument("--loads-out", metavar="PATH", nargs="?", const=LOADS,
+                    help="also dump per-train loads for crowding.py")
+    ap.add_argument("--no-output", action="store_true",
+                    help="skip trains.json/stats.json and the shaping pass. "
+                         "For crowding.py's intermediate rounds, which only "
+                         "want the loads -- it saves about a third of the run")
+    ap.add_argument("--cap", type=float, default=CRUSH_CAP, metavar="X",
+                    help="hold riders back off any train that would go over "
+                         "X times 정원 (default %.2f)" % CRUSH_CAP)
+    ap.add_argument("--no-cap", action="store_true",
+                    help="draw the raw model output, single trains at 400%% of "
+                         "정원 and all. See \"The crush cap\" in build.py")
+    args = ap.parse_args(argv)
+
+    w = build_world()
+
+    origins = sorted(w.by_origin)
+    if args.sample > 1:
+        origins = origins[::args.sample]
+        print("   sampling %d origins" % len(origins))
+
+    jobs = args.jobs or max(1, int((os.cpu_count() or 1) * JOB_SHARE))
+    jobs = max(1, min(jobs, NCHUNK, len(origins)))
+    chunks = [(i, [int(o) for o in c]) for i, c in
+              enumerate(np.array_split(np.array(origins), NCHUNK))]
+    chunks = [(i, c) for i, c in chunks if c]
+
+    fp = world_fingerprint(w)
+    results = [None] * len(chunks)
+    state = {"done": 0}
+    t0 = time.time()
+    print("routing %d origins in %d chunks on %d process%s ..."
+          % (len(origins), len(chunks), jobs, "" if jobs == 1 else "es"))
+
+    def report():
+        # Spawning the workers costs as much as several chunks, so the first
+        # one is not worth extrapolating from -- start the clock again once it
+        # lands and estimate off what the pool does at full speed.
+        done = state["done"]
+        el = time.time() - t0
+        if done == 1:
+            state["t1"] = time.time()
+            print("   chunk  1/%d  %4.0fs elapsed" % (len(chunks), el))
+        else:
+            per = (time.time() - state["t1"]) / (done - 1)
+            print("   chunk %2d/%d  %4.0fs elapsed, ~%.0fs left"
+                  % (done, len(chunks), el, per * (len(chunks) - done)))
+        sys.stdout.flush()
+
+    if jobs == 1:
+        for ci, part in chunks:
+            results[ci] = route_origins(w, part)
+            state["done"] += 1
+            report()
+    else:
+        import multiprocessing as mp
+        pool = mp.Pool(jobs, initializer=_worker_init)
+        try:
+            for ci, res in pool.imap_unordered(_worker_chunk, chunks):
+                if res["fp"] != fp:
+                    raise RuntimeError(
+                        "a worker built a different timetable than this "
+                        "process (%r vs %r) -- the routing tables would not "
+                        "line up" % (res["fp"], fp))
+                results[ci] = res
+                state["done"] += 1
+                report()
+        finally:
+            pool.close()
+            pool.join()
+
+    acc = merge_chunks(w, results)
+    boardings, alightings = acc["boardings"], acc["alightings"]
+    wait_deltas = acc["wait_deltas"]
+    routed, unrouted, late = acc["routed"], acc["unrouted"], acc["late"]
+    unrouted_by_hour, xtab = acc["unrouted_by_hour"], acc["xtab"]
+    net, patterns, complexes = w.net, w.patterns, w.complexes
+    coord, code_cx = w.coord, w.code_cx
+
+    print("\nRAPTOR searches: %s (one per gap between departures)"
+          % format(acc["searched"], ","))
+    print("\nrouted %s riders, %s unrouted (%.2f%%)"
+          % (format(int(routed), ","), format(int(unrouted), ","),
+             100.0 * unrouted / max(routed + unrouted, 1)))
+    print("   of those routed, %s fell back to the last scheduled train (%.2f%%)"
+          % (format(int(late), ","), 100.0 * late / max(routed, 1)))
+    # Sanity check worth keeping: a rider should board within an hour or so of
+    # spawning. A large figure here means people are being put on trains that
+    # left long before they arrived -- which is how the 00:00:00 null-time bug
+    # showed itself, as 15% of all boardings landing on the first train of the
+    # day.
+    tot_x = sum(xtab.values())
+    far = sum(v for (sh, dh), v in xtab.items() if abs(sh - dh) > 1)
+    print("   boarding a train more than an hour off the spawn hour: "
+          "%s of %s (%.2f%%)"
+          % (format(int(far), ","), format(int(tot_x), ","),
+             100.0 * far / max(tot_x, 1)))
+    if unrouted_by_hour:
+        print("unrouted by departure hour:")
+        for h in sorted(unrouted_by_hour):
+            print("   %02d:00  %10s" % (h % 24,
+                                        format(int(unrouted_by_hour[h]), ",")))
+
+    # Stamped into both outputs so the page can say which build it is
+    # drawing, and so a sampled one can say so out loud rather than looking
+    # like a quiet Sunday.
+    stamp = {
+        "built": datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
+        "sample": args.sample,
+        "origins": len(origins),
+        "riders": int(round(routed)),
+        "unrouted": int(round(unrouted)),
+        "shaped": not args.no_shapes,
+        # Says the per-station series carry `b0` (first-leg boardings) beside
+        # `b`. A station whose boardings are all transfers has no `b0` key at
+        # all, so its absence cannot be read as "this file is older than the
+        # split" -- only this flag can say that.
+        "split_boardings": True,
+    }
+    if args.loads_out:
+        dump_loads(w, boardings, alightings, args.loads_out)
+
+    if args.no_output:
+        print("")
+        print("skipping trains.json/stats.json (--no-output)")
+        return
+
+    # After dump_loads on purpose: crowding.py must keep seeing the real
+    # demand, or the cap would hide the crowding from the thing meant to
+    # deter it. See "The crush cap".
+    print("")
+    if args.no_cap:
+        print("NOT capping trains (--no-cap): single-train loads are the raw "
+              "model output")
+    else:
+        cap_trains(patterns, boardings, alightings, acc["boardings0"],
+                   acc["boardingsm"], args.cap)
+    stamp["crush_cap"] = 0 if args.no_cap else args.cap
+
+    write_output(net, patterns, boardings, alightings, acc["boardings0"],
+                 acc["boardingsm"], complexes, coord, wait_deltas, code_cx,
+                 stamp)
+
+    if args.no_shapes:
+        print("\nskipping build_shapes (--no-shapes): trains will cut corners")
+    else:
+        print("")
+        import build_shapes
+        build_shapes.main(out_paths(args.sample)[0])
+
+
+# --------------------------------------------------------------------------
+# The crush cap
+#
+# **This is a fudge, and it is the only one in the output path.** Read this
+# before quoting any single train's load off the map.
+#
+# Nothing in the routing has ever refused anyone a place -- see "Why a capacity
+# check does not work here" in README.md. Crowding only makes a train *look*
+# slower, and a fixed penalty table built from the previous round's averaged
+# loads cannot see a peak: the worst train in the uncapped build was priced as
+# if it would end at 160% of 정원 and ended at **409%**, carrying 6,550 people.
+#
+# The proper fix is fail-to-board inside the search, which is written up in
+# README.md and is a build cycle's work. This is the cheap stand-in: after the
+# routing is finished, walk each pattern forward in time and refuse boardings
+# that would put a train over `CRUSH_CAP` x 정원, holding those riders on the
+# platform for a later trip of the same pattern.
+#
+# What it is allowed to touch, and what it is not:
+#
+#   - `data/loads.npz` is written **before** this runs, so `crowding.py` still
+#     sees the true, uncapped demand. Feeding it capped loads would hide the
+#     crowding from the one mechanism meant to deter it.
+#   - `wait_deltas` is **not** patched. A rider deferred to the next trip of a
+#     sparse pattern would otherwise be drawn standing on the platform for an
+#     hour and a half, which is a worse artefact than the fat train was. The
+#     platform empties when the train they originally caught pulls out.
+#   - Second legs are not re-planned. A rider deferred on leg 1 still boards
+#     their leg 2 on the old trip. At 0.24% of person-segments this is not
+#     visible, but it is a real inconsistency and not a rounding error.
+#
+# Measured against the shipped uncapped build, at 1.5x: 413 cells of 241,952
+# (0.17%), on 86 trips of 9,306, carrying 226,818 person-segments of excess out
+# of 94M (0.24%). The cap is 1.5x because nothing 서울교통공사 publishes exceeds
+# 144.6% (2호선 사당 외선, 08:30) and that figure is a half-hour average, so a
+# single train may sit a little above it.
+#
+# The deferral is deliberately **not** time-limited, and that is the ugly part.
+# The 409% train is on a 13-trip 1호선 all-stops pattern whose next trip is 91
+# minutes later, so capping it means moving a rush-hour crowd onto a
+# mid-morning train. Limiting the deferral to a plausible wait would simply
+# leave that train at 409%, which is the thing being fixed. Riders who cannot
+# be placed before the pattern stops running are put back on their original
+# trip, which therefore stays over the cap; the build prints how many.
+# --------------------------------------------------------------------------
+
+CRUSH_CAP = 1.5
+
+# How many times the loading pass may be re-run for one pattern before the
+# pattern is left uncapped altogether. See the `must` loop for why more than
+# one pass is needed at all. The second half of them pin whole cells rather
+# than single riders, which is what makes the loop terminate.
+CAP_PASSES = 8
+
+
+def _alight_rates(b, a, ns):
+    """What fraction of the people aboard get off at each stop.
+
+    A rate, not a count, and that is the whole trick: it means the capping pass
+    never has to know where any individual rider was going, so there is no
+    per-rider leg table to carry. Riders deferred onto a later trip alight in
+    proportion to that trip's own destination mix, which is an approximation,
+    but only ever of where the 0.24% get off.
+
+    The last stop is forced to 1.0 so everyone who boards also alights, however
+    the boardings were shuffled.
+    """
+    rate = np.zeros(ns)
+    on = 0.0
+    for s in range(ns):
+        if on > 0.0:
+            rate[s] = min(1.0, a[s] / on)
+        on = max(0.0, on - a[s]) + b[s]
+    if ns:
+        rate[ns - 1] = 1.0
+    return rate
+
+
+def cap_trains(patterns, boardings, alightings, boardings0, boardingsm,
+               cap_factor=CRUSH_CAP):
+    """Hold riders back off trains that are over the cap. See above."""
+    print("capping trains at %.2fx 정원 ..." % cap_factor)
+    worst0 = worst1 = 0.0
+    cells0 = cells1 = 0
+    moved = stuck = pinned = total = 0.0
+    waits = []
+    touched = reverted = 0
+
+    for pi, p in enumerate(patterns):
+        ns, ntr = p["ns"], p["ntr"]
+        if not ns or not ntr:
+            continue
+        jeong = float(LR.CAPACITY.get(p["line"]) or 1000)
+        cap = cap_factor * jeong
+
+        B = np.zeros((ntr, ns))
+        A = np.zeros((ntr, ns))
+        B0 = np.zeros((ntr, ns))
+        BM = np.zeros((ntr, ns))
+        for arr, src in ((B, boardings), (A, alightings),
+                         (B0, boardings0), (BM, boardingsm)):
+            for ti in range(ntr):
+                d = src.get((pi, ti))
+                if d:
+                    for si, v in d.items():
+                        arr[ti, si] = v
+
+        # Nominal profile, and the fast path out: 402 of 445 patterns never
+        # put a single train over the cap and can be left exactly as they are.
+        load = np.zeros((ntr, ns))
+        on = np.zeros(ntr)
+        for s in range(ns):
+            on = np.maximum(0.0, on - A[:, s]) + B[:, s]
+            load[:, s] = on
+        total += float(load.sum())
+        if load.size:
+            worst0 = max(worst0, float(load.max()) / jeong)
+        over = load > cap
+        cells0 += int(over.sum())
+        if not over.any():
+            worst1 = max(worst1, float(load.max()) / jeong) if load.size else worst1
+            continue
+        touched += 1
+
+        rates = [_alight_rates(B[ti], A[ti], ns) for ti in range(ntr)]
+        pooled = _alight_rates(B.sum(0), A.sum(0), ns)
+        nb = B.sum(1)
+
+        # A pattern that is over the cap on *every* trip has nowhere to put
+        # anybody, and the first version of this walked straight into the trap:
+        # the overflow deferred forward, found no room anywhere, came back, and
+        # landed on top of the riders its own train had meanwhile taken from
+        # the queue -- turning a 312% train into a 462% one. So the pass runs
+        # more than once. Riders it could not place are pinned to the train
+        # they were routed onto (`must`), where they board ahead of everybody
+        # and cannot be displaced, and the pass is run again for the rest.
+        # `must` only ever grows and is bounded by B, so this settles; a
+        # saturated pattern converges on doing nothing at all, which is the
+        # honest answer for it.
+        must = np.zeros((ntr, ns))
+        for attempt in range(CAP_PASSES):
+            newB = np.zeros((ntr, ns))
+            newB0 = np.zeros((ntr, ns))
+            newBM = np.zeros((ntr, ns))
+            got = []              # (trip, stop, riders) actually deferred
+            # Per stop, riders still waiting: [origin trip, riders, first-leg,
+            # modelled]. Drained oldest first, so nobody is passed over twice
+            # while someone who turned up later gets on.
+            queue = [[] for _ in range(ns)]
+
+            for ti in range(ntr):
+                rate = rates[ti] if nb[ti] > 0 else pooled
+                aboard = 0.0
+                for s in range(ns):
+                    aboard -= aboard * rate[s]
+                    pin = must[ti, s]
+                    if pin > 0.0:
+                        f = pin / B[ti, s]
+                        newB[ti, s] += pin
+                        newB0[ti, s] += B0[ti, s] * f
+                        newBM[ti, s] += BM[ti, s] * f
+                        aboard += pin
+                    spare = B[ti, s] - pin
+                    if spare > 1e-9:
+                        f = spare / B[ti, s]
+                        queue[s].append([ti, spare, B0[ti, s] * f,
+                                         BM[ti, s] * f])
+                    if not queue[s]:
+                        continue
+                    room = cap - aboard
+                    left = []
+                    for rec in queue[s]:
+                        if room <= 1e-9:
+                            left.append(rec)
+                            continue
+                        take = min(rec[1], room)
+                        f = take / rec[1]
+                        newB[ti, s] += take
+                        newB0[ti, s] += rec[2] * f
+                        newBM[ti, s] += rec[3] * f
+                        room -= take
+                        aboard += take
+                        if rec[0] != ti:
+                            got.append((rec[0], ti, s, take))
+                        if rec[1] - take > 1e-9:
+                            left.append([rec[0], rec[1] - take,
+                                         rec[2] * (1.0 - f),
+                                         rec[3] * (1.0 - f)])
+                    queue[s] = left
+
+            leftover = [(s, rec) for s in range(ns) for rec in queue[s]]
+            if not leftover:
+                break
+            # Early passes pin only the riders that were actually homeless, so
+            # a cell that is merely a bit too full sheds only its excess. Later
+            # ones pin the whole cell, which is blunter but *cannot* leave a
+            # leftover behind, so the set of unpinned cells shrinks every pass
+            # from here and the loop has to settle.
+            for s, rec in leftover:
+                if attempt + 1 < CAP_PASSES // 2:
+                    must[rec[0], s] = min(B[rec[0], s],
+                                          must[rec[0], s] + rec[1])
+                else:
+                    must[rec[0], s] = B[rec[0], s]
+        else:
+            # Still homeless after every pass. Adding them back where the
+            # routing had them is what the first version did, and it is not
+            # safe: their own train has meanwhile taken riders off the queue,
+            # so they land on top and the train comes out *fuller* than it went
+            # in -- 29% -> 31% on the 0.08x stress run that found this. Leave
+            # the whole pattern exactly as the routing produced it instead.
+            # Uncapped, but never worse, and the count is printed.
+            reverted += 1
+            stuck += sum(rec[1] for s in range(ns) for rec in queue[s])
+            worst1 = max(worst1, float(load.max()) / jeong)
+            cells1 += int(over.sum())
+            continue
+
+        for ti0, ti, s, take in got:
+            moved += take
+            # Guarded because a terminus that only arrives carries a 00:00:00
+            # null in the departure column -- see "`00:00:00` is a null
+            # marker" in README.md.
+            dt = p["depc"][s][ti] - p["depc"][s][ti0]
+            if dt > 0:
+                waits.append(dt)
+        pinned += float(must.sum())
+
+        # Alightings recomputed from the boardings that actually happened, so
+        # every train still empties at its terminus.
+        newA = np.zeros((ntr, ns))
+        load = np.zeros((ntr, ns))
+        for ti in range(ntr):
+            rate = rates[ti] if nb[ti] > 0 else pooled
+            aboard = 0.0
+            for s in range(ns):
+                off = aboard * rate[s]
+                newA[ti, s] = off
+                aboard = aboard - off + newB[ti, s]
+                load[ti, s] = aboard
+        cells1 += int((load > cap).sum())
+        worst1 = max(worst1, float(load.max()) / jeong) if load.size else worst1
+
+        for src, arr in ((boardings, newB), (alightings, newA),
+                         (boardings0, newB0), (boardingsm, newBM)):
+            for ti in range(ntr):
+                row = arr[ti]
+                nz = np.nonzero(row > 1e-9)[0]
+                if nz.size:
+                    src[(pi, ti)] = dict((int(si), float(row[si]))
+                                         for si in nz)
+                else:
+                    src.pop((pi, ti), None)
+
+    print("   %d patterns had a train over the cap" % touched)
+    ncell = sum(p["ntr"] * p["ns"] for p in patterns)
+    print("   cells over the cap: %d -> %d of %s"
+          % (cells0, cells1, format(ncell, ",")))
+    print("   worst single train: %.0f%% of 정원 -> %.0f%%"
+          % (100 * worst0, 100 * worst1))
+    print("   riders held for a later train: %s (%.3f%% of person-segments)"
+          % (format(int(moved), ","), 100.0 * moved / max(total, 1)))
+    if waits:
+        w = np.array(waits) / 60.0
+        print("   how much later they board: median %.0f min, p90 %.0f min, "
+              "max %.0f min" % (np.median(w), np.percentile(w, 90), w.max()))
+    if pinned:
+        print("   %s riders the pattern had no later room for, boarding as "
+              "routed" % format(int(pinned), ","))
+    if reverted:
+        print("   %d patterns would not settle in %d passes and were left "
+              "uncapped, %s riders unplaced in them"
+              % (reverted, CAP_PASSES, format(int(stuck), ",")))
+    if worst1 > worst0 + 1e-6:
+        print("   WARNING: the worst train got worse, %.0f%% -> %.0f%%. That "
+              "is a bug in cap_trains(), not a data problem."
+              % (100 * worst0, 100 * worst1))
+
+
+def write_output(net, patterns, boardings, alightings, boardings0, boardingsm,
+                 complexes, coord, wait_deltas, code_cx, stamp):
+    print("building output ...")
+    trains = []
+    absurd = []
+    for (pi, ti), bd in boardings.items():
+        p = patterns[pi]
+        al = alightings.get((pi, ti), {})
+        vdep = p["vdep"][ti]
+        onboard = 0.0
+        timeline = []
+        for si, code in enumerate(p["stops"]):
+            onboard += bd.get(si, 0.0) - al.get(si, 0.0)
+            onboard = max(0.0, onboard)
+            xy = coord.get(code)
+            if not xy:
+                continue
+            timeline.append([int(vdep[si]), round(xy[0], 5),
+                             round(xy[1], 5), round(onboard, 1),
+                             round(bd.get(si, 0.0), 1)])
+        if not timeline or max(r[3] for r in timeline) < 0.5:
+            continue
+        # A single bad stop time used to stretch the page's time slider across
+        # nine days, because the slider spans the last train it is given. The
+        # longest real run on the network is line 1 at just under three hours,
+        # so anything past MAX_RUN_S is a parse failure upstream and the run is
+        # dropped rather than allowed to set the scale for everything else.
+        if timeline[-1][0] - timeline[0][0] > MAX_RUN_S or                 timeline[-1][0] > MAX_END_S:
+            absurd.append((p["line"], timeline[0][0], timeline[-1][0]))
+            continue
+        trains.append({
+            "route": p["line"],
+            "color": LINE_COLORS.get(p["line"], "#888"),
+            "express": bool(p["express"]),
+            "timeline": timeline,
+        })
+
+    if absurd:
+        print("   DROPPED %d runs with impossible times -- the timetable parse "
+              "is wrong upstream, run validate.py:" % len(absurd))
+        for line, t0, t1 in sorted(absurd, key=lambda x: -x[2])[:6]:
+            print("      line %-4s %.1fh -> %.1fh" % (line, t0 / 3600.0,
+                                                      t1 / 3600.0))
+
+    per_line = collections.Counter(t["route"] for t in trains)
+    print("   %d trains carrying riders" % len(trains))
+    for lid in sorted(per_line, key=LR.order_key):
+        print("      %-4s %-14s %5d" % (lid, LR.DISPLAY.get(lid, lid),
+                                        per_line[lid]))
+    quiet = [l for l in LR.ALL_IDS if l not in per_line]
+    if quiet:
+        print("      NO TRAINS WITH RIDERS: %s" % ",".join(quiet))
+
+    lines = []
+    for line, ways in net["geometry"].items():
+        lines.append({"route": line,
+                      "color": LINE_COLORS.get(line, "#888"),
+                      "ways": [[[round(a, 5), round(b, 5)] for a, b in w]
+                               for w in ways]})
+    line_meta = net.get("line_meta") or dict(
+        (l.id, {"display": l.display, "display_en": l.display_en,
+                "color": l.color, "capacity": l.capacity}) for l in LR.LINES)
+
+    waiting = build_waiting_timelines(wait_deltas, len(complexes))
+    stations = [{"name": c["name"], "name_en": c.get("name_en", ""),
+                 "lat": c["lat"], "lon": c["lon"],
+                 "lines": sorted(set(p["line"] for p in c["platforms"])),
+                 "boardings": c["od_boardings"],
+                 "measured": c["measured"],
+                 "wait": waiting[i]}
+                for i, c in enumerate(complexes)]
+
+    stamp = dict(stamp, trains=len(trains))
+    out = {"date": OD_DATE, "day": DAY_NAME, "build": stamp, "stations": stations,
+           "lines": lines, "line_meta": line_meta, "trains": trains}
+    path = out_paths(stamp["sample"])[0]
+    write_json(path, out)
+    print("wrote %s (%.1f MB)" % (path, os.path.getsize(path) / 1e6))
+
+    write_stats(patterns, boardings, alightings, boardings0, boardingsm,
+                complexes, coord, code_cx, line_meta, stamp)
+
+
+# --------------------------------------------------------------------------
+# the day in aggregate, for the static view
+# --------------------------------------------------------------------------
+
+STAT_HOURS = list(range(5, 26))       # 05:00 .. 25:00, the service day
+NSH = len(STAT_HOURS)
+
+
+def _hour_slot(secs):
+    return min(NSH - 1, max(0, secs // 3600 - STAT_HOURS[0]))
+
+
+def write_stats(patterns, boardings, alightings, boardings0, boardingsm,
+                complexes, coord, code_cx, line_meta, stamp):
+    """Aggregate the same routing into per-station and per-segment totals.
+
+    The animation answers "where is everyone right now"; this answers "how much
+    moves through here over the day", which is the question you cannot get at by
+    watching dots. Same numbers, summed instead of sampled -- so it costs one
+    more pass, not another model.
+    """
+    print("aggregating the day for the static view ...")
+    nb = len(complexes)
+    board = collections.defaultdict(lambda: [0.0] * NSH)   # (ci, line) -> hrs
+    board0 = collections.defaultdict(lambda: [0.0] * NSH)  # first leg only
+    boardm = collections.defaultdict(float)   # (ci, line) -> modelled riders
+    alight = collections.defaultdict(lambda: [0.0] * NSH)
+    seg = collections.defaultdict(lambda: [0.0] * NSH)     # (line, a, b) -> hrs
+    segx = collections.defaultdict(lambda: [0.0] * NSH)    # 급행 only
+
+    for (pi, ti), bd in boardings.items():
+        p = patterns[pi]
+        line = p["line"]
+        al = alightings.get((pi, ti), {})
+        bd0 = boardings0.get((pi, ti), {})
+        bdm = boardingsm.get((pi, ti), {})
+        vdep = p["vdep"][ti]
+        stops = p["stops"]
+        onboard = 0.0
+        for si, code in enumerate(stops):
+            h = _hour_slot(int(vdep[si]))
+            b, a = bd.get(si, 0.0), al.get(si, 0.0)
+            ci = code_cx.get(code)
+            if ci is not None:
+                if b:
+                    board[(ci, line)][h] += b
+                    b0 = bd0.get(si, 0.0)
+                    if b0:
+                        board0[(ci, line)][h] += b0
+                    bm = bdm.get(si, 0.0)
+                    if bm:
+                        boardm[(ci, line)] += bm
+                if a:
+                    alight[(ci, line)][h] += a
+            onboard = max(0.0, onboard + b - a)
+            if onboard > 0 and si + 1 < len(stops):
+                seg[(line, code, stops[si + 1])][h] += onboard
+                if p["express"]:
+                    segx[(line, code, stops[si + 1])][h] += onboard
+
+    # Trains over each segment per hour, counted over every trip and not only
+    # the ones carrying riders -- an empty train still dilutes the average.
+    # This is what turns riders-per-hour into riders-per-train, which is the
+    # quantity 서울교통공사 publishes as 혼잡도. See validate.py --congestion.
+    #
+    # Kept twice, all trains and 급행 only, because on 9호선 the two are not the
+    # same question. 서울교통공사 publish 일반 and 급행 congestion separately for
+    # good reason: an express train on 9호선 is far fuller than the local it
+    # overtakes, and one blended average describes neither. `hx`/`nx` are the
+    # express subset of `h`/`n`, not a separate total -- subtract for the local.
+    segn = collections.defaultdict(lambda: [0] * NSH)      # (line, a, b) -> hrs
+    segnx = collections.defaultdict(lambda: [0] * NSH)
+    for p in patterns:
+        stops = p["stops"]
+        for vdep in p["vdep"]:
+            for si in range(len(stops) - 1):
+                key = (p["line"], stops[si], stops[si + 1])
+                h = _hour_slot(int(vdep[si]))
+                segn[key][h] += 1
+                if p["express"]:
+                    segnx[key][h] += 1
+
+    # How much of each line, and of each station, is journeys the OD never
+    # held. Volumes are measured throughout; this is about who goes where.
+    # Replaces build_stations.py's `partial`, which was read off the *source*
+    # -- a line's within-line share in the raw OD -- and so described the file
+    # rather than the map once the seeding went in.
+    ltot = collections.Counter()
+    lmod = collections.Counter()
+    for (ci, line), hrs in board.items():
+        ltot[line] += sum(hrs)
+    for (ci, line), v in boardm.items():
+        lmod[line] += v
+    for lid, meta in line_meta.items():
+        t = ltot.get(lid, 0.0)
+        meta["modelled"] = round(lmod.get(lid, 0.0) / t, 4) if t > 0 else 0.0
+        meta["partial"] = meta["modelled"] >= 0.5
+
+    stmod = collections.defaultdict(float)
+    sttot = collections.defaultdict(float)
+    for (ci, line), hrs in board.items():
+        sttot[ci] += sum(hrs)
+    for (ci, line), v in boardm.items():
+        stmod[ci] += v
+
+    st_out = []
+    by_station = collections.defaultdict(dict)
+    for (ci, line), hrs in board.items():
+        by_station[ci].setdefault(line, {})["b"] = [round(v, 1) for v in hrs]
+    for (ci, line), hrs in board0.items():
+        by_station[ci].setdefault(line, {})["b0"] = [round(v, 1) for v in hrs]
+    for (ci, line), hrs in alight.items():
+        by_station[ci].setdefault(line, {})["a"] = [round(v, 1) for v in hrs]
+    for ci, c in enumerate(complexes):
+        rows = by_station.get(ci)
+        if not rows:
+            continue
+        st_out.append({"name": c["name"], "name_en": c.get("name_en", ""),
+                       "lat": c["lat"], "lon": c["lon"],
+                       "lines": sorted(set(p["line"] for p in c["platforms"])),
+                       "m": round(stmod.get(ci, 0.0)
+                                  / sttot[ci], 3) if sttot.get(ci) else 0.0,
+                       "by_line": rows})
+
+    seg_out = []
+    for (line, a, b), hrs in seg.items():
+        ca, cb = coord.get(a), coord.get(b)
+        if not ca or not cb or max(hrs) < 0.5:
+            continue
+        ia, ib = code_cx.get(a), code_cx.get(b)
+        seg_out.append({
+            "line": line,
+            "a": complexes[ia]["name"] if ia is not None else "",
+            "b": complexes[ib]["name"] if ib is not None else "",
+            "ae": complexes[ia].get("name_en", "") if ia is not None else "",
+            "be": complexes[ib].get("name_en", "") if ib is not None else "",
+            # platform codes, so a reader can tell 상선 from 하선: Seoul
+            # numbers its stations in the 하행 direction
+            "ca": a, "cb": b,
+            "p": [round(ca[0], 5), round(ca[1], 5),
+                  round(cb[0], 5), round(cb[1], 5)],
+            "h": [round(v, 1) for v in hrs],
+            "n": segn.get((line, a, b), [0] * NSH),
+        })
+        # Only carried where there is express service at all, so the file does
+        # not grow two empty arrays per segment across a network that is
+        # overwhelmingly all-stops.
+        hx = segx.get((line, a, b))
+        nx = segnx.get((line, a, b))
+        if hx and max(hx) >= 0.5:
+            seg_out[-1]["hx"] = [round(v, 1) for v in hx]
+        if nx and max(nx) > 0:
+            seg_out[-1]["nx"] = nx
+
+    out = {"date": OD_DATE, "day": DAY_NAME, "build": stamp, "hours": STAT_HOURS,
+           "line_meta": line_meta, "stations": st_out, "segments": seg_out}
+    path = out_paths(stamp["sample"])[1]
+    write_json(path, out)
+    print("   %d stations, %d segments -> %s (%.1f MB)"
+          % (len(st_out), len(seg_out), path, os.path.getsize(path) / 1e6))
+
+
+if __name__ == "__main__":
+    sys.stdout.reconfigure(encoding="utf-8")
+    main()
