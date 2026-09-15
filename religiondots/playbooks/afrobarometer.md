@@ -11,11 +11,20 @@ population table gives the people.
 - `lr` Liberia: drawn, 15 counties; the county pattern fitted by IPF to two 2022 census margins.
 - `tz` Tanzania: drawn, 30 regions, R4 and R6-R9 on the 2022 census; R4 placed by district, R5
   left out; the first build on `cab.stability`.
+- `cm` Cameroon: drawn, 12 units (the regions with Yaoundé and Douala apart), R5-R9 on COD-PS
+  2025; the first build to draw churches (Presbyterian, Baptist), on level by round, the census's
+  Protestant total and the unnamed share where each church lives (`sources/cm.md` §4).
 - `mz` Mozambique: drawn from the census; Afrobarometer was the witness that put `Sem religião`
   at 93-98% no religion (`sources/mz.md` §6).
-- `mg` Madagascar: queued as a survey build (its denominations hold their level). Check the card
-  first (Rulings). Also queued with an Afrobarometer route or witness: `cm`, `tg`, `sn`, `bf`
-  (`queue.md`, "Africa swept a second time"). Mauritania is not asked the question.
+- `mg` Madagascar: drawn, 22 regions, R5-R7 and R9 on the 2018 census; Catholic, FJKM and Lutheran
+  as churches (`Christian only` 0.3-2.3% by round, both DHS surveys witnessing the
+  Catholic/Protestant level); None and traditional placed as one box and split at one national
+  ratio (`sources/mg.md` §5); R4 left out (no Betsiboka district sampled).
+- `tg` Togo: drawn, 6 units (Lomé apart), R5-R9 fitted by IPF to the 2022 census's national rows
+  (UNSD table 28) and unit populations, as Liberia. With a census margin the churches' levels come
+  from the census, so Pentecostal and Presbyterian are drawn as patterns (`sources/tg.md` §4).
+- Also queued with an Afrobarometer route or witness: `sn`, `bf` (`queue.md`, "Africa swept
+  a second time"). Mauritania is not asked the question.
 
 ## Loading it
 - Six merged `.sav` files, ~280 MB, plain links on `afrobarometer.org/data/merged-data/`, no
@@ -47,6 +56,16 @@ population table gives the people.
   other; draw a denomination only with an outside witness to its level (Madagascar swings 2.0
   points, Mali 1.3). Caught by: `lr.py::main`, `ng.py::main` (the swing must stay at 15 points or
   more), `tz.py::main` (10); nothing shared. Detail: `sources.md` §11ai.
+- **Two other boxes can trade places between rounds.** Madagascar's `Traditional/ethnic religion`
+  runs 8.5, 4.5, 1.5, 1.3% by round while `None` runs 8.2, 4.0, 13.0, 12.7%, and per region the same
+  places move (Melaky 45% traditional and 0% none in R5-R6, 0% and 12% in R7 and R9). Tested apart,
+  traditional fails the split-half and None's level trips Norway's 3.5-point bar, which reads as a
+  real change and is not one. Print each small box per unit, early rounds against late, before
+  testing it alone; where two swap, test and place them as one and split them at the late rounds'
+  national ratio, with an outside witness to that ratio (Madagascar: both DHS reports). Pooling fixes
+  the level and keeps the early answers; it did not make the ranking steadier (+0.57 against +0.59).
+  Caught by: `mg.py::swap_table` (prints), `mg.py::none_fraction` (asserts the ratio against the DHS);
+  nothing shared. Detail: `sources/mg.md` §5.
 - **Every answer is grouped by name, and a box can be renamed.** An answer missing from the group
   table is dropped silently. `Shia only` (R4-R5) and `Shia` (R6-R9) are one box that does not
   fold together, and a zero in the crosstab means nobody chose it, not that it was off the card.
@@ -103,6 +122,28 @@ population table gives the people.
   same way. Caught by: `tz.py::main` (`LEVEL_GAP_MAX`, 3.5 points). Detail: spec §12 "A SURVEY POOL
   THAT SPANS A FAST CHANGE".
 
+- **`Christian only` is uneven across units, so a church that holds its level can still be drawn
+  short where it lives.** Cameroon: 7% of Christians in Ouest, 35% in Adamaoua; Lutherans hold
+  2.1-2.4% by round and live in the north. Test the unnamed share averaged over the church's own
+  respondents against the national one. Caught by: `cm.py::unnamed_where_they_live`; nothing
+  shared. Detail: `sources/cm.md` §4.
+- **A box can be abandoned between rounds while it stays on the card.** Cameroon's `Other` has 58
+  answers in R5-R7 and none in R8-R9 (Anglican, Methodist and Coptic vanish too), and passes the
+  split-half on which rounds it is in. Caught by: `cm.py::main` (asserts the zero; `NOT_PLACED`).
+- **REGION codes can shift between rounds with the labels intact** (Cameroon R8, every code off by
+  one against R6, R7, R9), and R6's labels arrive as mojibake (`Centre-YaoundÃ©`) because `_read`
+  falls back to LATIN1. Decode by label after undoing the mojibake, and check against the district
+  column. Caught by: `cm.py::gkey`, `cm.py::check_locations`.
+- **`held_out` stops a correct six-unit decode.** Six units allow 720 orderings, and a sample frame
+  from an older census moves the capital's share (Togo: Lomé sampled at 1.40x its 2022 share, 14
+  orderings reach the observed r). Where REGION labels are names, make the location column the
+  witness and say so in code. Caught by: `tg.py::check_locations` (asserts the one known
+  disagreement); nothing shared. Detail: `sources/tg.md` §4.
+- **A box can stay a value label after a country stops using it.** `Assembly of God` is a label in
+  every round and Togolese chose it only in R5 and R6: the labels are the merged file's, not one
+  country's card. Read the country's own counts by round before assuming a box was offered. Caught
+  by: `tg.py::report_card` (prints). Detail: `sources/tg.md` §4.
+
 ## "No religion" boxes
 The draft procedure is at the foot of `WORKFLOW_PLAN.md`.
 - **As the source.** The card offers `Traditional/ethnic religion`, `None`, `Atheist` and
@@ -118,7 +159,9 @@ The draft procedure is at the foot of `WORKFLOW_PLAN.md`.
 Import these, do not copy them.
 - `afrobarometer.py`: `fetch`, `load`, `country_spellings`, `fold`, `assert_one_wording`,
   `report_wordings`, `national`, `held_out`, `build` (float counts: round once, at the end),
-  `ROUNDS`, `AB_DIR`, `COUNTRY_ALIASES`, `ELIGIBLE_FLOOR` (1%).
+  `ROUNDS`, `AB_DIR`, `COUNTRY_ALIASES`, `ELIGIBLE_FLOOR` (1%), and since 2026-09-14
+  `round_within_rows` and `compose(df, nat, units, cats, carried)` (tz.py's, with the category list
+  passed in and no standouts; `cm.py` uses them, `tz.py` and `ng.py` keep their copies).
 - `cab.py`: `assert_not_quota(df, country, waves)` and `stability(df, cats, units, label)`. They
   expect columns `wave` and `code`; rename as `tz.py::main` does. `cab.stability` computes through
   `sources/stability.py`; look there first.

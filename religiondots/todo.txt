@@ -24,6 +24,11 @@ sikhism color
 make the "unspecified" colors a lot paler when looking at a religion group
     can move christianity to take ove yellow range maybe
 
+"placed from ethnicity" explanation
+    soemthing liek 
+    "placed from ethnicity: sunni vs shia
+    estimates available at national level, allocated to county level" or something like that
+
 LATER
 
 - religion genealogy panel, with selection linked both ways to the map. spec 10

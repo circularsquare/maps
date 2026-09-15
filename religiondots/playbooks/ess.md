@@ -148,8 +148,10 @@ Import these, do not copy them.
   each `sources/<cc>.md`; no dots move. Does not decide whether they are ever rebuilt on it.
 - **Ask 013 (answered, deferred):** Greece stays as built, dots and `note_public`. Does not pick
   one of its three options; not for an unprompted session.
-- **Ask 016 (open):** Ukraine's Orthodox as one node, occupied oblasts from pre-war rounds, no
-  rescale to round 11. Leave `ua` as built until answered.
+- **Ask 016 (answered 2026-09-14):** Ukraine stays as built: Orthodox as one node, occupied oblasts
+  from pre-war rounds, no rescale to round 11. Ukraine only.
+- **Ask 022 (answered 2026-09-14):** keep spec §12's rescale for ESS. A new ESS country rescales to
+  its late rounds when the drift is large and they reach every unit. No size bar was ruled.
 - **queue.md, 2026-09-14 evening:** probe `region<cc>` in rounds 1-4 for `gr`, `se`, `be`, `dk`,
   report first, not high priority. Does not approve a rebuild.
 - **Sweden (runlog 2026-09-14):** the two-level rebuild was approved and Jews stay at riksområde

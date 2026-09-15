@@ -301,12 +301,11 @@ def verdict(authored, got):
 def write_new(rows):
     """Insert `gap_share=` above the `gap=` line for the NEW rows only.
 
-    Matched on the country's own `"<cc>": dict(` header and then on the first `gap=` under it,
-    because line positions in this file move under other sessions' edits (CLAUDE.md's second
-    warning) and a positional patch would land in the wrong country.
+    Each entry is in its own countries/<cc>.py (WORKFLOW_PLAN.md item 9). Matched there on the
+    country's own `"<cc>": dict(` header and then on the first `gap=` under it, because line
+    positions move under other sessions' edits (CLAUDE.md's second warning) and a positional
+    patch would land in the wrong place. Every file is read and matched before any is written.
     """
-    path = os.path.join(ROOT, "countries.py")
-    lines = io.open(path, encoding="utf-8").read().split("\n")
     head = re.compile(r'^    "([a-z]{2})": dict\($')
     gapline = re.compile(r"^(\s*)gap=")
     # never a "rows only" country: B alone is a candidate for a human, not an answer
@@ -315,21 +314,28 @@ def write_new(rows):
     if not want:
         print("\nnothing to write: every country with a confirmed residual already has one")
         return
-    at, cur = {}, None
-    for i, ln in enumerate(lines):
-        m = head.match(ln)
-        if m:
-            cur = m.group(1)
-        if cur in want and cur not in at and gapline.match(ln):
-            at[cur] = (i, gapline.match(ln).group(1))
+    at = {}
+    for cc in sorted(want):
+        path = os.path.join(ROOT, "countries", f"{cc}.py")
+        if not os.path.exists(path):
+            continue
+        lines = io.open(path, encoding="utf-8").read().split("\n")
+        cur = None
+        for i, ln in enumerate(lines):
+            m = head.match(ln)
+            if m:
+                cur = m.group(1)
+            if cur == cc and gapline.match(ln):
+                at[cc] = (path, lines, i, gapline.match(ln).group(1))
+                break
     missing = sorted(set(want) - set(at))
     if missing:
         raise SystemExit(f"no gap= line found for {missing}; nothing written")
-    for cc, (i, indent) in sorted(at.items(), key=lambda kv: -kv[1][0]):
+    for cc, (path, lines, i, indent) in sorted(at.items()):
         # four significant figures, which is finer than the tooltip prints and coarse enough
         # that the file does not carry a float nobody can read
         lines.insert(i, f"{indent}gap_share={float(f'{want[cc]:.4g}')!r},")
-    io.open(path, "w", encoding="utf-8", newline="").write("\n".join(lines))
+        io.open(path, "w", encoding="utf-8", newline="").write("\n".join(lines))
     print(f"\nwrote gap_share for {len(at)}: {', '.join(sorted(at))}")
 
 
@@ -341,7 +347,7 @@ def main():
     ap.add_argument("--check", action="store_true",
                     help="exit 1 if any authored gap_share is smaller than the computed one")
     ap.add_argument("--write", action="store_true",
-                    help="fill gap_share in countries.py where there is none yet")
+                    help="fill gap_share in countries/<cc>.py where there is none yet")
     args = ap.parse_args()
 
     import countries as C

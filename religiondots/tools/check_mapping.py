@@ -84,7 +84,11 @@ DEFAULT_LEVELS = {# Austria's drawn tier is 2,358 Gemeinden PLUS Vienna's 23 Gem
                   # so a locality that HAS statistical areas is not drawn itself (drawing
                   # both would double the country). The default "level with the most units"
                   # would take `statarea` alone and lose every rural locality in the state.
-                  "il": ["statarea", "locality"]}
+                  "il": ["statarea", "locality"],
+                  # Senegal 1988 is nine régions plus Diourbel's three départements, which
+                  # REPLACE the Diourbel région (its regional report alone prints religion by
+                  # département). `region` alone reports 9 units and 619,245 too few people.
+                  "sn": ["region", "department"]}
 
 
 def main():

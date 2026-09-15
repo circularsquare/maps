@@ -7,10 +7,6 @@ catholique, MUS 3 musulman, PRO 4 protestant, AUT 5 autres, SAN 6 sans), so ther
 subtotal to exclude and no denomination to lose beyond the Catholic/Protestant split the form
 already makes.
 
-`other.td` does NOT exist in taxonomy/branches.py yet: Chad is parked on a §14 ask
-(ask/017-td) and the node is added with the registration, not before. Its text is drafted in
-handoff/td.md.
-
 EXCLUDED holds categories that are deliberately not on the tree.
 REVIEW holds calls that are defensible but arguable, with the reason.
 """

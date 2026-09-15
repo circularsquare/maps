@@ -4,13 +4,12 @@
     python tools/where.py mz --full      # matching lines whole, not cut to width
 
 WORKFLOW_PLAN.md item 6. The shared records are too big to read (sources.md ~24,000 lines, spec.md
-~12,800, countries.py ~20,800, queue.md ~950), and an agent that does not know where its country
-is mentioned either reads too much or misses the ruling that applies. This lists, with line
-numbers:
+~12,800, queue.md ~950), and an agent that does not know where its country is mentioned either
+reads too much or misses the ruling that applies. This lists, with line numbers:
 
   files         sources/<cc>*, taxonomy/<cc>YYYY.py, normalized CSVs, data/geo/<cc>/, dots,
                 handoff, claim
-  countries.py  the entry
+  countries.py  the entry's line in countries/<cc>.py
   sources.md    record sections: `## <cc>-YYYY-MM-DD.` keys, and older headings naming the country
   spec.md       headings naming the country
   queue.md      rows and lines naming it, with the section each sits under
@@ -73,12 +72,31 @@ def _block(title, hits, full, fmt=None):
         print(fmt(h) if fmt else f"  {h[0]:>6}  {_cut(h[1], full)}")
 
 
+def _entry_file(cc):
+    """The file holding the country's COUNTRIES entry (WORKFLOW_PLAN.md item 9)."""
+    return os.path.join("countries", f"{cc}.py")
+
+
+def queue_row(cc):
+    """The country's `queue.csv` row as a dict, or None (WORKFLOW_PLAN.md item 10)."""
+    import csv
+    p = os.path.join(ROOT, "queue.csv")
+    if not os.path.exists(p):
+        return None
+    with open(p, encoding="utf-8", newline="") as fh:
+        return next((r for r in csv.DictReader(fh) if r.get("cc") == cc), None)
+
+
 def name_of(cc):
-    """The country's name from its countries.py entry, or its queue.md row if it is not drawn."""
-    m = re.search(rf'^    "{cc}": dict\(\s*\n\s*name="([^"]+)"', "\n".join(_lines("countries.py")),
+    """The country's name from its countries/<cc>.py entry, else its queue.csv row, else its
+    queue.md table row. Belarus, Iran and Kuwait have a csv row and no table row."""
+    m = re.search(rf'^    "{cc}": dict\(\s*\n\s*name="([^"]+)"', "\n".join(_lines(_entry_file(cc))),
                   re.M)
     if m:
         return m.group(1)
+    row = queue_row(cc)
+    if row and row.get("name"):
+        return row["name"]
     for line in _lines("queue.md"):
         m = re.match(rf"^\|\s*`?{cc}`?\s*\|\s*([^|]+?)\s*\|", line)
         if m:
@@ -129,9 +147,20 @@ def main():
         else:
             print(f"  {rel:<46} {_size(os.path.getsize(p)):>7}  {_age(os.path.getmtime(p))} ago")
 
-    entry = [i for i, l in enumerate(_lines("countries.py"), 1) if l.startswith(f'    "{cc}": dict(')]
-    print("\ncountries.py")
-    print(f"  entry at line {entry[0]}" if entry else "  not registered")
+    entry = [i for i, l in enumerate(_lines(_entry_file(cc)), 1) if l.startswith(f'    "{cc}": dict(')]
+    print("\ncountries/")
+    print(f"  entry at line {entry[0]} of countries/{cc}.py" if entry else "  not registered")
+
+    row = queue_row(cc)
+    print("\nqueue.csv")
+    if not row:
+        print("  no row")
+    else:
+        extra = "; ".join(f"{k} {row[k]}" for k in ("grain", "source", "blocker", "held_for_anita")
+                          if row.get(k))
+        print(f"  {row['status']}" + (f": {_cut(extra, full, 90)}" if extra else ""))
+        if row.get("detail"):
+            print(f"  detail: {_cut(row['detail'], full, 94)}")
 
     key_re = re.compile(rf"^## {cc}-\d{{4}}-\d{{2}}-\d{{2}}[a-z]?\.")
     _block("sources.md record sections",

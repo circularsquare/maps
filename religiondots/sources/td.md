@@ -1,16 +1,17 @@
 # Chad — RGPH2 2009, religion by région
 
-**Built to the mapping 2026-09-14 and NOT drawn: held on spec §14, `ask/017-td`.** 22 régions,
-6 categories, 10,941,682 censused people. Everything up to the `countries.py` entry is on disk
-and checked; `handoff/td.md` has the entry drafted and the steps left.
+**Drawn 2026-09-14 at 22 régions** (sources.md §td-2026-09-14), after Anita ruled on
+`ask/answered/017-td`: draw it as built. 6 categories, 10,941,682 censused people, 10,939 dots
+at 1:1,000. Built to the mapping by session `f95259a4-td`, registered and scattered by
+`d743fc47-td`; the entry is `countries/td.py`.
 
 - `sources/td.py` -> `data/normalized/td.csv` (the PDF is `data/raw/td/rgph2_etat_structures.pdf`)
 - `sources/td_geo.py` -> `data/geo/td/td_regions.gpkg`, `td_hexes.gpkg`, `td_lookup.csv`
   (COD-AB départements rebuilt to 2009 + Kontur 400 m)
-- `taxonomy/td2009.py` -> the mapping; `other.td` is NOT yet in `taxonomy/branches.py`
+- `taxonomy/td2009.py` -> the mapping; `other.td` is in `taxonomy/branches.py`
 - `data/raw/td/rgph2_questionnaire.pdf`, `rgph2_resultats_sous_prefecture.pdf` (scan),
   `rgph2_manuel_agent.pdf` (the post-enumeration survey's manual, not the census's)
-- sources.md **§11aq** is the scout's row; no §9 section yet, because nothing is drawn.
+- sources.md **§11aq** is the scout's row; **§td-2026-09-14** is the build.
 
 ```
 python sources/td.py     --fetch
@@ -136,7 +137,11 @@ Fulani herder groups "continue to target religious communities in Chad". The Sta
 2023 religious freedom report records armed groups attacking Christian communities in Logone
 Oriental on 8 May 2023, killing 17 including a pastor and 12 congregants. Burkina Faso and Mali
 were held for Anita on the same question the same day. The builder's recommendation, the
-figures and the options are in the ask; nothing here is decided.
+figures and the options are in the ask.
+
+**Ruled 2026-09-14: draw Chad at its 22 régions as built** (option 1, "yes draww it"). Burkina
+Faso and Mali were ruled the same way in ask 018. The ruling covers the published grain; nothing
+finer than the région was asked or decided.
 
 ## 9. Gotchas
 
@@ -156,3 +161,25 @@ INSEED's thematic reports and questionnaire are public downloads with no licence
 structure volume is cited from its Wayback capture. The census microdata's NADA terms require
 the Director General's authorisation and were not used. USCIRF and State Department reports are
 US government works.
+
+## 11. Review, 2026-09-14 (`d743fc47-rev1`)
+
+Read from `data/normalized/td.csv`, `taxonomy/td2009.py` and `countries/td.py` before this file.
+Nothing to change, nothing to rebuild, no ask.
+
+- **`note_public` recomputes off the CSV.** The seven southern régions hold 90.3% of the
+  Catholics, 88.6% of the Protestants and 94.4% of the animists; Mayo Kebbi Est is 32.0% animist;
+  N'Djaména is 70.7% Muslim and 27.9% Christian; twelve of the other fourteen régions are 98% or
+  more. The note's top of "99.5%" is Kanem after raking (printed 99.4), so it matches what the map
+  draws. The `other.td` legend note's 91% is 91.4%. `grain` and `gap_share` check.
+- **The mapping follows precedent.** `Protestante`, `Animiste`, `Sans religion` and the residual
+  box go where cg2007, cf2003, ci2021 and gn2014 send the same French boxes. `other.td` is a
+  per-source residual under spec §3.11 like `other.gn` and `other.cg`, declared in
+  `religions.json`; it shows on Chad's legend only.
+- **The gap is not biased in a way that matters.** The 98,191 not counted are in Sila and Tibesti,
+  both 98-99% Muslim, so leaving them out understates Chad's Muslim share by about 0.4 points.
+  Spreading Sila's counted people over the uncounted Kimiti sous-préfectures (§5) moves no
+  religion share, since Sila is 99.0% Muslim throughout.
+- §14 is settled by ask 017.
+- **Screenshot at 1:1,000:** dots on land only, the Christian south and the Muslim north and east
+  where the table has them, the desert régions sparse. Nothing looks off.

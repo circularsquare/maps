@@ -14,6 +14,9 @@ checklist and every command in build order.
 
 ## Before writing any user-facing text
 
+Each country's entry is its own file, `countries/<cc>.py`. `countries.py` is the loader: it keeps
+the field docstring, the `ORDER` list a new country's code is appended to, and the checks.
+
 **Read the field docstring at the top of `countries.py`.** It documents `how`, `fill`,
 `grain`, `gap` and `note_public`, and carries Anita's rules on voice. The short version, all
 of it hers:

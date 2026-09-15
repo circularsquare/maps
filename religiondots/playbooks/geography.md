@@ -25,6 +25,11 @@ bases, joins, placement and the build tail. Survey and census-table traps are in
   Chad's COD moved two départements after 2009, by errors that cancel. Compare per-unit area with the office's area or
   density table. Caught by: `sources/iq_geo.py::main` (witness 2), `sources/td_geo.py::main` (`AREA_2009`). Example: `iq`.
   Detail: spec §12 "A BOUNDARY FILE'S ERROR HIDES INSIDE ITS CORRECT TOTAL"; "A CENSUS OLDER THAN ITS BOUNDARY FILE".
+- **COD's capital polygon can be the old core.** COD-AB Belarus draws Minsk City at 86.8 km² against
+  353.64, so the capital's outer districts fall in Minsk oblast and five of nine LiTS city PSUs land
+  outside the city. Compare a capital's polygon area with the city's own figure, and put survey PSU
+  coordinates in it. Caught by: `sources/by_geo.py::minsk_surgery` (OSM relation plus COD's polygon,
+  area asserted), `::psu_witness`. Example: `by`. Detail: `sources/by.md` §5.
 - **COD-PS is a projection, and a national match hides provincial error.** Dominican COD-PS is 0.56% off nationally,
   -23.7% to +10.3% by province. If the country counted after COD-PS's vintage, the office's count is the base. Caught by:
   `sources/do_geo.py::main` prints it per unit; not asserted there. Shared assertion for each `<cc>_geo.py` reading
@@ -37,6 +42,38 @@ bases, joins, placement and the build tail. Survey and census-table traps are in
 - **A second boundary source for part of a country fails an area test when right.** OSM's Karachi districts run out to
   sea (IoU 0.588 on a correct pairing): assert the grid people the second source leaves uncovered. Caught by:
   `sources/pk_2023_geo.py::main`. Example: `pk`. Detail: spec §12 "WHEN ONE PART OF A COUNTRY NEEDS A SECOND BOUNDARY SOURCE".
+
+- **A boundary file newer than the census draws a later district as its own feature.** COD's Seychelles
+  file has Perseverance Island, a district only since 2022, and puts six inner islands in `Other Islands`
+  that the 2010 census counts with La Digue. The census's printed area per district says which unit absorbed
+  each (English River 1.38 km² alone, 2.32 merged, 2.3 printed); drop grid cells built up after the count.
+  Caught by: `sources/sc_geo.py::check_areas`, `::split_other_islands`. Example: `sc`. Detail: `sources/sc.md` §5.
+
+- **A survey's capital stratum can be a commune the newer census no longer counts.** Togo's Afrobarometer
+  samples the old commune of Lomé; the 2022 census counts 13 new communes, and COD-AB draws the old commune
+  with two canton pieces of the same names left outside it. Rebuild the count from the new communes
+  (Golfe 1-5) and let Kontur pick the polygon against the national ratio (0.90x on the commune alone, 1.12x
+  with the pieces, 1.13x nationally). Caught by: `sources/tg_geo.py::main` (`LOME_KONTUR_TOL`). Example:
+  `tg`. Detail: `sources/tg.md` §3.
+
+- **A district reform after the census can usually be undone one level down.** COD-AB Sierra Leone
+  draws 2017's Karene and Falaba but keeps the pre-reform chiefdoms whole, so the census's 14 districts
+  come back by pcode. Assert each district's chiefdom count against the census's own chiefdom table, and
+  use an older release (geoBoundaries' 14) as an IoU witness. A small coastal unit can fail that on one
+  island the older file leaves out (Tasso Island, 7.7 km2 of an 82 km2 district, IoU 0.878): exclude the
+  named ward from the comparison and assert its name, rather than lowering the bar for every unit. Caught
+  by: `sources/sl_geo.py::main` (`EXPECTED_CHIEFDOMS`, `WITNESS_EXCLUDE`). Example: `sl`. Detail:
+  `sources/sl.md` §5.
+
+- **An area test between two traced layers can pass where people are misplaced and fail where
+  nobody lives.** Brunei's geoBoundaries districts and mukims are separate Wikimedia tracings.
+  Belait passed an IoU test at 0.942 while one 42.5 km2 coastal strip holding 29,972 Kontur people
+  lay outside every Belait mukim; Brunei Muara failed at 0.831 on river that the district tracing
+  leaves out. Compare Kontur people per unit on each layer against the census (districts 0.96x to
+  1.01x; mukims dissolved to districts 0.71x for Belait, 25,130 people in no district), and keep the
+  worse layer for membership only. Caught by: `sources/bn_geo.py::main` (membership by majority
+  area, the per-district Kontur band); the two-layer comparison is a scratch script, Not shared
+  yet. Example: `bn`. Detail: `sources/bn.md` §5.
 
 ## Joins
 
@@ -98,6 +135,27 @@ bases, joins, placement and the build tail. Survey and census-table traps are in
   58%, 15.6 km south), and real cores hit the cap too. Run `python kontur_cap.py <cc>` before scattering and add a
   `kontur_cap.csv` row per block (`real`, `capped`, `unreviewed`); an unlisted block at the cap stops the scatter. Caught
   by: `kontur_cap.py::apply`, from `scatter.py::main`. Example: `uz`. Detail: spec §12 "KONTUR'S DENSITY CAP MAKES FALSE CITIES".
+- **A town list can be too thin to review cap blocks against.** GeoNames gives Yemen 9,134 places with
+  a population and none for district towns such as Lawdar and Ja'ar. Where the population table is by
+  district, pair each block's peak with its district: a block of two to four hexes holding most of a
+  rural district's people, with no settlement of known size within 5 km, is false. Caught by: Not
+  checked yet (scratch review; the method and the 69 rows are in `sources/ye.md` §9). Example: `ye`.
+- **Kontur can put a fifth of a country in the wrong county, and a province-level check cannot see it.**
+  Iran's grid drew Sarvestan (census 38,114) at 1.78 million and Shiraz county at two-thirds of its census,
+  18.3% of Iran in the wrong county, with 78 blocks at the cap; capping blocks leaves the false weight in
+  their ramps. Where a census county table exists on the boundary file's pcodes (COD-PS ADM2 is often the
+  census itself: assert its sums against the counted units), compare Kontur per county and, if it is off,
+  calibrate each hex to its county total. Caught by: `sources/ir_geo.py::read_counties`, `::main` (step 4);
+  no shared helper. Example: `ir`. Detail: `sources/ir.md` §5.
+- **A Kontur extract can stop at a claimed border, and the grid holds people the census leaves out.**
+  Kontur's `PS` extract has no hexes in the part of Jerusalem Israel annexed (the `IL` extract holds
+  350,549 people there), and both grids model the Israeli settlements, which the Palestinian census
+  does not count (Ramallah & Al-Bireh read 1.85x the census before correction). Read every extract
+  that touches a disputed line and de-duplicate on `h3`; take a population the census excludes out of
+  the weights with the other side's own counts, and size a disc for any unit that is only a
+  placeholder polygon (CBS draws 119 small localities at 0.008 km2). Witness it with a third point
+  layer: the weight near the census's own communities must rise. Caught by: `sources/ps_geo.py::main`
+  (the per-extract table, witness 4), `::settlement_units`. Example: `ps`. Detail: `sources/ps.md` §6.
 - **Administrative units own water.** `water.py::clip` removes OSM's sea; a unit losing over 95% (`KEEP_WHOLE_ABOVE`)
   stays whole. Lakes are not removed: count dots in HydroLAKES, and read a cover of one polygon per unit (Bangladesh 544
   for 544) as water inside units. Caught by: `water.py::_keep_whole`; lakes only `sources/gh_geo.py::_drop_lakes` (a
@@ -116,6 +174,14 @@ bases, joins, placement and the build tail. Survey and census-table traps are in
 - **A country missing from `country_shapes.py` hands its legend to a neighbour.** Auto falls back to the dot tally. The
   script stops on a registered country Natural Earth lacks: add `ISO` or `FROM_UNITS` (a territory inside its sovereign)
   before registering. Caught by: `country_shapes.py::main`. Example: `bq`. Detail: spec §12 "Finishing".
+- **A territory inside its sovereign's data can draw with no outline.** Australia's Norfolk,
+  Christmas and Cocos SA2s are in `au.csv` with dots, but `country_shapes.py` emits one Natural Earth
+  feature per code (`if cc in seen: break`), so `Indian Ocean Ter.` (`ISO_A2_EH` AU) is skipped and
+  Norfolk Island is a separate `NF` feature nobody registered. Åland is the same shape inside `fi`
+  (FI200 in `fi.csv`, an unregistered `AX` feature; sources.md §scout-2026-09-15-europe). List the Natural Earth features a
+  country's dots fall in before calling it built. Caught by: Not checked yet (a dots-outside-outline
+  count belongs in `tools/built_countries.py --check`). Example: `au`. Detail: `sources.md`
+  §scout-2026-09-14-asia-oceania.
 - **The tail rewrites whole-map files.** Run `tools/build_tail.py --id <sid>` (lock, derived country list, `--coarse`,
   `coverage.py` last) after scattering both editions; a lattice on a page open mid-build is not corrupt data. Caught by:
   `tools/build_tail.py::main`, `tools/built_countries.py --check`. Example: `gh`. Detail: spec §12 "Finishing"; `COMMANDS.txt` 10-12.
@@ -153,10 +219,10 @@ Still no shared form, so copy from the worked example: name folds, the Kontur ba
 - Anita 2026-09-03 (spec §4.1a): leftover dots follow a Hilbert carry, never the top n. Already in `scatter.py`.
 - Anita 2026-09-05 (spec §8.2c-i): `KEEP_WHOLE_ABOVE = 0.95`, a known compromise. Does not rule out a per-region value.
 - Anita 2026-09-06 (`country_shapes.py` `CLIP`): the wash leaves out territory the source does not cover. The wash only.
-- Anita 2026-09-08 (spec §14.18): disputed land goes to its de facto administrator. Occupied Ukraine is ask 016, open.
+- Anita 2026-09-08 (spec §14.18): disputed land goes to its de facto administrator. Ukraine's occupied oblasts stay drawn from pre-war rounds (ask 016).
 - Anita 2026-09-08 (ask 003): mixed vintages in one country are fine if the method is sound. Tibet was left on size alone.
 - Anita 2026-09-08 (ask 001): Egypt at governorate, the instrument's ceiling. Decides nothing for other countries.
 - Anita 2026-09-14 (ask 014): Japan not left as one national unit; 1996 may allocate. Japan only.
-- Anita 2026-09-14 (`queue.md` night): one Christian share for Zanzibar, for safety. Chad (017), Burkina Faso and Mali (018) open.
+- Anita 2026-09-14 (`queue.md` night): one Christian share for Zanzibar, for safety. Chad (017), Burkina Faso and Mali (018) drawn at the published grain.
 - Kontur cap 2026-09-14 (`queue.md` evening): six blocks capped, method delegated; the listed follow-ups are undecided.
 - Standing (`AGENT_BRIEF.md`, spec §14): whether a country may be drawn at all is Anita's; raise it, do not decide it.

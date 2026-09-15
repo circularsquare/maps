@@ -80,6 +80,16 @@ the sample can never grow.
   dict passed the held-out check more cleanly than the truth (+0.9870 against +0.9866). Require each LiTS
   label to abbreviate exactly one COD Russian name, token by token. Caught by: `kg_geo.lits_decode_witness`
   (Kyrgyzstan only; a new country needs its own). Detail: `sources/kg.md` §9.5.
+- **A minority's survey geography can be fieldwork, and the ethnicity item shows it.** Belarus's
+  Catholics come out Gomel 18%, Grodno 11%; the same file's `q923` Poles are 8.2% of Gomel against
+  the 2019 census's 0.19% and 3.9% of Grodno against 21.7% (rank -0.21), with Gomel's Catholics
+  from five interviewers. Cross `q922`'s minority with `q923` against a census nationality table
+  by unit before trusting either. Caught by: `by.py::ethnicity_witness` (Belarus only; copy it).
+  Detail: `sources/by.md` §3.
+- **`region_name` can spell one unit two ways.** Belarus has `Gomel'  region` (double space) and
+  `Grodno region ` beside the clean forms, and `lits.load`'s end-strip leaves Gomel' as two units.
+  Collapse internal spaces and assert the raw set. Caught by: `by_geo.LITS_RAW`. Detail:
+  `sources/by.md` §5.
 - **The split is on PSUs, so PSUs must nest in units.** Splitting rows would split a 20-household cluster
   and count it twice. Caught by: `lits._matrices` stops if a PSU spans two units.
 - **Adults only, and the lean is measurable.** Kyrgyzstan's under-18 share against drawn Orthodoxy is r =

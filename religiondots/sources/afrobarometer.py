@@ -655,6 +655,72 @@ def build(df, nat, large, small, pop, units, unit_col="geo_id", cat_col="categor
     return pd.DataFrame(rows, columns=["geo_id", "source_category", "count", "basis_note"])
 
 
+def round_within_rows(m):
+    """Largest-remainder rounding inside each row, so every unit total stays exact.
+
+    Lifted from `sources/tz.py` and `sources/ng.py` on 2026-09-14 for `sources/cm.py`; those two
+    keep their own copies, which are the same arithmetic.
+    """
+    out = np.zeros(m.shape, dtype="int64")
+    for i in range(m.shape[0]):
+        row = m.iloc[i].to_numpy(dtype=float)
+        target = int(round(row.sum()))
+        base = np.floor(row).astype("int64")
+        short = target - int(base.sum())
+        if short:
+            base[np.argsort(-(row - base))[:short]] += 1
+        out[i] = base
+    return pd.DataFrame(out, index=m.index, columns=m.columns)
+
+
+def compose(df, nat, units, cats, carried, unit_col="geo_id", cat_col="category"):
+    """Per-unit shares as a closed partition: carried categories at the unit's own share, the tail
+    by spec §12's small-category rule. `sources/tz.py::compose` with the category list passed in
+    and no standouts; lifted 2026-09-14 for `sources/cm.py`.
+
+    The tail is the residual (national proportions inside what the carried categories leave)
+    unless that would draw a tail category at `stability.SMALL_CATEGORY_MULTIPLE` or more of its
+    national share in a unit where the survey found none of it; then the tail goes FLAT (national
+    shares everywhere, carried shares scaled to fill). Returns (frame, own, nraw, flat).
+    """
+    import stability as _stab           # this module has a function called `stability`
+
+    by = df.groupby([unit_col, cat_col])["w"].sum().unstack(fill_value=0.0)
+    by = by.reindex(index=units, columns=cats, fill_value=0.0)
+    own = by.div(by.sum(axis=1), axis=0)
+    nraw = df.groupby([unit_col, cat_col]).size().unstack(fill_value=0)
+    nraw = nraw.reindex(index=units, columns=cats, fill_value=0)
+
+    fixed = pd.DataFrame(0.0, index=units, columns=cats)
+    for c in carried:
+        fixed[c] = own[c]
+    tail = [c for c in cats if c not in carried]
+    tail_nat = float(sum(nat[c] for c in tail))
+    frame = fixed.copy()
+    remainder = 1.0 - fixed[carried].sum(axis=1)
+    for c in tail:
+        frame[c] = remainder * nat[c] / tail_nat
+    mult = remainder / tail_nat
+    print("\n  spec §12 small-category rule: the residual's multiple of national share, in units "
+          "where the survey found none of that category:")
+    rows, worst = _stab.residual_multiples(mult, nraw == 0, tail)
+    for c, u, m in rows:
+        print(f"    {c:<30} worst {m:.2f}x in {u} (found none there; national "
+              f"{100 * nat[c]:.2f}%)")
+    flat = worst is not None and worst[2] >= _stab.SMALL_CATEGORY_MULTIPLE
+    if flat:
+        print(f"    {worst[0]} at {worst[2]:.2f}x in {worst[1]}: 2x or more, so the tail goes FLAT")
+        scale = (1.0 - tail_nat) / fixed[carried].sum(axis=1)
+        frame = fixed.mul(scale, axis=0)
+        for c in tail:
+            frame[c] = nat[c]
+    else:
+        print("    under 2x everywhere, so the tail stays the residual")
+    if (frame.sum(axis=1) - 1.0).abs().max() > 1e-9:
+        raise SystemExit("a unit's shares do not sum to 1")
+    return frame, own, nraw, flat
+
+
 def main():
     if "--fetch" in sys.argv:
         fetch()

@@ -9,9 +9,16 @@ asked religion; boundaries, name joins, population bases and placement are in `p
 - `mz` Mozambique: per-province xlsx on INE's retired Plone site, found by a Wayback CDX prefix query (§9df, §9dy).
 - `cg` Republic of the Congo: Wayback `id_` copy of a squatted domain's PDF; the form's codes fix the column order (§9dv).
 - `gn` Guinea: one-decimal shares by région times printed populations, rescaled to UNSD (§9dh).
+- `ir` Iran: SCI's 1395 yearbook table in counts, Persian digits in the text layer, the bold national row a picture (§ir-2026-09-14).
 - `zm` Zambia: PDF tables with two wrong column headers, settled by the office's analytical report (§9db).
 - `pk` Pakistan: PBS Table 9 PDFs under `wp-content/uploads/`, right-aligned columns read by drawn rules (§9du).
-- `td` Chad: shares by région from a Wayback copy; animist offered beside no religion (built, held on ask 017).
+- `td` Chad: shares by région from a Wayback copy, raked to two printed margins; animist offered beside no religion; COD's provinces rebuilt to 2009 on the office's areas (sources.md §td-2026-09-14).
+- `bf` Burkina Faso: annex counts by province on a retired tree, equal to UNSD, summed by région to a second annex table; geoBoundaries because COD-AB moved to a 2025 reform (sources.md §bf-2026-09-14).
+- `sl` Sierra Leone: one-decimal shares by district on printed district totals, scaled to the household population; no national count in persons exists, so no rescale; a misprinted national row pinned (sources.md §sl-2026-09-15).
+- `sn` Senegal: one-decimal shares by région with the Sufi brotherhoods as codes, on printed populations; a cell printed in the wrong column, settled by a regional report in counts, which also draws Diourbel at département (sources.md §sn-2026-09-15).
+- `bn` Brunei: counts by district in a workbook and an annex PDF, both only on Wayback (one capture a 1 MiB fragment), equal to UNSD; the form's Hindu folded into Others (sources.md §bn-2026-09-15).
+- `gi` Gibraltar: report PDF, counts by residential area, drawn as one unit on 20 Kontur hexes; the 78 enumeration areas rebuild every area and place one institutional EA the appendix does not (sources.md §gi-2026-09-15).
+- `ps` Palestine: counts by governorate in a bilingual PDF read by English row label; three nested universes (Palestinians counted, everyone counted, plus the estimate) settle East Jerusalem (sources.md §ps-2026-09-15).
 - `pw` `ck` `tv` and eight more: UNSD table 28 is the whole source (`sources/micro.py`); `vg` `aw` in `sources/terr.py`.
 - `pe` Peru, `ni` Nicaragua: REDATAM. `et` Ethiopia: USCB geodatabase (also `bd`, `jm`, `vc`, `cf`, `pk2017`).
 - `lc` Saint Lucia: questionnaire catches a mislabelled column. `cv` Cabo Verde: UNSD `Unknown` is the under-15s.
@@ -33,7 +40,8 @@ asked religion; boundaries, name joins, population bases and placement are in `p
 - **A negative from one publication is not a negative for the country.** Zambia, Mozambique, Guinea and
   Guinea-Bissau were closed on one release or a volume title, then drawn from the same office. Open each volume's
   table list (the structure volume first in francophone Africa), newer and older censuses, per-province series,
-  the national-language tree; record what was asked, of what, when. Caught by: Not checked yet
+  the national-language tree, and the national statistical yearbook (Iran's 1395 census tree has no religion
+  topic; the 1395 yearbook's population chapter prints it by province); record what was asked, of what, when. Caught by: Not checked yet
   (`WORKFLOW_PLAN.md` item 8). Detail: spec §12 "No country is closed for good", "A VOLUME'S TITLE IS NOT ITS TABLE LIST".
 - **UNSD table 28 is a floor and a transcription.** Absence proves only nothing was forwarded. A row can be the
   under-15s (Cabo Verde) or collective households (Guinea); a value can be a typo (Burundi 494,533 for 484,533)
@@ -95,6 +103,41 @@ asked religion; boundaries, name joins, population bases and placement are in `p
   (`sources/jp_checks.py`). Caught by: `sources/fetch_checks.py::image_pages`; no reader calls it yet (belongs in
   each PDF reader). Detail: spec §12 "A PDF CAN
   HAVE A TEXT LAYER FOR ITS PROSE AND PICTURES FOR ITS TABLES".
+- **A printed 0.00% religion non-response means the blanks went somewhere.** A form with no
+  non-response code and a report printing none leave blank answers inside a real code. Cross another
+  table's non-response row: Burkina Faso's age-not-recorded row (A5.7) is 18.7% `Autre` against 0.57%
+  overall. Say so in REVIEW and the `other.<cc>` description; do not move dots on a guess. Caught by:
+  `sources/bf.py::check` (A5.7's ND row); a shared check Not checked yet. Detail: `sources/bf.md` §4.
+- **A share table can have non-response prorated in, and say so only in another volume.** Mali's
+  RGPH5 prints no religion non-response anywhere in its religion chapters; the cultural volume's
+  annex A01 counts 48,746 `Non Déclaré`, and Tableau 2.01's counts are A01's with that row spread
+  in proportion to within a person. Record it, never undo it. And a one-decimal table can be
+  forced to close: all 21 rows of Tableau 6.13 sum to exactly 100.0, with the slack in the last
+  cells (Koulikoro `Autre religion` 0.5 against 0.36 at two decimals). Where two volumes print
+  one table, take each cell from the finer one. Caught by: `sources/ml.py::check` (the proration,
+  the closure, cell-by-cell against 2.03); a shared check Not checked yet. Detail: `sources/ml.md` §2.
+- **A sum that does not close can be three universes nesting.** PCBS's 2017 book prints Palestinians
+  counted (Table 3, the religion table), everyone counted (Table 2) and counted plus the
+  post-enumeration estimate (Table 25). The scout read Table 25's J1 + J2 = 435,483 against Table 3's
+  392,835 as a contradiction; it was the largest universe against the smallest. Name each table's
+  universe from its caption and footnote, then assert the order per unit before calling a table
+  inconsistent. Caught by: `sources/ps.py::check` (steps 5 and 6). Detail: `sources/ps.md` §2.
+- **Space as the thousands separator makes a row ambiguous as text** (`2 622 730 55`). Solve each
+  row's cell boundaries against its printed total, then compare digit strings with the transcription.
+  Caught by: `sources/bf.py::segments` with `check`; the solver lived in a scratch script, Not shared yet.
+- **A religion table can be multi-response, and suppressed small cells can hide inside `Other`.** The Faroe
+  Islands' 2011 congregation table counts a member of two bodies in both (a `More than one` row of 4,596 people),
+  so its categories sum 5,122 above its responses; its district cells blank the small bodies (`...`) and fold them
+  into each district's `Other congregations`, which sums to 585 over the districts against 106 nationally. Sum
+  each level's categories against its responses, and each category over the units against its national cell.
+  Caught by: Not checked yet (belongs in `sources/fo.py::check`). Detail: sources.md §scout-2026-09-15-europe.
+- **An appendix's list of what makes up each unit can be wrong for one piece, while the table closes.**
+  Gibraltar's Appendix 9 builds residential areas from enumeration areas and leaves institutional EAs
+  80-87 to the Institutions row; Table 42 counts EA 85 (70 people) in South District. Only rebuilding
+  every area from Table 43's EA rows shows it: Institutions short and South District over by EA 85's
+  row in all 19 cells. Rebuild each unit from the finer table, fix shared pieces from the units that
+  pin them, and let the shortfall name the piece. Caught by: `sources/gi.py::solve_shared`, `::check`.
+  Detail: `sources/gi.md` §3.
 - **pandas deletes a category named `None`**; all three cases were the no-religion row (Zimbabwe 1.26M). Read
   normalised files with `keep_default_na=False, na_values=[""]`; NFC labels both ways. Caught by:
   `tools/check_na_readers.py::main` (every `read_csv` of a file holding an NA string; `countries.py::_micro_counts`
@@ -114,6 +157,13 @@ asked religion; boundaries, name joins, population bases and placement are in `p
   religion, by the analytical report read every way: assert both ways. Guinea-Bissau's prose swaps two regiões.
   Caught by: `sources/gw.py::ethnic_witness`, `::check`, `sources/zm.py::check_relabel`. Detail: spec §12 "A
   TABLE'S OWN TOTALS FIND THE OFFICE'S TYPOS", "A PRINTED COLUMN HEADER CAN BE WRONG", "PROSE CAN SWAP".
+- **A cell can sit in the wrong column with every row still closing, and the national row can be
+  another tabulation.** Senegal 1988's Tableau 1.15 prints Diourbel's Khadriya under Layène (the
+  orders still sum to Musulmans), and its Ensemble row sums to 99.7 and misses the population-weighted
+  régions by up to 0.8 points. Weight the rows by the printed populations and compare each column: one
+  misplaced cell moves one column away (Layène 0.93 against 0.6, 0.60 swapped back), while a row
+  that disagrees in most columns is a different tabulation, so do not rake to it. A regional report
+  in counts settles both. Caught by: `sources/sn.py::check`. Detail: `sources/sn.md` §4.
 - **An unmapped category vanishes.** `EXCLUDED` holds universe rows and non-answers, each with a sentence and
   which way it leans (§3.5); `REVIEW` every arguable call, naming the node wanted. A parent beside children that
   sum to it on every row is a duplicate; else emit the remainder. Never map on the string alone. Caught by:
@@ -154,5 +204,8 @@ Import these, do not copy them.
   `la2015.py` still maps `unknown`); China stays `unknown`. A merged node is Anita's, undecided.
 - **002-za, 008-ug**: accounts are Anita's to make; UBOS: extract what is needed, delete the rest.
 - **003-cn**: mixed vintages in one country are fine when the method is sound; Tibet was declined on size only.
-- **017-td, 018** (open): Chad, Burkina Faso, Mali held on §14 safety. Raise such cases; do not decide them.
+- **017-td, 018** (2026-09-14): draw Chad at 22 régions, Burkina Faso at 45 provinces, Mali at 20 régions, as
+  published. Other §14 safety cases are still raised, not decided.
+- **023-ir** (2026-09-14): draw Iran's 31 provinces; a small religion with no census answer sitting in other does
+  not hold a build.
 - **Pakistan** stays at district by Anita's choice (`sources/pk.md` §9); not a rule for other countries.

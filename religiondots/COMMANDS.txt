@@ -46,7 +46,8 @@ Run in order.  Every step, every time, even when only one country changed.
                                            #   work this directory at once; on 2026-09-08 one
                                            #   spent an hour on Peru that another had already
                                            #   finished, and clobbered its sources/pe.py.
-                                           #   Pick from queue.md, then claim it:
+                                           #   Pick from its free list, which it reads
+                                           #   from queue.csv, then claim it:
                                            #     python tools/claim.py take <cc> --id <sid>
                                            #   <sid> is the last component of your scratchpad
                                            #   path.  Release with `done <cc> --id <sid>`.
@@ -72,7 +73,10 @@ Run in order.  Every step, every time, even when only one country changed.
    1. python sources/<cc>.py --fetch       # -> data/normalized/<cc>.csv, with its own checks
    2. python sources/<cc>_geo.py --fetch   # -> data/geo/<cc>/, units + placement grid
    3. write taxonomy/<cc><YYYY>.py         # the mapping, with EXCLUDED and REVIEW
-   4. add the entry to countries.py        # counts=, place=, place_weight=, note_public=
+   4. write countries/<cc>.py              # the entry, and append <cc> to ORDER in
+                                           #   countries.py; the loader stops if a file and
+                                           #   ORDER disagree.  counts=, place=, place_weight=,
+                                           #   note_public=
                                            #   AND how=, grain=, fill= if anything is
                                            #   derived, gap= if part of the country is not
                                            #   drawn, and gap_share= beside it, which

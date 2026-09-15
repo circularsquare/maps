@@ -17,7 +17,7 @@ survey that does (MICS `HC1A` included); Uruguay, the Dominican Republic and Hon
 - `hn` Honduras: drawn from ENDESA-MICS 2019; LAPOP 2012/2014/2018/2023 is the cross-check.
 - `do` Dominican Republic, `uy` Uruguay: drawn from office surveys; LAPOP is the cross-check (`do.py::cross_check`, `uy.py::cross_check`).
 - `ht` Haiti: drawn from ECVMAS 2012; LAPOP refused, its `prov` does not decode (r=+0.23 against COD-PS).
-- `ve` Venezuela: queued; single-country files 2010-2016/17, `PROV` 16xx state codes, expect thin states.
+- `ve` Venezuela: drawn from LAPOP's single-country files 2010-2016/17, 21 of 25 states, decoded by municipality name; Catholic and Witnesses at 2010's six design regions.
 
 ## Loading it
 - **Grand merge**: `data/raw/lapop/Grand_Merge_2004-2023_LAPOP_AmericasBarometer_v1.0_FREE.dta` (1.12 GB,
@@ -91,6 +91,18 @@ survey that does (MICS `HC1A` included); Uruguay, the Dominican Republic and Hon
   `sources/stability.py`. Caught by: `co.py::main` and `bo.py::main` stop when a verdict changes. Detail:
   spec §12 "ONE SPLIT-HALF IS A DRAW", "A RANK TEST CAN BE PASSED BY A COLUMN THAT IS MOSTLY ZERO",
   "EVERY DISTINCT HALVING MEANS ALL OF THEM", "A CHI-SQUARE CANNOT VETO A CLUSTER".
+- **A permutation p near 0.05 on 2,000 draws is the seed's verdict.** The Monte Carlo error at p=0.05
+  on 2,000 draws is about 0.005. Venezuela's Catholic at the states was p=0.0500 on seed 0 (a pass)
+  and 0.045-0.058 on seeds 1-5; on 20,000 draws it is 0.0524, a fail, and Catholic went to the region
+  level. When a verdict's p is within about 0.01 of alpha, rerun on 20,000 draws before asserting it;
+  the test and the bar do not change. Caught by: `ve.py::STAB_PERM` (20,000); `co.py` and `bo.py`
+  still run 2,000 and were not re-measured. Detail: `sources/ve.md` §7.
+- **Drawing the big answer at a coarser level than the small ones can reverse the small ones.**
+  Venezuela's Catholic at the region leaves a state more Catholic than its region a large remainder,
+  filled at national proportions: Falcón's believers without a church drawn 11.7% against 1.3%
+  measured, Spearman of drawn against measured +0.13 (it was +0.80 with Catholic at the state). The
+  2x rule does not see it, because the survey found some in most states. Caught by: the reversal
+  print in `ve.py::main` and `bo.py::compose`, not asserted. Detail: `sources/ve.md` §8.
 - **Units missing from waves cannot be ranked, and each kind is treated differently.** Tabulate waves per
   unit first. Never offered a code or never sampled (Galápagos has no code 920; Colombia's seven): blank,
   in `gap=`. Sampled in one round: its design region's shares when the region passes a leave-one-out

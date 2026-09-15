@@ -1445,6 +1445,32 @@ The complement of §3.10: rather than splitting a bucket we cannot split, shrink
   population at output-area level. The goal is to shrink the bucket where evidence allows and label
   it honestly where it does not, not to drive it to zero.
 
+### 3.12 A "no religion" box that may also hold traditional religion — DECIDED 2026-09-14
+
+Laos, Mozambique and China had drawn the same kind of box three ways, and Anita asked for a written
+procedure. Her bar, 2026-09-14: *"did we find that like most of these people are traditional? like
+over 80%? if so then yeah totally chill."*
+
+1. **Read the questionnaire's wording for the box.**
+2. **If the form offers traditional or animist religion as its own answer,** "no religion" is
+   `unaffiliated` (Guinea-Bissau, Chad).
+3. **If the box lumps no religion with animist or traditional,** or the source defined religion so
+   that animism cannot be answered, draw it as `unknown` (China's treatment, §6.3a-ii) until step 4
+   settles it.
+4. **Look for a national source that asks the two separately,** such as MICS/LSIS, DHS,
+   Afrobarometer, Pew, or census prose. If one reading is at least 80% of the box, draw the box as
+   that reading and cite the source; otherwise it stays `unknown`. Say whether the source measures
+   what people call themselves or what they practise.
+5. **Record the split source and the percentage** in `sources/<cc>.md` and the mapping's `REVIEW`.
+   `tools/check_no_religion.py` checks that both are there.
+
+Applied: Laos's box goes to traditional religion (LSIS, about 99.8% animist; the redraw is queued in
+`queue.md`); Mozambique's to `unaffiliated` (Afrobarometer and Pew, 93-98% no religion as a
+self-description; drawn 2026-09-14, `sources.md` §9dy). Not settled by the rule: which figure counts
+toward the 80% when a self-description source and a practice source disagree (`ask/RULINGS.md`
+marks this ambiguous). The playbooks carrying it: `census_table`, `afrobarometer`, `arabbarometer`,
+`dhs_mics`.
+
 ## 4. The size problem — §4.1 and §4.3 DECIDED, §4.2 built
 
 Christianity is ~2.4 billion. A Carthusian charterhouse is ~20 monks. Eight orders of magnitude,
@@ -4065,7 +4091,8 @@ sources/<id>.py              one fetch+normalise per source, in one of two shape
    sites    (§4.4)           → data/sites/<id>.csv
    columns: lon, lat, node_id, kind, name, year, source_id, note
 sources/<id>_geo.py          units + placement layer                    → data/geo/<id>/
-countries.py                 per country: counts=, place=, place_weight=, note_public=, gap=
+countries/<cc>.py            per country, one file each, loaded by countries.py in its ORDER:
+                             counts=, place=, place_weight=, note_public=, gap=
 scatter.py                   units × placement weights → atomic dots, one per edition  §4.1a
 buffers.py                   → data/buffers/<cc>.bin   the unmerged scatter             §4.2d
 tiles.py                     → the merged pyramid + rings + counts.json, as PMTiles     §4.2a
@@ -6044,17 +6071,22 @@ Design questions for Anita are in `todo.txt`. The ones that are mine to resolve 
 
 ## 12. Adding a country — the playbook
 
-**This section is for whoever adds the next country, and it is meant to be added to.** If you find a
-trap that is not here, put it here before you finish, even if it seems obvious in hindsight — most of
-the entries below cost an hour each and would have cost five minutes to read. Keep it to things that
-*generalise*; a fact about one country belongs in its `sources/<cc>.md`. As the list of easy countries
+**This section is for whoever adds the next country.** Since 2026-09-14 a new trap about a route
+goes into that route's playbook in `playbooks/` (or `geography.md` when every route hits it), with
+the check that catches it; only a general working rule is added here, in the short form the entries
+below use. Most of the entries below cost an hour each and would have cost five minutes to read.
+A fact about one country belongs in its `sources/<cc>.md`. As the list of easy countries
 shrinks the rate of new tricks will drop, which is fine — **a short section that stays true is better
 than a long one that rots.**
 
-`COMMANDS.txt` has the runnable checklist. This is the reasoning behind it. **`playbooks/` has the
-short, current form of this section**, one file per route (`census_table`, `ess`, `lapop`,
-`afrobarometer`, `arabbarometer`, `cab`, `lits`, `wvs`, `dhs_mics`) plus `geography`, written
-2026-09-14. Read yours first. Where a lesson below disagrees with a playbook, the playbook was
+`COMMANDS.txt` has the runnable checklist. **`playbooks/` has the short, current form of this
+section**, one file per route (`census_table`, `ess`, `lapop`, `afrobarometer`, `arabbarometer`,
+`cab`, `lits`, `wvs`, `dhs_mics`) plus `geography`, written 2026-09-14. Read yours first. Since the
+trim of 2026-09-14 this section holds current rules only: an entry a playbook covers is cut to its
+rule, its check and its playbook, a reversed one says SUPERSEDED in its heading, and the full text
+of every cut entry, cases and reasoning, is kept word for word and in order in
+`spec_archive/12.md`. Headings did not change, so a playbook's `spec §12 "..."` citation finds the
+entry both here and in the archive. Where a rule here disagrees with a playbook, the playbook was
 written later from the current code.
 
 **YOU ARE PROBABLY NOT THE ONLY SESSION ADDING A COUNTRY RIGHT NOW, AND THAT IS BY DESIGN.** Anita
@@ -6062,7 +6094,7 @@ runs two or three agents at a time on this directory — her words, 2026-09-07: 
 running 2-3 agents at a time to add countries."* So treat all of this as the normal working state
 rather than as something to investigate or stop for:
 
-- **`countries.py`, `taxonomy/branches.py`, `spec.md`, `sources.md` and `COMMANDS.txt` will change
+- **`countries.py`'s `ORDER`, `queue.csv`, `taxonomy/branches.py`, `spec.md`, `sources.md` and `COMMANDS.txt` will change
   under you**, and your tooling will say so on an edit that applied perfectly well. Make surgical
   edits against unique anchors — they fail loudly if the anchor moved, which is what you want —
   and re-read before any edit that depends on surrounding context. **Never rewrite a shared file
@@ -6161,105 +6193,34 @@ force against the old one.
 
 ### The shapes of failure that cost the most
 
-Almost everything below is one of five things. If you are debugging and nothing here matches, ask
-which of these it is:
+Almost every trap in this section is one of these five. If nothing else matches, ask which one it
+is. The cases (Connecticut, Jordan, Nicaragua, Peru, Fiji) are in `spec_archive/12.md`.
 
-1. **A silent drop.** A join, a filter or a mapping quietly removes rows and every remaining total
-   still reconciles. Connecticut, the `None` category, the unmapped remainder, `--countries` short
-   lists. **Print both sides of every join and assert the count.**
-   **AND THE WORST VERSION IS A SELECTOR WHOSE EMPTY RESULT IS A LEGITIMATE ANSWER, which is
-   Jordan** (§9cq). A pooled multi-country survey is read wave by wave with *"take this country's
-   rows; if there are none, this wave did not field it, `continue`"* — a `continue` that is
-   correct most of the time and therefore never looked at. The Arab Barometer's wave II, alone of
-   ten, prints its country value labels as `8. Jordan`, `5. Egypt`, `17. Saudi Arabia`, with the
-   numeric code repeated inside the label, so an exact-match filter selected nothing and the whole
-   wave vanished **from every country ever built from that file**: 1,188 Jordanians, 1,219
-   Egyptians, all with the religion variable, the geography variable and a weight. Nothing
-   downstream disagrees, because a missing wave is a smaller pool and not a wrong one.
-   **The rule: where "no rows" is a meaningful outcome rather than an error, count the outcomes
-   and assert the count.** The same shape is any *"skip the years/regions/files this source does
-   not have"* loop.
-   **AND THE COUNT HAS TO BE TAKEN BEFORE THE FILTER, WHICH IS WHERE THE FIRST ATTEMPT AT THIS
-   WENT WRONG** (§9cq, `sources/jo.md` §10). `expect_waves=` was written as exactly that guard
-   and was recorded here as costing nothing. It also could not fail: it counted the waves in the
-   frame it had **already filtered to the waves the module asked for**, so it compared the
-   selection against itself. It could catch a wave vanishing from a list it was reading anyway,
-   and never a wave sitting in the file that the pool did not ask for — which is the wave II
-   failure itself, and the re-release its own docstring promised to catch. Repaired 2026-09-09 by
-   reading the files a second time, cheaply and independently, before any filter runs, and by
-   requiring a pool narrower than the files to name what it leaves out and why.
-   **The general form: a check is only as good as the widest thing it reads, and if the check
-   and the thing checked come from the same filtered object it is a tautology however carefully
-   it is worded.** A tautology where a guard should be is worse than no guard, because it is
-   read as coverage by everyone downstream — this project has now written three of them.
-   **So construct the failure the guard exists for and watch it fire.** If it cannot be made to
-   fire, that is the finding, and it takes about ten minutes.
-   **THE SECOND HALF OF IT IS THAT A GUARD BUILT ON A NORMALISER IS BLIND WHERE THE NORMALISER IS
-   NARROW.** That survey already had an assertion against one answer arriving under two spellings,
-   and it works by folding both and comparing — so it can only see collisions its fold can
-   produce. `1. muslim` and `Muslim` do not fold together, so Islam would have pooled as two
-   categories in silence, with every total still adding up, past the check written to catch
-   exactly that. **A deliberately narrow fold is right** (widening it far enough to merge
-   `refused` with `Refused to answer` would also merge Lebanon's `Something else: SPECIFY____`
-   into its `Other`, which is two answers and not one) **— but its narrowness is a blind spot and
-   not just a virtue, so ask what shape of difference it cannot represent.** Here the answer was
-   the same ordinal prefix that had just broken the country column, one column across.
-2. **A confident wrong pairing.** A key matches almost everything and pairs some units with the wrong
-   polygon. Sri Lanka, Vietnam's two code spaces, Ghana's `TMA`, Serbia's two Palilulas. **A shared
-   code is trustworthy only as far up the hierarchy as you have independently verified it.**
-   Nicaragua is the sharpest case (§9ay): COD's pcode is `NI` + INIDE's own code and **145 of 153
-   match**, but ten municipalities were renumbered between the census and the boundary vintage and
-   **five of them collide instead of going missing** — INIDE's `9105` is Waspám and COD's `NI9105`
-   is Mulukukú, so a code join moves a 43.6% Moravian border municipality inland and every total
-   still reconciles, because a permutation of units preserves every sum.
-   **AND THE COUNTER TO IT IS FREE WHENEVER A DRAWN CATEGORY HAS A KNOWN GEOGRAPHY.** Names and
-   codes both come from the same two offices and can be wrong together; *the Moravians being on the
-   Caribbean coast is a fact about Nicaragua that neither office authored.* So after joining, assert
-   the category lands where it belongs — `ni_geo.py` checks the six most Moravian municipios against
-   COD's own centroid longitudes, which uses neither of the join keys. Malawi's Anglicans on Likoma,
-   Zimbabwe's Vapostori in Mashonaland and Belize's Mennonites in the north can all afford the same
-   assertion, and it is one line.
-   **BUT THE WITNESS MUST NOT ENCODE THE FACT THE MAP IS BEING BUILT TO DISCOVER, AND PERU IS WHY
-   THIS SENTENCE EXISTS** (§9bc). The Moravian check was rewritten for Peru's Adventists as *"the
-   most Adventist districts are the Puno altiplano"*, on the well-documented history of the 1898
-   Platería mission — **and it fired on a join that was correct.** Three of the ten came out 800 km
-   north in the Alto Mayo, which is Peru's *other* Adventist region. The tell, available in advance:
-   "the Moravians are one coastline" is a claim that there is **one** cluster, and Nicaragua's data
-   said so; "the Adventists are the altiplano" is a claim about **where** the cluster is, which is
-   exactly what the map was built to show. When you cannot make the weaker claim, use the form that
-   names nowhere at all: **religion shares are spatially smooth**, so correlate each unit's share
-   with its k nearest neighbours' and calibrate the threshold against random re-pairings of the same
-   shares on every run. Peru gets r=0.75 against a best of 0.11 over 200 shuffles, it is a dozen
-   lines, and it cannot be wrong about the country because it asserts nothing about it.
-   **AND "JOIN ON NAME" IS NOT THE RULE — "MEASURE BOTH AND SAY WHICH ONE IS CARRYING IT" IS.**
-   Nicaragua joins on name because its codes were renumbered; Peru joins on **code** because COD's
-   `adm3_pcode` is the census's own ubigeo, 1,870 of 1,872 pairs agree on the name outright, and a
-   name join would be the risky one there — Peru has many districts sharing a name across provinces
-   and disambiguating them would need the code. Two countries wired four days apart sit on opposite
-   answers. Whichever key you use, the other one becomes the check, and the file says so out loud.
-3. **A duplicated or missing level.** An extra tier hides inside the drawn one, or a parent's child
-   list is short. Serbia's `Grad`, India's towns, Indonesia's regencies. **Only the parent/child sum
-   sees either, and it has to be computed on every column.**
-4. **A response that is not what it claims.** HTTP 200 with a PNG, a JS alert, a stray byte, the wrong
-   file format, a zero-feature read. **Assert size, type and count, never the absence of an
-   exception.**
-   **AND FOR GEOMETRY, COUNT IS NOT ENOUGH — ASSERT THE MAGNITUDE. Fiji is why** (§9bd). It
-   straddles the 180th meridian, and three separate steps produced a file that opened, had exactly
-   the right feature count and exactly the right names while being geometrically absurd:
-   reprojecting the provinces to EPSG:4326 tore Cakaudrove, Lau and Macuata into **360-degree**
-   polygons; **nine of Kontur's own hexes ship torn** across the EPSG:3857 plane, so their
-   centroids computed to longitude ~0 and landed in the Atlantic and the Sahara at Fiji's
-   latitude; and "fix it by projecting into a Pacific CRS" **does not work, because pyproj does
-   not wrap longitude** — it moves the tear somewhere less recognisable. A centroid-in-polygon
-   join against any of those silently drops or mispairs units and every total still reconciles.
-   **The check that catches all three is two lines: compare the layer's bounding box against how
-   big the country actually is.** Fiji is about 5° wide; the first attempt came out 28,670 km
-   across. Add it wherever a country is near 180°, near a pole, or spans a UTM zone — and note
-   that the fix is arithmetic in degrees (shift negative longitudes +360 and join there), not a
-   cleverer projection.
-5. **A category that does not mean its label.** India's Annexure, Kenya's "Evangelical", Germany's
-   three church-tax boxes. **Nothing inside the data catches this. Read the whole list and check one
-   number you already know.**
+1. **A silent drop.** A join, filter or mapping removes rows and every total still reconciles:
+   print both sides of every join and assert the count. Where "no rows" is a legitimate outcome (a
+   wave a pooled survey did not field), count the outcomes before any filter runs. A check that
+   reads the object it checks is a tautology, so construct the failure and watch the guard fire;
+   and a guard built on a normaliser is blind wherever the fold is narrow. Enforced by:
+   `sources/arabbarometer.py::load` (`wave_coverage`, `omit=`), `arabbarometer.py::fold` (ordinal
+   prefixes, curly apostrophes). Playbook: `playbooks/arabbarometer.md`.
+2. **A confident wrong pairing.** A key matches almost everything and pairs some units wrongly. A
+   shared code is trusted only as far up the hierarchy as it was verified; the key not used becomes
+   the check, beside a witness neither key determines. The witness must not assume where a group
+   lives (Peru's altiplano witness fired on a correct join); spatial smoothness against shuffles
+   names nowhere. Enforced by: `sources/ec_geo.py::check_code_join`,
+   `sources/do_geo.py::check_code_join`, `sources/ni_geo.py::main`, `sources/pe_geo.py::main`.
+   Playbook: `playbooks/geography.md` (Joins).
+3. **A duplicated or missing level.** Only a parent/child sum, computed on every column, sees either
+   (Serbia's `Grad`, Indonesia's short child lists). Playbook: `playbooks/census_table.md`.
+4. **A response that is not what it claims.** Assert size, type and count, never the absence of an
+   exception. For geometry assert the magnitude too: a layer torn at the antimeridian has the right
+   count and names (Fiji); shift negative longitudes +360, because a Pacific CRS only moves the
+   tear. Enforced by: `sources/geo_checks.py::check_torn`, from `scatter.py::main`;
+   `sources/fetch_checks.py::check_body` for downloads. Playbooks: `playbooks/geography.md`,
+   `playbooks/census_table.md`.
+5. **A category that does not mean its label** (India's Annexure, Kenya's "Evangelical"). Nothing in
+   the data catches it: read the whole list and check one number you already know. Playbook:
+   `playbooks/census_table.md` ("Read the questionnaire").
 
 ### The order that avoids wasted effort
 
@@ -6277,1799 +6238,454 @@ which of these it is:
    lookup or a day's work — see the boundary section. It is the second question, not a later one.
 3. **Check the boundaries exist and join**, third. A source with no joinable geography is not a source.
    Do this before writing a normaliser, not after.
-4. Then normaliser → taxonomy → `countries.py` → scatter → buffers/tiles → docs.
+4. Then normaliser → taxonomy → `countries/<cc>.py` (and its code in `ORDER`) → scatter → buffers/tiles → docs.
 
 ### Finding the data
 
-**CHECK WHETHER A NEWER CENSUS HAS LANDED SINCE THE QUEUE ROW WAS WRITTEN, BEFORE PARSING THE ONE IT
-NAMES.** `queue.md` priced Moldova at 2,804,801 people and 12 categories, which is the **2014** census;
-the **2024** one had published final results and was better on every axis but one. Geography: 901 UATs
-against 35 raions, because 2014 published religion at raion level only. Coverage: 2014 enumerated
-2,804,801 against the office's own estimate of 2,998,235, so about one person in fifteen was never
-reached. Non-response: 0.75% against 6.88%. **What a newer census usually loses is category names** —
-2024 dropped Moldova's `Iudaism` and Lutheran columns into a residual, so no Jewish dot is drawn in
-Bessarabia. Weigh that against the other three rather than assuming either direction, and record the
-older figures in `sources/<cc>.md` if they name something the new one does not (§9bv).
+One line per rule; the cases and reasoning are in `spec_archive/12.md`. Playbook:
+`playbooks/census_table.md` (REDATAM, the Wayback Machine, bot walls, JavaScript portals, API
+indexes).
 
-**Try a machine-readable endpoint before anything else.**
-
-- **PxWeb.** `https://<host>/api/v1/<lang>/<db>/` returns a JSON tree you can walk. It is the
-  Nordic/Baltic standard and Estonia took three minutes against three days of hunting for Slovakia.
-  `POST` with `{"query":[...],"response":{"format":"json-stat2"}}` and `"filter":"all","values":["*"]`
-  to get everything. **It is not a Nordic thing** — North Macedonia's `makstat.stat.gov.mk` runs it and
-  sat listed as "unchecked" for a day while being one request away. Try `/pxweb/api/v1/en/` *and*
-  `/api/v1/en/` on any office before concluding anything.
-- **json-stat2 is a flat cube, not a table.** One `value` array in row-major order over the dimensions
-  in `id`, sizes in `size`. Read it as rows and you will silently transpose the data. Compute strides.
-- **Do not search a PxWeb tree with a depth-limited keyword walk.** North Macedonia's religion table is
-  five levels down and a bounded walk returned ZERO hits on a database that has it. Worse, a
-  *national-only* religion table sits in a sibling folder, so a shallow search finds the wrong one and
-  suggests the country publishes religion with no geography. **The same variable routinely appears at
-  several geographies in different folders** — enumerate the census branch in full and compare.
-- **A PxWeb ASP.NET HTML tree cannot be walked by following links.** Navigation is `__doPostBack` and
-  every folder page re-renders the same sibling list, so a link-follower returns nothing and the
-  database looks empty. The node ids are in the postback arguments if the API really is gone.
-- **A PxWeb 403 can be a CELL LIMIT, not an auth failure.** Ghana's religion table has six dimensions;
-  asking for all of them is 663,750 cells and PxWeb answers 403. Dimensions with `elimination: true`
-  return their totals when simply left out of the query, which is what was wanted anyway.
-- **REDATAM. Ask whether the office runs one BEFORE reading its PDFs** — added 2026-09-07 with
-  Nicaragua (`sources.md` §11x, §9ay), and it is the largest single resolution win in this file.
-  Many Latin American offices run CELADE's Redatam webserver over their own **census microdata**,
-  unauthenticated, and it will run an arbitrary tabulation program. Nicaragua **prints** religion
-  at 17 departments and **serves** it at 153 municipios and 2,579 comarcas, from the same website,
-  for the same census. Two things to take from a live instance:
-  **(a) the variable picker is a free dictionary.** `.../RpWebStats.exe/Frequency?BASE=<base>&ITEM=FREQPOB`
-  ships the person-variable list and the geography levels inline in the HTML, so *"does this census
-  ask religion, at what grain, in which vintage"* is two GETs — that is how Panama's five censuses
-  and Ecuador's six were closed. Note the `<option>` tags are often **unclosed**, so a regex
-  expecting `</option>` finds nothing and the page reads as empty.
-  **(b) the tabulation itself**, by POSTing `CMDSET=RUNDEF Job / SELECTION ALL / TABLE T / AS
-  AREALIST / OF <GEOLEVEL>, <ENTITY>.<VAR>` to `.../RpWebStats.exe/CmdSet?`; the reply names a
-  minted temp file to fetch. **A bad program answers `Tabla vacía` with HTTP 200** — §5a again, and
-  the shape that writes an empty csv. Two traps worth knowing: a shared host (`prod.redatam.org`)
-  does **not** namespace `BASE=` by country, so asking under the wrong CGI directory returns another
-  country's census with a 200 and no warning; and a deployment can be a CELADE **demo stub**
-  (`redatam.one.gob.do` serves only `NMIROLD`, "Nueva Miranda"). See [[reference_redatam_servers]].
-- **SDMX gives you the CODELISTS, which may be the thing you actually need.**
-  `/api/structure/<flow>/<version>` returned KSH's category labels in two languages and its full
-  geography hierarchy — parent chain included, so a settlement's county came off the source rather than
-  out of a boundary file. Recognise the shape: `dataflows`, `structure`, `version` in any combination
-  means SDMX. **Where a PxWeb tree has to be walked, an SDMX catalogue can be grepped** — Lithuania's
-  is one file listing 9,521 dataflows with bilingual names, so `religi|tikyb` enumerates everything the
-  office holds in a single pass.
-- **AND ONE PART OF AN API ANSWERING JSON SAYS NOTHING ABOUT THE NEXT.** Lithuania's catalogue is
-  XML-only — `/rest_json/dataflow/` 404s while `/rest_xml/dataflow/` returns 7.4 MB — while the *data*
-  is served as either. Try the other representation of the same endpoint before concluding it does not
-  exist.
-
-**A PROBE'S STATUS IS A CLAIM ABOUT A HOSTNAME, AND OFFICES GET RENAMED — FOUND 2026-09-07 WITH
-NEPAL.** `sources.md` §12 already says a lead's status is a claim about a *date*; this is the same
-mistake in space rather than time. Nepal's `censusnepal.cbs.gov.np` answers **200 with 18 bytes of
-`<p>...working</p>`**, and `cbs.gov.np` answers 200 with nothing at all. Two separate sweeps recorded
-Nepal as reachable-but-thin on that evidence and moved on. **The Central Bureau of Statistics had
-become the National Statistics Office**: `nsonepal.gov.np` is alive, its census results are on
-`censusresults.nsonepal.gov.np`, and what was there is 753 local levels and ten religions — the finest
-counting geography of any large Asian country on this map.
-
-Nothing redirected. **A placeholder is worse than a 404** for exactly this reason: a probe records it
-as *up*, so the country reads as "checked, and thin" rather than "not found yet". When an office's host
-answers with a holding page, or with an empty 200, **check whether the agency still exists under that
-name** before writing the country down — and follow the *organisation's* current site to its data host
-rather than trusting a hostname from an old note.
-
-**A wall is a fact about a host and a path, not about a country.** Four shapes of the same mistake,
-and every one of them nearly wrote off a country that was reachable:
-
-- **Test the specific host, then its siblings.** Lithuania's `osp.stat.gov.lt` returns Cloudflare's
-  challenge — that is the human web UI; the statistics are on **`osp-rs.stat.gov.lt`**, a plain SDMX
-  endpoint with no protection at all. Taiwan is the same with no tidy explanation:
-  `religion.moi.gov.tw` and `statdb.dgbas.gov.tw` time out on connect over both IPv4 and IPv6 while
-  `www.moi.gov.tw`, `ws.moi.gov.tw`, `segis.moi.gov.tw` and `data.gov.tw` all answer normally. There is
-  no rule to it — not UI vs API, not old vs new.
-- **The API prefix is not always under the UI prefix, and the wrong one can return 500 rather than
-  404.** Ghana's StatsBank interface is at `/pxweb/en/…`, so `/pxweb/api/v1/en/` is the obvious API
-  root; it returns **HTTP 500 on a PX-Web ASP.NET error page**, which reads as "the API exists and is
-  broken". It is at **`/api/v1/en/`**, with no `/pxweb`. **A 500 rendered in an application's own error
-  template is evidence about the ROUTE, not the feature** — it means the request reached the app and
-  the app did not recognise it, which is what a 404 says, dressed to read the opposite way. Equally, a
-  404 on a wrong path under the right host reads exactly like absence (Lithuania's probe missed by one
-  path segment: `/rest_xml/` instead of `/rest_xml/dataflow/`).
-- **Re-test a 403 before believing it.** KSH's was gone by the time anyone tried again, and a stale
-  "blocked" note reads as a dead end for months.
-- **But bot protection is a stop sign, not a puzzle.** census2021.bg returns 403 to scripted clients.
-  Do not iterate on headers — hand the URL to Anita, who will fetch it in a browser
-  ([[feedback_long_scripts]] is the same shape of hand-off). Same for anything Cloudflare-interstitial;
-  the Philippines came from the Wayback `id_` endpoint instead. **And a reactive wall SPREADS while
-  being probed** — see the KOSIS entry below — so pushing harder costs access rather than gaining it.
-  That is the practical reason this is a rule.
-
-**A statistical office often runs two sites, and they are found by different searches.**
-
-- **A shiny data portal is often a shell.** `podaci.dzs.hr`, `data.gov.sk` and `data.stat.gov.rs` all
-  return a JavaScript app, not data. The real files are usually on the *old* site (`dzs.gov.hr`) linked
-  from a "Popis 2021" page.
-- **A dissemination database is not a census results portal.** `data.stat.gov.rs` was written off as an
-  SPA shell, correctly, and it is the wrong site: Serbia's census results live on
-  **`popis2022.stat.gov.rs`**, a separate host listing every published table as a direct `.xlsx` under
-  `/media/<id>/`. Religion by municipality is 83 KB of it and needed no API. **Before concluding a
-  country is blocked, look for `popis`/`census`/`recensement` + the year as a HOSTNAME**, not only as a
-  path on the office's main domain.
-- **"A JavaScript app with no data endpoint" is a claim about the searcher, not the site**
-  ([[reference_spa_hidden_apis]]). Two cheap tests. **(1) Compare the 404s.** KSH's `/api/anything`
-  returns 88 bytes of `{"timestamp":…,"status":404,"path":…}` while every other unknown path returns
-  the same 2,180-byte HTML shell — a Spring Boot error body IS a live API namespace, and content-type
-  plus length distinguishes a router from a catch-all. **(2) Grep the bundle for `/api`.** KSH's four
-  routes were plain string literals in `app.js`, which one session had already concluded contained
-  nothing. `podaci.dzs.hr`, `data.gov.sk` and `data.stat.gov.rs` have never had this done to them.
-  **(3) SEARCH THE WEB FOR THE HOST'S OWN API PATHS**, added 2026-09-07 with Israel, where both tests
-  above FAILED: `census.cbs.gov.il/api/<anything>` returns the same 2,804-byte shell as every other
-  unknown path, so the 404 comparison says there is no router, and the site is Astro — the bundle is a
-  page component with no endpoint literals in it. The working route was found because a search engine
-  had indexed one `…/api/get-pdf?…` URL. The site never links to `/api/` from anywhere, so nothing on
-  it could have led there. **One web query for `<host> api` costs nothing and is now the third test.**
-- **A SITE BUILT ON htmx OR ALPINE KEEPS ITS WHOLE API SURFACE IN THE DOM, AND THAT IS FASTER THAN
-  GREPPING A BUNDLE.** Israel's per-area census data is addressed by opaque 7-hex-character IDs with no
-  relation to any CBS code, sparse enough to rule out enumeration — so the endpoint alone was useless
-  without the ID mapping. The mapping is the site's own autocomplete: the search input carries
-  `hx-get="/en/partials/search/area"`, and that endpoint returns `data-id`/`data-search`/`data-type`
-  for **every geographic unit in the country**. **The diagnostic generalises past htmx**: load the page
-  in headless Chrome and dump every element carrying an `hx-*` (or `x-on:`, `@click`, `wire:`)
-  attribute. It took one CDP call after two days of the API looking absent, because those frameworks
-  put the URL in an HTML attribute rather than in JavaScript, where every search had been looking.
-- **A WordPress statistical office has a search API and it beats its search box.**
-  `GET /wp-json/wp/v2/search?search=<term>&per_page=50` returns title + URL for every post. Vietnam's
-  two census volumes came back as the top two hits of one request after the site's own search and two
-  web searches had missed the older one. **Search the publication's NAME, not the variable** —
-  `search=kết quả toàn bộ` found everything and `search=tôn giáo` found nothing. Recognise the shape
-  from `/wp-content/` in any asset URL.
-- If there is no API at all, the census results are usually a handful of XLSX behind a "results" page.
-  Fetch the page and regex out `href="...xlsx"` **with the link text**, because offices routinely name
-  the files `Tabel-2.04.xlsx` and put the title elsewhere (Romania).
-- **AN OFFICE'S DASHBOARD IS AN INTERFACE TO A DATABASE, AND THE DATABASE IS USUALLY WIDER THAN THE
-  DASHBOARD — added 2026-09-08 with Kazakhstan (§9cd), which was drawn as a MODELLED country for one
-  day because of this.** §11u had established four separate ways that BNS publishes religion
-  nationally and nowhere else, and all four were correct; all four were also about **documents**. The
-  census page linked two "interactive dashboards" nobody had opened. They are `<iframe>`s onto a
-  **Qlik Sense** server, and a Qlik app ships its DATA MODEL rather than its charts: this one's model
-  is the census microdata, 35,195,612 person rows with religion, oblast, rayon, urban/rural and
-  nationality on the same row, and its JSON API answered `anonymous` with `mustAuthenticate: false`.
-  Religion × oblast was a query. **The rule: a negative established from an office's publications is a
-  finding about its publications.** Before building a model or closing a country, open whatever
-  dashboard, map server or BI tool it runs and ask what that is sitting on. Qlik, Power BI, Tableau
-  and ArcGIS all expose a queryable model behind an embedded view, and all four announce themselves in
-  the embedding page's HTML.
-  **Two mechanics.** `WebFetch` renders to markdown and DROPS iframes and scripts, so it reports "no
-  embedded viewer" on a page full of them; fetch the raw HTML and grep for `iframe`, `data-dashboard`,
-  and the vendor hostnames. And with Qlik specifically, **ask for the field list and `GetTablesAndKeys`
-  before writing any query** — they tell you what the app can answer, and they are how the person-level
-  table announced itself. Same family as §9bv (Moldova's own GIS server carried the census population
-  on every polygon) and §9cc (Albania's map server was finer than any table it printed): three offices
-  in three days published more through a service than in anything they wrote down.
-
-**Two things to check about the publication itself before writing it off.**
-
-- **Fetch the table in more than one language when the join and the taxonomy want different ones.**
-  North Macedonia needs BOTH: the English edition for the category labels the taxonomy keys on, the
-  Macedonian for the Cyrillic municipality names GISCO carries. Neither edition alone builds the
-  country, and the English one alone silently makes the join impossible.
-- **CHECK THE PREVIOUS CENSUS BEFORE CONCLUDING A COUNTRY PUBLISHES RELIGION WITH NO GEOGRAPHY.**
-  §3.9's trade between category depth and spatial depth has always been a choice made *inside* one
-  publication. It can also be made **across censuses**: Vietnam's 2019 *Kết quả toàn bộ* gives religion
-  **one page, national**, while the **2009** volume of the same name, same office, same series, gives
-  religion **32 pages by province**. Nothing in the newer volume says the older one was finer, and
-  every secondary compilation cites the newer one. The check is one file. **And it usually converts the
-  country into §3.4** — old geography, new totals — rather than into a refusal.
-
-**Two API-shaped traps that produce plausible wrong data rather than an error.**
-
-- **An id in a response and an id in the URL that fetched it can be different spaces that overlap.**
-  BPS's SP2010 endpoint returns Aceh with `id_wilayah: "1675"`. Asking that endpoint for `wid=1675`
-  returns **Kabupaten Merangin, in Jambi**: HTTP 200, well-formed, a real unit, and the wrong one — and
-  `1674`, `1675` and `1676` all return it, so the space is not injective either. Nothing raises and no
-  total is wrong, because every number returned is genuine; only the *unit* is not the one asked for,
-  which is the one thing no reconciliation downstream can see. **Never feed an id from a payload back
-  into a URL unless the source says they are the same space.** Enumerate the URL parameter
-  positionally and read the unit's identity back out of the response.
-- **A parameter that looks like geography may be format, and file size cannot tell you which.** The
-  same endpoint's trailing path segment reads exactly like an admin level: `…/0/2` returns 133 KB and
-  `…/0/3` returns 5.4 MB, so `3` is obviously the finer geography. It is not — `2` is a **PDF export**
-  of the national table and `3` is the **same national table as JSON**. A finer geography and a more
-  verbose serialisation both predict a bigger file. **Look at what a response *is* — magic bytes,
-  content-type, the first line — before drawing any conclusion about what it *contains*.**
-- **A dead statistics office is not a dead census, and the volumes are as likely to be filed under the
-  ministry that paid for them — found with Eswatini 2026-09-08 (§9bq).** §11w closed Eswatini as *"no
-  reachable host"* on evidence that is all still true: `eswatinistats.org.sz` resolves and times out on
-  both ports with any User-Agent, `swazistats.org.sz` does not resolve, and the Wayback CDX has 61
-  captures of the first hostname and **not one PDF**. There is no route through the office and there
-  never was one. The 2017 census volumes are Joomla articles on `www.gov.sz` under
-  **`/images/FinanceDocuments/`**, the finance ministry's upload folder, and the Census Atlas is under
-  `/images/planningministry/`. No amount of probing the statistics office would have reached either.
-  **So when an office is dead, sweep the WHOLE government domain rather than the office's hostname**:
-  `web.archive.org/cdx/search/cdx?url=<gov domain>&matchType=domain&limit=60000&fl=original` is one
-  GET, grep it locally for `census`, and fetch the last good capture of whatever article id turns up
-  (the `id_` suffix gets the raw body). Ten minutes end to end, and it recovered the highest-ranked
-  undrawn country in Africa. Note the article listing the files 404s today while **every file it links
-  still serves from the live host**, so a dead index is not a dead directory.
-- **Two CDX failure modes that both read as a negative result.** It **refuses port 80** —
-  `http://web.archive.org/cdx/...` is connection-refused, which reads as the archive being down rather
-  than as a scheme problem — and it answers a `filter=` regex it does not like with **HTTP 500 and an
-  empty body**, which reads as zero matches. Ask for the unfiltered list over https and grep locally;
-  it is one request either way.
-- **A bot wall can answer HTTP 200, and it has already cost this project a country.**
-  `statssa.gov.za` and `cs2016.statssa.gov.za` sit behind Incapsula/Imperva: **curl gets a 200
-  carrying a 212-byte `_Incapsula_Resource` stub** instead of content, and `www.statssa.gov.za`
-  **fails cert verification (exit 60)** before answering at all. Both read as a dead or empty host.
-  §11b concluded StatsSA *"is the blocker"* and detoured to a DataFirst account — while the census
-  religion table it wanted was openly downloadable the whole time (§11ag). WebFetch walks straight
-  through and saves the real PDF. Same animal as `[[reference_dead_stats_office]]`'s 418.
-  **A 200 with a sub-kilobyte body, or a TLS failure, is a wall and not an answer: refetch with a
-  browser-shaped client before concluding anything about what an office publishes.**
-- **A survey variable can be revised under the same name.** ESS carries `rlgdnanl`, `rlgdnase`,
-  `rlgdnaua`, `rlgdnapl`/`rlgdnbpl`, `rlgdnask`/`rlgdnbsk` — `a`/`b` revisions with **different
-  category lists**, added when a country's denomination card changed. **Pooling on the bare name
-  silently drops the later rounds**: no error, just a smaller n and an older card. Match on the
-  prefix and assert the round count you expected. §11ad's flattened-value-label trap in another
-  costume, and the general form is that **a pooled multi-wave file will not tell you when the
-  instrument changed underneath it; only an assertion will.**
-- **AN OFFICE'S LANGUAGE VERSIONS ARE NOT TRANSLATIONS OF ONE SITE. THEY ARE SEPARATE TREES THAT
-  CAN DIFFER IN WHAT EXISTS AT ALL**, and Armenia cost §11o the whole country on it (§9bx).
-  `armstat.am/en/?nid=945` through `?nid=957` are the eleven 2022 census marz volumes, and every
-  one of them is a bare `<h1>` over the sentence *"Information is not available in English"*. The
-  same eleven nids under `/am/` each carry nine section archives, religion included. **The English
-  tree there is a strict subset, and the part missing from it is the geography** — which is the
-  worst thing to lose, because the national volume IS in English and looks like the whole
-  publication. Always re-check a negative in the national language before recording it, and say in
-  the record which tree it was taken from.
-- **A results page can be an image map whose links all go to the same file.** Armstat's
-  `?nid=944` renders a GIF of Armenia with eleven `<area>` polygons over it and **all eleven point
-  at the national volume**, so clicking any province returns the same download and the page reads
-  as *"there is only a national volume"*. The per-province pages existed the whole time, one nid
-  each, reachable only from the left navigation. **Enumerate a site's nav tree, not its landing
-  pages**: the same shape as §9bu's per-district booklets and §11ag's bot wall, and all three were
-  closures overturned on 2026-09-08 without the office having published anything new.
+- **Check whether a newer census has landed since the queue row was written.** It usually wins on
+  geography, coverage and non-response and loses category names; weigh them, and record the older
+  names in `sources/<cc>.md` (Moldova).
+- **Try a machine-readable endpoint first.** PxWeb runs at offices everywhere: try
+  `/pxweb/api/v1/<lang>/` and `/api/v1/<lang>/`, and enumerate the census branch in full rather than
+  walking it by keyword to a depth, because one variable sits at several geographies in different
+  folders.
+- json-stat2 is one row-major cube: compute strides. An ASP.NET PxWeb tree cannot be walked by
+  following links. A PxWeb 403 can be a cell limit: leave out the `elimination: true` dimensions.
+- **REDATAM: ask whether the office runs one before reading its PDFs.** The variable picker is a free
+  dictionary (its `<option>` tags are often unclosed), a bad program answers `Tabla vacía` with
+  200, and `prod.redatam.org` does not namespace `BASE=` by country.
+- SDMX codelists give labels and the geography hierarchy, and an SDMX catalogue can be grepped. Try
+  the other representation (`rest_xml`, `rest_json`) before concluding an endpoint is missing.
+- **A probe's status is a claim about a hostname.** Offices get renamed and a placeholder 200 reads
+  as alive: check the agency still exists under that name and follow its current site (Nepal).
+- **A wall is a fact about a host and a path.** Test sibling hosts; an API root may not sit under the
+  UI prefix, and a 500 in the application's own error template means a wrong route. Re-test a 403
+  before believing it.
+- **But bot protection is a stop sign, not a puzzle.** Do not iterate on headers: hand Anita the URL.
+  A reactive wall spreads while it is being probed.
+- A shiny data portal is often a shell; look for `popis`, `census` or `recensement` plus the year as
+  a hostname.
+- Before calling a JavaScript site API-less: compare the 404s, grep the bundle for `/api`, and search
+  the web for `<host> api`. On an htmx or Alpine site the API URLs are in the DOM's `hx-*`
+  attributes.
+- A WordPress office: `wp-json/wp/v2/search` on the publication's name, not the variable. With no API
+  at all, regex the XLSX links together with their link text.
+- **A dashboard sits on a database wider than it shows** (Qlik, Power BI, Tableau, ArcGIS;
+  Kazakhstan's census microdata). Fetch the raw HTML, because WebFetch drops iframes; in Qlik read
+  the field list and `GetTablesAndKeys` first.
+- Fetch the table in more than one language when the join and the taxonomy need different ones
+  (North Macedonia).
+- **Check the previous census before concluding religion has no geography** (Vietnam 2009); it
+  usually turns the country into §3.4.
+- Never feed an id from a payload back into a URL unless the source says they are one space (BPS).
+- A parameter that looks like geography may be format: look at what a response is (magic bytes,
+  content-type) before what it contains.
+- **A dead office is not a dead census.** Sweep the whole government domain in the Wayback CDX
+  (`matchType=domain`) and grep locally (Eswatini); a dead index is not a dead directory.
+- The CDX refuses port 80 and answers a bad `filter=` with an empty 500: ask over https, unfiltered,
+  and grep locally. Helpers exist: `sources/fetch_checks.py::cdx_url`, `parse_cdx` (no build calls
+  them yet).
+- **A bot wall can answer 200** with a sub-kilobyte stub, or look like a TLS failure: refetch with a
+  browser-shaped client before concluding anything (South Africa). Partly enforced by:
+  `sources/fetch_checks.py::check_body` (size and type).
+- **A survey variable can be revised under the same name** (ESS `rlgdna*`, `rlgdnb*`): match the
+  prefix and assert the round count. Playbook: `playbooks/ess.md`.
+- An office's language versions are separate trees: re-check a negative in the national language and
+  say which tree it came from (Armenia).
+- A results page can be an image map whose links all go to one file: enumerate the site's navigation
+  tree, not its landing pages.
 
 ### Estimating the work, and downloading
 
-**ASK HOW MANY PAGES THE TABLE OCCUPIES, AND NOTHING ELSE.** The rule written one morning was "the
-useful countries are the ones with a dissemination platform rather than a report series", and it was
-wrong by that afternoon. Ghana had a PxWeb API and took an afternoon; Kenya had a **498-page PDF** and
-took an afternoon too, because the whole religion table is **one page**. Guyana is the extreme case:
-the Bureau of Statistics runs no dissemination platform *at all* — just a list of PDFs on a WordPress
-page — and it still took an afternoon, because the religion cross-tabulation is one page of a 66-page
-compendium. A one-page county table parses in an hour whatever it is wrapped in; a per-district table
-spread over eleven regional volumes does not, whatever portal fronts it. **The size of the table is the
-predictor, and it is visible from the list of tables before anything is downloaded.**
+One line per rule; the cases and reasoning are in `spec_archive/12.md`. Playbook:
+`playbooks/census_table.md` ("A 200 is not the file", "A truncated PDF opens").
 
-- **When a report is dense with one geography and your variable is coarser, read what the other tables
-  do.** Kenya's Volume IV has forty-odd tables and *every one except religion* is published "by County
-  and Sub-County". That converts "I could not find a sub-county religion table" into "KNBS did not
-  publish one", which is a different fact and a much more useful one — it ends the search instead of
-  leaving it open, and it says the ceiling is editorial rather than technical. (The questionnaire annex
-  in the same volume showed the census captured six geographic levels, so the data exists and is
-  withheld.)
-- **A "code lists" or "classification" page is evidence about SOME census, not necessarily the current
-  one.** StatsSA maintains a religion code-list page whose depth (hundreds of bodies) made South Africa
-  look like the best source in Africa. Those are the 2001 lists; Census 2022's actual variable has
-  **twelve** categories with `Christianity` as one undivided cell holding 85% of the country. **Check
-  the variable in the current sample, not the classification the office happens to still host.**
-
-**HTTP 200 is not a download, and it keeps finding new disguises.** Always assert size *and* type
-(`zipfile.is_zipfile`, sheet names present, magic bytes) after fetching:
-
-- a truncated file (Czechia); an SPA shell; and Maa-amet's `linnaosa_shp.zip`, which returns **200 with
-  a 282-byte PNG of an error message**.
-- **A 200 can carry a JavaScript dialog.** KOSIS's data endpoints return **status 200, content-type
-  `text/html`, and a 335-byte body whose entire content is
-  `alert("비정상적인 서비스 이용으로 접근이 차단되었습니다")`** — access blocked, abnormal use.
-  `raise_for_status()` passes; a size check passes if the threshold is low. Two things generalise. **A
-  bot wall can be per-endpoint on a host that is otherwise wide open** — KOSIS's metadata endpoint
-  served 291 KB of table structure, unauthenticated, throughout, which is where the table id, its 327
-  geography items and all 12 category labels came from; only the endpoints returning *data* refuse. So
-  "the site is blocked" and "the data is blocked" are different findings. **And the wall SPREAD while
-  being probed**: the download endpoints refused first and the grid endpoint refused afterwards.
-- **A WALL YOU BUILT YOURSELF LOOKS EXACTLY LIKE ONE THEY BUILT FOR YOU** — 2026-09-07, Israel, and
-  it is the other side of KOSIS. There is no bulk file for the 2022 census: religion is published per
-  area through a dashboard, one request per unit, so drawing 3,236 units means ~4,600 calls against a
-  small national statistical office. Run at 0.15 s intervals with a second process pointed at the same
-  host, it took about thirty minutes to get **every connection reset, the static home page included** —
-  an IP-level block, not per-endpoint, and still up an hour later. It cleared overnight. Three rules,
-  and the third is the one that actually cost a run:
-  1. **Count the requests before starting.** The number was knowable from the unit list and nobody
-     looked at it. A four-figure request count is a design decision, not an implementation detail.
-  2. **Never point a second process at a host a harvest is already walking.** One extra connection is
-     what turned a working run into a block.
-  3. **A cache written only at the end is a cache that never gets written.** The first attempt held
-     everything in memory and flushed every 200 units; killed at thirty minutes, it had written
-     nothing. Flush small, flush through a temp file and `os.replace` ([[reference_wb_truncates]]), and
-     make resumption the ordinary path rather than the recovery path — on a run this long it *will* be
-     interrupted, so a resumable fetch is a correctness property and not a convenience.
-- **AND THE RETRY LAYER IS WHERE A LONG FETCH ACTUALLY DIES, NOT THE PARSER.** Both failures on
-  Israel's second attempt were in the plumbing and neither was the source's fault:
-  - **`SystemExit` is not an `Exception`.** The shell-page guard raised `SystemExit`, which
-    `except Exception` around the per-unit call cannot catch, so **one intermittent bad response killed
-    a two-hour run at unit 1,699.** A guard that fires on transient junk must raise something the
-    caller's handler catches, and it belongs *inside* the fetch helper where the retry can act on it.
-  - **A one-way backoff ratchet saturates and stays there.** Delay was multiplied by 1.5 on every error
-    and never reduced. Against a host emitting a transient shell page on ~1.5% of requests it pinned
-    itself at the 3 s cap within minutes, which turns a two-hour run into a six-hour one. **Decay back
-    towards the base on sustained success** — 1.5x up per error against 0.98x down per success is far
-    slower to recover than to back off, which is the asymmetry you want.
-- **A content-type is a claim about the body, not about its first byte.** `mozdata.ine.gov.mz`'s NADA
-  API answers `application/json` and emits a stray `n` before the JSON on *every* endpoint, so
-  `r.json()` dies with "Expecting value: line 1 column 1". That reads as "this endpoint is broken" and
-  it is not — the payload behind it is complete. **Find the first `{"` and parse from there**, and
-  treat a decode failure at offset 0 as a framing problem to look at rather than a verdict.
-- **An extension is a claim about nothing at all: check the magic bytes.** Every INSTAT table is served
-  as `application/vnd.ms-excel` with a `.xls` extension and is actually **SpreadsheetML 2003 XML**,
-  starting `<?xml`. Pandas refuses it with *"Excel file format cannot be determined, you must specify
-  an engine manually"*, which reads as a missing dependency and sends you installing `xlrd` — no engine
-  will ever open it, and `xml.etree` opens it in four lines. `PK\x03\x04` is a real xlsx,
-  `\xd0\xcf\x11\xe0` a real legacy xls, `<?xm` is neither. **When parsing SpreadsheetML, honour
-  `ss:Index`** — it omits empty cells rather than emitting blanks, so a positional read of a row with a
-  gap shifts every later column left.
-- **AND THE TRUNCATION CAN BE ONE CELL OF A PERFECT FILE, AND IT PARSES AS A NUMBER.** Guyana's PDF is
-  intact, every other column is right, and the rightmost column of Table 2.19 simply overflows its cell
-  in the text layer, so `38,962` arrives as **`38,96`** and `746,955` as `746,9`. **A clipped number is
-  a valid number.** Nothing raises and the error is one or two digits in a figure nobody has
-  independently in mind. The fix generalises past "do not read that column": recompute the derived
-  figure from the parts, then **assert that the source's clipped string is a PREFIX of your sum**. That
-  turns the defect into a check — it fails on a misparse, and it keeps passing if the office ever
-  re-renders the file. *Where a source's own derived figure is unusable, do not merely drop it; assert
-  the relationship it still has to the figure you computed.*
-
-**Two file-reading traps that return success and no data.**
-
-- **A read that succeeds is not a read that returned data.** COD ships Chile as a 92 MB geodatabase.
-  On GDAL 3.8.5's OpenFileGDB driver it **opens, lists all six layers with the right geometry types,
-  reports `crs=EPSG:4326`, and returns ZERO features from every one of them** — including `admin0`,
-  which is one polygon. No exception, no warning. Nothing downstream would have noticed until the join
-  came back empty, and the symptom would have pointed at the join. **Assert the feature count after
-  every `read_file`, not the absence of an exception.**
-- **And the zero-feature read is the ENGINE, not the format.** COD's `idn_admin_boundaries.gdb` returns
-  **522 features with `engine="fiona"` and ZERO with `engine="pyogrio"`** — same file, same driver,
-  same machine, one call apart. pyogrio reports `EPSG:4326`, a `geometry`-only column list and no
-  error, which is precisely Chile's symptom; and **pyogrio is geopandas' default whenever it is
-  installed**, so the failing path is the one you get without asking. That reframes Chile: the
-  geodatabase was probably readable all along. This is the TLS test below, one layer down — **all
-  readers failing means the file, one reader failing means the reader** — and
-  `read_file(..., engine="fiona")` costs nothing to try.
-
-**A TLS failure can be the server's fault, or yours, with a near-identical error and opposite fixes.**
-`stat.gov.pl` omits its intermediate certificate, so curl, requests and certifi all fail identically
-with "unable to get local issuer certificate" — turning verification off for that one named host *and
-validating the bytes structurally instead* is the honest fix, said out loud in the script and in
-COMMANDS.txt. But `urllib.request` cannot reach `ksh.hu` on this machine — "self signed certificate in
-certificate chain" — while `curl` and `requests` verify it fine, and that is a local trust store.
-**The distinguishing test is one line: try a second client. All clients failing means the server; one
-failing means you.** Reaching for the `stat.gov.pl` fix on the second case disables verification to
-route around a problem that is not there.
+- **Price a country by how many pages its religion table occupies**, which the table list shows
+  before any download, not by whether the office has a portal (Kenya, Guyana).
+- When every table in a report but religion is published at a finer geography, the ceiling is
+  editorial: the office did not publish one.
+- A code-list page may describe an older census: check the variable in the current sample (StatsSA).
+- **HTTP 200 is not a download.** Assert size and type: magic bytes, `zipfile.is_zipfile`, sheet
+  names. Disguises seen: a PNG of an error message, a JavaScript `alert()` block page (KOSIS),
+  SpreadsheetML served as `.xls` (`<?xm`; read it with `xml.etree` and honour `ss:Index`), a stray
+  byte before JSON (parse from the first `{"`). Enforced by: `sources/fetch_checks.py::check_body`.
+- A bot wall can be per-endpoint on an otherwise open host, and it spreads while being probed (KOSIS).
+- **A harvest of thousands of requests is a design decision.** Count the requests first, never point
+  a second process at the host, and flush a resumable cache in small steps through a temp file and
+  `os.replace` (Israel).
+- A guard inside a long fetch must raise something the retry catches (`SystemExit` is not an
+  `Exception`), and a backoff must decay again on success.
+- **A clipped PDF cell parses as a shorter valid number** (Guyana's `38,96`): recompute from the parts
+  and assert the printed string is a prefix of the sum. Enforced by: `sources/gy.py::check`.
+- **A read that succeeds may return zero features**: assert the feature count after every read, and
+  try the other engine (`engine="fiona"`); every reader failing means the file. Helper exists:
+  `sources/geo_checks.py::read_layer` (no build calls it yet).
+- **A TLS failure: try a second client.** All failing means the server (a missing intermediate: turn
+  verification off for that host only and validate the bytes); one failing means the local trust
+  store.
 
 ### Parsing the table
 
+One line per rule; the cases and reasoning are in `spec_archive/12.md`. Playbook:
+`playbooks/census_table.md` ("Cells that look like numbers", "PDF tables are read by geometry",
+"Reconcile every column at every level").
+
 **Sentinels, missing values and the things that look like numbers.**
 
-- **Look for in-band sentinels in numeric columns.** New Zealand's `-999` "Confidential", Romania's `*`
-  (suppressed) and `-` (true zero). Read cells one at a time, classify them, and **raise on anything
-  unrecognised** so a new sentinel cannot appear silently. **Never `errors="coerce"` a count column**:
-  it turns suppression into NaN and the people vanish. Where a flag distinguishes two meanings, resolve
-  it on its TEXT, not its index (§3.8).
-- **A CATEGORY CAN BE NAMED `None`, AND PANDAS WILL DELETE IT.** PSA's cell for no religion is the
-  literal string `None`, and default `read_csv` parsing turns it into `NaN`. It then fails to resolve
-  in the taxonomy mapping, and every reader that drops unresolved rows — which is all of them,
-  correctly — removes 43,931 people **with no error, no warning and no count anywhere**. The category
-  most likely to be hit is precisely the one a religion map cares about being honest regarding.
-  **Read normalised files with `keep_default_na=False, na_values=[""]`**, and treat `None`, `NA`,
-  `N/A`, `NaN`, `null` and `-` as category names a source is entitled to use. Guyana hit it a day
-  later, and **where it was still invisible is the part worth having**: `gy.py`'s reconciliation was
-  exact and `check_mapping.py` reported 746,955 people on 13 nodes, because both read the normalised
-  CSV correctly — the loss happened in `countries.py`'s per-country `_counts()`, the one reader without
-  the flags. **The rule has to be applied at every `read_csv` of a normalised file, not at the ones
-  that have a checker attached**, because the checkers are precisely the readers that will keep telling
-  you it is fine. **THIRD SIGHTING, 2026-09-07: ZIMSTAT's no-religion cell is also the literal string
-  `None`, at 1,255,578 people and 8.3% of Zimbabwe** — so this is not a Philippine quirk, it is what a
-  census office writes when its category is "none" and the answer must not be blank. Three of the
-  three occurrences have been the *no religion* row. **Stop relying on the flags being remembered and
-  ASSERT THE CATEGORY IS STILL THERE after reading** (`if "None" not in set(df["source_category"]):
-  raise`), which is one line and survives an edit that drops the flags.
-- **Excel type inference differs between two files of one release, and within one column of one
-  sheet.** India's state files store codes as text (`"00"`) and the Appendix stores the same codes as
-  numbers, so `str(cell)` yields `"00"` and `"0"`; India's own row became a 36th state and the whole
-  tail doubled. **Put every code through one zero-padding helper at the point of reading.** Germany's
-  Sonderauswertung stores some counts as numbers and some as text in the same column, and an
-  `isinstance(v, (int, float))` filter — the natural way to skip a sentinel — silently dropped
-  **2,228,001 people**, with every national total still plausible because the shortfall landed in the
-  largest category. **Classify every cell through one function that RAISES on anything it does not
-  recognise; never filter numeric cells by type.**
-- **Watch for a percentage twin beside every count column.** Croatia's sheet 2 is `Katolici` in column
-  7 and `Katolici, %` in column 8, for all twelve categories. Taking the wrong one of each pair gives a
-  map where every unit holds about 100 people and nothing else complains. **List the count columns
-  explicitly rather than striding.**
-- **A percentage column is not always count ÷ population, and the difference can be deliberate.**
-  Germany's disclosure method perturbs the count and then *adjusts the published share* where the
-  perturbed count would give an implausible percentage — Ammeldingen an der Our is 18 people with 20
-  Catholics, published as 100.0%. 75 cells disagree by over 0.6pp and every one is a Gemeinde of 9–122
-  people. **Assert the residual in the units the method works in.** Converting the disagreement back
-  into PEOPLE bounds it at 3.46; a tolerance in percentage points either passes everything or fails the
-  villages, and neither would catch a percentage column read as a count — which is the thing the check
-  exists for, and which would be wrong by hundreds of thousands in every large city.
+- Classify every cell through one function that raises on anything unrecognised; never
+  `errors="coerce"` a count column and never filter numeric cells by type (Germany lost 2,228,001
+  people). Resolve a flag on its text, not its index.
+- **A CATEGORY CAN BE NAMED `None`, AND PANDAS WILL DELETE IT.** Read every normalised file with
+  `keep_default_na=False, na_values=[""]`, at every reader, and assert the category survives the
+  read. Enforced by: `tools/check_na_readers.py`.
+- Put every code through one zero-padding helper when it is read (India's `"00"` against `0`).
+- A percentage twin sits beside each count column: list the count columns explicitly (Croatia).
+- A published share can be deliberately adjusted: assert the residual in people, not points
+  (Germany).
 
 **Structure, levels and universes.**
 
-- **Universe rows are not categories.** Every source has some nest of
-  total ⊃ answered ⊃ affiliated ⊃ the religions, and drawing an intermediate one doubles everything
-  below it. Put them in `EXCLUDED` with a sentence on what they are.
-- **A SOURCE THAT PUBLISHES ONLY PERCENTAGES IS NOT THEREBY A §3.4 CASE — LOOK FOR THE DENOMINATOR IN
-  THE SAME PUBLICATION FIRST.** Benin was recorded for a day as needing its commune totals joined from
-  a second document, which prices it as a cross-vintage rescale with everything that implies for §7a's
-  tier. **Tableau 2 of the same booklet prints the population of every commune in Tableau 8.** So there
-  is no join, each booklet is self-contained, and `count = published share × published total` is
-  `measured` rather than `derived`: nothing is carried from a coarser level and nothing is fitted, and
-  what the percentage costs is *precision*, which is computable — one decimal on a share is ±0.05% of
-  the unit, ±34 people in a 68,000-person commune. **A report written for a prefect almost always
-  prints the population first; it is the table before the one you came for.** Say the precision bound
-  out loud, and only reach for §3.4 when the denominator genuinely is in another document or another
-  year.
-- **Do not assume every sheet in one workbook has the same shape.** Poland's TABL.2/6/7 are flat and
-  TABL.5 carries the full 7-level classification; summing it the same way counts the Latin rite four
-  times. Where the office publishes a depth column, use it.
-- **A nested GEOGRAPHY can hide a second universe, and it is harder to see than a nested category.**
-  India's C-01 puts state, district, sub-district and town in one column set, distinguished only by
-  which code is non-zero — and **town rows are urban-only subsets of the sub-district above them**, so
-  summing the file as delivered counts urban India twice. They happen to carry only `Urban` and never
-  `Total`, which makes the obvious filter work by luck. **Assert the property; do not rely on it.**
-- **AND "FIND THE LEVELS" IS NOT FINISHED WHEN YOU HAVE FOUND THE BOTTOM ONE.** India's and Hungary's
-  extra levels sit *above* the drawn tier, so keeping the finest one is the fix. Serbia's sixth level
-  sits *inside* it: `Grad Niš`, `Grad Požarevac`, `Grad Užice` and `Grad Vranje` are municipality-level
-  rows that are parents of their own city municipalities, **462,527 people counted twice at exactly the
-  level you would draw**. There is no structural marker of any kind — after Niš's five city
-  municipalities the next row is an ordinary municipality of the same oblast, same column, same indent
-  — and every national, regional and oblast total reconciles either way, because the duplication never
-  leaves the tier. The `Grad ` prefix is a name, not a field. **The test is arithmetic and it doubles
-  as a parse check**: a parent's children are the consecutive rows whose totals sum to it *exactly*,
-  and the code refuses to continue if they do not. Once the level count is settled, **assert the count
-  of rows at EVERY level, not just the drawn one.**
-- **A source can publish a unit as EMPTY, and that is not the same as omitting it.** `Регион Косовo и
-  Метохија` is in RZS's sheet with `...` in every cell because the 2022 census did not enumerate it. It
-  carries no sex breakdown either, so the natural row filter — keep the rows marked as totals — drops
-  it without a word. **Keep such a row and assert on it**: *exactly* one all-empty unit, at the level
-  you expect. The source is telling you it did not measure somewhere, which is worth more than silence.
-- **A PARENT'S CHILD LISTING CAN BE INCOMPLETE WHILE EVERY ROW IN IT IS CORRECT.** Ten of BPS's 33
-  province responses omit between one and five of their own regencies — 16 units and 2,674,311 people —
-  with **no gap in the sequence, no marker, no error, and no change to any figure that is present**.
-  Sumatera Utara returns 31 consecutive-looking rows and is simply missing Pematangsiantar and
-  Padangsidimpuan. This is Serbia's lesson from the opposite direction: there an extra level hid INSIDE
-  the drawn tier and inflated it, here units are missing FROM the drawn tier and deflate it, and in
-  both cases every total that does not cross the boundary reconciles perfectly. **Only the parent/child
-  sum sees either. Compute it for every parent, always, even when the child list looks obviously
-  complete — especially then, because "obviously complete" is what a contiguous run of correct rows
-  looks like.**
-- **AND WHERE THE SOURCE PRINTS LEVELS SIDE BY SIDE RATHER THAN NESTED, RECONSTRUCT THE COMPOSITION AND
-  LET THE ARITHMETIC VERIFY IT.** The rule above assumes the child list is *in* the file. Vietnam's
-  census prints the nation, then all six socio-economic regions, then all 63 provinces — three flat
-  blocks, in code order, with no marker of which province belongs to which region — so the parent/child
-  check has no input and the natural move is to skip it. **Write the composition out from the published
-  standard instead.** It is a transcription and therefore a risk, and that is the point: the check
-  requires every region to equal the sum of its provinces in *every* category, so one province in the
-  wrong region breaks 28 equations at once. **A hand-written mapping that reconciles to the person is
-  evidence; one that does not is a loud failure rather than a regional map that is quietly wrong.**
-- **Recovering a missing child: the residual is exact when the missing children are CONTIGUOUS.** Two
-  passes learned this. First, Indonesia's omitted units are reachable one level down, so the obvious
-  fix is to rebuild each from its own children — and for two of them that listing is *also* incomplete:
-  one sums to 193,661 against a true 234,021, the other to 281,162 against 290,142. **Both UNDERSTATE,
-  which is worse than missing**, because an understated unit still draws, at a plausible size, and
-  nothing looks wrong. So **where a parent is missing children, prefer the parent's own residual** —
-  its row minus the children it did list — over summing grandchildren, which is the fallback and must
-  then be checked against that residual. Second, the condition is **not** that exactly one child is
-  missing: it is the SHAPE. Kalimantan Utara's territory, 524,656 people, was five missing regencies
-  and was written off as an unrecoverable 0.22%, leaving **a visible empty hole on the map**, found by
-  looking at the render rather than at any number. The residual was exact all along — it sums to the
-  published total to the person, is non-negative in every category, and matches the successor
-  province's documented population — **because those five were carved wholly out of one province, so
-  the leftover is a single contiguous block with a real geography and can be drawn as one coarse
-  unit.** A residual scattered over unrelated places has no shape and genuinely cannot be drawn.
-  **THE GENERAL FORM, FOR ANY COUNTRY THAT HAS REDISTRICTED SINCE ITS CENSUS:** a source re-based onto
-  a later geography loses precisely the units that MOVED, and those are almost always contiguous,
-  because that is what a boundary change is. Their old parent's row still contains them. So before
-  recording such a loss, ask whether the orphaned territory is one block. (Note also that the first
-  pass had *already measured* the gap, on the total, and discarded it; re-deriving it per category cost
-  nothing and closed it.)
-- **RECONCILING ON THE TOTAL IS NOT RECONCILING, and it is the cheapest of these rules to get wrong.**
-  Deciding which Indonesian tier to draw meant testing whether each regency's kecamatan sum to it, and
-  the obvious test is the one on the population total. **Nduga (9429) in Papua publishes eight kecamatan
-  that carry a `Total` row and NO religion categories at all.** The Totals sum to the regency exactly,
-  so a Total-only test calls the unit complete and promotes it to the fine tier — where its 79,053
-  Kristen become 79,053 people with no religion, a unit drawn on the map with nothing in it. One
-  regency in 492, invisible in every national figure, and the map would simply have had a hole in
-  Papua. **Test the parent/child identity on EVERY column, not on the one that looks like the sum**; a
-  total can reconcile because both sides are complete or because both sides are equally empty, and only
-  the categories tell you which.
+- Universe rows are not categories: `EXCLUDED`, with a sentence on what each one is.
+- **A percentage-only source: look for the denominator in the same publication before reaching for
+  §3.4.** Share times printed total is `measured`; state the precision bound (Benin).
+- Sheets in one workbook can differ in shape; use a published depth column (Poland).
+- A nested geography can hide a second universe (India's urban-only town rows): assert the property.
+- **Extra levels can sit inside the drawn tier** (Serbia's `Grad`): a parent's children are the rows
+  that sum to it exactly, and the row count is asserted at every level.
+- Keep a unit published as empty (Kosovo's `...`) and assert exactly one such unit.
+- **A child listing can be incomplete while every row in it is correct** (Indonesia): compute every
+  parent/child sum on every column, always.
+- Where levels are printed side by side, write the composition out from the published standard and
+  let the arithmetic verify it (Vietnam).
+- **Recovering a missing child: prefer the parent's own residual** to summing grandchildren; a
+  contiguous residual is one drawable coarse unit (Kalimantan Utara).
+- **Reconciling on the total is not reconciling**: test every column (Nduga's kecamatan carry a
+  Total and no categories).
 
 **Labels, codes and encodings.**
 
-- **A table of CODES is not a table of categories, and the plausible reading is wrong often enough to
-  be dangerous.** Hungary's exports carry `RE_C`, `RE_CA`, `RE_CO`, `RE_OU` and no labels. `RE_CA` is
-  **Calvinist**, not Catholic — Catholic is `RE_C`. `RE_CO` is "Other Christian", not Coptic. `RE_OU`
-  is **Ukrainian** Orthodox, a jurisdiction absent from KSH's own prose list of the five Orthodox
-  churches in Hungary, **so domain knowledge would have rejected the correct answer too.** Pin every
-  code against a published national total before writing a row, and re-derive the pinning in `check()`
-  so a reordered codelist fails the run instead of silently relabelling the map. Where labels exist at
-  all, read them from the source at run time rather than transcribing them.
-- **Arithmetic pins STRUCTURE even when no labels exist.** Hungary's three category groupings were
-  forced to the person by summation — 11,042 + 7,983 + 3,307 + 7,645 = 29,977 exactly — before any
-  label was in hand. A hierarchy deduced that way is stronger than a hand-written one, and **the
-  deduction is worth doing first: it tells you what the labels have to mean, which is a check on them
-  when they arrive.**
-- **Two tables of one census can spell one category two ways.** India's C-01 writes `Other religions
-  and persuasions`; its own Appendix writes `Other Religions and Persuasions` as the parent row inside
-  every state block. Matching the parent by label silently failed and added each state's bucket total
-  as though it were a named religion — 15.7M against a 7.9M bucket. **Match a parent on its code
-  wherever the source gives codes.**
-- **Indentation is often the only structure.** Leading dots (Estonia), or *which column* the text lands
-  in (Poland). Parse by position, not by matching label text — the labels carry trailing "w tym:",
-  embedded newlines, and typos.
-- **The office's own typos are part of the data.** Statistics Estonia writes `Taara Beliver` in one
-  table and `Taara Believer` in another. Map both in the taxonomy; do NOT repair it in the normaliser,
-  because the normalised CSV is supposed to reproduce the source verbatim.
-- **Headers can be two languages in one cell.** `Katolici Catholics`, `Ostali kršćani1) Other
-  Christians1)` — footnote markers included. Pick one language as the mapping key and keep it
-  *verbatim*, footnote and all, so the taxonomy key matches what the normaliser writes.
-- **UNESCAPE ANYTHING SCRAPED OUT OF AN HTML ATTRIBUTE, AND THE LANGUAGES THAT NEED IT ARE NOT THE
-  ONES YOU EXPECT.** Israel's locality names are joined on strings pulled from `data-search="…"`, and
-  Hebrew abbreviations carry the **gershayim**, which is a literal `"` — `בני עי"ש`, `כפר ביל"ו`,
-  `גבעת ח"ן`. Inside an attribute that must be `&quot;`, so a raw regex capture yields
-  `גבעת ח&quot;ן` and the join against the census file's own spelling fails. **35 real localities
-  resolved to nothing and every check still passed**, because 1.1% of a country is inside every
-  tolerance anyone would set; they were visible only because the run prints what it could not
-  resolve. Two rules: `html.unescape` every scraped attribute, and **make a fetch report the units it
-  missed BY NAME**, because a count alone would have read as ordinary attrition.
-- **TWO CATEGORY LABELS CAN DIFFER BY ONE WORD AND MEAN UNRELATED THINGS.** CBS's dashboard returns
-  `Others` — the population register's "not classified by religion", a real category with a real node
-  — and `Other religions`, which is **everything except the dominant group, lumped**, and is not a
-  category at all. Nazareth comes back `Muslims 73.1% / Other religions 26.9%` where that 26.9% is
-  essentially all Christian. Mapping the two alike, in either direction, erases Israel's Christians.
-  **Nothing in the data distinguishes them**: both sum to 100% with their siblings, and a lumped unit
-  is indistinguishable from a genuinely homogeneous one. It was caught by checking six places whose
-  composition is known independently — a Christian village, a Druze village, a mixed town — which is
-  this section's "check one number you already know", done six times because one would not have been
-  enough to see the pattern.
-- **Set `sys.stdout.reconfigure(encoding="utf-8")` at the top of every source script — and every
-  TOOL.** The Windows console is cp1252 and will kill a run on `ł`, `ș` or `õ` at the *print*, which
-  makes it look like a data error. `tools/check_overview.py` did not have it and died on
-  `Tứ Ân Hiếu Nghĩa` after the measurement had already succeeded.
-- **A PDF'S TEXT LAYER NEED NOT BE IN THE SAME UNICODE NORMAL FORM AS YOUR SOURCE FILE, AND ONLY SOME
-  WORDS WILL SHOW IT.** GSO's 2019 volume returns `Giá o hội Cơ đố c Phục lâm Việt Nam` with `á` and
-  `ố` **decomposed** — base letter plus combining acute — while every other Vietnamese label on the
-  same page comes back precomposed. The two affected syllables are exactly the two the typesetter split
-  across glyph runs, so the defect follows the *typesetting* and not the language. Compared as bytes
-  the string is unequal to a visually identical literal in the taxonomy file; the category resolves to
-  nothing, `countries.py` drops the rows, and **the two strings are identical in a terminal, in a diff
-  and in code review.** `tools/check_mapping.py` caught it and nothing else would have. **Normalise to
-  NFC on write AND on read**, and do not treat this as a Vietnamese problem.
+- A table of codes: pin every code against a published national total and re-derive the pin in
+  `check()` (Hungary's `RE_CA` is Calvinist). Arithmetic can pin the structure before labels arrive.
+- Match a parent on its code, not its label (India's two spellings of one row).
+- Indentation or column position can be the only structure: parse by position.
+- Keep the office's typos verbatim in the normalised CSV and map both spellings in the taxonomy.
+- Two-language headers: key on one language, verbatim, footnote markers included.
+- `html.unescape` every scraped attribute, and make a fetch report missed units by name (Israel).
+- Two labels one word apart can mean unrelated things (`Others`, `Other religions`): check places
+  whose composition you already know.
+- `sys.stdout.reconfigure(encoding="utf-8")` at the top of every source script and every tool.
+- Normalise to NFC on write and on read (Vietnamese decomposed syllables). Enforced by:
+  `tools/check_mapping.py::main`.
 
 **Reading numbers out of a PDF.**
 
-- **TWO VOLUMES OF ONE SERIES CAN USE DIFFERENT THOUSANDS SEPARATORS, AND A SPACE-SEPARATED ONE CANNOT
-  BE PARSED FROM TEXT AT ALL.** The 2009 *Kết quả toàn bộ* writes `85.846.997` and the 2019 volume of
-  the same series writes `96 208 984`. The ambiguity is real rather than theoretical:
-  `Tôn giáo Baha'i 2 153 1 089 1 064 841 419 422 1 312 670 642` has a second valid reading in which
-  841, 419 and 422 are three values, and an anchored nine-number regex reaches it by backtracking,
-  silently, with every value a genuine integer. **Read it by geometry instead** — right-aligned columns
-  on a fixed grid, digit groups ~2.6pt apart inside one number and >11pt between columns — and
-  **calibrate the grid off a row whose values you already know** rather than hard-coding pixel
-  positions. Two details that cost time: the columns are right-aligned, so a two-digit cell starts ~5pt
-  further right than a three-digit one and a left-edge grid misses it; and the label/number x-cutoff
-  has to clear the rightmost label word on the whole page, not the typical one. Then **assert the
-  arithmetic the table already contains** — total = male + female, total = urban + rural — which is 34
-  equations over 17 rows and breaks on any misplaced group.
-- **A WRAPPED LABEL CAN HAVE FRAGMENTS ON BOTH SIDES OF ITS FIGURES.** `gy.py`'s rule is that a
-  record's label is the row's own text plus the label-only rows that TRAIL it, which is right for
-  Guyana. Vietnam's Latter-day Saints row prints half its name above the numbers and half below, so the
-  trailing rule gives the *previous* category the opening half and the *next* category the closing
-  half: **one wrapped row corrupts three labels**, all into plausible-looking strings. Assign each
-  fragment to the NEAREST record by y — the two halves are 5pt from their own figures and 18pt from
-  their neighbours'.
-- **A TABLE'S OWN CAPTION NUMBER IS A DATA-SHAPED TOKEN SITTING INSIDE THE COLUMN BAND.** Where a
-  column parse takes "every digit token between the title and the first data row" as the population
-  row, `Tableau 2 :` contributes a bare `2` — at x=115 in INStaD's booklets, which is 190pt from most
-  departments' first column and **14pt from two of them**. So **Cotonou reads 2,679,012 people instead
-  of 679,012** and the Plateau 2,622,372 instead of 622,372, in two booklets of twelve, with the other
-  ten correct, both wrong figures plausible and both parsing as integers. Only the national sum sees
-  it. **Cut the caption's own line off explicitly rather than assuming the header band is text.**
-- **AND A LABEL DOES NOT SHARE A BASELINE WITH ITS FIGURES**, so binning rows on the top edge splits
-  some of them. The label is usually a point smaller and sits a little lower; in Benin's Atacora
-  booklet that put seven of ten religion labels in a different bin from their own values, and the
-  table came back looking as though the office had **changed its category list**. Cluster rows on the
-  vertical CENTRE with a tolerance, swept in order, never on a fixed bin.
-- **A SOURCE CAN NUMBER ITS COLUMNS IN A DIFFERENT ORDER FROM THE ONE IT PRINTS THEM IN, AND TWO
-  VOLUMES OF ONE SERIES CAN DISAGREE ABOUT WHICH.** Austria's Volkszählung 2001 heads Tabelle 4
-  `1 2 3 5 4 6 7 8 9 10 11` in all eight Bundesländer volumes — Orthodox is printed **fourth** and
-  numbered **5**, Evangelisch printed fifth and numbered 4 — while the **Wien** volume numbers the
-  same eleven columns in print order. A parser keying on the printed number therefore swaps
-  **Orthodoxy and Protestantism in eight volumes of nine**, and nothing downstream sees it: both are
-  plausible sizes, the categories still sum to the row total, the Gemeinden still sum to their Bezirk,
-  the Bezirke still sum to the nation, and even UNSD's independently forwarded national figures still
-  reconcile — because the swap is *consistent inside each volume*. The country would simply have
-  looked oddly Orthodox. **This is a different species from every other trap in this list**: Malawi's
-  rotated table and Benin's caption band are extraction failures that rendering the page reveals, and
-  this one survives rendering, because the page is right and the *source* is internally inconsistent
-  across its own volumes. It is visible only by comparing two volumes, or by ignoring the numbers.
-  So: **identify a column by its header LABEL, assert the resulting order against a written-out list,
-  and treat a printed column number as decoration.** Two cheap confirmations were available here and
-  usually are — a regional government's re-publication of the same table as a spreadsheet (Vorarlberg
-  prints the same anomaly, so it is the source's), and the volume's own prose, which quoted three
-  figures that pin the label order.
+- Space-separated thousands cannot be parsed from text: read by geometry calibrated on a known row,
+  and assert the table's own arithmetic (Vietnam 2019).
+- Assign a wrapped label's fragments to the nearest record by y.
+- Cut the caption's own line off, because its number sits in the column band (Benin's `Tableau 2`).
+- Cluster rows on their vertical centre with a tolerance, never on top-edge bins.
+- **Identify a column by its header label and assert the order**; a printed column number is
+  decoration (Austria's `1 2 3 5 4`). Enforced by: `sources/pk_2023.py::_column_edges`,
+  `::check_block`.
 
 **And one thing the office may have done to the data before you see it.**
 
-- **AN OFFICE CAN HAVE PRORATED ITS NON-RESPONSE AWAY BEFORE PUBLISHING, AND ONLY A FOOTNOTE SAYS SO.**
-  Every rule in §3.5 assumes non-response is a column you can choose not to draw. Guyana's Table 2.19
-  has no such column because the Bureau took its 363 not-stated, 16,331 no-contact and 7,443
-  institutional people — 3.23% of the country — and **distributed them across the thirteen religion
-  categories in proportion**, saying so in four lines under the table and nowhere else. So "100% of the
-  census is drawn" and "some of what is drawn is the office's estimate" are both true, and no figure at
-  any geography separates them. **Ask whether the office has already redistributed its non-response,
-  and read the footnote to find out.** The trap is that the symptom — a category set that partitions
-  the population exactly, with no non-response cell — is *also* what an unusually clean source looks
-  like, so it is invisible from the numbers alone. **Record it and do not undo it**: reversing a
-  proration means inventing the distribution it replaced (§14.4).
-- **A source with a publication floor needs its remainder emitted as a category** — *and then that
-  category needs mapping.* India's Appendix names a religion only at 100+ adherents nationally, leaving
-  1.9% of the bucket unnamed; without an explicit row for it `allocate.py` normalises shares over the
-  named categories and inflates every one by ~2%, silently and in the direction that flatters the map.
-  Emitting the row then created the *other* silent failure: it resolved to nothing in the taxonomy and
-  `countries.py` dropped 149,668 people without a word, while every reconciliation upstream of the
-  taxonomy still passed. **Adding a category is a taxonomy change even when it comes out of the
-  normaliser.**
-- **A FLAT EXPORT THAT NESTS BY POSITION FAILS SILENTLY ON ONE MISSING SPACE, AND THE VICTIM IS THE ROW
-  ABOVE.** SingStat's subzone population CSV marks a parent as a header row reading `<name> - Total`
-  with its children following unindented and unmarked, so the parent is carried positionally.
-  **`Changi- Total` is printed with no space before the hyphen**, alone among 55. An
-  `endswith(" - Total")` match misses it, Changi is never opened, and its three subzones are
-  attributed to the PREVIOUS header, Central Water Catchment — an uninhabited reservoir catchment
-  that then holds 3,700 people while its own total row says nil. **Nothing else complains**: every
-  other parent still reconciles against its own children and the grand total is untouched, because the
-  rows were merely moved between parents. This is [[reference_name_join_wrong_neighbour]] in
-  positional form, and it is invisible to arithmetic for the same reason. **The defence is to assert
-  the NUMBER OF PARENTS against an independent list — here URA's 55 planning areas — and never
-  against the file's own totals.** Match the separator loosely (`^(.*?)\s*-\s*Total$`) and let the
-  count assertion be the thing that catches you.
+- An office can prorate non-response away and say so only in a footnote (Guyana): read it, record
+  it, never undo it.
+- A publication floor's remainder is emitted as a category, and then mapped (India's Appendix).
+- A flat export that nests by position fails on one missing space (`Changi- Total`): match loosely
+  and assert the number of parents against an independent list.
 
 ### Joining to boundaries
 
+One line per rule; the cases and reasoning are in `spec_archive/12.md`. Playbook:
+`playbooks/geography.md` (Boundaries and population base, Joins).
+
 **Get the right FILE first — the tabulation geography, not the administrative one.**
 
-- **WHEN THE COUNTING GEOGRAPHY IS NOT THE ADMINISTRATIVE GEOGRAPHY, LOOK FOR A BOUNDARY FILE CUT FOR
-  THE TABLES.** PSA tabulates religion on *province excluding any highly urbanised city inside it*:
-  Cebu means Cebu minus Cebu City minus Lapu-Lapu minus Mandaue, and the 33 HUCs are separate rows.
-  Every general boundary source carries the plain provinces instead, so **an ADM2 join double counts
-  all 33 HUCs while every unit count and every name looks right.** COD had the wrong tier and a partial
-  ADM4; geoBoundaries had no ADM4 at all. What worked was the **U.S. Census Bureau's per-country
-  geodatabases**, which are built to link to another country's census tables and therefore carry that
-  country's *tabulation* tier ([[reference_uscb_country_gdb]]). **The tell is independent cities, HUCs,
-  census-only units, or any "excluding…" in a row label.**
-- **BUT LOOK ON THE OFFICE'S OWN SITE FIRST.** Before COD, geoBoundaries or a USCB geodatabase, look
-  for a *census atlas*, *geo-files* or *GIS* link on the statistical office's own platform. When one
-  exists it is the census vintage by construction and cut to the tabulation geography — the two things
-  the Philippines cost a session to get. GSS's was a single link on a page already open, and it held
-  BOTH published tiers (261 districts and the 272 with metros split into sub-metros), against
-  geoBoundaries' 260 units on a 2019 vintage with no sub-metros.
-- **"THE OFFICE'S OWN SITE" INCLUDES A GIS SERVER, WHICH IS NOT LINKED FROM THE DOWNLOAD PAGES AND IS
-  NOT IN THE NATIONAL OPEN-DATA PORTAL.** Moldova (§9bv) looked like a forced name join: geoBoundaries
-  has `MDA` at ADM0/ADM1 only, HDX's COD-AB the same, Kontur's extract 287 units against the 901
-  wanted, and an OSM join was written and got to 898 of 901 before **`gis.statistica.md`** turned up
-  with 212 hosted FeatureServers of 2024 census indicators pre-joined to geometry at three tiers.
-  The national portal is not where to look — `dataset.gov.md` returns **zero** results for
-  `geospatial`, `shapefile`, `hotare` and `cadastru`, and `geoportal.md` is 410 Gone. **Two hosts,
-  two different names:** `gis.` or `geo.` prefixed on the office's own domain, browsable at
-  `/server/rest/services?f=json`; and the office's **ArcGIS Online organisation** at
-  `services-eu1.arcgis.com/<orgid>/`, where BNS publishes its LAU and NUTS layers under CC-BY. Try
-  both before accepting a name join, and see [[reference_gis_server_census.md]], which is the same
-  finding from the other direction.
-- **A POPULATION COLUMN ON THE POLYGON TURNS A CODE JOIN INTO A PROVED ONE.** A code join can still be
-  a join to the wrong *vintage* of the same units, and nothing about matching codes detects that.
-  Moldova's commune layer carries `p_distrib`, the office's own 2024 census population per polygon,
-  and it equalled the total computed from the religion table **to the person on all 896 joined
-  units**. Ask what population field a boundary service offers and assert against it; it is free and
-  it is a stronger statement than any name join can make.
-- **A COUNTRY CAN HAVE TWO OFFICIAL CODE SYSTEMS THAT DO NOT CORRESPOND.** Moldova's CUATM carries a
-  7-digit *cod statistic* and a 4-digit *cod unic*. Below the raion neither is derivable from the
-  other (Drepcăuţi is `1422000` and `1426`) because the unique code numbers sub-village localities
-  that the statistical code does not, and they coincide only for towns, which both systems number
-  first. The census publishes one and OpenStreetMap tags the other. **A code that looks like a
-  truncation of the other code may not be one; check a village and not only a town.**
-- **TWO FILES LABELLED "ADM2" ARE NOT TWO FILES AT THE SAME LEVEL.** HDX's `ken_admpop_2019.xlsx` has
-  345 ADM2 rows; COD's `ken_admin2.shp` has 290 ADM2 polygons. Kenya's administrative **sub-counties**
-  and its **constituencies** are different tiers, both routinely called ADM2, and neither file says
-  which it means. Joined within county by folded name it is 182 rows of 345 and **40.5% of the
-  population unplaced**. The tell was not a name mismatch — it was the COUNT, visible before any join
-  was attempted. **Compare the row counts of two files at the "same" level before writing the join.**
-- **A BOUNDARY FILE WITH ONE FEATURE TOO MANY MAY BE TELLING YOU HOW TO FIX IT.** geoBoundaries VNM
-  ADM1 has 64 features and 63 distinct `shapeISO` values: the extra is **Côn Đảo**, an offshore
-  *district* of Bà Rịa–Vũng Tàu carried separately and correctly given the parent's code. Dissolving on
-  `shapeISO` reassembles the province. A feature-count assertion alone reads 64-against-63 as an
-  off-by-one and sends you to `drop_duplicates()`, which discards the islands or the mainland depending
-  on row order. **Count the KEYS, not the features, and treat a duplicated key as a grouping
-  instruction until proved otherwise.**
-- **AND CHECK WHETHER THE COUNTRY HAS REDISTRICTED SINCE THE COMMIT YOU PINNED, NOT ONLY SINCE THE
-  CENSUS.** §8.1's rule is about the data's vintage; this is about the file's. Vietnam merged 63
-  provinces into **34** on 1 July 2025, so a boundary release from after that has no Hà Nam, no Bạc
-  Liêu and no Ninh Thuận, and its An Giang is An Giang plus Kiên Giang — not a subtly wrong file but a
-  different country, joining at maybe half strength with no obvious symptom. **Pin the release, assert
-  the feature count, and put the reason in the error message.**
-- **Vintage, always** (§8.1). geoBoundaries POL ADM3 is 2017. Four Estonian EHAK codes were retired
-  between the 2021 census and the 2024 boundary file. Prefer a boundary set from the census year; when
-  you cannot, prove the join instead of arguing about it.
-- **A form-gated boundary file may be mirrored somewhere ungated.** SHRUG's own download needs a form;
-  the identical parquets are plain GitHub release assets in `yashveeeeeeer/india-geodata`
-  ([[reference_india_census_geo]]). **Check for a mirror before treating a form as a wall — and check
-  the licence on the mirror**, because SHRUG's is CC-BY-NC-SA, the first non-commercial source here.
-- **Eurostat GISCO LAU 2021 is the boundary answer for 34 European countries** in one 98MB zip, and its
-  companion LAU–NUTS correspondence workbook carries `NUTS3 | LAU CODE | LAU NAME NATIONAL` — which is
-  how Romania, whose census has no codes at all, was joinable. **Those 34 are NOT the EU27** — `MK`,
-  `RS` and `AL` all have full LAU coverage, so North Macedonia needed no boundary download at all. The
-  correspondence WORKBOOK is EU27 and excludes them: **polygons yes, code bridge no.**
+- Where the counting geography is a tabulation tier ("excluding" in row labels, HUCs, independent
+  cities), use a file cut for the tables: USCB country geodatabases carry them (Philippines).
+- **But look on the office's own site first**: a census atlas or GIS link, a `gis.` or `geo.` host
+  at `/server/rest/services?f=json`, and its ArcGIS Online organisation (Ghana, Moldova).
+- A population column on the polygon turns a code join into a proved one (Moldova's `p_distrib`).
+- Two official code systems may not correspond below the top tier: check a village, not a town.
+- Two files labelled "ADM2" can be different tiers: compare their row counts before joining (Kenya).
+- **A duplicated key is a grouping instruction**: count keys, dissolve, never `drop_duplicates()`
+  (Vietnam's Côn Đảo).
+- Check for redistricting since the release you pinned, not only since the census; pin the release
+  and assert the feature count. Enforced by: `EXPECTED_*` counts per `<cc>_geo.py`, e.g.
+  `sources/kr_geo.py::build_units`.
+- A form-gated boundary file may be mirrored somewhere open; check the mirror's licence (SHRUG).
+- GISCO LAU 2021 has polygons for 34 European countries; its LAU-NUTS workbook covers the EU-27 only.
 
 **Then join on a CODE if one exists, and prove it.**
 
-- **ASK EARLY WHETHER THE RELIGION TABLE CARRIES A GEOGRAPHIC CODE — it decides whether the join is a
-  lookup or a day's work.** Every trap in Romania's, Ghana's and Serbia's boundary work — folded
-  transliteration, parenthesised aliases, acronym collisions, two municipalities called Palilula —
-  descends from one fact: those sources publish names only. Lithuania publishes codes, GISCO's `LAU_ID`
-  **is** that code, and the whole join is `zfill(2)` and a merge. **It is the second question to ask a
-  candidate source, right after "does it go deep enough", because the answer changes the estimate by a
-  day and occasionally decides whether a country is worth doing at all.**
-- **A matching unit count is not a join.** Poland: GISCO's 13-digit `LAU_ID` and GUS's 7-digit TERYT
-  share no substring, both sides have exactly 2,477 units, and joining as delivered matches **zero**.
-  **Always print the join both ways and fail on either side.**
-- **TWO NUMERIC-LOOKING CODE SPACES CAN OVERLAP COMPLETELY AND AGREE NOWHERE.** Vietnam's census keys
-  provinces by GSO's administrative code; geoBoundaries keys them by `shapeISO`, which is ISO 3166-2:VN.
-  Both are two digits, both run over the same 63 units, and **`04` Cao Bằng is the only province where
-  they mean the same place** — GSO's `02` is Hà Giang and ISO's `VN-02` is Lào Cai. A numeric join
-  produces 63 wrong assignments, and the unit count, the national total and every category total still
-  reconcile, because nothing downstream can see which polygon a correct number was drawn on. **Bridge
-  the two spaces explicitly, re-derive the bridge by name on every run, and check it against a quantity
-  neither side determines** — here, Kontur population per province against census population.
-- **TWO FILES THAT SHARE A CODE *SHAPE* DO NOT SHARE A CODE, and a 96% match is not evidence that the
-  96% is right.** This is the inverse of Poland's trap and far more dangerous, because it *looks like
-  it worked*. COD's `adm4_pcode` is exactly `LK` + the census's district/DS/GN triple; joining on it
-  matched 13,472 of 14,003, and the misses looked exactly like the vintage gap a 2022 file and a 2024
-  census would predict. But **13 DS divisions had been renumbered between the two vintages**, so the
-  join did not miss those units, it paired each of them with a real polygon somewhere else in the same
-  district — **762,824 people, 3.5% of the country, in the wrong valley, with no symptom at all.**
-  Poland's failure announced itself by matching zero; this one by matching *almost everything*. **The
-  general rule: a shared code is only trustworthy as far up the hierarchy as you have independently
-  verified it.** The fix is to stop using the code as a global key — align the COARSER level by NAME
-  first, then match the finer code only *within* an aligned pair, which makes the code local, which is
-  all it was ever reliable as. **Names survive a renumbering and codes do not.**
-- **A partial match rate has two explanations and they need telling apart.** "Vintage gap" and "the key
-  is wrong for part of the file" produce the same number. Distinguish them by checking the matched side
-  for something the key does not determine — for Sri Lanka, comparing DS *names* across the code join,
-  since a correct pairing cannot put Walapane's polygon under Nildandahinna's name.
-- **A code can stop being comparable altogether when one side splits a unit.** COD numbers Kalmunai's
-  58 GN divisions 005–300, while the census splits the DS division in two and **restarts each half at
-  005**. Matching on the code gives all 29 low numbers to whichever half is seen first and orphans the
-  other. **Where two units on one side share one unit on the other, pool them and match on names only.**
-- **WHEN A UNIT CANNOT BE PLACED, ITS FALLBACK IS THE UNMATCHED REMAINDER OF ITS PARENT, NOT THE WHOLE
-  PARENT.** Everything that did match belongs to some other child, so what is left is where the unplaced
-  people must be — a tighter and strictly more honest area, for free. Kalmunai is the case that proves
-  it matters rather than being tidy: COD holds the town as one DS division and names only the 29 GN
-  polygons of its Tamil half, leaving the Muslim half's 29 blank, so no name can reach them. The
-  remainder puts those **52,798 people in the correct half of the town**; the whole-parent fallback
-  would have smeared them across both halves and **erased the sharpest religious boundary in the
-  country.**
-- **ID formats are per country.** Romania's `LAU_ID` simply *is* the SIRUTA code; Poland's needs
-  slicing; Estonia's PxWeb code is a concatenation of EHAK codes. **Assert the format (length, digits)
-  before slicing**, so a reissue fails loudly.
-- **A longer key can be the safer one, which is the exact reverse of Poland.** Poland's LAU id had to be
-  sliced DOWN to six digits; Germany's 12-digit ARS must not be shortened to the 8-digit AGS. The
-  difference is what the extra digits carry: Poland's were a unit TYPE the boundary file omits,
-  Germany's are the *Verbandsschlüssel*, which changes when a Gemeinde moves between Ämter. Joining
-  Germany on the AGS makes the two leftovers disappear and looks like a fix — while orphaning three
-  populated polygons whose people are counted elsewhere, placing ~3,000 people in the wrong villages
-  **with every count still reconciling**. **There is no rule about key length. There is only printing
-  the join both ways and asking what the leftovers *are*.**
-- **Verify a derived key with something independent.** For Poland it was names: 2,476 of 2,477 agreed,
-  and the one that did not was a real 2021 rename. A wrong offset rule cannot produce that.
-- **TWO ORDERINGS THAT AGREE 92% OF THE TIME ARE NOT THE SAME ORDERING.** Malawi got a free
-  independent key out of the fact that the census's print order reproduced COD's `adm2_pcode` order,
-  and Benin looks identical — both alphabetical within a department — and **fails on six of 77**. All
-  six are adjacent transpositions with dull explanations: COD sorts under its OWN spelling, so `Kobli`
-  follows `Kérou` where the census's `Cobly` precedes it; a hyphen sorts before a letter for one side
-  and is ignored by the other, swapping `Za-Kpota` and `Zagnanado`; and one department is simply not
-  alphabetical. **Six rows in 77 is exactly the size of discrepancy a stale vintage produces**, so an
-  assertion kept and then loosened until it passed would have stopped detecting anything at all. Two
-  responses, both needed: **mint the positional id so it cannot be mistaken for the official code**
-  (`BJ12-07`, not `BJ1207`), and **assert the weaker true thing** — that no unit's rank moves by more
-  than one place, which a transposition of neighbours survives and a shifted block does not.
-- **"The 2022 boundary file" can be two different files.** BKG publishes a **01.01 and a 31.12 edition
-  of every year**, and destatis never states which Gebietsstand it published on. Against the German
-  census: 01.01.2022 leaves 2 unmatched, 01.01.2023 leaves 10, 31.12.2022 leaves **none**. **Try them
-  all and let the leftovers pick; do not reason about which *ought* to be right.**
-- **WHERE THE CENSUS NUMBERS ITS UNITS AND NAMES NONE OF THEM, TRY ISO 3166-2.** Guyana has the
-  opposite of the usual problem: Table 2.19's columns are `Region 1` … `Region 10` and the compendium
-  never prints `Barima-Waini` anywhere, so there is no name on the census side to match on.
-  **geoBoundaries carries `shapeISO`, and ISO 3166-2:GY is exactly the ten regions in region-number
-  order**, so the join is a transcription of a published standard, checkable by asserting the code set
-  matches and is unique. `shapeISO` is present on many geoBoundaries layers and nothing here had looked
-  for it. It earned its keep immediately: the file misspells Region 1 as `Barina-Waini`, so a name join
-  would have failed on exactly one region of ten and read as a vintage gap.
+- Ask early whether the religion table carries a geographic code.
+- **A matching unit count is not a join** (Poland matches zero as delivered): print the join both
+  ways and fail on either side. Enforced by: a bijection assertion per `<cc>_geo.py`, e.g.
+  `sources/tl_geo.py::main`; `sources/geo_checks.py::check_unplaced`, from `scatter.py::main`.
+- Two numeric code spaces can overlap completely and agree nowhere (Vietnam's GSO and ISO codes):
+  bridge them explicitly and check against a quantity neither side determines.
+- **A shared code shape is not a shared code** (Sri Lanka): align the coarser level by name and match
+  codes only inside it. Enforced by: `sources/ec_geo.py::check_code_join`,
+  `sources/do_geo.py::check_code_join`.
+- A partial match rate is a vintage gap or a wrong key: check the matched side against something the
+  key does not determine.
+- Where two units on one side share one unit on the other, pool them and match on names (Kalmunai).
+- **A unit that cannot be placed falls back to its parent's unmatched remainder**, not the whole
+  parent (Kalmunai). Enforced by: `sources/kr_geo.py::patch_hole`.
+- Assert an ID's format before slicing it. There is no rule about key length: print the join both
+  ways and ask what the leftovers are (Poland, Germany's ARS).
+- Verify a derived key with something independent, such as names.
+- Two orderings that agree 92% of the time are not one ordering: mint positional ids that cannot
+  pass for official codes and assert no rank moves more than one place. Enforced by:
+  `sources/bj_geo.py::main`.
+- A year's boundary release can have two editions (BKG's 01.01 and 31.12): try all and let the
+  leftovers pick.
+- Where the census numbers its units and names none, try ISO 3166-2 through `shapeISO` (Guyana).
 
 **Joining on NAMES, where there is no code.**
 
-- **AN ACRONYM COLLIDES THE WAY A CODE DOES, AND LOOKS FRIENDLIER WHILE DOING IT.** GSS names sub-metros
-  by their parent's abbreviation, and **`TMA` is Tema Metropolitan Area in Greater Accra and Tamale
-  Metropolitan Area in Northern**, 600 km apart. Matching `TMA-` on a single global acronym hands all
-  four sub-metros to one of them and orphans the other, and **every national and regional total still
-  reconciles**, because the rows are all present and all in the same country. Sri Lanka's rule in a
-  human-readable costume: resolve the prefix inside the parent block. Beside it, the near-miss that
-  shapes the rule: `Nkwanta North (Kpassa)` is a parenthesised *alias*, not a metro, so the test has to
-  be "a parenthesised acronym that some row in the same region uses as a prefix" — both halves
-  load-bearing.
-- **A PLAIN PLACE NAME COLLIDES TOO, AND IT LOOKS EVEN FRIENDLIER.** Belgrade has a Palilula and so does
-  Niš, 200 km apart, and RZS publishes no codes of any kind. An acronym at least *invites* the question;
-  a real name does not, and the failure is Ghana's exactly. **Compute which names repeat rather than
-  listing the ones you found**: `rs_geo.py` collects the bare names appearing more than once on *either*
-  side of the join and qualifies only those with their parent, so a collision introduced by a future
-  census is caught by the code that already exists. **A hand-written exception table is a note that goes
-  stale; a derived one is a check.**
-- **Diacritics that look identical are not.** `ş` U+015F (cedilla) vs `ș` U+0219 (comma-below), and
-  `ţ`/`ț`. INS writes one, Eurostat writes the other, for the same names. Fold to ASCII on both sides or
-  a third of Romania silently fails to match — **and it looks exactly like a vintage problem.**
-- **Where a name join is the fix, fold transliteration — but only ever within a parent.** DCS and COD
-  romanise Sinhala and Tamil differently on 81 of 340 DS names (Mathugama/Matugama, Dickwella/Dikwella,
-  Vadamaradchi/Vadamaradchchi). A fold aggressive enough to catch those — collapsing aspirate digraphs,
-  `w`/`v`, `ee`/`i`, doubled letters, and `h` entirely — is far too aggressive to be a national key and
-  must be applied inside one district, with **every match required to be 1:1** so a collision is
-  reported rather than resolved.
-- **Resolve leftovers by elimination, never by guessing.** Romania had 8 unmatched names of 3,181
-  (`Râşca`/`Rişca`, `Sfântu`/`Sfântul Gheorghe`); each was the only one left in its county, so it is a
-  deduction. **Refuse when two or more remain on either side.**
-- **Derive alias maps, do not hard-code them.** A frozen list of four renames goes stale in silence at
-  the next release; a rule that re-derives them fails loudly instead.
-- **When names disagree across a good join, find out WHICH side is wrong before calling it spelling.**
-  Chile's CUT join is 345 of 346 both ways with no spares, and the name cross-check still turned up
-  three disagreements. Two were spelling. The third was `CL01401`, named **Tocopilla** in COD against
-  **Pozo Almonte** in the census — different towns 400 km apart, which reads exactly like Sri Lanka's
-  wrong-unit pairing. It is not: `CL01401`'s province is Tamarugal, its region Tarapacá and its area
-  13,738 km², which is Pozo Almonte to within 0.2%, while the real Tocopilla is `CL02301` and is present
-  and correct. **COD's name field is wrong and its geometry is right.** Two rules: resolve such a
-  disagreement against the PARENT UNITS AND THE AREA, which the code join does not determine; and
-  **take names from the statistical source rather than the boundary file**, since the census office is
-  authoritative for its own place names. Keep the resolved list in the script so a *fourth* disagreement
-  fails the build instead of joining the known-harmless pile. **And the corollary for the case Chile
-  does not cover** (Guyana's): when the statistical source publishes *no* names, the order becomes
-  **prefer a standard to a file, and a file to a guess.**
+- **Resolve an acronym or a repeated place name inside its parent**, and derive the names that
+  repeat on either side instead of listing them (Ghana's `TMA`, Serbia's two Palilulas). Enforced
+  by: `sources/rs_geo.py::_keys`. Helper exists: `sources/geo_checks.py::file_neighbour_outliers`
+  (no build calls it yet).
+- Fold look-alike diacritics (`ş` and `ș`, `ţ` and `ț`) on both sides.
+- Fold transliteration only within a parent, and require every match to be 1:1.
+- Resolve leftovers by elimination; refuse when two or more remain on either side.
+- Derive alias maps rather than hard-coding them.
+- When names disagree across a good code join, settle it on parent units and area, and take names
+  from the statistical source; with no names, prefer a standard to a file and a file to a guess
+  (Chile, Guyana).
 
 **When a unit has no polygon, or the wrong parent.**
 
-- **Look for the sub-level before accepting that a unit has no geography.** India publishes units called
-  `Area not under any Sub-district` — 17.4M people, including the whole Kolkata metropolitan fringe —
-  for which no polygon exists at that level, and whose district's polygons tile it completely, so there
-  is no leftover shape. The census also publishes their **town** rows, which sum to the unit's
-  population **exactly, 100.0%**, and every one of those towns has a polygon. **A census that publishes
-  a residual usually publishes its parts somewhere, and the union of the parts is a fact rather than an
-  estimate.**
-- **A unit with no polygon anywhere may still be reconstructable from its parts.** The BARMM Interim
-  Province — 63 barangays moved by the 2019 plebiscite — is younger than every published Philippine
-  boundary layer. The USCB had folded those barangays back into Cotabato *and tagged each one* with the
-  cluster it came from, so the unit was rebuilt from the tags. **The two halves of the discrepancy were
-  the same fact**: Cotabato was the single unit failing the total check, and it failed by exactly the
-  missing province's population. **When one unit is missing and one unit's total is too large, check
-  whether they are the same people before treating them as two problems.**
-- **AND WHEN ONE UNIT IS MISSING, THE FAILURE SURFACES SOMEWHERE ELSE.** geoBoundaries omits an entire
-  Korean county (Yeonggwang-gun, 53,984 people): no polygon of that name, 228 polygons against 229
-  census units. Rebuilt from the eleven ADM3 eup and myeon that fall inside no ADM2 polygon, 481 km²
-  against a published 475, with the selection checked three ways (the eleven must be present, they must
-  dissolve to one shape, the area must match) so a later release that fills the hole fails loudly. **The
-  two things to carry are about diagnosis, not repair.** The missing unit was NOT the one that looked
-  obvious — Sejong was the expectation, being both a province and its own single sigungu, and it turned
-  out present. And **one missing unit cascaded into a second, wrong-looking failure**: with the county
-  absent its province was a polygon short, the count-constrained assignment took a neighbouring city's
-  district to fill the gap, and the visible symptom was that CITY failing, 500 km away. **When two units
-  fail in different places, look for one defect before assuming two.**
-- **A BOUNDARY FILE'S OWN PARENT LAYER CAN BE UNUSABLE FOR ASSIGNING ITS CHILDREN.** The natural way to
-  give each ADM2 unit a parent is point-in-polygon against ADM1, and in Korea it fails twice over.
-  **First, the ADM1 polygons OVERLAP each other**: six metropolitan cities are enclaves carved out of
-  the province around them, and geoBoundaries draws the surrounding province *without cutting the city
-  out* — so a point in Gwangju's Dong-gu is inside both `Gwangju` and `South Jeolla`, `sjoin` returns
-  two rows, and dropping duplicates hands whole metropolitan cities to the wrong province. 14 units
-  landed in a neighbour, and the symptom was not a spatial error but a *name* failure downstream, in a
-  different province. **Second, greatest-overlap does not rescue it**, because parent and child layers
-  are different vintages: 85 of 228 districts sit less than 90% inside their best province and an island
-  district came out 77% inside the wrong one. **A geometric assignment is only as good as the geometry,
-  and two layers from one publisher are not thereby aligned.** The way out generalises: **derive the
-  parent from the NAMES where the names are unique, and use geometry only for the remainder.** A fold
-  unique on both sides matches globally with no parent needed and thereby *tells* you its polygon's
-  parent (199 of 229 here); the colliding remainder takes the nearest anchored neighbour's parent,
-  **constrained by the per-parent counts the statistical source already gives**, so a parent that is
-  full cannot take another's.
-- **WHERE THERE IS NO POPULATION COLUMN, THE PARENT UNIT IS THE FREE INDEPENDENT CHECK.** Ghana's
-  boundary file carries only names and a `Region` attribute, and on the census side a unit's region comes
-  *only from row order*. Those two are genuinely independent, so their agreement on all 272 confirms the
-  join AND the positional parse in one move. It is exactly the check that would have caught Romania's
-  county-header bug, it is available wherever a boundary file carries a parent column, and it costs
-  nothing. It also found the only real defect in the file — one row spelling Greater Accra
-  `Greate Accra`.
-- **The strongest join check is a quantity the join does not determine — and a boundary file may hand
-  you one.** The Philippine USCB geodatabase carries the census's own religion table as a layer, so
-  `RLG_HPOP` could be compared against the independently-read `ph.csv`: exact agreement, to the person,
-  on 115 of 116 units. That is worth more than any amount of name agreement, because a wrong pairing
-  cannot produce it. **Ask what else is inside a boundary download before treating it as only geometry.**
-- **A source's population and a boundary file's population measure different things, and asserting them
-  equal fails on honest data.** North Macedonia's census counts *residents*; GISCO's `POP_2021` does
-  not; the country has lost a fifth of its people to emigration and the two disagree by a median 11.7%,
-  worst in exactly the western emigration municipalities. **Assert the RELATIONSHIP instead**: a correct
-  join keeps every unit's ratio inside a factor of two around a tight median, a scrambled one pairs
-  villages with cities and scatters it over orders of magnitude. Written as an equality it either fails
-  on every real difference of definition or gets loosened until it detects nothing. (Also:
-  **GISCO's `POP_2021` is 0 for seven of Skopje's ten municipalities** — a live trap for anyone reaching
-  for it as a weight. Print such holes rather than filtering them.)
-- **A CODE HIERARCHY TELLS YOU THE CURRENT PARENT AND SAYS NOTHING ABOUT THE HISTORICAL ONE.** BPS
-  sub-district codes are `regency(4) + kecamatan(3)`, and a new regency is carved out of whole
-  kecamatan, so dissolving a modern file's ADM3 by the first four digits looks like a free way to
-  rebuild the census vintage's ADM2. It is not: **a regency created after the census gets entirely NEW
-  kecamatan codes under its own prefix** — Mahakam Hulu's five are `6411010`..`6411050`, not Kutai
-  Barat's `6402xxx` — and the boundary file's ADM3 codes agree with its own ADM2 for all 7,069. So the
-  dissolve rebuilds only the part of the old unit that stayed put. **Stable-looking leaf codes are no
-  evidence either way; the only thing that carries history is a source that states the parentage.**
+- Look for the sub-level first: a census that publishes a residual unit usually publishes its parts
+  (India's towns).
+- A unit with no polygon may be rebuilt from tagged parts, and one missing unit beside one unit too
+  large may be the same people (BARMM and Cotabato).
+- **One missing unit surfaces as a failure somewhere else** (Korea's Yeonggwang): look for one defect
+  before assuming two. Enforced by: `sources/kr_geo.py::patch_hole`, `::build_units`.
+- A boundary file's own parent layer can be unusable (overlapping enclaves, misaligned vintages):
+  derive parents from unique names and use geometry only for the rest, constrained by the source's
+  per-parent counts.
+- Where there is no population column, the parent unit is the free independent check. Enforced by:
+  `sources/gh_geo.py::_verify_region`.
+- Ask what else a boundary download carries: a census table layer beside the polygons is the
+  strongest join check (the Philippines' `RLG_HPOP`). Enforced by: `sources/ph_geo.py::main`.
+- Two populations on different definitions: assert a ratio band, never equality; GISCO's `POP_2021`
+  is 0 for seven Skopje municipalities. Enforced by: `sources/mk_geo.py::main`.
+- A code hierarchy gives the current parent, not the historical one (BPS's new regency codes).
 
 **Capitals and sub-city geography.**
 
-- **Watch for the capital in one polygon.** Tallinn is 33% of Estonia, Prague 12.4%, Bucharest 9.8%,
-  Warsaw 4.7%. If the office publishes religion for city districts, use them and let them REPLACE the
-  parent (Czechia, Estonia). If it does not, leave one polygon and say so — subdividing invents
-  structure the source does not have (§3.10).
-- **When the CENSUS is finer than the boundary file, that is a different problem and it is usually
-  solvable.** Zagreb and Budapest are the same case — religion published per city district, GISCO LAU
-  stopping at the city — and Croatia lost it while Hungary won it, purely because someone looked in a
-  second place. Budapest's 23 kerület are in **geoBoundaries ADM2**, whose Hungarian level is járás and
-  therefore includes them. **Check ADM2/ADM3 there before accepting one polygon for a capital; and check
-  the licence per level**, because geoBoundaries HUN is CC0 at ADM1 and ODbL at ADM2.
-- **AND THERE IS A THIRD ANSWER: THE SUB-LAYER EXISTS AND IS NOT GOOD ENOUGH.** Hungary won and
-  Croatia lost, so the rule read as "look harder". Benin is the case in between and it looks exactly
-  like Hungary's win until something independent is measured. INStaD publishes religion for Cotonou's
-  **13 arrondissements** — 6.8% of the country — COD-AB ships no ADM3 for Benin at all, and
-  geoBoundaries' 546 arrondissements (OpenStreetMap via a uMap, ODbL) contain all thirteen, correctly
-  numbered. Their union is **81.65 km² against COD's Cotonou at 80.58**, agreeing to 1.3%: on area and
-  on names it is a clean result. **The IoU is 0.729**, so 13 km² sticks out and 12 km² is uncovered,
-  and census population per arrondissement against Kontur's comes back at a **0.64×–1.98× band with
-  r = 0.81** where the standard is a factor of two around a tight median. Clipping to the parent — the
-  next bullet's fix — makes it worse, leaving one arrondissement with 16% of itself.
-  **So the capital stayed one polygon**, and the parsed thirteen rows were written to the normalised
-  CSV undrawn so a future layer is a lookup. **A finer tier is a gain only if something the join does
-  not determine says the pairing is right; area agreement and name agreement are not that thing.**
-- **Clip a borrowed sub-layer to the parent it subdivides.** Districts from a different vintage agreed
-  with GISCO's Budapest on total area to two decimal places and still overhung the city edge by tens of
-  metres, which would have put Budapest's dots in Budaörs. Intersecting with the parent makes the union
-  exactly the parent; the cost is a thin unfilled ring, which a dot map does not care about and a wrong
-  municipality is.
-- **A residual geography unit that is EMPTY is a proof, and worth asserting rather than filtering.** KSH
-  publishes `Budapest kerületre nem bontható adatai` — figures not divisible by district — and it carries
-  no religion rows at all. **That absence is what guarantees the 23 districts account for the whole
-  city.** If it ever fills, the assertion fails and the map is short by exactly that many people.
-- **"N polygons unmatched" and "N polygons unmatched that are all uninhabited" are different findings,
-  and only one is fine.** Germany's 204 leftovers all carry `BEZ == 'Gemeindefreies Gebiet'` — forest,
-  lake and military areas with no residents and so no religion row. **Assert the property**; a populated
-  polygon landing in that pile is a silent hole in the map.
+- A capital in one polygon: use city-district religion where it is published, replacing the parent;
+  otherwise leave one polygon (§3.10).
+- When the census is finer than the boundary file, check geoBoundaries ADM2 and ADM3, and the
+  licence per level (Budapest).
+- A borrowed sub-layer can agree on area and names and still be wrong (Benin's arrondissements, IoU
+  0.729): a finer tier needs a check the join does not determine. Not checked yet.
+- Clip a borrowed sub-layer to the parent it subdivides.
+- An empty "not divisible by district" unit is a proof: assert it (Budapest).
+- Assert that unmatched polygons are uninhabited (Germany's `Gemeindefreies Gebiet`).
 
 ### Choosing a placement layer
 
-§8.2 is the design; this is what goes wrong in practice.
+§8.2 is the design; one line per rule of practice here, with the cases and reasoning in
+`spec_archive/12.md`. Playbook: `playbooks/geography.md` (Placement).
 
-- **A FINE COUNTING GEOGRAPHY DOES NOT REMOVE THE NEED FOR A PLACEMENT WEIGHT — IT MOVES WHERE THE
-  ARTEFACT SHOWS.** §8.2's placement problem was learned on Kenya, where 47 huge counties washed empty
-  desert in one colour, so the reflex is that a country drawn at a fine tier does not need a grid.
-  Indonesia is drawn at sub-district for 403 of its 492 regencies and needed one anyway. The 89 whole
-  regencies are Kenya's case again — but the visible failure is **the dense urban unit**: Cengkareng is
-  513,920 people in one kecamatan, and an even wash across its polygon makes a city read as flat-shaded
-  tiles with administrative edges instead of a built-up area with a shape. **Empty units make a wash
-  where nobody is; crowded units make a rectangle where everybody is, and the second is the one a reader
-  notices first.**
-- **WHERE THE COUNTING GEOGRAPHY IS COARSE AND UNEVENLY INHABITED, A POPULATION GRID IS THE ANSWER AND
-  KONTUR IS ALREADY CHOSEN.** Kenya is 47 counties for 47.2M people and Turkana alone is 68,680 km² of
-  mostly desert; uniform placement washes the empty north in evenly spaced dots, and because Wajir,
-  Mandera and Garissa are 97–99% Muslim that wash is ONE COLOUR and becomes the loudest thing on the
-  map. 16.5 MB gzipped, 231,360 hexes, each carrying its own population, no administrative alignment
-  needed. Three mechanics worth copying: join on hex **centroids** so no hex is split between units;
-  **drop and report** hexes whose centroid is outside every unit (0.55% here); and **assert every unit
-  gets hexes**, because a unit with none silently empties. And **the grid is a MODEL** — assert its
-  national total against the census as a *ratio band*, never an equality (Kontur 55.0M vs census 47.6M,
-  ratio 1.156, four years of growth plus modelling); it is a within-unit weight, so only the shape
-  matters.
-
-- **A UNIT MISSING FROM THE `place` LAYER IS NOT DRAWN ON ITS POLYGON INSTEAD; ITS PEOPLE MOVE TO A
-  DIFFERENT UNIT.** Kenya's rule above says *assert every unit gets hexes, because a unit with none
-  silently empties* — and emptying is the optimistic reading. `countries.py` points `place` at ONE
-  layer, so a unit absent from that layer has no geometry at all, and `scatter.py` carries its people
-  into other units of the same node: they are drawn, in the wrong village, with every total still
-  reconciling. Cyprus hit it on **Akrotiri**, 931 people inside the Western Sovereign Base Area, where
-  Kontur models nobody — a military exclusion, not a modelling failure, so no ratio band would ever
-  have caught it. **The fix is for the grid builder to append the unit's own polygon at its census
-  population**, which invents neither geometry nor people, and then to assert the placement layer's
-  unit count equals the counting layer's. Any country with military land, a special zone or an island
-  the model skips wants that assertion; the symptom otherwise is a village that is simply not there.
-- **PICK THE GRID'S RESOLUTION AGAINST THE SMALLEST UNIT, NOT THE COUNTRY.** Russia is placed on
-  Kontur's **global r6** file (~36 km² hexes) and that is right for Russia; the same file for Serbia
-  gives **1,991 hexes for the whole country and four municipalities with no hex CENTRE at all** —
-  Vračar, Stari grad, Medijana and Sremski Karlovci, among the densest places in it. **A population
-  layer that fails hardest where people are densest is the wrong layer, and the symptom is silent.**
-  The test is the assert above. Keep the assert *and* a fallback: a unit smaller than one cell carries
-  its own polygon as a single cell, which is `de_grid.py`'s answer for 34 German Gemeinden. **Kontur
-  publishes per-country extracts at r8 and they are small** — Serbia's is 4.2 MB against the global
-  r8's 2.4 GB, at `…/kontur_datasets/kontur_population_<ISO2>_<date>.gpkg.gz`, and the URL takes any
-  code. So the global file is for countries too big to be worth an extract.
-- **AND A UNIT ABSENT FROM THE PLACEMENT LAYER DRAWS NOTHING, SILENTLY.** Kenya could assert that all 47
-  counties received hexes and stop; at 5,211 units that assertion becomes a run-stopper for four Papuan
-  sub-districts where the population grid models nobody at all. **Give such a unit its own polygon as a
-  single fallback cell** — which degrades to uniform placement for it and to nothing worse — and print
-  the list. Failing the run would be wrong, and dropping them would empty four real places with no error
-  anywhere.
-- **MEASURE COVER, NOT PRESENCE.** Bangladesh passes the every-unit-has-hexes assertion and is still
-  placed badly in four units, because **the counting unit can be smaller than the placement cell**: a
-  Kontur r8 hex is ~0.80 km² and central Dhaka's thanas are 0.8–3 km², so the centroid join gives Adabor
-  (2.29 km², 203,989 people) exactly one hex covering about a third of it. Every unit has a hex, every
-  total is exact, nothing fails, and the dots crowd into a third of the thana anyway. **The presence
-  check is not a cover check**, and on any country whose units approach the placement grain the number
-  to print is `hexes × cell_area / unit_area`. Whether to correct it is a separate question — in
-  Bangladesh it was left alone, because the fallback is an equal share over the same 2 km².
-- **AND NAME THE UNITS THE GRID MODELS WORST, RATHER THAN PRINTING A MIN AND A MAX.** The ratio band
-  verifies the join; it does not tell the reader anything. Per unit it does: Kontur misses about four
-  fifths of Serbia's Albanian-majority Preševo valley (Bujanovac 0.18×, Preševo 0.19×), so **the
-  country's two most Muslim southern municipalities sit on its weakest placement surface**. That moves
-  dots inside a unit and never a count, but it is exactly the sort of thing a reader would want flagged.
-  **A modelled population surface is least accurate where the model's inputs — night lights, building
-  footprints — are thinnest, which is not at random.**
-- **THE RATIO BAND IS NOT A CHECK UNTIL YOU HAVE SHOWN IT DISCRIMINATES, AND TWO LINES OF SHUFFLING
-  SHOW IT.** Every country here that joins by name asserts a Kontur/census band per unit, on the
-  reasoning that a scrambled join scatters over orders of magnitude. **Nobody had ever tested whether
-  that is true of the country in front of them, and for Benin it is false**: the communes are mostly
-  50,000–250,000 people and look alike, so shuffling the census populations across the polygons leaves
-  all but ~11 of 77 **inside the same factor-of-four band**. A band a scrambled join mostly passes is
-  decoration, and widening it to admit an honest outlier — Benin has two, both real — quietly makes it
-  decoration even where it started out useful.
-  **The fix is to measure the null rather than argue about it.** Compute the statistic under a few
-  hundred random pairings and compare. `bj_grid.py` uses the log-log correlation of census against
-  modelled population: **r = 0.9052 as built against a best of 0.3776 over 500 shuffles**, and asserts
-  that the real join beats every one of them. **Keep both** — the band still catches the gross failures
-  a correlation is blind to, an empty unit or a wrong CRS — **but know which one is doing the work.**
-- **AND WHICH ONE IS DOING THE WORK FLIPS WITH THE COUNTRY'S SHAPE — ZIMBABWE IS BENIN EXACTLY
-  REVERSED.** Ten provinces, wildly uneven (Harare is 2.4M people in 872 km², Matabeleland North is
-  828k in 75,025), and a grid whose vintage is one year off the census rather than ten. There the
-  **band** is 0.83×–1.11× and discriminates hard — a shuffle fails a median 4 of 10 and only 0.6% of
-  shuffles pass — while the **correlation** is nearly useless, because ten log-populations of similar
-  size correlate by luck: r = 0.979 for the real join against a best of **0.976** over 2,000 shuffles.
-  **A band is strong where the units are uneven and weak where they are alike; a correlation is the
-  reverse, and it needs enough units to have a null at all.** So the rule is not "prefer the
-  correlation", it is: **measure both nulls, assert on whichever the country's own shape makes
-  discriminating, and say in the file which one it was.** Two lines either way.
-- **AND CHECK AN ENCLAVE CITY TOGETHER WITH ITS RING, BECAUSE A BLURRED SURFACE CLOSES AND A BAD JOIN
-  DOES NOT.** Six Lithuanian cities are their own municipality sitting inside the rural municipality
-  named after them. Kontur reads Šiauliai city at 0.48× and Šiauliai rajono at 1.92×, which looks
-  alarming per unit and is simply a footprint-based model spreading Soviet apartment-district population
-  outward across an internal boundary. **Summed as a pair, all six close between 0.89× and 1.05×** — and
-  a wrong join would not. Derive the pairs from the names rather than listing them, and run this wherever
-  a country has cities carved out of rural districts, which in Europe is most of the post-Soviet ones.
-- **CHECK WHETHER A BIG INLAND LAKE IS INSIDE THE UNITS, AND MEASURE IT RATHER THAN ASSUMING.**
-  `water.py` subtracts the sea and states plainly that inland water is a known gap (§8.2c), on the
-  grounds that agencies usually cut lakes out themselves. GSS does not: its districts run straight
-  across **Lake Volta**, 6,045 km² and the largest reservoir on earth by surface area. **397 of 30,750
-  dots, 1.29% of Ghana, were in open water**, against the 3.0% of the New York bbox that made `water.py`
-  exist at all. One line of measurement finds it; nothing else will, because a dot in a lake is in the
-  right unit and every total is correct. HydroLAKES is already in `../data/`. Done locally in
-  `gh_geo.py` rather than in `water.py`: the gap is global, the demonstrated need is one country, and
-  **the second country to need it is when the code should move.**
-- **…AND A POPULATION GRID REMOVES THAT PROBLEM AS A SIDE EFFECT, BECAUSE WATER HAS NO POPULATION.**
-  Kenya has Lake Turkana and a share of Lake Victoria and needed no clip at all: it is placed on Kontur
-  hexes, which exist only where people do. 90 of 47,128 dots land inside a HydroLAKES polygon and most
-  are the inhabited islands of Lake Victoria. **The rule: a country placed on administrative polygons
-  may need the clip; a country placed on a population grid will not.**
-- **A COMPLETE POLYGON COVER IS NOT GOOD NEWS ABOUT WATER.** Ethiopia's ADM3 layer has 756 polygons for
-  738 counted woredas, and the 18 extras are lakes and parks cut OUT of the units, so §8.2c's problem
-  never arose there. Bangladesh has 544 for 544 — a clean identity join, and precisely the warning sign,
-  because no spare polygons means the agency has NOT removed the water and the rivers are inside the
-  units. In the largest delta on earth that is the difference between dots on land and dots
-  mid-Jamuna. **Spare polygons in an administrative file usually mean the lakes are already gone; their
-  absence means they are not.** The reading to avoid is that 544-and-544 means everything is fine — it
-  means the *join* is fine.
-- **A FINER GEOGRAPHY CAN BE WORSE, AND §3.9's TRADE IS NOT THE ONLY TRADE.** The usual question is
-  categories against geography. Indonesia's sub-district tier poses a different one — **geography
-  against completeness**: 6,357 units against 492, and 18% of the parents have an incomplete child
-  listing, so eighty-eight places would draw understated, one by 68%, while every national and regional
-  figure still looked reasonable. **Do not take the finer tier just because it exists.** Measure it
-  against the coarser one you already trust, per parent, and where it falls short prefer Ghana's answer:
-  **draw the fine unit where it reconciles and the coarse one where it does not**, so the drawn tier is
-  two `geo_level`s and every drawn row is still `measured`. Reaching for allocation to paper over the
-  shortfall would be inventing a magnitude the source does not publish, which §14.4 forbids outright.
-- **AND A PARTIAL FINER TIER IS NOT ONE KIND OF TRADE — ASK WHAT IT COSTS IN CATEGORIES AND IN VINTAGE
-  BEFORE ASKING HOW MUCH OF THE COUNTRY IT COVERS.** Two countries met the same-shaped choice on
-  2026-09-08 and it went opposite ways, which is the useful pair. **Albania (§9cc, `sources/al.md`
-  §3a) refused** a 373-unit layer that carried **4 of its 10 categories** and was **twelve years
-  older** than the drawn one: half the country would have lived in a unit more than a quarter grey,
-  and the grey was structured, heaviest exactly where Albania is most interesting. **Micronesia
-  (§9ch) took** a tier covering only **48.6% of its people**, with Chuuk's 44.7% left as one polygon,
-  because the finer half is the *same census year, the same office, the same eleven categories and
-  the same table number*, and the whole cost is 0.32% of the people in cells below the disclosure
-  floor. Coverage is the question that feels decisive and is the least informative of the three: a
-  finer layer that loses categories or vintage is a different dataset, while one that loses only
-  coverage is the same dataset read at the grain its own publisher chose per unit. That is Ghana's
-  answer above, and it is why the drawn tier is allowed to be two `geo_level`s.
-- **WHERE A CENSUS MERGES A NON-RESPONSE CELL INTO A SUBSTANTIVE ONE, THE SAME OFFICE'S PREVIOUS
-  ROUND OFTEN ASKED THEM APART, and that split is a free measurement of what is inside the merge.**
-  Palau's 2005 prints `None or Refused` and its 1995 prints `None` 1,577 against `Refused` 7
-  (`pw2005.py`); Micronesia's 2023 prints `No religion/Refused` and its 2010 Table B09 prints 723
-  against 72, and 281 against 12 in the one state that carries it (§9ch). Palau's was recorded when
-  the number could not matter. Micronesia's mattered, because a municipality tier turned a 0.7%
-  national footnote into **28.9% of one drawn unit** — at which point mapping it to `unaffiliated`
-  is a claim about a real place rather than a rounding decision. **The finer the tier, the more a
-  merged non-response cell needs evidence rather than a convention.**
-- **A MARGINAL CORRELATION ON THIRTY-ODD UNITS NEEDS A LEAVE-ONE-OUT BEFORE IT IS WRITTEN DOWN, and
-  the point to drop is the one that is extreme on BOTH axes.** [[reference_check_needs_power]] says
-  measure a validation correlation against sampling noise; this is its neighbour and it bites in the
-  opposite direction, on §3.5's lean check. Micronesia's undrawn residual correlates **+0.469** with
-  a unit's irreligion share over 31 units, permutation p = 0.046, which reads as a finding and was
-  nearly published as one. **Drop Kanifay and it is −0.011.** One municipality. A permutation test
-  alone would not have caught it, because the permutation null is about the pairing and not about
-  whether one row is carrying the whole estimate.
-- **`tools/oracle.py` TAKES UNSD'S OWN COUNTRY NAME AND NEVER A COUNTRY CODE, AND IT ANSWERS A cc
-  WITH A CONFIDENT FALSE NEGATIVE.** `oracle(country)` is a plain `dict.get` on UNSD's name string,
-  so `python tools/oracle.py fm` prints *"ABSENT from the oracle (proves no census tabulation was
-  forwarded, nothing more)"* — and prints exactly that for **every** two-letter code ever passed to
-  it, whatever the oracle holds. Micronesia shipped on that: the record and the reader-facing note
-  both said FSM had never sent UNSD a religion tabulation, while table 28 carries
-  `Micronesia (Federated States of)` 2000, 8 categories, 107,008, an exact partition that agrees
-  with the 2023 build within three points on every category and independently confirms the
-  `No religion/Refused` split (753 against 57, beside 2010's 723 against 72). **Always look the
-  country up in `--list` before writing down an absence**, and pass the name `--list` prints:
-  `python tools/oracle.py "Micronesia (Federated States of)"`. This is the same shape as the trap
-  `sources/bg.md` §3 records, where filtering the wrong column *"looks exactly like 'this country
-  is absent from the oracle', which is the one conclusion §11r warns is expensive to get wrong"* —
-  so it has now cost two countries, and the tool's own ABSENT wording, which says *proves*, is
-  what makes it expensive.
-- **BEFORE WIDENING A POPULATION GRID'S NATIONAL TOLERANCE, CHECK WHETHER THE COUNTRY CHANGED SIZE.**
-  Kontur's Micronesia extract reads **1.50x** the 2023 census, which looks like a failed download and
-  is not: FSM counted 102,843 in 2010 and 75,817 in 2023, and the grid is built on the older inputs.
-  The national ratio was never the test — it is divided out before any unit is judged — and the
-  per-unit band is (all 30 units inside a factor of 5, r = 0.9760 against a best shuffle of 0.5465).
-  So the right response is to widen the national check *with the census years written beside it* and
-  leave the band alone, rather than to distrust the grid or to loosen both.
-- **A POPULATION GRID CAN BE FINE ENOUGH AND STILL BE THE WRONG INSTRUMENT, BECAUSE RESOLUTION IS NOT
-  THE ONLY TEST. THE OTHER ONE IS WHETHER IT SHARES A UNIVERSE WITH THE COUNTS.**
-  [[reference_kontur_resolution_floor]] asks whether the grid is finer than the counting tier, and
-  Singapore passes that easily: Kontur at 400 m over 31 planning areas. It is refused anyway (§9bp).
-  Kontur counts everybody physically present; Singapore's census counts *residents*, and **1,641,590
-  people in Singapore are non-residents the religion table does not cover**, many of them in worker
-  dormitories. The resident population of Tuas is **70** and of Sungei Kadut **750**, so a
-  presence-weighted surface puts resident dots in both. The grid was never too coarse; it was
-  measuring different people. **So before reaching for the grid, ask what its denominator is and
-  whether the source's own office publishes population at a finer tier on the SAME universe.** Where
-  it does, that beats a modelled surface on universe, vintage and provenance at once, and Singapore is
-  weighted on its census's own 332 subzone resident populations instead (r = 0.99857 against the
-  religion table's own unit totals, and a correlation between two cuts of one census is *allowed* to
-  be tight, unlike every Kontur check on this map). The countries most exposed to this are the ones
-  with large counted-out populations: Gulf states, Singapore, Brunei, and anywhere the census word is
-  `resident` or `citizen` rather than `population`.
-
-- **AND A POPULATION GRID CAN SIMPLY BE WRONG, on its own terms, about a whole region — found with
-  Eswatini 2026-09-08 (§9bq).** Singapore's grid was accurate and counted the wrong people. Kontur's
-  Eswatini extract counts the right people and puts them in the wrong place: normalised by its own
-  national ratio it reads **0.38x on Hhohho and 2.24x on Lubombo**, dropping 43% of the country into a
-  region the census counts at 19%. The cause is what Kontur is built from. **Building footprints
-  inherit where the mapping happened rather than where the people are**, and Eswatini's northern
-  Lowveld sugar estates were mapped house by house in OSM while the Highveld *imiti*, the dispersed
-  homesteads most Swazis live in, are barely mapped at all. In a small country one mapping campaign is
-  enough to tip a whole region, so **this risk goes up as the country gets smaller, not down.**
-
-  Three things follow, and they are cheap.
-
-  **The per-unit band is not a formality and it must be believed when it fires.** It is the only thing
-  in the pipeline that would ever have caught this; every count reconciles, every join is a bijection,
-  and the map would simply have been wrong. A band failure is evidence about the grid at least as
-  often as about the join.
-
-  **Clear the boundaries before blaming them, and in that order.** Point-in-polygon for half a dozen
-  towns whose region you can look up, the polygons' areas against the office's published areas, and a
-  second independent spatial join. All three take ten minutes and all three passed here, which is what
-  turned "our join is broken" into "the grid is wrong" rather than leaving it ambiguous.
-
-  **Two independently built grids agreeing is what makes a modelled weight trustworthy; one grid
-  agreeing with the census is not.** Eswatini is placed on WorldPop's constrained 100 m `maxar_v1`
-  raster (machine-extracted footprints, not volunteered mapping) at 0.95-1.04, with the *unconstrained
-  2017* raster — a different model of the census's own year — carried as a **control rather than a
-  second opinion**, agreeing to within 0.037 on every region and asserted on every run. Any country
-  whose Kontur band looks ugly should get the same two-raster test before anything else is suspected.
-  Prefer the **constrained** release for placement even at the cost of a worse year: unconstrained
-  spreads people across open country, which is the failure §8.2 exists to avoid. (WorldPop ships
-  constrained rasters as **BigTIFF**, `II+\0`, and unconstrained ones as classic TIFF, `II*\0`, so a
-  §5a magic check accepting only `II*\0` rejects the file the country is built on.)
+- A fine counting tier still needs a placement weight: crowded units draw as flat rectangles
+  (Indonesia's Cengkareng).
+- Where the counting geography is coarse and unevenly inhabited, place on Kontur: join on hex
+  centroids, drop and report hexes outside every unit, and assert the national total as a ratio band.
+- **A unit missing from the `place` layer is not drawn on its polygon**: its dots are allocated and
+  never placed (Cyprus's Akrotiri). Give it its own polygon at census population and assert the
+  place layer's unit count. Enforced by: `sources/geo_checks.py::check_unplaced`, from
+  `scatter.py::main`, which stops unless `sources/geo_checks.csv` names the unit; this reverses the
+  archived advice that failing the run would be wrong.
+- Pick the grid's resolution against the smallest unit: use the per-country r8 extract
+  (`kontur_population_<ISO2>_<date>.gpkg.gz`), and let a unit smaller than a cell carry its own
+  polygon (Serbia).
+- **Measure cover, not presence**: hexes times cell area over unit area, with an r8 hex at about
+  0.74 km² (§8.2e; the archived ~0.80 km² is out of date). Enforced by:
+  `sources/geo_checks.py::check_grid_floor`, from `scatter.py::main` (warns).
+- Name the units the grid models worst, not a minimum and a maximum (Serbia's Preševo valley).
+- **A ratio band is a check only once it discriminates**: measure the null by shuffling. A band is
+  strong on uneven units and a correlation on many alike ones; assert whichever discriminates and
+  say which (Benin, Zimbabwe). Enforced by: `sources/bj_grid.py::main`, `sources/zw_grid.py::main`.
+- Check an enclave city together with its ring (Lithuania). Enforced by: `sources/lt_geo.py::report`.
+- Measure whether a big inland lake sits inside the units (Lake Volta held 1.29% of Ghana's dots). A
+  grid-placed country needs no clip; spare polygons usually mean the lakes are already out, and a
+  one-for-one cover means they are not. Enforced by: `sources/gh_geo.py::_drop_lakes` (Ghana only).
+- **A finer tier can be worse on completeness**: draw the fine unit where it reconciles and the
+  coarse one where it does not, as two `geo_level`s; never allocate over the shortfall (Indonesia).
+- Price a partial finer tier by the categories and vintage it loses before its coverage (Albania
+  refused one, Micronesia took one).
+- Where a census merges non-response into a substantive cell, the previous round often split them;
+  the finer the tier, the more that split is needed (Palau, Micronesia).
+- A marginal correlation on about thirty units needs a leave-one-out that drops the point extreme on
+  both axes (Micronesia's Kanifay).
+- **`tools/oracle.py` takes UNSD's country name**: look it up in `--list` before recording an
+  absence. The tool now says so when handed a two-letter code, instead of printing ABSENT
+  (`tools/oracle.py::main`).
+- Before widening a grid's national tolerance, check whether the country changed size, and leave the
+  per-unit band alone (Micronesia).
+- **A grid must share a universe with the counts**: where the census counts residents, prefer the
+  office's own finer population on that universe (Singapore).
+- **A grid can be wrong about a whole region** (Eswatini): believe a band failure, clear the
+  boundaries first, and test a second independently built raster (WorldPop constrained; its BigTIFF
+  magic is `II+\0`). Enforced by: `sources/sz_grid.py::main`. Grids that agree can still share one
+  error (the Haiti entry below).
 
 ### Taxonomy
 
-- **Map to branches, not leaves** (`cz2021.py` is the model). §2.4 defers cross-source matching and
-  `source_category` travels on every row, so deepening later costs nothing.
-- **Only map to paths declared in `branches.py`.** Nothing validates a country mapping at build time
-  except `tools/check_mapping.py <cc>` — run it. **An unmapped category is not an error anywhere
-  downstream**; `countries.py` just drops the rows, so people disappear quietly.
-- **Adding a branch under christianity/judaism/buddhism fails the build until it has a LINEAGE group**
-  (§6.5). That is deliberate.
-- **EXCLUDED and REVIEW are the deliverable**, as much as MAP is. Every arguable call gets a sentence on
-  why, so it can be overturned by someone who knows better.
-- **§2.4's DEFERRED MATCHING FINALLY PAID, AND IT IS WORTH KNOWING WHAT THAT LOOKS LIKE.** On 2026-09-05
-  Ghana's `Other Christian` swallowed the Musama Disco Christo Church and the Twelve Apostles because no
-  cell existed for them, and `gh2021.py` wrote down that a node was wanted and where its people would
-  sit meanwhile. The next day Kenya arrived counting **African Instituted Churches** as 3,292,573 people,
-  the node was added, and Ghana's rows needed no change at all. **The practical instruction: when a
-  category has no home, say in the REVIEW note what node you would want and what is inside the bucket in
-  the meantime.** That note is what makes the later fix a lookup instead of an investigation.
-- **Expect the source to disagree with the tree about *where* things go**, not just what they are
-  called: INEGI files Orthodox Christians under "other religions", GUS files Unitarians under
-  Christianity. Follow `branches.py` and record the disagreement.
-- **The same write-in string can mean opposite things in two countries, and only the place decides.**
-  `animismus` in Czechia is a Western neo-animist self-description and goes to `paganism`; `Animist` in
-  Sikkim is an outsider's word for a tribal religion and goes to `indigenous`. Likewise `Pagan` in
-  Meghalaya is the colonial-era label for the traditional Khasi religion, not the neo-pagan revival.
-  **Never map a category on its string alone — look at which units it is in first.** *Israel supplies
-  the sharpest case of this yet: `Masorti` there means traditional-but-not-strictly-observant, and
-  everywhere else in the Jewish world "Masorti" is the name of the Conservative movement. The two are
-  `judaism.masorti` and `judaism.conservative` and they are different objects.*
-- **A SOURCE THAT PUBLISHES TWO VARIABLES PER UNIT HAS NOT PUBLISHED THEIR CROSS-TABULATION**, however
-  much a per-area dashboard looks like it has. CBS gives every Israeli unit a religion breakdown AND a
-  household-observance breakdown — Secular 53.2%, Traditional 24.4%, Religious 12.2%, Ultra-religious
-  6.4% — and it is tempting to read the second as a split of the first, because in Bene Beraq (97.4%
-  Jewish, 83.8% ultra-religious) it effectively is. **It is not**: the question is asked of the whole
-  population, and Umm al-Fahm is 99.8% Muslim and returns 47.2% Traditional. Multiplying the two per
-  unit is a model, and in a mixed unit it attributes one group's answers to another. What Israel does
-  instead is the narrow honest version — **apply the second variable only where one group is at least
-  95% of the unit, and leave everyone else on the parent** — which covers most Israeli Jews without
-  ever claiming a cross-tabulation nobody computed. Mark those rows `modelled` (§7) either way.
-- **AN AXIS THAT IS NOT A LINE OF DESCENT NEEDS ITS OWN LINEAGE GROUP, NOT A SLOT BESIDE THE
-  MOVEMENTS.** Judaism's other children — Orthodox, Conservative, Reform, Reconstructionist — are
-  movements a person joins. Haredi/Dati/Masorti/Hiloni answer "how observant is this household", which
-  is a different question, and an Israeli Hiloni Jew has not left Orthodoxy for a liberal movement.
-  They therefore sit in their own `By observance` group rather than being interleaved, and **a country
-  uses one axis or the other and never both**. The general form: before adding children to a family,
-  ask whether the source is cutting it the same way the existing children cut it.
-- **A CATEGORY THAT IS A PEER CAN LOOK EXACTLY LIKE A CHILD.** KNBS prints `Evangelical Churches` beside
-  `Protestant`, not under it: in Kenya `Protestant` means the mainline mission inheritance (Anglican,
-  Presbyterian, Methodist) and `Evangelical` the faith-mission stream (Africa Inland Church, Baptists,
-  Pentecostal Assemblies of God). An Anglican there is a Protestant and a Baptist there is an
-  Evangelical, **which is the reverse of the usual English usage and would silently mis-file 9.6M
-  people.** Check the arithmetic — peers sum with their siblings to the total, children sum to their
-  parent — and then read what the office means by the word rather than what you do.
-- **A parent published BESIDE two of its own children needs the remainder emitted — and the remainder
-  must exist at every level the allocation touches.** KSH gives `Katolikus` (2,886,619) and, labelled as
-  subsets, Roman Catholic and Greek Catholic, but never their 77,629-person difference. Drawing the
-  parent too double-counts 2.8M; drawing only the children drops 77,629. **The second half is the one
-  that bites**: emitting it at the fine level alone silently deletes it at the allocation step, because
-  `allocate.py` carries a fine column forward only when some coarse category lands on it — and every
-  reconciliation upstream still passes. **AND THE TEST FOR WHICH CASE YOU ARE IN IS ARITHMETIC, NOT
-  STRUCTURAL:** GSS publishes `Christian` beside its four Christian categories and they sum to it
-  **exactly**, so there is no remainder and the parent is simply a duplicate to drop. The two look
-  identical in a table of contents and differ only in whether the published children add up. **Check it
-  per row, not nationally** — an identity that holds at the top and fails in one district is what a
-  misparse looks like.
-- **WHERE A SOURCE NAMES MANY BODIES OVER MANY UNITS, GEOGRAPHY IS EVIDENCE ABOUT LINEAGE — WITH TWO
-  CONDITIONS.** Two churches planted by the same mission are still in the same provinces sixty years
-  later, so provincial co-location says something a body's name cannot fake. 129 categories × 117 units
-  was enough to confirm six calls made from names and overturn one (`Evangelical Christian Outreach
-  Foundation`, 115,626 people, filed charismatic and actually a 1954 tribal faith mission). The
-  conditions:
-  1. **Normalise within the stream, not the population.** Correlating population shares measures "is
-     this province Protestant" and nothing else — on that basis Bible Baptist correlates 0.68 with the
-     Adventists, which is a fact about Mindanao. Use each body's share of its province's *named
-     non-Catholic Christian* population.
-  2. **Only act where the neighbours are classified independently of your own mapping.** Run over the
-     whole undocumented tail the check disagreed with 22 of 56 calls, and almost every disagreement was
-     circular: the nearest neighbours of a small unknown ministry are *other small unknown ministries
-     the same file placed by name*, so the vote just counts your guesses back to you.
+One line per rule; the cases and reasoning are in `spec_archive/12.md`. Playbook:
+`playbooks/census_table.md` ("An unmapped category vanishes", "`other.<cc>`, `unknown` and tiers").
 
-  **And it has a hard floor: it cannot separate categories that differ by doctrine and agree by
-  geography.** Charismatic and non-denominational megachurches are both Metro Manila, so the check put
-  the documented-non-denominational Christ's Commission Fellowship among the charismatics. **Use it to
-  audit a mapping, never to build one.**
-- **A new top-level family costs more than it looks.** `ROOT_HSL` (§6.3) is hand-authored for thirty
-  roots and its indigo→magenta wedge is already at the 3.3°-apart limit, so a 31st root makes every
-  other small family harder to tell apart. India's Nirankaris and Dera Sacha Sauda are real distinct
-  movements and still went to `other.in`, because **a group that draws one dot should not cost the whole
-  palette a degree.** Ghana's 999,319 Traditionalists went to a REGIONAL CHILD, `indigenous.african`, on
-  the pattern of `indigenous.indian` and `indigenous.philippine` — **the cheap move that gets a family
-  drawn without spending a root.**
+- Map to branches, not leaves (`cz2021.py` is the model).
+- **Map only to paths declared in `branches.py`**; an unmapped category is dropped silently
+  downstream. Enforced by: `tools/check_mapping.py::main`.
+- A new branch under christianity, judaism or buddhism fails the build until it has a LINEAGE group
+  (§6.5).
+- **`EXCLUDED` and `REVIEW` are the deliverable**: when a category has no home, name in `REVIEW` the
+  node wanted and what the bucket holds meanwhile (Ghana, then Kenya's African Instituted Churches).
+- Where a source files a category elsewhere in its own tree, follow `branches.py` and record the
+  disagreement.
+- **Never map a category on its string alone**: look at which units it is in (`animismus`,
+  `Animist`, `Pagan`, `Masorti`).
+- Two variables per unit are not their cross-tabulation: apply the second only where one group is at
+  least 95% of the unit, as `modelled` (Israel).
+- An axis that is not a line of descent gets its own lineage group, and a country uses one axis only
+  (Judaism's `By observance`).
+- A peer can look like a child (Kenya's `Evangelical Churches` beside `Protestant`): check the
+  arithmetic and read what the office means by the word.
+- A parent published beside its children: emit the remainder at every level the allocation touches,
+  unless the children sum to the parent on every row, when the parent is a duplicate (Hungary, Ghana).
+- Geography is evidence about lineage when a source names many bodies over many units, normalised
+  within the stream and only against independently classified neighbours: use it to audit a mapping,
+  never to build one.
+- A new top-level family costs the whole palette: prefer a regional child (`indigenous.african`) or
+  `other.<cc>`.
 
 ### Reconciliation discipline
 
-- **Assert what should be exact; report what cannot be.** Totals per level against the published
-  national figure: exact. Categories summing to the total: exact only if the source neither suppresses
-  nor rounds.
-- **Where the source rounds, compute the band from the rounding** rather than picking a tolerance that
-  passes. Estonia rounds to base 10, so a sum of n units is within ±5n — **and assert that every figure
-  is a multiple of 10**, so the band is never applied on a false premise. Same reasoning for Canada's
-  base-5.
-- **AN IDENTITY COMPUTED WITHIN ONE TABLE IS A PARSE CHECK ONLY IF THE PARSE CANNOT HAVE PERMUTED THE
-  TABLE.** Zimbabwe's Table 2.14 satisfies both of the obvious identities — the eleven categories sum
-  to each province's total, and the ten provinces sum to the national row — and **both would still
-  hold if every column had been read in the wrong order**, as long as it was the same wrong order
-  throughout. The only check that crosses tables is `Male + Female == Total`, on the two sex
-  breakdowns published beside the drawn one, and it is therefore the only one that could catch a
-  column landing in the wrong place. Malawi found the same thing from the other direction (§9bb).
-  **Ask of every reconciliation: what would a consistent permutation do to it?** If the answer is
-  "nothing", it is checking the census and not the read, and a second table is needed.
-- **The check that catches the bug is rarely the one you expect.** Romania's county-header misparse
-  (600,861 people double-counted) was caught only because two different counties' `Păuleşti` happened to
-  collide into one key. Had they not, the run would have passed. **Prefer checks that would fail
-  *loudly* on a structural error, not just a lucky one.**
-- **AN ALLOCATION REPRODUCES EXACTLY THE CONCENTRATIONS THAT LIVE IN THE DIMENSION IT ALLOCATES ON,
-  AND IS BLIND TO EVERY CONCENTRATION INSIDE ONE OF ITS OWN CELLS.** Where a country publishes a
-  variable nationally and a splitter subnationally, the arithmetic
-  `SUM_g P(religion | g) x N(g, unit)` reconciles perfectly to the national totals by construction —
-  which means **reconciliation says nothing at all about whether the geography is right**, and the
-  output looks equally confident whether it is or not. What decides it is whether the thing being
-  drawn varies *within* a cell of the splitter. Cyprus is the worked example and the one case where
-  it could be measured: 2021 religion allocated on four citizenship groups, checked against 2001's
-  Table 29, the only religion-by-district table any Cypriot census published. Orthodoxy came back
-  right across all five districts (it is the modal answer of every group); the British Anglicans of
-  Pafos came back at half strength (Britain is non-EU, so the splitter half-sees them, but non-EU also
-  holds Syrians, Filipinos and Sri Lankans and the average flattens the peak); and the **Armenians and
-  Maronites came back completely flat, 1.0x against a measured 1.88x and 2.07x in Lefkosia**, because
-  both sit inside `Cypriots` and a group with one national profile has one profile everywhere.
-  **So the error is bounded by how concentrated a group is inside a splitter cell, and that is usually
-  something you can look up BEFORE deciding to draw** — no historic table required. Where one does
-  exist, an older measured cut is worth parsing purely as a check even when it is far too stale to
-  draw: an upper bound on the error is not a measurement of it, but it is the difference between a
-  named cost and an unexamined one. `sources/cy_2001.py` is the shape of that check.
-- **WHERE A SOURCE PUBLISHES THE SAME CENSUS AT TWO GRAINS, ASK WHAT THE FINER GRAIN DOES WITH A
-  CATEGORY IT HAS TOO FEW PEOPLE FOR *BEFORE* WRITING THE RECONCILIATION.** The obvious check is
-  that each category's sum over the fine units equals the national figure, and it is the wrong
-  check wherever the fine tables suppress by **folding into their own residual** rather than by
-  masking a cell. Armenia is the worked example (§9bx): each marz volume prints only the columns
-  that marz has people in, so Syunik's table names five religions and Yerevan's fourteen, and an
-  answer with no column in a marz is inside that marz's `Other`. **483 of the country's 515 Muslims
-  are printed across four marzes and the other 32 are in the residuals of the seven without a
-  Muslim column.** A per-category equality fails on a correct read; the right assertions are that
-  **each unit closes on its own published total**, that **the units sum to the national total**,
-  and that **each category's shortfall is non-negative and reappears in the residual**. That last
-  one is the load-bearing part, because it is what would still fail if the read were actually
-  wrong.
-  - **And run the comparison in both directions, because the useful residue is the impossible
-    half.** Folding can only make a category *smaller* at the fine grain, so any category that
-    comes out *larger* is not folding. Armenia has three (`Refused to answer` +6, `Evangelical`
-    +1, `Jehovah's witness` +1): two publications of one census disagreeing by 177 people,
-    0.0060%. That is worth a bounded assertion rather than a silent tolerance, because the bound
-    is what distinguishes an editorial difference from a real divergence later.
-- **A NATIONAL TOTAL CAN CARRY A CATEGORY DISTRIBUTED TO NO SUBNATIONAL UNIT, so units summing
-  SHORT of the published national figure may be correct rather than a failed join — FOUND
-  2026-09-08 in the China Tibet audit.** The reflex on a shortfall is to go looking for the unit
-  that did not join, and that reflex is right most of the time and wrong here, because the
-  missing people are not missing from the source at all: they are a line the source printed
-  *beside* the units instead of inside them. China's 7th (2020) census communiqué carries
-  `现役军人` (active-duty military) as **a single national line of 2,000,000** standing beside the
-  31 provinces, undistributed, and its own footnote defines the national population as *"the 31
-  provinces, autonomous regions and municipalities of the mainland **and** active-duty
-  military"*. So a per-province sum is two million short by construction, no province is wrong,
-  and there is no provincial figure to recover because none was ever published (`sources/cn.md`
-  §9a). Expect the same shape wherever a census enumerates people it has no place of usual
-  residence to assign, and note that it is **indistinguishable from a join failure by arithmetic
-  alone**: the tell is the footnote defining the national total's universe, so read that before
-  writing the assertion rather than after it fires.
-  - **It changes what the assertion should say, not how tight it is.** `units sum to national`
-    becomes `units sum to national less the named undistributed lines`, with those lines
-    enumerated in the check, so that a new one appearing in a later edition fails loudly instead
-    of being absorbed by a tolerance widened to make the old one pass. And where they are people
-    this map cannot place, they belong in `gap=` (§3.5) rather than in a residual spread over the
-    units, which would be inventing exactly the geography the source declined to publish.
-- **A TWO-ROW HEADER CAN PUT A COLUMN IN THE UPPER ROW ONLY, AND LOSING IT STILL BALANCES.**
-  Armstat's marz tables span the religions under a *Religious belief* title in the lower header
-  row and print `No religion` and `Refused to answer` outside that span, **one row higher**, at
-  the far right. Read the lower row alone and every unit loses its irreligious and its
-  non-answers, 66,854 people nationally — and nothing looks wrong, because what remains still
-  equals the table's own printed `has a religious belief` sub-total. **A sub-total that closes is
-  not evidence the row was read whole; only the unit's population is.**
+One line per rule; the cases and reasoning are in `spec_archive/12.md`. Playbook:
+`playbooks/census_table.md` ("Reconcile every column at every level, then cross a second table").
+
+- Assert what should be exact; report what cannot be.
+- Where the source rounds, compute the band from the rounding and assert every figure is a multiple
+  of the base (Estonia).
+- **An in-table identity survives a consistent column permutation**: cross a second table (sexes,
+  urban and rural). Enforced by: each `check()`, `sources/pk_2023.py::check_block`,
+  `sources/mz.py::read_one`.
+- Prefer checks that fail loudly on a structural error, not on a lucky collision (Romania).
+- **An allocation reproduces only the concentrations in the dimension it allocates on**: bound the
+  error by how concentrated a group is inside a splitter cell, and parse an older measured cut as a
+  check where one exists (Cyprus, `sources/cy_2001.py`).
+- Where fine tables fold small categories into their own residual, assert each unit closes, the
+  units sum to national, and each category's shortfall is non-negative and reappears in the
+  residual; bound the impossible direction too (Armenia).
+- A national total can carry a line given to no unit (China's 2,000,000 military): assert that the
+  units equal national less the named lines, enumerated; such people go to `gap=`.
+- A two-row header can put a column in the upper row only: only the unit's population proves the row
+  was read whole (Armenia).
 
 ### Finishing
 
-`COMMANDS.txt`'s checklist is the authority; these are the reasons behind the steps that bite.
+`COMMANDS.txt`'s checklist is the authority. One line per rule; the cases and reasoning are in
+`spec_archive/12.md`. Playbook: `playbooks/geography.md` (Build).
 
-- **`tiles.py --countries` REPLACES the archive and `counts.json`.** Always pass every country that has
-  a `dots_<cc>.geojson` — a short list silently drops the rest of the map, and this has already happened
-  once.
-- **`buffers.py --countries` REPLACES `manifest.json` the same way — and this one is worse, because it
-  breaks only the DEFAULT view.** Since §4.2d, "overlapping dots: separate" — the default — draws from
-  `data/buffers/<cc>.bin` and not from the pmtiles at all. A country missing from the buffers has
-  correct tiles, a correct `counts.json` entry, a correct legend with correct totals, and **draws
-  nothing**. Ghana shipped that way for half an hour. **Re-tiling and re-buffering are ONE step with two
-  commands; never do the first without the second**, and never drop `--coarse` from either.
-- **`country_shapes.py` is the third silent one**, and the only build step nothing else depends on — so
-  nothing complains. A country missing from it is invisible to §6.2's Auto, which falls through to the
-  dot tally and hands the legend to whichever neighbour has dots in frame.
-- **`tools/check_mapping.py` defaults to the `geo_level` with the most units, which is wrong for a
-  country whose drawn tier is more than one level.** Ghana's 272 units are 255 `district` plus 17
-  `submetro`; the default reported 255 and 1.7M too few people, and nothing about the output looked
-  wrong. `--level` takes a comma-separated list, and a split tier declares itself in `DEFAULT_LEVELS`.
-- **Run `coverage.py` and `tools/check_palette.py` after a re-tile.** Coverage must hold for every drawn
-  node (§6.12); palette separation is a property of the palette *against a country's tallies*, so it
-  changes whenever a country lands (§6.3).
-- **Update `sources.md`** (the row, the drawn count, a §9x entry with what generalises) **and
-  `COMMANDS.txt`** (fetch, geo, scatter, the tiles line). `data/` is gitignored, so the `.md` files are
-  the only record that survives.
-- **COMPUTE A NEW CATEGORY'S GEOGRAPHY BEFORE WRITING PROSE ABOUT IT — FOUND 2026-09-07 WITH NEPAL.**
-  Every note this project writes about a new node is a factual claim, and the reconciliation checks
-  cannot see one of them. Nepal's `Bon` was written up first as trans-Himalayan — Mustang, Dolpa,
-  Humla, the districts with Yungdrung Bon monasteries — which is where Bon is in general and is not
-  where this census puts it. It is in **Gandaki's Gurung middle hills**: Gorkha 5.7%, Dharche 32.7%,
-  against 0.09% in Bagmati. The map would have shipped a note telling readers to look at one end of
-  the country while the dots clustered at the other, and **every arithmetic check would still have
-  passed**, because the arithmetic was never wrong.
-
-  This is §3.10d — *arithmetic consistency is not evidence of meaning* — aimed at the documentation
-  rather than at the data, and it is the more dangerous direction, because prose is where a reader's
-  understanding actually comes from. **The habit that fixes it costs about a minute**: before writing
-  a word about a category, print its top ten units at each tier and its bottom one. Do it for every
-  category the country adds, not only the new nodes; it is also how Cambodia's Cham belt, Nepal's
-  Kirat edge and Zimbabwe's Vapostori got described correctly rather than plausibly.
-- **A BLANK OR DEAD VIEWER MAY NOT BE YOUR COUNTRY AT ALL — SYNTAX-CHECK `index.html` FIRST, IT COSTS
-  ONE COMMAND.** Extract the inline `<script>` blocks and run `node --check` on them; it names the
-  line, where the browser console only says `SyntaxError: Unexpected identifier` with no location
-  you can use. Found 2026-09-07 while verifying Myanmar: a *comment* inside the GLSL vertex shader
-  had been given backticks around `` `derived` `` and `` `modelled` ``, and **the shader is a JS
-  template literal, so a backtick closes it** and everything after is parsed as code. The whole
-  viewer was dead — every country, not the new one — and the line immediately above the offending
-  comment already said *"NO BACKTICKS IN HERE — this comment had two and broke the page"*, so it was
-  the second time. **With several sessions editing `index.html` at once, the page being broken when
-  you go to look at it is a normal state and not evidence about your own work.**
-- **Look at the country, and look at it in the DEFAULT mode.** The panel and the legend can be entirely
-  correct while nothing draws, and only a screenshot says so. Headless needs
-  `--enable-unsafe-swiftshader` and must NOT have `--disable-gpu`, or the WebGL scatter layer silently
-  paints nothing and reproduces the same symptom for a different reason — which is how the buffers bug
-  got misdiagnosed once before it was found ([[reference_headless_map_screenshots]]). Forcing
-  `merged = true; applyPaint()` over CDP switches to the plain MapLibre circle layers and is a useful
-  A/B, but **a country that draws only when merged is a country that is broken.**
-- **WHEN A TABLE IS A DISTRIBUTION, FIND IT BY ITS ARITHMETIC AND NOT BY ITS CAPTION.** Mongolia
-  (§9bt) is published as twenty-two provincial volumes typeset by twenty-two provincial offices,
-  and they agree on nothing: table numbers, caption wording, declension, column order, whether
-  the aimag's own name is prefixed, whether two tables are merged into one, whether the table is
-  transposed, whether both census years are printed, and whether a religion with no adherents
-  gets a zero or no row at all. One volume misspells its own row label and one spells `ХҮН` as
-  `ХУН`. Every caption regex written for that country was wrong within three files. What works
-  instead is to scan pages and accept the one whose numbers satisfy an identity only the wanted
-  table can satisfy — two shares summing to 100.0, five shares summing to 100.0, age bands
-  summing to their own printed total. This is [[reference_pdf_table_geometry]]'s "anchor the
-  header" taken one step further, and it is strictly safer for the reason that matters: **a wrong
-  page fails the identity, whereas a wrong caption match returns numbers.** It also needs no
-  advance knowledge of any of the twenty-two differences.
-- **A NATIONAL REPORT WITH A RELIGION CHAPTER AND NO GEOGRAPHY IS NOT EVIDENCE THAT THE OFFICE
-  PUBLISHES NONE.** Mongolia's 2020 and 2010 national reports both carry a chapter called
-  CITIZENSHIP, ETHNICITY AND RELIGION and both give religion by sex, age and ethnicity only. The
-  sub-national tables exist, in twenty-two separate per-province volumes on a static host nothing
-  links to. Where a statistics office devolves publication to its provinces, "the national report
-  stops at the nation" says nothing about the country, and a session that stops there looks
-  thorough while being wrong.
-- **A RETIRED CMS DOWNLOAD HANDLER IS A FILENAME CATALOGUE FOR THE STATIC HOST THAT REPLACED IT.**
-  `1212.mn/BookLibraryDownload.ashx?url=<filename>` now 404s on every path, but its links are
-  archived in bulk, and that `url=` parameter is exactly the filename on the index-less
-  `downloads.1212.mn` that replaced it. A Wayback CDX sweep of the OLD dynamic route therefore
-  enumerates the NEW static one. Three Mongolian aimag volumes whose names share nothing with the
-  other nineteen were found this way after 273 guesses at the pattern all 404'd. Related to
-  [[reference_cms_download_id_sweep]] and [[reference_dead_stats_office]].
-- **A PDF CAN HAVE A TEXT LAYER FOR ITS PROSE AND PICTURES FOR ITS TABLES, and that combination
-  reads as a working file.** A whole-file scan is obvious the moment anything is extracted.
-  Darkhan-Uul's Mongolian census volume is the nastier case: captions and paragraphs are real
-  text, so a parser locates the table and reports its page number, and only the numbers are
-  absent. The one-line tell, worth running on any volume that "finds the table but reads no
-  rows", is `len(page.get_images())` against the count of parsed data rows — nine images and two
-  rows means stop.
-- **DO NOT LOCATE A YEAR COLUMN BY SCANNING A PAGE FOR YEAR TOKENS**, and assert a plausible
-  RANGE rather than only a sum. Both are Mongolian scars and both produced numbers instead of
-  errors. One volume's caption ends `..., 2010 ОН, 2020 ОН`, wraps, and so begins a line with
-  `2020` further left than the `2010` above it, which convinced an x-position comparison that the
-  columns were reversed and made it read 2010 as 2020 — undetectable downstream, because the
-  shares barely moved between the censuses. Separately, an appendix table printed its own
-  continuation block lower on the same page, so every unit appeared twice and a plain dict
-  assignment took the second, reading four age columns as a total and three child bands; the
-  row-total identity passed either way because both blocks are internally consistent, and only
-  the fact that the result went NEGATIVE gave it away.
-
-**A SWEEP'S NEGATIVE IS A VERDICT ON ONE PUBLICATION SERIES, NOT ON A COUNTRY — Botswana,
-2026-09-08, §9bu.** §11p closed Botswana with *"religion crossed with language and not with
-geography"*, which is a true and careful statement about the **2022** census: it asks the
-question, cross-tabulates it four ways, and publishes no subnational table in any of its five
-volumes. The **2011** census has the same property at national level and the opposite property
-one tier down, because Statistics Botswana issued a per-district *Selected Indicators* booklet
-and **all eighteen print religion by named village**. Nothing in a report-set sweep finds that,
-because the booklets are not part of the census report set.
-
-- **The tell is in the negative itself.** *"Crossed with language and not with geography"* means
-  the variable was asked, coded and tabulated. An office that cross-tabulates religion four
-  ways has it in the microdata, and the only open question is which of its publications carries
-  the place. Compare *"the census does not ask"*, which is a fact about the country. **Only the
-  second kind of negative closes anything.**
-- **So the probe is: does this office publish a per-district or per-province SERIES about
-  anything at all?** Malawi's religion table was in the main report (§9bb), Benin's was in a
-  per-department booklet (§9ai), Laos's was on a data platform that outlived its own atlas
-  (§9bk), Botswana's is a per-district booklet. **Three of those four are not the census
-  report**, and a sweep that enumerates report sets will keep missing them.
-- **And an older census is a different publication programme, not just older numbers.** Offices
-  change what they print far more than they change what they ask.
-
-**CHECK THE SHORTFALL PER CATEGORY, NOT JUST OVERALL.** When part of a country cannot be drawn,
-the natural summary is one number — Botswana draws 93.7% of its national total because two
-district booklets were never published. But **Badimo draws to only 88.2% of its own national
-figure**, so the missing districts are more traditional than the country, and the map understates
-exactly the category the country is most worth drawing for. It costs one loop against the
-oracle's national row and it changed what `note_public` had to say. A country that draws 94% of
-its people does not draw 94% of everything.
-
-**READ THE NUMBERS BEFORE BELIEVING THE CAPTION.** [[reference_pdf_table_geometry]] says render
-the page before blaming the parser; this is its companion for a table that parses fine and is
-labelled wrongly. In one booklet series both halves of a count/percentage pair were captioned
-`(%)` while the first held the counts, and a religion table was captioned *"Number of people by
-marital status"*. **Anchor on a column HEADER, and tell counts from percentages on the values.**
-The same series put the row-total column first in ten booklets, last in six and nowhere in one:
-detect that arithmetically (the total column is the one equal to the sum of the others, on every
-row), because assuming a width silently shifts every category by one and then reconciles against
-nothing. **A per-district series is as many typesetters as it has districts.**
-
-
-**A BOT WALL AND A TLS FAILURE LOOK THE SAME FROM A SCRIPT AND WANT OPPOSITE FIXES** — found
-2026-09-08 on South Africa, and it had already cost a country once. `sources.md` §11b closed
-South Africa partly on *"behind a DataFirst account"*, which was wrong: the census table was
-open all along and a scripted client had simply failed to fetch it. §11ag then recorded that
-`statssa.gov.za` is behind Imperva and that plain `curl` returns a 212-byte
-`_Incapsula_Resource` stub. Both halves are half right, and the distinction is in the exit
-code:
-
-- **`curl` exit 60, "SSL certificate problem", nothing downloaded.** That is the TLS chain,
-  not a wall. The host presents a self-signed intermediate and curl gives up *before it sends
-  the request*, so the server never saw you. Relax the certificate check and the identical
-  URL returns the real file at full size. This is what `cs2016.statssa.gov.za` does, and its
-  PDFs are not protected in any way.
-- **HTTP 200 with a kilobyte of HTML.** That is the wall. No client-side flag helps, and a
-  browser User-Agent does not either.
-
-The two are told apart in one command and the wrong diagnosis is expensive in both
-directions: reading a chain failure as a wall abandons an open file, and reading a wall as a
-chain failure sends you round a retry loop. **An office can also be walled on its HTML and
-open on its files at the same time**, which is exactly South Africa: its `?page_id=` listings
-are unreadable for curl *and* WebFetch, while every PDF underneath them fetches cleanly. So
-the method there is to find the file URL some other way and never try to read a listing.
-Companion to [[reference_dead_stats_office]], which is about the same confusion one layer up.
-
-**MATCHING CATEGORY LABELS ARE NOT EVIDENCE OF A SHARED ANSWER SET, and there is a cheap test**
-— found 2026-09-08 on South Africa, and it is §3.1a with a way to *detect* it rather than only
-a warning. Stats SA publishes religion twice, in Census 2022 and in Community Survey 2016, over
-category lists that match word for word. That makes a §3.4 rescale look safe. It is not:
-
-| | CS 2016 | Census 2022 |
-|---|---|---|
-| Islam | 1.62% | 1.60% |
-| Hinduism | 1.02% | 1.06% |
-| **No religious affiliation** | **10.9%** | **2.9%** |
-| **Traditional African religion** | **4.5%** | **7.8%** |
-
-**Sort the categories by how unambiguous the answer is, and look at which ones moved.** The
-two nobody is unsure about are stable to a hundredth of a point; the ones whose boundary
-depends on how the question is put move by factors, and in opposite directions. Six years
-cannot do that, so it is the instrument. Where a shared basis is real, the *fuzzy* categories
-move and the sharp ones move with them; where it is not, the sharp ones hold still and the
-fuzzy ones swing. A label-level diff shows none of this and will report the two lists as
-identical.
-
-**AN OFFICE THAT TABULATES EVERY VARIABLE BUT ONE AT A FINE GEOGRAPHY HAS MADE A DECISION** —
-found 2026-09-08 on South Africa. In the Census 2022 provincial profiles, population, density,
-age, population group, marital status, birthplace, education, dwelling, tenure and water are
-each tabulated *"by district and local municipality"*, and religion alone is province-only.
-Stats SA's own keyless dissemination API serves 24 topics down to Main Place and religion is
-on none of them. When the pattern looks like that, **stop searching the published reports and
-go and price the microdata**, because the omission is deliberate and no further report will
-have it. The corollary is the cheerful one: a variable that is *missing at every tier* is
-usually just unpublished, while a variable that is coarse *while its neighbours are fine* is
-being withheld, and those two want completely different next moves.
-
-**A CITATION IS A FIGURE, AND NOTHING DOWNSTREAM CHECKS ONE** — found 2026-09-08 on South
-Africa. The nine CS 2016 provincial profiles carry report numbers that do not run in province
-order: Western Cape is 03-01-07 and Mpumalanga is 03-01-13, which is the number a code-order
-guess hands to Western Cape. Three of nine were guessed wrong on the first pass and every
-check in the pipeline still passed, because a report number lives in the CSV's `note` column
-and nothing reconciles against it. **If a source's own identifier is going into the record,
-read it out of the file and assert it**; every profile carries it in the running header, so
-it cost four lines. This generalises past report numbers to any provenance string a build
-types rather than reads.
-
-**AND A HEADLINE MULTIPLE IS A FIGURE TOO.** South Africa's write-up claimed its African
-Instituted Church count *"more than doubles"* what that node held; a reviewer agent summed the
-other six countries out of `countries.py`'s own `counts()` and the true figure is 1.21x. The
-claim had been written from an impression of the node being small, and it survived into four
-files before anyone derived it. **Anything of the form "X times", "the largest" or "the
-sharpest" is a computation, and it should be run.** In the same pass, *"the sharpest
-denominational gradient in the country"* turned out to be the second sharpest, and its
-neighbouring entry called the actual first one *"the second"*.
+- **The tail rewrites whole-map files**: `tiles.py --countries` and `buffers.py --countries` replace
+  the archive, `counts.json` and the manifest, and a country missing from `country_shapes.py` hands
+  its legend to a neighbour. Run `tools/build_tail.py --id <sid>` (derived country list, `--coarse`
+  on both, `country_shapes.py`, `coverage.py` last) instead of the separate commands. Enforced by:
+  `tools/build_tail.py::main`, `tools/built_countries.py --check`, `country_shapes.py::main`.
+- `tools/check_mapping.py` defaults to the level with most units: a split tier declares
+  `DEFAULT_LEVELS`.
+- Run `tools/check_palette.py` after a country lands, because palette separation depends on the
+  tallies (§6.3).
+- Update `sources.md` and `COMMANDS.txt`: `data/` is gitignored, so the `.md` files are the record.
+- **Compute a new category's geography before writing prose about it**: its top ten units per tier
+  and its bottom one (Nepal's Bon).
+- A dead viewer may not be your country: run `node --check` on `index.html`'s inline scripts, and put
+  no backticks inside the GLSL template literal.
+- **Look at the country in the default (separate dots) mode.** Headless needs
+  `--enable-unsafe-swiftshader` and no `--disable-gpu`; a country that draws only when merged is
+  broken. Not checked yet.
+- When a table is a distribution, find it by an identity only it satisfies, not by its caption
+  (Mongolia's 22 volumes).
+- A national report with a religion chapter and no geography is not evidence the office publishes
+  none.
+- A retired CMS download handler's archived `url=` values catalogue the static host that replaced it.
+- **A PDF CAN HAVE A TEXT LAYER FOR ITS PROSE AND PICTURES FOR ITS TABLES**: compare
+  `len(page.get_images())` with the rows read. Helper exists: `sources/fetch_checks.py::image_pages`
+  (no build calls it yet).
+- Do not locate a year column by scanning a page for year tokens; assert a plausible range, not only
+  a sum.
+- **A SWEEP'S NEGATIVE IS A VERDICT ON ONE PUBLICATION SERIES, NOT ON A COUNTRY**: a variable crossed
+  four ways exists; ask whether the office publishes any per-district series, and treat an older
+  census as a different publication programme (Botswana).
+- **CHECK THE SHORTFALL PER CATEGORY, NOT JUST OVERALL** (Botswana draws 93.7% of its people and
+  88.2% of its Badimo).
+- **READ THE NUMBERS BEFORE BELIEVING THE CAPTION**: anchor on a column header, tell counts from
+  percentages by their values, and find the total column arithmetically.
+- **A BOT WALL AND A TLS FAILURE LOOK THE SAME FROM A SCRIPT AND WANT OPPOSITE FIXES**: curl exit 60
+  is the certificate chain, a 200 with a kilobyte of HTML is the wall, and an office can be walled on
+  its HTML and open on its files (South Africa).
+- **MATCHING CATEGORY LABELS ARE NOT EVIDENCE OF A SHARED ANSWER SET**: sort the categories by how
+  unambiguous the answer is; sharp ones holding still while fuzzy ones swing means the instrument
+  changed (§3.1a).
+- **AN OFFICE THAT TABULATES EVERY VARIABLE BUT ONE AT A FINE GEOGRAPHY HAS MADE A DECISION**: stop
+  searching its reports and price the microdata.
+- **A CITATION IS A FIGURE, AND NOTHING DOWNSTREAM CHECKS ONE**: read a source identifier out of the
+  file and assert it.
+- **AND A HEADLINE MULTIPLE IS A FIGURE TOO**: compute any "X times", "the largest" or "the sharpest"
+  from `counts()`.
 
 ### A CLOSURE RECORDS THE TIER IT TESTED, NOT THE COUNTRY — FOUND 2026-09-08 with Finland
 
-§11k closed Finland, Norway, Denmark, Iceland and Sweden in one move: *"the register tier is a
-mirage and it fails the same way four times"*, with the instruction *"do not re-scout the
-Nordics without a specific new release to point at"*. **Every word of that is true about the
-register and none of it is true about the country.** Finland is in all seven usable ESS rounds
-with `region` at NUTS 3, which is a finer geography than four drawn countries have, and it was
-sitting there the whole time.
+One line per rule; the cases and reasoning are in `spec_archive/12.md`. Playbooks:
+`playbooks/census_table.md` (first trap), `playbooks/arabbarometer.md`.
 
-**The mechanism is worth naming because it is not carelessness.** §11ai went looking for
-survey routes into the Nordics and listed eight countries — Norway, Sweden, Denmark, the
-Netherlands, Belgium, Latvia, Ukraine, Luxembourg. Finland is missing from that list, and the
-reason is that §11k had already closed it. **A country recorded as closed stops appearing in
-the candidate lists that later sweeps are built from**, so the closure protects itself: the one
-pass that would have caught it was the pass that had already crossed it off. That is why the
-fifth Finland-shaped reversal in one day was still available to find.
-
-So, two things to write into any negative:
-
-1. **Name the tier.** *"Statistics Finland publishes no religion below the country"* is a
-   finding. *"Finland is out"* is not, and the difference is invisible six sections later when
-   somebody greps for a country name and reads the verdict rather than the evidence.
-2. **A closure is a lead for the OTHER tiers**, not a lead for nothing. A state that keeps a
-   register detailed enough to close the census question is a state whose survey programme is
-   usually well funded and well sampled, which is the opposite of the inference the closure
-   invites.
-
-**And close on what the instrument measures, not on whether you could reach it.** The
-strongest version of Finland's closure is not *"the table is national only"* — it is that a
-register counts formal membership of a registered community, a records status you leave by
-filing a form, and that is a different quantity from affiliation. Finland is where the size of
-that difference is finally visible: **62.24% of Finns are on the Lutheran church's register and
-45.00% say they belong to it.** §3.9a already had the principle from Germany; Finland is the
-measurement.
-
-**The half of that comparison worth carrying is the half that goes the other way.** The
-register puts Finland at 0.48% Muslim and 1.03% Orthodox; this map gets 1.67% and 1.86%.
-A register only sees members of a *registered congregation*, so it undercounts precisely the
-groups with no reason to join one — which means **"the register is exact" is true about its own
-quantity and false about the country**, and a build that reaches for a register as the better
-source should ask which groups it is structurally blind to before preferring it.
-
-**SLOVENIA IS THE SECOND INSTANCE, THE SAME DAY, AND IT ADDS THE CHECK THAT WOULD HAVE CAUGHT
-BOTH** — §9cg, 2026-09-08. §11c and §11k both closed Slovenia on its 2021 register census,
-which genuinely does not ask; §11k fetched the SURS PxWeb catalogue, recorded that it is live
-and 908 KB, and concluded there was nothing to draw. **That catalogue contains `05W1006S.px`,
-religion by občina from Popis 2002** — 192 municipalities, the last conventional census the
-country ran. So the sweep reached the data, downloaded it, and searched it for the wrong
-census. Two instances in a day is a pattern, and the free check is this: **`tools/oracle.py`
-names the YEAR of the tabulation the office forwarded to the UN, and the sweep names the year
-it tested. If the oracle's year is older, the country has not been tested.** Slovenia's oracle
-row said `2002` and both sweeps were looking at 2021. One command, on every closure this
-project holds:
-
-```
-python tools/oracle.py --list | grep -i <country>
-```
-
-**A CODE DIMENSION THAT STARTS AT `001` WITH THE COUNTRY IN IT IS A SEQUENCE, NOT A CODE** —
-Slovenia, §9cg. `[[reference_name_join_wrong_neighbour]]` is about matching the wrong
-same-named place; this is the version with no name in it at all. The `OBČINA` dimension of
-Slovenia's religion table runs `001`-`193` with SLOVENIJA at `001`, so it is the 192
-municipalities in alphabetical order shifted one place from the national code list, which is
-alphabetical for `001`-`147` only. The values are the right length, zero-padded the same way,
-cover the right range, and are a different quantity: **join on them and every unit is one place
-out while every total still reconciles.** The tell is free and costs one look at the dimension
-— *if position 1 is the country, every subsequent value is displaced from anything that numbers
-only the units.* The fix is the general one: recover the real codes from another table of the
-SAME source that carries them (Slovenia's settlement table labels them `001  AJDOVŠČINA`), and
-check the resulting join on an INDEPENDENT quantity rather than on a count of matches — 192
-distinct populations agreeing to the person cannot survive a crossed or shifted join, and 192
-matched rows can.
-
-**AN OFFICE'S API CAN BE ON A DIFFERENT PORT, AND THE 443 HOST WILL NOT TELL YOU** — Egypt,
-§9bz, 2026-09-08. `[[reference_spa_hidden_apis]]` says to compare the 404s and grep the JS
-bundle before calling a portal blocked, and that is right as far as it goes: it is about
-*paths*. CAPMAS was recorded as having no API by two separate sweeps, both of which walked
-paths on `www.capmas.gov.eg`, which returns the same 1,421-byte React shell with HTTP 200 for
-every URL including `/nonsense-path-xyz-123`. **No path sweep of that host can ever find
-anything, and the negative it returns is indistinguishable from a dead portal.** The bundle's
-constants block names the real host: `API_ENDPOINT_URL: "https://www.capmas.gov.eg:8080"`, no
-key, 120 routes, one of which serves the governorate population table the country was then
-drawn on. So when you grep a bundle, **read the HOST out of it and not only the path** — and
-the same block usually names two or three, because search and one subject area often sit on
-their own ports.
-
-**A LIVE ENDPOINT USED AS A DENOMINATOR MUST BE PINNED, AND CHECKED FOR BEING ONE SERIES OR
-MANY.** A population clock is a fine source and a terrible dependency: it moves, so two builds
-of the same country differ, and the difference looks like a bug in whatever changed in between.
-Pin the date, cache the response into `data/raw/`, and assert the pin on read. Then ask two
-things before believing the subnational cut. **Is it deterministic** — the same unit and the
-same date twice must give the same integer. **And is it really per-unit, or one national clock
-split by fixed weights** — take two dates years apart and look at whether the unit SHARES move.
-Egypt's do (Cairo 10.039% → 9.647% between 2018 and 2026), so it is 27 series; had they been
-constant it would have been one series wearing 27 hats, and the geography would have been the
-census's rather than the estimate's.
-
-**A SURVEY'S NUMERIC ANSWER CODES ARE NOT THE SAME QUESTION TWICE.**
-`[[reference_pooled_survey_labels]]` is about geography — one label set per wave, so a
-renumbered region picks up a neighbour's name. **The same thing happens in the answer column
-and it is worse, because nobody looks.** Arab Barometer's `Q1012` is *"what is your religion"*
-in every wave, and code 3 is `Other` in three waves and `Jewish` in a fourth, while code 4 is
-`Jewish`, `Atheist` and `No religion` depending on the year. A frame pooled on the code merges
-three different answers and every total still reconciles. **Decode each wave through that
-wave's own value labels before anything is pooled, and carry the label string from then on.**
-
-**AND THE ANSWER CARD CHANGES TOO, WHICH DECODING CANNOT FIX.** A category offered on one
-questionnaire of four and pooled across all four measures which questionnaire was in the field.
-Egypt's two `Atheist` respondents are dropped from the universe for that reason and not for
-being few — `sources/gt.py` draws a category with ONE respondent quite happily, because LAPOP's
-card is stable across its waves. **Before pooling a small category across waves, check it was
-on every card.** Ecuador (§9bn) found the same instrument problem from the other end, where
-LAPOP withdrew named denominations mid-series and they reappeared inside `Otro`.
-
-**A NORMALISER AND ITS OWN KEY TABLE HAVE TO BE WRITTEN AGAINST EACH OTHER.** §11af's Egyptian
-harmoniser folded labels with `[^a-z ]` stripped and then looked them up in a table containing
-`"kafir el-sheikh"`, hyphen included, which the fold had already removed. That key could never
-match, forty respondents were dropped as unmapped, and the failure is silent **in the direction
-that loses units** — which is the direction that breaks a split-half, because the test's bar
-depends on how many units appear in both halves. Two cheap guards: run the fold over the
-table's own keys and assert every one is a fixed point, and refuse to run a stability test
-unless the overlap equals the count the bar was computed for.
-
-**ASSERT WHAT YOU MEASURED, NOT WHAT YOU BELIEVE.** A join witness written as *"New Valley must
-be the sparsest governorate and Cairo the densest"* fails on correct data, because Cairo
-governorate carries 3,085 km² of desert expansion and Qalyubia is 1,336 km² containing Shubra
-El Kheima. **An assertion that encodes a plausible belief rather than a measured fact costs
-exactly what a real join error costs**, and it is spent looking for something that is not
-there. Where the structural claim is genuinely known (*the five desert governorates are the
-five sparsest*), assert the set; where it is a guess about a maximum, print it instead. Same
-rule for a tolerance: Egypt's area witness had to become a **rank correlation with a
-permutation behind it** rather than a per-unit band, because two of twenty-seven units
-genuinely disagree between two correct sources, and a band tight enough to catch a permutation
-fails on them while a band loose enough to pass them catches nothing.
-
-**A SUPERLATIVE THAT FLIPS BETWEEN TWO DEFENSIBLE CONSTRUCTIONS IS A FACT ABOUT THE SAMPLE.**
-Egypt's most Christian governorate is Sohag unweighted and Minya weighted, and `ask/001-eg`,
-§11af and `queue.md` all said Sohag because all three were quoting the unweighted table while
-the map draws the weighted one. The fix is not to argue the constructions harder: at ±3.7 pp on
-samples of about 350 the top three sit inside one another's intervals, so `note_public` names
-the figure the CSV carries and tells the reader to take the three as a group. **Read every
-reader-facing superlative back out of `data/normalized/<cc>.csv` rather than out of the
-scouting note that sent you**, because a scouting note is usually one construction older than
-the build.
+- **Name the tier in a negative, and read a closure as a lead for the other tiers** (Finland, closed
+  on its register, is in seven ESS rounds at NUTS 3). A closed country drops out of later candidate
+  lists, so a closure protects itself.
+- Close on what the instrument measures: a register counts formal membership (62.24% of Finns on the
+  Lutheran register, 45.00% saying they belong) and is blind to groups with no reason to register.
+- **Compare the oracle's tabulation year with the census a sweep tested**
+  (`python tools/oracle.py --list | grep -i <country>`); an older oracle year means the country was
+  not tested (Slovenia's 2002).
+- A code dimension that starts at `001` with the country in it is a sequence: recover the real codes
+  from another table of the same source and check the join on an independent quantity (Slovenia).
+- Read the host out of a JavaScript bundle, not only the paths; an API can sit on another port
+  (CAPMAS on `:8080`).
+- Pin a live population endpoint's date, cache the response and assert the pin; check that it is
+  deterministic and really per unit (Egypt).
+- **Decode each survey wave through its own value labels before pooling**, and carry the label string
+  from then on. Enforced by: `sources/arabbarometer.py::load`.
+- Before pooling a small category across waves, check it was on every card. Enforced by:
+  `sources/lapop.py::check_waves`, from `lapop.load` (`CARD_ABSENT`, and undeclared per-wave code
+  jumps); Arab Barometer cards are not checked yet.
+- Write a normaliser and its key table against each other (every key a fixed point of the fold), and
+  refuse a stability test unless the unit overlap equals the count its bar assumes. Enforced by: each
+  module's `NORM`, and `stability` raising on a short overlap.
+- **Assert what you measured, not what you believe**: assert a known set, print a guessed maximum,
+  and use a rank correlation with a permutation where correct sources disagree on some units (Egypt's
+  area witness).
+- A superlative that flips between two defensible constructions is a fact about the sample: read
+  reader-facing superlatives from `data/normalized/<cc>.csv`.
 
 ### A TIER IS NOT SETTLED UNTIL YOU HAVE LOOKED FOR A PUBLICATION PER UNIT OF THE TIER BELOW — three countries in one day, 2026-09-08
 
-Mongolia (§9bt) was priced national and is 22 aimags, in 22 separate provincial PDFs. Botswana
-(§9bu) was priced "religion crossed with language and not with geography" and is named villages,
-in a booklet series filed outside the census report set. Rwanda (§9cb) was priced 5 provinces and
-is 30 districts, in a district profile series filed under `/district-statistics/` rather than
-with the census results. Same day, three sweeps, one mistake.
-
-**The mistake is not laziness and it is not a bad rule.** §11p's predictor — *find the thematic
-report series, see which theme religion got, and that tells you the geography* — is correct and
-was applied correctly to Rwanda. Religion is Chapter 4 of a thematic report that works at
-province. The rule simply cannot see a series that is not the thematic series.
-
-So add one question before accepting any tier, and ask it even when the tier you have is
-defensible:
-
-> **Does this office publish anything PER UNIT of the tier below the one I am about to accept?**
-> A profile per district, a monograph per region, a booklet per province, an atlas per
-> governorate. Not "is there a finer table in the report" — a separate publication, one per unit.
-
-Three properties make these easy to miss and are worth knowing as a search shape:
-
-* **They are filed away from the census results.** Rwanda's are under `/district-statistics/`,
-  Botswana's under a booklet index, Mongolia's on 22 aimag pages. A search for the census
-  returns the census.
-* **They are released years later.** Rwanda's district profiles are May 2025 for a 2022 census,
-  three years after the main indicators.
-* **Each one is a whole small report**, so the religion table is a numbered table in a
-  table of contents rather than a line in a results annex. That makes them easy to confirm once
-  found: open one, grep the contents page.
-
-**And the payoff is not uniform across the columns, which is why "coarse but drawable" is the
-wrong frame.** Rwanda's Adventists are 12.17% nationally and run 33.94% to 2.38% across the 30
-districts; at province the same column runs 9.48% to 14.58%. The coarse tier does not draw the
-belt faintly, it does not draw it at all. §3.9b says a coarse tier is still worth drawing, and
-that stands; it is not a reason to stop looking for the fine one.
-
-**A related habit, from the same country.** When a source publishes a count at a tier FINER than
-the one it publishes religion at, that finer count is a placement layer better than any modelled
-grid. Rwanda publishes population for 416 sectors and religion for 30 districts, so
-`sources/rw_grid.py` scales Kontur's hexes per sector to the census count and only the shape
-inside a sector stays modelled. **Run the Kontur-versus-census check on the raw ratios before
-the scaling**, because afterwards every ratio is 1.000 by construction and the file proves
-nothing.
+Before accepting a tier, ask whether the office publishes anything per unit of the tier below (a
+district profile, a provincial volume, a booklet series), filed away from the census results and
+often years later (Mongolia, Botswana, Rwanda). A census count finer than the religion tier is a
+placement layer: check Kontur against it on the raw ratios before scaling (`sources/rw_grid.py`).
+Playbook: `playbooks/census_table.md` (first trap). Full text: `spec_archive/12.md`.
 
 ### WHEN THE MAP SERVER IS FINER THAN THE TABLE, COUNT ITS COLUMNS BEFORE PRICING THE TIER — Albania, 2026-09-08
 
@@ -8108,234 +6724,58 @@ catalogue: walk the tree, in the office's own language, before recording an abse
 
 ### AN INTERNATIONAL SURVEY'S COUNTRY LIST IS NOT A LIST OF WHAT THOSE OFFICES HAVE — Uruguay, 2026-09-08
 
-The two sections above are about finding a finer TIER than the one you were priced at. This one
-is about finding a bigger SOURCE at the same tier, and it has the same shape: the search that
-priced the country never asked the question.
-
-`queue.md` §11ad is a nine-country table built by opening the AmericasBarometer's grand merge and
-counting who has religion at ADM1. It is accurate and it was worth building. **What it silently
-implies, and does not say, is that LAPOP is the best available source for those nine.** For
-Uruguay (§9ce) it is not close: INE's own *Encuesta Nacional de Hogares Ampliada 2006* carries a
-religion question with **230,898 respondents** on the same nineteen departments, against LAPOP's
-4,318 pooled over three waves. Fifty-three times the sample, same tier, national statistics
-office, open microdata behind a click-through.
-
-**The reason the gap survived a sweep is that §11x had already closed the census half**, and
-"the census does not ask" reads as "the office has nothing". Those are different statements. So:
-
-> **Before building a country from an international survey, ask what the OFFICE's own household
-> survey series carries — not its census.** A religion module on a labour-force or living-
-> conditions survey is a normal thing for a statistics office to field once, in one year,
-> because somebody funded it, and then never repeat. It will not be in the census documentation,
-> it will not be in the survey's title, and the office's own topic pages will not list religion
-> among the survey's themes.
-
-Where to look, in order, all of it cheap:
-
-* **The office's microdata catalogue** — NADA/ANDA is the common software (`.../index.php/catalog`).
-  Export the DDI for each household survey (`/metadata/export/<id>/ddi`) and grep it for the
-  local word; that is one request per survey and it returns every variable label in the file.
-* **The question wording**, once found, because it settles the universe (below).
-* **Academic writing about religion in the country**, which is where a one-off module surfaces.
-  Uruguay's 2006 figures are cited in the sociology of religion literature and nowhere in INE's
-  own topic pages.
-
-**And when both exist, wire the international survey as a CROSS-CHECK rather than dropping it.**
-Uruguay is the only country on this map where a large national instrument and the
-AmericasBarometer measure the same units, so the comparison measures LAPOP as well: its
-departmental ordering reproduces a clean categorical difference well (non-Catholic Christian
-r=+0.86, none of 20,000 random pairings reaching it) and its own ambiguous boundary cell badly
-(Catholic +0.34, not significant, because LAPOP's *Ninguna, cree en un Ser Superior* and INE's
-*Creyente sin confesión* move different people across the Catholic line). That is a caution
-about `gt`, `sv` and `ec`, whose no-religion geographies rest on exactly that cell, and it could
-only be seen from a country where both instruments ran.
-
-**Two smaller things from the same build, both general.**
-
-**A data dictionary and a questionnaire can disagree about the universe, and the microdata is
-the arbiter.** ANDA's entry for Uruguay's `e29_1` gives the question as *"PARA MAYORES DE 6
-AÑOS"* and then glosses the universe as *"personas de 6 años y más"*. Those differ by a whole
-birth cohort. The not-applicable code turned out to cover ages 0 to 6 exactly and completely, so
-the questionnaire was right; that is 4,225 respondents and a point of the population base.
-`[[reference_census_questionnaire]]` says the questionnaire catches a mislabelled column — this
-is the case where the DATA catches a mislabelled questionnaire, and the check is two-sided and
-costs one groupby. Assert it, in both directions, so a re-release fails loudly.
-
-**A COD-AB pcode join that is MOSTLY right is worse than one that is wholly wrong.** §9bl
-(El Salvador) established that OCHA pcodes can be alphabetical where the office's numbering is
-not. Uruguay is the same trap with a nastier overlap: INE numbers its departments Montevideo
-first and the other eighteen alphabetically, so `UY{dpto:02d}` gets **the last nine of nineteen
-right** and shifts the first ten by one place. Salto, Soriano, Tacuarembó and Treinta y Tres all
-pair correctly, which is exactly where a reviewer's eye lands when scanning a lookup, while
-Montevideo's 1.3 million people are drawn in Artigas and every total reconciles. Join on the
-name; assert what the code join would have done, with its exact count.
+Before building from an international survey, ask what the office's own household surveys carry
+(grep each NADA or ANDA survey's DDI export), and keep the international survey as a cross-check
+where both exist (Uruguay's ENHA 2006: 230,898 respondents). Let the microdata settle a universe the
+dictionary and questionnaire disagree on, and join on names where pcodes follow another order.
+Enforced by: `sources/uy.py::cross_check` (reported). Playbook: `playbooks/lapop.md`. Full text:
+`spec_archive/12.md`.
 
 ### A DEAD OFFICE CAN ANSWER 200 WITH A REAL PAGE, AND A PRESENT ORACLE ROW CAN BE WRONG — Burundi, 2026-09-08
 
-Two traps from one country, both of which make a check pass while it is measuring nothing.
-
-**1. The office's old domain lapsed and somebody else bought it.** `isteebu.bi` resolves,
-returns HTTP 200, serves 5.6 KB of well-formed HTML and its `<title>` is `Isteebu.bi / Nova
-Network` — a Romanian SEO agency's parking page that names the domain back at you. Status code,
-byte count, redirect chain and even a title check all say the office is alive.
-`[[reference_dead_stats_office]]` covers the bot wall and the move; this is the third shape and
-the only one where the *wrong host* answers politely. The office had renamed to INSBU at
-`insbu.bi` and every negative anyone had ever recorded against `isteebu.bi` was about a domain
-the institute no longer owns.
-
-> A liveness probe has to look at *content that only the office would serve* — a publication
-> title, a document path, the institute's own name in the body — not at the response.
-
-**Micronesia is the same trap in a second costume, found the same day.** `fsmstatistics.fm`
-answers 200 with a **LiteSpeed directory index** listing `cgi-bin`, `dasdas.png` and a stray
-`htaccess` — a real server, correctly configured, serving an empty document root. The office is
-at `stats.gov.fm` and `queue.md` had carried *“`fsmstatistics.fm` answers”* for weeks. Two
-countries, two different plausible 200s, and in both cases the sentence in the queue was
-written by something that checked reachability.
-
-The corollary is worth its own line, because Burundi has it too and so did Côte d'Ivoire: **the
-census bureau is often a different agency from the statistics office, with its own domain.**
-`bcr.bi` redirects to `app.rusansuma.bi:8405` and holds the whole 2024 census, and nothing on
-the statistics office's site links to it. Ask both.
-
-**2. The UNSD oracle's counts are transcriptions and can be arithmetically wrong.** `oracle.py`
-prints `partition: does NOT sum to the total` for Burundi 2008, over by exactly 10,000 in the
-Total and Rural rows both. That reads as an unlisted residual category. It is a digit: UNSD's
-`Other Religions 494,533` should be **484,533**, which the office's own reprint of the same
-census table closes on to the person. `[[reference_unsd_religion_oracle]]` says absence proves
-only that nothing was forwarded; the other half is that **presence does not certify the values**.
-Where the office publishes the same table, the office wins, and a miss shaped like a round
-number is a transcription error rather than a finding about the country.
+A liveness probe must look for content only the office would serve: a lapsed domain can answer 200
+with a parking page (`isteebu.bi`) or an empty directory index (`fsmstatistics.fm`), and the census
+bureau is often a separate agency with its own domain. An oracle row can be a transcription error;
+where the office prints the same table, the office wins. Partly enforced by:
+`sources/fetch_checks.py::check_body` (size and type). Playbook: `playbooks/census_table.md`. Full
+text: `spec_archive/12.md`.
 
 ### A COD-PS PROJECTION THAT AGREES NATIONALLY CAN BE WILDLY WRONG PER UNIT — Dominican Republic, 2026-09-08
 
-§9bn rejected COD-PS for Ecuador because its 2020 projection came in 3.4% above the 2022 census
-and did so unevenly, and wrote it up as "COD-PS is a projection with a date on it, not the
-neutral choice". **The Dominican Republic is the same finding with the warning light switched
-off.** COD-PS 2023 lands **0.56% under** ONE's 2022 census nationally, six times closer than
-Ecuador's, and per province it runs:
-
-    San José de Ocoa  -23.7%     Santo Domingo  +10.3%     Distrito Nacional  +3.2%
-
-**A 34-point spread underneath a national agreement of half a point.** Drawing on it would have
-put 285,000 people in Santo Domingo province who are not there and taken a quarter of San José
-de Ocoa away, and every total would still have reconciled, because a population base does not
-have to be right to be internally consistent. The projection was carrying forward the drift into
-the capital the 2010 census had been seeing; the 2022 count did not find it.
-
-**So the check is per unit and never in total, and it is one line.** Take COD-PS's ADM-n table
-and the country's own latest enumeration and print the ratio for every unit, sorted. It costs
-nothing and it is exactly the countries where the national totals agree that nobody runs it on.
-While you are there, read HDX's `methodology` field: the Dominican one says *"Projection from
-2015 census"* and there was no 2015 Dominican census, so the vintage statement was wrong as
-well as the numbers.
-
-**And check which COD level your units actually are.** Every other Latin American country on this
-map takes its first-order units from COD's ADM1. The Dominican ADM1 is the **ten planning
-regions** and the 32 provinces are ADM2, so copying a neighbour's geo module reads
-`dom_admin1.shp`, gets ten polygons, raises no error, and draws the country three times coarser
-than its own source measured it.
+Compare COD-PS with the country's latest enumeration per unit, never only in total (Dominican COD-PS
+is 0.56% off nationally and -23.7% to +10.3% by province); read HDX's `methodology` field, and check
+which COD level the units are (the Dominican ADM1 is ten planning regions). Helper exists:
+`sources/geo_checks.py::ratio_band` (no build calls it yet); `sources/do_geo.py::main` prints the
+ratios. Playbook: `playbooks/geography.md`. Full text: `spec_archive/12.md`.
 
 ### A CLOUDFLARE WALL OVER A WHOLE DOMAIN IS NOT A CLOSED SOURCE — Dominican Republic, 2026-09-08
 
-`[[reference_dead_stats_office]]` covers the bot wall that returns 418 to curl and lets a browser
-UA through. **This is the harder version and its usual remedies all fail**: `one.gob.do` and
-`anda.one.gob.do` sit behind a Cloudflare challenge that answers **403 to curl with a full
-browser header set AND to WebFetch**, on HTML, on PDFs and on microdata alike. There is no UA
-that works and nothing to inspect.
-
-Three ways round it, in the order they paid off:
-
-1. **Somebody else hosts the office's own tools.** CELADE runs ONE's REDATAM instance at
-   `prod.redatam.org/bindom/`, which is not behind Cloudflare because ECLAC hosts it. That is
-   where the 2010 census dictionary came from, and it closed the census question in one GET.
-   §11's REDATAM sweep had already NAMED `reddom` and never opened it.
-2. **Sweep the directory the catalogue points at, not the catalogue.** ONE publishes its
-   microdata as a plain file tree at `one.gob.do/catalogo-datos/` rather than through its ANDA
-   instance, and a **Wayback CDX PREFIX sweep of that path** (`matchType=prefix`, not a domain
-   sweep) returns everything the archive ever saw there: 18 ENHOGAR rounds with SPSS bases,
-   questionnaires and HTML codebooks, the 2022 census microdata, ENIGH, ENI, ENESIM, the vital
-   statistics. Fetching all 129 archived `.htm` codebooks and grepping them for
-   `religi|creenc|culto|confesi` is one script and it is what found the question this country is
-   drawn from. It also found a religion variable in the **marriage register** that nobody was
-   looking for.
-3. **A truncated `.sav` still has all its labels.** The archive caps captures at exactly
-   1,048,576 bytes, so large `.sav` files come back damaged. SPSS writes the whole label
-   dictionary into the HEADER, so `pyreadstat.read_sav(..., metadataonly=True)` reads every
-   variable label and value set out of a file whose cases are unreachable. Take the data from
-   the published CSV, which carries codes and no labels, and the labels from there, and assert
-   both. That is `[[reference_pdf_truncated_at_source]]`'s shape with the opposite outcome.
+When a whole office domain is walled, look for the office's tools hosted elsewhere (ECLAC's
+`prod.redatam.org`), sweep the catalogue's directory with a Wayback CDX prefix query, and read a
+truncated `.sav` capture's labels with `pyreadstat.read_sav(..., metadataonly=True)`. Helpers exist:
+`sources/fetch_checks.py::cdx_url`, `parse_cdx` (no build calls them yet). Playbook:
+`playbooks/census_table.md`. Full text: `spec_archive/12.md`.
 
 ### A SINGLE FAILING CATEGORY CANNOT USE THE RESIDUAL CONSTRUCTION — Dominican Republic, 2026-09-08
 
-`sources/lapop.py`'s `build()` draws the categories that pass §14.16's split-half on their own
-unit shares and gives each unit's REMAINING share to the failing ones at their national relative
-proportions. That is right whenever there are two or more of them, and it is **a silent no-op
-when there is exactly one**: with one failing category the residual *is* that category's own
-measured share, so "national rate inside the residual" reproduces the survey's own geography
-precisely, which is the thing the split-half just declined to license. It also divides by zero
-in any unit that measured the category at zero, which is where it was noticed.
-
-Where one category fails, set it to its national share directly and rescale the passing ones to
-fill the rest, which keeps their measured proportions to one another. `sources/do.py` does it and
-says so.
-
-**The general shape is worth more than the fix: a construction written for the plural case can
-degenerate to the identity in the singular case without erroring.** Two or more, and it works.
+With exactly one failing category the residual is that category's own measured share (and divides by
+zero where it is 0): set it to its national share and rescale the carried shares
+(`sources/do.py::main`). With several, the 2x rule below decides between residual and flat. Not
+checked in `lapop.build` yet. Playbook: `playbooks/lapop.md`. Full text: `spec_archive/12.md`.
 
 ### A HOUSEHOLD-HEAD RELIGION QUESTION CAN BE PRICED, AND IT COSTS ONE AXIS — Dominican Republic, 2026-09-08 (review)
 
-MICS's `HC1A` asks the religion **of the household head** and every tabulation applies it to
-everyone in the household, so a map built from it draws two thirds of its people on somebody
-else's answer. That is normally recorded as an unquantifiable ceiling. **It is often
-quantifiable, because the same statistics office usually has another round that asked
-individuals**, and a survey series is the cheapest place to look: ONE's `ENHOGAR 2018` carries
-`AD118`, *"¿A cuál religión pertenece usted?"*, put to women aged 15 to 19.
-
-Comparing that group's own answers with the way the 2019 build draws the same group:
-
-* **The bias is real and it is one axis.** Catholic falls from 49.8% attributed to 37.1%
-  self-reported and no religion rises from 21.6% to 34.8%. **The evangelical cell moves 0.06
-  points**, and Adventist and Other under 0.4. Nothing moves between religions; what moves is
-  that young people reporting no religion are drawn in their religious household's column. The
-  intuition that a head question understates a fast-growing evangelical population is wrong
-  here, and would have been asserted rather than tested.
-* **It is a level shift, not a distortion.** Self-reported on attributed across all 32
-  provinces: slope 1.007, intercept -12.66, r 0.872, and the gap is uncorrelated with the level.
-  The ranking survives at +0.87. A map's claim is mostly about where, and where is unaffected;
-  what a reader should not trust is the level a `note_public` quotes.
-* **Check the module's universe before believing the number.** The 2018 file is named
-  *Adolescentes* and its module is **women only** (`H202` = 2 for every respondent, and the one
-  weight in the file is `Mujeres15_19_Factor_Exp`). Cut the comparison group the same way or
-  the cost comes out a point and a half too large.
-
-The generalisation: **"the source cannot say which way it leans" is a claim to test, not a
-caveat to write.** §3.5 already says a hole's direction is usually measurable from data in
-hand; this is the same rule one step out, where the data in hand is another round of the same
-survey. Every MICS-built country here has the same ceiling and the same possible answer.
-
+A household-head question (MICS `HC1A`) draws everyone on the head's answer. Price it against an
+individual-religion module in the same series, cut to that module's universe (ENHOGAR 2018's
+`AD118`: a level shift along no religion, ranking kept at +0.87), and say so in `note_public`. Not
+checked yet. Playbook: `playbooks/dhs_mics.md`. Full text: `spec_archive/12.md`.
 
 ### AN ORACLE CATEGORY COUNT COUNTS ROWS, AND A ROW CAN BE AN AGE BAND — Cabo Verde, 2026-09-08
 
-`queue.md` priced Cabo Verde at **16 categories**, which for half a million people would be
-unusually deep and was the reason to take the country. The office publishes **fifteen**. The
-sixteenth row is `Unknown`, **138,739 people**, and it is not a non-response and not an
-unnamed religion: it is everyone under 15. INE asked the religion question of the population
-aged 15 and over, and forwarded the children to New York as the residual that makes its rows
-partition the whole country.
-
-**The tell is a subtraction that closes to the person**, and it costs one look at the same
-workbook: 491,233 − 352,494 = 138,739, and the census's own 0-4, 5-9 and 10-14 bands are
-45,540 + 46,619 + 46,580 = 138,739. Two independent routes to the same number, so the reading
-is certain rather than plausible.
-
-> Before pricing a country on `tools/oracle.py`'s category count, look at the counts. A row
-> that is a large round-ish share of the national total and has a vague label is a candidate
-> for a universe, a subtotal or an age cut, and the census's own population table settles it.
-
-That is §11p's Zambia correction pointing the other way — there the oracle was deeper than the
-publication a sweep had read, here it is shallower than it looks — and the shared rule is that
-**a count of rows is not a count of categories.**
+A count of oracle rows is not a count of categories: a large vague row can be a universe, a subtotal
+or an age cut (Cabo Verde's `Unknown` is the under-15s, to the person), and the census's own
+population table settles it. Enforced by: `sources/cv.py::check`. Playbook:
+`playbooks/census_table.md`. Full text: `spec_archive/12.md`.
 
 ### AN AGE CUT HAS A LEAN, AND IT IS USUALLY TESTABLE — Cabo Verde, 2026-09-08
 
@@ -8396,15 +6836,10 @@ deciding it does not matter.
 
 ### When the drawn tier is newer than COD-AB, look one level DOWN in the same file first
 
-[[reference_agol_statute_boundaries]] is about hunting a newer boundary file when a census
-tabulates on units COD-AB does not have. Timor-Leste is the cheap version and is probably the
-common one: COD-AB's bundle there is `valid_on 2020-09-11` with 13 ADM1, the 2022 census tabulates
-14, and the fourteenth was already in the file as an **ADM2**, because it was a sub-district
-before it was promoted. Subtracting that ADM2 polygon from its old parent's ADM1 gives both units
-at once, keyed on the office's own p-codes, with no name join anywhere. Assert it on area against
-the census's own area column and on geometry (the subtraction must remove exactly one connected
-piece) and the whole thing is twenty lines. **A promotion is the usual reason a census tier is
-newer than COD-AB, and a promoted unit's old boundary is by definition already in the file.**
+A census tier newer than COD-AB is usually a promotion, and the promoted unit is already in the file
+one level down: subtract it from its old parent and assert the areas against the census and exactly
+one removed piece (Timor-Leste). Enforced by: `sources/tl_geo.py::main`, `sources/ao_geo.py::main`.
+Playbook: `playbooks/geography.md`. Full text: `spec_archive/12.md`.
 
 ### A cross-country figure in a note must be computed from `counts()`, never from the dots
 
@@ -8579,228 +7014,70 @@ the table is sound, which is the reverse of the usual worry.
 
 ### COD-AB AND COD-PS CAN DISAGREE ABOUT WHAT LEVEL A TIER IS, AND THEIR PCODES THEN DO NOT JOIN — São Tomé, 2026-09-08
 
-São Tomé's seven districts are **ADM1** in the 2026 COD-AB boundary bundle, pcodes `ST11` and
-`ST21`-`ST26`, and **ADM2** in the 2022 COD-PS population bundle, under an ADM1 of two provinces,
-pcodes `ST0101` and `ST0201`-`ST0206`. Neither file mentions the other's scheme.
-
-Two failures follow, and only one of them is loud. Joining the two on a pcode returns an **empty
-frame**, which is obvious. Joining `adm1_pcode` to `adm1_pcode` silently pairs each **district**
-with a **province**, which is not.
-
-*When the drawn tier is newer than COD-AB, look one level DOWN in the same file first* is above
-and is about one file being re-levelled between vintages. This is the same re-levelling seen from
-outside: **two COD files of the same country, downloaded the same day, disagreeing about which
-level the tier is.** So assert the unit COUNT on each file separately before joining them, and
-never assume `ADM1` means the same thing in `-ab-` and `-ps-`.
+Two COD files of one country can put the same units at different levels (São Tomé's districts are
+ADM1 in COD-AB and ADM2 in COD-PS), so `adm1_pcode` to `adm1_pcode` silently pairs districts with
+provinces: assert the unit count on each file separately before joining. Enforced by:
+`sources/st_geo.py::main`, `sources/do_geo.py::main`. Playbook: `playbooks/geography.md`. Full text:
+`spec_archive/12.md`.
 
 ### A CATEGORY THAT IS EXACTLY ZERO IN A SURVEY CELL IS A COVERAGE FAILURE, NOT A MEASUREMENT — Tajikistan, 2026-09-08
 
-The stability tests here all ask whether a category's **pattern across units** is signal. None of
-them looks at a category that is simply not there, because a zero has no pattern to test.
-
-LiTS III returns **zero Orthodox Christians in Tajikistan**, on the same round, the same
-75-PSU design and the same ~1,500 respondents that gave **107 in Kyrgyzstan and 467 in
-Kazakhstan**. Tajikistan has a functioning Russian Orthodox diocese; at n=1,510 a population of
-even 0.5% has an expected count near eight. Nothing in the build would have flagged it: the
-category simply never appears, so it is never mapped, never tested and never drawn, and the map
-ships asserting that a real community does not exist.
-
-**So look at the empty cells before the odd ones.** Take the categories the country is known to
-have, and for each one that the source returns as zero, compute what count the smallest credible
-outside estimate implies at this sample size. A zero where the expectation is one or two is
-ordinary sampling. A zero where the expectation is eight or more is the instrument, and it
-condemns the whole minority half of that source rather than one row of it. §9cl's Liberia rule is
-the neighbouring case — a category whose LEVEL is set by the fieldwork rather than by the country
-— and this is its limiting form, where the level is set to nothing at all.
+For each category the country is known to have and the survey returns as zero, compute the count the
+smallest outside estimate implies at this sample size; a zero where eight or more are expected is
+the instrument and condemns the source's minority half (LiTS III: no Orthodox in Tajikistan). Not
+checked yet. Playbooks: `playbooks/lits.md`, `playbooks/afrobarometer.md`. Full text:
+`spec_archive/12.md`.
 
 ### A CARD THAT HAS THE CODE CAN STILL FAIL TO SEE THE COMMUNITY, AND THE TEST IS ITS HOME REGION — Tajikistan, 2026-09-08
 
-§11aj's finding about Tajikistan was that LiTS has no Ismaili code, so the instrument cannot
-express the one religious fact that distinguishes Gorno-Badakhshan. That reads as an argument for
-auditing the card. **Auditing the card is necessary and it is not sufficient.**
-
-The Central Asia Barometer *does* carry `Sunni Muslim / Shia Muslim / Ismaili Muslim`, and in
-Gorno-Badakhshan — the seat of the Nizari Ismaili community in Central Asia, whose Pamiri
-population is Ismaili almost entirely — it records **40 of 51 Muslims as Sunni and three as
-Ismaili**, while seating fourteen Shia in Khatlon and seven in the Districts of Republican
-Subordination, and losing 15.6% of Muslims nationally to *Don't Know*. The code was there and the
-answers came back wrong.
-
-**The test that catches this costs one cross-tab: take the category with the sharpest known
-geography and check whether its own home region returns it.** A group that is a regional majority
-somewhere and does not show up as one there has been measured by something other than itself —
-interviewer coding, a state-safe answer, or a label being heard as a generic. This is cheaper than
-the split-half and catches a class of failure the split-half cannot: **a category can rank units
-identically in both halves while its LEVEL is set by the card**, so a stability test on a
-mismeasured category is stable and wrong.
+Check that the category with the sharpest known geography comes out highest in its home unit; a
+stable split-half cannot see a level the card set (the barometer recorded Gorno-Badakhshan's Muslims
+as Sunni). Enforced by: `sources/uz.py::main`, `sources/tm.py::main`. Playbook: `playbooks/cab.md`.
+Full text: `spec_archive/12.md`.
 
 ### A SPLIT-HALF CANNOT SEE A QUOTA, AND A QUOTA IS WHAT IT LOOKS LIKE WHEN IT PASSES BEST — Lebanon, 2026-09-09
 
-The entry above is about a category whose LEVEL is set by the card. This one is about a category
-whose whole GEOGRAPHY is set by the fieldwork, and it is worse, because the check that is supposed
-to catch exactly this returns its strongest possible verdict on it.
-
-**Arab Barometer's Lebanese sample is a fixed sect-by-governorate quota.** The contractor is told
-how many Sunni, Shia, Maronite, Orthodox, Catholic and Druze interviews to collect in each
-governorate and collects them. Wave V (2018-19) and wave VII (2021-22) come back with the same
-Christian count in **all eight governorates** — Akkar 30 of 160, Beirut 90 of 250, Mount Lebanon
-650 of 960, South 10 of 260 — and Kesrwan-Jbeil is **100% Christian in all three parts of wave
-VI**. §11al and `sources/lb.md` have the tables and the country is not drawn.
-
-**§14.16's split-half asks whether a category's ranking across units replicates between the early
-and the late waves. A quota replicates by construction.** It is the same grid applied twice, so
-the correlation goes to +1 and the category is licensed to carry its own geography — a geography
-that is the pollster's assumption about where the groups live. Every other guard agrees with it:
-the held-out population check passes trivially, because a survey that quota-samples units matches
-the population's unit shares by design; the totals reconcile; the build returns a closed
-partition. **Nothing prints a warning.** A country that fails a check is a good outcome compared
-with this.
-
-**The general rule: replication is evidence only where the two halves COULD have disagreed.**
-Before believing any test that compares two samples, ask what fixed the composition of each one.
-Two waves agreeing to the interview is not corroboration, it is one measurement reported twice,
-and it is a fact about the sampling design rather than about the country.
-
-**The test, which is cheap and belongs beside the split-half in any survey module.** For each pair
-of waves and each unit both sampled, over the answers both cards offered, compute the exact
-probability that two independent samples of those sizes would land on the *same rational share*,
-and read the number of exact agreements against the Poisson-binomial tail. It separates by orders
-of magnitude rather than by a threshold: Lebanon comes in at an adjusted **1.4e-4** while Jordan,
-Egypt and Iraq have no exact agreement outside the degenerate cells at all.
-`sources/arabbarometer.py`'s `quota_agreement` is the implementation and `assert_not_quota` runs
-it before `stability`; anyone adding a country from a different pooled survey should port it.
-
-**And run it on every religion column the file offers, not only the one you mean to draw.** The
-quota is a property of the fieldwork. Lebanon's sect column, pooled over the waves that carry it,
-comes in a hair the *safe* side of the same bar purely because its pool excludes the wave that
-makes the pair — so a pass on the narrower column would have licensed the wider one.
-
+Replication is evidence only where the two halves could have disagreed: a fixed sect-by-unit quota
+passes the split-half and the held-out check at their strongest (Lebanon). Run the exact-agreement
+quota test before the split-half, on every religion column the file offers. Enforced by:
+`sources/arabbarometer.py::assert_not_quota` (`quota_agreement`), `sources/cab.py::assert_not_quota`.
+Playbooks: `playbooks/arabbarometer.md`, `playbooks/cab.md`. Full text: `spec_archive/12.md`.
 
 ### FITTING A COLUMN MARGIN TO THE SURVEY'S OWN NATIONAL SHARE UNDOES THE ROW MARGIN — Nigeria, 2026-09-09
 
-The Liberia construction (§9cl) is: seed a unit-by-category table with the survey's pattern, then
-IPF it to two exact margins, unit populations down the side and category totals across the top.
-It is correct there because **both margins are the same census counting the same 5,250,187
-people**. Reached for on a country with no census, it goes wrong in a way that raises nothing and
-looks reasonable in the diff.
-
-Nigeria's row margin is COD-PS 2022 by state. The obvious column margin, when no census exists,
-is the survey's own pooled national shares. That is wrong:
-
-> A survey's national share is its unit shares **weighted by the pool's own unit mix.** If the
-> row margin is a population table, the fit is being asked to reconcile two different weightings
-> of the same units, and it does so by bending every unit's measured share. The population
-> reweighting the row margin just performed is undone.
-
-**The two mixes differ for reasons that are normal rather than pathological**, which is why this
-is worth a spec entry instead of a country note:
-
-- **A pooled survey is missing units in some rounds.** Afrobarometer round 6 sampled no Adamawa,
-  Borno or Yobe, because it was in the field in Borno in December 2014. That is 14 million
-  mostly-Muslim people absent from a sixth of the pool and present in the population table.
-- **Pooling across years averages over internal migration and differential growth.** Each round
-  was allocated proportional to *its own year's* population. Nigeria's northern states grew at
-  x1.79 against the south-east's x1.28 over the same span, so a 2008-to-2022 pool under-weights
-  the north against any 2022 population table, however good each round's weights are.
-
-The size here was **4.6 points on the national Christian share**, 56.0% to 51.4%, which on 217
-million people is ten million of them, and it moved the country from one side of even to nearer
-the middle of the published range.
-
-**THE RULE.** Fit a column margin only to a source that counted the same people the row margin
-counted. Where there is no such source, do not fit at all: draw each unit at its own measured
-composition and let the national level fall out. `lapop.build` and `afrobarometer.build` already
-do this, so the failure is only available to someone who reaches for the IPF because a tail
-category has no residual to sit in — which is the actual trigger, and the fix for that is to add
-the tail additively at its national rate rather than to change the margin.
-
-**And the diagnostic is free and already printed.** `held_out` compares each unit's share of
-respondents with its share of the population table, for a different purpose. A unit at 0.63x and
-another at 1.37x is that check telling you the two weightings differ, before anything about
-religion has been read.
+Fit a column margin only to a count of the same people the row margin counted (Liberia's census);
+otherwise draw each unit at its own composition and add a tail at its national rate. `held_out`'s
+thinnest and fullest unit ratios are the early warning (Nigeria moved 4.6 points). Not checked yet.
+Playbook: `playbooks/afrobarometer.md`. Full text: `spec_archive/12.md`.
 
 ### A ZERO IN A CROSSTAB IS A FACT ABOUT RESPONDENTS; THE VALUE LABELS ARE THE SHOWCARD — Nigeria, 2026-09-09
 
-An answer with zero respondents in a round supports *"nobody chose it"*. It does not support
-*"it was not offered"*, and the two carry different weight in an argument about whether a pooled
-share is measuring the questionnaire.
-
-**The card is in the file and costs seconds to read.** `pyreadstat.read_sav(path,
-metadataonly=True)` returns `variable_value_labels` without touching the respondents, so on a
-280 MB merged file the check is free even after a full load. Nigeria's `report_card()` is twenty
-lines and prints, per answer, the rounds whose label set carried it.
-
-Run on six Afrobarometer rounds it confirmed the guess it was written to check and found two
-more, one of which matters: **`Shia only` and `Shia` are the same box renamed between rounds
-4-5 and 6-9.** `ab.assert_one_wording` cannot see that, because the guard compares folded
-strings and these two do not fold together; a country drawing the Muslim card would have had one
-answer as two categories with every total still adding up, which is
-`[[reference_pooled_survey_labels]]` arriving through the ANSWER column instead of the unit one.
-
-Worth running on any pooled instrument before arguing from a zero.
+A zero says nobody chose an answer, not that it was off the card: read the card from the value labels
+(`pyreadstat.read_sav(path, metadataonly=True)`), which also shows renamed boxes (`Shia only`,
+`Shia`) that the wording guard cannot fold. Enforced by: `sources/tz.py::report_card` (asserts
+`None` on every drawn round); `sources/ng.py::report_card` prints. Playbook:
+`playbooks/afrobarometer.md`. Full text: `spec_archive/12.md`.
 
 ### A GATED INSTRUMENT'S CATEGORY LIST AND ITS TIER ARE BOTH FREE TO READ — Papua New Guinea, 2026-09-09
 
-A survey whose microdata is behind a registration still ships a final report, and the report
-carries the two things that decide whether the account is worth asking for. Neither costs an
-account, and reading them can retire a route or reorder two of them.
-
-**Appendix A gives the tier.** PNG's DHS 2016-18 says *"representative at the national level, for
-urban and rural areas and each of the 22 provinces"*, so the geography is settled before anything
-is downloaded — and a survey designed for four regions is a different proposition from one
-designed for twenty-two provinces.
-
-**The questionnaire appendix gives the answer set, and Table 3.1 prices it.** PNG's DHS card has
-**eleven religion codes and no Baptist code**, though the census counts Baptists at 2.8–3.0%. The
-cost shows up as the residual: DHS reports `Other Christian church` at **21.3%** where the 2011
-census's `Other Christian` is **9.7%** and the 2022 SDES's is **0.89%**. An instrument whose
-residual is more than double the census's on the same population is measurably coarser than the
-thing it would stand in for, and one fifth of every unit would be drawn as *other*.
-
-That comparison is the general move: **put the gated instrument's residual beside the census's
-before valuing the route.** It is the same reasoning as §3.1a's answer sets, applied one step
-earlier — to whether to ask for access at all rather than to whether two sources can be compared.
-Here it reordered PNG's two blocked routes: IPUMS at 89 districts, all persons, 9.7% residual
-beats DHS at 22 provinces, ages 15-49, 21.3% residual on every axis except vintage.
-
-**And check the universe while the report is open.** PNG's DHS asks religion in the Woman's and
-Man's questionnaires, of respondents 15-49; Nigeria's carries it on the household roster. Same
-programme, different universe, and only one of them is a population composition.
+Before asking for a gated survey, read its free final report: Appendix A gives the tier, the
+questionnaire gives the universe and the card, and Table 3.1 prices the card by its residual against
+the census's (PNG's DHS: 21.3% `Other Christian church` against 9.7%). Not checked yet. Playbook:
+`playbooks/dhs_mics.md`. Full text: `spec_archive/12.md`.
 
 ### A BOUNDARY FILE'S ERROR HIDES INSIDE ITS CORRECT TOTAL — Iraq, 2026-09-09
 
-geoBoundaries' `gbOpen/IRQ/ADM1` has the right number of features, the right ISO codes, and a
-country area within **0.2%** of the office's own published figure. **Its Baghdad polygon is
-912 km² against Iraq's published 4,555 and COD-AB's 5,100**: it draws roughly the built-up
-city and hands the rest of the governorate to Babil, Diyala and Salah al-Din, whose polygons
-are 1.55×, 1.13× and 1.08× their statute areas to compensate. Baghdad is **21.2% of Iraq's
-population**, so building on that file puts a fifth of the country's dots inside a fifth of
-the right polygon and draws the overflow in three neighbours. Nothing errors; the totals
-reconcile; the map looks built.
-
-**The check is one rank correlation and it is per unit, never on the total.** Most offices
-publish a governorate/province area table beside the population one — Iraq's is Table 1/1 A of
-the same statistical abstract the census chapter is in — and comparing it against the polygon
-areas separates a re-cut unit from a re-projected one immediately. `sources/iq_geo.py`'s
-witness 2 is the implementation: ρ = +0.994 for COD-AB, 0 of 5,000 permutations reaching it,
-and the per-unit ratio column printed beside it so a single bad unit is visible.
-`[[reference_agol_statute_boundaries]]` is the same worry one file across.
+Compare per-unit polygon areas with the office's area table, never only the total (geoBoundaries
+Iraq draws Baghdad at 912 km² against 4,555 with the country right to 0.2%). Enforced by:
+`sources/iq_geo.py::main` (witness 2). Playbook: `playbooks/geography.md`. Full text:
+`spec_archive/12.md`.
 
 ### A COMPOSED CATEGORY CAN COLLIDE WITH ITSELF, AND THE WORDING GUARD CANNOT SEE IT — Iraq, 2026-09-09
 
-`assert_one_wording` catches one answer arriving under two spellings. The inverse exists and is
-worse: **two different answers arriving under one spelling.** Iraq's Arab Barometer build
-composes `category` from the religion question and the sect follow-up, and `Other` is a box on
-**both** cards — a religion that is neither Islam nor Christianity, and a Muslim denomination
-that is none of those offered. Composed naively they merge into a single category with every
-total still adding up, and no guard fires, because the two strings are identical rather than
-merely similar.
-
-**The rule: any time one column is built from two, list the answer sets of both and intersect
-them.** A non-empty intersection is a decision, not a coincidence, and the two sides need
-qualifying labels with the reason written down (`sources/iq.py`'s `COMPOSED`). This is the same
-family as `[[reference_pooled_survey_labels]]` and the one member of it that no automatic check
-can reach.
+When one column is built from two, list both answer sets, intersect them, and label each side of any
+overlap with the reason (`Other` is on both Arab Barometer's religion and sect cards). No automatic
+check can see it; `sources/iq.py::COMPOSED` records Iraq's. Playbook: `playbooks/arabbarometer.md`.
+Full text: `spec_archive/12.md`.
 
 ### A SURVEY PROGRAMME'S FAMOUS INSTALMENT IS NOT ITS ONLY ONE — Japan, 2026-09-11
 
@@ -8831,189 +7108,67 @@ category, which is usually the one you least needed.
 
 ### A WP FILE DOWNLOAD INSTALL IS INVISIBLE IN `wp-json/` — Nauru, 2026-09-11
 
-A previous session recorded that `stats.gov.nr` had **no WP File Download plugin**, which sent
-it away from the one route that worked. The reasoning was sound: the site is plain WordPress
-with an open REST API, and `wp-json/`'s namespace list is `wp/v2`, `divi/v1`, `oembed/1.0`,
-`duplicate-post/v1`, `wp-statistics/v2` and core internals. **That is exactly what a site with
-no document plugin looks like, because the plugin registers no REST namespace at all.** There
-is nothing in the API index to find, and `wp/v2/media` returns 48 items and one non-image file,
-which reads as an office that publishes nothing.
-
-The plugin was there. `task=files.getFiles&id=0` returned all **131 files**, the 2021 census
-among them.
-
-**Fetch the rendered page body before drawing any conclusion from an API index.** One `curl` of
-the documents page and one grep settles it:
-
-```
-grep -o 'wpfdajaxurl\|action=wpfd' page.html
-```
-
-`[[reference_wpfd_sweep]]` already says the download URLs are usually printed in the page
-bodies and to try that first. This is the same instruction with the reason attached, and it
-generalises past this one plugin: **an API index enumerates what registers itself with the API,
-which is not the same set as what the site serves.** A negative drawn from `wp-json/`,
-`/api/`, a PxWeb tree or an SDMX dataflow list is a statement about that index.
+An API index lists what registers with it, not what the site serves: WP File Download registers no
+REST namespace, so fetch the rendered page and grep it for `wpfdajaxurl` or `action=wpfd`, then page
+`task=files.getFiles&id=0`. Helper exists: `sources/fetch_checks.py::wp_json` (no build calls it
+yet). Playbook: `playbooks/census_table.md`. Full text: `spec_archive/12.md`.
 
 ### A QUESTIONNAIRE CAN MAKE A TABLE DEEPER THAN THE QUESTION, AND THE TABLE WILL NOT SAY SO — Nauru, 2026-09-11
 
-Nauru's 2021 census religion question offers **ten** pre-coded answers, one of which is `Other
-religion` with a free-text box. The published table prints **nineteen** rows. The extra nine are
-the office's back-coding of those write-ins, and the people still in `Other religion` are what
-it did not code.
-
-Nothing in the table hints at this, and two readings change once you know:
-
-* **The back-coded names are respondents' own words, not an office classification.** Nauru's
-  table carries `FOM Pentecostal Church` and `Fishers of Men Church` as separate rows for what
-  is almost certainly one body, because two people wrote it two ways. Map them to the same node
-  and do not merge them in the source module: merging edits the office's own partition.
-* **The residual is a coding tail, not a sampling tail.** Nauru's `Other religion` is 0.84%
-  where the same cell runs several percent in most censuses of that size. **A very small
-  residual is evidence of effort, not evidence of a homogeneous country**, and reading it as
-  the latter overstates how settled the country is.
-
-`[[reference_census_questionnaire]]` says the questionnaire is the only thing that catches a
-mislabelled column. This is the same tool catching the opposite: a column labelled correctly
-that means something different from what it looks like. **Read the form whenever a table has
-more categories than a census usually pre-codes**, which for a small country is roughly
-anything past a dozen.
+Read the form when a table has more categories than a census usually pre-codes: extra rows can be
+the office's back-coding of write-ins (Nauru: ten answers, nineteen rows), so two spellings of one
+body map to one node without being merged in the source, and a tiny residual shows coding effort, not
+a homogeneous country. Playbook: `playbooks/census_table.md`. Full text: `spec_archive/12.md`.
 
 ### A PERMUTATION NULL THAT SHUFFLES ABOVE THE RESAMPLING UNIT IS THE IDENTITY, AND IT FAILS AS A CLEAN RESULT — Belgium, 2026-09-11
 
-§14.16's split-half was brought to an ESS country for the first time with Belgium (§9cy). ESS's
-API returns cross-tabs and no PSU, so the resampling unit had to be the **round**: seven rounds,
-35 three-against-four splits, statistic = the median Spearman of a category's share across the
-eleven provinces.
-
-The first version drew **one** permutation of the province labels and applied it to the whole
-cube. That is a global relabelling of the map. It is applied to both halves of every split
-alike, so it moves no rank correlation at all, and the null came out **identical to the observed
-statistic to three decimals**: every category scored exactly `p = 1.0000` and the table read as a
-clean negative result — this survey cannot place anybody — rather than as a bug.
-
-**The rule.** A permutation null has to shuffle the labels **within each resampling unit,
-independently**, because the thing it is trying to destroy is the agreement BETWEEN units. Shuffle
-anything the two halves share and you have permuted nothing.
-
-**The tell is the identity, and it is worth looking for by name.** A null whose 95th percentile
-sits on top of the observed value for *every* category at once is not a weak signal; nothing
-about a real dataset makes nine categories of wildly different sizes agree with their own null
-to three decimals. The same shape appears whenever a resampling scheme is written one level too
-high, and a test that returns p = 1 everywhere is the friendlier version of the failure: the
-dangerous one returns p = 0 everywhere and licenses everything. Print the null quantile beside
-the observed statistic rather than only the verdict, which is what makes this visible at all.
+A permutation null shuffles unit labels independently within each resampling unit (each wave); one
+global relabelling is the identity and returns p = 1 for every category. Print the null's 95th
+percentile beside the statistic. Enforced by: `sources/stability.py::wave_null` (tested by
+`tools/test_stability.py`). Playbook: `playbooks/ess.md`. Full text: `spec_archive/12.md`.
 
 ### A BOT WALL CAN ANSWER HTTP 200, AND A HEADLESS BROWSER'S OWN USER-AGENT CAN MAKE IT WORSE — Belgium, 2026-09-11
 
-`statbel.fgov.be`, `data.gov.be` and the Belgian federal estate run **F5 Shape (TSPD)**. Three
-things about it are not specific to Belgium:
-
-* **It returns 200 with a JavaScript challenge**, a ~5.6 kB stub carrying `window["bobcmn"]` and
-  a `/TSPD/` script tag, on every path including static file directories. A fetcher that checks
-  the status code records a success and a plausible `Content-Length`, which is
-  `[[reference_pdf_truncated_at_source]]` one layer up. **Check the body, not the code**: a
-  response of a few kilobytes where a page was expected is the signature.
-* **§9cp's fix does not generalise.** Costa Rica's Akamai wall keys on header COMPLETENESS and
-  opens to a full browser header set. This one does not, and neither does `[[reference_dead_stats_office]]`'s
-  browser-UA retry. When a full header set still fails, the wall is executing JavaScript and only
-  a browser will do.
-* **Headless Chrome makes it worse before it makes it better.** `--headless=new` still reports
-  `HeadlessChrome/<version>` in the User-Agent, and the wall escalates that from a solvable JS
-  challenge to an **image CAPTCHA** — which reads as a harder wall than it is and is the point at
-  which a session gives up. Override it: `--user-agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64)
-  AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"` gets through on the
-  first navigation. `--dump-dom` is still not enough, because it captures the challenge page
-  before its reload; drive CDP, `Page.navigate`, wait about ten seconds, `DOM.getOuterHTML`. That
-  is `[[reference_headless_map_screenshots]]`'s rig pointed at a wall instead of at a map, and
-  `websocket-client` needs `suppress_origin=True` or Chrome refuses the socket with a 403.
-* **The Wayback CDX fallback is not always there.** A regex filter over a whole domain 504s on
-  large sites, with and without `matchType=domain`, so `[[reference_dead_stats_office]]`'s second
-  route can be unavailable exactly where it is most wanted.
-
-And one Drupal detail worth carrying to any Drupal site: Statbel's search parameter is
-**`search_api_fulltext_block`**. `search_api_fulltext`, which is Drupal's usual name and what the
-URL looks like it should take, is **not an error** — it is ignored, and the page returns the
-entire index with a result count that reads like a very large number of hits. **Read the form's
-own `name=` attribute out of the rendered DOM before trusting a query-string convention.**
+A JavaScript wall (F5 Shape) answers 200 with a ~5.6 kB challenge on every path: check the body, not
+the status. The playbook's rule is to stop there and give Anita the URL rather than iterate on
+clients; this entry's headless-Chrome route predates it and is in the archive. Read a Drupal search
+form's own `name=` attribute (`search_api_fulltext_block`). Partly enforced by:
+`sources/fetch_checks.py::check_body`. Playbook: `playbooks/census_table.md`. Full text:
+`spec_archive/12.md`.
 
 ### A COMMISSIONED TABLE LIVES ON THE CUSTOMER'S WEBSITE, NOT THE OFFICE'S — Sweden, 2026-09-11
 
-§9cu made an office's custom-table shelf the first thing to check before building any country
-from a survey, and it named SCB's *beställd statistik* as Sweden's. **Sweden has no shelf**:
-`scb.se`'s ordering pages are six services all framed as bespoke paid work, with no archive of
-past specialbearbetningar and no `maatwerk`-style URL space, and a site search for
-`trossamfund` returns civil-society accounts and occupational median ages. Underneath it is
-structural rather than editorial — Sweden registers nobody's religion, so SCB has no variable
-to tabulate, which is the exact opposite of CBS, whose labour-force survey asks 460,000 adults.
-
-**And the commissioned religion tabulation exists anyway, on the church's website.** The Church
-of Sweden's `Medlemsutveckling` PDF says in its own header that its population and membership
-figures are *"framtagna av SCB på uppdrag av Svenska kyrkan"*: 5,627,932 members at 31/12/2021,
-exact, per parish, kommun and län. §11k's closure line was *"Sweden. SCB carries nothing"*,
-which is true of the catalogue and false of what the office produces.
-
-> **Search the office and you find what the office published. A table it was paid to produce
-> for somebody else is on that somebody's site.** So when a country has an organised religious
-> body, a grant-paying agency or a federation, look there before closing the register tier —
-> and read the fine print of any table they publish, because it names who made it.
+A table an office was paid to produce is on the customer's site: before closing the register tier,
+look at the religious bodies, grant agencies and federations, and read the fine print naming who made
+the table (the Church of Sweden's parish figures, by SCB). Playbook: `playbooks/ess.md` (Loading it,
+"Office first"). Full text: `spec_archive/12.md`.
 
 ### ONE SPLIT-HALF IS A DRAW, NOT A STATISTIC — Sweden, 2026-09-11
 
-§9bi's test ranks the units on one half of the waves and again on the other. **Where the
-resampling unit is a survey ROUND there are few enough of them that which halving you pick
-decides the verdict.** Sweden pools four ESS rounds over 21 län, and `Svenska kyrkan`, 23% of
-the country, scores:
-
-    {5,7} vs {6,8}   +0.125     fails a +0.3701 bar
-    {5,6} vs {7,8}   +0.434     passes
-    {5,8} vs {6,7}   +0.458     passes
-
-Same data, same units, same category, three verdicts. **Take the median over every distinct
-split and compare it to a permutation null**, which is §9cy's construction, written for Belgium
-the same day and reused unchanged by `sources/se.py::_stability`. With a chronological halving
-the answer is whatever the calendar happened to arrange. This also silently produced a wrong
-conclusion about which NUTS level to draw Sweden at, which §9cz corrects.
-
-**The same rule applies to the LAPOP and barometer modules whenever the wave count is small.**
-They split by PSU and have many, so they are safer; a country with three or four waves and no
-PSU is not.
+Where the resampling unit is a survey round, which halving you pick decides the verdict (Sweden's
+church: +0.125, +0.434, +0.458), so take the median over every distinct halving against a per-wave
+permutation null. Enforced by: `sources/stability.py::halvings`, `median_rho`, `wave_null`. The
+archived text says LAPOP and the barometer modules split by PSU; `lapop.stability`,
+`afrobarometer.stability` and `arabbarometer.stability` in fact split once by wave, early rounds
+against late, so the rule applies to them. Playbooks: `playbooks/ess.md`, `playbooks/lapop.md`. Full
+text: `spec_archive/12.md`.
 
 ### A RANK TEST CAN BE PASSED BY A COLUMN THAT IS MOSTLY ZERO — Sweden, 2026-09-11
 
-Two Swedish categories on **21 and 23 respondents** cleared §9cy's round-split permutation test
-at p = 0.018 and 0.022. Their spatial chi-squares over the same 21 län are **0.32 and 0.40**:
-the survey cannot tell the units apart for either of them at all.
-
-**A Spearman over a column that is zero in most units is decided by how the ties break**, and
-permuting the unit labels of that same column reproduces the tie structure, so the permutation
-null is not protective against it either. A small category does not merely lose power against a
-rank test; it can be *passed* by one. With ten categories at alpha 0.05 you expect half a false
-pass, and these were two.
-
-> **Pair the rank test with the spatial chi-square, and require both.** §9bi already says to run
-> the chi-square before proposing an override — *"if the units do not differ, there is nothing
-> to draw"* — and the same sentence works as a veto on a pass. Adding it can only make a
-> category fail, so it is not the forbidden move of tuning a bar until something passes.
-
-It also does the job `lapop.ELIGIBLE_FLOOR`'s 1% size gate was doing, and does it for the right
-reason: **size is eligibility, the chi-square is evidence.** Sweden's free churches are 2.0% of
-citizens on 130 respondents and pass both, coming out at 7.71% of Örebro against 3.05%
-nationally; a size threshold that refused the two noise passes would have had to refuse them too.
+A Spearman over a mostly-zero column is decided by its ties, and the permutation null does not
+protect against that: a rank pass also needs the spatial chi-square under 0.05. Size is eligibility;
+the chi-square is evidence. Enforced by: `sources/stability.py::chi2_p`, through `no.py::_stability`,
+`se.py::_stability`, `cab.py::stability`, `co.py`, `bo.py`, and `lits.py::stability` (which also
+requires untested categories to be listed); `be.py::_stability` has none. Playbook:
+`playbooks/ess.md`. Full text: `spec_archive/12.md`.
 
 ### NESTED UNITS: EACH CATEGORY AT ITS OWN LEVEL, EXCEPT THE RESIDUAL (Sweden, 2026-09-14)
 
-Where survey units nest (Swedish län in riksområden, Italian regioni in ripartizioni), the
-level is not one choice for the whole country. **Give each category the finest level at which
-it passes, and apply a coarse unit's share inside each fine unit** (`sources/it.py::_composition`,
-`sources/se.py::_compose`). Sweden's free churches pass only at the 21 län, where NUTS 2
-reverses them, and its Catholics and Orthodox only at the 8 riksområden.
-
-**The exception is the big category that closes the partition.** Sweden's `No religion` passes
-at the riksområde too, but it is 68% of citizens and the complement of the fine categories.
-Fixed at the coarse share, the small tail has to absorb every fine unit's own departure and
-goes negative in 6 of 21 län. Leave it as the residual, where it still varies with the fine
-categories.
+Where units nest, give each category the finest level at which it passes and apply a coarse share
+inside each fine unit, except the big category that closes the partition, which stays the residual
+(`KEEP_AS_RESIDUAL`). Enforced by: each `_compose`, which prints the negative count and exits on no
+room (`sources/se.py::_compose`, `sources/it.py::_composition`). Playbook: `playbooks/ess.md`. Full
+text: `spec_archive/12.md`.
 
 ### A ROLL CAN AGREE WITH SELF-IDENTIFICATION NATIONALLY AND STILL BE A HEAD-OFFICE MAP — Japan, 2026-09-14
 
@@ -9037,41 +7192,18 @@ set the unit shares against a self-identification source unit by unit.
 
 ### A CHART PUBLISHED AS AN IMAGE CAN BE MEASURED, AND ITS PRINTED LABELS ARE THE CHECK — Japan, 2026-09-14
 
-The only public copy of NHK's 1996 prefecture religion survey is an 815×655 stacked-bar GIF.
-`sources/jp_checks.py` reads it: gridlines give pixels per point (6.5 here); each segment is the
-distance between the centres of the black border runs that bound it; a label wide enough to look
-like a border splits a segment into two pieces of one colour, which are merged because a category
-appears once per bar. **Every bar's measured total came within 0.08 points of the total printed
-above it, 48 of 48**, and segments agree with their printed labels to 0.14. One pixel is the
-precision, and a segment under about two pixels cannot be told from a zero, whose borders merge.
-
-**Calibrate on what the chart prints about itself before believing any segment.** A chart that
-prints totals, or labels its largest segments, has published its own answer key. Wikipedia's
-transcription of this same chart reads a third of its cells as `~2%`; the measurement has them to
-a pixel.
+A chart published as an image can be measured from its gridlines and segment borders; calibrate on
+the totals and labels it prints before believing any segment (NHK 1996: 48 of 48 bar totals within
+0.08 points). Measured in: `sources/jp_checks.py`. Playbook: `playbooks/census_table.md` ("Scanned
+tables"). Full text: `spec_archive/12.md`.
 
 ### A PRINTED COLUMN HEADER CAN BE WRONG, AND THE OFFICE'S OTHER PUBLICATION OF THE SAME CENSUS IS THE WITNESS — Zambia, 2026-09-14
 
-Zambia's 2022 religion volume heads one column `Judaism` (30,502, half of it in rural Eastern
-Province) and another `Other Religious Groups` (233,260), beside `African Traditional
-Religion` at 463 and `Non-Religious` at 9,238. Every structural check passes them: the rows
-sum, the provinces sum, four tables agree to the person. ZamStats' National Analytical Report
-on the same census gives five national figures in prose that B.1 reproduces **only** with
-`Judaism` read as the traditional religion and `Other Religious Groups` as no religion, and its
-sex split for that answer (1.8% of men, 0.8% of women) is the irreligion profile.
-
-**Before mapping a small column whose label or geography looks wrong, find a second
-publication of the same census that names the categories in words, and test every plausible
-reading against its figures.** Then assert the chosen reading both ways on every build, so a
-corrected re-issue fails instead of leaving a relabel standing (`sources/zm.py::check_relabel`).
-This is §3.10d with the outside number coming from the office itself.
-
-Two smaller things from the same country. **A suppressed cell is often in arithmetic reach**:
-all 15 of B.5's `*` cells sit in a row that prints both the total and the other half, so each
-is recovered two independent ways, which is worth checking before §3.8's removal. And
-**COD-AB's parent attribute can lag a boundary revision that kept the polygon**: Chirundu
-district is under Lusaka in COD-AB and Southern in the census, so join on the lower level when
-its names are unique and let the census's parent drive anything computed per parent.
+Before mapping a small column whose label or geography looks wrong, test every plausible reading
+against a second publication of the same census and assert the chosen reading both ways. A
+suppressed cell is often recoverable from its row, and COD-AB's parent attribute can lag a boundary
+revision. Enforced by: `sources/zm.py::check_relabel`. Playbook: `playbooks/census_table.md`. Full
+text: `spec_archive/12.md`.
 
 ### A REGION THAT IS ONLY DRAWN, NEVER LISTED, CAN BE READ FROM THE PDF'S FILL COLOURS — Argentina, 2026-09-14
 
@@ -9095,76 +7227,49 @@ end date, which is a date to reopen on rather than a closure.
 
 ### TWO NUTS VINTAGES CAN CROSS RATHER THAN NEST, AND THEN THE COARSE LEVEL IS NEARLY WORTHLESS — Norway, 2026-09-14
 
-Italy and Sweden split a survey by level because their fine units sit inside their coarse ones.
-**Norway's ESS rounds 5-9 are NUTS 2016 and rounds 10-11 are NUTS 2021, and the two cut the
-south of the country differently** (NO08 takes Akershus from NO01 and Østfold and Buskerud from
-NO03). Neither is a recode of the other. The coarsest geography both are unions of is four
-units, and **a round-split rank test over four units has almost no resolution**: the
-permutation null's 95th percentile is +0.8, so nothing but the largest category can pass. Check
-whether the vintages nest before planning a two-level build, and price the coarse level by its
-unit count, not by its sample.
+Check whether two NUTS vintages nest before planning a two-level build; Norway's cross, leaving four
+shared units where the null's 95th percentile is +0.8. Price the coarse level by its unit count.
+Enforced by: `sources/no.py::_check_level` per round; the crossing itself is not checked yet.
+Playbook: `playbooks/ess.md`. Full text: `spec_archive/12.md`.
 
 ### GISCO's `POP_2021` IS NOT 2021 FOR EVERY COUNTRY, AND ITS WORKBOOK IS EU-27 ONLY — Norway, 2026-09-14
 
-GISCO LAU 2021's shapefile carries Norway, and its correspondence workbook
-(`EU-27-LAU-2021-NUTS-2021.xlsx`) does not: EFTA countries need the NUTS code from somewhere
-else, and for Norway the kommune number's first two digits are the county. **Its `POP_2021` for
-Norway is the 1 January 2020 population** (5,367,580, SSB's figure to the person). A join check
-against the 2021 census failed six of eleven counties, every one in the direction a year of
-growth or decline gives rather than as an equal-and-opposite pair. **A population check that
-fails with the sign of growth is a vintage mismatch, not a bad join**; find the office's figure
-for the same date and test for exact equality.
+GISCO LAU 2021's `POP_2021` is 1 January 2020 for Norway, and its correspondence workbook is EU-27
+only. A population check failing with the sign of growth is a vintage mismatch: test equality only
+against the office's own figure for the same date. Enforced by: `sources/mk_geo.py::main`,
+`sources/md_geo.py::main`, `sources/ph_geo.py::main`. Playbook: `playbooks/geography.md`. Full text:
+`spec_archive/12.md`.
 
 ### A RANK TEST THAT MISSES ON FEW UNITS CAN BE SETTLED BY A ROLL AT THE SAME UNITS — Norway, 2026-09-14
 
-Norway's Islam answer scored p = 0.0555 on the round-split test at 7 regions with a spatial
-chi-square of 1.3e-10. **Drawn at the national rate, Oslo came out 4.4% Muslim against 9.6% on
-the membership roll.** The roll is a different instrument on a different basis, which is what
-makes it a witness: summed from the old counties to the survey's own 7 regions, it orders them
-the same way at Spearman +0.929. That goes in an `OVERRIDE` with the reason printed on every
-build (`sources/gt.py`'s convention), and the verdict set is asserted so a re-fetch cannot
-silently change it. **This is not moving the bar**: one named category, a second instrument, and
-the chi-square already saying the units differ. Where no independent witness exists at the
-survey's units, the rule stands as written.
+A near-miss with a strong chi-square can be settled by an independent instrument that orders the same
+units (Norway's membership roll, +0.929): an `OVERRIDE` naming the one category, with the reason
+printed and the verdict set asserted. Without such a witness the rule stands. Enforced by:
+`EXPECT_FINE_PASS` in `sources/no.py`. Playbook: `playbooks/ess.md`. Full text: `spec_archive/12.md`.
 
 ### A SURVEY POOL THAT SPANS A FAST CHANGE WANTS §3.4, AND THE SHAPE OF THE CHANGE IS TESTABLE — Norway, 2026-09-14
 
-Norway's Church of Norway share of citizens is 44.14% in ESS rounds 5-9 and 32.24% in rounds
-10-11. A pool over both draws a 2014 midpoint beside a 2021 census half. **§3.4 applies: the
-regional pattern from the pool that has the geography, the national level from the recent
-one**, weighted by the census's citizen population per unit and not by the survey's own unit
-mix (the Nigeria entry above). Whether the scaling is a factor or a shift is a claim about how
-the change is distributed, and it can be checked: the membership roll's county ratios moved
-with a coefficient of variation of 0.018 against 0.077 for the point drops, and the survey's own
-coarse units agreed. Sweden's drift was under 3.5 points and was left alone; check the size
-before reaching for this.
+Where a drawn category's national share moved more than 3.5 points across the pool, take the pattern
+from the pool and the level from the late rounds, weighted by census citizens per unit, and check
+factor against shift; LAPOP countries keep their pooled level (ask 015). Enforced by:
+`sources/no.py::_compose`, `sources/lv.py::_rescale`, `sources/tz.py::main` (`LEVEL_GAP_MAX`).
+Playbooks: `playbooks/ess.md`, `playbooks/afrobarometer.md`. Full text: `spec_archive/12.md`.
 
 ### ONE ROUND CAN PUBLISH THE SAME REGION CODES FOR DIFFERENT REGIONS, WITH WEIGHTS RAKED TO MATCH — Denmark, 2026-09-14
 
-ESS round 9 gives Denmark `region` as DK01-DK05 with the NUTS labels, exactly as rounds 5-7 do, and
-the respondents behind the codes are Danmarks Statistik's region numbers 1081-1085 in order
-(Nordjylland, Midtjylland, Syddanmark, Hovedstaden, Sjælland). Nothing errors, the code set passes
-§9as's level check, and pooling silently averages the capital with North Jutland. **Weighting hides
-it**: the round's `pspwght` was raked to the wrong labels, so the weighted regional shares match the
-population and only the unweighted sample shares look wrong (Hovedstaden 11.5% against 25-28%).
-
-**Before pooling survey rounds on a region code, compare each round's unweighted sample share per
-region, and one geography-bearing variable (ESS `domicil`), with the other rounds.** Where a round
-disagrees, try the office's own region numbering first, confirm with a second variable (Denmark's
-recalled vote separated the two Jutland regions), and assert it both ways so a corrected re-issue
-fails the build (`sources/dk.py::_check_recode`). Weight that round by its design weight, since its
-post-stratification is fitted to the wrong units.
+Before pooling rounds on a region code, compare each round's unweighted sample share per region and
+one geography-bearing variable (`domicil`) with the other rounds; recode where one disagrees, assert
+it both ways, and weight that round by its design weight. Enforced by: `sources/dk.py::_check_recode`,
+`sources/lv.py::_check_labels`, `sources/ua.py::_check_labels`. Playbook: `playbooks/ess.md`. Full
+text: `spec_archive/12.md`.
 
 ### A RANK TEST OVER FEW UNITS CANNOT SEE ONE UNIT STANDING APART — Denmark, 2026-09-14
 
-Denmark's Islam answer at the 5 regions: round-split rank test p = 0.32, spatial chi-square 4.1e-05.
-They do not contradict each other. The capital region is 2.98% Muslim among citizens and the other
-four sit at 0.80-1.35% in no stable order, so the chi-square sees the capital and the median
-Spearman is decided by how four near-equal shares shuffle between splits. **Read a
-failed rank test with a strong chi-square as "one unit differs", not as noise**, and then apply the
-rule as written unless an independent witness orders the units (Norway's entry above). The residual
-construction (§9bi) still carries some of it: Denmark's capital region draws 2.07% against 1.14%
-in North Jutland.
+A failed rank test with a strong chi-square over few units means one unit differs, not noise
+(Denmark's capital region: p 0.32, chi-square 4e-05). Keep the rule unless an independent witness
+orders the units; Honduras's standout test below is the other route. Enforced by: `EXPECT_PASS` in
+`sources/dk.py` and `sources/lv.py`; `sources/ua.py::_standouts`. Playbook: `playbooks/ess.md`. Full
+text: `spec_archive/12.md`.
 
 ### AN OLD SURVEY CAN BE LICENSED BY A NEW ONE THAT CANNOT REPLACE IT — Japan, 2026-09-14
 
@@ -9194,222 +7299,111 @@ being wrong in a new place.
 
 ### A PORTAL MIGRATION HIDES FILES THE OLD SITE PUBLISHED; ASK THE WAYBACK CDX FOR THE OLD PATH PREFIX — Mozambique, 2026-09-14
 
-§11w read Mozambique off the national brochure on `mozdata` and recorded religion as national
-only. INE had published Quadro 11 for every province in 2019, on a Plone site replaced by Liferay
-in 2022; the new portal's folder pages list nothing to a script and its guest APIs answer 403. A
-CDX query on the retired prefix with `filter=original:.*religi.*` returned all twelve files in one
-call (it 503s in bursts; retry). **When an office has changed CMS since the census, query the
-old site's path prefix, not the new site's.** Two smaller traps from the same build: a TLS
-failure on `unable to verify the first certificate` is a server that omits its intermediate, not
-a wall; and **UNSD table 28 can be a later edit of the office's figures** (same total, half the
-unknowns, the difference imputed into named cells), so check an oracle mismatch against the
-office's own printed volume before calling either side a misread.
+When an office has changed CMS since the census, query the Wayback CDX on the old site's path prefix,
+not the new portal (Mozambique's twelve provincial files), retrying 503s. "Unable to verify the first
+certificate" is a missing intermediate, and UNSD table 28 can be a later edit of the office's figures.
+Helpers exist: `sources/fetch_checks.py::cdx_url`, `parse_cdx`, `one_per_digest`, `wayback_raw` (no
+build calls them yet). Playbook: `playbooks/census_table.md`. Full text: `spec_archive/12.md`.
 
 ### A VOLUME'S TITLE IS NOT ITS TABLE LIST, AND UNSD'S `Unknown` MAY BE A POPULATION NOBODY ASKED — Guinea, 2026-09-14
 
-§11w closed Guinea on *"full RGPH-3 thematic series, no religion volume"*. There was no volume
-about religion; the *État et structure de la population* volume had religion by région as
-Tableau 5.10. **Open each volume's own list of tables before recording that a series lacks a
-topic**, and in francophone West Africa look in the structure volume first: Côte d'Ivoire's
-région table (§9az, `sources/ci.py`) was in the same kind of volume. And **before treating
-UNSD table 28's `Unknown` as non-response, compare it with the census's population outside the
-religion universe**: Guinea's 20,129 is the collective-household population to the person, in
-total, urban and rural alike, which also told the build that the report's percentages are shares
-of ordinary households.
+Open each volume's table list before recording that a series lacks a topic (the structure volume
+first in francophone West Africa), and compare UNSD's `Unknown` with the population outside the
+religion universe before calling it non-response (Guinea's collective households). Enforced by:
+`sources/gn.py::check`. Playbook: `playbooks/census_table.md`. Full text: `spec_archive/12.md`.
 
 ### A CHI-SQUARE CANNOT VETO A CLUSTER, SO LOOK AT EACH ANSWER'S LARGEST SAMPLING CELL — Uzbekistan, 2026-09-14
 
-Sweden's rule is that a rank-test pass needs the spatial chi-square beside it, because a mostly-zero
-column can pass on how its ties break. **The chi-square assumes independent respondents, and a
-clustered survey does not have them.** Uzbekistan's `Other (vol.)` answer has 18 respondents; 11 are
-wave 4's interviews in Bukhara, which at ten interviews per settlement is one or two sampling points.
-It passed the wave split-half at p = 0.043 and the chi-square at 6e-21, and fails at a coarser level
-(p = 0.41). Every answer that is placed has at most 22% of its respondents in any single (wave,
-region) cell; this one has 61%. **Print that share for every answer before trusting a pass on a
-small one**, and refuse in writing where one cell is most of the answer (`sources/uz.py`'s
-`OVERRIDE`). Refusing is the safe direction; nothing here moves a bar.
+The chi-square assumes independent respondents: refuse a pass when one sampling cell holds more than
+half of an answer (Uzbekistan's `Other (vol.)`, 61% in one wave-region cell). Enforced by:
+`sources/cab.py::stability` (stops unless `cell_refused` names the answer), `sources/lits.py::stability`
+(per PSU), `bo.py::stability`, `pr.py::stability`, `hn.py::stability`; the constant is
+`sources/stability.py::CELL_CAP`. Playbooks: `playbooks/cab.md`, `playbooks/lapop.md`. Full text:
+`spec_archive/12.md`.
 
 ### ESS ROUNDS 1-4 HAVE A REGION VARIABLE, NAMED FOR THE COUNTRY — Latvia, 2026-09-14
 
-Greece, Sweden, Belgium and Denmark recorded rounds 1-4 as having no `region` and stopped there. The
-harmonised `region` starts in round 5; **Latvia's rounds 3 and 4 carry `regionlv`**, the six
-statistical regions by name, coded 1-6. Probe `region<cc>` before closing an early round. The codes
-are country-specific and the fieldwork sits under an older NUTS vintage, so recode by label and check
-the labels against the people (the Denmark entry above) before pooling.
+Probe `region<cc>` (Latvia's `regionlv`) before closing ESS rounds 1-4; recode by label under the
+older NUTS vintage and check the labels against the people. Not checked yet. Playbook:
+`playbooks/ess.md`. Full text: `spec_archive/12.md`.
 
 ### A ROUND'S REGION CAN CARRY NO GEOGRAPHY AT ALL, AND THEN NOTHING CAN BE RECODED — Latvia, 2026-09-14
 
-ESS round 10's self-completion file gives Latvia's six regions with the right codes and labels, and
-every region is 34-41% big city, 23-30% Russian at home and 28-40% Catholic, Riga included (81-95%
-big city in every other round; language across regions, chi-square p 0.86). Denmark's round 9 was a
-permutation and could be recoded; this cannot, because relabelling identical rows recovers nothing.
-**The same check finds both, and the reading differs**: distinct rows in the wrong places, recode;
-rows that look alike, use the round nationally only (Latvia's round 10 matched its neighbours there).
-Assert that it fails, so a corrected release is noticed.
+The per-round comparison that finds permuted regions also finds regions with no geography (Latvia's
+round 10, every region alike): use such a round nationally only, and assert that it fails. Enforced
+by: `sources/lv.py::_check_labels`. Playbook: `playbooks/ess.md`. Full text: `spec_archive/12.md`.
 
 ### EUROSTAT'S `FOR` CAN INCLUDE THE COUNTRY'S OWN NON-CITIZENS — Latvia, 2026-09-14
 
-`cens_21ctz_r3` reports Latvia's 190,544 recognised non-citizens as `RNC`, a tenth of the country,
-**and counts them inside `FOR`**: the named citizenships under `FOR` sum to 61,472 of 252,305. Every
-two-half builder scales the named citizenships up to `FOR`, which here would have multiplied Russia,
-Ukraine and Belarus by four and given Latvia's non-citizens Pew's Russian composition. **Before
-scaling, check how much of `FOR` the named citizenships cover**; where `RNC` is large, take it out of
-the foreign target and draw it from the survey (ESS names the alien's passport in `ctzship*`).
+Before scaling named citizenships up to Eurostat's `FOR`, check how much of it they cover: Latvia's
+`FOR` holds 190,544 recognised non-citizens (`RNC`), so target `FOR - RNC` and draw `RNC` from ESS's
+`ctzship*`. Enforced by: `sources/lv.py::_foreign_half`; `_foreign_half` in `be`, `dk`, `gr`, `no`
+and `se` asserts `RNC` is 0. Playbook: `playbooks/ess.md`. Full text: `spec_archive/12.md`.
 
 ### THE RESIDUAL CONSTRUCTION CAN REVERSE A GEOGRAPHY, NOT JUST SOFTEN IT — Latvia, 2026-09-14
 
-§9bi shares each unit's remainder at national proportions, which is safe when the remainder has a
-similar make-up everywhere. **Latvia's does not**: Latgale's non-Catholic remainder is Orthodox and
-Kurzeme's is Lutheran. With both churches failing the rank test (one unit standing apart, chi-squares
-near 1e-14) the construction drew Latgale 3.9% Orthodox against 11.0% measured and Kurzeme 7.1%
-against 2.9%. **Print each national-rate category as drawn beside the survey's own regional share**
-(`sources/lv.py::_compose` does) and look for a reversal. A reversal is a reason to look for a
-witness, not a licence to override; Latvia had two, an unpooled ESS round ordering the regions at
-+0.886 and the population register's ethnicity at +0.943.
+Print each national-rate category as drawn beside the survey's own unit share and look for a reversal
+(Latvia drew Latgale 3.9% Orthodox against 11.0% measured); a reversal is a reason to look for a
+witness, not a licence to override. Printed, not asserted: `sources/lv.py::_compose`,
+`sources/dk.py::_compose`, `sources/bo.py::compose`. Playbooks: `playbooks/ess.md`,
+`playbooks/lapop.md`. Full text: `spec_archive/12.md`.
 
 ### EVERY DISTINCT HALVING MEANS ALL OF THEM WHEN THE WAVE COUNT IS ODD — Colombia, 2026-09-14
 
-§9cy's median-over-halvings keeps a combination only `if 0 in a`, which is right for an even count,
-where each halving appears twice (once as each half). **With an odd count the two halves have
-different sizes, so no halving appears twice, and the filter silently discards distinct ones**:
-five waves have ten 2-against-3 halvings and the filter keeps four. `sources/cab.py::stability`
-and `sources/se.py::_stability` carry the filter and both run on even counts today (6 waves; 4 and
-6 rounds). `sources/be.py` (7 rounds, all 35 splits), `sources/no.py::_splits` and
-`sources/co.py::_halvings` get it right; reuse one of those, or fix the filter, before handing
-`cab` or `se`'s function an odd count.
-
-Checked the same day in the Latvia review: `sources/lv.py` runs `no._stability` and gets all three
-halvings of its rounds 4, 9 and 11, and `tools/ess_split_half.py::splits_for` is the same
-construction as `no._splits`, so every report it printed (Greece and Italy's NUTS 1 on three rounds,
-Germany on five, Finland and France on seven) enumerated every halving. `sources/uz.py` (6 waves) is
-the only caller of `cab.stability`.
-
-**Fixed in `cab.stability` on 2026-09-14 for Turkmenistan's three waves**: the filter is now
-`if n_w % 2 or 0 in a`, so an odd count keeps every combination. Uzbekistan was rebuilt into a
-scratch file before and after the change and the two outputs are byte-identical (sha256
-`2cbce1d1...`), as they must be on an even count. `se._stability` still carries the old filter.
+With an odd wave count no halving repeats, so every combination is its own halving; the old `if 0 in
+a` filter kept 4 of 10 on five waves. Enforced by: `sources/stability.py::halvings`, which every
+median-over-halvings caller now uses (`be`, `no`, `se`, `cab`, `co`, `bo`, `tools/ess_split_half.py`),
+so the archived note that `se._stability` still carries the old filter is out of date. Tested by
+`tools/test_stability.py`. Playbooks: `playbooks/ess.md`, `playbooks/lapop.md`. Full text:
+`spec_archive/12.md`.
 
 ### A SURVEY DRAWN ON AN OLD FRAME CAN BE RIGHT ABOUT HOW PEOPLE ANSWER AND WRONG ABOUT WHO LIVES WHERE — Turkmenistan, 2026-09-14
 
-The Central Asia Barometer's Turkmen sample was allocated and weighted on 1995 figures. Its
-respondents are 6.4% Russian, Ukrainian or Armenian against 1.87% in the 2022 census, and 35.6%
-in Ashgabat against 7.71%. Almost every Christian answer comes from those three nationalities
-(92.9% of them answer Christian, 0.03% of Turkmen do), so the pooled regional shares would have
-drawn Ashgabat at 35.3% Christian. **Where the answer is mostly an ethnic one and the census
-publishes nationality by unit, post-stratify: take each nationality's answer shares from the
-survey and each unit's nationality mix from the census.** Turkmenistan's drawn Ashgabat is 7.28%,
-and wave 14, a 2023 phone round with a sample much closer to the census's mix, reads 8.44% and
-orders all six velayats the same way. Compare the survey's nationality mix with the census's
-before applying any survey country's regional shares; Uzbekistan's Tashkent (`sources/uz.md` §8)
-is the same problem, smaller.
-
-Two checks move with the frame. **The held-out check against a current census can fail on a
-correct decode**: Ashgabat took in part of Ahal in 2013, so six of 719 orderings beat the truth
-against 2022. Run it against the frame the sample was drawn on, which the methods report prints,
-and pin the decode with something that uses no names: Table 6 allocates each named region a
-different number of PSUs, and wave 4's file holds exactly ten interviews per PSU under each
-label (`sources/tm.py::frame_witness`).
+Compare the survey's nationality mix with the census's per unit before using regional shares; where
+the answer is mostly ethnic, take religion within group from the survey and group sizes from the
+census. Run the held-out check against the sampling frame and pin the decode with something that
+uses no names. Enforced by: `sources/tm.py::frame_witness`; the mix comparison is printed in
+`uz.py::main` and `tm.py::main`, not asserted. Playbook: `playbooks/cab.md`. Full text:
+`spec_archive/12.md`.
 
 ### A SURVEY'S SAMPLING-UNIT COLUMN CAN CARRY THE OFFICE'S PLACE CODES — Colombia, 2026-09-14
 
-Honduras (§11ap) showed that a merged file can print one wave's region labels on every wave, and
-that `municipio` names settle it. **Colombia's 2010 wave has no `municipio`, and its `upm` column
-turned out to hold DANE municipality codes**, whose department prefix confirmed `prov` for every
-respondent. Before calling a wave undecodable, look at every column that names a sampling point
-(`upm`, `cluster`, `estrato`, `segmento`) for the office's own codes. And check the decode in both
-directions: the same test found 24 Colombian interviews from 2012 filed under the wrong department,
-which no label check can see.
+Before calling a wave undecodable, look at every sampling-point column (`upm`, `cluster`, `estrato`,
+`segmento`) for the office's own codes, and check the decode in both directions (Colombia 2010's
+`upm` holds DANE codes). Enforced by: `sources/co.py::check_labels`. Playbook: `playbooks/lapop.md`.
+Full text: `spec_archive/12.md`.
 
 ### A RANK TEST CANNOT SEE ONE UNIT STANDING APART, SO ASK WHICH UNIT TOPS BOTH HALVES — Honduras, 2026-09-14
 
-Honduras's Adventists fail the split-half (median +0.358 on a +0.475 bar) with a chi-square of
-8e-122. Seventeen departments cannot be ordered on 205 households; the eighteenth, Islas de la
-Bahía, is the highest in both halves of all 400 cluster halvings (8.3% against 0.6%). Neither the
-national rate nor an OVERRIDE of all eighteen shares describes that. **For every failing category,
-print how often the same unit tops both halves.** At 95% or more, with the chi-square and the
-cluster check holding, keep that unit's measured share and give every other unit the category's
-share across the rest (`sources/hn.py`'s `STANDOUTS`). It claims less than an override, and the
-same test kept Honduras's `OTRO` (25%) and Latter-day Saints (23%) flat.
-
-The same country failed Latvia's reversal check in the other direction: §9bi's residual invented
-Latter-day Saints at 0.94% of Gracias a Dios, where the survey found none, because a small unit's
-tail can be one religion rather than a national mix. **A category that is flat can be set to its
-national share, with the carried shares scaled to fill the rest** (`sources/do.py`'s construction
-for one failing category works for several), and then it cannot be inflated anywhere.
+For every failing category, count how often the same unit tops both halves; at 95% or more, with the
+chi-square and the cluster check holding, that unit keeps its measured share and the rest take the
+share across the others. Whether the rest of the tail goes flat is settled by the 2x rule below.
+Enforced by: `sources/stability.py::halves`, `top_both_halves` (`STANDOUT_AGREE`), used by `hn.py`,
+`bo.py`, `tz.py` and `pr.py`. Playbook: `playbooks/dhs_mics.md`. Full text: `spec_archive/12.md`.
 
 ### SMALL CATEGORIES GO IN THE RESIDUAL UNLESS IT DRAWS ONE AT 2x WHERE THE SURVEY FOUND NONE — Honduras, Bolivia, Puerto Rico, 2026-09-14
 
-This settles the "can" in the entry above. Three countries had decided it three ways: Honduras went
-flat, Bolivia paired Honduras's standout test with §9bi's residual, and Puerto Rico kept the residual
-on a 1.2x check.
-
-**The rule.** Categories that fail the split-half and are not standouts take §9bi's residual by
-default: each unit's remainder, split at national proportions. Switch them all to flat national
-shares, with the carried shares scaled to fill the rest (`sources/do.py`'s construction), only when
-the residual draws some category at **2x its national share or more in a unit where the survey found
-none of it**. Test the residual as it would ship, after any standout has been taken out. "None" means
-zero unweighted respondents or households in that unit, and the national share is the one the
-construction itself uses.
-
-Under the residual every category in a unit sits at the same multiple of its national share (the
-unit's remainder over the national remainder), so the test asks how far one unit's remainder is from
-a national mix. As built:
-
-    country  drawn with   worst multiple where the survey found none, under the residual
-    pr       residual     1.20x   Hindú in Este (1 respondent); Budista 1.19x
-    bo       residual     0.94x   Jewish in Tarija (5 respondents); 1.41x in La Paz, where it was found
-    hn       flat         2.96x   Latter-day Saints in Gracias a Dios, 1.40% against 0.47%
-
-**Why 2x.** Any bar from 1.2x to 2.96x splits the three the way they were decided, so the cases fix
-the gap and not the number; 2x is the round number inside it. It is also about where the residual
-stops softening a geography and starts drawing a unit as one of a category's strongest when the
-survey found none of it there, which is Latvia's reversal arriving in the small categories. Below it
-the residual's cost is a unit with a larger remainder drawn slightly larger, and flat costs more than
-that, because it moves the categories that do carry evidence (Puerto Rico's Centro Catholics from
-64.0% to 59.0%). **Not 1x**, which is where `sources/pr.py` prints `ABOVE NATIONAL WHERE NONE FOUND`:
-a category with one or five respondents is "none" in almost every unit, so a 1x bar would send every
-small survey country flat on sampling noise. That print stays a print.
-
-**Apply it after the standouts; Honduras shows why.** With the Adventists left in the tail, the
-residual draws Latter-day Saints at 1.97x in Gracias a Dios and would pass. Taking the Adventist
-standout out first cuts the national remainder nearly in half (1.39% to 0.72%) but Gracias a Dios's
-by only about a fifth, because that department's tail is mostly `OTRO`, so the multiple rises to
-2.96x.
-
-**Checked 2026-09-14 (session `f95259a4-house`): all three comply as built, nothing rebuilt.** The
-figures come from each country's own composition code re-run read-only against its CSV
-(`sources/bo.py::compose` reproduces `bo.csv` row for row). Other countries drawn with the residual
-were not checked against the rule.
+Categories that fail and are not standouts take the residual; they all go flat (national shares,
+carried shares scaled) only when the residual, after standouts are taken out, draws some category at
+2x its national share or more in a unit with zero unweighted respondents of it. Enforced by:
+`sources/stability.py::residual_multiples` (`SMALL_CATEGORY_MULTIPLE`), used by `tz.py::compose`;
+`hn`, `pr` and `lapop.build` do not test it yet. Playbooks: `playbooks/lapop.md`,
+`playbooks/dhs_mics.md`, `playbooks/wvs.md`. Full text: `spec_archive/12.md`.
 
 ### A MICS REPORT PRINTS ENOUGH TO REBUILD THE WEIGHTS ITS PUBLIC FILE LEAVES OUT — Honduras, 2026-09-14
 
-INE's ENDESA-MICS 2019 files carry no weight, PSU or stratum. The final report's Tabla SR.3.1
-(weighted and unweighted households per sampling domain and by area) and the sample-design
-appendix's Tabla SD.1 (frame and sampled enumeration areas by domain and area) nearly are the
-weights: split each domain's weighted total by its frame areas, fit one national factor for rural
-against urban households per area so the area split matches, and test on SR.3.1 rows the fit did
-not use. In Honduras the ethnicity-of-head row went from 1,944 households misplaced unweighted to
-227. **Assert the unweighted column against the microdata first**, which proves the transcription
-and the domain codes together, and **check what the weights can move before spending on them**:
-laid on a projection's unit totals they only shift shares inside a unit, here by 1.6 points at most.
+Where an office's MICS copy has no weights, rebuild household weights from the report's weighted and
+unweighted households by domain and its frame areas, test on rows the fit never saw, assert the
+unweighted column against the microdata first, and measure what the weights can move. Enforced by:
+`sources/hn.py::rebuild_weights`. Playbook: `playbooks/dhs_mics.md`. Full text: `spec_archive/12.md`.
 
 ### LAPOP'S SINGLE-COUNTRY FILES KEEP THEIR OWN ORDER AND A CONSTANT WEIGHT — Bolivia, 2026-09-14
 
-The single-country files are the route for countries the free merge drops (Bolivia after 2008,
-Venezuela; §11ap), and they differ from the merge in three ways that fail silently.
-
-- **`prov` follows LAPOP's own department order and can change meaning between rounds.** Bolivia's is
-  1001 La Paz, 1002 Santa Cruz and so on to 2018, against INE's 01 Chuquisaca to 09 Pando, and a
-  province code in 2023. Decode each round from `municipio` names: per prov code, intersect the
-  departments each name could belong to and require exactly the labelled one. Where a prov code's
-  only municipality has a name two departments share, an office municipality code settles it
-  (`sources/bo.py::decode_wave`).
-- **`wt` can be 1 for everyone in a disproportionate design** (Bolivia 2016-2023, Beni at twice its
-  population share). Post-stratify each (round, unit) to its population share and give each round
-  the same total, the merge's `weight1500` convention.
-- **A population check against a recent census can fail on an old round's design weights**, which
-  are the frame population of their year: 14 of 9! orderings beat Bolivia's 2008 round, every one a
-  swap of units that changed rank or sit within a point. Report it, and let the names decide.
+In LAPOP's single-country files, decode each round's `prov` from `municipio` names, post-stratify
+where `wt` is constant in a disproportionate design, and report rather than assert a population check
+on old rounds' weights. Enforced by: `sources/bo.py::decode_wave`; `bo.py::poststratify` corrects the
+weight, and nothing detects a constant `wt` yet. Playbook: `playbooks/lapop.md`. Full text:
+`spec_archive/12.md`.
 
 ### AN OLD CENSUS CAN CONFIRM A SURVEY'S UNITS AND STILL NOT LICENSE A FINER PATTERN — Bolivia, 2026-09-14
 
@@ -9426,334 +7420,172 @@ And **a REDATAM home page can hide a base**: INE Bolivia's lists 2001, 2012 and 
 base answers at `BASE=PHCCEN92ESP` with its link commented out. Read the page source for `BASE=`
 before recording that an office has no tabulation of an old census.
 
-### `coverage.py` READS `counts.json`, NOT THE DOTS, SO A REMAP FAILS IT UNTIL THE TAIL RUNS — Laos and Mozambique, 2026-09-14
+### `coverage.py` READS `counts.json`, NOT THE DOTS, SO A REMAP FAILS IT UNTIL THE TAIL RUNS — Laos and Mozambique, 2026-09-14 — SUPERSEDED by `tools/build_tail.py` and COMMANDS.txt step 9
 
-COMMANDS.txt step 9 says coverage "reads the DOTS". Its `verify()` reads each country's `dots` keys
-out of `data/processed/counts.json`, which only `tiles.py` writes. So after moving a category to a
-different node and re-scattering, step 9 fails on the OLD node (`la indigenous.laos`, `mz
-unaffiliated`, "draws dots but is not in the country's coverage") and passes on the new one without
-having looked at it. **After a remap, run the tail, then run `coverage.py` again**; the pre-tail
-failure naming only old nodes is expected. The retiring half has no other trap: the tree's only two
-removals (`japanesenew`, `indigenous.laos`) were a tuple deleted from `branches.py`, a line left
-where a reader will look for it, and `build_tree.py`.
+`tools/build_tail.py` now runs `coverage.py` last, after `tiles.py` has rewritten `counts.json`, and
+COMMANDS.txt step 9 says the check reads the last build, so a pre-tail failure naming only the old
+node is expected (`playbooks/geography.md`, "After a node rename"). Full text: `spec_archive/12.md`.
 
 ### A SURVEY'S CAPITAL SAMPLE CAN CARRY A MINORITY AT 2.5 TIMES THE CENSUS, AND REGION WEIGHTS DO NOT SEE IT — Uzbekistan, 2026-09-14
 
-The Central Asia Barometer is post-stratified on region x urban/rural, age and sex. Its Tashkent
-city sample is 23.05% Russian; the 2026 census counts 9.29%. Outside the capital the two agree
-(Tashkent region 4.05% against 3.95%). A region share applied to the region's people drew the city
-21.7% Christian. **Where a census counts a group whose religion differs sharply, read religion
-within the group and apply it to the census's group counts**, as the citizenship splits do.
-
-- **A minority too sparse for a split-half can still be tested on two units.** Russians left 56 of
-  84 (wave, region) cells empty. The capital against the rest, with whole sampling points shuffled
-  within wave and the chi-square as a veto, found Russians outside Tashkent answer Muslim at 26.4%
-  against 1.3% (p = 0.0005). `sources/uz.py::two_unit_test`.
-- **Match the groups on both sides before choosing them.** The census had no Ukrainian row and the
-  survey no Turkmen code, so "other Slavic" could not be a group and the survey's Turkmens sit in
-  its Other. Put the census group where its religion belongs and print what the mismatch moves.
-- **A cached file named for a release can be a different volume of it.** Uzbekistan's three
-  `uz_census2026_prelim_*.xlsx` were the agriculture tables; the ethnicity table was in the
-  compilation PDF the whole time, and a review concluded it was unpublished.
+Where a census counts a group whose religion differs sharply, read religion within the group and
+apply it to the census's group counts; test a sparse minority on two units (capital against the rest,
+sampling points shuffled within wave), and match the groups on both sides first. Enforced by:
+`sources/uz.py::two_unit_test`; `uz.py::main` stops on an `Ethnic_M` label with no group. Playbook:
+`playbooks/cab.md`. Full text: `spec_archive/12.md`.
 
 ### A UNIT MEASURED IN ONE ROUND TAKES ITS REGION'S SHARES WHEN THE REGION PREDICTS ITS OWN UNITS BETTER THAN THE COUNTRY — Colombia, 2026-09-14
 
-A survey unit sampled in one round cannot enter the split-half, so nothing licenses shares of its
-own (Ecuador's Carchi line, §9bn). For the answers drawn on unit shares, **draw it on its design
-region's shares when the region passes a leave-one-out test, and at the national rate otherwise.**
-Leave each of the region's every-round units out in turn and predict its pooled shares of those
-answers two ways, from the rest of the region's every-round units and from every other every-round
-unit; the error is the summed absolute difference. The region is used when its mean error is lower
-**and** it is closer for more than half of its units; a region with fewer than two every-round
-units falls back to the national rate. One-round respondents stay out of both pools, since they
-are one wave's level. The other answers are the national rate inside the unit's residual, as
-everywhere (`lapop.build`). Printed and not deciding: how often a random set of as many units beats
-the country by as much. `sources/co.py::region_fallback`. Supervisor's decision, Anita having
-deferred it, leaning to "use the most granular thing available".
-
-- **Test each region on its own, and only on the answers the fallback changes.** Colombia's first
-  build averaged the test over every region and four answers, got two wins and two losses, and kept
-  the national rate. Atlántica is closer for all six of its departments (mean 6.1 against 15.2
-  points) and Pacífica for none of its three; the average hid both. It also counted traditional
-  Protestant, which is at the national rate whichever fallback is used.
-- **Colombia**: La Guajira (Atlántica, 6 of 6, random p=0.001) and Casanare (Oriental, 4 of 5, 9.7
-  against 12.6, p=0.059) take the region. Quindío (Central, 2 of 5) and Vaupés (1 of 2) stay
-  national. Quindío's means are 0.06 points apart, so the majority clause is what decides it.
-- **Ecuador, reported and not applied**: Carchi would change. Sierra is closer for 8 of 10 provinces
-  (11.7 against 16.1, p=0.025) and would draw Carchi 79.6% Catholic and 7.1% evangelical, against
-  the national 75.5% and 11.0%. Pastaza and Orellana would not (Oriente, 0 of 4). Carchi's line is
-  Anita's call of 2026-09-08 and stands until she rules.
+A unit sampled in one round takes its design region's shares when the region beats the country on a
+leave-one-out over its every-round units (lower mean error and closer for more than half), tested per
+region and only on the answers it changes; otherwise the national rate. Carchi (`ec`) is ruled to take
+Sierra's shares and it is not yet applied. Enforced by: `sources/co.py::region_fallback`, with
+`co.py::main` asserting `ONE_ROUND`, `ON_REGION`, `NOT_DRAWN`. Playbook: `playbooks/lapop.md`. Full
+text: `spec_archive/12.md`.
 
 ### KONTUR'S DENSITY CAP MAKES FALSE CITIES, AND ONLY A WRITTEN LIST CAN TELL THEM FROM REAL ONES — Uzbekistan and five more, 2026-09-14
 
-Kontur limits every hex to **46,200 people/km²**: the top hexes of 24 countries all read 46,199 to
-46,200. Where the model's input put too many people in one place, the output is a flat top at
-that limit with a ramp around it, and the ramp carries most of the weight. Tashkent's block is 54
-hexes at 15,000/km² or more, 11 of them at the limit, holding 58% of the city's placement weight
-15.6 km south of a centre Kontur draws at 2,432/km². Luxor's block holds 1.5 times the whole
-governorate. **No count moves, so no check on totals can see it; the dots are simply elsewhere.**
-
-**Real cores hit the same limit** (Dhaka, Cairo, Karachi, Luanda, Hong Kong, Seoul), so the limit
-alone identifies nothing. A scan of every Kontur layer found 174 blocks with a hex at the limit in
-24 countries and set each against `maps/data/worldcities.csv`. A block is suspect when its peak is
-5 km or more from the largest city within 20 km and Kontur at that city's own point is under a
-third of the peak, when no city is within 20 km, or when the block holds more than twice the
-city's figure. **That test misfires in both directions, so read every block it flags:** the city's
-point can sit in the hills (Bucaramanga) or on a business district (Nairobi), it can match the
-wrong town (Damietta), and a small town holding 1.5 to 2 times its figure passes (Anse-a-Galets).
-
-**The decision is per block, in `kontur_cap.csv`**, which `kontur_cap.py` reads from `scatter.py`
-before the water clip (density needs the hex's own area):
-
-- `real` (125 blocks): drawn as Kontur has it. Set by the test unless the row's `why` says it was
-  checked, so a `real` row is not a verdict.
-- `capped` (10, in uz, eg, gn, ht, ng, id): every hex in the block is lowered to the median
-  density of the populated hexes within 3 km, and the unit's other hexes absorb the share. The
-  median, because the ring includes the block's own ramp. A capped row may name a block that never
-  reaches the limit (Papua's regency 9432040).
-- `unreviewed` (40, in np, et, bd, ao, ng, co, mm, iq, tr, ht): drawn as Kontur has it, with a
-  warning on every scatter. It warns rather than stops because the row is proof someone looked.
-- **A block at the limit that no row names stops the scatter** and prints the row to add. Decide
-  `real` or `capped` there and then; `unreviewed` is for a block seen and not yet judged.
-
-**What the cap costs.** Where the block sits on a real town (Luxor city, Petit-Goave) the town is
-now drawn at its surroundings' density and gets too few dots. The error is smaller than before
-(Luxor's block had about 890 of the governorate's 1,460 dots and now has about 110), and it is
-still an error; a better ceiling needs a population figure for the town. Dots per node were
-identical before and after in all six countries at both editions, and `scatter.py` now asserts that
-every (unit, node) places exactly its allocated dots.
-
-**Before scattering a new Kontur country, run `python kontur_cap.py <cc>`**: it lists every block at
-the limit with the row to add. Layers whose density exceeds the limit (cn, kr, bg) are not raw
-Kontur and are skipped. Bishkek, which `sources/uz.md` §8 suspected, peaks at 26,781/km², below the
-limit and on its own centre: a steep real core, not this.
-
-**A capped block can be the top of a wider false surface, so check where the unit's weight sits
-afterwards, not only the block.** Tashkent city's dots in the capped hexes fell from 58% to 8.3%
-and its weight within 6 km of the centre rose from 9.7% to 21.2%, and a dense patch south of the
-city is still drawn: 13 smaller blocks below the limit and a ramp at 10,000-15,000/km². Capping
-all 13 would move the city's weight there only from 29.3% to 27.4%, so they were left; what
-remains is Kontur's surface, which no per-block rule reaches (`sources/uz.md` §10).
+A block of hexes at Kontur's 46,200/km² limit is a real core or a false concentration, and only a
+per-block row in `kontur_cap.csv` (`real`, `capped`, `unreviewed`) says which. Run
+`python kontur_cap.py <cc>` before scattering, and check where the unit's weight sits after capping.
+Enforced by: `kontur_cap.py::apply`, from `scatter.py::main` (an unlisted block at the limit stops the
+scatter). Playbook: `playbooks/geography.md`. Full text: `spec_archive/12.md`.
 
 ### THREE GRIDS AGREEING ON A COMMUNE CAN BE ONE ERROR, AND A FALSE COMMUNE IS SCALED, NOT CAPPED — Haiti, 2026-09-14
 
-The Eswatini rule above says two independently built grids agreeing is what makes a modelled
-weight trustworthy. **Haiti is where it fails.** Kontur and WorldPop 2020, constrained and
-unconstrained, agree to within 12% on Anse-à-Galets (244,000-274,000) and Petit-Goâve (292,000-
-305,000 before its cap) and all three are two to four times the COD-PS commune figure, with
-nothing since the 2003 census to explain it. They agree too closely on the same wrong communes to
-be independent, so agreement between grids at the level of admin units is lineage, not
-replication. **Test a grid against the official figure for the unit below the counting tier, where
-one exists**, and read each disagreement for a reason: a grid far above a stale projection is
-right where settlement has happened since (Canaan, in Croix-des-Bouquets), and the projection
-itself can be the error (Gressier, 3,987).
-
-**And where the whole commune is false, the block cap is the wrong tool.** The capped block is
-often the real town: capping Anse-à-Galets would have drawn the island's main town at 252/km² and
-left the island 2.5 times over. Scaling the commune to its official share of the department keeps
-the grid's shape inside it and fixes the level (`countries.py::_HT_COMMUNE_LEVEL`,
-`sources/ht.md` §12). Placement only; no count moves. COD-PS publishes a unit below the drawn
-tier for many countries, so it is worth checking before registering a `capped` row.
-
-**Petit-Goâve moved from its cap to the same commune scale that evening**, although Kontur has it at
-only 1.35x its share of Ouest. That is a second route into `_HT_COMMUNE_LEVEL`: a block already
-judged false, in a commune where every grid carries the same excess, where the cap draws the town at
-farmland density (8 dots within 1 km of the centre, 48 after the change; `sources/ht.md` §12.6).
+Grids that agree at admin-unit level can share one lineage: test a grid against the official figure
+for the unit below the counting tier (COD-PS often has one), and where a whole commune is false, scale
+it to its official share rather than capping its block. In code: `countries.py::_HT_COMMUNE_LEVEL`
+(Haiti). Playbook: `playbooks/geography.md`. Full text: `spec_archive/12.md`.
 
 ### A TRAILING DELIMITER SHIFTS EVERY COLUMN BY ONE AND LEAVES EVERY COLUMN PLAUSIBLE — Puerto Rico, 2026-09-14
 
-The WVS-7 Puerto Rico CSV has 404 names in its header and 405 fields on every row, the last one
-empty. pandas' `read_csv` takes a row one field longer than its header to carry an index, uses the
-first field as that index, and pairs every remaining value with the name one place to its left.
-Nothing errors and nothing looks broken: `A_YEAR` reads 630 (the country code), the region variable
-reads a plausible list of six codes, and the religion variable reads the neighbouring detailed
-codes. The supervisor's peek and this build's first peek read the same file two different ways.
-**Before trusting a delimited file's columns, compare the header's field count with a data row's,
-and assert a column that can only hold itself** (a DOI, the survey year, the country code).
-`index_col=False` is pandas' documented fix (`sources/pr.py::load`).
+Compare a delimited file's header field count with a data row's, and assert columns that can only
+hold themselves (a DOI, the survey year, the country code); read with `index_col=False`. Enforced by:
+`sources/pr.py::load`. Playbook: `playbooks/wvs.md`. Full text: `spec_archive/12.md`.
 
 ### WHERE THE SAMPLING UNITS NEST INSIDE THE DRAWN UNITS, THE NULL REGROUPS THEM — Puerto Rico, 2026-09-14
 
-Belgium's rule above shuffles unit labels within each resampling unit, because ESS rounds cross the
-units. A survey whose clusters sit inside the units has no such crossing: Puerto Rico's WVS drew
-three municipios in each of six regions. There the halving is one municipio against two inside each
-region, taken over every distinct halving (23,328), and **the null deals the clusters into random
-groups of the same sizes** and recomputes the same median, which destroys region structure while
-keeping each cluster's answers whole. Its 95th percentile came out at +0.49 to +0.54, against the
-§14.16 formula bar of +0.877 for six units; the formula is for one halving of untied ranks, and a
-median over many overlapping halvings has a narrower null, so the null decides and the bar is
-printed (`sources/pr.py::stability`).
+Where sampling clusters sit inside the drawn units, halve the clusters within each unit and build the
+null by dealing clusters into random groups of the same sizes; the null decides and the formula bar is
+only printed. Enforced by: `sources/stability.py::cluster_null` (used by `pr.py::stability` and
+`lits.py::stability`). Playbook: `playbooks/wvs.md`. Full text: `spec_archive/12.md`.
 
 ### UNSD'S NUMBERS CAN BE WRONG TOO, AND `NOT a partition` IS WHERE TO LOOK — small territories, 2026-09-14
 
-UNSD's British Virgin Islands 2010 row prints Muslim 255 where the census report prints 266 in both
-its national and its by-island table. Those 11 people are exactly the shortfall that makes
-`oracle.py --list` mark the row `NOT a partition`. Aruba's row has the census's numbers under a wrong
-label (`Pagan` for `No religion`), which §11ap had already found. **So a row that does not partition
-is a reason to open the office's own table, not a tolerance to allow**, and where that table exists,
-transcribe from it and pin each known disagreement in code, so a different one fails the build
-(`sources/terr.py::ORACLE`).
+A row `oracle.py --list` marks `NOT a partition` is a reason to open the office's own table, not a
+tolerance: transcribe from the office and pin each known disagreement in code. Enforced by:
+`sources/terr.py::ORACLE`; partly `sources/fetch_checks.py::pinned_differences`, called by
+`sources/mz.py::check`. Playbook: `playbooks/census_table.md`. Full text: `spec_archive/12.md`.
 
 ### A KONTUR EXTRACT CAN BE A VALID FILE WITH NOTHING IN IT — Caribbean Netherlands, 2026-09-14
 
-`kontur_population_BQ_20231101.gpkg.gz` answers 200 and opens as a GeoPackage with zero features.
-Count the features before building a placement layer on an extract. And a territory Natural Earth's
-`admin_0_countries` folds into its sovereign (Bonaire, Sint Eustatius and Saba are inside the
-Netherlands there) has to be named in `country_shapes.py::FROM_UNITS` before it is registered,
-because `country_shapes.py` stops on any registered country it cannot find, and it runs first in
-everyone's build tail.
+Count features when reading a Kontur extract (the `BQ` one opens with zero), and name a territory
+Natural Earth folds into its sovereign in `country_shapes.py::FROM_UNITS` before registering it.
+Helper exists: `sources/geo_checks.py::read_layer` (no build calls it yet); `country_shapes.py::main`
+stops on a registered country it cannot find. Playbook: `playbooks/geography.md`. Full text:
+`spec_archive/12.md`.
 
 ### A MERGED SURVEY FILE CAN DROP ONE COUNTRY'S REGION LABELS AND KEEP THE CODES — Tanzania, 2026-09-14
 
-Afrobarometer's round 8 merge carries Tanzania's `REGION` codes 740-770 and no value labels for
-them (its label set skips the range), so `afrobarometer.load` prints `0 REGION labels` for that
-round and returns a blank label for all 2,398 respondents. Nothing errors. **Read the per-round
-`REGION labels` count `load()` prints, not only the pooled total.** Where the codes mean one unit
-in every labelled round (assert it; it also proves typos like `Mrwara` for Mtwara), decode the
-bare round by code and check it Denmark's two ways: unweighted sample share per unit against the
-neighbouring rounds (Tanzania +0.989) and weighted share against the population (+0.959).
-`sources/tz.py::decode_codes`, `check_r8`.
+A merged round can carry a country's region codes with no labels: decode by code only where every
+labelled round gives each code one unit, and check it by unweighted share against neighbouring rounds
+and weighted share against population. Enforced by: `sources/afrobarometer.py::load` (stops on a code
+with no label unless `unlabelled_rounds=` names the round), `sources/tz.py::decode_codes`,
+`check_r8`. Playbook: `playbooks/afrobarometer.md`. Full text: `spec_archive/12.md`.
 
 ### A ROUND FIELDED BEFORE A REGIONAL RE-CUT IS PLACED BY ITS DISTRICT COLUMN, OR LEFT OUT — Tanzania, 2026-09-14
 
-Tanzania created four regions in March 2012, after Afrobarometer round 4 and during round 5; both
-rounds label the 26 old regions. **Before pooling rounds on a region label, check the boundary
-history across the pool's span, not only the spellings.** Round 4 has `DISTRICT`: match each to
-the boundary file's current district names and assert it lands in one of its old region's
-successors (1,192 placed, 136 in new regions), and drop a district that was itself divided across
-the new line (Magu, 16). Round 5 has nothing finer, so it cannot place anyone in the five split
-regions, and keeping it would measure nine units on fewer rounds than the rest, which is Nigeria's
-round 6 gap made on purpose; it is left out (2,396). The same district column checks the region
-labels of later rounds for free (Tanzania rounds 6, 7 and 9: 0 disagreements).
-`sources/tz.py::decode_r4`, `check_locations`.
+Check the boundary history across a pool's span: place a round fielded before a re-cut by its
+district column (each district asserted to land in its old region's successors, divided districts
+dropped), or leave the round out. Enforced by: `sources/tz.py::decode_r4`, `check_locations`.
+Playbook: `playbooks/afrobarometer.md`. Full text: `spec_archive/12.md`.
 
 ### A RIGHT-ALIGNED PDF TABLE IS READ BY ITS DRAWN RULES, NOT ITS COLUMN LABELS — Pakistan, 2026-09-14
 
-PBS's 2023 Table 9 prints numbers right-aligned in columns of unequal width. Assigning each number
-to the nearest printed column number (`1`..`10`), or cutting at the midpoints between them, put a
-one-digit Scheduled Castes cell into Sikh on the first page. **Read the header's vertical rules
-from `page.get_drawings()` (they come as thin rectangles, two x's per rule) and assign each number
-by its RIGHT edge.** Then make a misread loud: a row must fill every column exactly once, and every
-block's own arithmetic (total = categories, sexes add, rural + urban = all) is asserted. That
-arithmetic also caught the publisher's summary table misprinting a cell (Punjab Muslim 24,462,897
-for 124,462,897). `sources/pk_2023.py::_column_edges`.
+Read a right-aligned table's column edges from the header's drawn rules (`page.get_drawings()`),
+assign each number by its right edge, require every column filled once per row, and assert each
+block's arithmetic. Enforced by: `sources/pk_2023.py::_column_edges`, `::check_block`. Playbook:
+`playbooks/census_table.md`. Full text: `spec_archive/12.md`.
 
 ### WHEN ONE PART OF A COUNTRY NEEDS A SECOND BOUNDARY SOURCE, ASSERT PEOPLE, NOT AREA — Pakistan, 2026-09-14
 
-No one file had Pakistan's 2023 districts: COD-AB carried 129 of them, and Karachi's seven had to
-come from OpenStreetMap, clipped to COD's Karachi. An intersection-over-union bar on the two
-footprints failed at 0.588 on a correct pairing, because OSM's coastal districts run their
-boundary out over the sea; an area-coverage bar then came in at 93.2% against a 0.95 picked before
-looking. **The measure that means something is population: the grid's people inside the primary
-file's footprint that the second source does not cover** (2,806, 0.01% of Karachi). Confirm each
-pairing with a key neither file's name carries, here OSM's subarea towns against the census's own
-sub-divisions. And before writing a second mapping module for a country that already has one,
-pin `taxonomy/registry.py`'s `OVERRIDE`: two vintages on disk make `discover()` refuse for
-`coverage.py` and every other consumer, which breaks other sessions' builds, not only yours.
-**And never name a `sources/` script like a mapping module.** The parser was first
-`sources/pk2023.py`, beside `taxonomy/pk2023.py`; `coverage.py` puts `sources/` ahead of
-`taxonomy/` on `sys.path`, so inside `tiles.py` `import pk2023` loaded the parser, and the whole
-build tail died after writing the archive with *"pk2023 has no MAP"*. `check_mapping.py` and a
-bare `coverage.py` both passed, because they import in a different order. A vintage source script
-takes an underscore: `sources/pk_2023.py`. `sources/pk_2023_geo.py`, `sources/pk.md` §9.6.
+Check a second boundary source for part of a country by the grid people it leaves uncovered, not by
+area or IoU; pin `taxonomy/registry.py`'s `OVERRIDE` before adding a second mapping vintage; and never
+name a `sources/` script like a mapping module (`sources/pk_2023.py` beside `taxonomy/pk2023.py`).
+Enforced by: `sources/pk_2023_geo.py::main`; `sources/geo_checks.py::check_module_shadowing`, from
+`scatter.py::main`; `taxonomy/registry.py::discover`. Playbook: `playbooks/geography.md`. Full text:
+`spec_archive/12.md`.
 
 ### A SQUATTED OFFICE DOMAIN SERVES THE REAL DOCUMENT WITH LINKS INJECTED, AND A WORD PDF'S TRAILER CAN SIT 90 KB FROM THE END — Republic of the Congo, 2026-09-14
 
-`cnsee.org`, the domain of Congo's statistics office before it became the INS, is squatted and
-still serves the 2007 census brochure, reflowed to 20 pages with spam links written into its text
-layer (§11aq). Nothing on the page says the host changed hands, and the tables may well be
-untouched. **When an office has renamed itself, cite and fetch the Wayback `id_` capture from
-before the change, and refuse a body carrying a URL the original never had**: `sources/cg.py`
-checks the exact size and the absence of `http`.
-
-**That capture fails the `%%EOF`-in-the-last-2-KB rule and is complete.** Word 2007's PDF export
-writes a free-object xref list after its last `%%EOF`; this file has 93,345 bytes of it, cut off
-mid-entry, and PyMuPDF opens it as repaired. Every page has its text and Tableau 11 closes to the
-person. The trailer rule ([[reference_pdf_truncated_at_source]]) is a reason to look, not a
-verdict: check the page count against the document's own table list, text on every page, and a
-reconciliation. `sources/cg.md` §2.
+When an office has renamed itself, fetch the Wayback `id_` capture from before the change and refuse a
+body carrying a URL the original never had. A missing `%%EOF` near the end is a reason to look, not a
+verdict: pin the size or digest, and check pages, text and a reconciliation. Enforced by:
+`sources/fetch_checks.py::check_body` (`pin_size`, `forbid`), called by `sources/cg.py::fetch`.
+Playbook: `playbooks/census_table.md`. Full text: `spec_archive/12.md`.
 
 ### A ROUND THAT SKIPS A UNIT BREAKS THE HALVING, AND BREAKS THE NULL DIFFERENTLY — Ukraine, 2026-09-14
 
-ESS's Ukrainian rounds 2-5 each skip two to four oblasts (Ternopil is absent from rounds 2 and 3,
-Khmelnytskyi from 3, 4 and 5). `be._median_rho` drops any halving in which a unit has no respondents
-in one half, so five of ten halvings would vanish from the statistic; and the per-round permutation
-moves an absent unit's zero row onto other units, so the null drops different halvings from the ones
-the statistic dropped. Neither errors. **Tabulate which units each round sampled, assert it, and run
-the test on the units present in every round** (`sources/ua.py::EXPECT_ABSENT`, 19 of 26); the shares
-are still drawn for all of them.
+Tabulate which units each round sampled, assert it, and run the split-half on the units present in
+every round: a unit empty in one half drops that halving, and the null drops different ones. Enforced
+by: `no.py::_stability`, `be.py::_stability`, `se.py::_stability` and `cab.py::stability`, which stop
+on an empty (round, unit) cell; `sources/ua.py::_check_regions` (`EXPECT_ABSENT`). Playbooks:
+`playbooks/ess.md`, `playbooks/afrobarometer.md`. Full text: `spec_archive/12.md`.
 
 ### A LATE ROUND THAT CANNOT REACH PART OF THE COUNTRY CANNOT SET ITS LEVEL ALONE — Ukraine, 2026-09-14
 
-The Norway entry above scales a pooled pattern to a recent round's level. Ukraine's round 11 puts no
-religion 6.3 points above the pool on the 23 oblasts it sampled, and it cannot sample Crimea,
-Donetsk or Luhansk. Scaling only the units it reached draws a vintage step along a line of
-occupation; scaling all of them asserts a change nobody measured there. **Before rescaling, check
-that the late round covers every unit the factor will be applied to**; where it cannot, and the
-missing units are missing for a reason like this one, leave the level, say its vintage, and print
-the drift. Ask 016.
+Before rescaling a pool to a late round's level, check that the round covers every unit the factor
+applies to; where it cannot (Crimea, Donetsk, Luhansk), leave the level, state its vintage and print
+the drift. Enforced by: `sources/ua.py::_late_check` (prints `DRIFT_BAR`). Playbook:
+`playbooks/ess.md`. Full text: `spec_archive/12.md`.
 
 ### ESS's `searchDatafiles` IS GONE; THE SERIES LISTS EVERY ROUND'S FILE — Ukraine, 2026-09-14
 
-`search.searchDatafiles` (sources/fr.py's comment) is not in the schema any more, and
-`elasticSearch.searchForStudiesQuery` fails server-side. `search.seriesMetadata(id:
-"321b06ad-1b98-4b7d-93ad-ca8a24e8788a", version: 985, instance: PUBLISHED, agencyId: INT_ESSERIC)
-{studies{title{en} mainDataFiles{id version title{en}}}}` returns the main file of ESS1 to ESS11 in
-one call; `sources/ua.py::ESS_FILES` has rounds 2-6 and 11. Two smaller things from the same country:
-`data.gov.ua` and `razumkov.org.ua` answer 403 to WebFetch and 200 to a script with a browser header
-set, and **COD-PS Ukraine is restricted** by UNFPA, so it cannot be a population base.
+`search.searchDatafiles` is gone from the ESS API; `search.seriesMetadata` lists every round's main
+file. COD-PS Ukraine is restricted and cannot be a population base. Playbook: `playbooks/ess.md`
+(Loading it). Full text: `spec_archive/12.md`.
 
 ### A TABLE'S OWN TOTALS FIND THE OFFICE'S TYPOS, AND A ROW GAP EQUAL TO A COLUMN GAP NAMES THE CELL — Guinea-Bissau, 2026-09-14
 
-Guinea-Bissau's Anexo Quadro 2 (região x etnia, counts) was transcribed correctly and still did
-not close: the Fula row and the Oio column were both exactly 21,000 short, and the Mandinga row
-and the Cacheu column both exactly 10,000 short. Those are two dropped digits in the office's own
-typing (2,980 for 23,980, 1,460 for 11,460), and the shares printed beside them had been computed
-from the misprints, so the shares agreed with the wrong counts. **Before blaming a transcription
-for a total that does not close, sum the rows AND the columns against the printed totals: an
-office typo shows as one row and one column short by the same amount.** Other splits across the
-four cells would close too, so the correction is only the likeliest one (a single slipped digit);
-say that in code. The Gambia's H.28 (§11aq) is the same move on a whole table.
+Before blaming a transcription, sum the rows and the columns against the printed totals: an office
+typo shows as one row and one column short by the same amount. Fix the likeliest single slipped digit
+and say in code that other splits close too. Enforced by: `sources/gw.py::check`. Playbook:
+`playbooks/census_table.md`. Full text: `spec_archive/12.md`.
 
 ### A TRUNCATED WAYBACK CAPTURE OPENS AS THE WHOLE DOCUMENT; A URL WITH TWO CDX DIGESTS HAS ONE BAD COPY — Guinea-Bissau, 2026-09-14
 
-The CDX for Guinea-Bissau's socio-cultural volume lists two digests for one URL. One of them is the
-first 1,048,576 bytes of the file: it starts `%PDF-1.5`, has no `%%EOF`, and PyMuPDF opens it and
-reports all 92 pages. **A page count is not a completeness check.** Where a URL has captures with
-different digests, fetch one of each before choosing; check the trailer, and pin the file's SHA-1
-in the base32 form the CDX's `digest` column uses, so any later fetch from the office or the
-archive proves it got the same bytes.
+A page count is not a completeness check: where a URL has captures with different CDX digests, fetch
+one of each, check the trailer, and pin the SHA-1 in CDX base32 form. Enforced by:
+`sources/fetch_checks.py::check_body` (a digest or size pin decides; an unpinned PDF with no `%%EOF`
+is refused), called by `sources/gw.py::fetch`; helper `one_per_digest` exists, and no build calls it
+yet. Playbook: `playbooks/census_table.md`. Full text: `spec_archive/12.md`.
 
 ### PROSE CAN SWAP WHAT ITS TABLE HAS RIGHT, AND ANOTHER CROSS-TAB OF THE SAME CENSUS IS THE WITNESS — Guinea-Bissau, 2026-09-14
 
-Guinea-Bissau's report says Gabú and Bafatá are "77.1% and 86.5% respectively" Muslim; its tables
-say the reverse. The scout's note put the swap in the table; it was in the sentence above the
-table. To settle it without trusting one tabulation twice, predict each unit from a different
-cross-tab: região x etnia counts times the national religion rate of each etnia. It fits the
-Muslim column at r = +1.000 once the two misprints above are fixed. **Two limits.** National rates
-cannot see a city: Bissau's Christians run 12 points above the prediction, so the correlation bar
-has to allow for that. And a swap test has no power between units printed alike: Tombali and Oio,
-within 3.3 points on every answer, swap "better" by noise, so count as a failure only a swap
-between units that differ visibly.
+When prose and table disagree, predict each unit from a different cross-tab of the same census
+(región by etnia, times each etnia's national rate) rather than trusting one tabulation twice; allow
+for cities, and count only swaps between units that differ visibly. Enforced by:
+`sources/gw.py::ethnic_witness`. Playbook: `playbooks/census_table.md`. Full text:
+`spec_archive/12.md`.
 
 ### A CENSUS OLDER THAN ITS BOUNDARY FILE NEEDS AN AREA CHECK, NOT ONLY A NAME JOIN — Chad, 2026-09-14
 
-Chad's 2009 census has 22 régions and COD-AB v01 (2025) has 23 provinces. The one documented
-change, Ennedi's 2012 split, was dissolved. **Two départements had also changed province since
-2009, Djourf Al Ahmar from Sila to Ouaddaï and Abdi the other way, and nothing in the census
-volume says so.** Every name joined, every total closed, and Sila would have been drawn on
-24,835 km² instead of about 35,900, with Am-Dam, Haouich and Magrane's dots in Ouaddaï.
+When the census predates the boundary file, compare areas as well as names, from any area or density
+table, and rebuild from the finer COD tier where two neighbours are off by equal and opposite amounts
+(Chad's two moved départements). Enforced by: `sources/td_geo.py::main` (`AREA_2009`). Playbook:
+`playbooks/geography.md`. Full text: `spec_archive/12.md`.
 
-What caught it: the structure volume's Tableau 2.13 prints population and density by région, and
-population over density is the 2009 area. COD's Ouaddaï came out 35% too large and Sila 31% too
-small, **by amounts that cancel**, which is what a département moved across a shared border looks
-like. The scanned sous-préfecture volume then confirmed it by name. `sources/td_geo.py` now builds
-the régions from COD's départements and asserts the rebuilt areas.
+### A SURVEY WHOSE CARD CHANGED BETWEEN ROUNDS GIVES ITS PATTERN AS A WITHIN-ROUND INDEX AND ITS LEVEL FROM SAME-CARD ROUNDS — Taiwan, 2026-09-14
 
-**Rule: when the census predates the boundary file, compare areas as well as names**, from any
-table that prints area or density, and rebuild from the finer COD tier where a pair of
-neighbours is off by equal and opposite amounts. A few percent, open water (Lac, 0.90x) or a
-capital district (N'Djaména, 436 km² against 500) is digitising, not a moved unit.
+Where a pooled series changed its answer card, pooled raw shares draw a unit sampled mostly on one
+card as that card's answer: TSCS puts Buddhism at 38.5% on the 1994 short card and 13.5% on the 2018
+long one, and Hsinchu County's respondents are 44% from 1994. Read each unit as observed over the
+count its own respondents would give at their round's national shares, take the level from rounds on
+one card, close with a fit to unit populations and that level, and pull small units' indices toward 1
+(gamma-Poisson empirical Bayes) before fitting. Check every code's label against its answer: the two
+short cards use code 9 for different answers. Enforced by: `sources/tw.py::standardised`,
+`::compose`, `LABEL_TEST`. Playbook: none (TSCS has none). Full text: `sources/tw.md` §3-§4.
 
 ## 13. Things deliberately not being done
 

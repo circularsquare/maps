@@ -24498,3 +24498,1097 @@ volume. The questionnaire was never read.
   colour) is unchanged and is Anita's.
 - **Reopens on** the 1396 yearbook's population chapter, a 1395 provincial detailed-results volume,
   or the counts table behind Table 3.
+
+## td-2026-09-14. Chad drawn at 22 régions from the RGPH2 2009 structure volume, shares raked to two printed margins
+
+Built to the mapping by session `f95259a4-td` and held on §14 (`ask/answered/017-td`); Anita ruled
+"draw it as built" the same day, and session `d743fc47-td` registered and scattered it. The full
+record is `sources/td.md`.
+
+- **Source.** INSEED, RGPH2 2009 *Analyse thématique: État et structures de la population* (Nov
+  2013). Tableau 5.07 is région x religion, one-decimal shares beside each région's population;
+  Tableau 5.06 is the national counts. Only on the old `inseed.td` jdownloads store, through
+  Wayback's 2020-06-08 capture. Chad is absent from UNSD table 28.
+- **Construction.** Shares x populations, raked (IPF) to 5.07's région totals and 5.06's national
+  counts, integerised within each région. 12 of 132 cells no longer round to the printed share;
+  the largest move is 0.153 points.
+- **Form.** B12 has six boxes, ANI CAT MUS PRO AUT SAN, the table's columns in order. Animists had
+  their own box, so `Sans religion` is `unaffiliated`. New node `other.td` for `Autres religions`
+  (56,657, 0.52%, 91% in the seven southern régions).
+- **Boundaries.** COD-AB v01 (2025) départements dissolved to the 2009 régions: Ennedi Est + Ouest
+  merged, and Djourf Al Ahmar moved back to Sila and Abdi back to Ouaddaï. The swap passes every
+  name join and totals check and is caught only on Tableau 2.13's areas (spec §12, *A census older
+  than its boundary file needs an area check*). Placed on Kontur 2023-11 within régions; no block
+  at the density cap.
+- **Gap.** 98,191 people (0.89%) in zones enumerators could not reach were estimated and are in no
+  table. Tableau 2.02's footnote misprints Sila's estimated figure as 91,011; it is 94,011, so 24.3% of Sila
+  was not counted. Those uncounted people are in Kimiti département, and Sila's dots still fall
+  across all of it.
+- **Result.** 10,939 dots at 1:1,000. The seven southern régions hold 90.3% of Catholics, 88.6% of
+  Protestants and 94.4% of animists; twelve of the fourteen northern and central régions are 98%
+  Muslim or more in the printed table; Mayo Kebbi Est is 32.0% animist, N'Djaména 70.7% Muslim.
+
+## bf-2026-09-14. Burkina Faso drawn at 45 provinces from the RGPH 2006 structure volume's annex, in counts
+
+Built by session `d743fc47-bf` on §11aq's route, at the published grain by Anita's ruling on ask 018.
+The full record is `sources/bf.md`.
+
+- **Source.** INSD, RGPH 2006 *Thème 2: État et structure de la population*, Tableau A5.6
+  (province x religion, counts, PDF pp164-165). Not on the live site; three Wayback captures on three
+  retired paths share one SHA-1, pinned in `sources/bf.py`.
+- **Checks.** Every column equals UNSD table 28 to the person. The 45 provinces summed by région
+  equal Tableau A5.5 in all seven columns, which also proves the province-to-région list, and their
+  totals equal Tableau A 3.1 bis (population by sex, with areas). The numbers use a space as the
+  thousands separator, so each row was solved against its own total; all 46 had one solution.
+- **Form.** P15 has six printed codes, 1 Animiste to 6 Sans religion, the table's columns in order,
+  and no code for no answer (IPUMS's copy of the form). Tableau 1.3 prints 0.00% religion
+  non-response, so there is no `gap`.
+- **`Autre` probably holds some blanks.** Tableau A5.7's age-not-recorded row is 18.7% `Autre` against
+  0.57% overall. Mapped to a new `other.bf` anyway, with the reason in `taxonomy/bf2006.py` REVIEW and
+  on the node's legend text; a one-line change to `unknown` if someone disagrees.
+- **Boundaries.** geoBoundaries ADM2 (World Bank, 2017), because COD-AB v03 is the 2025 reform's 47
+  provinces and HDX keeps no older version. Name join 45/45 with one alias (`Komandjoari` =
+  `Komonjdjari`); every polygon is within 0.994-1.031 of the census's printed area, and every province
+  lies inside the région the census sums put it in. Placed on Kontur 2023-11, 1.66x the census overall,
+  0.93x in Sourou to 3.23x in Kompienga; no block at the density cap.
+- **2019.** The 5e RGPH *Volume des tableaux statistiques*, Tableau I.22, has animists at 9.0% nationally
+  against 15.3% here, and the Sud-Ouest région at 48.1% against 64.9%; `note_public` says so. A
+  province-level 2019 rebuild from the thirteen monographs' charts is written up in `sources/bf.md` §6
+  and not started.
+- **Result.** 14,015 dots at 1:1,000. Oudalan 98.0% Muslim; Poni 74.8% and Noumbiel 72.5% animist;
+  Sanguié 44.4% Catholic; Gnagna 18.7% Protestant.
+
+## sc-2026-09-14. Seychelles drawn from the 2010 census district supplement: 57 write-in labels on 26 districts
+
+`sources/sc.md` is the record. **26 districts, 90,945 people, 34 nodes; 4,328 not stated
+(4.76%) not drawn.** Queued as *"§11w: not chased"* off UNSD table 28's 2002 national row.
+
+**The office post-coded the write-ins in 2010 and printed them per district.** *Population and
+Housing Census 2010: Supplement Statistical Tables (ALL DISTRICTS)* (IHSN catalogue 4079; no
+longer linked from nbs.gov.sc) repeats Table 3, religion by sex, for every district, with 57
+labels down to one Presbyterian. The main report's national Table 2.9 folds 26 of them into
+four rows. It closes three ways: sexes per row, each district against its own age table, and
+the districts against Table 2.9 with the folds spelled out (`sources/sc.py::T29_FOLD`). The
+report's district table (2.3) misprints Other Islands as 576 for 1,042, short by exactly its
+own total's shortfall.
+
+**2022 is newer and not drawn.** Its Table B4.1 has religion by district but six answers, no
+religion inside `Other`, and 11.5% missing because institutions got a form without the
+question. It is a witness: across 23 unchanged districts the 2010 and 2022 shares correlate at
+Anglican rho 0.97, Catholic 0.71, Islam 0.67, Hindu 0.63.
+
+**A COD-AB newer than the census: the census's printed areas say which unit absorbed what.**
+COD's `syc_admbnda_adm3_nbs2010` draws Perseverance Island (a district only since 2022) as a
+separate feature and puts six inner islands in `Other Islands`. The 2010 report prints each
+district's area. English River is 1.38 km2 alone against 2.3 printed and 2.32 with the island;
+La Digue is 9.8 alone and 36.37 with the six islands its footnote names, against 36.4. Both
+are asserted in `sources/sc_geo.py`, and the island's 2023 grid cells are dropped because its
+housing was occupied after the count. Added to `playbooks/geography.md`.
+
+**Placement cuts Kontur hexes by overlap**, not by centroid, because central Victoria's
+districts are 1.2-1.7 km2 against a 0.74 km2 hex (`sources/sc_grid.py`); r = 0.891 over 26
+districts. `kontur_cap.py` cannot check a cut layer (slivers read as densities above the cap);
+no Seychelles hex can reach it.
+
+Grand Anse Praslin is **29.2% Anglican** against 6.2% nationally.
+
+## ir-2026-09-14. Iran drawn at 31 provinces from SCI's 1395 statistical yearbook, in counts; Kontur calibrated to the census county
+
+Built by session `d743fc47-ir` on Anita's ruling on ask 023 (draw the provinces, other on its node).
+The full record is `sources/ir.md`.
+
+- **Source.** Statistical Centre of Iran, *Statistical Yearbook 1395*, chapter 3, Table 3-18
+  (population by religion and province, Aban 1395, counts), read from the Iran Data Portal's copy of
+  SCI's PDF (pinned). §11n closed Iran on the census results tree and the scout found 1390 shares in
+  SCI's *Amar* magazine; neither opened the yearbook's population chapter.
+- **Why not the 1390 shares ask 023 named.** Table 3-18 is the next census, in counts, with other and
+  not stated printed apart and a single Christian column. Grain and other's node are as ruled; not
+  stated (124,572, 0.16%) is `gap` like any census's non-response.
+- **Checks.** 31 rows parsed = transcription and close; they sum to the national row, which equals UNSD
+  table 28 Iran 2016 in all six categories; Table 3-17 reproduces UNSD 2011 and 2006; every province
+  total equals the 1395 detailed-results workbook `3-jamiat-k.xls` to the person. The 1390 table is a
+  witness (same leading province for each minority).
+- **The 1390 "Assyrian or Chaldean" column** tracks the 1395 Christian share across provinces (+0.91)
+  better than 1390's own Christian column (+0.44): it is a thin even share, not Assyrians. That share is
+  still there in 1395, Christians at 0.08-0.16% of 28 provinces; unexplained, drawn as printed.
+- **Placement.** Kontur 2023 puts 18.3% of Iran in the wrong county within its province: false cities
+  at the 46,200/km2 limit in Sarvestan (census 38,114, Kontur 1.78M), Kavar and Kherameh outweigh Shiraz
+  county (1.87M, Kontur 1.24M), and 78 blocks reach the limit. COD-PS ADM2 2016 is the 1395 census by
+  county (429 counties, sums to every province to the person, COD-AB's pcodes), so each hex is scaled to
+  its county's census total. `playbooks/geography.md` has the trap.
+- **Result.** Muslim 99.59%; Christians a third in Tehran province (0.33%); Zoroastrians 0.32% of Yazd;
+  half of Jews in Tehran province, Fars highest share (0.06%); other 40,551.
+
+## tw-2026-09-14. Taiwan drawn at 19 of 22 counties from seven TSCS rounds, pattern standardised within round, level from 2014 and 2018
+
+Session `d743fc47-tw`. §11i closed Taiwan on "no survey fills the gap"; the scout of the same day
+reopened it and this cashes it. Full record `sources/tw.md`.
+
+- **Source.** Taiwan Social Change Survey 1994, 1999, 2004, 2009, 2014 (religion), 2015, 2018
+  (religion), ARDA's open copies (`thearda.com/data-archive?fid=TSC94` ... `TSCS181`, click-through,
+  no login; files on OSF). 13,395 placed respondents who answered. The census does not ask; the MOI
+  body roll (§11i) is not used.
+- **Residence.** Postcode (1994, 1999, 2004, 2009, 2015, 2018) through Chunghwa Post's 368 codes, or
+  the county label (2014). Postcode and label agree on every respondent in 2009 and 2015. 2018's
+  sampling area is used over present residence (124 differ). Penghu, Kinmen and Lienchiang are in no
+  round: blank, 259,650 people, 1.11%.
+- **Trap: the two short cards use code 9 for different answers** (None in 1994, Cihui Tang in 2015),
+  and the card moves Buddhism from 38.5% (1994) to 13.5% (2018). So the county pattern is a within-round
+  observed/expected index over all seven rounds and the level is 2014 and 2018, fitted together to the
+  MOI register (ODRP048, end of 2025, 23,299,132). Spec §12 has the rule.
+- **Test.** Township halves within round, regrouping null, chi-square veto, and a cell cap inside
+  the top county as well as nationally. Carried: none, folk religion, Buddhism, Taoism, Protestant.
+  `Buddhism and Taoism` passed the rank test and was refused: Hsinchu County's reading is 26 answers
+  from one 2009 township. Indices shrunk by gamma-Poisson empirical Bayes before the fit.
+- **Geography.** The NLSC county file on `www.tgos.tw` 403s; geoBoundaries TWN ADM1 (OSM 2017) used,
+  every polygon 0.97-1.03 of the MOI land area. Kontur 2023 per county against the register +0.963;
+  Kinmen 0.40 (registered, not resident; not drawn). Two blocks at the density cap, Taipei basin and
+  Sanchong-Luzhou, both `real`.
+- **Result.** Folk religion 48.5% (Chiayi County 73.8%, Taipei 38.1%), Buddhism 14.4%, Taoism 14.1%
+  (Yilan 25.0%), none 12.1%, Protestant 4.8% (Hualien 11.6%, Taipei 9.5%), Yiguan Dao 2.1%, Catholic
+  1.1%. New node `other.tw` (0.39%).
+
+## ml-2026-09-14. Mali drawn at 20 régions from two RGPH5 volumes' shares, raked to an annex that alone shows the non-response
+
+Session `d743fc47-ml`, on Anita's ruling of ask 018 (published grain). Full record `sources/ml.md`.
+
+- **Source.** INSTAT RGPH5 2022. *Caractéristiques culturelles de la population* Tableau 2.03
+  (région x Muslim, Christian, animist, none, other, two decimals) and annex A01 (national counts
+  of all seven codes and `Non Déclaré`); *État et structure de la population* Tableau 6.13
+  (Catholic, Protestant and other Christian apart, one decimal) and Tableau 2.9 (populations).
+  Both live on `instat-mali.org` and NADA catalog 95. Absent from UNSD.
+- **Trap: the shares have the non-response prorated in, and only the other volume's annex says
+  so.** A01 counts 48,746 (0.23%); Tableau 2.01's counts are A01's spread in proportion, within
+  0.8 people. Recorded, not undone. **And 6.13's rows are forced to 100.0**: the slack sits in the
+  last cells (Koulikoro `Autre religion` 0.5 against 0.36), so 6.13 supplies only the Christian
+  split. Playbook `census_table.md` has both.
+- **Construction.** 2.03 shares on 2.9 populations, raked to A01 prorated (big groups moved under
+  0.4%); Christians split by 6.13 and raked to A01's three (Catholic x0.985, other Christian x1.26).
+  The régions sum one person under the printed national, so the margins are rounded to that sum.
+- **Universe and gap.** Ordinary households, 21,347,587 of 22,395,489: 941,335 (4.20%) in areas not
+  enumerated for insecurity and modelled with GRID3, 106,567 (0.48%) collective or homeless; `gap`
+  4.68%. Tableau 1.2 and Tableaux 2.3 minus 2.9 disagree about which of Douentza and Bandiagara holds
+  the unenumerated; unresolved, no count moves.
+- **Geography.** COD-AB v03, 20 régions. Witnesses: Tableau 1.1's cercle count per région, the old
+  région holding each new one's largest share (geoBoundaries ADM1), the old Nioro, Kita, Sikasso
+  and Koutiala cercles, and Kontur against Tableau 2.3 (log-log 0.923, shuffle max 0.802).
+  COD-AB's Bamako is 733 km2 and contains the old 246 km2 district; the census's seven
+  arrondissements and 4.2 million fit the larger one. Kontur per région 0.27x (Ménaka, nomads and
+  modelled population) to 2.52x (Douentza).
+- **Result.** Muslim 96.45%, Catholic 1.37%, Protestant 0.82%, animist 0.65%, none 0.50%, other
+  0.13%, other Christian 0.08%. San 70.1% Muslim, 17.0% Christian, 8.3% animist, holding half the
+  animists and a third of the Protestants; Bandiagara 6.0% Christian, Koutiala 3.1% animist. New
+  node `other.ml`.
+
+## by-2026-09-14. Belarus drawn from LiTS III's national shares, Catholics placed by the Annuario Pontificio's diocesan counts
+
+Session `d743fc47-by`, on Anita's §14 ruling (quite a few Catholics; RULINGS `by`). Full record
+`sources/by.md`.
+
+- **Source.** EBRD LiTS III 2015-16, 1,504 adults, 75 PSUs, all 7 units; no census asks. Belstat's
+  1 January 2026 populations (9,056,080). Catholics per diocese from the Annuario Pontificio via
+  catholic-hierarchy.org: Grodno 548,125, Minsk-Mohilev 652,300, Vitebsk 167,516, Pinsk 54,140.
+- **The scout's trap, explained: the Gomel' Catholics are fieldwork.** The same file's `q923` Poles
+  are 8.17% of Gomel against the 2019 census's 0.19% and 3.92% of Grodno against 21.73% (rank -0.21
+  over seven units); 35 of Gomel's 41 Catholics come from five interviewers. Asserted in
+  `by.py::ethnicity_witness`.
+- **No oblast geography.** Split-half: Orthodox +0.11, none +0.21, Catholic +0.37 (p 0.10), all
+  fail; BUDDHIST (13 respondents) passes at p 0.037 and is overridden to the national rate as a
+  keying artefact, a ceiling as in `kg`.
+- **Construction.** LiTS's national Catholic 9.21% split by diocesan counts, uniform within a
+  diocese (Grodno 32.9%, Vitebsk 9.3%, Minsk-Mohilev 8.7%, Pinsk 1.2%), floored against the census's
+  Poles per unit; every other answer at its national share inside the non-Catholic remainder. Spec
+  §3.5a's survey-total, church-structure shape.
+- **Geography.** COD-AB v01; its Minsk City is 86.8 km² against 353.64 and misses five of nine city
+  PSUs, so the city is OSM relation 59195 plus COD's polygon (354.1 km²), with every city PSU
+  asserted inside. Kontur 1.048 nationally, 0.94-1.17 per unit; one capped block in Frunzensky
+  district judged real (0.94x the district's figure). New node `other.by`.
+- **Result.** Orthodox 73.5%, none 14.6%, Catholic 9.2%, Buddhist 1.0% (ceiling), other 0.8%, other
+  Christian 0.5%, Jewish 0.3%, Muslim 0.1%. Refusals 0.25% in `gap`.
+
+## ve-2026-09-14. Venezuela drawn at 21 of 25 states from four LAPOP single-country rounds, Catholics by design region
+
+Session `d743fc47-ve`, from §11ap's scouting. Full record `sources/ve.md`.
+
+- **Source.** LAPOP AmericasBarometer single-country files 2010, 2012, 2014 and 2016/17 (ids 1582,
+  1970, 2020, 2195), 5,894 respondents; no census asks (§11ac) and there is no later wave. No wave
+  carries a design weight, so every (wave, state) is post-stratified to the 2011 census.
+- **Population.** The 2011 census, 27,227,930: COD-PS equals INE's Cuadro 2.2 (*Resultados Total
+  Nacional*, p. 13) for all 24 of its rows and omits the Dependencias Federales' 2,155. No projection,
+  since none sees the emigration.
+- **Labels.** `prov` is alphabetical over 21 states in 2010 and a different order over 17 in
+  2012-2016. `municipio` names settle every state in every wave (seven renamings and misspellings
+  aliased, one-municipality states by elimination, the Distrito Capital by `tamano`); 2012-2016 share
+  one municipality numbering. Sample against census r=+0.99 (2010), +0.91 to +0.92 after.
+- **Geography tests, on 20,000 draws.** On 2,000, Catholic at the states was p=0.0500 on seed 0 and
+  0.045-0.058 on five others; on 20,000 it fails (0.0524) and passes at 2010's six design regions
+  (0.0438). Placed by state: evangelical, traditional religions. By region: Catholic, Witnesses.
+  Eastern religions refused on the chi-square. `lapop.wave_flags` flags codes 3 and 7 high in 2016/17;
+  judged not a code shift and kept.
+- **The reversal.** With Catholic at the region, the residual draws believers without a church at
+  11.7% of Falcón against 1.3% measured (Spearman drawn against measured +0.13) and traditional
+  Protestants at 2.5% of Bolívar against 9.8% (-0.28). Spec §12's Latvia rule, built as written, no
+  witness; recorded in `sources/ve.md` §8 and the mapping.
+- **Units.** Apure, Barinas, Monagas and La Guaira sampled in 2010 only: the first two take los llanos'
+  every-round states, La Guaira the capital region's, Monagas the national rate. Amazonas, Delta
+  Amacuro, Nueva Esparta and the Dependencias Federales never sampled, 805,770 (2.96%), blank.
+- **Kontur.** Six blocks at the cap: Petare and Maracay real; El Tigre, Yaracuy and Duaca capped;
+  Cubagua's lone hex left out with Nueva Esparta. New node `other.ve`.
+- **Result.** Catholic 74.0%, evangelical 9.8%, believer without a church 8.4%, traditional Protestant
+  3.4%, Witnesses 1.5%, other 2.1% (`other.ve`), agnostic or atheist 0.6%, Mormon 0.2%. Evangelicals
+  20.4% of Bolívar, 2.9% of the Distrito Capital; Catholic from 62.9% (los llanos) to 81.1% (Andes).
+
+## cm-2026-09-14. Cameroon drawn at 12 units from Afrobarometer R5-R9 on COD-PS 2025, Presbyterians and Baptists as churches
+
+Session `d743fc47-cm`, from §11aq's scouting. Full record `sources/cm.md`.
+
+- **Source.** Afrobarometer rounds 5-9 (2013-2022), 5,949 answers; Cameroon is not in round 4. The
+  2005 census printed religion nationally only (BUCREP Vol. II Tome 01, Tableau 5.8, read from CEPED's
+  IREDA copy), so it is a witness re-read from the PDF on every build, not a margin. Absent from the
+  oracle. Reopen on the 4th RGPH (2026).
+- **Units.** 12: the ten regions with Mfoundi (Yaoundé) and Wouri (Douala) cut out as whole COD-AB
+  departments, because every round samples the two cities apart. Labels change every round and round 8
+  shifts every REGION code by one, so the decode is by label; the department column in rounds 6, 7
+  and 9 agrees for all 3,567 respondents. Populations COD-PS 2025 (BUCREP's projection, with metropolis
+  rows); Kontur agrees per unit at 0.87-1.13x.
+- **Churches.** Catholics swing 26.3-41.4% by round while `Christian only` goes 6.7% to 13.5%, and the
+  census's 2005 Protestant 26.3% matches the survey's Protestant bodies (about 27%) without the
+  catch-all, so it takes mostly from Catholics. Presbyterian (range 2.2 points), Baptist (0.9) and
+  Lutheran (0.3) hold their level. A second test, from a reviewer agent: `Christian only` is 7% of
+  Christians in Ouest and 35% in Adamaoua, so a church is drawn only where its own respondents see an
+  unnamed share at or under the national 13.0%. Presbyterian 10.7% and Baptist 12.5% drawn; Lutheran
+  22.6% folded. The reviewer would have folded all three; `sources/cm.md` §4 has both sides.
+- **Tail.** `Other` passes the split-half but has no answers in rounds 8-9 with the box on the card:
+  not placed. Traditional 0.55% against the census's 5.6% animist, a floor of the single-choice card.
+  Residual rule, worst 1.71x, so not flat. New node `other.cm`.
+- **Result.** Christian (unspecified) 61.8%, Muslim 20.1%, Presbyterian 9.0%, none 3.8%, Baptist 3.5%,
+  other 1.2%, traditional 0.55%. Adamaoua 63.1% Muslim; Presbyterians 27.2% of Nord-Ouest, 22% of
+  Sud-Ouest and Sud. The census's three most Muslim regions, most Catholic region and two
+  Protestant-led regions are asserted; Sud-Ouest, Catholic-led in 2005, is Protestant-led in the survey.
+- **Shared code.** `afrobarometer.py` gained `round_within_rows` and `compose` (tz.py's, category list
+  passed in); traps added to `playbooks/afrobarometer.md`.
+
+## mg-2026-09-14. Madagascar drawn at 22 regions from Afrobarometer R5-R9 on the 2018 census, three churches apart, None and traditional placed as one box
+
+Session `d743fc47-mg`, from §11aq's scouting. Full record `sources/mg.md`.
+
+- **Source.** Afrobarometer rounds 5, 6, 7 and 9 (2013-2022), 4,788 answers. Round 4 is left out: six
+  old provinces, and its `DISTRICT` column reaches 21 of the 22 regions (no Betsiboka district sampled).
+  Madagascar is not in round 8. Neither census form asks; absent from the oracle. Populations are the
+  RGPH-3 2018 Tome 1 Tableau 6 (UNFPA Madagascar's copy), re-read from the PDF; COD-PS "2018" is the 2009
+  BNGRC figure grown forward and is not used.
+- **Units.** 22. COD-AB's 2026-08-13 edition has 24; Fitovinany is dissolved into Vatovavy and Ambatosoa
+  into Analanjirofo, with the census's own urban-commune table (Tome 1 p.46) as the witness. The 2018
+  COD-AB zip returns 404. Decoded by label (round 9 moves codes 433-435 and splits Vatovavy
+  Fitovinany); the district column in rounds 6 and 7 and the old-province column in round 9 agree for
+  every matched respondent.
+- **Churches.** `Christian only` is 0.3-2.3% by round, and Catholic, FJKM (`Calvinist`) and Lutheran
+  hold their level (35.1-40.5%, 19.7-23.8%, 12.7-14.6%). The witness is both DHS reports (EDSMD-IV
+  2008-09 Tableau 3.2, EDSMD-V 2021 Tableau 3.1), which print Catholic beside FJKM/FLM/Anglican at a
+  ratio of 0.94-1.01 against 1.04 drawn. Nothing outside the survey splits the FJKM from the Lutherans.
+- **None and traditional.** The card offers traditional religion beside `None` in every round, so by
+  step 2 `None` is `unaffiliated`. But the two trade places between rounds: traditional 8.5% to 1.3%
+  and None 8.2% to 12.7% from 2013 to 2022, and per region the same places move (Melaky 45% traditional
+  early, 12% none late). They are placed as one box (split-half +0.682) and split at rounds 7 and 9's
+  national ratio, 0.905 None, inside both DHS surveys' 0.896-0.958. The DHS puts None at 20-25% of
+  people aged 15-49 against 12.7% drawn; the level is the soft part. A build with the two apart and a
+  §3.4 rescale came first and was dropped (`sources/mg.md` §5).
+- **Tail.** Anglican, Pentecostal and Other fail the split-half; Jehovah's Witness passes under the 1%
+  floor. Residual rule, worst 1.68x, so not flat. New node `other.mg`. Seven `kontur_cap.csv` rows:
+  three off-centre blocks capped (Mahajanga, Antsiranana, Toliara).
+- **Result.** Catholic 37.85%, FJKM 21.37%, Lutheran 13.91%, None 12.69%, other Christian 3.66%, other
+  3.34%, Adventist 1.45%, Pentecostal 1.43%, traditional 1.33%, Muslim 1.30%, Anglican 1.15%, Jehovah's
+  Witness 0.53%. Haute Matsiatra 60.1% Catholic, Itasy 39.9% FJKM, Menabe 37.3% Lutheran, Diana 14.7%
+  Muslim, Sofia 39.4% None; no one of no religion or traditional religion found in five central
+  highland regions.
+
+## ye-2026-09-14. Yemen drawn at 21 governorates from Arab Barometer wave V, with wave III as the replication test and code 14 read as Zaydi
+
+Session `d743fc47-ye`, the last of `queue.md` §A's four. Full record `sources/ye.md`.
+
+- **Source.** Arab Barometer wave V (2018-2019), 2,400 respondents in 240 PSUs, on the Population
+  Task Force's 2025 estimate (CSO, UNFPA, IOM, OCHA; 34,879,018, the 2004 census projected and
+  corrected for displacement). No census since 2004 published religion; absent from the oracle.
+- **Wave III is not pooled.** Its card is Sunni or Shia only, so its Muslims had no box for naming no
+  branch; wave V's logged item has `Just a Muslim`. Iraq's card rule. Wave II has Yemenis and an empty
+  `q1012`.
+- **What replaces the split-half.** Wave III (2013) against wave V on the Zaydi share of branch-namers,
+  Spearman +0.844 on 21 against the exact bar +0.370, permutation p 5e-05 for the tied zeros; and
+  `lits.stability` on wave V's PSUs (Sunni +0.947, Zaydi +0.930, Just a Muslim +0.846).
+- **Code 14 `Alawi` is Zaydi.** The list has no Zaydi code; the 410 are 34% of the highlands, 1 in 950
+  in the south and east, 1 of 120 in Hadramawt; wave III's `Shia` lands in the same places.
+  `ye.py::zaydi_geography` asserts it. On `islam.shia`, no new node.
+- **Traps.** Wave III labels two governorates `Sana'a` (10503 and 10513), so it is decoded on the
+  CSO-order code with names and wave II's labels as witnesses. Wave V's item is interviewer-logged,
+  and eight governorates have nobody logged `Just a Muslim` (Ta'iz 0 of 260), which no available test
+  can separate from belief; the interviewer column is blank. 32 wave V weights are blank (no gender
+  recorded, 22 Zaydi) and take their PSU's mean.
+- **Result.** Sunni 58.0%, Just a Muslim 23.8%, Zaydi 17.7% (Sa'dah 62.5%, none in eight southern and
+  eastern governorates). Zaydi is 23.4% of those drawn with a branch against the US government's 35%
+  and ACLED's 45% of Muslims (State Department IRF 2023): a floor. Socotra (75,725, 0.22%) unsampled,
+  not drawn, `gap`.
+- **Geography.** COD-AB admin1; the Task Force's district sums equal its methodology note's printed
+  totals; Kontur's governorate totals pin the p-codes (rho +0.870, 0 of 5,000). 69 Kontur cap blocks
+  reviewed against GeoNames towns and Task Force district populations: 8 real, 7 capped, 54
+  unreviewed.
+- **Shared code.** `arabbarometer.py::load` gained `raw=` and `blank_weights=`; `eg.csv`, `jo.csv` and
+  `iq.csv` rebuilt byte-identical. Traps added to `playbooks/arabbarometer.md`. §14: covered by ask 021.
+
+## sl-2026-09-15. Sierra Leone drawn at the 14 districts of 2015 from the population structure report's Table 5.3, shares on printed district totals
+
+Session `d743fc47-sl`, from §11aq's row. Full record `sources/sl.md`.
+
+- **Source.** Stats SL, *2015 PHC Thematic Report on Population Structure and Population
+  Distribution* (Oct 2017), Table 5.3 (PDF pp.37-38): Christianity, Islam, Bahai, Traditional, Other,
+  No Religion, % of household population, one decimal, for 4 regions and 14 districts. District
+  totals from Table 2.2 (p.17); household population 7,076,119 of 7,092,113 from the National
+  Analytical Report's Tables 4.1 and 4.6. The live PDF is byte-identical to the 2019 Wayback capture
+  (digest pinned). Absent from UNSD.
+- **Construction.** Each district's shares, normalised within the row (99.9 to 100.1 printed), times
+  its total population times the national household share. No per-religion rescale: no national count
+  by religion exists in persons. `gap` is the 15,994 (0.23%) enumerated in institutions.
+- **Traps.** The national row prints Bahai 0.5 (districts weight to 0.036; Table 3.25 prints 0.0),
+  pinned. Table 3.25's Christian block has a stray `SDA 8.0` row; without it the six codes close on
+  21.9, but they are national only. Table 4.6's household population "by religion" is by the head's
+  religion. A CDX `length` is the compressed capture (4,052,621 for a 4,192,879-byte file).
+- **Questionnaire.** P05, eleven codes on the code list (six Christian, Islam, Bahai, Traditional,
+  Other, No Religion), no non-response code; Table 5.3 adds the six Christian codes. `No Religion` is
+  87.0% under-15s (Table 3.25), `unaffiliated` since Traditional is its own code.
+- **Geography.** COD-AB v02 draws 16 districts (Karene and Falaba, 2017) on the pre-2017 chiefdoms,
+  so 13 chiefdoms go back by pcode; every district's chiefdom count equals the census's Table 3.3, and
+  geoBoundaries' older 14 districts agree at IoU 0.963 to 1.000, Western Area Urban 0.968 once COD's
+  Tasso Island ward (7.7 km2), which geoBoundaries omits, is left out of the comparison. Trap added to
+  `playbooks/geography.md`. Kontur 2023 1.245x the 2015 count, 0.76x (Kono) to 1.61x (Bo); no cap
+  blocks.
+- **Result.** Islam 77.05%, Christianity 21.86%, other 0.73%, no religion 0.28%, traditional 0.04%,
+  Bahai 0.04%. Kono 43.5% Christian, Kailahun 34.0%, Western Area Urban 31.3% (21.3% of all
+  Christians); Pujehun 4.8%. New node `other.sl`. §14 considered, not escalated (district grain,
+  office's own table); no search for attacks on religious groups was made.
+- **Not opened.** The other fourteen 2015 thematic reports, for a religion-by-chiefdom annex.
+
+## tg-2026-09-15. Togo drawn at 6 units from the 2022 census's national rows and unit populations, fitted with the Afrobarometer R5-R9 pattern
+
+Record: `sources/tg.md`. Code: `sources/tg_geo.py`, `sources/tg.py`, `taxonomy/tg2022.py`,
+`countries/tg.py`; new node `other.tg`. Session `d743fc47-tg`.
+
+**What is drawn.** 8,095,498 people on 6 units (the five regions, with Lomé apart), 7,823,457 on 13
+nodes, every row `modelled`. Liberia's construction (§9cl): UNSD table 28's 15 national rows for the
+2022 census are the column margin, Livret 01's Tableaux 2 and 4 the row margin, and Afrobarometer
+rounds 5-9 (5,987 answers, December 2012 to March 2022) the pattern between them, fitted by
+`lr.ipf`. INSEED still publishes no religion table of its own (§11w, §11aq).
+
+**Three findings another session needs.**
+- UNSD's 15 rows sum to 8,058,172, 37,326 short of the census (23,099 urban, 14,228 rural), with no
+  `Total` row, and the urban and rural rows miss their own totals by one person for Catholic, Assembly
+  of God and Baptist. The residual is its own excluded column so the margins meet.
+- The survey's Lomé stratum is the old commune, which the 2022 census no longer counts. Golfe 1-5
+  (866,307) are its cantons; COD-AB draws the old commune and leaves two canton pieces of the same
+  names (Aflao Gakli, Amoutivé) in Golfe. Kontur reads 0.90x on the commune alone and 1.12x with the
+  pieces against 1.13x nationally, so the drawn Lomé is the three pieces.
+- At six units `ab.held_out` stops a correct decode (14 of 719 orderings reach r = +0.943; Lomé is
+  sampled at 1.40x its 2022 share, on a 2010 frame). The prefecture column is the witness instead:
+  every respondent in rounds 6, 7 and 9 agrees with REGION except one R7 sampling point of 8.
+
+**Split-half at six units** (`cab.stability`): Muslim +0.886, Traditional +0.943, None +0.600 (p =
+0.043), Pentecostal +0.886 and Presbyterian +0.943 carry a pattern; Catholic +0.371, Evangelical or
+Assembly of God +0.514, Baptist +0.429 and the small churches fail and are seeded at the national
+rate. With a census margin a church's level is the census's, so `Christian only` (5.4-16.5% by round,
+12-18% of Christians in every unit) matters only to the pattern, and is spread over each unit's named
+churches.
+
+**As drawn**: Centrale 52.7% Muslim, Savanes 29.7% traditional, Plateaux 9.0% Evangelical
+Presbyterian and 10.8% Pentecostal, Kara 15.9% no religion. Catholics are drawn by what the placed
+religions leave (Lomé 27.0%, Centrale 16.7%), and the survey's own pooled order (Savanes second) is
+not used; `note_public` says they are not placed.
+
+## bn-2026-09-15. Brunei drawn at its 4 districts from the 2021 census's Table A4 in counts, with Hindus inside Others
+
+Session `d743fc47-bn`, from §scout-2026-09-14-asia-oceania's row. Full record `sources/bn.md`.
+
+- **Source.** DEPS, *Report of the Population and Housing Census (BPP) 2021: Demographic, Household
+  and Housing Characteristics*, Annex A, Table A4 (religion x district x sex, persons, printed p.83),
+  read from the tables workbook and the annex PDF, both only on Wayback (digests pinned). Equals UNSD
+  table 28's 2021 row to the person, and closes on A1, A10, A11, A12 and C1.
+- **Traps.** The 2023-09-30 Annex A capture, the one the scout cited, is a 1 MiB fragment with no
+  `%%EOF`; every capture from 2024-06-24 is whole. The Malay and English labels for Islam are the same
+  word on separate rows.
+- **Questionnaire.** E10 offers Islam, Christianity, Buddhism, Hindu and Others (please specify), with
+  no box for no religion or not stated. Every table folds Hindu into Others. Drawn on a new node,
+  `other.bn`: 11.0% of Tutong, 4,718 of its 5,192 citizens; 3.2% of Brunei Muara, 7,615 of its 10,074
+  temporary residents. No non-response row, so no `gap`.
+- **Universe.** Everyone enumerated, temporary residents (18%) included; 63.3% of Christians are
+  temporary residents.
+- **Geography.** geoBoundaries ADM1 (traced, 2011), joined by name. Its separately traced ADM2 mukims
+  (38; Gadong A and B merged, Bokok as `Bunkok`) witness membership against census Table C1. An area
+  IoU test against them failed Brunei Muara (0.831) and passed Belait (0.942), while the mukim tracing
+  was the layer leaving 29,972 Kontur people off Belait's coast: measured in people, the districts read
+  0.96x to 1.01x and the dissolved mukims 0.71x for Belait. Trap added to `playbooks/geography.md`.
+  Kontur 2023 1.017x the census; Temburong 1.66x; no cap blocks.
+- **Result.** Islam 82.15%, Christianity 6.69%, Buddhism 6.30%, Others 4.87%. Belait 70.3% Muslim,
+  11.0% Buddhist, 10.7% Christian; Temburong 12.8% Christian. §14 considered, not escalated (district
+  grain, the state's own table); no search for restrictions on minorities was made.
+- **Not opened.** The full 2021 report `RPT.pdf`; the 2011 and 2001 census tables.
+
+## ps-2026-09-15. Palestine drawn at its 16 governorates from the 2017 census's Table 3 in counts, East Jerusalem included and the settlements left out of the weights
+
+Session `d743fc47-ps`, from §scout-2026-09-14-asia-oceania's row. Full record `sources/ps.md`.
+
+- **Source.** PCBS, *Preliminary Results of the Population, Housing and Establishments Census,
+  2017*, Table 3 (governorate x Islam / Christian / Other / Not Stated, counts, printed p.35),
+  `pcbs.gov.ps/Downloads/book2364-1.pdf`, pinned at 22,646,657 bytes. Parsed off the text layer by
+  English row label and equal to the transcription; every row and column closes on the West Bank,
+  Gaza Strip and Palestine rows. UNSD holds only the 1997 and 2007 national rows.
+- **The scout's open J1 sum is settled.** Three universes nest: Table 3, Palestinians counted
+  (4,665,426; Jerusalem 392,835), inside Table 2, everyone counted (4,705,601; 414,786), inside
+  Table 25, counted plus the post-enumeration estimate (4,780,978; 435,483 = J1 281,163 + J2
+  154,320). J2 alone is below Table 3's Jerusalem, so J1 is in it. Asserted per governorate; trap
+  added to `playbooks/census_table.md`.
+- **Questionnaire.** Form 25 PHC asks religion in its `For Palestinians only` block: 1 Muslim,
+  2 Christian, 3 Other, with no code for no answer and no box for no religion. `Other` -> new
+  `other.ps` (Nablus 361, possibly the Samaritans; not asserted). The 40,175 counted
+  non-Palestinians were not asked; with the 1,509 not stated they are `gap_share` 0.0089,
+  hand-written (the tool confirms the 0.03% part).
+- **Geography.** COD-AB `cod-ab-pse` v01 admin 2, the dataset Israel's entry was cut on, so the two
+  entries meet on one line. Authored pcode join, witnessed by Table 3's order and by OCHA's 893
+  community points summed by location against Table 2 (none of 20,000 permutations comes close).
+  Dier Al-Balah reads 0.716 because OCHA's list lacks An Nuseirat, Al Bureij and Al Maghazi, exactly
+  the 80,012 short. COD's Jerusalem holds 23 of OCHA's 25 East Jerusalem communities; the other two
+  have no population and are not on PCBS's J1 list.
+- **Placement.** Kontur's PS extract has no hexes in J1, so the PS and IL extracts are read together
+  (350,549 people added inside Jerusalem governorate). CBS's 2022 settlement counts (723,899 Jews and
+  Others in the 267 units `il_geo.py` dropped) are taken off the hexes they overlap, with CBS's 119
+  placeholder polygons (0.008 km2) replaced by discs: 477,068 removed. Salfit goes from 1.55x Table 2
+  to 1.04x and Jerusalem from 1.75x to 1.24x; Ramallah & Al-Bireh is still 1.57x. Weight near OCHA's
+  communities rises in every governorate touched. Trap added to `playbooks/geography.md`. No Kontur
+  cap blocks.
+- **Result.** Islam 98.93%, Christianity 1.00% (Bethlehem 23,165, 10.9% of the governorate and
+  half of all Christians), other 0.03%. 4,662 dots at 1:1,000, 465 at 1:10,000.
+- **§14.** Ask 028: drawn as built, with East Jerusalem, the Gaza Strip as counted in 2017 (1,138
+  Christians), and the settlers (about 720,000) on neither entry.
+- **Not opened.** The 2017 final-results population reports (a Princeton DataSpace record answered
+  401); the governorate census booklets other than Rafah's; `info.wafa.ps/ar_page.aspx?id=2116`.
+
+## scout-2026-09-14-asia-oceania. Asia and Oceania swept: Palestine, Brunei, American Samoa and Tokelau print religion below the nation, Qatar did in 2004, and Australia's external territories were drawn all along without an outline
+
+Session `d743fc47-scout-asia`, searched 2026-09-14 and 2026-09-15. Scope: every place in Asia and
+Oceania with no `queue.csv` row (`ps mv bt bn mo kp as gu mp nc pf wf tk nf pn cx cc`) and the thin
+closures `om ae bh qa kw az`. Nothing built and nothing written to `data/`.
+
+**How it ran.** The office probes went to eight helper agents in parallel, over a scout's one-slot
+budget; all eight reported, four of them after a first version of this record had been written
+without them. Re-read by the scout: PCBS Table 3 from its rendered page, Tokelau Table 5.8 from the
+workbook, the `au.csv` rows by grep, Brunei's columns against UNSD, the Arab Barometer from the
+files. Everything else is a helper's read of the document named.
+
+### Palestine (`ps`): census counts by governorate, 2017
+
+- **Source.** Palestinian Central Bureau of Statistics, *Preliminary Results of the Population,
+  Housing and Establishments Census, 2017* (February 2018), **Table 3**, *Palestinian Population in
+  Palestine by Governorate and Religion, 2017*, printed p.35 (PDF p.34) of
+  `https://www.pcbs.gov.ps/Downloads/book2364-1.pdf`. Read from the rendered page. Every governorate
+  row sums to the West Bank and Gaza Strip rows, and those to Palestine.
+- **The table** (total / Christian / other / not stated): Palestine 4,665,426 / 46,850 / 1,384 /
+  1,509 (Islam 4,615,683). West Bank 2,792,474 / 45,712 / 1,124 / 1,448: Jenin 308,073 / 2,699 / 21 /
+  146; Tubas and the Northern Valleys 60,132 / 54 / 8 / 0; Tulkarm 183,001 / 21 / 10 / 46; Nablus
+  386,552 / 601 / 361 / 263; Qalqiliya 107,989 / 11 / 5 / 0; Salfit 73,704 / 4 / 7 / 0; Ramallah and
+  Al-Bireh 315,083 / 10,255 / 60 / 442; Jericho and Al-Aghwar 47,325 / 285 / 7 / 71; Jerusalem
+  392,835 / 8,558 / 594 / 299; Bethlehem 212,191 / 23,165 / 32 / 143; Hebron 705,589 / 59 / 19 / 38.
+  Gaza Strip 1,872,952 / 1,138 / 260 / 61: North Gaza 363,726 / 20 / 90 / 19; Gaza 640,314 / 1,082 /
+  44 / 33; Dier Al-Balah 269,425 / 8 / 48 / 9; Khan Yunis 366,520 / 16 / 42 / 0; Rafah 232,967 / 12 /
+  36 / 0.
+- **Universe.** Palestinians counted. The census headline, 4,780,978 (Table 1), also carries an
+  undercount adjustment and non-Palestinians, per the helper.
+- **Jerusalem J1** (the part Israel annexed), per the helper: not enumerated in 1997 (estimated at
+  about 210,000, `book1827-2007.pdf`); a short form with religion in 2007, whose housing tables
+  exclude J1; in 2017 J1 households were listed on a paper short form with religion and 10% got the
+  long form. Table 3's Jerusalem row should include J1, since Table 25 puts J2 alone at 154,320. **But
+  Table 25's J1 281,163 and J2 154,320 sum to 435,483, not 392,835**, unresolved (different universe
+  is the likely reason). Settle it before writing `note_public`.
+- **Questionnaire.** All three censuses ask religion (Muslim, Christian, other): IPUMS
+  `enum_form_ps1997a.pdf` p.2 column 39, `enum_form_ps2007a.pdf`, `enum_form_ps2017a.pdf`.
+- **Checked and empty.** PCBS census microdata: 2007 (Arabic NADA catalog 641) and 2017 (English
+  catalog 663, licensed) carry governorate and locality type and no religion variable. IPUMS lists no
+  Palestine year under RELIGION. The 2017 Rafah governorate summary (`book2429.pdf`) and the 2007
+  press releases have no religion table. English and Arabic searches for 1997 and 2007 religion by
+  governorate found nothing.
+- **Not checked.** `info.wafa.ps/ar_page.aspx?id=2116`, titled population by governorate, sex and
+  religion (HTTP 500, no Wayback capture; year unknown): a browser job. The 2017 final-results
+  population report; the 1997 and 2007 governorate volumes among the old PCBS book files; the MICS
+  2019-20 household file's religion item (PCBS catalog 708); whether `cod-ab-pse` separates J1.
+- **Boundaries.** HDX `cod-ab-pse`: admin1 the two territories, admin2 the 16 governorates (Ministry
+  of Planning, CC BY-IGO). `cod-ps-pse` stops at admin1.
+- **Traps.** PCBS's certificate chain is incomplete (`curl -k`). The English and Arabic NADA catalogs
+  number the same study differently (641 is the 2006 Labour Force Survey in English). The Arabic text
+  layer of `book1827-2007.pdf` is scrambled. The religion infographic on PDF p.15 carries an
+  "excluded J1" footnote that belongs to the chart beside it.
+- **The Arab Barometer, as a witness.** On disk: waves II, III, IV, V, VII, VIII; 9,081 respondents,
+  all 16 governorates in every wave once `Tobas`, `Taulkarm` and `Betlehem` are folded. `ab.load`
+  stops on wave III (weight mean 0.9755). Wave V is a Christian booster: 8.78% unweighted, 0.95%
+  weighted, with 12 Bethlehem PSUs all Christian. Christians sit in few PSUs (wave VII: 13 of 30 in
+  one). The quota test passes (Bonferroni p=1); early against late Christian share, Spearman +0.80.
+  Pooled weighted against Table 3: Bethlehem 31.6% against 10.9%, Ramallah 4.9 against 3.3,
+  Jerusalem 2.4 against 2.2, Nablus 1.4 against 0.16, Jenin 0.75 against 0.88, Gaza 0.30 against
+  0.17; nationally 2.20% against 1.00%. Same top governorates, level cluster-driven. Scratch script
+  `ab_ps.py`.
+- **For the builder.** Nothing overlaps the Israel build, which drops the West Bank, Gaza and East
+  Jerusalem (`sources/il.md`). §14 note to raise, not a decision: 1,138 Christians in the Gaza Strip,
+  1,082 in Gaza governorate. Nablus's other (361) may be the Samaritans; the table does not say.
+
+### Tokelau (`tk`): religion by atoll, 2016
+
+- **Source.** Tokelau National Statistics Office and Statistics New Zealand, *2016 Tokelau Census of
+  Population and Dwellings: Tables about social profile* (1 February 2017), **Table 5.8**, religious
+  affiliation by atoll of usual residence, 2011 and 2016,
+  `https://www.tokelau.org.nz/site/tokelau/files/TokelauNSO/2016Census/2016%20Tokelau%20Census%20of%20Population%20and%20Dwellings%20-%20Tables%20about%20social%20profile.xlsx`.
+  Universe: usually resident population present on census night.
+- **2016** (Atafu / Fakaofo / Nukunonu / total): Congregational Christian 318 / 250 / 35 / 603;
+  Presbyterian 54 / 8 / 9 / 71; Roman Catholic 18 / 130 / 315 / 463; other Christian 15 / 11 / 24 /
+  50; Spiritualism and New Age 0; no religion 1 / 0 / 0 / 1; not stated 7 / 0 / 2 / 9; total 413 /
+  399 / 385 / 1,197. **2011**: 345 / 306 / 14; 5 / 11 / 5; 13 / 115 / 290; 21 / 11 / 0; New Age 0 /
+  1 / 0; none 0; not stated 1 / 5 / 0; total 385 / 449 / 309 / 1,143.
+- **UNSD table 28's 2016 row is four people off the table** (Catholic 460, other Christian 54, no
+  religion 0); its 2011 and 2006 rows are the office's. Build from the office table.
+- **Newer.** 2019 was a population count (1,647 usual residents) with no religion. The 2022 census
+  (Pacific Data Hub catalogue 834, 1,576 persons) is licensed microdata; whether it asks religion is
+  unverified, `microdata.pacificdata.org/index.php/catalog/834/variable/V198` is a 403 browser job.
+- **Traps.** `Congregational Christian ` has a trailing space. The sheet puts 2011 beside 2016.
+  `christianity.reformed.congregational.ekt` is Tuvalu's church. Natural Earth's countries file has no
+  Tokelau, only the `Tokelau` map unit (`FROM_UNITS`).
+
+### Australia's external territories (`nf`, `cx`, `cc`): in `au.csv` all along, with no outline
+
+- **`data/normalized/au.csv` has ABS 2021 G14 for all four state-9 SA2s, 34 rows each** (136 rows:
+  901011001 Christmas Island, 901021002 Cocos (Keeling) Islands, 901031003 Jervis Bay, 901041004
+  Norfolk Island). The helper also found 592 rows for them in `au_sa2_allocated.csv` and dots inside
+  the three islands in `data/processed/dots_au.geojson`. `sources/au_geo.md`'s "state 9 has no row" is
+  about the state-level rows only.
+- **Why they look undrawn.** `country_shapes.py` emits one Natural Earth feature per code
+  (`if cc in seen: break`, read). Per the helper, `Indian Ocean Ter.` (Christmas and Cocos) has
+  `ISO_A2` -99 and `ISO_A2_EH` AU, so it is skipped after Australia; Norfolk Island is a separate
+  feature with `ISO_A2` NF, which is not registered. Jervis Bay sits inside the mainland outline.
+  The fix is shape work (add the two features to `au`'s outline, or register the islands), not data.
+- **2021 counts** (G14; Islam, Buddhism and Christianity totals re-read, the rest the helper's):
+  Christmas Island 1,692: Islam 374, no religion 333, Buddhism 258, Christianity 245, not stated 453.
+  Cocos 593: Islam 389, no religion 83, Christianity 29, not stated 93. Norfolk 2,188: Christianity
+  1,047, no religion 782, not stated 330. Jervis Bay 310.
+- **Traps.** ABS randomises small cells, so parents and children disagree (Christmas Island's secular
+  total 336 against no religion 333). Not stated is 26.8% of Christmas Island and 32.6% of Jervis Bay.
+  **And this scout first recorded the islands as missing from `au.csv`**: a grep capped at 20 lines
+  returned only New Norfolk (Tasmania) rows. Count before concluding absence.
+
+### French Polynesia (`pf`), New Caledonia (`nc`), Wallis and Futuna (`wf`), Pitcairn (`pn`)
+
+- **French Polynesia: blocked on the 1962 volume.** *Résultats statistiques du recensement général de
+  la population de la Polynésie française effectué le 9 novembre 1962* (INSEE, Paris 1967) has
+  religion by archipelago on p.40, not seen. Read instead: "À propos des résultats statistiques du
+  Recensement de 1962 en Polynésie française", *Journal de la Société des Océanistes* 24 (1968),
+  pp.77-95 (`horizon.documentation.ird.fr/exl-doc/pleins_textes/pleins_textes_5/b_fdi_10-11/13165.pdf`):
+  p.86, 1962 (1951) Protestant 54.5% (54.8), Catholic 29.7 (24.0), Adventist 2 (1.2), Mormon 2.8
+  (1.9), "Mormons kanitos" 3.3 (3.2), other, none and not declared 7.6 (14.9); p.87 leading shares by
+  archipelago (Îles du Vent 55% Protestant, Îles sous le Vent 80% Protestant, Tuamotu-Gambier 69%
+  Catholic, Marquises 90% Catholic). "Kanitos" is Sanito, the Reorganized church, not LDS. 1956 had no
+  religion (p.86). The 1996 (`PYF1996enT.pdf`) and 2007 (`PYF2007frIn.pdf`) forms do not ask; the 2017
+  arrêté of 18 July 2017 (JORFTEXT000035388565) lists no religion variable. Not checked, browser jobs:
+  BNSP `bnsp.insee.fr/ark:/12148/bc6p0702jc7.pdf` (checkbox), Clairin, *Population* 27 (1972) on
+  1971 (Persée bot check). REOPEN on the 1962 volume.
+- **New Caledonia: closed at the questionnaire.** The 2019 specimen (`rp2019-binc-specimen.pdf`,
+  37 questions: community, tribe, customary status, no religion), 2009 (`NCL2009frIn.pdf`) and 1996
+  (`NCL1996enInT.pdf`) forms do not ask. The only split below the territory: J.-M. Kohler, *Religions
+  et dynamique sociale en Nouvelle-Calédonie, Fasc. II* (ORSTOM 1979), a count of church members from
+  church leaders, registers and gendarmerie reports (p.8), with Tableau 11 (p.31) giving the Loyalty
+  Islands' Melanesians by church (Lifou Catholic 1,610, Protestant 10,970). Membership, not
+  self-identification, and 47 years old. Not checked: the 2007 Aix/UNC survey (Cairn, 403), the 1956
+  and 1963 census volumes, the 1989 and 2014 forms.
+- **Wallis and Futuna: closed at the questionnaire.** The 1996 (`WLF1996enInT.pdf`) and 2008
+  (`WLF2008frIn.pdf`) forms do not ask; CNIS's 2023 theme list has none. Not checked: the 2013 and
+  2018 forms, the statistique.wf WP File Download library (`/download/wpfdcat/39/`), the 1969 and
+  1976 volumes.
+- **Pitcairn: closed.** government.pn has no statistics page; `sdd.spc.int/pn` 403. Zero dots at any
+  count.
+- **The UNSD table 28 download returned a 3.7 KB HTML page instead of a zip** to the helper, over http
+  and https. Not re-checked; `tools/oracle.py` reads the cached copy, so re-fetching needs a look.
+
+### Azerbaijan (`az`): stays closed, now on the surveys as well as the forms
+
+- **EVS 2017** (fielded November-December 2018), Variable Report ZA7500 v5.0.0
+  (`access.gesis.org/dbk/65190`): 1,800 respondents (p.57); `v275b_N1` 8 economic regions (p.1075),
+  `v275b_N2` rayon codes, 39 with respondents (pp.1059-1069; Appendix C `dbk/65196` p.5). Card
+  `v52_cs`: Muslim, Orthodox, Jewish, Catholic, Bahá'í, Protestant, other; weighted 1,704 Muslim of
+  1,714 (p.225), small minorities recoded to other for data protection. No Shia/Sunni. Data behind a
+  GESIS login.
+- **WVS wave 6** (December 2011), `WV6_Codebook_v20180912`: region `V256`, 10 Azerbaijan codes
+  (p.93), `V256B` 46 district codes (p.106); `V144` has shared Shia (70) and Sunni (75) codes and
+  the codebook does not say which countries used them. **WVS wave 3** (ICPSR 2790 codebook): 2,002,
+  November 1996, 8 areas, default card with one Muslim code.
+- **CRRC Social Capital, Media and Gender Survey 2012** (`caucasusbarometer.org/en/si2012az/`):
+  Islam 85, Shia 10, Sunni 4, and only `STRATUM` for place. **Pew, *The World's Muslims*** (fieldwork
+  December 2011, 1,000 interviews over 8 of 11 regions plus Baku): Shia 37%, Sunni 16%, just a Muslim
+  45% (report p.30); the dataset needs a Pew account and its region variable is unconfirmed.
+- **2009 census form** (`AZE2009azIn.pdf`, UNSD): 29 questions, nationality Q8, mother tongue Q9, no
+  religion.
+- **Not checked, the next place to look:** `V144` by `V256` for Azerbaijan in the WVS online tool,
+  through headless Chrome (`playbooks/wvs.md`). If Shia and Sunni codes were used, WVS 6 is a thin
+  sect route at 10 regions on 1,002 people.
+
+### Brunei (`bn`): religion by district, 2021 census
+
+- **Source.** Department of Economic Planning and Statistics, *Report of the Population and Housing
+  Census (BPP) 2021: Demographic, Household and Housing Characteristics*, Annex A, **Table A4**,
+  *Population by Religion, District and Sex, 2021*, printed p.83; the same in sheet A4 of the tables
+  workbook. Both survive only on Wayback, because the new DEPS site links the dead domain:
+  `web.archive.org/web/20231023184321id_/https://deps.mofe.gov.bn/DEPD%20Documents%20Library/DOS/POP/2021/EXCEL%20TABLE%20A-C.xls`
+  and `web.archive.org/web/20230930115000id_/https://deps.mofe.gov.bn/DEPD%20Documents%20Library/DOS/POP/2021/ANNEX%20A.pdf`.
+  A10 is age by religion per district; A11 and A12 are religion by residential status.
+- **The table** (Islam / Christianity / Buddhism / others / total; the helper's read): Brunei-Muara
+  269,074 / 20,076 / 19,306 / 10,074 / 318,530; Belait 46,072 / 7,028 / 7,235 / 5,196 / 65,531;
+  Tutong 39,763 / 1,151 / 1,104 / 5,192 / 47,210; Temburong 7,126 / 1,207 / 100 / 1,011 / 9,444.
+  **Each column sums to UNSD table 28's 2021 row to the person** (checked by the scout), which is the
+  outside witness.
+- **Residential status** (A11): citizens 333,669 (308,474 Muslim); permanent residents 25,834;
+  temporary residents 81,212 (43,284 Muslim, 18,653 Christian, 9,262 Buddhist, 10,013 others), 18% of
+  the population.
+- **Questionnaire.** 2021 item E10, *Ugama / Religion*, codes 1 Islam to 5 others (please specify), p.7
+  of the questionnaire PDF (Wayback, 2022-11-17).
+- **Traps.** The form and the definitions list Hindu, and every table folds Hindu, no religion and
+  not stated into `Others`. The live 2021 report (`deps.gov.bn/wp-content/uploads/2025/11/RPT-2.pdf`)
+  has only a national chart. The mukim tables (C1 onward) carry no religion.
+- **Boundaries.** No HDX COD-AB (the API answers "Not found"); geoBoundaries has 4 districts (2011)
+  and 38 mukims (2006).
+- **Not checked.** The 2011 census tables; the Wayback copy of the 2011 demographic report stops
+  after 10 pages.
+
+### Maldives (`mv`): blocked; only foreigners were asked
+
+- **Questionnaire, 2014**
+  (`web.archive.org/web/2016id_/http://statisticsmaldives.gov.mv/nbs/wp-content/uploads/2016/03/Census2014-Questionnaire_english.pdf`,
+  rendered p.7): M6 nationality, where "1- Maldivian" skips to M10; M7 *What is your religion?*
+  (Islam, Hinduism, Buddhism, Christianity, other). The 2022 census was on tablets and no form was
+  found.
+- **Published, and empty below the nation.** 2014 Release I tables PP1-PP10 and HH1-HH2, the summary
+  tables PDF and the leaflet, Release II migration tables MG1-MG19 (titles); 2022 tables P1-P6, the
+  WPD2023 summary, the 2022 yearbook's population chapter (titles). DHS 2016-17 (FR349) asks no
+  religion.
+- **UNSD's 2014 row covers the whole resident population** (402,071 = 338,434 Maldivians and 63,637
+  foreigners, per the helper), so its Islam figure includes Maldivians by rule rather than by answer.
+- **The route left** is census microdata through `app.statisticsmaldives.gov.mv/census-data/`, a form
+  asking the requester's identity. Anita's to decide; not requested. Any non-Muslim dots would be
+  foreign workers, in Malé and on resort islands.
+- **Not checked.** The 2022 form; the HIES 2019 questionnaire; the 2022 migration report (error page).
+- **Trap.** Old `/nbs/` URLs answer 200 with the home page.
+
+### Bhutan (`bt`): closed at the variable list
+
+- The PHCB 2017 metadata (`nsb.gov.bt/wp-content/uploads/dlm_uploads/2021/10/PHCB-Metadata.pdf`,
+  Wayback) lists no religion variable, and the 85-page `PHCB2017_wp.pdf` never uses the word. 2005:
+  IHSN catalogue 1374's topics and UNSD's coding slides list language and occupation codes and no
+  religion (the form itself not seen).
+- BLSS 2007 (IHSN catalogue 24), BLSS 2017 (World Bank copy) and BLSS 2022 (161 pages, spending on
+  religious ceremonies only) ask none; the 2010 multiple-indicator survey report (327 pages,
+  `ncwc.gov.bt`) has nothing.
+- **Trap.** NSB serves a 345,884-byte HTML error page for dead PDFs, which PyMuPDF opens as 36
+  pages; use Wayback copies.
+- **Not checked.** The 2005 form; the BLSS 2012 questionnaire. The largely Hindu Lhotshampa of the
+  south appear in no source; language is the nearest signal and is not religion.
+
+### Macau (`mo`): blocked on the survey half of Hong Kong's route
+
+- **The census stopped asking after 1991.** 1981 (aged 5 and over) and 1991 asked, per Zheng
+  Tianxiang et al., *Aomen Renkou* (Macau Foundation, 1994), ch.6 §2
+  (`macaudata.mo/macaubook/book125/html/0063001.htm`), citing DSEC's 1993 *Characteristics of
+  Population and Housing*; 1991 Buddhist 16.8%, Catholic 6.7%, Protestant 1.8%, other 13.9%, none
+  about 60%, no parish split in the book. 2001 (*Global Results*, 163 pp.), 2011 (detailed results, 198
+  pp., and the pilot enumerator manual) and 2016 (by-census, 182 pp.) have no religion; 2021 rests on
+  the census API's dimension list and a press list of items.
+- **The ethnicity half is open.** DSEC's census API needs no key: POST
+  `https://www.dsec.gov.mo/InReportApi/Censos2016/AllResidentData` with
+  `{"dimensions":"freguesias,nationality","filters":null,"year":2021}` (also `ancestry`, and 2016).
+  2021 nationality: Chinese 608,379, Filipino 33,896, Vietnamese 12,217, Portuguese 8,991, Indonesian
+  5,859, Thai 762, others 11,966 (sums to 682,070). Filipinos by parish: Santo António 10,238, Taipa
+  7,151, São Lourenço 6,435, Sé 4,083, Fátima 3,287, São Lázaro 1,835, Coloane 867.
+- **The self-identification half is walled.** WVS-7 Macau 2019 (University of Macau) asks denomination
+  with every place code the single `446001 MO: Macau` (WVS-7 codebook pp.212, 228, 260); its file needs
+  the WVS download form. Macau is in neither the Asian Barometer nor the Global Flourishing Study. The
+  *Macao Yearbook 2025* religion pages give the diocese's and churches' own counts, not
+  self-identification.
+- **Geography.** 7 parishes plus the maritime area, or 23 statistical districts. OSM has the five
+  peninsula parishes, Carmo, São Francisco Xavier and a separate Cotai relation, so polygons need
+  merging to DSEC's Taipa and Coloane; the DSCC geoportal is suspended.
+- **Traps.** Nationality and ancestry are long-form sample items, so parish counts are weighted. The
+  totals include non-resident workers (104,464 in 2016). The API wants `freguesias` and `zona`, not the
+  metadata's `_2021` names. A "Religion in Macau" page credits folk-religion shares to the 2021 census,
+  which did not ask.
+- **Not checked.** The 1981 and 1991 census volumes for religion by parish (not online).
+
+### North Korea (`kp`): closed at the questionnaire
+
+- 2008: *DPR Korea 2008 Population Census National Report*, Annex 2, form CPF-2, pp.269-272
+  (`unstats.un.org/unsd/demographic/sources/census/wphc/North_Korea/Final%20national%20census%20report.pdf`),
+  items H1-H14, P1-P29, M1-M10 and the institutional form: no religion (P7 nationality, Korean or
+  other). 1993: ten items on one sheet (KIHASA research report 2011-37-21, p.70, Table 2-1). MICS
+  2009, Appendix F: none.
+- **Not checked.** MICS 2017's household form (the MICS6 template has `HC1A`); every copy was 403 or
+  Cloudflare. A government-run interview is not free self-identification in any case, and KIHASA's
+  Table 3-4 (p.122) lists religious people among the suspect family-background classes. §14 first.
+
+### American Samoa (`as`), Guam (`gu`), Northern Mariana Islands (`mp`)
+
+- **The census cannot ask.** The 2010 American Samoa summary file documentation (`sfas.pdf`, p.337):
+  "The Census Bureau cannot collect information on religion." The 2020 Island Areas forms for all
+  three (Appendix C of `2020-iac-dhc-technical-documentation.pdf`) have no religion item.
+- **American Samoa: buildable now from a survey table.** Department of Commerce, *2015 American Samoa
+  Household Income and Expenditure Survey Report*, **Table 1.6**, *Religion by County*, p.57
+  (`https://www.doi.gov/sites/default/files/uploads/american-samoa-2015-household-income-and-expenditure-report.pdf`),
+  a write-in for every member of sampled households (p.23), weighted to 57,436. Territory, as read by
+  the helper: Congregational Christian Church in American Samoa 19,147, Catholic 10,410, Latter-day
+  Saints 9,091, Assembly of God 5,451, Methodist 4,342, other 3,178, Adventist 1,661, Baptist 774,
+  Full Gospel 762, Jehovah's Witnesses 714, no religion 702, Pentecostal 558, Bahá'í 294, Nazarene 246,
+  Jewish 84, Orthodox 24; the same rows for 10 counties. **Traps:** a 20% sample (1,838 of 2,098
+  housing units) with one flat weight, 5.99668, so every cell is a multiple of about six and small
+  county cells are noise; households only; the rows sum to 57,438 against 57,436 printed. Under the
+  microstate rule it can be drawn as one unit if the counties do not hold up. Check whether the CCCAS
+  belongs on Samoa's `cccs` node before mapping. Not checked: the 1988 HIES (scanned), the 1974 and
+  1977 territorial sample censuses, microdata catalogue 664 (403).
+- **Guam: closed.** The 2024 Guam Statistical Yearbook (544 pp.,
+  `bsp.guam.gov/wp-content/uploads/2026/09/2024-Guam-Statistical-Yearbook-Final.pdf`) has Catholic
+  school enrolment and church building permits and no affiliation. REOPEN on the 2019 Guam HIES report
+  and questionnaire (the SPC page 404s; try `bsp.guam.gov/reports/` in a browser). The circulating
+  "75% Catholic" is credited to a census that never asked; the archdiocese's 85% is a roll.
+- **Northern Mariana Islands: closed on vintage.** The only table found is *1973 Population of the
+  Trust Territory of the Pacific Islands*, Basic Table 11, de facto population by municipality and
+  religion, p.135 (`spc.int/digitallibrary/get/cexm5`), a full count on 18 September 1973 (religion
+  "not compulsory", p.12): Mariana Islands District 14,333, Catholic 13,026, Protestant 667, traditional
+  44, other 170, none 152, refused 89, not stated 185; Saipan 12,515, Tinian 714, Rota 1,104. The
+  islands now hold about three times that, most of the increase since the later migrant-worker years,
+  so the table does not describe today's population. The 2005 and 2016 HIES reports carry only church
+  spending, and the 1995 census table list has no religion. Trap: the text layer is garbled and one
+  scanned cell (Saipan females, other) reads 59 where the row needs 69. REOPEN on a newer table; not
+  checked: the 1995 questionnaire facsimile, the Central Statistics Division site (403).
+
+### The Gulf re-checked: Qatar reopens on 2004, the UAE and Oman close at the form, Bahrain published nationally, Kuwait blocked
+
+Wayback captures are `web.archive.org/web/<timestamp>id_/<url>`.
+
+- **Qatar (`qa`), reopened.** MDPS, 2004 census, *Table No (6), Population By Religion, Gender And
+  Municipality, March 2004*,
+  `mdps.gov.qa/en/statistics/census/Census2004/Population/Pages/Tables/Pubulation/T06.aspx` (capture
+  20170627120742; only the `/en/statistics/` path was captured). Muslim 576,391, Christian 63,212,
+  other 104,426, total 744,029, which is UNSD's national row; 10 municipalities (Doha, Al Rayyan, Al
+  Wakra, Umm Salal, Al Khor, Al Shamal, Al Ghuwairiya, Al Jemailya, Jerian al Betna, Mesaied), each by
+  sex. Doha 268,915 / 34,482 / 36,450 and Al Rayyan 213,675 / 16,445 / 42,740 (Muslim / Christian /
+  other). The 2004 form asks religion (UNSD `QAT2004en.pdf` p.2: Muslim, Christian). All residents, so
+  Anita's citizens-only ruling does not apply. **Traps:** `Other` is 14%, outnumbers Christians in Al
+  Rayyan, Al Khor, Mesaied and Al Jemailya, and is the only box for Hindus and Buddhists; the 2004
+  municipalities are not today's, so the boundaries need matching. Not checked: the Arabic T06, the
+  2015 simplified census. The 2010 sample form (`Sample 2.xls`) has no religion string (text scan), and
+  §11ao found none in the 2010 booklet or the 2020 workbook. A 2004 vintage in a country remade by
+  migration since; the builder decides whether it is worth drawing.
+- **United Arab Emirates (`ae`), closed at the questionnaire.** The 2005 form, UNSD `ARE2005en.pdf`
+  (capture 20120707082757), both person pages rendered: name, relationship, sex, age, nationality,
+  previous nationality, years of stay, education, marital status, labour force, occupation, sector,
+  chronic disease, disability; no religion. The CDX of `uaestatistics.gov.ae` filtered on religion has
+  no rows; `dsc.gov.ae`'s one hit, `geostat.dsc.gov.ae/Religious`, redirects to a 404 (2022). Not
+  checked: the 1975-1995 forms, the Sharjah 2015 form, Dubai yearbooks.
+- **Oman (`om`), closed at the 2003 questionnaire.** UNSD `OMN2003en.pdf` (capture 20120707080009),
+  household-members page rendered: no religion column. The 2010 final results (`ncsi.gov.om`
+  e-library, capture 20160923135022, 48 pp.) and the 2003 final results
+  (`omancensus.net/english/pdf_files/final_results.pdf`, 24 pp.) split Omani and expatriate by
+  governorate and wilayat and print no religion. Not checked: the 2010 form, the 2020 register census,
+  NCSI yearbooks.
+- **Bahrain (`bh`), asked and published nationally.** The 2010 form (`Census-Questinnaire.pdf` p.4, QN
+  1.09: Muslim, Christian, Jewish, other) and the 2001 form (UNSD `BHR2001ar.pdf` p.3, item 64, the same
+  codes; the header codes region, block and road) ask religion. `census2010.gov.bh/results/General.pdf`
+  (capture 20110824060744) pp.6-9 is religion by nationality, sex and age, national only, and prints
+  only Muslim against others although Christian and Jewish were coded (Muslim 866,888, others 367,683).
+  The 2001 English book (`cio.gov.bh`, 170 pp.) lists population tables by region and none by
+  religion. Not checked: CIO `Census/Population/2.pdf` to `7.pdf` (captured 2013 and 2017, titles
+  unknown), the Arabic 2001 book, 1991 and 1981.
+- **Kuwait (`kw`), blocked.** An archived PACI `tableQuery` (capture 20141015093707) gives religion by
+  nationality group for June 2014: Muslim 3,085,274, Christian 707,003, other or not stated 247,168.
+  The English 2014 (59 views) and Arabic 2019 (113 views) `config.json` carry `sf_relegion`,
+  `sf_governorate` and `sf_regions` and no view pairing religion with either. `stat.paci.gov.kw` timed
+  out again on 443 and 80. **Browser job:**
+  `http://stat.paci.gov.kw/englishreports/tableQuery?viewId=ColumnChartEduAge&wafers=mf_Year,sf_gender&rows=sf_relegion&columns=sf_governorate&resultWriter=json:format=standard;formatOutput=false;javaScriptContentType=false`.
+  The 1995 form asked religion (UNSD `KWT1995enT.pdf` p.2, item 28). Not checked: the CSB statistical
+  abstract, the 2005 and 2011 census volumes. Trap: view ids `ColumnRelegionNat` and
+  `ColumnDReligionGender` hold birthplace and deaths by marital status.
+
+### What generalises
+
+1. **A territory inside its sovereign's data can draw with no outline.** Added to
+   `playbooks/geography.md`.
+2. **A booster sample can sit inside one survey wave, and a country can fail a shared weight guard.**
+   Palestine's Arab Barometer wave V and wave III; added to `playbooks/arabbarometer.md`.
+3. **Count before concluding absence.** A capped grep hid 136 rows behind 20 of a same-named place.
+4. **A scout is one slot.** Eight parallel helpers exceeded it, and their reports landed after the
+   supervisor had asked for the record; probe in the session, a few countries at a time.
+
+## scout-2026-09-15-europe. Europe swept: Gibraltar and the Faroe Islands print religion below the territory, the Isle of Man island-wide, Åland is drawn inside Finland without an outline, Malta's 2021 tables sit behind a bot wall
+
+Session `d743fc47-scout-europe`, searched 2026-09-15. Scope: every place in Europe with no `queue.csv`
+row (`is mt ad mc sm va gi im je gg fo ax sj`), the thin Luxembourg closure, and the contested areas
+inside drawn countries (Northern Cyprus, Transnistria, Abkhazia, South Ossetia). No helper agents:
+every figure here was read by the scout from the document or API answer named, and figures from search
+snippets are marked as leads. Nothing built and nothing written to `data/`.
+
+**Natural Earth first.** Every place swept has its own feature in `ne_10m_admin_0_countries` (IS, MT,
+AD, MC, SM, VA, GI, JE, GG, IM, AX, FO, LU), so a new code needs no `FROM_UNITS`. Svalbard and Jan
+Mayen are map units inside Norway's feature. Northern Cyprus, Akrotiri, Dhekelia and the Cyprus buffer
+zone are -99 features.
+
+### Gibraltar (`gi`): religion by major residential area, 2012 and 2022
+
+- **Source.** *Census of Gibraltar 2022* (HM Government of Gibraltar),
+  `https://www.gibraltar.gov.gi/uploads/statistics/2025/Census/Census%20of%20Gibraltar%202022%20-%20Report.pdf`
+  (18,264,524 bytes, 528 pages, `%%EOF` present). **Table 42**, *Population by Major Residential Area,
+  Religion and Sex*, printed p.174; **Table 43**, *Population by Enumeration Area, Religion and Sex*,
+  pp.175-177. Religion also appears in Tables 37-41, 48, 54, 201, 240 and 251 (age, nationality,
+  birthplace, arrival, residence, partnership, language, householder, gender identity, orientation).
+- **Table 42, 2022** (Roman Catholic / Church of England / other Christian / Muslim / Jewish / Hindu /
+  no religion / other or not stated / total): Eastside 356 / 55 / 13 / 14 / 4 / 2 / 52 / 1 / 497;
+  North District 3,826 / 436 / 286 / 450 / 85 / 99 / 1,200 / 175 / 6,557; Reclamation Areas 10,345 /
+  906 / 580 / 338 / 330 / 380 / 1,812 / 274 / 14,965; Town Area 1,432 / 289 / 142 / 658 / 490 / 117 /
+  581 / 74 / 3,783; Upper Town 1,753 / 206 / 110 / 234 / 24 / 5 / 466 / 62 / 2,860; Sandpits Area
+  1,532 / 114 / 78 / 43 / 50 / 43 / 209 / 28 / 2,097; South District 4,511 / 520 / 275 / 116 / 80 / 43 /
+  965 / 115 / 6,625; Institutions 343 / 15 / 19 / 56 / 7 / 4 / 58 / 50 / 552; total 24,098 / 2,541 /
+  1,503 / 1,909 / 1,070 / 693 / 5,343 / 779 / 37,936. Summed by the scout: every row closes, the rows
+  sum to the total, and so does the Roman Catholic column.
+- **2012.** *Census of Gibraltar 2012*,
+  `gibraltar.gov.gi/new/sites/default/files/HMGoG_Documents/Full%20Census%20Report%202012%20FINAL.pdf`
+  (26,747,344 bytes, 376 pages): **Table 1.16cc** by major residential area and **1.16c** by enumeration
+  area (EAs 1-70 and 80-87), totals printed pp.52-53 (PDF pp.106-107), male and female versions before
+  them. Total 32,194: Roman Catholic 23,223, Church of England 2,480, other Christian 1,232, Muslim
+  1,166, Jewish 763, Hindu 628, other 365, none 2,293, not stated 44, UNSD table 28's 2012 row in every
+  cell. Town Area 2012: 1,520 / 272 / 136 / 556 / 352 / 121 / other 43 / none 255 / not stated 9 / 3,264.
+- **Questionnaire.** 2022 form, question 11 *Religion?* (report p.480): Roman Catholic, Church of
+  England, Other Christian, Muslim, Jewish, Hindu, Other, No religion. No not-stated box.
+- **Traps.** 2022 prints other and not stated as one column, so `other.gi` and the gap cannot be
+  separated in 2022 as they can in 2012. `Institutions` is a row, not a place. The residential areas are
+  described in Appendix 9 (2022) and Appendix (vi) (2012); no polygons for them were looked for.
+- **For the builder.** 2022 is newer than the oracle's 2012. At about 38 dots, one unit under the
+  microstate ruling is the likely build. Anita has not ruled on leaving a published district table
+  undrawn (RULINGS, the 2026-09-08 microstates line), so say which was chosen and why.
+
+### Faroe Islands (`fo`): religion and congregation by district, 2011 census
+
+- **Source.** Hagstova statbank, census 2011, folder `H2/MT/MT10`: **MT321** *MT10.1.1 Religion by
+  age, sex and district* and **MT325** *MT10.2.1 Congregration associations by age, sex and district*
+  (their spelling); MT322-323 and MT326-327 cross the same items with birthplace, arrival, occupation
+  and education. Open PxWeb v1, POST `{"query":[{"code":"age, sex and district","selection":{"filter":"item","values":["TOT","4100","4200","4300","4700","4400","4500","4600"]}}],"response":{"format":"csv"}}`
+  to `https://statbank.hagstova.fo/api/v1/en/H2/MT/MT10/MT1002/MT325.px` (MT321 under `MT1001`). The
+  landing page `hagstova.fo/en/population/census-2011/religion` says the question was optional and 94%
+  answered.
+- **MT325** (total / Norðoyar / Eysturoy / N-Streymoy / S-Streymoy / Vágar / Sandoy / Suðuroy): persons
+  37,965 / 4,545 / 8,415 / 2,961 / 14,832 / 2,378 / 1,063 / 3,771; National Lutheran Church 27,002 /
+  2,547 / 6,221 / 2,316 / 10,302 / 1,916 / 851 / 2,849; Christian missionary movements 4,085 / 625 /
+  1,616 / 209 / 882 / 339 / 89 / 325; Plymouth Brethren 5,381 / 1,547 / 1,233 / 130 / 1,829 / 129 / 38 /
+  475; charismatic and evangelical 1,262 / 154 / 340 / 65 / 505 / 80 / 82 / 36; Adventist 93, Catholic
+  167, Orthodox 93, Jehovah's Witnesses 126 (national only, `...` in every district); other
+  congregations 106 / 75 / 126 / 48 / 262 / 27 / 17 / 30; more than one association 4,596 / 743 / 1,778 /
+  227 / 1,113 / 320 / 88 / 327, of which National Church and Brethren 713 / 145 / 170 / 26 / 280 / 20 /
+  7 / 65; none 1,243 / 76 / 160 / 102 / 742 / 63 / 21 / 79; responses 34,436; not stated 2,369; not
+  queried 1,160 / 98 / 194 / 144 / 525 / 48 / 23 / 128.
+- **MT321**: Christianity 33,018 / 4,153 / 7,670 / 2,484 / 12,258 / 2,137 / 964 / 3,352; Islam 23, Hindu
+  7, Buddhism 66, Judaism 12, Bahá'í 13, Sikh 3 (national only); other belief 149 / 16 / 43 / 15 / 150 /
+  13 / 6 / 30; more than one 85; no religious belief 1,397 / 71 / 151 / 127 / 896 / 60 / 18 / 74;
+  responses 34,595; not stated 2,210.
+- **Checks run.** The districts sum to the national cell for persons, the National Church and the
+  Brethren. Responses, not stated and not queried sum to the persons in both tables.
+- **Traps.** (1) Multi-response: MT325's nine bodies and none sum to 39,558 against 34,436 responses,
+  MT321's to 34,773 against 34,595; `More than one` is a person count, not a category. (2) Suppression:
+  district `Other congregations` sums to 585 against 106 nationally, and 585 is exactly Adventist,
+  Catholic, Orthodox, Witnesses and other together; MT321's district `Other belief` sums to 273, exactly
+  the six small religions and other belief. (3) Universe: the age bands start at 15-29, so the tables
+  read as ages 15 and over, not confirmed in the metadata; `Not queried` is unexplained. (4) Streymoy is
+  split in two; geoBoundaries has only an ADM0 outline for the Faroes, so district polygons need building.
+- **Taxonomy.** `religions.json` has a Plymouth Brethren node and `Christian Brethren (Open Plymouth
+  Brethren)`. "Christian missionary movements" is not identified; read the census documentation first.
+- **Not checked.** A census after 2011, the 2011 form, municipality polygons.
+
+### Isle of Man (`im`): island-wide only, 2021 census
+
+- **Source.** *2021 Isle of Man Census Report Part I* (Statistics Isle of Man, Cabinet Office),
+  `https://www.gov.im/media/1375604/2021-01-27-census-report-part-i-final-2.pdf` (1,691,173 bytes, 42
+  pages), **Table 2.12**, *Residents by Religious Faith and Age*, printed p.27: Buddhism 390, Christianity
+  40,725, Hinduism 263, Islam 393, Judaism 113, Other 0, No Religion 32,603, total 74,487 (summed by
+  the scout), in 18 age bands. Footnote 14: the question was voluntary and the total is those who
+  answered. p.13: the first Manx census to ask; no religion is 38.8% of the resident population.
+- **Questionnaire.** *Part II* (`gov.im/media/1376421/2021-isle-of-man-census-report-part-ii_11052022.pdf`,
+  49 pages), form p.43, Q8 *What is your religion? (voluntary)*: Christianity, Judaism, Buddhism,
+  Sikhism, Hinduism, No religion, Islam, Other (please specify). Sikhism has no row and Other is 0, so
+  Sikhs and write-ins went somewhere the report does not say.
+- **Geography.** Part I's contents list no religion table by area; Part II's only religion page is the form.
+- **Traps.** 32,603 / 0.388 is about 84,000 residents, so about 9,500 did not answer. `gov.im/media/`
+  served a 269-byte HTML page to `curl -A "Mozilla/5.0"` and the PDF to a full Chrome user-agent string.
+
+### Åland (`ax`): drawn inside Finland, with no outline
+
+- **On disk.** `data/normalized/fi.csv`: `FI200,nuts3,Aland`, Evangelical Lutheran 13,973.36 (35
+  respondents) and No religion 12,502.48 (29 respondents), `ess_r5_r11_pooled`, the only two rows
+  naming Åland.
+- **Shape.** Both Natural Earth files carry `Åland` (ADMIN Aland, ISO_A2 AX, ADM0_A3 ALD, POP_EST 29,884)
+  as its own feature; `country_shapes.py` has no `ax`. Dots inside Åland were not counted.
+- **Register.** ÅSUB, *Statistisk årsbok för Åland 2023*
+  (`asub.ax/sites/default/files/media/document/Statistisk%20%C3%A5rsbok%20f%C3%B6r%20%C3%85land%202023_2.pdf`),
+  Table 2.16, population by religious community and sex, 31.12.2022, p.51: total 30,359; Evangelical
+  Lutheran 20,671 (68.1%); other communities 416 (Orthodox 169, Jehovah's Witnesses 38, Catholic 122,
+  other including unknown 87); no community 9,272 (30.5%). Lutheran 94.8% in 1990, 84.8% in 2010, 72.0%
+  in 2019. UNSD table 28 has Åland 2020 as the same three-way register (Lutheran 21,248, none 8,484,
+  other 397). ÅSUB's PxWeb (`pxweb.asub.ax/PXWeb/api/v1/sv/Statistik/BE/Befolkningens%20storlek%20och%20struktur`,
+  17 tables) has no religion table, so no municipality split was found.
+- **For whoever takes it.** The outline is shape work. Replacing the ESS pair with the register changes a
+  drawn country's numbers and puts membership into a self-description build, which is Anita's call. ESS
+  puts Lutheran at 52.8% of Åland's two drawn answers; the register says 68.1% of everyone.
+
+### Iceland (`is`): the register goes below the nation for one church only
+
+- **Hagstofa PxWeb**, `https://px.hagstofa.is/pxis/api/v1/is/Samfelag/menning/5_trufelog`, folders
+  `trufelog` and `trufelogeldra`. MAN10001, *Mannfjöldi eftir trú og lífsskoðunarfélögum 1998-2026*:
+  63 values (total, the National Church, about sixty registered bodies, `Önnur trúfélög og
+  ótilgreint`, `Utan trú- og lífsskoðunarfélaga`) by sex, 0-17, 18+, share and parish-fee payers; no
+  geography. MAN10289 (2023) back to MAN10302 (2010), *Mannfjöldi eftir sóknum, prestaköllum og
+  prófastsdæmum*: 308 values (total, 9 deaneries, clergy districts, parishes) by under 16, total 16 and
+  over, in the National Church, not in it. MAN10303-10310: National Church members by parish, 2002-2009.
+  MAN10200: registration by sex, 1997-2017.
+- **Þjóðskrá** (Registers Iceland) publishes monthly national counts with an xlsx; no municipality table
+  was found in its releases.
+- **Reading.** §11o said Iceland's only geographic religion table is `CEN0008` (1981). The parish tables
+  are newer and have §11o's Nordic shape: one church by place, every body only nationally. ESS drew
+  `no`, `dk`, `se` and `fi`. Not checked: which ESS rounds carry Iceland and its region variable; EVS
+  2017 (GESIS login).
+- **Boundaries.** geoBoundaries ISL ADM1 (8 regions, OSM 2017) and ADM2 (74 municipalities, National Land
+  Survey 2016).
+
+### Malta (`mt`): the table exists, behind a bot wall
+
+- **Leads, not read.** Search snippets quoting NSO: the 2021 census was the first to ask religion, of
+  persons aged 15 and over, and a selected-indicators page *Final Report: Volume 1: Chapter 5 - Religious
+  Affiliation* (`nso.gov.mt/selected_indicators/final-report-volume-1-chapter-5-religious-affiliation/`)
+  gives at least Hindus by district. The report is *Census of Population and Housing 2021: Final Report:
+  Population, migration and other social characteristics (Volume 1)*,
+  `https://nso.gov.mt/wp-content/uploads/Census-of-Population-2021-volume1-final.pdf`.
+- **What came back.** `nso.gov.mt` answered 403 with 4,542-byte (PDF) and 5,480-byte (page) HTML bodies to
+  curl with a Chrome user agent, and 403 to WebFetch. `census2021.gov.mt` does not resolve. The Wayback CDX
+  API answered "Temporarily Offline" twice on 2026-09-15.
+- **Browser job.** Open the PDF, read Chapter 5 and the form. Boundaries: geoBoundaries MLT ADM1, 68
+  local councils (2022, d-maps); districts dissolve from them.
+
+### Andorra (`ad`) and Jersey (`je`): thin survey routes at one unit
+
+- **Andorra.** No census. The Andorra Research + Innovation page
+  (`ari.ad/en/projects/world-values-survey-wvs-andorra`) lists WVS waves 5 (2005-2006), 7 (2017-2020)
+  and 8 (fieldwork from autumn 2025, results expected 2026). Fundació Reig's page
+  (`reigfundacio.com/enquesta-mundial-de-valors/`) gives about 1,000 interviews for 2018. Not checked:
+  the WVS-7 Andorra file and its parish codes, the statistics department, IEA's CRES surveys.
+- **Jersey.** *Report on the 2021 Jersey Census*
+  (`gov.je/SiteCollectionDocuments/Government%20and%20administration/R%20CensusFinalReport%2020221213%20SJ.pdf`,
+  142 pages): no page matches "relig". *Opinions and Lifestyle Survey 2023 Report*
+  (`gov.je/SiteCollectionDocuments/Government%20and%20administration/Opinions%20and%20Lifestyle%20Survey%202023%20Report.pdf`,
+  105 pages), Figure 9.6, p.79: "Do you regard yourself as having a religion?" yes 39%, no 49%, not sure
+  11% (47% yes in 2018); 93% of the yes group named Christianity or a denomination of it. By age and
+  place of birth only. Adults 16 and over in private households, stratified by parish, ±2 points overall
+  (p.103). Not checked: the 2015 and 2018 reports, the microdata, the 2021 census form.
+
+### Closed
+
+- **Monaco (`mc`).** `gouv.mc`, *Résultats du recensement de la population 2016*: 37,308 residents, 139
+  nationalities, housing, 8 sectors, no religion. Arrêté ministériel n° 2016-122 (`legimonaco.mc`)
+  defines who is counted and names no variables. IMSEE's population page lists demographic and
+  residential characteristics. Not checked: the 2016 form, any later census.
+- **San Marino (`sm`).** `statistica.sm` population pages (structure, dynamics, families, health,
+  education, residents abroad): no religion. The one page describing the 2010 census form
+  (`sanmarinofixing.com`) answered 403. Not checked: the form.
+- **Guernsey (`gg`).** `gov.gg/population`: the electronic census, from administrative records since
+  2015, publishes population, employment, earnings and unemployment, no religion. The last traditional
+  census was 29 April 2001. Not checked: whether 2001 asked.
+- **Vatican City (`va`).** Natural Earth POP_EST 825, one dot at most. No source searched.
+- **Svalbard and Jan Mayen (`sj`).** Map units inside Norway's feature (POP_EST 2,939 and 20), so inside
+  `no`'s outline. No source searched.
+- **Luxembourg (`lu`), closed again.** ESS rounds 1-2 only. Search results say EVS fielded Luxembourg in
+  1999 and 2008; GESIS (`search.gesis.org/research_data/ZA4800`) answered 403 and the EVS participant
+  pages for 2008 and 2017 404, so neither the participation nor a region variable was read, and the file
+  needs a GESIS login. REOPEN on the EVS 2008 Luxembourg region variable.
+
+### Contested areas inside drawn countries
+
+- **Northern Cyprus.** *KKTC Nüfus Sayımı 2011, Kesin Sonuçlar* (State Planning Organisation; copy at
+  `ktoeos.org/wp-content/uploads/2013/08/nufus_ikinci_.pdf`, 48 pages): no page matches din, dini,
+  Müslüman, Hristiyan or inanç. Not checked: the 2011 form, the 2006 census, `istatistik.gov.ct.tr`.
+- **Transnistria.** Wikipedia's 2004 census article gives about 90% Orthodox, 6% no answer, 4% other,
+  national only, citing a Wayback copy of `pridnestrovie.net/2004census.html` (not read). `sources/md.md`
+  records Transnistria as uncounted by the 2014 census; `country_shapes.py` has no `CLIP` for it. Not
+  checked: the 2015 census.
+- **Abkhazia and South Ossetia.** `country_shapes.py::CLIP` removes both from `ge`. Wikipedia's Abkhazia
+  shares come from a 2003 survey and a 2015 UNPO report; no census table found.
+- §14 first for all of these.
+
+### What generalises
+
+1. **A religion table can be multi-response, with suppressed cells folded into `Other`.** Added to
+   `playbooks/census_table.md`.
+2. **Åland is a second territory inside a drawn country with no outline of its own.** Added to the `au`
+   line of `playbooks/geography.md`; a dots-outside-outline count in `tools/built_countries.py --check`
+   would catch both.
+3. **List every folder of a PxWeb subject before quoting the one table found.** §11o's "Iceland's only
+   geographic table is 1981" missed fourteen parish tables in a sibling folder; its conclusion still held.
+
+## gi-2026-09-15. Gibraltar drawn as one unit from the 2022 census's Table 42 in counts; the seven residential areas checked against 78 enumeration areas and not drawn
+
+Session `d743fc47-gi`, from §scout-2026-09-15-europe's row. Full record `sources/gi.md`.
+
+- **Source.** HM Government of Gibraltar, *Census of Gibraltar 2022* report (published 2025), Table 42
+  (major residential area x religion x sex, persons, printed p.174), digest pinned. Its total row is the
+  usually-resident population, 37,936, the whole universe (p.44). The report's 1970-2022 series (p.52)
+  has the same 2022 column, and its 2012 and 2001 columns equal UNSD table 28 to the person.
+- **Grain: one unit.** The seven areas are defined only as lists of enumeration areas (Appendix 9) and
+  the EAs as lists of streets (Appendix 8), with no map; three EAs sit in two areas. Kontur covers
+  Gibraltar with 20 hexes, two of them holding 7,119 and 6,875 people, so the grid cannot separate the
+  areas either. 34 dots at 1:1,000, under the microstate ruling. Town Area's 490 of 1,070 Jews and 658
+  of 1,909 Muslims are stated in `note_public`. What reversing takes is `sources/gi.md` §5.
+- **Traps.** Rebuilding each area from Table 43's EA rows shows Table 42 counts institutional EA 85
+  (70 people) in South District, which Appendix 9 does not say, and leaves one cell 4 people apart
+  between the tables (Church of England males in EA 64). Both are asserted in `sources/gi.py::check`;
+  trap added to `playbooks/census_table.md`. Table 43's footnote has a bare dash that parses as a zero.
+- **Questionnaire.** Question 11 offers eight boxes, no write-in and no not-stated box; every table
+  prints `Other/Not stated` as one column (779, 2.05%; the 2012 report printed 365 other and 44 not
+  stated). Drawn on a new node, `other.gi`, following the shape of ask 023's ruling for Iran; no `gap`.
+  Other Christian goes on `christianity`, not `christianity.other`: it is a residual, not bodies with
+  no branch.
+- **Result.** Roman Catholic 63.52%, no religion 14.08%, Church of England 6.70%, Muslim 5.03%, other
+  Christian 3.96%, Jewish 2.82%, other or not stated 2.05%, Hindu 1.83%. §14 considered, not escalated
+  (one unit, the territory government's own table); no search for restrictions on minorities was made.
+- **Not opened.** The 2012 report itself (the scout read it); any Gibraltar government GIS for EA
+  polygons.
+
+## sn-2026-09-15. Senegal drawn at the nine other régions of 1988 and Diourbel's three départements, with the Sufi brotherhoods, from the 1988 census's Tableau 1.15 and the Diourbel report's counts
+
+Session `d743fc47-sn`, from §11aq's row. Full record `sources/sn.md`.
+
+- **Source.** Direction de la Prévision et de la Statistique, *RGPH 1988, résultats définitifs*
+  (June 1993), Tableau 1.15: région x the form's P11 codes, with Khadriya, Layène, Mouride and
+  Tidiane as the Muslim answers, one decimal, % of residents, on Tableau 1.2's populations. Diourbel
+  from its regional report's Tableau 1.12, all eight codes by département in counts, raked to its
+  Tableau 1.2 and its région column. Both reports and the enumerator manual are on IREDA
+  (`ireda.ceped.org/inventaire/ressources/sen-1988-rec-*`), pinned. 6,896,808 residents of ordinary
+  households; `gap` is the 35,000 counted apart (0.50%).
+- **Diourbel's row is misprinted on the page, not shifted by the text layer.** Khadriya `-`, Layène
+  3.7; the regional report counts 3.70% and 0.04%, and the table's own Ensemble Layène (0.6) comes
+  back only with the two swapped (0.60 against 0.93). §11aq put it down to text extraction; the text
+  layer keeps each `-` as its own line and parses cleanly.
+- **The Ensemble row is not the régions' sum** (weighted Khadriya 11.69 against 10.9 printed,
+  Autres 1.15 against 1.6, Musulmans 94.41 against 93.8; the row sums to 99.7) and is not used.
+- **Nodes.** `islam.qadiriyya` (806,271, 11.7%), `islam.tijaniyya` (3,260,497, 47.3%),
+  `islam.mouride` (2,047,728, 29.7%) and `islam.layene` (41,681, 0.6%), in LINEAGE's "Sufi orders"
+  group under `islam` after Bektashi; `Autres mus.` on `islam`; Christians on `christianity`
+  (Diourbel's Catholics folded in); `Autres` -> new `other.sn` (79,584; code 8, the manual's Jews,
+  Buddhists and animists). Ask 029 is whether the brotherhoods stay four legend rows.
+- **Geography.** The 1988 régions rebuilt from COD-AB v02 by pcode, with Matam, Kédougou, Kaffrine
+  and Sédhiou merged back. Against the areas 1988's printed densities imply, Louga is -8.5%, Fatick
+  -11.3%, Saint-Louis +5.1%, Diourbel département +9.5% and Mbacké +22.3% (pinned), while the total
+  agrees: borders have moved since 1988 or were remeasured. Kontur 2023 places dots inside units
+  (Mbacké is 5.2 times its 1988 count); no cap blocks.
+- **Dots.** 6,893 at 1:1,000, 686 at 1:10,000.
+- **What generalises.** A misplaced cell hides inside rows that still close; weight the rows by the
+  printed populations and compare each column with the national row (`playbooks/census_table.md`).
+- **REOPEN** when ANSD publishes RGPH-5 2023 religion below the nation (sixteen codes; give the
+  reformist, Ahmadiyya and Shia codes a §14 look first), or on the other nine 1988 regional reports,
+  which would take every région to département.

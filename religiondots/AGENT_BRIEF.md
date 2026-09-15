@@ -45,7 +45,8 @@ because that is §12's standing instruction that nothing is truly dead.
 `COMMANDS.txt` step it stopped after and what is already on disk. Resuming is cheaper than
 starting, and a parked country is the one thing here that rots.
 
-Otherwise take the top free row in `queue.md` unless you have a reason not to. Reasons that
+Otherwise take the top of `claim.py`'s free list (it reads `queue.csv`, in queue order; `queue.md`
+keeps the reasoning) unless you have a reason not to. Reasons that
 count: it needs an account or a login (skip, it is blocked, see `[[reference_ipums_account]]`);
 another session is working its neighbourhood; the row's own note says it is a browser job.
 "It looks hard" is not a reason — the queue is roughly ordered by what the country would add.
@@ -89,8 +90,9 @@ Everything else lives in `sources/<cc>.md`. Anita, 2026-09-14: long reports are 
 she can keep up with.
 
 **If the free queue is thin or every row left is walled, switch to SCOUT mode**: take a region
-nothing has swept, probe five or six offices, and write what came back into `queue.md` and a
-`sources.md` section headed `## scout-<YYYY-MM-DD>-<region>.`. A good scout leaves the next five
+nothing has swept, probe five or six offices, and write what came back into `queue.md`, a
+`queue.csv` row for each country probed (status `free`, `blocked` or `closed`), and a `sources.md`
+section headed `## scout-<YYYY-MM-DD>-<region>.`. A good scout leaves the next five
 build agents something to do.
 `sources.md`'s existing §11 sweeps are the model. Claim the countries you probe so two scouts do
 not sweep the same band.
@@ -200,9 +202,9 @@ The checkpoints, because they are where a handoff is cheap:
 
 | | what is true | if you cross 50% here |
 |---|---|---|
-| **A** | You know the table exists, and have its URL, its tier and its category list. Nothing downloaded. | **Do not start the fetch.** Write the scouting record into `queue.md` and `sources/<cc>.md`, park, stop. This is a good outcome, not a failed run. |
+| **A** | You know the table exists, and have its URL, its tier and its category list. Nothing downloaded. | **Do not start the fetch.** Write the scouting record into `queue.md`, its `queue.csv` row and `sources/<cc>.md`, park, stop. This is a good outcome, not a failed run. |
 | **B** | `sources/<cc>.py --fetch` produces `data/normalized/<cc>.csv` and it reconciles. | **Park here by preference.** The expensive, un-resumable part is on disk; the next agent writes the mapping against a CSV that exists. This is the designed handoff line. |
-| **C** | Mapping written, `countries.py` entry in, `check_mapping.py` passes. | **Push on through to the end**, even past 75% — steps 5–9 are mechanical and cheap, and under a supervisor steps 10–12 are not yours (§6). A country registered without dots leaves the tree in the half-state `claim.py` reports as *registered but NOT built*, which is worse than either finishing or never having started. |
+| **C** | Mapping written, `countries/<cc>.py` entry in and its code in `ORDER`, `check_mapping.py` passes. | **Push on through to the end**, even past 75% — steps 5–9 are mechanical and cheap, and under a supervisor steps 10–12 are not yours (§6). A country registered without dots leaves the tree in the half-state `claim.py` reports as *registered but NOT built*, which is worse than either finishing or never having started. |
 
 To park:
 
@@ -233,13 +235,16 @@ something; `spec.md` §12 is meant to be added to.
   `## <cc>-<YYYY-MM-DD>. <title>`, with `b` after the date if your country already has one that
   day. Cite it as `sources.md §<cc>-<YYYY-MM-DD>`. No new §9 letters: they were claimed
   first-come and collided (spec §12).
-- The `countries.py` entry with `note_public` and `gap=`, `python tools/gap_share.py <cc>` run
+- The `countries/<cc>.py` entry, its code appended to `ORDER` in `countries.py`, with `note_public` and `gap=`, `python tools/gap_share.py <cc>` run
   and its figure written if it found one, and `python tools/check_md.py` clean.
 - `python tools/built_countries.py --check` naming nothing.
-- The row moved to *Drawn* in `queue.md`, or taken out.
+- `claim.py done` sets the country's `queue.csv` row to `drawn`; move its `queue.md` row to
+  *Drawn*, or take it out.
 - `handoff/<cc>.md` deleted if you resumed one.
-- Anything that generalises added to spec §12. A trap that cost you an hour costs the next
-  session five minutes to read.
+- A trap that generalises goes into the playbook for its route (`playbooks/`, or `geography.md`
+  when it applies to every route), with the check that catches it or "Not checked yet" and where
+  one belongs; a check in code is better still. Only a general working rule goes into spec §12.
+  A trap that cost you an hour costs the next session five minutes to read.
 
 Then write your final message in the fixed shape from §1. A supervisor reads it, not Anita.
 
@@ -247,7 +252,7 @@ Then write your final message in the fixed shape from §1. A supervisor reads it
 
 ## 6. Two or three of you are running at once, by design
 
-`countries.py`, `spec.md`, `sources.md`, `taxonomy/branches.py` and `COMMANDS.txt` **will change
+`countries.py`'s `ORDER`, `queue.csv`, `spec.md`, `sources.md`, `taxonomy/branches.py` and `COMMANDS.txt` **will change
 under you** and your tooling will say so on an edit that applied fine. Make surgical edits against
 unique anchors. **Never rewrite a shared file wholesale** — that is the only move here that
 destroys someone's work. Before any `Write` to `sources/<cc>*`, `taxonomy/<cc>*` or `data/`, look

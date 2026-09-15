@@ -7,11 +7,11 @@ spent an hour on Peru while another had already finished it, and overwrote its `
 with a `Write` to a path it had not checked. Nothing was lost (Claude Code's file history had
 it), but the hour was.
 
-    python tools/claim.py                       # what is claimed, parked, and free
+    python tools/claim.py                       # what is claimed, parked, free, and held
     python tools/claim.py take pe --id <sid>    # claim Peru
     python tools/claim.py drop pe --id <sid>    # release it
     python tools/claim.py park pe --id <sid>    # release it and leave a handoff for the next one
-    python tools/claim.py done pe --id <sid>    # release it and note it as built
+    python tools/claim.py done pe --id <sid>    # release it; if registered, mark it drawn in queue.csv
     python tools/claim.py mine --id <sid>       # what you are holding
 
 `<sid>` is your session id. You know it: it is the last path component of the scratchpad
@@ -29,9 +29,41 @@ project history, and they must never reach a commit.
 **A CLAIM IS ADVISORY AND CANNOT STOP ANYONE.** It is a note on the door, not a mutex. The
 thing that actually prevents the Peru accident is the habit in spec §12: **check before you
 write.** This just makes checking one command instead of an inference from `git status`.
+
+**THE QUEUE IS `queue.csv`; `queue.md` KEEPS THE REASONING** (WORKFLOW_PLAN.md item 10,
+2026-09-14). The candidate list used to be read off `queue.md` table rows by regex, which
+listed closed, held and drawn countries as free: a table row carries no status, and a ruling
+or a closure written as a bullet is invisible to a regex. `queue.csv` has one row per country
+code, with the columns
+
+    cc, name, status, grain, source, blocker, held_for_anita, detail
+
+and `status` is one of
+
+    free      worth a build or a scout now
+    held      waiting on Anita; `held_for_anita` names the ask, e.g. `ask 017`
+    deferred  Anita put it off (South Sudan); not for an unprompted session
+    blocked   a route is known and something outside the project stops it: an account, a
+              network wall, a release not out yet; `blocker` says which
+    closed    a negative is recorded; `detail` says where (and nothing is truly dead, spec §12)
+    drawn     registered as a country; `held_for_anita` may still name an open ask about it
+
+`grain`, `source` and `blocker` are a few words each. `detail` points at the prose: the
+`queue.md` section heading, then the `sources.md` section where one is cited. Row order is the
+queue order, so the free list prints best first; put a new row where it ranks, and drawn rows
+sit at the end in code order. Edit it by hand when a status changes in `queue.md`; `done` sets
+`drawn` itself, writing a temp file and `os.replace`-ing it so a reader never sees half a file.
+
+The listing warns, one line each, where the files disagree: a registered country whose row is
+not `drawn`; a code in a `queue.md` table row with no `queue.csv` row, so a new queue row cannot
+be missed silently; and a `queue.csv` code that `queue.md` never mentions by code or name.
+Drawn rows are exempt from that last one, since their prose is the country entry and
+`sources/<cc>.md`.
 """
 
 import argparse
+import csv
+import datetime
 import json
 import os
 import re
@@ -44,7 +76,10 @@ if hasattr(sys.stdout, "reconfigure"):
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 CLAIMS = os.path.join(ROOT, "data", "claims")
-QUEUE = os.path.join(ROOT, "queue.md")
+QUEUE_MD = os.path.join(ROOT, "queue.md")
+QUEUE_CSV = os.path.join(ROOT, "queue.csv")
+COLUMNS = ["cc", "name", "status", "grain", "source", "blocker", "held_for_anita", "detail"]
+STATUSES = ("free", "held", "deferred", "blocked", "closed", "drawn")
 
 # Handoffs are NOT under data/, which is gitignored — a parked country is the one piece of
 # state here that rots, and it has to survive a clean checkout and show up in `git status`.
@@ -99,9 +134,36 @@ def _age(ts):
 
 
 def drawn():
-    """Country codes countries.py currently registers. Derived, never typed — spec §12."""
-    src = open(os.path.join(ROOT, "countries.py"), encoding="utf-8").read()
+    """Country codes currently registered. Derived, never typed — spec §12.
+
+    The `countries/<cc>.py` files once WORKFLOW_PLAN.md item 9 has split the registry and that
+    directory has any; until then the dict keys in `countries.py`. `tools/negatives.py`
+    imports this, so it stays a set of codes."""
+    d = os.path.join(ROOT, "countries")
+    if os.path.isdir(d):
+        codes = {m.group(1) for m in (re.fullmatch(r"([a-z]{2})\.py", f) for f in os.listdir(d))
+                 if m}
+        if codes:
+            return codes
+    path = os.path.join(ROOT, "countries.py")
+    if not os.path.exists(path):
+        return set()
+    src = open(path, encoding="utf-8").read()
     return set(re.findall(r'^    "([a-z]{2})": dict\(', src, re.M))
+
+
+def _registered_name(cc):
+    """The `name=` of a registered country, for a queue.csv row `done` has to add."""
+    # Anchored on the entry's own `"<cc>": dict(` line: a bare `name="` also matches a helper's
+    # `sheet_name="..."` above the entry (countries/us.py).
+    header = rf'^    "{cc}": dict\(\s*\n\s*name="([^"]*)"'
+    for path, pat in ((os.path.join(ROOT, "countries", f"{cc}.py"), header),
+                      (os.path.join(ROOT, "countries.py"), header)):
+        if os.path.exists(path):
+            m = re.search(pat, open(path, encoding="utf-8").read(), re.M)
+            if m:
+                return m.group(1)
+    return cc
 
 
 def built():
@@ -162,28 +224,132 @@ def parked():
     return out
 
 
-def read_queue():
-    """The candidate list. Rows look like `| pe | Peru | ... |`; anything else is prose.
+def read_queue_csv():
+    """(rows, problems): the rows of queue.csv as dicts in file order, and one line per fault.
+
+    `utf-8-sig` so a copy saved from a spreadsheet, which adds a BOM, still reads."""
+    if not os.path.exists(QUEUE_CSV):
+        return [], ["queue.csv is missing, so nothing is listed as free"]
+    rows, problems, seen = [], [], set()
+    with open(QUEUE_CSV, encoding="utf-8-sig", newline="") as fh:
+        reader = csv.DictReader(fh)
+        if reader.fieldnames != COLUMNS:
+            problems.append(f"queue.csv columns are {reader.fieldnames}, expected {COLUMNS}")
+        for r in reader:
+            r = {k: (r.get(k) or "").strip() for k in COLUMNS}
+            cc, at = r["cc"], f"queue.csv line {reader.line_num}"
+            if not re.fullmatch(r"[a-z]{2}", cc):
+                problems.append(f"{at}: cc {cc!r} is not two lowercase letters")
+                continue
+            if cc in seen:
+                problems.append(f"{at}: {cc} has a second row, which is ignored")
+                continue
+            if r["status"] not in STATUSES:
+                problems.append(f"{at}: {cc} has status {r['status']!r}, not one of "
+                                f"{', '.join(STATUSES)}")
+            seen.add(cc)
+            rows.append(r)
+    return rows, problems
+
+
+def _write_queue_csv(rows):
+    """Temp file and `os.replace`, so a concurrent reader sees the old file or the new one.
+
+    Windows refuses to replace a file another process has open this instant, so retry a few
+    times before giving up; a reader holds it for milliseconds."""
+    tmp = f"{QUEUE_CSV}.{os.getpid()}.tmp"
+    with open(tmp, "w", encoding="utf-8", newline="") as fh:
+        w = csv.DictWriter(fh, fieldnames=COLUMNS, lineterminator="\n")
+        w.writeheader()
+        w.writerows(rows)
+    for attempt in range(20):
+        try:
+            os.replace(tmp, QUEUE_CSV)
+            return
+        except PermissionError:
+            if attempt == 19:
+                os.remove(tmp)
+                raise
+            time.sleep(0.25)
+
+
+def mark_drawn(cc):
+    """Set cc's queue.csv row to `drawn`, moving it into the drawn block, or add a row.
+
+    Returns the old status, None when there was no row, or an error string starting `!!`."""
+    rows, problems = read_queue_csv()
+    if not os.path.exists(QUEUE_CSV) or any(p.startswith("queue.csv columns") for p in problems):
+        return f"!! queue.csv is missing or its columns are wrong, so {cc} was not marked drawn"
+    row = next((r for r in rows if r["cc"] == cc), None)
+    if row is not None and row["status"] == "drawn":
+        return "drawn"
+    old = row["status"] if row else None
+    if row is None:
+        row = dict.fromkeys(COLUMNS, "")
+        row.update(cc=cc, name=_registered_name(cc),
+                   detail=f"registered; row added by claim.py done {datetime.date.today()}")
+    else:
+        rows.remove(row)
+    row["status"] = "drawn"
+    at = next((i for i, r in enumerate(rows) if r["status"] == "drawn" and r["cc"] > cc),
+              len(rows))
+    rows.insert(at, row)
+    _write_queue_csv(rows)
+    return old
+
+
+def read_queue_md():
+    """({cc: line} for codes in queue.md table rows, the file's text). For the warnings only.
 
     A row followed by a `|---|` line is a table header, not a country: `| cc | drawn from |`
-    was being listed as a free country called `cc`."""
-    if not os.path.exists(QUEUE):
-        return []
-    rows = []
-    lines = open(QUEUE, encoding="utf-8").read().splitlines()
+    was once listed as a free country called `cc`. Struck-through rows count."""
+    if not os.path.exists(QUEUE_MD):
+        return {}, ""
+    text = open(QUEUE_MD, encoding="utf-8").read()
+    lines = text.splitlines()
+    out = {}
     for i, line in enumerate(lines):
-        m = re.match(r"^\|\s*`?([a-z]{2})`?\s*\|\s*([^|]+?)\s*\|(.*)\|\s*$", line)
-        if m and i + 1 < len(lines) and re.match(r"^\|\s*:?-{3,}", lines[i + 1]):
+        m = re.match(r"^\|\s*(?:~~)?`?([a-z]{2})`?(?:~~)?\s*\|", line)
+        if not m or (i + 1 < len(lines) and re.match(r"^\|\s*:?-{3,}", lines[i + 1])):
             continue
-        if m:
-            rest = [c.strip() for c in m.group(3).split("|")]
-            rows.append({"cc": m.group(1), "name": m.group(2), "cells": rest})
-    return rows
+        out.setdefault(m.group(1), i + 1)
+    return out, text
+
+
+def _mentioned(row, flat):
+    """Whether lower-cased, whitespace-collapsed queue.md names this row by `cc` or by name.
+
+    A name in brackets is an alias: `United Arab Emirates (UAE)` matches either."""
+    if f"`{row['cc']}`" in flat:
+        return True
+    names = [re.sub(r"\s*\(.*?\)", "", row["name"]).strip()] + re.findall(r"\((.*?)\)", row["name"])
+    return any(n and re.search(rf"(?<![\w-]){re.escape(n.lower())}(?![\w-])", flat) for n in names)
+
+
+def queue_warnings(rows, reg):
+    """One line per disagreement between queue.csv, queue.md and the registry."""
+    by_cc = {r["cc"]: r for r in rows}
+    md_rows, md_text = read_queue_md()
+    out = []
+    for cc in sorted(reg):
+        if cc not in by_cc:
+            out.append(f"{cc} is registered and has no queue.csv row "
+                       f"(python tools/claim.py done {cc} --id <sid> adds one)")
+        elif by_cc[cc]["status"] != "drawn":
+            out.append(f"{cc} is registered but queue.csv says {by_cc[cc]['status']}")
+    for cc, line in sorted(md_rows.items()):
+        if cc not in by_cc:
+            out.append(f"{cc} has a queue.md table row (line {line}) and no queue.csv row")
+    flat = re.sub(r"\s+", " ", md_text).lower()
+    for r in rows:
+        if r["status"] != "drawn" and r["cc"] not in md_rows and not _mentioned(r, flat):
+            out.append(f"{r['cc']} is in queue.csv as {r['status']} and queue.md never mentions it")
+    return out
 
 
 def cmd_list(args):
     claims, reg, have = load_claims(), drawn(), built()
-    q = read_queue()
+    rows, problems = read_queue_csv()
 
     if claims:
         print(f"CLAIMED ({len(claims)}):")
@@ -204,7 +370,7 @@ def cmd_list(args):
             state = "drawn now, delete the handoff" if cc in reg else "resumable"
             print(f"  {cc}  {_age(p['mtime']):>6s} ago  {state}   handoff/{cc}.md")
 
-    print(f"\nDRAWN: {len(reg)} registered in countries.py, {len(have)} with dots on disk")
+    print(f"\nDRAWN: {len(reg)} registered, {len(have)} with dots on disk")
     missing = sorted(reg - have)
     if missing:
         print(f"  registered but NOT built: {', '.join(missing)}")
@@ -217,17 +383,28 @@ def cmd_list(args):
     else:
         print(f"  build tail: nothing waiting (last run started {_age(wait[1])} ago)")
 
-    if q:
-        free = [r for r in q if r["cc"] not in claims and r["cc"] not in reg]
-        print(f"\nQUEUE: {len(q)} candidates in queue.md, {len(free)} free and undrawn")
-        for r in free:
-            print(f"  {r['cc']}  {r['name'][:26]:26s} "
-                  f"{' | '.join(r['cells'])[:72]}")
-        taken = [r for r in q if r["cc"] in reg]
-        if taken:
-            print(f"  (already drawn, ignore: {', '.join(r['cc'] for r in taken)})")
-    else:
-        print("\nQUEUE: queue.md has no candidate rows")
+    free = [r for r in rows if r["status"] == "free" and r["cc"] not in claims
+            and r["cc"] not in reg]
+    print(f"\nQUEUE: {len(rows)} rows in queue.csv, {len(free)} free, unclaimed and undrawn")
+    for r in free:
+        cells = " | ".join(x for x in (r["grain"], r["source"], r["blocker"]) if x)
+        print(f"  {r['cc']}  {r['name'][:26]:26s} {cells[:72]}")
+    for status, label in (("held", "HELD for Anita"), ("deferred", "DEFERRED by Anita"),
+                          ("blocked", "BLOCKED outside the project")):
+        sel = [r for r in rows if r["status"] == status]
+        if sel:
+            codes = ", ".join(f"{r['cc']} ({r['held_for_anita']})" if r["held_for_anita"]
+                              else r["cc"] for r in sel)
+            print(f"  {label} ({len(sel)}): {codes}")
+    n = {s: sum(r["status"] == s for r in rows) for s in ("closed", "drawn")}
+    print(f"  closed {n['closed']}, drawn {n['drawn']}; each row's detail names the queue.md "
+          f"section with the reason")
+
+    warn = problems + queue_warnings(rows, reg)
+    if warn:
+        print(f"\nQUEUE WARNINGS ({len(warn)}): fix queue.csv, or add the missing prose to queue.md")
+        for w in warn:
+            print(f"  !! {w}")
 
 
 def cmd_take(args):
@@ -237,8 +414,13 @@ def cmd_take(args):
     path = os.path.join(CLAIMS, f"{cc}.json")
 
     if cc in reg:
-        print(f"!! {cc} is ALREADY REGISTERED in countries.py. If you are re-working it that "
-              f"is fine, but check sources/{cc}.md first — somebody built it.")
+        print(f"!! {cc} is ALREADY REGISTERED. If you are re-working it that is fine, but check "
+              f"sources/{cc}.md first — somebody built it.")
+    row = next((r for r in read_queue_csv()[0] if r["cc"] == cc), None)
+    if row and row["status"] not in ("free", "drawn"):
+        why = "; ".join(x for x in (row["held_for_anita"], row["blocker"]) if x)
+        print(f"!! queue.csv has {cc} as {row['status']}{f' ({why})' if why else ''}. "
+              f"Read {row['detail'] or 'its queue.md prose'} before starting.")
 
     rec = {"id": args.id, "started": _now(), "note": args.note or "",
            "pid": os.getpid(), "host": os.environ.get("COMPUTERNAME", "?")}
@@ -306,8 +488,6 @@ def cmd_park(args):
     already exists. So parking after the CSV lands costs the next session almost nothing,
     while running to the wall with the findings still in your head costs it everything.
     """
-    import datetime
-
     cc = args.cc.lower()
     os.makedirs(HANDOFF, exist_ok=True)
     path = os.path.join(HANDOFF, f"{cc}.md")
@@ -332,18 +512,34 @@ def cmd_done(args):
     rc = cmd_drop(args)
     if rc == 0:
         cc = args.cc.lower()
+        if cc in drawn():
+            old = mark_drawn(cc)
+            if old == "drawn":
+                print(f"\nqueue.csv: {cc} was already drawn")
+            elif old is None:
+                print(f"\nqueue.csv: {cc} had no row; added one as drawn")
+            elif old.startswith("!!"):
+                print(f"\n{old}")
+            else:
+                print(f"\nqueue.csv: {cc} set to drawn (was {old})")
+        else:
+            row = next((r for r in read_queue_csv()[0] if r["cc"] == cc), None)
+            print(f"\nqueue.csv: {cc} is not registered, so its row stays "
+                  f"{row['status'] if row else '(it has none)'}. Run done again once it is "
+                  f"registered;\n  if you closed or parked it instead, set its row by hand.")
         print(f"\nbefore you stop, the §12 tail for {cc}:")
         print(f"  - sources/{cc}.md written, and a `## {cc}-YYYY-MM-DD.` section in sources.md "
               f"(no new §9 letters)")
         print("  - under a supervisor the build tail is its job, and this country now shows as "
               "waiting;\n    on your own, python tools/build_tail.py --id <sid>")
-        print("  - countries.py entry with note_public and gap=")
+        print("  - the country entry with note_public and gap=")
         print("  - python tools/built_countries.py --check   (both editions present)")
-        print(f"  - remove {cc} from queue.md, or mark it drawn there")
+        print(f"  - move {cc}'s queue.md row to *Drawn*, or strike it; queue.csv is what "
+              f"claim.py reads")
         if os.path.exists(os.path.join(HANDOFF, f"{cc}.md")):
             print(f"  - DELETE handoff/{cc}.md — you resumed a park and it is now a lie")
-        print("  - anything that generalises into spec §12; a fact about this country into "
-              f"sources/{cc}.md")
+        print("  - a trap that generalises into its route's playbook (playbooks/), a general "
+              f"working rule into spec §12, a fact about this country into sources/{cc}.md")
     return rc
 
 
@@ -361,11 +557,12 @@ def main():
     p = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     sub = p.add_subparsers(dest="cmd")
 
-    sub.add_parser("list", help="what is claimed and what is free (default)")
+    sub.add_parser("list", help="what is claimed, what is free, and what is held (default)")
 
     for name, help_ in (("take", "claim a country"), ("drop", "release a claim"),
                         ("park", "release it and leave a handoff for the next session"),
-                        ("done", "release a claim and print the finishing checklist")):
+                        ("done", "release a claim, mark it drawn in queue.csv if registered, "
+                                 "and print the finishing checklist")):
         s = sub.add_parser(name, help=help_)
         s.add_argument("cc")
         s.add_argument("--id", required=True, help="your session id")

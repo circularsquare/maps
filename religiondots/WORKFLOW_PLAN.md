@@ -18,7 +18,11 @@ Anita also asked, standing: **question her rules** when they look contradictory 
 - [x] **Reviews scoped by risk**, one reviewer per two countries, in `.claude/commands/rd-super.md`.
 - [x] **Chime on hand-back**, in `rd-super.md` and memory.
 
-## Next session, in this order
+## The ten items, all done 2026-09-14
+
+What remains is optional: a second item 4 pass on the playbooks' "Not checked yet" traps (it edits
+the loaders, so not while builders run), and marking superseded rules outside spec §12 (none found
+on a first look).
 
 1. [x] **Rulings digest, `ask/RULINGS.md`**, 2026-09-14. 85 lines: every answered ask and `queue.md`
    ruling, then the older ones in `sources.md`, spec and `estimates_todo.md`, each with what she did
@@ -44,8 +48,10 @@ Anita also asked, standing: **question her rules** when they look contradictory 
    whose process is gone and runs `coverage.py` last. Four agents by default.
 6. [x] **Lookup tool and section keys**, 2026-09-14. `tools/where.py <cc>`. New `sources.md`
    sections are `## <cc>-<YYYY-MM-DD>.`, scout sweeps `## scout-<YYYY-MM-DD>-<region>.` (spec §12).
-7. **Spec holds current rules only.** Superseded rules are marked, and lessons move to the
-   playbooks, so do this after 2.
+7. [x] **Spec holds current rules only**, §12 only, 2026-09-14. 3,713 lines to 1,506: 78 lessons
+   cut to the current rule plus its check and playbook, 1 marked superseded, 20 kept whole; every
+   cut line verified present in `spec_archive/12.md`. New route-specific traps go to the playbooks.
+   Nothing plainly superseded was found outside §12.
 8. **"Nothing is truly dead" sweep.** [x] Script, 2026-09-14: `tools/negatives.py` (127 records on
    44 countries). Missing parts do not pick out the wrong negatives; their shape does (closed on one
    release, never on the questionnaire, nothing said about what was left unchecked), so rank on
@@ -55,15 +61,19 @@ Anita also asked, standing: **question her rules** when they look contradictory 
 
 ## Later
 
-9. **Split `countries.py` into `countries/<cc>.py`** with a loader. Mechanical, but it needs a
-   quiet tree with no agents running.
-10. **A light structured queue.** A small `queue.csv` (cc, status, grain, source, blocker,
-    held_for_anita) that `claim.py` reads, with `queue.md` prose linking to rows. It fixes closed
-    rows showing as free. (Table headers listed as countries: fixed in `claim.py`, 2026-09-14.)
+9. [x] **Split `countries.py` into `countries/<cc>.py`**, 2026-09-14. `countries.py` is the loader
+   (field docstring, `ORDER`, foot assertion); `countries/_shared.py` holds the 12 helpers several
+   countries use. Every entry, all 153 `counts()` results and `counts.json` identical before and
+   after. A new country is a new file plus its code appended to `ORDER`.
+10. [x] **A light structured queue, `queue.csv`**, 2026-09-14. 206 rows: free 12, held 4,
+    deferred 1, blocked 5, closed 31, drawn 153. `claim.py` lists the free ones from it, prints the
+    held, deferred and blocked ones, warns where `queue.csv` and `queue.md` disagree, and `done`
+    marks a registered country drawn. The free list went from 17 to 12.
 
 ## Draft rule: "no religion" boxes (Anita asked for a documented procedure)
 
-To be written into spec and the census_table and survey playbooks. Precedents: Laos, Mozambique
+Written into spec §3.12 and the census_table, afrobarometer, arabbarometer and dhs_mics playbooks
+on 2026-09-14, and linted by `tools/check_no_religion.py`; kept here as drafted. Precedents: Laos, Mozambique
 and China 2026-09-14; Anita: *"did we find that like most of these people are traditional? like
 over 80%? if so then yeah totally chill."*
 

@@ -78,6 +78,13 @@ CLASSIFIED = {
         "practice no box) and maps it `unaffiliated` as printed. That reads as a lumped box, "
         "which the draft procedure draws `unknown` until a split source reaches 80%. The "
         "mapping predates the procedure; Anita's call, raised 2026-09-14."),
+    ("sc", "No Religion"): (
+        "separate",
+        "the 2010 form (report Annex 2, P13) prints `No Religion: NONE` beside `Others: write "
+        "full name`, and NBS post-coded every write-in: 57 labels across the districts, down "
+        "to one agnostic, and none is a traditional or ancestral religion. Seychelles had no "
+        "indigenous population before settlement, so there is no traditional practice for the "
+        "box to be holding."),
 }
 
 

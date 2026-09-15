@@ -250,16 +250,18 @@ _FORM_OF_STATE = {
 # never is. A country module normally states its own with `omit=` at the call.
 #
 # Egypt's is here instead of in `sources/eg.py`, for one reason. It is a decision about an
-# ALREADY-DRAWN country and the pin is Anita's to rule on, so the country module is not to be
-# edited while that is open; `sources/jo.md` §9.3 costs the rebuild out. Move this into
-# `sources/eg.py` beside its `WAVES` whenever the ruling lands.
+# ALREADY-DRAWN country and the pin was Anita's to rule on, so the country module was not to be
+# edited while that was open; `sources/jo.md` §9.3 costs the rebuild out. She ruled on 2026-09-14
+# (ask 020): keep wave II out. Move this into `sources/eg.py` beside its `WAVES` the next time
+# that module is edited.
 OMITTED = {
     "egypt": {
         "II": "Egypt was drawn on 2026-09-08 from a pool that could not see wave II, and "
               "fixing the country filter is not a reason to move a published map. Adding the "
               "wave takes the national Christian share from 6.024% to 5.831% and puts Asyut "
               "above Minya as the most Christian governorate on the strength of 70 "
-              "interviews; sources/jo.md §9.3 has the measurement. Anita's to rule on.",
+              "interviews; sources/jo.md §9.3 has the measurement. Anita ruled 2026-09-14 "
+              "(ask 020): keep it out.",
     },
 }
 
@@ -504,7 +506,39 @@ def assert_one_wording(df, country, cat_col="category"):
         "them unnoticed would cost.")
 
 
-def load(country, expect_waves=None, waves=None, recode=None, omit=None, extra=None):
+def _fill_blank_weights(df, sub, wv, blank_rows, wave, country, reason):
+    """Blank weights on answered rows -> the mean weight of the answered rows in the same PSU.
+
+    Only for a wave the country module names in `load(blank_weights=)`, with the reason. Added
+    2026-09-14 for Yemen's wave V: 32 of 2,400 respondents have no `wt`, every one of them also
+    has no recorded gender (the weight is post-stratified on it), and they sit in ten PSUs in
+    Hajjah, Dhamar, Al Hudaydah and Amanat al-Asimah, 22 of them Zaydi. Dropping them would
+    take a tenth of Dhamar's and Hajjah's interviews out of the two most Zaydi-heavy samples
+    after Sa'dah and Amran; a cluster's own mean is the design weight they would have shared
+    before the gender adjustment. Refuses a wave with no PSU column, or a PSU with no weighted
+    respondent to borrow from.
+    """
+    psu = _col(df, "psu")
+    if psu is None:
+        raise SystemExit(f"wave {wave}: blank_weights needs a `psu` column to fill from, and "
+                         "this wave has none")
+    keyed = pd.DataFrame({"psu": sub[psu], "w": wv, "blank": blank_rows,
+                          "answered": sub[_col(df, "q1012")].notna()})
+    donors = keyed[~keyed["blank"] & keyed["answered"]].groupby("psu")["w"].mean()
+    need = keyed.loc[keyed["blank"], "psu"]
+    orphan = sorted(set(need) - set(donors.index))
+    if orphan:
+        raise SystemExit(f"wave {wave}: PSUs {orphan} have blank weights and no weighted "
+                         "respondent to take a mean from")
+    out = wv.copy()
+    out[blank_rows] = need.map(donors).to_numpy()
+    print(f"  wave {wave}: {int(blank_rows.sum())} {country} respondents had no weight and take "
+          f"their PSU's mean ({need.nunique()} PSUs): {reason}")
+    return out
+
+
+def load(country, expect_waves=None, waves=None, recode=None, omit=None, extra=None, raw=None,
+         blank_weights=None):
     """One country's respondents, decoded wave by wave through that wave's own labels.
 
     Returns [`wave`, `wave_no`, `category`, `geo_raw`, `geo_code`, `w`] plus one column per
@@ -582,10 +616,21 @@ def load(country, expect_waves=None, waves=None, recode=None, omit=None, extra=N
     `assert_one_wording` is NOT re-run afterwards for the same reason: the composed category is
     the country module's construction, so that module calls it again on the result, which is
     what this one's error message asks for anyway.
+
+    ## `raw` AND `blank_weights`, ADDED 2026-09-14 FOR YEMEN
+
+    `raw={column name: (alias, ...)}` copies a column WITHOUT decoding it, for design variables
+    that carry no value labels (wave V's `psu`, wave III's `bid` block number); `extra` would
+    raise on them. `blank_weights={wave: "the reason"}` lets one named wave through the weight
+    assertion below by filling each blank weight with its PSU's mean (`_fill_blank_weights`); a
+    named wave with no blank weight stops, as a stale `recode` does. Neither changes a country
+    that does not pass it.
     """
     import pyreadstat
 
     want = None if waves is None else list(dict.fromkeys(waves))
+    blank_weights = dict(blank_weights or {})
+    filled = []
     known = list(WAVE_NAMES)
     if want is not None:
         unknown = [w for w in want if w not in known]
@@ -651,8 +696,12 @@ def load(country, expect_waves=None, waves=None, recode=None, omit=None, extra=N
                 "the within-country weight in that wave's codebook and add its name to the "
                 "lookup; never pool an unweighted wave beside weighted ones.")
         wv = pd.to_numeric(sub[wt], errors="coerce")
-        blank = int((wv.isna() & sub[rel].notna()).sum())
-        if blank:
+        blank_rows = wv.isna() & sub[rel].notna()
+        blank = int(blank_rows.sum())
+        if blank and name in blank_weights:
+            wv = _fill_blank_weights(df, sub, wv, blank_rows, name, country, blank_weights[name])
+            filled.append(name)
+        elif blank:
             raise SystemExit(f"wave {name}: {blank} {country} respondents who answered Q1012 "
                              f"have no {wt}. Nothing here fills a weight in; read the codebook.")
         if not 0.98 <= wv.mean() <= 1.02:
@@ -666,9 +715,17 @@ def load(country, expect_waves=None, waves=None, recode=None, omit=None, extra=N
             "category": sub[rel].map(rlab),
             "geo_code": sub[geo] if geo is not None else np.nan,
             "geo_raw": (sub[geo].map(glab) if geo is not None else np.nan),
-            "w": pd.to_numeric(sub[wt], errors="coerce") if wt else 1.0,
+            "w": wv,
         })
         note = ""
+        for col, aliases in (raw or {}).items():
+            src = _col(df, *aliases)
+            if src is None:
+                frame[col] = np.nan
+                note += f"  [{col}: no such column in this wave]"
+                continue
+            frame[col] = sub[src]
+            note += f"  [{col}={src}, undecoded]"
         for col, aliases in (extra or {}).items():
             src = _col(df, *aliases)
             if src is None:
@@ -688,6 +745,11 @@ def load(country, expect_waves=None, waves=None, recode=None, omit=None, extra=N
               + note)
     if not frames:
         raise SystemExit(f"no {country} rows in any wave")
+    stale_bw = sorted(set(blank_weights) - set(filled))
+    if stale_bw:
+        raise SystemExit(f"blank_weights names waves {stale_bw}, which have no blank weight on "
+                         f"an answered {country} row in this pool. A re-release has fixed the "
+                         "weights or the entry was never right; do not delete it unread.")
     out = pd.concat(frames, ignore_index=True)
     out = out[out["category"].notna()].copy()
     out["w"] = out["w"].fillna(1.0)

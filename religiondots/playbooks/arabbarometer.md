@@ -11,7 +11,8 @@ publishes none of it: the survey gives each governorate's mix, and a population 
 - `iq` Iraq: drawn, 18 governorates, waves V, VI-3, VII, VIII on the 2024 census, the religion
   answer composed with the sect follow-up.
 - `lb` Lebanon: closed on this source; the per-governorate mix is a fieldwork quota (`sources/lb.md`).
-- `ye` Yemen: queued; waves III and V only, so decide what replaces the split-half before building.
+- `ye` Yemen: drawn, 21 of 22 governorates (Socotra unsampled), wave V on the Population Task
+  Force's 2025 estimate, the logged sect item composed in; wave III is the replication witness.
 - Closed on the pooled survey: Morocco, Algeria, Tunisia, Libya, Sudan (`sources.md` §11af).
   Saudi Arabia, Mauritania and Bahrain have no `Q1012` answers at all.
 - `cab.py::assert_not_quota` wraps this module's quota test for other surveys.
@@ -24,8 +25,9 @@ publishes none of it: the survey gives each governorate's mix, and a population 
 - On disk at `data/raw/arabbarometer/` (zips and extracted `.sav`), shared, all ten present. The
   module has no command line: `python sources/eg.py --fetch` runs `ab.fetch` and `ab.unzip`.
 - `arabbarometer.py::load(country, expect_waves=, waves=, omit={wave: reason}, recode={raw: new},
-  extra={col: (alias, ...)})` gives `wave`, `wave_no`, `category` (decoded through that wave's own
-  labels), `geo_raw`, `geo_code`, `w`, and each `extra` column.
+  extra={col: (alias, ...)}, raw={col: (alias, ...)}, blank_weights={wave: reason})` gives `wave`,
+  `wave_no`, `category` (decoded through that wave's own labels), `geo_raw`, `geo_code`, `w`, each
+  `extra` column, and each `raw` column undecoded (a PSU: wave V `psu`, wave III `bid`).
 - Build with `OMP_NUM_THREADS=6 MKL_NUM_THREADS=6 OPENBLAS_NUM_THREADS=6 python sources/<cc>.py`.
   `sources/jo.py` is the plain case; `sources/iq.py` adds a second answer column.
 
@@ -99,6 +101,32 @@ publishes none of it: the survey gives each governorate's mix, and a population 
 - **Held-out at few units.** Caught by: `held_out` checks every ordering below `EXACT_PERM_MAX`
   and raises if one reaches the observed r; under seven units it prints that it cannot carry the
   join alone, and does not raise.
+- **One label on two governorates in one wave.** Wave III labels Yemen's 10503 (Amanat al-Asimah)
+  and 10513 (Sana'a governorate) both `Sana'a`; a name join merges the capital into its governorate
+  with every total intact. Caught by: `ye.py::decode_iii` (decodes on the CSO-order code, names and
+  wave II's labels as witnesses). Not checked for other countries; `NORM`'s one-label-per-unit check
+  cannot see two units under one label.
+- **Wave V's sect item is interviewer-logged** (`DO NOT READ, LOG ANSWER`) on one cross-country
+  list. A branch the list lacks is logged under another code (Yemen's Zaydis on code 14 `Alawi`),
+  and a whole governorate can have nobody in a box (Ta'iz 0 of 260 `Just a Muslim`). Caught by:
+  `ye.py::zaydi_geography` for the first; nothing for the second (`E2001B`, the interviewer, is
+  blank, and a PSU split inside a unit replicates a team's habit). Detail: `sources/ye.md` §4-5.
+- **Blank weights on answered rows.** Yemen wave V has 32, all with no recorded gender. Caught by:
+  `load` (stops); `blank_weights={wave: reason}` fills a named wave's from its PSU mean.
+- **Two waves on two cards is not a split-half.** Caught by: `ye.py::replication` (wave against
+  wave on the one quantity both cards measure, exact bar plus a permutation for tied zeros) and
+  `ye.py::psu_test` (`lits.stability` on the drawn wave's PSUs).
+- **`build` finds no room for a tail when the carried answers are all of a unit** (Yemen, 15 of
+  21). Sub-floor answers on the same node as a carried one go in at their unit shares:
+  `ye.py::SAME_NODE`, asserted against the mapping.
+- **A booster sample can sit inside one wave.** Palestine's wave V is 8.78% Christian unweighted and
+  0.95% weighted, with 12 Bethlehem PSUs where all nine interviews are Christian. Counts pooled
+  unweighted, or a split-half on counts, sees a Christian level the weights remove. Caught by: Not
+  checked yet (a per-wave weighted-against-unweighted print belongs in `load`). Detail: sources.md
+  §scout-2026-09-14-asia-oceania.
+- **Palestine's wave III `wt` averages 0.9755**, so `load`'s weight guard stops the country. Read
+  the wave III codebook before passing it. Caught by: `arabbarometer.py::load`. Detail: sources.md
+  §scout-2026-09-14-asia-oceania.
 - **Write an outside level check before building.** Egypt 5.0-7.0% Christian (1986 census
   5.7-5.8%) and Cairo 6-11%; Jordan `CHRISTIAN_BAND`; Iraq `SHIA_OF_NAMED_BAND`. Caught by: those
   assertions in `eg.py::main`, `jo.py::main`, `iq.py::main`.
@@ -126,12 +154,11 @@ Import these, do not copy them.
 ## Rulings
 - `ask/answered/001-eg` (2026-09-08): Egypt drawn at governorate ("governorates are pretty big"),
   which is also the instrument's ceiling. Not decided: Egypt's wave II.
-- Egypt's wave II: `OMITTED` says the pin is Anita's to rule on (adding the wave moves Christians
-  from 6.02% to 5.83% and puts Asyut above Minya on 70 interviews, `sources/jo.md` §9.3). No ask
-  has been filed. Keep the pin until one is ruled.
-- `queue.md` §A (2026-09-08): build `lb`, `iq`, `jo` and `ye`, and decide what to show once there
-  is something to show; not high priority. Iraq's record reads 001-eg as covering Iraq
-  (`sources/iq.md` §8); that is the builder's reading, not a ruling.
+- `ask/answered/020-eg` (2026-09-14): Egypt's wave II stays out ("a very marginal improvement");
+  the pin in `OMITTED` stays.
+- `queue.md` §A (2026-09-08): build `lb`, `iq`, `jo` and `ye`, not high priority.
+  `ask/answered/021-jo` (2026-09-14): Jordan and Iraq confirmed at governorate as built, and Yemen
+  is built the same way. Not decided: sect geography in Egypt; placing Iraq's minorities.
 - `ask/answered/007-cr` (2026-09-09): the split-half bar is the exact 95% null; Egypt and Jordan
   did not move. Not decided: any stricter level, which stays Anita's.
 - `ask/answered/015-bo`: the pooled level stays as displayed, for LAPOP countries only.
