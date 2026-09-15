@@ -1,0 +1,30 @@
+check,cc,key,status,why,reviewed
+unplaced,au,399999499,warn,"No usual address (Qld), 10,744 people. An ABS non-spatial SA2: its SA1 has empty geometry in ABS's own SA1 file, so scatter.py drops the polygon and these people have no location to draw. Not recorded in sources/au* or countries.py",2026-09-14 afaeb3fc-checks-geo
+unplaced,au,199999499,warn,"No usual address (NSW), 7,263 people. ABS non-spatial SA2 with empty SA1 geometry; see the Qld row",2026-09-14 afaeb3fc-checks-geo
+unplaced,au,299999499,warn,"No usual address (Vic.), 5,233 people. ABS non-spatial SA2 with empty SA1 geometry; see the Qld row",2026-09-14 afaeb3fc-checks-geo
+unplaced,au,599999499,warn,"No usual address (WA), 4,370 people. ABS non-spatial SA2 with empty SA1 geometry; see the Qld row",2026-09-14 afaeb3fc-checks-geo
+unplaced,au,499999499,warn,"No usual address (SA), 2,483 people. ABS non-spatial SA2 with empty SA1 geometry; see the Qld row",2026-09-14 afaeb3fc-checks-geo
+unplaced,au,799999499,warn,"No usual address (NT), 2,032 people. ABS non-spatial SA2 with empty SA1 geometry; see the Qld row",2026-09-14 afaeb3fc-checks-geo
+unplaced,au,699999499,warn,"No usual address (Tas.), 1,020 people. ABS non-spatial SA2 with empty SA1 geometry; see the Qld row",2026-09-14 afaeb3fc-checks-geo
+unplaced,au,899999499,warn,"No usual address (ACT), 464 people. ABS non-spatial SA2 with empty SA1 geometry; see the Qld row",2026-09-14 afaeb3fc-checks-geo
+unplaced,au,597979799,warn,"Migratory - Offshore - Shipping (WA), 282 people. ABS non-spatial SA2 with empty SA1 geometry; see the Qld row",2026-09-14 afaeb3fc-checks-geo
+unplaced,au,797979799,warn,"Migratory - Offshore - Shipping (NT), 68 people. ABS non-spatial SA2 with empty SA1 geometry; see the Qld row",2026-09-14 afaeb3fc-checks-geo
+unplaced,au,397979799,warn,"Migratory - Offshore - Shipping (Qld), 38 people. ABS non-spatial SA2 with empty SA1 geometry; see the Qld row",2026-09-14 afaeb3fc-checks-geo
+unplaced,au,297979799,warn,"Migratory - Offshore - Shipping (Vic.), 15 people. ABS non-spatial SA2 with empty SA1 geometry; see the Qld row",2026-09-14 afaeb3fc-checks-geo
+unplaced,au,999999499,warn,"No usual address (OT), 13 people. ABS non-spatial SA2 with empty SA1 geometry; see the Qld row",2026-09-14 afaeb3fc-checks-geo
+unplaced,au,697979799,warn,"Migratory - Offshore - Shipping (Tas.), 9 people. ABS non-spatial SA2 with empty SA1 geometry; see the Qld row",2026-09-14 afaeb3fc-checks-geo
+unplaced,bw,BW120120,warn,"Gootau (BW-serowepalapye-18, Central Serowe/Palapye), 1,010 people. A named locality paired 1:1 with an ADM3 polygon that holds no populated Kontur hex, so the unit is absent from bw_hexes.gpkg; sources/bw_geo.py prints 'ADM3 with no populated hex' and carries on. The fix belongs there: add the polygon as its own cell, as sources/cy_grid.py does for Akrotiri. Not recorded in sources/bw*",2026-09-14 afaeb3fc-checks-geo
+unplaced,nz,192700,warn,"Inlet Tauranga Harbour South, 48 responses. A water SA2 the coastline clip removes; sources/nz_geo.md ('The 84 the clipping removes') says drop them with the residual counted or fall back to the full-layer polygon, and that silently losing them is not defensible. Neither is done yet",2026-09-14 afaeb3fc-checks-geo
+unplaced,nz,100301,warn,"Inlets Far North District, 36 responses. Water SA2 removed by the coastline clip; see the 192700 row",2026-09-14 afaeb3fc-checks-geo
+unplaced,nz,303701,warn,"Inlets Nelson City, 33 responses. Water SA2 removed by the coastline clip; see the 192700 row",2026-09-14 afaeb3fc-checks-geo
+unplaced,nz,306401,warn,"Marlborough Sounds Coastal Marine, 27 responses. Water SA2 removed by the coastline clip; see the 192700 row",2026-09-14 afaeb3fc-checks-geo
+unplaced,nz,110600,warn,"Oceanic Auckland Region East, 21 responses. Water SA2 removed by the coastline clip; see the 192700 row",2026-09-14 afaeb3fc-checks-geo
+unplaced,nz,112001,warn,"Inlets other Auckland, 12 responses. Water SA2 removed by the coastline clip; see the 192700 row",2026-09-14 afaeb3fc-checks-geo
+unplaced,nz,332601,warn,"Inlet Port Lyttelton, 12 responses. Water SA2 removed by the coastline clip; see the 192700 row",2026-09-14 afaeb3fc-checks-geo
+unplaced,nz,147300,warn,"Bays Waiheke Island, 9 responses. Water SA2 removed by the coastline clip; see the 192700 row",2026-09-14 afaeb3fc-checks-geo
+unplaced,nz,400004,warn,"Oceanic Oil Rig Taranaki, 9 responses. No polygon in any Stats NZ boundary set; sources/nz_geo.md ('The 16 that have no polygon anywhere') says drop it explicitly with a note rather than lose it. Not done yet",2026-09-14 afaeb3fc-checks-geo
+unplaced,nz,108400,warn,"Inlet Whangārei Harbour, 6 responses. Water SA2 removed by the coastline clip; see the 192700 row",2026-09-14 afaeb3fc-checks-geo
+grid_floor,la,*,accepted,"Median 6 cells per village over 8,499 villages, 1,055 in one cell. sources/la_grid.py measures the grain and argues for the grid anyway: the units are travel-time catchments grown around a village point, so a single populated hex says where the village is, and the 365 villages with no hex get their own polygon",2026-09-14 afaeb3fc-checks-geo
+grid_floor,mu,*,warn,"Median 8 cells per unit over 182 units. sources/mu_grid.py records Kontur as coarse here (about 11 hexes each) and gives three no-hex slivers their own polygon, but does not weigh the grid against uniform placement as spec §8.2e asks",2026-09-14 afaeb3fc-checks-geo
+grid_floor,to,*,warn,"Median 3 cells per village over 156 villages, 29 in one cell. sources/to_grid.py gives villages smaller than a hex their own polygon but does not weigh the grid against uniform placement as spec §8.2e asks",2026-09-14 afaeb3fc-checks-geo
+grid_floor,fm,*,warn,"Median 5 cells per unit over 33 units. sources/fm.md gives units smaller than a hex their own polygon but does not weigh the grid against uniform placement as spec §8.2e asks",2026-09-14 afaeb3fc-checks-geo

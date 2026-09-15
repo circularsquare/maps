@@ -69,3 +69,12 @@ outright. If the rule is that a node must be a body rather than a self-descripti
 bevindelijk gereformeerde churches proper are inside the `Gereformeerd` cell and are not
 separable from it: Urk's 52.2% is what the answer looks like where the Gereformeerde Gemeenten
 are the local church, but nothing in the table tells them apart from a vrijgemaakte in Kampen.
+
+
+## Ruled 2026-09-11 by Anita
+
+**Keep the three nodes.** `hervormd`, `gereformeerd` and `pkn` stay as leaves under
+`christianity.reformed.continental`. Nothing to reverse; `taxonomy/nl2014.py` is as built.
+
+The review's observation stands as the reason it is cheap: they are L4, the viewer opens at L2,
+and a reader sees a single `Reformed` row unless they expand twice.

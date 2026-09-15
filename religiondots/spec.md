@@ -81,7 +81,8 @@ and the surviving part is stated first.
 - 4.1b People per dot is a setting: two editions, 1:1,000 and 1:10,000
 - 4.2 Zooming out merges dots, it does not drop them
 - 4.2a `tiles.py`, and why not tippecanoe · 4.2b Consolidation is toggleable ·
-  4.2c Draw order is randomised · **4.2d The unmerged dots leave the tile pyramid** — BUILT
+  4.2c Draw order is randomised · **4.2d The unmerged dots leave the tile pyramid** — BUILT ·
+  **4.2e Buried dots are skipped at world zoom** — BUILT · 4.2f Small dots as points — BUILT
 - 4.3 Presence rings: a second grammar that carries no magnitude
 - 4.4 Sources that answer the question backwards — they feed rings
 
@@ -134,15 +135,18 @@ and the surviving part is stated first.
 9a Auto's minimum-dots floor made every country under ~150k invisible to it — FIXED ·
 9b Auto will not enter a country that has none of what is selected ·
 **9c the phone gets a strip and a sheet, and Auto had to be told where the map is** ·
-**9d fill alone is an aspect-ratio trap** · 9d-i OPEN: fill measures the canvas, framing uses the band ·
-**9e the phone sheet, after using it** — a tap gets a 12px reach, the shut header wears the scope line, 40dvh
+**9d fill alone is an aspect-ratio trap** · 9d-i fill measured the canvas, framing used the band — RESOLVED for letting go ·
+**9e the phone sheet, after using it** — a tap gets a 20px reach at every zoom, the shut header wears the scope line, 40dvh ·
+**9f Auto looks for the middle in the top 80% of a phone, and switches only to a country the middle is on** — the Russia flicker, the hull rule
 
 **§10 The tree panel** — 10.0 fixed family order · 10.0a the grey family is contiguous ·
 10.1 what the panel says about itself · 10.2 the settings are segmented pairs ·
 10.3 a share bar per row, and a column of checkboxes ·
 **10.4 one bar for the whole scope, and a hatched segment for what nobody counted** ·
 10.4a half of the undrawn share is computed, and subtracting from a modern population is not ·
-**10.5 one size for every triangle, and the dot-size slider joins the block**
+**10.5 one size for every triangle, and the dot-size slider joins the block** ·
+**10.7 the all-religions legend gets shorter**: families under 1m sink, closed headings for
+Christianity's one-colour groups and for the not-asked pair, only Christianity, Islam and Buddhism divide at L2
 
 **§11 Open questions** — mine to resolve with a prototype; Anita's are in `todo.txt`
 
@@ -162,12 +166,13 @@ is checked and rejected** · **14.14 China is 100% drawn, and a threshold over a
 is not a rule** · **14.15 what is left for China, ranked — and CFPS was the wrong target all
 along, on §3.1 grounds**
 
-**§15 Magnitude without location — the national estimate layer** — DECIDED, NOT BUILT. The fourth
-cell of the dot/ring 2×2: a country outline carrying a quoted national figure for a religion the
-archive cannot place. 15.2 the symbol, and why the dwell was wrong · **15.3 an estimate never
-restates a node the country's own source measured**, which is the whole contradiction class ·
+**§15 Magnitude without location — the national estimate layer** — DECIDED, SCOUTED and BUILT
+2026-09-14, behind a toggle that is off by default. **15.11 is what shipped.** The fourth cell of the dot/ring 2×2: a country outline carrying a quoted national figure for a
+religion the archive cannot place. 15.2 the symbol, and why the dwell was wrong · **15.3 an estimate
+never restates a node the country's own source measured**, which is the whole contradiction class ·
 **15.4 a claim carries its own denominator**, which is what lets several sources stack ·
-15.4a the candidate compilers · 15.5 specificity wins and specificity is the interested party ·
+15.4a the candidate compilers · **15.4b what the scan found**: Pew for totals, the World Religion
+Project for Islam's split only after a hand review, hand rows for the small religions · 15.5 specificity wins and specificity is the interested party ·
 15.6 the tint — OPEN · 15.7 all 201, and the title needs two numbers · 15.8 the world total ·
 15.9 §14 clearance · 15.10 shape, and what is open
 
@@ -467,6 +472,30 @@ The whole change cost 13 mapping lines, three new branch nodes and a re-scatter 
 and **at the map's default depth a reader sees nothing different** — `christianity.oriental` is
 the drawn category at depth 2, so its subtree carries its colour and its row still shows the
 same count. The new rows appear at depth 3, which is where the distinction was worth having.
+
+### 2.7a A large unspecified share is expected, and does not stop a split being drawn — DECIDED 2026-09-14
+
+Anita, on Pew's *Religion in India* (2021) sect question, where "no sect in particular" plus "don't
+know" is 12% of Muslims in the North and 58% in the Northeast: *"we leave the no sect and i dont know
+as unspecified. i think in general even if we have a lot of unspecified, thats fine and expected."*
+
+So a source that names a branch for part of a population and not for the rest is drawn as it answers
+(§2.7): the named share on the branch node, everything else on the parent. **The size of the parent's
+residual is no longer a reason to withhold the named part.** That reverses the half of §11af's Morocco
+argument that turned on "45% undifferentiated" (`sources.md` §11af, and `queue.md`'s Maghreb row).
+
+**What it does not reverse is the other half: the named share still has to mean what the card says.**
+Egypt is the test case (`sources/branches.md`): the Global Flourishing Study's Sunni share replicates
+across 22 governorates at +0.90, and Egypt's Muslims are Sunni, so that pattern is how people label
+themselves rather than a sect geography. A split-half passing is not evidence against that. First
+customer of this rule: India, from Pew's six regions.
+
+**Built 2026-09-14** (`in_split.py`, `sources/in.md` §8): 90.5M Sunni and 8.50M Shi'a, with
+73.2M left on `islam` (Ahmadiyya was drawn, then folded back the same day on Anita's call), including 7.2M where Pew interviewed nobody. **A survey's
+branch shares applied inside a column the census counted are `derived`, not `modelled`.** The
+viewer rolls only `derived` dots back to their column and removes `modelled` ones, so Türkiye's
+tier would have made `inferred dots: not shown` delete 100M Muslims the census counted.
+`modelled` is for places where nobody counted the religion at any level.
 
 ## 3. Counting rules — DECIDED
 
@@ -1806,6 +1835,113 @@ unit size in dense cells at low zoom — and Anita's preference is for the plain
 plain scatter. Worth remembering it exists: it is a continuum between `dots` and `atomic` with one
 parameter, and it would have left the elevenfold duplication exactly where it was.
 
+### 4.2e Buried dots are skipped at world zoom — BUILT 2026-09-14
+
+**The one sentence:** a dot that cannot change the picture because shown dots already cover it is
+not drawn, and that is only ever decided while every dot is shown, so nothing a reader can select
+is ever the thing that goes missing.
+
+**Why.** Anita, 2026-09-14: every religion, every country, most of the world on screen is laggy on a
+phone. It is this map's most expensive frame by a wide margin: six million instances, and at z1 on a
+pixel-ratio-3 phone about 176 million fragment runs if every dot in view were drawn, on a screen
+of three million pixels. Almost all of it is dots painting over dots.
+
+**Why this is not the thinning §4.2 forbids.** §4.2 rejected dropping because the survivors were
+chosen by rank or byte budget, so a small group blinked out in dense places for no reason a reader
+could see, and select it alone and the dots were STILL gone. Here a dot is skipped only if, walking
+the country front to back (last drawn first, which is what the reader sees), the dots already kept
+in front of it hide it to within `LOD_EPS` = half an 8-bit step at every sample point it reaches.
+The picture is the same picture. And the moment the palette hides any node a country carries, that
+country draws its full buffer again, because a hidden dot on top may have been the only thing
+covering one underneath. Select a tiny religion and every one of its dots is there, since nothing is
+on top of it.
+
+**How.** `lodWorkerMain` in index.html, in a Web Worker, per country per zoom level, for this
+screen's `devicePixelRatio` and the size slider's `dotScale` (either changing starts again).
+Transmittance is tracked as 8-bit optical depth on a grid of cells one third of a dot radius across,
+sampled at cell centres with the fragment shader's own alpha profile (0.7 inside, smoothstep over the
+last min(1, r) device px), dot centres snapped to a quarter cell. The kept dots are copied out in
+their original order with the buckets renumbered, so `render()` culls and runs them exactly as it
+does the full buffer. Only countries with a visible bucket are ever sent. Until a level lands the
+full buffer draws, so nothing waits on it. The ladder is z1, 1.25, 1.5, 2, 2.5, 3; a level serves
+the zooms from the one below it up to itself, the direction in which dots only grow over each other.
+Above z3 the full buffer draws: by then a phone holds a region, and the saving is under half.
+
+**Measured, phone 390x844 at pixel ratio 3 (headless SwiftShader), instances drawn culled against full:**
+
+| view | zoom | drawn | share | pixels differing | > 8 levels | max |
+|---|---|---|---|---|---|---|
+| world | 1.00 | 566,748 of 3,319,780 | 17% | 8,606 | 157 | 90 |
+| India | 1.01 | 788,713 of 4,722,717 | 17% | 5,642 | 144 | 63 |
+| Asia | 1.24 | 603,788 of 3,983,821 | 15% | 7,034 | 147 | 161 |
+| Europe | 1.50 | 412,823 of 1,488,768 | 28% | 5,257 | 36 | 58 |
+| China | 1.76 | 704,272 of 3,750,210 | 19% | 4,195 | 50 | 44 |
+| West Africa | 2.01 | 543,383 of 1,389,396 | 39% | 2,582 | 33 | 35 |
+| India | 2.50 | 471,337 of 1,985,949 | 24% | 9,116 | 109 | 138 |
+| Java | 2.90 | 471,144 of 1,382,706 | 34% | 3,610 | 41 | 56 |
+| US | 3.00 | 134,193 of 262,144 | 51% | 3,198 | 4 | 25 |
+
+Out of 2.96 million pixels a frame. Desktop 1400x900 at pixel ratio 1: world z1.3 draws 32% (1,580
+pixels differ, 4 by more than 8 levels, max 19), India z2.2 44% (max 7), Europe z2.8 56% (max 5).
+
+**The differences are the culling's, not the renderer's.** Two captures of the full draw with
+nothing changed differ in zero pixels in three views of four (the fourth by at most 2 levels, in
+the basemap). What the culling leaves is lone device pixels and runs of two to five along a row;
+side by side at 4x the culled and full crops cannot be told apart. `LOD_EPS` and the worker's
+`CPD` (cells per radius) are the knobs if a real screen ever shows otherwise: in node, CPD 4 with 8
+sub-cell positions kept 19.1% at z1 against 17.7%, for about 1.6x the compute.
+
+**How the win was sized, because the first two estimates were both wrong.** A top-5-dots-per-cell
+count said 2.7% visible at z1; exact sampling says 17.7%, because sparse areas keep everything and a
+count ignores them. A version with strictly safe per-cell bounds (nearest and farthest corner, plus a
+margin over each zoom band) kept 73%: at two device pixels of radius a dot's solid core is barely
+larger than a cell, and corner bounds erase it. The A/B pixel diff above is the acceptance test
+instead of a proof.
+
+**Tilt is off** (`maxPitch: 0`), Anita's call the same day: she found it annoying, and a tilted camera
+has more than one scale in view, which this assumes it does not. Rotation stays; the bounds are
+pointwise in world space and do not care.
+
+**On a real phone, the same day.** Anita, with the page served over the LAN to her phone, every
+religion and country shown: *"yeah its a lot better. new version way better than lod=0."* `?lod=0`
+stays as the comparison.
+
+**What is NOT done.** The worker's time on a phone is unmeasured (node on the desktop: about one
+second per level for all 126 countries); it did not show up as a problem. The 1:10,000 edition is not
+culled, being a tenth the size. Context loss drops the culled copies and they are recomputed, which
+has not been exercised.
+
+### 4.2f Small dots as points — BUILT 2026-09-14, ON the same day
+
+**The one sentence:** while a dot is at most 16 device pixels across it is drawn as one `GL_POINTS`
+vertex instead of §4.2d's four-vertex instanced quad, and the pixels come out the same. `?points=0`
+draws quads throughout.
+
+**Why §4.2d's refusal does not bind here.** Both of its reasons are about LARGE dots: the 63-64 px
+point size limit on Mali and Adreno, and a point being clipped whole when its centre leaves the
+screen, which pops a big dot out at the edge. Capped at 16 px (`POINT_MAX_PX`), the first cannot
+happen and the second is a few device pixels at the very edge of the screen. Above the cap, which
+at pixel ratio 3 is around z10, `render()` goes back to quads frame by frame; by then there are few
+dots in view and the quads are cheap.
+
+**Why the pixels match.** A point covers the pixel centres inside a 2r square around the dot,
+exactly as the quad does, and `gl_PointCoord * 2 - 1` at a pixel is exactly the value the quad
+interpolates into `v_corner` there, so `FRAG_PT` is `FRAG` with that one line changed. Hidden dots
+are moved outside the clip volume, since a point cannot be collapsed to zero size. The two programs
+share attribute slots so switching between them frame to frame leaves nothing stale.
+
+**Measured, same harness as §4.2e, phone 390x844 at pixel ratio 3, culling on in both:** world z1
+6 pixels differ, Asia z1.24 4, India z2.5 2, US z3 16, every one of them by exactly 1 level out of
+255. A probe confirmed the point program linked and drew at z1 (radius 2.15 device px) and handed
+back to quads at z12 (17 px).
+
+**On by default, Anita's call the same day,** after comparing `?points=1` against without on her
+phone: *"can't really notice a difference between points=1 and not, but i feel liek its harmless. it
+doesn't look worse so we can keep it."* No visible speed-up on top of §4.2e is what to expect: it
+saves vertex work only (a quarter of it), not fill. If a phone driver ever draws points wrong (older
+mobile drivers are where point sizes have been rounded), `?points=0` is the comparison and
+`usePoints` is the switch.
+
 ### 4.3 Presence marks: a second grammar that carries no magnitude — DECIDED 2026-08-27
 
 **The current rule, as amended 2026-09-03:**
@@ -2410,6 +2546,18 @@ co-occur.*
 it behind a control labelled "no religion" asserts in one click the thing the node exists to avoid
 asserting.
 
+**Laos and Mozambique joined it on 2026-09-14, on Anita's ruling.** Both censuses asked about
+religion and offered a no-religion answer that also took traditional religion. Mozambique's form
+words it `Sem religião (ateu, animista, agnóstico,...)`, 3.74M or 13.9%; Laos defined religion as a
+system with written doctrines, so animism had only `No religion`, 2.04M or 31.45%. The two builds
+had made opposite calls on the same kind of box: Mozambique drew it as `unaffiliated`, Laos as a
+new `indigenous.laos`. Anita: Mozambique *must not be drawn as no religion*, and both are drawn as
+`unknown`, *the same treatment China uses*, until a national source measures the split. What was
+found is recorded in `sources/la.md` §10 and `sources/mz.md` §6 and is not drawn. `indigenous.laos`
+is retired. Both countries' rows stay `measured`, as Vietnam's are, because they are counts at the
+census's own units. A later census whose no-religion box also names a religion has this as its
+precedent.
+
 **What it bought, which is the argument for having it at all.** Vietnam without it draws 15,646 dots
 on an empty country, and §6.12's machinery can *label* that blank but cannot fix it. With it the
 country draws its own settlement pattern in grey — the two deltas, the coastal strip, the empty
@@ -2481,6 +2629,34 @@ cannot do the one job it has.
 **And it is NOT in `NO_RELIGION_IDS`**, for `unrecorded`'s and `unknown`'s reason and more strongly:
 these people were not asked and did not decline, so hiding them behind a control labelled "no
 religion" would assert in one click the thing the node exists to refuse to assert.
+
+#### 6.3a-iv `other` leaves the grey — CHANGED 2026-09-14, Anita's call
+
+Anita: *"maybe recolor 'other' to pale blue-purple or something? it's misleading to have it grey as
+it does reflect actual religions, just not sure what."* The table above already describes `other` as
+*"an actual religion, which the source did not name"*, and `NOT_A_RELIGION_IDS` already leaves it
+out, so the colour was the one place still filing it with the answers about not belonging. It is now
+`hsl(228, 100, 86)`, `#b8c6ff`, a light periwinkle, and the grey family is seven members.
+
+**It went lilac first the same day, then here, and Afro-diasporic moved to make room.** The first
+pass was `#d3c3df`, because the blue-purple asked for sat within ΔE 12 to 18 of `afrodiasporic` (then
+`#aea5f3`) and `unchurched`. Anita: *"it should be significantly more saturated and a little bluer.
+could we move afro-diasporic to a significantly deeper purple, somewhat closer to the indigenous and
+traditional religions?"* `afrodiasporic` is now `hsl(276, 45, 51)`, `#8d4aba`. Its note in index.html
+has the measurements, taken on Umbanda, Candomblé and Vodou, because its children are most of what
+it draws.
+
+**Moving Afro-diasporic did not clear the blue-purple, and what still blocks it is worth knowing.**
+The all-religions view draws the indigenous family's children as pale lavenders, Laos's traditional
+religions (2,038 dots) among them, so a saturated lavender at hue 258 lands ΔE 7 from them in Laos;
+US Judaism's pale blues block the bluer side. Measured against the rows actually drawn and not only
+the roots, the most colourful `other` that clears 25 everywhere is 1.6x the lilac's Lab chroma and
+nearly white. This one is 2x (30.6 against 15.7), with four pairs under 25, all in the all-religions
+view: Orthodox Judaism 22.6 and Conservative 23.8 in the US, Laos's traditional religions 22.7, and
+Reconstructionist Judaism 24.4 (39 dots). Every root pair clears 25. Contrast 11.3.
+
+The legend order is unchanged: `other` still closes the grey run in `ROOT_ORDER`, as the end of that
+scale.
 
 ### 6.4 The middle level — ANSWERED by §6.9, 2026-09-03
 
@@ -2832,7 +3008,7 @@ budget is about reading rather than pixels:
 > able to see everything within those 2 views."*
 
 `computeFold` walks a ladder of thresholds from the gentlest up and stops at the first legend that
-fits two screenfuls of rows. What it settles on, against a 64-row budget on a 1541×964 window:
+fits two screenfuls of rows (two and a half since 2026-09-14, §10.7). What it settles on, against a 64-row budget on a 1541×964 window:
 
 | view | threshold | rows | screens (was 3.11) |
 |---|---|---|---|
@@ -2909,6 +3085,25 @@ every country, which is the property §10.0's fixed order exists to provide. Eve
 top level folds on its size, **including families larger than these are in a given country** —
 Chinese religions keeps its row in the all-countries view while Judaism keeps its by name. The
 asymmetry is deliberate: the six are a reader's index into the legend, not a ranking.
+
+### 6.10d A family of 200,000 people or more keeps its row — DECIDED 2026-09-14
+
+> *"could we actually use a more forgiving threshold for this. i feel like we should be showing
+> bahai and afro diasporic and pagan and shinto. perhaps we set the threshold at 1m."*
+
+§6.10b's ladder had climbed to 7e-4 of the all-countries view, about 4.4m people, so "25 small
+religions" held East Asian new religions (4.1m) and Spiritualism (3.7m) beside Modekngei's thousand.
+One cut serves children and families alike, and a family row is worth far more than a child row.
+
+**It is a cap on the cut, not a new cut.** A flat 1m would fold every family outside the six in any
+small country, which is §6.10a's reason for a view-relative denominator. Families still fold on the
+ladder's share of the view; `ROOT_FOLD_MAX_PEOPLE` only stops that share from reaching past 200,000
+people, which binds in the world view and the largest countries. Children keep climbing the ladder,
+so the legend still shrinks where it can and runs long where it cannot.
+
+**200,000 rather than the 1m suggested**, because Bahá'í is 237k and would have stayed folded at 1m.
+At 200k the all-countries bucket goes from 25 families to 14, all under 160k (Druze, 153k, is the
+largest), and Daoism, Caodaism and Unitarian Universalism come back along with the four named.
 
 ### 6.11 The reader gets the hand overrides too — DECIDED 2026-09-03
 
@@ -3135,7 +3330,8 @@ stops pretending: six colours, one per lineage group, and a group is a thing a r
 **The rows stay.** Four Reformation rows with the same swatch have not lost information — names,
 counts and tree are all still there, and pressing `+` still separates them, because flattening paints
 the *member* and leaves its subtree dividing the group's slice as before. What it drops is the claim
-that Lutheran-vs-Anglican is visible on a world map at 2px.
+that Lutheran-vs-Anglican is visible on a world map at 2px. *(Since §10.7 the rows of each one-colour
+group sit inside one closed heading at L2. They are still rows.)*
 
 **Three tables, three different powers**, applied in this order:
 
@@ -4211,9 +4407,11 @@ had become the reflex: a `place_weight` hook, a per-country extract, a ratio che
 Vincent is the first country where it was **built, measured and thrown away**, and the reason
 is not about Saint Vincent.
 
-**A Kontur r8 hex is about 0.16 km². Saint Vincent's counting tier is the enumeration
-district, whose median area is 0.66 km².** So the grid is roughly four cells across a typical
-unit, and 43 of the 221 units are smaller than a single hex. What that produces, measured:
+**A Kontur r8 hex is about 0.74 km²** (corrected 2026-09-14; this said 0.16 km², see the note
+at the end of this section). **Saint Vincent's counting tier is the enumeration district, whose
+median area is 0.66 km².** So a typical unit is smaller than one cell (the first version said
+four cells across, from the wrong area), and the count of units smaller than a single hex, 43 of
+the 221, was taken against 0.16 km² and is too low. What that produces, measured:
 
 | | |
 |---|---|
@@ -4239,9 +4437,21 @@ opposite failure (India, where the units were too coarse for uniform to be hones
 same trade seen from the other end, and the two together bracket where a grid belongs.
 
 **The practical instruction, before writing a `place_weight`:** divide the median unit area by
-0.16 km². If the answer is single digits, or if a large share of units would come back with no
+0.74 km² (it said 0.16 km² until 2026-09-14). If the answer is single digits, or if a large share of units would come back with no
 hex, do not build the grid — and say in `sources/<cc>_geo.md` that it was measured rather than
 skipped, because the next reader will otherwise assume it was an oversight.
+
+**Correction, 2026-09-14 (session `f95259a4-kontur`): the hex area was about 4.6 times too
+small.** Measured in an equal-area projection (EPSG:6933) on the files in `data/geo/`, Kontur's
+hexes are 0.72 to 0.88 km² depending on latitude, which is H3 resolution 8's published average
+of 0.737 km²; 0.16 km² is nearer resolution 9. The correction makes Saint Vincent's verdict
+stronger, not weaker, and its counted figures (509 hexes, 78 of 219 units with none, the ratio
+spread) were never derived from the area. **The one drawn country whose decision used 0.16 km²
+is Saint Vincent** (`sources/vc_geo.md`, `sources/vc_geo.py`, its `countries.py` note,
+`COMMANDS.txt`, `sources.md` §9ac); those copies of the figure are left as written. Israel
+measured its own hex at 1.17 km², and the Central African Republic and Côte d'Ivoire used
+0.67 km² (`sources/cf_geo.md`, `sources/ci_geo.md`), so none of the three rested on it. No
+decision is revisited here.
 
 **And name what uniform costs.** Saint Vincent's unit areas are skewed by a factor of 6,000
 (0.007 km² to 44 km²), and the largest are the uninhabited Soufrière massif, so uniform scatter
@@ -4914,7 +5124,7 @@ where an odd box shape is cheapest to hit — the Cayman Islands' box is 2.8× w
 framed, nothing else framed, and no rival holding the middle, which is a stronger statement about the
 view than any coverage number.
 
-#### 9d-i OPEN: `viewFill` measures the CANVAS while `flyToCountry` frames the BAND
+#### 9d-i `viewFill` measured the CANVAS while `flyToCountry` framed the BAND — RESOLVED 2026-09-14 for letting go
 
 Found while measuring the above, not yet acted on, because the fix trades directly against the
 complaint that prompted §9d.
@@ -4946,6 +5156,25 @@ latching. Picks then stick on every window shape with no change to eagerness at 
 a country being held about 1.5× further out when zooming away from it — which points the same way as
 the file's own rule that it should be harder to change the legend than to set it. **Anita's call.**
 
+**RESOLVED 2026-09-14, the narrower version.** Anita: *"lets fix it for letting go."* `bandBounds()`
+gives the panel-free band on every layout, and the three release tests in `considerCamera` ask
+`viewFill(cc, bandBounds())`. Latching still goes through `framedIn`, on the canvas, so Auto is
+exactly as eager as it was. On a 1280×1024 window the United States, Canada, Chile, Estonia and
+Indonesia all hold after being picked, at a band fill of 1.00; before, four of the five were dropped.
+On the phone the band and the view were already the same rectangle, so nothing there moved.
+
+What it costs, measured on 1541×964 by zooming out from each country until each rule lets it go:
+
+| country | released at, old rule | released at, now |
+|---|---|---|
+| Estonia | 13° of view | 18° |
+| Poland | 28° | 32° |
+| United States | 103° | 137°, where the continental floor takes over |
+
+The 1.5× estimate was right for countries whose fill binds on width and generous for ones that bind
+on height, because the desktop band gives up more of the window's width than its height. A wide
+country now holds until `tooWide` releases it at 130°.
+
 ### 9e The phone sheet, after using it — DECIDED 2026-09-10
 
 Three corrections from Anita after a while with the built thing. None of them changes what §9c
@@ -4957,7 +5186,7 @@ decided; they are the sizes and the wording that only show up in the hand.
 > to tap on it precisely enough to actually see the tooltip."*
 
 `SCATTER.pick` used the dot's own drawn radius, which at street zoom is under two pixels. Exact is
-right for a mouse and useless for a thumb. It now reaches 12px — a 24px target — **as a fallback,
+right for a mouse and useless for a thumb. It now reaches 20px — a 40px target, raised from 12 on 2026-09-14 — **as a fallback,
 not as a bigger dot**, and that distinction is the whole of it. A dot that actually covers the point
 still wins by §4.2c's rule, the last one drawn, which is the one you can see; only when *nothing*
 covers the point does the reach come into play, and then the **nearest centre** answers, because
@@ -4965,15 +5194,27 @@ covers the point does the reach come into play, and then the **nearest centre** 
 an identical patch of Nebraska at z8, taps landing on a dot go from **30% to 93%**, and 200 picks
 still cost 2ms.
 
-12 and not more: past that it stops being grace. A tap on empty sea would name a dot the reader was
-not pointing at, which is worse than no card.
+**20, and a floor rather than a scale — REVISED 2026-09-14.** It was 12, on the argument that past
+that a tap on empty ground names a dot the reader was not pointing at. Anita weighed it the other
+way: *"i think phone tap reach should be floored fairly high. the issue here is the inaccuracy of a
+tap which is kinda fixed."* A thumb's error is a physical size. It does not shrink with the dots or
+with the zoom, so neither does the reach. 20px is a 40px target, near the 44-48px the phone
+platforms give a tap target. The wrong-dot cost is still there and is bounded by the reach. It does
+not follow the dot-size slider for the same reason: shrinking the target with the dots would help
+least exactly where the dots are smallest. On the same patch of Nebraska, taps landing on a dot are
+now 99%.
 
-**The scan is capped, and that is not a detail.** The neighbourhood searched is `(2·span+1)²` cells
-per buffer and `span` grows as the cells shrink — at zoom 0 a cell is a thirtieth of a pixel, so a
-12px reach is 450 cells and one tap is 800,000 lookups. `PICK_SPAN_MAX` holds it at 48, so low zoom
-keeps the exact radius it always had. That is the right answer there anyway: dots at world zoom are
-packed and a tap lands on one unaided. The cap can never degrade the exact pick, which floors the
-span separately.
+**The reach holds at every zoom, which the first version did not.** That version scanned
+`(2·span+1)²` grid cells with one binary search each, and `span` grows as cells shrink: at zoom 1 a
+20px reach is 320 cells either side, 410,000 searches for one tap. So it was capped at 48, and the
+cap quietly shrank the reach at low zoom, the opposite of a fixed floor. The scan now does one binary
+search per ROW. A cell's key is `row · PICK_CELLS + column`, so one row of the neighbourhood is one
+contiguous run of the sorted index and can be walked straight through: 641 searches at zoom 1, and
+the walk visits only dots inside the square. The cap is gone. Checked against a brute-force search
+over every loaded dot with the same visibility rule, 107 of 107 taps returned the same answer. The
+worst case measured is the all-countries view at zoom 1 with 127 buffers loaded, at 5ms a tap; from
+zoom 3 in it is under half a millisecond. A mouse hover runs the same scan with the dot's own radius
+and can only do fewer searches than before.
 
 **A shut sheet says which legend it is holding, not that it is a legend.**
 
@@ -5001,6 +5242,116 @@ strip and the sheet goes from 275px to 376px. The legend loses about five rows, 
 by folding one rung harder rather than by scrolling further — the budget is an input to the fold, so
 a shorter sheet is a shorter legend rather than a longer scroll. `panelPadding` reserves the same
 fraction, so framing and `viewFill` move with it.
+
+### 9f Auto looks for the middle in the top 80% of a phone, and switches only to a country the middle is on — BUILT 2026-09-14
+
+Anita, three things at once: the phone's centre assumed the legend was open when it can be shut;
+*"i can position myself in a place where it flickers continuously between autoselecting russia and
+all countries"*; and *"it still feels kinda biased toward selecting wide countries. it feels
+especially weird when the wide country like only covers the top part of the screen"*, with a rule
+to go with it: *"we shouldnt switch to viewing a country if it doesn't appear at the literal center
+point of the screen? or like its convex hull doesn't contain the literal center point for island
+countries"*.
+
+**Where the middle is.** Her first answer was the whole phone screen; the same hour she settled on
+*"lets pretend its like half open and only occupies like the bottom ~20% of the screen instead of
+40%"*. So `centreBounds()` is the screen less its bottom `CENTRE_SHEET` = 0.2 on the phone layout,
+whatever the sheet is doing, with nothing taken off the top for the title strip; on the desktop it
+is the whole canvas, which is what `viewBounds` already returned there. The centre point and the
+middle-half box (`viewCentre`, `centreShares`, `viewOverlap`, `viewportTally`) ask it. The scale
+tests (`viewFill`, `viewCover`, `tooWide`) and the picker's framing still use §9c's open-sheet
+band, so picking a country and shutting the sheet does not drop it.
+
+**The flicker was the phone band, and it is gone.** The band's top edge was the title strip's
+MEASURED height, and the title changes with the selection ("Religion in 128 countries" and its
+caveat against "Religion in Russia" and Russia's citation), so choosing a country moved the centre
+it had been chosen by. That was the one phone-only input that moved with the selection, and
+`centreBounds` is a fixed fraction that reads nothing off the page. Measured by walking a grid of
+cameras (world, and a dense patch over Russia) and asking Auto three times at each without moving:
+
+| | old code | new code |
+|---|---|---|
+| phone 390x844, unstable cameras of 6,594 | **21** (Russia along 40°N at z1.75-2.75; the US, Canada, China, Indonesia) | **0** |
+| desktop 1400x900 | 0 | 0 |
+
+**A country is switched to only if the middle is on it.** Where the centre is inside a built
+country's outline, `countryAt` already decided and only that country could be chosen; on the phone
+the old high centre is what let China be chosen with the middle of the screen in Bangladesh, the
+United States with it in Mexico, and Russia with it in Mongolia or China, and the centre change is
+what ends those. The routes that choose a country with the centre over sea or unbuilt ground, the
+dot tally and the tiny-country branch, now also need `centreInHullOf`: the centre inside that
+country's convex hull, built from its outline INSIDE ITS OWN VIEW BOX (so France's hull is
+metropolitan, the United States' has no Hawaii, Russia's stops at 180°E), unwrapped around the box
+for Fiji and Kiribati, with a pad of `CENTRE_HULL_PAD` = 4% of the shorter side of `centreBounds`.
+On the 1400x900 test window, picks the old code made that this refuses: Peru over the Pacific,
+Sweden over Norway (unbuilt at the time), Vietnam out in the South China Sea; there the picks made
+with the centre off every outline went from 16 to 11. Picks it still allows are seas a country's hull
+genuinely covers: Italy over the Tyrrhenian, France over the Channel, China off Hainan, Russia in the
+Gulf of Finland, Thailand over its gulf, Indonesia over the Java Sea. On the phone the same world
+grid (2,940 cameras, final code) made 15 such picks, every one over sea or unbuilt ground and none
+with the middle in another built country; Peru at 80°W 10°S z5 is still among them there, because
+the phone's middle sits higher on the screen and at that zoom lands within the pad of Peru's coast.
+
+**Two corrections the same day, both from a reach test** (frame each country the way the picker
+does, then zoom in around its view-box centre until Auto picks it, three levels at most):
+
+- *Nobody else's hull* was dropped. The first version also refused a point inside two hulls, and
+  Indonesia's Natuna and Anambas islands put Indonesia's hull over the sea between the halves of
+  Malaysia, so Malaysia's framing could never be chosen. Where hulls overlap, the tally's 85% share
+  of dots and `contested` already decide.
+- *The pad* was added. Framed and half a level in, the Solomon Islands missed their own hull by 0.8%
+  and 1.1% of that shorter side, Tuvalu (atolls nearly in a line) by 1.5% and 2.2%, Cyprus (framed
+  over the north, which the Republic's outline leaves out) by 1.9% and 2.7%; the refusals above sat
+  at 5.3% (Peru), 6.6% (Sweden) and 11.6% (Vietnam). 4% is about 16px on a phone and 36px on the
+  test window.
+
+**Reach, final code.** Desktop: the same five countries are not reached before and after (Chile,
+Croatia, Kiribati, Norway, Vietnam, each framed with its centre on a neighbour or open sea), and no
+country's latch zoom moved. Phone: those five plus Laos before and after, and **Malaysia and Tuvalu
+newly not reached by zooming straight in**. Both view boxes centre on sea, and the phone centre now
+sits about 43px below where the picker frames a country (the framing still targets the open-sheet
+band), which puts Malaysia's centre where Indonesia's dots crowd the middle box and Tuvalu's off its
+16px pad. Both are chosen once their own land is at the centre. For the same reason several countries
+latch later on the phone: Canada at +2.75 levels past framing instead of +1, Russia at +1.25 instead
+of +0.25.
+
+**On its land picks it, and its dots on screen keep it — the same day.** Anita: *"i guess we should
+select convex hull *or* its literally over the country's land ... i do want zooming on hawaii to focus
+on the US, for instance."* On land that already held: `countryAt` answers from the whole outline,
+Hawaii's and Réunion's included, and never asks the hull, so the Big Island, Oahu, Alaska and Réunion
+all picked their country on both layouts. What did not hold was KEEPING it. Over sea or unbuilt
+ground the release test let go on `viewOverlap`, which measures the country's opening view box and
+scores 0 anywhere near Hawaii.
+
+*Tried and withdrawn the same afternoon:* a hull for every island group lying outside the view box
+(Hawaii, the Galápagos, the Azores, grouped within 4 Mercator degrees), standing in for the overlap
+proxy. It picked the United States over the sea between the islands, but only kept it while the
+middle stayed within that small hull and a 16px pad, so on the phone it still dropped almost at
+once. Anita: *"i feel like maybe this is just overly complicated now and maybe mostly a regression.
+hawaaii does select, but on mobile it also jumps away from being selected quite quickly ... since
+theres nothing else around, i feel liek the correct thing to do here is to hold on to the USA
+selection for a while"*.
+
+**What replaced it is one rule, `dotsOnScreen`:** the overlap proxy only lets go once none of the
+country's dots are left anywhere on screen. Another country taking the middle (`outweighed`, the
+shapes branch) and zooming out (the fill and span tests) still release it. Picking is unchanged from
+the hull rule above: the middle on the country's land, or over sea inside its main hull. Measured by
+picking the United States on Oahu at z6, then:
+
+| | phone, before | phone, after | desktop, before | desktop, after |
+|---|---|---|---|---|
+| pan east | dropped at 100px, all of Hawaii on screen | kept until the last US dot left, 500px | dropped at 150px | kept past 750px, the end of the test |
+| zoom out | dropped at z5.25 | kept to z1.5, the end of the test | dropped at z2.75 | unchanged |
+| pan 60px off the island, then zoom out | dropped at z4.5 | kept to z1.5 | dropped at z2.75 | unchanged |
+
+Arriving cold with the middle over the sea between the islands still picks nothing; the United States
+is picked once the middle crosses an island, and held from there. The reach test is unchanged on the
+desktop (the same five countries not reached, no latch zoom moved) and on the phone (the same eight).
+
+**Not done.** The picker's framing and Auto's centre disagree by those 43px on the phone; aligning
+them would move a picked country down and tuck its bottom under the open sheet, which is a call for
+Anita. A big concave country's hull is coarse: Russia's is 26 points and covers the middle of the
+Caspian, and over the Åland Sea the dot share picks Sweden where the islands are Finland's.
 
 ## 10. The tree panel, and the genealogy drawn on it
 
@@ -5501,6 +5852,164 @@ taller, so `#legend-note` takes 19px more of the panel and the desktop row budge
 60. The all-countries view moves from 1.86 screens to 1.92, still inside §6.10b's two. The strip on
 the phone loses 36px, which goes back to the map.
 
+### 10.6 Resting the pointer on a country shows what it is made of — BUILT 2026-09-14
+
+> *"if we have a religion selected like "islam" and we hover over a country (but not a dot in that
+> country) and stay still for a bit, like 0.5s, we show a tooltip thats like this country is x%
+> islam. and then show breakdown of subcategories if thats available (like 46% sunni, 52% shia or
+> whatever). or if theres a lot of subcategories we show the top 5 subcategories in order, or as many
+> down tlike 1% of the domain. i suppose we can also do this if we have all religions visible. we can
+> just show the top 5 religions in this country that have >1% of the country. if we only have certain
+> things selected in viewing by like manualyl checking religions that are visible, we can just show
+> the top religions that are checked and visible."*
+
+**This is a dwell, and §15.2 turned one down.** That was for the estimate card, on the grounds that
+the ground already answered hovers at once and that a dwell does not exist on a phone. This card is
+asked for as a dwell, and it keeps §15.2's order on the same pixels: a dot under the pointer answers
+first, then an outlined country's estimate, and only where neither does, this.
+
+- **Half a second, with 4px of slack**, so a hand resting on the mouse does not restart it. Any
+  camera move puts it away and it does not come back until the pointer moves and rests again.
+- **A tap does not wait.** Anita, on a phone the same day: *"it brings it up half a second after
+  tapping. i guess on mobile we can just have it pop up instantly."* A tap reaches the map as the
+  mousemove a browser sends after the touch ends, so a move within a second of a touch shows the card
+  at once, and a touch laptop's mouse still waits.
+- **Two denominators, as §10.4 has.** The selected religion is a share of the country; its divisions
+  (the selected node's children) are shares of the religion, under a quiet "share of Islam" line.
+  With nothing selected the families are shares of the country. The top 5, stopping early under 1%.
+- **Every line carries its people too**, in the legend's rounding, after the share. Anita, the same
+  day: *"lets also give the number of people. hover over iraq see shia 45% and 21m."*
+- **The rows follow the tickboxes and the percentages do not**, §10.3's rule. A partly hidden row is
+  replaced by its visible parts, so "hide all, tick Baptist" reads Baptist rather than Christianity.
+- **The selected religion's own dots are an `unspecified` row**, as in the legend, but only when the
+  country divides it above the cut: Pakistan's Islam, divided only by slivers under 1%, gets the
+  religion's line and no rows rather than "unspecified 100%". MERGE_OWN still puts Catholic's own
+  dots on Latin Catholic.
+- **The key is a colour only where the row is one colour on the map**, and blank otherwise, §6's rule.
+- **Only the country being drawn.** In a one-country view a neighbour's dots are not on the map, so
+  it gets no card.
+- **Shares are of the people the source counted**, the drawn total, so Peru's under-twelves are
+  outside them, as they are outside the legend's.
+
+### 10.7 The all-religions legend gets shorter — BUILT 2026-09-14; order KEPT as built
+
+> *"i feel like the biggest issue with the legend currently is that u just have to scroll down too
+> far to see some big religions. like i feel like 'chinese religions' being 40m people should
+> probably not require scrolling all the way down."*
+
+Measured at 1541×964 in the all-countries view: 60 rows, 2.06 screens, and **Chinese religions
+(41m) was row 56**, below Bahá'í (237k) and Daoism (302k). Four changes, all in the viewer, none of
+them touching a colour on the map except the two families in the third:
+
+- **Families under 1m people sort after the rest.** *"i think we could drop all the <1m religions
+  down to the bottom."* The six and the grey run keep their places; the hue-ordered tail splits into
+  families of 1m or more and then the rest, each half still in hue order. The size is the **whole
+  archive's** (`ROOT_WORLD_PEOPLE`, off counts.json's world tally), not the view's, so the order is
+  the same in every country, §10.0's reason for fixing it.
+- **Closed headings, a legend layer and not a taxonomy one.** *"maybe we introduce another layer
+  between christianity L1 and L2? something that groups the 2 orthodoxes, the 4 restorationists."*
+  With nothing selected and at L2, each of Christianity's one-colour lineage groups (§6.14's
+  `OVERVIEW_FLAT`) becomes one closed row carrying that colour, with the member rows inside. Catholic
+  keeps its own row (it has its own colour through `OVERVIEW_ARC`) and `No single line` is not
+  grouped (it is not one colour). The labels name what a reader looks for rather than the line of
+  descent, because `.lb` ellipsises at 159px: Orthodox churches, Reformation, Baptist and Anabaptist,
+  Methodist and Pentecostal, Restorationist and Adventist, Locally founded churches. The tooltip
+  lists every member. At L3 the members' children take colours of their own, so the headings go.
+  The second kind is `ROOT_GROUPS`, a hand list: *"myanmars not enumerated and germanys religion not
+  recorded could maybe be merged into one parent"*, now **Not asked or not counted**. Its members keep
+  their own greys, so the mark is blank, as on §6.10c's bucket. `unknown` stays out: those people
+  were asked (§6.3a-ii). No heading forms around a selected member, and a lone member is a plain row.
+- **At L2 with nothing selected, only Christianity, Islam and Buddhism divide** (`OVERVIEW_DIVIDED_L2`);
+  every other family is one colour and starts closed. It began as two names, Indigenous and
+  traditional religions and Spiritualism (*"its silly to expand it just to see 'unspecified' and
+  kardecist"*; *"show the purple dot next to indigenous and traditional religions parent … we can
+  merge all the colors to one color for this all religions L2 view"*), and became the rule the same
+  day: *"we should start judaism collapsed. also east asian new religions start collapsed. only ones
+  open are christianity, islam and buddhism."* It is a list of the three that open, so a family that
+  lands later follows the rule unnamed. It holds in country views too, so a colour does not change
+  when Auto moves from the world into a country (§6.8). The cost there: Israel's four observance
+  groups, the US's Jewish movements, Mauritius's Hindu communities, and Brazil's Umbanda and
+  Candomblé are one row each at L2. Their overview colours were tiers of one hue already (ROOT_BAND's
+  notes on Judaism and Hinduism), and they come back at L3 or on selecting the family. `other` stays
+  in `OVERVIEW_LEAF`, one category at every depth. `check_overview.py` reads both sets out of
+  index.html.
+- **A heading's members do not fold (§6.10).** Inside a closed heading they cost no row, and folding
+  would swap the group's colour for Christianity's yellow. Hussites are drawn as Reformation.
+
+A heading's open state survives the panel's rebuild (`OPEN_GROUPS`) and `legendRows` counts it.
+Checked headless: the heading checkbox hides and restores every member, the headings go at L3 and
+under a selection, the row model matches the render in every view tried (world, US, Germany, India),
+and every heading's members draw in its swatch colour.
+
+**What it bought was less than it looks, and the reason is §6.10b.** Christianity went from 20 rows to
+15, Indigenous from 4 to 1, Spiritualism from 3 to 1, the grey pair from 2 to 1. The ladder then spent
+the room: the cut fell from 0.15% to 0.03% and Judaism's Israeli rows, Umbanda, Theravada, Hòa Hảo,
+East Asian new religions' children and United churches came out of their buckets. **Still 60 rows and
+2.06 screens, and Chinese religions moved from 56 to 53.** The legend now carries more detail in the
+same height; it did not get shorter.
+
+**What would have moved it, measured and not taken**, in one page by reordering `ROOTS` in place (54 rows
+in that run, so the numbers compare with each other, not with the 60 above; about 30 rows fit on the
+first screen):
+
+| order | budget | rows | Chinese religions | Indigenous | No religion |
+|---|---|---|---|---|---|
+| as built: six, grey, 1m+ by hue, rest | 2 screens | 54 | 48 | 39 | 32 |
+| 1m+ by size, after grey | 2 | 54 | 38 | 39 | 32 |
+| 1m+ by hue, above grey | 2 | 54 | 42 | 33 | 44 |
+| 1m+ by size, above grey | 2 | 54 | 32 | 33 | 44 |
+| as built | 1.5 | 43 | 37 | 31 | 24 |
+| 1m+ by size, above grey | 1.5 | 43 | 24 | 25 | 33 |
+
+Each of the three reverses an earlier call of Anita's (hue order in the tail, §10.0's 2026-09-07
+note; the grey run straight after the six, §10.0a; two screens, §6.10b). She kept the order as
+built: *"i think the current ordering is pretty good as is actually."*
+
+**The three-family rule, added the same day, is what shortened it.** With only Christianity, Islam
+and Buddhism dividing at L2, the all-countries legend is **52 rows and 1.79 screens with the cut at
+its floor**, so nothing folds for lack of room; Chinese religions is row 45, and `check_overview.py`
+counts 75 drawn categories in that view against 92.
+
+**Then three Christian rows, and the budget**, the same day, on the `No single line` rows the
+headings had left standing:
+
+- **United and uniting churches join Reformation** in LINEAGE (*"uniting maybe we can move to
+  reformation"*), so at L2 they sit inside that heading, in its colour. Every union on the map is
+  built on Presbyterian or Congregational churches with Methodists beside them (Australia, Zambia,
+  the UCCP, the Kyodan, Jamaica, the Solomons). Descent only: the node stays a direct child of
+  `christianity`, so no Reformed or Methodist count includes them.
+- **Adventist, Baptist or Apostolic is retired.** *"i really dont like cuz it only covers one
+  relatively small african country. could we move it into 'other christian' maybe?"* Malawi's
+  merged `Seventh Day Adventist/Baptist/Apostolic` cell (1,644,829 people) now maps to
+  `christianity.other`, and the node, its LINEAGE entry and its focus pin are gone. The argument
+  that had kept it a node, and the Shire-highlands geography behind it, stay in
+  `taxonomy/mw2018.py` and `sources/mw.md`.
+- **Evangelical, unspecified stays one node, because the split asked about is not clean.** *"if it
+  really is significantly different between the americas and africa... maybe we should just split
+  it into two nodes"*. It is not different along that line. Seven Latin American surveys print
+  `Evangélica y Pentecostal` as one cell, and so does Mozambique (`Evangélica/Pentecostal`). Kenya's
+  `Evangelical Churches`, 20% of the node, is the Africa Inland Church and the Baptists together with
+  the Pentecostal Assemblies of God and Deliverance Church. Côte d'Ivoire's covers the mission
+  churches and the Pentecostal assemblies without separating them, and Angola's is the Congregational
+  and Synodal mission churches, printed beside separate Baptist and Pentecostal boxes. A split by
+  continent would file some country's Pentecostals as Baptists or its Baptists as Pentecostals,
+  which is §2.6's rule broken twice. Anita, on reading that: *"ok sure we can keep evangelical
+  unspecified."*
+- **The budget is 2.5 screens** (`BUDGET_SCREENS`): *"we can widen the '2 times scroll cap' to like
+  2.5x."* After all of the above and a rebuild of the tail, the all-countries legend at 1541×964 is
+  50 rows and 1.72 screens against a budget of 72, with the cut at its floor.
+
+**What the node removal moved in the palette**, measured by dumping both tables before and after.
+Pinned colours did not move. The generated focus wheel did, as it does whenever a level-1 node is
+added or removed anywhere: 88 unpinned nodes changed tier, among them Judaism's and the indigenous
+family's children as seen on selecting those families, and New Apostolic by 12° of hue. In the
+overview, Reformation's fifth member shifts the tier of every Christian sub-branch after it by one,
+which shows only at L3 (Southern Baptists, Assemblies of God, the United Methodists). United itself
+moves from hsl(70,87,47) to the Reformation swatch. And `No single line` losing two members slid
+Non-denominational from hue 71.4 to 70.2, taking the US pair against the Methodist-and-Pentecostal
+swatch from dE 11.2 to 10.8 in `check_overview.py`; a `PIN_OVERVIEW` holds it at the old colour.
+The 11.2 was already under the checker's within-family 12 and is left as it was.
+
 ## 11. Open questions
 
 Design questions for Anita are in `todo.txt`. The ones that are mine to resolve with a prototype:
@@ -5542,7 +6051,11 @@ the entries below cost an hour each and would have cost five minutes to read. Ke
 shrinks the rate of new tricks will drop, which is fine — **a short section that stays true is better
 than a long one that rots.**
 
-`COMMANDS.txt` has the runnable checklist. This is the reasoning behind it.
+`COMMANDS.txt` has the runnable checklist. This is the reasoning behind it. **`playbooks/` has the
+short, current form of this section**, one file per route (`census_table`, `ess`, `lapop`,
+`afrobarometer`, `arabbarometer`, `cab`, `lits`, `wvs`, `dhs_mics`) plus `geography`, written
+2026-09-14. Read yours first. Where a lesson below disagrees with a playbook, the playbook was
+written later from the current code.
 
 **YOU ARE PROBABLY NOT THE ONLY SESSION ADDING A COUNTRY RIGHT NOW, AND THAT IS BY DESIGN.** Anita
 runs two or three agents at a time on this directory — her words, 2026-09-07: *"im generally
@@ -5556,9 +6069,12 @@ rather than as something to investigate or stop for:
   wholesale**; that is the only move here that actually destroys someone's work.
 - **A country you did not add can appear in `COUNTRIES` mid-session.** That is why the build list
   is derived and never pasted (see below, and `sources.md`'s note on the generator).
-- **§9-series letters in `sources.md` are claimed first-come.** Check the existing headings
-  immediately before you write one; §9ag and §9ah were taken between drafting and appending on
-  2026-09-07, and there are already two §9ac's.
+- **`sources.md` record sections are keyed by country, since 2026-09-14:** `## <cc>-<YYYY-MM-DD>.
+  <title>`, with `b`, `c` for a second one the same day, cited as `sources.md §<cc>-<YYYY-MM-DD>`.
+  Scout sweeps are `## scout-<YYYY-MM-DD>-<region>.`. The old §9 and §11 letters were claimed
+  first-come and collided (§9ag and §9ah taken between drafting and appending on 2026-09-07, two
+  §9ac's, two more collisions on 2026-09-14); existing sections keep their letters and no new
+  letters are added. `python tools/where.py <cc>` lists a country's sections under both schemes.
 - **The taxonomy is shared, so another session's node rename can invalidate YOUR already-scattered
   dots.** `buffers.py`'s `WARNING: n node(s) not in religions.json` is the only signal, and it
   means "some country needs re-scattering", not "re-run `build_tree.py`".
@@ -8286,6 +8802,959 @@ qualifying labels with the reason written down (`sources/iq.py`'s `COMPOSED`). T
 family as `[[reference_pooled_survey_labels]]` and the one member of it that no automatic check
 can reach.
 
+### A SURVEY PROGRAMME'S FAMOUS INSTALMENT IS NOT ITS ONLY ONE — Japan, 2026-09-11
+
+NHK runs 日本人の意識 every five years and it is the survey everyone means. It is national and its
+religion questions are about practice. NHK also ran **全国県民意識調査** twice, in 1978 and 1996,
+at 900 targeted respondents in **every one of the 47 prefectures** — and that one asked which
+religion or sect, with nine named options. §11q had checked the famous one, recorded "national",
+and closed the self-ID side of a country on it.
+
+**Ask what else the same organisation has ever fielded, by name, before writing a survey house off
+as national-only.** A one-off large-sample regional edition is a normal thing for a broadcaster or
+a newspaper to do once and never repeat, it is exactly the shape this project wants, and it is
+invisible to a search for the series everyone cites. The tell in Japan's case was a secondary site
+plotting a map nobody could source.
+
+### A TRANSCRIPTION FULL OF `~` IS A PICTURE SOMEBODY MEASURED WITH THEIR EYES — Japan, 2026-09-11
+
+English Wikipedia carries a full 47-row **"Organised religious affiliation in Japan by prefecture
+(1996)"** table. It looks like the country solved. Its single reference is a Japanese data-blog
+page which publishes the figures **only as an 815×655 GIF of a stacked bar chart**, and the
+Wikipedia cells give it away: `~2%`, `~3%`, `~0`, over and over, because only the largest two or
+three segments per bar carry a legible label.
+
+**Read the cells of a downstream table before treating it as data.** Approximation markers, values
+that repeat across every row of a column, and a reference chain that ends at an image rather than a
+release all say the same thing — and the one figure that survives being eyeballed is the big
+category, which is usually the one you least needed.
+
+### A WP FILE DOWNLOAD INSTALL IS INVISIBLE IN `wp-json/` — Nauru, 2026-09-11
+
+A previous session recorded that `stats.gov.nr` had **no WP File Download plugin**, which sent
+it away from the one route that worked. The reasoning was sound: the site is plain WordPress
+with an open REST API, and `wp-json/`'s namespace list is `wp/v2`, `divi/v1`, `oembed/1.0`,
+`duplicate-post/v1`, `wp-statistics/v2` and core internals. **That is exactly what a site with
+no document plugin looks like, because the plugin registers no REST namespace at all.** There
+is nothing in the API index to find, and `wp/v2/media` returns 48 items and one non-image file,
+which reads as an office that publishes nothing.
+
+The plugin was there. `task=files.getFiles&id=0` returned all **131 files**, the 2021 census
+among them.
+
+**Fetch the rendered page body before drawing any conclusion from an API index.** One `curl` of
+the documents page and one grep settles it:
+
+```
+grep -o 'wpfdajaxurl\|action=wpfd' page.html
+```
+
+`[[reference_wpfd_sweep]]` already says the download URLs are usually printed in the page
+bodies and to try that first. This is the same instruction with the reason attached, and it
+generalises past this one plugin: **an API index enumerates what registers itself with the API,
+which is not the same set as what the site serves.** A negative drawn from `wp-json/`,
+`/api/`, a PxWeb tree or an SDMX dataflow list is a statement about that index.
+
+### A QUESTIONNAIRE CAN MAKE A TABLE DEEPER THAN THE QUESTION, AND THE TABLE WILL NOT SAY SO — Nauru, 2026-09-11
+
+Nauru's 2021 census religion question offers **ten** pre-coded answers, one of which is `Other
+religion` with a free-text box. The published table prints **nineteen** rows. The extra nine are
+the office's back-coding of those write-ins, and the people still in `Other religion` are what
+it did not code.
+
+Nothing in the table hints at this, and two readings change once you know:
+
+* **The back-coded names are respondents' own words, not an office classification.** Nauru's
+  table carries `FOM Pentecostal Church` and `Fishers of Men Church` as separate rows for what
+  is almost certainly one body, because two people wrote it two ways. Map them to the same node
+  and do not merge them in the source module: merging edits the office's own partition.
+* **The residual is a coding tail, not a sampling tail.** Nauru's `Other religion` is 0.84%
+  where the same cell runs several percent in most censuses of that size. **A very small
+  residual is evidence of effort, not evidence of a homogeneous country**, and reading it as
+  the latter overstates how settled the country is.
+
+`[[reference_census_questionnaire]]` says the questionnaire is the only thing that catches a
+mislabelled column. This is the same tool catching the opposite: a column labelled correctly
+that means something different from what it looks like. **Read the form whenever a table has
+more categories than a census usually pre-codes**, which for a small country is roughly
+anything past a dozen.
+
+### A PERMUTATION NULL THAT SHUFFLES ABOVE THE RESAMPLING UNIT IS THE IDENTITY, AND IT FAILS AS A CLEAN RESULT — Belgium, 2026-09-11
+
+§14.16's split-half was brought to an ESS country for the first time with Belgium (§9cy). ESS's
+API returns cross-tabs and no PSU, so the resampling unit had to be the **round**: seven rounds,
+35 three-against-four splits, statistic = the median Spearman of a category's share across the
+eleven provinces.
+
+The first version drew **one** permutation of the province labels and applied it to the whole
+cube. That is a global relabelling of the map. It is applied to both halves of every split
+alike, so it moves no rank correlation at all, and the null came out **identical to the observed
+statistic to three decimals**: every category scored exactly `p = 1.0000` and the table read as a
+clean negative result — this survey cannot place anybody — rather than as a bug.
+
+**The rule.** A permutation null has to shuffle the labels **within each resampling unit,
+independently**, because the thing it is trying to destroy is the agreement BETWEEN units. Shuffle
+anything the two halves share and you have permuted nothing.
+
+**The tell is the identity, and it is worth looking for by name.** A null whose 95th percentile
+sits on top of the observed value for *every* category at once is not a weak signal; nothing
+about a real dataset makes nine categories of wildly different sizes agree with their own null
+to three decimals. The same shape appears whenever a resampling scheme is written one level too
+high, and a test that returns p = 1 everywhere is the friendlier version of the failure: the
+dangerous one returns p = 0 everywhere and licenses everything. Print the null quantile beside
+the observed statistic rather than only the verdict, which is what makes this visible at all.
+
+### A BOT WALL CAN ANSWER HTTP 200, AND A HEADLESS BROWSER'S OWN USER-AGENT CAN MAKE IT WORSE — Belgium, 2026-09-11
+
+`statbel.fgov.be`, `data.gov.be` and the Belgian federal estate run **F5 Shape (TSPD)**. Three
+things about it are not specific to Belgium:
+
+* **It returns 200 with a JavaScript challenge**, a ~5.6 kB stub carrying `window["bobcmn"]` and
+  a `/TSPD/` script tag, on every path including static file directories. A fetcher that checks
+  the status code records a success and a plausible `Content-Length`, which is
+  `[[reference_pdf_truncated_at_source]]` one layer up. **Check the body, not the code**: a
+  response of a few kilobytes where a page was expected is the signature.
+* **§9cp's fix does not generalise.** Costa Rica's Akamai wall keys on header COMPLETENESS and
+  opens to a full browser header set. This one does not, and neither does `[[reference_dead_stats_office]]`'s
+  browser-UA retry. When a full header set still fails, the wall is executing JavaScript and only
+  a browser will do.
+* **Headless Chrome makes it worse before it makes it better.** `--headless=new` still reports
+  `HeadlessChrome/<version>` in the User-Agent, and the wall escalates that from a solvable JS
+  challenge to an **image CAPTCHA** — which reads as a harder wall than it is and is the point at
+  which a session gives up. Override it: `--user-agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64)
+  AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"` gets through on the
+  first navigation. `--dump-dom` is still not enough, because it captures the challenge page
+  before its reload; drive CDP, `Page.navigate`, wait about ten seconds, `DOM.getOuterHTML`. That
+  is `[[reference_headless_map_screenshots]]`'s rig pointed at a wall instead of at a map, and
+  `websocket-client` needs `suppress_origin=True` or Chrome refuses the socket with a 403.
+* **The Wayback CDX fallback is not always there.** A regex filter over a whole domain 504s on
+  large sites, with and without `matchType=domain`, so `[[reference_dead_stats_office]]`'s second
+  route can be unavailable exactly where it is most wanted.
+
+And one Drupal detail worth carrying to any Drupal site: Statbel's search parameter is
+**`search_api_fulltext_block`**. `search_api_fulltext`, which is Drupal's usual name and what the
+URL looks like it should take, is **not an error** — it is ignored, and the page returns the
+entire index with a result count that reads like a very large number of hits. **Read the form's
+own `name=` attribute out of the rendered DOM before trusting a query-string convention.**
+
+### A COMMISSIONED TABLE LIVES ON THE CUSTOMER'S WEBSITE, NOT THE OFFICE'S — Sweden, 2026-09-11
+
+§9cu made an office's custom-table shelf the first thing to check before building any country
+from a survey, and it named SCB's *beställd statistik* as Sweden's. **Sweden has no shelf**:
+`scb.se`'s ordering pages are six services all framed as bespoke paid work, with no archive of
+past specialbearbetningar and no `maatwerk`-style URL space, and a site search for
+`trossamfund` returns civil-society accounts and occupational median ages. Underneath it is
+structural rather than editorial — Sweden registers nobody's religion, so SCB has no variable
+to tabulate, which is the exact opposite of CBS, whose labour-force survey asks 460,000 adults.
+
+**And the commissioned religion tabulation exists anyway, on the church's website.** The Church
+of Sweden's `Medlemsutveckling` PDF says in its own header that its population and membership
+figures are *"framtagna av SCB på uppdrag av Svenska kyrkan"*: 5,627,932 members at 31/12/2021,
+exact, per parish, kommun and län. §11k's closure line was *"Sweden. SCB carries nothing"*,
+which is true of the catalogue and false of what the office produces.
+
+> **Search the office and you find what the office published. A table it was paid to produce
+> for somebody else is on that somebody's site.** So when a country has an organised religious
+> body, a grant-paying agency or a federation, look there before closing the register tier —
+> and read the fine print of any table they publish, because it names who made it.
+
+### ONE SPLIT-HALF IS A DRAW, NOT A STATISTIC — Sweden, 2026-09-11
+
+§9bi's test ranks the units on one half of the waves and again on the other. **Where the
+resampling unit is a survey ROUND there are few enough of them that which halving you pick
+decides the verdict.** Sweden pools four ESS rounds over 21 län, and `Svenska kyrkan`, 23% of
+the country, scores:
+
+    {5,7} vs {6,8}   +0.125     fails a +0.3701 bar
+    {5,6} vs {7,8}   +0.434     passes
+    {5,8} vs {6,7}   +0.458     passes
+
+Same data, same units, same category, three verdicts. **Take the median over every distinct
+split and compare it to a permutation null**, which is §9cy's construction, written for Belgium
+the same day and reused unchanged by `sources/se.py::_stability`. With a chronological halving
+the answer is whatever the calendar happened to arrange. This also silently produced a wrong
+conclusion about which NUTS level to draw Sweden at, which §9cz corrects.
+
+**The same rule applies to the LAPOP and barometer modules whenever the wave count is small.**
+They split by PSU and have many, so they are safer; a country with three or four waves and no
+PSU is not.
+
+### A RANK TEST CAN BE PASSED BY A COLUMN THAT IS MOSTLY ZERO — Sweden, 2026-09-11
+
+Two Swedish categories on **21 and 23 respondents** cleared §9cy's round-split permutation test
+at p = 0.018 and 0.022. Their spatial chi-squares over the same 21 län are **0.32 and 0.40**:
+the survey cannot tell the units apart for either of them at all.
+
+**A Spearman over a column that is zero in most units is decided by how the ties break**, and
+permuting the unit labels of that same column reproduces the tie structure, so the permutation
+null is not protective against it either. A small category does not merely lose power against a
+rank test; it can be *passed* by one. With ten categories at alpha 0.05 you expect half a false
+pass, and these were two.
+
+> **Pair the rank test with the spatial chi-square, and require both.** §9bi already says to run
+> the chi-square before proposing an override — *"if the units do not differ, there is nothing
+> to draw"* — and the same sentence works as a veto on a pass. Adding it can only make a
+> category fail, so it is not the forbidden move of tuning a bar until something passes.
+
+It also does the job `lapop.ELIGIBLE_FLOOR`'s 1% size gate was doing, and does it for the right
+reason: **size is eligibility, the chi-square is evidence.** Sweden's free churches are 2.0% of
+citizens on 130 respondents and pass both, coming out at 7.71% of Örebro against 3.05%
+nationally; a size threshold that refused the two noise passes would have had to refuse them too.
+
+### NESTED UNITS: EACH CATEGORY AT ITS OWN LEVEL, EXCEPT THE RESIDUAL (Sweden, 2026-09-14)
+
+Where survey units nest (Swedish län in riksområden, Italian regioni in ripartizioni), the
+level is not one choice for the whole country. **Give each category the finest level at which
+it passes, and apply a coarse unit's share inside each fine unit** (`sources/it.py::_composition`,
+`sources/se.py::_compose`). Sweden's free churches pass only at the 21 län, where NUTS 2
+reverses them, and its Catholics and Orthodox only at the 8 riksområden.
+
+**The exception is the big category that closes the partition.** Sweden's `No religion` passes
+at the riksområde too, but it is 68% of citizens and the complement of the fine categories.
+Fixed at the coarse share, the small tail has to absorb every fine unit's own departure and
+goes negative in 6 of 21 län. Leave it as the residual, where it still varies with the fine
+categories.
+
+### A ROLL CAN AGREE WITH SELF-IDENTIFICATION NATIONALLY AND STILL BE A HEAD-OFFICE MAP — Japan, 2026-09-14
+
+Japan's Agency for Cultural Affairs roll counts **1,872,320 Christians** at 2024-12-31, 1.51% of
+the population. NHK's 1996 self-identification survey put Christians at **1.46%**. §11q had
+already thrown out the roll's Shinto and Buddhist lines as catchment counts, and the Christian line
+was the one that looked like it survived, on exactly that agreement.
+
+Per prefecture it does not. **Tokyo holds 46.9% of the roll's Christians on 11.5% of the
+population**, at 886 believers per Christian body against 133 in the rest of the country. Tokyo's
+bodies counted at the rest's rate would report about 132,000; the roll has 878,000, and the
+excess is 40% of the national figure. The source of it is on the same e-Stat page: table 5 puts
+968,496 of the Christian roll in independent corporations (単立宗教法人), which report their whole
+membership at their registered address. Outside Tokyo and Kanagawa the roll mostly runs below the
+survey, because the people filed in Tokyo live somewhere else.
+
+**A national agreement between a roll and a survey is a fact about two totals and says nothing
+about where either one's people are.** Before a roll allocates anything, compute believers per
+body per unit (§11q's test) on the line you mean to use, not only on the lines that failed, and
+set the unit shares against a self-identification source unit by unit.
+
+### A CHART PUBLISHED AS AN IMAGE CAN BE MEASURED, AND ITS PRINTED LABELS ARE THE CHECK — Japan, 2026-09-14
+
+The only public copy of NHK's 1996 prefecture religion survey is an 815×655 stacked-bar GIF.
+`sources/jp_checks.py` reads it: gridlines give pixels per point (6.5 here); each segment is the
+distance between the centres of the black border runs that bound it; a label wide enough to look
+like a border splits a segment into two pieces of one colour, which are merged because a category
+appears once per bar. **Every bar's measured total came within 0.08 points of the total printed
+above it, 48 of 48**, and segments agree with their printed labels to 0.14. One pixel is the
+precision, and a segment under about two pixels cannot be told from a zero, whose borders merge.
+
+**Calibrate on what the chart prints about itself before believing any segment.** A chart that
+prints totals, or labels its largest segments, has published its own answer key. Wikipedia's
+transcription of this same chart reads a third of its cells as `~2%`; the measurement has them to
+a pixel.
+
+### A PRINTED COLUMN HEADER CAN BE WRONG, AND THE OFFICE'S OTHER PUBLICATION OF THE SAME CENSUS IS THE WITNESS — Zambia, 2026-09-14
+
+Zambia's 2022 religion volume heads one column `Judaism` (30,502, half of it in rural Eastern
+Province) and another `Other Religious Groups` (233,260), beside `African Traditional
+Religion` at 463 and `Non-Religious` at 9,238. Every structural check passes them: the rows
+sum, the provinces sum, four tables agree to the person. ZamStats' National Analytical Report
+on the same census gives five national figures in prose that B.1 reproduces **only** with
+`Judaism` read as the traditional religion and `Other Religious Groups` as no religion, and its
+sex split for that answer (1.8% of men, 0.8% of women) is the irreligion profile.
+
+**Before mapping a small column whose label or geography looks wrong, find a second
+publication of the same census that names the categories in words, and test every plausible
+reading against its figures.** Then assert the chosen reading both ways on every build, so a
+corrected re-issue fails instead of leaving a relabel standing (`sources/zm.py::check_relabel`).
+This is §3.10d with the outside number coming from the office itself.
+
+Two smaller things from the same country. **A suppressed cell is often in arithmetic reach**:
+all 15 of B.5's `*` cells sit in a row that prints both the total and the other half, so each
+is recovered two independent ways, which is worth checking before §3.8's removal. And
+**COD-AB's parent attribute can lag a boundary revision that kept the polygon**: Chirundu
+district is under Lusaka in COD-AB and Southern in the census, so join on the lower level when
+its names are unique and let the census's parent drive anything computed per parent.
+
+### A REGION THAT IS ONLY DRAWN, NEVER LISTED, CAN BE READ FROM THE PDF'S FILL COLOURS — Argentina, 2026-09-14
+
+CEIL-CONICET publishes religion for six regions and nowhere says which provinces are in them.
+Its infographic draws them, and in a vector PDF every province is a path with a fill: PyMuPDF's
+`page.get_drawings()` returns each path's `fill` and `rect`, the rect's position names the
+province, and paths sharing a fill share a region. That turned "looks like NEA's shade" into an
+exact list, and it put Entre Ríos in a region INDEC's own grouping does not. **Before assuming a
+survey uses a standard regionalisation, look for the survey's own map and read it as data.** A
+raster map needs the image method above instead.
+
+Three smaller things from the same country, each silent when missed. **Two tables of the same
+figures by the same authors can disagree**: the article's 2008-vs-2019 table swaps two rows in
+one region in both years, so use the version an independent rendering confirms (here the
+report's own chart) and print the other's disagreements on every run. **A COD-AB zip can hold
+its layers in different CRSs** (Argentina's ADM1 in Web Mercator metres, ADM2 in degrees);
+reproject each layer on its own and assert the bounds land on the country, because a union
+across the two raises nothing. **And search the authors' institutional repository for a dataset
+deposit** even when the report offers no microdata: CONICET's holds it under an embargo with an
+end date, which is a date to reopen on rather than a closure.
+
+### TWO NUTS VINTAGES CAN CROSS RATHER THAN NEST, AND THEN THE COARSE LEVEL IS NEARLY WORTHLESS — Norway, 2026-09-14
+
+Italy and Sweden split a survey by level because their fine units sit inside their coarse ones.
+**Norway's ESS rounds 5-9 are NUTS 2016 and rounds 10-11 are NUTS 2021, and the two cut the
+south of the country differently** (NO08 takes Akershus from NO01 and Østfold and Buskerud from
+NO03). Neither is a recode of the other. The coarsest geography both are unions of is four
+units, and **a round-split rank test over four units has almost no resolution**: the
+permutation null's 95th percentile is +0.8, so nothing but the largest category can pass. Check
+whether the vintages nest before planning a two-level build, and price the coarse level by its
+unit count, not by its sample.
+
+### GISCO's `POP_2021` IS NOT 2021 FOR EVERY COUNTRY, AND ITS WORKBOOK IS EU-27 ONLY — Norway, 2026-09-14
+
+GISCO LAU 2021's shapefile carries Norway, and its correspondence workbook
+(`EU-27-LAU-2021-NUTS-2021.xlsx`) does not: EFTA countries need the NUTS code from somewhere
+else, and for Norway the kommune number's first two digits are the county. **Its `POP_2021` for
+Norway is the 1 January 2020 population** (5,367,580, SSB's figure to the person). A join check
+against the 2021 census failed six of eleven counties, every one in the direction a year of
+growth or decline gives rather than as an equal-and-opposite pair. **A population check that
+fails with the sign of growth is a vintage mismatch, not a bad join**; find the office's figure
+for the same date and test for exact equality.
+
+### A RANK TEST THAT MISSES ON FEW UNITS CAN BE SETTLED BY A ROLL AT THE SAME UNITS — Norway, 2026-09-14
+
+Norway's Islam answer scored p = 0.0555 on the round-split test at 7 regions with a spatial
+chi-square of 1.3e-10. **Drawn at the national rate, Oslo came out 4.4% Muslim against 9.6% on
+the membership roll.** The roll is a different instrument on a different basis, which is what
+makes it a witness: summed from the old counties to the survey's own 7 regions, it orders them
+the same way at Spearman +0.929. That goes in an `OVERRIDE` with the reason printed on every
+build (`sources/gt.py`'s convention), and the verdict set is asserted so a re-fetch cannot
+silently change it. **This is not moving the bar**: one named category, a second instrument, and
+the chi-square already saying the units differ. Where no independent witness exists at the
+survey's units, the rule stands as written.
+
+### A SURVEY POOL THAT SPANS A FAST CHANGE WANTS §3.4, AND THE SHAPE OF THE CHANGE IS TESTABLE — Norway, 2026-09-14
+
+Norway's Church of Norway share of citizens is 44.14% in ESS rounds 5-9 and 32.24% in rounds
+10-11. A pool over both draws a 2014 midpoint beside a 2021 census half. **§3.4 applies: the
+regional pattern from the pool that has the geography, the national level from the recent
+one**, weighted by the census's citizen population per unit and not by the survey's own unit
+mix (the Nigeria entry above). Whether the scaling is a factor or a shift is a claim about how
+the change is distributed, and it can be checked: the membership roll's county ratios moved
+with a coefficient of variation of 0.018 against 0.077 for the point drops, and the survey's own
+coarse units agreed. Sweden's drift was under 3.5 points and was left alone; check the size
+before reaching for this.
+
+### ONE ROUND CAN PUBLISH THE SAME REGION CODES FOR DIFFERENT REGIONS, WITH WEIGHTS RAKED TO MATCH — Denmark, 2026-09-14
+
+ESS round 9 gives Denmark `region` as DK01-DK05 with the NUTS labels, exactly as rounds 5-7 do, and
+the respondents behind the codes are Danmarks Statistik's region numbers 1081-1085 in order
+(Nordjylland, Midtjylland, Syddanmark, Hovedstaden, Sjælland). Nothing errors, the code set passes
+§9as's level check, and pooling silently averages the capital with North Jutland. **Weighting hides
+it**: the round's `pspwght` was raked to the wrong labels, so the weighted regional shares match the
+population and only the unweighted sample shares look wrong (Hovedstaden 11.5% against 25-28%).
+
+**Before pooling survey rounds on a region code, compare each round's unweighted sample share per
+region, and one geography-bearing variable (ESS `domicil`), with the other rounds.** Where a round
+disagrees, try the office's own region numbering first, confirm with a second variable (Denmark's
+recalled vote separated the two Jutland regions), and assert it both ways so a corrected re-issue
+fails the build (`sources/dk.py::_check_recode`). Weight that round by its design weight, since its
+post-stratification is fitted to the wrong units.
+
+### A RANK TEST OVER FEW UNITS CANNOT SEE ONE UNIT STANDING APART — Denmark, 2026-09-14
+
+Denmark's Islam answer at the 5 regions: round-split rank test p = 0.32, spatial chi-square 4.1e-05.
+They do not contradict each other. The capital region is 2.98% Muslim among citizens and the other
+four sit at 0.80-1.35% in no stable order, so the chi-square sees the capital and the median
+Spearman is decided by how four near-equal shares shuffle between splits. **Read a
+failed rank test with a strong chi-square as "one unit differs", not as noise**, and then apply the
+rule as written unless an independent witness orders the units (Norway's entry above). The residual
+construction (§9bi) still carries some of it: Denmark's capital region draws 2.07% against 1.14%
+in North Jutland.
+
+### AN OLD SURVEY CAN BE LICENSED BY A NEW ONE THAT CANNOT REPLACE IT — Japan, 2026-09-14
+
+Japan's prefecture pattern is NHK's 1996 survey, the only source that splits the Buddhist schools
+by place. The Global Flourishing Study (2022-23, open, 20,543 Japanese respondents, prefecture
+codes) cannot stand in for it: its answer list puts Japan at 38% religious against JGSS's 26%, it
+names no school, and its Christian and Shinto shares do not replicate between halves. **But its
+share naming a religion and its Buddhist share replicate across 47 prefectures (+0.69, +0.70) and
+rank them the way NHK did twenty-seven years earlier (+0.67, +0.72)**, which is the evidence that
+drawing a 1996 pattern draws something still true. Before refusing an old source on its date, look
+for a recent one that shares the dimension, even one too different to use directly.
+
+**And internal replication is not agreement.** The same panel ranks JGSS's six blocks like three
+probability samples do (+0.83 to +0.94) and still levels Hokkaido/Tohoku above average where all
+three put it below. When choosing which source supplies a level, count how many unrelated sources
+side with each, not how well each agrees with itself.
+
+### CORRECTING A ROLL'S LARGEST HEAD-OFFICE OUTLIER MOVES THE CAPTURE TO THE NEXT ONE — Japan, 2026-09-14
+
+The Agency for Cultural Affairs' Christian roll reports 886 believers per body in Tokyo, 578 in
+Kanagawa and 300 in Nagasaki against a median of 76. Resetting Tokyo to the national rate made
+**Kanagawa Japan's most Christian prefecture at 4.1%**. Nagasaki's is real (Catholic, on every
+source); Kanagawa's is national bodies filing at their address, the same thing as Tokyo's. **Rank
+every unit's per-body rate and explain each outlier before correcting any**: a fix aimed at the
+famous one leaves the rest, and the corrected map looks more plausible than the raw one while
+being wrong in a new place.
+
+### A PORTAL MIGRATION HIDES FILES THE OLD SITE PUBLISHED; ASK THE WAYBACK CDX FOR THE OLD PATH PREFIX — Mozambique, 2026-09-14
+
+§11w read Mozambique off the national brochure on `mozdata` and recorded religion as national
+only. INE had published Quadro 11 for every province in 2019, on a Plone site replaced by Liferay
+in 2022; the new portal's folder pages list nothing to a script and its guest APIs answer 403. A
+CDX query on the retired prefix with `filter=original:.*religi.*` returned all twelve files in one
+call (it 503s in bursts; retry). **When an office has changed CMS since the census, query the
+old site's path prefix, not the new site's.** Two smaller traps from the same build: a TLS
+failure on `unable to verify the first certificate` is a server that omits its intermediate, not
+a wall; and **UNSD table 28 can be a later edit of the office's figures** (same total, half the
+unknowns, the difference imputed into named cells), so check an oracle mismatch against the
+office's own printed volume before calling either side a misread.
+
+### A VOLUME'S TITLE IS NOT ITS TABLE LIST, AND UNSD'S `Unknown` MAY BE A POPULATION NOBODY ASKED — Guinea, 2026-09-14
+
+§11w closed Guinea on *"full RGPH-3 thematic series, no religion volume"*. There was no volume
+about religion; the *État et structure de la population* volume had religion by région as
+Tableau 5.10. **Open each volume's own list of tables before recording that a series lacks a
+topic**, and in francophone West Africa look in the structure volume first: Côte d'Ivoire's
+région table (§9az, `sources/ci.py`) was in the same kind of volume. And **before treating
+UNSD table 28's `Unknown` as non-response, compare it with the census's population outside the
+religion universe**: Guinea's 20,129 is the collective-household population to the person, in
+total, urban and rural alike, which also told the build that the report's percentages are shares
+of ordinary households.
+
+### A CHI-SQUARE CANNOT VETO A CLUSTER, SO LOOK AT EACH ANSWER'S LARGEST SAMPLING CELL — Uzbekistan, 2026-09-14
+
+Sweden's rule is that a rank-test pass needs the spatial chi-square beside it, because a mostly-zero
+column can pass on how its ties break. **The chi-square assumes independent respondents, and a
+clustered survey does not have them.** Uzbekistan's `Other (vol.)` answer has 18 respondents; 11 are
+wave 4's interviews in Bukhara, which at ten interviews per settlement is one or two sampling points.
+It passed the wave split-half at p = 0.043 and the chi-square at 6e-21, and fails at a coarser level
+(p = 0.41). Every answer that is placed has at most 22% of its respondents in any single (wave,
+region) cell; this one has 61%. **Print that share for every answer before trusting a pass on a
+small one**, and refuse in writing where one cell is most of the answer (`sources/uz.py`'s
+`OVERRIDE`). Refusing is the safe direction; nothing here moves a bar.
+
+### ESS ROUNDS 1-4 HAVE A REGION VARIABLE, NAMED FOR THE COUNTRY — Latvia, 2026-09-14
+
+Greece, Sweden, Belgium and Denmark recorded rounds 1-4 as having no `region` and stopped there. The
+harmonised `region` starts in round 5; **Latvia's rounds 3 and 4 carry `regionlv`**, the six
+statistical regions by name, coded 1-6. Probe `region<cc>` before closing an early round. The codes
+are country-specific and the fieldwork sits under an older NUTS vintage, so recode by label and check
+the labels against the people (the Denmark entry above) before pooling.
+
+### A ROUND'S REGION CAN CARRY NO GEOGRAPHY AT ALL, AND THEN NOTHING CAN BE RECODED — Latvia, 2026-09-14
+
+ESS round 10's self-completion file gives Latvia's six regions with the right codes and labels, and
+every region is 34-41% big city, 23-30% Russian at home and 28-40% Catholic, Riga included (81-95%
+big city in every other round; language across regions, chi-square p 0.86). Denmark's round 9 was a
+permutation and could be recoded; this cannot, because relabelling identical rows recovers nothing.
+**The same check finds both, and the reading differs**: distinct rows in the wrong places, recode;
+rows that look alike, use the round nationally only (Latvia's round 10 matched its neighbours there).
+Assert that it fails, so a corrected release is noticed.
+
+### EUROSTAT'S `FOR` CAN INCLUDE THE COUNTRY'S OWN NON-CITIZENS — Latvia, 2026-09-14
+
+`cens_21ctz_r3` reports Latvia's 190,544 recognised non-citizens as `RNC`, a tenth of the country,
+**and counts them inside `FOR`**: the named citizenships under `FOR` sum to 61,472 of 252,305. Every
+two-half builder scales the named citizenships up to `FOR`, which here would have multiplied Russia,
+Ukraine and Belarus by four and given Latvia's non-citizens Pew's Russian composition. **Before
+scaling, check how much of `FOR` the named citizenships cover**; where `RNC` is large, take it out of
+the foreign target and draw it from the survey (ESS names the alien's passport in `ctzship*`).
+
+### THE RESIDUAL CONSTRUCTION CAN REVERSE A GEOGRAPHY, NOT JUST SOFTEN IT — Latvia, 2026-09-14
+
+§9bi shares each unit's remainder at national proportions, which is safe when the remainder has a
+similar make-up everywhere. **Latvia's does not**: Latgale's non-Catholic remainder is Orthodox and
+Kurzeme's is Lutheran. With both churches failing the rank test (one unit standing apart, chi-squares
+near 1e-14) the construction drew Latgale 3.9% Orthodox against 11.0% measured and Kurzeme 7.1%
+against 2.9%. **Print each national-rate category as drawn beside the survey's own regional share**
+(`sources/lv.py::_compose` does) and look for a reversal. A reversal is a reason to look for a
+witness, not a licence to override; Latvia had two, an unpooled ESS round ordering the regions at
++0.886 and the population register's ethnicity at +0.943.
+
+### EVERY DISTINCT HALVING MEANS ALL OF THEM WHEN THE WAVE COUNT IS ODD — Colombia, 2026-09-14
+
+§9cy's median-over-halvings keeps a combination only `if 0 in a`, which is right for an even count,
+where each halving appears twice (once as each half). **With an odd count the two halves have
+different sizes, so no halving appears twice, and the filter silently discards distinct ones**:
+five waves have ten 2-against-3 halvings and the filter keeps four. `sources/cab.py::stability`
+and `sources/se.py::_stability` carry the filter and both run on even counts today (6 waves; 4 and
+6 rounds). `sources/be.py` (7 rounds, all 35 splits), `sources/no.py::_splits` and
+`sources/co.py::_halvings` get it right; reuse one of those, or fix the filter, before handing
+`cab` or `se`'s function an odd count.
+
+Checked the same day in the Latvia review: `sources/lv.py` runs `no._stability` and gets all three
+halvings of its rounds 4, 9 and 11, and `tools/ess_split_half.py::splits_for` is the same
+construction as `no._splits`, so every report it printed (Greece and Italy's NUTS 1 on three rounds,
+Germany on five, Finland and France on seven) enumerated every halving. `sources/uz.py` (6 waves) is
+the only caller of `cab.stability`.
+
+**Fixed in `cab.stability` on 2026-09-14 for Turkmenistan's three waves**: the filter is now
+`if n_w % 2 or 0 in a`, so an odd count keeps every combination. Uzbekistan was rebuilt into a
+scratch file before and after the change and the two outputs are byte-identical (sha256
+`2cbce1d1...`), as they must be on an even count. `se._stability` still carries the old filter.
+
+### A SURVEY DRAWN ON AN OLD FRAME CAN BE RIGHT ABOUT HOW PEOPLE ANSWER AND WRONG ABOUT WHO LIVES WHERE — Turkmenistan, 2026-09-14
+
+The Central Asia Barometer's Turkmen sample was allocated and weighted on 1995 figures. Its
+respondents are 6.4% Russian, Ukrainian or Armenian against 1.87% in the 2022 census, and 35.6%
+in Ashgabat against 7.71%. Almost every Christian answer comes from those three nationalities
+(92.9% of them answer Christian, 0.03% of Turkmen do), so the pooled regional shares would have
+drawn Ashgabat at 35.3% Christian. **Where the answer is mostly an ethnic one and the census
+publishes nationality by unit, post-stratify: take each nationality's answer shares from the
+survey and each unit's nationality mix from the census.** Turkmenistan's drawn Ashgabat is 7.28%,
+and wave 14, a 2023 phone round with a sample much closer to the census's mix, reads 8.44% and
+orders all six velayats the same way. Compare the survey's nationality mix with the census's
+before applying any survey country's regional shares; Uzbekistan's Tashkent (`sources/uz.md` §8)
+is the same problem, smaller.
+
+Two checks move with the frame. **The held-out check against a current census can fail on a
+correct decode**: Ashgabat took in part of Ahal in 2013, so six of 719 orderings beat the truth
+against 2022. Run it against the frame the sample was drawn on, which the methods report prints,
+and pin the decode with something that uses no names: Table 6 allocates each named region a
+different number of PSUs, and wave 4's file holds exactly ten interviews per PSU under each
+label (`sources/tm.py::frame_witness`).
+
+### A SURVEY'S SAMPLING-UNIT COLUMN CAN CARRY THE OFFICE'S PLACE CODES — Colombia, 2026-09-14
+
+Honduras (§11ap) showed that a merged file can print one wave's region labels on every wave, and
+that `municipio` names settle it. **Colombia's 2010 wave has no `municipio`, and its `upm` column
+turned out to hold DANE municipality codes**, whose department prefix confirmed `prov` for every
+respondent. Before calling a wave undecodable, look at every column that names a sampling point
+(`upm`, `cluster`, `estrato`, `segmento`) for the office's own codes. And check the decode in both
+directions: the same test found 24 Colombian interviews from 2012 filed under the wrong department,
+which no label check can see.
+
+### A RANK TEST CANNOT SEE ONE UNIT STANDING APART, SO ASK WHICH UNIT TOPS BOTH HALVES — Honduras, 2026-09-14
+
+Honduras's Adventists fail the split-half (median +0.358 on a +0.475 bar) with a chi-square of
+8e-122. Seventeen departments cannot be ordered on 205 households; the eighteenth, Islas de la
+Bahía, is the highest in both halves of all 400 cluster halvings (8.3% against 0.6%). Neither the
+national rate nor an OVERRIDE of all eighteen shares describes that. **For every failing category,
+print how often the same unit tops both halves.** At 95% or more, with the chi-square and the
+cluster check holding, keep that unit's measured share and give every other unit the category's
+share across the rest (`sources/hn.py`'s `STANDOUTS`). It claims less than an override, and the
+same test kept Honduras's `OTRO` (25%) and Latter-day Saints (23%) flat.
+
+The same country failed Latvia's reversal check in the other direction: §9bi's residual invented
+Latter-day Saints at 0.94% of Gracias a Dios, where the survey found none, because a small unit's
+tail can be one religion rather than a national mix. **A category that is flat can be set to its
+national share, with the carried shares scaled to fill the rest** (`sources/do.py`'s construction
+for one failing category works for several), and then it cannot be inflated anywhere.
+
+### SMALL CATEGORIES GO IN THE RESIDUAL UNLESS IT DRAWS ONE AT 2x WHERE THE SURVEY FOUND NONE — Honduras, Bolivia, Puerto Rico, 2026-09-14
+
+This settles the "can" in the entry above. Three countries had decided it three ways: Honduras went
+flat, Bolivia paired Honduras's standout test with §9bi's residual, and Puerto Rico kept the residual
+on a 1.2x check.
+
+**The rule.** Categories that fail the split-half and are not standouts take §9bi's residual by
+default: each unit's remainder, split at national proportions. Switch them all to flat national
+shares, with the carried shares scaled to fill the rest (`sources/do.py`'s construction), only when
+the residual draws some category at **2x its national share or more in a unit where the survey found
+none of it**. Test the residual as it would ship, after any standout has been taken out. "None" means
+zero unweighted respondents or households in that unit, and the national share is the one the
+construction itself uses.
+
+Under the residual every category in a unit sits at the same multiple of its national share (the
+unit's remainder over the national remainder), so the test asks how far one unit's remainder is from
+a national mix. As built:
+
+    country  drawn with   worst multiple where the survey found none, under the residual
+    pr       residual     1.20x   Hindú in Este (1 respondent); Budista 1.19x
+    bo       residual     0.94x   Jewish in Tarija (5 respondents); 1.41x in La Paz, where it was found
+    hn       flat         2.96x   Latter-day Saints in Gracias a Dios, 1.40% against 0.47%
+
+**Why 2x.** Any bar from 1.2x to 2.96x splits the three the way they were decided, so the cases fix
+the gap and not the number; 2x is the round number inside it. It is also about where the residual
+stops softening a geography and starts drawing a unit as one of a category's strongest when the
+survey found none of it there, which is Latvia's reversal arriving in the small categories. Below it
+the residual's cost is a unit with a larger remainder drawn slightly larger, and flat costs more than
+that, because it moves the categories that do carry evidence (Puerto Rico's Centro Catholics from
+64.0% to 59.0%). **Not 1x**, which is where `sources/pr.py` prints `ABOVE NATIONAL WHERE NONE FOUND`:
+a category with one or five respondents is "none" in almost every unit, so a 1x bar would send every
+small survey country flat on sampling noise. That print stays a print.
+
+**Apply it after the standouts; Honduras shows why.** With the Adventists left in the tail, the
+residual draws Latter-day Saints at 1.97x in Gracias a Dios and would pass. Taking the Adventist
+standout out first cuts the national remainder nearly in half (1.39% to 0.72%) but Gracias a Dios's
+by only about a fifth, because that department's tail is mostly `OTRO`, so the multiple rises to
+2.96x.
+
+**Checked 2026-09-14 (session `f95259a4-house`): all three comply as built, nothing rebuilt.** The
+figures come from each country's own composition code re-run read-only against its CSV
+(`sources/bo.py::compose` reproduces `bo.csv` row for row). Other countries drawn with the residual
+were not checked against the rule.
+
+### A MICS REPORT PRINTS ENOUGH TO REBUILD THE WEIGHTS ITS PUBLIC FILE LEAVES OUT — Honduras, 2026-09-14
+
+INE's ENDESA-MICS 2019 files carry no weight, PSU or stratum. The final report's Tabla SR.3.1
+(weighted and unweighted households per sampling domain and by area) and the sample-design
+appendix's Tabla SD.1 (frame and sampled enumeration areas by domain and area) nearly are the
+weights: split each domain's weighted total by its frame areas, fit one national factor for rural
+against urban households per area so the area split matches, and test on SR.3.1 rows the fit did
+not use. In Honduras the ethnicity-of-head row went from 1,944 households misplaced unweighted to
+227. **Assert the unweighted column against the microdata first**, which proves the transcription
+and the domain codes together, and **check what the weights can move before spending on them**:
+laid on a projection's unit totals they only shift shares inside a unit, here by 1.6 points at most.
+
+### LAPOP'S SINGLE-COUNTRY FILES KEEP THEIR OWN ORDER AND A CONSTANT WEIGHT — Bolivia, 2026-09-14
+
+The single-country files are the route for countries the free merge drops (Bolivia after 2008,
+Venezuela; §11ap), and they differ from the merge in three ways that fail silently.
+
+- **`prov` follows LAPOP's own department order and can change meaning between rounds.** Bolivia's is
+  1001 La Paz, 1002 Santa Cruz and so on to 2018, against INE's 01 Chuquisaca to 09 Pando, and a
+  province code in 2023. Decode each round from `municipio` names: per prov code, intersect the
+  departments each name could belong to and require exactly the labelled one. Where a prov code's
+  only municipality has a name two departments share, an office municipality code settles it
+  (`sources/bo.py::decode_wave`).
+- **`wt` can be 1 for everyone in a disproportionate design** (Bolivia 2016-2023, Beni at twice its
+  population share). Post-stratify each (round, unit) to its population share and give each round
+  the same total, the merge's `weight1500` convention.
+- **A population check against a recent census can fail on an old round's design weights**, which
+  are the frame population of their year: 14 of 9! orderings beat Bolivia's 2008 round, every one a
+  swap of units that changed rank or sit within a point. Report it, and let the names decide.
+
+### AN OLD CENSUS CAN CONFIRM A SURVEY'S UNITS AND STILL NOT LICENSE A FINER PATTERN — Bolivia, 2026-09-14
+
+Bolivia's 1992 census orders the nine departments like LAPOP 2010-2023 (non-Catholic Christian
++0.92, Catholic +0.75), which made §3.4 tempting: the survey's department level, split by 1992's 112
+provinces. Tested where the borrowing would happen, inside departments (each sampled province's
+departure from its department, provinces shuffled within departments for the null), it does not
+hold: Catholic p = 0.045 on thin power, non-Catholic Christian p = 0.10, and the best-sampled
+province reversed. **Before borrowing an old source's structure below the level where it was checked,
+test the structure at that level**; agreement one level up is evidence about that level only.
+`sources/bo_checks.py`.
+
+And **a REDATAM home page can hide a base**: INE Bolivia's lists 2001, 2012 and 2024, and the 1992
+base answers at `BASE=PHCCEN92ESP` with its link commented out. Read the page source for `BASE=`
+before recording that an office has no tabulation of an old census.
+
+### `coverage.py` READS `counts.json`, NOT THE DOTS, SO A REMAP FAILS IT UNTIL THE TAIL RUNS — Laos and Mozambique, 2026-09-14
+
+COMMANDS.txt step 9 says coverage "reads the DOTS". Its `verify()` reads each country's `dots` keys
+out of `data/processed/counts.json`, which only `tiles.py` writes. So after moving a category to a
+different node and re-scattering, step 9 fails on the OLD node (`la indigenous.laos`, `mz
+unaffiliated`, "draws dots but is not in the country's coverage") and passes on the new one without
+having looked at it. **After a remap, run the tail, then run `coverage.py` again**; the pre-tail
+failure naming only old nodes is expected. The retiring half has no other trap: the tree's only two
+removals (`japanesenew`, `indigenous.laos`) were a tuple deleted from `branches.py`, a line left
+where a reader will look for it, and `build_tree.py`.
+
+### A SURVEY'S CAPITAL SAMPLE CAN CARRY A MINORITY AT 2.5 TIMES THE CENSUS, AND REGION WEIGHTS DO NOT SEE IT — Uzbekistan, 2026-09-14
+
+The Central Asia Barometer is post-stratified on region x urban/rural, age and sex. Its Tashkent
+city sample is 23.05% Russian; the 2026 census counts 9.29%. Outside the capital the two agree
+(Tashkent region 4.05% against 3.95%). A region share applied to the region's people drew the city
+21.7% Christian. **Where a census counts a group whose religion differs sharply, read religion
+within the group and apply it to the census's group counts**, as the citizenship splits do.
+
+- **A minority too sparse for a split-half can still be tested on two units.** Russians left 56 of
+  84 (wave, region) cells empty. The capital against the rest, with whole sampling points shuffled
+  within wave and the chi-square as a veto, found Russians outside Tashkent answer Muslim at 26.4%
+  against 1.3% (p = 0.0005). `sources/uz.py::two_unit_test`.
+- **Match the groups on both sides before choosing them.** The census had no Ukrainian row and the
+  survey no Turkmen code, so "other Slavic" could not be a group and the survey's Turkmens sit in
+  its Other. Put the census group where its religion belongs and print what the mismatch moves.
+- **A cached file named for a release can be a different volume of it.** Uzbekistan's three
+  `uz_census2026_prelim_*.xlsx` were the agriculture tables; the ethnicity table was in the
+  compilation PDF the whole time, and a review concluded it was unpublished.
+
+### A UNIT MEASURED IN ONE ROUND TAKES ITS REGION'S SHARES WHEN THE REGION PREDICTS ITS OWN UNITS BETTER THAN THE COUNTRY — Colombia, 2026-09-14
+
+A survey unit sampled in one round cannot enter the split-half, so nothing licenses shares of its
+own (Ecuador's Carchi line, §9bn). For the answers drawn on unit shares, **draw it on its design
+region's shares when the region passes a leave-one-out test, and at the national rate otherwise.**
+Leave each of the region's every-round units out in turn and predict its pooled shares of those
+answers two ways, from the rest of the region's every-round units and from every other every-round
+unit; the error is the summed absolute difference. The region is used when its mean error is lower
+**and** it is closer for more than half of its units; a region with fewer than two every-round
+units falls back to the national rate. One-round respondents stay out of both pools, since they
+are one wave's level. The other answers are the national rate inside the unit's residual, as
+everywhere (`lapop.build`). Printed and not deciding: how often a random set of as many units beats
+the country by as much. `sources/co.py::region_fallback`. Supervisor's decision, Anita having
+deferred it, leaning to "use the most granular thing available".
+
+- **Test each region on its own, and only on the answers the fallback changes.** Colombia's first
+  build averaged the test over every region and four answers, got two wins and two losses, and kept
+  the national rate. Atlántica is closer for all six of its departments (mean 6.1 against 15.2
+  points) and Pacífica for none of its three; the average hid both. It also counted traditional
+  Protestant, which is at the national rate whichever fallback is used.
+- **Colombia**: La Guajira (Atlántica, 6 of 6, random p=0.001) and Casanare (Oriental, 4 of 5, 9.7
+  against 12.6, p=0.059) take the region. Quindío (Central, 2 of 5) and Vaupés (1 of 2) stay
+  national. Quindío's means are 0.06 points apart, so the majority clause is what decides it.
+- **Ecuador, reported and not applied**: Carchi would change. Sierra is closer for 8 of 10 provinces
+  (11.7 against 16.1, p=0.025) and would draw Carchi 79.6% Catholic and 7.1% evangelical, against
+  the national 75.5% and 11.0%. Pastaza and Orellana would not (Oriente, 0 of 4). Carchi's line is
+  Anita's call of 2026-09-08 and stands until she rules.
+
+### KONTUR'S DENSITY CAP MAKES FALSE CITIES, AND ONLY A WRITTEN LIST CAN TELL THEM FROM REAL ONES — Uzbekistan and five more, 2026-09-14
+
+Kontur limits every hex to **46,200 people/km²**: the top hexes of 24 countries all read 46,199 to
+46,200. Where the model's input put too many people in one place, the output is a flat top at
+that limit with a ramp around it, and the ramp carries most of the weight. Tashkent's block is 54
+hexes at 15,000/km² or more, 11 of them at the limit, holding 58% of the city's placement weight
+15.6 km south of a centre Kontur draws at 2,432/km². Luxor's block holds 1.5 times the whole
+governorate. **No count moves, so no check on totals can see it; the dots are simply elsewhere.**
+
+**Real cores hit the same limit** (Dhaka, Cairo, Karachi, Luanda, Hong Kong, Seoul), so the limit
+alone identifies nothing. A scan of every Kontur layer found 174 blocks with a hex at the limit in
+24 countries and set each against `maps/data/worldcities.csv`. A block is suspect when its peak is
+5 km or more from the largest city within 20 km and Kontur at that city's own point is under a
+third of the peak, when no city is within 20 km, or when the block holds more than twice the
+city's figure. **That test misfires in both directions, so read every block it flags:** the city's
+point can sit in the hills (Bucaramanga) or on a business district (Nairobi), it can match the
+wrong town (Damietta), and a small town holding 1.5 to 2 times its figure passes (Anse-a-Galets).
+
+**The decision is per block, in `kontur_cap.csv`**, which `kontur_cap.py` reads from `scatter.py`
+before the water clip (density needs the hex's own area):
+
+- `real` (125 blocks): drawn as Kontur has it. Set by the test unless the row's `why` says it was
+  checked, so a `real` row is not a verdict.
+- `capped` (10, in uz, eg, gn, ht, ng, id): every hex in the block is lowered to the median
+  density of the populated hexes within 3 km, and the unit's other hexes absorb the share. The
+  median, because the ring includes the block's own ramp. A capped row may name a block that never
+  reaches the limit (Papua's regency 9432040).
+- `unreviewed` (40, in np, et, bd, ao, ng, co, mm, iq, tr, ht): drawn as Kontur has it, with a
+  warning on every scatter. It warns rather than stops because the row is proof someone looked.
+- **A block at the limit that no row names stops the scatter** and prints the row to add. Decide
+  `real` or `capped` there and then; `unreviewed` is for a block seen and not yet judged.
+
+**What the cap costs.** Where the block sits on a real town (Luxor city, Petit-Goave) the town is
+now drawn at its surroundings' density and gets too few dots. The error is smaller than before
+(Luxor's block had about 890 of the governorate's 1,460 dots and now has about 110), and it is
+still an error; a better ceiling needs a population figure for the town. Dots per node were
+identical before and after in all six countries at both editions, and `scatter.py` now asserts that
+every (unit, node) places exactly its allocated dots.
+
+**Before scattering a new Kontur country, run `python kontur_cap.py <cc>`**: it lists every block at
+the limit with the row to add. Layers whose density exceeds the limit (cn, kr, bg) are not raw
+Kontur and are skipped. Bishkek, which `sources/uz.md` §8 suspected, peaks at 26,781/km², below the
+limit and on its own centre: a steep real core, not this.
+
+**A capped block can be the top of a wider false surface, so check where the unit's weight sits
+afterwards, not only the block.** Tashkent city's dots in the capped hexes fell from 58% to 8.3%
+and its weight within 6 km of the centre rose from 9.7% to 21.2%, and a dense patch south of the
+city is still drawn: 13 smaller blocks below the limit and a ramp at 10,000-15,000/km². Capping
+all 13 would move the city's weight there only from 29.3% to 27.4%, so they were left; what
+remains is Kontur's surface, which no per-block rule reaches (`sources/uz.md` §10).
+
+### THREE GRIDS AGREEING ON A COMMUNE CAN BE ONE ERROR, AND A FALSE COMMUNE IS SCALED, NOT CAPPED — Haiti, 2026-09-14
+
+The Eswatini rule above says two independently built grids agreeing is what makes a modelled
+weight trustworthy. **Haiti is where it fails.** Kontur and WorldPop 2020, constrained and
+unconstrained, agree to within 12% on Anse-à-Galets (244,000-274,000) and Petit-Goâve (292,000-
+305,000 before its cap) and all three are two to four times the COD-PS commune figure, with
+nothing since the 2003 census to explain it. They agree too closely on the same wrong communes to
+be independent, so agreement between grids at the level of admin units is lineage, not
+replication. **Test a grid against the official figure for the unit below the counting tier, where
+one exists**, and read each disagreement for a reason: a grid far above a stale projection is
+right where settlement has happened since (Canaan, in Croix-des-Bouquets), and the projection
+itself can be the error (Gressier, 3,987).
+
+**And where the whole commune is false, the block cap is the wrong tool.** The capped block is
+often the real town: capping Anse-à-Galets would have drawn the island's main town at 252/km² and
+left the island 2.5 times over. Scaling the commune to its official share of the department keeps
+the grid's shape inside it and fixes the level (`countries.py::_HT_COMMUNE_LEVEL`,
+`sources/ht.md` §12). Placement only; no count moves. COD-PS publishes a unit below the drawn
+tier for many countries, so it is worth checking before registering a `capped` row.
+
+**Petit-Goâve moved from its cap to the same commune scale that evening**, although Kontur has it at
+only 1.35x its share of Ouest. That is a second route into `_HT_COMMUNE_LEVEL`: a block already
+judged false, in a commune where every grid carries the same excess, where the cap draws the town at
+farmland density (8 dots within 1 km of the centre, 48 after the change; `sources/ht.md` §12.6).
+
+### A TRAILING DELIMITER SHIFTS EVERY COLUMN BY ONE AND LEAVES EVERY COLUMN PLAUSIBLE — Puerto Rico, 2026-09-14
+
+The WVS-7 Puerto Rico CSV has 404 names in its header and 405 fields on every row, the last one
+empty. pandas' `read_csv` takes a row one field longer than its header to carry an index, uses the
+first field as that index, and pairs every remaining value with the name one place to its left.
+Nothing errors and nothing looks broken: `A_YEAR` reads 630 (the country code), the region variable
+reads a plausible list of six codes, and the religion variable reads the neighbouring detailed
+codes. The supervisor's peek and this build's first peek read the same file two different ways.
+**Before trusting a delimited file's columns, compare the header's field count with a data row's,
+and assert a column that can only hold itself** (a DOI, the survey year, the country code).
+`index_col=False` is pandas' documented fix (`sources/pr.py::load`).
+
+### WHERE THE SAMPLING UNITS NEST INSIDE THE DRAWN UNITS, THE NULL REGROUPS THEM — Puerto Rico, 2026-09-14
+
+Belgium's rule above shuffles unit labels within each resampling unit, because ESS rounds cross the
+units. A survey whose clusters sit inside the units has no such crossing: Puerto Rico's WVS drew
+three municipios in each of six regions. There the halving is one municipio against two inside each
+region, taken over every distinct halving (23,328), and **the null deals the clusters into random
+groups of the same sizes** and recomputes the same median, which destroys region structure while
+keeping each cluster's answers whole. Its 95th percentile came out at +0.49 to +0.54, against the
+§14.16 formula bar of +0.877 for six units; the formula is for one halving of untied ranks, and a
+median over many overlapping halvings has a narrower null, so the null decides and the bar is
+printed (`sources/pr.py::stability`).
+
+### UNSD'S NUMBERS CAN BE WRONG TOO, AND `NOT a partition` IS WHERE TO LOOK — small territories, 2026-09-14
+
+UNSD's British Virgin Islands 2010 row prints Muslim 255 where the census report prints 266 in both
+its national and its by-island table. Those 11 people are exactly the shortfall that makes
+`oracle.py --list` mark the row `NOT a partition`. Aruba's row has the census's numbers under a wrong
+label (`Pagan` for `No religion`), which §11ap had already found. **So a row that does not partition
+is a reason to open the office's own table, not a tolerance to allow**, and where that table exists,
+transcribe from it and pin each known disagreement in code, so a different one fails the build
+(`sources/terr.py::ORACLE`).
+
+### A KONTUR EXTRACT CAN BE A VALID FILE WITH NOTHING IN IT — Caribbean Netherlands, 2026-09-14
+
+`kontur_population_BQ_20231101.gpkg.gz` answers 200 and opens as a GeoPackage with zero features.
+Count the features before building a placement layer on an extract. And a territory Natural Earth's
+`admin_0_countries` folds into its sovereign (Bonaire, Sint Eustatius and Saba are inside the
+Netherlands there) has to be named in `country_shapes.py::FROM_UNITS` before it is registered,
+because `country_shapes.py` stops on any registered country it cannot find, and it runs first in
+everyone's build tail.
+
+### A MERGED SURVEY FILE CAN DROP ONE COUNTRY'S REGION LABELS AND KEEP THE CODES — Tanzania, 2026-09-14
+
+Afrobarometer's round 8 merge carries Tanzania's `REGION` codes 740-770 and no value labels for
+them (its label set skips the range), so `afrobarometer.load` prints `0 REGION labels` for that
+round and returns a blank label for all 2,398 respondents. Nothing errors. **Read the per-round
+`REGION labels` count `load()` prints, not only the pooled total.** Where the codes mean one unit
+in every labelled round (assert it; it also proves typos like `Mrwara` for Mtwara), decode the
+bare round by code and check it Denmark's two ways: unweighted sample share per unit against the
+neighbouring rounds (Tanzania +0.989) and weighted share against the population (+0.959).
+`sources/tz.py::decode_codes`, `check_r8`.
+
+### A ROUND FIELDED BEFORE A REGIONAL RE-CUT IS PLACED BY ITS DISTRICT COLUMN, OR LEFT OUT — Tanzania, 2026-09-14
+
+Tanzania created four regions in March 2012, after Afrobarometer round 4 and during round 5; both
+rounds label the 26 old regions. **Before pooling rounds on a region label, check the boundary
+history across the pool's span, not only the spellings.** Round 4 has `DISTRICT`: match each to
+the boundary file's current district names and assert it lands in one of its old region's
+successors (1,192 placed, 136 in new regions), and drop a district that was itself divided across
+the new line (Magu, 16). Round 5 has nothing finer, so it cannot place anyone in the five split
+regions, and keeping it would measure nine units on fewer rounds than the rest, which is Nigeria's
+round 6 gap made on purpose; it is left out (2,396). The same district column checks the region
+labels of later rounds for free (Tanzania rounds 6, 7 and 9: 0 disagreements).
+`sources/tz.py::decode_r4`, `check_locations`.
+
+### A RIGHT-ALIGNED PDF TABLE IS READ BY ITS DRAWN RULES, NOT ITS COLUMN LABELS — Pakistan, 2026-09-14
+
+PBS's 2023 Table 9 prints numbers right-aligned in columns of unequal width. Assigning each number
+to the nearest printed column number (`1`..`10`), or cutting at the midpoints between them, put a
+one-digit Scheduled Castes cell into Sikh on the first page. **Read the header's vertical rules
+from `page.get_drawings()` (they come as thin rectangles, two x's per rule) and assign each number
+by its RIGHT edge.** Then make a misread loud: a row must fill every column exactly once, and every
+block's own arithmetic (total = categories, sexes add, rural + urban = all) is asserted. That
+arithmetic also caught the publisher's summary table misprinting a cell (Punjab Muslim 24,462,897
+for 124,462,897). `sources/pk_2023.py::_column_edges`.
+
+### WHEN ONE PART OF A COUNTRY NEEDS A SECOND BOUNDARY SOURCE, ASSERT PEOPLE, NOT AREA — Pakistan, 2026-09-14
+
+No one file had Pakistan's 2023 districts: COD-AB carried 129 of them, and Karachi's seven had to
+come from OpenStreetMap, clipped to COD's Karachi. An intersection-over-union bar on the two
+footprints failed at 0.588 on a correct pairing, because OSM's coastal districts run their
+boundary out over the sea; an area-coverage bar then came in at 93.2% against a 0.95 picked before
+looking. **The measure that means something is population: the grid's people inside the primary
+file's footprint that the second source does not cover** (2,806, 0.01% of Karachi). Confirm each
+pairing with a key neither file's name carries, here OSM's subarea towns against the census's own
+sub-divisions. And before writing a second mapping module for a country that already has one,
+pin `taxonomy/registry.py`'s `OVERRIDE`: two vintages on disk make `discover()` refuse for
+`coverage.py` and every other consumer, which breaks other sessions' builds, not only yours.
+**And never name a `sources/` script like a mapping module.** The parser was first
+`sources/pk2023.py`, beside `taxonomy/pk2023.py`; `coverage.py` puts `sources/` ahead of
+`taxonomy/` on `sys.path`, so inside `tiles.py` `import pk2023` loaded the parser, and the whole
+build tail died after writing the archive with *"pk2023 has no MAP"*. `check_mapping.py` and a
+bare `coverage.py` both passed, because they import in a different order. A vintage source script
+takes an underscore: `sources/pk_2023.py`. `sources/pk_2023_geo.py`, `sources/pk.md` §9.6.
+
+### A SQUATTED OFFICE DOMAIN SERVES THE REAL DOCUMENT WITH LINKS INJECTED, AND A WORD PDF'S TRAILER CAN SIT 90 KB FROM THE END — Republic of the Congo, 2026-09-14
+
+`cnsee.org`, the domain of Congo's statistics office before it became the INS, is squatted and
+still serves the 2007 census brochure, reflowed to 20 pages with spam links written into its text
+layer (§11aq). Nothing on the page says the host changed hands, and the tables may well be
+untouched. **When an office has renamed itself, cite and fetch the Wayback `id_` capture from
+before the change, and refuse a body carrying a URL the original never had**: `sources/cg.py`
+checks the exact size and the absence of `http`.
+
+**That capture fails the `%%EOF`-in-the-last-2-KB rule and is complete.** Word 2007's PDF export
+writes a free-object xref list after its last `%%EOF`; this file has 93,345 bytes of it, cut off
+mid-entry, and PyMuPDF opens it as repaired. Every page has its text and Tableau 11 closes to the
+person. The trailer rule ([[reference_pdf_truncated_at_source]]) is a reason to look, not a
+verdict: check the page count against the document's own table list, text on every page, and a
+reconciliation. `sources/cg.md` §2.
+
+### A ROUND THAT SKIPS A UNIT BREAKS THE HALVING, AND BREAKS THE NULL DIFFERENTLY — Ukraine, 2026-09-14
+
+ESS's Ukrainian rounds 2-5 each skip two to four oblasts (Ternopil is absent from rounds 2 and 3,
+Khmelnytskyi from 3, 4 and 5). `be._median_rho` drops any halving in which a unit has no respondents
+in one half, so five of ten halvings would vanish from the statistic; and the per-round permutation
+moves an absent unit's zero row onto other units, so the null drops different halvings from the ones
+the statistic dropped. Neither errors. **Tabulate which units each round sampled, assert it, and run
+the test on the units present in every round** (`sources/ua.py::EXPECT_ABSENT`, 19 of 26); the shares
+are still drawn for all of them.
+
+### A LATE ROUND THAT CANNOT REACH PART OF THE COUNTRY CANNOT SET ITS LEVEL ALONE — Ukraine, 2026-09-14
+
+The Norway entry above scales a pooled pattern to a recent round's level. Ukraine's round 11 puts no
+religion 6.3 points above the pool on the 23 oblasts it sampled, and it cannot sample Crimea,
+Donetsk or Luhansk. Scaling only the units it reached draws a vintage step along a line of
+occupation; scaling all of them asserts a change nobody measured there. **Before rescaling, check
+that the late round covers every unit the factor will be applied to**; where it cannot, and the
+missing units are missing for a reason like this one, leave the level, say its vintage, and print
+the drift. Ask 016.
+
+### ESS's `searchDatafiles` IS GONE; THE SERIES LISTS EVERY ROUND'S FILE — Ukraine, 2026-09-14
+
+`search.searchDatafiles` (sources/fr.py's comment) is not in the schema any more, and
+`elasticSearch.searchForStudiesQuery` fails server-side. `search.seriesMetadata(id:
+"321b06ad-1b98-4b7d-93ad-ca8a24e8788a", version: 985, instance: PUBLISHED, agencyId: INT_ESSERIC)
+{studies{title{en} mainDataFiles{id version title{en}}}}` returns the main file of ESS1 to ESS11 in
+one call; `sources/ua.py::ESS_FILES` has rounds 2-6 and 11. Two smaller things from the same country:
+`data.gov.ua` and `razumkov.org.ua` answer 403 to WebFetch and 200 to a script with a browser header
+set, and **COD-PS Ukraine is restricted** by UNFPA, so it cannot be a population base.
+
+### A TABLE'S OWN TOTALS FIND THE OFFICE'S TYPOS, AND A ROW GAP EQUAL TO A COLUMN GAP NAMES THE CELL — Guinea-Bissau, 2026-09-14
+
+Guinea-Bissau's Anexo Quadro 2 (região x etnia, counts) was transcribed correctly and still did
+not close: the Fula row and the Oio column were both exactly 21,000 short, and the Mandinga row
+and the Cacheu column both exactly 10,000 short. Those are two dropped digits in the office's own
+typing (2,980 for 23,980, 1,460 for 11,460), and the shares printed beside them had been computed
+from the misprints, so the shares agreed with the wrong counts. **Before blaming a transcription
+for a total that does not close, sum the rows AND the columns against the printed totals: an
+office typo shows as one row and one column short by the same amount.** Other splits across the
+four cells would close too, so the correction is only the likeliest one (a single slipped digit);
+say that in code. The Gambia's H.28 (§11aq) is the same move on a whole table.
+
+### A TRUNCATED WAYBACK CAPTURE OPENS AS THE WHOLE DOCUMENT; A URL WITH TWO CDX DIGESTS HAS ONE BAD COPY — Guinea-Bissau, 2026-09-14
+
+The CDX for Guinea-Bissau's socio-cultural volume lists two digests for one URL. One of them is the
+first 1,048,576 bytes of the file: it starts `%PDF-1.5`, has no `%%EOF`, and PyMuPDF opens it and
+reports all 92 pages. **A page count is not a completeness check.** Where a URL has captures with
+different digests, fetch one of each before choosing; check the trailer, and pin the file's SHA-1
+in the base32 form the CDX's `digest` column uses, so any later fetch from the office or the
+archive proves it got the same bytes.
+
+### PROSE CAN SWAP WHAT ITS TABLE HAS RIGHT, AND ANOTHER CROSS-TAB OF THE SAME CENSUS IS THE WITNESS — Guinea-Bissau, 2026-09-14
+
+Guinea-Bissau's report says Gabú and Bafatá are "77.1% and 86.5% respectively" Muslim; its tables
+say the reverse. The scout's note put the swap in the table; it was in the sentence above the
+table. To settle it without trusting one tabulation twice, predict each unit from a different
+cross-tab: região x etnia counts times the national religion rate of each etnia. It fits the
+Muslim column at r = +1.000 once the two misprints above are fixed. **Two limits.** National rates
+cannot see a city: Bissau's Christians run 12 points above the prediction, so the correlation bar
+has to allow for that. And a swap test has no power between units printed alike: Tombali and Oio,
+within 3.3 points on every answer, swap "better" by noise, so count as a failure only a swap
+between units that differ visibly.
+
+### A CENSUS OLDER THAN ITS BOUNDARY FILE NEEDS AN AREA CHECK, NOT ONLY A NAME JOIN — Chad, 2026-09-14
+
+Chad's 2009 census has 22 régions and COD-AB v01 (2025) has 23 provinces. The one documented
+change, Ennedi's 2012 split, was dissolved. **Two départements had also changed province since
+2009, Djourf Al Ahmar from Sila to Ouaddaï and Abdi the other way, and nothing in the census
+volume says so.** Every name joined, every total closed, and Sila would have been drawn on
+24,835 km² instead of about 35,900, with Am-Dam, Haouich and Magrane's dots in Ouaddaï.
+
+What caught it: the structure volume's Tableau 2.13 prints population and density by région, and
+population over density is the 2009 area. COD's Ouaddaï came out 35% too large and Sila 31% too
+small, **by amounts that cancel**, which is what a département moved across a shared border looks
+like. The scanned sous-préfecture volume then confirmed it by name. `sources/td_geo.py` now builds
+the régions from COD's départements and asserts the rebuilt areas.
+
+**Rule: when the census predates the boundary file, compare areas as well as names**, from any
+table that prints area or density, and rebuild from the finer COD tier where a pair of
+neighbours is off by equal and opposite amounts. A few percent, open water (Lac, 0.90x) or a
+capital district (N'Djaména, 436 km² against 500) is digitising, not a moved unit.
+
 ## 13. Things deliberately not being done
 
 - **No world-history time slider.** cityhistory is that map. Religion over time at this granularity is a
@@ -8293,6 +9762,21 @@ can reach.
 - **No adherent-count aggregation across bases** (§3.1), however tempting the coverage would be.
 - **No node invented at ingest** (§2). Unmapped source categories go to a file and wait.
 - **No log scale** (§4.1), and no confidence expressed in colour (§7).
+
+### A SURVEY SERIES OPENED FOR ONE COUNTRY HAS TO BE SCANNED FOR ALL OF ITS COUNTRIES — Uzbekistan and Turkmenistan, 2026-09-14
+
+The Central Asia Barometer was opened for Tajikistan (§11ak), found to exclude the religion question
+there, and closed. Uzbekistan had been closed the same morning on LiTS's coverage, and Turkmenistan
+was recorded as having no route at all. The same archives held 9,000 Uzbek answers on all 14 regions
+and 4,500 Turkmen answers on six (sources.md §11ao). **Before closing a multi-country file, scan every
+country in it for the item and a place variable**, and write the per-country result down. Two traps
+from the same session: the barometer changed from face-to-face to phone interviews at wave 7, which
+dropped the item for one country and cut the Christian level to a sixth for another, so check the
+mode before pooling; and `sources/arabbarometer.py`'s `quota_agreement` compares only waves listed in
+`WAVE_NAMES`, so on any other survey it finds no pair and `assert_not_quota` passes without testing
+anything. Fixed with the Uzbek build: both take `waves=`, a frame wave missing from the order now
+stops the run, and `assert_not_quota` returns how many pairs it compared (`sources/cab.py` requires
+all of them).
 
 ## 14. What this map could do harm with — ASSESSED 2026-09-04
 
@@ -10950,7 +12434,7 @@ work: Kontur's NL extract carries Brugge, Knokke and Zeebrugge, 371,100 Belgians
 Dutch gemeente is Sluis, and a nearest-join with no working cap hangs all of them on a gemeente
 of 24,000 people. **Project before any join whose output you are going to compare to a number.**
 
-## 15. Magnitude without location — the national estimate layer — DECIDED 2026-09-09, NOT BUILT
+## 15. Magnitude without location — the national estimate layer — DECIDED 2026-09-09, SCOUTED 2026-09-14 (§15.4b), BUILT 2026-09-14 behind a toggle, off by default (§15.11)
 
 > Anita, `todo.txt`: *"for this given country and this religion, this is our best national level
 > estimate of how many peopple are this religion … this might help with presenting a slightly more
@@ -10983,7 +12467,7 @@ All three of Anita's, in her order:
 They differ only in where the estimate sits relative to what was drawn. One data layer answers all
 three, and §15.2 makes one *symbol* answer all three as well.
 
-### 15.2 The symbol is an outline, and case 3 gets one too
+### 15.2 The symbol is an outline, and case 3 gets one too — the stroke as hover target REVERSED 2026-09-14 (§15.11a)
 
 The first sketch was a dwell: hover empty ground inside a country for 0.25 s without moving. **It is
 the right instinct and the wrong mechanism**, and Anita killed it on the second reading: *"dwell
@@ -11062,10 +12546,12 @@ Table 2.1.1's population (§9an), and both reconcile. What is new is that the fa
   Alevis". The card prints the figure at the precision the chain can carry and names every source in
   it, rather than presenting one blended number with one citation.
 
-**And the basis vocabulary already has the slot.** §3.1's `estimate` is defined as *"a compiler's
-judgement"* and names Pew, WRD/WCD and ARDA as the reporters. Every row here is `estimate`, every dot
-on the map is `self_id` or `roll`, and §13's ban on aggregating adherent counts across bases is what
-keeps the two from ever being added. **They are shown beside each other and never summed.**
+**And the basis vocabulary already has the slot, though not every row fills it.** §3.1's `estimate`
+is defined as *"a compiler's judgement"* and names Pew, WRD/WCD and ARDA as the reporters. Most rows
+here are `estimate`; a national survey figure too thin to place, such as CGSS's Daoists (§15.4b), is
+`self_id`, and a row keeps whichever basis its own source has. Every dot on the map is `self_id` or
+`roll`, and §13's ban on aggregating adherent counts across bases is what keeps the two layers from
+ever being added. **They are shown beside each other and never summed.**
 
 **Where a source publishes a range, carry the range.** Pew's *Mapping the Global Muslim Population*
 gives Shia shares as bounds for exactly the countries where the answer is contested. §14 rule 1
@@ -11086,7 +12572,7 @@ calls it: the backbone and the denominator, not a source of depth.
 
 | candidate | what it gives | cost |
 |---|---|---|
-| **ARDA / Correlates of War World Religion Project** | ~30 categories, national, free. **Verify the exact list before committing** — the reason to look is that it is believed to name Sunni and Shia apart and to give Taoism, Confucianism and Shinto rows of their own rather than folding them into `other` | stops at **2010**. `sources.md` §1 calls it "too old to lead", which is right for dots and is a caption here rather than a disqualification |
+| **ARDA / Correlates of War World Religion Project** | ~30 categories, national, free. **List verified 2026-09-14** (`sources/estimates.md`): Sunni, Shia, Ibadi, Nation of Islam, Alawite and Ahmadiyya; Mahayana and Theravada; Catholic, Protestant, Orthodox and Anglican; single columns for Taoism, Confucianism, Shinto, Sikh, Jain, Baha'i, Zoroastrian, animist and syncretic. No Alevi, Druze or Sunni schools | stops at **2010**, and is not self-identification. The scan found it usable for Islam's splits after a hand review and for nothing else; **§15.4b** |
 | **US State Department International Religious Freedom reports** | annual, every country, public domain, and they routinely print the exact sentence this feature wants about a country's Sunni and Shia split | prose, so per country by hand. The natural home for the overrides §15.5 governs |
 | **Pew, *Mapping the Global Muslim Population*** | Sunni/Shia by country, as ranges | 2009, and Muslims only |
 | **World Religion Database (Brill)** | the deepest of them | paywalled, confirmed |
@@ -11095,6 +12581,70 @@ calls it: the backbone and the denominator, not a source of depth.
 shares are not comparable across its own rows. §14.14 permitted it for groups selected on outside
 evidence and refused it as a threshold; a layer whose whole output is a magnitude is the threshold
 case.
+
+#### 15.4b What the scan found — SCOUTED 2026-09-14, `tools/scan_estimates.py`
+
+> Anita, 2026-09-14: *"i think we should try to avoid using bare 2010 figures if possible … i'd like
+> to use pew for totals and WRP for splits yeah."*
+
+**The chain is Pew 2020 for every total and the World Religion Project only for a share inside one of
+Pew's families.** A Shia figure is Pew's 2020 Muslims times WRP's 2010 Shia share of Muslims. That is
+§3.4's shape, structure from the older source and the total from the newer, and it keeps WRP's basis
+out of the magnitude: **Pew counts self-identification and WRP, by its own codebook, does not.** Inputs,
+URLs and the two country-code joins are in `sources/estimates.md`. The 195 joined Pew countries sum
+back to Pew's own world row for all six named families.
+
+**What passes.**
+
+| | |
+|---|---|
+| Pew's seven families | 195 countries, 2020, self-identification. **80 are not built.** Nothing to review |
+| Islam's Sunni and Shia shares | 111 and 78 countries. §15.3 refuses 9 Sunni and 5 Shia (Iraq, France, Belgium, Greece, Bulgaria). **73 Shia outlines**, 37 of them in countries with no dots. World Shia 240M, 210M outside the refused countries |
+| the two hand rows | China's Daoists **2.7M–4.0M** (CGSS 2021 0.19%, CLDS 2016 0.28%, adult shares over Pew's population); Türkiye's Alevis **3.4M–4.9M** (KONDA 2007–2021, ISSP 2010). Both ranges, no points |
+
+**What does not, and each is worth knowing beyond this file.**
+
+- **A zero in a WRP family column is not a measurement.** 63 countries record Muslims with every
+  family at zero, China's 33.6M among them, and 88 do the same for Buddhists, including China, Japan,
+  South Korea and Taiwan. §12's Tajikistan rule; no split is emitted.
+- **Islam's splits need a hand review before any is shown**, because the worst errors carry no flag.
+  Comoros is recorded **100% Shia** in 2000 and 2010, and it is overwhelmingly Sunni. Lebanon 2010 is
+  **Sunni 1,101,870 and Shia 1,101,870**, a placeholder. Ahmadiyya is recorded in **Indonesia alone**,
+  while eight built countries draw Ahmadis, so its 590k world total means nothing and the node is
+  withheld. About 75 rows; a sitting's work.
+- **The Buddhist split is not usable.** Seven countries, and two are wrong: Vietnam **75.5%
+  Theravada**, Sri Lanka **19.9% Mahayana**.
+- **Nothing inside Pew's `Other_religions` can come from WRP.** WRP's share of its own other-type
+  columns times Pew's other (route A) and WRP's share of population times Pew's population (route B)
+  differ by more than 2× for **23 of 35** Sikh estimates, **73 of 108** Baha'i and **74 of 104**
+  indigenous. A inflates where WRP's other columns are thin: 240k Sikhs in the Netherlands against B's
+  14k. B inflates where WRP counted practice or rolls: 110M Shinto in Japan, 57M animists in China.
+  So Daoism, Sikhism, Shinto, Jainism, Baha'i and Zoroastrianism come from hand rows only, and **that
+  includes Taiwan's Daoists**, which WRP puts at 4.1M. Pew's methodology cites its own Taiwan survey on
+  people raised Daoist; that is the candidate.
+- **The UN Demographic Yearbook's census table does not rescue them.** `data/raw/unsd/` covers 117
+  countries, 90 already built, and its latest tabulations name Sikhs in 13 countries, Jains in 4,
+  Daoists in 3, Shinto in 3 and Alevis in none. Its use here is narrower: a built country whose
+  national table is finer than the table its dots came from, and a few unbuilt ones such as Iran's
+  2016 Zoroastrians.
+
+**§15.3's node test has a blind spot, and the scan found it twice.** It compares node ids, so a source
+category whose boundary is not a node boundary passes. **WRP's `Orthodox` holds Eastern and Oriental
+Orthodoxy together**: Ethiopia's 50M Tewahedo Christians came out as Eastern Orthodox and passed,
+because Ethiopia draws `christianity.oriental.ethiopian`, a sibling. **Singapore's census `Taoism`
+"includes Chinese Traditional Beliefs"** and is drawn as `chinesefolk`, so a WRP Daoism figure there
+restates the same column under another name. The first is fixed by giving WRP's Orthodox no node, like
+its Protestant (270M and 590M, neither drawable); the second is refused by hand in `SAME_COLUMN`.
+**Expect more of these.** A compiler's categories need the same column-by-column argument the country
+mappings get, which is §7a-i-1's lesson arriving from the other side.
+
+**What the first build can honestly carry**: Pew's families everywhere, Islam's split after the review,
+and hand rows for the small religions. That is thinner than §15.1 hoped for Daoism, where the outlines
+come down to China and, once sourced, Taiwan.
+
+**The viewer has no outline layer yet.** The country borders on screen are OpenFreeMap's basemap. The
+`country-shapes` source the coverage wash already loads is what an outline layer would draw from, and
+it holds built countries only (§15.7).
 
 ### 15.5 Precedence is specificity, and specificity is usually the interested party
 
@@ -11128,7 +12678,7 @@ known collisions are not rediscovered as bugs.
   and Daoism and Shia are precisely the two selections this feature exists for. Expect a lightness
   floor of its own, or a dark halo under the stroke.
 
-### 15.7 All 201 countries, and what the title has to say instead
+### 15.7 All 201 countries, and what the title has to say instead — the title point WITHDRAWN 2026-09-14 (§15.11)
 
 Anita, 2026-09-09: *"yes i think we can cahgne what the titles country count means. not dots in all of
 them. ideally we cover all 201 countries with this, or try to."*
@@ -11206,3 +12756,99 @@ Open:
    the current picker cannot see it.
 3. **What the unit-composition panel does when clicked in an estimate-only country.** There is no unit
    and no composition; there is a country and a list of quoted shares.
+
+### 15.11 Built behind a toggle, Pew first — BUILT 2026-09-14
+
+> Anita, 2026-09-14: *"lets build pew first. also lets first build this as a toggleable feature. nto
+> enabled by default. i think small religions from specificalyl entered figures is good yeah … though
+> we should try to find self-identification ones so that we stay somewhat consistent. ideally we show
+> alevis separately from muslims. would like to be consistent with taxonomy."*
+
+**What shipped.** `estimates.py` builds two files, and the viewer fetches them only when the new
+`national estimates [hidden][shown]` row under `presence rings` is turned on:
+
+| file | what | size |
+|---|---|---|
+| `data/processed/estimates.json` | per country, the figures that may be shown; per node, the world figure and which countries are outlined | 43 KB |
+| `data/processed/estimate_shapes.geojson` | one polygon per country with anything to show; the viewer draws the outline from it | 2.2 MB |
+
+The inputs are Pew's seven families for 2020 and the hand rows in `estimates_hand.py`, which holds two
+so far: China's Daoists and Türkiye's Alevis. **Nothing comes from the World Religion Project**
+(§15.4b). With a religion selected, the countries holding a figure for exactly that node get an outline
+in its colour and a card on hover or tap, and the caption under "Viewing" gains a line: *1178m
+worldwide, Pew 2020* for Hinduism, *2.7m to 4.0m estimated in China* for Daoism.
+
+**Four decisions made while building it**, each also in `estimates.py`'s docstring:
+
+- **Separate files, not `counts.json`.** §15.10 proposed shipping inside `counts.json`. A layer that is
+  off by default should cost the default map nothing, and `counts.json` is fetched on every load. The
+  hand rows are one module rather than §15.10's directory of per-source files, because two rows do not
+  need a directory; split it when a source brings dozens.
+- **Alevis come out of Pew's Muslims**, Anita's call. Pew has no Alevi category, so its Muslims in
+  Türkiye include them, while the taxonomy keeps `alevism` apart. A hand row's `within` subtracts its
+  range from that family, so Türkiye's Muslims become 79M to 80M and the world's 2017M to 2019M. The
+  Türkiye figure itself is refused by §15.3, since Türkiye draws Islam.
+- **A floor of 10,000.** Pew prints "<10,000" below it, and a figure the source will only give as
+  "fewer than" is not a presence to outline. Those rows still count toward the world total.
+- **Polygons in the file, lines drawn from them, and the antimeridian cut left out of the lines.** A
+  line layer over Natural Earth's polygons draws their 180° cut as a border down the Pacific, so the
+  viewer's `estimateLines` drops the segments lying on it. Built countries use the wash's own shapes
+  at ~500 m and unbuilt ones Natural Earth at ~1 km, which is §15.7's coarser tier.
+
+**§15.6's legend collision did not arise for this first set.** The outline takes its colour from the
+focus table (`NODE_COLOR`) rather than `colorOf`, so a node has a colour even when it is not itself a
+drawn row; and every node with a figure here also draws dots somewhere on the map, so its legend row
+exists. The first hand row for a religion no country draws will hit it.
+
+**Verified on the running page, 2026-09-14**, through the control rather than by setting state. Off by
+default, with neither file fetched. On: Islam outlines 61 countries, Hinduism 20, Judaism 3,
+unaffiliated 77, Daoism and Alevism one each, Shia none. The cards for Iran, Türkiye and China give
+their figures and sources. Off again: nothing outlined, no card, no caption line.
+
+**Adding to it.** A new figure goes in `estimates_hand.py`, self-identification first, then `python
+estimates.py`. A hand row for a node Pew also names replaces Pew's figure for that country (§15.5).
+A figure published as a share of one of Pew's families, such as a sect's share of Muslims, takes
+`of="islam"` and is multiplied by Pew's 2020 figure for that family: §15.4's chain, added 2026-09-14
+for the Gulf's Shia and Sunni rows.
+
+**Still open:**
+1. Islam's Sunni and Shia split, after the hand review §15.4b calls for. Queued in `estimates_todo.md`.
+
+**Closed the same day, both Anita's calls.** The control's tooltip is the explanation and the about
+panel says nothing about the layer: *"tooltip enough i think."* And the header keeps counting built
+countries only, which withdraws §15.7's two-number title: *"lets not change wording of religions in n
+countriess."*
+
+#### 15.11a Four refinements the same day, and one reversal — BUILT 2026-09-14
+
+Anita, looking at Christianity with the layer on: *"could we have the outline be like half as thick?
+also, lets maybe lower the opacity of the outline slightly if the percent of the population of the
+country is low … also yeah we can have outlines fade when zoomed into a coutnry, and also have
+outlines disappear when we have just one country in view (in auto mode or manually)."* And within the
+hour: *"i think we should move the hover off the outline and into the interior of the country. the
+awkward part is when you mouse over a border and its not clear how to get it to show the country on
+one side of the border or the other."*
+
+- **Half the width**: 0.4 px at z1, 0.65 at z5, 0.9 at z9.
+- **Opacity follows the figure's share of the country**, on her stops: 100% draws at 1.0, 10% at 0.6,
+  1% at 0.3, 0.1% at 0.15 and 0.01% at 0.05, interpolated on the logarithm and clamped at both ends.
+  A range uses its upper end, because the weight is a picture and not a number the card states.
+  Libya's Christians, 0.5% of the country, draw at 0.26; the Democratic Republic of the Congo's, 96%,
+  at 0.99.
+- **A fade on the coverage wash's own curve**, full to z6.5 and gone by z8.5. Both layers end at
+  z8.5, so a faded country cannot answer a hover either.
+- **Nothing in a one-country view**, whether Auto picked the country or the reader did, and the
+  caption line leaves with the outlines, as the coverage caption already did.
+- **THE HOVER TARGET MOVES FROM THE STROKE TO THE INTERIOR, reversing §15.2.** A border belongs to two
+  countries, so a stroke on it cannot say which one it means. §15.2's objections were to a *dwell*
+  over the interior rather than to the interior: this card comes up at once, a dot under the pointer
+  still wins, and the outline is what tells a reader there is a card to find. The hit layer is an
+  invisible fill, which is why the shapes file now carries polygons, 2.2 MB against the lines' 1.6 MB.
+
+**Re-verified on the running page**: the width and opacities as above; cards from the middle of Libya
+and of Algeria, none over the sea and none at z9; selecting Egypt empties the outlines, the card and
+the caption line, and returning to all countries brings back all 74.
+
+**Further figures are work for short agents**, one item each from `estimates_todo.md`, which is where
+Anita's call of the same day put them rather than in one long session. `CLAUDE.md` points an agent
+spun up for this at that file.

@@ -658,3 +658,71 @@ and those dots keep the `son` placement by default. `Kasachstan` is deliberately
 Kazakh citizens in Germany are heavily Russlanddeutsche, so the column is neither a Muslim nor
 an Orthodox signal, which is §14.12's ancestry warning in the one place here where the
 ancestry is genuinely mixed.
+
+## 11. The split-half as a report, 2026-09-14 (ask 012, report only)
+
+Anita ruled on `ask/answered/012-be-five-ess-countries-were-drawn-without-the-sp.md` on
+2026-09-14: run the test Belgium (§9cy) and Sweden (§9cz) draw with on the five ESS countries
+drawn before it, print the tables, move no dots. `python tools/ess_split_half.py de` reproduces
+this section. It imports `sources/stability.py`'s statistic (`median_rho` and `wave_null`;
+`be.py::_median_rho` until 2026-09-14) with be.py's alpha (0.05), draw count (2,000) and seed (0),
+and adds Sweden's spatial chi-square at 0.05 (`stability.chi2_p`) as the second
+requirement. Nothing in `de_ess.py`, `de2022.py`, `countries.py` or the built outputs was
+changed.
+
+**What is tested is only what ESS draws, and in Germany that is much less than in the other
+four.** The register counts Catholics, EKD Protestants and the residual per Gemeinde, ZWST counts
+the Jewish communities, and ESS supplies one thing: each Land's composition of the register's
+residual (§9). So the test runs on that quantity, each category's share of every respondent who
+is not Catholic, EKD or Jewish. `Not applicable`, Refusal, No answer and Don't know stay in
+`unrecorded` and so are in that base without being tested.
+
+The pool is `de_ess.py`'s: every respondent (no citizenship filter), rounds 6, 7, 8, 9 and 11,
+7,235 unweighted in the residual base (6,953 weighted). **15 Länder, not 16**, because Bremen's
+72 pooled respondents are under `N_FLOOR` and it is already drawn with the national
+composition. Five rounds give 10 splits of two against three, with a null that permutes the Land
+labels per round. `national` is the weighted share of the residual base.
+
+| category | node | n | national | median rho | null 95th | p | chi² p | verdict |
+|---|---|---:|---:|---:|---:|---:|---:|---|
+| **Muslimisch/Islam** | `islam` | 401 | 8.04% | +0.857 | +0.336 | 0.0005 | 5.8e-43 | **own geography** |
+| **Eine evangelische Freikirche** | `christianity.evangelical` | 174 | 2.63% | +0.518 | +0.335 | 0.0030 | 3.3e-12 | **own geography** |
+| **Östlich-orthodox** | `christianity.orthodox` | 117 | 2.06% | +0.497 | +0.340 | 0.0035 | 1.1e-09 | **own geography** |
+| **Andere christliche Konfession** | `christianity` | 135 | 2.04% | +0.356 | +0.336 | 0.0420 | 6.8e-06 | **own geography** |
+| Christlich, aber fühlt sich keiner spezifischen Religionsgemeinschaft zugehörig | `christianity` | 112 | 1.55% | +0.195 | +0.356 | 0.1894 | 1.5e-05 | national rate |
+| **Östliche Religionsgemeinschaft** | `other.de` | 89 | 1.40% | +0.371 | +0.321 | 0.0300 | 6.0e-03 | **own geography** |
+| **Andere nicht-christliche Religionsgemeinschaft** | `other.de` | 38 | 0.63% | +0.512 | +0.350 | 0.0080 | 2.8e-03 | **own geography** |
+| Andere protestantische Konfession | `christianity.protestant` | 23 | 0.26% | -0.154 | +0.364 | 0.7766 | 8.0e-01 | national rate |
+
+If the test were applied, two categories would move to the national rate inside each Land's
+residual, 1.81% of the residual base: `Christlich, aber fühlt sich keiner spezifischen
+Religionsgemeinschaft zugehörig` and `Andere protestantische Konfession`. Islam, the
+Freikirchen, Orthodoxy and the other three keep their Land shares.
+
+**The test can see a real geography at this size, which is the doubt ask 012 raised about it.**
+The register's own two answers, run the same way over the same 15 Länder and five rounds as
+shares of every respondent. Neither is drawn from ESS. They are here because the register shows
+their geography is real, so they say whether five rounds and fifteen units have the power to
+find one:
+
+| category | n | national | median rho | null 95th | p | chi² p | verdict |
+|---|---:|---:|---:|---:|---:|---:|---|
+| Römisch-Katholisch | 2,969 | 24.82% | +0.927 | +0.348 | 0.0005 | < 1e-300 | own geography |
+| Evangelisch/Protestantisch (EKD, ohne Freikirchen) | 3,345 | 23.75% | +0.854 | +0.330 | 0.0005 | 1.6e-81 | own geography |
+
+Three readings:
+
+1. **Islam at +0.857 is the highest median rho of any minority category in the seven ESS
+   countries run so far** (Belgium's best is +0.764, France's +0.682, Finland's +0.703), and it
+   is the category most of Germany's modelled layer is made of: 3,471,376 of the 8,040,156
+   people §9 splits out.
+2. **What moving the two would change is small and specific.** `Andere protestantische
+   Konfession` is the only ESS source of §9's +110,000 on `christianity.protestant`, and it would
+   follow each Land's residual instead of 23 respondents. `christianity` has two ESS sources and
+   would still vary through `Andere christliche Konfession`, which carries.
+3. **`Andere nicht-christliche Religionsgemeinschaft` is the pass to treat as provisional**: 38
+   respondents with 6 of 15 Länder empty. Its chi-square (2.8e-03) keeps it under the stated rule,
+   the same position as Belgium's `Eastern religions`. §9's three structural zeros sit in
+   categories that carry, so applying the test would not remove any of them.
+
+Nothing here is alarming in the sense of the ruling, so no ask.

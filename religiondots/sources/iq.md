@@ -285,8 +285,10 @@ instrument rather than from a choice.**
   religious minority may be drawn at governorate, on the ground that governorates are big, and
   §11af recorded before any of these four were built that *"Jordan, Lebanon, Iraq and Yemen
   inherit whatever Anita rules on `ask/001-eg`"*. Iraq's eighteen average **2.56 million**
-  people, more than twice Egypt's twenty-seven. Nothing finer exists anyway: the survey cuts by
-  governorate and carries nothing below it.
+  people, a little over half the 4.5 million of Egypt's twenty-seven (the two `grain` fields in
+  `countries.py`; corrected 2026-09-14, this line had said "more than twice"). So ask 001's
+  ground, that governorates are big, holds less well here; ask 021 puts that to Anita. Nothing
+  finer exists anyway: the survey cuts by governorate and carries nothing below it.
 * **The groups rule 2 is about are placed nowhere.** 25 Christians and 27 others in 8,335
   respondents are both far under §11ad's 1% eligibility floor, so they fail the test that
   decides whether a category carries its own geography and `ab.build` spreads them at the

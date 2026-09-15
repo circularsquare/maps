@@ -456,3 +456,72 @@ other countries.
 in `countries.py`'s internal `note` and in §3 here. `fi2024.py` also says the register is
 *"62.9%"* where everything else says 62.24%. The true figures: 48.96% of citizens would land on
 `rlgdnm`'s Protestant, and the register is 62.2445%.
+
+## 9. The split-half as a report, 2026-09-14 (ask 012, report only)
+
+Anita ruled on `ask/answered/012-be-five-ess-countries-were-drawn-without-the-sp.md` on
+2026-09-14: run the test Belgium (§9cy) and Sweden (§9cz) draw with on the five ESS countries
+drawn before it, print the tables, move no dots. `python tools/ess_split_half.py fi` reproduces
+this section. It imports `sources/stability.py`'s statistic (`median_rho` and `wave_null`;
+`be.py::_median_rho` until 2026-09-14) with be.py's alpha (0.05), draw count (2,000) and seed (0),
+so it is Belgium's statistic rather than a copy of it, and it adds Sweden's spatial chi-square at
+0.05 (`stability.chi2_p`) as the second requirement. Nothing in `fi.py`,
+`fi2024.py`, `countries.py` or the built outputs was changed.
+
+The pool is the build's own: Finnish citizens, rounds 5 to 11, `rlgblg` x `rlgdnafi` through
+`fi._category`, refusals dropped, recoded to the 19 maakunnat through `fi.RECODE`. 12,708
+unweighted respondents (12,682 weighted), 35 splits of three rounds against four, a null that
+permutes the maakunta labels per round. `n` is unweighted, `national` is the weighted citizen
+share.
+
+| category | n | national | median rho | null 95th | p | chi² p | verdict |
+|---|---:|---:|---:|---:|---:|---:|---|
+| **No religion** | 5,929 | 48.01% | +0.593 | +0.281 | 0.0005 | 1.9e-32 | **own geography** |
+| **Evangelical Lutheran** | 6,250 | 47.56% | +0.600 | +0.284 | 0.0005 | 3.6e-31 | **own geography** |
+| **Eastern Orthodox** | 129 | 1.02% | +0.703 | +0.285 | 0.0005 | 6.8e-18 | **own geography** |
+| Pentecostalism | 112 | 0.93% | +0.242 | +0.285 | 0.0845 | 6.9e-06 | national rate |
+| Jehovah's Witness | 61 | 0.53% | +0.027 | +0.277 | 0.4398 | 1.7e-01 | national rate |
+| Other Christian denomination | 57 | 0.49% | +0.357 | +0.289 | 0.0185 | 2.9e-01 | refused on the chi-square |
+| Islam | 47 | 0.44% | +0.137 | +0.313 | 0.2464 | 3.9e-02 | national rate |
+| **Free church** | 35 | 0.28% | +0.525 | +0.297 | 0.0025 | 4.5e-03 | **own geography** |
+| Other Non-Christian religions | 28 | 0.24% | +0.341 | +0.320 | 0.0390 | 5.8e-01 | refused on the chi-square |
+| Roman Catholic | 17 | 0.15% | +0.244 | +0.333 | 0.1169 | 6.1e-01 | national rate |
+| Eastern religions | 14 | 0.13% | +0.129 | +0.322 | 0.2514 | 8.6e-01 | national rate |
+| **Advent church** | 13 | 0.10% | +0.328 | +0.320 | 0.0500 | 6.7e-03 | **own geography** |
+| Other Protestant denomination | 10 | 0.09% | +0.244 | +0.352 | 0.1274 | 2.8e-01 | national rate |
+| Jewish | 3 | 0.02% | +0.646 | +0.646 | 0.1479 | 1.0e+00 | national rate |
+| Mormon | 3 | 0.02% | -0.081 | +0.726 | 1.0000 | 7.0e-01 | national rate |
+
+If the test were applied, ten categories would move to the national rate, 3.04% of citizens:
+Pentecostalism, Jehovah's Witness, Islam, Roman Catholic, Eastern religions, Other Protestant
+denomination, Jewish and Mormon on the rank test, and Other Christian denomination and Other
+Non-Christian religions refused on the chi-square. The five that keep their maakunta shares are
+96.96% of citizens.
+
+**This reverses §8's verdict on Lutheran, and the statistic is the reason, not the data.** §8
+ran one halving (rounds 5-7 against 8-11) against the fixed bar 1.96/sqrt(18) = +0.462, got
++0.44, and called Finland the ESS country whose largest category fails. Its respondent counts
+and chi-squares are this table's to the digit (6,250, 5,929, 129; 3.6e-31, 1.9e-32, 6.8e-18), so
+it is the same pool. On the median over all 35 splits against a per-round null, Lutheran is
++0.600 against a 95th percentile of +0.284. That is Sweden's §2 finding a second time: one
+halving is a draw rather than a statistic. The round-to-round wobble §8 describes is real and
+still in the data; it does not reach the ordering of the maakunnat.
+
+**§8's eligibility floor and this test disagree about the small categories, in both
+directions.** Free church and Advent church are under 1% and carry; Pentecostalism is 0.93%, the
+largest of the small ones, and does not (p = 0.085). Size was never the question the test asks.
+
+**Advent church is the pass to treat as provisional.** It clears the rank test at p = 100/2001,
+the last draw count that is under 0.05, on 13 respondents with 12 of 19 maakunnat empty, which
+is the tie-breaking shape Sweden refused twice. Its chi-square is 6.7e-03, so the stated rule
+keeps it. Fifteen tests at 0.05 expect three quarters of a false pass and this is where one
+would sit. Free church (35 respondents, 9 empty, chi-square 4.5e-03) is firmer. Together they
+are 0.38% of citizens and neither is load-bearing.
+
+**Islam fails on 47 citizen respondents** (7 maakunnat empty, p = 0.25) while its chi-square
+just clears at 0.039: the maakunnat differ, and the ordering does not recur between rounds. The
+foreign half, which is census citizenship and not ESS, is untouched by any of this.
+
+Nothing here is alarming in the sense of the ruling, so no ask. The one file that should change
+if the ruling is ever reversed is `note_public`'s sentence about reading small categories as
+"some, here", which would become "the national rate, here" for the ten.

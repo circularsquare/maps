@@ -28,6 +28,8 @@ write the record** — a country parked cleanly at checkpoint B is worth more th
 python tools/claim.py                 # what is claimed, what is parked, what is free
 python tools/ask.py                   # what is already waiting on Anita, so you don't repeat it
 python tools/oracle.py --list         # UNSD's own list, with counts
+python tools/where.py <cc>            # once you have a candidate: its files, record sections,
+                                      #   queue rows, asks and rulings, with line numbers
 ```
 
 **`WebSearch` and `WebFetch` are the source-hunting tools.** A Gemini API route was built and
@@ -58,11 +60,45 @@ deriving it independently all get the *same* id, and `claim.py` can then neither
 what nor stop one of them releasing another's claim. Only fall back to the last path component of
 your scratchpad directory if you were given nothing.
 
+**Then read the playbook for your route, and `playbooks/geography.md` always.** A census table is
+`playbooks/census_table.md`; a survey is `ess`, `lapop`, `afrobarometer`, `arabbarometer`, `cab`,
+`lits`, `wvs` or `dhs_mics`. Each is the short, current form of spec §12 for that route: how to load
+it, its traps and the check that catches each, the shared code, and the rulings. Spec §12 keeps the
+reasoning; go there when a playbook names a section.
+
+**And read the lines in `ask/RULINGS.md` for your country and route** (`where.py` lists them).
+Each ruling says what Anita decided and what she did not. A case that is only similar is not
+settled by it; Tanzania's builder stretched the Nigeria ruling that way.
+
+**Scratch files go in `<scratchpad>/<sid>/`, never loose in the shared scratchpad.** Subagents
+share one scratchpad, and on 2026-09-14 two agents silently overwrote each other's helper scripts
+(`shot.js`, `pdftext.py`) there. Make your own folder first and keep everything under it.
+
+**Questions for Anita go in `ask/`, never only in a report or chat.** `ask/OPEN.md` is the one
+file she keeps open, and it only shows ask files (see `tools/ask.py`). Give every ask a
+`--summary` of 40 words or fewer.
+
+**Your final report to whoever spawned you has a fixed shape, under about 300 words:**
+1. one outcome line: drawn / parked at A-B-C / closed / scouted, `cc`, grain, people;
+2. at most three findings another session needs;
+3. calls you made that someone might reverse, one line each;
+4. asks filed, by number;
+5. files touched.
+
+Everything else lives in `sources/<cc>.md`. Anita, 2026-09-14: long reports are more than
+she can keep up with.
+
 **If the free queue is thin or every row left is walled, switch to SCOUT mode**: take a region
 nothing has swept, probe five or six offices, and write what came back into `queue.md` and a
-`sources.md` §11-series section. A good scout leaves the next five build agents something to do.
+`sources.md` section headed `## scout-<YYYY-MM-DD>-<region>.`. A good scout leaves the next five
+build agents something to do.
 `sources.md`'s existing §11 sweeps are the model. Claim the countries you probe so two scouts do
 not sweep the same band.
+
+**Or re-check an old negative.** `python tools/negatives.py --shape` lists closed records shaped
+like the ones that turned out wrong on 2026-09-14: closed because one release or listing lacked the
+table, never on the questionnaire, and silent about what was left unchecked. Its top rows are
+scout work too.
 
 ---
 
@@ -166,7 +202,7 @@ The checkpoints, because they are where a handoff is cheap:
 |---|---|---|
 | **A** | You know the table exists, and have its URL, its tier and its category list. Nothing downloaded. | **Do not start the fetch.** Write the scouting record into `queue.md` and `sources/<cc>.md`, park, stop. This is a good outcome, not a failed run. |
 | **B** | `sources/<cc>.py --fetch` produces `data/normalized/<cc>.csv` and it reconciles. | **Park here by preference.** The expensive, un-resumable part is on disk; the next agent writes the mapping against a CSV that exists. This is the designed handoff line. |
-| **C** | Mapping written, `countries.py` entry in, `check_mapping.py` passes. | **Push on through to the end**, even past 75% — steps 5–12 are mechanical, cheap and mostly waiting on a build. A country registered without dots leaves the tree in the half-state `claim.py` reports as *registered but NOT built*, which is worse than either finishing or never having started. |
+| **C** | Mapping written, `countries.py` entry in, `check_mapping.py` passes. | **Push on through to the end**, even past 75% — steps 5–9 are mechanical and cheap, and under a supervisor steps 10–12 are not yours (§6). A country registered without dots leaves the tree in the half-state `claim.py` reports as *registered but NOT built*, which is worse than either finishing or never having started. |
 
 To park:
 
@@ -193,9 +229,10 @@ something; `spec.md` §12 is meant to be added to.
 
 `python tools/claim.py done <cc> --id <sid>` prints the tail. It is:
 
-- `sources/<cc>.md` written, and a §9-series section appended to `sources.md` (**check the
-  existing headings immediately before you write one** — letters are claimed first-come and there
-  are already two §9ac's).
+- `sources/<cc>.md` written, and a section appended to `sources.md` headed
+  `## <cc>-<YYYY-MM-DD>. <title>`, with `b` after the date if your country already has one that
+  day. Cite it as `sources.md §<cc>-<YYYY-MM-DD>`. No new §9 letters: they were claimed
+  first-come and collided (spec §12).
 - The `countries.py` entry with `note_public` and `gap=`, `python tools/gap_share.py <cc>` run
   and its figure written if it found one, and `python tools/check_md.py` clean.
 - `python tools/built_countries.py --check` naming nothing.
@@ -204,9 +241,7 @@ something; `spec.md` §12 is meant to be added to.
 - Anything that generalises added to spec §12. A trap that cost you an hour costs the next
   session five minutes to read.
 
-Then say, in your final message: the country, whether it is drawn or parked or closed, the one or
-two findings worth carrying, and any ask you filed. Keep it to a paragraph — a supervisor reads
-it, not Anita.
+Then write your final message in the fixed shape from §1. A supervisor reads it, not Anita.
 
 ---
 
@@ -235,26 +270,17 @@ python tools/build_tail.py                   # just says who holds it
 **Waiting is the correct outcome, not a delay to route around.** The build covers every country
 from whatever dots are on disk, so the run you are waiting on very likely already includes yours.
 
+**Under a supervisor, the build tail is not yours at all.** If `rd-super` spawned you, your prompt
+says so: stop after `COMMANDS.txt` step 9 and `claim.py done`. `claim.py` then lists your country
+as waiting for the build tail, and the supervisor runs it for every waiting country at once, about
+hourly. Working on your own, run it yourself as above.
+
 ---
 
 ## 7. If you are the supervisor
 
-Your job is to keep two or three country agents running and to stay small, so you can run all day.
-You are not reviewing their work; `queue.md`, `sources.md` and the checks are the review.
+Follow `.claude/commands/rd-super.md`. It holds the supervisor's whole job: a distinct id for each
+agent, when a reviewer or a scout takes a builder's slot, and when to stop and hand back to Anita.
+It lives in one place so two copies cannot drift apart.
 
-1. `python tools/claim.py` and `python tools/ask.py` — one look at the state.
-2. Spawn agents in the background, each with the prompt: *"You are a religiondots agent. Read
-   `religiondots/AGENT_BRIEF.md` and follow it. Your session id is `<their scratchpad id>`. Take
-   `<cc>`"* — or *"pick a country yourself"* if you have no preference. Assign explicitly when two
-   agents would otherwise pick the same region.
-3. As each returns, append one line to `runlog.md` (date, cc, outcome, ask filed y/n) and spawn a
-   replacement. **Do not paste their reports into your own context beyond that line.**
-4. Spawn a REVIEWER instead of a builder after every second country lands, and always after one
-   that added a taxonomy node or drew from a survey — `.claude/commands/rd-review.md` is its
-   brief, it is a slim pass, and one at a time. Spawn a SCOUT instead when `claim.py` shows
-   fewer than about six free undrawn queue rows.
-5. Stop and hand back to Anita when: `tools/ask.py` shows more than about four open, the free
-   queue is empty and a scout came back empty too, or the same check fails across two different
-   countries — that is the tree being wrong, not the countries.
-
-Anita reads `runlog.md` and `ask/`. That is the whole interface.
+Anita reads `ask/OPEN.md` and `runlog.md`. That is the whole interface.

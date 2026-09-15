@@ -132,7 +132,8 @@ So all four figures are printed on every build and all four reach the reader:
 | Pew Research Center, 2020 | 43.4% | 56.1% |
 
 An 8.2-point spread on the Muslim share, which over 217 million people is 18 million of them.
-`ask/002-ng` puts the §14 question about publishing any of this to Anita; the decision taken
+Ask 010 (`ask/answered/010-ng-should-the-map-publish-a-state-level-christi.md`) put the §14
+question about publishing any of this to Anita; the decision taken
 meanwhile is to draw it and to say all four numbers.
 
 ## 4. The checks, and what each is worth
@@ -203,3 +204,33 @@ times over and on much bigger states.
    the obvious first place to look.
 5. ~~The NBS e-library~~ is **closed with a citable negative**, see §2: NBS's own religion
    document is a proposal for a database that does not exist, and says so.
+
+## Placement: blocks at Kontur's density cap, 2026-09-14 (session `f95259a4-kontur`): Gombe capped, Okene and others listed
+
+Kontur limits every hex to 46,200 people/km², and a block of hexes at that limit is either a real
+dense core or a false concentration (spec §12, "KONTUR'S DENSITY CAP"). **Gombe state (NG016) had
+two blocks in farmland east of Gombe town: 7 hexes with 6 at the limit holding 229,617 people
+(6.3% of the state's placement weight), and 5 hexes with 4 at the limit holding 162,179 (4.4%)**,
+6.5 and 7.2 km from the centre. Kontur within 5 km of the town's own centre never exceeds
+4,859/km².
+
+Both are `capped` in `kontur_cap.csv`, and `scatter.py` now lowers each hex to the median density
+of the populated hexes within 3 km, 354/km² and 153/km², which leaves the blocks 1,786 and 553
+people. Counts did not move: dots per node are identical before and after, 216,796 at 1:1,000
+and 21,678 at 1:10,000.
+
+**Listed as `unreviewed` and not changed.** Every scatter warns about these and draws them as
+Kontur has them:
+
+| unit | where | hexes (at the limit) | share of the unit's placement weight |
+|---|---|---|---|
+| NG023 | Okene, 6.7 km southwest of the centre | 12 (11) | **6.8%**; Kontur at the centre peaks at 11,811/km² |
+| NG004 | 10 km from Onitsha | 11 (1) | 3.2% |
+| NG003 | no town within 20 km | 6 (4) | 2.5% |
+| NG033 | 17 km from Choba | 6 (3) | 1.6% |
+| NG012, NG023 | single hexes west of Okene | 1 (1) each | 0.6% each |
+| NG023 | single hex 3 km from Okene | 1 (1) | 0.6% |
+| NG033 | single hex 16 km from Choba | 1 (1) | 0.3% |
+
+Lagos, Kano and the other blocks at the limit are registered `real`. To act on an `unreviewed`
+block: set its `status` to `capped` and re-scatter.

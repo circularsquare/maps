@@ -1,5 +1,8 @@
 # Pakistan — 2017 Population and Housing Census, via the U.S. Census Bureau
 
+**Since 2026-09-14 the drawn build is the 2023 census, PBS Table 9, at 136 districts: see §9.** Sections 1 to
+8 describe the 2017 build, which is kept and no longer drawn.
+
 `sources/pk.py` → `data/normalized/pk.csv`. 207,684,626 people, **135 districts drawn**,
 6 source categories → 5 nodes, 100% of the published tabulation.
 
@@ -259,6 +262,25 @@ host is **13 distinct URLs**, of which the two `Analysis` ones above are the onl
 WordPress media library (5,407 items, enumerated exhaustively rather than searched) carries the
 2017 `Table09p-*.xls` set and no 2023 equivalent.
 
+### 7b. The 2023 district and tehsil tables are on pbs.gov.pk after all, 2026-09-14
+
+Found by the sect sweep (`sources/branches.md`), not ingested. **§7's "not obtainable" is wrong.**
+
+    https://www.pbs.gov.pk/wp-content/uploads/census_tables/tables/table_9_kp_districts.pdf
+    ...table_9_punjab_districts.pdf, ...table_9_sindh_districts.pdf, ...table_9_balochistan_districts.pdf
+
+All four answer 200, `application/pdf`, 2.3 to 2.7 MB, `Last-Modified` 2025-01-22. The KP file was
+read: *Table 9: Population by sex, religion and rural/urban, Census-2023*, province then **district
+then tehsil**, each by all/rural/urban and sex, with columns Muslim, Christian, Hindu Jati,
+Qadiani/Ahmadi, Scheduled Castes, **Sikh, Parsi**, Others. KP totals 40,641,120, with 4,050 Sikhs
+and 36 Parsis. That header order is §7a's `r1`…`r8`, so §7a's reading of `r6` and `r7` as Sikh and
+Parsi is confirmed.
+
+**Why §7a's exhaustive media-library sweep missed it**: these files sit under
+`wp-content/uploads/census_tables/`, and they are not WordPress media items. Islamabad's file name was
+not probed. A rebuild on 2023 re-opens §3's §14.4 tier argument, because the state now prints Ahmadis
+by tehsil.
+
 **Two routes deliberately NOT taken**, both of which would have produced a Sikh and a Parsi
 node today.
 
@@ -293,3 +315,165 @@ at 40x the mean is a different population wearing the same label. §14.4.
   Not checked; USCB's file does not carry it.
 - **`PK_GEOG2_*_2010` layers** (a second geography vintage, 147 ADM2 units) are in the same
   geodatabase and are not used — they carry the 2010 agricultural census, not religion.
+
+---
+
+## 9. Rebuilt on the 2023 census at district, 2026-09-14
+
+**Pakistan is now drawn from the 2023 Digital Census, PBS's own Table 9, at 136 districts.** Anita
+approved it the same day §7b found the tables: *"ok we can rebuild pakistan at district."* §1 to §8
+above describe the 2017 build, which is kept whole and no longer drawn: `sources/pk.py` (now writing
+`data/normalized/pk2017.csv`), `sources/pk_geo.py`, `taxonomy/pk2017.py` and `_pk_counts`.
+
+| | 2017 (USCB) | 2023 (PBS) |
+|---|---|---|
+| modules | `pk.py`, `pk_geo.py`, `pk2017.py` | `pk_2023.py`, `pk_2023_geo.py`, `pk2023.py` (taxonomy) |
+| people | 207,684,626 | **240,458,089** |
+| districts drawn | 135 | **136** |
+| categories -> nodes | 6 -> 5 | **8 -> 7** |
+| boundaries | USCB geodatabase, identity join | COD-AB v01 tehsils + OSM for Karachi |
+
+`taxonomy/registry.py` pins `OVERRIDE['pk'] = 'pk2023'`, because two vintages on disk otherwise make
+`discover()` refuse for every consumer.
+
+### 9.1 The source
+
+Five PDFs under `https://www.pbs.gov.pk/wp-content/uploads/census_tables/tables/`: `table_9_kp_districts.pdf`,
+`table_9_punjab_districts.pdf`, `table_9_sindh_districts.pdf`, `table_9_balochistan_districts.pdf`, and
+**`table_9_islamabad.pdf`**, which is the name §7b had not probed (no `_districts`; `table_9_islamabad_districts.pdf`
+and `table_9_ict_districts.pdf` both 404). All `Last-Modified` 2025-01-22. Browser User-Agent.
+
+National, and every figure below reconciles to Table 4.13 of the *National Census Report 2023*:
+
+| Table 9 cell | people | share | node |
+|---|---|---|---|
+| Muslim | 231,686,709 | 96.352% | `islam` |
+| Hindu Jati | 3,867,729 | 1.609% | `hinduism` |
+| Scheduled Castes | 1,349,487 | 0.561% | `hinduism` (merged, §9.4) |
+| Christian | 3,300,788 | 1.373% | `christianity` |
+| Qadiani/Ahmadi | 162,684 | 0.068% | `islam.ahmadiyya` |
+| **Sikh** | **15,998** | 0.007% | `sikhism`, new cell |
+| **Parsi** | **2,348** | 0.001% | `zoroastrianism`, new cell |
+| Others | 72,346 | 0.030% | `other.pk` |
+
+Both new nodes were already on the tree from the US build, so nothing was added.
+
+### 9.2 What the parse asserts, and the two traps in it
+
+`sources/pk_2023.py` reads the PDFs by span geometry with PyMuPDF. All of these pass:
+
+- every block's 12 rows: Total = the eight religions; ALL SEXES = male + female + transgender; ALL
+  LOCALITIES = rural + urban, on all nine columns;
+- 136 district blocks, matching PBS's *List of Administrative Districts (as on 01-03-2023)* province by
+  province (35 KP, 36 Punjab, 30 Sindh, 34 Balochistan, 1 Islamabad);
+- 590 tehsil-tier units sum to their districts, and districts to their provinces, on all nine columns;
+- the five provinces equal Table 4.13 cell by cell, and sum to its Pakistan row;
+- Lahore and Islamabad equal §7a's two archived census23 portal records on all nine columns, which is an
+  independent publication path.
+
+**Table 4.13 misprints Punjab's Muslim cell as 24,462,897.** The row's own total less its other cells is
+124,462,897, and the Pakistan row only adds up with that, so the check holds the corrected figure.
+
+**Trap 1: the numbers are right-aligned in columns of different widths.** The first parser assigned cells by
+midpoints between the printed column numbers `1`..`10`, and on KP page 1 a one-digit Scheduled Castes cell
+landed in Sikh. The table's header draws its vertical rules as thin rectangles; reading those and assigning
+each number by its RIGHT edge is exact. A cell that collides or overruns the last rule fails loudly.
+
+**Trap 2: one district header does not say DISTRICT.** Malakand's block is headed `MALAKAND PROTECTED AREA`,
+so a suffix rule filed it and its two sub-divisions under Lower Kohistan. The per-province district count
+against PBS's list caught it; `DISTRICT_HEADERS` names it.
+
+Page 1 of each file prints thousands separators and later pages do not, and the Muslim column is bold on
+some pages; neither matters to a geometry read, and every block's sums would catch a misread digit.
+
+### 9.3 Who is not in it
+
+- **1,041,342 people in restricted areas, counted by head only.** NCR p.124: the 241,499,431 total
+  *"includes individuals from restricted areas for whom only headcounts are available. Consequently, detailed
+  demographic characteristics such as ... religion ... are available for only 240,458,089"*. They are in no
+  table at any level. `gap_share=0.004312`, hand-written, since `tools/gap_share.py` cannot see a group that
+  is in no column.
+- **Azad Kashmir and Gilgit-Baltistan, which is §2 again, reworded.** The 2023 report says census districts
+  were set up in both and the pilot census ran there (PDF pp. 24, 85, 87), but the published 241.5m and every
+  table cover only the four provinces and Islamabad; its migration figure counts only out-migration from them
+  (p.140). So "enumerated, not published", and `note_public` now says they are in no published table.
+
+### 9.4 The mapping, `taxonomy/pk2023.py`
+
+Every pk2017.py decision is kept. **Scheduled Castes stays merged into Hinduism, and one of §4b's two reasons
+has weakened.** §4b merged partly because PBS called the 2017 split unreliable; 2023 is the fixed split, and it
+is sharp: Tharparkar is 27.0% Scheduled Castes and 18.7% Hindu Jati, Umer Kot 11.3% and 43.3%. The merge now
+stands on the other reason alone, that a caste is not a religion and a legend row for it would draw the state's
+caste line as a line between faiths. Recorded in the module's REVIEW. `source_category` is verbatim, so the
+split is one mapping line away if that is ever wanted.
+
+### 9.5 The tier is district, by choice rather than by §14.4
+
+§3 drew district because PBS published religion no finer. **That is no longer true**: 2023 Table 9 prints every
+tehsil, sub-division, taluka and sub-tehsil, and Lalian tehsil is 13.41% Ahmadi where Chiniot district is 4.30%.
+Anita chose district anyway on 2026-09-14. The 591 tehsil-tier rows are in `pk.csv` and `_pk2023_counts` does
+not read them.
+
+### 9.6 Boundaries: the 2023 district set is in no one file
+
+`sources/pk_2023_geo.py`. The census's 136 districts are PBS's list as on 01-03-2023. **OCHA's COD-AB v01**
+(HDX `cod-ab-pak`, `valid_on` 2022-09-09, reviewed 2024-09-27, resources re-uploaded 2026-08-14) has 160 ADM2,
+of which 24 are AJK and GB. The remaining 136 differ from the census's 136 in exactly three places:
+
+- **129 districts join by name, 1:1 in both directions, within province.** Eight need `ALIAS`: Dera Ismail
+  Khan / `D. I. Khan`, Lower and Upper Chitral / `Chitral Lower`, `Chitral Upper`, Lower and Upper Kohistan /
+  `Kohistan Lower`, `Kohistan Upper`, Malakand Protected Area / `Malakand`, Layyah / `Leiah`, and **Surab /
+  `Shaheed Sikandarabad`**, which is the same district under its old name.
+- **COD's Lehri is not a census district, and it went to two parents.** The census prints the LEHRI
+  sub-division under Sibi and BHAG under Kachhi. COD's ADM3 has both as tehsils under Lehri, so the polygons
+  are reassigned tehsil by tehsil. Nothing is dissolved.
+- **Keamari is a census district (notified 2020) and not a COD one, and Karachi cannot be rebuilt from COD at
+  all.** COD's ADM3 under Karachi is the 2001 towns, and 2023's Karachi West includes Manghopir (1.08m), which
+  COD has inside Gadap Town under Malir. So **Karachi's seven districts come from OpenStreetMap**: the seven
+  admin_level=6 relations (`OSM_KARACHI` in the script; OSM still labels West as *Orangi District* and South as
+  *Karachi District*), clipped to COD's six-district footprint so the city's outer edge stays COD's. Every
+  pairing is confirmed by OSM's subarea towns against the census's own sub-division names, e.g. Keamari's
+  Baldia, SITE, Keamari and Mauripur. OSM covers 93.2% of COD's Karachi by area; the gaps hold 18 hexes and
+  2,806 people, who go to the nearest district, and that population (0.01% of Karachi) is what is asserted.
+  OSM's coastal districts run out over the sea (5,841 km2 against COD's 3,849), which is why an
+  intersection-over-union bar failed at 0.588 and was replaced. ODbL, (c) OpenStreetMap contributors.
+
+**So no census district was dissolved into a parent.** The checks, beyond the name join:
+
+- **Second key**: 468 of 501 COD tehsil names (93%) appear among the census tehsils of the district they were
+  paired with. The one pair with none is Malakand, whose COD tehsils are named for their towns (Bat Khela,
+  Dargai) and whose census sub-divisions for the Ranizai areas those towns are seats of; it is named in
+  `TEHSIL_NAMES_DIFFER` with that reason.
+- **Kontur 2023-11, joined on hex centroids** (the same file as 2017, re-unpacked from the .gz and removed
+  again): 364,283 hexes kept, 88 to 8,843 per district, 236,154,648 people against the census's 240,458,089,
+  **ratio 0.982**, per district median 0.98, quartiles 0.77 to 1.08. The low tail is Balochistan (Surab 0.44,
+  Quetta 0.46, Kharan 0.47, Kech 0.52) and it is not the join, since Quetta can pair with nothing else: the
+  2023 census counts Balochistan far above what the grid expects. Karachi's central districts run 0.67 to
+  0.74. The weight is within-district only, so neither moves a dot between districts.
+- **§12's geography witness**: Hindu share against its 5 nearest districts r=0.92, Christian r=0.75, where
+  200 shuffles of the same shares reach at most 0.49 and 0.39.
+- 16,435 hexes (5.43m people) fall in no district: AJK, GB and border overrun.
+
+### 9.7 What 2023 shows
+
+- **78 of 136 districts are over 99% Muslim**; Umer Kot, 54.66% Hindu, is the only Muslim-minority district.
+- **Hindus**: Umer Kot 54.7%, Tharparkar 45.6%, Mirpur Khas 41.5%, Tando Allahyar 36.6%, Badin 25.1%, Sanghar
+  24.5%. Sindh 8.81%, Punjab 0.20%, KP 0.02%.
+- **Christians**: Lahore 4.64%, Islamabad 4.26%, Sheikhupura 3.67%, Gujranwala 3.50%, Sialkot 3.46%, Kasur
+  3.43%, Korangi 3.42%, Faisalabad 3.40%.
+- **Ahmadis**: 162,684, down from 191,737; Chiniot 67,223 (4.30%).
+- **Sikhs**: Nankana Sahib 1,887 (11.8% of the national count), Peshawar 1,481, Buner 1,023, Attock 769.
+- **Parsis**: Karachi South 952 (40.5%), Karachi East 328, Karachi West 222, Rahim Yar Khan 175.
+- **Others**: Lower Chitral 1,451 per 100,000 (4,617 people), which is the Kalasha, then Awaran 669, Gwadar 305
+  and Panjgur 225, all Makran. The Zikri community is the likely reading of the Makran spike and nothing in the
+  census confirms it; the node note says so in those terms. §7b's *"a unit at 40x the mean is a different
+  population wearing the same label"* still describes this cell with Sikhs and Parsis taken out.
+
+### 9.8 Not done
+
+- **The tehsil tier is normalised and not drawn** (§9.5).
+- **COD-AB v01 predates districts notified after 01-03-2023** (Murree, Talagang, Kot Addu, Taunsa, Wazirabad,
+  Hub, Usta Muhammad). The 2023 census does not use them, so they do not matter until a later vintage does.
+- **Karachi's outer edge is COD's and its internal lines are OSM's**; a hex near the join of the two sources can
+  land one district over. 18 hexes needed the nearest-district rule, so this is small.
+- **The 1998 census** is still unchecked.

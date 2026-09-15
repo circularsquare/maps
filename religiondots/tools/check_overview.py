@@ -53,10 +53,16 @@ FOLD_MIN = 2
 HIDDEN_ROOTS = ("unaffiliated",)
 # index.html's OVERVIEW_LEAF: families the overview draws as one category at any depth.
 # Read out of the viewer rather than copied, for the reason the module docstring gives.
-OVERVIEW_LEAF = set(
-    re.findall(r"'([^']+)'",
-               re.search(r"const OVERVIEW_LEAF = new Set\(\[(.*?)\]\)",
-                         (HERE / "index.html").read_text(encoding="utf-8"), re.S).group(1)))
+def _viewer_set(name):
+    html = (HERE / "index.html").read_text(encoding="utf-8")
+    return set(re.findall(r"'([^']+)'",
+                          re.search(rf"const {name} = new Set\(\[(.*?)\]\)", html, re.S).group(1)))
+
+
+OVERVIEW_LEAF = _viewer_set("OVERVIEW_LEAF")
+# ...and OVERVIEW_DIVIDED_L2: with nothing selected and at depth 2 or less, every family NOT in
+# it is one category too (§10.7).
+OVERVIEW_DIVIDED_L2 = _viewer_set("OVERVIEW_DIVIDED_L2")
 
 
 def load_palette():
@@ -143,8 +149,9 @@ class Tree:
 
         def walk(nid, d):
             ks = self.vis(nid)
-            leaf = nid in OVERVIEW_LEAF and not (
-                scope and (scope == nid or scope.startswith(nid + ".")))
+            leaf = (nid in OVERVIEW_LEAF and not (
+                scope and (scope == nid or scope.startswith(nid + ".")))) or (
+                not scope and depth <= 2 and d == 1 and nid not in OVERVIEW_DIVIDED_L2)
             if d >= depth or not ks or leaf:
                 out.append(nid)
                 return

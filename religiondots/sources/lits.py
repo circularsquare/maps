@@ -112,6 +112,15 @@ def load(country_match):
     if not os.path.exists(DTA):
         raise SystemExit(f"{DTA} missing — §11ag has the URL; it is an open download")
     df = pd.read_stata(DTA, columns=COLS, convert_categoricals=True)
+    # THE CARD IS ASSERTED (2026-09-14): the delivered q922 labels in the file's order, eight
+    # substantive codes and the refusal (module docstring). The printed questionnaire shows six,
+    # so a re-release or another round that changes the list stops here, before any mapping.
+    card = [str(c) for c in df["q922"].cat.categories]
+    want = ["Refusal", "ATHEISTIC / AGNOSTIC / NONE", "BUDDHIST", "JEWISH", "ORTHODOX CHRISTIAN",
+            "CATHOLIC", "OTHER CHRISTIAN, INCLUDING PROTESTANT", "MUSLIM", "OTHER"]
+    if card != want:
+        raise SystemExit(f"lits_iii.dta's q922 labels are {card}, not {want}. Read the codebook "
+                         "and the module docstring's card section before mapping any country.")
     hit = df[df["country"].astype(str).str.contains(country_match, case=False, na=False)]
     if hit.empty:
         raise SystemExit(f"no LiTS III rows match country {country_match!r}; the file has "
@@ -331,7 +340,8 @@ def _median_rho(W, assign, splits, n_units):
         return np.nanmedian(out, axis=0), np.isnan(out).mean(axis=0)
 
 
-def stability(df, nat, units, unit_col="geo_id", n_split=400, n_perm=400, seed=0, alpha=0.05):
+def stability(df, nat, units, unit_col="geo_id", n_split=400, n_perm=400, seed=0, alpha=0.05,
+              untested=None):
     """WHICH CATEGORIES CARRY THEIR OWN GEOGRAPHY — a permutation null, not a fixed bar.
 
     Read the module docstring for why a bar for ONE Spearman correlation — `1.96/sqrt(n-1)`,
@@ -355,29 +365,67 @@ def stability(df, nat, units, unit_col="geo_id", n_split=400, n_perm=400, seed=0
     for k in range(n_split):
         splits[k, rng.permutation(len(psus))[: len(psus) // 2]] = True
 
+    import stability as shared      # this function is named `stability` too
     obs, undef = _median_rho(W, assign, splits, len(units))
-    null = np.full((n_perm, len(cats)), np.nan)
-    for jx in range(n_perm):
-        null[jx] = _median_rho(W, rng.permutation(assign), splits, len(units))[0]
+    # `assign[perm]` is the same draw as `rng.permutation(assign)`, which this used to call
+    null = shared.cluster_null(lambda perm: _median_rho(W, assign[perm], splits, len(units))[0],
+                               len(assign), n_perm, rng)
 
     print(f"\n  split-half stability on {len(psus)} PSUs, median of {n_split} halves, against "
           f"a {n_perm}-draw permutation null (§14.16, and see the lits.py docstring):")
     print(f"    {'category':<42}{'national':>9}{'median rho':>12}{'null 95th':>11}{'p':>8}  "
           "verdict")
-    carries = []
+    carries, untestable = [], []
     for i, c in enumerate(cats):
-        nc = null[:, i][np.isfinite(null[:, i])]
-        if not np.isfinite(obs[i]) or len(nc) < 20:
+        p, q95 = shared.permutation_p(obs[i], null[:, i], alpha)
+        if not np.isfinite(p):
             print(f"    {c[:40]:<42}{nat[c] * 100:8.3f}%{'':>12}{'':>11}{'':>8}  "
                   f"no test possible, undefined in {undef[i]:.0%} of halves")
+            untestable.append(c)
             continue
-        p = (1 + int((nc >= obs[i]).sum())) / (1 + len(nc))
         passed = p < alpha
         if passed:
             carries.append(c)
         print(f"    {c[:40]:<42}{nat[c] * 100:8.3f}%{obs[i]:+12.3f}"
-              f"{np.quantile(nc, 1 - alpha):+11.3f}{p:8.4f}  "
+              f"{q95:+11.3f}{p:8.4f}  "
               + ("own geography" if passed else "NOT distinguishable from chance"))
+
+    # THREE STOPS, ADDED 2026-09-14. None moves a verdict; each names its fix.
+    #  * A category no halving can rank is still spread at the national rate by `build`, so one
+    #    keyed respondent can put more Buddhists on the map than Christians of any kind (spec §12,
+    #    Tajikistan). The caller lists the ones it accepts in `untested`, `{category: reason}`
+    #    (`kg.py::UNTESTED`), and a listed one that becomes testable stops too.
+    #  * A rank pass needs the spatial chi-square under `alpha` as well: a column that is zero in
+    #    most units can pass on how its ties break (spec §12, Sweden).
+    #  * A pass with more than `stability.CELL_CAP` of its respondents in one PSU rests on one
+    #    twenty-household cluster (spec §12, Uzbekistan).
+    # Both counts are unweighted respondents.
+    untested = dict(untested or {})
+    surprise = sorted(set(untestable) - set(untested))
+    stale = sorted(set(untested) - set(untestable))
+    if surprise or stale:
+        raise SystemExit(
+            f"categories with no possible test: {untestable}; the caller's `untested` lists "
+            f"{sorted(untested)}. build() would still draw an untested category at its national "
+            "rate, so each one needs a reason in the caller's `untested` (kg.py::UNTESTED), or "
+            "leave it out of the partition.")
+    totals = df.groupby(unit_col).size().reindex(units, fill_value=0).to_numpy()
+    problems = []
+    for c in carries:
+        rows = df[df["code"] == c]
+        hits = rows.groupby(unit_col).size().reindex(units, fill_value=0).to_numpy()
+        chi = shared.chi2_p(hits, totals)
+        if not (np.isfinite(chi) and chi < alpha):
+            problems.append(f"{c}: spatial chi-square p {chi:.3g}, not under {alpha}")
+        per_psu = rows.groupby("PSU_number").size()
+        if per_psu.max() / per_psu.sum() > shared.CELL_CAP:
+            problems.append(f"{c}: {per_psu.max()} of its {per_psu.sum()} respondents are in "
+                            f"PSU {per_psu.idxmax()}")
+    if problems:
+        raise SystemExit(
+            "categories pass the rank test and fail a veto the test does not apply itself:\n    "
+            + "\n    ".join(problems) + "\n  Do not draw them on their own unit shares; spread "
+            "them at the national rate in the country module and write down why.")
     return carries
 
 

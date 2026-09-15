@@ -65,6 +65,20 @@ EXCLUDED = {
 
 # Defensible but arguable, recorded so the reasoning is not lost and can be overturned.
 REVIEW = {
+    "Seven Zen, Chan and Seon unions -> buddhism, NOT buddhism.mahayana.zen":
+        "Moved to the Zen node on 2026-09-14 when Japan's school nodes were added, and put back "
+        "the same day. Anita's rule for the move was more than one dot. Together these are "
+        "2,166 people nationally, but GUS leaves small gmina cells out, so only 935 are placed "
+        "at gmina level and the node drew no dot, only a presence ring. If a finer or fuller "
+        "table ever puts them over a thousand, these seven are the ones to move. Named "
+        "Zen outright: Buddyjska Wspolnota Zen Kannon (1,263), Zwiazek Buddystow Zen "
+        "'Bodhidharma' (271), Szkola Zen Kwan Um (240, Korean Seon, which calls itself a school "
+        "of Zen), Wspolnota bez Bram Mumon-Kai ... Zen Rinzai (44). Named for the tradition "
+        "without the word: Sangha 'Dogen Zenji' (77, after the founder of Soto), Zwiazek "
+        "Buddystow Czan (70, Chan is Zen's Chinese name). The arguable one is Kanzeon - Zwiazek "
+        "Buddyjski (201): read as the Kanzeon Sangha, a Western Zen lineage, from its name, not "
+        "from anything GUS prints. The Karma Kagyu, Dzogchen and Bon unions and the mixed "
+        "`rozne afiliacje buddyjskie` stay on the parent.",
     "Kościół Unitariański / Wspólnota Unitarian Uniwersalistów / Jednota Braci Polskich":
         "-> unitarianuniversalist, which is a ROOT in branches.py, so these three leave "
         "Christianity even though GUS files them under `inne chrześcijańskie`. Jednota "

@@ -317,8 +317,12 @@ def report_wordings(df, cat_col="category"):
             print(f"    {f!r}: {spellings}")
 
 
-def load(country, expect_rounds=None, regroup=False):
+def load(country, expect_rounds=None, regroup=False, extra=None, unlabelled_rounds=()):
     """One country's respondents, decoded round by round through that round's own labels.
+
+    `extra` names further columns to carry (e.g. `["DISTRICT"]`), each decoded through its own
+    value labels where it has them and left blank in a round that lacks the column. Added for
+    `sources/tz.py`, whose round 4 predates four regions and can only be placed by district.
 
     Returns [`round`, `round_no`, `category`, `geo_raw`, `geo_code`, `w`], one row per
     respondent who gave a religion answer. `category` is the ANSWER'S OWN WORDING (spec §2.4)
@@ -390,9 +394,30 @@ def load(country, expect_rounds=None, regroup=False):
 
         rlab = meta.variable_value_labels.get(rel, {})
         glab = meta.variable_value_labels.get(geo, {})
+        # A ROUND CAN CARRY REGION CODES AND NO LABELS (Tanzania's R8: codes 740-770, no value
+        # labels), and `geo_raw` then arrives blank for every row with only a count printed.
+        # Added 2026-09-14: stop unless the caller names the round and decodes it by code, as
+        # `tz.py::decode_codes` does; a named round that has its labels after all stops too.
+        blank = int((sub[geo].notna() & sub[geo].map(glab).isna()).sum())
+        if blank and rnd not in set(unlabelled_rounds):
+            raise SystemExit(
+                f"R{rnd}: {blank} of {len(sub)} {country} rows have a REGION code with no label. "
+                "Decode by code only where every labelled round gives each code one unit "
+                "(tz.py::decode_codes), and name the round in `unlabelled_rounds=`.")
+        if not blank and rnd in set(unlabelled_rounds):
+            raise SystemExit(f"R{rnd} is named in unlabelled_rounds, but every {country} REGION "
+                             "code has a label; the release has changed, read it before decoding")
         undecoded = sorted(set(sub[rel].dropna()) - set(rlab))
         if undecoded:
             raise SystemExit(f"R{rnd}: {relname} codes with no label: {undecoded}")
+        carried = {}
+        for ename in (extra or ()):
+            ec = _col(df, ename)
+            if ec is None:
+                carried[ename] = np.full(len(sub), None, dtype=object)
+                continue
+            elab = meta.variable_value_labels.get(ec, {})
+            carried[ename] = sub[ec].map(lambda v, el=elab: el.get(v, v)).to_numpy()
         frames.append(pd.DataFrame({
             "round": rnd,
             "round_no": rnd,
@@ -400,6 +425,7 @@ def load(country, expect_rounds=None, regroup=False):
             "geo_code": sub[geo].to_numpy(),
             "geo_raw": sub[geo].map(glab).to_numpy(),
             "w": w.to_numpy(),
+            **carried,
         }))
         # The fieldwork window, because a pooled survey's date range is a thing the country's
         # note_public says out loud and nothing else in the build would check it.

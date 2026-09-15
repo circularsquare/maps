@@ -1,5 +1,8 @@
 # Pakistan — boundaries and placement
 
+**This is the 2017 build's geography, kept and no longer drawn.** The 2023 build's boundaries are
+`sources/pk_2023_geo.py` -> `data/geo/pk2023/`, written up in `sources/pk.md` §9.6.
+
 `sources/pk_geo.py` → `data/geo/pk/`. 135 district polygons, 364,357 Kontur hexes.
 
 | | |

@@ -1,8 +1,13 @@
 """The inbox for things that are genuinely Anita's call, and nothing else.
 
     python tools/ask.py                              # what is open (default)
-    python tools/ask.py new <cc> --title "..."       # file one, prints the path to fill in
+    python tools/ask.py new <cc> --title "..." --summary "..."   # file one, prints the path to fill in
     python tools/ask.py answered <n>                 # move it out of the way once she has ruled
+
+**`ask/OPEN.md` IS WHAT ANITA READS.** Every command regenerates it: one line per open ask, the
+`Summary:` line of each file, 40 words or fewer. She keeps that one file open. So the summary is
+the question as she will see it, and a question that is not in an ask file does not exist for her.
+Never put a question for Anita only in a chat message or a report (Anita, 2026-09-14).
 
 **AN ASK IS NEVER A BLOCK.** The template forces two lines before the question: the decision you
 already took, and what reversing it costs. The country ships either way; she is choosing whether
@@ -24,6 +29,7 @@ not about one category.
 Files are `ask/NNN-<cc>-<slug>.md`, one per ask, created with `O_CREAT|O_EXCL` — same reason as
 `tools/claim.py`, that two or three sessions run here at once and a shared list they all append to
 is `index.html` again. Answered ones move to `ask/answered/`; nothing is ever deleted by a tool.
+`ask/OPEN.md` is the one derived file, rewritten whole by every command and never edited by hand.
 """
 
 import argparse
@@ -31,6 +37,7 @@ import datetime
 import os
 import re
 import sys
+import tempfile
 
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -39,8 +46,15 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 ASK = os.path.join(ROOT, "ask")
 ANSWERED = os.path.join(ASK, "answered")
+OPEN_MD = os.path.join(ASK, "OPEN.md")
+
+SUMMARY_WORDS = 40
+PLACEHOLDER = ("<!-- 40 words or fewer: what Anita is choosing between, and what you recommend. "
+               "This line is all she sees in ask/OPEN.md. -->")
 
 TEMPLATE = """# {n:03d} — {cc}: {title}
+
+Summary: {summary}
 
 *Filed {date} by session `{sid}`. Anita's call; nothing is waiting on it.*
 
@@ -93,6 +107,71 @@ def _title_of(path):
     return "(no title line)"
 
 
+def _summary_of(path):
+    """The `Summary:` line, or None if it is missing or still the template placeholder."""
+    try:
+        with open(path, encoding="utf-8") as fh:
+            for line in fh:
+                if line.startswith("Summary:"):
+                    s = line[len("Summary:"):].strip()
+                    return s if s and not s.startswith("<!--") else None
+    except OSError:
+        pass
+    return None
+
+
+def _write_open():
+    """Rewrite ask/OPEN.md whole, via a temp file, because Anita keeps it open in her editor."""
+    os.makedirs(ASK, exist_ok=True)
+    open_ = _entries(ASK)
+    stamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
+    lines = [
+        "# Open questions for Anita",
+        "",
+        f"Updated {stamp} by `tools/ask.py`, which rewrites this file after every command, so do "
+        "not edit it by hand. One line per open question, 40 words or fewer. The linked file "
+        "has the detail. Answer in chat or in the file.",
+        "",
+    ]
+    if not open_:
+        lines.append("Nothing open.")
+    for n, cc, fname, path in open_:
+        s = _summary_of(path)
+        if s is None:
+            s = f"{_title_of(path)} (no summary line yet)"
+        else:
+            words = len(s.split())
+            if words > SUMMARY_WORDS:
+                s = f"{s} (summary is {words} words, over {SUMMARY_WORDS})"
+        lines.append(f"- **{n:03d} {cc}**: {s} [{fname}]({fname})")
+    fd, tmp = tempfile.mkstemp(dir=ASK, prefix=".OPEN.", suffix=".tmp")
+    with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as fh:
+        fh.write("\n".join(lines) + "\n")
+    os.replace(tmp, OPEN_MD)
+
+
+def cmd_list(args):
+    open_ = _entries(ASK)
+    if not open_:
+        print("no open asks — which is the healthy state")
+    else:
+        print(f"OPEN ({len(open_)}) — Anita's to rule on; no session is waiting on any of them:")
+        for n, cc, fname, path in open_:
+            flag = "" if _summary_of(path) else "  [NO SUMMARY LINE]"
+            print(f"  {n:3d}  {cc}  {_age(path):>5s}  {_title_of(path)[:66]}{flag}")
+            print(f"       ask/{fname}")
+        if len(open_) > 4:
+            print(f"\n  !! {len(open_)} is above the bar in AGENT_BRIEF.md §3. If you are a "
+                  f"supervisor,\n     stop spawning and hand back to Anita.")
+    if args.all:
+        done = _entries(ANSWERED)
+        print(f"\nANSWERED ({len(done)}):")
+        for n, cc, fname, path in done:
+            print(f"  {n:3d}  {cc}  {_title_of(path)[:66]}")
+    _write_open()
+    return 0
+
+
 def _age(path):
     try:
         d = (datetime.datetime.now()
@@ -103,32 +182,16 @@ def _age(path):
     return f"{h * 60:.0f}m" if h < 1 else (f"{h:.1f}h" if h < 48 else f"{h / 24:.0f}d")
 
 
-def cmd_list(args):
-    open_ = _entries(ASK)
-    if not open_:
-        print("no open asks — which is the healthy state")
-    else:
-        print(f"OPEN ({len(open_)}) — Anita's to rule on; no session is waiting on any of them:")
-        for n, cc, fname, path in open_:
-            print(f"  {n:3d}  {cc}  {_age(path):>5s}  {_title_of(path)[:66]}")
-            print(f"       ask/{fname}")
-        if len(open_) > 4:
-            print(f"\n  !! {len(open_)} is above the bar in AGENT_BRIEF.md §3. If you are a "
-                  f"supervisor,\n     stop spawning and hand back to Anita.")
-    if args.all:
-        done = _entries(ANSWERED)
-        print(f"\nANSWERED ({len(done)}):")
-        for n, cc, fname, path in done:
-            print(f"  {n:3d}  {cc}  {_title_of(path)[:66]}")
-    return 0
-
-
 def cmd_new(args):
     os.makedirs(ASK, exist_ok=True)
     cc = args.cc.lower()
     used = {n for n, _, _, _ in _entries(ASK) + _entries(ANSWERED)}
     n = max(used, default=0) + 1
     slug = _slug(args.title)
+    summary = (args.summary or "").strip() or PLACEHOLDER
+    if args.summary and len(args.summary.split()) > SUMMARY_WORDS:
+        print(f"summary is {len(args.summary.split())} words; cut it to {SUMMARY_WORDS} or fewer")
+        return 1
 
     # O_CREAT|O_EXCL, walking the number up, so two sessions filing at once cannot collide.
     for _ in range(50):
@@ -140,12 +203,17 @@ def cmd_new(args):
             continue
         with os.fdopen(fd, "w", encoding="utf-8") as fh:
             fh.write(TEMPLATE.format(n=n, cc=cc, title=args.title, sid=args.id or "?",
+                                     summary=summary,
                                      date=datetime.date.today().isoformat()))
+        _write_open()
         print(f"filed ask {n:03d} — {path}")
         print("\nnow FILL IT IN, and note that the first two sections are the point:")
         print("  * the decision you already took, so the country ships")
         print("  * what reversing it costs, so she knows what she is choosing")
-        print("\nthen carry on. Do not wait for an answer.")
+        if summary == PLACEHOLDER:
+            print("  * the Summary: line, 40 words or fewer — it is all she sees in ask/OPEN.md")
+        print("\nthen run `python tools/ask.py` so ask/OPEN.md picks up your summary,")
+        print("and carry on. Do not wait for an answer.")
         return 0
     print("could not allocate a number — look in ask/ by hand")
     return 1
@@ -156,6 +224,7 @@ def cmd_answered(args):
     for n, cc, fname, path in _entries(ASK):
         if n == args.n:
             os.replace(path, os.path.join(ANSWERED, fname))
+            _write_open()
             print(f"moved {fname} to ask/answered/")
             return 0
     print(f"no open ask numbered {args.n}")
@@ -168,12 +237,14 @@ def main():
     p.add_argument("--all", action="store_true", help="include answered ones")
     sub = p.add_subparsers(dest="cmd")
 
-    l = sub.add_parser("list", help="what is open (default)")
+    l = sub.add_parser("list", help="what is open (default); also rewrites ask/OPEN.md")
     l.add_argument("--all", action="store_true", help="include answered ones")
 
     nw = sub.add_parser("new", help="file one")
     nw.add_argument("cc")
     nw.add_argument("--title", required=True, help="one line, specific")
+    nw.add_argument("--summary", default="",
+                    help=f"{SUMMARY_WORDS} words or fewer; the line Anita sees in ask/OPEN.md")
     nw.add_argument("--id", default="", help="your session id")
 
     an = sub.add_parser("answered", help="move one out of the way once she has ruled")

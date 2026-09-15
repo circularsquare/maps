@@ -101,10 +101,11 @@ No Religion                                     376,784    2.15%
 one arguable mapping call in the country. The tree holds Adventists, Baptists and the African
 Apostolic churches in three different places, and every person in this cell belongs to one of
 them — but the census does not say which, and the three are not the same kind of thing at
-all. It goes to `christianity.sdabaptistapostolic`, a node added for Malawi that holds the
-merge and names what is in it. Splitting it by assumption would invent three numbers;
-`christianity.other` would file 1.6 million people as bodies with no branch when the truth is
-that they have three. See `taxonomy/mw2018.py` and the node's own note.
+all. It went to `christianity.sdabaptistapostolic`, a node added for Malawi that held the
+merge and named what was in it. **Since 2026-09-14 it goes to `christianity.other`**, and that
+node is retired: Anita, *"i really dont like cuz it only covers one relatively small african
+country. could we move it into 'other christian' maybe?"* Splitting it by assumption would
+still invent three numbers, so it is not split. See `taxonomy/mw2018.py`.
 
 **The grouping is not arbitrary and its geography says so.** The cell is 29.1% in Neno, 21.5%
 in Thyolo, 21.0% in Mwanza and 17.6% in Chikwawa, against 9.4% nationally and 2.2% in

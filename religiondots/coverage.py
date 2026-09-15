@@ -177,8 +177,26 @@ def coverage():
     # and four national Orthodox churches. Italy's entry was missed here for weeks because
     # nothing it added happened to round up to a dot; Finland's 271,000 foreign residents are
     # concentrated enough that they did, so the omission failed loudly the same day.
+    # Belgium, added 2026-09-11. Its foreign half is 1.45M people, 12.58% of the country and
+    # 34.99% of Brussels, so it emits more of these nodes with more weight behind them than
+    # any other country on this list; the same omission here would have failed loudly.
+    # Sweden, added 2026-09-11 (§9cz). It failed the check on its first coverage run with
+    # EIGHTEEN nodes, the most of any country here, because 856,212 foreign citizens from
+    # Syria, Iraq, Iran, Eritrea, Somalia, Poland, Romania and the former Yugoslavia between
+    # them reach eight national Orthodox churches, two Oriental ones, Eastern Catholicism,
+    # Shia Islam, Alevism, Hinduism and Buddhism. **The run that passed was the one before
+    # `scatter.py`**, which is worth knowing: this check reads the dots, so a country with no
+    # dots on disk yet passes vacuously. Run coverage AFTER the scatter, not before.
+    # Norway, added 2026-09-14 with its line in place before the scatter, which is §9cz's
+    # lesson taken: 599,825 foreign citizens, 11.1% of the country, from Poland, Lithuania,
+    # Sweden, Syria, Eritrea and Somalia among others.
+    # Denmark, added 2026-09-14 (§9dg), before its scatter too.
+    # Latvia, added 2026-09-14 before its scatter. Its foreign part is only 61,761 people, because
+    # the 190,544 recognised non-citizens inside Eurostat's FOR are drawn from the survey instead.
     for cc, other in (("es", "other.es"), ("gr", "other.gr"), ("fr", "other.fr"),
-                      ("it", "other.it"), ("fi", "other.fi")):
+                      ("it", "other.it"), ("fi", "other.fi"), ("be", "other.be"),
+                      ("se", "other.se"), ("no", "other.no"), ("dk", "other.dk"),
+                      ("lv", "other.lv")):
         if cc in out:
             out[cc] |= origin.nodes(other)
     return out

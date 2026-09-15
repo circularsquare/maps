@@ -48,6 +48,21 @@ DOT_VALUE = 1000
 SEED = 20260827
 
 
+def _geo_checks():
+    """sources/geo_checks.py, loaded by path.
+
+    Not by putting sources/ on sys.path: that is the shadowing trap the module itself checks
+    for, since countries.py imports taxonomy modules by bare name and a sources/ script of the
+    same name would win.
+    """
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("geo_checks",
+                                                  HERE / "sources" / "geo_checks.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
 def random_points_in_polygon(geom, n: int, rng) -> np.ndarray:
     """Rejection-sample n points inside geom. Vectorised contains, as ancestrydots does."""
     if n <= 0:
@@ -78,31 +93,13 @@ def random_points_in_polygon(geom, n: int, rng) -> np.ndarray:
     return np.vstack(out)[:n]
 
 
-def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--country", required=True, choices=sorted(COUNTRIES))
-    ap.add_argument("--dot-value", type=int, default=DOT_VALUE)
-    ap.add_argument("--state", help="us only: two-digit FIPS, for quick iteration")
-    ap.add_argument("--no-weights", action="store_true",
-                    help="ignore the country's place_weight hook and split each unit's dots "
-                         "equally across its placement polygons (spec §8.2). The before "
-                         "picture, and the way to check that weighting moved dots INSIDE "
-                         "units without changing any unit's total.")
-    ap.add_argument("--no-water", action="store_true",
-                    help="skip water.py: leave the sea inside the placement polygons, so "
-                         "dots can land in rivers and harbours. The before picture — 3.0%% "
-                         "of the dots in the New York bbox were in open water without it.")
-    args = ap.parse_args()
-    cfg = COUNTRIES[args.country]
-    dot_value = args.dot_value
-    rng = np.random.default_rng(SEED)
+def read_place(cfg):
+    """The placement layer as main() uses it: a `unit` column, EPSG:4326, no empty geometry.
 
-    print(f"country: {args.country}  ({cfg['note']})")
-    print("reading counts…")
-    df = cfg["counts"]()
-    print(f"  {len(df):,} (unit, node) rows, {df['node'].nunique()} nodes, "
-          f"{df['unit'].nunique():,} units")
-
+    A function of its own so a scan can load exactly what the scatter loads and run the geo
+    checks on it without scattering (sources/geo_checks.py). Rows keep their read order, less
+    the polygons dropped here, and the index is reset.
+    """
     print("reading placement polygons…")
     place = gpd.read_file(cfg["place"])
     print(f"  {len(place):,} placement polygons, crs={place.crs}")
@@ -139,6 +136,57 @@ def main():
         print(f"  !! {int(empty.sum()):,} placement polygons have empty geometry — dropped")
         place = place[~empty]
     place = place.reset_index(drop=True)
+    return place
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--country", required=True, choices=sorted(COUNTRIES))
+    ap.add_argument("--dot-value", type=int, default=DOT_VALUE)
+    ap.add_argument("--state", help="us only: two-digit FIPS, for quick iteration")
+    ap.add_argument("--no-weights", action="store_true",
+                    help="ignore the country's place_weight hook and split each unit's dots "
+                         "equally across its placement polygons (spec §8.2). The before "
+                         "picture, and the way to check that weighting moved dots INSIDE "
+                         "units without changing any unit's total.")
+    ap.add_argument("--no-water", action="store_true",
+                    help="skip water.py: leave the sea inside the placement polygons, so "
+                         "dots can land in rivers and harbours. The before picture — 3.0%% "
+                         "of the dots in the New York bbox were in open water without it.")
+    ap.add_argument("--no-kontur-cap", action="store_true",
+                    help="skip kontur_cap.py: draw blocks at Kontur's 46,200/km2 density cap as "
+                         "Kontur has them, and do not stop on unregistered ones. The before "
+                         "picture; writes dots_<cc>_uncapped so the real output survives.")
+    args = ap.parse_args()
+    cfg = COUNTRIES[args.country]
+    dot_value = args.dot_value
+    rng = np.random.default_rng(SEED)
+
+    print(f"country: {args.country}  ({cfg['note']})")
+    # Checks only: each stops or warns and none changes a count, a polygon or a weight
+    # (sources/geo_checks.py, playbooks/geography.md). A module name used twice broke tiles.py
+    # after the archive was written, so it is caught before anything is read.
+    geo = _geo_checks()
+    geo.check_module_shadowing()
+    print("reading counts…")
+    df = cfg["counts"]()
+    print(f"  {len(df):,} (unit, node) rows, {df['node'].nunique()} nodes, "
+          f"{df['unit'].nunique():,} units")
+
+    place = read_place(cfg)
+    # A polygon torn at the antimeridian samples dots across the whole band it spans; stop
+    # before the water clip reads a globe-wide box of ocean for it.
+    geo.check_torn(args.country, geo.torn_parts(place))
+
+    # Kontur's density cap (kontur_cap.py, spec §12 "KONTUR'S DENSITY CAP"). A block of hexes at
+    # 46,200/km2 is either a real core or a false concentration, and kontur_cap.csv says which;
+    # a block it does not name STOPS here. Capped blocks are lowered to their 3 km ring's median.
+    # Changes `pop` only, only downward, so no count moves. BEFORE the water clip, because
+    # density is people over the hex's own area and a clipped coastal hex reads denser than
+    # Kontur made it.
+    if cfg.get("place_weight") is not None and not args.no_weights and not args.no_kontur_cap:
+        import kontur_cap
+        place = kontur_cap.apply(place, args.country, cfg["place"])
 
     # Subtract the sea (water.py). AFTER the empty-geometry drop and the reset_index, so the
     # positional row identity everything below depends on is already final, and before the
@@ -158,6 +206,9 @@ def main():
         lost = df[df["unit"].isin(missing)]["count"].sum()
         print(f"  !! {len(missing):,} units in the data have no polygons "
               f"({lost:,.0f} people): {missing[:6]}")
+    # That print used to be the whole guard, and a counted unit's dots were allocated and never
+    # drawn. Now it stops unless sources/geo_checks.csv names every such unit with people.
+    unplaced = geo.check_unplaced(args.country, geo.unplaced_units(df, place))
     extra = len(have - want)
     if extra:
         print(f"  {extra:,} units have polygons but no religion rows")
@@ -170,6 +221,11 @@ def main():
     weighter = None
     if cfg.get("place_weight") is not None and not args.no_weights:
         weighter = cfg["place_weight"](place)
+    # spec §8.2e: a grid no finer than the counting units is noise, not a weight. Warns only,
+    # for every weighter on a grid layer rather than inside one hook.
+    import kontur_cap
+    if weighter is not None and kontur_cap.is_kontur_layer(cfg["place"]):
+        geo.check_grid_floor(args.country, geo.grid_floor(place))
 
     # ---- carry the fractions ALONG A SPATIAL ORDER, dropping each dot where the carry
     # crosses. Anita's rule, 2026-09-03: "never hand to the top n — accumulate as we go in
@@ -338,9 +394,12 @@ def main():
     # the unit's polygons in Hilbert order and drop a dot each time the running weight crosses.
     # A random offset per row keeps the first polygon on the curve from always losing its
     # fraction. Largest-remainder here would be the Whitechapel bug again, one unit down.
+    n_unplaced_dots = 0                 # dots of units geo_checks.csv lets through with no polygon
     for row in df.itertuples(index=False):
         idx = by_unit.get(row.unit)
         if idx is None or len(idx) == 0 or row.dots == 0:
+            if row.dots and (idx is None or len(idx) == 0):
+                n_unplaced_dots += int(row.dots)
             continue
         dots = int(row.dots)
         # `plain` says "this row is not a measurement" (§7). A weighter may hold a per-node
@@ -363,6 +422,9 @@ def main():
             crossed[-1] = dots                          # float drift on the last step only
             alloc_p = np.zeros(len(idx), dtype=np.int64)
             alloc_p[order] = np.diff(np.concatenate([[0], crossed]))
+        # A placement change may never move a count (§4.1): every (unit, node) places exactly
+        # the dots the weight-free allocation above gave it, whatever the weights were.
+        assert int(alloc_p.sum()) == dots and (alloc_p >= 0).all(), (row.unit, row.node, dots)
         for t, k in zip(idx, alloc_p):
             if k:
                 per_poly.setdefault(t, []).append((row.node, int(k), int(row.tier)))
@@ -387,6 +449,12 @@ def main():
                       0 if pd.isna(row.congregations) else row.congregations))
 
     print(f"  {n_dots:,} dots across {len(per_poly):,} polygons")
+    # Every allocated dot is placed, or belongs to a unit geo_checks.csv lets through with no
+    # polygon, and those are said out loud here rather than left to the arithmetic.
+    assert n_dots + n_unplaced_dots == int(alloc.sum()), (n_dots, n_unplaced_dots, int(alloc.sum()))
+    if n_unplaced_dots:
+        print(f"  !! {n_unplaced_dots:,} dots allocated to units with no placement polygon are not "
+              f"drawn: {[str(u) for u in unplaced[:6]]} (sources/geo_checks.csv)")
     if weighter is not None:
         # A weighter says how it placed things, because "what were these weights" is the
         # first question any of them raises and the answer differs per country: the US
@@ -433,6 +501,8 @@ def main():
     stem = f"{args.country}_{args.state}" if args.state else args.country
     if args.no_weights:
         stem += "_unweighted"
+    if args.no_kontur_cap:
+        stem += "_uncapped"
     # A non-default dot value is a SECOND build of the same country, not a replacement: the
     # viewer offers 1:1,000 and 1:10,000 side by side (§4.1b), so both files have to survive
     # in data/processed/ at once. Without the suffix the coarse run silently overwrites the

@@ -261,3 +261,24 @@ ADM3 codes agree with their own ADM2 for all 7,069. So dissolving ADM3 by the 20
 rebuilds only the part of a 2010 regency that stayed put. Reconstructing the rest needs the
 post-2010 units assigned to a 2010 parent by geometry, which is a guess this file has not
 made.
+
+## Placement: two Papua highland blocks at Kontur's density cap, capped 2026-09-14 (session `f95259a4-kontur`)
+
+Kontur limits every hex to 46,200 people/km², and a block of hexes at that limit is either a real
+dense core or a false concentration (spec §12, "KONTUR'S DENSITY CAP"). Two highland regencies
+had one:
+
+| regency | hexes | people | share of the regency's placement weight | after |
+|---|---|---|---|---|
+| 9431010 | 7, one at the limit | 153,721 | **76.7%** | 62,663, 57.4% |
+| 9432040 | 5, peaking at 42,483/km² | 122,030 | **70.0%** | 13,887, 21.0% |
+
+No town in worldcities lies within 20 km of either. Both are `capped` in `kontur_cap.csv`, and
+`scatter.py` now lowers each hex to the median density of the populated hexes within 3 km,
+10,429/km² and 3,240/km². 9431010 keeps most of its weight because Kontur draws the hexes around
+the block densely too; the regency's whole Kontur surface is doubtful and this does not fix that.
+9432040 never reaches the limit, so the guard alone would not have found it; it is registered so
+the fix reaches it.
+
+Counts did not move: dots per node are identical before and after, 236,742 at 1:1,000 and 23,670
+at 1:10,000.

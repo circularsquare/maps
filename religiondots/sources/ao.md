@@ -377,3 +377,18 @@ python sources/ao_grid.py --fetch     # one 17 MB gzipped Kontur gpkg
 `data/raw/ao/lei_14_24.json` is the parsed statute and is optional; without it `ao_geo.py`
 skips check 1 and says so. It was produced from the angolex.com transcription of Lei 14/24,
 which is the full text including every boundary description.
+
+## Placement: a hex at Kontur's density cap, 2026-09-14 (session `f95259a4-kontur`), not changed
+
+Kontur limits every hex to 46,200 people/km², and a block of hexes at that limit is either a real
+dense core or a false concentration (spec §12, "KONTUR'S DENSITY CAP"). In Angola one block is in
+doubt: **a single hex in AO0516 holding 36,225 people, 43.1% of the municipality's placement
+weight**, 16.5 km from worldcities' Talatona point, where Kontur is 14,153/km². It is `unreviewed`
+in `kontur_cap.csv`: every scatter warns about it and draws it as Kontur has it. **Nothing here
+was changed.**
+
+Luanda's main block is registered `real`: 219 hexes, 161 at the cap, 95.7% of AO0508's weight,
+and Kontur is at the cap at Luanda's own centre too.
+
+To act on the AO0516 hex: set its `status` to `capped` in `kontur_cap.csv` and re-scatter. The
+fix lowers it to the median density of the populated hexes within 3 km and cannot move a count.

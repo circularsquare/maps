@@ -25,6 +25,17 @@ on disk, so a run you waited for probably already included your country, and the
 yourself is merely redundant rather than wrong. Twenty minutes of waiting is much cheaper than
 the hour of diagnosis a torn archive costs.
 
+**UNDER A SUPERVISOR IT IS RUN IN BATCHES** (WORKFLOW_PLAN.md item 5). Builders stop after the
+scatter; the supervisor runs this about hourly for every country waiting. A finished run writes
+`data/build_last.json`, and `claim.py` lists the countries whose dots are newer than its start.
+At the end it runs `coverage.py`, which reads the `counts.json` this run wrote, so only then does
+the coverage check say anything about the new dots; a failure exits 1.
+
+**A DEAD HOLDER'S LOCK IS CLEARED ON SIGHT.** The lock records its pid. If that process has gone,
+or the pid now belongs to a process that started after the lock did, the lock is removed and the
+wait carries on. Only a holder whose process cannot be checked still needs `--force` after
+`STALE_MIN`; a live build is waited for however long it takes.
+
 Not in scope, because neither is whole-map-destructive and both are cheap:
 `taxonomy/build_tree.py` (run it yourself after touching a mapping, before scattering) and
 `rollup.py` (after editing a COLUMNS dict; `--rollup` here runs it inside the lock if you want).
@@ -63,23 +74,91 @@ def _age_min(rec):
     return (time.time() - rec.get("started", 0)) / 60.0
 
 
+def _alive(rec):
+    """Whether the lock holder's process is still running: True, False, or None if unknowable.
+
+    Never ask with `os.kill(pid, 0)` on Windows, where it TERMINATES the process instead of
+    probing it. And pids are reused, so a process that started after the lock was taken is
+    somebody else's and the holder is gone."""
+    pid = rec.get("pid")
+    if not pid:
+        return None
+    if os.name != "nt":
+        try:
+            os.kill(int(pid), 0)
+        except ProcessLookupError:
+            return False
+        except OSError:
+            return None
+        return True
+    import ctypes
+    from ctypes import wintypes
+    k32 = ctypes.WinDLL("kernel32", use_last_error=True)
+    k32.OpenProcess.argtypes = [wintypes.DWORD, wintypes.BOOL, wintypes.DWORD]
+    k32.OpenProcess.restype = wintypes.HANDLE
+    k32.GetExitCodeProcess.argtypes = [wintypes.HANDLE, ctypes.POINTER(wintypes.DWORD)]
+    k32.GetProcessTimes.argtypes = [wintypes.HANDLE] + [ctypes.POINTER(wintypes.FILETIME)] * 4
+    k32.CloseHandle.argtypes = [wintypes.HANDLE]
+    h = k32.OpenProcess(0x1000, False, int(pid))         # PROCESS_QUERY_LIMITED_INFORMATION
+    if not h:
+        err = ctypes.get_last_error()
+        return {5: True, 87: False}.get(err)             # access denied / no such process
+    try:
+        code = wintypes.DWORD()
+        if not k32.GetExitCodeProcess(h, ctypes.byref(code)):
+            return None
+        if code.value != 259:                              # STILL_ACTIVE
+            return False
+        t = [wintypes.FILETIME() for _ in range(4)]
+        if not k32.GetProcessTimes(h, *[ctypes.byref(x) for x in t]):
+            return None
+        created = ((t[0].dwHighDateTime << 32) | t[0].dwLowDateTime) / 1e7 - 11644473600
+        return created <= rec.get("started", 0) + 5
+    finally:
+        k32.CloseHandle(h)
+
+
+def _clear(judged):
+    """Remove the lock only if it is still the one judged dead. Another waiter may have cleared
+    it and taken a fresh one in between, and deleting that would cause the tear this prevents."""
+    cur = _read() or {}
+    if (cur.get("pid"), cur.get("started")) != (judged.get("pid"), judged.get("started")):
+        return
+    try:
+        os.remove(LOCK)
+    except FileNotFoundError:
+        pass
+
+
 def acquire(sid, wait=True, force=False):
     os.makedirs(os.path.dirname(LOCK), exist_ok=True)
     while True:
         try:
             fd = os.open(LOCK, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
         except FileExistsError:
-            cur = _read() or {}
+            cur = _read()
+            if cur is None:
+                # Empty or half-written: its holder may be writing it this instant.
+                try:
+                    fresh = time.time() - os.path.getmtime(LOCK) < 10
+                except FileNotFoundError:
+                    continue
+                if fresh:
+                    time.sleep(1)
+                    continue
+                cur = {}
             age = _age_min(cur)
             who = cur.get("id", "?")
-            if force:
-                print(f"!! breaking {who}'s lock ({age:.0f}m old) because --force")
-                os.remove(LOCK)
+            alive = _alive(cur)
+            if force or alive is False:
+                why = "--force" if force else f"its process {cur.get('pid')} is gone"
+                print(f"!! clearing {who}'s lock ({age:.0f}m old) because {why}")
+                _clear(cur)
                 continue
             print(f"build lock held by {who}, {age:.0f}m ago, step: {cur.get('step', '?')}")
-            if age > STALE_MIN:
-                print(f"   that is over {STALE_MIN}m, so it is probably a dead session.\n"
-                      f"   Check nothing is running, then re-run with --force.")
+            if alive is None and age > STALE_MIN:
+                print(f"   that is over {STALE_MIN}m and its process cannot be checked, so it may "
+                      f"be a dead session.\n   Check nothing is running, then re-run with --force.")
                 return False
             if not wait:
                 return False
@@ -128,6 +207,9 @@ def main():
                    help="break a lock you are sure is dead; check for a running python first")
     p.add_argument("--rollup", action="store_true",
                    help="also rebuild rollup.json, after editing a COLUMNS dict")
+    p.add_argument("--jobs", type=int, default=6,
+                   help="tiles.py worker processes. 6 of Anita's 16 cores, because she uses "
+                        "the machine while this runs; tiles are identical at any --jobs")
     args = p.parse_args()
 
     if not args.id:
@@ -144,6 +226,7 @@ def main():
               "say so in your final message and stop, or re-run this later.")
         return 2
 
+    started = time.time()
     py = sys.executable
     try:
         # Derived, never typed. --check first: it names a registered country missing an edition,
@@ -163,18 +246,32 @@ def main():
             note("rollup")
             run([py, "rollup.py"])
         note("tiles")
-        run([py, "tiles.py", "--countries", ccs, "--coarse", "--no-atomic"])   # step 11
+        run([py, "tiles.py", "--countries", ccs, "--coarse", "--no-atomic",
+             "--jobs", str(args.jobs)])                                         # step 11
         note("buffers")
         run([py, "buffers.py", "--countries", ccs, "--coarse"])                # step 12
+        # claim.py compares every country's dots with `started` to list what is still waiting.
+        last = os.path.join(ROOT, "data", "build_last.json")
+        with open(last + ".tmp", "w", encoding="utf-8") as fh:
+            json.dump({"id": args.id, "started": started, "finished": time.time(),
+                       "countries": ccs.split(",")}, fh, indent=1)
+        os.replace(last + ".tmp", last)
     finally:
         release(args.id)
+
+    # Only now does coverage.py say anything about this run's dots: it reads counts.json, which
+    # tiles.py has just rewritten (COMMANDS.txt step 9).
+    cov = subprocess.run([py, "coverage.py"], cwd=ROOT).returncode
+    if cov:
+        print("\n!! COVERAGE FAILED: a node that draws dots is missing from its country's "
+              "coverage.\n   Fix coverage.py, then run the tail again, because tiles.py reads it.")
 
     print("\nbuild tail done. The one-line checks worth running now:")
     print("  python tools/built_countries.py --check")
     print("  python tools/check_tiles.py <ALL> --coarse --no-atomic --max-zoom 6")
     print("  python -c \"import json;m=json.load(open('data/buffers/manifest.json'));"
           "print({k:len(v['countries']) for k,v in m['editions'].items()})\"")
-    return 0
+    return 1 if cov else 0
 
 
 if __name__ == "__main__":

@@ -196,3 +196,27 @@ publications offered for public download with no registration, terms page or rob
 restriction on the file paths used. Same footing as NIS Cambodia and ZIMSTAT — fine to draw
 and cite, and worth re-checking before any commercial use
 ([[reference_poster_commercial_licences]]).
+
+## Placement: blocks at Kontur's density cap, 2026-09-14 (session `f95259a4-kontur`), not changed
+
+Kontur limits every hex to 46,200 people/km², and a block of hexes at that limit is either a real
+dense core or a false concentration (spec §12, "KONTUR'S DENSITY CAP"). The scan found four
+Nepali blocks at the limit that sit well away from any town Kontur draws densely, all in the
+Terai. They are `unreviewed` in `kontur_cap.csv`: every scatter warns about them and draws them
+as Kontur has them. **Nothing here was changed.**
+
+| unit | where | hexes (at the cap) | share of the unit's placement weight |
+|---|---|---|---|
+| NP0234408 | 17 km west of Birganj | 6 (5) | **75.8%** |
+| NP0234409 | beside it | 1 (1) | 43.9% |
+| NP0106304 | 15.5 km from Biratnagar | 5 (2) | 43.8% |
+| NP0217310 | 8.5 km southeast of Janakpur | 2 (1) | 39.0% |
+
+Kontur is thin at the towns themselves: 3,574/km² at Birganj's centre, at most 1,237/km² within
+1 km of Janakpur. NP0106304 passes the scan's distance test (Kontur at Biratnagar is 1/2.9 of
+the peak, against a threshold of 1/3) and is listed because it has the Parsa blocks' shape.
+Kathmandu's block, 101 hexes with 3 at the cap and 96.5% of NP0327101, is registered `real`.
+
+To act on any of the four: set its `status` to `capped` in `kontur_cap.csv` and re-scatter. The
+fix lowers every hex in the block to the median density of the populated hexes within 3 km and
+cannot move a count.

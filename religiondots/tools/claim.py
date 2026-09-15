@@ -113,6 +113,27 @@ def built():
             (re.fullmatch(r"dots_([a-z]{2})\.geojson", f) for f in os.listdir(d)) if m}
 
 
+def waiting_for_build():
+    """Countries whose dots are newer than the start of the last build tail, so not on the map.
+
+    Under a supervisor, agents stop after the scatter and the supervisor runs
+    `tools/build_tail.py` for all of them at once (WORKFLOW_PLAN.md item 5). A finished tail
+    writes `data/build_last.json`. Returns (countries, started), or None before the first run."""
+    try:
+        with open(os.path.join(ROOT, "data", "build_last.json"), encoding="utf-8") as fh:
+            since = json.load(fh)["started"]
+    except (OSError, ValueError, KeyError):
+        return None
+    d = os.path.join(ROOT, "data", "processed")
+    out = []
+    for cc in sorted(built()):
+        paths = [os.path.join(d, f"dots_{cc}.geojson"), os.path.join(d, f"dots_{cc}_10k.geojson")]
+        newest = max((os.path.getmtime(p) for p in paths if os.path.exists(p)), default=0)
+        if newest > since:
+            out.append(cc)
+    return out, since
+
+
 def load_claims():
     if not os.path.isdir(CLAIMS):
         return {}
@@ -142,12 +163,18 @@ def parked():
 
 
 def read_queue():
-    """The candidate list. Rows look like `| pe | Peru | ... |`; anything else is prose."""
+    """The candidate list. Rows look like `| pe | Peru | ... |`; anything else is prose.
+
+    A row followed by a `|---|` line is a table header, not a country: `| cc | drawn from |`
+    was being listed as a free country called `cc`."""
     if not os.path.exists(QUEUE):
         return []
     rows = []
-    for line in open(QUEUE, encoding="utf-8"):
+    lines = open(QUEUE, encoding="utf-8").read().splitlines()
+    for i, line in enumerate(lines):
         m = re.match(r"^\|\s*`?([a-z]{2})`?\s*\|\s*([^|]+?)\s*\|(.*)\|\s*$", line)
+        if m and i + 1 < len(lines) and re.match(r"^\|\s*:?-{3,}", lines[i + 1]):
+            continue
         if m:
             rest = [c.strip() for c in m.group(3).split("|")]
             rows.append({"cc": m.group(1), "name": m.group(2), "cells": rest})
@@ -181,6 +208,14 @@ def cmd_list(args):
     missing = sorted(reg - have)
     if missing:
         print(f"  registered but NOT built: {', '.join(missing)}")
+    wait = waiting_for_build()
+    if wait is None:
+        print("  build tail: no data/build_last.json yet, so what is waiting for it is unknown")
+    elif wait[0]:
+        print(f"  WAITING FOR THE BUILD TAIL (last run started {_age(wait[1])} ago): "
+              f"{', '.join(wait[0])}")
+    else:
+        print(f"  build tail: nothing waiting (last run started {_age(wait[1])} ago)")
 
     if q:
         free = [r for r in q if r["cc"] not in claims and r["cc"] not in reg]
@@ -298,7 +333,10 @@ def cmd_done(args):
     if rc == 0:
         cc = args.cc.lower()
         print(f"\nbefore you stop, the §12 tail for {cc}:")
-        print("  - sources/<cc>.md written, and a §9-series section in sources.md")
+        print(f"  - sources/{cc}.md written, and a `## {cc}-YYYY-MM-DD.` section in sources.md "
+              f"(no new §9 letters)")
+        print("  - under a supervisor the build tail is its job, and this country now shows as "
+              "waiting;\n    on your own, python tools/build_tail.py --id <sid>")
         print("  - countries.py entry with note_public and gap=")
         print("  - python tools/built_countries.py --check   (both editions present)")
         print(f"  - remove {cc} from queue.md, or mark it drawn there")

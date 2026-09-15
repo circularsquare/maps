@@ -59,6 +59,15 @@ REVIEW = {
     "Pantheist":
         "-> paganism. Stats NZ files it under Spiritualism and New Age; Ireland's CSO pairs "
         "it with Pagan in a single category, which is the precedent followed here.",
+    "Zen, Theravada and Mahayana Buddhism -> their own nodes":
+        "Moved off `buddhism` on 2026-09-14, Anita's rule being more than one dot. `Zen "
+        "Buddhism` (1,401 responses nationally, 1,516 once allocated) went to "
+        "buddhism.mahayana.zen when Japan's school nodes were added; `Theravada Buddhism` "
+        "(4,851) and `Mahayana Buddhism` (1,026) followed the same day to the nodes that already "
+        "existed for them. Under a dot and left on the parent: `Vajrayana Buddhism` (327), and "
+        "`Nichiren Buddhism` (768), which in New Zealand is probably mostly Soka Gakkai "
+        "International, which Japan draws on eastasiannew.japanese rather than on the Nichiren "
+        "schools.",
     "Falun Gong":
         "-> chinesefolk. A qigong movement out of the Buddhist and Daoist traditions, and "
         "not comfortably any of the three. 116 people.",
@@ -217,9 +226,9 @@ MAP = {
     # ---------------------------------------------------------------- Buddhism
     "Buddhism nfd": "buddhism",
     "Buddhism nec": "buddhism",
-    "Theravada Buddhism": "buddhism",
-    "Mahayana Buddhism": "buddhism",
-    "Zen Buddhism": "buddhism",
+    "Theravada Buddhism": "buddhism.theravada",
+    "Mahayana Buddhism": "buddhism.mahayana",
+    "Zen Buddhism": "buddhism.mahayana.zen",
     "Nichiren Buddhism": "buddhism",
     "Vajrayana Buddhism": "buddhism",
 

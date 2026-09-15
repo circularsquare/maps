@@ -166,6 +166,14 @@ catchment is a statement about *where*, which is the only thing the weight is us
 
 ## 7. The 31.45%, which is the whole argument
 
+> **REDRAWN 2026-09-14 AS `unknown`, on Anita's ruling.** Laos's `No religion` and Mozambique's
+> `Sem religião (ateu, animista, agnóstico,...)` are both drawn as `unknown`, the treatment China
+> uses, until a national source measures how each splits between traditional religion and none.
+> §10 records what was searched. `indigenous.laos` is retired (a comment in `branches.py` marks
+> where it stood). Everything below is kept because it is the case for splitting the cell; it
+> is no longer the drawn call, and the paragraph rejecting `unknown` at the end of §7a is
+> superseded.
+
 The census's own English label is `no religion`. It is **not** filed on `unaffiliated`, and
 `taxonomy/la2015.py` and the `indigenous.laos` entry in `branches.py` carry the case. In
 short:
@@ -273,3 +281,63 @@ ethical weight is the one it declined to name rather than one it named and suppr
   the same data for one province. Unused; it would be an independent parse check.
 - **The 2011 agricultural census** is on the same server with ethnicity per village, and
   1995 is not.
+
+## 10. How the 31.45% splits, from national sources (researched 2026-09-14, NOT drawn)
+
+Anita, 2026-09-14: *"are we able to find any national level source for roughly how many of these
+people are indigenous religion and how many are no religion?"* **For Laos, yes, and almost none of
+it is no religion.** Recorded here and not drawn; splitting the category is Anita's call.
+
+**The source that measures it is the Lao Social Indicator Survey (LSIS, Laos's MICS round).** Both
+rounds ask the religion of the household head, question HC1A, with `Animist` and `No religion` as
+separate precoded answers:
+
+| round | heads, valid | Buddhist | Christian | Islam | Animist | Other religion | No religion |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| LSIS 2011-12 | 18,843 | 11,484 | 160 | 10 | **7,141** | 19 | **9** |
+| LSIS II 2017 | 22,287 | 13,543 | 353 | 4 | **8,307** | 59 | **18** |
+
+Unweighted case counts from the World Bank microdata library's variable pages,
+`microdata.worldbank.org/catalog/1911/variable/V45` and `catalog/3401/variable/V774`, both
+re-read 2026-09-14. The answer lists are on the questionnaires printed in the survey reports
+(DHS Program `FR268`, pdf p.424; `FR356`, pdf p.475). Weighted figures need the microdata. Anita
+has had a UNICEF MICS account since 2026-09-09 (`ask/answered/006-pa`, whose terms allow published
+aggregates only), so the LSIS II 2017 file is a browser download under that account; it was not
+requested.
+
+**Among heads giving either answer, `No religion` is 9 of 7,150 (0.13%) in 2011-12 and 18 of
+8,325 (0.22%) in 2017.** Applied to the census cell's 2,038,393, that is roughly **2,600 to 4,400
+people with no religion** and the rest traditional religion. Three cautions: the counts are
+unweighted, and the animist share of heads (37-38%) runs above the census's 31%, so the sample is
+not proportional; they are household heads, not persons; and LSIS's `Other religion` (0.3% of
+heads in 2017) may also sit inside the census cell.
+
+**Pew's `<0.1%` is this survey**, so §7's point 4 is not independent of it. *How the Global
+Religious Landscape Changed From 2010 to 2020* (2025), Appendix A (printed p.170), names the Lao
+MICS of 2012 and 2017 as its Laos source; Appendix B (p.190) has other religions 35.2% in 2010
+and 34.2% in 2020 with unaffiliated `<0.1%` in both; p.123 puts folk religions inside `other
+religions`.
+
+Weaker national sources:
+
+- **Pew, *The Global Religious Landscape* (2012)**: folk religion 30.7%, unaffiliated 0.9%, for
+  2010, *"based on 2005 Census, adjusted to account for underrepresented religious groups"*
+  (p.75). No measurement behind the split.
+- **World Religion Database, via ARDA** (`thearda.com/world-religion/national-profiles?u=127c`):
+  ethnic religionists 42.32%, agnostics 0.87%, atheists 0.29%, for 2025. Modelled, no method
+  given.
+- **1995 census.** The form's codes were Buddhist, **Animist**, Christian, Muslim and Others,
+  with no code for no religion (IPUMS's scan of the questionnaire; IPUMS notes no religion went to
+  Others). The only Lao census with an animist box, but the published comparison prints 1995 as
+  Buddhist 65, Christian 1, Other 33 and nothing finer.
+- **2005 census, *Results in Brief***: Table 1.5 (p.14) has Other at 1,739,009 of 5,621,982
+  (30.9%), and p.8 says *"Animism was not regarded as a religion and was included in 'Other'"*.
+  Confirms what the cell is; does not split it.
+
+Nothing usable, 2026-09-14: the LSIS reports themselves (no table by religion); LECS 2002-03
+(IHSN catalogue 2263, no religion variable; LECS 6 is restricted and was not checked); the Lao
+Front for National Construction's 2010 UPR submission (no figures); the US State Department's
+2023 religious freedom report (state.gov and the embassy PDF both 403; the ecoi.net copy repeats
+the 2015 census and churches' own estimates). **LSIS III 2023 is unchecked**: LSB's copy failed
+TLS twice and UNICEF's key-indicators PDF carries no religion. As a third round of the same
+question it is the next place to look.

@@ -96,6 +96,11 @@ N_UNITS = 9
 # is a failure here rather than a silent re-drawing of the country.
 CARRIES = ["MUSLIM", "ORTHODOX CHRISTIAN"]
 
+# Answers the split-half cannot test at all, drawn at the national rate anyway; `lits.stability`
+# stops on any other (spec §12's Tajikistan Buddhist). Recorded in the table above and in
+# sources/kg.md's category table.
+UNTESTED = {"CATHOLIC": "one respondent in the whole sample, so no halving can rank it"}
+
 # One respondent refused. It is excluded from the partition rather than drawn, and `lits.lean`
 # reports what excluding it does; with a single non-zero unit there is nothing to measure and
 # the check says so instead of producing a number.
@@ -153,7 +158,7 @@ def main():
           f"({', '.join(EXCLUDE)})")
     nat = lits.national(kept)
 
-    large = lits.stability(kept, nat, units)
+    large = lits.stability(kept, nat, units, untested=UNTESTED)
     if sorted(large) != sorted(CARRIES):
         raise SystemExit(
             f"the split-half now selects {sorted(large)}, not {sorted(CARRIES)}. That is a "

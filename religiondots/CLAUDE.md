@@ -5,6 +5,9 @@
 short list that is Anita's, and when to stop — `python tools/claim.py park <cc> --id <sid>`
 leaves a handoff so the next session resumes instead of restarting.
 
+**If you were spun up to add national estimates (spec §15), read `estimates_todo.md` instead.** It
+is the queue and the brief for that work: one item per agent, figures into `estimates_hand.py`.
+
 `spec.md` is the load-bearing record and later sections reverse earlier ones; read the one
 that applies before changing behaviour it describes. `COMMANDS.txt` has the new-country
 checklist and every command in build order.

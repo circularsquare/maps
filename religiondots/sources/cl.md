@@ -148,3 +148,56 @@ in the far north, not the capital.
 - INE publishes indigenous belonging (P2) at the same geography. Crossing it with religion
   to bring Mapuche practice out of `other.cl` is exactly what §14.4 forbids, and the census
   does not cross the two questions itself.
+
+## 7. Placement on Kontur, added 2026-09-14 (session `f95259a4-clht`)
+
+Anita, looking at the map: *"population distributions look a bit more artificial than i'd
+expect. could we improve population density granularity here?"*
+
+**Confirmed first: until today every comuna's dots were spread evenly over its polygon.**
+`countries.py` had no `place_weight` for Chile and `place` was `cl_comunas.gpkg`, so
+`scatter.py` split each comuna's dots uniformly across its area (§8.2's default). Measured on
+the dots as they were, **40.6% of Chile's 15,112 dots fell in no hex Kontur has as populated**,
+46.3% on land under 5 people/km², and the median dot sat at 13 people/km². The screenshot of La
+Araucanía and Los Ríos showed an even speckle over farmland and up the Andes at Lonquimay and
+Curarrehue, with only Temuco and Valdivia visible, and only because they are their own small
+comunas; around Santiago, Lampa, Colina, Pudahuel and Paine were filled edge to edge.
+
+**§8.2e's floor is nowhere near.** Comunas run 6.3 km² (San Ramón) to 51,456 km², median 630
+km² (EPSG:6933), so a median comuna is about 850 Kontur hexes at 0.74 km² and the smallest still
+takes eight. None is under one hex.
+
+**Built the way Haiti and Peru are**: `sources/cl_grid.py` joins Kontur's CL 2023 extract
+(148,550 hexes) to the 345 comuna polygons on hex centroids and writes
+`data/geo/cl/cl_hexes.gpkg`, 145,865 hexes; `countries.py::_cl_place_weight` uses it. The checks:
+
+    hexes outside every comuna        2,685, 141,094 people (0.72%), the extract overruns the
+                                      borders; dropped
+    comunas with no hex centroid      none (fewest hexes: 10)
+    Kontur 2023 / CPV 2024 total      19,492,352 / 18,480,432 = 1.055
+    log census vs log Kontur, 345     r = 0.970; best of 500 random pairings 0.205
+    comunas of 50,000+ people         0.33x to 1.90x after normalising
+
+The per-comuna band is set at **12x** and is a tripwire, not evidence. It is Peru's shape: every
+comuna past 3x has under 7,000 people. Timaukel (157 people, 9.2x) and Torres del Paine (203,
+9.1x) are Magallanes estancias and park buildings; Pica (6,272, 5.9x) holds the Collahuasi mine
+camp, whose workers the census counts at home. At 1:1,000 all of these draw at most six dots.
+**Central Santiago runs low on Kontur (Santiago comuna 0.33x, San Miguel 0.44x, Ñuñoa 0.54x)**,
+which does not matter here because each is its own unit and the weight only works inside one.
+
+**`python kontur_cap.py cl` finds no block at the density cap.** Nothing to register.
+
+**After**, same dots re-placed: **0.0%** in no populated hex, 0.5% under 5/km², median
+6,333/km². Dots per node identical at 1:1,000 (15,112) and 1:10,000 (1,505); `scatter.py` placed
+all 1,356 and 614 (comuna, node) rows on hex population and none on equal shares.
+
+**What the screenshots show** (1400x900, 1:1,000, before and after, same camera; kept in the
+session scratchpad, not in the tree). La Araucanía and Los Ríos: the even speckle over farmland
+and the Andes is gone, and the dots now sit on Temuco, Valdivia, Osorno, Angol, Victoria,
+Villarrica, Pucón and Loncoche and along the roads between them, with Lonquimay and Curarrehue
+nearly empty. Santiago: the city now has an edge, and the ring of evenly spread dots across
+Lampa, Colina, Pudahuel and Paine has become Colina, Lampa, Talagante, El Monte and Buin.
+
+**What it does not fix.** It is a population weight, not a religion one: a Catholic and an
+evangelical dot inside one comuna are spread the same way, so read clusters as "this comuna,
+drawn where its people live". The religion geography is still the comuna's.

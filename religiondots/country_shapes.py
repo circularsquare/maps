@@ -98,6 +98,11 @@ SLIVER_KM2 = 5.0
 # future country whose code does not match is a KeyError here and not a silently missing wash.
 ISO = {"uk": "GB"}
 
+# A country `admin_0_countries` does not carry at all, taken whole from the map-units file by
+# GU_A3. The Caribbean Netherlands (Bonaire, Sint Eustatius, Saba) is inside the Netherlands
+# feature there and a unit of its own only in `admin_0_map_units`. Added 2026-09-14 with `bq`.
+FROM_UNITS = {"bq": "NLY"}
+
 ROUND = 3          # ~110 m at the equator, well under this layer's own error
 
 
@@ -204,6 +209,19 @@ def main():
                 geoms = [by_unit[u] for u in units]
                 emit(feats, cc, rg,
                      geoms[0] if len(geoms) == 1 else shapely.union_all(geoms))
+
+    for cc, gu in FROM_UNITS.items():
+        if cc not in want.values() or cc in seen:
+            continue
+        if not UNITS.exists():
+            raise SystemExit(f"missing {UNITS}\n  curl -sSL -o {UNITS} {UNITS_URL}")
+        mu = json.loads(UNITS.read_text(encoding="utf-8"))
+        geom = next((shapely.geometry.shape(f["geometry"]) for f in mu["features"]
+                     if str(f["properties"].get("GU_A3") or "").strip() == gu), None)
+        if geom is None:
+            raise SystemExit(f"no map unit {gu} for {cc}; see FROM_UNITS in country_shapes.py")
+        seen.add(cc)
+        emit(feats, cc, cc, geom)
 
     missing = sorted(set(COUNTRIES) - seen)
     if missing:

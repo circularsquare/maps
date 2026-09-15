@@ -438,6 +438,10 @@ def fold(label):
     as far apart as they were.
     """
     s = unicodedata.normalize("NFKC", str(label))
+    # A second addition, 2026-09-14: NFKC leaves U+2019 alone, so `Ja’fari` (waves V, VII, VIII)
+    # and `Ja'fari` (VI-3) folded to two keys and `assert_one_wording` could not see the clash;
+    # `iq.py::RECODE` merges them by hand. `afrobarometer.py::fold` already did this.
+    s = s.replace("’", "'")
     s = _ORDINAL_PREFIX.sub("", " ".join(s.split()))
     return s.strip(" .,:;!?_-").casefold()
 
@@ -636,6 +640,26 @@ def load(country, expect_waves=None, waves=None, recode=None, omit=None, extra=N
         undecoded = sorted(set(sub[rel].dropna()) - set(rlab))
         if undecoded:
             raise SystemExit(f"wave {name}: Q1012 codes with no label: {undecoded}")
+        # THE WEIGHT IS ASSERTED, NOT DEFAULTED (2026-09-14). Until then a wave with no weight
+        # column pooled at 1.0 and a blank weight was filled with 1.0, both silently, so a
+        # release renaming `wt` would re-level every unit with nothing on screen. Every wave
+        # Egypt, Jordan and Iraq pool has a within-country `wt`/`WT` with no blank among the
+        # answered rows, averaging 0.997 to 1.001 over the country (measured 2026-09-14).
+        if wt is None:
+            raise SystemExit(
+                f"wave {name} has no weight column (looked for wt, weight, weight1500). Find "
+                "the within-country weight in that wave's codebook and add its name to the "
+                "lookup; never pool an unweighted wave beside weighted ones.")
+        wv = pd.to_numeric(sub[wt], errors="coerce")
+        blank = int((wv.isna() & sub[rel].notna()).sum())
+        if blank:
+            raise SystemExit(f"wave {name}: {blank} {country} respondents who answered Q1012 "
+                             f"have no {wt}. Nothing here fills a weight in; read the codebook.")
+        if not 0.98 <= wv.mean() <= 1.02:
+            raise SystemExit(
+                f"wave {name}: {wt} averages {wv.mean():.3f} over {country}'s rows. A "
+                "within-country weight averages 1, so this is a cross-country or population "
+                "weight, which would re-level the units by country size.")
         frame = pd.DataFrame({
             "wave": name,
             "wave_no": ordinal,
@@ -875,7 +899,7 @@ def _poisson_binomial_tail(ps, k):
     return float(dist[k:].sum())
 
 
-def quota_agreement(df, unit_col="geo_id", cat_col="category", verbose=True):
+def quota_agreement(df, unit_col="geo_id", cat_col="category", verbose=True, waves=None):
     """DID THE FIELDWORK SET THE ANSWER? Every pair of waves, compared cell by cell.
 
     ## THE FAILURE THIS EXISTS FOR, AND WHY §14.16 CANNOT SEE IT
@@ -922,7 +946,18 @@ def quota_agreement(df, unit_col="geo_id", cat_col="category", verbose=True):
     narrower pool is not evidence about the wider one.
     """
     tabs = {w: pd.crosstab(d[unit_col], d[cat_col]) for w, d in df.groupby("wave")}
-    order = [w for w in WAVE_NAMES if w in tabs]
+    # `waves` IS THE PAIRING ORDER, and a frame whose waves are not in it used to compare
+    # nothing and pass: a Central Asia Barometer frame (waves 1..6) matched no name in
+    # WAVE_NAMES, this returned None, and assert_not_quota returned without raising
+    # (sources.md §11ao). Any other survey passes its own wave list; a wave missing from the
+    # order now stops the run instead of being skipped.
+    known = list(WAVE_NAMES) if waves is None else list(waves)
+    stray = sorted(set(tabs) - set(known), key=str)
+    if stray:
+        raise SystemExit(f"quota_agreement: waves {stray} are in the frame but not in the order "
+                         f"it was given ({known}), so they would be compared with nothing. "
+                         "Pass the survey's own wave list as `waves=`.")
+    order = [w for w in known if w in tabs]
     worst, n_pairs = None, 0
     if verbose:
         print("\n  quota check: does any pair of waves return the SAME composition per unit?")
@@ -972,24 +1007,32 @@ def quota_agreement(df, unit_col="geo_id", cat_col="category", verbose=True):
     return worst, n_pairs
 
 
-def assert_not_quota(df, country, unit_col="geo_id", cat_col="category", quota_ok=None):
+def assert_not_quota(df, country, unit_col="geo_id", cat_col="category", quota_ok=None,
+                     waves=None, min_pairs=0):
     """Refuse to run the split-half on a country whose per-unit composition is fieldwork.
 
     `quota_ok` is a written sentence, not a flag, and it is the same escape hatch as
     `stability`'s `override`: a country that fails this and is drawn anyway must say why on the
     page. **There is no such country yet, and the one that failed is not drawn.**
+
+    `waves` is the pairing order (default `WAVE_NAMES`) and `min_pairs` the fewest comparable
+    pairs that count as having tested anything; a survey other than Arab Barometer passes both
+    (`sources/cab.py`). Returns `(worst, n_pairs)` so a caller can say how much was compared.
     """
-    worst, n_pairs = quota_agreement(df, unit_col, cat_col)
+    worst, n_pairs = quota_agreement(df, unit_col, cat_col, waves=waves)
+    if n_pairs < min_pairs:
+        raise SystemExit(f"{country}: the quota test compared {n_pairs} pairs of waves, fewer "
+                         f"than the {min_pairs} required, so a pass would say nothing")
     if worst is None:
-        return
+        return worst, n_pairs
     p, wa, wb, hits, cells = worst
     adjusted = min(1.0, p * max(n_pairs, 1))
     print(f"    Bonferroni over {n_pairs} pairs: p={adjusted:.3g}, bar {QUOTA_P_BAR:g}")
     if adjusted > QUOTA_P_BAR:
-        return
+        return worst, n_pairs
     if quota_ok:
         print(f"    UNDER THE BAR and drawn anyway: {quota_ok}")
-        return
+        return worst, n_pairs
     raise SystemExit(
         f"{country}'s waves {wa} and {wb} return the same composition in {hits} of {cells} "
         f"free cells, p={p:.3g} ({adjusted:.3g} after Bonferroni over {n_pairs} pairs). Two "

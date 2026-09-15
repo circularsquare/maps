@@ -31,6 +31,16 @@ is that change and spec §14.13/§14.14 are the decisions.** `sources/cn.py` reb
 > not in it. **§8 is that change**; the national figure now lands 428 people from the census,
 > of which 411 are 西南中沙群岛's islanders and 17 are the pre-existing residue.
 
+> **2026-09-14, from the `chinaethnicity` project (not yet acted on here).** §4's premise that
+> no county-level nationality table newer than 2000 is open, and that 2020 exists only as a
+> JPEG scan, is wrong for about half the country. Most 2020 provincial census yearbooks hide an
+> `.xls` beside each table image, and table 1-4 is county x all 56 nationalities: 16 provinces
+> are open this way, and the national province table is an `.xls` too. `maps/chinaethnicity/`
+> has the fetcher, a parser checked against the national table, and the county join
+> (`provinces.md` there lists which provinces and why the rest are not). Using it here would
+> put the Hui, Tibetan and other religio-ethnic rows on 2020 counts for those provinces. That
+> is religiondots' call and has not been made.
+
 ## 1. Why this country exists at all, and the rule that lets it
 
 China has never carried a religion question in any census. So unlike every other country on

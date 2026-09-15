@@ -221,6 +221,20 @@ def _ess_table(rnd):
         rec["count"] = cell["count"]
         rows.append(rec)
     df = pd.DataFrame(rows)
+    # THE GR->EL RECODE IS ASSERTED (2026-09-14), `fi.py::_check_recode`'s rule: a recode table
+    # is a name join wearing a code's clothes. A round still on GR codes must carry all thirteen,
+    # each labelled with the name NUTS2 gives its EL code (`&` read as `,`), and every round must
+    # land inside NUTS2 after the recode.
+    reg = dict(zip(values["region"], labels["region"]))
+    norm = lambda s: " ".join(str(s).replace("&", ",").replace(" ,", ",").split()).casefold()
+    if any(str(c).startswith("GR") for c in reg):
+        bad = [f"{c} {reg.get(c)!r} -> {e} {NUTS2[e]!r}" for c, e in sorted(GR_TO_EL.items())
+               if c not in reg or norm(reg[c]) != norm(NUTS2[e])]
+        if bad:
+            sys.exit(f"!! round {rnd}: GR_TO_EL does not hold:\n  " + "\n  ".join(bad))
+    stray = sorted({GR_TO_EL.get(c, c) for c in reg} - set(NUTS2))
+    if stray:
+        sys.exit(f"!! round {rnd}: region codes outside NUTS2 after the recode: {stray}")
     df["region"] = df["region"].map(lambda r: GR_TO_EL.get(r, r))
     return df
 
@@ -309,6 +323,16 @@ def _foreign_half(cen):
     covered = leaf["value"].sum()
     print(f"  {leaf['citizen'].nunique()} named citizenships cover {covered:,.0f} of "
           f"{total_for:,.0f} foreign residents ({100 * covered / total_for:.2f}%)")
+    # EUROSTAT'S `FOR` CAN HOLD THE COUNTRY'S OWN RECOGNISED NON-CITIZENS (Latvia's 190,544
+    # `RNC`), and scaling the named citizenships up to `FOR` would hand them to Russia and the
+    # rest (spec §12, "EUROSTAT'S `FOR`"). Greece's `RNC` is 0 and the named citizenships are
+    # 99.8% of `FOR` (2026-09-14); asserted, with `lv.py::_foreign_half`'s band.
+    rnc = cen[cen["citizen"] == "RNC"]["value"].sum()
+    if rnc:
+        sys.exit(f"!! cens_21ctz_r3 has {rnc:,.0f} recognised non-citizens (RNC) inside FOR; scale "
+                 "to FOR - RNC and draw RNC separately, as lv.py::_foreign_half does")
+    if not 0.9 < covered / total_for <= 1.0001:
+        sys.exit("!! the named citizenships do not match FOR; read the census file before scaling")
 
     comp, unmapped = {}, []
     for iso in sorted(leaf["citizen"].unique()):

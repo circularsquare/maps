@@ -73,11 +73,11 @@ DEFAULT_LEVELS = {# Austria's drawn tier is 2,358 Gemeinden PLUS Vienna's 23 Gem
                   # `kecamatan_partial` are the two record-only halves of that split and
                   # must not be tallied -- either one would double-count.
                   "id": ["kecamatan", "regency"],
-                  # Pakistan's drawn tier is NOT the finest one in its file. pk.csv carries
-                  # 585 tehsils and 155 districts, and countries.py draws districts because
-                  # PBS publishes religion at district and not below (spec §14.4). The
-                  # default "level with the most units" would tally the tehsils, which are
-                  # a tier this map deliberately does not draw.
+                  # Pakistan's drawn tier is NOT the finest one in its file. pk.csv (the 2023
+                  # census since 2026-09-14) carries 591 tehsil-tier units and 136 districts,
+                  # and countries.py draws districts by Anita's choice (sources/pk.md §9),
+                  # although PBS now prints religion by tehsil too. The default "level with
+                  # the most units" would tally the tehsils, which this map does not draw.
                   "pk": ["district"],
                   # Israel's drawn tier is two levels by construction: CBS splits 142
                   # localities into statistical areas and publishes the other 1,043 whole,

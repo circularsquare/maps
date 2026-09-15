@@ -221,3 +221,27 @@ Same word, different sets, which is exactly why `source_category` is kept verbat
 - **Ethnicity and language layers are in the same file** and are not read. `spec` §14.5
   permits a derived layer only where there is no religion count; Ethiopia has one, so there
   is nothing to derive and no reason to touch them.
+
+## Placement: blocks at Kontur's density cap, 2026-09-14 (session `f95259a4-kontur`), not changed
+
+Kontur limits every hex to 46,200 people/km², and a block of hexes at that limit is either a real
+dense core or a false concentration (spec §12, "KONTUR'S DENSITY CAP"). Six Ethiopian blocks at
+the limit fail the scan's checks against `maps/data/worldcities.csv`. They are `unreviewed` in
+`kontur_cap.csv`: every scatter warns about them and draws them as Kontur has them. **Nothing
+here was changed.**
+
+| woreda | where | hexes (at the cap) | share of the woreda's placement weight |
+|---|---|---|---|
+| ETH_02_01_04 | Afar | 4 (1) | **56.8%**, no town within 20 km |
+| ETH_11_03_01 | Mekele outskirts, 8 km from the centre | 7 (3) | **45.0%**; Kontur at Mekele's centre is 4,170/km² |
+| ETH_10_09_05 | Somali, at Bike | 2 (1) | 29.9%, six times the town's worldcities figure |
+| ETH_10_06_02 | Somali | 3 (1) | 28.9%, no town within 20 km |
+| ETH_10_07_04 | Somali | 1 (1) | 21.5%, no town within 20 km |
+| ETH_10_06_03 | Somali, at Moyale | 1 (1) | 9.4% |
+
+The other three Ethiopian blocks at the cap, Addis Ababa's (89 hexes, 13 at the cap) among them,
+are registered `real`.
+
+To act on any of the six: set its `status` to `capped` in `kontur_cap.csv` and re-scatter. The
+fix lowers every hex in the block to the median density of the populated hexes within 3 km and
+cannot move a count.

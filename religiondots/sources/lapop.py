@@ -93,6 +93,99 @@ CATEGORY = {
 # is not permission — `stability()` is the stricter test and it decides.
 ELIGIBLE_FLOOR = 0.01
 
+# THE CARD CHANGES BY WAVE, AND `load` ASSERTS WHAT IS KNOWN ABOUT IT (added 2026-09-14).
+#
+# Codes off the card in some waves: exactly zero respondents in these waves in every one of the
+# merge's 22 countries, measured 2026-09-14. Pooled over the waves that offered the box, 6, 10 and
+# 12 are floors and 77 `Otro` is inflated late (`taxonomy/ec2023.py` has the words).
+CARD_ABSENT = {77: (2010, 2012, 2014), 6: (2018, 2023), 10: (2018, 2023), 12: (2018, 2023)}
+
+# A WAVE CAN ARRIVE WITH SHIFTED ANSWER CODES. Honduras 2016: code 3 (Eastern religions) is 143
+# respondents against about 3 expected, and evangelicals fall. `wave_flags` compares each code's
+# unweighted count in each wave with the median share of the other waves whose card offers it: a
+# zero where 8 or more are expected, or a count at 3x or under a third of expected with a Poisson p
+# under 1e-6. Unweighted, because a shifted code is a fact about respondents.
+WAVE_ZERO_EXPECT = 8.0
+WAVE_JUMP_RATIO = 3.0
+WAVE_JUMP_P = 1e-6
+
+# Every flag `wave_flags` raises for a country this module loads, by `pais`. A flag not listed
+# stops `load`, and so does a listed flag that no longer fires. `judged` names where the flags
+# were looked at and found harmless. None means REPORTED BY THIS CHECK ON 2026-09-14 AND NOT
+# JUDGED: the country was drawn before the check existed, `load` prints the flags loudly, and
+# leaving a wave out would be a redraw for someone to rule on. A flag goes in here only with the
+# reason it is harmless written beside it, never to make a new country load.
+WAVE_FLAGS = {
+    2: {"flags": {("high", 3, 2014), ("high", 11, 2010), ("zero", 11, 2014)}, "judged": None},
+    3: {"flags": {("high", 2, 2018), ("high", 3, 2016), ("high", 3, 2023)}, "judged": None},
+    6: {"flags": {("low", 11, 2014)}, "judged": None},
+    7: {"flags": {("high", 3, 2014), ("zero", 11, 2014)}, "judged": None},
+    8: {"flags": {("high", 3, 2014), ("high", 7, 2014), ("low", 12, 2010), ("high", 12, 2014)},
+        "judged": "sources/co.md §4: 2014 is the odd wave for the small codes, while the Christian "
+                  "total and the Catholic series move smoothly through it and no answer sits in "
+                  "one sampling cluster; not a Honduras-2016 shift"},
+    9: {"flags": {("high", 3, 2023), ("high", 11, 2023)}, "judged": None},
+    21: {"flags": {("zero", 3, 2010), ("high", 3, 2023)}, "judged": None},
+}
+
+
+def wave_flags(df):
+    """`[(kind, code, wave, observed, expected)]` for one country's respondents. See WAVE_FLAGS."""
+    from scipy.stats import poisson
+    wave = df["wave"].astype(float).astype(int)
+    n = df.groupby([df["code"], wave]).size().unstack(fill_value=0)
+    waves = [int(w) for w in n.columns]
+    nw = n.sum(axis=0)
+    share = n / nw
+    flags = []
+    for c in n.index:
+        on = [w for w in waves if w not in CARD_ABSENT.get(int(c), ())]
+        for w in on:
+            other = [x for x in on if x != w]
+            if not other:
+                continue
+            exp = max(float(np.median(share.loc[c, other])) * float(nw[w]), 0.5)
+            obs = int(n.loc[c, w])
+            if obs == 0 and exp >= WAVE_ZERO_EXPECT:
+                flags.append(("zero", int(c), w, obs, exp))
+            elif obs >= WAVE_JUMP_RATIO * exp and poisson.sf(obs - 1, exp) < WAVE_JUMP_P:
+                flags.append(("high", int(c), w, obs, exp))
+            elif obs <= exp / WAVE_JUMP_RATIO and poisson.cdf(obs, exp) < WAVE_JUMP_P:
+                flags.append(("low", int(c), w, obs, exp))
+    return flags
+
+
+def check_waves(df, pais):
+    """`load`'s per-wave card assertions: CARD_ABSENT holds, and every WAVE_FLAGS entry matches."""
+    wave = df["wave"].astype(float).astype(int)
+    off = sorted({(int(c), int(w)) for c, w in zip(df["code"], wave)
+                  if int(w) in CARD_ABSENT.get(int(c), ())})
+    if off:
+        raise SystemExit(f"pais={pais} has respondents on codes CARD_ABSENT says were off the "
+                         f"card: {off}. The card reading is wrong for this release; re-measure "
+                         "CARD_ABSENT over every country before pooling anything.")
+    found = wave_flags(df)
+    got = {(k, c, w) for k, c, w, _o, _e in found}
+    entry = WAVE_FLAGS.get(int(pais), {"flags": set(), "judged": None})
+    new, gone = sorted(got - entry["flags"]), sorted(entry["flags"] - got)
+    lines = [f"    {k:<5} code {c:>4} ({CATEGORY.get(c, '?')[:40]}) in {w}: {o} respondents "
+             f"against {e:.1f} expected" for k, c, w, o, e in found]
+    if new or gone:
+        raise SystemExit(
+            f"pais={pais}: the per-wave code check found {new or 'nothing'} not in WAVE_FLAGS"
+            f"{f', and no longer finds {gone}' if gone else ''}:\n" + "\n".join(lines)
+            + "\n  Tabulate each code's weighted share by wave (sources/co.md §4). A wave whose "
+            "codes are shifted (Honduras 2016) leaves the pool; a flag goes into WAVE_FLAGS only "
+            "with the reason it is harmless written beside it.")
+    if not found:
+        return
+    if entry["judged"]:
+        print(f"  per-wave codes: {len(found)} flag(s), judged harmless: {entry['judged']}")
+    else:
+        print(f"  !! per-wave codes: {len(found)} flag(s) REPORTED 2026-09-14 AND NOT JUDGED "
+              "(lapop.WAVE_FLAGS); this country was drawn with these waves pooled:")
+    print("\n".join(lines))
+
 
 def valid(s):
     """LAPOP columns mix numeric codes with letter missing-codes; this is the real answers."""
@@ -143,6 +236,7 @@ def load(pais, expect_waves):
     unknown = sorted(set(df["code"]) - set(CATEGORY))
     if unknown:
         raise SystemExit(f"religion codes with no label: {unknown} — the card has changed")
+    check_waves(df, pais)
 
     waves = sorted(int(w) for w in df["wave"].unique())
     if waves != list(expect_waves):

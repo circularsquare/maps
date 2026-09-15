@@ -565,3 +565,89 @@ interleave, and it fails silently, because the resulting map looks more precise 
 less. Reaching arrondissements honestly would need nationality by country below the
 département, which INSEE's open tables do not publish and its detailed files coarsen for
 disclosure control — §14.3's wall again, one level down.
+
+## 13. The split-half as a report, 2026-09-14 (ask 012, report only)
+
+Anita ruled on `ask/answered/012-be-five-ess-countries-were-drawn-without-the-sp.md` on
+2026-09-14: run the test Belgium (§9cy) and Sweden (§9cz) draw with on the five ESS countries
+drawn before it, print the tables, move no dots. `python tools/ess_split_half.py fr` reproduces
+this section. It imports `sources/stability.py`'s statistic (`median_rho` and `wave_null`;
+`be.py::_median_rho` until 2026-09-14) with be.py's alpha (0.05), draw count (2,000) and seed (0),
+and adds Sweden's spatial chi-square at 0.05 (`stability.chi2_p`) as the second
+requirement. Nothing in `fr.py`, `fr2024.py`, `countries.py` or the built outputs was changed.
+
+The pool is the build's own: French citizens, rounds 5 to 11, `rlgdnm` with Refusal, Don't know
+and No answer dropped, recoded to the 21 anciennes régions through `fr.FR10_TO_16`. 12,782
+unweighted respondents (12,652 weighted), 35 splits of three rounds against four, a null that
+permutes the région labels per round. **Both tests need unweighted counts and `fr.py` only ever
+fetched the weighted pass**, so the unweighted one was fetched with the same break variables and
+sits beside it as `data/raw/fr/ess_r<N>_n.json`; `fr.py` does not read it. The overseas régions
+are Pew and Corsica is undrawn, so neither is in the test. `national` is the weighted share.
+
+| category | n | national | median rho | null 95th | p | chi² p | verdict |
+|---|---:|---:|---:|---:|---:|---:|---|
+| **Not applicable** (no religion) | 6,541 | 51.67% | +0.671 | +0.265 | 0.0005 | 1.3e-19 | **own geography** |
+| **Roman Catholic** | 5,275 | 39.12% | +0.481 | +0.260 | 0.0010 | 5.4e-07 | **own geography** |
+| **Islam** | 500 | 5.25% | +0.668 | +0.257 | 0.0005 | 1.8e-42 | **own geography** |
+| **Protestant** | 213 | 1.75% | +0.340 | +0.272 | 0.0185 | 3.5e-30 | **own geography** |
+| Other Christian denomination | 87 | 0.75% | +0.041 | +0.272 | 0.4153 | 8.2e-01 | national rate |
+| **Jewish** | 66 | 0.55% | +0.682 | +0.280 | 0.0005 | 5.2e-14 | **own geography** |
+| Other Non-Christian religions | 43 | 0.38% | -0.295 | +0.278 | 0.9645 | 5.7e-01 | national rate |
+| Eastern religions | 27 | 0.27% | +0.169 | +0.293 | 0.1719 | 6.9e-02 | national rate |
+| **Eastern Orthodox** | 30 | 0.26% | +0.424 | +0.286 | 0.0075 | 4.8e-02 | **own geography** |
+
+If the test were applied, three categories would move to the national rate, 1.40% of citizens:
+Other Christian denomination, Other Non-Christian religions and Eastern religions. The six that
+keep their régional shares are 98.60%.
+
+**France is the least exposed of the five, as ask 012 expected.** Every category above half a
+percent carries, and the three that fail are residual buckets the map already files under
+`christianity` and `other.fr`, so no named body loses its geography.
+
+**Jewish carries on 66 respondents with 10 of 21 régions empty**, which is the column shape
+Sweden refused twice, and here it is not refused: the chi-square is 5.2e-14 and the rank
+statistic sits at the smallest p the null can give. Belgium's 15 Jewish respondents failed; 66
+spread over half the régions are enough.
+
+**Eastern Orthodox is the pass to treat as provisional.** 30 respondents, 10 régions empty, rank
+p = 0.0075, and a chi-square of 0.048 that clears 0.05 by a hair. Nine tests at 0.05 expect about
+half a false pass and this is the likeliest place for it. It is 0.26% of citizens.
+
+Nothing here is alarming in the sense of the ruling, so no ask.
+
+## 14. The overseas régions on Kontur hexes — 2026-09-14
+
+Anita: *"french guiana population distribution looks a little silly spread out, that seems not
+right. is there more granular population density we could use here?"*
+
+It was the placement layer, not the counts. The five DOM were placed on their communes, weighted by
+commune population, and a DOM commune is often mostly forest or volcano: Guyane has 22 communes for
+268,700 people and Maripasoula alone is 18,360 km². Each commune's dots were spread evenly over the
+whole polygon, so the interior drew as a thin even scatter across the rainforest.
+
+`fr_geo.py` now swaps each DOM's communes for its populated Kontur 400 m hexes (`_dom_hexes`), one
+per-territory file each from the bucket every Kontur country here uses (`--fetch` gets them). No
+magnitude moves: each DOM is still one unit on Pew's shares, and the hexes only decide where inside
+it a dot lands. `pop` and `french` both carry the hex population, so `_ItWeighter` treats a hex the
+way it treated a commune.
+
+| unit | | communes | hexes | Kontur | communes' pop | ratio |
+|---|---|---:|---:|---:|---:|---:|
+| `FRY1` | Guadeloupe | 33 | 2,247 | 395,834 | 425,587 | 0.93 |
+| `FRY2` | Martinique | 34 | 1,649 | 383,073 | 372,594 | 1.03 |
+| `FRY3` | Guyane | 22 | 2,243 | 327,742 | 268,700 | 1.22 |
+| `FRY4` | La Réunion | 24 | 1,997 | 1,002,673 | 853,659 | 1.17 |
+| `FRY5` | Mayotte | 17 | 484 | 335,987 | 256,518 | 1.31 |
+
+The ratio is a shape check and not a magnitude one, because Kontur never sets a count here. Its band
+is 0.7 to 1.4 and Mayotte set the top: GISCO's commune population is the 2017 census, which is widely
+held to undercount the island, and Pew's own 2020 figure is already 284,370. A hex belongs to a DOM
+when its centroid is inside that DOM's communes with 1 km of slack; 7 hexes and 56 people fell
+outside across all five.
+
+**Checked on the dots, not only on the layer.** Of Guyane's 283 dots at 1:1,000, 73% land within
+5 km of a named settlement and 89% within 10 km. The 47 south of 4.6°N sit at Saint-Georges (13),
+Maripasoula (11), Grand-Santi (8), Papaïchton (7), Camopi (3) and the upper-river villages. Of the
+twelve more than 20 km from the list, the recognisable ones are Trois-Sauts on the upper Oyapock
+and Saint-Élie; the rest are single dots near the Maroni or the coast road between Iracoubo and
+Mana, which the list did not name.

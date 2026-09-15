@@ -20,6 +20,8 @@ checkpoint with a handoff rather than running to the wall with the findings stil
     python tools/ask.py                   the short list of things waiting on Anita
     python tools/ask.py new <cc> --title  file one -- rare, and never a blocker
     python tools/review_dump.py [cc ...]  every mapping's REVIEW dict, read together
+    python tools/where.py <cc>            every file, record section, queue row, ask and ruling
+                                          for one country, with line numbers
     python tools/build_tail.py --id <sid> steps 10-12 under an exclusive lock -- the ONLY three
                                           steps that rewrite whole-map files, so never run them
                                           bare while anyone else is working
@@ -104,10 +106,30 @@ Run in order.  Every step, every time, even when only one country changed.
    5. python taxonomy/build_tree.py        # NOT automatic.  Skip it and the viewer greys out
                                            #   whole countries -- it does not know the new nodes.
    6. python tools/check_mapping.py <cc>   # every source category resolves; every node exists
-   7. python coverage.py                   # every drawn node is covered, all countries
-   8. python scatter.py --country <cc>                  # 1:1,000
-   9. python scatter.py --country <cc> --dot-value 10000  # 1:10,000, needed by --coarse below
+   7. python scatter.py --country <cc>                  # 1:1,000
+   8. python scatter.py --country <cc> --dot-value 10000  # 1:10,000, needed by --coarse below
+   9. python coverage.py                   # every drawn node is covered, all countries
+                                           # IT CHECKS THE LAST BUILD, NOT YOUR SCATTER.  It
+                                           #   compares the mappings with data/processed/
+                                           #   counts.json, which tiles.py writes in step 11.
+                                           #   So before the tail a new country passes vacuously
+                                           #   and a remapped one reports the nodes it USED to
+                                           #   draw (mz, 2026-09-14).  build_tail.py runs it
+                                           #   again at the end, and that run is the one that
+                                           #   counts.  Sweden passed here and then failed with
+                                           #   18 uncovered nodes once built, every one of them
+                                           #   the foreign half's (§9cz).  A two-half country
+                                           #   needs its `other.<cc>` line in coverage.py's
+                                           #   foreign-half tuple.
+                                           # If it fails and you fix coverage.py, the tail below
+                                           #   has to run again: tiles.py reads coverage.
   10-12.  python tools/build_tail.py --id <sid>
+                                           # UNDER A SUPERVISOR, SKIP IT.  If rd-super spawned
+                                           #   you (your prompt says so), stop after step 9 and
+                                           #   `claim.py done`.  The supervisor runs the tail for
+                                           #   every waiting country at once, about hourly, and
+                                           #   `claim.py` lists the countries whose dots are
+                                           #   newer than the last run.
                                            # RUN THIS INSTEAD OF THE THREE COMMANDS BELOW when
                                            #   anyone else might be working (which is normally).
                                            #   Steps 10, 11 and 12 are NOT per-country: each one
@@ -204,6 +226,18 @@ Run in order.  Every step, every time, even when only one country changed.
         back to 7a-i's ancestor walk, so the UK's 22.1M unaffiliated vanish again.
         Loads every country's counts(), so the full run is a few minutes; --countries
         merges into the existing file rather than replacing it.
+
+    python estimates.py [--dry]
+        Builds data/processed/estimates.json and estimate_shapes.geojson, the NATIONAL
+        ESTIMATE layer (spec 15.11): Pew 2020's seven families for every country plus the
+        hand rows in estimates_hand.py, drawn as outlines behind the `national estimates`
+        toggle, which is off by default.  RUN IT AFTER tiles.py, because it reads each
+        country's `covers` from counts.json to refuse figures a built country already
+        measures, and after editing estimates_hand.py.  Skipping it fails safe: a newly built
+        country keeps its outlines until the next run.
+    python tools/scan_estimates.py [node -v]
+        The scout behind spec 15.4b: what the World Religion Project would add and why it is
+        not used.  Ships nothing.
 
   THE ONE-LINE CHECKS, and they are worth running:
 
@@ -1497,6 +1531,14 @@ Run in order.  Every step, every time, even when only one country changed.
                                      #   miss is Antartica, 60 people, which COD does not
                                      #   carry.  COD mislabels CL01401 (Pozo Almonte) as
                                      #   "Tocopilla", so NAMES COME FROM INE, not COD.
+    python sources/cl_grid.py --fetch # Kontur CL 2023, 10.7MB gz, ~1 min.  Needs cl_geo.py.
+                                     #   The placement layer, added 2026-09-14: before it
+                                     #   each comuna's dots were spread evenly over a median
+                                     #   630 km2, and 40.6% of them fell in no populated
+                                     #   hex.  The per-comuna band is 12x because hamlets of
+                                     #   100-250 people in Magallanes run 7-9x on Kontur;
+                                     #   log r = 0.970 over 345 is the real check.
+                                     #   sources/cl.md 7.
     python sources/lk_geo.py --fetch # OCHA COD-AB lka v03, 118MB shp bundle from HDX,
                                      #   ~2 min.  Needs sources/lk.py to have run first.
                                      #   READ sources/lk_geo.md BEFORE TOUCHING THIS.

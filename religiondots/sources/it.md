@@ -342,3 +342,82 @@ assert the national sum.
    Protestant cell is out by 5× and its Protestant-plus-other-Christian total is out by 3%.
    Checking a node against an outside count is worth doing at more than one level of the
    tree, because the level where it agrees tells you what the respondents actually heard.
+
+## 10. The split-half as a report, 2026-09-14 (ask 012, report only)
+
+Anita ruled on `ask/answered/012-be-five-ess-countries-were-drawn-without-the-sp.md` on
+2026-09-14: run the test Belgium (§9cy) and Sweden (§9cz) draw with on the five ESS countries
+drawn before it, print the tables, move no dots. `python tools/ess_split_half.py it` reproduces
+this section. It imports `sources/stability.py`'s statistic (`median_rho` and `wave_null`;
+`be.py::_median_rho` until 2026-09-14) with be.py's alpha (0.05), draw count (2,000) and seed (0),
+and adds Sweden's spatial chi-square at 0.05 (`stability.chi2_p`) as the second
+requirement. Nothing in `it.py`, `it2024.py`, `countries.py` or the built outputs was changed.
+**Both tests need unweighted counts and `it.py` only ever fetched the weighted pass**, so the
+unweighted one was fetched with the same break variables as `data/raw/it/ess_r<N>_n.json`;
+`it.py` does not read it.
+
+**Italy's two survey levels make two different claims, so the test runs on each separately,
+and neither is Belgium's test in full.** The ruling named this country's construction as the
+one that might not take the test; it takes it, with the limits below.
+
+### Level 1: the minority categories, 5 ripartizioni, rounds 9, 10 and 11
+
+Base: every Italian citizen who answered, as `it.py`'s `s1`. 7,700 unweighted (7,649 weighted),
+three splits of one round against two, a null that permutes the ripartizione labels per round.
+
+| category | n | national | median rho | null 95th | p | chi² p | verdict |
+|---|---:|---:|---:|---:|---:|---:|---|
+| Islam | 64 | 0.92% | +0.600 | +0.700 | 0.1189 | 2.5e-05 | national rate |
+| Other Christian denomination | 43 | 0.55% | +0.600 | +0.700 | 0.1179 | 3.0e-03 | national rate |
+| Eastern Orthodox | 29 | 0.39% | +0.359 | +0.667 | 0.2429 | 1.4e-01 | national rate |
+| Eastern religions | 18 | 0.26% | +0.447 | +0.700 | 0.1729 | 3.7e-01 | national rate |
+| Other Non-Christian religions | 15 | 0.18% | -0.707 | +0.718 | 0.9525 | 8.3e-01 | national rate |
+| Protestant | 10 | 0.13% | +0.707 | +0.707 | 0.1824 | 2.9e-01 | national rate |
+| Jewish | 8 | 0.12% | +0.000 | +0.803 | 0.5007 | 2.2e-01 | national rate |
+
+And a reference, not drawn at this level: Catholic and unaffiliated over the same five units and
+three rounds, where Italy's north-south religiosity gradient is known to be real.
+
+| category | n | national | median rho | null 95th | p | chi² p | verdict |
+|---|---:|---:|---:|---:|---:|---:|---|
+| Roman Catholic | 5,721 | 74.27% | +0.800 | +0.700 | 0.0225 | 9.4e-22 | own geography |
+| Not applicable (no religion) | 1,792 | 23.18% | +0.800 | +0.700 | 0.0235 | 1.6e-19 | own geography |
+
+### Level 2: the Catholic : unaffiliated ratio, the regioni over `N_FLOOR`, rounds 6 and 8
+
+Base: Catholic and `Not applicable` only, in the 11 regioni whose weighted pooled sample clears
+`N_FLOOR`; the other ten already take their ripartizione's ratio and are not tested. 2,757
+unweighted (2,748 weighted).
+
+| category | n | national | median rho | null 95th | p | chi² p | verdict |
+|---|---:|---:|---:|---:|---:|---:|---|
+| **Roman Catholic** (and so its complement) | 2,013 | 73.91% | +0.836 | +0.527 | 0.0015 | 5.7e-26 | **own geography** |
+
+If the test were applied, all seven minority categories would move to the national rate inside
+each ripartizione's residual, 2.55% of citizens: Islam, Other Christian denomination, Eastern
+Orthodox, Eastern religions, Other Non-Christian religions, Protestant and Jewish. The Catholic :
+unaffiliated ratio would keep its regione values.
+
+Four readings:
+
+1. **Five units leave the test very little room, and the reference shows it is not powerless.**
+   With nothing tied, a Spearman over five units moves in steps of 0.1, and the null's 95th
+   percentile here is +0.70 to +0.80, so a category has to reproduce its ordering nearly exactly
+   in every split. Catholic and unaffiliated do, at +0.800, and only just (p = 0.023). Islam, at
+   +0.600 with a chi-square of 2.5e-05, is close and does not. So a failure at this level mostly
+   says that five units cannot show a minority geography, which is §9cy's meaning of a failure
+   taken about as far as it goes.
+2. **What it would cost is small, for §3's reason.** The seven are 2.55% of citizens, and the
+   foreign half, which is census citizenship at 107 province and holds roughly four fifths of the
+   people Italy's map exists to show, is untouched.
+3. **The level 2 ratio passes, and it is one halving.** Two rounds give one split, round 6 (704
+   Catholic or unaffiliated respondents in these eleven regioni) against round 8 (2,053), so the
+   median is that single halving and Sweden's §2 warning applies in full. It is a strong one
+   (+0.836 against +0.527, p = 0.0015), and the same gradient turns up at level 1 in three later
+   rounds, so there is no reason to doubt it; but it is not the median-over-splits statistic, and
+   with two rounds it cannot be. The unaffiliated side is one minus the Catholic side of the same
+   base, so its rho is identical and this is one test, not two.
+4. **`N_FLOOR`'s ten fallback regioni and Molise were not tested**, because they are already drawn
+   from their ripartizione and Molise is in no round.
+
+Nothing here is alarming in the sense of the ruling, so no ask for Italy.

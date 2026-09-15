@@ -42,18 +42,23 @@ REVIEW = {
         "3.4; the body's own name is Church of Central Africa Presbyterian, and the "
         "source's spelling is kept in `source_category` per §2.4.",
     "Seventh Day Adventist/Baptist/Apostolic":
-        "-> christianity.sdabaptistapostolic, a node added for Malawi and the only one on "
-        "the tree that merges three traditions. 1,644,829 people, 9.4%. **This is the one "
-        "arguable call in the file and it is worth stating plainly**: the tree holds "
-        "`christianity.adventist`, `christianity.baptist`, `christianity.pentecostal` and "
-        "`christianity.africaninstituted` separately, and every person in this cell belongs "
-        "to one of them — but the census does not say which, and the three are not even the "
-        "same kind of thing. Adventists are a 19th-century American body, Malawi's Baptists "
-        "are mostly the post-1960s Baptist Convention, and `Apostolic` here means the "
-        "African Apostolic and Apostolic Faith Mission churches, which are locally founded. "
-        "Splitting them by any assumption would be inventing three numbers; `christianity."
-        "other` would file them as bodies with no branch, which is the opposite of true. "
-        "The merge gets its own node and the node says what is in it. See the node's note.",
+        "-> christianity.other. 1,644,829 people, 9.4%. **It had a node of its own until "
+        "2026-09-14**, `christianity.sdabaptistapostolic`, the only one on the tree that "
+        "merged three traditions, and this note used to argue that `christianity.other` "
+        "would file these people as bodies with no branch. Anita retired the node: \"i "
+        "really dont like cuz it only covers one relatively small african country. could we "
+        "move it into 'other christian' maybe?\" A node a single census cell ever reaches "
+        "costs a legend row and a colour in every view that draws Malawi, for a distinction "
+        "no other source can be read against. "
+        "What is still true: every person in this cell belongs to `christianity.adventist`, "
+        "`christianity.baptist`, `christianity.pentecostal` or "
+        "`christianity.africaninstituted`, and the census does not say which, so no split is "
+        "inferred. Adventists are a 19th-century American body, Malawi's Baptists are mostly "
+        "the post-1960s Baptist Convention, and `Apostolic` here means the African Apostolic "
+        "and Apostolic Faith Mission churches. The cell keeps its name in `source_category`, "
+        "so if a Malawian source ever separates them the rows can be moved (spec §2.4). The "
+        "geography that made it worth reading as one category, the Shire highlands and "
+        "valley around the Malamulo mission, is in sources/mw.md.",
     "Anglican":
         "-> christianity.anglican. 410,633 people, 2.3%. The Anglican Church of the "
         "Province of Central Africa, out of the Universities' Mission to Central Africa — "
@@ -129,7 +134,7 @@ REVIEW = {
 MAP = {
     "Catholic": "christianity.catholic",
     "CCAP": "christianity.reformed.presbyterian",
-    "Seventh Day Adventist/Baptist/Apostolic": "christianity.sdabaptistapostolic",
+    "Seventh Day Adventist/Baptist/Apostolic": "christianity.other",
     "Anglican": "christianity.anglican",
     "Pentecostal": "christianity.pentecostal",
     "Other Christian Denominations": "christianity.other",

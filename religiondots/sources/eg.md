@@ -535,3 +535,26 @@ been read. Left for whoever builds `lb`, `jo` or `ye`, because the fix is a judg
 whether a missing column means a wave that never asked or a re-release that renamed something,
 and that is better made by someone with a country in front of them. It is the first thing they
 will hit, in the first minute.
+
+## Placement: Luxor's block at Kontur's density cap, capped 2026-09-14 (session `f95259a4-kontur`)
+
+Kontur limits every hex to 46,200 people/km², and a block of hexes at that limit is either a real
+dense core or a false concentration (spec §12, "KONTUR'S DENSITY CAP"). **Luxor governorate
+(EG29) had a block of 73 hexes, 28 of them at the limit, holding 2,185,844 people**: 60.8% of the
+governorate's placement weight and 1.5 times the governorate's own 1,459,385
+(`data/geo/eg/eg_lookup.csv`). Roughly 890 of Luxor's 1,460 dots were drawn inside it.
+
+It is `capped` in `kontur_cap.csv`, and `scatter.py` now lowers every hex in the block to the
+median density of the populated hexes within 3 km, here 1,881/km². That leaves the block 117,569
+people and 7.7% of the governorate's weight, roughly 110 dots. **What it costs:** Luxor city sits
+inside the block, so the city is now drawn at its surroundings' density and gets fewer dots than
+it has people. The error is smaller than before, and it is still an error; a better ceiling
+would need a population figure for the city, which this build does not read.
+
+Counts did not move: dots per node are identical before and after, 107,657 at 1:1,000 and 10,765
+at 1:10,000.
+
+The other nine Egyptian blocks at the limit are registered `real`, Cairo's, Alexandria's and Port
+Said's among them. Damietta's (11 hexes, one at the limit, 16.4% of EG11) failed the scan's
+distance test only because worldcities matched Ras el-Barr; the block is on the city, 1.5 km
+from its centre, where Kontur is 43,331/km².

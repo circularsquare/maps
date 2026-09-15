@@ -242,3 +242,29 @@ considered rather than assumed away. It does not block:
 
 Raised here so the reasoning is on the record rather than re-derived. Anita's call stands
 above it either way (§14's opening line).
+
+## Placement: blocks at Kontur's density cap, 2026-09-14 (session `f95259a4-kontur`), not changed
+
+Kontur limits every hex to 46,200 people/km², and a block of hexes at that limit is either a real
+dense core or a false concentration (spec §12, "KONTUR'S DENSITY CAP"). Five Bangladeshi blocks
+at the limit fail the scan's checks against `maps/data/worldcities.csv`, four of them in the
+Mymensingh and Kishoreganj band with no town in that file within 20 km. They are `unreviewed` in
+`kontur_cap.csv`: every scatter warns about them and draws them as Kontur has them. **Nothing
+here was changed.**
+
+| upazila | hexes (at the cap) | share of the upazila's placement weight | why listed |
+|---|---|---|---|
+| BGD_03_05_08 | 10 (1) | **39.3%** | no town within 20 km |
+| BGD_02_10_09 | 10 (1) | **36.7%** | 17.6 km from Companiganj, where Kontur is 6,838/km² |
+| BGD_03_05_07 | 4 (1) | 29.0% | no town within 20 km |
+| BGD_03_05_06 | 2 (1) | 18.2% | no town within 20 km |
+| BGD_03_05_12 | 1 (1) | 12.5% | 17.7 km from Sripur, where Kontur is 4,150/km² |
+
+Two more blocks look like the same thing but never reach the cap, so the guard does not see
+them and they are not in the registry: BGD_08_03_10 at Sunamganj (6 hexes, 32.8%, 2.3 times the
+town's worldcities figure) and BGD_03_05_03 (6 hexes, 31.2%, 5 times Shahbazpur's). Dhaka's block
+(404 hexes, 289 at the cap), Chattogram's and seven others are registered `real`.
+
+To act on any of the five: set its `status` to `capped` in `kontur_cap.csv` and re-scatter. The
+fix lowers every hex in the block to the median density of the populated hexes within 3 km and
+cannot move a count.

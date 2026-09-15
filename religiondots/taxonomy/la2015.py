@@ -4,9 +4,16 @@ Six categories on 8,499 villages. Four of them are trivial and one is a residual
 whole of this module is about the fifth**, which is 31.45% of the country and which the
 source labels `no religion`.
 
-**THE CALL: `No religion` -> `indigenous.laos`, NOT `unaffiliated` and NOT `unknown`.** The
-evidence is set out at length in the node's own entry in `branches.py`, and in short it is
-four independent statements plus a geography:
+**THE CALL: `No religion` -> `unknown`, Anita's ruling of 2026-09-14, and NOT `unaffiliated`.**
+The ruling puts Laos and Mozambique on the treatment China uses: the cell is drawn on
+`unknown` (spec §6.3a-ii), which says these people were counted and claims nothing about what
+they practise. From 2026-09-08 to 2026-09-14 it was `indigenous.laos`, a node built for it,
+which is now retired (the comment where it stood in `branches.py` says so).
+
+The evidence that the cell is mostly traditional religion is unchanged, and it is kept here and
+in sources/la.md §7 because it is the case for splitting the cell if a source ever measures the
+split (sources/la.md §10 records what was searched). In short it is four independent statements
+plus a geography:
 
   * the census defined religion as a spiritual system with WRITTEN DOCTRINES, so animism
     could not be recorded as one (Socio-Economic Atlas of the Lao PDR, §F.5);
@@ -50,7 +57,7 @@ REVIEW = {
         "90.9%, Khammouan 86.5% and Savannakhet 80.1% — the lowland corridor where the Lao "
         "and Tai-Thay live and where the wat is the centre of a village. Against **20.3% in "
         "Oudomxai and 20.9% in Louangnamtha**, which is the same boundary the "
-        "`indigenous.laos` node runs along from the other side. The two categories are the "
+        "`No religion` cell runs along from the other side. The two categories are the "
         "Laos map, and between them they are 96.2% of the country.",
     "Christian":
         "-> christianity, the ROOT, which is spec §6.6's 'branch that carries dots' and "
@@ -63,7 +70,7 @@ REVIEW = {
         "**Its geography is not the capital and not the lowlands.** Vientiane Capital is "
         "0.79%. The top provinces are **Bokeo 4.93%, Xaisomboun 3.91%, Bolikhamxai 3.47% "
         "and Vientiane province 3.33%** — that is Hmong and Khmu country, and it is the same "
-        "upland population the `indigenous.laos` cell draws from. The two are competing for "
+        "upland population the `No religion` cell draws from. The two are competing for "
         "the same people and the map shows both, which is kh2019.py's Mondul Kiri finding "
         "one country to the south. "
         "**Read the figure as a floor.** Laos's constitution protects religious practice and "
@@ -88,14 +95,18 @@ REVIEW = {
         "the highest provincial share is Oudomxai's 0.08%. Published as a percentage rather "
         "than a count, recovered exactly (sources/la.py).",
     "No religion":
-        "-> indigenous.laos. **2,038,393 people, 31.45%, and this is the one argued "
-        "decision in the module.** The full case is in the node's entry in `branches.py`; "
-        "the summary is in this module's docstring. Two things to hold onto when reading "
-        "the map: **it is a ceiling and not a floor**, unlike every other node in the "
-        "`indigenous` family, because it is a residual that also contains however many Lao "
-        "genuinely report no religion; and **no tradition is named under it**, because no "
-        "source names one. The Khmu, Hmong, Akha, Katu, Ta Oi, Brao and Lamet religions are "
-        "in one box together and depth follows what a source counts (§2.4).",
+        "-> unknown. **2,038,393 people, 31.45%. Anita's ruling, 2026-09-14: draw it as "
+        "unknown, the same treatment China uses**, together with Mozambique's `Sem religião`, "
+        "until a source measures how much of it is traditional religion and how much is "
+        "none. From 2026-09-08 it was `indigenous.laos`, on the case in this module's "
+        "docstring and sources/la.md §7, which is kept; the node is retired. `unaffiliated` "
+        "stays rejected for the reason it always was: Pew bounds irreligion in Laos at under "
+        "0.1%, and the cell runs 96.5% in Dakcheung against 2.41% in central Vientiane. "
+        "`unknown`'s test (§6.3a-ii) is that the source counted these people and does not "
+        "establish what they practise, and the census's own summary calls the cell *no "
+        "religion or being animist* without saying which. The Khmu, Hmong, Akha, Katu, Ta "
+        "Oi, Brao and Lamet religions are inside it together. Vietnam files the same upland "
+        "peoples on the same node across the border.",
     "Others/not stated":
         "-> other.la. 133,296 people, 2.06%, derived as a residual rather than published "
         "(sources/la.py). It pools an answer with a non-answer, and its shape says the "
@@ -110,7 +121,7 @@ MAP = {
     "Christian": "christianity",
     "Muslim": "islam",
     "Baha'i": "bahai",
-    "No religion": "indigenous.laos",
+    "No religion": "unknown",
     "Others/not stated": "other.la",
 }
 

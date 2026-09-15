@@ -71,3 +71,16 @@ Or draw it only at the six geopolitical zones, which is how Nigerians themselves
 states and which would put the national balance on screen while refusing the state-by-state
 picture. I did not take the third because it loses Kaduna, and Kaduna at 66.6% Muslim beside
 Plateau at 89.9% Christian is the fact worth having.
+
+
+## Ruled 2026-09-11 by Anita
+
+**Draw it. Nigeria ships.** The state-level Christian/Muslim balance is published as built, with
+the `note_public` the builder wrote — the explanation of why Nigeria stopped counting, and all
+four national figures side by side. No change required.
+
+**Standing follow-up, LOW PRIORITY, not for this session.** Countries that end up with
+essentially two categories — Christianity and Islam and little else — are worth revisiting later
+to see whether more can be got out of them. That is a general note about the drawn set, not a
+defect in `ng`. Do not open it as work unless a session is explicitly told to; it is recorded in
+`queue.md` under Revisit so it is not lost.

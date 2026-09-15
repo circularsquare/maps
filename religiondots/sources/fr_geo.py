@@ -10,8 +10,13 @@ Writes data/geo/fr/fr_lau.gpkg with, per commune:
     foreign  foreign nationals resident there   ] reason this file has a --fetch
     name     LAU NAME LATIN
 
+Since 2026-09-14 the five overseas régions are NOT communes in this file: each is replaced by its
+populated Kontur 400 m hexes (`_dom_hexes`), because a DOM commune is often mostly forest or
+volcano and a commune polygon spread French Guiana's interior evenly over the rainforest.
+
 Usage:
-    python sources/fr_geo.py --fetch   # INSEE TD_NAT1, commune x nationality (~4.5 MB)
+    python sources/fr_geo.py --fetch   # INSEE TD_NAT1, commune x nationality (~4.5 MB),
+                                       # plus Kontur for GP, MQ, GF, RE, YT (~0.6 MB together)
     python sources/fr_geo.py
 
 TWO FILES THAT WERE ALREADY HERE, AND ONE JOIN — Greece's §9z arrangement exactly. The GISCO
@@ -82,23 +87,59 @@ NAT_URL = ("https://www.insee.fr/fr/statistiques/fichier/8202752/"
            "TD_NAT1_2021_csv.zip")
 UA = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) religiondots"}
 
+# --- the overseas régions on Kontur hexes, added 2026-09-14 ----------------------------------
+# Anita: "french guiana population distribution looks a little silly spread out". It did,
+# because a DOM commune is often mostly forest or volcano: Maripasoula is 18,360 km² for about
+# 12,000 people, and a commune polygon weighted by commune population spreads them evenly over
+# all of it. Kontur's 400 m hexes put them on the Maroni and the coast. One file per DOM, each
+# ~0.2-1 MB gzipped, from the same bucket every other Kontur country here uses.
+KONTUR_URL = ("https://geodata-eu-central-1-kontur-public.s3.eu-central-1.amazonaws.com/"
+              "kontur_datasets/kontur_population_{CC}_20231101.gpkg.gz")
+DOM_KONTUR = {"FRY1": "GP", "FRY2": "MQ", "FRY3": "GF", "FRY4": "RE", "FRY5": "YT"}
+
+
+def _kontur_gpkg(cc):
+    return os.path.join(RAW, f"kontur_population_{cc}_20231101.gpkg")
+
 
 def fetch():
     import certifi
+    import gzip
+    import shutil
     os.makedirs(RAW, exist_ok=True)
+    ctx = ssl.create_default_context(cafile=certifi.where())
     if os.path.exists(NAT):
         print(f"  already on disk ({os.path.getsize(NAT):,} bytes)")
-        return
-    ctx = ssl.create_default_context(cafile=certifi.where())
-    with urllib.request.urlopen(urllib.request.Request(NAT_URL, headers=UA),
-                                timeout=900, context=ctx) as r:
-        blob = r.read()
-    with zipfile.ZipFile(io.BytesIO(blob)) as z:
-        name = [n for n in z.namelist() if n.lower().endswith(".csv")][0]
-        with open(NAT, "wb") as f:
-            f.write(z.read(name))
-    print(f"  {len(blob):,} bytes zipped -> {os.path.basename(NAT)} "
-          f"({os.path.getsize(NAT):,} bytes)")
+    else:
+        with urllib.request.urlopen(urllib.request.Request(NAT_URL, headers=UA),
+                                    timeout=900, context=ctx) as r:
+            blob = r.read()
+        with zipfile.ZipFile(io.BytesIO(blob)) as z:
+            name = [n for n in z.namelist() if n.lower().endswith(".csv")][0]
+            with open(NAT, "wb") as f:
+                f.write(z.read(name))
+        print(f"  {len(blob):,} bytes zipped -> {os.path.basename(NAT)} "
+              f"({os.path.getsize(NAT):,} bytes)")
+
+    for cc in DOM_KONTUR.values():
+        gpkg = _kontur_gpkg(cc)
+        gz = gpkg + ".gz"
+        if not os.path.exists(gz):
+            url = KONTUR_URL.format(CC=cc)
+            with urllib.request.urlopen(urllib.request.Request(url, headers=UA),
+                                        timeout=300, context=ctx) as r:
+                blob = r.read()
+            with open(gz + ".part", "wb") as f:
+                f.write(blob)
+            os.replace(gz + ".part", gz)
+            print(f"  {os.path.basename(gz)}: {len(blob):,} bytes")
+        if not os.path.exists(gpkg):
+            with gzip.open(gz, "rb") as src, open(gpkg + ".part", "wb") as dst:
+                shutil.copyfileobj(src, dst)
+            os.replace(gpkg + ".part", gpkg)
+        with open(gpkg, "rb") as f:
+            if f.read(4) != b"SQLi":
+                sys.exit(f"!! {gpkg} is not a GeoPackage — delete it and the .gz and refetch")
 
 
 def _nationality():
@@ -247,11 +288,75 @@ def main():
         print(f"    {r['name'][:28]:<30} {r['foreign']:>9,.0f}  "
               f"{100 * r['foreign'] / max(r['french'] + r['foreign'], 1):5.1f}%")
 
+    g = _dom_hexes(g)
+
     os.makedirs(OUT_DIR, exist_ok=True)
     out = g[["lau", "nuts3", "nuts2", "unit", "pop", "french", "foreign", "name",
              "geometry"]].reset_index(drop=True)
     out.to_file(OUT, driver="GPKG", layer="lau")
-    print(f"wrote {OUT}  ({len(out):,} communes)")
+    print(f"wrote {OUT}  ({len(out):,} placement polygons)")
+
+
+def _dom_hexes(g):
+    """Swap each overseas région's communes for its populated Kontur 400 m hexes.
+
+    See KONTUR_URL for why. Each DOM is one counting unit, so there is no join to get wrong:
+    a hex belongs to the DOM whose communes its centroid falls in, with 1 km of slack for
+    centroids just offshore. The same test drops whatever Kontur's national cut carries across
+    a border river; Albina, opposite Saint-Laurent-du-Maroni, is Suriname.
+
+    `pop` and `french` are both the hex population, so `_ItWeighter` places a unit's dots by
+    where people live, exactly as it did on communes; `foreign` is zero because the DOM have
+    no foreign half (fr.md §10).
+    """
+    import numpy as np
+
+    print("placing the overseas régions on Kontur hexes…")
+    parts = [g[~g["nuts2"].isin(DOM_KONTUR)]]
+    for nuts2, cc in DOM_KONTUR.items():
+        gpkg = _kontur_gpkg(cc)
+        if not os.path.exists(gpkg):
+            sys.exit(f"missing {gpkg} — run: python sources/fr_geo.py --fetch")
+        communes = g[g["nuts2"] == nuts2]
+        if communes["unit"].nunique() != 1:
+            sys.exit(f"!! {nuts2} spans {communes['unit'].nunique()} NUTS 3 units, expected 1")
+        unit = communes["unit"].iloc[0]
+
+        hexes = gpd.read_file(gpkg)
+        popcol = next((c for c in hexes.columns if c.lower() == "population"), None)
+        if popcol is None:
+            sys.exit(f"!! no population column in {os.path.basename(gpkg)}: "
+                     f"{list(hexes.columns)}")
+        hexes = hexes[hexes[popcol] > 0]
+        # Centroids in the CRS the hexes were tiled in (Kontur ships EPSG:3857), as bb_grid.py
+        # does. 1,000 units of 3857 is under a kilometre this close to the equator.
+        gs = communes.to_crs(hexes.crs).geometry
+        zone = (gs.union_all() if hasattr(gs, "union_all") else gs.unary_union).buffer(1000)
+        inside = hexes.geometry.centroid.within(zone).to_numpy()
+        lost = float(hexes.loc[~inside, popcol].sum())
+        hexes = hexes[inside].to_crs(g.crs)
+
+        # A SHAPE CHECK, NOT A MAGNITUDE ONE: Kontur only weights where a DOM's dots go and
+        # never how many there are. The band is 0.7-1.4 rather than 1.3 because of Mayotte,
+        # 1.31x: GISCO's commune population is the 2017 census (256,518), which is widely
+        # held to undercount the island, and Pew's 2020 figure is already 284,370.
+        k, c = float(hexes[popcol].sum()), float(communes["pop"].sum())
+        ratio = k / c if c > 0 else float("nan")
+        print(f"  {nuts2} {DRAWN[nuts2]:<11} {len(communes):>3} communes -> "
+              f"{len(hexes):>6,} hexes; Kontur {k:>9,.0f} against the communes' {c:>9,.0f} "
+              f"({ratio:.2f}x); {int((~inside).sum()):,} hexes outside dropped "
+              f"({lost:,.0f} people)")
+        if c > 0 and not 0.7 < ratio < 1.4:
+            sys.exit(f"!! Kontur's {cc} file is {ratio:.2f}x the communes' population — look "
+                     f"at it before placing anything on it")
+        pop = hexes[popcol].to_numpy(dtype=float)
+        parts.append(gpd.GeoDataFrame({
+            "lau": [f"{unit}:h{i}" for i in range(len(hexes))],
+            "nuts3": unit, "nuts2": nuts2, "unit": unit,
+            "pop": pop, "french": pop, "foreign": np.zeros(len(pop)),
+            "name": DRAWN[nuts2],
+        }, geometry=hexes.geometry.to_numpy(), crs=g.crs))
+    return gpd.GeoDataFrame(pd.concat(parts, ignore_index=True), crs=g.crs)
 
 
 if __name__ == "__main__":

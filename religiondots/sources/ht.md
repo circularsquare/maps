@@ -477,3 +477,189 @@ containing it would be the odder outcome.
 bodies and then offers a residual, which is that node's definition, and the contrast drawn
 against `do2019.py`'s `EVANGÉLICA` is the correct one: there the single box was the only
 general Protestant answer on the card.
+
+## Placement: Petit-Goave's block at Kontur's density cap, capped 2026-09-14 (session `f95259a4-kontur`)
+
+Kontur limits every hex to 46,200 people/km², and a block of hexes at that limit is either a real
+dense core or a false concentration (spec §12, "KONTUR'S DENSITY CAP"). **Ouest (HT01) had a
+block of 8 hexes at Petit-Goave, 2 of them at the limit, holding 157,473 people and 3.4% of the
+department's placement weight.** Kontur put 110,836 people within 1 km of the town's centre, more
+than within 1 km of central Port-au-Prince (100,774).
+
+It is `capped` in `kontur_cap.csv`, and `scatter.py` now lowers every hex in the block to the
+median density of the populated hexes within 3 km, here 377/km², which leaves it 1,719 people.
+**What it costs:** the ring around a small town is farmland, so Petit-Goave itself is now drawn
+at farmland density and gets fewer dots than it has people. Before, it was drawn with Kontur's
+3.4% of Ouest, many times too many.
+
+Counts did not move: dots per node are identical before and after, 11,894 at 1:1,000 and 1,184
+at 1:10,000.
+
+**Superseded the same evening by §12.6: the cap no longer applies to Petit-Goâve.** The row is
+`real` and the commune is scaled to its COD-PS share instead (135 to 196 dots).
+
+Port-au-Prince's blocks are registered `real`. **Anse-a-Galets on La Gonave looks like Petit-Goave
+and is not changed**: 5 hexes, 3 at the limit, 100,109 people, 2.2% of Ouest, 1.6 times the
+town's worldcities figure on an island of two communes. It is `unreviewed`, so every scatter
+warns about it. **Superseded the same evening by §12: La Gonâve is corrected at commune level
+and the row is now `real`.**
+
+## 12. Placement review after Anita's map look, 2026-09-14 (session `f95259a4-clht`)
+
+Anita, on Chile and Haiti together: *"population distributions look a bit more artificial than
+i'd expect."* Haiti already placed dots on Kontur, so the question was which part reads as
+artificial. Screenshots of the whole country and of Ouest were taken before changing anything.
+
+### 12.1 What reads as artificial, candidate by candidate
+
+| candidate | verdict | changed? |
+|---|---|---|
+| Kontur's own blockiness | **No.** At country zoom the rural speckle is dense and even, which is what Haiti's dispersed *lakou* settlement looks like; towns and the Port-au-Prince strip stand out. | no |
+| **Anse-à-Galets, La Gonâve** | **Yes, and the loudest thing on the Ouest view.** Two tight clumps on an island otherwise almost empty. | **yes, §12.3** |
+| Kontur against COD-PS by department (0.69x to 1.16x) | Real, but it is the population base, not placement. §12.4. | no, recorded |
+| Colour steps at department lines | The 10-department religion grain by construction. Finer religion needs the 2005 commune volumes (§10). | no, recorded |
+
+### 12.2 COD-PS prints communes, and what that shows about Kontur
+
+`ht_grid.py` said the projection had no sub-departmental detail. **It has 140 communes**
+(`hti_admpop_adm2_2024.csv`, now in `data/raw/ht/`), summing exactly to the department figures.
+The workbook's own methodology sheet: a cohort-component projection at ADM-1 from the 2003
+census, disaggregated to ADM-2 by iterative proportional fitting, on the 140 communes that predate
+the current 149.
+
+Kontur, as drawn (after `kontur_cap.py`), put **6.9% of dots in a different commune** from the one
+COD-PS would, population-weighted; log-log r over 140 communes 0.929. The within-department
+outliers:
+
+    commune              COD-PS 2024    Kontur    within-dept share
+    Anse-à-Galets             70,156   273,795    3.49x
+    Gressier                   3,987    45,707   10.24x
+    Beaumont                  35,380    70,239    2.25x
+    Croix-des-Bouquets       129,879   325,992    2.24x
+    Anse Rouge                47,668    83,149    1.71x
+    Cabaret                   65,302   119,398    1.63x
+    Petit-Goâve              194,867   149,067    0.68x   (after this morning's cap)
+
+**These are three different kinds of disagreement, and only one is Kontur's.** Croix-des-Bouquets
+and Cabaret are where **Canaan** was settled after 2010, which a projection off the 2003 census
+cannot see; Kontur is right there. Gressier at 3,987 is COD-PS, not Kontur. Anse-à-Galets is the
+one where the grid is high and nothing since 2003 explains it.
+
+### 12.3 La Gonâve: scaled to its COD-PS share, not capped
+
+As drawn, Kontur gave **La Gonâve 6.70% of Ouest's weight, about 266 dots, against COD-PS's
+2.44%, about 97**, piled into a few hexes: 87% of the island's weight in its densest 40 km², where
+the island's median populated hex is 27/km² against 132 on the Ouest mainland.
+
+**Capping the block would not fix it**, measured with `kontur_cap.py`'s own ring-median arithmetic
+without touching the registry: the island falls to 4.56% (about 181 dots) and Anse-à-Galets
+commune to 174,396, still 2.5 times COD-PS, because a second patch inland (-72.94, 18.78) at
+8,000-14,000/km² sits below the 15,000/km² block line. And the cap would draw the island's main
+town at 252/km², the ring median, which is Petit-Goâve's known cost.
+
+**What was done instead**: `countries.py::_HT_COMMUNE_LEVEL` names commune `HT0151`, and
+`_ht_place_weight` scales its hexes so the commune holds exactly its COD-PS share of Ouest,
+keeping Kontur's shape inside it. The block is the town and keeps about 37% of the commune, so
+the town is drawn at roughly 26,000 people. `sources/ht_grid.py` now writes `commune` and
+`commune_pop` on every hex and asserts the join (every hex in a commune of its own department,
+all 140 communes present, communes summing to the departments). The registry row is now `real`
+with the reason.
+
+    scatter log   ht: commune HT0151 scaled to its COD-PS share, 6.15% -> 1.76% of HT01's weight
+    dots          Anse-à-Galets 240 -> 72 (COD-PS 70); Pointe-à-Raquette 20 -> 22 (27)
+                  the 168 moved went to mainland Ouest in Kontur's proportions:
+                  Port-au-Prince +35, Delmas +20, Carrefour +19, Croix-des-Bouquets +16 ...
+    counts        identical per node, 11,894 dots at 1:1,000 and 1,184 at 1:10,000
+
+**Screenshots, before and after** (1400x900, 1:1,000, same camera; session scratchpad, not the
+tree). Whole country: the only visible change is La Gonâve, where the bright clump at
+Anse-à-Galets is now a small town cluster; the mainland is unchanged to the eye. Ouest close up:
+Anse-à-Galets goes from two dense clumps on an empty island to a modest cluster with a scatter of
+dots inland, Pointe-à-Raquette stays small, and the Port-au-Prince strip, Arcahaie and Léogâne are
+as before. Petit-Goâve town still reads thin, which is the cap's cost noted below.
+
+**The bar for adding a commune to that dict**: every grid tested is over by more than 2x AND
+nothing since 2003 explains it. Croix-des-Bouquets and Cabaret fail it (Canaan). Gressier fails
+it the other way. Beaumont (Grand'Anse, 2.25x on Kontur) was not added: constrained WorldPop has
+it at 18,188, against Kontur's 70,239 and unconstrained WorldPop's 70,765, so the grids do not
+agree and there is no case.
+
+**Petit-Goâve is the same shared error and was left as capped.** All three grids have it at
+292,000 to 305,000 against COD-PS's 194,867, and the cap leaves the commune at 0.68x its share
+(138 dots against 195) with the town at farmland density. A commune scale would do better, as it
+did for La Gonâve, but the cap was the supervisor's decision this morning and is recorded here as
+the candidate rather than reversed. **Superseded the same evening by §12.6: Petit-Goâve is now
+commune-scaled and its row is `real`.**
+
+### 12.4 Would another grid be better? Measured: no
+
+WorldPop 2020 for Haiti, constrained (`BSGM/HTI/hti_ppp_2020_UNadj_constrained.tif`, 0.9 MB) and
+unconstrained (`Global_2000_2020/2020/HTI/hti_ppp_2020_UNadj.tif`, the control, spec §12's
+two-raster test), zonal sums on the 140 COD-AB communes. Scratch only; nothing in the build reads
+them.
+
+    department / COD-PS, normalised     Kontur   WP constrained   WP unconstrained
+    Ouest                                1.17        1.22             1.19
+    Artibonite, Nord-Ouest               1.07        1.05-1.06        1.06-1.07
+    Nord                                 0.98        0.93             0.96
+    Grand'Anse                           0.93        0.75             0.92
+    Nord-Est                             0.83        0.76             0.80
+    Centre                               0.77        0.77             0.76
+    Sud-Est                              0.74        0.74             0.73
+    Sud                                  0.73        0.75             0.73
+    spread, max/min                      1.62        1.66             1.64
+
+    in another commune than COD-PS       6.9%        7.4%             6.4%
+    Anse-à-Galets                     273,795     244,402          254,858     (COD-PS 70,156)
+    Croix-des-Bouquets                325,992     292,096          285,251     (129,879)
+    Gressier                           45,707      41,513           42,267     (3,987)
+    Petit-Goâve                       149,067*    292,091          292,951     (194,867)
+    La Gonâve in its densest 10 km²     55.1%       99.9%            37.4%
+
+    * after this morning's cap; 305,000 before it
+
+**The three grids agree with each other on exactly the communes where they disagree with the
+census**, so the La Gonâve and Petit-Goâve errors are an input they share, not something Kontur
+did alone, and switching grids would move neither. Constrained WorldPop is also worse on shape,
+putting 99.9% of La Gonâve on one town's building cells. **GHSL was not tested.**
+
+### 12.5 The department density step, recorded and not changed
+
+All three grids put the same departments low against COD-PS, **and they are the ones the
+projection grew fastest since 2003** (§9: Centre +1.6 points, Sud-Est +1.2, Sud +0.8), while Ouest,
+which the projection shrank by 3.6 points, is high on every grid. Because dots per department are
+fixed by COD-PS and placed by the grid, a rural hex of the same Kontur density draws about 1.6
+times as many dots in Sud, Sud-Est or Centre as in Ouest, so the speckle can step up across those
+department lines. That is the population base, which sets counts, so it is not a placement fix
+and nothing here changes it. If the base were ever revisited, the COD-PS metadata names a
+**"2022 Haiti Population Data Grid" from IHSI and UNFPA** as the thing it was checked against; not
+chased.
+
+### 12.6 Petit-Goâve: moved from the cap to the commune scale, 2026-09-14 (session `f95259a4-house`)
+
+The supervisor's decision, on §12.3's finding. Commune `HT0122` is added to
+`countries.py::_HT_COMMUNE_LEVEL` and its `kontur_cap.csv` row goes from `capped` to `real`, so the
+block keeps Kontur's shape inside the commune and the commune holds its COD-PS share of Ouest.
+
+**It does not clear the dict's own 2x bar, and the comment above the dict now says so.** Raw
+Kontur has the commune at 304,821, 6.62% of Ouest's weight against COD-PS's 4.90%, so 1.35x
+(Anse-à-Galets is 3.37x on the same measure). It comes in on a second route, written above the
+dict: its town block was already registered false, both WorldPop 2020 rasters have the same excess
+(292,091 and 292,951), and the cap drew the town at farmland density while leaving the commune
+under its share.
+
+    scatter log   ht: commune HT0122 scaled to its COD-PS share, 6.91% -> 4.90% of HT01's weight
+                  (6.91% rather than 6.62% because La Gonâve's scale runs first)
+    dots          Petit-Goâve commune 135 -> 196 (COD-PS 194,867)
+                  within 1 km of the town centre 8 -> 48, within 3 km 50 -> 134;
+                  within 1 km of central Port-au-Prince, 109
+                  the 61 came out of the rest of Ouest: Port-au-Prince -15, Carrefour -13,
+                  Grand-Goâve -13, Tabarre -8, Cabaret -7, Croix-des-Bouquets -7
+    counts        identical per node and per tier, 11,894 dots at 1:1,000 and 1,184 at 1:10,000
+    cap           the Haiti scatter now reports 5 blocks registered `real` and caps none
+
+The rest of Ouest should each lose about 1.7%, and most do. Grand-Goâve's 9% is more than that,
+but it is within what placement moves between runs: Anse-à-Galets, whose share is fixed, went
+74 -> 71 in the same pair. Dots were counted per commune by joining each dot to its hex's
+`commune`; 4-6 dots per run land in no hex because coordinates are rounded to 4 decimals.
+No screenshot was taken.

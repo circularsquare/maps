@@ -87,6 +87,10 @@ COUNTRIES = {
     "ag": ("Antigua and Barbuda", 2001, 76_886, 21, 3),   # see the docstring: DYB is +3
     "dm": ("Dominica",            2001, 68_635, 14, 0),
     "mh": ("Marshall Islands",    1999, 50_848,  4, 0),
+    # Added 2026-09-14 with the small-territory batch (sources/terr.md). Sint Maarten's row
+    # equals the census report's Table B-10 to the person; Anguilla's is the only round found.
+    "sx": ("Sint Maarten (Dutch part)", 2011, 33_609, 17, 0),
+    "ai": ("Anguilla",            2001, 11_430, 18, 0),
 }
 
 UA = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "

@@ -199,3 +199,97 @@ the undocumented adjustment would have been the error rather than the correction
    inside `islam.sunni` and gr2024.py says so rather than rolling them in silently.
 4. **Rounds 1, 2 and 4 are unused** for want of a `region` variable. Their country-specific
    region variables may exist under another name; ~7,000 more respondents, from 2002–2008.
+
+## 9. The split-half as a report, 2026-09-14 (ask 012, report only): nothing carries
+
+Anita ruled on `ask/answered/012-be-five-ess-countries-were-drawn-without-the-sp.md` on
+2026-09-14: run the test Belgium (§9cy) and Sweden (§9cz) draw with on the five ESS countries
+drawn before it, print the tables, move no dots. `python tools/ess_split_half.py gr` reproduces
+this section. It imports `sources/stability.py`'s statistic (`median_rho` and `wave_null`;
+`be.py::_median_rho` until 2026-09-14) with be.py's alpha (0.05), draw count (2,000) and seed (0),
+and adds Sweden's spatial chi-square at 0.05 (`stability.chi2_p`) as the second
+requirement. Nothing in `gr.py`, `gr2024.py`, `countries.py` or the built outputs was changed.
+
+The pool is the build's own: Greek citizens, rounds 5, 10 and 11, `rlgdnm` with Refusal, Don't
+know and No answer dropped, recoded to the 13 NUTS 2016 regions through `gr.GR_TO_EL`. 7,935
+unweighted respondents (7,874 weighted). Three rounds give three splits, each one round against
+the other two, with a null that permutes the region labels per round. **Both tests need
+unweighted counts and `gr.py` only ever fetched the weighted pass**, so the unweighted one was
+fetched with the same break variables as `data/raw/gr/ess_r<N>_n.json`; `gr.py` does not read
+it. Mount Athos and the Thracian minority are authored and outside the test. `national` is the
+weighted share of citizens who answered, before the Thrace split and without the foreign half,
+which is why Orthodox reads 91.50% here and 83.9% in §7.
+
+| category | n | national | median rho | null 95th | p | chi² p | verdict |
+|---|---:|---:|---:|---:|---:|---:|---|
+| Eastern Orthodox | 7,239 | 91.50% | -0.038 | +0.374 | 0.5757 | 1.9e-29 | national rate |
+| Not applicable (no religion) | 573 | 6.95% | -0.066 | +0.396 | 0.6182 | 2.1e-26 | national rate |
+| Other Christian denomination | 54 | 0.67% | +0.197 | +0.435 | 0.2389 | 2.2e-07 | national rate |
+| Roman Catholic | 33 | 0.42% | +0.538 | +0.568 | 0.0625 | 9.5e-113 | national rate |
+| Other Non-Christian religions | 25 | 0.32% | +0.303 | +0.444 | 0.1279 | 1.1e-20 | national rate |
+| Islam | 7 | 0.11% | | | | 2.1e-08 | no test possible |
+| Eastern religions | 3 | 0.01% | -0.123 | +0.736 | 1.0000 | 2.0e-01 | national rate |
+| Protestant | 1 | 0.01% | | | | 5.8e-04 | no test possible |
+
+If the test were applied, all eight categories would move to the national rate, 100% of the
+citizens ESS draws: with nothing carrying, each region's residual is the whole region, so every
+region would get Greece's national citizen composition, and what still varied across the country
+would be the Thracian minority and the foreign half. Islam cannot be tested at all, because it
+has no respondent in round 10 or 11 and so every split has an empty half; Protestant has one
+respondent.
+
+**The recode was checked first, because a wrong one would look exactly like this.** Round 5
+carries NUTS 2006 codes with Latin labels and rounds 10 and 11 carry NUTS 2016 codes with Greek
+labels, and a region mapped onto its neighbour would destroy every rank correlation while
+leaving every chi-square large. It is not that: all thirteen `GR_TO_EL` pairs name the same
+region in both scripts (`GR14 Thessalia` and `EL61 Θεσσαλία`, `GR21 Ipeiros` and `EL54 Ήπειρος`,
+and so on down the list).
+
+**The regions differ inside each round, and not the same way from one round to the next.**
+Unweighted per-round shares (%) for the regions §7 and `note_public` name, and the ones that
+swing most:
+
+| region | respondents r5 / r10 / r11 | no religion | Orthodox | Catholic |
+|---|---|---|---|---|
+| Attiki | 799 / 947 / 904 | 11.9 / 9.2 / 10.7 | 87.1 / 86.2 / 88.8 | |
+| Peloponnisos | 133 / 127 / 138 | 19.5 / 11.0 / 7.2 | 80.5 / 89.0 / 92.0 | |
+| Thessalia | 188 / 190 / 191 | 1.1 / **32.1** / 0.5 | 98.9 / **67.4** / 99.5 | |
+| Ipeiros | 105 / 78 / 75 | 7.6 / 17.9 / 2.7 | 90.5 / 80.8 / 97.3 | |
+| Ionia Nisia | 62 / 47 / 52 | 0.0 / 19.1 / 0.0 | 100.0 / 80.9 / 98.1 | |
+| Voreio Aigaio | 51 / 42 / 42 | 0.0 / 0.0 / 21.4 | 100.0 / 97.6 / 76.2 | |
+| Dytiki Makedonia | 86 / 66 / 72 | 1.2 / 4.5 / 0.0 | 96.5 / 95.5 / 100.0 | |
+| Notio Aigaio | 69 / 93 / 55 | 0.0 / 5.4 / 5.5 | 75.4 / 88.2 / 94.5 | 24.6 / 6.5 / 0.0 |
+
+Four readings:
+
+1. **Thessalia's no-religion share is one round.** 61 of its 64 no-religion respondents are from
+   round 10, where 32.1% of 190 people said they belong to no religion; rounds 5 and 11 found 1.1%
+   and 0.5% of about as many. Sampling error on 190 people at the pooled 11% is about 2.3 points,
+   so that is far outside it, and it is the shape of a few sampling points per region per round
+   rather than of a region. This API returns no PSU, so that last part is inference. Ionia Nisia
+   (all 9 from round 10) and Voreio Aigaio (all 9 from round 11) are the same shape. **Attiki is
+   the one that recurs** (11.9, 9.2, 10.7), and Peloponnisos falls steadily from 19.5 to 7.2.
+2. **The Cycladic Catholics are real, and this pool cannot replicate them.** Notio Aigaio is 24.6%
+   Catholic in round 5, 6.5% in round 10 and none of 55 in round 11, so 17 of its 23 Catholic
+   respondents are from 2010. Syros, Tinos and Naxos have their Latin-rite communities whatever
+   the survey finds, so this failure (p = 0.0625, 8 of 13 regions empty) is a failure to
+   demonstrate a true geography, which is exactly what §9cy says a failure means. It is the case
+   that makes ask 013 a real trade and not a cleanup.
+3. **Every chi-square but one passes, and the chi-square cannot be the gate here.** The chi-square
+   treats the 7,935 as independent draws; a round's regional subsample drawn from a few sampling
+   points is not independent, so the test sees that the thirteen cells differ and cannot see
+   whether they will differ the same way next round. Sweden added the chi-square to refuse small
+   categories the rank test let through. Greece is the other direction, the rank test refusing
+   large categories the chi-square lets through, and between them they are why the rule needs
+   both.
+4. **Three splits, each one round against two, is the thinnest version of this test that runs.**
+   Sweden's §2 showed that three halvings can disagree, and a median of three is only a little
+   better than one. So this is weak evidence. It is weak evidence pointing one way, with Orthodox
+   and no religion both near zero rather than just under the bar.
+
+**`note_public` makes three regional claims that rest on these categories**: no religion
+"concentrated in Attiki, Peloponnisos and Thessalia", Dytiki Makedonia "the most Orthodox", and
+Notio Aigaio "10% Catholic". Attiki recurs, Peloponnisos is a trend, Thessalia is one round,
+Dytiki Makedonia is 6th, 4th and 1st by Orthodox share in the three rounds, and the Cyclades are
+2010. Filed as **ask 013**, the one ask from this pass; the other four countries' tables are in
+their own files and none of them is alarming. Nothing was changed.

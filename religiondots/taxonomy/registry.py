@@ -51,7 +51,11 @@ SPECIAL = {
 
 # A country whose module cannot be discovered — two vintages on disk, or a name off the
 # convention. Empty is the healthy state; an entry here is a promise to keep it current.
-OVERRIDE = {}
+OVERRIDE = {
+    # Two vintages on disk since 2026-09-14: pk2017.py (USCB, the 2017 census) is kept, and
+    # pk2023.py (PBS Table 9, the 2023 census) is what countries.py draws. sources/pk.md §9.
+    "pk": "pk2023",
+}
 
 
 def discover(drawn_only=True):

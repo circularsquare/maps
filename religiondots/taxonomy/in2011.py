@@ -27,6 +27,11 @@ community usually put near 10M). Mapping any of it would put figures on the map 
 wrong by one to three orders of magnitude in a direction the map cannot show. It is
 normalised into in.csv with a note, and drawn nowhere. See sources/in.md §4.
 
+**India's Muslims are divided by a second instrument, 2026-09-14.** `in_split.py` splits the
+census `Muslim` column by Pew's *Religion in India* (2021) sect question, one share per Pew
+region, and writes three `Muslim: ... (Pew 2021)` labels that are in no census table. The
+Annexure is still not used for this; Pew counted people and the Annexure did not.
+
 EXCLUDED holds categories that are deliberately not on the tree.
 REVIEW holds calls that are defensible but arguable, with the reason.
 """
@@ -51,6 +56,44 @@ EXCLUDED = {
 
 # Defensible but arguable, recorded so the reasoning is not lost and can be overturned.
 REVIEW = {
+    "Muslim: Sunni (Pew 2021)":
+        "-> islam.sunni, from Pew's QSECT (topline p. 23), one share per region: North 80, "
+        "Central 79, West 50, East 43, South 38, Northeast 32. Uniform inside a region, because "
+        "six regions is all Pew publishes, so no concentration inside a region can show. The "
+        "Northeast's 32 sits beside 38% who did not know or refused, and that 38 stays on "
+        "`islam` (spec §2.7a). QSECT offers the four madhhabs nowhere, so nothing goes below "
+        "`islam.sunni` (§2.6).",
+    "Muslim: Shi'a (Pew 2021)":
+        "-> islam.shia, NOT islam.shia.jaafari: the card says Shi'a and names no school, and "
+        "the Bohras and Khojas inside it are not Twelvers anyway. West 11, North 7, South 6, "
+        "Central 5, Northeast 5, East 2. THE KNOWN COST: Lucknow's Shia get Central's 5% like "
+        "the rest of Uttar Pradesh, Hyderabad's get the South's 6%, and the Gujarati Bohras "
+        "are spread over the whole West. Kargil, where Muslims are mostly Shia, would have got "
+        "the North's 7% and is left undivided instead because Pew selected no location in "
+        "Ladakh (in_split.py). About 6% of India's Muslims against community figures often "
+        "quoted at 10 to 15%; none of those was verified, and Pew is the only one that counted "
+        "people.",
+    "Muslim: Ahmadiyya (Pew 2021)":
+        "NO LONGER EMITTED. Pew's volunteered Ahmadiyya share goes to islam with the unspecified "
+        "remainder, not islam.ahmadiyya: folded back on Anita's call of 2026-09-14 ('lets move "
+        "ahmadiya back for now'), after it had drawn 1,355,525 people for part of a day. No census "
+        "counts India's Ahmadis and the best national figure is about 150,000, while Pew's code "
+        "put 1.17M in the South on about fifteen respondents and 0 in the East, where Odisha has "
+        "organised Ahmadi villages (sources/branches.md, 'India's Ahmadis'). in_split.py still "
+        "splits the share out before adding it to `Muslim`, so Sunni and Shi'a did not move.",
+    "Muslim":
+        "THE UNSPLIT PART stays on `islam` as the census's own `Muslim`, `measured`, in two "
+        "cases. (1) Inside a surveyed region, the answers that name no branch: some other sect, "
+        "no sect in particular and DK/refused (spec §2.7a), the volunteered Ahmadiyya code "
+        "since Anita folded it back on 2026-09-14, plus Pew's rounding, since three "
+        "regions print to 99 and one to 101. (2) Everywhere Pew interviewed nobody: the Kashmir "
+        "Valley's ten districts, Ladakh (Leh and Kargil), Manipur, Sikkim, Chandigarh, Dadra and "
+        "Nagar Haveli, Daman and Diu, Lakshadweep, and the Andaman and Nicobar Islands. Kashmir "
+        "Valley is read as the 2011 Kashmir division; Pew says only 'Kashmir districts'. "
+        "Ladakh, Chandigarh and the two western UTs were in Pew's frame and got no location, "
+        "which on the Galapagos line (queue.md) is still nothing measured. TIER: the split rows "
+        "are `derived` and not `modelled`, unlike Turkiye's, because these Muslims were counted "
+        "at the sub-district and the viewer removes `modelled` dots instead of rolling them up.",
     "Sari Dharma":
         "-> indigenous.indian.sarna, NOT a node of its own, and this is the largest "
         "judgement call in the file: 506,369 people, 100% of them in West Bengal. `Sari "
@@ -124,6 +167,14 @@ MAP = {
     "Sikh": "sikhism",
     "Buddhist": "buddhism",
     "Jain": "jainism",
+
+    # ------------------------------------------------------------ Muslim branches, in_split.py
+    # DERIVED, 2026-09-14. Not census categories: in_split.py divides each sub-district's
+    # `Muslim` count by Pew's 2021 QSECT shares for its region and writes these labels, plus a
+    # smaller `Muslim` for the answers that name no branch. See REVIEW and in_split.py.
+    "Muslim: Sunni (Pew 2021)": "islam.sunni",
+    "Muslim: Shi'a (Pew 2021)": "islam.shia",
+    # No Ahmadiyya label: folded back into `Muslim` on Anita's call, 2026-09-14 (REVIEW).
 
     # ------------------------------------------------------------ Appendix: Sarna
     "Sarna": "indigenous.indian.sarna",
@@ -292,8 +343,13 @@ EXCLUDED.update({f"Sect: {s}": _ANNEXURE_REASON for s in _ANNEXURE_SECTS})
 # sub-district while claiming they were counted there is the thing this control exists to
 # refuse. The named map is still the default; this is what is left when the reader asks
 # what was measured.
+#
+# `Muslim` joined 2026-09-14 with in_split.py: the census counted Muslims at every sub-district,
+# and only the branch comes from Pew's six regions, so a Sunni or Shi'a dot rolls back to the
+# `islam` the census measured there.
 COLUMNS = {
     "Other religions and persuasions": "other.in",
+    "Muslim": "islam",
 }
 
 

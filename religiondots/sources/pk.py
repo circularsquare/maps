@@ -55,7 +55,9 @@ if hasattr(sys.stdout, "reconfigure"):
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 RAW = os.path.join(ROOT, "data", "raw", "pk")
-OUT = os.path.join(ROOT, "data", "normalized", "pk.csv")
+# pk2017.csv since 2026-09-14, when the 2023 census replaced this build and took `pk.csv`
+# (sources/pk_2023.py, sources/pk.md §9). Kept so the 2017 vintage stays reproducible.
+OUT = os.path.join(ROOT, "data", "normalized", "pk2017.csv")
 
 SOURCE_ID = "pk_phc_2017_uscb"
 YEAR = 2017

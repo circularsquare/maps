@@ -202,3 +202,140 @@ Recorded in `taxonomy/in2011.py`'s `REVIEW`. The three that could most easily be
   non-census source.
 - **Town-level splitting of the 23 residual units** is available for free and not taken;
   see `sources/in_geo.md` §3.
+
+## 8. Muslim branches from Pew's *Religion in India* (2021), added 2026-09-14
+
+Built by `in_split.py`, which writes `data/normalized/in_split.csv`; `countries.py::_in_counts`
+swaps it in for the allocated file's `Muslim` rows. Anita's ruling is spec §2.7a. This closes
+§7's "no sect detail" for Islam only.
+
+### The source
+
+| | |
+|---|---|
+| publisher | Pew Research Center, *Religion in India: Tolerance and Segregation*, 29 June 2021 |
+| topline | `https://www.pewresearch.org/wp-content/uploads/sites/20/2021/06/PF_06.29.21_India_topline.pdf`, printed p. 23 |
+| report | `https://www.pewresearch.org/religion/2021/06/29/religion-in-india-tolerance-and-segregation/`, full PDF on disk |
+| on disk | `data/raw/in/pew_2021/PF_06.29.21_India_topline.pdf` and `PF_06.29.21_India_full_report.pdf` |
+| item | QSECT *"Are you ...?"*, asked of Muslims; `Ahmadiyya` is a volunteered code (DO NOT READ) |
+| fieldwork | 17 Nov 2019 to 23 Mar 2020, face to face (CAPI), RTI International; 3,336 Muslims answered QSECT |
+| geography | six regions, the zonal councils |
+
+% of Muslims, as printed. `in_split.py` re-reads all 56 numbers off the PDF and fails on a mismatch.
+
+| region | N | Sunni | Shi'a | some other sect | no sect in particular | Ahmadiyya | DK/refused |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| India | 3,336 | 55 | 6 | 2 | 14 | 1 | 22 |
+| Northeast | 512 | 32 | 5 | 4 | 20 | 0 | 38 |
+| North | 655 | 80 | 7 | 1 | 6 | 0 | 6 |
+| Central | 202 | 79 | 5 | 1 | 2 | 0 | 12 |
+| East | 1,016 | 43 | 2 | 1 | 18 | 0 | 35 |
+| West | 579 | 50 | 11 | 4 | 17 | 1 | 17 |
+| South | 372 | 38 | 6 | 7 | 24 | 4 | 22 |
+
+**Four rows do not sum to 100.** Northeast, Central and East print to 99 and South to 101, with
+`Total` printed as 100 on each; each cell is rounded on its own. Nothing is re-rounded: the three
+named shares are used as printed and the rounding falls on the unspecified remainder.
+
+### The regions, read at source
+
+PDF page numbers (the printed folio is one lower). The p. 16 map is titled *How regions of India
+are defined in this report* and says the regions *"reflect zonal council divisions"*; p. 224
+footnote 26 names the States Re-organisation Act 1956 and the North Eastern Council Acts of 1972
+and 2002.
+
+| region | states and UTs | where it is stated |
+|---|---|---|
+| North | Chandigarh, Delhi, Haryana, Himachal Pradesh, Jammu and Kashmir, Ladakh, Punjab, Rajasthan | p. 123 text |
+| Central | Chhattisgarh, Madhya Pradesh, Uttar Pradesh, Uttarakhand | **p. 16 map only**; no text list anywhere in the report |
+| East | Bihar, Jharkhand, Odisha, West Bengal | p. 33 text |
+| Northeast | Arunachal Pradesh, Assam, Manipur, Meghalaya, Mizoram, Nagaland, Sikkim, Tripura | **p. 16 map only** |
+| West | Goa, Gujarat, Maharashtra (p. 43 text); the map also draws Dadra and Nagar Haveli and Daman and Diu inside it | p. 43, p. 16 |
+| South | Andhra Pradesh, Karnataka, Kerala, Tamil Nadu, Telangana, Puducherry | p. 49 text |
+
+The Central and Northeast lists were read off the rendered map's region boundaries, and they are
+the Central Zonal Council and the North Eastern Council exactly. The 2011 census has Andhra
+Pradesh undivided; both halves are South.
+
+### What stays undivided, and why
+
+Anita's line is whether anything measured the place (Ecuador's Galápagos, `queue.md`). The grain
+is the state or UT, which is Pew's stratum (p. 224). **7,196,283 Muslims, 4.18%**, stay on
+`islam`:
+
+| place (2011 census units) | Muslims | Pew says |
+|---|---:|---|
+| Kashmir Valley: Kupwara, Badgam, Baramula, Bandipore, Srinagar, Ganderbal, Pulwama, Shupiyan, Anantnag, Kulgam | 6,640,957 | *"Fieldwork could not be conducted in the Kashmir Valley due to security concerns"* (p. 16); *"Kashmir districts"* dropped after sampling (p. 227); the 480 planned interviews moved to Jammu, Haryana and West Bengal (p. 229) |
+| Ladakh: Leh (Ladakh), Kargil | 127,296 | *"No locations in ... Ladakh were selected"* (p. 16), and hatched on the map |
+| Manipur, Sikkim | 249,703 | no interviews, COVID-19 (p. 16, p. 230) |
+| Chandigarh, Dadra and Nagar Haveli, Daman and Diu | 83,646 | *"No locations ... were selected"* (p. 16) |
+| Lakshadweep, Andaman and Nicobar Islands | 94,681 | outside the sample design (p. 224, footnote 27) |
+
+**"Kashmir Valley" is read as the 2011 Kashmir division.** Pew names no districts. Jammu division,
+including Doda, Ramban and Kishtwar, was surveyed (fieldwork dates for *Jammu & Kashmir*, p. 222)
+and gets the North's shares. p. 25 also drops *"a few districts elsewhere"* for security without
+naming them; nothing can be done about those.
+
+Ladakh, Chandigarh and the two western UTs were in Pew's frame and drew no location. They are
+left undivided anyway, since nothing measured them. For Ladakh that also avoids a known wrong
+answer: Kargil's Muslims are mostly Shia and the North's shares would have made 80% of them Sunni.
+
+### Result
+
+| region | census Muslims | Sunni | Shi'a | Ahmadiyya | unspecified |
+|---|---:|---:|---:|---:|---:|
+| Northeast | 11,216,626 | 3,589,311 | 560,829 | 0 | 7,066,486 |
+| North | 12,640,005 | 10,112,012 | 884,809 | 0 | 1,643,184 |
+| Central | 45,180,485 | 35,692,583 | 2,259,021 | 0 | 7,228,881 |
+| East | 47,918,298 | 20,604,887 | 958,355 | 0 | 26,355,056 |
+| West | 18,939,477 | 9,469,746 | 2,083,345 | 189,380 | 7,197,006 |
+| South | 29,153,984 | 11,078,534 | 1,749,216 | 1,166,145 | 15,160,089 |
+| not surveyed | 7,196,283 | 0 | 0 | 0 | 7,196,283 |
+| **India** | **172,245,158** | **90,547,073** | **8,495,575** | **1,355,525** | **71,846,985** |
+
+Checks: every one of 5,974 sub-districts' rows sums to its census `Muslim` count; 35 state codes
+and the 12 unsurveyed district codes are asserted against `in.csv` by name. Census-weighted over
+the surveyed units, Sunni is 54.9% against Pew's national 55, Shi'a 5.1 against 6, Ahmadiyya 0.8
+against 1. Those are weighted differently (Pew by adult Muslims in its frame), so this is a
+relationship and not an identity.
+
+### Calls made, all in `taxonomy/in2011.py`'s `REVIEW`
+
+- **Shi'a goes to `islam.shia`, not `.jaafari`.** The card names no school, and India's Bohras and
+  Khojas are not Twelvers.
+- **The split is `derived`, not `modelled`, unlike Türkiye.** The brief asked for `modelled`. The
+  census counted these Muslims at the sub-district, so this is spec §7a-i's Israel case: only which
+  branch is inferred. It also decides the viewer: `index.html` rolls `derived` dots up to their
+  column and removes `modelled` dots outright, so `modelled` would make `inferred dots: not shown`
+  delete about 100 million counted Muslims instead of redrawing them as `islam`. `uk_split.py`'s
+  England is the same shape and is `derived`. The remainder and the unsurveyed units stay
+  `measured`, as `uk_split.py`'s `Christian` remainder does.
+- **Ahmadiyya is drawn, and is the weakest number here.** South's 4% of 372 respondents is roughly
+  fifteen people and becomes 1.17M once applied to the census; the North, which holds Qadian,
+  reads 0. No outside figure was checked. First thing to revisit.
+
+### The known cost
+
+One share per region (spec §3.10). Lucknow's Shia get Central's 5% like the rest of Uttar
+Pradesh; Hyderabad's get the South's 6%; the Dawoodi Bohras of Gujarat and Maharashtra are spread
+over the whole West at 11%. The East's 35% DK/refused and the Northeast's 38% make those two
+regions mostly unspecified, which §2.7a accepts. Pew's own warning (p. 25) applies: the survey
+*"cannot speak to the experiences and views of Kashmiri Muslims"*, and the Muslim sample is 11%
+of respondents against about 13% of adults.
+
+### Ahmadiyya folded back into `islam`, 2026-09-14
+
+Anita's call, the same day: *"lets move ahmadiya back for now"*. The 1,355,525 people who were on
+`islam.ahmadiyya` are back on the census's own `Muslim` (`islam`, `measured`). `in_split.py` still
+splits Pew's Ahmadiyya share out as its own part and then adds it to the remainder, so **Sunni and
+Shi'a are unchanged to the person**: India draws 90,547,073 Sunni, 8,495,575 Shi'a and 73,202,510
+on `islam`. The result table above and the Ahmadiyya bullet under *Calls made* are the state before
+this change.
+
+Why, from the check in `sources/branches.md` (Decided, "India's Ahmadis, checked 2026-09-14"): no
+census of independent India counts Ahmadis, and the only national figure with any standing is
+about 150,000, from the US State Department's religious freedom reports for 2021 to 2023, which
+cite unnamed media reports. Pew's pattern also fails where the answer is known: the East reads 0
+although Odisha has organised Ahmadi villages (Kerang, Soro, Bhadrak), and the South's 1.17M is 8
+to 10 times the whole national estimate, most likely one or two sampling points. No Ahmadiyya row
+was added to the national estimate layer.
