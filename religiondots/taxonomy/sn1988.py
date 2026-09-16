@@ -20,20 +20,21 @@ EXCLUDED = {}
 
 REVIEW = {
     "Tidiane":
-        "-> islam.tijaniyya, a new node. 3,260,497 people with Diourbel's `TIDIANE`, 47.28% of "
+        "-> islam.sunni.tijaniyya, a new node. 3,260,497 people with Diourbel's `TIDIANE`, 47.28% of "
         "residents, and 80.2% of Saint-Louis région (Matam included). Code 4 `TI`. One code for "
         "every branch of the order.",
     "Mouride":
-        "-> islam.mouride, a new node. 2,047,728 with Diourbel's `MOURIDE`, 29.69%; 91.55% of "
-        "Mbacké département.",
+        "-> islam.sunni.mouride, a new node. 2,047,728 with Diourbel's `MOURIDE`, 29.69%; 91.55% "
+        "of Mbacké département.",
     "Khadriya":
-        "-> islam.qadiriyya, a new node. 806,271 with Diourbel's `KHADRIA`, 11.69%; 32.0% of "
+        "-> islam.sunni.qadiriyya, a new node. 806,271 with Diourbel's `KHADRIA`, 11.69%; 32.0% of "
         "Ziguinchor. The national table prints Diourbel's 3.7 under Layène; sources/sn.py uses the "
         "Diourbel report's counts, which settle it.",
     "Layène":
         "-> islam.layene, a new node. 41,681, 0.60%, 74.9% of them in Dakar région. Kaolack prints "
-        "`-` and is drawn as zero (under 0.05%, fewer than about 400 people). The founder's "
-        "Mahdist claim is why the four orders sit under `islam` and not `islam.sunni` (branches.py).",
+        "`-` and is drawn as zero (under 0.05%, fewer than about 400 people). Under `islam` beside "
+        "Bektashi, not under `islam.sunni` with the other three orders: the founder proclaimed "
+        "himself the Mahdi, a claim outside Sunni orthodoxy (branches.py; ask 029).",
     "Autres mus.":
         "-> islam, no branch. 353,325, 5.12%. Code 5 `AM`, which the manual defines as Muslims "
         "*qui n'appartiennent pas à ces confréries*: Muslims of no brotherhood and of any other, "
@@ -50,10 +51,10 @@ REVIEW = {
         "(printed p27) calls it *animisme principalement*. Not drawn as traditional religion "
         "because the code also holds every other religion and, with no code for no religion or "
         "no answer, may hold people with none; the report's phrase is a description, not a count.",
-    "KHADRIA": "Diourbel report Tableau 1.12: -> islam.qadiriyya, as `Khadriya`.",
+    "KHADRIA": "Diourbel report Tableau 1.12: -> islam.sunni.qadiriyya, as `Khadriya`.",
     "LAYENNE": "-> islam.layene, as `Layène`.",
-    "MOURIDE": "-> islam.mouride, as `Mouride`.",
-    "TIDIANE": "-> islam.tijaniyya, as `Tidiane`.",
+    "MOURIDE": "-> islam.sunni.mouride, as `Mouride`.",
+    "TIDIANE": "-> islam.sunni.tijaniyya, as `Tidiane`.",
     "AUTRES":
         "Diourbel's `AUTRES` is the row under TOTAL MUSULMAN, Muslims of no listed brotherhood: "
         "-> islam, as `Autres mus.`. It is NOT the national table's `Autres`.",
@@ -66,17 +67,17 @@ REVIEW = {
 }
 
 MAP = {
-    "Khadriya": "islam.qadiriyya",
+    "Khadriya": "islam.sunni.qadiriyya",
     "Layène": "islam.layene",
-    "Mouride": "islam.mouride",
-    "Tidiane": "islam.tijaniyya",
+    "Mouride": "islam.sunni.mouride",
+    "Tidiane": "islam.sunni.tijaniyya",
     "Autres mus.": "islam",
     "Chrétiens": "christianity",
     "Autres": "other.sn",
-    "KHADRIA": "islam.qadiriyya",
+    "KHADRIA": "islam.sunni.qadiriyya",
     "LAYENNE": "islam.layene",
-    "MOURIDE": "islam.mouride",
-    "TIDIANE": "islam.tijaniyya",
+    "MOURIDE": "islam.sunni.mouride",
+    "TIDIANE": "islam.sunni.tijaniyya",
     "AUTRES": "islam",
     "CATHOLIQUE": "christianity",
     "AUTRES CHRETIENS": "christianity",

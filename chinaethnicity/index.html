@@ -1,0 +1,321 @@
+<title>Nationalities of China</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
+<style>
+  html, body { margin: 0; height: 100%; background: #0c0c0c; color: #ccc;
+    font-family: Nunito, system-ui, sans-serif; font-size: 13px; }
+  #map { position: absolute; inset: 0; }
+  #title { position: absolute; top: 12px; left: 14px; z-index: 2; color: #ddd;
+    font-size: 17px; font-weight: 700; text-shadow: 0 1px 3px #000; pointer-events: none; }
+  .panel { background: rgba(10,10,10,.85); border: 1px solid #333; border-radius: 8px; }
+  .ptitle { text-transform: uppercase; font-size: 11px; letter-spacing: .08em; color: #888; }
+  #legend { position: absolute; top: 12px; right: 12px; z-index: 2; width: 230px;
+    max-height: calc(100% - 90px); display: flex; flex-direction: column; }
+  #legend .head { display: flex; align-items: baseline; justify-content: space-between;
+    padding: 9px 10px 6px; gap: 8px; }
+  #legend .head .dv { color: #888; font-size: 12px; }
+  #legend .acts { padding: 0 10px 6px; color: #888; font-size: 12px; }
+  #legend .acts a { color: #89b4fa; cursor: pointer; margin-right: 10px; }
+  #rows { overflow-y: auto; padding: 0 4px 8px; scrollbar-color: #444 transparent;
+    scrollbar-width: thin; }
+  #rows::-webkit-scrollbar { width: 6px; }
+  #rows::-webkit-scrollbar-track { background: transparent; }
+  #rows::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
+  .row { display: flex; align-items: center; gap: 8px; padding: 2px 6px; cursor: pointer;
+    border-radius: 4px; user-select: none; }
+  .row:hover { background: #1a1a1a; }
+  .row .sw { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+  .row .nm { flex: 1; color: #ccc; }
+  .row .ct { color: #aaa; font-variant-numeric: tabular-nums; font-size: 12px; }
+  .row.off .nm, .row.off .ct { color: #555; }
+  .row.off .sw { opacity: .25; }
+  #size { position: absolute; left: 12px; bottom: 12px; z-index: 2; padding: 8px 10px;
+    display: flex; align-items: center; gap: 10px; }
+  #size .val { color: #aaa; font-variant-numeric: tabular-nums; width: 34px; }
+  input[type=range] { -webkit-appearance: none; appearance: none; width: 110px;
+    background: transparent; height: 14px; }
+  input[type=range]::-webkit-slider-runnable-track { height: 3px; background: #555; }
+  input[type=range]::-moz-range-track { height: 3px; background: #555; }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 3px; height: 14px;
+    background: #cfd9e4; margin-top: -5.5px; border: 0; }
+  input[type=range]::-moz-range-thumb { width: 3px; height: 14px; background: #cfd9e4;
+    border: 0; border-radius: 0; }
+  .ghost { background: none; border: 1px solid #555; color: #ccc; width: 30px; height: 30px;
+    border-radius: 6px; cursor: pointer; font-family: inherit; font-size: 14px; padding: 0; }
+  .ghost.active { border-color: #6889a8; color: #6889a8; }
+  #info-btn { font-family: 'Times New Roman', serif; font-style: italic; }
+  #about { position: absolute; left: 12px; bottom: 58px; z-index: 3; width: 360px;
+    max-width: calc(100% - 48px); max-height: calc(100% - 120px); overflow-y: auto;
+    padding: 12px 14px; line-height: 1.5; }
+  #about p { margin: 6px 0 10px; }
+  #about a { color: #89b4fa; }
+  #about .muted { color: #888; }
+  #tip { position: absolute; z-index: 4; pointer-events: none; padding: 5px 8px;
+    font-size: 12px; white-space: nowrap; }
+  #legend-toggle { display: none; }
+  @media (max-width: 600px) {
+    /* the attribution sits along the bottom edge at this width, so both panels move up */
+    #size { bottom: 40px; }
+    #legend { width: calc(100% - 24px); top: auto; bottom: 94px; max-height: 45%; }
+    #legend.collapsed #rows, #legend.collapsed .acts { display: none; }
+    #legend-toggle { display: inline-block; }
+    #title { font-size: 15px; }
+    #about { bottom: 94px; }
+    #tip { white-space: normal; max-width: 70%; }
+  }
+</style>
+
+<div id="map"></div>
+<div id="title">Nationalities of China</div>
+
+<div id="legend" class="panel">
+  <div class="head">
+    <span class="ptitle">2020 census</span>
+    <span class="dv" id="dv"></span>
+    <button class="ghost" id="legend-toggle" title="Show or hide the list">≡</button>
+  </div>
+  <div class="acts"><a id="all">all</a><a id="none">none</a></div>
+  <div id="rows"></div>
+</div>
+
+<div id="size" class="panel">
+  <button class="ghost" id="info-btn" title="About this map">i</button>
+  <span class="ptitle">dots</span>
+  <input type="range" id="dot-size" min="0.4" max="3" step="0.1" value="1">
+  <span class="val" id="dot-size-val">1.0×</span>
+</div>
+
+<div id="about" class="panel" hidden>
+  <div class="ptitle">About</div>
+  <p>Each dot is <span id="about-dv"></span> people counted in China's 2020 census, coloured by
+  nationality (minzu), the officially recognised ethnic group recorded for every person.</p>
+  <p><span id="about-measured"></span> are drawn from table 1-4, population by region, sex and
+  nationality, in each province's own 2020 census yearbook, which gives every county. Each
+  table was checked against the national yearbook's copy, and every province matches it in
+  every column.</p>
+  <p id="about-estimated" hidden></p>
+  <p>The census gives how many people of each nationality live in a county, not where in
+  the county they live. Inside a county every group is spread the same way, using the
+  <a href="https://doi.org/10.6084/m9.figshare.27323106" target="_blank" rel="noopener">ASPECT</a>
+  population grid (Ju et al. 2025), which places the same census's township counts on
+  100 m cells. Development zones, which the census counts apart from the districts around
+  them, are placed in the counties of their city where ASPECT finds more people than those
+  counties' own census rows.</p>
+  <p class="muted">2000 county tables from the 2000 Population Census Data Assembly, digitised
+  in the <a href="https://dataverse.harvard.edu/dataverse/chinacensus" target="_blank"
+  rel="noopener">China Census collection</a> on the Harvard Dataverse. Boundaries from DataV
+  GeoAtlas, clipped to areas China administers. Basemap by
+  <a href="https://openfreemap.org/" target="_blank" rel="noopener">OpenFreeMap</a>,
+  © OpenStreetMap contributors.</p>
+</div>
+
+<div id="tip" class="panel" hidden></div>
+
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<script src="https://unpkg.com/pmtiles@3.2.0/dist/pmtiles.js"></script>
+<script>
+const DATA = 'data/processed/';
+
+/* A merged mark stands for k dots and its area is proportional to k, capped so the densest
+   cells do not spill over their neighbours (religiondots' method). A dot here is a fifth of
+   religiondots' people, but scaling its curve by sqrt(1/5) made a lone dot sub-pixel at
+   mid zoom, and southern Ningxia's Hui villages all but vanished. So single dots stay about
+   a pixel across from z8, and the slider is there for anyone who wants less ink. */
+const MERGED_STOPS = [[0, 0.45], [4, 0.6], [6, 0.7], [8, 0.85], [10, 1.05], [12, 1.6], [14, 2.8]];
+const CAP = 5;
+const DOT_GAIN = 1.3;
+const DOT_ALPHA = 0.85;
+/* Estimated provinces (fallback.py) are hatched under the dots, so the hatch shows where
+   dots are sparse and dense areas stay legible. */
+const HATCH_ALPHA = 0.13;
+
+function store(key, fallback) {
+  try { const v = localStorage.getItem('chinaethnicity:' + key); return v === null ? fallback : JSON.parse(v); }
+  catch (e) { return fallback; }
+}
+function save(key, value) {
+  try { localStorage.setItem('chinaethnicity:' + key, JSON.stringify(value)); } catch (e) {}
+}
+
+let LEGEND = null;
+let hidden = new Set(store('hidden', []));
+let dotScale = store('scale', 1);
+
+maplibregl.addProtocol('pmtiles', new pmtiles.Protocol().tile);
+const map = new maplibregl.Map({
+  container: 'map',
+  style: 'https://tiles.openfreemap.org/styles/dark',
+  center: [104, 35.5], zoom: 3.5, hash: true, attributionControl: { compact: true },
+});
+
+function radius() {
+  const K = ['sqrt', ['max', ['get', 'k'], 1]];
+  const g = dotScale * DOT_GAIN;
+  return ['interpolate', ['exponential', 1.26], ['zoom'],
+    ...MERGED_STOPS.flatMap(([z, r]) => [z, ['min', ['*', r * g, K], CAP * g]])];
+}
+function colour() {
+  return ['match', ['get', 'n'], ...LEGEND.groups.flatMap(g => [g.key, g.color]), '#888'];
+}
+function applyFilter() {
+  map.setFilter('dots', hidden.size ? ['!', ['in', ['get', 'n'], ['literal', [...hidden]]]] : null);
+  save('hidden', [...hidden]);
+  for (const el of document.querySelectorAll('.row'))
+    el.classList.toggle('off', hidden.has(el.dataset.key));
+}
+
+function fmt(n) {
+  if (n >= 1e7) return (n / 1e6).toFixed(0) + 'M';
+  if (n >= 1e6) return (n / 1e6).toFixed(1) + 'M';
+  if (n >= 1e4) return Math.round(n / 1e3) + 'k';
+  if (n >= 1e3) return (n / 1e3).toFixed(1) + 'k';
+  return String(n);
+}
+function andList(names) {
+  return names.length < 2 ? names.join('')
+    : names.slice(0, -1).join(', ') + ' and ' + names[names.length - 1];
+}
+
+function hatch() {
+  const px = 16, c = document.createElement('canvas');
+  c.width = c.height = px;
+  const x = c.getContext('2d');
+  x.strokeStyle = `rgba(255,255,255,${HATCH_ALPHA})`;
+  x.lineWidth = 1.5;
+  x.beginPath();
+  for (const o of [-px, 0, px]) { x.moveTo(o, px); x.lineTo(o + px, 0); }
+  x.stroke();
+  return x.getImageData(0, 0, px, px);
+}
+
+function provinceNote(p) {
+  if (p.status === 'estimated')
+    return `${p.name}: estimated, 2000 counties scaled to 2020 ${p.scaled_to} totals`;
+  if (p.status === 'queued') return `${p.name}: not drawn yet`;
+  return null;
+}
+
+function buildLegend() {
+  document.getElementById('dv').textContent = '1 dot = ' + LEGEND.dot_value.toLocaleString() + ' people';
+  document.getElementById('about-dv').textContent = LEGEND.dot_value.toLocaleString();
+  const provs = Object.values(LEGEND.provinces);
+  const measured = provs.filter(p => p.status === 'measured');
+  const est = provs.filter(p => p.status === 'estimated');
+  const queued = provs.filter(p => p.status === 'queued');
+  document.getElementById('about-measured').textContent = `${measured.length} provinces`;
+  const byPref = est.filter(p => p.scaled_to === 'prefecture').map(p => p.name).sort();
+  let text = '';
+  if (est.length) {
+    text = `The other ${est.length}, hatched on the map, have no 2020 county table available ` +
+      `online, so they are estimated. Each nationality's county counts in the 2000 census are ` +
+      `scaled to its 2020 total: ` +
+      (byPref.length ? `for each prefecture in ${andList(byPref)}, where the 2020 table is ` +
+        `published by prefecture, and for the whole province elsewhere. ` : `for the whole province. `) +
+      `The totals are from 2020, and the split between counties inside them is from 2000.`;
+  }
+  if (queued.length)
+    text += ` ${andList(queued.map(p => p.name))} ${queued.length > 1 ? 'are' : 'is'} not drawn yet.`;
+  const estEl = document.getElementById('about-estimated');
+  estEl.textContent = text.trim();
+  estEl.hidden = !text;
+
+  const rows = document.getElementById('rows');
+  rows.innerHTML = '';
+  for (const g of [...LEGEND.groups].filter(g => g.people > 0).sort((a, b) => b.people - a.people)) {
+    const el = document.createElement('div');
+    el.className = 'row';
+    el.dataset.key = g.key;
+    el.title = g.cn;
+    el.innerHTML = `<span class="sw" style="background:${g.color}"></span>` +
+      `<span class="nm"></span><span class="ct">${fmt(g.people)}</span>`;
+    el.querySelector('.nm').textContent = g.en;
+    el.addEventListener('click', (ev) => {
+      if (ev.shiftKey || ev.altKey) {
+        hidden = new Set(LEGEND.groups.map(x => x.key).filter(k => k !== g.key));
+      } else if (hidden.has(g.key)) hidden.delete(g.key);
+      else hidden.add(g.key);
+      applyFilter();
+    });
+    rows.appendChild(el);
+  }
+  document.getElementById('all').onclick = () => { hidden.clear(); applyFilter(); };
+  document.getElementById('none').onclick = () => {
+    hidden = new Set(LEGEND.groups.map(x => x.key)); applyFilter();
+  };
+}
+
+map.on('load', async () => {
+  const [legend, provinces] = await Promise.all([
+    fetch(DATA + 'legend.json').then(r => r.json()),
+    fetch(DATA + 'provinces.geojson').then(r => r.json()),
+  ]);
+  LEGEND = legend;
+  const codesWith = (s) => Object.entries(LEGEND.provinces).filter(([, p]) => p.status === s).map(([c]) => c);
+  const below = map.getStyle().layers.find(l => l.type === 'symbol')?.id;
+
+  map.addImage('hatch', hatch(), { pixelRatio: 2 });
+  map.addSource('provinces', { type: 'geojson', data: provinces });
+  map.addLayer({
+    id: 'queued', type: 'fill', source: 'provinces',
+    filter: ['in', ['get', 'code'], ['literal', codesWith('queued')]],
+    paint: { 'fill-color': '#ffffff', 'fill-opacity': 0.035 },
+  }, below);
+  map.addLayer({
+    id: 'estimated', type: 'fill', source: 'provinces',
+    filter: ['in', ['get', 'code'], ['literal', codesWith('estimated')]],
+    paint: { 'fill-pattern': 'hatch' },
+  }, below);
+  map.addLayer({
+    id: 'province-lines', type: 'line', source: 'provinces',
+    paint: { 'line-color': '#4a4a4a',
+             'line-width': ['interpolate', ['linear'], ['zoom'], 3, 0.5, 8, 1.2] },
+  }, below);
+
+  map.addSource('dots', { type: 'vector', url: 'pmtiles://' + DATA + 'chinaethnicity.pmtiles' });
+  map.addLayer({
+    id: 'dots', type: 'circle', source: 'dots', 'source-layer': 'dots',
+    paint: { 'circle-color': colour(), 'circle-radius': radius(), 'circle-opacity': DOT_ALPHA,
+             'circle-stroke-width': 0 },
+  }, below);
+
+  buildLegend();
+  applyFilter();
+
+  const tip = document.getElementById('tip');
+  for (const layer of ['queued', 'estimated']) {
+    map.on('mousemove', layer, (e) => {
+      const note = provinceNote(LEGEND.provinces[e.features[0].properties.code]);
+      if (!note) return;
+      tip.textContent = note;
+      tip.style.left = (e.point.x + 14) + 'px';
+      tip.style.top = (e.point.y + 14) + 'px';
+      tip.hidden = false;
+    });
+    map.on('mouseleave', layer, () => { tip.hidden = true; });
+  }
+});
+
+const slider = document.getElementById('dot-size');
+slider.value = dotScale;
+document.getElementById('dot-size-val').textContent = Number(dotScale).toFixed(1) + '×';
+slider.addEventListener('input', () => {
+  dotScale = Number(slider.value);
+  document.getElementById('dot-size-val').textContent = dotScale.toFixed(1) + '×';
+  save('scale', dotScale);
+  if (map.getLayer('dots')) map.setPaintProperty('dots', 'circle-radius', radius());
+});
+
+const about = document.getElementById('about');
+const infoBtn = document.getElementById('info-btn');
+infoBtn.addEventListener('click', () => {
+  about.hidden = !about.hidden;
+  infoBtn.classList.toggle('active', !about.hidden);
+});
+if (matchMedia('(max-width: 600px)').matches)
+  document.getElementById('legend').classList.add('collapsed');
+document.getElementById('legend-toggle').addEventListener('click', () => {
+  document.getElementById('legend').classList.toggle('collapsed');
+});
+</script>

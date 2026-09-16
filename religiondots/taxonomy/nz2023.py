@@ -69,8 +69,14 @@ REVIEW = {
         "International, which Japan draws on eastasiannew.japanese rather than on the Nichiren "
         "schools.",
     "Falun Gong":
-        "-> chinesefolk. A qigong movement out of the Buddhist and Daoist traditions, and "
-        "not comfortably any of the three. 116 people.",
+        "-> eastasiannew, the parent. A qigong movement founded in China in 1992, drawing on "
+        "Buddhist and Daoist teaching around one founder, which is the kind of body that "
+        "family holds. There is no Chinese grouping node under it, and Taiwan's Yiguan Dao "
+        "and `Other Chinese religions` already sit on the parent (tw2018.py), so no leaf "
+        "was added for 116 people. Was `chinesefolk` until 2026-09-15; moved on Anita's "
+        "ruling on ask 036 (ask/RULINGS.md, `cn`, `all`). `Confucianism` moved to "
+        "`confucianism` the same day; `Chinese Religions nfd` and `nec` stay on "
+        "`chinesefolk`.",
     "Socialism":
         "-> other.nz, with Marxism, Maoism and Libertarianism. Political ideologies written "
         "in as religion. Not `secular`, which branches.py defines as organised non-theistic "
@@ -266,10 +272,12 @@ MAP = {
     "Church of Scientology": "scientology",
 
     # ---------------------------------------------------------------- Chinese / Japanese
-    "Confucianism": "chinesefolk",
+    # Confucianism and Falun Gong moved off `chinesefolk` 2026-09-15, Anita's ruling on ask 036
+    # (ask/RULINGS.md, `cn`, `all`); see REVIEW["Falun Gong"].
+    "Confucianism": "confucianism",
     "Chinese Religions nfd": "chinesefolk",
     "Chinese Religions nec": "chinesefolk",
-    "Falun Gong": "chinesefolk",
+    "Falun Gong": "eastasiannew",
     "Mahikari": "eastasiannew.japanese",
     "Tenrikyo": "eastasiannew.japanese",
     "Japanese Religion nfd": "eastasiannew.japanese",

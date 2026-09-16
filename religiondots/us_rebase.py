@@ -79,8 +79,9 @@ sys.path.insert(0, str(HERE / "taxonomy"))
 
 PEW = HERE / "data" / "normalized" / "us_pew.csv"
 SUMMARIES = HERE / "data" / "raw" / "2020_USRC_Summaries.xlsx"
-# The roll itself is not read here: it comes from countries.py's `_us_counts`, so that the
-# residual is subtracted from exactly the frame that gets scattered. See `_asarb`.
+# The roll itself is not read here: it comes from countries.py's `_us_measured` (ASARB's county
+# rolls plus the 2020 census's county Sikhs and Yazidis, sources/us_dhca.py), so that the
+# residual is subtracted from exactly the measured frame that gets scattered. See `_asarb`.
 
 # Where a residual lands when its Pew line covers more than one root: Sikhs, Daoists, Bahá'ís
 # and Zoroastrians are published as one line and cannot be separated at n=36,908, so what is
@@ -118,10 +119,16 @@ def _asarb(roll=None):
     The summaries workbook ends with a blank row and a Totals row whose FIPS is the STRING
     `Totals`, so `notna()` is not enough — that mistake doubles the US population, and it is
     where §3.6's "3,144 counties" came from.
+
+    Since 2026-09-15 the frame also holds the 2020 census's county counts of Sikhs and Yazidis
+    (sources/us_dhca.py), by the same rule: they are drawn, so they come out of Pew's
+    other-world-religions line like the Bahá'í roll. The pool below is still ASARB's
+    `population - adherents`; the census rows are 69,034 people and leaving them in it moves
+    no county's spread share by more than a rounding.
     """
     if roll is None:
-        from countries import _us_counts
-        roll = _us_counts()
+        from countries import _us_measured
+        roll = _us_measured()
 
     cty = pd.read_excel(SUMMARIES, sheet_name="2020 County Summary", dtype={"FIPS": str})
     cty = cty[pd.to_numeric(cty["FIPS"], errors="coerce").notna()].copy()

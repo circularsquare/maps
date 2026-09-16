@@ -42,14 +42,23 @@ def _in_counts():
     # rolling back to `islam` through in2011.COLUMNS) plus a smaller census `Muslim` for the
     # rest, summing to the census figure. Adding them without dropping these would double
     # India's Muslims, and the check below is what makes that impossible to do quietly.
-    replaced = df.loc[df["source_category"] == "Muslim", "count"].sum()
-    df = df[df["source_category"] != "Muslim"]
-    split = pd.read_csv(HERE / "data" / "normalized" / "in_split.csv",
-                        dtype={"geo_id": str}, low_memory=False)
-    if abs(split["count"].sum() - replaced) > 0.5:
-        raise SystemExit(f"in_split.csv draws {split['count'].sum():,.0f} Muslims against the "
-                         f"{replaced:,.0f} it replaces; re-run in_split.py")
-    df = pd.concat([df, split], ignore_index=True)
+    #
+    # `Christian` joined 2026-09-15 the same way (in_split_christian.py): Kerala's Catholics by
+    # district, Mizoram's churches from the state's rolls, and Catholic and Baptist shares from
+    # Pew's 2021 respondent file in its East and South (the Northeast withdrawn the same day,
+    # sources/in.md §12); every other sub-district's Christians are written back unchanged.
+    splits = []
+    for column, name, builder in [("Muslim", "in_split.csv", "in_split.py"),
+                                  ("Christian", "in_split_christian.csv", "in_split_christian.py")]:
+        replaced = df.loc[df["source_category"] == column, "count"].sum()
+        df = df[df["source_category"] != column]
+        split = pd.read_csv(HERE / "data" / "normalized" / name,
+                            dtype={"geo_id": str}, low_memory=False)
+        if abs(split["count"].sum() - replaced) > 0.5:
+            raise SystemExit(f"{name} draws {split['count'].sum():,.0f} {column} against the "
+                             f"{replaced:,.0f} it replaces; re-run {builder}")
+        splits.append(split)
+    df = pd.concat([df, *splits], ignore_index=True)
     df["node"] = df["source_category"].map(resolve)
     df = df[df["node"].notna() & (df["count"] > 0)]
     df["unit"] = df["geo_id"]
@@ -115,11 +124,16 @@ ENTRY = {
     "in": dict(
         name="India",
         source="Census of India 2011, table C-01 and its Appendix (ORGI); Muslim branches "
-               "from Pew Research Center, Religion in India (2021)",
+               "and Christian churches from Pew Research Center, Religion in India (2021) and "
+               "its India Survey Dataset; Kerala's Catholics from K.C. Zachariah, CDS Working "
+               "Paper 468 (2016); Mizoram's churches from the Mizoram Directorate of Economics "
+               "and Statistics",
         basis="self-identification, reported by the head of household",
         view=[67.5, 6.5, 97.8, 36.0],
         gap="0.2%, whose religion the head of household did not state; Muslim branches only "
-            "at Pew's six regions, and none where Pew did not survey",
+            "at Pew's six regions, and none where Pew did not survey; Christian churches for "
+            "about a third of Christians, only in Kerala, Mizoram and Pew's East and South "
+            "regions",
         gap_share=0.002368,
         note_public=(
             "One in six people on earth, and the oldest source on this map by a decade: "
@@ -147,10 +161,38 @@ ENTRY = {
             "Muslims, **42%** of India's. The Shia of Lucknow and Hyderabad and the Bohras of "
             "Gujarat are spread across their whole region, and Kargil's Shia are not shown at "
             "all. Pew interviewed nobody in the Kashmir Valley, Ladakh, Manipur, Sikkim or five "
-            "small union territories, so their Muslims are not divided."),
-        how="census, 2011, answered by the head of household; Muslim branches from a 2019 to "
-            "2020 survey",
-        fill="from Pew's 2019 to 2020 survey regions for Muslim branches, and from the same "
+            "small union territories, so their Muslims are not divided. "
+            "**India's Christians are divided by church from three sources.** In Kerala, the Kerala "
+            "Migration Surveys of 2008 to 2014 asked households their church, and the Catholics "
+            "among them are drawn by district, from **89%** of Christians in Thrissur to **36%** in "
+            "Kozhikode and Pathanamthitta. The survey also splits Catholics into Syro-Malabar, "
+            "Latin and Syro-Malankara, but those figures disagree with the dioceses' own "
+            "membership rolls, so they are not drawn; nor are Kerala's Orthodox, Jacobite, Mar "
+            "Thoma and Protestant churches, which nothing independent could check. In Mizoram "
+            "the state statistics department collects church membership, and its rolls for 2010 "
+            "to 2011 divide the census's Christians: **57%** Presbyterian and **15%** Baptist "
+            "Church of Mizoram. One share covers the whole state, so the Evangelical Church of "
+            "Maraland and the Lai Baptist church of the far south appear in Aizawl too. "
+            "**Elsewhere the church comes from Pew's survey, which asked 1,011 Christians.** Its "
+            "respondent file names only three churches, Catholic, Baptist and Presbyterian, and "
+            "puts the Church of North India, the Church of South India, the Orthodox churches and "
+            "the Pentecostals together as other churches, which stay undivided. Two regions are "
+            "drawn, the East and the South: **39%** Catholic in both, since their answers could not "
+            "be told apart, and **13%** Baptist in the South. As with the Muslim branches, one share covers each region, so Tamil Nadu is "
+            "drawn with the South's Baptists, and the South's figures include the answers of "
+            "Kerala's Christians. The North, Central and West regions, with 24, 10 and 56 "
+            "Christians interviewed, are not divided, and neither are the places Pew did not "
+            "survey. Nor is the Northeast outside Mizoram: its churches differ from state to "
+            "state, and one share for the whole region matched none of them. Altogether **35%** "
+            "of India's Christians are drawn on a church. Pew Research Center bears no responsibility for "
+            "the analyses or interpretations of the data presented here. The opinions expressed "
+            "herein, including any implications for policy, are those of the author and not of "
+            "Pew Research Center."),
+        how="census, 2011, answered by the head of household; Muslim branches and Christian "
+            "churches from surveys, except Mizoram's churches, from church rolls",
+        fill="from Pew's 2019 to 2020 survey regions for Muslim branches and for Christian "
+             "churches in the East and South, Kerala Migration Survey districts for Kerala's "
+             "Catholics, Mizoram's 2010 to 2011 church rolls for its churches, and the same "
              "census at state level for the other religions",
         grain="sub-districts, 200,000 people on average",
         counts=_in_counts,
@@ -184,6 +226,12 @@ ENTRY = {
              "`Other religions and persuasions` is allocated within each state, not "
              "pooled nationally (allocate.py --within; spec §3.10). The `Muslim` column is "
              "split into Sunni and Shi'a by Pew 2021's six regions (in_split.py, "
-             "sources/in.md §8); those rows are derived and roll back to islam.",
+             "sources/in.md §8); those rows are derived and roll back to islam. The "
+             "`Christian` column is split in Kerala (Catholics, KMS by district), Mizoram "
+             "(state church rolls) and Pew 2021's East and South (Catholic and Baptist from the "
+             "respondent file, Catholics at one share pooled over both, whose shares do not differ; "
+             "the Northeast withdrawn, its one share failing state by state) by "
+             "in_split_christian.py (sources/in.md §9, §10, §12, §13); derived, rolling back to "
+             "christianity.",
     ),
 }

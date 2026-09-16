@@ -73,9 +73,18 @@ Run in order.  Every step, every time, even when only one country changed.
    1. python sources/<cc>.py --fetch       # -> data/normalized/<cc>.csv, with its own checks
    2. python sources/<cc>_geo.py --fetch   # -> data/geo/<cc>/, units + placement grid
    3. write taxonomy/<cc><YYYY>.py         # the mapping, with EXCLUDED and REVIEW
-   4. write countries/<cc>.py              # the entry, and append <cc> to ORDER in
-                                           #   countries.py; the loader stops if a file and
-                                           #   ORDER disagree.  counts=, place=, place_weight=,
+   4. write countries/<cc>.py              # the entry. DRAFT IT IN YOUR SCRATCH FOLDER, then
+                                           #   write the file and add <cc> to ORDER in
+                                           #   countries.py BACK TO BACK, running nothing in
+                                           #   between.  Until both exist the loader SKIPS
+                                           #   the country with a warning on stderr and loads
+                                           #   the rest, so anything run in the gap goes
+                                           #   without it.  (It used to stop every other
+                                           #   session instead: a tiles.py worker hung a
+                                           #   build tail on it, 2026-09-15.)
+                                           #   `tools/built_countries.py --check` and
+                                           #   `claim.py done` fail on a half-registered one.
+                                           #   counts=, place=, place_weight=,
                                            #   note_public=
                                            #   AND how=, grain=, fill= if anything is
                                            #   derived, gap= if part of the country is not

@@ -23,6 +23,9 @@ population table gives the people.
 - `tg` Togo: drawn, 6 units (Lomé apart), R5-R9 fitted by IPF to the 2022 census's national rows
   (UNSD table 28) and unit populations, as Liberia. With a census margin the churches' levels come
   from the census, so Pentecostal and Presbyterian are drawn as patterns (`sources/tg.md` §4).
+- `sd` Sudan: drawn, 18 states, R5-R9 pooled with Arab Barometer V and VII on COD-PS 2022 at one
+  national share; R5 is 15 pre-2012 states, R6-R8 six regions, R9's `LOCATION.LEVEL.1` the 18
+  states (`sources/sd.md`).
 - Also queued with an Afrobarometer route or witness: `sn`, `bf` (`queue.md`, "Africa swept
   a second time"). Mauritania is not asked the question.
 
@@ -134,6 +137,11 @@ population table gives the people.
   one against R6, R7, R9), and R6's labels arrive as mojibake (`Centre-YaoundÃ©`) because `_read`
   falls back to LATIN1. Decode by label after undoing the mojibake, and check against the district
   column. Caught by: `cm.py::gkey`, `cm.py::check_locations`.
+- **A round's REGION labels can be the first N official names, not the units sampled.** Algeria R5:
+  codes 1420-1455 carry wilayas 1 to 36 in official order, so Ghardaïa (47) is missing, Algiers has 30
+  respondents and Tamanrasset 128, and the 10 Ibadi answers land in "Boumerdes". Compare each label's
+  respondents with its population share before decoding by name. Not caught by anything yet. Detail:
+  `sources.md` §maghreb-2026-09-16.
 - **`held_out` stops a correct six-unit decode.** Six units allow 720 orderings, and a sample frame
   from an older census moves the capital's share (Togo: Lomé sampled at 1.40x its 2022 share, 14
   orderings reach the observed r). Where REGION labels are names, make the location column the
@@ -143,6 +151,12 @@ population table gives the people.
   every round and Togolese chose it only in R5 and R6: the labels are the merged file's, not one
   country's card. Read the country's own counts by round before assuming a box was offered. Caught
   by: `tg.py::report_card` (prints). Detail: `sources/tg.md` §4.
+- **One region can carry a round's whole `None` box.** Sudan R8: 31 of 32 `None` answers are in
+  Darfur (30 rural), 7.2% of its interviews there, against 3 in about 2,400 Darfur interviews in the
+  other rounds and the Arab Barometer; R8 has no location below the region. Tabulate each small box
+  by region and round before pooling, and drop a block no other round or instrument reproduces,
+  counted and asserted. Caught by: `sd.py::load_afro` (`R8_DARFUR_NONE`); nothing shared. Detail:
+  `sources/sd.md` §3.
 
 ## "No religion" boxes
 The draft procedure is at the foot of `WORKFLOW_PLAN.md`.

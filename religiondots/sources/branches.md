@@ -66,6 +66,30 @@ and Ghana (`sources/estimates.md`); India's Pew 2021 split went into its dots in
   data modelled 65% or whatever. we should also specify what we assigned based on ethnicity."* Note that
   China's §14.5 rows are `derived` today (`sources/cn.md` §7 table), so a new tier would move them too.
 
+## Decided, 2026-09-15
+
+- **Russia's Buddhists follow Mongolia's onto `buddhism.vajrayana`.** They were inconsistent:
+  `mn2020.py` files the census's `Будда` on `buddhism.vajrayana` (its REVIEW note argues why, against
+  the letter of spec §2.6), while `ru2012.py` files Arena's "I profess Buddhism" (655,196, 0.46%) on
+  bare `buddhism`. Anita: *"we can match mongolia to vajrayana i think."* The heartland carries it:
+  Tuva 208,050, Buryatia 193,760, Kalmykia 100,442 and Zabaykalsky 62,758 are 565,010, **85.7%** of
+  the drawn subjects' 659,032. (Arena's national column is 655,196; this line first said 86.2% and
+  90,186 against that, corrected the same day.) The other 94,022 are one or two respondents per
+  subject at n~720 (Moscow 16,263, Moscow Oblast 10,656). **Revised the same day: only those four
+  subjects go to `buddhism.vajrayana`; the other 22 subjects' Buddhists stay on `buddhism`** (14.3%,
+  against WRD's 16.4% Mahayana share of Russia's Buddhists), using the survey's own geography rather
+  than an even spread. Anita: *"we should use the surveys geography. why would we not?"* Russia and
+  Mongolia both carry the "assigned from ethnicity" tier (spec §2.6a). **Not done yet**: no drawing
+  on 2026-09-15 while rd-super runs.
+- **Census Buddhists in Thailand, Myanmar, Cambodia, Sri Lanka, Laos and Bangladesh go to
+  `buddhism.theravada`, less an unspecified remainder: spec §2.6a, reversing §2.6.** The remainder is
+  for Chinese- and Vietnamese-descended Buddhists and is spread as one share per country, because
+  nothing places them. Sized from WRD's shares (9.1% of Thai Buddhists). A per-country check found no
+  drawn unit mostly non-Theravada except a 2,300-Buddhist village in Bokeo, Laos; Mae Hong Son,
+  Ratanakiri and Preah Sihanouk run about a quarter and get a note only. **South Korea was added the
+  same day** (census Buddhists to `buddhism.mahayana`, 0.7% remainder), and "assigned from
+  ethnicity" is to be built as its own tier first. **Not built.**
+
 ## Where the undivided people are (counts.json, 2026-09-14)
 
 Thousands of people, on the bare node. `total` is the family.
@@ -327,6 +351,63 @@ and is Japan's alone. Scripts: the lead's scratchpad, not kept; re-derive from t
   Myanmar 2014 Vol 2-C (seven categories), Sri Lanka 2024 press note, Cambodia 2019 final report.
   Pew's 2023 South and Southeast Asia questionnaire (Cambodia, Sri Lanka, Thailand, Malaysia, Singapore,
   Indonesia) offers only "Buddhist".
+
+### Thailand's 7.9% Mahayana, checked 2026-09-15
+
+Gemini found it on ARDA's national profile (`thearda.com/world-religion/national-profiles?u=220c`),
+which cites Zurlo ed., *World Religion Database* (Brill, accessed September 2025): 2025 Buddhist
+86.87%, Theravada 78.98%, Mahayana 7.90%, "Lamaist" 0. Anita asked what it rests on, and for a second
+estimate of the Chinese count and of Mahayana, because it is unclear whether Sino-Thai descendants
+simply become Theravada. **Nothing here changes §2.6.**
+
+- **WRD's split is ethnic ascription at a fixed ratio.** Its methodology note
+  (`worldreligiondatabase.org/static/downloads/wrd_methodology.e10266f1a9be.pdf`, pp. 14-15) gives each
+  ethnolinguistic people a religion breakdown, compiled for the World Christian Encyclopedia 2nd ed.,
+  and assumes it holds wherever that people lives. The ARDA page's chart data put Mahayana at **9.08%
+  of Buddhists in 1900, 1950, 1970 and 2000 alike** (8.246 of 90.859; 8.225 of 90.631; 8.190 of
+  90.239; 7.903 of 87.084). A century of immigration and assimilation does not move it, so the figure
+  records the assumption, not the population. National only; WRD holds provincial data only "where
+  available from censuses and surveys".
+- **No independent count of lay Mahayana exists.** COW WRP (`data/raw/estimates/WRP_national.csv`)
+  never splits Thai Buddhists by school: 1955 has Theravada 82.0% plus "other Buddhist" 9.6% from an
+  encyclopedia it rates low, and 2000-2010 codes every Buddhist Theravada from State Department
+  reports. Religious Characteristics of States (RCS-Dem 2.0, ARDA/OSF) gives 0.94% Mahayana in 2010
+  with 17.3% "unspecified Buddhists", no per-point source, and WCE and WRD as its main sources. The
+  National Office of Buddhism's 2023 roll has the Chinese sect at 138 monks and 281 novices and the
+  Annam sect at 143 and 138, against 256,219 monks (read through search summaries; the onab pages
+  answer 403). Kataoka, "Religion as Non-religion" (*Southeast Asian Studies* 1(3), 2012, p. 464):
+  *"the exact number of Theravada and Mahayana lay followers among Buddhists is not known"*;
+  laypeople *"are never classified according to sects"* (p. 468).
+- **Practice does not mark a school.** Pew's 2022 survey (topline p. 35, QFIGURESi, "Do you currently
+  pray or offer your respects to ... Guanyin"): Thailand **33%** of adults (N=2,504), **36% of
+  Buddhists** (N=2,228), four times WRD's Mahayana share. Skinner (1957:313, via Morita, Nagoya
+  *Studies in Language and Culture* 28(2)) found Thai-born Chinese worshipping at both Chinese
+  temples and wats; Skinner 1973:408, *"Chinese religious sentiment is eclectic and syncretic rather
+  than exclusivistic."* Suengprasit 2022 (*J. Yanasangvorn Research Institute* 13(2)) asked 12
+  worshippers at a Hat Yai Chinese temple; 3 knew it was a Buddhist temple. The scouting agent reports a
+  Pew ethnicity item for Thailand (QETHTHA, Thai / Chinese / ...); the topline prints no ethnic cut
+  and the microdata needs a Pew account. Not re-checked.
+- **The Chinese count behind the ratio has one real vote, not five.** The 7-7.5M (10-11%) cluster,
+  Taiwan's OCAC, Zhuang Guotu for the PRC Qiaoban, the PRC Overseas Chinese Blue Book and
+  Suryadinata/ISEAS, is **Skinner's 1955 share of 11.3% applied to later Thai populations**: OCAC's
+  2004 figure is 64,197,000 × 0.113 = 7,254,261 exactly, which assumes no assimilation after 1955.
+  OCAC's open-data CSV (`data.gov.tw/dataset/6483`) has a percent column that is Thailand's share of
+  world overseas Chinese, not of Thailand. Wikipedia's 9.5M and "11 to 14 per cent" carry no citation
+  and are Skinner's 11% beside the CIA Factbook's unsourced 14% (1982 to about 2014 editions).
+- **The independent figures, by definition**: Chinese nationals 3.8% (1919) falling to about 1% (1970),
+  household registration then census; Chinese spoken at home 231,350 (2000) and 111,866 (2010), UN
+  Demographic Yearbook language table; self-identified Chinese about 2% or less, Asian Barometer wave 4
+  (search snippet only; data by application); Joshua Project 1.7M, 2.4%. So descent by Skinner's 1955
+  definition is 10-11%, self-identification about 2%, home language 0.2-0.4%. WRD's 5.6M sits with the
+  Skinner lineage.
+- **Nothing gives Chinese by province.** The 2000 census language tables list Chinese only for a few
+  southern provinces (Yala 3.0%, Nakhon Si Thammarat 2.1%), and the archived Bangkok table has no
+  Chinese row at all. The one route to a regional self-ID cut is **WVS wave 7 Thailand** (2018,
+  n=1,500): Q290 code 764002 "China", with region and province in the file, behind the WVS download
+  form (name and email). Its religion item offers only "Buddhism".
+
+### The other countries, 2026-09-14 sweep
+
 - **India**: Pew 2021 QBUDDHIST above, national. Census 2011 ST-14 gives tribal Buddhists by district
   but pools every tribe; ST-14A splits by tribe at state level only; SC-14 is state level. All three
   are §14.5 derivations.
@@ -337,6 +418,13 @@ and is Japan's alone. Scripts: the lead's scratchpad, not kept; re-derive from t
   to say which of the three major strands of Buddhism they follow."**
 - **Vietnam**: 2009 and 2019 censuses do not cross religion with ethnicity; the 2019 survey of the 53
   minorities may, not read (gso.gov.vn DNS failure).
+  **Khmer counts are not a Theravada count, checked 2026-09-15.** Khmer by province is published
+  (2019: Trà Vinh 318,231, Sóc Trăng 362,029), but against the map's 2009 Buddhist cells Trà Vinh has
+  498,930 Buddhists, about 180,000 more than its Khmer (Kinh Mahayana too), and Sóc Trăng 332,392,
+  fewer than its Khmer. The years differ; the gaps are too large for that. Without a religion by
+  ethnicity table the Khmer count cannot weight anything. The office's 2019 census files now turn
+  up under `nso.gov.vn` in search results, so the minorities survey is worth one retry there (not
+  probed).
 - **Nepal**: *Religions in Nepal* 2021 Table 5.5, Buddhists by caste/ethnicity, national (Tamang
   1,391,866, Magar 314,745, Gurung 296,124, Sherpa 128,341, Newar 120,812); a derivation, and national.
 - **Malaysia**: 2020 key findings Table 6 is religion by state, no ethnic cross.
@@ -460,3 +548,150 @@ for Arabia. Anita asked for them to be checked after reading this file.
   WVS route is closed for sect in all six, and the licence-form microdata almost certainly carries
   the same codes. Nigeria's list shows `Eastern Orthodox` at 4.4%, which looks like a coding slip
   worth knowing before anyone reads that row.
+
+## Where the common Sunni/Shia geography comes from: Iran and Pakistan traced, 2026-09-16
+
+Anita, after a Google AI overview listing Iran's Sunni provinces: *"people have a pretty good
+qualitative understanding of shia vs sunni ... i'd like to look into where this comes from. trying to
+trace anything to see if it juts ultimately comes from personal account or something."* Two
+researchers followed the citation chains to their origins. Extracted texts were in session
+`99a598aa`'s scratchpad (`ir_sect/`, `pk_sect/`), not kept.
+
+**For both countries, no regional Shia or Sunni share traces to a count or a probability survey,
+except British India's censuses.** What exists is compilers with no source, sect leaders' claims,
+officials' guesses, one author's per-unit percentages, and travel accounts, with ethnic ascription
+underneath.
+
+### Iran
+- **National 5-10% Sunni:** the CIA Factbook's, no source (the 1990 edition said 4%). The State
+  Department's 2022-23 reports call it Iranian government data, and a 2025 Persian journal cites the
+  Factbook. Circular.
+- **Leaders' claims:** 20% and over a million in Tehran, Molavi Abdolhamid to DW, 10 November 2011
+  ("according to our statistics", none published); 25%, Molavi Abdolaziz Mollazadeh to the Assembly
+  of Experts, September 1979. The Atlantic Council's "officials say 7-9%" (2018) names nobody.
+- **GAMAAN 2020** (5% Sunni): online opt-in, 39,981 answers, weighted by province among other
+  things; national only, not a probability sample.
+- **The only provincial table:** Masaili, *Atlas-e Towsifi-ye Ahl-e Sonnat-e Iran* (Amirkabir, 2023,
+  p. 59), reprinted as Table 1 of Hosseinpour and Masaili, *Haft Aseman* 26(88), 2025
+  (`haftasman.urd.ac.ir/article_218087_735cc0a11dd4bd43e466ede88c6286bc.pdf`, open). It is 2016
+  census totals times the author's own percentages from "library and first-hand field research":
+  Kurdistan 82, Sistan and Baluchestan 64, Golestan 38, West Azerbaijan 35, Hormozgan 35, Kermanshah
+  26, South Khorasan 15, North Khorasan 10, Gilan 7, Razavi Khorasan 5, Bushehr 5, Fars 4, plus
+  500,000 for Tehran and the centre; 7,608,500 in all. The paper says no census has published sect.
+  Farmanian, *Mazaheb dar Iran* (2021, p. 22), same method, 8-11%.
+- **Ascription and accounts for the rest.** Wikipedia's Baloch "70-76%" has no citation; Kurdistan
+  cites a qualitative study (Ahmady); Golestan's Turkmen 34.2% cites an unfound "Ministry of
+  Education estimate, 2006", and the AI overview's Sunni majority there contradicts Masaili's 38%.
+  Hormozgan, rural Kermanshah, Larestan and the Talysh are the Atlantic Council author's interviews
+  and travel. A 31-province Sunni and mosque table on Persian blogs comes from a Kurdistan Da'wat va
+  Eslah site (2008) calling itself "unconfirmed, unofficial". Anonby et al. 2019 put Kurdish as
+  possibly the mother tongue of a slight majority in West Azerbaijan, above Masaili's 35% if Kurds
+  are taken as Sunni.
+- **Surveys with no sect item:** WVS 2020 Iran has province codes and no Iran denomination list,
+  so no Sunni code, and no Baluchi or Turkmen home-language answer. *Values and Attitudes of
+  Iranians* wave 4 (2023, 15 provinces) shows no sect item in its Identity volume (garbled text
+  layer; waves 1-3 not reached). No sect table of the 1986 census anywhere.
+- **Institutions, not people:** 54,770 mosques in the National Mosque Planning Survey and about 900
+  Sunni Friday-prayer sites (via Factnameh); a Shabestan News infographic of mosques by province and
+  sect (August 2025, an image, not read); 18-22 Sunni MPs (snippet only).
+- **§14:** a provincial Sunni layer marks the Baloch and Kurdish areas under the heaviest crackdown
+  (Zahedan, September 2022), and the numbers are politically loaded inside Iran.
+- **Masaili, vetted 2026-09-16.** Anita: *"do people generally think this feels trustworthy / what
+  is methodology / does he seem strongly biased?"*
+  - **Who.** Mehdi Masaili, born about 1984, a Shia cleric (Hojjat al-Islam) at the Isfahan
+    seminary since 2002 and a teacher there, and a PhD student in the rapprochement (taqrib) track
+    of Islamic denominations at the University of Religions and Denominations, Qom, where his
+    co-author Hosseinpour is an assistant professor. His other titles, from book listings only,
+    argue against anti-Sunni Shia practice (one against the 9 Rabi' festival; *Pishvayan-e Shia,
+    pishgaman-e vahdat*). Amirkabir published the atlas; Fars News and Ketab News covered it.
+  - **Method, in his words:** library and field research with field given priority, and "this
+    research was conducted individually and therefore faced many research limitations" (Ketab News
+    interview, `ketabnews.com/fa/news/20546`). The 2025 paper calls the total "a summation of the
+    Sunni population of Sunni-inhabited counties and provinces", 9-10%, and the book names the
+    Sunni-majority counties per province (Hormozgan: Bandar Lengeh, Parsian, Khamir, Bastak, Qeshm,
+    Jask; Kermanshah: the Avroman counties). No per-county share, source list or interview list
+    appears in anything read; the book itself was not seen.
+  - **Framing.** The paper was written to answer social-media claims that Sunnis will soon equal
+    Shia in number. It calls estimates of a third, a quarter or a fifth exaggerated, driven by
+    "demands for Sunni rights or intensifying Shia-Sunni rivalry". Any lean runs low.
+  - **Cross-checks.** Farmanian and Beheshti, *Mazaheb dar Iran* (2021), from the same institution
+    and by the same method: 8-11% nationally, Kurdistan 75 against Masaili's 82, West Azerbaijan 40
+    against 35. Not independent. **Soltani, *Ahl-e Sonnat-e Iran: forsat-ha va chalesh-ha*** (Aras,
+    Sanandaj, 2015, from his Arabic PhD at Imam Ouzai University, Lebanon; a Sunni author;
+    archive.org `abu-abdurahman-kurdi-f_barid_20171224_0042`, OCR text read): about 10.5 million
+    from "statistics and personal and field research", by group Kurds 5M, Baluch 2.5M, Persians
+    1.7M, Turkmen 1M, Talysh 250,000, Arabs 120,000, Turks 50,000. Against Masaili's 7.6M, Golestan
+    (800,000 against 710,000) and Sistan and Baluchestan (about 1.7M on the 2011 census against
+    1.78M) agree; the gap is the Kurds, 5M against roughly 3M in Masaili's three Kurdish provinces,
+    and the scattered remainder. His other province figures are garbled in the OCR. Islahweb, the
+    Sunni reformist Da'wat va Eslah's site, cites Masaili's atlas without objection and says no
+    estimate has scientific credibility.
+  - **Verdict.** A careful one-person estimate from the rapprochement camp, open about its limits,
+    with a stated reason to lean low; about 28% below a Sunni author working the same way, mostly
+    on the Kurds. The best province-level figures in print, and still not a measurement.
+  - **Direction, not a decision (Anita, 2026-09-16):** *"maybe the best thing to do in these highly
+    mixed areas is just to use already published estimates"*, rather than the project assigning
+    sect by ethnicity itself.
+  - **Decided 2026-09-16: draw Iran's split from Masaili** (*"lets draw masaili. he seems good."*),
+    after the §14 flag above. The brief is `queue.md`, "Iran's Sunni/Shia split from Masaili".
+    **Built 2026-09-15** (`ir_split.py`, `sources/ir.md` §9): 7,608,500 Sunnis `derived` inside the
+    census's Muslim column, the rest left on `islam`, the 500,000 lump over Tehran and Alborz.
+  - **The language lesson.** Anita: *"this 'gap' in estimates for religions in muslim coutnries are
+    in part due to like language barrier more than they are actual gaps."* Every English chain here
+    ended at the CIA Factbook; all three usable estimates (Masaili, Farmanian, Soltani) are Persian
+    and none is cited in English. **For a sect or school estimate, search in the country's own
+    language before concluding there is none**, and read the local university and seminary
+    journals, not only the statistics office.
+
+### Pakistan
+- **National:** CIA 20% Shia (2009), 10-15% (2021), then sect dropped; no source in any edition. The
+  State Department's 15-20% is "generally believed". Wikipedia's "25-50 million" misattributes CIA
+  2009. DFAT 2019 credits the 2017 census, which asks no sect.
+- **Gilgit-Baltistan 39/27/18/16** (Shia/Sunni/Ismaili/Noorbakhshi): IRB Canada 2024 copies DFAT,
+  which copies ICG 2007, *Discord in Pakistan's Northern Areas*, footnote 120, which cites **Manzoom
+  Ali, *Atlas of the Northern Areas* (Gilgit, 2004; revised 2016)**, by a geography lecturer at
+  Government Degree College Gilgit, with district splits such as Skardu 87/10/3. Method unknown; no
+  copy or catalogue record found. Wikipedia's 39.85/30.05/24/6.1 cites PILDAT 2011, which has no such
+  numbers.
+- **Kurram 42% Shia:** Jamestown 2008's "official figures", citing *The News*, 20 January 2008; no
+  document named. DFAT's Upper Kurram 80-83% and Lower 35:65 have no source. The 1931 NWFP census
+  report (para 297) has the superintendent's estimate that Kurram's Shia tribes "exceed 60 per cent";
+  Kurram was not counted by sect.
+- **Quetta's Hazaras**, 500,000 to under a million: Minority Rights Group 2018, DFAT 2019, UK Home
+  Office 2022, none sourced; NCHR's 0.4-0.5 million cites a World Hazara Council article.
+- **Punjab by division**, Shia 10.86% (Sargodha 17.5, Rawalpindi 16.75, Faisalabad 15.5): Ramzan,
+  *Journal of Political Studies* 22(2), 2015
+  (`pu.edu.pk/images/journal/pols/pdf-files/7%20-%20RAMZAN_v22_2_wint2015.pdf`), Table 1, "personal
+  estimates of officials of provincial and local governments"; the author was Deputy Director
+  (Research) at the Punjab Home Department. Table 3 counts madrassas by sect and division from police
+  and intelligence records (Barelvi 5,584, Deobandi 4,636, Ahl-e-Hadith 779, Shia 195), and the paper
+  also lists madrassas "linked with militancy" by division. **Not drawn (Anita, 2026-09-16):** it
+  covers Punjab alone and rests on officials' guesses by a questionable method, so it stays a lead to
+  use later beside other data.
+- **Barelvi 50%, Deobandi 20%:** GlobalSecurity.org, "by one estimate", no source.
+- **British India sect tables located, not transcribed:** NWFP 1931 report
+  (`in.ernet.dli.2015.56040`) reprints district Shia counts for 1911, 1921 and 1931 (Kohat 10,576 /
+  40,248 / 13,556) and calls them unreliable; NWFP 1911 `india.history.resource.92548`; NWFP 1921
+  only on JSTOR, `saoa.crl.25430163`; Baluchistan 1921 and 1931 province-level only
+  (`in.ernet.dli.2015.105669`, `.56021`); Jammu & Kashmir 1931, Subsidiary Table V by province, with
+  Shia, Molayi (Ismaili) and Nur Bakshi in the Frontier Districts (`in.ernet.dli.2015.105679`, tables
+  volume `.56050`); the Punjab 1931 report (`.56041`) has no "Shia" in its OCR.
+- A Sindh Home Ministry madrassa survey, 512 Shia of 12,545 (via Friday Times 2013, not seen).
+- **§14:** the Kurram, Parachinar and Hazara figures point at enclaves attacked again and again
+  (Hazara Town, Mari Abad; three Parachinar attacks in 2017 killed over 120, per DFAT).
+
+### What this means here
+Every version of the common picture is ascription or a figure someone wrote down. The nearest
+things to tables, Masaili for Iran, Manzoom Ali for Gilgit-Baltistan and Ramzan for Punjab, are one
+person's or officials' per-unit percentages with no stated method: `estimate` in spec §3.1's terms,
+and the same shape as the ethnic-assignment direction above.
+
+### `taxonomy/origin_religion.py`'s sect shares have no source
+Found the same day, on Anita's idea of placing Shia in 99%-Sunni countries through foreigners. The
+foreigner model already does it: `MUSLIM` gives Iran 0.90 Shia, Iraq 0.62, Lebanon 0.50, Azerbaijan
+0.75, Bahrain 0.60, Yemen 0.35, Pakistan 0.145, India 0.13, Afghanistan 0.15 and Türkiye 0.20 Alevi,
+and **every origin not listed is 100% Sunni** (`DEFAULT_MUSLIM`). No source is recorded for any row.
+Pakistan and India are about twice Pew's surveyed 6% (2012, 2021). The default makes Omanis wholly
+Sunni (most Omani Muslims are Ibadi) and gives Saudis, Kuwaitis and Tajikistan's Ismailis no split.
+It feeds the foreign half of `fr`, `es`, `it`, `gr`, `be`, `se`, `no`, `dk`, `fi` and `lv`. Not
+changed: a shared-code change moves drawn countries, and it is Anita's to schedule.

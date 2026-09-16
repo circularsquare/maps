@@ -183,7 +183,10 @@ MAP = {
     "Other religion: Rastafarian": "rastafari",
     "Other religion: Taoist": "daoism",
     "Other religion: Shintoism": "shinto",
-    "Other religion: Confucianist": "chinesefolk",
+    # Confucianist was `chinesefolk` until 2026-09-15; Anita's ruling on ask 036
+    # (ask/RULINGS.md, `cn`, `all`) sends a row naming Confucianism to its own node. 76 in
+    # England and Wales. `Chinese Religion` (112) names no single tradition and stays.
+    "Other religion: Confucianist": "confucianism",
     "Other religion: Chinese Religion": "chinesefolk",
     "Other religion: Scientology": "scientology",
     "Other religion: Unification Church": "unification",

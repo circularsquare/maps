@@ -8,6 +8,8 @@ country is built from it, so most of this playbook is the Puerto Rico build plus
 ## Used by
 - `pr` Puerto Rico: drawn, WVS-7 2018, 1,127 adults, 6 regions with 3 municipios sampled in each; Católico
   and Otros at region share, the other four answers in each region's remainder.
+- `ad` Andorra: drawn, WVS-7 2018, 1,004 adults, one unit, every answer at its national share, read
+  from the IHSN catalogue's frequency pages with no download (`sources/ad.md`).
 - Checked and not used: `jp` (WVS-7 2019: `N_REGION_ISO` is prefecture, 45 of 47, `N_REGION_WVS` 5 blocks,
   no Shinto code; `ask/answered/014-jp`); `tr` (the wave 7 denomination list has no split, `sources/tr.md`);
   `pk bd id ng eg my` (the online tool shows one `Islam; nfd` code each, no sect, `sources/branches.md`);
@@ -15,6 +17,9 @@ country is built from it, so most of this playbook is the Puerto Rico build plus
 - Listed and not opened: `bo` (2017, 9 departments), `ve` (2021, 22 states), `co` (2018, 26 codes), all in
   sources.md §11ap; `ir` wave 7 (a province code may exist, but about 1,500 over 31 provinces would not clear
   a split-half); `az` wave 6; Puerto Rico's waves 3 (1995) and 4 (2001).
+- Checked and not used: `lb` Lebanon, wave 7 (2018), 1,200 citizens, Anita's Stata download. The sample design
+  sets every cluster's sect (Statistics Lebanon Ltd., the Arab Barometer's firm), so the sect mix by governorate
+  is an allocation (`sources/lb.md` §9, `sources/lb_wvs.py`).
 
 ## Loading it
 - Country files come from the WVS wave 7 download page: non-profit use, publications cited and reported to
@@ -22,11 +27,21 @@ country is built from it, so most of this playbook is the Puerto Rico build plus
   §11ap treated the form as hers.
 - The online analysis tool `worldvaluessurvey.org/WVSOnline.jsp` needs no registration and crosses `Q289CS9`
   with `N_REGION_WVS` in unweighted counts, which prices a country before any download. It is
-  JavaScript-driven; read it with headless Chrome over CDP (`sources/branches.md`, Pakistan section).
+  JavaScript-driven; read it with headless Chrome over CDP (`sources/branches.md`, Pakistan section). Its
+  frame is `AJOnline.jsp?WAVE=7&COUNTRY=<ISO numeric>`, a chain of JSP form posts with no single crosstab
+  URL, and curl needs `-k` (missing intermediate certificate).
 - Puerto Rico: `data/raw/pr/F00013157-WVS_Wave_7_Puerto_Rico_Csv_v5.1.zip`, one semicolon-delimited CSV
   with a BOM. The codebook `F00011055-WVS-7-Codebook-Variables-report` has the code lists (the `N_REGION_ISO`
   annex, `N_REGION_WVS`, `Q289CS`). The survey team's national report carries the design, the region map,
   the questionnaire and a national religion table (`sources/pr.md` §1); find the equivalent before building.
+- **The IHSN catalogue prints each WVS-7 country file's unweighted frequencies, with no form.**
+  `catalog.ihsn.org/catalog?sk=World+Values+Survey+<Country>` finds the entry; each
+  `/catalog/<id>/variable/F1/V<n>?name=<VAR>` page has the category table, and the V numbers
+  differ by country (Andorra's Q289 is V338, Romania's Q289 V337), so take them from
+  `/catalog/<id>/data-dictionary/F1?offset=0&limit=600`. The entry's related materials carry the
+  national questionnaires, methodology report and sample design. One variable at a time, so a
+  national share and a region's interview count, never religion by region. For a one-unit country
+  that is the whole source (`sources/ad.py::read_page`, which asserts the page's variable and file).
 - There is no shared reader. `pr.py::load`, `attach_geography` and `stability` are the only WVS code; a
   second WVS country should lift them into a module rather than copy them a second time.
 - Run `OMP_NUM_THREADS=6 MKL_NUM_THREADS=6 OPENBLAS_NUM_THREADS=6 python sources/pr.py`.
@@ -80,6 +95,24 @@ country is built from it, so most of this playbook is the Puerto Rico build plus
   in `pr.py` (`pr.py::compose` only prints `ABOVE NATIONAL WHERE NONE FOUND` at 1x; `tz.py::compose` is the
   pattern that tests 2x and asserts `TAIL_FLAT`). Detail: spec §12 "SMALL CATEGORIES GO IN THE RESIDUAL
   UNLESS IT DRAWS ONE AT 2x WHERE THE SURVEY FOUND NONE".
+- **The card's write-in is harmonised differently by country.** Puerto Rico's `Otros (escribir)` is
+  `Q289CS9` 80000000 `Other Christian; nfd`; Andorra's code 8 `Altra, quina?` is held as `Q289` code 9
+  and `Q289CS9` 90000000 `Other; nfd`, so it goes to `other.<cc>`, not the Christianity root. Read
+  `Q289CS9` before mapping Other. Caught by: `sources/ad.py::check_survey` (`CS9_OF`, one to one);
+  the node is a review call (`taxonomy/ad2018.py` `REVIEW`). Detail: `sources/ad.md` §3.
+- **Interviews per region can depart from the design note's allocation.** Andorra's note says
+  proportional to parish population; `N_REGION_ISO` puts La Massana and Ordino at 8.2% of interviews
+  against 20.0% of residents. With no weight, the national share carries any difference between
+  parishes. Print interviews against population per region before trusting an unweighted national
+  share. Caught by: `sources/ad.py::check_survey` prints it; not asserted. Detail: `sources/ad.md` §4.
+- **A stratum can be a sect, and one round cannot show it by agreement.** Lebanon's Sample Design (an IHSN
+  related material, a table image on pp.3-4) gives every cluster a sect; the file's 120 `I_PSU` clusters of 10
+  are each one community and equal that table in all 23 kadaa, while Christian denominations mix inside them.
+  Lebanon came as Stata, with real `I_PSU` values and `N_TOWN` as the caza, unlike Puerto Rico. Before trusting
+  a region's composition, read the country's sample design and methodology report (Q14 "profile required",
+  Q15 quota controls, Q20 stratification factors), and where `I_PSU` is filled, count clusters pure on each
+  religion answer against a finer answer that mixes. Caught by: `sources/lb_wvs.py::psu_purity` and `::main`
+  (the design table asserted). Detail: `sources/lb.md` §9; spec §12 "ONE ROUND CANNOT SHOW A QUOTA BY AGREEMENT".
 
 ## Shared code
 Nothing WVS-specific is importable yet.

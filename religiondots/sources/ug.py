@@ -1,6 +1,6 @@
 """Uganda — religion by district, 2002 census Table B7.
 
-Writes data/normalized/ug.csv.
+Writes data/normalized/ug2002.csv (ug.csv until 2026-09-15, when the 2024 build took the name).
 
 **THIS IS THE ONLY RELIGION-BY-GEOGRAPHY TABLE UGANDA HAS EVER PUBLISHED, and it is
 filed away from every census report.** `Table B7: Religion by District for the
@@ -69,7 +69,8 @@ if hasattr(sys.stdout, "reconfigure"):
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 RAW = os.path.join(ROOT, "data", "raw", "ug")
-OUT = os.path.join(ROOT, "data", "normalized", "ug.csv")
+# ug2002.csv since 2026-09-15: the drawn vintage owns ug.csv (sources/ug_2024.py), as with pk.
+OUT = os.path.join(ROOT, "data", "normalized", "ug2002.csv")
 
 SOURCE_ID = "ug_phc_2002_tableB7"
 

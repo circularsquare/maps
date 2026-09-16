@@ -188,6 +188,9 @@ taken together, and they are recorded here so the call can be reversed rather th
 
 What would change the answer is a finer tier: the 136 districts would be a different question,
 and nothing here can reach them anyway.
+Re-checked 2026-09-15 (sources.md §scout-2026-09-15-africa-upgrades): `lisgis.gov.lr` is still the
+placeholder, LISGIS's NADA has no 2022 census entry, and its 2008 entry is a remote-access pointer to
+IPUMS, so the districts stay out of reach.
 
 ## 9. Review, 2026-09-08
 

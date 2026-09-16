@@ -87,6 +87,9 @@ is still inside the grey and still has no geography this map may claim. The unde
 never whether the node could be drawn; it was whether the belief measure could, and it still
 cannot.
 
+**Since 2026-09-15 part of the practising population is drawn** (spec §3.13): a religious home altar
+among Han who name no religion, by province. It reaches the Han row only; §11 says why.
+
 **The Mongols, 5.98M, and this one reverses spec §12 and §14.5's own table.** Both send
 Mongol → Tibetan Buddhist. At 5.98M in 2010 that is **more people than Tibetans (6.28M is
 close, and in 2000 Mongols outnumbered them outright)**, so Inner Mongolia rather than Tibet
@@ -547,3 +550,57 @@ and it is filed as an ask rather than taken.** Note also that §6's rejection of
 modern county totals does not bear on this: that argument was against inflating a contested
 minority share in a growing city, and this moves in the opposite direction, raising the Han share
 toward its measured value.
+
+## 10. Review of the §3.13 redraw, 2026-09-15 (session `cb8b206e-rev5`)
+
+The full review is `sources/folk_practice.md` section 9. For China: `cn_altar.csv` rebuilds exactly from
+`cgss2010.dta` with a separate reader, and every `note_public` figure recomputes (215,032,470, 16.13%;
+`unknown` 75.03%; Guangdong 46.85%, Fujian 34.52%, Beijing 5.96%, Liaoning 3.10%). `gap` said 88% and now
+says 75%. Of the 174.1M the altar layer adds, 10.9M are minorities, 0.74M of them Mongols at Inner
+Mongolia's one-county rate, so "The Mongols are deliberately absent too" is loose. `taxonomy/cn2000.py`'s
+Han entry is stale against §3.13. Screenshot clean.
+
+## 11. The altar share reaches the Han only, 2026-09-15 (session `cb8b206e-folkfix`)
+
+As first built, the §3.13 altar share carved every row's `unknown` residual. Of the 174.1M it added,
+10.9M were minorities: Zhuang 2.73M, Miao 1.45M, Tujia 1.20M, Yi 1.14M, Mongols 0.74M, Manchu 0.60M,
+Yao 0.50M, Dong 0.46M and smaller groups, plus 0.28M on Hainan's `Unpublished` and 0.09M on
+`Unidentified`. `note_public` said the Mongols were deliberately absent.
+
+**Decision: the altar share reaches the Han row only, at the Han respondents' own rate.**
+
+Why not the other minorities:
+- The item asks about any religious shrine, altar or object at home, and the node is Chinese folk
+  religion. For a Mongol household the object is as likely Tibetan Buddhist; for Yi, Naxi, Hani or
+  Zhuang households it may belong to their own tradition. The survey does not say which.
+- Splitting the minorities into those who practise like their Han neighbours (Manchu, She, perhaps
+  Tujia) and those who do not would be a per-group coefficient nothing documents. That is §14.5's
+  refusal, and the same reason the Mongols were kept off Tibetan Buddhism on 2026-09-05.
+- The minority respondents answer the item differently. In CGSS 2010, 240 of the 3,622 eligible
+  no-religion respondents are not Han (149 "other", 34 Zhuang, 30 Manchu, 9 Hui, 6 Mongol); 16.8% of
+  them keep an altar, weighted, against 13.7% of the Han. In Guangxi 63 minority respondents with 17
+  altars lifted the province from a Han 6.1% to 17.2%, so the old rate was not a Han rate there.
+- The grey claims nothing, so the error left runs toward understating. The Manchu and other groups
+  whose practice is close to their Han neighbours' keep altars this map now does not draw.
+
+`Unidentified` (0.73M, mostly Guizhou) and `Unpublished` (Hainan's eleven counties with no published
+nationality, 3.34M) are not the Han row either, so they get no altar share: about 0.37M at the old
+rates, and the altar half now has a hole over central Hainan. The named layer still reaches them.
+
+**The named layer is unchanged.** CGSS's Buddhism, Protestantism and named folk religion still carve
+every row's residual, as since 2026-09-08. The Mongols carry Mahayana 179,058, Protestant 126,626 and
+named folk 35,831 at their provinces' rates; with the Tu that is about 6% of the two groups. The note
+now says so, and its lead reads "not drawn as Tibetan Buddhists" instead of "deliberately absent".
+
+**Rebuilt.** `sources/cn_altar.py` reads `a4` and keeps 汉: 3,382 respondents, 418 with an altar, 131
+counties. Split-half median +0.508 against a null 95th of +0.231, p 0.0025, still "own geography";
+national 13.7%, prior 15.5 respondents. Drawn rates: Guangdong 39.4% (was 39.4%), Jiangxi 26.9%,
+Fujian 25.9%, Guangxi 7.4% (was 16.9%), Yunnan 13.9% (was 16.1%).
+
+**Drawn.** `chinesefolk` 201,035,265, 15.08% (was 215,032,470, 16.13%), of which the altar half is
+160.1M; `unknown` 76.08% (was 75.03%). Guangdong 46.35%, Fujian 34.35%, Jiangxi 25.07%, Beijing 6.14%,
+Liaoning 2.85%, Guangxi 9.60%, Inner Mongolia 12.66%.
+
+Updated to match: `note_public`, `basis` (now says folk religion also counts a home altar), `gap` (76%),
+`note`, spec §3.13's table, and `taxonomy/cn2000.py`'s two Han entries (the one that still said
+`chinesefolk` was "the node waiting for them").

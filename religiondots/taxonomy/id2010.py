@@ -58,15 +58,16 @@ REVIEW = {
         "Lutheran, Reformed and Pentecostal in origin and cannot be separated from this "
         "cell. The answer-node asserts only what the form asked.",
     "Khong Hu Chu":
-        "-> chinesefolk. 106,568 people, 0.045%. Confucianism as a state-recognised "
+        "-> confucianism. 116,916 people as drawn. Confucianism as a state-recognised "
         "RELIGION is a specifically Indonesian construction, and the number is a political "
         "artefact as much as a count: recognition was withdrawn in 1979 under the New "
         "Order, so Chinese Indonesians registered as Buddhist or Christian for two decades, "
         "and it was restored in 2000. 2010 is the first census that counts it and the "
-        "figure is certainly a floor — the community is generally put at millions. It goes "
-        "to `chinesefolk` rather than to a node of its own because that node already exists "
-        "for exactly this: Confucianism and Chinese folk practice as one thing census "
-        "categories cannot separate.",
+        "figure is certainly a floor — the community is generally put at millions. "
+        "Was `chinesefolk` until 2026-09-15. That node was relabelled 'Chinese folk "
+        "religion' the same day, and Anita ruled on ask 036 that rows naming Confucianism "
+        "go to the Confucianism node (ask/RULINGS.md, `cn`, `all`). The cell names "
+        "Confucianism and nothing else, so it moved.",
     "Lainnya":
         "-> other.id, a per-source residual (spec §3.11). 292,889 people. It is NOT sent to "
         "indigenous.austronesian or anything like it, even though most of what is really "
@@ -86,7 +87,7 @@ MAP = {
     "Katolik": "christianity.catholic",
     "Hindu": "hinduism",
     "Budha": "buddhism",
-    "Khong Hu Chu": "chinesefolk",
+    "Khong Hu Chu": "confucianism",
     "Lainnya": "other.id",
 }
 

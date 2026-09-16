@@ -88,6 +88,86 @@ def fetch():
     print(f"  unpacked {os.path.getsize(gpkg):,} bytes")
 
 
+SOUMS_GPKG = os.path.join(GEO, "mn_soums.gpkg")
+
+# Ulaanbaatar's düüregs, 2026-09-15. Set before the numbers were read: at most one of the nine
+# outside a factor of two of its census share, and a shuffled join must do worse.
+DUUREG_BAND = 2.0
+MAX_DUUREG_OUTSIDE = 1
+
+
+def split_capital(out, pts, crs, popcol):
+    """Give Ulaanbaatar's hexes their düüreg's pcode instead of MN11, in place.
+
+    The capital is counted by düüreg (sources/mn_ub.py), so its dots are placed by düüreg. Same
+    join as the aimags, one level down: hex centroids within COD-AB's nine düüreg polygons, any
+    centroid inside the city but outside every düüreg snapped to the nearest one, none dropped.
+
+    The witness is the one mn_grid.py already uses for aimags, against appendix table 1.1 of
+    the capital's own volume: Kontur's people per düüreg over the census's, normalised by the
+    city's own ratio. Three of the nine are exclaves far outside the city (Baganuur, Bagakhangai,
+    Nalaikh) and they run from 4,123 people to 361,689, so a wrong pairing is not subtle.
+    """
+    import random
+
+    import fitz
+    import geopandas as gpd
+    import mn_ub as UB
+
+    soums = gpd.read_file(SOUMS_GPKG)
+    dg = soums[soums["aimag"] == UB.CITY][["unit", "name_mn", "geometry"]].to_crs(crs)
+    want = {c: n for c, (n, _) in UB.DUUREG.items()}
+    if dict(zip(dg["unit"], dg["name_mn"])) != want:
+        raise SystemExit(f"{SOUMS_GPKG}: the children of {UB.CITY} are not {want}")
+
+    city = out.index[out["unit"] == UB.CITY]
+    cpts = pts.loc[city, ["geometry"]]
+    j = gpd.sjoin(cpts, dg[["unit", "geometry"]], how="left", predicate="within")
+    j = j[~j.index.duplicated(keep="first")].reindex(cpts.index)
+    stray = j["unit"].isna()
+    print(f"\n  Ulaanbaatar: {len(city):,} hexes, {int(stray.sum()):,} with a centroid in no "
+          f"düüreg ({float(out.loc[stray[stray].index, 'pop'].sum()):,.0f} people)")
+    if stray.any():
+        near = gpd.sjoin_nearest(cpts.loc[stray], dg[["unit", "geometry"]], how="left")
+        near = near[~near.index.duplicated(keep="first")]
+        j.loc[near.index, "unit"] = near["unit"]
+        print(f"  snapped all {int(stray.sum()):,} to the nearest düüreg; none dropped")
+    if j["unit"].isna().any():
+        raise SystemExit("Ulaanbaatar hexes still without a düüreg after the snap")
+    out.loc[city, "unit"] = j["unit"].to_numpy()
+
+    kont = out.loc[city].groupby("unit")["pop"].sum()
+    missing = sorted(set(UB.DUUREG) - set(kont.index))
+    if missing:
+        raise SystemExit(f"düüregs with no hex: {missing}")
+    cen = UB.read_population(fitz.open(UB.PDF))
+    census = {c: cen[n][0] for c, (n, _) in UB.DUUREG.items()}
+    ratio = float(kont.sum()) / sum(census.values())
+    rows = sorted(((c, UB.DUUREG[c][1], census[c], float(kont[c]),
+                    float(kont[c]) / census[c] / ratio) for c in UB.DUUREG),
+                  key=lambda r: r[4])
+    print(f"  per düüreg, Kontur/census normalised by the city's own ratio ({ratio:.3f}):")
+    for c, nm, ce, k, r in rows:
+        print(f"    {nm:<18} {ce:>9,} {k:>11,.0f} {r:>6.2f}")
+    worst = [r for r in rows if not 1 / DUUREG_BAND <= r[4] <= DUUREG_BAND]
+    print(f"  outside the factor-of-{DUUREG_BAND:g} band: {len(worst)} of {len(rows)}")
+    if len(worst) > MAX_DUUREG_OUTSIDE:
+        raise SystemExit(f"{len(worst)} düüregs outside a factor of {DUUREG_BAND:g}: "
+                         f"{[(w[1], round(w[4], 2)) for w in worst]}")
+    rng = random.Random(0)
+    ks, cs, fails = [r[3] for r in rows], [r[2] for r in rows], []
+    for _ in range(2000):
+        sh = ks[:]
+        rng.shuffle(sh)
+        fails.append(sum(1 for c, k2 in zip(cs, sh)
+                         if not 1 / DUUREG_BAND <= k2 / c / ratio <= DUUREG_BAND))
+    med = sorted(fails)[len(fails) // 2]
+    print(f"  BAND control: a shuffled join puts a median {med} of {len(rows)} düüregs "
+          f"outside, against the real join's {len(worst)}")
+    if med <= MAX_DUUREG_OUTSIDE:
+        raise SystemExit("the düüreg band does not tell a shuffled join from the real one")
+
+
 def main():
     import math
     import random
@@ -221,6 +301,8 @@ def main():
     r = pearson([math.log(x[2]) for x in rows], [math.log(x[3]) for x in rows])
     print(f"  log-log correlation of Kontur against the census, over {len(rows)} aimags: "
           f"r = {r:.3f}")
+
+    split_capital(out, pts, reg.crs, popcol)
 
     os.makedirs(GEO, exist_ok=True)
     out.to_file(OUT, driver="GPKG", layer="hexes")

@@ -1,56 +1,34 @@
 cc,name,status,grain,source,blocker,held_for_anita,detail
-gm,The Gambia,free,8 LGAs,"2013 census Annex H, counts",H.28 misprint; shallow,,"queue.md: Africa swept a second time, 2026-09-14; sources.md §11aq"
-ne,Niger,free,8 régions,"2012 census Tableau A11, counts","adds least; §14 note, Tillabéri",,"queue.md: Africa swept a second time, 2026-09-14; sources.md §11aq"
-as,American Samoa,free,10 counties,"2015 HIES Table 1.6, weighted",20% household sample; check CCCAS against cccs,,"queue.md: Asia and Oceania swept, 2026-09-15; sources.md §scout-2026-09-14-asia-oceania"
-tk,Tokelau,free,3 atolls,"2016 census Table 5.8, counts",own church code (ekt is Tuvalu's); FROM_UNITS shape,,"queue.md: Asia and Oceania swept, 2026-09-15; sources.md §scout-2026-09-14-asia-oceania"
-qa,Qatar,free,10 municipalities (2004),"2004 census Table 6, counts",22 years old; 2004 municipalities are not today's,,"queue.md: Asia and Oceania swept, 2026-09-15; sources.md §scout-2026-09-14-asia-oceania; queue.md: Closed, with the reason; sources.md §11ao"
-nf,Norfolk Island,free,drawn inside au (SA2),"ABS 2021 G14, already in au.csv",outline only: NE feature NF is not in au's shape,,"queue.md: Asia and Oceania swept, 2026-09-15; sources.md §scout-2026-09-14-asia-oceania"
-cx,Christmas Island,free,drawn inside au (SA2),"ABS 2021 G14, already in au.csv",outline only: country_shapes.py skips Indian Ocean Ter.,,"queue.md: Asia and Oceania swept, 2026-09-15; sources.md §scout-2026-09-14-asia-oceania"
-cc,Cocos (Keeling) Islands,free,drawn inside au (SA2),"ABS 2021 G14, already in au.csv",outline only: country_shapes.py skips Indian Ocean Ter.,,"queue.md: Asia and Oceania swept, 2026-09-15; sources.md §scout-2026-09-14-asia-oceania"
-fo,Faroe Islands,free,7 districts,"2011 census, Hagstova MT325 and MT321, counts",multi-response; district Other absorbs suppressed cells; no district polygons,,"queue.md: Europe swept, 2026-09-15; sources.md §scout-2026-09-15-europe"
-im,Isle of Man,free,1 unit,"2021 census Part I Table 2.12, counts",voluntary question; about 9.5k residents unanswered,,"queue.md: Europe swept, 2026-09-15; sources.md §scout-2026-09-15-europe"
-ax,Åland Islands,free,drawn inside fi (NUTS3 FI200),"ESS pooled, already in fi.csv; ÅSUB register 2022",outline only: NE feature AX is not in fi's shape; a register swap changes fi,,"queue.md: Europe swept, 2026-09-15; sources.md §scout-2026-09-15-europe"
-is,Iceland,free,,ESS (rounds and region not checked); Hagstofa register as witness,register is membership; parish table is one church,,"queue.md: Europe swept, 2026-09-15; sources.md §scout-2026-09-15-europe"
-ad,Andorra,free,1 unit,"WVS wave 7 (2018), about 1,000 respondents",file behind the WVS download form; parish variable unchecked,,"queue.md: Europe swept, 2026-09-15; sources.md §scout-2026-09-15-europe"
-je,Jersey,free,1 unit,"Opinions and Lifestyle Survey 2023, shares",no denomination table; 11% not sure; census does not ask,,"queue.md: Europe swept, 2026-09-15; sources.md §scout-2026-09-15-europe"
-ss,South Sudan,deferred,6-7 of 10 former states,High Frequency South Sudan Survey,World Bank login; §14 heavy,,"queue.md: Africa swept a second time, 2026-09-14; Anita's rulings, 2026-09-14 night (deferred); sources.md §11aq"
+nf,Norfolk Island,closed,drawn inside au (SA2),"ABS 2021 G14, in au.csv",not its own entry: NE feature NFK joins au's outline (country_shapes.py ALSO) from the next build tail,,"queue.md: Asia and Oceania swept, 2026-09-15; sources.md §outlines-2026-09-15"
+cx,Christmas Island,closed,drawn inside au (SA2),"ABS 2021 G14, in au.csv",not its own entry: NE feature IOA joins au's outline (country_shapes.py ALSO) from the next build tail,,"queue.md: Asia and Oceania swept, 2026-09-15; sources.md §outlines-2026-09-15"
+cc,Cocos (Keeling) Islands,closed,drawn inside au (SA2),"ABS 2021 G14, in au.csv",not its own entry: NE feature IOA joins au's outline (country_shapes.py ALSO) from the next build tail,,"queue.md: Asia and Oceania swept, 2026-09-15; sources.md §outlines-2026-09-15"
+ax,Åland Islands,closed,drawn inside fi (NUTS3 FI200),"ESS pooled, in fi.csv; ÅSUB register 2022","not its own entry: NE feature ALD joins fi's outline (country_shapes.py ALSO) from the next build tail; a register swap changes fi, Anita's",,"queue.md: Europe swept, 2026-09-15; sources.md §outlines-2026-09-15; §scout-2026-09-15-europe"
+ss,South Sudan,held,6-7 of 10 former states,High Frequency South Sudan Survey waves 1-2 (World Bank catalogs 2778 and 2777),"a priority hole (Anita, 2026-09-15); free World Bank Microdata Library login for the hhq and hhm files; §14 heavy; open routes rechecked 2026-09-15, all national only",ask 042,"queue.md: Africa swept a second time, 2026-09-14; sources.md §11aq, §ss-2026-09-15; sources/ss.md; handoff/ss.md"
 pg,Papua New Guinea,blocked,89 districts,IPUMS 2000 microdata,account; office publishes national only,,queue.md: Oceania; sources.md §11ab
-cd,DR Congo,blocked,26 provinces,DHS microdata,DHS institutional account,,queue.md: From the lead triage / D. Sub-Saharan Africa via DHS; sources.md §11h
 kw,Kuwait,blocked,unverified,PACI table builder; 1995 census form,builder times out; browser query in the record,,"queue.md: Closed, with the reason (Kuwait, not closed); sources.md §11ao; re-checked 2026-09-15, sources.md §scout-2026-09-14-asia-oceania"
 ga,Gabon,blocked,provinces,RGPL 2026,no 2026 questionnaire or tables out yet,,"queue.md: Africa swept a second time, 2026-09-14 (Closed in §11aq, parked); sources.md §scout-2026-09-14-taiwan-belarus-gabon"
 tc,Turks and Caicos,blocked,unknown,2012 census household tables,"access requested by Anita, no reply yet",,"queue.md: The Americas swept, 2026-09-14 (Closed in §11ap); Anita's rulings, 2026-09-14 evening; sources.md §11ap"
 mo,Macau,blocked,7 parishes,DSEC census API nationality by parish; WVS-7 Macau 2019,no census religion since 1991; WVS file behind the download form,,"queue.md: Asia and Oceania swept, 2026-09-15; sources.md §scout-2026-09-14-asia-oceania"
 mv,Maldives,blocked,,2014 census form M7; census microdata request,only foreigners asked; microdata form asks identity,,"queue.md: Asia and Oceania swept, 2026-09-15; sources.md §scout-2026-09-14-asia-oceania"
 pf,French Polynesia,blocked,4 archipelagos (1962),"1962 census volume, INSEE 1967",volume not seen; BNSP and Persée copies are browser jobs,,"queue.md: Asia and Oceania swept, 2026-09-15; sources.md §scout-2026-09-14-asia-oceania"
-mt,Malta,free,6 districts (unverified),"2021 census Final Report Vol. 1, ch. 5, persons 15+",PDF in data/raw/mt/ (Anita downloaded 2026-09-15); not yet read,,"queue.md: Europe swept, 2026-09-15; ask/answered/027; sources.md §scout-2026-09-15-europe"
-ma,Morocco,closed,,2014 and 2024 census forms; Arab Barometer,census does not ask,,"queue.md: Closed, with the reason; sources.md §11af, §11aq"
-dz,Algeria,closed,,2008 and 2022 census forms; Arab Barometer,census does not ask,,"queue.md: Closed, with the reason; sources.md §11af, §11aq"
-tn,Tunisia,closed,,2014 census form; Arab Barometer,census does not ask,,"queue.md: Closed, with the reason; sources.md §11af, §11aq"
-ly,Libya,closed,,office; Arab Barometer,no religion published; AB flat,,"queue.md: Closed, with the reason; sources.md §11af"
-mr,Mauritania,closed,,2013 census form; Arab Barometer; Afrobarometer,census does not ask; AB empty,,"queue.md: Closed, with the reason; sources.md §11af, §11aq"
-sa,Saudi Arabia,closed,,ministry; Arab Barometer,nothing on people; AB religion empty,,"queue.md: Closed, with the reason; sources.md §11af, §11ao"
-sd,Sudan,closed,,"1956, 1973, 2008 census forms",question deleted from the 2008 census,,"queue.md: Closed, with the reason; sources.md §11af, §11aq"
 na,Namibia,closed,,"2001, 2011, 2023 census forms; Afrobarometer",census does not ask,,"queue.md: Closed, with the reason; sources.md §11w, §11aq"
 bi,Burundi,closed,,2008 census; INSBU catalogue,national only; reopens on the RGPHAE 2024 platform,,"queue.md: Closed, with the reason; sources.md §11ah, §11aq; sources/bi.md"
 az,Azerbaijan,closed,,2009 and 2019 census forms; EVS 2017; WVS 6; CRRC 2012,census does not ask; surveys with regions card Muslim only,,"queue.md: Closed, with the reason; sources.md §11ao; re-checked 2026-09-15, sources.md §scout-2026-09-14-asia-oceania"
-af,Afghanistan,closed,,Survey of the Afghan People,no census; no religion item; §14 first,,"queue.md: Closed, with the reason; sources.md §11ao"
-sy,Syria,closed,,2004 census; USCB geodatabase,no religion published; §14 first,,"queue.md: Closed, with the reason; sources.md §11ao"
+sy,Syria,closed,,2004 census form; 1960 census; Arab Barometer IX,no religion item on the 2004 form; AB IX data due autumn 2026; §14 first,,"queue.md: Old negatives re-checked, 2026-09-15; Closed, with the reason; sources.md §scout-2026-09-15-negatives, §11ao"
 bh,Bahrain,closed,,2001 and 2010 census forms and results,asked; every published table national,,"queue.md: Closed, with the reason; sources.md §11ao; re-checked 2026-09-15, sources.md §scout-2026-09-14-asia-oceania"
-om,Oman,closed,,2003 census form; 2003 and 2010 final results,census does not ask (2003); no religion table,,"queue.md: Closed, with the reason; sources.md §11ao; re-checked 2026-09-15, sources.md §scout-2026-09-14-asia-oceania"
 ae,United Arab Emirates (UAE),closed,,2005 census form,census does not ask,,"queue.md: Closed, with the reason; sources.md §11ao; re-checked 2026-09-15, sources.md §scout-2026-09-14-asia-oceania"
-cu,Cuba,closed,,2012 census; IPUMS; in-country polls,census does not ask; polls national,,"queue.md: The Americas swept, 2026-09-14 (Closed in §11ap); sources.md §11ap"
+cu,Cuba,closed,,census forms 1899-1953 (ONEI Cuadro 32) 2002 and 2012; in-country polls,no census form asks religion (1970 and 1981 unread); polls national,,"queue.md: Old negatives re-checked, 2026-09-15; The Americas swept, 2026-09-14; sources.md §scout-2026-09-15-negatives, §11ap"
 vi,US Virgin Islands,closed,,US census,13 U.S.C. 221(c),,"queue.md: The Americas swept, 2026-09-14 (Closed in §11ap); sources.md §11ap"
-gl,Greenland,closed,,church membership,national only,,"queue.md: The Americas swept, 2026-09-14 (Closed in §11ap); sources.md §11ap"
-pm,Saint Pierre and Miquelon,closed,,,no religion statistics,,"queue.md: The Americas swept, 2026-09-14 (Closed in §11ap); sources.md §11ap"
-mf,Saint Martin,closed,,,no religion statistics,,"queue.md: The Americas swept, 2026-09-14 (Closed in §11ap); sources.md §11ap"
-bl,Saint Barthélemy,closed,,,no religion statistics,,"queue.md: The Americas swept, 2026-09-14 (Closed in §11ap); sources.md §11ap"
+gl,Greenland,closed,,BEXKIRK church membership 2012-2026,church roll only with no geography; dk draws self-identification,,"queue.md: Old negatives re-checked, 2026-09-15; The Americas swept, 2026-09-14; sources.md §scout-2026-09-15-negatives, §11ap"
+pm,Saint Pierre and Miquelon,closed,,INSEE census bulletin individuel; MFV surveys,census form has no religion item; MFV covers four other overseas departments only,,"queue.md: Old negatives re-checked, 2026-09-15; The Americas swept, 2026-09-14; sources.md §scout-2026-09-15-negatives, §11ap"
+mf,Saint Martin,closed,,INSEE census bulletin individuel; MFV surveys,census form has no religion item; MFV covers four other overseas departments only,,"queue.md: Old negatives re-checked, 2026-09-15; The Americas swept, 2026-09-14; sources.md §scout-2026-09-15-negatives, §11ap"
+bl,Saint Barthélemy,closed,,INSEE census bulletin individuel; MFV surveys,census form has no religion item; MFV covers four other overseas departments only,,"queue.md: Old negatives re-checked, 2026-09-15; The Americas swept, 2026-09-14; sources.md §scout-2026-09-15-negatives, §11ap"
 ls,Lesotho,closed,,"2016 dictionary; IPUMS 1996, 2006; Afrobarometer",census does not ask; DHS gated,,"queue.md: Africa swept a second time, 2026-09-14 (Closed in §11aq); sources.md §11aq"
 km,Comoros,closed,,2003 and 2017 dictionaries,census does not ask,,"queue.md: Africa swept a second time, 2026-09-14 (Closed in §11aq); sources.md §11aq"
-dj,Djibouti,closed,,2009 census forms,census does not ask; 2024 form not found,,"queue.md: Africa swept a second time, 2026-09-14 (Closed in §11aq); sources.md §11aq"
+dj,Djibouti,closed,,2009 census forms; RGPH-3 2024 topics (EGRISS),2009 forms do not ask; 2024 form still not found,,"queue.md: Old negatives re-checked, 2026-09-15; Africa swept a second time, 2026-09-14; sources.md §scout-2026-09-15-negatives, §11aq"
 er,Eritrea,closed,,"EPHS 2010; EDHS 1995, 2002",surveys never cross religion with zoba,,"queue.md: Africa swept a second time, 2026-09-14 (Closed in §11aq); sources.md §11aq"
-so,Somalia,closed,,PESS 2014; SHDS 2020; World Bank surveys,surveys ask none,,"queue.md: Africa swept a second time, 2026-09-14 (Closed in §11aq); sources.md §11aq"
-gq,Equatorial Guinea,closed,,2015 census results,no religion chapter,,"queue.md: Africa swept a second time, 2026-09-14 (Closed in §11aq); sources.md §11aq"
-lb,Lebanon,closed,governorates (8),Arab Barometer sect item,per-governorate composition is a fieldwork quota,,queue.md: From the lead triage / A. Arab Barometer east of Egypt; sources.md §11al; sources/lb.md
+gq,Equatorial Guinea,blocked,provinces,2015 census form Q9; DHS 2011,2015 form asks religion and no table found; ask 034's download was the Resultados definitivos already read; the two preliminary-results files are still behind inege.org's Cloudflare challenge (browser job),,"queue.md: Old negatives re-checked, 2026-09-15; Africa swept a second time, 2026-09-14; sources.md §gq-2026-09-15, §scout-2026-09-15-negatives, §11aq"
+lb,Lebanon,closed,governorates (8),WVS wave 7 (2018) Q289CS9; Arab Barometer sect item,both surveys set each cluster's sect in the design (Statistics Lebanon Ltd.) so the mix by governorate is an allocation,,"queue.md: Old negatives re-checked, 2026-09-15; A. Arab Barometer east of Egypt; sources.md §lb-2026-09-15, §11al; sources/lb.md §9"
 tj,Tajikistan,closed,5 regions,2020 census; LiTS III; Central Asia Barometer,census table unpublished; no survey carries it,,queue.md: From the lead triage / B. Central Asia via LiTS; sources.md §11ak; sources/tj.md
 lu,Luxembourg,closed,,ESS rounds 1-2; EVS 1999 and 2008 (GESIS login),"2002-2004 only, one unit; EVS region variable unchecked",,"queue.md: From the lead triage / C. Europe via ESS; re-checked 2026-09-15, sources.md §scout-2026-09-15-europe"
 bt,Bhutan,closed,,"PHCB 2017 metadata; BLSS 2007, 2017, 2022; BMIS 2010",census and surveys do not ask,,"queue.md: Asia and Oceania swept, 2026-09-15; sources.md §scout-2026-09-14-asia-oceania"
@@ -65,12 +43,15 @@ sm,San Marino,closed,,statistics office population pages,no religion published; 
 gg,Guernsey,closed,,electronic census (from 2015),no religion; 2001 census not checked,,"queue.md: Europe swept, 2026-09-15; sources.md §scout-2026-09-15-europe"
 va,Vatican City,closed,,,about 800 residents; one dot at most,,"queue.md: Europe swept, 2026-09-15; sources.md §scout-2026-09-15-europe"
 sj,Svalbard and Jan Mayen,closed,,,inside no's outline; no source searched,,"queue.md: Europe swept, 2026-09-15; sources.md §scout-2026-09-15-europe"
+ad,Andorra,drawn,1 unit,"WVS wave 7 (2018), about 1,000 respondents",file behind the WVS download form; parish variable unchecked,,"queue.md: Europe swept, 2026-09-15; sources.md §scout-2026-09-15-europe"
+af,Afghanistan,drawn,,Survey of the Afghan People,no census; no religion item; §14 first,,"queue.md: Closed, with the reason; sources.md §11ao"
 ag,Antigua and Barbuda,drawn,,,,,registered
 ai,Anguilla,drawn,1 unit,,,,"registered; queue.md: The Americas swept, 2026-09-14"
-al,Albania,drawn,12 qarqe,,,,registered; queue.md: Drawn; sources.md §9cc; sources/al.md
+al,Albania,drawn,12 qarqe,2023 census table 1.13,"upgrade closed for 2023: booklets, ArcGIS and PxWeb stop religion at the qark; 2011's 373-unit layers (four categories) stay Anita's option (sources/al.md §3a)",,"registered; queue.md: Drawn countries re-checked for a finer tier, second pass, 2026-09-15; Drawn; sources.md §scout-2026-09-15-upgrades, §9cc; sources/al.md"
 am,Armenia,drawn,11 marzes,,,,registered; queue.md: Drawn; sources.md §9bx; sources/am.md
 ao,Angola,drawn,,,,,registered; sources/ao.md
 ar,Argentina,drawn,6 regions,,,,registered; queue.md: From the lead triage / E. Argentina; sources.md §9dc; sources/ar.md
+as,American Samoa,drawn,10 counties,"2015 HIES Table 1.6, weighted",20% household sample; check CCCAS against cccs,,"queue.md: Asia and Oceania swept, 2026-09-15; sources.md §scout-2026-09-14-asia-oceania"
 at,Austria,drawn,"2,380 units",,,,registered; queue.md: Drawn; sources.md §9br; sources/at.md
 au,Australia,drawn,,,,,registered; sources/au.md
 aw,Aruba,drawn,1 unit,,,,"registered; queue.md: The Americas swept, 2026-09-14"
@@ -91,6 +72,7 @@ bw,Botswana,drawn,485 localities,,,,registered; queue.md: Drawn; sources.md §9b
 by,Belarus,drawn,7 units,LiTS III; EVS 2017 as a check,"explain LiTS Catholics in Gomel, not Grodno",,"queue.md: From the lead triage (Belarus, in the §11ag paragraph; Anita: §14 does not stop it); sources.md §scout-2026-09-14-taiwan-belarus-gabon"
 bz,Belize,drawn,,,,,registered; sources/bz.md
 ca,Canada,drawn,,,,,registered; sources/ca.md
+cd,DR Congo,drawn,26 provinces,DHS microdata,DHS institutional account,,queue.md: From the lead triage / D. Sub-Saharan Africa via DHS; sources.md §11h
 cf,Central African Republic,drawn,,,,,registered; sources/cf.md
 cg,Republic of the Congo,drawn,12 départements,,,,"registered; queue.md: Africa swept a second time, 2026-09-14; sources/cg.md"
 ch,Switzerland,drawn,,,,,registered; queue.md: Angola-shaped work: UPGRADES to countries already drawn / A. Newer round than the one drawn; sources/ch.md
@@ -109,21 +91,24 @@ de,Germany,drawn,,,,,registered; sources/de.md
 dk,Denmark,drawn,11 landsdele,,,,registered; queue.md: From the lead triage / C. Europe via ESS; sources.md §9dg; sources/dk.md
 dm,Dominica,drawn,,,,,registered
 do,Dominican Republic,drawn,32 provinces,,,,"registered; queue.md: Drawn; Latin America from LAPOP / HOW TO BUILD ONE, now that three exist; Drawn from one survey alone; sources.md §9cf; sources/do.md"
+dz,Algeria,drawn,,2008 and 2022 census forms; Arab Barometer,survey build; first of the Maghreb; no foreigner layer (nationality asked in 2008 and 2022 but never tabulated by wilaya; waits on RGPH 2022 results),,"queue.md: Maghreb reopened, 2026-09-16; sources.md §maghreb-2026-09-16; sources.md §scout-2026-09-15-algeria-foreigners"
 ec,Ecuador,drawn,23 of 24 provincias,,,,registered; queue.md: Drawn; Drawn from one survey alone; sources.md §9bn; sources/ec.md
 ee,Estonia,drawn,,,,,registered; sources/ee.md
 eg,Egypt,drawn,24 of 27 governorates,,,,registered; queue.md: Drawn; Drawn from one survey alone; sources.md §9bz; sources/eg.md
 es,Spain,drawn,,,,,registered; sources/es.md
 et,Ethiopia,drawn,,,,,registered; sources/et.md
-fi,Finland,drawn,19 maakunnat,,,,registered; queue.md: Drawn; sources.md §9by; sources/fi.md
+fi,Finland,drawn,19 maakunnat,ESS rounds 5-11 at NUTS 3,"upgrade blocked: nothing finer asks belonging; the Lutheran roll by parish union is a Tableau view with no export found, a placement lead of a different quantity; paid tabulations are Anita's",,"registered; queue.md: Drawn countries re-checked for a finer tier, second pass, 2026-09-15; Drawn; sources.md §scout-2026-09-15-upgrades, §9by; sources/fi.md"
 fj,Fiji,drawn,provinces,,,,registered; queue.md: Oceania; Angola-shaped work: UPGRADES to countries already drawn / A. Newer round than the one drawn; sources/fj.md
 fk,Falkland Islands,drawn,3 locations,,,,"registered; queue.md: The Americas swept, 2026-09-14"
 fm,Micronesia,drawn,33 units,,,,registered; queue.md: Microstates; sources.md §9ch; sources/fm.md
+fo,Faroe Islands,drawn,7 districts,"2011 census, Hagstova MT325 and MT321, counts",multi-response; district Other absorbs suppressed cells; no district polygons,,"queue.md: Europe swept, 2026-09-15; sources.md §scout-2026-09-15-europe"
 fr,France,drawn,,,,,registered; sources/fr.md
 gd,Grenada,drawn,,,,,registered; sources/gd.md
 ge,Georgia,drawn,,,,,"registered; queue.md: Angola-shaped work: UPGRADES to countries already drawn / B. Same round, finer volumes; sources/ge.md"
 gh,Ghana,drawn,,,,,registered; sources/gh.md
 gi,Gibraltar,drawn,8 major residential areas (or 1 unit),"Census of Gibraltar 2022 Table 42, counts",other and not stated merged; no area polygons looked for,,"queue.md: Europe swept, 2026-09-15; sources.md §scout-2026-09-15-europe"
-gn,Guinea,drawn,8 régions,,,,registered; queue.md: From the lead triage / D. Sub-Saharan Africa via DHS; sources.md §9dh; sources/gn.md
+gm,The Gambia,drawn,8 LGAs,"2013 census Annex H, counts",H.28 misprint; shallow,,"queue.md: Africa swept a second time, 2026-09-14; sources.md §11aq"
+gn,Guinea,drawn,8 régions,RGPH 2014 Tableau 5.10,upgrade closed: nothing below région in the RGPH 2014 volumes or the 2015 and 2019 yearbooks; census microdata only in IPUMS; reopens on RGPH-4,,"registered; queue.md: Drawn African countries re-checked for a finer tier, 2026-09-15; From the lead triage / D. Sub-Saharan Africa via DHS; sources.md §scout-2026-09-15-africa-upgrades, §9dh; sources/gn.md"
 gr,Greece,drawn,,,,,registered; sources/gr.md
 gt,Guatemala,drawn,22 departamentos,,,,registered; queue.md: Drawn; Drawn from one survey alone; sources/gt.md
 gw,Guinea-Bissau,drawn,9 regiões of 9,,,,registered; queue.md: Drawn; sources.md §9dx; sources/gw.md
@@ -131,15 +116,18 @@ gy,Guyana,drawn,,,,,registered; sources/gy.md
 hk,Hong Kong,drawn,18 DC districts,,,,registered; queue.md: Drawn; sources/hk.md
 hn,Honduras,drawn,18 departments of 18,,,,"registered; queue.md: Drawn; Latin America from LAPOP / HOW TO BUILD ONE, now that three exist; The Americas swept, 2026-09-14; sources.md §9dl; sources/hn.md"
 hr,Croatia,drawn,,,,,registered; sources/hr.md
-ht,Haiti,drawn,10 departements,,,,"registered; queue.md: Drawn; Latin America from LAPOP / HOW TO BUILD ONE, now that three exist; Drawn from one survey alone; sources.md §9ck; sources/ht.md"
+ht,Haiti,drawn,10 departements,ECVMAS 2012 I_H04,"upgrade blocked: the public ECVMAS masks commune, arrondissement and SDE; commune religion only in IHSI's 2005 printed departmental volumes, no scan found",,"registered; queue.md: Drawn countries re-checked for a finer tier, second pass, 2026-09-15; Drawn; Latin America from LAPOP / HOW TO BUILD ONE, now that three exist; Drawn from one survey alone; sources.md §scout-2026-09-15-upgrades, §9ck; sources/ht.md"
 hu,Hungary,drawn,,,,,registered; sources/hu.md
 id,Indonesia,drawn,,,,,registered; queue.md: Angola-shaped work: UPGRADES to countries already drawn / A. Newer round than the one drawn; sources/id.md
 ie,Ireland,drawn,,,,,registered; sources/ie.md
 il,Israel,drawn,,,,,registered; sources/il.md
-in,India,drawn,,,,,registered; sources/in.md
+im,Isle of Man,drawn,1 unit,"2021 census Part I Table 2.12, counts",voluntary question; about 9.5k residents unanswered,,"queue.md: Europe swept, 2026-09-15; sources.md §scout-2026-09-15-europe"
+in,India,drawn,,,,,registered; sources/in.md; Northeast church split withdrawn 2026-09-15 (sources/in.md §12); a Northeast split needs a state-level source (queue.md D)
 iq,Iraq,drawn,18 governorates of 18,,,,registered; queue.md: From the lead triage / A. Arab Barometer east of Egypt; sources.md §9cw; sources/iq.md
 ir,Iran,drawn,31 provinces,"SCI Amar no. 21, 1390 shares",settle the flat Assyrian or Chaldean column first,,"queue.md: From the lead triage (Iran, in the §11ag paragraph); ask/answered/023 (draw at province); sources.md §scout-2026-09-14-iran"
+is,Iceland,drawn,,ESS (rounds and region not checked); Hagstofa register as witness,register is membership; parish table is one church,,"queue.md: Europe swept, 2026-09-15; sources.md §scout-2026-09-15-europe"
 it,Italy,drawn,,,,,registered; sources/it.md
+je,Jersey,drawn,1 unit,"Opinions and Lifestyle Survey 2023, shares",no denomination table; 11% not sure; census does not ask,,"queue.md: Europe swept, 2026-09-15; sources.md §scout-2026-09-15-europe"
 jm,Jamaica,drawn,,,,,registered; sources/jm.md
 jo,Jordan,drawn,12 governorates of 12,,,,registered; queue.md: Drawn; From the lead triage / A. Arab Barometer east of Egypt; sources.md §9cq; sources/jo.md
 jp,Japan,drawn,,,,,registered; sources/jp.md
@@ -155,23 +143,28 @@ la,Laos,drawn,,,,,registered; sources/la.md
 lc,Saint Lucia,drawn,,,,,registered; sources/lc.md
 li,Liechtenstein,drawn,,,,,registered; sources/li.md
 lk,Sri Lanka,drawn,,,,,registered; sources/lk.md
-lr,Liberia,drawn,15 units,,,,"registered; queue.md: Elsewhere, ranked by what they would add; sources.md §9cl; sources/lr.md"
+lr,Liberia,drawn,15 units,"2022 census national table, Afrobarometer pattern",upgrade blocked: 2008 districts only through IPUMS (LISGIS NADA points there); no 2022 microdata or table below county; lisgis.gov.lr still a placeholder,,"registered; queue.md: Drawn African countries re-checked for a finer tier, 2026-09-15; Elsewhere, ranked by what they would add; sources.md §scout-2026-09-15-africa-upgrades, §9cl; sources/lr.md"
 lt,Lithuania,drawn,,,,,registered; sources/lt.md
 lv,Latvia,drawn,6 statistical regions,,,,registered; queue.md: From the lead triage / C. Europe via ESS; sources.md §9dj; sources/lv.md
+ly,Libya,drawn,,office; Arab Barometer,survey build; one Maghreb country at a time (shared Arab Barometer loader),,"queue.md: Maghreb reopened, 2026-09-16; sources.md §maghreb-2026-09-16"
+ma,Morocco,drawn,,2014 and 2024 census forms; Arab Barometer,survey build; one Maghreb country at a time (shared Arab Barometer loader),,"queue.md: Maghreb reopened, 2026-09-16; sources.md §maghreb-2026-09-16"
 md,Moldova,drawn,901 UATs,,,,registered; queue.md: Drawn; sources.md §9bv; sources/md.md
 me,Montenegro,drawn,,,,,registered; sources/me.md
 mg,Madagascar,drawn,22 regions,Afrobarometer R5-R9,check the card for a traditional answer first,,"queue.md: Africa swept a second time, 2026-09-14; Anita's rulings, 2026-09-14 night; sources.md §11aq"
 mh,Marshall Islands,drawn,,,,,registered
 mk,North Macedonia,drawn,,,,,registered; sources/mk.md
-ml,Mali,drawn,20 régions,"RGPH5 2022 Tableau 6.13, shares",none; ask 018 says draw at the 20 régions,,"queue.md: Africa swept a second time, 2026-09-14; Anita's rulings, 2026-09-14 night; ask/answered/018; sources.md §11aq"
+ml,Mali,drawn,20 régions,"RGPH5 2022 Tableau 6.13, shares","upgrade blocked: nothing below région in print; RGPH5 microdata needs an INSTAT login; a finer tier is outside ask 018 (§14, Anita's)",,"queue.md: Drawn African countries re-checked for a finer tier, 2026-09-15; Africa swept a second time, 2026-09-14; Anita's rulings, 2026-09-14 night; ask/answered/018; sources.md §scout-2026-09-15-africa-upgrades, §11aq"
 mm,Myanmar,drawn,,,,,registered; sources/mm.md
-mn,Mongolia,drawn,20 of 22 aimags,,,,registered; queue.md: Drawn; sources.md §9bt; sources/mn.md
+mn,Mongolia,drawn,19 aimags + Ulaanbaatar's 9 düüregs,2020 census aimag volumes; Ulaanbaatar volume figures 3.5-3.6 by düüreg,"upgrade done 2026-09-15: Ulaanbaatar's 9 düüregs measured off the capital's own 2020 volume, figures 3.5 and 3.6; soums have nothing in 2020 or 2010",,"registered; queue.md: Drawn countries re-checked for a finer tier, second pass, 2026-09-15; Drawn; sources.md §mn-2026-09-15, §scout-2026-09-15-upgrades, §9bt; sources/mn.md §11"
+mr,Mauritania,drawn,15 wilayas,"Pew 2020 national shares; RGPH 2023 Thème 16 foreigners by wilaya (125,933)","national compiler figure plus foreigners by wilaya (Anita 2026-09-16); PARKED at checkpoint A, handoff/mr.md; Pew counts foreigners, do not stack",,"queue.md: Maghreb reopened, 2026-09-16; sources/mr.md; sources.md §maghreb-2026-09-16; ask/RULINGS.md 2026-09-16; back for a partial rebuild after review 2026-09-15 (refugees at northern Mali's census mix, ask 033 gap; queue.md Maghreb table, mr row)"
 ms,Montserrat,drawn,,,,,registered
+mt,Malta,drawn,6 districts (unverified),"2021 census Final Report Vol. 1, ch. 5, persons 15+",PDF in data/raw/mt/ (Anita downloaded 2026-09-15); not yet read,,"queue.md: Europe swept, 2026-09-15; ask/answered/027; sources.md §scout-2026-09-15-europe"
 mu,Mauritius,drawn,,,,,registered; sources/mu.md
 mw,Malawi,drawn,,,,,registered; sources/mw.md
 mx,Mexico,drawn,,,,,registered; sources/mx.md
 my,Malaysia,drawn,,,,,registered; sources/my.md
-mz,Mozambique,drawn,11 provinces of 11,,,,registered; queue.md: Drawn; From the lead triage / D. Sub-Saharan Africa via DHS; sources.md §9df; sources/mz.md
+mz,Mozambique,drawn,"121 districts as of 2007 in 9 provinces, 2 provinces whole",2007 Quadro 8.1 district shares fitted to 2017 Quadros 3 and 11 (derived); Cabo Delgado and Manica 2017 Quadro 11,"upgrade done 2026-09-15; Cabo Delgado and Manica stay at province: no 2007 volume captured, and Cabo Delgado's district tier is a §14 question",,"registered; queue.md: Drawn African countries re-checked for a finer tier, 2026-09-15; Drawn; From the lead triage / D. Sub-Saharan Africa via DHS; sources.md §mz-2026-09-15, §scout-2026-09-15-africa-upgrades, §9df; sources/mz.md §7"
+ne,Niger,drawn,8 régions,"2012 census Tableau A11, counts","adds least; §14 note, Tillabéri",,"queue.md: Africa swept a second time, 2026-09-14; sources.md §11aq"
 ng,Nigeria,drawn,37 states of 37,,,,registered; queue.md: Drawn; sources.md §9cv; sources/ng.md
 ni,Nicaragua,drawn,,,,,registered; sources/ni.md
 nl,Netherlands,drawn,394 gemeenten,,,,registered; queue.md: From the lead triage / C. Europe via ESS; sources.md §9cu; sources/nl.md
@@ -180,7 +173,8 @@ np,Nepal,drawn,,,,,registered; sources/np.md
 nr,Nauru,drawn,1 unit,,,,registered; queue.md: Microstates; sources.md §9cx; sources/nr.md
 nu,Niue,drawn,,,,,registered
 nz,New Zealand,drawn,,,,,registered; queue.md: Angola-shaped work: UPGRADES to countries already drawn / A. Newer round than the one drawn; sources/nz.md
-pa,Panama,drawn,10 provinces and comarcas of 13,,,,"registered; queue.md: Drawn; Latin America from LAPOP / HOW TO BUILD ONE, now that three exist; Drawn from one survey alone; sources.md §9cm; sources/pa.md"
+om,Oman,drawn,,2003 census form; 2003 and 2010 final results,census does not ask (2003); no religion table,,"queue.md: Closed, with the reason; sources.md §11ao; re-checked 2026-09-15, sources.md §scout-2026-09-14-asia-oceania"
+pa,Panama,drawn,10 provinces and comarcas of 13,LAPOP 2010-2023 pooled; MICS 2013 on disk at the same tier,"upgrade blocked: MICS 2013 stops at the 12 provinces and comarcas (fills the two blank comarcas, not finer); EPM 2022 districts of Panamá and Panamá Oeste unpublished, an INEC request",,"registered; queue.md: Drawn countries re-checked for a finer tier, second pass, 2026-09-15; Drawn; Latin America from LAPOP / HOW TO BUILD ONE, now that three exist; Drawn from one survey alone; sources.md §scout-2026-09-15-upgrades, §9cm; sources/pa.md"
 pe,Peru,drawn,,,,,registered; sources/pe.md
 ph,Philippines,drawn,,,,,"registered; queue.md: Angola-shaped work: UPGRADES to countries already drawn / B. Same round, finer volumes; sources/ph.md"
 pk,Pakistan,drawn,,,,,registered; sources/pk.md
@@ -190,18 +184,22 @@ ps,Palestine,drawn,16 governorates,"PCBS 2017 preliminary results Table 3, count
 pt,Portugal,drawn,,,,,registered; sources/pt.md
 pw,Palau,drawn,,,,,registered
 py,Paraguay,drawn,229 distritos,,,,registered; queue.md: Drawn; Angola-shaped work: UPGRADES to countries already drawn / A. Newer round than the one drawn; sources/py.md
+qa,Qatar,drawn,10 municipalities (2004),"2004 census Table 6, counts",22 years old; 2004 municipalities are not today's,,"queue.md: Asia and Oceania swept, 2026-09-15; sources.md §scout-2026-09-14-asia-oceania; queue.md: Closed, with the reason; sources.md §11ao"
 ro,Romania,drawn,,,,,registered; sources/ro.md
 rs,Serbia,drawn,,,,,registered; sources/rs.md
 ru,Russia,drawn,,,,,registered; sources/ru.md
 rw,Rwanda,drawn,30 districts,,,,registered; queue.md: Drawn; sources.md §9cb; sources/rw.md
+sa,Saudi Arabia,drawn,,ministry; Arab Barometer,nothing on people; AB religion empty,,"queue.md: Closed, with the reason (Saudi bullet: placement fix wanted, review 2026-09-15); sources/sa.md §8; sources.md §11af, §11ao"
 sb,Solomon Islands,drawn,183 wards,,,,registered; queue.md: Drawn; sources.md §9bh; sources/sb.md
 sc,Seychelles,drawn,unknown,"UNSD oracle row, 11 categories",office not chased,,"queue.md: Elsewhere, ranked by what they would add; sources.md §11w"
+sd,Sudan,drawn,,"1956, 1973, 2008 census forms",question deleted from the 2008 census,,"queue.md: Closed, with the reason; sources.md §11af, §11aq"
 se,Sweden,drawn,21 län,,,,registered; queue.md: From the lead triage / C. Europe via ESS; sources.md §9cz; sources/se.md
 sg,Singapore,drawn,31 planning areas,,,,registered; queue.md: Drawn; sources.md §9bp; sources/sg.md
 si,Slovenia,drawn,192 units,,,,registered; queue.md: Europe; sources.md §9cg; sources/si.md
 sk,Slovakia,drawn,,,,,registered; sources/sk.md
 sl,Sierra Leone,drawn,14 districts (2015),"2015 census Table 5.3, shares",2015 districts rebuilt from chiefdoms,,"queue.md: Africa swept a second time, 2026-09-14; sources.md §11aq"
 sn,Senegal,drawn,10 régions (1988),"1988 census Tableau 1.15, Sufi orders",§14 before any 2023 reformist or Shia code,,"queue.md: Africa swept a second time, 2026-09-14; sources.md §11aq"
+so,Somalia,drawn,,PESS 2014; SHDS 2020; World Bank surveys,surveys ask none,,"queue.md: Africa swept a second time, 2026-09-14 (Closed in §11aq); sources.md §11aq"
 sr,Suriname,drawn,,,,,registered; sources/sr.md
 st,São Tomé and Príncipe,drawn,7 districts,,,,"registered; queue.md: Elsewhere, ranked by what they would add; sources.md §9cn; sources/st.md"
 sv,El Salvador,drawn,14 departamentos,,,,registered; queue.md: Drawn; Drawn from one survey alone; sources.md §9bl; sources/sv.md
@@ -210,8 +208,10 @@ sz,Eswatini,drawn,4 regions,,,,registered; queue.md: Drawn; sources.md §9bq; so
 td,Chad,drawn,22 regions,"2009 census Tableau 5.07, shares",built to the mapping; resume from handoff/td.md,,"queue.md: Africa swept a second time, 2026-09-14; Anita's rulings, 2026-09-14 night; ask/answered/017 (draw it as built); handoff/td.md; sources/td.md"
 tg,Togo,drawn,6 regions,Afrobarometer on the 2022 census national table,"six units, weak rank test",,"queue.md: Africa swept a second time, 2026-09-14; sources.md §11aq"
 th,Thailand,drawn,,,,,registered; queue.md: Angola-shaped work: UPGRADES to countries already drawn / A. Newer round than the one drawn; sources/th.md
+tk,Tokelau,drawn,3 atolls,"2016 census Table 5.8, counts",own church code (ekt is Tuvalu's); FROM_UNITS shape,,"queue.md: Asia and Oceania swept, 2026-09-15; sources.md §scout-2026-09-14-asia-oceania"
 tl,Timor-Leste,drawn,14 units,,,,"registered; queue.md: Elsewhere, ranked by what they would add; sources.md §9cj; sources/tl.md"
 tm,Turkmenistan,drawn,6 units,,,,registered; queue.md: From the lead triage / B. Central Asia via LiTS; sources.md §9do; sources/tm.md
+tn,Tunisia,drawn,,2014 census form; Arab Barometer,survey build; one Maghreb country at a time (shared Arab Barometer loader),,"queue.md: Maghreb reopened, 2026-09-16; sources.md §maghreb-2026-09-16"
 to,Tonga,drawn,156 villages,,,,registered; queue.md: Drawn; sources.md §9bj; sources/to.md
 tr,Türkiye,drawn,12 İBBS-1 regions,,,,registered; queue.md: Drawn; sources/tr.md
 tt,Trinidad and Tobago,drawn,,,,,registered; sources/tt.md
@@ -219,11 +219,11 @@ tv,Tuvalu,drawn,,,,,registered
 tw,Taiwan,drawn,22 counties and cities,"TSCS rounds, ARDA open copies",rounds not downloaded or priced,,"queue.md: Elsewhere, ranked by what they would add; sources.md §scout-2026-09-14-taiwan-belarus-gabon"
 tz,Tanzania,drawn,30 units,,,,registered; queue.md: From the lead triage / D. Sub-Saharan Africa via DHS; sources.md §9ds; sources/tz.md
 ua,Ukraine,drawn,27 COD-AB units,,,,registered; queue.md: From the lead triage / C. Europe via ESS; sources.md §9dw; sources/ua.md
-ug,Uganda,drawn,56 districts of 56,,,,registered; queue.md: Drawn; sources.md §9cr; sources/ug.md
+ug,Uganda,drawn,"2,200 subcounties (2024)",NPHC 2024 population file (10% sample) times the full-count workbook; was 2002 Table B7,"upgrade drawn 2026-09-15 (cb8b206e-ug): subcounty units, grain per answer by a household split-half test; sources/ug.md §0",,"registered; queue.md: Drawn African countries re-checked for a finer tier, 2026-09-15; Drawn; ask/answered/008; sources.md §scout-2026-09-15-africa-upgrades, §9cr; sources/ug.md"
 uk,United Kingdom,drawn,,,,,registered; sources/uk.md
 us,United States,drawn,,,,,registered
-uy,Uruguay,drawn,19 departamentos,,,,"registered; queue.md: Drawn; Latin America from LAPOP / HOW TO BUILD ONE, now that three exist; Drawn from one survey alone; sources.md §9ce; sources/uy.md"
-uz,Uzbekistan,drawn,14 regions of 14,,,,registered; queue.md: Drawn from one survey alone; From the lead triage / B. Central Asia via LiTS; sources.md §9di; sources/uz.md
+uy,Uruguay,drawn,18 departamentos + Montevideo's 62 barrios,ENHA 2006 e29_1; Montevideo barrios on the 2023 census persons file,"upgrade done 2026-09-15: Montevideo's 62 barrios, six of seven answers on a census-segment split-half and Otra at the city's; outside Montevideo nothing finer (secc and segm blank, locagr is locality groups without polygons); the 7+ band cut is wrong in every department and left as drawn (sources/uy.md §12.7)",,"registered; queue.md: Drawn countries re-checked for a finer tier, second pass, 2026-09-15; Drawn; Latin America from LAPOP / HOW TO BUILD ONE, now that three exist; Drawn from one survey alone; sources.md §uy-2026-09-15, §scout-2026-09-15-upgrades, §9ce; sources/uy.md §12"
+uz,Uzbekistan,drawn,14 regions of 14,CAB waves 1-6 on the 2026 census's ethnic groups by region,upgrade closed: the 2026 census publishes nationality by region only (item 6258's xlsx is the agriculture volume) and CAB has no district; REOPEN on the 2027 final results,,"registered; queue.md: Drawn countries re-checked for a finer tier, second pass, 2026-09-15; Drawn from one survey alone; From the lead triage / B. Central Asia via LiTS; sources.md §scout-2026-09-15-upgrades, §9di; sources/uz.md"
 vc,Saint Vincent and the Grenadines,drawn,,,,,registered; sources/vc.md
 ve,Venezuela,drawn,states,LAPOP per-country 2010-2016/17,thin; nothing after 2016/17,,"queue.md: The Americas swept, 2026-09-14; Anita's rulings, 2026-09-14 night (ask 015 ruled); sources.md §11ap"
 vg,British Virgin Islands,drawn,4 islands drawn,,,,"registered; queue.md: The Americas swept, 2026-09-14; sources.md §9dr"
@@ -231,6 +231,7 @@ vn,Vietnam,drawn,,,,,registered; queue.md: Angola-shaped work: UPGRADES to count
 vu,Vanuatu,drawn,66 area councils,,,,registered; queue.md: Drawn; sources.md §9bg; sources/vu.md
 ws,Samoa,drawn,25 districts,,,,registered; queue.md: Drawn; sources.md §9bk; sources/ws.md
 xk,Kosovo,drawn,,,,,registered; sources/xk.md
+xs,Israeli settlements in the West Bank,drawn,,,,,registered; row added by claim.py done 2026-09-15
 ye,Yemen,drawn,governorates,Arab Barometer waves III and V,"two waves, no split-half; take last",,queue.md: From the lead triage / A. Arab Barometer east of Egypt; ask/answered/021: governorate like Jordan and Iraq; sources.md §11af
 za,South Africa,drawn,213 local municipalities,,,,registered; queue.md: Drawn; sources.md §9cs; sources/za.md
 zm,Zambia,drawn,156 constituencies of 156,,,,registered; queue.md: Drawn; sources.md §9db; sources/zm.md

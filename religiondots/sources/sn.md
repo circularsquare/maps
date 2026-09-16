@@ -9,10 +9,11 @@ Diourbel's three départements), 7 nodes, 6,896,808 residents of ordinary househ
 - `sources/sn_geo.py` -> `data/geo/sn/sn_units.gpkg`, `sn_hexes.gpkg`, `sn_lookup.csv` (COD-AB
   Senegal v02 by pcode, Kontur 400 m, 2023-11)
 - `taxonomy/sn1988.py` -> the mapping; `countries/sn.py` -> the entry; `taxonomy/branches.py`
-  gains `islam.qadiriyya`, `islam.tijaniyya`, `islam.mouride`, `islam.layene` and `other.sn`
+  gains `islam.sunni.qadiriyya`, `islam.sunni.tijaniyya`, `islam.sunni.mouride`, `islam.layene`
+  and `other.sn`
 - `tools/check_mapping.py` `DEFAULT_LEVELS["sn"] = ["region", "department"]`
-- sources.md **§sn-2026-09-15** is the summary; **§11aq** was the scout's row. Ask **029** is
-  whether the brotherhoods stay four legend rows.
+- sources.md **§sn-2026-09-15** is the summary; **§11aq** was the scout's row. Ask **029** asked
+  whether the brotherhoods stay four legend rows: they do, settled by Anita on 2026-09-16 (§6).
 
 ```
 python sources/sn.py     --fetch
@@ -117,9 +118,13 @@ so inside a unit the dots follow today's population. No unit's count moves.
 
 ## 6. Mapping calls (`taxonomy/sn1988.py` REVIEW)
 
-- **The four brotherhoods are four new nodes** under `islam`, in LINEAGE's "Sufi orders" group after
-  Bektashi: the form asks the order, not the school, and the Layène's Mahdist founding makes
-  `islam.sunni` arguable for one of them. Ask 029 asks Anita whether four legend rows stay.
+- **The four brotherhoods are four new nodes.** The Qadiriyya, Tijaniyya and Mourides are Sunni
+  orders, Maliki in Senegal, and are children of `islam.sunni`, in its "Sufi orders" group after the
+  schools of law; not under `islam.sunni.maliki`, because the form asks the order and not the
+  school. The Layène is `islam.layene`, under `islam` in the "Sufi orders" group after Bektashi: its
+  founder proclaimed himself the Mahdi, a claim outside Sunni orthodoxy, the same kind of reason the
+  map keeps the Ahmadiyya apart. Ask 029: Anita kept four nodes and left which are Sunni to
+  judgement, and settled the four on 2026-09-16 ("sufi settled", `ask/RULINGS.md`); they were drawn first with all four under `islam` and moved the same day.
 - `Autres mus.` -> `islam`: code 5, Muslims of no listed brotherhood (reformists, Shia, others).
 - `Chrétiens` -> `christianity`; Diourbel's `CATHOLIQUE` and `AUTRES CHRETIENS` fold into it too, so
   one région's four Catholic dots do not add a legend row.
@@ -157,3 +162,36 @@ tier, the published grain; the Casamance conflict is separatist, not religious.
   `sn1988.py` asserts they resolve apart.
 - **OCR in the text layer**: `Ko Ida` for Kolda, `1'1`, `1 OO`, `2, 1`; the form garbles
   *Catholiques*. The readers normalise these and compare against the transcription.
+
+## 10. Review, 2026-09-15 (session `d743fc47-rev9`)
+
+Full pass. `check_md.py` clean, `built_countries.py --check` ok, `check_rollup.py sn` clean
+(6,896,808 measured, nothing derived).
+
+- **The pages themselves.** Rendered national report PDF p11 and p30 and Diourbel report PDF p32.
+  Tableau 1.15 prints Diourbel's Khadriya `-` and Layène 3.7, and Tableau 1.12 gives KHADRIA 3.70%
+  and LAYENNE 0.04%, so the swap is in the print. The Ensemble row is 93.8, 10.9, 0.6, 30.1, 47.4,
+  4.8, 4.3, 1.6 and sums to 99.7. Every printed share, Tableau 1.2 population and Tableau 1.12 count
+  quoted in `sn.csv`'s notes matches the pages.
+- **Figures.** Every `note_public` figure recomputes off `sn.csv` (47.3, 80.2, 29.7, 91.5, 45.9,
+  44.7, 11.7, 32.0, 26.0, 0.6 with 74.9% of it in Dakar, 5.1, and Ziguinchor's 17.1 and 7.7, which
+  is also the highest Christian-plus-other unit at 24.8%), and so do the figures in the four node
+  notes in `branches.py`. "The 2002, 2013 and 2023 censuses asked the same question" holds on
+  §11aq's questionnaire list. `grain`'s 575,000 is 6,896,808 / 12.
+- **Mapping and nodes.** Built as ask 029 and the supervisor's follow-up left them. Against
+  precedent: every other mapping that mentions the orders (`bf`, `bj`, `ml`, `td`, `gw`, `cm`,
+  `ng`, `et`, `tz`, `mw`) leaves them unsplit because its source did not ask or too few respondents
+  chose one, so Senegal is the first source that asked and nothing conflicts. `other.sn` follows
+  the `other.<cc>` residuals. Diourbel's Catholics folded into `christianity`: agreed.
+- **Gap.** The 0.5% counted apart is hand-written and honest; all 12 units are measured, so there
+  is no partial view to be biased.
+- **"For now" is stale.** §6 here and the `branches.py` comments above `islam.layene` and the three
+  Sunni orders still say the four nodes are kept "for now", pending the Maghreb. `ask/RULINGS.md`
+  has a later ruling, "sufi settled" (dated 2026-09-16, a day ahead of every other entry from this
+  session). Not edited. Since fixed in both places (cb8b206e-maint, 2026-09-15).
+- **Screenshot** (Senegal picked, framed on the country): dots on land everywhere, the Touba
+  cluster clear, nothing in the sea, The Gambia blank. At the depth the viewer opened (L2), the
+  legend shows Sunni Islam, 6.1m, as one row with the three orders under its expander, and the
+  Layène, 41k, as its own row beside it; so the map reads as one green until Sunni Islam is
+  opened. That follows from the orders sitting at depth 3 under `islam.sunni`; worth a human eye,
+  not a defect.

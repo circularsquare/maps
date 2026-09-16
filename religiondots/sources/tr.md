@@ -328,3 +328,29 @@ Türkiye as a country with no non-Muslims at all.
   table that is empty rather than negative.
 - **A newer wave.** Nothing found for 2023 or 2024; the Diyanet's Sayıştay audit reports
   mention no successor survey.
+
+## 8. Syrians under temporary protection sized for the bar, ask 033 sweep (cb8b206e-gap, 2026-09-15)
+
+On Anita's ruling (`ask/RULINGS.md` 2026-09-15); the sweep's record is `sources.md`
+§gapsweep-2026-09-15.
+
+- **Who.** The magnitude is COD-PS 2022, which is ADNKS at 31 December 2022, 85,279,553 (the NVİ
+  copy of TÜİK's province table, `nvi.gov.tr/.../2022_Iller_Nufus.pdf`, opened). ADNKS takes its
+  foreigners from residence permits, work permits and blue cards (TÜİK's own description of the
+  system, SESRIC copy `ADM_REGISTRIES_Address_Based_Population_Registration_System_EN.pdf`, slide 38,
+  opened); temporary protection is not among them. The arithmetic settles it: Euronews' report of
+  TÜİK's 2023 bulletin (2024-02-06, opened) gives the foreign population as 1,570,543 after a fall
+  of 253,293, so 1,823,836 at the end of 2022, fewer than the Syrians under temporary protection
+  alone.
+- **Figure.** 3,535,898 Syrians under temporary protection on 19 January 2023, the migration
+  authority's (Göç İdaresi) figure as published by the Refugees Association (Mülteciler Derneği)
+  and quoted by Diken, "Türkiye'deki Suriyeliler (Ocak 2023)" (opened). Anadolu Agency's 2026
+  article on the fall since 2021 gives the same 3,535,898 for 2022 (opened). Göç İdaresi's own page
+  shows only the current figure, as an image. Non-nationals, by status.
+- **Share.** 3,535,898 / (85,279,553 + 3,535,898) = **0.03981**. Nineteen days separate the two
+  counts.
+- **Not in the hole.** Other foreigners are inside ADNKS and so inside the base, drawn at the
+  survey's shares. Irregular migrants are in neither and nobody counts them; the `gap` does not
+  name them.
+- **Note.** A paragraph added at the end of `note_public`; `gap` gains a third clause and
+  `gap_share`. Nothing rebuilt.

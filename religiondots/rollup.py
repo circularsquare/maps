@@ -189,7 +189,11 @@ def main():
         print("\n--dry-run: nothing written")
         return 0
     OUT.parent.mkdir(parents=True, exist_ok=True)
-    OUT.write_text(json.dumps(tables), encoding="utf-8")
+    # Through a temp file: tiles.py reads this, and a build tail running beside a rollup must
+    # never see half of it (runlog 2026-09-15, the same race as scatter.py's dots).
+    tmp = OUT.with_name(OUT.name + ".tmp")
+    tmp.write_text(json.dumps(tables), encoding="utf-8")
+    tmp.replace(OUT)
     print(f"\nwrote {OUT}  ({len(tables)} countries, "
           f"{sum(len(v) for v in tables.values())} nodes)")
     print("Now: python tiles.py --refresh-meta   (carries it into counts.json; no retile)")

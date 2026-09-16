@@ -66,6 +66,15 @@ DEFAULT_LEVELS = {# Austria's drawn tier is 2,358 Gemeinden PLUS Vienna's 23 Gem
                   # units". Tallying it reports the country correctly by accident and the
                   # geography not at all.
                   "am": ["marz"],
+                  # Mongolia is drawn at 19 aimags plus Ulaanbaatar's 9 düüregs, which
+                  # REPLACE the capital (mn.csv carries no city-wide row). `aimag` alone
+                  # reports 19 units and 989,404 too few adults: the whole capital.
+                  "mn": ["aimag", "duureg"],
+                  # Uruguay is drawn at 18 departamentos plus Montevideo's 62 barrios, which
+                  # REPLACE the capital (uy.csv carries no Montevideo department row since
+                  # 2026-09-15). `barrio` alone reports 62 units and the whole interior
+                  # missing; `departamento` alone reports 1,207,523 too few people.
+                  "uy": ["departamento", "barrio"],
                   # Indonesia's drawn tier is decided per unit, not by rule: a regency's
                   # kecamatan REPLACE it where they sum to it exactly in EVERY
                   # category (403 of 492) and the regency is drawn where they
@@ -85,6 +94,9 @@ DEFAULT_LEVELS = {# Austria's drawn tier is 2,358 Gemeinden PLUS Vienna's 23 Gem
                   # both would double the country). The default "level with the most units"
                   # would take `statarea` alone and lose every rural locality in the state.
                   "il": ["statarea", "locality"],
+                  # The Israeli settlements are the same kind of CBS units, beyond the Green
+                  # Line (sources/xs.py), so the same two levels.
+                  "xs": ["statarea", "locality"],
                   # Senegal 1988 is nine régions plus Diourbel's three départements, which
                   # REPLACE the Diourbel région (its regional report alone prints religion by
                   # département). `region` alone reports 9 units and 619,245 too few people.

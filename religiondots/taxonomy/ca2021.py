@@ -103,6 +103,11 @@ LEAF = {
     "Zoroastrian": "zoroastrianism",
     "Druze": "druze",
     "Taoist": "daoism",
+    # Under `Chinese religions and spiritual traditions`, which maps to `chinesefolk`. Pulled
+    # out 2026-09-15 on Anita's ruling on ask 036 (ask/RULINGS.md, `cn`, `all`): a row naming
+    # Confucianism goes to its own node. 995 people. `Ancestor veneration` and the n.i.e.
+    # remainder keep the group's node.
+    "Confucian": "confucianism",
     "Unitarian/Unitarian Universalist": "unitarianuniversalist",
     "Spiritualist": "spiritualism",
 

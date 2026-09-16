@@ -2,7 +2,13 @@
 // then loads the current admin level's geojson and lets the user click / shift-click.
 
 const CURRENT_YEAR = new Date().getFullYear();
-const DISPLAY_YEARS = [2011, 2026];  // years shown in the detail panel history table
+// Fallback years for the detail panel history table when a country's meta.json
+// doesn't name its own (India's five-yearly projections were the first case).
+const DISPLAY_YEARS = [2011, 2026];
+// A split level is one geojson per adm1 region, loaded only for what's on
+// screen. Above this many regions in view we load nothing — the point of
+// splitting is that the whole level never gets fetched at once.
+const SPLIT_MAX_GROUPS = 4;
 const state = {
   country: null,   // {id, name, meta}
   level: null,     // int
@@ -13,7 +19,55 @@ const state = {
   hoverCode: null,    // feature under the cursor
   activeCode: null,   // feature clicked for the detail panel
   overlayGeo: {},     // {1: adm1, 2: adm2} geojson — coarser borders drawn as context
+  groupBounds: {},    // {groupCode: [minx, miny, maxx, maxy]} — for split loading
+  splitCache: new Map(),  // "level/group" -> features, so re-ticking doesn't refetch
+  loadedSplitKey: null,   // which set of groups is currently rendered
+  loading: false,         // mid country switch — don't save or lazy-load yet
 };
+
+// Saved view lives here; declared up top because the sidebar width is read from
+// it before the map exists (see the saved-view section for the rest).
+const STORE_KEY = "helper1m:view";
+
+// Sidebar width is draggable. Below NARROW the panels tighten up so a sidebar
+// about a third of the default still reads.
+const SIDEBAR_DEFAULT = 320;
+const SIDEBAR_MIN = 100;
+const SIDEBAR_NARROW = 200;
+
+// Elevation basemap. Terrain Tiles on AWS Open Data: global, keyless,
+// terrarium-encoded, and served with CORS — which matters, because
+// updateRelief() reads these same tiles pixel by pixel to find the range on
+// screen. The ramp runs blue (lowest on screen) through green, yellow, orange
+// and red to white (highest). The top of the scale gets more than an even
+// share: a scene's mountains are a long thin tail of elevations, so red to
+// white spans 45% of the range and the crowded lower ground keeps the finer
+// steps. Colours between anchors are mixed in OKLab so no pair of neighbours
+// goes muddy on the way.
+const DEM_URL = "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png";
+// [position along the on-screen range, colour]
+const RELIEF_ANCHORS = [
+  [0.00, "#2b5ea7"],   // blue
+  [0.14, "#3f9b4f"],   // green
+  [0.28, "#f2d33a"],   // yellow
+  [0.42, "#f08c28"],   // orange
+  [0.55, "#d7301f"],   // red
+  [1.00, "#ffffff"],   // white
+];
+const RELIEF_STEPS = 24;
+const BASEMAPS = ["streets", "topo", "relief"];
+
+function setSidebarWidth(px) {
+  const max = Math.max(SIDEBAR_MIN, Math.min(640, window.innerWidth - 200));
+  const w = Math.round(Math.min(max, Math.max(SIDEBAR_MIN, px)));
+  const el = document.getElementById("sidebar");
+  el.style.width = `${w}px`;
+  el.classList.toggle("narrow", w < SIDEBAR_NARROW);
+  return w;
+}
+
+// Before the map is built, so it initialises at the right size with no flash.
+setSidebarWidth(Number(readStore().sidebarWidth) || SIDEBAR_DEFAULT);
 
 const map = new maplibregl.Map({
   container: "map",
@@ -37,19 +91,40 @@ const map = new maplibregl.Map({
         maxzoom: 17,
         attribution: "© OpenTopoMap (CC-BY-SA)",
       },
+      dem: {
+        type: "raster-dem",
+        tiles: [DEM_URL],
+        encoding: "terrarium",
+        tileSize: 256,
+        maxzoom: 15,
+        attribution: "Terrain Tiles (Mapzen, AWS Open Data)",
+      },
     },
     layers: [
       { id: "osm", type: "raster", source: "osm", paint: { "raster-opacity": 0.55 } },
       { id: "topo", type: "raster", source: "topo",
         layout: { visibility: "none" }, paint: { "raster-opacity": 0.8 } },
+      { id: "relief", type: "color-relief", source: "dem",
+        layout: { visibility: "none" },
+        paint: { "color-relief-color": reliefColorExpr(0, 3000) } },
     ],
   },
   center: [0, 0],
   zoom: 2,
+  // North stays up and the map stays flat. maxPitch pins the tilt even if
+  // something calls easeTo with a pitch.
+  dragRotate: false,
+  pitchWithRotate: false,
+  touchPitch: false,
+  maxPitch: 0,
 });
 
 // Shift-click is our multi-select; free it from MapLibre's box-zoom handler.
 map.boxZoom.disable();
+// The constructor flags miss two paths: pinch-rotate on a trackpad or phone,
+// and shift+arrow on the keyboard. Pinch-zoom and the arrow-key pan both stay.
+map.touchZoomRotate.disableRotation();
+map.keyboard.disableRotation();
 
 // ---- data loading ----
 
@@ -68,20 +143,84 @@ async function loadCountriesIndex() {
 async function loadCountry(id) {
   const meta = await (await fetchNoCache(`countries/${id}/meta.json`)).json();
   teardown();   // drop the previous country's sources/layers
+  state.loading = true;
   state.country = { id, name: meta.name, meta };
-  map.flyTo({ center: meta.center, zoom: meta.zoom, duration: 0 });
   await loadOverlays();
   loadGroups();
+
+  // Pick up where this country was left. Usually one region at the finest
+  // level, so restoring the camera too is what makes it actually continue.
+  const saved = loadView(id);
+  if (saved && saved.groups) {
+    const known = new Set(state.groups.map(g => g.code));
+    const ticked = new Set(saved.groups.filter(c => known.has(c)));
+    if (ticked.size) state.shownGroups = ticked;
+  }
   renderGroupFilter();
   renderLevelRadios();
-  // default to the finest level with a geojson already built
-  const lvl = meta.admin_levels.find(l => l).level;
+  if (saved && saved.center) {
+    map.jumpTo({ center: saved.center, zoom: saved.zoom });
+  } else {
+    map.flyTo({ center: meta.center, zoom: meta.zoom, duration: 0 });
+  }
+  const levels = meta.admin_levels.map(l => l.level);
+  const lvl = saved && levels.includes(saved.level) ? saved.level : levels[0];
+  state.loading = false;
   await setLevel(lvl);
+  saveView();
+}
+
+// ---- saved view ----
+
+// Which regions are ticked, which level, and where the map is — per country,
+// so a refresh drops you back into the province you were working through.
+// STORE_KEY is declared at the top of the file.
+
+function readStore() {
+  try { return JSON.parse(localStorage.getItem(STORE_KEY) || "{}"); }
+  catch (e) { return {}; }   // private window, disabled storage, bad JSON
+}
+
+function loadView(countryId) {
+  const all = readStore();
+  return (all.countries && all.countries[countryId]) || null;
+}
+
+function saveView() {
+  if (!state.country || state.loading) return;
+  try {
+    const all = readStore();
+    all.countries = all.countries || {};
+    all.countries[state.country.id] = {
+      level: state.level,
+      groups: state.shownGroups ? [...state.shownGroups] : null,
+      center: map.getCenter().toArray(),
+      zoom: map.getZoom(),
+    };
+    all.last = state.country.id;
+    all.basemap = currentBasemap();
+    delete all.topo;   // the old checkbox, replaced by basemap
+    all.opacity = document.getElementById("fill-opacity").value;
+    all.sidebarWidth = parseInt(document.getElementById("sidebar").style.width, 10);
+    localStorage.setItem(STORE_KEY, JSON.stringify(all));
+  } catch (e) { /* nothing here is worth breaking the page over */ }
+}
+
+map.on("moveend", saveView);
+
+function levelCfg(level = state.level) {
+  return state.country.meta.admin_levels.find(l => l.level === level);
 }
 
 async function setLevel(level) {
   state.level = level;
-  const cfg = state.country.meta.admin_levels.find(l => l.level === level);
+  state.loadedSplitKey = null;
+  document.querySelectorAll("#level-radios input").forEach(r => {
+    r.checked = parseInt(r.value) === level;
+  });
+  const cfg = levelCfg(level);
+  if (cfg.split) return loadSplitLevel();
+
   const url = `countries/${state.country.id}/${cfg.file}`;
   let geo;
   try {
@@ -93,22 +232,110 @@ async function setLevel(level) {
   state.featuresByCode.clear();
   for (const f of geo.features) state.featuresByCode.set(f.properties.code, f);
   renderLayer(geo);
-  document.querySelectorAll("#level-radios input").forEach(r => {
-    r.checked = parseInt(r.value) === level;
-  });
 }
+
+// ---- split levels ----
+
+// Which adm1 regions overlap the current viewport, of the ones ticked. Keeps a
+// 43,655-township level usable by never holding more than a few provinces.
+function groupsInView() {
+  const b = map.getBounds();
+  const [w, s, e, n] = [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()];
+  return state.groups
+    .map(g => g.code)
+    .filter(code => !state.shownGroups || state.shownGroups.has(code))
+    .filter(code => {
+      const bb = state.groupBounds[code];
+      return bb && bb[0] <= e && bb[2] >= w && bb[1] <= n && bb[3] >= s;
+    });
+}
+
+async function loadSplitLevel() {
+  const cfg = levelCfg();
+  if (!cfg || !cfg.split) return;
+  const wanted = groupsInView();
+  const key = wanted.join(",");
+  if (key === state.loadedSplitKey) return;
+
+  if (!wanted.length || wanted.length > SPLIT_MAX_GROUPS) {
+    state.loadedSplitKey = key;
+    state.featuresByCode.clear();
+    renderLayer({ type: "FeatureCollection", features: [] });
+    const label = cfg.label.toLowerCase();
+    showInfo(`<div class="empty">Zoom in to load ${label}s — this level is
+      stored per ${groupLabel()} and loads what's on screen, up to
+      ${SPLIT_MAX_GROUPS} at a time.</div>`);
+    return;
+  }
+
+  const parts = await Promise.all(wanted.map(async code => {
+    const cacheKey = `${state.level}/${code}`;
+    if (!state.splitCache.has(cacheKey)) {
+      const url = `countries/${state.country.id}/${cfg.dir}/${code}.geojson`;
+      try {
+        state.splitCache.set(cacheKey, (await (await fetchNoCache(url)).json()).features);
+      } catch (e) {
+        state.splitCache.set(cacheKey, []);
+      }
+    }
+    return state.splitCache.get(cacheKey);
+  }));
+
+  // The viewport may have moved on while those were in flight.
+  if (groupsInView().join(",") !== key) return loadSplitLevel();
+
+  const features = parts.flat();
+  state.loadedSplitKey = key;
+  state.featuresByCode.clear();
+  for (const f of features) state.featuresByCode.set(f.properties.code, f);
+  renderLayer({ type: "FeatureCollection", features });
+  // Clear the zoom-in prompt once there is something to click.
+  if (document.querySelector("#info-panel .empty")) {
+    showInfo(`<div class="empty">Click a region for its population.</div>`);
+  }
+}
+
+function groupLabel() {
+  const adm1 = state.country.meta.admin_levels.find(l => l.level === 1);
+  return adm1 ? adm1.label.toLowerCase() : "region";
+}
+
+// Reload on idle rather than on every move — setData on a big source backs up.
+map.on("idle", () => {
+  if (state.loading || !state.country) return;
+  if (levelCfg() && levelCfg().split) loadSplitLevel();
+});
 
 // ---- state filter ----
 
 function loadGroups() {
   state.groups = [];
   state.shownGroups = null;
+  state.groupBounds = {};
+  state.splitCache.clear();
   const geo = state.overlayGeo[1];   // adm1 — the state list
   if (!geo) return;
   state.groups = geo.features
     .map(f => ({ code: f.properties.code, name: f.properties.name }))
     .sort((a, b) => a.name.localeCompare(b.name));
   state.shownGroups = new Set(state.groups.map(g => g.code));
+  for (const f of geo.features) state.groupBounds[f.properties.code] = bbox(f.geometry);
+}
+
+function bbox(geometry) {
+  let minx = Infinity, miny = Infinity, maxx = -Infinity, maxy = -Infinity;
+  const walk = (coords) => {
+    if (typeof coords[0] === "number") {
+      if (coords[0] < minx) minx = coords[0];
+      if (coords[0] > maxx) maxx = coords[0];
+      if (coords[1] < miny) miny = coords[1];
+      if (coords[1] > maxy) maxy = coords[1];
+      return;
+    }
+    for (const c of coords) walk(c);
+  };
+  walk(geometry.coordinates);
+  return [minx, miny, maxx, maxy];
 }
 
 function renderGroupFilter() {
@@ -116,12 +343,27 @@ function renderGroupFilter() {
   const host = document.getElementById("group-list");
   if (!state.groups.length) { panel.style.display = "none"; return; }
   panel.style.display = "";
+  // The filter is by adm1, so name it after whatever the country calls that.
+  // Only pluralise a single word — India's "State / UT" reads worse with an s.
+  const label = (state.country.meta.admin_levels.find(l => l.level === 1)
+    || {}).label || "Region";
+  document.getElementById("group-panel-label").textContent =
+    /[\s/]/.test(label) ? label : label + "s";
   host.innerHTML = "";
   for (const g of state.groups) {
     const on = state.shownGroups.has(g.code) ? "checked" : "";
     host.insertAdjacentHTML("beforeend",
-      `<label><input type="checkbox" value="${escapeHtml(g.code)}" ${on}>${escapeHtml(g.name)}</label>`);
+      `<label title="${escapeHtml(g.name)}"><input type="checkbox" value="${escapeHtml(g.code)}" ${on}>` +
+      `<span>${escapeHtml(shortGroupName(g.name))}</span></label>`);
   }
+}
+
+// The list is already headed by the division type, so "Anhui Province" can read
+// "Anhui" and the list stays legible in a narrow sidebar. Full name on hover.
+const GROUP_TYPE_WORDS =
+  /\s+(Special Administrative Region|Autonomous Region|Municipality|Province)$/;
+function shortGroupName(name) {
+  return name.replace(GROUP_TYPE_WORDS, "") || name;
 }
 
 // MapLibre filter: show a feature when its group is checked. Features with no
@@ -135,9 +377,12 @@ function groupFilterExpr() {
 
 function applyGroupFilter() {
   const expr = groupFilterExpr();
-  for (const id of [FILL, LINE, HL, OV_DIST + "-line", OV_STATE + "-line"]) {
+  for (const id of [FILL, LINE, HL, ...overlayLayerIds()]) {
     if (map.getLayer(id)) map.setFilter(id, expr);
   }
+  // A split level holds only the ticked regions, so unticking one has to drop
+  // its features rather than just hide them.
+  if (state.country && levelCfg() && levelCfg().split) loadSplitLevel();
 }
 
 // ---- map layer ----
@@ -146,25 +391,45 @@ const SRC = "admin";
 const FILL = "admin-fill";
 const LINE = "admin-line";
 const HL = "admin-highlight";
-const OV_STATE = "ov-state";      // overlay source: state borders
-const OV_DIST = "ov-district";    // overlay source: district borders
 
-// Fill opacity for the density choropleth (set to 0 in topographic mode, so
-// regions stay clickable but their colours don't fight the topo basemap).
-const FILL_OPACITY = ["case",
-  ["boolean", ["feature-state", "selected"], false], 0.75,
-  0.55];
+// Coarser levels drawn as context, heavier the coarser they are, so the
+// hierarchy reads at a glance: province thicker than prefecture thicker than
+// county thicker than the level you are working in. Each is fetched only once
+// the current level is deeper than it, which keeps county borders (10 MB in
+// China) off the initial load.
+const OVERLAY_LEVELS = [1, 2, 3];
+// Thickness carries the ranking; no coarser border is ever paler than a finer
+// one, or the thin working-level lines read as the more important boundary.
+const OVERLAY_STYLE = {
+  1: { color: "#000", width: 2.2 },
+  2: { color: "#111", width: 1.3 },
+  3: { color: "#222", width: 0.8 },
+};
+const overlayId = lvl => `ov-${lvl}`;
+
+// Fill opacity for the density choropleth, driven by the sidebar slider so the
+// colours can be laid over any basemap at whatever strength reads.
+// Selected regions sit a little above whatever that is.
+function fillOpacityExpr() {
+  const base = (parseInt(document.getElementById("fill-opacity").value, 10) || 0) / 100;
+  return ["case",
+    ["boolean", ["feature-state", "selected"], false], Math.min(1, base + 0.2),
+    base];
+}
 
 // Pointer handlers — registered once. They key off the layer id, so they keep
 // working when the layer is torn down and rebuilt on a country switch.
 map.on("mousemove", FILL, (e) => {
   if (!e.features.length) return;
   map.getCanvas().style.cursor = "pointer";
-  setHover(e.features[0].properties.code);
+  const code = e.features[0].properties.code;
+  setHover(code);
+  showTip(code, e.originalEvent.clientX, e.originalEvent.clientY);
 });
 map.on("mouseleave", FILL, () => {
   map.getCanvas().style.cursor = "";
   setHover(null);
+  hideTip();
 });
 map.on("click", FILL, onFeatureClick);
 
@@ -176,54 +441,276 @@ map.on("click", (e) => {
 
 // ---- boundary overlays (coarser levels drawn as context) ----
 
+// adm1 is fetched eagerly — the group filter and the split-level loader both
+// need its geometry. The rest wait until a level below them is in use.
 async function loadOverlays() {
   state.overlayGeo = {};
-  for (const lvl of [1, 2]) {
-    const cfg = state.country.meta.admin_levels.find(l => l.level === lvl);
-    if (!cfg) continue;
-    try {
-      state.overlayGeo[lvl] =
-        await (await fetchNoCache(`countries/${state.country.id}/${cfg.file}`)).json();
-    } catch (e) { /* level not built */ }
+  await fetchOverlay(1);
+}
+
+async function fetchOverlay(lvl) {
+  if (lvl in state.overlayGeo) return state.overlayGeo[lvl];
+  state.overlayGeo[lvl] = null;
+  const cfg = levelCfg(lvl);
+  if (!cfg || !cfg.file) return null;
+  try {
+    state.overlayGeo[lvl] =
+      await (await fetchNoCache(`countries/${state.country.id}/${cfg.file}`)).json();
+  } catch (e) { /* level not built */ }
+  return state.overlayGeo[lvl];
+}
+
+function addOverlay(lvl, geo) {
+  const id = overlayId(lvl);
+  if (!geo || map.getSource(id)) return;
+  map.addSource(id, { type: "geojson", data: geo });
+  map.addLayer({
+    id: id + "-line", type: "line", source: id,
+    layout: { visibility: "none" },
+    paint: {
+      "line-color": OVERLAY_STYLE[lvl].color,
+      "line-width": OVERLAY_STYLE[lvl].width,
+    },
+  }, map.getLayer(HL) ? HL : undefined);   // under the highlight, over the fill
+  map.setFilter(id + "-line", groupFilterExpr());
+}
+
+// A coarser level's borders show whenever the working level is below it.
+async function updateOverlayVisibility() {
+  for (const lvl of OVERLAY_LEVELS) {
+    const show = state.level > lvl;
+    const id = overlayId(lvl) + "-line";
+    if (show && !map.getLayer(id)) addOverlay(lvl, await fetchOverlay(lvl));
+    if (map.getLayer(id))
+      map.setLayoutProperty(id, "visibility", show ? "visible" : "none");
   }
 }
 
-function addOverlay(srcId, geo, color, width) {
-  if (!geo || map.getSource(srcId)) return;
-  map.addSource(srcId, { type: "geojson", data: geo });
-  map.addLayer({
-    id: srcId + "-line", type: "line", source: srcId,
-    layout: { visibility: "none" },
-    paint: { "line-color": color, "line-width": width },
-  });
-}
-
-// State borders show below state level; district borders below district level.
-function updateOverlayVisibility() {
-  const vis = (id, show) => {
-    if (map.getLayer(id)) map.setLayoutProperty(id, "visibility", show ? "visible" : "none");
-  };
-  vis(OV_STATE + "-line", state.level >= 2);
-  vis(OV_DIST + "-line", state.level >= 3);
+function overlayLayerIds() {
+  return OVERLAY_LEVELS.map(lvl => overlayId(lvl) + "-line");
 }
 
 function teardown() {
-  for (const id of [FILL, LINE, HL, OV_DIST + "-line", OV_STATE + "-line"]) {
+  for (const id of [FILL, LINE, HL, ...overlayLayerIds()]) {
     if (map.getLayer(id)) map.removeLayer(id);
   }
-  for (const id of [SRC, OV_DIST, OV_STATE]) {
+  for (const id of [SRC, ...OVERLAY_LEVELS.map(overlayId)]) {
     if (map.getSource(id)) map.removeSource(id);
   }
 }
 
-// Topographic mode swaps the basemap and hides the density fill (regions stay
-// clickable — an opacity-0 fill still receives events).
+// ---- basemap ----
+
+function currentBasemap() {
+  const el = document.querySelector("#basemap-radios input:checked");
+  return el ? el.value : "streets";
+}
+
+// Swaps what sits under the density fill. The fill itself stays at whatever
+// the slider says, so either can be read through the other.
 function applyBasemap() {
-  const topo = document.getElementById("topo-toggle").checked;
-  map.setLayoutProperty("topo", "visibility", topo ? "visible" : "none");
-  map.setLayoutProperty("osm", "visibility", topo ? "none" : "visible");
+  const base = currentBasemap();
+  map.setLayoutProperty("osm", "visibility", base === "streets" ? "visible" : "none");
+  map.setLayoutProperty("topo", "visibility", base === "topo" ? "visible" : "none");
+  map.setLayoutProperty("relief", "visibility", base === "relief" ? "visible" : "none");
+  document.getElementById("relief-legend").hidden = base !== "relief";
+  if (base === "relief") updateRelief();
+}
+
+function applyFillOpacity() {
+  const el = document.getElementById("fill-opacity");
+  document.getElementById("fill-opacity-value").textContent = `${el.value}%`;
   if (map.getLayer(FILL))
-    map.setPaintProperty(FILL, "fill-opacity", topo ? 0 : FILL_OPACITY);
+    map.setPaintProperty(FILL, "fill-opacity", fillOpacityExpr());
+}
+
+// ---- elevation basemap ----
+
+// The relief's colours are stretched over whatever elevations are on screen,
+// so a plain and a mountain range each get the whole ramp. MapLibre colours the
+// DEM on the GPU but will not say what range it saw, so the range is measured
+// here from the same tiles, one zoom coarser than the view and at most a dozen
+// of them. Re-measured on idle, and pushed to the layer only when it changes.
+const demTiles = new Map();   // "z/x/y" -> Promise of a Float32Array, or null
+let reliefApplied = "";       // "lo,hi" last pushed to the layer
+let reliefRequest = 0;        // lets a measurement the camera has moved past drop out
+
+map.on("idle", () => {
+  if (currentBasemap() === "relief") updateRelief();
+});
+
+function demTile(z, x, y) {
+  const key = `${z}/${x}/${y}`;
+  if (!demTiles.has(key)) {
+    demTiles.set(key, (async () => {
+      try {
+        const url = DEM_URL.replace("{z}", z).replace("{x}", x).replace("{y}", y);
+        const blob = await (await fetch(url)).blob();
+        // No colour management: the channels encode elevation, not a colour.
+        const bmp = await createImageBitmap(blob,
+          { colorSpaceConversion: "none", premultiplyAlpha: "none" });
+        const canvas = new OffscreenCanvas(256, 256);
+        const ctx = canvas.getContext("2d", { willReadFrequently: true });
+        ctx.drawImage(bmp, 0, 0, 256, 256);
+        const px = ctx.getImageData(0, 0, 256, 256).data;
+        const elev = new Float32Array(256 * 256);
+        for (let i = 0; i < elev.length; i++) {
+          elev[i] = px[i * 4] * 256 + px[i * 4 + 1] + px[i * 4 + 2] / 256 - 32768;
+        }
+        return elev;
+      } catch (e) {
+        return null;
+      }
+    })());
+    // Bounded; the browser's own cache still holds the PNGs if one is evicted.
+    if (demTiles.size > 128) demTiles.delete(demTiles.keys().next().value);
+  }
+  return demTiles.get(key);
+}
+
+function mercatorY(lat) {
+  const s = Math.sin(Math.max(-85.0511, Math.min(85.0511, lat)) * Math.PI / 180);
+  return 0.5 - Math.log((1 + s) / (1 - s)) / (4 * Math.PI);
+}
+
+async function updateRelief() {
+  const req = ++reliefRequest;
+  const b = map.getBounds();
+  let z = Math.max(0, Math.min(15, Math.floor(map.getZoom()) - 1));
+  let x0, x1, y0, y1;
+  for (;;) {
+    const n = 2 ** z;
+    x0 = (b.getWest() + 180) / 360 * n;
+    x1 = (b.getEast() + 180) / 360 * n;
+    y0 = mercatorY(b.getNorth()) * n;
+    y1 = mercatorY(b.getSouth()) * n;
+    const count = (Math.floor(x1) - Math.floor(x0) + 1) * (Math.floor(y1) - Math.floor(y0) + 1);
+    if (count <= 12 || z === 0) break;
+    z--;
+  }
+  const n = 2 ** z;
+  const jobs = [];
+  for (let ty = Math.max(0, Math.floor(y0)); ty <= Math.min(n - 1, Math.floor(y1)); ty++) {
+    for (let tx = Math.floor(x0); tx <= Math.floor(x1); tx++) {
+      jobs.push(demTile(z, ((tx % n) + n) % n, ty).then(elev => ({ tx, ty, elev })));
+    }
+  }
+  const tiles = await Promise.all(jobs);
+  if (req !== reliefRequest || currentBasemap() !== "relief") return;
+
+  // Every 4th pixel that falls inside the view.
+  const STEP = 4;
+  const land = [];
+  const all = [];
+  for (const { tx, ty, elev } of tiles) {
+    if (!elev) continue;
+    for (let iy = STEP / 2; iy < 256; iy += STEP) {
+      const gy = ty + iy / 256;
+      if (gy < y0 || gy > y1) continue;
+      for (let ix = STEP / 2; ix < 256; ix += STEP) {
+        const gx = tx + ix / 256;
+        if (gx < x0 || gx > x1) continue;
+        const v = elev[iy * 256 + ix];
+        all.push(v);
+        if (v > 0) land.push(v);
+      }
+    }
+  }
+  // Stretch over land where there is enough of it, or a coastal view gets
+  // squashed by a seafloor thousands of metres down. The sea then sits at the
+  // blue end alongside the lowest land. Percentiles rather than min and max,
+  // so one spike or pit does not set the scale.
+  const sample = land.length >= all.length * 0.05 ? land : all;
+  if (!sample.length) return;
+  sample.sort((a, b2) => a - b2);
+  const pick = q => sample[Math.min(sample.length - 1, Math.floor(q * sample.length))];
+  let lo = Math.floor(pick(0.02) / 10) * 10;
+  let hi = Math.ceil(pick(0.98) / 10) * 10;
+  if (hi - lo < 20) {
+    const mid = (lo + hi) / 2;
+    lo = mid - 10;
+    hi = mid + 10;
+  }
+  const key = `${lo},${hi}`;
+  if (key === reliefApplied) return;
+  reliefApplied = key;
+  map.setPaintProperty("relief", "color-relief-color", reliefColorExpr(lo, hi));
+  document.getElementById("relief-min").textContent = `${lo.toLocaleString()} m`;
+  document.getElementById("relief-max").textContent = `${hi.toLocaleString()} m`;
+}
+
+// Positions along the range to put a stop at: every anchor, so each colour
+// lands exactly where it is placed, plus an even grid so the OKLab mixing
+// between anchors survives MapLibre's straight-line interpolation.
+function reliefStops() {
+  const ts = [...new Set([
+    ...RELIEF_ANCHORS.map(([t]) => t),
+    ...Array.from({ length: RELIEF_STEPS + 1 }, (_, i) => i / RELIEF_STEPS),
+  ])].sort((a, b) => a - b);
+  // interpolate needs strictly ascending inputs; drop float near-duplicates.
+  return ts.filter((t, i) => i === 0 || t - ts[i - 1] > 1e-6);
+}
+
+function reliefColorExpr(lo, hi) {
+  const stops = [];
+  for (const t of reliefStops()) stops.push(lo + (hi - lo) * t, reliefColor(t));
+  return ["interpolate", ["linear"], ["elevation"], ...stops];
+}
+
+function reliefGradientCss() {
+  const parts = reliefStops().map(t => `${reliefColor(t)} ${(100 * t).toFixed(1)}%`);
+  return `linear-gradient(to right, ${parts.join(", ")})`;
+}
+
+// t in 0..1 along the positioned anchors, mixed in OKLab.
+function reliefColor(t) {
+  let seg = 0;
+  while (seg < RELIEF_ANCHORS.length - 2 && t > RELIEF_ANCHORS[seg + 1][0]) seg++;
+  const [t0, hex0] = RELIEF_ANCHORS[seg];
+  const [t1, hex1] = RELIEF_ANCHORS[seg + 1];
+  const f = Math.max(0, Math.min(1, (t - t0) / (t1 - t0)));
+  const a = toOklab(hexToRgb(hex0));
+  const c = toOklab(hexToRgb(hex1));
+  const [r, g, bl] = fromOklab(a.map((v, i) => v + (c[i] - v) * f));
+  return `rgb(${r},${g},${bl})`;
+}
+
+function hexToRgb(hex) {
+  const v = parseInt(hex.slice(1), 16);
+  return [(v >> 16) & 255, (v >> 8) & 255, v & 255];
+}
+
+function srgbToLinear(c) {
+  c /= 255;
+  return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+}
+
+function linearToSrgb(c) {
+  const v = c <= 0.0031308 ? 12.92 * c : 1.055 * c ** (1 / 2.4) - 0.055;
+  return Math.round(Math.max(0, Math.min(1, v)) * 255);
+}
+
+function toOklab(rgb) {
+  const [R, G, B] = rgb.map(srgbToLinear);
+  const l = Math.cbrt(0.4122214708 * R + 0.5363325363 * G + 0.0514459929 * B);
+  const m = Math.cbrt(0.2119034982 * R + 0.6806995451 * G + 0.1073969566 * B);
+  const s = Math.cbrt(0.0883024619 * R + 0.2817188376 * G + 0.6299787005 * B);
+  return [
+    0.2104542553 * l + 0.7936177850 * m - 0.0040720468 * s,
+    1.9779984951 * l - 2.4285922050 * m + 0.4505937099 * s,
+    0.0259040371 * l + 0.7827717662 * m - 0.8086757660 * s,
+  ];
+}
+
+function fromOklab([L, A, B]) {
+  const l = (L + 0.3963377774 * A + 0.2158037573 * B) ** 3;
+  const m = (L - 0.1055613458 * A - 0.0638541728 * B) ** 3;
+  const s = (L - 0.0894841775 * A - 1.2914855480 * B) ** 3;
+  return [
+    linearToSrgb(4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s),
+    linearToSrgb(-1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s),
+    linearToSrgb(-0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s),
+  ];
 }
 
 function renderLayer(geojson) {
@@ -234,6 +721,7 @@ function renderLayer(geojson) {
       ? latest.pop / f.properties.area_km2 : 0;
   }
   state.hoverCode = null;
+  hideTip();
   if (map.getSource(SRC)) {
     map.getSource(SRC).setData(geojson);
     applyGroupFilter();
@@ -262,16 +750,13 @@ function renderLayer(geojson) {
           4.602, "#2233cc",   //  40000 /km²  — blue
         ],
       ],
-      "fill-opacity": FILL_OPACITY,
+      "fill-opacity": fillOpacityExpr(),
     },
   });
   map.addLayer({
     id: LINE, type: "line", source: SRC,
     paint: { "line-color": "#333", "line-width": 0.4 },
   });
-  // Coarser-level borders as context — created hidden, toggled by level.
-  addOverlay(OV_DIST, state.overlayGeo[2], "#222", 1.0);
-  addOverlay(OV_STATE, state.overlayGeo[1], "#000", 1.4);
   // Highlight layer on top — driven by feature-state, so hover is a cheap
   // setFeatureState instead of a per-mousemove setFilter (which queued and lagged).
   map.addLayer({
@@ -294,6 +779,7 @@ function renderLayer(geojson) {
   reapplyFeatureStates();
   updateOverlayVisibility();
   applyBasemap();
+  applyFillOpacity();
 }
 
 // ---- interactions ----
@@ -338,14 +824,94 @@ function reapplyFeatureStates() {
     map.setFeatureState({ source: SRC, id: state.activeCode }, { active: true });
 }
 
+// ---- hover tooltip ----
+
+// Name, the divisions it sits inside, and population, under the cursor. It
+// reads the feature from featuresByCode rather than the event, because
+// MapLibre hands event features back with nested properties like populations
+// flattened to JSON strings. The body only re-renders when the region changes;
+// within one it just follows.
+const tip = document.getElementById("hover-tip");
+let tipCode = null;
+let tipComplete = true;   // false if an ancestor level was still loading last render
+
+// code -> properties for one coarser level, built once per loaded geojson. Keyed
+// on the geojson object, so a country switch (new overlays) drops it for free.
+const ancestorIndexes = new WeakMap();
+
+function ancestorIndex(lvl) {
+  const geo = state.overlayGeo[lvl];
+  if (!geo) return null;
+  let idx = ancestorIndexes.get(geo);
+  if (!idx) {
+    idx = new Map(geo.features.map(f => [String(f.properties.code), f.properties]));
+    ancestorIndexes.set(geo, idx);
+  }
+  return idx;
+}
+
+// Parent, grandparent and so on up to adm1, nearest first, by walking
+// parent_code through the coarser levels' borders. Those are already loaded
+// whenever the working level is below them; if one is still in flight the walk
+// stops short and says so, and the tip fills in on the next move.
+function ancestors(props, level) {
+  const names = [];
+  let parent = props.parent_code;
+  for (let lvl = level - 1; lvl >= 1 && parent != null; lvl--) {
+    const idx = ancestorIndex(lvl);
+    const up = idx && idx.get(String(parent));
+    if (!up) return { names, complete: false };
+    names.push(up.name);
+    parent = up.parent_code;
+  }
+  return { names, complete: true };
+}
+
+function showTip(code, x, y) {
+  const feature = state.featuresByCode.get(code);
+  if (!feature) return hideTip();
+  if (code !== tipCode || !tipComplete) {
+    const p = feature.properties;
+    const chain = ancestors(p, state.level);
+    tipCode = code;
+    tipComplete = chain.complete;
+    const est = estimate(p.populations);
+    const raw = latestPop(p.populations);
+    let html = `<div class="tip-name">${escapeHtml(p.name)}` +
+      (p.name_cn ? ` <span class="tip-cn">${escapeHtml(p.name_cn)}</span>` : "") +
+      `</div>`;
+    for (const name of chain.names) html += `<div class="tip-parent">${escapeHtml(name)}</div>`;
+    if (est) {
+      html += `<div class="tip-pop">${fmt(est.pop)} <span class="tip-note">est. ${CURRENT_YEAR}</span></div>`;
+    } else if (raw) {
+      html += `<div class="tip-pop">${fmt(raw.pop)} <span class="tip-note">${raw.year}</span></div>`;
+    }
+    tip.innerHTML = html;
+  }
+  tip.hidden = false;
+  // Below and right of the cursor, flipped when that would run off the window.
+  const pad = 14;
+  const w = tip.offsetWidth;
+  const h = tip.offsetHeight;
+  tip.style.left = `${x + pad + w > window.innerWidth ? x - pad - w : x + pad}px`;
+  tip.style.top = `${y + pad + h > window.innerHeight ? y - pad - h : y + pad}px`;
+}
+
+function hideTip() {
+  tip.hidden = true;
+  tipCode = null;
+}
+
 function showFeatureInfo(feature) {
   const p = feature.properties;
   const pops = p.populations || {};
   const est = estimate(pops);
+  const shown = state.country.meta.display_years || DISPLAY_YEARS;
   const years = Object.keys(pops).map(Number)
-    .filter(y => DISPLAY_YEARS.includes(y)).sort((a, b) => a - b);
+    .filter(y => shown.includes(y)).sort((a, b) => a - b);
 
   let html = `<div class="name">${escapeHtml(p.name)}</div>`;
+  if (p.name_cn) html += `<div class="parent">${escapeHtml(p.name_cn)}</div>`;
   if (p.parent_name) html += `<div class="parent">${escapeHtml(p.parent_name)}</div>`;
   if (est) {
     html += `<div class="estimate">${fmt(est.pop)}</div>`;
@@ -393,8 +959,10 @@ function estimate(pops) {
     const y0 = years[years.length - 3];
     const p0 = pops[y0];
     const slope_prev = (p1 - p0) / (y1 - y0);
+    // Says what happened, not why. A flip can be a boundary change, but in
+    // China it is usually the real turn from growth to decline after 2020.
     if (Math.sign(slope) !== Math.sign(slope_prev) && Math.abs(slope) > 0 && Math.abs(slope_prev) > 0) {
-      flags.push("sign flipped between periods (boundary change?)");
+      flags.push("direction changed between periods");
     } else if (Math.abs(slope) > 3 * Math.max(Math.abs(slope_prev), 1)) {
       flags.push("growth rate shifted sharply");
     }
@@ -436,12 +1004,16 @@ function renderSelection() {
     summaryEl.innerHTML = "Shift-click regions to add.";
     return;
   }
-  const sumEst = state.selection.reduce((a, s) => a + (s.est_pop || 0), 0);
+  // With only one year there is nothing to extrapolate from, so the counted
+  // figure stands in — otherwise the running sum reads zero.
+  const sumEst = state.selection.reduce((a, s) => a + (s.est_pop ?? s.raw_pop ?? 0), 0);
   const sumRaw = state.selection.reduce((a, s) => a + (s.raw_pop || 0), 0);
+  const anyEst = state.selection.some(s => s.est_pop != null);
   summaryEl.className = "";
   summaryEl.innerHTML =
     `<div class="sum">${fmt(sumEst)}</div>` +
-    `<div class="estimate-note">estimated ${CURRENT_YEAR}  ·  raw sum ${fmt(sumRaw)}</div>`;
+    `<div class="estimate-note">${anyEst ? `estimated ${CURRENT_YEAR}  ·  ` : ""}` +
+    `raw sum ${fmt(sumRaw)}</div>`;
   for (const s of state.selection) {
     const li = document.createElement("li");
     li.innerHTML =
@@ -473,19 +1045,93 @@ document.getElementById("group-list").addEventListener("change", (e) => {
   if (e.target.checked) state.shownGroups.add(e.target.value);
   else state.shownGroups.delete(e.target.value);
   applyGroupFilter();
+  saveView();
 });
 document.getElementById("groups-all").addEventListener("click", () => {
   state.shownGroups = new Set(state.groups.map(g => g.code));
   renderGroupFilter();
   applyGroupFilter();
+  saveView();
 });
 document.getElementById("groups-none").addEventListener("click", () => {
   state.shownGroups = new Set();
   renderGroupFilter();
   applyGroupFilter();
+  saveView();
 });
 
-document.getElementById("topo-toggle").addEventListener("change", applyBasemap);
+document.getElementById("basemap-radios").addEventListener("change", () => {
+  applyBasemap();
+  saveView();
+});
+document.getElementById("fill-opacity").addEventListener("input", applyFillOpacity);
+// Save on release rather than on every pixel of the drag.
+document.getElementById("fill-opacity").addEventListener("change", saveView);
+
+// ---- sidebar resize ----
+
+// Drag the sidebar's edge; double-click it to go back to the default. The map
+// canvas only follows the new width after map.resize(), which is batched to one
+// call a frame while dragging.
+(() => {
+  const handle = document.getElementById("sidebar-resizer");
+  let dragging = false;
+  let queued = false;
+  const resizeMap = () => {
+    if (queued) return;
+    queued = true;
+    requestAnimationFrame(() => { queued = false; map.resize(); });
+  };
+  const stop = () => {
+    if (!dragging) return;
+    dragging = false;
+    handle.classList.remove("dragging");
+    document.body.classList.remove("resizing");
+    map.resize();
+    saveView();
+  };
+  handle.addEventListener("pointerdown", (e) => {
+    e.preventDefault();
+    dragging = true;
+    handle.classList.add("dragging");
+    document.body.classList.add("resizing");
+    handle.setPointerCapture(e.pointerId);
+  });
+  handle.addEventListener("pointermove", (e) => {
+    if (!dragging) return;
+    setSidebarWidth(e.clientX);
+    resizeMap();
+  });
+  handle.addEventListener("pointerup", stop);
+  handle.addEventListener("pointercancel", stop);
+  handle.addEventListener("lostpointercapture", stop);
+  handle.addEventListener("dblclick", () => {
+    setSidebarWidth(SIDEBAR_DEFAULT);
+    map.resize();
+    saveView();
+  });
+  // A narrower window can leave the saved width too wide for it.
+  window.addEventListener("resize", () => {
+    setSidebarWidth(parseInt(document.getElementById("sidebar").style.width, 10));
+    map.resize();
+  });
+})();
+
+// ---- hotkeys ----
+
+// 1-4 pick the admin level, where the country has that level. Ignored while
+// typing into a control, and with a modifier held so browser shortcuts still work.
+document.addEventListener("keydown", async (e) => {
+  if (e.ctrlKey || e.metaKey || e.altKey || e.repeat || !state.country) return;
+  const tag = e.target.tagName;
+  if (tag === "SELECT" || tag === "TEXTAREA" ||
+      (tag === "INPUT" && !["checkbox", "radio", "range"].includes(e.target.type))) return;
+  const level = parseInt(e.key, 10);
+  if (!levelCfg(level) || level === state.level) return;
+  e.preventDefault();
+  await setLevel(level);
+  saveView();
+});
 
 // ---- UI wiring ----
 
@@ -495,12 +1141,18 @@ function renderLevelRadios() {
   for (const l of state.country.meta.admin_levels) {
     const id = `level-${l.level}`;
     host.insertAdjacentHTML("beforeend",
-      `<label><input type="radio" name="level" value="${l.level}" id="${id}"> ${escapeHtml(l.label)}</label>`);
+      `<label title="Hotkey ${l.level}"><input type="radio" name="level" value="${l.level}" id="${id}"> ${escapeHtml(l.label)}</label>`);
   }
-  host.addEventListener("change", (e) => {
-    if (e.target.name === "level") setLevel(parseInt(e.target.value));
-  });
 }
+
+// Registered once. It used to be added inside renderLevelRadios, which runs on
+// every country switch, so each switch stacked another copy of this handler and
+// one click loaded the level several times over.
+document.getElementById("level-radios").addEventListener("change", async (e) => {
+  if (e.target.name !== "level") return;
+  await setLevel(parseInt(e.target.value));
+  saveView();
+});
 
 async function renderCountrySelector(countries) {
   const sel = document.getElementById("country-select");
@@ -528,5 +1180,21 @@ function escapeHtml(s) {
 (async () => {
   const countries = await loadCountriesIndex();
   await renderCountrySelector(countries);
-  if (countries.length) await loadCountry(countries[0].id);
+  if (!countries.length) return;
+
+  // Basemap settings are global rather than per country, so they go on first.
+  // A view saved before the elevation option existed has a topo checkbox value.
+  const saved = readStore();
+  const basemap = BASEMAPS.includes(saved.basemap) ? saved.basemap
+    : saved.topo === true ? "topo" : "streets";
+  document.querySelector(`#basemap-radios input[value="${basemap}"]`).checked = true;
+  if (saved.opacity != null)
+    document.getElementById("fill-opacity").value = saved.opacity;
+  document.getElementById("relief-ramp").style.background = reliefGradientCss();
+  applyBasemap();
+  applyFillOpacity();
+
+  const start = countries.some(c => c.id === saved.last) ? saved.last : countries[0].id;
+  document.getElementById("country-select").value = start;
+  await loadCountry(start);
 })();

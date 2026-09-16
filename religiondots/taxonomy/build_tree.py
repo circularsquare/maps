@@ -305,9 +305,19 @@ def main():
             print("  -", p)
         return 1
 
-    OUT.write_text(
-        json.dumps({"nodes": nodes, "lineage": lineage}, indent=2, ensure_ascii=False),
-        encoding="utf-8")
+    # Through a temp file: tiles.py and buffers.py read religions.json, and a build tail running
+    # beside this must never see half of it (runlog 2026-09-15, the same race as scatter.py's dots).
+    tmp = OUT.with_name(OUT.name + ".tmp")
+    text = json.dumps({"nodes": nodes, "lineage": lineage}, indent=2, ensure_ascii=False)
+    tmp.write_text(text, encoding="utf-8")
+    try:
+        tmp.replace(OUT)
+    except PermissionError:
+        # Something held religions.json open without delete sharing (WinError 5 twice on
+        # 2026-09-15). That blocks the swap but not a plain write, so write it in place.
+        OUT.write_text(text, encoding="utf-8")
+        tmp.unlink()
+        print(f"     {OUT.name} is held open elsewhere; wrote it in place instead of swapping")
 
     # ---- fill the path column
     df = pd.read_csv(CSV, dtype={"Group Code": str})

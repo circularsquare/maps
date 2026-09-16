@@ -419,6 +419,31 @@ def wave_coverage(country):
     return available, declared
 
 
+def card(pool, omit):
+    """Which waves' `Q1012` card offers a box for having no religion, asserted against the pool.
+
+    Lifted 2026-09-15 for Libya from the copies in `sources/dz.py`, `ma.py` and `tn.py`, which
+    still carry their own (move them here the next time each is edited). `pool` is the waves a
+    country draws and `omit` the `{wave: reason}` it leaves out; a wave in the pool must offer the
+    box and an omitted wave must not, so a card that changes under a re-release stops the build.
+    The labels are the whole file's, not one country's card: every country in a wave is asked from
+    the same code list.
+    """
+    import pyreadstat
+
+    print("\n  the card by wave (Q1012 labels, the whole file's):")
+    for name, _o, _z, sav in WAVES:
+        if name not in pool and name not in omit:
+            continue
+        meta = pyreadstat.read_sav(os.path.join(AB_DIR, sav), metadataonly=True)[1]
+        rel = next(c for c in meta.column_names if c.lower() == "q1012")
+        labs = [fold(v) for v in meta.variable_value_labels.get(rel, {}).values()]
+        box = any(lab in ("atheist", "no religion") for lab in labs)
+        print(f"    {name:<5} no-religion box: {'yes' if box else 'no'}")
+        if box != (name in pool):
+            raise SystemExit(f"wave {name}: the card does not match the pool; read the omit reasons")
+
+
 def fold(label):
     """The differences between two wordings that carry no meaning: case, spacing, edge marks.
 
@@ -538,7 +563,7 @@ def _fill_blank_weights(df, sub, wv, blank_rows, wave, country, reason):
 
 
 def load(country, expect_waves=None, waves=None, recode=None, omit=None, extra=None, raw=None,
-         blank_weights=None):
+         blank_weights=None, rescale_weights=None):
     """One country's respondents, decoded wave by wave through that wave's own labels.
 
     Returns [`wave`, `wave_no`, `category`, `geo_raw`, `geo_code`, `w`] plus one column per
@@ -625,12 +650,26 @@ def load(country, expect_waves=None, waves=None, recode=None, omit=None, extra=N
     assertion below by filling each blank weight with its PSU's mean (`_fill_blank_weights`); a
     named wave with no blank weight stops, as a stale `recode` does. Neither changes a country
     that does not pass it.
+
+    ## `rescale_weights`, ADDED 2026-09-15 FOR ALGERIA
+
+    `{wave: "the reason"}` divides one named wave's weights by their mean over the country's
+    answered rows, so that wave passes the 0.98-1.02 guard below. Algeria is the case: all three
+    parts of wave VI carry a `WT` labelled `Weight for the probability of selection` that averages
+    0.840, 0.780 and 0.849 over Algeria's rows, while every other country in the same three files
+    averages 0.992 to 1.001. Only Algeria's weight was left un-normalised, and a share within the
+    wave is unchanged by a constant; what the rescale fixes is the pool, where the wave would
+    otherwise count for 78-85% of its interviews. Refused for a wave already inside the guard (the
+    entry is stale) and for a wave not in the pool. It cannot re-level anything: the relative
+    weights inside the wave are untouched.
     """
     import pyreadstat
 
     want = None if waves is None else list(dict.fromkeys(waves))
     blank_weights = dict(blank_weights or {})
     filled = []
+    rescale_weights = dict(rescale_weights or {})
+    rescaled = []
     known = list(WAVE_NAMES)
     if want is not None:
         unknown = [w for w in want if w not in known]
@@ -704,6 +743,17 @@ def load(country, expect_waves=None, waves=None, recode=None, omit=None, extra=N
         elif blank:
             raise SystemExit(f"wave {name}: {blank} {country} respondents who answered Q1012 "
                              f"have no {wt}. Nothing here fills a weight in; read the codebook.")
+        if name in rescale_weights:
+            m = float(wv[sub[rel].notna()].mean())
+            if 0.98 <= m <= 1.02:
+                raise SystemExit(f"rescale_weights names wave {name}, whose {wt} already averages "
+                                 f"{m:.3f} over {country}'s answered rows. A re-release has "
+                                 "normalised it or the entry was never right; do not delete it "
+                                 "unread.")
+            wv = wv / m
+            rescaled.append(name)
+            print(f"  wave {name}: {wt} averaged {m:.4f} over {country}'s answered rows and is "
+                  f"divided by that: {rescale_weights[name]}")
         if not 0.98 <= wv.mean() <= 1.02:
             raise SystemExit(
                 f"wave {name}: {wt} averages {wv.mean():.3f} over {country}'s rows. A "
@@ -745,6 +795,11 @@ def load(country, expect_waves=None, waves=None, recode=None, omit=None, extra=N
               + note)
     if not frames:
         raise SystemExit(f"no {country} rows in any wave")
+    stale_rw = sorted(set(rescale_weights) - set(rescaled))
+    if stale_rw:
+        raise SystemExit(f"rescale_weights names waves {stale_rw}, which are not in {country}'s "
+                         "pool. The entry is for a wave this call does not read; do not delete "
+                         "it unread.")
     stale_bw = sorted(set(blank_weights) - set(filled))
     if stale_bw:
         raise SystemExit(f"blank_weights names waves {stale_bw}, which have no blank weight on "

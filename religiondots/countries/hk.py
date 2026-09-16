@@ -28,7 +28,7 @@ def _hk_counts():
         Filipinos to `christianity.catholic.latin`, the remainder of each to `unknown`, both
         halves `modelled`. This is spec §14.5 as §14.9 amended it.
       * **the survey, for the whole territory, carved out of what is left.** The Hong Kong
-        Political Culture Survey 2021 (Cai and Hung, China Quarterly 257, Table 1; 3,744
+        Political Culture Survey 2021 (Cai and Hung, China Quarterly 259, Table 1; 3,744
         respondents aged 16+, 72 clusters) asks which religion a person belongs to, so this
         is §3.1's `self_id`, the same basis as the mainland's CGSS layer.
 
@@ -59,13 +59,14 @@ def _hk_counts():
     figure doubled while the only measurement fell by a quarter. Its Muslim and Hindu numbers
     are each about twice what the census and the survey independently agree on. sources/hk.md.
 
-    65.83% OF HONG KONG IS `unknown` AND IT IS EMPHATICALLY NOT IRRELIGION. The same table
+    65.83% OF HONG KONG NAMED NO RELIGION AND IT IS NOT DRAWN AS IRRELIGION. The same table
     says why: 2,097 of those 2,462 respondents -- 56.07% of the whole sample -- report
-    practising folk religion anyway. So most of Hong Kong's "no religion" is people who tend
-    graves, burn incense and visit temples and will not call it a religion. That is the
-    mainland's §14.22 gap, measured here by one instrument rather than borrowed from Pew, and
-    it is why nothing here is drawn on `chinesefolk`: what the survey measures is practice,
-    and §3.1 forbids mixing it with the naming layer beside it.
+    practising folk religion anyway. Until 2026-09-15 all of it stayed `unknown`, because §3.1
+    forbade mixing practice with the naming layer. Spec §3.13 relaxed that for `chinesefolk` in
+    China, Taiwan and Hong Kong: a religious altar at home among people who name no religion
+    counts. The survey has no altar item, so Pew 2023's 21% of the unaffiliated is carved from
+    the `Chinese` row's residual below (hk2021.ALTAR_FOLK_SHARE, ALTAR_FOLK_ROWS), and 52.3% of
+    Hong Kong stays grey.
     """
     from hk2021 import shares, SURVEY_NODES
 
@@ -80,6 +81,7 @@ def _hk_counts():
                 continue
             parts.append(pd.DataFrame({
                 "unit": sub["geo_id"].to_numpy(),
+                "cat": cat,
                 "node": node,
                 "count": sub["count"].to_numpy(dtype=float) * share,
                 "tier": tier,
@@ -105,6 +107,22 @@ def _hk_counts():
         carved.append(part)
     out = pd.concat(carved, ignore_index=True)
 
+    # ---- spec §3.13: a religious home altar among the people left grey --------------------
+    # Anita, 2026-09-15. After the carve the `unknown` residual stands for the people who named
+    # no religion, and Pew finds 21% of Hong Kong's unaffiliated keep an altar at home; that
+    # share of the residual is drawn on `chinesefolk`, territory-wide like the survey layer.
+    # ONLY THE `Chinese` ROW'S RESIDUAL (ALTAR_FOLK_ROWS), 2026-09-15, session cb8b206e-folkfix:
+    # applied to every row it drew about 44,800 non-Chinese residents as Chinese folk religion,
+    # 10,400 of them the Indians and Nepalese the note says are left grey. sources/hk.md §10.
+    from hk2021 import ALTAR_FOLK_NODE, ALTAR_FOLK_SHARE, ALTAR_FOLK_ROWS
+    unk = (out["node"] == "unknown") & out["cat"].isin(ALTAR_FOLK_ROWS)
+    folk = out.loc[unk].copy()
+    folk["count"] = folk["count"] * ALTAR_FOLK_SHARE
+    folk["node"] = ALTAR_FOLK_NODE
+    folk["tier"] = "modelled"
+    out.loc[unk, "count"] = out.loc[unk, "count"] * (1.0 - ALTAR_FOLK_SHARE)
+    out = pd.concat([out, folk], ignore_index=True)
+
     out = out.groupby(["unit", "node", "tier"], as_index=False)["count"].sum()
     out = out[out["count"] > 0]
     out["congregations"] = 0
@@ -115,9 +133,11 @@ ENTRY = {
     "hk": dict(
         name="Hong Kong",
         source=("2021 Population Census ethnicity by district (C&SD); religion shares from "
-                "the Hong Kong Political Culture Survey 2021"),
+                "the Hong Kong Political Culture Survey 2021; home altars from Pew Research "
+                "Center's 2023 survey of East Asian societies"),
         basis=("ethnicity, derived for three migrant nationalities; plus self-identified "
-               "religion from one territory-wide survey"),
+               "religion from one territory-wide survey; folk religion also counts a home altar "
+               "among Chinese residents who name no religion, from a second survey"),
         view=[113.80, 22.13, 114.52, 22.58],
         note_public=(
             "**Hong Kong has never asked anybody here what their religion is either.** Its "
@@ -160,14 +180,22 @@ ENTRY = {
             "against an official 100,000. When a census and a survey with nothing in common "
             "agree with each other and disagree with a third number, the third number is the "
             "one to leave out. "
-            "**About two thirds of Hong Kong is grey, and it is emphatically not drawn as "
-            "irreligion.** The same survey asked the people who said they had no religion "
-            "what they actually do, and **56% of everyone surveyed practises folk religion "
-            "anyway**: grave-tending at Ching Ming, incense at Wong Tai Sin, a fortune "
-            "stick, a date chosen for a wedding. So most of Hong Kong's *no religion* is "
-            "people who do these things and will not call them a religion. That is the same "
-            "gap the mainland has, except that here one survey measured both halves of it. "
-            "Those people are counted and placed and nothing is claimed about them. "
+            "**About one in eight people in Hong Kong is drawn as Chinese folk religion, from "
+            "home altars.** Mainland China and Taiwan are drawn on one rule: people who name folk "
+            "religion, and people who name no religion but keep a religious shrine or altar "
+            "at home. This survey has no altar question, so Pew's 2023 survey supplies it: "
+            "**21%** of Hong Kong people with no religion say there is an altar in their "
+            "home, and that share of the grey among Chinese residents is drawn as folk "
+            "religion, **13.1%** of Hong Kong and the same in every district. Nobody outside "
+            "the Chinese population is counted this way. Pew's question is narrower than the one "
+            "asked in China and Taiwan (in Taiwan the two get 49% and 71%), so read it as a "
+            "floor. "
+            "**About half of Hong Kong is still grey, and it is not drawn as irreligion.** "
+            "The same survey asked the people who said they had no religion what they "
+            "actually do, and **56% of everyone surveyed practises folk religion** in some "
+            "way: grave-tending at Ching Ming, incense at Wong Tai Sin, a fortune stick, a "
+            "date chosen for a wedding. Most of them keep no altar, and they are counted and "
+            "placed with nothing claimed about them. "
             "**The Indians and Nepalese are counted and left grey on purpose.** They are the "
             "obvious next candidates, 42,569 and 29,701 people, but Hong Kong's Indian "
             "community is disproportionately Sindhi Hindu and Punjabi Sikh rather than a "
@@ -183,12 +211,12 @@ ENTRY = {
             "village. It undercounts Wong Tai Sin and Sham Shui Po and overcounts the rural "
             "north, so within a district the dots drift a little away from the tower estates. "
             "It never changes how many dots a district gets, only which street they are on."),
-        how="no census question; ethnicity for three migrant nationalities, one survey for "
+        how="no census question; ethnicity for three migrant nationalities, two surveys for "
             "everyone else",
         fill="from the 2021 census's ethnicity table",
         grain=("18 District Council districts, 412,000 people on average; the survey layer is "
                "territory-wide, so most religions do not vary between districts"),
-        gap=("a religion for 65% of these dots; with no census question they say only that "
+        gap=("a religion for 52% of these dots; with no census question they say only that "
              "somebody was counted"),
         counts=_hk_counts,
         # The hexes carry the district letter and there is no separate unit layer, which is

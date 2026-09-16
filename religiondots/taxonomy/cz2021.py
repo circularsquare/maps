@@ -163,7 +163,9 @@ MAP = {
     "sikhismus": "sikhism",
     "taoismus": "daoism",
     "šintoismus": "shinto",
-    "konfucianismus": "chinesefolk",
+    # Was `chinesefolk` until 2026-09-15; Anita's ruling on ask 036 (ask/RULINGS.md, `cn`,
+    # `all`) sends a row naming Confucianism to its own node. 13 people.
+    "konfucianismus": "confucianism",
     "zoroastrismus": "zoroastrianism",
     "Bahá'í víra": "bahai",
     "rastafariánství": "rastafari",

@@ -62,7 +62,9 @@ REVIEW = {
         "Pentecostal missions plus a Korean-sent Protestant presence, with a Catholic "
         "prefecture of a few hundred; the tree could hold all of those apart and NSO "
         "separates none of them, so anything below the root would be inference. It is "
-        "strongly urban: 4.9% of Ulaanbaatar's religious against 0.9% in Khövsgöl.",
+        "strongly urban: 3.3% of Ulaanbaatar's religious in 2020 against 0.9% in Khövsgöl "
+        "(4.9% was the capital's 2010 column, quoted here until 2026-09-15), and 6.0% in "
+        "Baganuur, the highest of its nine düüregs.",
     "Ислам":
         "-> islam, with no branch. 68,880 people, 3.3%, and the most concentrated "
         "distribution in the country by a wide margin: 92.5% of Bayan-Ölgii's religious "

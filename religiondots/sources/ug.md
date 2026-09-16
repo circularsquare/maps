@@ -1,4 +1,143 @@
-# Uganda — UBOS, 2002 census, Table B7, and why the 2024 census could not be used
+# Uganda: the 2024 census from UBOS's 10% sample (drawn since 2026-09-15), and the 2002 Table B7 build before it
+
+Sections 1-12 below are the 2002 build's record (session `967ffe99-…-ug`), kept because its files are kept
+(`sources/ug.py`, `sources/ug_geo.py`, `sources/ug_grid.py`, `taxonomy/ug2002.py`,
+`data/normalized/ug2002.csv`). Section 0 is what is drawn now.
+
+## 0. The 2024 rebuild, 2026-09-15, session `cb8b206e-ug`
+
+### 0.1 What is drawn
+
+12 answers on 2,200 drawn units (2,207 census subcounties, three Bidi Bidi merges), **44,378,756 people**,
+the 2024 household population. Shares come from UBOS's 10% population sample; each unit's people from the
+census's own Subcounty Profiles workbook. Files: `sources/ug_2024.py` (checks, stability test, composition,
+writes `data/normalized/ug.csv` and `data/raw/ug/nphc2024_aggregate/ug2024_stability.csv`),
+`sources/ug_2024_geo.py` (`--fetch` the portal; build `data/geo/ug/ug2024_subcounties.gpkg` and
+`ug2024_hexes.gpkg`), `taxonomy/ug2024.py` (registry `OVERRIDE`), `countries/ug.py`.
+
+Re-run: `python sources/ug_2024_geo.py --fetch`, `python sources/ug_2024_geo.py`, `python sources/ug_2024.py`
+(add `--parish` for the parish tier, ten more minutes). The two aggregates come from Anita's RAR, not the web:
+`python data/raw/ug/nphc2024_aggregate_script.py` then `python data/raw/ug/nphc2024_waves_script.py`,
+17 minutes each, one core, through `C:\Program Files\WinRAR\UnRAR.exe p -inul` (Windows tar stops at 20 MiB).
+
+### 0.2 The file
+
+`NPHC_HOUSEHOLD_DICT`, Stata 118, 161 variables, 4,693,190 records at 4,790 bytes. Household key
+`HH_CASEUID` (also `HH_SEGMENT`, `HH_STRUCTURE`, `HH_NUMBER`). 1,069,871 households, mean 4.24 persons (the
+census's is 4.15). **25.2% of households hold more than one religion** (31.7% of persons), so persons are
+not independent draws and the split has to deal households. Non-household records (152,385) are blank on
+religion; `HH_P27` refugee status is answered by 106,663 household persons (80,603 yes), so refugees are in
+households: they are 31% of the sample's Orthodox and 15% of its Witnesses.
+
+**Trap: Stata float32 missing is 1.70e38, not the double's 8.99e307**, so a `> 1e300` test lets
+`Residence_updated`'s missing values through as garbage integers (a cast warning, nothing else).
+
+**The two passes disagree in six parish cells**, inside subcounties 417-2-3 and 419-2-12: the waves pass puts
+a household in the parish of its first record and two households' records carry two parish codes. Every
+subcounty x religion cell agrees. Asserted (`PARISH_SPLIT_SUBCOUNTIES`).
+
+### 0.3 The population base and the joins
+
+The workbook's levels are cell indentation, which a value read cannot see, so the tree is rebuilt by sum
+closure (district = counties = subcounties = parishes). It ends with `APAA` (9,456 people, no children) and
+`National` (45,905,417; household population 44,387,526; households 10,698,913), and parishes plus Apaa equal
+all three. Checks, all asserted in `sources/ug_2024.py`:
+
+- all 10,852 sample parishes join the workbook on district, county, subcounty and parish name, with no
+  repeated key on either side; the two workbook-only parishes hold 6 and 31 people in households;
+- the witness the names do not decide: every subcounty's sampling fraction is 0.0819-0.1248 (median 0.1026);
+  each subcounty's non-household share in the census and in the sample correlate at r = 0.974;
+- the portal's subcounty codes carry the sample's names for all 2,207, and its totals equal the workbook's
+  for 2,202; five Karamoja subcounties (311101-311105) read `#N/A` there; its extra row `LOBULE REFUGEE CAMP`
+  (319107) has no population.
+
+### 0.4 The grain, and why it is not the parish
+
+Households are dealt into 12 waves (hash order inside each parish, round-robin), paired into six.
+`stability.halvings(6)` gives ten halvings. District against the nation is the shared construction
+(`median_rho`, `wave_null`, `permutation_p`, `chi2_p`, and the household `CELL_CAP`, largest 0.014 for
+Buddhist). Finer tiers are tested **against their parent**, because at 2,207 units a rank test against zero
+passes anything with district-level geography: each unit's share minus its parent's in the same half,
+correlated between halves (Pearson and Spearman), median over halvings; the null shuffles units within
+their parent separately in every wave (parent shares do not move). Only-children and units with an empty
+wave are left out (26 subcounties; 104 parishes with an empty wave).
+
+**The bar is effect size, not significance**: median half-sample Pearson of the departures >= 1/3. At 1/3
+the full sample's unit share and the parent's share have equal expected squared error as estimates of the
+unit's true share (Spearman-Brown reliability 1/2), so above it the finer figure is better. A category takes
+the finest tier that passes against its immediate parent. Median half-sample Pearson, 2,000 permutations,
+every listed pass at p = 0.0005:
+
+| answer | district | county | subcounty | parish |
+|---|---|---|---|---|
+| Roman Catholic | .998 | .969 | .886 | .609 |
+| Anglican | .995 | .958 | .873 | .587 |
+| SDA | .989 | .944 | .896 | .436 |
+| Islam | .998 | .982 | .903 | .606 |
+| Pentecostal / Evangelicals | .994 | .923 | .740 | .366 |
+| Orthodox | .873 | .879 | .258 x | .294 x |
+| Bahai | .583 | .291 x | .299 x | .196 x |
+| Budhist | .800 | .138 x | .177 x | .011 x |
+| Jehovah's witness | .728 | .541 | .249 x | .089 x |
+| Traditional | .944 | .906 | .580 | .400 |
+| No Religion | .947 | .678 | .477 | .371 |
+| Others | .987 | .933 | .742 | .457 |
+
+Eight answers would support parishes. **No 2024 parish polygon is published** (0.5), so the drawn unit is the
+subcounty and those eight are drawn at their subcounty share; Orthodox and Witnesses at their county's share,
+Bahai and Buddhist at their district's, and the eight share the rest of each unit in the proportions its own
+sample gives them (`compose`). Latvia's reversal check is printed: 64 units where 10+ sample Orthodox give
+twice the drawn share (worst UG2240209, 4.3% sampled against 0.3% drawn), 64 for Witnesses, 9 Bahai, 7 Buddhist.
+
+### 0.5 Geography
+
+COD-AB `cod-ab-uga` (HDX, reviewed 2025-01-28) is still the 135-district edition with 1,520 subcounties and no
+parishes; geoBoundaries has 137 districts (2020) and 1,521 subcounties (UNHCR 2019); HDX's
+`uganda-other-0-0` "Administrative Units Level 6 (Parish)" is the 2006 gazetteer as an xls with no geometry,
+and `uganda-admin-level-5-boundaries` is 2010 subcounties. `statistics.ubos.org/nphc/map` runs on
+`api/get_geospatial_data.php`: `level=district` (147 polygons), `level=subcounty` with no filter (313 county
+features on 312 codes, Kampala's 1025 twice, plus 2,208 subcounty population rows), `level=subcounty` with
+`district_code` and `county_code` (that county's subcounties), and `level=parish` answers `Could not read
+GeoJSON file` with or without a subcounty. The portal's home page states no terms. 312 paced requests.
+
+Joined on DCode/CCode/SCode, which are the sample's codes; names agree for all 2,204 polygons once a hyphen
+is a space (OMIYA-ANYIMA). Areas sum to 241,672 km2 on a union of 241,421 (overlap 0.10%), 1.000 of COD-AB's
+admin0. Median unit 57 km2.
+
+**Bidi Bidi has no polygon.** Its three census subcounties (UG3130106, UG3130207, UG3130409; 121,919 people in
+households, about a third Anglican, a quarter Catholic, a quarter Muslim) sit inside host subcounties'
+polygons. Each is merged with the hosts in its own county whose Kontur/household ratio exceeds 1.2 (national
+1.10): Kululu (2.06); Barakala Town Council, Lori, Romogi (1.48-1.63); Ariwa, Drajini, Odravu West
+(1.22-1.68). The Kontur surplus of each host set is 0.65, 0.69 and 0.73 of its camp, which is the witness.
+Merged ids end `BB`. `LOBULE REFUGEE CAMP` (2.2 km2, Koboko, no census row) is dissolved into Lobule.
+
+Kontur 2023-11 per subcounty against the 2024 household count: p1 0.32, median 1.11, p99 2.10; lowest Opara
+(Amuru) 0.10, Abiliyep (Amudat) 0.15, Palorinya Refugee Settlement 0.18; highest Nyakatonzi (Kasese) 6.52,
+Lubya Town Council 4.11. A within-unit weight only. 879 hex centroids fell outside every polygon, 875 snapped
+within 1 km, 4 dropped (916 people). No unit is hexless. `kontur_cap.py ug`: no stops.
+
+### 0.6 Calls someone might reverse
+
+- **Subcounty-tier rows are `measured`.** They are the census's own answers, a flat 10% household sample
+  whose unit share the split-half supports, times the full count. Survey countries use `modelled`; a reviewer
+  could put this sample there too.
+- **The 1/3 bar** is this build's, derived from the squared-error argument, not a shared constant.
+- **Pentecostal / Evangelicals (Born Again) to `christianity.evangelical`**, not `.pentecostal` (the 2002
+  build's box was `Pentecostal` alone).
+- **Bidi Bidi merged into hosts chosen by Kontur**, rather than finding a UNHCR or OSM settlement boundary.
+
+### 0.7 What 2002 said that 2024 reverses
+
+Karamoja: 2002's Kotido was 28.2% `Other` and 11.9% `None` on a form with no traditional box; 2024's Kotido is
+91.7% Catholic, 0.8% Traditional and 0.8% no religion. Kotido's withdrawn 2002 population (section 5) no longer
+matters. No religion now peaks on Mount Elgon (Bukwo 2.6%, Kween 2.1%, Benet subcounty 6.5%).
+
+### 0.8 Not checked
+
+The 2024 questionnaire's P9 wording and instructions; whether `Others` holds the Protestant churches the form
+does not name; Final Report Table 3.1 re-read (the §11b transcription was used); the mapping of the eleven
+refugee-settlement subcounties that do have polygons against UNHCR's boundaries.
+
 
 Built 2026-09-09, session `967ffe99-…-ug`. Drawn on **56 districts, 7 categories,
 24,433,132 people**, from `Table B7: Religion by District for the Population`, an annex
@@ -286,6 +425,11 @@ three orders of magnitude larger.
 
 1. **The UBOS microdata** (`ask/008-ug-ubos-microdata-needs-a-free-account-and-its.md`). 2024, parish level, ten categories.
    Everything else here is a distant second.
+   **Opened 2026-09-15 (sources.md §scout-2026-09-15-africa-upgrades).** Anita's download is a **10%
+   sample**, 4,693,190 person records with no weight, not the full count; religion has twelve codes and
+   every household record answers; district, county, subcounty and parish codes and names are on every
+   record. Windows tar stops at 20 MiB on the RAR; `UnRAR.exe p -inul` reads it. The parish x religion
+   aggregate is in `data/raw/ug/nphc2024_aggregate/`, so the rebuild starts from that, not the RAR.
 2. **`ubosgis.ubos.org`** when it comes back up. An office ArcGIS portal is where a
    religion layer would sit if one existed ([[reference_gis_server_census]]).
 3. **The 2024 monograph series, Volumes 1-3**, unpublished as of 2026-09-09. The published

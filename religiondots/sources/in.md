@@ -199,7 +199,10 @@ Recorded in `taxonomy/in2011.py`'s `REVIEW`. The three that could most easily be
   route — see §4. India's Shia and Sunni, its Syro-Malabar and Latin Catholics, its
   Digambar and Swetambar Jains are inside single categories and no Indian census table
   separates them. This is the largest single R2 gap on the map and it will need a
-  non-census source.
+  non-census source. For Christians, the non-census sources were scouted on 2026-09-15:
+  `sources.md §scout-2026-09-15-india-christians` (Kerala by district from the Kerala
+  Migration Surveys, Mizoram from the state's church rolls, all of India only from Pew's
+  microdata).
 - **Town-level splitting of the 23 residual units** is available for free and not taken;
   see `sources/in_geo.md` §3.
 
@@ -339,3 +342,439 @@ cite unnamed media reports. Pew's pattern also fails where the answer is known: 
 although Odisha has organised Ahmadi villages (Kerang, Soro, Bhadrak), and the South's 1.17M is 8
 to 10 times the whole national estimate, most likely one or two sampling points. No Ahmadiyya row
 was added to the national estimate layer.
+
+## 9. Christian churches in Kerala and Mizoram, added 2026-09-15
+
+Built by `in_split_christian.py`, which writes `data/normalized/in_split_christian.csv`;
+`countries/in.py::_in_counts` swaps it in for the allocated file's `Christian` rows, as it does
+`in_split.csv` for `Muslim`. Queue item `queue.md` D, scouted in `sources.md
+§scout-2026-09-15-india-christians`. Spec §2.7a's construction; named rows `derived`, rolling back to
+`christianity` through `in2011.COLUMNS`. Session `d743fc47-inchr`.
+
+**Drawn:** 3,926,477 Catholics in Kerala's 14 districts, and 945,127 Christians on nine church rows in
+Mizoram. **Undivided:** 20,721,988 Christians outside those two states (74.5%), plus 2,214,792 in
+Kerala and 11,204 in Mizoram, on `christianity`.
+
+### Sources, all under `data/raw/in/`, all refetched by `--fetch`
+
+| file | what |
+|---|---|
+| `zachariah_2016/WP468.pdf` | K.C. Zachariah, *Religious Denominations of Kerala*, CDS Working Paper 468, April 2016, `cds.edu/wp-content/uploads/WP468.pdf`, 29 pp. Table 6 (district rows) and Table 5 (column shares), PDF p. 17 |
+| `catholic_hierarchy/scin1.html` | catholic-hierarchy.org's all-diocese table for India, Annuario Pontificio 2005 (2004 data), the witness |
+| `mizoram_churches/<body>.html` | Mizoram Statistical Database, NGO > churches, year-wise form, district `State`, 2000-2023, ten bodies |
+
+### Kerala: the Zachariah table was checked, and most of it failed
+
+The same paper's Muslim table has Pathanamthitta 60.9% Shia, so nothing was drawn before three checks.
+Every number below is printed by `python in_split_christian.py --dry-run`.
+
+1. **The table is unweighted.** Table 6 times Table 5's `Total` column reproduces Table 5 to 0.55 points,
+   so the tables agree; but that `Total` column is the sample's spread of Christians, not the census's
+   (Thrissur 4.9% of the sample against 12.3% of the census, Kozhikode 6.0 against 2.1, Wayanad 8.1 against
+   2.8, Kasaragod 4.9 against 1.4). Table 6's `KERALA` row, and Table 2's state totals which are that row
+   times 6,141,269, weight districts by who was sampled. That is why Table 2 equals Table 6's Kerala row
+   (the scout's open question). The build applies each district row to that district's census Christians;
+   on census weights Kerala is 41.9% Syro-Malabar against Table 2's 38.2%.
+2. **The three Catholic rites fail against the dioceses' rolls; their sum passes.** The 26 Kerala-seated
+   jurisdictions in `scin1.html`, each placed in its see city's district, compared with Table 6 on the
+   census, by six groups of districts. A roll runs above self-identification, so the test is whether
+   roll / survey is steady between places:
+
+   | group | Syro-Malabar | Syro-Malankara | Latin | all Catholics |
+   |---|---:|---:|---:|---:|
+   | Thiruvananthapuram, Kollam | no see | 4.26 | 2.52 | 1.69 |
+   | Pathanamthitta, Alappuzha, Kottayam, Idukki | 1.10 | 0.29 | 1.35 | 1.06 |
+   | Ernakulam, Thrissur | 1.47 | 0.08 | 1.54 | 1.36 |
+   | Palakkad | 0.99 | no see | no see | 0.74 |
+   | Malappuram, Kozhikode, Wayanad | 2.19 | no see | 0.96 | 1.44 |
+   | Kannur, Kasaragod | 2.22 | no see | 0.27 | 1.16 |
+   | largest over smallest | 2.2 | 51.1 | 9.2 | 2.3 |
+
+   The cleanest cell is Kannur and Kasaragod, where Tellicherry (Syro-Malabar) and Kannur (Latin) cover
+   the same two districts: rolls 279,200 and 32,540, survey about 126,000 and 120,000. No roll margin makes
+   one rite 2.2 and the other 0.27 in one place. In Ernakulam the only Syro-Malankara see rolls 11,067
+   against about 106,000 in the survey. The rites partition the Catholic total, so a respondent filed under
+   the wrong rite is wrong in two of them; Syro-Malabar's 2.2 is under the bar only because it is two
+   thirds of the total, and the three pass or fail together. Most of the Catholic total's 2.3 is see
+   territory crossing group lines (Changanacherry, seated in Kottayam, covers Thiruvananthapuram and
+   Kollam; Palakkad's Latin Catholics are under Coimbatore, a Tamil Nadu see not counted here). The bar,
+   `CATHOLIC_SPREAD_BAR = 3.0`, was set after a first look, so it is post hoc; any bar from 3 to 20 gives
+   the same answer. Likely cause: Syro-Malabar and Syro-Malankara differ by two letters, and four of
+   Kerala's churches have "Malankara" in their formal names. Absent from the witness: the Knanaya
+   Archeparchy of Kottayam and the Syro-Malankara Eparchy of Bathery (no rows in the table).
+3. **Nothing independent reaches the other churches.** No diocesan roll was found for the Jacobite,
+   Orthodox, Mar Thoma or CSI churches, and three of them carry the "Malankara" name. Not searched beyond
+   the scout's pass: each church's own diocesan membership. The J.B. Koshy Commission on Kerala's
+   Christian minorities had its release reported on 28 February 2026, with no count by church in the
+   coverage; the scout did not find the report online.
+
+So Kerala draws one share per district, the three rites summed, on `christianity.catholic`: Thrissur
+88.5%, Palakkad 78.2, Malappuram 77.9, Kasaragod 77.0, Kannur 76.6, Alappuzha 72.1, Idukki 66.7, Wayanad
+66.5, Kottayam 66.0, Ernakulam 61.6, Kollam 57.1, Thiruvananthapuram 47.3, Kozhikode 35.6, Pathanamthitta
+35.6. It is a floor (Catholics who answered Dalit Christian or Others stay on the parent). **Kozhikode's
+35.6% is the number to distrust first:** its cells put 54.8% of its Christians in the three "Malankara"
+churches, and Thamarassery's 124,664 Syro-Malabar Catholics are seated there. The six-group check
+cannot see inside Malappuram, Kozhikode and Wayanad.
+
+Table 5 as printed has an `Others` column summing to 101.4, a slip in the paper; it is used only by the
+checks.
+
+### Mizoram: the state's church rolls for 2010-11
+
+Ten bodies' members (the eleventh, "Association", has none). **The year is 2010-11**, because the
+census date, 1 March 2011, is in that financial year; it sums to 960,814, 100.5% of the census's 956,331
+Christians. The scout's 2011-12 sums to 1,016,033 (106.2%), mostly because the Salvation Army steps from
+36,395 to 55,791 that year; reading it instead would move no share by more than 1.7 points.
+
+| body | 2010-11 | share | node |
+|---|---:|---:|---|
+| Presbyterian Church of India (Mizoram Synod) | 550,560 | 57.30 | `christianity.reformed.presbyterian` |
+| Baptist Church of Mizoram | 146,331 | 15.23 | `christianity.baptist` |
+| United Pentecostal Church (North East India) | 70,497 | 7.34 | `christianity.pentecostal.oneness` |
+| United Pentecostal Church (Mizoram) | 45,471 | 4.73 | `christianity.pentecostal.oneness` |
+| Evangelical Church of Maraland | 37,383 | 3.89 | `christianity.other` |
+| Salvation Army | 36,395 | 3.79 | `christianity.holiness.salvation-army` |
+| Lairam Isua Krista Baptist Kohhran | 24,795 | 2.58 | `christianity.baptist` |
+| Seventh-day Adventist | 19,235 | 2.00 | `christianity.adventist` |
+| Roman Catholic | 18,890 | 1.97 | `christianity.catholic.latin` |
+| Isua Krista Kohhran | 11,257 | 1.17 | stays on `christianity`, family not identified |
+
+Each share divides every Mizoram sub-district's census Christians. **One share for the state is the
+known cost:** the Evangelical Church of Maraland (Saiha) and the Lairam Isua Krista Baptist Kohhran
+(Lawngtlai) are spread across Aizawl, and the Baptist Church of Mizoram's southern weight is lost. The
+district form returns empty cells. Flagged series: Salvation Army (the 2011-12 step), Seventh-day
+Adventist (26,858 in 2009-10, 12,542 in 2013-14), Presbyterian 2014-15 (325,214, an entry error in a year
+not read).
+
+### Calls, all in `taxonomy/in2011.py`'s `REVIEW`
+
+- Kerala's Catholics on `christianity.catholic`, not the rite nodes, for point 2.
+- Kerala's non-Catholic answers stay on `christianity`: unchecked is not drawn.
+- The Evangelical Church of Maraland on `christianity.other`, since `christianity.evangelical` holds an
+  answer and not a body. The United Pentecostal Church (Mizoram) on Oneness by its name alone.
+- No new nodes. Mar Thoma, Malankara Orthodox and Jacobite would have needed ASARB's leaves promoted
+  (`christianity.oriental.marthoma`, `.malankara-orthodox`) and were not drawn.
+
+## 10. Christian churches for the rest of India from Pew's respondent file, added 2026-09-15
+
+Built by `in_split_christian.py`, the §9 script extended; session `cb8b206e-in`, under a supervisor.
+`python in_split_christian.py --dry-run` prints every number below. Kerala and Mizoram are unchanged,
+asserted row for row against the file on disk before it is overwritten. The Muslim split (§8) is not
+touched.
+
+**Drawn:** 4,848,532 Catholics, 2,793,795 Baptists and 1,810,899 Presbyterians in Pew's Northeast, East
+and South, outside Kerala and Mizoram. With §9, **14,324,830 of India's 27,819,588 Christians (51.5%) are
+on a church node**, up from 4,871,604 (17.5%).
+
+### The file, and whose terms govern it
+
+| | |
+|---|---|
+| publisher | Pew Research Center, *India Survey Dataset*, Neha Sahgal and Jonathan Evans, 2021, doi:10.58094/rfte-a185 |
+| behind | *Religion in India: Tolerance and Segregation*, 29 June 2021 (§8) |
+| on disk | `data/raw/in/pew_india_2021.dta`, 10,235,100 bytes, Stata, stamped 24 May 2023; Anita's download `Pew India Survey Dataset.DTA` from her Pew account (ask 032). Not fetchable by a script |
+| size | 29,999 respondents, 312 variables; 1,011 Christians |
+| item | `qdenomrec`, QDENOM recoded, *"Please tell me which denomination or church, if any, you identify with MOST CLOSELY?"*, asked if `qrelsing` = 3 (Christian) |
+| geography | `region`, Pew's six zonal-council regions (§8); nothing finer |
+| weight | `weight`, summing to 29,999 |
+
+**`ICPSR_38489-V1.zip` beside it is another study.** ICPSR 38489 is the *East Asian Social Survey (EASS),
+Cross-National Survey Data Sets: Culture and Globalization in East Asia, 2018* (its manifest, its
+codebook's cover, its description page). `ask/RULINGS.md` (ask 032) calls it this file's codebook and
+terms; it is neither, and its terms (research use, no redistribution) do not govern the Pew file. Nothing
+here reads it. The Pew file came with no documentation; the topline and report in `pew_2021/` stand in.
+
+**Pew's own Terms of Use govern it** (`pewresearch.org/about/terms-and-conditions/`, read 2026-09-15
+through WebFetch's extraction, twice, quoting; the dataset page asks for them to be accepted at download
+and is behind the account). §13, *Additional Survey Dataset Terms and Conditions*: a licence to "publish,
+modify, create derivatives of, or otherwise exploit the survey datasets"; publication of the Data
+"limited to excerpts" and never "in full or substantially in full"; nothing implying a policy or lobbying
+position of the Center; attribution to the Center; and *"you must include the following disclaimer with
+your use of any Data: 'Pew Research Center bears no responsibility for the analyses or interpretations of
+the data presented here. The opinions expressed herein, including any implications for policy, are those
+of the author and not of Pew Research Center.'"* §14: no attempt to identify respondents, or to link
+records with other data to identify them. Regional shares applied to census counts are a derivative that
+publishes no respondent record and identifies nobody, so this is not an ask. **The disclaimer closes
+India's `note_public`, word for word**, and `source` names the dataset. Not read closely enough to rule
+on: whether §13 allows a sold print (`[[reference_poster_commercial_licences]]`); the extraction quoted no
+commercial clause, which is not the same as there being none.
+
+### The public file recodes the card
+
+Topline p. 23 prints QDENOM for India in sixteen answers. The file keeps seven codes:
+
+| code | label | Christians | weighted % | topline cells it holds |
+|---|---|---:|---:|---|
+| 1 | Catholic | 374 | 37.1 | Catholic 37 |
+| 9 | Baptist | 181 | 13.2 | Baptist (DO NOT READ) 13 |
+| 12 | Presbyterian (DO NOT READ) | 96 | 5.1 | Presbyterian 5 |
+| 6 | No denomination or church in particular | 23 | 3.5 | 4 |
+| 97 | All other denominations | 246 | 30.4 | Church of North India 7, Church of South India 7, Orthodox 3, some other 2, Jehovah's Witness 0, Adventist 2, Unitarian 0, Methodist 1, Pentecostal 5, Lutheran 2, Protestant not specified 1 |
+| 98, 99 | Don't know; Refused | 76; 15 | 9.3; 1.2 | DK/Refused 11 |
+
+Every row reproduces within its rounding (largest gap 0.47 points per printed cell), which confirms the
+codes and the weight; `check_topline()` re-reads the printed row off the PDF. **The Church of North India
+and Church of South India, 14% of India's Christians between them, are inside code 97 and cannot be
+drawn from this file.** Nor can the Orthodox or the Pentecostals.
+
+### Nothing below region
+
+`region` is the only geography. There is no state, district or sampling-point variable. `Q85AREC` ("In
+what state or union territory were you raised?") is recoded to same state / different state / don't know;
+`qmlangrec` is Hindi / not Hindi; `qrid` is a respondent number from 23 to 34,929 with no cluster in it.
+So the Kerala and Mizoram respondents cannot be taken out of the South and Northeast pools that are applied
+to their neighbours.
+
+Pew's design (report pp. 223-227): 30 strata built from states, 138 PSUs (groups of districts), six
+sub-districts per PSU, four villages or census blocks per sub-district, twelve households per village; the
+Northeast allocated more than its share; Christians targeted through a composite measure of size (731
+expected without it, 1,011 achieved). Median design effect for Christians 3.7, margin of error 5.9 points
+(p. 228).
+
+### Christians by region, weighted % of each region's Christians
+
+| region | respondents | Catholic | Baptist | Presbyterian | no denomination | all other | don't know | refused | drawn |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---|
+| Northeast | 326 | 16.2 | 33.6 | 31.8 | 1.3 | 14.4 | 1.1 | 1.6 | yes |
+| North | 24 | 52.4 | 0 | 0 | 18.4 | 16.9 | 3.7 | 8.6 | no |
+| Central | 10 | 62.2 | 0 | 0 | 3.7 | 8.4 | 25.7 | 0 | no |
+| East | 123 | 37.4 | 0 | 0 | 0 | 37.7 | 24.9 | 0 | yes |
+| West | 56 | 52.5 | 0 | 0 | 3.3 | 37.3 | 4.9 | 2.0 | no |
+| South | 472 | 39.4 | 13.0 | 0 | 4.6 | 34.3 | 7.5 | 1.2 | yes |
+| India | 1,011 | 37.1 | 13.2 | 5.1 | 3.5 | 30.4 | 9.3 | 1.2 | |
+
+Unweighted: Catholic 62, 13, 6, 43, 32, 218; Baptist 114 in the Northeast and 67 in the South; all 96
+Presbyterians in the Northeast.
+
+### Which regions are drawn: 100 Christian respondents or more
+
+`MIN_RESPONDENTS = 100` is Italy's `N_FLOOR` (`sources/it.py`), where 100 respondents put the standard
+error on a Catholic share near 4.3 points. It was picked after the table above was printed, so it is not
+blind; it is a borrowed number, not one fitted to these answers. Pew printed QDENOM for India only, though
+it printed QSECT by region down to Central's 202 Muslims, and with twelve interviews to a village the
+North's 24 and Central's 10 Christians may be one or two villages; the file has no cluster id to check
+(`stability.py`'s `CELL_CAP` cannot run). The floor is a minimum, not a guarantee: at the design effect
+of 3.7 the East's 123 are worth about 33.
+
+Italy's thin units take their parent's share. Here the only parent is all of India, whose Baptists and
+Presbyterians Pew found only in the Northeast and South, and whose 37% Catholic is below all three thin
+regions' readings (52 to 62%). So the North, Central and West stay on `christianity` rather than take a
+national share that their own respondents contradict.
+
+**No split-half.** The survey is one wave with no cluster variable, and six regions give a rank test no
+power anyway (`playbooks/cab.md`, Turkmenistan). What stands in:
+
+- **(b) The spatial chi-square** of each named answer against the rest over the drawn regions, on
+  unweighted counts, raw and with the statistic divided by the design effect 3.7: Catholic p 2.7e-14 (2.1e-04
+  after), Baptist 1.0e-19 (7.4e-06), Presbyterian 3.4e-43 (3.3e-12). The build stops if one is 0.05 or
+  more after the division. A clustered answer can have a design effect above the median, so this is not a
+  cluster check.
+- **(c) Catholics against catholic-hierarchy's 149 diocesan rolls** (`scin1.html`, 2004), each see put in
+  its see city's state (`SEE_STATE`), against Pew's share of the region's surveyed census Christians:
+
+  | region | census Christians surveyed | Pew Catholic % | survey | rolls | roll / survey |
+  |---|---:|---:|---:|---:|---:|
+  | Northeast | 6,653,490 | 16.2 | 1,078,110 | 1,258,335 | 1.17 |
+  | North | 676,264 | 52.4 | 354,347 | 259,518 | 0.73 (not drawn) |
+  | Central | 1,098,053 | 62.2 | 682,786 | 601,324 | 0.88 (not drawn) |
+  | East | 3,368,181 | 37.4 | 1,260,149 | 1,941,686 | 1.54 |
+  | West | 1,762,381 | 52.5 | 925,890 | 1,585,489 | 1.71 (not drawn) |
+  | South | 12,910,581 | 39.4 | 5,083,139 | 11,307,772 | 2.22 |
+
+  Spread over the drawn regions 1.91, under `CATHOLIC_SPREAD_BAR` (3.0, set by §9 the same morning); over
+  all six 3.04. A roll runs above self-identification, so the North's 0.73, the only ratio under 1, is a
+  sign its 52% is high, and it is not drawn. The South's 2.22 is the highest drawn ratio; since Kerala's
+  own rolls run 1.28 times its KMS Catholics (§9), the rest of the South reads about 2.35, so Tamil Nadu's
+  and Andhra Pradesh's Catholics are probably under-drawn at 39%.
+- **(d) The Northeast's named Protestants against Mizoram's rolls.** Pew implies 2,114,860 Presbyterians
+  in the surveyed Northeast; Mizoram's roll holds 550,560 (26%), leaving 1,564,300 for the other states.
+  Baptists 2,233,378, of which Mizoram's two Baptist rolls hold 171,126 (8%). The Nagaland Baptist Church
+  Council's 716,495 baptised members (the scout's reading of the Baptist World Alliance page, undated) sit
+  inside the second figure comfortably. Neither is a check with power.
+
+### Result
+
+| drawn region, census Christians split | Christians | Catholic | Baptist | Presbyterian | unnamed, on `christianity` |
+|---|---:|---:|---:|---:|---:|
+| Northeast, without Mizoram, Manipur and Sikkim | 5,697,159 | 923,139 | 1,912,361 | 1,810,899 | 1,050,760 |
+| East | 3,368,181 | 1,260,157 | 0 | 0 | 2,108,024 |
+| South, without Kerala, Lakshadweep, Andaman and Nicobar | 6,769,312 | 2,665,236 | 881,434 | 0 | 3,222,642 |
+
+Undivided and `measured`: North 676,264, Central 1,098,053, West 1,762,381 (under the floor); 1,350,638
+where Pew interviewed nobody (Manipur, Sikkim, the Kashmir Valley, Ladakh, Chandigarh, Dadra and Nagar
+Haveli, Daman and Diu, Lakshadweep, Andaman and Nicobar; `in_split.py`'s lists, imported). On a church
+node: Pew 9,453,226, Kerala 3,926,477, Mizoram 945,127. Every one of 5,974 sub-districts sums to its census
+`Christian` count.
+
+### Calls, all in `taxonomy/in2011.py`'s `REVIEW`
+
+- **One Northeast share, Presbyterians in Nagaland.** About 550,000 Presbyterians are drawn in Nagaland,
+  whose churches are Baptist associations, and Meghalaya, Assam, Arunachal Pradesh and Tripura take the
+  same Baptist share. Kept because the Muslim split draws Pew's regions the same way (spec §3.10) and the
+  region's total holds. **The first call to reverse**; the alternative is the Northeast's Baptists and
+  Presbyterians on `christianity`.
+- `Catholic` on `christianity.catholic`, not `.latin`: the card names no rite.
+- North, Central and West undivided under the floor, above; their shares are printed by `--dry-run`.
+- Shares of all Christians, don't know and refused included, as the topline prints them.
+- The disclaimer in `note_public`, because §13 requires it with any use of the data.
+
+### Found on the way
+
+- **`scin1.html` does list the Syro-Malankara Eparchy of Bathery**, as `Battery (Malankarese)`, 25,512
+  Catholics. §9's docstring called it absent. It would sit in the Malappuram, Kozhikode and Wayanad group,
+  where Syro-Malankara already has no see, so it adds a ratio where §9 had none; the rites already fail,
+  and §9's check was not re-run with it. Recorded in the docstring beside `SEAT`.
+- The ICPSR zip, above.
+
+## 11. Review, 2026-09-15 (session `cb8b206e-rev2`)
+
+A full review of §9 and §10. `check_md.py` is clean, `built_countries.py --check` passes, and `check_rollup.py in`
+shows 121,305,212 derived people, all rolling up and none orphaned. A screenshot at the country's `view` shows no
+dots in the sea, no blank state and nothing that looks broken. Not rebuilt; put back in `queue.md` (D, the `in` item).
+
+**The one Northeast share fails §10's own Catholic test inside the region.** Check (c) compares
+catholic-hierarchy's 2004 rolls with Pew's share applied to census Christians, by region, and passes at a
+spread of 1.91 under `CATHOLIC_SPREAD_BAR` = 3.0. I ran the same comparison by state inside each drawn region,
+on the same `scin1.html` and `SEE_STATE` (read-only scratch script, nothing written):
+
+| Northeast, drawn at 16.2% Catholic | census Christians | rolls | roll / drawn |
+|---|---:|---:|---:|
+| Assam with Arunachal Pradesh (no see of its own in 2004) | 1,584,599 | 567,217 | 2.21 |
+| Meghalaya (Shillong, Tura) | 2,213,027 | 588,465 | 1.64 |
+| Tripura (Agartala) | 159,882 | 21,162 | 0.82 |
+| Nagaland (Kohima) | 1,739,651 | 50,873 | 0.18 |
+
+That is a spread of 12.2. A roll runs above self-identification, which is why §10 reads the North's 0.73 as a
+sign of a share that is too high. By the same reading, Nagaland's Catholics are drawn at about five times
+the Diocese of Kohima's own roll: about 282,000 drawn against 50,873 on its books. Meghalaya and Assam are
+under-drawn by that same share. For comparison, the East spreads 3.8 (Bihar 3.81 on 129,247 Christians,
+Jharkhand 1.42, Odisha 1.01) and the South outside Kerala spreads 1.7 (Andhra Pradesh 3.49, Karnataka 2.23,
+Tamil Nadu with Puducherry 2.09). So the South holds, the East is marginal, and the Northeast fails at four
+times the bar.
+
+This is the Presbyterian problem in §10's calls (about 553,000 drawn in Nagaland) showing up in the one church
+that has an outside figure to check against. The error has a direction; it is not noise. Northeast churches
+follow the tribe, and so the state: Baptist in Nagaland and the Garo hills, Presbyterian and Catholic in the
+Khasi and Jaintia hills. A regional average matches none of them. Nagaland is drawn 33.6% Baptist (about
+585,000), while the Nagaland Baptist Church Council alone has 716,495 baptised members, a count that leaves
+out children.
+
+**The region's total does not hold either, though `REVIEW` says it does.** Mizoram draws from its own rolls,
+while the rest of the Northeast still takes the full regional share, which includes Mizoram's respondents.
+Here is the Northeast as drawn (Mizoram's rolls plus the Pew share elsewhere) against the totals Pew implies
+for the same 6,653,490 surveyed Christians:
+
+| church | drawn | Pew implies | difference |
+|---|---:|---:|---:|
+| Presbyterian | about 2.36M | 2.11M | +12% |
+| Baptist | about 2.08M | 2.23M | -7% |
+| Catholic | about 0.94M | 1.08M | -13% |
+
+Splitting what is left after Mizoram instead would put Presbyterians at 27.5% rather than 31.8%. That fixes the
+totals but still puts about 480,000 Presbyterians in Nagaland.
+
+**What I would do:** take the Northeast out of the Pew split and leave its Christians outside Mizoram on
+`christianity`, as North, Central and West already are, and keep the East and South. That removes 923,139
+Catholics, 1,912,361 Baptists and all 1,810,899 Pew Presbyterians. The share of India's Christians on a church
+would fall from 51.5% to 34.8%. The note's Northeast figures and the Nagaland sentence would go with them.
+
+Smaller points, recorded and not fixed:
+
+- `taxonomy/in2011.py`: the `REVIEW` text for `Pagan` and `Non Christians` says `indigenous.indian`, but `MAP`
+  files both on `indigenous.indian.khasi`. That text is older than this upgrade. The comment above `COLUMNS`
+  still says only Kerala and Mizoram get their churches from a second source.
+- Kozhikode's **36%** Catholic, printed in bold in the note, is a soft doubt. The two sees seated in the
+  district (Thamarassery 124,664, Calicut 35,123) hold 3.4 times the 46,820 Catholics that KMS gives its 131,516
+  Christians, against 1.28 for Kerala as a whole. Both sees also reach into Malappuram and Wayanad, and §9's
+  check on that three-district group passes, so this is a doubt about one printed figure, not a failure.
+- Voice: the new Christian paragraphs read plainly. They add no em dashes and bold only figures and the
+  paragraph openers. The closing disclaimer is Pew's required text.
+
+## 12. The Northeast taken off the Pew split, 2026-09-15 (session `cb8b206e-in2`)
+
+A supervisor's call on §11, built under a supervisor. `python in_split_christian.py --dry-run` prints every
+number below.
+
+**Changed.** Pew's Northeast (326 Christian respondents) is no longer drawn. Its 5,697,159 Christians outside
+Mizoram, Manipur and Sikkim are back on `christianity`, `measured`, with a note giving the reason
+(`NOT_DRAWN`). That removes 923,139 Catholics, 1,912,361 Baptists and all 1,810,899 Pew Presbyterians. The
+East and South are unchanged (1,260,157 and 2,665,236 Catholics, 881,434 Baptists), and Kerala and Mizoram
+are identical to the file on disk row for row. **9,678,431 of India's 27,819,588 Christians (34.8%) are on a
+church node**, down from 51.5%. `note_public`, `gap`, `fill` and `note` in `countries/in.py`, and the
+Catholic, Baptist, Presbyterian and `Christian` entries in `taxonomy/in2011.py`'s `REVIEW`, say so.
+
+**Why.** §11's by-state roll test is now check (d) in the script, printed on every run and not a guard:
+
+| Northeast, 16.2% Catholic | census Christians | drawn | rolls | roll / drawn |
+|---|---:|---:|---:|---:|
+| Meghalaya | 2,213,027 | 358,592 | 588,465 | 1.64 |
+| Nagaland | 1,739,651 | 281,887 | 50,873 | 0.18 |
+| Assam with Arunachal Pradesh | 1,584,599 | 256,763 | 567,217 | 2.21 |
+| Tripura | 159,882 | 25,907 | 21,162 | 0.82 |
+
+A spread of 12.2 against `CATHOLIC_SPREAD_BAR` (3.0); the same share drew about 553,000 Presbyterians in
+Nagaland, and Mizoram's respondents sat inside a share applied only to its neighbours.
+
+**A Northeast split needs a source by state**, not Pew's region again: the church bodies' own rolls state by
+state, or the church each tribe follows applied to a count of that tribe, after
+`[[feedback_proxy_residual_nameable]]`'s test. Recorded in `queue.md` D.
+
+**Two things the withdrawal exposed.**
+
+- **Check (b) stopped the build on Catholics.** Over the East and South alone the chi-square gives p 0.033
+  raw and 0.27 after the design effect: 37.4% and 39.4% cannot be told from one pooled 39.0%. Pooling would
+  move the East by 1.6 points, in a split the call keeps as built. The guard now lets regional shares stand
+  when no drawn region is further than `SE_AT_FLOOR` from the pooled share: 4.3 points, the standard error
+  at the 100-respondent floor from `sources/it.py`'s `N_FLOOR` note. It was added after the failure, so it
+  is post hoc. Baptist still passes (p 0.026 after the design effect); Presbyterian has no answer in the
+  drawn regions and is skipped. **Replaced the same day by pooling the East and South (§13).**
+- **The East by state spreads 3.8, over the bar:** West Bengal 2.29, Jharkhand 1.42, Odisha 1.01, and
+  Bihar 3.81 on 129,247 Christians; 2.3 without Bihar. Kept on the supervisor's call, which is why check (d)
+  prints and does not stop. The South spreads 1.7 (Andhra Pradesh 3.50, Karnataka 2.23, Tamil Nadu with
+  Puducherry 2.09).
+
+**Also fixed.** `taxonomy/in2011.py`'s `REVIEW` text for `Pagan` and `Non Christians` named
+`indigenous.indian`; `MAP` files both on `indigenous.indian.khasi`, and the text now says so (`Pagan` adds
+that its 38% outside Meghalaya take that node too). The comment above `COLUMNS` names all three Christian
+sources. Kozhikode's 36% (§11) is untouched.
+
+**Rebuilt through step 9.** `build_tree.py` clean (728 nodes), `check_mapping.py in` clean, rescattered: 1,207,976
+dots at 1:1,000 and 120,785 at 1:10,000, no rings. `check_rollup.py in`: 116,658,813 derived, all rolling
+up (4,646,399 fewer than §11, the Northeast's three churches). `coverage.py` ok over 186 countries,
+`built_countries.py --check` ok, `check_md.py` clean. Waiting for the supervisor's build tail.
+
+## 13. East and South pooled for Catholics, 2026-09-15 (session `cb8b206e-fixes`)
+
+A supervisor's call on §12, built under a supervisor. `python in_split_christian.py --dry-run` prints every
+number below.
+
+**Changed.** §12's post-hoc rule is gone. It had let the East's and South's Catholic shares stand apart
+because neither sat more than 4.3 points (`SE_AT_FLOOR`) from their pooled share. Check (b) now applies
+the standard treatment. If an answer's drawn regions differ at 0.05 after Pew's design effect (3.7), each
+region keeps its own share. If they do not, every drawn region takes one pooled share: the weighted share
+of all their Christian respondents together. Catholics over the East and South (37.4 and 39.4 on their
+own; p 0.033 raw, 0.27 after the design effect) are now drawn at **39.0%** in both. Baptist still differs
+(p 0.026 after the design effect), so it stays regional: 13.0 in the South, and none in the East.
+Presbyterian has no answer in either region. Kerala and Mizoram are identical to the file on disk, row for
+row. The pooled rows' note reads `structure_geo=pew_region:East+South`.
+
+| drawn region | census Christians | Catholic in §12 | Catholic now | Baptist |
+|---|---:|---:|---:|---:|
+| East | 3,368,181 | 1,260,157 | 1,314,139 | 0 |
+| South, outside Kerala, Lakshadweep, Andaman and Nicobar | 6,769,312 | 2,665,236 | 2,641,132 | 881,460 |
+
+The South's Baptists moved by 26 (from 881,434), from the rounding done alongside the Catholic share.
+**9,708,335 of India's 27,819,588 Christians (34.90%) are on a church node**, up from 9,678,431 (34.79%).
+The note's rounded 35% holds, and its sentence now reads 39% Catholic in both regions.
+
+**The checks, run on the share drawn.** (c) Roll / survey is 1.48 in the East and 2.24 in the South, a
+spread of 1.52 (1.44 before; the bar is 3.0). (d) By state, the East still spreads 3.8: Odisha 0.97,
+Jharkhand 1.37, West Bengal 2.19, Bihar 3.66. The South spreads 1.7: Tamil Nadu with Puducherry 2.11,
+Karnataka 2.26, Andhra Pradesh 3.53.
+
+**Rebuilt through step 9.** `build_tree.py` clean (729 nodes), `check_mapping.py in` clean. Rescattered:
+1,207,976 dots at 1:1,000 and 120,785 at 1:10,000, no rings. `check_rollup.py in`: 116,688,717 derived, all
+rolling up (29,904 more than §12). `built_countries.py --check` ok over 187, `check_md.py` clean.
+`coverage.py` reports one problem, and it is not India's: `ug christianity.pentecostal` draws dots but is
+missing from Uganda's coverage line, while `cb8b206e-ug` is mid-upgrade. Waiting for the supervisor's build
+tail.

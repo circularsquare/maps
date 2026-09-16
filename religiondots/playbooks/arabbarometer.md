@@ -10,10 +10,27 @@ publishes none of it: the survey gives each governorate's mix, and a population 
 - `jo` Jordan: drawn, 12 governorates, waves II to VIII on DOS end-2025.
 - `iq` Iraq: drawn, 18 governorates, waves V, VI-3, VII, VIII on the 2024 census, the religion
   answer composed with the sect follow-up.
-- `lb` Lebanon: closed on this source; the per-governorate mix is a fieldwork quota (`sources/lb.md`).
+- `lb` Lebanon: closed on this source; the per-governorate mix is a fieldwork quota (`sources/lb.md`). WVS wave 7
+  closes the same way: the same firm, Statistics Lebanon Ltd., sets each cluster's sect there too (`sources/lb.md` §9).
 - `ye` Yemen: drawn, 21 of 22 governorates (Socotra unsampled), wave V on the Population Task
   Force's 2025 estimate, the logged sect item composed in; wave III is the replication witness.
-- Closed on the pooled survey: Morocco, Algeria, Tunisia, Libya, Sudan (`sources.md` §11af).
+- `dz` Algeria: drawn, 48 wilayas, waves V to VII on the RGPH 2008 count; the non-Muslim share at
+  two units (Kabylie, the rest) on Anita's 2026-09-16 ruling, split at the national mix; II-IV
+  out on the card (`sources/dz.md`).
+- `ma` Morocco: drawn, 73 units, waves V to VIII on RGPH 2024 Moroccans; the non-Muslim share
+  split urban and rural (tested in this survey and in the Afrobarometer), with foreign residents
+  by nationality; III-IV out on the card and the pre-2015 regions (`sources/ma.md`).
+- `tn` Tunisia: drawn, 24 governorates, waves V to VIII on RGPH 2024 at one national share and mix
+  (no governorate, Greater Tunis or urban stratum passes); II-IV out on the card; wave VI decoded on
+  the code (`sources/tn.md`).
+- `ly` Libya: drawn, 22 districts, waves V to VII on BSC's 2020 estimate of Libyans at one
+  national share and mix (7 non-Muslim answers); III out on the card; wave VII's district labels
+  fail the allocation check and set the level only (`sources/ly.md`).
+- `sd` Sudan: drawn, 18 states, waves V and VII pooled with Afrobarometer R5-R9 on COD-PS 2022 at
+  one national share; II and III out on the card; eight wave V answers contradicting the follow-up
+  dropped (`sources/sd.md`). It had been closed on the pooled survey (`sources.md` §11af). Morocco,
+  Tunisia and Libya were
+  reopened on 2026-09-16 (`queue.md` "Maghreb reopened").
   Saudi Arabia, Mauritania and Bahrain have no `Q1012` answers at all.
 - `cab.py::assert_not_quota` wraps this module's quota test for other surveys.
 
@@ -52,8 +69,12 @@ publishes none of it: the survey gives each governorate's mix, and a population 
 - **The card changes by wave.** `Atheist` is on Egypt's wave V card only and `No religion` on VII;
   Iraq's sect item is absent in II and empty in III. A share pooled over waves whose card lacked
   the box measures the questionnaire: drop the answer (`eg.py::DROPPED`, `iq.py::DROPPED`) or omit
-  the waves (`iq.py::OMIT`). Not checked yet (nothing reads each wave's card; a reader like
-  `tz.py::report_card` belongs in `arabbarometer.py`).
+  the waves (`iq.py::OMIT`). Caught by: `dz.py::card` (reads each wave's `Q1012` labels and asserts
+  which waves offer a no-religion box against the pool: none in II-IV, `Atheist` in V, `No
+  religion` in VI-VII, where Algeria's non-Muslim answers are half that box); lifted 2026-09-15 as
+  `arabbarometer.py::card(pool, omit)`, first called by `ly.py`, with the copies in `dz.py`, `ma.py`
+  and `tn.py` still to be replaced when each is next edited. The labels are the whole file's, not
+  one country's card.
 - **Two spellings of one answer.** `Other`/`other` (Lebanon), `refused`/`Refused to answer`
   (Jordan, Iraq). Caught by: `assert_one_wording` at the foot of `load`; merge with `recode=`, whose
   keys must exist. A curly apostrophe got past it until 2026-09-14 (`Ja’fari` against `Ja'fari`).
@@ -106,8 +127,26 @@ publishes none of it: the survey gives each governorate's mix, and a population 
   with every total intact. Caught by: `ye.py::decode_iii` (decodes on the CSO-order code, names and
   wave II's labels as witnesses). Not checked for other countries; `NORM`'s one-label-per-unit check
   cannot see two units under one label.
+- **Two codes can share one label while a governorate's own label is missing.** Tunisia's waves
+  VI-1, VI-2 and VI-3 label both 21009 and 21010 `Jendouba` and have no `Kef` label, in a code order
+  that is not INS's (V, VII and VIII are). Decoded by name, Le Kef merges into Jendouba with every
+  total intact. Decode such a wave on the code, with the names as witness everywhere else, and settle
+  the pair on sample size against the waves that label both (23 against 37 respondents, Le Kef 56 to
+  Jendouba's 88 elsewhere). Caught by: `tn.py::decode` (`VI_CODES`, `VI_MISLABELLED`, the swap
+  asserted worse). Check for it: print each wave's code-to-label table and look for a label on two
+  codes or a unit with no label. Detail: `sources/tn.md` §3.
+- **A wave's district labels can fail the population while its weights average 1.** Libya's wave
+  VII ranks its weighted respondents per district against BSC's estimate at Spearman +0.853, where
+  V and VI read +0.99: Ajdabiya 3.7 times its share, Benghazi 0.32, Tripoli 0.41, mean weights near
+  1 in each. Swapping three pairs of labels halves the misfit and does not remove it, so no swap is
+  applied. `held_out` pools waves and passed Libya at +0.999 with VII left out; with it in, the
+  wave's misfit is diluted, not caught. Caught by: `ly.py::allocation` (per-wave Spearman, VII
+  pinned in a band); not shared yet, and it belongs beside `held_out`. Use such a wave for the
+  level only. The same wave also re-uses VI's codes 11001-11022 for other districts. Detail:
+  `sources/ly.md` §3.
 - **Wave V's sect item is interviewer-logged** (`DO NOT READ, LOG ANSWER`) on one cross-country
-  list. A branch the list lacks is logged under another code (Yemen's Zaydis on code 14 `Alawi`),
+  list. A branch the list lacks is logged under another code (Yemen's Zaydis on code 14 `Alawi`;
+  Libya's 561 `Alawi` with no Maliki code, where VII records Maliki 286 and no Alawi),
   and a whole governorate can have nobody in a box (Ta'iz 0 of 260 `Just a Muslim`). Caught by:
   `ye.py::zaydi_geography` for the first; nothing for the second (`E2001B`, the interviewer, is
   blank, and a PSU split inside a unit replicates a team's habit). Detail: `sources/ye.md` §4-5.
@@ -127,9 +166,31 @@ publishes none of it: the survey gives each governorate's mix, and a population 
 - **Palestine's wave III `wt` averages 0.9755**, so `load`'s weight guard stops the country. Read
   the wave III codebook before passing it. Caught by: `arabbarometer.py::load`. Detail: sources.md
   §scout-2026-09-14-asia-oceania.
+- **A weight can be left un-normalised for one country in one wave.** Algeria's `WT` in all three
+  parts of wave VI averages 0.840, 0.780 and 0.849 while every other country in the same files
+  averages 0.99-1.00. Caught by: `load` stops; `rescale_weights={wave: reason}` divides the wave by
+  its mean over the country (`dz.py::RESCALE`). Detail: `sources/dz.md` §3.
+- **The religion answer can contradict the denomination follow-up in the same interview.** Algeria
+  wave V: all three `Jewish` answers give Shafi'i, Sunni or Orthodox, and three `Christian` answers
+  give Shia, Sunni or `Just a Muslim`; drawn as recorded, that is about 60,000 Algerian Jews. Drop
+  the contradictions like refusals. Caught by: `dz.py::contradictions` (the list asserted; a
+  non-Muslim answer with an unclassified follow-up stops). Not shared yet; it belongs in
+  `arabbarometer.py`. Detail: `sources/dz.md` §3.
 - **Write an outside level check before building.** Egypt 5.0-7.0% Christian (1986 census
   5.7-5.8%) and Cairo 6-11%; Jordan `CHRISTIAN_BAND`; Iraq `SHIA_OF_NAMED_BAND`. Caught by: those
   assertions in `eg.py::main`, `jo.py::main`, `iq.py::main`.
+
+- **Wave VI has no urban and rural stratum.** `Q13` Urban/Rural is in V, VII and VIII; VI-1 has
+  nothing, and VI-2 and VI-3 carry `Q13A`, a self-reported "big city, village or town, rural area"
+  (Morocco VI-3: 947 of 1,201 "big city"), which is not the sampling stratum. Test an urban and rural
+  contrast on the waves with `Q13` and take the level from the whole pool. Caught by: `ma.py::main`
+  (`extra={"urban": ("q13",)}` prints `not asked` for VI). Detail: `sources/ma.md` §4.
+- **A share of 0.3% cannot carry a region but can carry urban and rural.** Morocco's 36 non-Muslims
+  stand apart in no region, and are urban beyond the sample in both this survey and the
+  Afrobarometer. Pre-register the bar, require it in both instruments, and lay the two shares on the
+  census's own urban and rural counts per unit. Caught by: `ma.py::urban_test` (`URBAN_BAR`,
+  `URBAN_EXPECTED`); nothing shared. The card check is now copied in `dz.py::card` and
+  `ma.py::card`: lift it into `arabbarometer.py` next time either is edited.
 
 ## "No religion" boxes
 The card offers no traditional religion, so the draft procedure in `WORKFLOW_PLAN.md` seldom

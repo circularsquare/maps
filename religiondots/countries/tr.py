@@ -115,13 +115,20 @@ ENTRY = {
             "twelve regions here. Almost all of those people are in Istanbul in reality. "
             "**And nothing here was counted.** Every dot is a survey share applied to the "
             "population the address register puts in that region, so hiding inferred dots "
-            "empties the country, which is the fair test of it."),
+            "empties the country, which is the fair test of it. "
+            "**Syrians under temporary protection are not on this map.** The address register "
+            "that sets each region's population leaves them out. Türkiye's migration authority "
+            "counted **3,535,898** in January 2023, weeks after the register's count of 31 "
+            "December 2022, which would make them about one person in twenty-five living in the "
+            "country. They are in the not drawn part of the bar."),
         how="survey, 21,632 people, 2013; no census has asked since 1965",
         grain="twelve statistical regions, 7.1m people each; the source's own limit",
         fill=("from the survey's national figures, for the religion split; the school split "
               "is regional"),
-        gap=("Alevis, who have no option on the questionnaire; and any breakdown of the "
-             "0.4% who are not Muslim"),
+        gap=("Alevis, who have no option on the questionnaire; any breakdown of the 0.4% who "
+             "are not Muslim; and the 3,535,898 Syrians under temporary protection in January "
+             "2023, 4.0% of residents, whom the address register leaves out"),
+        gap_share=0.03981,
         counts=_tr_counts,
         units=None,
         unit_key=None,

@@ -118,6 +118,7 @@ def _cn_counts():
                 continue
             parts.append(pd.DataFrame({
                 "unit": sub["geo_id"].to_numpy(),
+                "cat": cat,
                 "node": node,
                 "count": sub["count"].to_numpy(dtype=float) * share,
                 "tier": tier,
@@ -180,6 +181,31 @@ def _cn_counts():
         carved.append(part)
     out = pd.concat(carved, ignore_index=True)
 
+    # ---- spec §3.13: a religious home altar among the people left grey -----------------------
+    #
+    # Anita, 2026-09-15: `chinesefolk` is folk religion NAMED (the CGSS layer above) or a religious
+    # altar kept by someone who names no religion. After that carve the `unknown` residual stands
+    # for the people who named none, and sources/cn_altar.py gives the share of them with an altar
+    # by province, from CGSS 2010's ISSP module. The share eats the residual and nothing else, for
+    # the CGSS layer's reason. Xizang is not in the table and keeps its residual.
+    #
+    # THE HAN ROW ONLY, and the rate is the Han respondents' (2026-09-15, session cb8b206e-folkfix).
+    # Applied to every row it put 10.9M minority people on `chinesefolk`, 0.74M of them Mongols at
+    # Inner Mongolia's one-county rate, where a religious object in the home is as likely Tibetan
+    # Buddhist, or a Yi, Naxi or Zhuang household's own tradition. Sorting 40 nationalities into
+    # "practises like the Han" would be a coefficient nothing documents, which is §14.5's refusal.
+    # So the minorities, `Unidentified` and Hainan's `Unpublished` keep their residual grey.
+    # sources/cn.md §11.
+    alt = pd.read_csv(HERE / "data" / "normalized" / "cn_altar.csv").set_index("province")["share"]
+    unk = (out["node"] == "unknown") & (out["cat"] == "Han")
+    a = out["unit"].map(prov).map(alt).fillna(0.0).where(unk, 0.0)
+    folk = out.loc[a > 0].copy()
+    folk["count"] = folk["count"] * a[a > 0]
+    folk["node"] = "chinesefolk"
+    folk["tier"] = "modelled"
+    out["count"] = out["count"] * (1.0 - a)
+    out = pd.concat([out, folk], ignore_index=True)
+
     # Several nationalities land on `unknown` in the same county — Han, Miao, Manchu and
     # the non-Christian remainder of the Lisu are four rows saying the same thing. scatter.py
     # would group them anyway; doing it here takes ~60,000 rows to ~10,000 and keeps the
@@ -198,7 +224,8 @@ ENTRY = {
                 "religion shares from the Chinese General Social Survey, "
                 "2010+2012+2013+2017+2021"),
         basis=("ethnicity, derived — no census asked about religion; plus self-identified "
-               "religion from a pooled national survey, at province"),
+               "religion from a pooled national survey, at province; folk religion also counts "
+               "Han who name no religion but keep a religious altar at home"),
         view=[73.0, 17.5, 135.5, 54.0],
         note_public=(
             "**China has never asked anybody on this map what their religion is.** No "
@@ -215,58 +242,58 @@ ENTRY = {
             "survey asks, and it is deliberately a small number.** China's censuses do not "
             "ask, but its main academic social survey does — *which religion do you belong "
             "to* — and pooling five waves of it gives about 55,000 answers across 30 of "
-            "the 31 provinces. Roughly **one person in eight** is drawn with a religion "
-            "here. Those are the Buddhist, folk-religion and Protestant dots across "
-            "eastern China: Buddhism heaviest in Zhejiang, Fujian and Jiangxi at ten to "
+            "the 31 provinces. Roughly **one person in eight** names one. Those answers are "
+            "the Buddhist and Protestant dots across eastern China and part of the "
+            "folk-religion ones: Buddhism heaviest in Zhejiang, Fujian and Jiangxi at ten to "
             "fifteen percent, Protestantism heaviest "
             "in Henan, which is the province usually described as China's Christian "
             "heartland, and in the northeast. "
-            "**The largest thing here that is not an imported religion is the folk one.** "
-            "The survey offers *popular belief, worshipping Mazu or Guandi and the like* as "
-            "an answer of its own, and **41 million** people are drawn on it: the sea "
-            "goddess of the Fujian coast, the deified general, the lineage hall and the "
-            "earth-god shrine, which is what most religious practice in China has always "
-            "looked like and which no census anywhere counts. It is overwhelmingly southern "
-            "and coastal, around **18%** in Guangdong and Fujian against under one "
-            "percent across most of the north. "
-            "**These are the least certain dots on this map, and it is worth saying exactly "
-            "why.** Every other layer here counts people who gave a religion a name, and so "
-            "does this one, but folk practice is the thing people are least likely to call a "
-            "religion. Asked to tick everything that applies, about three in a hundred "
-            "Chinese name folk belief; asked in 2021 to choose one single religion, **fewer "
-            "than three in a thousand** did. That is a **sixteenfold** swing on question "
-            "wording alone, where Buddhism moves by half and Protestantism by four fifths. "
-            "All five waves are pooled here rather than the ones that flatter the layer, so "
-            "the number sits in the middle of that range and is a floor rather than a count. "
-            "**The gap it cannot show is much larger than the layer itself.** In the one "
-            "survey that asks both questions of the same people, the Spiritual Life Study of "
-            "2007, **16%** of Chinese said they had a religious belief while only **38%** "
-            "said they never worshipped a god, spirit or ancestor. So roughly four times as "
-            "many people tend graves, burn incense and visit temples as will call any of it "
-            "their religion. The dots are the naming, not the doing. "
-            "Two smaller things: sixteen of the thirty provinces have fewer than ten people "
-            "giving this answer, so the southern block is firm and the thin northern shading "
-            "is a direction rather than a quantity; and about one in twelve of these people "
-            "also named Buddhism, so a few of them are drawn twice. "
+            "**Folk religion is the largest colour here after grey, and it is built from two "
+            "questions.** The survey offers *popular belief, worshipping Mazu or Guandi and "
+            "the like* as an answer of its own, and about three in a hundred people choose "
+            "it, most of them in Guangdong and Fujian. Far more keep a shrine or an altar at "
+            "home for religious reasons and still say they have no religion: in the survey's "
+            "2010 wave, **14%** of the Han who named no religion did. They are drawn as folk "
+            "religion too, at their own province's rate, because temple and ancestor worship is "
+            "most of the religious practice in China and few people there call it a religion. "
+            "The altar is counted for the Han only. For China's other nationalities a religious "
+            "object at home can as easily belong to a religion of their own, such as Tibetan "
+            "Buddhism among Mongols, so their grey is left as it is. Together that is "
+            "**201 million** people, 15% of China: **46%** of Guangdong, about a third of Fujian "
+            "and a quarter of Jiangxi, against 6% of Beijing and 3% of Liaoning. Taiwan and Hong "
+            "Kong are drawn on the same rule. "
+            "**These are uncertain dots, for a different reason in each half.** The named "
+            "half moves a lot between survey waves: about three in a hundred people named "
+            "folk belief when they could tick several religions, and **fewer than three in a "
+            "thousand** in 2021, when they could tick one and the survey reached only 19 "
+            "provinces. All five waves are pooled rather than the ones that flatter the "
+            "layer. The altar half rests on one wave, 2010, and about 3,400 Han who named "
+            "no religion, so where a province had few of them (Ningxia had three) its rate is "
+            "pulled toward the national one. And an altar is a line drawn through practice, "
+            "not around it: temple-goers without one stay grey. "
+            "**The rule sits between naming and doing.** In the Spiritual Life Study of 2007, "
+            "which asked both questions of the same people, **16%** of Chinese said they had a "
+            "religious belief, a quarter had worshipped at a temple or at home in the past "
+            "year, and most had tended an ancestor's grave. People who name a religion or keep "
+            "an altar come to about a quarter of China on this map. "
+            "Two smaller things about the named half: sixteen of the thirty provinces have "
+            "fewer than ten people giving that answer, so the southern block is firm and the "
+            "thin northern shading is a direction rather than a quantity; and about one in "
+            "twelve of these people also named Buddhism, so a few of them are drawn twice. "
             "**Daoism and Confucianism are not drawn, and the reasons differ.** Only about "
             "one person in three hundred names Daoism when asked, which is far below the "
             "figures usually quoted for it, because those count practice and temple-going "
             "rather than what people call themselves. Confucianism is not drawn because the "
             "survey does not offer it as an answer at all. "
-            "**The other seven in eight are still grey, and that is a choice rather than "
-            "a finding.** They are drawn as *Religion unknown* — counted by the census, "
-            "placed where it puts them, nothing claimed about what they believe. **They are "
-            "emphatically not drawn as irreligious**, because in China the two halves of "
-            "that survey question are not equally trustworthy. Ask people to name a "
-            "religion and about 88% name none; ask instead whether they tend graves, visit "
-            "temples or believe in deities and most of it comes back. Pew's *Measuring "
-            "Religion in China* puts Buddhism alone at 4% by self-identification and 33% by "
-            "belief, from the same two surveys in the same year. **So the answer *yes, I am "
-            "a Buddhist* is a measurement and the answer *none* is mostly an artefact of "
-            "the wording.** This map draws the first and leaves the second grey. Daoism, "
-            "most of a Christian population usually estimated in the tens of millions, and "
-            "a great deal more folk practice than the 41 million who name it are all still "
-            "inside that grey. "
+            "**The other three quarters are still grey, and that is a choice rather than a "
+            "finding.** They are drawn as *Religion unknown*: counted by the census, placed "
+            "where it puts them, and nothing claimed about what they believe. They are not "
+            "drawn as irreligious. Most of them would name no religion and keep no altar at "
+            "home, but many still tend graves, burn incense at festivals or believe in "
+            "deities; Pew's *Measuring Religion in China* puts belief in Buddha at 33% where "
+            "4% call themselves Buddhist. Daoism, most of a Christian population usually "
+            "estimated in the tens of millions, and temple-goers with no altar at home are "
+            "all still inside that grey. "
             "**And the number that is drawn is falling, which may not be about belief.** "
             "Across the five survey waves used here, running from 2010 to 2021, the share "
             "naming any religion at all fell from a peak of 14.5% in 2012 to **7.5%** in "
@@ -294,13 +321,15 @@ ENTRY = {
             "removes all of them.** That is the honest test of this country: turn it on and "
             "China loses its colour entirely, because nothing in it was counted as religion "
             "by anybody. "
-            "**The Mongols are deliberately absent too**, and they are the biggest "
+            "**The Mongols are not drawn as Tibetan Buddhists**, and that is the biggest "
             "judgement call in the country. Tibetan Buddhism among Mongols is real history, "
             "but at 5.8 million people they would have outnumbered Tibetans and made Inner "
             "Mongolia the largest Buddhist region in China on the strength of an assumption "
             "nothing measures — decades after the monastic system they would have been "
             "counted through was dismantled. The same reasoning leaves out the Tu, and it "
-            "is the reason to trust what remains. "
+            "is the reason to trust what remains. Like everyone else in their provinces, "
+            "Mongols and Tu do carry the survey's named answers at the provincial rate, about "
+            "6% of them; the home-altar count is not applied to them. "
             "**What the map does show is real and is not obvious.** Islam in China is not "
             "only Xinjiang: the Hui live in every province, so the Muslim layer runs from "
             "Kashgar to Kaifeng and down to a single village cluster in Sanya on Hainan. "
@@ -358,14 +387,17 @@ ENTRY = {
         how=("no census question; ethnicity for the minorities, a pooled survey by province for "
              "everyone else"),
         fill="from the 2000 census's ethnicity table",
-        grain=("counties, 478,000 people on average; the survey layer's shares are provincial, so "
-               "Buddhism and Protestantism vary between provinces and not within them"),
+        grain=("counties, 478,000 people on average; the survey layers' shares are provincial, so "
+               "Buddhism, Protestantism and folk religion vary between provinces and not within "
+               "them"),
         # `gap` (§6.12). It said "Han majority not shown" until §14.14 drew them, then
         # "97% of these dots say only that somebody was counted" until the CGSS layer of
-        # 2026-09-08 took the grey from 97.5% to 91.6%. The failure mode it guards against
+        # 2026-09-08 took the grey from 97.5% to 91.6%, and "88%" until spec §3.13's altar layer
+        # (2026-09-15) took it to 75.0% (review cb8b206e-rev5), and "75%" until the altar share was
+        # kept to the Han row the same day, 76.1% (cb8b206e-folkfix). The failure mode it guards against
         # has never moved: this is still the country where a reader is most likely to read
         # the grey as irreligion, which is exactly what it is not.
-        gap=("a religion for 88% of these dots; with no census question they say only that "
+        gap=("a religion for 76% of these dots; with no census question they say only that "
              "somebody was counted"),
         counts=_cn_counts,
         # Counts are on the GB/T 2260 county adcode; the Kontur hexes carry no adcode, so
@@ -376,7 +408,8 @@ ENTRY = {
         place=HERE / "data" / "geo" / "cn" / "cn_grid_3km.gpkg",
         place_unit=lambda g: g["unit"].astype(str),
         place_weight=_cn_place_weight,
-        note="**100% of the census population is drawn and 88.1% of it is `unknown`** — "
+        note="**100% of the census population is drawn and 76.1% of it is `unknown`** (88.1% "
+             "until spec §3.13's home-altar layer, 2026-09-15, sources/cn_altar.py) — "
              "rewritten 2026-09-07, spec §14.25, after CFPS refused the data access §14.7 "
              "had planned a Han Buddhist share around. Nothing is measured: the derived "
              "rows are §14.5's ethnic derivation and the modelled rows are §14.9's "

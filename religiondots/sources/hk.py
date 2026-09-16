@@ -40,7 +40,7 @@ THE THREE SOURCES, ALL OPEN AND NONE GATED.
      distribution over the 18 districts. Together these split `DC_21C`'s lumped `Others` into
      Indian, Nepalese, Pakistani, Other South Asian, Thai, Japanese and Korean.
   3. **The Hong Kong Political Culture Survey 2021**, Cai and Hung, published as Table 1 of
-     *Religion and Trust in Hong Kong*, The China Quarterly 257 (2024), open access. 3,744
+     *Religion and Trust in Hong Kong*, The China Quarterly 259 (2024), open access. 3,744
      respondents aged 16+, May-September 2021. The published table IS the tabulation, so no
      microdata is needed -- Guatemala's LAPOP shares are used the same way.
 
@@ -121,8 +121,8 @@ LAND_TOTAL = 7_411_945             # DC_21C row Z; the difference is the marine 
 # The survey, transcribed from one published table
 # ---------------------------------------------------------------------------------
 #
-# Cai, Yongshun and Sin Yu Hung, "Religion and Trust in Hong Kong", The China Quarterly 257
-# (2024), 609-628, Table 1, column "Believers (2021)" / "Frequency (%)". n = 3,740 of 3,744
+# Cai, Yongshun and Sin Yu Hung, "Religion and Trust in Hong Kong", The China Quarterly 259
+# (2024), 611-628, Table 1, column "Believers (2021)" / "Frequency (%)". n = 3,740 of 3,744
 # interviewed. **The eight shares sum to exactly 100.00**, so the table is a partition and
 # needs no residual of its own.
 #

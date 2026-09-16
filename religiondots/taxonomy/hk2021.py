@@ -82,6 +82,21 @@ SURVEY_NODES = {
     "Catholic": "christianity.catholic.latin",
 }
 
+# Spec §3.13 (Anita, 2026-09-15): `chinesefolk` is folk religion named, or a religious altar kept
+# by someone who names no religion. The Political Culture Survey has no altar item, so the rate is
+# Pew's: 21% of Hong Kong's religiously unaffiliated say there is an altar in their home (Pew,
+# *Religion and Spirituality in East Asian Societies*, 2024, p. 77; 25% of all adults, 56% of
+# Buddhists, 11% of Christians). Only the unaffiliated figure is used, and only on the residual
+# left after the survey's named answers are carved, so a Buddhist or Taoist with an altar is not
+# counted twice. countries/hk.py applies it; see REVIEW.
+ALTAR_FOLK_NODE = "chinesefolk"
+ALTAR_FOLK_SHARE = 0.21
+# The census rows whose residual the share reaches. Pew's 21% is a rate for Hong Kong's unaffiliated,
+# and the node is Chinese folk religion, so only the `Chinese` row: applied to every row it drew about
+# 44,800 non-Chinese residents on `chinesefolk`, among them about 10,400 Indians and Nepalese that
+# NOT_ASSERTED leaves grey on purpose (2026-09-15, session cb8b206e-folkfix; sources/hk.md §10).
+ALTAR_FOLK_ROWS = ("Chinese",)
+
 # Survey answers that are NOT drawn, with the reason.
 SURVEY_NOT_DRAWN = {
     "Islam":
@@ -95,7 +110,8 @@ SURVEY_NOT_DRAWN = {
         "which understates the other six by about 0.8 percentage points between them.",
     "NoReligion":
         "65.83%, 2,462 respondents, and it stays `unknown` rather than becoming an "
-        "irreligion node. **The same table says why**: 2,097 of those 2,462 — 56.07% of the "
+        "irreligion node, except the 21% of it that keeps a religious altar at home (Pew 2023), "
+        "which spec §3.13 draws on `chinesefolk` (ALTAR_FOLK_SHARE). **The same table says why**: 2,097 of those 2,462 — 56.07% of the "
         "whole sample — report practising folk religion anyway. So five sixths of Hong Kong's "
         "'no religion' is people who tend graves, burn incense and visit temples and will not "
         "call it a religion, which is the mainland's §14.22 gap measured here by one "
@@ -152,6 +168,16 @@ EXCLUDED = {
 }
 
 REVIEW = {
+    "ALTAR_FOLK_SHARE":
+        "-> 21% of the residual to chinesefolk, spec §3.13 (Anita, 2026-09-15). Pew's figure is "
+        "used directly, as she asked, rather than bridged from Taiwan. Two things to know. The "
+        "unaffiliated figure is used and not the 25% of all adults, because the 25% includes "
+        "Buddhists (56%) and Christians (11%) who are already drawn on their own nodes. And Pew "
+        "asks whether 'there is an altar in your home', which is narrower than the ISSP item "
+        "China and Taiwan are drawn from ('a shrine, an altar or a religious object, for "
+        "religious reasons'): in Taiwan the same population answers 49% to Pew and 71% to TSCS. "
+        "So Hong Kong's folk layer is on a stricter question than its neighbours' and reads as a "
+        "floor beside them. Placement is territory-wide either way.",
     "Thai":
         "-> NOT derived, and it is the closest call in this file. Thailand is 92.5% Buddhist "
         "and `th` is drawn on this map, so the coefficient is right there. Two things stopped "

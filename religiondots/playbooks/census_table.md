@@ -6,10 +6,10 @@ asked religion; boundaries, name joins, population bases and placement are in `p
 
 ## Used by
 - `gw` Guinea-Bissau: PDF annex in counts, equal to UNSD to the person; misprints, a prose swap, a pinned digest (sources.md §9dx).
-- `mz` Mozambique: per-province xlsx on INE's retired Plone site, found by a Wayback CDX prefix query (§9df, §9dy).
+- `mz` Mozambique: per-province xlsx on INE's retired Plone site, found by a Wayback CDX prefix query (§9df, §9dy); since 2026-09-15 also the 2007 district volumes' one-decimal shares with N, fitted by IPF to 2017's province answers and district populations (sources.md §mz-2026-09-15).
 - `cg` Republic of the Congo: Wayback `id_` copy of a squatted domain's PDF; the form's codes fix the column order (§9dv).
 - `gn` Guinea: one-decimal shares by région times printed populations, rescaled to UNSD (§9dh).
-- `ir` Iran: SCI's 1395 yearbook table in counts, Persian digits in the text layer, the bold national row a picture (§ir-2026-09-14).
+- `ir` Iran: SCI's 1395 yearbook table in counts, Persian digits in the text layer, the bold national row a picture (§ir-2026-09-14). A Persian journal PDF (§ir-2026-09-15) decomposed the `لا` ligature (`گیالن` for `گیلان`) and mixed Persian and Latin digits within one column: fold both before matching a name or a number, and join on the printed population as well as the name (`ir_split.py::_fold`).
 - `zm` Zambia: PDF tables with two wrong column headers, settled by the office's analytical report (§9db).
 - `pk` Pakistan: PBS Table 9 PDFs under `wp-content/uploads/`, right-aligned columns read by drawn rules (§9du).
 - `td` Chad: shares by région from a Wayback copy, raked to two printed margins; animist offered beside no religion; COD's provinces rebuilt to 2009 on the office's areas (sources.md §td-2026-09-14).
@@ -18,7 +18,16 @@ asked religion; boundaries, name joins, population bases and placement are in `p
 - `sn` Senegal: one-decimal shares by région with the Sufi brotherhoods as codes, on printed populations; a cell printed in the wrong column, settled by a regional report in counts, which also draws Diourbel at département (sources.md §sn-2026-09-15).
 - `bn` Brunei: counts by district in a workbook and an annex PDF, both only on Wayback (one capture a 1 MiB fragment), equal to UNSD; the form's Hindu folded into Others (sources.md §bn-2026-09-15).
 - `gi` Gibraltar: report PDF, counts by residential area, drawn as one unit on 20 Kontur hexes; the 78 enumeration areas rebuild every area and place one institutional EA the appendix does not (sources.md §gi-2026-09-15).
+- `mt` Malta: counts by the 68 localities in a born-digital PDF, crossed with the single-year age table to show the religion totals are the whole population aged 15 and over; GISCO LAU joined by name, witnessed by code district and printed area (sources.md §mt-2026-09-15).
 - `ps` Palestine: counts by governorate in a bilingual PDF read by English row label; three nested universes (Palestinians counted, everyone counted, plus the estimate) settle East Jerusalem (sources.md §ps-2026-09-15).
+- `ne` Niger: annex counts by région equal to UNSD; the body's share table is of those who stated a religion, with three cells forced to close, and the density table doubles as the office's area per unit (sources.md §ne-2026-09-15).
+- `gm` The Gambia: annex counts by LGA with sex and urban/rural tables; one both-sexes table reprints the urban one and closes on itself, caught by the sex and urban-rural identities (sources.md §gm-2026-09-15).
+- `fo` Faroe Islands: PxWeb API counts by district from a select-all-that-apply question, ticks scaled to people per district; suppressed small bodies folded into Other; districts rebuilt from the register's villages (sources.md §fo-2026-09-15).
+- `im` Isle of Man: island-wide counts in a report PDF, one unit on Kontur; the form offers Sikhism and a write-in that the table never prints (Other 0 in every cell), so read the form against the rows; gov.im refuses urllib and serves curl (sources.md §im-2026-09-15).
+- `qa` Qatar: HTML table pages only on Wayback, pinned by CDX digest; a count for Qataris and a sample calibrated to the counted totals for everyone else, said only on the census's introduction page (sources.md §qa-2026-09-15).
+- `us` United States (Sikhs, Yazidis): 2020 Census Detailed DHC-A race write-in by county and tract, noise-infused and thresholded, subtracted from a survey line (sources.md §us-2026-09-15).
+- `tk` Tokelau: counts by atoll in a workbook for the usual residents present on census night, a fifth short of the official de jure count; UNSD's 2016 row is 4 people off, its 2011 row equal (sources.md §tk-2026-09-15).
+- `mn` Mongolia: 22 per-aimag PDF volumes of chained one-decimal shares, each table found by its identity; Ulaanbaatar's düüregs measured off a vector chart (§9bt, sources.md §mn-2026-09-15).
 - `pw` `ck` `tv` and eight more: UNSD table 28 is the whole source (`sources/micro.py`); `vg` `aw` in `sources/terr.py`.
 - `pe` Peru, `ni` Nicaragua: REDATAM. `et` Ethiopia: USCB geodatabase (also `bd`, `jm`, `vc`, `cf`, `pk2017`).
 - `lc` Saint Lucia: questionnaire catches a mislabelled column. `cv` Cabo Verde: UNSD `Unknown` is the under-15s.
@@ -38,7 +47,7 @@ asked religion; boundaries, name joins, population bases and placement are in `p
 
 ## Traps
 - **A negative from one publication is not a negative for the country.** Zambia, Mozambique, Guinea and
-  Guinea-Bissau were closed on one release or a volume title, then drawn from the same office. Open each volume's
+  Guinea-Bissau were closed on one release or a volume title, then drawn from the same office; Equatorial Guinea was closed on its 2015 results volume while question 9 of its form asks religion (sources.md §scout-2026-09-15-negatives). Open each volume's
   table list (the structure volume first in francophone Africa), newer and older censuses, per-province series,
   the national-language tree, and the national statistical yearbook (Iran's 1395 census tree has no religion
   topic; the 1395 yearbook's population chapter prints it by province); record what was asked, of what, when. Caught by: Not checked yet
@@ -103,6 +112,15 @@ asked religion; boundaries, name joins, population bases and placement are in `p
   (`sources/jp_checks.py`). Caught by: `sources/fetch_checks.py::image_pages`; no reader calls it yet (belongs in
   each PDF reader). Detail: spec §12 "A PDF CAN
   HAVE A TEXT LAYER FOR ITS PROSE AND PICTURES FOR ITS TABLES".
+- **A chart in a PDF is usually vector, so measure it, and its prose can name the wrong segment.**
+  Ulaanbaatar's 2020 volume gives religion by düüreg only as two charts: every bar is a filled
+  rectangle in `page.get_drawings()`, and the labels and names are glyph outlines with no text.
+  Take widths at one scale fitted on the printed labels, never per row (Baganuur's printed values
+  sum to 100.1, so its bar is wider); check transcribed names by glyph path signature (one outline,
+  one letter, across every name); check each label sits inside the segment it is credited to. The
+  prose called Nalaikh's 13.6% Christian; the fill, the label and a reweighting of the nine units
+  against the city's printed table all say Islam. Caught by: `sources/mn_ub.py::read_fig36`,
+  `sources/mn.py::read_ub`. Detail: `sources/mn.md` §11.
 - **A printed 0.00% religion non-response means the blanks went somewhere.** A form with no
   non-response code and a report printing none leave blank answers inside a real code. Cross another
   table's non-response row: Burkina Faso's age-not-recorded row (A5.7) is 18.7% `Autre` against 0.57%
@@ -130,7 +148,9 @@ asked religion; boundaries, name joins, population bases and placement are in `p
   so its categories sum 5,122 above its responses; its district cells blank the small bodies (`...`) and fold them
   into each district's `Other congregations`, which sums to 585 over the districts against 106 nationally. Sum
   each level's categories against its responses, and each category over the units against its national cell.
-  Caught by: Not checked yet (belongs in `sources/fo.py::check`). Detail: sources.md §scout-2026-09-15-europe.
+  Before choosing a rule to turn ticks into people, test the rule's premise on the table's own cells: the
+  Faroese overlaps could not all be National Church plus missionary movement (six districts too few), so
+  the rescale is proportional. Caught by: `sources/fo.py::check` (checks 4 to 6). Detail: `sources/fo.md` §3.
 - **An appendix's list of what makes up each unit can be wrong for one piece, while the table closes.**
   Gibraltar's Appendix 9 builds residential areas from enumeration areas and leaves institutional EAs
   80-87 to the Institutions row; Table 42 counts EA 85 (70 people) in South District. Only rebuilding
@@ -138,6 +158,12 @@ asked religion; boundaries, name joins, population bases and placement are in `p
   row in all 19 cells. Rebuild each unit from the finer table, fix shared pieces from the units that
   pin them, and let the shortfall name the piece. Caught by: `sources/gi.py::solve_shared`, `::check`.
   Detail: `sources/gi.md` §3.
+- **One volume can name a unit two ways, and only a name-set comparison catches it.** Malta's Table
+  1.5 heads Gozo's Żebbuġ page `Iż-Żebbuġ, Għawdex` where Tables 1.2, 1.10 and 5.3 print `Iż-Żebbuġ`.
+  A count of 68 pages passed; comparing the sets failed, and the under-15s came out 423 short, exactly
+  that page's. Compare name sets, not counts, between every pair of tables a check crosses, and alias
+  a variant by name in code. Caught by: `sources/mt.py::read_age_pages` (`T15_ALIAS`), `::check`.
+  Detail: `sources/mt.md` §2.
 - **pandas deletes a category named `None`**; all three cases were the no-religion row (Zimbabwe 1.26M). Read
   normalised files with `keep_default_na=False, na_values=[""]`; NFC labels both ways. Caught by:
   `tools/check_na_readers.py::main` (every `read_csv` of a file holding an NA string; `countries.py::_micro_counts`
@@ -164,6 +190,16 @@ asked religion; boundaries, name joins, population bases and placement are in `p
   misplaced cell moves one column away (Layène 0.93 against 0.6, 0.60 swapped back), while a row
   that disagrees in most columns is a different tabulation, so do not rake to it. A regional report
   in counts settles both. Caught by: `sources/sn.py::check`. Detail: `sources/sn.md` §4.
+- **A religion can hide in another question's write-ins, and a noise-infused table does not add up by
+  design.** The US census asks no religion, but its race write-in codes "Sikh" and "Yazidi" as detailed
+  groups (DHC-A T01001, ITERID 3845 and 1207). The Bureau adds noise to every cell separately and prints
+  a county or tract only at 22 or more, so tracts need not sum to their county (checked at 11 per tract)
+  and counties sum to 96.9% of the nation. A withheld cell is `-888888888` with `ANN` `X`; DC's county
+  row repeats its state row and sits under the threshold (19). Look up each ITERID's label in the
+  iterations list rather than trusting a code. The count is of people who wrote the word, a floor (70,697
+  against a community estimate of 500,000), so draw it as counted and subtract it from any survey line
+  that already holds those people. Caught by: `sources/us_dhca.py::classify`, `::check`. Detail:
+  `sources/us_dhca.md` §2.
 - **An unmapped category vanishes.** `EXCLUDED` holds universe rows and non-answers, each with a sentence and
   which way it leans (§3.5); `REVIEW` every arguable call, naming the node wanted. A parent beside children that
   sum to it on every row is a duplicate; else emit the remainder. Never map on the string alone. Caught by:
@@ -172,6 +208,29 @@ asked religion; boundaries, name joins, population bases and placement are in `p
   People in no table (collective households, restricted areas, unasked ages) are hand-written and join `gap`
   (Guinea's precedent); never add the two silently. Caught by: `tools/gap_share.py --check`; the foot of
   `countries.py` asserts `gap` states `gap_share`. Detail: spec §10.4a; `countries.py` docstring.
+- **A refugee block given its origin country's national mix is wrong where refugees come from one end of it.**
+  Mauritania's 46,800 Mbera refugees on Pew's Mali row carried 2,745 non-Muslims, 21.6% of every non-Muslim
+  drawn in the country; they are from northern Mali, 99.7% Muslim in Mali's own census, which gives 379. Look
+  for UNHCR's areas-of-origin map for the camp and weight the origin census's regions by it. Caught by:
+  `sources/mr.py::refugee_composition`, which prints both mixes; no shared helper. Example: `mr`. Detail:
+  `sources/mr.md` §7.
+- **Refugees the census missed look like refugees who said they were nationals.** Set the census's count of
+  the camp itself against UNHCR's camp figure: a refugee who told the census they were a national is still in
+  the camp's census population, so a short camp count is people never counted, and they go in `gap` (Mbera:
+  about 41,200 counted, almost 100,000 by UNHCR). UNHCR's API (`api.unhcr.org/population/v1/population/`)
+  returns no rows unless `cf_type=ISO` is passed with ISO3 codes. Caught by: Not checked yet; it belongs beside
+  `tools/gap_share.py`. Example: `mr`. Detail: `sources/mr.md` §8.
+- **A foreigner layer on a national nationality mix can use the sexes, and two origin rows are wrong in the
+  Gulf.** Saudi Arabia's census gives non-Saudis per region and their nationality only nationally, but both by
+  sex (a regional sex-ratio chart, national nationality tables by sex). The sexes carry different streams
+  (non-Saudi men 5.3% Christian, women 25.4%), so each region's men take the men's mix and its women the
+  women's; against one mix Makkah gains 31,000 Christians. Before trusting Pew's origin rows, look for the
+  stream: GAStat's `Burma` are the Rohingya (Pew's Myanmar row would draw 158,240 non-Muslims), and India's row
+  draws 2.3x Pew's own Saudi Hindu figure, because Indians in the Gulf are mostly Muslim (Pew, *Faith on the
+  Move*, pp.21-22). A chart's bar values can be in the text layer out of order: read them off the rendered
+  page, then assert the values are on the page and that each overall bar follows from its two parts. Caught by:
+  `sources/sa.py::report_checks`, `::main` (the Rohingya and India lines, the by-sex against one-mix table).
+  Example: `sa`. Detail: `sources/sa.md` §4.
 - **`other.<cc>`, `unknown` and tiers.** A source's `Other` gets a new `other.<cc>` in `taxonomy/branches.py`,
   a real religion (§6.3a-iv); `unknown` is counted people no geography can place (§6.3a-ii). Own-geography counts
   and shares times a total in the same publication (Benin) are `measured`; spread from coarser is `derived` with
@@ -182,6 +241,40 @@ asked religion; boundaries, name joins, population bases and placement are in `p
   source and share in `sources/<cc>.md` and `REVIEW`. Caught by: `tools/check_no_religion.py::main` (a box naming
   traditional religion needs a traditional sibling or a classification; a lumped box drawn as one reading needs source,
   80%+ and what it measures); a form nobody read Not checked yet. Detail: sources.md §9dn, §9dy.
+- **A census table can be a count for some people and a calibrated sample for the rest, and print
+  plain counts that close every way.** Qatar's 2004 census enumerated Qataris in full and sampled
+  non-Qataris (households and labour gatherings), then weighted the sample to the counted
+  population by municipality and sex. Table 6 closes on Tables 1-5 and equals UNSD to the person,
+  and nothing on it or on the form says part of it is an estimate; only the census's introduction
+  page does. Read the methodology or introduction beside the form, name who was sampled, and say
+  in the tier reasoning whether the printed unit is the sample's stratum (Qatar's is, so
+  `measured`). Caught by: Not checked yet (a reading step; record it in `sources/<cc>.md`).
+  Detail: `sources/qa.md` §3.
+- **A religion table can cover only the residents present while the official count is de jure.**
+  Tokelau's 2016 Table 5.8 counts the 1,197 usual residents present on census night; the official
+  count is 1,499, adding 254 absentees their household head described and 48 public servants in Apia
+  on a short form, none asked religion. The table closes on itself and on UNSD, so nothing flags the
+  missing fifth. Read each table's universe line against the report's population definitions,
+  rebuild its unit totals from the de jure and absentee tables, and put people no table asks in `gap`
+  in the official count's universe. Caught by: `sources/tk.py::check` (step 3, de jure minus
+  absentees per atoll). Detail: `sources/tk.md` §4.
+- **A census microdata sample supports a tier by its noise against its parent, not by significance.**
+  Uganda's 10% file has 2,207 subcounties and 10,852 parishes; a split-half rank test against zero passes
+  nearly every answer at parish, because district geography alone ranks parishes. Deal HOUSEHOLDS into
+  waves (a quarter of Ugandan households hold two religions), test each tier's departure from its parent
+  with a within-parent shuffle null, and take a tier only where the median half-sample Pearson of the
+  departures is 1/3 or more (the unit's own share then has lower expected squared error than the parent's).
+  Take people from the full-count unit table, not the sample, and check the sampling fraction per unit.
+  Caught by: `sources/ug_2024.py::stability`, `::join` (fraction band). Detail: `sources/ug.md` §0.4.
+- **A share table's N can sit a line off its row, and a Total row can be the right numbers in the
+  wrong cells.** Mozambique's 2007 district volumes print one-decimal shares with each district's
+  `N`; in five of nine the text layer puts some `N` on the line above the shares, or between the
+  name and the shares, so a line parser pairs the wrong population. Read the table as one token
+  stream and pair the kth count with the kth row, then prove it: the `N` column sums to the Total
+  row, and the N-weighted shares match the Total row within the rounding. That second check is
+  also what found Gaza's printed Total row to be its districts' eight numbers set in the wrong
+  cells; pin the misprint and keep the districts. Caught by: `sources/mz_2007.py::read_volume`,
+  `::check_volume` (`GAZA_PRINTED`, `GAZA_MEANT`). Detail: `sources/mz.md` §7.
 
 ## Shared code
 Import these, do not copy them.

@@ -181,7 +181,7 @@ def main():
     # population, so a ratio near 1.9 is just twenty years of growth.
     import pandas as pd
 
-    norm = pd.read_csv(os.path.join(ROOT, "data", "normalized", "ug.csv"))
+    norm = pd.read_csv(os.path.join(ROOT, "data", "normalized", "ug2002.csv"))
     pop02 = (norm[norm["source_category"] == "Total"]
              .set_index("geo_id")[["geo_name", "count"]])
     print("\n  Kontur-2023 over census-2002, by district (Uganda's population roughly "

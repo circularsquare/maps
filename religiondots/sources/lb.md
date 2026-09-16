@@ -1,6 +1,8 @@
 # Lebanon — CLOSED on the Arab Barometer, 2026-09-09. The sect column exists and the geography under it is a fieldwork quota
 
-**Lebanon is not drawn and there is no `sources/lb.py`.** `queue.md` called it *"the one to
+**Lebanon is not drawn and there is no `sources/lb.py`.** The World Values Survey's wave 7 was
+opened on 2026-09-15 and closes the same way, by its own sample design, from the same fieldwork firm
+(§9, `sources/lb_wvs.py`). `queue.md` called it *"the one to
 want"* and it was right about the prize: the Arab Barometer carries a **sect** item for Lebanon
 and nowhere else in this file, with Maronite, Orthodox, Catholic, Armenian, Sunni, Shia and
 Druze as separate answers. What closes the country is not the answer column. It is that the
@@ -283,3 +285,81 @@ Barometer's Lebanese sample includes, and both of which are much larger relative
 than Jordan's non-citizen quarter. Any future Lebanese build has to decide whether it draws
 residents or citizens **before** it picks a denominator, and there is no COD-PS figure that
 answers it for you.
+
+## 8. Re-checked 2026-09-15: the World Values Survey was never opened
+
+Scout `cb8b206e-scout1`, sources.md §scout-2026-09-15-negatives. §5's list missed a second survey.
+**WVS wave 7, Lebanon 2018** (IHSN catalog 12281, data dictionary) has 1,200 respondents with
+`Q289CS9` coded Sunni 320, Shia 310, Maronite 297, Druze 100, Orthodox 82, Roman Catholic 64,
+Armenian Apostolic 23, other 4, and `N_REGION_ISO` on all eight governorates (Mount Lebanon 480,
+North 190, Beirut 130, South 130, Bekaa 100, Nabatieh 70, Akkar 50, Baalbek-Hermel 50). It is
+untested for the quota §2 found. The first step is the WVS online tool's crosstab of `Q289CS9` by
+`N_REGION_WVS`, set beside §2's grid, before anyone asks Anita for the download; whether the sample
+is citizens or residents is also unchecked. Arab Barometer wave IX fielded Lebanon on 3-25 November
+2025 and its data is promised for autumn 2026, which is when §5 item 4 can be run.
+
+## 9. WVS wave 7 opened 2026-09-15: the sample design gives every cluster a sect, so it closes too
+
+Session `cb8b206e-lb`, on ask 035's ruling ("get it in and then see", with the rider that a quota
+sample does not stand on it). Anita downloaded `F00013081-WVS_Wave_7_Lebanon_Stata_v5.1.zip`
+(Stata, 1,200 rows, 451 columns). It is in `data/raw/lb/` with the .dta unzipped beside it, and the
+three IHSN related materials for catalogue 12281 are saved there as PDFs: the methodology report
+(104800), the team sheet (104801) and the sample design (104802). The zip carries no terms file; the
+WVS download licence (`worldvaluessurvey.org/AJDownloadLicense.jsp`, read 2026-09-15) allows
+non-profit use, requires a citation in each publication and sending that citation to the WVSA, and
+forbids redistributing the files. Wave 6 was not downloaded. `python sources/lb_wvs.py` reruns
+everything below and exits 0 while it holds.
+
+**The survey says so itself.** The Sample Design's pp.3-4 are a table, rendered as an image, of
+Mohafaza, Kadaa, Sample, Number of PSUs and **Sect** (Christian, Sunni, Shiaa, Druze): 120 PSUs of
+10 interviews, each row one sect. The methodology report ticks Yes on quota controls (Q15), gives
+the stratification factors as "by governorates / districts / religions" (Q20), and says "the daily
+work sheet mentioned also the profile required of the interviewee" (Q14). The fieldwork firm is
+Statistics Lebanon Ltd. (co-PI Rabih Haber), which is also the Arab Barometer's Lebanese partner;
+Arab Barometer wave V's technical report (`ABV_Methods_Report-1.pdf` p.7) gives Lebanon's strata as
+"Governorates and sect", 23 strata, 240 PSUs of 10.
+
+**The file reproduces the design exactly.** `I_PSU` holds 120 clusters of exactly 10, and all 120
+hold a single community; the four `Other; nfd` answers sit one each in four El Meten Christian
+clusters. Counted by kadaa (`N_TOWN`, where the file's "Saida Villages" is the design's three Shia
+PSUs in Saida) and sect, the clusters equal the design table in all 23 kadaa. Inside Christian
+clusters the denominations mix in 39 of 47 (Maronite, Orthodox, Catholic, Armenian), which is what
+free household selection looks like; Sunni, Shia, Druze and Christian never share a cluster. §8's
+marks are all present: Akkar 50 of 50 Sunni, with no Christian, Alawite, Shia or Druze respondent;
+Baalbek-Hermel 50 of 50 Shia; Nabatieh 70 of 70 Shia.
+
+Christian over total per governorate, beside §2's grid (WVS Christian includes the four `Other`):
+
+```
+                  WVS 7 (2018)      AB V and VII     AB VIII
+Akkar               0/50     0%      30/160  19%      32/170  19%
+Baalbek-Hermel      0/50     0%       0/150   0%      10/180   6%
+Bekaa              20/100   20%      60/150  40%      48/150  32%
+Beirut             50/130   38%      90/250  36%      74/251  29%
+North              80/190   42%     100/330  30%      75/341  22%
+South              20/130   15%      10/260   4%       0/350   0%
+Mount Lebanon     300/480   62%     650/960  68%     568/851  67%
+Nabatieh            0/70     0%       0/140   0%       0/110   0%
+```
+
+The WVS grid is not a copy of the Arab Barometer's, and that is not reassuring: one firm's two
+2018 allocations disagree by up to 20 points (Bekaa 20% against 40%, North 42% against 30%), so
+the allocation is not even stable as the firm's own estimate. Each is a frame rounded into 5 to 48
+clusters per governorate.
+
+**What it means.** The sect composition per governorate, and nationally (Sunni 320, Shia 310 and
+Druze 100 are 32, 31 and 10 clusters), is the design's allocation, and nothing in the file measured
+it. One wave cannot carry a split-half, and a split-half would have passed a quota anyway (§3); the
+check that stands in for it is the one above, which needs only the cluster id and the design
+document. Lebanon does not stand on ruling 035 and is not drawn.
+
+**What the file does measure**, in case another source ever supplies the community shares: the
+denomination split inside Christian clusters (Maronite 297, Orthodox 82, Roman Catholic 64,
+Armenian 23, other 4, of 470). The sample is citizens only: `Q269` is Yes for all 1,200, though the
+design's text says "residents" in one sentence and "Lebanese citizens" a few lines later.
+
+**REOPEN** only on a source whose design does not set sect per cluster. Arab Barometer wave IX
+(Lebanon fielded November 2025, data promised autumn 2026) is very likely the same firm with the
+same strata: read its technical report's strata line before loading the file. WVS wave 6 Lebanon
+(2013) was not downloaded and its design was not read; read its IHSN sample design before asking
+Anita for it.

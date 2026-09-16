@@ -72,6 +72,12 @@ size slider are in the legend; hover for the figure and the operators served.
   third-sector, tram, monorail). S12's JR East feed is partial and some private
   operators withhold unmanned-station counts; every station with visible
   ridership is in.
+- **Hover target:** a bubble drawn at a pixel or more gets a grab radius of at
+  least 3–9 px (growing with zoom), so small stations are easy to hit. A bubble
+  drawn under a pixel gets no floor: zoomed out, hovering a rural line was
+  otherwise mostly tooltips for stations nobody could see. `hitRadius` bakes
+  the test into one stop per zoom level, since `['zoom']` cannot sit inside a
+  `case`.
 
 ### v2 census stitch
 
@@ -134,10 +140,39 @@ looks names up with no runtime geo-matching):
 If a future data rebuild introduces a line, operator or remark the tables don't
 cover, `build_names.py` prints it as `MISSING` — add it to the table and re-run.
 
-Serve locally (the page `fetch()`es the GeoJSON, so `file://` won't work):
+### Korea overlay
+
+A faint rounded outline sits over South Korea. Clicking it fetches
+[koreariders](../koreariders/)' data and draws Korea's rail network on this
+map at this map's own width and bubble scales, so a Korean line and a Japanese
+line of the same thickness carry the same passengers a day. Nothing is fetched
+until the click. Once loaded, a legend checkbox turns Korea off again, which
+brings the outline back.
+
+- **Data path:** `../koreariders/data/` when the page is served from
+  `riders/japanriders/`, `../korearail/data/` otherwise (the site). So the site
+  needs `/korearail/data/` live before this page can show Korea.
+- **`KR_DATA_VERSION`** in `index.html` is the cache-bust for the Korean files
+  and has to follow `DATA_VERSION` in `koreariders/index.html`.
+- **Kept from koreariders:** the authored intercity palette, the grey
+  no-rider-figure track and its notes, the published-total note on 경원선, the
+  city models' scenario ranges, the romaniser. **Dropped:** the direction toggle
+  and the line roster; the segment panel still shows down and up. Korean names
+  stay romanised in the Japanese view too: the overlay is for comparing Korea
+  with Japan at a glance, and the legend's "full map" link opens korearail for
+  anyone who wants to read it closely.
+- **"by operator"** colours Korail the way it colours a JR company, and every
+  other operator grey. SRT's 수서고속선 is grey. Seoul Lines 1, 3 and 4 change
+  operator partway along and are split at their Korail / Seoul Metro handovers
+  (`KR_OP_SECTIONS`). 서해선 is left non-Korail.
+- The Korean figures are reconstructed rather than published, and the page says
+  so in the legend, in every Korean tooltip and in the about panel.
+
+Serve `riders/`, not this folder, so the Korea overlay can reach
+`../koreariders/` (the page `fetch()`es the GeoJSON, so `file://` won't work):
 
 ```
-python -m http.server 8000     # then open http://localhost:8000/
+python -m http.server 8000 --directory ..   # then open http://localhost:8000/japanriders/
 ```
 
 ## Data

@@ -213,3 +213,39 @@ empty, Penghu, Kinmen and Matsu blank. Nothing rebuilt or changed.
 - **On the map most of the legend is pink.** `Chinese religions`, `East Asian new religions`,
   `Daoism` and `Mahayana Buddhism` read as shades of one colour, and the first two looked almost
   the same in the legend at 1400 px. Worth a human eye; ask 019 left a similar pair alone.
+
+## 9. Spec §3.13: folk religion split by a religious home altar, 2026-09-15
+
+Anita's rule for China, Taiwan and Hong Kong: `chinesefolk` is folk religion named, or a religious
+altar kept by someone who names no religion. Here that is `sources/tw_altar.py`, called from
+`tw.py` main() after the fit, so no count moves between counties or between the other answers.
+
+- **Code 021 (volunteers "folk religion") is 4.0% of the folk answer** in 2014 and 2018, weighted,
+  1.94% of Taiwan, applied nationally.
+- **Codes 022-024 split by the ISSP altar item** (2009 `havshrin`, 2014 `v27`, 2018 `v55`): 2,530
+  respondents in 189 townships, 72.4% with an altar nationally. The county test passes (median
+  +0.334 against a null 95th of +0.302, p 0.032, chi-square 1e-11, largest township 3%), so county
+  rates are drawn, shrunk with a prior of 34 respondents: Yunlin 87% and Keelung 82% down to Taipei
+  and Tainan 61%.
+- **Code 010 splits at the national 47.4%**: 693 respondents in 162 townships, p 0.052 (median
+  +0.310 against a null 95th of +0.309).
+- **Drawn**: `chinesefolk` 43.14% (was 50.43%), `unknown` 19.35% (was 0), `unaffiliated` 0 (was
+  12.06%). Folk religion is 65.1% of Yunlin and 61.6% of Chiayi County, 32.7% of Taipei.
+- **ARDA's English labels are not the Chinese questions**: 2018 `v28` asks about ancestors only and
+  `v32` about religious activities, not temple visits (the 2018 報告書). Neither is used here.
+- **Everyone who names nothing and keeps no altar is on `unknown`**, as in China and Hong Kong: codes
+  022-024 without an altar (13.00%) and, on Anita's ruling the same day, code 010 without one
+  (6.35%), which the first build had left on `unaffiliated`. `tw.csv` now calls that row
+  `No religious belief, no religious altar`.
+- **Calls someone might reverse**: 031 `Buddha worship` is not split, since those people named
+  Buddhism; the TSCS altar question lists folk objects as examples, so Taiwan's rate probably runs
+  high against China's (`sources/folk_practice.md` section 5).
+
+## 10. Review of the §3.13 redraw, 2026-09-15 (session `cb8b206e-rev5`)
+
+The full review is `sources/folk_practice.md` section 9. For Taiwan: every figure in section 9 and in
+`note_public` recomputes off `tw.csv` and the raw rounds (2,530 and 693 respondents at 72.42% and 47.37%,
+code 021 at 4.00%; Yunlin 65.06%, Chiayi County 61.61%, Taipei 32.75%), and the altar item's code 1 is
+yes. The one Taiwan-only difference from China and Hong Kong is code 010 without an altar on
+`unaffiliated`, which RULINGS already lists as not decided. `basis` still reads as self-identification
+only. Screenshot clean. Nothing changed here.

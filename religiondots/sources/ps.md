@@ -123,9 +123,11 @@ assertion is that removal never moves weight away from the community points.
 
 ## 7. What the map does not show
 
-- **Israeli settlers.** Neither entry draws them: the census does not count them, and Israel's
-  entry drops everyone beyond the Green Line (Anita's decision, 2026-09-07, `sources/il.md` §7).
-  About 720,000 in CBS's 2022 units beyond the line. Said in `gap` and `note_public`.
+- **Israeli settlers.** Not on this entry: the census does not count them, and Israel's entry
+  drops everyone beyond the Green Line (Anita's decision, 2026-09-07, `sources/il.md` §7).
+  About 720,000 in CBS's 2022 units beyond the line. Since 2026-09-15 they are drawn as their own
+  entry, `xs`, part of neither country (ask 028's ruling, `sources/xs.md`); `gap` and
+  `note_public` point there.
 - **The 40,175 non-Palestinians counted**, never asked religion; with the 1,509 not stated, 0.89%
   of the counted population (`gap_share` 0.0089, hand-written; the tool confirms the 0.03% part).
 - **The 75,377 PCBS estimates the count missed** are in no table by governorate and religion.
@@ -137,3 +139,44 @@ Filed as ask 028: whether Palestine should be drawn as built. Decision taken: dr
 published governorates. The Gaza Strip's 1,138 Christians (1,082 in Gaza governorate) are about
 one dot, placed across a governorate of 640,314; their churches' location is public, and rule 2
 (no finer than the state publishes) is met. Reversing costs removing `ps` from `ORDER`.
+
+## 9. Review, 2026-09-15 (session `d743fc47-rev8`)
+
+Full pass. `check_md.py` clean, `built_countries.py --check` ok, `check_rollup.py ps` clean
+(4,663,917 measured, nothing derived).
+
+- **Figures.** Every `note_public` figure recomputes off `ps.csv`: Islam 98.9%, Christian 1.0%,
+  Bethlehem 23,165 (49.4% of Christians, 10.9% of the governorate's Table 3 total), Ramallah &
+  Al-Bireh 10,255, Jerusalem 8,558, Gaza Strip 1,138. `gap`'s 0.89% is (40,175 + 1,509) /
+  4,705,601; `grain`'s 292,000 is 4,665,426 / 16.
+- **Mapping.** Christian on the parent, Islam with no branch, Other on `other.ps` as `other.cg`,
+  `other.sl` and `other.bn`: agreed.
+- **Against ask 028's ruling.** Built as ruled. The Jerusalem row includes J1: PCBS's own list
+  (book2364-1.pdf, the Table 25 footnote, PDF index 80) names 21 localities, Beit Safafa and
+  Sharafat among them. Gaza is drawn as counted in 2017 with the sentence. The settlers are on
+  `xs`: `counts.json` carries exactly one `"territory": false` entry, and
+  `country_shapes.geojson` has `il` and `ps` and no `xs`.
+- **Nobody is drawn twice across `il`, `ps` and `xs`.** Three boundaries:
+  1. `il` / `xs`. CBS's 267 dropped units hold 1,097,156 people, which is `xs`'s 723,899 Jews and
+     Others plus 373,257 Muslims and Christians exactly. `_il_counts` removes all 267;
+     `_xs_counts` stops on any unit not on the list.
+  2. `xs` / `ps`. Table 3 is Palestinians only, and PCBS does not enumerate the settlements.
+  3. `il` / `ps`, which no assertion covers: Palestinians PCBS counts living in a unit Israel's
+     entry keeps. CBS's units were rebuilt uncut with `il_geo.build_units()` and measured
+     against OCHA's oPt polygon (scratchpad script, not kept). Jerusalem's 370,471 Muslims
+     split 359,478 in dropped units and 10,993 in kept ones. Beit Safafa, which the Green Line
+     crosses and PCBS lists in J1, is dropped: no kept Jerusalem unit holds more than 707
+     Muslims. Every kept unit with 100 or more Muslims, Christians or Druze has its centroid
+     outside COD's governorates. Among the 30 largest, four Jerusalem units reach 5-28% into
+     the oPt (3000_1336+1332, 3000_512+511, 3000_521, 3000_1412+1411), with 1,925 Muslims and
+     Christians together in near-equal counts, 0.04% of the drawn total. The other 50 kept units
+     in that list hold under 290 Muslims and Christians each and were not printed one by one,
+     so any overlap with J1 is of that order. The Arab towns Israel keeps along the line (Kafr Qasim, Tayibe,
+     Baqa al-Gharbiyye, Jatt, 0.2-4.7% east) are not PCBS localities. Nothing to change.
+- **One `note_public` phrase no longer holds.** "Israel's entry on this map leaves out East
+  Jerusalem and the West Bank, so each place is drawn once" was written when the settlers were
+  on neither entry. With `xs`, East Jerusalem and the West Bank are drawn on two entries (for
+  different people), so "each place is drawn once" is now wrong and "so nobody is drawn twice"
+  would be right. Not edited here; a note wording fix for the supervisor or Anita.
+- **Screenshot** (all-countries view, framed on Palestine): West Bank and Gaza dots on land and
+  green, settlement clusters blue inside the West Bank, nothing in the sea, nothing blank.

@@ -9,6 +9,10 @@ Resultados Definitivos*, INE 2019):
 
 `Desconhecida` is the eighth column and is not an answer on the form.
 
+Since 2026-09-15 the district rows drawn in nine provinces (sources/mz_2007.py, data/normalized/
+mz_districts.csv) resolve through this module too: the 2007 census's district volumes print the
+same eight answers under the same names, and the fitted rows carry 2017's category labels.
+
 EXCLUDED holds categories that are deliberately not on the tree.
 REVIEW holds calls that are defensible but arguable, with the reason.
 """

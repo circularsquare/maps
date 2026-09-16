@@ -160,11 +160,13 @@ def main():
     log(f"  unassigned (no township under the cell centre): "
         f"{totals[0] / 1e6:.2f} M")
 
+    # The unrounded sum is kept alongside for anyone re-checking the totals.
     out = pd.DataFrame({
         "code": gdf["code"].values,
         "name": gdf["name"].values,
         "name_cn": gdf["name_cn"].values,
         "pop_2020": np.round(totals[1:]).astype(np.int64),
+        "pop_2020_raw": totals[1:],
     })
     path = Path(args.out) if args.out else OUT
     path.parent.mkdir(parents=True, exist_ok=True)

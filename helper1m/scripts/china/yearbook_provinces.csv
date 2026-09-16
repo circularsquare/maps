@@ -1,0 +1,46 @@
+# Year-end resident population by province, China Statistical Yearbook 2025,
+# table 2-5 分地区年末人口数, published as an image at
+# https://www.stats.gov.cn/sj/ndsj/2025/html/C02-05.jpg
+#
+# Transcribed from 万人 and multiplied by 10,000, so each figure is exact to
+# +/- 5,000. Only the 2024/2020 ratio is used, so that rounding is worth about
+# 0.01% and nothing downstream depends on the levels.
+#
+# Both columns come from this one table on purpose: the yearbook's year-end
+# estimates are a different series from the November census counts, and a ratio
+# is only meaningful within one series. The table's own footnote says the
+# national total includes servicemen while the provincial rows do not, and the
+# 31 rows sum to 140,628万 against a national 140,828万 in 2024 — exactly the
+# 200万 difference, which is what makes this transcription checkable.
+name_cn,name,pop_2020,pop_2024
+北京市,Beijing Municipality,21890000,21830000
+天津市,Tianjin Municipality,13870000,13640000
+河北省,Hebei Province,74640000,73780000
+山西省,Shanxi Province,34900000,34460000
+内蒙古自治区,Nei Mongol Autonomous Region,24030000,23880000
+辽宁省,Liaoning Province,42550000,41550000
+吉林省,Jilin Province,23990000,23170000
+黑龙江省,Heilongjiang Province,31710000,30290000
+上海市,Shanghai Municipality,24880000,24800000
+江苏省,Jiangsu Province,84770000,85260000
+浙江省,Zhejiang Province,64680000,66700000
+安徽省,Anhui Province,61050000,61230000
+福建省,Fujian Province,41610000,41930000
+江西省,Jiangxi Province,45190000,45020000
+山东省,Shandong Province,101650000,100800000
+河南省,Henan Province,99410000,97850000
+湖北省,Hubei Province,57450000,58340000
+湖南省,Hunan Province,66450000,65390000
+广东省,Guangdong Province,126240000,127800000
+广西壮族自治区,Guangxi Zhuangzu Autonomous Region,50190000,50130000
+海南省,Hainan Province,10120000,10480000
+重庆市,Chongqing Municipality,32090000,31900000
+四川省,Sichuan Province,83710000,83640000
+贵州省,Guizhou Province,38580000,38600000
+云南省,Yunnan Province,47220000,46550000
+西藏自治区,Xizang Autonomous Region,3660000,3700000
+陕西省,Shaanxi Province,39550000,39530000
+甘肃省,Gansu Province,25010000,24580000
+青海省,Qinghai Province,5930000,5930000
+宁夏回族自治区,Ningxia Huizu Autonomous Region,7210000,7290000
+新疆维吾尔自治区,Xinjiang Uygur Autonomous Region,25900000,26230000

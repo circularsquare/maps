@@ -22,6 +22,14 @@ def _uy_counts():
     """INE's Encuesta Nacional de Hogares Ampliada 2006 at departamento: 7 categories, 19
     units, and EVERY ROW IS `modelled` IN §7.
 
+    SINCE 2026-09-15 MONTEVIDEO IS ITS 62 BARRIOS (sources/uy.md §12), so the units are 18
+    departments plus `UY10-B01`..`UY10-B62`, and there is no `UY10` row. Six of the seven
+    answers carry their own barrio shares on a census-segment split-half; `Otra` takes the
+    city's. Barrio populations come from the 2023 census persons file, weighted, under INE's
+    own Montevideo total, and the place layer follows INE's Montevideo line, not COD's
+    (sources/uy_grid.py). What follows describes the department build and is still true of it,
+    except the 7+ figures, corrected on 2026-09-15 (sources/uy.md §12.7).
+
     THE QUEUE PRICED THIS COUNTRY FROM LAPOP AND THE STATISTICS OFFICE HAS SOMETHING FIFTY
     TIMES BIGGER. INE put a religion question on the 2006 ENHA -- the year the continuous
     household survey was widened to cover small localities and rural areas -- and asked it of
@@ -39,7 +47,7 @@ def _uy_counts():
     says "personas mayores de 6 anos" and then glosses it as "6 anos y mas", which are two
     different universes. The microdata settles it: the not-applicable code covers ages 0 to 6
     exactly and completely, all 4,225 six-year-olds included, and nobody 7 or over carries it.
-    8.99% of Uruguay is therefore children and is in `gap=`. There is no non-response cell at
+    7.67% of Uruguay is therefore children and is in `gap=`. There is no non-response cell at
     all -- every person in the universe has one of the seven answers, which is rare here.
 
     THE CODE JOIN IS EL SALVADOR'S TRAP, HARDER TO SEE. INE numbers departments with
@@ -53,9 +61,9 @@ def _uy_counts():
     THE POPULATION IS INE'S OWN POST-CENSUS ESTIMATE, NOT COD-PS. Uruguay counted in 2023 and
     COD-PS's Uruguay file is a projection off the 2011 census, so §9bn's rule applies. INE's
     Estimaciones y proyecciones revision 2025 gives 3,496,400 at 30 June 2023 by department
-    and five-year age band, of whom 3,181,996 are 7 or over. The 7+ cut needs three fifths of
-    the 5-9 band because nothing INE publishes for Uruguay is by single year of age; that
-    interpolation is worth at most 0.05% of the country and sources/uy_geo.py says so.
+    and five-year age band, of whom 3,228,150 are 7 or over. The 7+ cut subtracts two fifths
+    of the 5-9 band (ages 5 and 6) because nothing INE publishes for Uruguay is by single year
+    of age; sources/uy_geo.py says so.
 
     TWO CHECKS, AND ONE IS A SECOND SURVEY. The ENHA's own weighted department distribution
     tracks INE's 2006 population distribution at r=+1.0000 over 19, which none of 20,000
@@ -87,13 +95,18 @@ def _uy_counts():
                      keep_default_na=False, na_values=[""])
 
     lut = pd.read_csv(HERE / "data" / "geo" / "uy" / "uy_lookup.csv", dtype=str)
-    df["unit"] = df["geo_id"].map(dict(zip(lut["geo_id"], lut["unit"])))
+    blut = pd.read_csv(HERE / "data" / "geo" / "uy" / "uy_barrios_lookup.csv", dtype=str)
+    unit_of = dict(zip(lut["geo_id"], lut["unit"]))
+    unit_of.update(zip(blut["geo_id"], blut["unit"]))
+    df["unit"] = df["geo_id"].map(unit_of)
     missing = sorted(df.loc[df["unit"].isna(), "geo_id"].unique())
     if missing:
-        raise SystemExit(f"uy.csv departments with no polygon: {missing} -- re-run "
+        raise SystemExit(f"uy.csv units with no polygon: {missing} -- re-run "
                          "sources/uy_geo.py, the lookup is stale")
-    if df["unit"].nunique() != 19:
-        raise SystemExit(f"{df['unit'].nunique()} departments, expected 19")
+    # Since 2026-09-15: 18 departments, and Montevideo's 62 barrios in place of Montevideo.
+    if df["unit"].nunique() != 80 or "UY10" in set(df["unit"]):
+        raise SystemExit(f"{df['unit'].nunique()} units, expected 18 departments and 62 "
+                         "Montevideo barrios, with no Montevideo department row")
 
     df["node"] = df["source_category"].map(resolve)
     unmapped = sorted(df.loc[df["node"].isna(), "source_category"].unique())
@@ -110,7 +123,8 @@ ENTRY = {
     "uy": dict(
         name="Uruguay",
         source="Encuesta Nacional de Hogares Ampliada 2006 (INE), against INE's own "
-               "departmental population estimates for 2023",
+               "departmental population estimates for 2023 and, for Montevideo's barrios, "
+               "the 2023 census",
         basis="self-identification, people aged 7 or over",
         note_public=(
             "**Uruguay's census has not asked about religion since 1908, so this map is a "
@@ -122,21 +136,21 @@ ENTRY = {
             "department, Flores, rests on 3,252 answers and Montevideo on 80,196, so every "
             "department here carries its own measured composition rather than a national "
             "average. Children under seven were not asked and are not drawn. "
-            "**42.5% of Uruguayans over six claim no religious affiliation, against 46.2% "
+            "**42.5% of Uruguayans over six claim no religious affiliation, against 46.1% "
             "Catholic.** That is far more than any other Latin American country on this map, "
-            "and the survey splits it where it matters: **26.9%** say they believe in God but "
-            "belong to no religion, and **15.6%** call themselves atheist or agnostic. Most "
+            "and the survey splits it where it matters: **27.0%** say they believe in God but "
+            "belong to no religion, and **15.5%** call themselves atheist or agnostic. Most "
             "Uruguayans who have left the church have not left belief. The separation goes "
             "back a long way, to an 1861 law taking the cemeteries out of church hands and "
             "the 1917 constitution that finished the job. "
             "**The two halves of the no-religion answer have opposite maps.** Atheists and "
-            "agnostics are a Montevideo and Atlantic-coast phenomenon, **21.7%** of the "
+            "agnostics are a Montevideo and Atlantic-coast phenomenon, **21.6%** of the "
             "capital and 16.6% of Maldonado against 3.9% of Artigas on the Brazilian border. "
             "Believers without a religion are the interior and the north, 41.9% of Tacuarembó "
             "and 41.6% of Rocha against 13.6% of Colonia. Put together they run from 20.5% of "
             "Paysandú to **58.1% of Rocha**. "
             "**Catholicism is the other side of that and its range is nearly as wide**, 67.7% "
-            "of Paysandú against 30.3% of Rivera. Non-Catholic Christians are 10.0% of the "
+            "of Paysandú against 30.3% of Rivera. Non-Catholic Christians are 10.1% of the "
             "country and are one box: the question folds evangelicals, Pentecostals, "
             "Baptists, Protestants, Adventists and the Armenian Apostolic Church into a "
             "single answer, so nothing separates them here. They are 27.9% of Rivera and 5.6% "
@@ -144,12 +158,26 @@ ENTRY = {
             "Protestant body in the country, are inside that box and cannot be taken out of "
             "it. "
             "**Two small answers get their own box here that most surveys in the region do "
-            "not offer.** Judaism is **0.38%** of the country and Montevideo holds nine "
-            "tenths of it, 0.92% of the city against 0.06% of everywhere else. Umbanda and "
-            "Afro-American religion together are 0.63%, highest in Montevideo at 0.93% and in "
+            "not offer.** Judaism is **0.36%** of the country and Montevideo holds nine "
+            "tenths of it, 0.87% of the city against 0.06% of everywhere else. Umbanda and "
+            "Afro-American religion together are 0.63%, highest in Montevideo at 0.95% and in "
             "Rivera at 0.78%, which is the capital and the Brazilian border town. That second "
             "figure is people who define themselves that way first, and Uruguayan practice of "
             "those religions is wider than the number. "
+            "**Montevideo is drawn at its 62 barrios rather than as one department.** The "
+            "survey reached people in every one of them, from 358 in La Blanqueada to 4,131 "
+            "in La Paloma and Tomkinson, and the split was tested before it was drawn: when "
+            "each barrio's sampled census segments were divided into two halves, six of the "
+            "seven answers ordered the barrios the same way in both. The seventh, another "
+            "religion, is drawn at the city-wide share. The barrios' populations are from the "
+            "2023 census. The same contrasts appear inside the city. Atheists and agnostics "
+            "are **29.8%** of Palermo and 29.7% of Barrio Sur, against 14.7% of Lezica and "
+            "Melilla on the rural edge; Catholics are 63.8% of Carrasco Norte and 31.8% of La "
+            "Paloma and Tomkinson; non-Catholic Christians are 14.9% of Villa García and Manga "
+            "Rural and 3.1% of Barrio Sur. Punta Carretas and Pocitos are each about 8% "
+            "Jewish, and with Punta Gorda they hold seven in ten of the city's Jewish "
+            "residents. A barrio rests on a few hundred to a few thousand answers, so a gap of "
+            "several points between two barrios can be sampling noise. "
             "**The level is 2006 and the country has kept moving.** The AmericasBarometer "
             "asked a similar question between 2010 and 2014 and found 37% Catholic, so what "
             "is drawn here is several points more Catholic than Uruguay is now. What the two "
@@ -157,9 +185,9 @@ ENTRY = {
             "Christians and for atheists match closely, and the ordering is what a map is "
             "for."),
         how="national household survey, 2006, ages 7 and over",
-        grain="departamentos, 167,000 people on average",
-        gap="children under 7, 9.0% of Uruguay, who were not asked the question",
-        gap_share=0.0899,
+        grain="departamentos, 112,000 people on average; Montevideo's 62 barrios, 19,000",
+        gap="children under 7, 7.7% of Uruguay, who were not asked the question",
+        gap_share=0.0767,
         counts=_uy_counts,
         units=None,
         unit_key=None,
@@ -177,7 +205,7 @@ ENTRY = {
              "THE UNIVERSE IS AGES 7 AND OVER AND ANDA'S METADATA GETS IT WRONG -- the data "
              "dictionary says `personas mayores de 6 anos` and then glosses it `6 anos y "
              "mas`. The microdata settles it: the not-applicable code covers ages 0 to 6 "
-             "completely, all 4,225 six-year-olds included. 8.99% of Uruguay is in `gap=` and "
+             "completely, all 4,225 six-year-olds included. 7.67% of Uruguay is in `gap=` and "
              "there is no non-response cell at all. "
              "THE CODE JOIN IS EL SALVADOR'S TRAP AND HARDER TO SEE. INE numbers departments "
              "Montevideo first then alphabetically; COD-AB's UY01..UY19 are alphabetical with "
@@ -186,10 +214,9 @@ ENTRY = {
              "Montevideo's 1.3 million are drawn in Artigas. sources/uy_geo.py joins on the "
              "name, all 19 with no aliases, and asserts that the code join still mispairs ten. "
              "THE POPULATION IS INE'S OWN 2023 ESTIMATE, not COD-PS, because Uruguay counted "
-             "in 2023 and COD-PS projects off 2011 (§9bn). 3,496,400 people of whom 3,181,996 "
-             "are 7 or over; the 7+ cut takes three fifths of the 5-9 band because nothing INE "
-             "publishes for Uruguay is by single year of age, which is worth at most 0.05% of "
-             "the country. "
+             "in 2023 and COD-PS projects off 2011 (§9bn). 3,496,400 people of whom 3,228,150 "
+             "are 7 or over; the 7+ cut subtracts two fifths of the 5-9 band (ages 5 and 6) "
+             "because nothing INE publishes for Uruguay is by single year of age. "
              "THE SECOND CHECK IS A SECOND SURVEY, which no LAPOP-only country can have. "
              "LAPOP measured the same nineteen departments four to eight years later with a "
              "different instrument: non-Catholic Christian r=+0.86 with 0 of 20,000 random "
@@ -205,6 +232,12 @@ ENTRY = {
              "of nineteen units the rank test is ranking noise, while the thing the map draws "
              "is Montevideo at 0.92% Jewish against 0.06% elsewhere on 80,196 respondents. "
              "Both exceptions carry a chi-square as their precondition and the bar was not "
-             "moved. sources/uy.md is the write-up and taxonomy/uy2006.py the mapping.",
+             "moved. SINCE 2026-09-15 MONTEVIDEO IS ITS 62 BARRIOS: six answers on their own "
+             "barrio shares by a census-segment split-half, `Otra` at the city's, barrio "
+             "populations from the 2023 census persons file, placement on INE's Montevideo "
+             "line (sources/uy.md §12). Until 2026-09-15 the 7+ cut subtracted three fifths of "
+             "the band, ages 7 to 9 instead of 5 and 6, leaving every department short in "
+             "proportion (46,154 people in all); fixed and redrawn that day (§12.7). "
+             "sources/uy.md is the write-up and taxonomy/uy2006.py the mapping.",
     ),
 }

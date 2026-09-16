@@ -127,6 +127,17 @@ and, for the viewer, which draws one country at a time and needs to say whose da
   view          optional [w, s, e, n] to fly to, where the data bbox is the wrong picture —
                 the US spans Hawaii to Maine and fitting that shows mostly ocean. Defaults to
                 the bbox of the country's own dots, computed in tiles.py.
+  territory     optional, default True. False for an entry that is people rather than a place:
+                part of no country on the map, with no outline and no wash of its own
+                (country_shapes.py leaves it out), and never chosen by the viewer's Auto from
+                where the camera is looking. It is seen in the all-countries view, or picked by
+                hand from the list. Written into counts.json by tiles.py, and a bool (asserted
+                below). Anita, 2026-09-15, for the Israeli settlements beyond the Green Line
+                (`xs`), which Israel's entry stops short of and Palestine's census does not
+                count: *"they dont actually have any territory so it shouldnt be possible to
+                auto-mode onto them."* Northern Cyprus is a later candidate and is not built.
+                Such an entry takes its code from ISO 3166's user-assigned range (`x?`, as
+                Kosovo's `xk`), so it can never meet a real country's.
 """
 import json
 from pathlib import Path
@@ -143,7 +154,10 @@ sys.path.insert(0, str(HERE / "taxonomy"))
 # countries use are in countries/_shared.py, which every country file star-imports. This file
 # only loads them: COUNTRIES takes its order from ORDER below, never from the directory, and
 # every helper stays importable as `countries.<name>`. A new country is a new file plus its
-# code appended to ORDER; the loader stops if the two disagree.
+# code appended to ORDER, written back to back. Until both exist the loader SKIPS that country
+# with a warning on stderr and loads the rest (HALF_REGISTERED, below). It used to stop instead,
+# which broke every other session's import for as long as the gap lasted: on 2026-09-15 a
+# tiles.py worker died on it and hung a build tail for 45 minutes, and check_md.py stopped.
 ORDER = [
     "us",
     "ca",
@@ -315,13 +329,47 @@ ORDER = [
     "ps",
     "sn",
     "gi",
+    "xs",
+    "gm",
+    "mt",
+    "as",
+    "ne",
+    "dz",
+    "fo",
+    "qa",
+    "is",
+    "ma",
+    "tn",
+    "ly",
+    "im",
+    "tk",
+    "mr",
+    "ad",
+    "je",
+    "sd",
+    "sa",
+    "cd",
+    "af",
+    "so",
+    "om",
 ]
 
 COUNTRIES = {}
 
+# {cc: which half is missing} for a country with its code in ORDER or its countries/<cc>.py but
+# not both. Filled by _load(), which skips these and loads everything else; empty when ORDER and
+# the directory agree. The strict form of the check reads it: `tools/built_countries.py --check`
+# fails on any entry, and `tools/claim.py done` will not mark such a country drawn.
+HALF_REGISTERED = {}
+
 
 def _load():
-    """Fill COUNTRIES from countries/<cc>.py in ORDER and re-export every helper by name."""
+    """Fill COUNTRIES from countries/<cc>.py in ORDER and re-export every helper by name.
+
+    A half-registered country is skipped with one warning line on stderr, not stopped on: a
+    builder writes its file and its ORDER line one after the other, and every other session
+    imports this file in between. A code named twice in ORDER, or a file not named for a code,
+    still stops, because neither is a builder partway through its two writes."""
     import importlib.util
     import types
 
@@ -335,16 +383,18 @@ def _load():
     if odd:
         problems.append("not named for a two-letter country code: "
                         + ", ".join(f"countries/{s}.py" for s in odd))
-    unlisted = sorted(on_disk - set(ORDER) - set(odd))
-    if unlisted:
-        problems.append("in countries/ but missing from ORDER: " + ", ".join(unlisted)
-                        + " (append the code to ORDER in countries.py)")
-    absent = [cc for cc in ORDER if cc not in on_disk]
-    if absent:
-        problems.append("in ORDER but there is no countries/<cc>.py for: " + ", ".join(absent))
     if problems:
         raise SystemExit("countries.py: ORDER and the files in countries/ disagree\n  "
                          + "\n  ".join(problems))
+    for cc in ORDER:
+        if cc not in on_disk:
+            HALF_REGISTERED[cc] = f"it is in ORDER but countries/{cc}.py does not exist"
+    for cc in sorted(on_disk - set(ORDER)):
+        HALF_REGISTERED[cc] = f"countries/{cc}.py exists but {cc} is not in ORDER"
+    for cc, why in HALF_REGISTERED.items():
+        print(f"countries.py: WARNING skipping {cc}: {why}. Every other country loads. If a "
+              f"builder is between its two writes this clears in a moment; if it persists, add "
+              f"the missing half.", file=sys.stderr, flush=True)
 
     def load(name, path):
         spec = importlib.util.spec_from_file_location(name, str(path))
@@ -363,6 +413,8 @@ def _load():
         g.setdefault(n, getattr(shared, n))
     owner = {}
     for cc in ORDER:
+        if cc in HALF_REGISTERED:
+            continue
         mod = load(f"countries.{cc}", folder / f"{cc}.py")
         entry = getattr(mod, "ENTRY", None)
         if not (isinstance(entry, dict) and list(entry) == [cc]):
@@ -398,6 +450,8 @@ for _cc, _m in COUNTRIES.items():
         assert "\u2014" not in _v, f"{_cc}.{_f} has an em dash; use a comma, a semicolon or a bracket"
         assert not (set("<`*") & set(_v)), (
             f"{_cc}.{_f} has markup (< ` or *); these fields are escaped, not rendered")
+    # `territory` is read as `!== false` by the viewer, so a truthy string would be ignored there.
+    assert isinstance(_m.get("territory", True), bool), f"{_cc}.territory must be True or False"
     # spec \u00a710.4: the hatched segment's width. A share with no sentence beside it is a hole
     # the reader cannot ask about, and a share of 0 or 1 is a bar with nothing in it.
     _g = _m.get("gap_share")

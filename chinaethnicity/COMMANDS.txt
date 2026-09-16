@@ -1,0 +1,58 @@
+CHINA NATIONALITIES DOT MAP — COMMANDS
+======================================
+
+Python: C:\Python39\python.exe (the one with geopandas, rasterio, xlrd, openpyxl, fitz,
+pmtiles, pypinyin). Run everything from this folder.
+
+---- ONE-TIME INPUTS ----
+
+religiondots' China boundaries must exist (geo.py reads them):
+    religiondots/data/geo/cn/cn_counties.gpkg
+    religiondots/data/raw/cn/datav/county_index.json
+    (build in religiondots: python sources/cn_geo.py --fetch ; python sources/cn_geo.py)
+
+religiondots' 2000 census county tables (fallback.py reads them, and imports
+religiondots/sources/cn.py for its county-name resolver):
+    religiondots/data/raw/cn/J??A0106.tab
+    (in religiondots: python sources/cn.py --fetch)
+
+ASPECT grid zip, read in place, never unpacked:
+    maps/data/asia1m/china/aspect_population_total_pop.zip
+    (figshare doi:10.6084/m9.figshare.27323106, 488 MB)
+
+7-Zip or WinRAR, for Yunnan's rar (Windows tar cannot read its Chinese file names).
+
+
+---- BUILD, IN ORDER ----
+
+1. python fetch.py          # 22 files, ~400 MB. Chongqing's 337 MB PDF often drops partway;
+                            # run again and it resumes
+2. python geo.py            # counties.gpkg + processed/provinces.geojson, ~1 min
+3. python aspect.py         # data/geo/cells.npz, ~1.5 min
+4. python parse.py          # data/work/table_2020.csv; every check must pass
+5. python join.py           # data/work/leaves_2020.csv + join_report.txt; READ the report
+6. python fallback.py       # data/work/leaves_fallback.csv + fallback_report.txt, the
+                            # provinces parse.py has no county table for; READ the report
+7. python palette.py        # only if colors.csv does not exist yet; never overwrites it
+8. python scatter.py        # processed/dots_2020.npz + legend.json
+9. python tiles.py          # processed/chinaethnicity.pmtiles
+
+After editing colors.csv only: re-run step 8 (legend.json carries the colours). No retile.
+
+
+---- ADDING A PROVINCE ----
+
+1. its source in fetch.py SOURCES, and its file in parse.py TABLES
+2. python fetch.py <key> ; python parse.py <key>
+3. python join.py, fix anything the report marks !! (OVERRIDES in join.py)
+4. python fallback.py (a province with a county table drops out of the estimates by itself),
+   then steps 8-9, and move it to "Measured" in provinces.md
+
+
+---- LOCAL VIEWER ----
+
+    npx serve . -p 8080
+    http://localhost:8080
+
+(not python -m http.server: PMTiles needs range requests, and without them the map loads
+with no dots and no error)

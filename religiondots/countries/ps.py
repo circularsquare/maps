@@ -58,12 +58,13 @@ ENTRY = {
             "Christianity is one colour. "
             "**Jerusalem governorate includes East Jerusalem.** The census counts the part of "
             "the governorate Israel annexed in 1967 together with the rest, and Israel's entry "
-            "on this map leaves out East Jerusalem and the West Bank, so each place is drawn "
-            "once. "
-            "**Israelis living in the settlements are not drawn.** The Palestinian census does "
-            "not count them and Israel's entry stops at the 1949 armistice line, so the "
-            "settlements in the West Bank and East Jerusalem, where Israel's 2022 census counted "
-            "about **720,000** people, are on neither. "
+            "on this map leaves out East Jerusalem and the West Bank, so nobody is drawn "
+            "twice. "
+            "**Israelis living in the settlements are drawn as an entry of their own.** The "
+            "Palestinian census does not count them and Israel's entry stops at the 1949 "
+            "armistice line, so the settlements in the West Bank and East Jerusalem, where "
+            "Israel's 2022 census counted about **720,000** people, are on the separate entry "
+            "\"Israeli settlements in the West Bank\", part of neither country. "
             "**These are 2017 figures.** Since October 2023 the war has displaced most of the "
             "Gaza Strip's population, so the dots there show where people lived when the census "
             "was taken, not where they live now."),
@@ -71,7 +72,7 @@ ENTRY = {
         grain="governorates, 292,000 people on average",
         gap="0.89%: the 40,175 people counted who are not Palestinian, whom the form did not "
             "ask about religion, and 1,509 who gave no answer; and the Israeli settlements, "
-            "which this census does not count",
+            "which this census does not count and which are drawn as their own entry",
         gap_share=0.0089,
         counts=_ps_counts,
         units=None,

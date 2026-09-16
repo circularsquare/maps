@@ -392,3 +392,22 @@ since it affects the confidence tier definitions and not just New Zealand.
 7. **The product and release finder** is a genuinely good artefact — one .xlsx listing all 757
    published 2023 products with their geography and variables.  Finding it first would have
    saved most of the search; it is the thing to look for in any national statistics office.
+
+## 11. Confucianism and Falun Gong moved off `chinesefolk`, 2026-09-15 (session `cb8b206e-folksplit`)
+
+On Anita's ruling on ask 036 (`ask/RULINGS.md`, `cn`, `all`), in `taxonomy/nz2023.py`:
+
+| row | as allocated to SA2 | 2018 national | was | now |
+|---|---:|---:|---|---|
+| Confucianism | 110 | 99 | `chinesefolk` | `confucianism` |
+| Falun Gong | 116 | 105 | `chinesefolk` | `eastasiannew` |
+
+- **Falun Gong went on the `eastasiannew` parent, and no leaf was added.** It is a 1992 Chinese
+  founding, which is what that family holds. There is no Chinese grouping node under it, and
+  Taiwan's Yiguan Dao and `Other Chinese religions` already sit on the parent (`tw2018.py`). 116
+  people do not justify a legend row of their own.
+- Kept on `chinesefolk`: `Chinese Religions nfd` (306) and `Chinese Religions nec` (20).
+- All four rows are allocated and under one dot, so no dot or ring; legend counts only. Both
+  editions rescattered: 4,633 and 445 dots.
+
+The whole change is `sources/folk_practice.md` §11.

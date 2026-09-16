@@ -1,6 +1,7 @@
 * { box-sizing: border-box; }
 html, body { margin: 0; height: 100%; font: 13px/1.4 -apple-system, BlinkMacSystemFont, system-ui, sans-serif; }
 body { display: flex; }
+[hidden] { display: none !important; }
 
 #sidebar {
   width: 320px; height: 100vh; overflow-y: auto;
@@ -9,9 +10,18 @@ body { display: flex; }
 }
 #map { flex: 1 1 auto; height: 100vh; }
 
+/* Drag handle on the sidebar's edge. Its negative margins cancel its own width,
+   so it overlaps the border instead of taking space from the map. */
+#sidebar-resizer {
+  flex: 0 0 6px; height: 100vh; margin: 0 -5px 0 -1px;
+  position: relative; z-index: 3; cursor: col-resize; touch-action: none;
+}
+#sidebar-resizer:hover, #sidebar-resizer.dragging { background: rgba(0, 0, 0, 0.15); }
+body.resizing { cursor: col-resize; user-select: none; }
+
 .panel { margin-bottom: 16px; }
 .panel label { display: block; font-weight: 600; margin-bottom: 4px; color: #444; }
-.panel .panel-header { display: flex; justify-content: space-between; align-items: baseline; font-weight: 600; margin-bottom: 4px; color: #444; }
+.panel .panel-header { display: flex; flex-wrap: wrap; gap: 2px 6px; justify-content: space-between; align-items: baseline; font-weight: 600; margin-bottom: 4px; color: #444; }
 .panel .empty { color: #999; font-style: italic; }
 
 select, button { font: inherit; padding: 4px 8px; }
@@ -21,8 +31,8 @@ button { cursor: pointer; }
 #level-radios label { display: inline-block; margin-right: 10px; font-weight: 400; }
 #level-radios input { margin-right: 4px; }
 
-#info-panel .name { font-size: 16px; font-weight: 600; margin-bottom: 2px; }
-#info-panel .parent { color: #666; margin-bottom: 8px; }
+#info-panel .name { font-size: 16px; font-weight: 600; margin-bottom: 2px; overflow-wrap: anywhere; }
+#info-panel .parent { color: #666; margin-bottom: 8px; overflow-wrap: anywhere; }
 #info-panel .estimate { font-size: 20px; font-weight: 600; color: #222; }
 #info-panel .estimate-note { color: #666; margin-bottom: 8px; }
 #info-panel .flag { color: #b8400a; font-size: 12px; margin-bottom: 6px; }
@@ -30,18 +40,75 @@ button { cursor: pointer; }
 #info-panel .history td { padding: 1px 8px 1px 0; }
 #info-panel .history td:first-child { color: #666; }
 
-.basemap-toggle label { font-weight: 400; color: #333; }
-.basemap-toggle input { margin-right: 6px; vertical-align: middle; }
+#basemap-radios label { display: inline-block; margin-right: 10px; margin-bottom: 0; font-weight: 400; color: #333; }
+#basemap-radios input { margin-right: 4px; }
+.opacity-row { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+.opacity-row input[type="range"] { flex: 1 1 auto; min-width: 0; margin: 0; }
+.opacity-row span { width: 34px; text-align: right; color: #666; font-variant-numeric: tabular-nums; }
+.basemap-toggle .hint { color: #999; font-size: 12px; margin-top: 2px; }
+
+/* The elevation basemap's scale: its gradient, and the range it spans right now. */
+#relief-legend { margin-top: 8px; }
+#relief-ramp { height: 8px; border: 1px solid #ccc; }
+#relief-labels {
+  display: flex; justify-content: space-between; margin-top: 1px;
+  color: #666; font-size: 11px; font-variant-numeric: tabular-nums;
+}
 
 .group-btns button { padding: 1px 7px; font-size: 12px; margin-left: 4px; }
 #group-list {
   max-height: 240px; overflow-y: auto;
   border: 1px solid #ddd; background: #fff; padding: 4px 7px;
 }
-#group-list label { display: block; font-weight: 400; margin: 0; color: #333; }
+#group-list label { display: block; font-weight: 400; margin: 0; color: #333; overflow-wrap: anywhere; }
 #group-list input { margin-right: 6px; vertical-align: middle; }
 
 #selection-panel ul { list-style: none; padding: 0; margin: 0; font-size: 12px; }
-#selection-panel li { padding: 2px 0; display: flex; justify-content: space-between; }
+#selection-panel li { padding: 2px 0; display: flex; gap: 6px; justify-content: space-between; }
+#selection-panel li > span:first-child { min-width: 0; overflow-wrap: anywhere; }
+#selection-panel li > span:last-child { margin-left: auto; white-space: nowrap; }
 #selection-panel li .sel-remove { cursor: pointer; color: #999; border: none; background: none; padding: 0 4px; }
 #selection-summary .sum { font-size: 18px; font-weight: 600; }
+
+/* Hover readout pinned to the cursor. Fixed to the viewport rather than placed
+   inside the map, so the sidebar's width never shifts it. */
+#hover-tip {
+  position: fixed; z-index: 10; pointer-events: none; max-width: 280px;
+  background: rgba(255, 255, 255, 0.96); border: 1px solid #bbb; border-radius: 3px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+  padding: 4px 7px; font-size: 12px; line-height: 1.35; color: #222;
+}
+#hover-tip .tip-name { font-weight: 600; }
+#hover-tip .tip-cn { color: #666; font-weight: 400; }
+#hover-tip .tip-parent { color: #555; }
+#hover-tip .tip-pop { margin-top: 2px; font-variant-numeric: tabular-nums; }
+#hover-tip .tip-note { color: #888; }
+
+/* A sidebar dragged down towards a third of the default: tighter padding, thin
+   scrollbars, one control per line with its box kept beside its text rather
+   than above it, and the selection figure dropped under its name. */
+#sidebar.narrow { padding: 8px 5px; scrollbar-width: thin; }
+#sidebar.narrow .panel { margin-bottom: 12px; }
+#sidebar.narrow select, #sidebar.narrow button { padding: 2px 4px; }
+#sidebar.narrow #level-radios label,
+#sidebar.narrow #basemap-radios label,
+#sidebar.narrow #group-list label {
+  display: flex; align-items: flex-start; gap: 3px; margin-right: 0;
+}
+#sidebar.narrow #level-radios input,
+#sidebar.narrow #basemap-radios input,
+#sidebar.narrow #group-list input { flex: 0 0 auto; margin: 2px 0 0; }
+/* Too narrow for a name beside its box, so cut it with an ellipsis rather than
+   break it mid-word; the label's title carries the full name. */
+#sidebar.narrow #group-list label span {
+  min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+}
+#sidebar.narrow .basemap-toggle .hint { display: none; }
+#sidebar.narrow .opacity-row { gap: 4px; }
+#sidebar.narrow .opacity-row span { width: auto; font-size: 11px; }
+#sidebar.narrow .group-btns button { padding: 0 4px; margin-left: 0; }
+#sidebar.narrow #group-list { padding: 3px; font-size: 11px; scrollbar-width: thin; }
+#sidebar.narrow #info-panel .name { font-size: 14px; }
+#sidebar.narrow #info-panel .estimate { font-size: 17px; }
+#sidebar.narrow #info-panel .history td { padding-right: 4px; }
+#sidebar.narrow #selection-panel li { flex-wrap: wrap; gap: 0; }

@@ -80,11 +80,12 @@ CUT = {
     # One line, 776,032 adults, published in 33 states. Pew's own contents for it are Sikh,
     # Daoist, Bahá'í, Zoroastrian, Jain and Shinto; we hold each as a root and cannot split
     # the line, so the set is recorded and the residual is taken against all of it at once.
-    # Only `bahai` has a non-zero ASARB roll (178,727), so the rest are inert today and are
-    # listed anyway, because the day one of them gets a roll is the day a silent list is
-    # wrong.
+    # `bahai` has an ASARB roll (178,727), and since 2026-09-15 `sikhism` and `yazidism` have
+    # the 2020 census's county counts (sources/us_dhca.py, 68,483 and 551), all subtracted
+    # here. The rest are inert today and are listed anyway, because the day one of them gets
+    # a count is the day a silent list is wrong. `yazidism` is ours, not Pew's; see REVIEW.
     "other-world-religions": ("sikhism", "daoism", "bahai", "zoroastrianism", "jainism",
-                              "shinto"),
+                              "shinto", "yazidism"),
 
     # `something-else` is NOT here, nor are `unitarians-and-other-liberal-faiths` or
     # `new-age`; all three are opened up.
@@ -152,11 +153,20 @@ REVIEW = {
         "Christian Science is the large body in it, though Religious Science and Divine "
         "Science are New Thought and are misfiled by this call.",
     "other-world-religions":
-        "the six roots listed are Pew's contents for the line, not ours, and the boundary is "
-        "theirs to draw. Arithmetically it barely matters -- five of the six have no ASARB "
-        "roll at all -- but if a future source gives Sikhs in America a number, this line "
-        "stops being the right home for them and the entry has to be revisited rather than "
-        "extended.",
+        "the six roots Pew names for the line, plus `yazidism`. This note used to say that if a "
+        "source gave American Sikhs a number the entry had to be revisited; the 2020 census did "
+        "(sources/us_dhca.py) and it was, 2026-09-15. The line stays the Sikhs' home, because "
+        "the census counts only people who wrote Sikh in the race question, 68,483 in the "
+        "counties it prints against the Sikh Coalition's estimate of more than 500,000, and the "
+        "Sikhs it misses have no geography of their own. So the census's county counts are "
+        "drawn as `sikhism` and subtracted from this line the way the Bahá'í roll is, and "
+        "`other.us` keeps the rest. Where they exceed what the line leaves after the Bahá'í "
+        "roll, §3.5a's overflow rule charges the difference to unaffiliated: 3,162 people in 10 "
+        "states, 1,596 of them in Indiana, where the line has no respondents (us_rebase.compute, "
+        "run with and without the census rows). `yazidism` is ours and not Pew's: a Yazidi "
+        "answering this survey has nowhere else to be coded, Yazidism being neither Islam nor "
+        "Christianity, and leaving it out would draw the census's 551 twice. It takes 523 out of "
+        "the line and 28 out of unaffiliated.",
     "historically-black-protestant":
         "-> christianity, like the other two Protestant traditions. Pew's tradition split is "
         "the organising idea of the whole study and it dissolves here, which looks like a "

@@ -17,7 +17,11 @@ DHS half of this playbook is a priced route, not a tested one.
 - `pa` Panama and `cr` Costa Rica: drawn from LAPOP. MICS 2013 (`HC1.A` asked of every household member)
   and EMNA 2018 (MICS6, representative at 7 provinces) would replace them; Anita downloaded Panama's file on
   2026-09-09 and neither is built.
-- DHS, priced and not built: `cd` (26 provinces, the only person-level route, `queue.md` §D); `pg` (DHS
+- DHS, priced and not built: `cd` (drawn 2026-09-15 from USCB's Enquête 1-2-3 household-head table
+  instead, `sources/cd.md`; EDS-RDC III 2023-24 `CDIR81FL`/`CDMR81FL` is the upgrade, its report
+  prints religion nationally only in Tableau 3.1, and MICS-Palu 2017-18 asks `HC1A` and tabulates
+  nothing; `cd.py::stability` is a split-half for a table with no cluster ids, halving districts
+  inside provinces against a regrouping null); `pg` (DHS
   2016-18, 22 provinces, ages 15-49, 21.3% `Other Christian church`, ranked below IPUMS); `ht`, `bi`, `lr`
   gated. `ng`, `tz`, `ug`, `mz`, `gn`, `zm` were drawn without it. No religion item in Türkiye 2018
   (`sources/tr.md`), Jordan's JPFHS (`sources/jo.md`), Morocco 2003-04 or Mauritania 2019-21; the DHS API
@@ -32,7 +36,11 @@ DHS half of this playbook is a priced route, not a tested one.
 - **Free views that need no microdata.** A NADA catalogue's per-variable summary gives a weighted national
   distribution (`cr`: `/api/catalog/IDD-CRI-INEC-EMNA-2019/variable/V23`); World Bank microdata variable
   pages give unweighted counts (`la`: `catalog/1911/variable/V45`, `catalog/3401/variable/V774`). The final
-  report's questionnaire annex shows whether the item exists.
+  report's questionnaire annex shows whether the item exists. The World Bank library's search API takes a
+  variable keyword and a country (`microdata.worldbank.org/index.php/api/catalog/search?vk=religion&country=SSD&ps=50`)
+  and lists the studies whose variables match, a sweep IHSN's keyword search cannot do (it returns nothing
+  even for `age`). A match is a lead: read the file's dictionary, since `ss`'s 31 matches included a wave
+  whose analysis file has no religion variable. Detail: `sources/ss.md` §2.
 - **UNICEF's MICS copies** (with `hhweight`, PSU and stratum) sit behind `mics.unicef.org`. Anita has the
   account (`ask/answered/006-pa`) and does the downloading. Keep files under `data/raw/<cc>/`, which is
   gitignored with all of `data/`, and never pass them on.

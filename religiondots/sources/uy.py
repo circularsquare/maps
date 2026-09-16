@@ -35,7 +35,7 @@ covers ages 0 to 6 exactly and completely — all 3,136 zero-year-olds through a
 six-year-olds — and nobody aged 7 or over carries it. Asserted below, because the difference
 is 4,225 respondents and a percentage point of the country's population base.
 
-So 8.99% of Uruguay is not drawn, and it is children rather than a non-response cell. There
+So 7.67% of Uruguay is not drawn, and it is children rather than a non-response cell. There
 is no non-response cell at all: every person in the universe has one of the seven answers.
 
 ## WHAT THE COUNTRY LOOKS LIKE, AND WHY IT IS THE STANDOUT IN THE AMERICAS
@@ -125,13 +125,52 @@ the bar is not moved, and everything else clears it by a distance.
 So **nothing here is drawn at a national rate**; every department carries its own measured
 composition, which is not true of any of the three AmericasBarometer countries.
 
+## MONTEVIDEO IS DRAWN AT ITS 62 BARRIOS, SINCE 2026-09-15
+
+Every Montevideo row carries `barrio`, INE's 62 barrios, with 358 to 4,131 respondents each.
+Montevideo's department row is gone and the barrios replace it; the other 18 departments are
+untouched. `sources/uy.md` §12 is the record, `sources/uy_geo.py` the populations.
+
+**The grain was tested, not taken because the file has it.** `barrio_stability()` is
+`sources/pr.py`'s construction for sampling clusters nested inside the drawn units. The cluster
+is the census segment (`secc` with `segm`: 1,025 in Montevideo, 6 to 46 per barrio, none
+crossing a barrio line), because religion runs in households (within-household correlation
+0.48 for atheist, 0.66 Catholic, 0.82 Jewish) and households sit in segments, so halving
+people would put one household in both halves. For 400 random halvings of each barrio's
+segments, the median Spearman between the halves' barrio shares, against 2,000 dealings of the
+segments into random barrios of the same sizes (`stability.cluster_null`); the chi-square and
+the largest-segment cap (`stability.CELL_CAP`) can only veto.
+
+    category                   barrio  null95      p    | 18 CCZ   null95      p
+    Catolico                   +0.486  +0.155  <0.001   | +0.709   +0.267  <0.001
+    Cristiano no catolico      +0.444  +0.163  <0.001   | +0.754   +0.271  <0.001
+    Judio                      +0.462  +0.180  <0.001   | +0.763   +0.288  <0.001
+    Umbandista/afroamericano   +0.533  +0.171  <0.001   | +0.750   +0.296  <0.001
+    Creyente sin confesion     +0.591  +0.154  <0.001   | +0.804   +0.271  <0.001
+    Ateo/agnostico             +0.406  +0.150  <0.001   | +0.728   +0.263  <0.001
+    Otra                       +0.020  +0.179   0.465   | +0.231   +0.271   0.085
+
+Six of seven carry their own barrio geography, with no segment holding more than 3% of any
+answer. **`Otra` does not, at barrio or at CCZ**, so inside each barrio it takes Montevideo's own
+share and the six are scaled to fill the rest (`compose_montevideo`). The CCZ is not a coarser
+level of the barrio, since 36 of 62 barrios cross a CCZ line, so there is nothing nested between
+barrio and department to give `Otra`. The CCZ half of the table is `--ccz`, printed only.
+
+The weights are calibrated to department and Montevideo stratum, not to barrio, so a barrio's
+share is a domain estimate the design did not target. That is why the test resamples segments,
+and why `barrio_held_out()` checks each barrio's weighted share of the city against the 2023
+census before any religion is read.
+
 Usage:
     python sources/uy.py --fetch    check the ENHA microdata is unpacked, and say where from
     python sources/uy.py            rebuild data/normalized/uy.csv
+    python sources/uy.py --ccz      also print the split-half at Montevideo's 18 CCZ
 """
 
+import difflib
 import os
 import sys
+import unicodedata
 
 os.environ.setdefault("OMP_NUM_THREADS", "6")
 
@@ -151,9 +190,19 @@ RAR = os.path.join(RAW, "2006_SAV.rar")
 POP = os.path.join(ROOT, "data", "geo", "uy", "uy_pop_2023.csv")
 LOOKUP = os.path.join(ROOT, "data", "geo", "uy", "uy_lookup.csv")
 OUT = os.path.join(ROOT, "data", "normalized", "uy.csv")
+BARRIO_LOOKUP = os.path.join(ROOT, "data", "geo", "uy", "uy_barrios_lookup.csv")
+BARRIO_POP = os.path.join(ROOT, "data", "geo", "uy", "uy_barrios_pop.csv")
 
 SOURCE_ID = "uy_ine_enha_2006"
 N_DEPARTMENTS = 19
+
+# ---- Montevideo's barrios (the docstring's last section)
+MONTEVIDEO_DPTO = 1
+N_BARRIOS = 62
+BARRIO_HALVINGS = 400
+# The categories that carry their own barrio shares, as the split-half decided on 2026-09-15.
+# Asserted on every run: if the test changes its mind, the build stops rather than redrawing.
+BARRIO_CARRIES = [1, 2, 3, 4, 5, 6]
 
 # The value labels of `e29_1`, verbatim from the .sav's own label set. INE writes them
 # without accents there; spec §2.4 keeps the source's own words, so these strings are what
@@ -244,7 +293,8 @@ def load():
     if not os.path.exists(SAV):
         raise SystemExit(f"{SAV} missing — run with --fetch for the walk-through")
     df, meta = pyreadstat.read_sav(
-        SAV, usecols=["dpto", "e29_1", "e29_2", "pesoano", "e27", "mes"])
+        SAV, usecols=["dpto", "e29_1", "e29_2", "pesoano", "e27", "mes",
+                      "numero", "secc", "segm", "ccz", "barrio", "nombarrio"])
     df = df.rename(columns={"e27": "age", "e29_1": "code", "e29_2": "other_text",
                             "pesoano": "w"})
 
@@ -452,6 +502,203 @@ def report_other(df):
         print(f"      {v / tot:6.1%}  {t if t else '(blank)'}")
 
 
+# =======================================================================================
+# Montevideo's barrios
+# =======================================================================================
+
+def barrio_geo_id(nro):
+    """`UY10-B01`..`UY10-B62`, the same ids `sources/uy_geo.py::barrio_geo_id` writes."""
+    return f"UY10-B{int(nro):02d}"
+
+
+def fold_name(s):
+    """Accent- and case-free key. The .sav writes Ñ as Ð (`BAÐADOS DE CARRASCO`)."""
+    s = str(s).replace("Ð", "N")
+    s = unicodedata.normalize("NFKD", s).encode("ascii", "ignore").decode()
+    return "".join(ch for ch in s.lower() if ch.isalnum())
+
+
+def round_to_total(values, total):
+    """Integers summing exactly to `total`, by largest remainder. `values` is a Series."""
+    floor = np.floor(values).astype("int64")
+    short = int(total) - int(floor.sum())
+    if not 0 <= short <= len(values):
+        raise SystemExit(f"cannot round {values.sum():,.2f} to {total:,}")
+    up = (values - floor).sort_values(ascending=False).index[:short]
+    out = floor.copy()
+    out[up] += 1
+    return out
+
+
+def barrio_names(mvd, blut):
+    """A witness the barrio code does not decide: the ENHA's own `nombarrio` for each code
+    best matches the census's name for the barrio with that number, all 62."""
+    if mvd.groupby("barrio")["nombarrio"].nunique().max() != 1:
+        raise SystemExit("an ENHA barrio code carries two names")
+    enha = mvd.groupby("barrio")["nombarrio"].first()
+    census = dict(zip(blut["nro"].astype(int), blut["name"]))
+    wrong = []
+    for code, name in enha.items():
+        sims = {c: difflib.SequenceMatcher(None, fold_name(name), fold_name(n)).ratio()
+                for c, n in census.items()}
+        best = max(sims, key=sims.get)
+        if best != int(code):
+            wrong.append((int(code), name, census[best]))
+    if wrong:
+        raise SystemExit(f"ENHA barrio names that best match another barrio: {wrong}")
+    print(f"  witness: each ENHA `nombarrio` best matches the census name of its own code, "
+          f"all {len(enha)}")
+
+
+def barrio_held_out(mvd, bpop, n_perm=20000, seed=0):
+    """Each barrio's weighted share of the ENHA's Montevideo against its 2023 census share.
+
+    Nothing here touches religion. Seventeen years apart, so real movement is in it (the
+    census-year check `held_out()` makes at department is not available below it), but a
+    permuted barrio join would not survive it.
+    """
+    s = mvd.groupby("geo_id")["w"].sum()
+    j = pd.concat([(s / s.sum()).rename("enha"),
+                   (bpop["census_2023"] / bpop["census_2023"].sum()).rename("census")],
+                  axis=1)
+    if j.isna().any().any():
+        raise SystemExit("a barrio has survey respondents or census people but not both")
+    r = np.corrcoef(j["enha"], j["census"])[0, 1]
+    ratio = (j["enha"] / j["census"]).sort_values()
+    rng = np.random.default_rng(seed)
+    a, b = j["enha"].to_numpy(), j["census"].to_numpy()
+    perm = np.array([np.corrcoef(a, rng.permutation(b))[0, 1] for _ in range(n_perm)])
+    beaten = int((perm >= r).sum())
+    print(f"  held out: barrio share of Montevideo, ENHA 2006 against census 2023, r = {r:+.3f} "
+          f"over {len(j)}; best of {n_perm:,} shuffles {perm.max():+.3f}, {beaten} reach it")
+    lo, hi = ratio.index[0], ratio.index[-1]
+    print(f"    thinnest {lo} at {ratio.iloc[0]:.2f}x its 2023 share, fullest {hi} at "
+          f"{ratio.iloc[-1]:.2f}x")
+    if beaten:
+        raise SystemExit("the barrio population check does not pin the barrio join")
+
+
+def barrio_stability(mvd, unit_col, label, expected):
+    """WHICH CATEGORIES CARRY THEIR OWN GEOGRAPHY INSIDE MONTEVIDEO. Docstring, last section.
+
+    Unweighted counts on (segment, category), as `stability.py` assumes. Returns the codes that
+    carry; when `expected` is given, stops unless that is exactly `expected`.
+    """
+    import warnings
+    from scipy.stats import rankdata
+
+    import stability as shared      # this module has a function called `stability` too
+
+    m = mvd.copy()
+    m["cl"] = (m["secc"].astype(str) + "-" + m["segm"].astype(str) + "|"
+               + m[unit_col].astype(str))
+    cl = (m.groupby("cl").agg(unit=(unit_col, "first")).reset_index()
+          .sort_values(["unit", "cl"]).reset_index(drop=True))
+    units = list(dict.fromkeys(cl["unit"]))
+    C = len(cl)
+    ci = {c: i for i, c in enumerate(cl["cl"])}
+    K = sorted(CATEGORY)
+    M = np.zeros((C, len(K)))
+    for (c, code), n in m.groupby(["cl", "code"]).size().items():
+        M[ci[c], K.index(code)] = n
+    uidx = cl["unit"].map({u: i for i, u in enumerate(units)}).to_numpy()
+    starts = np.r_[0, np.flatnonzero(np.diff(uidx)) + 1]
+    sizes = np.diff(np.r_[starts, C])
+    if (sizes < 2).any():
+        raise SystemExit(f"a {label} unit has fewer than two segments and cannot be halved")
+
+    rng = np.random.default_rng(shared.STAB_SEED)
+    P = np.zeros((BARRIO_HALVINGS, C))
+    for s in range(BARRIO_HALVINGS):
+        for st, sz in zip(starts, sizes):
+            order = rng.permutation(sz)
+            k = sz // 2 + (int(rng.random() < 0.5) if sz % 2 else 0)
+            P[s, st + order[:k]] = 1.0
+
+    def halves(Mo):
+        A = np.add.reduceat(P[:, :, None] * Mo[None], starts, axis=1)
+        B = np.add.reduceat((1.0 - P)[:, :, None] * Mo[None], starts, axis=1)
+        with np.errstate(invalid="ignore", divide="ignore"):
+            return A / A.sum(axis=2, keepdims=True), B / B.sum(axis=2, keepdims=True)
+
+    def median_rho(Mo):
+        sa, sb = halves(Mo)
+        ra, rb = rankdata(sa, axis=1), rankdata(sb, axis=1)
+        ra -= ra.mean(axis=1, keepdims=True)
+        rb -= rb.mean(axis=1, keepdims=True)
+        den = np.sqrt((ra ** 2).sum(axis=1) * (rb ** 2).sum(axis=1))
+        with np.errstate(invalid="ignore", divide="ignore"):
+            rho = np.where(den > 0, (ra * rb).sum(axis=1) / den, np.nan)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", RuntimeWarning)
+            return np.nanmedian(rho, axis=0), sa, sb
+
+    obs, sa, sb = median_rho(M)
+    null = shared.cluster_null(lambda perm: median_rho(M[perm])[0], C, shared.STAB_PERM, rng)
+    tot_u = np.add.reduceat(M.sum(axis=1), starts)
+    top_unit, top_share = shared.top_both_halves(sa, sb)
+    print(f"\n  split-half inside Montevideo at {label} ({len(units)} units, {C:,} segment "
+          f"clusters, {sizes.min()}-{sizes.max()} per unit): median Spearman over "
+          f"{BARRIO_HALVINGS} halvings of each unit's segments, against {shared.STAB_PERM:,} "
+          "random groupings of the segments")
+    print(f"    {'category':<26}{'n':>6}{'median':>8}{'null95':>8}{'p':>7}{'chi2 p':>10}"
+          f"{'topseg':>7}{'top both halves':>18}  verdict")
+    carries = []
+    for j, code in enumerate(K):
+        n = int(M[:, j].sum())
+        chi = shared.chi2_p(np.add.reduceat(M[:, j], starts), tot_u)
+        p, q95 = shared.permutation_p(obs[j], null[:, j])
+        topseg = m[m["code"] == code].groupby("cl").size().max() / n
+        ok_rank = np.isfinite(p) and p < shared.STAB_ALPHA
+        ok_chi = np.isfinite(chi) and chi < shared.STAB_ALPHA
+        ok_cell = topseg < shared.CELL_CAP
+        standout = top_unit[j] >= 0 and top_share[j] >= shared.STANDOUT_AGREE
+        if ok_rank and ok_chi and ok_cell:
+            verdict = "own geography"
+            carries.append(code)
+        elif ok_rank:
+            verdict = "REFUSED by the " + ("chi-square" if not ok_chi else "segment cap")
+        elif standout and ok_chi and ok_cell:
+            verdict = "fails, but ONE UNIT STANDS OUT: not handled here, see the docstring"
+        else:
+            verdict = "fails"
+        top = f"{units[top_unit[j]]} {top_share[j]:.0%}" if top_unit[j] >= 0 else "-"
+        print(f"    {CATEGORY[code]:<26}{n:>6}{obs[j]:+8.3f}{q95:+8.3f}{p:7.3f}{chi:10.1e}"
+              f"{topseg:7.2f}{top:>18}  {verdict}")
+        if expected is not None and "STANDS OUT" in verdict:
+            raise SystemExit(f"{CATEGORY[code]} fails at {label} but one unit tops both halves "
+                             "in most halvings; decide deliberately whether it keeps that share")
+    if expected is not None and carries != expected:
+        raise SystemExit(f"the barrio split-half now carries {[CATEGORY[c] for c in carries]}, "
+                         f"against BARRIO_CARRIES={[CATEGORY[c] for c in expected]}. Read the "
+                         "table above and edit BARRIO_CARRIES deliberately.")
+    return carries
+
+
+def compose_montevideo(mvd, carries):
+    """Per-barrio composition: carried categories at the barrio's weighted share, the rest at
+    Montevideo's, and the carried ones scaled together to fill what is left."""
+    by = (mvd.groupby(["geo_id", "code"])["w"].sum().unstack(fill_value=0.0)
+          .reindex(columns=sorted(CATEGORY), fill_value=0.0))
+    share = by.div(by.sum(axis=1), axis=0)
+    city = by.sum() / by.to_numpy().sum()
+    rest = [c for c in sorted(CATEGORY) if c not in carries]
+    comp = share.copy()
+    for c in rest:
+        comp[c] = city[c]
+    room = 1.0 - float(city[rest].sum())
+    comp[carries] = share[carries].mul(room / share[carries].sum(axis=1), axis=0)
+    err = (comp.sum(axis=1) - 1.0).abs().max()
+    if err > 1e-9:
+        raise SystemExit(f"a barrio's composition does not sum to 1 (off by {err:.1e})")
+    moved = (comp[carries] - share[carries]).abs().to_numpy().max()
+    print(f"\n  Montevideo composed: {len(carries)} categories at barrio shares, "
+          f"{[CATEGORY[c] for c in rest]} at the city's "
+          f"({', '.join(f'{city[c]:.2%}' for c in rest)}); the rescale moves a carried share "
+          f"by at most {moved * 100:.2f} points")
+    return comp
+
+
 def main():
     if "--fetch" in sys.argv:
         fetch()
@@ -484,53 +731,91 @@ def main():
     cross_check(df, names)
     report_other(df)
 
+    # ---- Montevideo, at its 62 barrios (the docstring's last section)
+    blut = pd.read_csv(BARRIO_LOOKUP, dtype={"geo_id": str})
+    bpop = pd.read_csv(BARRIO_POP, dtype={"geo_id": str}).set_index("geo_id")
+    if len(blut) != N_BARRIOS or sorted(blut["geo_id"]) != sorted(bpop.index):
+        raise SystemExit("the barrio lookup and populations disagree — re-run sources/uy_geo.py")
+    mvd_unit = dpto_to_unit[MONTEVIDEO_DPTO]
+    mvd = df[df["dpto"] == MONTEVIDEO_DPTO].copy()
+    mvd["geo_id"] = mvd["barrio"].astype(int).map(barrio_geo_id)
+    if set(mvd["geo_id"]) != set(bpop.index):
+        raise SystemExit(f"ENHA barrios {sorted(set(mvd['geo_id']) ^ set(bpop.index))} are on "
+                         "one side only")
+    nb = mvd.groupby("geo_id").size()
+    print(f"\nMontevideo: {len(mvd):,} respondents in {mvd['geo_id'].nunique()} barrios, "
+          f"{nb.min():,} ({blut.set_index('geo_id').loc[nb.idxmin(), 'name']}) to {nb.max():,} "
+          f"({blut.set_index('geo_id').loc[nb.idxmax(), 'name']})")
+    barrio_names(mvd, blut)
+    barrio_held_out(mvd, bpop)
+    carries = barrio_stability(mvd, "geo_id", "barrio", BARRIO_CARRIES)
+    if "--ccz" in sys.argv:
+        barrio_stability(mvd, "ccz", "CCZ (comparison only, decides nothing)", None)
+    bshare = compose_montevideo(mvd, carries)
+
     # ---- shares x population. Every department carries its own measured composition, so
-    # there is no tail to spread and no national rate anywhere in this country.
+    # there is no tail to spread and no national rate anywhere in this country. Montevideo is
+    # not a row: its barrios replace it.
     by_unit = df.groupby(["geo_id", "code"])["w"].sum().unstack(fill_value=0.0)
     for c in CATEGORY:
         if c not in by_unit.columns:
             raise SystemExit(f"{CATEGORY[c]} is absent from every department")
     unit_share = by_unit.div(by_unit.sum(axis=1), axis=0)
 
-    units = sorted(lut["geo_id"])
+    units = sorted(u for u in lut["geo_id"] if u != mvd_unit)
     rows = []
     for unit in units:
         p = int(round(pop.loc[unit, "pop7_2023"]))
         for c in sorted(CATEGORY):
             rows.append((unit, CATEGORY[c], unit_share.loc[unit, c] * p))
+    bp7 = round_to_total(bpop["pop7_2023"], int(round(pop.loc[mvd_unit, "pop7_2023"])))
+    for g in sorted(bpop.index):
+        for c in sorted(CATEGORY):
+            rows.append((g, CATEGORY[c], bshare.loc[g, c] * int(bp7[g])))
     out = pd.DataFrame(rows, columns=["geo_id", "source_category", "count"])
     out["count"] = out["count"].round().astype("int64")
 
-    target = int(sum(int(round(pop.loc[u, "pop7_2023"])) for u in units))
+    target = int(sum(int(round(pop.loc[u, "pop7_2023"])) for u in sorted(lut["geo_id"])))
     drift = target - int(out["count"].sum())
     if abs(drift) > len(out):
         raise SystemExit(f"rounding drift {drift} is larger than one person per row")
+    in_mvd = out["geo_id"].isin(bpop.index)
     if drift:
-        out.loc[out["count"].idxmax(), "count"] += drift
-    print(f"\n  rounding drift {drift:+d} people, absorbed into the largest cell")
+        # into Montevideo, so the other eighteen departments' rows stay exactly as they were
+        out.loc[out.loc[in_mvd, "count"].idxmax(), "count"] += drift
+    print(f"\n  rounding drift {drift:+d} people, absorbed into Montevideo's largest barrio cell")
 
-    n_by = df.groupby("geo_id").size()
-    out["geo_level"] = "departamento"
+    n_by = pd.concat([df[df["dpto"] != MONTEVIDEO_DPTO].groupby("geo_id").size(), nb])
+    names.update(dict(zip(blut["geo_id"], blut["name"])))
+    out["geo_level"] = np.where(in_mvd, "barrio", "departamento")
     out["geo_name"] = out["geo_id"].map(names)
     out["basis"] = "self_id"
     out["year"] = "2006"
     out["source_id"] = SOURCE_ID
-    out["note"] = out["geo_id"].map(
-        lambda g: (f"INE Encuesta Nacional de Hogares Ampliada 2006, n={int(n_by[g]):,} in "
-                   "this department; department share applied to INE's estimated population "
-                   "aged 7 and over in 2023"))
+    rest = ", ".join(CATEGORY[c] for c in sorted(CATEGORY) if c not in carries)
+    out["note"] = [
+        (f"INE Encuesta Nacional de Hogares Ampliada 2006, n={int(n_by[g]):,} in this barrio of "
+         f"Montevideo; barrio shares ({rest} at Montevideo's) applied to INE's estimated "
+         "Montevideo population aged 7 and over in 2023, split between barrios by the 2023 "
+         "census") if m else
+        (f"INE Encuesta Nacional de Hogares Ampliada 2006, n={int(n_by[g]):,} in "
+         "this department; department share applied to INE's estimated population "
+         "aged 7 and over in 2023")
+        for g, m in zip(out["geo_id"], in_mvd)]
 
     total = int(out["count"].sum())
     if total != target:
         raise SystemExit(f"drawn {total:,} against a target of {target:,}")
-    if out["geo_id"].nunique() != N_DEPARTMENTS:
-        raise SystemExit(f"{out['geo_id'].nunique()} departments drawn")
+    if out["geo_id"].nunique() != N_DEPARTMENTS - 1 + N_BARRIOS or mvd_unit in set(out["geo_id"]):
+        raise SystemExit(f"{out['geo_id'].nunique()} units drawn, expected "
+                         f"{N_DEPARTMENTS - 1} departments and {N_BARRIOS} barrios")
 
     cols = ["geo_id", "geo_level", "geo_name", "source_category", "count",
             "basis", "year", "source_id", "note"]
     out[cols].to_csv(OUT, index=False, encoding="utf-8")
     print(f"\nwrote {OUT} ({len(out)} rows, {total:,} people, "
-          f"{out['source_category'].nunique()} categories, {N_DEPARTMENTS} departments)")
+          f"{out['source_category'].nunique()} categories, {N_DEPARTMENTS - 1} departments "
+          f"and Montevideo's {N_BARRIOS} barrios)")
     under7 = int(round(pop["pop_2023"].sum())) - target
     print(f"  {under7:,} children under 7 are NOT in this file and belong in countries.py's "
           f"`gap=` ({under7 / pop['pop_2023'].sum():.2%} of Uruguay)")
@@ -540,15 +825,15 @@ def main():
     for cat, sh in drawn.items():
         print(f"    {sh * 100:6.2f}%  {cat}")
 
-    print("\n  by department, sorted by the unaffiliated share:")
+    print("\n  by department and Montevideo barrio, sorted by the unaffiliated share:")
     show = out.pivot_table(index="geo_id", columns="source_category", values="count",
                            aggfunc="sum")
     show = show.div(show.sum(axis=1), axis=0) * 100
     none = show["Creyente sin confesion"] + show["Ateo/agnostico"]
     head = f"{'n':>8}{'Cath':>8}{'nonCath':>9}{'believer':>10}{'atheist':>9}{'none':>8}"
-    print(f"    {'department':<18}{head}")
+    print(f"    {'unit':<27}{head}")
     for g in none.sort_values().index:
-        print(f"    {names[g]:<18}{int(n_by[g]):>8,}{show.loc[g, 'Catolico']:8.1f}"
+        print(f"    {names[g]:<27}{int(n_by[g]):>8,}{show.loc[g, 'Catolico']:8.1f}"
               f"{show.loc[g, 'Cristiano no catolico']:9.1f}"
               f"{show.loc[g, 'Creyente sin confesion']:10.1f}"
               f"{show.loc[g, 'Ateo/agnostico']:9.1f}{none[g]:8.1f}")

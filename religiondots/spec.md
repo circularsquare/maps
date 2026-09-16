@@ -51,8 +51,10 @@ and the surviving part is stated first.
 - 2.3 Source categories are not all the same kind of thing
 - 2.4 The first tree — 428 nodes, and the three checks that earn their place
 - 2.5 The Catholic Church sits at a different depth in the US — DONE
-- 2.6 A school is never assigned from outside the source — RE-CONFIRMED, and the registry that
-  says 99.9% is not the only registry
+- 2.6 A school is never assigned from outside the source — RE-CONFIRMED, then REVERSED 2026-09-15
+  for six Theravada countries and South Korea (§2.6a); the registry lesson stands
+- 2.6a Census Buddhists get a school in six Theravada countries and South Korea, less an
+  unspecified share — DECIDED 2026-09-15, NOT BUILT
 - 2.7 Record whatever the source actually says — DECIDED, and a coarse cell left at the parent
   is the finished answer
 
@@ -351,7 +353,13 @@ largest-remainder allocation (§4.1a) are unchanged. `tiles.py` still has to run
 are baked into the archive; until it does, those dots carry a node that no longer exists and draw
 grey, the one thing §6.6 says must never happen.
 
-### 2.6 A school is never assigned from outside the source — RE-CONFIRMED 2026-09-07, with evidence this time
+### 2.6 A school is never assigned from outside the source — RE-CONFIRMED 2026-09-07, REVERSED 2026-09-15 for six Theravada countries and South Korea (§2.6a)
+
+**What survives, stated first:** no source counts lay Buddhists by school in Thailand, Myanmar,
+Cambodia or Sri Lanka; the registry lesson at the foot of this section; and China's Dai on
+`buddhism.theravada`. **The 2026-09-07 decision to leave those countries' Buddhists undivided is
+reversed by §2.6a**, which assigns Theravada with an unspecified remainder, for Laos and Bangladesh
+too, and assigns South Korea's Buddhists to Mahayana the same way.
 
 **The bare-`buddhism` call has now been made seven times** — `lk2024` (Sri Lanka, 15.2M),
 `mm2014` (Myanmar, 45.2M), `kh2019` (Cambodia, 15.1M), `th2010` (Thailand, 61.7M), `bd2011`
@@ -415,6 +423,160 @@ names.
 under-counts a tradition by exactly as much of it as the registry does not register* — and that
 share is invisible from inside the registry. Ask which OTHER register might hold the same
 tradition under a different law before quoting a 99% from one of them.
+
+### 2.6a Census Buddhists get a school in six Theravada countries and South Korea, less an unspecified share — DECIDED 2026-09-15, NOT BUILT
+
+**This reverses §2.6's 2026-09-07 "leave it as is" for Thailand, Myanmar, Cambodia, Sri Lanka,
+Laos and Bangladesh (to Theravada), and for South Korea (to Mahayana, added the same day).** What
+survives of §2.6: no source counts lay Buddhists by school in any of
+them, so this is an assignment and not a measurement; the registry lesson; China's Dai stay on
+`buddhism.theravada`. The evidence behind it is `sources/branches.md`, "Thailand's 7.9% Mahayana".
+
+Anita, 2026-09-15, after reading that: *"what if we do a conservative thing where we map all the non
+chinese/vietnamese thais to [Theravada] and all the chinese/vietnamese to unspecified?"* (she wrote
+vajrayana and then confirmed Theravada), *"unfortunate that we dont have any placement for chinese
+thais but yeah we can spread"*, and *"lets do all countries"*.
+
+#### The rule
+
+- In every unit, the census's undivided Buddhist cell splits in two: a remainder stays on bare
+  `buddhism` for Chinese- and Vietnamese-descended Buddhists, and the rest goes to
+  `buddhism.theravada`.
+- **The remainder is the same share of Buddhists in every unit of a country**, because nothing
+  places Sino-Thai or Sino-Burmese families below national. Each `note_public` says it is spread
+  evenly and why. The known cost: in Thailand it leaves too much unspecified in the Northeast and
+  too little in Bangkok.
+- **Size, Anita 2026-09-15 (*"lets take databases"*):** the World Religion Database's 2025 shares
+  (ARDA world rankings: Mahayanists ADH_709, Theravadins ADH_720, Lamaists ADH_722). The remainder is
+  WRD's other traditions as a share of all three. WRD's split is itself ethnic ascription at a fixed
+  ratio, which is why it sizes only what is NOT asserted. Skinner's 11.3% for Thailand was put to her
+  and not taken.
+- **South Korea** is the same rule with `buddhism.mahayana` as the school and WRD's Theravada plus
+  Lamaist as the remainder. `buddhism.won` (84,141) is its own census answer and does not move.
+
+| | census Buddhists drawn | WRD Mahayana | WRD Theravada | WRD Lamaist | school | remainder | to the school |
+|---|---:|---:|---:|---:|---|---:|---:|
+| Thailand | 61.7M | 7.90% | 78.98% | 0 | Theravada | 9.1% | 56.1M |
+| Myanmar | 45.2M | 0.65% | 73.54% | 0.02% | Theravada | 0.9% | 44.8M |
+| Sri Lanka | 15.2M | 0.11% | 67.88% | 0 | Theravada | 0.2% | 15.2M |
+| Cambodia | 15.1M | 1.01% | 85.96% | 0.00% | Theravada | 1.2% | 14.9M |
+| Laos | 4.2M | 1.19% | 51.61% | 0 | Theravada | 2.3% | 4.1M |
+| Bangladesh | 0.89M | 0.00% | 0.72% | 0 | Theravada | 0% | 0.89M |
+| South Korea | 7.62M | 24.37% | 0.18% | 0.00% | Mahayana | 0.7% | 7.56M |
+
+WRD percentages are of population, 2025; 0 means ARDA lists no Lamaists. About 136M go to
+`buddhism.theravada`, which holds about 1.5M today; 7.56M to `buddhism.mahayana`; 6.4M stay
+undivided.
+
+#### Why this is not §2.6's mistake
+
+1. **The remainder answers §2.6's objection.** §2.6 said forcing a school on a Thai Chinese family
+   "invents a boundary"; those families are not given one. §2.7a already says a large unspecified
+   share is fine.
+2. **The institutions are one school.** On 1 March 2025, 44,153 of Thailand's 44,195 temples were
+   Maha Nikaya or Dhammayuttika; Chinese Nikaya 17, Annam Nikaya 25 (National Office of Buddhism, via
+   Wikipedia's *List of Buddhist temples in Thailand*, Anita's screenshot). The Interior Ministry's
+   Chinese shrines are "non-religion" in the state's own categories (Kataoka 2012), not a second
+   school's congregations.
+3. **The only counter-figure is ascription.** WRD's 7.9% holds Mahayana at 9.08% of Thai Buddhists in
+   1900, 1950, 1970 and 2000 alike, and 36% of Thai Buddhists pray to Guanyin (Pew 2022), so practice
+   does not mark a school either.
+4. **The map already does this where a country's institutions are one tradition:** Mongolia's census
+   Buddhists are on `buddhism.vajrayana` (`mn2020.py`), and Russia's follow (`branches.md`, Decided
+   2026-09-15).
+5. **All six at once**, because a Theravada colour that stops at Thailand's borders would read as a
+   difference between countries.
+
+#### Per-country check, 2026-09-15: is any drawn unit mostly not Theravada?
+
+Anita asked for a brief check of each country for other Buddhisms concentrated enough to need
+drawing. **No drawn unit is plausibly majority non-Theravada, except one Laos village with about
+2,300 Buddhists.** What does exist is mostly folk religion counted as Buddhist, which is a
+different problem from school. Two scouting agents; figures marked *estimate* are theirs and are not
+counts.
+
+- **Thailand, 76 provinces.** Highland peoples whose practice is spirit and ancestor religion, or Mien
+  Taoist ritual, are recorded as Buddhist. The 2000 enumerator manual's seven religion codes have no
+  animist answer and the 2010 form is a write-in; the North's whole non-Buddhist, non-Muslim residual
+  is 373,413 and 95% Christian, against roughly 850,000 highland people in the northern provinces; and
+  a census-microdata paper (IPC 2005, Table 4) finds hill-tribe-language households 83.7% Buddhist in
+  2000, Hmong 93.9%. Non-Theravada share of census Buddhists, *estimate* from 2000 hill-tribe-language
+  shares and per-group religion shares: **Mae Hong Son 17-36%, middle about 26%** (census 76.2%
+  Buddhist, 22.8% Christian; 63% hill-tribe-language households in 2000); Tak 7-14%; Chiang Rai 6-13%,
+  including the Yunnanese Chinese of Mae Salong; Chiang Mai 4-11%; Nan 4-9%; every other province
+  under 3.5%. The Karen traditional-religion share (20-45%, from uncited 1977 figures) drives the Mae
+  Hong Son and Tak ranges.
+- **Myanmar, 15 states and regions.** The Kokang Self-Administered Zone had 154,912 people, about
+  121,000 Buddhist by Joshua Project's 73% (Chinese folk religion and Mahayana): 2.5% of Shan's
+  4,755,834 Buddhists. The Wa were enumerated in 2014 and mostly answered Animist (Shan's Animist cell
+  is 383,072) or Christian. Myanmar's Tibetan Buddhists are about 200 people in Tahaundam, Kachin.
+  Urban Chinese in Mandalay, Yangon and Lashio are unmeasured.
+- **Laos, 8,499 villages.** The Lao Statistics Bureau's 2015 village ethnic layers (K4D map server)
+  joined to the village Buddhist counts show spirit religion going to "no religion", not to Buddhist:
+  Mien-majority villages are 3.1% Buddhist, Hmong-majority 8.1%. Urban villages in Vientiane, Pakse
+  and Thakhek are at most 10-22% outside every Lao ethnic category. **The one exception is VCODE
+  502999, the Golden Triangle Special Economic Zone, Tonpheung, Bokeo:** 3,523 people, 96% in no Lao
+  ethnic category, 65.6% Buddhist, probably Chinese nationals (inference; no citizenship by village).
+- **Cambodia, 25 provinces.** Vietnamese (78,090 by mother tongue, 2019) and Chinese (94,450) are
+  spread thin. **Preah Sihanouk:** 28.8% of literate people aged 7+ read only a non-Khmer language
+  (Table PT04; 1.5% nationally), NIS extended enumeration there for the Chinese influx, and Other is
+  0.0%, so roughly a quarter of its 298,289 Buddhists are likely casino-era Chinese migrants.
+  **Ratanakiri:** Buddhist rose from 49.3% (2008) to 73.4% (2019) while Other fell from 47.2% to
+  23.2%, so highland folk religion moved into the Buddhist cell, *estimate* about 25% of its
+  Buddhists; Mondulkiri about 12%.
+- **Sri Lanka, 14,003 GN divisions.** Clean. The Vedda corner (Dambana GN, 2,711 of 2,719 Buddhist)
+  mixes ancestor worship with Buddhism and is about 2,000 people.
+- **Bangladesh, 544 upazilas.** Clean. Buddhist counts track Chakma plus Marma plus Tanchangya
+  (Khagrachhari Sadar 44,574 against 44,370), and the Barua and Rakhine are Theravada. **Alikadam**
+  (15,233 Buddhists against 11,599 Mro) may be mostly Mro spirit-Buddhist practice or Krama; not
+  Mahayana.
+- **South Korea, 229 districts (added the same day).** Clean for Mahayana. The census counts Won
+  Buddhism separately, and every large order (Jogye, Taego, Cheontae, and the esoteric Jingak, which
+  sits where the tree files Japan's Shingon) is Mahayana. Theravada in Korea is mostly migrant workers'
+  temples, and the religion universe (49,052,389) is smaller than the resident-Korean population
+  (49,705,663, `sources/kr.md` §5), so most foreign residents are probably not in it (inference).
+
+#### Answered by Anita, 2026-09-15
+
+- **Size:** WRD's shares, as in the table.
+- **Mae Hong Son, Ratanakiri, Preah Sihanouk and the Bokeo SEZ village stay on the school like
+  everywhere else, with a note** (*"sure just a note for mae hong son etc."*). Thailand's
+  `note_public` names the northern highland provinces, Cambodia's names Ratanakiri, Mondulkiri and
+  Preah Sihanouk, and Laos's names the Bokeo zone.
+- **South Korea is added** (*"yes for korea. makes sense to do it here"*): the case `kr2015.py` names.
+- **"Assigned from ethnicity" is built as its own tier** (*"yes we should build assigned from
+  ethnicity as a tier"*), beside `modelled`, saying what was assigned rather than carrying a share
+  (`branches.md`, 2026-09-14). These rows are its first. China's §14.5 rows (`derived` today) are the
+  obvious next ones. **The name holds for Korea too.** Anita: *"i feel like assigned from ethnicity is
+  accurate descriptor given that we try to calculate the foreign branch groups"*. In all seven
+  countries the remainder is sized from WRD's per-ethnic-group ascription and the school goes to the
+  rest; the minority is left unspecified, not given another school. **Mongolia and Russia join the
+  tier** (Anita, same day). Mongolia's census Buddhists stay whole on `buddhism.vajrayana`, since WRD
+  lists no tradition there but Lamaist. Russia's go to `buddhism.vajrayana` only in Tuva, Buryatia,
+  Kalmykia and Zabaykalsky (565,010, 85.7% of the drawn subjects' 659,032) and stay unspecified in the
+  other 22 subjects (94,022, 14.3%, against WRD's 16.4% Mahayana share of Russia's Buddhists).
+- **Spread the remainder evenly only when nothing places it.** Russia uses Arena's own subject
+  geography instead (*"we should use the surveys geography. why would we not?"*). Its costs run the
+  cautious way: most of the 22 subjects are one or two respondents, and the Buryat, Kalmyk and Tuvan
+  migrants among them (Irkutsk's 5,925 includes the former Ust-Orda Buryat district) are left
+  unspecified rather than mislabelled.
+- **The Thai KPI-reader bug waits for this rebuild** (*"fine to wait for rebuild"*).
+
+#### To build
+
+Not done on 2026-09-15: no drawing while rd-super runs.
+
+1. **The tier**, wherever `measured`, `derived` and `modelled` are handled (pipeline, viewer, about
+   text), before any row uses it.
+2. `taxonomy/th2010.py`, `mm2014.py`, `kh2019.py`, `lk2024.py`, `la2015.py`, `bd2011.py`: the Buddhist
+   cell splits into `buddhism.theravada` and the bare remainder at the table's share. `kr2015.py` does
+   the same into `buddhism.mahayana`, and its REVIEW note, which argues for the parent, is rewritten.
+3. **Thailand: fix the KPI reader in the same rebuild** (`sources/th.md` §6). It reads only the Islam
+   row, so provinces whose sheet prints Christianity instead draw their Muslims as Christians.
+4. Rebuild th, mm, kh, lk, la, bd, kr, mn and ru. Each `note_public` says the school is assigned and
+   how the remainder was placed (evenly, or for Russia by subject), and names the places above. The
+   node notes of `buddhism.theravada`, `buddhism.mahayana` and `buddhism.vajrayana` need rewriting.
+   `ru2012.py` needs a per-subject split, not a one-line remap.
 
 ### 2.7 Record whatever the source actually says — DECIDED 2026-09-08
 
@@ -853,7 +1015,9 @@ closing note says plainly that this decision was left exposed in between.)
 - **This does not solve §4.4.** Pew publishes Sikh, Daoist, Bahá'í and Zoroastrian as a single
   "other world religions" line at <0.3%, and Unitarian, pantheist and Wiccan as "other religious
   identifications" at 1.9%; at n=36,000 nothing smaller can be broken out. The eleven
-  congregations-only religions still need their own per-body sources.
+  congregations-only religions still need their own per-body sources. (Sikhs and Yazidis have one
+  since 2026-09-15: the 2020 census race write-in by county, drawn as counted and subtracted from
+  `other-world-religions` like the Bahá'í roll, `sources/us_dhca.md`.)
 
 **BUILT 2026-09-04, `us_rebase.py`.** The map now draws **326,813,748 of 331,449,281 Americans —
 98.6%** against 48.4% before. The residual is 166.2M people, so **a little over half of the
@@ -1470,6 +1634,60 @@ self-description; drawn 2026-09-14, `sources.md` §9dy). Not settled by the rule
 toward the 80% when a self-description source and a practice source disagree (`ask/RULINGS.md`
 marks this ambiguous). The playbooks carrying it: `census_table`, `afrobarometer`, `arabbarometer`,
 `dhs_mics`.
+
+### 3.13 Chinese folk religion is drawn from practice as well as naming, in China, Taiwan and Hong Kong — DECIDED and BUILT 2026-09-15
+
+Anita, looking at China beside Taiwan: *"i feel like we should target a consistent middle ground
+cuz this just seems highly subjective ... chinas ~90% unknown is not good and does not reflect
+reality. i feel like taiwans also juts feels a bit high."* And on the rule: *"i feel like this is
+the place that makes most sense in the world to mix in practice, since it really is kinda vague.
+i think we can make this exception."*
+
+**The rule.** In China, Taiwan and Hong Kong, a person is drawn on `chinesefolk` if they name folk
+religion, or if they name no religion and keep a religious shrine or altar at home. Everyone who
+names another religion stays on it. People who name nothing and keep no altar go to `unknown` in all
+three (Anita, 2026-09-15: "ah yeah we can switch taiwan to unknown"; Taiwan's code 010 had first been
+built on `unaffiliated`). **This is the one place §3.1 is relaxed**: a practice item is added to a
+self-identification basis, for one node in three places. Whether the rule reaches any other node or
+country is undecided (Vietnam's `unknown` residual is the obvious candidate).
+
+**Why here.** Almost nobody in these three places calls temple and ancestor worship a religion
+(*zongjiao* means an organised, registered religion), so naming alone drew China at 3% folk while
+interviewer coding drew Taiwan at 48%, and the jump at the strait was the question rather than the
+people. `sources/folk_practice.md` has the evidence. People who name folk religion are 2-3% on both
+sides (Taiwan's self-identified code 021 is 1.5-2.5% of adults), and four separate Chinese measures
+of worship at a temple or at home put practice at 24-28%.
+
+**The item.** ISSP's *for religious reasons, do you have in your home a shrine, an altar, or a
+religious object*, carried by CGSS 2010 (`na`) and TSCS 2009, 2014 and 2018. Hong Kong has no ISSP
+survey, so Pew 2023's *there is an altar in your home* is used there, among the unaffiliated.
+
+| | built by | test | `chinesefolk` drawn | grey |
+|---|---|---|---|---|
+| China | `sources/cn_altar.py`: 3,382 Han no-religion respondents in 131 counties, applied to the Han row only | passes by province: median +0.508, null 95th +0.231, p 0.0025; shrunk, prior 15.5 respondents | 15.1%, 201M; Guangdong 46.4%, Fujian 34.4%, Liaoning 2.9% | `unknown` 88.1% to 76.1% |
+| Taiwan | `sources/tw_altar.py`: 2,530 folk-coded and 693 no-religion respondents | folk-coded rate by county (p 0.032); no-religion rate national at 47.4% (p 0.052) | 43.1% with the Buddhism-and-Taoism answer; was 50.4% | `unknown` 19.35% (was 0), `unaffiliated` 0 (was 12.06%) |
+| Hong Kong | `taxonomy/hk2021.py` `ALTAR_FOLK_SHARE`: Pew 2023 p. 77, 21% of the unaffiliated, on the `Chinese` row only | none possible, territory-wide | 13.1% | `unknown` 65.4% to 52.3% |
+
+**The shares are carved from the residual only**, the CGSS layer's arithmetic: named answers first,
+then the altar share of what is left, so nobody who named Buddhism or Daoism is counted twice. **In
+China and Hong Kong the altar share reaches only the Han and `Chinese` census rows**, and China's rate
+is the Han respondents' own: for other groups a religious object at home is as likely their own
+tradition, and applied to every row it drew 10.9M minority people in China, and about 44,800
+non-Chinese in Hong Kong, as Chinese folk religion (2026-09-15, `sources/cn.md` §11, `sources/hk.md` §10).
+
+**What is weak, and where it is said.**
+- The altar question is not worded the same. TSCS's version lists examples (bagua, talismans,
+  protective mirrors, door gods, amulets) and CGSS 2010's does not, so Taiwan's ~70% probably runs
+  high against China's 20%; Pew's narrower question makes Hong Kong a floor beside both.
+- China's rate rests on one wave and a module subsample. Ningxia's three eligible respondents move
+  from 56% to 21% under the shrinkage, Xinjiang's four Han from 0% to 11%.
+- Taiwan's folk-coded people without an altar (13%) and its no-religion answers without one (6.35%)
+  go to `unknown`, not `unaffiliated`, so the grey means what it means in China and Hong Kong.
+- A home altar is a threshold. Temple-goers without one stay grey, and some people who keep one
+  practise little.
+
+**Reverses:** §14.22's *the dots are the naming, not the doing* for this node; `sources/hk.md` §7's
+*nothing in Hong Kong is drawn on `chinesefolk`*; and `coverage.py`'s Hong Kong comment.
 
 ## 4. The size problem — §4.1 and §4.3 DECIDED, §4.2 built
 
@@ -3526,6 +3744,73 @@ permanent second colour for 434m people.
 eight countries. Doing it in the viewer keeps the claim readable and reversible in one line, which is
 the right place for a claim this size to start.
 
+### 6.16 A selected family's `unspecified` row is a quieter shade — DECIDED 2026-09-15
+
+> *"currently we just use the generic 'christianity' color to denote unspecified christianity when we
+> have christianity selected and we're looking at the fanned out christianity subgroup colors. lets
+> have this 'unspecified' color be desaturated in some cases, to denote its kinda generic."*
+> and: *"the 'unspecified' colors should only apply when looking at a specific religion. when looking
+> at all religions we maintain the current group colors."*
+
+`FOCUS_UNSPECIFIED` in `index.html` gives a node a second colour for its own dots. It started with
+four families, Anita's hexes, each the root's own hue with the saturation taken down: Christianity `#dbc96b`, Islam `#419f5d`, Judaism
+`#5696d2`, Buddhism `#b44149`. `paletteFor` uses it for the family's own dots **only while that family
+is the selection and its children are drawn**, which is exactly when §6.6's `unspecified` row is on
+screen. Anywhere else (unselected, undivided, the all-religions view) the family keeps its `ROOT_HSL`
+colour. The row's swatch, the hover card's key and the colour picker all read `colorOf`, so the legend
+still holds every colour on the map. A hand-set colour (§6.11) still wins.
+
+Measured with `check_overview.py`'s tree against the children each family draws, before and after, dE
+to the nearest child:
+
+| family | better | worse, and now under 25 |
+|---|---|---|
+| Islam | Sunni 31.2 → 45.9 | none |
+| Judaism | nearest child is still 68 | none |
+| Buddhism | Shingon 19.4 → 27.2 | none (Hòa Hảo 54.5 → 29.4) |
+| Christianity | Catholic 25.3 → 28.3, United Methodist 16.0 → 20.3 | Anabaptist 31.0 → 15.9 (US, 806 dots), Christian Churches and Churches of Christ 35.6 → 14.3 (1,379), Iglesia ni Cristo 29.9 → 14.4 (2,806, all countries) |
+
+The Christian cost is the price of pulling the yellow toward the tan-gold the branches already use.
+Contrast on the map is 11.3, 5.7, 6.0 and 3.4, all over the 2.9 floor. `check_overview.py --focus`
+now reads the table too, for any divided node in view, so it measures the shade the viewer draws.
+
+**Two more the same day.** *"lets also fade protestant unspecifeid to #6c84e4 and sunni unspecified
+to #7eb536."* Sunni Islam goes into the same table. Islam opens at depth 2, so with Islam selected
+Sunni's schools are drawn and its own dots are an `unspecified` row; at depth 1 and in the
+all-religions view it keeps `#81cb20`. `Protestant, unspecified` has no children, so it is always an
+unspecified answer. Its focus colour in `PIN` changes from `#5476fc` instead, and the overview keeps
+the Reformation gold. Measured over every country, at L1 to L3:
+
+- **Sunni: nothing newly under 25 anywhere.** It moves toward Islam's own dots (45.9 → 31.4), which is
+  what Sunni's note in `PIN` asked for, and away from Hanafi (31.4 → 35.5).
+- **Protestant: Reformed 25.2 → 10.4**, at L1, the depth Christianity opens at. The two are drawn
+  together in Brazil (1,149 Reformed against 10,183), Mexico (428 / 9,494), Switzerland, the UK,
+  Australia, New Zealand, the Philippines, Czechia and the all-countries view (28,225 / 169,268). At
+  L2 and L3 it also comes close to small rows: Wisconsin Evangelical Lutheran Synod 6.8 and Tongan
+  Methodist 8.1 (all countries only), Harrist Church 11.1 (Côte d'Ivoire, 140 against 678), Coptic
+  Orthodox 17.4 (Australia), Armenian Apostolic 18.7 (France).
+
+**Then three neighbours moved to clear them**, all in `PIN`, so only with a religion selected:
+*"lets make reformed #4e5ff9 and protestant unspec #6c84e5"* and *"also anabaptist #dbfc5a"*.
+Reformed goes from `#9791f3` to `#4e5ff9`, Protestant-unspecified to `#6c84e5` (saturation 69 → 70),
+and Anabaptist's saturation from 54 to 96. Measured again over every country, L1 to L3:
+
+- **Both targets clear.** Protestant-unspecified against Reformed, and Anabaptist against Christianity's
+  `unspecified`, are over 25 everywhere.
+- **Lutheran / Reformed 30.1 → 18.6** at L1: the US (5,594 / 3,378), Madagascar (3,570 / 5,487), South
+  Africa, Brazil, Hungary, Australia, the Philippines, Romania, Slovakia, Zambia and the all-countries
+  view (21,241 / 28,225). This is the pair the Reformation note in `PIN` says has to work.
+- **Anglican / Reformed 54.5 → 20.4** at L1: the UK (17,119 / 2,005), South Africa, the US, Malawi,
+  Madagascar, New Zealand, Australia, Ireland, Zambia, the Philippines, Trinidad, Vanuatu and the
+  all-countries view (34,463 / 28,225).
+- **Anabaptist / Baptist 36.9 → 17.5** at L1: the US (806 / 23,828), Zambia and the all-countries view.
+- **Hussite / Reformed 40.9 → 8.2**, Czechia only, 23 and 32 dots.
+- Protestant-unspecified's small neighbours at L2 and L3 barely move (Wisconsin Evangelical Lutheran
+  Synod 7.4, Harrist Church 11.4).
+
+**Accepted by eye.** Anita looked at Reformed against Lutheran and Anglican, and Anabaptist against
+Baptist: *"they look fine."* The numbers above are known and kept.
+
 ## 7. Confidence is carried, not drawn — REVERSED 2026-09-04
 
 **Confidence must never be expressed in colour.** A desaturation was built on 2026-09-04 and removed
@@ -4928,6 +5213,19 @@ longitude, which is a view of the Mediterranean. Nothing below zoom 3 can take t
 (§6.2). **A window narrow enough still gets the fit clamped at `minZoom`** — a phone opens on
 Europe-to-Indonesia rather than on the world — and that is left as it is rather than hand-centred.
 
+**CENTRED ON THE PRIME MERIDIAN — Anita, 2026-09-15**, and it amends the second point above:
+*"when we load in we center the view slightly east. lets just center on prime meridian actually, feels
+less opinionated to me."* The data box put the centre at 26.5°E. The only box centred on 0° that still
+holds -127°E and 180°E is -180 to 180, and that opened the world about a quarter of a zoom level
+smaller (log2 360/307 = 0.23).
+
+**Then a quarter zoom tighter, and the box stops being the data**, the same day: *"lets start zoomed in
+a quarter of a zoom level too. we dont have to hold the whole world, peopel can scroll."* The box is
+±151.4° (360 / 2^0.25 wide), so wherever the width sets the fit, which is every desktop window short of
+an ultrawide, it opens exactly 0.25 in from the whole-world fit. New Zealand, Hawaii and western Alaska
+start off the edge. A phone's fit is clamped at `minZoom` either way and is unchanged: centred on 0°,
+from the Americas' east coast to Pakistan.
+
 **The hover card is dark, and it carries the legend's own colour key — 2026-09-06.** MapLibre ships the
 popup white, with `10px 10px 15px` of padding (the extra 5 px clears a close button this one does not
 have), and it was the single piece of light-mode chrome on the map. Same tokens as every other panel,
@@ -5446,6 +5744,19 @@ now says on its own. (`unknown`, §6.3a-ii, joins the run on the same logic.)
 
 Families a country does not report are dropped by `PRESENT`, so nobody sees an empty row. It changes no
 colours, for §10.0's reason — verified after the change.
+
+### 10.0b Sikhism and Jainism follow Buddhism — DECIDED 2026-09-15
+
+Anita's call: *"lets reorder sikhism to be after buddhism, and jainism after sikhism."* The named run
+at the top of `ROOT_ORDER` is now
+
+```
+christianity  islam  judaism  hinduism  buddhism  sikhism  jainism
+```
+
+and the grey run follows it as before. Jainism leaves the hue-ordered tail to join the run.
+`ROOT_KEEP` (§6.10c) still holds the first six only, so Jainism can still fold into the small-religions
+bucket in a view where it is small. It changes no colours, for §10.0's reason.
 
 ### 10.1 What the panel says about itself — DECIDED 2026-09-03
 
@@ -7043,6 +7354,16 @@ quota test before the split-half, on every religion column the file offers. Enfo
 `sources/arabbarometer.py::assert_not_quota` (`quota_agreement`), `sources/cab.py::assert_not_quota`.
 Playbooks: `playbooks/arabbarometer.md`, `playbooks/cab.md`. Full text: `spec_archive/12.md`.
 
+### ONE ROUND CANNOT SHOW A QUOTA BY AGREEMENT; THE DESIGN DOCUMENT AND THE CLUSTER IDS CAN — Lebanon, 2026-09-15
+
+`quota_agreement` needs two waves. For a single round, read the sample design and methodology report
+before the file (strata, quota controls, the "profile required" on an interviewer's sheet), and where
+the file has cluster ids, count the clusters that hold one value of each religion answer: a stratified
+answer is pure in every cluster while a finer answer inside it mixes. WVS 7 Lebanon: all 120 clusters
+hold one community, 39 of 47 Christian clusters mix denominations, and the clusters equal the design's
+table of PSUs per kadaa and sect. Enforced by: `sources/lb_wvs.py::psu_purity` (Lebanon only).
+Playbook: `playbooks/wvs.md`. Detail: `sources/lb.md` §9.
+
 ### FITTING A COLUMN MARGIN TO THE SURVEY'S OWN NATIONAL SHARE UNDOES THE ROW MARGIN — Nigeria, 2026-09-09
 
 Fit a column margin only to a count of the same people the row margin counted (Liberia's census);
@@ -7448,6 +7769,8 @@ text: `spec_archive/12.md`.
 A block of hexes at Kontur's 46,200/km² limit is a real core or a false concentration, and only a
 per-block row in `kontur_cap.csv` (`real`, `capped`, `unreviewed`) says which. Run
 `python kontur_cap.py <cc>` before scattering, and check where the unit's weight sits after capping.
+Since 2026-09-15 a false block with no populated ring outside the dense blocks is `isolated` and
+lowered to its unit's median density outside them (Sudan, `sources/sd.md` §6).
 Enforced by: `kontur_cap.py::apply`, from `scatter.py::main` (an unlisted block at the limit stops the
 scatter). Playbook: `playbooks/geography.md`. Full text: `spec_archive/12.md`.
 
@@ -7586,6 +7909,17 @@ one card, close with a fit to unit populations and that level, and pull small un
 (gamma-Poisson empirical Bayes) before fitting. Check every code's label against its answer: the two
 short cards use code 9 for different answers. Enforced by: `sources/tw.py::standardised`,
 `::compose`, `LABEL_TEST`. Playbook: none (TSCS has none). Full text: `sources/tw.md` §3-§4.
+
+### A PUBLIC FILE CAN HOLD FEWER ANSWERS THAN ITS TOPLINE PRINTS, AND THE TERMS BESIDE A DOWNLOAD CAN BE ANOTHER STUDY'S — India, 2026-09-15
+
+Pew's *Religion in India* topline prints sixteen QDENOM answers; the public respondent file's `qdenomrec`
+keeps seven, with the Church of North India and Church of South India inside `all other`. Read a file's
+value labels before planning categories from its report, and require the weighted file to reproduce the
+printed national row cell by cell, which also confirms the codes and the weight. The zip copied beside
+it as its codebook and terms was ICPSR 38489, the East Asian Social Survey 2018: check that a terms file
+names the study before reading it as the terms that govern it. Enforced by:
+`in_split_christian.py::read_pew` (labels and counts asserted, topline row reproduced),
+`::check_topline`. Playbook: none (Pew has none). Full text: `sources/in.md` §10.
 
 ## 13. Things deliberately not being done
 

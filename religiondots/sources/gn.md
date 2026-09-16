@@ -35,6 +35,9 @@ page naming a religion was checked for prefecture names; none prints religion be
 région. `microdata.insguinee.org` (NADA) holds DHS 2018, a malaria survey and a livestock
 survey, no census. `rgph.insguinee.org` is an indicator database with no religion theme. So
 eight régions is the ceiling in both censuses that are online.
+Re-checked 2026-09-15 (sources.md §scout-2026-09-15-africa-upgrades): the 2015 and 2019 *Annuaires
+statistiques* print religion nationally and by région only (2019 Tableau 15.3 repeats 5.10), plus church
+buildings by préfecture; the census microdata exists only in IPUMS (1983, 1996, 2014).
 
 ## 2. The construction
 

@@ -63,6 +63,17 @@ ask religion, once the office's commissioned-table shelf has come back empty.
   `ua.py::_check_labels`; missing in the other eight. Detail: spec §12 "ONE ROUND CAN PUBLISH".
 - **A round's region can carry no geography.** Latvia round 10: all regions alike, nothing to
   recode; use it nationally, assert it still fails. Caught by: `lv.py::_check_labels`.
+- **A two-code region can be the wrong split, and there is nothing to recode.** Iceland round 9's
+  IS001 is 79% of the sample (the capital area is 64%) and its IS002 77% village or farm, so the
+  towns went to the capital code; `pspwght` does not correct it. Compare each round's sample share
+  and `domicil` per region with the other rounds, leave the round out, and assert it still fails.
+  Caught by: `is.py::_check_round9`. Detail: `sources/is.md` §2.
+- **Two units give the rank split-half nothing to rank.** Every median rho is +1 or -1 and no p
+  reaches 0.05. Print it, and decide with the two-unit test (spec §12 Uzbekistan): the share
+  difference against labels shuffled within round, plus the chi-square; shuffle respondents only
+  where the design file shows the sample nearly unclustered (Iceland round 8: 705 PSUs for 880).
+  Witness with a roll at the same two units. Caught by: `is.py::_two_unit_test`,
+  `uz.py::two_unit_test`. Detail: `sources/is.md` §4.
 - **Card variables vary by country and round.** `rlgdnfi`/`rlgdnse` do not exist (`rlgdnafi`,
   `rlgdnase`); `rlgdnbe` is rounds 5-9, `rlgdndk` round 5; `rlgdnua` (4-6) and `rlgdnaua` (11)
   are different cards. A missing variable or a UUID is HTTP 400 `E201VariableNotFound`. Tabulate

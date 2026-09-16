@@ -177,3 +177,32 @@ publisher, not on a safety check; a session that reads such a record should rere
 DEPS's reports and workbook are public files on its former site; no licence text was seen and none
 was looked for. geoBoundaries gbOpen BRN ADM1 and ADM2 are public domain (Wikimedia Commons
 tracings). Kontur Population is CC BY 4.0.
+
+## 11. Review, 2026-09-15 (`d743fc47-rev7`)
+
+Light pass. Read the entry, `taxonomy/bn2021.py`, `bn.csv` and `other.bn`'s node note. `check_md`
+clean, `built_countries --check` OK, `check_rollup bn` 0 orphaned (every row measured). One
+screenshot: dots along the Brunei-Muara, Tutong and Belait coasts and up the Temburong river,
+nothing in the sea. No ask, nothing rebuilt.
+
+- **Figures match** `bn.csv`: Belait 70.3% Muslim, 11.0% Buddhist, 10.7% Christian; Temburong 12.8%
+  Christian; Others 11.0% of Tutong and 3.2% of Brunei-Muara.
+- **Mapping: agreed.** Islam, Christianity and Buddhism bare, as the form asks. `other.bn` is the
+  usual `other.<cc>` residual, and `unknown` would hide the Hindus the form names.
+- **Gap: honest.** A4 totals A1 and no table prints non-response, so no `gap`. That anyone with no
+  religion could only be inside Others is said in the note, the node note and the REVIEW.
+- **§14, searched now, and no ask.** The State Department's *2023 Report on International Religious
+  Freedom: Brunei* returned 403 from `state.gov` (PDF and page), and its 2021-2025 archive page came
+  back garbled, so it was not read. Read instead: Freedom House, *Freedom in the World 2024: Brunei*,
+  section D2, and ISEAS Perspective 2024/49 (Hoon and Kumpoh, *Minorities in Brunei Darussalam:
+  Intersecting Religion and Ethnicity*). Neither reports a physical attack on any religious group.
+  What they describe is the state's own law: the Sharia Penal Code makes apostasy and blasphemy
+  capital offences, proselytising for any religion but Islam is banned, and Christmas may be kept only
+  indoors. ISEAS says the Dusun "encounter minimal discriminatory barriers when practising Temarok".
+  The people that law bears on hardest, apostates and non-Shafi'i Muslims, are not drawn: the form
+  has one Islam code and no no-religion code. Christians, Buddhists and Others are drawn at the four
+  districts DEPS publishes, which §14 rule 2 allows, and the restricting party is the same state
+  that published the table. §7's conclusion stands; no further search is needed at this grain.
+- **Reopen under §14 if a build goes below district or splits Others.** A mukim table, or a split
+  that separates no religion out of Others, would place people who may count as apostates under the
+  Sharia Penal Code. That is a question for Anita, not a builder.

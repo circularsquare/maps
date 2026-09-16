@@ -34,7 +34,12 @@ def _mn_place_weight(place):
 
 
 def _mn_counts():
-    """NSO 2020 PHC at aimag: 6 drawn categories on 20 of Mongolia's 22 units.
+    """NSO 2020 PHC: 6 drawn categories on 19 aimags and Ulaanbaatar's 9 düüregs (20 of 22 units).
+
+    ULAANBAATAR IS DRAWN BY DÜÜREG since 2026-09-15: the capital's own volume charts religion
+    for its nine düüregs (figures 3.5 and 3.6), which sources/mn_ub.py measures off the vector
+    drawing and sources/mn.py checks against the city's printed tables. mn.csv carries no
+    city-wide row, so nothing here can draw the capital twice. sources/mn.md §11.
 
     ONE level, no allocation, nothing modelled — every row is `measured` and may ring. The
     figures are RECONSTRUCTED from two published percentage tables rather than read as
@@ -59,18 +64,24 @@ def _mn_counts():
     df = pd.read_csv(HERE / "data" / "normalized" / "mn.csv",
                      dtype={"geo_id": str}, low_memory=False,
                      keep_default_na=False, na_values=[""])
-    df = df[df["geo_level"] == "aimag"].copy()
+    df = df[df["geo_level"].isin(["aimag", "duureg"])].copy()
 
     # geo_id IS the polygon id: COD-AB's pcode is the census's own aimag code, so there is
-    # no name join anywhere in this country. sources/mn_geo.py asserts that.
+    # no name join anywhere in this country. sources/mn_geo.py asserts that. The capital's
+    # nine düüregs are COD's MN11xx, joined inside the city by name with the volume's table
+    # order as witness (sources/mn_ub.py::check_join).
     df["unit"] = df["geo_id"]
-    units = set(gpd_read_units(HERE / "data" / "geo" / "mn" / "mn_aimags.gpkg"))
+    geo = HERE / "data" / "geo" / "mn"
+    units = (set(gpd_read_units(geo / "mn_aimags.gpkg"))
+             | set(gpd_read_units(geo / "mn_soums.gpkg")))
     missing = sorted(set(df["unit"]) - units)
     if missing:
-        raise SystemExit(f"mn.csv aimags with no polygon: {missing} -- re-run "
+        raise SystemExit(f"mn.csv units with no polygon: {missing} -- re-run "
                          "sources/mn_geo.py")
-    if df["unit"].nunique() != 20:
-        raise SystemExit(f"{df['unit'].nunique()} aimags, expected 20")
+    if "MN11" in set(df["unit"]):
+        raise SystemExit("mn.csv carries Ulaanbaatar city-wide as well as by düüreg")
+    if df["unit"].nunique() != 28:
+        raise SystemExit(f"{df['unit'].nunique()} units, expected 19 aimags and 9 düüregs")
 
     df["node"] = df["source_category"].map(resolve)
     df = df[df["node"].notna() & (df["count"] > 0)]
@@ -98,14 +109,21 @@ ENTRY = {
             "that was; a tenth of Mongolia's 2,170,573 adults is **about 217,000**, which "
             "is more respondents than any survey on this map has, and it is still a sample: a "
             "cell worth a few tenths of a per cent in a small aimag rests on a handful of "
-            "answers, and the country's smallest, Govisumber, has only about 1,100 people "
+            "answers, and the smallest unit drawn, Bagakhangai, has only about 280 people "
             "in the sample altogether. "
             "**Bayan-Olgii is the sharpest edge on the map for a thousand miles.** Islam is "
-            "**92.5%** of its religious population, against **13.6%** next door in Khovd "
-            "and almost nothing in the other eighteen drawn. These are Mongolia's Kazakhs, "
-            "who settled the far west in the nineteenth century and are still most of the "
-            "aimag. Bayan-Olgii is also the second most religious unit drawn, **88.7%** "
-            "against a national 59.6%, behind Ovorkhangai's **89.6%**. "
+            "**92.5%** of its religious population, against **13.6%** next door in Khovd, "
+            "the same **13.6%** in Nalaikh on the edge of Ulaanbaatar, and almost nothing "
+            "anywhere else drawn. These are Mongolia's Kazakhs, who settled the far west in "
+            "the nineteenth century and are still most of the aimag; the capital's census "
+            "volume puts Nalaikh's share down to the many Kazakhs living there. Bayan-Olgii "
+            "is also the second most religious unit drawn, **88.7%** against a national "
+            "59.6%, behind Ovorkhangai's **89.6%**. "
+            "**Ulaanbaatar, nearly half the adults drawn, is split into its nine districts.** "
+            "The city's own census volume charts religion for each, from **58.2%** religious "
+            "in Chingeltei to **47.1%** in Bagakhangai, against 53.7% for the city. The "
+            "charts print percentages only, so each district's figures are measured off the "
+            "chart and multiplied by its adults from the same volume's age table. "
             "**Shamanism here is not a survival or a curiosity, and it has a geography.** "
             "It is **10.9%** of the religious in Dornod and **7.1%** in Khovsgol, against "
             "**0.4%** in Ovorkhangai: the north and the east, the Buryat and Darkhad "
@@ -122,7 +140,7 @@ ENTRY = {
             "out. They are 148,869 people between them, 4.7% of Mongolia, and nothing about "
             "them is suppressed or unpublished."),
         how="census long form, 2020, a 10% sample of adults",
-        grain="aimags, 103,000 adults on average",
+        grain="aimags, and the nine districts of Ulaanbaatar; 74,000 adults on average",
         gap="children under 15; Darkhan-Uul and Dundgovi, whose volumes are scans",
         counts=_mn_counts,
         units=None,
@@ -139,7 +157,7 @@ ENTRY = {
              "tables carry one decimal place, so a category's count is good to roughly a "
              "tenth of a per cent of the aimag's adults before the sampling error is even "
              "considered. The check that this is right is the national reconstruction: "
-             "summed over the 20 aimags drawn it gives 51.8% Buddhist, 40.4% no religion, "
+             "summed over the 20 aimags drawn it gives 51.9% Buddhist, 40.4% no religion, "
              "3.3% Muslim, 2.4% shamanist, 1.3% Christian and 0.7% other, against NSO's own "
              "published 51.7 / 40.6 / 3.2 / 2.5 / 1.3 / 0.7. "
              "THE UNIVERSE IS ADULTS AND IS NOT SCALED UP to the whole population (Chile's "
@@ -154,6 +172,16 @@ ENTRY = {
              "'this aimag, drawn where Mongolians live'. "
              "The join is by CODE and not by name: COD-AB's pcode is the census's own aimag "
              "code, which sources/mn_geo.py asserts against the census DDI on all seventeen "
-             "codes the DDI prints.",
+             "codes the DDI prints. "
+             "ULAANBAATAR IS DRAWN BY ITS NINE DÜÜREGS (2026-09-15). Its own volume charts "
+             "religion by düüreg in figures 3.5 and 3.6 and nowhere else; both are vector "
+             "drawings, so every share is a rectangle width at one scale fitted on the printed "
+             "labels (every label within 0.03 points of its own segment), and the düüregs' "
+             "adults come from the same volume's appendix table 1.1, which equals the national "
+             "report's Ulaanbaatar row exactly. Weighted back up they give the city's printed "
+             "53.7% religious and its five type shares within 0.07 points. The volume's prose "
+             "calls Nalaikh's 13.6% Christian; the chart draws and labels it Islam, and the "
+             "city check fails on the prose's reading. Hexes take their düüreg by centroid "
+             "(sources/mn_grid.py::split_capital). sources/mn_ub.py, sources/mn.md §11.",
     ),
 }

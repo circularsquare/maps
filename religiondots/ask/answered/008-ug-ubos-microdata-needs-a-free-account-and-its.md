@@ -122,3 +122,9 @@ extra tool, and the single member is a Stata file of **22,480,546,172 bytes — 
 count rather than a sample. She has 58.4 GB free, so it fits, but her instruction is explicit:
 **extract, take what is needed, delete.** The compact aggregate stays, the 22.5 GB file does not,
 and the RAR in Downloads is hers to keep or bin.
+
+**Correction 2026-09-15, `cb8b206e-scout2`** (sources.md §scout-2026-09-15-africa-upgrades): the file is
+not the full count. Its header says 4,693,190 person records (10.22% of 45,905,417) at 4,790 bytes each,
+which is where the 22.5 GB comes from, and it has no weight variable. Windows tar stops decompressing it
+at 20,971,520 bytes ("Parsing filters is unsupported"); WinRAR's `UnRAR.exe p -inul` reads it whole. The
+parish x religion aggregate is kept in `data/raw/ug/nphc2024_aggregate/`, and nothing else was extracted.

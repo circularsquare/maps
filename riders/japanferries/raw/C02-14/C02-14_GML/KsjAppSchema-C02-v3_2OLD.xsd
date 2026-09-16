@@ -1,0 +1,469 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:ksj="http://nlftp.mlit.go.jp/ksj/schemas/ksj-app" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:sch="http://www.ascc.net/xml/schematron" xmlns:xsd="http://www.w3.org/2001/XMLSchema" targetNamespace="http://nlftp.mlit.go.jp/ksj/schemas/ksj-app" elementFormDefault="qualified" version="3.2">
+<!-- 外部参照 -->
+<xsd:import namespace="http://www.opengis.net/gml/3.2" schemaLocation="http://standards.iso.org/ittf/PubliclyAvailableStandards/ISO_19136_Schemas/gml.xsd"/>
+<xsd:include schemaLocation="Ksj_Common.xsd"/>
+<!-- 基底要素 -->
+<xsd:element name="Dataset">
+<xsd:complexType>
+<xsd:complexContent>
+<xsd:extension base="gml:AbstractFeatureType">
+<xsd:choice minOccurs="0" maxOccurs="unbounded">
+<xsd:element ref="gml:AbstractGML"/>
+<xsd:element ref="gml:CompositeValue"/>
+</xsd:choice>
+</xsd:extension>
+</xsd:complexContent>
+</xsd:complexType>
+</xsd:element>
+<!-- 要素定義 -->
+<xsd:element name="PortDistrictBoundary" type="ksj:PortDistrictBoundaryType" substitutionGroup="gml:AbstractFeature"/>
+<xsd:complexType name="PortDistrictBoundaryType">
+<xsd:annotation>
+<xsd:documentation>港域界</xsd:documentation>
+</xsd:annotation>
+<xsd:complexContent>
+<xsd:extension base="gml:AbstractFeatureType">
+<xsd:sequence>
+<xsd:element name="location" type="gml:CurvePropertyType">
+<xsd:annotation>
+<xsd:documentation>場所</xsd:documentation>
+</xsd:annotation>
+</xsd:element>
+<xsd:element name="prefectureCode" type="gml:CodeType">
+<xsd:annotation>
+<xsd:documentation>都道府県コード</xsd:documentation>
+<xsd:appinfo>
+<gml:defaultCodeSpace>PrefectureCode.xml</gml:defaultCodeSpace>
+</xsd:appinfo>
+</xsd:annotation>
+</xsd:element>
+<xsd:element name="harborAndFishingPortCode" type="ksj:HarborAndFishingPortCodePropertyType" minOccurs="0" maxOccurs="unbounded">
+<xsd:annotation>
+<xsd:documentation>港湾・漁港コード</xsd:documentation>
+</xsd:annotation>
+</xsd:element>
+</xsd:sequence>
+</xsd:extension>
+</xsd:complexContent>
+</xsd:complexType>
+<xsd:complexType name="PortDistrictBoundaryPropertyType">
+<xsd:sequence minOccurs="0">
+<xsd:element ref="ksj:PortDistrictBoundary"/>
+</xsd:sequence>
+<xsd:attributeGroup ref="gml:AssociationAttributeGroup"/>
+<xsd:attributeGroup ref="gml:OwnershipAttributeGroup"/>
+</xsd:complexType>
+<xsd:complexType name="PortDistrictBoundaryMemberType">
+<xsd:complexContent>
+<xsd:extension base="gml:AbstractMemberType">
+<xsd:sequence minOccurs="0">
+<xsd:element ref="ksj:PortDistrictBoundary"/>
+</xsd:sequence>
+<xsd:attributeGroup ref="gml:AssociationAttributeGroup"/>
+</xsd:extension>
+</xsd:complexContent>
+</xsd:complexType>
+<xsd:element name="PortAndHarbor" type="ksj:PortAndHarborType" substitutionGroup="gml:AbstractFeature"/>
+<xsd:complexType name="PortAndHarborType">
+<xsd:annotation>
+<xsd:documentation>港湾</xsd:documentation>
+</xsd:annotation>
+<xsd:complexContent>
+<xsd:extension base="gml:AbstractFeatureType">
+<xsd:sequence>
+<xsd:element name="position" type="gml:PointPropertyType">
+<xsd:annotation>
+<xsd:documentation>地点</xsd:documentation>
+</xsd:annotation>
+</xsd:element>
+<xsd:element name="type1" type="ksj:PortType1CodeType">
+<xsd:annotation>
+<xsd:documentation>種別（1）</xsd:documentation>
+</xsd:annotation>
+</xsd:element>
+<xsd:element name="type2" type="ksj:PortType2CodeType">
+<xsd:annotation>
+<xsd:documentation>種別（2）</xsd:documentation>
+</xsd:annotation>
+</xsd:element>
+<xsd:element name="administrativeAreaCode" type="gml:CodeType" maxOccurs="unbounded">
+<xsd:annotation>
+<xsd:documentation>行政区域コード</xsd:documentation>
+<xsd:appinfo>
+<gml:defaultCodeSpace>AdministrativeAreaCode.xml</gml:defaultCodeSpace>
+</xsd:appinfo>
+</xsd:annotation>
+</xsd:element>
+<xsd:element name="portCode" type="xsd:string">
+<xsd:annotation>
+<xsd:documentation>港湾コード</xsd:documentation>
+</xsd:annotation>
+</xsd:element>
+<xsd:element name="portName" type="xsd:string">
+<xsd:annotation>
+<xsd:documentation>港湾名</xsd:documentation>
+</xsd:annotation>
+</xsd:element>
+<xsd:element name="administratorType" type="ksj:PortAdministratorTypeCodeType" minOccurs="0">
+<xsd:annotation>
+<xsd:documentation>管理者区分</xsd:documentation>
+</xsd:annotation>
+</xsd:element>
+<xsd:element name="administratorName" type="xsd:string" minOccurs="0">
+<xsd:annotation>
+<xsd:documentation>管理者名</xsd:documentation>
+</xsd:annotation>
+</xsd:element>
+<xsd:element name="designatedDate" type="gml:TimeInstantPropertyType" minOccurs="0">
+<xsd:annotation>
+<xsd:documentation>政令指定年月日</xsd:documentation>
+</xsd:annotation>
+</xsd:element>
+<xsd:element name="foundationDate" type="gml:TimeInstantPropertyType" minOccurs="0">
+<xsd:annotation>
+<xsd:documentation>設立年月日</xsd:documentation>
+</xsd:annotation>
+</xsd:element>
+<xsd:element name="seaAgencyType" type="ksj:SeaAagencyTypeCodeType" minOccurs="0" maxOccurs="unbounded">
+<xsd:annotation>
+<xsd:documentation>海事機関種別</xsd:documentation>
+</xsd:annotation>
+</xsd:element>
+<xsd:element name="boundaryLengthOfOutlyingFacility" type="xsd:integer">
+<xsd:annotation>
+<xsd:documentation>外郭施設延長</xsd:documentation>
+</xsd:annotation>
+</xsd:element>
+<xsd:element name="mooringFacilitiesLength" type="xsd:integer">
+<xsd:annotation>
+<xsd:documentation>係留施設延長</xsd:documentation>
+</xsd:annotation>
+</xsd:element>
+<xsd:element name="regularFerry" type="xsd:boolean">
+<xsd:annotation>
+<xsd:documentation>フェリー便有無</xsd:documentation>
+</xsd:annotation>
+</xsd:element>
+</xsd:sequence>
+</xsd:extension>
+</xsd:complexContent>
+</xsd:complexType>
+<xsd:complexType name="PortAndHarborPropertyType">
+<xsd:sequence minOccurs="0">
+<xsd:element ref="ksj:PortAndHarbor"/>
+</xsd:sequence>
+<xsd:attributeGroup ref="gml:AssociationAttributeGroup"/>
+<xsd:attributeGroup ref="gml:OwnershipAttributeGroup"/>
+</xsd:complexType>
+<xsd:complexType name="PortAndHarborMemberType">
+<xsd:complexContent>
+<xsd:extension base="gml:AbstractMemberType">
+<xsd:sequence minOccurs="0">
+<xsd:element ref="ksj:PortAndHarbor"/>
+</xsd:sequence>
+<xsd:attributeGroup ref="gml:AssociationAttributeGroup"/>
+</xsd:extension>
+</xsd:complexContent>
+</xsd:complexType>
+<xsd:element name="HarborDistrictBoundary" type="ksj:HarborDistrictBoundaryType" substitutionGroup="gml:AbstractFeature"/>
+<xsd:complexType name="HarborDistrictBoundaryType">
+<xsd:annotation>
+<xsd:documentation>港湾区域界</xsd:documentation>
+</xsd:annotation>
+<xsd:complexContent>
+<xsd:extension base="gml:AbstractFeatureType">
+<xsd:sequence>
+<xsd:element name="location" type="gml:CurvePropertyType">
+<xsd:annotation>
+<xsd:documentation>場所</xsd:documentation>
+</xsd:annotation>
+</xsd:element>
+<xsd:element name="prefectureCode" type="gml:CodeType">
+<xsd:annotation>
+<xsd:documentation>都道府県コード</xsd:documentation>
+<xsd:appinfo>
+<gml:defaultCodeSpace>PrefectureCode.xml</gml:defaultCodeSpace>
+</xsd:appinfo>
+</xsd:annotation>
+</xsd:element>
+<xsd:element name="portCode" type="xsd:string">
+<xsd:annotation>
+<xsd:documentation>港湾コード</xsd:documentation>
+</xsd:annotation>
+</xsd:element>
+</xsd:sequence>
+</xsd:extension>
+</xsd:complexContent>
+</xsd:complexType>
+<xsd:complexType name="HarborDistrictBoundaryPropertyType">
+<xsd:sequence minOccurs="0">
+<xsd:element ref="ksj:HarborDistrictBoundary"/>
+</xsd:sequence>
+<xsd:attributeGroup ref="gml:AssociationAttributeGroup"/>
+<xsd:attributeGroup ref="gml:OwnershipAttributeGroup"/>
+</xsd:complexType>
+<xsd:complexType name="HarborDistrictBoundaryMemberType">
+<xsd:complexContent>
+<xsd:extension base="gml:AbstractMemberType">
+<xsd:sequence minOccurs="0">
+<xsd:element ref="ksj:HarborDistrictBoundary"/>
+</xsd:sequence>
+<xsd:attributeGroup ref="gml:AssociationAttributeGroup"/>
+</xsd:extension>
+</xsd:complexContent>
+</xsd:complexType>
+<xsd:element name="HarborAndFishingPortCode" type="ksj:HarborAndFishingPortCodeType" substitutionGroup="gml:AbstractObject"/>
+<xsd:complexType name="HarborAndFishingPortCodeType">
+<xsd:annotation>
+<xsd:documentation>港湾・漁港コード</xsd:documentation>
+</xsd:annotation>
+<xsd:choice>
+<xsd:element name="portCode" type="xsd:string">
+<xsd:annotation>
+<xsd:documentation>港湾コード</xsd:documentation>
+</xsd:annotation>
+</xsd:element>
+<xsd:element name="fishingPortCode" type="xsd:string">
+<xsd:annotation>
+<xsd:documentation>漁港コード</xsd:documentation>
+</xsd:annotation>
+</xsd:element>
+</xsd:choice>
+</xsd:complexType>
+<xsd:complexType name="HarborAndFishingPortCodePropertyType">
+<xsd:sequence>
+<xsd:element ref="ksj:HarborAndFishingPortCode"/>
+</xsd:sequence>
+<xsd:attributeGroup ref="gml:OwnershipAttributeGroup"/>
+</xsd:complexType>
+<xsd:simpleType name="SeaAagencyTypeCodeType">
+<xsd:annotation>
+<xsd:documentation>海事機関種別コード</xsd:documentation>
+</xsd:annotation>
+<xsd:union memberTypes="ksj:SeaAagencyTypeCodeEnumType ksj:SeaAagencyTypeCodeOtherType"/>
+</xsd:simpleType>
+<xsd:simpleType name="SeaAagencyTypeCodeEnumType">
+<xsd:restriction base="xsd:string">
+<xsd:enumeration value="1">
+<xsd:annotation>
+<xsd:documentation>海上保安部</xsd:documentation>
+<xsd:appinfo>
+<gml:description>海上保安部</gml:description>
+</xsd:appinfo>
+</xsd:annotation>
+</xsd:enumeration>
+<xsd:enumeration value="2">
+<xsd:annotation>
+<xsd:documentation>税関</xsd:documentation>
+<xsd:appinfo>
+<gml:description>税関</gml:description>
+</xsd:appinfo>
+</xsd:annotation>
+</xsd:enumeration>
+<xsd:enumeration value="3">
+<xsd:annotation>
+<xsd:documentation>海運局</xsd:documentation>
+<xsd:appinfo>
+<gml:description>海運局</gml:description>
+</xsd:appinfo>
+</xsd:annotation>
+</xsd:enumeration>
+<xsd:enumeration value="4">
+<xsd:annotation>
+<xsd:documentation>地方海難審判庁</xsd:documentation>
+<xsd:appinfo>
+<gml:description>地方海難審判庁</gml:description>
+</xsd:appinfo>
+</xsd:annotation>
+</xsd:enumeration>
+<xsd:enumeration value="5">
+<xsd:annotation>
+<xsd:documentation>検疫所</xsd:documentation>
+<xsd:appinfo>
+<gml:description>検疫所</gml:description>
+</xsd:appinfo>
+</xsd:annotation>
+</xsd:enumeration>
+<xsd:enumeration value="6">
+<xsd:annotation>
+<xsd:documentation>動物検疫所</xsd:documentation>
+<xsd:appinfo>
+<gml:description>動物検疫所</gml:description>
+</xsd:appinfo>
+</xsd:annotation>
+</xsd:enumeration>
+<xsd:enumeration value="7">
+<xsd:annotation>
+<xsd:documentation>植物検疫所</xsd:documentation>
+<xsd:appinfo>
+<gml:description>植物検疫所</gml:description>
+</xsd:appinfo>
+</xsd:annotation>
+</xsd:enumeration>
+<xsd:enumeration value="8">
+<xsd:annotation>
+<xsd:documentation>入国管理局</xsd:documentation>
+<xsd:appinfo>
+<gml:description>入国管理局</gml:description>
+</xsd:appinfo>
+</xsd:annotation>
+</xsd:enumeration>
+</xsd:restriction>
+</xsd:simpleType>
+<xsd:simpleType name="SeaAagencyTypeCodeOtherType">
+<xsd:restriction base="xsd:string">
+<xsd:pattern value="other: \w{2,}"/>
+</xsd:restriction>
+</xsd:simpleType>
+<xsd:simpleType name="PortType1CodeType">
+<xsd:annotation>
+<xsd:documentation>港湾種別（1）コード</xsd:documentation>
+</xsd:annotation>
+<xsd:union memberTypes="ksj:PortType1CodeEnumType ksj:PortType1CodeOtherType"/>
+</xsd:simpleType>
+<xsd:simpleType name="PortType1CodeEnumType">
+<xsd:restriction base="xsd:string">
+<xsd:enumeration value="1">
+<xsd:annotation>
+<xsd:appinfo>
+<gml:description>甲種</gml:description>
+</xsd:appinfo>
+</xsd:annotation>
+</xsd:enumeration>
+<xsd:enumeration value="2">
+<xsd:annotation>
+<xsd:appinfo>
+<gml:description>乙種</gml:description>
+</xsd:appinfo>
+</xsd:annotation>
+</xsd:enumeration>
+<xsd:enumeration value="0">
+<xsd:annotation>
+<xsd:appinfo>
+<gml:description>その他</gml:description>
+</xsd:appinfo>
+</xsd:annotation>
+</xsd:enumeration>
+</xsd:restriction>
+</xsd:simpleType>
+<xsd:simpleType name="PortType1CodeOtherType">
+<xsd:restriction base="xsd:string">
+<xsd:pattern value="other: \w{2,}"/>
+</xsd:restriction>
+</xsd:simpleType>
+<xsd:simpleType name="PortType2CodeType">
+<xsd:annotation>
+<xsd:documentation>港湾種別（2）コード</xsd:documentation>
+</xsd:annotation>
+<xsd:union memberTypes="ksj:PortType2CodeEnumType ksj:PortType2CodeOtherType"/>
+</xsd:simpleType>
+<xsd:simpleType name="PortType2CodeEnumType">
+<xsd:restriction base="xsd:string">
+<xsd:enumeration value="11">
+<xsd:annotation>
+<xsd:appinfo>
+<gml:description>国際戦略港湾</gml:description>
+</xsd:appinfo>
+</xsd:annotation>
+</xsd:enumeration>
+<xsd:enumeration value="12">
+<xsd:annotation>
+<xsd:appinfo>
+<gml:description>国際拠点港湾</gml:description>
+</xsd:appinfo>
+</xsd:annotation>
+</xsd:enumeration>
+<xsd:enumeration value="13">
+<xsd:annotation>
+<xsd:appinfo>
+<gml:description>重要港湾</gml:description>
+</xsd:appinfo>
+</xsd:annotation>
+</xsd:enumeration>
+<xsd:enumeration value="14">
+<xsd:annotation>
+<xsd:appinfo>
+<gml:description>地方港湾</gml:description>
+</xsd:appinfo>
+</xsd:annotation>
+</xsd:enumeration>
+<xsd:enumeration value="15">
+<xsd:annotation>
+<xsd:appinfo>
+<gml:description>56条港湾</gml:description>
+</xsd:appinfo>
+</xsd:annotation>
+</xsd:enumeration>
+<xsd:enumeration value="99">
+<xsd:annotation>
+<xsd:appinfo>
+<gml:description>その他</gml:description>
+</xsd:appinfo>
+</xsd:annotation>
+</xsd:enumeration>
+</xsd:restriction>
+</xsd:simpleType>
+<xsd:simpleType name="PortType2CodeOtherType">
+<xsd:restriction base="xsd:string">
+<xsd:pattern value="other: \w{2,}"/>
+</xsd:restriction>
+</xsd:simpleType>
+<xsd:simpleType name="PortAdministratorTypeCodeType">
+<xsd:annotation>
+<xsd:documentation>港湾管理者区分コード</xsd:documentation>
+</xsd:annotation>
+<xsd:union memberTypes="ksj:PortAdministratorTypeCodeEnumType ksj:PortAdministratorTypeCodeOtherType"/>
+</xsd:simpleType>
+<xsd:simpleType name="PortAdministratorTypeCodeEnumType">
+<xsd:restriction base="xsd:string">
+<xsd:enumeration value="1">
+<xsd:annotation>
+<xsd:appinfo>
+<gml:description>都道府県</gml:description>
+</xsd:appinfo>
+</xsd:annotation>
+</xsd:enumeration>
+<xsd:enumeration value="2">
+<xsd:annotation>
+<xsd:appinfo>
+<gml:description>市区町村</gml:description>
+</xsd:appinfo>
+</xsd:annotation>
+</xsd:enumeration>
+<xsd:enumeration value="3">
+<xsd:annotation>
+<xsd:appinfo>
+<gml:description>港務局</gml:description>
+</xsd:appinfo>
+</xsd:annotation>
+</xsd:enumeration>
+<xsd:enumeration value="4">
+<xsd:annotation>
+<xsd:appinfo>
+<gml:description>一部事務組合</gml:description>
+</xsd:appinfo>
+</xsd:annotation>
+</xsd:enumeration>
+<xsd:enumeration value="5">
+<xsd:annotation>
+<xsd:appinfo>
+<gml:description>港湾管理者なし</gml:description>
+</xsd:appinfo>
+</xsd:annotation>
+</xsd:enumeration>
+<xsd:enumeration value="0">
+<xsd:annotation>
+<xsd:appinfo>
+<gml:description>その他</gml:description>
+</xsd:appinfo>
+</xsd:annotation>
+</xsd:enumeration>
+</xsd:restriction>
+</xsd:simpleType>
+<xsd:simpleType name="PortAdministratorTypeCodeOtherType">
+<xsd:restriction base="xsd:string">
+<xsd:pattern value="other: \w{2,}"/>
+</xsd:restriction>
+</xsd:simpleType>
+</xsd:schema>

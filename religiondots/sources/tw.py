@@ -750,6 +750,10 @@ def main():
                              note=f"TSCS 1994-2018 pooled, n={int(n_by[u])} in this county; {how}; "
                                   f"applied to the MOI register population, end of 2025"))
     out = pd.DataFrame(rows)
+    # Spec §3.13 (Anita, 2026-09-15): `chinesefolk` is folk religion named, or a religious home
+    # altar kept by someone who names no religion. sources/tw_altar.py splits the drawn answers.
+    import tw_altar  # noqa: E402
+    out = tw_altar.apply(out, sys.modules[__name__], zips, sampled)
     drawn = int(out["count"].sum())
     if drawn != total - gap:
         raise SystemExit(f"drawn {drawn:,} against {total - gap:,}")

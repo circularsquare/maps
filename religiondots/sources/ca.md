@@ -468,3 +468,18 @@ are under the same licence.
   spec.md §2.4; the 168 names are StatCan's own strings. Note for whoever does the mapping later
   that **`Messianic Jewish` sits under Christianity in StatCan's tree**, which is the same call
   the US mapping made and flagged in `REVIEW` — the two sources agree, for once.
+
+## 11. Confucian moved off `chinesefolk`, 2026-09-15 (session `cb8b206e-folksplit`)
+
+On Anita's ruling on ask 036 (`ask/RULINGS.md`, `cn`, `all`), `Confucian` (995 nationally, 961 as
+allocated to CSDs) is in `ca2021.LEAF` as `confucianism`. It used to inherit `chinesefolk` from its
+parent `Chinese religions and spiritual traditions`; `Taoist` already left the same group for
+`daoism` the same way.
+
+Kept on `chinesefolk`: `Ancestor veneration` (1,660) and `Chinese religions and spiritual
+traditions, n.i.e.` (4,360).
+
+`tools/check_mapping.py` does not cover Canada (`taxonomy/registry.py` SPECIAL), so the move was
+checked by resolving every national row through the parent chain. The row is derived and under
+one dot nationally, so no dot or ring; legend counts only. Both editions rescattered: 36,230 and
+3,602 dots. The whole change is `sources/folk_practice.md` §11.

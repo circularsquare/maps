@@ -11,18 +11,14 @@ a little house per religion, for the holy site / origin site / headquarters of t
 
 find further breakdowns on all the "indigenous religions" generic groups? 
 
-explain what granularity means: points randomly distributed within region
 
 first time usage guide:
     arrow pointing at christianity like "try clicking christianity row!"
         consider hwo it should look on mobile
 
-start view centered on meridian
+place us sikhs somehow
 
-sikhism color 
 
-make the "unspecified" colors a lot paler when looking at a religion group
-    can move christianity to take ove yellow range maybe
 
 "placed from ethnicity" explanation
     soemthing liek 

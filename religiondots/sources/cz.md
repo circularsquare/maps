@@ -211,3 +211,13 @@ states the licence and it has not been checked against a redistribution of deriv
 - The tradition/institution double-listing, where "islám" is 46× "Ústředí muslimských obcí".
 - The voluntary question's 30% non-response has a 7× spread between municipalities.
 - Write-in residuals outnumber all named churches combined.
+
+## 10. `konfucianismus` moved off `chinesefolk`, 2026-09-15 (session `cb8b206e-folksplit`)
+
+On Anita's ruling on ask 036 (`ask/RULINGS.md`, `cn`, `all`), `konfucianismus` (13 people) maps to
+`confucianism` instead of `chinesefolk` (`taxonomy/cz2021.py`). Czechia had no other row on
+`chinesefolk`; `taoismus` was already on `daoism`.
+
+The count is measured, so it draws a ring. The `confucianism` ring is in both `rings_cz.geojson`
+(18 rings) and `rings_cz_10k.geojson` (31), in place of the old `chinesefolk` one. Dots unchanged:
+7,346 and 726. `check_mapping.py cz` clean. The whole change is `sources/folk_practice.md` §11.

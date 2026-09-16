@@ -2,9 +2,9 @@
 
 **Drawn 2026-09-15** (session `d743fc47-gi`). One unit, the territory; 8 categories; 37,936
 people (the whole usually-resident population); every row `measured`. 34 dots and 2 rings (other
-or not stated, Hindu) at 1:1,000; 2 dots and 7 rings at 1:10,000. The water clip removed 52.7% of
-the hexes' area as sea and left 4 hexes that are over 95% sea whole (`KEEP_WHOLE_ABOVE`); they
-hold 5 to 27 people each, so dots rarely land in them.
+or not stated, Hindu) at 1:1,000; 2 dots and 7 rings at 1:10,000. The placement hexes are cut to
+Gibraltar's land, so no dot can land in Spain or the sea (§5a, since the re-scatter of 2026-09-15;
+the first build placed on whole hexes and one dot fell in La Línea).
 
 - `sources/gi.py` -> `data/normalized/gi.csv` (the report in `data/raw/gi/`, pinned) and
   `data/geo/gi/gi_hexes.gpkg` (Kontur GI 2023-11-01, raw extract in `data/raw/micro/` as the
@@ -138,6 +138,36 @@ add area rows, and the work is a units layer (the seven areas traced from Append
 South District, Institutions spread over the areas or placed at named institutions) and a
 placement layer finer than Kontur.
 
+## 5a. The hexes are cut to Gibraltar's land (2026-09-15, session `d743fc47-fixes`)
+
+The first build placed dots on the 20 whole Kontur hexes, and the scatter's water clip took off
+only the sea. Along the isthmus the hexes run into La Línea, so the Roman Catholic dot the review
+found at -5.3504, 36.1585 (§11) was in Spain. It sat in hex GI:8, 1,220 people, of whose land only
+13.7% is Gibraltar's.
+
+**The outline is OpenStreetMap relation 1278736** (Gibraltar, `admin_level=2`, ODbL), fetched
+in full from the OSM API into `data/raw/gi/osm_relation_1278736.json`. Overpass returned a 504
+and two mirrors timed out on the same day. The relation takes in the territorial sea. The OSM
+water polygons, the layer `water.py` clips with, take it off again, which leaves 6.59 km2 of land
+with its north edge at 36.15492 N on 5.35 W, the frontier fence. Two other outlines were
+measured and not used. Natural Earth's 10m Gibraltar is 7 vertices and 3.69 km2, with 20 of the
+first build's 34 dots outside it. geoBoundaries' gbOpen GIB ADM0, a Sentinel-2 land-cover trace
+(CC BY 4.0), is 6.23 km2 of land and stops at 36.1527 N on 5.35 W, about 250 m short of the fence.
+It would itself have put a dot and two rings outside.
+
+**Each hex keeps the share of its people that its land inside Gibraltar is of all its land**,
+Spanish land included and the sea excluded, as `mt_geo.py` now shares Malta's coastal hexes.
+Two hexes are cut: GI:8 keeps 167 of 1,220 (13.7%) and GI:17 keeps 1,203 of 2,750 (43.8%). GI:9,
+23 people, has no land in Gibraltar and is dropped. That leaves 19 pieces holding 32,285 of
+Kontur's 34,908 people, 0.85 of the census where the whole hexes were 0.92. The weight only places
+the territory's 34 dots, so this moves no count.
+
+`geometry()` stops if the relation's tags change, if its outer ways do not close into one ring,
+if the land is outside 6.3 to 7.0 km2, if the north edge on 5.35 W leaves 36.153 to 36.157, or if
+any piece reaches outside the land. It writes the land as `data/geo/gi/gi_land.gpkg`, and
+`python sources/gi.py --check-dots` asserts every dot and ring of both editions is on it, to 7.2 m.
+That is how far the scatter's 4-decimal coordinates can round.
+
 ## 6. What the table shows
 
 Roman Catholic 63.52% (72.1% in 2012), no religion 14.08% (7.1% in 2012, 2.9% in 2001), Church of
@@ -173,3 +203,27 @@ religious minorities in Gibraltar was made for this build.
 
 The report is a public document of HM Government of Gibraltar, also laid before Parliament; no
 licence text was seen and none was looked for. Kontur Population is CC BY 4.0.
+
+## 11. Review, 2026-09-15 (session `d743fc47-rev8`)
+
+Light pass. `check_md.py` clean, `built_countries.py --check` ok, `check_rollup.py gi` clean
+(37,936 measured, nothing derived).
+
+- **Figures.** Every `note_public` figure recomputes off `gi.csv` and §5's table: 63.5, 14.1,
+  6.7, 5.0, 4.0, 2.8 and 1.8%; 779 people at 2.1%; Town Area 490 and 658 of 3,783 (13.0% and
+  17.4%); the Reclamation Areas 380 of 693 Hindus.
+- **Mapping.** `Other Christian` on the parent: agreed. Across the mapping modules that label is
+  filed about half on `christianity` and half on `christianity.other` (`ca` and `hu` use both).
+  Gibraltar's form, two named churches and then one box, is the shape of the parent side (`be`,
+  `fr`, `uk`, `lk`), not of `bb`'s long named list. `other.gi` with no `gap`, on the shape of ask
+  023's ruling for Iran: agreed.
+- **One unit rather than seven areas**: the builder's call, reasoned in §5, agreed.
+- **Screenshot: one dot looks off, worth a human eye.** A Roman Catholic dot at -5.3504, 36.1585
+  (`dots_gi.geojson`) draws north of the border line, in what reads as La Línea de la
+  Concepción in Spain; the frontier runs just north of the runway. Not diagnosed, nothing
+  rebuilt. The other 33 land on Gibraltar. **Diagnosed and fixed the same day** (session
+  `d743fc47-fixes`): the dot was in a Kontur hex that straddles the frontier, and the hexes are
+  now cut to Gibraltar's land (§5a). Both editions were re-scattered, and `--check-dots` puts every
+  dot and ring on that land. The build tail was not run. Hindu (693) and `other.gi` (779) get no dot at
+  1:1,000 and appear only as rings, which are off by default, so that view's legend lists six
+  rows; that is the carry rule working, not a fault.

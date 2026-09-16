@@ -8,16 +8,40 @@ the answer; *worships the gods* (拜神) is coded as folk religion and *Buddha w
 Buddhism, which is why the Buddhist and folk shares move between cards and why the level is read
 from 2014 and 2018 only.
 
+**Fifteen in `tw.csv` since 2026-09-15 (spec §3.13).** `sources/tw_altar.py` splits the drawn folk
+answer into self-identified (code 021) and the interviewer-coded rest with and without a religious
+home altar, and the no-religion answer by the altar, so `Folk religion` itself no longer reaches
+the file.
+
 Every row is `modelled` (§7). Named for the last round, per the registry convention.
 """
 
 EXCLUDED = {}
 
 REVIEW = {
-    "Folk religion":
-        "-> chinesefolk. The card's four folk codes (self-identified; worships the gods; not "
-        "clearly specified; other folk religion) are one answer. Its node note is Chinese folk "
-        "religion and the syncretic practice censuses cannot separate, which is this exactly.",
+    "Folk religion, self-identified":
+        "-> chinesefolk. Long-card code 021, the respondent volunteers 'folk religion': 4.0% of "
+        "the folk answer in 2014 and 2018, applied nationally. Until 2026-09-15 all four folk "
+        "codes were one answer on this node; spec §3.13 split them (sources/tw_altar.py).",
+    "Folk religion, worships the gods, religious altar at home":
+        "-> chinesefolk, under spec §3.13 (Anita, 2026-09-15): folk religion named, or a religious "
+        "altar kept by someone who names no religion. Codes 022-024 are interviewer-coded, and "
+        "the 2018 report's rules put 'no religion but worships along with my family' on 022, so "
+        "these people did not name folk religion; the ISSP altar item (2009 havshrin, 2014 v27, "
+        "2018 v55) is what puts them here. County rates, shrunk.",
+    "Folk religion, worships the gods, no religious altar":
+        "-> unknown, the node China and Hong Kong use for people who named no religion and whose "
+        "practice this map does not establish. Not `unaffiliated`: the interviewer coded worship "
+        "of the gods, and calling 13% of Taiwan irreligious on that coding would say the "
+        "opposite of it.",
+    "No religious belief, no religious altar":
+        "-> unknown, Anita 2026-09-15 (\"ah yeah we can switch taiwan to unknown\"), so that "
+        "people who name nothing and keep no altar are the same grey in China, Taiwan and Hong "
+        "Kong. Code 010 without a religious altar, 6.35% of Taiwan. The first build that day "
+        "left it on `unaffiliated` as `No religious belief`.",
+    "No religious belief, religious altar at home":
+        "-> chinesefolk, spec §3.13. Code 010 with a religious altar: 47.4% of those answers "
+        "(2009-2018 weighted), at the national rate because the county test missed (p 0.052).",
     "Buddhism and Taoism, or the three teachings":
         "-> chinesefolk, not split between buddhism and daoism. Long-card codes 101-103: both "
         "Buddhism and Taoism, the three teachings in one, other polytheism. Splitting a person "
@@ -51,8 +75,11 @@ REVIEW = {
 }
 
 MAP = {
-    "No religious belief": "unaffiliated",
-    "Folk religion": "chinesefolk",
+    "No religious belief, no religious altar": "unknown",
+    "No religious belief, religious altar at home": "chinesefolk",
+    "Folk religion, self-identified": "chinesefolk",
+    "Folk religion, worships the gods, religious altar at home": "chinesefolk",
+    "Folk religion, worships the gods, no religious altar": "unknown",
     "Buddhism": "buddhism.mahayana",
     "Taoism": "daoism",
     "Buddhism and Taoism, or the three teachings": "chinesefolk",

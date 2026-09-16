@@ -145,6 +145,9 @@ considered and none of them fits cleanly: the resident-Korean population in 2015
 49,705,663, which is closer but still 653,274 away, and the foreign-resident population is
 the wrong size to account for the rest. **It is left unexplained and reported rather than
 absorbed** (§3.5). Anyone who finds the definition should write it here.
+**Since accounted for in §7** (2026-09-15): the table is below the Korean count alone, so it
+leaves out the 1,363,712 foreign residents, and its footnote excludes special enumeration
+districts, which is where the other 653,274 would be. Both are in `gap` now.
 
 ## 6. Not done
 
@@ -156,3 +159,25 @@ absorbed** (§3.5). Anyone who finds the definition should write it here.
   Tonghap assemblies each larger than most European national churches, and the census offers
   one Protestant box. The tree could hold them apart; nothing in KOSIS reaches them.
 - **Anything after 2015.** The question was dropped. This is the final measurement.
+
+## 7. Foreign residents sized for the bar, ask 033 sweep (cb8b206e-gap, 2026-09-15)
+
+On Anita's ruling (`ask/RULINGS.md` 2026-09-15); the sweep's record is `sources.md`
+§gapsweep-2026-09-15.
+
+- **Source.** KOSTAT, *2015 인구주택총조사 표본 집계 결과 (인구, 가구, 주택 기본특성항목)*, press
+  release with PDF and tables workbook (`mods.go.kr` board 203, list_no 358170, opened 2026-09-15).
+  Printed p.44 (PDF p.47) gives the sample's estimation totals: Koreans **49,705,663**, foreigners
+  **1,363,712**. Tables 10 and 12 (printed pp.15 and 17) give the religion total as 49,052 thousand,
+  footnoted 특별조사구제외 (special enumeration districts excluded). Printed p.43: the sample covered
+  Koreans and foreigners alike.
+- **Reading, by arithmetic.** 49,052,389 is below the Korean count alone, so the foreigners cannot be
+  in the religion table. The remaining 653,274 are Koreans outside it; the footnote's special
+  enumeration districts are the stated exclusion, and no printed figure gives their size. No title
+  opened for the religion table says 내국인 (Koreans). The label is set table by table: in the same
+  workbook tables 1 and 2 carry it and table 4 does not, and table 4's 70-74 band is 1,357 larger than
+  table 1's.
+- **Share.** (1,363,712 + 653,274) / 51,069,375 = **0.0395**, §5's 3.95%. The foreigners alone are
+  2.67% and the Koreans outside the table 1.28%; `gap` gives both.
+- **Note.** A paragraph added at the end of `note_public`; the internal `note` and §5 point here.
+  Nothing rebuilt.

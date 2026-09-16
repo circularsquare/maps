@@ -209,6 +209,13 @@ def main():
                         if o != nid and o.startswith(nid + "."))
             size[nid] = tree.counts[nid] - inner
         cols = {nid: hsl_of(table[nid]) for nid in drawn if nid in table}
+        # in a focus view, a node's own dots, once its children are drawn, are the viewer's
+        # FOCUS_UNSPECIFIED shade rather than its table colour (spec §6.16)
+        if args.focus:
+            unspec = pal.get("FOCUS_UNSPECIFIED", {})
+            for nid in list(cols):
+                if nid in unspec and any(o.startswith(nid + ".") for o in drawn):
+                    cols[nid] = tuple(unspec[nid])
 
         print(f"\n{'=' * 70}\n{cc}: {len(drawn)} drawn categories, "
               f"{sum(size.values()):,} dots")

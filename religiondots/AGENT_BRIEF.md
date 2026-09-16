@@ -50,6 +50,9 @@ keeps the reasoning) unless you have a reason not to. Reasons that
 count: it needs an account or a login (skip, it is blocked, see `[[reference_ipums_account]]`);
 another session is working its neighbourhood; the row's own note says it is a browser job.
 "It looks hard" is not a reason — the queue is roughly ordered by what the country would add.
+**Anita's priority, 2026-09-15** (`ask/RULINGS.md`, top line): the biggest visual holes come first,
+even where the queue says closed or blocked (`cd sd ss sa om af cu so bt az pg`); new places under
+about 100k people and single-city splits wait until the rest is exhausted.
 
 ```
 python tools/claim.py take <cc> --id <sid> --note "what you are doing"
@@ -89,13 +92,21 @@ file she keeps open, and it only shows ask files (see `tools/ask.py`). Give ever
 Everything else lives in `sources/<cc>.md`. Anita, 2026-09-14: long reports are more than
 she can keep up with.
 
+**Never end your turn to wait for a background job.** A scatter, a geo build or a Monitor you
+started does not reliably wake you, and on 2026-09-14/15 four agents stopped "waiting for the
+scatter to report" and sat idle until the supervisor noticed. Run long steps in the foreground
+(a 600000 ms timeout covers ten minutes), or poll in the foreground with a short script that
+sleeps and checks the output file. Only report when you are done or parked.
+
 **If the free queue is thin or every row left is walled, switch to SCOUT mode**: take a region
 nothing has swept, probe five or six offices, and write what came back into `queue.md`, a
 `queue.csv` row for each country probed (status `free`, `blocked` or `closed`), and a `sources.md`
 section headed `## scout-<YYYY-MM-DD>-<region>.`. A good scout leaves the next five
 build agents something to do.
 `sources.md`'s existing §11 sweeps are the model. Claim the countries you probe so two scouts do
-not sweep the same band.
+not sweep the same band. **Do the probing yourself and start no agents of your own**: a scout is
+one of the supervisor's slots, and one that fanned out to eight helpers ran past the budget and then
+stopped with nothing to wake it (Anita, 2026-09-15).
 
 **Or re-check an old negative.** `python tools/negatives.py --shape` lists closed records shaped
 like the ones that turned out wrong on 2026-09-14: closed because one release or listing lacked the
@@ -235,7 +246,7 @@ something; `spec.md` §12 is meant to be added to.
   `## <cc>-<YYYY-MM-DD>. <title>`, with `b` after the date if your country already has one that
   day. Cite it as `sources.md §<cc>-<YYYY-MM-DD>`. No new §9 letters: they were claimed
   first-come and collided (spec §12).
-- The `countries/<cc>.py` entry, its code appended to `ORDER` in `countries.py`, with `note_public` and `gap=`, `python tools/gap_share.py <cc>` run
+- The `countries/<cc>.py` entry, its code appended to `ORDER` in `countries.py` **back to back with writing the file, running nothing in between** (until both exist the loader skips your country with a warning on stderr, so anything run in the gap goes without it, and `tools/built_countries.py --check` and `claim.py done` fail on it; draft the entry in your scratch folder first), with `note_public` and `gap=`, `python tools/gap_share.py <cc>` run
   and its figure written if it found one, and `python tools/check_md.py` clean.
 - `python tools/built_countries.py --check` naming nothing.
 - `claim.py done` sets the country's `queue.csv` row to `drawn`; move its `queue.md` row to

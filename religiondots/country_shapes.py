@@ -101,7 +101,25 @@ ISO = {"uk": "GB"}
 # A country `admin_0_countries` does not carry at all, taken whole from the map-units file by
 # GU_A3. The Caribbean Netherlands (Bonaire, Sint Eustatius, Saba) is inside the Netherlands
 # feature there and a unit of its own only in `admin_0_map_units`. Added 2026-09-14 with `bq`.
-FROM_UNITS = {"bq": "NLY"}
+# Tokelau is the same shape: inside New Zealand's countries-file feature, and map unit TKL
+# (ISO_A2 TK). Added 2026-09-15 with `tk`.
+FROM_UNITS = {"bq": "NLY", "tk": "TKL"}
+
+# A territory Natural Earth draws apart from its country, where that country's own source counts
+# it, added to the country's outline by ADM0_A3 in `admin_0_countries`. Without it the dots are
+# drawn and the outline is not: the wash leaves them dark and Auto cannot tell which country the
+# camera is over, because the loop below takes one feature per code and a territory with its own
+# ISO code never matches at all. A territory with its OWN source is its own entry instead (`hk`,
+# `bq`), not a row here. Added 2026-09-15, sources.md §outlines-2026-09-15:
+#   au  IOA, Christmas Island and Cocos (Keeling) Islands (ISO_A2 -99, ISO_A2_EH AU), and NFK,
+#       Norfolk Island (ISO_A2 NF): ABS SA2s 901011001, 901021002 and 901041004, in au.csv.
+#       Coral Sea Islands (CSI) and Ashmore and Cartier Islands (ATC) stay out, because no SA1 of
+#       the ABS geography is within half a degree of either; the loop prints them as left out.
+#   fi  ALD, Åland (ISO_A2 AX): NUTS 3 FI200, in fi.csv.
+#   so  SOL, Somaliland (ISO_A2 -99, "Self admin.; Claimed by Somalia"): COD-AB regions SO11-SO15,
+#       which the 2026 planning estimate counts as Somalia's, in so.csv. Added 2026-09-15 with `so`,
+#       sources/so.md §4; a separate Somaliland entry would take these five regions instead.
+ALSO = {"au": ("IOA", "NFK"), "fi": ("ALD",), "so": ("SOL",)}
 
 ROUND = 3          # ~110 m at the equator, well under this layer's own error
 
@@ -120,7 +138,11 @@ def main():
     from countries import COUNTRIES
 
     ne = json.loads(SRC.read_text(encoding="utf-8"))
-    want = {ISO.get(cc, cc.upper()): cc for cc in COUNTRIES}
+    # An entry with `territory=False` (countries.py) gets no shape: no wash, no outline, and so
+    # nothing for Auto's "which country is the camera over" to find. The Israeli settlements
+    # (`xs`) first, Anita 2026-09-15: people the map draws as part of neither country.
+    shaped = {cc for cc, m in COUNTRIES.items() if m.get("territory", True)}
+    want = {ISO.get(cc, cc.upper()): cc for cc in shaped}
 
     def _clip(cc, geom):
         """Subtract territory the source does not cover. See CLIP."""
@@ -171,9 +193,28 @@ def main():
         feats.append({"type": "Feature", "properties": {"cc": cc, "rg": rg},
                       "geometry": _round(json.loads(shapely.to_geojson(g)))})
 
-    feats, seen = [], set()
+    # ALSO's territories, gathered first so the loop can add them to their country's outline.
+    both = sorted(set(ALSO) & (set(SPLIT) | set(FROM_UNITS)))
+    if both:
+        raise SystemExit(f"{both} in ALSO and in SPLIT or FROM_UNITS; ALSO only extends a "
+                         "countries-file outline")
+    also_cc = {a3: cc for cc, a3s in ALSO.items() if cc in shaped for a3 in a3s}
+    also = {}
+    for f in ne["features"]:
+        a3 = str(f["properties"].get("ADM0_A3") or "").strip()
+        if a3 in also_cc:
+            also.setdefault(also_cc[a3], []).append(
+                (a3, f["properties"].get("ADMIN"), shapely.geometry.shape(f["geometry"])))
+    missing_a3 = sorted(set(also_cc) - {a3 for parts in also.values() for a3, _, _ in parts})
+    if missing_a3:
+        raise SystemExit(f"no countries-file feature with ADM0_A3 in {missing_a3}; Natural "
+                         "Earth has been revised, see ALSO in country_shapes.py")
+
+    feats, seen, left_out = [], set(), []
     for f in ne["features"]:
         p = f["properties"]
+        if str(p.get("ADM0_A3") or "").strip() in also_cc:
+            continue            # joins its country's outline below, never stands for it
         # NE carries -99 in ISO_A2 for a handful of countries and puts the real code in
         # ISO_A2_EH; check both rather than trusting either.
         for key in ("ISO_A2", "ISO_A2_EH"):
@@ -181,11 +222,23 @@ def main():
             if code in want:
                 cc = want[code]
                 if cc in seen:
+                    # A second feature for a code is left out. Said out loud, because Australia's
+                    # external territories were left out this way with their dots drawn (ALSO).
+                    left_out.append(f"{cc}: {p.get('ADMIN')} ({p.get('ADM0_A3')}, "
+                                    f"POP_EST {p.get('POP_EST')})")
                     break
                 seen.add(cc)
                 if cc not in SPLIT:
-                    emit(feats, cc, cc, shapely.geometry.shape(f["geometry"]))
+                    geom = shapely.geometry.shape(f["geometry"])
+                    if also.get(cc):
+                        print(f"  {cc}: outline adds "
+                              + ", ".join(f"{name} ({a3})" for a3, name, _ in also[cc]))
+                        geom = shapely.union_all([geom] + [g for _, _, g in also[cc]])
+                    emit(feats, cc, cc, geom)
                 break
+    if left_out:
+        print("  left out of a matched country's outline (add to ALSO if its source counts "
+              "people there):\n    " + "\n    ".join(left_out))
 
     # The split countries, from the map-units file, one feature per census rather than one
     # per country.
@@ -223,7 +276,7 @@ def main():
         seen.add(cc)
         emit(feats, cc, cc, geom)
 
-    missing = sorted(set(COUNTRIES) - seen)
+    missing = sorted(shaped - seen)
     if missing:
         raise SystemExit(f"no Natural Earth polygon for {missing} — check the ISO table "
                          "in country_shapes.py")

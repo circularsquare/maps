@@ -55,6 +55,9 @@ OVERRIDE = {
     # Two vintages on disk since 2026-09-14: pk2017.py (USCB, the 2017 census) is kept, and
     # pk2023.py (PBS Table 9, the 2023 census) is what countries.py draws. sources/pk.md §9.
     "pk": "pk2023",
+    # Two vintages on disk since 2026-09-15: ug2002.py (Table B7, 56 districts) is kept, and
+    # ug2024.py (the NPHC 2024 10% sample, subcounties) is what countries.py draws. sources/ug.md.
+    "ug": "ug2024",
 }
 
 

@@ -39,6 +39,7 @@ import json
 import math
 import os
 import sys
+import threading
 from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 
@@ -48,7 +49,11 @@ from pmtiles.writer import Writer
 from pmtiles.tile import Compression, TileType, zxy_to_tileid
 
 import mvt
-from countries import COUNTRIES
+
+# NOT `from countries import COUNTRIES` up here; main() imports it. Windows starts each --jobs
+# worker by re-running this file's top level, so a module-level import made every worker load all
+# of countries.py again, for nothing, and die if another session had half-registered a country
+# since the parent started. One did on 2026-09-15 and the build tail hung (_worker_failed).
 
 # Windows consoles here are cp1252 and the data is not: source names, categories and country
 # notes carry Č, š, ú, ł and much else. Without this the script dies inside a print() after the
@@ -204,6 +209,70 @@ def _chunk(tasks, jobs):
     return [tasks[i:i + size] for i in range(0, len(tasks), size)]
 
 
+_FAILING = threading.Lock()      # _worker_failed reports once, whichever thread gets there first
+
+
+@contextlib.contextmanager
+def _watching(pool):
+    """Run _watch_workers for the life of the block. Leaving it stops the watcher BEFORE the pool
+    shuts down, so workers exiting normally at shutdown are not read as a failure, and an error in
+    the parent keeps its own traceback."""
+    if pool is None:
+        yield
+        return
+    stop = threading.Event()
+    t = threading.Thread(target=_watch_workers, args=(pool, stop), daemon=True,
+                         name="tiles-worker-watch")
+    t.start()
+    try:
+        yield
+    finally:
+        stop.set()
+        t.join()
+
+
+def _worker_failed(pool, what):
+    """End the run now, with a message and exit status 1, after a tile worker failed.
+
+    NOT BY RAISING. On this Python (3.9) a ProcessPoolExecutor whose worker dies while the call
+    queue holds tile payloads can deadlock: the parent's feeder thread blocks writing to a pipe
+    no worker will read, and both leaving `with pool:` and interpreter exit wait on it. That is
+    how a build tail sat for 45 minutes with no output on 2026-09-15, and it reproduces in
+    isolation (6 workers, 48 chunks of 8 MB, the workers dying at import). os._exit skips those
+    joins. OUT is only replaced after a whole build, so what is left is a scrap .tmp beside it.
+    """
+    if not _FAILING.acquire(blocking=False):
+        threading.Event().wait()          # the other thread is already ending the process
+    print(f"\n!! tiles.py FAILED: {what}\n   {OUT.name} was not touched; {OUT.name}.tmp beside it "
+          f"is scrap. --jobs 1 runs the encoding inline if the traceback needs to be clearer.",
+          file=sys.stderr, flush=True)
+    for p in list((getattr(pool, "_processes", None) or {}).values()):
+        try:
+            p.terminate()
+        except Exception:
+            pass
+    sys.stdout.flush()
+    os._exit(1)
+
+
+def _watch_workers(pool, stop):
+    """From a thread: end the run if any tile worker process exits before `stop` is set.
+
+    Catching the exception out of map() is not enough on its own, because with payloads this
+    size the executor can deadlock before the parent ever sees BrokenProcessPool
+    (_worker_failed). A worker never exits mid-run on 3.9, which has no max_tasks_per_child, so
+    any exit at all is a failure. `_processes` is the executor's private map of its workers."""
+    seen = {}
+    while not stop.wait(1.0):
+        for p in list((getattr(pool, "_processes", None) or {}).values()):
+            seen[p.pid] = p
+        dead = [p for p in seen.values() if p.exitcode is not None]
+        if dead and not stop.is_set():
+            _worker_failed(pool, "; ".join(f"worker process {p.pid} exited with code {p.exitcode}"
+                                           for p in dead)
+                           + " (its own error message, if it printed one, is above)")
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--min-zoom", type=int, default=0)
@@ -229,6 +298,8 @@ def main():
                          "runs it inline, which is what to do when a traceback out of a "
                          "worker is hiding where the problem is.")
     args = ap.parse_args()
+    # Here and not at the top of the file: see the note under `import mvt`.
+    from countries import COUNTRIES
 
     if args.refresh_meta:
         path = PROC / "counts.json"
@@ -263,6 +334,9 @@ def main():
             entry["gap"] = meta.get("gap", "")
             # spec §10.4: absent for most countries, and the viewer tests for a number
             entry["gap_share"] = meta.get("gap_share")
+            # countries.py `territory`: False for an entry that is part of no country (the Israeli
+            # settlements), which the viewer's Auto never picks and country_shapes.py never draws
+            entry["territory"] = bool(meta.get("territory", True))
             # the data bbox stays whatever the build measured; only the framing is editable
             entry["view"] = list(meta.get("view") or entry.get("bbox") or [])
             print(f"  {cc}: {entry['name']}  view {[round(v, 1) for v in entry['view']]}")
@@ -368,6 +442,7 @@ def main():
                 "grain": meta.get("grain", ""),
                 "gap": meta.get("gap", ""),
                 "gap_share": meta.get("gap_share"),
+                "territory": bool(meta.get("territory", True)),
                 "bbox": box,
                 "view": list(meta.get("view") or box),
                 "dots": d["n"].value_counts().to_dict(),
@@ -462,7 +537,7 @@ def main():
     tmp = OUT.with_suffix(OUT.suffix + ".tmp")
     pool_ctx = (ProcessPoolExecutor(max_workers=args.jobs) if args.jobs > 1
                 else contextlib.nullcontext())
-    with pool_ctx as pool, open(tmp, "wb") as f:
+    with pool_ctx as pool, open(tmp, "wb") as f, _watching(pool):
         w = Writer(f)
         # ZOOM IS THE OUTER LOOP, and that is the difference between a 600 MB build and a
         # 3.5 GB one. Every tile id at zoom z sorts below every tile id at z+1, so a zoom
@@ -534,11 +609,20 @@ def main():
             # `tasks` is already in tile-id order and map() returns chunk results in
             # order, so the archive stays clustered with no re-sort. Nothing is shared:
             # each chunk carries copies of its own slices.
-            for blobs in (map(_encode_chunk, _chunk(tasks, args.jobs))
-                          if pool is None else
-                          pool.map(_encode_chunk, _chunk(tasks, args.jobs))):
-                for tid, blob in blobs:
-                    w.write_tile(tid, blob)
+            try:
+                for blobs in (map(_encode_chunk, _chunk(tasks, args.jobs))
+                              if pool is None else
+                              pool.map(_encode_chunk, _chunk(tasks, args.jobs))):
+                    for tid, blob in blobs:
+                        w.write_tile(tid, blob)
+            except Exception as e:
+                if pool is None:
+                    raise
+                # A worker's own exception, or BrokenProcessPool from one that died. Raising it
+                # would leave through `with pool:`, which can hang (_worker_failed).
+                import traceback
+                traceback.print_exc()
+                _worker_failed(pool, f"encoding z{z}: {type(e).__name__}: {e}")
             n_tiles += len(touched)
             print(f"  z{z:<2} {len(touched):>6,} tiles   " + "  |  ".join(report))
 

@@ -185,9 +185,14 @@ NOT_ASSERTED = {
         "question: ask Chinese respondents to name a religion and about 92% name none (CGSS "
         "2021), ask instead about ancestor rites, temple visits and belief in deities and "
         "most of it comes back -- Pew's *Measuring Religion in China* puts Buddhism alone at "
-        "4% by self-identification and 33% by belief, from the same two instruments. A dot "
-        "map cannot hold both answers and spec §3.1 says pick a basis. `chinesefolk` is "
-        "still the node waiting for them if that ever changes.",
+        "4% by self-identification and 33% by belief, from the same two instruments. "
+        "**Spec §3.13 (2026-09-15) made the one exception, for `chinesefolk`**: downstream of "
+        "this file, `countries/cn.py` carves folk religion NAMED out of every row's residual "
+        "(`sources/cn_cgss.py`) and then a religious home altar out of THIS row's residual "
+        "alone, at the Han no-religion respondents' own province rate (`sources/cn_altar.py`). "
+        "This row still resolves to `unknown` here; about 160M of it is drawn as folk "
+        "religion there. The other nationalities get no altar share, for the reason in "
+        "sources/cn.md §11.",
     "Unidentified":
         "734,438 people the census could not assign to any of the 56 nationalities, "
         "overwhelmingly in Guizhou. No religion follows from 'not classified' -- and none "
@@ -440,7 +445,7 @@ REVIEW = {
         "row makes China the largest country on the map, and the reason the map can carry "
         "it honestly is that `unknown` says nothing -- if anybody is ever tempted to split "
         "it, spec §14.7's 'refusing to draw the boundary is the point' is the sentence to "
-        "read first.",
+        "read first, and then spec §3.13, the one exception to it (see NOT_ASSERTED).",
 }
 
 

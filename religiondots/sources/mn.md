@@ -299,3 +299,97 @@ national figures to within 0.15 points is itself evidence the hole does not bias
 **These corrections are in `countries.py` only.** `tiles.py` bakes `note_public` into the counts
 JSON, so the text a reader sees updates on the next build tail run, which any country landing
 after this will do. No build was run from this session.
+
+
+## 11. Ulaanbaatar drawn by düüreg, 2026-09-15
+
+Session `cb8b206e-mn`, on the lead in `sources.md` §scout-2026-09-15-upgrades. Code:
+`sources/mn_ub.py` (the reader), `sources/mn.py::read_ub` (the city checks and the rows),
+`sources/mn_grid.py::split_capital` (placement).
+
+**What is drawn now.** 19 aimags and the capital's 9 düüregs, 28 units, 2,067,774 adults on the
+same six nodes; 2,064 dots at 1:1,000 and 204 at 1:10,000. `mn.csv` carries no city-wide
+Ulaanbaatar row (geo_level `duureg` replaces it), so `tools/check_mapping.py::DEFAULT_LEVELS` has
+`mn: aimag, duureg`. §9's national reconstruction moves by 0.05 points at most (Buddhist 51.81% to
+51.86%).
+
+**Source.** `data/raw/mn/aimags/Ulaanbaatar_XAOCT_Negdsen_dun.pdf`. Зураг 3.5 (PDF p.54): the
+share of people aged 15 and over who practise a religion, by düüreg. Зураг 3.6 (PDF p.55): the
+religious by type, by düüreg. Nothing else in the volume crosses religion with düüreg.
+
+**Measured off the drawing, not by pixel.** Both charts are vector: every bar and segment is a
+filled rectangle (figure 3.6: Будда `#d8c0cc`, Христ `#965777`, Ислам `#b08199`, Бөө `#7c2d55`,
+Бусад `#808285`, read off the legend swatches; figure 3.5: one fill, `#be96aa`). The value
+labels, row names and legend words are glyph outlines with no text layer. So:
+
+- shares are widths at one scale per chart, fitted by least squares through the origin on the
+  printed labels, which were read by eye off 300 dpi renders. The worst label against its own
+  segment is 0.013 points on 3.5 and 0.030 on 3.6. Songinokhairkhan's 3.5 label runs under the
+  city-average callout and is checked but not fitted.
+- the scale is fixed, not per row. Baganuur's bar is 0.09% wider than the others because its
+  printed values sum to 100.1; normalising each bar to 100 read its Buddhist share as 85.4
+  against a printed 85.5.
+- the transcribed row names and legend words are checked by glyph path signature: 26 distinct
+  outlines, each standing for one letter across all 23 strings on both charts.
+- each printed label must lie inside the segment of the religion it is credited to.
+- the city-average line on 3.5 measures 53.06 against its printed 53.7, so that callout is placed
+  by hand and is not used.
+
+| düüreg | aged 15+ | religious % | Buddhist | Christian | Muslim | Shamanist | other |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| Baganuur | 19,878 | 51.30 | 85.50 | 5.99 | 0.43 | 7.77 | 0.41 |
+| Bagakhangai | 2,809 | 47.11 | 95.52 | 1.89 | 0 | 2.60 | 0 |
+| Bayangol | 151,891 | 55.41 | 91.59 | 2.92 | 0.68 | 3.82 | 1.00 |
+| Bayanzürkh | 244,078 | 50.51 | 87.99 | 3.99 | 0.93 | 5.49 | 1.60 |
+| Nalaikh | 25,321 | 55.30 | 77.69 | 4.31 | 13.59 | 4.03 | 0.39 |
+| Songinokhairkhan | 220,200 | 55.11 | 90.31 | 2.28 | 0.39 | 5.31 | 1.71 |
+| Sükhbaatar | 99,850 | 52.70 | 88.99 | 3.60 | 0.39 | 6.42 | 0.61 |
+| Khan-Uul | 122,927 | 53.19 | 89.10 | 3.32 | 0.57 | 5.42 | 1.60 |
+| Chingeltei | 102,450 | 58.19 | 89.31 | 3.17 | 0.11 | 6.92 | 0.50 |
+
+The type shares are of the religious. Against the scout's pixel reading, the widths move
+Bagakhangai's Christian from 1.8 to 1.89 (its Muslim and other have no segment at all, so 0),
+Nalaikh's other from 0.3 to 0.39 and Sükhbaatar's other from 0.5 to 0.61; the rest agree within
+0.1. Baganuur's Muslim 0.43 and Khan-Uul's 0.57 sit within 0.03 of a rounding boundary, so the
+chart cannot say which one-decimal value lies under them; the width is used, and the difference
+is a few dozen people.
+
+**Nalaikh's 13.6 is Islam.** The prose (PDF p.20) says Christian, and gives the Kazakhs living
+there as the reason. The chart's segment is in the Islam fill, the `13.6` label sits inside it,
+Christian is a separate 4.3, and the city check below fails on the prose's reading.
+
+**Denominator: appendix table 1.1 (PDF p.211)**, resident population by düüreg and five-year age
+group, printed in two blocks so every düüreg appears twice; which block is which is settled by the
+fifteen bands summing to the total. Tables 1.2 (men) and 1.3 (women) are read the same way and add
+to 1.1 in every cell, and the nine düüregs give 1,466,125 residents and 989,404 aged 15 and over,
+the national report's Ulaanbaatar row exactly. **Trap:** table 1.2 prints Songinokhairkhan's men
+aged 45-49 as `9145`, with no thousands space (PDF p.212). `sources/mn.py::_rows` reads a number
+only as one-to-three-digit groups, filed the cell in the row label and shifted the row a column;
+`mn_ub.py::_table_rows` takes four digits and the identities check it (18,789 less 9,644).
+
+**The city check.** Weighting each düüreg's shares by its adults gives 53.76% religious (printed
+53.7), and Buddhist 89.17 (89.1), Christian 3.26 (3.3), Muslim 0.90 (0.9), Shamanist 5.43 (5.4),
+other 1.25 (1.3): worst 0.07 against a 0.15 bar. With Nalaikh's 13.6 as Christian it gives Muslim
+0.65 and Christian 3.51, off by 0.25, and fails. None of 2,000 shuffles of the populations among
+the düüregs passes. The düüregs are not raked to the city's printed tables: the differences are
+inside those tables' one-decimal rounding.
+
+**Join and placement.** COD-AB's nine children of MN11 carry exactly the Cyrillic names the charts
+and table 1.1 print, and the volume's per-düüreg appendix tables 1.4 to 1.12 run in COD's pcode
+order (`mn_ub.py::check_join`). All 3,401 Kontur hexes assigned to Ulaanbaatar have their centroid
+inside a düüreg polygon, none snapped. Kontur against table 1.1 per düüreg, normalised by the
+city's own ratio (1.290): Bayangol 0.77, Khan-Uul 0.80, Bayanzürkh 0.84, Sükhbaatar 0.94, Nalaikh
+0.95, Baganuur 0.98, Bagakhangai 1.03, Chingeltei 1.17, Songinokhairkhan 1.40. None is outside a
+factor of two (the bar was at most one, set before reading), against a median 6 of 9 on a shuffled
+join. `kontur_cap.py mn`: no stops.
+
+**Sampling.** The 10% long form puts about 280 of Bagakhangai's 2,809 adults in the sample and
+about 130 religious answers under its type split, so its 1.89% Christian is two or three people.
+Baganuur, at about 2,000 adults sampled, is the next smallest.
+
+**Also fixed.** `taxonomy/mn2020.py` REVIEW quoted Ulaanbaatar's Christians as 4.9% of the
+religious. That is the capital's 2010 column; the 2020 figure, which the map has always drawn, is
+3.3.
+
+**Still open.** Darkhan-Uul and Dundgovi (§7). The note's "about 280" is an expectation on a
+household sample, as §10.1 says of the national figure.

@@ -475,6 +475,109 @@ def _read_type(doc, path):
                      f"distribution over {CATEGORIES} summing to 100.0")
 
 
+CITY = "MN11"
+CITY_TOL = 0.15      # a share rebuilt from the nine düüregs against the city's printed one
+
+
+def _ub_city(p15, rel, types):
+    """The city-wide religious share and type shares the nine düüregs add up to."""
+    adults = sum(p15.values())
+    religious = {n: p15[n] * rel[n] / 100.0 for n in p15}
+    r = 100.0 * sum(religious.values()) / adults
+    t = {c: 100.0 * sum(religious[n] * types[n][c] / 100.0 for n in p15)
+         / sum(religious.values()) for c in CATEGORIES}
+    return r, t
+
+
+def read_ub(city_total, city_pop15, city_rel, city_types):
+    """Ulaanbaatar's nine düüregs as mn.csv rows (sources/mn_ub.py), checked against the city.
+
+    Three checks, each of which the reader itself cannot make:
+
+      1. the nine düüregs' resident and 15-and-over populations, from the UB volume's appendix
+         table 1.1, equal the national report's own Ulaanbaatar row exactly;
+      2. weighting each düüreg's measured shares by those adults gives back the city's printed
+         53.7% religious (table 3.5) and its five type shares (table 3.6) within CITY_TOL;
+      3. and check 2 HAS POWER on the one trap the volume sets: moving Nalaikh's 13.6 from
+         Islam to Christian, as its prose does, must fail it.
+    """
+    import random
+    import mn_ub as UB
+
+    pop, rel, types, rep = UB.read()
+    print(f"\n  Ulaanbaatar by düüreg ({os.path.basename(UB.PDF)}):")
+    print(f"    ЗУРАГ 3.5 (PDF p.{rep['fig35']['page']}) and 3.6 (p.{rep['fig36']['page']}) "
+          f"measured off their rectangles; worst printed label against its own width "
+          f"{rep['fig35']['worst']:.3f} and {rep['fig36']['worst']:.3f} points")
+    print(f"    {rep['outlines']} distinct glyph outlines decode the transcribed row and legend "
+          f"names without a conflict; the volume's {rep['join_tables']} per-düüreg tables "
+          "run in COD's pcode order")
+
+    ok = True
+    tot = sum(v[0] for v in pop.values())
+    p15 = {n: v[1] for n, v in pop.items()}
+    good = tot == city_total and sum(p15.values()) == city_pop15
+    ok &= good
+    print(f"  {'OK ' if good else 'BAD'} appendix table 1.1's nine düüregs: {tot:,} residents "
+          f"and {sum(p15.values()):,} aged 15+, against the national report's {city_total:,} "
+          f"and {city_pop15:,}")
+
+    r, t = _ub_city(p15, rel, types)
+    worst = max([abs(r - city_rel)] + [abs(t[c] - city_types[c]) for c in CATEGORIES])
+    good = worst <= CITY_TOL
+    ok &= good
+    print(f"  {'OK ' if good else 'BAD'} the düüregs rebuild the city: religious {r:.2f} "
+          f"(printed {city_rel}); " + ", ".join(f"{c} {t[c]:.2f} ({city_types[c]})"
+                                                 for c in CATEGORIES)
+          + f"; worst {worst:.2f} against {CITY_TOL}")
+
+    swapped = {n: dict(v) for n, v in types.items()}
+    na = swapped["Налайх"]
+    na["Христ"], na["Ислам"] = na["Ислам"], na["Христ"]
+    _, ts = _ub_city(p15, rel, swapped)
+    sw = max(abs(ts[c] - city_types[c]) for c in CATEGORIES)
+    good = sw > CITY_TOL
+    ok &= good
+    print(f"  {'OK ' if good else 'BAD'} the check has power on the prose's reading: Nalaikh's "
+          f"13.6 as Christian rebuilds Islam {ts['Ислам']:.2f} and Christian {ts['Христ']:.2f}, "
+          f"off by {sw:.2f}")
+
+    # Printed, not asserted: how often a shuffle of the populations among the düüregs would
+    # pass check 2 too ([[reference_check_needs_power]]). The shares are much alike outside
+    # Nalaikh, so this is expected to pass often; it says check 2 is about Nalaikh, not about
+    # the join, which check_join and the Kontur band in mn_grid.py carry.
+    rng, names, passed = random.Random(0), list(p15), 0
+    for _ in range(2000):
+        sh = names[:]
+        rng.shuffle(sh)
+        rr, tt = _ub_city({a: p15[b] for a, b in zip(names, sh)}, rel, types)
+        passed += max([abs(rr - city_rel)] + [abs(tt[c] - city_types[c])
+                                               for c in CATEGORIES]) <= CITY_TOL
+    print(f"      (a shuffle of the düüregs' populations passes check 2 in {passed / 20:.0f}% "
+          "of 2,000 draws)")
+    if not ok:
+        raise SystemExit("Ulaanbaatar düüreg reconciliation FAILED")
+
+    rows = []
+    for code, (name, latin) in UB.DUUREG.items():
+        n15, r_d = p15[name], rel[name]
+        counts = {NOT_RELIGIOUS: n15 * (100.0 - r_d) / 100.0}
+        for cat in CATEGORIES:
+            counts[cat] = n15 * r_d / 100.0 * types[name][cat] / 100.0
+        for cat, n in counts.items():
+            rows.append({"geo_id": code, "geo_level": "duureg",
+                         "geo_name": f"Ulaanbaatar {latin}", "source_category": cat,
+                         "count": int(round(n)), "basis": BASIS, "year": YEAR,
+                         "source_id": SOURCE_ID,
+                         "note": (f"pop15={n15}; religious_pc={r_d:.2f}; UB volume figures 3.5 "
+                                  "and 3.6, measured")})
+        rows.append({"geo_id": code, "geo_level": "duureg",
+                     "geo_name": f"Ulaanbaatar {latin}", "source_category": TOTAL_CAT,
+                     "count": n15, "basis": BASIS, "year": YEAR, "source_id": SOURCE_ID,
+                     "note": "universe total (population aged 15 and over), not a category"})
+    return rows
+
+
 def read():
     import fitz
 
@@ -494,6 +597,13 @@ def read():
             none_pc, rel_pc = _read_status(doc, path)
         types, order = _read_type(doc, path)
 
+        report.append((pcode, name, pop_all, pop15, none_pc, rel_pc, types, order))
+        # THE CAPITAL IS DRAWN BY DÜÜREG (2026-09-15), from its own volume's figures 3.5 and
+        # 3.6; its city-wide tables, read above, are kept only as the check on them.
+        if pcode == CITY:
+            out.extend(read_ub(pop_all, pop15, rel_pc, types))
+            continue
+
         counts = {NOT_RELIGIOUS: pop15 * none_pc / 100.0}
         for cat in CATEGORIES:
             counts[cat] = pop15 * rel_pc / 100.0 * types[cat] / 100.0
@@ -507,7 +617,6 @@ def read():
                     "source_category": TOTAL_CAT, "count": pop15,
                     "basis": BASIS, "year": YEAR, "source_id": SOURCE_ID,
                     "note": "universe total (population aged 15 and over), not a category"})
-        report.append((pcode, name, pop_all, pop15, none_pc, rel_pc, types, order))
     return out, report
 
 

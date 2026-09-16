@@ -1,0 +1,6 @@
+# Everything under data/ is downloaded or derived. fetch.py holds the exact URL of every raw
+# file and the build scripts rebuild the rest, so the recipe is version-controlled even
+# though the bytes are not. The .pmtiles goes to the R2 bucket when published, never to git.
+data/
+
+__pycache__/

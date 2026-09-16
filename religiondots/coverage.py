@@ -134,16 +134,16 @@ def coverage():
     # and Sikhism would all be absent from Hong Kong's coverage while dots sat on every one
     # of them — §6.12's wash saying "not asked" over a religion that is on screen.
     #
-    # **Selecting Judaism or chinesefolk therefore leaves Hong Kong unlit, and that is
-    # right.** Hong Kong has both. Its census does not ask, and the one survey drawn here
-    # offers no folk answer at all, so an unlit Hong Kong says "not asked" where a lit one
-    # with no dots would say "asked, and nobody is there" — which for folk religion in Hong
-    # Kong would be the most misleading thing this map could say, since the same survey finds
-    # 56% of the territory practising it.
+    # **Selecting Judaism therefore leaves Hong Kong unlit, and that is right**: its census does
+    # not ask and the survey offers no Jewish answer, so unlit says "not asked". `chinesefolk`
+    # was unlit for the same reason until spec §3.13 (2026-09-15) drew it from a religious home
+    # altar among the people the survey leaves grey. `ALTAR_FOLK_NODE` is applied in
+    # countries.py::_hk_counts, downstream of here, so it is added by hand like SURVEY_NODES.
     hk = importlib.import_module("hk2021")
     hk_cats = set(hk.DERIVED) | set(hk.NOT_ASSERTED) | set(hk.EXCLUDED)
     out["hk"] = _clean(node for c in hk_cats for node, _s, _t in hk.shares(c))
     out["hk"] |= _clean(hk.SURVEY_NODES.values())
+    out["hk"] |= _clean([hk.ALTAR_FOLK_NODE])
 
     # The United States is two instruments (§3.5a): ASARB's 372 bodies, plus Pew for the
     # self-identification re-basing. A Pew category maps to a TUPLE of paths, not one.
@@ -196,9 +196,23 @@ def coverage():
     for cc, other in (("es", "other.es"), ("gr", "other.gr"), ("fr", "other.fr"),
                       ("it", "other.it"), ("fi", "other.fi"), ("be", "other.be"),
                       ("se", "other.se"), ("no", "other.no"), ("dk", "other.dk"),
-                      ("lv", "other.lv")):
+                      ("lv", "other.lv"), ("is", "other.is"), ("ma", "other.ma"),
+                      ("mr", "other.mr"), ("sa", "other.sa"), ("om", "other.om")):
+        # Oman, added 2026-09-15 before its scatter: 2,283,279 expatriates on the end-2024 register's
+        # national nationality mixes for male workers, female workers and dependants (sources/om.py).
+        # Saudi Arabia, added 2026-09-15 before its scatter: 13,382,962 non-Saudis on the 2022
+        # census's national nationality mix by sex (sources/sa.py).
+        # Mauritania, added 2026-09-15 before its scatter: 125,933 foreign residents on the 2023
+        # census's national nationality groups (sources/mr.py).
+        # Morocco, added 2026-09-15 before its scatter: 148,152 foreign residents on HCP's
+        # national nationality mix (sources/ma.py).
         if cc in out:
             out[cc] |= origin.nodes(other)
+    # Mauritania's refugees take Mali's 2022 census answers rather than origin_religion's model
+    # (sources/mr.py ML_NODE_FOLD, 2026-09-15), and Mali's `Autre religion chrétienne` box is a
+    # node that model never emits.
+    if "mr" in out:
+        out["mr"].add("christianity.other")
     return out
 
 

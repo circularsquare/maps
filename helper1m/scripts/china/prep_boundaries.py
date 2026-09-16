@@ -36,9 +36,68 @@ OUT = REPO_ROOT / "helper1m/data/china/boundaries"
 # Chinese column names in the source shapefile.
 COL = {1: "省", 2: "市", 3: "县", 4: "乡"}
 
+# The source is mid-2014 (昌都地区 is still a 地区, 日喀则地区 already is not), so
+# it predates a handful of administrative changes. They are applied before the
+# dissolve because the codes are positional: a county's code is its prefecture's
+# plus two digits, so its parent has to be right before anything is numbered.
+
+# Counties that genuinely moved to another prefecture. Each one puts its whole
+# population under the wrong adm2 unit until it is fixed — invisible at province
+# and county level, and only visible at adm2.
+COUNTY_MOVES = {
+    ("四川省", "资阳市", "简阳市"): "成都市",      # 2016
+    ("吉林省", "四平市", "公主岭市"): "长春市",     # 2020
+    ("安徽省", "六安市", "寿县"): "淮南市",        # 2016
+    ("安徽省", "安庆市", "枞阳县"): "铜陵市",      # 2016
+    # Laiwu was abolished into Jinan in 2019. Both of its districts move, which
+    # dissolves the prefecture rather than leaving it holding a single county.
+    ("山东省", "莱芜市", "莱城区"): "济南市",
+    ("山东省", "莱芜市", "钢城区"): "济南市",
+}
+
+# Prefectures upgraded from 地区 to 市 between 2014 and 2016. The counties under
+# them were already grouped correctly; only the label was stale.
+PREFECTURE_RENAMES = {
+    ("西藏自治区", "昌都地区"): "昌都市",
+    ("西藏自治区", "那曲地区"): "那曲市",
+    ("西藏自治区", "山南地区"): "山南市",
+    ("西藏自治区", "林芝地区"): "林芝市",
+    ("新疆维吾尔自治区", "吐鲁番地区"): "吐鲁番市",
+    ("新疆维吾尔自治区", "哈密地区"): "哈密市",
+}
+
 
 def log(msg):
     print(f"[{time.strftime('%H:%M:%S')}] {msg}", flush=True)
+
+
+def apply_admin_changes(gdf):
+    """Move counties to their current prefecture and refresh renamed ones.
+
+    Every entry is asserted to match something: a typo in a Chinese name would
+    otherwise do nothing at all and leave the county quietly misfiled.
+    """
+    prov, pref, cnty = COL[1], COL[2], COL[3]
+
+    keys = list(zip(gdf[prov], gdf[pref], gdf[cnty]))
+    for key, target in COUNTY_MOVES.items():
+        hit = [i for i, k in zip(gdf.index, keys) if k == key]
+        if not hit:
+            raise SystemExit(f"COUNTY_MOVES entry matches nothing: {key}")
+        gdf.loc[hit, pref] = target
+        log(f"  moved {key[2]} from {key[1]} to {target} ({len(hit)} townships)")
+
+    # After the moves, so a county that has just left a prefecture is not also
+    # renamed by it.
+    keys = list(zip(gdf[prov], gdf[pref]))
+    for key, target in PREFECTURE_RENAMES.items():
+        hit = [i for i, k in zip(gdf.index, keys) if k == key]
+        if not hit:
+            raise SystemExit(f"PREFECTURE_RENAMES entry matches nothing: {key}")
+        gdf.loc[hit, pref] = target
+        log(f"  renamed {key[1]} to {target} ({len(hit)} townships)")
+
+    return gdf
 
 
 def assign_codes(gdf):
@@ -72,6 +131,7 @@ def main():
         log(f"  repairing {int(invalid.sum())} invalid geometries")
         gdf.loc[invalid, "geometry"] = shapely.make_valid(gdf.loc[invalid, "geometry"])
 
+    gdf = apply_admin_changes(gdf)
     gdf = assign_codes(gdf)
 
     # Latin names — one romanisation per distinct Chinese name, not per row.

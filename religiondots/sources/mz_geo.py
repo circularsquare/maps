@@ -140,5 +140,95 @@ def main():
     print(f"wrote {LOOKUP}")
 
 
+UNITS_OUT = os.path.join(OUT_DIR, "mz_units.gpkg")
+UNITS_CSV = os.path.join(OUT_DIR, "mz_units.csv")
+ADM3_SHP = os.path.join(SHP_DIR, "moz_admin3.shp")
+FITTED = os.path.join(ROOT, "data", "normalized", "mz_districts.csv")
+# The two provinces with no captured 2007 district volume, drawn whole from 2017's Quadro 11.
+WHOLE_PROVINCES = ("MZ02", "MZ06")   # Cabo Delgado, Manica
+AREA_TOL = 0.01
+
+
+def build_units():
+    """The drawn units: 2007 districts in nine provinces, and Cabo Delgado and Manica whole.
+
+    Writes data/geo/mz/mz_units.gpkg (layer `units`: unit, level, name, province) and
+    mz_units.csv. A 2007 district is the union of the COD-AB administrative posts
+    sources/mz_2007.py assigns to it: its COD districts by default, POST_MOVES for the posts
+    that changed district after 2007. Checks, all fatal:
+      1. every post in the nine provinces has a 2007 district, and every 2007 district a post;
+      2. the unit set is DISTRICTS' geo_ids, and data/normalized/mz_districts.csv's if it exists;
+      3. per province, the 2007 districts' area is the COD province polygon's within AREA_TOL
+         (the posts tile the province, so nothing is double-counted or lost).
+    """
+    import geopandas as gpd
+    import pandas as pd
+
+    sys.path.insert(0, HERE)
+    import mz_2007 as M
+
+    posts = gpd.read_file(ADM3_SHP, engine="fiona")
+    if len(posts) == 0:
+        raise SystemExit(f"{ADM3_SHP}: zero features")
+    posts = posts.to_crs(4326)
+    assign = M.post_units(list(zip(posts["adm3_pcode"], posts["adm3_name"], posts["adm2_pcode"],
+                                   posts["adm2_name"], posts["adm1_pcode"])))
+    nine = posts[posts["adm1_pcode"].str[2:].isin(M.DISTRICTS)].copy()
+    nine["unit"] = nine["adm3_pcode"].map(assign)
+    if nine["unit"].isna().any():
+        raise SystemExit(f"posts with no 2007 district: {sorted(nine.loc[nine['unit'].isna(), 'adm3_name'])}")
+    names = {p[0]: nm for dl in M.DISTRICTS.values() for nm, p in dl}
+    want = set(names)
+    got = set(nine["unit"])
+    print(f"\n  2007 districts: {len(got)} built from {len(nine)} COD-AB posts, {len(want)} in DISTRICTS")
+    if got != want:
+        raise SystemExit(f"units differ from DISTRICTS: extra {sorted(got - want)}, "
+                         f"missing {sorted(want - got)}")
+    if os.path.exists(FITTED):
+        fitted = set(pd.read_csv(FITTED, dtype=str)["geo_id"])
+        if fitted != want:
+            raise SystemExit(f"mz_districts.csv units differ: {sorted(fitted ^ want)}")
+        print("  the unit set is mz_districts.csv's")
+    moved = nine[nine["adm3_pcode"].isin(M.POST_MOVES)]
+    for _, r in moved.iterrows():
+        print(f"    moved: {r['adm3_name']} ({r['adm3_pcode']}), COD {r['adm2_name']} -> "
+              f"2007 {names[r['unit']]}")
+
+    d = nine[["unit", "geometry"]].dissolve(by="unit").reset_index()
+    d["level"] = "district2007"
+    d["name"] = d["unit"].map(names)
+    d["province"] = d["unit"].str[:4]
+
+    provs = gpd.read_file(OUT, layer="provinces").to_crs(4326)
+    ea_d = d.to_crs(6933).area
+    ea_p = provs.set_index("unit").to_crs(6933).area
+    print("  area of the 2007 districts against the COD province polygon:")
+    bad = []
+    for p, a in ea_d.groupby(d["province"]).sum().items():
+        ratio = a / ea_p[p]
+        print(f"    {p}  {ratio:.4f}")
+        if abs(ratio - 1) > AREA_TOL:
+            bad.append((p, round(ratio, 4)))
+    if bad:
+        raise SystemExit(f"2007 districts do not tile their provinces: {bad}")
+
+    whole = provs[provs["unit"].isin(WHOLE_PROVINCES)].copy()
+    if len(whole) != len(WHOLE_PROVINCES):
+        raise SystemExit(f"province polygons missing for {WHOLE_PROVINCES}")
+    whole["level"] = "province"
+    whole["province"] = whole["unit"]
+    units = pd.concat([d[["unit", "level", "name", "province", "geometry"]],
+                       whole[["unit", "level", "name", "province", "geometry"]]],
+                      ignore_index=True)
+    units = gpd.GeoDataFrame(units, geometry="geometry", crs=4326)
+    if units["unit"].duplicated().any():
+        raise SystemExit("duplicate unit ids")
+    units.to_file(UNITS_OUT, layer="units", driver="GPKG")
+    pd.DataFrame(units.drop(columns="geometry")).to_csv(UNITS_CSV, index=False, encoding="utf-8")
+    print(f"\nwrote {UNITS_OUT} ({len(units)} units: {len(d)} 2007 districts, {len(whole)} provinces)")
+    print(f"wrote {UNITS_CSV}")
+
+
 if __name__ == "__main__":
     main()
+    build_units()

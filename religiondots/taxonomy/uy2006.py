@@ -111,7 +111,10 @@ REVIEW = {
         "Uruguay, seven hundred people at a dot value of a thousand, and §3.11 says a bucket "
         "nothing can resolve stays whole. Drawn on its own department shares under "
         "`sources/uy.py`'s `UNDER_BAR`, with the caveat recorded there that how often an "
-        "interviewer reaches for this box is partly a property of the fieldwork team.",
+        "interviewer reaches for this box is partly a property of the fieldwork team. "
+        "Since 2026-09-15 Montevideo is drawn at its 62 barrios and this is the one answer "
+        "whose barrio split-half fails (+0.02, p 0.47), so inside Montevideo it takes the "
+        "city's own share, 0.36%, in every barrio (`sources/uy.md` §12.2).",
 }
 
 MAP = {

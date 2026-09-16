@@ -437,3 +437,14 @@ apostrophe in `Jehovah’s Witness` — is exactly as published.
     -- so a verbatim category string quietly fails to match `Muslim` from TS030 (§9).
 11. **`Church of All Religion`, 24 people**, is the smallest published religion figure in
     any of these four censuses — and the ONS published it rather than suppressing it.
+
+## 11. Confucianist moved off `chinesefolk`, 2026-09-15 (session `cb8b206e-folksplit`)
+
+On Anita's ruling on ask 036 (`ask/RULINGS.md`, `cn`, `all`), `Other religion: Confucianist`
+(England and Wales, 76 people) maps to `confucianism` instead of `chinesefolk`
+(`taxonomy/uk2021.py`). `Other religion: Chinese Religion` (111) names no single tradition and
+stays. Scotland's and Northern Ireland's tables have no row for either.
+
+Both rows are allocated from MSOA to Output Area and are under one dot, so no dot or ring; legend
+counts only. Both editions rescattered: 62,958 and 6,279 dots. The whole change is
+`sources/folk_practice.md` §11.

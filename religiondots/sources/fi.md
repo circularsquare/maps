@@ -196,6 +196,12 @@ citizen population and the foreign half by foreign population, which is worth re
 Helsinki-Uusimaa (8.96% foreign) and Åland (11.76%) against Etelä-Pohjanmaa (1.82%). Not done;
 it is one PxWeb call and a wiring change.
 
+**Outline, 2026-09-15.** Åland (FI200) is in the counts and the dots, but Natural Earth draws it as
+its own `Aland` feature and `country_shapes.py` left it out of Finland's outline. It now joins it
+through `country_shapes.py::ALSO` and stays part of this entry. Replacing its 64 ESS respondents
+with ÅSUB's register (sources.md §scout-2026-09-15-europe) would change Finland's numbers and is
+Anita's call; not done. sources.md §outlines-2026-09-15.
+
 ### The foreign half, in one table
 
 The 2021 census's own count, largest first, of the citizenships behind the foreign half

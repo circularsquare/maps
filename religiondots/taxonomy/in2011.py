@@ -32,6 +32,22 @@ census `Muslim` column by Pew's *Religion in India* (2021) sect question, one sh
 region, and writes three `Muslim: ... (Pew 2021)` labels that are in no census table. The
 Annexure is still not used for this; Pew counted people and the Annexure did not.
 
+**Christians in two states, 2026-09-15.** `in_split_christian.py` splits the census `Christian`
+column where a second source reaches: Kerala's Catholics by district from the Kerala Migration
+Surveys (K.C. Zachariah, CDS Working Paper 468, Table 6), and Mizoram's churches from the state
+statistics department's membership rolls for 2010-11, one share for the whole state. Kerala's
+table names ten churches and only the Catholic total is drawn: the three rites disagree with the
+dioceses' own rolls by up to fifty times from place to place while their sum holds, and nothing
+independent reaches the others. The reasoning is in that file's docstring and sources/in.md §9.
+
+**And Pew's regions for the rest, the same day.** The same script applies Pew's 2021 respondent file
+(`qdenomrec`, weighted) to the East and South outside Kerala: Catholic and Baptist, of the three churches
+the public file names. Catholics take one share pooled over both regions, whose own shares do not differ
+(sources/in.md §13); Baptists keep the South's. North, Central and West have too few Christian respondents (24, 10 and 56) and stay
+on `christianity`. The Northeast was drawn too for part of the day and is withdrawn: its one share failed
+the Catholic rolls state by state and put Presbyterians in Nagaland, so its Christians outside Mizoram are
+on `christianity` as well. sources/in.md §10 to §12.
+
 EXCLUDED holds categories that are deliberately not on the tree.
 REVIEW holds calls that are defensible but arguable, with the reason.
 """
@@ -94,6 +110,91 @@ REVIEW = {
         "which on the Galapagos line (queue.md) is still nothing measured. TIER: the split rows "
         "are `derived` and not `modelled`, unlike Turkiye's, because these Muslims were counted "
         "at the sub-district and the viewer removes `modelled` dots instead of rolling them up.",
+    "Christian: Catholic, three rites (KMS 2008-2014)":
+        "-> christianity.catholic, NOT the rite nodes the survey names. Kerala only, from Zachariah's "
+        "WP468 Table 6: Syro-Malabar + Syro-Malankara + Latin as a share of each of the 14 districts' "
+        "Christians (Thrissur 88.5, Kozhikode and Pathanamthitta 35.6), applied to the census. The "
+        "rites fail against catholic-hierarchy's diocesan rolls (roll/survey spreads 51 for "
+        "Syro-Malankara and 9.2 for Latin across six groups of see districts; Kannur and Kasaragod "
+        "read Syro-Malabar 2.22 and Latin 0.27 under sees covering the same two districts), while "
+        "the Catholic total spreads 2.3, so the survey swaps rites and keeps the total. Would be "
+        "catholic.eastern and catholic.latin if a rite ever passed. A floor: Catholics who answered "
+        "Dalit Christian or Others stay on `christianity`.",
+    "Christian: Catholic (Pew 2021)":
+        "-> christianity.catholic, NOT .latin: the card says Catholic, and India has three rites. Pew's "
+        "respondent file, weighted: East 37.4 and South 39.4 on their own, which do not differ once Pew's "
+        "design effect is allowed for (p 0.27), so both are drawn at the pooled 39.0 (sources/in.md §13). "
+        "The South's pool includes Kerala's respondents and is applied only outside Kerala; against "
+        "catholic-hierarchy's 2004 rolls it reads roll/survey 2.24 there against 1.48 in the East, so Tamil "
+        "Nadu's and Andhra "
+        "Pradesh's Catholics are probably under-drawn. By state the East spreads 3.8 (Bihar high on few "
+        "Christians) and is kept. North 52.4, Central 62.2 and West 52.5 are not drawn (24, 10 and 56 "
+        "respondents, under the 100 floor); North's roll/survey, 0.73, is the only one under 1. The "
+        "Northeast's 16.2 is not drawn either, withdrawn 2026-09-15: by state its roll/drawn ran from "
+        "0.18 in Nagaland to 2.21 in Assam with Arunachal (sources/in.md §11, §12).",
+    "Christian: Baptist (Pew 2021)":
+        "-> christianity.baptist. A volunteered code (DO NOT READ). South 13.0 (67 respondents), drawn; "
+        "Northeast 33.6 (114), withdrawn 2026-09-15 with the rest of the Northeast's share, because one "
+        "rate for Nagaland, Meghalaya, Assam, Arunachal Pradesh and Tripura fits none of them (sources/"
+        "in.md §12); no Baptist answer in the other four regions. THE KNOWN COST: the South's 881,434 "
+        "are spread over Tamil Nadu, Karnataka, Andhra Pradesh and Puducherry alike.",
+    "Christian: Presbyterian (Pew 2021)":
+        "NO LONGER EMITTED WITH A COUNT, since 2026-09-15. -> christianity.reformed.presbyterian, as "
+        "Mizoram's Presbyterian Church of India roll is. A volunteered code; all 96 answers are in the "
+        "Northeast (31.8%). For part of a day one share for the region put about 553,000 Presbyterians "
+        "in Nagaland, whose churches the Nagaland Baptist Church Council organises (716,495 baptised "
+        "members on the Baptist World Alliance's undated member page, per the scout), and 1.81M outside "
+        "Mizoram from Meghalaya to Tripura. The review (sources/in.md §11) found the same share failing "
+        "the Catholic rolls state by state and the region's total not holding either, since Mizoram's "
+        "respondents sit inside a share applied only to its neighbours, so the Northeast was withdrawn "
+        "(§12). The mapping stays for the label, which in_split_christian.py still names and no region "
+        "now fills.",
+    "Christian":
+        "THE UNSPLIT PART stays on `christianity` as the census's own `Christian`, `measured`. "
+        "(1) Kerala: the non-Catholic answers of WP468 Table 6 (Jacobite, Orthodox, Mar Thoma, CSI, "
+        "Pentecost/Church of God/Brethren) have no independent figure to check them against, and "
+        "three of the four Syrian churches share the 'Malankara' name the rite check shows being "
+        "confused, so unchecked is not drawn; Dalit Christian is a caste, not a church; Others. "
+        "(2) Mizoram: Isua Krista Kohhran, 1.2% of the rolls, whose family nothing read here names. "
+        "(3) Pew's East and South: the answers the respondent file does not name, which are "
+        "all other denominations (Church of North India, Church of South India, Orthodox, Pentecostal "
+        "and the rest, recoded together in the public file), no denomination, don't know and refused. "
+        "(4) Pew's North, Central and West: 24, 10 and 56 Christian respondents, under the 100 floor "
+        "(in_split_christian.py docstring, point 3); their shares are printed by --dry-run. (4a) Pew's "
+        "Northeast outside Mizoram, 326 respondents, withdrawn 2026-09-15 because its one share fails "
+        "state by state; a split there needs a source by state (sources/in.md §12, queue.md D). (5) Where "
+        "Pew interviewed nobody: Manipur, Sikkim, the Kashmir Valley, Ladakh, Chandigarh, Dadra and "
+        "Nagar Haveli, Daman and Diu, Lakshadweep, and the Andaman and Nicobar Islands.",
+    "Christian: Presbyterian Church of India (Mizoram roll 2010-11)":
+        "-> christianity.reformed.presbyterian. The Mizoram Synod of the Presbyterian Church of India, "
+        "550,560 members in 2010-11, 57.3% of the ten rolls. Its series is smooth except 2014-15 "
+        "(325,214 with 30,396 women), an entry error in a year not read.",
+    "Christian: Baptist Church of Mizoram (Mizoram roll 2010-11)":
+        "-> christianity.baptist. The southern (Lunglei) Baptist church, 146,331. Spread over the "
+        "whole state like every body here, which is the construction's known cost.",
+    "Christian: Lairam Isua Krista Baptist Kohhran (Mizoram roll 2010-11)":
+        "-> christianity.baptist. The Lai church of Lawngtlai, 24,795; Baptist by its own name. It is "
+        "a Lawngtlai church drawn at a state share, so most of its dots land in Aizawl.",
+    "Christian: United Pentecostal Church (North East India) (Mizoram roll 2010-11)":
+        "-> christianity.pentecostal.oneness, as fj2007.py files `United Pentecostal`: the UPC of North "
+        "East India is the Oneness (Jesus' name) church of that name, 70,497.",
+    "Christian: United Pentecostal Church (Mizoram) (Mizoram roll 2010-11)":
+        "-> christianity.pentecostal.oneness. 45,471. A later separation from the UPC (North East "
+        "India) that kept the name; filed with it on the name alone, no doctrinal statement read.",
+    "Christian: Evangelical Church of Maraland (Mizoram roll 2010-11)":
+        "-> christianity.other, NOT christianity.evangelical: that node holds a census ANSWER "
+        "'Evangelical', and this is a named body, the church of the Lakher Pioneer Mission among the "
+        "Mara of Saiha, 37,383, with no Protestant family to belong to. Drawn at the state share, so "
+        "it appears across Aizawl although it is a Saiha church.",
+    "Christian: Salvation Army (Mizoram roll 2010-11)":
+        "-> christianity.holiness.salvation-army, as ag2001, bm2010 and eight others. 36,395 in "
+        "2010-11; the series steps to 55,791 in 2011-12 with no explanation, which is most of why "
+        "2011-12's rolls sum to 106% of the census and 2010-11's to 100.5%.",
+    "Christian: Seventh-day Adventist (Mizoram roll 2010-11)":
+        "-> christianity.adventist. 19,235; a noisy series (26,858 the year before, 12,542 in 2013-14).",
+    "Christian: Roman Catholic (Mizoram roll 2010-11)":
+        "-> christianity.catholic.latin, as fr2024, ee2021 and be2024 file `Roman Catholic`: Mizoram is "
+        "the Latin Diocese of Aizawl, 18,890. Unlike Kerala's cell, this one names the Roman church.",
     "Sari Dharma":
         "-> indigenous.indian.sarna, NOT a node of its own, and this is the largest "
         "judgement call in the file: 506,369 people, 100% of them in West Bengal. `Sari "
@@ -105,18 +206,19 @@ REVIEW = {
         "genuinely distinct, this merges 506k people into the wrong node. `Sarnam` "
         "(1,494) and `Saranath` (837) go the same way for the same reason.",
     "Pagan":
-        "-> indigenous.indian, NOT `paganism`. 2,088 people, 62% in Meghalaya. `Pagan` in "
+        "-> indigenous.indian.khasi, NOT `paganism`. 2,088 people, 62% in Meghalaya. `Pagan` in "
         "the Khasi hills is the colonial-era label for the traditional religion and is "
         "still used that way locally; it is not the Western neo-pagan revival that "
         "branches.py's `paganism` node describes. Mapping it there would file Khasi "
-        "traditionalists with Wiccans.",
+        "traditionalists with Wiccans. The 38% outside Meghalaya take the Khasi node too, "
+        "because the mapping is one row for every state.",
     "Animist":
         "-> indigenous.indian. 4,130 people, 80% in Sikkim. The mirror of cz2021.py's "
         "`animismus`, which goes to `paganism` — there the write-in is a Western "
         "self-description, here it is an outsider's word for a tribal religion in a state "
         "full of them. Same string, opposite meaning, decided by where it was written.",
     "Non Christians":
-        "-> indigenous.indian. 1,538 people, 96% in Meghalaya, a state that is 75% "
+        "-> indigenous.indian.khasi. 1,538 people, 96% in Meghalaya, a state that is 75% "
         "Christian. A negative self-description given in a place where the traditional "
         "religion is defined locally by not being the missionary one. `unaffiliated` "
         "would be a clear misreading; it says nothing about belief.",
@@ -175,6 +277,30 @@ MAP = {
     "Muslim: Sunni (Pew 2021)": "islam.sunni",
     "Muslim: Shi'a (Pew 2021)": "islam.shia",
     # No Ahmadiyya label: folded back into `Muslim` on Anita's call, 2026-09-14 (REVIEW).
+
+    # ------------------------------------------------------------ Christian churches, in_split_christian.py
+    # DERIVED, 2026-09-15. Not census categories: in_split_christian.py divides each Kerala and Mizoram
+    # sub-district's `Christian` count and writes these labels, plus a smaller `Christian` for the rest.
+    "Christian: Catholic, three rites (KMS 2008-2014)": "christianity.catholic",
+    "Christian: Presbyterian Church of India (Mizoram roll 2010-11)": "christianity.reformed.presbyterian",
+    "Christian: Baptist Church of Mizoram (Mizoram roll 2010-11)": "christianity.baptist",
+    "Christian: Lairam Isua Krista Baptist Kohhran (Mizoram roll 2010-11)": "christianity.baptist",
+    "Christian: United Pentecostal Church (North East India) (Mizoram roll 2010-11)":
+        "christianity.pentecostal.oneness",
+    "Christian: United Pentecostal Church (Mizoram) (Mizoram roll 2010-11)":
+        "christianity.pentecostal.oneness",
+    "Christian: Evangelical Church of Maraland (Mizoram roll 2010-11)": "christianity.other",
+    "Christian: Salvation Army (Mizoram roll 2010-11)": "christianity.holiness.salvation-army",
+    "Christian: Seventh-day Adventist (Mizoram roll 2010-11)": "christianity.adventist",
+    "Christian: Roman Catholic (Mizoram roll 2010-11)": "christianity.catholic.latin",
+
+    # ------------------------------------------------------------ Christian churches, Pew 2021 regions
+    # DERIVED, 2026-09-15. in_split_christian.py divides each sub-district's `Christian` count in Pew's
+    # East and South (outside Kerala) by the respondent file's weighted shares. The Northeast was withdrawn
+    # the same day, so no row carries the Presbyterian label; its mapping is kept (REVIEW).
+    "Christian: Catholic (Pew 2021)": "christianity.catholic",
+    "Christian: Baptist (Pew 2021)": "christianity.baptist",
+    "Christian: Presbyterian (Pew 2021)": "christianity.reformed.presbyterian",
 
     # ------------------------------------------------------------ Appendix: Sarna
     "Sarna": "indigenous.indian.sarna",
@@ -347,9 +473,14 @@ EXCLUDED.update({f"Sect: {s}": _ANNEXURE_REASON for s in _ANNEXURE_SECTS})
 # `Muslim` joined 2026-09-14 with in_split.py: the census counted Muslims at every sub-district,
 # and only the branch comes from Pew's six regions, so a Sunni or Shi'a dot rolls back to the
 # `islam` the census measured there.
+#
+# `Christian` joined 2026-09-15 with in_split_christian.py, the same way: counted at every
+# sub-district, and only the church comes from a second source (Kerala's survey, Mizoram's rolls,
+# and Pew's East and South).
 COLUMNS = {
     "Other religions and persuasions": "other.in",
     "Muslim": "islam",
+    "Christian": "christianity",
 }
 
 

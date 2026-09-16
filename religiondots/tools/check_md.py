@@ -42,7 +42,14 @@ def md(s):
 
 
 def main():
+    import countries
     bad = 0
+    # Skipped, not failed: a half-registered country is usually another session between its two
+    # writes, and this check stopping on that was the 2026-09-15 bug. built_countries.py --check
+    # is the one that fails on it.
+    if countries.HALF_REGISTERED:
+        print("not checked, half-registered (countries.py's warning says which half is missing): "
+              + ", ".join(sorted(countries.HALF_REGISTERED)))
     for cc, meta in sorted(COUNTRIES.items()):
         out = md(meta.get("note_public", "") or "")
         left = [ch for ch in out if ch in "*`"]

@@ -59,6 +59,9 @@ not `drawn`; a code in a `queue.md` table row with no `queue.csv` row, so a new 
 be missed silently; and a `queue.csv` code that `queue.md` never mentions by code or name.
 Drawn rows are exempt from that last one, since their prose is the country entry and
 `sources/<cc>.md`.
+
+An open upgrade to a drawn country is a `drawn` row whose `blocker` starts `upgrade free`. The free
+list skips registered countries, so the listing prints those apart, under UPGRADES FREE.
 """
 
 import argparse
@@ -150,6 +153,27 @@ def drawn():
         return set()
     src = open(path, encoding="utf-8").read()
     return set(re.findall(r'^    "([a-z]{2})": dict\(', src, re.M))
+
+
+def half_registered():
+    """{cc: which half is missing} where countries/<cc>.py and ORDER in countries.py disagree.
+
+    countries.py skips such a country with a warning instead of stopping (a builder writes the
+    two back to back and every other session imports in between), so nothing downstream sees it
+    until both halves exist. Read from the text, as drawn() is, so this file never imports the
+    registry."""
+    try:
+        src = open(os.path.join(ROOT, "countries.py"), encoding="utf-8").read()
+    except OSError:
+        return {}
+    m = re.search(r"^ORDER = \[(.*?)^\]", src, re.M | re.S)
+    if not m:
+        return {}
+    order = set(re.findall(r'^\s*"([a-z]{2})",?\s*$', m.group(1), re.M))
+    files = drawn()
+    out = {cc: f"in ORDER but countries/{cc}.py does not exist" for cc in order - files}
+    out.update({cc: f"countries/{cc}.py exists but {cc} is not in ORDER" for cc in files - order})
+    return out
 
 
 def _registered_name(cc):
@@ -374,6 +398,10 @@ def cmd_list(args):
     missing = sorted(reg - have)
     if missing:
         print(f"  registered but NOT built: {', '.join(missing)}")
+    half = half_registered()
+    if half:
+        print("  HALF-REGISTERED, so countries.py skips it until both halves exist: "
+              + "; ".join(f"{cc} ({why})" for cc, why in sorted(half.items())))
     wait = waiting_for_build()
     if wait is None:
         print("  build tail: no data/build_last.json yet, so what is waiting for it is unknown")
@@ -399,6 +427,21 @@ def cmd_list(args):
     n = {s: sum(r["status"] == s for r in rows) for s in ("closed", "drawn")}
     print(f"  closed {n['closed']}, drawn {n['drawn']}; each row's detail names the queue.md "
           f"section with the reason")
+
+    # Scouts record an open upgrade to a drawn country as a `drawn` row whose blocker starts
+    # "upgrade free". The free list above skips registered countries, so it cannot show them.
+    upgrades = [r for r in rows if r["status"] == "drawn"
+                and r["blocker"].lower().startswith("upgrade free")]
+    if upgrades:
+        taken = [r["cc"] for r in upgrades if r["cc"] in claims]
+        open_ = [r for r in upgrades if r["cc"] not in claims]
+        print(f"\nUPGRADES FREE to drawn countries ({len(open_)} unclaimed"
+              + (f"; claimed: {', '.join(taken)}" if taken else "") + "):")
+        for r in open_:
+            verdict = re.sub(r"^upgrade free:?\s*", "", r["blocker"], flags=re.I).split("; ")[0]
+            print(f"  {r['cc']}  {r['name'][:26]:26s} {verdict[:110]}")
+            refs = [x for x in r["detail"].split("; ") if x.startswith("sources")]
+            print(f"      see {'; '.join(refs) or r['detail']}"[:120])
 
     warn = problems + queue_warnings(rows, reg)
     if warn:
@@ -509,6 +552,14 @@ def cmd_park(args):
 
 
 def cmd_done(args):
+    half = half_registered().get(args.cc.lower())
+    if half:
+        # countries.py skips a half-registered country rather than stopping, so nothing else
+        # would say so: it is on no map and in no check. Refuse before releasing the claim.
+        print(f"REFUSED: {args.cc.lower()} is half-registered: {half}. countries.py skips it, "
+              f"so it is on no map and in no check. Add the missing half, then run done again. "
+              f"The claim is still yours.")
+        return 1
     rc = cmd_drop(args)
     if rc == 0:
         cc = args.cc.lower()

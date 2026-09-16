@@ -63,7 +63,9 @@ Markers: `open`, `taken <date> <id>`, `done <date>`, `parked <date>: <why>`.
 - `open` **Shia and Sunni, second batch: Iran, Azerbaijan, Afghanistan, Syria, Lebanon, Tajikistan.**
   Read the Gulf section of `sources/estimates.md` first. The Arab Barometer covers Lebanon (and its
   national sect shares may survive the quota that closed its governorates, §11al, or may not) and none
-  of the others; WVS wave 7 has Iran.
+  of the others; WVS wave 7 has Iran. **Iran now draws `islam.sunni`** (Masaili's province
+  estimates, 2026-09-15, `sources/ir.md` §9), so a national Sunni row for Iran would restate a drawn
+  node (spec §15.3); a Shia row would not, since the rest of Iran's Muslims stay on `islam`.
 - `open` **Ahmadiyya.** The World Religion Project records it in Indonesia alone. Pakistan's census
   counts Ahmadis. Check which built countries already draw `islam.ahmadiyya` before sourcing any.
   §14 applies.

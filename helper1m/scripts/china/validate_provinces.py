@@ -1,13 +1,17 @@
-"""Check the zonal-recovered township populations against the published 2020 census.
+"""Check the built populations against the published census, province by province.
 
-A township count recovered from a grid is only worth using if it reconciles with
-the printed provincial totals, so this sums township_pop2020.csv up to province
-level and prints the gap. Provinces that drift are where our 2018-vintage
-boundaries disagree with the 2020 census geography.
+2020 is the real test: those counts are recovered from the ASPECT grid and
+nothing else pins them, so a province that drifts is a place where our
+2018-vintage boundaries disagree with the 2020 census geography.
 
-Note the census's own national figure (1,411,778,724) is 2,000,000 above the sum
-of the 31 provinces: active service personnel are counted nationally only. The
-comparison here is against the provincial sum.
+2010 is a weaker test by construction — fetch.py normalises each province onto
+its published 2010/2020 growth — so it mainly confirms that normalisation
+landed, and that the 2020 bias carries through rather than compounding.
+
+Note the census's own national figures are above the sum of the 31 provinces:
+by 2,000,000 in 2020 and by about 6,900,000 in 2010, being servicemen and, in
+2010, people whose usual residence could not be determined. Both are counted
+nationally only, so the comparison here is against the provincial sum.
 """
 import io
 import sys
@@ -24,7 +28,7 @@ XIANGZHEN = HERE.parents[2] / "data/asia1m/china/xiangzhen.shp"
 
 
 def province_codes():
-    """Province code -> Chinese name, rebuilt the way assign_codes ranks them."""
+    """Chinese province name -> code, rebuilt the way assign_codes ranks them."""
     names = set()
     with fiona.open(XIANGZHEN) as src:
         for feat in src:
@@ -33,27 +37,38 @@ def province_codes():
 
 
 def main():
-    pops = pd.read_csv(DATA / "township_pop2020.csv", dtype={"code": str})
-    pops["prov"] = pops["code"].str[:2]
-    recovered = pops.groupby("prov")["pop_2020"].sum().rename("recovered")
+    pop = pd.read_csv(DATA / "population.csv", dtype={"code": str})
+    ours = pop[pop["level"] == 1].pivot(index="code", columns="year", values="pop")
+    ours.columns = [f"ours_{y}" for y in ours.columns]
 
-    ref = pd.read_csv(HERE / "census2020_provinces.csv")
-    ref["prov"] = ref["name_cn"].map(province_codes())
-    missing = ref[ref["prov"].isna()]
-    if len(missing):
-        print("no province code for:", list(missing["name_cn"]))
+    codes = province_codes()
+    ref = pd.read_csv(HERE / "census2010_provinces.csv").merge(
+        pd.read_csv(HERE / "census2020_provinces.csv")[["name_cn", "pop_2020"]],
+        on="name_cn")
+    # The 2024 reference is the yearbook, not a census — a different series, so
+    # a gap here is the base year differing, not an error.
+    yb = pd.read_csv(HERE / "yearbook_provinces.csv", comment="#")
+    ref = ref.merge(yb[["name_cn", "pop_2024"]], on="name_cn")
+    ref["code"] = ref["name_cn"].map(codes)
+    tbl = ref.merge(ours, on="code", how="left")
 
-    tbl = ref.merge(recovered, on="prov", how="left")
-    tbl["diff_pct"] = 100 * (tbl["recovered"] - tbl["pop_2020"]) / tbl["pop_2020"]
+    years = [y for y in (2010, 2020, 2024) if f"ours_{y}" in tbl.columns]
+    for y in years:
+        tbl[f"d{y}"] = 100 * (tbl[f"ours_{y}"] - tbl[f"pop_{y}"]) / tbl[f"pop_{y}"]
 
-    print(f"{'province':<36} {'recovered':>13} {'census 2020':>13} {'diff':>8}")
-    for r in tbl.sort_values("diff_pct").itertuples():
-        print(f"{r.name:<36} {int(r.recovered):>13,} {r.pop_2020:>13,} "
-              f"{r.diff_pct:>7.2f}%")
-    tot_r, tot_c = int(tbl.recovered.sum()), int(tbl.pop_2020.sum())
+    head = f"{'province':<36}" + "".join(f"{y:>10}" for y in years)
+    print(head + "   (built minus published, %)")
+    for r in tbl.sort_values(f"d{years[-1]}").itertuples():
+        line = f"{r.name:<36}"
+        for y in years:
+            line += f"{getattr(r, f'd{y}'):>9.2f}%"
+        print(line)
+
     print()
-    print(f"{'TOTAL':<36} {tot_r:>13,} {tot_c:>13,} "
-          f"{100 * (tot_r - tot_c) / tot_c:>7.2f}%")
+    for y in years:
+        o, c = int(tbl[f"ours_{y}"].sum()), int(tbl[f"pop_{y}"].sum())
+        print(f"{'TOTAL ' + str(y):<36} {o:>15,} {c:>15,} "
+              f"{100 * (o - c) / c:>6.2f}%")
 
 
 if __name__ == "__main__":

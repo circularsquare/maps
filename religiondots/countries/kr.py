@@ -73,9 +73,18 @@ ENTRY = {
             "hyanggyo, not as Confucian practice, which is near-universal and is not what "
             "anyone is reporting. "
             "**This is the last Korean census that asked.** The question was dropped after "
-            "2015, so nothing here will be updated."),
+            "2015, so nothing here will be updated. "
+            "**Foreign residents are not in the religion figures.** The 2015 census counted "
+            "51,069,375 people, 1,363,712 of them foreign residents. The religion table counts "
+            "49,052,389, fewer than the census's Korean nationals alone, and by its own footnote "
+            "it leaves out special enumeration districts. The foreigners and the other 653,274 "
+            "people missing, 3.9% of the census together, are in the not drawn part of the bar."),
         how="census, 2015, 20% sample",
         grain="si/gun/gu, 214,000 people on average",
+        gap=("3.9% of the 2015 census population: 1,363,712 foreign residents (2.7%), who are "
+             "outside the religion table; and 653,274 Korean nationals (1.3%), the difference "
+             "between them and the table, which leaves out special enumeration districts"),
+        gap_share=0.0395,
         counts=_kr_counts,
         units=None,
         unit_key=None,
@@ -88,8 +97,10 @@ ENTRY = {
              "this country is worth drawing for. Daejonggyo is 3,101 people nationally, so "
              "its district cells are a few sampled households each. "
              "The universe is 49,052,389 against a census population of 51,069,375, a gap "
-             "of 3.95% the table does not explain; it is reported rather than filled "
-             "(spec §3.5, sources/kr.md §5). "
+             "of 3.95%. It is below the census's 49,705,663 Koreans alone, so the 1,363,712 "
+             "foreign residents are outside it, and the other 653,274 sit with the special "
+             "enumeration districts the table's footnote excludes; both are in gap and gap_share "
+             "since the ask 033 sweep, not filled (spec §3.5, sources/kr.md §5 and §7). "
              "**KOSIS bot-blocks its own data endpoints**, so this table cannot be fetched "
              "by script — the metadata endpoint is open and the download endpoints answer "
              "200 with an HTML alert. Anita downloaded it through a browser on 2026-09-05; "

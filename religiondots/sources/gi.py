@@ -4,9 +4,24 @@ Reads (or fetches) the census report into data/raw/gi/ and the Kontur extract in
 data/raw/micro/, and writes
 
     data/normalized/gi.csv          the territory's eight answers, geo_level `country`
-    data/geo/gi/gi_hexes.gpkg       Kontur 400 m population hexagons, unit = GI
+    data/geo/gi/gi_hexes.gpkg       Kontur 400 m population hexagons cut to Gibraltar's land,
+                                    unit = GI
+    data/geo/gi/gi_land.gpkg        that land: OSM relation 1278736 less the OSM water polygons
 
 `sources/gi.md` is the write-up; `taxonomy/gi2022.py` is the mapping.
+
+## THE HEXES ARE CUT TO GIBRALTAR'S LAND
+
+Kontur's GI extract is 20 hexes of 0.78 km2, and the ones along the isthmus reach into La Línea:
+the first build put a Roman Catholic dot at -5.3504, 36.1585, north of the frontier (sources/gi.md
+§11). So each hex is intersected with Gibraltar's land, as `mt_geo.py` cuts Malta's hexes to its
+localities, and keeps the share of its people that its land inside Gibraltar is of all its land.
+Land is the part of the hex outside the OSM water polygons, which is also what `water.py` takes off
+in the scatter; dividing by the whole hex would hand the sea a share of the people. The outline
+is OpenStreetMap's (ODbL): Natural Earth's 10m Gibraltar is 7 vertices and 3.7 km2 with 20 of the
+first build's 34 dots outside it, and geoBoundaries' (a Sentinel-2 land-cover trace) stops about
+200 m short of the frontier on the isthmus. `python sources/gi.py --check-dots` asserts every dot
+and ring of both editions is on that land.
 
 ## THE TABLE
 
@@ -95,6 +110,17 @@ PAGE_T42 = 173         # p.174
 PAGES_T43 = (174, 175, 176)   # pp.175-177
 PAGE_FORM = 479        # p.480, individual questions 6-13
 PAGE_APP9 = 522        # p.523
+
+# Gibraltar's outline, for cutting the hexes (docstring, THE HEXES ARE CUT TO GIBRALTAR'S LAND).
+# The relation takes in the territorial sea as well; the water polygons take that back off.
+OSM_RELATION = 1278736
+OSM_JSON = os.path.join(RAW, f"osm_relation_{OSM_RELATION}.json")
+WATER = os.path.join(os.path.dirname(ROOT), "data", "water-polygons-split-4326",
+                     "water_polygons.shp")
+LAND_KM2 = (6.3, 7.0)            # Gibraltar is 6.7-6.8 km2 of land; this outline measured 6.59
+FRONTIER_LON = -5.35
+FRONTIER_LAT = (36.153, 36.157)  # the land's north edge at 5.35 W, the fence; measured 36.1549
+EQUAL_AREA = "EPSG:3035"
 
 CATS = ["Roman Catholic", "Church of England", "Other Christian", "Muslim", "Jewish", "Hindu",
         "No Religion", "Other/Not stated"]
@@ -239,6 +265,36 @@ def fetch():
             raise SystemExit("neither gibraltar.gov.gi nor parliament.gi returned the report; "
                              "give Anita the URL (AGENT_BRIEF, blocked downloads)")
     micro.fetch(["gi"])       # Kontur GI 2023-11-01, into data/raw/micro/ as the tier keeps it
+    fetch_outline()
+
+
+def fetch_outline():
+    """OSM relation 1278736 in full (the relation, its ways and their nodes) into data/raw/gi/.
+
+    From the main OSM API rather than Overpass: on 2026-09-15 overpass-api.de gave a 504 and two
+    mirrors timed out on a one-relation query, and a browser User-Agent got a 406. Not pinned by
+    digest, since any OSM edit changes the bytes; `land_outline()` checks what matters instead,
+    the relation's tags, one closed outer ring, the land area and the frontier."""
+    import json
+    import urllib.request
+
+    if os.path.exists(OSM_JSON) and os.path.getsize(OSM_JSON) > 0:
+        print("already have", OSM_JSON)
+        return
+    url = f"https://api.openstreetmap.org/api/0.6/relation/{OSM_RELATION}/full.json"
+    req = urllib.request.Request(url, headers={"User-Agent": "religiondots/1.0 (research dot map)"})
+    try:
+        with urllib.request.urlopen(req, timeout=180) as r:
+            body = r.read()
+        if not json.loads(body).get("elements"):
+            raise ValueError("no elements")
+    except (OSError, ValueError) as e:
+        raise SystemExit(f"{url}: {e}; give Anita that URL (AGENT_BRIEF, blocked downloads) and "
+                         f"save it as {OSM_JSON}")
+    with open(OSM_JSON + ".part", "wb") as fh:
+        fh.write(body)
+    os.replace(OSM_JSON + ".part", OSM_JSON)
+    print(f"wrote {OSM_JSON} ({len(body):,} bytes)")
 
 
 def read_t42(doc):
@@ -518,10 +574,61 @@ def report():
               f"({100.0 * T42[top]['T'][i] / TOTAL['T'][i]:.1f}%) in {top}")
 
 
+def land_outline():
+    """Gibraltar's land in EPSG:4326: OSM relation 1278736 less the OSM water polygons.
+
+    The relation's outer ways close into one ring that takes in the territorial sea. The water
+    polygons are the layer `water.py` subtracts in the scatter, so the coast here is the coast the
+    scatter cuts to anyway."""
+    import json
+
+    import geopandas as gpd
+    import shapely
+    from shapely.ops import linemerge, polygonize, unary_union
+
+    if not os.path.exists(OSM_JSON):
+        raise SystemExit(f"missing {OSM_JSON}; run: python sources/gi.py --fetch")
+    with open(OSM_JSON, encoding="utf-8") as fh:
+        els = json.load(fh).get("elements", [])
+    # the OSM API's `full` shape: the relation, its member ways as node-id lists, and the nodes
+    nodes = {e["id"]: (e["lon"], e["lat"]) for e in els if e.get("type") == "node"}
+    way_nodes = {e["id"]: e["nodes"] for e in els if e.get("type") == "way"}
+    rels = [e for e in els if e.get("type") == "relation" and e.get("id") == OSM_RELATION]
+    if len(rels) != 1:
+        raise SystemExit(f"{OSM_JSON} does not hold relation {OSM_RELATION}")
+    want = {"ISO3166-1": "GI", "admin_level": "2", "boundary": "administrative"}
+    got = {k: rels[0].get("tags", {}).get(k) for k in want}
+    if got != want:
+        raise SystemExit(f"relation {OSM_RELATION} is no longer Gibraltar's national boundary: {got}")
+    outer = [m["ref"] for m in rels[0]["members"]
+             if m.get("type") == "way" and m.get("role") == "outer"]
+    lacking = [w for w in outer if w not in way_nodes or any(n not in nodes for n in way_nodes[w])]
+    if lacking:
+        raise SystemExit(f"{OSM_JSON} lacks the nodes of outer ways {lacking[:5]}; delete it and "
+                         "run --fetch")
+    ways = [shapely.LineString([nodes[n] for n in way_nodes[w]]) for w in outer]
+    rings = list(polygonize(linemerge(unary_union(ways))))
+    if len(rings) != 1:
+        raise SystemExit(f"relation {OSM_RELATION}'s {len(ways)} outer ways close into "
+                         f"{len(rings)} polygons, expected 1")
+    if not os.path.exists(WATER):
+        raise SystemExit(f"missing {WATER}, the OSM water polygons water.py clips with")
+    water = gpd.read_file(WATER, bbox=rings[0].bounds)
+    return shapely.make_valid(shapely.difference(rings[0], unary_union(list(water.geometry))))
+
+
 def geometry():
-    """Kontur hexes -> data/geo/gi/gi_hexes.gpkg, every hex on the one unit."""
+    """Kontur hexes cut to Gibraltar's land -> data/geo/gi/gi_hexes.gpkg, all on the one unit.
+
+    Each piece keeps the share of its hex's people that the piece is of the hex's LAND, Spanish
+    land included; the sea gets none (docstring, THE HEXES ARE CUT TO GIBRALTAR'S LAND)."""
     import gzip
     import shutil
+
+    import geopandas as gpd
+    import numpy as np
+    import shapely
+    from shapely.ops import unary_union
 
     from geo_checks import read_layer
 
@@ -545,24 +652,102 @@ def geometry():
     if not (-5.40 < w < e < -5.30 and 36.08 < s < n < 36.18):
         raise SystemExit(f"gi: Kontur bbox {w:.3f},{s:.3f},{e:.3f},{n:.3f} is not Gibraltar")
 
-    k = float(hexes["pop"].sum())
-    ratio = k / CENSUS_TOTAL
+    def km2(geoms):
+        return gpd.GeoSeries(geoms, crs="EPSG:4326").to_crs(EQUAL_AREA).area.to_numpy() / 1e6
+
+    land = land_outline()
+    land_km2 = float(km2([land])[0])
+    if not LAND_KM2[0] <= land_km2 <= LAND_KM2[1]:
+        raise SystemExit(f"gi: Gibraltar's land measures {land_km2:.2f} km2, outside {LAND_KM2}")
+    ray = shapely.intersection(shapely.LineString([(FRONTIER_LON, 36.13), (FRONTIER_LON, 36.18)]),
+                               land)
+    north = ray.bounds[3] if not ray.is_empty else float("nan")
+    if not FRONTIER_LAT[0] <= north <= FRONTIER_LAT[1]:
+        raise SystemExit(f"gi: the land's north edge at {FRONTIER_LON} is {north:.5f}, outside "
+                         f"{FRONTIER_LAT}; the frontier in the outline has moved")
+
+    # Each hex's land, Gibraltar's and Spain's: the hex less the sea, over the hexes' own bounds
+    # (they reach further north than the outline does).
+    sea = gpd.read_file(WATER, bbox=tuple(hexes.total_bounds))
+    hexes["land_km2"] = km2(shapely.difference(hexes.geometry.values,
+                                               unary_union(list(sea.geometry))))
+    cut = gpd.overlay(hexes[["cellcode", "unit", "pop", "land_km2", "geometry"]],
+                      gpd.GeoDataFrame(geometry=[land], crs="EPSG:4326"),
+                      how="intersection", keep_geom_type=True)
+    cut["share"] = np.minimum(1.0, np.divide(km2(cut.geometry.values), cut["land_km2"],
+                                             out=np.zeros(len(cut)),
+                                             where=cut["land_km2"].to_numpy() > 0))
+    cut["kontur"] = cut["pop"]
+    cut["pop"] = cut["kontur"] * cut["share"]
+    cut = cut[cut["pop"] > 0].reset_index(drop=True)
+    if not cut.geometry.within(land.buffer(1e-7)).all():
+        raise SystemExit("gi: a cut piece reaches outside Gibraltar's land")
+
+    k, kept = float(hexes["pop"].sum()), float(cut["pop"].sum())
+    print(f"\n  Gibraltar's land (OSM relation {OSM_RELATION} less the OSM water polygons): "
+          f"{land_km2:.2f} km2, frontier at {north:.5f} N on {FRONTIER_LON}")
+    part = cut[cut["share"] < 0.999]
+    for r in part.itertuples():
+        print(f"    {r.cellcode:<6} {r.kontur:>6,.0f} people, {100 * r.share:5.1f}% of its land in "
+              f"Gibraltar -> {r.pop:,.0f}")
+    gone = sorted(set(hexes["cellcode"]) - set(cut["cellcode"]))
+    print(f"  {len(cut)} of {len(hexes)} hexes have land in Gibraltar ({len(part)} of them only "
+          f"partly; with none: {', '.join(gone) or '-'}). {kept:,.0f} of Kontur's {k:,.0f} "
+          f"people kept; the rest are on the Spanish land of those hexes")
+
+    ratio = kept / CENSUS_TOTAL
     # Kontur 2023-11 against a count of 14 November 2022: a year apart, so a narrow band.
     if not 0.8 <= ratio <= 1.2:
-        raise SystemExit(f"gi: Kontur {k:,.0f} against the census's {CENSUS_TOTAL:,}, ratio "
-                         f"{ratio:.2f}, outside 0.8-1.2")
+        raise SystemExit(f"gi: Kontur {kept:,.0f} in Gibraltar against the census's "
+                         f"{CENSUS_TOTAL:,}, ratio {ratio:.2f}, outside 0.8-1.2")
     geo = os.path.join(ROOT, "data", "geo", "gi")
     os.makedirs(geo, exist_ok=True)
+    lp = os.path.join(geo, "gi_land.gpkg")
+    gpd.GeoDataFrame({"source": [f"OSM relation {OSM_RELATION} less OSM water polygons"]},
+                     geometry=[land], crs="EPSG:4326").to_file(lp + ".part.gpkg", layer="land",
+                                                                driver="GPKG")
+    os.replace(lp + ".part.gpkg", lp)
     out = os.path.join(geo, "gi_hexes.gpkg")
-    hexes[["cellcode", "unit", "pop", "geometry"]].to_file(out + ".part.gpkg", layer="hexes",
-                                                           driver="GPKG")
+    cut[["cellcode", "unit", "pop", "geometry"]].to_file(out + ".part.gpkg", layer="hexes",
+                                                         driver="GPKG")
     os.replace(out + ".part.gpkg", out)
-    print(f"\n  {len(hexes)} hexes, Kontur {k:,.0f} vs census {CENSUS_TOTAL:,} "
-          f"({micro.KONTUR_VINTAGE}, ratio {ratio:.2f}); largest hex "
-          f"{hexes['pop'].max():,.0f} people; wrote {out}")
+    print(f"  Kontur {kept:,.0f} vs census {CENSUS_TOTAL:,} ({micro.KONTUR_VINTAGE}, ratio "
+          f"{ratio:.2f}); largest piece {cut['pop'].max():,.0f} people; wrote {out} and {lp}")
+
+
+def check_dots():
+    """Every dot and ring of both editions on Gibraltar's land, or stop. Run after scattering."""
+    import geopandas as gpd
+
+    # scatter.py writes coordinates to 4 decimals, up to 0.00005 degrees off in each axis, which
+    # at 36 N is at most 7.1 m. A dot sampled inside the land can be written that far outside it.
+    tol_m = 7.2
+    lp = os.path.join(ROOT, "data", "geo", "gi", "gi_land.gpkg")
+    if not os.path.exists(lp):
+        raise SystemExit(f"missing {lp}; run: python sources/gi.py")
+    land = gpd.read_file(lp).to_crs(EQUAL_AREA).geometry.iloc[0]
+    bad = 0
+    for fn in ("dots_gi.geojson", "dots_gi_10k.geojson", "rings_gi.geojson", "rings_gi_10k.geojson"):
+        p = os.path.join(ROOT, "data", "processed", fn)
+        if not os.path.exists(p):
+            if fn.startswith("dots"):
+                raise SystemExit(f"missing {p}; scatter both editions first")
+            print(f"  --  {fn}: none written")
+            continue
+        d = gpd.read_file(p)
+        dist = d.geometry.to_crs(EQUAL_AREA).distance(land) if len(d) else d.geometry
+        far = int((dist > tol_m).sum()) if len(d) else 0
+        bad += far
+        print(f"  {'OK ' if not far else 'BAD'} {fn}: {len(d)} marks, {far} more than {tol_m:g} m "
+              f"off Gibraltar's land" + (f" (farthest {dist.max():.2f} m)" if len(d) else ""))
+    if bad:
+        raise SystemExit(f"gi: {bad} marks outside Gibraltar's land")
 
 
 def main():
+    if "--check-dots" in sys.argv:
+        check_dots()
+        return
     import fitz
 
     if "--fetch" in sys.argv:

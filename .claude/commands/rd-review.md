@@ -28,14 +28,18 @@ python tools/check_md.py                    # markdown markers reaching the read
 python tools/built_countries.py --check     # registered but missing an edition
 python tools/check_rollup.py <cc>           # derived dots vanishing instead of rolling up
 python tools/review_dump.py <cc>            # what the builder already flagged as arguable
+python tools/where.py <cc>                  # every file, record section, ask and ruling for it
 ```
 
 Then read, in this order, and stop when you have found something worth saying:
 
-1. **The `countries.py` entry.** Voice is the map's whole claim to being trusted. No em dashes and
-   no markup in `how`/`fill`/`grain`/`gap`; in a note, bold only a figure inside a sentence, never
-   a bold sentence opening one. Read the field docstring at the top of the file and hold the new
-   note against a good existing one. **A note that reads as generated is a real defect here.**
+1. **The `countries/<cc>.py` entry.** Voice is the map's whole claim to being trusted. No em dashes and
+   no markup in `how`/`fill`/`grain`/`gap`. In a note, a `**bold opening sentence.**` is the
+   paragraph-break marker the viewer renders as a plain new paragraph (the rule at the top of
+   `countries.py`), so do not flag it; beyond that, bold only a figure inside a sentence. Anita,
+   2026-09-14, on the rendered panel: that opening is fine. Read the field docstring at the top of
+   the file and hold the new note against a good existing one. **A note that reads as generated is
+   a real defect here.**
 2. **Any new taxonomy node.** Every one is a legend row everyone sees forever. Her todo: *"maybe
    get rid of some of the jewish categories? half are only in israel, half are only in usa."*
    A single-country node has to earn its row.
@@ -70,7 +74,7 @@ Mechanics, because four of these fail while looking like success:
   will answer yours, giving a correct-looking shot of the wrong thing.
 - **`map` is a top-level `const`, not `window.map`**, and the `#country=` hash does not move the
   camera — drive `map.fitBounds([[w,s],[e,n]], {padding:60, animate:false})` from the country's
-  own `view` in `countries.py`, then sleep for tiles.
+  own `view` in `countries/<cc>.py`, then sleep for tiles.
 
 ## What to do with what you find
 
@@ -82,7 +86,7 @@ Builders are live, so be read-mostly:
    This is where nearly everything belongs. Dated and specific. Never rewrite someone's section.
 3. **File an ask** only if it clears `AGENT_BRIEF.md` §3. The cap applies to you too.
 4. **Rebuild nothing.** A country wrong enough to need rebuilding goes back in `queue.md` with the
-   reason; doing it yourself while its builder still holds the claim is the Peru accident again.
+   reason, and its `queue.csv` row's `detail` points at that note (its status stays `drawn`); doing it yourself while its builder still holds the claim is the Peru accident again.
 
 Append one line to `runlog.md` marked `review`, then stop.
 

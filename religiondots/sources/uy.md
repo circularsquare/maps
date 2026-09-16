@@ -7,8 +7,8 @@ Built 2026-09-08. `sources.md` §9ce is the short version; `taxonomy/uy2006.py` 
     tier        19 departamentos, 167,000 drawn people each
     n           230,898 respondents with an answer, 3,252 (Flores) to 80,196 (Montevideo)
     universe    persons aged 7 and over in private households, whole national territory
-    population  INE's own estimate at 30 June 2023: 3,496,400, of whom 3,181,996 are 7+
-    drawn       3,181,997 people, 7 categories, every row `modelled`
+    population  INE's own estimate at 30 June 2023: 3,496,400, of whom 3,228,150 are 7+ (§12.7)
+    drawn       3,228,150 people, 7 categories, every row `modelled`
 
 ---
 
@@ -140,8 +140,8 @@ ages 0 to 6 exactly and completely — 3,136 zero-year-olds, 3,349 one-year-olds
 six-year-olds, 25,963 in total — and nobody aged 7 or over carries it. `sources/uy.py` asserts
 this in both directions on every run.
 
-So the drawn universe is **7 and over, 91.01% of Uruguay**, and 8.99% is children rather than
-a non-response cell. **There is no non-response cell at all**: every person in the universe
+So the drawn universe is **7 and over, 92.33% of Uruguay**, and 7.67% is children rather than
+a non-response cell (91.01% and 8.99% until §12.7's fix). **There is no non-response cell at all**: every person in the universe
 carries one of the seven answers, which is unusual on this map.
 
 The children are in `gap=` with the figure, following Peru's under-twelves rather than Chile's
@@ -161,7 +161,7 @@ and five-year age bands, 1996 to 2023.
 
 Two years are read, not one:
 
-  * **2023** is the magnitude the map is drawn on: 3,496,400 people, 3,181,996 aged 7+.
+  * **2023** is the magnitude the map is drawn on: 3,496,400 people, 3,228,150 aged 7+.
   * **2006** is what the survey's own departmental weighting is checked against. Comparing a
     2006 survey's unit shares with a 2023 population would test seventeen years of internal
     migration rather than the join: Montevideo is down 64,657 over that span, Canelones is up
@@ -169,9 +169,10 @@ Two years are read, not one:
 
 **Nothing INE publishes for Uruguay is by single year of age.** The 2025 revision's
 `(100ymas)` files are five-year bands too; the phrase refers to the open top band. So the 7+
-cut is `total − (0-4) − 0.6 × (5-9)`. The 5-9 band is 6.3% of the country, so being wrong
-about its internal split by two parts in five is 0.05% of Uruguay, about 1,700 people. Stated
-because it is arithmetic on a published band rather than a published number.
+cut is `total − (0-4) − 0.4 × (5-9)`, ages 5 and 6 being two fifths of the band (it was 0.6
+until §12.7). The 5-9 band is 6.60% of the country; the census 2023 persons file puts
+Montevideo's under-7 share at 6.95%, and this cut gives 7.16%. Stated because it is arithmetic
+on a published band rather than a published number.
 
 **One trap in the workbook.** Eighteen sheets write the 2023 column header as the integer
 `2023` and **Paysandú writes it as the string `2023*`**, a footnote marker nothing in the
@@ -495,3 +496,175 @@ INE's terms were re-fetched from `www4.ine.gub.uy/Anda5/index.php/catalog/48/get
 and §2 quotes clause 6 **verbatim**; the other five clauses are accurate paraphrases, and
 clause 2's *"exclusivamente para la presentación de información agregada"* is on the page as
 described. The deposit obligation is real and stands.
+
+---
+
+## 12. Montevideo at its 62 barrios, 2026-09-15 (session cb8b206e-uy)
+
+The §10 upgrade, built from the ENHA file already on disk. `sources.md` §uy-2026-09-15 is the
+short version. `sources/uy.py`, `uy_geo.py` and `uy_grid.py` carry the checks in code.
+
+### 12.1 What changed, and what did not
+
+- Montevideo's department row is gone; 62 barrio rows replace it (`geo_level` `barrio`,
+  `geo_id` `UY10-B01` to `UY10-B62` on INE's own barrio numbers). `tools/check_mapping.py`'s
+  `DEFAULT_LEVELS` has `uy: departamento, barrio`.
+- **The other 18 departments' 126 rows are identical, row for row**, to the build before
+  (checked against a copy taken first). Montevideo's total (1,191,552 people aged 7+) and the
+  country's (3,181,997) are unchanged; rounding drift goes into Montevideo's largest cell. (Both
+  totals are from before §12.7's fix: 1,207,523 and 3,228,150 after it.)
+- National shares move by at most 0.06 points, because the city is now a sum of barrio shares
+  on barrio populations: Catholic 46.19% to 46.12%, believer without a religion 26.90% to
+  26.96%, atheist 15.57% to 15.54%, non-Catholic Christian 10.02% to 10.07%, Jewish 0.381% to
+  0.364%, Umbanda 0.626% to 0.632%, other 0.316% unchanged.
+
+### 12.2 The grain: barrio for six answers, and why not CCZ
+
+The file places every Montevideo respondent in a barrio (62), a CCZ (18) and a sección censal
+(25 plus a `99` catch-all of 5,478 respondents, not a place). **CCZ is not a coarser barrio**:
+36 of 62 barrios cross a CCZ line, so the two are rival partitions and neither nests in the
+other. Secciones were not tested.
+
+**Why the test resamples census segments and not people.** Religion runs in households: the
+within-household intraclass correlation is 0.66 for Catholic, 0.48 for atheist and 0.82 for
+Jewish, with 2.69 answering people per household, a design effect of about 2. Montevideo's
+80,196 respondents are 29,766 households in 1,025 census segments (`secc` with `segm`); no
+household spans two months and no segment crosses a barrio line; 6 to 46 segments per barrio,
+median 16. The file has no PSU or zona column, so the segment is the finest cluster it names.
+
+`barrio_stability()` is `sources/pr.py`'s construction: 400 random halvings of each unit's
+segments, median Spearman of the halves' unit shares, against 2,000 dealings of the segments
+into random groups of the same sizes (`stability.cluster_null`), with `chi2_p` and `CELL_CAP`
+as vetoes. Unweighted counts. Seed `STAB_SEED`, so it reproduces.
+
+    category                   n      barrio  null95  p       | CCZ     null95  p
+    Catolico                   32,949 +0.486  +0.155  <0.001  | +0.709  +0.267  <0.001
+    Cristiano no catolico       7,387 +0.444  +0.163  <0.001  | +0.754  +0.271  <0.001
+    Judio                         444 +0.462  +0.180  <0.001  | +0.763  +0.288  <0.001
+    Umbandista/afroamericano      923 +0.533  +0.171  <0.001  | +0.750  +0.296  <0.001
+    Creyente sin confesion     21,349 +0.591  +0.154  <0.001  | +0.804  +0.271  <0.001
+    Ateo/agnostico             16,883 +0.406  +0.150  <0.001  | +0.728  +0.263  <0.001
+    Otra                          261 +0.020  +0.179   0.465  | +0.231  +0.271   0.085
+
+Every chi-square is under 1e-9 and no segment holds more than 3% of any answer. **Six of seven
+carry their own barrio shares; `Otra` fails at both grains** and no barrio tops both halves
+in more than 2% of halvings, so it takes Montevideo's weighted share (0.36%) in every barrio
+and the six are scaled together to fill the rest, which moves no carried share by more than
+0.55 points. Barrio rather than CCZ: every answer that passes at CCZ passes at barrio, and
+the barrio is the unit the city and its census use. The medians are lower at barrio (+0.41 to
++0.59 against +0.71 to +0.80), which is the price of the finer grain and is said in the note.
+
+**What this does not fix.** The weights are calibrated to department and to `Estrato` (four
+Montevideo classes; 56 of 62 barrios span more than one; `pesoano` runs 7-8 in *Bajo* to 26-27
+in *Alto*), not to barrio, so a barrio's share is a domain estimate the design did not target.
+The drawn shares are weighted; the test is not.
+
+### 12.3 Witnesses on the barrio join
+
+- The ENHA's own `nombarrio` best-matches the census name of its own code for all 62. The
+  .sav writes Ñ as Ð (`BAÐADOS DE CARRASCO`), which `fold_name` handles.
+- **Held out**: each barrio's weighted share of the ENHA's Montevideo against its 2023 census
+  share, r = +0.941 over 62, best of 20,000 shuffles +0.584. Seventeen years of movement are in
+  it: Bañados de Carrasco sits at 0.32x its 2023 share, Jacinto Vera at 1.24x. Not checked
+  further.
+
+### 12.4 Populations: the 2023 census, weighted, under INE's own Montevideo total
+
+- **Cuadro 15** (census 2023, *Población por barrios*, weighted): 62 barrios, 1,359 people *sin
+  dato de barrio* who live on the street, 1,302,721 in all. It prints names and no numbers.
+- **The persons file**, ANDA catalogue 781, `download/1503`, `personas_ext_07_2026.rar`,
+  135,339,245 bytes holding one 1.9 GB CSV, streamed through bsdtar and never unpacked. Its
+  terms are catalogue 48's seven clauses word for word (§2), so clause 6's deposit covers it
+  too. Only a 64-row aggregate is kept (`data/raw/uy/censo2023_mvd_barrio_edad.csv`).
+- **Traps in that file**: the CSV is latin-1; the header names are quoted and the values are
+  not; the weight is a bare `W` that a search for *peso* or *pond* misses; age is `PERNA01`
+  (questionnaire p.4, question 19) and the DDI's range for it is from a small extraction.
+- **The weight is not optional.** Weighted, the file reproduces Cuadro 15 within 0.53 of a
+  person in every barrio, and 3,499,451 nationally, the published census count; `9898` weights
+  to exactly the 1,359. Unweighted it runs 0.78 (Villa García) to 0.99 (Punta Carretas) of the
+  table, lowest in the poorest barrios, where the census's omission correction was largest.
+- **Why age by barrio matters**: the under-7 share runs 3.97% (Tres Cruces) to 10.68%
+  (Casavalle). INE's single Montevideo 7+ ratio would have drawn barrios 3.1% under to 4.2%
+  over their own 7+ population, centre against periphery.
+- Each barrio takes INE's revision-2025 Montevideo total at 30 June 2023 (1,300,670, of whom
+  1,207,525 are 7+ since §12.7's fix, 1,191,553 before) split by its census share; the 7+ figures are rounded by largest remainder
+  to the department's own rounded total.
+
+### 12.5 Polygons, and COD's Montevideo is not INE's
+
+- The Intendencia's WFS layer `zon_v_sig_barrios` (435 KB, free use under resolution 640/10)
+  against INE's own `ine_barrios_mvd_nbi85` from the 45 MB *mapas vectoriales 2011* zip: the
+  same numbers 1-62, IoU 0.990 or better on every barrio. One lineage, so only the small one
+  is fetched. Cuadro 15's names pair to it one to one by best match; the narrowest margin is
+  Cerro against Cerrito at 0.17.
+- **INE's own 2011 department layer draws Montevideo as the union of the barrios (IoU 0.9999);
+  COD-AB's Montevideo meets it at IoU 0.835.** 70.2 km2 of INE's Montevideo lies in COD's
+  Canelones, holding about 19,700 Kontur people (the north of Villa García and Colón), and
+  18.1 km2 of COD's Montevideo is outside every barrio, holding about 12,100 (by Paso Carrasco,
+  and across the Santa Lucía). Kontur cannot pick the line: on INE's, Montevideo reads 0.997
+  (COD's 0.995), Canelones 0.948 (0.970) and San José 0.983 (0.932). INE tabulates its counts
+  on its own line, so placement follows it.
+- `uy_grid.py::montevideo_edge` cuts every hex on either line: pieces inside a barrio go to it,
+  pieces outside to their COD department, the 127 pieces of COD's Montevideo outside INE's line
+  to the nearest other department (Canelones or San José), each hex's people shared over its
+  land pieces. Montevideo holds 1,316,475 Kontur people on INE's line against 1,294,683 on
+  COD's; the edge's Canelones hexes 38,696 to 29,810, San José 0 to 6,822; 19,728 people in
+  river-centred hexes, dropped before, are placed on their land; nobody is dropped.
+- **Witness**: Kontur per barrio over census per barrio, normalised to Montevideo, p10 0.90,
+  median 1.03, p90 1.13 (Tres Cruces lowest at 0.76, Punta Carretas highest at 1.18); Spearman
+  +0.974 against a best of 1,000 shuffles at +0.393, the assertion set before the numbers were
+  read. Pieces per barrio: median 14, minimum 4.
+- Not checked: COD's other department lines against `ine_depto`. The before-build had
+  Montevideo's dots in Paso Carrasco; whether any other department has the same problem is
+  one overlay away.
+
+### 12.6 What the barrios show (off `data/normalized/uy.csv`)
+
+- Atheist or agnostic: 29.8% of Palermo and 29.7% of Barrio Sur, against 14.7% of Lezica and
+  Melilla and 15.2% of Cerrito.
+- Catholic: 63.8% of Carrasco Norte and 61.2% of Carrasco, against 31.8% of La Paloma and
+  Tomkinson and 32.8% of Casabó and Pajas Blancas.
+- Believer without a religion: 33.5% of La Paloma and Tomkinson, against 9.5% of Carrasco.
+- Non-Catholic Christian: 14.9% of Villa García and Manga Rural, 13.8% of Manga and Toledo
+  Chico, 13.6% of Casavalle, against 3.1% of Barrio Sur and 4.4% of Pocitos.
+- Jewish: 8.4% of Punta Carretas and 8.0% of Pocitos; with Punta Gorda they hold 69.2% of the
+  city's 10,546 (10,404 before §12.7's fix). Montevideo holds 89.8% of the country's.
+- Umbanda and Afro-American: 2.7% of Las Acacias and 2.5% of Villa García, none drawn in
+  Carrasco.
+- Both no-religion cells together run 30.3% (Carrasco Norte) to 55.5% (Barrio Sur), inside the
+  departments' own range.
+- Thinnest barrio sample: La Blanqueada, 358 respondents, about 5 points either way on a share
+  near 46% before the design effect. A gap of several points between two barrios can be noise.
+
+### 12.7 The 7+ cut took out the wrong fifths: FIXED 2026-09-15
+
+`uy_geo.py`'s `BAND_5_9_OVER_6 = 0.6` is subtracted from the 5-9 band, but three fifths of that
+band is ages 7 to 9, **inside** the universe. The cut wants 0.4 (ages 5 and 6). Nationally the
+5-9 band is 230,771 people (6.60%, not §5's 6.3%), so **the drawn 7+ population is 46,154 people
+short, 1.32% of Uruguay, in every department in proportion**, and `gap_share` is 0.0899 where
+0.0767 is right. §5's "0.05% of Uruguay" is also wrong arithmetic. The census is the witness:
+Montevideo's under-7 share is 6.95% in the 2023 persons file, 8.39% as built and 7.16% with 0.4.
+
+Not fixed by the barrio session, which was scoped to Montevideo with the rest of Uruguay as drawn.
+
+**Fixed the same day, session `cb8b206e-fixes2`, on the supervisor's call.** `BAND_5_9_OVER_6`
+is 0.4; `uy_geo.py` and `uy.py` rerun, both editions rescattered (3,225 and 321 dots).
+
+- Drawn **3,228,150** aged 7+, 46,154 more; Montevideo 1,207,523, over the same 62 barrio
+  shares, which `uy.py` recomputed unchanged. `gap_share` **0.0767** (268,250 under 7), written
+  by hand: `tools/gap_share.py uy` refuses an age cut ("the mapping excludes nothing").
+- Every department's shares are the survey's and did not move. National shares moved by at
+  most 0.007 points (atheist 15.535% to 15.528%, non-Catholic Christian 10.066% to 10.070%),
+  because the 5-9 band's weight differs a little between departments. Every figure in
+  `note_public` holds at the precision it prints, and the note was not edited.
+- Changed text: `gap` 9.0% to 7.7%; `grain` 111,000 to 112,000 per department (the barrio
+  average stays 19,000); the city's Jewish residents 10,404 to 10,546 (§12.6); §5's arithmetic.
+- Not taken: reading each department's 7+ from the census persons file (`DEPARTAMENTO`,
+  `PERNA01`). 0.4 leaves Montevideo 0.21 points above the census's under-7 share, so that
+  would move each department by about 0.2%.
+
+### 12.8 Not done
+
+- Whether any ECH after 2006 repeated `e29` (§10, still open).
+- Secciones censales as a grain.
+- The barrio figures are 2006's; the note says the level is 2006 and that holds here too.

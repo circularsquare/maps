@@ -1680,8 +1680,13 @@ const ROOT_ORDER = [
   'islam',
   'judaism',
   'hinduism',
-  'sikhism',
   'buddhism',
+  /* SIKHISM AFTER BUDDHISM, AND JAINISM AFTER SIKHISM. Anita, 2026-09-15: "lets reorder sikhism
+     to be after buddhism, and jainism after sikhism". Jainism leaves the hue-ordered tail for it,
+     so seven named religions now lead. ROOT_KEEP still holds the first six, so Jainism can fold
+     into the small-religions bucket where it is small (spec §10.0b). */
+  'sikhism',
+  'jainism',
   // §6.3a's grey family, contiguous. Ordered person -> instrument:
   'unaffiliated',      // No religion — asked, and said none
   'secular',           // Secular and ethical — asked, and stated a position
@@ -1726,15 +1731,14 @@ const ROOT_ORDER = [
   'hebrewisraelite',      // 270
   'unitarianuniversalist',// 274
   'scientology',          // 279
-  'esoteric',             // 284
+  'esoteric',             // 244 since 2026-09-15 (was 284), so out of hue order here
   'newthought',           // 290
-  'spiritualism',         // 297
-  // the two that belong to no block
+  'spiritualism',         // 290, and 297 until 2026-09-15
+  // the one that belongs to no block (Jainism was here too, until 2026-09-15)
   'druze',                // 304
-  'jainism',              // 310
   // East Asian, running up into Shinto and Buddhism
   'caodaism',             // 316
-  'eastasiannew',         // 320
+  'eastasiannew',         // 228 since 2026-09-15 (was 315), so out of hue order here
   'confucianism',         // 323
   'unification',          // 325
   'chinesefolk',          // 327
@@ -2379,7 +2383,12 @@ const ROOT_HSL = {
      in the overview (OVERVIEW_ARC), and every degree Sikhism gives back is a degree they
      are not squeezed into. */
   buddhism:              [356,  86, 45],
-  sikhism:               [  0, 100, 70],   // #ff6666
+  /* LIGHTER AGAIN, L 70 -> 77. Anita, 2026-09-15: "lets recolor sikh to #ff8a8a, main issue here
+     is contrast with hindu". Same hue and saturation; the lightness the search above found to be
+     the separation, taken further. Hinduism 31.1 -> 42.2, Buddhism 27.4 -> 45.1, contrast 6.6 ->
+     8.3. What it costs: Shinto 42.4 -> 24.8, flagged in the all-countries view only, since no
+     country draws both at size; Ravidassia 26.8 -> 20.9, under every size threshold. */
+  sikhism:               [  0, 100, 77],   // #ff8a8a  Anita, 2026-09-15
   /* MOVED TO #fb6b28 ON 2026-09-07 — Anita, pairing it with the ancient communions in the
      same breath: "maybe lets make the orthodox a little more yellowish like #b86c2e and
      hinduism a tad more reddish and lighter like #fb6b28 so that they're not so close".
@@ -2510,7 +2519,19 @@ const ROOT_HSL = {
      Nepal. Anita's rule, 2026-09-06: collisions are fine where the pair does not
      co-occur. */
   bon:                   [208,  84, 72],   // #7cbcf4
-  judaism:               [214,  92, 58],
+  /* SLIGHTLY GREENER. Anita, 2026-09-15: "we can also shift jewish slightly greener i think to make
+     a bit more room". Was [214, 92, 58], #3187f6. Five degrees, saturation and lightness kept, and
+     it measures lighter against the background for it (contrast 5.32 -> 6.21) because the hue
+     turned toward cyan. The room is for East Asian new religions in Brazil, which draws both: the
+     best blue there cleared 25.7 with Judaism at 214 and 30.4 with it at 209.
+
+     NOTHING JUDAISM IS DRAWN BESIDE COMES UNDER 25 except the new pale Esoteric, 22.7 in the US
+     and Brazil (dE00 18.3), which is that move's cost rather than this one's. `secular` goes
+     56.2 -> 47.0, and `bon`, in the all-countries view only, is 26.7.
+
+     ITS BAND CAME DOWN WITH IT, 197-211 -> 197-207 (see ROOT_BAND), because a band must not
+     contain its own root's hue. Only the top moved, so the teal region's stop at 193 holds. */
+  judaism:               [209,  92, 58],   // #3197f6  Anita, 2026-09-15
   /* SHINTO LIGHTER AND PINKER — Anita, 2026-09-14: "we can move shinto a bit lighter to pink".
      Was [334, 84, 70], #f372aa. Six degrees toward pink, eight points lighter and a little less
      saturated, which is what pink is. Measured against the rest of the palette as it stood:
@@ -2862,12 +2883,48 @@ const ROOT_HSL = {
   hebrewisraelite:       [270,  86, 59],   // #953df0  drawn in no country yet
   unitarianuniversalist: [274,  76, 71],   // #bd7ded
   scientology:           [279,  78, 65],   // #bb60eb
-  esoteric:              [284,  86, 50],   // #b212ed
+  /* ESOTERIC GOES BLUE-PURPLE, AND PALE. Anita, 2026-09-15, on the pinks being crowded: "perhaps
+     we shift esoterics to blue-purple between pagan and indigenous". Was [284, 86, 50], #b312ed.
+     Hue 244 is between `paganism` 237 and `indigenous` 258; the line stays here in the list.
+
+     PALE BECAUSE NOTHING ELSE BETWEEN THE TWO CLEARS. The US draws all three (Pagan 1,502,
+     Esoteric 866, Indigenous 226) and they are already 15.6 apart. Searched over hue 238-256: at
+     their lightness every candidate lands dE00 6-8 from one of them, and darker falls under the
+     contrast floor, because a blue-violet at L 50 is dim. The pale tier is the only one with room
+     and the best of it reaches dE 23.6 (#a9a3ff); this gives up half a point of that, 23.1, for a
+     better CIEDE2000 floor, 11.4 against 9.3.
+
+     WHAT IT COSTS, on what check_overview draws:
+       esoteric / spiritualism    21.7 -> over 32   Brazil 110 against 3,343, and the US
+       esoteric / indigenous      25.0 -> over 32   the US and Brazil
+       esoteric / judaism         over 32 -> 22.7   the US, 866 against 5,580 (dE00 18.3); Brazil
+       esoteric / unitarian       over 32 -> 23.1   the US, 573 (dE00 11.4)
+       esoteric / unchurched      over 32 -> 23.8   the US, 2,793 (dE00 14.6)
+       esoteric / other           over 32 -> 24.7   the US 1,124 and Brazil 961 (dE00 11.4)
+     More pairs under 25 than before and none as tight in CIEDE2000: the old worst was dE00 9.3
+     against Indigenous. Contrast 3.79 -> 7.57. */
+  esoteric:              [244,  80, 78],   // #a09af4  Anita, 2026-09-15
   newthought:            [290,  76, 68],   // #d76feb
-  spiritualism:          [297,  78, 57],   // #de3ce7
+  /* SLIGHTLY BLUER. Anita, 2026-09-15: "then shift spiritualism and jainism slightly bluer". Was
+     [297, 78, 57], #de3ce7. Seven degrees, saturation and lightness kept, and 290 is as far as it
+     goes: at 287 Brazil's Indigenous pair (99 dots against 3,343) drops under 25.
+       spiritualism / new thought     23.9 -> 23.9   the US, 151 against 93 (dE00 7.8 -> 9.8)
+       spiritualism / indigenous   over 32 -> 26.2   Brazil, the US, Mexico, the Philippines
+       spiritualism / afrodiasporic   34.5 -> 31.2   Brazil
+       spiritualism / druze           13.8 -> 16.4   the all-countries view only
+     Its 21.7 against Esoteric went with Esoteric's move. Contrast 5.32 -> 4.78. */
+  spiritualism:          [290,  78, 57],   // #ca3ce7  Anita, 2026-09-15
   // -- the two that belong to no block: the lone dharmic family, and the teal's exception
   druze:                 [304,  86, 42],   // #c70fbb  see the teal note above
-  jainism:               [310,  76, 66],   // #ea66d4
+  /* SLIGHTLY BLUER, the same sentence as Spiritualism's (Anita, 2026-09-15). Was [310, 76, 66],
+     #ea66d4. Five degrees, and the UK sets the limit: it draws both (24 dots against 33), and with
+     Spiritualism at 290 the pair is 25.3 here and 23.3 at 303.
+       jainism / spiritualism   27.3 -> 25.3   the UK (dE00 8.7 -> 11.0)
+     In the all-countries view it gains on Confucianism (16.7 -> 22.3), Caodaism (14.3 -> 17.3),
+     Unification (19.2 -> 23.8) and Daoism (23.2 -> 28.9), and loses on New Thought (14.2 -> 10.5),
+     Druze (24.5 -> 21.8) and Unitarian Universalism (24.0 -> 22.7); no country view reports any of
+     those. Contrast 6.63 -> 6.73. */
+  jainism:               [305,  76, 66],   // #ea66df  Anita, 2026-09-15
   /* -- East Asian, running up into Shinto at 334 and Buddhism at 356.
      `eastasiannew` LEADS THE BLOCK — Anita, 2026-09-07: "maybe lets put korean/japanese new
      religions to be a bit bluer, as they are regional". It is also the family that made the
@@ -2879,7 +2936,29 @@ const ROOT_HSL = {
      THE ROOT-LEVEL SEARCH CANNOT SEE THIS, which is worth writing down: it scores families
      against families, and this is a family CHILD against a neighbouring family. The signal
      only appears in tools/check_overview.py. */
-  eastasiannew:          [315,  86, 44],   // #d1108f  its children take 313-317
+  /* EAST ASIAN NEW RELIGIONS JUMP TO THE BLUE. Anita, 2026-09-15: "then maybe we also jump east
+     asian new religions over to a blueish one similar to pagan and nature". Was [315, 86, 44],
+     #d110a0 (the old comment on this line said #d1108f). It no longer leads this block; it sits
+     in the blue beside `paganism` [237, 86, 64], and stays on this line so the note above still
+     reads in place.
+
+     TAIWAN IS WHAT ASKED FOR IT: Chinese religions against it measured 21.2 (dE00 7.6), 11,617
+     dots against 600, among Daoism and Mahayana in the same pinks. By check_overview, before and
+     after:
+       Taiwan   Chinese religions 21.2, Daoism 31.6, Mahayana 43.2    -> all over 32, dE00 over 16
+       Japan    Unification 15.9                                      -> over 32
+       Korea    Confucianism 27.8, the child-band collision above     -> over 32
+       Brazil   the one country with blue neighbours: Afro-diasporic 29.2, Indigenous 29.2 (dE00
+                13.3), Esoteric 30.8, Judaism 31.3
+     SIMILAR TO PAGAN, NOT THE SAME: dE 14.9 (dE00 7.1), in the all-countries view only, because no
+     country draws both. Judaism moving greener the same day is what makes the room in Brazil:
+     the best blue here cleared 25.7 with Judaism at 214 and 30.4 with it at 209. Its children now
+     take 226-230, and Brazil's Japanese new religions against Indigenous at L3 is 23.5 (146 and
+     99 dots). Contrast 3.85 -> 4.55.
+
+     WHAT IT DOES NOT FIX IN TAIWAN: Mahayana against Daoism, 22.0 over 3,321 and 3,257 dots.
+     Neither moved. */
+  eastasiannew:          [228,  90, 64],   // #5172f6  Anita, 2026-09-15; its children take 226-230
   caodaism:              [319,  78, 58],   // #e740c0
   confucianism:          [323,  76, 68],   // #eb6fbc
   unification:           [325,  78, 59],   // #e845a5  drawn in no country yet
@@ -2951,7 +3030,9 @@ const PIN = {
   'christianity.catholic.latin':     [38, 83, 56],   // MERGE_OWN keeps these identical
 
   // ---- Separatist and believers' churches: yellow-green
-  'christianity.anabaptist':         [72, 54, 67],
+  /* SATURATED, 54 -> 96. Anita, 2026-09-15: "also anabaptist #dbfc5a", after the faded Christian
+     `unspecified` #dbc96b (FOCUS_UNSPECIFIED) came out dE 15.9 from it. Measured in spec §6.16. */
+  'christianity.anabaptist':         [72, 96, 67],   // #dbfc5a — Anita, 2026-09-15
   'christianity.baptist':            [83, 72, 54],
   'christianity.friends':            [94, 82, 40],
   'christianity.plymouth':           [105, 54, 67],
@@ -2985,7 +3066,12 @@ const PIN = {
   /* Moved 2026-09-07 to clear Protestant-unspecified's blue — see its note below. */
   'christianity.hussite':            [236, 70, 56],
   'christianity.lutheran':           [262, 86, 68],
-  'christianity.reformed':           [244, 80, 76],  // #9791f3 — Anita
+  /* BRIGHTER AND BLUER. Anita, 2026-09-15: "lets make reformed #4e5ff9 and protestant unspec
+     #6c84e5", after the faded Protestant-unspecified came out dE 10.4 from the old #9791f3
+     [244, 80, 76] with Christianity selected, in nine countries. What it costs: Lutheran, the
+     pair the note above says has to work, 30.1 -> 18.6 (the US, Madagascar, South Africa,
+     Brazil, Hungary), and Anglican 54.5 -> 20.4 (the UK). Measured in spec §6.16. */
+  'christianity.reformed':           [234, 93, 64],  // #4e5ff9 — Anita, 2026-09-15 (was #9791f3)
   'christianity.anglican':           [255, 88, 60],  // #6c3ff3 — Anita
 
   // ---- No single line: purple -> magenta
@@ -3045,7 +3131,12 @@ const PIN = {
      it used to be blue. Reformed and Anglican did not move. If the trade reads wrong on the
      map, the lever is Lutheran's lightness rather than its hue — it is the only node here
      with room left underneath it. */
-  'christianity.protestant':         [228, 97, 66],   // #5476fc — Anita's colour
+  /* FADED, SATURATION 97 -> 70. Anita, 2026-09-15: "lets also fade protestant unspecifeid to
+     #6c84e4", alongside the family shades in FOCUS_UNSPECIFIED, then #6c84e5 when Reformed moved
+     to clear it. This node has no children, so it is always an unspecified answer and its colour
+     changes here rather than there. Hue and lightness kept. The overview still draws it in the
+     Reformation swatch (PIN_OVERVIEW). */
+  'christianity.protestant':         [228, 70, 66],   // #6c84e5 — Anita, 2026-09-15 (was #5476fc)
   /* EVANGELICAL-UNSPECIFIED SITS WITH THE BELIEVERS' CHURCHES, not in the residual block —
      Anita, 2026-09-05: "maybe evangelical same color as... baptist? not sure what it's
      closest to". Baptist is the right guess and Kenya is why the node exists: KNBS's
@@ -3310,6 +3401,37 @@ const PIN_OVERVIEW = {
      and at depth 3 Shingon (7.7) and Zen (9.5) clear. The one cost is Sikhism in the
      all-countries view, 24.3 to 22.1, which no single country's view reports. */
   'buddhism.vajrayana':               [344, 95, 46],     // #e50641 — Anita
+
+  /* FOUR ISLAMIC ROWS HELD AT THEIR PRE-SENEGAL COLOURS, 2026-09-15. Filing Senegal's orders
+     (Qadiriyya, Tijaniyya and the Mourides under `islam.sunni`, the Layène beside Bektashi)
+     re-divided Islam's band and moved rows nobody had changed. Against 844a2c7, the commit
+     before Senegal: Shia dE 30.4 (36,889 dots), Bektashi 30.3, Ahmadiyya 22.3, Ja'fari 5.2.
+     Anita wants one colour per category, so these are the old colours pinned back. Ja'fari was
+     not in the request and is pinned because Shia is: with Shia back and Ja'fari not, Türkiye's
+     Hanafi/Ja'fari pair sits at 8.3, and with both back it is its old 13.1. Ibadi also moved
+     (6.2) and is drawn nowhere, so it is left alone. The same move shifted 262 of the 715
+     focus-palette colours by more than dE 1; those are not pinned. */
+  'islam.shia':                       [106, 45, 56],
+  'islam.shia.jaafari':               [106, 66, 40],
+  'islam.bektashi':                   [120, 63, 27],
+  'islam.ahmadiyya':                  [112, 48, 52],
+
+  /* SENEGAL'S FOUR ORDERS, 2026-09-15. Left to the band they came out as one green: Tijaniyya
+     against the Layène 7.9 and Qadiriyya against the Mourides 9.3 in Senegal, and in the
+     all-countries view Tijaniyya 0.6 from Sunni Islam's own row. Searched jointly over hue
+     100-145 (Islam's side of the wheel, above the Christian chartreuse and below the teal
+     region) on CIE76 and CIEDE2000 both, because the first flatters saturated greens: an
+     earlier pick cleared 22.6 in CIE76 and was 5.1 in CIEDE2000. In Senegal now, CIE76 / CIEDE2000:
+       Tijaniyya / Qadiriyya   50.7 / 26.5      Mouride / Qadiriyya   29.0 / 14.5
+       Tijaniyya / Mouride     52.4 / 37.4      Mouride / Layène      47.6 / 16.5
+       Tijaniyya / Layène      45.2 / 34.0      Qadiriyya / Layène    67.5 / 21.9
+     Every other family is over 45. Two costs: Qadiriyya is 14.5 from Islam's own row but only
+     4.4 in CIEDE2000 (806 dots against 353), and Tijaniyya, the largest order, is a dark muted
+     green at contrast 3.4. */
+  'islam.sunni.tijaniyya':            [121, 35, 34],   // #387539
+  'islam.sunni.mouride':              [142, 95, 70],   // #6afb9f
+  'islam.sunni.qadiriyya':            [139, 95, 40],   // #05c742
+  'islam.layene':                     [145, 35, 76],   // #acd7be
 };
 
 /* THE OVERVIEW DRAWS A LINEAGE GROUP AS ONE COLOUR — Anita, 2026-09-05, and it is the
@@ -3678,7 +3800,16 @@ const ROOT_BAND = {
      detail is for. Same call as Hinduism's below, and for the same reason: "they seem quite
      similar and if people want to see detail they can click to disperse the colors."
      DO NOT "fix" the dE number by widening this band. */
-  judaism:       [197, 211],
+  /* TOP DOWN FROM 211 TO 207 ON 2026-09-15, because Judaism's root moved from 214 to 209 on
+     Anita's "shift jewish slightly greener", and a band must not contain its own root (see the
+     note below this table). The bottom stays at 197, which is what the teal region's stop at 193
+     is set against. [193, 207] was tried to keep the old width: it did a little better on the
+     US movements against `other` and took Israel's observance rows toward Zoroastrianism in the
+     all-countries view (Dati 17.5 -> 13.2). At [197, 207], by check_overview at L3: Orthodox
+     against `other` in the US 22.3 -> 23.2, Conservative 23.8 -> 24.4, Reconstructionist
+     24.2 -> 23.4; in the all-countries view Dati/Zoroastrianism 17.5 -> 15.5, Hiloni/Bon
+     6.0 -> 7.9. */
+  judaism:       [197, 207],
   buddhism:      [340, 352],   // the three vehicles; Shinto is 334 below and its own root 356 above
 
   /* ISLAM GETS A BAND, 2026-09-08 WITH TÜRKİYE — Anita: "you can expand islam hue band if u
@@ -3754,7 +3885,7 @@ const ROOT_BAND = {
 
 };
 
-/* A BAND MUST NOT CONTAIN ITS OWN ROOT'S HUE, which is why Judaism's runs BELOW 214 and
+/* A BAND MUST NOT CONTAIN ITS OWN ROOT'S HUE, which is why Judaism's runs BELOW 209 (214 until 2026-09-15) and
    Buddhism's below 356 rather than straddling them. A split family draws a row for its own
    dots at the root's exact colour (§6.6's `unspecified`, and it is 30% of Judaism and 60% of
    Buddhism worldwide), so a branch landing on the root hue is a branch that cannot be told
@@ -4019,6 +4150,30 @@ function buildOverview(gkids, rankOf) {
   for (const id in PIN_OVERVIEW) OVERVIEW_COLOR[id] = hsl(...PIN_OVERVIEW[id]);
 }
 
+/* A SELECTED FAMILY'S OWN DOTS DRAW IN A QUIETER SHADE OF IT — Anita, 2026-09-15: "currently we
+   just use the generic christianity color to denote unspecified christianity when we have
+   christianity selected ... lets have this unspecified color be desaturated in some cases, to
+   denote its kinda generic", and then "the unspecified colors should only apply when looking at a
+   specific religion. when looking at all religions we maintain the current group colors".
+
+   So this is the colour of a family's `unspecified` row (§6.6) while that family is the selection
+   and its children are drawn, and nothing else. Unselected, undivided, or in the all-religions
+   view, the family keeps ROOT_HSL's colour. Her four hexes, each the root's own hue with the
+   saturation taken down. The row's swatch shows it, so every colour on the map is still one in
+   the legend. A node with no line here keeps its usual colour on that row. Spec §6.16.
+
+   NOT ONLY FAMILIES. Sunni Islam joined the same day ("sunni unspecified to #7eb536"): it is split
+   whenever Islam is selected, since Islam opens at depth 2 (SCOPE_DEPTH), and its own dots are
+   the row PIN's Sunni note wanted to read like Islam's own. Both are faded now. `paletteFor` asks
+   the same question of any drawn node, so a line here works at any depth. */
+const FOCUS_UNSPECIFIED = {
+  christianity:          [ 50,  61, 64],   // #dbc96b, root #f8dc4f
+  islam:                 [138,  42, 44],   // #419f5d, root #26ba53
+  judaism:               [209,  58, 58],   // #5696d2, root #3197f6
+  buddhism:              [356,  47, 48],   // #b44149, root #d5101d
+  'islam.sunni':         [ 86,  54, 46],   // #7eb536, PIN #81cb20
+};
+
 /* A node BELOW the drawn cut takes its drawn ancestor's colour exactly, rather than a shade
    of it. It used to take a shade, which sounds harmless and was not: at depth 2 in the US,
    93% of the dots on screen were a shade of something whose own legend row sat a level
@@ -4055,8 +4210,15 @@ function paletteFor(sc, dep) {
   const table = sc ? NODE_COLOR : OVERVIEW_COLOR;
   const paint = id => USER_COLOR[id] || table[id];
   const out = {};
-  for (const id of drawnSet(sc, dep))
-    for (const m of subtree(id)) out[m] = paint(id);
+  const drawn = drawnSet(sc, dep);
+  /* The selected family's own dots take FOCUS_UNSPECIFIED once its children are drawn beside
+     them. Painted on the family's whole subtree like any drawn colour, so the children paint
+     over their parts and anything folded under it reads as unspecified too. */
+  const split = sc ? splitOver(new Set(drawn)) : new Set();
+  const paintDrawn = id => USER_COLOR[id]
+    || (split.has(id) && FOCUS_UNSPECIFIED[id] ? hsl(...FOCUS_UNSPECIFIED[id]) : table[id]);
+  for (const id of drawn)
+    for (const m of subtree(id)) out[m] = paintDrawn(id);
   /* A MERGED BRANCH'S OWN DOTS TAKE ITS CHILD'S COLOUR, so §6.6's `unspecified` row and that
      child are one thing on the map as well as in the legend (MERGE_OWN). Applied after the
      loop rather than inside it, because `drawnSet` pushes the parent first and the child
@@ -5764,7 +5926,9 @@ function renderProvenance() {
    not a sovereign state, not only the built ones, so a territory added later drops out of N
    without anyone remembering this list. Only the title uses it; dots, legend and picker are
    unchanged. Cook Islands and Niue are in it (in free association with New Zealand, not UN
-   members). Kosovo, Palestine, Taiwan and Western Sahara are not, and count if built. */
+   members). Kosovo, Palestine, Taiwan and Western Sahara are not, and count if built. An entry
+   with no territory (`territory: false`, the Israeli settlements) is not a country and does not
+   count either. */
 const TERRITORIES = new Set([
   'ai', 'aq', 'as', 'aw', 'ax', 'bl', 'bm', 'bq', 'bv', 'cc', 'ck', 'cw', 'cx', 'fk', 'fo',
   'gf', 'gg', 'gi', 'gl', 'gp', 'gs', 'gu', 'hk', 'hm', 'im', 'io', 'je', 'ky', 'mf', 'mo',
@@ -5794,7 +5958,7 @@ function retitle() {
     const names = BUILT.map(cc => META[cc].name_in || META[cc].name);
     t.textContent = !names.length ? 'Religion'
       : names.length <= 2 ? 'Religion in ' + fmtList(names)
-      : `Religion in ${BUILT.filter(cc => !TERRITORIES.has(cc)).length} countries`;
+      : `Religion in ${BUILT.filter(cc => !TERRITORIES.has(cc) && META[cc].territory !== false).length} countries`;
     /* THE SUBTITLE CARRIES §7c's WARNING IN THIS VIEW, because the block that carries it in a
        country view is not drawn here (see `renderProvenance`). Anita's words, 2026-09-07. The
        old line said the countries were "measured differently", which is true and is the
@@ -6671,8 +6835,20 @@ function outweighed(sh, cc) {
   return false;
 }
 
+/* AN ENTRY WITH NO TERRITORY IS NEVER THE CAMERA'S CHOICE. Anita, 2026-09-15, on the Israeli
+   settlements (`xs`): *"they dont actually have any territory so it shouldnt be possible to
+   auto-mode onto them. only way to see them should be in all countries mode, or selecting them
+   manually in the dropdown."* countries.py's `territory=False` arrives as META[cc].territory.
+   Such an entry has no shape, so `countryAt`, the samples and the hulls never name it; the dot
+   tally and the small-country branch below could, and are gated on this. */
+function autoMay(cc) {
+  return !!META[cc] && META[cc].territory !== false;
+}
+
 function considerCamera() {
   if (!autoCountry || autoLock || !map.getLayer('dots')) return;
+  // held only by hand: turning Auto on hands the choice to the camera, which lets it go
+  if (country !== null && !autoMay(country)) setCountry(null, { fly: false });
   const z = map.getZoom();
   // where Auto looks for the middle — see `centreBounds`
   const c = viewCentre();
@@ -6722,7 +6898,7 @@ function considerCamera() {
       if (tooWide() || viewFill(country, bandBounds()) < AUTO_FILL_OUT
           || viewOverlap(country) < AUTO_OVER_OUT)
         setCountry(null, { fly: false });
-    } else if (!tooWide() && META[at] && framedIn(at)
+    } else if (!tooWide() && autoMay(at) && framedIn(at)
                && !contested(sh, at) && scopeDrawsIn(at)) {
       setCountry(at, { fly: false });     // straight across, with no all-countries frame between
     } else if (country !== null) {
@@ -6815,7 +6991,7 @@ function considerCamera() {
      above returned otherwise), so both must also find the centre inside one of the country's
      hulls before switching to it. See `centreInHullOf` and spec §9f. */
   if (total < AUTO_MIN) {
-    const framed = BUILT.filter(cc => META[cc] && viewFill(cc) >= AUTO_FILL_IN
+    const framed = BUILT.filter(cc => autoMay(cc) && viewFill(cc) >= AUTO_FILL_IN
                                       && viewOverlap(cc) >= AUTO_OVER_IN);
     if (framed.length === 1 && framed[0] !== country && !contested(sh, framed[0])
         && centreInHullOf(framed[0], c) && scopeDrawsIn(framed[0]))
@@ -6826,7 +7002,7 @@ function considerCamera() {
   if (key === lastLook) return;
   lastLook = key;
   let best = null;
-  for (const cc in out) if (!best || out[cc] > out[best]) best = cc;
+  for (const cc in out) if (autoMay(cc) && (!best || out[cc] > out[best])) best = cc;
   // `contested` here too, so "lean towards all countries" means the same thing on both routes
   // into a selection. It costs nothing on the cases this fallback exists for — Indonesia and
   // the Philippines framed from the sea each hold every sample that lands on a built country.
@@ -8491,6 +8667,18 @@ SCATTER.pick = function (point) {
    a camera that jumps once the data arrives is worse than a constant that needs widening the
    day a country outside it is built.
 
+   CENTRED ON THE PRIME MERIDIAN SINCE 2026-09-15 — Anita: "when we load in we center the view
+   slightly east. lets just center on prime meridian actually, feels less opinionated to me." The
+   data box above, -127 to 180, put the centre at 26.5°E. The box centred on 0 that holds both of
+   its edges runs -180 to 180, and that opened the world a quarter of a zoom level smaller.
+
+   SO IT IS A QUARTER ZOOM TIGHTER THAN THE WHOLE WORLD, AND NO LONGER THE DATA — Anita, the same
+   day: "lets start zoomed in a quarter of a zoom level too. we dont have to hold the whole world,
+   peopel can scroll." ±151.4 is 360 / 2^0.25 wide, so where the width sets the fit (every desktop
+   window short of an ultrawide) it opens exactly 0.25 in from the -180 to 180 fit. New Zealand,
+   Hawaii and western Alaska start off the edge. A phone's fit is clamped at minZoom either way, so
+   it does not change.
+
    ASYMMETRIC PADDING, AND ONLY THE RIGHT SIDE IS REAL. `panelPadding` is the wrong table for
    this one view: it reserves 250 px on the left for a panel that is a hundred pixels tall, so
    the world lands smaller for nothing, and at this zoom a world narrower than the window means
@@ -8508,7 +8696,7 @@ SCATTER.pick = function (point) {
 const map = new maplibregl.Map({
   container: 'map',
   style: 'https://tiles.openfreemap.org/styles/dark',
-  bounds: [[-127, -50], [180, 64]],
+  bounds: [[-151.4, -50], [151.4, 64]],
   fitBoundsOptions: {
     padding: { left: 14, top: 14, bottom: 14,
                right: panelPadding(document.getElementById('map')).right },

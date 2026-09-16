@@ -507,28 +507,10 @@
       "note": "The Sufi order founded on Haji Bektash Veli in thirteenth-century Anatolia, whose world headquarters moved to Tirana after Atatürk abolished the tekkes in 1925. **Albania's is the only census on this map that counts it apart from other Muslims**: INSTAT's 2023 table 1.13 prints `Mysliman - Bektashi` as a row of its own beside `Mysliman`, 115,644 people and 4.81% of the country. **Filed under `islam` because that is where the census files it and where Albanian Bektashis file themselves** — the row reads *Muslim - Bektashism* in INSTAT's own English, and the order is one of Albania's four recognised faith communities alongside the Sunni Muslim Community and the Catholic and Orthodox churches. It is NOT under `islam.shia`, which is the Twelver community and a different thing, and not under `alevism`, which is held apart for the reason that node's own text gives: Alevism is the Anatolian community identity that many Alevis decline to file inside Islam at all, where the Bektashiyyah is an initiatic order that does not. The two are twinned in Turkey and named together there; in Albania the order is institutionally separate and has been since 1929."
     },
     {
-      "id": "islam.qadiriyya",
-      "label": "Qadiriyya",
-      "kind": "branch",
-      "note": "The Sufi order traced to Abd al-Qadir al-Jilani of Baghdad, who died in 1166, and the oldest of the brotherhoods in West Africa. **Senegal's 1988 census counts it**: the form asked every Muslim which brotherhood they belonged to, and its code 1 (`Khadr`) holds **806,271 people, 11.7% of residents**. It is 32.0% of Ziguinchor, 26.0% of Kolda and 25.2% of Tambacounda, against 3.7% of the Diourbel region."
-    },
-    {
-      "id": "islam.tijaniyya",
-      "label": "Tijaniyya",
-      "kind": "branch",
-      "note": "The Sufi order founded by Ahmad al-Tijani in the 1780s. **Senegal's 1988 census counts 3,260,497 people in it, 47.3% of residents** (code 4, `Tidiane`), the largest answer in the country. It is 80.2% of Saint-Louis region, which then included Matam, 65.4% of Kaolack and 51.4% of Dakar, against 4.3% of Mbacké. Its Senegalese centres include Tivaouane and Medina Baye in Kaolack; the form has one code for all of its branches."
-    },
-    {
-      "id": "islam.mouride",
-      "label": "Mouride",
-      "kind": "branch",
-      "note": "The brotherhood founded by Amadou Bamba in the 1880s, whose holy city is Touba. **Senegal's 1988 census counts 2,047,728 Mourides, 29.7% of residents** (code 3). They are 91.5% of Mbacké department, where Touba is, 85.5% of Bambey and 77.1% of Diourbel department, and 45.9% of Louga and 44.7% of Thiès, against 3.6% of Kolda."
-    },
-    {
       "id": "islam.layene",
       "label": "Layène",
       "kind": "branch",
-      "note": "The brotherhood founded in 1883 by Seydina Limamou Laye at Yoff, among the Lebou of the Cap-Vert peninsula. **Senegal's 1988 census counts 41,681 people in it, 0.6% of residents** (code 2), and 74.9% of them live in the Dakar region, where they are 2.1% of residents. Limamou Laye proclaimed himself the Mahdi; the census lists the Layène among the Muslim brotherhoods, and it is filed beside them."
+      "note": "The brotherhood founded in 1883 by Seydina Limamou Laye at Yoff, among the Lebou of the Cap-Vert peninsula. **Senegal's 1988 census counts 41,681 people in it, 0.6% of residents** (code 2), and 74.9% of them live in the Dakar region, where they are 2.1% of residents. **Filed under Islam but not under Sunni Islam, unlike the census's other three brotherhoods.** Limamou Laye proclaimed himself the Mahdi, a claim his followers keep and one that lies outside Sunni orthodoxy; this map keeps the Ahmadiyya apart from the branches for the same kind of reason. The census lists the Layène among the Muslim brotherhoods, so it sits under `islam` with the Sufi orders, beside Bektashi."
     },
     {
       "id": "islam.ahmadiyya",
@@ -565,6 +547,24 @@
       "label": "Hanbali",
       "kind": "branch",
       "note": "From Ahmad ibn Hanbal, d. 855; the smallest of the four and the school of the Arabian peninsula. **0.1% of Muslims in Türkiye.** As with `maliki`, a real published column and a very small one."
+    },
+    {
+      "id": "islam.sunni.qadiriyya",
+      "label": "Qadiriyya",
+      "kind": "branch",
+      "note": "The Sufi order traced to Abd al-Qadir al-Jilani of Baghdad, who died in 1166, and the oldest of the brotherhoods in West Africa. A Sunni order; its members in Senegal follow the Maliki school, which the census does not ask. **Senegal's 1988 census counts it**: the form asked every Muslim which brotherhood they belonged to, and its code 1 (`Khadr`) holds **806,271 people, 11.7% of residents**. It is 32.0% of Ziguinchor, 26.0% of Kolda and 25.2% of Tambacounda, against 3.7% of the Diourbel region."
+    },
+    {
+      "id": "islam.sunni.tijaniyya",
+      "label": "Tijaniyya",
+      "kind": "branch",
+      "note": "The Sufi order founded by Ahmad al-Tijani in the 1780s; a Sunni order, Maliki in Senegal. **Senegal's 1988 census counts 3,260,497 people in it, 47.3% of residents** (code 4, `Tidiane`), the largest answer in the country. It is 80.2% of Saint-Louis region, which then included Matam, 65.4% of Kaolack and 51.4% of Dakar, against 4.3% of Mbacké. Its Senegalese centres include Tivaouane and Medina Baye in Kaolack; the form has one code for all of its branches."
+    },
+    {
+      "id": "islam.sunni.mouride",
+      "label": "Mouride",
+      "kind": "branch",
+      "note": "The brotherhood founded by Amadou Bamba in the 1880s, whose holy city is Touba; a Sunni order, Maliki like the rest of Senegal. **Senegal's 1988 census counts 2,047,728 Mourides, 29.7% of residents** (code 3). They are 91.5% of Mbacké department, where Touba is, 85.5% of Bambey and 77.1% of Diourbel department, and 45.9% of Louga and 44.7% of Thiès, against 3.6% of Kolda."
     },
     {
       "id": "islam.shia.jaafari",
@@ -767,7 +767,7 @@
       "id": "confucianism",
       "label": "Confucianism",
       "kind": "branch",
-      "note": "Added 2026-09-05 with South Korea, which is **the only source on this map that counts it as a religion** — 유교, 75,703 people in 2015, with a cell of its own beside Buddhism and the two Christianities. Everywhere else it is either not asked or folded into a folk-religion residual: `chinesefolk`'s note names it as one of the things that category carries, and China's census asks nothing at all. A root rather than a child of anything, on Anita's call 2026-09-05, because there is nothing on the tree for it to descend from — the alternative was `chinesefolk`, which would be wrong twice over for a Korean answer. **What the number means is narrower than the word.** Confucian practice — ancestral rites, the lineage hall — is near-universal in Korea and is not what these 75,703 people are reporting; they are reporting Confucianism as their RELIGION, which is a much smaller and more deliberate claim, and most of them are the membership of Seonggyungwan and the local hyanggyo. Read it as the institutional core, not the practice."
+      "note": "Added 2026-09-05 with South Korea, which was then the only source on this map drawn on it — 유교, 75,703 people in 2015, with a cell of its own beside Buddhism and the two Christianities. **Since 2026-09-15 every census cell that names Confucianism by itself draws here** (Anita, ask 036): Indonesia's Khong Hu Chu, 116,916 and now the largest, and small cells in Australia (330), Canada (995), Czechia (13), New Zealand and England and Wales (76); Thailand and Japan already did. Combination cells that fold it in with folk practice stay on `chinesefolk`, and China's census asks nothing at all. A root rather than a child of anything, on Anita's call 2026-09-05, because there is nothing on the tree for it to descend from — the alternative was `chinesefolk`, which would be wrong twice over for a Korean answer. **What the number means is narrower than the word.** Confucian practice — ancestral rites, the lineage hall — is near-universal in Korea and is not what these 75,703 people are reporting; they are reporting Confucianism as their RELIGION, which is a much smaller and more deliberate claim, and most of them are the membership of Seonggyungwan and the local hyanggyo. Read it as the institutional core, not the practice."
     },
     {
       "id": "unification",
@@ -828,9 +828,10 @@
     },
     {
       "id": "chinesefolk",
-      "label": "Chinese religions",
+      "label": "Chinese folk religion",
       "kind": "branch",
-      "note": "Chinese folk religion, Confucianism and the syncretic practice that census categories usually cannot separate — the §3.3 combination node for China's own tradition. Daoism is a sibling top-level family rather than a child, because sources enumerate it separately where they enumerate anything at all."
+      "note": "Chinese folk religion, Confucianism and the syncretic practice that census categories usually cannot separate — the §3.3 combination node for China's own tradition. Daoism is a sibling top-level family rather than a child, because sources enumerate it separately where they enumerate anything at all. Since spec §3.13 (2026-09-15) it also holds, in China, Taiwan and Hong Kong, people who name no religion and keep a religious altar at home. **Since 2026-09-15 a cell that names Confucianism by itself goes to `confucianism`, and Falun Gong to `eastasiannew`** (Anita, ask 036; sources/folk_practice.md §11). Cells that name Chinese religion in general, ancestor veneration, or a declared combination (Singapore's Taoism with its footnote, Mauritius's Buddhist/Chinese, Taiwan's three teachings) stay here.",
+      "public_note": "In China, Taiwan and Hong Kong this is two groups: people who named folk religion when a survey asked their religion, and people who named no religion but keep a religious shrine or altar at home. Few people there call temple and ancestor worship a religion, so the second group is most of it. In China and Hong Kong the altar group is drawn only among Han Chinese. China's and Taiwan's surveys carry the same international altar question, but Taiwan's version lists folk objects as examples and probably reads higher; Hong Kong's figure is Pew's, from a narrower question, and reads low beside both."
     },
     {
       "id": "indigenous",
@@ -957,7 +958,7 @@
       "label": "Religion unknown",
       "kind": "branch",
       "note": "**A SEVENTH member of the §6.3a grey family, and it is the one that reports nothing at all.** People the source counted and whose religion it did not establish. Not a report of no religion; not a religion the tree could not place; not a positive report of belief outside an institution. The claim is only that these people are here.\n\n**Vietnam is the first, at 70,195,530 people — 81.8% of the country.** Its census asks which of the state-recognised religious organisations a person belongs to, and that many answered none of them. The answer is real and it does not mean irreligion: ancestor veneration is close to universal, the village đình and the mother-goddess rites of đạo Mẫu are everywhere, and most of the people who would call themselves Buddhist in conversation are in here rather than in the 4.6 million the census counts. The bucket's composition is decided by Vietnam's list of registered organisations, which is a fact about the question.\n\n**Why not `unrecorded`, which is the near neighbour.** That node is the residual of a source that never asked — Germany's church-tax register — and §6.3a-i's argument for splitting it from `unaffiliated` was precisely that being asked and not being asked are different. Vietnam's respondents WERE asked; the answer set was too narrow for their answer to mean what it says. Folding the two together would blur the distinction that ramp exists to draw, and §14.7 says so outright: *`unrecorded` means 'the register only ever saw church-tax bodies' and is Germany-shaped*.\n\n**The test for admitting anything else here**, and it is deliberately narrower than 'we are not sure': the source COUNTED these people, and what they practise is not determinable from it at any geography. Not a small residual — that is `other.<source>` — and not a suppressed cell. **China is the case it was specified for** (§14.7), and it was BUILT on 2026-09-07 (§14.13): **1.21 billion people, 97.5% of the country**, being the 1.14 billion Han plus every nationality no religion is claimed for. That makes this node much the largest on the map — bigger than every other node put together — and it is worth naming why that is allowed. China's census never asked about religion at all, so unlike Vietnam this is not the residual of an answer; it is the residual of a question that was never put. The test above still passes on the letter of it — the source counted these people and what they practise is not determinable from it at any geography — and the alternative was the map's previous state, in which a billion people did not appear.\n\n**Laos and Mozambique joined on 2026-09-14, on Anita's ruling, and they are a third shape.** Both censuses asked about religion and offered a no-religion answer that also took traditional religion. Mozambique's form words it `Sem religião (ateu, animista, agnóstico,...)`, 3.74 million people or 13.9%. Laos defined religion as a system with written doctrines, so animism went to `No religion`, 2.04 million or 31.45%, which was drawn as `indigenous.laos` for a week before this. Neither source says how much of its box is traditional religion and how much is none, which is the admission test above. Both are counts at the census's own units, so their rows are `measured`, like Vietnam's and unlike China's `derived`.\n\n**The colour is Anita's, 2026-09-06: `#68665a`** — a neutral grey with a warm cast, which is what §14.7's *slightly yellow* was asking for. It is the THIRD quietest of the seven rather than the first, which departs from §6.3a's 'the biggest node is the darkest' on purpose: at 70,195 dots this is Vietnam's settlement pattern, and §14.7's argument for drawing the residual at all is that the people are visible as people. See spec §6.3a-ii, including the two earlier attempts and why an HSL lightness cannot be compared across hues.\n\n**And it is NOT in the viewer's `no religion` control** (`NO_RELIGION_IDS`), for `unrecorded`'s reason and more strongly: hiding it behind a switch labelled 'no religion' asserts in one click the exact thing the node exists to avoid asserting.",
-      "public_note": "Not a report of no religion. These people were counted and the source does not establish what they practise — in Vietnam because the census asks only which state-registered organisation someone belongs to, so this holds ancestor veneration, folk religion and most Buddhist practice alongside the genuinely irreligious, and cannot tell them apart. In Laos and Mozambique it is the census's no-religion answer, which also took people who follow traditional religion."
+      "public_note": "Not a report of no religion. These people were counted and the source does not establish what they practise — in Vietnam because the census asks only which state-registered organisation someone belongs to, so this holds ancestor veneration, folk religion and most Buddhist practice alongside the genuinely irreligious, and cannot tell them apart. In Laos and Mozambique it is the census's no-religion answer, which also took people who follow traditional religion. In China, Hong Kong and Taiwan it is mostly the people a survey found naming no religion and keeping no religious altar at home."
     },
     {
       "id": "unenumerated",
@@ -1035,7 +1036,7 @@
       "id": "eastasiannew",
       "label": "East Asian new religions",
       "kind": "branch",
-      "note": "The 19th- and 20th-century foundings of Japan, Korea and China — shinshūkyō and sinheung jonggyo — studied together because they are one phenomenon: charismatic founders, syncretic of Buddhism, Confucianism, folk practice and Christianity, and often millenarian. **Was `japanesenew`, a root, until 2026-09-05, when Korea arrived counting three of these separately and the Japanese-only name stopped fitting.** Renaming rather than adding a second root was the cheap move (§12): the wedge this sits in is at 3° spacing and a new family costs every other small group a degree. It also FIXED something: IBGE's own category is `Novas religiões orientais` — new ORIENTAL religions — and its residual `Outras novas religiões orientais` was landing on the Japanese node for want of a parent. It now lands on the parent, which is what the source actually says. Distinct from `shinto`, the shrine tradition, and from `buddhism`, though individual bodies here derive from one or the other. **Two existing roots arguably belong under this and are deliberately left alone**: `unification` is Korean (Sun Myung Moon, 1954) and `caodaism` Vietnamese (1926), so both are East Asian new religions by any reading. Moving them would restructure four drawn countries at once for no gain today, and Anita's call on 2026-09-05 was that this is not a blocker and can change later. If it does, they become `eastasiannew.korean.unification` and `eastasiannew.vietnamese`."
+      "note": "The 19th- and 20th-century foundings of Japan, Korea and China — shinshūkyō and sinheung jonggyo — studied together because they are one phenomenon: charismatic founders, syncretic of Buddhism, Confucianism, folk practice and Christianity, and often millenarian. **Was `japanesenew`, a root, until 2026-09-05, when Korea arrived counting three of these separately and the Japanese-only name stopped fitting.** Renaming rather than adding a second root was the cheap move (§12): the wedge this sits in is at 3° spacing and a new family costs every other small group a degree. It also FIXED something: IBGE's own category is `Novas religiões orientais` — new ORIENTAL religions — and its residual `Outras novas religiões orientais` was landing on the Japanese node for want of a parent. It now lands on the parent, which is what the source actually says. Distinct from `shinto`, the shrine tradition, and from `buddhism`, though individual bodies here derive from one or the other. **Two existing roots arguably belong under this and are deliberately left alone**: `unification` is Korean (Sun Myung Moon, 1954) and `caodaism` Vietnamese (1926), so both are East Asian new religions by any reading. Moving them would restructure four drawn countries at once for no gain today, and Anita's call on 2026-09-05 was that this is not a blocker and can change later. If it does, they become `eastasiannew.korean.unification` and `eastasiannew.vietnamese`. **Chinese foundings sit on this parent**, there being no Chinese grouping node: Taiwan's Yiguan Dao and other Chinese religions (tw2018.py), and since 2026-09-15 New Zealand's Falun Gong, moved off `chinesefolk` on Anita's ruling on ask 036. A `eastasiannew.chinese` node is the obvious next step if a source ever counts enough of them to want one."
     },
     {
       "id": "eastasiannew.japanese",
@@ -1254,6 +1255,18 @@
       "note": "**4,001 people, 34.3% of Nauru at the 2021 census**, and the largest body in the country by 42 people over the Catholics. It belongs beside `.cccs`, `.cicc`, `.ekt`, `.kpc` and `.niue` on the institution's own evidence: the **Council for World Mission**, which is the London Missionary Society's successor body, lists the Nauru Congregational Church among its Pacific member churches in the same list as all of them.\n\n**Its mission line comes through the Gilberts rather than from Samoa.** Protestant work on Nauru begins with a Gilbertese teacher in 1887 — the centenary Nauru itself celebrated in 1987 — and the American Board of Commissioners for Foreign Missions sent Philip Delaporte in 1899, who translated the Bible into Nauruan. That makes it Kiribati's daughter rather than Samoa's, and it inherits `.kpc`'s two-parent situation: the American Board and the LMS both worked the Gilberts, secondary sources name one or the other, and both are Congregational, so nothing about the placement turns on which.\n\n**The share is falling and the Catholics are 42 people behind.** 35.7% in 2011 against 34.3% in 2021, while Roman Catholic went 33.0% to 33.9%. Nauru is the only country in the Pacific Congregational set where the national church does not lead comfortably: Tuvalu's EKT holds 85.9% and the Cook Islands Christian Church 49.1%."
     },
     {
+      "id": "christianity.reformed.congregational.cccas",
+      "label": "Congregational Christian Church in American Samoa",
+      "kind": "branch",
+      "note": "The Ekalesia Fa'apotopotoga Kerisiano i Amerika Samoa: **33.3% of American Samoa** in the 2015 Household Income and Expenditure Survey (19,147 of 57,436 weighted people), the largest body in the territory, and **88.3% of Manu'a**.\n\nIt shares its history with Samoa's `.cccs` and is not the same church. The World Council of Churches, which both belong to, records a movement from 1964 for an independent assembly in American Samoa, constituted in 1980, and a declaration of reconciliation between the two churches in 1982. Its lowest shares are Tualauta (25.2%), where the Latter-day Saints reach 25.0%, and Maoputasi (25.5%), where the Catholics are 25.9%."
+    },
+    {
+      "id": "christianity.reformed.congregational.tokelau",
+      "label": "Congregational Christian Church of Tokelau",
+      "kind": "branch",
+      "note": "**603 people, 50.4% of the residents present at Tokelau's 2016 census**, which counts it as `Congregational Christian`, one of the three churches its form names. It is **77.0% of Atafu** and 62.7% of Fakaofo, and 9.1% of Nukunonu, which is 81.8% Catholic.\n\nIts congregations were planted by the London Missionary Society's Samoan teachers and were a district of Samoa's `.cccs` until they formed a church of their own in the mid-1990s (1996 in Wikipedia's article on the CCCS), which is why it sits beside `.cccs` rather than on it. `.ekt` is Tuvalu's church, not this one."
+    },
+    {
       "id": "indigenous.maori",
       "label": "Maori traditional religion",
       "kind": "branch",
@@ -1449,7 +1462,7 @@
       "id": "other.us",
       "label": "Other religion (United States)",
       "kind": "branch",
-      "note": "Pew's two irreducible lines, and only Pew's — ASARB names every body it counts and has never needed a residual. First, what is left of `Other world religions` (776,032 adults) after the ASARB rolls of the roots it covers are subtracted; Sikhs, Daoists, Bahá'ís and Zoroastrians are one published line at n=36,908 and cannot be separated (spec §3.5a, §4.4). Second, `Other in the Unitarian and other liberal faiths family` (221,896), a write-in residual whose siblings run from Unitarian Universalism to humanism, so no root can claim it. Per source, per spec §3.11; see taxonomy/us_pew2024.py."
+      "note": "Pew's two irreducible lines, and only Pew's — ASARB names every body it counts and has never needed a residual. First, what is left of `Other world religions` (776,032 adults) after the ASARB rolls of the roots it covers, and the 2020 census's county counts of Sikhs and Yazidis (sources/us_dhca.py), are subtracted; Sikhs, Daoists, Bahá'ís and Zoroastrians are one published line at n=36,908 and cannot be separated (spec §3.5a, §4.4). Second, `Other in the Unitarian and other liberal faiths family` (221,896), a write-in residual whose siblings run from Unitarian Universalism to humanism, so no root can claim it. Per source, per spec §3.11; see taxonomy/us_pew2024.py."
     },
     {
       "id": "other.cl",
@@ -2016,16 +2029,76 @@
       "note": "Statistics Sierra Leone's `Other` in the 2015 census, code 10 of eleven on a list that also offers six Christian churches, Islam, Bahai, traditional religion and no religion: **51,963 people, 0.73% of the household population.**\n\nThe census reports do not say what it holds. The code list has no code for no answer, so answers left blank may be counted here. It is 1.8% of Kono, 1.4% of Kailahun and of Bonthe and 1.2% of Bombali, against 0.1% of Pujehun."
     },
     {
+      "id": "other.as",
+      "label": "Other religion (American Samoa)",
+      "kind": "branch",
+      "note": "The Department of Commerce's `Other religion` in the 2015 Household Income and Expenditure Survey: **3,178 of 57,436 weighted people, 5.5%**, the write-in answers it did not code into fifteen named rows.\n\nThe report does not say what it holds. 1,943 of the 3,178 were born in American Samoa and 588 in Samoa, so it is mostly not a migrants' answer. It is 11.6% of Maoputasi and 6.8% of Tualauta, and none was recorded in Saole, Vaifanua or Manu'a."
+    },
+    {
       "id": "other.bn",
       "label": "Other religion (Brunei)",
       "kind": "branch",
       "note": "DEPS's `Others` (`Lain-lain`) in the 2021 census: **21,473 people, 4.87% of the population.**\n\nThe form's religion question has five answers: Islam, Christianity, Buddhism, Hindu and Others, please specify. Every published table adds the Hindus to Others, and the form has no box for no religion, so this holds Brunei's Hindus and everyone who wrote in another answer or none. It is 11.0% of Tutong, where 4,718 of the 5,192 are Brunei citizens, and 10.7% of Temburong, against 3.2% of Brunei-Muara, where 7,615 of the 10,074 are temporary residents."
     },
     {
+      "id": "other.dz",
+      "label": "Other religion (Algeria)",
+      "kind": "branch",
+      "note": "The Arab Barometer's `Other` for Algeria: three answers, all in wave VI-1 (Tizi Ouzou 2, Sétif 1), with no text recorded; 0.04% of the country as drawn, which is also Pew 2020's figure for other religions. A per-country residual, as other.gm and other.ne."
+    },
+    {
+      "id": "other.ma",
+      "label": "Other religion (Morocco)",
+      "kind": "branch",
+      "note": "The Arab Barometer's `Other` for Morocco: two answers, `Other` in wave VI-2 (Casablanca-Settat) and `Something else` in VI-3 (Marrakech-Safi), with no text recorded; 3,968 Moroccans as drawn. It also holds the part of Pew's `Other religions` for Morocco's foreign residents that taxonomy/origin_religion.py cannot place. A per-country residual, as other.dz."
+    },
+    {
+      "id": "other.mr",
+      "label": "Other religion (Mauritania)",
+      "kind": "branch",
+      "note": "Pew Research Center's `Other religions` for Mauritania's foreign residents, where taxonomy/origin_religion.py has no split for the nationality: **991 people as drawn**, most of them on Mali's row. No source asks Mauritanians their religion, so nothing else is here. A per-country residual, as other.ma."
+    },
+    {
+      "id": "other.sa",
+      "label": "Other religion (Saudi Arabia)",
+      "kind": "branch",
+      "note": "Pew Research Center's `Other religions` for Saudi Arabia's non-Saudi residents, where taxonomy/origin_religion.py has no split for the nationality: **34,975 people as drawn**. No source asks Saudi citizens their religion, so nothing else is here. A per-country residual, as other.mr."
+    },
+    {
+      "id": "other.om",
+      "label": "Other religion (Oman)",
+      "kind": "branch",
+      "note": "Pew Research Center's `Other religions` for Oman's expatriates, where taxonomy/origin_religion.py has no split for the nationality: **4,871 people as drawn**. No source asks Omanis their religion, so nothing else is here. A per-country residual, as other.sa."
+    },
+    {
+      "id": "other.tn",
+      "label": "Other religion (Tunisia)",
+      "kind": "branch",
+      "note": "The Arab Barometer's `Other` for Tunisia: 25 answers in waves V to VIII with no text recorded, 10 of them in wave VII in Le Kef, Siliana and Sousse; 0.23% of the country as drawn, at one national share. Waves VI to VIII have no Jewish box, so a Jewish respondent could only answer here. A per-country residual, as other.dz and other.ma."
+    },
+    {
+      "id": "other.gm",
+      "label": "Other religion (The Gambia)",
+      "kind": "branch",
+      "note": "The Gambia Bureau of Statistics' `Other` in the 2013 census, code 4 of four on a form whose other codes are Islam, Christianity and Traditional: **2,686 people, 0.14% of the population.**\n\nThe enumerator's manual sends every other religion here, with its name written in (its example is Hindu), and the form has no code for no religion, so anyone who said they had none was recorded here or left blank. It is 0.53% of Kanifing, where 1,106 of the 1,996 were also recorded with no age, and 0.21% of Banjul, against 0.05% or less in most of the country."
+    },
+    {
+      "id": "other.ne",
+      "label": "Other religion (Niger)",
+      "kind": "branch",
+      "note": "The Institut National de la Statistique's `Autre à préciser` in the 2012 census, code 9 on a form whose other codes are no religion, Muslim, Christian and animist: **2,520 people, 0.015% of residents.**\n\nThe answer was written in, and no table prints what people wrote. The form has no code for no answer, so this is a religion someone named rather than a blank. Niamey holds 1,044 of them, 0.10% of the city, against 0.01% or less everywhere else."
+    },
+    {
       "id": "other.ps",
       "label": "Other religion (Palestine)",
       "kind": "branch",
       "note": "The Palestinian Central Bureau of Statistics' `Other` in the 2017 census, code 3 of three on a form whose only other codes are Muslim and Christian: **1,384 people, 0.03% of Palestinians counted.**\n\nThe census does not say what it holds. 361 are in Nablus governorate, where the Samaritan community lives on Mount Gerizim, and 594 in Jerusalem. The form has no box for no religion, so some people with none may have answered here."
+    },
+    {
+      "id": "other.qa",
+      "label": "Other religion (Qatar)",
+      "kind": "branch",
+      "note": "The 2004 census's `Other`: **104,426 people, 14.0% of the population.**\n\nThe religion question on the census form has three answers, Muslim, Christian and Other, with no box for no religion or for not stated, so this holds Qatar's Hindus and Buddhists, anyone else who was neither Muslim nor Christian, and anyone with no religion. 89% of them were men. It is 46.5% of Mesaieed and 32.8% of Al Khor, against 5.8% of Umm Salal. The religion of non-Qataris comes from the census's sample, weighted to the counted population of each municipality."
     },
     {
       "id": "other.sn",
@@ -2079,7 +2152,7 @@
       "id": "other.ug",
       "label": "Other religion (Uganda)",
       "kind": "branch",
-      "note": "UBOS's `Other` in Table B7 of the 2002 census, **741,589 people, 3.04%**, and the residual with the widest declared contents in this list. The table's own footnote says it holds `Orthodox, Bahai, Other Christian, Non-Christian, and Traditional` in one column, so a Ugandan Baptist, a Ugandan Orthodox Christian, a Bahá'í and a practitioner of Kiganda or Karimojong religion are all inside it together. Only five boxes stand above it (Catholic, Anglican, Moslem, Pentecostal, SDA) and one below (None), which is why it carries so much.\n\nWhat is in it is known nationally and cannot be split by district. The 2002 Population Composition report gives nine national categories where Table B7 gives seven, and its extra four are Orthodox **35,400**, Other Christian **282,300**, Bahá'í **18,500** and a further **380,400** of `Other Non-Christians, Traditional and None`. That report excludes Kotido district; take Kotido out of Table B7 and its `Other` plus `None` is 716,629 against those four totalling 716,600, so the two tables are the same numbers cut two ways. `sources/ug.py` asserts it. But the split exists only for the nation, and applying it per district would put a quarter of Kotido's cell into `Other Christian` when Kotido is Karamoja, so §14.4's first rule applies and nothing is estimated.\n\nIts geography is two unrelated things and the map shows both. The top of the list is the three Karamoja districts, **28.2%** in Kotido, 25.0% in Nakapiripirit and 19.7% in Moroto, where the cell is traditional religion answering a form that offered five churches and Islam; `None` peaks in exactly the same three districts, so one population is being recorded in two boxes. Then, well clear of everywhere else, **13.6%** in Kibaale and **12.9%** in the adjoining Kyenjojo, against 0.1% in Yumbe and 0.3% in Kabale.\n\nThat second cluster is a reading and it is offered as one. UBOS names `Ow'obushobozi` among the contents of the equivalent cell in its 2024 report, the only Ugandan new religious movement it names anywhere; the Faith of Unity was founded in 1980 at Kapyemi in Muhorro, and Table C1 of this same census prints `Muhoro` and `Kagadi` as sub-counties of Kibaale district, so the place is inside the cell without anything being inferred. The cluster is contiguous across two districts, which is the shape §9r's Chittagong rule reads as something rather than noise. Nothing in the 2002 tabulations names it, so it stays inside this node whole, per spec §3.11."
+      "note": "`Others` in the 2024 census (question P9, code 96), **about 684,000 people, 1.54%** of the household population, drawn from UBOS's 10% sample on 2,200 subcounties. It holds every answer the form's eleven other boxes do not name. Its centre is Kagadi **14.8%**, Kibaale 12.7% and Kyenjojo 11.4%, and Muhorro Town Council 34.7%; UBOS names the Faith of Unity (Ow'obushobozi), founded there, among the contents of the box. Lemusui in Nakapiripirit is 42.3%.\n\nUntil 2026-09-15 the node held the 2002 census's `Other`, which the rest of this note describes. UBOS's `Other` in Table B7 of the 2002 census, **741,589 people, 3.04%**, and the residual with the widest declared contents in this list. The table's own footnote says it holds `Orthodox, Bahai, Other Christian, Non-Christian, and Traditional` in one column, so a Ugandan Baptist, a Ugandan Orthodox Christian, a Bahá'í and a practitioner of Kiganda or Karimojong religion are all inside it together. Only five boxes stand above it (Catholic, Anglican, Moslem, Pentecostal, SDA) and one below (None), which is why it carries so much.\n\nWhat is in it is known nationally and cannot be split by district. The 2002 Population Composition report gives nine national categories where Table B7 gives seven, and its extra four are Orthodox **35,400**, Other Christian **282,300**, Bahá'í **18,500** and a further **380,400** of `Other Non-Christians, Traditional and None`. That report excludes Kotido district; take Kotido out of Table B7 and its `Other` plus `None` is 716,629 against those four totalling 716,600, so the two tables are the same numbers cut two ways. `sources/ug.py` asserts it. But the split exists only for the nation, and applying it per district would put a quarter of Kotido's cell into `Other Christian` when Kotido is Karamoja, so §14.4's first rule applies and nothing is estimated.\n\nIts geography is two unrelated things and the map shows both. The top of the list is the three Karamoja districts, **28.2%** in Kotido, 25.0% in Nakapiripirit and 19.7% in Moroto, where the cell is traditional religion answering a form that offered five churches and Islam; `None` peaks in exactly the same three districts, so one population is being recorded in two boxes. Then, well clear of everywhere else, **13.6%** in Kibaale and **12.9%** in the adjoining Kyenjojo, against 0.1% in Yumbe and 0.3% in Kabale.\n\nThat second cluster is a reading and it is offered as one. UBOS names `Ow'obushobozi` among the contents of the equivalent cell in its 2024 report, the only Ugandan new religious movement it names anywhere; the Faith of Unity was founded in 1980 at Kapyemi in Muhorro, and Table C1 of this same census prints `Muhoro` and `Kagadi` as sub-counties of Kibaale district, so the place is inside the cell without anything being inferred. The cluster is contiguous across two districts, which is the shape §9r's Chittagong rule reads as something rather than noise. Nothing in the 2002 tabulations names it, so it stays inside this node whole, per spec §3.11."
     },
     {
       "id": "other.nl",
@@ -2148,6 +2221,12 @@
       "note": "Two ESS answers together, `Eastern religions` and `Other Non-Christian Religions`, pooled over rounds 4, 9 and 11, plus the unresolvable slice of Pew's `Other religions` cell for the foreign citizens. The Latvian card offers the Eastern traditions as one box, so choosing Buddhism over Hinduism would invent a fact about a respondent. Greece, Croatia, Finland, Belgium, Sweden, Norway and Denmark have the same node for the same reason.\n\n**The two answers are 7 Latvian citizens over three rounds**, too few for the split-half to see a regional pattern, so they are drawn at the national rate inside each region's residual. What the cell certainly contains is the Dievturi, the Latvian folk-religion revival registered as a religious union (602 members reported to the Ministry of Justice for 2025), the Baha'i, and the Buddhist, Hindu, Vaishnava and Sukyo Mahikari congregations on the same list.\n\nPer source, per spec §3.11."
     },
     {
+      "id": "other.is",
+      "label": "Other religion (Iceland)",
+      "kind": "branch",
+      "note": "Three ESS answers together, `Austrænum trúarbrögðum` (Eastern religions), `Öðrum trúarbrögðum utan kristni` (other non-Christian religions) and, in rounds 6 and 8 only, `Öðrum` (other), pooled over rounds 6, 8, 10 and 11, plus the unresolvable slice of Pew's `Other religions` cell for the foreign citizens. The Icelandic card offers the Eastern traditions as one box, so choosing Buddhism over Hinduism would invent a fact about a respondent. Greece, Croatia, Finland, Belgium, Sweden, Norway, Denmark and Latvia have the same node for the same reason. Ásatrú has its own box on the card and is drawn on `paganism`, not here.\n\n**The three answers are 27 Icelandic citizens over four rounds**, too few for the two-unit test to place, so they are drawn at the national rate inside each unit's residual. What the cell certainly contains is Hagstofa's registered Buddhist, Bahá'í, Hindu and yoga associations and the Jewish cultural association, each counted nationally only.\n\nPer source, per spec §3.11."
+    },
+    {
       "id": "other.ua",
       "label": "Other religion (Ukraine)",
       "kind": "branch",
@@ -2212,6 +2291,30 @@
       "label": "Other religion or not stated (Gibraltar)",
       "kind": "branch",
       "note": "The 2022 census's `Other/Not stated`, **779 people, 2.1%**. The form offers Roman Catholic, Church of England, Other Christian, Muslim, Jewish, Hindu, Other and No religion, with no box for not stated, and the report prints other and not stated as one column. The 2012 report printed them apart, 365 other and 44 not stated. 50 of the 779 live in institutions, 9.1% of their residents against 1.95% of everyone else.\n\nPer source, per spec §3.11."
+    },
+    {
+      "id": "other.mt",
+      "label": "Other religion (Malta)",
+      "kind": "branch",
+      "note": "The 2021 census's `Other religious groups`, **911 people, 0.20%** of those aged 15 and over. The census has no Sikh answer, and the largest citizenship in the category is Indian (202, 161 of them men), which fits Sikhs; the volume does not say what it holds.\n\nPer source, per spec §3.11."
+    },
+    {
+      "id": "other.ad",
+      "label": "Other religion (Andorra)",
+      "kind": "branch",
+      "note": "The 2018 World Values Survey's `Other`, **5 of 1,004 respondents, 0.5%**. It is a write-in on the card (`Altra, quina?`), and the archive codes all five `Other; nfd` without the text, so nothing says which religions they named. A survey share, not a count.\n\nPer source, per spec §3.11."
+    },
+    {
+      "id": "other.je",
+      "label": "Other religion (Jersey)",
+      "kind": "branch",
+      "note": "Statistics Jersey's Opinions and Lifestyle Survey 2023: of adults who named a religion, **7%** named one other than Christianity, about 2.7% of adults. A write-in the office codes and does not print apart; the 2015 round's report names Buddhist, Hindu, Jewish, Muslim and Sikh answers, each from very small numbers of respondents. A survey share, not a count.\n\nPer source, per spec §3.11."
+    },
+    {
+      "id": "other.cd",
+      "label": "Other religion (DR Congo)",
+      "kind": "branch",
+      "note": "The Institut National de la Statistique's `Autre religion` in the Enquête 1-2-3 of 2005 and 2012, code 7 of eight on a card that also offers Catholic, Protestant, Kimbanguist, Muslim, other Christian, animist and no religion: **4.3% of people, by the religion of their household head** (1,361 of 31,755 heads).\n\nThe survey does not say what is in it. Its geography is strongest in the centre of the country, 13.0% of Tshopo, 12.8% of Tshuapa and 12.1% of Sankuru, against 1.0% of Bas-Uele. The DRC's own prophetic movements have no code on the card."
     },
     {
       "id": "christianity.adventist.advent-christian",
@@ -5191,9 +5294,6 @@
         "label": "Sufi orders",
         "ids": [
           "islam.bektashi",
-          "islam.qadiriyya",
-          "islam.tijaniyya",
-          "islam.mouride",
           "islam.layene"
         ]
       },
@@ -5212,6 +5312,14 @@
           "islam.sunni.maliki",
           "islam.sunni.shafii",
           "islam.sunni.hanbali"
+        ]
+      },
+      {
+        "label": "Sufi orders",
+        "ids": [
+          "islam.sunni.qadiriyya",
+          "islam.sunni.tijaniyya",
+          "islam.sunni.mouride"
         ]
       }
     ],

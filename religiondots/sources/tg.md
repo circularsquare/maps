@@ -165,3 +165,37 @@ units are big (ask 018), and kept Niger, Cameroon and Senegal free with the grai
 that lost over 95% to the sea left whole. 1:1,000: 7,816 dots on 4,629 hexes, 28 carried by the
 Hilbert order, 0 rings. 1:10,000: 775 dots, 11 (unit, node) rows carried into other units, 0 rings.
 Steps 10-12 are the supervisor's.
+
+## 9. Review, 2026-09-15 (`d743fc47-rev7`)
+
+Full pass. Read the entry, `taxonomy/tg2022.py`, `tg.csv`, `other.tg`'s node note and the playbook.
+`check_md` clean, `built_countries --check` OK, `check_rollup tg` 0 orphaned (every row modelled).
+One screenshot: dots over the whole country, faded as modelled rows are, densest in Lomé, nothing in
+the sea. No ask, nothing rebuilt, no edit to the entry or the mapping.
+
+- **Figures match** `tg.csv`: Centrale 419,431 Muslims of 795,529 is 52.7%; Savanes 198,414 Catholics
+  of 1,143,520 is 17.4%; Kara's Catholics 18.2%.
+- **Mapping: agreed.** Assembly of God on `pentecostal.trinitarian` with four precedents, `Other
+  Christians` on `christianity.other` as `bj2013`, `other.tg` as the usual `other.<cc>` residual.
+- **The location check in place of `ab.held_out`: agreed.** The labels are names, R6 and R9 agree
+  with the prefecture column for every respondent, and the pattern is taken per unit, so Lomé's
+  1.40x sampling does not reach the fit.
+- **§5.3, the Catholic call: the witness in §8.3 has now been looked up, and it does not back the
+  survey's Savanes.** The spec §12 Latvia rule asks for a witness when a residual reverses a survey
+  share. The Annuario Pontificio's diocesan counts, as catholic-hierarchy.org tabulates them (read
+  2026-09-15): **Dapaong**, whose 8,534 km2 is Savanes, is 6.1-9.4% Catholic in every edition from
+  ap2000 to ap2020, 12.6% in ap2022 and **11.9% in ap2024** (122,488 of 1,028,282). Its ap2005 row
+  (147,716, 24.7%) sits between 25,233 and 41,746 and is a typo; Wikipedia's infobox quotes that row.
+  In ap2024 Sokodé is 12.0% and Kara 21.9% (gcatholic.org), Lomé 39.8% (Wikipedia, 2023), and Togo
+  27.9% (gcatholic.org). On the church's count Savanes is about 0.43x the national rate; the map
+  draws it at 0.83x, and the survey's pooled 29.4% is about 1.04x. So if the dioceses have the
+  order right, the map errs high in Savanes, not low, and the survey's second place is the outlier.
+  It is a different basis (baptised Catholics, diocesan population estimates) and the dioceses do not
+  follow the Plateaux-Maritime line, so it is a witness to order and not a pattern to draw. No
+  change; `note_public`'s "not because the survey found them there" stays true. Not looked up:
+  Aného, Atakpamé and Kpalimé in a recent edition (Wikipedia has only 2004-2006).
+- **One wording point, left alone.** The note's national figures are shares of people with a stated
+  religion and its unit figures are shares of the whole population (§6's footnote), so Centrale's
+  Muslims are 52.7% in the note and 54.2% in §6. Under 1.5 points and neither is wrong.
+- **§14: agreed with §7.** Nothing drawn locates a group below a region of a million people, and dots
+  inside a region follow Kontur.

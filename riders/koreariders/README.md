@@ -556,6 +556,24 @@ Nothing else overflowed at either size (`scrollWidth` equals `innerWidth`), and
 the whole payload is **1.7 MB** across nine files, against japanriders' 13 MB —
 which matters more on a phone than anything else on this list.
 
+### The legend lost its direction toggle and its line list (2026-09-14)
+
+Both went at Anita's call. Nobody reading the map uses both / down / up, and
+the busiest lines are obvious from the map itself. The map always draws
+`daily`, both directions together; `valueExpr` and `segValue` are one line each
+now. The segment panel still shows 하행 and 상행 side by side, because their gap
+is still the best read on how hard the reconstruction is straining. The legend
+is **379 px** tall at 390×844 without them, and still starts closed on a phone.
+The note further down about the roster reading "Gyeongchun Line 13" is history.
+
+Same day: the Seoul section of the about panel printed a literal `${dataYear}`
+in both languages, because those two strings were in single quotes. They are
+template literals now and read 2023.
+
+japanriders now draws this map's data as an overlay, from `data/` directly.
+Its `KR_DATA_VERSION` has to follow `DATA_VERSION` here, and its file list
+(`KR_SEG_FILES` / `KR_STN_FILES`) has to follow `publish.py`'s `DATA`.
+
 ### Smaller, and mostly legibility
 
 - ~~**Non-Korail stations on the chains**~~ and ~~**stations a line's trains run

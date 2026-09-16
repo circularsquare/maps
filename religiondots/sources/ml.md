@@ -32,6 +32,8 @@ Both reports are live on `instat-mali.org/laravel-filemanager/files/shares/rgph/
 Nothing below région was found: the cultural volume's annexes A01-A07 are national, and §11aq found no
 cercle table. **Not opened:** the *Résultats globaux* report (NADA download 586) and the census
 microdata's access terms on catalog 95; a cercle table would be finer than ask 018 ruled on anyway.
+Both checked 2026-09-15 (sources.md §scout-2026-09-15-africa-upgrades): the *Résultats globaux* has no
+religion table, and the microdata needs a login; the catalogue lists no cercle or commune volume.
 
 ## 2. The tables and their checks (all in `sources/ml.py`)
 

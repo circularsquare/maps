@@ -138,3 +138,23 @@ on every run and flags anything past 25%.
 **Placement**: Kontur's 400 m grid, 419,176 hexes, reproducing the census at 1.085× nationally
 with a per-province median of 0.90 and **not one of the 76 outside a factor of two** — against
 **38 of 76** for a shuffled null, which is what says the join is real.
+
+## 6. The KPI reader misses the Christianity row — FOUND 2026-09-15, NOT FIXED
+
+`read_kpi` in `th.py` reads only `นับถือศาสนาอิสลาม` and treats a missing row as 0. Many sheets
+print a Christianity row (`นับถือศาสนาคริสต์`) instead of the Islam row, and a few print both. On a
+Christianity-only sheet the Muslims read as 0, and the whole 100 − Buddhist residual is allocated
+from the region's mix.
+
+**Tak, checked by eye:** the sheet prints Buddhism 94.0% and Christianity 4.4% and has no Islam row.
+The build draws 30,078 Christians (5.71% of 526,400) against the printed 4.4% (about 23,160), so Tak's
+Muslims, about 1% in 2000, are drawn as Christians and small categories.
+
+The scouting agent's list, not re-checked: Christianity row only in Mae Hong Son (22.8%), Chiang Rai
+(8.8%), Tak (4.4%), Nan (1.8%), Lamphun (0.4%), Amnat Charoen, Bueng Kan, Buri Ram, Nakhon Pathom,
+Nakhon Phanom, Si Sa Ket, Udon Thani and Yasothon; both rows in Chiang Mai, Chon Buri and Sakon Nakhon.
+
+The fix is to read the Christianity row wherever it is printed, as a measured share beside Buddhist
+and Muslim, and allocate only what is left. That moves Christians from `derived` to `measured` in
+those provinces. Found during a sources session scoped to no drawing (`branches.md`, 2026-09-15), so
+it waits for the spec §2.6a rebuild of Thailand.

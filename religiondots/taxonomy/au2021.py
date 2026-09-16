@@ -230,7 +230,9 @@ MAP = {
     "Spiritualism": "spiritualism",
 
     # ---------------------------------------------------------------- Chinese / Japanese
-    "Confucianism": "chinesefolk",
+    # Confucianism moved off `chinesefolk` 2026-09-15, Anita's ruling on ask 036
+    # (ask/RULINGS.md, `cn`, `all`): a row naming Confucianism goes to its own node. 330 in 2021.
+    "Confucianism": "confucianism",
     "Ancestor Veneration": "chinesefolk",
     "Chinese Religions, nec": "chinesefolk",
     "Chinese Religions, nfd": "chinesefolk",

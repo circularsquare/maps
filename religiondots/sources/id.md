@@ -282,3 +282,20 @@ the fix reaches it.
 
 Counts did not move: dots per node are identical before and after, 236,742 at 1:1,000 and 23,670
 at 1:10,000.
+
+## Khong Hu Chu moved from `chinesefolk` to `confucianism`, 2026-09-15 (session `cb8b206e-folksplit`)
+
+`chinesefolk` was relabelled "Chinese folk religion" the same day, which put Indonesia's
+state-recognised Confucianism under a folk-religion label. On Anita's ruling on ask 036
+(`ask/RULINGS.md`, `cn`, `all`), `Khong Hu Chu` now maps to `confucianism` (`taxonomy/id2010.py`).
+The cell names Confucianism and nothing else.
+
+- 116,916 people at the drawn tier. Indonesia is now the largest population on that node, ahead of
+  South Korea's 75,703.
+- `note_public` already called them Confucians, so the legend row and the note now agree. Not
+  edited.
+- The REVIEW text said 106,568 people, 0.045%. The drawn tier tallies 116,916, which is also
+  `note_public`'s figure, and the text now says that.
+- Both editions rescattered: 236,742 and 23,670 dots, the same totals as before.
+
+The whole change is `sources/folk_practice.md` §11.

@@ -38,12 +38,19 @@ def built():
 
 def main():
     sys.path.insert(0, ROOT)
+    import countries
     from countries import COUNTRIES
 
     fine, coarse = built()
     both = sorted(fine & coarse & set(COUNTRIES))
 
     problems = []
+    # A country with its countries/<cc>.py or its ORDER line but not both is skipped by the
+    # loader with a warning, so it is in no list above. This is the strict form of that check:
+    # --check fails on it, where the bare list (build_tail.py's input) just leaves it out.
+    half = countries.HALF_REGISTERED
+    for cc, why in sorted(half.items()):
+        problems.append(f"{cc}: half-registered, {why}")
     for cc in sorted(set(COUNTRIES) - set(both)):
         why = []
         if cc not in fine:

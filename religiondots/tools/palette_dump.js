@@ -15,7 +15,8 @@ const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
 const script = html.match(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/)[1];
 
 const WANT = ['hsl', 'parentOf', 'ROOT_HSL', 'PIN', 'PIN_OVERVIEW', 'OVERVIEW_ARC', 'TIERS',
-              'OVERVIEW_FLAT', 'FLAT_SHARE', 'ROOT_BAND', 'BAND_TIERS', 'buildPalette', 'buildOverview'];
+              'OVERVIEW_FLAT', 'FLAT_SHARE', 'ROOT_BAND', 'BAND_TIERS', 'buildPalette', 'buildOverview',
+              'FOCUS_UNSPECIFIED'];
 const decls = [...script.matchAll(/^(?:const|let|function)\s+([A-Za-z_$][\w$]*)/gm)]
   .map(m => ({ name: m[1], at: m.index }));
 const found = new Set();
@@ -44,6 +45,6 @@ for (const parent in LIN) {                       // same flattening index.html 
 
 const run = new Function('NODES', 'LINEAGE_RANK', 'LINEAGE_GROUP', 'LINEAGE_PARENTS',
   'let NODE_COLOR = {}, OVERVIEW_COLOR = {};\n' + src
-  + '\nbuildPalette();\nreturn { NODE_COLOR, OVERVIEW_COLOR };');
+  + '\nbuildPalette();\nreturn { NODE_COLOR, OVERVIEW_COLOR, FOCUS_UNSPECIFIED };');
 fs.writeFileSync(process.argv[3],
   JSON.stringify(run(NODES, LINEAGE_RANK, LINEAGE_GROUP, LINEAGE_PARENTS), null, 1));

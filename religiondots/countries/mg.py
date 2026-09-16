@@ -85,7 +85,7 @@ ENTRY = {
             "the south. Muslims are 14.7% of Diana and 7.8% of Melaky; the survey found none in "
             "ten regions, and those regions are drawn with none. "
             "**No religion is drawn at 12.7%**, and at a fifth or more of the people in most "
-            "regions outside the central highlands: 39.4% of Sofia and 27.3% of Androy.In Itasy, Bongolava, Vakinankaratra, Amoron'i Mania and Haute "
+            "regions outside the central highlands: 39.4% of Sofia and 27.3% of Androy. In Itasy, Bongolava, Vakinankaratra, Amoron'i Mania and Haute "
             "Matsiatra the survey found no one of no religion or of traditional religion. The card "
             "offered traditional religion as a separate answer, but the two answers trade places "
             "between rounds: nationally traditional religion fell from 8.5% of answers in 2013 to "
@@ -95,7 +95,7 @@ ENTRY = {
             "and Health Surveys find. Those surveys put no religion higher, at **20 to 25%** of "
             "people aged 15 to 49. "
             "**Anglicans, Pentecostals, Jehovah's Witnesses and other religions are not placed, "
-            "because where they live does not repeat between halves of the survey.**They are spread in their national proportions over what the larger groups "
+            "because where they live does not repeat between halves of the survey.** They are spread in their national proportions over what the larger groups "
             "leave in each region."),
         how="a pooled survey, 2013 to 2022, on 2018 census region populations",
         grain="regions, 1.2 million people on average",

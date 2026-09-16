@@ -8,7 +8,7 @@ gitignored, so this file is the record.
 | | |
 |---|---|
 | structure | 2021 Population Census, ethnicity by District Council district (C&SD `DC_21C.CSV` and the *Thematic Report: Ethnic Minorities*) |
-| religion | *Hong Kong Political Culture Survey 2021*, Cai and Hung, published as Table 1 of *Religion and Trust in Hong Kong*, The China Quarterly **257** (2024), 609–628 |
+| religion | *Hong Kong Political Culture Survey 2021*, Cai and Hung, published as Table 1 of *Religion and Trust in Hong Kong*, The China Quarterly **259** (2024), 611–628 |
 | geography | **18 District Council districts**, mean 412,000 people |
 | basis | `ethnicity_derived` for three migrant nationalities; `self_id` for everyone else |
 | tier | **`derived` 64.8%, `modelled` 35.2%; nothing is `measured`** |
@@ -57,7 +57,7 @@ third does not, the third is the one to leave out.
 |---|---|---|
 | 1 | **`DC_21C.CSV`** — exact counts per district: total population, and ethnicity as Chinese / Filipino / Indonesian / White / Others | `census2021.gov.hk/doc/DC_21C.zip`, 20 KB, linked from data.gov.hk |
 | 2 | **Thematic Report: Ethnic Minorities** — Table 3.1 (each ethnicity's territory total) and Table 8.1 (each ethnicity's % distribution over the 18 districts) | `census2021.gov.hk/doc/pub/21c-ethnic-minorities.pdf`, 6 MB |
-| 3 | **Hong Kong Political Culture Survey 2021** — 3,744 respondents, eight religion categories | China Quarterly 257 (2024) Table 1, open access |
+| 3 | **Hong Kong Political Culture Survey 2021** — 3,744 respondents, eight religion categories | China Quarterly 259 (2024) Table 1, open access |
 | geo | **18 district boundaries**, WGS84 GeoJSON, one file, 18 features | `had.gov.hk/psi/hong-kong-administrative-boundaries/hksar_18_district_boundary.json` |
 
 **No microdata is needed and none was sought.** The survey's published table *is* the
@@ -291,3 +291,47 @@ with a population-weighted scatter**, which is what it is.
   bodies, and its census does not ask either.
 - **Thai → Theravada** is the one refused derivation that is a close call, argued in
   `taxonomy/hk2021.py`'s REVIEW. It is 12 dots.
+
+## 10. Spec §3.13: a home-altar share of the grey drawn as folk religion, 2026-09-15
+
+Anita's rule for China, Taiwan and Hong Kong: `chinesefolk` is folk religion named, or a religious
+altar kept by someone who names no religion. **This reverses §7's "nothing in Hong Kong is drawn on
+`chinesefolk`".**
+
+- The Political Culture Survey has no altar question, so the rate is Pew's (*Religion and
+  Spirituality in East Asian Societies*, 2024, p. 77): an altar in the home for **25%** of Hong Kong
+  adults, **21%** of the religiously unaffiliated, 56% of Buddhists and 11% of Christians.
+- **21% is applied to the `unknown` residual after the survey carve**, in `countries/hk.py`, with the
+  share in `taxonomy/hk2021.py` (`ALTAR_FOLK_SHARE`). The 25% was not used because it includes
+  Buddhists and Christians already drawn on their own nodes. Anita asked for Pew's figure directly
+  rather than a ratio from Taiwan.
+- **Drawn**: `chinesefolk` 13.13% (972,949 people); `unknown` from 65.4% to 52.26%. Territory-wide,
+  like every survey share here. (13.73%, 1,017,774 and 51.66% until the fix in the next bullet.)
+- **It is a floor beside its neighbours.** Pew asks whether "there is an altar in your home"; China
+  and Taiwan are drawn from ISSP's "a shrine, an altar or a religious object, for religious
+  reasons", and in Taiwan the two questions get 49% and 71%.
+- **Only the `Chinese` row's residual** (`ALTAR_FOLK_ROWS`, fixed the same day, session
+  `cb8b206e-folkfix`). As first built the share reached every row's residual, and this bullet said
+  about 9,000 non-Chinese were drawn on `chinesefolk`, which counted only the non-Muslim and
+  non-Catholic remainders of the three derived rows. The residual also held every `NOT_ASSERTED` row,
+  so the real figure was 44,825: OtherEthnicity 11,550, White 8,821, Indian 6,098, Filipino 6,089,
+  Nepalese 4,263, Indonesian 2,542, Thai 1,860, Japanese 1,471, Korean 1,246, other South Asian 762,
+  Pakistani 123. That included 10,361 Indians and Nepalese, whom `note_public` calls left grey on
+  purpose. Pew's 21% is a rate for Hong Kong's unaffiliated and the node is Chinese folk religion, so it
+  now reaches the `Chinese` row alone. The survey's named shares still reach every row, as they did
+  before §3.13.
+- **Citation corrected the same day**: the paper is *The China Quarterly* **259** (2024), 611-628,
+  not 257, 609-628.
+
+## 11. Review of the §3.13 redraw, 2026-09-15 (session `cb8b206e-rev5`)
+
+The full review is `sources/folk_practice.md` section 9. For Hong Kong: 1,017,774 (13.73%) and `unknown`
+65.39% to 51.66% recompute. Pew's 25% of adults is confirmed on its Practices chapter; the 21% of the
+unaffiliated was in a chart the fetch could not read. **Section 10's "about 9,000" non-Chinese on
+`chinesefolk` counts only the three derived rows.** The residual also holds every `NOT_ASSERTED` row, so
+the figure is about 44,800, including about 10,400 Indians and Nepalese whom `note_public` calls left grey
+on purpose. Applying `ALTAR_FOLK_SHARE` to the `Chinese` row alone would end it. Not rebuilt. Screenshot
+clean.
+
+**Fixed the same day** (session `cb8b206e-folkfix`): the share now reaches the `Chinese` row only, and
+section 10 carries the corrected figures (13.13%, 972,949; `unknown` 52.26%).

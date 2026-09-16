@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <title>helper1m</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4/dist/maplibre-gl.css" />
+  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.css" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -18,11 +18,25 @@
       <div id="level-radios"></div>
     </div>
     <div class="panel basemap-toggle">
-      <label><input type="checkbox" id="topo-toggle"> Topographic basemap</label>
+      <label>Basemap</label>
+      <div id="basemap-radios">
+        <label><input type="radio" name="basemap" value="streets" checked> Streets</label>
+        <label><input type="radio" name="basemap" value="topo"> Topo</label>
+        <label><input type="radio" name="basemap" value="relief"> Elevation</label>
+      </div>
+      <div id="relief-legend" hidden>
+        <div id="relief-ramp"></div>
+        <div id="relief-labels"><span id="relief-min"></span><span id="relief-max"></span></div>
+      </div>
+      <div class="opacity-row">
+        <input type="range" id="fill-opacity" min="0" max="100" step="5" value="55">
+        <span id="fill-opacity-value">55%</span>
+      </div>
+      <div class="hint">density fill over the basemap</div>
     </div>
     <div class="panel" id="group-panel">
       <div class="panel-header">
-        <span>States</span>
+        <span id="group-panel-label">States</span>
         <span class="group-btns">
           <button id="groups-all">all</button>
           <button id="groups-none">none</button>
@@ -42,8 +56,10 @@
       <ul id="selection-list"></ul>
     </div>
   </div>
+  <div id="sidebar-resizer" title="Drag to resize. Double-click to reset."></div>
   <div id="map"></div>
-  <script src="https://unpkg.com/maplibre-gl@4/dist/maplibre-gl.js"></script>
+  <div id="hover-tip" hidden></div>
+  <script src="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.js"></script>
   <script src="viewer.js"></script>
 </body>
 </html>

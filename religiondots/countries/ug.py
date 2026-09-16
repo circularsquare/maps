@@ -4,183 +4,132 @@ from countries._shared import *  # noqa: F401,F403
 
 
 def _ug_place_weight(place):
-    """countries.py hook. `place` is the 400m hex layer scatter.py has read.
+    """countries.py hook. `place` is data/geo/ug/ug2024_hexes.gpkg, Kontur 2023-11 hexes on the
+    2,200 drawn units (sources/ug_2024_geo.py).
 
-    Uganda needs this for §8.2's emptiness reason: 56 districts over about 200,500 km2 of
-    land is roughly 3,600 km2 a unit, and the country is not evenly habitable at that
-    scale. Karamoja is a fifth of the area and a twentieth of the people; Lake Kyoga's
-    swamp runs through the middle of four districts at once; Murchison Falls sits inside
-    Masindi and Gulu and Queen Elizabeth inside Kasese and Bushenyi. An equal share per
-    polygon puts Uganda's dots in national parks and papyrus.
-
-    THE GRID IS 2023 AND THE COUNTS ARE 2002, which is stated rather than hidden: it is a
-    within-district weight, so the level does not matter, but a 2023 surface places a
-    district's dots where its people live now (sources/ug_grid.py).
+    A within-unit weight only: every unit's people come from the census workbook. Median unit
+    57 km2, about 75 hexes, and every unit has a populated hex, so the grid floor is not near.
     """
-    return _kontur_place_weight(place, "ug_hexes.gpkg", "sources/ug_grid.py")
+    return _kontur_place_weight(place, "ug2024_hexes.gpkg", "sources/ug_2024_geo.py")
 
 
 def _ug_counts():
-    """UBOS 2002 census Table B7 at district: 7 drawn categories on the 56 districts of 2002.
+    """NPHC 2024 on 2,200 drawn subcounty units: 12 answers, shares from UBOS's 10% sample.
 
-    ONE level, no allocation, nothing modelled — every row is `measured` and may ring.
-
-    56 UNITS AND NOT 4, AND THE GEOGRAPHY IS THE ONLY THING UGANDA HAS. The 2024 census
-    has the best religion category list in Africa, ten cells separating the Adventists,
-    the Orthodox and the Witnesses, and it publishes them for the nation and for
-    urban/rural and nowhere else; so do 2014 and the whole NPHC 2024 portal, which reaches
-    PARISH level on fifteen other tables. The 2002 analytical report reaches four regions.
-    Table B7, an annex table on the retired ubos.org tree, is the only religion tabulation
-    ever published beside a Ugandan geography. sources/ug.py lists what was checked.
-
-    THE BOUNDARIES ARE REBUILT AND THE REBUILD IS PROVED. No 2002-vintage boundary file
-    exists, so the 56 districts are dissolved out of COD-AB's 135 of 2020 using the 2002
-    census's own district/county/sub-county tree, and the result reproduces all 56 of
-    Table B1's 1991 populations exactly, on 56 distinct values, from a table published in
-    a different census twelve years later. See sources/ug_geo.py.
-
-    `None` IS THE LITERAL STRING AND PANDAS DELETES IT — §12's Philippine trap, fourth
-    sighting after `ph`, `gy` and `zw`. 212,388 irreligious Ugandans, and in Uganda they
-    are not where a reader would guess: half of that cell is in Karamoja.
+    sources/ug_2024.py writes one row per unit and answer, already composed and scaled to the
+    unit's full-count household population; its note says the tier the answer was drawn at.
+    `tier=subcounty` rows are the unit's own sample share and are `measured`; `tier=county` and
+    `tier=district` rows (Orthodox and Jehovah's Witnesses; Bahai and Buddhist) take a parent's
+    share because the split-half test did not support them finer, so they are `derived`, may not
+    ring, and roll NOWHERE: nothing measured them at the subcounty.
     """
-    from ug2002 import resolve
+    from rollup import NOWHERE
+    from ug2024 import resolve
 
-    df = pd.read_csv(HERE / "data" / "normalized" / "ug.csv",
-                     dtype={"geo_id": str}, low_memory=False,
-                     keep_default_na=False, na_values=[""])
-    if "None" not in set(df["source_category"]):
-        raise SystemExit("ug.csv has no `None` category -- it has been read as NaN, and "
-                         "212,388 people are about to disappear (§12, the Philippine trap)")
-    df = df[df["geo_level"] == "district_2002"].copy()
-
-    lut = pd.read_csv(HERE / "data" / "geo" / "ug" / "ug_lookup.csv", dtype=str)
-    df["unit"] = df["geo_id"].map(dict(zip(lut["geo_id"], lut["unit"])))
-    missing = sorted(df.loc[df["unit"].isna(), "geo_id"].unique())
-    if missing:
-        raise SystemExit(f"ug.csv districts with no polygon: {missing} -- re-run "
-                         "sources/ug_geo.py, the lookup is stale")
-    if df["unit"].nunique() != 56:
-        raise SystemExit(f"{df['unit'].nunique()} districts, expected 56")
-
+    df = pd.read_csv(HERE / "data" / "normalized" / "ug.csv", dtype={"geo_id": str},
+                     low_memory=False, keep_default_na=False, na_values=[""])
+    df = df[df["geo_level"] == "subcounty_2024"].copy()
+    if df["geo_id"].nunique() != 2200:
+        raise SystemExit(f"ug.csv has {df['geo_id'].nunique()} units, expected 2,200 -- re-run "
+                         "sources/ug_2024.py")
+    df["unit"] = df["geo_id"]
     df["node"] = df["source_category"].map(resolve)
-    df = df[df["node"].notna() & (df["count"] > 0)]
+    df = df[df["node"].notna() & (df["count"] > 0)].copy()
+    tier = df["note"].str.extract(r"tier=(\w+)")[0]
+    if tier.isna().any() or not set(tier) <= {"subcounty", "county", "district"}:
+        raise SystemExit(f"ug.csv rows without a known tier: {sorted(set(tier.dropna()))}")
+    df["tier"] = tier.map({"subcounty": "measured", "county": "derived", "district": "derived"})
+    df["may_ring"] = df["tier"] == "measured"
+    df["roll"] = df["tier"].map({"derived": NOWHERE, "measured": None})
     df["congregations"] = 0
-    return df[["unit", "node", "count", "congregations"]]
+    return df[["unit", "node", "count", "congregations", "may_ring", "tier", "roll"]]
 
 
 ENTRY = {
     "ug": dict(
         name="Uganda",
-        source="2002 Population and Housing Census, Table B7 (Uganda Bureau of Statistics)",
-        basis="self-identification, whole census population",
+        source="National Population and Housing Census 2024, 10% population sample and "
+               "subcounty profiles (Uganda Bureau of Statistics)",
+        basis="self-identification, household population",
         view=[29.4, -1.6, 35.2, 4.4],
         note_public=(
-            "**Uganda's best religion question and its only religious geography are "
-            "twenty-two years apart, and this map is the older one.** The 2024 census "
-            "separates ten answers, including the Adventists, the Orthodox and the "
-            "Jehovah's Witnesses, and publishes them for the nation and for town against "
-            "country and nowhere else. So does 2014. The census portal that carries the "
-            "2024 results down to parish level carries fifteen tables and religion is in "
-            "none of them. The one time the Bureau ever printed religion beside a place "
-            "was an annex table of the 2002 census, seven categories on the 56 districts "
-            "of the day, and that is what is drawn here. "
-            "**Catholic and Anglican Uganda are close to each other's negative, and the "
-            "line is where two missions met in the 1890s.** Catholicism is the largest "
-            "answer in 29 of the 56 districts and the Church of Uganda in 25. The Catholic "
-            "north runs to **82.5%** in Adjumani and 78.2% in Gulu; the Anglican south and "
-            "west to **60.8%** in Nakasongola and 60.6% in Ntungamo. A map of four "
-            "regions, which is as fine as the Bureau's own 2002 analysis ever got, shows "
-            "almost none of it. "
-            "**Yumbe is 76.2% Muslim and the districts around it are not.** Islam is 12.1% "
-            "of the country and the sharpest column in the table: Yumbe, which is Aringa "
-            "county in West Nile, against 0.4% in Kotido and in Pader. The other Muslim "
-            "Uganda is the Busoga lakeshore and the old Buganda trading towns, Mayuge at "
-            "36.2% and Iganga at 33.8%, and the two have nothing to do with each other. "
-            "**Pentecostal Uganda is the thing this map is too old to show.** It is 4.6% "
-            "here, strongest in Sebei and Teso rather than in Kampala, and 14.3% by the "
-            "2024 census, which is the largest movement in Ugandan religion in living "
-            "memory and has no published geography at all. Read every share here as 2002: "
-            "Catholicism is 41.9% on this map and 36.2% in the 2024 census, and the Church "
-            "of Uganda 35.9% here and 29.0% there. "
-            "**In Karamoja the census offered five churches and Islam to people who "
-            "practise neither, and recorded the answer twice.** `Other`, which the table's "
-            "footnote says holds the Orthodox, the Baha'is, other Christians and "
-            "traditional religion together, is **28.2%** of Kotido; no religion is 12.0% "
-            "of Nakapiripirit, and the three Karamoja districts hold 52% of the whole "
-            "country's no-religion cell between them. Neither figure should be read the "
-            "way the same box is read in Europe. "
-            "**And Kotido's own numbers are ones the Bureau later withdrew.** This table "
-            "gives the district 591,870 people; the 2014 census report, redistributing the "
-            "same census onto later boundaries, gives the same ground **377,102**, and for "
-            "the other 55 districts the two publications agree to the person. Kotido holds "
-            "22.5% of the national `Other` cell and 33.1% of the no-religion cell, so both "
-            "are affected: without it the country reads 2.41% `Other` and 0.60% no "
-            "religion instead of 3.04% and 0.87%. It is drawn as published, because the "
-            "Bureau revised a population and never revised a religion table, and inventing "
-            "seven numbers to fit would be worse than showing the seven it printed."),
-        how="census, 2002",
-        grain="districts, 436,000 people on average",
-        gap_share=0.00036625,
-        gap="the 8,952 people, 0.037% of the country, enumerated in hotels, whom the "
-            "religion table leaves out",
+            "**Uganda is drawn from its 2024 census, read from the Bureau of Statistics' own "
+            "sample of one household in ten.** The Bureau publishes religion only for the "
+            "whole country, but its sample file carries each person's answer beside their "
+            "district, subcounty and parish: 4.5 million people in 1.07 million households. "
+            "Each subcounty's mix comes from that sample and its population from the full "
+            "count, and added up the four largest answers land within 1% of the Bureau's "
+            "published national figures. A split-half test decided how finely each answer "
+            "can be drawn. The large answers, traditional religion, no religion and `Others` "
+            "hold up down to the parish, but no parish boundaries are published, so the map "
+            "stops at 2,200 subcounties of about 20,000 people. The Orthodox and Jehovah's "
+            "Witnesses are drawn at their county's share and the Baha'is and Buddhists at "
+            "their district's. "
+            "**The line between Catholic and Anglican Uganda still follows the missions of "
+            "the 1890s.** Catholicism is the largest answer in 80 of the 146 districts and "
+            "the Church of Uganda in 53. The Anglican south-west reaches **59.1%** in Sheema "
+            "and 58.7% in Rukiga; the Catholic north reaches 81.9% in Moyo. "
+            "**Muslim Uganda is a handful of places.** Yumbe district is **70.9%** Muslim and "
+            "its Aringa subcounties reach 98%; Bugweri and Butambala are just over half, Mbale "
+            "City 46.4% and Koboko 45.0%, while Lamwo, Agago and Abim are under half a percent. "
+            "**Pentecostal and evangelical churches are the third answer, at 14.7%, and their "
+            "stronghold is Mount Elgon.** Bukwo is **66.6%** Pentecostal or evangelical and "
+            "several of its subcounties are over 80%; Kween is 42.5% and Namayingo 38.8%. "
+            "The 2002 census's narrower Pentecostal box was 4.6% of the country. "
+            "**The Seventh-day Adventists are a Rwenzori church.** Ntoroko is 19.2% Adventist, "
+            "Bundibugyo 14.6% and Bunyangabu 11.9%, and Mabere subcounty in Bundibugyo 68.4%. "
+            "**Karamoja answers the opposite way from 2002.** The 2002 form had no box for "
+            "traditional religion, and Kotido put 28.2% in `Other` and 11.9% in no religion. "
+            "In 2024 Kotido is **91.7%** Catholic, Karenga 91.2% and Kaabong 89.7%. Traditional "
+            "religion is 0.13% of the country, highest in Kaabong at 2.7% and in its Lotim "
+            "subcounty at 11.3%. No religion peaks on Mount Elgon instead, in Bukwo (2.6%) and "
+            "Kween (2.1%), where Benet subcounty is 6.5%. "
+            "**`Others` is 1.5% of the country and its centre is Kagadi and Kibaale.** It is "
+            "14.8% of Kagadi, 12.7% of Kibaale and 11.4% of Kyenjojo, and 34.7% of Muhorro "
+            "Town Council; the Bureau names the Faith of Unity (Ow'obushobozi), which began "
+            "there, among the contents of the box. "
+            "**Bidi Bidi is drawn inside its host subcounties.** The refugee settlement in "
+            "Yumbe, 122,000 people in households, is three census subcounties with no "
+            "boundary of their own, so each is drawn together with the subcounties that "
+            "hold its zones. That is why Anglican and Catholic dots sit among Muslim "
+            "villages in eastern Yumbe."),
+        how="census, 2024, 10% household sample",
+        grain="subcounties, 20,000 people on average",
+        fill="from the same sample at county and district level",
+        gap_share=0.033257,
+        gap="3.33% of the country: the 1,517,205 people counted outside households, in "
+            "boarding schools, barracks, prisons, hospitals and transit centres, whose sample "
+            "records carry no religion; and Apaa's 9,456 people, counted as a unit of their "
+            "own with no sample record",
         counts=_ug_counts,
         units=None,
         unit_key=None,
-        place=HERE / "data" / "geo" / "ug" / "ug_hexes.gpkg",
+        place=HERE / "data" / "geo" / "ug" / "ug2024_hexes.gpkg",
         place_unit=lambda g: g["unit"].astype(str),
         place_weight=_ug_place_weight,
-        note="THE QUEUE ROW SAID `regions` AND IT IS 56 DISTRICTS, FROM A TABLE NO UBOS "
-             "PAGE LINKS TO. sources.md §11b established that the 2024 census publishes "
-             "religion nationally only and priced Uganda as needing DHS or a microdata "
-             "email for any geography. Both halves of that stand for 2024; what §11b did "
-             "not reach is that the 2002 census published `Table B7: Religion by District "
-             "for the Population` as a loose annex PDF in "
-             "ubos.org/onlinefiles/uploads/ubos/census_tabulations/, one of fifteen such "
-             "tables on the retired tree, reachable now only through the Wayback Machine. "
-             "436k people a unit against the four regions the 2002 analytical report stops "
-             "at. Rwanda's shape exactly: the report set everyone reads is coarse and a "
-             "separate series outside it is not. "
-             "WHAT WAS CHECKED FOR 2024 BEFORE FALLING BACK TWENTY-TWO YEARS, because a "
-             "later table would beat this one outright: Final Report Volume 1 (434 pages, "
-             "religion on fourteen of them, never with a geography); the NPHC 2024 "
-             "statistics portal, which is a real query API reaching parish and serves "
-             "fifteen tables, none of them religion, with `format=all` returning the same "
-             "fifteen; all seventeen sub-region profile reports; the sub-county profiles "
-             "workbook; the community module report, whose 200 pages of `Religious` "
-             "columns are facility OWNERSHIP; 703 documents swept off ubos.org's own "
-             "publications catalogue, none of which mentions religion; and the 2014 Area "
-             "Specific Profiles. sources/ug.md has the list. "
-             "THE BOUNDARY REBUILD IS THE RISKY PART AND IT IS PROVED ON POPULATION. No "
-             "2002 boundary file exists anywhere, so the 56 districts are dissolved out of "
-             "COD-AB's 135 of 2020 by matching COD-AB's counties and sub-counties against "
-             "the 995 place names Table C1 prints under each 2002 district. Grouping the "
-             "2014 census report's Table A3 by that concordance reproduces all 56 of Table "
-             "B1's 1991 figures EXACTLY, on 56 distinct values, from a different "
-             "publication of a different census. The first attempt failed it: a dropped "
-             "district header sent all of Bugiri's sub-counties to Wakiso, and the 1991 "
-             "test is what caught it. "
-             "KOTIDO IS DRAWN AS PUBLISHED AND THE CALL WAS REVIEWED. Running the same "
-             "test on the 2002 column instead leaves 55 districts exact and Kotido 214,787 "
-             "people short, which is the entire national difference between the two "
-             "publications. Scaling its seven cells by 0.6371 was considered and refused "
-             "under §14.4 rule 1: UBOS revised a population, not a religion split, and the "
-             "factor would invent seven counts in the one district where `Other` and "
-             "`None` are least like the rest of the country. A reviewer agent was asked "
-             "and reached the same answer, and found no drawn country where this map has "
-             "ever altered a published census figure. What changes instead is that "
-             "note_public carries both national shares, with and without Kotido. "
-             "KONTUR IS 2023 AND THE COUNTS ARE 2002. It is a within-district weight so "
-             "the level is irrelevant, but the shape has moved; sources/ug_grid.py says "
-             "so, and its per-district ratios are a third witness on Kotido, which comes "
-             "out at 1.07x against a national middle near 1.9x. "
-             "RE-LEVELLING ONTO THE 940 SUB-COUNTIES TABLE C1 COUNTS was considered and "
-             "refused: unlike the district concordance there is no second publication "
-             "giving sub-county population on both vintages, so the join could not be "
-             "proved and would move dots on a surface nobody could audit. "
-             "THE §3.5 LEAN CHECK RUNS AND SAYS ALMOST NOTHING, which is the right answer "
-             "for a 0.037% hole. The excluded hotel population correlates +0.269 with the "
-             "Adventist share across the 56 districts and +0.353 with Kalangala dropped, "
-             "so it leans urban as hotels would, but if every one of the 8,952 belonged to "
-             "a single faith no national share would move by more than 0.04 points.",
+        note="REBUILT 2026-09-15 FROM THE 2024 CENSUS, REPLACING THE 2002 BUILD (56 districts, "
+             "Table B7; sources/ug.py, taxonomy/ug2002.py and data/normalized/ug2002.csv are "
+             "kept). Anita registered with UBOS and downloaded the NPHC 2024 population file "
+             "(ask 008): a 10.22% sample, 4,693,190 person records, no weight, religion in "
+             "twelve codes, district, county, subcounty and parish on every record. "
+             "SHARES FROM THE SAMPLE, PEOPLE FROM THE FULL COUNT: joined by name to the "
+             "Subcounty Profiles workbook (all 10,852 sample parishes join; every subcounty's "
+             "sampling fraction is 8.2% to 12.5%), each subcounty's composition is scaled to "
+             "its Table 2 household population. Catholic, Anglican, Islam and Pentecostal land "
+             "within 0.5% of Final Report Table 3.1. "
+             "GRAIN BY THE STABILITY TEST, NOT THE FILE: households dealt into six waves; "
+             "district against the nation by stability.median_rho and wave_null; each finer "
+             "tier against its parent (departure correlation between halves, within-parent "
+             "shuffle null, 2,000 permutations) with a bar of median half-sample Pearson 1/3, "
+             "where the unit's own share starts to beat its parent's in expected squared error. "
+             "Eight answers pass to parish; Orthodox and Witnesses to county; Bahai and "
+             "Buddhist to district. No 2024 parish polygon exists (COD-AB is the 2020 edition; "
+             "the UBOS portal's map stops at subcounty), so the unit is the subcounty, from "
+             "the portal's own polygons fetched county by county. "
+             "BIDI BIDI: three census subcounties with no polygon, each merged with the host "
+             "subcounties of its county whose Kontur people exceed the census count 1.2 times "
+             "(the surplus is 0.65-0.73 of each camp), giving 2,200 drawn units from 2,207. "
+             "PENTECOSTAL/EVANGELICALS goes to christianity.evangelical under the one-node "
+             "ruling, as mz2017 does. sources/ug.md has the full record.",
     ),
 }

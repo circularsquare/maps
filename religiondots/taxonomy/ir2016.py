@@ -7,9 +7,17 @@ stated (`اظهارنشده`). The 1395 form was not found; *Amar* no. 21's Tabl
 answers as Muslim, Christian (Assyrian or Chaldean, Armenian, other Christian), Jewish, Zoroastrian
 and other, and the 1395 yearbook prints Christians as one column.
 
+The Muslim column is split by ir_split.py (2026-09-15, on Anita's ruling recorded 2026-09-16): a
+Sunni row from Masaili's province estimates, `derived`, plus the census's own `مسلمان` for the rest.
+The two Sunni labels below are that script's, not the census's.
+
 EXCLUDED holds categories that are deliberately not on the tree.
 REVIEW holds calls that are defensible but arguable, with the reason.
 """
+
+# ir_split.py writes these; they must stay identical to its LABEL and LABEL_LUMP.
+LABEL_SUNNI = "Muslim: Sunni (Masaili 2023)"
+LABEL_LUMP = "Muslim: Sunni, Tehran and the central provinces (Masaili 2023)"
 
 EXCLUDED = {
     "اظهارنشده":
@@ -23,10 +31,43 @@ EXCLUDED = {
 
 REVIEW = {
     "مسلمان":
-        "-> islam, no branch. 79,598,054 people, 99.589%. The table has one Muslim column; it "
-        "does not split Shia from Sunni, and Iran's Sunni minority is concentrated in some "
-        "provinces, so `islam.shia` would draw an inference onto exactly the provinces where it "
-        "is wrong (spec §2.7a).",
+        "-> islam, no branch. 79,598,054 people, 99.589%, before ir_split.py takes Masaili's "
+        "7,608,500 Sunnis out of it; 71,989,554 stay here. THE REMAINDER IS NOT PUT ON "
+        "`islam.shia`, although most of it is Twelver Shia. (1) Masaili names Sunnis and prints no "
+        "Shia figure, so a Shia layer would be census Muslims minus an estimate: a number nobody "
+        "published (spec §2.7a draws the named share and leaves the rest on the parent). (2) It "
+        "would carry his stated low lean onto the wrong node: Soltani (2015), a Sunni author, puts "
+        "the Kurds about two million higher, and on this construction those two million would be "
+        "drawn as Shia in Kurdistan, West Azerbaijan and Kermanshah. (3) Of the three tests in the "
+        "Bulgaria reversal (a split may be drawn when its magnitude is the publisher's, something "
+        "published can contradict it, and the roll-up undoes it), a residual Shia layer passes "
+        "only the third. THE COST: selecting Shia draws nothing in Iran, the country with the most "
+        "Shia. The estimates layer (estimates_todo.md, the open Shia and Sunni batch) may still "
+        "outline Iran for Shia, since spec §15.3 only refuses an estimate on a node the country "
+        "drew. The 15 provinces with no row in Masaili's table (Khuzestan, Isfahan, East "
+        "Azerbaijan, Ilam, Lorestan and ten more) keep every Muslim here.",
+    LABEL_SUNNI:
+        "-> islam.sunni. 7,108,500 people in 14 provinces, Masaili's printed counts (Atlas-e "
+        "Towsifi-ye Ahl-e Sonnat-e Iran, 2023, p. 59; Haft Aseman 26(88), Table 1): Kurdistan 82% "
+        "of the population, Sistan and Baluchestan 64, Golestan 38, West Azerbaijan 35, Hormozgan "
+        "35, Kermanshah 26, South Khorasan 15, North Khorasan 10, Gilan 7, Razavi Khorasan 5, "
+        "Bushehr 5, Fars 4, Kerman 2, Ardabil 2. `derived`, basis estimate: one researcher's "
+        "judgement from library and field work, applied inside a column the census counted at the "
+        "same province, so it rolls back to `islam` through COLUMNS. The printed count is drawn "
+        "rather than the integer percentage times census Muslims; the two differ by at most 2,469 "
+        "(Kurdistan). Uniform inside a province: the book names Sunni-majority counties (Bastak, "
+        "Jask, Qeshm and others in Hormozgan; the Avroman counties in Kermanshah) but prints no "
+        "county figure, so Sunni and unbranched dots are placed by the same population weight. No "
+        "school (Hanafi, Shafi'i) is named, so nothing goes below `islam.sunni`.",
+    LABEL_LUMP:
+        "-> islam.sunni. Masaili's row 15, 500,000 Sunnis of 'Tehran and the central provinces of "
+        "Iran', names no province. SPREAD OVER TEHRAN AND ALBORZ ONLY, by census Muslims (both "
+        "3.1%; ir_split.py prints the two counts): Tehran is the one province named; Alborz was "
+        "part of Tehran province until 2010 and Karaj is in the same city region; Soltani (2015) "
+        "counts Alborz with Tehran. The other provinces a reader could call central (Qom, "
+        "Markazi, Isfahan, Qazvin, Semnan, Yazd; 10.9M Muslims) get none: nothing read names a "
+        "Sunni community in any of them, and spreading over all eight would put about 95,000 of "
+        "the 500,000 in Isfahan. Changing the set is one dict in ir_split.py (LUMP_PROVINCES).",
     "مسیحی":
         "-> christianity, the bare branch. 130,158 people, 0.163%. One column in 1395. The 1390 "
         "table (Amar no. 21, Table 3) split Christians into `آشوری یا کلدانی` (Assyrian or "
@@ -60,10 +101,17 @@ MAP = {
     "مسیحی": "christianity",
     "کلیمی": "judaism",
     "سایر": "other.ir",
+    # ir_split.py's labels: Masaili's Sunnis, taken out of `مسلمان` (REVIEW).
+    LABEL_SUNNI: "islam.sunni",
+    LABEL_LUMP: "islam.sunni",
 }
 
-# spec §7a-i-1: every row is measured at the node it is drawn on.
-COLUMNS = {v: v for v in MAP.values()}
+# spec §7a-i-1: for a derived row, the node its SOURCE COLUMN names at the drawn unit. Every census
+# column is measured at the province it is drawn on; the only derived rows are ir_split.py's Sunnis,
+# which carry `parent_column=مسلمان` and roll back to the `islam` the census counted there.
+COLUMNS = {
+    "مسلمان": "islam",
+}
 
 
 def _key(cat):

@@ -516,40 +516,24 @@ BRANCHES = [
      "separate and has been since 1929."),
 
     # --- added 2026-09-15 with Senegal, whose 1988 census asked every Muslim for their
-    #     brotherhood (form item P11). In LINEAGE's "Sufi orders" group after Bektashi, under
-    #     `islam` rather than `islam.sunni`, for Bektashi's reason: the form asks the order and
-    #     not the school. The Qadiriyya, Tijaniyya and Mourides are Sunni and Maliki in Senegal;
-    #     the Layène's founder proclaimed himself the Mahdi, which makes a Sunni filing arguable
-    #     for one of the four, and the census lists all four side by side. Afrobarometer's card
-    #     offers the Qadiriyya, Tijaniyya and Mourides too (sources.md §11aq); nothing is drawn
-    #     from it. Whether these stay four legend rows is an ask (ask/, `sn`).
-    ("islam.qadiriyya",
-     "Qadiriyya",
-     "The Sufi order traced to Abd al-Qadir al-Jilani of Baghdad, who died in 1166, and the "
-     "oldest of the brotherhoods in West Africa. **Senegal's 1988 census counts it**: the form "
-     "asked every Muslim which brotherhood they belonged to, and its code 1 (`Khadr`) holds "
-     "**806,271 people, 11.7% of residents**. It is 32.0% of Ziguinchor, 26.0% of Kolda and "
-     "25.2% of Tambacounda, against 3.7% of the Diourbel region."),
-    ("islam.tijaniyya",
-     "Tijaniyya",
-     "The Sufi order founded by Ahmad al-Tijani in the 1780s. **Senegal's 1988 census counts "
-     "3,260,497 people in it, 47.3% of residents** (code 4, `Tidiane`), the largest answer in "
-     "the country. It is 80.2% of Saint-Louis region, which then included Matam, 65.4% of "
-     "Kaolack and 51.4% of Dakar, against 4.3% of Mbacké. Its Senegalese centres include "
-     "Tivaouane and Medina Baye in Kaolack; the form has one code for all of its branches."),
-    ("islam.mouride",
-     "Mouride",
-     "The brotherhood founded by Amadou Bamba in the 1880s, whose holy city is Touba. "
-     "**Senegal's 1988 census counts 2,047,728 Mourides, 29.7% of residents** (code 3). They "
-     "are 91.5% of Mbacké department, where Touba is, 85.5% of Bambey and 77.1% of Diourbel "
-     "department, and 45.9% of Louga and 44.7% of Thiès, against 3.6% of Kolda."),
+    #     brotherhood (form item P11). Three of its four brotherhoods, the Qadiriyya, Tijaniyya
+    #     and Mourides, are Sunni orders and are children of `islam.sunni` (after the schools of
+    #     law, below). The Layène is the fourth and stays here, in LINEAGE's "Sufi orders" group
+    #     beside Bektashi: its founder proclaimed himself the Mahdi, a claim outside Sunni
+    #     orthodoxy, the same kind of reason `islam.ahmadiyya` is not under a branch. Anita left
+    #     which orders count as Sunni to judgement (ask 029, 2026-09-15) and kept all four as
+    #     nodes, settled on 2026-09-16 ("sufi settled"): the Maghreb's sources report nothing on orders.
     ("islam.layene",
      "Layène",
      "The brotherhood founded in 1883 by Seydina Limamou Laye at Yoff, among the Lebou of the "
      "Cap-Vert peninsula. **Senegal's 1988 census counts 41,681 people in it, 0.6% of "
      "residents** (code 2), and 74.9% of them live in the Dakar region, where they are 2.1% of "
-     "residents. Limamou Laye proclaimed himself the Mahdi; the census lists the Layène among "
-     "the Muslim brotherhoods, and it is filed beside them."),
+     "residents. "
+     "**Filed under Islam but not under Sunni Islam, unlike the census's other three "
+     "brotherhoods.** Limamou Laye proclaimed himself the Mahdi, a claim his followers keep and "
+     "one that lies outside Sunni orthodoxy; this map keeps the Ahmadiyya apart from the "
+     "branches for the same kind of reason. The census lists the Layène among the Muslim "
+     "brotherhoods, so it sits under `islam` with the Sufi orders, beside Bektashi."),
 
     # --- added 2026-09-06 with Pakistan.
     ("islam.ahmadiyya",
@@ -618,6 +602,37 @@ BRANCHES = [
      "From Ahmad ibn Hanbal, d. 855; the smallest of the four and the school of the Arabian "
      "peninsula. **0.1% of Muslims in Türkiye.** As with `maliki`, a real published column "
      "and a very small one."),
+
+    # --- three of Senegal's four Sufi brotherhoods, added 2026-09-15 with its 1988 census
+    #     (form item P11), first under `islam` and moved here the same day. They are Sunni
+    #     orders, and Senegal's Muslims are Maliki, but they are children of `islam.sunni` and
+    #     not of `islam.sunni.maliki`: a school is the law a Muslim follows and an order the
+    #     brotherhood they join, and the form asks the order and not the school. The Layène,
+    #     the census's fourth, is under `islam` beside Bektashi, for the reason its note gives.
+    #     Afrobarometer's card offers these three too (sources.md §11aq); nothing is drawn from it.
+    ("islam.sunni.qadiriyya",
+     "Qadiriyya",
+     "The Sufi order traced to Abd al-Qadir al-Jilani of Baghdad, who died in 1166, and the "
+     "oldest of the brotherhoods in West Africa. A Sunni order; its members in Senegal follow "
+     "the Maliki school, which the census does not ask. **Senegal's 1988 census counts it**: "
+     "the form asked every Muslim which brotherhood they belonged to, and its code 1 (`Khadr`) "
+     "holds **806,271 people, 11.7% of residents**. It is 32.0% of Ziguinchor, 26.0% of Kolda "
+     "and 25.2% of Tambacounda, against 3.7% of the Diourbel region."),
+    ("islam.sunni.tijaniyya",
+     "Tijaniyya",
+     "The Sufi order founded by Ahmad al-Tijani in the 1780s; a Sunni order, Maliki in Senegal. "
+     "**Senegal's 1988 census counts 3,260,497 people in it, 47.3% of residents** (code 4, "
+     "`Tidiane`), the largest answer in the country. It is 80.2% of Saint-Louis region, which "
+     "then included Matam, 65.4% of Kaolack and 51.4% of Dakar, against 4.3% of Mbacké. Its "
+     "Senegalese centres include Tivaouane and Medina Baye in Kaolack; the form has one code "
+     "for all of its branches."),
+    ("islam.sunni.mouride",
+     "Mouride",
+     "The brotherhood founded by Amadou Bamba in the 1880s, whose holy city is Touba; a Sunni "
+     "order, Maliki like the rest of Senegal. **Senegal's 1988 census counts 2,047,728 "
+     "Mourides, 29.7% of residents** (code 3). They are 91.5% of Mbacké department, where "
+     "Touba is, 85.5% of Bambey and 77.1% of Diourbel department, and 45.9% of Louga and 44.7% "
+     "of Thiès, against 3.6% of Kolda."),
     ("islam.shia.jaafari",
      "Ja'fari (Twelver)",
      "The school of the Twelver Shia, named for Ja'far al-Sadiq, d. 765. **1.0% of Muslims in "
@@ -880,11 +895,14 @@ BRANCHES = [
     ("daoism", "Daoism", ""),
     ("confucianism",
      "Confucianism",
-     "Added 2026-09-05 with South Korea, which is **the only source on this map that counts "
-     "it as a religion** — 유교, 75,703 people in 2015, with a cell of its own beside "
-     "Buddhism and the two Christianities. Everywhere else it is either not asked or folded "
-     "into a folk-religion residual: `chinesefolk`'s note names it as one of the things that "
-     "category carries, and China's census asks nothing at all. "
+     "Added 2026-09-05 with South Korea, which was then the only source on this map drawn "
+     "on it — 유교, 75,703 people in 2015, with a cell of its own beside "
+     "Buddhism and the two Christianities. **Since 2026-09-15 every census cell that names "
+     "Confucianism by itself draws here** (Anita, ask 036): Indonesia's Khong Hu Chu, "
+     "116,916 and now the largest, and small cells in Australia (330), Canada (995), "
+     "Czechia (13), New Zealand and England and Wales (76); Thailand and Japan already did. "
+     "Combination cells that fold it in with folk practice stay on `chinesefolk`, and "
+     "China's census asks nothing at all. "
      "A root rather than a child of anything, on Anita's call 2026-09-05, because there is "
      "nothing on the tree for it to descend from — the alternative was `chinesefolk`, which "
      "would be wrong twice over for a Korean answer. "
@@ -931,11 +949,18 @@ BRANCHES = [
      "Wicca, Neopaganism, Druidry, nature religions. StatCan groups these explicitly; the ABS "
      "buries them inside Other Religious Groups (§3.9)."),
     ("chinesefolk",
-     "Chinese religions",
+     "Chinese folk religion",
      "Chinese folk religion, Confucianism and the syncretic practice that census categories "
      "usually cannot separate — the §3.3 combination node for China's own tradition. Daoism "
      "is a sibling top-level family rather than a child, because sources enumerate it "
-     "separately where they enumerate anything at all."),
+     "separately where they enumerate anything at all. Since spec §3.13 (2026-09-15) it also "
+     "holds, in China, Taiwan and Hong Kong, people who name no religion and keep a religious "
+     "altar at home. "
+     "**Since 2026-09-15 a cell that names Confucianism by itself goes to `confucianism`, and "
+     "Falun Gong to `eastasiannew`** (Anita, ask 036; sources/folk_practice.md §11). Cells that "
+     "name Chinese religion in general, ancestor veneration, or a declared combination "
+     "(Singapore's Taoism with its footnote, Mauritius's Buddhist/Chinese, Taiwan's three "
+     "teachings) stay here."),
     ("indigenous",
      "Indigenous and traditional religions",
      "Traditional religions of indigenous peoples, kept as one family with regional children "
@@ -1443,7 +1468,12 @@ BRANCHES = [
      "both are East Asian new religions by any reading. Moving them would restructure four "
      "drawn countries at once for no gain today, and Anita's call on 2026-09-05 was that "
      "this is not a blocker and can change later. If it does, they become "
-     "`eastasiannew.korean.unification` and `eastasiannew.vietnamese`."),
+     "`eastasiannew.korean.unification` and `eastasiannew.vietnamese`. "
+     "**Chinese foundings sit on this parent**, there being no Chinese grouping node: "
+     "Taiwan's Yiguan Dao and other Chinese religions (tw2018.py), and since 2026-09-15 New "
+     "Zealand's Falun Gong, moved off `chinesefolk` on Anita's ruling on ask 036. A "
+     "`eastasiannew.chinese` node is the obvious next step if a source ever counts enough of "
+     "them to want one."),
     ("eastasiannew.japanese",
      "Japanese new religions",
      "Sekai Kyūsei Kyō (Igreja Messiânica Mundial), Seicho-no-Ie, Perfect Liberty, "
@@ -1960,6 +1990,29 @@ BRANCHES = [
      "country in the Pacific Congregational set where the national church does not lead "
      "comfortably: Tuvalu's EKT holds 85.9% and the Cook Islands Christian Church 49.1%."),
 
+    # --- added 2026-09-15 with American Samoa, the seventh of the Pacific Congregational set.
+    ("christianity.reformed.congregational.cccas",
+     "Congregational Christian Church in American Samoa",
+     "The Ekalesia Fa'apotopotoga Kerisiano i Amerika Samoa: **33.3% of American Samoa** in the "
+     "2015 Household Income and Expenditure Survey (19,147 of 57,436 weighted people), the "
+     "largest body in the territory, and **88.3% of Manu'a**.\n\n"
+     "It shares its history with Samoa's `.cccs` and is not the same church. The World Council "
+     "of Churches, which both belong to, records a movement from 1964 for an independent "
+     "assembly in American Samoa, constituted in 1980, and a declaration of reconciliation "
+     "between the two churches in 1982. Its lowest shares are Tualauta (25.2%), where the "
+     "Latter-day Saints reach 25.0%, and Maoputasi (25.5%), where the Catholics are 25.9%."),
+
+    # --- added 2026-09-15 with Tokelau, the eighth of the Pacific Congregational set.
+    ("christianity.reformed.congregational.tokelau",
+     "Congregational Christian Church of Tokelau",
+     "**603 people, 50.4% of the residents present at Tokelau's 2016 census**, which counts it as "
+     "`Congregational Christian`, one of the three churches its form names. It is **77.0% of "
+     "Atafu** and 62.7% of Fakaofo, and 9.1% of Nukunonu, which is 81.8% Catholic.\n\n"
+     "Its congregations were planted by the London Missionary Society's Samoan teachers and were a "
+     "district of Samoa's `.cccs` until they formed a church of their own in the mid-1990s (1996 in "
+     "Wikipedia's article on the CCCS), which is why it sits beside `.cccs` rather than on it. "
+     "`.ekt` is Tuvalu's church, not this one."),
+
     ("indigenous.maori",
      "Maori traditional religion",
      "The pre-Christian Maori religion and the part of Stats NZ's `Maori Religions, Beliefs "
@@ -2216,7 +2269,8 @@ BRANCHES = [
      "Other religion (United States)",
      "Pew's two irreducible lines, and only Pew's — ASARB names every body it counts and has "
      "never needed a residual. First, what is left of `Other world religions` (776,032 "
-     "adults) after the ASARB rolls of the roots it covers are subtracted; Sikhs, Daoists, "
+     "adults) after the ASARB rolls of the roots it covers, and the 2020 census's county "
+     "counts of Sikhs and Yazidis (sources/us_dhca.py), are subtracted; Sikhs, Daoists, "
      "Bahá'ís and Zoroastrians are one published line at n=36,908 and cannot be separated "
      "(spec §3.5a, §4.4). Second, `Other in the Unitarian and other liberal faiths family` "
      "(221,896), a write-in residual whose siblings run from Unitarian Universalism to "
@@ -3824,6 +3878,16 @@ BRANCHES = [
      "answers left blank may be counted here. It is 1.8% of Kono, 1.4% of Kailahun and of "
      "Bonthe and 1.2% of Bombali, against 0.1% of Pujehun."),
 
+    # --- added 2026-09-15 with American Samoa.
+    ("other.as",
+     "Other religion (American Samoa)",
+     "The Department of Commerce's `Other religion` in the 2015 Household Income and Expenditure "
+     "Survey: **3,178 of 57,436 weighted people, 5.5%**, the write-in answers it did not code "
+     "into fifteen named rows.\n\n"
+     "The report does not say what it holds. 1,943 of the 3,178 were born in American Samoa and "
+     "588 in Samoa, so it is mostly not a migrants' answer. It is 11.6% of Maoputasi and 6.8% of "
+     "Tualauta, and none was recorded in Saole, Vaifanua or Manu'a."),
+
     # --- added 2026-09-15 with Brunei.
     ("other.bn",
      "Other religion (Brunei)",
@@ -3836,6 +3900,76 @@ BRANCHES = [
      "10.7% of Temburong, against 3.2% of Brunei-Muara, where 7,615 of the 10,074 are "
      "temporary residents."),
 
+    # --- added 2026-09-15 with Algeria.
+    ("other.dz",
+     "Other religion (Algeria)",
+     "The Arab Barometer's `Other` for Algeria: three answers, all in wave VI-1 (Tizi Ouzou 2, "
+     "Sétif 1), with no text recorded; 0.04% of the country as drawn, which is also Pew 2020's "
+     "figure for other religions. A per-country residual, as other.gm and other.ne."),
+
+    # --- added 2026-09-15 with Morocco.
+    ("other.ma",
+     "Other religion (Morocco)",
+     "The Arab Barometer's `Other` for Morocco: two answers, `Other` in wave VI-2 "
+     "(Casablanca-Settat) and `Something else` in VI-3 (Marrakech-Safi), with no text recorded; "
+     "3,968 Moroccans as drawn. It also holds the part of Pew's `Other religions` for Morocco's "
+     "foreign residents that taxonomy/origin_religion.py cannot place. A per-country residual, as "
+     "other.dz."),
+
+    # --- added 2026-09-15 with Mauritania.
+    ("other.mr",
+     "Other religion (Mauritania)",
+     "Pew Research Center's `Other religions` for Mauritania's foreign residents, where "
+     "taxonomy/origin_religion.py has no split for the nationality: **991 people as drawn**, most "
+     "of them on Mali's row. No source asks Mauritanians their religion, so nothing else is here. "
+     "A per-country residual, as other.ma."),
+
+    # --- added 2026-09-15 with Saudi Arabia.
+    ("other.sa",
+     "Other religion (Saudi Arabia)",
+     "Pew Research Center's `Other religions` for Saudi Arabia's non-Saudi residents, where "
+     "taxonomy/origin_religion.py has no split for the nationality: **34,975 people as drawn**. No "
+     "source asks Saudi citizens their religion, so nothing else is here. A per-country residual, "
+     "as other.mr."),
+
+    # --- added 2026-09-15 with Oman.
+    ("other.om",
+     "Other religion (Oman)",
+     "Pew Research Center's `Other religions` for Oman's expatriates, where "
+     "taxonomy/origin_religion.py has no split for the nationality: **4,871 people as drawn**. No "
+     "source asks Omanis their religion, so nothing else is here. A per-country residual, as "
+     "other.sa."),
+
+    # --- added 2026-09-15 with Tunisia.
+    ("other.tn",
+     "Other religion (Tunisia)",
+     "The Arab Barometer's `Other` for Tunisia: 25 answers in waves V to VIII with no text "
+     "recorded, 10 of them in wave VII in Le Kef, Siliana and Sousse; 0.23% of the country as "
+     "drawn, at one national share. Waves VI to VIII have no Jewish box, so a Jewish respondent "
+     "could only answer here. A per-country residual, as other.dz and other.ma."),
+
+    # --- added 2026-09-15 with The Gambia.
+    ("other.gm",
+     "Other religion (The Gambia)",
+     "The Gambia Bureau of Statistics' `Other` in the 2013 census, code 4 of four on a form whose "
+     "other codes are Islam, Christianity and Traditional: **2,686 people, 0.14% of the "
+     "population.**\n\n"
+     "The enumerator's manual sends every other religion here, with its name written in (its "
+     "example is Hindu), and the form has no code for no religion, so anyone who said they had "
+     "none was recorded here or left blank. It is 0.53% of Kanifing, where 1,106 of the 1,996 "
+     "were also recorded with no age, and 0.21% of Banjul, against 0.05% or less in most of the "
+     "country."),
+
+    # --- added 2026-09-15 with Niger.
+    ("other.ne",
+     "Other religion (Niger)",
+     "The Institut National de la Statistique's `Autre à préciser` in the 2012 census, code 9 on a "
+     "form whose other codes are no religion, Muslim, Christian and animist: **2,520 people, "
+     "0.015% of residents.**\n\n"
+     "The answer was written in, and no table prints what people wrote. The form has no code for "
+     "no answer, so this is a religion someone named rather than a blank. Niamey holds 1,044 of "
+     "them, 0.10% of the city, against 0.01% or less everywhere else."),
+
     # --- added 2026-09-15 with Palestine.
     ("other.ps",
      "Other religion (Palestine)",
@@ -3845,6 +3979,17 @@ BRANCHES = [
      "The census does not say what it holds. 361 are in Nablus governorate, where the "
      "Samaritan community lives on Mount Gerizim, and 594 in Jerusalem. The form has no box "
      "for no religion, so some people with none may have answered here."),
+
+    # --- added 2026-09-15 with Qatar (sources/qa.md).
+    ("other.qa",
+     "Other religion (Qatar)",
+     "The 2004 census's `Other`: **104,426 people, 14.0% of the population.**\n\n"
+     "The religion question on the census form has three answers, Muslim, Christian and Other, "
+     "with no box for no religion or for not stated, so this holds Qatar's Hindus and Buddhists, "
+     "anyone else who was neither Muslim nor Christian, and anyone with no religion. 89% of them "
+     "were men. It is 46.5% of Mesaieed and 32.8% of Al Khor, against 5.8% of Umm Salal. The "
+     "religion of non-Qataris comes from the census's sample, weighted to the counted population "
+     "of each municipality."),
 
     # --- added 2026-09-15 with Senegal.
     ("other.sn",
@@ -3969,7 +4114,14 @@ BRANCHES = [
     # --- added 2026-09-09 with Uganda.
     ("other.ug",
      "Other religion (Uganda)",
-     "UBOS's `Other` in Table B7 of the 2002 census, **741,589 people, 3.04%**, and the "
+     "`Others` in the 2024 census (question P9, code 96), **about 684,000 people, 1.54%** of "
+     "the household population, drawn from UBOS's 10% sample on 2,200 subcounties. It holds "
+     "every answer the form's eleven other boxes do not name. Its centre is Kagadi "
+     "**14.8%**, Kibaale 12.7% and Kyenjojo 11.4%, and Muhorro Town Council 34.7%; UBOS names "
+     "the Faith of Unity (Ow'obushobozi), founded there, among the contents of the box. "
+     "Lemusui in Nakapiripirit is 42.3%.\n\n"
+     "Until 2026-09-15 the node held the 2002 census's `Other`, which the rest of this note "
+     "describes. UBOS's `Other` in Table B7 of the 2002 census, **741,589 people, 3.04%**, and the "
      "residual with the widest declared contents in this list. The table's own footnote "
      "says it holds `Orthodox, Bahai, Other Christian, Non-Christian, and Traditional` in "
      "one column, so a Ugandan Baptist, a Ugandan Orthodox Christian, a Bahá'í and a "
@@ -4196,6 +4348,22 @@ BRANCHES = [
      "Buddhist, Hindu, Vaishnava and Sukyo Mahikari congregations on the same list.\n\n"
      "Per source, per spec §3.11."),
 
+    # --- added 2026-09-15 with Iceland.
+    ("other.is",
+     "Other religion (Iceland)",
+     "Three ESS answers together, `Austrænum trúarbrögðum` (Eastern religions), `Öðrum trúarbrögðum "
+     "utan kristni` (other non-Christian religions) and, in rounds 6 and 8 only, `Öðrum` (other), "
+     "pooled over rounds 6, 8, 10 and 11, plus the unresolvable slice of Pew's `Other religions` "
+     "cell for the foreign citizens. The Icelandic card offers the Eastern traditions as one box, so "
+     "choosing Buddhism over Hinduism would invent a fact about a respondent. Greece, Croatia, "
+     "Finland, Belgium, Sweden, Norway, Denmark and Latvia have the same node for the same reason. "
+     "Ásatrú has its own box on the card and is drawn on `paganism`, not here.\n\n"
+     "**The three answers are 27 Icelandic citizens over four rounds**, too few for the two-unit "
+     "test to place, so they are drawn at the national rate inside each unit's residual. What the "
+     "cell certainly contains is Hagstofa's registered Buddhist, Bahá'í, Hindu and yoga "
+     "associations and the Jewish cultural association, each counted nationally only.\n\n"
+     "Per source, per spec §3.11."),
+
     # --- added 2026-09-14 with Ukraine.
     ("other.ua",
      "Other religion (Ukraine)",
@@ -4272,6 +4440,41 @@ BRANCHES = [
      "column. The 2012 report printed them apart, 365 other and 44 not stated. 50 of the 779 "
      "live in institutions, 9.1% of their residents against 1.95% of everyone else.\n\n"
      "Per source, per spec §3.11."),
+    # --- added 2026-09-15 with Malta (sources/mt.md).
+    ("other.mt",
+     "Other religion (Malta)",
+     "The 2021 census's `Other religious groups`, **911 people, 0.20%** of those aged 15 and "
+     "over. The census has no Sikh answer, and the largest citizenship in the category is "
+     "Indian (202, 161 of them men), which fits Sikhs; the volume does not say what it holds.\n\n"
+     "Per source, per spec §3.11."),
+    # --- added 2026-09-15 with Andorra (sources/ad.md).
+    ("other.ad",
+     "Other religion (Andorra)",
+     "The 2018 World Values Survey's `Other`, **5 of 1,004 respondents, 0.5%**. It is a "
+     "write-in on the card (`Altra, quina?`), and the archive codes all five `Other; nfd` "
+     "without the text, so nothing says which religions they named. A survey share, not a "
+     "count.\n\n"
+     "Per source, per spec §3.11."),
+    # --- added 2026-09-15 with Jersey (sources/je.md).
+    ("other.je",
+     "Other religion (Jersey)",
+     "Statistics Jersey's Opinions and Lifestyle Survey 2023: of adults who named a religion, "
+     "**7%** named one other than Christianity, about 2.7% of adults. A write-in the office "
+     "codes and does not print apart; the 2015 round's report names Buddhist, Hindu, Jewish, "
+     "Muslim and Sikh answers, each from very small numbers of respondents. A survey share, "
+     "not a count.\n\n"
+     "Per source, per spec §3.11."),
+
+    # --- added 2026-09-15 with DR Congo (sources/cd.md).
+    ("other.cd",
+     "Other religion (DR Congo)",
+     "The Institut National de la Statistique's `Autre religion` in the Enquête 1-2-3 of 2005 "
+     "and 2012, code 7 of eight on a card that also offers Catholic, Protestant, Kimbanguist, "
+     "Muslim, other Christian, animist and no religion: **4.3% of people, by the religion of "
+     "their household head** (1,361 of 31,755 heads).\n\n"
+     "The survey does not say what is in it. Its geography is strongest in the centre of the "
+     "country, 13.0% of Tshopo, 12.8% of Tshuapa and 12.1% of Sankuru, against 1.0% of Bas-Uele. "
+     "The DRC's own prophetic movements have no code on the card."),
 ]
 
 
@@ -4339,7 +4542,18 @@ PUBLIC_NOTE = {
         "veneration, folk religion and most Buddhist practice alongside the genuinely "
         "irreligious, and cannot tell them apart. In Laos and Mozambique it is the "
         "census's no-religion answer, which also took people who follow traditional "
-        "religion.",
+        "religion. In China, Hong Kong and Taiwan it is mostly the people a survey found naming no "
+        "religion and keeping no religious altar at home.",
+    # Spec §3.13, 2026-09-15: the label says what people call it, and in these three places most
+    # of the dots are people who call it nothing.
+    "chinesefolk":
+        "In China, Taiwan and Hong Kong this is two groups: people who named folk religion when "
+        "a survey asked their religion, and people who named no religion but keep a religious "
+        "shrine or altar at home. Few people there call temple and ancestor worship a religion, "
+        "so the second group is most of it. In China and Hong Kong the altar group is drawn only "
+        "among Han Chinese. China's and Taiwan's surveys carry the same international altar "
+        "question, but Taiwan's version lists folk objects as examples and probably reads higher; "
+        "Hong Kong's figure is Pew's, from a narrower question, and reads low beside both.",
 }
 
 LINEAGE = {
@@ -4526,11 +4740,13 @@ LINEAGE = {
         # Added 2026-09-08 with Albania. A tariqa rather than a branch or a movement: the
         # Bektashiyyah descends from a Sufi lineage that cuts across the succession dispute
         # entirely, so it sits beside the pair rather than under either.
-        # Senegal's four brotherhoods added 2026-09-15, after Bektashi so its place in the group
-        # holds, and in order of founding: Qadiriyya (12th century), Tijaniyya (1780s), then
-        # the Mourides and the Layène, both Senegalese foundings of the 1880s.
-        ("Sufi orders", ["islam.bektashi", "islam.qadiriyya", "islam.tijaniyya",
-                         "islam.mouride", "islam.layene"]),
+        # Senegal's Layène added 2026-09-15, after Bektashi so its place in the group holds. It
+        # is the one brotherhood of Senegal's four not filed under `islam.sunni` (its founder's
+        # Mahdist claim; the node's note has the reason). The other three moved to
+        # `islam.sunni`'s own "Sufi orders" group the same day, so this group still means
+        # "an order this map files under no branch", and draws one row per country: Bektashi
+        # in Albania, the Layène in Senegal.
+        ("Sufi orders", ["islam.bektashi", "islam.layene"]),
         # Added 2026-09-14 for the national estimate layer. Ibadism came out of the secession
         # after Siffin in 657, which took neither side of the succession dispute, so it is not
         # in `Branches`. LAST ON PURPOSE, and measured rather than chosen: inside `Branches` it
@@ -4551,6 +4767,15 @@ LINEAGE = {
             "islam.sunni.shafii",
             "islam.sunni.hanbali",
         ]),
+        # Added 2026-09-15 with Senegal. The orders are a group of their own after the schools,
+        # not members of "Schools of law": a school is the law a Muslim follows and an order is
+        # the brotherhood they join, so one person has both, and a Senegalese Mouride is also a
+        # Maliki. Labelled like `islam`'s "Sufi orders", which holds the orders filed under no
+        # branch (Bektashi, the Layène); the viewer keys captions by parent, so the two do not
+        # collide. Order of founding, as there: Qadiriyya (12th century), Tijaniyya (1780s),
+        # Mourides (1880s).
+        ("Sufi orders", ["islam.sunni.qadiriyya", "islam.sunni.tijaniyya",
+                         "islam.sunni.mouride"]),
     ],
     "islam.shia": [
         ("Schools of law", ["islam.shia.jaafari"]),

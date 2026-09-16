@@ -234,8 +234,15 @@ def main():
         note("built_countries --check")
         subprocess.run([py, "tools/built_countries.py", "--check"], cwd=ROOT)
 
-        ccs = subprocess.run([py, "tools/built_countries.py"], cwd=ROOT,
-                             capture_output=True, text=True, check=True).stdout.strip()
+        got = subprocess.run([py, "tools/built_countries.py"], cwd=ROOT,
+                             capture_output=True, text=True)
+        # countries.py warns on stderr about a half-registered country and leaves it out of the
+        # list. Captured here, so pass it on rather than build without saying so.
+        if got.stderr.strip():
+            print(got.stderr.rstrip())
+        if got.returncode != 0:
+            raise SystemExit(f"FAILED (exit {got.returncode}): tools/built_countries.py")
+        ccs = got.stdout.strip()
         if not ccs:
             raise SystemExit("built_countries.py printed nothing — no country has both editions")
         print(f"\nbuilding {len(ccs.split(','))} countries")

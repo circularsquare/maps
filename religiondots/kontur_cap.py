@@ -18,6 +18,12 @@ block, a point inside it, and a status.
     real         a genuine dense core. Drawn as Kontur has it; one summary line.
     capped       a false concentration. Every hex in the block is lowered to the median density
                  of the populated hexes within 3 km around it (below).
+    isolated     a false concentration with no ring to set a ceiling: no populated hex within
+                 3 km lies outside every dense block (Sudan's Red Sea hills, 2026-09-15). Every
+                 hex in the block is lowered to the median density of the populated hexes of
+                 its own unit that are in no dense block, which spreads the block's excess over
+                 the rest of the unit in proportion to Kontur. Refused, and the scatter stops,
+                 on a block that does have such a ring: that block is `capped`.
     unreviewed   seen, written down, not yet judged. Drawn as Kontur has it, with a loud warning
                  on every scatter. It WARNS rather than stops because the stop exists to force
                  someone to look at a block, and an unreviewed row is proof someone did; stopping
@@ -69,7 +75,7 @@ OVER_CAP = 1.005 * CAP      # a layer with any hex above this is not raw Kontur
 HI = 15_000.0               # per km2: block membership
 RING_KM = 3.0
 MATCH_KM = 1.0
-STATUSES = ("real", "capped", "unreviewed")
+STATUSES = ("real", "capped", "isolated", "unreviewed")
 FIELDS = ["cc", "lon", "lat", "status", "place", "unit", "unit_share", "why", "reviewed"]
 
 _LAYER = re.compile(r"(_hexes|_grid_\d+k?m)\.gpkg$")
@@ -210,6 +216,7 @@ def apply(place, cc, src, verbose=True):
 
     new = pop.copy()
     n_real = 0
+    base_ceiling = {}           # unit -> median density outside the blocks, for `isolated`
     for k, idx in enumerate(b["groups"]):
         rows = rows_for.get(k, [])
         if not rows:
@@ -243,6 +250,30 @@ def apply(place, cc, src, verbose=True):
                       f"{d['people']:,.0f} ({100 * d['share']:.1f}% of unit {u}) lowered to the "
                       f"{RING_KM:g} km ring's median of {ceiling:,.0f}/km2: now "
                       f"{new[idx].sum():,.0f} ({100 * share_after:.1f}%)")
+        elif status == "isolated":
+            near = b["tree"].query_ball_point(b["xy"][idx], RING_KM * 1000.0)
+            ring = np.unique(np.concatenate([np.asarray(n, dtype=np.int64) for n in near]))
+            ring = ring[(b["label"][ring] < 0) & (pop[ring] > 0)]
+            if len(ring):
+                raise SystemExit(f"!! kontur cap STOPPED the scatter: block '{name}' is `isolated` "
+                                 f"but {len(ring)} populated hex(es) outside every dense block lie "
+                                 f"within {RING_KM:g} km; it has a ring, so it is `capped`")
+            for u in np.unique(unit[idx]):
+                if u not in base_ceiling:
+                    base = (unit == u) & (b["label"] < 0) & (pop > 0)
+                    if not base.any():
+                        raise SystemExit(f"!! kontur cap STOPPED the scatter: unit {u} has no "
+                                         f"populated hex outside a dense block to set "
+                                         f"'{name}''s ceiling")
+                    base_ceiling[u] = float(np.median(dens[base]))
+                h = idx[unit[idx] == u]
+                new[h] = np.minimum(pop[h], base_ceiling[u] * area[h])
+            if verbose:
+                u = d["unit"]
+                print(f"  kontur cap: ISOLATED '{name}', {d['n']} hexes holding "
+                      f"{d['people']:,.0f} ({100 * d['share']:.1f}% of unit {u}), no populated "
+                      f"ring outside the blocks; lowered to unit {u}'s median of "
+                      f"{base_ceiling[u]:,.1f}/km2 outside the blocks: now {new[idx].sum():,.0f}")
     if verbose and n_real:
         print(f"  kontur cap: {n_real} block(s) at the cap registered as real cores, drawn as is")
 

@@ -98,6 +98,14 @@ https://www.abs.gov.au/statistics/standards/australian-statistical-geography-sta
 digit is the state. `state` rows use ASGS STE codes `1`–`8`. Everything is **place of usual
 residence** and **excludes overseas visitors**.
 
+**Outline, 2026-09-15.** The Other Territories SA2s (state `9`: 901011001 Christmas Island,
+901021002 Cocos (Keeling) Islands, 901031003 Jervis Bay, 901041004 Norfolk Island) were in the
+counts and the dots from the start, but Natural Earth draws Christmas and Cocos as one
+`Indian Ocean Ter.` feature and Norfolk as its own, and `country_shapes.py` left all three out of
+Australia's outline. They now join it through `country_shapes.py::ALSO` and stay part of this
+entry; no count changed. Jervis Bay is inside the mainland outline. sources.md
+§outlines-2026-09-15.
+
 ---
 
 ## 3. The classification, and the double-counting trap
@@ -510,3 +518,16 @@ re-tabulate, scatter and derive, the "Based on" form is the correct one — ABS 
 10. **ABS began reviewing the ASCRG in 2022**, so the 2026 census will not use this classification
     unchanged. Whatever cross-source matching happens later (spec §2.4) should not assume these
     codes are stable across censuses.
+
+## 9. Confucianism moved off `chinesefolk`, 2026-09-15 (session `cb8b206e-folksplit`)
+
+On Anita's ruling on ask 036 (`ask/RULINGS.md`, `cn`, `all`), `Confucianism` (6052, 330 people as
+allocated to SA2) maps to `confucianism` instead of `chinesefolk` (`taxonomy/au2021.py`).
+
+Kept on `chinesefolk`, because none of their labels names a single other tradition:
+`Ancestor Veneration` 409, `Chinese Religions, nfd` 6, `Chinese Religions, nec` 49.
+
+All four rows are allocated below state level and under one dot nationally, so neither edition
+draws a dot or a ring for them; the change reaches the legend's counts only. Both editions
+rescattered: 23,504 and 2,327 dots, unchanged. The whole change across countries is
+`sources/folk_practice.md` §11.

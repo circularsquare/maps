@@ -23,7 +23,9 @@ Usage:
 """
 import argparse
 import json
+import os
 import sys
+import time
 from pathlib import Path
 
 import geopandas as gpd
@@ -46,6 +48,30 @@ OUT = HERE / "data" / "processed"
 # (spec §4.2); 1:100 is the nicer map and four times the features.
 DOT_VALUE = 1000
 SEED = 20260827
+
+
+def write_json_atomic(path: Path, obj) -> None:
+    """Write `obj` as JSON through a temp file in the same directory, then swap it into `path`.
+
+    A build tail died on a JSONDecodeError reading a half-written dots_in.geojson while a builder
+    was mid-scatter (runlog 2026-09-15). `os.replace` on one volume is atomic, so a reader sees the
+    old file or the new one, never part of one. The temp name ends in `.tmp`, which no reader's
+    `dots_<cc>*.geojson` path or regex matches. On Windows the swap raises PermissionError while
+    a reader holds the old file open, so it retries for a minute before stopping, and the new
+    output is then left in the temp file.
+    """
+    tmp = path.with_name(f"{path.name}.{os.getpid()}.tmp")
+    with open(tmp, "w", encoding="utf-8") as f:
+        json.dump(obj, f)
+    for attempt in range(60):
+        try:
+            os.replace(tmp, path)
+            return
+        except PermissionError:
+            if attempt == 59:
+                raise SystemExit(f"could not replace {path.name}, held open for a minute; "
+                                 f"the new output is in {tmp.name}")
+            time.sleep(1)
 
 
 def _geo_checks():
@@ -510,8 +536,7 @@ def main():
     if dot_value != DOT_VALUE:
         stem += f"_{dot_value // 1000}k" if dot_value % 1000 == 0 else f"_dv{dot_value}"
     OUT.mkdir(parents=True, exist_ok=True)
-    with open(OUT / f"dots_{stem}.geojson", "w", encoding="utf-8") as f:
-        json.dump({"type": "FeatureCollection", "features": feats}, f)
+    write_json_atomic(OUT / f"dots_{stem}.geojson", {"type": "FeatureCollection", "features": feats})
     print(f"wrote {len(feats):,} dots -> dots_{stem}.geojson")
 
     rfeats = []
@@ -527,8 +552,7 @@ def main():
                                                         round(float(y), 4)]},
                            "properties": {"n": node, "why": why,
                                           "congregations": int(congs)}})
-    with open(OUT / f"rings_{stem}.geojson", "w", encoding="utf-8") as f:
-        json.dump({"type": "FeatureCollection", "features": rfeats}, f)
+    write_json_atomic(OUT / f"rings_{stem}.geojson", {"type": "FeatureCollection", "features": rfeats})
     print(f"wrote {len(rfeats):,} rings -> rings_{stem}.geojson")
 
 

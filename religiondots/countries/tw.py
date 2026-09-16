@@ -51,7 +51,8 @@ ENTRY = {
         source="Taiwan Social Change Survey, seven rounds 1994 to 2018 (Institute of Sociology, "
                "Academia Sinica; open copies at the Association of Religion Data Archives), against "
                "the Ministry of the Interior's household register at the end of 2025",
-        basis="self-identification, adults",
+        basis=("self-identification, adults; folk religion also counts people who name no "
+               "religion, or only worship of the gods, and keep a religious altar at home"),
         view=[119.3, 21.8, 122.2, 25.4],
         note_public=(
             "**Taiwan's census does not ask about religion, so this map is drawn from a "
@@ -64,8 +65,17 @@ ENTRY = {
             "as Buddhism, it was **13.5%**. The national figures here come from the 2014 and "
             "2018 rounds, which used the same card, and the older rounds only show where each "
             "answer is more or less common. "
+            "**Folk religion here is drawn on the same rule as in mainland China and Hong "
+            "Kong.** Few people in Taiwan name folk religion when asked their religion, about "
+            "2%. Most say they worship the gods, or that they have no religion but worship "
+            "with their family, and the interviewer records that as folk religion. So this "
+            "map counts as folk religion the people who name it, and the people who name no "
+            "religion or only worship of the gods but keep a religious shrine or altar at "
+            "home, which about two in three of them do. With people who named Buddhism and "
+            "Taoism together, that is **43%** of Taiwan. The worshippers with no altar (13%) "
+            "and the people who say they have no religion and keep no altar (6%) are grey. "
             "**Folk religion is strongest in the rural southwest and centre.** It is about "
-            "**74% of Chiayi County** and 68% of Yunlin, against 38% of Taipei. Taoism is a "
+            "**65% of Yunlin** and 62% of Chiayi County, against 33% of Taipei. Taoism is a "
             "fifth or more of Tainan, Kaohsiung, Pingtung and Yilan. Protestants are **9.5% of "
             "Taipei** and about a tenth of Hualien and Taitung, the two counties with the "
             "largest indigenous share of residents. "
