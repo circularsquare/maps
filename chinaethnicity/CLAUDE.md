@@ -25,6 +25,10 @@ Rules that are Anita's or that the build depends on:
   that. After a colour change re-run `scatter.py` only (legend.json carries the colours).
 - **Read `data/work/join_report.txt` after any `join.py` run.** Every `!!` line is a real
   problem; a new province usually needs a few entries in `OVERRIDES`, each with its reason.
+- **The pies and the dots must stay the same numbers.** `units.py` repeats the split
+  `scatter.py` gives the dots and stops at the county, and checks that every census row
+  splits into whole counties and that the levels add to the census total. If the dot
+  pipeline's splitting ever changes, change both.
 - **Read `data/work/fallback_report.txt` after any `fallback.py` run.** The script stops on a
   county polygon that no 2000 row reaches; add it to `CARVED` with the counties it was carved
   from, which must border it. The report prints each province's large scaling factors and how

@@ -37,10 +37,35 @@ needs MapLibre GL JS 5 for the Elevation layer.
 
 - `index.html`, `viewer.js`, `style.css` — MapLibre viewer (country-agnostic).
 - `countries.json` — index of available countries.
-- `countries/<country_id>/` — per-country output: `meta.json` + one `adm{N}.geojson` per admin level, with population timeseries baked into feature properties. A level with too many features to fetch at once is written as `adm{N}/<adm1 code>.geojson` instead and declared `"split"` in `meta.json`; the viewer then loads only the adm1 regions on screen.
+- `countries/<country_id>/` — per-country output: `meta.json` + one `adm{N}.geojson` per admin level, with population timeseries baked into feature properties. A level with too many features to fetch at once is written as `adm{N}/<adm1 code>.geojson` instead and declared `"split"` in `meta.json`; the viewer then loads only the adm1 regions on screen. A country may also have a `composition.json` (below).
 - `scripts/build_country.py` — generic: reads shapefile(s) + long-format `population.csv`, writes `adm{N}.geojson` under `countries/<id>/`.
 - `scripts/<country_id>/` — country-specific fetchers that produce `data/<id>/population.csv` in the long format `code,level,year,pop`. Every country gets its own fetcher — data sources differ too much to generalize.
 - `data/` — gitignored. Raw shapefiles, response caches, canonical `population.csv`.
+
+## Composition pies
+
+A country can ship `countries/<id>/composition.json`, named in its `meta.json` as
+`"composition": "composition.json"`. It holds, for each admin unit at whichever
+levels the source actually reaches, how its people divide between a fixed set of
+groups, plus the mean position of those people. The viewer draws one pie per unit
+over its shape, sized by the unit's own population, and adds the top few groups to
+the hover tooltip. A level the file has nothing for draws nothing, and a country
+without the file never shows the panel.
+
+The panel sits under the basemap controls: a checkbox to draw them, a size slider,
+and the list of groups. Clicking a group hides it and the pies renormalise over the
+rest, which is how you read a minority pattern under a large majority;
+shift-clicking one isolates it. The setting is remembered per country.
+
+```json
+{ "label": "Nationality", "year": 2020,
+  "groups": [{ "key": "han", "en": "Han", "cn": "汉族", "color": "#8ba0b6" }],
+  "levels": { "3": { "<unit code>": { "t": 1000, "x": 104.1, "y": 35.2,
+                                      "g": [0, 5], "k": [900, 100] } } } }
+```
+
+`g` indexes `groups` and `k` is the count, biggest first. China's is built by
+`scripts/china/ethnicity.py` from `maps/chinaethnicity/`.
 
 ## Countries
 
@@ -56,7 +81,11 @@ needs MapLibre GL JS 5 for the Elevation layer.
   published against its name, because the census reports development zones as
   their own rows while the land stays legally the district's — Hefei's Shushan
   is 1,047,150 by that reckoning and 1,874,930 by its own boundary. Fetcher:
-  `scripts/china/`.
+  `scripts/china/`. Composition: nationality at province, prefecture and county,
+  from `maps/chinaethnicity/`, carried onto these boundaries through the same
+  ASPECT grid rather than joined by county name, because the two boundary
+  vintages disagree about where the urban districts end
+  (`scripts/china/ethnicity.py`).
 - **india** — three levels (state/UT, district, subdistrict) on 2011-census
   boundaries (SHRUG 2.1 open polygons). No post-2011 census exists, so
   populations come from the IIPS district projections (Dhar 2022, Table 8) at

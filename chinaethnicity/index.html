@@ -7,6 +7,7 @@
   html, body { margin: 0; height: 100%; background: #0c0c0c; color: #ccc;
     font-family: Nunito, system-ui, sans-serif; font-size: 13px; }
   #map { position: absolute; inset: 0; }
+  #pies { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
   #title { position: absolute; top: 12px; left: 14px; z-index: 2; color: #ddd;
     font-size: 17px; font-weight: 700; text-shadow: 0 1px 3px #000; pointer-events: none; }
   .panel { background: rgba(10,10,10,.85); border: 1px solid #333; border-radius: 8px; }
@@ -52,8 +53,20 @@
   #about p { margin: 6px 0 10px; }
   #about a { color: #89b4fa; }
   #about .muted { color: #888; }
-  #tip { position: absolute; z-index: 4; pointer-events: none; padding: 5px 8px;
+  #tip { position: absolute; z-index: 4; pointer-events: none; padding: 6px 9px;
     font-size: 12px; white-space: nowrap; }
+  #tip .hd { color: #eee; font-weight: 700; }
+  #tip .sub { color: #888; margin-bottom: 4px; }
+  #tip table { border-spacing: 0; }
+  #tip td { padding: 1px 0; }
+  #tip td.sw span { display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+    margin-right: 6px; }
+  #tip td.pc { text-align: right; padding-left: 12px; color: #aaa;
+    font-variant-numeric: tabular-nums; }
+  #tip .note { color: #888; margin-top: 4px; }
+  #mode { display: flex; gap: 8px; }
+  #mode a { color: #666; cursor: pointer; user-select: none; }
+  #mode a.on { color: #cfd9e4; }
   #legend-toggle { display: none; }
   @media (max-width: 600px) {
     /* the attribution sits along the bottom edge at this width, so both panels move up */
@@ -68,6 +81,7 @@
 </style>
 
 <div id="map"></div>
+<canvas id="pies"></canvas>
 <div id="title">Nationalities of China</div>
 
 <div id="legend" class="panel">
@@ -82,7 +96,8 @@
 
 <div id="size" class="panel">
   <button class="ghost" id="info-btn" title="About this map">i</button>
-  <span class="ptitle">dots</span>
+  <span id="mode"><a data-mode="auto">auto</a><a data-mode="pies">pies</a><a
+    data-mode="dots">dots</a></span>
   <input type="range" id="dot-size" min="0.4" max="3" step="0.1" value="1">
   <span class="val" id="dot-size-val">1.0×</span>
 </div>
@@ -91,6 +106,12 @@
   <div class="ptitle">About</div>
   <p>Each dot is <span id="about-dv"></span> people counted in China's 2020 census, coloured by
   nationality (minzu), the officially recognised ethnic group recorded for every person.</p>
+  <p>Zoomed out, the map draws one circle per administrative unit instead: a county, or a
+  prefecture or a province where counties would overlap. The circle is divided by the
+  nationalities living in that unit and its area is proportional to its population, and it
+  sits at the mean position of the unit's people rather than in the middle of its boundary.
+  Hovering gives the name and the breakdown. Zoom in and the dots come back. The three words
+  at the bottom left set which of the two you see.</p>
   <p><span id="about-measured"></span> are drawn from table 1-4, population by region, sex and
   nationality, in each province's own 2020 census yearbook, which gives every county. Each
   table was checked against the national yearbook's copy, and every province matches it in
@@ -131,6 +152,22 @@ const DOT_ALPHA = 0.85;
    dots are sparse and dense areas stay legible. */
 const HATCH_ALPHA = 0.13;
 
+/* Pies. Merging dots by where they fall turns dense provinces into a lattice of equal
+   discs at low zoom, because nearly every merge cell hits the radius cap. These merge by
+   admin unit instead: one pie per county, at the mean position of its people, holding the
+   county's whole nationality breakdown. Counties overlap badly below about z6, so the
+   level coarsens to prefecture and then province as you zoom out (units.py builds all
+   three). Area is proportional to people. */
+const PIE_LEVELS = [['province', 0], ['prefecture', 4], ['county', 6]];   // from this zoom
+const PIE_TO_DOTS = 8;        // in auto mode: pies below this zoom, dots at or above it
+const PIE_STOPS = [[0, 0.0019], [3, 0.0030], [4, 0.0038], [6, 0.011], [8, 0.020],
+                   [10, 0.040], [13, 0.10]];    // pie radius = this x sqrt(people)
+const PIE_MIN_R = 1.6, PIE_MAX_R = 70;
+/* A group thinner than this folds away and the rest are scaled back up to fill the circle,
+   so a 3 px pie does not spend its whole edge on slivers nobody can see. */
+const PIE_MIN_WEDGE = 1.2;    // degrees
+const PIE_EDGE = 'rgba(0,0,0,.5)';
+
 function store(key, fallback) {
   try { const v = localStorage.getItem('chinaethnicity:' + key); return v === null ? fallback : JSON.parse(v); }
   catch (e) { return fallback; }
@@ -140,8 +177,10 @@ function save(key, value) {
 }
 
 let LEGEND = null;
+let UNITS = null;
 let hidden = new Set(store('hidden', []));
 let dotScale = store('scale', 1);
+let mode = store('mode', 'auto');
 
 maplibregl.addProtocol('pmtiles', new pmtiles.Protocol().tile);
 const map = new maplibregl.Map({
@@ -164,6 +203,8 @@ function applyFilter() {
   save('hidden', [...hidden]);
   for (const el of document.querySelectorAll('.row'))
     el.classList.toggle('off', hidden.has(el.dataset.key));
+  filterGen++;
+  drawPies();
 }
 
 function fmt(n) {
@@ -188,6 +229,167 @@ function hatch() {
   for (const o of [-px, 0, px]) { x.moveTo(o, px); x.lineTo(o + px, 0); }
   x.stroke();
   return x.getImageData(0, 0, px, px);
+}
+
+/* ---- pies ------------------------------------------------------------------------- */
+
+const pieCanvas = document.getElementById('pies');
+const pctx = pieCanvas.getContext('2d');
+const sprites = new Map();
+let filterGen = 0;            // bumped when the legend changes, which retires every sprite
+let drawn = [];               // [x, y, r, unit] of the pies on screen, for hover
+
+function esc(s) {
+  return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;',
+                                              '"': '&quot;' }[c]));
+}
+function pieScale(z) {
+  let i = 0;
+  while (i < PIE_STOPS.length - 2 && z > PIE_STOPS[i + 1][0]) i++;
+  const [z0, v0] = PIE_STOPS[i], [z1, v1] = PIE_STOPS[i + 1];
+  const t = Math.max(0, Math.min(1, (z - z0) / (z1 - z0)));
+  return Math.exp(Math.log(v0) + t * (Math.log(v1) - Math.log(v0)));
+}
+function pieLevel(z) {
+  let id = PIE_LEVELS[0][0];
+  for (const [name, from] of PIE_LEVELS) if (z >= from) id = name;
+  return id;
+}
+function piesOn(z) { return mode === 'pies' || (mode === 'auto' && z < PIE_TO_DOTS); }
+
+/* The visible part of a unit's breakdown, cached on the unit until the legend changes. */
+function visible(u) {
+  if (u._gen === filterGen) return u;
+  const w = [];
+  let sum = 0;
+  for (let i = 0; i < u.g.length; i++) {
+    const g = LEGEND.groups[u.g[i]];
+    if (hidden.has(g.key)) continue;
+    w.push([g.color, u.k[i]]);
+    sum += u.k[i];
+  }
+  u._w = w;
+  u._sum = sum;
+  u._gen = filterGen;
+  return u;
+}
+
+function sprite(u, r) {
+  const key = u.c + ':' + r + ':' + filterGen;
+  const got = sprites.get(key);
+  if (got) return got;
+  if (sprites.size > 6000) sprites.clear();
+  const dpr = window.devicePixelRatio || 1;
+  const d = 2 * (r + 1);
+  const c = document.createElement('canvas');
+  c.width = c.height = Math.ceil(d * dpr);
+  const x = c.getContext('2d');
+  x.scale(c.width / d, c.height / d);
+  let keep = u._w.filter(([, k]) => k / u._sum * 360 >= PIE_MIN_WEDGE);
+  if (!keep.length) keep = [u._w[0]];
+  const kept = keep.reduce((a, [, k]) => a + k, 0);
+  let a0 = -Math.PI / 2;
+  for (const [color, k] of keep) {
+    const a1 = a0 + k / kept * 2 * Math.PI;
+    x.beginPath();
+    x.moveTo(r + 1, r + 1);
+    x.arc(r + 1, r + 1, r, a0, a1);
+    x.closePath();
+    x.fillStyle = color;
+    x.fill();
+    a0 = a1;
+  }
+  if (r > 2.2) {
+    x.beginPath();
+    x.arc(r + 1, r + 1, r, 0, 2 * Math.PI);
+    x.strokeStyle = PIE_EDGE;
+    x.lineWidth = 0.8;
+    x.stroke();
+  }
+  sprites.set(key, c);
+  return c;
+}
+
+function drawPies() {
+  const cv = map.getCanvas();
+  const w = cv.clientWidth, h = cv.clientHeight;
+  const dpr = window.devicePixelRatio || 1;
+  if (pieCanvas.width !== Math.round(w * dpr) || pieCanvas.height !== Math.round(h * dpr)) {
+    pieCanvas.width = Math.round(w * dpr);
+    pieCanvas.height = Math.round(h * dpr);
+    pieCanvas.style.width = w + 'px';
+    pieCanvas.style.height = h + 'px';
+  }
+  pctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  pctx.clearRect(0, 0, w, h);
+  drawn = [];
+  if (!UNITS || !LEGEND) return;
+  const z = map.getZoom();
+  if (!piesOn(z)) return;
+  const s = pieScale(z) * dotScale;
+  // units.json holds each level biggest first, so the small pies are painted last and a
+  // county is never buried under the city beside it.
+  for (const u of UNITS.levels[pieLevel(z)]) {
+    const r = Math.min(PIE_MAX_R, Math.max(PIE_MIN_R, s * Math.sqrt(u.t)));
+    const p = map.project([u.x, u.y]);
+    if (p.x < -r || p.y < -r || p.x > w + r || p.y > h + r) continue;
+    if (!visible(u)._sum) continue;
+    const img = sprite(u, Math.max(2, Math.round(r)));
+    const d = img.width / dpr;
+    pctx.drawImage(img, p.x - d / 2, p.y - d / 2, d, d);
+    drawn.push([p.x, p.y, r, u]);
+  }
+}
+
+function pieAt(x, y) {
+  for (let i = drawn.length - 1; i >= 0; i--) {
+    const [px, py, r, u] = drawn[i];
+    const hit = Math.max(r, 4);
+    if ((x - px) * (x - px) + (y - py) * (y - py) <= hit * hit) return u;
+  }
+  return null;
+}
+
+function pct(v) {
+  const p = v * 100;
+  if (p >= 10) return p.toFixed(0) + '%';
+  if (p >= 0.1) return p.toFixed(1) + '%';
+  return '<0.1%';
+}
+
+function unitTip(u) {
+  visible(u);
+  const rows = [];
+  let more = 0;
+  for (let i = 0; i < u.g.length; i++) {
+    const g = LEGEND.groups[u.g[i]];
+    if (hidden.has(g.key)) continue;
+    if (rows.length >= 6) { more++; continue; }
+    rows.push(`<tr><td class="sw"><span style="background:${g.color}"></span>${esc(g.en)}</td>` +
+      `<td class="pc">${pct(u.k[i] / u.t)}</td></tr>`);
+  }
+  const notes = [];
+  if (more) notes.push(`+ ${more} more ${more > 1 ? 'nationalities' : 'nationality'}`);
+  if (u.e) notes.push('estimated: 2000 counties scaled to 2020 totals');
+  return `<div class="hd">${esc(u.n)}</div>` +
+    `<div class="sub">${u.in ? esc(u.in) + ' &middot; ' : ''}${u.t.toLocaleString()} people</div>` +
+    `<table>${rows.join('')}</table>` +
+    notes.map(n => `<div class="note">${esc(n)}</div>`).join('');
+}
+
+function syncLayers() {
+  if (!map.getLayer('dots')) return;
+  const dots = mode === 'dots' || (mode === 'auto' && map.getZoom() >= PIE_TO_DOTS);
+  map.setLayoutProperty('dots', 'visibility', dots ? 'visible' : 'none');
+}
+
+function setMode(m) {
+  mode = m;
+  save('mode', m);
+  for (const a of document.querySelectorAll('#mode a'))
+    a.classList.toggle('on', a.dataset.mode === m);
+  syncLayers();
+  drawPies();
 }
 
 function provinceNote(p) {
@@ -247,11 +449,13 @@ function buildLegend() {
 }
 
 map.on('load', async () => {
-  const [legend, provinces] = await Promise.all([
+  const [legend, provinces, units] = await Promise.all([
     fetch(DATA + 'legend.json').then(r => r.json()),
     fetch(DATA + 'provinces.geojson').then(r => r.json()),
+    fetch(DATA + 'units.json').then(r => r.json()),
   ]);
   LEGEND = legend;
+  UNITS = units;
   const codesWith = (s) => Object.entries(LEGEND.provinces).filter(([, p]) => p.status === s).map(([c]) => c);
   const below = map.getStyle().layers.find(l => l.type === 'symbol')?.id;
 
@@ -281,20 +485,37 @@ map.on('load', async () => {
   }, below);
 
   buildLegend();
+  setMode(mode);
   applyFilter();
 
+  map.on('render', drawPies);
+  map.on('zoom', syncLayers);
+
   const tip = document.getElementById('tip');
-  for (const layer of ['queued', 'estimated']) {
-    map.on('mousemove', layer, (e) => {
-      const note = provinceNote(LEGEND.provinces[e.features[0].properties.code]);
-      if (!note) return;
-      tip.textContent = note;
-      tip.style.left = (e.point.x + 14) + 'px';
-      tip.style.top = (e.point.y + 14) + 'px';
-      tip.hidden = false;
-    });
-    map.on('mouseleave', layer, () => { tip.hidden = true; });
+  function showTip(html, point) {
+    tip.innerHTML = html;
+    tip.hidden = false;
+    const w = tip.offsetWidth, h = tip.offsetHeight;
+    const flipX = point.x + 14 + w > map.getCanvas().clientWidth;
+    const flipY = point.y + 14 + h > map.getCanvas().clientHeight;
+    tip.style.left = (flipX ? point.x - 14 - w : point.x + 14) + 'px';
+    tip.style.top = (flipY ? Math.max(4, point.y - 14 - h) : point.y + 14) + 'px';
   }
+  map.on('mousemove', (e) => {
+    const u = pieAt(e.point.x, e.point.y);
+    if (u) { showTip(unitTip(u), e.point); return; }
+    const f = map.queryRenderedFeatures(e.point, { layers: ['queued', 'estimated'] });
+    const note = f.length ? provinceNote(LEGEND.provinces[f[0].properties.code]) : null;
+    if (note) showTip(esc(note), e.point);
+    else tip.hidden = true;
+  });
+  map.on('mouseout', () => { tip.hidden = true; });
+  // A touch screen never sends mousemove, so a tap has to open the same tooltip.
+  map.on('click', (e) => {
+    const u = pieAt(e.point.x, e.point.y);
+    if (u) showTip(unitTip(u), e.point);
+    else tip.hidden = true;
+  });
 });
 
 const slider = document.getElementById('dot-size');
@@ -305,7 +526,11 @@ slider.addEventListener('input', () => {
   document.getElementById('dot-size-val').textContent = dotScale.toFixed(1) + '×';
   save('scale', dotScale);
   if (map.getLayer('dots')) map.setPaintProperty('dots', 'circle-radius', radius());
+  drawPies();
 });
+
+for (const a of document.querySelectorAll('#mode a'))
+  a.addEventListener('click', () => setMode(a.dataset.mode));
 
 const about = document.getElementById('about');
 const infoBtn = document.getElementById('info-btn');

@@ -98,9 +98,25 @@ against them would only prove the anchoring ran. `validate_counties.py` therefor
 scores the **raw** zonal sums instead — the recovery underneath, which is what
 decides the counties anchoring cannot reach. It compares them as groups, because
 a merged panel row covers several of our counties at once and only the group can
-honestly be held against it. The median group is 0.5% out, 94% within 5% and 97%
+honestly be held against it. The median group is 0.1% out, 94% within 5% and 97%
 within 10%, and it now also prints the counties it cannot check at all rather
 than dropping them silently.
+
+What comes out: 2,593 of 2,861 counties (91.7% of the country's people) sit on
+their published census figure exactly. The other 268 — 8.3% of people, headed by
+Shenzhen's Bao'an at 8.1 M — have no census figure and take their province's
+residual. Anchoring moved 77 counties by more than 10% and 10 by more than 25%,
+which is a measure of how wrong the grid was in those places.
+
+**The 25% group check is doing real work; do not loosen it.** Of the 16 merged
+rows it rejects, most are rejected correctly: we hold only some of the row's
+parts, so 沙河市 alone against a five-county row is 72% short and anchoring it
+would hand one county five counties' people. The exception is a row whose missing
+parts are all development zones, which have no polygon of ours — Chuzhou's
+琅琊区+南谯区 covers its whole row and is 174% over, the largest surviving error in
+the build. Telling those two cases apart needs the missing parts classified, and
+a renamed county (邢台's 桥东区 is now 襄都区) reads exactly like an absent one, so
+there is no safe automatic rule. Chuzhou stays wrong for now.
 
 At 1.41 billion the country needs about 1,410 regions of a million. The median
 township holds 18,500 people, so a region is around 54 of them and about 2.6

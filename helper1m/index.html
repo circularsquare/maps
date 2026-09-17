@@ -34,6 +34,22 @@
       </div>
       <div class="hint">density fill over the basemap</div>
     </div>
+    <div class="panel" id="comp-panel" hidden>
+      <div class="panel-header">
+        <label class="comp-head"><input type="checkbox" id="comp-toggle">
+          <span id="comp-label">Composition</span></label>
+        <span class="group-btns">
+          <button id="comp-all">all</button>
+          <button id="comp-none">none</button>
+        </span>
+      </div>
+      <div class="opacity-row">
+        <input type="range" id="comp-size" min="0.3" max="2.5" step="0.1" value="1">
+        <span id="comp-size-value">1.0×</span>
+      </div>
+      <div id="comp-note" class="hint"></div>
+      <div id="comp-list"></div>
+    </div>
     <div class="panel" id="group-panel">
       <div class="panel-header">
         <span id="group-panel-label">States</span>
@@ -58,6 +74,7 @@
   </div>
   <div id="sidebar-resizer" title="Drag to resize. Double-click to reset."></div>
   <div id="map"></div>
+  <canvas id="comp-canvas"></canvas>
   <div id="hover-tip" hidden></div>
   <script src="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.js"></script>
   <script src="viewer.js"></script>

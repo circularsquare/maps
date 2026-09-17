@@ -23,6 +23,10 @@ const state = {
   splitCache: new Map(),  // "level/group" -> features, so re-ticking doesn't refetch
   loadedSplitKey: null,   // which set of groups is currently rendered
   loading: false,         // mid country switch — don't save or lazy-load yet
+  comp: null,             // countries/<id>/composition.json, when the country has one
+  compOn: true,           // draw the composition pies
+  compSize: 1,            // pie size multiplier, off the slider
+  compHidden: new Set(),  // group keys switched off in the composition legend
 };
 
 // Saved view lives here; declared up top because the sidebar width is read from
@@ -147,6 +151,7 @@ async function loadCountry(id) {
   state.country = { id, name: meta.name, meta };
   await loadOverlays();
   loadGroups();
+  await loadComposition();
 
   // Pick up where this country was left. Usually one region at the finest
   // level, so restoring the camera too is what makes it actually continue.
@@ -196,6 +201,8 @@ function saveView() {
       groups: state.shownGroups ? [...state.shownGroups] : null,
       center: map.getCenter().toArray(),
       zoom: map.getZoom(),
+      comp: state.comp ? { on: state.compOn, size: state.compSize,
+                           hidden: [...state.compHidden] } : undefined,
     };
     all.last = state.country.id;
     all.basemap = currentBasemap();
@@ -497,6 +504,8 @@ function teardown() {
   for (const id of [SRC, ...OVERLAY_LEVELS.map(overlayId)]) {
     if (map.getSource(id)) map.removeSource(id);
   }
+  state.comp = null;
+  document.getElementById("comp-panel").hidden = true;
 }
 
 // ---- basemap ----
@@ -886,6 +895,7 @@ function showTip(code, x, y) {
     } else if (raw) {
       html += `<div class="tip-pop">${fmt(raw.pop)} <span class="tip-note">${raw.year}</span></div>`;
     }
+    html += compTipHtml(code);
     tip.innerHTML = html;
   }
   tip.hidden = false;
@@ -934,6 +944,309 @@ function showFeatureInfo(feature) {
 function showInfo(html) {
   document.getElementById("info-panel").innerHTML = html;
 }
+
+// ---- composition pies ----
+
+// A country can ship countries/<id>/composition.json: for each admin unit, at
+// whichever levels its source actually reaches, how its people divide between a
+// fixed set of groups, and the mean position of those people. The viewer draws
+// one pie per unit over the shape. Everything else is already here — the
+// shapes, the level switch, the region filter, the hover — so this only has to
+// draw the pies and add its rows to the tooltip. A level the file has nothing
+// for simply draws nothing.
+//
+// MapLibre has no wedge, so the pies go on a canvas over the map rather than in
+// the layer stack. Each is rendered once into an offscreen sprite keyed by unit,
+// whole-pixel radius and legend state, so panning redraws a few hundred
+// drawImage calls instead of a few thousand arcs.
+
+const compCanvas = document.getElementById("comp-canvas");
+const compCtx = compCanvas.getContext("2d");
+const compSprites = new Map();
+let compGen = 0;   // bumped when the legend changes, which retires every sprite
+
+// Radius for a unit of the level's median size, against zoom. Every other unit
+// is sqrt(its people / that median) times this, so a level of provinces and a
+// level of counties both come out readable without a per-level setting.
+const PIE_R = [[0, 2.5], [3, 5], [5, 8], [7, 13], [9, 19], [12, 28]];
+const PIE_MIN_R = 2.5, PIE_MAX_R = 90;
+// A group thinner than this folds away and the rest scale back up to fill the
+// circle: at a 3 px radius the edge would otherwise be all slivers.
+const PIE_MIN_WEDGE = 1.2;   // degrees
+const PIE_EDGE = "rgba(255,255,255,0.85)";
+
+function interpStops(stops, x) {
+  let i = 0;
+  while (i < stops.length - 2 && x > stops[i + 1][0]) i++;
+  const [x0, v0] = stops[i], [x1, v1] = stops[i + 1];
+  const t = Math.max(0, Math.min(1, (x - x0) / (x1 - x0)));
+  return v0 + t * (v1 - v0);
+}
+
+async function loadComposition() {
+  state.comp = null;
+  compSprites.clear();
+  const file = state.country.meta.composition;
+  if (file) {
+    try {
+      state.comp = await (await fetchNoCache(
+        `countries/${state.country.id}/${file}`)).json();
+    } catch (e) {
+      state.comp = null;   // declared but not built yet; the panel just stays hidden
+    }
+  }
+  const saved = (loadView(state.country.id) || {}).comp || {};
+  state.compOn = saved.on !== false;
+  state.compSize = Number(saved.size) > 0 ? Number(saved.size) : 1;
+  state.compHidden = new Set(saved.hidden || []);
+  const slider = document.getElementById("comp-size");
+  slider.value = state.compSize;
+  document.getElementById("comp-size-value").textContent = state.compSize.toFixed(1) + "×";
+  renderCompPanel();
+}
+
+// Codes biggest first, so a small unit is painted over the city beside it and
+// not under it, plus the level's median size. Cached on the loaded document.
+function compOrder(lvl) {
+  const doc = state.comp;
+  doc._order = doc._order || {};
+  if (!doc._order[lvl]) {
+    const units = doc.levels[lvl];
+    const codes = Object.keys(units).sort((a, b) => units[b].t - units[a].t);
+    doc._order[lvl] = codes;
+    doc._ref = doc._ref || {};
+    doc._ref[lvl] = units[codes[Math.floor(codes.length / 2)]].t || 1;
+  }
+  return doc._order[lvl];
+}
+
+function compUnits() {
+  if (!state.comp || !state.compOn || state.level == null) return null;
+  return state.comp.levels[String(state.level)] || null;
+}
+
+// The part of a unit's breakdown still switched on, cached until the legend moves.
+function compVisible(u) {
+  if (u._gen === compGen) return u;
+  const w = [];
+  let sum = 0;
+  for (let i = 0; i < u.g.length; i++) {
+    const g = state.comp.groups[u.g[i]];
+    if (state.compHidden.has(g.key)) continue;
+    w.push([g.color, u.k[i]]);
+    sum += u.k[i];
+  }
+  u._w = w;
+  u._sum = sum;
+  u._gen = compGen;
+  return u;
+}
+
+function compSprite(code, u, r) {
+  const key = `${code}:${r}:${compGen}`;
+  const got = compSprites.get(key);
+  if (got) return got;
+  if (compSprites.size > 6000) compSprites.clear();
+  const dpr = window.devicePixelRatio || 1;
+  const d = 2 * (r + 1);
+  const c = document.createElement("canvas");
+  c.width = c.height = Math.ceil(d * dpr);
+  const x = c.getContext("2d");
+  x.scale(c.width / d, c.height / d);
+  let keep = u._w.filter(([, k]) => k / u._sum * 360 >= PIE_MIN_WEDGE);
+  if (!keep.length) keep = [u._w[0]];
+  const kept = keep.reduce((a, [, k]) => a + k, 0);
+  let a0 = -Math.PI / 2;
+  for (const [color, k] of keep) {
+    const a1 = a0 + k / kept * 2 * Math.PI;
+    x.beginPath();
+    x.moveTo(r + 1, r + 1);
+    x.arc(r + 1, r + 1, r, a0, a1);
+    x.closePath();
+    x.fillStyle = color;
+    x.fill();
+    a0 = a1;
+  }
+  if (r > 2.2) {
+    x.beginPath();
+    x.arc(r + 1, r + 1, r, 0, 2 * Math.PI);
+    x.strokeStyle = PIE_EDGE;
+    x.lineWidth = 1;
+    x.stroke();
+  }
+  compSprites.set(key, c);
+  return c;
+}
+
+// Pie area follows the unit's own population, the number the rest of the tool
+// works in, not the composition file's total. The two disagree where the census
+// counts a development zone apart from the district it stands in, and the
+// population panel is the one that has to be believed.
+function unitPop(props) {
+  const est = estimate(props.populations);
+  if (est) return est.pop;
+  const raw = latestPop(props.populations);
+  return raw ? raw.pop : 0;
+}
+
+function drawPies() {
+  const rect = map.getCanvas().getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  const style = compCanvas.style;
+  style.left = `${rect.left}px`;
+  style.top = `${rect.top}px`;
+  style.width = `${rect.width}px`;
+  style.height = `${rect.height}px`;
+  const W = Math.round(rect.width * dpr), H = Math.round(rect.height * dpr);
+  if (compCanvas.width !== W || compCanvas.height !== H) {
+    compCanvas.width = W;
+    compCanvas.height = H;
+  }
+  compCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  compCtx.clearRect(0, 0, rect.width, rect.height);
+  const units = compUnits();
+  if (!units) return;
+  const lvl = String(state.level);
+  const ref = (compOrder(lvl), state.comp._ref[lvl]);
+  const base = interpStops(PIE_R, map.getZoom()) * state.compSize;
+  const filtered = state.shownGroups && state.groups.length
+    && state.shownGroups.size !== state.groups.length;
+  for (const code of compOrder(lvl)) {
+    const f = state.featuresByCode.get(code);
+    if (!f) continue;   // not loaded: a split level holds only the ticked regions
+    const p = f.properties;
+    if (filtered && p.group != null && !state.shownGroups.has(p.group)) continue;
+    const u = units[code];
+    const r = Math.min(PIE_MAX_R,
+      Math.max(PIE_MIN_R, base * Math.sqrt((unitPop(p) || u.t) / ref)));
+    const pt = map.project([u.x, u.y]);
+    if (pt.x < -r || pt.y < -r || pt.x > rect.width + r || pt.y > rect.height + r) continue;
+    if (!compVisible(u)._sum) continue;
+    const img = compSprite(code, u, Math.max(2, Math.round(r)));
+    const d = img.width / dpr;
+    compCtx.drawImage(img, pt.x - d / 2, pt.y - d / 2, d, d);
+  }
+}
+
+map.on("render", drawPies);
+
+function compPct(v) {
+  const p = v * 100;
+  if (p >= 10) return `${p.toFixed(0)}%`;
+  if (p >= 0.1) return `${p.toFixed(1)}%`;
+  return "<0.1%";
+}
+
+// The rows the hover tooltip gets under the population. Percentages are of the
+// unit's whole population as the composition source counted it, so they add up
+// whatever is switched off in the legend.
+function compTipHtml(code) {
+  const units = compUnits();
+  const u = units && units[code];
+  if (!u) return "";
+  let html = '<div class="tip-comp">';
+  let shown = 0, more = 0;
+  for (let i = 0; i < u.g.length; i++) {
+    const g = state.comp.groups[u.g[i]];
+    if (state.compHidden.has(g.key)) continue;
+    if (shown >= 5) { more++; continue; }
+    shown++;
+    html += `<div><span class="sw" style="background:${g.color}"></span>` +
+      `<span>${escapeHtml(g.en)}</span>` +
+      `<span class="pc">${compPct(u.k[i] / u.t)}</span></div>`;
+  }
+  if (more) html += `<div class="tip-note">+ ${more} more</div>`;
+  return `${html}</div>`;
+}
+
+function compRefresh() {
+  compGen++;
+  hideTip();
+  drawPies();
+}
+
+function renderCompPanel() {
+  const panel = document.getElementById("comp-panel");
+  const doc = state.comp;
+  if (!doc) { panel.hidden = true; return; }
+  panel.hidden = false;
+  document.getElementById("comp-toggle").checked = state.compOn;
+  document.getElementById("comp-label").textContent = doc.label || "Composition";
+
+  const levels = Object.keys(doc.levels).map(Number).sort((a, b) => a - b);
+  const labels = levels.map(l =>
+    (state.country.meta.admin_levels.find(x => x.level === l) || {}).label || `level ${l}`);
+  document.getElementById("comp-note").textContent =
+    `${doc.year ? doc.year + ", " : ""}${labels.join(", ").toLowerCase()}`;
+
+  // Country-wide totals, from the coarsest level the file has, for the order of
+  // the list and the share beside each name.
+  if (!doc._nat) {
+    const top = doc.levels[String(levels[0])];
+    const tot = new Array(doc.groups.length).fill(0);
+    for (const u of Object.values(top))
+      u.g.forEach((g, i) => { tot[g] += u.k[i]; });
+    doc._nat = tot;
+    doc._natTotal = tot.reduce((a, b) => a + b, 0) || 1;
+  }
+  const host = document.getElementById("comp-list");
+  host.innerHTML = "";
+  const order = doc.groups.map((g, i) => i)
+    .filter(i => doc._nat[i] > 0)
+    .sort((a, b) => doc._nat[b] - doc._nat[a]);
+  for (const i of order) {
+    const g = doc.groups[i];
+    const off = state.compHidden.has(g.key) ? " off" : "";
+    host.insertAdjacentHTML("beforeend",
+      `<div class="row${off}" data-key="${escapeHtml(g.key)}" ` +
+      `title="${escapeHtml(g.cn || g.en)}">` +
+      `<span class="sw" style="background:${g.color}"></span>` +
+      `<span class="nm">${escapeHtml(g.en)}</span>` +
+      `<span class="pc">${compPct(doc._nat[i] / doc._natTotal)}</span></div>`);
+  }
+}
+
+document.getElementById("comp-toggle").addEventListener("change", (e) => {
+  state.compOn = e.target.checked;
+  compRefresh();
+  saveView();
+});
+document.getElementById("comp-size").addEventListener("input", (e) => {
+  state.compSize = Number(e.target.value);
+  document.getElementById("comp-size-value").textContent = state.compSize.toFixed(1) + "×";
+  drawPies();
+  saveView();
+});
+document.getElementById("comp-list").addEventListener("click", (e) => {
+  const row = e.target.closest(".row");
+  if (!row || !state.comp) return;
+  const key = row.dataset.key;
+  // Shift or alt on a row isolates it, the way the region list's all/none do in bulk.
+  if (e.shiftKey || e.altKey) {
+    state.compHidden = new Set(state.comp.groups.map(g => g.key).filter(k => k !== key));
+  } else if (state.compHidden.has(key)) {
+    state.compHidden.delete(key);
+  } else {
+    state.compHidden.add(key);
+  }
+  for (const el of document.querySelectorAll("#comp-list .row"))
+    el.classList.toggle("off", state.compHidden.has(el.dataset.key));
+  compRefresh();
+  saveView();
+});
+document.getElementById("comp-all").addEventListener("click", () => {
+  state.compHidden.clear();
+  renderCompPanel();
+  compRefresh();
+  saveView();
+});
+document.getElementById("comp-none").addEventListener("click", () => {
+  if (!state.comp) return;
+  state.compHidden = new Set(state.comp.groups.map(g => g.key));
+  renderCompPanel();
+  compRefresh();
+  saveView();
+});
 
 // ---- population math ----
 

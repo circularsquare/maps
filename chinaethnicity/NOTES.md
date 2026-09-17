@@ -188,7 +188,51 @@ narrower fix, letting Han alone absorb the gap, is open for Anita.
 the districts around it. The resolver matches names, so 2000's people land on 2025's polygons:
 Shihezi is drawn 371,000 above ASPECT and Urumqi's Xinshi district 514,000 below.
 
-## 8. Handoff (end of the second session, 2026-09-14)
+## 8. Pies: merging by admin unit instead of by cell (2026-09-16)
+
+`tiles.py` merges dots by where they fall, 1/64 of a tile per side. At low zoom nearly every
+cell in the dense east hits the viewer's radius cap, so the map reads as a mesh of equal grey
+discs with colour only at the edges, and rural areas show the cell grid as a faint lattice.
+Anita's fix, and the better map anyway: merge by administrative unit and draw each unit's
+whole nationality breakdown as a pie.
+
+`units.py` builds them. It repeats the split `scatter.py` gives the dots, a census row over
+its `adcodes` counties by ASPECT population or by join.py's explicit development-zone shares,
+and stops at the county rather than going on to the cells. So a county's pie and the dots
+drawn inside it are the same numbers, and the levels add to 1,409,778,724, the census's own
+provincial total. Rounding each county's 58 columns to whole people loses 666 of them
+nationally.
+
+Three levels, because 2,846 county pies overlap into a mesh below about z6: county,
+prefecture and province. The four municipalities are one prefecture each, not 16 or 38
+districts. Each unit sits at the mean position of its people, taken from the ASPECT cells
+inside it, so Gansu's pies sit along the Hexi corridor rather than in the empty north.
+
+`units.json` is 1.0 MB, and holds every group with at least one person in the unit, biggest
+first. That is what lets the legend's show/hide work on the pies: hiding Han renormalises
+every pie over the groups still shown, which is the fastest way to read the minority pattern.
+
+The viewer draws them on a canvas over the map rather than through MapLibre, which has no
+wedge primitive. Each pie is rendered once into an offscreen sprite keyed by unit, radius in
+whole pixels and the legend state, so a full redraw of 366 prefecture pies costs 0.6 ms and
+324 county pies 1.3 ms. Wedges thinner than 1.2° fold away and the rest scale back up to fill
+the circle, because at a 4 px radius the edge would otherwise be all slivers. Units are drawn
+biggest first, so a small county lands on top of the city beside it rather than under it.
+
+Two costs of the canvas: the pies sit above the basemap's labels, where the dots sit below
+them, and they are not in the PMTiles, so they need `units.json` fetched up front.
+
+**Names.** DataV carries Chinese names only. `names.py --fetch` asks Wikidata for the English
+label of every unit with a `P442` administrative division code (written "54 25 21", and the
+prefecture above it as "54 25"), which covers 2,826 of 2,848 counties and every prefecture,
+and knows the conventional exonyms: Lhasa, Hohhot, Kashgar, Xaitongmoin, Harqin Banner. The
+rest fall back to pypinyin with the suffix and any nationality in the name translated, which
+is what 长阳土家族自治县 -> "Changyang Tujia Autonomous County" is. Four units are corrected by
+hand in `FIXES`, with the reason on each. The obvious SPARQL query, every P442 with labels
+through `SERVICE wikibase:label`, times out at 60 s; `rdfs:label` with the length filter
+inside the query returns in a few seconds.
+
+## 9. Handoff (end of the second session, 2026-09-14)
 
 **State.** All 31 provinces are drawn: 16 measured, 15 estimated (§7). `fallback.py` and
 `scatter.py` have run with every check passing; `tiles.py` had not been re-run at the end of
@@ -199,13 +243,9 @@ tweak, but it looks great so far".
 
 **Visual tweaks still open**, roughly in order of how much they show:
 
-1. **Low and mid zoom (about z3-6) reads as tiled circles.** In dense provinces nearly every
-   merge cell hits the radius cap, so eastern China is a mesh of equal grey discs with colour
-   only at the edges. Ideas not yet tried: a smaller cap at low zoom only (per-stop caps in
-   `radius()` in `index.html`), lower opacity for capped marks, or a finer merge cell at low
-   zoom only (`tiles.py --cell-bits`, currently 6 everywhere).
-2. **A faint lattice in rural areas around z6**, from one merged mark per cell at the cell's
-   mean position.
+1. ~~Low and mid zoom reads as tiled circles~~, and ~~the lattice in rural areas around
+   z6~~: both were the spatial merge, and §8's pies replace it below z8. The dot layer still
+   does this, so it still shows in `dots` mode below z8.
 3. **Palette.** `colors.csv` is `palette.py`'s first draft and has not been looked at by eye.
    Greens collide (Hui, Manchu, Hani, Maonan, Pumi) and so do pinks (Zhuang, Naxi, Dai,
    Evenki). Han's grey-blue is a legibility choice Anita has not confirmed. The estimated
@@ -243,6 +283,13 @@ To check
   (0.20x); an even split by population might be just as defensible.
 
 **Data work next**: the `provinces.md` queue, starting with Chongqing's short table.
+
+**Third session, 2026-09-16.** Pies per admin unit, at her request (§8). New: `units.py`,
+`names.py`, `data/processed/units.json`, and a canvas layer plus an auto/pies/dots control in
+`index.html`. Sizes are a first guess and are hers to judge: `PIE_STOPS` (radius against
+people, per zoom), `PIE_LEVELS` (which level at which zoom), `PIE_TO_DOTS` (8, where auto
+hands over to the dots) and `PIE_MIN_WEDGE`. The hatch on the 15 estimated provinces was set
+against dots and reads heavier under pies, since pies leave more of it uncovered.
 
 **Decided by Anita, 2026-09-14**: provinces with no open 2020 county table are drawn from an
 older county pattern scaled to 2020 totals (prefecture totals where published, province totals

@@ -22,6 +22,12 @@ ASPECT grid zip, read in place, never unpacked:
 
 7-Zip or WinRAR, for Yunnan's rar (Windows tar cannot read its Chinese file names).
 
+English names for every county and prefecture, for the hover text (units.py reads them):
+    python names.py --fetch     # one SPARQL query to Wikidata, ~30 s, writes
+                                # data/work/names_wikidata.csv. Optional: without it every
+                                # unit falls back to pypinyin, which does not know Lhasa
+                                # from Lasa or Kashgar from Kashi.
+
 
 ---- BUILD, IN ORDER ----
 
@@ -35,9 +41,11 @@ ASPECT grid zip, read in place, never unpacked:
                             # provinces parse.py has no county table for; READ the report
 7. python palette.py        # only if colors.csv does not exist yet; never overwrites it
 8. python scatter.py        # processed/dots_2020.npz + legend.json
-9. python tiles.py          # processed/chinaethnicity.pmtiles
+9. python units.py          # processed/units.json, the per-unit pies and their hover text
+10. python tiles.py         # processed/chinaethnicity.pmtiles
 
 After editing colors.csv only: re-run step 8 (legend.json carries the colours). No retile.
+Step 9 does not depend on step 8 and takes about 20 seconds.
 
 
 ---- ADDING A PROVINCE ----
