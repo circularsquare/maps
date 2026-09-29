@@ -41,6 +41,18 @@ COL = {1: "省", 2: "市", 3: "县", 4: "乡"}
 # dissolve because the codes are positional: a county's code is its prefecture's
 # plus two digits, so its parent has to be right before anything is numbered.
 
+# Counties the source files under the wrong province outright — errors in
+# xiangzhen.shp, not changes on the ground. Three of 郴州市's counties are labelled
+# 四川省 成都市, which drew them as part of Chengdu and booked 1.56 M people to
+# Sichuan; the XPCC city 铁门关市 is labelled 西藏自治区. Found 2026-09-29 by
+# checking which province's census polygons each township's people sit in.
+SOURCE_FIXES = {
+    ("四川省", "成都市", "桂阳县"): ("湖南省", "郴州市"),
+    ("四川省", "成都市", "永兴县"): ("湖南省", "郴州市"),
+    ("四川省", "成都市", "临武县"): ("湖南省", "郴州市"),
+    ("西藏自治区", "铁门关市", "铁门关市"): ("新疆维吾尔自治区", "铁门关市"),
+}
+
 # Counties that genuinely moved to another prefecture. Each one puts its whole
 # population under the wrong adm2 unit until it is fixed — invisible at province
 # and county level, and only visible at adm2.
@@ -78,6 +90,16 @@ def apply_admin_changes(gdf):
     otherwise do nothing at all and leave the county quietly misfiled.
     """
     prov, pref, cnty = COL[1], COL[2], COL[3]
+
+    keys = list(zip(gdf[prov], gdf[pref], gdf[cnty]))
+    for key, (to_prov, to_pref) in SOURCE_FIXES.items():
+        hit = [i for i, k in zip(gdf.index, keys) if k == key]
+        if not hit:
+            raise SystemExit(f"SOURCE_FIXES entry matches nothing: {key}")
+        gdf.loc[hit, prov] = to_prov
+        gdf.loc[hit, pref] = to_pref
+        log(f"  refiled {key[2]} from {key[0]} {key[1]} to {to_prov} {to_pref} "
+            f"({len(hit)} townships)")
 
     keys = list(zip(gdf[prov], gdf[pref], gdf[cnty]))
     for key, target in COUNTY_MOVES.items():

@@ -109,14 +109,15 @@ def main():
               f"= {int(r.density):>7,}/km2, {int(r.cells):>5,} cells")
 
     # Agreement, against the published county census.
-    cnty = pd.read_csv(DATA / "county_ratios.csv", dtype={"code": str})
-    pop = pd.read_csv(DATA / "population.csv", dtype={"code": str})
-    cnty["built"] = cnty["code"].map(
-        pop[(pop.level == 3) & (pop.year == 2020)].set_index("code")["pop"])
+    # The census-implied figure: each census county's figure split between our
+    # counties by grid share (fetch.py's counties.csv). The raw grid sum is what
+    # is being scored, as before.
+    cnty = pd.read_csv(DATA / "counties.csv", dtype={"code": str})
+    cnty["built"] = cnty["raw_2020"]
     cnty["area_km2"] = cnty["code"].map(t.groupby(t["code"].str[:6])["area_km2"].sum())
-    m = cnty[cnty["panel_2020"].notna() & cnty["area_km2"].notna()].copy()
-    m["density"] = m["panel_2020"] / m["area_km2"]
-    m["err"] = ((m["built"] - m["panel_2020"]) / m["panel_2020"]).abs()
+    m = cnty[(cnty["covered"] >= 0.95) & cnty["area_km2"].notna()].copy()
+    m["density"] = m["implied_2020"] / m["area_km2"]
+    m["err"] = ((m["built"] - m["implied_2020"]) / m["implied_2020"]).abs()
 
     print()
     print("agreement — error against the published county census, by county density:")

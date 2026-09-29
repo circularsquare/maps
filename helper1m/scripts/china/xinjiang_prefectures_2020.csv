@@ -1,0 +1,21 @@
+# Xinjiang 2020 census resident population by prefecture: 新疆维吾尔自治区第七次全国人口普查公报（第二号）, 表2-1 各地区人口
+# https://tjj.xinjiang.gov.cn/tjj/tjgn/202106/34c32383b11042c7836ff5a8b78d3345.shtml (the table is an image; transcribed by hand)
+# The 15 rows sum to the printed regional total 25,852,345 exactly.
+# 伊犁哈萨克自治州直属县市 excludes 塔城地区 and 阿勒泰地区, which the table lists separately.
+# 自治区直辖县级行政区划 = the XPCC cities (石河子, 阿拉尔, 图木舒克, 五家渠, 北屯, 铁门关, 双河, 可克达拉, 昆玉, 胡杨河, 新星).
+name_cn,pop_2020
+乌鲁木齐市,4054369
+克拉玛依市,490348
+吐鲁番市,693988
+哈密市,673383
+昌吉回族自治州,1613585
+博尔塔拉蒙古自治州,488198
+巴音郭楞蒙古自治州,1613979
+阿克苏地区,2714422
+克孜勒苏柯尔克孜自治州,622222
+喀什地区,4496377
+和田地区,2504718
+伊犁哈萨克自治州直属县市,2848393
+塔城地区,1138638
+阿勒泰地区,668587
+自治区直辖县级行政区划,1231138

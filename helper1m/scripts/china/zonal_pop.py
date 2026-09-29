@@ -16,11 +16,24 @@ census total of 1,411 M — short by exactly the population-weighted mean of
 and the recovery is a plain sum. TRUE_CELL_AREA keeps the other reading
 available for anyone re-checking that.
 
+The same pass also burns the census panel's own 2020 county polygons (the `coord`
+column of census_county_2010-2020_v1.csv) onto the grid, and records how many
+people sit in each (township, census county) piece. That table is what fetch.py
+uses to carry the census county figures onto our 2014 boundaries by where people
+actually live, instead of by matching names.
+
+The raster is read straight out of the zip through GDAL's /vsizip/, so the
+10.8 GB tif never has to be unpacked. An unpacked tif beside the zip is used
+instead if one is there, which is quicker.
+
 Usage:
     python zonal_pop.py                      # all of mainland China
     python zonal_pop.py --provinces 01 02    # by adm1 code, for a quick test
 
-Writes helper1m/data/china/township_pop2020.csv (code, pop_2020).
+Writes helper1m/data/china/township_pop2020.csv (code, pop_2020) and
+township_panel_pop2020.csv (code, panel_code, pop), where code is empty for
+cells no township covers and panel_code is empty for cells no census county
+covers.
 """
 import os
 
@@ -41,8 +54,12 @@ from rasterio.windows import Window
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 RASTER = REPO_ROOT / "data/asia1m/china/aspect_population_total_pop.tif"
+RASTER_ZIP = REPO_ROOT / "data/asia1m/china/aspect_population_total_pop.zip"
+ZIP_MEMBER = "population_total_pop.tif"
 ADM4 = REPO_ROOT / "helper1m/data/china/boundaries/adm4.gpkg"
+PANEL = REPO_ROOT / "helper1m/data/china/census_county_2010-2020_v1.csv"
 OUT = REPO_ROOT / "helper1m/data/china/township_pop2020.csv"
+OUT_PAIRS = REPO_ROOT / "helper1m/data/china/township_panel_pop2020.csv"
 
 BLOCK_ROWS = 512
 
@@ -95,7 +112,18 @@ def main():
     gdf["zone"] = np.arange(1, len(gdf) + 1, dtype=np.int32)
     bounds = gdf.geometry.bounds.to_numpy()  # minx, miny, maxx, maxy
 
-    with rasterio.open(RASTER) as src:
+    # The census panel's own polygons, numbered 1..M the same way.
+    panel = pd.read_csv(PANEL, usecols=["county_code", "coord"], dtype=str)
+    pgeom = gpd.GeoSeries.from_wkt(panel["coord"].values)
+    pzone = np.arange(1, len(panel) + 1, dtype=np.int32)
+    pbounds = pgeom.bounds.to_numpy()
+    log(f"  {len(panel)} census panel polygons")
+
+    raster = str(RASTER) if RASTER.exists() else \
+        "/vsizip/" + str(RASTER_ZIP).replace("\\", "/") + "/" + ZIP_MEMBER
+    log(f"  raster {raster}")
+
+    with rasterio.open(raster) as src:
         log(f"  raster {src.width} x {src.height}, dtype={src.dtypes[0]}, "
             f"nodata={src.nodata}")
         log(f"  pixel {src.transform.a:.8f} x {src.transform.e:.8f} deg")
@@ -108,8 +136,15 @@ def main():
         poly_row_min = np.floor((bounds[:, 3] - top) / dlat).astype(np.int64)  # maxy
         poly_row_min = np.clip(poly_row_min, 0, src.height)
         poly_row_max = np.clip(poly_row_max + 1, 0, src.height)
+        prow_max = np.clip(np.ceil((pbounds[:, 1] - top) / dlat).astype(np.int64) + 1,
+                           0, src.height)
+        prow_min = np.clip(np.floor((pbounds[:, 3] - top) / dlat).astype(np.int64),
+                           0, src.height)
 
         totals = np.zeros(len(gdf) + 1, dtype=np.float64)
+        # (township zone, panel zone) -> people, accumulated block by block.
+        pair_keys, pair_pops = [], []
+        pstride = len(panel) + 1
         raster_mass = 0.0
         t0 = time.time()
         nblocks = math.ceil(src.height / BLOCK_ROWS)
@@ -147,6 +182,18 @@ def main():
             totals += np.bincount(zones.ravel(), weights=counts.ravel(),
                                   minlength=len(gdf) + 1)
 
+            phit = np.where((prow_min < row0 + nrows) & (prow_max > row0))[0]
+            pz = rasterize(
+                ((pgeom.values[i], pzone[i]) for i in phit),
+                out_shape=(nrows, src.width), transform=win_transform,
+                fill=0, dtype=np.int32) if len(phit) else \
+                np.zeros((nrows, src.width), dtype=np.int32)
+            live = counts > 0
+            key = zones[live].astype(np.int64) * pstride + pz[live]
+            uk, inv = np.unique(key, return_inverse=True)
+            pair_keys.append(uk)
+            pair_pops.append(np.bincount(inv, weights=counts[live]))
+
             if bi % 10 == 0 or bi == nblocks - 1:
                 el = time.time() - t0
                 log(f"  block {bi + 1}/{nblocks}  rows {row0}-{row0 + nrows}  "
@@ -173,6 +220,20 @@ def main():
     out.to_csv(path, index=False, encoding="utf-8")
     zero = int((out["pop_2020"] == 0).sum())
     log(f"  wrote {path} — {len(out)} townships, {zero} with zero population")
+
+    pairs = pd.DataFrame({"key": np.concatenate(pair_keys),
+                          "pop": np.concatenate(pair_pops)})
+    pairs = pairs.groupby("key", as_index=False)["pop"].sum()
+    z, p = np.divmod(pairs["key"].to_numpy(), pstride)
+    codes = np.concatenate([[""], gdf["code"].astype(str).values])
+    pcodes = np.concatenate([[""], panel["county_code"].values])
+    pairs = pd.DataFrame({"code": codes[z], "panel_code": pcodes[p],
+                          "pop": pairs["pop"].round(1)})
+    ppath = OUT_PAIRS if not args.out else path.with_name(path.stem + "_panel.csv")
+    pairs.to_csv(ppath, index=False, encoding="utf-8")
+    log(f"  wrote {ppath} — {len(pairs)} (township, census county) pieces, "
+        f"{pairs.loc[pairs['panel_code'] == '', 'pop'].sum() / 1e6:.2f} M "
+        f"under no census polygon")
 
 
 if __name__ == "__main__":

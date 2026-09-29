@@ -1,7 +1,7 @@
 # China — helper1m fetcher
 
 Four admin levels, township at the bottom: province / prefecture / county /
-township, 31 / 365 / 2,861 / 43,655 units, mainland only.
+township, 31 / 364 / 2,861 / 43,655 units, mainland only.
 
 ## Boundaries
 
@@ -29,14 +29,25 @@ Vintage is mid-2014 — 昌都地区 is still a 地区 while 日喀则地区 alr
 Sichuan still has 4,754 townships, before the 2019–20 merger that cut it to about
 3,100, and urban districts are smaller than their 2020 selves.
 
-`prep_boundaries.py` applies the few changes since then that matter at adm2,
-because a county under the wrong prefecture books its whole population against
-the wrong unit and nothing at province or county level can see it. Six counties
-move to the prefecture that now holds them — 简阳市 to 成都市, 公主岭市 to 长春市,
-寿县 to 淮南市, 枞阳县 to 铜陵市, and both of 莱芜市's districts to 济南市, which
-dissolves Laiwu as the 2019 change did. Six prefectures renamed from 地区 to 市
-(Tibet's 昌都, 那曲, 山南, 林芝; Xinjiang's 吐鲁番, 哈密) get their current names;
-their counties were already grouped correctly.
+`prep_boundaries.py` corrects the source before dissolving it, in three tables:
+
+- `SOURCE_FIXES` — plain errors in the shapefile. Three of 郴州市's counties
+  (桂阳县, 永兴县, 临武县) are labelled 四川省 成都市, which drew them as part of
+  Chengdu and booked 1.56 M people to Sichuan, and the XPCC city 铁门关市 is
+  labelled 西藏自治区. Found by checking which province's census polygons each
+  township's people sit in; a sweep at prefecture level found nothing else.
+- `COUNTY_MOVES` — counties that have since moved prefecture, because a county
+  under the wrong prefecture books its whole population against the wrong unit
+  and nothing at province or county level can see it. 简阳市 to 成都市, 公主岭市
+  to 长春市, 寿县 to 淮南市, 枞阳县 to 铜陵市, and both of 莱芜市's districts to
+  济南市, which dissolves Laiwu as the 2019 change did.
+- `PREFECTURE_RENAMES` — six prefectures renamed from 地区 to 市 (Tibet's 昌都,
+  那曲, 山南, 林芝; Xinjiang's 吐鲁番, 哈密), whose counties were already grouped
+  correctly.
+
+Any change here renumbers much of the country, since codes are positional. That
+is harmless as long as `zonal_pop.py` is re-run afterwards; it reads the grid
+straight out of the zip, so nothing has to be unpacked or re-keyed.
 
 ## Population, 2020
 
@@ -44,16 +55,12 @@ No open source publishes the township counts as a table. They are printed in
 《中国人口普查分乡、镇、街道资料—2020》(China Statistics Press, 2022); the Excel
 transcriptions that circulate are all behind Baidu Netdisk.
 
-So the counts are recovered from a grid instead. ASPECT (Ju et al. 2025,
-*Scientific Data*, CC BY 4.0) takes those printed township counts and spreads
-each one over 100 m cells by dasymetric mapping. That spreading is
-mass-preserving, so summing the grid back over a township returns the township's
-census count. `zonal_pop.py` does the sum, in row blocks, in about 90 seconds.
-
-This avoids joining 43,655 Chinese name tuples to a book we cannot download, and
-it handles the boundary-vintage gap gracefully: where our 2018 townships differ
-from the 2020 ones, people are counted where the grid says they live rather than
-being dropped.
+So the counts start from a grid. ASPECT (Ju et al. 2025, *Scientific Data*,
+CC BY 4.0) takes those printed township counts and spreads each one over 100 m
+cells by dasymetric mapping. That spreading is mass-preserving, so summing the
+grid back over a township returns roughly that township's census count.
+`zonal_pop.py` does the sum, reading the tif straight out of its zip, in about
+two and a half minutes.
 
 ### The units trap
 
@@ -65,58 +72,76 @@ reads like missing data rather than a units error. The values are persons per
 *nominal* hectare, one per cell, so the recovery is a plain sum. `TRUE_CELL_AREA`
 in `zonal_pop.py` keeps the other reading available for anyone re-checking this.
 
-### How good the raw recovery is
+### Carrying the census onto our boundaries
 
-Before any correction, 25 of the 31 provinces land within 0.25% of the published
-2020 census and the national total is 0.18% high. Below the province the errors
-are larger and come in matched pairs: an urban core district short and its
-neighbouring rural county long, because those districts annexed populated fringe
-between 2018 and 2020 and the grid puts people where they physically live.
-Changsha County is 18% over while Tianxin District next door is 23% under.
+The county census panel (`census_county_2010-2020_v1.csv`, Dong & Wang,
+github.com/leiii/census) has a 2020 polygon for every county alongside its 2010
+and 2020 figures. `zonal_pop.py` burns those polygons onto the grid in the same
+pass as our townships and writes `township_panel_pop2020.csv`: how many grid
+people sit in each (township, census county) piece. `fetch.py` then scales each
+piece by a factor for its census county and sums the pieces back into
+townships. Nothing is matched by name.
 
-Two provinces are off by more than boundary vintage explains — Anhui +4.5% and
-Sichuan +3.4%. That excess is in the ASPECT grid, not in our polygons: summing
-the same grid over the independent OCHA 2020 province outlines puts Anhui 4.8%
-over as well.
+Matching by name was the previous method and it went wrong in three ways. A
+2014 county and the 2020 county of the same name are often not the same ground
+(Changsha's 天心区 was pushed 25% too high by being given 2020 Tianxin's figure),
+268 counties found no name at all, and those 268 absorbed whatever their
+province had left over — Hunan's two took all of Hunan's slack, which put 衡南县
+at 2.14 M against a census 0.80 M.
 
-`fetch.py` therefore puts every county it can match onto its own published census
-figure (`ANCHOR_TO_CENSUS`), and lets the counties with no figure absorb what is
-left of their province. The published province total minus the published figures
-of the anchored counties is, by construction, what the rest of that province
-holds — so province and national totals stay exact while the county level is
-right wherever the census can say so.
+How far each side is trusted:
 
-That replaced a blanket province scaling, which multiplied every township in a
-province by a single factor. It is the wrong instrument when a province's excess
-sits in one or two broken counties: Anhui's is mostly Chuzhou's urban core and
-Baohe, and the old scaling paid for them by shaving 4.3% off all 88 of Anhui's
-other counties, which were already right. The county is the level these maps get
-assembled at, so it is the level that has to be accurate.
+- **Each census county's figure is taken as it is**, and the grid only says
+  where inside that census county its people live. On the census's own polygons
+  the grid is right to 0.2% at the median and within 5% for 92% of counties, and
+  where it is badly out the error is usually the grid's: 衡南县 is +43% while
+  every other county in Hengyang is within 2%, Chuzhou's urban core is +174%,
+  Tongling's 义安区 +190%.
+- **This holds even where the census's reporting units and the ground part
+  company** — the decision is that the census is used wherever it has a figure.
+  Zhengzhou's first row is 管城+金水+郑东新区+经开区+航空港区, and much of the
+  Zhengdong and airport zones' land is legally 中牟县 and 新郑市, so the census
+  books people the grid puts in Zhongmou (1.4 M) to Jinshui, and Zhongmou gets
+  its census 703k. Anyang's 殷都区 (-71%) beside 安阳县 (+102%) looks like a
+  polygon out of date; 新乡市's "原阳县+平原示范区" row actually sits on 新乡县,
+  which has no row; XPCC cities' regiments live on other counties' ground. In
+  all of these the census figure is used anyway. `CENSUS_EVERYWHERE = False` in
+  `fetch.py` flips to letting the grid decide inside such prefectures, 20 of
+  them, recognised by a development-zone row the grid is more than 10% off from
+  or two census counties more than 25% off in opposite directions.
+- **People the census books to no county are handed back.** In nine provinces
+  the census counties sum to less than the provincial bulletin — Shaanxi 770k,
+  Liaoning 630k, Fujian 550k, Anhui 460k. They are most likely development-zone
+  populations reported only at province level (Shaanxi's would be Xixian New
+  Area, whose host counties in Xianyang the grid holds 900k over). They are
+  returned to the counties the first step cut, in proportion to the cut.
 
-Because anchoring uses the county census figures, scoring the built output
-against them would only prove the anchoring ran. `validate_counties.py` therefore
-scores the **raw** zonal sums instead — the recovery underneath, which is what
-decides the counties anchoring cannot reach. It compares them as groups, because
-a merged panel row covers several of our counties at once and only the group can
-honestly be held against it. The median group is 0.1% out, 94% within 5% and 97%
-within 10%, and it now also prints the counties it cannot check at all rather
-than dropping them silently.
+Provinces are then put onto their published census totals, which moves them by
+well under a percent once the boundaries are right.
 
-What comes out: 2,593 of 2,861 counties (91.7% of the country's people) sit on
-their published census figure exactly. The other 268 — 8.3% of people, headed by
-Shenzhen's Bao'an at 8.1 M — have no census figure and take their province's
-residual. Anchoring moved 77 counties by more than 10% and 10 by more than 25%,
-which is a measure of how wrong the grid was in those places.
+**The panel has no Xinjiang.** It was built from local census bulletins and
+Xinjiang's counties published none, so all 106 Xinjiang rows are empty.
+`xinjiang_counties.py` fills them from hongheiku.com, whose county pages carry
+the census table in the layout of the national county book
+(《中国人口普查分县资料—2020》, print only; Excel copies are sold by resellers).
+Summed by prefecture, those figures
+equal the official table in Xinjiang's own census bulletin No. 2
+(`xinjiang_prefectures_2020.csv`) to the person in all 15 rows. As a check on the
+site outside Xinjiang, its Hunan pages match the panel in 107 of 108 counties in
+both years; the odd one, 衡东县, is a slip in the panel (it puts Hunan exactly
+3,000 short of its bulletin), corrected in `fetch.py`'s `PANEL_FIXES`.
 
-**The 25% group check is doing real work; do not loosen it.** Of the 16 merged
-rows it rejects, most are rejected correctly: we hold only some of the row's
-parts, so 沙河市 alone against a five-county row is 72% short and anchoring it
-would hand one county five counties' people. The exception is a row whose missing
-parts are all development zones, which have no polygon of ours — Chuzhou's
-琅琊区+南谯区 covers its whole row and is 174% over, the largest surviving error in
-the build. Telling those two cases apart needs the missing parts classified, and
-a renamed county (邢台's 桥东区 is now 襄都区) reads exactly like an absent one, so
-there is no safe automatic rule. Chuzhou stays wrong for now.
+### How good it is
+
+`validate_counties.py` prints three things. On the census's own polygons, the
+raw grid is 0.2% out at the median. Where one of our counties is the same ground
+as one census county (2,521 of 2,861), the published figure is within 5% of the
+census for 99.2% and within 10% for 99.6%; the name-matched build before it
+managed 97.9% and 98.3%, with 23 counties more than 25% off against 6 now. And it
+lists every county sitting more than 15% from its census-implied figure, with the
+reason — what remains is the handed-back people above. Only two counties cannot be checked at all, the island
+groups 嵊泗县 and 长海县, where a tenth of the grid falls outside the census
+polygons.
 
 At 1.41 billion the country needs about 1,410 regions of a million. The median
 township holds 18,500 people, so a region is around 54 of them and about 2.6
@@ -125,65 +150,19 @@ splitting a large county or following a line precisely.
 
 ## Population, 2010
 
-The other half of the trend. `census_county_2010-2020_v1.csv` (Dong & Wang, github.com/leiii/census) has
-county-level 2010 and 2020 counts on harmonised boundaries. Each township is
-scaled by its county's ratio from that panel — the uniform-within-parent
-assumption India's subdistricts also use.
+The same pieces carry 2010: each piece is scaled by its census county's own
+2010/2020 ratio from the panel (or, for Xinjiang, from hongheiku.com's 6th-census
+column). A ratio outside 0.25–4 is a boundary moved between the two censuses
+rather than growth — Harbin's 香坊区 0.21 beside 平房区 3.8 — and those pieces take
+what their province has left over. Each province is then put onto its published
+2010 total, which moves none by more than 1%.
+
+Xinjiang used to need a 0.891 correction here. That was the empty panel: every
+Xinjiang county got the national growth rate, and Xinjiang grew far faster.
 
 **It is context, not arithmetic.** The viewer's current-year estimate is a line
 through the last two years it holds, 2020 and 2024; 2010 only fills the history
-table and raises the two "direction changed" flags. It is also the weakest column
-in the build, being one county ratio applied uniformly to every township inside.
-Worth reading, not worth more work — the figure that has to be right is the 2020
-county total, which is measured rather than inferred.
-
-Matching our counties to the panel by Chinese name gets 2,593 of 2,861. Misses
-are mostly 2015–16 renames, 崇明县 becoming 崇明区 and 腾冲县 becoming 腾冲市, so
-the name stem is tried after the full name; a match whose 2020 population
-disagrees with our own sum by more than 25% is thrown out, which is what stops a
-stem match picking a same-named neighbour.
-
-Two further guards stop one panel row backing two of our counties. A key has to
-be unique on our side as well as the panel's, and a row one of our counties has
-already taken cannot back another. Jiangsu has a 鼓楼区 in both Nanjing and
-Xuzhou: Nanjing's matches on the prefecture pass, and without the second guard
-the Xuzhou one then claimed that same Nanjing row on the looser prov+name pass.
-Neither looks wrong against that row on its own — only the pair does — so it
-survived every per-county check until the validation started comparing groups.
-
-### Development zones
-
-139 panel rows are not one county but several joined with `+`, because the census
-reports a development zone separately from the district it sits in:
-蜀山区+高新区+经开区, coded 340104;340171;340172. Those zones are not
-administrative divisions. The Ministry of Civil Affairs list for Hefei is four
-districts, four counties and one county-level city, and 合肥高新区 and 合肥经开区
-are management committees that 代管 subdistricts whose land stays legally
-Shushan's. One of our polygons therefore covers the whole merged row, and the
-row's ratio is the right one for it.
-
-These rows cover 171 of our counties and 137 M people, and until they were
-handled every one of them fell back to the province residual. Shushan came out
-growing 27% across the decade where the census says its ground grew 65%.
-
-The population check for a merged row is made against the group rather than the
-single county: everything of ours landing on one row is summed and that sum is
-tested against the row. Hangzhou's 上城区 is 9% of its four-district row and
-would fail alone, while the group is within 1%. 116 of the 132 rows pass, and the
-rest fall back to the province residual as before.
-
-This is also why a district can read far above the figure printed against its
-name. Hefei books 1.29 M people under four development zones, so the census row
-for 蜀山区 is 1,047,150 while the district's own 653 km² holds 1,874,930.
-
-**Do not average the matched ratios to fill the rest.** The counties that fail
-to match are overwhelmingly the ones renamed when they became urban districts,
-which are the fastest-growing ones, so their average understates growth badly —
-the first attempt came out 46 M above the 2010 census. Unmatched counties instead
-take the province residual: what the panel says is left in that province once the
-matched counties are accounted for. Each province is then normalised onto its
-published 2010/2020 growth, which fixes the level while keeping the
-county-to-county variation. Xinjiang needs the largest correction, 0.89.
+table and raises the two "direction changed" flags.
 
 ## Population, 2024
 
@@ -206,31 +185,37 @@ sum to 140,628万 against a national 140,828万 — exactly the 200万 differenc
 
 No township data exists after 2020, so every township in a province shares its
 province's recent rate and the post-2020 trend carries no within-province
-detail. The 2010-2020 step is the one that shows how a place was actually
-moving, and it stays visible in the history table.
+detail.
 
 ## Known gaps
 
 261 townships come out zero. They are ASPECT's own missing-data units and are
 almost all forestry stations, state farms, 经营所 and industrial parks —
 special-purpose units holding a few hundred thousand people in total. 80 of them
-are in Heilongjiang, whose provincial total is still within 0.12%.
+are in Heilongjiang.
+
+The hand-back of people the census books to no county goes to every county the
+first step cut in that province, in proportion. It cannot tell Xianyang's
+Xixian counties from 商南县, whose grid excess is its own, so a little of
+Shaanxi's 770k lands in the wrong place.
 
 ## Order to run
 
 ```
 python prep_boundaries.py     # ~6 min, writes boundaries/adm{1,2,3,4}.gpkg + units.csv
-python zonal_pop.py           # ~90 s, needs the ASPECT tif extracted
-python fetch.py               # instant, writes population.csv
-python validate_provinces.py  # instant, both years against the census bulletins
-python validate_counties.py   # instant, the test fetch.py cannot rig
+python zonal_pop.py           # ~2.5 min, reads the ASPECT zip; township sums + census pieces
+python xinjiang_counties.py   # instant once data/china/hongheiku_xinjiang.csv exists (else ~2 min scrape)
+python fetch.py               # instant, writes population.csv + panel_rows.csv + counties.csv
+python validate_provinces.py  # instant, all three years against the published totals
+python validate_counties.py   # instant, against the county census
 python ../build_country.py china
+python ethnicity.py           # rebuilds composition.json on the new adm3; needs chinaethnicity's cells.npz
 ```
 
 The ASPECT raster is `data/asia1m/china/aspect_population_total_pop.zip` (488 MB,
-figshare doi:10.6084/m9.figshare.27323106). Unzip it to
-`aspect_population_total_pop.tif` (10.8 GB) beside the zip before running
-`zonal_pop.py`; the tif can be deleted afterwards.
+figshare doi:10.6084/m9.figshare.27323106). `zonal_pop.py` reads it through
+GDAL's `/vsizip/`; an unpacked `aspect_population_total_pop.tif` beside the zip
+is used instead if present.
 
 The township level is written as one geojson per province under
 `countries/china/adm4/`, because 43,655 features in a single fetch is not

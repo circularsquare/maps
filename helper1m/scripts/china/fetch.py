@@ -1,9 +1,42 @@
 """Build helper1m/data/china/population.csv from the township counts.
 
-2020 comes from zonal_pop.py — the census township counts recovered from the
-ASPECT grid. 2010 is a back-cast: each township is scaled by its county's
-2010/2020 ratio from the county census panel, the same uniform-within-parent
-assumption India's subdistricts use.
+2020 starts from zonal_pop.py: the ASPECT grid summed over our townships, and over
+each (township, census county) piece, where the census counties are the county
+panel's own 2020 polygons. The census county figures are then carried onto our
+2014 boundaries through those pieces, by where the grid says people live, with
+no matching of names at all.
+
+The rule for how far to trust each side:
+
+  * Each census county's figure is taken as it is, and the grid only says where
+    inside that census county its people live. The grid is right to 0.2% at the
+    median on the census's own polygons, and where it is not the error is
+    usually its own: Hengnan +43% with every neighbour within 2%, Chuzhou's
+    urban core +174%, Tongling's 义安区 +190%.
+  * The census is used even where its reporting units and the ground part
+    company (CENSUS_EVERYWHERE). With it off, the grid decides where people are
+    in those prefectures and only the prefecture total follows the census.
+    Zhengzhou's first row is
+    管城+金水+郑东新区+经开区+航空港区, and much of the Zhengdong and airport
+    zones' land is legally 中牟县 and 新郑市; the panel's polygons are sometimes
+    out of date or mislabelled (新乡市's "原阳县+平原示范区" row sits on 新乡县).
+    Such a prefecture is recognised by a development-zone row the grid is well
+    off from, or by two census counties far off in opposite directions. Where
+    its grid total is over or under, the difference comes off the census
+    counties the grid overfilled (or goes onto the ones it underfilled).
+  * Where a province's census counties sum to less than its bulletin, the
+    missing people are ones the census books to no county at all (770k in
+    Shaanxi, most likely Xixian New Area's), and they are handed back to the counties the grid
+    holds them in. See row_factors.
+
+Each township's 2020 figure is the sum of its pieces, each scaled by its census
+county's factor. Provinces are then put onto their published census totals,
+which moves them by well under a percent.
+
+2010 uses the same pieces: each piece is scaled by its census county's own
+2010/2020 ratio. Pieces in a census county with no 2010 figure take what the
+province has left over, and each province is then put onto its published 2010
+total.
 
 2024 is a forward-cast by province, and it exists because the viewer
 extrapolates from the last two years it has. With only 2010 and 2020 it carried
@@ -13,30 +46,42 @@ township data exists after 2020, so every township in a province shares its
 province's rate — the recent trend carries no within-province detail, and the
 2010-2020 differential is what shows how a place was actually moving.
 
-Levels 1-3 are sums of their townships rather than the published figures for
-those units, so every level reconciles with the one below exactly. Each county we
-can match is first put onto its own published census figure, and the counties
-with no figure absorb what is left of their province — so the county level is
-right where the census can say so, and the province and national totals stay
-exact either way. See validate_counties.py.
+Levels 1-3 are sums of their townships, so every level reconciles with the one
+below exactly.
 
-Writes population.csv with columns code, level, year, pop.
+Writes population.csv (code, level, year, pop), plus two audit tables:
+panel_rows.csv (one row per census county: grid, census, factor) and
+counties.csv (one row per helper1m county: raw grid sum, published figure, and
+the census-implied figure validate_counties.py compares them with).
 """
 import io
-import re
 import sys
 from pathlib import Path
 
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
 
+import numpy as np
 import pandas as pd
 
 HERE = Path(__file__).resolve().parent
 DATA = HERE.parents[1] / "data/china"
 
-# County-level census panel: 2010 and 2020 on harmonised boundaries, with
-# official codes. Dong & Wang, github.com/leiii/census.
+# County-level census panel: 2010 and 2020 on harmonised boundaries, with official
+# codes and a 2020 polygon per row. Dong & Wang, github.com/leiii/census. It was
+# assembled from local census bulletins, and Xinjiang's counties published none,
+# so all 106 of Xinjiang's rows are empty.
 PANEL = DATA / "census_county_2010-2020_v1.csv"
+PIECES = DATA / "township_panel_pop2020.csv"
+
+# Transcription slips in the panel. 衡东县 is 562,423 in the panel and 565,423 on
+# hongheiku.com; with the latter Hunan's rows sum to its bulletin exactly, and
+# with the panel's they fall exactly 3,000 short.
+PANEL_FIXES = {"430424": 565423}
+
+# Figures for panel rows the panel leaves empty, keyed by county_code. Xinjiang's
+# come from hongheiku.com's transcription of the national county book; see the
+# file's header for how they were checked.
+SUPPLEMENT = HERE / "xinjiang_counties.csv"
 
 # Year-end provincial resident population, China Statistical Yearbook 2025
 # table 2-5. Both of its columns come from that one table so the ratio stays
@@ -47,361 +92,235 @@ RECENT_YEAR = 2024
 
 YEARS = [2010, 2020, RECENT_YEAR]
 
-# County-level suffixes that changed between our 2018 boundaries and the 2020
-# census — 崇明县 became 崇明区, 腾冲县 became 腾冲市, and so on. Matching on the
-# stem recovers those; the population check below throws out stems that collide.
-COUNTY_SUFFIXES = ("自治县", "自治旗", "县", "市", "区", "旗")
+# Xinjiang's XPCC cities are each a prefecture of their own in the panel, but a
+# division's regiments are scattered through the counties around its city, so the
+# city's census figure and its polygon are not the same people. Each is pooled
+# with the prefecture it sits in, as the regional bulletin itself counts six of
+# them. 石河子's regiments straddle Changji and Tacheng, so those pool as one.
+POOL_WITH = {
+    "石河子市": "昌吉回族自治州", "五家渠市": "昌吉回族自治州",
+    "胡杨河市": "昌吉回族自治州", "塔城地区": "昌吉回族自治州",
+    "阿拉尔市": "阿克苏地区", "图木舒克市": "喀什地区", "北屯市": "阿勒泰地区",
+    "铁门关市": "巴音郭楞蒙古自治州", "双河市": "博尔塔拉蒙古自治州",
+    "可克达拉市": "伊犁哈萨克自治州", "昆玉市": "和田地区",
+}
 
-# A matched county whose panel 2020 population is this far from our own zonal
-# sum is the wrong county, not a boundary quibble. Rejecting those is what keeps
-# a stem match from silently picking a same-named neighbour.
-MATCH_TOLERANCE = 0.25
+# Take every census county's figure as it is, everywhere — her call, 2026-09-29:
+# the census is used wherever it has a figure. That includes the prefectures
+# below where the census's units and the ground part company, so Zhongmou gets
+# its census 703k although the grid holds 1.4M on its ground (the Zhengdong and
+# airport zones' people, whom the census books to Jinshui). Setting this False
+# lets the grid decide inside those prefectures instead, holding only the
+# prefecture total to the census.
+CENSUS_EVERYWHERE = True
 
-# Ratios outside this are a boundary change masquerading as growth.
-RATIO_MIN, RATIO_MAX = 0.5, 2.0
+# What marks a prefecture where the census's reporting units and the ground part
+# company (used only when CENSUS_EVERYWHERE is False). A row naming a development zone (蜀山区+高新区+经开区) books the zone's
+# people to it wherever they live; if the grid is more than ZONE_OFF from such a
+# row, the zone's people are on some other county's ground. Two census counties
+# more than PAIR_OFF off in opposite directions are a polygon out of date
+# (Anyang's 殷都区 -71% beside 安阳县 +102%). In those prefectures the grid decides
+# where people are; everywhere else each census county's figure is taken as is.
+ZONE_ROW = r"[+＋]|新区|开发区|高新|经开|示范区|管理区|工业园"
+ZONE_OFF = 0.10
+PAIR_OFF = 0.25
 
-# The panel merges a district with the development zones carved out of it into
-# one row — 蜀山区+高新区+经开区, coded 340104;340171;340172. Those zones are not
-# administrative divisions of their own: they are management committees running
-# land that legally stays with the district, and the census gives them their own
-# row only because they have their own committee. Our single polygon covers the
-# whole merged row, so the row's ratio is the right one for it.
-MERGED_SPLIT = re.compile(r"[+＋]")
-PARENS = re.compile(r"[（(]([^）)]*)[）)]")
+# A census county the grid barely touches cannot carry a factor: a few hundred
+# grid people scaled up to a census figure would be a spike, not a correction.
+MIN_GRID = 1000
 
-# Put every county we can onto its own published 2020 census figure, and let the
-# counties with no figure absorb what is left of their province.
-#
-# This replaced a blanket province scaling, which multiplied every township in a
-# province by one factor so the province matched its census total. That is the
-# wrong instrument when a province's excess sits in one or two broken counties:
-# Anhui's is mostly Chuzhou's urban core and Baohe, and the old scaling paid for
-# them by shaving 4.3% off all 88 of Anhui's other counties, which were already
-# right. The county is the level these maps get assembled at, so it is the level
-# that has to be accurate.
-ANCHOR_TO_CENSUS = True
+# Bounds on a census county's 2020 factor. Chuzhou's urban core needs 0.37, so
+# the floor has to sit below it; anything past these is a join failure.
+FACTOR_MIN, FACTOR_MAX = 0.2, 5.0
 
-
-def stem(name):
-    for suffix in COUNTY_SUFFIXES:
-        if name.endswith(suffix) and len(name) > len(suffix):
-            return name[: -len(suffix)]
-    return name
+# A 2010/2020 ratio outside this is a boundary change between the two
+# censuses masquerading as growth. Growth itself reaches 0.38 (Lhasa's 堆龙德庆区)
+# and 0.44 (Yinchuan's 金凤区); Harbin's 香坊区 0.21 beside 平房区 3.8 is a
+# boundary moved between them, and falls outside.
+RATIO_MIN, RATIO_MAX = 0.25, 4.0
 
 
-def merged_parts(name):
-    """The constituent unit names of a multi-code panel row.
+def load_panel(provinces):
+    panel = pd.read_csv(PANEL, dtype={"county_code": str, "city_code": str},
+                        usecols=["county", "county_code", "city", "city_code",
+                                 "province", "popu_2020", "popu_2010"])
+    for code, pop in PANEL_FIXES.items():
+        hit = panel["county_code"] == code
+        if not hit.any():
+            raise SystemExit(f"PANEL_FIXES entry matches nothing: {code}")
+        panel.loc[hit, "popu_2020"] = pop
+    panel["source"] = np.where(panel["popu_2020"].notna(), "panel", "")
+    if SUPPLEMENT.exists():
+        sup = pd.read_csv(SUPPLEMENT, dtype={"county_code": str}, comment="#")
+        sup = sup.set_index("county_code")
+        fill = panel["county_code"].isin(sup.index) & panel["popu_2020"].isna()
+        codes = panel.loc[fill, "county_code"]
+        panel.loc[fill, "popu_2020"] = codes.map(sup["pop_2020"]).values
+        panel.loc[fill, "popu_2010"] = codes.map(sup["pop_2010"]).values
+        panel.loc[fill, "source"] = "supplement"
+        print(f"  {int(fill.sum())} empty panel rows filled from {SUPPLEMENT.name}")
+    # Hong Kong and Macau have rows but none of our townships; a row there would
+    # only ever reach the few border cells our Shenzhen and Zhuhai townships share.
+    panel["mainland"] = panel["province"].isin(provinces)
+    return panel
 
-    市辖区（昌邑区+龙潭区+…） keeps what is inside the brackets, because the wrapper
-    is not a name. 永登县+兰州新区（部分） drops the trailing qualifier and keeps
-    both names. Parts that are zones rather than counties — 高新区, 曲江新区 — simply
-    match nothing of ours, which is harmless.
+
+def row_factors(panel, bulletin):
+    """2020 factor per census county.
+
+    First each census county is put onto its own figure, except in the
+    prefectures flagged as ones where the census's units and the ground part
+    company; those are put onto the sum of their census counties as a whole, the
+    difference coming off the counties the grid overfilled or going onto the ones
+    it underfilled.
+
+    Then the people the panel does not place at all are handed back. Where a
+    province's census counties sum to less than its bulletin total, the missing
+    people are ones the census booked to no county row — in Shaanxi 770k, most
+    likely Xixian New Area's, whose host counties the grid holds 900k over — and they are still on the ground where the grid has them,
+    which is inside the counties the first step cut. So that shortfall is given
+    back to the cut counties in proportion to their cuts, never above the grid.
+    Hengnan is the other kind: Hunan's rows sum to its bulletin, Hengnan's
+    neighbours all match to 2%, and the grid alone is wrong, so it stays cut.
     """
-    name = str(name)
-    inner = PARENS.search(name)
-    if inner and MERGED_SPLIT.search(inner.group(1)):
-        name = inner.group(1)
-    else:
-        name = PARENS.sub("", name)
-    return [p.strip() for p in MERGED_SPLIT.split(name) if p.strip()]
-
-
-def load_units():
-    units = pd.read_csv(DATA / "units.csv", dtype={"code": str, "parent": str,
-                                                   "group": str})
-    by_level = {lvl: df.set_index("code") for lvl, df in units.groupby("level")}
-    return units, by_level
-
-
-def county_frame(units, by_level, pops):
-    """Our counties with their Chinese name tuple and our own 2020 sum."""
-    cnty = by_level[3].reset_index()[["code", "name_cn"]].rename(
-        columns={"name_cn": "cnty"})
-    cnty["pref"] = cnty["code"].str[:4].map(by_level[2]["name_cn"])
-    cnty["prov"] = cnty["code"].str[:2].map(by_level[1]["name_cn"])
-    ours = pops.groupby(pops["code"].str[:6])["pop_2020"].sum().rename("our_2020")
-    cnty = cnty.merge(ours, left_on="code", right_index=True, how="left")
-    return cnty
-
-
-def match_counties(cnty, panel):
-    """Attach each of our counties to a panel row, most specific key first.
-
-    Returns the frame with panel_2010 / panel_2020 / match_key filled where a
-    match survived the population check.
-    """
-    panel = panel.copy()
-    panel["stem"] = panel["county"].map(stem)
-
-    keys = [
-        ("prov+pref+name", ["province", "city", "county"], ["prov", "pref", "cnty"]),
-        ("prov+pref+stem", ["province", "city", "stem"], ["prov", "pref", "cnty_stem"]),
-        ("prov+name", ["province", "county"], ["prov", "cnty"]),
-        ("prov+stem", ["province", "stem"], ["prov", "cnty_stem"]),
-    ]
-    cnty = cnty.copy()
-    cnty["cnty_stem"] = cnty["cnty"].map(stem)
-    cnty["panel_2010"] = pd.NA
-    cnty["panel_2020"] = pd.NA
-    cnty["match_key"] = pd.NA
-    # Which panel row backed the match. A merged row backs several of our
-    # counties at once, and the province residual has to count it only once.
-    cnty["panel_row"] = pd.NA
-    cnty["panel_name"] = pd.NA
-    claimed = set()
-
-    for label, right_on, left_on in keys:
-        todo = cnty["match_key"].isna()
-        if not todo.any():
-            break
-        # Ambiguous keys are worse than no key: a wrong twin is invisible later.
-        unique = panel[panel.groupby(right_on)[right_on[0]].transform("size") == 1].copy()
-        unique["row_id"] = unique.index
-        # "county" is already a key on some passes; selecting it twice is an error.
-        cols = right_on + [c for c in ("popu_2010", "popu_2020", "row_id", "county")
-                           if c not in right_on]
-        merged = cnty.loc[todo, left_on].merge(
-            unique[cols], left_on=left_on, right_on=right_on, how="left")
-        merged.index = cnty.index[todo]
-
-        ok = merged["popu_2020"].notna()
-        # Reject a match whose population disagrees with our own sum.
-        rel = (merged["popu_2020"] - cnty.loc[todo, "our_2020"]).abs() / \
-            merged["popu_2020"]
-        ok &= rel <= MATCH_TOLERANCE
-        # The key has to be unique on our side too, and a row one of our counties
-        # already took cannot back another. Jiangsu has a 鼓楼区 in both Nanjing
-        # and Xuzhou: Nanjing's matches on the prefecture pass, and the Xuzhou one
-        # would then claim that same Nanjing row on the looser prov+name pass.
-        # Neither looks wrong against that row on its own, so only these two
-        # checks catch it. Both fall through to the province residual instead.
-        ok &= ~cnty.loc[todo].duplicated(subset=left_on, keep=False)
-        ok &= ~merged["row_id"].isin(claimed)
-        cnty.loc[merged.index[ok], "panel_2010"] = merged.loc[ok, "popu_2010"].values
-        cnty.loc[merged.index[ok], "panel_2020"] = merged.loc[ok, "popu_2020"].values
-        cnty.loc[merged.index[ok], "panel_row"] = merged.loc[ok, "row_id"].values
-        cnty.loc[merged.index[ok], "panel_name"] = merged.loc[ok, "county"].values
-        cnty.loc[merged.index[ok], "match_key"] = label
-        claimed.update(merged.loc[ok, "row_id"].dropna().tolist())
-        print(f"  matched on {label:<16} {int(ok.sum()):>5}  "
-              f"(running total {int(cnty['match_key'].notna().sum())} of {len(cnty)})")
-
-    return cnty
-
-
-def match_merged(cnty, panel):
-    """Match the counties still left over against the panel's multi-code rows.
-
-    The population check here is made against the group rather than the single
-    county. Our one 蜀山区 polygon covers the whole of 蜀山区+高新区+经开区, so
-    testing it against the row's total is the honest test; testing Hangzhou's
-    上城区 on its own against a four-district row would throw away a good match
-    for the wrong reason. Summing every one of our counties that lands on a row
-    and testing that sum is what still catches a row we do not actually cover.
-    """
-    cnty = cnty.copy()
-    rows = panel[panel["county"].astype(str).str.contains(MERGED_SPLIT, na=False)]
-    todo = cnty["match_key"].isna()
-    if rows.empty or not todo.any():
-        return cnty
-
-    parts = []
-    for idx, r in rows.iterrows():
-        for part in merged_parts(r["county"]):
-            parts.append({"province": r["province"], "city": r["city"],
-                          "part": part, "row_id": idx, "row_name": r["county"],
-                          "popu_2010": r["popu_2010"], "popu_2020": r["popu_2020"]})
-    parts = pd.DataFrame(parts)
-    # A name that points at two different rows in one prefecture is no key.
-    parts = parts.drop_duplicates(subset=["province", "city", "part"], keep=False)
-
-    cand = cnty.loc[todo, ["prov", "pref", "cnty", "our_2020"]].merge(
-        parts, left_on=["prov", "pref", "cnty"],
-        right_on=["province", "city", "part"], how="left")
-    cand.index = cnty.index[todo]
-    cand = cand[cand["row_id"].notna() & cand["popu_2010"].notna()
-                & cand["popu_2020"].notna()]
-    if cand.empty:
-        return cnty
-
-    ours = cand.groupby("row_id")["our_2020"].sum()
-    theirs = cand.groupby("row_id")["popu_2020"].first()
-    rel = (theirs - ours).abs() / theirs
-    good = rel[rel <= MATCH_TOLERANCE].index
-    keep = cand[cand["row_id"].isin(good)]
-    if keep.empty:
-        return cnty
-
-    cnty.loc[keep.index, "panel_2010"] = keep["popu_2010"].values
-    cnty.loc[keep.index, "panel_2020"] = keep["popu_2020"].values
-    cnty.loc[keep.index, "panel_row"] = keep["row_id"].values
-    cnty.loc[keep.index, "panel_name"] = keep["row_name"].values
-    cnty.loc[keep.index, "match_key"] = "merged row"
-    print(f"  matched on {'merged row':<16} {len(keep):>5}  "
-          f"(running total {int(cnty['match_key'].notna().sum())} of {len(cnty)})")
-    print(f"    {len(good)} of {cand['row_id'].nunique()} merged rows passed the "
-          f"group population check, covering {keep['our_2020'].sum():,.0f} people")
-    return cnty
-
-
-def anchor_to_census(pops, cnty, ref2020, by_level):
-    """Scale each matched county onto its published 2020 census figure.
-
-    A merged panel row covers several of our counties at once, so the group is
-    scaled as a unit — scaling one county onto a total it is only part of would
-    be nonsense.
-
-    Counties with no census figure then take up whatever their province has left:
-    the published province total minus the published figures of the anchored
-    counties is, by construction, what the rest of that province holds. So the
-    province totals and the national total stay exact, nobody is dropped, and
-    nobody is counted twice.
-    """
-    pops = pops.copy()
-    county = pops["code"].str[:6]
-    cur = pops.groupby(county)["pop_2020"].sum()
-
-    have = cnty[cnty["panel_2020"].notna() & cnty["panel_row"].notna()].copy()
-    now = have.groupby("panel_row")["code"].apply(lambda s: cur.reindex(s).sum())
-    target = have.groupby("panel_row")["panel_2020"].first().astype(float)
-    row_factor = (target / now).where(now > 0)
-
-    factor = pd.Series(1.0, index=cur.index, dtype=float)
-    f = pd.Series(have["panel_row"].map(row_factor).values, index=have["code"]).dropna()
-    factor.loc[f.index] = f.values
-    anchored = set(f.index)
-    print(f"  anchored {len(anchored)} counties onto "
-          f"{int(row_factor.notna().sum())} published census figures")
-
-    prov_target = ref2020.set_index("name_cn")["pop_2020"]
-    prov_of = pd.Series(cur.index.str[:2], index=cur.index)
-    for pcode, pname in by_level[1]["name_cn"].items():
-        here = cur.index[prov_of == pcode]
-        rest = [c for c in here if c not in anchored]
-        if not rest:
+    p = panel
+    p["target"] = p["grid"]
+    fig = (p["mainland"] & (p["popu_2020"].fillna(0) > 0) & (p["grid"] >= MIN_GRID))
+    p["pooled"] = fig
+    xj = p["province"] == "新疆维吾尔自治区"
+    p["pool"] = p["city"].where(~xj, p["city"].map(lambda c: POOL_WITH.get(c, c)))
+    p["pool"] = p["province"] + p["pool"]
+    rel = p["grid"] / p["popu_2020"] - 1
+    # An XPCC city is a zone in the same sense: its regiments' people are on
+    # other counties' ground.
+    xpcc = xj & p["city"].isin(set(POOL_WITH) - {"塔城地区"})
+    zone_off = fig & (p["county"].astype(str).str.contains(ZONE_ROW) | xpcc) & \
+        (rel.abs() > ZONE_OFF)
+    far = fig & (rel.abs() > PAIR_OFF)
+    p["grid_decides"] = False
+    for key, g in p[fig].groupby("pool"):
+        # Only where the prefecture shows the census's reporting units and the
+        # ground parting company: a zone row the grid disagrees with, or two
+        # census counties far off in opposite directions (a stale polygon).
+        # Everywhere else each census county's own figure is taken as it is.
+        split = not CENSUS_EVERYWHERE and (zone_off[g.index].any() or (
+            (rel[g.index][far[g.index]] > 0).any() and (rel[g.index][far[g.index]] < 0).any()))
+        if not split:
+            p.loc[g.index, "target"] = g["popu_2020"]
             continue
-        taken = have[have["code"].isin(anchored) &
-                     have["code"].str.startswith(pcode)] \
-            .drop_duplicates("panel_row")["panel_2020"].astype(float).sum()
-        left = float(prov_target.get(pname, 0)) - taken
-        now_rest = float(cur.reindex(rest).sum())
-        if left <= 0 or now_rest <= 0:
-            print(f"    {pname}: nothing sensible left for its {len(rest)} "
-                  f"unmatched counties, leaving them as measured")
+        p.loc[g.index, "grid_decides"] = True
+        d = g["grid"] - g["popu_2020"]
+        excess = d.sum()
+        side = d.clip(lower=0) if excess > 0 else (-d).clip(lower=0)
+        if side.sum() <= 0:
             continue
-        factor.loc[rest] = left / now_rest
+        p.loc[g.index, "target"] = g["grid"] - excess * side / side.sum()
 
-    pops["pop_2020"] = (pops["pop_2020"] * county.map(factor)).round().astype("int64")
-    moved = factor[(factor - 1).abs() > 0.10]
-    print(f"  factors: median {factor.median():.4f}, "
-          f"range {factor.min():.3f}-{factor.max():.3f}; "
-          f"{len(moved)} counties moved by more than 10%")
-    print(f"  2020 total now {pops['pop_2020'].sum():,}")
-    return pops
+    split = p[p["grid_decides"]].drop_duplicates("pool")
+    print(f"  the grid decides inside {len(split)} prefectures: "
+          f"{', '.join(split['city'].astype(str).head(40))}")
 
-
-def county_ratios(cnty, panel, ref2010, ref2020):
-    """2010/2020 ratio per county.
-
-    Matched counties take the panel's own ratio. Unmatched ones take the
-    province residual — what the panel says is left in that province once the
-    matched counties are accounted for. Averaging the matched ratios instead
-    biases the result badly: the counties that fail to match are overwhelmingly
-    the ones renamed when they became urban districts, which are the
-    fastest-growing ones, so the average understates their growth. That error
-    put the first national back-cast 46 M above the 2010 census.
-
-    Then each province is normalised so its 2010/2020 ratio equals the published
-    one, which fixes the level while keeping the county-to-county variation.
-    """
-    cnty = cnty.copy()
-    raw = pd.to_numeric(cnty["panel_2010"], errors="coerce") / \
-        pd.to_numeric(cnty["panel_2020"], errors="coerce")
-    cnty["ratio"] = raw.where(raw.between(RATIO_MIN, RATIO_MAX))
-    dropped = int((raw.notna() & cnty["ratio"].isna()).sum())
-    if dropped:
-        print(f"  dropped {dropped} ratios outside {RATIO_MIN}-{RATIO_MAX} "
-              f"(boundary change, not growth)")
-
-    cnty["prov_code"] = cnty["code"].str[:2]
-    prov_cn = cnty.drop_duplicates("prov_code").set_index("prov_code")["prov"]
-
-    # Only panel rows with both years can contribute to a residual.
-    both = panel[panel["popu_2010"].notna() & panel["popu_2020"].notna()]
-    panel_2010 = both.groupby("province")["popu_2010"].sum()
-    panel_2020 = both.groupby("province")["popu_2020"].sum()
-
-    have = cnty[cnty["ratio"].notna()]
-    # One panel row can back several of our counties, because a merged row covers
-    # a group of them. Counting its population once per county would inflate what
-    # gets subtracted here and leave the province residual far too small — the
-    # double count would land on whatever counties are still unmatched.
-    uniq = have.drop_duplicates(subset=["panel_row"])
-    m2010 = pd.to_numeric(uniq["panel_2010"]).groupby(uniq["prov_code"]).sum()
-    m2020 = pd.to_numeric(uniq["panel_2020"]).groupby(uniq["prov_code"]).sum()
-
-    national = float(both["popu_2010"].sum() / both["popu_2020"].sum())
-    residual = {}
-    for code, name in prov_cn.items():
-        num = panel_2010.get(name, 0) - m2010.get(code, 0)
-        den = panel_2020.get(name, 0) - m2020.get(code, 0)
-        r = num / den if den > 0 else national
-        residual[code] = min(max(r, RATIO_MIN), RATIO_MAX)
-
-    need = cnty["ratio"].isna()
-    cnty.loc[need, "ratio"] = cnty.loc[need, "prov_code"].map(residual)
-    cnty["ratio_source"] = pd.Series("county", index=cnty.index).where(
-        ~need, "province residual")
-    print("  ratio source:", dict(cnty["ratio_source"].value_counts()))
-
-    # Normalise each province onto its published 2010/2020 growth.
-    target = (ref2010.set_index("name_cn")["pop_2010"] /
-              ref2020.set_index("name_cn")["pop_2020"])
-    ours = ((cnty["ratio"] * cnty["our_2020"]).groupby(cnty["prov_code"]).sum() /
-            cnty["our_2020"].groupby(cnty["prov_code"]).sum())
-    factor = (prov_cn.map(target) / ours).rename("factor")
-    cnty["ratio"] = cnty["ratio"] * cnty["prov_code"].map(factor)
-    worst = factor.reindex(factor.abs().sub(1).sort_values().index)
-    print(f"  province normalisation factor: median {factor.median():.3f}, "
-          f"range {factor.min():.3f}-{factor.max():.3f}")
-    off = factor[(factor - 1).abs() > 0.02]
-    for code, f in off.sort_values().items():
-        print(f"    {prov_cn[code]} {f:.3f}")
-    return cnty
+    p["returned"] = 0.0
+    placed = p[p["mainland"]].assign(
+        placed=lambda q: q["popu_2020"].where(q["pooled"], q["grid"]).fillna(0))
+    placed = placed.groupby("province")["placed"].sum()
+    for prov, have in placed.items():
+        short = bulletin.get(prov, have) - have
+        mine = fig & (p["province"] == prov)
+        cut = (p.loc[mine, "grid"] - p.loc[mine, "target"]).clip(lower=0)
+        if short <= 0 or cut.sum() <= 0:
+            continue
+        back = min(short, cut.sum()) * cut / cut.sum()
+        p.loc[back.index, "target"] += back
+        p.loc[back.index, "returned"] = back
+        print(f"    {prov}: census rows {short:,.0f} short of the bulletin; "
+              f"{back.sum():,.0f} handed back to the counties the grid holds them in")
+    raw = (p["target"] / p["grid"]).where(p["grid"] > 0, 1.0)
+    p["factor"] = raw.clip(FACTOR_MIN, FACTOR_MAX)
+    clipped = p[(raw - p["factor"]).abs() > 1e-9]
+    if len(clipped):
+        print(f"  {len(clipped)} census counties' factors clipped to "
+              f"{FACTOR_MIN}-{FACTOR_MAX}:")
+        for r in clipped.itertuples():
+            print(f"    {r.province} {r.city} {r.county}: {raw[r.Index]:.2f}")
+    return p
 
 
 def main():
-    units, by_level = load_units()
-    pops = pd.read_csv(DATA / "township_pop2020.csv", dtype={"code": str})
-    print(f"townships: {len(pops)}, 2020 total {pops['pop_2020'].sum():,}")
+    units = pd.read_csv(DATA / "units.csv", dtype={"code": str})
+    names = {lvl: df.set_index("code")["name_cn"] for lvl, df in units.groupby("level")}
+    ref2010 = pd.read_csv(HERE / "census2010_provinces.csv").set_index("name_cn")["pop_2010"]
+    ref2020 = pd.read_csv(HERE / "census2020_provinces.csv").set_index("name_cn")["pop_2020"]
 
-    panel = pd.read_csv(PANEL, dtype={"county_code": str})
-    print(f"county panel: {len(panel)} rows")
+    panel = load_panel(set(names[1].values))
+    pieces = pd.read_csv(PIECES, dtype={"code": str, "panel_code": str},
+                         keep_default_na=False)
+    pieces["pop"] = pieces["pop"].astype(float)
+    print(f"pieces: {len(pieces)}, {pieces['pop'].sum():,.0f} grid people, "
+          f"{pieces.loc[pieces['code'] == '', 'pop'].sum():,.0f} outside our townships")
 
-    ref2010 = pd.read_csv(HERE / "census2010_provinces.csv")
-    ref2020 = pd.read_csv(HERE / "census2020_provinces.csv")
+    panel["grid"] = panel["county_code"].map(
+        pieces.groupby("panel_code")["pop"].sum()).fillna(0.0)
+    panel = row_factors(panel, ref2020)
+    has = panel["pooled"]
+    print(f"  {int(has.sum())} of {len(panel)} census counties carry a figure, holding "
+          f"{panel.loc[has, 'grid'].sum() / 1e6:,.1f} M of the grid; the rest keep the "
+          f"grid as it is")
+    moved = panel[has & ((panel["factor"] - 1).abs() > 0.10)]
+    print(f"  {len(moved)} census counties moved by more than 10%, the largest:")
+    for r in moved.reindex((moved["factor"] - 1).abs()
+                           .sort_values(ascending=False).index).head(8).itertuples():
+        print(f"    {r.province} {r.city} {r.county[:24]}: grid {r.grid:,.0f} -> "
+              f"{r.target:,.0f} (census {r.popu_2020:,.0f})")
 
-    # Matching runs on the raw zonal sums, so the population check compares a
-    # measurement against the census rather than against an already-adjusted
-    # number.
-    cnty = county_frame(units, by_level, pops)
-    cnty = match_counties(cnty, panel)
-    cnty = match_merged(cnty, panel)
+    # Our pieces only; the few grid people outside every township are dropped here.
+    pc = pieces[pieces["code"] != ""].copy()
+    pc["prov"] = pc["code"].str[:2]
+    row = panel.set_index("county_code")
+    pc["factor"] = pc["panel_code"].map(row["factor"]).fillna(1.0)
+    pc["p2020"] = pc["pop"] * pc["factor"]
 
-    if ANCHOR_TO_CENSUS:
-        pops = anchor_to_census(pops, cnty, ref2020, by_level)
-        # The 2010 ratios are weighted by our own 2020 figures, so refresh those.
-        cnty["our_2020"] = cnty["code"].map(
-            pops.groupby(pops["code"].str[:6])["pop_2020"].sum())
+    # Provinces onto their published census totals.
+    target20 = names[1].map(ref2020)
+    sums = pc.groupby("prov")["p2020"].sum()
+    scale = target20 / sums
+    pc["p2020"] *= pc["prov"].map(scale)
+    print(f"  province 2020 scaling: median {scale.median():.4f}, "
+          f"range {scale.min():.4f}-{scale.max():.4f}")
+    for code, s in scale[(scale - 1).abs() > 0.005].sort_values().items():
+        print(f"    {names[1][code]} {s:.4f}")
 
-    cnty = county_ratios(cnty, panel, ref2010, ref2020)
+    # 2010: each piece carries its census county's own ratio.
+    ratio = (row["popu_2010"] / row["popu_2020"]).where(row["pooled"])
+    ratio = ratio.where(ratio.between(RATIO_MIN, RATIO_MAX))
+    pc["ratio"] = pc["panel_code"].map(ratio)
+    known = pc["ratio"].notna()
+    target10 = names[1].map(ref2010)
+    done = (pc.loc[known, "p2020"] * pc.loc[known, "ratio"]).groupby(pc["prov"]).sum()
+    rest = pc.loc[~known, "p2020"].groupby(pc["prov"]).sum()
+    fill = ((target10 - done.reindex(target10.index, fill_value=0)) /
+            rest.reindex(target10.index)).clip(RATIO_MIN, RATIO_MAX)
+    pc.loc[~known, "ratio"] = pc.loc[~known, "prov"].map(fill)
+    share = rest.reindex(target10.index, fill_value=0) / pc.groupby("prov")["p2020"].sum()
+    print(f"  2010: {known.mean():.1%} of pieces carry their own census county's ratio")
+    for code in share[share > 0.05].index:
+        print(f"    {names[1][code]}: {share[code]:.0%} of people on the province "
+              f"residual, ratio {fill[code]:.3f}")
+    pc["p2010"] = pc["p2020"] * pc["ratio"]
+    norm = target10 / pc.groupby("prov")["p2010"].sum()
+    pc["p2010"] *= pc["prov"].map(norm)
+    print(f"  province 2010 normalisation: median {norm.median():.4f}, "
+          f"range {norm.min():.4f}-{norm.max():.4f}")
+    for code, s in norm[(norm - 1).abs() > 0.01].sort_values().items():
+        print(f"    {names[1][code]} {s:.4f}")
 
-    # Back-cast every township by its county's ratio.
-    ratio_by_county = cnty.set_index("code")["ratio"]
-    pops["ratio"] = pops["code"].str[:6].map(ratio_by_county)
-    pops["pop_2010"] = (pops["pop_2020"] * pops["ratio"]).round().astype("int64")
-    print(f"  2010 total {pops['pop_2010'].sum():,} "
-          f"(the 31 provinces summed to {ref2010['pop_2010'].sum():,} in 2010)")
+    # Townships, rounded once at the end.
+    town = pc.groupby("code")[["p2020", "p2010"]].sum()
+    pops = pd.DataFrame({"code": names[4].index})
+    pops["pop_2020"] = pops["code"].map(town["p2020"]).fillna(0).round().astype("int64")
+    pops["pop_2010"] = pops["code"].map(town["p2010"]).fillna(0).round().astype("int64")
+    print(f"  2020 total {pops['pop_2020'].sum():,} (31 provinces {int(ref2020.sum()):,})")
+    print(f"  2010 total {pops['pop_2010'].sum():,} (31 provinces {int(ref2010.sum()):,})")
 
     # Forward-cast by province. The yearbook's own two columns give the rate, so
     # it stays inside one series rather than mixing a census count with a
@@ -409,7 +328,7 @@ def main():
     yb = pd.read_csv(HERE / YEARBOOK, comment="#")
     recent = (yb.set_index("name_cn")[f"pop_{RECENT_YEAR}"] /
               yb.set_index("name_cn")["pop_2020"])
-    prov_ratio = by_level[1]["name_cn"].map(recent)
+    prov_ratio = names[1].map(recent)
     missing = prov_ratio[prov_ratio.isna()]
     if len(missing):
         raise SystemExit(f"no yearbook row for provinces {list(missing.index)}")
@@ -417,8 +336,6 @@ def main():
         pops["pop_2020"] * pops["code"].str[:2].map(prov_ratio)).round().astype("int64")
     print(f"  {RECENT_YEAR} total {pops[f'pop_{RECENT_YEAR}'].sum():,} "
           f"(the yearbook's 31 provinces summed to {int(yb[f'pop_{RECENT_YEAR}'].sum()):,})")
-    grew = int((prov_ratio > 1).sum())
-    print(f"    {grew} provinces up, {31 - grew} down since 2020")
 
     # Roll up: every level is the sum of its townships, so the levels reconcile.
     cols = [f"pop_{y}" for y in YEARS]
@@ -426,24 +343,37 @@ def main():
     for lvl, width in ((4, 9), (3, 6), (2, 4), (1, 2)):
         grouped = pops.groupby(pops["code"].str[:width])[cols].sum()
         for year in YEARS:
-            rows.append(pd.DataFrame({
-                "code": grouped.index,
-                "level": lvl,
-                "year": year,
-                "pop": grouped[f"pop_{year}"].values,
-            }))
+            rows.append(pd.DataFrame({"code": grouped.index, "level": lvl,
+                                      "year": year, "pop": grouped[f"pop_{year}"].values}))
     out = pd.concat(rows, ignore_index=True).sort_values(
         ["level", "code", "year"], kind="stable")
-    path = DATA / "population.csv"
-    out.to_csv(path, index=False)
-    print(f"  wrote {path}: {len(out)} rows")
-    for lvl in (1, 2, 3, 4):
-        n = out[(out["level"] == lvl) & (out["year"] == RECENT_YEAR)]
-        print(f"    adm{lvl}: {len(n)} units, {n['pop'].sum():,} in {RECENT_YEAR}")
+    out.to_csv(DATA / "population.csv", index=False)
+    print(f"  wrote population.csv: {len(out)} rows")
 
-    cnty.drop(columns=["cnty_stem"]).to_csv(
-        DATA / "county_ratios.csv", index=False, encoding="utf-8")
-    print(f"  wrote county_ratios.csv (the 2010 back-cast audit trail)")
+    # Audit tables.
+    panel.drop(columns=["mainland"]).to_csv(DATA / "panel_rows.csv", index=False,
+                                            encoding="utf-8")
+    pc["county"] = pc["code"].str[:6]
+    # What each of our counties would hold if every census county's figure were
+    # taken at face value and split by grid share: the comparison validate_counties
+    # prints, and the measure of what the prefecture rule chose to leave alone.
+    cen = row["popu_2020"].where(row["pooled"])
+    pc["implied"] = pc["pop"] / pc["panel_code"].map(row["grid"]) * pc["panel_code"].map(cen)
+    pc["covered"] = pc["panel_code"].map(cen).notna()
+    cty = pc.groupby("county").agg(raw_2020=("pop", "sum"), pub_2020=("p2020", "sum"),
+                                   implied_2020=("implied", "sum"))
+    cov = pc[pc["covered"]].groupby("county")["pop"].sum()
+    cty["covered"] = (cov / cty["raw_2020"]).reindex(cty.index).fillna(0)
+    top = pc.sort_values("pop").drop_duplicates("county", keep="last").set_index("county")
+    cty["top_code"] = top["panel_code"]
+    cty["top_row"] = top["panel_code"].map(row["county"])
+    cty["top_share"] = top["pop"] / cty["raw_2020"]
+    cty.insert(0, "cnty", cty.index.map(names[3]))
+    cty.insert(0, "pref", cty.index.str[:4].map(names[2]))
+    cty.insert(0, "prov", cty.index.str[:2].map(names[1]))
+    cty.index.name = "code"
+    cty.round(1).to_csv(DATA / "counties.csv", encoding="utf-8")
+    print("  wrote panel_rows.csv and counties.csv (the audit trail)")
 
 
 if __name__ == "__main__":
