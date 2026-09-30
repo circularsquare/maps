@@ -69,7 +69,7 @@ def main():
     w_in, h_in = (float(v) for v in args.sheet.lower().split("x"))
     f = fr.fit_sheet(lon, lat, 0.0, w_in, h_in, pad_km=args.pad_km)
 
-    vmax = max(v["value"] for v in feats.values())
+    vmax = D.WIDTH_REF
     lo, hi = args.min_width, args.max_width
     widths_m = {k: (0.0 if v["value"] < 0.5
                     else lo + (hi - lo) * (v["value"] / vmax) ** args.width_gamma) * f.m_per_inch
@@ -92,14 +92,18 @@ def main():
     joints = ribbons.joint_normals(runs, node_runs, xy)
     nudges = ribbons.load_nudges(HERE / "nudges.json")
     forced, dropped = ribbons.nudge_sets(nudges)
-    cs = chains.build(runs, offs, xy, joints, forced=forced, dropped=dropped)
+    cs = chains.build(runs, offs, xy, joints, forced=forced, dropped=dropped,
+                      frozen=nudges["ctrl"])
 
     st = ribbons.station_totals(data, None)
     sval = np.array([s[2] for s in st])
     sr = (args.bubble_min + (args.bubble_max - args.bubble_min)
           * np.sqrt(sval / sval.max())) * f.m_per_inch
     sx, sy = fr.project(np.array([s[0] for s in st]), np.array([s[1] for s in st]), 0.0)
-    stations = [[round(float(sx[i]), 1), round(float(sy[i]), 1), round(float(sr[i]), 1)]
+    # [x, y, r, complex id, name]; positions are unmoved, the editor applies
+    # the "stations" section of nudges.json itself
+    stations = [[round(float(sx[i]), 1), round(float(sy[i]), 1), round(float(sr[i]), 1),
+                 st[i][4], st[i][3]]
                 for i in range(len(st))]
 
     # a backdrop so it is possible to tell where you are

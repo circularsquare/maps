@@ -55,7 +55,7 @@ THEMES = {
     # street grid on the sheet, so the shoreline is the only thing telling a
     # reader which borough they are looking at.
     "dark": {"land": "#15171a", "water": "#0e1520", "coast": "#313b47",
-             "bubble": "#e6ebf2", "bubble_alpha": 0.80, "bubble_edge": None},
+             "bubble": "#e6ebf2", "bubble_alpha": 0.74, "bubble_edge": None},
     "light": {"land": "#f5f2ec", "water": "#dde6ee", "coast": "#9dafbd",
               "bubble": "#ffffff", "bubble_alpha": 0.75,
               "bubble_edge": "#1b2027"},
@@ -141,7 +141,7 @@ def build_ribbons(f, args, feats):
     """
     runs, node_runs, graph = ribbons.build_runs(feats)
 
-    vmax = max(fv["value"] for fv in feats.values())
+    vmax = D.WIDTH_REF
     lo, hi = args.min_width, args.max_width
     widths_in = {k: 0.0 if fv["value"] < 0.5
                  else lo + (hi - lo) * (fv["value"] / vmax) ** args.width_gamma
@@ -168,9 +168,10 @@ def build_ribbons(f, args, feats):
     joints = ribbons.joint_normals(runs, node_runs, xy)
 
     nudges = (ribbons.load_nudges(HERE / "nudge" / "nudges.json") if args.nudges
-              else {"move": {}, "add": set(), "drop": set()})
+              else {"move": {}, "add": set(), "drop": set(), "ctrl": set()})
     forced, dropped = ribbons.nudge_sets(nudges)
-    cs = chains.build(runs, offs, xy, joints, forced=forced, dropped=dropped)
+    cs = chains.build(runs, offs, xy, joints, forced=forced, dropped=dropped,
+                      frozen=nudges["ctrl"])
     report = ribbons.edit_report(nudges, cs)
     if report:
         print(report)
@@ -212,6 +213,20 @@ def render_bubbles(f, W, H, scale, out, args, data):
     lat = np.array([s[1] for s in st])
     val = np.array([s[2] for s in st])
     rx, ry = fr.project(lon, lat, f.rot)
+
+    # hand moves from the editor, keyed by complex id
+    if args.nudges:
+        smoves = ribbons.load_nudges(HERE / "nudge" / "nudges.json")["stations"]
+        ids = [s[4] for s in st]
+        for i, cid in enumerate(ids):
+            d = smoves.get(cid)
+            if d is not None:
+                rx[i] += d[0]
+                ry[i] += d[1]
+        lost = len(set(smoves) - set(ids))
+        if smoves:
+            print(f"  station edits: {len(smoves) - lost} moved"
+                  + (f"; {lost} no longer match a station" if lost else ""))
 
     # area proportional to boardings, as on the interactive map
     r_in = args.bubble_min + (args.bubble_max - args.bubble_min) * np.sqrt(val / val.max())

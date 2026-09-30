@@ -1,0 +1,68 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<osm version="0.6" generator="handwritten fixture">
+  <node id="1" lat="35.6812" lon="139.7671"/>
+  <node id="2" lat="35.6850" lon="139.7700"/>
+  <node id="3" lat="35.6900" lon="139.7750"/>
+  <node id="10" lat="35.6812" lon="139.7671">
+    <tag k="railway" v="station"/>
+    <tag k="name" v="東京"/>
+    <tag k="name:en" v="Tokyo"/>
+    <tag k="operator" v="JR East"/>
+  </node>
+  <node id="11" lat="35.6900" lon="139.7750">
+    <tag k="public_transport" v="stop_position"/>
+    <tag k="railway" v="stop"/>
+    <tag k="name" v="神田"/>
+    <tag k="name:en" v="Kanda"/>
+  </node>
+  <node id="12" lat="35.7000" lon="139.7800">
+    <tag k="highway" v="crossing"/>
+  </node>
+  <way id="100">
+    <nd ref="1"/>
+    <nd ref="2"/>
+    <nd ref="3"/>
+    <tag k="railway" v="rail"/>
+    <tag k="name" v="山手線"/>
+    <tag k="usage" v="main"/>
+    <tag k="electrified" v="contact_line"/>
+  </way>
+  <way id="101">
+    <nd ref="2"/>
+    <nd ref="3"/>
+    <tag k="railway" v="abandoned"/>
+  </way>
+  <way id="102">
+    <nd ref="1"/>
+    <tag k="railway" v="rail"/>
+  </way>
+  <way id="103">
+    <nd ref="1"/>
+    <nd ref="2"/>
+    <tag k="railway" v="platform"/>
+  </way>
+  <relation id="200">
+    <member type="node" ref="10" role="stop"/>
+    <member type="node" ref="11" role="stop"/>
+    <member type="way" ref="100" role=""/>
+    <tag k="type" v="route"/>
+    <tag k="route" v="train"/>
+    <tag k="name" v="山手線"/>
+    <tag k="ref" v="JY"/>
+    <tag k="colour" v="#9ACD32"/>
+    <tag k="operator" v="JR East"/>
+  </relation>
+  <relation id="201">
+    <member type="relation" ref="200" role=""/>
+    <tag k="type" v="route_master"/>
+    <tag k="route_master" v="train"/>
+    <tag k="name" v="山手線"/>
+    <tag k="ref" v="JY"/>
+  </relation>
+  <relation id="202">
+    <member type="way" ref="100" role=""/>
+    <tag k="type" v="route"/>
+    <tag k="route" v="bus"/>
+    <tag k="name" v="a bus that must not appear"/>
+  </relation>
+</osm>

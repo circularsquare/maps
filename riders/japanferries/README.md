@@ -6,6 +6,53 @@ thickness ∝ passengers per day, at the rail map's own width scale, and possibl
 port bubbles. It would load the way the Korea overlay does, from
 `../japanferries/data/`, fetched only when switched on.
 
+## Status — parked 2026-09-30
+
+Data collection is done and reproducible; nothing is drawn yet. Every script below re-runs
+from `raw/` in about a minute, verified on the day this was parked.
+
+**To pick it up, in order**
+
+1. Settle the open decisions below. They set what the layer can honestly show.
+2. **Join the route figures to the route lines — nothing does this yet.**
+   `data/route_figures.csv` names routes the way each source writes them (石垣／竹富,
+   苫小牧～八戸), while `data/osm_ferry_ways.geojson` carries the port names the matcher
+   worked out. Match on the pair of port names, with a curated override table for the rest,
+   the way `build_names.py` does it in japanriders.
+3. Turn figures into thickness: passenger-km ÷ route km ÷ 365 where passenger-km exists
+   (Okinawa only so far), otherwise annual passengers ÷ 365. Decide what to do with figures
+   that cover a corridor (long-distance ferries) or a whole island (Iki, Tsushima, Goto)
+   rather than one route.
+4. Draw it in japanriders' `index.html`, reading `../japanferries/data/` the way the Korea
+   overlay reads `../koreariders/data/`.
+
+**Open decisions** (put to Anita 2026-09-15, not yet answered)
+
+- Hub ports — Takamatsu, Hiroshima, Kagoshima, Naha — serve many routes at once, and no
+  published figure splits their port total by route. Proposal: draw routes that have a real
+  figure at true thickness and leave the rest as thin grey "no figure" lines, the way
+  japanrail treats unmeasured track, rather than splitting a port total by sailings.
+- Sightseeing boats are excluded, except Miyajima, which is transport. That is what the code
+  does now.
+- Re-run the regions the search cap cut short (Chugoku, Shikoku, Kinki, Kanagawa/Chiba)?
+  That is where the missing Seto Inland Sea routes are, and it needs
+  `CLAUDE_CODE_MAX_WEB_SEARCHES_PER_SESSION` raised first.
+- `raw/` is 24 MB and committed. Everything in it is re-downloadable from the URLs in this
+  file and in `sources/*.csv`, so it can leave the repo with
+  `git rm -r --cached riders/japanferries/raw` plus an ignore rule.
+
+**Loose ends**
+
+- 野伏 (東京, 61,864) is the one port that could not be placed — probably 式根島's port,
+  unconfirmed. Add it to `OVERRIDES` in `geocode_ports.py` once someone checks.
+- Rows in `sources/*.csv` with `needs_download` = yes are Excel files nobody opened: 18 of
+  them, mostly prefecture and city yearbooks.
+- Flags to respect when modelling: rows marked SUBSET (Ago Bay counts tourists only), island
+  and corridor totals sitting in the `route` column, and 来島者数 rows that count arrivals
+  only (both directions are about double).
+- Hiroshima is the weakest prefecture, and its subsidy sheets will not help: they target
+  sailings, not riders.
+
 ## Why it takes assembling
 
 No national per-route table is published. Every operator files a yearly
@@ -51,7 +98,7 @@ route.
 | `parse_ports.py` | `raw/port2024_koushu_t2.xlsx`, `raw/port2024_otsushu_t2.xlsx` (e-Stat 港湾統計 2024, 第2部/第3部 第2表) | `data/ports_2024.csv` | 375 ports (123 major, 252 minor). Port sums equal the published 総計 内 exactly |
 | `geocode_ports.py` | the above + `raw/C02-14/` (国土数値情報 C02 港湾, 2014) | `data/ports_2024.geojson` | 374 placed. Three same-named ports resolved by municipality code in `OVERRIDES`. 野伏 (東京, 61,864) is not in C02 and is unplaced — probably 式根島's port, unconfirmed |
 | `parse_flows.py` | `raw/flow_fy2024_t2.xlsx` (旅客船 sheet), `raw/flow_fy2024_t3.xlsx` (航送船) | `data/flows_fy2024.csv` | Prefecture level, thousands |
-| `osm_ferries.overpassql` | Overpass | `raw/osm_ferries.json` | route=ferry ways + relations in a Japan bbox (Korean, Chinese, Russian lines included, filtered later). `raw/osm_ferries_mirror.json` is the same query from a mirror. Terminals: `nwr["amenity"="ferry_terminal"]; out center tags;` in the same bbox → `raw/osm_ferry_terminals.json` |
+| `osm_ferries.overpassql` | Overpass | `raw/osm_ferries.json` | route=ferry ways + relations in a Japan bbox (Korean, Chinese, Russian lines included, filtered later). Terminals come from a second query, `nwr["amenity"="ferry_terminal"]; out center tags;` in the same bbox → `raw/osm_ferry_terminals.json`. Overpass needs a User-Agent and answers "too busy" to a query that asks for a long timeout |
 | `match_osm_ports.py` | OSM ways + terminals, ports | `data/osm_ferry_ways.geojson` | Joins ways into routes and ties route ends to statistics ports |
 | `manual_sources.py` | `raw/dl/` | `sources/manual.csv` | Nagasaki port boardings + landings per route (CY2013–2017, CY2021–2025), Akashi–Iwaya (FY2015–FY2021), Tokyo Bay Ferry at 浜金谷 (CY2024, Chiba port yearbook) and 久里浜港's scheduled-route total (CY2018–2022, Yokosuka yearbook) |
 | `merge_sources.py` | `sources/*.csv` | `data/route_figures.csv` | One table with a `region` column and parsed numbers; prints per-region coverage and suspect rows |

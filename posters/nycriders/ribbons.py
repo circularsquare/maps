@@ -115,24 +115,22 @@ def load_features(stats_path, hour=None):
             return sum(h[0] for h in bh)
         return bh[hour][0]
 
-    feats = {}
+    # A folded express is extra trains on the same track, so it adds to its
+    # base route, but only within one direction. The stripe then shows the
+    # busier direction. Doing both at once used to add the express's two
+    # directions on top of the local's busier one, which put the 6/7/F 17-27%
+    # too high; the 7 in Jackson Heights read 140k where it is 111k.
+    feats, per_dir = {}, {}
     for seg in data["segments"]:
         route = palette.STATIC_FOLD.get(seg["route"], seg["route"])
         a, b = sorted((seg["from"], seg["to"]))
         key = f"{route}|{a}|{b}"
-        v = value_of(seg)
-        f = feats.get(key)
-        if f is None:
-            feats[key] = {"route": route, "coords": seg["coords"], "value": v,
+        per_dir[(key, seg["from"])] = per_dir.get((key, seg["from"]), 0.0) + value_of(seg)
+        if key not in feats:
+            feats[key] = {"route": route, "coords": seg["coords"], "value": 0.0,
                           "from": a, "to": b}
-        else:
-            # both directions of the same route, and any folded express: the
-            # stripe shows the busier direction, but a folded express is extra
-            # trains on the same track, so it adds
-            if seg["route"] in palette.STATIC_FOLD:
-                f["value"] += v
-            else:
-                f["value"] = max(f["value"], v)
+    for (key, _), v in per_dir.items():
+        feats[key]["value"] = max(feats[key]["value"], v)
     apply_welds(feats)
     for f in feats.values():
         f["coords"] = densify(f["coords"])
@@ -165,8 +163,9 @@ def densify(coords, max_m=DENSIFY_M):
 
 
 def station_totals(data, hour=None):
-    """(lon, lat, boardings) per complex — entries plus transfers, as the web
-    map's 'all' metric."""
+    """(lon, lat, boardings, name, complex id) per complex — entries plus
+    transfers, as the web map's 'all' metric. The complex id is what a hand
+    move of a bubble is keyed by."""
     out = []
     for s in data["stations"]:
         total = 0.0
@@ -176,7 +175,7 @@ def station_totals(data, hour=None):
             else:
                 total += arr[hour][0] + arr[hour][1]
         if total > 0:
-            out.append((s["lon"], s["lat"], total, s["name"]))
+            out.append((s["lon"], s["lat"], total, s["name"], s["complex_id"]))
     return out
 
 
@@ -524,12 +523,15 @@ def load_nudges(path):
 
     A bare object of key -> [dx, dy] is read as moves only, which is the format
     the first version of the editor wrote.
+
+    Station bubbles are separate: "stations" maps a complex id to [dx, dy] in
+    projected metres. A bubble is not on any route, so it has no route key.
     """
     p = Path(path)
     if not p.exists():
-        return {"move": {}, "add": set(), "drop": set()}
+        return {"move": {}, "add": set(), "drop": set(), "stations": {}, "ctrl": set()}
     raw = json.loads(p.read_text(encoding="utf-8"))
-    if "move" not in raw and "add" not in raw and "drop" not in raw:
+    if not any(k in raw for k in ("move", "add", "drop", "stations")):
         raw = {"move": raw}
     return {
         "move": {k: np.array(v, float)
@@ -539,6 +541,11 @@ def load_nudges(path):
         # where each moved point sat when it was moved, so drift can be spotted
         "base": {k: np.array(v, float)
                  for k, v in (raw.get("base") or {}).items() if "|" in k},
+        "stations": {int(k): np.array(v, float)
+                     for k, v in (raw.get("stations") or {}).items()},
+        # every control point as of the editor's last save, so the sheet uses
+        # exactly the points the editor showed (see chains._make_chain)
+        "ctrl": {tuple(k.split("|", 1)) for k in (raw.get("ctrl") or []) if "|" in k},
     }
 
 

@@ -1,0 +1,141 @@
+# noritetsu
+
+A map of every passenger rail line, and a record of the ones you have ridden. To live at
+anita.garden/noritetsu. `spec.md` is the design and §13 is the todo, `HANDOFF.md` is how to
+pick the project up and who owns which files when two people work on it at once, and this
+file is how to run it and what state it is in.
+
+**Japan, and Switzerland as data.** The pipeline is region-by-region. Switzerland is built
+from the federal network register (`schienennetz.py`) and checks out against published
+lengths, but the app is still hard-coded to Japan; `HANDOFF.md` lists what it needs.
+
+## Run
+
+```powershell
+python serve.py                 # http://localhost:8767
+```
+
+`serve.py` rather than `python -m http.server` because a .pmtiles archive is read over HTTP
+range requests, and SimpleHTTPRequestHandler ignores `Range` and answers 200 with the whole
+file. pmtiles.js reads that as a broken server and the map comes up with a basemap and no
+rail on it, which looks exactly like a bad build.
+
+## Build
+
+```powershell
+python extract.py --region jp --pbf data/raw/japan-260928.osm.pbf   # 3.5 min
+python inspect_region.py --region jp                                # is this extract any good
+python build_model.py --region jp --register n02:data/raw/N02-24_GML.zip   # 90 s
+python build_tiles.py --region jp                                   # 2 min -> dist/data/jp.pmtiles
+python check_model.py --region jp                                   # built vs published lengths
+python -m unittest discover -s tests
+
+python extract.py --region ch --pbf data/raw/switzerland-260929.osm.pbf   # 1 min
+python build_model.py --region ch --register schienennetz:data/raw/schienennetz_2056_de.gdb.zip
+python build_tiles.py --region ch                                         # 30 s, 3.0 MB
+python check_model.py --region ch
+```
+
+**Tiles come after the model**: `build_tiles.py` reads each piece of track's line colour
+from `build_model.py`'s output. Run before it, the tiles build with kind colours only.
+
+Switzerland's register wants `data/raw/ch_servicepoints.csv` beside the network file; both
+URLs are in the docstring of `schienennetz.py`.
+
+The `.osm.pbf` comes from Geofabrik (`https://download.geofabrik.de/asia/japan-latest.osm.pbf`,
+2.5 GB) and is gitignored. Extraction needs `pip install --user osmium`. Both extracts were
+deleted after extracting on 2026-09-30; `data/proc/<region>/` keeps what came out of them.
+
+## What each step does
+
+- **extract.py** — three passes over the .pbf, writing raw material to `data/proc/<region>/`:
+  railway ways, rail route relations, stopping places, and coordinates for exactly the nodes
+  those reference. Three passes rather than one because pyosmium's node-location index costs
+  ~12 bytes for *every* node in the file — 2.4 GB for Japan, ~100 GB for a planet. Nothing here interprets the data, so re-deciding what a line is
+  never means re-reading the .pbf.
+- **build_tiles.py** — the faint all-lines background, as `dist/data/<region>.pmtiles`.
+  Japan: 10.5 MB, 11,104 tiles, z0–13; Switzerland 3.0 MB. Each piece of track carries
+  the colour of the line on it (`c`), read from `build_model.py`'s output.
+- **build_model.py** — lines, stations and sections, as `dist/data/<region>/`. With `--n02`
+  it builds the national register from `n02.py` and merges OSM onto it. Japan: 1,306 lines of
+  which **593 are register lines** (28,156 km), 9,112 stations, plus per-line geometry in
+  `geom/` fetched on demand and `ways.json` for resolving a click on track.
+- **probe_n02.py** — what is inside 国土数値情報 N02, the Japanese government's own railway
+  inventory. Not built on yet; see `spec.md` §12c for why it is going to be.
+- **inspect_region.py / check_model.py / probe_line.py** — the checks. `check_model.py
+  --coverage` reports how much of the network only a named train reaches, which is the
+  measure of how far OSM alone falls short. Run `check_model.py`
+  after any change to the model; it compares built line lengths against published operating
+  lengths and everything should stay within a couple of percent.
+
+## State
+
+Built and verified:
+
+- Extraction, tiling and the line model, run end to end on Japan. The pipeline is
+  region-agnostic; only `check_model.KNOWN` and one naming rule are Japan-specific.
+- The map: pan and zoom, LOD z0–z13, two palettes by mode, click a line or station.
+- Line lengths validated against published operating lengths — worst deviation 2% across
+  eleven lines.
+- Spatial crediting: riding one line completes the part of every other line sharing its
+  corridor. Riding the whole Yamanote credits 12.7 km of the Tokaido Main Line and some part
+  of 46 lines in total (`python check_model.py --region jp --shared 山手線`).
+- **The tracker.** Click a station or a line on the map, or search either, then tap where you
+  got on and off, on the diagram or on the map. Recorded with an optional date, and the
+  destination becomes the origin of the next leg. Ridden track is drawn over the map in each
+  line's own colour, and percentages are kept per line, per operator and overall. Rides live
+  in localStorage and export to / import from a JSON file. A journey can also be traced by
+  clicking its stations in order; a whole operator can be marked ridden at once; a ride can
+  go the other way round a loop; and every change can be undone (Ctrl+Z) and a ride's date
+  and note edited afterwards.
+
+Not built yet — see `spec.md` §13 for the full list:
+
+- Station-to-station routing (input mode 1), which needs a graph across lines rather than the
+  per-line one the strip diagram already uses.
+- The poster generator, and line detail panels.
+- **Regions beyond Japan and Switzerland.** 73 GB free as of 2026-09-30, and the ~90 GB a
+  world build needs is download rather than peak disk. `HANDOFF.md` says what a new region's
+  reader has to produce.
+
+## Things that cost a rebuild to learn
+
+- **A line's track is a graph, not a chain, and its sections come from an absorbing search.**
+  Merging double track end to end doubles a line's length; ordering stations from a terminus
+  breaks on loops. `n02.py` explains both, with the numbers they produced.
+- **Station bubbles must come from the model, not the tiles.** The tiles carry every station
+  node OSM has, which at a complex like Kita-Senju is one per operator stacked on top of each
+  other, and no way to tell which to click.
+- **Sections have to be cut at the finest granularity available.** Deriving them per variant
+  from each variant's own calling points double-counts shared track: the Tokaido Main Line
+  came out at 5,719 km against a published 590. `build_model.place_stations` explains it.
+- **Shared track has to be found geometrically, not by rail identity.** Fingerprinting the OSM
+  nodes a section runs over finds nothing between the Yamanote and the Tohoku Main Line — the
+  loop has its own pair of tracks thirty metres away. `build_model.build_credits`.
+- **Merge ways into chains before simplifying, or the world view is blank.** An OSM way is a
+  few hundred metres, which is sub-pixel at z0, so every one of them gets dropped.
+- **The basemap draws its own railways.** Six layers of them, in near-black, from the same
+  OSM data. They are hidden on load; left alone they read as a second ghost network.
+- **`['*', ['interpolate', ['zoom'], ...], factor]` is invalid MapLibre** and silently drops
+  the whole layer. `node tools/lint_map_expressions.js dist/index.html` catches it; run it on
+  every edit to index.html.
+- **Anchor added layers at the trailing label block**, not at the first symbol layer — in this
+  style that is a water label sitting before the roads, which buries the rail network.
+- **The console here is cp1252 and the data is not.** Scripts that print Japanese names
+  reconfigure stdout to UTF-8 first, or they die in a `print()` after all the work succeeded.
+
+## Sources
+
+- [OpenStreetMap](https://www.openstreetmap.org/copyright), ODbL — all rail geometry, stations,
+  lines and colours, via [Geofabrik](https://download.geofabrik.de/) extracts. Attribution is
+  on the map; a published derived database would have to be offered under ODbL too.
+- [OpenFreeMap](https://openfreemap.org/) / OpenMapTiles — basemap.
+- MapLibre GL JS 4.7.1 and pmtiles 3.2.0, pinned to match the other maps in this repo.
+- Published operating lengths (営業キロ) in `check_model.py` are the operators' own figures,
+  which is also what the Japanese line-completion hobby counts.
+- [国土数値情報 N02](https://nlftp.mlit.go.jp/ksj/gml/datalist/KsjTmplt-N02-v3_1.html) (MLIT),
+  Public Data Licence 1.0 — Japan's line register.
+- [Schienennetz](https://opendata.swiss/de/dataset/schienennetz) (BAV, via geo.admin.ch) and
+  the [service-point list](https://opentransportdata.swiss/en/cookbook/masterdata-cookbook/servicepoints/)
+  (opentransportdata.swiss) — Switzerland's line register and passenger stops. Open
+  government data; free use with the source named.

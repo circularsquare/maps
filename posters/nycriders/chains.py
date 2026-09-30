@@ -100,7 +100,7 @@ def _rdp(pts, keep, lo, hi, tol):
 
 
 def build(runs, offs, xy, joints, forced=frozenset(), dropped=frozenset(),
-          rdp_tol=RDP_TOL_M, max_span=MAX_SPAN_M):
+          frozen=frozenset(), rdp_tol=RDP_TOL_M, max_span=MAX_SPAN_M):
     """Per-route chains: the whole walk, plus which of its points are controls.
 
     A chain carries every vertex the route passes through, and `ctrl` says which
@@ -114,6 +114,8 @@ def build(runs, offs, xy, joints, forced=frozenset(), dropped=frozenset(),
     ones the hand-edit file has an opinion about, so re-running the automatic
     pass cannot orphan an edit. `dropped` is the reverse, for points deleted by
     hand; a chain's two ends are never dropped, since that would shorten it.
+    `frozen` is every control point as of the editor's last save; a chain with
+    any of them uses exactly those instead of thinning afresh.
     """
     pos = route_positions(runs, offs, xy, joints)
 
@@ -169,7 +171,8 @@ def build(runs, offs, xy, joints, forced=frozenset(), dropped=frozenset(),
                 if len(walk) < 2:
                     continue
                 chains.append(_make_chain(route, walk, pos, width, boundary,
-                                          forced, dropped, rdp_tol, max_span))
+                                          forced, dropped, frozen, rdp_tol,
+                                          max_span))
     return [c for c in chains if c]
 
 
@@ -221,36 +224,52 @@ def _continue(route, prev, cur, nb, used, pos):
     return best
 
 
-def _make_chain(route, walk, pos, width, boundary, forced, dropped,
+def _make_chain(route, walk, pos, width, boundary, forced, dropped, frozen,
                 rdp_tol, max_span):
     pts = np.array([pos[(route, k)] for k in walk], float)
     n = len(walk)
     keep = [False] * n
     keep[0] = keep[-1] = True
-    for i, k in enumerate(walk):
-        if k in boundary or (route, k) in forced:
+
+    # The control points the editor last saved, when there are any on this
+    # chain, are used exactly as they are. Picking them afresh here is not
+    # stable: the thinning below anchors on the hand edits, so every save
+    # changed which automatic points it chose, and the sheet grew wiggles
+    # through points the editor was not showing. A width change moved them
+    # too. Only a chain the editor has never saved falls back to thinning.
+    fz = [i for i, k in enumerate(walk) if (route, k) in frozen]
+    if fz:
+        for i in fz:
             keep[i] = True
+    else:
+        for i, k in enumerate(walk):
+            if k in boundary or (route, k) in forced:
+                keep[i] = True
 
-    # thin the interior of each kept-to-kept stretch down to the shape
-    idx = [i for i in range(n) if keep[i]]
-    for a, b in zip(idx, idx[1:]):
-        _rdp(pts, keep, a, b, rdp_tol)
-
-    # ...then make sure nothing is left bare over a long distance
-    while True:
+        # thin the interior of each kept-to-kept stretch down to the shape
         idx = [i for i in range(n) if keep[i]]
-        added = False
         for a, b in zip(idx, idx[1:]):
-            if b <= a + 1:
-                continue
-            d = float(np.hypot(*(pts[b] - pts[a])))
-            if d > max_span:
-                keep[(a + b) // 2] = True
-                added = True
-        if not added:
-            break
+            _rdp(pts, keep, a, b, rdp_tol)
 
-    # hand deletions win over everything except the chain's own ends
+        # ...then make sure nothing is left bare over a long distance
+        while True:
+            idx = [i for i in range(n) if keep[i]]
+            added = False
+            for a, b in zip(idx, idx[1:]):
+                if b <= a + 1:
+                    continue
+                d = float(np.hypot(*(pts[b] - pts[a])))
+                if d > max_span:
+                    keep[(a + b) // 2] = True
+                    added = True
+            if not added:
+                break
+
+    # moved and added points are always on; hand deletions win over everything
+    # except the chain's own ends
+    for i, k in enumerate(walk):
+        if (route, k) in forced:
+            keep[i] = True
     for i in range(1, n - 1):
         if (route, walk[i]) in dropped:
             keep[i] = False

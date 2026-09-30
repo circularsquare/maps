@@ -40,6 +40,11 @@
 <div id="ui">
   <h1>nudge</h1>
   <div class="row">
+    <label>edit</label>
+    <button id="modeLines" class="on">lines</button>
+    <button id="modeStations">stations</button>
+  </div>
+  <div class="row">
     <label>spread</label>
     <input id="radius" type="range" min="0" max="500" step="10" value="0">
     <span class="val" id="radiusV">point</span>
@@ -64,9 +69,13 @@
 <div id="badge">—</div>
 
 <div id="hint">
-  drag a point to move <b>that route only</b> · right-click a line to <b>add</b> a point,
+  drag a point to move <b>that route only</b> · drag empty space to <b>box-select</b>,
+  <kbd>shift</kbd>+drag to add to it, then drag any selected point to shift them all ·
+  <kbd>esc</kbd> clears · right-click a line to <b>add</b> a point,
   a point to <b>delete</b> it · <kbd>space</kbd>+drag or right-<i>drag</i> to pan · scroll to zoom ·
-  <kbd>[</kbd> <kbd>]</kbd> spread · <kbd>s</kbd> solo · <kbd>ctrl</kbd>+<kbd>z</kbd> undo
+  <kbd>[</kbd> <kbd>]</kbd> spread · <kbd>s</kbd> solo · <kbd>ctrl</kbd>+<kbd>z</kbd> undo ·
+  <kbd>b</kbd> switches to <b>stations</b>, where the same drag and box moves bubbles
+  and right-click resets one
 </div>
 
 <script>
@@ -98,6 +107,12 @@ let D = null;
 let moves = new Map();          // "route|nodeKey" -> [dx, dy] metres
 let added = new Set();          // vertices promoted to control points by hand
 let dropped = new Set();        // control points demoted by hand
+// Station bubbles are not on any route, so they are keyed by complex id and
+// edited in their own mode: every station is also a route control point, and
+// one click could not otherwise say which of the two you meant.
+let stationMoves = new Map();   // complex id -> [dx, dy] metres
+let mode = 'lines';             // or 'stations'
+let stIdx = new Map();          // complex id -> index into D.stations
 let undoStack = [];
 let baseImg = null;
 let showPoints = true, showBase = true, solo = null;
@@ -140,13 +155,13 @@ function ctrlIdx(ci) {
   return (ctrlCache[ci] = [...set].sort((a, b) => a - b));
 }
 
-function spline(P) {
+function spline(P, ns = SAMPLES) {
   const n = P.length;
   if (n < 2) return { pts: P, owner: [0] };
   if (n === 2) {
     const pts = [], owner = [];
-    for (let j = 0; j <= SAMPLES; j++) {
-      const t = j / SAMPLES;
+    for (let j = 0; j <= ns; j++) {
+      const t = j / ns;
       pts.push([P[0][0] + t * (P[1][0] - P[0][0]), P[0][1] + t * (P[1][1] - P[0][1])]);
       owner.push(0);
     }
@@ -159,9 +174,9 @@ function spline(P) {
   for (let i = 0; i < n - 1; i++) {
     const p0 = ext[i], p1 = ext[i + 1], p2 = ext[i + 2], p3 = ext[i + 3];
     const t0 = 0, t1 = knot(p0, p1, t0), t2 = knot(p1, p2, t1), t3 = knot(p2, p3, t2);
-    const steps = i === n - 2 ? SAMPLES : SAMPLES - 1;
+    const steps = i === n - 2 ? ns : ns - 1;
     for (let j = 0; j <= steps; j++) {
-      const t = t1 + (t2 - t1) * j / SAMPLES;
+      const t = t1 + (t2 - t1) * j / ns;
       const mix = (a, b, ta, tb) => [
         (tb - t) / (tb - ta) * a[0] + (t - ta) / (tb - ta) * b[0],
         (tb - t) / (tb - ta) * a[1] + (t - ta) / (tb - ta) * b[1]];
@@ -263,36 +278,69 @@ function draw() {
   }
   ctx.globalAlpha = 1;
 
+  const isSel = k => selection.has(k) || (box && box.keys.has(k));
+  const stMode = mode === 'stations';
   ctx.fillStyle = D.theme === 'dark' ? 'rgba(230,235,242,.75)' : 'rgba(255,255,255,.7)';
-  for (const s of D.stations) {
-    const r = s[2] * view.k;
-    if (r < 0.6) continue;
-    ctx.beginPath(); ctx.arc(sx(s[0]), sy(s[1]), r, 0, 6.2832); ctx.fill();
+  for (let i = 0; i < D.stations.length; i++) {
+    const r = D.stations[i][2] * view.k;
+    if (r < 0.6 && !stMode) continue;
+    const p = stPos(i);
+    ctx.beginPath(); ctx.arc(sx(p[0]), sy(p[1]), Math.max(r, 0.6), 0, 6.2832); ctx.fill();
+  }
+  // in station mode every bubble gets a ring, so the small ones can be found and
+  // grabbed; the ring carries the edit state, as it does for route points
+  if (stMode) {
+    for (let i = 0; i < D.stations.length; i++) {
+      const s = D.stations[i], p = stPos(i);
+      const X = sx(p[0]), Y = sy(p[1]), r = Math.max(s[2] * view.k, 3);
+      if (X < -r || Y < -r || X > innerWidth + r || Y > innerHeight + r) continue;
+      const sel = isSel(s[3]), moved = stationMoves.has(s[3]);
+      ctx.beginPath(); ctx.arc(X, Y, r, 0, 6.2832);
+      ctx.lineWidth = sel ? 2.2 : moved ? 1.8 : 1;
+      ctx.strokeStyle = sel ? '#1f5fd6' : moved ? '#d0021b' : 'rgba(20,28,40,.6)';
+      ctx.stroke();
+    }
   }
 
-  if (showPoints && view.k > 0.06) {
+  // zoomed out past where points are drawn, the selected ones still are, so a
+  // selection made up close does not vanish when you pull back to move it
+  const zoomedIn = view.k > 0.06;
+  if (!stMode && showPoints && (zoomedIn || selection.size || box)) {
     for (let i = 0; i < D.chains.length; i++) {
       const c = D.chains[i];
       if (solo && c.route !== solo) continue;
       for (const j of ctrlIdx(i)) {
+        const k = keyOf(c, j);
+        const sel = isSel(k);
+        if (!zoomedIn && !sel) continue;
         const p = ptOf(c, j);
         const X = sx(p[0]), Y = sy(p[1]);
         if (X < -12 || Y < -12 || X > innerWidth + 12 || Y > innerHeight + 12) continue;
-        const k = keyOf(c, j);
         const isNew = added.has(k), isMoved = moves.has(k);
         // fill is the route's own colour, so a point says which line it belongs
         // to without having to hover it; the ring carries the edit state
-        ctx.beginPath(); ctx.arc(X, Y, isMoved || isNew ? 4.2 : 2.9, 0, 6.2832);
+        ctx.beginPath(); ctx.arc(X, Y, sel ? 4.6 : isMoved || isNew ? 4.2 : 2.9, 0, 6.2832);
         ctx.fillStyle = c.color;
         ctx.fill();
-        ctx.lineWidth = isMoved || isNew ? 1.8 : 1;
-        ctx.strokeStyle = isMoved ? '#d0021b' : isNew ? '#1f7a3f' : 'rgba(20,28,40,.85)';
+        ctx.lineWidth = sel ? 2.2 : isMoved || isNew ? 1.8 : 1;
+        ctx.strokeStyle = sel ? '#1f5fd6' : isMoved ? '#d0021b' : isNew ? '#1f7a3f' : 'rgba(20,28,40,.85)';
         ctx.stroke();
       }
     }
   }
 
-  if (drag && drag.group.length > 1) {
+  if (box) {
+    const x = Math.min(box.x0, box.x1), y = Math.min(box.y0, box.y1);
+    const w = Math.abs(box.x1 - box.x0), h = Math.abs(box.y1 - box.y0);
+    ctx.fillStyle = 'rgba(31,95,214,.08)';
+    ctx.fillRect(x, y, w, h);
+    ctx.strokeStyle = 'rgba(31,95,214,.8)'; ctx.lineWidth = 1;
+    ctx.setLineDash([4, 3]);
+    ctx.strokeRect(x + .5, y + .5, w, h);
+    ctx.setLineDash([]);
+  }
+
+  if (drag && !drag.many && drag.group.length > 1) {
     ctx.strokeStyle = 'rgba(40,90,200,.5)'; ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.arc(sx(drag.origin[0]), sy(drag.origin[1]), spread * view.k, 0, 6.2832);
@@ -315,6 +363,23 @@ function nearestPoint(mx, my, maxPx) {
       const dx = p[0] - X, dy = p[1] - Y, d = dx * dx + dy * dy;
       if (d < bd) { bd = d; best = [i, j]; }
     }
+  }
+  return best;
+}
+
+function stPos(i) {
+  const s = D.stations[i], d = stationMoves.get(s[3]);
+  return d ? [s[0] + d[0], s[1] + d[1]] : [s[0], s[1]];
+}
+
+// The bubble under the cursor, or the nearest one within a few pixels of a small
+// one. Where bubbles overlap, the one whose centre is closest wins.
+function nearestStation(mx, my) {
+  let best = null, bd = Infinity;
+  for (let i = 0; i < D.stations.length; i++) {
+    const p = stPos(i);
+    const d = Math.hypot(sx(p[0]) - mx, sy(p[1]) - my);
+    if (d <= Math.max(D.stations[i][2] * view.k, 10) && d < bd) { bd = d; best = D.stations[i][3]; }
   }
   return best;
 }
@@ -345,22 +410,43 @@ function lineUnder(mx, my, slackPx) {
   return -1;
 }
 
-// Nearest vertex on one chain that is NOT already a control point — the thing a
-// right-click promotes. Skipping the ones already promoted matters: vertices sit
-// every 60 m or so, so the closest one to a click is often an existing point
-// that is simply too far away to have been picked as a hit, and offering
-// "already a point here" instead of adding one would make the tool feel broken.
-function nearestFreeVertex(ci, mx, my) {
-  const c = D.chains[ci], X = wx(mx), Y = wy(my);
-  const taken = new Set(ctrlIdx(ci));
-  let best = -1, bd = Infinity;
-  for (let j = 0; j < c.keys.length; j++) {
-    if (taken.has(j)) continue;
-    const p = ptOf(c, j);
+// Where a right-click adds a point: ON THE CURVE AS IT IS DRAWN NOW. Adding a
+// point must not change the line's shape, only moving it should. Promoting the
+// nearest vertex where it lay did change it: a vertex's own position is where
+// the automatic pass put it, so wherever the neighbours had been moved the line
+// got pulled back to the automatic path.
+//
+// So the curve is sampled finely, the sample nearest the click says which span
+// it is in and how far along, and the vertex nearest that fraction of the span
+// (measured along the route's own vertices) is promoted and given a move that
+// puts it on that sample. Every vertex strictly inside a span is free, so there
+// is always one unless the span's two ends are neighbours.
+const ADD_SAMPLES = 64;
+function pointOnCurve(ci, mx, my) {
+  const c = D.chains[ci], idx = ctrlIdx(ci);
+  const { pts, owner } = spline(idx.map(i => ptOf(c, i)), ADD_SAMPLES);
+  const X = wx(mx), Y = wy(my);
+  let s = 0, bd = Infinity;
+  pts.forEach((p, i) => {
     const d = (p[0] - X) ** 2 + (p[1] - Y) ** 2;
-    if (d < bd) { bd = d; best = j; }
+    if (d < bd) { bd = d; s = i; }
+  });
+  const m = owner[s];
+  const a = idx[m], b = idx[m + 1];
+  if (b === undefined || b - a < 2) return null;
+  const frac = (s - owner.indexOf(m)) / ADD_SAMPLES;
+  const cum = [0];
+  for (let j = a + 1; j <= b; j++) {
+    cum.push(cum[cum.length - 1] +
+             Math.hypot(c.pos[j][0] - c.pos[j - 1][0], c.pos[j][1] - c.pos[j - 1][1]));
   }
-  return best;
+  const target = frac * cum[cum.length - 1];
+  let best = -1, bdist = Infinity;
+  for (let j = a + 1; j < b; j++) {
+    const d = Math.abs(cum[j - a] - target);
+    if (d < bdist) { bdist = d; best = j; }
+  }
+  return best < 0 ? null : { j: best, at: pts[s] };
 }
 
 // ---------------------------------------------------------------------------
@@ -368,7 +454,53 @@ function nearestFreeVertex(ci, mx, my) {
 // ---------------------------------------------------------------------------
 
 let spread = 0;
-let drag = null, panning = null, spaceDown = false;
+let drag = null, panning = null, box = null, spaceDown = false;
+
+// A selection is a set of point keys, across any number of routes. Dragging any
+// one of them moves every one by the same offset — a rigid shift, so a bundle of
+// parallel routes keeps its spacing. Spread does not apply to it.
+let selection = new Set();
+
+const routeOfKey = k => D.chains[byKey.get(k)[0][0]].route;
+
+function pointsInBox(b) {
+  const X0 = wx(Math.min(b.x0, b.x1)), X1 = wx(Math.max(b.x0, b.x1));
+  const Y0 = wy(Math.max(b.y0, b.y1)), Y1 = wy(Math.min(b.y0, b.y1));
+  const out = new Set();
+  const inside = p => p[0] >= X0 && p[0] <= X1 && p[1] >= Y0 && p[1] <= Y1;
+  if (mode === 'stations') {
+    for (let i = 0; i < D.stations.length; i++) if (inside(stPos(i))) out.add(D.stations[i][3]);
+    return out;
+  }
+  for (let i = 0; i < D.chains.length; i++) {
+    const c = D.chains[i];
+    if (solo && c.route !== solo) continue;
+    for (const j of ctrlIdx(i)) {
+      const p = ptOf(c, j);
+      if (p[0] >= X0 && p[0] <= X1 && p[1] >= Y0 && p[1] <= Y1) out.add(keyOf(c, j));
+    }
+  }
+  return out;
+}
+
+// Drop keys that are no longer points you can see: demoted by a delete, reset
+// or undo, or hidden by solo. Otherwise a drag would move things off-screen.
+function pruneSelection() {
+  if (mode === 'stations') return;     // a station never stops being one
+  for (const k of [...selection]) {
+    const at = byKey.get(k) || [];
+    const live = at.some(([ci, j]) => ctrlIdx(ci).includes(j));
+    if (!live || (solo && routeOfKey(k) !== solo)) selection.delete(k);
+  }
+}
+
+const selStatus = () => selection.size
+  ? `<b>${selection.size}</b> ${mode === 'stations' ? 'stations' : 'points'} selected · ` +
+    `drag one to move them all · <kbd>esc</kbd> clears`
+  : 'selection cleared';
+
+const stationName = id => D.stations[stIdx.get(id)][4];
+const copyMoves = m => new Map([...m].map(([k, v]) => [k, v.slice()]));
 let cursor = { x: innerWidth / 2, y: innerHeight / 2 };
 addEventListener('pointermove', e => { cursor = { x: e.clientX, y: e.clientY }; });
 
@@ -401,7 +533,7 @@ function chainsForKeys(keys) {
 }
 
 function pushUndo() {
-  undoStack.push({ moves: new Map([...moves].map(([k, v]) => [k, v.slice()])),
+  undoStack.push({ moves: copyMoves(moves), stations: copyMoves(stationMoves),
                    added: new Set(added), dropped: new Set(dropped) });
   if (undoStack.length > 100) undoStack.shift();
   document.getElementById('undo').disabled = false;
@@ -421,13 +553,29 @@ cv.addEventListener('pointerdown', e => {
     panning = { x: e.clientX, y: e.clientY, cx: view.cx, cy: view.cy };
     return;
   }
+  if (mode === 'stations') { stationDown(e); return; }
   const hit = nearestPoint(e.clientX, e.clientY, 12);
-  if (!hit) {
-    panning = { x: e.clientX, y: e.clientY, cx: view.cx, cy: view.cy };
+  // Empty space draws a box. Shift always draws one, adding to the selection —
+  // and a shift-click that never grows into a box toggles the point under it.
+  if (!hit || e.shiftKey) {
+    box = { x0: e.clientX, y0: e.clientY, x1: e.clientX, y1: e.clientY,
+            add: e.shiftKey, hit: hit && keyOf(D.chains[hit[0]], hit[1]), keys: new Set() };
     return;
   }
   pushUndo();
   const c = D.chains[hit[0]];
+  const hk = keyOf(c, hit[1]);
+  if (selection.has(hk) && selection.size > 1) {
+    const group = [...selection].map(k => [k, 1]);
+    drag = {
+      x: e.clientX, y: e.clientY, many: true, group,
+      base: new Map([...moves].map(([k, v]) => [k, v.slice()])),
+      chains: chainsForKeys(selection),
+    };
+    setStatus(`moving <b>${group.length}</b> selected points`);
+    return;
+  }
+  if (!selection.has(hk)) selection.clear();
   const group = groupFor(hit[0], hit[1], spread);
   drag = {
     x: e.clientX, y: e.clientY, route: c.route,
@@ -439,6 +587,25 @@ cv.addEventListener('pointerdown', e => {
   setStatus(`<b>${c.route}</b> · ${group.length} point${group.length > 1 ? 's' : ''}`);
 });
 
+// Same gestures as for route points: empty space or shift draws a box, a
+// selected bubble drags the whole selection, an unselected one drags alone.
+function stationDown(e) {
+  const id = nearestStation(e.clientX, e.clientY);
+  if (id === null || e.shiftKey) {
+    box = { x0: e.clientX, y0: e.clientY, x1: e.clientX, y1: e.clientY,
+            add: e.shiftKey, hit: id, keys: new Set() };
+    return;
+  }
+  pushUndo();
+  if (!selection.has(id)) selection.clear();
+  const ids = selection.has(id) ? [...selection] : [id];
+  drag = { x: e.clientX, y: e.clientY, stations: true, many: true, ids,
+           base: copyMoves(stationMoves) };
+  badge.textContent = ids.length > 1 ? `${ids.length} stations` : stationName(id);
+  setStatus(ids.length > 1 ? `moving <b>${ids.length}</b> stations`
+                           : `<b>${stationName(id)}</b>`);
+}
+
 cv.addEventListener('pointermove', e => {
   if (panning) {
     view.cx = panning.cx - (e.clientX - panning.x) / view.k;
@@ -446,8 +613,25 @@ cv.addEventListener('pointermove', e => {
     draw();
     return;
   }
+  if (box) {
+    box.x1 = e.clientX; box.y1 = e.clientY;
+    box.keys = pointsInBox(box);
+    draw();
+    return;
+  }
   if (!drag) return;
   const dx = (e.clientX - drag.x) / view.k, dy = -(e.clientY - drag.y) / view.k;
+  if (drag.stations) {
+    for (const id of drag.ids) {
+      const b = drag.base.get(id) || [0, 0];
+      const nx = b[0] + dx, ny = b[1] + dy;
+      if (Math.abs(nx) < 1e-6 && Math.abs(ny) < 1e-6) stationMoves.delete(id);
+      else stationMoves.set(id, [nx, ny]);
+    }
+    dirty = true;
+    draw();
+    return;
+  }
   for (const [key, w] of drag.group) {
     const b = drag.base.get(key) || [0, 0];
     const nx = b[0] + dx * w, ny = b[1] + dy * w;
@@ -465,9 +649,32 @@ function endDrag(e) {
     panning = null;
     if (moved < 4) { rightClick(e.clientX, e.clientY); return; }
   }
+  if (box) {
+    const moved = Math.hypot(box.x1 - box.x0, box.y1 - box.y0);
+    if (moved < 4) {
+      // a click, not a box: shift-click toggles a point, a plain click on
+      // empty space clears
+      if (box.add && box.hit != null) {
+        if (selection.has(box.hit)) selection.delete(box.hit); else selection.add(box.hit);
+      } else if (!box.add) selection.clear();
+    } else {
+      if (!box.add) selection.clear();
+      for (const k of box.keys) selection.add(k);
+    }
+    box = null;
+    setStatus(selStatus());
+    draw();
+    return;
+  }
   if (drag) {
     const d = Math.hypot(e.clientX - drag.x, e.clientY - drag.y) / view.k;
-    setStatus(`<b>${drag.route}</b> moved ${d.toFixed(0)} m · ${countEdits()} edits`);
+    setStatus(drag.stations
+      ? (drag.ids.length > 1 ? `moved <b>${drag.ids.length}</b> stations`
+                             : `<b>${stationName(drag.ids[0])}</b> moved`) +
+        ` ${d.toFixed(0)} m · ${countEdits()} edits`
+      : drag.many
+      ? `moved <b>${drag.group.length}</b> points ${d.toFixed(0)} m · ${countEdits()} edits`
+      : `<b>${drag.route}</b> moved ${d.toFixed(0)} m · ${countEdits()} edits`);
   }
   drag = null; panning = null;
   draw();
@@ -479,6 +686,18 @@ cv.addEventListener('pointercancel', endDrag);
 // "Add" promotes the nearest vertex the route already passes through, so a new
 // point lands exactly on the line and carries a stable key.
 function rightClick(mx, my) {
+  if (mode === 'stations') {
+    // a bubble has nothing to add or delete, so right-click puts it back
+    const id = nearestStation(mx, my);
+    if (id === null) { setStatus('no station under the cursor'); return; }
+    if (!stationMoves.has(id)) { setStatus(`<b>${stationName(id)}</b> has not been moved`); return; }
+    pushUndo();
+    stationMoves.delete(id);
+    dirty = true;
+    setStatus(`reset <b>${stationName(id)}</b> · ${countEdits()} edits`);
+    draw();
+    return;
+  }
   const hit = nearestPoint(mx, my, 11);
   if (hit) {
     const c = D.chains[hit[0]];
@@ -494,6 +713,7 @@ function rightClick(mx, my) {
     pushUndo();
     const k = keyOf(c, hit[1]);
     moves.delete(k);
+    selection.delete(k);
     // deleting a point you added is just an undo of the add; only a point the
     // automatic pass would put back needs recording as a deletion
     if (added.has(k)) added.delete(k);
@@ -508,11 +728,13 @@ function rightClick(mx, my) {
   const ci = lineUnder(mx, my, 3);
   if (ci < 0) { setStatus('no line under the cursor'); return; }
   const c = D.chains[ci];
-  const j = nearestFreeVertex(ci, mx, my);
-  if (j < 0) { setStatus(`<b>${c.route}</b> · every vertex here is already a point`); return; }
-  const k = keyOf(c, j);
+  const on = pointOnCurve(ci, mx, my);
+  if (!on) { setStatus(`<b>${c.route}</b> · every vertex here is already a point`); return; }
+  const k = keyOf(c, on.j), base = c.pos[on.j];
   pushUndo();
   dropped.delete(k); added.add(k);
+  const dx = on.at[0] - base[0], dy = on.at[1] - base[1];
+  if (Math.hypot(dx, dy) > 0.01) moves.set(k, [dx, dy]); else moves.delete(k);
   rebuild([ci]); buildOrder();
   dirty = true;
   badge.textContent = c.route;
@@ -536,6 +758,9 @@ addEventListener('keydown', e => {
   if (e.key === '[') setSpread(spread - 20);
   if (e.key === ']') setSpread(spread + 20);
   if (e.key.toLowerCase() === 's') toggleSolo();
+  if (e.key.toLowerCase() === 'b' && !e.ctrlKey && !e.metaKey)
+    setMode(mode === 'lines' ? 'stations' : 'lines');
+  if (e.key === 'Escape' && selection.size) { selection.clear(); setStatus(selStatus()); draw(); }
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); doUndo(); }
 });
 addEventListener('keyup', e => {
@@ -546,7 +771,23 @@ addEventListener('keyup', e => {
 // ui
 // ---------------------------------------------------------------------------
 
-const countEdits = () => moves.size + added.size + dropped.size;
+const countEdits = () => moves.size + added.size + dropped.size + stationMoves.size;
+
+// The selection is cleared on a switch: it holds route keys in one mode and
+// station ids in the other.
+function setMode(m) {
+  if (drag || box) return;
+  mode = m;
+  selection.clear();
+  document.getElementById('modeLines').classList.toggle('on', m === 'lines');
+  document.getElementById('modeStations').classList.toggle('on', m === 'stations');
+  setStatus(m === 'stations'
+    ? `editing <b>stations</b> · ${stationMoves.size} moved · <kbd>b</kbd> back to lines`
+    : `editing <b>lines</b> · <kbd>b</kbd> for stations`);
+  draw();
+}
+document.getElementById('modeLines').onclick = () => setMode('lines');
+document.getElementById('modeStations').onclick = () => setMode('stations');
 
 function setStatus(msg) {
   statusEl.innerHTML = msg + (dirty ? ' · <b>unsaved</b>' : '');
@@ -574,6 +815,7 @@ function toggleSolo() {
   b.textContent = solo || 'off';
   b.classList.toggle('on', !!solo);
   badge.textContent = solo || '—';
+  pruneSelection();
   draw();
 }
 document.getElementById('soloBtn').onclick = toggleSolo;
@@ -581,9 +823,10 @@ document.getElementById('soloBtn').onclick = toggleSolo;
 function doUndo() {
   if (!undoStack.length) return;
   const s = undoStack.pop();
-  moves = s.moves; added = s.added; dropped = s.dropped;
+  moves = s.moves; added = s.added; dropped = s.dropped; stationMoves = s.stations;
   document.getElementById('undo').disabled = !undoStack.length;
   rebuild(); buildOrder();
+  pruneSelection();
   dirty = true;
   setStatus(`${countEdits()} edits`);
   draw();
@@ -591,6 +834,27 @@ function doUndo() {
 document.getElementById('undo').onclick = doUndo;
 
 document.getElementById('clearNode').onclick = () => {
+  if (mode === 'stations') {
+    const ids = selection.size ? [...selection] : [];
+    if (!ids.length) { setStatus('select stations to reset, or right-click one'); return; }
+    pushUndo();
+    for (const id of ids) stationMoves.delete(id);
+    dirty = true;
+    setStatus(`reset <b>${ids.length}</b> stations · ${countEdits()} edits`);
+    draw();
+    return;
+  }
+  if (selection.size) {
+    pushUndo();
+    const keys = [...selection];
+    for (const k of keys) { moves.delete(k); added.delete(k); dropped.delete(k); }
+    rebuild(chainsForKeys(keys)); buildOrder();
+    pruneSelection();
+    dirty = true;
+    setStatus(`reset <b>${keys.length}</b> selected points · ${countEdits()} edits`);
+    draw();
+    return;
+  }
   const hit = nearestPoint(cursor.x, cursor.y, 40);
   if (!hit) { setStatus('nothing under the cursor'); return; }
   pushUndo();
@@ -616,13 +880,22 @@ document.getElementById('save').onclick = async () => {
       base[k] = [Math.round(p[0] * 10) / 10, Math.round(p[1] * 10) / 10];
     }
   }
-  const body = { move, base, add: [...added].sort(), drop: [...dropped].sort() };
+  const stations = {};
+  for (const [id, d] of stationMoves)
+    stations[id] = [Math.round(d[0] * 100) / 100, Math.round(d[1] * 100) / 100];
+  // Every control point exactly as shown, so render.py draws through these and
+  // not through whatever its own thinning would pick (chains._make_chain).
+  const ctrl = new Set();
+  D.chains.forEach((c, ci) => { for (const i of ctrlIdx(ci)) ctrl.add(keyOf(c, i)); });
+  const body = { move, base, add: [...added].sort(), drop: [...dropped].sort(), stations,
+                 ctrl: [...ctrl].sort() };
   try {
     const r = await fetch('save', { method: 'POST',
       headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
     if (!r.ok) throw new Error(await r.text());
     dirty = false;
-    setStatus(`saved ${moves.size} moved, ${added.size} added, ${dropped.size} deleted`);
+    setStatus(`saved ${moves.size} moved, ${added.size} added, ${dropped.size} deleted, ` +
+              `${stationMoves.size} stations moved`);
   } catch (err) {
     setStatus('save failed: ' + err.message + ' — is serve.py running?');
   }
@@ -637,12 +910,14 @@ document.getElementById('save').onclick = async () => {
   SAMPLES = (D.spline && D.spline.samples) || 10;
   try {
     const saved = await (await fetch('nudges.json?' + Date.now())).json();
-    const mv = saved.move || (saved.add || saved.drop ? {} : saved);
+    const mv = saved.move || (saved.add || saved.drop || saved.stations ? {} : saved);
     for (const [k, d] of Object.entries(mv || {})) moves.set(k, d.slice());
     for (const k of (saved.add || [])) added.add(k);
     for (const k of (saved.drop || [])) dropped.add(k);
+    for (const [id, d] of Object.entries(saved.stations || {})) stationMoves.set(+id, d.slice());
   } catch (e) { /* none saved yet */ }
 
+  D.stations.forEach((s, i) => stIdx.set(s[3], i));
   indexPoints();
   rebuild(); buildOrder();
 

@@ -2191,10 +2191,49 @@ each move, and `ribbons.edit_report` — printed by both render.py and prepare.p
 more than 4 m since they were placed. Edits saved before this exist say so
 rather than being silently unchecked.
 
+### Text and the print file (built 2026-09-30)
+
+    python render.py --theme dark --tag n4
+    python compose.py --tag n4          # -> build/poster_flat_dark_n4.png
+
+Dark is the edition going to proof. `compose.py` sets everything in one column
+in the empty right-hand side (x 18-23.25 in, from 1.6 in down): title, a
+two-sentence description, the width key, the circle key, a mile and a km scale
+bar, then the small print with the MTA credit and "not an official MTA map".
+The keys come from `defaults.py` and `render.THEMES`, and the top rung of each
+names the real busiest place (the 7 in Jackson Heights, 140k; Times Sq, 433k),
+so the legend cannot drift from the map. The run warns if any text touches a
+line or circle, because nudges move the free space. Output is tagged sRGB.
+
+**Fold fix (2026-09-30).** A stripe is one route in its busier direction, same
+as the web map. But the poster folds 6X/7X/FX into their locals, and the fold
+used to add BOTH of an express's directions on top of the local's busier one,
+so 109 stripes on the 6, 7 and F were 17-27% too thick (the 7 in Jackson Heights
+read 140k; it is 111k). `load_features` now folds within a direction and takes
+the busier afterwards. Width is now pinned to `WIDTH_REF` = 140k riders rather
+than to the busiest stripe, so the fix did not widen every other line by 25%.
+The nudges drifted a median 5 m, worst 11 m (0.01 in on the sheet), which is
+under a printed pixel or three and was left alone.
+
+**Control points are saved, not re-picked (2026-09-30).** `nudges.json` now
+carries `ctrl`, every control point as the editor showed it at save, and
+`chains.build` uses exactly that set for any chain that has one. Before, the
+automatic thinning ran afresh on every render and anchored on the hand edits,
+so each save shifted which automatic points it chose: the sheet had 15 control
+points the editor was not showing (a wiggle on the F at 57 St), and a width
+change brought in dozens more. Thinning without the anchors was tried and was
+worse (158 new points to delete). A chain the editor has never saved still
+falls back to thinning. Right-click "add" also now places the new point on the
+curve as drawn, with a move, so adding a point does not change the shape.
+
+Station bubbles can be nudged too now: the editor's `b` key switches to
+station mode, and the moves live in the `stations` section of `nudges.json`,
+keyed by MTA complex id.
+
 ### Open
 
-- **Title block, legend and the MTA credit line.** The credit is required, not
-  optional — see the per-map status note above.
+- **Title block, legend and the MTA credit line.** First version built, above.
+  Wording still wants her read.
 - **The ~10 ribbons that still fold.** Down from 78, and the cap on how far
   smoothing may move a node is what stops the rest; more passes does not help.
   They are the first thing to try the nudge tool on.
