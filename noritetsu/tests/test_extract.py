@@ -26,7 +26,8 @@ def quiet(_msg):
 class TestExtract(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.ways, cls.rels, cls.needed = extract.pass_ways_and_relations(FIXTURE, quiet)
+        cls.ways, cls.rels, cls.infra, cls.needed = extract.pass_ways_and_relations(
+            FIXTURE, quiet)
         cls.stops = extract.pass_stops(FIXTURE, quiet)
         ids = np.unique(np.concatenate(
             cls.needed + [np.fromiter(cls.stops.keys(), dtype=np.int64)]))

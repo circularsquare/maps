@@ -435,8 +435,11 @@ Countries load as the map pans over them (`dist/regions.json`, from `tools/build
 merged into one model. The strip diagram draws a line's whole track graph (`lineLayout`):
 a main route down lane 0 that prefers stopping at stations over the shortest path, every
 other route that leaves and rejoins or dead-ends in a lane beside it with its stations kept
-together as one block and a thin line back to where it rejoins, express track beside a
-stopping route not drawn at all (a ride over it lights the stopping route), other track
+together as one block and a thin line back to where it rejoins, a loop at either end of
+the main route walked in one column with only its closing section drawn back (the Oedo
+Line reads in the order its trains run), shortcuts (express track beside a stopping route,
+duplicate sections, the Oedo's Shinjuku to Shinjuku-nishiguchi past Tochomae) set aside
+before layout (a ride over one lights the way beside it), other track
 with no station of its own as thin arcs in one shared outer lane, loops with caps, separate
 pieces with a gap. 959 of 995 register lines are one straight lane; the JR East Tohoku Line
 needs the most, 8.
@@ -481,30 +484,67 @@ needs the most, 8.
 - [ ] On a phone the open panel covers the whole map, so picking on the map, and tracing a
       journey by clicking, only work through search there
 - [ ] Undo lasts only as long as the page. Enough for a slip; not a history
-- [ ] Where a line's far end is itself a loop, the diagram can end on the wrong station of
-      it: the Chuo Line ends at Shiojiri, but the diagram's main route ends at Ono, because
-      both sit on the Tatsuno/tunnel loop and the track graph cannot tell them apart. The
-      register's own terminus, if the build passed it on, would settle it
-- [ ] The JR East Tokaido Line's diagram is tangled from Tokyo to Tsurumi. That is the data:
-      the register line is 242.6 km against a published 104.6, with freight and parallel
-      lines whose sections skip stations. It tidies up when the freight-branch item in §4 does
+- [ ] Where a line's far end is itself a loop, the diagram walks the loop in one column but
+      cannot know which station of it is the terminus: the Chuo Line ends at Shiojiri, and
+      the diagram reads Midoriko, Shiojiri, Ono, ... Okaya. The register's own terminus, if
+      the build passed it on, would let it start the loop there
+- [x] N02 puts Tochomae 152 m from the Oedo loop track, so the build made a Shinjuku to
+      Shinjuku-nishiguchi section that does not call there. Fixed 2026-09-30 with the
+      station footprints in §4: the Oedo Line is 40.5 km against 40.7
+- [x] The JR East Tokaido Line's diagram was tangled from Tokyo to Tsurumi (Omori not joined
+      to Kamata, Hazawa between Musashi-Kosugi and Shin-Kawasaki). Fixed 2026-09-30: the
+      data half by the §4 footprints, and the app's `looksStraight` guess now runs only on
+      lines with `straight_sections`; on this line it had removed the real, straight
+      Musashi-Kosugi to Shin-Kawasaki section and sent the main column down the non-stop
+      Sotetsu-through track. The line now reads Shinagawa, Oimachi ... Kawasaki, Tsurumi, with
+      the Yokosuka route as a block beside it and Hazawa as a spur. Osaka reads Shin-Osaka,
+      Osaka, Tsukamoto with Fukushima as the Umekita spur
 
 **4. Data quality, in descending size of error.**
 
-- [ ] N02 labels freight branches with the main line's name, so JR trunk lines measure 5-20%
-      over their published operating length (山陽線 1.10, 奥羽線 1.10, 東海道線 1.12). Metro
-      lines, which have no freight branches, land on 1.01-1.03. **Worth attempting a filter,
-      but not important** (decided 2026-09-30): it is a few percent on a line's total, not a
-      line missing or a wrong section
-- [ ] 山手線 as a register line measures 29.7 km against a published 20.6: N02 gives the name
-      to more track than the register line covers
+- [x] JR trunk lines measured 5-20% over their published length (山陽線 1.10, 奥羽線 1.10,
+      東海道線 1.12, 山手線 1.44), put down to N02 naming freight branches after the main
+      line. It was mostly `n02.py` instead: a station claimed only the one track vertex
+      nearest its centre, so a multi-track line's other tracks slid past it and gave sections
+      that skip stations (田町-大井町 through 品川, 東京-品川 past three). Fixed 2026-09-30: a
+      station claims every track within 80 m of its platform, and a section that doubles back
+      at a junction (大井町 out towards 北品川 and back down the 大崎 branch to 西大井) is
+      dropped where the line's other sections still join its stations; 38 were. The register
+      went from 28,156 to 27,122 km and every checked line is now 0.99-1.01, except JR
+      Central's 東海道線 at 1.06, which is its 美濃赤坂 branch and the 垂井 bypass, both real
+- [x] The register still lists lines that no longer run, and OSM has no rails there, so the
+      map drew nothing where the line's panel listed stations: the 日田彦山線 from 添田 to 夜明
+      (BRT since 2023), 留萌線 石狩沼田-深川 (closed 2026), the suspended 美祢線, 肥薩線
+      八代-吉松 and the 津軽線's far end, and the Nagoya guideway bus. **Kept, greyed as not
+      running** (Anita, 2026-09-30): `not_running.py` flags a register section with drawn
+      track beside under half of it (`closed` on the line; 45 sections, 154 km in Japan, 18 in
+      Switzerland), and the app draws those dashed grey on the map and the strip, clickable,
+      and leaves them out of the line's length and every percentage. A ride from before the
+      closure can still be entered on them
 - [x] 471 sections fell back to a straight line where an OSM route relation has a gap. Fixed
       2026-09-30: the gap is traced along track (`TrackGraph`), the line's own ways first and
       then the network with a detour cap, and cut at any of the line's stations it passes.
       20 remain in Japan, 14 of them named trains, where OSM's track itself does not join
-- [ ] The app's `looksStraight` (over 2 km, within 1% of the crow-flies distance) now flags
-      mostly real track: Shinkansen sections are that straight. With 20 true fallbacks left,
-      the build could list them per line so the app need not guess
+- [x] The app's `looksStraight` (over 2 km, within 1% of the crow-flies distance) flagged
+      mostly real track. Since 2026-09-30 it only guesses on a line whose `straight_sections`
+      is over 0 (12 lines in Japan, none of them register lines), which is precise enough
+- [x] Track that touches no line was drawn and could not be clicked: tourist monorails,
+      amusement-park railways, a roller coaster, pedal trolleys, harbour freight lines. Since
+      2026-09-30 `build_tiles.drop_islands` leaves out a connected piece of track when no line
+      runs over any of it; 635 ways in Japan. An OSM passenger route over it does not save it:
+      Disneyland's railway and the harbour freight lines are route=train with no stops, the same
+      as the Swiss funiculars the model was missing (now given lines by `funicular_ends`)
+- [x] A register line in pieces, or with a dead end another line joins to another dead end of
+      it, says which line joins them ("to Niiya by 内子線" on the 予讃線), since the register
+      splits lines by legal name and the diagram otherwise read as a line with a hole in it
+- [x] **Light theme** (2026-09-30, so Anita can see it before deciding whether to switch to
+      it): the Light/Dark button, or `?theme=`. Positron basemap with its labels repainted a
+      faint grey and its city dots faded, no country names (in either theme) and paler
+      province and country boundaries, darker kind colours, station dots white with a
+      black ring. Page colours are CSS variables; `THEMES` in index.html holds the ones CSS
+      cannot reach. A line too close to the background gets a thin edge (dark round bright
+      lines in light, light round near-black ones in dark; `CASED_*`), drawn narrower over
+      it so it weighs the same
 - [ ] **Duplicate lines**, done 2026-09-30 as far as they could be found: register matches
       that failed only on operator spelling or station spelling (+17: the Hanzomon,
       Yurakucho and Toei Shinjuku lines), and OSM lines that are each other
@@ -537,7 +577,21 @@ should keep doing so — do not "fix" a Japanese line name into an id or a trans
       `?x wdt:P31/wdt:P279* wd:Q728937` with P17 for the country gives English labels to
       match on the native name plus operator (§12c)
 - [ ] Only 30% of register lines have a colour, because a colour only arrives when an OSM
-      line matched. Wikidata and the operators' own line-colour tables could fill more
+      line matched. **Wikidata done 2026-09-30** (`line_colours.py`, applied in
+      `build_model.main` after the merge, marked `colour_src: "wikidata"`): Japan 183 -> 338
+      of 593 register lines (a dry run; lands on the next jp build), Korea 18 -> 33 of 82.
+      Many Wikidata colours are Japanese Wikipedia infobox picks, 54 of Japan's 155 a CSS
+      named colour (008000, FF0000), not the operator's. Korea's intercity lines have no line
+      colours at all; Wikidata's Korail blue is skipped as generic.
+      **Tables done 2026-09-30** (`colours/<region>.csv`, which win over OSM and Wikidata):
+      `kr.csv` from the widely circulated Korea network map, `jp.csv` 105 register lines in
+      the JR companies' own colours, read from the vector fills of their route-map PDFs
+      (JR West, Kyushu, Shikoku, Hokkaido, Central, and JR East's Tokyo area). A line whose
+      sections have different official colours and none covers 40% has an empty colour and
+      its sections listed in the note (山陰線, 山陽線, 函館線, 東北線...), for a per-section
+      pass later. Still open: JR East outside Tokyo (the South Tohoku map
+      jreast.co.jp/map/pdf/minamitohoku.pdf returns 403 to scripts), and 八高線's grey,
+      which may be that map's neutral default rather than a line colour
 
 **6. Reach.**
 
@@ -550,6 +604,12 @@ should keep doing so — do not "fix" a Japanese line name into an id or a trans
       line itself counts (`register_way_lines`); 26 more yard, depot and harbour lines went
       (Limmattal RBL, Lausanne-Triage, Kleinhüningen). "Basel SBB - Basel GB - Basel RB"
       stays, correctly: its kept 1.9 km ends at Basel St. Jakob, the stadium stop
+- [ ] Swiss register sections with no OSM track within 700 m (found 2026-09-30 by maps-9f's
+      not-running check): Sonceboz-Sombeval - Moutier - Delémont (Tavannes-Sonceboz, 7 of 8
+      sections), Ruchfeld - Aesch BL Dorf (Reinach, tram 11 under rebuilding), and single
+      sections elsewhere. The register geometry is sound (no jumps, starts at its stations);
+      the gap is on OSM's side. Tavannes-Sonceboz not yet explained: Overpass was down and the
+      ch extract is deleted; check whether that stretch is railway=construction in OSM
 - [ ] Track under construction is not extracted (`railway=construction`), so a line closed
       for rebuilding shows its stops with no track between them: BLT Tram 11 through Reinach,
       closed as of 2026. Correct as data, odd on the map; it returns when OSM does
@@ -559,12 +619,70 @@ should keep doing so — do not "fix" a Japanese line name into an id or a trans
       clutter a per-line list
 - [ ] Where a km-line has two routes between neighbouring stops, only the shorter becomes a
       section (the absorbing search). 8 km in Switzerland outside the Gotthard's second bore
-- [ ] Regions beyond Japan and Switzerland. Per-country registers are in §12c, and
+- [x] **South Korea**, 2026-09-30: `kr_register.py` takes OSM's named track as the geometry
+      register (98% of main-line km carries its legal line's name) and the published station
+      lists read by `kr_sources.py` (Korail's 거리표, KRIC 1294) for which stations are on
+      which line. 82 register lines, 4,644 km; against the register's own km per section a
+      median of 0.997, and every metro and nearly every Korail line within 3% of its
+      published length. In the app at `?region=kr`. `HANDOFF.md` "Korea" has the detail
+- [ ] Korea: a register line whose named track stops short of its first listed station loses
+      that section: 호남고속선 오송-공주 (0.76 of its length), 영동선's 영주 and 강릉 ends,
+      대구선, 광주선, 수서평택고속선's 지제 end. Trace such a station over the wider network
+      to the line's own track
+- [ ] Korea: register lines have no English names yet (stations do, from RAFIS and KRIC)
+- [x] **Hong Kong and Singapore**, 2026-09-30, on Taiwan's pattern: 13 and 10 register lines,
+      293 and 269 km, station lists from MTR's DATA.GOV.HK files and LTA DataMall. Worst
+      register lines 0.91 (Peak Tram, measured along its slope) and 1.09 (Light Rail, whose
+      one-way street pairs count twice). `hk_sources.md`, `sg_sources.md`
+- [ ] Hong Kong: 機場快綫 is listed twice (OSM's and the register's), because Airport has no
+      station node and its stop lands on the people mover's Terminal 2 station; the tram and
+      Peak Tram OSM relations fail the 6% length test. Light Rail's one-way pairs should be one
+      section each way, not two sections
+- [x] **Belgium, Austria and the Netherlands**, 2026-09-30, from `rinf.py`, the generic ERA
+      RINF reader (§12c "Elsewhere"): 145, 125 and 96 register lines, 3,196, 4,342 and
+      2,780 km, median 0.996-1.000 against RINF's own section lengths. Metros, trams and
+      private railways RINF lacks stay OSM lines
+- [ ] Netherlands: Breda - Rotterdam builds 17% over its published length and nobody has
+      worked out why; Dutch line names are ProRail's end points ("Lelystad Opstelterrein
+      Aansl. - Zwolle" for the Hanzelijn); Enschede De Eschmarke is cut off from Enschede in OSM
+- [ ] Austria: each private line's stub to its ÖBB junction (0.5-3.5 km) is lost, because
+      those RINF points have no coordinates
+- [x] **France**, 2026-09-30: `fr_register.py`, 278 register lines, 24,227 km, chainage
+      median 0.996
+- [x] **Czechia, Poland, Hungary, Portugal**, 2026-09-30, from `rinf.py` with a settings file
+      each in `rinf_countries/`: 236, 352, 133 and 24 register lines (9,101, 16,171, 6,721 and
+      2,138 km). HANDOFF.md "Europe from ERA RINF" has the hooks they needed
+- [x] **Mainland China**, 2026-09-30: `cn_register.py`, 417 register lines, 121,894 km, from
+      OSM's named track and 12306's station list
+- [ ] China: named track stopping short of a terminus loses that stretch (宝成线 at 广汉北,
+      青藏线 from 湟源, 京广线 from 房山东); 成昆线 and 京港高速线 are each two pieces;
+      stations are placed by proximity, so parallel lines can share one wrongly; 瓦日线 and
+      唐包线 are freight lines that pass the passenger-station test
+- [ ] **Completion counts everything with scheduled passenger service** (Anita, 2026-10-01),
+      named trains included; reverses §5/§6's "named trains are lookup and input only".
+      Confirm with her how a named train's own km counts, then change the app
+- [ ] **Draw track across borders**: a cross-border route (TER K80 Kortrijk – Lille) has no
+      section between the last station on one side and the first on the other, because each
+      country's build keeps only its own side
+- [ ] RINF countries: where OSM has no passenger route relation, a junction-ended section is
+      dropped even when trains run (Czechia ~83 km: 238 into Havlíčkův Brod, 292 around
+      Bludov); where OSM still maps a closed line as railway=rail, it stays drawn (Hungary:
+      parts of 27, 37, 62). A per-country timetable feed would settle both
+- [ ] France: the Grande Ceinture carries RER C, T12 and T13 but a register line has one kind,
+      so T12/T13 rides do not credit it
+- [ ] Austria: the Vienna S-Bahn Stammstrecke through Wien Mitte has no railway=rail in the
+      extract (probably mapped as construction), and the Mattersburger Bahn stops 416 m short
+      of Wiener Neustadt; both leave sections out
+- [ ] Singapore: "LRT Sengkang Line" is listed beside the register line (OSM names its stop
+      positions "Sengkang - East Loop Anticlockwise"); the KTM shuttle's 1 km in Singapore is
+      left out until Malaysia is built
+- [ ] Regions beyond Japan, Switzerland and Korea. Per-country registers are in §12c, and
       `HANDOFF.md` has the contract a new region's reader has to meet
-- [ ] Everything Japan-specific has to be replaced per region: the named-train rule is about
-      Japanese names, `check_model.KNOWN` is Japanese lines. `REGISTER` now has Switzerland
-      too. In Switzerland every OSM route relation is a service pattern (IC 1, S12), and none
-      is flagged a named train
+- [ ] Everything Japan-specific has to be replaced per region: `check_model.KNOWN` is
+      Japanese lines. `REGISTER` has Switzerland and Korea too. The named-train rule has a
+      Korean branch (a train brand in the name: KTX, SRT, ITX, 새마을, 무궁화...; 22 flagged).
+      In Switzerland every OSM route relation is a service pattern (IC 1, S12), and none is
+      flagged a named train
 - [ ] Station areas mapped as ways rather than nodes are dropped by the extractor. Fine for
       Japan, likely not elsewhere. `public_transport=stop_area` relations are not read either
       and would be better evidence than name-plus-distance where there is no register

@@ -24,13 +24,16 @@ HERE = pathlib.Path(__file__).resolve().parent.parent
 DIST = HERE / "dist"
 MAPS = HERE.parent
 SHAPES = MAPS / "religiondots" / "data" / "processed" / "country_shapes.geojson"
-NAMES = MAPS / "religiondots" / "data" / "geo" / "ne_110m_admin_0_countries.geojson"
+# 1:10m, not 1:110m: the small-scale file has no Singapore or Hong Kong at all.
+NAMES = MAPS / "religiondots" / "data" / "geo" / "ne_10m_admin_0_countries.geojson"
 
 # Degrees. About 2 km at Japan's latitude; see the docstring for why that is enough.
 TOLERANCE = 0.02
 # Parts smaller than this (square degrees, ~25 km2) are dropped: a rock offshore does not
 # decide whether a country is on screen, and there are thousands of them.
 MIN_PART = 0.002
+# Degrees from the largest part beyond which a part is overseas, for the opening view only.
+FAR_DEG = 15
 
 # religiondots' codes where they differ from ISO 3166.
 ISO = {"uk": "GB"}
@@ -43,10 +46,14 @@ def main():
     if not built:
         sys.exit("no built country under dist/data/")
 
-    names = {}
+    # Several features can share a code (France's is also on Clipperton Island), so the most
+    # populous one names the country.
+    names, pop, ne_geom = {}, {}, {}
     for f in json.loads(NAMES.read_text(encoding="utf-8"))["features"]:
         q = f["properties"]
-        names[q.get("ISO_A2_EH")] = q.get("NAME")
+        cc, p = q.get("ISO_A2_EH"), q.get("POP_EST") or 0
+        if cc not in names or p > pop[cc]:
+            names[cc], pop[cc], ne_geom[cc] = q.get("NAME"), p, f["geometry"]
 
     by_cc = {}
     for f in json.loads(SHAPES.read_text(encoding="utf-8"))["features"]:
@@ -55,8 +62,15 @@ def main():
     out = {}
     for cc in built:
         if cc not in by_cc:
-            print(f"  {cc}: no outline in {SHAPES.name}; left out, so it will not load by panning")
-            continue
+            # religiondots leaves out a few small countries (Luxembourg); Natural Earth's
+            # 1:10m outline does as well for "is it on screen".
+            g = ne_geom.get(ISO.get(cc, cc.upper()))
+            if g is None:
+                print(f"  {cc}: no outline in {SHAPES.name} or {NAMES.name}; left out, so it "
+                      f"will not load by panning")
+                continue
+            print(f"  {cc}: outline from {NAMES.name}")
+            by_cc[cc] = [shape(g)]
         geom = by_cc[cc][0]
         for g in by_cc[cc][1:]:
             geom = geom.union(g)
@@ -70,8 +84,12 @@ def main():
         w, s, e, n = geom.bounds
         # The opening view leaves out outlying islands: Japan's full box reaches Minami-Torishima
         # at 154 E and would open on the Pacific. Parts under 5% of the largest do not count.
-        big = max(p.area for p in polys)
-        core = [p for p in polys if p.area >= 0.05 * big]
+        # Nor do parts far from the largest: French Guiana is big enough to pass the 5% test
+        # and would open France on South America.
+        main = max(polys, key=lambda p: p.area)
+        mx, my = main.centroid.x, main.centroid.y
+        core = [p for p in polys if p.area >= 0.05 * main.area
+                and abs(p.centroid.x - mx) < FAR_DEG and abs(p.centroid.y - my) < FAR_DEG]
         vw = min(p.bounds[0] for p in core); vs = min(p.bounds[1] for p in core)
         ve = max(p.bounds[2] for p in core); vn = max(p.bounds[3] for p in core)
         out[cc] = {
@@ -83,8 +101,20 @@ def main():
         print(f"  {cc}: {out[cc]['name']}, {len(parts)} parts, "
               f"{sum(len(p) for p in parts)} points")
 
+    # A line that crosses a border is built in every country it touches under one id (the OSM
+    # route_master's). The app merges them into one line, and needs to know which countries to
+    # load for it before loading any of them.
+    seen = {}
+    for cc in out:
+        for line in json.loads((DIST / "data" / cc / "lines.json").read_text(
+                encoding="utf-8"))["lines"]:
+            seen.setdefault(line["id"], []).append(cc)
+    shared = {lid: sorted(ccs) for lid, ccs in sorted(seen.items()) if len(ccs) > 1}
+    print(f"  {len(shared)} line ids shared between countries")
+
     path = DIST / "regions.json"
-    path.write_text(json.dumps({"regions": out}, ensure_ascii=False, separators=(",", ":")),
+    path.write_text(json.dumps({"regions": out, "shared_lines": shared}, ensure_ascii=False,
+                               separators=(",", ":")),
                     encoding="utf-8")
     print(f"wrote {path}, {path.stat().st_size / 1024:.1f} KB")
 

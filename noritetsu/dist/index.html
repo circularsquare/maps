@@ -8,92 +8,177 @@
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet" />
 <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" />
 <style>
+  /* THE THEME. Every colour the page uses is one of these. The greys are named by their
+     value in the dark theme (--g0a is #0a0a0a), so they read as a ramp in order; the
+     light theme gives each a hand-picked counterpart rather than a formula, because
+     text greys need to darken further than an inversion takes them. */
+  :root {
+    --del: #d98a8a;
+    --del-bg: #3a1f1f;
+    --del-border: #4a2e2e;
+    --del-hover: #d96b6b;
+    --focus: #4a5a6a;
+    --g0a: #0a0a0a;
+    --g0d: #0d0d0d;
+    --g12: #121212;
+    --g14: #141414;
+    --g16: #161616;
+    --g17: #171717;
+    --g1e: #1e1e1e;
+    --g24: #242424;
+    --g26: #262626;
+    --g2c: #2c2c2c;
+    --g33: #333;
+    --g3a: #3a3a3a;
+    --g55: #555;
+    --g5a: #5a5a5a;
+    --g5f: #5f5f5f;
+    --g66: #666;
+    --g6f: #6f6f6f;
+    --g77: #777;
+    --g7a: #7a7a7a;
+    --g8a: #8a8a8a;
+    --g9a: #9a9a9a;
+    --gbb: #bbb;
+    --gc8: #c8c8c8;
+    --gcc: #ccc;
+    --gdd: #ddd;
+    --ge8: #e8e8e8;
+    --gee: #eee;
+    --gff: #fff;
+    --glass: rgba(10,10,10,0.85);
+    --glass-strong: rgba(10,10,10,0.94);
+    --note: #d9b36a;
+    --on: #cfd9e4;
+    --warn: #d98a5a;
+  }
+  :root[data-theme="light"] {
+    --del: #b33a3a;
+    --del-bg: #fbe9e9;
+    --del-border: #e3b5b5;
+    --del-hover: #c0392b;
+    --focus: #8a9aaa;
+    --g0a: #f2f3f0;
+    --g0d: #fafaf8;
+    --g12: #f0f0ec;
+    --g14: #ffffff;
+    --g16: #efefeb;
+    --g17: #ecece8;
+    --g1e: #e4e4e0;
+    --g24: #e0e0dc;
+    --g26: #dcdcd8;
+    --g2c: #d0d0cc;
+    --g33: #c4c4c0;
+    --g3a: #bdbdb8;
+    --g55: #8a8a86;
+    --g5a: #85857f;
+    --g5f: #80807b;
+    --g66: #777773;
+    --g6f: #6a6a66;
+    --g77: #666662;
+    --g7a: #62625e;
+    --g8a: #575753;
+    --g9a: #4d4d49;
+    --gbb: #3a3a37;
+    --gc8: #333330;
+    --gcc: #30302d;
+    --gdd: #262624;
+    --ge8: #1f1f1d;
+    --gee: #1a1a18;
+    --gff: #111110;
+    --glass: rgba(250,250,248,0.92);
+    --glass-strong: rgba(252,252,250,0.97);
+    --note: #8a6a10;
+    --on: #3a4a5a;
+    --warn: #b3541e;
+  }
+
   * { box-sizing: border-box; }
   html, body { margin: 0; height: 100%; }
-  body { background: #0a0a0a; color: #eee; font-family: 'Nunito', sans-serif; overflow: hidden; }
+  body { background: var(--g0a); color: var(--gee); font-family: 'Nunito', sans-serif; overflow: hidden; }
   #map { position: absolute; inset: 0; right: 340px; }
   .maplibregl-canvas-container.maplibregl-interactive,
   .maplibregl-canvas-container.maplibregl-interactive:active { cursor: default; }
 
   #title {
     position: absolute; top: 14px; left: 14px; z-index: 2;
-    background: rgba(10,10,10,0.85); border: 1px solid #262626;
+    background: var(--glass); border: 1px solid var(--g26);
     padding: 9px 13px 10px; max-width: 280px;
   }
   #title h1 { margin: 0; font-size: 17px; font-weight: 700; letter-spacing: 0.2px; }
-  #title p { margin: 3px 0 0; font-size: 12px; line-height: 1.45; color: #9a9a9a; }
   #modes { display: flex; gap: 6px; margin-top: 8px; }
   #modes button, #panel-open {
-    background: none; border: 1px solid #333; color: #8a8a8a;
+    background: none; border: 1px solid var(--g33); color: var(--g8a);
     font-family: inherit; font-size: 11.5px; padding: 3px 9px; cursor: pointer;
   }
-  #modes button:hover, #panel-open:hover { border-color: #666; color: #ccc; }
-  #modes button.on { border-color: #cfd9e4; color: #fff; }
+  #modes button:hover, #panel-open:hover { border-color: var(--g66); color: var(--gcc); }
+  #modes button.on { border-color: var(--on); color: var(--gff); }
   #panel-open { display: none; }
+  #modes button.theme { margin-left: auto; }
 
   #legend {
     position: absolute; bottom: 30px; left: 14px; z-index: 2;
-    background: rgba(10,10,10,0.85); border: 1px solid #262626;
+    background: var(--glass); border: 1px solid var(--g26);
     padding: 9px 12px 10px; font-size: 12px;
   }
-  #legend summary { font-size: 11px; font-weight: 600; color: #8a8a8a; cursor: pointer;
+  #legend summary { font-size: 11px; font-weight: 600; color: var(--g8a); cursor: pointer;
                     text-transform: uppercase; letter-spacing: 0.7px; list-style: none; }
   #legend summary::-webkit-details-marker { display: none; }
-  #legend summary::after { content: ' ▾'; color: #5a5a5a; }
+  #legend summary::after { content: ' ▾'; color: var(--g5a); }
   #legend details:not([open]) summary::after { content: ' ▸'; }
   #legend details[open] summary { margin-bottom: 6px; }
-  #legend .row { display: flex; align-items: center; gap: 7px; padding: 1px 0; color: #c8c8c8; }
+  #legend .row { display: flex; align-items: center; gap: 7px; padding: 1px 0; color: var(--gc8); }
   #legend .sw { width: 17px; height: 0; border-top-width: 2.5px; border-top-style: solid; flex: none; }
-  #legend .off { color: #5a5a5a; }
-  #legend .note { margin-top: 7px; font-size: 11px; color: #6f6f6f; max-width: 190px; line-height: 1.4; }
+  #legend .off { color: var(--g5a); }
+  #legend .note { margin-top: 7px; font-size: 11px; color: var(--g6f); max-width: 190px; line-height: 1.4; }
 
   /* ---- the tracker panel ---- */
   #panel {
     position: absolute; top: 0; right: 0; bottom: 0; width: 340px; z-index: 3;
-    background: #0d0d0d; border-left: 1px solid #262626;
+    background: var(--g0d); border-left: 1px solid var(--g26);
     display: flex; flex-direction: column; font-size: 13px;
   }
-  #panel-head { padding: 12px 14px 10px; border-bottom: 1px solid #1e1e1e; }
+  #panel-head { padding: 12px 14px 10px; border-bottom: 1px solid var(--g1e); }
   #panel-body { flex: 1; overflow-y: auto; padding: 0 14px 20px; }
   #panel-close { display: none; }
 
   #q {
-    width: 100%; background: #141414; border: 1px solid #2c2c2c; color: #eee;
+    width: 100%; background: var(--g14); border: 1px solid var(--g2c); color: var(--gee);
     font-family: inherit; font-size: 13px; padding: 7px 9px;
   }
-  #q:focus { outline: none; border-color: #4a5a6a; }
+  #q:focus { outline: none; border-color: var(--focus); }
   #results { margin-top: 6px; }
   .hit { padding: 5px 7px; cursor: pointer; border-left: 2px solid transparent; }
-  .hit:hover { background: #161616; border-left-color: #4a9eff; }
-  .hit .t { color: #e8e8e8; }
-  .hit .s { color: #7a7a7a; font-size: 11.5px; }
+  .hit:hover { background: var(--g16); border-left-color: #4a9eff; }
+  .hit .t { color: var(--ge8); }
+  .hit .s { color: var(--g7a); font-size: 11.5px; }
   .hit .bar { display: inline-block; width: 9px; height: 9px; border-radius: 2px;
               margin-right: 6px; vertical-align: -1px; }
 
   h2.sec {
-    margin: 16px 0 6px; font-size: 11px; font-weight: 600; color: #7a7a7a;
+    margin: 16px 0 6px; font-size: 11px; font-weight: 600; color: var(--g7a);
     text-transform: uppercase; letter-spacing: 0.7px;
   }
-  .muted { color: #6f6f6f; font-size: 12px; line-height: 1.5; }
-  .big { font-size: 26px; font-weight: 700; color: #fff; line-height: 1.1; }
-  .big small { font-size: 12px; font-weight: 400; color: #8a8a8a; display: block; margin-top: 2px; }
+  .muted { color: var(--g6f); font-size: 12px; line-height: 1.5; }
+  .big { font-size: 26px; font-weight: 700; color: var(--gff); line-height: 1.1; }
+  .big small { font-size: 12px; font-weight: 400; color: var(--g8a); display: block; margin-top: 2px; }
 
-  .meter { height: 4px; background: #1e1e1e; margin-top: 4px; }
+  .meter { height: 4px; background: var(--g1e); margin-top: 4px; }
   .meter i { display: block; height: 100%; background: #4a9eff; }
 
-  .lrow { padding: 7px 0; border-bottom: 1px solid #171717; }
-  .lrow[onclick]:hover b { color: #fff; }
+  .lrow { padding: 7px 0; border-bottom: 1px solid var(--g17); }
+  .lrow[onclick]:hover b { color: var(--gff); }
   .lrow .n { display: flex; justify-content: space-between; gap: 8px; }
-  .lrow .n b { font-weight: 600; color: #ddd; min-width: 0; overflow: hidden;
+  .lrow .n b { font-weight: 600; color: var(--gdd); min-width: 0; overflow: hidden;
                text-overflow: ellipsis; white-space: nowrap; }
-  .lrow .n span { color: #9a9a9a; font-variant-numeric: tabular-nums; flex: none; }
-  .lrow .o { color: #6f6f6f; font-size: 11.5px; }
+  .lrow .n span { color: var(--g9a); font-variant-numeric: tabular-nums; flex: none; }
+  .lrow .o { color: var(--g6f); font-size: 11.5px; }
 
   button.act {
-    background: none; border: 1px solid #3a3a3a; color: #bbb;
+    background: none; border: 1px solid var(--g3a); color: var(--gbb);
     font-family: inherit; font-size: 12px; padding: 5px 10px; cursor: pointer;
   }
-  button.act:hover { border-color: #777; color: #fff; }
+  button.act:hover { border-color: var(--g77); color: var(--gff); }
   button.act.go { border-color: #4a9eff; color: #4a9eff; }
   button.act.go:hover { background: #4a9eff; color: #06121f; }
   .btnrow { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
@@ -105,14 +190,15 @@
   #strip { margin-top: 4px; position: relative; --w: 22px; }
   #strip > svg { position: absolute; left: 0; top: 0; pointer-events: none; overflow: visible; }
   .st { display: flex; align-items: stretch; cursor: pointer; padding-left: var(--w); }
-  .st:hover .nm { color: #fff; }
-  .st .nm { padding: 5px 0 5px 6px; color: #c8c8c8; line-height: 1.25; }
-  .st .nm i { display: block; font-style: normal; color: #6f6f6f; font-size: 11px; }
-  .st.in .nm { color: #fff; }
-  a.also { color: #c8c8c8; text-decoration: none; border-bottom: 2px solid var(--c); }
-  a.also:hover { color: #fff; }
+  .st:hover .nm { color: var(--gff); }
+  .st .nm { padding: 5px 0 5px 6px; color: var(--gc8); line-height: 1.25; }
+  .st .nm i { display: block; font-style: normal; color: var(--g6f); font-size: 11px; }
+  .st.in .nm { color: var(--gff); }
+  a.also { color: var(--gc8); text-decoration: none; border-bottom: 2px solid var(--c); }
+  a.also:hover { color: var(--gff); }
   .st.jn { cursor: default; }
-  .st.jn .nm { color: #6f6f6f; font-size: 12px; padding-top: 3px; padding-bottom: 3px; }
+  .st.gone .nm { color: var(--g7a); }
+  .st.jn .nm { color: var(--g6f); font-size: 12px; padding-top: 3px; padding-bottom: 3px; }
 
   /* A loop does not end, so its diagram should not look like it does. The rail runs on past
      the first and last station and curves away to the left (drawn by drawStrip), the two
@@ -120,69 +206,69 @@
   .loopcap { position: relative; height: 22px; }
   .loopcap b {
     position: absolute; left: 20px; top: 50%; margin-top: -7px;
-    font-size: 10.5px; font-weight: 400; color: #5f5f5f;
+    font-size: 10.5px; font-weight: 400; color: var(--g5f);
   }
   .loopcap.bottom b { margin-top: -6px; }
   /* Between the pieces of a line that runs through another country (Basel to Schaffhausen
      through Germany), or whose register has a gap. */
-  .stgap { padding: 6px 0 6px 6px; margin-left: var(--w); font-size: 11px; color: #5f5f5f;
-           border-top: 1px dashed #262626; border-bottom: 1px dashed #262626; margin-top: 4px;
+  .stgap { padding: 6px 0 6px 6px; margin-left: var(--w); font-size: 11px; color: var(--g5f);
+           border-top: 1px dashed var(--g26); border-bottom: 1px dashed var(--g26); margin-top: 4px;
            margin-bottom: 4px; }
 
-  #addbar { position: sticky; bottom: 0; z-index: 2; background: #0d0d0d; padding: 10px 0 4px;
-            border-top: 1px solid #1e1e1e; }
-  #addbar label { display: block; color: #9a9a9a; font-size: 12px; margin: 2px 0 6px;
+  #addbar { position: sticky; bottom: 0; z-index: 2; background: var(--g0d); padding: 10px 0 4px;
+            border-top: 1px solid var(--g1e); }
+  #addbar label { display: block; color: var(--g9a); font-size: 12px; margin: 2px 0 6px;
                   cursor: pointer; }
   #addbar label input { vertical-align: -2px; margin: 0 5px 0 0; }
 
-  .ride { position: relative; padding: 6px 0 6px 12px; border-bottom: 1px solid #171717;
+  .ride { position: relative; padding: 6px 0 6px 12px; border-bottom: 1px solid var(--g17);
           cursor: pointer; margin-top: 3px; }
   /* The trip's lines down its left edge, one band per leg. */
   .ride .edge { position: absolute; left: 0; top: 0; bottom: 0; width: 3px; }
-  .ride:hover b { color: #fff; }
-  .ride.editing { background: #121212; }
+  .ride:hover b { color: var(--gff); }
+  .ride.editing { background: var(--g12); }
   .ride .legs { margin: 6px 0 2px; cursor: default; }
   .legrow { display: flex; align-items: center; gap: 7px; padding: 3px 0; font-size: 12px;
-            color: #9a9a9a; }
+            color: var(--g9a); }
   .legrow .sw { width: 9px; height: 9px; border-radius: 50%; flex: none; }
   .legrow .t { min-width: 0; flex: 1; overflow: hidden; text-overflow: ellipsis;
                white-space: nowrap; }
-  .legrow .t b { color: #ccc; font-weight: 600; }
-  .legrow .km { color: #6f6f6f; font-variant-numeric: tabular-nums; flex: none; }
+  .legrow .t b { color: var(--gcc); font-weight: 600; }
+  .legrow .km { color: var(--g6f); font-variant-numeric: tabular-nums; flex: none; }
   button.act.small { font-size: 11px; padding: 1px 6px; margin-left: 0; }
-  button.act.del { margin-left: auto; color: #d98a8a; border-color: #4a2e2e; }
-  button.act.del:hover { color: #fff; border-color: #d96b6b; background: #3a1f1f; }
+  button.act.del { margin-left: auto; color: var(--del); border-color: var(--del-border); }
+  button.act.del:hover { color: var(--gff); border-color: var(--del-hover); background: var(--del-bg); }
 
   /* One list at a time on the home view. */
   .tabs { display: flex; flex-wrap: wrap; gap: 4px; margin: 16px 0 10px; }
   .tabs button {
-    background: none; border: 1px solid #2c2c2c; color: #8a8a8a;
+    background: none; border: 1px solid var(--g2c); color: var(--g8a);
     font-family: inherit; font-size: 12px; padding: 4px 9px; cursor: pointer;
   }
-  .tabs button:hover { border-color: #555; color: #ccc; }
-  .tabs button.on { border-color: #cfd9e4; color: #fff; }
+  .tabs button:hover { border-color: var(--g55); color: var(--gcc); }
+  .tabs button.on { border-color: var(--on); color: var(--gff); }
 
   /* The bar under a row's name: dim in the row's colour, full strength for what is done. */
   .lmeter { height: 4px; margin: 5px 0 3px;
-            background: #242424; background: color-mix(in srgb, var(--c) 28%, #0d0d0d); }
+            background: var(--g24); background: color-mix(in srgb, var(--c) 28%, var(--g0d)); }
   .lmeter i { display: block; height: 100%; background: var(--c); }
   .ride .edit { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin-top: 6px; }
   .ride .edit input[type=text] { flex: 1; min-width: 120px; }
 
   input.fld, #addbar input[type=date], .ride .edit input, select.fld {
-    background: #141414; border: 1px solid #2c2c2c; color: #ddd;
+    background: var(--g14); border: 1px solid var(--g2c); color: var(--gdd);
     font-family: inherit; font-size: 12px; padding: 4px 6px;
   }
-  input.fld:focus, .ride .edit input:focus, select.fld:focus { outline: none; border-color: #4a5a6a; }
+  input.fld:focus, .ride .edit input:focus, select.fld:focus { outline: none; border-color: var(--focus); }
 
   #stale {
-    display: none; padding: 8px 14px; border-bottom: 1px solid #1e1e1e;
-    font-size: 12px; line-height: 1.45; color: #d9b36a;
+    display: none; padding: 8px 14px; border-bottom: 1px solid var(--g1e);
+    font-size: 12px; line-height: 1.45; color: var(--note);
   }
-  #stale a { color: #fff; }
+  #stale a { color: var(--gff); }
   #undobar {
     display: none; align-items: center; gap: 8px; padding: 7px 14px;
-    border-bottom: 1px solid #1e1e1e; font-size: 12px; color: #9a9a9a;
+    border-bottom: 1px solid var(--g1e); font-size: 12px; color: var(--g9a);
   }
   #undobar span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis;
                   white-space: nowrap; }
@@ -192,22 +278,22 @@
   .trip { margin: 12px 0 6px; }
   .trip .rail { width: 22px; flex: none; position: relative; }
   .tst { display: flex; align-items: center; min-height: 26px; }
-  .tst b { font-weight: 600; color: #eee; padding-left: 6px; }
+  .tst b { font-weight: 600; color: var(--gee); padding-left: 6px; }
   .tst .dot {
     position: absolute; left: 5px; top: 50%; margin-top: -6px; width: 12px; height: 12px;
-    border-radius: 50%; background: #fff; border: 2px solid #fff; z-index: 1;
+    border-radius: 50%; background: var(--gff); border: 2px solid var(--gff); z-index: 1;
   }
   .tleg { display: flex; align-items: stretch; min-height: 30px; }
   .tleg .rail::before {
     content: ''; position: absolute; left: 9px; top: -7px; bottom: -7px; width: 4px;
     background: var(--c);
   }
-  .tleg.bad .rail::before { background: repeating-linear-gradient(#3a3a3a 0 4px, transparent 4px 8px); }
+  .tleg.bad .rail::before { background: repeating-linear-gradient(var(--g3a) 0 4px, transparent 4px 8px); }
   .tleg .what { display: flex; align-items: center; gap: 8px; padding: 4px 0 4px 6px;
-                font-size: 12.5px; color: #c8c8c8; min-width: 0; flex: 1; }
-  .tleg.bad .what { color: #d98a5a; font-size: 12px; }
+                font-size: 12.5px; color: var(--gc8); min-width: 0; flex: 1; }
+  .tleg.bad .what { color: var(--warn); font-size: 12px; }
   .tleg .nm { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .tleg .km { margin-left: auto; color: #7a7a7a; font-size: 11.5px; flex: none;
+  .tleg .km { margin-left: auto; color: var(--g7a); font-size: 11.5px; flex: none;
               font-variant-numeric: tabular-nums; }
   /* The real <select> sits invisibly over the name, so the choice opens the native list
      while the row reads exactly like a leg with no choice. */
@@ -215,31 +301,30 @@
               cursor: pointer; }
   .pickline select { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%;
                      font: inherit; }
-  .pickline .caret { color: #8a8a8a; font-size: 11px; flex: none; }
-  .pickline:hover .nm { color: #fff; text-decoration: underline; text-decoration-color: #555; }
-  .tnote { color: #d98a5a; font-size: 12px; line-height: 1.45; margin: 6px 0; }
+  .pickline .caret { color: var(--g8a); font-size: 11px; flex: none; }
+  .pickline:hover .nm { color: var(--gff); text-decoration: underline; text-decoration-color: var(--g55); }
+  .tnote { color: var(--warn); font-size: 12px; line-height: 1.45; margin: 6px 0; }
 
   .maplibregl-ctrl-attrib { font-size: 10px; }
 
   .maplibregl-popup { pointer-events: none; }
   .maplibregl-popup-content {
-    background: rgba(10,10,10,0.94); border: 1px solid #2c2c2c; border-radius: 0;
+    background: var(--glass-strong); border: 1px solid var(--g2c); border-radius: 0;
     padding: 7px 10px 8px; font-family: 'Nunito', sans-serif; font-size: 12.5px;
-    color: #e8e8e8; box-shadow: none;
+    color: var(--ge8); box-shadow: none;
   }
-  .maplibregl-popup-content b { display: block; font-size: 13.5px; color: #fff; }
-  .maplibregl-popup-content .jp { color: #8a8a8a; font-size: 11px; margin-bottom: 4px; }
+  .maplibregl-popup-content b { display: block; font-size: 13.5px; color: var(--gff); }
+  .maplibregl-popup-content .jp { color: var(--g8a); font-size: 11px; margin-bottom: 4px; }
   .maplibregl-popup-content .pl {
-    display: block; font-size: 11.5px; color: #c8c8c8; padding-left: 8px;
-    border-left: 3px solid #555; margin-top: 3px; line-height: 1.3;
+    display: block; font-size: 11.5px; color: var(--gc8); padding-left: 8px;
+    border-left: 3px solid var(--g55); margin-top: 3px; line-height: 1.3;
   }
-  .maplibregl-popup-content .more { color: #6f6f6f; font-size: 11px; margin-top: 4px; }
+  .maplibregl-popup-content .more { color: var(--g6f); font-size: 11px; margin-top: 4px; }
   .maplibregl-popup-tip { display: none; }
 
   @media (max-width: 720px) {
     #map { right: 0; }
     #title { padding: 7px 11px 8px; max-width: calc(100% - 28px); }
-    #title p { display: none; }
     #panel-open { display: inline-block; margin-top: 8px; }
     #legend { bottom: 44px; padding: 7px 11px 8px; }
     #panel { width: 100%; display: none; }
@@ -253,10 +338,11 @@
 
 <div id="title">
   <h1>noritetsu</h1>
-  <p>Every passenger rail line, and the ones you have ridden. Japan and Switzerland so far.</p>
   <div id="modes">
     <button data-mode="browse" onclick="setMode('browse')">All lines</button>
     <button data-mode="ridden" class="on" onclick="setMode('ridden')">Ridden</button>
+    <button id="theme-btn" class="theme"
+            onclick="setTheme(THEME_NAME === 'dark' ? 'light' : 'dark')">Light</button>
   </div>
   <button id="panel-open" onclick="openPanel(true)">Rides</button>
 </div>
@@ -301,16 +387,37 @@
    so they are prefixed with the country as they are read ("ch:120"). Nothing saved names a
    section, so the prefix never leaves the page. */
 let REGIONS = {};                 // cc -> {name, bbox, view, parts: [{ring, w, e, s, n}]}
+/* Line ids built in more than one country (regions.json `shared_lines`, id -> [cc, ...]):
+   an OSM route over a border is built in every country it touches under the same id. Lets
+   the app load the rest of such a line before it has seen it. Empty until the index has it;
+   the app then guesses from where the line ends (neighbourRegions). */
+let SHARED_LINES = {};
 const START = new URLSearchParams(location.search).get('region');
-let FOCUS = START || 'jp';        // the country under the middle of the map: the headline's
+
+/* THE CAMERA IS REMEMBERED: where the map was left, and the country the headline was on.
+   A first visit opens on the whole world; a `?region=` link still opens on its country. */
+const CAMERA_KEY = 'noritetsu.camera';
+const SAVED_CAMERA = (() => {
+  try {
+    const c = JSON.parse(localStorage.getItem(CAMERA_KEY) || 'null');
+    if (c && Array.isArray(c.c) && isFinite(c.c[0]) && isFinite(c.c[1]) && isFinite(c.z)) return c;
+  } catch (e) { }
+  return null;
+})();
+// The country under the middle of the map: the headline's. Null over the open world.
+let FOCUS = START || (SAVED_CAMERA && SAVED_CAMERA.f) || null;
 const TILES = new Set();          // countries whose tiles are on the map
 const LOADING = new Map();        // cc -> the promise of its line data
 const LOADED = new Set();         // countries whose line data is merged in
 const DATA_MIN_ZOOM = 4;          // below this every country is in view; fetch none by panning
 // Every ride saved before regions existed was in Japan.
 const rideRegion = r => r.region || 'jp';
+/* Every country a ride needs loaded to resolve: its own, and for a line over a border the
+   others it runs through (`regions`, saved on rides on such lines, and the shared index). */
+const rideRegions = r => [...new Set([rideRegion(r), ...(r.regions || []),
+                                      ...(SHARED_LINES[r.line] || [])])];
 const here = () => RIDES.filter(r => LOADED.has(rideRegion(r)));
-const regionName = cc => (REGIONS[cc] || {}).name || cc.toUpperCase();
+const regionName = cc => (cc ? (REGIONS[cc] || {}).name || cc.toUpperCase() : '');
 const STORE_KEY = 'noritetsu.rides.v1';
 
 /* THE PAINT EXPRESSIONS ARE PLAIN LITERALS, and have to stay that way:
@@ -343,6 +450,44 @@ const TRACK_LINE_COLOUR = ['to-color', ['get', 'c'], TRACK_COLOUR];
 const TRACK_COLOUR_RIDDEN = ['interpolate', ['linear'], 0.36, 0, '#0d0d0d', 1, TRACK_LINE_COLOUR];
 const TRACK_COLOUR_MUTED = ['interpolate', ['linear'], 0.24, 0, '#0d0d0d', 1, TRACK_LINE_COLOUR];
 
+/* THE LIGHT THEME'S KIND COLOURS are darker and more saturated: the dark theme's tram yellow
+   and narrow-gauge green all but vanish on a pale basemap. Held back towards the basemap's
+   own background, the way the dark theme's are held back towards black. */
+const TRACK_COLOUR_LIGHT = ['match', ['get', 'k'],
+  'rail', '#1f6fd1',
+  'subway', '#8a3fc7',
+  'light_rail', '#0d9488',
+  'tram', '#c98a00',
+  'monorail', '#e0621a',
+  'narrow_gauge', '#2f9e44',
+  'funicular', '#d6336c',
+  'heritage', '#c0392b',
+  '#777777'];
+const TRACK_LINE_COLOUR_LIGHT = ['to-color', ['get', 'c'], TRACK_COLOUR_LIGHT];
+const TRACK_COLOUR_RIDDEN_LIGHT = ['interpolate', ['linear'], 0.36,
+  0, '#f2f3f0', 1, TRACK_LINE_COLOUR_LIGHT];
+const TRACK_COLOUR_MUTED_LIGHT = ['interpolate', ['linear'], 0.24,
+  0, '#f2f3f0', 1, TRACK_LINE_COLOUR_LIGHT];
+
+/* A THIN EDGE ON A LINE TOO CLOSE TO THE BACKGROUND: dark round a bright line on the light
+   basemap (the Yamanote's green, the Sobu Line's yellow), light round a near-black one on the
+   dark (the Yokosuka Line's navy). The brightness is worked out in the expression from the
+   line's own colour, 0-255 weighted as luminance. The edge is a layer under the track at the
+   track's width, and the line itself is drawn narrower (CASED_INNER) over it, so an edged
+   line weighs about what it did: the edge is under half a pixel a side at most zooms, and
+   reads as a firmer outline rather than a border (Anita, 2026-09-30). Dark mode's threshold
+   is low because pure red scores about 50 and needs no help on black. */
+const LUM_DARK = ['+',
+  ['*', 0.2126, ['at', 0, ['to-rgba', TRACK_LINE_COLOUR]]],
+  ['*', 0.7152, ['at', 1, ['to-rgba', TRACK_LINE_COLOUR]]],
+  ['*', 0.0722, ['at', 2, ['to-rgba', TRACK_LINE_COLOUR]]]];
+const LUM_LIGHT = ['+',
+  ['*', 0.2126, ['at', 0, ['to-rgba', TRACK_LINE_COLOUR_LIGHT]]],
+  ['*', 0.7152, ['at', 1, ['to-rgba', TRACK_LINE_COLOUR_LIGHT]]],
+  ['*', 0.0722, ['at', 2, ['to-rgba', TRACK_LINE_COLOUR_LIGHT]]]];
+const CASED_DARK = ['<', LUM_DARK, 45];
+const CASED_LIGHT = ['>', LUM_LIGHT, 170];
+
 const RANK_W = ['match', ['get', 'r'], 0, 1.0, 0.8];
 
 /* THE RANK FACTOR MULTIPLIES EACH STOP, not the interpolate: ['*', ['interpolate', ['zoom'],
@@ -355,6 +500,21 @@ const TRACK_WIDTH = ['interpolate', ['linear'], ['zoom'],
   11, ['*', 1.50, RANK_W],
   14, ['*', 2.40, RANK_W],
   17, ['*', 4.00, RANK_W]];
+// The track's width when it has an edge under it (CASED_*), per theme; TRACK_WIDTH otherwise.
+const TRACK_WIDTH_DARK = ['interpolate', ['linear'], ['zoom'],
+  1, ['*', 0.45, RANK_W, ['case', CASED_DARK, 0.65, 1]],
+  5, ['*', 0.70, RANK_W, ['case', CASED_DARK, 0.65, 1]],
+  8, ['*', 1.00, RANK_W, ['case', CASED_DARK, 0.65, 1]],
+  11, ['*', 1.50, RANK_W, ['case', CASED_DARK, 0.65, 1]],
+  14, ['*', 2.40, RANK_W, ['case', CASED_DARK, 0.65, 1]],
+  17, ['*', 4.00, RANK_W, ['case', CASED_DARK, 0.65, 1]]];
+const TRACK_WIDTH_LIGHT = ['interpolate', ['linear'], ['zoom'],
+  1, ['*', 0.45, RANK_W, ['case', CASED_LIGHT, 0.65, 1]],
+  5, ['*', 0.70, RANK_W, ['case', CASED_LIGHT, 0.65, 1]],
+  8, ['*', 1.00, RANK_W, ['case', CASED_LIGHT, 0.65, 1]],
+  11, ['*', 1.50, RANK_W, ['case', CASED_LIGHT, 0.65, 1]],
+  14, ['*', 2.40, RANK_W, ['case', CASED_LIGHT, 0.65, 1]],
+  17, ['*', 4.00, RANK_W, ['case', CASED_LIGHT, 0.65, 1]]];
 
 /* With a line selected, everything else drops back (TRACK_COLOUR_MUTED) so the line can be
    read against it. The selected line is not drawn by this layer at all: it is redrawn on
@@ -368,6 +528,12 @@ const RIDDEN_WIDTH = ['interpolate', ['linear'], ['zoom'],
   1, 1.2, 5, 1.8, 8, 2.4, 11, 3.2, 14, 4.4, 17, 6.5];
 const RIDDEN_CASING = ['interpolate', ['linear'], ['zoom'],
   1, 2.6, 5, 3.4, 8, 4.4, 11, 5.6, 14, 7.4, 17, 10.0];
+
+/* Track the register lists but no train runs over (`closed`, see mergeRegion): grey and
+   dashed, from the model's geometry, since the tiles have no rails there to draw. */
+const CLOSED_WIDTH = ['interpolate', ['linear'], ['zoom'],
+  5, 0.8, 8, 1.1, 11, 1.6, 14, 2.4, 17, 3.6];
+const CLOSED_DASH = ['literal', [2, 2]];
 
 /* The selected line: a white halo under it, so the selection reads as a selection whatever
    colour the line itself is, and its stations as rings. The two ends of the trip being
@@ -392,6 +558,11 @@ const SEL_ST_FILL = ['match', ['get', 'role'],
   'from', ['get', 'c'], 'to', ['get', 'c'], '#0a0a0a'];
 const SEL_ST_STROKE = ['match', ['get', 'role'],
   'from', '#ffffff', 'to', '#ffffff', 'via', '#ffffff', ['get', 'c']];
+// In the light theme what is white above is near-black, and the dark fill is white.
+const SEL_ST_FILL_LIGHT = ['match', ['get', 'role'],
+  'from', ['get', 'c'], 'to', ['get', 'c'], '#ffffff'];
+const SEL_ST_STROKE_LIGHT = ['match', ['get', 'role'],
+  'from', '#111111', 'to', '#111111', 'via', '#111111', ['get', 'c']];
 /* The `sel` source holds three parts, each with its own layers:
      base  the whole selected line, held back, since most of it is usually unridden;
      done  the part of it that has been ridden (by any line over the same track), at full
@@ -403,6 +574,7 @@ const SEL_RUN_WIDTH = ['interpolate', ['linear'], ['zoom'],
 const PART_BASE = ['==', ['get', 'part'], 'base'];
 const PART_DONE = ['==', ['get', 'part'], 'done'];
 const PART_RUN = ['==', ['get', 'part'], 'run'];
+const PART_GONE = ['==', ['get', 'part'], 'gone'];
 const SEL_ST_STROKE_W = ['match', ['get', 'role'], 'from', 3, 'to', 3, 'reach', 1.3, 2.4];
 
 /* Legend text, and the zoom each kind starts appearing at (which must match MINZOOM in
@@ -418,12 +590,89 @@ const RANK_LABEL = ['main line', 'branch'];
 
 /* The OpenFreeMap dark style draws its OWN railways, from the same OpenStreetMap data, in
    near-black. Left alone they shadow every line we draw and read as a ghost network. */
+// The last two are the light theme's (Positron's).
 const BASEMAP_RAIL = ['railway', 'railway_dashline', 'railway_minor',
-  'railway_minor_dashline', 'railway_transit', 'railway_transit_dashline'];
+  'railway_minor_dashline', 'railway_transit', 'railway_transit_dashline',
+  'railway_service', 'railway_service_dashline'];
 
-// Ridden first (decided 2026-09-30): the map opens on your own lines.
-let MODE = 'ridden';
-function palette() { return TRACK_COLOUR; }
+// Ridden first (decided 2026-09-30): the map opens on your own lines. Then as it was left.
+const MODE_KEY = 'noritetsu.mode';
+let MODE = (() => {
+  try { const m = localStorage.getItem(MODE_KEY); if (m === 'browse' || m === 'ridden') return m; }
+  catch (e) { }
+  return 'ridden';
+})();
+
+/* DARK OR LIGHT. The page's colours are CSS variables (the :root blocks above); these are
+   the ones CSS cannot reach: the basemap, the map's own paint, and colours the script
+   writes into the strip diagram's SVG. `run` is what the dark theme draws in white (the trip
+   being entered, the stations it passes); `bg` is what a held-back colour fades towards.
+   Chosen with ?theme=light|dark or the button, and remembered per browser. Added
+   2026-09-30 so Anita can see a light version before deciding whether to switch to it. */
+const THEMES = {
+  dark: {
+    style: 'https://tiles.openfreemap.org/styles/dark',
+    bg: [13, 13, 13], panel: '#0d0d0d', run: '#ffffff', halo: '#ffffff', haloOpacity: 0.2,
+    casing: '#0a0a0a', stFill: '#0a0a0a', stStroke: '#cfd9e4', label: '#d8dee6',
+    labelHalo: '#0a0a0a', gone: '#6a6a6a', selGone: '#9a9a9a', stripGone: '#555555',
+    off: '#3a3a3a', dimText: '#6f6f6f',
+    track: TRACK_LINE_COLOUR, ridden: TRACK_COLOUR_RIDDEN, muted: TRACK_COLOUR_MUTED,
+    kinds: TRACK_COLOUR, selFill: SEL_ST_FILL, selStroke: SEL_ST_STROKE,
+    // The edge under too-dark lines, and the same held back as the track is (0.36, 0.24).
+    width: TRACK_WIDTH_DARK, cased: CASED_DARK,
+    edge: '#d8d8d8', edgeRidden: '#565656', edgeMuted: '#3e3e3e',
+    baseHide: ['place_country_other', 'place_country_minor', 'place_country_major'],
+    basePaint: [['boundary_state', 'line-color', '#1c1c1c'],
+                ['boundary_country_z0-4', 'line-color', '#2a2a2a'],
+                ['boundary_country_z5-', 'line-color', '#2a2a2a']],
+  },
+  light: {
+    style: 'https://tiles.openfreemap.org/styles/positron',
+    bg: [242, 243, 240], panel: '#fafaf8', run: '#111111', halo: '#000000', haloOpacity: 0.12,
+    casing: '#ffffff', stFill: '#ffffff', stStroke: '#111111', label: '#2a2f35',
+    labelHalo: '#ffffff', gone: '#9a9a96', selGone: '#77776f', stripGone: '#b0b0aa',
+    off: '#c4c4c0', dimText: '#8a8a86',
+    track: TRACK_LINE_COLOUR_LIGHT, ridden: TRACK_COLOUR_RIDDEN_LIGHT,
+    muted: TRACK_COLOUR_MUTED_LIGHT, kinds: TRACK_COLOUR_LIGHT,
+    selFill: SEL_ST_FILL_LIGHT, selStroke: SEL_ST_STROKE_LIGHT,
+    width: TRACK_WIDTH_LIGHT, cased: CASED_LIGHT,
+    edge: '#2a2a2a', edgeRidden: '#aaaaaa', edgeMuted: '#c2c2c2',
+    /* Positron's own labels, softened. It draws country, city and town names in pure black
+       on a white halo, which stood out over the rail network more than Anita liked
+       (2026-09-30); a mid grey keeps them readable without competing with the lines. */
+    baseLabels: {
+      label_country_1: '#a2a7ad', label_country_2: '#a2a7ad', label_country_3: '#a2a7ad',
+      label_city_capital: '#a2a7ad', label_city: '#a2a7ad', label_town: '#aaafb4',
+      label_village: '#b1b5ba', label_state: '#b8bcc0', label_other: '#b8bcc0',
+      water_name_point_label: '#a8b4c8', water_name_line_label: '#a8b4c8',
+      'highway-name-minor': '#b4b4b4', 'highway-name-major': '#b4b4b4', airport: '#b4b4b4',
+    },
+    baseLabelHalo: 'rgba(242,243,240,0.85)',
+    /* The dots beside city and town names are black images from Positron's sprite, which
+       cannot be recoloured, so they are faded instead. Removing them would move the names,
+       which are placed against the dot. */
+    baseIcons: ['label_city_capital', 'label_city', 'label_town', 'label_village', 'airport'],
+    baseIconOpacity: 0.3,
+    /* No country names: the map is of lines and the places on them, and the country is
+       plain from the panel's headline. Province and country boundaries paler than Positron
+       draws them (Anita, 2026-09-30). The dark theme's entries do the same. */
+    baseHide: ['label_country_1', 'label_country_2', 'label_country_3'],
+    basePaint: [['boundary_3', 'line-color', '#dcdcd8'],
+                ['boundary_2', 'line-color', '#c8c8c4'],
+                ['boundary_disputed', 'line-color', '#c8c8c4']],
+  },
+};
+const THEME_KEY = 'noritetsu.theme';
+let THEME_NAME = (() => {
+  const q = new URLSearchParams(location.search).get('theme');
+  if (THEMES[q]) return q;
+  try { const s = localStorage.getItem(THEME_KEY); if (THEMES[s]) return s; } catch (e) { }
+  return 'dark';
+})();
+let THEME = THEMES[THEME_NAME];
+document.documentElement.dataset.theme = THEME_NAME;
+
+function palette() { return THEME.kinds; }
 
 /* The same darkening the strip diagram's unridden spine uses, so the map and the diagram
    agree about what an unridden line looks like. CSS does it with
@@ -447,8 +696,9 @@ function dimmed(c, amount = 0.30) {
     const m = v.match(/(\d+)\D+(\d+)\D+(\d+)/);
     if (m) { r = +m[1]; g = +m[2]; b = +m[3]; }
   }
-  const mix = x => Math.round(x * amount + 13 * (1 - amount));
-  return `rgb(${mix(r)},${mix(g)},${mix(b)})`;
+  const [br, bg, bb] = THEME.bg;
+  const mix = (x, y) => Math.round(x * amount + y * (1 - amount));
+  return `rgb(${mix(r, br)},${mix(g, bg)},${mix(b, bb)})`;
 }
 function kindColour(k) {
   const p = palette();
@@ -460,11 +710,16 @@ function kindColour(k) {
 
 maplibregl.addProtocol('pmtiles', new pmtiles.Protocol().tile);
 
+/* Where the map was left, or the whole world the first time: zoom 1 shows a 1024 px wide
+   world, so the zoom that fits it across the map is log2(width / 512). `?region=` moves the
+   camera once regions.json says where that is. */
+const WORLD_ZOOM = Math.max(1, Math.log2((document.getElementById('map').clientWidth || 1024) / 512));
 const map = new maplibregl.Map({
   container: 'map',
-  style: 'https://tiles.openfreemap.org/styles/dark',
-  // Japan to begin with; `?region=` moves the camera once regions.json says where that is.
-  center: [137.5, 37.0], zoom: 4.6,
+  style: THEME.style,
+  center: SAVED_CAMERA ? SAVED_CAMERA.c : [15, 25],
+  zoom: SAVED_CAMERA ? SAVED_CAMERA.z : WORLD_ZOOM,
+  bearing: SAVED_CAMERA ? SAVED_CAMERA.b || 0 : 0,
   minZoom: 1, maxZoom: 17, maxPitch: 0,
   pitchWithRotate: false, touchPitch: false,
   attributionControl: { compact: true },
@@ -500,6 +755,8 @@ map.on('load', () => {
                          data: { type: 'FeatureCollection', features: [] } });
   map.addSource('selst', { type: 'geojson',
                            data: { type: 'FeatureCollection', features: [] } });
+  map.addSource('closed', { type: 'geojson',
+                            data: { type: 'FeatureCollection', features: [] } });
   /* STATION BUBBLES COME FROM THE MODEL, not from the tiles. The tile layer carries every
      station node OpenStreetMap has, which at a complex like Kita-Senju is one per operator:
      four bubbles on top of each other, no way to tell which to click, and only one of them
@@ -509,6 +766,15 @@ map.on('load', () => {
                               data: { type: 'FeatureCollection', features: [] } });
 
   // Each country's track goes in under these, as it comes into view: see addRegionTiles.
+  map.addLayer({
+    id: 'closed-hit', type: 'line', source: 'closed',
+    paint: { 'line-color': '#000', 'line-opacity': 0.01, 'line-width': HIT_WIDTH },
+  }, beforeLabels);
+  map.addLayer({
+    id: 'closed', type: 'line', source: 'closed',
+    paint: { 'line-color': '#6a6a6a', 'line-width': CLOSED_WIDTH,
+             'line-dasharray': CLOSED_DASH },
+  }, beforeLabels);
   map.addLayer({
     id: 'sel-halo', type: 'line', source: 'sel', filter: PART_BASE,
     layout: { 'line-cap': 'round', 'line-join': 'round' },
@@ -522,6 +788,11 @@ map.on('load', () => {
     paint: { 'line-color': ['get', 'c'], 'line-width': SEL_LINE_WIDTH, 'line-opacity': 0.45 },
   }, beforeLabels);
   // Dark casing so a ridden line stays legible where it crosses another one.
+  map.addLayer({
+    id: 'sel-gone', type: 'line', source: 'sel', filter: PART_GONE,
+    paint: { 'line-color': '#9a9a9a', 'line-width': SEL_LINE_WIDTH,
+             'line-dasharray': CLOSED_DASH },
+  }, beforeLabels);
   map.addLayer({
     id: 'ridden-casing', type: 'line', source: 'ridden',
     layout: { 'line-cap': 'round', 'line-join': 'round' },
@@ -555,7 +826,7 @@ map.on('load', () => {
   map.addLayer({
     id: 'station', type: 'circle', source: 'stations', minzoom: 9,
     paint: {
-      'circle-radius': ['interpolate', ['linear'], ['zoom'], 9, 1.4, 12, 2.6, 15, 4.5],
+      'circle-radius': ['interpolate', ['linear'], ['zoom'], 9, 1.75, 12, 3.25, 15, 5.6],
       'circle-color': '#0a0a0a', 'circle-stroke-color': '#cfd9e4',
       'circle-stroke-width': ['interpolate', ['linear'], ['zoom'], 9, 0.7, 13, 1.3],
     },
@@ -574,15 +845,101 @@ map.on('load', () => {
   });
 
   mapReady = true;
+  applyTheme();
   document.getElementById('legend-box').open = window.innerWidth > 720;
   drawLegend();
   map.on('zoomend', drawLegend);
   map.on('moveend', considerCamera);
+  map.on('moveend', saveCamera);
   paintStations();
   paintRidden();
   paintSelection();
   REGIONS_READY.then(startRegions);
 });
+
+/* The theme's colours on the layers this page adds. They are created with the dark theme's
+   literals (which the expression lint checks) and set here for whichever theme is on. */
+function applyTheme() {
+  if (!mapReady) return;
+  applyBasemap();
+  const set = (id, k, v) => { if (map.getLayer(id)) map.setPaintProperty(id, k, v); };
+  set('sel-halo', 'line-color', THEME.halo);
+  set('sel-halo', 'line-opacity', THEME.haloOpacity);
+  for (const id of ['ridden-casing', 'sel-done-casing', 'sel-run-casing'])
+    set(id, 'line-color', THEME.casing);
+  set('station', 'circle-color', THEME.stFill);
+  set('station', 'circle-stroke-color', THEME.stStroke);
+  set('sel-station', 'circle-color', THEME.selFill);
+  set('sel-station', 'circle-stroke-color', THEME.selStroke);
+  set('station-label', 'text-color', THEME.label);
+  set('station-label', 'text-halo-color', THEME.labelHalo);
+  set('closed', 'line-color', THEME.gone);
+  set('sel-gone', 'line-color', THEME.selGone);
+  applyTrackColour();
+}
+
+/* The basemap's own changes: its railways off, and its labels in the theme's colours. Run on
+   `style.load`, which comes before the first frame is drawn; waiting for `load`, which comes
+   after it, showed Positron's black labels for a moment before they faded. */
+function applyBasemap() {
+  for (const id of BASEMAP_RAIL)
+    if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', 'none');
+  for (const [id, c] of Object.entries(THEME.baseLabels || {})) {
+    if (!map.getLayer(id)) continue;
+    map.setPaintProperty(id, 'text-color', c);
+    map.setPaintProperty(id, 'text-halo-color', THEME.baseLabelHalo);
+  }
+  for (const id of THEME.baseIcons || [])
+    if (map.getLayer(id)) map.setPaintProperty(id, 'icon-opacity', THEME.baseIconOpacity);
+  for (const id of THEME.baseHide || [])
+    if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', 'none');
+  for (const [id, k, v] of THEME.basePaint || [])
+    if (map.getLayer(id)) map.setPaintProperty(id, k, v);
+}
+map.on('style.load', applyBasemap);
+
+/* Switching theme swaps the basemap style, and MapLibre's setStyle throws away every source
+   and layer the page added. `carryOver` hands them to the new style instead, in the same
+   places: everything that is not a label just under the new style's labels, as on load,
+   and the station names on top. The geojson sources come across with their data. */
+const OWN_SOURCES = new Set(['ridden', 'sel', 'selst', 'stations', 'closed']);
+function carryOver(prev, next) {
+  if (!prev) return next;
+  const ours = prev.layers.filter(l => OWN_SOURCES.has(l.source)
+    || String(l.source || '').startsWith('rail-'));
+  const sources = { ...next.sources };
+  for (const l of ours) sources[l.source] = prev.sources[l.source];
+  let last = -1;
+  next.layers.forEach((l, i) => { if (l.type !== 'symbol') last = i; });
+  return { ...next, sources, layers: [
+    ...next.layers.slice(0, last + 1), ...ours.filter(l => l.type !== 'symbol'),
+    ...next.layers.slice(last + 1), ...ours.filter(l => l.type === 'symbol')] };
+}
+
+function setTheme(name) {
+  if (!THEMES[name] || name === THEME_NAME) return;
+  THEME_NAME = name;
+  THEME = THEMES[name];
+  try { localStorage.setItem(THEME_KEY, name); } catch (e) { /* remembered for this page only */ }
+  document.documentElement.dataset.theme = name;
+  themeButton();
+  if (mapReady) {
+    map.once('style.load', () => {
+      applyTheme();
+      paintStations(); paintRidden(); paintClosed(); paintSelection();
+    });
+    // No diff: a diffed swap fires no style.load, and the repaint above would never run.
+    map.setStyle(THEME.style, { transformStyle: carryOver, diff: false });
+    drawLegend();
+  }
+  render();
+}
+// The button names the theme it switches to.
+function themeButton() {
+  const b = document.getElementById('theme-btn');
+  if (b) b.textContent = THEME_NAME === 'dark' ? 'Light' : 'Dark';
+}
+themeButton();
 
 /* One bubble per station the model knows, which is one per complex. */
 function paintStations() {
@@ -596,11 +953,17 @@ function paintStations() {
 
 function setMode(m) {
   MODE = m;
-  for (const b of document.querySelectorAll('#modes button'))
-    b.classList.toggle('on', b.dataset.mode === m);
+  try { localStorage.setItem(MODE_KEY, m); } catch (e) { /* for this page only */ }
+  modeButtons();
+  if (!mapReady) return;
   drawLegend();
   paintSelection();       // which sets the track's colour for the mode
 }
+function modeButtons() {
+  for (const b of document.querySelectorAll('#modes button[data-mode]'))
+    b.classList.toggle('on', b.dataset.mode === MODE);
+}
+modeButtons();
 
 /* Whether any country's tiles carry line colours. Older archives have only the kind, and the
    legend must not claim colours the map is not drawing. Learned from the tiles as they
@@ -637,10 +1000,7 @@ const REGIONS_READY = fetch('regions.json').then(r => r.json())
       });
       REGIONS[cc] = r;
     }
-    const names = Object.values(REGIONS).map(r => r.name);
-    document.querySelector('#title p').textContent = 'Every passenger rail line, and the ones '
-      + `you have ridden. ${names.length > 1 ? names.slice(0, -1).join(', ') + ' and '
-        + names[names.length - 1] : names[0] || 'Nowhere'} so far.`;
+    SHARED_LINES = j.shared_lines || {};
   })
   .catch(() => { /* no index: the countries with rides still load, below */ });
 
@@ -649,8 +1009,23 @@ const REGIONS_READY = fetch('regions.json').then(r => r.json())
    whatever is on screen. */
 function startRegions() {
   if (START && REGIONS[START]) goRegion(START);
-  for (const cc of new Set(RIDES.map(rideRegion))) loadRegion(cc);
+  for (const cc of new Set(RIDES.flatMap(rideRegions))) loadRegion(cc);
+  // The headline's country, remembered with the camera, even when it is not in the middle.
+  if (FOCUS && REGIONS[FOCUS]) loadRegion(FOCUS);
+  else if (FOCUS && !START) FOCUS = null;
   considerCamera();
+  if (VIEW.kind === 'home') render();
+  restoreUi();
+}
+
+/* Saved on every camera stop: one small write, and only when something moved. */
+function saveCamera() {
+  const c = map.getCenter();
+  try {
+    localStorage.setItem(CAMERA_KEY, JSON.stringify({
+      c: [+c.lng.toFixed(5), +c.lat.toFixed(5)], z: +map.getZoom().toFixed(3),
+      b: +map.getBearing().toFixed(1), f: FOCUS || null }));
+  } catch (e) { /* remembered for this page only */ }
 }
 
 /* A country's track, as two layers under everything the app draws on top. The same two for
@@ -666,21 +1041,35 @@ function addRegionTiles(cc) {
     id: `track-hit-${cc}`, type: 'line', source: `rail-${cc}`, 'source-layer': 'track',
     paint: { 'line-color': '#000', 'line-opacity': 0.01, 'line-width': HIT_WIDTH },
   }, 'sel-halo');
+  // The edge under a line too close to the background (CASED_*), at the full track width.
+  map.addLayer({
+    id: `track-edge-${cc}`, type: 'line', source: `rail-${cc}`, 'source-layer': 'track',
+    filter: CASED_DARK,
+    layout: { 'line-cap': 'round', 'line-join': 'round' },
+    paint: { 'line-color': '#d8d8d8', 'line-width': TRACK_WIDTH,
+             'line-opacity': TRACK_OPACITY },
+  }, 'sel-halo');
   map.addLayer({
     id: `track-${cc}`, type: 'line', source: `rail-${cc}`, 'source-layer': 'track',
     layout: { 'line-cap': 'round', 'line-join': 'round' },
-    paint: { 'line-color': TRACK_LINE_COLOUR, 'line-width': TRACK_WIDTH,
+    paint: { 'line-color': TRACK_LINE_COLOUR, 'line-width': TRACK_WIDTH_DARK,
              'line-opacity': TRACK_OPACITY },
   }, 'sel-halo');
   applyTrackColour();
 }
-const hitLayers = () => [...TILES].map(cc => `track-hit-${cc}`);
+const hitLayers = () => [...TILES].map(cc => `track-hit-${cc}`)
+  .concat(TILES.size && map.getLayer('closed-hit') ? ['closed-hit'] : []);
 
 let MUTED_NOW = false;
 function applyTrackColour() {
-  const c = MUTED_NOW ? TRACK_COLOUR_MUTED
-    : MODE === 'ridden' ? TRACK_COLOUR_RIDDEN : TRACK_LINE_COLOUR;
-  for (const cc of TILES) map.setPaintProperty(`track-${cc}`, 'line-color', c);
+  const c = MUTED_NOW ? THEME.muted : MODE === 'ridden' ? THEME.ridden : THEME.track;
+  const edge = MUTED_NOW ? THEME.edgeMuted : MODE === 'ridden' ? THEME.edgeRidden : THEME.edge;
+  for (const cc of TILES) {
+    map.setPaintProperty(`track-${cc}`, 'line-color', c);
+    map.setPaintProperty(`track-${cc}`, 'line-width', THEME.width);
+    map.setPaintProperty(`track-edge-${cc}`, 'line-color', edge);
+    map.setFilter(`track-edge-${cc}`, THEME.cased);
+  }
 }
 
 /* Ray casting in degrees, after a bounding-box reject: religiondots' `countryAt`. The
@@ -749,8 +1138,8 @@ function goRegion(cc) {
   const r = REGIONS[cc];
   if (!r) return;
   const [w, s, e, n] = r.view || r.bbox;
-  map.fitBounds([[w, s], [e, n]], { padding: 40, duration: 0 });
   FOCUS = cc;
+  map.fitBounds([[w, s], [e, n]], { padding: 40, duration: 0 });
   loadRegion(cc);
   if (VIEW.kind === 'home') render();
 }
@@ -765,9 +1154,11 @@ function drawLegend() {
     + Object.entries(KIND_LABEL).map(([k, [label, mz]]) => {
       const on = z >= mz;
       return `<div class="row${on ? '' : ' off'}">`
-        + `<span class="sw" style="border-top-color:${on ? sw(k) : '#3a3a3a'}"></span>`
+        + `<span class="sw" style="border-top-color:${on ? sw(k) : THEME.off}"></span>`
         + `${label}</div>`;
-    }).join('');
+    }).join('')
+    + (CLOSED.size ? `<div class="row"><span class="sw" style="border-top-style:dashed;`
+      + `border-top-color:${THEME.gone}"></span>No longer running</div>` : '');
   const note = MODE === 'ridden'
     ? 'Held back, so the lines you have ridden read over it at full strength.'
     : z < 6 ? 'Main lines only at this zoom. Zoom in for metros, trams and branches.'
@@ -784,9 +1175,10 @@ const REGISTER_IN = new Set();   // countries whose build has a national registe
 const ALIASES = {};        // cc -> {old station id: new}, for rides saved before a rebuild
 const LINE_ALIASES = {};   // cc -> {OSM line id: the register line it was merged into}
 const LINE_BY_ID = new Map(), SEC_BY_GID = new Map();
+const CLOSED = new Set();  // section gids the register lists but no train runs over
 const OP_EN = new Map();   // raw operator string -> the English name any of its lines gives
 const GEOM = new Map();    // line id -> promise of {"from|to": [[lon,lat],...]}, on demand
-let MIGRATION = { moved: 0, lost: 0 };
+let MIGRATION = { moved: 0 };
 
 function loadRegion(cc) {
   if (!cc) return Promise.resolve();
@@ -801,12 +1193,14 @@ function loadRegion(cc) {
     ]).then(([l, s, c, a]) => {
       mergeRegion(cc, l, s, c, a);
       LOADED.add(cc);
-      const m = migrateRides(cc);
-      MIGRATION.moved += m.moved;
-      MIGRATION.lost += m.lost;
+      // A line over a border may have just grown a piece, so every ride's run is redone.
+      for (const r of RIDES) delete r._gids;
+      MIGRATION.moved += migrateRides(cc);
       REACH_CACHE = { from: null, set: new Set() };
       paintStations();
       paintRidden();
+      paintClosed();
+      if (mapReady) drawLegend();
       paintSelection();
       render();
     }).catch(err => {
@@ -823,6 +1217,14 @@ function mergeRegion(cc, l, s, c, a) {
   // Any source but OpenStreetMap is a register: 'n02' in Japan, 'schienennetz' in Switzerland.
   if (l.lines.some(x => x.src !== 'osm')) REGISTER_IN.add(cc);
   for (const [id, st] of Object.entries(s.stations)) {
+    /* A STATION IN TWO EXTRACTS (a border point, a tram stop over the line in Basel) keeps
+       the object loaded first, and the lines calling there become the union of both. */
+    const had = STATIONS[id];
+    if (had) {
+      had.l = [...new Set([...(had.l || []), ...(st.l || [])])];
+      had.regions = [...new Set([...(had.regions || [had.region]), cc])];
+      continue;
+    }
     st.region = cc;
     st._n = norm(st.e);
     st._n2 = norm(st.n);
@@ -835,14 +1237,24 @@ function mergeRegion(cc, l, s, c, a) {
   for (const line of l.lines) {
     line.region = cc;
     for (const sec of line.sections) sec[3] = g(sec[3]);
+    /* NOT RUNNING: sections the register lists with no rails on the map (not_running.py in
+       the build). Kept, greyed and dashed, so a ride from before the closure can still be
+       entered, but left out of the line's length and so out of every percentage: nobody can
+       finish the 日田彦山線 by riding it now. `km_closed` is what was taken off. */
+    if (line.closed && line.closed.length) {
+      const shut = new Set(line.closed);
+      let off = 0;
+      for (const sec of line.sections)
+        if (shut.has(`${sec[0]}|${sec[1]}`)) { CLOSED.add(sec[3]); off += sec[2]; }
+      line.km_closed = off;
+      line.km = Math.max(0, line.km - off);
+    }
+    searchKeys(line);
+    const had = LINE_BY_ID.get(line.id);
+    if (had && !regionsOf(had).includes(cc)) { joinLine(had, line); continue; }
     LINES.push(line);
     LINE_BY_ID.set(line.id, line);
     for (const sec of line.sections) SEC_BY_GID.set(sec[3], { line, sec });
-    // Search keys, accent-stripped once here rather than per keystroke over 713 lines.
-    line._n = norm(line.name_en || line.name);
-    line._n2 = norm(line.name);
-    line._k = norm(`${line.name} ${line.name_en} ${line.ref} `
-                   + `${line.operator} ${line.operator_en}`);
   }
 
   /* JR East came out as TWO operators, "East Japan Railway Company" with 86.5 km and
@@ -872,26 +1284,160 @@ function mergeRegion(cc, l, s, c, a) {
   buildOps();
 }
 
+// Search keys, accent-stripped once here rather than per keystroke over 713 lines.
+function searchKeys(line) {
+  line._n = norm(line.name_en || line.name);
+  line._n2 = norm(line.name);
+  line._k = norm(`${line.name} ${line.name_en} ${line.ref} `
+                 + `${line.operator} ${line.operator_en}`);
+}
+
+/* ONE LINE OVER A BORDER IS ONE LINE. Each country is built on its own, and an OSM route
+   that crosses a border is built in every country it touches under the same id (the Eurostar
+   is m5189989 in Belgium, France and the Netherlands). Kept apart, the last country loaded
+   won and a click showed only its piece. So when a second country brings an id already
+   loaded, the two become one line: sections concatenate (their ids are already prefixed by
+   country), lengths add up, and the stations along it join end to end. Each country's piece
+   is kept in `parts`, since a country's own totals count only its own piece, and geometry
+   is fetched from every country the line runs through. Register lines have per-country ids
+   and are never joined: Belgium's L.36 stops at the border by design. */
+const partsOf = l => l.parts || [l];
+const regionsOf = l => (l.regions || [l.region]);
+
+function joinLine(had, line) {
+  const m = combineParts([...partsOf(had).map(p => p.orig || p), line]);
+  const i = LINES.indexOf(had);
+  if (i >= 0) LINES[i] = m; else LINES.push(m);
+  LINE_BY_ID.set(m.id, m);
+  for (const sec of m.sections) SEC_BY_GID.set(sec[3], { line: m, sec });
+  GEOM.delete(m.id);
+}
+
+/* The joined line, from each country's line object as read. A section two countries both
+   carry (the same two stations, as a Basel tram stop over the border is in both extracts)
+   is kept once, from the country loaded first, and its length is not counted twice. */
+function combineParts(origs) {
+  const seen = new Set(), sections = [];
+  const service = origs.some(p => p.service);
+  const parts = origs.map(o => {
+    const own = [];
+    let drop = 0;
+    for (const sec of o.sections) {
+      const k = sec[0] < sec[1] ? `${sec[0]}|${sec[1]}` : `${sec[1]}|${sec[0]}`;
+      if (seen.has(k)) { if (!CLOSED.has(sec[3])) drop += sec[2]; continue; }
+      seen.add(k);
+      own.push(sec);
+      sections.push(sec);
+    }
+    // One country's piece, as its own totals and its geometry file see it.
+    return { orig: o, id: o.id, region: o.region, src: o.src, service, sections: own,
+             km: Math.max(0, o.km - drop), km_closed: o.km_closed || 0, display: o.display };
+  });
+  const first = k => (origs.find(p => p[k]) || {})[k] || '';
+  const sum = k => parts.reduce((s, p) => s + (p[k] || 0), 0);
+  const m = {
+    id: origs[0].id, region: origs[0].region, regions: parts.map(p => p.region), parts,
+    name: first('name'), name_en: first('name_en'), ref: first('ref'), colour: first('colour'),
+    operator: first('operator'), operator_en: first('operator_en'), network: first('network'),
+    kind: first('kind'), src: first('src'), service, dup: origs.some(p => p.dup),
+    variants: Math.max(...origs.map(p => p.variants || 0)),
+    straight_sections: origs.reduce((s, p) => s + (p.straight_sections || 0), 0),
+    km: sum('km'), sections, display: chainDisplays(parts),
+  };
+  if (sum('km_closed')) m.km_closed = sum('km_closed');
+  searchKeys(m);
+  return m;
+}
+
+/* Each piece's stations in order, joined end to end: start from whichever end gives the
+   shortest jumps between pieces, then always on to the nearest end of what is left.
+   Pieces meeting at one station (a tram stop in both extracts) list it once. */
+function chainDisplays(parts) {
+  const ds = parts.map(p => (p.display && p.display.length ? p.display
+    : [...new Set(p.sections.flatMap(s => [s[0], s[1]]))])).filter(d => d.length);
+  if (ds.length < 2) return ds[0] || [];
+  const gap = (a, b) => {
+    const A = STATIONS[a], B = STATIONS[b];
+    return a === b ? 0 : A && B ? crowKm(A, B) : 1e6;
+  };
+  let best = null;
+  for (let s = 0; s < ds.length; s++) for (const flip of [false, true]) {
+    const left = ds.filter((_, i) => i !== s);
+    let out = flip ? [...ds[s]].reverse() : [...ds[s]], total = 0;
+    while (left.length) {
+      const tail = out[out.length - 1];
+      let bi = 0, bf = false, bd = Infinity;
+      left.forEach((d, i) => {
+        const d0 = gap(tail, d[0]), d1 = gap(tail, d[d.length - 1]);
+        if (d0 < bd) { bd = d0; bi = i; bf = false; }
+        if (d1 < bd) { bd = d1; bi = i; bf = true; }
+      });
+      const d = left.splice(bi, 1)[0];
+      out = out.concat(bf ? [...d].reverse() : d);
+      total += bd;
+    }
+    if (!best || total < best.total) best = { total, out };
+  }
+  const out = best.out.filter((id, i, a) => i === 0 || id !== a[i - 1]);
+  // North first, as the strip diagram draws each piece.
+  const y = id => (STATIONS[id] || {}).y || 0;
+  return y(out[0]) < y(out[out.length - 1]) ? out.reverse() : out;
+}
+
+/* The other countries a line runs into, so that selecting it can load them: from the
+   shared index in regions.json, or where that is missing, any country within about 3 km of
+   one of the line's ends of track (a border crossing ends a country's piece there). */
+function lineRegionsToLoad(line) {
+  const out = new Set(SHARED_LINES[line.id] || []);
+  if (!Object.keys(SHARED_LINES).length) {
+    const deg = new Map();
+    for (const [a, b] of line.sections) for (const s of [a, b]) deg.set(s, (deg.get(s) || 0) + 1);
+    const d = 0.03;
+    for (const [id, n] of deg) {
+      const s = STATIONS[id];
+      if (n !== 1 || !s) continue;
+      for (const [cc, r] of Object.entries(REGIONS)) {
+        if (out.has(cc)) continue;
+        for (const [dx, dy] of [[0, 0], [d, 0], [-d, 0], [0, d], [0, -d]])
+          if (inRegion(r, s.x + dx, s.y + dy)) { out.add(cc); break; }
+      }
+    }
+  }
+  for (const cc of regionsOf(line)) out.delete(cc);
+  return [...out];
+}
+function loadLineRegions(id) {
+  const line = LINE_BY_ID.get(id);
+  const ccs = line ? lineRegionsToLoad(line) : (SHARED_LINES[id] || []);
+  return Promise.all(ccs.filter(cc => !LOADED.has(cc)).map(loadRegion));
+}
+
 /* The promise is what is cached, so two paints asking for the same line while it is still
-   in flight share one fetch rather than racing two. */
+   in flight share one fetch rather than racing two. A line over a border is one file per
+   country it runs through, merged; joining another country's piece drops the cached one. */
 function geomFor(lineId) {
   if (!GEOM.has(lineId)) {
     // A failure is not cached: an empty answer kept for the session left a line with
     // nothing drawn on the map until a reload.
-    const region = (LINE_BY_ID.get(lineId) || {}).region;
-    GEOM.set(lineId, fetch(`data/${region}/geom/${lineId}.json`)
+    const line = LINE_BY_ID.get(lineId);
+    let failed = false;
+    const one = part => fetch(`data/${part.region}/geom/${lineId}.json`)
       .then(r => {
         if (r.status === 404) noteStale();
         if (!r.ok) throw new Error(r.status);
         return r.json();
       })
       .then(g => {
-        const line = LINE_BY_ID.get(lineId);
-        if (line && line.sections.length && Object.keys(g).length
-            && !line.sections.some(([a, b]) => g[`${a}|${b}`])) noteStale();
+        if (part.sections.length && Object.keys(g).length
+            && !part.sections.some(([a, b]) => g[`${a}|${b}`])) noteStale();
         return g;
       })
-      .catch(() => { GEOM.delete(lineId); return {}; }));
+      .catch(() => { failed = true; return {}; });
+    const p = Promise.all((line ? partsOf(line) : []).map(one)).then(gs => {
+      if (failed && GEOM.get(lineId) === p) GEOM.delete(lineId);
+      return Object.assign({}, ...gs);
+    });
+    GEOM.set(lineId, p);
   }
   return GEOM.get(lineId);
 }
@@ -919,28 +1465,38 @@ function nearestStation(lon, lat, withinM) {
 /* A rebuild can move station ids: merging OpenStreetMap onto the national register turned
    n760985649 into g004633. Rides name stations by id, so without this every trip recorded
    before that build would quietly stop counting and its diagram would show raw ids. */
-// Run as each country's data arrives, over that country's rides only.
+// Run as each country's data arrives, over the rides that need that country.
 function migrateRides(cc) {
-  let moved = 0, lost = 0;
+  let moved = 0;
   for (const r of RIDES) {
-    if (rideRegion(r) !== cc) continue;
+    if (!rideRegions(r).includes(cc)) continue;
     if (!r.region) { r.region = cc; moved++; }
     moved += migrateRide(r);
-    if (!STATIONS[r.from] || !STATIONS[r.to] || !LINE_BY_ID.has(r.line)) lost++;
   }
   if (moved) saveRides();
-  return { moved, lost };
+  return moved;
+}
+
+/* Rides that cannot be matched to the data, counted only once every country the ride needs
+   is in: a ride on a line over a border names a station of the next country, which is not
+   lost while that country is still loading. */
+function lostRides() {
+  return RIDES.filter(r => rideRegions(r).every(cc => LOADED.has(cc))
+    && (!STATIONS[r.from] || !STATIONS[r.to] || !LINE_BY_ID.has(r.line))).length;
 }
 
 /* Station ids that a rebuild moved, and OSM lines a rebuild merged into their register
-   twin (148 in Japan: the Ginza line as operated is now just the Ginza line). */
+   twin (148 in Japan: the Ginza line as operated is now just the Ginza line). Looked up in
+   every country the ride runs through. */
 function migrateRide(r) {
   let moved = 0;
-  const st = ALIASES[rideRegion(r)] || {}, ln = LINE_ALIASES[rideRegion(r)] || {};
-  for (const k of ['from', 'to']) {
-    if (!STATIONS[r[k]] && st[r[k]]) { r[k] = st[r[k]]; moved++; }
+  for (const cc of rideRegions(r)) {
+    const st = ALIASES[cc] || {}, ln = LINE_ALIASES[cc] || {};
+    for (const k of ['from', 'to']) {
+      if (!STATIONS[r[k]] && st[r[k]]) { r[k] = st[r[k]]; moved++; }
+    }
+    if (!LINE_BY_ID.has(r.line) && ln[r.line]) { r.line = ln[r.line]; moved++; }
   }
-  if (!LINE_BY_ID.has(r.line) && ln[r.line]) { r.line = ln[r.line]; moved++; }
   delete r._gids;
   return moved;
 }
@@ -1096,7 +1652,15 @@ function rideGids(ride) {
   // A whole-line ride is not expressible as from -> to on a LOOP, where the first and last
   // stop are the same station and the shortest path between them is nothing at all. It also
   // saves picking two ends on a line with branches.
-  if (ride.whole) return (ride._gids = line.sections.map(s => s[3]));
+  /* On a line over a border, "all of it" is the pieces the ride was saved with (`regions`).
+     A ride saved before lines were joined saw only its own country's piece, and keeps
+     meaning that. */
+  if (ride.whole) {
+    const parts = partsOf(line);
+    const mine = parts.length > 1
+      ? parts.filter(p => (ride.regions || [rideRegion(ride)]).includes(p.region)) : parts;
+    return (ride._gids = (mine.length ? mine : parts).flatMap(p => p.sections.map(s => s[3])));
+  }
   // Stored as a flag rather than as the sections taken, because section ids are not stable
   // across rebuilds and the two stations are.
   const p = ride.around ? pathAround(line, ride.from, ride.to)
@@ -1105,12 +1669,19 @@ function rideGids(ride) {
 }
 
 function newRide(lineId, from, to, date, opts = {}) {
+  const line = LINE_BY_ID.get(lineId) || {};
+  const regions = [...new Set([...(line.regions || []), ...(SHARED_LINES[lineId] || [])])];
+  // On a line over a border: the country got on in, and every country the line runs through.
+  const st = STATIONS[from];
+  const region = (st && regions.length > 1 && regions.includes(st.region) ? st.region
+    : line.region) || FOCUS;
   const ride = {
     id: 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
-    region: (LINE_BY_ID.get(lineId) || {}).region || FOCUS,
+    region,
     line: lineId, from, to, date: date || '', note: '',
     added: new Date().toISOString(),
   };
+  if (regions.length > 1) ride.regions = [...regions];
   if (opts.whole) ride.whole = true;
   if (opts.around) ride.around = true;
   return ride;
@@ -1264,7 +1835,12 @@ function sliceLine(pts, lo, hi) {
    train or a duplicate of a register line -- all rideable, all crediting the register
    through the corridor machinery, none of them a thing to complete. Without a register,
    fall back to anything not flagged as a named train. */
-function countable(l) { return REGISTER_IN.has(l.region) ? l.src !== 'osm' : !l.service; }
+/* A line over a border counts where any of its pieces does; each country's totals take
+   only the pieces that count there (stats). */
+function countable(l) {
+  if (l.parts) return l.parts.some(countable);
+  return REGISTER_IN.has(l.region) ? l.src !== 'osm' : !l.service;
+}
 
 /* A station with `j` is where a register line ends without stopping: a junction, or the
    national border. It is a section end, so the strip diagram shows it, but it is not
@@ -1278,11 +1854,14 @@ function stats() {
   const byRegion = new Map();
   for (const line of LINES) {
     const km = lineKm(line, frac);
-    if (countable(line)) {
-      const r = byRegion.get(line.region) || { done: 0, total: 0, finished: 0 };
-      r.done += km; r.total += line.km;
-      if (km / Math.max(line.km, 0.001) > 0.999) r.finished++;
-      byRegion.set(line.region, r);
+    // A line over a border: each country its own piece.
+    for (const p of partsOf(line)) {
+      if (!countable(p)) continue;
+      const pk = p === line ? km : lineKm(p, frac);
+      const r = byRegion.get(p.region) || { done: 0, total: 0, finished: 0 };
+      r.done += pk; r.total += p.km;
+      if (pk / Math.max(p.km, 0.001) > 0.999) r.finished++;
+      byRegion.set(p.region, r);
     }
     if (km > 0.001) perLine.push({ line, km, pct: km / Math.max(line.km, 0.001) });
   }
@@ -1338,6 +1917,27 @@ async function paintRidden() {
   map.getSource('ridden').setData({ type: 'FeatureCollection', features });
 }
 
+/* Every not-running section of every loaded country, for the base map. A few lines a
+   country, so their geometry is fetched as soon as the country's lines are in. */
+let CLOSED_GEN = 0;
+async function paintClosed() {
+  if (!mapReady || !map.getSource('closed')) return;
+  const gen = ++CLOSED_GEN;
+  const features = [];
+  for (const line of LINES) {
+    if (!line.km_closed) continue;
+    const g = await geomFor(line.id);
+    if (gen !== CLOSED_GEN) return;
+    for (const [a, b, km, gid] of line.sections) {
+      const pts = CLOSED.has(gid) && g[`${a}|${b}`];
+      if (pts && pts.length > 1)
+        features.push({ type: 'Feature', properties: { l: line.id },
+                        geometry: { type: 'LineString', coordinates: pts } });
+    }
+  }
+  map.getSource('closed').setData({ type: 'FeatureCollection', features });
+}
+
 // ---------------------------------------------------------------- panel
 
 let VIEW = { kind: 'home' };
@@ -1365,6 +1965,7 @@ function setMuted(on) {
   map.setPaintProperty('ridden-casing', 'line-opacity', on ? 0.2 : 0.85);
   map.setPaintProperty('station', 'circle-opacity', on ? 0.3 : 1);
   map.setPaintProperty('station', 'circle-stroke-opacity', on ? 0.3 : 1);
+  map.setPaintProperty('closed', 'line-opacity', on ? 0.4 : 1);
 }
 
 /* Each call is numbered, and a call that finds a newer one started while it awaited
@@ -1383,7 +1984,7 @@ async function paintSelection() {
     const s = STATIONS[id];
     if (!s) return;
     pts.features.push({ type: 'Feature',
-                        properties: { role: role || '', id, c: colour || '#cfd9e4' },
+                        properties: { role: role || '', id, c: colour || THEME.stStroke },
                         geometry: { type: 'Point', coordinates: [s.x, s.y] } });
   };
 
@@ -1422,7 +2023,7 @@ async function paintSelection() {
         stops.add(r.from); stops.add(r.to);
       }
       for (const s of via) if (!stops.has(s) && isStop(s)) mark(s, 'via');
-      for (const s of stops) mark(s, 'from', '#ffffff');
+      for (const s of stops) mark(s, 'from', THEME.run);
     }
     if (FIT_TRIP === shown.key) {
       FIT_TRIP = null;
@@ -1447,7 +2048,7 @@ async function paintSelection() {
        what is clickable. */
     for (const s of traceReachable()) if (!clicked.has(s) && !via.has(s)) mark(s, 'reach');
     for (const s of via) if (!clicked.has(s)) mark(s, 'via');
-    for (const s of clicked) mark(s, 'from', '#ffffff');
+    for (const s of clicked) mark(s, 'from', THEME.run);
   }
   map.getSource('sel').setData(lines);
   map.getSource('selst').setData(pts);
@@ -1466,7 +2067,8 @@ function drawLine(line, g, runGids, from, to, lines, mark) {
   for (const [a, b, km, gid] of line.sections) {
     const c = g[`${a}|${b}`];
     if (!c || c.length < 2) continue;
-    lines.features.push({ type: 'Feature', properties: { part: 'base', c: own },
+    lines.features.push({ type: 'Feature',
+                          properties: { part: CLOSED.has(gid) ? 'gone' : 'base', c: own },
                           geometry: { type: 'LineString', coordinates: c } });
     for (const [lo, hi] of spans.get(gid) || []) {
       const piece = sliceLine(c, lo, hi);
@@ -1483,7 +2085,7 @@ function drawLine(line, g, runGids, from, to, lines, mark) {
     if ((frac.get(gid) || 0) > 0.999) { visited.add(a); visited.add(b); }
   }
   const via = runGids ? pathStations(runGids) : new Set();
-  if (runGids) lines.features.push(...runFeatures(line, runGids, g, '#ffffff'));
+  if (runGids) lines.features.push(...runFeatures(line, runGids, g, THEME.run));
 
   const seen = new Set();
   for (const [a, b] of line.sections) for (const s of [a, b]) {
@@ -1550,12 +2152,13 @@ function afterChange() {
 function render() {
   showUndo();
   const body = document.getElementById('panel-body');
-  if (VIEW.kind === 'line') return renderLine(body);
-  if (VIEW.kind === 'station') return renderStation(body);
-  if (VIEW.kind === 'pick') return renderPick(body);
-  if (VIEW.kind === 'op') return renderOp(body);
-  if (VIEW.kind === 'trace') return renderTrace(body);
-  renderHome(body);
+  if (VIEW.kind === 'line') renderLine(body);
+  else if (VIEW.kind === 'station') renderStation(body);
+  else if (VIEW.kind === 'pick') renderPick(body);
+  else if (VIEW.kind === 'op') renderOp(body);
+  else if (VIEW.kind === 'trace') renderTrace(body);
+  else renderHome(body);
+  saveUi();
 }
 
 function renderHome(el) {
@@ -1563,20 +2166,32 @@ function renderHome(el) {
   const pct = s.totalKm ? (100 * s.doneKm / s.totalKm) : 0;
   // The headline is the country under the middle of the map, and follows you across borders.
   const focusIn = LOADED.has(FOCUS);
-  let h = `<h2 class="sec">Ridden in ${esc(regionName(FOCUS))}</h2>`
-    + (focusIn
-      ? `<div class="big">${s.doneKm.toFixed(1)} km<small>of ${Math.round(s.totalKm).toLocaleString()} km of line, ${pct.toFixed(2)}%</small></div>`
-      : `<div class="big" style="color:#6f6f6f">…<small>loading its lines</small></div>`)
-    + `<div class="meter"><i style="width:${Math.min(100, pct).toFixed(2)}%"></i></div>`;
+  let h;
+  if (!FOCUS) {
+    /* No country under the middle of the map (the world view a first visit opens on): the
+       total over every country with rides, and how to get one country's numbers. */
+    let km = 0, n = 0;
+    for (const r of s.byRegion.values()) if (r.done > 0.001) { km += r.done; n++; }
+    h = `<h2 class="sec">Ridden</h2>`
+      + `<div class="big">${km.toFixed(1)} km<small>${n ? `in ${n} countr${n === 1 ? 'y' : 'ies'}. `
+        : ''}Centre the map on a country for its own total.</small></div>`;
+  } else {
+    h = `<h2 class="sec">Ridden in ${esc(regionName(FOCUS))}</h2>`
+      + (focusIn
+        ? `<div class="big">${s.doneKm.toFixed(1)} km<small>of ${Math.round(s.totalKm).toLocaleString()} km of line, ${pct.toFixed(2)}%</small></div>`
+        : `<div class="big" style="color:var(--g6f)">…<small>loading its lines</small></div>`)
+      + `<div class="meter"><i style="width:${Math.min(100, pct).toFixed(2)}%"></i></div>`;
+  }
   const mine = here();
 
   if (!mine.length) {
     h += `<p class="muted" style="margin-top:14px">Nothing recorded yet. Click a station on `
       + `the map, or search a line above, then pick where you got on and off.</p>`;
   }
-  if (MIGRATION.lost) {
-    h += `<p class="muted" style="margin-top:10px">${MIGRATION.lost} ride`
-      + `${MIGRATION.lost === 1 ? '' : 's'} could not be matched to the current data and `
+  const lost = lostRides();
+  if (lost) {
+    h += `<p class="muted" style="margin-top:10px">${lost} ride`
+      + `${lost === 1 ? '' : 's'} could not be matched to the current data and `
       + `count towards nothing. They are still in your export.</p>`;
   }
 
@@ -1630,6 +2245,109 @@ function renderHome(el) {
 let HOME_TAB = 'rides';
 function setHomeTab(k) { HOME_TAB = k; EDITING = null; render(); paintSelection(); }
 
+/* WHAT IS OPEN IN THE PANEL IS REMEMBERED: the view (a line, a station, an operator, the
+   lines over a piece of track, a journey being traced), the ends picked on a line, the home
+   tab and the trip open in it. Saved on every render, and put back on load once the
+   countries it needs (`need`) are in. Until then the page shows home and saves nothing, so
+   the load itself cannot overwrite what is being restored; any change the reader makes
+   first wins over the restore. */
+const UI_KEY = 'noritetsu.ui';
+let UI_PENDING = null;          // {saved, sig} while a saved view waits for its countries
+
+function uiSig() {
+  const v = { ...VIEW };
+  delete v.note;
+  return JSON.stringify({ v, p: VIEW.kind === 'line' ? PICK : null, t: HOME_TAB, e: EDITING });
+}
+
+// The countries the open view needs loaded to show again.
+function viewRegions() {
+  const ofLine = id => {
+    const l = LINE_BY_ID.get(id);
+    return [...(l ? regionsOf(l) : []), ...(SHARED_LINES[id] || [])];
+  };
+  const ofSt = id => {
+    const s = STATIONS[id];
+    return s ? (s.regions || [s.region]) : [];
+  };
+  let out = [];
+  if (VIEW.kind === 'line') out = ofLine(VIEW.id);
+  else if (VIEW.kind === 'station') out = ofSt(VIEW.id);
+  else if (VIEW.kind === 'pick') out = VIEW.ids.flatMap(ofLine);
+  else if (VIEW.kind === 'trace') out = VIEW.stops.flatMap(ofSt);
+  else if (VIEW.kind === 'op') {
+    const o = OPS[OP_INDEX.get(VIEW.key)];
+    out = o ? o.lines.flatMap(regionsOf) : [];
+  }
+  return [...new Set(out)];
+}
+
+function saveUi() {
+  if (UI_PENDING) {
+    if (uiSig() === UI_PENDING.sig) return;
+    UI_PENDING = null;          // the reader moved first: theirs wins
+  }
+  const v = { ...VIEW };
+  delete v.note;
+  try {
+    localStorage.setItem(UI_KEY, JSON.stringify({
+      view: v, pick: VIEW.kind === 'line' ? PICK : null, tab: HOME_TAB, trip: EDITING,
+      need: viewRegions() }));
+  } catch (e) { /* remembered for this page only */ }
+}
+
+/* At boot: the tab and the open trip straight away, since they need nothing loaded; the
+   view itself waits in UI_PENDING for restoreUi. */
+function bootUi() {
+  let s = null;
+  try { s = JSON.parse(localStorage.getItem(UI_KEY) || 'null'); } catch (e) { }
+  if (!s || typeof s !== 'object') return;
+  if (['country', 'op', 'line', 'rides'].includes(s.tab)) HOME_TAB = s.tab;
+  if (typeof s.trip === 'string') EDITING = s.trip;
+  const v = s.view;
+  if (v && ['line', 'station', 'op', 'pick', 'trace'].includes(v.kind))
+    UI_PENDING = { saved: s, sig: uiSig() };
+}
+
+function restoreUi() {
+  const p = UI_PENDING;
+  if (!p) return;
+  const known = Object.keys(REGIONS).length;
+  const need = (p.saved.need || []).filter(cc => !known || REGIONS[cc]);
+  Promise.all(need.map(loadRegion)).then(() => {
+    if (UI_PENDING !== p) return;
+    UI_PENDING = null;
+    const v = p.saved.view;
+    // Ids a rebuild moved, as rides are migrated.
+    const lineId = id => {
+      if (LINE_BY_ID.has(id)) return id;
+      for (const cc of need) if ((LINE_ALIASES[cc] || {})[id]) return LINE_ALIASES[cc][id];
+      return id;
+    };
+    const stId = id => {
+      if (STATIONS[id]) return id;
+      for (const cc of need) if ((ALIASES[cc] || {})[id]) return ALIASES[cc][id];
+      return id;
+    };
+    if (v.kind === 'line') v.id = lineId(v.id);
+    if (v.kind === 'station') v.id = stId(v.id);
+    if (v.kind === 'pick') v.ids = (v.ids || []).map(lineId);
+    if (v.kind === 'trace') {
+      v.stops = (v.stops || []).map(stId).filter(id => STATIONS[id]);
+      v.choice = v.choice || {};
+    }
+    VIEW = v;
+    const pk = p.saved.pick;
+    PICK = v.kind === 'line' && pk
+      ? { from: pk.from ? stId(pk.from) : null, to: pk.to ? stId(pk.to) : null, around: !!pk.around }
+      : { from: null, to: null, around: false };
+    // A view that no longer resolves falls back to home inside render.
+    render();
+    paintSelection();
+    if (VIEW.kind === 'line') loadLineRegions(VIEW.id);
+  });
+}
+
 /* A row with a bar under its name: the bar dim in the row's colour, filled at full strength
    for the fraction done, the way the map draws a selected line. Lines use their own colour,
    operators and countries the plain accent. */
@@ -1644,7 +2362,8 @@ function meterRow({ name, right, frac, colour, click, detail }) {
 // Capped at the line's length: its sections can sum a rounding step over it (14.2 of 14.1).
 function lineKm(line, frac) {
   let km = 0;
-  for (const [a, b, secKm, gid] of line.sections) km += secKm * (frac.get(gid) || 0);
+  for (const [a, b, secKm, gid] of line.sections)
+    if (!CLOSED.has(gid)) km += secKm * (frac.get(gid) || 0);
   return Math.min(km, line.km);
 }
 
@@ -1655,7 +2374,10 @@ function lineRow(line, km, opts = {}) {
   const touched = km > 0.001;
   const detail = [touched ? `${km.toFixed(1)} of ${line.km.toFixed(1)} km` : '',
                   opts.operator ? esc(opName(line)) : '',
-                  line.service ? 'a named train, not a line' : ''].filter(Boolean).join(' · ');
+                  line.service ? 'a named train, not a line' : '',
+                  line.km_closed ? (line.km < 0.05 ? 'no longer running'
+                    : `${line.km_closed.toFixed(0)} km no longer running`) : '']
+    .filter(Boolean).join(' · ');
   return meterRow({
     name: lineName(line), frac: f, colour: lineColour(line),
     right: touched ? `${(100 * f).toFixed(0)}%` : `${line.km.toFixed(0)} km`,
@@ -1703,7 +2425,7 @@ function renderRides() {
   for (const t of list.slice(0, 200)) {
     const first = t.rides[0], last = t.rides[t.rides.length - 1];
     const legLines = t.rides.map(r => LINE_BY_ID.get(r.line));
-    const colours = legLines.map(l => (l ? lineColour(l) : '#3a3a3a'));
+    const colours = legLines.map(l => (l ? lineColour(l) : THEME.off));
     const open = EDITING === t.key;
     const km = t.rides.reduce((s, r) => s + rideKm(r), 0);
     // The edge is the trip's lines in order, one band per leg.
@@ -1947,7 +2669,11 @@ function traceChoose(i, lineId) {
 /* A section as long as the straight line between its two stations, over more than a couple
    of kilometres, is the build's fallback for a gap in an OSM route relation rather than
    real track (spec §13 counts 471 of them). Such a path looks shortest precisely because it
-   is wrong: JR中央線快速 has Tokyo to Shinjuku as one 6.1 km chord, where the track is 10.3. */
+   is wrong: JR中央線快速 has Tokyo to Shinjuku as one 6.1 km chord, where the track is 10.3.
+   Only on a line the build says has any (`straight_sections`, 19 lines' worth in Japan now
+   the build traces gaps along track): elsewhere a straight section is straight track, and
+   guessing took 武蔵小杉-新川崎 out of the Tokaido Line's diagram, which then ran its main
+   column down the non-stop Sotetsu-through track and left Kawasaki and Kamata as a spur. */
 function crowKm(a, b) {
   const kx = Math.cos((a.y + b.y) / 2 * Math.PI / 180) * 111.32, ky = 110.57;
   return Math.hypot((a.x - b.x) * kx, (a.y - b.y) * ky);
@@ -1955,7 +2681,7 @@ function crowKm(a, b) {
 function looksStraight(p) {
   for (const gid of p.gids) {
     const e = SEC_BY_GID.get(gid);
-    if (!e || e.sec[2] < 2) continue;
+    if (!e || !e.line.straight_sections || e.sec[2] < 2) continue;
     const A = STATIONS[e.sec[0]], B = STATIONS[e.sec[1]];
     if (A && B && e.sec[2] < 1.01 * crowKm(A, B)) return true;
   }
@@ -2063,7 +2789,7 @@ function renderTrace(el) {
   h += `<div class="trip">`;
   if (stops.length) h += stopRow(stops[0]);
   for (const leg of legs) {
-    const c = leg.line ? lineColour(leg.line) : '#3a3a3a';
+    const c = leg.line ? lineColour(leg.line) : THEME.off;
     h += `<div class="tleg${leg.line ? '' : ' bad'}" style="--c:${c}"><div class="rail"></div>`
       + `<div class="what">`;
     if (!leg.line) {
@@ -2210,6 +2936,8 @@ function showLine(id, preselect) {
   openPanel(true);
   render();
   paintSelection();
+  // A line over a border: bring in the rest of it, which redraws it whole as it arrives.
+  loadLineRegions(id);
   // The camera does NOT move. Selecting a line while looking at a particular place should
   // leave you looking at that place; "zoom to line" is there when the whole line is wanted.
 }
@@ -2335,6 +3063,14 @@ function lineLayout(line) {
   }
   const lat = id => (STATIONS[id] || {}).y || 0;
   comps.sort((p, q) => Math.max(...q.map(lat)) - Math.max(...p.map(lat)));
+  /* A line over a border is in the order its pieces join end to end (chainDisplays), so
+     Brussels, Lille and Rotterdam read along the route rather than by latitude. */
+  if (line.parts) {
+    const at = new Map(line.display.map((id, i) => [id, i]));
+    const first = nodes => Math.min(...nodes.map(n => (at.has(n) ? at.get(n) : Infinity)));
+    const north = new Map(comps.map((c, i) => [c, i]));
+    comps.sort((p, q) => (first(p) - first(q)) || (north.get(p) - north.get(q)));
+  }
 
   const pieces = comps.map(nodes => layoutPiece(line, nodes, adj, other));
   const lanes = Math.max(1, ...pieces.map(p => p.lanes));
@@ -2394,6 +3130,8 @@ function layoutPiece(line, nodes, adj, other) {
   }
   const pos = new Map(), laneOf = new Map(), used = new Set(), placedEdges = [];
   const intervals = [[]];                 // per lane, the [lo, hi] spans already taken
+  // The main route's two ends, until a loop hanging off one of them carries it on (below).
+  const ends = { first: null, last: null };
   if (best.d < 0) {                       // a single station, or two joined only to each other
     pos.set(nodes[0], 0); laneOf.set(nodes[0], 0);
   } else {
@@ -2463,6 +3201,7 @@ function layoutPiece(line, nodes, adj, other) {
     });
     for (const e of pedges) { used.add(e); placedEdges.push({ ...e, lane: 0 }); }
     intervals[0].push([0, km]);
+    ends.first = path[0]; ends.last = path[path.length - 1];
   }
 
   // Everything else, one route at a time, each in the nearest lane free over its span.
@@ -2514,6 +3253,30 @@ function layoutPiece(line, nodes, adj, other) {
        alternated row by row, and one loop read as several branches crossing (Anita,
        2026-09-30). Blocks leaving the same station follow one another rather than mix. */
     const interior = route.slice(1, rejoins ? -1 : undefined);
+
+    /* A LOOP AT THE END OF THE LINE IS WALKED IN ONE COLUMN. Where a route rejoins at one of
+       the main route's two ends, the main route carries on round it: its stations continue
+       the main lane past that end, and only the section closing the loop runs back to the
+       junction as a thin line. The Oedo Line reads Hikarigaoka ... Tochomae, Shinjuku-
+       nishiguchi ... Monzen-nakacho, Tsukishima ... Shinjuku, back to Tochomae, the order its
+       trains run, where splitting the loop into two halves met at Monzen-nakacho. */
+    const T = rejoins && interior.length
+      ? [ends.first, ends.last].find(t => t && (t === start || t === end) && start !== end)
+      : null;
+    if (T) {
+      const U = T === start ? end : start;
+      const inner = T === start ? interior : [...interior].reverse();
+      const edgesFromT = T === start ? redges : [...redges].reverse();
+      const down = T === ends.last ? 1 : -1;
+      const pT = pos.get(T);
+      inner.forEach((id, i) => { pos.set(id, pT + EPS * (i + 1) * down); laneOf.set(id, 0); });
+      const pLast = pos.get(inner[inner.length - 1]), pU = pos.get(U);
+      const back = freeLane(Math.min(pU, pLast), Math.max(pU, pLast), 0);
+      edgesFromT.forEach((x, i) => placedEdges.push(i < edgesFromT.length - 1
+        ? { ...x, lane: 0 } : { ...x, lane: back, thin: true }));
+      if (T === ends.last) ends.last = null; else ends.first = null;   // once per end
+      continue;
+    }
     const dir = p1 >= p0 ? 1 : -1;
     const k0 = blockAt.get(start) || 0;
     interior.forEach((id, i) => pos.set(id, p0 + EPS * (k0 + i + 1) * dir));
@@ -2534,7 +3297,9 @@ function layoutPiece(line, nodes, adj, other) {
 
   // Shortcuts beside a stopping route were set aside before layout (lineLayout), so what is
   // left in the bypass lane is track with no such route beside it: a freight line round a city.
-  const stationLanes = 1 + Math.max(0, ...laneOf.values());
+  // Lanes taken by stations, or by a loop's thin way back, which has none.
+  const stationLanes = 1 + Math.max(0, ...laneOf.values(),
+    ...placedEdges.filter(e => typeof e.lane === 'number').map(e => e.lane));
   const bypass = placedEdges.some(e => e.lane === 'bypass');
   for (const e of placedEdges) if (e.lane === 'bypass') { e.lane = stationLanes; e.thin = true; }
   const rows = [...pos.keys()].sort((p, q) => pos.get(p) - pos.get(q))
@@ -2562,8 +3327,8 @@ function drawStrip(strip, line, lay, st) {
     return c ? c.offsetTop + c.offsetHeight / 2 : null;
   };
   const own = lineColour(line), dim = dimmed(own, 0.30), dotDim = dimmed(own, 0.45);
-  const colourOf = gid => (st.run(gid) ? '#ffffff' : st.ridden(gid) ? own : dim);
-  const rank = c => (c === '#ffffff' ? 2 : c === own ? 1 : 0);
+  const colourOf = gid => (st.run(gid) ? THEME.run : st.ridden(gid) ? own : dim);
+  const rank = c => (c === THEME.run ? 2 : c === own ? 1 : 0);
   const paths = [];                       // [colour, d], drawn dim first and white last
 
   /* A section from one station's row to another's, through lane L: straight down where
@@ -2591,7 +3356,11 @@ function drawStrip(strip, line, lay, st) {
       if (!a || !b) continue;
       const L = e.lane >= 0 ? e.lane : Math.max(a.lane, b.lane);
       const d = route(a, b, L);
-      if (d) paths.push([colourOf(e.gid), d, e.thin ? 2 : 4]);
+      // A thin line in the unridden colour vanished against the panel; it gets the dots' one.
+      const c = colourOf(e.gid);
+      // Not running: dashed, and grey unless it was ridden before it closed.
+      if (d && CLOSED.has(e.gid)) paths.push([c === dim ? THEME.stripGone : c, d, 3, '4 4']);
+      else if (d) paths.push([e.thin && c === dim ? dotDim : c, d, e.thin ? 2 : 4]);
     }
     if (piece.loop) {
       // The section closing the loop, as the two caps curving away behind the list.
@@ -2606,9 +3375,10 @@ function drawStrip(strip, line, lay, st) {
       const pick = row && row.classList.contains('pick');
       const via = row && row.classList.contains('via');
       const jn = row && row.classList.contains('jn');
-      const stroke = pick || via ? '#ffffff' : st.reached(r.id) ? own : dotDim;
+      const stroke = pick || via ? THEME.run : st.reached(r.id) ? own
+        : row && row.classList.contains('gone') ? THEME.stripGone : dotDim;
       dots.push(`<circle cx="${laneX(r.lane)}" cy="${y.get(r.id)}" r="${jn ? 3 : 5}" `
-        + `fill="${pick ? '#ffffff' : '#0d0d0d'}" stroke="${stroke}" `
+        + `fill="${pick ? THEME.run : THEME.panel}" stroke="${stroke}" `
         + `stroke-width="${jn ? 1.5 : 2}"/>`);
     }
   });
@@ -2616,12 +3386,61 @@ function drawStrip(strip, line, lay, st) {
   const w = laneX(lay.lanes - 1) + STRIP_X0, hgt = strip.scrollHeight;
   strip.insertAdjacentHTML('afterbegin',
     `<svg width="${w}" height="${hgt}" viewBox="0 0 ${w} ${hgt}">`
-    + paths.map(([c, d, sw]) => `<path d="${d}" fill="none" stroke="${c}" `
-      + `stroke-width="${sw || 4}" stroke-linecap="round"/>`).join('')
+    + paths.map(([c, d, sw, dash]) => `<path d="${d}" fill="none" stroke="${c}" `
+      + `stroke-width="${sw || 4}" stroke-linecap="${dash ? 'butt' : 'round'}"`
+      + `${dash ? ` stroke-dasharray="${dash}"` : ''}/>`).join('')
     + dots.join('') + `</svg>`);
 }
 if (document.fonts) document.fonts.ready.then(() => STRIP_REDRAW && STRIP_REDRAW());
 window.addEventListener('resize', () => STRIP_REDRAW && STRIP_REDRAW());
+
+/* The line that joins two pieces of this one, where one does: a counted line calling at a
+   station of each, the shortest if several. The register splits lines by their legal
+   name, so the 予讃線's inland route is two pieces joined by the 内子線 from 内子 to 新谷,
+   and read as a line with a hole in it until the gap said so (Anita, 2026-09-30). */
+function joinedBy(line, p, q) {
+  const at = piece => {
+    const s = new Set();
+    for (const r of piece.rows) for (const id of (STATIONS[r.id] || {}).l || []) s.add(id);
+    return s;
+  };
+  const a = at(p);
+  let best = null;
+  for (const id of at(q)) {
+    const l = LINE_BY_ID.get(id);
+    if (!a.has(id) || id === line.id || !l || !countable(l)) continue;
+    if (!best || l.km < best.km) best = l;
+  }
+  return best;
+}
+
+/* The same at a dead end within one piece: the 予讃線's inland route stops at 内子, and its
+   spur off 伊予大洲 stops at 新谷, and the 内子線 joins the two. For each end of track, the
+   shortest counted line from there to another end of this one, as {line, to}. */
+function endJoins(line) {
+  if (line._ends) return line._ends;
+  const deg = new Map();
+  for (const [a, b] of line.sections) for (const s of [a, b]) deg.set(s, (deg.get(s) || 0) + 1);
+  const ends = [...deg].filter(([, n]) => n === 1).map(([s]) => s);
+  const out = new Map();
+  for (const s of ends) {
+    let best = null;
+    for (const lid of (STATIONS[s] || {}).l || []) {
+      const l = LINE_BY_ID.get(lid);
+      if (!l || l === line || !countable(l)) continue;
+      const on = lineStations(l);
+      /* A short link only. Without the cap, 東京 read "to 熱海 by the 東海道新幹線", since
+         both ends of the JR East 東海道線 are on it. */
+      for (const to of ends) {
+        if (to === s || !on.has(to)) continue;
+        const p = pathBetween(l, s, to);
+        if (p && p.km <= 25 && (!best || p.km < best.km)) best = { line: l, to, km: p.km };
+      }
+    }
+    if (best) out.set(s, best);
+  }
+  return (line._ends = out);
+}
 
 /* The strip diagram: the rows are names, and the rails and dots are drawn over them. */
 function renderLine(el) {
@@ -2636,9 +3455,11 @@ function renderLine(el) {
   for (const [gid, alt] of lay.hidden) if (pathSet.has(gid)) alt.forEach(g => pathSet.add(g));
   const inRun = pathStations([...pathSet]);
 
-  const done = line.sections.reduce((n, s) => n + (frac.get(s[3]) > 0.999 ? 1 : 0), 0);
-  let riddenKm = 0;
-  for (const [a, b, km, gid] of line.sections) riddenKm += km * (frac.get(gid) || 0);
+  const running = line.sections.filter(s => !CLOSED.has(s[3]));
+  const done = running.reduce((n, s) => n + (frac.get(s[3]) > 0.999 ? 1 : 0), 0);
+  const riddenKm = lineKm(line, frac);
+  const closedNote = line.km_closed
+    ? ` · ${line.km_closed.toFixed(1)} km no longer running` : '';
 
   let h = `<div class="btnrow"><button class="act" onclick="goHome()">← back</button>`
     + `<button class="act" onclick="fitLine('${line.id}')">zoom to line</button>`
@@ -2647,7 +3468,9 @@ function renderLine(el) {
     + `<div class="big" style="font-size:19px">`
     + `<span class="bar" style="background:${lineColour(line)}"></span>${esc(lineName(line))}`
     + `<small>${esc(opName(line) || 'operator not stated')}`
-    + ` · ${line.km.toFixed(1)} km · ${line.sections.length} sections</small></div>`;
+    + ` · ${line.km.toFixed(1)} km · ${running.length} sections${closedNote}`
+    + (line.parts ? ` · in ${esc(line.regions.map(regionName).join(', '))}` : '')
+    + `</small></div>`;
   if (line.service) {
     h += `<p class="muted" style="margin-top:8px">This is a named train rather than a line, `
       + `so it is not counted towards a total of its own. Riding it still credits the lines `
@@ -2656,12 +3479,27 @@ function renderLine(el) {
   h += `<div class="meter" style="margin-top:8px"><i style="width:`
     + `${Math.min(100, 100 * riddenKm / Math.max(line.km, 0.001)).toFixed(1)}%"></i></div>`
     + `<div class="o muted">${riddenKm.toFixed(1)} of ${line.km.toFixed(1)} km ridden`
-    + ` · ${done} of ${line.sections.length} sections</div>`;
+    + ` · ${done} of ${running.length} sections</div>`;
+  if (line.km_closed) {
+    h += `<p class="muted" style="margin-top:8px">The dashed part is still on the register `
+      + `but has no rails on the map: closed, suspended or replaced by a bus. It does not `
+      + `count towards the line, and a ride from before can still be entered on it.</p>`;
+  }
 
   // A station is reached when any section of this line beside it has been ridden.
   const reached = new Set();
   for (const [a, b, km, gid] of line.sections)
     if ((frac.get(gid) || 0) > 0.999) { reached.add(a); reached.add(b); }
+  // Stations no train calls at: no running section of this line beside them, nor of any
+  // other line there (夜明, the 日田彦山線's end, is on the running 久大線).
+  const joins = endJoins(line);
+  const live = new Set(running.flatMap(s => [s[0], s[1]]));
+  const gone = id => line.km_closed && !live.has(id)
+    && !((STATIONS[id] || {}).l || []).some(lid => {
+      const l = LINE_BY_ID.get(lid);
+      return l && l !== line
+        && l.sections.some(s => (s[0] === id || s[1] === id) && !CLOSED.has(s[3]));
+    });
 
   if (VIEW.also && VIEW.also.length) {
     const others = VIEW.also.map(id => LINE_BY_ID.get(id)).filter(Boolean).sort(lineOrder);
@@ -2673,7 +3511,17 @@ function renderLine(el) {
   h += `<div id="strip" style="--c:${lineColour(line)};`
     + `--w:${STRIP_X0 * 2 + (lay.lanes - 1) * STRIP_LANE}px">`;
   lay.pieces.forEach((piece, k) => {
-    if (k) h += `<div class="stgap">the line continues elsewhere</div>`;
+    if (k) {
+      const via = joinedBy(line, lay.pieces[k - 1], piece);
+      // A line over a border: the next piece is another country's.
+      const cc = id => (STATIONS[id] || {}).region;
+      const was = cc(lay.pieces[k - 1].rows[0].id), now = cc(piece.rows[0].id);
+      h += `<div class="stgap">` + (via
+        ? `joined by <a href="" class="also" style="--c:${lineColour(via)}" onclick="showLine(`
+          + `'${via.id}'); return false">${esc(lineName(via))}</a>`
+        : line.parts && was && now && was !== now ? `continues in ${esc(regionName(now))}`
+        : `the line continues elsewhere`) + `</div>`;
+    }
     if (piece.loop) h += `<div class="loopcap top" data-cap="${k}t"><b>continues round</b></div>`;
     for (const { id } of piece.rows) {
       const end = PICK.from === id || PICK.to === id;
@@ -2682,10 +3530,16 @@ function renderLine(el) {
       const alt = stAlt(id);
       // A junction or border point: a row, since the line runs through it, but no stop.
       const junction = !isStop(id);
-      h += `<div class="st ${cls}${junction ? ' jn' : ''}" data-st="${id}"`
+      const note = [alt, gone(id) ? 'no trains' : ''].filter(Boolean).join(' · ');
+      const join = joins.get(id);
+      // The link stops the click reaching the row, which would pick the station instead.
+      const joinNote = join ? `<i>to ${esc(stName(join.to))} by <a href="" class="also" `
+        + `style="--c:${lineColour(join.line)}" onclick="event.stopPropagation(); `
+        + `showLine('${join.line.id}'); return false">${esc(lineName(join.line))}</a></i>` : '';
+      h += `<div class="st ${cls}${junction ? ' jn' : ''}${gone(id) ? ' gone' : ''}" data-st="${id}"`
         + `${junction ? '' : ` onclick="pickStop('${id}')"`}>`
         + `<div class="nm">${esc(stName(id))}${junction ? '<i>junction, not a stop</i>'
-          : alt ? `<i>${esc(alt)}</i>` : ''}</div></div>`;
+          : note ? `<i>${esc(note)}</i>` : ''}${joinNote}</div></div>`;
     }
     if (piece.loop) h += `<div class="loopcap bottom" data-cap="${k}b"><b>back to `
       + `${esc(stName(piece.rows[0].id))}</b></div>`;
@@ -2946,6 +3800,8 @@ map.on('click', (e) => {
     return showStation(id);
   }
   if (tracing) return;
+  // Not-running track is drawn from the model, and names its line.
+  if (near[0].layer.id === 'closed-hit') return showLine(near[0].properties.l);
   const withWay = near.find(f => f.properties.w);
   if (withWay) pickTrack(withWay);
   else pickByChord(e.point);
@@ -3042,7 +3898,7 @@ function openTrackLines(ids) {
      the same track listed under it. Clicking the San'in coast gives 山陰線 rather than a
      choice between it and スーパーおき. */
   const reg = ids.filter(id => countable(LINE_BY_ID.get(id)));
-  if (reg.length === 1 && REGISTER_IN.has(LINE_BY_ID.get(reg[0]).region)) {
+  if (reg.length === 1 && regionsOf(LINE_BY_ID.get(reg[0])).some(cc => REGISTER_IN.has(cc))) {
     showLine(reg[0]);
     VIEW.also = ids.filter(id => id !== reg[0]);
     return render();
@@ -3119,6 +3975,7 @@ function esc(s) {
 document.getElementById('q').addEventListener('input', runSearch);
 
 loadRides();
+bootUi();
 render();
 // Countries load from startRegions once the map is up, and then as the camera moves.
 REGIONS_READY.then(() => {

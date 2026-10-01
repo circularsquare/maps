@@ -5,9 +5,22 @@ anita.garden/noritetsu. `spec.md` is the design and §13 is the todo, `HANDOFF.m
 pick the project up and who owns which files when two people work on it at once, and this
 file is how to run it and what state it is in.
 
-**Japan, and Switzerland as data.** The pipeline is region-by-region. Switzerland is built
-from the federal network register (`schienennetz.py`) and checks out against published
-lengths, but the app is still hard-coded to Japan; `HANDOFF.md` lists what it needs.
+**Japan, mainland China, South Korea, Taiwan, Hong Kong, Singapore, Switzerland, France,
+Belgium, the Netherlands, Austria, Czechia, Poland, Hungary, Portugal, Slovenia, Slovakia,
+Romania, Bulgaria, Finland, Lithuania, Latvia, Estonia, Croatia, Greece and Luxembourg.**
+`HANDOFF.md` "Start here" has the state and the open threads. In 14 of the RINF countries a
+national timetable feed decides which register sections trains run over (`gtfs_served.py`,
+`gtfs_sources.md`). China comes from
+OSM's named track plus 12306's station list (`cn_register.py`). The pipeline is
+region-by-region, and the app loads each country as the map moves over it. Hong Kong and
+Singapore follow Taiwan's pattern (`hk_register.py`, `sg_register.py`); the EU countries come
+from `rinf.py`, one reader for every country in the EU's infrastructure register, with a small
+settings file per country in `rinf_countries/`; France
+from SNCF Réseau's own register (`fr_register.py`). Each has a `<cc>_sources.md` with its
+sources and run commands. `multi_sources.md` is the survey of sources that cover many
+countries at once. Switzerland is built from the federal network register
+(`schienennetz.py`); Korea from OSM's named track plus Korail's and KRIC's published station
+lists (`kr_register.py`, `kr_sources.py`). Both check out against published lengths.
 
 ## Run
 
@@ -34,7 +47,20 @@ python extract.py --region ch --pbf data/raw/switzerland-260929.osm.pbf   # 1 mi
 python build_model.py --region ch --register schienennetz:data/raw/schienennetz_2056_de.gdb.zip
 python build_tiles.py --region ch                                         # 30 s, 3.0 MB
 python check_model.py --region ch
+
+python extract.py --region kr --pbf data/raw/south-korea-260929.osm.pbf   # 25 s
+python build_model.py --region kr --register kr_register:data/raw/kr      # 30 s
+python build_tiles.py --region kr                                         # 15 s, 1.8 MB
+python check_model.py --region kr
+
+python build_model.py --region tw --register tw_register:data/raw/tw      # Taiwan
+python build_tiles.py --region tw                                         # 0.6 MB
+python check_model.py --region tw
 ```
+
+Korea's register wants the files listed in `kr_sources.md` in `data/raw/kr/` (all open, no
+login; `probe_kric.py --fetch` gets the KRIC ones, and `kr_sources.md` says how to fetch the
+data.go.kr ones).
 
 **Tiles come after the model**: `build_tiles.py` reads each piece of track's line colour
 from `build_model.py`'s output. Run before it, the tiles build with kind colours only.
@@ -43,8 +69,10 @@ Switzerland's register wants `data/raw/ch_servicepoints.csv` beside the network 
 URLs are in the docstring of `schienennetz.py`.
 
 The `.osm.pbf` comes from Geofabrik (`https://download.geofabrik.de/asia/japan-latest.osm.pbf`,
-2.5 GB) and is gitignored. Extraction needs `pip install --user osmium`. Both extracts were
-deleted after extracting on 2026-09-30; `data/proc/<region>/` keeps what came out of them.
+2.5 GB) and is gitignored. Extraction needs `pip install --user osmium`. All three extracts
+were deleted after extracting on 2026-09-30; `data/proc/<region>/` keeps what came out of
+them. Geofabrik's `-latest` URLs for Switzerland and Korea were redirect-looping that day; the
+dated `<country>-YYMMDD.osm.pbf` files worked.
 
 ## What each step does
 
@@ -94,9 +122,11 @@ Not built yet — see `spec.md` §13 for the full list:
 - Station-to-station routing (input mode 1), which needs a graph across lines rather than the
   per-line one the strip diagram already uses.
 - The poster generator, and line detail panels.
-- **Regions beyond Japan and Switzerland.** 73 GB free as of 2026-09-30, and the ~90 GB a
-  world build needs is download rather than peak disk. `HANDOFF.md` says what a new region's
-  reader has to produce.
+- **More regions** (Russia, Germany, Italy, Spain, Sweden, the USA...). 73 GB free as of
+  2026-09-30, and the ~90 GB a world build needs is download rather than peak disk.
+  `HANDOFF.md` says what a new region's reader has to produce.
+- **Track across borders.** Each country's build stops at its own border; the proposal for
+  drawing the crossings is in `border_proposal/`, waiting on Anita's decisions.
 
 ## Things that cost a rebuild to learn
 
@@ -139,3 +169,9 @@ Not built yet — see `spec.md` §13 for the full list:
   the [service-point list](https://opentransportdata.swiss/en/cookbook/masterdata-cookbook/servicepoints/)
   (opentransportdata.swiss) — Switzerland's line register and passenger stops. Open
   government data; free use with the source named.
+- Korail's 각 선구별 거리표 and ㈜SR's distance matrix (data.go.kr 15137040, 15040194),
+  KRIC's 전국 도시광역철도 역사정보 (data.kric.go.kr 1294), RAFIS 역 정보 (data.go.kr
+  15132601), and published lengths from Korail's 2023 철도통계연보 — Korea's station lists,
+  section km and English names. Korean public data; each dataset carries its own 공공누리
+  licence type, not yet checked one by one, so check before publishing. `kr_sources.md` has
+  every file.

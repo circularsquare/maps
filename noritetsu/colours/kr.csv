@@ -1,0 +1,25 @@
+line,operator,colour,source,url,note
+경부고속선,,#1D2088,korea-hsr-map,,sampled from the widely circulated Korea rail network map Anita supplied 2026-09-30
+경부선,,#0068B7,korea-hsr-map,,
+호남고속선,,#E60012,korea-hsr-map,,
+호남선,,#E4007F,korea-hsr-map,,
+수서평택고속선,,#920783,korea-hsr-map,,
+전라선,,#F08300,korea-hsr-map,,
+경전선,,#009E96,korea-hsr-map,,
+중앙선,,#006428,korea-hsr-map,,
+경강선,,#4D5C63,korea-hsr-map,,both halves (성남-여주 and 서원주-강릉) are one OSM track name
+영동선,,#A3779F,korea-hsr-map,,
+동해선,,#92539D,korea-hsr-map,,
+중부내륙선,,#985E24,korea-hsr-map,,
+서해선,,#FCC800,korea-hsr-map,,
+수인선,,#006896,korea-hsr-map,,
+경의선,,#89C997,korea-hsr-map,,
+경원선,,#527F5F,korea-hsr-map,,
+인천국제공항선,,#7ECEF4,korea-hsr-map,,AREX
+장항선,,#B5473A,picked,,not on the map; picked to sit apart from 서해선 and 호남선
+충북선,,#7A9A01,picked,,not on the map; picked to sit apart from 중부내륙선 and 중앙선
+태백선,,#D98E04,picked,,not on the map; picked to sit apart from 중앙선 and 영동선
+경북선,,#7B5EA7,picked,,not on the map
+대구선,,#2BA6C4,picked,,not on the map
+정선선,,#B0413E,picked,,not on the map
+교외선,,#E06040,picked,,not on the map; the colour OSM's 교외선 무궁화호 route relation uses

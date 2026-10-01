@@ -86,6 +86,13 @@ def rank_of(kind, tags):
     if tags.get("service"):
         return 3
     usage = tags.get("usage")
+    # Tourist NARROW GAUGE carries scheduled passengers often enough to be drawn: Taiwan's
+    # Alishan Forest Railway is usage=tourism end to end with no route relation, and ranked
+    # 2 it vanished from the map and from its register line. Park trains and rail-bike
+    # loops on it are islands, which drop_islands takes out. Standard-gauge usage=tourism
+    # stays rank 2: in Korea that is mostly rail bikes on closed main lines.
+    if usage == "tourism" and kind == "narrow_gauge":
+        return 1
     if usage in ("industrial", "military", "tourism", "freight", "test", "distribution"):
         return 2
     if usage == "main":
@@ -179,6 +186,7 @@ def geometries(ways, on_route, cid, cx, cy, log):
         x, y = merc(lon, lat)
         feats.append({
             "wid": wid,
+            "nodes": nodes,
             "kind": kind,
             "rank": rank,
             "pax": 1 if pax else 0,
@@ -241,6 +249,57 @@ def way_colours(region, log):
             out[int(wid)] = best
     log(f"{len(out)} of {len(ways['ways'])} ways on a line carry that line's colour")
     return out
+
+
+def drop_islands(region, feats, log):
+    """Leave out every piece of track that touches no line: a set of ways joined to each other
+    by shared nodes, none of which any line in the model runs over.
+
+    WHY.  Such track can never be clicked or ridden, since nothing in the model is there, and
+    in Japan it is nearly all amusement and tourist rides tagged as railways: the 奥祖谷
+    sightseeing monorail looping round a mountainside, Disneyland's Western River Railroad, a
+    roller coaster, pedal trolleys on closed branches. Anita saw them as "tiny orange rails
+    not connected to anything" (2026-09-30).  Track that joins a line's track stays even when
+    no line runs over it (the 武蔵野線 and 東海道 freight lines, the second bore of the 上越線's
+    新清水 tunnel), since it reads as part of the network and a gap would read as missing.
+
+    AN OSM PASSENGER ROUTE OVER THE PIECE DOES NOT SAVE IT.  A first version kept those, and
+    they turned out to be the same unclickable track: Disneyland's railway and harbour freight
+    lines (京葉臨海鉄道, 仙台臨海鉄道) are route=train relations with no stops, exactly like
+    the Niesenbahn and Stoosbahn funiculars, and no tag tells them apart. So a real line that
+    the model is missing vanishes here too; the log line is where that shows. The fix for one
+    of those is to get it into the model, not to draw it unclickable.
+    """
+    try:
+        with open(ROOT / "dist" / "data" / region / "ways.json", encoding="utf-8") as f:
+            on_line = {int(w) for w in json.load(f)["ways"]}
+    except FileNotFoundError:
+        return feats
+    parent = {}
+
+    def find(a):
+        while parent.setdefault(a, a) != a:
+            parent[a] = parent[parent[a]]
+            a = parent[a]
+        return a
+
+    for f in feats:
+        ns = f["nodes"].tolist()
+        r = find(ns[0])
+        for n in ns[1:]:
+            s = find(n)
+            if s != r:
+                parent[s] = r
+    touched = {find(int(f["nodes"][0])) for f in feats if f["wid"] in on_line}
+    keep, gone = [], Counter()
+    for f in feats:
+        if find(int(f["nodes"][0])) in touched:
+            keep.append(f)
+        else:
+            gone[f["kind"]] += 1
+    log(f"left out {sum(gone.values())} ways on pieces of track no line touches "
+        f"({', '.join(f'{n} {k}' for k, n in gone.most_common())})")
+    return keep
 
 
 def merged_chains(feats, log):
@@ -386,7 +445,7 @@ def main():
         print(f"[{time.time()-t0:6.1f}s] {msg}", flush=True)
 
     ways, stops, on_route, cid, cx, cy = load(args.region, log)
-    feats = geometries(ways, on_route, cid, cx, cy, log)
+    feats = drop_islands(args.region, geometries(ways, on_route, cid, cx, cy, log), log)
     colours = way_colours(args.region, log)
     for f in feats:
         f["c"] = colours.get(f["wid"], "")

@@ -1,0 +1,14 @@
+line,operator,colour,source,url,note
+東鐵綫,,#5EB7E8,mtr-routemap,https://www.mtr.com.hk/archive/en/services/routemap.pdf,"stroke colour of the line in MTR's own system map, read with PyMuPDF (2026-09-30)"
+屯馬綫,,#9C2E00,mtr-routemap,https://www.mtr.com.hk/archive/en/services/routemap.pdf,MTR system map stroke
+觀塘綫,,#00A040,mtr-routemap,https://www.mtr.com.hk/archive/en/services/routemap.pdf,MTR system map stroke
+荃灣綫,,#E60012,mtr-routemap,https://www.mtr.com.hk/archive/en/services/routemap.pdf,MTR system map stroke
+港島綫,,#0075C2,mtr-routemap,https://www.mtr.com.hk/archive/en/services/routemap.pdf,MTR system map stroke
+南港島綫,,#CBD300,mtr-routemap,https://www.mtr.com.hk/archive/en/services/routemap.pdf,MTR system map stroke
+東涌綫,,#F3982D,mtr-routemap,https://www.mtr.com.hk/archive/en/services/routemap.pdf,MTR system map stroke
+機場快綫,,#00888E,mtr-routemap,https://www.mtr.com.hk/archive/en/services/routemap.pdf,MTR system map stroke
+將軍澳綫,,#7E3C93,mtr-routemap,https://www.mtr.com.hk/archive/en/services/routemap.pdf,MTR system map stroke
+迪士尼綫,,#EB6EA5,mtr-routemap,https://www.mtr.com.hk/archive/en/services/routemap.pdf,MTR system map stroke
+輕鐵,,#DBB400,mtr-routemap,https://www.mtr.com.hk/archive/en/services/routemap.pdf,"MTR system map stroke (the thin gold line); the numbered routes keep their own OSM colours"
+香港電車,,#1E7B45,picked,,"no published line colour; picked from the trams' green livery"
+山頂纜車,,#8A1C2B,picked,,"no published line colour; picked from the Peak Tram's maroon livery"

@@ -1,0 +1,10 @@
+line,operator,colour,source,url,note
+North-South Line,,#E12219,lta-system-map,https://www.lta.gov.sg/content/dam/ltagov/getting_around/public_transport/rail_network/pdf/SM_EN_(Ver210726)_CCL6.pdf,vector stroke fill read with PyMuPDF; map SM-26-01-EN
+East-West Line,,#00953B,lta-system-map,https://www.lta.gov.sg/content/dam/ltagov/getting_around/public_transport/rail_network/pdf/SM_EN_(Ver210726)_CCL6.pdf,also the Changi Airport branch (CG)
+North East Line,,#9E26B5,lta-system-map,https://www.lta.gov.sg/content/dam/ltagov/getting_around/public_transport/rail_network/pdf/SM_EN_(Ver210726)_CCL6.pdf,
+Circle Line,,#FF9F10,lta-system-map,https://www.lta.gov.sg/content/dam/ltagov/getting_around/public_transport/rail_network/pdf/SM_EN_(Ver210726)_CCL6.pdf,
+Downtown Line,,#0056B8,lta-system-map,https://www.lta.gov.sg/content/dam/ltagov/getting_around/public_transport/rail_network/pdf/SM_EN_(Ver210726)_CCL6.pdf,
+Thomson-East Coast Line,,#9D5918,lta-system-map,https://www.lta.gov.sg/content/dam/ltagov/getting_around/public_transport/rail_network/pdf/SM_EN_(Ver210726)_CCL6.pdf,
+Bukit Panjang LRT,,#6F8473,lta-system-map,https://www.lta.gov.sg/content/dam/ltagov/getting_around/public_transport/rail_network/pdf/SM_EN_(Ver210726)_CCL6.pdf,all three LRTs share LTA's one grey
+Sengkang LRT,,#6F8473,lta-system-map,https://www.lta.gov.sg/content/dam/ltagov/getting_around/public_transport/rail_network/pdf/SM_EN_(Ver210726)_CCL6.pdf,all three LRTs share LTA's one grey
+Punggol LRT,,#6F8473,lta-system-map,https://www.lta.gov.sg/content/dam/ltagov/getting_around/public_transport/rail_network/pdf/SM_EN_(Ver210726)_CCL6.pdf,all three LRTs share LTA's one grey

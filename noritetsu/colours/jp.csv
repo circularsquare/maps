@@ -1,0 +1,128 @@
+line,operator,colour,source,url,note
+東海道線,西日本旅客鉄道,#007AC2,official-swatch,https://www.westjr.co.jp/global/en/timetable/pdf/ubn_en.pdf,A (琵琶湖線/JR京都線/JR神戸線) covers 米原-神戸; vector fill in JR West Kinki route map (2026-03-14)
+北陸線,西日本旅客鉄道,#007AC2,official-swatch,https://www.westjr.co.jp/global/en/timetable/pdf/ubn_en.pdf,A 琵琶湖線/北陸線 米原-敦賀; vector fill in JR West Kinki route map (2026-03-14)
+湖西線,西日本旅客鉄道,#00B3E6,official-swatch,https://www.westjr.co.jp/global/en/timetable/pdf/ubn_en.pdf,B; vector fill in JR West Kinki route map (2026-03-14)
+草津線,西日本旅客鉄道,#66B04C,official-swatch,https://www.westjr.co.jp/global/en/timetable/pdf/ubn_en.pdf,C; vector fill in JR West Kinki route map (2026-03-14)
+奈良線,西日本旅客鉄道,#BB7C32,official-swatch,https://www.westjr.co.jp/global/en/timetable/pdf/ubn_en.pdf,D; vector fill in JR West Kinki route map (2026-03-14)
+おおさか東線,西日本旅客鉄道,#467795,official-swatch,https://www.westjr.co.jp/global/en/timetable/pdf/ubn_en.pdf,F; vector fill in JR West Kinki route map (2026-03-14)
+福知山線,西日本旅客鉄道,#FFC20D,official-swatch,https://www.westjr.co.jp/global/en/timetable/pdf/ubn_en.pdf,G JR宝塚線/福知山線 尼崎-福知山; vector fill in JR West Kinki route map (2026-03-14)
+JR東西線,西日本旅客鉄道,#EE3C8A,official-swatch,https://www.westjr.co.jp/global/en/timetable/pdf/ubn_en.pdf,H; vector fill in JR West Kinki route map (2026-03-14)
+片町線,西日本旅客鉄道,#EE3C8A,official-swatch,https://www.westjr.co.jp/global/en/timetable/pdf/ubn_en.pdf,H 学研都市線; vector fill in JR West Kinki route map (2026-03-14)
+加古川線,西日本旅客鉄道,#00B08D,official-swatch,https://www.westjr.co.jp/global/en/timetable/pdf/ubn_en.pdf,I; vector fill in JR West Kinki route map (2026-03-14)
+播但線,西日本旅客鉄道,#B02857,official-swatch,https://www.westjr.co.jp/global/en/timetable/pdf/ubn_en.pdf,J covers 姫路-寺前 only (about 45% of the line); 寺前-和田山 is uncoloured grey; vector fill in JR West Kinki route map (2026-03-14)
+姫新線,西日本旅客鉄道,,official-swatch,https://www.westjr.co.jp/global/en/timetable/pdf/ubn_en.pdf,K 姫路-上月 #F04B2C on the Kinki map (about 27% of the line); the JR West Okayama map draws the whole 姫新線 grey; no colour beyond 上月
+舞鶴線,西日本旅客鉄道,#F99D1C,official-swatch,https://www.westjr.co.jp/global/en/timetable/pdf/ubn_en.pdf,L; vector fill in JR West Kinki route map (2026-03-14)
+大阪環状線,西日本旅客鉄道,#EF394F,official-swatch,https://www.westjr.co.jp/global/en/timetable/pdf/ubn_en.pdf,O; vector fill in JR West Kinki route map (2026-03-14)
+桜島線,西日本旅客鉄道,#214097,official-swatch,https://www.westjr.co.jp/global/en/timetable/pdf/ubn_en.pdf,P JRゆめ咲線; vector fill in JR West Kinki route map (2026-03-14)
+関西線,西日本旅客鉄道,#53479D,official-swatch,https://www.westjr.co.jp/global/en/timetable/pdf/ubn_en.pdf,"V 関西線 亀山-加茂 (61.0 of ~115 passenger km, the larger part); Q 大和路線 加茂-JR難波 #00AE74 (54.0 km); vector fill in JR West Kinki route map (2026-03-14)"
+阪和線,西日本旅客鉄道,#F99D1C,official-swatch,https://www.westjr.co.jp/global/en/timetable/pdf/ubn_en.pdf,R 天王寺-和歌山; 羽衣支線 drawn grey; vector fill in JR West Kinki route map (2026-03-14)
+関西空港線,西日本旅客鉄道,#007AC2,official-swatch,https://www.westjr.co.jp/global/en/timetable/pdf/ubn_en.pdf,S; vector fill in JR West Kinki route map (2026-03-14)
+和歌山線,西日本旅客鉄道,#F6A3BA,official-swatch,https://www.westjr.co.jp/global/en/timetable/pdf/ubn_en.pdf,T 王寺-和歌山; vector fill in JR West Kinki route map (2026-03-14)
+桜井線,西日本旅客鉄道,#D02332,official-swatch,https://www.westjr.co.jp/global/en/timetable/pdf/ubn_en.pdf,U 万葉まほろば線; vector fill in JR West Kinki route map (2026-03-14)
+紀勢線,西日本旅客鉄道,#00B1C2,official-swatch,https://www.westjr.co.jp/global/en/timetable/pdf/ubn_en.pdf,W きのくに線 和歌山-新宮; 和歌山-和歌山市 drawn grey; vector fill in JR West Kinki route map (2026-03-14)
+山陰線,西日本旅客鉄道,,official-swatch,https://www.westjr.co.jp/global/en/timetable/pdf/ubn_en.pdf,"no colour covers 40%. Sections: E 嵯峨野線/山陰線 京都-城崎温泉 #7686C2 (Kinki map, vector); A 城崎温泉-米子 #A6C858 and D 米子-益田 #E9653C (San-in map https://www.jr-odekake.net/station/pdf/san.pdf, raster sample); 益田-下関/幡生 and 仙崎支線 #7F733D (Hiroshima-area map https://www.jr-odekake.net/station/pdf/cnh.pdf, vector, no line symbol)"
+山陽線,西日本旅客鉄道,,official-swatch,https://www.westjr.co.jp/global/en/timetable/pdf/ubn_en.pdf,"no colour covers 40%. Sections: A JR神戸線 神戸-上郡 #007AC2 (Kinki map); 上郡-三石 uncoloured; S 三石-岡山 #B0D235, W 岡山-福山 #F79137, X 福山-三原 #00AEEF (Okayama map https://www.jr-odekake.net/station/pdf/oka.pdf); G 三原(糸崎)-広島 #66B04C, R 広島-岩国 #CB3C3B, 岩国-下関 #006BB6 no symbol, largest at ~34% (Hiroshima map https://www.jr-odekake.net/station/pdf/cnh.pdf); all vector"
+伯備線,西日本旅客鉄道,#3E934A,official-swatch,https://www.jr-odekake.net/station/pdf/oka.pdf,"V 倉敷-伯耆大山, whole line (San-in map shows 新見-伯耆大山 in the same V green); vector fill in JR West Okayama-area route map (2026-03-14)"
+吉備線,西日本旅客鉄道,#F6A4B5,official-swatch,https://www.jr-odekake.net/station/pdf/oka.pdf,U 桃太郎線; vector fill in JR West Okayama-area route map (2026-03-14)
+津山線,西日本旅客鉄道,#FEBC18,official-swatch,https://www.jr-odekake.net/station/pdf/oka.pdf,T; vector fill in JR West Okayama-area route map (2026-03-14)
+宇野線,西日本旅客鉄道,#79CDCD,official-swatch,https://www.jr-odekake.net/station/pdf/oka.pdf,L 宇野みなと線 茶屋町-宇野 (the larger part); M 瀬戸大橋線 岡山-茶屋町 #007CC2; vector fill in JR West Okayama-area route map (2026-03-14)
+本四備讃線,西日本旅客鉄道,#007CC2,official-swatch,https://www.jr-odekake.net/station/pdf/oka.pdf,M 瀬戸大橋線 茶屋町-児島; vector fill in JR West Okayama-area route map (2026-03-14)
+赤穂線,西日本旅客鉄道,#F16469,official-swatch,https://www.jr-odekake.net/station/pdf/oka.pdf,N 寒河-東岡山 (about 60%); A 相生-播州赤穂 #007AC2 on the Kinki map; 播州赤穂-寒河 uncoloured; vector fill in JR West Okayama-area route map (2026-03-14)
+福塩線,西日本旅客鉄道,#D74A77,official-swatch,https://www.jr-odekake.net/station/pdf/cnh.pdf,"塩町-府中 (about 70%) drawn #D74A77 on the Hiroshima-area map, no line symbol; Z 福山-府中 #49479D on the Okayama map https://www.jr-odekake.net/station/pdf/oka.pdf; vector fill in JR West Hiroshima-area route map"
+可部線,西日本旅客鉄道,#00B1C2,official-swatch,https://www.jr-odekake.net/station/pdf/cnh.pdf,B; vector fill in JR West Hiroshima-area route map
+芸備線,西日本旅客鉄道,#8D7EBB,official-swatch,https://www.jr-odekake.net/station/pdf/cnh.pdf,P; the map draws 広島-備後落合 (about 70%) in P purple; 備後落合-備中神代 grey; vector fill in JR West Hiroshima-area route map
+呉線,西日本旅客鉄道,#D0882F,official-swatch,https://www.jr-odekake.net/station/pdf/cnh.pdf,Y; vector fill in JR West Hiroshima-area route map
+山口線,西日本旅客鉄道,#F37053,official-swatch,https://www.jr-odekake.net/station/pdf/cnh.pdf,no line symbol; line colour on the Hiroshima-area map; vector fill in JR West Hiroshima-area route map
+宇部線,西日本旅客鉄道,#B02857,official-swatch,https://www.jr-odekake.net/station/pdf/cnh.pdf,no line symbol; line colour on the Hiroshima-area map; vector fill in JR West Hiroshima-area route map
+小野田線,西日本旅客鉄道,#6860AA,official-swatch,https://www.jr-odekake.net/station/pdf/cnh.pdf,no line symbol; line colour on the Hiroshima-area map; vector fill in JR West Hiroshima-area route map
+美祢線,西日本旅客鉄道,#D60080,official-swatch,https://www.jr-odekake.net/station/pdf/cnh.pdf,no line symbol; line colour on the Hiroshima-area map (line suspended since 2023 flood); vector fill in JR West Hiroshima-area route map
+岩徳線,西日本旅客鉄道,#00A663,official-swatch,https://www.jr-odekake.net/station/pdf/cnh.pdf,no line symbol; line colour on the Hiroshima-area map; vector fill in JR West Hiroshima-area route map
+因美線,西日本旅客鉄道,#B27B46,official-swatch,https://www.jr-odekake.net/station/pdf/san.pdf,B 鳥取-東津山; sampled from the raster JR West San-in (Tottori/Shimane) route map; approximate
+境線,西日本旅客鉄道,#286BAB,official-swatch,https://www.jr-odekake.net/station/pdf/san.pdf,C; sampled from the raster JR West San-in (Tottori/Shimane) route map; approximate
+木次線,西日本旅客鉄道,#F5B63D,official-swatch,https://www.jr-odekake.net/station/pdf/san.pdf,E; sampled from the raster JR West San-in (Tottori/Shimane) route map; approximate
+鹿児島線,九州旅客鉄道,#EF404A,official-swatch,https://www.jrkyushu.co.jp/english/pdf/station_numbering_map.pdf,JA 門司港-博多 / JB 博多-荒尾 (about 46% of the line); south of 荒尾 not on the numbering map; vector fill in JR Kyushu station-numbering map (2022-10)
+山陽線,九州旅客鉄道,#EF404A,official-swatch,https://www.jrkyushu.co.jp/english/pdf/station_numbering_map.pdf,JA 山陽線 下関-門司; vector fill in JR Kyushu station-numbering map (2022-10)
+日豊線,九州旅客鉄道,#0095DA,official-swatch,https://www.jrkyushu.co.jp/english/pdf/station_numbering_map.pdf,"JF 小倉-行橋 carries the symbol; the map draws 日豊本線 in the same blue on to 大分 (legend square ""Nippo Line""); south of 大分 not shown; vector fill in JR Kyushu station-numbering map (2022-10)"
+長崎線,九州旅客鉄道,#FCAF17,official-swatch,https://www.jrkyushu.co.jp/english/pdf/station_numbering_map.pdf,JH 鳥栖-佐賀; the map draws 長崎本線 west of 佐賀 in the same yellow (legend square); vector fill in JR Kyushu station-numbering map (2022-10)
+佐世保線,九州旅客鉄道,#35B558,official-swatch,https://www.jrkyushu.co.jp/english/pdf/station_numbering_map.pdf,"no symbol; legend square ""Sasebo Line""; vector fill in JR Kyushu station-numbering map (2022-10)"
+唐津線,九州旅客鉄道,#0095DA,official-swatch,https://www.jrkyushu.co.jp/english/pdf/station_numbering_map.pdf,"no symbol; legend square ""Karatsu Line""; vector fill in JR Kyushu station-numbering map (2022-10)"
+筑肥線,九州旅客鉄道,#903F98,official-swatch,https://www.jrkyushu.co.jp/english/pdf/station_numbering_map.pdf,JK 姪浜-唐津 (about 62%); 山本-伊万里 not on the map; vector fill in JR Kyushu station-numbering map (2022-10)
+香椎線,九州旅客鉄道,#0095DA,official-swatch,https://www.jrkyushu.co.jp/english/pdf/station_numbering_map.pdf,JD; vector fill in JR Kyushu station-numbering map (2022-10)
+篠栗線,九州旅客鉄道,#FCAF17,official-swatch,https://www.jrkyushu.co.jp/english/pdf/station_numbering_map.pdf,JC 福北ゆたか線; vector fill in JR Kyushu station-numbering map (2022-10)
+筑豊線,九州旅客鉄道,#FCAF17,official-swatch,https://www.jrkyushu.co.jp/english/pdf/station_numbering_map.pdf,JC 福北ゆたか線 折尾-桂川 (about half); JE 若松線 若松-折尾 #0095DA; JG 原田線 桂川-原田 #35B558; vector fill in JR Kyushu station-numbering map (2022-10)
+後藤寺線,九州旅客鉄道,#903F98,official-swatch,https://www.jrkyushu.co.jp/english/pdf/station_numbering_map.pdf,JJ; vector fill in JR Kyushu station-numbering map (2022-10)
+日田彦山線,九州旅客鉄道,#BA7031,official-swatch,https://www.jrkyushu.co.jp/english/pdf/station_numbering_map.pdf,JI 城野-田川後藤寺; the map draws the rest of the line in the same brown; vector fill in JR Kyushu station-numbering map (2022-10)
+久大線,九州旅客鉄道,#35B558,official-swatch,https://www.jrkyushu.co.jp/english/pdf/station_numbering_map.pdf,"no symbol; legend square ""Kyudai Line""; vector fill in JR Kyushu station-numbering map (2022-10)"
+豊肥線,九州旅客鉄道,#BA7031,official-swatch,https://www.jrkyushu.co.jp/english/pdf/station_numbering_map.pdf,"no symbol; legend square ""Hohi Line""; vector fill in JR Kyushu station-numbering map (2022-10)"
+予讃線,四国旅客鉄道,#FCAF17,official-swatch,https://www.jr-shikoku.co.jp/01_trainbus/st_number/map.pdf,Y 高松-松山 and U 松山-宇和島 (内子経由) share orange (about 83%); S 向井原-伊予大洲 (伊予長浜経由) #97AAD7; vector fill in JR Shikoku route map (2025-05-01)
+内子線,四国旅客鉄道,#FCAF17,official-swatch,https://www.jr-shikoku.co.jp/01_trainbus/st_number/map.pdf,U; vector fill in JR Shikoku route map (2025-05-01)
+土讃線,四国旅客鉄道,#E15985,official-swatch,https://www.jr-shikoku.co.jp/01_trainbus/st_number/map.pdf,D 多度津-高知 and K 高知-窪川 share pink; vector fill in JR Shikoku route map (2025-05-01)
+高徳線,四国旅客鉄道,#8AC63F,official-swatch,https://www.jr-shikoku.co.jp/01_trainbus/st_number/map.pdf,T; vector fill in JR Shikoku route map (2025-05-01)
+徳島線,四国旅客鉄道,#2B6482,official-swatch,https://www.jr-shikoku.co.jp/01_trainbus/st_number/map.pdf,B よしの川ブルーライン; vector fill in JR Shikoku route map (2025-05-01)
+鳴門線,四国旅客鉄道,#8C2D5F,official-swatch,https://www.jr-shikoku.co.jp/01_trainbus/st_number/map.pdf,N; vector fill in JR Shikoku route map (2025-05-01)
+牟岐線,四国旅客鉄道,#09BAB4,official-swatch,https://www.jr-shikoku.co.jp/01_trainbus/st_number/map.pdf,M 阿波室戸シーサイドライン; vector fill in JR Shikoku route map (2025-05-01)
+予土線,四国旅客鉄道,#009157,official-swatch,https://www.jr-shikoku.co.jp/01_trainbus/st_number/map.pdf,G しまんとグリーンライン; vector fill in JR Shikoku route map (2025-05-01)
+本四備讃線,四国旅客鉄道,#007AC2,official-swatch,https://www.jr-shikoku.co.jp/01_trainbus/st_number/map.pdf,"瀬戸大橋線, no line symbol; drawn blue on the map; vector fill in JR Shikoku route map (2025-05-01)"
+千歳線,北海道旅客鉄道,#0072BC,official-swatch,https://www.jrhokkaido.co.jp/global/pdf/route_map.pdf,H; 新千歳空港支線 AP #00AFEB; vector line colour in JR Hokkaido route map (2026-04-01)
+室蘭線,北海道旅客鉄道,#0072BC,official-swatch,https://www.jrhokkaido.co.jp/global/pdf/route_map.pdf,H 長万部-沼ノ端 (about 70%) and 室蘭支線; 沼ノ端-岩見沢 drawn grey #939598 without symbol; vector line colour in JR Hokkaido route map (2026-04-01)
+函館線,北海道旅客鉄道,,official-swatch,https://www.jrhokkaido.co.jp/global/pdf/route_map.pdf,no colour covers 40%. Sections: H 函館-長万部 (and 砂原支線) #0072BC; S 長万部-小樽-札幌 #ED1C24 (about 38%); A 札幌-旭川 #F7941D; vector line colour in JR Hokkaido route map (2026-04-01)
+宗谷線,北海道旅客鉄道,#964B35,official-swatch,https://www.jrhokkaido.co.jp/global/pdf/route_map.pdf,W; vector line colour in JR Hokkaido route map (2026-04-01)
+石北線,北海道旅客鉄道,#F7941D,official-swatch,https://www.jrhokkaido.co.jp/global/pdf/route_map.pdf,A (continues from 函館線 札幌-旭川); vector line colour in JR Hokkaido route map (2026-04-01)
+石勝線,北海道旅客鉄道,#8DC63F,official-swatch,https://www.jrhokkaido.co.jp/global/pdf/route_map.pdf,K; vector line colour in JR Hokkaido route map (2026-04-01)
+根室線,北海道旅客鉄道,#8DC63F,official-swatch,https://www.jrhokkaido.co.jp/global/pdf/route_map.pdf,K 新得-釧路 (about 48%); T 滝川-富良野 #FAB383; 花咲線 釧路-根室 #0EA14B; vector line colour in JR Hokkaido route map (2026-04-01)
+富良野線,北海道旅客鉄道,#6F60AA,official-swatch,https://www.jrhokkaido.co.jp/global/pdf/route_map.pdf,F; vector line colour in JR Hokkaido route map (2026-04-01)
+札沼線,北海道旅客鉄道,#007A48,official-swatch,https://www.jrhokkaido.co.jp/global/pdf/route_map.pdf,G 学園都市線; vector line colour in JR Hokkaido route map (2026-04-01)
+釧網線,北海道旅客鉄道,#F172AC,official-swatch,https://www.jrhokkaido.co.jp/global/pdf/route_map.pdf,B (釧網本線); vector line colour in JR Hokkaido route map (2026-04-01)
+東海道線,東海旅客鉄道,#F47920,official-swatch,https://railway.jr-central.co.jp/route-map/_pdf/numbering.pdf,CA; vector line colour in JR Central railway map (2025-10)
+御殿場線,東海旅客鉄道,#477543,official-swatch,https://railway.jr-central.co.jp/route-map/_pdf/numbering.pdf,CB; vector line colour in JR Central railway map (2025-10)
+身延線,東海旅客鉄道,#773C97,official-swatch,https://railway.jr-central.co.jp/route-map/_pdf/numbering.pdf,CC; vector line colour in JR Central railway map (2025-10)
+飯田線,東海旅客鉄道,#6FA3D7,official-swatch,https://railway.jr-central.co.jp/route-map/_pdf/numbering.pdf,CD; vector line colour in JR Central railway map (2025-10)
+武豊線,東海旅客鉄道,#8C5A38,official-swatch,https://railway.jr-central.co.jp/route-map/_pdf/numbering.pdf,CE; vector line colour in JR Central railway map (2025-10)
+中央線,東海旅客鉄道,#327198,official-swatch,https://railway.jr-central.co.jp/route-map/_pdf/numbering.pdf,"CF 名古屋-塩尻, whole JR Central section; vector line colour in JR Central railway map (2025-10)"
+高山線,東海旅客鉄道,#9E1813,official-swatch,https://railway.jr-central.co.jp/route-map/_pdf/numbering.pdf,CG; vector line colour in JR Central railway map (2025-10)
+太多線,東海旅客鉄道,#C8BA45,official-swatch,https://railway.jr-central.co.jp/route-map/_pdf/numbering.pdf,CI; vector line colour in JR Central railway map (2025-10)
+関西線,東海旅客鉄道,#16B68F,official-swatch,https://railway.jr-central.co.jp/route-map/_pdf/numbering.pdf,CJ 名古屋-亀山; vector line colour in JR Central railway map (2025-10)
+東海道線,東日本旅客鉄道,#F68B1E,official-swatch,https://www.jreast.co.jp/map/pdf/map_tokyo.pdf,"legend 1 東海道線 東京-熱海 (JT); the register line also takes in 品鶴線 and freight lines, served by 横須賀線 #007AC1 and 湘南新宿ライン #E31F26; 京浜東北線 #00B3E6 runs 東京-横浜 on parallel tracks; vector colour, JR East Railway Lines Network map (2024-03-16; jreast.co.jp blocks scripts, read from the Wayback Machine copy)"
+伊東線,東日本旅客鉄道,#F68B1E,official-swatch,https://www.jreast.co.jp/map/pdf/map_tokyo.pdf,"legend 34; vector colour, JR East network map (2024-03-16, Wayback copy)"
+横須賀線,東日本旅客鉄道,#007AC1,official-swatch,https://www.jreast.co.jp/map/pdf/map_tokyo.pdf,"legend 2 横須賀線・総武線快速 (JO); vector colour, JR East network map (2024-03-16, Wayback copy)"
+根岸線,東日本旅客鉄道,#00B3E6,official-swatch,https://www.jreast.co.jp/map/pdf/map_tokyo.pdf,"legend 4 京浜東北線・根岸線 (JK); 横浜線 through trains #80C341 also shown; vector colour, JR East network map (2024-03-16, Wayback copy)"
+横浜線,東日本旅客鉄道,#80C341,official-swatch,https://www.jreast.co.jp/map/pdf/map_tokyo.pdf,"legend 6 (JH); vector colour, JR East network map (2024-03-16, Wayback copy)"
+山手線,東日本旅客鉄道,#80C341,official-swatch,https://www.jreast.co.jp/map/pdf/map_tokyo.pdf,"legend 9 (JY); the legal 山手線 品川-新宿-田端 also carries 埼京線 #05B48D and 湘南新宿ライン #E31F26 between 大崎 and 池袋; vector colour, JR East network map (2024-03-16, Wayback copy)"
+南武線,東日本旅客鉄道,#FFD401,official-swatch,https://www.jreast.co.jp/map/pdf/map_tokyo.pdf,"legend 7 (JN); vector colour, JR East network map (2024-03-16, Wayback copy)"
+鶴見線,東日本旅客鉄道,#FFD401,official-swatch,https://www.jreast.co.jp/map/pdf/map_tokyo.pdf,"legend 8 (JI); vector colour, JR East network map (2024-03-16, Wayback copy)"
+相模線,東日本旅客鉄道,#009793,official-swatch,https://www.jreast.co.jp/map/pdf/map_tokyo.pdf,"legend 5; the legend fill is not a plain vector colour, so this is its CMYK (C100 M15 Y50 K0) converted the same way as the other rows; JR East network map (2024-03-16, Wayback copy)"
+青梅線,東日本旅客鉄道,#F15A22,official-swatch,https://www.jreast.co.jp/map/pdf/map_tokyo.pdf,"legend 14 (JC colour); vector colour, JR East network map (2024-03-16, Wayback copy)"
+五日市線,東日本旅客鉄道,#F15A22,official-swatch,https://www.jreast.co.jp/map/pdf/map_tokyo.pdf,"legend 15 (JC colour); vector colour, JR East network map (2024-03-16, Wayback copy)"
+中央線,東日本旅客鉄道,#007AC1,official-swatch,https://www.jreast.co.jp/map/pdf/map_tokyo.pdf,"legend 10 中央線 blue for 高尾 westward (about 60% if it runs on to 塩尻 as in JR East's Nagano-area colours; this map only shows the eastern end); JC 中央線快速 東京-高尾 #F15A22; JB 各駅停車 御茶ノ水-三鷹 #FFD401; vector colour, JR East network map (2024-03-16, Wayback copy)"
+八高線,東日本旅客鉄道,#948E85,official-swatch,https://www.jreast.co.jp/map/pdf/map_tokyo.pdf,"legend 16 八高線 and 20 川越線・八高線 are grey; the same grey is used on this map for 総武線 east of 千葉 and the subway through services, so it may be a neutral default rather than a line colour; vector colour, JR East network map (2024-03-16, Wayback copy)"
+川越線,東日本旅客鉄道,#05B48D,official-swatch,https://www.jreast.co.jp/map/pdf/map_tokyo.pdf,"legend 19 埼京線・川越線 大宮-川越 (JA, about 53%); 川越-高麗川 grey #948E85 (legend 20); JR East network map (2024-03-16, Wayback copy)"
+赤羽線,東日本旅客鉄道,#05B48D,official-swatch,https://www.jreast.co.jp/map/pdf/map_tokyo.pdf,"埼京線 (JA) 池袋-赤羽; JR East network map (2024-03-16, Wayback copy)"
+高崎線,東日本旅客鉄道,#F68B1E,official-swatch,https://www.jreast.co.jp/map/pdf/map_tokyo.pdf,"legend 18 (JU); JR East network map (2024-03-16, Wayback copy)"
+常磐線,東日本旅客鉄道,#007AC1,official-swatch,https://www.jreast.co.jp/map/pdf/map_tokyo.pdf,"legend 21 常磐線 blue, 取手 northward (this map ends near 高萩; the South Tohoku map https://www.jreast.co.jp/map/pdf/minamitohoku.pdf draws いわき-岩沼 in its 常磐線 blue #0071C5, so blue covers 取手-岩沼, most of the line); JJ 常磐線快速 上野-取手 #07B262 (CMYK C80 Y85 converted); JL 各駅停車 綾瀬-取手 grey #948E85; JR East network map (2024-03-16, Wayback copy)"
+水戸線,東日本旅客鉄道,#007AC1,official-swatch,https://www.jreast.co.jp/map/pdf/map_tokyo.pdf,"legend 33; JR East network map (2024-03-16, Wayback copy)"
+成田線,東日本旅客鉄道,#07B262,official-swatch,https://www.jreast.co.jp/map/pdf/map_tokyo.pdf,"legend 22 常磐線快速・成田線 and 27 成田線 green (佐倉-松岸 and 我孫子-成田); 空港支線 成田-成田空港 blue #007AC1 (JO); legend fill converted from CMYK C80 Y85; JR East network map (2024-03-16, Wayback copy)"
+内房線,東日本旅客鉄道,#DCAF27,official-swatch,https://www.jreast.co.jp/map/pdf/map_tokyo.pdf,"legend 25; vector colour, JR East network map (2024-03-16, Wayback copy)"
+外房線,東日本旅客鉄道,#128848,official-swatch,https://www.jreast.co.jp/map/pdf/map_tokyo.pdf,"legend 26; JR East network map (2024-03-16, Wayback copy)"
+東金線,東日本旅客鉄道,#F15A22,official-swatch,https://www.jreast.co.jp/map/pdf/map_tokyo.pdf,"legend 28; vector colour, JR East network map (2024-03-16, Wayback copy)"
+京葉線,東日本旅客鉄道,#C92530,official-swatch,https://www.jreast.co.jp/map/pdf/map_tokyo.pdf,"legend 29 (JE); 武蔵野線 through services #F15A22 on the 西船橋 and 市川塩浜 branches; JR East network map (2024-03-16, Wayback copy)"
+武蔵野線,東日本旅客鉄道,#F15A22,official-swatch,https://www.jreast.co.jp/map/pdf/map_tokyo.pdf,"legend 30 (JM); vector colour, JR East network map (2024-03-16, Wayback copy)"
+両毛線,東日本旅客鉄道,#F68B1E,official-swatch,https://www.jreast.co.jp/map/pdf/map_tokyo.pdf,"legend 32; JR East network map (2024-03-16, Wayback copy)"
+日光線,東日本旅客鉄道,#F68B1E,official-swatch,https://www.jreast.co.jp/map/pdf/map_tokyo.pdf,"legend 36; JR East network map (2024-03-16, Wayback copy)"
+総武線,東日本旅客鉄道,,official-swatch,https://www.jreast.co.jp/map/pdf/map_tokyo.pdf,"no colour covers 40%. JO 総武線快速 東京-千葉 #007AC1; JB 各駅停車 御茶ノ水-千葉 #FFD401; 千葉-銚子 drawn grey #948E85 (legend 24 総武線), likely a neutral default; JR East network map (2024-03-16, Wayback copy)"
+東北線,東日本旅客鉄道,#00BB85,official-swatch,https://www.jreast.co.jp/map/pdf/minamitohoku.pdf,"South Tohoku map legend 東北線 green, drawn 黒磯-一ノ関 plus 利府支線 (about 286 km, 44% of the register km); 一ノ関-盛岡 is off the map. Tokyo map https://www.jreast.co.jp/map/pdf/map_tokyo.pdf: legend 17 宇都宮線 東京-黒磯 #F68B1E (about 25%); 京浜東北線 東京-大宮 #00B3E6 and 埼京線 赤羽-大宮 #05B48D on parallel tracks. 仙石東北ライン #73C11D is a service, not a register line; vector fill, JR East South Tohoku route map (2023-02-01)"
+上越線,東日本旅客鉄道,,official-swatch,https://www.jreast.co.jp/map/pdf/minamitohoku.pdf,"Left empty 2026-09-30: JR East's two maps disagree (cyan here, orange on the Tokyo map) and each draws only a stub. South Tohoku map legend 上越線 cyan; the map draws only a stub at 小出, so this is the legend's line colour, not a drawn section. The Tokyo map https://www.jreast.co.jp/map/pdf/map_tokyo.pdf gives 上越線 orange #F68B1E (legend 31) and draws only 高崎-渋川 (about 20 km); vector fill, JR East South Tohoku route map (2023-02-01)"
+奥羽線,東日本旅客鉄道,#FF7E1C,official-swatch,https://www.jreast.co.jp/map/pdf/minamitohoku.pdf,"legend 奥羽線 orange (includes the 山形線 section); the map draws only 福島-新庄-院内, about a third of the register km; north of that is off the map. Colour taken as the line's legend colour; vector fill, JR East South Tohoku route map (2023-02-01)"
+水郡線,東日本旅客鉄道,#378640,official-swatch,https://www.jreast.co.jp/map/pdf/minamitohoku.pdf,"legend 水郡線 dark green (same green as the Shinkansen symbol); the map draws only the northern end at 安積永盛; vector fill, JR East South Tohoku route map (2023-02-01)"
+仙石線,東日本旅客鉄道,#00ACD1,official-swatch,https://www.jreast.co.jp/map/pdf/minamitohoku.pdf,"legend 仙石線; 仙石東北ライン #73C11D (a service, not a register line) also runs 高城町-石巻 over it; vector fill, JR East South Tohoku route map (2023-02-01)"
+仙山線,東日本旅客鉄道,#4DC94A,official-swatch,https://www.jreast.co.jp/map/pdf/minamitohoku.pdf,"legend 仙山線; vector fill, JR East South Tohoku route map (2023-02-01)"
+陸羽東線,東日本旅客鉄道,#75787A,official-swatch,https://www.jreast.co.jp/map/pdf/minamitohoku.pdf,"legend 陸羽東線 grey, a named line colour (other operators are drawn in a different grey #969696); vector fill, JR East South Tohoku route map (2023-02-01)"
+陸羽西線,東日本旅客鉄道,#69D485,official-swatch,https://www.jreast.co.jp/map/pdf/minamitohoku.pdf,"legend 陸羽西線; vector fill, JR East South Tohoku route map (2023-02-01)"
+大船渡線,東日本旅客鉄道,#FF8B52,official-swatch,https://www.jreast.co.jp/map/pdf/minamitohoku.pdf,"legend 大船渡線; rail section 一ノ関-気仙沼 (BRT beyond is not a register line); vector fill, JR East South Tohoku route map (2023-02-01)"
+気仙沼線,東日本旅客鉄道,#4641A4,official-swatch,https://www.jreast.co.jp/map/pdf/minamitohoku.pdf,"legend 気仙沼線, rail section 前谷地-柳津; the BRT section is #7A76C8 and is not a register line; vector fill, JR East South Tohoku route map (2023-02-01)"
+石巻線,東日本旅客鉄道,#F76F99,official-swatch,https://www.jreast.co.jp/map/pdf/minamitohoku.pdf,"legend 石巻線; vector fill, JR East South Tohoku route map (2023-02-01)"
+左沢線,東日本旅客鉄道,#0072BA,official-swatch,https://www.jreast.co.jp/map/pdf/minamitohoku.pdf,"legend 左沢線; vector fill, JR East South Tohoku route map (2023-02-01)"
+米坂線,東日本旅客鉄道,#B074D6,official-swatch,https://www.jreast.co.jp/map/pdf/minamitohoku.pdf,"legend 米坂線; the map draws the 米沢 end (今泉-坂町 suspended since the 2022 flood); vector fill, JR East South Tohoku route map (2023-02-01)"
+只見線,東日本旅客鉄道,#0081B8,official-swatch,https://www.jreast.co.jp/map/pdf/minamitohoku.pdf,"legend 只見線, whole line 会津若松-小出; vector fill, JR East South Tohoku route map (2023-02-01)"
+磐越東線,東日本旅客鉄道,#C5527A,official-swatch,https://www.jreast.co.jp/map/pdf/minamitohoku.pdf,"legend 磐越東線, whole line いわき-郡山; vector fill, JR East South Tohoku route map (2023-02-01)"
+磐越西線,東日本旅客鉄道,#BC6E23,official-swatch,https://www.jreast.co.jp/map/pdf/minamitohoku.pdf,"legend 磐越西線; the map draws 郡山-会津若松 and on toward 新津, which is off the map; vector fill, JR East South Tohoku route map (2023-02-01)"
+羽越線,東日本旅客鉄道,#00B9DB,official-swatch,https://www.jreast.co.jp/map/pdf/minamitohoku.pdf,"legend 羽越線; the map draws only the 余目-酒田 area, so this is the legend's line colour; vector fill, JR East South Tohoku route map (2023-02-01)"
