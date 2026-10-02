@@ -1005,14 +1005,15 @@ async function loadComposition() {
   renderCompPanel();
 }
 
-// Codes biggest first, so a small unit is painted over the city beside it and
-// not under it, plus the level's median size. Cached on the loaded document.
+// Codes smallest first, so the biggest pies are painted last and sit on top:
+// the cities should read at a glance even where small units crowd round them.
+// Plus the level's median size. Cached on the loaded document.
 function compOrder(lvl) {
   const doc = state.comp;
   doc._order = doc._order || {};
   if (!doc._order[lvl]) {
     const units = doc.levels[lvl];
-    const codes = Object.keys(units).sort((a, b) => units[b].t - units[a].t);
+    const codes = Object.keys(units).sort((a, b) => units[a].t - units[b].t);
     doc._order[lvl] = codes;
     doc._ref = doc._ref || {};
     doc._ref[lvl] = units[codes[Math.floor(codes.length / 2)]].t || 1;
@@ -1199,7 +1200,7 @@ function renderCompPanel() {
     const off = state.compHidden.has(g.key) ? " off" : "";
     host.insertAdjacentHTML("beforeend",
       `<div class="row${off}" data-key="${escapeHtml(g.key)}" ` +
-      `title="${escapeHtml(g.cn || g.en)}">` +
+      `title="${escapeHtml(g.title || g.cn || g.en)}">` +
       `<span class="sw" style="background:${g.color}"></span>` +
       `<span class="nm">${escapeHtml(g.en)}</span>` +
       `<span class="pc">${compPct(doc._nat[i] / doc._natTotal)}</span></div>`);

@@ -15,16 +15,24 @@ RINF's border points are that table for Europe: one per line crossing, the same 
 countries' registers (Mouscron-Frontière is EU00084 in Belgium's RINF and France's), and on
 the track (median 2 m from OSM's rails, 90% within 9 m, over 415 measured crossings). A RINF
 register's junction there is already "e" + uopid, so the OSM half ends at the register's own
-junction station. Country outlines were tried and are far too coarse for this: Natural Earth
+junction station. Country outlines were tried and are far too coarse to cut at: Natural Earth
 10m and religiondots' shapes put the border a median 600 m from RINF's points, up to 5.5 km.
 
-EXTRA holds crossings RINF lacks (trams, Basel's German lines, borders outside the EU). Ids
-there are "x" + a short name, never a uopid. A route end that meets no point is logged by
-build_model ("no border point") and not drawn, which is how every crossing was before.
+NAMES.  A border point is shown under one neutral name, the same in every country's
+stations.json: "Belgium – France border", the two countries' Natural Earth names (as
+tools/build_regions.py names countries) in alphabetical order, joined by an en dash. Not
+either register's own name: RINF calls the same point "Mouscron-Frontière" in Belgium and
+"Frontière FR - BE (Tourcoing - Mouscron)" in France. `countries` comes from which countries'
+sections of line end at the point; where only one country files it (83 of 227), the other is
+the nearest other country in Natural Earth within NEIGHBOUR_KM, which is coarse but only has
+to say which country, not where the border is.
 
-The table is border_points.json beside this file, tracked: [{id, name: {cc: name}, lon, lat,
-countries: [cc, ...]}]. `countries` comes from which countries' sections of line end at the
-point; a point only one country files (83 of 227) gets just that one.
+EXTRA holds crossings RINF lacks (Anita, 2026-10-01: add them by hand when the country on the
+other side is built, not before). Ids there are "x" + a short name, never a uopid. A route end
+that meets no point is logged by build_model ("no border point") and not drawn.
+
+The table is border_points.json beside this file, tracked:
+{"points": [{id, name, lon, lat, countries: [cc, cc]}], ...}.
 """
 import json
 import math
@@ -37,30 +45,31 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
 TABLE = ROOT / "border_points.json"
+NAMES = ROOT.parent / "religiondots" / "data" / "geo" / "ne_10m_admin_0_countries.geojson"
 ENDPOINT = "https://graph.data.era.europa.eu/repositories/rinf-plus"
 USER_AGENT = "noritetsu-rail-map/0.1 (personal rail map research; python-urllib)"
 
 ISO3 = {"AUT": "at", "BEL": "be", "BGR": "bg", "CHE": "ch", "CZE": "cz", "DEU": "de",
         "DNK": "dk", "EST": "ee", "ESP": "es", "FIN": "fi", "FRA": "fr", "GRC": "gr",
-        "HRV": "hr", "HUN": "hu", "IRL": "ie", "ITA": "it", "LIE": "li", "LTU": "lt", "LUX": "lu",
-        "LVA": "lv", "NLD": "nl", "NOR": "no", "POL": "pl", "PRT": "pt", "ROU": "ro",
-        "SWE": "se", "SVN": "si", "SVK": "sk"}
+        "HRV": "hr", "HUN": "hu", "IRL": "ie", "ITA": "it", "LIE": "li", "LTU": "lt",
+        "LUX": "lu", "LVA": "lv", "NLD": "nl", "NOR": "no", "POL": "pl", "PRT": "pt",
+        "ROU": "ro", "SWE": "se", "SVN": "si", "SVK": "sk"}
 
-# (id, name, lon, lat, [countries]): crossings RINF has no point for. Empty to start; filled
-# from the build logs' "no border point" lines where a crossing is worth drawing.
+# (id, lon, lat, [cc, cc]): crossings RINF has no point for. Named like the rest.
 EXTRA = []
 
 # A border point this close to a route's track is where that track crosses.
 NEAR_M = 60
+# A point only one country files: the other country is the nearest one within this.
+NEIGHBOUR_KM = 50
 
 Q_POINTS = """
 PREFIX era: <http://data.europa.eu/949/>
 PREFIX wgs: <http://www.w3.org/2003/01/geo/wgs84_pos#>
 PREFIX geo: <http://www.opengis.net/ont/geosparql#>
-SELECT DISTINCT ?op ?uopid ?name ?lat ?lon ?wkt ?country WHERE {
+SELECT DISTINCT ?op ?uopid ?lat ?lon ?wkt ?country WHERE {
   ?op a era:OperationalPoint ; era:opType <http://data.europa.eu/949/concepts/op-types/90> .
   OPTIONAL { ?op era:uopid ?uopid }
-  OPTIONAL { ?op era:opName ?name }
   OPTIONAL { ?op era:inCountry ?country }
   OPTIONAL { ?op era:netReference ?nr . ?nr wgs:lat ?lat ; wgs:long ?lon }
   OPTIONAL { ?op geo:hasGeometry ?g . ?g geo:asWKT ?wkt }
@@ -92,6 +101,49 @@ def cc_of(iri):
     return ISO3.get(t, t.lower())
 
 
+def countries():
+    """cc -> (English name, outline), Natural Earth 10m; the most populous feature names a
+    code, as in tools/build_regions.py."""
+    from shapely.geometry import shape
+    from shapely.ops import unary_union
+    names, pop, geo = {}, {}, defaultdict(list)
+    for f in json.loads(NAMES.read_text(encoding="utf-8"))["features"]:
+        q = f["properties"]
+        cc = (q.get("ISO_A2_EH") or "").lower()
+        if not cc or cc == "-99":
+            continue
+        p = q.get("POP_EST") or 0
+        if cc not in names or p > pop[cc]:
+            names[cc], pop[cc] = q.get("NAME"), p
+        geo[cc].append(shape(f["geometry"]))
+    return {cc: (names[cc], unary_union(g)) for cc, g in geo.items()}
+
+
+def border_name(ccs, ne):
+    return " – ".join(sorted(ne[c][0] if c in ne else c.upper() for c in ccs)) + " border"
+
+
+def complete(points, ne):
+    """Give each point two countries (the nearest other one where only one is known) and its
+    neutral name."""
+    from shapely.geometry import Point
+    lone = 0
+    for p in points:
+        if len(p["countries"]) < 2:
+            pt = Point(p["lon"], p["lat"])
+            near = sorted((g.distance(pt), cc) for cc, (_n, g) in ne.items()
+                          if cc not in p["countries"])
+            # Not always at the border itself: Röszke's point is 7 km short of Serbia, the
+            # Channel Tunnel's at the French portal, 35 km from England.
+            km = near[0][0] * 111.32 * math.cos(math.radians(p["lat"])) if near else None
+            if km is not None and km <= NEIGHBOUR_KM:
+                p["countries"].add(near[0][1])
+            else:
+                lone += 1
+        p["name"] = border_name(p["countries"], ne)
+    return lone
+
+
 def fetch():
     import re
     pairs = defaultdict(set)
@@ -109,30 +161,63 @@ def fetch():
             if not m:
                 continue
             lon, lat = float(m.group(1)), float(m.group(2))
-        p = out.setdefault(u, {"id": f"e{u}", "name": {}, "lon": round(lon, 6),
-                               "lat": round(lat, 6), "countries": set(pairs.get(u, ()))})
+        p = out.setdefault(u, {"id": f"e{u}", "lon": round(lon, 6), "lat": round(lat, 6),
+                               "countries": set(pairs.get(u, ()))})
         if r.get("country"):
             p["countries"].add(cc_of(r["country"]))
-            if r.get("name"):
-                p["name"].setdefault(cc_of(r["country"]), r["name"])
-    rows = [{**p, "countries": sorted(p["countries"])} for _u, p in sorted(out.items())]
+    pts = [p for _u, p in sorted(out.items())]
+    lone = complete(pts, countries())
+    rows = [{"id": p["id"], "name": p["name"], "lon": p["lon"], "lat": p["lat"],
+             "countries": sorted(p["countries"])} for p in pts]
     TABLE.write_text(json.dumps({"source": ENDPOINT, "fetched": date.today().isoformat(),
                                  "points": rows}, ensure_ascii=False, indent=0),
                      encoding="utf-8")
-    print(f"wrote {len(rows)} border points to {TABLE}")
+    print(f"wrote {len(rows)} border points to {TABLE}; {lone} with one country only")
 
 
-def load():
-    """[{id, name, lon, lat, countries}], id being the station id every build gives it."""
+def load(canonical_only=False):
+    """[{id, name, lon, lat, countries}], id being the station id every build gives it.
+    `canonical_only`: leave out points that are a co-located duplicate of another (`canon`),
+    for tracing route ends to a border; naming still wants every id."""
     rows = json.loads(TABLE.read_text(encoding="utf-8"))["points"]
     pts = [{**r, "countries": set(r["countries"])} for r in rows]
-    for pid, name, lon, lat, ccs in EXTRA:
-        pts.append({"id": pid, "name": {"": name}, "lon": lon, "lat": lat, "countries": set(ccs)})
+    if EXTRA:
+        ne = countries()
+        extra = [{"id": pid, "lon": lon, "lat": lat, "countries": set(ccs)}
+                 for pid, lon, lat, ccs in EXTRA]
+        complete(extra, ne)
+        pts += extra
+    if canonical_only:
+        dup = canon(pts)
+        pts = [p for p in pts if p["id"] not in dup]
     return pts
 
 
-def name_for(p, cc):
-    return p["name"].get(cc) or next(iter(p["name"].values()), "") or p["id"]
+# RINF files some crossings twice, a point per country at the same spot: Bulgaria's register
+# ends at EU00208 and Romania's at EU00209 (0 m apart), Czechia and Poland carry both EU00072
+# and EU00073 (6 m), Austria and Switzerland both EU00118 and CH15472 (0 m). Two ids never
+# join in the app, so each such group is one id: the eEU one, else the lowest.
+SAME_POINT_M = 15
+
+
+def canon(pts=None):
+    """{duplicate id: the id that stands for it}, for points within SAME_POINT_M."""
+    if pts is None:
+        pts = load()
+    out = {}
+
+    def m(a, b):
+        dx = (a["lon"] - b["lon"]) * math.cos(math.radians(a["lat"])) * 111320
+        return math.hypot(dx, (a["lat"] - b["lat"]) * 110570)
+
+    order = sorted(pts, key=lambda p: (not p["id"].startswith("eEU"), p["id"]))
+    for i, a in enumerate(order):
+        if a["id"] in out:
+            continue
+        for b in order[i + 1:]:
+            if b["id"] not in out and m(a, b) <= SAME_POINT_M:
+                out[b["id"]] = a["id"]
+    return out
 
 
 class Index:
@@ -140,6 +225,7 @@ class Index:
 
     def __init__(self, points):
         self.pts = points
+        self.by_id = {p["id"]: p for p in points}
         self.cell = defaultdict(list)
         for i, p in enumerate(points):
             self.cell[(int(p["lon"] * 50), int(p["lat"] * 50))].append(i)
@@ -191,5 +277,5 @@ if __name__ == "__main__":
     pts = load()
     by = defaultdict(int)
     for p in pts:
-        by["-".join(sorted(p["countries"]))] += 1
+        by[p["name"]] += 1
     print(f"{len(pts)} border points: " + ", ".join(f"{k} {v}" for k, v in sorted(by.items())))

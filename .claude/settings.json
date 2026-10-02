@@ -11,7 +11,15 @@
       "WebFetch(domain:api.census.gov)",
       "WebSearch",
       "Bash(python download_shapefiles.py --state 72 --areawater)",
-      "Bash(python tokyoriders/peek.py)"
+      "Bash(python tokyoriders/peek.py)",
+      "Bash(python tools/rebuild.py:*)",
+      "Bash(python tools/compare_lines.py:*)",
+      "Bash(python c:/Users/anita/projects/maps/noritetsu/tools/rebuild.py:*)",
+      "Bash(python c:/Users/anita/projects/maps/noritetsu/tools/compare_lines.py:*)",
+      "Bash(python C:/Users/anita/projects/maps/noritetsu/tools/rebuild.py:*)",
+      "Bash(python C:/Users/anita/projects/maps/noritetsu/tools/compare_lines.py:*)",
+      "PowerShell(python tools/rebuild.py:*)",
+      "PowerShell(python tools/compare_lines.py:*)"
     ],
     "additionalDirectories": [
       "C:\\Users\\anita\\projects",

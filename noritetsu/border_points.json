@@ -4,65 +4,57 @@
 "points": [
 {
 "id": "eCH15452",
-"name": {
-"ch": "Landesgrenze CH-Liechtenstein"
-},
+"name": "Liechtenstein – Switzerland border",
 "lon": 9.490675,
 "lat": 47.164532,
 "countries": [
-"ch"
+"ch",
+"li"
 ]
 },
 {
 "id": "eCH15472",
-"name": {
-"ch": "St. Margrethen Landesgrenze"
-},
+"name": "Austria – Switzerland border",
 "lon": 9.657876,
 "lat": 47.447697,
 "countries": [
+"at",
 "ch"
 ]
 },
 {
 "id": "eEEIVANG",
-"name": {
-"ee": "Rakenduspunkt Narva"
-},
+"name": "Estonia – Russia border",
 "lon": 28.2059,
 "lat": 59.3671,
 "countries": [
-"ee"
+"ee",
+"ru"
 ]
 },
 {
 "id": "eEEPETSO",
-"name": {
-"ee": "Rakenduspunkt Koidula"
-},
+"name": "Estonia – Russia border",
 "lon": 27.6077,
 "lat": 57.837,
 "countries": [
-"ee"
+"ee",
+"ru"
 ]
 },
 {
 "id": "eEEVALKA",
-"name": {
-"ee": "Rakenduspunkt Valkapiir"
-},
+"name": "Estonia – Latvia border",
 "lon": 26.0235,
 "lat": 57.7691,
 "countries": [
-"ee"
+"ee",
+"lv"
 ]
 },
 {
 "id": "eEU00001",
-"name": {
-"de": "Weener Grenze",
-"nl": "Nieuweschans Grens"
-},
+"name": "Germany – Netherlands border",
 "lon": 7.210297,
 "lat": 53.187511,
 "countries": [
@@ -72,10 +64,7 @@
 },
 {
 "id": "eEU00002",
-"name": {
-"nl": "Oldenzaal Grens",
-"de": "Bad Bentheim Grenze"
-},
+"name": "Germany – Netherlands border",
 "lon": 7.040075,
 "lat": 52.30909,
 "countries": [
@@ -85,10 +74,7 @@
 },
 {
 "id": "eEU00003",
-"name": {
-"de": "Gronau Grenze",
-"nl": "Enschede Grens"
-},
+"name": "Germany – Netherlands border",
 "lon": 6.979951,
 "lat": 52.218024,
 "countries": [
@@ -98,10 +84,7 @@
 },
 {
 "id": "eEU00004",
-"name": {
-"de": "Emmerich Grenze",
-"nl": "Zevenaar grens"
-},
+"name": "Germany – Netherlands border",
 "lon": 6.137716,
 "lat": 51.901244,
 "countries": [
@@ -111,10 +94,7 @@
 },
 {
 "id": "eEU00005",
-"name": {
-"de": "Kaldenkirchen Grenze",
-"nl": "Venlo grens"
-},
+"name": "Germany – Netherlands border",
 "lon": 6.192587,
 "lat": 51.341009,
 "countries": [
@@ -124,10 +104,7 @@
 },
 {
 "id": "eEU00006",
-"name": {
-"nl": "Haanrade grens",
-"de": "Herzogenrath Grenze"
-},
+"name": "Germany – Netherlands border",
 "lon": 6.084949,
 "lat": 50.88035,
 "countries": [
@@ -137,10 +114,7 @@
 },
 {
 "id": "eEU00007",
-"name": {
-"de": "Aachen West Grenze",
-"be": "Montzen-Frontière"
-},
+"name": "Belgium – Germany border",
 "lon": 6.021333,
 "lat": 50.753388,
 "countries": [
@@ -150,10 +124,7 @@
 },
 {
 "id": "eEU00008",
-"name": {
-"de": "Aachen Süd Grenze",
-"be": "Hergenrath-Frontière"
-},
+"name": "Belgium – Germany border",
 "lon": 6.041278,
 "lat": 50.718486,
 "countries": [
@@ -163,9 +134,7 @@
 },
 {
 "id": "eEU00009",
-"name": {
-"de": "Igel Grenze"
-},
+"name": "Germany – Luxembourg border",
 "lon": 6.506633,
 "lat": 49.713849,
 "countries": [
@@ -175,10 +144,7 @@
 },
 {
 "id": "eEU00010",
-"name": {
-"de": "Perl Grenze",
-"fr": "Frontière FR - DE (Apach - Perl)"
-},
+"name": "France – Germany border",
 "lon": 6.36963,
 "lat": 49.468985,
 "countries": [
@@ -188,10 +154,7 @@
 },
 {
 "id": "eEU00011",
-"name": {
-"de": "Hemmersdorf (Saar) Grenze",
-"fr": "Frontière FR-DE (Bouzonville - Hemmersdorf)"
-},
+"name": "France – Germany border",
 "lon": 6.59117,
 "lat": 49.33606,
 "countries": [
@@ -201,10 +164,7 @@
 },
 {
 "id": "eEU00012",
-"name": {
-"de": "Saarbrücken Grenze",
-"fr": "Frontière FR - DE (Forbach - Saarbrucken)"
-},
+"name": "France – Germany border",
 "lon": 6.944131,
 "lat": 49.214084,
 "countries": [
@@ -214,10 +174,7 @@
 },
 {
 "id": "eEU00013",
-"name": {
-"de": "Hanweiler Grenze",
-"fr": "Frontière FR - DE (Sarreguemines - Hanweiler)"
-},
+"name": "France – Germany border",
 "lon": 7.057337,
 "lat": 49.11196,
 "countries": [
@@ -227,10 +184,7 @@
 },
 {
 "id": "eEU00014",
-"name": {
-"de": "Kapsweyer Grenze",
-"fr": "Frontière FR-DE (Wissembourg - Winden)"
-},
+"name": "France – Germany border",
 "lon": 7.978843,
 "lat": 49.02708,
 "countries": [
@@ -240,10 +194,7 @@
 },
 {
 "id": "eEU00015",
-"name": {
-"fr": "Frontière FR-DE (Lauterbourg - Wörth)",
-"de": "Berg (Pfalz) Grenze"
-},
+"name": "France – Germany border",
 "lon": 8.1954,
 "lat": 48.9752,
 "countries": [
@@ -253,10 +204,7 @@
 },
 {
 "id": "eEU00016",
-"name": {
-"de": "Kehl Grenze",
-"fr": "Frontière FR - DE (Strasbourg-Kehl)"
-},
+"name": "France – Germany border",
 "lon": 7.801062,
 "lat": 48.575634,
 "countries": [
@@ -266,10 +214,7 @@
 },
 {
 "id": "eEU00017",
-"name": {
-"de": "Neuenburg (Baden) Grenze",
-"fr": "Frontière FR-DE (Bantzenheim - Neuenburg)"
-},
+"name": "France – Germany border",
 "lon": 7.5464,
 "lat": 47.8143,
 "countries": [
@@ -279,42 +224,37 @@
 },
 {
 "id": "eEU00021",
-"name": {
-"de": "Waldshut Grenze"
-},
+"name": "Germany – Switzerland border",
 "lon": 8.234142,
 "lat": 47.609231,
 "countries": [
+"ch",
 "de"
 ]
 },
 {
 "id": "eEU00026",
-"name": {
-"de": "Konstanz BW/CH 4000"
-},
+"name": "Germany – Switzerland border",
 "lon": 9.176715,
 "lat": 47.65434,
 "countries": [
+"ch",
 "de"
 ]
 },
 {
 "id": "eEU00027",
-"name": {
-"de": "Konstanz BW/CH 4322"
-},
+"name": "Germany – Switzerland border",
 "lon": 9.176953,
 "lat": 47.654452,
 "countries": [
+"ch",
 "de"
 ]
 },
 {
 "id": "eEU00028",
-"name": {
-"de": "Lindau-Reutin Grenze"
-},
+"name": "Austria – Germany border",
 "lon": 9.736,
 "lat": 47.5344,
 "countries": [
@@ -324,10 +264,7 @@
 },
 {
 "id": "eEU00029",
-"name": {
-"at": "Staatsgrenze nächst Vils [BSTS_ID=2320]",
-"de": "Pfronten-Steinach Grenze"
-},
+"name": "Austria – Germany border",
 "lon": 10.5905,
 "lat": 47.5604,
 "countries": [
@@ -337,10 +274,7 @@
 },
 {
 "id": "eEU00030",
-"name": {
-"at": "Staatsgrenze nächst Ehrwald-Zugspitzbahn [BSTS_ID=703]",
-"de": "Griesen (Oberbay) Grenze"
-},
+"name": "Austria – Germany border",
 "lon": 10.9302,
 "lat": 47.4697,
 "countries": [
@@ -350,9 +284,7 @@
 },
 {
 "id": "eEU00031",
-"name": {
-"de": "Mittenwald Grenze"
-},
+"name": "Austria – Germany border",
 "lon": 11.2675,
 "lat": 47.3978,
 "countries": [
@@ -362,10 +294,7 @@
 },
 {
 "id": "eEU00032",
-"name": {
-"at": "Staatsgrenze nächst Kufstein [BSTS_ID=1050019]",
-"de": "Kufstein Grenze"
-},
+"name": "Austria – Germany border",
 "lon": 12.1774,
 "lat": 47.6012,
 "countries": [
@@ -375,9 +304,7 @@
 },
 {
 "id": "eEU00033",
-"name": {
-"de": "Salzburg Grenze"
-},
+"name": "Austria – Germany border",
 "lon": 12.989,
 "lat": 47.8319,
 "countries": [
@@ -387,10 +314,7 @@
 },
 {
 "id": "eEU00034",
-"name": {
-"at": "Staatsgrenze nächst Braunau am Inn [BSTS_ID=234]",
-"de": "Simbach (Inn) Grenze"
-},
+"name": "Austria – Germany border",
 "lon": 13.0384,
 "lat": 48.262,
 "countries": [
@@ -400,9 +324,7 @@
 },
 {
 "id": "eEU00035",
-"name": {
-"de": "Passau Grenze"
-},
+"name": "Austria – Germany border",
 "lon": 13.4517,
 "lat": 48.5633,
 "countries": [
@@ -412,10 +334,7 @@
 },
 {
 "id": "eEU00036",
-"name": {
-"cz": "Z.Ruda-Alzbet.st.hr.",
-"de": "Bayerisch Eisenstein Grenze"
-},
+"name": "Czechia – Germany border",
 "lon": 13.20916,
 "lat": 49.12162,
 "countries": [
@@ -425,10 +344,7 @@
 },
 {
 "id": "eEU00037",
-"name": {
-"de": "Furth im Wald Grenze",
-"cz": "C.Kubice st.hr."
-},
+"name": "Czechia – Germany border",
 "lon": 12.879498,
 "lat": 49.332934,
 "countries": [
@@ -438,10 +354,7 @@
 },
 {
 "id": "eEU00038",
-"name": {
-"cz": "Cheb st.hr.",
-"de": "Schirnding Grenze"
-},
+"name": "Czechia – Germany border",
 "lon": 12.25349,
 "lat": 50.087,
 "countries": [
@@ -451,10 +364,7 @@
 },
 {
 "id": "eEU00039",
-"name": {
-"de": "Bad Brambach Grenze 3",
-"cz": "Vojtanov st.hr."
-},
+"name": "Czechia – Germany border",
 "lon": 12.334749,
 "lat": 50.217641,
 "countries": [
@@ -464,10 +374,7 @@
 },
 {
 "id": "eEU00040",
-"name": {
-"cz": "Kraslice st.hr.",
-"de": "Klingenthal Grenze"
-},
+"name": "Czechia – Germany border",
 "lon": 12.46645,
 "lat": 50.35392,
 "countries": [
@@ -477,10 +384,7 @@
 },
 {
 "id": "eEU00041",
-"name": {
-"de": "Johanngeorgenstadt Grenze",
-"cz": "Potucky st.hr."
-},
+"name": "Czechia – Germany border",
 "lon": 12.734632,
 "lat": 50.432352,
 "countries": [
@@ -490,10 +394,7 @@
 },
 {
 "id": "eEU00042",
-"name": {
-"de": "Bärenstein (Kr Annaberg) Grenze",
-"cz": "Vejprty st.hr."
-},
+"name": "Czechia – Germany border",
 "lon": 13.031648,
 "lat": 50.505054,
 "countries": [
@@ -503,10 +404,7 @@
 },
 {
 "id": "eEU00043",
-"name": {
-"cz": "Decin st.hr.",
-"de": "Bad Schandau Grenze"
-},
+"name": "Czechia – Germany border",
 "lon": 14.22218,
 "lat": 50.85942,
 "countries": [
@@ -516,10 +414,7 @@
 },
 {
 "id": "eEU00044",
-"name": {
-"de": "Sebnitz Grenze",
-"cz": "D.Poustevna st.hr."
-},
+"name": "Czechia – Germany border",
 "lon": 14.2791,
 "lat": 50.981118,
 "countries": [
@@ -529,21 +424,17 @@
 },
 {
 "id": "eEU00045",
-"name": {
-"de": "Ebersbach (Sachs) Grenze"
-},
+"name": "Czechia – Germany border",
 "lon": 14.57981,
 "lat": 50.997468,
 "countries": [
+"cz",
 "de"
 ]
 },
 {
 "id": "eEU00046",
-"name": {
-"de": "Großschönau (Sachs) Gr",
-"cz": "Varnsdorf st.hr."
-},
+"name": "Czechia – Germany border",
 "lon": 14.644442,
 "lat": 50.902609,
 "countries": [
@@ -553,10 +444,7 @@
 },
 {
 "id": "eEU00047",
-"name": {
-"de": "Seifhennersdorf CZ",
-"cz": "Varnsd.st.n.st.hr."
-},
+"name": "Czechia – Germany border",
 "lon": 14.604055,
 "lat": 50.921178,
 "countries": [
@@ -566,10 +454,7 @@
 },
 {
 "id": "eEU00048",
-"name": {
-"de": "Zittau Grenze",
-"pl": "Gr. (Zittau) L.346 km 24.528"
-},
+"name": "Germany – Poland border",
 "lon": 14.829096,
 "lat": 50.892471,
 "countries": [
@@ -579,10 +464,7 @@
 },
 {
 "id": "eEU00049",
-"name": {
-"pl": "Zgorzelec (Gr)",
-"de": "Görlitz Grenze"
-},
+"name": "Germany – Poland border",
 "lon": 14.990667,
 "lat": 51.1441,
 "countries": [
@@ -592,10 +474,7 @@
 },
 {
 "id": "eEU00050",
-"name": {
-"de": "Horka Grenze",
-"pl": "Bielawa Dolna (Gr)"
-},
+"name": "Germany – Poland border",
 "lon": 15.031971,
 "lat": 51.286228,
 "countries": [
@@ -605,10 +484,7 @@
 },
 {
 "id": "eEU00051",
-"name": {
-"de": "Forst (Lausitz) Grenze",
-"pl": "Zasieki (Gr)"
-},
+"name": "Germany – Poland border",
 "lon": 14.659806,
 "lat": 51.736773,
 "countries": [
@@ -618,10 +494,7 @@
 },
 {
 "id": "eEU00052",
-"name": {
-"de": "Guben Grenze",
-"pl": "Gubin (Gr)"
-},
+"name": "Germany – Poland border",
 "lon": 14.705499,
 "lat": 51.972828,
 "countries": [
@@ -631,10 +504,7 @@
 },
 {
 "id": "eEU00053",
-"name": {
-"de": "Frankfurt (Oder) Grenze",
-"pl": "Kunowice (Gr)"
-},
+"name": "Germany – Poland border",
 "lon": 14.576732,
 "lat": 52.321275,
 "countries": [
@@ -644,10 +514,7 @@
 },
 {
 "id": "eEU00054",
-"name": {
-"de": "Küstrin-Kietz Grenze",
-"pl": "Kostrzyn (Gr)"
-},
+"name": "Germany – Poland border",
 "lon": 14.628717,
 "lat": 52.581054,
 "countries": [
@@ -657,10 +524,7 @@
 },
 {
 "id": "eEU00055",
-"name": {
-"de": "Tantow Grenze",
-"pl": "Szczecin Gum/Tan(Gr)"
-},
+"name": "Germany – Poland border",
 "lon": 14.414583,
 "lat": 53.325789,
 "countries": [
@@ -670,10 +534,7 @@
 },
 {
 "id": "eEU00056",
-"name": {
-"pl": "Szczecin Gum/Gra(Gr)",
-"de": "Grambow Grenze"
-},
+"name": "Germany – Poland border",
 "lon": 14.3753,
 "lat": 53.4174,
 "countries": [
@@ -683,10 +544,7 @@
 },
 {
 "id": "eEU00057",
-"name": {
-"de": "Hirschfelde Grenze",
-"pl": "Gr. (Trzciniec Zg.) L.348 km 0.200"
-},
+"name": "Germany – Poland border",
 "lon": 14.893793,
 "lat": 50.948542,
 "countries": [
@@ -696,10 +554,7 @@
 },
 {
 "id": "eEU00058",
-"name": {
-"de": "Hagenwerder Grenze",
-"pl": "Gr. (Ręczyn) L.324 km 0.689"
-},
+"name": "Germany – Poland border",
 "lon": 14.955984,
 "lat": 51.046765,
 "countries": [
@@ -709,10 +564,7 @@
 },
 {
 "id": "eEU00059",
-"name": {
-"dk": "Padborg grænse",
-"de": "Flensburg Grenze"
-},
+"name": "Denmark – Germany border",
 "lon": 9.362975,
 "lat": 54.815211,
 "countries": [
@@ -722,10 +574,7 @@
 },
 {
 "id": "eEU00060",
-"name": {
-"at": "Staatsgrenze nächst Summerau [BSTS_ID=2035]",
-"cz": "H.Dvoriste st.hr."
-},
+"name": "Austria – Czechia border",
 "lon": 14.433714,
 "lat": 48.593068,
 "countries": [
@@ -735,9 +584,7 @@
 },
 {
 "id": "eEU00061",
-"name": {
-"cz": "C.Velenice st.hr."
-},
+"name": "Austria – Czechia border",
 "lon": 14.968332,
 "lat": 48.764445,
 "countries": [
@@ -747,10 +594,7 @@
 },
 {
 "id": "eEU00062",
-"name": {
-"at": "Staatsgrenze nächst Retz [BSTS_ID=1802]",
-"cz": "Satov st.hr."
-},
+"name": "Austria – Czechia border",
 "lon": 16.01468,
 "lat": 48.773654,
 "countries": [
@@ -760,10 +604,7 @@
 },
 {
 "id": "eEU00063",
-"name": {
-"at": "Staatsgrenze nächst Bernhardsthal Fbf [BSTS_ID=147]",
-"cz": "Breclav st.hr."
-},
+"name": "Austria – Czechia border",
 "lon": 16.868384,
 "lat": 48.712544,
 "countries": [
@@ -773,10 +614,7 @@
 },
 {
 "id": "eEU00064",
-"name": {
-"cz": "Visnova st.hr.",
-"pl": "Zawidów (Gr)"
-},
+"name": "Czechia – Poland border",
 "lon": 15.03796,
 "lat": 51.01225,
 "countries": [
@@ -786,21 +624,17 @@
 },
 {
 "id": "eEU00065",
-"name": {
-"cz": "Harrachov st.hr."
-},
+"name": "Czechia – Poland border",
 "lon": 15.39633,
 "lat": 50.778359,
 "countries": [
-"cz"
+"cz",
+"pl"
 ]
 },
 {
 "id": "eEU00066",
-"name": {
-"pl": "Lubawka (Gr)",
-"cz": "Kralovec st.hr."
-},
+"name": "Czechia – Poland border",
 "lon": 15.984707,
 "lat": 50.686214,
 "countries": [
@@ -810,10 +644,7 @@
 },
 {
 "id": "eEU00067",
-"name": {
-"cz": "Mezimesti st.hr.",
-"pl": "Mieroszów (Gr)"
-},
+"name": "Czechia – Poland border",
 "lon": 16.220369,
 "lat": 50.636328,
 "countries": [
@@ -823,10 +654,7 @@
 },
 {
 "id": "eEU00069",
-"name": {
-"cz": "Lichkov st.hr.",
-"pl": "Międzylesie (Gr)"
-},
+"name": "Czechia – Poland border",
 "lon": 16.691087,
 "lat": 50.098529,
 "countries": [
@@ -836,10 +664,7 @@
 },
 {
 "id": "eEU00070",
-"name": {
-"pl": "Głuchołazy (Gr)",
-"cz": "Mikulovice st.hr."
-},
+"name": "Czechia – Poland border",
 "lon": 17.353355,
 "lat": 50.307388,
 "countries": [
@@ -849,10 +674,7 @@
 },
 {
 "id": "eEU00071",
-"name": {
-"pl": "Gr. (Pokrzywna) L.333 Km 11.225",
-"cz": "Jindr.ve Sl.st.hr."
-},
+"name": "Czechia – Poland border",
 "lon": 17.504755,
 "lat": 50.27471,
 "countries": [
@@ -862,10 +684,7 @@
 },
 {
 "id": "eEU00072",
-"name": {
-"cz": "Bohumin-Vrbice st.hr",
-"pl": "Chałupki (Gr)"
-},
+"name": "Czechia – Poland border",
 "lon": 18.322469,
 "lat": 49.916393,
 "countries": [
@@ -875,21 +694,17 @@
 },
 {
 "id": "eEU00073",
-"name": {
-"cz": "Bohumin st.hr."
-},
+"name": "Czechia – Poland border",
 "lon": 18.322523,
 "lat": 49.91644,
 "countries": [
-"cz"
+"cz",
+"pl"
 ]
 },
 {
 "id": "eEU00074",
-"name": {
-"cz": "Petrovice u K.st.hr.",
-"pl": "Zebrzydowice (Gr)"
-},
+"name": "Czechia – Poland border",
 "lon": 18.570156,
 "lat": 49.884472,
 "countries": [
@@ -899,10 +714,7 @@
 },
 {
 "id": "eEU00075",
-"name": {
-"pl": "Cieszyn Marklowice (Gr)",
-"cz": "Cesky Tesin st.hr."
-},
+"name": "Czechia – Poland border",
 "lon": 18.618754,
 "lat": 49.752125,
 "countries": [
@@ -912,10 +724,7 @@
 },
 {
 "id": "eEU00076",
-"name": {
-"cz": "Horni Lidec st.hr.",
-"sk": "Lúky pod Makytou št. hr."
-},
+"name": "Czechia – Slovakia border",
 "lon": 18.12982,
 "lat": 49.17981,
 "countries": [
@@ -925,10 +734,7 @@
 },
 {
 "id": "eEU00077",
-"name": {
-"sk": "Horné Srnie št. hr.",
-"cz": "Vlar.prusmyk st.hr."
-},
+"name": "Czechia – Slovakia border",
 "lon": 18.05331,
 "lat": 49.03166,
 "countries": [
@@ -938,10 +744,7 @@
 },
 {
 "id": "eEU00078",
-"name": {
-"cz": "Velka n.Vel.st.hr.",
-"sk": "Vrbovce št. hr."
-},
+"name": "Czechia – Slovakia border",
 "lon": 17.51682,
 "lat": 48.82603,
 "countries": [
@@ -951,10 +754,7 @@
 },
 {
 "id": "eEU00079",
-"name": {
-"cz": "Sudomer.n.M.st.hr.",
-"sk": "Skalica na Slovensku št. hr."
-},
+"name": "Czechia – Slovakia border",
 "lon": 17.24065,
 "lat": 48.86982,
 "countries": [
@@ -964,10 +764,7 @@
 },
 {
 "id": "eEU00080",
-"name": {
-"sk": "Holíč nad Moravou št. hr.",
-"cz": "Hodonin st.hr."
-},
+"name": "Czechia – Slovakia border",
 "lon": 17.12643,
 "lat": 48.83772,
 "countries": [
@@ -977,10 +774,7 @@
 },
 {
 "id": "eEU00081",
-"name": {
-"cz": "Lanzhot st.hr.",
-"sk": "Kúty št. hr."
-},
+"name": "Czechia – Slovakia border",
 "lon": 17.00042,
 "lat": 48.71112,
 "countries": [
@@ -990,10 +784,7 @@
 },
 {
 "id": "eEU00082",
-"name": {
-"sk": "Čadca št. hr.",
-"cz": "Mosty u Jabl.st.hr."
-},
+"name": "Czechia – Slovakia border",
 "lon": 18.76439,
 "lat": 49.49439,
 "countries": [
@@ -1003,10 +794,7 @@
 },
 {
 "id": "eEU00083",
-"name": {
-"be": "Esplechin-Frontière",
-"fr": "Frontière FR-BE (Wannehain - Antoing)"
-},
+"name": "Belgium – France border",
 "lon": 3.278451,
 "lat": 50.572025,
 "countries": [
@@ -1016,10 +804,7 @@
 },
 {
 "id": "eEU00084",
-"name": {
-"fr": "Frontière FR - BE (Tourcoing - Mouscron)",
-"be": "Mouscron-Frontière"
-},
+"name": "Belgium – France border",
 "lon": 3.196167,
 "lat": 50.72207,
 "countries": [
@@ -1029,10 +814,7 @@
 },
 {
 "id": "eEU00085",
-"name": {
-"be": "Blandain-Frontière",
-"fr": "Frontière FR-BE (Baisieux - Froyennes)"
-},
+"name": "Belgium – France border",
 "lon": 3.263677,
 "lat": 50.617436,
 "countries": [
@@ -1042,10 +824,7 @@
 },
 {
 "id": "eEU00086",
-"name": {
-"fr": "Frontière FR-BE (Feignies - Quévy)",
-"be": "Quévy-Frontière"
-},
+"name": "Belgium – France border",
 "lon": 3.908375,
 "lat": 50.328842,
 "countries": [
@@ -1055,10 +834,7 @@
 },
 {
 "id": "eEU00087",
-"name": {
-"be": "Erquelinnes-Frontière",
-"fr": "Frontière FR-BE (Jeumont - Erquelines)"
-},
+"name": "Belgium – France border",
 "lon": 4.109181,
 "lat": 50.302705,
 "countries": [
@@ -1068,10 +844,7 @@
 },
 {
 "id": "eEU00088",
-"name": {
-"be": "Aubange-Frontière-France",
-"fr": "Frontière FR-BE (Longwy - Aubange)"
-},
+"name": "Belgium – France border",
 "lon": 5.812849,
 "lat": 49.547418,
 "countries": [
@@ -1081,10 +854,7 @@
 },
 {
 "id": "eEU00089",
-"name": {
-"be": "Meer-Grens",
-"nl": "HSL Breda grens"
-},
+"name": "Belgium – Netherlands border",
 "lon": 4.734452,
 "lat": 51.485665,
 "countries": [
@@ -1094,10 +864,7 @@
 },
 {
 "id": "eEU00090",
-"name": {
-"nl": "Roosendaal grens",
-"be": "Essen-Grens"
-},
+"name": "Belgium – Netherlands border",
 "lon": 4.448921,
 "lat": 51.46913,
 "countries": [
@@ -1107,10 +874,7 @@
 },
 {
 "id": "eEU00091",
-"name": {
-"be": "Hamont-Grens",
-"nl": "Budel grens"
-},
+"name": "Belgium – Netherlands border",
 "lon": 5.555298,
 "lat": 51.247263,
 "countries": [
@@ -1120,10 +884,7 @@
 },
 {
 "id": "eEU00092",
-"name": {
-"be": "Lanaken-Grens",
-"nl": "Maastricht grens"
-},
+"name": "Belgium – Netherlands border",
 "lon": 5.666877,
 "lat": 50.880098,
 "countries": [
@@ -1133,10 +894,7 @@
 },
 {
 "id": "eEU00093",
-"name": {
-"nl": "Eijsden grens",
-"be": "Visé-Frontière"
-},
+"name": "Belgium – Netherlands border",
 "lon": 5.703065,
 "lat": 50.75883,
 "countries": [
@@ -1146,10 +904,7 @@
 },
 {
 "id": "eEU00094",
-"name": {
-"be": "Zelzate-Grens",
-"nl": "Sas van Gent grens"
-},
+"name": "Belgium – Netherlands border",
 "lon": 3.79983,
 "lat": 51.210866,
 "countries": [
@@ -1159,9 +914,7 @@
 },
 {
 "id": "eEU00095",
-"name": {
-"be": "Gouvy-Frontière"
-},
+"name": "Belgium – Luxembourg border",
 "lon": 5.9653,
 "lat": 50.173,
 "countries": [
@@ -1171,9 +924,7 @@
 },
 {
 "id": "eEU00096",
-"name": {
-"be": "Sterpenich-Frontière"
-},
+"name": "Belgium – Luxembourg border",
 "lon": 5.9042,
 "lat": 49.6437,
 "countries": [
@@ -1183,9 +934,7 @@
 },
 {
 "id": "eEU00097",
-"name": {
-"be": "Aubange-Frontière-Luxembourg"
-},
+"name": "Belgium – Luxembourg border",
 "lon": 5.825,
 "lat": 49.5518,
 "countries": [
@@ -1195,9 +944,7 @@
 },
 {
 "id": "eEU00098",
-"name": {
-"be": "Athus-Frontière"
-},
+"name": "Belgium – Luxembourg border",
 "lon": 5.8106,
 "lat": 49.5518,
 "countries": [
@@ -1207,9 +954,7 @@
 },
 {
 "id": "eEU00099",
-"name": {
-"fr": "Frontière FR - LU (Mont St Matin - Pétange)"
-},
+"name": "France – Luxembourg border",
 "lon": 5.8106,
 "lat": 49.5433,
 "countries": [
@@ -1219,9 +964,7 @@
 },
 {
 "id": "eEU00100",
-"name": {
-"fr": "Frontière FR-LU (Audun-le Tiche - Esch-sur-Alzette)"
-},
+"name": "France – Luxembourg border",
 "lon": 5.9688,
 "lat": 49.4859,
 "countries": [
@@ -1231,9 +974,7 @@
 },
 {
 "id": "eEU00102",
-"name": {
-"fr": "Frontière FR - LU (France-Luxembourg)"
-},
+"name": "France – Luxembourg border",
 "lon": 6.107842,
 "lat": 49.472053,
 "countries": [
@@ -1243,9 +984,7 @@
 },
 {
 "id": "eEU00103",
-"name": {
-"hu": "Sopron oh."
-},
+"name": "Austria – Hungary border",
 "lon": 16.54136,
 "lat": 47.713687,
 "countries": [
@@ -1255,10 +994,7 @@
 },
 {
 "id": "eEU00104",
-"name": {
-"at": "Staatsgrenze nächst Loipersbach-Schattendorf [BSTS_ID=1271]",
-"hu": "Ágfalva oh."
-},
+"name": "Austria – Hungary border",
 "lon": 16.494076,
 "lat": 47.698966,
 "countries": [
@@ -1268,10 +1004,7 @@
 },
 {
 "id": "eEU00105",
-"name": {
-"at": "Staatsgrenze nächst Nickelsdorf [BSTS_ID=1552]",
-"hu": "Nickelsdorf-Hegyeshalom"
-},
+"name": "Austria – Hungary border",
 "lon": 17.095408,
 "lat": 47.938486,
 "countries": [
@@ -1281,9 +1014,7 @@
 },
 {
 "id": "eEU00106",
-"name": {
-"hu": "Pamhagen oh."
-},
+"name": "Austria – Hungary border",
 "lon": 16.883949,
 "lat": 47.688219,
 "countries": [
@@ -1293,9 +1024,7 @@
 },
 {
 "id": "eEU00107",
-"name": {
-"hu": "Harka oh."
-},
+"name": "Austria – Hungary border",
 "lon": 16.62486,
 "lat": 47.626771,
 "countries": [
@@ -1305,10 +1034,7 @@
 },
 {
 "id": "eEU00108",
-"name": {
-"at": "Staatsgrenze nächst Jennersdorf [BSTS_ID=969]",
-"hu": "Szentgotthárd oh."
-},
+"name": "Austria – Hungary border",
 "lon": 16.246134,
 "lat": 46.950488,
 "countries": [
@@ -1318,9 +1044,7 @@
 },
 {
 "id": "eEU00109",
-"name": {
-"sk": "Bratislava-Petržalka št. hr."
-},
+"name": "Austria – Slovakia border",
 "lon": 17.084221,
 "lat": 48.102834,
 "countries": [
@@ -1330,10 +1054,7 @@
 },
 {
 "id": "eEU00110",
-"name": {
-"at": "Staatsgrenze nächst Marchegg [BSTS_ID=2593]",
-"sk": "Devínska Nová Ves št. hr."
-},
+"name": "Austria – Slovakia border",
 "lon": 16.946641,
 "lat": 48.241229,
 "countries": [
@@ -1343,10 +1064,7 @@
 },
 {
 "id": "eEU00111",
-"name": {
-"at": "Staatsgrenze nächst Bleiburg [BSTS_ID=1050005]",
-"si": "Prevalje d.m."
-},
+"name": "Austria – Slovenia border",
 "lon": 14.8399,
 "lat": 46.5667,
 "countries": [
@@ -1356,10 +1074,7 @@
 },
 {
 "id": "eEU00112",
-"name": {
-"at": "Staatsgrenze nächst Rosenbach [BSTS_ID=1868]",
-"si": "Jesenice d.m."
-},
+"name": "Austria – Slovenia border",
 "lon": 14.0199,
 "lat": 46.4815,
 "countries": [
@@ -1369,9 +1084,7 @@
 },
 {
 "id": "eEU00113",
-"name": {
-"si": "Šentilj d.m."
-},
+"name": "Austria – Slovenia border",
 "lon": 15.6404,
 "lat": 46.692,
 "countries": [
@@ -1381,9 +1094,7 @@
 },
 {
 "id": "eEU00114",
-"name": {
-"it": "CONFINE ITALO/AUSTRIACO LT ARNBACH"
-},
+"name": "Austria – Italy border",
 "lon": 12.37123,
 "lat": 46.74025,
 "countries": [
@@ -1393,9 +1104,7 @@
 },
 {
 "id": "eEU00115",
-"name": {
-"it": "CONFINE ITALO/AUSTRIACO LT STEINACH TIR."
-},
+"name": "Austria – Italy border",
 "lon": 11.5074,
 "lat": 47.0067,
 "countries": [
@@ -1405,9 +1114,7 @@
 },
 {
 "id": "eEU00116",
-"name": {
-"it": "CONFINE ITALO/AUSTRIACO LT THOERL-MAGLER"
-},
+"name": "Austria – Italy border",
 "lon": 13.64054,
 "lat": 46.53482,
 "countries": [
@@ -1417,7 +1124,7 @@
 },
 {
 "id": "eEU00117",
-"name": {},
+"name": "Austria – Liechtenstein border",
 "lon": 9.569751,
 "lat": 47.218855,
 "countries": [
@@ -1427,10 +1134,7 @@
 },
 {
 "id": "eEU00118",
-"name": {
-"at": "Staatsgrenze nächst Lustenau [BSTS_ID=1462]",
-"ch": "Staatsgrenze nächst Lustenau"
-},
+"name": "Austria – Switzerland border",
 "lon": 9.657876,
 "lat": 47.447697,
 "countries": [
@@ -1440,10 +1144,7 @@
 },
 {
 "id": "eEU00119",
-"name": {
-"fr": "Frontière FR - ES (Hendaye - Irun)",
-"es": "P.K. 641,181 (FRONTERA)"
-},
+"name": "France – Spain border",
 "lon": -1.78589,
 "lat": 43.35065,
 "countries": [
@@ -1453,10 +1154,7 @@
 },
 {
 "id": "eEU00120",
-"name": {
-"es": "P.K.274,305(FRONTERA)",
-"fr": "Frontière FR - ES (Cerbère - Port Bou)"
-},
+"name": "France – Spain border",
 "lon": 3.1597,
 "lat": 42.43494,
 "countries": [
@@ -1466,21 +1164,17 @@
 },
 {
 "id": "eEU00121",
-"name": {
-"fr": "Border France - Spain"
-},
+"name": "France – Spain border",
 "lon": 2.86132,
 "lat": 42.45494,
 "countries": [
+"es",
 "fr"
 ]
 },
 {
 "id": "eEU00122",
-"name": {
-"es": "P.K. 50,707(FRONT)",
-"fr": "Frontière FR-ES (Latour de Carol-Enveitg - Puigcerdà)"
-},
+"name": "France – Spain border",
 "lon": 1.91449,
 "lat": 42.44716,
 "countries": [
@@ -1490,10 +1184,7 @@
 },
 {
 "id": "eEU00123",
-"name": {
-"pt": "Valença Fronteira",
-"es": "TUI-FRONTERA"
-},
+"name": "Portugal – Spain border",
 "lon": -8.64676,
 "lat": 42.0363,
 "countries": [
@@ -1503,10 +1194,7 @@
 },
 {
 "id": "eEU00124",
-"name": {
-"pt": "Vilar Formoso Fronteira",
-"es": "FUENTES OÑORO-FRONTERA"
-},
+"name": "Portugal – Spain border",
 "lon": -6.826,
 "lat": 40.6057,
 "countries": [
@@ -1516,10 +1204,7 @@
 },
 {
 "id": "eEU00125",
-"name": {
-"pt": "Elvas Fronteira",
-"es": "BADAJOZ-FRONTERA"
-},
+"name": "Portugal – Spain border",
 "lon": -7.03015,
 "lat": 38.92024,
 "countries": [
@@ -1529,10 +1214,7 @@
 },
 {
 "id": "eEU00126",
-"name": {
-"fr": "Frontière FR - IT (Menton - Ventimille)",
-"it": "Frontière FR - IT (Menton - Ventimille)"
-},
+"name": "France – Italy border",
 "lon": 7.52957,
 "lat": 43.78537,
 "countries": [
@@ -1542,10 +1224,7 @@
 },
 {
 "id": "eEU00127",
-"name": {
-"it": "CONFINE ITALO/FRANCESE LT MODANE",
-"fr": "Frontière FR-IT (Modane - Bardonecchia)"
-},
+"name": "France – Italy border",
 "lon": 6.68342,
 "lat": 45.13757,
 "countries": [
@@ -1555,10 +1234,7 @@
 },
 {
 "id": "eEU00128",
-"name": {
-"it": "CONFINE ITALO/FRANCESE LT VIEVOLA",
-"fr": "Frontière FR-IT (Vievola - Limone Piemonte)"
-},
+"name": "France – Italy border",
 "lon": 7.56981,
 "lat": 44.15268,
 "countries": [
@@ -1568,10 +1244,7 @@
 },
 {
 "id": "eEU00129",
-"name": {
-"fr": "Frontière FR-IT (Breil-sur-Roya - Olivetta - S. Michele)",
-"it": "CONFINE FRANCESE/ITALIANO LT BREIL ROYA"
-},
+"name": "France – Italy border",
 "lon": 7.53092,
 "lat": 43.89028,
 "countries": [
@@ -1581,87 +1254,77 @@
 },
 {
 "id": "eEU00130",
-"name": {
-"fr": "Frontière FR - CH (Pougny-Chancy - La Plaine)"
-},
+"name": "France – Switzerland border",
 "lon": 5.990589,
 "lat": 46.177452,
 "countries": [
+"ch",
 "fr"
 ]
 },
 {
 "id": "eEU00131",
-"name": {
-"ch": "Chêne-Bourg-Frontière"
-},
+"name": "France – Switzerland border",
 "lon": 6.212824,
 "lat": 46.193923,
 "countries": [
-"ch"
+"ch",
+"fr"
 ]
 },
 {
 "id": "eEU00132",
-"name": {
-"fr": "Frontière FR - CH (Les Longevilles - Vallorbe)"
-},
+"name": "France – Switzerland border",
 "lon": 6.347762,
 "lat": 46.713594,
 "countries": [
+"ch",
 "fr"
 ]
 },
 {
 "id": "eEU00133",
-"name": {
-"fr": "Frontière FR-CH (Pontarlier - Les Verrières)"
-},
+"name": "France – Switzerland border",
 "lon": 6.45899,
 "lat": 46.89917,
 "countries": [
+"ch",
 "fr"
 ]
 },
 {
 "id": "eEU00134",
-"name": {
-"fr": "Frontière FR - CH (Morteau - Le Locle-Col-des-Roches)"
-},
+"name": "France – Switzerland border",
 "lon": 6.716949,
 "lat": 47.050231,
 "countries": [
+"ch",
 "fr"
 ]
 },
 {
 "id": "eEU00135",
-"name": {
-"fr": "Frontière FR - CH (Delle - Boncourt)"
-},
+"name": "France – Switzerland border",
 "lon": 7.012894,
 "lat": 47.502777,
 "countries": [
+"ch",
 "fr"
 ]
 },
 {
 "id": "eEU00138",
-"name": {
-"fr": "Frontière FR - CH (Saint-Louis - Basel St. Johann)"
-},
+"name": "France – Switzerland border",
 "lon": 7.567592,
 "lat": 47.577565,
 "countries": [
+"ch",
 "fr"
 ]
 },
 {
 "id": "eEU00141",
-"name": {
-"dk": "Peberholm grænse",
-"se": "Peberholm gränsen"
-},
+"name": "Denmark – Sweden border",
 "lon": 12.738071,
 "lat": 55.605923,
 "countries": [
@@ -1671,10 +1334,7 @@
 },
 {
 "id": "eEU00142",
-"name": {
-"lt": "Valstybessiena",
-"pl": "Trakiszki (Gr)"
-},
+"name": "Lithuania – Poland border",
 "lon": 23.22999,
 "lat": 54.26487,
 "countries": [
@@ -1684,32 +1344,27 @@
 },
 {
 "id": "eEU00143",
-"name": {
-"lv": "Zilupe/Sebeža"
-},
+"name": "Latvia – Russia border",
 "lon": 28.17265,
 "lat": 56.38863,
 "countries": [
-"lv"
+"lv",
+"ru"
 ]
 },
 {
 "id": "eEU00144",
-"name": {
-"lv": "Kārsava/Pitalova"
-},
+"name": "Latvia – Russia border",
 "lon": 27.72848,
 "lat": 56.85329,
 "countries": [
-"lv"
+"lv",
+"ru"
 ]
 },
 {
 "id": "eEU00145",
-"name": {
-"lt": "Valstybessiena",
-"lv": "Meitene/Joniškis"
-},
+"name": "Latvia – Lithuania border",
 "lon": 23.65876,
 "lat": 56.36361,
 "countries": [
@@ -1719,10 +1374,7 @@
 },
 {
 "id": "eEU00146",
-"name": {
-"lt": "Valstybessiena",
-"lv": "Eglaine/Rokiškis"
-},
+"name": "Latvia – Lithuania border",
 "lon": 26.04576,
 "lat": 55.94445,
 "countries": [
@@ -1732,10 +1384,7 @@
 },
 {
 "id": "eEU00147",
-"name": {
-"lt": "Valstybessiena",
-"lv": "Kurcums/Turmantas"
-},
+"name": "Latvia – Lithuania border",
 "lon": 26.46777,
 "lat": 55.70351,
 "countries": [
@@ -1745,10 +1394,7 @@
 },
 {
 "id": "eEU00148",
-"name": {
-"lt": "Valstybessiena",
-"lv": "Reņģe/Mažeikiai"
-},
+"name": "Latvia – Lithuania border",
 "lon": 22.62039,
 "lat": 56.37945,
 "countries": [
@@ -1758,10 +1404,7 @@
 },
 {
 "id": "eEU00149",
-"name": {
-"it": "CONFINE ITALO/SLOVENO LT VRTOJBA",
-"si": "Vrtojba d.m."
-},
+"name": "Italy – Slovenia border",
 "lon": 13.6269,
 "lat": 45.92315,
 "countries": [
@@ -1771,10 +1414,7 @@
 },
 {
 "id": "eEU00150",
-"name": {
-"si": "Repentabor d.m.",
-"it": "CONFINE ITALO/SLOVENO LT STANJEL"
-},
+"name": "Italy – Slovenia border",
 "lon": 13.81084,
 "lat": 45.72324,
 "countries": [
@@ -1784,10 +1424,7 @@
 },
 {
 "id": "eEU00151",
-"name": {
-"si": "Sežana d.m.",
-"it": "CONFINE ITALO/SLOVENO LT SEZANA"
-},
+"name": "Italy – Slovenia border",
 "lon": 13.83348,
 "lat": 45.68757,
 "countries": [
@@ -1797,53 +1434,47 @@
 },
 {
 "id": "eEU00152",
-"name": {
-"it": "CONFINE ITALO/SVIZZERO LT RANZO"
-},
+"name": "Italy – Switzerland border",
 "lon": 8.756673,
 "lat": 46.1037,
 "countries": [
+"ch",
 "it"
 ]
 },
 {
 "id": "eEU00153",
-"name": {
-"it": "CONFINE ITALO/SVIZZERO LT ISELLE"
-},
+"name": "Italy – Switzerland border",
 "lon": 8.09526,
 "lat": 46.27094,
 "countries": [
+"ch",
 "it"
 ]
 },
 {
 "id": "eEU00154",
-"name": {
-"it": "CONFINE ITALO/SVIZZERO LT MO1"
-},
+"name": "Italy – Switzerland border",
 "lon": 9.0346,
 "lat": 45.8305,
 "countries": [
+"ch",
 "it"
 ]
 },
 {
 "id": "eEU00155",
-"name": {
-"it": "CONFINE ITALO/SVIZZERO LT MO2"
-},
+"name": "Italy – Switzerland border",
 "lon": 9.0352,
 "lat": 45.8304,
 "countries": [
+"ch",
 "it"
 ]
 },
 {
 "id": "eEU00157",
-"name": {
-"ch": "Staatsgrenze nächst Nendeln [BSTS_ID=1508]"
-},
+"name": "Liechtenstein – Switzerland border",
 "lon": 9.49064,
 "lat": 47.16453,
 "countries": [
@@ -1853,10 +1484,7 @@
 },
 {
 "id": "eEU00158",
-"name": {
-"pl": "Zwardoń (Gr)",
-"sk": "Skalité št. hr."
-},
+"name": "Poland – Slovakia border",
 "lon": 18.97193,
 "lat": 49.50388,
 "countries": [
@@ -1866,10 +1494,7 @@
 },
 {
 "id": "eEU00159",
-"name": {
-"sk": "Plaveč št. hr.",
-"pl": "Muszyna (Gr)"
-},
+"name": "Poland – Slovakia border",
 "lon": 20.92397,
 "lat": 49.29605,
 "countries": [
@@ -1879,10 +1504,7 @@
 },
 {
 "id": "eEU00160",
-"name": {
-"pl": "Łupków (Gr)",
-"sk": "Medzilaborce št. hr."
-},
+"name": "Poland – Slovakia border",
 "lon": 22.03846,
 "lat": 49.25086,
 "countries": [
@@ -1892,43 +1514,37 @@
 },
 {
 "id": "eEU00161",
-"name": {
-"sk": "Maťovce ŠRT št. hr."
-},
+"name": "Slovakia – Ukraine border",
 "lon": 22.16063,
 "lat": 48.56241,
 "countries": [
-"sk"
+"sk",
+"ua"
 ]
 },
 {
 "id": "eEU00162",
-"name": {
-"sk": "Čierna nad Tisou št. hr."
-},
+"name": "Slovakia – Ukraine border",
 "lon": 22.13762,
 "lat": 48.43276,
 "countries": [
-"sk"
+"sk",
+"ua"
 ]
 },
 {
 "id": "eEU00163",
-"name": {
-"sk": "Čierna nad Tisou ŠRT št. hr."
-},
+"name": "Slovakia – Ukraine border",
 "lon": 22.13762,
 "lat": 48.43276,
 "countries": [
-"sk"
+"sk",
+"ua"
 ]
 },
 {
 "id": "eEU00164",
-"name": {
-"sk": "Slovenské Nové Mesto št. hr.",
-"hu": "Sátoraljaújhely-Slovenské Nové Mesto št. hr."
-},
+"name": "Hungary – Slovakia border",
 "lon": 21.66948,
 "lat": 48.38981,
 "countries": [
@@ -1938,10 +1554,7 @@
 },
 {
 "id": "eEU00165",
-"name": {
-"hu": "Hidasnémeti-Čaňa št. hr.",
-"sk": "Čaňa št. hr."
-},
+"name": "Hungary – Slovakia border",
 "lon": 21.26256,
 "lat": 48.52877,
 "countries": [
@@ -1951,10 +1564,7 @@
 },
 {
 "id": "eEU00166",
-"name": {
-"hu": "Bánréve-Lenartovce št. hr.",
-"sk": "Lenartovce št. hr."
-},
+"name": "Hungary – Slovakia border",
 "lon": 20.33859,
 "lat": 48.3018,
 "countries": [
@@ -1964,10 +1574,7 @@
 },
 {
 "id": "eEU00167",
-"name": {
-"sk": "Fiľakovo št. hr.",
-"hu": "Somoskőújfalu-Fiľakovo št. hr."
-},
+"name": "Hungary – Slovakia border",
 "lon": 19.82116,
 "lat": 48.16836,
 "countries": [
@@ -1977,10 +1584,7 @@
 },
 {
 "id": "eEU00168",
-"name": {
-"hu": "Nógrádszakál-Malé Straciny št. hr.",
-"sk": "Malé Straciny št. hr."
-},
+"name": "Hungary – Slovakia border",
 "lon": 19.51302,
 "lat": 48.16365,
 "countries": [
@@ -1990,10 +1594,7 @@
 },
 {
 "id": "eEU00169",
-"name": {
-"sk": "Lučenec št. hr.",
-"hu": "Ipolytarnóc-Lučenec št. hr."
-},
+"name": "Hungary – Slovakia border",
 "lon": 19.63834,
 "lat": 48.24626,
 "countries": [
@@ -2003,10 +1604,7 @@
 },
 {
 "id": "eEU00170",
-"name": {
-"sk": "Štúrovo št. hr.",
-"hu": "Szob-Štúrovo št. hr."
-},
+"name": "Hungary – Slovakia border",
 "lon": 18.85269,
 "lat": 47.82362,
 "countries": [
@@ -2016,10 +1614,7 @@
 },
 {
 "id": "eEU00171",
-"name": {
-"sk": "Komárno št. hr.",
-"hu": "Komárom-Komárno št. hr."
-},
+"name": "Hungary – Slovakia border",
 "lon": 18.0879,
 "lat": 47.75657,
 "countries": [
@@ -2029,10 +1624,7 @@
 },
 {
 "id": "eEU00172",
-"name": {
-"hu": "Rajka oh.",
-"sk": "Rusovce št. hr."
-},
+"name": "Hungary – Slovakia border",
 "lon": 17.17945,
 "lat": 48.01373,
 "countries": [
@@ -2042,120 +1634,107 @@
 },
 {
 "id": "eEU00173",
-"name": {
-"pl": "Medyka (Gr)"
-},
+"name": "Poland – Ukraine border",
 "lon": 22.9615,
 "lat": 49.8051,
 "countries": [
-"pl"
+"pl",
+"ua"
 ]
 },
 {
 "id": "eEU00174",
-"name": {
-"pl": "Werchrata (Gr)"
-},
+"name": "Poland – Ukraine border",
 "lon": 23.5254,
 "lat": 50.2408,
 "countries": [
-"pl"
+"pl",
+"ua"
 ]
 },
 {
 "id": "eEU00175",
-"name": {
-"pl": "Hrebenne (Gr)"
-},
+"name": "Poland – Ukraine border",
 "lon": 23.6076,
 "lat": 50.2949,
 "countries": [
-"pl"
+"pl",
+"ua"
 ]
 },
 {
 "id": "eEU00178",
-"name": {
-"pl": "Dorohusk (Gr)"
-},
+"name": "Poland – Ukraine border",
 "lon": 23.8127,
 "lat": 51.1799,
 "countries": [
-"pl"
+"pl",
+"ua"
 ]
 },
 {
 "id": "eEU00179",
-"name": {
-"pl": "Terespol (Gr)"
-},
+"name": "Belarus – Poland border",
 "lon": 23.6221,
 "lat": 52.0912,
 "countries": [
+"by",
 "pl"
 ]
 },
 {
 "id": "eEU00180",
-"name": {
-"pl": "Czeremcha (Gr)"
-},
+"name": "Belarus – Poland border",
 "lon": 23.3523,
 "lat": 52.4645,
 "countries": [
+"by",
 "pl"
 ]
 },
 {
 "id": "eEU00181",
-"name": {
-"pl": "Siemianówka (Gr)"
-},
+"name": "Belarus – Poland border",
 "lon": 23.9166,
 "lat": 52.939,
 "countries": [
+"by",
 "pl"
 ]
 },
 {
 "id": "eEU00182",
-"name": {
-"pl": "Kuźnica Białostocka (Gr)"
-},
+"name": "Belarus – Poland border",
 "lon": 23.6516,
 "lat": 53.5444,
 "countries": [
+"by",
 "pl"
 ]
 },
 {
 "id": "eEU00183",
-"name": {
-"pl": "Skandawa (Gr)"
-},
+"name": "Poland – Russia border",
 "lon": 21.3032,
 "lat": 54.3335,
 "countries": [
-"pl"
+"pl",
+"ru"
 ]
 },
 {
 "id": "eEU00184",
-"name": {
-"pl": "Braniewo (Gr)"
-},
+"name": "Poland – Russia border",
 "lon": 19.8735,
 "lat": 54.4366,
 "countries": [
-"pl"
+"pl",
+"ru"
 ]
 },
 {
 "id": "eEU00185",
-"name": {
-"hu": "Őriszentpéter-Hodoš",
-"si": "Hodoš d.m."
-},
+"name": "Hungary – Slovenia border",
 "lon": 16.34172,
 "lat": 46.81974,
 "countries": [
@@ -2165,21 +1744,17 @@
 },
 {
 "id": "eEU00186",
-"name": {
-"gr": "PYTHION-UZUNKOPRU"
-},
+"name": "Greece – Turkey border",
 "lon": 26.6315,
 "lat": 41.3621,
 "countries": [
-"gr"
+"gr",
+"tr"
 ]
 },
 {
 "id": "eEU00187",
-"name": {
-"bg": "Broder (Svilengrad-Dikea)",
-"gr": "SVILENGRAD-DIKEA"
-},
+"name": "Bulgaria – Greece border",
 "lon": 26.16666,
 "lat": 41.7477,
 "countries": [
@@ -2189,10 +1764,7 @@
 },
 {
 "id": "eEU00188",
-"name": {
-"gr": "KULATA-PROMACHON",
-"bg": "Border(Kulata-Promachon)"
-},
+"name": "Bulgaria – Greece border",
 "lon": 23.3643,
 "lat": 41.3795,
 "countries": [
@@ -2202,32 +1774,27 @@
 },
 {
 "id": "eEU00189",
-"name": {
-"gr": "IDOMENI-GEVGELIJA"
-},
+"name": "Greece – North Macedonia border",
 "lon": 22.5172,
 "lat": 41.1283,
 "countries": [
-"gr"
+"gr",
+"mk"
 ]
 },
 {
 "id": "eEU00190",
-"name": {
-"gr": "NEOS KAFKASOS-KREMENITSA"
-},
+"name": "Greece – North Macedonia border",
 "lon": 21.4645,
 "lat": 40.9073,
 "countries": [
-"gr"
+"gr",
+"mk"
 ]
 },
 {
 "id": "eEU00191",
-"name": {
-"cz": "Hradek n.N. st.hr.",
-"pl": "Granica Państwa (HRADEK NAD NISOU)"
-},
+"name": "Czechia – Poland border",
 "lon": 14.83999,
 "lat": 50.86917,
 "countries": [
@@ -2237,32 +1804,27 @@
 },
 {
 "id": "eEU00192",
-"name": {
-"hu": "Eperjeske-Соловка"
-},
+"name": "Hungary – Ukraine border",
 "lon": 22.25738,
 "lat": 48.37405,
 "countries": [
-"hu"
+"hu",
+"ua"
 ]
 },
 {
 "id": "eEU00193",
-"name": {
-"hu": "Záhony-Чоп"
-},
+"name": "Hungary – Ukraine border",
 "lon": 22.18605,
 "lat": 48.41547,
 "countries": [
-"hu"
+"hu",
+"ua"
 ]
 },
 {
 "id": "eEU00194",
-"name": {
-"hu": "Biharkeresztes-Oradea",
-"ro": "Episcopia Bihor FR"
-},
+"name": "Hungary – Romania border",
 "lon": 21.792944,
 "lat": 47.124529,
 "countries": [
@@ -2272,10 +1834,7 @@
 },
 {
 "id": "eEU00195",
-"name": {
-"ro": "Salonta FR",
-"hu": "Kötegyán-Salonta"
-},
+"name": "Hungary – Romania border",
 "lon": 21.487366,
 "lat": 46.760782,
 "countries": [
@@ -2285,10 +1844,7 @@
 },
 {
 "id": "eEU00196",
-"name": {
-"ro": "Curtici FR",
-"hu": "Lőkösháza-Curtici"
-},
+"name": "Hungary – Romania border",
 "lon": 21.252697,
 "lat": 46.409703,
 "countries": [
@@ -2298,10 +1854,7 @@
 },
 {
 "id": "eEU00197",
-"name": {
-"ro": "Valea Lui Mihai FR",
-"hu": "Nyírábrány-Valea lui Mihai"
-},
+"name": "Hungary – Romania border",
 "lon": 22.031618,
 "lat": 47.525013,
 "countries": [
@@ -2311,10 +1864,7 @@
 },
 {
 "id": "eEU00198",
-"name": {
-"hu": "Ágerdőmajor-Berveni",
-"ro": "Carei FR"
-},
+"name": "Hungary – Romania border",
 "lon": 22.435682,
 "lat": 47.769806,
 "countries": [
@@ -2324,76 +1874,67 @@
 },
 {
 "id": "eEU00199",
-"name": {
-"hu": "Kelebia-Суботица / Subotica"
-},
+"name": "Hungary – Serbia border",
 "lon": 19.63273,
 "lat": 46.16952,
 "countries": [
-"hu"
+"hu",
+"rs"
 ]
 },
 {
 "id": "eEU00200",
-"name": {
-"hu": "Röszke-Хоргош / Horgoš"
-},
+"name": "Hungary – Serbia border",
 "lon": 20.00099,
 "lat": 46.23042,
 "countries": [
-"hu"
+"hu",
+"rs"
 ]
 },
 {
 "id": "eEU00201",
-"name": {
-"hu": "Botovo-Gyékényes"
-},
+"name": "Croatia – Hungary border",
 "lon": 16.94493,
 "lat": 46.24703,
 "countries": [
+"hr",
 "hu"
 ]
 },
 {
 "id": "eEU00202",
-"name": {
-"hu": "Beli Manastir-Magyarboly"
-},
+"name": "Croatia – Hungary border",
 "lon": 18.55795,
 "lat": 45.79834,
 "countries": [
+"hr",
 "hu"
 ]
 },
 {
 "id": "eEU00203",
-"name": {
-"hu": "Kotoriba-Murakeresztur"
-},
+"name": "Croatia – Hungary border",
 "lon": 16.85202,
 "lat": 46.35918,
 "countries": [
+"hr",
 "hu"
 ]
 },
 {
 "id": "eEU00204",
-"name": {
-"lv": "Indra/Polocka"
-},
+"name": "Belarus – Latvia border",
 "lon": 27.63814,
 "lat": 55.84455,
 "countries": [
+"by",
 "lv"
 ]
 },
 {
 "id": "eEU00205",
-"name": {
-"lv": "Lugaži/Valga",
-"ee": "Rakenduspunkt Lugažipiir"
-},
+"name": "Estonia – Latvia border",
 "lon": 26.02336,
 "lat": 57.76861,
 "countries": [
@@ -2403,10 +1944,7 @@
 },
 {
 "id": "eEU00206",
-"name": {
-"ro": "Giurgiu Nord FR",
-"bg": "Border (Ruse razpredelitelna-Giurgiu Nord)"
-},
+"name": "Bulgaria – Romania border",
 "lon": 26.007716,
 "lat": 43.887193,
 "countries": [
@@ -2416,32 +1954,27 @@
 },
 {
 "id": "eEU00208",
-"name": {
-"bg": "Border(Vidin-Golenti)"
-},
+"name": "Bulgaria – Romania border",
 "lon": 22.948364,
 "lat": 44.003012,
 "countries": [
-"bg"
+"bg",
+"ro"
 ]
 },
 {
 "id": "eEU00209",
-"name": {
-"ro": "Golenti FR"
-},
+"name": "Bulgaria – Romania border",
 "lon": 22.948364,
 "lat": 44.003012,
 "countries": [
+"bg",
 "ro"
 ]
 },
 {
 "id": "eEU00210",
-"name": {
-"ro": "Negru Voda FR",
-"bg": "Border (Kardam-Negru Voda)"
-},
+"name": "Bulgaria – Romania border",
 "lon": 28.151004,
 "lat": 43.785906,
 "countries": [
@@ -2451,186 +1984,167 @@
 },
 {
 "id": "eEU00211",
-"name": {
-"bg": "Border(Kalotina Zapad-Dimitrovgrad)"
-},
+"name": "Bulgaria – Serbia border",
 "lon": 22.83536,
 "lat": 42.99824,
 "countries": [
-"bg"
+"bg",
+"rs"
 ]
 },
 {
 "id": "eEU00212",
-"name": {
-"bg": "Border (Svilengrad-Kapikule)"
-},
+"name": "Bulgaria – Turkey border",
 "lon": 26.34738,
 "lat": 41.72183,
 "countries": [
-"bg"
+"bg",
+"tr"
 ]
 },
 {
 "id": "eEU00213",
-"name": {
-"si": "Lendava d.m."
-},
+"name": "Croatia – Slovenia border",
 "lon": 16.44405,
 "lat": 46.51546,
 "countries": [
+"hr",
 "si"
 ]
 },
 {
 "id": "eEU00214",
-"name": {
-"si": "Imeno d.m."
-},
+"name": "Croatia – Slovenia border",
 "lon": 15.60657,
 "lat": 46.11559,
 "countries": [
+"hr",
 "si"
 ]
 },
 {
 "id": "eEU00215",
-"name": {
-"si": "Metlika d.m."
-},
+"name": "Croatia – Slovenia border",
 "lon": 15.34289,
 "lat": 45.64556,
 "countries": [
+"hr",
 "si"
 ]
 },
 {
 "id": "eEU00216",
-"name": {
-"si": "Dobova d.m."
-},
+"name": "Croatia – Slovenia border",
 "lon": 15.68015,
 "lat": 45.89068,
 "countries": [
+"hr",
 "si"
 ]
 },
 {
 "id": "eEU00217",
-"name": {
-"si": "Ilirska Bistrica d.m."
-},
+"name": "Croatia – Slovenia border",
 "lon": 14.24422,
 "lat": 45.50518,
 "countries": [
+"hr",
 "si"
 ]
 },
 {
 "id": "eEU00218",
-"name": {
-"si": "Središče d.m."
-},
+"name": "Croatia – Slovenia border",
 "lon": 16.30414,
 "lat": 46.38822,
 "countries": [
+"hr",
 "si"
 ]
 },
 {
 "id": "eEU00219",
-"name": {
-"si": "Rakitovec d.m."
-},
+"name": "Croatia – Slovenia border",
 "lon": 13.9501,
 "lat": 45.45398,
 "countries": [
+"hr",
 "si"
 ]
 },
 {
 "id": "eEU00220",
-"name": {
-"si": "Rogatec d.m."
-},
+"name": "Croatia – Slovenia border",
 "lon": 15.77691,
 "lat": 46.21231,
 "countries": [
+"hr",
 "si"
 ]
 },
 {
 "id": "eEU00228",
-"name": {
-"fr": "Limite SNCF RESEAU - EuroTunnel"
-},
+"name": "France – United Kingdom border",
 "lon": 1.50182,
 "lat": 51.01718,
 "countries": [
-"fr"
+"fr",
+"gb"
 ]
 },
 {
 "id": "eEU00230",
-"name": {
-"cz": "As st.hr."
-},
+"name": "Czechia – Germany border",
 "lon": 12.17348,
 "lat": 50.212494,
 "countries": [
-"cz"
+"cz",
+"de"
 ]
 },
 {
 "id": "eEU00234",
-"name": {
-"se": "Kornsjö gränsen"
-},
+"name": "Norway – Sweden border",
 "lon": 11.66987,
 "lat": 58.93476,
 "countries": [
+"no",
 "se"
 ]
 },
 {
 "id": "eEU00235",
-"name": {
-"se": "Charlottenberg gränsen"
-},
+"name": "Norway – Sweden border",
 "lon": 12.24341,
 "lat": 59.93187,
 "countries": [
+"no",
 "se"
 ]
 },
 {
 "id": "eEU00236",
-"name": {
-"se": "Storlien gränsen"
-},
+"name": "Norway – Sweden border",
 "lon": 12.0605,
 "lat": 63.337,
 "countries": [
+"no",
 "se"
 ]
 },
 {
 "id": "eEU00237",
-"name": {
-"se": "Riksgränsen Vj-Bjf"
-},
+"name": "Norway – Sweden border",
 "lon": 18.10572,
 "lat": 68.43004,
 "countries": [
+"no",
 "se"
 ]
 },
 {
 "id": "eEU00239",
-"name": {
-"se": "Riksgräns Haparanda - Tornio",
-"fi": "Riksgräns Haparanda - Tornio"
-},
+"name": "Finland – Sweden border",
 "lon": 24.150731,
 "lat": 65.827855,
 "countries": [
@@ -2640,156 +2154,142 @@
 },
 {
 "id": "eEU00240",
-"name": {
-"ro": "Halmeu FR"
-},
+"name": "Romania – Ukraine border",
 "lon": 23.0029,
 "lat": 47.9954,
 "countries": [
-"ro"
+"ro",
+"ua"
 ]
 },
 {
 "id": "eEU00241",
-"name": {
-"ro": "Campulung pe Tisa FR"
-},
+"name": "Romania – Ukraine border",
 "lon": 23.7352,
 "lat": 48.0011,
 "countries": [
-"ro"
+"ro",
+"ua"
 ]
 },
 {
 "id": "eEU00242",
-"name": {
-"ro": "Valea Viseului FR"
-},
+"name": "Romania – Ukraine border",
 "lon": 24.1683,
 "lat": 47.9203,
 "countries": [
-"ro"
+"ro",
+"ua"
 ]
 },
 {
 "id": "eEU00243",
-"name": {
-"ro": "Vicsani FR."
-},
+"name": "Romania – Ukraine border",
 "lon": 25.9639,
 "lat": 47.9769,
 "countries": [
-"ro"
+"ro",
+"ua"
 ]
 },
 {
 "id": "eEU00244",
-"name": {
-"ro": "Ungheni Prut FR"
-},
+"name": "Moldova – Romania border",
 "lon": 27.7869,
 "lat": 47.1998,
 "countries": [
+"md",
 "ro"
 ]
 },
 {
 "id": "eEU00245",
-"name": {
-"ro": "Falciu FR"
-},
+"name": "Moldova – Romania border",
 "lon": 28.1278,
 "lat": 46.2599,
 "countries": [
+"md",
 "ro"
 ]
 },
 {
 "id": "eEU00246",
-"name": {
-"ro": "Galati Larga FR"
-},
+"name": "Moldova – Romania border",
 "lon": 28.1976,
 "lat": 45.471,
 "countries": [
+"md",
 "ro"
 ]
 },
 {
 "id": "eEU00247",
-"name": {
-"ro": "Jimbolia FR"
-},
+"name": "Romania – Serbia border",
 "lon": 20.7011,
 "lat": 45.7522,
 "countries": [
-"ro"
+"ro",
+"rs"
 ]
 },
 {
 "id": "eEU00248",
-"name": {
-"ro": "Stamora Moravita FR"
-},
+"name": "Romania – Serbia border",
 "lon": 21.2714,
 "lat": 45.2325,
 "countries": [
-"ro"
+"ro",
+"rs"
 ]
 },
 {
 "id": "eEU00250",
-"name": {
-"lt": "Valstybessiena"
-},
+"name": "Belarus – Lithuania border",
 "lon": 25.757498,
 "lat": 54.594567,
 "countries": [
+"by",
 "lt"
 ]
 },
 {
 "id": "eEU00251",
-"name": {
-"lt": "Valstybessiena"
-},
+"name": "Belarus – Lithuania border",
 "lon": 25.353265,
 "lat": 54.264018,
 "countries": [
+"by",
 "lt"
 ]
 },
 {
 "id": "eEU00252",
-"name": {
-"lt": "Valstybessiena"
-},
+"name": "Lithuania – Russia border",
 "lon": 22.747429,
 "lat": 54.640139,
 "countries": [
-"lt"
+"lt",
+"ru"
 ]
 },
 {
 "id": "eEU00253",
-"name": {
-"lt": "Valstybessiena"
-},
+"name": "Lithuania – Russia border",
 "lon": 21.887514,
 "lat": 55.09157,
 "countries": [
-"lt"
+"lt",
+"ru"
 ]
 },
 {
 "id": "eEU00254",
-"name": {
-"be": "Raeren-Frontière"
-},
+"name": "Belgium – Germany border",
 "lon": 6.1523,
 "lat": 50.67646,
 "countries": [
-"be"
+"be",
+"de"
 ]
 }
 ]

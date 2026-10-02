@@ -103,8 +103,8 @@ means it contains the same number as RINF's `uopid`.
 | Latvia | pieturas.lv aggregate (Mobility Database mdb-2337; mirror `api.transitous.org/gtfs/lv_pieturas.gtfs.zip`) | Vivi (all passenger rail), Gulbene - Alūksne narrow gauge, buses | yes | CC0 | direct | daily | works. The NAP (transportdata.gov.lv) was not opened |
 | Estonia | Elron `eu-gtfs.remix.com/elron.zip` (national: `eu-gtfs.remix.com/estonia_unified_gtfs.zip`) | Elron, all domestic passenger rail | yes | CC0 | direct | weekly | works |
 | Croatia | HŽPP `hzpp.hr/GTFS_files.zip` | HŽ Putnički prijevoz only: no SŽ, MÁV or ŽRS trains | yes | CC0 | direct | daily; whole year | works, live (`NO_INTERNATIONAL`) |
-| Luxembourg | national feed on data.public.lu (`data.public.lu/api/1/datasets/horaires-et-arrets-des-transport-publics-gtfs/`; a new file name each week, `fetch` takes the newest) | CFL and every bus; slimmed to 0.2 MB | | CC BY 4.0 | direct (Python's certificate check fails there on this machine; `fetch` falls back to curl) | weekly | not rolled out: see "Rollout" |
-| Greece | `jbb.ghsq.de/gtfs/gr-hellenic-train.gtfs.zip` (Transitous, generated) | Hellenic Train (plus ferries in the same file) | yes | not stated | direct | daily; 2026-07-10 to 2026-12-01 | unofficial. Stop ids are hex strings, not UIC (corrected 2026-10-01), and no Greek OSM station has `uic_ref`, so names. Four ferry agencies (route_type 4) and replacement buses (3) in the same file; trains are 2, 102, 106, 109. Not rolled out: see "Rollout" |
+| Luxembourg | national feed on data.public.lu (`data.public.lu/api/1/datasets/horaires-et-arrets-des-transport-publics-gtfs/`; a new file name each week, `fetch` takes the newest) | CFL and every bus; slimmed to 0.2 MB | | CC BY 4.0 | direct (Python's certificate check fails there on this machine; `fetch` falls back to curl) | weekly; 30 Sep - 12 Dec 2026 | live (2026-10-01). Stop ids are 12-digit numbers, names end ", Gare" (a generic word), so names match |
+| Greece | `jbb.ghsq.de/gtfs/gr-hellenic-train.gtfs.zip` (Transitous, generated) | Hellenic Train (plus ferries in the same file) | yes | not stated | direct | daily; 2026-07-10 to 2026-12-01 | live (2026-10-01). Stop ids are hex strings, not UIC, and no Greek OSM station has `uic_ref`, so names (Greek folded to Latin; `NAME_ALIAS` for Ska, Paleopharsalos, Aegion, Σέρραι...). Four ferry agencies (route_type 4) and Hellenic Train replacement buses (3) in the same file; trains are 2, 102, 106, 109. Kept whole, not slimmed: the buses are what tell a closed line. Refetch before December: the window ends 1 December |
 | Germany | DELFI (official, all modes, 470 MB): `opendata-oepnv.de/ht/de/datensaetze/sharing?...` (the Transitous sharing link resolves without login); easier: gtfs.de `fv_free` + `rv_free` (12 MB together) | all operators incl. non-DB railways | no | CC BY 4.0 | direct | weekly (DELFI); daily, 30 days (gtfs.de) | works. DELFI uses DHIDs; gtfs.de its own numbers, so names |
 | Italy | `raw.githubusercontent.com/deryclem/trenitalia-gtfs/refs/heads/main/gtfs-trenitalia.zip`, converted from Trenitalia's NeTEx on the NAP (`cciss.it`) | Trenitalia: high speed, Intercity, regional | yes (from NeTEx ServiceLinks) | CC BY 4.0 | direct | weekly | works for Trenitalia. Trenord (Transitland f-u0n-trenord), Italo (`github.com/deryclem/italo-gtfs`), FNM, EAV, FSE, FdC and FAL each need their own feed |
 | Spain | Renfe, direct: `ssl.renfe.com/gtransit/Fichero_AV_LD/google_transit.zip` (AVE, long and medium distance), `ssl.renfe.com/ftransit/Fichero_CER_FOMENTO/fomento_transit.zip` (Cercanías), FEVE via data.renfe.com | Renfe; FGC, Euskotren, FGV, SFM and OUIGO are separate feeds | Cercanías yes, long distance no | CC BY 4.0 | direct (the NAP itself wants an account) | daily | works. Adif 5-digit station codes in stop_id |
@@ -232,8 +232,8 @@ Where it will not work, or needs care:
 ## Built: `gtfs_served.py` (2026-10-01)
 
 Live since the 2026-10-01 rollout (below) for cz, hu, pt, pl, be, si, sk, ro, bg, fi, lt,
-lv, ee and hr. Not for at and nl (switched off, see "Rollout"), lu and gr (feeds found, not
-rolled out), nor the non-RINF countries. `build_model.main` calls `gtfs_served.check` just before
+lv, ee, hr, lu and gr. Not for at and nl (switched off, see "Rollout"), nor the non-RINF
+countries. `build_model.main` calls `gtfs_served.check` just before
 `drop_unridden_sections` and `gtfs_served.mark` just after `not_running.mark`. A region with
 no zip in `data/raw/gtfs/<cc>/` gets `None` back and builds exactly as before. The module
 docstring has the method; in short:
@@ -393,6 +393,15 @@ Two fixes the Portugal trial asked for, and four more the rollout showed were ne
    closed after a wrong match one call earlier).
 6. **Feeds with no international trains** (`NO_INTERNATIONAL`, Croatia only): the track from
    an unseen border point back to the last stop the feed knows is "border", left as it is.
+7. **A closed line closes whole** (added with Greece): an "unknown" stop-to-stop section on a
+   line with closed sections, reached from them through stops no train calls at, is closed
+   too. Replacement buses do not call at every halt, so Velestino - Volos closed while
+   Velestino - Stefanovikeio stayed unknown. A line whose operator is missing from the feed
+   has no closed section to grow from. Elsewhere it changed only Romania's 806 (Nazarcea -
+   Dorobanțu, 9.2 km, freight).
+8. **Name variants** (`NAME_ALIAS`, Greece): another name tried for a feed station.
+9. **Seasonal lines** (`PAST`, Poland; pending Anita's approval of the download): see
+   "Seasonal lines" below.
 
 Measured on cz and hu (`tools/compare_lines.py` save, rebuild, diff, plus a section-by-section
 comparison of old and new states):
@@ -418,11 +427,11 @@ comparison of old and new states):
 | cz | Oběhy CZPTT (14 Dec 2025 - 12 Dec 2026) | 2,633 of 2,745 | 55 km, 26 sections | 74 km, 7 lines |
 | hu | MÁV (1 Jun - 13 Dec 2026) | 1,174 of 1,199 | 1 km | 726 km, 23 lines |
 | pt | CP + Fertagus (whole year) | 429 of 468 | 3.5 km | 8.5 km, 2 lines |
-| pl | Polish-Trains (19 Sep - 24 Oct 2026), PKP IC (22 Sep - 31 Dec), narrow gauge | 3,272 of 3,765 | 110 km | 1,007 km, 30 lines |
+| pl | Polish-Trains (19 Sep - 24 Oct 2026), PKP IC (22 Sep - 31 Dec), narrow gauge; past: Polish Trains 13 Jul - 14 Aug 2026 | 3,272 of 3,765 | 110 km | 910 km, 28 lines (96 and 131 seasonal) |
 | be | SNCB (whole year) | 560 of 679 | 2.5 km | 9.2 km, 1 line |
 | si | nap.si via Transitous (whole year) | 265 of 267 | 0 | 0 |
 | sk | ŽSR (whole year) | 688 of 887 | 12.8 km | 398 km, 20 lines (66 km beyond sk.py's SUSPENDED) |
-| ro | data.gov.ro via jbb (whole year) | 1,542 of 1,643 | 47 km | 784 km, 20 lines |
+| ro | data.gov.ro via jbb (whole year) | 1,542 of 1,643 | 47 km | 793 km, 20 lines |
 | bg | livetransport BDZ (30 Sep - 30 Oct 2026) | 625 of 661 | 19 km | 83 km, 3 lines |
 | fi | Fintraffic (24 Sep 2026 - end 2027) | 196 of 198 | 3.5 km | 34 km, 1 line (Porvoo) |
 | lt | LTG Link via jbb (1 Oct - 30 Nov 2026) | 115 of 122 | 0 | 0 |
@@ -431,7 +440,8 @@ comparison of old and new states):
 | hr | HŽPP (8 Dec 2025 - 13 Dec 2026) | 458 of 460 | 22.6 km | 139 km, 3 lines (15.5 beyond hr.py's SUSPENDED) |
 | at | switched off | | | |
 | nl | switched off | | | |
-| lu, gr | feed found, not rolled out, blocked on permission | | | |
+| lu | national feed (30 Sep - 12 Dec 2026) | 69 of 91 | 0 | 0 |
+| gr | Hellenic Train via jbb (10 Jul - 1 Dec 2026) | 280 of 395 | 0 | 509 km, 5 lines |
 
 Unmatched feed stations are nearly all abroad. Where many inside the country are unmatched
 (Latvia 43: the Skulte, Gulbene and Saldus lines' halts; Slovakia 26: Trenčianske Teplice,
@@ -493,7 +503,8 @@ Kúty, Horné Srnie (Vlárský průsmyk) and Plaveč (12.8 km). Unknown, left dr
 Šahy (nothing in the feed calls at its stops), a piece of 120 at Žilina, and TEŽ's Tatra lines.
 
 **Romania.** Kept: Giurgiu line pieces at Jilava (10.2 km), Curtici - border (8.4), Săcuieni
-(7.4), Golenți (3.3). Closed 784 km on 20 lines: 300 Cluj-Napoca - Oradea (139.6 km; closed
+(7.4), Golenți (3.3). Closed 793 km on 20 lines (806 includes Nazarcea - Dorobanțu since the
+closed-line growth rule): 300 Cluj-Napoca - Oradea (139.6 km; closed
 for modernisation since January 2024, trains back in stages from 2027), 600 Făurei - Tecuci
 (89.6; Bucharest - Iași trains run via Focșani), 700 Urziceni - Făurei (67.4; Urziceni is a
 terminus in the feed), 603, 314, 703, 316, 806 (Constanța - Năvodari - Capul Midia, freight),
@@ -534,17 +545,88 @@ closed nothing and its only rescue was a depot track (Watergraafsmeer HSA), reac
 register has no direct Amsterdam Centraal - Muiderpoort section. Every Dutch passenger section
 already has OSM routes, so the feed adds nothing.
 
-**Luxembourg and Greece: feed found, not rolled out, blocked on permission.** Both downloaded
-fine (lu 16.8 MB slimmed to 0.2 MB; gr 5.8 MB to 0.6 MB), but reading them for the check was
-refused by the session's permission classifier, so the folders were removed and both stay on
-the OSM rule. Greek names will match: `tokens()` now folds Greek and Cyrillic as rinf.norm does.
+**Luxembourg** (rolled out later on 2026-10-01, after Anita approved the downloads). CFL's
+trains are route_type 2 in the national feed (slimmed 16.8 MB to 0.2 MB). No change: nothing
+kept, nothing closed; the border stubs (Troisvierges, Kleinbettingen, Bettembourg, Rodange,
+Esch) stay as OSM has them.
+
+**Greece** (rolled out later on 2026-10-01). The feed is kept whole (5.8 MB): slimmed, it lost
+Hellenic Train's 81 bus routes, and without them the closed Thessaly lines read as "unknown"
+(an operator missing from the feed) and stayed drawn. Closed 509 km on 5 lines:
+- 25 Thessaloniki - Alexandroupoli from Serres east (278.6 km: Serres - Drama - Xanthi -
+  Komotini - Alexandroupoli); Thessaloniki - Serres keeps its trains (route 1634 and others in
+  the feed and in the 2026 news). So partial greying, as expected.
+- 12 Palaiofarsalos - Kalambaka (79.9 km) and 13 Larissa - Volos (61.0 km): no train in the
+  10 July - 1 December timetable, buses in the feed and in the news (Storm Daniel; the
+  expected summer 2026 reopening has not happened in the feed).
+- 10 Lianokladi - Stylida (19.7 km).
+- Thessaloniki - Idomeni (69.8 km; gr.py already greyed 62.4 of it).
+Left drawn: Strymonas - Promachonas (13.4 km, "unknown": only the Sofia train, not in the
+feed) and two Thessaloniki freight-area pieces. Not matched: the Kiato - Patras line's stations
+(the register has no such line) and a few on the Athens lines. The window ends 1 December 2026;
+the check ignores today's date, so the snapshot keeps working, but refetch for the next
+timetable.
+
+### Seasonal lines (decided and built 2026-10-01)
+
+Anita: seasonal lines are drawn as running. Poland's regional feed covers about five autumn
+weeks, so its summer-only lines read as closed. Options measured on the Polish closed sections
+(scratch scripts, read-only):
+
+- **A feed covering under N months cannot close a section OSM routes run over:** reopens
+  nothing seasonal. 96 Muszyna - Leluchów and 363 Skwierzyna - Wierzbno have no OSM passenger
+  route (share 0.00 and 0.02). It would reopen 287 Opole - Nysa (works) and freight lines
+  (131, 171, 13, 57, 273) instead: 207 km.
+- **...unless corroborated (trains at both ends, or buses):** reopens 96 and 363 but also 13,
+  131, 208, 406, 201, 249, 103 and the Bieszczady lines (327 km). In one autumn feed a seasonal
+  line and a closed one look the same.
+- **A whole-year source:** none found for Polish regional trains. Koleje Małopolskie's own
+  GTFS covers 9 September - 24 October. Polregio's would not download (TLS error; not
+  retried).
+- **A past snapshot (chosen):** Mobility Database keeps every daily download of a feed, and
+  the files are public at `files.mobilitydatabase.org/<id>/<id>-YYYYMMDDHHMM/<same>.zip`. The
+  listing needs an account, but a date's file can be found by trying the minutes after
+  midnight (scratch `mdb_find.py`). The 15 July 2026 Polish Trains snapshot (mdb-3191) has
+  regional and PKP IC trains from 13 July to 14 August. It has Koleje Małopolskie's Kraków -
+  Muszyna - Plaveč - Poprad weekend trains, and nothing at Leluchów's neighbours Wierzbno,
+  Ustrzyki Dolne or Łupków.
+
+Rule (`PAST`, `SEASONAL_MIN_DAYS`): the past snapshot's trains are put through the same paths.
+A section the current feed would close (or leave unknown) is "seasonal", drawn as running,
+when it has at least 16 trip-days in the snapshot. That is one train each way weekly over an
+8-week summer, Anita's "more often than about once a week". Two exceptions: a section with
+junctions at both ends, and a section where replacement buses now call at a stop no train
+calls at. The latter is a works closure that began after the snapshot (Opole - Nysa, closed 3
+August), which stays greyed.
+
+Built on Poland (`--fetch-past pl`, approved by Anita; rebuild diffed against the build
+before it: only 96 and 131 changed, from closed to running):
+- Reopens 96 Muszyna - Leluchów (7.0 km; 32 trip-days).
+- Reopens 131 Kraski - Zduńska Wola Karsznice and Kraski - Babiak (91.3 km; 64 trip-days of
+  the summer InterCity coast trains Gdynia - Inowrocław - Zduńska Wola Karsznice - Katowice,
+  so 131 is not freight-only after all).
+- Keeps 295 Węgliniec - Bielawa Dolna to the German border (13.3 km; 128 trip-days).
+- Stays closed: line 12 (one day, under the threshold) and 273 (8 days). Also 363 Wierzbno
+  and the Bieszczady lines (no trains in summer 2026 either), and every works closure.
+- Closed in Poland: 1,007 -> 910 km.
+
+No other country has a past snapshot: Bulgaria's and Greece's feeds are not in Mobility
+Database (Greece's covers July - December anyway), and Lithuania's has no closures.
+
+The snapshot is in `data/raw/gtfs/pl/past/` (7.2 MB slimmed from 28.3). Its own
+patterns.pkl cache sits beside it. Poland's row in the table above is now 910 km closed on
+28 lines.
 
 ### Things to know
 
+- **Inspecting data only reads it** (Anita, 2026-10-01). Inspection scripts set
+  `gtfs_served.WRITE_CACHE = False` so no patterns.pkl is written beside a feed, and keep
+  their own state in the scratch folder. Only `--fetch` / `--fetch-past` and an agreed build
+  write to `data/`.
 - A feed is a snapshot. Works closures that end (Opole - Nysa 24 October, Jelenia Góra 30
   October, Cieszyn 13 December) stay greyed until the feed is fetched again and the country
   rebuilt.
 - Seasonal trains are missed wherever the window is short (Poland's regional feed, Bulgaria,
-  Lithuania). A union of past runs would fix it; not built.
+  Lithuania). The fix is a past snapshot (`PAST`, "Seasonal lines"), for Poland only so far.
 - `fetch` falls back to curl when Python's certificate check fails (data.public.lu on this
   machine).

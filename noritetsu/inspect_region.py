@@ -115,12 +115,12 @@ def main():
 
     print("\n  route kinds")
     for k, n in Counter(t.get("route") for t, _ in routes.values()).most_common():
-        print(f"    {k:<14} {n:>6}")
+        print(f"    {k or '(none)':<14} {n:>6}")
 
     print("\n  biggest operators by route relation count")
     ops = Counter(t.get("operator", "(none)") for t, _ in routes.values())
     for k, n in ops.most_common(args.top):
-        print(f"    {k:<44} {n:>5}")
+        print(f"    {k or '(none)':<44} {n:>5}")
 
     passenger_coverage(args.region, ways, routes)
 

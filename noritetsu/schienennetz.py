@@ -34,7 +34,20 @@ HOW IT DIFFERS FROM JAPAN, and why this is not a copy of n02.py:
   point; it is matched by name onto the stop it belongs to.
 - TWIN TUBES ARE TWO KM-LINES. "GBT Ost" and "GBT West" are the two bores of the Gotthard
   Base Tunnel. They are merged into one line and, because the graph is a graph, each section
-  follows one bore, as a double-track line follows one track in n02.py.
+  follows one bore, as a double-track line follows one track in n02.py. A line end is a node
+  with one NEIGHBOUR, not one segment: the merged Lötschberg base tunnel (330/331) has two
+  segments, one per bore, into St. German, and counting segments built it no section at all
+  (until 2026-10-02).
+- BORDER NODES ARE RINF'S BORDER POINTS. A line end that is not a stop and lies within
+  BORDER_SNAP_M of a border point (borders.py; the register's own "La Plaine-Frontière",
+  "Le Locle-Frontière", "Delle-Frontière" are 0-17 m from them) takes the point's id, which
+  France's register, every RINF register and OSM's border tails end at too.
+
+NOT IN THE REGISTER (checked 2026-10-02): the CEVA tunnels in Geneva. Line 152 has Lancy-Bachet
+and Champel - Eaux-Vives - Chêne-Bourg, but not Lancy-Bachet - Champel nor Chêne-Bourg - the
+border, opened December 2019. The published file is the 2021-07-06 edition (Stand), still the
+only one on data.geo.admin.ch (STAC item updated 2025-01-18, same checksum), so the Léman
+Express owns that track as an OSM line.
 """
 import csv
 import hashlib
@@ -55,6 +68,8 @@ SERVICEPOINTS = "ch_servicepoints.csv"
 
 # How far a platform-group node ("Chur [Gleis 10-14]") may be from the stop it is part of.
 PLATFORM_M = 800
+# A line-end node this close to a RINF border point is that point.
+BORDER_SNAP_M = 30
 
 # Trailing words on a node name that make it a part of the railway, not a railway's platforms.
 NOT_A_RAILWAY = {w.casefold() for w in (
@@ -228,6 +243,28 @@ def build(gdb_zip, log):
         rec = stop_of.get(nid)
         return (rec and geopos(rec)) or (nodes[nid]["lon"], nodes[nid]["lat"])
 
+    # --- national borders. A node that is not a stop and lies on a RINF border point (borders.py)
+    # is that point: the register's own "Le Locle-Frontière" or "La Plaine-Frontière" is 0-17 m
+    # from it. Ending there under the point's id joins the line to the neighbour's half, which
+    # ends at the same id (France's register, every RINF register, OSM's border tails).
+    border_of, border_rec = {}, {}
+    try:
+        import borders
+        bpts = borders.load()
+    except (ImportError, OSError, ValueError):
+        bpts = []
+    for nid, p in nodes.items():
+        if means(nid):
+            continue
+        # Nearest; between points a few metres apart, an "eEU" one, which is what the
+        # neighbour's RINF register ends at (St. Margrethen is both eEU00118 and eCH15472).
+        near = min(((round(math.hypot((b["lon"] - p["lon"]) * math.cos(math.radians(p["lat"]))
+                                      * 111320, (b["lat"] - p["lat"]) * 110570) / 5),
+                     not b["id"].startswith("eEU"), b["id"], b) for b in bpts), default=None)
+        if near is not None and near[0] * 5 <= BORDER_SNAP_M:
+            border_of[nid] = near[2]
+            border_rec[near[2]] = near[3]
+
     # --- km-lines, with twin bores merged
     by_kml = defaultdict(list)
     for s in segs:
@@ -262,8 +299,13 @@ def build(gdb_zip, log):
         # (Verzw)"), which reads exactly like a dead end. build_model decides instead, keeping
         # a section that ends at one only where OSM passenger routes run over it.
         stop_nodes = {n for n in adj if means(n)}
-        ends = {n for n, nb in adj.items() if len(nb) == 1 and n not in stop_nodes}
-        at = {n: station_of(n) for n in stop_nodes | ends}
+        # An end is a node with ONE NEIGHBOUR, not one segment: in a merged twin-bore line the
+        # far portal has two, one per bore, to the same node. Counting segments left the
+        # Lötschberg base tunnel (330/331, St. German) with a single end, and so with no
+        # section at all.
+        ends = {n for n, nb in adj.items()
+                if len({v for v, _w, _s, _r in nb}) == 1 and n not in stop_nodes}
+        at = {n: border_of.get(n) or station_of(n) for n in stop_nodes | ends}
         if len({*at.values()}) < 2:
             continue
 
@@ -328,8 +370,12 @@ def build(gdb_zip, log):
 
         for n, sid in at.items():
             if sid not in stations:
-                lon, lat = pos_of(n)
-                stations[sid] = {"id": sid, "name": name_of(n), "name_en": "",
+                if sid in border_rec:
+                    b = border_rec[sid]
+                    lon, lat, st_name = b["lon"], b["lat"], b["name"]
+                else:
+                    (lon, lat), st_name = pos_of(n), name_of(n)
+                stations[sid] = {"id": sid, "name": st_name, "name_en": "",
                                  "lon": lon, "lat": lat, "lines": set()}
             if n in stop_nodes:
                 stations[sid]["stop"] = True

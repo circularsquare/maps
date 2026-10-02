@@ -1,8 +1,196 @@
-# Russia (ru): sources, measurements, recipe (surveyed 2026-10-01)
+# Russia (ru): sources, measurements, recipe (surveyed and built 2026-10-01)
 
-Stage-1 research for adding Russia. No reader written yet. Every number below comes from a
-`probe_ru_*.py` script in this folder; their outputs are in `data/raw/ru/probe_*.txt`. Nothing
-used needed a login. User-Agent `noritetsu-rail-map/1.0` throughout.
+Built 2026-10-01 by the recipe at the end: `ru_register.py` converts the tariff guide into
+rinf.py's input and `rinf_countries/ru.py` holds the settings. "Built" below is what came out;
+the sections after it are the stage-1 research, kept as it was written (its numbers come from
+the `probe_ru_*.py` scripts, outputs in `data/raw/ru/probe_*.txt`, and predate the build's
+clip and outline). Nothing used needed a login. User-Agent `noritetsu-rail-map/1.0` throughout.
+
+## Built (2026-10-01)
+
+**898 register lines, 76,776 km**, one per tariff section, named by its two ends as
+the tariff guide spells them ("Обухово — Чудово-Московское"), operator the regional railway
+("Октябрьская железная дорога"). Of them 53 lines (1,291 km) on the 2022-annexed railways are
+drawn greyed (below). With OSM's lines and trains: 3,513 lines, 15,832 stations; 388 named
+trains (FPK's numbered trains, Сапсан, the long-distance «Ласточка»s) are flagged as such by
+build_model's `ru` branch. ru.pmtiles 22.9 MB.
+
+What the 1,180 tariff sections the converter kept became, by railway (tariff km of the
+sections against register km built; the gap is unridden sections dropped, rejected traces,
+and pairs left on another section or outside Russia):
+
+| railway | sections | tariff km | lines built | km built |
+|---|---|---|---|---|
+| Октябрьская | 134 | 9,946 | 113 | 8,597 |
+| Московская | 182 | 8,520 | 153 | 7,312 |
+| Свердловская | 72 | 7,249 | 53 | 6,413 |
+| Дальневосточная | 67 | 6,920 | 49 | 6,078 |
+| Северо-Кавказская | 102 | 6,491 | 78 | 5,237 |
+| Северная | 59 | 5,936 | 45 | 5,581 |
+| Западно-Сибирская | 63 | 5,803 | 53 | 5,055 |
+| Горьковская | 82 | 5,550 | 63 | 5,034 |
+| Куйбышевская | 63 | 4,827 | 46 | 4,233 |
+| Южно-Уральская | 53 | 4,423 | 35 | 3,306 |
+| Юго-Восточная | 71 | 4,404 | 50 | 3,515 |
+| Приволжская | 61 | 4,181 | 45 | 3,541 |
+| Восточно-Сибирская | 16 | 3,862 | 11 | 3,734 |
+| Забайкальская | 17 | 3,353 | 11 | 3,075 |
+| Красноярская | 21 | 3,193 | 13 | 2,846 |
+| Донецкая (2022, greyed) | 55 | 1,366 | 32 | 590 |
+| Луганская (2022, greyed) | 23 | 933 | 17 | 530 |
+| Якутии | 3 | 808 | 2 | 786 |
+| Калининградская | 16 | 728 | 13 | 600 |
+| Крымская | 15 | 639 | 12 | 543 |
+| Мелитопольская-Херсонская (2022, greyed) | 4 | 192 | 4 | 170 |
+| ИФР-1 (the Нижнеленинское bridge spur) | 1 | 5 | 0 | 0 |
+| **all** | **1,180** | **89,329** | **898** | **76,776** |
+
+(The Donetsk sheet's 1,366 km already leaves out its node lists; most of the rest of the gap
+there is Ukrainian-held: Kramatorsk, Sloviansk, Lyman, Kostiantynivka.)
+
+**Checks.** Against the tariff guide's own km (every line, `km_official`): median 0.995 over
+887 lines of 2 km or more; 153 off by more than 5%, nearly all short lines where whole
+kilometres matter (3.5 km of track for 3 tariff km) or a stop placed off its line (Инская —
+Среднесибирская 1.06: Мичуринец sits 5 km from where the tariff km put it, and both traces
+agree). Outside figures (`REGISTER["ru"]`, 17 lines; Wikidata P2043 and ru.wikipedia
+infoboxes, few as they are; two more, Пинозеро — Ковдор and Первушино — Заволжск, are built
+as no line because OSM has no passenger route on them): 12 within 2%, worst deviation 0.35,
+and the four off are explained in their notes: Соблаго — Торжок 0.65 (Торжок — Кувшиново
+dropped, OSM's trains run only Осташков — Кувшиново), Петрозаводск — Суоярви I 0.93 (its first
+9 km are the same pair of points on 01-027 and counted there), Софрино — Красноармейск 1.11
+against Wikidata's 15 km (tariff 16, built 16.6), Вырица — Поселок 0.90 (its last point has no
+OSM node).
+
+**Timing and size.** `ru_register.py --convert` 5 s; `build_model` 21 min (rinf.build 4.5 min,
+2.8 GB; build_credits 15 min over 64,700 sections), `build_tiles` 2.5 min.
+`dist/data/ru/lines.json` is 5.5 MB (1.1 MB gzipped; Japan's and China's are 1.2 MB): OSM
+suburban lines 2.7 MB, register lines 1.2 MB, trams 0.8 MB, named trains 0.7 MB.
+**`credits.json` is the real size problem: 23.5 MB (4.2 MB gzipped; Japan's 0.9 MB)**, of which
+13.6 MB are the credits of named trains (a 9,000 km Россия over hundreds of sections credits
+every line beside it) and 12.2 MB of OSM lines. A per-region split of lines.json alone would
+not help much; trimming named trains' credits, or loading credits per line on demand, would.
+Measured, not changed.
+
+### How it was built
+
+```powershell
+# sources (no login)
+curl -A "noritetsu-rail-map/1.0" -o data/raw/ru/tr4_kniga1_2026-09-30.xls https://sovetgt.org/tr4/2026/09/30/Kniga_1_2026-09-30.xls
+curl -A "noritetsu-rail-map/1.0" -o data/raw/ru/tr4_kniga2_2026-09-29.xls https://sovetgt.org/tr4/2026/09/29/Kniga_2_2026-09-29.xls
+curl -L -A "noritetsu-rail-map/1.0" -o data/raw/ru/russia-260930.osm.pbf https://download.geofabrik.de/russia-260930.osm.pbf          # 4.2 GB
+curl -L -A "noritetsu-rail-map/1.0" -o data/raw/ru/ukraine-260930.osm.pbf https://download.geofabrik.de/europe/ukraine-260930.osm.pbf # 0.9 GB
+curl -A "noritetsu-rail-map/1.0" -o data/raw/ru/ru_boundary.geojson "https://polygons.openstreetmap.fr/get_geojson.py?id=60189&params=0"
+
+$env:OSMIUM_POOL_THREADS=2
+python extract.py --region ru/full --pbf data/raw/ru/russia-260930.osm.pbf                              # 7 min
+python extract.py --region ru/ua --pbf data/raw/ru/ukraine-260930.osm.pbf --bbox 32.0,45.9,40.3,50.2    # 2 min
+python ru_register.py --esr data/raw/ru/russia-260930.osm.pbf          # esr:user codes -> data/raw/ru/osm_esr.json
+python ru_register.py --esr data/raw/ru/ukraine-260930.osm.pbf --ua    # + name:ru of stations -> osm_names_ua.json
+# (both .pbf deleted after; data/proc/ru/full and data/proc/ru/ua keep what came out)
+python ru_register.py --annex        # data/raw/ru/annex.geojson (fetches the two Wikipedia modules once)
+python ru_register.py --clip         # ru/full + ru/ua -> data/proc/ru, clipped to the outline
+python ru_register.py --wikidata     # data/raw/ru/wdx_lines.json, wdx_stations.json
+python ru_register.py --convert      # data/raw/rinf/ru/{sections,points,names}.json
+python build_model.py --region ru --register rinf:data/raw/rinf/ru    # 21 min
+python build_tiles.py --region ru                                     # 2.5 min
+python check_model.py --region ru
+python probe_ru_wplengths.py > data/raw/ru/probe_wplengths.txt        # the ru.wikipedia figures in REGISTER
+```
+
+### What the converter decides (ru_register.py's docstring has the detail)
+
+- **Points** are placed at the OSM node carrying their ESR code (10,466 of 13,096), else at an
+  OSM station of the same name near their placed neighbours (1,183), else left unplaced
+  (1,447; rinf.py retraces end to end past them).
+- **A point is a stop** when Book 2 gives it a passenger operation AND an OSM train route stops
+  within 400 m (9,132 points). 3,325 points Book 2 allows passengers at have no OSM route
+  stopping there and are junctions.
+- **Long stop-to-stop stretches answer to OSM's routes**: a stretch of 10 km or more past such
+  an unserved point, or of 25 km or more with no passenger point, gets its end stops cloned as
+  junctions on that line only (`<code>@<section>`), so build_model keeps it only where OSM
+  passenger routes run over it. 999 stretches, 27,053 tariff km; without this, freight
+  bypasses between two served stations (Безенчук — Кинель, the southern bypass) and closed
+  branches (Сенная — Аткарск) were stop-to-stop sections nothing questions. build_model then
+  kept 1,103 junction-ended sections (26,878 km) and dropped 241 (6,112 km). The clone is
+  joined to its stop by a 0 km piece (so the line stays one piece) and given an unplaced stub
+  (so it has three neighbours and rinf.py ends a section there); both vanish in the build.
+- Pairs listed on two sections stay on one (main sections first, then the lower id), and a
+  pair another section lists with points between is left to that one (61-004 Сенная —
+  Трофимовский I is not Сенная — Аткарск). Extra codes ("(эксп.)", "(перев.)", "(стык)") at the
+  same km as a neighbour are dropped; the 7 all-0-km node lists (the Moscow Central Circle's
+  stations) are left to OSM.
+- **The outline** is OSM's own boundary of Russia (relation 60189, which holds Crimea and the
+  territorial sea) plus annex.geojson. religiondots' and Natural Earth's outlines put
+  Bagrationovsk station, 2 km inside Kaliningrad oblast, in Poland, and religiondots' coast cut
+  the beach line at Sochi. Kazakhstan's stretches of Trans-Siberian sections (Петропавловск,
+  Кулунда) and every border stub are cut; rinf.py builds the Russian pieces.
+- `rinf.py` gained one hook for Russia, `direct_near_m` (1500 in ru.py): an end-to-end retrace
+  must pass within 1,500 m of every placed point of the section it replaces. Сенная — Аткарск
+  had traced 209 km round by Saratov. 32 such traces refused.
+
+### Crimea and the 2022-annexed railways
+
+- **Crimea** is in Geofabrik's Russia extract and in OSM's Russia boundary: 12 lines, 543 km,
+  built like everywhere else (OSM has Crimea's suburban routes).
+- **Donetsk, Luhansk, Melitopol-Kherson.** The tariff guide lists the whole pre-war Donetsk
+  railway, Kramatorsk, Sloviansk and Lyman included, which Ukraine holds and Ukrzaliznytsia
+  serves. Done: (1) Geofabrik's Ukraine extract, cut by `extract.py --bbox` to the four
+  oblasts' box, is merged into data/proc/ru by `--clip`; (2) the clip polygon there is
+  `data/raw/ru/annex.geojson`, the four oblasts (OCHA COD-AB admin 1) cut to the Voronoi cells
+  of the places en.wikipedia's war maps (Module:Russo-Ukrainian war overview map and detailed
+  map, CC BY-SA, fetched 2026-10-01 and kept in data/raw/ru/wp_*.lua) mark as Russian-held;
+  contested places count as not held. 83% of the four oblasts; Pokrovsk, Siversk, Huliaipole
+  in, Kostiantynivka, Kramatorsk, Orikhiv, Kherson city out. (3) Russia's new ESR codes there
+  (89xxxx, 84xxxx, 82xxxx) are not in OSM, which carries Ukrzaliznytsia's, so points are
+  placed by their Russian name against OSM's `name:ru` (428 of 591). (4) **OSM has no
+  passenger route relation in the occupied area** (only Ukrzaliznytsia's on the Ukrainian
+  side and Crimea's Армянск trains), so the OSM test would drop every section: there, Book 2's
+  passenger points are stops on their own, and `rinf_countries/ru.py`'s `suspended` draws the
+  lines greyed, as not running, while `ANNEX_RUNNING = False`. 53 lines, 1,291 km of 2,491
+  tariff km in the three sheets. (5) OSM's station names there are mostly Ukrainian; `--clip`
+  puts their `name:ru` in `name` (1,323 stops), keeping the Ukrainian in `name:uk`.
+- **The outline the app needs**: religiondots' `ru` (which has Crimea) plus
+  `data/raw/ru/annex.geojson`. When Ukraine is built, its outline and extract need that area
+  taken out.
+
+### Sources and licences
+
+| source | licence | used for |
+|---|---|---|
+| Тарифное руководство № 4, Books 1-2 (sovetgt.org) | official intergovernmental document, its preface calls the data publicly available | the register, stops |
+| OSM via Geofabrik (Russia, Ukraine 260930), OSM boundary relation 60189 via polygons.openstreetmap.fr | ODbL | track, stations, ESR codes, routes, the outline |
+| Wikidata | CC0 | English line names (47, only labels that read as English: "Kaliningrad–Sovetsk railway line"; the rest are other languages' transliterations), lengths for check_model |
+| ru.wikipedia line articles | CC BY-SA | lengths for check_model |
+| en.wikipedia war maps (two Lua modules) | CC BY-SA | which annexed places Russia holds |
+| OCHA COD-AB Ukraine admin 1 (maps/data/asia1m/ukraine) | CC BY-IGO | the four oblasts |
+
+### What is still off
+
+- **No independent per-section lengths to speak of**: 17 outside figures. The tariff km are
+  the main check, and they are the register's own.
+- **3,325 passenger-permitted points no OSM route stops at are not stops**, and the lines over
+  them answer to OSM's route coverage. Where OSM's routes are incomplete, real service is
+  dropped: Торжок — Кувшиново is dropped because OSM has trains only Осташков — Кувшиново
+  (here OSM is probably right). A Yandex Rasp key would settle stops properly.
+- **1,447 points are unplaced** (no ESR node in OSM, no name match). Pieces through them are
+  retraced end to end; 351 merged sections were rejected outright (biggest: Новый Уренгой —
+  Ямбург under construction, Кулунда — Локоть through Kazakhstan, Орск — Рудный Клад).
+- **Some parallel tariff sections still overlap** (about 400 km counted twice): Адлер — Роза
+  Хутор and Сириус — Роза Хутор share 40 km from the Adler junction; short station-throat
+  sections in Samara, Kirov, Novosibirsk. Each is a real tariff section.
+- **Station English names**: 1,813 of 8,559 register stops have one, from OSM. Wikidata has
+  English labels for 10,524 stations by ESR code (`wdx_stations.json`); using them would need a
+  rinf.py hook for stop English names.
+- **The annexed railways are greyed** until someone can say which sections trains run on
+  (Anita's call: `ANNEX_RUNNING`). The control polygon is as current as the Wikipedia modules
+  fetched 2026-10-01; delete data/raw/ru/wp_*.lua and rerun `--annex`, `--clip`, `--convert`
+  to refresh.
+- Ten 0 km sections remain on register lines: the link between a stop and its clone where
+  OSM's routes kept it (`eRU<code>@<section>`, a junction at the stop's own place). Harmless,
+  but they show as junction rows in those lines. rinf.py's log counts the clone stubs among
+  "sections left out for a rejected trace" (1,994, of which 1,643 are stubs).
+- Line colours: none of the register lines has one (151 OSM lines do); `line_colours.py` has
+  no `ru` entry and no colours/ru.csv was made.
 
 ## The short answer
 
@@ -28,7 +216,7 @@ used needed a login. User-Agent `noritetsu-rail-map/1.0` throughout.
   `rinf.py` do the tracing, stop matching and checks, with a `rinf_countries/ru.py`. Details
   at the end.
 
-## Run
+## Run (stage-1 probes, as first run)
 
 ```powershell
 # sources (no login; dated files, see "Sources")
@@ -325,11 +513,9 @@ coverage. Stations: about 10,500 register points placed by ESR code. Metros, tra
 and all suburban and long-distance services come from OSM as elsewhere. Expect build_model
 times of China's order (6 min) and a log worth reading for the `suspended` list.
 
-## Open questions
+## Open questions (stage 1), and their answers
 
-- The 2022-annexed regions (TR-4's Донецкая, Луганская, Мелитопольская railways, 2,722 km):
-  in or out? Not in Geofabrik's Russia extract nor in religiondots' `ru` outline; left out by
-  every probe.
-- A Yandex Rasp API key (Yandex account) would give the one authoritative passenger-station
-  list; worth it, or rely on OSM routes?
-- Register unit: tariff section ("A — B", 1,117 lines), or corridors?
+- The 2022-annexed regions: in, with Russia, de facto (Anita, 2026-10-01). How: "Built" above.
+- A Yandex Rasp API key: not asked for; the build relies on OSM's routes. Still the best way to
+  settle which points are passenger stops.
+- Register unit: the tariff section (Anita, 2026-10-01).

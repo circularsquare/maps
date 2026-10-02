@@ -8,8 +8,11 @@ The viewer is a static page that `fetch()`es its GeoJSON, so `file://` won't
 work — serve the folder and open it over HTTP:
 
 ```
-python -m http.server 8000     # from helper1m/, then open http://localhost:8000/
+./serve.sh          # or ./serve.sh 8001; then open http://localhost:8000/
 ```
+
+It just runs `python -m http.server 8000` from `helper1m/`, wherever you call
+it from.
 
 Pick a country from the list, click an admin division for its population
 (linear extrapolation from the last two data points), shift-click to add to a
@@ -64,8 +67,10 @@ shift-clicking one isolates it. The setting is remembered per country.
                                       "g": [0, 5], "k": [900, 100] } } } }
 ```
 
-`g` indexes `groups` and `k` is the count, biggest first. China's is built by
-`scripts/china/ethnicity.py` from `maps/chinaethnicity/`.
+`g` indexes `groups` and `k` is the count, biggest first. A group may carry a
+`title`, shown on hover in the group list. China's is built by
+`scripts/china/ethnicity.py` from `maps/chinaethnicity/`, India's by
+`scripts/india/language.py`.
 
 ## Countries
 
@@ -90,7 +95,14 @@ shift-clicking one isolates it. The setting is remembered per country.
   boundaries (SHRUG 2.1 open polygons). No post-2011 census exists, so
   populations come from the IIPS district projections (Dhar 2022, Table 8) at
   five-year steps 2011–2031: states summed from districts, subdistricts scaled
-  by their 2011 census share. Fetcher: `scripts/india/fetch.py`.
+  by their 2011 census share. Fetcher: `scripts/india/fetch.py`. Composition:
+  mother tongue at all three levels, from Census 2011 table C-16, which goes
+  down to the sub-district (`scripts/india/fetch_c16.py` downloads it,
+  `scripts/india/language.py` builds it). Hindi's varieties (Bhojpuri,
+  Rajasthani, Magahi and so on) get their own colours; how people split
+  "Hindi" from a variety differs by state, so Bihar shows far more Bhojpuri
+  than eastern Uttar Pradesh. The palette is `scripts/india/language_colors.csv`,
+  hand-editable; the script only appends rows for new groups.
 - [indonesia](scripts/indonesia/README.md) — BPS (main site + 514 regency
   subdomains). Abandoned mid-build — the source site proved too unfriendly, so
   that map was finished by hand instead.

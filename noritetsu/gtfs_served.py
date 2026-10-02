@@ -67,6 +67,10 @@ HOW.
    - ambiguous: not on any shortest path, but on a path no more than NEAR times the shortest
      between some consecutive calls (a classic line beside a new one with no stop between,
      a triangle). Left as it is.
+   - seasonal: no train now, but at least SEASONAL_MIN_DAYS trip-days in a past snapshot of
+     the feed (PAST, data/raw/gtfs/<cc>/past/, `--fetch-past`), and no replacement bus at a
+     stop no train calls at (that would be a works closure). Drawn as running: Anita counts
+     seasonal lines. Poland's 15 July snapshot has Muszyna - Leluchów's summer trains.
    - border: ends at a border point the feed calls nowhere beyond (within BORDER_SEEN_KM).
      MÁV's feed ends Budapest - Wien at Hegyeshalom, so it cannot say. Left as it is. For a
      feed with no international trains at all (NO_INTERNATIONAL: Croatia's HŽPP), also every
@@ -77,7 +81,9 @@ HOW.
      stop at its ends has nothing in the feed calling at it. That is how an operator missing
      from the feed looks (JHMD's 228 and 229 in Czechia: OSM has no route there either, the
      manager test is what catches them). Left as it is, logged, so a feed can be added.
-   - not running: every other stop-to-stop section with no train, and a junction-ended one
+   - not running: every other stop-to-stop section with no train (and an "unknown" one on a
+     line closed beside it, reached through stops no train calls at: replacement buses skip
+     halts, Larissa - Volos), and a junction-ended one
      that is part of a closed line (shares an end, in a chain, with a not-running
      stop-to-stop section of the same line). Marked `closed` after not_running.mark (`mark`),
      so the app greys it and leaves it out of completion.
@@ -102,15 +108,19 @@ routes alone would drop; closed = km marked not running.
    be  kept 2.5 km; closed L.147 Auvelais - Fleurus (9.2 km)
    sk  kept 12.8 km; closed 398 km on 20 lines (17 already in sk.py's SUSPENDED, plus 141,
        133 Sereď - Leopoldov, Hronec - Chvatimech)
-   ro  kept 47 km; closed 784 km on 20 lines (300 Cluj - Oradea works, 600, 700, 603...)
+   ro  kept 47 km; closed 793 km on 20 lines (300 Cluj - Oradea works, 600, 700, 603...)
    bg  kept 19 km (8 Trakia - Plovdiv Razpredelitelna); closed 83 km (83, 61, a Sofia stub)
    fi  kept 3.5 km (Tornio - Haparanda); closed the Porvoon rata (34 km, museum trains only)
    hr  kept 22.6 km (M304 Ploče - Metković); closed 139 km (M606, L103, R104)
-   si, lt, lv, ee: no change. at, nl: switched off (no feed folder). lu, gr: not rolled out.
+   gr  closed 509 km on 5 lines (25 from Serres to Alexandroupoli, 12 Palaiofarsalos -
+       Kalambaka, 13 Larissa - Volos, 10 Lianokladi - Stylida, Thessaloniki - Idomeni)
+   si, lt, lv, ee, lu: no change. at, nl: switched off (no feed folder).
+   Seasonal (PAST, pl's 15 July snapshot): pl 96 Muszyna - Leluchów and 131 Kraski -
+   Zduńska Wola Karsznice/Babiak drawn as running (pl closed 1,008 -> 910 km).
 
 WHAT IT CANNOT SEE.  A feed that covers only part of the year misses seasonal trains (Polish
 regional trains are a 5-week window, PKP Intercity from 22 September: Muszyna - Leluchów's
-summer trains to Poprad read as closed). Works closures look like abandonment (Opole - Nysa,
+summer trains to Poprad read as closed) unless a past snapshot (PAST) covers the season. Works closures look like abandonment (Opole - Nysa,
 Cluj - Oradea). An operator missing from the feed looks like closure where neither OSM nor the
 manager's name gives it away (museum trains: Porvoo). Two equally short register paths
 between consecutive calls with no shapes to choose between them are "ambiguous". A register
@@ -181,8 +191,27 @@ FEEDS = {
     "lu": [("lu_national.gtfs.zip", UDATA + "https://data.public.lu/api/1/datasets/"
             "horaires-et-arrets-des-transport-publics-gtfs/", True)],
     "hr": [("hr_hzpp.gtfs.zip", "https://www.hzpp.hr/GTFS_files.zip", False)],
+    # not slimmed: Hellenic Train's replacement buses are route_type 3, and they are what
+    # tells a line closed (Larissa - Volos, Palaiofarsalos - Kalambaka) from an operator
+    # missing from the feed. The file also holds four ferry companies, which never count.
     "gr": [("gr_hellenic-train.gtfs.zip", "https://jbb.ghsq.de/gtfs/gr-hellenic-train.gtfs.zip",
-            True)],
+            False)],
+}
+# Past snapshots of a short-window feed, kept in data/raw/gtfs/<cc>/past/ (`--fetch-past`):
+# trains in them mark a section the current feed has none on as seasonal, drawn as running.
+# Poland's regional feed covers about five weeks, so summer-only trains (Muszyna - Leluchów -
+# Plaveč) read as closed in autumn. Mobility Database keeps every daily download of a feed
+# at files.mobilitydatabase.org/<id>/<id>-YYYYMMDDHHMM/...zip (found by date: the listing
+# needs an account, the files do not); the 15 July 2026 one of Polish Trains (mdb-3191) has
+# regional and PKP IC trains from 13 July to 14 August 2026.
+# A past snapshot counts for a section only with this many trip-days on it: "scheduled more
+# often than about once a week" (Anita), one train each way weekly over an 8-week summer.
+# Leaves out one-off specials and diversions (Warszawa - Łuków over line 12, one day).
+SEASONAL_MIN_DAYS = 16
+MDB = "https://files.mobilitydatabase.org/"
+PAST = {
+    "pl": [("pl_Polish-Trains_2026-07-15.gtfs.zip",
+            MDB + "mdb-3191/mdb-3191-202607150054/mdb-3191-202607150054.zip", True)],
 }
 # stop_id -> RINF uopid, where the feed carries RINF's own station number.
 CODE = {
@@ -191,6 +220,13 @@ CODE = {
     "pt": (re.compile(r"^94_(\d{1,5})$"), lambda m: f"PT{int(m.group(1)):05d}"),
     # the Romanian feed's 60309 is RINF's RO60309 (Tecuci)
     "ro": (re.compile(r"^(\d{5})$"), lambda m: f"RO{m.group(1)}"),
+}
+# Feed station names the register spells otherwise: another name tried as well.
+NAME_ALIAS = {
+    # Hellenic Train's feed mixes Latin and old Greek forms
+    "gr": {"Ska": "Σιδηροδρομικό Κέντρο Αχαρνών", "Paleopharsalos": "Παλαιοφάρσαλος",
+           "Aegion": "Αίγιο", "Σέρραι": "Σέρρες", "Πεδινός": "Πεδινό",
+           "Πετρίτσιον": "Νέο Πετρίτσι", "Rodopolis – Λιβαδειά": "Λιβάδια Κερκίνης"},
 }
 # Feeds that leave out international trains, so the track between the last stop they serve
 # and the border is "border", undecided (see `check`). HŽPP's feed has no SŽ, MÁV or ŽRS trains.
@@ -346,12 +382,29 @@ def read_feed(path, prefix, skip_agency, log):
 
 
 def load_feeds(cc, log):
-    zips = feed_zips(cc)
+    return _load_dir(RAW / cc, cc, log)
+
+
+def past_dir(cc):
+    return RAW / cc / "past"
+
+
+def load_past(cc, log):
+    """The country's past snapshots (PAST), or None: trains seen in them mark a section the
+    current feed has no train on as seasonal, not closed."""
+    return _load_dir(past_dir(cc), cc, log)
+
+
+WRITE_CACHE = True      # inspection scripts set False: read the data, never write beside it
+
+
+def _load_dir(d, cc, log):
+    zips = sorted(d.glob("*.zip")) if d.is_dir() else []
     if not zips:
         return None
     key = (CACHE_VERSION, [(p.name, p.stat().st_size, int(p.stat().st_mtime)) for p in zips],
            sorted(SKIP_AGENCY.get(cc, ())))
-    cache = RAW / cc / "patterns.pkl"
+    cache = d / "patterns.pkl"
     if cache.exists():
         try:
             with open(cache, "rb") as f:
@@ -367,8 +420,9 @@ def load_feeds(cc, log):
         patterns += pa
         infos.append(info)
     out = {"stations": stations, "patterns": patterns, "info": infos}
-    with open(cache, "wb") as f:
-        pickle.dump((key, out), f)
+    if WRITE_CACHE:
+        with open(cache, "wb") as f:
+            pickle.dump((key, out), f)
     return out
 
 
@@ -578,7 +632,8 @@ def match_stations(cc, feed_st, nodes, points, log):
                         out[fid] = near[0]
                         how["code, then nearest"] += 1
                         continue
-        got = by_name([fname], flon, flat, NAME_KM)
+        alias = NAME_ALIAS.get(cc, {}).get(fname)
+        got = by_name([fname] + ([alias] if alias else []), flon, flat, NAME_KM)
         if got:
             out[fid] = got[2]
             how[f"name tier {got[0]}"] += 1
@@ -779,8 +834,13 @@ def check(region, lines, stations, route_share, log):
         f"{len(called):,} that trains call at, {len(called - set(fmatch)):,} matched nothing")
 
     # a call abroad: in another country's outline, with a RINF border point on the way to it
-    border = [n for n in nodes if n.startswith("e") and
-              points.get(n[1:].upper(), {}).get("type") in BORDER_TYPES]
+    # A border point is RINF's type 90, or any id in borders.py's table: build_model gives a
+    # crossing RINF files twice one id (borders.canon), which can be the neighbour's point
+    # (Romania's EU00209 becomes Bulgaria's EU00208), not in this country's points.json.
+    import borders
+    table = {p["id"] for p in borders.load()}
+    border = [n for n in nodes if n.startswith("e") and (
+              n in table or points.get(n[1:].upper(), {}).get("type") in BORDER_TYPES)]
     bgrid = Grid((n, nodes[n][1], nodes[n][2]) for n in border)
     is_abroad = outline(region)
     bcache = {}
@@ -922,6 +982,41 @@ def check(region, lines, stations, route_share, log):
         log(f"timetable: {n_direct} sections on no path found, but with trains calling at both "
             f"ends one after the other: served")
 
+    # Past snapshots (PAST): the same paths for their trains, kept apart. Used only to tell a
+    # seasonal line from a closed one (below); they never make a section "served".
+    past = load_past(region, log)
+    past_trips = [0] * len(edges)
+    past_days = [0] * len(edges)        # trip-days: one train a day for a day is 1
+    ppairs = {}
+    if past is not None:
+        pmatch, _ = match_stations(region, past["stations"], nodes, points, log)
+        ppairs, _ = call_pairs(past["patterns"], past["stations"], pmatch, border_between,
+                               find_path)
+        for (u, v), (km, n, d, path, along) in ppairs.items():
+            for i in path:
+                past_trips[i] += n
+                past_days[i] += d
+        pdirect = defaultdict(lambda: [0, 0])
+        for seq, n, d in past["patterns"]:
+            prev = None
+            for fid in seq:
+                node = pmatch.get(fid)
+                if node is None:
+                    continue
+                if prev is not None and prev != node:
+                    rec = pdirect[(prev, node) if prev < node else (node, prev)]
+                    rec[0] += n
+                    rec[1] += d
+                prev = node
+        for i in range(n_reg):
+            a, b, _ = edges[i]
+            rec = pdirect.get((a, b) if a < b else (b, a))
+            if rec and not past_trips[i]:
+                past_trips[i], past_days[i] = rec
+        log(f"timetable: past snapshots: " + "; ".join(
+            f"{info['file']} {info['from']} to {info['to']}, {info['trips']:,} rail trips"
+            for info in past["info"]))
+
     # ambiguous: on a near-shortest path of some pair
     pairs_at = defaultdict(list)
     for (u, v), rec in pairs.items():
@@ -1009,6 +1104,49 @@ def check(region, lines, stations, route_share, log):
         else:
             state[i] = "closed"
 
+    # An "unknown" stop-to-stop section on a line that is closed next to it, reached from the
+    # closed part through stops no train calls at, is closed too: the line has no trains, its
+    # replacement buses just do not call at every halt. Greece: Larissa - Volos and
+    # Palaiofarsalos - Kalambaka are bus-replaced, and Velestino - Volos closed while Velestino
+    # - Stefanovikeio stayed unknown. A line whose operator is missing from the feed has no
+    # closed section to grow from (JHMD's 228 and 229).
+    train_nodes = {fmatch[f] for seq, _, _ in feed["patterns"] for f in seq if f in fmatch}
+    by_line_i = defaultdict(list)
+    for i, (l, key) in enumerate(eref):
+        by_line_i[l["id"]].append(i)
+    n_grown = 0
+    for lid, idx in by_line_i.items():
+        reach = {n for i in idx if state[i] == "closed" and not nodes[edges[i][0]][3]
+                 and not nodes[edges[i][1]][3] for n in edges[i][:2]} - train_nodes
+        grown = bool(reach)
+        while grown:
+            grown = False
+            for i in idx:
+                a, b, _ = edges[i]
+                if state[i] == "unknown" and not nodes[a][3] and not nodes[b][3] and \
+                        (a in reach or b in reach):
+                    state[i] = "closed"
+                    n_grown += 1
+                    reach |= {a, b} - train_nodes
+                    grown = True
+    if n_grown:
+        log(f"timetable: {n_grown} unknown sections closed with the closed line beside them")
+
+    # Seasonal: a section with no train now that a past snapshot (PAST) has trains on is drawn
+    # as running (Anita, 2026-10-01: seasonal lines count). Poland's regional feed covers five
+    # autumn weeks; its July snapshot has Koleje Małopolskie's summer weekend trains Muszyna -
+    # Leluchów - Plaveč. Not where replacement buses now call at a stop no train calls at:
+    # that is a works closure that began after the snapshot (Opole - Nysa, closed 3 August).
+    if past is not None:
+        for i in range(n_reg):
+            if state[i] not in ("closed", "unknown") or past_days[i] < SEASONAL_MIN_DAYS or \
+                    (nodes[edges[i][0]][3] and nodes[edges[i][1]][3]):
+                continue
+            a, b, _ = edges[i]
+            if any(n in known and n not in train_nodes for n in (a, b) if not nodes[n][3]):
+                continue
+            state[i] = "seasonal"
+
     # A junction-ended section no train's shortest path crosses is weak evidence on its own:
     # with no shapes, the feed cannot say which of two tracks into Praha Masarykovo nádraží a
     # train takes. So it is not running only as part of a closed line, sharing an end (in a
@@ -1050,6 +1188,8 @@ def check(region, lines, stations, route_share, log):
             if rs < NEEDS_ROUTE_SHARE:
                 rescued[l["id"]].append(i)
             route_share[(l["id"], key)] = 1.0
+        elif state[i] == "seasonal" and junc:
+            route_share[(l["id"], key)] = 1.0
         elif state[i] == "closed":
             if i not in in_closed_line:
                 # left to OSM's routes: kept where they run over it, else dropped by
@@ -1082,6 +1222,8 @@ def check(region, lines, stations, route_share, log):
     for what, label in (("unknown", "no train in the feed, but OSM routes run over it or its "
                                     "manager is not in the feed, and nothing in the feed calls "
                                     "at its stops (an operator missing from the feed?)"),
+                        ("seasonal", "no train now, but trains in a past snapshot and no "
+                                     "replacement bus at its stops: drawn as running"),
                         ("ambiguous", "not on a shortest path, but on one nearly as short"),
                         ("weak", f"junction-ended, no OSM route, and on the path only of runs "
                                  f"longer than {LONG_RUN_KM:.0f} km or winding beyond "
@@ -1100,6 +1242,7 @@ def check(region, lines, stations, route_share, log):
     log(f"timetable: of {sum(e[2] for e in edges[:n_reg]):,.0f} register km, "
         f"{served_km:,.0f} served")
     LAST.clear()
+    LAST.update(past_trips=past_trips, past_days=past_days, past_pairs=ppairs, past=past)
     LAST.update(nodes=nodes, fmatch=fmatch, feed=feed, pairs=pairs, graph=g, edges=edges,
                 eref=eref, state=state, trips=trips, known=known)
     return {"closed": {lid: [eref[i][1] for i in v] for lid, v in closed.items()}}
@@ -1153,13 +1296,14 @@ def _download(url, path):
                         str(path), url], check=True)
 
 
-def fetch(cc):
-    """Download a country's feeds. A `slim` one is cut down to its rail routes and the full
-    download deleted (OVapi's Netherlands feed is 238 MB with every bus in the country)."""
+def fetch(cc, past=False):
+    """Download a country's feeds (or, with past, its PAST snapshots into past/). A `slim` one
+    is cut down to its rail routes and the full download deleted (OVapi's Netherlands feed is
+    238 MB with every bus in the country)."""
     import json
-    d = RAW / cc
+    d = past_dir(cc) if past else RAW / cc
     d.mkdir(parents=True, exist_ok=True)
-    for name, url, slim in FEEDS[cc]:
+    for name, url, slim in (PAST if past else FEEDS)[cc]:
         tmp = d / (name + ".download")
         if url.startswith(UDATA):
             _download(url[len(UDATA):], tmp)
@@ -1265,6 +1409,10 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--fetch", metavar="CC", nargs="+",
                     help="download FEEDS[CC] into data/raw/gtfs/CC/")
+    ap.add_argument("--fetch-past", metavar="CC", nargs="+",
+                    help="download PAST[CC] into data/raw/gtfs/CC/past/")
     args = ap.parse_args()
     for cc in args.fetch or []:
         fetch(cc)
+    for cc in args.fetch_past or []:
+        fetch(cc, past=True)

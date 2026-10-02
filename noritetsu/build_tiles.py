@@ -236,7 +236,9 @@ def way_colours(region, log):
         return {}
     out = {}
     for wid, idxs in ways["ways"].items():
-        ls = [lines[ways["lines"][i]] for i in idxs if ways["lines"][i] in lines]
+        # In index order: ways.json puts the way's owner first, and a tie between colours
+        # goes to the first counted, which was the lowest index before owners existed.
+        ls = [lines[ways["lines"][i]] for i in sorted(idxs) if ways["lines"][i] in lines]
         best = None
         for tier in ([l for l in ls if l.get("src", "osm") != "osm"],
                      [l for l in ls if l.get("src", "osm") == "osm" and not l["service"]],

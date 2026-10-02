@@ -1090,6 +1090,349 @@ REGISTER = {
         ("L209 Vinkovci – Županja", "", 28.073, "HŽI"),
         ("L214 Gradec – Sveti Ivan Žabno", "", 12.520, "HŽI"),
     ],
+    # Russia: tariff sections (ru_register.py), named by their two ends. check_model compares
+    # every line with the tariff guide's own km (km_official) as well; these are the outside
+    # figures, and there are few: of the 528 Wikidata line items named for a section's two
+    # ends, 18 carry a length (P2043, WD) and 10 have a ru.wikipedia article, 7 of them with
+    # an infobox length (WP; probe_ru_wplengths.py). Retrieved 2026-10-01. Many of these
+    # figures may themselves come from the tariff guide. Left out: Пинозеро — Ковдор (WD 117)
+    # and Первушино — Заволжск (WD 70), built as no line because no OSM passenger route runs
+    # on them (build_model drops unridden junction-ended sections). ru_sources.md.
+    "ru": [
+        ("Зеленый Дол — Яранск", "", 196.0, "WP, WD"),
+        ("Соблаго — Торжок", "", 165.0, "WP, WD; Торжок - Кувшиново (58 km) has no OSM "
+                                        "passenger route (trains run Осташков - Кувшиново "
+                                        "only) and is dropped: expect 0.65"),
+        ("Алтайская — Бийск (эксп.)", "", 147.0, "WD"),
+        ("Петрозаводск — Суоярви I", "", 139.0, "WD; tariff 140, of which Петрозаводск - "
+                                                "Томицы (9 km) is the same pair of points on "
+                                                "01-027 and counted there: expect 0.93"),
+        ("Советск — Калининград-Пассажирский", "", 123.7, "WD"),
+        ("Узуново — Рыбное", "", 68.1, "WP, WD"),
+        ("Кривандино — Рязановка", "", 53.0, "WP, WD"),
+        ("Калининград-Пассажирский — Мамоново", "", 49.6, "WD, to Mamonovo station; the "
+                                                         "tariff section runs 6 km on to the "
+                                                         "Polish border point, unplaced"),
+        ("Адлер — Роза Хутор", "", 48.2, "WD Адлер — Красная Поляна (Q4057605); tariff 48"),
+        ("Овинище II (пп) — Весьегонск", "", 42.0, "WP, WD"),
+        ("Голутвин — Озеры", "", 40.0, "WD; tariff 39"),
+        ("Калининград-Пассажирский — Багратионовск", "", 35.8, "WD, to Bagrationovsk station; "
+                                                               "tariff 41 to the border point"),
+        ("Енисей — Дивногорск", "", 31.0, "WP, WD; tariff 30"),
+        ("Угловка — Боровичи", "", 30.0, "WP, WD"),
+        ("Софрино — Красноармейск", "", 15.0, "WD; tariff 16, traced 16.6 (1.04 of it): the "
+                                              "WD figure is low"),
+        ("Вырица — Поселок", "", 7.0, "WD; tariff 7; the last point, Платформа № 4, has no OSM "
+                                      "node, so the line ends 0.7 km short at Платформа № 3"),
+    ],
+    # Italy: RFI publishes no per-line length table that is open (the PIR's line list is on
+    # the ePIR portal). CH = it.wikipedia's station table (Percorso) chainage, differenced
+    # between the line's two ends as built; WP = it.wikipedia infobox `lunghezza`; WD =
+    # Wikidata P2043 of the it.wikipedia article's item. Retrieved 2026-10-02. RFI's F lines
+    # run node to node (Milano - Bologna is Rogoredo - Lavino), so their figures are the
+    # chainage between those points, not the whole Wikipedia line. it_sources.md.
+    "it": [
+        # fundamental lines (CH)
+        ("Brennero – Verona", "", 238.71, "CH Verona Porta Nuova 0 - Brennero 238.711"),
+        ("Firenze – Roma (Direttissima)", "", 237.63, "CH Firenze Rovezzano 254.004 - "
+                                                      "Settebagni 16.379"),
+        ("Milano – Bologna", "", 199.23, "CH Milano Rogoredo 208.751 - PM Lavino 9.522; RINF "
+                                         "also files the Rogoredo - Bivio Melegnano - "
+                                         "Tavazzano pair (18.2 km) under F41-F42: ~1.09"),
+        ("Bologna – Ancona", "", 193.09, "CH PM Mirandola-Ozzano 10.906 - Ancona 203.996"),
+        ("Ancona – Foggia", "", 322.03, "CH Ancona 203.996 - Foggia 526.027"),
+        ("Orte – Ancona", "", 211.63, "CH Orte 82.503 - Falconara 285.429 = 195.299, - "
+                                      "Ancona 203.996"),
+        ("Fiumetorto – Messina", "", 180.55, "CH Fiumetorto 43.219 - Messina Centrale 223.764; "
+                                             "built has both the old coast line via Falcone "
+                                             "and the Patti - Terme Vigliatore line (18 km), "
+                                             "as RINF does: ~1.10"),
+        ("Catanzaro Lido – Reggio Calabria", "", 177.55, "CH Jonica 294.720 - 472.270"),
+        ("Sibari – Catanzaro Lido", "", 172.48, "CH Jonica 122.237 - 294.720"),
+        ("Genova – Pisa", "", 147.70, "CH Genova Nervi 10.791 - La Spezia Centrale 86.162 = "
+                                      "172.462 - Pisa San Rossore 100.133; built has both "
+                                      "Vezzano - La Spezia routes (Migliarina, Cà di "
+                                      "Boschetti) and Pisa Centrale: ~1.06"),
+        ("Venezia – Trieste", "", 141.10, "CH Venezia Carpenedo 3.904 - 131.315 = 13.687 - "
+                                          "Trieste Centrale 0"),
+        ("Milano – Torino", "", 118.81, "CH Settimo 15.763 - Rho 134.571"),
+        ("Torino – Arquata Scrivia", "", 110.10, "CH Trofarello 13.030 - Arquata Scrivia "
+                                                 "123.132"),
+        ("Verona – Bologna", "", 103.01, "CH Verona Porta Nuova 114.951 - PM Tavernelle "
+                                         "11.941; built also has the Verona Porta Vescovo "
+                                         "leg (6.8 km): ~1.06"),
+        ("Bologna – Padova", "", 99.04, "CH San Pietro in Casale 23.879 - Padova 122.921"),
+        ("Bologna – Firenze (Direttissima)", "", 97.0, "WD"),
+        ("Alessandria – Piacenza", "", 96.51, "CH; built also has the Bressana Bottarone - "
+                                              "Barbianello - Broni leg towards Pavia (13.3 "
+                                              "km) and Alessandria Smistamento: ~1.15"),
+        ("Messina – Catania", "", 94.77, "CH Catania Centrale 240.714 - Messina Centrale "
+                                         "335.485"),
+        ("Palermo – Fiumetorto", "", 43.22, "CH"),
+        # high speed
+        ("AV Torino – Milano", "", 125.0, "WD (WP 127)"),
+        ("AV Bologna – Firenze", "", 78.5, "WD, the line proper; built runs from Bologna "
+                                           "Centrale's underground AV station (WP 86): ~1.09"),
+        # complementary lines and groups (WP, WD)
+        ("Battipaglia – Potenza – Metaponto", "", 198.0, "WP"),
+        ("Ferrara – Ravenna – Rimini", "", 123.0, "WD"),
+        ("Lecco – Sondrio – Tirano", "", 105.0, "WD"),
+        ("Lucca – Aulla", "", 90.0, "WP (WD 98)"),
+        ("Domodossola – Novara", "", 89.56, "WD; Vignale - Novara (3.2 km) is RFI's C24, a "
+                                            "line of its own: ~0.95"),
+        ("Mantova – Monselice", "", 84.1, "WP, WD"),
+        ("Terontola – Foligno", "", 82.0, "WD"),
+        ("Avezzano – Roccasecca", "", 79.0, "WD"),
+        ("Fortezza – San Candido", "", 73.06, "WP 65 to San Candido + RINF's San Candido - "
+                                              "border 8.06"),
+        ("Barletta – Spinazzola", "", 66.0, "WD"),
+        ("Empoli – Siena", "", 63.0, "WD"),
+        ("Cremona – Mantova", "", 62.0, "WD; Bozzolo - Mantova (26 km) has no track in the "
+                                        "extract (railway=construction in OSM): ~0.59"),
+        ("Vicenza – Treviso", "", 60.0, "WD"),
+        ("Rovigo – Chioggia", "", 57.0, "WD"),
+        ("Treviso – Portogruaro", "", 52.5, "WP, WD"),
+        ("Novara – Biella", "", 51.0, "WD"),
+        ("Asciano – Monte Antico", "", 51.0, "WD"),
+        ("Savigliano – Saluzzo – Cuneo", "", 48.0, "WD (WP 49)"),
+        ("Vairano – Isernia", "", 45.0, "WD"),
+        ("Milano – Mortara", "", 44.0, "WD"),
+        ("Lamezia Terme – Catanzaro Lido", "", 43.0, "WD"),
+        ("Torino – Ceres", "", 42.0, "WP (WD 42.88)"),
+        ("Castel Bolognese – Ravenna", "", 41.0, "WD"),
+        ("Conegliano – Ponte nelle Alpi", "", 40.0, "WD"),
+        ("Viterbo – Attigliano", "", 39.0, "WD"),
+        ("Palermo – Punta Raisi", "", 37.0, "WP Passante ferroviario di Palermo (WD 38)"),
+        ("Foggia – Manfredonia", "", 36.0, "WD"),
+        ("Alessandria – Ovada", "", 34.0, "WD"),
+        ("Pontassieve – Borgo San Lorenzo", "", 33.0, "WD"),
+        ("Bolzano – Merano", "", 31.8, "WP, WD"),
+        ("Seregno – Ponte San Pietro", "", 31.0, "WP Seregno-Bergamo (WD 40 is to Bergamo)"),
+        ("Vicenza – Schio", "", 31.0, "WD"),
+        ("Cecina – Volterra", "", 30.0, "WP (WD 37.5)"),
+        ("Monza – Molteno", "", 29.0, "WD"),
+        ("Santhià – Biella", "", 27.0, "WD"),
+        ("Paola – Cosenza", "", 26.0, "WP (WD 27.65)"),
+        ("Colico – Chiavenna", "", 26.0, "WD"),
+        ("Giulianova – Teramo", "", 25.0, "WD"),
+        ("Fossano – Cuneo", "", 25.0, "WD"),
+        ("Pisa – Lucca", "", 23.0, "WP"),
+        ("Lucca – Viareggio", "", 23.0, "WP (WD 22)"),
+        ("Casarsa – Portogruaro", "", 22.0, "WP"),
+        ("Treviglio – Bergamo", "", 22.0, "WD"),
+        ("Montebelluna – Treviso", "", 20.0, "WD"),
+        ("Carmagnola – Bra", "", 20.0, "WD (WP 25)"),
+        ("Salerno – Mercato San Severino", "", 17.63, "WD"),
+        ("Campiglia Marittima – Piombino", "", 16.0, "WD (WP 15)"),
+        ("Palazzolo sull'Oglio – Paratico", "", 9.7, "WP"),
+        ("Bari – Bitritto", "", 9.0, "WP (WD 11.9); RINF 9.3"),
+        ("Fidenza – Salsomaggiore Terme", "", 9.0, "WD"),
+        ("Nocera Inferiore – Codola", "", 4.0, "WP, rounded; RINF 4.2"),
+        # other infrastructure managers
+        ("Bari – Martina Franca – Taranto", "", 112.63, "WP, WD"),
+        ("Brescia – Iseo – Edolo", "", 103.0, "WP (WD 105)"),
+        ("Martina Franca – Lecce", "", 102.588, "WP"),
+        ("Novoli – Gagliano del Capo", "", 74.194, "WP"),
+        ("Lecce – Gallipoli", "", 53.812, "WP, WD"),
+        ("Ferrara – Codigoro", "", 53.0, "WD"),
+        ("Saronno – Laveno", "", 51.1, "WD"),
+        ("Cancello – Benevento", "", 47.9, "WP"),
+        ("Zollino – Gagliano del Capo", "", 46.502, "WP, WD"),
+        ("Bologna – Portomaggiore", "", 45.0, "WD from Bologna Centrale; FER's RINF line "
+                                              "starts at Bologna Roveri: ~0.93"),
+        ("Bari Mungivacca – Putignano", "", 43.412, "WP, WD"),
+        ("Parma – Suzzara", "", 43.0, "WD"),
+        ("Santa Maria Capua Vetere – Piedimonte Matese", "", 41.245, "WP Ferrovia Alifana"),
+        ("Saronno – Novara", "", 40.02, "WD"),
+        ("Reggio Emilia – Guastalla", "", 29.0, "WD; built also has the Reggio San Lazzaro "
+                                                "spur (2.1 km): ~1.05"),
+        ("Reggio Emilia – Ciano d'Enza", "", 26.0, "WD"),
+        ("Saronno – Como", "", 24.6, "WP, WD"),
+        ("Casalecchio di Reno – Vignola", "", 24.0, "WD"),
+        ("Reggio Emilia – Sassuolo", "", 22.494, "WP"),
+        ("Casarano – Gallipoli", "", 22.003, "WP"),
+        ("Milano – Saronno", "", 21.0, "WD"),
+        ("Foggia – Lucera", "", 19.353, "WP, WD"),
+        ("Modena – Sassuolo", "", 19.0, "WD"),
+        ("Maglie – Otranto", "", 18.271, "WP"),
+        ("Saronno – Seregno", "", 15.0, "WP, from Saronno; FERROVIENORD's RINF line starts at "
+                                        "Saronno Sud (13.15): ~0.89"),
+        ("Udine – Cividale", "", 15.0, "WP (WD 15.3)"),
+    ],
+    # Adif's line numbers, as rinf_countries/es.py names them ("100 Hendaya – Madrid-Chamartín-
+    # Clara Campoamor"), against the catalogue length in es.wikipedia "Anexo:Líneas de la Red
+    # Ferroviaria de Interés General" (Orden FOM/710/2015 and Adif's Declaración sobre la Red;
+    # retrieved 2026-10-02). Lines whose build covers a different extent say so; es_sources.md.
+    "es": [
+        ("050 Límite ADIF-LFPSA – Madrid-Puerta de Atocha-Almudena Grandes", "", 752.4,
+         "catalogue; Sants - Riells and Alcover - Camp de Tarragona added in es.py"),
+        ("200 Madrid-Chamartín-Clara Campoamor – Barcelona-Estació de França", "", 699.7,
+         "catalogue"),
+        ("100 Hendaya – Madrid-Chamartín-Clara Campoamor", "", 640.9,
+         "catalogue"),
+        ("400 Alcázar de San Juan – Cádiz", "", 576.9,
+         "catalogue"),
+        ("300 Madrid-Chamartín-Clara Campoamor – València-Estació del Nord", "", 480.6,
+         "catalogue; RINF's own is 492.0: ~1.03"),
+        ("010 Madrid-Puerta de Atocha-Almudena Grandes – Sevilla-Santa Justa", "", 470.5,
+         "catalogue"),
+        ("822 Bifurcación Valorio – A Coruña", "", 436.3,
+         "catalogue"),
+        ("800 A Coruña – León-Aguja km 123,6", "", 428.2,
+         "catalogue"),
+        ("040 Madrid-Chamartín-Clara Campoamor – Valencia-Joaquín Sorolla", "", 397.6,
+         "catalogue"),
+        ("520 Ciudad Real – Badajoz", "", 336.7,
+         "catalogue"),
+        ("610 Sagunt – Bifurcación Teruel", "", 314.5,
+         "catalogue"),
+        ("982 Taboadela aguja km 234,0 – Bifurcación Medina", "", 313.9,
+         "catalogue (to Taboadela); the build carries on over the mixed-gauge Taboadela - "
+         "Ourense stretch RINF files under 982 (15.4 km): ~1.04"),
+        ("790 Aranguren – Asunción Universidad", "", 310.0,
+         "catalogue"),
+        ("130 Gijón-Sanz Crespo – Venta de Baños", "", 306.1,
+         "catalogue; RINF 303.8"),
+        ("080 Burgos-Rosa Manzano – Madrid-Chamartín-Clara Campoamor", "", 304.0,
+         "catalogue; Las Pajareras - Dueñas and Venta de Baños - La Vega added in es.py"),
+        ("210 Miraflores – Sant Vicenç de Calders", "", 275.9,
+         "catalogue"),
+        ("740 Pravia – Ferrol", "", 269.0,
+         "catalogue"),
+        ("600 València-Estació del Nord – Cambiador de La Boella", "", 254.1,
+         "catalogue"),
+        ("410 Linares-Baeza – Almería", "", 240.8,
+         "catalogue; Huércal-Viator - Almería is closed for works in OSM: ~0.97"),
+        ("042 Bifurcación Albacete – Alacant-Terminal", "", 237.8,
+         "catalogue"),
+        ("160 Santander – Palencia", "", 217.2,
+         "catalogue"),
+        ("770 Santander – Oviedo", "", 216.0,
+         "catalogue"),
+        ("120 Villar Formoso – Medina del Campo", "", 201.0,
+         "catalogue; Tejares - Barbadillo added in es.py"),
+        ("220 Lleida-Pirineus – Bifurcación Vilanova", "", 181.7,
+         "catalogue"),
+        ("420 Bifurcación Las Maravillas – Algeciras", "", 179.6,
+         "catalogue"),
+        ("026 Plasencia – Bifurcación San Nicolás", "", 175.3,
+         "catalogue; Peñas Blancas - Bif. La Isla added in es.py (RINF lacks it)"),
+        ("270 Cerbère – Bifurcación Aragó", "", 162.1,
+         "catalogue; built runs on to the border point: ~1.01"),
+        ("030 Bifurcación Málaga-Alta Velocidad – Málaga-María Zambrano", "", 154.5,
+         "catalogue"),
+        ("222 La Tor de Querol-Enveitg – Bifurcació Aigües", "", 149.7,
+         "catalogue; Montcada - La Garriga is railway=construction in OSM (doubling works, R3 "
+         "runs La Garriga - Puigcerdà only): ~0.85"),
+        ("320 Chinchilla de Montearagón-aguja km 298,4 – Murcia del Carmen", "", 146.2,
+         "catalogue; Chinchilla - Hellín (51 km) has no OSM passenger route and ends at a "
+         "junction, so it is dropped as unridden: ~0.65"),
+        ("710 Altsasu – Castejón de Ebro", "", 139.2,
+         "catalogue"),
+        ("204 Bifurcación Canfranc – Canfranc", "", 138.5,
+         "catalogue"),
+        ("084 León – Bifurcación Venta de Baños", "", 127.9,
+         "catalogue; Las Barreras - Vilecha (79 km) added in es.py"),
+        ("036 Antequera-Santa Ana – Granada", "", 125.7,
+         "catalogue; RINF's own is 114.6: ~0.91"),
+        ("122 Salamanca – Ávila", "", 111.1,
+         "catalogue"),
+        ("440 Bifurcación Los Naranjos – Huelva", "", 109.1,
+         "catalogue"),
+        ("820 Zamora-aguja km 233 – Medina del Campo", "", 90.2,
+         "catalogue"),
+        ("276 Maçanet-Massanes – L'Hospitalet de Llobregat", "", 85.1,
+         "catalogue"),
+        ("082 Bifurcación A Grandeira aguja km 85,0 – Bifurcación Coto da Torre", "", 84.0,
+         "catalogue"),
+        ("330 La Encina – Alacant-Terminal", "", 78.3,
+         "catalogue"),
+        ("336 El Reguerón-aguja km 525,3 – Alacant-Terminal", "", 73.7,
+         "catalogue"),
+        ("240 Sant Vicenç de Calders – L'Hospitalet de Llobregat", "", 71.0,
+         "catalogue"),
+        ("522 Manzanares – Ciudad Real", "", 64.5,
+         "catalogue"),
+        ("342 Alcoi – Xàtiva", "", 63.7,
+         "catalogue"),
+        ("110 Segovia – Villalba de Guadarrama", "", 62.7,
+         "catalogue"),
+        ("416 Moreda – Granada", "", 56.7,
+         "catalogue"),
+        ("764 Trubia – Collanzo", "", 55.0,
+         "catalogue"),
+        ("344 Gandia – Silla", "", 50.8,
+         "catalogue"),
+        ("920 Móstoles-El Soto – Parla", "", 45.3,
+         "catalogue"),
+        ("804 Betanzos-Infiesta – Ferrol", "", 42.8,
+         "catalogue"),
+        ("436 Fuengirola – Málaga-Centro Alameda (apeadero)", "", 30.8,
+         "catalogue"),
+        ("910 Madrid-Atocha Cercanías – Pinar de Las Rozas", "", 28.0,
+         "catalogue"),
+        ("020 La Sagra – Toledo", "", 21.4,
+         "catalogue"),
+    ],
+    # DB InfraGO's lines by VzG number, named "<number> <DB's Streckenkurzname>". Figures are
+    # Wikidata's length (P2043) on the item carrying that one route number (P1671), which is
+    # the de.wikipedia infobox ("WP"), taken only where the article covers the same extent as
+    # the number (within 3% of RINF's own length); two high-speed lines with no such item use
+    # DB InfraGO's Streckennetz CSV (de_sources.md). Retrieved 2026-10-02.
+    "de": [
+        ("2200 Wanne-Eickel – Hamburg", "", 355.0, "Bahnstrecke Wanne-Eickel–Hamburg, WP"),
+        ("2550 Aachen – Kassel", "", 343.3, "Bahnstrecke Aachen–Kassel, WP"),
+        ("1733 Hannover – Kassel – Würzburg", "", 327.0, "SFS Hannover–Würzburg, WP"),
+        ("6100 Berlin-Spandau – Hamburg-Altona", "", 284.1, "Bahnstrecke Berlin–Hamburg, WP"),
+        ("1720 Lehrte – Cuxhaven", "", 256.9, "Bahnstrecke Lehrte–Hamburg-Harburg, WP"),
+        ("3900 Kassel – Frankfurt", "", 199.8, "Main-Weser-Bahn, WP"),
+        ("1700 Hannover – Hamm (Westf)", "", 176.4, "Bahnstrecke Hannover–Hamm, WP"),
+        ("2651 Köln Messe/Deutz – Gießen", "", 166.2, "Siegstrecke + Dillstrecke, WP"),
+        ("2631 Hürth-Kalscheuren – Ehrang", "", 163.5, "Eifelstrecke, WP"),
+        ("6383 Leipzig-Leutzsch – Probstzella", "", 160.0, "Saalbahn north + south, WP"),
+        ("2630 Köln – Bingen", "", 152.0, "Linke Rheinstrecke, WP"),
+        ("4250 Offenburg – Singen", "", 149.1, "Schwarzwaldbahn, WP"),
+        ("3511 Bingen Hbf – Saarbrücken", "", 141.8, "Nahetalbahn, WP"),
+        ("5903 Nürnberg Hbf – Schirnding", "", 140.6, "Nürnberg – Schirnding Grenze, WP"),
+        ("5321 Treuchtlingen – Würzburg", "", 140.2, "Bahnstrecke Treuchtlingen–Würzburg, WP"),
+        ("5500 München – Regensburg", "", 138.1, "Bahnstrecke München–Regensburg, WP"),
+        ("5501 München – Treuchtlingen", "", 136.7, "Bahnstrecke München–Treuchtlingen, WP"),
+        ("5634 Landshut – Bayerisch Eisenstein", "", 134.6, "WP"),
+        ("6153 Berlin Ostbahnhof – Guben (DB-Grenze)", "", 132.0, "WP"),
+        ("6325 Neustrelitz – Warnemünde", "", 127.0, "WP"),
+        ("2610 Köln – Kranenburg (DB-Grenze)", "", 120.0, "Linksniederrheinische Strecke, WP"),
+        ("5600 München Ost – Simbach (Inn)", "", 115.1, "Bahnstrecke München–Simbach, WP"),
+        ("6899 Stendal – Uelzen", "", 107.5, "Amerikalinie, WP"),
+        ("4500 Ulm – Friedrichshafen", "", 103.6, "Südbahn, WP"),
+        ("3710 Wetzlar – Koblenz", "", 104.0, "Lahntalbahn, WP"),
+        ("6212 Görlitz – Dresden-Neustadt", "", 102.1, "Bahnstrecke Görlitz–Dresden, WP"),
+        ("1040 Neumünster – Flensburg", "", 101.5, "WP"),
+        ("5850 Regensburg – Nürnberg", "", 100.6, "WP"),
+        ("6132 Berlin Südkreuz – Halle Hbf", "", 161.6, "Anhalter Bahn, WP; DB's line starts "
+                                                        "at Südkreuz, RINF 156.2"),
+        ("1220 Hamburg-Altona – Kiel", "", 105.6, "WP"),
+        ("5510 München – Rosenheim", "", 64.9, "WP"),
+        ("1120 Lübeck – Hamburg", "", 62.8, "WP"),
+        ("5503 München – Augsburg", "", 61.9, "WP"),
+        ("3603 Frankfurt – Wiesbaden", "", 41.2, "Taunus-Eisenbahn, WP"),
+        ("6605 Heidenau – Altenberg (Erzgeb)", "", 38.0, "Müglitztalbahn, WP"),
+        ("5453 Tutzing – Kochel", "", 35.5, "Kochelseebahn, WP"),
+        ("6773 Wolgaster Fähre – Seebad Heringsdorf", "", 34.9, "Usedomer Bäderbahn, WP"),
+        ("1206 Heide – Büsum", "", 24.0, "WP"),
+        ("5451 Murnau – Oberammergau", "", 23.7, "Ammergaubahn, WP"),
+        ("4311 Denzlingen – Elzach", "", 19.3, "Elztalbahn, WP"),
+        # S-Bahn on light_rail track in OSM (rinf.py light_rail_track)
+        ("1244 Hamburg Hbf(S-Bahn) – Aumühle", "", 25.2, "Hamburg S-Bahn to Aumühle, WP"),
+        ("1271 Hamburg Hbf SB – Hamburg-Neugraben", "", 22.0, "Harburger S-Bahn, WP"),
+        # High-speed lines with no single-number Wikidata length: DB InfraGO Streckennetz
+        ("4080 Mannheim – Stuttgart-Zuffenhausen", "", 98.7, "SFS Mannheim–Stuttgart, DB"),
+        ("2690 Köln – Frankfurt am Main Stadion", "", 164.4,
+         "SFS Köln–Rhein/Main, DB; WP's 180 km adds the Wiesbaden and Köln/Bonn airport "
+         "branches, which have numbers of their own"),
+        ("5919 Eltersdorf – Leipzig Hbf", "", 293.3,
+         "VDE 8 Nürnberg–Erfurt–Leipzig, WP item Q136766768; DB's own list says 284.0 and "
+         "RINF 284.2, so expect 0.96: the gap is between the published figures"),
+    ],
 }
 
 KNOWN = {
@@ -1217,37 +1560,49 @@ def main():
             print(f"nothing matches {args.shared!r}")
             return
         line = max(hits, key=lambda l: l["km"])
-        cr = json.loads((d / "credits.json").read_text(encoding="utf-8"))
-        # The build writes it keyed by the COVERING section; this wants the other direction.
-        covered_by = {}
-        for g_s, ranges in cr["covers"].items():
-            for g, lo, hi in ranges:
-                covered_by.setdefault(str(g), []).append([int(g_s), lo, hi])
+        # Riding a section credits its footprint (foot.json, ownership.py); another section
+        # is ridden where its own footprint is, as the app works it out (creditState).
+        import ownership
+        foot = ownership.read(d / "foot.json")
         owner, sec_km = {}, {}
         for l in lines:
             for a, b, km, gid in l["sections"]:
                 owner[gid], sec_km[gid] = l, km
         mine = {gid for a, b, km, gid in line["sections"]}
+        footof = lambda g: foot.get(g, [[g, 0.0, 1.0, 0.0, 1.0]])
+        ridden = {}
+        for g in mine:
+            for t, f, to, a, b in footof(g) + [[g, 0.0, 1.0, 0.0, 1.0]]:
+                ridden.setdefault(t, []).append((min(f, to), max(f, to)))
+
+        def union(iv):
+            out = []
+            for lo, hi in sorted(iv):
+                if out and lo <= out[-1][1]:
+                    out[-1][1] = max(out[-1][1], hi)
+                else:
+                    out.append([lo, hi])
+            return out
+        ridden = {t: union(iv) for t, iv in ridden.items()}
 
         print(f"{line['name']} [{line['operator']}]  {line['km']:.1f} km, "
               f"{len(line['sections'])} sections")
-        print(f"corridor buffer {cr['buffer_m']} m\n")
         print("If you rode all of it, what else would that complete:\n")
 
         tally = {}
-        for gid_s, ranges in covered_by.items():
-            gid = int(gid_s)
+        for gid in owner:
             if gid in mine:
                 continue
-            spans = sorted((lo, hi) for g, lo, hi in ranges if g in mine)
-            if not spans:
-                continue
-            frac, end = 0.0, -1.0
-            for lo, hi in spans:                 # union of the covered ranges
-                lo = max(lo, end)
-                if hi > lo:
-                    frac += hi - lo
-                    end = hi
+            got = []
+            for t, f, to, a, b in footof(gid):
+                lo, hi = min(f, to), max(f, to)
+                for x, y in ridden.get(t, ()):
+                    ix, iy = max(x, lo), min(y, hi)
+                    if iy > ix and hi > lo:
+                        p1 = a + (ix - f) / (to - f) * (b - a)
+                        p2 = a + (iy - f) / (to - f) * (b - a)
+                        got.append((min(p1, p2), max(p1, p2)))
+            frac = min(1.0, sum(hi - lo for lo, hi in union(got)))
             if frac <= 0:
                 continue
             o = owner[gid]

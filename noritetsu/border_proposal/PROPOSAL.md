@@ -3,13 +3,54 @@
 Written 2026-10-01 for the managing session (maps-ee) and Anita. Everything here was measured
 read-only on the project outputs, or built in a scratch copy; no project file was touched.
 
-**Status: proposed, not landed; waiting on Anita's answers to section 7.** This folder holds
-the proposal and the code it needs (`borders.py`, `border_points.json`, `build_model.diff`).
-The `border\` paths below are the session scratchpad, which is temporary; the measurement
-scripts and prototype outputs there may be gone. `build_model.diff` is against build_model.py
-as it was before the 2026-10-01 Greece changes (two-way names, bare-stop twins), so it may need
-rebasing.
-Scratch folder: `C:\Users\anita\AppData\Local\Temp\claude\c--Users-anita-projects-maps\2b091358-b381-48f3-94de-72ef6687d688\scratchpad\border\`
+## As built (2026-10-01, landed; project outputs not yet rebuilt)
+
+Anita's answers to section 7: (1) border track counts in the country it lies in, a ride over
+the border credits both; (2) yes to R2; (3) crossings RINF has no point for are added by hand
+later, when the country on the other side is built (`borders.EXTRA`, empty now); (4) a border
+point shows one neutral name, the same in every country.
+
+Landed in the project, against build_model.py as of the Greece changes (the diff below
+applied cleanly with offsets):
+
+- `borders.py` and `border_points.json` (229 RINF border points, every one with two countries;
+  83 that only one country files get the other as the nearest Natural Earth country within
+  50 km, which names Röszke's point Hungary – Serbia and the Channel Tunnel portal France –
+  United Kingdom). `python borders.py --fetch` regenerates it.
+- `build_model.py`: `border_tails`, `add_border_sections`, `split_at_borders` (R2) and
+  `name_border_points` as in section 5, plus, since the proposal:
+  - every border point station, a RINF register's own junction included, is renamed to the
+    neutral name ("Belgium – France border": Natural Earth names, alphabetical, en dash) just
+    before the outputs are written, so gtfs_served sees the register's names as before;
+  - `carry_aliases(..., abroad)`: stations R2 leaves to a neighbour count as live through
+    their alias, so an older alias chain through one ends at the neighbour's id instead of
+    being dropped (the first rebase lost be's n5695983384 -> Kleinbettingen this way);
+  - the ru branch of looks_like_service (from the Russia agent; ru only).
+
+Validated in scratch on be, nl, fr, cz, hu and lu against an unmodified build of the same
+inputs (gtfs check live on be, cz and hu): register lines identical in all six; every
+border point named the same in every country (92 checked); R2 aliases resolve to the
+neighbour's ids. Per country, before -> after:
+
+| | sections to a border point (km) | OSM line km, net | new lines | whole sections cut by R2 / far part dropped | stations no longer shipped, aliased to the neighbour | register km made creditable |
+|---|---|---|---|---|---|---|
+| be | 25 (1,122) | +412 | 8 | 4 / 4 | 2 (Baisieux -> fr, Kleinbettingen -> lu) | +136.4 |
+| nl | 16 (328) | +324 | 1 | 1 / 1 | 1 (Essen -> be) | +32.4 |
+| lu | 17 (102) | +32 | 5 | 0 / 0 | 0 | +16.8 |
+| cz | 34 (418) | +338 | 5 | 7 / 2 (the rest end in Germany, unbuilt) | 1 (Gmünd NÖ -> at) | +160.9 |
+| hu | 15 (84) | +67 | 2 | 4 / 4 | 2 (Loipersbach-Schattendorf, Mogersdorf -> at) | +27.6 |
+| fr | 62 (1,127) | +658 | 12 | 3 / 2 | 2 (Erquelinnes -> be, La Plaine -> ch) | +98.4 |
+
+Own track (the app's OWN reading of credits.json) barely moves: be -1, nl +12, cz, hu, fr,
+lu within 2 km. Border sections that read as own track: the parts R2 keeps in an unbuilt
+neighbour (cz: Schöna, Sebnitz, Schirnding, 2 km each, in Germany; fr: Kehl 0.5 km),
+which were own track before too, as whole sections; fr R1/R11 Delle - border (0.4 km) and
+TER 04 Menton-Garavan - border (1.0 km), where France's register stub does not reach the
+point; nl 9200 Breda - border 32% and 9500 13%, be CFL-70 Athus - border 41%.
+
+The rest of this file is the proposal as written before the answers.
+
+Scratch folder (temporary): `C:\Users\anita\AppData\Local\Temp\claude\c--Users-anita-projects-maps\2b091358-b381-48f3-94de-72ef6687d688\scratchpad\border\`
 (called `border\` below).
 
 ## 1. What is actually missing

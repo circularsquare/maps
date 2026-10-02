@@ -97,7 +97,10 @@ leave register sections' speed unknown, so no credit is filtered by it (Greece),
 lines that stay on the map but carry no passenger trains (Slovakia), and `stop_name(point)`
 where a national station list says which points are stops and what they are called (Finland),
 and `netref_wkt: True` where the points' coordinates are only on their netReference's
-geometry (Luxembourg). Then --fetch, extract,
+geometry (Luxembourg), and `direct_near_m` (metres) where an end-to-end retrace must pass
+near every placed point of the section it replaces (Russia, 1500), and `light_rail_track: True`
+where OSM maps some of the register's lines as railway=light_rail and their stations as
+light-rail stations (Germany: the Berlin and Hamburg S-Bahn). Then --fetch, extract,
 build, and add its published lengths to check_model.REGISTER.
 
     python rinf.py --dry <cc>     runs build() alone and prints its log (about 25 s for Belgium)
@@ -545,13 +548,17 @@ class Track:
     """The extract's rail track as a graph of OSM nodes, with a grid of its edges for
     finding where a point lies abreast of the track."""
 
-    def __init__(self, ways, coords, log):
+    def __init__(self, ways, coords, log, light_rail=False):
         self.adj = defaultdict(list)
         eu, ev, ew = [], [], []
         self.xy = {}
         self.way_tags = {}
+        # `light_rail_track`: the country's register lines include track OSM maps as
+        # railway=light_rail (Germany's Berlin and Hamburg S-Bahn). The second pass keeps a
+        # main line off a Stadtbahn beside it, by its own relation's ways.
+        kinds = TRACK | {"light_rail"} if light_rail else TRACK
         for wid, (tags, nodes) in ways.items():
-            if tags.get("railway") not in TRACK:
+            if tags.get("railway") not in kinds:
                 continue
             pos, ok = coords.many(np.asarray(nodes, dtype=np.int64))
             prev = None
@@ -582,6 +589,8 @@ class Track:
                               for w in ew], dtype=bool)
         self.fast = np.array([self.way_tags[w].get("highspeed") == "yes" for w in ew],
                              dtype=bool)
+        self.lr = np.array([self.way_tags[w].get("railway") == "light_rail" for w in ew],
+                           dtype=bool)
         for e, (u, v) in enumerate(zip(eu, ev)):
             self.adj[u].append((v, e))
             self.adj[v].append((u, e))
@@ -632,6 +641,11 @@ class Track:
         inside = (t > 0) & (t < 1)
         k = (inside & (d <= d0 + SNAP_BAND_M)) | (d <= d0 + 5)
         return {"e": e[k], "t": t[k], "d0": d0}
+
+    def lr_km(self, edges):
+        """Length of these edges that is railway=light_rail track, in km."""
+        e = np.asarray(edges, dtype=np.int64)
+        return float(self.elen[e][self.lr[e]].sum()) / 1000 if e.size else 0.0
 
     def point_on(self, e, t):
         u, v = int(self.eu[e]), int(self.ev[e])
@@ -725,20 +739,22 @@ class Track:
 
 # ================================================================ OSM stations
 
-def osm_stations(stops):
+def osm_stations(stops, light_rail=False):
     """OSM's rail stations a main-line train calls at: railway=station/halt, or a
-    public_transport=station saying train=yes; never a metro, tram or light-rail stop."""
+    public_transport=station saying train=yes; never a metro, tram or light-rail stop, unless
+    `light_rail` (a country's `light_rail_track`), when a light-rail station counts too."""
     out = {}
+    lr_ok = ("light_rail",) if light_rail else ()
     for nid, (tags, lon, lat) in stops.items():
         rw, pt = tags.get("railway"), tags.get("public_transport")
         if not tags.get("name"):
             continue
         if rw in ("station", "halt"):
             if tags.get("station") in ("subway", "light_rail", "monorail", "funicular") \
-                    and tags.get("train") != "yes":
+                    and tags.get("station") not in lr_ok and tags.get("train") != "yes":
                 continue
-            if any(tags.get(m) == "yes" for m in ("subway", "tram", "light_rail")) \
-                    and tags.get("train") != "yes":
+            if any(tags.get(m) == "yes" for m in ("subway", "tram", "light_rail")
+                   if m not in lr_ok) and tags.get("train") != "yes":
                 continue
         elif not (pt == "station" and tags.get("train") == "yes"):
             continue
@@ -990,10 +1006,11 @@ def build(path, log, ref_date=None):
             infra = pickle.load(f)
     wd = load_wikidata(path, frozenset(infra), conf.get("generic_label"),
                        (conf.get("langs") or ["en"])[0])
-    track = Track(ways, coords, log)
+    light_rail = bool(conf.get("light_rail_track"))
+    track = Track(ways, coords, log, light_rail)
 
     # --- which point is which station (docstring, 2)
-    ost = osm_stations(stops)
+    ost = osm_stations(stops, light_rail)
     sidx = StationIndex(ost)
 
     # A point with no coordinate at all (all 93 of the Steiermärkische Landesbahnen's in
@@ -1375,6 +1392,23 @@ def build(path, log, ref_date=None):
             if na != nb:
                 net_nbrs[na].add(nb)
                 net_nbrs[nb].add(na)
+    # `direct_near_m`: an end-to-end retrace (below) is believed only if every placed point
+    # of the merged section lies within this many metres of it (Russia). Unset, no test.
+    direct_near_m = conf.get("direct_near_m")
+    n_direct_far = 0
+
+    def passes_near(pts, chain_secs, r):
+        from shapely.geometry import LineString, Point
+        if len(pts) < 2:
+            return True
+        g = LineString([(x * track.kx, y * track.ky) for x, y in pts])
+        for s in chain_secs:
+            for op in (s["a"], s["b"]):
+                p = pos_of(op)
+                if p and g.distance(Point(p[0] * track.kx, p[1] * track.ky)) > r:
+                    return False
+        return True
+
     for gkey, lids in sorted(groups.items()):
         pieces = []                                   # (node a, node b, sol, op a, op b)
         for lid in lids:
@@ -1433,6 +1467,7 @@ def build(path, log, ref_date=None):
         out_secs = {}
         for key, v in sections.items():
             pts_all, km, fast_km, own_km, bad = [], 0.0, 0.0, 0.0, False
+            lr_km = 0.0
             for i, s in enumerate(v["secs"]):
                 st, got = tr[s["sol"]]
                 if st != "ok":
@@ -1440,6 +1475,7 @@ def build(path, log, ref_date=None):
                     break
                 pts, pkm, fast, _e, okm = got
                 own_km += okm
+                lr_km += track.lr_km(_e) if light_rail else 0.0
                 forward = node_of(s["a"]) == v["nodes"][i]
                 pa, pb = pos_of(s["a"]), pos_of(s["b"])
                 seq = [pa] + pts + [pb]
@@ -1476,6 +1512,13 @@ def build(path, log, ref_date=None):
                 got = (track.trace(sa, sb, v["chain"], own or None,
                                    prefer_main=op0 in stop_of or op1 in stop_of)
                        if sa is not None and sb is not None else None)
+                if got is not None and direct_near_m and not passes_near(
+                        got[0], v["secs"], direct_near_m):
+                    # The end-to-end trace misses a placed point of the section by more than
+                    # `direct_near_m`: it has found some other line. Russia's Сенная - Аткарск
+                    # (199 km, a piece with no path) traced 209 km round by Saratov.
+                    n_direct_far += 1
+                    got = None
                 if (got is not None and bad and own and got[1]
                         and got[4] < OWN_DIRECT * got[1]):
                     # A piece had no path and the end-to-end trace barely touches the line's
@@ -1487,6 +1530,7 @@ def build(path, log, ref_date=None):
                     pts, km, fast, _e, _o = got
                     pts_all = [p0] + pts + [p1]
                     fast_km = fast * km
+                    lr_km = track.lr_km(_e) if light_rail else 0.0
                     how_ok = "direct"
                     n_direct += 1
                 elif (got is not None and not bad and km and not_short(km)
@@ -1509,7 +1553,7 @@ def build(path, log, ref_date=None):
             if v["nodes"][0] != key[0]:
                 pts_all.reverse()
             out_secs[key] = {"km": km, "pts": pts_all, "chain": v["chain"], "how": how_ok,
-                             "fast": fast_km >= 0.5 * km if km else False}
+                             "fast": fast_km >= 0.5 * km if km else False, "lr": lr_km}
         if osm_stop_cands:
             n_before = len(out_secs)
             out_secs, extra = split_at_osm_stops(out_secs, osm_stop_cands, track.kx, track.ky,
@@ -1608,7 +1652,11 @@ def build(path, log, ref_date=None):
             "id": lid_out, "src": "rinf", "service": False,
             "name": name, "name_en": name_en, "ref": ref, "colour": "",
             "operator": operator, "operator_en": "", "network": "",
-            "kind": "rail",
+            # `light_rail_track`: a line traced mostly over light_rail track is light rail, so
+            # build_model ties it to that track and not to the main line beside it (Hamburg's
+            # S-Bahn 1244 runs within 40 m of the Berlin line 6100 to Aumühle).
+            "kind": ("light_rail" if light_rail and sum(v.get("lr", 0.0) for v in out_secs.values())
+                     > 0.5 * sum(v["km"] for v in out_secs.values()) else "rail"),
             "km": round(sum(v["km"] for v in out_secs.values()), 3),
             "km_official": round(sum(v["chain"] for v in out_secs.values()), 3),
             "chain": {f"{a}|{b}": round(v["chain"], 3) for (a, b), v in out_secs.items()},
@@ -1641,6 +1689,9 @@ def build(path, log, ref_date=None):
         f"{n_rejected_secs} sections left out for a rejected trace, {n_direct} traced "
         f"end to end because the pieces did not add up; {n_parallel} sections "
         f"({km_parallel:.0f} km) dropped as a second track pair of their own line")
+    if direct_near_m:
+        log(f"RINF: {n_direct_far} end-to-end traces passed a placed point by more than "
+            f"{direct_near_m} m and were not used")
     log(f"RINF: {len(length_off)} sections kept on their own line's track although their "
         f"length disagrees with RINF's:")
     for r in length_off:

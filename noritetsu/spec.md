@@ -118,6 +118,12 @@ a judgement about what the hobby means, and is open:
   中央線快速 are named with 線 and are lines to any rider, but are not lines in JR's register;
   they run over 東北本線 and 中央本線. noritsubushi.org counts the register.
 
+Settled 2026-10-01 (Anita): everything with scheduled passenger service counts, and named
+trains get no percentage of their own (option B). Operating patterns count only for track they
+own, which is track no register line covers (one owner per piece of track, §6); an OSM line at
+least 40% off the register is listed as a line of its own (metros, trams, private railways
+outside the register).
+
 ### section
 
 The atomic ridden unit: a line plus a consecutive pair of stations it serves. Has `length_m` and
@@ -147,13 +153,24 @@ Line, not the Yamanote Line — completes part of that too.
 
 **Completion is reported for lines.** Operating patterns and named trains stay as things you
 can look up and enter a trip against, because a rider looking up the Yamanote wants the whole
-loop, not the 20.6 km the register calls the Yamanote Line. They just are not the things whose
-percentage is being kept.
+loop, not the 20.6 km the register calls the Yamanote Line. Named trains are not the things
+whose percentage is being kept; operating patterns count only for their own track (§4,
+settled 2026-10-01).
 
 ### How crediting works
 
-Section A credits section B over the fraction of B that lies inside a 45 m buffer around A,
-and that fraction is stored as a **range** `[start, end]` in `credits.json`. So:
+**Since 2026-10-01: one owner per piece of track** (Anita: "no double counting, every piece of
+track belongs to exactly one line"; for crediting only, rides are still entered on any service
+and path). Every piece of track (an OSM way) belongs to exactly one line: a register line where
+one lies on it (assigned by geometry), else one OSM line by the lowest ref; named trains own
+nothing. Riding a section credits its footprint, the stretches of owner sections its own ways
+lie on, found by node ids, not a buffer (`ownership.py`, `foot.json`). A ride credits the track
+pair its route uses, a junction crossing credits each side's line, and a through service
+credits the railway it runs onto. `ownership_prototype/WRITEUP.md` has the comparison with the
+buffer model below, which it replaced.
+
+*Superseded, kept for the record:* section A credited section B over the fraction of B that
+lay inside a 45 m buffer around A, stored as a **range** `[start, end]` in `credits.json`. So:
 
 - two lines on the same rails credit each other in full;
 - one express section spanning three local ones credits all three;
@@ -172,14 +189,10 @@ Keihin-Tohoku, and some part of 46 lines in total.
 
 ### The numbers to show
 
-- **per line** — credited length / line length.
-- **per operator or network** — summed over its lines.
-- **per country or region** — on unique track. Because crediting is spatial, two parallel
-  services over one corridor no longer inflate this.
-
-The approximation to keep an eye on: the 45 m buffer is a guess, and `--buffer` is a flag so it
-can be argued with. Too wide merges lines that merely run beside each other; too narrow drops
-the corridor sharing that makes the whole thing work.
+- **per line** — the share of its footprint ridden.
+- **per operator or network** and **per country or region** — owned track ridden over owned
+  track, each piece once by construction. A named train has no total of its own; its track
+  counts through the lines that own it (Anita, 2026-10-01).
 
 ## 7. Rendering
 
@@ -559,9 +572,11 @@ needs the most, 8.
 - [ ] Credit ranges stop a few tens of metres short of a station, where two parallel lines
       part to reach their own platforms: riding the Marunouchi as operated credited 97.3% of
       the register line's Ginza to Kasumigaseki section. The app now closes gaps under 150 m
-      (capped at 10% of the section) in `creditSpans`; the build could do it at the source
-- [ ] The 45 m corridor buffer is a guess. A Marunouchi ride credits 0.4 km of the Oedo line,
-      which may be right or may be two tunnels passing
+      (capped at 10% of the section) in `creditSpans`; the build could do it at the source.
+      Kept in the app under track ownership (`mergeSpans`)
+- [x] The 45 m corridor buffer was a guess (a Marunouchi ride credited 0.4 km of the Oedo
+      line). Gone 2026-10-01: one owner per piece of track, crediting by the ways a service
+      runs on (§6)
 - [ ] A jointly operated line counts as one combined operator ("A · B") rather than towards
       each of them
 
@@ -624,7 +639,7 @@ should keep doing so — do not "fix" a Japanese line name into an id or a trans
       lists read by `kr_sources.py` (Korail's 거리표, KRIC 1294) for which stations are on
       which line. 82 register lines, 4,644 km; against the register's own km per section a
       median of 0.997, and every metro and nearly every Korail line within 3% of its
-      published length. In the app at `?region=kr`. `HANDOFF.md` "Korea" has the detail
+      published length. In the app at `?region=kr`. `HISTORY.md` "Korea" has the detail
 - [ ] Korea: a register line whose named track stops short of its first listed station loses
       that section: 호남고속선 오송-공주 (0.76 of its length), 영동선's 영주 and 강릉 ends,
       대구선, 광주선, 수서평택고속선's 지제 end. Trace such a station over the wider network
@@ -651,25 +666,27 @@ should keep doing so — do not "fix" a Japanese line name into an id or a trans
       median 0.996
 - [x] **Czechia, Poland, Hungary, Portugal**, 2026-09-30, from `rinf.py` with a settings file
       each in `rinf_countries/`: 236, 352, 133 and 24 register lines (9,101, 16,171, 6,721 and
-      2,138 km). HANDOFF.md "Europe from ERA RINF" has the hooks they needed
+      2,138 km). HISTORY.md "Europe from ERA RINF" has the hooks they needed
 - [x] **Mainland China**, 2026-09-30: `cn_register.py`, 417 register lines, 121,894 km, from
       OSM's named track and 12306's station list
 - [ ] China: named track stopping short of a terminus loses that stretch (宝成线 at 广汉北,
       青藏线 from 湟源, 京广线 from 房山东); 成昆线 and 京港高速线 are each two pieces;
       stations are placed by proximity, so parallel lines can share one wrongly; 瓦日线 and
       唐包线 are freight lines that pass the passenger-station test
-- [ ] **Completion counts everything with scheduled passenger service** (Anita, 2026-10-01),
-      named trains included; reverses §5/§6's "named trains are lookup and input only".
-      Confirm with her how a named train's own km counts, then change the app
-- [ ] **Draw track across borders**: a cross-border route (TER K80 Kortrijk – Lille) has no
-      section between the last station on one side and the first on the other, because each
-      country's build keeps only its own side
-- [ ] RINF countries: where OSM has no passenger route relation, a junction-ended section is
-      dropped even when trains run (Czechia ~83 km: 238 into Havlíčkův Brod, 292 around
-      Bludov); where OSM still maps a closed line as railway=rail, it stays drawn (Hungary:
-      parts of 27, 37, 62). A per-country timetable feed would settle both
+- [x] **Completion counts everything with scheduled passenger service** (Anita, 2026-10-01).
+      Done the same day (option B): named trains no percentage of their own; OSM lines count
+      for their own track, each piece once (§4, §6, HANDOFF)
+- [x] **Draw track across borders**: done 2026-10-01 (`borders.py`, `border_tails`,
+      `split_at_borders`; HISTORY.md "what maps-ee did")
+- [x] RINF countries: where OSM has no passenger route relation, a junction-ended section was
+      dropped even when trains run; where OSM still maps a closed line as railway=rail, it
+      stayed drawn. Settled by the timetable check (`gtfs_served.py`), live in 16 countries
+- [x] **Croatia, Greece, Luxembourg** (RINF) and **Russia** (the tariff guide, one line per
+      tariff section), 2026-10-01. Russia's 2022-annexed railways are left out, assigned to no
+      country, until a source says which trains run there (Anita); Crimea is built
 - [ ] France: the Grande Ceinture carries RER C, T12 and T13 but a register line has one kind,
-      so T12/T13 rides do not credit it
+      so T12/T13 rides did not credit it. Track ownership no longer matches by kind: check
+      after the 2026-10-01 rebuild
 - [ ] Austria: the Vienna S-Bahn Stammstrecke through Wien Mitte has no railway=rail in the
       extract (probably mapped as construction), and the Mattersburger Bahn stops 416 m short
       of Wiener Neustadt; both leave sections out
@@ -692,3 +709,12 @@ should keep doing so — do not "fix" a Japanese line name into an id or a trans
 - [x] `build_tiles.py` wrote a `station` layer that nothing read. Dropped 2026-09-30
 - [ ] Whether a named train should be searchable at all, or only reachable through the lines
       it runs over
+
+**8. Long term** (not now; Anita, 2026-10-01).
+
+- [ ] Russia: a Yandex Rasp API key (free, needs a Yandex account; per-station queries,
+      restrictive terms) would say which stations are passenger stops, instead of relying on
+      OSM's train routes. Skipped for now
+- [ ] Russia's 2022-annexed railways: add back, with Russia (de facto), once a source says
+      which trains run there (`ANNEX_RUNNING` in rinf_countries/ru.py, `EXTRA_AREAS` in
+      tools/build_regions.py)

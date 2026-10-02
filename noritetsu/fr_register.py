@@ -15,6 +15,8 @@ Files, all open data (ODbL, SNCF Réseau; Wikidata CC0), in data/raw/fr, fetched
       that line and a `voyageurs` flag (O/N) saying whether it is a passenger station
   wikidata_lines.json                   line names: Wikidata items with P1671 (route number)
       in France. SNCF's own files carry the code where the name used to be.
+  voies-de-ligne.geojson                every line track (type_voie VPL) of the per-track file,
+      for the lines the files above lack and for coarse geometry (see below); optional
 
 WHAT THE REGISTER IS.  About 1,590 line codes, of which some 780 portions are exploited. A line
 is a chainage axis: its PK (point kilométrique) runs from its origin, which need not be where the
@@ -58,10 +60,24 @@ HOW IT DIFFERS FROM SWITZERLAND:
   sections are flagged not high-speed per section (`highspeed_sections`), except where OSM
   tags its track highspeed=yes (200-220 km/h stretches), which are left unknown so the
   trains OSM puts there still credit it.
-- TRAM-TRAINS: a line most of whose ridden length OSM runs trams or light rail over (T11 on
-  960000, Esbly-Crécy 071000) takes kind light_rail. The Grande Ceinture (990000) is mixed:
-  RER C, T12 and T13 each run on part of it, and it stays rail, so T12 and T13 rides do not
-  credit it.
+- TRAM-TRAINS: a line most of whose ridden length is OSM light rail track (T11 on 960000,
+  Esbly-Crécy 071000) takes kind light_rail. Tram-trains on railway=rail track (Nantes -
+  Châteaubriant 519000, Lyon - Montbrison 782000) leave their line rail. The Grande Ceinture
+  (990000) is mixed: RER C and T12 run on rail track, T13 on light rail track, and it stays
+  rail, so T13 rides do not credit it.
+- NATIONAL BORDERS: a line's dead end near a RINF border point (borders.py) ends AT it, under
+  its id, so the neighbour's half joins there (`snap_borders`): cut where the point lies on
+  the track short of the end (Basel 900 m, Portbou 860 m, Le Locle 710 m, Geneva 15 km), or
+  drawn on where the end stops up to BORDER_GAP_M short of it (Jeumont 89 m).
+- LINES SNCF'S LINE FILES LACK. lignes-par-statut has no rows at all for some exploited lines
+  that the per-track file (voies-de-ligne.geojson, "Fichier de formes des voies du réseau
+  ferré national", line tracks only) has: the LGV Interconnexion Est (226310), Douai -
+  Blanc-Misseron (262000), Lamothe - Arcachon (657000), the LGV branch Pasilly - Aisy
+  (768300), Bondy - Aulnay (958000, T4). Those are read from their first track, and take the
+  passenger stations SNCF lists under other lines on their track plus OSM's (`added`). A
+  portion whose geometry has a vertex only every COARSE_M or more (LGV Est from Baudrecourt,
+  one per 1.5 km, 46 of its 124 km more than 40 m off the rails) takes its track's shape.
+  Without the file both are skipped and the rest builds as before.
 - THE REGISTER IS CLIPPED TO THE EXTRACT. A section is kept only where the OSM extract has rail
   around nearly all of it (COVER_*), so a regional extract (Ile-de-France, for development)
   gets the register lines it can check, and the whole-country extract loses nothing.
@@ -87,6 +103,10 @@ SNCF_URL = ("https://ressources.data.sncf.com/api/explore/v2.1/catalog/datasets/
             "{}/exports/geojson")
 SNCF_FILES = ("lignes-par-statut", "lignes-par-type", "lignes-lgv-et-par-ecartement",
               "liste-des-gares")
+# The per-track file, line tracks only (type_voie VPL): see "LINES SNCF'S LINE FILES LACK".
+VOIES_DS = "fichier-de-formes-des-voies-du-reseau-ferre-national"
+VOIES_FILE = "voies-de-ligne.geojson"
+VOIES_WHERE = 'type_voie="VPL"'
 WIKIDATA = "wikidata_lines.json"
 WIKIDATA_QUERY = """
 SELECT ?item ?num ?label ?len ?enlabel WHERE {
@@ -121,6 +141,12 @@ EXTRA_APART_M = 150  # ... and must be this far from every station SNCF does lis
 CALL_M = 600         # a route's stop node belongs to a station this close (and of its name)
 HS_M = 25            # a classic section is beside OSM highspeed=yes track this close ...
 HS_SHARE = 0.5       # ... along this share of it
+BORDER_ON_M = 100    # a border point this close to a line's track lies on it
+BORDER_REACH_M = 2000  # ... and is its border when this far along from a dead end, or less,
+BORDER_FAR_M = 30000   # ... or this far, when what lies past it is outside the country
+BORDER_GAP_M = 100   # a dead end stopping this short of a border point is drawn on to it
+COARSE_M = 1000      # a portion with a vertex only every this many metres takes the track's shape
+BORROW_M = 100       # a line SNCF lists no stations for takes passenger stations this close
 
 # Words that say nothing about which station a name is.
 STOPWORDS = {"gare", "de", "du", "des", "la", "le", "les", "l", "d", "sur", "en", "et", "a",
@@ -140,6 +166,12 @@ def pk_km(s):
     if not m:
         return None
     return int(m.group(1)) + (1 if m.group(2) == "+" else -1) * int(m.group(3)) / 1000.0
+
+
+def pk_str(km):
+    """49.056 -> '049+056', -0.771 -> '000-771': pk_km's inverse."""
+    m = int(round(abs(km) * 1000))
+    return f"{m // 1000:03d}+{m % 1000:03d}" if km >= 0 else f"000-{m:03d}"
 
 
 def dist_m(lon1, lat1, lon2, lat2):
@@ -229,6 +261,10 @@ def fetch(raw):
         dst = raw / f"{ds}.geojson"
         urllib.request.urlretrieve(SNCF_URL.format(ds), dst)
         print(f"{dst.name}: {dst.stat().st_size / 1e6:.1f} MB", flush=True)
+    dst = raw / VOIES_FILE
+    urllib.request.urlretrieve(SNCF_URL.format(VOIES_DS) + "?" + urllib.parse.urlencode(
+        {"where": VOIES_WHERE}), dst)
+    print(f"{dst.name}: {dst.stat().st_size / 1e6:.1f} MB", flush=True)
     url = "https://query.wikidata.org/sparql?" + urllib.parse.urlencode(
         {"query": WIKIDATA_QUERY, "format": "json"})
     req = urllib.request.Request(url, headers={"User-Agent": "noritetsu-map/0.1"})
@@ -243,6 +279,72 @@ def features(raw, ds):
     if not f.exists():
         raise SystemExit(f"{f} is missing; run python fr_register.py --fetch")
     return json.loads(f.read_text(encoding="utf-8"))["features"]
+
+
+def main_tracks(raw, log):
+    """{code: [(rg_troncon, pkd, pkf, coords)]} from the per-track file: for each tronçon, its
+    first track ("V1", "V1B", "UNIQUE"...), and a second or other track only over PK the first
+    does not cover (262 000 is double track to PK 247, single track on). {} without the file,
+    and the reader then works as it did before the file was used."""
+    f = raw / VOIES_FILE
+    if not f.exists():
+        log(f"FR: no {VOIES_FILE} (python fr_register.py --fetch); lines SNCF's line files "
+            f"lack are left out and coarse geometry is kept")
+        return {}
+    recs = defaultdict(list)
+    for x in json.loads(f.read_text(encoding="utf-8"))["features"]:
+        p, g = x["properties"], x.get("geometry")
+        a, b = pk_km(p.get("pk_debut_r")), pk_km(p.get("pk_fin_r"))
+        if not g or g["type"] != "LineString" or a is None or b is None or b <= a:
+            continue
+        name = (p.get("nom_voie") or "").upper()
+        cls = (0 if re.fullmatch(r"V1\w*|UNIQUE|U|VU|1", name) else
+               1 if re.fullmatch(r"V2\w*|2", name) else 2)
+        recs[(p["code_ligne"], p["rg_troncon"])].append((cls, -(b - a), a, b, g["coordinates"]))
+    out = defaultdict(list)
+    for (code, rg), rs in recs.items():
+        chosen = []
+        for cls, _neg, a, b, coords in sorted(rs, key=lambda r: r[:2]):
+            have = sum(max(0.0, min(b, hi) - max(a, lo)) for lo, hi, _c in chosen)
+            if have < 0.5 * (b - a):
+                chosen.append((a, b, coords))
+        for a, b, coords in sorted(chosen, key=lambda c: c[0]):
+            out[code].append((rg, a, b, coords))
+    log(f"FR: {VOIES_FILE}: main tracks for {len(out)} line codes")
+    return out
+
+
+def track_between(tracks, rg, a, b, ends=None):
+    """The main track of one tronçon between PK a and b, as parts in PK order, each cut by PK
+    in proportion to its length; where `ends` (the portion's own first and last point) lies
+    within JOIN_M * 4 of the track, it is cut there instead, so the portion still meets its
+    neighbours (LGV Est's track is 950 m short of its PK range, which put Baudrecourt 260 m
+    off). None when the tracks cover under 90% of a..b."""
+    pieces, got = [], 0.0
+    for trg, ta, tb, coords in tracks:
+        lo, hi = max(a, ta), min(b, tb)
+        if trg != rg or hi <= lo:
+            continue
+        poly = Poly(coords)
+        m = lambda pk: (pk - ta) / (tb - ta) * poly.length
+        pieces.append([poly, m(lo), m(hi)])
+        got += hi - lo
+    if not pieces or got < 0.9 * (b - a):
+        return None
+    tie = [None, None]
+    if ends:
+        for j, (piece, pt, k) in enumerate(((pieces[0], ends[0], 1), (pieces[-1], ends[1], 2))):
+            mm, off = piece[0].project(*pt)
+            if off <= JOIN_M * 4:
+                piece[k] = mm
+                tie[j] = tuple(pt)
+    out = [poly.cut(m1, m2) for poly, m1, m2 in pieces if m2 > m1]
+    # ... and starts and ends exactly where the portion did, so its joints stay joints.
+    if out and tie[0]:
+        out[0] = [tie[0]] + out[0]
+    if out and tie[1]:
+        out[-1] = out[-1] + [tie[1]]
+    return out
 
 
 def line_names(raw, region, log):
@@ -412,6 +514,152 @@ def chain_parts(parts):
     return runs
 
 
+def country_outline(region):
+    """The country's outline from dist/regions.json (lon/lat, prepared), or None before the
+    country's first build."""
+    try:
+        reg = json.loads((ROOT / "dist" / "regions.json").read_text(
+            encoding="utf-8"))["regions"][region]
+    except (OSError, ValueError, KeyError):
+        return None
+    import shapely
+    from shapely.geometry import Polygon
+    polys = []
+    for ring in reg.get("parts") or []:
+        r = ring[0] if ring and isinstance(ring[0][0], list) else ring
+        if len(r) >= 3:
+            polys.append(Polygon(r).buffer(0))
+    if not polys:
+        return None
+    g = shapely.union_all(polys)
+    shapely.prepare(g)
+    return g
+
+
+def snap_borders(code, runs, node_of, deg, bidx, border_pts, outline=None):
+    """End a line at the national border where it reaches one: at a dead end of a run, the
+    border point (borders.py) on its track within BORDER_REACH_M, with no station between,
+    cuts the run there (what lies past it is the neighbour's: 677 000 ran 860 m into Portbou,
+    890 000 15 km into Geneva); one the run stops short of by up to BORDER_GAP_M, straight on
+    ahead, is drawn on to (Jeumont, 89 m). Not further: Modane's line stops 430 m short, in
+    the Fréjus tunnel, which OSM maps as long ways the register line cannot own, so a straight
+    line drawn on to the point was a stretch nothing could credit. The end node becomes the
+    point's own id, the one every country's build and every RINF register gives it, so the
+    neighbour's half of the line joins this one there. Mutates runs, node_of and deg; returns
+    [(point id, what was done)]."""
+    from shapely.geometry import Point
+    done, used = [], set()
+    for i, r in enumerate(runs):
+        for e in (0, 1):
+            node = node_of[(i, e)]
+            if deg.get(node, 0) != 1 or node in border_pts:
+                continue
+            poly = r["poly"]
+            L = poly.length
+            end_m = 0.0 if e == 0 else L
+            end_pt = poly.point(end_m)
+            best = None
+            reach = BORDER_FAR_M if outline is not None else BORDER_REACH_M
+            for p in bidx.pts:
+                if p["id"] in used or dist_m(*end_pt, p["lon"], p["lat"]) > reach:
+                    continue
+                m, off = poly.project(p["lon"], p["lat"])
+                along = abs(m - end_m)
+                if along > 1.0:
+                    # On the track, no station in between, and nearer this end than the
+                    # other where that is a dead end too (202 100 is 650 m long, with a
+                    # border point 16 m from one end).
+                    other = node_of[(i, 1 - e)]
+                    if off > BORDER_ON_M or (deg.get(other, 0) == 1
+                                             and along >= abs(m - (L - end_m))):
+                        continue
+                    lo, hi = sorted((m, end_m))
+                    if any(lo < em < hi for em, _s, _pk in r["events"]):
+                        continue
+                    # Further than BORDER_REACH_M only when the stretch cut off lies abroad.
+                    if along > BORDER_REACH_M and (along > BORDER_FAR_M or outline.contains(
+                            Point(*poly.point((m + end_m) / 2)))):
+                        continue
+                    cand = (along, "cut", p, m)
+                else:
+                    # Ahead of the end: within reach, and straight on (or practically there).
+                    if off > BORDER_GAP_M:
+                        continue
+                    if off > 30:
+                        back = poly.point(min(L, 200.0) if e == 0 else max(0.0, L - 200.0))
+                        k = math.cos(math.radians(end_pt[1]))
+                        ux, uy = (end_pt[0] - back[0]) * k, end_pt[1] - back[1]
+                        vx, vy = (p["lon"] - end_pt[0]) * k, p["lat"] - end_pt[1]
+                        nu, nv = math.hypot(ux, uy), math.hypot(vx, vy)
+                        if not nu or not nv or (ux * vx + uy * vy) / (nu * nv) < 0.7:
+                            continue
+                    cand = (off, "extend", p, m)
+                if best is None or cand[0] < best[0]:
+                    best = cand
+            if best is None:
+                continue
+            dist, how, p, m = best
+            pt = (p["lon"], p["lat"])
+            anchors = [a for a in r["anchors"] if a[1] is not None]
+
+            def pk_at(x):
+                if len(anchors) < 2:
+                    return None
+                a = sorted(anchors)
+                return float(np.interp(x, [q[0] for q in a], [q[1] for q in a]))
+            if how == "cut" and min(m, L - m) <= 1.0:
+                # The whole run lies abroad (890 000's last portion runs from the border to
+                # Geneva): drop it, and the joint at its other end is the border point.
+                joint = node_of[(i, 1 - e)]
+                for key, n in list(node_of.items()):
+                    if n == joint:
+                        node_of[key] = p["id"]
+                node_of[(i, 0)], node_of[(i, 1)] = f"x{i}a", f"x{i}b"
+                r["drop"] = True
+                deg[p["id"]] = deg.get(joint, 1) - 1
+                border_pts[p["id"]] = p
+                used.add(p["id"])
+                done.append((p["id"], f"cut {dist:.0f} m short of its end (a run wholly abroad "
+                                      f"dropped), at"))
+                break
+            if how == "cut":
+                pk = pk_at(m)
+                # The track ends at the foot of the point, as border_tails cuts OSM's.
+                if e == 1:
+                    r["poly"] = Poly(poly.cut(0.0, m))
+                    r["anchors"] = [a for a in r["anchors"] if a[0] < m] + [
+                        (r["poly"].length, pk)]
+                    r["events"] = [ev for ev in r["events"] if ev[0] <= m]
+                else:
+                    r["poly"] = Poly(poly.cut(m, L))
+                    r["anchors"] = [(0.0, pk)] + [(a[0] - m, a[1]) for a in r["anchors"]
+                                                  if a[0] > m]
+                    r["events"] = [(em - m, s, k) for em, s, k in r["events"] if em >= m]
+                how = f"cut {dist:.0f} m short of its end, at"
+            else:
+                pts = [tuple(q) for q in poly.p]
+                pa, pb = (r["anchors"][0][1], r["anchors"][-1][1])
+                sign = (1 if pb >= pa else -1) if pa is not None and pb is not None else 0
+                if e == 1:
+                    r["poly"] = Poly(pts + [pt])
+                    grow = r["poly"].length - L
+                    r["anchors"] = r["anchors"] + [
+                        (r["poly"].length, pb + sign * grow / 1000 if sign else None)]
+                else:
+                    r["poly"] = Poly([pt] + pts)
+                    grow = r["poly"].length - L
+                    r["anchors"] = [(0.0, pa - sign * grow / 1000 if sign else None)] + [
+                        (a[0] + grow, a[1]) for a in r["anchors"]]
+                    r["events"] = [(em + grow, s, k) for em, s, k in r["events"]]
+                how = f"drawn on {grow:.0f} m to"
+            node_of[(i, e)] = p["id"]
+            deg[p["id"]] = 1
+            border_pts[p["id"]] = p
+            used.add(p["id"])
+            done.append((p["id"], how))
+    return done
+
+
 def build(path, log=log_default):
     raw = Path(path)
     region = raw.name
@@ -436,6 +684,39 @@ def build(path, log=log_default):
         key = (p["code_ligne"], p["rg_troncon"], p["pkd"], p["pkf"])
         portions[key].append((f["geometry"]["coordinates"],
                               (p["x_d_wgs84"], p["y_d_wgs84"])))
+    # --- the per-track file: coarse portions take its shape, and the lines the line files lack
+    tracks = main_tracks(raw, log)
+    n_coarse = 0
+    for key, parts in list(portions.items()):
+        code, rg, pkd, pkf = key
+        a, b = pk_km(pkd), pk_km(pkf)
+        if code not in tracks or a is None or b is None:
+            continue
+        polys = [Poly(pp) for pp, _s in parts if len(pp) >= 2]
+        nseg = sum(len(q.p) - 1 for q in polys)
+        if not nseg or sum(q.length for q in polys) / nseg <= COARSE_M:
+            continue
+        runs0 = chain_parts([pp for pp, _s in parts])
+        ends = (runs0[0][0], runs0[-1][-1]) if runs0 else None
+        got = track_between(tracks[code], rg, min(a, b), max(a, b), ends)
+        if got:
+            portions[key] = [(pp, None) for pp in got]
+            n_coarse += 1
+            log(f"    coarse geometry of {code_ref(code)} PK {pkd}-{pkf} "
+                f"({sum(q.length for q in polys) / 1000:.1f} km, a vertex every "
+                f"{sum(q.length for q in polys) / nseg:.0f} m) replaced by its track")
+    in_statut = {f["properties"]["code_ligne"] for f in statut}
+    added = set()
+    for code, ts in sorted(tracks.items()):
+        if code in in_statut or types.get(code, "Ligne") != "Ligne":
+            continue
+        for rg, a, b, coords in ts:
+            portions[(code, rg, pk_str(a), pk_str(b))].append((coords, None))
+        added.add(code)
+    if tracks:
+        log(f"FR: {n_coarse} coarse portions took their track's shape; {len(added)} line codes "
+            f"the line files lack, taken from the per-track file: "
+            f"{', '.join(code_ref(c) for c in sorted(added))}")
     kept_types = Counter()
     by_code = defaultdict(list)
     for key, parts in portions.items():
@@ -542,16 +823,19 @@ def build(path, log=log_default):
     free = [o for o in osm if o[5] not in by_osm]          # for line ends
     fpos = np.array([[o[0], o[1]] for o in free]) if free else np.zeros((0, 2))
     extra = []
+    # Keyed by the name's words, so OSM's "Arcy sur Cure" and "Arcy-sur-Cure", or
+    # "Marne-la-Vallée - Chessy" and "Marne-la-Vallée Chessy", 60 m apart, are one candidate.
     seen_names = defaultdict(list)
+    skey = lambda n: name_words(n) or fold(n).strip()
     for s in stations.values():
-        seen_names[fold(s["name"]).strip()].append((s["lon"], s["lat"]))
+        seen_names[skey(s["name"])].append((s["lon"], s["lat"]))
     for o in osm:
         if o[5] in by_osm:
             continue
         if len(apos) and np.min(np.hypot((apos[:, 0] - o[0]) * math.cos(math.radians(o[1]))
                                          * 111320, (apos[:, 1] - o[1]) * 110570)) <= EXTRA_APART_M:
             continue
-        key = fold(o[2]).strip()
+        key = skey(o[2])
         if any(dist_m(o[0], o[1], x, y) <= SAME_NAME_M for x, y in seen_names[key]):
             continue
         # Another record of a listed station: "Gare d'Austerlitz" beside "Paris Austerlitz".
@@ -578,6 +862,41 @@ def build(path, log=log_default):
             r = rs[len(rs) // 2]                       # SNCF lists Martigues four times
             on_line[code][uic] = (sid_of[uic], r["rg_troncon"], pk_km(r["pk"]),
                                   r["x_wgs84"], r["y_wgs84"])
+
+    def end_stop(pt, code):
+        """The station a line's dead end at pt ends at, or None. A line that ends at a
+        passenger station of another line ends there, or at an OSM station SNCF does not list:
+        Paris-Montparnasse, whose main halls are not in the list (only Montparnasse 3 -
+        Vaugirard, 400 m off)."""
+        nonlocal n_extra
+        k = math.cos(math.radians(pt[1])) * 111320
+        if len(apos):
+            dd = np.hypot((apos[:, 0] - pt[0]) * k, (apos[:, 1] - pt[1]) * 110570)
+            j = int(np.argmin(dd))
+            if dd[j] <= END_SNAP_M:
+                return all_pos[j][0]
+        if len(fpos):
+            dd = np.hypot((fpos[:, 0] - pt[0]) * k, (fpos[:, 1] - pt[1]) * 110570)
+            j = int(np.argmin(dd))
+            if dd[j] <= END_SNAP_M:
+                o = free[j]
+                sid = f"fro{o[5]}"
+                if sid not in stations:
+                    stations[sid] = {"id": sid, "name": o[2], "name_en": o[3],
+                                     "lon": o[0], "lat": o[1], "lines": set()}
+                    n_extra += 1
+                    log(f"    OSM station added to {code_ref(code)}, at its end: {o[2]}")
+                return sid
+        return None
+
+    try:
+        import borders
+        bidx = borders.Index(borders.load())
+    except (ImportError, OSError, ValueError) as err:
+        log(f"FR: no border points ({err}); line ends at borders are left as they are")
+        bidx = None
+    border_pts, snaps = {}, []
+    outline = country_outline(region) if bidx is not None else None
 
     cells = coverage(region)
     lines, geoms, n_off, n_pkbad, n_gap = [], {}, 0, 0, 0
@@ -623,6 +942,24 @@ def build(path, log=log_default):
                 continue
             _d, r, m = best
             r["events"].append((m, sid, pk))
+        # A line the line files lack has no stations in SNCF's list either: it takes the
+        # passenger stations SNCF lists under other lines that lie on its track and that an
+        # OSM route calls at (Somain on 262 000; not Roissy-CDGX 2 of the unopened CDG Express
+        # beside 226 310).
+        if code in added and len(apos) and ridden is not None:
+            for r in runs:
+                p = r["poly"].p
+                pad = 0.002
+                box = np.nonzero((apos[:, 0] >= p[:, 0].min() - pad)
+                                 & (apos[:, 0] <= p[:, 0].max() + pad)
+                                 & (apos[:, 1] >= p[:, 1].min() - pad)
+                                 & (apos[:, 1] <= p[:, 1].max() + pad))[0]
+                for j in box:
+                    m, d = r["poly"].project(apos[j, 0], apos[j, 1])
+                    sid = all_pos[j][0]
+                    if (d <= BORROW_M and not any(e[1] == sid for e in r["events"])
+                            and called_at(ridden.calls, stations[sid])):
+                        r["events"].append((m, sid, None))
 
         # --- nodes: run ends (joined across runs within JOIN_M), and stations
         end_pts = []
@@ -640,6 +977,10 @@ def build(path, log=log_default):
                 node_of[(i, e)] = f"e{len(reps)}"
                 reps.append(pt)
         deg = Counter(node_of.values())
+        # --- national borders: a dead end near a border point ends AT it (see the docstring)
+        if bidx is not None:
+            for bid, how in snap_borders(code, runs, node_of, deg, bidx, border_pts, outline):
+                snaps.append(f"{code_ref(code)} {how} {bid} ({border_pts[bid]['name']})")
 
         def across(i, end):
             """The nearest station past run i's `end` (0 or 1), on the runs joined there."""
@@ -652,13 +993,21 @@ def build(path, log=log_default):
                     return ev2[0] if e2 == 0 else ev2[-1]
             return None
 
+        def line_end(i, end):
+            """The station run i's `end` stops at, when it is a dead end at a station."""
+            node = node_of[(i, end)]
+            if node in border_pts or deg.get(node, 0) != 1:
+                return None
+            sid = end_stop(reps[int(node[1:])], code)
+            return None if sid is None else (0.0, sid, None)
+
         # --- OSM stations on the line that SNCF does not list: one within OSM_ON_LINE_M of
         # the track, which an OSM route calls at together with its neighbouring stations on
         # this line. The second test keeps out a station of another line that merely passes.
         if ridden is not None and len(epos):
             for i, r in enumerate(runs):
                 ev = sorted(r["events"])
-                if not ev:
+                if r.get("drop") or (not ev and code not in added):
                     continue
                 p = r["poly"].p
                 pad = 0.003
@@ -675,9 +1024,20 @@ def build(path, log=log_default):
                     # tunnel is two runs meeting at Châtelet), the neighbour is on that run.
                     b = before[-1] if before else across(i, 0)
                     a = after[0] if after else across(i, 1)
-                    if b is None or a is None:
+                    # A line SNCF lists no stations for may have only one of its own: its
+                    # station-ended dead end is the other neighbour (Arcachon on 657 000).
+                    # It may also have no station at one end (657 000 leaves 655 000 at a
+                    # junction): there the one neighbour it has must do.
+                    if code in added:
+                        b = b if b is not None else line_end(i, 0)
+                        a = a if a is not None else line_end(i, 1)
+                        nb = [x for x in (b, a) if x is not None]
+                    elif b is None or a is None:
                         continue            # a line's end: see the dead-end snapping below
-                    nb = [b, a]
+                    else:
+                        nb = [b, a]
+                    if not nb:
+                        continue
                     # Both neighbours: T4 calls at Remise à Jorelle and at Bondy, but not at
                     # the next station along 070000; RER B calls at Les Baconnets and at
                     # Massy-Verrières, where 985000 ends.
@@ -701,6 +1061,8 @@ def build(path, log=log_default):
         adj = defaultdict(list)
         edges = []
         for i, r in enumerate(runs):
+            if r.get("drop"):
+                continue
             poly = r["poly"]
             ev = sorted(r["events"])
             # PK anchors: the run's ends and every station whose PK sits in order.
@@ -746,33 +1108,21 @@ def build(path, log=log_default):
             if isinstance(n, tuple):
                 at[n] = n[1]
         for n in adj:
+            if n in border_pts:          # a section end even where two runs meet there
+                at[n] = n
+                if n not in stations:
+                    p = border_pts[n]
+                    stations[n] = {"id": n, "name": p["name"], "name_en": "",
+                                   "lon": p["lon"], "lat": p["lat"], "lines": set(),
+                                   "junction": True}
+                continue
             if isinstance(n, tuple) or deg.get(n, 0) != 1:
                 continue
             pt = reps[int(n[1:])]
-            # A line that ends at a passenger station of another line ends there.
-            if len(apos):
-                dd = np.hypot((apos[:, 0] - pt[0]) * math.cos(math.radians(pt[1])) * 111320,
-                              (apos[:, 1] - pt[1]) * 110570)
-                j = int(np.argmin(dd))
-                if dd[j] <= END_SNAP_M:
-                    at[n] = all_pos[j][0]
-                    continue
-            # ... or at an OSM station SNCF does not list: Paris-Montparnasse, whose main
-            # halls are not in the list (only Montparnasse 3 - Vaugirard, 400 m off).
-            if len(fpos):
-                dd = np.hypot((fpos[:, 0] - pt[0]) * math.cos(math.radians(pt[1])) * 111320,
-                              (fpos[:, 1] - pt[1]) * 110570)
-                j = int(np.argmin(dd))
-                if dd[j] <= END_SNAP_M:
-                    o = free[j]
-                    sid = f"fro{o[5]}"
-                    if sid not in stations:
-                        stations[sid] = {"id": sid, "name": o[2], "name_en": o[3],
-                                         "lon": o[0], "lat": o[1], "lines": set()}
-                        n_extra += 1
-                        log(f"    OSM station added to {code_ref(code)}, at its end: {o[2]}")
-                    at[n] = sid
-                    continue
+            sid = end_stop(pt, code)
+            if sid is not None:
+                at[n] = sid
+                continue
             jid = f"fj{code}_{pt[0]:.4f}_{pt[1]:.4f}"
             at[n] = jid
             junctions[jid] = pt
@@ -867,6 +1217,9 @@ def build(path, log=log_default):
     if cells is not None:
         log(f"FR: clipped to the extract: {clipped_km:,.0f} km of sections outside it, "
             f"{clipped_lines} lines with nothing inside")
+    log(f"FR: {len(snaps)} line ends at a national border now end at its border point:")
+    for s in snaps:
+        log(f"    {s}")
 
     # --- junctions, named after the nearest point SNCF lists
     gpos = np.array([[f["properties"]["x_wgs84"], f["properties"]["y_wgs84"]] for f in gares])
@@ -943,7 +1296,9 @@ def route_ways(region):
         g = xy(wid) if wid in ways else None
         if g is not None:
             geo.append(g)
-            knd.append("train" if "train" in ks else "light")
+            # What the TRACK is, not which routes run on it (question_stop_sections).
+            knd.append("light" if ways[wid][0].get("railway") in ("light_rail", "tram")
+                       else "train")
     hs = [g for g in (xy(w) for w, (t, _n) in ways.items() if t.get("highspeed") == "yes")
           if g is not None]
     return geo, knd, to_l93, calls, hs
@@ -963,6 +1318,14 @@ def served_together(calls, a, b):
     return any(at(ws, wa, a) and at(ws, wb, b) for ws in calls)
 
 
+def called_at(calls, s):
+    """Does some OSM route call at this station (by served_together's test)?"""
+    w = name_words(s["name"])
+    return bool(w) and any(
+        any((x == w or x < w or w < x) and dist_m(lon, lat, s["lon"], s["lat"]) <= CALL_M
+            for x, lon, lat in ws) for ws in calls)
+
+
 def question_stop_sections(ridden, lines, stations, geoms, log):
     """Ask OSM which register sections passenger trains run over.
 
@@ -976,8 +1339,12 @@ def question_stop_sections(ridden, lines, stations, geoms, log):
       Ceinture from Athis-Mons to Les Saules is 54% "ridden" by the RER C track beside it,
       though no route calls at both. Junction-ended sections are left to build_model's own
       test (drop_unridden_sections).
-    - a line most of whose ridden length is tram-train track takes kind light_rail, so that
-      build_model pairs it with that track and credits the tram-train rides."""
+    - a line most of whose ridden length is light rail TRACK (railway=light_rail or tram, as
+      T11's on 960 000) takes kind light_rail, so that build_model pairs it with that track
+      and not with the freight tracks of the Grande Ceinture beside it. The track's tag, not
+      the route's: Nantes - Châteaubriant (519 000) and Lyon-Saint-Paul - Montbrison
+      (782 000) run tram-trains on railway=rail track, and as light_rail they owned none of
+      it (2.6% and 0% creditable until 2026-10-02)."""
     if ridden is None:
         log("FR: no OSM extract; stop-to-stop sections not questioned")
         return lines
@@ -1032,7 +1399,7 @@ def question_stop_sections(ridden, lines, stations, geoms, log):
         f"route runs over; {len(lines) - len(out)} lines left with nothing")
     for ref, name, a, b, km, share in sorted(hit)[:80]:
         log(f"    {ref}  {a} - {b}  {km:.1f} km, {share:.0%} ridden  ({name})")
-    log(f"FR: {len(rekinded)} lines ridden mostly by tram-trains, now light_rail: "
+    log(f"FR: {len(rekinded)} lines mostly on light rail track, now light_rail: "
         f"{'; '.join(rekinded)}")
     log(f"FR: {len(hs_open)} sections of classic lines lie on OSM highspeed=yes track and are "
         f"left unflagged: {'; '.join(f'{r} {a} - {b}' for r, a, b in hs_open[:30])}")

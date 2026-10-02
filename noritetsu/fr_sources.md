@@ -33,8 +33,37 @@ What these files do not have:
   build). `colours/fr.csv` was deliberately not made.
 
 `formes-des-lignes-du-rfn` (the shapefile dataset) holds the same 1,638 portions as
-lignes-par-statut, with the same keys, so it is not used. `fichier-de-formes-des-voies-du-
-reseau-ferre-national` (per track) was not tried.
+lignes-par-statut, with the same keys, so it is not used.
+
+### The per-track file (added 2026-10-02, optional)
+
+| file | dataset | what the reader takes from it |
+|---|---|---|
+| `voies-de-ligne.geojson` | "Fichier de formes des voies du réseau ferré national" (`fichier-de-formes-des-voies-du-reseau-ferre-national`), line tracks only (`type_voie` VPL, 1,602 of 9,956 tracks), 39 MB, ODbL | each line code's first track (V1, V1B, UNIQUE...) with its PK range |
+
+Fetched by `--fetch` with `?where=type_voie="VPL"` on the export URL. It fills two holes in the
+line files:
+
+- **Lines the line files lack.** lignes-par-statut, lignes-par-type and liste-des-gares have no
+  rows at all for these exploited lines, which the per-track file has (checked against the
+  live API 2026-10-02, not a stale download): 226 310 LGV Interconnexion Est (57 km), 262 000
+  Douai - Blanc-Misseron (the main line to Valenciennes), 657 000 Lamothe - Arcachon, 768 300
+  the LGV branch Pasilly - Aisy to Dijon, 958 000 Bondy - Aulnay (T4). Their stations are
+  missing from SNCF's list too (Arcachon, Marne-la-Vallée - Chessy), so such a line takes the
+  passenger stations SNCF lists under other lines on its track, and OSM's stations. Codes the
+  per-track file adds that carry no passenger trains (145 306, 245 300, 272 326, 312 300,
+  354 000, 365 000, 811 000) fall out in build_model like any junction-ended freight section.
+- **Coarse geometry.** One portion has a vertex only every 1.5 km: LGV Est from PK 301.5
+  (Baudrecourt) to Vendenheim. 46 of its 124 km lay more than 40 m off OSM's rails, so its
+  ways went unowned and 111 km of LGV Est counted for nobody. It now takes the track's shape
+  (one vertex per ~90 m). No other portion is above COARSE_M (1 km per vertex); LGV SEA,
+  Rhin-Rhône and BPL (670-720 m) already lie on the rails.
+
+Without the file the reader skips both and builds as before.
+
+**Not RFN, correctly absent**: Perpignan - Figueras (837 000, the concession line, 55 km of
+track only the Renfe-SNCF trains use) is in lignes-par-type but in neither the statut file nor
+the per-track file.
 
 ## Checks
 
@@ -58,8 +87,9 @@ reseau-ferre-national` (per track) was not tried.
 ## Known limits
 
 - **The Grande Ceinture (990 000) is mixed.** RER C, T12 and T13 each run on part of it, and a
-  register line has one kind. It stays rail, so T12 and T13 rides do not credit it; T11 (960 000)
-  and Esbly-Crécy (071 000) are light_rail and are credited.
+  register line has one kind. It stays rail; T12 runs on rail track and credits it, T13's
+  track is light_rail and does not (see "Track ownership gaps"). T11 (960 000) and
+  Esbly-Crécy (071 000) are light_rail and are credited.
 - **Parallel lines out of Paris-Saint-Lazare.** 334 000, 334 900, 340 000, 973 000 and 975 000
   are separate RFN lines on parallel track pairs, and each has its own Saint-Lazare to Asnières
   sections. Riding one credits the others over the shared corridor, which is how the register
@@ -71,6 +101,47 @@ reseau-ferre-national` (per track) was not tried.
   "Roissy-CDGX 2" on the unopened CDG Express line (025 000) and "La Défense CNIT" on EOLE
   (979 000), which OSM names differently. The build log lists the OSM stations beside a line that were refused (Rougemont
   Chanteloup is a T4 stop; Les Baconnets is RER B beside 985 000).
+
+## Track ownership gaps (2026-10-02, cleanup)
+
+What the ownership log (`own:` lines) showed as register gaps or named-train-only track, and
+why:
+
+- **Border stubs** (Longwy, Thionville - Apach, Morteau, Modane, Basel, Portbou): fixed in
+  the reader, `snap_borders` (docstring). 30 line ends now end at their RINF border point
+  under its `eEU` id. Measured on a trial build against an unchanged one: Basel 99.3 -> 100%,
+  Portbou 99.2 -> 100%, Besançon - Le Locle 99.1 -> 100%, Lyon - Genève 99.6 -> 100% (and 15 km
+  of Swiss track it claimed, greyed as not running, is gone). Thionville - Apach and Modane
+  were already 100% under ownership. **Longwy (202 000) stays at 95%**: its last 1.2 km, from
+  where the trains to Luxembourg leave it on the curve 202 100 to the Belgian border at Athus,
+  has no passenger trains, and the line has no node there to end a section at. Modane's
+  register stops 430 m short of the point inside the Fréjus tunnel and is left so (a straight
+  line on to it was a stretch nothing could credit).
+- **Tram-trains on rail track**: Nantes - Châteaubriant (519 000) was 2.6% creditable and
+  Lyon-Saint-Paul - Montbrison (782 000) 0%, because the reader made them light_rail (their
+  routes are tram-trains) while their track is railway=rail, so they owned none of it. The
+  light_rail test now reads the track's tag: 519 000 -> 100%, 782 000 -> 93%; T11 (960 000)
+  and Esbly - Crécy (071 000), on light rail track, unchanged. Side effect: 457 000 (2.4 km
+  at Nantes-État) is now kept, as tram kind.
+- **Lines SNCF's line files lack** (Interconnexion Est, Douai - Valenciennes, Arcachon,
+  Pasilly - Aisy, Bondy - Aulnay) and **LGV Est's coarse geometry**: the per-track file above.
+  Trial build with the file, against the same build without it: +5 register lines, +125.7 km;
+  LGV Est 86.8 -> 99.5% creditable; 226 310 57.3 km, 262 000 30.1 km, 657 000 15.8 km,
+  768 300 15.1 km all 100%, 958 000 7.8 km 97%; named-train-only track 556 -> 314 km.
+  258 000 (a 0.6 km stub at Somain) drops out, lying on 262 000's rails; 025 000 (CDG
+  Express, not open) loses its 57% to 226 310, whose track it shares at CDG 2.
+- **Perpignan - Figueras** (55 km, named trains only): not RFN. Left.
+- **800 000 near Valence** (19 km, only the ICN Paris - Briançon night train): its stop-to-stop
+  section Saint-Péray - Le Teil is 39% ridden and dropped as freight; the train leaves 800 000
+  at a junction with no node in that section. Left.
+- **Long connecting curves (Rac)** the reader leaves out by design: Arras Sud (226 306, 19 km
+  of way near Boisleux), Migné-Auxances, Sablé, Laval-Ouest, Pont-de-Veyle, La Couronne,
+  Monts, Annet, Herny... about 100 km of way only TGVs use, counted nowhere. 48 exploited Racs
+  are 3 km or longer (250 km). Whether to keep long Racs is open.
+- **T13 on the Grande Ceinture** (990 000 Saint-Germain - Saint-Cyr, 13.5 km): T13's track is
+  railway=light_rail and 990 000 is rail, so 990 000 owns its sections but no ride credits
+  them, and T13 owns the same ways as an OSM line. T12 (Massy - Évry, rail track) credits
+  990 000. Open: a register line has one kind.
 
 ## Running it
 

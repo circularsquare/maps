@@ -12,6 +12,8 @@ sys.stdout.reconfigure(encoding="utf-8")
 import build_model as bm  # noqa: E402
 import gtfs_served  # noqa: E402
 
+gtfs_served.WRITE_CACHE = False     # inspecting data only reads it
+
 cc = sys.argv[1]
 here = os.path.dirname(os.path.abspath(__file__))
 with open(os.path.join(here, f"state_{cc}.pkl"), "rb") as f:

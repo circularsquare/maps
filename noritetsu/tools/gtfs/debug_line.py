@@ -8,6 +8,8 @@ sys.path.insert(0, r"C:\Users\anita\projects\maps\noritetsu")
 sys.stdout.reconfigure(encoding="utf-8")
 import gtfs_served as gs  # noqa: E402
 
+gs.WRITE_CACHE = False              # inspecting data only reads it
+
 cc, want = sys.argv[1], sys.argv[2]
 here = os.path.dirname(os.path.abspath(__file__))
 with open(os.path.join(here, f"state_{cc}.pkl"), "rb") as f:

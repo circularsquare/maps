@@ -2,7 +2,7 @@
 
 One file each so that several agents can add RINF countries at once without editing the same
 file: a new country is a new file here, and rinf.py itself is shared code, changed only
-through whoever holds the shared files (HANDOFF.md, "Running several country agents").
+through whoever holds the shared files (HANDOFF.md, "How the work is run").
 
 What a COUNTRY dict may hold is in rinf.py's docstring ("A NEW COUNTRY"); be.py, at.py and
 nl.py are worked examples of the three ways a RINF id becomes a public line number.

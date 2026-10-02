@@ -7,8 +7,9 @@ file is how to run it and what state it is in.
 
 **Japan, mainland China, South Korea, Taiwan, Hong Kong, Singapore, Switzerland, France,
 Belgium, the Netherlands, Austria, Czechia, Poland, Hungary, Portugal, Slovenia, Slovakia,
-Romania, Bulgaria, Finland, Lithuania, Latvia, Estonia, Croatia, Greece and Luxembourg.**
-`HANDOFF.md` "Start here" has the state and the open threads. In 14 of the RINF countries a
+Romania, Bulgaria, Finland, Lithuania, Latvia, Estonia, Croatia, Greece, Luxembourg and
+Russia.**
+`HANDOFF.md` "Start here" has the state and the open threads. In 16 of the RINF countries a
 national timetable feed decides which register sections trains run over (`gtfs_served.py`,
 `gtfs_sources.md`). China comes from
 OSM's named track plus 12306's station list (`cn_register.py`). The pipeline is
@@ -85,9 +86,10 @@ dated `<country>-YYMMDD.osm.pbf` files worked.
   Japan: 10.5 MB, 11,104 tiles, z0–13; Switzerland 3.0 MB. Each piece of track carries
   the colour of the line on it (`c`), read from `build_model.py`'s output.
 - **build_model.py** — lines, stations and sections, as `dist/data/<region>/`. With `--n02`
-  it builds the national register from `n02.py` and merges OSM onto it. Japan: 1,306 lines of
-  which **593 are register lines** (28,156 km), 9,112 stations, plus per-line geometry in
-  `geom/` fetched on demand and `ways.json` for resolving a click on track.
+  it builds the national register from `n02.py` and merges OSM onto it. Japan (2026-10-02):
+  1,094 lines of which **593 are register lines** (27,122 km), 9,073 stations, plus per-line
+  geometry in `geom/` fetched on demand, `foot.json` for crediting (track ownership) and
+  `ways.json` for resolving a click on track.
 - **probe_n02.py** — what is inside 国土数値情報 N02, the Japanese government's own railway
   inventory. Not built on yet; see `spec.md` §12c for why it is going to be.
 - **inspect_region.py / check_model.py / probe_line.py** — the checks. `check_model.py
@@ -105,9 +107,9 @@ Built and verified:
 - The map: pan and zoom, LOD z0–z13, two palettes by mode, click a line or station.
 - Line lengths validated against published operating lengths — worst deviation 2% across
   eleven lines.
-- Spatial crediting: riding one line completes the part of every other line sharing its
-  corridor. Riding the whole Yamanote credits 12.7 km of the Tokaido Main Line and some part
-  of 46 lines in total (`python check_model.py --region jp --shared 山手線`).
+- Crediting by track ownership: every piece of track belongs to exactly one line, and riding
+  any service credits the lines whose track it runs over (`ownership.py`, `foot.json`;
+  `python check_model.py --region jp --shared 山手線`: 20.1 of the register 山手線's 20.5 km).
 - **The tracker.** Click a station or a line on the map, or search either, then tap where you
   got on and off, on the diagram or on the map. Recorded with an optional date, and the
   destination becomes the origin of the next leg. Ridden track is drawn over the map in each
@@ -125,8 +127,9 @@ Not built yet — see `spec.md` §13 for the full list:
 - **More regions** (Russia, Germany, Italy, Spain, Sweden, the USA...). 73 GB free as of
   2026-09-30, and the ~90 GB a world build needs is download rather than peak disk.
   `HANDOFF.md` says what a new region's reader has to produce.
-- **Track across borders.** Each country's build stops at its own border; the proposal for
-  drawing the crossings is in `border_proposal/`, waiting on Anita's decisions.
+- **Track across borders** is drawn where the EU register has a border point (`borders.py`);
+  crossings without one (Swiss-German, the Channel Tunnel, borders outside the EU) are added
+  by hand when the country on the other side is built.
 
 ## Things that cost a rebuild to learn
 
@@ -141,7 +144,8 @@ Not built yet — see `spec.md` §13 for the full list:
   came out at 5,719 km against a published 590. `build_model.place_stations` explains it.
 - **Shared track has to be found geometrically, not by rail identity.** Fingerprinting the OSM
   nodes a section runs over finds nothing between the Yamanote and the Tohoku Main Line — the
-  loop has its own pair of tracks thirty metres away. `build_model.build_credits`.
+  loop has its own pair of tracks thirty metres away. Track ownership assigns each way to a
+  line by geometry, then credits by the ways a service runs on (`ownership.py`).
 - **Merge ways into chains before simplifying, or the world view is blank.** An OSM way is a
   few hundred metres, which is sub-pixel at z0, so every one of them gets dropped.
 - **The basemap draws its own railways.** Six layers of them, in near-black, from the same

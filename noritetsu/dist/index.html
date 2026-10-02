@@ -392,6 +392,14 @@ let REGIONS = {};                 // cc -> {name, bbox, view, parts: [{ring, w, 
    the app load the rest of such a line before it has seen it. Empty until the index has it;
    the app then guesses from where the line ends (neighbourRegions). */
 let SHARED_LINES = {};
+/* OSM line ids folded into one across countries (regions.json `line_aliases`, id -> id).
+   Each country merges its OSM twins on its own, and countries disagree: Belgium and the
+   Netherlands merged "Eurostar: Paris - Amsterdam" (m5189990) into "Eurostar" (m5189989),
+   France kept the two apart, so France's piece had nothing to join and a ride from Paris to
+   Amsterdam stopped at the Belgian border. Every line id read from a country goes through
+   this before lines are joined (tools/build_regions.py says which merges are taken). */
+let LINE_FOLD = {};
+const foldLine = id => LINE_FOLD[id] || id;
 const START = new URLSearchParams(location.search).get('region');
 
 /* THE CAMERA IS REMEMBERED: where the map was left, and the country the headline was on.
@@ -415,7 +423,7 @@ const rideRegion = r => r.region || 'jp';
 /* Every country a ride needs loaded to resolve: its own, and for a line over a border the
    others it runs through (`regions`, saved on rides on such lines, and the shared index). */
 const rideRegions = r => [...new Set([rideRegion(r), ...(r.regions || []),
-                                      ...(SHARED_LINES[r.line] || [])])];
+                                      ...(SHARED_LINES[foldLine(r.line)] || [])])];
 const here = () => RIDES.filter(r => LOADED.has(rideRegion(r)));
 const regionName = cc => (cc ? (REGIONS[cc] || {}).name || cc.toUpperCase() : '');
 const STORE_KEY = 'noritetsu.rides.v1';
@@ -1001,6 +1009,7 @@ const REGIONS_READY = fetch('regions.json').then(r => r.json())
       REGIONS[cc] = r;
     }
     SHARED_LINES = j.shared_lines || {};
+    LINE_FOLD = j.line_aliases || {};
   })
   .catch(() => { /* no index: the countries with rides still load, below */ });
 
@@ -1170,7 +1179,7 @@ function drawLegend() {
 // ---------------------------------------------------------------- data
 
 /* ONE MODEL FOR EVERY LOADED COUNTRY. Each line and station carries its `region`. */
-let LINES = [], STATIONS = {}, COVERS = new Map();
+let LINES = [], STATIONS = {};
 const REGISTER_IN = new Set();   // countries whose build has a national register
 const ALIASES = {};        // cc -> {old station id: new}, for rides saved before a rebuild
 const LINE_ALIASES = {};   // cc -> {OSM line id: the register line it was merged into}
@@ -1188,10 +1197,13 @@ function loadRegion(cc) {
       return r.json();
     });
     LOADING.set(cc, Promise.all([
-      get('lines.json'), get('stations.json'), get('credits.json'),
+      get('lines.json'), get('stations.json'),
+      // A country not yet rebuilt has no foot.json: every section then owns itself whole.
+      get('foot.json').catch(() => ({ foot: {} })),
       get('aliases.json').catch(() => ({})),
-    ]).then(([l, s, c, a]) => {
-      mergeRegion(cc, l, s, c, a);
+      REGIONS_READY,               // LINE_FOLD has to be in before any line id is read
+    ]).then(([l, s, f, a]) => {
+      mergeRegion(cc, l, s, f, a);
       LOADED.add(cc);
       // A line over a border may have just grown a piece, so every ride's run is redone.
       for (const r of RIDES) delete r._gids;
@@ -1211,11 +1223,20 @@ function loadRegion(cc) {
   return LOADING.get(cc);
 }
 
-function mergeRegion(cc, l, s, c, a) {
+function mergeRegion(cc, l, s, f, a) {
+  DATA_GEN++;
   ALIASES[cc] = (a && a.stations) || {};
-  LINE_ALIASES[cc] = (a && a.lines) || {};
+  LINE_ALIASES[cc] = {};
+  for (const [k, v] of Object.entries((a && a.lines) || {})) LINE_ALIASES[cc][k] = foldLine(v);
   // Any source but OpenStreetMap is a register: 'n02' in Japan, 'schienennetz' in Switzerland.
   if (l.lines.some(x => x.src !== 'osm')) REGISTER_IN.add(cc);
+  // Line ids folded across countries (LINE_FOLD); `file` keeps the id its geometry is under.
+  for (const line of l.lines) {
+    const to = foldLine(line.id);
+    if (to !== line.id) { line.file = line.id; line.id = to; }
+  }
+  for (const st of Object.values(s.stations))
+    if (st.l && st.l.some(id => LINE_FOLD[id])) st.l = [...new Set(st.l.map(foldLine))];
   for (const [id, st] of Object.entries(s.stations)) {
     /* A STATION IN TWO EXTRACTS (a border point, a tram stop over the line in Basel) keeps
        the object loaded first, and the lines calling there become the union of both. */
@@ -1232,8 +1253,20 @@ function mergeRegion(cc, l, s, c, a) {
     STATIONS[id] = st;
   }
   const g = x => `${cc}:${x}`;
-  for (const [k, v] of Object.entries(c.covers))
-    COVERS.set(g(k), v.map(([b, lo, hi]) => [g(b), lo, hi]));
+  /* Footprints, [owner, from, to, a, b] with the fractions in `scale` units, in order of a.
+     An entry of four numbers takes a from the last entry's b (0 for the first), one of
+     three also runs to the end of the section (b = 1). */
+  const scale = (f && f.scale) || 1;
+  if (f && f.foot && Object.keys(f.foot).length) FOOT_REGIONS.add(cc);
+  for (const [k, v] of Object.entries((f && f.foot) || {})) {
+    let prev = 0;
+    FOOT.set(g(k), v.map(e => {
+      const a = e.length === 5 ? e[3] : prev;
+      const b = e.length === 5 ? e[4] : e.length === 4 ? e[3] : scale;
+      prev = b;
+      return [g(e[0]), e[1] / scale, e[2] / scale, a / scale, b / scale];
+    }));
+  }
   for (const line of l.lines) {
     line.region = cc;
     for (const sec of line.sections) sec[3] = g(sec[3]);
@@ -1250,12 +1283,14 @@ function mergeRegion(cc, l, s, c, a) {
       line.km = Math.max(0, line.km - off);
     }
     searchKeys(line);
+    // The same id from another country, or a second line of this one folded into it.
     const had = LINE_BY_ID.get(line.id);
-    if (had && !regionsOf(had).includes(cc)) { joinLine(had, line); continue; }
+    if (had) { joinLine(had, line); continue; }
     LINES.push(line);
     LINE_BY_ID.set(line.id, line);
     for (const sec of line.sections) SEC_BY_GID.set(sec[3], { line, sec });
   }
+  ownTrack(cc);
 
   /* JR East came out as TWO operators, "East Japan Railway Company" with 86.5 km and
      東日本旅客鉄道 with 29.3 km, because `operator:en` is on some of its lines and not
@@ -1305,7 +1340,7 @@ const partsOf = l => l.parts || [l];
 const regionsOf = l => (l.regions || [l.region]);
 
 function joinLine(had, line) {
-  const m = combineParts([...partsOf(had).map(p => p.orig || p), line]);
+  const m = combineParts([...partsOf(had).flatMap(p => p.origs || [p]), line]);
   const i = LINES.indexOf(had);
   if (i >= 0) LINES[i] = m; else LINES.push(m);
   LINE_BY_ID.set(m.id, m);
@@ -1315,25 +1350,43 @@ function joinLine(had, line) {
 
 /* The joined line, from each country's line object as read. A section two countries both
    carry (the same two stations, as a Basel tram stop over the border is in both extracts)
-   is kept once, from the country loaded first, and its length is not counted twice. */
+   is kept once, from the country loaded first, and its length is not counted twice.
+   ONE PIECE PER COUNTRY. Two lines of one country can fold into one id (LINE_FOLD: France
+   keeps "Eurostar" and "Eurostar: Paris - Amsterdam" apart, Belgium merged them), and then
+   they are one piece of that country, with both lines' sections and each one's geometry
+   file (`files`, the ids the country built them under). */
 function combineParts(origs) {
   const seen = new Set(), sections = [];
   const service = origs.some(p => p.service);
-  const parts = origs.map(o => {
+  const byRegion = new Map();
+  for (const o of origs) {
+    if (!byRegion.has(o.region)) byRegion.set(o.region, []);
+    byRegion.get(o.region).push(o);
+  }
+  const parts = [...byRegion.values()].map(os => {
     const own = [];
     let drop = 0;
-    for (const sec of o.sections) {
+    for (const o of os) for (const sec of o.sections) {
       const k = sec[0] < sec[1] ? `${sec[0]}|${sec[1]}` : `${sec[1]}|${sec[0]}`;
       if (seen.has(k)) { if (!CLOSED.has(sec[3])) drop += sec[2]; continue; }
       seen.add(k);
       own.push(sec);
       sections.push(sec);
     }
-    // One country's piece, as its own totals and its geometry file see it.
-    return { orig: o, id: o.id, region: o.region, src: o.src, service, sections: own,
-             km: Math.max(0, o.km - drop), km_closed: o.km_closed || 0, display: o.display };
+    const o = os[0];
+    const km = os.reduce((s, x) => s + x.km, 0);
+    const closed = os.reduce((s, x) => s + (x.km_closed || 0), 0);
+    // One country's piece, as its own totals and its geometry files see it.
+    return { origs: os, id: o.id, region: o.region, src: o.src, service, sections: own,
+             km: Math.max(0, km - drop), km_closed: closed,
+             files: [...new Set(os.map(x => x.file || x.id))],
+             display: os.length > 1 ? chainDisplays(os) : o.display };
   });
-  const first = k => (origs.find(p => p[k]) || {})[k] || '';
+  /* Names from a line built under the id itself before one folded into it (`file`): folded
+     into the Eurostar, Belgium's "Eurostar: Amsterdam ↔ London" had the only English name
+     and the whole joined line took it. */
+  const named = [...origs.filter(p => !p.file), ...origs.filter(p => p.file)];
+  const first = k => (named.find(p => p[k]) || {})[k] || '';
   const sum = k => parts.reduce((s, p) => s + (p[k] || 0), 0);
   const m = {
     id: origs[0].id, region: origs[0].region, regions: parts.map(p => p.region), parts,
@@ -1408,7 +1461,7 @@ function lineRegionsToLoad(line) {
 }
 function loadLineRegions(id) {
   const line = LINE_BY_ID.get(id);
-  const ccs = line ? lineRegionsToLoad(line) : (SHARED_LINES[id] || []);
+  const ccs = line ? lineRegionsToLoad(line) : (SHARED_LINES[foldLine(id)] || []);
   return Promise.all(ccs.filter(cc => !LOADED.has(cc)).map(loadRegion));
 }
 
@@ -1421,7 +1474,7 @@ function geomFor(lineId) {
     // nothing drawn on the map until a reload.
     const line = LINE_BY_ID.get(lineId);
     let failed = false;
-    const one = part => fetch(`data/${part.region}/geom/${lineId}.json`)
+    const one = (part, file) => fetch(`data/${part.region}/geom/${file}.json`)
       .then(r => {
         if (r.status === 404) noteStale();
         if (!r.ok) throw new Error(r.status);
@@ -1429,11 +1482,15 @@ function geomFor(lineId) {
       })
       .then(g => {
         if (part.sections.length && Object.keys(g).length
-            && !part.sections.some(([a, b]) => g[`${a}|${b}`])) noteStale();
+            && !part.sections.some(([a, b]) => g[`${a}|${b}`] || g[`${b}|${a}`])) noteStale();
         return g;
       })
       .catch(() => { failed = true; return {}; });
-    const p = Promise.all((line ? partsOf(line) : []).map(one)).then(gs => {
+    // A piece is one file per id its country built it under (`files`; two where two lines
+    // of that country fold into one, LINE_FOLD).
+    const files = (line ? partsOf(line) : [])
+      .flatMap(part => (part.files || [part.file || lineId]).map(file => one(part, file)));
+    const p = Promise.all(files).then(gs => {
       if (failed && GEOM.get(lineId) === p) GEOM.delete(lineId);
       return Object.assign({}, ...gs);
     });
@@ -1497,6 +1554,14 @@ function migrateRide(r) {
     }
     if (!LINE_BY_ID.has(r.line) && ln[r.line]) { r.line = ln[r.line]; moved++; }
   }
+  /* A line folded into another across countries (LINE_FOLD). `regions` is left as saved: a
+     whole-line ride means the pieces it was saved with, not the countries joined since, and
+     `wholeOf` keeps it to the folded line's own sections (rideGids). */
+  if (LINE_FOLD[r.line]) {
+    if (r.whole) r.wholeOf = r.line;
+    r.line = LINE_FOLD[r.line];
+    moved++;
+  }
   delete r._gids;
   return moved;
 }
@@ -1529,9 +1594,10 @@ function opKey(line) {
     .map(s => OP_EN.get(s) || s);
   return [...new Set(parts)].sort().join(' · ');
 }
-/* Register lines, then operating patterns, then named trains, longest first inside each. */
+/* Listed lines (register lines, and OSM lines mostly off the register), then operating
+   patterns, then named trains, longest first inside each. */
 function lineOrder(a, b) {
-  const rank = l => (countable(l) ? 0 : l.service ? 2 : 1);
+  const rank = l => (listed(l) ? 0 : l.service ? 2 : 1);
   return (rank(a) - rank(b)) || (b.km - a.km);
 }
 const opName = l => (l.operator_en && !l.operator_en.includes(';'))
@@ -1659,7 +1725,17 @@ function rideGids(ride) {
     const parts = partsOf(line);
     const mine = parts.length > 1
       ? parts.filter(p => (ride.regions || [rideRegion(ride)]).includes(p.region)) : parts;
-    return (ride._gids = (mine.length ? mine : parts).flatMap(p => p.sections.map(s => s[3])));
+    let secs = (mine.length ? mine : parts).flatMap(p => p.sections);
+    /* All of a line since folded into this one (`wholeOf`, set by migrateRide) is that line's
+       own sections, by their two stations: all of France's "Eurostar: Paris - Amsterdam" is
+       not the Eurostar's branch to Marne-la-Vallée as well. */
+    if (ride.wholeOf) {
+      const key = s => (s[0] < s[1] ? `${s[0]}|${s[1]}` : `${s[1]}|${s[0]}`);
+      const own = new Set(parts.flatMap(p => (p.origs || [])
+        .filter(o => o.file === ride.wholeOf).flatMap(o => o.sections.map(key))));
+      if (own.size) secs = secs.filter(s => own.has(key(s)));
+    }
+    return (ride._gids = secs.map(s => s[3]));
   }
   // Stored as a flag rather than as the sections taken, because section ids are not stable
   // across rebuilds and the two stations are.
@@ -1753,61 +1829,196 @@ document.addEventListener('keydown', e => {
 
 // ---------------------------------------------------------------- crediting
 
-/* A ride is against TRACK, not against the line label it was entered under: riding the part
-   of the Yamanote loop that is technically the Tohoku Main Line counts for both. Each ridden
-   section credits a RANGE of every section sharing its corridor, and the ranges are unioned
-   per section, so three local sections together complete one long express section. */
-function creditRanges() {
-  const frac = new Map();
-  for (const [gid, spans] of creditSpans())
-    frac.set(gid, Math.min(1, spans.reduce((s, [lo, hi]) => s + hi - lo, 0)));
-  return frac;
+/* ONE OWNER FOR EVERY PIECE OF TRACK (Anita, 2026-10-01). No piece of track is counted twice:
+   each belongs to exactly one line, and that decides only what a ride credits. Rides are
+   still entered on any service over any path.
+
+   The build (ownership.py) gives every drawn way one owner: a register line where one lies on
+   it, else an OpenStreetMap line whose route runs over it, the lowest ref first where several
+   do (natural sort, empty refs last, then name, then id). Named trains own nothing. Then each
+   section gets a FOOTPRINT, foot.json: the owner sections it runs over, as entries
+   [owner section, from, to, a, b], meaning the stretch a..b of this section (fractions of its
+   length) lies on from..to of the owner section (`to < from` where it runs the other way).
+   A section not in foot.json is its own footprint, whole.
+
+   A ride credits the footprints of the sections it rides. So riding an IC over register
+   track credits the register lines it runs on and nothing beside them; riding a metro
+   through-service onto a private railway credits that railway. */
+const FOOT = new Map();       // section gid -> [[owner gid, from, to, a, b], ...]
+const FOOT_INTO = new Map();  // owner gid -> gids whose footprint names it
+const FOOT_REGIONS = new Set();  // countries whose foot.json has any footprint
+const OWNSP = new Map();      // owner gid -> merged spans of it its own line owns
+let OWN_GEN = 0;              // bumped whenever OWNSP changes, for the per-line caches
+let DATA_GEN = 0;             // bumped whenever a country's data is merged in
+const footOf = gid => FOOT.get(gid) || [[gid, 0, 1, 0, 1]];
+const secKm = gid => { const e = SEC_BY_GID.get(gid); return e ? e.sec[2] : 0; };
+const regionOfGid = gid => gid.slice(0, gid.indexOf(':'));
+const isRegisterLine = l => !!l && partsOf(l).some(p => p.src !== 'osm');
+
+/* Spans [lo, hi] along one section merged. GAPS UNDER 150 m ARE CLOSED, at the ends of a
+   section and between two spans: a ride along one line covers a parallel one up to where the
+   two part to reach their own platforms, a few tens of metres short of the station. Capped at
+   10% of the section, so a short one is not completed by a ride that only touched it. */
+function mergeSpans(spans, km) {
+  if (!spans.length) return [];
+  const tol = km > 0 ? Math.min(0.15 / km, 0.1) : 0;
+  const s = spans.map(x => [x[0], x[1]]).sort((p, q) => p[0] - q[0]);
+  const out = [];
+  for (const [lo, hi] of s) {
+    const last = out[out.length - 1];
+    if (last && lo <= last[1] + tol) last[1] = Math.max(last[1], hi);
+    else out.push([lo, hi]);
+  }
+  if (out[0][0] <= tol) out[0][0] = 0;
+  if (out[out.length - 1][1] >= 1 - tol) out[out.length - 1][1] = 1;
+  return out;
+}
+const spansLength = sp => Math.min(1, sp.reduce((n, [lo, hi]) => n + hi - lo, 0));
+function spansMeet(a, b) {
+  let out = 0, i = 0, j = 0;
+  while (i < a.length && j < b.length) {
+    const lo = Math.max(a[i][0], b[j][0]), hi = Math.min(a[i][1], b[j][1]);
+    if (hi > lo) out += hi - lo;
+    if (a[i][1] < b[j][1]) i++; else j++;
+  }
+  return out;
 }
 
-/* The same, kept as the merged spans themselves, [[lo, hi], ...] as fractions along each
-   section's geometry, which is what the map needs to draw the ridden part of a line that
-   was only partly covered by a ride on another one. */
-function creditSpans() {
-  const m = new Map();
+/* What each line owns, worked out as a country loads: the union of the footprints of its own
+   sections onto each of them. A register section owns itself whole unless it lies on rails
+   another register line owns; an OSM section owns the part of it on track its line owns. */
+function ownTrack(cc) {
+  const raw = new Map();
+  for (const line of LINES) for (const p of partsOf(line)) {
+    if (p.region !== cc) continue;
+    for (const [a, b, km, gid] of p.sections) {
+      const f = FOOT.get(gid);
+      if (f) for (const e of f) {
+        if (!FOOT_INTO.has(e[0])) FOOT_INTO.set(e[0], []);
+        FOOT_INTO.get(e[0]).push(gid);
+      }
+      if (p.service || CLOSED.has(gid)) continue;
+      for (const [t, from, to] of footOf(gid)) {
+        const te = SEC_BY_GID.get(t);
+        if (!te || te.line.id !== p.id || CLOSED.has(t) || to === from) continue;
+        if (!raw.has(t)) raw.set(t, []);
+        raw.get(t).push([Math.min(from, to), Math.max(from, to)]);
+      }
+    }
+  }
+  for (const [t, iv] of raw) OWNSP.set(t, mergeSpans(iv, secKm(t)));
+  OWN_GEN++;
+}
+
+/* Km a line's piece owns, and km of it on track no register line owns. Cached per OWN_GEN. */
+function ownedKm(p) {
+  if (p._own && p._own.gen === OWN_GEN) return p._own.km;
+  let km = 0;
+  for (const [a, b, secK, gid] of p.sections)
+    if (!CLOSED.has(gid)) km += secK * spansLength(OWNSP.get(gid) || []);
+  p._own = { gen: OWN_GEN, km };
+  return km;
+}
+function offRegisterKm(p) {
+  if (p._off && p._off.gen === OWN_GEN) return p._off.km;
+  let km = 0;
+  for (const [a, b, secK, gid] of p.sections) {
+    if (CLOSED.has(gid)) continue;
+    for (const [t, from, to, x, y] of footOf(gid)) {
+      const te = SEC_BY_GID.get(t);
+      if (te && te.line.src === 'osm') km += secK * Math.abs(y - x);
+    }
+  }
+  p._off = { gen: OWN_GEN, km };
+  return km;
+}
+
+/* WHICH LINES ARE LISTED as lines of their own (the lists, the operators, the finished
+   count). Register lines always, unless all their track belongs to another line (one of a
+   tunnel's two bores, a track the register lists as a line of its own). Named trains never.
+   An OpenStreetMap line when at least OFF_REGISTER_SHARE of it runs on track no register line
+   owns: RER A and B, the Paris Metro, every tram. Judged on track off the register, not on
+   what the line ends up owning, so a metro sharing its trunk with a lower-numbered line
+   (Brussels' 6 over the 2) is still a line. Below that it is an operating pattern over
+   register lines, and the few km it owns are register gaps the build logs. */
+const OFF_REGISTER_SHARE = 0.4;
+function listed(l) {
+  if (l.parts) return l.parts.some(listed);
+  if (l.src !== 'osm') return !(l.km > 0.05) || ownedKm(l) > 0.05;
+  if (l.service) return false;
+  const off = offRegisterKm(l);
+  return off > 0.05 && off >= OFF_REGISTER_SHARE * l.km;
+}
+
+/* What every ride credits, worked out once per change of rides or data:
+   `R`, the ridden spans of each owner section (a ride's own sections whole, plus their
+   footprints), which the totals count against what each section owns; and `spans`/`frac`,
+   the ridden part of every section along its own length, which line percentages, the strip
+   diagram and the map read. A section not ridden itself is ridden where its footprint is:
+   riding the register line under an S-Bahn completes that much of the S-Bahn. */
+let CREDIT = null;
+const rideSig = r => [r.id, r.line, r.from, r.to, r.whole ? 1 : 0, r.around ? 1 : 0,
+                      (r.regions || []).join(','), r.region || '', r.wholeOf || ''].join('|');
+function creditState() {
+  const rides = here();
+  const sig = DATA_GEN + '#' + rides.map(rideSig).join(';');
+  if (CREDIT && CREDIT.sig === sig) return CREDIT;
+  const raw = new Map(), direct = new Set();
   const push = (gid, lo, hi) => {
     if (hi <= lo) return;
-    if (!m.has(gid)) m.set(gid, []);
-    m.get(gid).push([lo, hi]);
+    if (!raw.has(gid)) raw.set(gid, []);
+    raw.get(gid).push([lo, hi]);
   };
-  for (const ride of here()) {
+  for (const ride of rides) {
     for (const gid of rideGids(ride)) {
+      direct.add(gid);
       push(gid, 0, 1);
-      const cov = COVERS.get(gid);
-      if (cov) for (const [b, lo, hi] of cov) push(b, lo, hi);
+      for (const [t, from, to] of footOf(gid)) push(t, Math.min(from, to), Math.max(from, to));
     }
   }
-  /* GAPS UNDER 150 m ARE CLOSED, at the ends of a section and between two spans. A ride
-     along one line covers a parallel one up to where the two part to reach their own
-     platforms, a few tens of metres short of the station: riding the Marunouchi as operated
-     credited 97.3% of the register line's Ginza to Kasumigaseki section, so a stretch
-     plainly ridden showed as unridden on the diagram. Capped at 10% of the section, so a
-     short one is not completed by a ride that only touched it. */
-  const merged = new Map();
-  for (const [gid, spans] of m) {
-    const e = SEC_BY_GID.get(gid);
-    const tol = e && e.sec[2] > 0 ? Math.min(0.15 / e.sec[2], 0.1) : 0;
-    spans.sort((a, b) => a[0] - b[0]);
-    const out = [];
-    for (const [lo, hi] of spans) {
-      const last = out[out.length - 1];
-      if (last && lo <= last[1] + tol) last[1] = Math.max(last[1], hi);
-      else out.push([lo, hi]);
-    }
-    if (out[0][0] <= tol) out[0][0] = 0;
-    if (out[out.length - 1][1] >= 1 - tol) out[out.length - 1][1] = 1;
-    merged.set(gid, out);
+  const R = new Map();
+  for (const [t, iv] of raw) R.set(t, mergeSpans(iv, secKm(t)));
+  const touched = new Set(direct);
+  for (const t of R.keys()) {
+    if (!FOOT.has(t)) touched.add(t);
+    for (const g of FOOT_INTO.get(t) || []) touched.add(g);
   }
-  return merged;
+  const spans = new Map(), frac = new Map();
+  for (const gid of touched) {
+    const sp = direct.has(gid) ? [[0, 1]] : mapBack(gid, R);
+    if (!sp.length) continue;
+    spans.set(gid, sp);
+    frac.set(gid, spansLength(sp));
+  }
+  CREDIT = { sig, R, spans, frac };
+  return CREDIT;
 }
 
+/* The ridden part of a section along its own length, from what is ridden of its footprint. */
+function mapBack(gid, R) {
+  const out = [];
+  for (const [t, from, to, a, b] of footOf(gid)) {
+    const r = R.get(t);
+    if (!r) continue;
+    const lo = Math.min(from, to), hi = Math.max(from, to);
+    if (hi - lo < 1e-9) continue;
+    for (const [x, y] of r) {
+      const ix = Math.max(x, lo), iy = Math.min(y, hi);
+      if (iy <= ix) continue;
+      const p1 = a + (ix - from) / (to - from) * (b - a);
+      const p2 = a + (iy - from) / (to - from) * (b - a);
+      out.push([Math.min(p1, p2), Math.max(p1, p2)]);
+    }
+  }
+  return mergeSpans(out, secKm(gid));
+}
+
+// Section gid -> fraction of it ridden, and the same as merged spans along it.
+const creditRanges = () => creditState().frac;
+const creditSpans = () => creditState().spans;
+
 /* The part of a polyline between two fractions of its length. Lengths on a local flat
-   projection, which within one section agrees with the Mercator lengths the build measured
-   the fractions in. */
+   projection, which is how the build measures the fractions in foot.json. */
 function sliceLine(pts, lo, hi) {
   if (lo <= 0.0005 && hi >= 0.9995) return pts;
   const kx = Math.cos(pts[0][1] * Math.PI / 180);
@@ -1830,16 +2041,29 @@ function sliceLine(pts, lo, hi) {
   return out.length > 1 ? out : null;
 }
 
-/* WHAT COUNTS TOWARDS COMPLETION.  Where the build has the national register (src 'n02'),
-   those are the lines, and everything from OpenStreetMap is an operating pattern, a named
-   train or a duplicate of a register line -- all rideable, all crediting the register
-   through the corridor machinery, none of them a thing to complete. Without a register,
-   fall back to anything not flagged as a named train. */
-/* A line over a border counts where any of its pieces does; each country's totals take
-   only the pieces that count there (stats). */
-function countable(l) {
-  if (l.parts) return l.parts.some(countable);
-  return REGISTER_IN.has(l.region) ? l.src !== 'osm' : !l.service;
+/* WHAT COUNTS TOWARDS COMPLETION (Anita, 2026-10-01): everything with scheduled passenger
+   service, and every km of track once. A country's total is the track every line owns there,
+   each piece once; an operator's is the track its listed lines own. Ridden is what the rides
+   credit of that owned track. */
+function ownedDone(p, R) {
+  let done = 0;
+  for (const [a, b, km, gid] of p.sections) {
+    const r = R.get(gid);
+    if (r && !CLOSED.has(gid)) done += km * spansMeet(r, OWNSP.get(gid) || []);
+  }
+  return done;
+}
+let REGION_TOTAL = { gen: -1, by: new Map() };
+function regionTotals() {
+  if (REGION_TOTAL.gen === OWN_GEN) return REGION_TOTAL.by;
+  const by = new Map();
+  for (const [t, sp] of OWNSP) {
+    if (CLOSED.has(t)) continue;
+    const cc = regionOfGid(t);
+    by.set(cc, (by.get(cc) || 0) + secKm(t) * spansLength(sp));
+  }
+  REGION_TOTAL = { gen: OWN_GEN, by };
+  return by;
 }
 
 /* A station with `j` is where a register line ends without stopping: a junction, or the
@@ -1848,20 +2072,26 @@ function countable(l) {
 const isStop = id => STATIONS[id] && !STATIONS[id].j;
 
 function stats() {
-  const frac = creditRanges();
+  const { frac, R } = creditState();
   const perLine = [];
-  // Per country, over its counted lines. The headline is FOCUS's; the Countries tab all of them.
+  // Per country. The headline is FOCUS's; the Countries tab all of them.
   const byRegion = new Map();
+  for (const [cc, total] of regionTotals())
+    byRegion.set(cc, { done: 0, total, finished: 0 });
+  for (const [t, r] of R) {
+    const own = OWNSP.get(t);
+    if (!own || CLOSED.has(t)) continue;
+    const e = byRegion.get(regionOfGid(t));
+    if (e) e.done += secKm(t) * spansMeet(r, own);
+  }
   for (const line of LINES) {
     const km = lineKm(line, frac);
     // A line over a border: each country its own piece.
     for (const p of partsOf(line)) {
-      if (!countable(p)) continue;
+      if (!listed(p)) continue;
       const pk = p === line ? km : lineKm(p, frac);
-      const r = byRegion.get(p.region) || { done: 0, total: 0, finished: 0 };
-      r.done += pk; r.total += p.km;
-      if (pk / Math.max(p.km, 0.001) > 0.999) r.finished++;
-      byRegion.set(p.region, r);
+      const r = byRegion.get(p.region);
+      if (r && pk / Math.max(p.km, 0.001) > 0.999) r.finished++;
     }
     if (km > 0.001) perLine.push({ line, km, pct: km / Math.max(line.km, 0.001) });
   }
@@ -1871,11 +2101,15 @@ function stats() {
 
   const byOp = new Map();
   for (const line of LINES) {
-    if (!countable(line)) continue;
+    if (!listed(line)) continue;
     const op = opKey(line);
     const e = byOp.get(op) || { op, label: op, km: 0, total: 0, lines: 0, done: 0 };
     const km = lineKm(line, frac);
-    e.km += km; e.total += line.km; e.lines++;
+    for (const p of partsOf(line)) {
+      e.total += ownedKm(p);
+      e.km += ownedDone(p, R);
+    }
+    e.lines++;
     if (km / Math.max(line.km, 0.001) > 0.999) e.done++;
     byOp.set(op, e);
   }
@@ -1887,7 +2121,7 @@ function stats() {
 // ---------------------------------------------------------------- ridden on the map
 
 /* Only the sections actually ridden are drawn, not everything they credit: a credited
-   section is the same corridor, so drawing both would just double-draw the same rails. */
+   section lies on the same rails, so drawing both would just double-draw them. */
 let RIDDEN_GEN = 0;         // the same guard as paintSelection's, for the same race
 
 async function paintRidden() {
@@ -2058,7 +2292,7 @@ async function paintSelection() {
    it, held back where it has not been ridden (`base`) and at full strength over the part
    that has (`done`). Ridden counts whatever line the ride was entered on, so the part of a
    register line covered by a ride on an operating pattern lights up too, sliced to exactly
-   the stretch the corridor shares. The halo is what says "selected". Over it, `runGids` in
+   the stretch of track the two share. The halo is what says "selected". Over it, `runGids` in
    white, with the stations it passes through as white rings: the same thing the diagram
    lights up, in the same place. */
 function drawLine(line, g, runGids, from, to, lines, mark) {
@@ -2264,7 +2498,7 @@ function uiSig() {
 function viewRegions() {
   const ofLine = id => {
     const l = LINE_BY_ID.get(id);
-    return [...(l ? regionsOf(l) : []), ...(SHARED_LINES[id] || [])];
+    return [...(l ? regionsOf(l) : []), ...(SHARED_LINES[foldLine(id)] || [])];
   };
   const ofSt = id => {
     const s = STATIONS[id];
@@ -2321,6 +2555,7 @@ function restoreUi() {
     // Ids a rebuild moved, as rides are migrated.
     const lineId = id => {
       if (LINE_BY_ID.has(id)) return id;
+      if (LINE_FOLD[id]) return LINE_FOLD[id];
       for (const cc of need) if ((LINE_ALIASES[cc] || {})[id]) return LINE_ALIASES[cc][id];
       return id;
     };
@@ -2729,7 +2964,7 @@ function traceLegs() {
                        c.line === prev ? 0 : 1,
                        -reach(c.line.id, leg.i),
                        c.straight ? 1 : 0,
-                       countable(c.line) ? 0 : c.line.service ? 2 : 1,
+                       listed(c.line) ? 0 : c.line.service ? 2 : 1,
                        c.p.km];
     const lex = (r, s) => {
       for (let k = 0; k < r.length; k++) if (r[k] !== s[k]) return r[k] - s[k];
@@ -2842,7 +3077,7 @@ function commitTrace() {
 
 // ---------------------------------------------------------------- operators
 
-/* One entry per operator as the panel counts them (opKey), holding its countable lines.
+/* One entry per operator as the panel counts them (opKey), holding its listed lines.
    Reached from the operator rows on the home view and from search, and the place to mark a
    whole operator ridden in one go. */
 let OPS = [];
@@ -2851,15 +3086,18 @@ const OP_INDEX = new Map();
 function buildOps() {
   const by = new Map();
   for (const line of LINES) {
-    if (!countable(line)) continue;
+    if (!listed(line)) continue;
     const key = opKey(line);
     if (!by.has(key)) by.set(key, { key, lines: [], km: 0, raw: new Set() });
     const o = by.get(key);
     o.lines.push(line);
-    o.km += line.km;
     if (line.operator) o.raw.add(line.operator);
     if (line.operator_en) o.raw.add(line.operator_en);
   }
+  /* An operator's length is the track its lines own, not the sum of its lines: Prague's
+     trams share the street, and each piece of it belongs to one of them. */
+  for (const o of by.values())
+    o.km = o.lines.reduce((s, l) => s + partsOf(l).reduce((t, p) => t + ownedKm(p), 0), 0);
   OPS = [...by.values()].sort((a, b) => b.km - a.km);
   // Rebuilt whenever a country's lines arrive, so positions move: views hold the key.
   OP_INDEX.clear();
@@ -2891,7 +3129,10 @@ function renderOp(el) {
   // Started lines first, most complete at the top; untouched ones after, longest first.
   rows.sort((a, b) => (b.pct > 0.0005) - (a.pct > 0.0005) || b.pct - a.pct
                       || b.line.km - a.line.km);
-  const done = rows.reduce((s, r) => s + r.km, 0);
+  // Over the track its lines own, as its length is.
+  const { R } = creditState();
+  const done = o.lines.reduce((s, l) => s + partsOf(l).reduce((t, p) => t + ownedDone(p, R), 0),
+                              0);
   const finished = rows.filter(r => r.pct > 0.999).length;
   const left = rows.length - finished;
   const pct = 100 * done / Math.max(o.km, 0.001);
@@ -3408,7 +3649,7 @@ function joinedBy(line, p, q) {
   let best = null;
   for (const id of at(q)) {
     const l = LINE_BY_ID.get(id);
-    if (!a.has(id) || id === line.id || !l || !countable(l)) continue;
+    if (!a.has(id) || id === line.id || !l || !listed(l)) continue;
     if (!best || l.km < best.km) best = l;
   }
   return best;
@@ -3416,7 +3657,7 @@ function joinedBy(line, p, q) {
 
 /* The same at a dead end within one piece: the 予讃線's inland route stops at 内子, and its
    spur off 伊予大洲 stops at 新谷, and the 内子線 joins the two. For each end of track, the
-   shortest counted line from there to another end of this one, as {line, to}. */
+   shortest listed line from there to another end of this one, as {line, to}. */
 function endJoins(line) {
   if (line._ends) return line._ends;
   const deg = new Map();
@@ -3427,7 +3668,7 @@ function endJoins(line) {
     let best = null;
     for (const lid of (STATIONS[s] || {}).l || []) {
       const l = LINE_BY_ID.get(lid);
-      if (!l || l === line || !countable(l)) continue;
+      if (!l || l === line || !listed(l)) continue;
       const on = lineStations(l);
       /* A short link only. Without the cap, 東京 read "to 熱海 by the 東海道新幹線", since
          both ends of the JR East 東海道線 are on it. */
@@ -3469,12 +3710,34 @@ function renderLine(el) {
     + `<span class="bar" style="background:${lineColour(line)}"></span>${esc(lineName(line))}`
     + `<small>${esc(opName(line) || 'operator not stated')}`
     + ` · ${line.km.toFixed(1)} km · ${running.length} sections${closedNote}`
-    + (line.parts ? ` · in ${esc(line.regions.map(regionName).join(', '))}` : '')
+    + (line.parts && line.parts.length > 1 ? ` · in ${esc(line.regions.map(regionName).join(', '))}` : '')
     + `</small></div>`;
+  /* Each piece of track belongs to one line, and only that line counts it in the totals.
+     Say so where this line's own share is not the whole of it. */
+  const own = partsOf(line).reduce((s, p) => s + ownedKm(p), 0);
+  const note = t => { h += `<p class="muted" style="margin-top:8px">${t}</p>`; };
   if (line.service) {
-    h += `<p class="muted" style="margin-top:8px">This is a named train rather than a line, `
-      + `so it is not counted towards a total of its own. Riding it still credits the lines `
-      + `it runs over.</p>`;
+    note(`This is a named train rather than a line, so it owns no track and is not counted `
+      + `towards a total of its own. Riding it credits the lines whose track it runs over.`);
+  } else if (!isRegisterLine(line)) {
+    if (!listed(line)) {
+      note(`This service runs mostly over register lines, so it is not listed as a line of `
+        + `its own. Riding it credits the lines whose track it runs over.`
+        + (own > 0.05 ? ` The ${own.toFixed(1)} km no register line covers belong to it and `
+          + `count towards the totals.` : ''));
+    } else if (own < 0.95 * line.km) {
+      note(`${(line.km - own).toFixed(1)} km of this line runs over track that belongs to `
+        + `other lines and counts towards those: register lines, or where several lines `
+        + `share track no register covers, the one with the lowest number. The other `
+        + `${own.toFixed(1)} km belongs to this line and counts towards the totals as it.`);
+    }
+  } else if (line.km > 0.05 && !listed(line)) {
+    note(`All of this line lies on track that belongs to another register line, so it is `
+      + `not listed as a line of its own. Riding it counts towards that line.`);
+  } else if (line.km > 0.05 && own < 0.95 * line.km) {
+    note(`${(line.km - own).toFixed(1)} km of this line lies on track that belongs to `
+      + `another register line, and counts towards that one. The other ${own.toFixed(1)} km `
+      + `counts as this line.`);
   }
   h += `<div class="meter" style="margin-top:8px"><i style="width:`
     + `${Math.min(100, 100 * riddenKm / Math.max(line.km, 0.001)).toFixed(1)}%"></i></div>`
@@ -3831,18 +4094,82 @@ function tracksNear(p, r) {
     .sort((a, b) => a.d - b.d).map(x => x.f);
 }
 
-function segDist(p, a, b) {
+// How far along the segment a..b (0 to 1) the point nearest p is.
+function segT(p, a, b) {
   const dx = b.x - a.x, dy = b.y - a.y, len2 = dx * dx + dy * dy;
-  const t = len2 ? Math.max(0, Math.min(1, ((p.x - a.x) * dx + (p.y - a.y) * dy) / len2)) : 0;
-  return Math.hypot(p.x - (a.x + t * dx), p.y - (a.y + t * dy));
+  return len2 ? Math.max(0, Math.min(1, ((p.x - a.x) * dx + (p.y - a.y) * dy) / len2)) : 0;
+}
+function segDist(p, a, b) {
+  const t = segT(p, a, b);
+  return Math.hypot(p.x - (a.x + t * (b.x - a.x)), p.y - (a.y + t * (b.y - a.y)));
+}
+
+/* The point of a drawn section nearest the click: its distance on screen, and how far along
+   the section (0 to 1) it is. Lengths on the same local flat projection as sliceLine, which
+   is how the build measures foot.json's fractions. */
+function nearOnTrack(pts, p) {
+  if (!pts || pts.length < 2) return null;
+  const kx = Math.cos(pts[0][1] * Math.PI / 180);
+  let cum = 0, best = Infinity, at = 0, prev = map.project(pts[0]);
+  for (let i = 1; i < pts.length; i++) {
+    const q = map.project(pts[i]);
+    const len = Math.hypot((pts[i][0] - pts[i - 1][0]) * kx, pts[i][1] - pts[i - 1][1]);
+    const d = segDist(p, prev, q);
+    if (d < best) { best = d; at = cum + segT(p, prev, q) * len; }
+    cum += len;
+    prev = q;
+  }
+  return cum ? { d: best, f: at / cum } : null;
+}
+
+/* EVERY LINE OVER THE TRACK AT ONE POINT OF A SECTION, `t` along it: from the footprints
+   (foot.json), not from where lines are drawn. The section's footprint names the owner track
+   there; every section whose footprint covers that point of the owner track is on it, named
+   trains and lines over a border included. Within `tolKm` of the point, either way.
+   Null where the country has no footprints. */
+function linesOverTrack(gid, t, tolKm) {
+  if (!FOOT_REGIONS.has(regionOfGid(gid))) return null;
+  const tolOf = g => tolKm / Math.max(secKm(g), 0.001);
+  const fp = footOf(gid);
+  const tol = tolOf(gid);
+  let at = fp.filter(e => t >= Math.min(e[3], e[4]) - tol && t <= Math.max(e[3], e[4]) + tol);
+  if (!at.length) at = fp;
+  const out = new Set();
+  for (const [own, from, to, a, b] of at) {
+    const k = b > a ? Math.max(0, Math.min(1, (t - a) / (b - a))) : 0.5;
+    const u = from + k * (to - from), ut = tolOf(own);
+    const covers = (lo, hi) => u >= Math.min(lo, hi) - ut && u <= Math.max(lo, hi) + ut;
+    const oe = SEC_BY_GID.get(own);
+    if (oe && !FOOT.has(own)) out.add(oe.line.id);       // the owner track's own line
+    for (const g of FOOT_INTO.get(own) || []) {
+      const e = SEC_BY_GID.get(g);
+      if (e && footOf(g).some(([o, f2, t2]) => o === own && covers(f2, t2))) out.add(e.line.id);
+    }
+  }
+  return [...out];
 }
 
 /* BELOW z10 THE TILES CARRY NO WAY ID, only merged chains, so a click there used to do
-   nothing at all. It is resolved from the model instead: the nearest run between two
-   stations, as a straight line on screen, which at these zooms sits within a few pixels
-   of the track. Every line within a few pixels of the best is offered, since parallel
-   lines are indistinguishable this far out. */
-function pickByChord(p) {
+   nothing at all. It is resolved from the model instead. Parallel lines are
+   indistinguishable this far out, so the nearest listed line opens (a register line first
+   among those within a few pixels of each other). Only where no listed line is near at all
+   is the choice offered as a list.
+   NEAREST BY THE DRAWN TRACK, where a chord will not do. Each section is first measured as
+   a straight line between its two stations, which for a short section sits within a few
+   pixels of the track. A long one can bow far from its chord: Belgium's HSL 1 is two
+   sections, Halle to the French border 74.5 km, and a click on it at Enghien was nearer the
+   chord of the old line 94 beside it. So a listed line with a long chord anywhere near is
+   measured again on its drawn geometry (the same files a selected line draws from).
+   WHAT ELSE RUNS THERE comes from the footprints at the clicked point of the opened line's
+   section (linesOverTrack), not from chords: the Eurostar's one section from Brussels-Midi
+   to the French border, 87.6 km, was never near a click on HSL 1. Lines drawn within
+   SAME_TRACK_PX of the opened one are listed too, with what runs over them. */
+let CHORD_GEN = 0;
+const LONG_CHORD = 30;    // px: a chord longer than this is checked against its drawn track
+const SAME_TRACK_PX = 1.5;  // px: lines this much further than the nearest are the same track
+const MAX_MEASURED = 12;    // listed lines measured on their drawn track per click, at most
+async function pickByChord(p) {
+  const gen = ++CHORD_GEN;
   const b = map.getBounds().toArray();
   const pad = 0.2 * (b[1][0] - b[0][0]);
   const inView = s => s && s.x > b[0][0] - pad && s.x < b[1][0] + pad
@@ -3852,27 +4179,87 @@ function pickByChord(p) {
     if (!proj.has(id)) proj.set(id, map.project([STATIONS[id].x, STATIONS[id].y]));
     return proj.get(id);
   };
-  const best = new Map();                   // line id -> its nearest section's distance
+  const reach = CLICK_SLOP + 4;
+  // line id -> its nearest section: [distance, section, how far along it]
+  const best = new Map();
+  const bowed = new Map();          // listed line id -> long sections that may be near
+  const keep = (id, d, sec, t) => {
+    if (d < (best.has(id) ? best.get(id)[0] : Infinity)) best.set(id, [d, sec, t]);
+  };
   const z = map.getZoom();
   for (const line of LINES) {
     // Only kinds the tiles draw at this zoom: a tram under a main line is not what was hit.
     const k = KIND_LABEL[line.kind === 'train' ? 'rail' : line.kind];
     if (k && z < k[1]) continue;
-    for (const [a, c] of line.sections) {
+    let isListed = null;
+    for (const sec of line.sections) {
+      const [a, c] = sec;
       if (!inView(STATIONS[a]) && !inView(STATIONS[c])) continue;
       if (!STATIONS[a] || !STATIONS[c]) continue;
-      const d = segDist(p, at(a), at(c));
-      if (d < (best.has(line.id) ? best.get(line.id) : Infinity)) best.set(line.id, d);
+      const A = at(a), C = at(c);
+      const d = segDist(p, A, C), len = Math.hypot(C.x - A.x, C.y - A.y);
+      // A track rarely bows from its chord by more than a quarter of the chord's length.
+      if (len > LONG_CHORD && d <= reach + 0.25 * len) {
+        if (isListed === null) isListed = listed(line);
+        if (isListed) {
+          if (!bowed.has(line.id)) bowed.set(line.id, { d, secs: [] });
+          const bw = bowed.get(line.id);
+          bw.d = Math.min(bw.d, d);
+          bw.secs.push(sec);
+          continue;
+        }
+      }
+      keep(line.id, d, sec, segT(p, A, C));
     }
   }
-  const min = Math.min(...best.values());
-  if (!(min <= CLICK_SLOP + 4)) return;
-  openTrackLines([...best].filter(([, d]) => d <= min + 4).map(([id]) => id));
+  // Where there is no drawn track to measure: the chord, as before.
+  const byChord = (id, sec) => {
+    const A = at(sec[0]), C = at(sec[1]);
+    keep(id, segDist(p, A, C), sec, segT(p, A, C));
+  };
+  // The nearest few by chord: zoomed out over China, dozens of long sections can qualify.
+  const toMeasure = [...bowed].sort((x, y) => x[1].d - y[1].d);
+  for (const [id, { secs }] of toMeasure.slice(MAX_MEASURED)) secs.forEach(s => byChord(id, s));
+  await Promise.all(toMeasure.slice(0, MAX_MEASURED).map(([id, { secs }]) => geomFor(id)
+    .then(g => {
+      for (const sec of secs) {
+        const fwd = g[`${sec[0]}|${sec[1]}`], back = g[`${sec[1]}|${sec[0]}`];
+        const r = nearOnTrack(fwd || back, p);
+        if (r) keep(id, r.d, sec, fwd ? r.f : 1 - r.f);
+        else byChord(id, sec);
+      }
+    })
+    .catch(() => secs.forEach(s => byChord(id, s)))));
+  if (gen !== CHORD_GEN) return;          // a later click won
+  const min = Math.min(...[...best.values()].map(x => x[0]));
+  if (!(min <= reach)) return;
+  const near = [...best].filter(([, x]) => x[0] <= reach);
+  const lst = near.filter(([id]) => listed(LINE_BY_ID.get(id)));
+  if (!lst.length)
+    return openTrackLines(near.filter(([, x]) => x[0] <= min + 4).map(([id]) => id));
+  const m = Math.min(...lst.map(([, x]) => x[0]));
+  const pool = lst.filter(([, x]) => x[0] <= m + 4);
+  const reg = pool.filter(([id]) => isRegisterLine(LINE_BY_ID.get(id)));
+  const [owner, [od]] = (reg.length ? reg : pool).reduce((a, b) => (b[1][0] < a[1][0] ? b : a));
+  /* Track a pixel or so apart cannot be told apart at this zoom (Brussels - Leuven is line
+     36 and line 36N side by side), so what runs over each of those is listed, with the
+     lines themselves. */
+  const same = pool.filter(([, x]) => x[0] <= od + SAME_TRACK_PX);
+  const over = same.map(([id, [, sec, t]]) => linesOverTrack(sec[3], t, 2));
+  const ids = over.every(Boolean)
+    ? [...new Set([owner, ...same.map(([id]) => id), ...over.flat()])].filter(id => LINE_BY_ID.has(id))
+    : near.filter(([, x]) => x[0] <= m + 4).map(([id]) => id);
+  openTrackLines(ids, owner);
 }
 
-/* Clicking a piece of track picks the line it belongs to, or offers a choice where several
-   run over it. The way id is only carried at z10 and above, because below that the tiles
-   hold merged chains rather than individual ways and there is no single way to name. */
+/* Clicking a piece of track opens the line that owns it (ownership.py gives every drawn way
+   one owner), with every other line over it listed under it. The way id is only carried at
+   z10 and above, because below that the tiles hold merged chains rather than individual
+   ways and there is no single way to name.
+   ways.json gives each way the indices of the lines over it, THE OWNER FIRST (build_model.main
+   writes it so). A way with no owner keeps its list in index order, and is either listed in
+   `unowned` or starts with a named train, which never owns. A ways.json from before owners
+   has no `unowned` at all, and then no owner is read from it. */
 const WAYS = new Map();     // cc -> promise of that country's ways.json
 async function pickTrack(feature) {
   const w = feature.properties.w;
@@ -3881,26 +4268,38 @@ async function pickTrack(feature) {
   if (!WAYS.has(cc)) {
     // 1-2 MB a country, so it is fetched the first time someone clicks a line there.
     WAYS.set(cc, fetch(`data/${cc}/ways.json`).then(r => r.json())
-      .catch(() => { WAYS.delete(cc); return { lines: [], ways: {} }; }));
+      .then(j => ({ ...j, free: Array.isArray(j.unowned) ? new Set(j.unowned) : null }))
+      .catch(() => { WAYS.delete(cc); return { lines: [], ways: {}, free: null }; }));
   }
   // A click can land on a country whose tiles are in but whose lines are still arriving.
   const [ways] = await Promise.all([WAYS.get(cc), loadRegion(cc)]);
   const idxs = ways.ways[String(w)];
   if (!idxs || !idxs.length) return;
-  openTrackLines(idxs.map(i => ways.lines[i]).filter(id => LINE_BY_ID.has(id)));
+  // Folded as the lines were (LINE_FOLD), the owner still first.
+  const ids = [...new Set(idxs.map(i => foldLine(ways.lines[i])))];
+  const first = LINE_BY_ID.get(ids[0]);
+  const owner = ways.free && !ways.free.has(String(w)) && first && !first.service
+    ? ids[0] : null;
+  openTrackLines(ids.filter(id => LINE_BY_ID.has(id)), owner);
 }
 
-function openTrackLines(ids) {
+/* `owner`: the line to open, the others listed under it as also on this track. Without one
+   (track no line owns), the one line there opens, or where exactly one REGISTER line runs
+   over the track that one, since it is almost always the line meant; clicking the San'in
+   coast gives 山陰線 rather than a choice between it and スーパーおき. Otherwise a list. */
+function openTrackLines(ids, owner) {
   if (!ids.length) return;
-  if (ids.length === 1) return showLine(ids[0]);
-  /* Where exactly one REGISTER line runs over the track, that is almost always the line
-     meant, so it opens straight away, with the operating patterns and named trains over
-     the same track listed under it. Clicking the San'in coast gives 山陰線 rather than a
-     choice between it and スーパーおき. */
-  const reg = ids.filter(id => countable(LINE_BY_ID.get(id)));
-  if (reg.length === 1 && regionsOf(LINE_BY_ID.get(reg[0])).some(cc => REGISTER_IN.has(cc))) {
-    showLine(reg[0]);
-    VIEW.also = ids.filter(id => id !== reg[0]);
+  // A register line that owns nothing (a companion track) cannot own a way; guarded anyway.
+  const ol = owner && LINE_BY_ID.get(owner);
+  if (!ol || (isRegisterLine(ol) && !listed(ol))) {
+    const reg = ids.filter(id => isRegisterLine(LINE_BY_ID.get(id)));
+    owner = ids.length === 1 ? ids[0] : reg.length === 1 ? reg[0] : null;
+  }
+  if (owner) {
+    showLine(owner);
+    const also = ids.filter(id => id !== owner);
+    if (!also.length) return;
+    VIEW.also = also;
     return render();
   }
   VIEW = { kind: 'pick', ids };

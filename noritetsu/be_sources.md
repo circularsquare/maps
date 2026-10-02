@@ -113,6 +113,14 @@ rightly does not have: 12's Dutch part (REGISTER uses the Belgian part), 21A (Ge
 - **Parallel lines on one corridor share track in the app.** 36 and 36N now trace on their own
   OSM relations, but where OSM puts all four tracks in one relation, or none, both lines draw
   over the same pair and a click there offers both.
+- **161A on 161's rails, Bakenbos - La Hulpe - Genval - Rixensart** (6.3 km of L.161A counts as
+  L.161 under track ownership). Not a tracing error (checked 2026-10-02): RINF's 1613 is the
+  second track pair of the quadrupled Brussels - Ottignies line, which OSM calls 161A, and
+  RINF lists 1613 sections over Bakenbos - La Hulpe - Genval - Rixensart beside 1610's. OSM
+  maps four tracks at Hoeilaart (L161 and L161A ways) but only one pair at La Hulpe, where
+  its 161A relation runs on the L161 ways. So both lines lie on one pair there and ownership
+  gives it to the lower ref, as it should for shared rails; riding either credits L.161. If
+  the quadrupling is built there, it is OSM that lacks the second pair; nothing for be.py.
 - **17 register lines have no number**: connecting curves and depot leads that passenger
   routes do run over, named "first - last" from their ends. Their public numbers exist
   (Infrabel's annex D.1 lists them) but OSM has no relation to carry them onto the RINF id.

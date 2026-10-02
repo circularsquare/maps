@@ -5,6 +5,7 @@ sys.path.insert(0, r"C:\Users\anita\projects\maps\noritetsu")
 sys.stdout.reconfigure(encoding="utf-8")
 import gtfs_served  # noqa: E402
 
+gtfs_served.WRITE_CACHE = False     # inspecting data only reads it
 cc, sub = sys.argv[1], sys.argv[2].casefold()
 mx = int(sys.argv[3]) if len(sys.argv) > 3 else 15
 feed = gtfs_served.load_feeds(cc, print)
