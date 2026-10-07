@@ -7,13 +7,17 @@ population table gives the people.
 
 ## Used by
 - `ng` Nigeria: drawn, 37 states, R4-R9 on COD-PS 2022; each state at its own mix, no column
-  margin, small categories at the national rate.
+  margin, small categories at the national rate. Since 2026-10-03 Catholics from R4-R6 (four NDHS
+  reports as witness) and Anglicans levelled by GFS; Pentecostals tested and not drawn.
 - `lr` Liberia: drawn, 15 counties; the county pattern fitted by IPF to two 2022 census margins.
 - `tz` Tanzania: drawn, 30 regions, R4 and R6-R9 on the 2022 census; R4 placed by district, R5
-  left out; the first build on `cab.stability`.
+  left out; the first build on `cab.stability`. Since 2026-10-03 five churches on the mainland,
+  levels from the GFS 2023's church item, places from it and R4, R6, R8, R9 together
+  (`sources/tz.md` §9).
 - `cm` Cameroon: drawn, 12 units (the regions with Yaoundé and Douala apart), R5-R9 on COD-PS
   2025; the first build to draw churches (Presbyterian, Baptist), on level by round, the census's
-  Protestant total and the unnamed share where each church lives (`sources/cm.md` §4).
+  Protestant total and the unnamed share where each church lives (`sources/cm.md` §4); since
+  2026-10-03 Catholics from R5-R6, the rounds matching the DHS 2011 and 2018 (§9).
 - `mz` Mozambique: drawn from the census; Afrobarometer was the witness that put `Sem religião`
   at 93-98% no religion (`sources/mz.md` §6).
 - `mg` Madagascar: drawn, 22 regions, R5-R7 and R9 on the 2018 census; Catholic, FJKM and Lutheran
@@ -26,6 +30,23 @@ population table gives the people.
 - `sd` Sudan: drawn, 18 states, R5-R9 pooled with Arab Barometer V and VII on COD-PS 2022 at one
   national share; R5 is 15 pre-2012 states, R6-R8 six regions, R9's `LOCATION.LEVEL.1` the 18
   states (`sources/sd.md`).
+- `ga` Gabon: drawn, 9 provinces, R6-R9, citizens only on the RGPL 2026 count (foreigners, 34.1%,
+  in `gap`); the split-half passes nothing, two standouts drawn, Christians split at the DHS
+  2019-21 national ratio (`sources/ga.md`).
+- `na` Namibia: drawn, 14 regions (13 survey mixes, Kavango whole in R4-R5), R4-R9 on the 2023
+  census; Lutheran and Anglican from R5-R6 only, the rounds that match the DHS 2013's ELCIN share,
+  as a share of the Christian pool they trade with (`sources/na.md` §3).
+- `ls` Lesotho: drawn, 10 districts, R4-R9 on the 2016 census; Catholic, Anglican, Methodist,
+  Pentecostal and Zionist/independent placed, the LEC (two boxes in R9) in the residual, both DHS
+  reports as the level witness; round 6's northern traditional block dropped (`sources/ls.md`).
+- `bi` Burundi: drawn, 17 provinces of 2008, R5-R6 seeding a three-way fit to the 2008 census's
+  religion rows by urban and rural, province populations by urban and rural, and collective
+  households (`sources/bi.md` §0).
+- `bw` Botswana: drawn from the 2011 census by locality; since 2026-10-03 Catholics and Adventists
+  are split out of its Christians at R4-R8 unit shares, `derived` inside the counted column, the
+  two churches that keep their share while `Christian only` climbs (`sources/bw.md` §10).
+- `km` Comoros: drawn, 3 islands at one national mix from round 10's summary of results (2025),
+  its first round; the data set is not released, so no island split (`sources/km.md`).
 - Also queued with an Afrobarometer route or witness: `sn`, `bf` (`queue.md`, "Africa swept
   a second time"). Mauritania is not asked the question.
 
@@ -156,7 +177,87 @@ population table gives the people.
   other rounds and the Arab Barometer; R8 has no location below the region. Tabulate each small box
   by region and round before pooling, and drop a block no other round or instrument reproduces,
   counted and asserted. Caught by: `sd.py::load_afro` (`R8_DARFUR_NONE`); nothing shared. Detail:
-  `sources/sd.md` §3.
+  `sources/sd.md` §3. The same shape in Lesotho R6: `Traditional` at 10-25% in three northern
+  districts and under 4% in every other (round, district) cell, with the Zionist and `Independent`
+  boxes empty there that round (`ls.py::drop_r6_north_traditional`, `R6_NORTH_TRAD`).
+- **One church can split across two boxes in a single round.** Lesotho's Evangelical Church is
+  `Evangelical` 17-22% through R8; in R9 its members choose `Calvinist` (13.1%) and `Evangelical`
+  (9.6%) in every district, so either box alone reads as the church halving. Sum candidate boxes by
+  round before calling a level unstable, and check both appear in every unit. Caught by:
+  `ls.py::levels_by_round` (the grouped level's range); nothing shared. Detail: `sources/ls.md` §3.
+- **A church can be coded right in some rounds and not others, and an open DHS report can say which.**
+  Namibia's `Lutheran` runs 42.8% and 41.9% in R5-R6 and 20-24% in R4 and R7-R9, where ELCIN members
+  went to `Evangelical` (the church's name), `Christian only` or `Anglican`, a different box each round.
+  The DHS final report's Table 3.1 often names the big church (ELCIN 43.9%) even when the dataset is
+  gated. Where some rounds match the witness, take that church's unit shares from those rounds only, as
+  a share of the pool it trades with, and the pool from all rounds; assert both the match and the
+  other rounds' gap. One halving of two rounds is a weak split-half (Namibia's Catholics fail it there
+  and pass over six rounds), so take only the churches that need it from the subset. Caught by:
+  `na.py::levels_by_round`, `na.py::carved_shares`; nothing shared. Detail: `sources/na.md` §3.
+- **Where `Christian only` is large, the Global Flourishing Study can level the churches.** GFS wave 1
+  (on disk, CC BY) asks every Christian `REL3_Y1`, the church they most identify with (codebook wave
+  2, OSF 285w7, p.21: Catholic, Orthodox, Anglican, Presbyterian, Lutheran, Methodist, Baptist,
+  Pentecostal/Charismatic, Independent/Evangelical, LDS, Jehovah's Witness, Adventist, African
+  Initiated, other, none), by `REGION1_Y1`. Tanzania: 0.5% named none against the Afrobarometer's
+  21%, and the unnamed turned out to be mostly Pentecostal (61.5%) and not Catholic, so spreading
+  them at the named proportions would have halved Pentecostals. Test the two surveys as the two
+  halves (rank over units) and check each GFS level lies between the Afrobarometer's named share and
+  that plus `Christian only`. African GFS countries: Kenya, Nigeria, South Africa, Tanzania. Caught
+  by: `tz.py::church_shares` (both assertions); nothing shared. Detail: `sources/tz.md` §9.
+- **Test a church on the basis it is drawn on.** Nigeria's Pentecostals rank the states alike in
+  GFS and Afrobarometer as a share of ALL Christians (+0.40, p 0.02) and not as a share of the
+  non-Catholic Christians they are carved from (+0.20, p 0.15): the first is mostly the Catholic
+  pattern inverted. Where one church is carved first, test the next on what is left. Also: GFS
+  wave 1's Catholic level can disagree with every DHS (Nigeria 27.9% against 19-24%; prefer the
+  DHS), GFS small boxes can be one team's coding (Plateau 87% `Orthodox`), and its `REGION1_Y1`
+  labels are not in the codebook PDF but in the `.sav`'s value labels (the first 40 MB of OSF
+  `eadfm` suffice). Caught by: `ng.py::church_split` (`CHURCHES_CARRIED`). Detail: `sources/ng.md`.
+- **A DHS report that names only `Catholic` and `Other Christian` is still a Catholic witness**, and
+  four of them (Nigeria 2008-2024) agree within 4.5 points. Compare Catholics as a share of
+  Christians, sexes pooled by weighted n, round by round; never spread `Christian only` over the
+  named churches without checking it against that share (Nigeria's named Catholics are 29-66% of
+  named Christians, the DHS's 19-24% of all). The Church's diocesan figures summed by cathedral
+  region are a rank witness, never a level (`sources/gcatholic.py`; Nigeria +0.83, Cameroon +0.64).
+  Caught by: `ng.py::catholic_fraction`, `cm.py::carve_catholic`. Detail: `sources/ng.md`, `sources/cm.md` §9.
+- **Where `Christian only` climbs by round, test which churches keep their share of ALL
+  respondents.** Botswana's unnamed run 5% to 57% of respondents over R4-R8; rounds 7-8 against 4-5,
+  named Christians keep 0.45, Catholics 0.78, Adventists 0.81, Lutherans 0.63, Pentecostals 0.57. A
+  church that keeps its share is one whose members go on naming it, so its named share is near its
+  level and can be drawn as a floor, with the unnamed left on the parent; run the split-half on the
+  church as a share of ALL the unit's Christians, the quantity drawn (the ZCC passes on named
+  Christians and fails on all). The card can also drop a big church's box between rounds (UCCSA
+  after R5). The Pew Forum's 2008-09 Africa survey (*Tolerance and Tension*, p.23) prints churches
+  per country but its Botswana Catholics (22%) are off by a factor of three to four. Caught by:
+  `bw_churches.py::main` (`HOLD_MIN`, asserted both ways); nothing shared. Detail: `sources/bw.md` §10.
+- **Two standouts that are complements break the standout residual.** `tz.py::compose` fixes each
+  standout at the other units' pooled share everywhere and fills the rest with the tail. Gabon's
+  standouts are Christian (Woleu-Ntem) and None (Nyanga): in Nyanga 82% + 28% > 100%, and the
+  residual goes negative with no error from the arithmetic itself. Start every unit from one base
+  mix (each category pooled where it is not a standout), let a standout unit keep its own share and
+  scale the rest to fill. Caught by: `ga.py::compose` (asserts no negative share); `tz.compose`
+  has no such assertion. Detail: `sources/ga.md` §3.
+- **A census urban/rural religion table is a third margin, and a carried survey pattern counts the
+  town twice unless it is split first.** Burundi prints religion only nationally, by urban and rural
+  (Muslims 14.3% urban, 1.3% rural). Fitting province x urban/rural x religion with the survey's
+  province share seeded flat across both milieus put 20.0% Muslims in Bujumbura Mairie (survey 12.6%,
+  n=175) and 4.9% in every other town, because the province shares already contain their towns.
+  Split each carried province share by the survey's own national urban and rural multiples (keeping
+  the province total), then fit: Mairie 14.4%, other towns 14.1%, census 14.3%. Rows not carried
+  are seeded flat and take the census's milieu shares. Caught by: `bi.py::main` (`TOWN_BAND`;
+  `--flat-milieu` reruns the rejected seed and stops on it), `bi.py::ipf3`; nothing shared. Detail:
+  `sources/bi.md` §0.3.
+- **The survey samples citizens; the census may count a third of a country as foreign.** Gabon's
+  2026 count is 34.1% foreign residents; Afrobarometer's frame is citizens 18+. Draw the citizens
+  and put the foreigners in `gap` (Libya ruling); where foreigners are counted by province only in
+  an older census, fit the province split to the new national margin (`ga_geo.py::split_citizens`).
+- **A country new in round 10 is published as PDFs before its data set.** Comoros R10 (fieldwork
+  May-June 2025) has a *Résumé des résultats* (weighted religion line in the sample description,
+  and the religion question in full) and a codebook (unweighted counts per code) on its country
+  page, while `afrobarometer.org/data/data-sets/?select-countries[]=comoros` lists nothing
+  (2026-10-03; the same filter lists 13 for Namibia, so the empty answer is real). The summary
+  gives a national mix at one decimal and no `REGION` cut, so the build is one national mix until
+  the file appears; re-check the data-sets filter before building. Caught by: `sources/km.py`
+  (both PDFs read back and asserted against each other). Example: `km`.
 
 ## "No religion" boxes
 The draft procedure is at the foot of `WORKFLOW_PLAN.md`.

@@ -1,0 +1,137 @@
+# Côte d'Ivoire (RGPH 2021, the national language spoken most). Nodes for taxonomy/ci2021.py.
+#
+# Only the 13 languages Tableau 4.20 names by région are drawn; the other 82 labels the census
+# coded are printed nationally only and sit together on `nigercongo` per région.
+#
+# Middle levels are the conventional ones, checked against Glottolog (data/raw/glottolog), which
+# makes Kru (krua1234) and Mande (mand1469) families of their own and Senufo (senu1239) and
+# Kulango (kula1277) branches of Atlantic-Congo outside Gur; here, as most readers know them,
+# Kru and Mande sit under Niger-Congo (as au.txt and ca.txt already have them) and Senufo, Lobi
+# and Kulango under Gur.
+#   * Kwa: Baoulé (baou1238), Anyi (anyi1245; the census's Agni), Attié (atti1239; Akyé),
+#     Abbey (abee1242; Glottolog's Abé). Kwa's existing leaves (Akan, Nzema, Ga...) are flat
+#     under `nigercongo.kwa`, so these are too, without a Tano/Bia level.
+#   * Mande: Dioula is pl.txt's `nigercongo.mande.dyula`, Yacouba ou Dan is au.txt's
+#     `nigercongo.mande.dan`; new: Maninka (the census's "Malinké ou Malinka") and Guro.
+#   * Kru: Bété (a cluster: Gagnoa, Guiberoua, Daloa Bété) and Guéré (Glottolog's Wè Northern,
+#     Southern and Western), each one census answer, so one leaf each.
+#   * Gur: Senufo (one answer for the cluster; Tagbana, Djimini, Niarafolo, Nafana and Palaka are
+#     printed apart nationally), Lobi, Kulango.
+#
+# Colours (AGENT_BRIEF §3): neighbours on the ground told apart, inside each family's part of the
+# wheel. North: Senoufo orange, Dioula green, Malinké dark teal. North-east: Lobi brick, Koulango
+# peach. East and south-east: Agni dark mustard, Attié yellow-olive, Abbey pink, Baoulé golden.
+# West and centre-west: Dan leaf green, Guéré pale lime, Bété dark olive, Gouro pale cyan.
+# Checked: every pair of named languages at 2% or more in a shared région is at least 0.079
+# apart in OKLab (closest: Bété/Agni, Attié/Dan, both minor shares in Abidjan and the south).
+# Dyula and Dan already existed (pl.txt, au.txt) without colours; they are tiny there.
+
+nigercongo | Niger-Congo | 0.72 0.14 75
+nigercongo.kwa | Kwa | 0.82 0.12 85
+nigercongo.mande | Mande | 0.72 0.13 130
+nigercongo.gur | Gur | 0.76 0.12 65
+nigercongo.kru | Kru | 0.74 0.12 110
+other | Other or unclassified
+
+nigercongo.kwa.baoule | Baoulé | 0.82 0.16 85
+nigercongo.kwa.anyi | Anyi (Agni) | 0.58 0.13 75
+nigercongo.kwa.attie | Attié (Akyé) | 0.74 0.14 105
+nigercongo.kwa.abbey | Abbey (Abé) | 0.72 0.14 5
+nigercongo.mande.dyula | Dyula | 0.78 0.16 150
+nigercongo.mande.maninka | Maninka (Malinké) | 0.60 0.12 175
+nigercongo.mande.dan | Dan | 0.68 0.16 125
+nigercongo.mande.guro | Guro (Gouro) | 0.84 0.09 195
+nigercongo.gur.senufo | Senufo (Senoufo) | 0.70 0.16 50
+# Lobi darkened to a brown (was 0.60 0.15 30, brick) by bf.txt's session: in Burkina Faso's
+# south-west it sits beside Fula's red (OKLab 0.047 apart). Still clear of Koulango and Senoufo.
+nigercongo.gur.lobi | Lobi | 0.52 0.12 45
+nigercongo.gur.kulango | Kulango (Koulango) | 0.82 0.11 55
+nigercongo.kru.bete | Bété | 0.62 0.12 105
+nigercongo.kru.guere | Guéré (Wè) | 0.88 0.11 115
+
+# ---- The share-out of "other national languages" (ask 011, sources/ci_model.py) ----
+# One leaf per annex 20 label (taxonomy/ci2021.py SHARED says how each was placed). Glottolog
+# names in brackets where the census spelling differs. Existing nodes reused: Nzema (gh), Bambara
+# (ml), Cerma (bf), Fula and Peulh (cf). Colours generated, except where a generated one sat under
+# 0.05 OKLab from a language at 2%+ of a shared région (hand-picked below; COLOURS.md lists them).
+# Nzema is recoloured here (pl.txt has it bare and tiny), away from Attié in Sud-Comoé.
+nigercongo.atlantic | Atlantic
+nigercongo.kwa.nzema | Nzema | 0.72 0.12 20
+nigercongo.mande.bambara | Bamanankan (Bambara)
+nigercongo.gur.cerma | Cerma (Gouin)
+nigercongo.atlantic.fulah | Fula
+nigercongo.atlantic.peulh | Peulh
+nigercongo.kwa.abidji | Abidji | 0.55 0.08 60
+nigercongo.kwa.aboure | Abouré (Abure)
+nigercongo.kwa.abron | Abron
+nigercongo.kwa.adjoukrou | Adjoukrou (Adioukrou) | 0.68 0.12 40
+nigercongo.kwa.alladian | Alladian
+nigercongo.kwa.avikam | Avikam (Brignan) | 0.88 0.06 60
+nigercongo.kwa.ebrie | Ebrié
+nigercongo.kwa.ega | Ega
+nigercongo.kwa.ehotile | Ehotilé (Beti)
+nigercongo.kwa.essouma | Essouma (Esuma)
+nigercongo.kwa.krobou | Krobou (Krobu)
+nigercongo.kwa.mbatto | Mbatto (Goua)
+nigercongo.kwa.ando | Ando (Andoh)
+nigercongo.kwa.souaminlin | Souaminlin
+nigercongo.kru.aizi | Aïzi (Ahizi) | 0.70 0.08 90
+nigercongo.kru.bakwe | Bakwé
+nigercongo.kru.dida | Dida | 0.78 0.10 175
+nigercongo.kru.godie | Godié | 0.70 0.12 140
+nigercongo.kru.kodia | Kodia
+nigercongo.kru.kouya | Kouya
+nigercongo.kru.kroumen | Kroumen (Krumen) | 0.48 0.08 100
+nigercongo.kru.neyo | Neyo
+nigercongo.kru.nyabwa | Niaboua (Nyabwa) | 0.78 0.12 120
+nigercongo.kru.niedeboua | Niédéboua (Nyedebwa)
+nigercongo.kru.oubi | Oubi (Glio-Oubi)
+nigercongo.kru.wane | Wané
+nigercongo.kru.wobe | Wobé (Wè Northern) | 0.56 0.09 140
+nigercongo.kru.guebie | Guébié (Gabogbo)
+nigercongo.kru.kotrohou | Kotrohou
+nigercongo.kru.kouzie | Kouzié
+nigercongo.kru.sokya | Sokya
+nigercongo.kru.winnin | Winnin
+nigercongo.mande.koyaka | Koyaka (Koyaga) | 0.74 0.14 135
+nigercongo.mande.mahou | Mahou | 0.50 0.10 140
+nigercongo.mande.worodougou | Worodougouka
+nigercongo.mande.baralaka | Baralaka
+nigercongo.mande.finanga | Finanga
+nigercongo.mande.karandjan | Karandjan | 0.60 0.10 120
+nigercongo.mande.nigbi | Nigbi
+nigercongo.mande.odienneka | Odienneka
+nigercongo.mande.ngaradougou | N'garadougouka
+nigercongo.mande.djamala | Djamala
+nigercongo.mande.gandje | Gandjé
+nigercongo.mande.komara | Komara (Kamara)
+nigercongo.mande.ouadougou | Ouadougou
+nigercongo.mande.ouodougou | Ouodougou
+nigercongo.mande.koro | Koro | 0.70 0.12 190
+nigercongo.mande.gbin | Gbin
+nigercongo.mande.toura | Toura | 0.78 0.08 150
+nigercongo.mande.mwan | Mona (Mwan) | 0.86 0.08 140
+nigercongo.mande.wan | Ouan (Wan) | 0.66 0.14 115
+nigercongo.mande.gban | Gban (Gagou) | 0.76 0.10 165
+nigercongo.mande.kla | Kla
+nigercongo.mande.sia | Sia
+nigercongo.mande.yaoure | Yaouré
+nigercongo.mande.ngain | Ngain (Beng)
+nigercongo.mande.samogho | Samogho
+nigercongo.gur.tagbana | Tagbana (Tagwana) | 0.62 0.15 15
+nigercongo.gur.djimini | Djimini | 0.86 0.08 45
+nigercongo.gur.niarafolo | Niarafolo (Nyarafolo)
+nigercongo.gur.nafana | Nafana (Nafaanra)
+nigercongo.gur.palaka | Palaka
+nigercongo.gur.tchebara | Tchebara (Tyebara)
+nigercongo.gur.fodonon | Fodonon
+nigercongo.gur.koufoulo | Koufoulo (Kufuru)
+nigercongo.gur.gbonzron | Gbonzron
+nigercongo.gur.mangoro | Mangoro
+nigercongo.gur.lorhon | Lorhon (Téén)
+nigercongo.gur.birifor | Birifor | 0.62 0.10 70
+nigercongo.gur.deg | Degha (Deg)
+nigercongo.gur.komono | Komono (Khisa)
+nigercongo.gur.siti | Siti
+nigercongo.conja | Conja
+nigercongo.doma | Doma

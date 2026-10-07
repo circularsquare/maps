@@ -1,0 +1,8 @@
+# Slovenia, Popis 2002, mother tongue (taxonomy/si2002.py). No new nodes; every label maps onto a
+# node other countries already made.
+#
+# Colour. Serbo-Croatian (defined bare in cz/fi/us, generated #63e6be) is biggest here (36k) and
+# sat between Serbian (0.072 OKLab) and Slovenian (0.076) in exactly the towns where all three
+# meet (Jesenice, Velenje, Zasavje). A mid green: 0.116 from Croato-Serbian (hr's sibling), 0.121
+# from Bosnian, further from Serbian, Slovenian, Croatian and Macedonian.
+indoeuropean.slavic.south.serbocroatian | Serbo-Croatian | 0.64 0.16 125

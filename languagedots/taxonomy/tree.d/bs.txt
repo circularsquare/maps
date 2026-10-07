@@ -1,0 +1,69 @@
+# The Bahamas (2010 census citizenship and race, sources/bs_census.py). New: Bahamian Creole
+# (Glottolog baha1260), hand-coloured apart from Jamaican Creole and Haitian Creole; Turks and
+# Caicos Creole (turk1310), coloured by build.py. The other Caribbean creoles repeat bb.txt's
+# lines (Bajan's colour lives there); everything else is a bare repeat.
+afroasiatic.chadic | Chadic
+afroasiatic.chadic.hausa | Hausa
+afroasiatic.egyptian_arabic | Egyptian Arabic
+austronesian | Austronesian
+austronesian.malayic | Malayic
+austronesian.malayic.indonesian | Indonesian
+austronesian.philippine | Philippine
+austronesian.philippine.tagalog | Tagalog
+creole | Creoles
+creole.english_based | English-based creoles
+creole.english_based.antiguan | Antiguan and Barbudan Creole
+creole.english_based.bahamian | Bahamian Creole | 0.64 0.13 172
+creole.english_based.bajan | Bajan
+creole.english_based.grenadian | Grenadian Creole
+creole.english_based.guyanese | Guyanese Creole
+creole.english_based.jamaican | Jamaican Creole
+creole.english_based.trinidadian | Trinidadian Creole
+creole.english_based.turks_caicos | Turks and Caicos Creole
+creole.english_based.vincentian | Vincentian Creole
+creole.french_based | French-based creoles
+creole.french_based.antillean | Antillean Creole (Guadeloupe, Martinique)
+creole.french_based.haitian | Haitian Creole
+indoeuropean.germanic.continental | Continental West Germanic
+indoeuropean.germanic.continental.dutch | Dutch
+indoeuropean.germanic.continental.german | German
+indoeuropean.germanic.north | North Germanic
+indoeuropean.germanic.north.danish | Danish
+indoeuropean.germanic.north.norwegian | Norwegian
+indoeuropean.germanic.north.swedish | Swedish
+indoeuropean.hellenic | Hellenic
+indoeuropean.hellenic.greek | Greek
+indoeuropean.indoaryan.sinhala | Sinhala
+indoeuropean.romance | Romance
+indoeuropean.romance.french | French
+indoeuropean.romance.italian | Italian
+indoeuropean.romance.portuguese | Portuguese
+indoeuropean.romance.romanian | Romanian
+indoeuropean.romance.spanish | Spanish
+indoeuropean.slavic | Slavic
+indoeuropean.slavic.east | East Slavic
+indoeuropean.slavic.east.russian | Russian
+indoeuropean.slavic.east.ukrainian | Ukrainian
+indoeuropean.slavic.south | South Slavic
+indoeuropean.slavic.south.bulgarian | Bulgarian
+indoeuropean.slavic.west | West Slavic
+indoeuropean.slavic.west.polish | Polish
+japonic | Japonic
+japonic.japanese | Japanese
+nigercongo | Niger-Congo
+nigercongo.bantu | Bantu
+nigercongo.bantu.ganda | Ganda
+nigercongo.bantu.nguni | Nguni
+nigercongo.bantu.nguni.siswati | Swati
+nigercongo.bantu.nguni.zulu | Zulu
+nigercongo.bantu.shona | Shona
+nigercongo.bantu.sotho_tswana | Sotho-Tswana
+nigercongo.bantu.sotho_tswana.setswana | Setswana
+nigercongo.bantu.swahili | Swahili
+nigercongo.kwa | Kwa
+nigercongo.kwa.twi | Twi
+sinotibetan.sinitic | Chinese
+sinotibetan.sinitic.cantonese | Cantonese
+sinotibetan.sinitic.mandarin | Mandarin
+uralic | Uralic
+uralic.estonian | Estonian

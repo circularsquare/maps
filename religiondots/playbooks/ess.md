@@ -13,7 +13,9 @@ ask religion, once the office's commissioned-table shelf has come back empty.
 - `ua` Ukraine: drawn, rounds 2-6 for all residents at 26 oblasts, round 11 a witness; ask 016.
 - `gr` `fi` `fr` `it`: drawn before the split-half existed; it runs on them as a report only.
 - `de` Germany: ESS splits the register's residual by Land (`de_ess.py`, `countries.py::_de_split_ess`).
-- `nl` Netherlands: priced for ESS, drawn from a CBS maatwerk table. `lu`: closed, rounds 1-2 only.
+- `nl` Netherlands: priced for ESS, drawn from a CBS maatwerk table.
+- `lu` Luxembourg: rounds 1-2 a witness only (`regionlu` one value); drawn from EVS 2020/21 and TNS
+  Ilres 2022 national figures at one mix (`sources/lu.md`).
 
 ## Loading it
 - **Office first.** Look for a commissioned-table shelf and on the customer's site (Sweden's church
@@ -102,6 +104,13 @@ ask religion, once the office's commissioned-table shelf has come back empty.
   Caught by: `lv.py::_foreign_half`; `be`, `dk`, `gr`, `no` and `se` `::_foreign_half` stop on any
   `RNC` and on named citizenships outside Latvia's coverage band. `fi`, `fr` and `it` still only
   print (their `RNC` is 0, 2026-09-14). Detail: spec §12 "EUROSTAT'S `FOR`".
+- **The Pew foreign half can hold more of a religion than the whole country has.** Luxembourg's
+  foreigners on Pew origin rows are 9.4% Muslim, 4.4% of the country, against 1.3-2.9% of everyone
+  in two surveys and Pew's own 1.8%: French, Belgian and German movers are not their home countries'
+  Muslims in proportion (ESS 2002-04: 2.5%, 2.1%, 0% against Pew's 9.1%, 6.8%, 6.5%), while Christian
+  and none fit. Where a national total of all residents exists, compare the foreign half with it per
+  category before building on it. Caught by: `lu.py::_foreign_half_test` (pinned); missing in the
+  two-half countries, whose surveys are citizen-only and have no such total. Detail: `sources/lu.md` §3.
 - **Countries and units drop out of rounds.** Sweden has no round 10, Denmark no 8, 10, 11, Ukraine
   none of 7-10, and Ukraine's 2-5 each skip 2-4 oblasts. A unit empty in one half drops that
   halving in `stability.median_rho`, and different ones from the null. Assert who each round sampled

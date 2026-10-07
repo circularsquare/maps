@@ -113,13 +113,35 @@ station centre. OSM's own running track per direction is in each `REGISTER` note
   list. OSM keeps it as an OSM line.
 - **Jurong Region Line**: under construction (first stage due 2027). OSM tags its station
   nodes `railway=station`, but it has no open track and no stops in a service relation.
-- **RTS Link** (Woodlands North to Bukit Chagar, Johor Bahru): not open (planned end-2026).
-- **KTM Shuttle Tebrau** (Woodlands Train Checkpoint to JB Sentral): open, but its Singapore
-  part is 1.1 km of track from the checkpoint to the middle of the causeway, with one station.
-  OSM has no route relation for it, so a section ending at the border would be dropped as
-  unridden anyway. Left out (decided 2026-09-30); it comes back naturally if Malaysia is
-  ever built, and the RTS Link replaces it.
+- **RTS Link** (Woodlands North to Bukit Chagar, Johor Bahru): not open. Checked 2026-10-03:
+  passenger service, first due December 2026, is now expected in February 2027 after trial
+  runs end this year. Build it when it opens (OSM track named for it, two stations, one of
+  them in Malaysia: a piece to a border point on each side, as below).
 - **Sentosa's other transport**: the cable car is `aerialway`, not rail.
+
+## Over the border: KTM's Shuttle Tebrau (built 2026-10-04)
+
+KTM's Shuttle Tebrau runs JB Sentral - Woodlands Train Checkpoint, 31 trips a day (KTM's GTFS,
+my_sources.md). Malaysia's build ends its West Coast Line at the border point `xWoodlands`
+(borders.EXTRA: where KTM's track, OSM way 925109455, crosses OSM's boundary on the causeway),
+so until now a ride could not end in Singapore. Singapore now builds the rest:
+
+- **Woodlands Train Checkpoint - Malaysia – Singapore border, 0.89 km**, over the two ways OSM
+  names "KTM" (545059768, 925109455). Against the chainage in en.wikipedia's route diagram
+  (JB Sentral 756.8, Woodlands 759.0, so 2.2 km) less Malaysia's JB Sentral - border 1.27 km:
+  0.93, so 0.96.
+- **It is a piece of Malaysia's line, not a line of Singapore's own**: same id (`y792c0834bf`,
+  my_register.line_id of "Laluan Pantai Barat"), same name, KTM as operator. The app joins
+  lines of one id from every country into one line, each country counting its own piece in
+  its totals, so JB Sentral -> Woodlands Train Checkpoint is one ride on the West Coast Line
+  and credits Malaysia's 1.27 km and Singapore's 0.89. A line of Singapore's own would have
+  met Malaysia's at the border point and still left no line calling at both stations: the app
+  never joins two register lines of different ids, and OSM has no route relation for the
+  shuttle to carry the ride instead.
+- Kept by build_model through the line's `served_sections` (the section ends at a junction
+  no OSM route runs over). `BORDER_PIECES` in sg_register.py; it goes when the RTS Link
+  replaces the shuttle (KTM is to stop it about six months after the RTS opens).
+- Not in `check_model.REGISTER["sg"]`: no published figure for Singapore's part alone.
 
 ## Shared-code change it needed
 

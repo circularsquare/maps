@@ -1,0 +1,66 @@
+# Myanmar, GAD 2018 Township Profiles ethnic nationality read as language (taxonomy/mm2018.py;
+# countries/mm.py). Nodes other fragments already define are repeated identically.
+#
+# New group nodes, drawn washed out since GAD names no language inside them:
+#   sinotibetan.kachin       the Kachin national race's languages (Jingpho, Zaiwa, Lhaovo,
+#                            Rawang, Lachik); not a genealogical group, the conventional one
+#   sinotibetan.karen.kayah  Glottolog's Kayah family (Eastern and Western Kayah Li)
+# Each has its member languages as children so the viewer treats it as a group (a node with no
+# children is drawn as a named language). Nobody is drawn on those children; they are there for
+# a future source that splits them. Jingpho stays where it is (sinotibetan.jingpho, other
+# fragments), so the Kachin group lists the others.
+# Colours: Kachin a yellow, clear of Shan's green where the two meet in Kachin and northern
+# Shan; Pa'o a deep blue, clear of Shan's teal-green and Intha's lilac round Inle Lake.
+# New leaves: Pa'o and Kayan under Karen; Danu, Intha and Taungyo under Burmish; Akha under
+# Loloish; Kadu and Ganan (Luish) directly under Sino-Tibetan; Yinchia and Danau (Palaungic)
+# under Austroasiatic beside Palaung and Wa; Moken under Austronesian; "Indian" under other.
+sinotibetan | Sino-Tibetan
+sinotibetan.burmish | Burmish
+sinotibetan.burmish.burmese | Burmese
+sinotibetan.burmish.rakhine | Rakhine
+sinotibetan.burmish.danu | Danu
+sinotibetan.burmish.intha | Intha
+sinotibetan.burmish.taungyo | Taungyo
+sinotibetan.karen | Karen | 0.80 0.11 215
+sinotibetan.karen.pao | Pa'o | 0.56 0.12 232
+sinotibetan.karen.kayan | Kayan (Padaung)
+sinotibetan.karen.kayah | Kayah (Karenni) | 0.70 0.12 228
+sinotibetan.karen.kayah.eastern | Eastern Kayah Li
+sinotibetan.karen.kayah.western | Western Kayah Li
+sinotibetan.kukichin | Kuki-Chin
+sinotibetan.kachin | Kachin languages (Jingpho, Zaiwa, Lhaovo, Rawang) | 0.82 0.14 90
+sinotibetan.kachin.zaiwa | Zaiwa (Atsi)
+sinotibetan.kachin.lhaovo | Lhaovo (Maru)
+sinotibetan.kachin.rawang | Rawang
+sinotibetan.kachin.lachik | Lachik (Lashi)
+sinotibetan.naga | Naga
+sinotibetan.loloish | Loloish (Yi languages) | 0.66 0.14 268
+sinotibetan.loloish.lisu | Lisu
+sinotibetan.loloish.lahu | Lahu
+sinotibetan.loloish.akha | Akha
+sinotibetan.kadu | Kadu
+sinotibetan.ganan | Ganan (Kanan)
+sinotibetan.sinitic | Chinese | 0.62 0.19 38
+sinotibetan.sinitic.mandarin | Mandarin | 0.68 0.17 41
+kradai | Kra-Dai (Tai-Kadai) | 0.80 0.14 125
+kradai.shan | Shan
+austroasiatic | Austroasiatic
+austroasiatic.mon | Mon | 0.78 0.14 65
+austroasiatic.palaung | De'ang (Palaung)
+austroasiatic.wa | Wa
+austroasiatic.yinchia | Yinchia (Yinn) | 0.84 0.15 290.0
+austroasiatic.danau | Danau
+hmongmien | Hmong-Mien | 0.66 0.15 170
+hmongmien.hmong | Hmong | 0.66 0.16 170
+austronesian | Austronesian | 0.76 0.13 195
+austronesian.moken | Moken
+# Rohingya (Anita, 2026-10-05): Rakhine's people missing from GAD's ethnicity table, drawn from
+# its religion table (countries/mm.py). Same id as ca.txt and sa.txt: Glottolog files Rohingya
+# (rohi1238) in Bengali-Assamese, which this tree keeps flat under Eastern. Colour pinned to an
+# olive, clear of Rakhine's pink and Bengali's yellow across the Naf.
+indoeuropean | Indo-European
+indoeuropean.indoaryan | Indo-Aryan
+indoeuropean.indoaryan.eastern | Eastern
+indoeuropean.indoaryan.eastern.rohingya | Rohingya | 0.66 0.14 100
+other | Other or unclassified
+other.indian | Indian (no language named)

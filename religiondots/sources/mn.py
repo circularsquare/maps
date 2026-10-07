@@ -108,7 +108,10 @@ AIMAGS = {
     "MN42": ("Govisumber", "Govisumber_XAOCT_Negdsen_dun.pdf"),
     "MN43": ("Selenge", "Selenge_XAOCT_Negdsen_dun.pdf"),
     "MN44": ("Dornogovi", "Dornogovi_XAOCT_Negdsen_Dun.pdf"),
+    # Darkhan-Uul and Dundgovi are read by eye, not parsed: see TRANSCRIBED below.
+    "MN45": ("Darkhan-Uul", "Darkhan-Uul_XAOCT_Negdsen%20dun.pdf"),
     "MN46": ("Umnugovi", "Umnugovi_XAOCT_Negdsen_Dun.pdf"),
+    "MN48": ("Dundgovi", "Dundgovi.pdf"),
     "MN61": ("Orkhon", "Orkhon_XAOCT_Negdsen_Dun.pdf"),
     "MN62": ("Uvurkhangai", "Uvurkhangai_XAOCT_Negdsen_dun.pdf"),
     "MN63": ("Bulgan", "Bulgan_XAOCT_Negdsen_dun.pdf"),
@@ -140,20 +143,50 @@ OVERRIDE = {
     "MN84": (39.3, 60.6),
 }
 
-# DUNDGOVI IS PUBLISHED AND IS STILL NOT DRAWN, and the reason is not that it is missing.
-# `https://downloads.1212.mn/Dundgovi.pdf` is the right volume, 2020, 211 pages, 34.8 MB --
-# and it is a SCAN. Its producer is `iLovePDF`, and the only extractable text on any page is
-# the running header and the page number; the tables are pixels. Nothing in this file can
-# read it, and OCR of Mongolian Cyrillic tables is not something to bolt on here. See
-# sources/mn.md §7 for the two ways it could be brought in.
+# DUNDGOVI AND DARKHAN-UUL ARE TRANSCRIBED BY HAND (2026-10-03), because their tables are
+# pictures. `Dundgovi.pdf` is a scan throughout (producer `iLovePDF`; the only text on any
+# page is the running header and page number). Darkhan-Uul's volume has real text for the
+# prose and captions and pasted-in images for every table. The figures below were read off
+# 200-220 dpi renders of the pages named, the 2020 `Бүгд` column of each table, and each set
+# is checked four ways in check_transcribed(): the pair sums to 100.0, the five sum to 100.0,
+# the volume's own prose repeats two of them (the Buddhist share, and the women-minus-men gap
+# in religiosity, which is the table's other two 2020 columns), and the volume's age-by-type
+# table prints a БҮГД row that repeats the type split. sources/mn.md §13.
 #
-# DARKHAN-UUL IS THE SAME PROBLEM ONE STEP FURTHER IN. Its volume has a text layer for the
-# prose and the captions, and its TABLES are pasted-in images: the two religion pages carry
-# nine picture objects between them and two extractable data rows. Nothing here can read it.
-MISSING = {
-    "MN48": "Dundgovi",
-    "MN45": "Darkhan-Uul",
+# **DARKHAN-UUL'S TABLE 3.10 CONTRADICTS ITSELF, and the `Бүгд` column is taken.** Its 2020
+# men and women columns put 3.8 / 2.6 against `Бөө` and 7.3 / 7.7 against `Ислам`, which
+# averages to the `Бүгд` column's figures with the two rows swapped (Бүгд: Бөө 7.5, Ислам
+# 3.2). The `Бүгд` reading is the right one on three counts: table 3.11's БҮГД row (columns
+# in a different order, Ислам before Бөө) prints Ислам 3.2 and Бөө 7.5; table 3.11's age
+# rows weighted by table 3.12's age distribution of the religious rebuild 3.19 and 7.51; and
+# the ethnic table 3.2 has Kazakhs at 2.6% and Khotons at 0.5% of the population, so 7.5% of
+# the religious as Muslim would be 3.9% of adults, more than every Kazakh and Khoton adult
+# in the aimag (about 2.9%). The volume's prose follows the swapped sex columns (it says the
+# shamanist share fell since 2010); that is not followed.
+#
+# DUNDGOVI'S TABLE 3.8 БҮГД ROW reads Ислам 0.1 and Бусад 0.2 where table 3.7 prints 0.0
+# and 0.1 (3.8 sums to 100.2). Table 3.7 is taken, as for every other aimag; the difference
+# is about 30 adults.
+TRANSCRIBED = {
+    # pcode: (not religious %, religious %, {type: % of the religious}, where)
+    "MN45": (48.1, 51.9,
+             {"Будда": 83.3, "Христ": 5.2, "Ислам": 3.2, "Бөө": 7.5, "Бусад": 0.8},
+             dict(status="ХҮСНЭГТ 3.9, PDF p.43 (index 42)",
+                  types="ХҮСНЭГТ 3.10, PDF p.44 (index 43)",
+                  echo={"Будда": 83.3, "Христ": 5.2, "Ислам": 3.2, "Бөө": 7.5,
+                        "Бусад": 0.8},            # ХҮСНЭГТ 3.11 БҮГД row, same page
+                  prose_buddhist=83.3, sex=(48.7, 54.7), prose_gap=6.0)),
+    "MN48": (30.7, 69.3,
+             {"Будда": 97.0, "Христ": 1.3, "Ислам": 0.0, "Бөө": 1.6, "Бусад": 0.1},
+             dict(status="ХҮСНЭГТ 3.6, PDF p.42 (index 41)",
+                  types="ХҮСНЭГТ 3.7, PDF p.42 (index 41)",
+                  echo={"Будда": 97.0, "Христ": 1.3, "Ислам": 0.1, "Бөө": 1.6,
+                        "Бусад": 0.2},            # ХҮСНЭГТ 3.8 БҮГД row, same page
+                  prose_buddhist=97.0, sex=(66.2, 72.1), prose_gap=5.9)),
 }
+
+# Kept for sources/mn_grid.py, which looks a polygon's census name up here as a fallback.
+MISSING = {}
 
 ALL_AIMAG_NAMES = ({n for n, _ in AIMAGS.values()} | set(MISSING.values()))
 
@@ -321,9 +354,9 @@ def read_population():
     `Census2020_Main_report_Eng.pdf` APPENDIX TABLE 1.1 gives resident population by age
     group for all twenty-two units in one English table, and everything needed is on its
     first page: the row's `Total` and its `0-4`, `5-9` and `10-14` columns, so 15+ is a
-    subtraction and the continuation pages are never touched. It also covers Dundgovi, whose
-    religion shares are not readable (see MISSING), so the denominator is already here if
-    that volume is ever transcribed.
+    subtraction and the continuation pages are never touched. It covers Darkhan-Uul and
+    Dundgovi too, whose shares are transcribed by hand (TRANSCRIBED), so their denominator
+    comes from the same table as everyone else's.
 
     Checked against Bayan-Ölgii's own volume, which prints 103,908 and the same three child
     bands: identical.
@@ -591,11 +624,15 @@ def read():
         doc = fitz.open(path)
 
         pop_all, pop15 = pop[name]
-        if pcode in OVERRIDE:
-            none_pc, rel_pc = OVERRIDE[pcode]
+        if pcode in TRANSCRIBED:
+            none_pc, rel_pc, types, _ = TRANSCRIBED[pcode]
+            types, order = dict(types), ["transcribed"]
         else:
-            none_pc, rel_pc = _read_status(doc, path)
-        types, order = _read_type(doc, path)
+            if pcode in OVERRIDE:
+                none_pc, rel_pc = OVERRIDE[pcode]
+            else:
+                none_pc, rel_pc = _read_status(doc, path)
+            types, order = _read_type(doc, path)
 
         report.append((pcode, name, pop_all, pop15, none_pc, rel_pc, types, order))
         # THE CAPITAL IS DRAWN BY DÜÜREG (2026-09-15), from its own volume's figures 3.5 and
@@ -612,7 +649,9 @@ def read():
             out.append({"geo_id": pcode, "geo_level": "aimag", "geo_name": name,
                         "source_category": cat, "count": int(round(n)),
                         "basis": BASIS, "year": YEAR, "source_id": SOURCE_ID,
-                        "note": f"pop15={pop15}; religious_pc={rel_pc}"})
+                        "note": f"pop15={pop15}; religious_pc={rel_pc}"
+                                + ("; transcribed by eye from the volume's image tables"
+                                   if pcode in TRANSCRIBED else "")})
         out.append({"geo_id": pcode, "geo_level": "aimag", "geo_name": name,
                     "source_category": TOTAL_CAT, "count": pop15,
                     "basis": BASIS, "year": YEAR, "source_id": SOURCE_ID,
@@ -620,8 +659,33 @@ def read():
     return out, report
 
 
-def check(rows, report):
+def check_transcribed():
+    """The hand-read figures against everything else their own volume prints. True if clean."""
     ok = True
+    for pcode, (none_pc, rel_pc, types, w) in sorted(TRANSCRIBED.items()):
+        name = AIMAGS[pcode][0]
+        men, women = w["sex"]
+        tests = [
+            ("pair sums to 100.0", abs(none_pc + rel_pc - 100.0) < 0.05),
+            ("five sum to 100.0", abs(sum(types.values()) - 100.0) < 0.05),
+            (f"prose Buddhist {w['prose_buddhist']}", types["Будда"] == w["prose_buddhist"]),
+            (f"prose women-minus-men {w['prose_gap']}",
+             abs(women - men - w["prose_gap"]) < 0.05),
+            ("religious lies between men and women", min(men, women) <= rel_pc
+             <= max(men, women)),
+            ("age table's БҮГД row within 0.1", all(abs(types[c] - w["echo"][c]) <= 0.1
+                                                  for c in CATEGORIES)),
+        ]
+        bad = [t for t, good in tests if not good]
+        ok &= not bad
+        print(f"  {'OK ' if not bad else 'BAD'} {name} transcribed ({w['status']}; "
+              f"{w['types']}): {len(tests) - len(bad)} of {len(tests)} checks"
+              + (f", failing {bad}" if bad else ""))
+    return ok
+
+
+def check(rows, report):
+    ok = check_transcribed()
 
     good = len(report) == len(AIMAGS)
     ok &= good
@@ -686,6 +750,21 @@ def check(rows, report):
     for cat in [NOT_RELIGIOUS] + CATEGORIES:
         n = nat[cat]
         print(f"    {n:>10,}  {100.0 * n / universe:6.2f}%  {cat}")
+
+    # The national rebuild has power on Darkhan-Uul's swapped rows (see TRANSCRIBED): reading
+    # its Бөө and Ислам the way its sex columns and prose do moves about 1,600 adults and
+    # takes both national shares outside the rounding of NSO's printed 3.2 and 2.5.
+    du = next(r for r in report if r[0] == "MN45")
+    moved = du[3] * du[5] / 100.0 * (du[6]["Бөө"] - du[6]["Ислам"]) / 100.0
+    for label, m in (("as taken", 0.0), ("rows swapped", moved)):
+        mus = 100.0 * (nat["Ислам"] + m) / universe
+        sha = 100.0 * (nat["Бөө"] - m) / universe
+        print(f"    Darkhan-Uul {label:<12}: national Muslim {mus:.2f} (NSO 3.2), shamanist "
+              f"{sha:.2f} (NSO 2.5)")
+        if label == "as taken":
+            good = abs(mus - 3.2) <= 0.05 and abs(sha - 2.5) <= 0.05
+            ok &= good
+            print(f"  {'OK ' if good else 'BAD'} both inside the rounding of NSO's figures")
 
     print("\n  For comparison, NSO's published NATIONAL figures for the 2020 census are "
           "51.7% Buddhist,\n  40.6% no religion, 3.2% Muslim, 2.5% Shamanist, 1.3% "

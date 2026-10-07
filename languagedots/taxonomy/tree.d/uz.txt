@@ -1,0 +1,25 @@
+# Uzbekistan, 2026 census native language (taxonomy/uz2026.py). Adds no node: all eight columns
+# are languages other fragments define, repeated here identically so the fragment stands alone.
+#
+# Colours. Turkmen was generated a light pink (#f58de0) almost on Uzbek's (#ec81c0), and the two
+# meet on the ground in Khorezm, Karakalpakstan and the south (and in Turkmenistan's Dashoguz and
+# Lebap). Hand-picked a darker crimson, still in Turkic's warm region: apart from Uzbek's pink by
+# lightness and from Karakalpak's burnt orange (Karakalpakstan has 83,000 Turkmen) by hue. It sits
+# nearest Kyrgyz's red, which it does not meet. Turkmen elsewhere is a few migrants (au, cz, fi,
+# kg, pl), drawn from the generated colour until now. Kazakh's pale rose beside Uzbek's pink
+# (Tashkent region) is kg's pick and is told apart, so it stays.
+
+# ---- parents and languages defined elsewhere, repeated identically ----
+turkic | Turkic
+turkic.uzbek | Uzbek | 0.74 0.15 345
+turkic.karakalpak | Karakalpak | 0.580 0.160 41.7
+turkic.kazakh | Kazakh | 0.84 0.09 15
+turkic.kyrgyz | Kyrgyz | 0.64 0.20 25
+turkic.turkmen | Turkmen | 0.58 0.18 5
+indoeuropean | Indo-European
+indoeuropean.iranian | Iranian
+indoeuropean.iranian.tajik | Tajik
+indoeuropean.slavic | Slavic
+indoeuropean.slavic.east | East Slavic
+indoeuropean.slavic.east.russian | Russian
+other | Other or unclassified

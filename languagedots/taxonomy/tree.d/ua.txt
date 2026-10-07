@@ -1,0 +1,25 @@
+# Ukraine, 2001 census (taxonomy/ua2001.py). Checked against Glottolog (data/raw/glottolog):
+# Crimean Tatar (crim1257), Gagauz (gaga1249), Karaim (kara1464) and Tatar (tata1255) are all in
+# Turkic (turk1311); flat under `turkic` like the Turkic languages already in the tree.
+# Moldovan: Glottolog files Moldavian (mold1248) as a dialect of Romanian, but the census asked them
+# apart and 185,000 people chose Moldovan, so it is a sibling of Romanian, not a child (a child
+# would make Romanian a group, drawn washed out as "language not named").
+# Romani: the census's "циганську" names no variety; Glottolog's Romani is a family (roma1329), so
+# the label gets a leaf under the existing Romani group rather than sitting on the group itself.
+#
+# Repeated from ca.txt, identically, because Canada is still being built and these must exist:
+indoeuropean.slavic.east.belarusian | Belarusian
+turkic.azerbaijani | Azerbaijani
+turkic.uzbek | Uzbek
+#
+# New. Colours for the Budjak (south Odesa oblast), where Bulgarian, Gagauz, Moldovan, Ukrainian
+# and Russian share raions, and for Crimea (Crimean Tatar beside Russian and Ukrainian).
+turkic.crimean_tatar | Crimean Tatar | 0.64 0.18 15
+# Bulgarian is defined in us.txt with no colour; generated it came out olive beside Ukrainian's
+# yellow-green across the Budjak, so it is a darker blue-green here (this file is read first).
+indoeuropean.slavic.south.bulgarian | Bulgarian | 0.60 0.12 185
+turkic.gagauz | Gagauz | 0.66 0.16 350
+turkic.karaim | Karaim
+turkic.tatar | Tatar
+indoeuropean.romance.moldovan | Moldovan | 0.84 0.13 65
+indoeuropean.indoaryan.romani.romani | Romani

@@ -1,0 +1,14 @@
+# British Virgin Islands (2010 census country of birth, no language question; sources/vg.md).
+# Bare repeats of nodes from ag.txt, bb.txt and fr.txt.
+africa_other | Other African languages
+creole | Creoles
+creole.english_based | English-based creoles
+creole.english_based.antiguan | Antiguan and Barbudan Creole
+creole.english_based.grenadian | Grenadian Creole
+creole.english_based.guyanese | Guyanese Creole
+creole.english_based.jamaican | Jamaican Creole
+creole.english_based.trinidadian | Trinidadian Creole
+creole.english_based.vincentian | Vincentian Creole
+creole.english_based.virgin_islands | Virgin Islands Creole
+creole.french_based | French-based creoles
+creole.french_based.antillean | Antillean Creole (Guadeloupe, Martinique)

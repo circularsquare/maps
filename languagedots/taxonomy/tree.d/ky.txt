@@ -1,0 +1,13 @@
+# Cayman Islands (2021 census country of birth by district). No new nodes; bare repeats so the
+# country stands on its own under `build.py --only` (the Caribbean creoles are bb.txt's).
+austronesian | Austronesian
+austronesian.philippine | Philippine
+austronesian.philippine.tagalog | Tagalog
+creole | Creoles
+creole.english_based | English-based creoles
+creole.english_based.bajan | Bajan
+creole.english_based.guyanese | Guyanese Creole
+creole.english_based.jamaican | Jamaican Creole
+creole.english_based.trinidadian | Trinidadian Creole
+indoeuropean.romance | Romance
+indoeuropean.romance.spanish | Spanish

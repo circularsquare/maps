@@ -16,6 +16,7 @@ python build_model.py --region it --register rinf:data/raw/rinf/it     # 2 min
 python build_tiles.py --region it                                      # 1.5 min
 python check_model.py --region it
 python rinf.py --dry it          # the reader alone, with its full log
+python gtfs_served.py --fetch it  # refresh the timetable feeds (data/raw/gtfs/it/), then rebuild
 ```
 
 ## Sources
@@ -66,7 +67,7 @@ RFI-style name with an en dash:
 - fundamental lines by the cities whose node they start from: "Milano – Bologna", "Firenze –
   Roma (Direttissima)", "Firenze – Roma (linea lenta)", "Roma – Formia – Napoli";
 - high speed: "AV Roma – Napoli", "AV Milano – Bologna", "AV Treviglio – Brescia";
-- node lines: "Nodo di Milano" etc. (one line per city: Milano's is 141 km of 48 sections).
+- node lines: split since 2026-10-03 into the lines inside each city (below, "City nodes").
 
 Pieces of an id that stay apart after the fixes are named alone ("Cuneo – Limone" and
 "Breil-sur-Roya – Ventimiglia" are C10). Twelve groups join pieces that it.wikipedia treats
@@ -112,16 +113,17 @@ the shared EU_TRAIN rule (EC, EN, NJ, TGV, European Sleeper). OSM maps the Frecc
 route by route with no train number. Regionale, Regionale Veloce, RegioExpress, the Leonardo
 Express and the S, FL, SFM, FM suburban lines are lines. 22 lines, 9,790 km.
 
-## Built (2026-10-02)
+## Built (2026-10-03: timetable check live, city nodes split)
 
-- **302 register lines, 16,604 km**, against RINF's own section lengths median 0.997 (298 lines
-  of 2 km or more, 3 off by more than 5%: Bari – Barletta, where RINF gives Andria Sud - Andria
-  and Corato - Corato Sud 13.06 km each for about 1.4 km of track; Cagliari – Decimomannu;
-  Busto Arsizio – Malpensa). By manager: RFI 264 lines 15,098 km, FSE 8 / 471, FER 10 / 354,
-  FERROVIENORD 10 / 319, Ferrovie del Gargano 2 / 93, EAV 2 / 90, LFI 2 / 83, Ferrotramviaria
-  3 / 82, FUC 1 / 15.
-- rinf.py traced 17,276 km of 17,349 km of RINF length; 20 sections rejected (no track, below);
-  build_model then dropped 154 junction-ended sections (672 km) no OSM passenger route runs over.
+- **310 register lines, 16,856 km** (2026-10-02: 302 lines, 16,604 km), against RINF's own
+  section lengths median 0.997 (306 lines of 2 km or more, 4 off by more than 5%: Bari –
+  Barletta, where RINF gives Andria Sud - Andria and Corato - Corato Sud 13.06 km each for
+  about 1.4 km of track; Cagliari – Decimomannu; Busto Arsizio – Malpensa; a 2.4 km Venezia
+  yard piece). 809 km of it is now greyed as not running (below).
+- rinf.py traced 17,317 km of 17,392 km of RINF length; 20 sections rejected (no track, below);
+  build_model then dropped 107 junction-ended sections (461 km) that neither a train in the feed
+  nor an OSM passenger route runs over (2026-10-02: 154 sections, 672 km).
+- What follows in this section is from the 2026-10-02 build and still holds.
 - 653 lines in all: 351 OSM lines (26,002 km), of which 22 are named trains (9,790 km). 4,448
   stations. 99 lines carry a colour (all from OSM; no `colours/it.csv` yet). Tiles 6.8 MB;
   775 ways on pieces of track no line touches left out (Sardinia's and Calabria's narrow gauge
@@ -141,18 +143,28 @@ Express and the S, FL, SFM, FM suburban lines are lines. 22 lines, 9,790 km.
 
 ## Check
 
-`python check_model.py --region it`: 98 published lengths, 85 within 5%, every miss explained
-in its note. The F-line figures are it.wikipedia chainage between the built line's two ends.
+`python check_model.py --region it` (2026-10-03): 101 published lengths, 83 within 5%, every
+miss explained in its note. The F-line figures are it.wikipedia chainage between the built
+line's two ends; with the city nodes split most F lines now reach their city stations, so the
+figures were re-taken (Bologna – Ancona from Bologna Centrale 0.997, Bologna – Padova 0.993,
+Torino – Arquata Scrivia from Porta Nuova 1.016, Firenze – Roma (linea lenta) Firenze SMN -
+Roma Termini 1.021 against it.wikipedia's 314, Bologna – Porretta Terme 0.995, Roma – Avezzano
+from Termini 1.024).
 
 | line | built | published | ratio | why |
 |---|---|---|---|---|
+| Milano – Mortara | 54.1 | 44.0 | 1.23 | the southern belt Rogoredo - Romolo - San Cristoforo (9.8 km, from the Milano node) |
 | Alessandria – Piacenza | 110.6 | 96.5 | 1.15 | RINF also files the Bressana - Broni leg (13.3 km) |
+| Venezia – Trieste | 159.8 | 141.1 | 1.13 | Bivio d'Aurisina - Villa Opicina (14.9 km, kept by the timetable) and Mestre Olimpia - Carpenedo |
 | Fiumetorto – Messina | 199.0 | 180.6 | 1.10 | old coast line via Falcone and the new Patti - Terme Vigliatore line both built |
-| Milano – Bologna | 217.5 | 199.2 | 1.09 | RINF also files Rogoredo - Bivio Melegnano - Tavazzano (18.2 km) |
 | AV Bologna – Firenze | 85.7 | 78.5 | 1.09 | built starts at Bologna's underground AV station (it.wikipedia says 86) |
+| Milano – Bologna | 232.7 | 214.5 | 1.08 | RINF also files Rogoredo - Bivio Melegnano - Tavazzano (18.2 km) |
+| Bologna – Firenze (Direttissima) | 104.6 | 97.0 | 1.08 | now Bologna San Vitale - Firenze SMN, with the Castello - Olmatello link |
 | Nocera Inferiore – Codola | 4.3 | 4.0 | 1.07 | rounded figure |
-| Genova – Pisa | 157.1 | 147.7 | 1.06 | both Vezzano - La Spezia routes, and Pisa Centrale |
-| Verona – Bologna | 109.3 | 103.0 | 1.06 | the Verona Porta Vescovo leg (6.8 km) |
+| AV Torino – Milano | 133.3 | 125.0 | 1.07 | Novara interconnection (kept by the timetable), Rho and Stura links |
+| Firenze – Roma (Direttissima) | 265.4 | 249.5 | 1.06 | Chiusi and Valdarno interconnections (15.8 km, kept by the timetable) |
+| Genova – Pisa | 168.0 | 158.5 | 1.06 | both Vezzano - La Spezia routes, and Pisa Centrale |
+| Verona – Bologna | 117.0 | 110.8 | 1.06 | the Verona Porta Vescovo leg (6.8 km) |
 | Bari – Bitritto | 9.5 | 9.0 | 1.05 | rounded figure |
 | Reggio Emilia – Guastalla | 30.5 | 29.0 | 1.05 | the Reggio San Lazzaro spur (2.1 km) |
 | Domodossola – Novara | 85.1 | 89.6 | 0.95 | Vignale - Novara is C24, a line of its own |
@@ -160,44 +172,141 @@ in its note. The F-line figures are it.wikipedia chainage between the built line
 | Saronno – Seregno | 13.3 | 15.0 | 0.89 | RINF starts at Saronno Sud (13.15) |
 | Cremona – Mantova | 36.4 | 62.0 | 0.59 | Bozzolo - Mantova has no track in the extract |
 
-Among those within 5%: Brennero – Verona 1.01, Firenze – Roma (Direttissima) 1.00, Bologna –
-Ancona 1.00, Ancona – Foggia 0.99, Venezia – Trieste 1.00, Milano – Torino 0.99, Battipaglia –
-Potenza – Metaponto 1.00, Lecco – Sondrio – Tirano 1.00, every FSE line 0.98-1.00.
+Among those within 5%: Brennero – Verona 1.01, Ancona – Foggia 0.99, Milano – Torino 1.03,
+Battipaglia – Potenza – Metaponto 1.00, Lecco – Sondrio – Tirano 1.00, every FSE line
+0.98-1.00.
+
+## City nodes (split 2026-10-03; Anita's yes of 2026-10-02)
+
+RFI files every line inside eight cities under one node id (N1 Torino ... N8 Napoli; Nodo di
+Roma was 194 km). `NODE_SPLIT` in it.py hands each node section, by the uopids of its two ends,
+to the it.wikipedia line it belongs to ("Rete ferroviaria del Lazio" and the line articles'
+station tables, retrieved 2026-10-03). Mostly that is the F/C line that used to stop at the
+node's edge, which keeps its line id and now reaches the city's stations:
+
+- **Roma**: Firenze – Roma (linea lenta) to Roma Termini by Settebagni, Fidene, Nuovo Salario
+  and Tiburtina (the FL1 pair); the Direttissima to Tiburtina; AV Roma – Napoli's Termini and
+  Tiburtina links; Roma – Avezzano (was "Guidonia – Avezzano") from Termini by Prenestina and
+  Lunghezza (FL2); Roma – Formia – Napoli from Termini by Casilina; Roma – Cassino by Capannelle;
+  Pisa – Roma to Termini by Ostiense, Trastevere, San Pietro and Aurelia (FL5), with the old
+  Ponte Galeria - Maccarese route; Roma – Viterbo from Trastevere by Quattro Venti, Monte Mario
+  and La Storta (FL3). New lines: **Roma – Fiumicino** (Trastevere - Ponte Galeria - Fiumicino
+  Aeroporto, 23.0 km; keeps the Nodo di Roma's id) and **Valle Aurelia – Vigna Clara** (7.1 km).
+- **Milano**: new **Milano – Gallarate** (Gallarate - Rho - Certosa - Porta Garibaldi /
+  Centrale, 47.7 km; keeps the Nodo di Milano's id) and **Passante di Milano** (Bovisa -
+  Rogoredo, 15.2 km); Milano – Como – Chiasso (was "Seregno – ...") from Centrale and Garibaldi
+  by Monza; Milano – Verona from Centrale by Lambrate and by Forlanini - Segrate; Milano –
+  Bologna from Lambrate; Milano – Mortara by the southern belt from Rogoredo.
+- **Bologna**: new **Bologna – Porretta Terme** (the Porrettana's Bologna half, Santa Viola -
+  Porretta, 54.0 km; keeps the Nodo di Bologna's id; Pistoia – Porretta Terme stays its own
+  line as RFI files it); Milano – Bologna, Verona – Bologna, Bologna – Padova, Bologna – Ancona
+  and the Direttissima to Bologna Centrale or San Vitale.
+- **Torino**: new **Passante di Torino** (Lingotto - Porta Susa - Rebaudengo - Stura, 19.8 km;
+  keeps the Nodo di Torino's id); Torino – Modane to Porta Nuova and Porta Susa; Torino –
+  Arquata Scrivia to Porta Nuova; Milano – Torino to Stura.
+- **Firenze**: Firenze – Roma (linea lenta) from Rovezzano to Santa Maria Novella and Rifredi;
+  the Bologna Direttissima from Castello; Firenze – Pisa from Cascine; Firenze – Borgo San
+  Lorenzo by Le Cure to Campo di Marte.
+- **Venezia**: Padova – Venezia to Santa Lucia; Venezia – Udine – Tarvisio to Mestre; Venezia
+  Mestre – Castelfranco Veneto (was "Castelfranco Veneto – Maerne") by Spinea.
+- **Genova**: Genova – Savona to Principe (and by Via di Francia to Principe sotterranea);
+  Genova – Pisa from Principe by Brignole; Arquata Scrivia – Genova by the Giovi lines; Genova –
+  Ovada to Torbella.
+- **Napoli**: Villa Literno – Napoli Gianturco (was "Villa Literno – Pozzuoli"; the Passante,
+  metro line 2); Napoli – Salerno, Roma – Formia – Napoli and Napoli – Cancello – Dugenta to
+  Napoli Centrale and Gianturco.
+
+Track no line takes (yards, freight belts, depot leads) stays under `<node>R`, named "Cintura
+di Milano", "Cintura di Bologna" or "Nodo di ..."; drop_unridden_sections drops what no train
+runs over. Kept as drawn track: Cintura di Milano (Lambrate - Smistamento - Rogoredo 17.9 km,
+Greco - Turro - Centrale 6.7 km), Cintura di Bologna (4.1 + 5.9 km of second routes), Nodo di
+Genova (Bivio Polcevera - Voltri bretella 10.7 km), Nodo di Torino (Orbassano lead 4.8 km),
+Nodo di Venezia (2.4 + 1.5 km).
+
+**Saved rides.** A ride names a line id and two stations. Roma, Milano, Bologna and Torino keep
+their node id on one new line, so a ride between stations of that line still credits. Genova,
+Firenze, Napoli and Venezia's node ids are gone: `line_alias` in COUNTRY (NODE_ALIAS) maps each to
+the line most of its stations went to (Genova -> Genova – Savona, Firenze -> Firenze – Roma
+(linea lenta), Napoli -> Villa Literno – Napoli Gianturco, Venezia's two pieces -> Padova –
+Venezia and Venezia – Trieste), and rinf.py keeps it as `rinf.LINE_ALIAS`; build_model does not
+ship it in aliases.json yet (a one-line change, asked for). A ride between stations that went
+to two different lines cannot be moved by a one-to-one alias at all.
 
 ## Still off, and why
 
-- **Real passenger track dropped because no OSM route covers it** (junction-ended sections,
-  `drop_unridden_sections`). The largest: **AV Treviglio – Brescia** (53.8 km, the whole line,
-  ridden by every Milano - Venezia Frecciarossa and Italo); Giave - Chilivani on Decimomannu –
-  Ozieri Chilivani (24.8 km, the Cagliari - Sassari/Olbia main line; Sardinia has no Trenitalia
-  route relations) and Ardara - Chilivani on Ozieri – Sassari (8.3 km); the Foggia approaches of
-  Dugenta – Benevento – Foggia (17.6 km) and Foggia – Bari (10 km); the Signa - Bivio
-  Samminiatello sections of Firenze – Pisa (about 16 km, where the OSM regional route runs on
-  track RINF's trace did not take); Villa Opicina - Trieste on Venezia – Trieste (36 km;
-  whether the Trieste - Ljubljana trains use it is unchecked); Udine – Palmanova (34.5 km,
-  whole line, passenger service unchecked); the AV interconnections. 672 km in all. The GTFS check should
-  decide each of these; Italy is the country where it matters most so far.
+- **AV Treviglio – Brescia (53.8 km) is still dropped**, though every Milano - Venezia
+  Frecciarossa and Italo runs over it. The timetable check calls it "ambiguous": the Frecce run
+  Milano - Brescia non-stop and the classic line by Romano and Rovato is about as short, and
+  Trenitalia's shapes are straight lines between stops, so nothing tells the two apart. Needs a
+  high-speed rule in gtfs_served (high-speed products prefer `highspeed` sections), not in it.py.
+  The other 407 km still dropped are freight curves, yard throats and AV interconnections the
+  check found no train on or only long non-stop runs over ("weak": Bologna San Ruffillo - Bivio
+  Emilia 8.3 km and Bivio Modena Ovest - Quattro Ville 4.4 km carry Frecce, 516 and 241 trips,
+  but only as parts of runs over 40 km).
 - **No track in the extract** (OSM has these as `railway=construction` with no passenger route,
   so extract.py leaves them out): Bergamo - Ponte San Pietro (doubling works), Bozzolo -
   Mantova, Decimomannu - Villamassargia - Iglesias/Carbonia (Villamassargia – Carbonia built
   as 0.6 km), Lugo - Sant'Agata. If these have reopened, OSM has not caught up.
-- **The node lines** (Nodo di Milano, di Roma...) are RFI's unit, not a rider's: Nodo di Roma
-  is 194 km over FL1-FL8 track. Splitting them into the it.wikipedia lines inside each node
-  (Passante di Milano, Milano - Gallarate, Roma - Fiumicino...) would need a section list per
-  node; not done.
 - Four register lines took a ref from the OSM line merged into them ("R" on Novara – Biella and
   Santhià – Biella, "2" on Martina Franca – Lecce, "FUC" on Udine – Cividale): not RFI numbers.
 - The Simplon tunnel's Italian half (Iselle - border, 0.4 km in RINF) has no path; the EC Basel
   - Milano owns about 25 km of tunnel and approach way the register does not cover.
 - Lines have no colours of their own beyond OSM's (99 lines, mostly metros and Trenord).
 
-## Timetable feed (not wired; for the managing session)
+## Timetable check (live 2026-10-03)
 
-Per `gtfs_sources.md`: Trenitalia's GTFS converted from its NeTEx on the national access point
-(`raw.githubusercontent.com/deryclem/trenitalia-gtfs/refs/heads/main/gtfs-trenitalia.zip`, CC
-BY 4.0, weekly, high speed + Intercity + regional), plus Trenord (Transitland
-`f-u0n-trenord`) for Lombardy, Italo (`github.com/deryclem/italo-gtfs`) for the AV lines, and
-for the regional managers in this register FNM/Trenord (FERROVIENORD lines), FER/TPER, FSE, EAV,
-Ferrotramviaria and FdG feeds where they exist. The Trenitalia feed alone should rescue the
-dropped sections listed above (AV Treviglio - Brescia, Sardinia, Foggia, Signa) and grey any
-line with no trains (Udine – Palmanova is the first to look at).
+The feeds fetched on 2026-10-02 (`gtfs_served.FEEDS["it"]`) were moved from
+`data/raw/gtfs_pending/it/` to `data/raw/gtfs/it/`, which switches gtfs_served on for Italy:
+
+| feed | what is in it | window |
+|---|---|---|
+| `it_trenitalia.gtfs.zip`, deryclem's conversion of Trenitalia's NeTEx (CC BY 4.0) | 13,671 rail trips (Frecce, IC, regional, SFM; Trenitalia's buses left out) | 26 Sep - 12 Dec 2026 |
+| `it_trenord.gtfs.zip` (Transitous) | 6,745 trips, every Trenord line incl. FERROVIENORD's and TILO | 26 Jul - 12 Dec 2026 |
+| `it_eav.gtfs.zip` (Transitous) | 625 trips, EAV's railways (Cancello - Benevento, the Alifana, and the Vesuviana and Flegree lines that are not in RINF) | 30 Sep 2026 - |
+| `it_ferrotramviaria.gtfs.zip` (Transitous) | 852 trips, Bari - Barletta; **stale**, its calendar ends 31 Dec 2025 | 2023 - 2025 |
+| `it_gtt.gtfs.zip`, `it_tft.gtfs.zip` (Transitous, slimmed) | nothing: no rail routes survive the slimming | |
+
+Not in any feed: Trenitalia Tper (Emilia-Romagna's regional trains, on FER's lines and on RFI
+lines such as Ferrara – Ravenna – Rimini, Castel Bolognese – Ravenna, Lugo – Lavezzola and the
+Porrettana), FSE, Ferrovie del Gargano, FUC, Busitalia (Perugia's FCU lines), TFT's own trains
+(TFT's dati.toscana.it feed, checked 2026-10-03, has only 118 route_type 3 trips on its two
+lines, so it was not added), Italo. Their lines come out "unknown" where OSM routes run over
+them or their manager is missing, and stay drawn. Searched for open feeds: Transitous' Italian
+index, the Mobility Database catalogue, TPER's open-data page (buses only).
+
+2,271 of 2,548 feed stations match a register station (names; Trenitalia's stop code
+`830008409` is RINF's IT08409 for 1,640 stations but not all: Fidene, Nuovo Salario and the FL3
+stations are numbered off by a few, so no `CODE` rule).
+
+**Kept** (junction-ended sections OSM routes alone dropped): 46 sections, 209 km on 24 lines.
+The big ones: Udine – Palmanova (17.9 km, the whole line, 45 trips: Udine - Cervignano trains);
+Giave - Chilivani and Ardara - Chilivani in Sardinia (34.9 km); Firenze – Pisa by Signa (25 km);
+the Direttissima's Chiusi and Valdarno interconnections (15.8 km); Foggia's approaches on
+Foggia – Bari and Dugenta – Foggia (13 km); Sarno - Bivio Santa Lucia (11.2 km); Villa Opicina -
+Bivio d'Aurisina on Venezia – Trieste (14.9 km, but on only 2 trips in the window).
+
+**Closed** (no train in the window; greyed): 101 sections, 809 km on 21 lines. Checked one by
+one against the feed's own buses and the web:
+- works closures with buses in the feed: Sibari – Catanzaro Lido's Sibari - Crotone part
+  (112.5 km; electrification, trains suspended 13 Sep - 12 Dec 2026), Termoli – Campobasso
+  (87.0; electrification), Ponte nelle Alpi – Calalzo (35.5; buses to Calalzo in the feed),
+  Melfi - Rocchetta on Rocchetta Sant'Antonio – Potenza (16.1; trains run Potenza - Melfi,
+  buses Melfi - Foggia), Mercato San Severino – Montoro (4.4; buses)
+- suspended for years, buses in the feed: Barletta – Spinazzola (65.5), Gravina – Gioia del
+  Colle (46.5), Cecina – Volterra (29.4), Oleggio – Laveno Mombello (33.9), Fabriano – Pergola
+  (28.8), Novara – Romagnano Sesia (25.6), Bra - Cavallermaggiore (12.8)
+- tourist trains only (Fondazione FS): Sulmona – Carpinone (114.8, the Transiberiana d'Italia),
+  Asciano – Monte Antico (51.0), Agrigento – Porto Empedocle (10.1)
+- freight: Gemona – Osoppo (4.8)
+- a second filing of running track: Palermo Notarbartolo - Imperatore Federico (2.1; trains run
+  the parallel Libertà sections), Carbonia Serbariu - Carbonia Stato (0.6)
+- **wrong**, waiting on two gtfs_served changes (asked for; with both patched in at run time
+  only these three lines change, to 681 km closed on 18 lines):
+  - San Severo – Peschici (73.7; Ferrovie del Gargano reopened it on 1 June 2026) and Zollino –
+    Gagliano del Capo (46.3; FSE, state unknown): their managers count as "in the feed" because
+    "Ferrovie" and "del" match Ferrotramviaria's agency name, "Ferrovie del Nord Barese"
+    (`ORG_WORDS` needs the Italian generic words)
+  - Valle Aurelia – Vigna Clara (7.1): about 20 trains a day Monday to Saturday, but the feed
+    places "Vigna Clara PES" 5.5 km away (41.9676, 12.4094), so it matches nothing
+
+**Still dropped**: AV Treviglio – Brescia (above, "Still off").

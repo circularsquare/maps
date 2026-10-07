@@ -39,8 +39,12 @@ THE DRAWN TIER IS STILL DISTRICT. The 2023 state prints religion by tehsil, and 
 keep district anyway (spec §14.4's ceiling is now a choice below it, not the state's limit;
 `sources/pk.md` §3 and §9). The tehsil rows are normalised for the sum checks and not drawn.
 
+AZAD JAMMU AND KASHMIR IS APPENDED FROM ITS OWN GOVERNMENT'S YEARBOOK (2026-10-03, sources/pk_ajk.py,
+sources/pk.md §10): the same census, the same eight categories, ten districts PBS never printed.
+Gilgit-Baltistan has no published religion table anywhere found and is still not in pk.csv.
+
 Usage:
-    python sources/pk_2023.py --fetch    five GETs, ~10 MB
+    python sources/pk_2023.py --fetch    five GETs, ~10 MB, plus the AJK yearbook, 11.5 MB
     python sources/pk_2023.py            normalise from data/raw/pk2023/
 """
 
@@ -477,19 +481,33 @@ def rows_out(units):
         for i, cat in enumerate(CATS, start=1):
             out.append({"geo_id": gid, "geo_level": u["level"], "geo_name": u["name"],
                         "source_category": cat, "count": u["cells"][i], "basis": BASIS,
-                        "year": YEAR, "source_id": SOURCE_ID, "note": note})
+                        "year": YEAR, "source_id": u.get("source_id", SOURCE_ID), "note": note})
     return out
 
 
 def main():
     if "--fetch" in sys.argv:
         fetch()
+        import pk_ajk
+        pk_ajk.fetch()
     for name, *_ in FILES:
         if not os.path.exists(os.path.join(RAW, name)):
             raise SystemExit(f"{name} missing -- run: python sources/pk_2023.py --fetch")
     print("Pakistan -- 2023 census religion, PBS Table 9\n")
     units, ok = read()
     check(units, ok)
+    # Azad Jammu and Kashmir: the same census, in no PBS table, printed in the AJK government's
+    # own yearbook (sources/pk_ajk.py, sources/pk.md §10). Checked there, appended here, so the
+    # ten districts are in pk.csv beside the 136 and every tool that reads pk.csv sees them.
+    import pk_ajk
+    if not os.path.exists(pk_ajk.PDF):
+        raise SystemExit(f"{pk_ajk.PDF_NAME} missing -- run: python sources/pk_ajk.py --fetch")
+    print("\nAzad Jammu and Kashmir, AJK Statistical Year Book 2025 (sources/pk_ajk.py)")
+    ajk, _ = pk_ajk.read()
+    units += ajk
+    nd = sum(1 for u in units if u["level"] == "district")
+    print(f"  {nd} districts in all, "
+          f"{sum(u['cells'][0] for u in units if u['level'] == 'district'):,} people")
     rows = rows_out(units)
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
     with open(OUT, "w", encoding="utf-8", newline="") as fh:

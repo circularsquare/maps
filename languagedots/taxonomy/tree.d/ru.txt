@@ -1,0 +1,153 @@
+# Russia, 2021 census native language (taxonomy/ru2021.py). Checked against Glottolog
+# (data/raw/glottolog/languages.csv):
+#   Nakh-Daghestanian (nakh1245): Andi, Akhvakh, Bagvalal, Botlikh, Godoberi, Karata, Tindi and
+#   Chamalal under the existing Avar-Andic branch; Tsez (dido1241), Hinukh, Hunzib (hunz1247),
+#   Bezhta (bezh1248) and Khvarshi as a Tsezic branch; Lak (lakk1252) a branch of its own beside
+#   Dargwa; Tabasaran, Rutul (rutu1240) and Archi (arch1244) under Lezgic, beside Aghul.
+#   Chukotko-Kamchatkan (chuk1271), Yeniseian (yeni1252: Ket, Yugh) and Yukaghir (yuka1259) are new
+#   roots, one per family (AGENT_BRIEF §3). The census's "Yukaghir" names neither Tundra nor Kolyma
+#   Yukaghir, so it is a leaf `yukaghir.yukaghir`, not the root. Nivkh is a family of two in
+#   Glottolog (nivk1234) but read as an isolate almost everywhere: `isolate.nivkh`.
+#   Uralic stays flat under `uralic`, as every country before has it. Mordvin (mord1256) and Mari
+#   (mari1278) are pairs in Glottolog; the census prints "Mordvin" beside Erzya and Moksha, and
+#   "Mari" beside Hill Mari and Meadow-Eastern Mari, so each of the four unspecified or specified
+#   labels is a sibling leaf (a child would turn Erzya's parent into a group drawn "not named").
+#   Siberian Yupik (cent2128) and the census's "Yuit" under Eskimo-Aleut; Mingrelian (ming1252)
+#   under Kartvelian; Church Slavonic (chur1257, South Slavic in Glottolog) directly under Slavic, so
+#   that South Slavic gains no uncoloured member (which would move Croatian's and Bosnian's generated
+#   colours); Russian Sign Language (russ1271).
+#   Turkic stays flat. Teleut, Tofa and Chelkan are dialects in Glottolog (of Southern Altai,
+#   Tuvan-ish Tofa, Northern Altai) and Nogai-Karagash and Yurt Tatar are Nogai dialects in the
+#   Institute of Linguistics' list; the census prints each as a language, so each is a leaf.
+#   "Ahiska" is the census's "Turkic" (Tyurksky), which the Institute of Linguistics' list says is
+#   the Meskhetian Turks' name for their language. "Bulgar" is the census's own label: the Institute
+#   files most of it as Tatar, the rest as "other answers"; drawn as what it says, under Turkic.
+#   "Dagestani" names no language (the Institute splits it over nine Daghestanian and Turkic
+#   languages), so it is a leaf under `other`, as az.txt's "Jewish" is.
+#
+# COLOURS. Hand-picked for the places where languages meet on the ground:
+#   Volga-Urals: Tatar (coral red), Bashkir (amber), Chuvash (magenta), Mari (light cyan), Udmurt
+#     (blue), the three Mordvin labels (teals), Komi-Permyak and Komi (blues) beside Russian green.
+#     Crimean Tatar keeps ua.txt's deep red; Tatar is lighter and more orange so the two differ.
+#   Dagestan: Avar (az.txt's periwinkle), Dargwa dark teal, Lak pale lavender, Kumyk pink, Lezgian
+#     (az.txt's blue), Tabasaran pale aqua, Rutul lilac, Nogai orange, Chechen pale sky; Ingush a
+#     mid blue against Chechen; the Circassian languages violet and rose; Karachay-Balkar a darker red (beside Nogai orange in Karachay-Cherkessia).
+#   Siberia: Yakut, Tuvan, Altai, Khakas in Turkic's reds and oranges; Nenets violet against Komi;
+#     Khanty teal and Mansi pale blue; Chukotko-Kamchatkan orchid; Yukaghir pale yellow; Ket tan.
+#   Turkic, Uralic and Nakh-Daghestanian gain many siblings here, which moves every generated
+#   colour among them; the ones other countries draw are frozen at their old colours below.
+
+# ---- Turkic ----
+turkic.tatar | Tatar | 0.72 0.17 28
+turkic.bashkir | Bashkir | 0.84 0.14 70
+turkic.chuvash | Chuvash | 0.60 0.16 305
+turkic.kumyk | Kumyk | 0.78 0.13 5
+turkic.karachay_balkar | Karachay-Balkar | 0.64 0.17 18
+turkic.nogai | Nogai | 0.76 0.15 55
+turkic.yakut | Yakut (Sakha) | 0.68 0.17 30
+turkic.tuvan | Tuvan | 0.74 0.16 45
+turkic.altai | Altai | 0.68 0.18 8
+turkic.khakas | Khakas | 0.80 0.12 350
+turkic.shor | Shor
+turkic.dolgan | Dolgan
+turkic.teleut | Teleut
+turkic.tubalar | Tubalar
+turkic.kumandy | Kumandy
+turkic.chelkan | Chelkan
+turkic.tofa | Tofa
+turkic.chulym | Chulym Turkic
+turkic.karagash | Nogai-Karagash
+turkic.yurt_tatar | Yurt Tatar
+turkic.ahiska | Ahiska (Meskhetian Turkish; the census's "Turkic")
+turkic.bulgar | Bulgar
+
+# ---- Uralic ----
+uralic.mari | Mari | 0.80 0.20 330
+uralic.hill_mari | Hill Mari | 0.70 0.12 330
+uralic.meadow_mari | Meadow-Eastern Mari | 0.78 0.12 350
+uralic.udmurt | Udmurt | 0.58 0.18 25
+uralic.komi | Komi | 0.80 0.12 15
+uralic.komi_permyak | Komi-Permyak | 0.64 0.14 340
+uralic.mordvin | Mordvin (Erzya or Moksha, not said which) | 0.88 0.10 330
+uralic.erzya | Erzya | 0.66 0.15 345
+uralic.moksha | Moksha | 0.80 0.10 25
+uralic.karelian | Karelian | 0.78 0.13 30
+uralic.veps | Veps
+uralic.votic | Votic
+uralic.izhorian | Ingrian (Izhorian)
+uralic.nenets | Nenets | 0.62 0.15 325
+uralic.enets | Enets
+uralic.nganasan | Nganasan
+uralic.selkup | Selkup | 0.72 0.13 345
+uralic.khanty | Khanty | 0.64 0.17 5
+uralic.mansi | Mansi | 0.80 0.11 0
+
+# ---- Nakh-Daghestanian ----
+nakhdaghestanian.nakh.chechen | Chechen | 0.86 0.10 210
+nakhdaghestanian.nakh.ingush | Ingush | 0.62 0.14 235
+nakhdaghestanian.dargwa | Dargwa | 0.62 0.12 190
+nakhdaghestanian.lak | Lak | 0.86 0.08 250
+nakhdaghestanian.lezgic.agul | Aghul | 0.62 0.12 215
+nakhdaghestanian.lezgic.tabasaran | Tabasaran | 0.82 0.11 175
+nakhdaghestanian.lezgic.rutul | Rutul | 0.76 0.11 290
+nakhdaghestanian.lezgic.archi | Archi
+nakhdaghestanian.avarandic.andi | Andi
+nakhdaghestanian.avarandic.akhvakh | Akhvakh
+nakhdaghestanian.avarandic.bagvalal | Bagvalal
+nakhdaghestanian.avarandic.botlikh | Botlikh
+nakhdaghestanian.avarandic.godoberi | Godoberi
+nakhdaghestanian.avarandic.karata | Karata
+nakhdaghestanian.avarandic.tindi | Tindi
+nakhdaghestanian.avarandic.chamalal | Chamalal
+nakhdaghestanian.tsezic | Tsezic | 0.80 0.10 300
+nakhdaghestanian.tsezic.tsez | Tsez
+nakhdaghestanian.tsezic.hinukh | Hinukh
+nakhdaghestanian.tsezic.hunzib | Hunzib
+nakhdaghestanian.tsezic.bezhta | Bezhta
+nakhdaghestanian.tsezic.khvarshi | Khvarshi
+
+# ---- Northwest Caucasian ----
+abkhazadyghe.kabardian | Kabardian | 0.80 0.12 310
+abkhazadyghe.adyghe | Adyghe | 0.64 0.15 335
+abkhazadyghe.abaza | Abaza | 0.84 0.10 355
+abkhazadyghe.circassian | Circassian (the census's "Adygsky", either Adyghe or Kabardian)
+
+# ---- Tungusic (flat, as tungusic.manchu) ----
+tungusic.evenki | Evenki
+tungusic.even | Even
+tungusic.nanai | Nanai
+tungusic.ulch | Ulch
+tungusic.udege | Udege
+tungusic.oroch | Oroch
+tungusic.negidal | Negidal
+tungusic.uilta | Uilta
+
+# ---- new families ----
+chukotkokamchatkan | Chukotko-Kamchatkan | 0.78 0.13 320
+chukotkokamchatkan.chukchi | Chukchi
+chukotkokamchatkan.koryak | Koryak
+chukotkokamchatkan.itelmen | Itelmen
+chukotkokamchatkan.alutor | Alutor
+chukotkokamchatkan.kerek | Kerek
+yukaghir | Yukaghir | 0.86 0.12 98
+yukaghir.yukaghir | Yukaghir
+yeniseian | Yeniseian | 0.72 0.11 60
+yeniseian.ket | Ket
+yeniseian.yugh | Yugh
+isolate.nivkh | Nivkh | 0.82 0.12 345
+
+# ---- the rest ----
+eskimoaleut.yupik | Siberian Yupik (the census's "Eskimo")
+eskimoaleut.yuit | Yuit (Siberian Yupik)
+kartvelian.mingrelian | Mingrelian
+indoeuropean.slavic.church_slavonic | Church Slavonic
+signlanguage.rsl | Russian Sign Language | 0.86 0.03 250
+other.dagestani | Dagestani (the census's "Dagestan language")
+
+# ---- frozen: generated colours other countries draw, held where they were before this fragment
+# (new uncoloured siblings above would otherwise move them); values from taxonomy/build.py run
+# without ru.txt, 2026-10-05 ----
+turkic.azerbaijani | Azerbaijani | 0.580 0.160 341.7
+turkic.karakalpak | Karakalpak | 0.580 0.160 41.7
+tungusic.manchu | Manchu | 0.800 0.120 292.0
+turkic.karaim | Karaim | 0.780 0.160 55.0

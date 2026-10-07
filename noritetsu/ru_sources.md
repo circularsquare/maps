@@ -13,7 +13,8 @@ the tariff guide spells them ("Обухово — Чудово-Московск�
 ("Октябрьская железная дорога"). Of them 53 lines (1,291 km) on the 2022-annexed railways are
 drawn greyed (below). With OSM's lines and trains: 3,513 lines, 15,832 stations; 388 named
 trains (FPK's numbered trains, Сапсан, the long-distance «Ласточка»s) are flagged as such by
-build_model's `ru` branch. ru.pmtiles 22.9 MB.
+build_model's `ru` branch. ru.pmtiles 22.9 MB. (The annexed railways were later left out, then
+built again on 2026-10-04 with what runs: "The annexed railways: what runs".)
 
 What the 1,180 tariff sections the converter kept became, by railway (tariff km of the
 sections against register km built; the gap is unridden sections dropped, rejected traces,
@@ -88,6 +89,7 @@ python ru_register.py --esr data/raw/ru/russia-260930.osm.pbf          # esr:use
 python ru_register.py --esr data/raw/ru/ukraine-260930.osm.pbf --ua    # + name:ru of stations -> osm_names_ua.json
 # (both .pbf deleted after; data/proc/ru/full and data/proc/ru/ua keep what came out)
 python ru_register.py --annex        # data/raw/ru/annex.geojson (fetches the two Wikipedia modules once)
+python ru_register.py --annex-trains # data/raw/ru/annex_trains.json from the ua build's poizdato pages (2026-10-04)
 python ru_register.py --clip         # ru/full + ru/ua -> data/proc/ru, clipped to the outline
 python ru_register.py --wikidata     # data/raw/ru/wdx_lines.json, wdx_stations.json
 python ru_register.py --convert      # data/raw/rinf/ru/{sections,points,names}.json
@@ -114,6 +116,10 @@ python probe_ru_wplengths.py > data/raw/ru/probe_wplengths.txt        # the ru.w
   kept 1,103 junction-ended sections (26,878 km) and dropped 241 (6,112 km). The clone is
   joined to its stop by a 0 km piece (so the line stays one piece) and given an unplaced stub
   (so it has three neighbours and rinf.py ends a section there); both vanish in the build.
+  Until 2026-10-05 nothing rejoined the kept stretch to its stop once build_model had dropped
+  the 0 km link, so 304 lines came out in pieces (Лена-Восточная — Хани in 14). rinf.py's
+  `split_pieces` hook now folds each such clone back into its stop after the drop: 36 lines
+  in pieces, 1,142 clone junction ids gone (HISTORY.md, "2026-10-05").
 - Pairs listed on two sections stay on one (main sections first, then the lower id), and a
   pair another section lists with points between is left to that one (61-004 Сенная —
   Трофимовский I is not Сенная — Аткарск). Extra codes ("(эксп.)", "(перев.)", "(стык)") at the
@@ -144,11 +150,12 @@ python probe_ru_wplengths.py > data/raw/ru/probe_wplengths.txt        # the ru.w
   (89xxxx, 84xxxx, 82xxxx) are not in OSM, which carries Ukrzaliznytsia's, so points are
   placed by their Russian name against OSM's `name:ru` (428 of 591). (4) **OSM has no
   passenger route relation in the occupied area** (only Ukrzaliznytsia's on the Ukrainian
-  side and Crimea's Армянск trains), so the OSM test would drop every section: there, Book 2's
-  passenger points are stops on their own, and `rinf_countries/ru.py`'s `suspended` draws the
-  lines greyed, as not running, while `ANNEX_RUNNING = False`. 53 lines, 1,291 km of 2,491
-  tariff km in the three sheets. (5) OSM's station names there are mostly Ukrainian; `--clip`
-  puts their `name:ru` in `name` (1,323 stops), keeping the Ukrainian in `name:uk`.
+  side and Crimea's Армянск trains), so the OSM test would drop every section. First drawn
+  greyed (53 lines, 1,291 km), then left out altogether (Anita, 2026-10-01, `ANNEX_RUNNING =
+  False`); since 2026-10-04 built again, running where poizdato's trains run and greyed
+  elsewhere: "The annexed railways: what runs" below. (5) OSM's station names there are mostly
+  Ukrainian; `--clip` puts their `name:ru` in `name` (1,323 stops), keeping the Ukrainian in
+  `name:uk`.
 - **The outline the app needs**: religiondots' `ru` (which has Crimea) plus
   `data/raw/ru/annex.geojson`. When Ukraine is built, its outline and extract need that area
   taken out.
@@ -178,19 +185,257 @@ python probe_ru_wplengths.py > data/raw/ru/probe_wplengths.txt        # the ru.w
 - **Some parallel tariff sections still overlap** (about 400 km counted twice): Адлер — Роза
   Хутор and Сириус — Роза Хутор share 40 km from the Adler junction; short station-throat
   sections in Samara, Kirov, Novosibirsk. Each is a real tariff section.
-- **Station English names**: 1,813 of 8,559 register stops have one, from OSM. Wikidata has
-  English labels for 10,524 stations by ESR code (`wdx_stations.json`); using them would need a
-  rinf.py hook for stop English names.
-- **The annexed railways are greyed** until someone can say which sections trains run on
-  (Anita's call: `ANNEX_RUNNING`). The control polygon is as current as the Wikipedia modules
-  fetched 2026-10-01; delete data/raw/ru/wp_*.lua and rerun `--annex`, `--clip`, `--convert`
-  to refresh.
+- **Station English names** (2026-10-03, "English names and line colours" above): 3,419 of the
+  8,297 register stops shipped have one (1,756 before, from OSM alone), and 590 of 1,674
+  junction ends; the rest have no English label on Wikidata that passes the check, and show in
+  Russian.
+- **The annexed railways run only where poizdato's suburban trains run** (2026-10-04, "The
+  annexed railways: what runs"); a new long-distance service (Donetsk - Rostov, Melitopol -
+  Crimea) would need a source of its own. The control polygon is as current as the Wikipedia
+  modules fetched 2026-10-01; delete data/raw/ru/wp_*.lua and rerun `--annex`, `--clip`,
+  `--annex-trains`, `--convert` to refresh, and Ukraine's `ua_register.py --outline --clip`
+  after it (both builds cut at the same polygon).
 - Ten 0 km sections remain on register lines: the link between a stop and its clone where
   OSM's routes kept it (`eRU<code>@<section>`, a junction at the stop's own place). Harmless,
   but they show as junction rows in those lines. rinf.py's log counts the clone stubs among
   "sections left out for a rejected trace" (1,994, of which 1,643 are stubs).
-- Line colours: none of the register lines has one (151 OSM lines do); `line_colours.py` has
-  no `ru` entry and no colours/ru.csv was made.
+- Line colours (2026-10-03): every register line in its railway's picked colour
+  (colours/ru.csv); 151 OSM lines keep OSM's. `line_colours.py` needs no `ru` entry (its
+  Wikidata fill matches line names, and no tariff section is a Wikidata item with a colour).
+
+## The annexed railways: what runs (2026-10-04)
+
+Anita, 2026-10-04: "donetsk luhansk to russia makes sense if theres trains run, yeah, lets do
+it", under her rule that only track trains run over is drawn as running. So
+`ANNEX_RUNNING = True` (rinf_countries/ru.py): the Донецкая, Луганская and
+Мелитопольская-Херсонская sheets are built with Russia, inside annex.geojson (the area Russia
+holds, unchanged since 2026-10-01). A section trains run over is drawn as running; the rest is
+built and greyed as not running (rinf.py's `suspended`, as Slovakia's suspended lines), so a
+rider who went before can still record it.
+
+**The source.** poizdato.net lists the Russian-run suburban trains of the occupied area beside
+Ukrzaliznytsia's (the ua build crawled every page, data/raw/ua/poizdato/). `ru_register.py
+--annex-trains` keeps the trains with at least two calls, and at least half their calls, at
+OSM stations inside annex.geojson, and at least 9 running days in the pages' October-November
+calendar: **31 trains**, all of the Donetsk and Luhansk railways' suburban service, copied into
+`data/raw/ru/annex_trains.json` (so a refresh of the ua crawl does not move this build). None
+calls in Zaporizhzhia or Kherson oblast. Spot-checked against Yandex Rasp the same day, which
+shows the same trains with today's operational changes: Donetsk - Ilovaisk 6001-6010 and
+Donetsk - Uspenskaya 6119/6120 daily, Ilovaisk - Torez 6602/6604 daily, Debaltseve - Rodakove
+6421 daily, Luhansk - Starobilsk 6490/6491 Wednesday, Thursday, Saturday and Sunday; Yandex has
+nothing Luhansk - Rodakove, Luhansk - Debaltseve or Donetsk - Volnovakha, nor does poizdato.
+
+**No long-distance train** runs into the annexed railways: crimea.ria.ru (30 May 2025) quotes
+the DPR transport minister that only freight and suburban trains run and long-distance
+passenger trains wait on "security measures"; the DPR head has since said trains to other
+Russian regions are expected by 2028 (donetsk.kp.ru). FPK's and Grand Service Express's Crimea
+trains ("Таврия") run over the Kerch bridge, not through Melitopol.
+
+**Melitopol - Kherson (82-001..004) is greyed whole.** Test trains Melitopol - Dzhankoi ran
+from 1 July 2022 (iz.ru, ria.ru, June 2022) and stopped; ria-m.tv (29 May 2025): "Пассажирское
+сообщение, несмотря на многочисленные обещания, так и не запущено", only freight runs through
+Melitopol; tutu.ru on 2026-10-04: 0 trains Melitopol - Dzhankoi; Yandex Rasp: no train at
+Melitopol; poizdato: none.
+
+**How the calls become track** (`annex_evidence`). Each call is matched to a Book 1 point of
+the three sheets by name (the same consonants, `skel`: Ukrainian "Старобільськ" and Russian
+"Старобельск" are both "стрблск"; "1118 Км" to the point named for that kilometre) or by place
+(within 400 m of the OSM station of that Ukrainian name); of several candidates the one nearest
+along the track to the train's previous call. The pairs on the shortest path between two
+matched calls are run over (at most 2x the crow-fly distance + 5 km and 40 tariff km). Points
+trains call at are the stops on that track; off it, Book 2's passenger points stay stops so the
+greyed lines keep their stations. A tariff section trains run over in part becomes two lines:
+the part they run over under its id, the rest under `<id>~` with the same name, greyed. (The
+front-line cuts already make several lines of one section, rinf.py's `#1`, `#2`.)
+
+Three hand entries in ru_register.py, each with its reason there: `ANNEX_PLACE_ALIAS` (Book 1
+names OSM knows by another: Торез is Чистякове since 2016, Ясиноватая is OSM's "Ясинувата
+Захід", Луганск-Северный has only the Ukrainian name, Book 1 misspells Амвросиевка),
+`ANNEX_CALL_ALIAS` (the trains' "Ясинувата-Західна" is Ясиноватая) and `ANNEX_ON_PAIR`
+(Щебенка, where the Нижнекрынка branch leaves, is on no pair of 89-013). And one link,
+`ANNEX_LINKS`: Квашино (стык), the end of 89-018, to Успенская, Russia's station across the
+pre-2014 border, ~10 km of track that Book 1 lists on no section (89-018 ends at the
+inter-railway junction, 51-007 at "Успенская (эксп.)" placed at the station); the Donetsk -
+Uspenskaya trains run over it, so it is on 89-018.
+
+Placement improved on the way: the unique-name pass looked all over Ukraine's ANNEX_BBOX and
+put "Донец" (84-014, by Вергунка) at Donets station near Balakliia and the numbered halts
+"Ост. пункт 12 км", "143 км", "805 км" near Kremenchuk, cutting 84-014, 84-001, 84-008 and
+84-012 in two. Placements far from both neighbours are now undone (8), and points with only a
+Ukrainian name in OSM are placed by their consonants (77) or the alias (4): 501 of the 591
+annexed points placed, 90 not.
+
+**Line by line, what runs** (tariff km of the pairs; trains by number, all daily unless said):
+
+| section | running | greyed | trains |
+|---|---|---|---|
+| 89-007 Ясиноватая — Донецк | 14 | | every Donetsk train: 6001-6010, 6119-6122, 6303-6306, 6307/6308, 6503-6506, 6703/6704, 6707-6720 |
+| 89-016 Криничная — Ясиноватая | 13 | | Donetsk - Ilovaisk, - Uspenskaya, - Yenakiieve, - Makiivka; 6012 |
+| 89-017 Криничная — Иловайск | 27 | | 6001-6010, 6119-6122, 6012 |
+| 89-018 Иловайск — Квашино (стык), + the link to Успенская | 41 + 10 | | 6119-6122 Donetsk - Uspenskaya |
+| 89-003 Ларино — Иловайск, 89-006 Ларино — Ясиноватая | 27, 33 | | 6931-6934 Ilovaisk - Yasynuvata via Mospyne and Donetsk-2 |
+| 89-008 Донецк — Рутченково | 10 | | 6741, 6743 Donetsk - Dolia; 6307/6308, 6703/6704 from Dolia |
+| 89-001 Рутченково — Волноваха | 10 (to Доля) | 38 (Доля - Волноваха) | the Dolia trains |
+| 89-013 Углегорск — Криничная | 23 (Криничная - Енакиево) | 14 (Енакиево - Углегорск) | 6301, 6303-6306 Yenakiieve |
+| 89-014 Щебенка — Разъезд 5 км | 12 (to Нижнекрынка) | 5 | 6301 runs up the branch to Nyzhnia Krynka and back |
+| 89-020 Иловайск — Чернухино | 49 (to Торез) | 37 (Торез - Чернухино) | 6602, 6604 Ilovaisk - Torez |
+| 89-029 Дебальцево — Депрерадовка, 84-001 Родаково — Депрерадовка | 8, 48 | | 6421 Debaltseve - Rodakove |
+| 84-014 Луганск — Ольховая | 19 (to Кондрашевская) | 18 (to the border junction) | 6412/6413 Luhansk - Kindrashivska-Nova; 6490/6491 |
+| 84-013 Кондрашевская-Новая — Кондрашевская | 4 | | 6412/6413, 6490/6491 |
+| 84-012 Кондрашевская-Новая — Граковка | 90 (to Старобельск) | 103 | 6490/6491 Luhansk - Starobilsk, 4 days a week |
+| 84-011 Семейкино-Новое — Кондрашевская-Новая | 1 (Локомотивный - Кондрашевская-Новая) | 46 | 6491 calls at Локомотивний |
+| the other 69 sections, Melitopol - Kherson's four included | | all | none |
+
+In tariff km: 439 running (the link included), 1,941 greyed. **As built: 81 register lines,
+2,140 km on the three railways; 17 lines (437 km) running, 64 lines (1,703 km) greyed** (by
+railway: Donetsk 12 running, 275 km / 42 greyed, 858 km; Luhansk 5, 162 km / 18, 653 km;
+Melitopol - Kherson 0 / 4, 192 km). Every running line's trace is within 1.1 km of its tariff
+km (Луганск — Ольховая's piece 17.9 of 19), but Иловайск — Квашино with the link, 49.5 against
+51.2 (the link's crow-fly x 1.15 is a guess). Greyed lines lose what OSM has no track for
+(unplaced points, track lifted).
+
+**The frontline track.** OSM's mappers have retagged the frontline railways `railway=disused`
+since 2022, and extract.py keeps no disused track, so Lysychansk - Svatove, Popasna, Bakhmut,
+Avdiivka had no rails and were not drawn even greyed. `--clip` now puts back the main-line
+disused ways mostly inside annex.geojson from the ua build's `data/raw/ua/osm_disused.pkl`
+(`ua_register.py --disused`, 1,051 ways), tagged `noritetsu:osm_railway=disused` as Ukraine's
+are: greyed km 1,110 -> 1,703 in the trial. One stale route relation came back over them
+(Ukrzaliznytsia's unnamed r3478672, 3.6 km): `rules/ru.py` SKIP_ROUTES.
+
+**The line of control** (checked on the trial build against dist/data/ua): no Russian register
+track lies more than ~400 m outside annex.geojson + Russia, no Ukrainian register track more
+than ~400 m inside annex.geojson, and no Russian register track lies within 30 m of Ukrainian
+register track: the two builds cut at the same polygon (annex.geojson unchanged since
+2026-10-01; ua clipped 2026-10-03). Nothing is drawn across the front: a tariff pair with a point
+on each side is in neither build, and no train runs over it (all such lines on both sides are
+greyed: Kostiantynivka, Pokrovsk, Lyman, Kupiansk - Svatove, Kherson - Snihurivka, Polohy).
+Where both sides' tracks stop short of the polygon edge, the gap is no-man's-land track OSM has
+no rails for, or a pair straddling the line. The one crossing trains use is the old state
+border at Квашино - Успенская (ANNEX_LINKS), Russia on both sides.
+
+## Abkhazia: the Psou crossing (2026-10-04)
+
+Abkhazia is now its own region (xa, caucasus_register.py); borders.py EXTRA has its point
+`eXARUPSOU` at the Psou bridge. `BORDER` gives 51-032 (Туапсе-Сортировочная — Веселое) a piece
+from Веселое to it, "at": Book 1 ends 51-032 at "Веселое (эксп.)", 2 km past Веселое. Built: the
+line 113.3 -> 114.9 km (2.0 tariff km, 1.6 km as the crow flies), and build_model's own tails take
+three OSM trains to the point too (479А/480С and 304М/304С to Sukhum, the «Диоскурия» electric
+train), +1.6 km each, so the Adler - Sukhum crossing joins xa's line there.
+
+## Borders with Belarus and Kazakhstan (2026-10-03, night)
+
+Belarus and Kazakhstan were built the same evening and end their lines at points in
+`borders.EXTRA` ("eBYRU...", "eXKZRU..."). Russia's lines now run on to the same points
+(`ru_register.BORDER`, a piece from the last Russian point to the border point, junction-ended,
+so it stays only where OSM's passenger routes run over it):
+
+- **Belarus**: each Russian section ends at an export code, the tariff handover at the border
+  ("Красное (эксп.)" 3 km past Красное). Those codes are not in OSM and were placed by name
+  at their station, so the last pair was rejected (Красное, Злынка, Клястица: 0 m of track for
+  3-6 km) or traced as a 10 km loop (Рудня) or ran to the station (Невель II - "Завережье
+  (эксп.)"). The piece now replaces that pair, with its tariff km.
+- **Kazakhstan**: where the pair crosses, its tariff km are shared by crow-fly distance, as
+  casia_register shares them on the far side; Озинки, Исилькуль and Локоть by the section's own
+  km or crow-fly x 1.2. The crossing pair itself stays as it was, so no section splits into new
+  pieces and no line id moves.
+- **Iletsk.** Kazakhstan's railway runs Iletsk I and the lines from it to the border on
+  Russian soil, and Book 1 lists them only on its own sheet, so 150 km of Russian track was in
+  no build. `FOREIGN` reads those two sections (68-001 to Uyutny, 68-003 to Kos-Aral) and keeps
+  their pairs placed inside Russia; operator Қазақстан темір жолы, teal. RZD's 80-030 Orenburg -
+  Kanisai ended at "Канисай (рзд) (эксп.)", 8 km past Kanisai, which is Iletsk I (`ALIAS`).
+- **--clip** keeps OSM's track up to each of these points: a way mostly abroad used to be cut
+  whole (Ezerishche, Ozinki, Petukhovo, Isilkul, Kulunda and five more had no track to the
+  border), and one kept whole ran on into Kazakhstan (Черлак's two 15 km ways, 9 km abroad,
+  so the piece's track belonged to no line). Each way over a crossing now ends at a new node on
+  the border point (ids from 10^15 in coords.npz).
+
+What came out (tools/ab.py against the build before; register lines and km):
+
+| crossing | Russian line | piece | joins Belarus/Kazakhstan's |
+|---|---|---|---|
+| Osinovka | 17-066 Смоленск — Красное | Красное - border 3.2 km | yes |
+| Zaolsha | 17-067#2 Смоленск — Рудня | Рудня - border 10.1 km (was a 10.5 km loop to "Рудня (эксп.)") | yes |
+| Ezerishche | 01-072 Невель II — Завережье | Невель-2 - border 19.4 km (tariff 21; was 9.3 km to the station) | yes |
+| Alesha | 01-073 Невель I — Клястица | Клястица - border 6.6 km | yes |
+| Zakopytye | 17-052 Унеча — Злынка | Злынка - border 5.5 km | yes |
+| XKZRU01 | 61-017#1 (new, 14.2 km: Верхний Баскунчак - border) | | yes |
+| XKZRU02, 04 | 61-017#2 | Эльтон - border 20.1 and 20.9 km | yes |
+| XKZRU03 | 61-017#3 | Кайсацкая - border 19.6 km | yes (kz has an OSM line there) |
+| XKZRU08 | 68-003 Илецк I — Кандыагаш (new, 90.5 km) | Кос-Арал - border 3.3 km | yes |
+| XKZRU15 | 80-011 Утяк — Петропавловск | Петухово - Горбуново - border 22.6 km | yes |
+| XKZRU16 | 83-002 | Исилькуль - border 18.7 km | yes |
+| XKZRU17 | 83-018 Иртышское — Осолодино | Черлак - border 6.0 km | yes (kz has no line there) |
+| XKZRU18 | 83-018 | Теренгуль - border 10.8 km, and Теренгуль - Осолодино (51 km, new) | yes |
+| XKZRU20 | 83-014 Барнаул — Локоть | Веселый Яр - border 15.0 km | yes |
+| XKZRU05 Kigash, 06 Ozinki, 07 Uyutny | 61-074, 61-072, 68-001 | none: no OSM passenger route over them | no |
+
+80-030 Orenburg - Iletsk I is now 76.3 km (68.7 before, to Kanisai) and joins 68-003 at
+Iletsk-1, whose id moves from OSM's n10679322595 to the register's e10679322595 (aliased).
+Ids gone, all junctions: three of the export codes (Рудня's aliased to Рудня, Завережье's and
+Канисай's to nothing), Полынный and Ингеловский (61-017#2's ends before, merged into its
+pieces now), Локоть (эксп. на Рубцовск) (aliased to OSM's Lokot). No line id moved; 17-067's
+two pieces keep theirs (the border point's op is "border/<id>" so it does not sort first).
+Register lines 845 -> 847, km +287 (68-003 90, Теренгуль - Осолодино 51, Петухово - Горбуново
+21, the Iletsk link 8, the rest border pieces). 35 OSM lines (FPK trains, the Smolensk - Vitebsk and
+Velikiye Luki - Alesha diesels) get build_model's own tails to the new points.
+
+## English names and line colours (2026-10-03)
+
+**Station English names: Wikidata by ESR code.** The tariff guide's six-digit codes are
+Wikidata's P2815 ("ESR station code"; P2814 is a Danish company register). `ru_register.py
+--wikidata-stations` fetches every item with a P2815 in ten queries, one per first digit (2-7 s
+each; the single query over all of them is near the service's time limit), with its `en`,
+`en-gb` and `mul` labels and en.wikipedia title, plus the 157 Russian items that have only an
+Express code (P722), joined to ESR through osm.sbin.ru's esr.csv (5 of them are stops here).
+Of the 9,128 points that are stops, 8,336 (91%) have a Wikidata item by code, but only 3,246
+have an English label. `--convert` keeps a label only where it reads as a romanisation of the
+point's Russian name (`en_score` >= 0.88: transliterated, adjective endings and words such as
+Пассажирский / Passenger left out on both sides, numbers equal), after cleaning ("Kirov
+railway station" -> "Kirov"). It turns away about 400 labels of 3,642 on all points: Tatar
+and Bashkir names filed as English ("Tügäräk Qır" for Круглое Поле, "Qaratun"), Dutch and
+German transliterations ("Tsjebangda", "Noviy Oergal", "Rakitnaja"), Finnish names, items for
+another or a renamed point ("208 km" on Платформа 210 км, "Nauchny park" on Олимпийская
+Деревня), and labels that drop part of the name ("Paveletsky" for
+Москва-Пассажирская-Павелецкая). Nothing is transliterated by us: a point with no label
+that passes has no English name, and the app shows the Russian one. Crimea's labels are
+mostly Ukrainian-based romanisations ("Pryberezhne" for Прибрежная, "Vladyslavivka"): kept,
+as that is how English sources spell them. The checked names go into points.json as
+`name_en`; rinf.py's `station_en` hook (no-op elsewhere) gives them to register stations OSM
+gave no `name:en`, checking again against the name the station is shown under (OSM's, where
+the stop matched an OSM station). Result, measured on the build (tools/ab.py, then the
+rebuild): **register stops with an English name 1,756 -> 3,419 of 8,297 (21% -> 41%)**,
+junction ends 79 -> 590 of 1,674, every station in ru 2,717 -> 4,902 of 15,588. Eight
+junctions that took an OSM `name:en` from a merged OSM station before now show Wikidata's
+spelling instead ("Jessoila" -> "Essoila", "Tuapse-Sortirovochnaya" -> "Tuapse-Sorting").
+No station or line id moved; foot.json and ways.json byte-identical.
+
+**Line English names** are built like the Russian ones, from the same two end points' English
+names: "Obukhovo — Chudovo-Moskovskoye", with the via note where there is one ("Voskresensk —
+Ilyinsky Pogost (via Lopatino, Berendino)"); none unless both ends and every via station have
+one. The 47 Wikidata line labels used before all restate the two ends in an editor's spelling
+("Railway line Kovrov - Nizniy Novgorod", "Beloostrov - Vuborg line"), so they now only fill
+in where an end has no English name, and only where no other line has the same label.
+**Register lines with an English name 44 -> 392 of 845 (46%; 54% of register km)**; 409 of
+the 1,180 tariff sections from their end stations, 14 from a Wikidata label. The English
+names inherit Wikidata's inconsistent spellings ("Yegoryevsk II — Yegorievsk I",
+"Vologda I" beside "Krasnodar-1").
+
+**Line colours.** The tariff sections have no colours, nor does any widely used map colour
+Russia's railways (Wikimedia's "Russia Rail Map" and "RZD branches area 2018", the maps on
+en/ru.wikipedia, draw every railway alike; OSM's route=railway relations carry no colour).
+OSM's own lines already have theirs (the metros, МЦД-1..4, Аэроэкспресс, Nizhny Novgorod's
+city trains: 151 lines). So every register line takes its regional railway's colour, picked
+(`ROAD_COLOUR` in ru_register.py: nine hues, no two neighbouring railways alike), written by
+`ru_register.py --colours` into colours/ru.csv, one row per built line, marked `picked`.
+Anita's to confirm.
+
+    python ru_register.py --wikidata-stations   # data/raw/ru/wdx_stations.json, ~1 min
+    python ru_register.py --convert             # points.json name_en, names.json name_en
+    python ru_register.py --colours             # colours/ru.csv from dist/data/ru/lines.json
+    python tools/compare_lines.py save ru
+    python tools/slot.py -- python tools/rebuild.py -j 1 ru
+    python tools/compare_lines.py diff ru
+    python check_model.py --region ru
 
 ## The short answer
 

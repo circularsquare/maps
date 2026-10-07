@@ -1,4 +1,10 @@
-# Lebanon — CLOSED on the Arab Barometer, 2026-09-09. The sect column exists and the geography under it is a fieldwork quota
+# Lebanon — DRAWN 2026-10-03 from the 2022 electoral register by caza of family registration (§10). Sections 1-9 are the survey closures that came first
+
+**§10 is the build** (session `fafd1067-lb`, on Anita's ruling in ask 049). Sections 1-9 below
+record why no survey could place Lebanon's sects; they still hold, and they are why the register,
+with its known flaw, is what is drawn.
+
+*What follows, through §9, was written while Lebanon was closed.*
 
 **Lebanon is not drawn and there is no `sources/lb.py`.** The World Values Survey's wave 7 was
 opened on 2026-09-15 and closes the same way, by its own sample design, from the same fieldwork firm
@@ -363,3 +369,177 @@ design's text says "residents" in one sentence and "Lebanese citizens" a few lin
 same strata: read its technical report's strata line before loading the file. WVS wave 6 Lebanon
 (2013) was not downloaded and its design was not read; read its IHSN sample design before asking
 Anita for it.
+
+## 10. DRAWN 2026-10-03 from the 2022 electoral register, by caza of family registration
+
+Session `fafd1067-lb`, on ask 049 (Anita: draw it from the register by caza, labelled as where
+families are registered and not where they live, "its replicating what people usually use. and
+would be a big improvement over no granularity"). `python sources/lb.py`, then `lb_geo.py`, then
+`lb_grid.py` rebuild everything below and stop on any check that moves.
+
+### 10.1 What was found, and what the 2022 register is published as
+
+* **The Monthly no. 187 (April-May 2022), Information International**, pp. 6-22, "Lebanon's 2022
+  voters by sect and district": Table 1 the nation (3,967,507, 17 rows), Tables 2-16 the fifteen
+  electoral districts of the 2017 law, each "based on the figures issued by the Ministry of
+  Interior and Municipalities", with the 2018 column and the difference beside 2022. A born-digital
+  PDF (4,609,114 bytes, 52 pages), `monthlymagazine.com/cms/upload/magazine/630f55c7ec72b382_file.pdf`,
+  read off its text layer. **This is the most complete citable 2022 tabulation found, and it is by
+  electoral district, not caza.** Nine of the fifteen districts hold two to four cazas.
+* **No caza-by-sect table for 2022 was found in a publishable form.** Searched 2026-10-03: The
+  Monthly's 2022 issue (districts only); the Wikipedia articles for the 2022 district elections
+  (totals only) and the caza articles (2022 percentages credited to L'Orient Today, mixed
+  groupings, Koura's Greek Catholics jump from 1.18% to 2.80% between 2018 and 2022, so not
+  used); `elections.gov.lb` (a single-page app; its Statistics chunk shows turnout by major
+  district and nothing by sect); the DGPS statistics map (§4: no sect).
+* **lub-anan.com**, "electoral facts about Lebanon, per the official voter lists issued by the
+  Ministry of Interior for 2014" (its disclaimer: the lists the Ministry issued on discs). One
+  page per caza with every sect's count by sex: 29 pages (Beirut as the 2008 law's three
+  districts, Saida as city and villages), 3,514,588 voters, each page closing on its own block
+  subtotals and grand total. Only these aggregate pages were read; the site also has name and
+  family pages, which were not.
+* **L'Orient Today's Tableau Public workbook "Registered Voters by District"** (Richard Salame
+  and Iva Kovic, 2022, author profile `richard.salame`), embedded in their "Mapping Lebanon: Data
+  and statistics" page. Its view's own CSV export
+  (`public.tableau.com/views/RegisteredVotersbyDistrict/RegisteredVotersbyDistrict.csv?:showVizHome=no`)
+  gives registered voters per minor district: 25 rows, three of them caza pairs (West
+  Bekaa-Rashaya, Marjayoun-Hasbaya, Baalbek-Hermel), summing to 3,967,507 exactly.
+
+### 10.2 THE PACKAGED WORKBOOK IS THE VOTER ROLL. DO NOT DOWNLOAD IT
+
+`public.tableau.com/workbooks/RegisteredVotersbyDistrict.twb` answers with a 58 MB packaged
+workbook whose `.hyper` extract is built from "20220428 district populations.csv", with the
+columns `firstname`, `lastname`, `fathersname`, `mothersname`, `dob`, `sex`, `personalsect`,
+`regsect`, `regnumber`, `town_neighb`, `cadaa`, `voting_country`: the Ministry's roll, one row per
+voter, 3.97 million named people with their sect. It was fetched once on 2026-10-03 while probing
+for the view's data, its `.twb` column list was read, and both it and the towns workbook's copy
+were deleted without the extract being opened. Nothing in this build comes from it. It would
+answer every question here (caza by sect, personal against register sect, town by sect), and it
+is still not to be used: it is personal data on a scale this project should not hold, whatever
+its availability. If a caza-by-sect table is wanted from it, it is L'Orient's to publish.
+
+### 10.3 Personal sect and register sect are different counts
+
+The roll carries two sects per voter: the personal sect and the sect of the family register
+(`مذهب السجل`). lub-anan's 2014 pages count the **personal** sect: its minority sects are mostly
+women (El Koura's Greek Catholics 593 women, 98 men; nationally 12,126 of the 13,857 `not stated`
+are women), which is what a woman's own sect looks like after her record moves to her husband's
+family. The Monthly's 2022 tables are the **register** sect: in Maronite Kesrouan-Jbeil they put
+3,423 Greek Orthodox and 2,499 Greek Catholics where lub-anan's 2014 seed has 7,001 and 6,102,
+and their 2018 column (3,361, 2,328) agrees with 2022. The map draws the register sect, because
+that is what is published for 2022 and what the ruling names; `note_public` says a married woman
+is usually counted under her husband's family's sect. The 2014 seed is used only for how a
+district's sects split between its cazas, so the two kinds mix only there.
+
+### 10.4 The construction and its checks
+
+1. **2022 by district** (`read_monthly`). Every table's Total row equals the district total printed
+   above it and L'Orient's minor districts summed, except Table 9, whose Total (153,974) is a
+   misprint for the 153,975 its rows, its header and L'Orient give (`PINNED`). **Nine tables' rows
+   miss their total by 1 to 44 voters** (`ROW_SUM_OFF`: North III +44, North II +10); the
+   difference column finds three slips (Table 4 Others +99 for +9, Table 12 Others +13 for +15,
+   Table 13 Alawite +57 for +58) that do not close their tables, so rows are kept as printed and
+   scaled to the total (at most 0.017%). Against Table 1, **ten sects agree to the voter** (Sunni,
+   Shia, Maronite, Druze, Armenian Orthodox and Catholic, Alawite, Evangelical, Latin, Assyrian);
+   Greek Orthodox is 2,554 higher in the districts, and Table 1 groups the Syriac, Chaldean and
+   Others rows differently (its Syriac Orthodox 15,672 against the districts' 6,530 plus 13,047
+   printed as one `Syriac` in four districts). Pinned as `NATIONAL_OFF`; the districts are drawn.
+2. **Districts to cazas** (`build`). In each multi-caza district, an IPF of the 2014 caza-by-sect
+   seed onto the district's 2022 sect rows and L'Orient's 2022 minor-district totals; `Syriac` and
+   `Others` rows are expanded on the seed. The 2014 seed against each district's 2022 rows is held
+   to a growth band (0.70-1.45 for sects over 2,000), which is what would catch a sect on the wrong
+   row; three cells are outside it and pinned with their reasons (`GROWTH_PINNED`: the two in
+   §10.3, and North II's Alawites at 1.47, already 1.35 by the 2018 column). The rake moved between
+   1,000 and 6,100 voters between minor districts per district. The three caza pairs are split per
+   sect on 2014.
+3. **Five cazas are whole districts** (Beirut = Beirut I + II, El Meten, Baabda, Zahle, Akkar) and
+   are `measured`: 1,305,483 of the 3,864,296 Lebanese dots. The rest are `derived`, with
+   `roll = NOWHERE` (rollup.py's same-unit rule: the sect was counted for the district).
+4. **Scale.** Registered voters (21 and over, emigrants included) times 3,864,296 / 3,967,507 =
+   0.97399, OCHA's resident Lebanese (2026 LRP package, from CAS's 2018-19 LFHLCS). One national
+   factor: each caza is drawn with as many people as are REGISTERED there. The alternative,
+   OCHA's resident Lebanese per caza at each caza's registered mix, was rejected: it would move
+   the national mix (the South and the Bekaa, registered far above their residents, are mostly
+   Shia, so national Shia would fall and Mount Lebanon's sects rise) while still colouring the
+   southern suburbs with Baabda's register.
+
+The 2022 register as drawn: Sunni 29.51%, Shia 29.32%, Maronite 19.31%, Greek Orthodox 6.65%,
+Druze 5.59%, Greek Catholic 4.31%, Armenian Orthodox 2.12%, Alawite 0.97%, Armenian Catholic
+0.50%, Evangelical 0.44%, Syriac Orthodox 0.41%, Syriac Catholic 0.32%, Latin 0.28%, Jewish
+0.11%, Chaldean 0.06%, Assyrian 0.04%, Others 0.05%.
+
+### 10.5 What registration does to the map, measured
+
+Register share over OCHA's resident-Lebanese share, per caza (`sources/lb.py` prints it):
+Marjaayoun 4.87, El Hermel 2.84, Bent Jbeil 2.71, Bcharre 2.39, Jezzine 2.24, **Beirut 2.08**, ...
+Akkar 1.02, Chouf 0.99, ... Aley 0.61, **El Meten 0.45, Baabda 0.41, Kesrwane 0.41**. Baabda, El
+Meten and Kesrwane hold 26.8% of resident Lebanese and 11.4% of the register. Baabda's register is
+35.6% Maronite, 25.9% Shia and 17.6% Druze; Beirut's is 48.9% Sunni and 16.0% Shia. OCHA's
+resident split of the south reflects the 2023-24 war's displacement (Marjaayoun's 0.66% of
+residents), so the extreme southern ratios are partly that.
+
+**Kontur only places inside a caza and is not calibrated.** It agrees with OCHA's residents
+nationally (0.997) and ranks the cazas like OCHA (Spearman +0.847 against a shuffled 99th
+percentile of +0.448, the asserted witness), but six cazas fall outside a 0.5-2.0 band: Kontur
+puts 1,200,117 people in Baabda against OCHA's 568,296 and 112,226 in Akkar against 484,765 (its
+footprint covers Akkar, 912 populated hexes). A caza total Kontur gets wrong moves nobody between
+cazas here, so the band is printed, not asserted. Cap blocks (`kontur_cap.csv`): Beirut with the
+Dahiyeh (58 hexes, 1.6 million people) and Tripoli's core (5 hexes, 167,487 of the caza's
+229,436) real; three hexes east of Hazmieh at the cap among 2,600-9,900/km2 capped. COD-AB's
+Hasbaya loses 17.9 km2 to Natural Earth's Israeli-held Shebaa Farms; 6,276 Kontur people in hexes
+across the Syrian and Israeli borders are dropped, 64,888 on the coast snapped.
+
+### 10.6 The non-Lebanese layer
+
+OCHA's 2026 package gives every population by caza (the brief expected governorate): Syrians
+1,120,000 (UNHCR registration, adjusted for 2025 returns and arrivals), Palestinians 224,791
+(UNRWA, refugees from Lebanon and from Syria), migrants 164,097 (IOM's Migrant Presence
+Monitoring, quoted by OCHA; no IOM data was downloaded, per the 2026-09-16 ruling). Syrians take
+Pew 2020's Syria row (94.2% Muslim, 3.8% Christian) with Muslims on bare `islam` and Christians on
+bare `christianity`, as Syria itself is drawn: nothing measures the sects or churches of Syrians
+in Lebanon, and the 2025 arrivals after the coastal killings were reported as largely Alawite,
+which a Sunni default would get wrong. Palestinians take Pew's Palestinian-territories row,
+Muslims on `islam.sunni` (origin_religion's default). Both `modelled`. Migrants are the `gap`
+(3.05% of OCHA's 5,373,184): no nationality by caza.
+
+### 10.7 Nodes
+
+Added `christianity.catholic.eastern.maronite` and `.melkite` (depth 4) and `other.lb`. Greek
+Orthodox on `christianity.orthodox.canonical.antiochian` (origin_religion's LB and SY rows already
+use it); Armenian Orthodox on `christianity.oriental.armenian` (not `.cilicia`: the register does
+not name the catholicosate, ask 004's rule); Armenian Catholic, Syriac Catholic and Chaldean on
+the Eastern Catholic parent; Evangelical on `christianity.protestant`; Assyrian on
+`christianity.churchofeast`; the register's `Israeli` on `judaism`; Alawites on bare `islam`
+(origin_religion.py's reasoning for Syria's). Cyprus's `Maronite church` still sits on the parent;
+moving it would change a drawn country and was left.
+
+### 10.8 Calls someone might reverse
+
+* Dots per caza follow registration, scaled by one national factor (§10.4 step 4).
+* The 2014 personal-sect register splits each district's 2022 register-sect counts between cazas.
+* Lebanon's Jews (4,309 registered, almost all Beirut II) are drawn where registered.
+* Alawites on bare `islam` rather than a new node.
+* Syrians' Muslims unsplit; Palestinians' Sunni.
+
+### 10.9 What would improve it
+
+* A caza-by-sect table for 2022 that someone publishes as a table (L'Orient's dashboard tooltips
+  show the top sects per minor district; Information International may print cazas in another
+  issue; neither was found).
+* The next parliamentary election's register: the same route, one vintage newer. Whether the
+  May 2026 vote was held was not checked (a search on 2026-10-03 returned a Wikipedia page for a
+  2028 election, unopened); the Directorate of Personal Status lists 4,093,662 voters for 2025,
+  totals only.
+* Personal sect by caza for 2022, which would be closer to what people call themselves.
+
+## 11. Top text before the 75-word cut, 2026-10-03 (`fafd1067-top75`)
+
+Anita asked for the text at the top of the phone screen to come down to about 75 words
+(queue.md, "Cut the country text to about 75 words"). These are the four header fields as
+they stood before the cut, verbatim, so nothing they said is lost. The cut versions are in
+`countries/lb.py`; `note_public` was not changed.
+
+- `how`: electoral register, 2022, every voter's sect of record, by electoral district
+- `fill`: from the 2014 register by caza, inside each 2022 electoral district
+- `grain`: cazas of family registration, not of residence; 200,000 people on average
+- `gap`: 164,097 migrant workers, 3.1% of the people living in Lebanon, whose nationalities and religions are not known by caza

@@ -18,7 +18,8 @@ def _eg_place_weight(place):
 
 
 def _eg_counts():
-    """Arab Barometer waves III, IV, V and VII pooled, at governorate: 2 categories, 24 of 27.
+    """Arab Barometer waves III, IV, V and VII pooled, at governorate: 2 categories, 24 of 27;
+    the Christians split Coptic Orthodox / other from the Global Flourishing Study (below).
 
     THE COUNTRY IS A SURVEY ON CAPMAS'S OWN PROJECTION AND EVERY ROW IS `modelled` (§7b).
     `Q1012` gives a governorate share; CAPMAS's api/GovernoratePopulation gives the number of
@@ -35,11 +36,14 @@ def _eg_counts():
     deposited for the 2017 census has thirteen variables and religion is not among them. So
     governorate is simultaneously the ruling and the ceiling.
 
-    THREE GOVERNORATES ARE NOT DRAWN AT ALL. New Valley, North Sinai and South Sinai have no
-    respondents in any wave, so they have no share to apply and get no dots. That is 870,398
-    people, 0.80% of Egypt, and 48% of its land; `gap=` says so. Filling them at the national
-    rate would assert that the Western Desert oases and the Sinai look like Egypt's average,
-    which nothing supports.
+    THREE GOVERNORATES HAVE NO RESPONDENTS IN ANY WAVE: New Valley, North Sinai and South
+    Sinai. Filling them at the national rate would assert that the Western Desert oases and the
+    Sinai look like Egypt's average, which nothing supports. Two of them were measured by the
+    census, though, and are drawn from it (scout 2026-10-03, sources/eg_census.py, on Anita's
+    "whether anything measured the place" line of 2026-09-08): South Sinai at the 1996 census's
+    5.03% Christian, from the governorate table Arab-West Report copied in the CAPMAS library,
+    and New Valley at the 1976 census's 1.8%, from Chitam (1986) Table 4.1. North Sinai has no
+    census figure anyone has printed and stays empty: 475,331 people, 0.44% of Egypt; `gap=`.
 
     BOTH ANSWERS CARRY THEIR OWN GEOGRAPHY AND THERE IS NO TAIL, which is unique here. The
     card has two boxes that anybody in Egypt chose, both clear the 1% eligibility floor, and
@@ -66,6 +70,18 @@ def _eg_counts():
     df = pd.read_csv(HERE / "data" / "normalized" / "eg.csv",
                      dtype={"geo_id": str}, low_memory=False,
                      keep_default_na=False, na_values=[""])
+    unsampled = {"EG32", "EG34", "EG35"}
+    if unsampled & set(df["geo_id"]):
+        raise SystemExit(f"{sorted(unsampled & set(df['geo_id']))} is in eg.csv and must not "
+                         "be -- the Arab Barometer never sampled it; re-run sources/eg.py")
+    # New Valley (1976 census) and South Sinai (1996 census), the two frontier governorates a
+    # census measured; scout 2026-10-03, sources/eg_census.py. North Sinai stays empty.
+    census = pd.read_csv(HERE / "data" / "normalized" / "eg_census.csv",
+                         dtype={"geo_id": str}, keep_default_na=False, na_values=[""])
+    if set(census["geo_id"]) != {"EG32", "EG35"}:
+        raise SystemExit(f"eg_census.csv has {sorted(set(census['geo_id']))}, expected EG32 "
+                         "and EG35; re-run sources/eg_census.py")
+    df = pd.concat([df, census], ignore_index=True)
 
     lut = pd.read_csv(HERE / "data" / "geo" / "eg" / "eg_lookup.csv", dtype=str)
     df["unit"] = df["geo_id"].map(dict(zip(lut["geo_id"], lut["unit"])))
@@ -73,14 +89,30 @@ def _eg_counts():
     if missing:
         raise SystemExit(f"eg.csv governorates with no polygon: {missing} -- re-run "
                          "sources/eg_geo.py, the lookup is stale")
-    # 24 of Egypt's 27. The three unsampled ones keep their polygons and their hexes and draw
-    # no religion; see the docstring and `gap=`.
-    if df["unit"].nunique() != 24:
-        raise SystemExit(f"{df['unit'].nunique()} governorates, expected 24")
-    unsampled = {"EG32", "EG34", "EG35"}
-    if unsampled & set(df["unit"]):
-        raise SystemExit(f"{sorted(unsampled & set(df['unit']))} is in eg.csv and must not be "
-                         "-- the Arab Barometer never sampled it; re-run sources/eg.py")
+    # 26 of Egypt's 27. North Sinai keeps its polygon and its hexes and draws no religion;
+    # see the docstring and `gap=`.
+    if df["unit"].nunique() != 26 or "EG34" in set(df["unit"]):
+        raise SystemExit(f"{df['unit'].nunique()} governorates, expected 26 without EG34")
+
+    # THE COPTS (2026-10-04, `fafd1067-copts`, sources/eg_churches.py). Every governorate's
+    # Christians, survey and census rows alike, split at one national share: 86.49% to the
+    # Coptic Orthodox Church (Global Flourishing Study 2023, `REL3` Orthodox) and the rest left
+    # on `christianity`. One share everywhere, so this labels the Christians already drawn and
+    # moves nobody: 131 GFS Christians cannot say where the share differs. Rows stay `modelled`
+    # like the parent; `derived` would claim a counted parent to roll back to, and there is none.
+    ch = pd.read_csv(HERE / "data" / "normalized" / "eg_churches.csv")
+    share = dict(zip(ch["source_category"], ch["share_of_christians"]))
+    if len(share) != 2 or abs(sum(share.values()) - 1) > 1e-6:
+        raise SystemExit(f"eg_churches.csv is not a two-way split of Christians: {share}; "
+                         "re-run sources/eg_churches.py")
+    coptic_key = next(k for k in share if "Orthodox" in k)
+    rest_key = next(k for k in share if k != coptic_key)
+    is_c = df["source_category"] == "Christian"
+    c = df[is_c]
+    cop = c.assign(source_category=coptic_key,
+                   count=(c["count"] * share[coptic_key]).round().astype(int))
+    rest = c.assign(source_category=rest_key, count=c["count"] - cop["count"].to_numpy())
+    df = pd.concat([df[~is_c], cop, rest], ignore_index=True)
 
     df["node"] = df["source_category"].map(resolve)
     unmapped = sorted(df.loc[df["node"].isna(), "source_category"].unique())
@@ -98,16 +130,20 @@ ENTRY = {
         name="Egypt",
         source="Arab Barometer, four waves 2013 to 2022 (Arab Barometer, Princeton "
                "University), against CAPMAS's own governorate population estimates for "
-               "January 2026",
-        basis="self-identification, adults 18 and over",
+               "January 2026; South Sinai from the 1996 census (governorate table copied in "
+               "the CAPMAS library, Arab-West Report paper 52) and New Valley from the 1976 "
+               "census (E. J. Chitam, The Coptic Community in Egypt, Durham 1986, Table 4.1); "
+               "the Coptic Orthodox share of Christians from the Global Flourishing Study, 2023",
+        basis="self-identification, adults 18 and over; census, all residents, in two "
+              "governorates",
         note_public=(
-            "**Egypt has asked about religion in four censuses and published the answer from "
-            "one of them, in 1986.** So this map is a survey standing where a census would "
+            "**Egypt's last four censuses asked about religion, and only the 1986 answer was "
+            "published.** So this map is a survey standing where a census would "
             "be. It is drawn from the Arab Barometer: **6,840 people** interviewed across "
             "four rounds between 2013 and 2022, pooled, with each governorate's answers "
             "applied to CAPMAS's own estimate of that governorate's population. Nobody "
-            "counted this, and the dots are drawn desaturated to say so. "
-            "**Christians are 6.02% of the country as drawn, and Upper Egypt is where they "
+            "counted this, so the dots disappear when inferred dots are turned off. "
+            "**Christians are 6.01% of the country as drawn, and Upper Egypt is where they "
             "are.** Minya is **16.41%**, Sohag 13.90% and Asyut 13.58%, against **1.06% of "
             "Sharqia** and 1.83% of Beheira in the Delta. Those top three rest on about 350 "
             "interviews each and sit inside one another's margins, so read them as a group "
@@ -116,7 +152,7 @@ ENTRY = {
             "**The reason this map was drawn at all is that the survey agrees with the last "
             "census that published.** The 1986 census, the last one whose religion table was "
             "released, put Christians at 5.7% of Egypt, and this map's national figure is "
-            "**6.02%**. Cairo is drawn at **8.19%** against the 8.57% recorded for Cairo in "
+            "**6.01%**. Cairo is drawn at **8.19%** against the 8.57% recorded for Cairo in "
             "1996, a governorate figure that reached the academic literature and that CAPMAS "
             "has never published itself. Those two are the only Egyptian numbers there are "
             "to check a survey against, and it clears both. How many Christians Egypt has is "
@@ -126,25 +162,39 @@ ENTRY = {
             "the Red Sea 28 and Port Said 44, against a median of 271. The Red Sea is drawn "
             "as entirely Muslim because none of its 28 respondents answered Christian, which "
             "on that sample is consistent with anything up to about 11%; it is not a finding "
-            "that no Copts live in Hurghada. "
-            "**New Valley, North Sinai and South Sinai are not on the map.** The survey "
-            "interviewed nobody in any of them across all four rounds, so they have no share "
-            "to apply and take no dots: **870,398 people**, 0.8% of Egypt on 48% of its "
-            "land. "
+            "that no Copts live in Hurghada; the 1996 census counted **10.5%** Christians "
+            "in the governorate. "
+            "**The survey interviewed nobody in New Valley, North Sinai or South Sinai**, in "
+            "any of the four rounds. Two of them are drawn from the census instead. South "
+            "Sinai takes the 1996 census's **5.03%** Christian, from the governorate table "
+            "Arab-West Report copied in the statistics agency's library, and New Valley the "
+            "1976 census's **1.8%**, from E. J. Chitam's 1986 study of the Coptic community; "
+            "both are shares from decades ago laid on today's population. North Sinai has "
+            "no census figure anyone has printed and is not on the map: **475,331 people**, "
+            "0.44% of Egypt. "
             "**No irreligion is drawn, and that is a fact about the questionnaire rather "
             "than about Egypt.** Two of the 6,840 answered atheist, on a card that only one "
             "of the four rounds carried; two rounds offered no such box at all and the "
             "fourth offered a differently worded one. In a country where saying it to a "
             "stranger with a clipboard carries a real risk, two is a floor of unknown depth, "
             "and nothing published says what the right number would be. The card is shallow "
-            "the other way too: one Muslim box and one Christian box, so this map says "
-            "nothing about the Sunni share, and nothing about which church Egypt's "
-            "Christians belong to even though most of them are Coptic Orthodox."),
-        how="survey, four rounds 2013 to 2022 pooled",
-        grain="governorates, 4.5 million people on average",
-        gap="New Valley, North Sinai and South Sinai, 0.8% of Egypt, where the survey "
-            "interviewed nobody",
-        gap_share=0.0080,
+            "the other way too: it has one Muslim box, so the Sunni share drawn here comes "
+            "from elsewhere (last paragraph). "
+            "**86.5% of Egypt's Christians are drawn as Coptic Orthodox.** That is the share "
+            "of the 131 Christians in the Global Flourishing Study's 2023 Egyptian sample who "
+            "named the Orthodox church as the one they most identify with, give or take about "
+            "7 points. The other 13.5% stay plain Christian: Catholics, Protestants, and the "
+            "one in thirteen who named no church. The same share is used in every governorate, "
+            "because a sample that size cannot say where it differs, so the Coptic dots follow "
+            "the Christian ones exactly. The Arab Barometer's 2018 round put the Orthodox lower, "
+            "at 72%, but it also put Catholics at 16% of Christians, three times what the "
+            "Catholic Church itself counts in Egypt; the 2023 figure sits much closer to the "
+            "churches' own numbers."),
+        how="survey, four rounds 2013 to 2022 pooled; two frontier governorates from old "
+            "censuses; Copts from a 2023 survey",
+        grain="governorates, 4.2 million people on average",
+        gap="North Sinai, 0.44% of Egypt, where the survey interviewed nobody",
+        gap_share=0.0044,
         counts=_eg_counts,
         units=None,
         unit_key=None,

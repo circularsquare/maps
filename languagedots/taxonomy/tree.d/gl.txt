@@ -1,0 +1,133 @@
+# Greenland (register 2026, no language question; sources/gl.md). Greenlandic node from fi.txt,
+# repeated; Tunumiisut (Glottolog tunu1234) and Inuktun (Polar Eskimo, pola1254, which Glottolog
+# files under Eastern Canadian Inuktitut) are new, drawn as siblings of Kalaallisut so none of
+# the three sits on a group node.
+eskimoaleut | Inuit-Yupik-Aleut (Eskimo-Aleut)
+eskimoaleut.greenlandic | Greenlandic (Kalaallisut)
+eskimoaleut.tunumiisut | Tunumiisut (East Greenlandic)
+eskimoaleut.inuktun | Inuktun (Polar Inuit)
+# --- origin_mix borrowed nodes (python sources/origin_mix.py --fragment gl) ---
+# Every node the origin mixes bring in that tree.txt lacks, repeated without colour.
+africa_other | Other African languages
+afroasiatic.berber | Berber
+afroasiatic.berber.tachelhit | Tachelhit
+afroasiatic.berber.tamazight | Tamazight
+afroasiatic.berber.tarifit | Tarifit (Riffian)
+afroasiatic.cushitic | Cushitic
+afroasiatic.cushitic.lowland | Lowland East Cushitic
+afroasiatic.cushitic.lowland.benaadir | Benaadir Somali
+afroasiatic.cushitic.lowland.maay | Maay
+afroasiatic.cushitic.lowland.somali | Somali
+afroasiatic.darija | Moroccan Arabic (Darija)
+austroasiatic.khmer | Khmer
+austroasiatic.muong | Muong (Mường)
+austroasiatic.vietnamese | Vietnamese
+austronesian | Austronesian
+austronesian.malayic | Malayic
+austronesian.malayic.pattani_malay | Pattani Malay (Yawi)
+austronesian.philippine | Philippine
+austronesian.philippine.bikol | Bikol
+austronesian.philippine.boholano | Boholano
+austronesian.philippine.cebuano | Cebuano
+austronesian.philippine.hiligaynon | Hiligaynon
+austronesian.philippine.ilocano | Ilocano
+austronesian.philippine.kapampangan | Kapampangan
+austronesian.philippine.maguindanao | Maguindanao
+austronesian.philippine.maranao | Maranao
+austronesian.philippine.pangasinan | Pangasinan
+austronesian.philippine.tagalog | Tagalog
+austronesian.philippine.tausug | Tausug
+austronesian.philippine.waray | Waray-Waray
+creole | Creoles
+creole.french_based | French-based creoles
+creole.french_based.reunionese | Reunion Creole
+hmongmien | Hmong-Mien
+hmongmien.hmong | Hmong
+indoeuropean.baltic | Baltic
+indoeuropean.baltic.latvian | Latvian
+indoeuropean.baltic.lithuanian | Lithuanian
+indoeuropean.celtic | Celtic
+indoeuropean.celtic.irish | Irish
+indoeuropean.germanic.continental | Continental West Germanic
+indoeuropean.germanic.continental.dutch | Dutch
+indoeuropean.germanic.continental.german | German
+indoeuropean.germanic.continental.limburgish | Limburgish
+indoeuropean.germanic.continental.lowgerman | Low German
+indoeuropean.germanic.continental.lowgerman.westphalian | Westphalian
+indoeuropean.germanic.continental.luxembourgish | Luxembourgish
+indoeuropean.germanic.frisian | Frisian
+indoeuropean.germanic.north | North Germanic
+indoeuropean.germanic.north.danish | Danish
+indoeuropean.germanic.north.icelandic | Icelandic
+indoeuropean.germanic.north.norwegian | Norwegian
+indoeuropean.germanic.north.swedish | Swedish
+indoeuropean.indoaryan.dardic.pashai | Pashai
+indoeuropean.indoaryan.romani | Romani
+indoeuropean.indoaryan.romani.romani | Romani
+indoeuropean.indoaryan.sinhala | Sinhala
+indoeuropean.iranian.dari | Dari
+indoeuropean.iranian.gilaki | Gilaki
+indoeuropean.iranian.kurdish | Kurdish
+indoeuropean.iranian.luri | Luri (Lurish and Bakhtiari)
+indoeuropean.iranian.mazandarani | Mazandarani
+indoeuropean.iranian.persian | Persian (Farsi)
+indoeuropean.iranian.zazaki | Zazaki
+indoeuropean.romance | Romance
+indoeuropean.romance.catalan | Catalan
+indoeuropean.romance.emilian | Emilian
+indoeuropean.romance.french | French
+indoeuropean.romance.galician | Galician
+indoeuropean.romance.italian | Italian
+indoeuropean.romance.lombard | Lombard
+indoeuropean.romance.neapolitan | Neapolitan
+indoeuropean.romance.portuguese | Portuguese
+indoeuropean.romance.romanian | Romanian
+indoeuropean.romance.sicilian | Sicilian
+indoeuropean.romance.spanish | Spanish
+indoeuropean.romance.valencian | Valencian
+indoeuropean.romance.venetian | Venetian
+indoeuropean.slavic | Slavic
+indoeuropean.slavic.east | East Slavic
+indoeuropean.slavic.east.russian | Russian
+indoeuropean.slavic.east.ukrainian | Ukrainian
+indoeuropean.slavic.south | South Slavic
+indoeuropean.slavic.south.bulgarian | Bulgarian
+indoeuropean.slavic.west | West Slavic
+indoeuropean.slavic.west.czech | Czech
+indoeuropean.slavic.west.polish | Polish
+indoeuropean.slavic.west.slovak | Slovak
+isolate | Language isolates
+isolate.basque | Basque
+japonic | Japonic
+japonic.japanese | Japanese
+kradai | Kra-Dai (Tai-Kadai)
+kradai.tai_vietnam | Tai Dam and Tai Don (Thái)
+kradai.tay | Tay (Tày)
+kradai.thai | Thai
+kradai.zhuang | Zhuang
+nakhdaghestanian | Nakh-Daghestanian
+nakhdaghestanian.nakh | Nakh
+nakhdaghestanian.nakh.chechen | Chechen
+other.two_mother_tongues | Two mother tongues (the census does not say which)
+seasia_other | Other indigenous languages of mainland Southeast Asia
+sinotibetan.sinitic | Chinese
+sinotibetan.sinitic.cantonese | Cantonese
+sinotibetan.sinitic.gan | Gan
+sinotibetan.sinitic.hakka | Hakka
+sinotibetan.sinitic.jin | Jin
+sinotibetan.sinitic.mandarin | Mandarin
+sinotibetan.sinitic.min_nan | Min Nan (Taiwanese, Hokkien)
+sinotibetan.sinitic.teochew | Teochew (Chiu Chau)
+sinotibetan.sinitic.wu | Wu
+sinotibetan.sinitic.xiang | Xiang
+turkic | Turkic
+turkic.azerbaijani | Azerbaijani
+turkic.bashkir | Bashkir
+turkic.tatar | Tatar
+turkic.turkish | Turkish
+turkic.turkmen | Turkmen
+turkic.uzbek | Uzbek
+uralic | Uralic
+uralic.finnish | Finnish
+uralic.hungarian | Hungarian
+# --- end origin_mix borrowed nodes ---

@@ -1,0 +1,212 @@
+# Finland (taxonomy/fi2025.py). The population register's 166 language codes, 31 Dec 2025.
+#
+# COLOURS. Finland is 83% Finnish, 5% Swedish and 2% Russian, and the three edges that matter on
+# the ground are Finnish | Swedish (the Ostrobothnian coast, Uusimaa's coast, Aland), Finnish |
+# Sami (the far north) and Finnish | Russian and Estonian (Helsinki, the east). Generated, Finnish
+# came out a light green beside Russian's green (cz.txt, us.txt) and Sami's sea-green, and
+# Estonian a sky blue beside Swedish's light cyan. Hand-picked here, all inside the Uralic and
+# North Germanic parts of the wheel:
+#   Finnish  light teal, Uralic's own hue, lighter than the group
+#   Swedish  periwinkle, away from Finnish by 75 degrees (us.txt, bo.txt and pr.txt use it bare)
+#   Sami     dark sea-green, well below Finnish in lightness
+#   Estonian mid steel-blue, between the two and darker than both
+uralic.finnish | Finnish | 0.66 0.19 355
+indoeuropean.germanic.north.swedish | Swedish | 0.76 0.13 265
+uralic.saami | Sami | 0.76 0.13 330
+uralic.estonian | Estonian | 0.78 0.13 10
+
+# New leaves. Twi and Ewe are printed apart from Akan and Gbe, so each is a sibling, not a child
+# (a child would turn us.txt's Akan or Gbe leaf into a group, drawn washed out). Ido is a
+# constructed language beside Esperanto.
+nigercongo.kwa.twi | Twi
+nigercongo.kwa.ewe | Ewe
+other.ido | Ido
+
+# Repeated from other fragments with their labels unchanged, so this fragment stands alone when
+# the build tail reads only the drawn countries' fragments.
+abkhazadyghe | Northwest Caucasian (Abkhaz-Adyghe)
+abkhazadyghe.abkhaz | Abkhaz
+afroasiatic.chadic | Chadic
+afroasiatic.chadic.hausa | Hausa
+afroasiatic.cushitic | Cushitic
+afroasiatic.cushitic.lowland | Lowland East Cushitic
+afroasiatic.cushitic.lowland.afar | Afar
+afroasiatic.cushitic.lowland.oromo | Oromo
+afroasiatic.cushitic.lowland.somali | Somali
+afroasiatic.ethiosemitic | Ethiopian Semitic
+afroasiatic.ethiosemitic.amharic | Amharic
+afroasiatic.ethiosemitic.tigrinya | Tigrinya
+afroasiatic.hebrew | Hebrew
+afroasiatic.maltese | Maltese
+algic | Algic
+algic.creeinnu | Cree-Innu
+algic.creeinnu.cree | Cree
+austroasiatic.khmer | Khmer
+austroasiatic.vietnamese | Vietnamese
+austronesian | Austronesian
+austronesian.chamorro | Chamorro
+austronesian.javanese | Javanese
+austronesian.malagasy | Malagasy
+austronesian.malayic | Malayic
+austronesian.malayic.indonesian | Indonesian
+austronesian.malayic.malay | Malay
+austronesian.oceanic | Oceanic
+austronesian.oceanic.fijian | Fijian
+austronesian.oceanic.nauruan | Nauruan
+austronesian.oceanic.samoan | Samoan
+austronesian.oceanic.tahitian | Tahitian | 0.74 0.15 20
+austronesian.oceanic.tongan | Tongan
+austronesian.philippine | Philippine
+austronesian.philippine.tagalog | Tagalog
+austronesian.sundanese | Sundanese
+aymaran | Aymaran
+aymaran.aymara | Aimara
+creole | Creoles
+creole.english_based | English-based creoles
+creole.english_based.bislama | Bislama
+eskimoaleut | Inuit-Yupik-Aleut (Eskimo-Aleut)
+eskimoaleut.greenlandic | Greenlandic (Kalaallisut)
+indoeuropean.albanian | Albanian
+indoeuropean.albanian.albanian | Albanian
+indoeuropean.armenian | Armenian
+indoeuropean.armenian.armenian | Armenian
+indoeuropean.baltic | Baltic
+indoeuropean.baltic.latvian | Latvian
+indoeuropean.baltic.lithuanian | Lithuanian
+indoeuropean.celtic | Celtic
+indoeuropean.celtic.irish | Irish
+indoeuropean.celtic.scottishgaelic | Scottish Gaelic
+indoeuropean.celtic.welsh | Welsh
+indoeuropean.germanic.continental | Continental West Germanic
+indoeuropean.germanic.continental.afrikaans | Afrikaans
+indoeuropean.germanic.continental.dutch | Dutch
+indoeuropean.germanic.continental.german | German
+indoeuropean.germanic.continental.limburgish | Limburgish
+indoeuropean.germanic.continental.luxembourgish | Luxembourgish
+indoeuropean.germanic.continental.yiddish | Yiddish
+indoeuropean.germanic.frisian | Frisian
+indoeuropean.germanic.north | North Germanic
+indoeuropean.germanic.north.danish | Danish
+indoeuropean.germanic.north.faroese | Faroese
+indoeuropean.germanic.north.icelandic | Icelandic
+indoeuropean.germanic.north.norwegian | Norwegian
+indoeuropean.hellenic | Hellenic
+indoeuropean.hellenic.greek | Greek
+indoeuropean.indoaryan.dhivehi | Dhivehi
+indoeuropean.indoaryan.sinhala | Sinhala
+indoeuropean.iranian.kurdish | Kurdish
+indoeuropean.iranian.ossetian | Ossetian
+indoeuropean.iranian.persian | Persian (Farsi)
+indoeuropean.iranian.tajik | Tajik
+indoeuropean.romance | Romance
+indoeuropean.romance.aragonese | Aragonese
+indoeuropean.romance.catalan | Catalan
+indoeuropean.romance.french | French
+indoeuropean.romance.galician | Galician
+indoeuropean.romance.italian | Italian
+indoeuropean.romance.moldovan | Moldovan
+indoeuropean.romance.portuguese | Portuguese
+indoeuropean.romance.rhaetoromance | Rhaeto-Romance
+indoeuropean.romance.romanian | Romanian
+indoeuropean.romance.spanish | Spanish
+indoeuropean.slavic | Slavic
+indoeuropean.slavic.east | East Slavic
+indoeuropean.slavic.east.belarusian | Belarusian
+indoeuropean.slavic.east.russian | Russian
+indoeuropean.slavic.east.ukrainian | Ukrainian
+indoeuropean.slavic.south | South Slavic
+indoeuropean.slavic.south.bosnian | Bosnian
+indoeuropean.slavic.south.bulgarian | Bulgarian
+indoeuropean.slavic.south.croatian | Croatian
+indoeuropean.slavic.south.macedonian | Macedonian
+indoeuropean.slavic.south.serbian | Serbian
+indoeuropean.slavic.south.serbocroatian | Serbo-Croatian
+indoeuropean.slavic.south.slovenian | Slovenian
+indoeuropean.slavic.west | West Slavic
+indoeuropean.slavic.west.czech | Czech
+indoeuropean.slavic.west.polish | Polish
+indoeuropean.slavic.west.slovak | Slovak
+isolate | Language isolates
+isolate.basque | Basque
+japonic | Japonic
+japonic.japanese | Japanese
+kartvelian | Kartvelian
+kartvelian.georgian | Georgian
+koreanic | Koreanic
+koreanic.korean | Korean
+kradai | Kra-Dai (Tai-Kadai)
+kradai.lao | Lao
+kradai.thai | Thai
+kradai.zhuang | Zhuang
+mongolic | Mongolic
+mongolic.mongolian | Mongolian
+nakhdaghestanian | Nakh-Daghestanian
+nakhdaghestanian.avarandic | Avar-Andic
+nakhdaghestanian.avarandic.avar | Avar
+nakhdaghestanian.nakh | Nakh
+nakhdaghestanian.nakh.chechen | Chechen
+nigercongo | Niger-Congo
+nigercongo.atlantic | Atlantic
+nigercongo.atlantic.fulah | Fula
+nigercongo.atlantic.wolof | Wolof
+nigercongo.bantu | Bantu
+nigercongo.bantu.ganda | Ganda
+nigercongo.bantu.gikuyu | Gikuyu
+nigercongo.bantu.herero | Herero
+nigercongo.bantu.kinyarwanda | Kinyarwanda
+nigercongo.bantu.kirundi | Kirundi (Rundi)
+nigercongo.bantu.kongo | Kongo
+nigercongo.bantu.kwanyama | Kwanyama
+nigercongo.bantu.lingala | Lingala
+nigercongo.bantu.luba_katanga | Luba-Katanga
+nigercongo.bantu.ndonga | Ndonga
+nigercongo.bantu.nguni | Nguni
+nigercongo.bantu.nguni.ndebele_za | Ndebele (South Africa)
+nigercongo.bantu.nguni.ndebele_zw | Ndebele (Zimbabwe)
+nigercongo.bantu.nguni.siswati | Swati
+nigercongo.bantu.nguni.xhosa | Xhosa
+nigercongo.bantu.nguni.zulu | Zulu
+nigercongo.bantu.nyanja_sena | Nyanja-Sena (N.30-40)
+nigercongo.bantu.nyanja_sena.chewa | Chewa
+nigercongo.bantu.shona | Shona
+nigercongo.bantu.sotho_tswana | Sotho-Tswana
+nigercongo.bantu.sotho_tswana.sesotho | Sesotho (Southern Sotho)
+nigercongo.bantu.sotho_tswana.setswana | Setswana
+nigercongo.bantu.swahili | Swahili
+nigercongo.bantu.tswa_ronga | Tswa-Ronga
+nigercongo.bantu.tswa_ronga.tsonga | Xitsonga (Tsonga)
+nigercongo.bantu.venda | Tshivenda (Venda)
+nigercongo.kwa | Kwa
+nigercongo.kwa.akan | Akan (Twi)
+nigercongo.mande | Mande
+nigercongo.mande.bambara | Bamanankan (Bambara)
+nigercongo.sango | Sango
+nigercongo.voltaniger | Volta-Niger
+nigercongo.voltaniger.igbo | Igbo
+nigercongo.voltaniger.yoruba | Yoruba
+nilosaharan | Nilo-Saharan
+nilosaharan.kanuri | Kanuri
+other.esperanto | Esperanto
+quechuan | Quechuan
+quechuan.quechua | Quechua
+sinotibetan.burmish.burmese | Burmese
+sinotibetan.sinitic | Chinese
+sinotibetan.tibetic.dzongkha | Dzongkha
+tupian | Tupian
+tupian.tupiguarani | Tupi-Guarani
+tupian.tupiguarani.guarani | Guarani
+tupian.tupiguarani.guarani.paraguayan | Paraguayan Guarani
+turkic | Turkic
+turkic.azerbaijani | Azerbaijani
+turkic.bashkir | Bashkir
+turkic.chuvash | Chuvash
+turkic.kazakh | Kazakh
+turkic.kyrgyz | Kyrgyz
+turkic.tatar | Tatar
+turkic.turkish | Turkish
+turkic.turkmen | Turkmen
+turkic.uyghur | Uyghur
+turkic.uzbek | Uzbek
+uralic | Uralic
+uralic.hungarian | Hungarian
+uralic.komi | Komi

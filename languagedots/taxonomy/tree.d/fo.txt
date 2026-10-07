@@ -1,0 +1,5 @@
+# Faroe Islands (taxonomy/fo2011.py). No new node: Faroese and Danish repeat fi.txt's lines so
+# this country stands on its own fragment.
+indoeuropean.germanic.north | North Germanic
+indoeuropean.germanic.north.danish | Danish
+indoeuropean.germanic.north.faroese | Faroese

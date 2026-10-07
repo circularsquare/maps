@@ -1,0 +1,4 @@
+# North Korea (no language question; everyone on Korean). No new nodes; bare repeats so the
+# country stands on its own under `build.py --only`. Colour stays the other fragments'.
+koreanic | Koreanic
+koreanic.korean | Korean

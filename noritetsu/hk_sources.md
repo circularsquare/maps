@@ -113,11 +113,41 @@ shade. Light Rail is the thin gold path. The grey 16.3 pt path (#9C948B) is the 
 which is not built. The trams and the Peak Tram have no published line colour; theirs are
 `picked` from their liveries.
 
+## Over the border (2026-10-04)
+
+**The high-speed line, built as Hong Kong's piece of China's 广深港高速线.** Anita saw no stop
+on the Hong Kong side of the line from Shenzhen. Hong Kong's section (香港西九龍 to the border,
+26 km) has one station and no OSM route relation, so until now it had no second station to
+make a section to, and China's build ended the line at 福田. Now:
+
+- A border point `xFutian` (borders.EXTRA): OSM splits both tracks on its boundary of Hong
+  Kong (relation 913110) in the tunnel under the Shenzhen River, at nodes 11 m apart; the
+  point is between them. Named "China – Hong Kong border".
+- Hong Kong builds **香港西九龍 - China – Hong Kong border, 25.46 km** over the ways OSM names
+  廣深港高速鐵路 (the platform roads included, yard roads not). Published: "26 km" for the Hong
+  Kong section (en.wikipedia, Hong Kong section of the XRL), which runs to the end of the
+  platforms: 0.98. China builds 福田 - border (cn_sources.md).
+- Hong Kong's piece **takes China's line id** (`c1d25d1a02a`, cn_register.line_id of
+  广深港高速线), name 廣深港高速鐵路, MTR as operator, high-speed. The app joins lines of one
+  id from every country into one line, each country's totals counting its own piece, so 福田 ->
+  香港西九龍 (or 广州南 -> 香港西九龍) is one ride on one line and credits both. Two lines of
+  their own would have met at the border point and left no line calling at both stations: the
+  app never joins register lines of different ids, and there is no OSM route to carry the
+  ride. Colour: MTR's map draws the high-speed line in grey, #9C948B (`colours/hk.csv`); China
+  has no line colours, so the joined line takes it.
+- Kept by build_model through the line's `served_sections`. `BORDER_PIECES` in hk_register.py.
+
+**East Rail at 羅湖 and 落馬洲 stays as it is.** No train crosses: passengers walk over the
+border to 罗湖 and 福田口岸 on the Shenzhen side, so East Rail ending at both stations is right.
+**The Intercity Through Train** (Hung Hom - Guangzhou East, Beijing West, Shanghai) is gone:
+suspended in January 2020, never resumed, and its four mainland ports were closed by the State
+Council on 2024-07-05 (The Standard, "Time's up for intercity through trains", 2024-08-01;
+MTR had already called it the end in 2022, SCMP "End of an era"); China Railway replaced the
+Beijing and Shanghai trains with high-speed sleepers to West Kowloon on 2024-06-15. Nothing
+to build.
+
 ## Not built, and known faults
 
-- **廣深港高速鐵路** (the Hong Kong section of the high-speed line, 西九龍 to the border, 26 km):
-  one station in Hong Kong and no OSM route relation, so it has no second station to make a
-  section to. Its track is in the extract but left off the map by build_tiles (no line on it).
 - **The airport's people mover** (airside), **Ocean Park's 海洋列車** and the
   **Disneyland Railroad** are not register lines. The first two have OSM route relations and
   stay as OSM lines.

@@ -1,0 +1,84 @@
+# Czechia, SLDB 2021, mother tongue (taxonomy/cz2021.py). ČSÚ prints 55 languages, sign language
+# and other. Two new leaves, checked against Glottolog (data/raw/glottolog/languages.csv):
+#   Moravian: Glottolog has Czecho-Moravian (czec1259) and Lach (lach1246) as dialects of Czech
+#     (czec1258). It is a sibling of Czech under West Slavic here, not a child, because a child
+#     would turn Czech into a group, drawn washed out (pl.txt's Lemko, the same reasoning).
+#   Montenegrin: Glottolog's Montenegrin Standard (mont1282) is a dialect under South Slavic's
+#     Serbian-Croatian-Bosnian; a leaf beside Serbian, Croatian, Bosnian and Serbo-Croatian.
+#
+# Colours. Czech is the colour of the whole country, so it is hand-picked here instead of
+# generated (a generated colour moves with the set of siblings in the build: it was a dark teal
+# one build and a yellow-green, next to Ukrainian and Silesian, the next). A mid teal: apart from
+# Polish's green (the Polish minority of Třinec and Karviná lives among Czech speakers), Slovak's
+# cyan and German's blue. Moravian lives among Czech speakers all over Moravia, so it is a pale
+# mint, the same corner of the wheel but far lighter.
+
+# ---- parents and nodes defined in other fragments, repeated identically ----
+afroasiatic.hebrew | Hebrew
+austroasiatic.vietnamese | Vietnamese | 0.68 0.17 310
+indoeuropean.albanian | Albanian | 0.60 0.13 70
+indoeuropean.albanian.albanian | Albanian | 0.60 0.13 70
+indoeuropean.armenian | Armenian | 0.80 0.12 170
+indoeuropean.armenian.armenian | Armenian | 0.80 0.12 170
+indoeuropean.baltic | Baltic | 0.76 0.11 110
+indoeuropean.baltic.latvian | Latvian
+indoeuropean.baltic.lithuanian | Lithuanian
+indoeuropean.germanic.continental | Continental West Germanic | 0.68 0.13 235
+indoeuropean.germanic.continental.dutch | Dutch | 0.80 0.14 225
+indoeuropean.germanic.continental.german | German | 0.66 0.13 240
+indoeuropean.hellenic | Hellenic | 0.56 0.18 295
+indoeuropean.hellenic.greek | Greek | 0.56 0.18 295
+indoeuropean.indoaryan.romani | Romani | 0.58 0.13 30
+indoeuropean.indoaryan.romani.romani | Romani | 0.58 0.13 30
+indoeuropean.iranian.persian | Persian (Farsi) | 0.78 0.12 75
+indoeuropean.iranian.tajik | Tajik | 0.86 0.12 92
+indoeuropean.romance | Romance | 0.78 0.11 230
+indoeuropean.romance.french | French | 0.60 0.15 340
+indoeuropean.romance.italian | Italian | 0.82 0.12 60
+indoeuropean.romance.moldovan | Moldovan | 0.84 0.13 65
+indoeuropean.romance.romanian | Romanian | 0.78 0.09 345
+indoeuropean.romance.spanish | Spanish | 0.78 0.10 95
+indoeuropean.slavic | Slavic | 0.70 0.15 140
+indoeuropean.slavic.east | East Slavic | 0.70 0.15 145
+indoeuropean.slavic.east.belarusian | Belarusian
+indoeuropean.slavic.east.russian | Russian | 0.70 0.16 145
+indoeuropean.slavic.east.rusyn | Rusyn
+indoeuropean.slavic.east.ukrainian | Ukrainian | 0.84 0.14 120
+indoeuropean.slavic.south | South Slavic | 0.78 0.13 130
+indoeuropean.slavic.south.bosnian | Bosnian
+indoeuropean.slavic.south.bulgarian | Bulgarian | 0.60 0.12 185
+indoeuropean.slavic.south.croatian | Croatian
+indoeuropean.slavic.south.macedonian | Macedonian
+indoeuropean.slavic.south.serbian | Serbian
+indoeuropean.slavic.south.serbocroatian | Serbo-Croatian
+indoeuropean.slavic.south.slovenian | Slovenian
+indoeuropean.slavic.west | West Slavic | 0.64 0.14 160
+indoeuropean.slavic.west.polish | Polish | 0.64 0.15 160
+indoeuropean.slavic.west.silesian | Silesian | 0.84 0.16 105
+indoeuropean.slavic.west.slovak | Slovak
+japonic | Japonic | 0.86 0.09 20
+japonic.japanese | Japanese | 0.86 0.09 20
+kartvelian | Kartvelian | 0.72 0.13 305
+kartvelian.georgian | Georgian | 0.72 0.13 305
+koreanic | Koreanic | 0.76 0.17 0
+koreanic.korean | Korean | 0.76 0.17 0
+mongolic | Mongolic | 0.76 0.12 70
+mongolic.mongolian | Mongolian | 0.76 0.12 70
+nakhdaghestanian | Nakh-Daghestanian | 0.74 0.12 225
+nakhdaghestanian.nakh | Nakh
+nakhdaghestanian.nakh.chechen | Chechen
+sinotibetan.sinitic | Chinese | 0.62 0.19 38
+turkic | Turkic | 0.68 0.16 15
+turkic.azerbaijani | Azerbaijani
+turkic.kazakh | Kazakh
+turkic.kyrgyz | Kyrgyz
+turkic.turkish | Turkish | 0.70 0.16 330
+turkic.turkmen | Turkmen
+turkic.uzbek | Uzbek
+uralic | Uralic | 0.64 0.17 15
+uralic.hungarian | Hungarian | 0.62 0.20 10
+
+# ---- Czechia's own ----
+indoeuropean.slavic.west.czech | Czech | 0.60 0.10 192
+indoeuropean.slavic.west.moravian | Moravian | 0.88 0.08 165
+indoeuropean.slavic.south.montenegrin | Montenegrin

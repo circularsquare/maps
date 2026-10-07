@@ -1,0 +1,5 @@
+# Samoa (2021 census, everyone but non-citizens on Samoan). No new nodes; bare repeats so the
+# country stands on its own under `build.py --only`.
+austronesian | Austronesian
+austronesian.oceanic | Oceanic
+austronesian.oceanic.samoan | Samoan

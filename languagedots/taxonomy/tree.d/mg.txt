@@ -1,0 +1,6 @@
+# Madagascar, RGPH-3 2018 (taxonomy/mg2018.py). No new nodes: Malagasy, French and English are
+# repeated from other fragments so that a build of this country alone resolves them. The colours
+# stay where ca.txt sets them.
+austronesian | Austronesian
+austronesian.malagasy | Malagasy
+indoeuropean.romance.french | French

@@ -1,0 +1,24 @@
+# Iraq (taxonomy/iq2018.py). WVS waves 4, 6, 7 and Arab Barometer II, III, first / home language.
+# Parents and languages other fragments already define are repeated with the same label and no
+# colour: Iranian, Kurdish (am.txt and others), Assyrian Neo-Aramaic (am.txt), Turkic.
+#
+# Glottolog (data/raw/glottolog): Iraqi Arabic is Mesopotamian Arabic, Gilit (meso1252, Baghdad
+# and the south) and North Mesopotamian (nort3142, qeltu: Mosul, the Tigris above Baghdad);
+# the surveys' "Arabic" does not tell them apart, so one node beside `arabic`, as Morocco's
+# Darija and Sudan's Sudanese Arabic. Iraqi Turkmen is Glottolog's Kirkuk dialect (kirk1242)
+# of South Azerbaijani, not the Turkmen of Turkmenistan (`turkic.turkmen`), so a leaf of its own.
+# Shabaki shab1251, Zaza-Gorani branch of Iranian; flat under `indoeuropean.iranian` like the
+# rest there.
+afroasiatic | Afroasiatic
+afroasiatic.iraqi_arabic | Iraqi Arabic | 0.66 0.10 150
+afroasiatic.assyrian | Assyrian Neo-Aramaic
+indoeuropean | Indo-European
+indoeuropean.iranian | Iranian
+indoeuropean.iranian.kurdish | Kurdish | 0.66 0.13 45
+indoeuropean.iranian.shabaki | Shabaki | 0.58 0.10 70
+turkic | Turkic
+turkic.iraqi_turkmen | Iraqi Turkmen
+#
+# Colours: Iraqi Arabic one shade off Sudanese Arabic's and Darija's mint, so the Arabics read as
+# one family; Kurdish (generated olive-sand) and Iraqi Turkmen (generated, Turkic magenta side)
+# meet it in Kirkuk and Nineveh.

@@ -171,3 +171,18 @@ apostolic` moved from `christianity.oriental` to `christianity.oriental.armenian
 2026-09-08, when Armenia's 2,793,041 reopened the question as `ask/004-am` and Anita ruled
 that a source is recorded as it answers. Australia and Estonia were re-pointed at the same
 time, along with seven others; spec §2.7 and `taxonomy/ge2014.py` REVIEW have it.
+
+
+## Not-drawn hatching fix batch (fafd1067-fixes3, 2026-10-03)
+
+The not-drawn scan found 65 of Georgia's dots inside South Ossetia (and 9 in Abkhazia), inside
+the hatching that says nobody there was counted. `sources/ge_geo.py` removed geoBoundaries' Java
+and Akhalgori from the placement grid, but Tskhinvali sits in geoBoundaries' Gori polygon, so its
+Kontur people (~57,000 on Shida Kartli's side) weighted Shida Kartli's dots into it. The grid is
+now also cut to Natural Earth's Abkhazia and South Ossetia, the polygons `country_shapes.CLIP` and
+`not_drawn.py` use: 1,280 more hexes, 67,125 Kontur people, dropped, and boundary hexes clipped.
+Shida Kartli's Kontur/census ratio falls to 0.66, outside the asserted band, so it is reported
+rather than asserted (`LINE_REGION`, beside the Tbilisi ring). About 16,000 of those Kontur people
+lie within 2 km of Natural Earth's simplified line and some are probably Georgian-held villages
+the census counted; their region's dots now land on the rest of Shida Kartli. Rescattered both
+editions: 0 dots inside either polygon.

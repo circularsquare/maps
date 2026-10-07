@@ -332,6 +332,8 @@ def main():
             entry["fill"] = meta.get("fill", "")
             entry["grain"] = meta.get("grain", "")
             entry["gap"] = meta.get("gap", "")
+            # spec §7e: what was assigned, as words; the viewer's `assigned` row
+            entry["assigned"] = meta.get("assigned", "")
             # spec §10.4: absent for most countries, and the viewer tests for a number
             entry["gap_share"] = meta.get("gap_share")
             # countries.py `territory`: False for an entry that is part of no country (the Israeli
@@ -441,6 +443,7 @@ def main():
                 "fill": meta.get("fill", ""),
                 "grain": meta.get("grain", ""),
                 "gap": meta.get("gap", ""),
+                "assigned": meta.get("assigned", ""),
                 "gap_share": meta.get("gap_share"),
                 "territory": bool(meta.get("territory", True)),
                 "bbox": box,
@@ -501,9 +504,10 @@ def main():
     NODE_T = [mvt.value_str(s) for s in node_vocab]
     CC_T = [mvt.value_str(s) for s in cc_vocab]
     WHY_T = [mvt.value_str(s) for s in why_vocab]
-    # `t` is written only when it is 1 or 2 — a missing one reads as measured, and a
+    # `t` is written only when it is 1, 2 or 3 — a missing one reads as measured, and a
     # property on every dot of every country would cost tile size for the common case.
-    TIER_T = [mvt.value_int(1), mvt.value_int(2)]
+    # 3 is `assigned` (spec §7e, 2026-10-04); merge_at_zoom's tspace of 4 already had room.
+    TIER_T = [mvt.value_int(1), mvt.value_int(2), mvt.value_int(3)]
 
     def tier_codes(t):
         return np.where(t > 0, t - 1, mvt.OMIT)

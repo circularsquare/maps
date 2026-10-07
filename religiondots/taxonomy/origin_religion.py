@@ -489,3 +489,39 @@ def nodes(other_node):
             out |= set(split)
     out |= set(SIMPLE.values())
     return {other_node if n is None else n for n in out}
+
+
+# --------------------------------------------------------------------------------------
+# THE GULF RULE (sources.md §gulf-2026-10-03): where a Gulf state counts nobody's religion, the
+# Christian/Hindu split of its foreign non-Muslims is raked to an outside ratio, on Indians.
+#
+# Origin rows invert that split in the Gulf: India's own row makes Indians 2.3% Christian, while
+# Kuwait's register (the one count of religion by nationality group in the Gulf, sources/kw.md)
+# has Asian Christians about ten times what the origin rows give. So Indians are the one origin
+# moved, as India's Hindu share already is (Pew, Faith on the Move, 2012, pp.21-22). Only Hindus
+# and Christians move; the non-Muslim total and every other family stay as the origins give them.
+# Used by ae, om and bh (bh since sources.md §bh-2026-10-03b; before that it raked every family).
+# --------------------------------------------------------------------------------------
+GULF_MATERIAL = 0.01   # apply only where the move is over 1% of the country's people
+
+
+def gulf_christian_hindu(people, comps, india, ratio):
+    """Move Indians from `hinduism` to India's Christian nodes so that, over the whole layer,
+    Christians / (Christians + Hindus) equals `ratio`. `people` is {origin: count} and `comps`
+    {origin: {node: share}}, already folded; India's comp is edited in place. Returns the number
+    of people moved (negative would mean Christians to Hindus, which is refused)."""
+    chr_ = sum(n * sum(s for node, s in comps[k].items() if node.startswith("christianity"))
+               for k, n in people.items())
+    hin = sum(n * comps[k].get("hinduism", 0.0) for k, n in people.items())
+    moved = ratio * (chr_ + hin) - chr_
+    c_in = comps[india]
+    x = moved / people[india]
+    if x < 0:
+        raise ValueError(f"the layer is already more Christian than the ratio ({chr_ / (chr_ + hin):.3f})")
+    if x > c_in.get("hinduism", 0.0):
+        raise ValueError(f"Indians would need {x:.2%} moved, more than their {c_in['hinduism']:.2%} Hindus")
+    split = CHRISTIAN.get(india, DEFAULT_CHRISTIAN)
+    c_in["hinduism"] -= x
+    for node, s in split.items():
+        c_in[node] = c_in.get(node, 0.0) + x * s / sum(split.values())
+    return moved

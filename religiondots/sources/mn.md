@@ -138,6 +138,8 @@ is no soum-level religion figure anywhere and there is unlikely ever to be one.
 
 ## 7. What is not drawn, and how it could be
 
+**Resolved 2026-10-03: both are now drawn, transcribed by hand (route 2 below). See §13.**
+
 **Darkhan-Uul and Dundgovi are the two aimags left out**, 148,869 people, 4.7% of Mongolia. In
 both cases the volume exists, is the right year, and downloads fine; the tables inside it are
 **pasted-in images**. Dundgovi's whole file is a scan (its producer is `iLovePDF`, and the only
@@ -393,3 +395,76 @@ religious. That is the capital's 2010 column; the 2020 figure, which the map has
 
 **Still open.** Darkhan-Uul and Dundgovi (§7). The note's "about 280" is an expectation on a
 household sample, as §10.1 says of the national figure.
+
+## 12. Review, 2026-10-03 (fafd1067-rev4, light pass)
+
+Checks clean (check_md, built_countries, check_rollup: 2,067,774, all measured). Every düüreg
+figure in `note_public` re-summed from `data/normalized/mn.csv` and matches: 58.2% Chingeltei,
+47.1% Bagakhangai, Nalaikh 13.6% Muslim, Ulaanbaatar 47.9% of adults drawn, 74,000 per unit.
+Screenshot of the country and of the capital: dots on land, Ulaanbaatar dense, Bayan-Olgii green,
+the two scanned aimags blank as stated.
+
+- **Changed:** the shamanism sentence compared Dornod's 10.9% *of the religious* with a national
+  2.4% *of adults*, so Dornod read as 4.5 times the national rate. Now "4.1% of the religious"
+  (2.45/59.59); "nearly twice the Christian share" holds on either base (§10). refresh-meta run.
+- **Not changed:** "almost nothing anywhere else drawn" for Islam. Uvs is 5.4% of its religious
+  (the Khotons, presumably), the third-highest unit after Bayan-Olgii and the 13.6% pair, and
+  Selenge 1.7%, Orkhon 1.6%. Arguably worth naming Uvs; left as wording.
+
+## 13. Darkhan-Uul and Dundgovi transcribed, 2026-10-03
+
+Session `fafd1067-mn2`, on `sources.md` §scout-2026-10-03-gaps. Mongolia is now drawn on all 22
+units (21 aimags and Ulaanbaatar's 9 düüregs, 30 units, 2,170,573 adults). Code:
+`sources/mn.py::TRANSCRIBED` and `check_transcribed()`; no other reader changed.
+
+**Volumes.** Darkhan-Uul was already on disk (`data/raw/mn/aimags/Darkhan-Uul_XAOCT_Negdsen_dun.pdf`,
+36,637,812 bytes; its URL is `Darkhan-Uul_XAOCT_Negdsen%20dun.pdf`, the space before `dun`, not
+before `XAOCT`). Dundgovi was fetched on this date from `downloads.1212.mn/Dundgovi.pdf`,
+34,758,309 bytes, 211 pages, producer iLovePDF; both are now in `AIMAGS`, so `--fetch` gets them.
+
+**Read by eye, not OCR.** Each aimag needs six figures, so the pages were rendered at 200-220 dpi
+and read; no OCR dependency was added. The figures are the 2020 `Бүгд` column:
+
+| | table, PDF page | not religious | religious | Buddhist | Christian | Muslim | Shamanist | other |
+|---|---|---:|---:|---:|---:|---:|---:|---:|
+| Darkhan-Uul | 3.9 and 3.10, pp.43-44 | 48.1 | 51.9 | 83.3 | 5.2 | 3.2 | 7.5 | 0.8 |
+| Dundgovi | 3.6 and 3.7, p.42 | 30.7 | 69.3 | 97.0 | 1.3 | 0.0 | 1.6 | 0.1 |
+
+Type shares are of the religious. Denominators are the national report's appendix table 1.1,
+as for every other aimag: Darkhan-Uul 102,171 residents, 70,171 aged 15+; Dundgovi 46,698 and
+32,561. Each matches its own volume: Darkhan-Uul's prose (PDF p.29) gives the resident
+population as 102171, and its table 2.4 puts 0-14 at 31.3% (68.7% adults, against 68.68% from
+the national report); Dundgovi's prose and figure 3.1 (p.38) give 46,698 exactly, and its table
+2.4's 2020 child bands put adults near 69.9% (69.73%).
+
+**Checks, all in code** (`check_transcribed`): each pair sums to 100.0 and each five to 100.0;
+the prose repeats the Buddhist share (83.3, 97.0) and the women-minus-men gap in religiosity (6.0
+points, 5.9 points), which tests the men and women columns read beside the total; the religious
+share lies between the men's and women's; and each volume's age-by-type table prints a БҮГД row
+within 0.1 of the type split (Dundgovi's 3.8 reads Ислам 0.1 and Бусад 0.2 against 3.7's 0.0 and
+0.1, summing to 100.2; 3.7 is taken, about 30 adults).
+
+**Trap: Darkhan-Uul's table 3.10 swaps two rows in its men and women columns.** 2020 men and
+women read `Бөө` 3.8 / 2.6 and `Ислам` 7.3 / 7.7, which cannot average to the `Бүгд` column's Бөө
+7.5 and Ислам 3.2; swapped, they do. The `Бүгд` column is taken because table 3.11's БҮГД row
+(printed in a different column order, Ислам before Бөө) repeats Ислам 3.2 and Бөө 7.5; table
+3.11's age rows weighted by table 3.12's age split of the religious rebuild 3.19 and 7.51; the
+ethnic table 3.2 (p.37) puts Kazakhs at 2.6% and Khotons at 0.5% of residents, so 7.5% of the
+religious as Muslim would be 3.9% of adults, above every Kazakh and Khoton adult in the aimag
+(about 2.9%); and the national rebuild below fails on the swapped reading. The volume's prose
+follows the swapped columns (it says the shamanist share fell since 2010) and is not followed.
+
+**National check.** Over all 22 units the reconstruction gives Buddhist 51.81, no religion 40.51,
+Muslim 3.23, Shamanist 2.47, Christian 1.34, other 0.63, against NSO's printed 51.7 / 40.6 / 3.2 /
+2.5 / 1.3 / 0.7. The summed absolute gap falls from 0.585 points (20 aimags) to 0.356; Muslim and
+Shamanist land inside the rounding of the printed figures. With Darkhan-Uul's rows swapped they
+would be 3.30 and 2.40, both outside it, so the check has power on the one trap.
+
+**Text.** `note_public`: the missing-aimags paragraph replaced by one saying the two were typed
+in by hand and naming the swapped rows; national religious 59.6% to 59.5%, shamanism 4.1% to 4.2%
+of the religious. `grain` 74,000 to 72,000 adults per unit; `gap` now "children under 15".
+`gap_share` was absent before and is left absent.
+
+**Sampling.** Dundgovi's 32,561 adults put about 3,300 in the 10% sample and about 2,250
+religious answers under the type split, so its 1.3% Christian and 1.6% Shamanist are roughly 30
+and 35 people, and its 0.0 Muslim means fewer than one in 2,000.

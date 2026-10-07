@@ -54,8 +54,8 @@ ENTRY = {
             "adults** who named a religion in five rounds of the Afrobarometer (2013 to 2022) "
             "and two of the Arab Barometer (2018-19 and 2022), with the share who were not "
             "Muslim applied to each state's people in the Central Bureau of Statistics' "
-            "projection for 2022, **46,934,433** people. Nobody counted these dots, and they are "
-            "drawn desaturated to say so. "
+            "projection for 2022, **46,934,433** people. Nobody counted these dots, so they "
+            "disappear when inferred dots are turned off. "
             "**Non-Muslims are 0.69% of Sudanese as drawn, at the same share in every state.** "
             "86 of the 10,657 said they were not Muslim: 62 Christian and 24 with no religion, "
             "drawn at one mix, 73% Christian and 27% with no religion. Christians answered in "
@@ -87,9 +87,8 @@ ENTRY = {
             "are left out too."),
         how="surveys, two series 2013 to 2022 pooled, one national share",
         grain="states, 2.6 million people on average",
-        gap="foreign residents and refugees, whom neither survey interviews: about 1.38 million "
-            "in 2020 by the UN Population Division's estimate, 2.9% of residents; and Abyei, "
-            "which the projection leaves out",
+        gap="foreign residents and refugees, whom neither survey interviews: 1.38 million "
+            "in 2020 (UN estimate), 2.9% of residents; and Abyei, left out of the projection",
         gap_share=0.02855,
         counts=_sd_counts,
         units=None,

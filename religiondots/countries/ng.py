@@ -17,8 +17,8 @@ def _ng_place_weight(place):
 
 
 def _ng_counts():
-    """Six pooled Afrobarometer rounds on COD-PS state populations: 5 nodes, 37 units, and
-    EVERY ROW IS `modelled` IN §7.
+    """Six pooled Afrobarometer rounds on COD-PS state populations: 7 nodes, 37 units, and
+    EVERY ROW IS `modelled` IN Â§7.
 
     NIGERIA HAS PUBLISHED NO RELIGION COUNT SINCE 1963 and the 1973 census that asked was
     annulled with nothing released, so unlike Liberia there is no census margin to fit to and
@@ -28,7 +28,7 @@ def _ng_counts():
     reason it is NOT fitted to the NDHS or to Pew.
 
     THREE STATES ARE DRAWN WITH NO MUSLIMS AT ALL -- Abia, Cross River and Ebonyi -- because
-    none of their pooled respondents was one, and §3.5 drops rather than invents. On samples
+    none of their pooled respondents was one, and Â§3.5 drops rather than invents. On samples
     of 198 to 256 the true share could be a couple of per cent, which is what note_public
     says.
     """
@@ -52,7 +52,7 @@ def _ng_counts():
     if unmapped:
         raise SystemExit(f"ng.csv categories with no node: {unmapped}")
     df = df[df["count"] > 0]
-    # EVERY row, without exception -- there is no measured tier in this country (§7).
+    # EVERY row, without exception -- there is no measured tier in this country (Â§7).
     df["tier"] = "modelled"
     df["congregations"] = 0
     return df[["unit", "node", "count", "congregations", "tier"]]
@@ -76,7 +76,8 @@ ENTRY = {
             "population in Africa has no official figure for either. "
             "**So the whole of this map's Nigeria comes from a survey.** Six rounds of the "
             "Afrobarometer pooled, **11,909** people interviewed between May 2008 and April "
-            "2022, and every dot is desaturated because nobody counted it. Each state is "
+            "2022, and nobody counted these dots, so they disappear when inferred dots are turned "
+            "off. Each state is "
             "drawn at the mix its own respondents gave and at its projected population, so "
             "the national balance here, **51.4%** Christian against **47.9%** Muslim, is a "
             "result rather than an input. It is one figure among several and it sits at the "
@@ -101,14 +102,21 @@ ENTRY = {
             "of the 198 to 256 people interviewed in each of them across six rounds was one. "
             "Every large Nigerian town has a northern trading quarter, so read those three "
             "as states where the survey found none rather than as states with none. "
-            "**Christianity and Islam are each one colour here, and the survey could have "
-            "split both.** Its card names about twenty Christian denominations and, on the "
-            "Muslim side, Sunni, Shia, Ismaili, Izala and three Sufi brotherhoods, and "
-            "Nigerians fill nearly all of them. The share who name a denomination rather "
-            "than answering just Christian swings **27.9** points between rounds with no "
-            "trend, so a pooled Catholic or Pentecostal share would be a measurement of how "
-            "hard that round's fieldwork probed. The Muslim card is worse than that: the box "
-            "for Izala is on it in three rounds and off it in the other three. "
+            "**Catholics and Anglicans are drawn apart from other Christians; the rest of "
+            "Christianity and all of Islam are one colour each.** The survey's card names about "
+            "twenty churches, but the share who name one rather than answering just Christian "
+            "swings **27.9** points between rounds. The Catholic share holds in the three rounds "
+            "from 2008 to 2015, at 19 to 21% of Christians, which is what all four Demographic "
+            "and Health Surveys since 2008 found (19.4 to 23.9%), so each state's Catholics come "
+            "from those rounds: **10.2%** of Nigerians, most of all in Benue (52.8%), Anambra, "
+            "Imo and Enugu. It is a floor where many Christians named no church: Lagos is drawn "
+            "at 5.8% Catholic, while its archdiocese counts a quarter of the state. Anglicans, "
+            "**4.2%**, take their level from the 2023 Global Flourishing Study, where almost "
+            "every Christian named a church, and are strongest in Anambra (22.1%), Enugu and "
+            "Imo. That study puts Pentecostals at about 40% of Christians, but it and the "
+            "Afrobarometer disagree about which states they are in, so they stay inside "
+            "Christianity. On the Muslim side the box for Izala is on the card in three rounds "
+            "and off it in the other three. "
             "**Traditional religion is 0.32% here and is a floor rather than a count.** The "
             "survey offers it as an alternative to Christianity and Islam, so it cannot see "
             "anyone who is both, and in Nigeria a great many people are. Ifa and orisha "
@@ -137,7 +145,7 @@ ENTRY = {
              "1973 census asked and was annulled in 1975 with nothing released; 1991 and "
              "2006 did not ask; Nigeria is ABSENT from the UNSD oracle. sources/ng.md lists "
              "what was searched. So there is no census margin to fit to, which is the whole "
-             "difference from Liberia (§9cl) on the same instrument. "
+             "difference from Liberia (Â§9cl) on the same instrument. "
              "THE NATIONAL LEVEL IS COMPUTED, NOT MEASURED AND NOT FITTED. Each state is "
              "drawn at its own measured Christian/Muslim ratio and at its COD-PS 2022 "
              "population, so the country's balance falls out of the state pattern and the "
@@ -150,15 +158,20 @@ ENTRY = {
              "fitting the columns back to the survey UNDOES the reweighting the row margin "
              "just did. "
              "IT IS NOT FITTED TO THE NDHS OR TO PEW EITHER, and sources/ng.py says why. "
-             "Pew is a synthesis partly built on this same survey, and §3.1 does not let an "
+             "Pew is a synthesis partly built on this same survey, and Â§3.1 does not let an "
              "`estimate` set a `self_id` magnitude; the NDHS is 15-to-49 only, and scaling "
-             "that up to a whole population is what §3.4 refused for Brazil. Both are "
+             "that up to a whole population is what Â§3.4 refused for Brazil. Both are "
              "printed on every build and both are in note_public. "
-             "THE DENOMINATIONS AND THE SUNNI/SHIA SPLIT ARE IN THE SURVEY AND ARE NOT "
-             "DRAWN. §11ai's probing swing is 27.9 points here, and report_card() in "
+             "TWO CHURCHES ARE DRAWN (2026-10-03): the Catholic Church, as each state's share of "
+             "its Christians in rounds 4-6, the rounds whose Catholic share matches the four "
+             "NDHS reports' Table 3.1; and the Anglican Church, levelled by GFS 2023 REL3 and "
+             "placed by GFS and Afrobarometer together; sources/ng.md, the 2026-10-03 section. "
+             "Pentecostals fail the two-survey rank test. THE OTHER DENOMINATIONS AND THE "
+             "SUNNI/SHIA SPLIT ARE IN THE SURVEY AND ARE NOT "
+             "DRAWN. Â§11ai's probing swing is 27.9 points here, and report_card() in "
              "sources/ng.py reads each round's value labels to show which answers were on "
              "that round's card at all: Izala is on three of six and the Shia box is renamed "
-             "between rounds. Shia is refused under §14.4 rule 2 as well as on the "
+             "between rounds. Shia is refused under Â§14.4 rule 2 as well as on the "
              "arithmetic; the Islamic Movement in Nigeria has been proscribed since 2019.",
     ),
 }

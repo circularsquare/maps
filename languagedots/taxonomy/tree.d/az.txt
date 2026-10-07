@@ -1,0 +1,49 @@
+# Azerbaijan, 2019 census mother tongue (taxonomy/az2019.py). Checked against Glottolog
+# (data/raw/glottolog/languages.csv):
+#   Nakh-Daghestanian (nakh1245) is a new root. Lezgic (lezg1248) holds Lezgian (lezg1247),
+#   Tsakhur (tsak1249), Udi (udii1243), Kryts (Kryz, kryt1240) and Budukh (budu1248); Haput
+#   (hapu1234, "Haput-Ismaili") is a dialect of Kryts in Glottolog, but the census counts Haputs as
+#   a nationality of their own and their own language as theirs, so it is a sibling of Kryts, not a
+#   child (a child would turn Kryts into a group, drawn as "language not named"). Avar (avar1256)
+#   sits under the conventional Avar-Andic branch; Khinalug (khin1240) is a branch of its own.
+#   Talysh (North-Central Talysh, taly1247) and Tat (Muslim Tat, musl1236) are Iranian.
+#   Ingilo (ingi1240) is a Georgian dialect in Glottolog; the census prints the Ingiloys' own
+#   language apart from Georgian, so it is a sibling of Georgian under Kartvelian.
+#   "Jewish": the census's own-language column for Jews names no language (Juhuri, Hebrew and
+#   Yiddish are all possible), so it is a named leaf under `other` (as Ethiopia's unclassifiable
+#   labels are), not guessed into one of them.
+#
+# Colours: the north (Gusar, Guba, Gakh, Zagatala, Balakan) is where these languages meet on the
+# ground: Lezgian beside Azerbaijani (Turkic red) and Tat; Avar and Tsakhur beside Georgian and
+# Ingilo (Kartvelian violet). Nakh-Daghestanian takes the blue-cyan band nothing else uses here;
+# Lezgian, Avar and Tsakhur are hand-picked apart inside it. Talysh (the south, Lankaran, Lerik,
+# Astara) is a saturated sand so it does not read as Azerbaijani's red or Russian's green.
+
+# ---- parents defined elsewhere, repeated identically ----
+kartvelian | Kartvelian | 0.72 0.13 305
+kartvelian.georgian | Georgian | 0.72 0.13 305
+turkic | Turkic | 0.68 0.16 15
+turkic.azerbaijani | Azerbaijani
+
+# ---- Nakh-Daghestanian (new root) ----
+nakhdaghestanian | Nakh-Daghestanian | 0.74 0.12 225
+nakhdaghestanian.lezgic | Lezgic | 0.74 0.12 215
+nakhdaghestanian.lezgic.lezgian | Lezgian | 0.72 0.15 235
+nakhdaghestanian.lezgic.tsakhur | Tsakhur | 0.84 0.10 195
+nakhdaghestanian.lezgic.udi | Udi | 0.66 0.12 180
+nakhdaghestanian.lezgic.kryts | Kryts | 0.84 0.09 215
+nakhdaghestanian.lezgic.haput | Haput | 0.62 0.12 205
+nakhdaghestanian.lezgic.budukh | Budukh | 0.78 0.12 250
+nakhdaghestanian.avarandic | Avar-Andic | 0.66 0.14 265
+nakhdaghestanian.avarandic.avar | Avar | 0.66 0.14 265
+nakhdaghestanian.khinalug | Khinalug | 0.80 0.10 170
+
+# ---- Iranian ----
+indoeuropean.iranian.talysh | Talysh | 0.80 0.14 85
+indoeuropean.iranian.tat | Tat | 0.70 0.10 60
+
+# ---- Kartvelian ----
+kartvelian.ingilo | Ingilo | 0.82 0.09 320
+
+# ---- unclassifiable named label ----
+other.jewish | Jewish (the census's "language of the Jews")

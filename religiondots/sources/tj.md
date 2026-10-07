@@ -1,4 +1,18 @@
-# Tajikistan — NOT DRAWN. The census asks and publishes nothing; three surveys ask and none of them can see the country
+# Tajikistan: drawn 2026-10-03 as an ethnicity model at five regions; the census asks and publishes nothing
+
+**Drawn 2026-10-03** by session `fafd1067-tj`, from `sources.md` §scout-2026-10-03-negatives, on
+Anita's rulings of 2026-09-15 (priority holes) and 2026-09-16 (a country nothing places is drawn on
+the best figure there is, method disclosed). `sources.md` §tj-2026-10-03 is the summary. The new
+sections are §7 (the model), §8 (Gorno-Badakhshan's Ismailis, ask 051) and §9 (what reopens it).
+Code: `sources/tj_geo.py`, `sources/tj_grid.py`, `sources/tj.py`, `taxonomy/tj2020.py`,
+`countries/tj.py`. Raw files in `data/raw/tj/`.
+
+§1-§6 below are the closing record of 2026-09-08 and stand as written; §5's objection was to
+drawing LiTS III's composition, and the model in §7 does not use LiTS for anything.
+
+---
+
+## The 2026-09-08 record: NOT DRAWN. The census asks and publishes nothing; three surveys ask and none of them can see the country
 
 Closed 2026-09-08, `sources.md` §11ak. **No `sources/tj.py`, no `taxonomy/`, no row in
 `countries.py`.** The queue sent Tajikistan to the Life in Transition Survey with a warning
@@ -281,3 +295,101 @@ inside those units is not measured.
 - **A survey that asks the school of Islam face to face and is not the Barometer.** The Life in
   Transition round after III would need the religion question back; §11aj established LiTS IV
   does not have it.
+
+---
+
+## 7. THE BUILD, 2026-10-03: AN ETHNICITY MODEL, AS AZERBAIJAN
+
+§6's third bullet, reached by another route: the 2020 Volume III is still empty, but **the 2010
+Volume III is on the Wayback Machine** and is a 537-page PDF with a text layer.
+
+| | |
+|---|---|
+| 2010 nationality | *Национальный состав, владение языками и гражданство населения Республики Таджикистан*, Том III (Agency, 2012), `web.archive.org/web/20131014054442/http://www.stat.tj/ru/img/526b8592e834fcaaccec26a22965ea2b_1355501132.pdf`, 13,682,802 bytes, saved as `census2010_vol3.pdf`. Linked from ru.wikipedia's 2010 census article. |
+| what it has | pp.7-11 every nationality (92 rows plus India/Pakistan, other, not stated), national only; pp.108-115 seven groups (Tajiks, Uzbeks, Russians, Kyrgyz, Turkmens, Tatars, Kazakhs) by the five regions. **Nothing below region**: every regional table in the volume is the same five. |
+| 2020 nationality | shares only, on the Agency's own slides: UNECE workshop, September 2023 (`unece2023_WS10RizoevENG.pdf`, slide 27, via Wayback; unece.org is behind Cloudflare): Tajik 86.1, Uzbek 11.3, Kyrgyz 0.4, Russian 0.3, other 1.9. The CISSTAT deck of July 2023 says 81 nationalities and 86.1% Tajik. |
+| 2020 population | Volume I table 1 (`census2020_vol1_table1.pdf`), permanent population by region and district, 9,657,005; it also prints the 2010 column, which equals Volume III's region totals exactly. |
+| pop-stat.mashke.org | `tajikistan-ethnic2010.htm` transcribes the same regional table (seven groups plus other, with urban and rural); it agrees with the PDF and is not used. |
+
+**The construction** (`sources/tj.py` docstring has the table): Russians and Tatars on their own
+2010 regional counts; Ukrainians, Belarusians, Germans, Armenians, Georgians, Jews and about forty
+other non-Muslim-heritage nationalities (Koreans, Chinese, Ossetians, Moldovans ...) on the
+Russians' regional distribution, each region's 2010 `other` column asserted to hold them; all scaled
+by 28,971/34,838 = 0.832 (the Agency's 0.3% Russian in 2020, whose rounding alone spans 24,000 to
+34,000); religion from Kazakhstan's 2021 census for Russians, Tatars, Ukrainians, Belarusians and
+Germans (refusals and the small answers out, as `az.py`); Armenians, Georgians, Jews religio-ethnic;
+the rest `unknown`; every Muslim-heritage nationality, the nine Uzbek tribal rows (Lakai 65,555,
+Kongrat 38,078 ...) included, on `islam` as the residual of each region.
+
+**Checks:** the 92 national rows sum to 7,564,502; the seven regional groups sum to their national
+rows and to p.7; Volume I's 2010 column equals the regions; the build reproduces the 2020 count per
+region exactly.
+
+**Result** (`data/normalized/tj.csv`): islam 9,622,434 (99.64%), christianity.orthodox 29,641,
+unknown 2,464, secular 2,000, Armenian 361, Georgian 76, judaism 29. Not on Islam: Dushanbe 1.94%,
+Sughd 0.33%, Districts of Republican Subordination 0.13%, Khatlon 0.12%, Gorno-Badakhshan 0.03%.
+9,655 dots at 1:1,000.
+
+**Pew is the witness, and it is three times higher.** Pew 2020: 9,749,311; Muslim 98.91%,
+Christian 97,515 (1.00%), unaffiliated 7,268. Appendix A p.24 sources it to Pew's Survey of the
+World's Muslims, 2011-12, with UN WPP for the population. 1.0% of about 1,500 respondents is about
+fifteen people; the census counted 34,838 Russians in 2010 (0.46%), and Kazakhstan's coefficients
+make about 92% of them Orthodox. The difference (about 67,000) is not drawn: no source places it.
+Christian converts of Muslim-heritage nationality, however many there are (no figure was opened),
+are not visible to a nationality model; `gap` names them, without a figure.
+
+**Calls someone might reverse.** Germans on Kazakhstan's German row (89.1% Orthodox after refusals
+and Catholics are out) rather than `unknown`; Tatars at Kazakhstan's 28.7% Orthodox, as `az`;
+Koreans on `unknown` rather than Kazakhstan's Korean row (Protestant-heavy, which the kept columns
+would drop); the scaling of every minority by the Russians' fall, when the Chinese rose from 24 in
+2000 to 801 in 2010.
+
+**Population base.** Permanent population. The migration volume (table 6,
+`census2020_migration_table6.pdf`) counts 470,973 temporarily absent, 352,681 of them outside the
+republic, and 246,133 of all the absent gone to work. They are residents and are drawn at home; a
+de facto base would take 3.7% off, mostly men of working age, evenly enough that it moves no
+region's religion.
+
+**Geography.** COD-AB `cod-ab-tjk` has no polygons (the workbook and the p-code PDF only).
+geoBoundaries gbOpen TJK ADM1 (OSM via Wambacher, 2017, ODbL) has the five units, Sughd with its two
+exclaves in Kyrgyzstan. **Its Dushanbe is 366 km2 against the city's own 203.18 km2**
+(`dushanbe.tj` city passport, 1 July 2019); OSM's current relation 7328360 is 197 km2. The old
+polygon's extra 180 km2 is suburb the census counts in the Districts (Kontur holds 260,000 there).
+Dushanbe is redrawn on today's OSM line (`polygons.openstreetmap.fr`; Overpass timed out on two
+mirrors) and the rest goes to the Districts. Kontur TJ 2023 (37,960 hexes, 10.28M): ratio to the
+census 1.059; per region over the national ratio, Khatlon 0.84, Districts 1.04, Sughd 1.00,
+Gorno-Badakhshan 1.18, Dushanbe 1.46 (pinned: Kontur's capital is high, 1.72 on the old polygon).
+348 hexes in Afghanistan, Uzbekistan, Kyrgyzstan or China dropped (60,748 people), 361 snapped
+within 2 km (74,561). `kontur_cap.py tj`: no blocks at the cap. Five units are too few for a rank
+witness; the band is the check.
+
+## 8. GORNO-BADAKHSHAN'S ISMAILIS (ask 051)
+
+Not drawn: every Muslim is on `islam`. Drawing the Pamiri districts (Khorog, Shughnon, Roshtqal'a,
+Ishkoshim, Rushon, 154,623 people in 2020; Vanj, Darvoz and Murghob 73,293, mostly Sunni) as
+Ismaili would be ascription by district: the census has one `ислам` box and no Pamiri nationality,
+and the Central Asia Barometer's one reading (§4) is not credible. `taxonomy/cn2000.py` keeps
+Taxkorgan's Ismaili Tajiks on plain `islam` for the same want of a measure. §14 because of the
+state's pressure on the region since the May 2022 Khorog protests; the ask recommends leaving it.
+
+## 9. WHAT REOPENS IT
+
+- The 2020 Volume III (nationality), even national only: it replaces the 0.3% scaling with counts.
+  Check `stat.tj/ru/perepis-naseleniya-i-zhilishhnogo-fonda-2020/` for the `<details>` list.
+- Any 2020 religion table (§6, first bullet): it replaces the whole model.
+- `nada.stat.tj` (§2), if it ever answers.
+
+## 10. Review, 2026-10-03 (`fafd1067-rev10`, full pass)
+
+Checks clean (`check_md`, `built_countries --check`, `check_rollup tj`: all 9,657,005 modelled, none
+orphaned). Every note figure re-summed from `data/normalized/tj.csv` and matches: 30,078 Christians
+(29,641 Orthodox, 361 Armenian, 76 Georgian), 2,464 unknown, 2,000 secular, Dushanbe 1.94% not
+Muslim, 99.64% Muslim. No new node; mappings follow `az2019`/`kz2021`. Screenshot: dots in all five
+regions, Gorno-Badakhshan sparse, along the Panj and around Khorog, nothing over the border.
+
+One wording fix in `note_public`: *"about **28,971** people"* is 0.3% of 9,657,005, a share the
+Agency printed to one decimal (§7: its rounding alone spans 24,000 to 34,000), so five digits read as
+a count. Now *"about **29,000**"*; `refresh-meta` run.
+`queue.csv`'s row still carried the scout's plan (Pew 2020, one national mix); set to what was built.
+Ask 051 not re-opened.
+

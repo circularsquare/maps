@@ -23,6 +23,9 @@ def be_osm_ref(ref):
 
 
 COUNTRY = {
+    # join a line's pieces where RINF leaves a stretch out, over its own OSM relation
+    # (rinf.fill_holes; trialled 2026-10-05)
+    "fill_holes": True,
     "iso3": "BEL", "wikidata": "Q31", "langs": ["nl", "fr", "en", "de"],
     "fixed": BE_FIXED, "ref": be_ref, "osm_ref": be_osm_ref,
     # Infrabel's network statement writes "L.36", "L.3" (hogesnelheidslijnen L.3 en L.4).

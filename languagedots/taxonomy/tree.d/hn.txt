@@ -1,0 +1,138 @@
+# Honduras, Censo 2013, peoples read as languages (taxonomy/hn2013.py). Families from Glottolog:
+# Miskito and Tawahka (a Mayangna variety) Misumalpan (ni.txt's root); Pech Chibchan (co.txt's
+# root); Tol Jicaquean (jica1245), a new root of one language; Garifuna Arawakan (gt.txt);
+# Bay Islands English an English-based creole, not separated in Glottolog.
+#
+# Colours: Tol sits in Yoro and Francisco Morazan among Spanish speakers only, so a violet
+# away from Spanish's red-orange. Tawahka borders Miskito on the Patuca (Wampusirpi), so it
+# takes a paler, bluer shade than Miskito, like ni.txt's Mayangna. Pech borders Miskito and
+# Garifuna in Olancho, Colon and Gracias a Dios; Chibchan's blue-violet keeps it apart.
+
+# ---- repeated parents ----
+indoeuropean.romance | Romance
+indoeuropean.romance.spanish | Spanish
+chibchan | Chibchan
+arawakan | Arawakan
+arawakan.garifuna | Garifuna
+creole | Creoles
+creole.english_based | English-based creoles
+misumalpan | Misumalpan
+misumalpan.miskito | Miskito (Miskitu)
+
+# ---- new family ----
+jicaquean | Jicaquean | 0.62 0.15 300
+
+# ---- languages ----
+jicaquean.tol | Tol (Tolupan) | 0.62 0.15 300
+misumalpan.tawahka | Tawahka | 0.84 0.10 245
+chibchan.pech | Pech | 0.68 0.15 280
+creole.english_based.bay_islands | Bay Islands English
+# --- origin_mix borrowed nodes (python sources/origin_mix.py --fragment hn) ---
+# Every node the origin mixes bring in that tree.txt lacks, repeated without colour.
+afroasiatic.algerian_arabic | Algerian Arabic (Darija)
+afroasiatic.berber | Berber
+afroasiatic.berber.chaouia | Chaoui (Chaouia)
+afroasiatic.berber.kabyle | Kabyle
+afroasiatic.berber.tachelhit | Tachelhit
+afroasiatic.berber.tamazight | Tamazight
+afroasiatic.berber.tarifit | Tarifit (Riffian)
+afroasiatic.darija | Moroccan Arabic (Darija)
+afroasiatic.egyptian_arabic | Egyptian Arabic
+afroasiatic.hebrew | Hebrew
+afroasiatic.iraqi_arabic | Iraqi Arabic
+afroasiatic.levantine_arabic | Levantine Arabic
+afroasiatic.mesopotamian_arabic | Mesopotamian Arabic (Syrian Euphrates and Jazira)
+afroasiatic.saidi_arabic | Sa'idi Arabic
+afroasiatic.tunisian_arabic | Tunisian Arabic
+austronesian | Austronesian
+austronesian.oceanic | Oceanic
+austronesian.oceanic.maori | Māori
+creole.english_based.bajan | Bajan
+creole.english_based.belize_kriol | Belize Kriol
+creole.english_based.guyanese | Guyanese Creole
+creole.english_based.jamaican | Jamaican Creole
+creole.english_based.tobagonian | Tobagonian Creole
+creole.english_based.trinidadian | Trinidadian Creole
+creole.english_based.vincentian | Vincentian Creole
+creole.french_based | French-based creoles
+creole.french_based.antillean | Antillean Creole (Guadeloupe, Martinique)
+creole.french_based.haitian | Haitian Creole
+creole.french_based.reunionese | Reunion Creole
+indoeuropean.germanic.continental | Continental West Germanic
+indoeuropean.germanic.continental.afrikaans | Afrikaans
+indoeuropean.germanic.continental.dutch | Dutch
+indoeuropean.germanic.continental.german | German
+indoeuropean.germanic.continental.limburgish | Limburgish
+indoeuropean.germanic.continental.lowgerman | Low German
+indoeuropean.germanic.continental.lowgerman.westphalian | Westphalian
+indoeuropean.germanic.continental.yiddish | Yiddish
+indoeuropean.germanic.frisian | Frisian
+indoeuropean.germanic.north | North Germanic
+indoeuropean.germanic.north.danish | Danish
+indoeuropean.germanic.north.norwegian | Norwegian
+indoeuropean.germanic.north.swedish | Swedish
+indoeuropean.hellenic | Hellenic
+indoeuropean.hellenic.greek | Greek
+indoeuropean.indoaryan.romani | Romani
+indoeuropean.indoaryan.romani.romani | Romani
+indoeuropean.iranian.gilaki | Gilaki
+indoeuropean.iranian.kurdish | Kurdish
+indoeuropean.iranian.luri | Luri (Lurish and Bakhtiari)
+indoeuropean.iranian.mazandarani | Mazandarani
+indoeuropean.iranian.persian | Persian (Farsi)
+indoeuropean.iranian.zazaki | Zazaki
+indoeuropean.romance.emilian | Emilian
+indoeuropean.romance.french | French
+indoeuropean.romance.italian | Italian
+indoeuropean.romance.lombard | Lombard
+indoeuropean.romance.neapolitan | Neapolitan
+indoeuropean.romance.portuguese | Portuguese
+indoeuropean.romance.sicilian | Sicilian
+indoeuropean.romance.venetian | Venetian
+indoeuropean.slavic | Slavic
+indoeuropean.slavic.east | East Slavic
+indoeuropean.slavic.east.russian | Russian
+indoeuropean.slavic.west | West Slavic
+indoeuropean.slavic.west.polish | Polish
+japonic | Japonic
+japonic.japanese | Japanese
+koreanic | Koreanic
+koreanic.korean | Korean
+kradai | Kra-Dai (Tai-Kadai)
+kradai.zhuang | Zhuang
+nakhdaghestanian | Nakh-Daghestanian
+nakhdaghestanian.nakh | Nakh
+nakhdaghestanian.nakh.chechen | Chechen
+nigercongo | Niger-Congo
+nigercongo.bantu | Bantu
+nigercongo.bantu.nguni | Nguni
+nigercongo.bantu.nguni.ndebele_za | Ndebele (South Africa)
+nigercongo.bantu.nguni.siswati | Swati
+nigercongo.bantu.nguni.xhosa | Xhosa
+nigercongo.bantu.nguni.zulu | Zulu
+nigercongo.bantu.sotho_tswana | Sotho-Tswana
+nigercongo.bantu.sotho_tswana.sepedi | Sepedi (Northern Sotho)
+nigercongo.bantu.sotho_tswana.sesotho | Sesotho (Southern Sotho)
+nigercongo.bantu.sotho_tswana.setswana | Setswana
+nigercongo.bantu.tswa_ronga | Tswa-Ronga
+nigercongo.bantu.tswa_ronga.tsonga | Xitsonga (Tsonga)
+nigercongo.bantu.venda | Tshivenda (Venda)
+sinotibetan.sinitic | Chinese
+sinotibetan.sinitic.cantonese | Cantonese
+sinotibetan.sinitic.gan | Gan
+sinotibetan.sinitic.hakka | Hakka
+sinotibetan.sinitic.jin | Jin
+sinotibetan.sinitic.mandarin | Mandarin
+sinotibetan.sinitic.min_nan | Min Nan (Taiwanese, Hokkien)
+sinotibetan.sinitic.teochew | Teochew (Chiu Chau)
+sinotibetan.sinitic.wu | Wu
+sinotibetan.sinitic.xiang | Xiang
+turkic | Turkic
+turkic.azerbaijani | Azerbaijani
+turkic.bashkir | Bashkir
+turkic.syrian_turkmen | Syrian Turkmen
+turkic.tatar | Tatar
+turkic.turkish | Turkish
+uralic | Uralic
+uralic.finnish | Finnish
+# --- end origin_mix borrowed nodes ---

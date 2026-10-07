@@ -1,0 +1,58 @@
+# Guatemala, Censo 2018 (taxonomy/gt2018.py): the language each person learned to speak in. INE
+# prints 22 Mayan languages, Xinka, Garifuna, Spanish, English, sign, other. Every one gets a node.
+# Mayan subgroups as mx.txt has them (Kaufman's; `mayan.kichean` there already holds Q'eqchi', so it
+# is read as Greater K'iche'an and takes Uspanteko and the Poqom pair too). Checked against
+# Glottolog (data/raw/glottolog): Achi achi1256, Ch'orti' chor1273 (Cholan), Itza' itza1241 and
+# Mopan mopa1243 (Yucatecan), Poqomam poqo1253 and Poqomchi' poqo1254 (Poqom), Sakapulteko
+# saca1238, Sipakapense sipa1247, Tz'utujil tzut1248, Uspanteko uspa1245, Garifuna gari1256
+# (Arawakan). Glottolog has no Chalchiteko: it files the speech of Aguacatan's eastern half under
+# Awakateko, but INE prints it as a language (recognised in 2003), so it is its own node beside
+# Awakateko under Mamean. Xinka is a small family to Glottolog (xinc1237, four varieties, all but
+# extinct); INE prints one "Xinka" and most readers know it as one language, so it sits under the
+# shared `isolate` root, as mx.txt does with Huave and P'urhepecha.
+#
+# Colours, for neighbours on the ground (sources/gt.md): the Mayan blues, cyans and violets, the
+# big neighbours pulled apart by lightness as well as hue. K'iche' mid blue; Q'eqchi' light cyan;
+# Mam violet; Kaqchikel pale sky; Tz'utujil dark teal at Atitlan between those two; Achi dark
+# blue-teal against Q'eqchi' and Kaqchikel; Poqomchi' indigo against Q'eqchi'; Ixil pale lilac;
+# Q'anjob'al light teal against Mam and Chuj's lavender; in Aguacatan, Awakateko dark blue and
+# Chalchiteko teal-green (the generator gave Chalchiteko and Mopan the Mayan root's own colour). Mexico (mx.txt) uses these nodes bare
+# for its few speakers, mostly Chiapas; Mam stays away from Tsotsil's 272.
+
+# ---- repeated parents and the nodes mx.txt already defines (identical labels) ----
+mayan | Mayan
+mayan.yucatecan | Yucatecan
+mayan.cholan_tzeltalan | Cholan-Tzeltalan
+mayan.qanjobalan | Q'anjob'alan
+mayan.mamean | Mamean
+mayan.kichean | K'iche'an
+mayan.kichean.kiche | K'iche' | 0.72 0.15 245
+mayan.kichean.qeqchi | Q'eqchi' | 0.82 0.12 195
+mayan.kichean.kaqchikel | Kaqchikel | 0.86 0.09 225
+mayan.mamean.mam | Mam | 0.66 0.17 305
+mayan.mamean.ixil | Ixil | 0.84 0.10 300
+mayan.mamean.awakateko | Awakateko | 0.62 0.13 255
+mayan.mamean.teko | Teko (Tektiteko)
+mayan.qanjobalan.qanjobal | Q'anjob'al | 0.80 0.12 175
+mayan.qanjobalan.chuj | Chuj | 0.72 0.12 290
+mayan.qanjobalan.akateko | Akateko | 0.62 0.14 225
+mayan.qanjobalan.jakalteko | Jakalteko (Popti')
+indoeuropean.romance | Romance
+indoeuropean.romance.spanish | Spanish
+isolate | Language isolates
+arawakan | Arawakan
+
+# ---- new ----
+mayan.kichean.achi | Achi | 0.58 0.13 215
+mayan.kichean.tzutujil | Tz'utujil | 0.62 0.14 200
+mayan.kichean.sakapulteko | Sakapulteko
+mayan.kichean.sipakapense | Sipakapense
+mayan.kichean.uspanteko | Uspanteko
+mayan.kichean.poqomam | Poqomam
+mayan.kichean.poqomchi | Poqomchi' | 0.62 0.15 275
+mayan.mamean.chalchiteko | Chalchiteko | 0.80 0.11 170
+mayan.cholan_tzeltalan.chorti | Ch'orti' | 0.72 0.14 215
+mayan.yucatecan.itza | Itza'
+mayan.yucatecan.mopan | Mopan | 0.66 0.14 265
+isolate.xinka | Xinka
+arawakan.garifuna | Garifuna | 0.80 0.14 150

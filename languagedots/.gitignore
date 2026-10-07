@@ -1,0 +1,5 @@
+# transient coordination state, rewritten by tools/claim.py, tools/ask.py and tools/build_tail.py
+claims.json
+*.lock
+ask/.lock
+*.tmp

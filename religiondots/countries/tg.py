@@ -60,7 +60,8 @@ ENTRY = {
             "**Where those people are comes from a survey.** Five rounds of the Afrobarometer are "
             "pooled, **5,987** adults interviewed between December 2012 and March 2022. The census "
             "fixes each unit's population and each religion's national total, and the survey "
-            "decides only how a unit's people divide between them, so the dots are desaturated. "
+            "decides only how a unit's people divide between them, so the dots disappear when "
+            "inferred dots are turned off. "
             "Lomé, the communes Golfe 1 to 5, is drawn apart from the rest of Maritime because the "
             "survey interviews it separately. "
             "**Five religions are placed by the survey, because their order across the units "
@@ -76,8 +77,8 @@ ENTRY = {
             "them there."),
         how="census totals, 2022, given a regional pattern by a pooled survey",
         grain="regions, with Lomé apart; 1.35 million people on average",
-        gap="3.4%: 2.9% whose religion the census gives as not stated or unknown, and 0.5% who "
-            "are in the census count and in none of its religion rows",
+        gap="3.4%: 2.9% whose religion the census gives as not stated or unknown, and 0.5% in "
+            "none of its religion rows",
         gap_share=0.03360,                      # 272,041/8,095,498, exact; tools/gap_share.py "rows only"
         counts=_tg_counts,
         units=None,

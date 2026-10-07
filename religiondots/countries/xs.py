@@ -92,8 +92,7 @@ ENTRY = {
         fill="from each area's own household-lifestyle table",
         grain="statistical areas and localities, about 2,700 people each",
         gap="373,257 Muslims and Christians in the same areas, nearly all in East Jerusalem and "
-            "left to Palestine's entry, except the non-Arab Christians among them (at most "
-            "6,275), who are on neither entry",
+            "left to Palestine's entry",
         counts=_xs_counts,
         units=None,
         unit_key=None,

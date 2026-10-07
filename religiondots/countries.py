@@ -11,7 +11,8 @@ Each entry supplies:
                 optionally `tier` (spec §7): `measured` / `derived` / `modelled`, per row.
                 Missing means `measured`, which is right for a census read at its own
                 geography and wrong for anything that was spread, so an adapter that spreads
-                must say so. `derived` and `modelled` draw DESATURATED, and the weakest tier
+                must say so. `derived` and `modelled` draw in full colour (the desaturation was
+                removed 2026-09-04) and are hidden under `inferred dots: not shown`; the weakest tier
                 on a (unit, node) pair wins — a pair that is part measurement and part
                 estimate is not a measurement.
                 optionally `roll` (spec §7a-i-1): for a `derived` row, the node its SOURCE
@@ -50,6 +51,13 @@ and, for the viewer, which draws one country at a time and needs to say whose da
                 viewer falls back to "from broader counts" without it, which is the wording
                 Anita rejected for describing fifteen real published tables as vaguely as
                 possible. `allocate.py`'s invocation in COMMANDS.txt names the coarse level.
+  assigned      spec §7e: what was ASSIGNED from outside the source, in words, shown as the
+                `assigned` row under the title, e.g. "Islam's Sunni branch, from national
+                estimates". It names the split and carries no share. Set for a country whose
+                branch or school of a religion was assigned rather than asked; islam_assign.py
+                sets it for its 33 countries. Rows assigned inside a counted column carry the
+                `assigned` tier; rows assigned inside a modelled one stay `modelled`, and this
+                field is how the reader learns about them either way.
   gap           who or what the source leaves out, a few words, shown as the `not drawn` row.
                 Not a summary of `note_public` — if it needs a second line it belongs there
                 instead. Most countries have one, because most censuses print a non-response
@@ -352,6 +360,30 @@ ORDER = [
     "af",
     "so",
     "om",
+    "ss",
+    "az",
+    "cu",
+    "bt",
+    "pg",
+    "gq",
+    "mv",
+    "kw",
+    "ga",
+    "sy",
+    "na",
+    "ae",
+    "ls",
+    "tj",
+    "bi",
+    "bh",
+    "kp",
+    "er",
+    "dj",
+    "km",
+    "lb",
+    "gl",
+    "nc",
+    "lu",
 ]
 
 COUNTRIES = {}
@@ -439,13 +471,46 @@ def _load():
 _load()
 del _load
 
+# BRANCHES AND SCHOOLS DRAWN BY ASSIGNMENT: Muslims as Sunni (spec §2.6b, islam_assign.py) and
+# Buddhists on a school (spec §2.6a, buddhism_assign.py), both 2026-10-04. Applied here rather
+# than in each countries/<cc>.py so each family is one table and one rule: every consumer of
+# counts() sees the split, the note gains one paragraph naming the evidence, and `assigned`
+# (spec §7e) says under the title what was assigned. A country in both tables (Bangladesh) gets
+# both splits and one joined `assigned` line.
+def _assign_branches():
+    import islam_assign as ia
+    import buddhism_assign as ba
+    ia.check()
+    ba.check()
+    texts = {}
+    for mod, ccs in ((ia, ia.REMAINDER), (ba, ba.SCHOOL)):
+        for cc in ccs:
+            m = COUNTRIES.get(cc)
+            if m is None:
+                continue                 # half-registered; _load already warned
+            if m.get("assigned") and cc not in texts:
+                raise SystemExit(f"countries/{cc}.py sets `assigned` and {mod.__name__}.py "
+                                 "would overwrite it; join the two texts in one place")
+            m["counts"] = (lambda f, c, md: lambda: md.apply(c, f()))(m["counts"], cc, mod)
+            m["note_public"] = (m.get("note_public") or "").rstrip() + " " + mod.note(cc)
+            texts.setdefault(cc, []).append(mod.assigned_text(cc))
+    for cc, parts in texts.items():
+        suffix = ", from national estimates"
+        if len(parts) > 1 and all(p.endswith(suffix) for p in parts):
+            parts = [" and ".join(p[:-len(suffix)] for p in parts) + suffix]
+        COUNTRIES[cc]["assigned"] = "; ".join(parts)
+
+
+_assign_branches()
+del _assign_branches
+
 # spec §7c: the header block is plain text, and the em dash is the thing it must not contain.
 # Anita, 2026-09-07 — the first draft of these rows was correct and read as machine-written, and
 # the dash doing the work of a comma, a semicolon and a bracket at once was most of the reason.
 # Checked here rather than trusted to review: the fields are edited one country at a time, months
 # apart, and a rule this easy to forget is a rule worth failing the import over.
 for _cc, _m in COUNTRIES.items():
-    for _f in ("how", "fill", "grain", "gap"):
+    for _f in ("how", "fill", "grain", "gap", "assigned"):
         _v = _m.get(_f, "")
         assert "\u2014" not in _v, f"{_cc}.{_f} has an em dash; use a comma, a semicolon or a bracket"
         assert not (set("<`*") & set(_v)), (
@@ -470,3 +535,49 @@ for _cc, _m in COUNTRIES.items():
         assert any(abs(_p - _g * 100) <= 0.1 for _p in _pcts), (
             f"{_cc}.gap_share is {_g * 100:.2f}% and gap= states {_pcts or 'no percentage'}; "
             f"the sentence is where the reader gets the figure, so it has to carry it")
+
+# THE TOP TEXT HAS A CAP — Anita, 2026-10-03, looking at the map on her phone: "the top text is a
+# bit too lengthy in some cases and covers too much of the screen. we should set a target hard cap
+# and prune everything until it reaches that. 75 words or so." The top text is the viewer's #left
+# block: the title, the `source` line (clamped to two lines, about 22 words), and the provenance
+# rows, whose labels are seven words, plus `how`, `grain`, `gap` and, where the country has
+# `derived` rows, "N% filled in" and `fill`. Every country was cut to 75 measured words or under
+# (queue.md, "Cut the country text to about 75 words"; the old wording is in each sources/<cc>.md).
+#
+# This is an ESTIMATE of that count, and it runs a few words high: it counts 22 words of source
+# whatever the clamp shows, and it counts `fill` even though the viewer prints it only where the
+# country's dots include `derived` ones, which only the built data knows. So the bar is 80, not 75.
+# _FILL_NEVER_SHOWN is the exception: countries that carry a `fill` but draw no `derived` row
+# (jp and tr are all `modelled`, py all `measured`), so the viewer never prints it and it is not
+# counted. A country belongs there only if its counts() emits no `derived` row; if one of these
+# gains one, take it out.
+_TOP_WORDS_CAP = 80
+_FILL_NEVER_SHOWN = {"jp", "py", "tr"}
+
+
+def _words(_s):
+    return sum(1 for _w in (_s or "").split() if any(_c.isalnum() for _c in _w))
+
+
+for _cc, _m in COUNTRIES.items():
+    _parts = {
+        "title": _words("Religion in " + (_m.get("name_in") or _m.get("name") or _cc)),
+        "source": min(_words(_m.get("source")), 22),
+        "labels": 7 + 3,
+        "how": _words(_m.get("how")),
+        "fill": 0 if _cc in _FILL_NEVER_SHOWN else _words(_m.get("fill")),
+        "grain": _words(_m.get("grain")),
+        "gap": _words(_m.get("gap")),
+        # spec §7e's row: its one-word label and its text, only where the country has one
+        "assigned": (1 + _words(_m.get("assigned"))) if _m.get("assigned") else 0,
+    }
+    _top = sum(_parts.values())
+    assert _top <= _TOP_WORDS_CAP, (
+        f"{_cc}: the phone's top text comes to about {_top} words and the cap is "
+        f"{_TOP_WORDS_CAP} (Anita, 2026-10-03). Count by part: "
+        + ", ".join(f"{_k} {_v}" for _k, _v in _parts.items())
+        + f". Shorten how, fill, grain or gap in countries/{_cc}.py BY LEAVING THINGS OUT, not by "
+        f"abbreviating: keep the source, the year, the unit and the one finding a reader came for, "
+        f"and drop method detail and caveats. Copy the old wording into sources/{_cc}.md first so "
+        f"nothing is lost. `grain` is the unit and its average population only. If gap_share is set, "
+        f"`gap` must still state that figure.")

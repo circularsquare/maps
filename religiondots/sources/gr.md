@@ -293,3 +293,14 @@ Notio Aigaio "10% Catholic". Attiki recurs, Peloponnisos is a trend, Thessalia i
 Dytiki Makedonia is 6th, 4th and 1st by Orthodox share in the three rounds, and the Cyclades are
 2010. Filed as **ask 013**, the one ask from this pass; the other four countries' tables are in
 their own files and none of them is alarming. Nothing was changed.
+
+## 10. The Orthodox node's label, 2026-10-03 (fix batch `fafd1067-fixes`)
+
+Anita saw Greece's Orthodox drawn as "Greek Orthodox Archdiocese of America": `christianity.orthodox.
+canonical.greek` was built as an ASARB leaf and took ASARB's group name. It is now "Greek Orthodox",
+through `LEAF_LABEL` in `taxonomy/branches.py`, which `build_tree.py` applies to the leaf without
+touching its `usrc2020` code 246, so the US mapping is unchanged. The same fix went to the eight other
+national-church leaves that foreign residents (`origin_religion.py`) and Azerbaijan's Georgians are
+filed on: Albanian, Antiochian, Bulgarian, Georgian, Macedonian, Romanian, Serbian and Ukrainian
+Orthodox. The genuinely American bodies (OCA, ROCOR, the Carpatho-Russian diocese, the Patriarchal
+Parishes) keep ASARB's names. No rescatter; the label reaches the map with `religions.json`.

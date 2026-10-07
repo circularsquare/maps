@@ -18,9 +18,11 @@ Extension, now CC33-CC34, and Stage 6 to Prince Edward Road, opened 2026-07-12),
 Thomson-East Coast, and the Bukit Panjang, Sengkang and Punggol LRTs; plus the Sentosa Express
 monorail, which is Sentosa Development Corporation's and not on LTA's list. The Changi Airport
 Skytrain (airport people mover) is left out, as are the Jurong Region Line (under
-construction; OSM already tags its stations railway=station), the RTS Link (not open), and
-KTM's Shuttle Tebrau to Johor Bahru, which has one station and 1.1 km of track in Singapore
-and no OSM route relation.
+construction; OSM already tags its stations railway=station) and the RTS Link (not open;
+passenger service now expected February 2027). KTM's Shuttle Tebrau to Johor Bahru has one
+station and 0.9 km of track here, from Woodlands Train Checkpoint to the border point on the
+causeway: it is built as Singapore's piece of Malaysia's West Coast Line, under that line's
+id, so a ride from JB Sentral is one ride (BORDER_PIECES, below).
 
 WHICH STATIONS ARE ON A LINE comes from LTA's own list, the DataMall "Train Station Codes and
 Chinese Names" file (sg_sources.md), whose station codes (NS1, EW24, CG2, STC, PW7) give each
@@ -524,6 +526,13 @@ def build(path, log):
                + ", ".join(f"{station_rec(a)['name']}-{station_rec(b)['name']}"
                            for a, b in extra_pairs) if extra_pairs else ""))
 
+    got = border_pieces(ways, st, by_key, coords, log)
+    for line, sts, g in got:
+        for sid, rec in sts.items():
+            stations.setdefault(sid, rec)["lines"].add(line["id"])
+        lines.append(line)
+        geoms[line["id"]] = g
+
     total = sum(l["km"] for l in lines)
     log(f"SG: {len(lines)} register lines, {total:,.1f} km, {len(stations)} stations; placed "
         f"by a route relation's stop node {n_route}, by LTA's list alone {n_listed}; "
@@ -542,6 +551,101 @@ def build(path, log):
         else:
             log(f"SG: no {label}")
     return lines, stations, geoms
+
+
+# --------------------------------------------------------------------------- over the border
+
+# Lines that run on over a border with no OSM route relation to carry a ride across, built
+# here as Singapore's PIECE OF THE NEIGHBOUR'S REGISTER LINE: its last station on this side to
+# the border point (borders.EXTRA), under the neighbour's own line id. The app joins lines of
+# one id from every country into one line (each country's totals counting its own piece), so a
+# ride from the far side to the station here is one ride on one line and credits both. A
+# section to a border point is kept by build_model only if an OSM route runs over it or the
+# line lists it in `served_sections`, which these do.
+#
+# KTM's Shuttle Tebrau (JB Sentral - Woodlands Train Checkpoint, 31 trips a day, KTM's GTFS)
+# runs over the end of KTM's West Coast Line, which en.wikipedia's chainage takes to Woodlands
+# (JB Sentral 756.8, Woodlands 759.0). Malaysia's build (my_register) ends that line at
+# xWoodlands mid-causeway; this is the 1.1 km on from there to the checkpoint, over the two
+# ways OSM names "KTM" (545059768, 925109455). It goes when the RTS Link replaces the shuttle.
+#   (border point, station here, OSM track name, (line id, name, name_en, ref, operator,
+#    operator_en, kind))
+def _wcl():
+    from my_register import KTM, line_id as my_line_id
+    return (my_line_id("Laluan Pantai Barat"), "Laluan Pantai Barat", "West Coast Line", "",
+            KTM[0], KTM[1], "rail")
+
+
+BORDER_PIECES = [("xWoodlands", "Woodlands Train Checkpoint", "KTM", _wcl)]
+PIECE_STATION_M = 300      # the station's node is this close to the track
+PIECE_BORDER_M = 60        # the border point this close (borders.NEAR_M)
+
+
+def track_piece(wids, ways, coords, a_lon, a_lat, b_lon, b_lat):
+    """The track between two points over these ways: (geometry from a's anchor to b's,
+    km, metres a is off the track, metres b is off it), or None."""
+    adj, xy, _fast = line_graph(sorted(wids), ways, coords)
+    if len(xy) < 2:
+        return None
+    vb, db = Near(xy).nearest(b_lon, b_lat)
+    # the station's anchor on track joined to the border point's (a platform road OSM leaves
+    # unconnected is no way there)
+    seen, todo = {vb}, [vb]
+    while todo:
+        u = todo.pop()
+        for v, _w in adj.get(u, ()):
+            if v not in seen:
+                seen.add(v)
+                todo.append(v)
+    va, da = Near({v: xy[v] for v in seen}).nearest(a_lon, a_lat)
+    got = between(adj, {va: 0.0}, {vb: 0.0}, set())
+    if got is None:
+        return None
+    nodes, km = got
+    keep = [n for i, n in enumerate(nodes) if n > 0 or i == 0 or i == len(nodes) - 1]
+    geom = [xy[n] for n in keep]
+    return geom, km, da, db
+
+
+def border_pieces(ways, st, by_key, coords, log):
+    """[(line, {station id: station}, geoms)] for BORDER_PIECES."""
+    import borders
+    pts = {p["id"]: p for p in borders.load(canonical_only=True)}
+    out = []
+    for pid, stname, track, ident in BORDER_PIECES:
+        p = pts.get(pid)
+        cands = by_key.get(name_key(stname), ())
+        if p is None or not cands:
+            log(f"  SG: border piece {stname} - {pid}: "
+                + ("no border point" if p is None else "no OSM station of that name"))
+            continue
+        nid = min(cands, key=lambda n: st[n]["rank"])
+        s = st[nid]
+        wids = [w for w, (t, _n) in ways.items()
+                if t.get("railway") in TRACK_KIND and not t.get("service")
+                and unicodedata.normalize("NFKC", t.get("name") or "").strip() == track]
+        got = track_piece(wids, ways, coords, s["lon"], s["lat"], p["lon"], p["lat"])
+        if got is None or got[2] > PIECE_STATION_M or got[3] > PIECE_BORDER_M:
+            log(f"  SG: border piece {stname} - {pid}: no track between them "
+                + ("" if got is None else f"(station {got[2]:.0f} m, point {got[3]:.0f} m off)"))
+            continue
+        geom, km, _da, _db = got
+        geom = geom + [(p["lon"], p["lat"])]
+        lid, name, name_en, ref, op, op_en, kind = ident()
+        a = f"s{nid}"
+        line = {"id": lid, "src": "sg", "service": False, "name": name, "name_en": name_en,
+                "ref": ref, "colour": "", "operator": op, "operator_en": op_en, "network": "",
+                "kind": kind, "km": round(km, 3), "variants": 1, "straight_sections": 0,
+                "display": [a, pid], "sections": [[a, pid, round(km, 3)]],
+                "served_sections": [f"{a}|{pid}"]}
+        sts = {a: {"id": a, "name": s["name"], "name_en": s["name_en"], "lon": s["lon"],
+                   "lat": s["lat"], "lines": set()},
+               pid: {"id": pid, "name": p["name"], "name_en": "", "lon": p["lon"],
+                     "lat": p["lat"], "lines": set(), "junction": True}}
+        log(f"  SG: {name} ({name_en}), the piece over the border: {s['name']} - {p['name']} "
+            f"{km:.3f} km, under the neighbour's id {lid}")
+        out.append((line, sts, {f"{a}|{pid}": [[round(x, 5), round(y, 5)] for x, y in geom]}))
+    return out
 
 
 def clip(log=print):

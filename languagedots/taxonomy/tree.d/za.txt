@@ -1,0 +1,37 @@
+# South Africa (taxonomy/za2011.py). Census 2011, first language spoken in the household.
+# Parents and languages other fragments already define are repeated identically (label and
+# colour), so a change there shows up as a clash, not a dangle.
+#
+# Middle levels checked against Glottolog (data/raw/glottolog): Sotho-Tswana (S.30, soth1248)
+# holds Northern Sotho, Southern Sotho and Tswana; Tswa-Ronga (S.50, tswa1254) holds Tsonga;
+# Venda (vend1245) is in neither and hangs from Bantu directly; Nguni (S.40, ngun1276) is uk.txt's.
+#
+# Colours, for the neighbours on the South African ground. Limpopo's three (Sepedi, Xitsonga,
+# Tshivenda) border each other and are pulled far apart: crimson, teal, violet. Sesotho (pale
+# yellow) and Setswana (olive) meet across the Free State and North West. The Nguni languages
+# are hand-picked here (build.py takes a colour from any fragment since 2026-10-04): Zulu a full
+# orange, Xhosa a darker red-orange, Swati a light peach (the generated salmon sat on Sepedi's
+# crimson), Ndebele a brown, so the four read apart in Gauteng and Mpumalanga. Afrikaans (blue)
+# and English (near white) are us.txt's and tree.txt's.
+#
+# Setswana is under Sotho-Tswana for every country (uk2021.py and ca2021.py moved here too).
+
+# ---- parents and languages defined elsewhere, repeated identically ----
+nigercongo | Niger-Congo | 0.72 0.14 75
+nigercongo.bantu | Bantu | 0.70 0.14 60
+nigercongo.bantu.nguni | Nguni | 0.66 0.13 40
+nigercongo.bantu.nguni.zulu | Zulu | 0.72 0.16 50
+nigercongo.bantu.nguni.xhosa | Xhosa | 0.60 0.16 30
+nigercongo.bantu.nguni.siswati | Swati | 0.84 0.08 60
+nigercongo.bantu.nguni.ndebele_za | Ndebele (South Africa) | 0.52 0.11 60
+indoeuropean.germanic.continental | Continental West Germanic | 0.68 0.13 235
+indoeuropean.germanic.continental.afrikaans | Afrikaans | 0.62 0.11 220
+
+# ---- new ----
+nigercongo.bantu.sotho_tswana | Sotho-Tswana | 0.76 0.12 100
+nigercongo.bantu.sotho_tswana.sepedi | Sepedi (Northern Sotho) | 0.62 0.17 355
+nigercongo.bantu.sotho_tswana.sesotho | Sesotho (Southern Sotho) | 0.86 0.11 95
+nigercongo.bantu.sotho_tswana.setswana | Setswana | 0.68 0.14 130
+nigercongo.bantu.tswa_ronga | Tswa-Ronga | 0.74 0.13 165
+nigercongo.bantu.tswa_ronga.tsonga | Xitsonga (Tsonga) | 0.74 0.13 165
+nigercongo.bantu.venda | Tshivenda (Venda) | 0.68 0.15 300

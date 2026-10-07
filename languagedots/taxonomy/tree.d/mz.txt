@@ -1,0 +1,68 @@
+# Mozambique (taxonomy/mz2017.py). IV RGPH 2017, mother tongue (língua materna), aged 5 and over.
+# Parents and languages other fragments already define are repeated with the same label and no
+# colour, so their owners can retune them; Yao (pl.txt) and Shona (us.txt, bw.txt) were defined
+# bare by countries that draw a few; Yao, and Mwani (ca.txt, label kept as "Mwani"), are coloured
+# here, where they are big.
+#
+# Middle levels, checked against Glottolog (data/raw/glottolog/values.csv, classification):
+#   * Makhuwa (P.30): Glottolog's Makua node (maku1247) holds Makua-Lomwe (Makhuwa, Lomwe),
+#     Koti-Nathembo and Chuwaboic (Chuwabo, Lolo). One group here, conventional Guthrie P.30.
+#   * Nyanja-Sena (N.30-40, zm.txt's group): Glottolog's Sena-Nyanja (sena1271) holds Nyanja,
+#     Sena, Nyungwe and Barwe (Barwe is Senaic there, though Guthrie numbered it S.17).
+#   * Shona (S.10, shon1250) holds Ndau, Manyika and Tewe. Shona itself is a leaf other countries
+#     draw on, so the three hang from Bantu beside it, as bw.txt's Kalanga does.
+#   * Tswa-Ronga (S.50, za.txt's group): Tsonga (Changana), Tswa, Ronga.
+#   * Chopi (S.60, chop1242): Chopi and Gitonga, a new group.
+#   * Yao and Makonde are Glottolog's Ruvuma (ruvu1234); Mwani is Sabaki, beside Swahili. All
+#     three hang from Bantu, as Yao and Swahili already do.
+#
+# Colours, for the neighbours on the Mozambican ground:
+#   The north: Emakhuwa a strong yellow (Nampula, Niassa, Cabo Delgado, 5.8 million); Yao a dark
+#   teal beside it in Niassa, apart from Nyanja's magenta on the lake shore; Makonde crimson and
+#   Mwani a sky blue on the Cabo Delgado coast, with Swahili (us.txt's orange) between them; Koti a
+#   red on Nampula's coast at Angoche.
+#   Zambézia: Lomwe green, Chuwabo cyan, Lolo a pale green, all apart from the yellow Makhuwa and
+#   the dark purple Sena.
+#   Tete, Manica and Sofala: Nyanja (zm.txt's magenta), Sena a dark purple, Nyungwe a light lilac,
+#   Barwe a pale pink; the Shona varieties warm (Ndau orange, Tewe a light amber, Manyika brick
+#   red) so they read apart from the Nyanja-Sena violets they border.
+#   The south: Changana is za.txt's teal Xitsonga; Tswa a deeper blue-teal (Inhambane); Ronga a
+#   pale mint (Maputo); Chopi coral and Gitonga a light orange on the Inhambane coast, warm
+#   against the teals. Portuguese is br.txt's blue-violet and is in every town.
+
+# ---- parents and languages defined elsewhere, repeated bare (their colours are theirs) ----
+nigercongo | Niger-Congo
+nigercongo.bantu | Bantu
+nigercongo.bantu.nyanja_sena | Nyanja-Sena (N.30-40)
+nigercongo.bantu.nyanja_sena.nyanja | Nyanja
+nigercongo.bantu.tswa_ronga | Tswa-Ronga
+nigercongo.bantu.tswa_ronga.tsonga | Xitsonga (Tsonga)
+nigercongo.bantu.shona | Shona
+nigercongo.bantu.swahili | Swahili
+indoeuropean.romance | Romance
+indoeuropean.romance.portuguese | Portuguese
+other | Other or unclassified
+
+# ---- defined bare elsewhere, coloured here ----
+nigercongo.bantu.yao | Yao (Chiyao) | 0.56 0.12 190
+nigercongo.bantu.mwani | Mwani | 0.76 0.11 225
+
+# ---- new ----
+nigercongo.bantu.makhuwa | Makhuwa (P.30) | 0.76 0.13 105
+nigercongo.bantu.makhuwa.emakhuwa | Emakhuwa | 0.82 0.16 95
+nigercongo.bantu.makhuwa.elomwe | Elomwe (Lomwe) | 0.62 0.15 140
+nigercongo.bantu.makhuwa.echuwabo | Echuwabo (Chuwabo) | 0.74 0.12 200
+nigercongo.bantu.makhuwa.lolo | Lolo | 0.86 0.10 130
+nigercongo.bantu.makhuwa.koti | Ekoti (Koti) | 0.62 0.15 25
+nigercongo.bantu.nyanja_sena.sena | Cisena (Sena) | 0.48 0.15 310
+nigercongo.bantu.nyanja_sena.nyungwe | Cinyungwe (Nyungwe) | 0.80 0.10 315
+nigercongo.bantu.nyanja_sena.barwe | Chibalke (Barwe) | 0.86 0.08 355
+nigercongo.bantu.ndau | Cindau (Ndau) | 0.70 0.15 50
+nigercongo.bantu.tewe | Chitewe (Tewe) | 0.84 0.12 80
+nigercongo.bantu.manyika | Cimanika (Manyika) | 0.56 0.13 25
+nigercongo.bantu.makonde | Shimakonde (Makonde) | 0.54 0.17 10
+nigercongo.bantu.tswa_ronga.tswa | Xitswa (Tswa) | 0.60 0.12 205
+nigercongo.bantu.tswa_ronga.ronga | Xironga (Ronga) | 0.86 0.09 150
+nigercongo.bantu.chopi | Chopi (S.60) | 0.70 0.14 40
+nigercongo.bantu.chopi.cicopi | Cicopi (Chopi) | 0.66 0.15 28
+nigercongo.bantu.chopi.gitonga | Gitonga | 0.82 0.12 62

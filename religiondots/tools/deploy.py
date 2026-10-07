@@ -56,8 +56,10 @@ PUBLIC = "https://pub-ae551368cea941f39101e13c84d60bde.r2.dev/religiondots/data"
 # and a range into a gzip stream is not a range into the file -- this is the same failure as
 # ancestrydots' original Pages diagnosis, arriving from the other direction.  Its tiles are
 # individually compressed inside the archive anyway, so there is nothing to win.
-RAW_FILES = ["processed/religiondots.pmtiles"]
-GZ_FILES = ["processed/counts.json", "processed/country_shapes.geojson"]
+# regions.pmtiles is regions mode's (regions_tiles.py), and the same rule applies.
+RAW_FILES = ["processed/religiondots.pmtiles", "processed/regions.pmtiles"]
+GZ_FILES = ["processed/counts.json", "processed/country_shapes.geojson",
+            "processed/not_drawn.geojson"]
 GZ_DIRS = ["buffers"]
 
 # Staged under data/, which is gitignored whole, so the compressed copies never reach a repo.

@@ -1,0 +1,280 @@
+# Philippines (taxonomy/ph2020.py, from the 2020 census's ethnicity table; sources/ph.md).
+# Generated from ph2020.py's NAMES and NODES, ordered by people drawn; the reasoning for every
+# node is in ph2020.py's docstring. Existing flat ids (tagalog, cebuano, ilocano, hiligaynon,
+# bikol, waray, kapampangan, pangasinan, kinaraya, kankanaey) are repeated bare, except that
+# Hiligaynon, Bikol, Waray, Kapampangan, Pangasinan, Kinaray-a and Kankanaey had no colour
+# anywhere and get one here: generated, they all sat in Tagalog's cyan and the island borders
+# vanished. Tagalog, Cebuano and Ilocano keep us.txt's colours.
+# Groups: northern_luzon (Glottolog's Northern Luzon less the three flat ids), manobo, mansakan,
+# mangyan, sambalic, panay_bukidnon, agta ("Agta and Dumagat", Luzon's Negrito peoples, NOT a
+# Glottolog unit), and austronesian.sama_bajaw (sama1302, outside Philippine).
+austronesian | Austronesian
+austronesian.philippine | Philippine
+austronesian.philippine.tagalog | Tagalog
+austronesian.philippine.cebuano | Cebuano
+austronesian.philippine.hiligaynon | Hiligaynon | 0.80 0.15 110
+austronesian.philippine.ilocano | Ilocano
+austronesian.philippine.bikol | Bikol | 0.70 0.15 300
+austronesian.philippine.waray | Waray-Waray | 0.80 0.13 70
+austronesian.philippine.kapampangan | Kapampangan | 0.66 0.16 340
+austronesian.philippine.maguindanao | Maguindanao | 0.66 0.17 20
+austronesian.philippine.boholano | Boholano | 0.84 0.10 215
+austronesian.philippine.tausug | Tausug | 0.72 0.16 320
+austronesian.philippine.maranao | Maranao | 0.84 0.12 85
+austronesian.philippine.pangasinan | Pangasinan | 0.72 0.15 260
+austronesian.philippine.northern_luzon | Northern Luzon | 0.74 0.13 60
+austronesian.philippine.northern_luzon.ibanag | Ibanag
+austronesian.philippine.northern_luzon.itawis | Itawis
+austronesian.philippine.northern_luzon.ifugao | Ifugao | 0.70 0.14 140
+austronesian.philippine.northern_luzon.ifugao.tuwali | Tuwali
+austronesian.philippine.northern_luzon.ifugao.ayangan | Ayangan
+austronesian.philippine.northern_luzon.ifugao.henanga | Ayangan (Henanga)
+austronesian.philippine.northern_luzon.ifugao.kelei | Tuwali (Kele-i)
+austronesian.philippine.northern_luzon.kalinga | Kalinga | 0.80 0.13 100
+austronesian.philippine.northern_luzon.kalinga.pinukpuk | Kalinga (Pinukpuk)
+austronesian.philippine.northern_luzon.kalinga.lubuagan | Kalinga (Lubuagan)
+austronesian.philippine.northern_luzon.kalinga.butbut | Kalinga (Butbut)
+austronesian.philippine.northern_luzon.kalinga.sumadel | Kalinga (Sumadel)
+austronesian.philippine.northern_luzon.kalinga.tongrayan | Kalinga (Tongrayan)
+austronesian.philippine.northern_luzon.kalinga.ababaan | Kalinga (Ab-abaan)
+austronesian.philippine.northern_luzon.kalinga.pangol | Kalinga (Pangol)
+austronesian.philippine.northern_luzon.kalinga.limos | Kalinga (Limos)
+austronesian.philippine.northern_luzon.kalinga.tulgao | Kalinga (Tulgao)
+austronesian.philippine.northern_luzon.kalinga.guilayon | Kalinga (Guilayon)
+austronesian.philippine.northern_luzon.kalinga.salegseg | Kalinga (Salegseg)
+austronesian.philippine.northern_luzon.kalinga.bangad | Kalinga (Bangad)
+austronesian.philippine.northern_luzon.kalinga.lubo | Kalinga (Lubo)
+austronesian.philippine.northern_luzon.kalinga.banao | Kalinga (Banao)
+austronesian.philippine.northern_luzon.kalinga.mangali | Kalinga (Mangali)
+austronesian.philippine.northern_luzon.kalinga.tobog | Kalinga (Tobog)
+austronesian.philippine.northern_luzon.kalinga.guinaang | Kalinga (Guina-ang)
+austronesian.philippine.northern_luzon.kalinga.biga | Kalinga (Biga)
+austronesian.philippine.northern_luzon.kalinga.nanong | Kalinga (Nanong)
+austronesian.philippine.northern_luzon.kalinga.uma | Kalinga (Uma)
+austronesian.philippine.northern_luzon.kalinga.buaya | Kalinga (Buaya)
+austronesian.philippine.northern_luzon.kalinga.dacalan | Kalinga (Dacalan)
+austronesian.philippine.northern_luzon.kalinga.ammacian | Kalinga (Ammacian)
+austronesian.philippine.northern_luzon.kalinga.balinciagao | Kalinga (Balinciagao)
+austronesian.philippine.northern_luzon.kalinga.aciga | Kalinga (Aciga)
+austronesian.philippine.northern_luzon.kalinga.dananao | Kalinga (Dananao)
+austronesian.philippine.northern_luzon.kalinga.basao | Kalinga (Basao)
+austronesian.philippine.northern_luzon.kalinga.tanglag | Kalinga (Tanglag)
+austronesian.philippine.northern_luzon.kalinga.taloctoc | Kalinga (Taloctoc)
+austronesian.philippine.northern_luzon.kalinga.daoangan | Kalinga (Dao-Angan)
+austronesian.philippine.northern_luzon.kalinga.balatoc | Kalinga (Balatoc)
+austronesian.philippine.northern_luzon.kalinga.dugpa | Kalinga (Dugpa)
+austronesian.philippine.northern_luzon.kalinga.poswoy | Kalinga (Poswoy)
+austronesian.philippine.northern_luzon.kalinga.cagaluan | Kalinga (Cagaluan)
+austronesian.philippine.northern_luzon.kalinga.ballayangan | Kalinga (Ballayangan)
+austronesian.philippine.northern_luzon.kalinga.dallac | Kalinga (Dallac)
+austronesian.philippine.northern_luzon.kalinga.gaddang | Kalinga (Gaddang)
+austronesian.philippine.northern_luzon.kalinga.ableg_dalupa | Kalinga (Ableg/Dalupa)
+austronesian.philippine.northern_luzon.kalinga.mabaca | Kalinga (Mabaca)
+austronesian.philippine.northern_luzon.kalinga.gubang | Kalinga (Gubang)
+austronesian.philippine.northern_luzon.kalinga.malbong | Kalinga (Malbong)
+austronesian.philippine.northern_luzon.kalinga.mabongtot | Kalinga (Mabongtot)
+austronesian.philippine.northern_luzon.kalinga.culminga | Kalinga (Culminga)
+austronesian.philippine.northern_luzon.kalinga.dangtalan | Kalinga (Dangtalan)
+austronesian.philippine.northern_luzon.kalinga.magaogao | Kalinga (Magaogao)
+austronesian.philippine.northern_luzon.kalinga.gaang | Kalinga (Gaang)
+austronesian.philippine.northern_luzon.kalinga.minanga | Kalinga (Minanga)
+austronesian.philippine.northern_luzon.ibaloi | Ibaloi
+austronesian.philippine.northern_luzon.kalanguya | Kalanguya
+austronesian.philippine.northern_luzon.itneg | Itneg (Tinggian) | 0.66 0.14 40
+austronesian.philippine.northern_luzon.itneg.inlaud | Itneg (Inlaud)
+austronesian.philippine.northern_luzon.itneg.maeng | Itneg (Maeng)
+austronesian.philippine.northern_luzon.itneg.adasen | Itneg (Adasen)
+austronesian.philippine.northern_luzon.itneg.masadiit | Itneg (Masadiit)
+austronesian.philippine.northern_luzon.itneg.binongan | Itneg (Binongan)
+austronesian.philippine.northern_luzon.itneg.mabaka | Itneg (Mabaka)
+austronesian.philippine.northern_luzon.itneg.banao | Itneg (Banao)
+austronesian.philippine.northern_luzon.itneg.muyadan | Itneg (Muyadan)
+austronesian.philippine.northern_luzon.itneg.balatok | Itneg (Balatok)
+austronesian.philippine.northern_luzon.itneg.gubang | Itneg (Gubang)
+austronesian.philippine.northern_luzon.itneg.belwang | Itneg (Belwang)
+austronesian.philippine.northern_luzon.isnag | Isnag
+austronesian.philippine.northern_luzon.applai | Applai
+austronesian.philippine.northern_luzon.malaueg | Malaueg
+austronesian.philippine.northern_luzon.yogad | Yogad
+austronesian.philippine.northern_luzon.gaddang | Gaddang
+austronesian.philippine.northern_luzon.bontok | Bontok
+austronesian.philippine.northern_luzon.isinai | Isinai
+austronesian.philippine.northern_luzon.balangao | Balangao
+austronesian.philippine.northern_luzon.baliwon | Baliwon | 0.84 0.10 60
+austronesian.philippine.northern_luzon.baliwon.gaddang | Baliwon (Gaddang)
+austronesian.philippine.northern_luzon.baliwon.sadanga | Baliwon (Sadanga)
+austronesian.philippine.northern_luzon.baliwon.fiallig | Baliwon (Fiallig)
+austronesian.philippine.northern_luzon.baliwon.miligan | Baliwon (Miligan)
+austronesian.philippine.northern_luzon.bugkalot | Bugkalot (Ilongot)
+austronesian.philippine.northern_luzon.ikalahan | Kalanguya (Ikalahan)
+austronesian.philippine.northern_luzon.hakki | Kankanaey (Hak'ki)
+austronesian.philippine.northern_luzon.yapayao | Yapayao
+austronesian.philippine.northern_luzon.kadaclan | Applai (Kadaclan)
+austronesian.philippine.northern_luzon.yattuka | Kalanguya (Yattuka)
+austronesian.philippine.northern_luzon.majukayong | Bontok (Majukayong)
+austronesian.philippine.northern_luzon.iwak | Iwak
+austronesian.philippine.northern_luzon.karao | Karao
+austronesian.philippine.northern_luzon.lias | Balangao (Lias)
+austronesian.philippine.kinaraya | Kinaray-a | 0.62 0.13 150
+austronesian.philippine.masbatenyo | Masbatenyo | 0.62 0.12 230
+austronesian.philippine.aklanon | Aklanon | 0.74 0.13 285
+austronesian.philippine.manobo | Manobo | 0.68 0.14 130
+austronesian.philippine.manobo.higaonon | Higaonon
+austronesian.philippine.manobo.talaandig | Talaandig
+austronesian.philippine.manobo.binukid | Binukid (Bukidnon)
+austronesian.philippine.manobo.kagayanen | Kagayanen
+austronesian.philippine.manobo.tagabawa | Tagabawa
+austronesian.philippine.manobo.dibabawon | Dibabawon
+austronesian.philippine.manobo.matigsalug | Matigsalug
+austronesian.philippine.manobo.dulangan | Dulangan Manobo
+austronesian.philippine.manobo.aromanon | Aromanon Manobo
+austronesian.philippine.manobo.banwaon | Banwaon
+austronesian.philippine.manobo.ata_manobo | Ata Manobo
+austronesian.philippine.manobo.obo | Obo Manobo
+austronesian.philippine.manobo.tigwahanon | Tigwahanon
+austronesian.philippine.manobo.langilan | Langilan
+austronesian.philippine.manobo.ubo | Ubo Manobo
+austronesian.philippine.manobo.kinamiguin | Kinamiguin
+austronesian.philippine.manobo.arumanen | Arumanen Manobo
+austronesian.philippine.manobo.pulangiyen | Pulangiyen Manobo
+austronesian.philippine.manobo.umayamnon | Umayamnon
+austronesian.philippine.manobo.arumanen_ilianen | Arumanen Manobo (Ilianen)
+austronesian.philippine.manobo.higaonon_tagoloanon | Higaonon (Tagoloanon)
+austronesian.philippine.manobo.kirenteken | Kirenteken Manobo
+austronesian.philippine.manobo.arumanen_dibabeen | Arumanen Manobo (Dibabeen)
+austronesian.philippine.manobo.tinananen | Tinananen
+austronesian.philippine.manobo.arumanen_kulmanen | Arumanen Manobo (Kulmanen)
+austronesian.philippine.manobo.arumanen_kirenteken | Arumanen Manobo (Kirenteken)
+austronesian.philippine.manobo.dulangan_lambangian | Dulangan Manobo (Lambangian)
+austronesian.philippine.manobo.blit | Blit Manobo
+austronesian.philippine.manobo.arumanen_livunganen | Arumanen Manobo (Livunganen)
+austronesian.philippine.manobo.arumanen_mulitaan | Arumanen Manobo (Mulitaan)
+austronesian.philippine.manobo.bukidnon_tagoloanon | Bukidnon (Tagoloanon)
+austronesian.philippine.manobo.dunggoanon | Dunggoanon Manobo
+austronesian.philippine.manobo.arumanen_lahitanen | Arumanen Manobo (Lahitanen)
+austronesian.philippine.manobo.arumanen_direrayaan | Arumanen Manobo (Direrayaan)
+austronesian.philippine.manobo.arumanen_isoroken | Arumanen Manobo (Isoroken)
+austronesian.philippine.manobo.talaingod | Talaingod
+austronesian.philippine.manobo.arumanen_pulengien | Arumanen Manobo (Pulengien)
+austronesian.philippine.manobo.tasaday | Tasaday
+austronesian.philippine.surigaonon | Surigaonon | 0.80 0.13 340
+austronesian.philippine.mansakan | Mansakan | 0.80 0.12 30
+austronesian.philippine.mansakan.mandaya | Mandaya
+austronesian.philippine.mansakan.tagakaulo | Tagakaulo
+austronesian.philippine.mansakan.kagan | Kagan Kalagan
+austronesian.philippine.mansakan.davawenyo | Davawenyo
+austronesian.philippine.mansakan.mansaka | Mansaka
+austronesian.philippine.mansakan.mangguangan | Mangguangan
+austronesian.philippine.iranun | Iranun | 0.62 0.12 60
+austronesian.philippine.kankanaey | Kankanaey | 0.62 0.15 320
+austronesian.philippine.blaan | Blaan | 0.66 0.16 290
+austronesian.philippine.subanen | Subanen | 0.78 0.14 50
+austronesian.philippine.cuyonon | Cuyonon | 0.70 0.14 50
+austronesian.philippine.sambalic | Sambalic | 0.72 0.14 30
+austronesian.philippine.sambalic.sambal | Sambal
+austronesian.philippine.sambalic.ayta_sambal | Ayta (Sambal)
+austronesian.philippine.sambalic.abellen | Abellen Ayta
+austronesian.philippine.sambalic.mag_antsi | Mag-antsi Ayta
+austronesian.philippine.sambalic.mag_indi | Mag-Indi Ayta
+austronesian.philippine.sambalic.magbukun | Magbukun Ayta
+austronesian.philippine.sambalic.ambala | Ambala Ayta
+austronesian.philippine.tboli | Tboli | 0.82 0.12 20
+austronesian.philippine.capiznon | Capiznon | 0.86 0.08 40
+austronesian.philippine.tiruray | Teduray (Tiruray) | 0.76 0.14 230
+austronesian.philippine.romblomanon | Romblomanon | 0.84 0.11 140
+austronesian.philippine.mangyan | Mangyan | 0.70 0.14 70
+austronesian.philippine.mangyan.hanunoo | Hanunoo
+austronesian.philippine.mangyan.iraya | Iraya
+austronesian.philippine.mangyan.sibuyan_tagabukid | Sibuyan Mangyan (Tagabukid)
+austronesian.philippine.mangyan.alangan | Alangan
+austronesian.philippine.mangyan.buhid | Buhid
+austronesian.philippine.mangyan.tadyawan | Tadyawan
+austronesian.philippine.mangyan.tawbuid | Tawbuid
+austronesian.philippine.mangyan.bangon | Bangon
+austronesian.philippine.mangyan.ratagnon | Ratagnon
+austronesian.philippine.mangyan.gubatnon | Gubatnon
+austronesian.philippine.palawano | Palawano
+austronesian.philippine.asi | Asi (Bantoanon)
+austronesian.philippine.agta | Agta and Dumagat | 0.80 0.10 280
+austronesian.philippine.agta.paranan | Paranan
+austronesian.philippine.agta.tabangnon | Agta (Tabangnon)
+austronesian.philippine.agta.remontado | Dumagat (Remontado)
+austronesian.philippine.agta.cimaron | Agta (Cimaron)
+austronesian.philippine.agta.manide | Manide (Kabihug)
+austronesian.philippine.agta.agay | Agta (Agay)
+austronesian.philippine.agta.dupaninan | Agta (Dupaninan)
+austronesian.philippine.agta.taboy | Agta (Taboy)
+austronesian.philippine.agta.alta | Alta
+austronesian.philippine.agta.agta_dumagat | Agta (Dumagat)
+austronesian.philippine.agta.kabolowen | Dumagat (Kabolowen)
+austronesian.philippine.agta.edimala | Dumagat (Edimala)
+austronesian.philippine.agta.labin | Agta (Labin)
+austronesian.philippine.agta.isigiran | Agta (Isigiran)
+austronesian.philippine.agta.tagebolus | Dumagat (Tagebolus)
+austronesian.philippine.molbog | Molbog
+austronesian.philippine.tagbanwa | Tagbanwa
+austronesian.philippine.ivatan | Ivatan
+austronesian.philippine.ata | Ata
+austronesian.philippine.palawani | Palawani
+austronesian.philippine.kolibugan | Kolibugan
+austronesian.philippine.sangil | Sangil
+austronesian.philippine.agutaynen | Agutaynen
+austronesian.philippine.giangan | Giangan (Bagobo-Klata)
+austronesian.philippine.mamanwa | Mamanwa
+austronesian.philippine.calamian_tagbanwa | Calamian Tagbanwa
+austronesian.philippine.karolano | Karolano
+austronesian.philippine.panay_bukidnon | Panay Bukidnon (Sulod) | 0.70 0.12 170
+austronesian.philippine.panay_bukidnon.magahat | Magahat
+austronesian.philippine.panay_bukidnon.iraynon | Iraynon
+austronesian.philippine.panay_bukidnon.ituman | Ituman
+austronesian.philippine.panay_bukidnon.panayanon | Pan-ayanon
+austronesian.philippine.panay_bukidnon.halawodnon | Halawodnon
+austronesian.philippine.ibatan | Ibatan
+austronesian.philippine.imalawa | Imalawa
+austronesian.philippine.ibukid | Ibukid
+austronesian.philippine.inati | Inati (Ati)
+austronesian.philippine.batak | Batak (Palawan)
+austronesian.philippine.palawano_keney | Palawano (Ken-ey)
+austronesian.philippine.palawano_taotbato | Palawano (Tao't Bato)
+austronesian.philippine.tandulanen | Tagbanwa (Tandulanen)
+austronesian.philippine.kaunana | Kaunana
+austronesian.philippine.magkunana | Magkunana
+austronesian.philippine.kabayukan | Kabayukan
+austronesian.philippine.kailawan | Kailawan
+austronesian.philippine.lambangian | Lambangian
+austronesian.sama_bajaw | Sama-Bajaw | 0.74 0.13 250
+austronesian.sama_bajaw.sama | Sama
+austronesian.sama_bajaw.yakan | Yakan
+austronesian.sama_bajaw.bangingi | Sama Bangingi
+austronesian.sama_bajaw.sama_badjao | Sama Badjao
+austronesian.sama_bajaw.badjao | Badjao
+austronesian.sama_bajaw.jama_mapun | Jama Mapun
+austronesian.sama_bajaw.sama_dilaut | Sama Dilaut
+austronesian.malayic | Malayic
+austronesian.malayic.indonesian | Indonesian
+creole | Creoles
+creole.spanish_based | Spanish-based creoles
+creole.spanish_based.chavacano | Chavacano (Zamboangueño) | 0.88 0.13 100
+creole.spanish_based.caviteno | Caviteño Chabacano
+creole.spanish_based.davaoeno | Davao Chavacano
+creole.spanish_based.cotabateno | Cotabateño Chavacano
+indoeuropean | Indo-European
+indoeuropean.germanic | Germanic
+indoeuropean.germanic.english | English
+indoeuropean.germanic.continental | Continental West Germanic
+indoeuropean.germanic.continental.german | German
+indoeuropean.indoaryan | Indo-Aryan
+indoeuropean.romance | Romance
+indoeuropean.romance.spanish | Spanish
+indoeuropean.romance.french | French
+indoeuropean.romance.italian | Italian
+other | Other or unclassified
+other.eskayan | Eskayan
+sinotibetan | Sino-Tibetan
+sinotibetan.sinitic | Chinese
+koreanic | Koreanic
+koreanic.korean | Korean
+japonic | Japonic
+japonic.japanese | Japanese
+turkic | Turkic
+turkic.turkish | Turkish

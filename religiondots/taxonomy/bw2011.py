@@ -36,9 +36,32 @@ REVIEW = {
         "Zion Christian Church out of South Africa and a large Pentecostal sector. **None "
         "of that is in the table**, so no branch is inferred and the whole cell sits on the "
         "root, which is the call bd2011.py makes for Bangladesh. "
+        "SINCE 2026-10-03 two churches are split out of it by the Afrobarometer (`Roman "
+        "Catholic`, `Seventh Day Adventist` below; sources/bw.md §10), and this row is what "
+        "they leave: 92.7% of the census's Christians. "
         "Its geography is the inverse of everything else here: it is HIGHEST in the eastern "
         "corridor and the towns and lowest in the Kalahari, where Badimo and no-religion "
         "between them take a fifth of some settlements.",
+    "Roman Catholic":
+        "-> christianity.catholic, bare, as na2023.py and zm2022.py. NOT A CENSUS CATEGORY: "
+        "sources/bw_churches.py splits each locality's census Christians at its survey unit's "
+        "Catholic share of Christians, Afrobarometer rounds 4-8 (2008-2019), `derived`, "
+        "rolling back to `christianity` through COLUMNS. 53,819 people aged 12+, 4.86% of "
+        "Christians, and **a floor**: everyone answering `Christian only` (5% to 57% of "
+        "respondents by round) stays on the parent. Drawn because the share holds while the "
+        "unnamed rise (rounds 7-8 keep 0.78 of rounds 4-5, against 0.45 for named Christians) "
+        "and it passes the split-half at 21 units (+0.464, null 95th +0.293). South East 13.7% "
+        "of Christians, Lobatse 12.3%, Kweneng East 8.5%, Ghanzi 8.4%; Kalahari and the north "
+        "about 1%. The Diocese of Gaborone counts 7.0% of its population as baptised Catholics "
+        "(2013); the Pew Forum's 22% of Christians (2008-09) is not credible beside either.",
+    "Seventh Day Adventist":
+        "-> christianity.adventist.sda, as zm2022.py and na2023.py. Split like `Roman "
+        "Catholic`: 27,273 people aged 12+, 2.46% of Christians, a floor. Keeps 0.81 of its "
+        "level while the unnamed rise; split-half +0.481 (null 95th +0.285). Ngamiland West "
+        "13.2% of Christians, Ngamiland East 9.6%, Chobe 8.9% (next to Namibia's Zambezi, 41% "
+        "Adventist on that map), Ngwaketse 4.5% (Kanye's Adventist hospital); none found in "
+        "South East or Kgalagadi. The church counted 47,590 baptised members, one in 49 people, "
+        "in 2021.",
     "Badimo":
         "-> indigenous.african, the node Ghana added and Zimbabwe, Malawi and Benin have "
         "since fed. 60,613 people, 4.1%. "
@@ -97,6 +120,8 @@ REVIEW = {
 
 MAP = {
     "Christian": "christianity",
+    "Roman Catholic": "christianity.catholic",
+    "Seventh Day Adventist": "christianity.adventist.sda",
     "Muslim": "islam",
     "Bahai": "bahai",
     "Hindu": "hinduism",
@@ -104,6 +129,14 @@ MAP = {
     "No religion": "unaffiliated",
     "Rastafarian": "rastafari",
     "Other": "other.bw",
+}
+
+
+# spec §7a-i-1: the two church rows (sources/bw_churches.py -> bw_split.csv) are `derived` out of
+# the census's own `Christian` cell and carry `parent_column=Christian`, so with inferred dots
+# hidden they roll back to the `christianity` the census counted in that locality.
+COLUMNS = {
+    "Christian": "christianity",
 }
 
 

@@ -1,0 +1,15 @@
+# Eswatini (Afrobarometer home language). No new nodes; bare repeats so the country stands on its
+# own under `build.py --only`. Colours stay za.txt's.
+nigercongo | Niger-Congo
+nigercongo.bantu | Bantu
+nigercongo.bantu.nguni | Nguni
+nigercongo.bantu.nguni.siswati | Swati
+nigercongo.bantu.nguni.zulu | Zulu
+nigercongo.bantu.tswa_ronga | Tswa-Ronga
+nigercongo.bantu.tswa_ronga.tsonga | Xitsonga (Tsonga)
+indoeuropean | Indo-European
+indoeuropean.germanic | Germanic
+indoeuropean.germanic.english | English
+indoeuropean.romance | Romance
+indoeuropean.romance.portuguese | Portuguese
+other | Other or unclassified

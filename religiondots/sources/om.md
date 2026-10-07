@@ -154,3 +154,48 @@ said in `note_public`; no ask.
 - A source says who Oman's Myanmar domestic workers are (29,116 of the 60,559 Buddhists).
 - The Kerala Migration Survey's emigrants by destination and religion, for the religion of Indians in
   Oman (Christians 0.31 of Pew; India fitted on Hindus only).
+
+## 7. Review, 2026-10-03 (`fafd1067-rev3`, full pass)
+
+- Checks clean (`check_md`, `built_countries --check`, `check_rollup`: all 5,268,072 `modelled`,
+  nothing orphaned). Normalized CSVs re-summed independently: every figure in `note_public` matches
+  (2,984,793 / 2,283,279 / 720,302 / 502,123 / 133,118 / 60,559 / 16,477; 86.3% and 2.5%).
+  Screenshot clean: dots on the Batinah coast, Muscat, the interior and Salalah, none in the sea, no
+  blank wilaya.
+- **Note reworded (India sentence).** It said Pew finds Indians in Muslim-majority Middle Eastern
+  countries "mostly Muslim" and then drew them 55.4% Hindu, which reads as a contradiction; Pew's
+  text (as `sources/sa.md` quotes it) is that it took Egypt's census, where most Indians are Muslim,
+  as its guide. Now says Pew counts more of them as Muslim than India's own share, names the Egypt
+  guide, and says the difference is drawn as Muslim. `refresh-meta` run. Saudi Arabia's note carries
+  the same "mostly Muslim" phrasing, but its fit (19.7% Hindu) is consistent with it; left alone.
+- **One lean, recorded, not changed.** The India fit sends every removed Hindu to `islam` and keeps
+  Indian Christians at India's row. Gulf emigration from Kerala is heavily Christian as well as
+  Muslim, and Pew's own Oman Christians are 3.2x what is drawn, so the error among Indians most
+  likely runs toward Islam and away from Christianity. The note prints both Pew's and the map's
+  figures, so a reader can see it; the Kerala Migration Survey item in §6 is the fix route.
+- Ask 043's ruling (Omanis on one Islam) stands; not reopened. Bare `islam` for citizens matches
+  `sa` and `mr`; `other.om` is the per-country residual convention, as `other.sa`.
+
+## 8. The Gulf rule, 2026-10-03 (`fafd1067-gulf`)
+
+Applied after Bahrain's builder found origin rows invert the Gulf's Christian/Hindu split
+(`sources.md` §gulf-2026-10-03 has the rule and the evidence). After §4's India Hindu fit, Indians
+are moved from Hindu to Christian until the layer's Christians / (Christians + Hindus) equals Pew
+2020's Oman row, 0.459 (the layer gave 0.210). `origin_religion.gulf_christian_hindu`, called from
+`om.py`. This is the fix §7's review pointed at (the India fit's lean away from Christianity).
+
+- 158,151 Indians moved; Indians end 34.6% Hindu, 23.0% Christian, 39.2% Muslim (India's row 79.4,
+  2.2, 15.2). Non-Muslims stay 720,302, Muslims 86.3%, every other family unchanged.
+- Now drawn: Christians 291,264 (5.53%, **0.69** of Pew's share), Hindus 343,975 (0.69 of Pew's).
+  Muscat governorate 8.1% Christian, Al Batinah South 4.1%.
+- Pew's full Oman row is not believable on the register's nationalities: its 425,000 Christians as
+  well as its 502,000 Hindus would need the 760,295 Indians 55% Hindu and 41% Christian, under 2%
+  Muslim. So only the ratio is taken.
+- The added Indian Christians take India's church split (Protestant 58%); Kerala's churches are
+  mostly Catholic and Orthodox. Not changed, no opened source. `NOTE` re-measured; both editions
+  rescattered; `note_public` rewritten.
+
+Light review after the Gulf rule, 2026-10-03 (`fafd1067-rev11`): map shot fine; note figures
+match §8. Two wording fixes in `note_public`: "records religion by nationality" now "by region of
+origin" (Bahrain's census prints religion by nationality too), and "Its Buddhists are about ten
+times Pew's figure" (read as Pew's) now "The Buddhists drawn are".

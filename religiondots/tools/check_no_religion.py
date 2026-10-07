@@ -44,7 +44,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 sys.path.insert(0, os.path.join(ROOT, "taxonomy"))
 
-NO_RELIGION = re.compile(r"(?i)\bno\s+religio|\bnone\b|sans\s+religion|sem\s+religi|"
+NO_RELIGION = re.compile(r"(?i)\bno\s+religio|\bnone\b|sans\s+religion|aucune\s+religion|sem\s+religi|"
                          r"sin\s+religi|\bninguna\b|không theo tôn giáo|no\s+religious")
 # A `None` under a religion is a denomination answer, not the box (Zambia's
 # `Christianity Denomination: None`).
@@ -70,7 +70,8 @@ CLASSIFIED = {
         "lumped",
         "the 2015 census defined religion as a system with written doctrine, so animism could "
         "not be answered, and its report calls the cell `no religion or being animist`. "
-        "`unknown` by Anita's ruling of 2026-09-14; the move to traditional religion is queued."),
+        "Drawn `indigenous.laos` since 2026-10-03 by Anita's night ruling of 2026-09-14, on "
+        "LSIS 2011-12 and 2017 (about 99.8% animist among household heads, self-description)."),
     ("my", "No Religion"): (
         "warn",
         "my2020.py's own REVIEW calls the near-certain reading indigenous traditional practice "

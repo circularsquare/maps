@@ -604,3 +604,15 @@ Liaoning 2.85%, Guangxi 9.60%, Inner Mongolia 12.66%.
 Updated to match: `note_public`, `basis` (now says folk religion also counts a home altar), `gap` (76%),
 `note`, spec §3.13's table, and `taxonomy/cn2000.py`'s two Han entries (the one that still said
 `chinesefolk` was "the node waiting for them").
+
+## 12. Top text before the 75-word cut, 2026-10-03 (`fafd1067-top75`)
+
+Anita asked for the text at the top of the phone screen to come down to about 75 words
+(queue.md, "Cut the country text to about 75 words"). These are the four header fields as
+they stood before the cut, verbatim, so nothing they said is lost. The cut versions are in
+`countries/cn.py`; `note_public` was not changed.
+
+- `how`: no census question; ethnicity for the minorities, a pooled survey by province for everyone else
+- `fill`: from the 2000 census's ethnicity table
+- `grain`: counties, 478,000 people on average; the survey layers' shares are provincial, so Buddhism, Protestantism and folk religion vary between provinces and not within them
+- `gap`: a religion for 76% of these dots; with no census question they say only that somebody was counted

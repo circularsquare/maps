@@ -309,10 +309,13 @@ def main():
     if "tier" not in df.columns:
         df["tier"] = "measured"
     df["tier"] = df["tier"].fillna("measured")
-    rank = {"measured": 0, "derived": 1, "modelled": 2}
+    # `assigned` (3, spec §7e, 2026-10-04): the religion was counted here and only the branch or
+    # school was assigned from outside the source (islam_assign.py). It rolls up like derived
+    # and is reported apart from it.
+    rank = {"measured": 0, "derived": 1, "modelled": 2, "assigned": 3}
     unknown = sorted(set(df["tier"]) - set(rank))
     if unknown:
-        raise SystemExit(f"unknown confidence tier(s) {unknown}; spec §7 has three")
+        raise SystemExit(f"unknown confidence tier(s) {unknown}; spec §7 has four")
     df["tier"] = df["tier"].map(rank)
 
     # min_count=1 keeps "reported nothing" apart from "reported zero" — see `uncounted`

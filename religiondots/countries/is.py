@@ -71,9 +71,8 @@ ENTRY = {
         how="survey, 3,222 people in four rounds from 2012; foreign residents by nationality",
         grain="the capital area and the rest of Iceland, 180,000 people on average",
         gap_share=0.004824,
-        gap=("0.48% of Iceland: the 1,655 Icelandic citizens, 0.46%, who were asked about religion "
-             "and declined; and the 77 people the 2021 census recorded as stateless or of unknown "
-             "citizenship, 0.02%, who are in neither half"),
+        gap=("0.48% of Iceland: the 1,655 Icelandic citizens who were asked about religion and "
+             "declined, and 77 people who are stateless or of unknown citizenship"),
         counts=_is_counts,
         units=None,
         unit_key=None,

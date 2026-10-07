@@ -1,0 +1,76 @@
+# Timor-Leste, Census 2015, mother tongue (taxonomy/tl2015.py). Parents and languages other
+# fragments already define are repeated identically, so Timor-Leste builds on its own.
+#
+# Two new groups, one per family as most readers know them (AGENT_BRIEF §3):
+#   * `austronesian.timoric`, "Timoric": every Austronesian language of Timor the census names.
+#     Glottolog splits them between Timor-Babar (timo1265: the Tetun pair, Galoli, Waima'a,
+#     Naueti, Kairui-Midiki, Habun, Idaté, Lakalei, Baikeno, Maku'a, and the Wetar languages of
+#     Atauro) and a Western Timor branch (west2945: Mambae, Kemak, Tukudede); "Timoric" is the
+#     name Wikipedia and Hull use for the lot, and the map gains nothing from a second level.
+#   * `papuan.timor_alor_pantar`, "Timor-Alor-Pantar" (Glottolog timo1261): Bunak, Fataluku,
+#     Makasae, Makalero, Sa'ani. Under au.txt's `papuan` root, as sb.txt put the Central Solomons.
+# The Tetun pair are new leaves inside Timoric, beside uk.txt's bare `austronesian.tetun`
+# ("Tetun", used by uk, au and pl for an answer that does not say which Tetun): giving that node
+# children would turn it into a group, and their named answers would then draw as unnamed.
+#
+# Every census label is a leaf, including Hull's two cover terms the census lists beside their
+# members (Idalaka for Idaté-Lakalei, Kawaimina for Kairui-Midiki, Waima'a and Naueti) and the
+# Atauro names (Atauran, Adabe, Dadu'a, Rahesuk, Raklungu, Resuk); taxonomy/tl2015.py says why.
+# Adabe is a Glottolog bookkeeping entry (book1242), spoken on Atauro; it sits in Timoric with
+# the island's other names rather than on a root of its own.
+#
+# Colours. Drawn by municipality, so the languages of one municipality mix and those are the
+# pairs to tell apart. Tetun Prasa is everywhere and is a pale cream that sits behind the rest
+# (a pale blue first, and it was English's near-white). Mambai (Aileu, Ainaro, Ermera, Liquica,
+# Manufahi) a mid green; Kemak (Ermera, Bobonaro) a violet; Tokodede (Liquica) a pink; Bunak
+# (Bobonaro, Covalima, Ainaro) a brick red; Tetun Terik (Covalima, Manufahi, Manatuto, Viqueque)
+# a teal; Baikenu (Oecusse) a dark steel blue, clear of br.txt's Portuguese; Makasae (Baucau,
+# Viqueque, Lautem) a dark orange beside Waima'a lavender and Midiki slate blue in Baucau, Naueti
+# magenta and Kairui pale lilac in Viqueque, Fataluku light lime, Makalero olive green and Sa'ani
+# dusty pink in Lautem; Galoli (Manatuto) a light orange beside Idaté's rose, Dadu'a's olive
+# yellow (Mambai's green otherwise) and Habun; Lakalei (Manufahi) generated. The Atauro names
+# sit close to some mainland colours, but their dots are on the island and the others are not.
+austronesian | Austronesian | 0.76 0.13 195
+austronesian.timoric | Timoric | 0.72 0.11 185
+austronesian.timoric.tetun_prasa | Tetun Prasa (Tetun Dili) | 0.92 0.06 95
+austronesian.timoric.tetun_terik | Tetun Terik | 0.70 0.12 195
+austronesian.timoric.mambai | Mambai (Mambae) | 0.66 0.15 150
+austronesian.timoric.kemak | Kemak | 0.68 0.15 300
+austronesian.timoric.tokodede | Tokodede | 0.78 0.13 345
+austronesian.timoric.baikenu | Baikenu (Uab Meto) | 0.56 0.13 235
+austronesian.timoric.galoli | Galoli | 0.82 0.12 65
+austronesian.timoric.idate | Idaté | 0.70 0.14 0
+austronesian.timoric.waimaa | Waima'a | 0.80 0.10 290
+austronesian.timoric.naueti | Naueti | 0.66 0.16 340
+austronesian.timoric.midiki | Midiki | 0.58 0.10 250
+austronesian.timoric.kairui | Kairui | 0.86 0.07 310
+austronesian.timoric.habun | Habun
+austronesian.timoric.lakalei | Lakalei
+austronesian.timoric.isni | Isni
+austronesian.timoric.idalaka | Idalaka (Idaté-Lakalei)
+austronesian.timoric.kawaimina | Kawaimina (Kairui-Midiki, Waima'a and Naueti)
+austronesian.timoric.bekais | Bekais
+austronesian.timoric.lolein | Lolein
+austronesian.timoric.nanaek | Nanaek
+austronesian.timoric.makuva | Makuva (Maku'a)
+austronesian.timoric.atauran | Atauran (Atauro, dialect not named)
+austronesian.timoric.adabe | Adabe
+austronesian.timoric.dadua | Dadu'a | 0.76 0.13 105
+austronesian.timoric.rahesuk | Rahesuk
+austronesian.timoric.raklungu | Raklungu
+austronesian.timoric.resuk | Resuk
+papuan | Papuan languages | 0.70 0.12 120
+papuan.timor_alor_pantar | Timor-Alor-Pantar | 0.70 0.13 75
+papuan.timor_alor_pantar.makasae | Makasae | 0.64 0.15 50
+papuan.timor_alor_pantar.bunak | Bunak | 0.60 0.15 25
+papuan.timor_alor_pantar.fataluku | Fataluku | 0.84 0.14 110
+papuan.timor_alor_pantar.makalero | Makalero | 0.62 0.12 135
+papuan.timor_alor_pantar.saani | Sa'ani | 0.80 0.10 10
+austronesian.malayic | Malayic | 0.74 0.12 175
+austronesian.malayic.indonesian | Indonesian | 0.86 0.10 195
+austronesian.malayic.malay | Malay | 0.82 0.15 150
+indoeuropean.romance | Romance
+indoeuropean.romance.portuguese | Portuguese
+indoeuropean.germanic.english | English
+sinotibetan.sinitic | Chinese
+other | Other or unclassified

@@ -1,0 +1,9 @@
+# Turks and Caicos Islands (2012 census citizenship, no language question; sources/tc.md).
+# Bare repeats: Turks and Caicos Creole (Glottolog turk1310) and Bahamian Creole from bs.txt,
+# Haitian Creole from ht.txt.
+creole | Creoles
+creole.english_based | English-based creoles
+creole.english_based.bahamian | Bahamian Creole
+creole.english_based.turks_caicos | Turks and Caicos Creole
+creole.french_based | French-based creoles
+creole.french_based.haitian | Haitian Creole

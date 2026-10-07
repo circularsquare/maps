@@ -1,0 +1,30 @@
+# Guam (2020 Island Areas Census, PCT25 language spoken at home). Families and branches checked
+# against Glottolog (data/raw/glottolog/languages.csv: Chamorro cham1312, Palauan pala1344,
+# Carolinian caro1242 and Chuukese chuu1238 all in Austronesian aust1307). Chamorro and Palauan
+# are their own Malayo-Polynesian branches, outside Oceanic and outside Philippine; Carolinian
+# and Chuukese are Chuukic, inside Oceanic's Micronesian group, beside us.txt's Chuukese.
+#
+# New: Carolinian, and `pacific_other` for the census's "other Pacific Island languages". That
+# label cannot go on Austronesian or Oceanic: the Bureau's Pacific Island group also takes the
+# Papuan languages of New Guinea (2020-iac-language-code-list.xlsx files Kuman, Enga and Wahgi
+# beside Motu), so the narrowest node holding everything filed there is a regional remainder,
+# kept apart from `other` (the brief's rule for indigenous remainders), like `seasia_other`.
+# Low chroma and a teal-blue hue so it reads as the region's leftovers, not as a language.
+#
+# The rest are repeated bare from tree.txt and other fragments so Guam stands on its own under
+# `build.py --only`; their colours stay where they were set (us.txt, pl.txt).
+indoeuropean.germanic.english | English
+austronesian | Austronesian
+austronesian.chamorro | Chamorro
+austronesian.palauan | Palauan
+austronesian.philippine | Philippine
+austronesian.oceanic | Oceanic
+austronesian.oceanic.chuukese | Chuukese
+austronesian.oceanic.carolinian | Carolinian | 0.82 0.13 255.0
+pacific_other | Other Pacific Island languages | 0.66 0.06 210
+sinotibetan.sinitic | Chinese
+japonic | Japonic
+japonic.japanese | Japanese
+koreanic | Koreanic
+koreanic.korean | Korean
+other | Other or unclassified

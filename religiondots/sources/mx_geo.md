@@ -206,3 +206,8 @@ urban Mexico, but they only exist in the 2.89 GB national zip or the 32 per-stat
 AGEB is already fine enough that the limiting factor is the data, not the geometry:
 `mx.csv` is four categories at municipio level (`mx.md` §3.2), so nothing below AGEB buys
 extra truth. Per-state URLs are in the API response described in §2 if that changes.
+
+**Placement uses `mx_place.gpkg`, not `00a` directly** (2026-10-04): `sources/mx_geo.py` cuts
+the islands with under 250 people in ITER 2020 out of `00a` (225 island-only AGEBs dropped,
+8 trimmed), because INEGI makes each cay its own AGEB and an equal share drew dots on them.
+`mx.md` §9.

@@ -1,0 +1,8 @@
+# Anguilla (2001 census citizenship; sources/ai_census.py). No new nodes: the Leeward creole is
+# bb.txt's `antiguan` (Glottolog anti1245 lists AI). Bare repeats so the country stands alone.
+creole | Creoles
+creole.english_based | English-based creoles
+creole.english_based.antiguan | Antiguan and Barbudan Creole
+creole.english_based.jamaican | Jamaican Creole
+indoeuropean.romance | Romance
+indoeuropean.romance.spanish | Spanish

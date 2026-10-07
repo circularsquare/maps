@@ -1,0 +1,15 @@
+# Comoros. Three new leaves, Glottolog's split of Comorian (family como1260, under Sabaki):
+# Ngazidja ngaz1238, Ndzwani ndzw1235, Mwali mwal1237 (Maore maor1244 is fr.txt's Shimaore).
+# Siblings of fr.txt's `comorian` leaf, not its children: France draws a named "Comorian" answer
+# there, and a named label must never sit on a group node. Hand colours around Comorian's red
+# (0.60 0.15 25), one step apart in lightness and hue so the three islands read as one language
+# family yet are told apart; Ndzwani kept clear of Shimaore's ochre across the water on Mayotte.
+nigercongo | Niger-Congo
+nigercongo.bantu | Bantu
+nigercongo.bantu.comorian_ngazidja | Ngazidja Comorian (Shingazidja) | 0.57 0.16 18
+nigercongo.bantu.comorian_ndzwani | Ndzwani Comorian (Shindzuani) | 0.68 0.14 42
+nigercongo.bantu.comorian_mwali | Mwali Comorian (Shimwali) | 0.48 0.13 5
+# French at Afrobarometer R10's home-language share (Anita, 2026-10-05; countries/km.py).
+indoeuropean | Indo-European
+indoeuropean.romance | Romance
+indoeuropean.romance.french | French

@@ -1,0 +1,9 @@
+# Türkiye, KONDA 2006 mother tongue (taxonomy/tr2006.py). Checked against Glottolog
+# (data/raw/glottolog/languages.csv): Laz (lazz1240) is Kartvelian, beside Georgian and
+# Mingrelian. `other.caucasian` holds KONDA's "Kafkas" answer, Caucasian languages other than
+# Circassian, which span Kartvelian, Abkhaz-Adyghe and Nakh-Daghestanian; a leaf under `other`
+# like Russia's `other.dagestani`.
+# Laz is hand-picked bluer than the generated slot, which sat beside Turkish (its neighbour in Rize).
+kartvelian | Kartvelian | 0.72 0.13 305
+kartvelian.laz | Laz | 0.64 0.15 268
+other.caucasian | Caucasian languages (KONDA's "Kafkas", not named)

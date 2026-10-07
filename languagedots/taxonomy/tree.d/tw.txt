@@ -1,0 +1,41 @@
+# Taiwan 2020 census, language learned earliest in childhood (taxonomy/tw2020.py). The Sinitic and
+# Austronesian nodes other fragments define are repeated with identical labels and colours, so
+# Taiwan does not depend on them.
+sinotibetan.sinitic | Chinese | 0.62 0.19 38
+sinotibetan.sinitic.mandarin | Mandarin | 0.68 0.17 41
+sinotibetan.sinitic.hakka | Hakka | 0.58 0.14 5
+sinotibetan.sinitic.min_nan | Min Nan (Taiwanese, Hokkien) | 0.50 0.12 28
+austronesian | Austronesian | 0.76 0.13 195
+# TAIWAN'S INDIGENOUS LANGUAGES. An areal group, as `australian` and `americas_other` are: the
+# census files every one of them under 原住民族語 and names none. They are not one branch: the
+# Formosan languages are several primary branches of Austronesian (Glottolog), and Yami (Tao) on
+# Orchid Island is Malayo-Polynesian (Batanic). The group keeps the census's indigenous-language
+# speakers whose people the household register does not name (尚未申報), drawn as "language not
+# named". The members are drawn since ask 012 (Anita, 2026-10-05): each township's census figure
+# shared across the peoples registered there (countries/tw.py, sources/tw_cip.py).
+# Members: the sixteen languages of Taiwan's sixteen recognised peoples. Glottolog's fifteen
+# (aust1307) plus Truku, which Glottolog files as a dialect of Seediq (taro1264) but Taiwan
+# recognises as its own people and language; the register counts Truku (32,717) and Seediq
+# (10,602) apart, so they are two leaves. Names as most readers know them (Wikipedia's).
+# Colours hand-picked across green, teal, blue and lime (Austronesian's side of the wheel, clear
+# of the three Sinitic reds that fill the plain), for contrast where peoples meet: Amis on the
+# east coast against Truku, Kavalan and Sakizaya in Hualien and Puyuma in Taitung; Atayal,
+# Saisiyat, Seediq and Truku across the north and centre; Bunun in the central mountains against
+# all of them, Tsou, Thao, Kanakanavu and Saaroa; Paiwan, Rukai and Puyuma in the south.
+austronesian.taiwan | Taiwan indigenous languages | 0.76 0.15 150
+austronesian.taiwan.amis | Amis | 0.82 0.17 135
+austronesian.taiwan.atayal | Atayal | 0.72 0.14 190
+austronesian.taiwan.truku | Truku | 0.90 0.13 108
+austronesian.taiwan.seediq | Seediq | 0.62 0.14 240
+austronesian.taiwan.bunun | Bunun | 0.58 0.12 160
+austronesian.taiwan.paiwan | Paiwan | 0.88 0.15 100
+austronesian.taiwan.rukai | Rukai | 0.62 0.14 225
+austronesian.taiwan.puyuma | Puyuma | 0.88 0.10 185
+austronesian.taiwan.tsou | Tsou | 0.86 0.11 205
+austronesian.taiwan.saisiyat | Saisiyat | 0.88 0.13 95
+austronesian.taiwan.yami | Yami (Tao) | 0.76 0.12 210
+austronesian.taiwan.thao | Thao | 0.90 0.10 140
+austronesian.taiwan.kavalan | Kavalan | 0.66 0.13 260
+austronesian.taiwan.sakizaya | Sakizaya | 0.66 0.13 105
+austronesian.taiwan.kanakanavu | Kanakanavu | 0.74 0.12 120
+austronesian.taiwan.saaroa | Saaroa (Hla'alua) | 0.78 0.12 245

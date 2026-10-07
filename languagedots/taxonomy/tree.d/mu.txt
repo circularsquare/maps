@@ -1,0 +1,17 @@
+# Mauritius 2022 census, language usually spoken at home (taxonomy/mu2022.py). Nothing new: every
+# node is repeated from other fragments with identical labels (and colours where they gave one),
+# so Mauritius does not depend on those fragments being in the build.
+#
+# One colour hand-picked: Morisyen. ca.txt added it bare, so it was generated near French-based
+# creoles' pale grey-cyan (0.84 0.08 190), and here it is 85% of the country. On Mauritian ground
+# it sits beside Bhojpuri (red-orange), Hindi (orange), French (violet), Bangla (yellow) and
+# English (near white); a clearer cyan keeps it in the creoles' part of the wheel and apart from
+# all five. Tamil's teal (0.70 0.13 185) is nearest, but Tamil is 1,035 people here and Morisyen
+# almost absent from Tamil country. (Morisyen is also drawn, small, in Canada, beside French and
+# English.)
+indoeuropean.romance | Romance | 0.78 0.11 230
+indoeuropean.romance.french | French | 0.60 0.15 340
+sinotibetan.sinitic | Chinese | 0.62 0.19 38
+creole | Creoles | 0.84 0.06 200
+creole.french_based | French-based creoles | 0.84 0.08 190
+creole.french_based.morisyen | Morisyen | 0.80 0.12 205

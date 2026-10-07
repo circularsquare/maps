@@ -63,6 +63,8 @@ Delta Amacuro, Nueva Esparta and the Dependencias Federales were never sampled: 
 Usage:
     python sources/ve.py --fetch    download the four Stata files from LAPOP (~3 MB)
     python sources/ve.py            rebuild data/normalized/ve.csv
+    python sources/ve.py --latinobarometro    the test that keeps the four blank entities blank
+                                    (ve.md §14; needs sources/latinobarometro.py --fetch)
 """
 
 import os
@@ -543,6 +545,69 @@ def compose(pools, nat, fine, coarse, standouts, pop, units, rshare, basis_of):
     return out, small, pd.Series(resid)
 
 
+LB_WAVES = [2010, 2011, 2013, 2015, 2016, 2017]      # Latinobarómetro inside LAPOP's window
+LB_GAP = {"VE17": 35, "VE10": 40, "VE02": 9}        # its respondents in the window, asserted
+
+
+def latinobarometro_check(df, fine_units, names):
+    """sources/ve.md §14, 2026-10-03: could Latinobarómetro fill the four blank entities? Printed
+    and asserted, never drawn. `co.py::latinobarometro_units` drew Colombia's Amazonas this way;
+    here the instrument fails the same test, so NOT_DRAWN stands.
+
+    `ciudad` names the state (sources/latinobarometro.py). In the window Nueva Esparta has 35
+    respondents over four waves, Delta Amacuro 40 over two, Amazonas 9 in one. At the 17 states in
+    every LAPOP round, Latinobarómetro's Catholic and none shares do not order the states as
+    LAPOP's do; only its Protestant group does. Leave-one-out over the three groups (Catholic,
+    Protestant, none), its readings do worse than the country, so the step that licensed Amazonas
+    in Colombia fails here, before the question of which design region a blank state would take
+    for the region-level Catholic and Witness shares."""
+    import latinobarometro as lbm
+    from scipy.stats import spearmanr
+    by_name = {fold(n): g for g, n in names.items()}
+    by_name.update({fold("Vargas"): "VE24", fold("Estado Amazonas"): "VE02"})
+    lb = lbm.load("ve", LB_WAVES)
+    lb = lb[lb["ciudad"] // 1_000_000 == 862].copy()
+    lb["geo_id"] = (lb["ciudad_label"].str.replace("VE:", "", regex=False).str.split("-").str[0]
+                    .str.strip().map(lambda s: by_name.get(fold(s))))
+    if lb["geo_id"].isna().any():
+        raise SystemExit(f"Latinobarómetro ciudad labels with no state: "
+                         f"{sorted(set(lb.loc[lb['geo_id'].isna(), 'ciudad_label']))}")
+    got = lb[lb["geo_id"].isin(list(LB_GAP)) & (lb["rel"] > 0)].groupby("geo_id").size().to_dict()
+    if got != LB_GAP:
+        raise SystemExit(f"Latinobarómetro's blank-state respondents are now {got}, not {LB_GAP}")
+    lbs = lbm.group_shares(lb, "geo_id")
+    groups = {"cath": [1], "prot": [2, 5], "none": [4, 11]}
+    G = list(groups)
+    lap = pd.DataFrame({g: df[df["code"].isin(cs)].groupby("geo_id")["w"].sum()
+                        / df.groupby("geo_id")["w"].sum() for g, cs in groups.items()}).fillna(0.0)
+    both = sorted(set(lbs.index) & set(fine_units))
+    print(f"\n  Latinobarómetro {LB_WAVES[0]}-{LB_WAVES[-1]} against LAPOP at the {len(both)} "
+          "every-round states:")
+    rng = np.random.default_rng(0)
+    for g in G:
+        x, y = lap.loc[both, g].to_numpy(), lbs.loc[both, g].to_numpy()
+        o = spearmanr(x, y).statistic
+        nl = np.array([spearmanr(x, rng.permutation(y)).statistic for _ in range(20000)])
+        print(f"    {g}: Spearman {o:+.3f}, {int((nl >= o).sum())} of 20,000 random pairings reach it")
+    e_c, e_l = [], []
+    for d in both:
+        rest = df[df["geo_id"].isin(fine_units) & (df["geo_id"] != d)]
+        country = np.array([rest[rest["code"].isin(groups[g])]["w"].sum() / rest["w"].sum()
+                            for g in G])
+        e_c.append(np.abs(lap.loc[d, G].to_numpy() - country).sum() * 100)
+        e_l.append(np.abs(lap.loc[d, G].to_numpy() - lbs.loc[d, G].to_numpy(float)).sum() * 100)
+    e_c, e_l = np.array(e_c), np.array(e_l)
+    ok = e_l.mean() < e_c.mean() and (e_l < e_c).sum() * 2 > len(both)
+    print(f"    leave-one-out, summed error over the three groups: Latinobarómetro {e_l.mean():.2f} "
+          f"against the country {e_c.mean():.2f}, closer in {int((e_l < e_c).sum())} of {len(both)} "
+          f"-> {'passes' if ok else 'fails'}")
+    for g in LB_GAP:
+        print(f"    {names[g]}: n={int(lbs.loc[g, 'n'])} "
+              + ", ".join(f"{k} {lbs.loc[g, k]:.1%}" for k in G))
+    if ok:
+        raise SystemExit("Latinobarómetro now passes for Venezuela; reconsider NOT_DRAWN (ve.md §14)")
+
+
 def main():
     if "--fetch" in sys.argv:
         fetch()
@@ -616,6 +681,10 @@ def main():
           f"({int(pop.loc[at_one].sum()):,} people, {pop.loc[at_one].sum() / pop.sum():.2%}); "
           f"{len(blank)} never sampled, NOT DRAWN: {gap:,} people ({gap / pop.sum():.2%}), "
           + ", ".join(NOT_DRAWN[g] for g in blank))
+
+    if "--latinobarometro" in sys.argv:
+        latinobarometro_check(df, fine_units, names)
+        return
 
     cats = sorted(nat.index, key=lambda k: -nat[k])
     dfine = df[df["geo_id"].isin(fine_units)]

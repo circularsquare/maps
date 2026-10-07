@@ -68,7 +68,11 @@ def _pk_counts():
 
 
 def _pk2023_counts():
-    """Pakistan 2023 census at district: 7 drawn nodes on 136 districts (sources/pk.md §9).
+    """Pakistan 2023 census at district: 7 drawn nodes on 146 districts (sources/pk.md §9, §10).
+
+    136 are PBS's own Table 9. Since 2026-10-03 the other 10 are Azad Jammu and Kashmir, the
+    same census printed in the AJK Bureau of Statistics' Statistical Year Book 2025, Table 15.24,
+    under the same eight categories (sources/pk_ajk.py). Gilgit-Baltistan is still not drawn.
 
     PBS's own Table 9, read by sources/pk_2023.py. ONE level, nothing allocated, nothing
     modelled: every row is `measured` and may ring.
@@ -91,8 +95,10 @@ def _pk2023_counts():
                      keep_default_na=False, na_values=[""])
     df = df[df["geo_level"] == "district"].copy()
     df["count"] = df["count"].astype(int)
-    if df["geo_id"].nunique() != 136:
-        raise SystemExit(f"{df['geo_id'].nunique()} districts, expected 136 -- re-run "
+    # 136 from PBS Table 9, and Azad Kashmir's 10 from the AJK government's yearbook
+    # (sources/pk_ajk.py, 2026-10-03). Gilgit-Baltistan's 10 are in no published table.
+    if df["geo_id"].nunique() != 146:
+        raise SystemExit(f"{df['geo_id'].nunique()} districts, expected 146 -- re-run "
                          "sources/pk_2023.py")
     df["node"] = df["source_category"].map(resolve)
     if df["node"].isna().any():
@@ -110,11 +116,11 @@ def _pk2023_counts():
 ENTRY = {
     "pk": dict(
         name="Pakistan",
-        source="Digital Census 2023 (PBS), Table 9",
+        source="Digital Census 2023 (PBS), Table 9; Azad Kashmir from the AJK Statistical Year Book 2025",
         basis="self-identification",
         view=[60.8, 23.6, 77.9, 37.1],
         note_public=(
-            "**Pakistan is 96.4% Muslim, and 78 of its 136 districts are over 99% Muslim.** "
+            "**Pakistan is 96.4% Muslim, and 88 of its 146 districts are over 99% Muslim.** "
             "Almost the whole map is one colour. The other 3.6% is not spread thin; it sits in a "
             "few places. "
             "**The Hindu population is southeastern Sindh.** Umer Kot is **54.7%** Hindu, the "
@@ -127,29 +133,35 @@ ENTRY = {
             "**The Christian population is central Punjab and the capital.** Lahore is 4.6% "
             "Christian and Islamabad 4.3%, with Sheikhupura, Gujranwala, Sialkot, Kasur and "
             "Faisalabad all near 3.5%. The census does not divide it by church. "
-            "**Ahmadis are counted, and the count is a floor.** It is 162,684 people, down from "
-            "191,737 in 2017, and 67,223 of them live in Chiniot district (4.3%), which contains "
-            "Rabwah. Ahmadis identify as Muslim and this map files them under Islam; Pakistan's "
+            "**Ahmadis are counted, and the count is a floor.** It is 162,684 people in the four "
+            "provinces and Islamabad, down from 191,737 in 2017, and 67,223 of them live in "
+            "Chiniot district (4.3%), which contains Rabwah; Azad Kashmir adds 3,137, most of "
+            "them in Kotli and Mirpur.Ahmadis identify as Muslim and this map files them under Islam; Pakistan's "
             "constitution declares them non-Muslim, which is why the census lists "
             "*Qadiani/Ahmadi* beside *Muslim*. Registering as Ahmadi puts a person on a separate "
             "electoral roll, and the community has boycotted the census over it since 1974, so "
             "independent estimates are several times this figure. "
             "**Sikhs and Parsis have their own colours for the first time.** The 2017 census had "
-            "no box for either. There are 15,998 Sikhs, the most in Nankana Sahib (1,887), Guru "
-            "Nanak's birthplace, then Peshawar and Buner; and 2,348 Parsis, 952 of them in "
-            "Karachi South. The remaining *Others*, 72,346 people, has a geography of its own: "
+            "no box for either. There are 16,126 Sikhs, the most in Nankana Sahib (1,887), Guru "
+            "Nanak's birthplace, then Peshawar and Buner; and 2,366 Parsis, 952 of them in "
+            "Karachi South. The remaining *Others*, 75,991 people, has a geography of its own: "
             "Lower Chitral is 1.5% Others, and that is the Kalasha. "
-            "**The blank in the north is missing data, not empty land.** The published census "
-            "covers the four provinces and Islamabad, and Azad Kashmir and Gilgit-Baltistan are "
-            "in none of its tables. Gilgit-Baltistan is also where Pakistan's Shia population is "
-            "most concentrated; the census does not ask about Sunni and Shia anywhere. A further "
-            "1,041,342 people in restricted areas were counted by head only, with no religion "
-            "recorded."),
+            "**Azad Kashmir comes from its own government's yearbook.** The national statistics "
+            "bureau's tables cover the four provinces and Islamabad; the Azad Kashmir Bureau of "
+            "Statistics prints the same census's religion table for its ten districts, which are "
+            "all over 99% Muslim, with small Christian communities in Mirpur and Bhimber. Kashmir "
+            "is disputed between India and Pakistan, and this map draws each side of the Line of "
+            "Control with the country that administers it. "
+            "**The blank in the far north is missing data, not empty land.** Gilgit-Baltistan's "
+            "1,709,049 people were counted in the same census, but no published table gives "
+            "their religion. It is also where Pakistan's Shia population is most concentrated; "
+            "the census does not ask about Sunni and Shia anywhere. A further 1,041,342 people "
+            "in restricted areas were counted by head only, with no religion recorded."),
         how="census, 2023",
-        grain="districts, 1.8m people on average",
-        gap=("0.43%, in restricted areas counted by head only with no religion recorded; and "
-             "Azad Kashmir and Gilgit-Baltistan, which are in no published table"),
-        gap_share=0.004312,
+        grain="districts, 1.7m people on average",
+        gap=("1.1%: Gilgit-Baltistan, which is in no published religion table, and people in "
+             "restricted areas counted by head only with no religion recorded"),
+        gap_share=0.011111,
         counts=_pk2023_counts,
         units=None,
         unit_key=None,
@@ -176,6 +188,15 @@ ENTRY = {
              "at the median district; Balochistan runs low (Quetta 0.46, Surab 0.44), which is "
              "the grid and the census disagreeing about Balochistan rather than the join. Hindu "
              "and Christian shares against their 5 nearest districts give r=0.92 and 0.75, where "
-             "200 shuffles reach at most 0.49.",
+             "200 shuffles reach at most 0.49. "
+             "**AZAD KASHMIR ADDED 2026-10-03** (sources/pk.md §10, sources/pk_ajk.py): ten "
+             "districts, 4,333,467 people, from the AJK Bureau of Statistics' Statistical Year "
+             "Book 2025, Table 15.24, which prints the 2023 census's eight Table 9 categories "
+             "(`Hindu` and `Scheduled Caste` as headers, written under Table 9's names). It agrees "
+             "with the yearbook's Table 15.23 cell by cell, and its Table 15.15 tehsils fall into "
+             "the districts by exact cumulative sums; COD's AJK polygons join 1:1 by name, follow "
+             "the Line of Control (4 India 10k dots inside them), and Kontur runs 0.74 to 0.99. "
+             "**GILGIT-BALTISTAN IS STILL NOT DRAWN**: no published religion table was found for "
+             "it in 2017 or 2023 (sources/pk.md §10.3 lists what was searched).",
     ),
 }

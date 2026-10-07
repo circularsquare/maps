@@ -1,0 +1,6 @@
+# Vatican City (sources/va_pop.py). No new nodes; bare repeats so the country stands alone.
+indoeuropean.romance | Romance
+indoeuropean.romance.italian | Italian
+indoeuropean.romance.french | French
+indoeuropean.germanic.continental | Continental West Germanic
+indoeuropean.germanic.continental.german | German

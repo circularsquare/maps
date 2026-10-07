@@ -1,0 +1,452 @@
+# Indonesia, Sensus Penduduk 2010, language used daily at home (taxonomy/id2010.py). Parents and
+# languages other fragments already define are repeated identically (label and colour), so
+# Indonesia does not depend on fi, hk, pl, sg or us being in the build.
+#
+# One new leaf, placed by Glottolog (data/raw/glottolog/values.csv, classification):
+#   * Banjar (banj1239) is Malayic (mala1538), beside Malay and Minangkabau.
+# One new areal root, as `americas_other` and `africa_other` are (AGENT_BRIEF §3, "keep
+# indigenous remainders apart"): `indonesia_other` holds the regional languages BPS's province
+# table does not name. They cross Austronesian and the Papuan families (NTT, Maluku, Papua), and
+# BPS also files sign language in the regional-language box, so no family node is narrow enough.
+# Its colour is a muted teal between Austronesian (195) and Papuan (120), low in chroma so it reads
+# as a remainder and not as one more language.
+#
+# Colours. Drawn by province, so every language here is mixed with the others of its province, and
+# all eight sit in the Austronesian part of the wheel; they are spread by hue AND lightness so any
+# two that share a province part: Javanese a mid blue (everywhere; at 215 it read as Indonesian's
+# cyan in Jakarta), Sundanese a light lime
+# (with Javanese in Jawa Barat and Banten), Madurese a mid teal-green (with Javanese in Jawa Timur),
+# Indonesian a light cyan (everywhere), Malay sg.txt's light green unchanged, Minangkabau an olive
+# (with Malay in Riau and Jambi), Banjar a light lilac (Kalimantan, with Javanese and Bugis),
+# Buginese a light leaf green (Sulawesi and Kalimantan Timur). Javanese, Sundanese, Madurese,
+# Buginese, Minangkabau and Indonesian were bare (generated) in au, fi, hk, pl and us, where each
+# is a few hundred or thousand people; those countries take these colours now.
+austronesian | Austronesian | 0.76 0.13 195
+austronesian.javanese | Javanese | 0.66 0.14 248
+austronesian.sundanese | Sundanese | 0.86 0.13 110
+austronesian.madurese | Madurese | 0.66 0.14 170
+austronesian.buginese | Buginese | 0.80 0.14 130
+austronesian.malayic | Malayic | 0.74 0.12 175
+austronesian.malayic.indonesian | Indonesian | 0.86 0.10 195
+austronesian.malayic.malay | Malay | 0.82 0.15 150
+austronesian.malayic.minangkabau | Minangkabau | 0.66 0.15 120
+austronesian.malayic.banjar | Banjar | 0.82 0.10 290
+indonesia_other | Other regional languages of Indonesia | 0.62 0.06 170
+#
+# The share-out of the remainder by ethnicity (ask 009, 2026-10-05; Glottolog codes and calls in
+# taxonomy/id2010.py). Acehnese, Balinese, Nias, Sasak and Gorontalo repeat pl.txt's and au.txt's
+# ids and labels; they were bare (generated) there, a few hundred people each, and take these
+# colours now. Six are new: Batak, Lampung, Cirebonese, Makassarese, Minahasan, Dayak (leaves
+# under `austronesian`) and Betawi (under `malayic`).
+#
+# Colours. The eight measured languages already fill hue 110-290, so the new ones go in the free
+# part of the Austronesian wheel, violet to rose (295-360) plus two warm lights, and are spread by
+# lightness within each region where they meet: Aceh, Acehnese deep violet beside Batak light
+# pink; North Sumatra, Batak light pink beside Nias pale gold and Javanese blue; Lampung, Lampung
+# mid violet beside Javanese blue and Sundanese lime; Jakarta to Cirebon, Betawi light orchid
+# beside Cirebonese deep rose, Sundanese lime and Javanese blue; Bali and Lombok, Balinese mid
+# magenta beside Sasak light salmon; Kalimantan, Dayak deep rose against Banjar's light lilac;
+# South Sulawesi, Makassarese magenta against Buginese leaf green; North Sulawesi and Gorontalo,
+# Minahasan mid violet beside Gorontalo light pink.
+austronesian.acehnese | Acehnese | 0.62 0.16 300
+austronesian.batak | Batak | 0.80 0.13 345
+austronesian.nias | Nias | 0.86 0.10 75
+austronesian.lampung | Lampung | 0.68 0.15 305
+austronesian.malayic.betawi | Betawi | 0.80 0.13 320
+austronesian.cirebonese | Cirebonese | 0.62 0.16 345
+austronesian.balinese | Balinese | 0.70 0.17 325
+austronesian.sasak | Sasak | 0.84 0.11 20
+austronesian.dayak | Dayak | 0.64 0.17 345
+austronesian.makassarese | Makassarese | 0.66 0.17 320
+austronesian.minahasan | Minahasan | 0.68 0.15 305
+austronesian.gorontalo | Gorontalo | 0.84 0.11 350
+#
+# The wider share-out (2026-10-05, session edd42a8c-id2; sources/id_shareout.py, the calls and
+# Glottolog codes in taxonomy/id2010.py). Batak becomes a group (its line above is unchanged).
+# Borrowed parents, repeated without colour: pl.txt's bare Gayo and Mandar (coloured here, as
+# Acehnese was), tl.txt's Timoric and Tetun Terik, ph.txt's Sama-Bajaw and Bajau, au.txt's and
+# pg.txt's Papuan roots, pg.txt's Asmat-Awyu-Ok, Ngalum and Anim, the isolate root.
+#
+# Colours, hand-picked for the big languages where they meet on the ground; the small ones are
+# generated around their group. Austronesian keeps its part of the wheel and the warm lights the
+# earlier block used; Papuan stays in the yellow-greens (au.txt's 120, pg.txt's TNG 135, tl.txt's
+# Timor-Alor-Pantar 75), with the two new Papuan groups beside them.
+#   North Sumatra: Toba pink, Mandailing coral-red, Karo pale lilac, Simalungun deep rose, beside
+#     Nias pale gold, Javanese blue and Malay green; Aceh: Gayo light amber between Acehnese
+#     violet and Alas-Kluet.
+#   South Sumatra: Musi deep teal, Central Malay light khaki, Komering light pink beside
+#     Lampung's violet, Rejang coral in Bengkulu.
+#   Nusa Tenggara: Bima blue-violet and Sumbawa sky beside Sasak salmon; Flores west to east
+#     Manggarai magenta, Ngada pale yellow, Lio blue-violet, Lamaholot light coral; Sumba orchid;
+#     Timor Uab Meto tl.txt's Baikenu blue (one language across the border), Tetun teal, Rote
+#     pale amber, Hawu coral, Kupang Malay mint.
+#   Sulawesi: Toraja orange and Mandar blue-violet beside Makassarese magenta and Buginese
+#     green; Buton coral, Muna light orchid, Tolaki blue-violet; Kaili red-coral, Pamona light
+#     orchid; Manado Malay mint beside Minahasan violet, Sangir light coral, Mongondow deep red.
+#   Maluku and Papua: Ambonese Malay aqua, Kei magenta, Seram pale amber; North Moluccan Malay
+#     teal against the North Halmahera yellows; Papuan Malay light blue. Papua's own languages
+#     are in the generated block at the end (2026-10-06, sources/id_papua.py).
+austronesian.gayo | Gayo | 0.82 0.12 70
+austronesian.simeulue | Simeulue
+austronesian.batak.toba | Toba Batak | 0.78 0.14 350
+austronesian.batak.mandailing | Mandailing and Angkola Batak | 0.66 0.16 18
+austronesian.batak.karo | Karo Batak | 0.86 0.09 315
+austronesian.batak.simalungun | Simalungun Batak | 0.60 0.15 340
+austronesian.batak.pakpak | Pakpak Dairi Batak
+austronesian.batak.alas_kluet | Alas-Kluet | 0.70 0.12 275
+austronesian.batak.singkil | Singkil
+austronesian.malayic.aneuk_jamee | Aneuk Jamee
+austronesian.malayic.tamiang | Tamiang Malay
+austronesian.malayic.kerinci | Kerinci
+austronesian.malayic.musi | Musi (Palembang) | 0.60 0.12 185
+austronesian.malayic.central_malay | Central Malay (Besemah, Semendo, Ogan, Enim) | 0.82 0.11 95
+austronesian.malayic.col | Lembak (Col)
+austronesian.malayic.pekal | Pekal
+austronesian.malayic.kaur | Kaur
+austronesian.malayic.kutai | Kutai Malay | 0.82 0.12 60
+austronesian.malayic.trade_malay | Eastern Indonesian trade Malay | 0.76 0.08 170
+austronesian.malayic.trade_malay.manado | Manado Malay | 0.80 0.12 160
+austronesian.malayic.trade_malay.ambonese | Ambonese Malay | 0.80 0.12 180
+austronesian.malayic.trade_malay.north_moluccan | North Moluccan Malay | 0.66 0.12 195
+austronesian.malayic.trade_malay.papuan | Papuan Malay | 0.80 0.10 225
+austronesian.malayic.trade_malay.kupang | Kupang Malay | 0.82 0.11 150
+austronesian.komering | Komering | 0.84 0.10 330
+austronesian.rejang | Rejang | 0.70 0.15 22
+austronesian.mentawai | Mentawai
+austronesian.bima | Bima | 0.64 0.14 285
+austronesian.sumbawa | Sumbawa | 0.86 0.09 230
+austronesian.timoric | Timoric
+austronesian.timoric.uab_meto | Uab Meto (Dawan) | 0.56 0.13 235
+austronesian.timoric.tetun_terik | Tetun Terik
+austronesian.timoric.rote | Rote | 0.84 0.11 75
+austronesian.manggarai | Manggarai | 0.68 0.17 330
+austronesian.ngada | Ngada | 0.88 0.10 95
+austronesian.lio | Lio (Ende-Lio) | 0.62 0.14 270
+austronesian.lamaholot | Lamaholot | 0.80 0.12 25
+austronesian.sumba | Sumba languages (Kambera, Weyewa and others) | 0.74 0.14 305
+austronesian.hawu | Hawu (Sabu) | 0.68 0.15 15
+austronesian.paser | Paser
+austronesian.toraja | Toraja-Sa'dan | 0.76 0.15 45
+austronesian.mandar | Mandar | 0.62 0.15 275
+austronesian.tae | Tae' (Luwu) | 0.86 0.10 80
+austronesian.duri | Duri
+austronesian.mamasa | Mamasa
+austronesian.selayar | Selayar
+austronesian.mamuju | Mamuju
+austronesian.buton | Buton languages (Wolio, Cia-Cia, Tukang Besi and others) | 0.72 0.16 25
+austronesian.tolaki | Tolaki | 0.62 0.15 270
+austronesian.muna | Muna | 0.84 0.11 305
+austronesian.moronene | Moronene
+austronesian.banggai | Banggai | 0.66 0.14 285
+austronesian.saluan | Saluan
+austronesian.kaili | Kaili languages (Ledo, Da'a, Unde) | 0.72 0.16 15
+austronesian.pamona | Pamona | 0.84 0.11 300
+austronesian.buol | Buol
+austronesian.tomini | Tomini
+austronesian.lauje | Lauje
+austronesian.sangir | Sangir | 0.82 0.12 35
+austronesian.mongondow | Mongondow | 0.60 0.16 20
+austronesian.talaud | Talaud
+austronesian.sama_bajaw | Sama-Bajaw
+austronesian.sama_bajaw.bajau | Bajau
+austronesian.kei | Kei | 0.68 0.16 330
+austronesian.seram | Seram languages | 0.84 0.12 65
+austronesian.tanimbar | Tanimbar languages (Yamdena, Fordata, Selaru)
+austronesian.sula | Sula
+austronesian.buru | Buru
+austronesian.geser_gorom | Geser-Gorom
+austronesian.aru | Aru languages
+austronesian.kisar | Kisar
+austronesian.babar | Babar languages
+papuan | Papuan languages
+papuan.north_halmahera | North Halmahera | 0.80 0.13 100
+papuan.north_halmahera.ternate | Ternate
+papuan.north_halmahera.tidore | Tidore
+papuan.north_halmahera.tobelo | Tobelo
+papuan.north_halmahera.galela | Galela
+papuan.north_halmahera.loloda | Loloda
+papuan.north_halmahera.tabaru | Tabaru
+papuan.timor_alor_pantar | Timor-Alor-Pantar
+papuan.timor_alor_pantar.alor_pantar | Alor-Pantar languages
+papuan.tng | Trans-New Guinea
+isolate | Language isolates
+signlanguage | Sign language
+# BEGIN GENERATED by sources/id_papua.py: do not edit by hand, edit the script
+# Indonesian New Guinea (2026-10-06): Glottolog's living languages of the 2010
+# Papua and Papua Barat regencies, under Glottolog's families as sources/pg_build.py
+# draws PNG: Trans-New Guinea's groups (pg.txt's where a group crosses the border),
+# the other Papuan families each a root under `papuan`, isolates on `isolate`, the
+# Austronesian languages under South Halmahera-West New Guinea. A language PNG also
+# draws keeps pg's node, so a border language is one colour on both sides. Lines
+# borrowed from pg.txt are repeated as pg writes them.
+austronesian.arguni | Arguni
+austronesian.irarutu | Irarutu | 0.66 0.14 300
+austronesian.kowiai | Kowiai
+austronesian.mbaruan | Mbaruan
+austronesian.nabi | Nabi
+austronesian.oceanic | Oceanic
+austronesian.onin | Onin
+austronesian.sekar | Sekar
+austronesian.shwng | South Halmahera-West New Guinea | 0.72 0.13 280
+austronesian.uruangnirin | Uruangnirin
+austronesian.yarikman | Yarikman
+isolate.abun | Abun | 0.82 0.17 290
+isolate.burmeso | Burmeso | 0.58 0.17 350
+isolate.damal | Damal | 0.82 0.12 60
+isolate.dem | Dem
+isolate.elseng | Elseng | 0.82 0.17 300
+isolate.kapori | Kapori | 0.64 0.17 350
+isolate.kimki | Kimki | 0.58 0.17 340
+isolate.marori | Marori | 0.82 0.17 310
+isolate.mawes | Mawes | 0.58 0.17 0
+isolate.molof | Molof | 0.76 0.17 10
+isolate.momuna | Momuna | 0.82 0.17 350
+isolate.mpur | Mpur
+isolate.pyu | Pyu | 0.76 0.17 300
+isolate.sause | Sause
+isolate.tanahmerah | Tanahmerah
+isolate.usku | Usku
+isolate.yetfa | Yetfa
+papuan.anim | Anim
+papuan.bayono_awbono | Bayono-Awbono
+papuan.border | Border
+papuan.bulaka_river | Bulaka River
+papuan.east_bird_s_head | East Bird's Head
+papuan.geelvink_bay | Geelvink Bay
+papuan.greater_kwerba | Greater Kwerba
+papuan.hatam_mansim | Hatam-Mansim
+papuan.kaure_kosare | Kaure-Kosare
+papuan.kayagaric | Kayagaric
+papuan.kolopom | Kolopom
+papuan.konda_yahadian | Konda-Yahadian
+papuan.lakes_plain | Lakes Plain
+papuan.lepki_murkim_kembra | Lepki-Murkim-Kembra
+papuan.mairasic | Mairasic
+papuan.maybratic | Maybratic
+papuan.mombum_koneraw | Mombum-Koneraw
+papuan.namla_tofanma | Namla-Tofanma
+papuan.nimboranic | Nimboranic
+papuan.pauwasi | Pauwasi
+papuan.senagi | Senagi
+papuan.sentanic | Sentanic
+papuan.sko | Sko
+papuan.south_bird_s_head | South Bird's Head
+papuan.tor_orya | Tor-Orya
+papuan.west_bird_s_head | West Bird's Head
+papuan.west_bomberai | West Bomberai
+papuan.yam | Yam
+papuan.yawa_saweru | Yawa-Saweru
+austronesian.oceanic.sarmi_jayapura_bay | Sarmi-Jayapura Bay | 0.70 0.13 250
+austronesian.shwng.ambai | Ambai
+austronesian.shwng.ambel | Ambel
+austronesian.shwng.ansus | Ansus
+austronesian.shwng.biak | Biak | 0.68 0.16 325
+austronesian.shwng.biga | Biga
+austronesian.shwng.busami | Busami
+austronesian.shwng.kawe | Kawe
+austronesian.shwng.kurudu | Kurudu
+austronesian.shwng.legenyem | Legenyem
+austronesian.shwng.marau | Marau
+austronesian.shwng.matbat | Matbat
+austronesian.shwng.meoswar | Meoswar
+austronesian.shwng.misool_salawati_ma_ya | Misool-Salawati Ma'ya
+austronesian.shwng.mor_mor_islands | Mor (Mor Islands)
+austronesian.shwng.munggui | Munggui
+austronesian.shwng.papuma | Papuma
+austronesian.shwng.pom | Pom
+austronesian.shwng.roon | Roon
+austronesian.shwng.salawati | Salawati
+austronesian.shwng.serui_laut | Serui-Laut
+austronesian.shwng.wabo | Wabo
+austronesian.shwng.wandamen | Wandamen
+austronesian.shwng.warembori | Warembori
+austronesian.shwng.waropen | Waropen
+austronesian.shwng.wauyai | Wauyai
+austronesian.shwng.woi | Woi
+austronesian.shwng.yaur | Yaur
+austronesian.shwng.yeretuar | Yeretuar
+austronesian.shwng.yerisiam | Yerisiam
+austronesian.shwng.yoke | Yoke
+papuan.anim.bian_marind | Bian Marind
+papuan.anim.marind | Marind
+papuan.anim.warkay_bipim | Warkay-Bipim
+papuan.anim.yaqay | Yaqay
+papuan.bayono_awbono.awbono | Awbono
+papuan.bayono_awbono.bayono | Bayono
+papuan.border.amanab | Amanab
+papuan.border.awyi | Awyi
+papuan.border.manem | Manem
+papuan.border.senggi | Senggi
+papuan.border.sowanda | Sowanda
+papuan.border.taikat | Taikat
+papuan.border.waris | Waris
+papuan.bulaka_river.maklew | Maklew
+papuan.east_bird_s_head.meyah | Meyah
+papuan.east_bird_s_head.moskona | Moskona
+papuan.east_bird_s_head.sougb | Sougb
+papuan.geelvink_bay.barapasi | Barapasi
+papuan.geelvink_bay.bauzi | Bauzi
+papuan.geelvink_bay.burate | Burate
+papuan.geelvink_bay.demisa | Demisa
+papuan.geelvink_bay.kofei | Kofei
+papuan.geelvink_bay.nisa_anasi | Nisa-Anasi
+papuan.geelvink_bay.sauri | Sauri
+papuan.geelvink_bay.tefaro | Tefaro
+papuan.geelvink_bay.tunggare | Tunggare
+papuan.greater_kwerba.airoran | Airoran
+papuan.greater_kwerba.bagusa | Bagusa
+papuan.greater_kwerba.isirawa | Isirawa
+papuan.greater_kwerba.kauwera | Kauwera
+papuan.greater_kwerba.kwerba | Kwerba
+papuan.greater_kwerba.kwerba_mamberamo | Kwerba Mamberamo
+papuan.greater_kwerba.samarokena | Samarokena
+papuan.greater_kwerba.trimuris | Trimuris
+papuan.hatam_mansim.hatam | Hatam
+papuan.kaure_kosare.kaure_narau | Kaure-Narau
+papuan.kaure_kosare.kosadle | Kosadle
+papuan.kayagaric.atohwaim | Atohwaim
+papuan.kayagaric.kayagar | Kayagar
+papuan.kayagaric.tamagario | Tamagario
+papuan.kolopom.kimaama | Kimaama
+papuan.kolopom.ndom | Ndom
+papuan.kolopom.riantana | Riantana
+papuan.konda_yahadian.yaben_konda | Yaben (Konda)
+papuan.konda_yahadian.yahadian | Yahadian
+papuan.lakes_plain.abawiri | Abawiri
+papuan.lakes_plain.biritai | Biritai
+papuan.lakes_plain.duvle | Duvle
+papuan.lakes_plain.edopi | Edopi
+papuan.lakes_plain.eritai | Eritai
+papuan.lakes_plain.fayu | Fayu
+papuan.lakes_plain.iau | Iau
+papuan.lakes_plain.kaiy | Kaiy
+papuan.lakes_plain.kirikiri | Kirikiri
+papuan.lakes_plain.obokuitai | Obokuitai
+papuan.lakes_plain.papasena | Papasena
+papuan.lakes_plain.rasawa | Rasawa
+papuan.lakes_plain.sikaritai | Sikaritai
+papuan.lakes_plain.tause | Tause
+papuan.lakes_plain.taworta | Taworta
+papuan.lakes_plain.waritai | Waritai
+papuan.lepki_murkim_kembra.lepki | Lepki
+papuan.lepki_murkim_kembra.murkim | Murkim
+papuan.mairasic.mairasi | Mairasi
+papuan.mairasic.semimi | Semimi
+papuan.maybratic.karon_dori | Karon Dori
+papuan.maybratic.maybrat | Maybrat | 0.72 0.14 150
+papuan.mombum_koneraw.koneraw | Koneraw
+papuan.mombum_koneraw.mombum | Mombum
+papuan.namla_tofanma.tofanma | Tofanma
+papuan.nimboranic.kemtuik | Kemtuik
+papuan.nimboranic.mlap | Mlap
+papuan.pauwasi.dubu | Dubu
+papuan.pauwasi.emumu | Emumu
+papuan.pauwasi.towei | Towei
+papuan.pauwasi.yafi | Yafi
+papuan.senagi.dera_indonesia | Dera (Indonesia)
+papuan.sentanic.sentani | Sentani | 0.80 0.13 200
+papuan.sko.skou | Skou
+papuan.sko.wutung | Wutung
+papuan.south_bird_s_head.dombano | Dombano
+papuan.south_bird_s_head.kaburi | Kaburi
+papuan.south_bird_s_head.kais | Kais
+papuan.south_bird_s_head.kemberano | Kemberano
+papuan.south_bird_s_head.kokoda | Kokoda
+papuan.south_bird_s_head.puragi | Puragi
+papuan.tng.asmat_awyu_ok | Asmat-Awyu-Ok
+papuan.tng.dani | Dani languages | 0.76 0.10 125
+papuan.tng.mek | Mek
+papuan.tng.paniai_lakes | Paniai Lakes
+papuan.tor_orya.berik | Berik
+papuan.tor_orya.betaf | Betaf
+papuan.tor_orya.dabe | Dabe
+papuan.tor_orya.jofotek_bromnya | Jofotek-Bromnya
+papuan.tor_orya.keder | Keder
+papuan.tor_orya.kwesten | Kwesten
+papuan.tor_orya.kwinsu | Kwinsu
+papuan.tor_orya.orya | Orya
+papuan.tor_orya.vitou | Vitou
+papuan.west_bird_s_head.kalabra | Kalabra
+papuan.west_bird_s_head.moi_indonesia | Moi (Indonesia)
+papuan.west_bird_s_head.moraid | Moraid
+papuan.west_bird_s_head.seget | Seget
+papuan.west_bird_s_head.tehit | Tehit
+papuan.west_bomberai.baham | Baham
+papuan.west_bomberai.iha | Iha
+papuan.yam.ngkontar_ngkolmpu | Ngkontar Ngkolmpu
+papuan.yam.yei | Yei
+papuan.yawa_saweru.saweru | Saweru
+papuan.yawa_saweru.yawa | Yawa
+austronesian.oceanic.sarmi_jayapura_bay.korur | Korur
+austronesian.oceanic.sarmi_jayapura_bay.ormu | Ormu
+austronesian.oceanic.sarmi_jayapura_bay.podena | Podena
+austronesian.oceanic.sarmi_jayapura_bay.sobei | Sobei
+austronesian.oceanic.sarmi_jayapura_bay.tarpia | Tarpia
+austronesian.oceanic.sarmi_jayapura_bay.wakde | Wakde
+austronesian.oceanic.sarmi_jayapura_bay.yamna | Yamna
+papuan.tng.asmat_awyu_ok.aghu | Aghu
+papuan.tng.asmat_awyu_ok.asue_awyu | Asue Awyu
+papuan.tng.asmat_awyu_ok.buruwai | Buruwai
+papuan.tng.asmat_awyu_ok.casuarina_coast_asmat | Casuarina Coast Asmat
+papuan.tng.asmat_awyu_ok.central_asmat | Central Asmat
+papuan.tng.asmat_awyu_ok.central_awyu | Central Awyu
+papuan.tng.asmat_awyu_ok.citak | Citak
+papuan.tng.asmat_awyu_ok.diuwe | Diuwe
+papuan.tng.asmat_awyu_ok.edera_awyu | Edera Awyu
+papuan.tng.asmat_awyu_ok.kamoro | Kamoro | 0.66 0.14 300
+papuan.tng.asmat_awyu_ok.ketum | Ketum
+papuan.tng.asmat_awyu_ok.kia_river_awyu | Kia River Awyu
+papuan.tng.asmat_awyu_ok.kokenop_mandobo | Kokenop Mandobo
+papuan.tng.asmat_awyu_ok.kombai | Kombai
+papuan.tng.asmat_awyu_ok.komyandaret | Komyandaret
+papuan.tng.asmat_awyu_ok.kopkaka | Kopkaka
+papuan.tng.asmat_awyu_ok.korowai | Korowai
+papuan.tng.asmat_awyu_ok.mandobo_atas | Mandobo Atas
+papuan.tng.asmat_awyu_ok.mandobo_bawah | Mandobo Bawah
+papuan.tng.asmat_awyu_ok.momogo_pupis_irogo | Momogo-Pupis-Irogo
+papuan.tng.asmat_awyu_ok.morop_dintere | Morop-Dintere
+papuan.tng.asmat_awyu_ok.nakai | Nakai
+papuan.tng.asmat_awyu_ok.ngalum | Ngalum
+papuan.tng.asmat_awyu_ok.ninggerum | Ninggerum
+papuan.tng.asmat_awyu_ok.north_awyu | North Awyu
+papuan.tng.asmat_awyu_ok.north_kamrau | North Kamrau
+papuan.tng.asmat_awyu_ok.north_muyu | North Muyu
+papuan.tng.asmat_awyu_ok.sempan | Sempan
+papuan.tng.asmat_awyu_ok.south_awyu | South Awyu
+papuan.tng.asmat_awyu_ok.south_kamrau | South Kamrau
+papuan.tng.asmat_awyu_ok.south_muyu | South Muyu
+papuan.tng.asmat_awyu_ok.suganga | Suganga
+papuan.tng.asmat_awyu_ok.tamnim_citak | Tamnim Citak
+papuan.tng.asmat_awyu_ok.tangko | Tangko
+papuan.tng.asmat_awyu_ok.tsaukambo | Tsaukambo
+papuan.tng.asmat_awyu_ok.wambon | Wambon
+papuan.tng.asmat_awyu_ok.wanggom | Wanggom
+papuan.tng.asmat_awyu_ok.yaosakor_asmat | Yaosakor Asmat
+papuan.tng.asmat_awyu_ok.yonggom | Yonggom
+papuan.tng.dani.angguruk_yali | Angguruk Yali | 0.72 0.15 60
+papuan.tng.dani.hupla | Hupla | 0.64 0.13 270
+papuan.tng.dani.lower_grand_valley_dani | Lower Grand Valley Dani | 0.86 0.13 100
+papuan.tng.dani.mid_grand_valley_dani | Mid Grand Valley Dani | 0.60 0.14 165
+papuan.tng.dani.nduga | Nduga | 0.66 0.15 15
+papuan.tng.dani.nggem | Nggem | 0.84 0.14 135
+papuan.tng.dani.ninia_yali | Ninia Yali | 0.84 0.11 80
+papuan.tng.dani.pass_valley_yali | Pass Valley Yali | 0.60 0.13 80
+papuan.tng.dani.silimo | Silimo
+papuan.tng.dani.upper_grand_valley_dani | Upper Grand Valley Dani | 0.82 0.12 175
+papuan.tng.dani.walak | Walak | 0.66 0.14 95
+papuan.tng.dani.wano | Wano
+papuan.tng.dani.western_dani | Western Dani | 0.70 0.16 140
+papuan.tng.mek.eipomek | Eipomek
+papuan.tng.mek.ketengban | Ketengban | 0.76 0.15 35
+papuan.tng.mek.korapun_bromley | Korapun-Bromley
+papuan.tng.mek.korupun_sela | Korupun-Sela
+papuan.tng.mek.kosarek_yale | Kosarek Yale
+papuan.tng.mek.nalca | Nalca
+papuan.tng.mek.nipsan | Nipsan
+papuan.tng.mek.una | Una
+papuan.tng.paniai_lakes.auye | Auye
+papuan.tng.paniai_lakes.dao | Dao
+papuan.tng.paniai_lakes.ekari | Ekari | 0.86 0.12 110
+papuan.tng.paniai_lakes.moni | Moni | 0.62 0.15 40
+papuan.tng.paniai_lakes.wolani | Wolani
+# END GENERATED by sources/id_papua.py

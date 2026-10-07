@@ -1,0 +1,19 @@
+# Pakistan: census 2023 Table 11 (taxonomy/pk2023.py), plus Gilgit-Baltistan and Azad Kashmir
+# from sources/pk_north.py. Table 11's nodes are all in tree.txt; these are the north's.
+# Checked against Glottolog (data/raw/glottolog/languages.csv, values.csv):
+#   * Burushaski buru1296 is a family of its own, so an isolate.
+#   * Khowar khow1242: Glottolog puts it directly under Indo-Aryan (indo1321); filed under Dardic
+#     as conventionally grouped (with Kalasha, its Chitrali neighbour).
+#   * Kundal Shahi kund1257: Shinaic (dard1244/nucl1819/shin1270), Dardic.
+#   * Wakhi wakh1245: Iranian (Saka-Wakhi); the node by.txt made, repeated here.
+#
+# COLOUR. Gilgit-Baltistan's neighbours on the ground are Shina (teal, #33a6a0), Balti (blue,
+# #488acb), Burushaski and Wakhi (generated salmon, #d08a7b) in Hunza and Nagar, and Khowar in
+# Ghizer. Burushaski is hand-picked a strong purple, apart from Shina's teal, Balti's blue and
+# Wakhi's salmon by hue. Khowar is a dark blue-teal, so it stays apart from Shina (same family,
+# lighter) by lightness, and from Kalasha's pale green in Chitral.
+isolate | Language isolates | 0.70 0.17 330
+isolate.burushaski | Burushaski | 0.58 0.19 312
+indoeuropean.indoaryan.dardic.khowar | Khowar | 0.50 0.09 225
+indoeuropean.indoaryan.dardic.kundal_shahi | Kundal Shahi
+indoeuropean.iranian.wakhi | Wakhi

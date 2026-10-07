@@ -1,0 +1,13 @@
+# Europe — language coverage
+
+53 rows (UK split into GBR_EW / GBR_SC / GBR_NI; those three ids are made up, not ISO). 22 of 25 searches used.
+
+**Well covered.** Central/Eastern Europe and the Balkans ask mother tongue and publish it by municipality, mostly as open xlsx: Romania (by commune, ~3,181 units, checked), Slovakia (2,890 municipalities, XLSX/CSV/JSON, checked), Hungary (by settlement), Czechia, Poland (home language by gmina), Croatia, Serbia, Bulgaria, Montenegro (open-data xlsx, mother tongue and usual language), North Macedonia, Kosovo, Bosnia. England and Wales is the best small-area source in the region: main language by output area, 106 categories, OGL (checked). Scotland and Northern Ireland also ask main language now. Switzerland and Luxembourg ask main language by commune. Finland and Estonia take mother tongue from their population registers, by municipality, every year.
+
+**ex-USSR.** Russia 2021 native language: 87 subject sheets with an urban/rural split and ~150 languages (checked). Some regional offices go down to municipality, but coverage is uneven. Belarus 2019 asks both native language and language spoken at home. Belarusian is 54% native but only 26% at home, which makes Belarus the clearest identity-vs-use warning in the set. Ukraine has only 2001 (by settlement in the census database, by raion on HDX). Moldova, Georgia, Armenia and Azerbaijan all ask native or mother tongue, but I didn't verify how finely they publish it.
+
+**Gaps.** France, Belgium (banned since 1947), the Netherlands, Germany (microcensus only, Land level), Italy (only South Tyrol and Trentino declarations), Spain (no national question), Portugal, Greece (none since 1951), the Nordics apart from Finland, Austria and Slovenia (last asked 2001/2002), Latvia (2021 was register-only; 2011 home language is the last), and Turkey (1965 by province is the newest). For Western Europe a first-language map would need surveys or proxies.
+
+**Surprises.** Latvia dropped language in 2021. Spain's only true first-language figure by municipality is the Basque Country's (Eustat). Catalonia and the others publish only ability by municipality. Malta's locality figures seem to cover Maltese nationals only. Scotland switched from "other language at home" (2011) to "main language" (2022), so the two years aren't comparable. Several Balkan "languages" (Serbian/Croatian/Bosnian/Montenegrin, and Moldovan/Romanian) are identity labels for one language.
+
+Unreachable on 2026-10-03: db.ukrcensus.gov.ua and instat.gov.al (connection refused), KSH census site and UKDS CKAN (403). The UNECE database and the Eurostat census hub have no language tables. IPUMS-I lists only Hungary and Poland with European language source variables.

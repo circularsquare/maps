@@ -1,0 +1,84 @@
+# Jordan (taxonomy/jo2015.py). Jordanians by Arab Barometer first language and ethnic group;
+# non-Jordanians by 2015 census nationality, each on its home language or home mix
+# (sources/jo_build.py writes node ids). No new nodes: Levantine Arabic (nort3139, South
+# Levantine sout3123 a dialect of it) is sa.txt's, coloured there; Circassian is ru.txt's
+# `abkhazadyghe.circassian` (Adyghe or Kabardian; Jordan's Circassians speak both and no source
+# here tells them apart). Every node below is borrowed and repeated without colour (AGENT_BRIEF
+# section 3).
+abkhazadyghe | Northwest Caucasian (Abkhaz-Adyghe)
+abkhazadyghe.circassian | Circassian (the census's "Adygsky", either Adyghe or Kabardian)
+afroasiatic.berber | Berber
+afroasiatic.berber.kabyle | Kabyle
+afroasiatic.berber.tachelhit | Tachelhit
+afroasiatic.berber.tamazight | Tamazight
+afroasiatic.berber.tarifit | Tarifit (Riffian)
+afroasiatic.chadic | Chadic
+afroasiatic.chadic.hausa | Hausa
+afroasiatic.darija | Moroccan Arabic (Darija)
+afroasiatic.egyptian_arabic | Egyptian Arabic
+afroasiatic.ethiosemitic | Ethiopian Semitic
+afroasiatic.ethiosemitic.amharic | Amharic
+afroasiatic.gulf_arabic | Gulf Arabic
+afroasiatic.hassaniya | Hassaniya (Maure)
+afroasiatic.iraqi_arabic | Iraqi Arabic
+afroasiatic.levantine_arabic | Levantine Arabic
+afroasiatic.omani_arabic | Omani Arabic
+afroasiatic.saudi_arabic | Saudi Arabic
+afroasiatic.sudanese_arabic | Sudanese Arabic
+afroasiatic.tunisian_arabic | Tunisian Arabic
+afroasiatic.yemeni_arabic | Yemeni Arabic
+austronesian | Austronesian
+austronesian.malayic | Malayic
+austronesian.malayic.indonesian | Indonesian
+austronesian.malayic.malay | Malay
+austronesian.philippine | Philippine
+austronesian.philippine.tagalog | Tagalog
+indoeuropean.germanic.continental | Continental West Germanic
+indoeuropean.germanic.continental.dutch | Dutch
+indoeuropean.germanic.continental.german | German
+indoeuropean.germanic.north | North Germanic
+indoeuropean.germanic.north.norwegian | Norwegian
+indoeuropean.germanic.north.swedish | Swedish
+indoeuropean.indoaryan.sinhala | Sinhala
+indoeuropean.iranian.persian | Persian (Farsi)
+indoeuropean.romance | Romance
+indoeuropean.romance.french | French
+indoeuropean.romance.italian | Italian
+indoeuropean.romance.portuguese | Portuguese
+indoeuropean.romance.romanian | Romanian
+indoeuropean.romance.spanish | Spanish
+indoeuropean.slavic | Slavic
+indoeuropean.slavic.east | East Slavic
+indoeuropean.slavic.east.russian | Russian
+indoeuropean.slavic.east.ukrainian | Ukrainian
+koreanic | Koreanic
+koreanic.korean | Korean
+kradai | Kra-Dai (Tai-Kadai)
+kradai.thai | Thai
+nigercongo | Niger-Congo
+nigercongo.bantu | Bantu
+nigercongo.bantu.swahili | Swahili
+sinotibetan.burmish.burmese | Burmese
+sinotibetan.sinitic | Chinese
+turkic | Turkic
+turkic.turkish | Turkish
+# --- origin_mix borrowed nodes (python sources/origin_mix.py --fragment jo) ---
+# Every node the origin mixes bring in that tree.txt lacks, repeated without colour.
+afroasiatic.berber.nafusi | Nafusi (Libyan Berber)
+afroasiatic.berber.tamahaq | Tamahaq (Tuareg)
+afroasiatic.libyan_arabic | Libyan Arabic
+indoeuropean.germanic.continental.limburgish | Limburgish
+indoeuropean.germanic.continental.lowgerman | Low German
+indoeuropean.germanic.continental.lowgerman.westphalian | Westphalian
+indoeuropean.germanic.frisian | Frisian
+indoeuropean.romance.catalan | Catalan
+indoeuropean.romance.emilian | Emilian
+indoeuropean.romance.galician | Galician
+indoeuropean.romance.lombard | Lombard
+indoeuropean.romance.neapolitan | Neapolitan
+indoeuropean.romance.sicilian | Sicilian
+indoeuropean.romance.valencian | Valencian
+indoeuropean.romance.venetian | Venetian
+isolate | Language isolates
+isolate.basque | Basque
+# --- end origin_mix borrowed nodes ---

@@ -1,0 +1,4 @@
+# Cuba (no language question; everyone on Spanish). No new nodes; bare repeats so the country
+# stands on its own under `build.py --only`.
+indoeuropean.romance | Romance
+indoeuropean.romance.spanish | Spanish

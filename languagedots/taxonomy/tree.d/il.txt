@@ -1,0 +1,18 @@
+# Israel (taxonomy/il2021.py). Every node is defined elsewhere (sa.txt, et.txt, fi.txt, fr.txt);
+# repeated here without colour so Israel builds on its own (AGENT_BRIEF section 3). Hebrew is
+# hand-picked here: its generated pale cyan sat close to Yiddish (us.txt) and Levantine Arabic,
+# its neighbours in Jerusalem, Bene Beraq and the mixed cities. Elsewhere Hebrew is a few dots.
+afroasiatic | Afroasiatic
+afroasiatic.arabic | Arabic
+afroasiatic.levantine_arabic | Levantine Arabic
+afroasiatic.hebrew | Hebrew | 0.70 0.12 260
+afroasiatic.ethiosemitic | Ethiopian Semitic
+afroasiatic.ethiosemitic.amharic | Amharic
+indoeuropean.slavic | Slavic
+indoeuropean.slavic.east | East Slavic
+indoeuropean.slavic.east.russian | Russian
+indoeuropean.romance | Romance
+indoeuropean.romance.french | French
+indoeuropean.romance.spanish | Spanish
+indoeuropean.germanic.continental | Continental West Germanic
+indoeuropean.germanic.continental.yiddish | Yiddish

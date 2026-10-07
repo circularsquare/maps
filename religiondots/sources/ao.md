@@ -392,3 +392,15 @@ and Kontur is at the cap at Luanda's own centre too.
 
 To act on the AO0516 hex: set its `status` to `capped` in `kontur_cap.csv` and re-scatter. The
 fix lowers it to the median density of the populated hexes within 3 km and cannot move a count.
+
+## 9. Top text before the 75-word cut, 2026-10-03 (`fafd1067-top75`)
+
+Anita asked for the text at the top of the phone screen to come down to about 75 words
+(queue.md, "Cut the country text to about 75 words"). These are the four header fields as
+they stood before the cut, verbatim, so nothing they said is lost. The cut versions are in
+`countries/ao.py`; `note_public` was not changed.
+
+- `how`: census, 2024, ages 2 and over
+- `fill`: from the same census at province level, for the ten bodies Uíge's and Moxico Leste's volumes did not print
+- `grain`: municipalities, 106,000 people on average
+- `gap`: the 2.3% who did not answer or did not know; and children under 2, who were not asked the religion question

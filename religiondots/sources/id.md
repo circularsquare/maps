@@ -299,3 +299,29 @@ The cell names Confucianism and nothing else.
 - Both editions rescattered: 236,742 and 23,670 dots, the same totals as before.
 
 The whole change is `sources/folk_practice.md` §11.
+
+
+## Not-drawn hatching fix batch (fafd1067-fixes3, 2026-10-03)
+
+The not-drawn scan (`not_drawn.py`) hatched ~40 places in Indonesia, ~1.4M people by Kontur:
+Pangandaran, Malaka, PALI and the other regencies carved out after 2010. Cause: COD-AB is 2020, so
+464 of its 7,069 sub-district polygons have no SP2010 row, and `sources/id_geo.py` left them out of
+`id_drawn.gpkg`. Their 2010 people were counted in the parent and drawn on the parent's shrunken
+2020 polygon, and the land read blank. It was bigger than the hatch showed: ~7.2M Kontur people in
+all, most of them in kecamatan split inside a regency drawn at kecamatan (Bandar Lampung's seven
+new kecamatan, 323k; Samarinda, Jambi, Palu, Dumai), which the hatch's enclosed-hole floor hid.
+
+Fix, `add_post2010_ground` in `sources/id_geo.py`: every unpainted COD sub-district now joins the
+2010 unit that held it. The 17 new regencies go to the parent named in their formation law
+(`NEW_REGENCY_PARENT`; every parent is drawn whole, asserted). Tambrauw's four districts taken from
+Manokwari in 2013 go back to Manokwari (`MOVED_KECAMATAN`). Lake and forest polygons go to the
+drawn unit they share the most border with. A kecamatan split after 2010 goes to the bordering
+drawn kecamatan of the same regency whose 2010 count is most out of proportion to the Kontur
+people on its 2020 polygon (the one that lost ground); the longest-border rule made 80 of 231 grown
+kecamatan fit worse, the fit leaves 35 of 236. A COD regency missing from the table stops the build.
+
+Check: census/Kontur on the 17 parents went from 1.15-2.06 to 0.70-1.05 (national 0.87); Buton
+2.06 to 0.88, Ciamis 1.35 to 0.95, Belu 1.69 to 0.80. `id_hexes.gpkg` now places 274.4M Kontur
+people against 267.2M before; 3.1M (1.1%) still fall outside, the coast. Counts and the 5,212 units
+are unchanged. Rescattered both editions (236,742 and 23,670 dots). `not_drawn.py` now hatches
+nothing in Indonesia. `sources/id_grid.py` also reads Kontur from the kept .gz now.

@@ -160,7 +160,7 @@ def cmd_list(args):
             flag = "" if _summary_of(path) else "  [NO SUMMARY LINE]"
             print(f"  {n:3d}  {cc}  {_age(path):>5s}  {_title_of(path)[:66]}{flag}")
             print(f"       ask/{fname}")
-        if len(open_) > 4:
+        if len(open_) > 10:  # Anita 2026-09-15 raised the supervisor stop from 4 to about 10
             print(f"\n  !! {len(open_)} is above the bar in AGENT_BRIEF.md §3. If you are a "
                   f"supervisor,\n     stop spawning and hand back to Anita.")
     if args.all:

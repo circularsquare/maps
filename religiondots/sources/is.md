@@ -281,3 +281,14 @@ it, the Free Church 2.2% and 0.3%, 310,316 citizens plus 47,073 foreign, 1,732 o
   level. Norway, Denmark and Sweden are built the same way, so this is not an Iceland defect.
 
 Screenshot clean: Reykjavík, Keflavík, Selfoss and Akureyri, nothing offshore.
+
+## 12. Top text before the 75-word cut, 2026-10-03 (`fafd1067-top75`)
+
+Anita asked for the text at the top of the phone screen to come down to about 75 words
+(queue.md, "Cut the country text to about 75 words"). These are the four header fields as
+they stood before the cut, verbatim, so nothing they said is lost. The cut versions are in
+`countries/is.py`; `note_public` was not changed.
+
+- `how`: survey, 3,222 people in four rounds from 2012; foreign residents by nationality
+- `grain`: the capital area and the rest of Iceland, 180,000 people on average
+- `gap`: 0.48% of Iceland: the 1,655 Icelandic citizens, 0.46%, who were asked about religion and declined; and the 77 people the 2021 census recorded as stateless or of unknown citizenship, 0.02%, who are in neither half

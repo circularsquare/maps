@@ -40,9 +40,15 @@ there too, unused.
 - **DB InfraGO, "Infrastrukturdaten der DB InfraGO"** (Mobilithek, listed on GovData,
   https://www.govdata.de/suche/daten/infrastrukturdaten-der-db-infrago, data of 2026-04-29):
   `M1 Streckennetz.csv` gives every VzG line's Streckenkurzname and per-segment length (1,549
-  lines, 33,624 km). Used for line names and for two check figures. multi_sources.md records the
-  dataset as CC BY 4.0; the GovData page showed no licence when fetched, so confirm before
-  shipping the names anywhere public beyond attribution.
+  lines, 33,624 km). Used for line names and for two check figures. **Licence: CC BY 4.0**
+  (checked 2026-10-03). GovData's web page shows none and its package-level licence field is
+  empty, but both resources carry `http://dcat-ap.de/def/licenses/cc-by/4.0`
+  (https://www.govdata.de/ckan/api/3/action/package_show?id=infrastrukturdaten-der-db-infrago),
+  and Mobilithek's own offer record says `standardLicense` CC BY 4.0, rights "free use, open
+  data" (https://mobilithek.info/mdp-api/mdp-msa-metadata/v2/offers/922109165921083392; the
+  offer page https://mobilithek.info/offers/922109165921083392 is a script-only app).
+  Attribution needs the dataset's name, its publisher (GovData names Deutsche Bahn AG) and the
+  licence: "Infrastrukturdaten der DB InfraGO, Deutsche Bahn AG, CC BY 4.0".
 - **Wikidata** (CC0): 2,739 items with a route number (P1671) and country Germany, with
   de.wikipedia's infobox lengths (P2043). Only for `check_model.REGISTER["de"]`.
 - Timetable feed, not wired yet (gtfs_served.py is shared): gtfs.de `fv_free` + `rv_free`
@@ -138,6 +144,41 @@ countries.
 - Sizes: lines.json 2.9 MB, foot.json 1.0 MB, ways.json 5.1 MB, stations.json 1.6 MB,
   de.pmtiles 18.5 MB.
 
+## Borders (2026-10-03)
+
+Every crossing with passenger trains now ends on both sides at one border point id
+(`borders.py`; checked by trial builds of de and each neighbour):
+
+- **Switzerland.** DB InfraGO's track on Swiss soil (Basel Badischer Bahnhof, Riehen, the
+  Hochrhein line Trasadingen - Schaffhausen - Thayngen) is left to Switzerland's register:
+  `rinf_countries/de.py` drops the 27 RINF sections with an end in `SWISS_SOIL`, so 4000, 4400
+  and 4405 end at DB's own border points ("Weil am Rhein BW/CH" and so on, RINF type 120),
+  which `borders.EXTRA` lists under those ids at Switzerland's "Landesgrenze" nodes. 4404 Basel
+  SBB - Basel Bad Bf and 4407 lie wholly in Switzerland and are gone. Five crossings: Weil am
+  Rhein, Grenzach, Riehen - Lörrach-Stetten, Erzingen - Trasadingen, Thayngen - Bietingen.
+  Konstanz - Kreuzlingen is one id (`borders.SAME`: EU00026, EU00027 and DB's two "Konstanz
+  Grenze" points). Koblenz - Waldshut was already joined at EU00021.
+- **France.** Strasbourg's tram D over the Rhine to Kehl (`xKehlTram`).
+- **Denmark.** Niebüll - Tønder (`xTonder`, from the Denmark agent).
+- **Czechia.** Selb - Aš (DB's "Selb-Plößberg Grenze" is EU00230, `SAME`); Klingenthal -
+  Kraslice and Bad Brambach - Plesná (`borders.MOVE` puts EU00040 and EU00039 where DB's and
+  Czechia's lines end; `fix` gives DB's "Bad Brambach Grenze" the id EU00039, which DB had put
+  on its "Bad Brambach Grenze 3" 690 m away).
+- **Poland.** Görlitz - Zgorzelec and Grambow - Szczecin Gumieńce (`MOVE`: the table had
+  Poland's coordinates, 121 and 178 m off the rails; DB's are 3-9 m).
+
+Left: the Rafzerfeld (Rafz - Lottstetten - Jestetten - Neuhausen), Swiss track in Germany that
+Switzerland's register holds whole; the UBB's Ahlbeck Grenze - Świnoujście Centrum, which
+Poland builds whole from its buffer with no register station on it; the S6 Basel Bad Bf -
+Riehen and Basel's trams, which this extract still builds on Swiss soil as OSM lines; RB 2's
+Bad Brambach - Plesná - Vojtanov, straight-line sections in OSM (a gap in the relation).
+
+Rebuilt 2026-10-03 with the above: **1,103 register lines, 31,382 km** (4404 and 4407 gone,
+4000 -4.2 km, 4400 -6.1, 4405 -3.1); 1280 (59.9 km) and 1750 (43.2 km) greyed; 91 sections
+to a border point (2,308 km), 33 sections built over a border cut there (52.4 km left to the
+neighbour), 57 border points named. `check_model.py --region de`: worst register deviation
+0.04 (5919, as before).
+
 ## Check
 
 `python check_model.py --region de`: against RINF's own section lengths, 865 lines of 2 km
@@ -152,12 +193,29 @@ every one within 5%, worst 0.96:
 
 ## Still off, and why
 
-- **Freight lines between two passenger stations are kept**, because build_model never
-  questions a stop-to-stop section: 1280 Buchholz – Hamburg-Allermöhe (the Hamburg freight
-  bypass) is 59.9 km built for 49.3, Meckelfeld - Buchholz traced over the 2200 main line
-  beside it; 2315 Duisburg-Hochfeld Süd – Mannesmann (6.7 km) even came out as a tram line.
-  5230 Waigolshausen – Gemünden (the Werntalbahn, excursion trains only) is 45.2 km for 40.1.
-  A timetable check (gtfs.de) would grey these.
+- **Lines in pieces** (2026-10-05): `fill_holes: True` joins 12 gaps (74 km) over each line's
+  own OSM relation: 2950 Dissen - Hörne (the Haller Willem), 2400 Hattingen - Wengern Ost,
+  6663 Adorf - Zwotental, 4713 Bad Cannstatt - Nürnberger Straße and others; 50 -> 44 lines
+  in pieces. **4721 Untertürkheim – Nürnberger Str is gone, and should be**: it was only
+  ever credited because the timetable check, with 4713's S-Bahn stretch missing, routed S2/S3
+  trains over it. With that stretch filled no train is left on 4721.
+- **Freight lines between two passenger stations**: build_model never questions a
+  stop-to-stop section, and the timetable check leaves one "ambiguous" when a path nearly as
+  short as the trains' own runs over it. Greyed by hand (`FREIGHT` in de.py): 1280 Buchholz –
+  Hamburg-Allermöhe (the freight bypass by Maschen; erixx's weekend RB 38 to Harburg runs via
+  Hittfeld, and the feed's ICE 77 Bergedorf - Harburg trips are a works diversion), 1750
+  Wunstorf – Lehrte and 1751 (Hannover's freight bypass, "nur Güterverkehr"). 1280 is still
+  traced long (Meckelfeld - Buchholz over the 2200 main line beside it). **5230 Waigolshausen –
+  Gemünden (the Werntalbahn) is running**: RE 55 "Freizeit-Express Frankenland", two pairs
+  every weekend (18 trips in the feed). Candidates not yet checked one by one (stop-to-stop
+  sections drawn as running with no OSM passenger route over them, from the timetable check):
+  2324 Düsseldorf-Rath - Hilden - Opladen - Köln-Mülheim (49 km, "served" by Köln - Essen runs'
+  shortest path), 2990 Minden – Hamm Rbf (the freight pair beside 1700, served as a parallel),
+  6170 Berlin Ring mainline Tempelhof - Halensee / Neukölln (12 km), 6369 Leipzig-Thekla -
+  Engelsdorf (6.7), 2400 Hagen-Vorhalle - Wengern Ost (8.3, the Ruhrtalbahn's museum trains),
+  2500 Krefeld-Linn - Krefeld Hbf (4.9), 5201 Würzburg Rbf - Hbf / Veitshöchheim (6.8), 5922
+  Nürnberg-Dutzendteich - Ost (3.4). 2315 Duisburg-Hochfeld Süd – Mannesmann (6.7 km) came out
+  as a tram line.
 - **No OSM track to trace on**: 1100 Lübeck – Puttgarden north of Neustadt (Holst) and 6328
   Passow – Tantow have RINF points more than 1.5 km from any rail way in the extract (probably
   mapped as construction or disused while rebuilt; not checked), 3021 the Hunsrückbahn

@@ -1,0 +1,294 @@
+# Gabon (Afrobarometer R6-R9 card; taxonomy/ga2026.py). Glottolog codes in the mapping's
+# docstring. Hand colours keep the big neighbours apart: Fang (gold, north) against Kota and Kele
+# (east), Punu (south-west) against Nzebi, Tsogho and Sira around Ngounie, Mbere (south-east).
+nigercongo | Niger-Congo
+nigercongo.bantu | Bantu
+nigercongo.bantu.fang | Fang
+nigercongo.bantu.teke | Teke
+nigercongo.bantu.punu | Punu | 0.52 0.15 30
+nigercongo.bantu.nzebi | Nzebi (Njebi) | 0.62 0.14 140
+nigercongo.bantu.mbere | Mbere (Mbédé) | 0.50 0.12 300
+nigercongo.bantu.kota_gabon | Kota | 0.64 0.12 200
+nigercongo.bantu.tsogo | Tsogo | 0.75 0.12 330
+nigercongo.bantu.myene | Myene | 0.58 0.12 250
+nigercongo.bantu.lumbu_gabon | Lumbu (Baloumbou)
+nigercongo.bantu.kele_gabon | Kele (Kélé)
+nigercongo.bantu.sangu_gabon | Sangu (Masangu)
+nigercongo.bantu.sira | Sira (Eshira) | 0.45 0.10 60
+nigercongo.bantu.vumbu | Vumbu (Bavungu)
+nigercongo.bantu.vili | Vili
+indoeuropean.romance | Romance
+indoeuropean.romance.french | French
+# --- origin_mix borrowed nodes (python sources/origin_mix.py --fragment ga) ---
+# Every node the origin mixes bring in that tree.txt lacks, repeated without colour.
+africa_other | Other African languages
+afroasiatic.algerian_arabic | Algerian Arabic (Darija)
+afroasiatic.arabic.shuwa | Shuwa Arabic
+afroasiatic.berber | Berber
+afroasiatic.berber.chaouia | Chaoui (Chaouia)
+afroasiatic.berber.kabyle | Kabyle
+afroasiatic.berber.tachelhit | Tachelhit
+afroasiatic.berber.tamasheq | Tamasheq (Tuareg)
+afroasiatic.berber.tamazight | Tamazight
+afroasiatic.berber.tarifit | Tarifit (Riffian)
+afroasiatic.chadic | Chadic
+afroasiatic.chadic.gabri | Gabri
+afroasiatic.chadic.guidar | Guidar
+afroasiatic.chadic.guiziga | Guiziga
+afroasiatic.chadic.hausa | Hausa
+afroasiatic.chadic.kapsiki | Kapsiki (Psikye)
+afroasiatic.chadic.lele | Lele
+afroasiatic.chadic.mafa | Mafa
+afroasiatic.chadic.marba | Marba
+afroasiatic.chadic.massa | Massa (Masana)
+afroasiatic.chadic.mubi | Mubi (Moubi)
+afroasiatic.chadic.musey | Musey (Mousseye)
+afroasiatic.darija | Moroccan Arabic (Darija)
+afroasiatic.hebrew | Hebrew
+afroasiatic.levantine_arabic | Levantine Arabic
+afroasiatic.mesopotamian_arabic | Mesopotamian Arabic (Syrian Euphrates and Jazira)
+afroasiatic.tunisian_arabic | Tunisian Arabic
+creole | Creoles
+creole.french_based | French-based creoles
+creole.french_based.reunionese | Reunion Creole
+creole.portuguese_based | Portuguese-based creoles
+creole.portuguese_based.angolar | Angolar
+creole.portuguese_based.fadambo | Fa d'Ambô (Annobonese)
+creole.portuguese_based.forro | Forro (Sãotomense)
+creole.portuguese_based.kabuverdianu | Kabuverdianu
+indoeuropean.germanic.continental | Continental West Germanic
+indoeuropean.germanic.continental.afrikaans | Afrikaans
+indoeuropean.germanic.continental.dutch | Dutch
+indoeuropean.germanic.continental.german | German
+indoeuropean.iranian.kurdish | Kurdish
+indoeuropean.romance.portuguese | Portuguese
+indoeuropean.romance.spanish | Spanish
+indoeuropean.slavic | Slavic
+indoeuropean.slavic.east | East Slavic
+indoeuropean.slavic.east.russian | Russian
+japonic | Japonic
+japonic.japanese | Japanese
+koreanic | Koreanic
+koreanic.korean | Korean
+kradai | Kra-Dai (Tai-Kadai)
+kradai.zhuang | Zhuang
+nigercongo.adamawa | Adamawa (Mbum)
+nigercongo.adamawa.fali | Fali
+nigercongo.adamawa.mundang | Mundang
+nigercongo.adamawa.tupuri | Tupuri
+nigercongo.atlantic | Atlantic
+nigercongo.atlantic.fulah | Fula
+nigercongo.atlantic.jola | Jola languages
+nigercongo.atlantic.jola.joola | Jola (Joola)
+nigercongo.atlantic.kissi | Kissi
+nigercongo.atlantic.serer | Serer (Sereer)
+nigercongo.atlantic.wolof | Wolof
+nigercongo.bantoid | Bantoid
+nigercongo.bantoid.grassfields | Grassfields languages
+nigercongo.bantoid.grassfields.bamileke | Bamileke languages
+nigercongo.bantoid.grassfields.bamileke.fefe | Fe'fe' (Bafang)
+nigercongo.bantoid.grassfields.bamileke.ghomala | Ghomala' (Bandjoun)
+nigercongo.bantoid.grassfields.bamileke.mbouda | Mbouda
+nigercongo.bantoid.grassfields.bamileke.medumba | Medumba (Bangangte)
+nigercongo.bantoid.grassfields.bamileke.yemba | Yemba (Dschang)
+nigercongo.bantoid.grassfields.bamun | Bamun
+nigercongo.bantoid.grassfields.lamnso | Lamnso' (Nso)
+nigercongo.bantu.bafia | Bafia
+nigercongo.bantu.bakundu | Bakundu
+nigercongo.bantu.basaa | Basaa
+nigercongo.bantu.bemba | Bemba (M.40)
+nigercongo.bantu.bemba.tabwa | Tabwa
+nigercongo.bantu.bembe | Bembe
+nigercongo.bantu.bube | Bubi (Bube)
+nigercongo.bantu.bulu | Bulu
+nigercongo.bantu.chokwe_lunda | Chokwe-Lunda (K.10-20, L.50)
+nigercongo.bantu.chokwe_lunda.chokwe | Chokwe
+nigercongo.bantu.chokwe_lunda.lunda | Lunda
+nigercongo.bantu.chokwe_lunda.ngangela | Ngangela
+nigercongo.bantu.duala | Duala
+nigercongo.bantu.eton | Eton
+nigercongo.bantu.ewondo | Ewondo
+nigercongo.bantu.fiote | Fiote
+nigercongo.bantu.kete | Kete
+nigercongo.bantu.kimbundu | Kimbundu
+nigercongo.bantu.kinyarwanda | Kinyarwanda
+nigercongo.bantu.kirundi | Kirundi (Rundi)
+nigercongo.bantu.kituba | Kituba (Munukutuba)
+nigercongo.bantu.kongo | Kongo
+nigercongo.bantu.kongo_dialects | Kongo varieties (H.10)
+nigercongo.bantu.kongo_dialects.manyanga | Manyanga
+nigercongo.bantu.kongo_dialects.ndibu | Ndibu
+nigercongo.bantu.kongo_dialects.yombe | Yombe (Kikongo)
+nigercongo.bantu.kota | Kota
+nigercongo.bantu.kwanyama | Kwanyama
+nigercongo.bantu.laari | Laari (Lari)
+nigercongo.bantu.lega | Lega
+nigercongo.bantu.lingala | Lingala
+nigercongo.bantu.luba_kasai | Luba-Kasai
+nigercongo.bantu.luba_katanga | Luba-Katanga
+nigercongo.bantu.makaa | Makaa (Maka)
+nigercongo.bantu.mbala | Mbala
+nigercongo.bantu.mbosi | Mbosi (Mbochi)
+nigercongo.bantu.mbuun | Mbunda (Mbuun)
+nigercongo.bantu.mongo | Mongo
+nigercongo.bantu.nande | Nande
+nigercongo.bantu.ndowe | Ndowe (Kombe, Benga)
+nigercongo.bantu.ngombe | Ngombe
+nigercongo.bantu.nguni | Nguni
+nigercongo.bantu.nguni.ndebele_za | Ndebele (South Africa)
+nigercongo.bantu.nguni.siswati | Swati
+nigercongo.bantu.nguni.xhosa | Xhosa
+nigercongo.bantu.nguni.zulu | Zulu
+nigercongo.bantu.nyaneka_nkhumbi | Nyaneka-Nkhumbi (R.10)
+nigercongo.bantu.nyaneka_nkhumbi.nyaneka | Nyaneka
+nigercongo.bantu.sanga | Sanga (Kisanga)
+nigercongo.bantu.shi | Shi
+nigercongo.bantu.songe | Songe (Songye)
+nigercongo.bantu.sotho_tswana | Sotho-Tswana
+nigercongo.bantu.sotho_tswana.sepedi | Sepedi (Northern Sotho)
+nigercongo.bantu.sotho_tswana.sesotho | Sesotho (Southern Sotho)
+nigercongo.bantu.sotho_tswana.setswana | Setswana
+nigercongo.bantu.tetela | Tetela
+nigercongo.bantu.tswa_ronga | Tswa-Ronga
+nigercongo.bantu.tswa_ronga.tsonga | Xitsonga (Tsonga)
+nigercongo.bantu.umbundu | Umbundu
+nigercongo.bantu.venda | Tshivenda (Venda)
+nigercongo.bantu.yaka | Yaka
+nigercongo.crossriver | Cross River
+nigercongo.crossriver.efik | Efik
+nigercongo.crossriver.ibibio | Ibibio
+nigercongo.dogon | Dogon languages
+nigercongo.dogon.dogon | Dogon
+nigercongo.gbaya | Gbaya-Manza-Ngbaka
+nigercongo.gbaya.gbaya | Gbaya
+nigercongo.gbaya.ngbaka_minagende | Ngbaka Minagende
+nigercongo.gur | Gur
+nigercongo.gur.bariba | Bariba (Baatonum)
+nigercongo.gur.biali | Biali
+nigercongo.gur.bomu | Bomu (Bwamu, Bobo)
+nigercongo.gur.bwamu | Bwamu
+nigercongo.gur.dagara | Dagara (Dagaare)
+nigercongo.gur.dagbani | Dagbani
+nigercongo.gur.ditammari | Ditammari
+nigercongo.gur.farefare | Farefare (Gurene, Frafra)
+nigercongo.gur.gourmanchema | Gourmanchéma (Gulmancema)
+nigercongo.gur.kabiye | Kabiyè
+nigercongo.gur.konkomba | Konkomba (Likpakpaln)
+nigercongo.gur.kulango | Kulango (Koulango)
+nigercongo.gur.kusaal | Kusaal (Koussassé)
+nigercongo.gur.lama | Lama (Lamba)
+nigercongo.gur.lobi | Lobi
+nigercongo.gur.lukpa | Lokpa (Lukpa)
+nigercongo.gur.lyele | Lyélé
+nigercongo.gur.mamara | Mamara (Minyanka)
+nigercongo.gur.mampruli | Mampruli
+nigercongo.gur.moba | Moba
+nigercongo.gur.moore | Mòoré
+nigercongo.gur.nawdm | Nawdm (Losso)
+nigercongo.gur.ngangam | Ngangam (Gangam)
+nigercongo.gur.ntcham | Ntcham (Basari)
+nigercongo.gur.nuni | Nuni
+nigercongo.gur.senufo | Senufo (Senoufo)
+nigercongo.gur.tagbana | Tagbana (Tagwana)
+nigercongo.gur.tem | Tem (Kotokoli)
+nigercongo.gur.yom | Yom
+nigercongo.ijoid | Ijoid
+nigercongo.ijoid.ijaw | Ijaw (Izon)
+nigercongo.kru | Kru
+nigercongo.kru.bete | Bété
+nigercongo.kru.dida | Dida
+nigercongo.kru.guere | Guéré (Wè)
+nigercongo.kwa | Kwa
+nigercongo.kwa.abbey | Abbey (Abé)
+nigercongo.kwa.abron | Abron
+nigercongo.kwa.adangme | Adangme
+nigercongo.kwa.aja | Aja (Adja)
+nigercongo.kwa.akan | Akan (Twi)
+nigercongo.kwa.anyi | Anyi (Agni)
+nigercongo.kwa.attie | Attié (Akyé)
+nigercongo.kwa.ayizo | Ayizo
+nigercongo.kwa.baoule | Baoulé
+nigercongo.kwa.ewe | Ewe
+nigercongo.kwa.fon | Fon
+nigercongo.kwa.ga | Ga
+nigercongo.kwa.gen | Gen (Mina)
+nigercongo.kwa.gtm | Ghana-Togo Mountain languages
+nigercongo.kwa.gtm.akebu | Akebu
+nigercongo.kwa.gtm.ikposo | Ikposo (Akposso)
+nigercongo.kwa.guan | Guan
+nigercongo.kwa.guan.gonja | Gonja
+nigercongo.kwa.gun | Gun (Goun)
+nigercongo.kwa.kotafon | Kotafon
+nigercongo.kwa.maxi | Maxi (Mahi)
+nigercongo.kwa.saxwe | Saxwe
+nigercongo.kwa.tofin | Tofin
+nigercongo.kwa.toli | Toli, Seto and Kogbe (Gbe)
+nigercongo.kwa.waci | Ouatchi (Waci)
+nigercongo.kwa.weme | Weme
+nigercongo.kwa.xwela | Xwla (Xwela)
+nigercongo.mande | Mande
+nigercongo.mande.bambara | Bamanankan (Bambara)
+nigercongo.mande.bissa | Bissa
+nigercongo.mande.bobo | Bobo (Bobo Madaré)
+nigercongo.mande.bozo | Bozo
+nigercongo.mande.dan | Dan
+nigercongo.mande.dyula | Dyula
+nigercongo.mande.guro | Guro (Gouro)
+nigercongo.mande.jahanka | Jahanka (Diakhanké)
+nigercongo.mande.khassonke | Khassonké (Xaasongaxango)
+nigercongo.mande.konyanka | Konyanka Maninka (Koniaka)
+nigercongo.mande.koyaka | Koyaka (Koyaga)
+nigercongo.mande.kpelle | Kpelle
+nigercongo.mande.kuranko | Kuranko
+nigercongo.mande.loma | Loma
+nigercongo.mande.mahou | Mahou
+nigercongo.mande.mandinka | Mandinka
+nigercongo.mande.maninka | Maninka (Malinké)
+nigercongo.mande.marka | Marka (Dafing)
+nigercongo.mande.san | San (Samo)
+nigercongo.mande.soninke | Soninke
+nigercongo.mande.susu | Susu
+nigercongo.tiv | Tiv
+nigercongo.voltaniger | Volta-Niger
+nigercongo.voltaniger.ede_idaca | Ede Idaca (Idaasha)
+nigercongo.voltaniger.ede_ije | Ede Ije (Holli)
+nigercongo.voltaniger.ede_nago | Ede Nago (Nago)
+nigercongo.voltaniger.edoid | Edoid (Edo)
+nigercongo.voltaniger.edoid.edo | Edo
+nigercongo.voltaniger.edoid.urhobo | Urhobo
+nigercongo.voltaniger.idoma | Idoma
+nigercongo.voltaniger.ife | Ifè
+nigercongo.voltaniger.igala | Igala
+nigercongo.voltaniger.igbo | Igbo
+nigercongo.voltaniger.nupe | Nupe
+nigercongo.voltaniger.yoruba | Yoruba
+nilosaharan | Nilo-Saharan
+nilosaharan.centralsudanic | Central Sudanic
+nilosaharan.centralsudanic.bilala | Bilala (Boulala)
+nilosaharan.centralsudanic.sara | Sara
+nilosaharan.centralsudanic.sara_kaba | Sara Kaba
+nilosaharan.daju | Daju (Dadjo)
+nilosaharan.kanembu | Kanembu
+nilosaharan.kanuri | Kanuri
+nilosaharan.maban | Maban
+nilosaharan.maban.maba | Maba (Ouaddaïen)
+nilosaharan.maban.masalit | Masalit
+nilosaharan.songhay | Songhay languages
+nilosaharan.songhay.dendi | Dendi
+nilosaharan.songhay.songhay | Songhay (Sonrhai, Zarma)
+nilosaharan.tama | Tama
+nilosaharan.tubu | Tubu (Teda-Daza)
+nilosaharan.zaghawa | Zaghawa (Beria)
+sinotibetan.sinitic | Chinese
+sinotibetan.sinitic.cantonese | Cantonese
+sinotibetan.sinitic.gan | Gan
+sinotibetan.sinitic.hakka | Hakka
+sinotibetan.sinitic.jin | Jin
+sinotibetan.sinitic.mandarin | Mandarin
+sinotibetan.sinitic.min_nan | Min Nan (Taiwanese, Hokkien)
+sinotibetan.sinitic.teochew | Teochew (Chiu Chau)
+sinotibetan.sinitic.wu | Wu
+sinotibetan.sinitic.xiang | Xiang
+turkic | Turkic
+turkic.syrian_turkmen | Syrian Turkmen
+# --- end origin_mix borrowed nodes ---

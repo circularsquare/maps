@@ -1,0 +1,33 @@
+# Tajikistan, 2010 census native language (taxonomy/tj2010.py).
+#
+# The Uzbek tribal groups' own languages (Lakai, Kongrat, Durmen, Katagan, Yuz, Ming, Kesamir,
+# Semiz): the census counts these groups as nationalities apart from Uzbeks, and each one's "own
+# language" as an answer apart from Uzbek (tj2010.py says why). Glottolog (values.csv) has nothing
+# below Northern Uzbek (nort2690) for any of them, so they are leaves beside `turkic.uzbek`, which
+# cannot take children without turning into a group drawn as "language not named". The Lakai and
+# Kongrat dialects are Kipchak Uzbek.
+#
+# "Afghan": the census's own language of the Afghans, which names no language (Dari, Pashto, or
+# Parya, the Indo-Aryan speech of the Hisor valley's self-styled Afghans); a named leaf under
+# `other`, as Azerbaijan's "Jewish".
+#
+# Colours. The tribal dialects live in Khatlon and the Districts of Republican Subordination beside
+# Uzbek's pink (0.74 0.15 345) and Tajik's sand. Hand-picked in a magenta band next to Uzbek, so
+# they read as Uzbek's neighbours but apart from it and from each other: Lakai (60,392) deeper and
+# darker, Kongrat (37,831) pale; the three under 300 people are left generated.
+
+# ---- parents defined elsewhere, repeated identically ----
+turkic | Turkic
+turkic.uzbek | Uzbek | 0.74 0.15 345
+other | Other or unclassified
+
+# ---- new ----
+turkic.lakai | Lakai (Uzbek dialect) | 0.58 0.17 330
+turkic.kongrat | Kongrat (Uzbek dialect) | 0.85 0.09 335
+turkic.durmen | Durmen (Uzbek dialect) | 0.66 0.12 320
+turkic.katagan | Katagan (Uzbek dialect) | 0.79 0.12 322
+turkic.yuz | Yuz (Uzbek dialect) | 0.68 0.08 345
+turkic.ming | Ming (Uzbek dialect)
+turkic.kesamir | Kesamir (Uzbek dialect)
+turkic.semiz | Semiz (Uzbek dialect)
+other.afghan | Afghan (the census's "own language" of Afghans: Dari, Pashto or Parya)

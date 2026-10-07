@@ -1,0 +1,35 @@
+# Serbia, Popis 2022, mother tongue (taxonomy/rs2022.py). Two new leaves; the other 16 named
+# languages were already in the tree (us.txt, cz.txt, ro.txt, hu.txt, ca.txt).
+#
+# Bunjevac (Bunjevački): the Shtokavian-Ikavian speech of the Bunjevci of Subotica and Sombor.
+# Glottolog files it as a dialect of Serbian-Croatian-Bosnian (bunj1247 under sout1528), as it
+# does the Serbian, Bosnian and Montenegrin standards, which are all leaves here; the census
+# prints it apart from Serbian and Croatian.
+# No glottocode for its own node: the leaf is the census's label, and bunj1247 is a dialect entry.
+indoeuropean.slavic.south.bunjevac | Bunjevac | 0.64 0.13 115
+#
+# Vlach (Vlaški): the Romanian speech of the Vlachs of eastern Serbia (Timok, Mlava, Pek), whose
+# two dialect groups, Ungureni and Tarani, Glottolog lists under Romanian (roma1327). The census
+# prints it apart from Romanian, whose speakers are in the Banat 200 km away, so it is a sibling
+# of Romanian, not a child (a child would make Romanian a group, drawn washed out; hu.txt's
+# Boyash). Not Aromanian, which is also called Vlach in Greece and North Macedonia.
+indoeuropean.romance.vlach | Vlach | 0.72 0.15 20
+#
+# Colour. Serbian was defined bare (us.txt, cz.txt) and generated as an olive, #a99a26, which sat
+# 0.07 (OKLab) from Slovak's generated lime: the Slovak towns of the Banat and Backa (Backi
+# Petrovac, Kovacica) vanished into the Serbian around them, and Albanian's brown (Presevo) and
+# Rusyn's green (Ruski Krstur) were not much further. Serbian is now a light teal-green, still on
+# South Slavic's green side of the wheel and at least 0.11 from every language that shares a
+# municipality with it in Serbia (Hungarian, Slovak, Bosnian, Albanian, Romani, Romanian,
+# Bulgarian, Rusyn, Croatian) and from Montenegrin, Bosnian and Croatian for the neighbours still
+# to come. Serbian is a small migrant language in every other country drawn so far (hu, ro, cz,
+# us); against Hungarian and Romanian there it is clearer than before, not less.
+indoeuropean.slavic.south.serbian | Serbian | 0.77 0.14 168
+#
+# Bunjevac (above) is hand-picked because its generated teal, #1ab28c, landed right on the new
+# Serbian; a darker yellow-green keeps it apart from Serbian, Hungarian and Croatian in Subotica.
+# Vlach (above): a coral in Romance's warm reds, apart from Romanian's pink (not neighbours, but
+# related) and from Romani's purple, which shares the same villages in eastern Serbia.
+# Not changed: Bosnian (lime) and Montenegrin (mint) are only 0.06 apart. They hardly meet in
+# Serbia (Montenegrin is 1,981 people, in Vojvodina), but they will in Montenegro and Sandzak's
+# neighbours; that country's agent should hand-pick one.

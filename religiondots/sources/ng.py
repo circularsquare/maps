@@ -21,7 +21,7 @@ not ask"* is still true.
 Nigeria in the middle of the continent, which tells a reader nothing at all, and §12's rule is
 that modelled is the floor rather than the plan. What is on the map is what 11,909 people told
 the Afrobarometer between May 2008 and April 2022, applied to a population table somebody else
-projected. Every dot is `modelled` and draws desaturated.
+projected. Every dot is `modelled`.
 
 ## WHAT IS DRAWN, AND WHERE EACH NUMBER COMES FROM
 
@@ -47,21 +47,53 @@ below their population weight and the far-southern ones above it, and round 6 ha
 Borno or Yobe at all. Both figures are printed on every build and `note_public` gives the
 reader both, along with the two published estimates that disagree with each.
 
-## THE DENOMINATIONS ARE NOT DRAWN, AND NEITHER IS THE SUNNI/SHIA SPLIT
+## ONE CHURCH IS DRAWN, THE CATHOLIC CHURCH, FROM THE THREE ROUNDS THE DHS AGREES WITH
 
 Afrobarometer's card offers about twenty Christian denominations and, on the Muslim side,
 Sunni, Shia, Ismaili and three Sufi brotherhoods plus Izala. Nigerians fill nearly all of them:
 Roman Catholic takes 8.6% of the pooled respondents, Pentecostal 4.8%, Anglican 3.0%, the
-Tijaniyya 1.0% and Izala 0.7%. None of it is drawn, for §11ai's reason, which bites here as
-hard as it did in Liberia. The share answering `Christian only` rather than naming a
+Tijaniyya 1.0% and Izala 0.7%. The share answering `Christian only` rather than naming a
 denomination, by round:
 
     R4  32.3%    R5  19.4%    R6  28.0%    R7  44.9%    R8  47.3%    R9  41.1%
 
 A 27.9-point range with no trend, over fourteen years in which nothing like that happened to
-Nigerian denominational life. A pooled Catholic share is therefore a measurement of which
-rounds are in the pool. `GROUP` below collapses the card to five categories that the probing
-cannot move, because a Catholic and a `Christian only` are both Christian in every round.
+Nigerian denominational life. So a pooled church share measures which rounds are in the pool,
+and `GROUP` collapses the card to five categories the probing cannot move.
+
+**The Catholic Church is carved back out of `Christian` afterwards (2026-10-03), on Namibia's
+rule** (`sources/na.md` §3): a church whose answer drifts by round is taken from the rounds that
+match an outside witness to its level. The witness is the four open NDHS final reports (2008,
+2013, 2018, 2024), whose Table 3.1 names `Catholic` beside `Other Christian` for women and men
+15-49: Catholics are 19.4-23.9% of Christians in all four (`dhs_witness`). The survey's Catholics
+as a share of its Christians run 21.2, 18.9 and 19.1% in rounds 4-6 and 8.4, 4.3 and 12.5% in
+rounds 7-9, so rounds 4-6 match and 7-9 do not (`catholic_fraction` asserts both sides). Each
+state's Catholic share of its Christians comes from rounds 4-6 and multiplies the state's
+Christian share from all six rounds; states with fewer than `MIN_CHRISTIANS` Christian
+respondents in those rounds (the far north) take the national fraction. The split-half on
+Christians in rounds 4-6 passes (+0.75 at 27 states), and the Church's own diocesan statistics,
+summed by the state the cathedral stands in (`sources/gcatholic.py`), rank the states the same
+way (`diocese_witness`).
+
+`Christian only` is NOT spread over the named churches of its state, as Togo does it
+(`sources/tg.py`): named Catholics are 29-66% of named Christians by round, against the DHS's
+19-24% of all Christians, so the people who name no church are mostly not Catholic. Catholics are
+a share of all Christians, and everyone else stays in `Christian`.
+
+**Anglicans are carved out of the non-Catholic Christians next, levelled by the Global Flourishing
+Study** (GFS wave 1, 2023, on disk; `church_split`), on Tanzania's construction (`sources/tz.md`
+§9). The GFS asks every Christian the church they most identify with and only 1.2% of Nigeria's
+3,849 name none. Its Anglicans are 10.0% of non-Catholic Christians; the Afrobarometer's named
+Anglicans in rounds 4-6 are 8.9%, a floor, so the level sits inside the survey's bounds and takes
+1.9% of `Christian only`. Each state's share averages the two surveys by respondents, and the two
+rank 27 states alike (+0.550, p 0.0014). The GFS's Catholic share (27.9% of Christians naming a
+church) is above all four NDHS reports, so it is not used for Catholics.
+
+**Pentecostals are not drawn.** The GFS puts them at 55.9% of non-Catholic Christians and the
+Afrobarometer's bounds allow it (15.1% named, 72.2% with every unnamed answer), but the two
+surveys do not rank the states alike on that basis (+0.20, p 0.15). As a share of all Christians
+they do (+0.40), which is mostly the Catholic pattern seen from the other side. A split nothing can
+check is left on the parent.
 
 **The Muslim side has a second reason on top of that one**, and it is §14. `Shia` and `Shia
 only` take 58 of 11,909 respondents across six rounds, in a country where the Islamic Movement
@@ -108,9 +140,12 @@ import numpy as np
 import pandas as pd
 
 import afrobarometer as ab
+import cab
+import gcatholic
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
+RAW = os.path.join(ROOT, "data", "raw", "ng")
 LOOKUP = os.path.join(ROOT, "data", "geo", "ng", "ng_lookup.csv")
 OUT = os.path.join(ROOT, "data", "normalized", "ng.csv")
 
@@ -273,6 +308,72 @@ ZONES = {
 # What is drawn on its own state shares, asserted so a change in the data is a failure here
 # rather than a silent re-drawing of the country. Set from the split-half below.
 CARRIES = ["Christian", "Muslim"]
+
+# ---- the Catholic Church, carved out of `Christian` (see the docstring) ----
+OUT_CATEGORIES = ["Christian", "Catholic", "Anglican", "Muslim",
+                  "Traditional/ethnic religion", "None", "Other"]
+CHURCH_ROUNDS = [4, 5, 6]
+# A state with fewer Christian respondents than this in CHURCH_ROUNDS takes the national fraction:
+# Kano 4, Jigawa 5, Yobe 5, Zamfara 6, Katsina 7, Kebbi 7, Sokoto 14, Adamawa 14. Every other state
+# has at least 40.
+MIN_CHRISTIANS = 30
+CATH_DHS_GAP_MAX = 0.04     # each of rounds 4-6 within 4 points of the DHS mean (gaps 0.8, 3.1, 2.9)
+CATH_SWING_MIN = 0.08       # each of rounds 7-9 at least 8 points under it (13.6, 17.7, 9.5)
+CATH_DRAWN_GAP_MAX = 0.04   # the drawn national fraction within 4 points of the DHS mean
+DIOCESE_RHO_MIN = 0.60      # drawn Catholic share against the dioceses' by cathedral state
+
+# The four open NDHS final reports, Table 3.1 "Background characteristics of respondents", re-read
+# from the PDFs: (file, PDF page, {row: (women %, women weighted n, men %, men weighted n)}).
+# Respondents aged 15-49. No report has a no-religion row, and none names any church but the
+# Catholic one. Catholics as a share of Christians, sexes pooled by weighted number: 21.5, 23.9,
+# 23.1, 19.4%.
+DHS = {
+    "2008": ("FR222.pdf", 63, {"Catholic": (11.5, 3848, 11.6, 1597),
+                               "Other Christian": (42.1, 14060, 42.1, 5806)}),
+    "2013": ("FR293.pdf", 59, {"Catholic": (11.1, 4316, 11.6, 2014),
+                               "Other Christian": (35.7, 13922, 35.6, 6181)}),
+    "2018": ("NDHS2018_FR359.pdf", 91, {"Catholic": (10.4, 4345, 11.3, 1339),
+                                        "Other Christian": (35.6, 14872, 34.5, 4092)}),
+    "2024": ("FR395.pdf", 93, {"Catholic": (8.2, 3212, 7.6, 829),
+                               "Other Christian": (33.7, 13174, 33.2, 3633)}),
+}
+# ---- Pentecostal and Anglican, levelled by the Global Flourishing Study (see the docstring) ----
+# GFS wave 1, Nigeria (`COUNTRY` 12), on disk for every GFS country (`python sources/jp_gfs.py
+# --fetch`, CC BY, OSF vrejf). `REL3_Y1` (codebook wave 2, OSF 285w7, p.21) asks every Christian
+# which church they most identify with: 1 Catholic, 2 Orthodox, 3 Anglican, 4 Presbyterian,
+# 5 Lutheran, 6 Methodist, 7 Baptist, 8 Pentecostal/Charismatic, 9 Independent/Evangelical,
+# 10 LDS, 11 Jehovah's Witness, 12 Adventist, 13 African Initiated, 96 other, 97 none in particular,
+# 98/99 unanswered. `REGION1_Y1` labels from the value labels of the GFS .sav (OSF eadfm), read
+# 2026-10-03; codes 1203 Adamawa, 1209 Borno, 1235 Taraba and 1236 Yobe have no respondents.
+GFS_CSV = os.path.join(ROOT, "data", "raw", "gfs", "gfs_all_countries_wave2.csv")
+GFS_COUNTRY = 12
+GFS_N = 6_827
+GFS_CHRISTIANS = 3_849
+GFS_REGION = {
+    1201: "Abia", 1202: "Federal Capital Territory", 1203: "Adamawa", 1204: "Akwa Ibom",
+    1205: "Anambra", 1206: "Bauchi", 1207: "Bayelsa", 1208: "Benue", 1209: "Borno",
+    1210: "Cross River", 1211: "Delta", 1212: "Ebonyi", 1213: "Edo", 1214: "Ekiti", 1215: "Enugu",
+    1216: "Gombe", 1217: "Imo", 1218: "Jigawa", 1219: "Kaduna", 1220: "Kano", 1221: "Katsina",
+    1222: "Kebbi", 1223: "Kogi", 1224: "Kwara", 1225: "Lagos", 1226: "Nasarawa", 1227: "Niger",
+    1228: "Ogun", 1229: "Ondo", 1230: "Osun", 1231: "Oyo", 1232: "Plateau", 1233: "Rivers",
+    1234: "Sokoto", 1235: "Taraba", 1236: "Yobe", 1237: "Zamfara",
+}   # the .sav spells them `Abuja`, `Ananmbra`, `Cross-River`, `Eboyin`, `Nassarawa`
+GFS_CATHOLIC = 1
+GFS_CHURCH = {8: "Pentecostal", 3: "Anglican"}
+GFS_UNNAMED = {97, 98, 99, -98}
+AB_CHURCH = {"pentecostal": "Pentecostal", "anglican": "Anglican"}
+GFS_CHURCHES = ["Pentecostal", "Anglican"]
+# The two surveys as the two halves: each church's share of non-Catholic Christians must rank the
+# states alike (Spearman, 5,000-draw permutation, states with 20+ such respondents in both).
+CHURCH_P_MAX = 0.05
+CHURCH_MIN_N = 20
+# Set from that test, 2026-10-03: Anglican passes; Pentecostal does not (+0.20, p 0.15, on the
+# non-Catholic basis; it passed at +0.40 only as a share of ALL Christians, where it is largely the
+# mirror image of the Catholic pattern), so Pentecostals stay in `Christian`.
+CHURCHES_CARRIED = ["Anglican"]
+
+DHS_URLS = {name: f"https://dhsprogram.com/pubs/pdf/{name.split('_')[-1][:-4]}/"
+                  f"{name.split('_')[-1]}" for name, _p, _r in DHS.values()}
 
 # THE ONLY OUTSIDE EVIDENCE THIS COUNTRY HAS, and it is a legal fact rather than a statistic.
 # What it is worth is set out honestly at `check_sharia()`: one leg is real evidence about the
@@ -487,9 +588,229 @@ def check_sharia(share, nm):
             "outside check this country has; read why before drawing.")
 
 
+def fetch_witnesses():
+    """The four NDHS reports and the GCatholic diocese table, into data/raw/ng/."""
+    import requests
+
+    os.makedirs(RAW, exist_ok=True)
+    for name, url in DHS_URLS.items():
+        dst = os.path.join(RAW, name)
+        if os.path.exists(dst) and os.path.getsize(dst) > 1_000_000:
+            print(f"  have {name}")
+            continue
+        r = requests.get(url, headers={"User-Agent": ab.UA}, timeout=600)
+        r.raise_for_status()
+        if r.content[:4] != b"%PDF" or b"%%EOF" not in r.content[-2048:]:
+            raise SystemExit(f"{name} is not a complete PDF ([[reference_pdf_truncated_at_source]])")
+        with open(dst + ".part", "wb") as f:
+            f.write(r.content)
+        os.replace(dst + ".part", dst)
+        print(f"  got  {name} ({len(r.content):,} bytes)")
+    gcatholic.fetch("NG", "ng")
+
+
+def dhs_witness():
+    """Catholics as a share of Christians in each NDHS, re-read from Table 3.1 of each report;
+    women and men pooled by weighted number. Returns {year: fraction}."""
+    import fitz
+
+    out = {}
+    for year, (name, page, rows) in DHS.items():
+        path = os.path.join(RAW, name)
+        if not os.path.exists(path):
+            raise SystemExit(f"missing {path}; run with --fetch")
+        t = " ".join(fitz.open(path)[page - 1].get_text().split())
+        if "Table 3.1" not in t or "Religion" not in t:
+            raise SystemExit(f"{name} PDF page {page} is not Table 3.1's religion block")
+        for lab, want in rows.items():
+            got = re.search(re.escape(lab) + r" ([\d.]+) ([\d,]+) [\d,]+ ([\d.]+) ([\d,]+)", t)
+            vals = (float(got.group(1)), int(got.group(2).replace(",", "")),
+                    float(got.group(3)), int(got.group(4).replace(",", ""))) if got else None
+            if vals != want:
+                raise SystemExit(f"NDHS {year} {lab}: transcribed {want}, the PDF has {vals}")
+        cath = rows["Catholic"][1] + rows["Catholic"][3]
+        other = rows["Other Christian"][1] + rows["Other Christian"][3]
+        out[year] = cath / (cath + other)
+    print("\n  NDHS Table 3.1 re-read from all four reports and equal; Catholics as a share of "
+          "Christians, women and men 15-49 pooled: "
+          + ", ".join(f"{y} {100 * v:.1f}%" for y, v in out.items()))
+    return out
+
+
+def catholic_fraction(df, units, nm, dhs):
+    """Each state's Catholics as a share of its Christians, from CHURCH_ROUNDS, with the checks
+    that justify taking them from those rounds. Returns a Series over `units`."""
+    chr_ = df[df["category"] == "Christian"]
+    k = chr_["raw_category"].map(key)
+    by_round = (chr_[k == "roman catholic"].groupby("round")["w"].sum()
+                / chr_.groupby("round")["w"].sum())
+    ref = float(np.mean(list(dhs.values())))
+    print(f"\n  Catholics as a share of the survey's Christians by round, against the NDHS mean "
+          f"{100 * ref:.1f}%:")
+    for r, v in by_round.items():
+        print(f"    R{r}  {100 * v:5.1f}%  ({100 * (v - ref):+5.1f})"
+              + ("  used" if r in CHURCH_ROUNDS else ""))
+    off = {r: round(float(v), 3) for r, v in by_round.items()
+           if r in CHURCH_ROUNDS and abs(v - ref) > CATH_DHS_GAP_MAX}
+    if off:
+        raise SystemExit(f"rounds {CHURCH_ROUNDS} no longer sit within {100 * CATH_DHS_GAP_MAX:.0f} "
+                         f"points of the NDHS Catholic share: {off}")
+    near = {r: round(float(v), 3) for r, v in by_round.items()
+            if r not in CHURCH_ROUNDS and ref - v < CATH_SWING_MIN}
+    if near:
+        raise SystemExit(f"rounds outside {CHURCH_ROUNDS} now come within "
+                         f"{100 * CATH_SWING_MIN:.0f} points of the NDHS: {near}; decide again")
+
+    sub = chr_[chr_["round"].isin(CHURCH_ROUNDS)]
+    sk = sub["raw_category"].map(key)
+    tot = sub.groupby("geo_id")["w"].sum().reindex(units, fill_value=0.0)
+    cat = sub[sk == "roman catholic"].groupby("geo_id")["w"].sum().reindex(units, fill_value=0.0)
+    n = sub.groupby("geo_id").size().reindex(units, fill_value=0)
+    national = float(cat.sum() / tot.sum())
+    frac = (cat / tot).where(n >= MIN_CHRISTIANS, national)
+    thin = sorted(nm[u] for u in units if n[u] < MIN_CHRISTIANS)
+    print(f"    rounds {CHURCH_ROUNDS} pooled: {100 * national:.1f}% of Christians; states with "
+          f"under {MIN_CHRISTIANS} Christian respondents take that: {', '.join(thin)}")
+    zero = sorted(f"{nm[u]} (0 of {int(n[u])})" for u in units if frac[u] == 0)
+    print(f"    no Catholic among the state's Christian respondents, drawn at zero: {zero}")
+
+    # the split-half, on Christians in those rounds, at the states with Christians in every one
+    cells = sub.groupby(["round", "geo_id"]).size().unstack(fill_value=0)
+    tested = [u for u in units if u in cells.columns and (cells[u] > 0).all()
+              and len(cells.index) == len(CHURCH_ROUNDS)]
+    dfw = sub.assign(code=np.where(sk == "roman catholic", "Catholic", "other Christian"))
+    dfw = dfw.rename(columns={"round": "wave"})[["wave", "geo_id", "code", "w"]]
+    dfw = dfw[dfw["geo_id"].isin(tested)]
+    passed, _t = cab.stability(dfw, ["Catholic", "other Christian"], tested,
+                               f"{len(tested)} states, Christians in rounds 4-6")
+    if "Catholic" not in passed:
+        raise SystemExit("the Catholic share of Christians no longer passes the split-half in "
+                         "rounds 4-6; it cannot be drawn on its own")
+    return frac
+
+
+def church_split(df, units, nm, noncath):
+    """Pentecostal and Anglican as shares of each state's non-Catholic Christians.
+
+    Tanzania's construction (`sources/tz.md` §9), on the non-Catholic Christians only, since the
+    Catholics are already set by the NDHS. Each state's share is the average, weighted by
+    non-Catholic Christian respondents, of (a) the GFS's own state share, its few unnamed left out,
+    and (b) the Afrobarometer's named share in rounds 4-6 plus its `Christian only` spread at one
+    national proportion per church, chosen so that side meets the GFS's national level weighted by
+    the drawn non-Catholic Christians. `noncath` is that drawn count per unit. Returns a DataFrame
+    of shares over `units`, and prints the tests."""
+    from scipy.stats import spearmanr
+
+    if not os.path.exists(GFS_CSV):
+        raise SystemExit(f"missing {GFS_CSV}; run `python sources/jp_gfs.py --fetch`")
+    g = pd.read_csv(GFS_CSV, usecols=["COUNTRY", "REGION1_Y1", "REL2_Y1", "REL3_Y1",
+                                      "ANNUAL_WEIGHT_C1"], low_memory=False)
+    g = g.apply(pd.to_numeric, errors="coerce")
+    g = g[g["COUNTRY"] == GFS_COUNTRY]
+    if len(g) != GFS_N:
+        raise SystemExit(f"GFS Nigeria has {len(g):,} rows, this was written against {GFS_N:,}")
+    stray = sorted(set(g["REGION1_Y1"].dropna().astype(int)) - set(GFS_REGION))
+    if stray:
+        raise SystemExit(f"GFS REGION1_Y1 codes with no state: {stray}")
+    name_to_id = {v: k for k, v in nm.items()}
+    g["geo_id"] = g["REGION1_Y1"].astype(int).map(GFS_REGION).map(name_to_id)
+    c = g[g["REL2_Y1"] == 1]
+    if len(c) != GFS_CHRISTIANS:
+        raise SystemExit(f"GFS Nigeria has {len(c):,} Christians, written against {GFS_CHRISTIANS:,}")
+    unnamed = c["REL3_Y1"].isin(GFS_UNNAMED) | c["REL3_Y1"].isna()
+    print(f"\n  GFS 2023, Nigeria: {len(c):,} Christians, {100 * c.loc[unnamed, 'ANNUAL_WEIGHT_C1'].sum() / c['ANNUAL_WEIGHT_C1'].sum():.1f}% "
+          f"naming no church; Catholic {100 * c.loc[c['REL3_Y1'] == GFS_CATHOLIC, 'ANNUAL_WEIGHT_C1'].sum() / c.loc[~unnamed, 'ANNUAL_WEIGHT_C1'].sum():.1f}% "
+          "of those naming one (the NDHS is used for Catholics, not this)")
+    gn = c[~unnamed & (c["REL3_Y1"] != GFS_CATHOLIC)].copy()
+    gn["c"] = gn["REL3_Y1"].map(GFS_CHURCH).fillna("rest")
+    gt = gn.groupby(["geo_id", "c"])["ANNUAL_WEIGHT_C1"].sum().unstack(fill_value=0.0)
+    g_share = gt.div(gt.sum(axis=1), axis=0).reindex(columns=GFS_CHURCHES, fill_value=0.0)
+    g_n = gn.groupby("geo_id").size().reindex(units, fill_value=0)
+
+    a = df[df["round"].isin(CHURCH_ROUNDS) & (df["category"] == "Christian")]
+    ak = a["raw_category"].map(key)
+    a = a[ak != "roman catholic"].assign(k=ak[ak != "roman catholic"])
+    at = a.groupby(["geo_id", "k"])["w"].sum().unstack(fill_value=0.0).reindex(units, fill_value=0.0)
+    a_tot = at.sum(axis=1)
+    a_named = pd.DataFrame({ch: at.get(k, 0.0) / a_tot for k, ch in AB_CHURCH.items()}).fillna(0.0)
+    a_un = (at.get("christian only", 0.0) / a_tot).fillna(0.0)
+    a_n = a.groupby("geo_id").size().reindex(units, fill_value=0)
+
+    # the GFS's national level, weighted by the drawn non-Catholic Christians of the states it has
+    have = [u for u in units if g_n[u] > 0]
+    wnc = noncath.reindex(units).astype(float)
+    target = {ch: float((g_share.loc[have, ch] * wnc[have]).sum() / wnc[have].sum())
+              for ch in GFS_CHURCHES}
+    floor = {ch: float((a_named[ch] * wnc).sum() / wnc.sum()) for ch in GFS_CHURCHES}
+    un_mean = float((a_un * wnc).sum() / wnc.sum())
+    spread = {ch: (target[ch] - floor[ch]) / un_mean for ch in GFS_CHURCHES}
+    print("  shares of non-Catholic Christians: GFS level, Afrobarometer R4-R6 named (a floor), that "
+          f"plus all `Christian only` ({100 * un_mean:.1f}%), and the part of the unnamed given to it:")
+    for ch in GFS_CHURCHES:
+        print(f"    {ch:<12} GFS {100 * target[ch]:5.1f}%   named {100 * floor[ch]:5.1f}%   ceiling "
+              f"{100 * (floor[ch] + un_mean):5.1f}%   {100 * spread[ch]:5.1f}% of the unnamed")
+    bad = [ch for ch in GFS_CHURCHES if not 0.0 <= spread[ch] <= 1.0]
+    if bad or sum(spread.values()) > 1.0:
+        raise SystemExit(f"the GFS level lies outside the Afrobarometer's bounds for {bad or 'their sum'}")
+
+    # the two surveys as the two halves
+    passed = []
+    for ch in GFS_CHURCHES:
+        ok = [u for u in units if g_n[u] >= CHURCH_MIN_N and a_n[u] >= CHURCH_MIN_N]
+        x, y = g_share.reindex(ok)[ch].to_numpy(), a_named.loc[ok, ch].to_numpy()
+        rho = float(spearmanr(x, y).statistic)
+        rng = np.random.default_rng(20261003)
+        null = np.array([spearmanr(x, rng.permutation(y)).statistic for _ in range(5000)])
+        p = float((null >= rho).mean())
+        verdict = "drawn" if p <= CHURCH_P_MAX else "NOT drawn, stays in Christian"
+        print(f"    {ch}: GFS against the Afrobarometer's named share, {len(ok)} states, Spearman "
+              f"{rho:+.3f}, null 95th {np.quantile(null, 0.95):+.3f}, p {p:.4f}: {verdict}")
+        if p <= CHURCH_P_MAX:
+            passed.append(ch)
+    if passed != CHURCHES_CARRIED:
+        raise SystemExit(f"the two-survey test now passes {passed}, not {CHURCHES_CARRIED}; "
+                         "read the lines above and decide deliberately")
+
+    a_side = a_named + pd.DataFrame({ch: spread[ch] * a_un for ch in GFS_CHURCHES})
+    wa, wg = a_n.astype(float), g_n.astype(float)
+    out = (a_side.mul(wa, axis=0) + g_share.reindex(units, fill_value=0.0).mul(wg, axis=0)) \
+        .div(wa + wg, axis=0)[CHURCHES_CARRIED]
+    if out.isna().any().any() or (out.sum(axis=1) > 1).any():
+        raise SystemExit("a state has no non-Catholic Christian respondent in either survey, or "
+                         "its two churches exceed its non-Catholic Christians")
+    missing = sorted(nm[u] for u in units if g_n[u] == 0)
+    print(f"    states with no non-Catholic Christian in the GFS, Afrobarometer only: "
+          f"{', '.join(missing)}")
+    return out, a_n, g_n
+
+
+def diocese_witness(share, nm):
+    """The drawn Catholic share of each state against the Church's own diocesan figures, summed
+    by the state each cathedral stands in. A rank check; the Church's level is not the survey's."""
+    g = gcatholic.by_seat("ng", rename={"Abuja": "Federal Capital Territory"})
+    drawn = share["Catholic"].rename(index=nm)
+    both = g.join(drawn.rename("drawn"), how="inner")
+    missing = sorted(set(g.index) - set(drawn.index))
+    if missing:
+        raise SystemExit(f"GCatholic cathedral states with no COD-AB state: {missing}")
+    from scipy.stats import spearmanr
+    rho = float(spearmanr(both["share"], both["drawn"]).statistic)
+    print(f"\n  the Catholic Church's diocesan figures (GCatholic, mostly 2022), by the cathedral's "
+          f"state, {len(both)} states: Spearman {rho:+.3f} against the drawn Catholic share")
+    print("    " + ", ".join(f"{s} {100 * r.share:.0f}/{100 * r.drawn:.0f}"
+                             for s, r in both.sort_values("share", ascending=False).iterrows()))
+    print(f"    (church/drawn, %). The Church claims {100 * g.catholics.sum() / g.population.sum():.1f}% "
+          "of its own population figure nationally; that is a count of the baptised, not a level")
+    if rho < DIOCESE_RHO_MIN:
+        raise SystemExit(f"the drawn Catholic geography ranks the states at {rho:+.2f} against the "
+                         f"Church's dioceses, under {DIOCESE_RHO_MIN}")
+
+
 def main():
     if "--fetch" in sys.argv:
         ab.fetch()
+        fetch_witnesses()
+    dhs = dhs_witness()
 
     print("=== Afrobarometer, Nigeria ===")
     # regroup=True: the answers are grouped to the five below, so the one-answer-two-spellings
@@ -661,6 +982,56 @@ def main():
           f"`held_out` above, and R6's missing north-east")
     check_level(nat, drawn_nat)
 
+    # ---- carve the Catholic Church out of `Christian` (docstring; sources/na.md §3's rule) ----
+    cath = catholic_fraction(df, units, nm, dhs)
+    frame6 = frame.copy()
+    frame6["Catholic"] = frame["Christian"] * cath.reindex(units)
+    frame6["Christian"] = frame["Christian"] - frame6["Catholic"]
+    # ---- then Pentecostal and Anglican out of the non-Catholic Christians (GFS levels) ----
+    noncath = frame6["Christian"] * pop.reindex(units)
+    split, a_n, g_n = church_split(df, units, nm, noncath)
+    for ch in CHURCHES_CARRIED:
+        frame6[ch] = frame6["Christian"].to_numpy() * split[ch].reindex(units).to_numpy()
+    frame6["Christian"] = frame6["Christian"] - frame6[CHURCHES_CARRIED].sum(axis=1)
+    frame6 = frame6[OUT_CATEGORIES]
+    if (frame6 < -1e-12).any().any() or (frame6.sum(axis=1) - 1).abs().max() > 1e-12:
+        raise SystemExit("the eight shares are not a closed partition of every state")
+    n_church = df[df["round"].isin(CHURCH_ROUNDS) & (df["category"] == "Christian")] \
+        .groupby("geo_id").size().reindex(units, fill_value=0)
+    for u in units:
+        basis[(u, "Catholic")] = (
+            f"the state's Christian share times its Catholics' share of Christians in rounds 4-6 "
+            f"({int(n_church[u])} Christian respondents)" if n_church[u] >= MIN_CHRISTIANS else
+            f"the state's Christian share times the national Catholic share of Christians in "
+            f"rounds 4-6 (only {int(n_church[u])} Christian respondents here)")
+        basis[(u, "Christian")] = ("the state's own measured Christian share, less Catholics, "
+                                   "Pentecostals and Anglicans: every other church and the unnamed "
+                                   "not given to those two")
+        for ch in CHURCHES_CARRIED:
+            basis[(u, ch)] = (
+                f"the state's non-Catholic Christians times their {ch} share: the GFS 2023 "
+                f"({int(g_n[u])} non-Catholic Christians here) and the Afrobarometer rounds 4-6 "
+                f"({int(a_n[u])}, `Christian only` spread at one national proportion) averaged by "
+                "respondents, levelled to the GFS")
+    counts5 = counts
+    counts = round_within_rows(frame6.mul(pop.reindex(units), axis=0))
+    if not (counts.sum(axis=1) == pop.reindex(units).round().astype("int64")).all():
+        raise SystemExit("a state's drawn total is not its COD-PS population")
+    chr_cols = ["Christian", "Catholic", *CHURCHES_CARRIED]
+    if not ((counts[chr_cols].sum(axis=1) - counts5["Christian"]).abs() <= 2).all():
+        raise SystemExit("carving the churches out moved a state's Christian total")
+    cath_nat = float(counts["Catholic"].sum() / counts[chr_cols].sum().sum())
+    for ch in CHURCHES_CARRIED:
+        print(f"  {ch} as drawn: {100 * counts[ch].sum() / counts[chr_cols].sum().sum():.1f}% of "
+              f"Christians, {100 * counts[ch].sum() / counts.sum().sum():.1f}% of everyone")
+    ref = float(np.mean(list(dhs.values())))
+    print(f"\n  Catholics as drawn: {100 * cath_nat:.1f}% of Christians, against the NDHS mean "
+          f"{100 * ref:.1f}% (range {100 * min(dhs.values()):.1f}-{100 * max(dhs.values()):.1f}%)")
+    if abs(cath_nat - ref) > CATH_DRAWN_GAP_MAX:
+        raise SystemExit(f"the drawn Catholic share of Christians is more than "
+                         f"{100 * CATH_DRAWN_GAP_MAX:.0f} points from the NDHS mean")
+    diocese_witness(counts.div(counts.sum(axis=1), axis=0), nm)
+
     # ---- write ----
     n_by = df.groupby("geo_id").size()
     out = counts.stack().rename("count").reset_index()
@@ -692,6 +1063,12 @@ def main():
     print("\n  national, as drawn:")
     for cat, n in drawn.items():
         print(f"    {n / total * 100:6.2f}%  {cat}  ({n:,})")
+    share6 = counts.div(counts.sum(axis=1), axis=0)
+    for ch in ["Catholic", *CHURCHES_CARRIED]:
+        print(f"\n  {ch} share of each state as drawn, highest first: "
+              + ", ".join(f"{nm[u]} {100 * v:.1f}%" for u, v in
+                          share6[ch].sort_values(ascending=False).items()))
+    counts = counts5
     share = counts.div(counts.sum(axis=1), axis=0)
     report_zones(share, pop, n_by, nm)
     m = counts["Muslim"]

@@ -253,6 +253,37 @@ def way_colours(region, log):
     return out
 
 
+def ways_on_lines(region):
+    """The ids of the ways some line in the model runs over (ways.json), or None before the
+    model is built."""
+    try:
+        with open(ROOT / "dist" / "data" / region / "ways.json", encoding="utf-8") as f:
+            return {int(w) for w in json.load(f)["ways"]}
+    except FileNotFoundError:
+        return None
+
+
+def mark_no_line(region, feats, log):
+    """`n` = 1 on track no line runs over, which the app draws a faint grey and never offers as
+    a line (Anita, 2026-10-04: Mexico's freight network drawn in passenger blue read as far more
+    passenger rail than Mexico has; "mark rail without any lines on it as like a much more subtle
+    gray ... almost invisible"). Only pieces joined to a line's track are left by drop_islands,
+    so this is the freight, yard throats and disused track beside the passenger network. A line
+    is any line in ways.json, named trains included. Without a model nothing is marked."""
+    on_line = ways_on_lines(region)
+    km = Counter()
+    for f in feats:
+        f["n"] = 0 if on_line is None or f["wid"] in on_line else 1
+        if f["n"]:
+            xy = f["xy"]
+            # Mercator units to km at this latitude, roughly: enough for a log line.
+            lat = math.degrees(math.atan(math.sinh(math.pi * (1 - 2 * xy[:, 1].mean()))))
+            km[f["kind"]] += float(np.hypot(*np.diff(xy, axis=0).T).sum()) * 40075.0 \
+                * math.cos(math.radians(lat))
+    log(f"marked {sum(1 for f in feats if f['n'])} ways no line runs over ("
+        + (", ".join(f"{k} {v:,.0f} km" for k, v in km.most_common()) or "none") + ")")
+
+
 def drop_islands(region, feats, log):
     """Leave out every piece of track that touches no line: a set of ways joined to each other
     by shared nodes, none of which any line in the model runs over.
@@ -272,10 +303,8 @@ def drop_islands(region, feats, log):
     the model is missing vanishes here too; the log line is where that shows. The fix for one
     of those is to get it into the model, not to draw it unclickable.
     """
-    try:
-        with open(ROOT / "dist" / "data" / region / "ways.json", encoding="utf-8") as f:
-            on_line = {int(w) for w in json.load(f)["ways"]}
-    except FileNotFoundError:
+    on_line = ways_on_lines(region)
+    if on_line is None:
         return feats
     parent = {}
 
@@ -316,14 +345,15 @@ def merged_chains(feats, log):
     Merging discards `wid` and `name`, so it is only used below z10, where nothing is
     clickable or labelled and only kind, rank and colour are drawn.  linemerge joins through
     degree-two connections only, so chains break at real junctions, which is what we want,
-    and ways of different colours are never merged, so a chain is one line's colour.
+    and ways of different colours are never merged, so a chain is one line's colour. Nor are
+    track with a line and track without (`n`, mark_no_line).
     """
     out = []
-    keys = sorted({(f["kind"], f["rank"], f["pax"], f["c"]) for f in feats})
-    for kind, rank, pax, c in keys:
+    keys = sorted({(f["kind"], f["rank"], f["pax"], f["c"], f.get("n", 0)) for f in feats})
+    for kind, rank, pax, c, n in keys:
         group = [LineString(f["xy"]) for f in feats
                  if f["kind"] == kind and f["rank"] == rank and f["pax"] == pax
-                 and f["c"] == c]
+                 and f["c"] == c and f.get("n", 0) == n]
         if not group:
             continue
         merged = linemerge(group) if len(group) > 1 else group[0]
@@ -331,7 +361,7 @@ def merged_chains(feats, log):
                  else [merged])
         for p in parts:
             out.append({
-                "kind": kind, "rank": rank, "pax": pax, "c": c,
+                "kind": kind, "rank": rank, "pax": pax, "c": c, "n": n,
                 "minzoom": MINZOOM.get((kind, rank), 7),
                 "name": "", "wid": 0,
                 "xy": np.asarray(p.coords),
@@ -364,6 +394,8 @@ def tile_features(z, feats, chains, pts):
         p = {"k": f["kind"], "r": f["rank"], "p": f["pax"]}
         if f["c"]:
             p["c"] = f["c"]
+        if f.get("n"):
+            p["n"] = 1
         if z >= SPLIT:
             p["w"] = f["wid"]
             if f["name"]:
@@ -451,6 +483,7 @@ def main():
     colours = way_colours(args.region, log)
     for f in feats:
         f["c"] = colours.get(f["wid"], "")
+    mark_no_line(args.region, feats, log)
     chains = merged_chains(feats, log)
     # No station layer any more: bubbles come from the model (stations.json), and the tile
     # layer was one point per OSM station node, which nothing has read since.
@@ -499,7 +532,8 @@ def main():
                 "vector_layers": [
                     {"id": "track", "fields": {"k": "String", "r": "Number",
                                                "p": "Number", "w": "Number",
-                                               "nm": "String", "c": "String"}},
+                                               "nm": "String", "c": "String",
+                                               "n": "Number"}},
                 ],
             },
         )

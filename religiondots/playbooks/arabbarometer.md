@@ -32,6 +32,11 @@ publishes none of it: the survey gives each governorate's mix, and a population 
   Tunisia and Libya were
   reopened on 2026-09-16 (`queue.md` "Maghreb reopened").
   Saudi Arabia, Mauritania and Bahrain have no `Q1012` answers at all.
+- `kw` Kuwait: citizens' Shia/Sunni at one national share (Anita, 2026-10-03), from wave III's
+  `q2005kw`, the field team's opinion of the respondent's sect (`kw.py::kuwaiti_sect`); the only
+  sect item for Kuwait in ten files (V has no `Q1012` answer for Kuwait, VII and VIII an empty
+  sect column). "Cannot determine" (19%) is the interviewer failing, not the respondent
+  declining, so it is apportioned, unlike `Just a Muslim` (`sources/kw.md` §8).
 - `cab.py::assert_not_quota` wraps this module's quota test for other surveys.
 
 ## Loading it
@@ -89,6 +94,12 @@ publishes none of it: the survey gives each governorate's mix, and a population 
   their strongest. Caught by: `assert_not_quota` (exact tie probabilities, Bonferroni, bar
   `QUOTA_P_BAR` 1e-3), called inside `stability` on the column passed in only. Run it on every
   religion column the file offers. Detail: spec §12 "A SPLIT-HALF CANNOT SEE A QUOTA".
+- **One wave with no region cannot be quota-tested at all.** Wave I (Bahrain's only wave) has no
+  subnational column, so `assert_not_quota` has nothing to compare. Read the country's page in
+  `ABI_Methods_Report.pdf` instead: Lebanon's says "Strata: Governorates and sect", Bahrain's lists
+  no strata. Also tabulate the item by sex: Bahrain's sample is 64% men, and Shia respondents 72%,
+  which moves the national level by 3 points depending on whether you weight by sex. Caught by:
+  nothing automatic; `sources/bh.md` §7 has the reading.
 - **Weights used to default silently.** `load` took the first of `wt`, `weight`, `weight1500`, used
   1.0 when none existed and filled a blank weight with 1.0. Caught by: `arabbarometer.py::load`
   (stops on no weight column, a blank weight on an answered row, or a mean outside 0.98-1.02 over the
@@ -110,6 +121,11 @@ publishes none of it: the survey gives each governorate's mix, and a population 
   North Africa and about a quarter of Iraq, its level moving 17-38% by wave: draw it as itself on
   `islam`, never apportioned, and fold madhhabs into their branch (`iq.py::SECT_FOLD`). Caught by:
   `iq.py::sect_geography`, `SHIA_OF_NAMED_BAND`. Detail: `sources/iq.md` §3-4.
+- **The Christian side of the sect item is not a church level either.** Egypt, wave V `Q1012A`
+  (one card for both religions, no Protestant box): Catholic 16.2% of 268 Christians, three times
+  the Catholic Church's own count, and 10.8% refused; wave VII's `Q1012A_CHRISTIAN` is empty for
+  Egypt. Check a church level against the church's own count (GCatholic) and the GFS `REL3` before
+  using it. Not checked in code. Detail: `sources/eg.md`, "The Copts".
 - **The split-half is one halving.** `arabbarometer.py::stability` compares early waves with late
   ones once, against `spearman_null.critical_rho`, with no chi-square veto. The rule now is the
   median over every halving against a per-wave permutation null, with the chi-square as veto

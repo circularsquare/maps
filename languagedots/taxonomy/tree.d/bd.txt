@@ -1,0 +1,41 @@
+# Bangladesh, 2011 census ethnic groups read as languages (taxonomy/bd2011.py). Parents that other
+# fragments or tree.txt define are not repeated here.
+#
+# New leaves, placed by Glottolog (data/raw/glottolog/languages.csv and values.csv):
+#   * Tanchangya (tang1330), Indo-Aryan, beside its close relative Chakma under Eastern.
+#   * Mal Paharia (malp1246, "Mar Paharia of Dumka", ISO mkb), Indo-Aryan in Glottolog; filed
+#     under Eastern as the conventional zone. Not the Dravidian Sauria Paharia (Malto), which the
+#     census's separate "Pahari" group is drawn as.
+#   * Bawm (bawm1236), Khumi (khum1248), Khyang (khya1239) and Pangkhua (pank1249) are Kuki-Chin.
+#   * Rakhine (rakh1245) is Burmish, beside Marma.
+#   * Usoi (usui1238) is Bodo-Garo (Tipperic, with Kokborok).
+#   * Kol (kolb1241, "Kol (Bangladesh)") is Munda (Santalic).
+# New groups, each a Sino-Tibetan branch of one language here:
+#   * Luish, for Chak (chak1270; Brahmaputran > Jingpho-Luish > Luish in Glottolog).
+#   * Mruic, for Mru (mruu1242; Sino-Tibetan > Mruic in Glottolog).
+# One new areal root, as `indonesia_other` and `americas_other` are: `bangladesh_other` holds the
+# census's "Other ethnicity" and the few named groups whose language is not established (Barmon,
+# Dalu, Mong). They cross Indo-Aryan (Sadri, Odia), Munda and Dravidian, so no family node is
+# narrow enough. Muted, so it reads as a remainder.
+#
+# Colours. The Chittagong Hill Tracts put Bengali (yellow), Chakma, Tanchangya, Marma, Tripura
+# (Kokborok), Mru, Bawm and Khumi side by side. Chakma and Tanchangya would otherwise be generated
+# next to Eastern's yellow-orange, too close to Bengali, so Chakma is a strong orange-red and
+# Tanchangya a pink; both are small in India (Mizoram, Tripura), where they sit beside Mizo and
+# Kokborok blues, so the change reads there too. Marma keeps Burmish violet; Mru a teal-blue
+# between Kokborok and Marma; Chak a light blue.
+indoeuropean.indoaryan.eastern.chakma | Chakma | 0.66 0.18 40
+indoeuropean.indoaryan.eastern.tanchangya | Tanchangya | 0.78 0.14 5
+indoeuropean.indoaryan.eastern.mal_paharia | Mal Paharia
+sinotibetan.kukichin.bawm | Bawm
+sinotibetan.kukichin.khumi | Khumi
+sinotibetan.kukichin.khyang | Khyang
+sinotibetan.kukichin.pangkhua | Pangkhua
+sinotibetan.burmish.rakhine | Rakhine
+sinotibetan.boro_garo.usoi | Usoi
+sinotibetan.luish | Luish | 0.80 0.10 220
+sinotibetan.luish.chak | Chak
+sinotibetan.mruic | Mruic | 0.66 0.13 205
+sinotibetan.mruic.mru | Mru
+austroasiatic.munda.kol | Kol
+bangladesh_other | Other languages of Bangladesh's ethnic minorities | 0.64 0.04 60

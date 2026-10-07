@@ -1,0 +1,53 @@
+# Cambodia 2019 census, mother tongue (taxonomy/kh2019.py, which has the Glottolog checks). Nodes
+# other fragments already define are repeated identically.
+#
+# New groups: Chamic (Austronesian) and Bahnaric, Katuic and Pearic (Austroasiatic). New leaves:
+# Cham, Jarai, Rade; eleven Bahnaric answers; Kuy; Pear, Suoy, Sa'och; and four small answers
+# directly under Austroasiatic whose branch is not verified (Thmon, Ro-ong, Ka-chrook,
+# Kanh-Chok).
+#
+# Colours. Khmer is nearly everyone and pale pink, so each minority is set off from it:
+#   * Chamic in the Austronesian blues. Cham (the Mekong and Tonle Sap belt, beside Khmer) a
+#     clear teal; Jarai (Ratanak Kiri, beside Tampuan and Kreung) a lighter sky blue.
+#   * Bahnaric violet, apart from Khmer's pink and Vietnamese's purple by hue and lightness.
+#     Tampuan, the biggest in Ratanak Kiri, a deep violet; Kreung and Brao (its neighbours to
+#     the west and north) a light lavender and a mid blue-violet; Bunong (Mondul Kiri) a rose.
+#   * Kuy a red (Preah Vihear, Kampong Thom, Stung Treng: Khmer and Lao country).
+#   * Pearic a warm orange-pink, scattered in the Cardamoms and Kampong Speu.
+austronesian | Austronesian | 0.76 0.13 195
+austronesian.chamic | Chamic | 0.74 0.13 205
+austronesian.chamic.cham | Cham | 0.70 0.14 190
+austronesian.chamic.jarai | Jarai | 0.84 0.11 230
+austronesian.chamic.rade | Rade (Ede)
+austroasiatic | Austroasiatic
+austroasiatic.khmer | Khmer | 0.82 0.10 330
+austroasiatic.vietnamese | Vietnamese | 0.68 0.17 310
+austroasiatic.mon | Mon
+austroasiatic.bahnaric | Bahnaric | 0.66 0.15 285
+austroasiatic.bahnaric.tampuan | Tampuan | 0.60 0.17 290
+austroasiatic.bahnaric.brao | Brao | 0.70 0.14 265
+austroasiatic.bahnaric.kreung | Kreung | 0.84 0.09 300
+austroasiatic.bahnaric.kavet | Kavet
+austroasiatic.bahnaric.lun | Lun
+austroasiatic.bahnaric.khleung | Khleung
+austroasiatic.bahnaric.bunong | Bunong (Mnong) | 0.70 0.16 350
+austroasiatic.bahnaric.stieng | Stieng
+austroasiatic.bahnaric.kraol | Kraol
+austroasiatic.bahnaric.mel | Mel
+austroasiatic.bahnaric.khaonh | Khaonh
+austroasiatic.katuic | Katuic | 0.66 0.17 20
+austroasiatic.katuic.kuy | Kuy | 0.66 0.17 20
+austroasiatic.pearic | Pearic | 0.76 0.13 50
+austroasiatic.pearic.pear | Pear
+austroasiatic.pearic.suoy | Suoy
+austroasiatic.pearic.saoch | Sa'och
+austroasiatic.thmon | Thmon | 0.78 0.15 300.0
+austroasiatic.ro_ong | Ro-ong | 0.6 0.15 290.0
+austroasiatic.ka_chrook | Ka-chrook | 0.78 0.15 310.0
+austroasiatic.kanh_chok | Kanh-Chok | 0.78 0.15 280.0
+kradai | Kra-Dai (Tai-Kadai) | 0.80 0.14 125
+kradai.thai | Thai | 0.80 0.14 125
+kradai.lao | Lao | 0.68 0.14 110
+sinotibetan | Sino-Tibetan
+sinotibetan.sinitic | Chinese | 0.62 0.19 38
+seasia_other | Other indigenous languages of mainland Southeast Asia | 0.68 0.06 300

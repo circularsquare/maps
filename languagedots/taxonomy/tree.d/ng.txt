@@ -1,0 +1,216 @@
+# Nigeria (taxonomy/ng2022.py). Afrobarometer R4-R9, home language, by state
+# (sources/ng_afro.py). Every coded answer and every free-text language named by two or more
+# respondents has a node.
+#
+# Middle levels, checked against Glottolog (data/raw/glottolog), "families as most readers know
+# them" (AGENT_BRIEF §3):
+#   * Volta-Niger, flat as us.txt has Yoruba and Igbo: Yoruboid (Igala igal1242, Ibaji ibaj1238
+#     an Igala dialect the survey codes apart), Nupoid (Nupe nupe1254, Gbagyi gbag1258, Ebira
+#     ebir1243, Bassa-Nge, Ganagana, Gade gade1242; Glottolog's "Ebira-Nupoid" under
+#     Benue-Congo), Idomoid (Idoma idom1241, Agatu agat1236, Alago alag1242, Yala yala1263,
+#     Etulo etul1245, Igede iged1239, Yace yace1238), Igboid (Ika ikaa1238, Ukwuani ukwu1241,
+#     Ikwere ikwe1242, Ekpeye ekpe1253, Ogba ogba1241; Ohafia, an Igbo dialect the survey codes
+#     apart). Edoid as us.txt's group: Urhobo urho1239, Isoko isok1239, Esan esan1238, Yekhee
+#     yekh1238, Okpela (ivbi1241), Okpe okpe1250, Epie epie1238, Degema dege1246, Emai-Iuleha-Ora
+#     emai1241.
+#   * Ijoid (ijoi1239, a family of its own in Glottolog; Niger-Congo as most readers know it):
+#     Izon izon1238, Kalabari kala1381, Kirike (Okrika) kiri1254, Nembe, Ibani iban1261.
+#   * Cross River (Glottolog's Delta Cross): Ibibio ibib1240, Efik efik1245, Anaang anaa1238,
+#     Oro oroo1241, Obolo obol1243 (Lower Cross); Ogoni, Khana khan1278, Eleme elem1253
+#     (Ogonoid); Abua abua1244, Ogbia ogbi1239 (Central Delta); Yakurr, Cross River Mbembe
+#     cros1244 (Upper Cross). Poland's `ibibio_efik` (a census label naming both) stays apart.
+#   * Plateau (Benue-Congo Plateau): Tarok taro1263, Berom bero1242, Tyap tyap1238, Jju
+#     jjuu1238, Gyong (Kagoma), Ganang (Aten) gana1270, Hyam hyam1245, Adara (kada1284), Eggon
+#     eggo1239, Mada mada1282, Ninzo ninz1246, Numana numa1252, Irigwe irig1241, Izere
+#     izer1241, Migili, Koro.
+#   * Kainji: Kambari, Bassa (Bassa-Kontagora bass1259), Kurama kura1249, Laru laru1238, Lela
+#     (C'lela, Dakarkari).
+#   * Jukunoid: Jukun (Jukun Takum juku1254 and the other Jukun varieties), Kuteb kute1248,
+#     Jibu jibu1239, Tigon tigo1236, Etkywan (Ichen) etky1238.
+#   * Bantoid (Glottolog's Southern and Northern Bantoid, not Bantu): Ejagham ejag1239, Jarawa
+#     (Jar, jarr1236), Mambila, Ndoola ndoo1241, Bekwarra bekw1241, Bette-Bendi bete1262.
+#     Tiv and Ekajuk stay flat where pl.txt put them.
+#   * Adamawa, cf.txt's group: Mumuye nucl1240, Chamba (Samba Leko samb1305), Dza (Jenjo)
+#     dzaa1238, Yungur, Waja waja1259 and Tula tula1252. Glottolog files Waja and Tula under
+#     Gur (Tula-Longuda); conventionally they are Adamawa (Waja group), which is how most
+#     readers know them.
+#   * Gur: Bariba (Baatonum baat1238). Mande: Busa busa1253.
+#   * Chadic: Ngas ngas1240, Tangale nucl1696, Bura-Pabir bura1292, Marghi marg1265, Karekare
+#     kare1348, Bade bade1248, Kamwe kamw1239, Mwaghavul mwag1236 (Mupun is its dialect),
+#     Gwandara gwan1268, Tera tera1251, Bole nucl1695, Bachama baca1246, Zaar (Saya saya1246),
+#     Goemai goem1240, Kibaku (Chibok), Huba (Kilba) huba1236, Glavda glav1244, Piapung.
+#   * Shuwa Arabic: Chadian Arabic chad1249, under Arabic. Zarma: bf.txt's node.
+#   * Nigerian Pidgin nige1257 under English-based creoles, as Krio.
+#
+# Colours, for neighbours on the Nigerian ground. North: Hausa pale lime, Fula red, Kanuri
+# lavender, the minor Chadic languages olive around the Chadic group. South-west: Yoruba salmon.
+# South-east: Igbo orange, Cross River pinks and magentas. Delta: Ijoid teals, Edoid reds and
+# roses, Pidgin green. Middle Belt: Plateau blues, Jukunoid purple, Kainji brown, Bantoid pale
+# blue, Tiv yellow, Nupe yellow-orange, Igala deep red, Idoma rose.
+
+# Pinned here to the colours they had before this fragment existed (all three were generated,
+# and Nigeria's new siblings took their slots): Hausa, Edoid and Edo. Bariba and Busa are
+# hand-picked at a chroma off the Gur and Mande grids so that no generated sibling in Burkina
+# Faso or Côte d'Ivoire moves.
+
+# ---- parents and languages defined elsewhere, repeated bare (their colours are theirs) ----
+nigercongo | Niger-Congo
+nigercongo.voltaniger | Volta-Niger
+nigercongo.voltaniger.yoruba | Yoruba
+nigercongo.voltaniger.igbo | Igbo
+nigercongo.voltaniger.edoid | Edoid (Edo) | 0.559 0.15 29.6
+nigercongo.voltaniger.edoid.edo | Edo | 0.61 0.149 0.3
+nigercongo.atlantic | Atlantic
+nigercongo.atlantic.fulah | Fula
+nigercongo.tiv | Tiv
+nigercongo.ekajuk | Ekajuk
+nigercongo.adamawa | Adamawa (Mbum)
+nigercongo.gur | Gur
+nigercongo.mande | Mande
+afroasiatic | Afroasiatic
+afroasiatic.chadic | Chadic
+afroasiatic.chadic.hausa | Hausa | 0.899 0.12 120.8
+afroasiatic.arabic | Arabic
+nilosaharan | Nilo-Saharan
+nilosaharan.kanuri | Kanuri
+nilosaharan.songhay | Songhay languages
+nilosaharan.songhay.zarma | Zarma (Djerma)
+creole | Creoles
+creole.english_based | English-based creoles
+indoeuropean | Indo-European
+indoeuropean.germanic | Germanic
+indoeuropean.germanic.english | English
+africa_other | Other African languages
+
+# ---- Volta-Niger ----
+nigercongo.voltaniger.nupe | Nupe | 0.80 0.13 75
+nigercongo.voltaniger.igala | Igala | 0.60 0.16 15
+nigercongo.voltaniger.ibaji | Ibaji (Igala)
+nigercongo.voltaniger.idoma | Idoma | 0.74 0.14 355
+nigercongo.voltaniger.agatu | Agatu
+nigercongo.voltaniger.alago | Alago
+nigercongo.voltaniger.yala | Yala | 0.64 0.14 20
+nigercongo.voltaniger.etulo | Etulo
+nigercongo.voltaniger.igede | Igede
+nigercongo.voltaniger.yace | Yace | 0.86 0.08 10
+nigercongo.voltaniger.ebira | Ebira | 0.86 0.09 45
+nigercongo.voltaniger.gbagyi | Gbagyi (Gwari) | 0.62 0.12 55
+nigercongo.voltaniger.bassa_nge | Bassa-Nge
+nigercongo.voltaniger.ganagana | Ganagana (Dibo)
+nigercongo.voltaniger.gade | Gade
+nigercongo.voltaniger.ika | Ika
+nigercongo.voltaniger.ukwuani | Ukwuani
+nigercongo.voltaniger.ikwere | Ikwere | 0.70 0.13 70
+nigercongo.voltaniger.ekpeye | Ekpeye
+nigercongo.voltaniger.ogba | Ogba | 0.88 0.08 85
+nigercongo.voltaniger.ohafia | Ohafia (Igbo)
+nigercongo.voltaniger.edoid.urhobo | Urhobo | 0.78 0.13 15
+nigercongo.voltaniger.edoid.isoko | Isoko | 0.60 0.12 340
+nigercongo.voltaniger.edoid.esan | Esan | 0.84 0.09 350
+nigercongo.voltaniger.edoid.yekhee | Yekhee (Etsako)
+nigercongo.voltaniger.edoid.okpela | Okpela
+nigercongo.voltaniger.edoid.okpe | Okpe | 0.88 0.07 20
+nigercongo.voltaniger.edoid.epie | Epie
+nigercongo.voltaniger.edoid.degema | Degema
+nigercongo.voltaniger.edoid.emai | Emai-Iuleha-Ora (Owan)
+
+# ---- Ijoid ----
+nigercongo.ijoid | Ijoid | 0.70 0.12 180
+nigercongo.ijoid.ijaw | Ijaw (Izon) | 0.68 0.13 175
+nigercongo.ijoid.kalabari | Kalabari | 0.56 0.10 165
+nigercongo.ijoid.okrika | Okrika (Kirike) | 0.60 0.10 200
+nigercongo.ijoid.nembe | Nembe
+nigercongo.ijoid.ibani | Ibani
+
+# ---- Cross River ----
+nigercongo.crossriver | Cross River | 0.72 0.14 330
+nigercongo.crossriver.ibibio | Ibibio | 0.70 0.16 340
+nigercongo.crossriver.efik | Efik | 0.82 0.11 305
+nigercongo.crossriver.anaang | Anaang | 0.60 0.14 320
+nigercongo.crossriver.oron | Oron
+nigercongo.crossriver.obolo | Obolo (Andoni)
+nigercongo.crossriver.ogoni | Ogoni | 0.84 0.08 345
+nigercongo.crossriver.khana | Khana | 0.62 0.12 285
+nigercongo.crossriver.eleme | Eleme | 0.84 0.08 260
+nigercongo.crossriver.abua | Abua
+nigercongo.crossriver.ogbia | Ogbia
+nigercongo.crossriver.yakurr | Yakurr
+nigercongo.crossriver.mbembe | Mbembe (Cross River)
+
+# ---- Plateau ----
+nigercongo.plateau | Plateau | 0.72 0.12 225
+nigercongo.plateau.tarok | Tarok | 0.70 0.13 215
+nigercongo.plateau.berom | Berom | 0.80 0.09 240
+nigercongo.plateau.tyap | Tyap (Kataf)
+nigercongo.plateau.jju | Jju (Bajju)
+nigercongo.plateau.gyong | Gyong (Kagoma)
+nigercongo.plateau.aten | Ganang (Aten)
+nigercongo.plateau.hyam | Hyam (Jaba) | 0.84 0.08 200
+nigercongo.plateau.adara | Adara (Kadara)
+nigercongo.plateau.eggon | Eggon
+nigercongo.plateau.mada | Mada
+nigercongo.plateau.ninzo | Ninzo
+nigercongo.plateau.numana | Numana
+nigercongo.plateau.irigwe | Irigwe
+nigercongo.plateau.izere | Izere
+nigercongo.plateau.migili | Migili (Koro Lafia)
+nigercongo.plateau.koro | Koro
+
+# ---- Kainji ----
+nigercongo.kainji | Kainji | 0.62 0.11 85
+nigercongo.kainji.kambari | Kambari
+nigercongo.kainji.bassa | Bassa
+nigercongo.kainji.kurama | Kurama
+nigercongo.kainji.laru | Laru
+nigercongo.kainji.lela | Lela (Dakarkari)
+
+# ---- Jukunoid ----
+nigercongo.jukunoid | Jukunoid | 0.64 0.15 305
+nigercongo.jukunoid.jukun | Jukun | 0.66 0.16 300
+nigercongo.jukunoid.kuteb | Kuteb
+nigercongo.jukunoid.jibu | Jibu
+nigercongo.jukunoid.tigon | Tigon
+nigercongo.jukunoid.etkywan | Etkywan (Ichen)
+
+# ---- Bantoid ----
+nigercongo.bantoid | Bantoid | 0.80 0.08 250
+nigercongo.bantoid.ejagham | Ejagham
+nigercongo.bantoid.jarawa | Jarawa
+nigercongo.bantoid.mambila | Mambila
+nigercongo.bantoid.ndoola | Ndoola | 0.88 0.06 215
+nigercongo.bantoid.bekwarra | Bekwarra
+nigercongo.bantoid.bette_bendi | Bette-Bendi
+
+# ---- Adamawa, Gur, Mande ----
+nigercongo.adamawa.mumuye | Mumuye
+nigercongo.adamawa.chamba | Chamba
+nigercongo.adamawa.dza | Dza (Jenjo)
+nigercongo.adamawa.yungur | Yungur | 0.80 0.10 225
+nigercongo.adamawa.waja | Waja | 0.62 0.14 250
+nigercongo.adamawa.tula | Tula
+nigercongo.gur.bariba | Bariba (Baatonum) | 0.80 0.18 60
+nigercongo.mande.busa | Busa | 0.66 0.19 140
+
+# ---- Chadic, Arabic ----
+afroasiatic.chadic.ngas | Ngas (Angas)
+afroasiatic.chadic.tangale | Tangale
+afroasiatic.chadic.bura_pabir | Bura-Pabir
+afroasiatic.chadic.marghi | Marghi
+afroasiatic.chadic.karekare | Karekare
+afroasiatic.chadic.bade | Bade
+afroasiatic.chadic.kamwe | Kamwe (Higgi) | 0.70 0.12 90
+afroasiatic.chadic.mwaghavul | Mwaghavul
+afroasiatic.chadic.gwandara | Gwandara
+afroasiatic.chadic.tera | Tera
+afroasiatic.chadic.bole | Bole | 0.80 0.12 100
+afroasiatic.chadic.bachama | Bachama
+afroasiatic.chadic.zaar | Zaar (Sayawa)
+afroasiatic.chadic.goemai | Goemai
+afroasiatic.chadic.kibaku | Kibaku (Chibok)
+afroasiatic.chadic.huba | Huba (Kilba)
+afroasiatic.chadic.glavda | Glavda
+afroasiatic.chadic.piapung | Piapung | 0.68 0.12 55
+afroasiatic.arabic.shuwa | Shuwa Arabic
+
+# ---- creole ----
+creole.english_based.nigerian_pidgin | Nigerian Pidgin | 0.82 0.12 150

@@ -1,0 +1,12 @@
+# Curaçao, Census 2023, language spoken most often at home (taxonomy/cw2023.py). Five answers:
+# Papiamentu, Spanish, Dutch, English, other. Papiamentu reuses pl.txt's node (Glottolog
+# papi1253; Glottolog files it under Indo-European, the project files creoles under `creole` as
+# readers know them); repeated here with its parents because Curaçao is its home. Spanish and
+# Dutch repeat the nodes bo.txt, fi.txt and ie.txt define.
+creole | Creoles
+creole.portuguese_based | Portuguese-based creoles
+creole.portuguese_based.papiamento | Papiamento
+indoeuropean.romance | Romance
+indoeuropean.romance.spanish | Spanish
+indoeuropean.germanic.continental | Continental West Germanic
+indoeuropean.germanic.continental.dutch | Dutch

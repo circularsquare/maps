@@ -1,0 +1,63 @@
+# Nauru (2021 census ethnicity; sources/nr_census.py, taxonomy/nr2021.py). No new nodes: Nauruan
+# is au.txt's, Kosraean fm.txt's; the block below is every node the origin mixes bring in.
+austronesian.oceanic.nauruan | Nauruan
+austronesian.oceanic.kosraean | Kosraean
+# --- origin_mix borrowed nodes (python sources/origin_mix.py --fragment nr) ---
+# Every node the origin mixes bring in that tree.txt lacks, repeated without colour.
+austronesian | Austronesian
+austronesian.oceanic | Oceanic
+austronesian.oceanic.fijian | Fijian
+austronesian.oceanic.gilbertese | Gilbertese (Kiribati)
+austronesian.oceanic.nw_solomonic | Northwest Solomonic
+austronesian.oceanic.nw_solomonic.babatana | Babatana
+austronesian.oceanic.nw_solomonic.cheke_holo | Cheke Holo
+austronesian.oceanic.nw_solomonic.marovo | Marovo
+austronesian.oceanic.nw_solomonic.roviana | Roviana
+austronesian.oceanic.nw_solomonic.varisi | Varisi
+austronesian.oceanic.samoan | Samoan
+austronesian.oceanic.se_solomonic | Southeast Solomonic
+austronesian.oceanic.se_solomonic.areare | 'Are'are
+austronesian.oceanic.se_solomonic.arosi | Arosi
+austronesian.oceanic.se_solomonic.baegu | Baegu
+austronesian.oceanic.se_solomonic.baelelea | Baelelea
+austronesian.oceanic.se_solomonic.bauro | Bauro (Tairaha)
+austronesian.oceanic.se_solomonic.birao | Birao
+austronesian.oceanic.se_solomonic.gela | Gela
+austronesian.oceanic.se_solomonic.ghari | Ghari
+austronesian.oceanic.se_solomonic.kahua | Kahua
+austronesian.oceanic.se_solomonic.kwaio | Kwaio
+austronesian.oceanic.se_solomonic.kwaraae | Kwara'ae
+austronesian.oceanic.se_solomonic.lau | Lau
+austronesian.oceanic.se_solomonic.lengo | Lengo
+austronesian.oceanic.se_solomonic.owa | Owa
+austronesian.oceanic.se_solomonic.saa | Sa'a
+austronesian.oceanic.se_solomonic.talise | Tolo/Talise
+austronesian.oceanic.se_solomonic.toabaita | To'abaita
+austronesian.oceanic.se_solomonic.wala | Wala
+austronesian.oceanic.temotu | Temotu
+austronesian.oceanic.temotu.aiwoo | Äiwoo
+austronesian.oceanic.tongan | Tongan
+austronesian.oceanic.tuvaluan | Tuvaluan
+austronesian.oceanic.vanuatu | Vanuatu languages
+austronesian.philippine | Philippine
+austronesian.philippine.bikol | Bikol
+austronesian.philippine.cebuano | Cebuano
+austronesian.philippine.hiligaynon | Hiligaynon
+austronesian.philippine.ilocano | Ilocano
+austronesian.philippine.tagalog | Tagalog
+creole | Creoles
+creole.english_based | English-based creoles
+creole.english_based.bislama | Bislama
+creole.english_based.pijin | Solomon Islands Pijin
+indoeuropean.indoaryan.eastcentral.fiji_hindi | Fiji Hindi
+papuan | Papuan languages
+papuan.central_solomons | Central Solomons
+papuan.central_solomons.bilua | Bilua
+sinotibetan.sinitic | Chinese
+sinotibetan.sinitic.cantonese | Cantonese
+sinotibetan.sinitic.hakka | Hakka
+sinotibetan.sinitic.jin | Jin
+sinotibetan.sinitic.mandarin | Mandarin
+sinotibetan.sinitic.min_nan | Min Nan (Taiwanese, Hokkien)
+sinotibetan.sinitic.wu | Wu
+# --- end origin_mix borrowed nodes ---

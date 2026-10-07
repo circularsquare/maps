@@ -1,0 +1,18 @@
+# Iran, World Values Survey waves 5 and 7, language at home (taxonomy/ir2020.py).
+#
+# Checked against Glottolog (data/raw/glottolog/languages.csv): Gilaki gila1241, Mazanderani
+# maza1291, both Caspian (casp1236), Iranian; Luric (luri1252) holds Northern Luri nort2645,
+# Bakhtiari bakh1245 and Southern Luri sout2647. The survey's one answer "Lurish; Luri;
+# Bakhtiari" spans all three, so `luri` is a leaf for the answer, not the family; it cannot take
+# children without turning into a group drawn as "language not named". Zoroastrian Dari is
+# Glottolog's Zoroastrian Yazdi (zoro1242, gbz), Iranian. All flat under `indoeuropean.iranian`
+# like Persian, Kurdish and Balochi already there.
+
+# ---- parents defined elsewhere, repeated identically ----
+indoeuropean.iranian | Iranian
+
+# ---- new ----
+indoeuropean.iranian.gilaki | Gilaki | 0.64 0.10 105
+indoeuropean.iranian.mazandarani | Mazandarani | 0.86 0.10 55
+indoeuropean.iranian.luri | Luri (Lurish and Bakhtiari) | 0.86 0.08 95
+indoeuropean.iranian.zoroastrian_dari | Zoroastrian Dari | 0.72 0.08 115

@@ -1,0 +1,91 @@
+# United Arab Emirates (taxonomy/ae2024.py). No language question; Emiratis and non-Emiratis by
+# emirate (religiondots' 2024 layer), non-Emiratis by UN DESA 2024 origin, each origin read as a
+# language or a home mix (sources/ae_build.py, sources/gulf_mix.py, sources/gulf.md).
+#
+# Gulf Arabic (Glottolog gulf1241), one node shared by the citizens of the UAE, Kuwait, Qatar and
+# Bahrain (sources/gulf.md §1), beside `arabic` as Saudi, Iraqi and Sudanese Arabic are. Colour:
+# in Arabic's mint, darker than Saudi Arabic (0.77, its neighbour across every land border) and
+# apart from Egyptian, Levantine and Yemeni Arabic, which share every Gulf city with it.
+afroasiatic.gulf_arabic | Gulf Arabic | 0.76 0.10 160
+#
+# Borrowed nodes, repeated without colour (AGENT_BRIEF §3): every node the home mixes and
+# single-language origins bring in that tree.txt lacks.
+afroasiatic.berber | Berber
+afroasiatic.berber.tachelhit | Tachelhit
+afroasiatic.berber.tamazight | Tamazight
+afroasiatic.berber.tarifit | Tarifit (Riffian)
+afroasiatic.chadic | Chadic
+afroasiatic.chadic.hausa | Hausa
+afroasiatic.cushitic | Cushitic
+afroasiatic.cushitic.lowland | Lowland East Cushitic
+afroasiatic.cushitic.lowland.somali | Somali
+afroasiatic.darija | Moroccan Arabic (Darija)
+afroasiatic.egyptian_arabic | Egyptian Arabic
+afroasiatic.ethiosemitic | Ethiopian Semitic
+afroasiatic.ethiosemitic.amharic | Amharic
+afroasiatic.ethiosemitic.tigrinya | Tigrinya
+afroasiatic.hassaniya | Hassaniya (Maure)
+afroasiatic.levantine_arabic | Levantine Arabic
+afroasiatic.saudi_arabic | Saudi Arabic
+afroasiatic.sudanese_arabic | Sudanese Arabic
+afroasiatic.yemeni_arabic | Yemeni Arabic
+austronesian | Austronesian
+austronesian.acehnese | Acehnese
+austronesian.balinese | Balinese
+austronesian.batak | Batak
+austronesian.buginese | Buginese
+austronesian.javanese | Javanese
+austronesian.madurese | Madurese
+austronesian.malayic | Malayic
+austronesian.malayic.banjar | Banjar
+austronesian.malayic.betawi | Betawi
+austronesian.malayic.indonesian | Indonesian
+austronesian.malayic.malay | Malay
+austronesian.malayic.minangkabau | Minangkabau
+austronesian.philippine | Philippine
+austronesian.philippine.bikol | Bikol
+austronesian.philippine.boholano | Boholano
+austronesian.philippine.cebuano | Cebuano
+austronesian.philippine.hiligaynon | Hiligaynon
+austronesian.philippine.ilocano | Ilocano
+austronesian.philippine.kapampangan | Kapampangan
+austronesian.philippine.maguindanao | Maguindanao
+austronesian.philippine.maranao | Maranao
+austronesian.philippine.pangasinan | Pangasinan
+austronesian.philippine.tagalog | Tagalog
+austronesian.philippine.tausug | Tausug
+austronesian.philippine.waray | Waray-Waray
+austronesian.sasak | Sasak
+austronesian.sundanese | Sundanese
+indoeuropean.germanic.continental | Continental West Germanic
+indoeuropean.germanic.continental.dutch | Dutch
+indoeuropean.indoaryan.sinhala | Sinhala
+indoeuropean.iranian.dari | Dari
+indoeuropean.iranian.kurdish | Kurdish
+indoeuropean.iranian.zazaki | Zazaki | 0.84 0.10 70
+indoeuropean.romance | Romance
+indoeuropean.romance.french | French
+indonesia_other | Other regional languages of Indonesia
+kradai | Kra-Dai (Tai-Kadai)
+kradai.thai | Thai
+nilosaharan | Nilo-Saharan
+nilosaharan.centralsudanic | Central Sudanic
+nilosaharan.centralsudanic.sara | Sara
+nilosaharan.nilotic | Nilotic
+nilosaharan.nilotic.dinka | Dinka
+turkic | Turkic
+turkic.turkish | Turkish
+# --- origin_mix borrowed nodes (python sources/origin_mix.py --fragment ae) ---
+# Every node the origin mixes bring in that tree.txt lacks, repeated without colour.
+afroasiatic.cushitic.beja | Beja
+afroasiatic.tunisian_arabic | Tunisian Arabic
+indoeuropean.germanic.continental.limburgish | Limburgish
+indoeuropean.germanic.continental.lowgerman | Low German
+indoeuropean.germanic.continental.lowgerman.westphalian | Westphalian
+indoeuropean.germanic.frisian | Frisian
+indoeuropean.romance.spanish | Spanish
+nilosaharan.fur | Fur
+nilosaharan.maban | Maban
+nilosaharan.maban.masalit | Masalit
+nilosaharan.nobiin | Nobiin (Fadicca)
+# --- end origin_mix borrowed nodes ---

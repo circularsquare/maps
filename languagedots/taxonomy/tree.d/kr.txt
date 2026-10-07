@@ -1,0 +1,136 @@
+# South Korea (taxonomy/kr2020.py). No language question; Korean nationals on Korean, Jejueo from a
+# speaker estimate, foreign nationals by nationality read as a language or a home mix
+# (sources/kr_census.py, sources/kr.md).
+#
+# One new leaf: Jejueo, Glottolog jeju1234, a Koreanic language of its own (also UNESCO's
+# critically endangered list, 2010). Hand-picked darker and more orange than Korean's pink-red,
+# because every Jejueo dot sits among Korean ones in Jeju.
+koreanic.jejueo | Jejueo | 0.58 0.14 40
+#
+# Borrowed nodes, repeated without colour (AGENT_BRIEF §3): every node the home mixes of China,
+# Taiwan, Vietnam, the Philippines, Thailand, Indonesia, Cambodia, Myanmar, Malaysia, Laos,
+# Timor-Leste, Sri Lanka, Pakistan, Bangladesh, Nepal, Uzbekistan, Kazakhstan and Kyrgyzstan,
+# and the single-language origins, bring in that tree.txt lacks.
+africa_other | Other African languages
+austroasiatic.katuic | Katuic
+austroasiatic.katuic.bru | Bru (Bru-Vân Kiều)
+austroasiatic.katuic.katang | Katang
+austroasiatic.khmer | Khmer
+austroasiatic.khmuic | Khmuic
+austroasiatic.khmuic.khmu | Khmu (Khơ Mú)
+austroasiatic.mon | Mon
+austroasiatic.muong | Muong (Mường)
+austroasiatic.vietnamese | Vietnamese
+austronesian | Austronesian
+austronesian.acehnese | Acehnese
+austronesian.balinese | Balinese
+austronesian.batak | Batak
+austronesian.buginese | Buginese
+austronesian.chamic | Chamic
+austronesian.chamic.cham | Cham
+austronesian.javanese | Javanese
+austronesian.madurese | Madurese
+austronesian.malayic | Malayic
+austronesian.malayic.banjar | Banjar
+austronesian.malayic.betawi | Betawi
+austronesian.malayic.iban | Iban
+austronesian.malayic.indonesian | Indonesian
+austronesian.malayic.malay | Malay
+austronesian.malayic.minangkabau | Minangkabau
+austronesian.malayic.pattani_malay | Pattani Malay (Yawi)
+austronesian.north_borneo | North Borneo
+austronesian.north_borneo.kadazandusun | Kadazan-Dusun
+austronesian.philippine | Philippine
+austronesian.philippine.bikol | Bikol
+austronesian.philippine.boholano | Boholano
+austronesian.philippine.cebuano | Cebuano
+austronesian.philippine.hiligaynon | Hiligaynon
+austronesian.philippine.ilocano | Ilocano
+austronesian.philippine.kapampangan | Kapampangan
+austronesian.philippine.maguindanao | Maguindanao
+austronesian.philippine.maranao | Maranao
+austronesian.philippine.pangasinan | Pangasinan
+austronesian.philippine.tagalog | Tagalog
+austronesian.philippine.tausug | Tausug
+austronesian.philippine.waray | Waray-Waray
+austronesian.sama_bajaw | Sama-Bajaw
+austronesian.sama_bajaw.bajau | Bajau
+austronesian.sasak | Sasak
+austronesian.sundanese | Sundanese
+austronesian.timoric | Timoric
+austronesian.timoric.baikenu | Baikenu (Uab Meto)
+austronesian.timoric.galoli | Galoli
+austronesian.timoric.idate | Idaté
+austronesian.timoric.kemak | Kemak
+austronesian.timoric.mambai | Mambai (Mambae)
+austronesian.timoric.midiki | Midiki
+austronesian.timoric.naueti | Naueti
+austronesian.timoric.tetun_prasa | Tetun Prasa (Tetun Dili)
+austronesian.timoric.tetun_terik | Tetun Terik
+austronesian.timoric.tokodede | Tokodede
+austronesian.timoric.waimaa | Waima'a
+hmongmien | Hmong-Mien
+hmongmien.hmong | Hmong
+indoeuropean.indoaryan.sinhala | Sinhala
+indoeuropean.iranian.tajik | Tajik
+indoeuropean.romance | Romance
+indoeuropean.romance.spanish | Spanish
+indoeuropean.slavic | Slavic
+indoeuropean.slavic.east | East Slavic
+indoeuropean.slavic.east.russian | Russian
+indonesia_other | Other regional languages of Indonesia
+japonic | Japonic
+japonic.japanese | Japanese
+koreanic | Koreanic
+koreanic.korean | Korean
+kradai | Kra-Dai (Tai-Kadai)
+kradai.lao | Lao
+kradai.phu_thai | Phu Thai
+kradai.shan | Shan
+kradai.tai_lue | Tai Lue (Lự)
+kradai.tai_vietnam | Tai Dam and Tai Don (Thái)
+kradai.tay | Tay (Tày)
+kradai.thai | Thai
+kradai.zhuang | Zhuang
+mongolic | Mongolic
+mongolic.mongolian | Mongolian
+papuan | Papuan languages
+papuan.timor_alor_pantar | Timor-Alor-Pantar
+papuan.timor_alor_pantar.bunak | Bunak
+papuan.timor_alor_pantar.fataluku | Fataluku
+papuan.timor_alor_pantar.makasae | Makasae
+seasia_other | Other indigenous languages of mainland Southeast Asia
+sinotibetan.burmish.burmese | Burmese
+sinotibetan.burmish.rakhine | Rakhine
+sinotibetan.kachin | Kachin languages (Jingpho, Zaiwa, Lhaovo, Rawang)
+sinotibetan.karen | Karen
+sinotibetan.karen.pao | Pa'o
+sinotibetan.loloish | Loloish (Yi languages)
+sinotibetan.loloish.akha | Akha
+sinotibetan.sinitic | Chinese
+sinotibetan.sinitic.cantonese | Cantonese
+sinotibetan.sinitic.gan | Gan
+sinotibetan.sinitic.hakka | Hakka
+sinotibetan.sinitic.jin | Jin
+sinotibetan.sinitic.mandarin | Mandarin
+sinotibetan.sinitic.min_nan | Min Nan (Taiwanese, Hokkien)
+sinotibetan.sinitic.teochew | Teochew (Chiu Chau)
+sinotibetan.sinitic.wu | Wu
+sinotibetan.sinitic.xiang | Xiang
+turkic | Turkic
+turkic.karakalpak | Karakalpak
+turkic.kazakh | Kazakh
+turkic.kyrgyz | Kyrgyz
+turkic.uyghur | Uyghur
+turkic.uzbek | Uzbek
+# --- origin_mix borrowed nodes (python sources/origin_mix.py --fragment kr) ---
+# Every node the origin mixes bring in that tree.txt lacks, repeated without colour.
+indoeuropean.indoaryan.eastern.rohingya | Rohingya
+mongolic.buryat | Buryat
+mongolic.oirat | Oirat
+nakhdaghestanian | Nakh-Daghestanian
+nakhdaghestanian.nakh | Nakh
+nakhdaghestanian.nakh.chechen | Chechen
+turkic.bashkir | Bashkir
+turkic.tatar | Tatar
+# --- end origin_mix borrowed nodes ---

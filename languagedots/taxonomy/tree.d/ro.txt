@@ -1,0 +1,8 @@
+# Romania, RPL 2021 mother tongue (taxonomy/ro2021.py). No new nodes: every one of the 22 named
+# languages was already in the tree (Rusyn from ca.txt, Crimean Tatar from ua.txt, the rest mostly
+# us.txt).
+#
+# Colour. Hungarian is defined bare in us.txt and was generated as #1f99c7, a mid blue next to
+# German's #359bd9; across Transylvania (Satu Mare, Sibiu, Braşov, the Banat) German and Hungarian
+# share towns, so Hungarian is a lighter, paler blue here, still on the Uralic side of the wheel.
+uralic.hungarian | Hungarian | 0.62 0.20 10

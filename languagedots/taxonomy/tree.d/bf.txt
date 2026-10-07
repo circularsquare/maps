@@ -1,0 +1,83 @@
+# Burkina Faso (taxonomy/bf2006.py). RGPH 2006, main language spoken, aged 3 and over.
+# Parents and languages other fragments already define are repeated with the same label and no
+# colour. Mòoré (ca.txt, ml.txt) was defined bare by countries that draw a few; it is coloured
+# here, where it is half the country.
+#
+# Middle levels, checked against Glottolog (data/raw/glottolog), "families as most readers know
+# them" (AGENT_BRIEF §3), flat under the branch as ci.txt and ml.txt already have them:
+#   * Gur (Glottolog files these under Atlantic-Congo without a Gur node): Mossi (moss1236),
+#     Gourmanchéma (gour1243), Northern Dagara (nort2780), Bwamu (bwam1247, the cluster: Buamu,
+#     Cwi, Láá Láá, Bomu), Lyélé (lyel1241), Nuni (nuni1253, Northern and Southern), Kasem
+#     (kase1253), Winyé (winy1241, the census's "Ko"), Kusaal (kusa1250, "Koussassé"), Cerma
+#     (cerm1238, "Gouin"), Sisaala (sisa1248, "Sissaka"). Mali's `bomu` is a leaf for Mali's
+#     own answer, so Burkina's Bwamu answer is a sibling leaf beside it, near it in colour.
+#   * The census's "Gurunsi" names the Grusi peoples (grus1239) without the language; Kasem,
+#     Nuni, Lyélé and Sisaala are printed apart, so it is a leaf of its own, not a group over
+#     them (a group would draw the named languages' parent washed out).
+#   * Mande (mand1469): Bissa (biss1248), Bobo (Southern Bobo Madaré sout2840, beside ml.txt's
+#     Konabéré, the Northern one), San (Matya Samo maty1235 and Maya Samo maya1281), Sembla
+#     (Seeku, seek1238).
+#   * Siamou (Sɛmɛ, siam1242) is an isolate in Glottolog; on the shared `isolate` root.
+#   * Djerma (Zarma) is a Songhay language printed apart from Sonrhaï: a leaf beside ml.txt's.
+#   * Ashanti is Asante Twi, a variety of Akan: its own leaf beside `akan`, which is a leaf.
+#
+# Colours, for neighbours on the Burkinabè ground (Gur stretches here from mauve through orange
+# to yellow, Mande stays green to cyan):
+#   Centre and north: Mòoré a light warm yellow, Fula ml.txt's red, Dogon ml.txt's magenta.
+#   East: Gourmanchéma a dark ochre. Centre-east: Bissa a mid teal, Kusaal generated.
+#   West (Houet, Kossi, Mouhoun, Tuy): Dioula ci.txt's green, Bobo a darker olive, Bwamu a
+#   peach, San a cyan, Marka ml.txt's dark green, Senufo ci.txt's orange.
+#   Centre-west and south (Sanguié, Sissili, Ziro, Nahouri): Lyélé mauve, Nuni a dark mauve,
+#   Kasem a light pink, Gurunsi a pale mauve. South-west: Dagara a light rose against ci.txt's
+#   brick Lobi. Comoé: Cerma a pale sand beside Senufo's orange and Dioula's green.
+
+# ---- parents and languages defined elsewhere, repeated bare (their colours are theirs) ----
+nigercongo | Niger-Congo
+nigercongo.mande | Mande
+nigercongo.mande.dyula | Dyula
+nigercongo.mande.marka | Marka (Dafing)
+nigercongo.gur | Gur
+nigercongo.gur.senufo | Senufo (Senoufo)
+nigercongo.gur.lobi | Lobi
+nigercongo.gur.mamara | Mamara (Minyanka)
+nigercongo.atlantic | Atlantic
+nigercongo.atlantic.fulah | Fula
+nigercongo.atlantic.wolof | Wolof
+nigercongo.kwa | Kwa
+nigercongo.dogon | Dogon languages
+nigercongo.dogon.dogon | Dogon
+nilosaharan | Nilo-Saharan
+nilosaharan.songhay | Songhay languages
+nilosaharan.songhay.songhay | Songhay (Sonrhai, Zarma)
+afroasiatic | Afroasiatic
+afroasiatic.arabic | Arabic
+afroasiatic.berber | Berber
+afroasiatic.berber.tamasheq | Tamasheq (Tuareg)
+afroasiatic.chadic | Chadic
+afroasiatic.chadic.hausa | Hausa
+isolate | Language isolates
+africa_other | Other African languages
+other | Other or unclassified
+
+# ---- defined bare elsewhere, coloured here ----
+nigercongo.gur.moore | Mòoré | 0.84 0.14 88
+
+# ---- new ----
+nigercongo.gur.gourmanchema | Gourmanchéma (Gulmancema) | 0.58 0.13 65
+nigercongo.gur.dagara | Dagara (Dagaare) | 0.76 0.12 355
+nigercongo.gur.bwamu | Bwamu | 0.80 0.12 45
+nigercongo.gur.lyele | Lyélé | 0.68 0.13 335
+nigercongo.gur.nuni | Nuni | 0.56 0.10 350
+nigercongo.gur.kasem | Kasem (Kasséna) | 0.82 0.10 15
+nigercongo.gur.gurunsi | Gurunsi (Grusi, language not named) | 0.74 0.08 345
+nigercongo.gur.winye | Winyé (Ko)
+nigercongo.gur.kusaal | Kusaal (Koussassé)
+nigercongo.gur.cerma | Cerma (Gouin) | 0.86 0.09 30
+nigercongo.gur.sisaala | Sisaala (Sissala)
+nigercongo.mande.bissa | Bissa | 0.68 0.13 165
+nigercongo.mande.bobo | Bobo (Bobo Madaré) | 0.66 0.12 120
+nigercongo.mande.san | San (Samo) | 0.74 0.12 195
+nigercongo.mande.sembla | Sembla (Seeku)
+nigercongo.kwa.asante | Asante Twi (Ashanti)
+nilosaharan.songhay.zarma | Zarma (Djerma)
+isolate.siamou | Sɛmɛ (Siamou) | 0.7 0.17 320

@@ -1,0 +1,65 @@
+# Egypt (taxonomy/eg2026.py). No language question anywhere; speaker estimates on their home
+# governorates, the rest Egyptian or Sa'idi Arabic, refugees by UNHCR nationality
+# (sources/eg_build.py, sources/eg.md).
+#
+# Glottolog (data/raw/glottolog):
+#   * Egyptian Arabic egyp1253 (sa.txt's node, repeated with its colour); Sa'idi Arabic said1239,
+#     a language of its own, whose dialects include Western Desert Egyptian Arabic (west2939, the
+#     oases). Both beside `arabic`, as Sudan's, Iraq's and the Gulf's Arabic are.
+#   * Eastern Egyptian Bedawi Arabic east2690 (Sinai, Eastern Desert, and the Negev and Jordan
+#     Bedouin); `bedawi_arabic`, so Jordan and Palestine can draw on it.
+#   * Libyan Arabic liby1240: Glottolog files Western Egyptian Bedawi (west2774), the Awlad Ali's
+#     Arabic in Matrouh, as its dialect, so they go on the language node Libya can share.
+#   * Siwi siwi1239 under Berber (Libyan-Egyptian Oases Berber, siwi1238).
+#   * Nobiin nobi1240 and Kenzi (Kenuzi, kenu1243, a dialect of Kenuzi-Dongola kenu1236): two
+#     leaves beside sd.txt's `nilosaharan.nubian`, which is a leaf for Sudan's unnamed "Nubian
+#     language" answer and cannot become their group without washing Sudan's dots out.
+#   * Domari doma1258, Indo-Aryan, beside the Romani group.
+# Colours, for neighbours on the Egyptian ground: Egyptian Arabic keeps sa.txt's pale mint; Sa'idi
+# darker and yellower along the valley from Minya south; Libyan Arabic between Darija and Algerian
+# Arabic's mint, bluer than Egyptian Arabic, which it meets west of Alexandria; Eastern Bedawi a
+# darker green against Egyptian Arabic at the Canal. Nobiin a deeper lavender than Sudan's Nubian,
+# Kenzi a paler one; Beja keeps sd.txt's olive. Siwi and Domari generated.
+afroasiatic | Afroasiatic
+afroasiatic.arabic | Arabic
+afroasiatic.egyptian_arabic | Egyptian Arabic | 0.66 0.06 166
+afroasiatic.saidi_arabic | Sa'idi Arabic | 0.72 0.10 146
+afroasiatic.libyan_arabic | Libyan Arabic | 0.60 0.10 172
+afroasiatic.bedawi_arabic | Bedawi Arabic (Eastern Egyptian) | 0.86 0.06 146
+afroasiatic.berber | Berber
+afroasiatic.berber.siwi | Siwi
+afroasiatic.cushitic | Cushitic
+afroasiatic.cushitic.beja | Beja | 0.62 0.14 115
+nilosaharan | Nilo-Saharan
+nilosaharan.nobiin | Nobiin (Fadicca) | 0.68 0.13 292
+nilosaharan.kenzi | Kenzi (Kenuzi) | 0.86 0.07 270
+indoeuropean.indoaryan.domari | Domari
+#
+# Borrowed nodes, repeated without colour (AGENT_BRIEF section 3): the refugees' languages, from
+# Sudan's and South Sudan's drawn mixes and the single-language origins.
+afroasiatic.sudanese_arabic | Sudanese Arabic
+afroasiatic.levantine_arabic | Levantine Arabic
+afroasiatic.ethiosemitic | Ethiopian Semitic
+afroasiatic.ethiosemitic.tigrinya | Tigrinya
+nigercongo | Niger-Congo
+nigercongo.ubangian | Ubangian
+nigercongo.ubangian.belanda_viri | Belanda Viri
+nigercongo.ubangian.zande | Zande-Nzakara
+nigercongo.ubangian.zande.zande | Zande
+nilosaharan.centralsudanic | Central Sudanic
+nilosaharan.centralsudanic.baka_ss | Baka (South Sudan)
+nilosaharan.centralsudanic.moru | Moru
+nilosaharan.madi | Ma'di
+nilosaharan.nilotic | Nilotic
+nilosaharan.nilotic.dinka | Dinka
+nilosaharan.nilotic.kakwa | Kakwa
+nilosaharan.nilotic.kuku | Kuku
+nilosaharan.nilotic.luwo | Luwo (Jur Chol)
+nilosaharan.nilotic.mundari | Mundari
+nilosaharan.nilotic.otuho | Otuho (Lotuko)
+nilosaharan.nilotic.pari | Päri
+nilosaharan.nilotic.pojulu | Pojulu
+nilosaharan.nilotic.reel | Reel (Atuot)
+nilosaharan.nilotic.toposa | Toposa
+nilosaharan.surmic | Surmic
+nilosaharan.surmic.didinga | Didinga

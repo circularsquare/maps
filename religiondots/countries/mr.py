@@ -60,7 +60,7 @@ ENTRY = {
             "there. So the **4,801,598** Mauritanians the 2023 census counted are all drawn as "
             "Muslim, which is also what the CIA World Factbook gives: \"Muslim (official) 100%\". "
             "Any Mauritanians who are not Muslim are not on this map, because no source counts "
-            "them. Nobody counted these dots, and they are drawn desaturated to say so. "
+            "them. Nobody counted these dots, so they disappear when inferred dots are turned off. "
             "**Every non-Muslim drawn is a foreign resident.** The census counted **125,933** "
             "foreign residents, 2.6% of the people living in the country, in every wilaya, but "
             "their nationality only for the whole country: 83,681 from Mali, 22,906 from Senegal, "
@@ -92,9 +92,8 @@ ENTRY = {
             "are not on this map; they are the not-drawn part of the bar."),
         how="no source asks; nationals drawn as Muslim, foreign residents by nationality",
         grain="wilayas, 328,000 people on average",
-        gap="refugees and asylum seekers the census did not count, 1.4% of residents: UNHCR's "
-            "118,476 registered at the end of 2023 less the census's 46,800; and Mauritanians "
-            "who are not Muslim, whom no source has counted",
+        gap="refugees and asylum seekers the census did not count, 1.4% of residents; and "
+            "Mauritanians who are not Muslim, whom no source has counted",
         gap_share=0.01434,
         counts=_mr_counts,
         units=None,

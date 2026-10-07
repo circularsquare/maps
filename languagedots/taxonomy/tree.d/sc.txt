@@ -1,0 +1,14 @@
+# Seychelles 2022 census, first main language spoken at home (taxonomy/sc2022.py). Nothing new:
+# every node is repeated from other fragments with identical labels, so Seychelles does not depend
+# on those fragments being in the build. au.txt added Seychellois Creole bare.
+#
+# One colour hand-picked: Seychellois Creole, 85% of those who answered. Generated, it would sit
+# near French-based creoles' pale grey-cyan and read as washed out beside English (near white).
+# A clearer cyan, as mu.txt gives Morisyen, keeps it in the creoles' part of the wheel and apart
+# from English, French (violet), Hindi (orange) and Tamil (teal, 0.70 0.13 185); bluer than
+# Morisyen (205) so the two creoles are not one colour, though they never share ground.
+indoeuropean.romance | Romance | 0.78 0.11 230
+indoeuropean.romance.french | French | 0.60 0.15 340
+creole | Creoles | 0.84 0.06 200
+creole.french_based | French-based creoles | 0.84 0.08 190
+creole.french_based.seselwa | Seychellois Creole | 0.78 0.12 218

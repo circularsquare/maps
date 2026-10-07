@@ -26,9 +26,21 @@ outside every region (coast, reclaimed land, borders) are snapped to the nearest
   * **no town lost**: every GeoNames seat (PPLA, PPLC) of `SEAT_MIN_POP` or more against Kontur's
     people within `HOLE_KM`, gated on its region's ratio; `KONTUR_HOLES` names the holes.
 
+## MECCA'S HARAM (fix batch 2026-10-03, sources/sa.md §9)
+
+`--haram` writes data/geo/sa/sa_haram.gpkg: the sacred boundary around Mecca (Hudud al-Haram),
+which non-Muslims may not enter. It is OpenStreetMap relation 19590020 ("حدود الحرم المكي", tagged
+from Khadran and Saud al-Thubaiti, *A'lam wa hudud al-Haram al-Makki al-Sharif* (1433 AH / 2012), archive.org
+20230127_20230127_1703), read from the OSM API's `/full` call and saved raw as
+data/raw/sa/osm_haram_19590020.json. Checks: one ring, area inside `HARAM_KM2` (the boundary is
+usually given as about 550 km2), the Kaaba, Mina and Muzdalifah inside, Arafat (which is outside
+the haram by every account), Jeddah and Taif outside, and the whole of it inside Makkah region.
+countries/sa.py reads it.
+
 Usage:
     python sources/sa_grid.py --fetch    one gzipped gpkg from Kontur (17 MB); GeoNames SA.zip
     python sources/sa_grid.py            rebuild from data/raw/sa/
+    python sources/sa_grid.py --haram    the haram polygon (fetches the OSM relation if missing)
 """
 
 import gzip
@@ -161,9 +173,74 @@ def seat_check(out, units, rel):
                          f"under {LOW_RATIO} of its count: {sorted(holes)}, not {sorted(KONTUR_HOLES)}")
 
 
+HARAM_REL = 19590020
+HARAM_URL = f"https://api.openstreetmap.org/api/0.6/relation/{HARAM_REL}/full.json"
+HARAM_RAW = os.path.join(RAW, f"osm_haram_{HARAM_REL}.json")
+HARAM_OUT = os.path.join(GEO, "sa_haram.gpkg")
+HARAM_KM2 = (500.0, 620.0)
+HARAM_UNIT = "SA02"
+HARAM_IN = {"Kaaba": (39.8262, 21.4225), "Mina": (39.8930, 21.4133),
+            "Muzdalifah": (39.9364, 21.3889)}
+HARAM_OUT_PTS = {"Arafat, Jabal ar-Rahmah": (39.9845, 21.3549), "Jeddah": (39.17, 21.54),
+                 "Taif": (40.41, 21.27)}
+
+
+def haram():
+    import json
+
+    import geopandas as gpd
+    from shapely.geometry import LineString, Point
+    from shapely.ops import polygonize, unary_union
+
+    if not os.path.exists(HARAM_RAW):
+        req = urllib.request.Request(HARAM_URL, headers={"User-Agent": "religiondots-build/1.0"})
+        with urllib.request.urlopen(req, timeout=120) as r:
+            raw = r.read()
+        os.makedirs(RAW, exist_ok=True)
+        with open(HARAM_RAW + ".part", "wb") as fh:
+            fh.write(raw)
+        os.replace(HARAM_RAW + ".part", HARAM_RAW)
+    with open(HARAM_RAW, encoding="utf-8") as fh:
+        els = json.load(fh)["elements"]
+    nodes = {e["id"]: (e["lon"], e["lat"]) for e in els if e["type"] == "node"}
+    ways = {e["id"]: e["nodes"] for e in els if e["type"] == "way"}
+    rel = next(e for e in els if e["type"] == "relation" and e["id"] == HARAM_REL)
+    lines = [LineString([nodes[n] for n in ways[m["ref"]]]) for m in rel["members"]
+             if m["type"] == "way" and m["role"] in ("outer", "")]
+    polys = list(polygonize(unary_union(lines)))
+    if len(polys) != 1:
+        raise SystemExit(f"relation {HARAM_REL} assembles into {len(polys)} polygons, expected 1")
+    g = gpd.GeoDataFrame({"name": [rel["tags"].get("name:en", "")],
+                          "osm_version": [rel.get("version")],
+                          "osm_timestamp": [rel.get("timestamp")]},
+                         geometry=polys, crs=4326)
+    km2 = float(g.to_crs(METRIC).area.iloc[0]) / 1e6
+    print(f"haram: OSM relation {HARAM_REL} v{rel.get('version')} ({rel.get('timestamp')}), "
+          f"{km2:,.1f} km2")
+    if not HARAM_KM2[0] <= km2 <= HARAM_KM2[1]:
+        raise SystemExit(f"haram area {km2:.1f} km2 outside {HARAM_KM2}")
+    poly = polys[0]
+    bad = ([n for n, p in HARAM_IN.items() if not poly.contains(Point(p))]
+           + [n for n, p in HARAM_OUT_PTS.items() if poly.contains(Point(p))])
+    if bad:
+        raise SystemExit(f"haram landmarks on the wrong side: {bad}")
+    units = gpd.read_file(REGIONS_GPKG)
+    mk = units.loc[units["unit"] == HARAM_UNIT].to_crs(METRIC).geometry.iloc[0]
+    spill = float(g.to_crs(METRIC).geometry.iloc[0].difference(mk).area) / 1e6
+    if spill > 1.0:
+        raise SystemExit(f"{spill:.1f} km2 of the haram falls outside {HARAM_UNIT}")
+    os.makedirs(GEO, exist_ok=True)
+    g.to_file(HARAM_OUT + ".tmp.gpkg", layer="haram", driver="GPKG")
+    os.replace(HARAM_OUT + ".tmp.gpkg", HARAM_OUT)
+    print(f"  landmarks right, {spill:.2f} km2 outside {HARAM_UNIT}; wrote {HARAM_OUT}")
+
+
 def main():
     import geopandas as gpd
     from geo_checks import read_layer
+
+    if "--haram" in sys.argv:
+        return haram()
 
     gpkg = os.path.join(RAW, GPKG_NAME)
     if "--fetch" in sys.argv or not os.path.exists(gpkg) or not os.path.exists(GEONAMES):

@@ -1,0 +1,5 @@
+# Tonga (2021 census, language used at home). No new nodes; bare repeats so the country stands on
+# its own under `build.py --only`.
+austronesian | Austronesian
+austronesian.oceanic | Oceanic
+austronesian.oceanic.tongan | Tongan

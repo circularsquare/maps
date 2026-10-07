@@ -54,7 +54,9 @@ and the surviving part is stated first.
 - 2.6 A school is never assigned from outside the source — RE-CONFIRMED, then REVERSED 2026-09-15
   for six Theravada countries and South Korea (§2.6a); the registry lesson stands
 - 2.6a Census Buddhists get a school in six Theravada countries and South Korea, less an
-  unspecified share — DECIDED 2026-09-15, NOT BUILT
+  unspecified share — DECIDED 2026-09-15, BUILT 2026-10-04 with Mongolia, Russia and Bhutan
+- 2.6b Muslims drawn as Sunni by assignment in 33 countries, less the best minority figure —
+  DECIDED AND BUILT 2026-10-04
 - 2.7 Record whatever the source actually says — DECIDED, and a coarse cell left at the parent
   is the finished answer
 
@@ -121,6 +123,7 @@ and the surviving part is stated first.
 - 7b The US residual is `modelled`, not `derived`
 - 7c The header says what kind of map this is, and how much of it we made up — BUILT
 - 7d `fill` names the table each derivation came from; `gap` moves in; the about panel — BUILT
+- 7e `assigned`: a fourth tier, and a row that says what was assigned — BUILT 2026-10-04
 
 **§8 Pipeline**
 - 8.1 Boundaries must be the vintage the data was *published* on
@@ -424,7 +427,16 @@ under-counts a tradition by exactly as much of it as the registry does not regis
 share is invisible from inside the registry. Ask which OTHER register might hold the same
 tradition under a different law before quoting a 99% from one of them.
 
-### 2.6a Census Buddhists get a school in six Theravada countries and South Korea, less an unspecified share — DECIDED 2026-09-15, NOT BUILT
+### 2.6a Census Buddhists get a school in six Theravada countries and South Korea, less an unspecified share — DECIDED 2026-09-15, BUILT 2026-10-04
+
+**Built 2026-10-04** (Anita: *"ok lets go ahead"*, and *"bhutan is fine ya"*) as
+`buddhism_assign.py`, sharing `branch_assign.py`'s split with §2.6b's Muslims and carrying §7e's
+`assigned` tier and row. Ten countries: the seven below, Mongolia (its mapping's Vajrayana rows
+re-assigned so they carry the tier), Russia (Vajrayana in its four Buddhist republics only) and
+**Bhutan**, added on WRD's 82.72% Lamaist and 0.02% Mahayana (ARDA, read 2026-10-04), all to
+`buddhism.vajrayana`. Thailand's KPI reader was fixed in the same rebuild (`sources/th.md` §6). The
+places named under "Answered by Anita" are in the notes, with Myanmar's Kokang added. The three
+school nodes' notes were rewritten.
 
 **This reverses §2.6's 2026-09-07 "leave it as is" for Thailand, Myanmar, Cambodia, Sri Lanka,
 Laos and Bangladesh (to Theravada), and for South Korea (to Mahayana, added the same day).** What
@@ -567,7 +579,9 @@ counts.
 Not done on 2026-09-15: no drawing while rd-super runs.
 
 1. **The tier**, wherever `measured`, `derived` and `modelled` are handled (pipeline, viewer, about
-   text), before any row uses it.
+   text), before any row uses it. **BUILT 2026-10-04 as §7e** (`assigned`, code 3, plus the
+   per-country `assigned` row); these rows tag `tier="assigned"` and set the country's `assigned`
+   text, e.g. "Theravada, from the World Religion Database".
 2. `taxonomy/th2010.py`, `mm2014.py`, `kh2019.py`, `lk2024.py`, `la2015.py`, `bd2011.py`: the Buddhist
    cell splits into `buddhism.theravada` and the bare remainder at the table's share. `kr2015.py` does
    the same into `buddhism.mahayana`, and its REVIEW note, which argues for the parent, is rewritten.
@@ -577,6 +591,36 @@ Not done on 2026-09-15: no drawing while rd-super runs.
    how the remainder was placed (evenly, or for Russia by subject), and names the places above. The
    node notes of `buddhism.theravada`, `buddhism.mahayana` and `buddhism.vajrayana` need rewriting.
    `ru2012.py` needs a per-subject split, not a one-line remap.
+
+### 2.6b Muslims drawn as Sunni by assignment in 33 countries, less the best minority figure — DECIDED AND BUILT 2026-10-04
+
+§2.6a's rule applied to Islam. The evidence is `sources/branches.md`, "Muslim-majority countries, how
+close each is to one branch" (2026-10-04), and the four reports in `sources/branches_2026-10-04/`.
+Anita: *"ok yeah, lets assign. and remainder can be best minority figure per coutnry ig yeah. we can
+do libya too, same treatment"*, with Saudi Arabia left to the builder.
+
+- **Which countries:** every Muslim-majority country still on bare `islam` where every credible
+  estimate of the other branches is small, plus Libya and Sierra Leone with their minorities left
+  unassigned: ma, dz, tn, ly, mr, sd, so, dj, km, ml, ne, bf, gn, gm, gw, td, eg, sl, jo, ps, uz, kz,
+  kg, tm, tj, id, bd, my, bn, mv, ba, xk, al. Not: Saudi Arabia (no traceable regional figure, §14),
+  Oman, the UAE, Qatar, Afghanistan, Azerbaijan, Pakistan and Syria (real minorities nothing places).
+- **The remainder** on bare `islam` is the best minority figure for each country, as a share of its
+  Muslims: a government or community figure where one exists, else the World Religion Database's
+  non-Sunni share. Spread at one share across the country, as in §2.6a, because nothing places the
+  minority below national. From 0 (Algeria outside Ghardaïa, Djibouti, Burkina Faso, Guinea, Chad,
+  the Maldives) to 6.5% (Sierra Leone's Ahmadis, 2004 census).
+- **Whole units.** Where the minority's home is a drawn unit and a large share of it, the unit stays
+  whole on `islam`: Ghardaïa (M'zab Ibadis), Gorno-Badakhshan (Pamiri Ismailis), and Libya's Nalut,
+  Jabal al Gharbi and Zuwara (Ibadi Amazigh). Médenine (Djerba's Ibadis) gets its own 12%. No Ibadi
+  or Ismaili node is drawn anywhere.
+- **Tiers.** A counted (`measured`) Muslim row splits into an `assigned` Sunni row with
+  `roll=islam` and a measured remainder (§7e, built the same day; first built as `derived`, Iran's
+  shape), so `inferred dots: not shown` puts the census's own Muslims back. A `modelled` row stays
+  `modelled` on both halves. Every one of the 33 countries carries the `assigned` row under its title.
+- **Where it lives:** `islam_assign.py` (the table, the note paragraph each country gains, and the
+  split), applied in `countries.py` after loading, so every consumer of `counts()` sees it, and in
+  `coverage.py`, which adds `islam.sunni` to these countries. Seven older notes that said Muslims
+  were undivided (dz, tn, ly, km, eg, jo, tj) were corrected the same day.
 
 ### 2.7 Record whatever the source actually says — DECIDED 2026-09-08
 
@@ -1628,8 +1672,8 @@ over 80%? if so then yeah totally chill."*
 5. **Record the split source and the percentage** in `sources/<cc>.md` and the mapping's `REVIEW`.
    `tools/check_no_religion.py` checks that both are there.
 
-Applied: Laos's box goes to traditional religion (LSIS, about 99.8% animist; the redraw is queued in
-`queue.md`); Mozambique's to `unaffiliated` (Afrobarometer and Pew, 93-98% no religion as a
+Applied: Laos's box goes to traditional religion (LSIS, about 99.8% animist; drawn on the revived
+`indigenous.laos` 2026-10-03, `sources.md` §la-2026-10-03); Mozambique's to `unaffiliated` (Afrobarometer and Pew, 93-98% no religion as a
 self-description; drawn 2026-09-14, `sources.md` §9dy). Not settled by the rule: which figure counts
 toward the 80% when a self-description source and a practice source disagree (`ask/RULINGS.md`
 marks this ambiguous). The playbooks carrying it: `census_table`, `afrobarometer`, `arabbarometer`,
@@ -2800,7 +2844,8 @@ new `indigenous.laos`. Anita: Mozambique *must not be drawn as no religion*, and
 found is recorded in `sources/la.md` §10 and `sources/mz.md` §6 and is not drawn. `indigenous.laos`
 is retired. Both countries' rows stay `measured`, as Vietnam's are, because they are counts at the
 census's own units. A later census whose no-religion box also names a religion has this as its
-precedent.
+precedent. **Both have since left `unknown` under §3.12:** Mozambique to `unaffiliated` the same night,
+and Laos to the revived `indigenous.laos` on 2026-10-03 (LSIS, about 99.8% animist).
 
 **What it bought, which is the argument for having it at all.** Vietnam without it draws 15,646 dots
 on an empty country, and §6.12's machinery can *label* that blank but cannot fix it. With it the
@@ -4365,6 +4410,40 @@ sixty-nine variations on "self-identification".
 `gap`, which are short authored fields with a checker behind them. The notes are 69 long essays and a
 mechanical substitution there would produce comma splices, so they are untouched and the dashes are
 still in the prose.
+
+### 7e. `assigned`: a fourth tier, and a row that says what was assigned — BUILT 2026-10-04
+
+Decided 2026-09-14/15 (§2.6a, `sources/branches.md` "Direction, not yet a decision: ethnic
+assignment"): *"we have data modelled 65% or whatever. we should also specify what we assigned based
+on ethnicity"*, and *"yes we should build assigned from ethnicity as a tier"*. Built 2026-10-04 on
+*"ok lets add it"*, for the Muslims of §2.6b's 33 countries. Two parts, because "assigned" and
+"modelled" are claims about different things and one country can carry both.
+
+- **The tier, `assigned` (code 3).** A row whose religion the source counted at the drawn unit and
+  whose branch or school was assigned from outside it: Indonesia's census Muslims drawn on
+  `islam.sunni`. It rolls up exactly as `derived` does (its `roll` is the counted column, `islam`), so
+  `inferred dots: not shown` puts the census's own Muslims back. It is **not** in the header's
+  "filled in" or "modelled" share, because nothing was filled in and the religion was counted; the
+  legend control's caption names it ("98% assigned") so the switch never reads "all counted" while
+  it still changes the map. Rows assigned inside a column that was itself `modelled` (Morocco's,
+  from a survey) or `derived` stay on that tier: the weaker claim decides what the switch does.
+  Rings: `may_ring` is false, as for derived.
+- **The row, `assigned`, a per-country field** shown under the title between `data modelled` and
+  `granularity`: what was assigned, in words, with no share ("Sunni, from national estimates";
+  "Sunni outside Ghardaïa"). It shows whatever tier the dots carry, so Morocco and Indonesia read the
+  same sentence. Short, because it counts toward the 80-word top-text cap; adding it took Egypt,
+  Palestine and Sudan over, and their `gap` lines were cut (old wording in each `sources/<cc>.md`).
+
+**Where it lives.** `scatter.py` accepts the tier name; `tiles.py` writes `t=3` and the `assigned`
+field into counts.json; buffers carry it in the same two bits; `rollup.py`, `countries/_shared.py`
+and `tools/check_rollup.py` treat it as derived for the roll; in `index.html` the colour and filter
+expressions (`rollsExpr`), both vertex shaders, the hit test, the hover cards, `tierTally`,
+`tierShares`, `rollMutes`, the control caption and `renderProvenance`. A country whose counted
+Muslims are all assigned (Djibouti) is not muted: assigned counts as measured for §7a-iii.
+
+**Users:** §2.6b's Muslims and, the same day, §2.6a's Buddhist schools (ten countries; Bangladesh
+carries both and its row reads "Sunni and Theravada, from national estimates"). Probably next:
+China's §14.5 rows, which are `derived` today.
 
 ## 8. Pipeline
 
@@ -7759,9 +7838,10 @@ sampling points shuffled within wave), and match the groups on both sides first.
 
 A unit sampled in one round takes its design region's shares when the region beats the country on a
 leave-one-out over its every-round units (lower mean error and closer for more than half), tested per
-region and only on the answers it changes; otherwise the national rate. Carchi (`ec`) is ruled to take
-Sierra's shares and it is not yet applied. Enforced by: `sources/co.py::region_fallback`, with
-`co.py::main` asserting `ONE_ROUND`, `ON_REGION`, `NOT_DRAWN`. Playbook: `playbooks/lapop.md`. Full
+region and only on the answers it changes; otherwise the national rate. Carchi (`ec`) takes Sierra's
+shares, applied 2026-10-03 (sources.md §ec-2026-10-03). Enforced by: `sources/co.py::region_fallback`,
+with `co.py::main` asserting `ONE_ROUND`, `ON_REGION`, `NOT_DRAWN`, and `ec.py::main` importing it and
+asserting the same for Ecuador. Playbook: `playbooks/lapop.md`. Full
 text: `spec_archive/12.md`.
 
 ### KONTUR'S DENSITY CAP MAKES FALSE CITIES, AND ONLY A WRITTEN LIST CAN TELL THEM FROM REAL ONES — Uzbekistan and five more, 2026-09-14

@@ -1,0 +1,72 @@
+# Kyrgyzstan, 2022 census native language (taxonomy/kg2022.py). Checked against Glottolog
+# (data/raw/glottolog/values.csv classification):
+#   Dungan (dung1253) is Sinitic; Glottolog files it under Mandarin (mand1471 > zhon1236,
+#   Zhongyuan), but `sinitic.mandarin` is a leaf other countries draw on, and a child would turn it
+#   into a group drawn as "language not named". Dungan is written in Cyrillic, standardised apart
+#   and asked as a language of its own by the census (it has its own column in Naryn's volume),
+#   so it is a sibling of Mandarin, as the usual handbooks list it.
+#   Aghul (aghu1253) is Lezgic (lezg1248), beside Lezgian.
+#   "Languages of India and Pakistan": the census's own language of the "peoples of India and
+#   Pakistan", which names no language; a named leaf under `other`, as Azerbaijan's "Jewish".
+
+#
+# Colours. Generated, Kyrgyz, Uzbek, Kazakh and Uyghur all came out the same mid pink round
+# Turkic's hue, and Kyrgyz and Uzbek are THE pair that meets on the ground (Osh, Jalal-Abad,
+# Batken, the Fergana valley edge). Hand-picked here: Kyrgyz a full red (the country's 80%),
+# Uzbek a lighter magenta-pink, Kazakh a pale rose (it meets Kyrgyz in Talas and Chui), Uyghur a
+# light orange (Chui, Bishkek, and Osh beside Uzbek), all still in Turkic's warm region of the
+# wheel. Elsewhere these four are a few thousand migrants (ca, cz, pl,
+# ua), so nothing there depends on the old colours. Russian (green), Dungan (violet) and Tajik
+# (sand) already stand apart from all three.
+
+# ---- parents and languages defined elsewhere, repeated identically ----
+turkic | Turkic
+turkic.kyrgyz | Kyrgyz | 0.64 0.20 25
+turkic.uzbek | Uzbek | 0.74 0.15 345
+turkic.uyghur | Uyghur | 0.58 0.16 312
+turkic.kazakh | Kazakh | 0.84 0.09 15
+turkic.turkish | Turkish
+turkic.azerbaijani | Azerbaijani
+turkic.tatar | Tatar
+turkic.turkmen | Turkmen
+turkic.karachay_balkar | Karachay-Balkar
+turkic.kumyk | Kumyk
+indoeuropean | Indo-European
+indoeuropean.slavic | Slavic
+indoeuropean.slavic.east | East Slavic
+indoeuropean.slavic.east.russian | Russian
+indoeuropean.slavic.east.ukrainian | Ukrainian
+indoeuropean.slavic.east.belarusian | Belarusian
+indoeuropean.slavic.south | South Slavic
+indoeuropean.slavic.south.bulgarian | Bulgarian
+indoeuropean.iranian | Iranian
+indoeuropean.iranian.tajik | Tajik
+indoeuropean.iranian.kurdish | Kurdish
+indoeuropean.germanic | Germanic
+indoeuropean.germanic.continental | Continental West Germanic
+indoeuropean.germanic.continental.german | German
+indoeuropean.romance | Romance
+indoeuropean.romance.moldovan | Moldovan
+indoeuropean.indoaryan | Indo-Aryan
+indoeuropean.indoaryan.romani | Romani
+indoeuropean.indoaryan.romani.romani | Romani
+sinotibetan | Sino-Tibetan
+sinotibetan.sinitic | Chinese
+koreanic | Koreanic
+koreanic.korean | Korean
+mongolic | Mongolic
+mongolic.kalmyk | Kalmyk
+nakhdaghestanian | Nakh-Daghestanian
+nakhdaghestanian.lezgic | Lezgic
+nakhdaghestanian.lezgic.lezgian | Lezgian
+nakhdaghestanian.dargwa | Dargwa
+nakhdaghestanian.nakh | Nakh
+nakhdaghestanian.nakh.chechen | Chechen
+nakhdaghestanian.avarandic | Avar-Andic
+nakhdaghestanian.avarandic.avar | Avar
+other | Other or unclassified
+
+# ---- new ----
+sinotibetan.sinitic.dungan | Dungan | 0.56 0.20 291
+nakhdaghestanian.lezgic.agul | Aghul
+other.india_pakistan | Languages of India and Pakistan (the census's "own language" of their peoples)

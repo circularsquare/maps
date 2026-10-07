@@ -1,0 +1,120 @@
+# Ethiopia (2007 census, mother tongue). Nodes for taxonomy/et2007.py.
+#
+# Middle levels are the conventional ones for Ethiopia (Bender, Ethnologue): Ethiopian Semitic,
+# Cushitic in three (Lowland East, Highland East, Agaw), Omotic inside Afroasiatic, and
+# Nilo-Saharan as one family. Glottolog agrees on every language's branch below but does not
+# accept the two big groupings: it keeps the Omotic families (Ta-Ne-Omotic, South Omotic,
+# Dizoid, Blue Nile Mao) out of Afroasiatic and gives Nilotic, Surmic, Koman, Gumuz, Berta and
+# Kunama a family each. ask/ has the question for Anita (a new top-level family).
+#
+# Group colours, plus hand-picked ones for the big languages and their neighbours on the
+# ground (AGENT_BRIEF §3); the rest are generated near their group (build.py).
+
+afroasiatic.ethiosemitic | Ethiopian Semitic | 0.76 0.14 60
+afroasiatic.ethiosemitic.amharic | Amharic | 0.78 0.15 70
+afroasiatic.ethiosemitic.tigrinya | Tigrinya | 0.58 0.14 15
+afroasiatic.ethiosemitic.gurage | Gurage | 0.70 0.14 50
+afroasiatic.ethiosemitic.silte | Silt'e | 0.86 0.12 95
+afroasiatic.ethiosemitic.harari | Harari | 0.82 0.13 80
+afroasiatic.ethiosemitic.argobba | Argobba | 0.70 0.13 85
+
+afroasiatic.cushitic | Cushitic | 0.76 0.13 150
+afroasiatic.cushitic.lowland | Lowland East Cushitic | 0.76 0.14 140
+afroasiatic.cushitic.lowland.oromo | Oromo | 0.72 0.16 145
+afroasiatic.cushitic.lowland.somali | Somali | 0.84 0.13 120
+afroasiatic.cushitic.lowland.afar | Afar | 0.66 0.12 180
+afroasiatic.cushitic.lowland.konso | Konso | 0.80 0.14 155
+afroasiatic.cushitic.lowland.gawwada | Debase (Gawwada) | 0.62 0.13 130
+afroasiatic.cushitic.lowland.gidole | Gidole | 0.86 0.10 140
+afroasiatic.cushitic.lowland.daasanach | Daasanach | 0.76 0.13 125
+afroasiatic.cushitic.lowland.saho | Saho (Irob) | 0.80 0.10 170
+afroasiatic.cushitic.lowland.tsamai | Tsamai | 0.66 0.12 150
+afroasiatic.cushitic.lowland.dirasha | Dirasha | 0.70 0.12 165
+afroasiatic.cushitic.lowland.mosiye | Mosiye | 0.74 0.10 175
+afroasiatic.cushitic.lowland.mashile | Mashile | 0.88 0.08 150
+afroasiatic.cushitic.lowland.kusume | Kusume | 0.68 0.10 110
+afroasiatic.cushitic.lowland.arbore | Arbore | 0.84 0.11 105
+afroasiatic.cushitic.lowland.baiso | Gidicho (Baiso) | 0.78 0.10 135
+afroasiatic.cushitic.highland | Highland East Cushitic | 0.76 0.12 185
+afroasiatic.cushitic.highland.sidama | Sidama | 0.70 0.13 200
+afroasiatic.cushitic.highland.hadiyya | Hadiyya | 0.82 0.11 185
+afroasiatic.cushitic.highland.gedeo | Gedeo | 0.86 0.09 215
+afroasiatic.cushitic.highland.kambaata | Kambaata | 0.66 0.11 175
+afroasiatic.cushitic.highland.alaba | Alaba | 0.62 0.11 190
+afroasiatic.cushitic.highland.timbaro | Timbaro | 0.86 0.09 175
+afroasiatic.cushitic.highland.mareko | Mareko (Libido) | 0.72 0.10 225
+afroasiatic.cushitic.highland.qebena | Qebena | 0.88 0.08 195
+afroasiatic.cushitic.highland.burji | Burji | 0.70 0.12 215
+afroasiatic.cushitic.highland.donga | Donga | 0.76 0.12 205
+afroasiatic.cushitic.agaw | Agaw | 0.80 0.10 110
+afroasiatic.cushitic.agaw.awngi | Awngi | 0.64 0.13 115
+afroasiatic.cushitic.agaw.xamtanga | Xamtanga (Kamyr) | 0.84 0.11 100
+afroasiatic.cushitic.agaw.felashigna | Felashigna | 0.74 0.08 95
+
+afroasiatic.omotic | Omotic | 0.72 0.14 330
+afroasiatic.omotic.ometo | Ometo | 0.72 0.15 340
+afroasiatic.omotic.ometo.wolaytta | Wolaytta | 0.66 0.18 0
+afroasiatic.omotic.ometo.gamo | Gamo | 0.78 0.14 330
+afroasiatic.omotic.ometo.dawro | Dawro | 0.86 0.09 270
+afroasiatic.omotic.ometo.gofa | Gofa | 0.62 0.15 305
+afroasiatic.omotic.ometo.koore | Koore | 0.72 0.16 345
+afroasiatic.omotic.ometo.male | Male | 0.86 0.09 340
+afroasiatic.omotic.ometo.basketo | Basketo | 0.68 0.14 320
+afroasiatic.omotic.ometo.konta | Konta | 0.76 0.13 15
+afroasiatic.omotic.ometo.oyda | Oyda | 0.80 0.12 355
+afroasiatic.omotic.ometo.zayse | Zayse | 0.70 0.13 330
+afroasiatic.omotic.ometo.chara | Chara | 0.84 0.10 20
+afroasiatic.omotic.ometo.kachama | Kachama-Ganjule | 0.64 0.12 340
+afroasiatic.omotic.ometo.koyra | Koyra | 0.78 0.10 310
+afroasiatic.omotic.gonga | Gonga (Kefoid) | 0.74 0.13 300
+afroasiatic.omotic.gonga.kafa | Kafa | 0.70 0.15 290
+afroasiatic.omotic.gonga.shekkacho | Shekkacho | 0.84 0.11 285
+afroasiatic.omotic.gonga.shinasha | Shinasha (Boro) | 0.62 0.14 280
+afroasiatic.omotic.bench | Bench | 0.82 0.10 300
+afroasiatic.omotic.yem | Yem | 0.76 0.13 320
+afroasiatic.omotic.mao | Mao | 0.66 0.14 335
+afroasiatic.omotic.dizoid | Dizoid | 0.76 0.12 285
+afroasiatic.omotic.dizoid.sheko | Sheko | 0.74 0.12 270
+afroasiatic.omotic.dizoid.dizi | Dizi | 0.86 0.08 280
+afroasiatic.omotic.dizoid.nayi | Nayi (Nao) | 0.64 0.12 295
+afroasiatic.omotic.south | South Omotic | 0.78 0.12 355
+afroasiatic.omotic.south.aari | Aari | 0.74 0.15 355
+afroasiatic.omotic.south.hamer | Hamer | 0.86 0.10 15
+afroasiatic.omotic.south.banna | Banna | 0.64 0.14 335
+afroasiatic.omotic.south.demegna | Demegna | 0.88 0.07 345
+afroasiatic.omotic.south.karo | Karo | 0.80 0.12 330
+afroasiatic.omotic.south.dime | Dime | 0.70 0.12 20
+
+nilosaharan | Nilo-Saharan | 0.72 0.12 255
+nilosaharan.nilotic | Nilotic | 0.70 0.13 250
+nilosaharan.nilotic.nuer | Nuer | 0.66 0.15 255
+nilosaharan.nilotic.anuak | Anuak | 0.82 0.10 240
+nilosaharan.nilotic.nyangatom | Nyangatom | 0.74 0.12 265
+nilosaharan.surmic | Surmic | 0.76 0.11 225
+nilosaharan.surmic.meen | Me'en | 0.74 0.12 220
+nilosaharan.surmic.suri | Suri | 0.86 0.08 230
+nilosaharan.surmic.mursi | Mursi | 0.64 0.12 215
+nilosaharan.surmic.bodi | Bodi | 0.80 0.10 205
+nilosaharan.surmic.mesengo | Mesengo | 0.70 0.10 235
+nilosaharan.surmic.bacha | Bacha (Kwegu) | 0.84 0.09 215
+nilosaharan.surmic.zilmamu | Zilmamu | 0.76 0.09 240
+nilosaharan.surmic.koygo | Koygo | 0.66 0.09 225
+nilosaharan.surmic.murle | Murle | 0.88 0.06 220
+nilosaharan.surmic.majang | Majang | 0.72 0.11 228
+nilosaharan.gumuz | Gumuz | 0.80 0.11 260
+nilosaharan.berta | Berta | 0.78 0.10 210
+nilosaharan.berta.berta | Berta | 0.66 0.12 225
+nilosaharan.berta.fadashi | Fadashi
+nilosaharan.koman | Koman | 0.74 0.12 275
+nilosaharan.koman.komo | Komo | 0.72 0.13 280
+nilosaharan.koman.opo | Opo | 0.84 0.09 270
+nilosaharan.koman.gwama | Gwama | 0.64 0.11 290
+nilosaharan.kunama | Kunama
+
+# Named in the census, not identified with any language (sources/et.md says what was tried).
+other.merigna | Merigna
+other.brayligna | Brayligna (probably Braille)
+other.guagugna | Guagugna
+other.wergigna | Wergigna
+other.gebatogna | Gebatogna
+other.shegna | Shegna

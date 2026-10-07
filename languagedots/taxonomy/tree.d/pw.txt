@@ -1,0 +1,30 @@
+# Palau (2015 Census, Table 16, language spoken at home; taxonomy/pw2015.py). Checked against
+# Glottolog (data/raw/glottolog/languages.csv): Palauan pala1344 is its own Malayo-Polynesian
+# branch (gu.txt already has it); Sonsorol sons1242 and Tobian tobi1238 form the family
+# Sonsorol-Tobi sons1245, Chuukic, inside Oceanic.
+#
+# New: Sonsorolese and Tobian, one leaf for the census's "Carolinian". In Palau's census
+# "Carolinian" is the southwest islanders' language (Sonsorol and Hatohobei states; the
+# constitution of each makes its own language official), not the Carolinian of Saipan
+# (gu.txt's austronesian.oceanic.carolinian). The table does not tell the two apart, and the 12
+# speakers live in Sonsorol, Koror and Airai, so one leaf rather than a split by state.
+#
+# The rest are repeated bare from tree.txt and other fragments so Palau stands on its own under
+# `build.py --only`; their colours stay where they were set.
+austronesian | Austronesian
+austronesian.palauan | Palauan
+austronesian.philippine | Philippine
+austronesian.oceanic | Oceanic
+austronesian.oceanic.sonsorol_tobi | Sonsorolese and Tobian | 0.58 0.13 185.0
+pacific_other | Other Pacific Island languages
+indoeuropean | Indo-European
+indoeuropean.germanic | Germanic
+indoeuropean.germanic.english | English
+sinotibetan | Sino-Tibetan
+sinotibetan.sinitic | Chinese
+sinotibetan.sinitic.min_nan | Min Nan (Taiwanese, Hokkien)
+japonic | Japonic
+japonic.japanese | Japanese
+koreanic | Koreanic
+koreanic.korean | Korean
+other | Other or unclassified

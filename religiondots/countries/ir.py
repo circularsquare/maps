@@ -24,9 +24,10 @@ def _ir_counts():
 
     THE `مسلمان` (MUSLIM) ROWS ARE REPLACED, NOT SUPPLEMENTED (ir_split.py, 2026-09-15), the way
     in_split.csv replaces India's `Muslim`. ir_split.csv holds every province's Muslims again:
-    Masaili's Sunnis in 16 provinces (`derived`, rolling back to `islam` through ir2016.COLUMNS)
-    plus a smaller census `مسلمان` for the rest, summing to the census figure. Adding them without
-    dropping these would count 7.6M Muslims twice, and the check below stops that.
+    Masaili's Sunnis in 16 provinces plus the rest on Shia in all 31 (Anita's ruling of
+    2026-09-15), all `derived` and rolling back to `islam` through ir2016.COLUMNS, summing to the
+    census figure. Adding them without dropping these would count 79.6M Muslims twice, and the
+    check below stops that.
     """
     from ir2016 import resolve
     import ir2016
@@ -74,8 +75,8 @@ ENTRY = {
             "constitution recognises, plus other and not stated. The Statistical Centre of Iran "
             "prints the counts for all 31 provinces in its statistical yearbook. Muslims are "
             "**99.6%**. "
-            "**Sunni Muslims are drawn from one researcher's estimate.** No Iranian census "
-            "publishes Muslims by sect. Mehdi Masaili, a Shia cleric who teaches at the Isfahan "
+            "**Sunni and Shia Muslims are drawn from one researcher's estimate.** No Iranian "
+            "census publishes Muslims by sect. Mehdi Masaili, a Shia cleric who teaches at the Isfahan "
             "seminary, put Iran's Sunnis at **7.6 million**, 9.5% of the country, in his "
             "*Atlas-e Towsifi-ye Ahl-e Sonnat-e Iran* (2023), from library and field research "
             "he did alone. He gives each province a share of its 2016 census population: "
@@ -87,8 +88,12 @@ ENTRY = {
             "Isfahan among them, draw no Sunnis, though his table does not say they have none. "
             "His paper argues against claims that Sunnis are a fifth or more of Iran, and a "
             "Sunni author, Soltani (2015), puts Iran's Sunni Kurds about two million higher. "
-            "The rest of Iran's Muslims are drawn without a branch; most are Twelver Shia, but "
-            "no source counts them. "
+            "The rest of Iran's Muslims, **72.0 million**, are drawn as Shia, including every "
+            "Muslim in those 15 provinces. Masaili says Twelver Shia are the majority but gives "
+            "no figure for them, so the Shia count is each province's census Muslims less his "
+            "Sunnis. Any Sunnis he missed are therefore drawn as Shia, such as the Kurds Soltani "
+            "counts and he does not, and so are Kermanshah's Yarsan (Ahl-e Haqq) who answered "
+            "Muslim on the census. "
             "**Zoroastrians and Jews live mostly in a few provinces.** Zoroastrians are 23,109 "
             "people and **0.32%** of Yazd, against 0.03% of Iran, though Tehran province has "
             "more of them (8,579 against Yazd's 3,600). Half of Iran's 9,826 Jews are in Tehran "
@@ -101,8 +106,8 @@ ENTRY = {
             "**There is no Baháʼí answer on the census.** People who answered other, 40,551 in "
             "all, are drawn as other religion. The 124,572 people (0.16%) who did not state a "
             "religion are not drawn."),
-        how="census, 2016; Sunni Muslims from one researcher's 2023 estimate",
-        fill="from Masaili's 2023 estimate of Sunni Muslims by province",
+        how="census, 2016; Muslims split into Sunni and Shia by one researcher's 2023 estimate",
+        fill="from Masaili's 2023 estimate of Sunni Muslims by province, the other Muslims as Shia",
         grain="provinces, 2.6 million people on average",
         gap="the 0.16% who did not state a religion",
         gap_share=0.00156,
@@ -126,7 +131,9 @@ ENTRY = {
              "node. THE MUSLIM COLUMN IS SPLIT BY ir_split.py (2026-09-15, Anita's ruling of "
              "2026-09-16): Masaili's 2023 Sunni estimates by province (Haft Aseman 26(88), "
              "Table 1, re-read off the PDF), 7,608,500 Sunnis `derived` and rolling back to "
-             "islam; the rest stays on islam, not islam.shia, because nobody published a Shia "
-             "figure. sources/ir.md §9 has the record.",
+             "islam. THE REST GOES ON islam.shia in every province, also `derived` and rolling "
+             "back to islam (Anita's ruling of 2026-09-15, applied 2026-10-03; it reverses the "
+             "first build, which left the rest on islam). sources/ir.md §9 and §11 have the "
+             "record.",
     ),
 }

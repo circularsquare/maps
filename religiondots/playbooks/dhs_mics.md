@@ -12,8 +12,8 @@ DHS half of this playbook is a priced route, not a tested one.
 - `hn` Honduras: drawn, ENDESA-MICS 2019, INE's open zip with no weights (rebuilt from the report), 18
   departments.
 - `la` Laos: drawn from the census; LSIS 2011-12 and 2017 (`HC1A`, with `Animist` and `No religion`
-  separate) put the census "No religion" box at about 99.8% animist, unweighted. Redraw ruled, listed in
-  `queue.md`.
+  separate) put the census "No religion" box at about 99.8% animist, unweighted. Redrawn on
+  `indigenous.laos` 2026-10-03 (`sources/la.md` §11).
 - `pa` Panama and `cr` Costa Rica: drawn from LAPOP. MICS 2013 (`HC1.A` asked of every household member)
   and EMNA 2018 (MICS6, representative at 7 provinces) would replace them; Anita downloaded Panama's file on
   2026-09-09 and neither is built.
@@ -26,7 +26,18 @@ DHS half of this playbook is a priced route, not a tested one.
   gated. `ng`, `tz`, `ug`, `mz`, `gn`, `zm` were drawn without it. No religion item in Türkiye 2018
   (`sources/tr.md`), Jordan's JPFHS (`sources/jo.md`), Morocco 2003-04 or Mauritania 2019-21; the DHS API
   lists no Eritrean datasets at all.
+- `ss` South Sudan: drawn 2026-10-03 from the World Bank and NBS High Frequency South Sudan Survey wave 1
+  (2015), not a MICS but the same shape (head's religion, EA clusters, a household weight); 6 of 10 states.
+  `sources/ss.py`, `sources/ss.md` §5.
 - `uz` uses the five DHS 1996 survey regions as a coarse design grouping, not DHS data.
+- `gq` Equatorial Guinea: drawn 2026-10-03 from the open DHS 2011 **report**, not the recode: Cuadro 3.1's
+  national religion rows for women and men 15-49, combined at the census's sex split and laid on every
+  province at one mix. The route where a census asked and printed nothing and no survey has geography.
+  Weight the two sexes by population, not by the weighted n (the men's sample is a subsample).
+  `sources/gq.py::read_table` reads the rows back from the text layer. `sources/gq.md` §2.
+- `er` Eritrea: drawn 2026-10-03 the same way from the EPHS 2010 report (a DHS-shaped survey run by
+  the NSO and Fafo, open on `afro.who.int`), Table 3-1's `Women ALL` and `Men` columns combined at the
+  survey's own household sex split; no census exists. `sources/er.py`, `sources/er.md` §3.
 
 ## Loading it
 - **Look for the office's own open MICS copy first.** `do`: `data/raw/do/mics6_2019_{hogares,miembros}.csv`.
@@ -107,6 +118,28 @@ DHS half of this playbook is a priced route, not a tested one.
   checked yet in `hn.py` (the 2.96x was a read-only re-run; `tz.py::compose` is the pattern that asserts
   `TAIL_FLAT`). Detail: spec §12 "SMALL CATEGORIES GO IN THE RESIDUAL UNLESS IT DRAWS ONE AT 2x";
   `sources/hn.md` §4.2, §9.
+- **A multi-select religion item's first variable is card order, not the head's first choice.** South
+  Sudan's HFS stores C.9 as `religion1`/`religion2`; all 32 two-answer heads have Christianity (code 1)
+  first, so `religion1` alone would put every Christian-and-traditional household on Christianity. Split
+  the household between its answers. The same files key households on `(state, ea, hh)`; `hh` alone
+  repeats, and a join on it silently matches nothing. Caught by: `ss.py::load_wave` (the key, `hhsize`
+  against the roster, a second answer with no first). Detail: `sources/ss.md` §5.1.
+- **A later wave can be towns only while keeping every state's code.** HFS wave 2 has no `urban`
+  variable and no rural EA; pooling it with wave 1 would count the towns twice. Read the EA list per
+  state before pooling; a towns-only wave is a replicate of the earlier urban half (Islam r +0.992 there).
+  Caught by: Not checked in code (the comparison is `ss.py::wave2_witness`, printed). Detail:
+  `sources/ss.md` §5.1.
+- **A report-table survey and Pew can disagree because Pew's figure is the World Religion Database.**
+  Eritrea's EPHS 2010 has 37% Muslim, Pew 2020 52%; Pew's 2025 Appendix A ("Sources") lists WRD as the
+  only composition source for Eritrea (and Equatorial Guinea, French Guiana and about two dozen more),
+  and WRD ascribes religion by ethnic group. Read the country's row in that appendix before treating
+  Pew as a second measurement. Caught by: Not checked yet (a reading step; the appendix PDF is
+  `pewresearch.org/wp-content/uploads/sites/20/2025/06/PR_2025.06.09_global-religious-change_appendix-a.pdf`).
+  Detail: `sources/er.md` §2.
+- **A survey can print two women's columns.** EPHS 2010's Table 3-1 has `Women CORE` (10,238) and
+  `Women ALL` (30,224, the core plus a maternal-mortality module); take ALL, and expect its rows to
+  fall a few short of the total where the card's `Other` has no printed row. Caught by:
+  `sources/er.py::read_table` (row sums within 10). Detail: `sources/er.md` §1.
 - **A MICS split source is unweighted, about heads, and not proportional.** LSIS's animist share of heads
   (37-38%) runs above the census's 31%, and its `Other religion` may also sit inside the census cell. A
   weighted split needs the UNICEF file; LSIS III 2023 is unchecked. Caught by: Not checked yet. Detail:

@@ -1,0 +1,64 @@
+# Kenya, Afrobarometer R4 and R6-R9 home language (taxonomy/ke2022.py). Checked against
+# Glottolog (data/raw/glottolog/languages.csv): Kikuyu kiku1240, Kamba kamb1297, Meru meru1245,
+# Embu embu1241, Gusii gusi1247, Taita tait1250, Kuria kuri1259, Suba suba1238, Pokomo
+# poko1261, Swahili swah1253 (Bajuni baju1245 is a dialect of it, drawn as a sibling because
+# the respondents named it), Luyia luyi1234 and Mijikenda miji1238 subgroups: all Atlantic-Congo,
+# Bantu. Dholuo luok1236, Turkana turk1308, Teso teso1249, Samburu samb1315, Maasai, Pokoot
+# poko1263, Sabaot saba1262, Okiek okie1245 and the Kalenjin subgroup kale1246: Nilotic
+# (Nilo-Saharan as most readers know it). Somali soma1255, Borana-Arsi-Guji Oromo bora1271,
+# Orma orma1241, Garre garr1259, Rendille rend1243: Lowland East Cushitic.
+#
+# Luhya, Kalenjin and Mijikenda are leaves although Glottolog files each as a subgroup: the
+# survey's card offers the cluster as one answer, and a group node would draw a named answer
+# washed out. Pokot, Sabaot and Okiek are Kalenjin languages but sit beside Kalenjin, not
+# under it, for the same reason. Sheng, Nairobi's Swahili-based urban vernacular, has no
+# Glottolog entry; it sits under Bantu beside Swahili.
+#
+# Colours, for neighbours on the Kenyan ground. Every Kenyan node is hand-picked off its
+# parent's generated grid (chroma 0.04-0.10 or 0.18-0.20, or lightness outside 0.55-0.82), so
+# no generated sibling elsewhere moves; Gikuyu and Kamba are pinned to the colours they had
+# before this fragment (diffed against a build without ke.txt: nothing outside Kenya moved).
+# Central: Gikuyu orange, Meru vivid red, Embu pale pink, Kamba yellow. West: Luhya red-orange,
+# Kalenjin violet, Luo blue (existing), Gusii gold, Kuria dark red, Teso pale periwinkle, Sabaot
+# grey lilac. Coast: Mijikenda crimson, Swahili orange (existing), Taita brown, Pokomo pink,
+# Bajuni olive. North: Turkana cyan, Pokot lilac, Samburu deep blue, Rendille pale mint, Orma
+# teal, Garre dark green beside Somali's lime.
+
+# ---- parents and nodes defined in other fragments, repeated identically ----
+nigercongo | Niger-Congo
+nigercongo.bantu | Bantu
+nigercongo.bantu.gikuyu | Gikuyu | 0.760 0.140 60.2
+nigercongo.bantu.swahili | Swahili
+nigercongo.bantu.kamba | Kamba (Kikamba) | 0.820 0.140 100.3
+nilosaharan | Nilo-Saharan
+nilosaharan.nilotic | Nilotic
+nilosaharan.nilotic.luo | Luo (Dholuo)
+nilosaharan.nilotic.maasai | Maasai
+afroasiatic.cushitic | Cushitic
+afroasiatic.cushitic.lowland | Lowland East Cushitic
+afroasiatic.cushitic.lowland.somali | Somali
+afroasiatic.cushitic.lowland.oromo | Oromo
+africa_other | Other African languages
+
+# ---- Kenya ----
+nigercongo.bantu.luhya | Luhya (Luyia) | 0.68 0.19 45
+nigercongo.bantu.gusii | Gusii (Ekegusii) | 0.80 0.18 85
+nigercongo.bantu.mijikenda | Mijikenda | 0.62 0.19 0
+nigercongo.bantu.meru | Meru (Kimeru) | 0.60 0.20 25
+nigercongo.bantu.embu | Embu (Kiembu) | 0.86 0.07 30
+nigercongo.bantu.taita | Taita (Kidawida) | 0.50 0.10 60
+nigercongo.bantu.kuria | Kuria | 0.52 0.15 20
+nigercongo.bantu.suba | Suba | 0.90 0.07 80
+nigercongo.bantu.pokomo | Pokomo | 0.80 0.09 350
+nigercongo.bantu.bajuni | Bajuni | 0.66 0.08 95
+nigercongo.bantu.sheng | Sheng | 0.93 0.04 70
+nilosaharan.nilotic.kalenjin | Kalenjin | 0.56 0.19 300
+nilosaharan.nilotic.pokot | Pokot (Pökoot) | 0.80 0.10 330
+nilosaharan.nilotic.sabaot | Sabaot | 0.72 0.07 310
+nilosaharan.nilotic.okiek | Okiek | 0.64 0.06 240
+nilosaharan.nilotic.samburu | Samburu | 0.48 0.14 260
+nilosaharan.nilotic.turkana | Turkana | 0.78 0.12 185
+nilosaharan.nilotic.teso | Teso (Ateso) | 0.86 0.07 280
+afroasiatic.cushitic.lowland.orma | Orma | 0.58 0.12 200
+afroasiatic.cushitic.lowland.garre | Garre | 0.56 0.13 125
+afroasiatic.cushitic.lowland.rendille | Rendille | 0.92 0.06 160

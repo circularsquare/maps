@@ -1,0 +1,20 @@
+# Gambia (taxonomy/gm2013.py). 2013 census ethnic group by LGA, read as language through
+# Afrobarometer R7 mother tongues. No new nodes: every one is defined by another fragment
+# (sn, gw, ml, sl) and repeated here with the same label, so Gambia builds on its own.
+nigercongo | Niger-Congo
+nigercongo.mande | Mande
+nigercongo.mande.mandinka | Mandinka
+nigercongo.mande.jahanka | Jahanka (Diakhanké)
+nigercongo.mande.soninke | Soninke
+nigercongo.mande.bambara | Bamanankan (Bambara)
+nigercongo.atlantic | Atlantic
+nigercongo.atlantic.fulah | Fula
+nigercongo.atlantic.wolof | Wolof
+nigercongo.atlantic.serer | Serer (Sereer)
+nigercongo.atlantic.manjak | Manjak (Mànjaku)
+nigercongo.atlantic.jola | Jola languages
+nigercongo.atlantic.jola.joola | Jola (Joola)
+creole | Creoles
+creole.english_based | English-based creoles
+creole.english_based.krio | Krio
+africa_other | Other African languages

@@ -1,0 +1,6 @@
+# Cape Verde (no language question; everyone on Kabuverdianu). No new nodes; bare repeats of
+# st.txt's and us.txt's lines so the country stands on its own under `build.py --only`.
+# Colour stays us.txt's.
+creole | Creoles
+creole.portuguese_based | Portuguese-based creoles
+creole.portuguese_based.kabuverdianu | Kabuverdianu

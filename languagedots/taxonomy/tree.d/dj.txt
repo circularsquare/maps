@@ -1,0 +1,14 @@
+# Djibouti (taxonomy/dj2024.py). RGPH-3 2024 languages spoken; every node is defined elsewhere
+# and repeated here with the same label so the country builds on its own.
+afroasiatic | Afroasiatic
+afroasiatic.arabic | Arabic
+afroasiatic.yemeni_arabic | Yemeni Arabic
+afroasiatic.cushitic | Cushitic
+afroasiatic.cushitic.lowland | Lowland East Cushitic
+afroasiatic.cushitic.lowland.somali | Somali
+afroasiatic.cushitic.lowland.afar | Afar
+afroasiatic.cushitic.lowland.oromo | Oromo
+afroasiatic.ethiosemitic | Ethiopian Semitic
+afroasiatic.ethiosemitic.amharic | Amharic
+signlanguage | Sign language
+other | Other or unclassified

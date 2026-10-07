@@ -12,7 +12,9 @@ line is the graph of the OSM ways carrying its name, as in Korea and Taiwan.
 THE REGISTER UNIT is the line as MTR names it: the ten heavy-rail lines (東鐵綫, 屯馬綫, 觀塘綫,
 荃灣綫, 港島綫, 南港島綫, 東涌綫, 機場快綫, 將軍澳綫, 迪士尼綫), MTR Light Rail as ONE line (輕鐵:
 MTR draws and counts it as one 36.2 km network; its twelve numbered routes stay OSM operating
-patterns over it), Hong Kong Tramways as one line, and the Peak Tram.
+patterns over it), Hong Kong Tramways as one line, and the Peak Tram. Plus the high-speed
+line's Hong Kong section, 香港西九龍 to the border, as a piece of China's 广深港高速线 under its
+id (BORDER_PIECES, at the end).
 
 WHICH STATIONS ARE ON A LINE comes from MTR's own open data (hk_sources.md): the "MTR lines and
 stations" and "Light Rail routes and stops" files on DATA.GOV.HK, which give every line's
@@ -82,7 +84,7 @@ LINES = {
 CODE = {v[1]: k for k, v in LINES.items() if v[1]}          # EAL -> 東鐵綫
 
 # OSM track name (its Chinese half) -> the register line(s) it is. Everything else named is not
-# register track: 廣深港高速鐵路 (see hk_sources.md), the airport's airside people mover, Ocean
+# register track: 廣深港高速鐵路 (built apart, by border_pieces), the airport's airside people mover, Ocean
 # Park's 海洋列車, 藍田服務聯絡綫 (a depot link).
 TRACK = {
     "港鐵東鐵綫": ("東鐵綫",), "港鐵東鐵綫馬場支綫": ("東鐵綫",),
@@ -619,6 +621,12 @@ def build(path, log):
         log(f"  HK: {name:<6} {lines[-1]['km']:7.2f} km  {len(sections):3d} sections  "
             f"{len({s for k in sections for s in k}):3d} stations  ({kind})")
 
+    for line, sts, g in border_pieces(ways, st, by_key, coords, log):
+        for sid, rec in sts.items():
+            stations.setdefault(sid, rec)["lines"].add(line["id"])
+        lines.append(line)
+        geoms[line["id"]] = g
+
     total = sum(l["km"] for l in lines)
     log(f"HK: {len(lines)} register lines, {total:,.1f} km, {len(stations)} stations; "
         f"dropped (under two stations): {' '.join(dropped) or 'none'}")
@@ -634,6 +642,73 @@ def build(path, log):
         for l, nm in unmatched:
             log(f"    {l}: {nm}")
     return lines, stations, geoms
+
+
+# --------------------------------------------------------------------------- over the border
+
+# The high-speed line's Hong Kong section, 香港西九龍 to the border in the tunnel under the
+# Shenzhen River (borders.EXTRA xFutian), built as Hong Kong's PIECE OF MAINLAND CHINA'S
+# 广深港高速线, under cn_register's id for it. Trains run West Kowloon - 福田 - 深圳北 - 广州南
+# and on into the mainland; there is no other station in Hong Kong and no OSM route relation,
+# so on its own it had nothing to make a section to. The app joins lines of one id from every
+# country into one line, each country's totals counting its own piece, so a ride 福田 ->
+# 香港西九龍 is one ride on one line and credits both. Kept by build_model through
+# `served_sections`. (Not an OSM line: none exists in either extract, and the track needs an
+# owner in Hong Kong's register the way 26 km of tunnel deserves.)
+#   (border point, station here (Chinese name), OSM track name (Chinese part), identity)
+def _xrl():
+    from cn_register import line_id as cn_line_id
+    return (cn_line_id("广深港高速线"), "廣深港高速鐵路",
+            "Guangzhou–Shenzhen–Hong Kong Express Rail Link", "", *MTR, "rail")
+
+
+BORDER_PIECES = [("xFutian", "香港西九龍", "廣深港高速鐵路", _xrl)]
+PIECE_STATION_M = 300
+PIECE_BORDER_M = 60
+
+
+def border_pieces(ways, st, by_key, coords, log):
+    """[(line, {station id: station}, geoms)] for BORDER_PIECES (sg_register's way)."""
+    import borders
+    from sg_register import track_piece
+    pts = {p["id"]: p for p in borders.load(canonical_only=True)}
+    out = []
+    for pid, stname, track, ident in BORDER_PIECES:
+        p = pts.get(pid)
+        cands = by_key.get(zh_key(stname), ())
+        if p is None or not cands:
+            log(f"  HK: border piece {stname} - {pid}: "
+                + ("no border point" if p is None else "no OSM station of that name"))
+            continue
+        nid = min(cands, key=lambda n: st[n]["rank"])
+        s = st[nid]
+        wids = [w for w, (t, _n) in ways.items()
+                if t.get("railway") in TRACK_KIND and t.get("service") != "yard"
+                # the English half's en dashes stay in the key: "廣深港高速鐵路––"
+                and zh_key(t.get("name") or "").strip("–-") == track]
+        got = track_piece(wids, ways, coords, s["lon"], s["lat"], p["lon"], p["lat"])
+        if got is None or got[2] > PIECE_STATION_M or got[3] > PIECE_BORDER_M:
+            log(f"  HK: border piece {stname} - {pid}: no track between them "
+                + ("" if got is None else f"(station {got[2]:.0f} m, point {got[3]:.0f} m off)"))
+            continue
+        geom, km, _da, _db = got
+        geom = geom + [(p["lon"], p["lat"])]
+        lid, name, name_en, ref, op, op_en, kind = ident()
+        a, key = f"h{nid}", f"h{nid}|{pid}"
+        line = {"id": lid, "src": "hk", "service": False, "name": name, "name_en": name_en,
+                "ref": ref, "colour": "", "operator": op, "operator_en": op_en, "network": "",
+                "kind": kind, "highspeed_sections": {key: True},
+                "km": round(km, 3), "variants": 1, "straight_sections": 0,
+                "display": [a, pid], "sections": [[a, pid, round(km, 3)]],
+                "served_sections": [key]}
+        sts = {a: {"id": a, "name": s["name"], "name_en": s["name_en"], "lon": s["lon"],
+                   "lat": s["lat"], "lines": set()},
+               pid: {"id": pid, "name": p["name"], "name_en": "", "lon": p["lon"],
+                     "lat": p["lat"], "lines": set(), "junction": True}}
+        log(f"  HK: {name} ({name_en}), the piece over the border: {s['name']} - {p['name']} "
+            f"{km:.3f} km, under the neighbour's id {lid}")
+        out.append((line, sts, {key: [[round(x, 5), round(y, 5)] for x, y in geom]}))
+    return out
 
 
 if __name__ == "__main__":

@@ -1,0 +1,79 @@
+at: 125 register lines, 47 in pieces, 3,178 km on them, 1,111 km outside the biggest piece; causes {'rinf-hole': 45, 'reader': 2, 'reader:rejected': 2, 'reader:untraceable': 2, 'reader:unplaced': 0}
+be: 148 register lines, 7 in pieces, 154 km on them, 6 km outside the biggest piece; causes {'rinf-hole': 7}
+nl: 96 register lines, 8 in pieces, 418 km on them, 61 km outside the biggest piece; causes {'reader': 3, 'reader:rejected': 3, 'reader:untraceable': 1, 'reader:unplaced': 0, 'rinf-hole': 5}
+cz: 244 register lines, 22 in pieces, 1,293 km on them, 226 km outside the biggest piece; causes {'reader': 5, 'reader:rejected': 5, 'reader:untraceable': 1, 'reader:unplaced': 0, 'rinf-hole': 17}
+pl: 358 register lines, 11 in pieces, 646 km on them, 193 km outside the biggest piece; causes {'reader': 9, 'reader:rejected': 9, 'reader:untraceable': 6, 'reader:unplaced': 4, 'rinf-hole': 2}
+hu: 133 register lines, 5 in pieces, 387 km on them, 76 km outside the biggest piece; causes {'rinf-hole': 3, 'reader': 2, 'reader:rejected': 2, 'reader:untraceable': 0, 'reader:unplaced': 1}
+pt: 24 register lines, 1 in pieces, 220 km on them, 67 km outside the biggest piece; causes {'drop-gap': 1}
+si: 22 register lines, 0 in pieces, 0 km on them, 0 km outside the biggest piece; causes {}
+sk: 70 register lines, 4 in pieces, 289 km on them, 77 km outside the biggest piece; causes {'rinf-hole': 3, 'drop-gap': 1}
+bg: 32 register lines, 4 in pieces, 1,378 km on them, 435 km outside the biggest piece; causes {'rinf-hole': 3, 'reader': 2, 'reader:rejected': 2, 'reader:untraceable': 1, 'reader:unplaced': 0}
+ro: 86 register lines, 5 in pieces, 1,010 km on them, 216 km outside the biggest piece; causes {'reader': 2, 'reader:rejected': 2, 'reader:untraceable': 2, 'reader:unplaced': 0, 'rinf-hole': 2, 'drop-gap': 1}
+fi: 31 register lines, 0 in pieces, 0 km on them, 0 km outside the biggest piece; causes {}
+lt: 16 register lines, 0 in pieces, 0 km on them, 0 km outside the biggest piece; causes {}
+lv: 10 register lines, 0 in pieces, 0 km on them, 0 km outside the biggest piece; causes {}
+ee: 13 register lines, 0 in pieces, 0 km on them, 0 km outside the biggest piece; causes {}
+hr: 39 register lines, 1 in pieces, 39 km on them, 3 km outside the biggest piece; causes {'rinf-hole': 1}
+gr: 12 register lines, 0 in pieces, 0 km on them, 0 km outside the biggest piece; causes {}
+lu: 16 register lines, 0 in pieces, 0 km on them, 0 km outside the biggest piece; causes {}
+de: 1103 register lines, 50 in pieces, 3,240 km on them, 628 km outside the biggest piece; causes {'rinf-hole': 42, 'reader': 9, 'reader:rejected': 9, 'reader:untraceable': 6, 'reader:unplaced': 1}
+it: 310 register lines, 11 in pieces, 1,354 km on them, 138 km outside the biggest piece; causes {'reader': 9, 'reader:rejected': 9, 'reader:untraceable': 0, 'reader:unplaced': 0, 'drop-gap': 5}
+es: 171 register lines, 3 in pieces, 172 km on them, 17 km outside the biggest piece; causes {'reader': 3, 'reader:rejected': 3, 'reader:untraceable': 1, 'reader:unplaced': 1}
+se: 56 register lines, 1 in pieces, 22 km on them, 1 km outside the biggest piece; causes {'reader': 1, 'reader:rejected': 1, 'reader:untraceable': 0, 'reader:unplaced': 0}
+dk: 46 register lines, 0 in pieces, 0 km on them, 0 km outside the biggest piece; causes {}
+ie: 17 register lines, 0 in pieces, 0 km on them, 0 km outside the biggest piece; causes {}
+ru: 928 register lines, 304 in pieces, 51,030 km on them, 26,135 km outside the biggest piece; causes {'reader': 303, 'reader:rejected': 303, 'reader:untraceable': 36, 'reader:unplaced': 294, 'drop-gap': 2}
+ua: 318 register lines, 62 in pieces, 5,500 km on them, 2,185 km outside the biggest piece; causes {'reader': 62, 'reader:rejected': 62, 'reader:untraceable': 12, 'reader:unplaced': 57}
+by: 75 register lines, 6 in pieces, 677 km on them, 79 km outside the biggest piece; causes {'reader': 6, 'reader:rejected': 6, 'reader:untraceable': 2, 'reader:unplaced': 6}
+md: 15 register lines, 3 in pieces, 196 km on them, 32 km outside the biggest piece; causes {'reader': 3, 'reader:rejected': 3, 'reader:untraceable': 0, 'reader:unplaced': 3}
+in: 720 register lines, 19 in pieces, 3,030 km on them, 742 km outside the biggest piece; causes {'reader': 19, 'reader:rejected': 19, 'reader:untraceable': 11, 'reader:unplaced': 0}
+id: 38 register lines, 0 in pieces, 0 km on them, 0 km outside the biggest piece; causes {}
+nz: 15 register lines, 0 in pieces, 0 km on them, 0 km outside the biggest piece; causes {}
+za: 53 register lines, 0 in pieces, 0 km on them, 0 km outside the biggest piece; causes {}
+rs: 26 register lines, 0 in pieces, 0 km on them, 0 km outside the biggest piece; causes {}
+ba: 5 register lines, 0 in pieces, 0 km on them, 0 km outside the biggest piece; causes {}
+me: 3 register lines, 0 in pieces, 0 km on them, 0 km outside the biggest piece; causes {}
+mk: 6 register lines, 0 in pieces, 0 km on them, 0 km outside the biggest piece; causes {}
+al: 6 register lines, 1 in pieces, 53 km on them, 18 km outside the biggest piece; causes {'reader': 1, 'reader:rejected': 1, 'reader:untraceable': 1, 'reader:unplaced': 0}
+xk: 3 register lines, 1 in pieces, 136 km on them, 39 km outside the biggest piece; causes {'reader': 1, 'reader:rejected': 1, 'reader:untraceable': 1, 'reader:unplaced': 0}
+kz: 74 register lines, 15 in pieces, 4,459 km on them, 1,755 km outside the biggest piece; causes {'reader': 15, 'reader:rejected': 15, 'reader:untraceable': 1, 'reader:unplaced': 14}
+uz: 37 register lines, 4 in pieces, 397 km on them, 121 km outside the biggest piece; causes {'reader': 3, 'reader:rejected': 3, 'reader:untraceable': 0, 'reader:unplaced': 3, 'drop-gap': 1}
+kg: 3 register lines, 1 in pieces, 247 km on them, 76 km outside the biggest piece; causes {'reader': 1, 'reader:rejected': 1, 'reader:untraceable': 0, 'reader:unplaced': 1}
+tj: 5 register lines, 0 in pieces, 0 km on them, 0 km outside the biggest piece; causes {}
+tm: 10 register lines, 2 in pieces, 563 km on them, 168 km outside the biggest piece; causes {'reader': 2, 'reader:rejected': 2, 'reader:untraceable': 1, 'reader:unplaced': 2}
+ge: 18 register lines, 2 in pieces, 45 km on them, 15 km outside the biggest piece; causes {'reader': 2, 'reader:rejected': 2, 'reader:untraceable': 0, 'reader:unplaced': 2}
+am: 10 register lines, 0 in pieces, 0 km on them, 0 km outside the biggest piece; causes {}
+az: 17 register lines, 1 in pieces, 195 km on them, 39 km outside the biggest piece; causes {'reader': 1, 'reader:rejected': 1, 'reader:untraceable': 0, 'reader:unplaced': 1}
+xa: 1 register lines, 0 in pieces, 0 km on them, 0 km outside the biggest piece; causes {}
+ma: 13 register lines, 0 in pieces, 0 km on them, 0 km outside the biggest piece; causes {}
+dz: 24 register lines, 0 in pieces, 0 km on them, 0 km outside the biggest piece; causes {}
+tn: 11 register lines, 1 in pieces, 87 km on them, 10 km outside the biggest piece; causes {'reader': 1, 'reader:rejected': 1, 'reader:untraceable': 0, 'reader:unplaced': 0}
+eg: 30 register lines, 0 in pieces, 0 km on them, 0 km outside the biggest piece; causes {}
+ALL: 602 in pieces, 34,667 km outside; {'rinf-hole': 130, 'reader': 467, 'reader:rejected': 467, 'reader:untraceable': 85, 'reader:unplaced': 390, 'drop-gap': 11}
+worst 15:
+    847.9  ru Лена-Восточная — Хани [] [277.8, 159.4, 143.7, 114.7, 99.1, 70.4, 54.7, 52.4, 37.0, 28.5, 26.1, 25.1, 24.8, 12.1]  reader+13(rejected 16, untraceable 0, unplaced 33)
+    543.7  ru Сосногорск — Воркута [] [148.1, 139.9, 73.5, 53.1, 38.3, 36.2, 35.1, 26.9, 25.3, 24.2, 23.0, 22.6, 22.4, 12.9, 10.2]  reader+14(rejected 15, untraceable 0, unplaced 23)
+    533.7  ru Куэнга — Бамовская [] [210.3, 122.9, 121.3, 81.6, 64.2, 56.1, 17.7, 16.4, 15.6, 12.5, 9.4, 8.9, 7.0]  reader+12(rejected 17, untraceable 0, unplaced 25)
+    531.3  ru Бестужево (рзд) — Новый Ургал [] [391.6, 117.8, 100.8, 90.8, 49.8, 42.6, 31.8, 31.2, 27.9, 20.8, 17.7]  reader+10(rejected 16, untraceable 0, unplaced 16)
+    456.7  ru Хабаровск I — Сибирцево [] [127.9, 104.7, 70.8, 63.9, 53.2, 42.0, 23.1, 22.8, 22.3, 21.4, 18.5, 13.9]  reader+11(rejected 17, untraceable 0, unplaced 17)
+    450.9  ru Тайшет — Лена-Восточная [] [279.6, 110.0, 84.4, 76.3, 37.4, 32.6, 28.4, 25.7, 25.1, 21.3, 9.9]  reader+10(rejected 11, untraceable 0, unplaced 17)
+    435.7  ru Бамовская — Белогорск [] [154.0, 119.6, 59.6, 40.4, 38.4, 33.3, 27.4, 24.4, 23.5, 22.9, 20.9, 20.2, 5.1]  reader+12(rejected 22, untraceable 0, unplaced 28)
+    357.5  ru Иркутск-Пассажирский — Улан-Удэ [] [96.3, 87.3, 85.8, 69.7, 50.8, 22.1, 13.9, 13.7, 7.6, 6.7]  reader+9(rejected 17, untraceable 0, unplaced 19)
+    349.4  ru Комсомольск-Сортировочный — Ванино [] [57.4, 51.6, 43.3, 40.3, 33.7, 28.8, 28.6, 27.3, 26.6, 25.5, 18.6, 17.1, 8.0]  reader+13(rejected 14, untraceable 0, unplaced 14)
+    320.0  ru Войновка — Называевская [] [93.5, 81.3, 49.5, 45.1, 34.4, 28.5, 17.8, 16.3, 10.9, 10.3, 9.8, 9.7, 4.0, 2.6]  reader+13(rejected 24, untraceable 0, unplaced 26)
+    318.4  ru Кинель — Чишмы [] [114.7, 90.1, 76.6, 52.6, 37.0, 16.6, 14.9, 11.5, 9.8, 9.3]  reader+9(rejected 10, untraceable 0, unplaced 33)
+    303.8  ru Ачинск I — Тигей [] [127.7, 120.6, 61.2, 56.5, 40.3, 25.3]  reader+5(rejected 14, untraceable 0, unplaced 14)
+    302.3  ru Татарская — Обь [] [136.8, 102.0, 63.7, 53.9, 22.8, 21.8, 18.8, 16.8, 2.6]  reader+8(rejected 11, untraceable 0, unplaced 11)
+    295.2  ru Тигей — Саянская [] [108.6, 101.9, 77.9, 50.3, 30.6, 12.9, 11.5, 10.1]  reader+7(rejected 10, untraceable 1, unplaced 11)
+    283.0  ru Ивдель II (пп) — Приобье [] [92.7, 61.6, 47.4, 44.1, 35.2, 29.9, 23.5, 16.4, 14.0, 11.0]  reader+10(rejected 12, untraceable 0, unplaced 12)
+dropped junction-ended sections between two pieces: 10, 64 km; route share histogram [(0.0, 5), (0.2, 2), (0.5, 2), (0.1, 1)]
+    36.9 km  pt Linha do Sul: Pinheiro - Grândola Norte  share 0.037
+    13.2 km  it Dugenta – Benevento – Foggia: Ponte Albanito - Dev. Binario IM lato BN/PZ  share 0.0
+     6.2 km  it Venezia – Udine – Tarvisio: PM Vat - Udine Parco Dev. Laipacco  share 0.128
+     3.7 km  uz Qarshi — Kitob: Toshgʻuzor - Ост. Пункт 34 км  share 0.0
+     1.1 km  it Palermo – Punta Raisi: Palermo Maredolce - Dev. Estr. Palermo Centrale  share 0.165
+     1.1 km  it Palermo – Giachery: Palermo Maredolce - Dev. Estr. Palermo Centrale  share 0.165
+     1.0 km  sk 188 Košice – Muszyna: Orlov - Plaveč výh. č. 5/6  share 0.0
+     0.4 km  ro Secția 102 București – Giurgiu: R1 Jilava - R2 Jilava  share 0.0
+     0.0 km  ru Смычка — Алапаевск: Салка - Салка  share 0.5
+     0.0 km  ru Сакмарская — Мурапталово: Октябрьское - Октябрьское (рзд)  share 0.497

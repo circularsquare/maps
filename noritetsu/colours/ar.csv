@@ -1,0 +1,10 @@
+line,operator,colour,source,url,note
+Línea Mitre,,#00A3E0,picked,,Trenes Argentinos paints every line the same light blue (OSM #37bbed) and publishes no per-line colours; picked to tell the seven Buenos Aires lines apart
+Línea Sarmiento,,#2E9E44,picked,,as Línea Mitre
+Línea Roca,,#1F4FA3,picked,,as Línea Mitre
+Línea San Martín,,#D6338A,picked,,as Línea Mitre
+Línea Belgrano Sur,,#E8A317,picked,,as Línea Mitre
+Línea Belgrano Norte,,#D62D20,picked,,as Línea Mitre; OSM's route_master has red
+Línea Urquiza,,#7B3FA0,picked,,as Línea Mitre
+Tren de la Costa,,#00DFFE,wikidata,https://www.wikidata.org/wiki/Q3538439,P465
+Metrotranvía de Mendoza,,#2CA05A,wikidata,https://www.wikidata.org/wiki/Q56346144,P465

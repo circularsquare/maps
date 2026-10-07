@@ -44,7 +44,7 @@ mixed-level construction places no answer at the coarse level (Uzbekistan's resu
 places by department (Spearman +0.08 between their pooled shares), so they are tested and
 drawn as the two answers the card offers.
 
-## FOUR DEPARTMENTS ARE ASSUMED AND SEVEN ARE LEFT BLANK
+## FOUR DEPARTMENTS ARE ASSUMED, ONE COMES FROM A SECOND SURVEY, AND SIX ARE LEFT BLANK
 
 Ecuador's line (§9bn, Anita 2026-09-08 on Carchi and Galápagos): whether anything measured
 the place at all.
@@ -60,11 +60,17 @@ the place at all.
     apart) and Vaupés (the old national territories, 1 of 2) stay national.** The first
     build drew all four national, on a leave-one-out averaged over every region and four
     answers, which hid that the Caribbean is where the region wins (sources/co.md §6, §10).
-  * **Not drawn: Chocó, Arauca, Vichada, Guaviare, Amazonas, San Andrés and Guainía.** LAPOP
-    has no code for any of them, 1,303,929 people, 2.45% of Colombia, in `gap=`.
+  * **Amazonas is drawn from Latinobarómetro (2026-10-03, sources/co.md §11).** LAPOP has no
+    code for it; Latinobarómetro interviewed 40 people in Leticia in each of its nine waves
+    2010-2023, and its department readings predict LAPOP's better than the country does
+    (latinobarometro_units()).
+  * **Not drawn: Chocó, Arauca, Vichada, Guaviare, San Andrés and Guainía.** LAPOP has no code
+    for any of them and Latinobarómetro reaches only Chocó, outside the window, in readings too
+    small to pass; 1,216,477 people, 2.29% of Colombia, in `gap=`.
 
 Usage:
     python sources/co.py --fetch    read Colombia's rows out of the 1.1 GB LAPOP .dta (~2 min)
+    python sources/latinobarometro.py --fetch    the Latinobarómetro zips Amazonas needs
     python sources/co.py            rebuild data/normalized/co.csv from that extract
 """
 
@@ -97,7 +103,7 @@ PAIS = 8                       # LAPOP's country code for Colombia
 WAVES = [2010, 2012, 2014, 2018, 2023]
 SOURCE_ID = "co_lapop_2010_2023"
 N_UNITS = 33
-N_SAMPLED = 26
+N_SAMPLED = 26                 # by LAPOP; Amazonas (LB_DRAWN) makes 27 drawn
 N_RESPONDENTS = 7_532
 EXTRA = ["municipio", "upm", "cluster", "estratopri", "tamano"]
 
@@ -121,8 +127,18 @@ ONE_ROUND = {
 ON_REGION = ["CO44", "CO85"]   # La Guajira (Atlántica), Casanare (Oriental)
 NOT_DRAWN = {
     "CO27": "Chocó", "CO81": "Arauca", "CO88": "San Andrés, Providencia y Santa Catalina",
-    "CO91": "Amazonas", "CO94": "Guainía", "CO95": "Guaviare", "CO99": "Vichada",
+    "CO94": "Guainía", "CO95": "Guaviare", "CO99": "Vichada",
 }
+
+# ---- Latinobarómetro, for a department LAPOP never sampled (sources/co.md §11, 2026-10-03) ----
+# Its 2010-2023 waves, LAPOP's window. Every one samples the same 20 departments at fixed sizes.
+LB_WAVES = [2010, 2011, 2013, 2015, 2016, 2017, 2018, 2020, 2023]
+LB_DRAWN = {"CO91": "Amazonas"}           # 40 respondents in each of the nine waves (Leticia)
+LB_N = {"CO91": 360}
+# Chocó is the one other gap department Latinobarómetro reached, and only outside the window:
+# 2000 (Bagadó, Tadó), 2008, 2009 (San José del Palmar) and 2024 (Bojayá, El Carmen de Atrato).
+LB_OUT_WAVES = [2008, 2009, 2024]          # 2000's file predates latinobarometro.CARD_WAVES
+LB_OUT_PASSES = False                      # asserted: out-of-window readings do not beat the country
 
 # LAPOP municipality labels that are not COD's spelling of the same DANE code. All three are
 # the short everyday name of the city COD gives in full, at the same code, so they are aliases
@@ -411,6 +427,214 @@ def region_fallback(df, fine_units, one_round, cats, unit_col="geo_id", region_c
     return use
 
 
+def latinobarometro_units(df, fine_units, nat, names, pop):
+    """Latinobarómetro's reading for the departments in LB_DRAWN, translated onto LAPOP's card.
+
+    sources/co.md §11. The steps, each asserted:
+      1. `ciudad`'s department digits decode by name to one COD department in every wave, and the
+         2007 Paraguayan code is the only foreign one (outside the window anyway).
+      2. A witness that uses no place name: in every wave that asks race or ethnicity, the
+         respondents placed in Amazonas name themselves indigenous at least three times as often
+         as the country's.
+      3. Latinobarómetro's own split-half, at its every-wave departments over the nine waves, on
+         the three groups it shares with LAPOP (GROUPS): printed.
+      4. The deciding test, region_fallback's rule with Latinobarómetro in the region's place: for
+         each department in every LAPOP round and every LB_WAVES wave, predict LAPOP's pooled
+         shares of the three placed answers two ways, from the rest of the country in LAPOP and
+         from the department's own Latinobarómetro reading translated as in 5; it is used only if
+         its mean summed error is lower AND it is closer for more than half.
+      5. The translation: Catholic is Catholic; LAPOP's evangelical share is Latinobarómetro's
+         Protestant group times LAPOP's national evangelical share of its two Protestant boxes;
+         LAPOP's `Ninguna (creyente)` is the none group times its national share of believers
+         without a religion plus agnostics and atheists. The other answers fill the residual at
+         national proportions, as in lapop.build.
+    Also asserted: Chocó's out-of-window readings fail the same test (LB_OUT_PASSES).
+    Returns the rows for LB_DRAWN in lapop.build's columns.
+    """
+    import latinobarometro as lbm
+    from scipy.stats import spearmanr
+
+    import stability as shared
+    lut = pd.read_csv(LOOKUP, dtype={"geo_id": str})
+    by_name = {fold(n): g for g, n in zip(lut["geo_id"], lut["name"])}
+    by_name.update({fold("Bogotá D.C."): "CO11", fold("Cesar"): "CO20", fold("César"): "CO20"})
+
+    def decode(d):
+        d = d.copy()
+        foreign = d[d["ciudad"] // 1_000_000 != 170]
+        got = {(int(w), int(c)): n for (w, c), n in foreign.groupby(["wave", "ciudad"]).size().items()}
+        if got not in ({}, {(2007, 600008002): 65}):
+            raise SystemExit(f"Latinobarómetro Colombian rows with a foreign ciudad: {got}")
+        d = d[d["ciudad"] // 1_000_000 == 170].copy()
+        d["dcode"] = d["ciudad"] // 1000 % 1000
+        d["dname"] = (d["ciudad_label"].str.replace("CO:", "", regex=False).str.split("-").str[0]
+                      .str.strip().map(fold))
+        per = d.groupby("dcode")["dname"].agg(lambda s: sorted(set(s) - {""}))
+        if (per.map(len) != 1).any():
+            raise SystemExit(f"ciudad department codes with no or several names: "
+                             f"{per[per.map(len) != 1].to_dict()}")
+        d["geo_id"] = d["dcode"].map(per.map(lambda v: by_name.get(v[0])))
+        if d["geo_id"].isna().any():
+            raise SystemExit(f"ciudad departments with no COD department: "
+                             f"{sorted(per[d.loc[d['geo_id'].isna(), 'dcode'].unique()].map(str))}")
+        return d
+
+    lb = decode(lbm.load("co", LB_WAVES))
+    print(f"\n  Latinobarómetro {LB_WAVES[0]}-{LB_WAVES[-1]}, Colombia: {len(lb):,} respondents in "
+          f"{lb['geo_id'].nunique()} departments")
+    tab = lb.groupby(["geo_id", "wave"]).size().unstack(fill_value=0)
+    every = sorted(tab.index[(tab > 0).all(axis=1)])
+    for g, n in LB_N.items():
+        if g not in every or int(tab.loc[g].sum()) != n:
+            raise SystemExit(f"{names[g]}: {int(tab.loc[g].sum()) if g in tab.index else 0} "
+                             f"Latinobarómetro respondents in {LB_WAVES[0]}-{LB_WAVES[-1]}, expected {n} "
+                             "in every wave")
+    if set(tab.index) & set(NOT_DRAWN):
+        raise SystemExit(f"Latinobarómetro now reaches {sorted(set(tab.index) & set(NOT_DRAWN))} in "
+                         "the window; test it as LB_DRAWN")
+
+    # ---- the witness ----
+    for w in sorted(set(LB_WAVES) & set(lbm.RACE)):
+        s = lb[(lb["wave"] == w) & (lb["race_label"] != "")]
+        ind = s["race_label"].map(fold).str.startswith("indigena")
+        for g in LB_DRAWN:
+            a, b = ind[s["geo_id"] == g].mean(), ind.mean()
+            print(f"    {w}: {a:.0%} of {names[g]}'s respondents name themselves indigenous, "
+                  f"{b:.0%} of the country's")
+            if not a >= 3 * b:
+                raise SystemExit(f"{w}: the indigenous witness fails for {names[g]}")
+
+    # ---- Latinobarómetro's own split-half ----
+    G = list(lbm.GROUPS)
+    wi = {w: i for i, w in enumerate(LB_WAVES)}
+    ui = {u: i for i, u in enumerate(every)}
+    a = lb[lb["geo_id"].isin(every) & (lb["rel"] > 0)]
+    cube = np.zeros((len(LB_WAVES), len(every), len(G)))
+    tot = np.zeros((len(LB_WAVES), len(every)))
+    for (w, u), s in a.groupby(["wave", "geo_id"]):
+        tot[wi[w], ui[u]] = len(s)
+        for j, g in enumerate(G):
+            cube[wi[w], ui[u], j] = s["rel"].isin(lbm.GROUPS[g]).sum()
+    splits = shared.halvings(len(LB_WAVES))
+    obs = shared.median_rho(cube, splits, tot=tot)
+    null = shared.wave_null(cube, splits, STAB_PERM, STAB_SEED, tot=tot)
+    print(f"    its own split-half at its {len(every)} every-wave departments, median of "
+          f"{len(splits)} halvings: " + "; ".join(
+              f"{g} {obs[j]:+.3f} p={shared.permutation_p(obs[j], null[:, j], STAB_ALPHA)[0]:.4f}"
+              for j, g in enumerate(G)))
+
+    # ---- the deciding test ----
+    lap_groups = {"cath": [1], "prot": [2, 5], "none": [4, 11]}
+    r5 = nat[5] / (nat[5] + nat[2])
+    r4 = nat[4] / (nat[4] + nat[11])
+    placed = [1, 5, 4]
+
+    def translate(sh):
+        return np.array([sh["cath"], sh["prot"] * r5, sh["none"] * r4])
+
+    lbs = lbm.group_shares(lb, "geo_id")
+    fine = df[df["geo_id"].isin(fine_units)]
+    C = (fine[fine["code"].isin(placed)].groupby(["geo_id", "code"])["w"].sum()
+         .unstack(fill_value=0.0).reindex(columns=placed, fill_value=0.0))
+    W = fine.groupby("geo_id")["w"].sum()
+    both = sorted(set(every) & set(fine_units))
+
+    def loo(readings, label, max_n=None):
+        """`readings` is {department: (group shares, respondents)}. With `max_n`, only readings of
+        at most that many respondents enter: a reading is judged against readings of its size."""
+        rows = []
+        for d, (sh, n) in readings.items():
+            if max_n is not None and n > max_n:
+                continue
+            own = (C.loc[d] / W[d]).to_numpy()
+            country = ((C.drop(index=d).sum() / W.drop(index=d).sum())).to_numpy()
+            rows.append((d, n, np.abs(own - country).sum() * 100,
+                         np.abs(own - translate(sh)).sum() * 100))
+        r = pd.DataFrame(rows, columns=["geo_id", "n", "country", "lb"]).set_index("geo_id")
+        closer = int((r["lb"] < r["country"]).sum())
+        ok = len(r) >= 5 and r["lb"].mean() < r["country"].mean() and closer * 2 > len(r)
+        print(f"    {label}: mean summed error, Latinobarómetro {r['lb'].mean():.2f} against the "
+              f"country {r['country'].mean():.2f} points; Latinobarómetro closer in {closer} of "
+              f"{len(r)} -> {'USE IT' if ok else 'not used'}")
+        return r, ok
+
+    print(f"\n  does Latinobarómetro's department reading predict LAPOP's? The {len(both)} "
+          "departments in every round of both, leave-one-out over Catholic, evangelical and "
+          "Ninguna as drawn:")
+    for g in G:
+        x = (fine[fine["code"].isin(lap_groups[g])].groupby("geo_id")["w"].sum()
+             .reindex(both, fill_value=0.0) / W[both])
+        y = lbs.loc[both, g]
+        rng = np.random.default_rng(0)
+        o = spearmanr(x, y).statistic
+        nl = np.array([spearmanr(x, rng.permutation(y.to_numpy())).statistic for _ in range(20000)])
+        print(f"    {g} group, Spearman of the two instruments' department shares {o:+.3f}, "
+              f"{int((nl >= o).sum())} of 20,000 random pairings reach it")
+    readings = {d: (lbs.loc[d], int(lbs.loc[d, "n"])) for d in both}
+    r, ok = loo(readings, f"{LB_WAVES[0]}-{LB_WAVES[-1]}, all {len(both)}")
+    for g in LB_DRAWN:
+        _r, ok_g = loo(readings, f"only readings of at most twice {names[g]}'s {LB_N[g]}",
+                       max_n=2 * LB_N[g])
+        ok = ok and ok_g
+    for d, x in r.iterrows():
+        print(f"      {names[d][:22]:<24} n_lb={int(lbs.loc[d, 'n']):<5} country {x['country']:5.1f}"
+              f"   Latinobarómetro {x['lb']:5.1f}")
+    if not ok:
+        raise SystemExit("Latinobarómetro no longer predicts LAPOP's departments; LB_DRAWN cannot "
+                         "be drawn from it")
+
+    # ---- Chocó, outside the window: each department relative to its own waves' country ----
+    out = decode(lbm.load("co", LB_OUT_WAVES))
+    out = out[out["rel"] > 0]
+    natw = {w: lbm.group_shares(s.assign(all=1), "all").iloc[0] for w, s in out.groupby("wave")}
+    nat_lap = pd.Series({g: (df[df["code"].isin(lap_groups[g])]["w"].sum() / df["w"].sum())
+                         for g in G})
+    rel_read = {}
+    for d, s in out.groupby("geo_id"):
+        acc, n = pd.Series(0.0, index=G), 0
+        for w, sw in s.groupby("wave"):
+            acc += len(sw) * (lbm.group_shares(sw, "geo_id").iloc[0][G] - natw[w][G])
+            n += len(sw)
+        rel_read[d] = (nat_lap + acc / n, n)
+    n_choco = rel_read["CO27"][1]
+    tested = {d: v for d, v in rel_read.items() if d in fine_units}
+    _r, ok_all = loo(tested, f"{', '.join(map(str, LB_OUT_WAVES))}, each department against "
+                             "its waves' country, all")
+    _r, ok_small = loo(tested, f"the same, only readings of at most twice Chocó's {n_choco}",
+                       max_n=2 * n_choco)
+    out_ok = ok_all and ok_small
+    if out_ok != LB_OUT_PASSES:
+        raise SystemExit("the out-of-window test changed verdict; read it and reconsider Chocó")
+    ch = out[out["geo_id"] == "CO27"]
+    print(f"    Chocó: {len(ch)} respondents in {sorted(ch['wave'].unique())}, so it stays blank")
+
+    # ---- the rows ----
+    small = [c for c in nat.index if c not in placed]
+    small_total = float(nat[small].sum())
+    rows = []
+    for g in LB_DRAWN:
+        sh = translate(lbs.loc[g])
+        residual = 1.0 - sh.sum()
+        p = int(pop.loc[g, "pop"])
+        print(f"    {names[g]}: Latinobarómetro n={int(lbs.loc[g, 'n'])}, Catholic "
+              f"{lbs.loc[g, 'cath']:.1%}, Protestant group {lbs.loc[g, 'prot']:.1%}, none group "
+              f"{lbs.loc[g, 'none']:.1%} -> drawn Catholic {sh[0]:.1%}, evangelical {sh[1]:.1%}, "
+              f"Ninguna {sh[2]:.1%}, the rest {residual:.1%}")
+        for c, v in zip(placed, sh):
+            rows.append((g, lapop.CATEGORY[c], v * p,
+                         "Latinobarómetro department share, translated to LAPOP's card"))
+        for c in small:
+            rows.append((g, lapop.CATEGORY[c], residual * nat[c] / small_total * p,
+                         "national share within the department's residual"))
+    res = pd.DataFrame(rows, columns=["geo_id", "source_category", "count", "basis_note"])
+    res["count"] = res["count"].round().astype("int64")
+    for g in LB_DRAWN:
+        m = res["geo_id"] == g
+        res.loc[res.loc[m, "count"].idxmax(), "count"] += (int(pop.loc[g, "pop"])
+                                                           - int(res.loc[m, "count"].sum()))
+    return res
+
+
 def main():
     if "--fetch" in sys.argv:
         fetch()
@@ -453,16 +677,20 @@ def main():
     if set(at_national) != set(ONE_ROUND):
         raise SystemExit(f"departments outside the split-half are now {at_national}, not "
                          f"{sorted(ONE_ROUND)} — LAPOP's sample has changed")
-    blank = sorted(set(lut["geo_id"]) - set(sampled["geo_id"]))
-    if set(blank) != set(NOT_DRAWN) or set(df["geo_id"]) & set(NOT_DRAWN):
-        raise SystemExit(f"the undrawn departments are now {blank}, not {sorted(NOT_DRAWN)}")
+    unsampled = sorted(set(lut["geo_id"]) - set(sampled["geo_id"]))
+    if set(unsampled) != set(NOT_DRAWN) | set(LB_DRAWN) or set(df["geo_id"]) & set(unsampled):
+        raise SystemExit(f"the departments LAPOP never sampled are now {unsampled}, not "
+                         f"{sorted(set(NOT_DRAWN) | set(LB_DRAWN))}")
+    blank = sorted(NOT_DRAWN)
     gap = int(pop.loc[blank, "pop"].sum())
     print(f"\n  {len(fine_units)} departments in every wave; {len(at_national)} in one only "
           f"({int(pop.loc[at_national, 'pop'].sum()):,} people, "
           f"{pop.loc[at_national, 'pop'].sum() / pop['pop'].sum():.2%}):")
     for gid in at_national:
         print(f"    {gid} n={int((df['geo_id'] == gid).sum()):<4}{ONE_ROUND[gid]}")
-    print(f"  {len(blank)} NOT DRAWN, no LAPOP code: {gap:,} people "
+    print(f"  {len(LB_DRAWN)} with no LAPOP code drawn from Latinobarómetro: "
+          + ", ".join(LB_DRAWN.values()))
+    print(f"  {len(blank)} NOT DRAWN, in neither survey's window: {gap:,} people "
           f"({gap / pop['pop'].sum():.2%}): {', '.join(NOT_DRAWN[g] for g in blank)}")
 
     # ---- the tests ----
@@ -520,7 +748,8 @@ def main():
         m = rest["geo_id"] == gid
         rest.loc[rest.loc[m, "count"].idxmax(), "count"] += (int(pop.loc[gid, "pop"])
                                                              - int(rest.loc[m, "count"].sum()))
-    out = pd.concat(parts + [rest], ignore_index=True)
+    lbrows = latinobarometro_units(df, fine_units, nat, names, pop)
+    out = pd.concat(parts + [rest, lbrows], ignore_index=True)
     if out["basis_note"].isna().any():
         raise SystemExit("a region row's basis note did not map — lapop.build's wording changed")
 
@@ -528,11 +757,15 @@ def main():
     out["geo_name"] = out["geo_id"].map(names)
     out["basis"] = "self_id"
     out["year"] = "2010-2023"
-    out["source_id"] = SOURCE_ID
+    out["source_id"] = np.where(out["geo_id"].isin(list(LB_DRAWN)), "co_latinobarometro_2010_2023",
+                                SOURCE_ID)
     n_by = df.groupby("geo_id").size()
-    out["n_dept"] = out["geo_id"].map(n_by).astype(int)
+    out["n_dept"] = out["geo_id"].map(n_by)
     out["note"] = out.apply(
-        lambda r: (f"LAPOP AmericasBarometer waves 2010-2023 pooled, n={r.n_dept} in this "
+        lambda r: (f"Latinobarómetro waves 2010-2023 pooled, n={LB_N[r.geo_id]} in this "
+                   f"department (LAPOP never sampled it); {r.basis_note} applied to the COD-PS "
+                   "2025 population" if r.geo_id in LB_DRAWN else
+                   f"LAPOP AmericasBarometer waves 2010-2023 pooled, n={int(r.n_dept)} in this "
                    f"department; {r.basis_note} applied to the COD-PS 2025 population"), axis=1)
 
     total = int(out["count"].sum())

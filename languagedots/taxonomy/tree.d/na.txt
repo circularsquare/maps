@@ -1,0 +1,40 @@
+# Namibia (taxonomy/na2011.py). Census 2011, main language spoken in the household. The census
+# offers thirteen answers, six of them named as groups ("Oshiwambo languages"). Parents and
+# languages other fragments already define are repeated identically (label and colour), so a
+# change there shows up as a clash, not a dangle.
+#
+# KHOISAN, a new root. Glottolog has no Khoisan family: Khoekhoe is in Khoe-Kwadi (khoe1240),
+# the Ju and !Xun languages in Kx'a (kxaa1236), Taa and !Xoon in Tuu (tuuu1241). Readers know
+# them as one family, and the brief's rule (families as most readers know them, Anita
+# 2026-10-04, as for Nilo-Saharan) gives them one root. Under it, Khoe (khoe1241) holds
+# Khoekhoegowab, the Nama/Damara language (Glottolog nama1264, North Khoekhoe); the Kalahari
+# Khoe languages (Naro, Khwe) belong under Khoe too when a census names them. The census's "San
+# languages" spans Khoe, Kx'a and Tuu, so it sits on the root (na2011.py).
+#
+# Oshiwambo and Otjiherero hang from Bantu directly, as Venda does: Glottolog's Ndonga (R.20)
+# and Herero (R.30) groups are under Kunene / Southern Njila, levels no other fragment uses.
+#
+# Colours, for the neighbours on the Namibian ground, using the whole wheel as za.txt does:
+#   Oshiwambo a full orange across the north; Otjiherero a magenta (Kunene, Omaheke,
+#   Otjozondjupa, beside Oshiwambo and Khoekhoegowab); Khoekhoegowab a light yellow (Kunene,
+#   Erongo, the south), apart from Oshiwambo's orange by lightness and from Setswana's olive in
+#   Aminuis; Afrikaans stays us.txt's blue. The Khoisan root, where the San languages are drawn
+#   washed out, is a green, so the washed San in Tsumkwe reads apart from the washed Bantu
+#   (Kavango and Caprivi languages) next door.
+
+# ---- parents and languages defined elsewhere, repeated identically ----
+nigercongo | Niger-Congo | 0.72 0.14 75
+nigercongo.bantu | Bantu | 0.70 0.14 60
+nigercongo.bantu.sotho_tswana | Sotho-Tswana | 0.76 0.12 100
+nigercongo.bantu.sotho_tswana.setswana | Setswana | 0.68 0.14 130
+indoeuropean.germanic.continental | Continental West Germanic | 0.68 0.13 235
+indoeuropean.germanic.continental.afrikaans | Afrikaans | 0.62 0.11 220
+africa_other | Other African languages | 0.58 0.06 40
+
+# ---- new ----
+nigercongo.bantu.oshiwambo | Oshiwambo | 0.72 0.17 45
+nigercongo.bantu.otjiherero | Otjiherero | 0.64 0.17 340
+
+khoisan | Khoisan languages | 0.74 0.14 160
+khoisan.khoe | Khoe | 0.78 0.14 110
+khoisan.khoe.khoekhoe | Khoekhoegowab (Nama/Damara) | 0.86 0.15 100

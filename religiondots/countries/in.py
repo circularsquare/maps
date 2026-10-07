@@ -130,10 +130,7 @@ ENTRY = {
                "and Statistics",
         basis="self-identification, reported by the head of household",
         view=[67.5, 6.5, 97.8, 36.0],
-        gap="0.2%, whose religion the head of household did not state; Muslim branches only "
-            "at Pew's six regions, and none where Pew did not survey; Christian churches for "
-            "about a third of Christians, only in Kerala, Mizoram and Pew's East and South "
-            "regions",
+        gap="0.2%, whose religion the head of household did not state",
         gap_share=0.002368,
         note_public=(
             "One in six people on earth, and the oldest source on this map by a decade: "
@@ -188,12 +185,9 @@ ENTRY = {
             "the analyses or interpretations of the data presented here. The opinions expressed "
             "herein, including any implications for policy, are those of the author and not of "
             "Pew Research Center."),
-        how="census, 2011, answered by the head of household; Muslim branches and Christian "
-            "churches from surveys, except Mizoram's churches, from church rolls",
-        fill="from Pew's 2019 to 2020 survey regions for Muslim branches and for Christian "
-             "churches in the East and South, Kerala Migration Survey districts for Kerala's "
-             "Catholics, Mizoram's 2010 to 2011 church rolls for its churches, and the same "
-             "census at state level for the other religions",
+        how="census, 2011, answered by the head of household",
+        fill="from Pew's 2019 to 2020 survey, Kerala's migration surveys, Mizoram's church "
+             "rolls and the census's state tables",
         grain="sub-districts, 200,000 people on average",
         counts=_in_counts,
         # THE COUNT LAYER IS STILL THE SUB-DISTRICT AND NOTHING HERE CHANGES THAT. India's

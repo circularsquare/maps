@@ -1,0 +1,12 @@
+# Equatorial Guinea (DHS 2011 ethnicity read as language; taxonomy/gq2011.py). Glottolog: Bube
+# bube1242, Kwasio kwas1243, Fa d'Ambo fada1250; Ndowe one leaf for Kombe and Benga (the DHS
+# names the people only). Bubi on Bioko is told apart from Fang's Bantu colour by a hand pick.
+nigercongo | Niger-Congo
+nigercongo.bantu | Bantu
+nigercongo.bantu.fang | Fang
+nigercongo.bantu.bube | Bubi (Bube) | 0.55 0.13 20
+nigercongo.bantu.ndowe | Ndowe (Kombe, Benga)
+nigercongo.bantu.kwasio | Kwasio (Bisio)
+creole | Creoles
+creole.portuguese_based | Portuguese-based creoles
+creole.portuguese_based.fadambo | Fa d'Ambô (Annobonese)

@@ -1,0 +1,20 @@
+# Algeria (taxonomy/dz2022.py). Arab Barometer VI-VII ethnic group read as language.
+# Parents and languages other fragments already define are repeated with the same label and no
+# colour: Berber (ca.txt colours it), Kabyle (ca.txt), French (ao.txt and others).
+#
+# Glottolog (data/raw/glottolog): Algerian Arabic alge1239, Kabyle kaby1243, Chaouia of the
+# Aures tach1249, Tumzabt tumz1238, Tahaggart Tamahaq taha1241; all Afroasiatic, the four Berber
+# ones under Berber. Algerian Arabic sits beside `arabic` as Morocco's Darija does.
+afroasiatic | Afroasiatic
+afroasiatic.algerian_arabic | Algerian Arabic (Darija) | 0.78 0.06 180
+afroasiatic.berber | Berber
+afroasiatic.berber.kabyle | Kabyle
+afroasiatic.berber.chaouia | Chaoui (Chaouia)
+afroasiatic.berber.tumzabt | Tumzabt (Mozabite)
+afroasiatic.berber.tamahaq | Tamahaq (Tuareg)
+indoeuropean | Indo-European
+indoeuropean.romance | Romance
+indoeuropean.romance.french | French
+#
+# Colours: Algerian Arabic one shade off Morocco's Darija mint, so the two read as one dialect
+# continuum across the border.

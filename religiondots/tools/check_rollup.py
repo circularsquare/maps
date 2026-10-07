@@ -109,6 +109,9 @@ def main():
         if "tier" not in df.columns:
             df = df.assign(tier="measured")
         df["tier"] = df["tier"].fillna("measured")
+        # `assigned` (spec §7e) rolls exactly as derived does, so it is checked as derived and
+        # counted in that column here.
+        df["tier"] = df["tier"].replace({"assigned": "derived"})
 
         by = df.groupby(["node", "tier"])["count"].sum()
         measured_nodes = {n for (n, t) in by.index if t == "measured"}

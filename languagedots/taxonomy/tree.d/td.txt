@@ -1,0 +1,83 @@
+# Chad (taxonomy/td2009.py). RGPH2 2009, first national language spoken (Tableau 5.10), every
+# printed row a node.
+#
+# Families and branches checked against Glottolog (data/raw/glottolog), "families as most
+# readers know them" (AGENT_BRIEF §3): Nilo-Saharan is one root; Saharan, Maban, Tamaic and
+# Dajuic languages sit under it as ne.txt and sd.txt already file Kanuri, Tubu, Zaghawa and
+# Masalit (directly, or under Maban).
+#   * Arabe local: Chadian Arabic (chad1249), ne.txt's `afroasiatic.arabic.shuwa`.
+#   * Saharan: Gorane is the census's "Gorane Daza" (Dazaga, daza1242), on ne.txt's Tubu leaf
+#     (a child would wash out Niger's Tubu dots); Kanembu (kane1243) a new leaf beside Kanuri;
+#     Zaghawa/Béri/Bideyat on sd.txt's Zaghawa (Beria, zagh1240).
+#   * Maban: Maba (maba1277), Massalit (sd.txt's, nucl1440), Mimi (Glottolog's Mimi-Nachtigal
+#     mimi1241 is Maban; its Mimi-Gaudefroy mimi1240 is unclassified; Maban is the conventional
+#     account), Rounga (cf.txt's Runga, rung1258).
+#   * Tama (tama1331, Tamaic) and Dadjo (Daju: dard1243 Dar Daju, dars1235 Dar Sila; Dajuic),
+#     new leaves directly under Nilo-Saharan, as Fur and Zaghawa are.
+#   * Central Sudanic (cf.txt's group): Sara (cf.txt's leaf; the census's Sara holds Ngambay,
+#     Sar, Mbay, Gulay, Gor, Laka, Mango, Nangnda, Ngam and Kaba, Annexe 3), Sara Kaba (sara1321,
+#     sara1322, the Kaba languages of Moyen Chari and Mandoul), Barma/Baguirmi (bagi1246),
+#     Boulala (Glottolog's Naba, naba1253, the Bilala-Kuka-Medogo language).
+#   * Adamawa (cf.txt's group, Glottolog's Mbum-Day and kin): Moundang and Toupouri (cm.txt's),
+#     Mboum (cf.txt's Mbum), Daye (Day, dayy1236), Kim (kimm1246).
+#   * Chadic, flat under cm.txt's Chadic: Massa (cm.txt's Masana) and Lélé (cm.txt's Lele;
+#     Glottolog's Lele (Chad), lele1276), and new: Mousseye (Musey muse1242), Marba (marb1239),
+#     Mesmé (mesm1239), Lamé/Pévé (Peve peve1243), Karo/Kado (not in Glottolog under either
+#     name; the census groups it with Zimé and Pévé, the Zime languages of the Masa branch, so
+#     Chadic is what is claimed), Gabri (gabr1253), Kabalaye (Kabalai kaba1292), Nangtchéré
+#     (Nancere nanc1253), Kéra (kera1255), Toumak/Ndom (Tumak tuma1260), Moubi (Mubi mubi1246).
+#   * Peul/Foulfouldé/Bodoré on Fula. Autres 1ères langues nationales parlées on africa_other
+#     (zm.txt's root for an unnamed indigenous remainder).
+#
+# Colours, hand-picked where generated ones sat too close to a neighbour on the ground:
+# Kanembu violet against Gorane's (Tubu's) blue in Kanem and Lac; Maba light pink against
+# Zaghawa's cyan in Ouaddaï and Wadi Fira; Sara Kaba deep blue against Sara's cyan in Moyen
+# Chari; Gabri rust against Marba's pale orange in Tandjilé; Pévé olive against Karo's and
+# Marba's pale oranges in Mayo Kebbi Ouest. No node another country uses was recoloured.
+
+# ---- parents and nodes defined elsewhere, repeated bare (their colours are theirs) ----
+afroasiatic | Afroasiatic
+afroasiatic.arabic | Arabic
+afroasiatic.arabic.shuwa | Shuwa Arabic | 0.60 0.06 164
+afroasiatic.chadic | Chadic
+afroasiatic.chadic.massa | Massa (Masana)
+afroasiatic.chadic.lele | Lele
+nilosaharan | Nilo-Saharan
+nilosaharan.tubu | Tubu (Teda-Daza)
+nilosaharan.zaghawa | Zaghawa (Beria)
+nilosaharan.maban | Maban
+nilosaharan.maban.masalit | Masalit
+nilosaharan.maban.runga | Runga
+nilosaharan.centralsudanic | Central Sudanic
+nilosaharan.centralsudanic.sara | Sara
+nigercongo | Niger-Congo
+nigercongo.atlantic | Atlantic
+nigercongo.atlantic.fulah | Fula
+nigercongo.adamawa | Adamawa (Mbum)
+nigercongo.adamawa.mundang | Mundang
+nigercongo.adamawa.tupuri | Tupuri
+nigercongo.adamawa.mbum | Mbum
+africa_other | Other African languages
+
+# ---- new ----
+nilosaharan.kanembu | Kanembu | 0.60 0.15 295
+nilosaharan.maban.maba | Maba (Ouaddaïen) | 0.80 0.12 350
+nilosaharan.maban.mimi | Mimi
+nilosaharan.tama | Tama
+nilosaharan.daju | Daju (Dadjo)
+nilosaharan.centralsudanic.sara_kaba | Sara Kaba | 0.62 0.14 235
+nilosaharan.centralsudanic.bagirmi | Bagirmi (Barma)
+nilosaharan.centralsudanic.bilala | Bilala (Boulala)
+nigercongo.adamawa.day | Day (Daye)
+nigercongo.adamawa.kim | Kim
+afroasiatic.chadic.musey | Musey (Mousseye)
+afroasiatic.chadic.marba | Marba
+afroasiatic.chadic.mesme | Mesme
+afroasiatic.chadic.peve | Pévé (Lamé) | 0.58 0.11 115
+afroasiatic.chadic.karo | Karo (Kado)
+afroasiatic.chadic.gabri | Gabri | 0.62 0.14 40
+afroasiatic.chadic.kabalai | Kabalai (Kabalaye)
+afroasiatic.chadic.nancere | Nancere (Nangtchéré)
+afroasiatic.chadic.kera | Kera
+afroasiatic.chadic.tumak | Tumak (Toumak)
+afroasiatic.chadic.mubi | Mubi (Moubi)

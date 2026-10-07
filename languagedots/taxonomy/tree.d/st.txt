@@ -1,0 +1,32 @@
+# São Tomé and Príncipe (taxonomy/st2012.py). IV RGPH 2012, languages spoken, several allowed.
+# Parents and languages other fragments already define are repeated with the same label and no
+# colour: Portuguese, the creole root, Portuguese-based creoles, Kabuverdianu (us.txt), French,
+# English, sign language, other.
+#
+# New: the three Gulf of Guinea creoles of the islands, as leaves under Portuguese-based creoles
+# beside Kabuverdianu and Papiamento. Glottolog files all three under Indo-European (its creoles
+# go under the lexifier): Sãotomense saot1239, Angolar ango1258, Principense prin1242. The census
+# calls them Fôrro, Angolar and Lunguié.
+#
+# Colours, for neighbours on the ground. São Tomé island: Forro a darker blue-green, apart from
+# Portuguese's blue-violet and Kabuverdianu's light green, which are on every roça beside it;
+# Angolar, the south coast of Caué, a warm ochre. Príncipe: Lung'ie orange-red beside
+# Kabuverdianu and Portuguese.
+
+# ---- parents and languages defined elsewhere, repeated bare (their colours are theirs) ----
+indoeuropean | Indo-European
+indoeuropean.romance | Romance
+indoeuropean.romance.portuguese | Portuguese
+indoeuropean.romance.french | French
+indoeuropean.germanic | Germanic
+indoeuropean.germanic.english | English
+creole | Creoles
+creole.portuguese_based | Portuguese-based creoles
+creole.portuguese_based.kabuverdianu | Kabuverdianu
+signlanguage | Sign language
+other | Other or unclassified
+
+# ---- new ----
+creole.portuguese_based.forro | Forro (Sãotomense) | 0.56 0.11 190
+creole.portuguese_based.angolar | Angolar | 0.74 0.13 80
+creole.portuguese_based.lungie | Lung'ie (Principense) | 0.66 0.16 35

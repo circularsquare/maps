@@ -61,5 +61,36 @@ class TestRuns(unittest.TestCase):
         self.assertEqual(len(got), 2)
 
 
+import borders  # noqa: E402
+
+
+@unittest.skipUnless(borders.NAMES.exists() and borders.SHAPES.exists(),
+                     "needs religiondots' outlines and Natural Earth")
+class TestAbroad(unittest.TestCase):
+    """Only another country's land (or water nearer it) is abroad, not a coast the simplified
+    outline cut off or the water a tunnel crosses (PATH under the Hudson, 2026-10-05)."""
+
+    def mask(self, region, pts):
+        lon = np.array([p[0] for p in pts])
+        lat = np.array([p[1] for p in pts])
+        return ownership.abroad_mask(region, ownership.merc(lon, lat)).tolist()
+
+    def test_home_land_and_water_stay(self):
+        got = self.mask("us", [(-74.0020, 40.7338),     # PATH under Greenwich Village
+                               (-74.0200, 40.7320),     # under the Hudson
+                               (-73.9700, 40.7400)])    # under the East River
+        self.assertEqual(got, [False, False, False])
+
+    def test_neighbour_land_is_abroad(self):
+        got = self.mask("us", [(-79.3832, 43.6532),     # Toronto
+                               (-106.4245, 31.6904)])   # Ciudad Juárez
+        self.assertEqual(got, [True, True])
+
+    def test_land_a_register_outline_cuts_out(self):
+        self.assertEqual(self.mask("ru", [(34.10, 44.95)]), [False])   # Simferopol, built with ru
+        if (ownership.ROOT / "data" / "raw" / "ua" / "outline.geojson").exists():
+            self.assertEqual(self.mask("ua", [(34.10, 44.95)]), [True])
+
+
 if __name__ == "__main__":
     unittest.main()

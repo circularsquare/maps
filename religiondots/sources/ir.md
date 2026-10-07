@@ -3,8 +3,9 @@
 **Drawn 2026-09-14** by session `d743fc47-ir`. 31 provinces, 5 nodes, 79,801,698 people drawn;
 124,572 who did not state a religion (0.156%) are `gap`. Every row `measured`, in counts.
 **Sunni split added 2026-09-15** by `d743fc47-irsect` (§9): `ir_split.py` takes Masaili's 7,608,500
-Sunnis out of the census's Muslims as `derived` rows on `islam.sunni`; the rest stays on `islam`.
-6 nodes.
+Sunnis out of the census's Muslims as `derived` rows on `islam.sunni`. **The rest moved to
+`islam.shia` on 2026-10-03** by `fafd1067-ir` (§11, Anita's ruling of 2026-09-15): all 79,598,054
+Muslims are now `derived`, on Sunni or Shia, rolling back to `islam`. 6 nodes.
 
 - `sources/ir.py` -> `data/normalized/ir.csv` (raw: `data/raw/ir/sci_yearbook1395_ch3_population.pdf`,
   `census1395_tafsili_3-jamiat-k.xls`)
@@ -234,7 +235,9 @@ digits within one column (Fars, South Khorasan, Kerman, Ardabil); both are folde
 
 - **The printed count is drawn**, taken out of the census `مسلمان` column, not the integer percentage
   times census Muslims. The count is what he published and it sums to his total.
-- **The rest stays on `islam`, not `islam.shia`.** Masaili prints no Shia figure, so a Shia layer
+- **REVERSED by Anita's ruling of 2026-09-15, applied 2026-10-03 (§11): the rest now goes on
+  `islam.shia` in every province.** The call as first made, kept for the record:
+  **The rest stays on `islam`, not `islam.shia`.** Masaili prints no Shia figure, so a Shia layer
   would be census Muslims minus his estimate: a magnitude nobody published, with nothing that could
   contradict it. It would also carry his stated low lean onto Shia in exactly the Kurdish provinces,
   since Soltani (2015) puts the Kurds about two million higher. Spec §2.7a (named share on the
@@ -248,7 +251,7 @@ digits within one column (Fars, South Khorasan, Kerman, Ardabil); both are folde
   95,000 in Isfahan. Tehran alone would be 3.8% of its Muslims.
 - **The 15 provinces with no row keep every Muslim on `islam`** (29,547,714 Muslims, Khuzestan,
   Isfahan, East Azerbaijan, Ilam and Lorestan among them), and `note_public` says his table does not
-  say they have none.
+  say they have none. (Since 2026-10-03, §11: every Muslim there is on `islam.shia`.)
 - **Tier `derived`, basis `estimate`,** `parent_column=مسلمان`; `ir2016.COLUMNS` rolls the Sunni rows
   back to `islam`, which the census counted at the same province (spec §7a-i-1). `modelled` would
   have deleted them under `inferred dots: not shown`. Only `measured` rows may ring.
@@ -281,12 +284,13 @@ digits within one column (Fars, South Khorasan, Kerman, Ardabil); both are folde
 | 15 provinces, no row | 29,547,714 | 0 | 0 |
 | **Iran** | **79,598,054** | **7,608,500** | **9.56%** |
 
-71,989,554 stay on `islam`. Sunnis are 9.52% of the census population; the paper says nine to ten.
+71,989,554 stay on `islam` (on `islam.shia` since 2026-10-03, §11). Sunnis are 9.52% of the census
+population; the paper says nine to ten.
 
 **Estimates layer (spec §15.3).** `data/processed/estimates.json` has Iran at `christianity` and
 `islam` only (Pew 2020), nothing at `islam.sunni` or `islam.shia`, so the split restates no estimate.
 `estimates_todo.md`'s open Shia and Sunni batch lists Iran; a line there now says a national Sunni row
-would restate this and a Shia row would not.
+would restate this and a Shia row would not. (Since 2026-10-03, §11, a Shia row would restate too.)
 
 **`note_public`** names Masaili and his book, says one researcher's estimate from library and field
 research, that no census publishes sect (the 1385 and 1390 answer lists had one Muslim answer), the
@@ -312,7 +316,8 @@ the sea.
   500,000 and the 7,608,500 foot equal `TABLE`, `LUMP` and `TOTAL`. The lead-in on printed p. 77 says
   nine to ten (about 9.5) percent, citing the book's p. 59.
 - **Tier, roll-up, rings, the lump over Tehran and Alborz, no county placement: agreed.**
-- **The rest on `islam`: agreed on the outcome, not on two of the reasons.**
+- **The rest on `islam`: agreed on the outcome, not on two of the reasons.** (Anita ruled the other
+  way on 2026-09-15, accepting the two errors below; applied 2026-10-03, §11.)
   - `feedback_unspecified_is_fine` and spec §2.7a do not decide it. They are about respondents who
     were asked and named no sect (India's "no sect" and "don't know"), and they license drawing the
     named part; they say nothing about the complement of an estimate. Here the remainder is not
@@ -332,7 +337,60 @@ the sea.
     under Open.
   - If a blank Iran under Shia looks wrong on the map, the cheaper fix is the national Shia estimate
     row for Iran already queued in `estimates_todo.md` (spec §15.3 allows it, since Iran draws nothing
-    on `islam.shia`), not a residual layer.
-- **`note_public`, small, not edited:** "most are Twelver Shia, but no source counts them" holds
+    on `islam.shia`), not a residual layer. (Moot since 2026-10-03: Iran draws `islam.shia`, §11.)
+- **`note_public`, small, not edited:** (the sentence is gone since 2026-10-03, §11) "most are Twelver Shia, but no source counts them" holds
   equally for the Sunnis, whom no source counts either. "no source gives a figure for them by
   province" would be exact.
+
+## 11. The rest of the Muslims on `islam.shia`, 2026-10-03 (`fafd1067-ir`)
+
+**Anita's ruling** (`ask/RULINGS.md`, 2026-09-15, "ok lets record (a)"): Iran's Muslims outside
+Masaili's Sunni estimates go on `islam.shia` in every province, not plain `islam`. It reverses the
+remainder-on-`islam` call in §9, which the §10 review had kept. She accepted the two costs §10 named:
+
+- **Masaili's Kurdish count leans low**, by his own framing, and Soltani (2015) puts the Kurds about
+  two million higher. Whatever he missed is now drawn as Shia, in Kurdistan, West Azerbaijan and
+  Kermanshah above all.
+- **Kermanshah's Yarsan (Ahl-e Haqq)** who answered Muslim on the census are drawn on `islam.shia`,
+  the Twelver node. The paper calls most of Kermanshah "Shia Kurds".
+
+Not decided, so not done: any later correction for the Kurdish provinces or the Yarsan. The 500,000
+lump's spread (Tehran and Alborz by census Muslims) and the tier stay as built.
+
+**What changed.** `ir_split.py` writes the remainder as `Muslim: Shia, census Muslims less Masaili's
+Sunnis` (`taxonomy/ir2016.py` LABEL_SHIA -> `islam.shia`), and in the 15 provinces with no row the
+whole census Muslim column goes there. Province totals and the Sunni rows are unchanged; the script
+asserts that every province's rows sum to its census Muslims, that no row is left on bare `مسلمان`,
+and that every row is `derived` and ends in `parent_column=مسلمان`.
+
+| | before | after |
+|---|---:|---:|
+| `islam.sunni` (derived) | 7,608,500 | 7,608,500 |
+| `islam.shia` (derived) | 0 | 71,989,554 |
+| `islam` (measured) | 71,989,554 | 0 |
+| Muslims | 79,598,054 | 79,598,054 |
+
+Per province the Shia figure is exactly the old `islam` figure (the §9 table's census Muslims less
+Sunni): Tehran 12,764,501, Razavi Khorasan 6,087,180, Isfahan 5,101,133, Khuzestan 4,680,333 and so
+on down to Kurdistan 288,537.
+
+**Tier.** The Shia rows are `derived`, basis `estimate`, with `parent_column=مسلمان`, the same as the
+Sunni rows, so `ir2016.COLUMNS` rolls both back to `islam`. With inferred dots hidden Iran draws every
+Muslim on `islam`, as the census counted them. Iran now has no `measured` `islam` row, so the
+recorded roll is what carries them: `rollup.py --countries ir` was re-run, and `check_rollup ir`
+reports 203,644 measured, 79,598,054 derived, all rolling up, none orphaned. Muslim dots no longer
+ring (`may_ring` is measured only); at 99.6% that changes nothing drawn.
+
+**Dots.** Both editions rescattered: 79,799 dots at 1:1,000 (71,989 Shia, 7,608 Sunni) and 7,977 at
+1:10,000 (7,198 Shia, 760 Sunni), the same counts per node as before; only the `islam` label became
+`islam.shia`. Joined to `ir_provinces.gpkg`, every province's Shia and Sunni dots are within 9 of the
+split except Tehran (+16) and Alborz (-15), and 47 dots, mostly coastal, fall just outside the
+polygons. The old dots give exactly the same per-province counts, so this is placement near the
+edges that the rebuild did not change.
+
+**Estimates layer (spec §15.3).** Iran now draws `islam.shia` as well as `islam.sunni`, so a national
+Shia row for Iran would restate a drawn node too; `estimates_todo.md`'s Shia and Sunni batch says so.
+
+**`note_public`** now says the rest of the Muslims, 72.0 million, are drawn as Shia; that Masaili gives
+no Shia figure, so it is census Muslims less his Sunnis; and that any Sunnis he missed (the Kurds
+Soltani counts) and Kermanshah's Yarsan who answered Muslim are drawn as Shia.

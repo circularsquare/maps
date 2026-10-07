@@ -156,3 +156,18 @@ excluded from a table), so it is hand-written.
 4. Border hexes: Cabudwaaq snapped from up to 10 km; hexes a neighbour's layer holds left to it.
 5. Sixteen cap blocks lowered on a rule that reads a GeoNames town with no population as capped.
 6. `gap_share` from UN DESA's imputed 77,972, not UNHCR's registered 41,763.
+
+## Review 2026-10-03 (fafd1067-rev1, full pass)
+
+Nothing changed. check_md, built_countries --check and check_rollup clean (19,442,160 modelled, none orphaned). Bare `islam` matches `mr`, `om` and `sa`. `gap_share` recomputed: 77,972 / 19,520,132 = 0.00399. Spec 14: Christians placed nowhere, named nationally only, is right under rule 2; no ask. Somaliland inside `so` follows the precedent that the land goes with the source that counts it (`ge`, `cy`, spec 14.18). Small wording point left as is: `note_public` says foreign residents are "not on this map", while section 6 calls `gap_share` an upper bound by whatever part the planning estimate already holds; at 0.4% it is not worth a retext. Screenshot: dots on land, Mogadishu and the Shabelle valley densest, Hargeysa and Somaliland drawn, nothing in the sea, the Ethiopian border clean.
+
+## 9. Top text before the 75-word cut, 2026-10-03 (`fafd1067-top75`)
+
+Anita asked for the text at the top of the phone screen to come down to about 75 words
+(queue.md, "Cut the country text to about 75 words"). These are the four header fields as
+they stood before the cut, verbatim, so nothing they said is lost. The cut versions are in
+`countries/so.py`; `note_public` was not changed.
+
+- `how`: no source asks; everyone drawn as Muslim, on published national estimates
+- `grain`: regions, 1.08 million people on average
+- `gap`: foreign residents and refugees, whom no source counts by region: 77,972 in mid-2024 by the UN Population Division's estimate, 0.4% of residents; and Somalis who are not Muslim, whom no source has counted

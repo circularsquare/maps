@@ -1,0 +1,20 @@
+{
+  "1": {"candidates": ["data/asia1m/bangladesh/bgd_admin1.shp"],
+        "code_col": "adm1_pcode", "name_col": "adm1_name",
+        "group_col": "adm1_pcode"},
+  "2": {"candidates": ["data/asia1m/bangladesh/bgd_admin2.shp"],
+        "code_col": "adm2_pcode", "name_col": "adm2_name",
+        "parent_col": "adm1_pcode", "parent_name_col": "adm1_name",
+        "group_col": "adm1_pcode"},
+  "3": {"candidates": ["data/asia1m/bangladesh/bgd_admin3.shp"],
+        "code_col": "adm3_pcode", "name_col": "adm3_name",
+        "parent_col": "adm2_pcode", "parent_name_col": "adm2_name",
+        "group_col": "adm1_pcode",
+        "simplify": 0.001},
+  "4": {"candidates": ["helper1m/data/bangladesh/level4.gpkg"],
+        "code_col": "code", "name_col": "name",
+        "parent_col": "adm3_pcode", "parent_name_col": "adm3_name",
+        "group_col": "adm1_pcode",
+        "simplify": 0.0003,
+        "split_by": "group"}
+}

@@ -1,0 +1,403 @@
+# Regrouping (Anita, 2026-10-06). Format and mechanism: taxonomy/regroup.py's docstring.
+# What was grouped and why: taxonomy/GROUPING.md.
+#
+# Ids here are WRITTEN ids, as fragments and mappings spell them. Members keep their colour.
+
+# ===================================================================== Arabic
+# Every Arabic variety under one group; plain census "Arabic" on its own leaf. Maltese stays out.
+= afroasiatic.arabic | Arabic | Arabic (variety not given)
+    afroasiatic.gulf_arabic afroasiatic.darija afroasiatic.egyptian_arabic afroasiatic.hassaniya
+    afroasiatic.levantine_arabic afroasiatic.saudi_arabic afroasiatic.sudanese_arabic
+    afroasiatic.yemeni_arabic afroasiatic.tunisian_arabic afroasiatic.algerian_arabic
+    afroasiatic.libyan_arabic afroasiatic.mesopotamian_arabic afroasiatic.saidi_arabic
+    afroasiatic.baharna_arabic afroasiatic.iraqi_arabic afroasiatic.omani_arabic
+    afroasiatic.bedawi_arabic afroasiatic.judeo_arabic
+
+# ===================================================================== Bantu: Guthrie zones
+# Guthrie's zones as Maho (2009) revised them (J for the Great Lakes), the letters the tree's
+# subgroups already cite (Bemba (M.40), Luyana (K.30)...). Inside the big zones, Glottolog's
+# subgroups or Guthrie's decades.
++ nigercongo.bantu.zone_a | Zone A (Cameroon, Gabon)
++ nigercongo.bantu.zone_a.a10_30 | Sawabantu and Manenguba (A.10-30)
+    nigercongo.bantu.bakundu nigercongo.bantu.akoose nigercongo.bantu.mokpwe nigercongo.bantu.oroko
+    nigercongo.bantu.mbo nigercongo.bantu.duala nigercongo.bantu.ndowe nigercongo.bantu.batanga
+    nigercongo.bantu.bube
++ nigercongo.bantu.zone_a.a40_60 | Basaa and Mbam (A.40-60)
+    nigercongo.bantu.basaa nigercongo.bantu.bakoko nigercongo.bantu.abo nigercongo.bantu.tunen
+    nigercongo.bantu.nomaande nigercongo.bantu.bafia nigercongo.bantu.yambassa
++ nigercongo.bantu.zone_a.beti_fang | Beti-Fang (A.70)
+    nigercongo.bantu.eton nigercongo.bantu.ewondo nigercongo.bantu.bulu nigercongo.bantu.fang
+    nigercongo.bantu.bene nigercongo.bantu.ntumu nigercongo.bantu.mvele
++ nigercongo.bantu.zone_a.makaa_kako | Makaa-Kako (A.80-90)
+    nigercongo.bantu.makaa nigercongo.bantu.mpiemo nigercongo.bantu.kako nigercongo.bantu.pomo
+    nigercongo.bantu.pol nigercongo.bantu.koonzime nigercongo.bantu.bajwee nigercongo.bantu.kwasio
++ nigercongo.bantu.zone_b | Zone B (Gabon, Congo)
+    nigercongo.bantu.myene nigercongo.bantu.kele_gabon nigercongo.bantu.kota nigercongo.bantu.kota_gabon
+    nigercongo.bantu.tsogo nigercongo.bantu.sira nigercongo.bantu.punu nigercongo.bantu.lumbu_gabon
+    nigercongo.bantu.sangu_gabon nigercongo.bantu.vumbu nigercongo.bantu.nzebi nigercongo.bantu.mbere
+    nigercongo.bantu.teke nigercongo.bantu.teke_laali nigercongo.bantu.yansi nigercongo.bantu.mbuun
+    nigercongo.bantu.boma nigercongo.bantu.ngongo nigercongo.bantu.tere
++ nigercongo.bantu.zone_c | Zone C (Congo Basin)
+    nigercongo.bantu.sakata
++ nigercongo.bantu.zone_c.rivers | Rivers Bantu (C.10-40)
+    nigercongo.bantu.lingala nigercongo.bantu.bobangi nigercongo.bantu.likuba nigercongo.bantu.libinza
+    nigercongo.bantu.mpama nigercongo.bantu.nunu nigercongo.bantu.budza nigercongo.bantu.babango
+    nigercongo.bantu.ngombe nigercongo.bantu.benza nigercongo.bantu.bwa nigercongo.bantu.kari
+    nigercongo.bantu.mbati nigercongo.bantu.bomitaba nigercongo.bantu.aka nigercongo.bantu.mbosi
+    nigercongo.bantu.akwa nigercongo.bantu.koyo nigercongo.bantu.bodo
++ nigercongo.bantu.zone_c.mongo | Mongo and Kasai (C.60-80)
+    nigercongo.bantu.mongo nigercongo.bantu.ekonda nigercongo.bantu.kundu nigercongo.bantu.ntomba
+    nigercongo.bantu.sengele nigercongo.bantu.ngando nigercongo.bantu.nkutu nigercongo.bantu.bushoong
+    nigercongo.bantu.lele nigercongo.bantu.dengese nigercongo.bantu.tetela nigercongo.bantu.kusu
++ nigercongo.bantu.zone_c.kele_poke | Kele-Poke (C.50)
+    nigercongo.bantu.poke nigercongo.bantu.lombo nigercongo.bantu.lokele nigercongo.bantu.mbesa
++ nigercongo.bantu.zone_d | Zone D (Maniema, Ituri)
+    nigercongo.bantu.bembe nigercongo.bantu.lega nigercongo.bantu.lega_mwenga nigercongo.bantu.nyanga
+    nigercongo.bantu.songola nigercongo.bantu.benye_nonda nigercongo.bantu.ngengele nigercongo.bantu.komo
+    nigercongo.bantu.lengola nigercongo.bantu.budu nigercongo.bantu.nyali nigercongo.bantu.amba
++ nigercongo.bantu.zone_e | Zone E (Kenya, Kilimanjaro)
+    nigercongo.bantu.gikuyu nigercongo.bantu.embu nigercongo.bantu.meru nigercongo.bantu.kamba
+    nigercongo.bantu.chaga nigercongo.bantu.rwa nigercongo.bantu.taita nigercongo.bantu.mijikenda
+    nigercongo.bantu.pokomo nigercongo.bantu.sonjo nigercongo.bantu.segeju
++ nigercongo.bantu.zone_f | Zone F (western Tanzania)
+    nigercongo.bantu.sukuma nigercongo.bantu.nyamwezi nigercongo.bantu.sumbwa nigercongo.bantu.kimbu
+    nigercongo.bantu.konongo nigercongo.bantu.nyaturu nigercongo.bantu.nilamba nigercongo.bantu.isanzu
+    nigercongo.bantu.rangi nigercongo.bantu.mbugwe nigercongo.bantu.tongwe
++ nigercongo.bantu.zone_g | Zone G (Swahili, eastern Tanzania)
+    nigercongo.bantu.swahili nigercongo.bantu.comorian nigercongo.bantu.mwani nigercongo.bantu.sheng
+    nigercongo.bantu.manyema nigercongo.bantu.pare nigercongo.bantu.pogoro nigercongo.bantu.ndamba
++ nigercongo.bantu.zone_g.ruvu | Ruvu (G.10, G.30)
+    nigercongo.bantu.gogo nigercongo.bantu.kaguru nigercongo.bantu.luguru nigercongo.bantu.zaramo
+    nigercongo.bantu.kwere nigercongo.bantu.kutu nigercongo.bantu.sagala
++ nigercongo.bantu.zone_g.seuta | Seuta (G.20-30)
+    nigercongo.bantu.shambala nigercongo.bantu.bondei nigercongo.bantu.zigua nigercongo.bantu.nguu
+    nigercongo.bantu.mushungulu
++ nigercongo.bantu.zone_g.southern_highlands | Southern Highlands (G.60)
+    nigercongo.bantu.hehe nigercongo.bantu.bena nigercongo.bantu.sangu nigercongo.bantu.wanji
+    nigercongo.bantu.kinga nigercongo.bantu.magoma nigercongo.bantu.pangwa nigercongo.bantu.kisi
++ nigercongo.bantu.zone_h | Zone H (Kongo, Kimbundu)
+    nigercongo.bantu.kongo nigercongo.bantu.kongo_dialects nigercongo.bantu.kimbundu
+    nigercongo.bantu.kituba nigercongo.bantu.beembe nigercongo.bantu.vili nigercongo.bantu.yaka nigercongo.bantu.suku
+    nigercongo.bantu.pelende
++ nigercongo.bantu.zone_j | Zone J (Great Lakes)
++ nigercongo.bantu.zone_j.west_nyanza | West Nyanza (Uganda, Kagera)
+    nigercongo.bantu.chiga nigercongo.bantu.ganda nigercongo.bantu.gwere nigercongo.bantu.haya
+    nigercongo.bantu.nyankole nigercongo.bantu.nyoro nigercongo.bantu.soga nigercongo.bantu.tooro
+    nigercongo.bantu.nyambo nigercongo.bantu.zinza nigercongo.bantu.kerewe nigercongo.bantu.ruuli
+    nigercongo.bantu.kenyi nigercongo.bantu.gungu nigercongo.bantu.bwisi nigercongo.bantu.songora
+    nigercongo.bantu.nyara nigercongo.bantu.runyakitara
++ nigercongo.bantu.zone_j.east_nyanza | East Nyanza (Mara, Gusii)
+    nigercongo.bantu.jita nigercongo.bantu.kwaya nigercongo.bantu.kara nigercongo.bantu.zanaki
+    nigercongo.bantu.ikizu nigercongo.bantu.ikoma nigercongo.bantu.kabwa nigercongo.bantu.suba
+    nigercongo.bantu.suba_simbiti nigercongo.bantu.gusii nigercongo.bantu.kuria
++ nigercongo.bantu.zone_j.western_lakes | Western Lakes (Rwanda, Burundi, Kivu)
+    nigercongo.bantu.shi nigercongo.bantu.havu nigercongo.bantu.hunde
+    nigercongo.bantu.fuliiru nigercongo.bantu.vira
+# Cross-border groups (2026-10-06, 5d7dac7e-xb, followups.md): Rwanda-Rundi (Glottolog's West
+# Highlands Kivu: Rwandic and Rundic) and Konzo-Nande (Glottolog's Rwenzori)
++ nigercongo.bantu.zone_j.western_lakes.rwanda_rundi | Rwanda-Rundi
+    nigercongo.bantu.kinyarwanda nigercongo.bantu.kirundi nigercongo.bantu.ha nigercongo.bantu.hangaza
++ nigercongo.bantu.zone_j.western_lakes.konzo_nande | Konzo-Nande
+    nigercongo.bantu.konzo nigercongo.bantu.nande
++ nigercongo.bantu.zone_j.luyia | Luyia (J.30)
+    nigercongo.bantu.luhya nigercongo.bantu.masaaba nigercongo.bantu.saamia nigercongo.bantu.nyole
++ nigercongo.bantu.zone_k | Zone K (eastern Angola, western Zambia)
+    nigercongo.bantu.chokwe_lunda nigercongo.bantu.luyana nigercongo.bantu.kwese nigercongo.bantu.pende
+    nigercongo.bantu.mbala
++ nigercongo.bantu.zone_l | Zone L (Luba)
+    nigercongo.bantu.luba_kasai nigercongo.bantu.luba_katanga nigercongo.bantu.luban
+    nigercongo.bantu.songe nigercongo.bantu.kete nigercongo.bantu.kanyok nigercongo.bantu.sanga
+    nigercongo.bantu.hemba nigercongo.bantu.bangubangu nigercongo.bantu.luntu nigercongo.bantu.zela
++ nigercongo.bantu.zone_m | Zone M (Zambia, southern Tanzania)
+    nigercongo.bantu.bemba nigercongo.bantu.bisa_lamba nigercongo.bantu.botatwe
+    nigercongo.bantu.mambwe_nyiha nigercongo.bantu.nyakyusa nigercongo.bantu.ndali
++ nigercongo.bantu.zone_n | Zone N (Malawi)
+    nigercongo.bantu.nyanja_sena nigercongo.bantu.tumbuka nigercongo.bantu.ngoni_tz
+    nigercongo.bantu.matengo nigercongo.bantu.mpoto nigercongo.bantu.ndendeule
++ nigercongo.bantu.zone_p | Zone P (northern Mozambique)
+    nigercongo.bantu.makhuwa nigercongo.bantu.yao nigercongo.bantu.mwera nigercongo.bantu.makonde
+    nigercongo.bantu.ndengereko nigercongo.bantu.matumbi nigercongo.bantu.ngindo
++ nigercongo.bantu.zone_r | Zone R (southern Angola, Namibia)
+    nigercongo.bantu.umbundu nigercongo.bantu.nyaneka_nkhumbi
+    nigercongo.bantu.oshiwambo nigercongo.bantu.herero
+    nigercongo.bantu.otjiherero nigercongo.bantu.yeyi
++ nigercongo.bantu.zone_s | Zone S (Southern Africa)
+    nigercongo.bantu.shona nigercongo.bantu.kalanga nigercongo.bantu.nambya
+    nigercongo.bantu.nguni nigercongo.bantu.sotho_tswana
+    nigercongo.bantu.venda nigercongo.bantu.tswa_ronga nigercongo.bantu.chopi
+
+# Bantu languages and their dialects (Glottolog's dialect level)
+= nigercongo.bantu.swahili | Swahili
+    nigercongo.bantu.bajuni nigercongo.bantu.shirazi nigercongo.bantu.swahili_congo
+    nigercongo.bantu.chimwiini
+= nigercongo.bantu.comorian | Comorian | Comorian (island not given)
+    nigercongo.bantu.comorian_mwali nigercongo.bantu.comorian_ndzwani
+    nigercongo.bantu.comorian_ngazidja nigercongo.bantu.shimaore
+= nigercongo.bantu.kinyarwanda | Kinyarwanda
+    nigercongo.bantu.rufumbira
+= nigercongo.bantu.zinza | Zinza
+    nigercongo.bantu.shubi
+= nigercongo.bantu.nyoro | Nyoro
+    nigercongo.bantu.tagwenda
+= nigercongo.bantu.ndali | Ndali
+    nigercongo.bantu.sukwa
+= nigercongo.bantu.mbati | Mbati ("Issongo")
+    nigercongo.bantu.bonzio
+= nigercongo.bantu.nyanja_sena.nyanja | Nyanja
+    nigercongo.bantu.nyanja_sena.chewa nigercongo.bantu.nyanja_sena.manganja
+    nigercongo.bantu.nyanja_sena.nyasa
+= nigercongo.bantu.nyanja_sena.nsenga | Nsenga
+    nigercongo.bantu.nyanja_sena.kunda
+= nigercongo.bantu.bisa_lamba.lamba | Lamba
+    nigercongo.bantu.bisa_lamba.lima
+= nigercongo.bantu.botatwe.lenje | Lenje
+    nigercongo.bantu.botatwe.twa
+= nigercongo.bantu.botatwe.ila | Ila
+    nigercongo.bantu.botatwe.lundwe
+= nigercongo.bantu.luyana.simaa | Simaa
+    nigercongo.bantu.luyana.imilangu nigercongo.bantu.luyana.mwenyi nigercongo.bantu.luyana.liyuwa
+    nigercongo.bantu.luyana.mulonga
+= nigercongo.bantu.chokwe_lunda.lunda | Lunda
+    nigercongo.bantu.chokwe_lunda.ndembu
+= nigercongo.bantu.luban.nkoya | Nkoya
+    nigercongo.bantu.luban.lukolwe nigercongo.bantu.luban.lushangi nigercongo.bantu.luban.mashasha
+
+# Cross-border groups (2026-10-06, 5d7dac7e-xb; tools/audit_crossborder.py, followups.md): one
+# language or cluster that two censuses name differently, so it stopped at the border.
+# Shona: Mozambique names Ndau, Manyika and Tewe (Glottolog's Core Shona); Kalanga and Nambya
+# (Western Shona) stay beside it.
+= nigercongo.bantu.shona | Shona
+    nigercongo.bantu.ndau nigercongo.bantu.manyika nigercongo.bantu.tewe
+# Kongo: Angola and Congo print "Kongo", the DRC its varieties (Yombe, Ndibu, Manyanga...), Angola
+# also Cabinda's Fiote, Congo also Laari and Suundi (Glottolog's Kilaadic Kikongo). Beembe and Vili
+# (H.11, H.12) and Kituba (a creole) stay beside it.
+= nigercongo.bantu.kongo | Kongo | Kongo (variety not given)
+    nigercongo.bantu.kongo_dialects.yombe nigercongo.bantu.kongo_dialects.ndibu
+    nigercongo.bantu.kongo_dialects.manyanga nigercongo.bantu.kongo_dialects.ntandu
+    nigercongo.bantu.kongo_dialects.mbata nigercongo.bantu.kongo_dialects.lemfu
+    nigercongo.bantu.kongo_dialects.besingombe nigercongo.bantu.kongo_dialects.kongo_se
+    nigercongo.bantu.kongo_dialects.mboma nigercongo.bantu.fiote nigercongo.bantu.laari
+    nigercongo.bantu.suundi
+# Oshiwambo: Namibia prints the cluster, Angola Kwanyama (Glottolog's Ndonga (R.20))
+= nigercongo.bantu.oshiwambo | Oshiwambo | Oshiwambo (variety not given)
+    nigercongo.bantu.kwanyama nigercongo.bantu.ndonga
+# Nyakyusa-Ngonde is one Glottolog language: Malawi prints Nkhonde, Tanzania Nyakyusa
+= nigercongo.bantu.nyakyusa | Nyakyusa
+    nigercongo.bantu.nkhonde
+# Malawi's Lomwe and Sena beside Mozambique's (Glottolog: Malawi Lomwe, Malawi Sena)
+= nigercongo.bantu.makhuwa.elomwe | Lomwe
+    nigercongo.bantu.makhuwa.lomwe_mw
+= nigercongo.bantu.nyanja_sena.sena | Sena
+    nigercongo.bantu.nyanja_sena.sena_mw
+
+# ===================================================================== Austronesian
+# Glottolog's Malayo-Polynesian branches, with Blust's Central Malayo-Polynesian as one group for
+# the Lesser Sundas and southern Maluku (Glottolog keeps its five lineages apart).
++ austronesian.gorontalo_mongondow | Gorontalo-Mongondow
+    austronesian.gorontalo austronesian.mongondow austronesian.buol
++ austronesian.sangiric_minahasan | Sangiric and Minahasan
+    austronesian.sangir austronesian.talaud austronesian.minahasan
++ austronesian.bali_sasak_sumbawa | Bali-Sasak-Sumbawa
+    austronesian.balinese austronesian.sasak austronesian.sumbawa
++ austronesian.lampungic | Lampungic
+    austronesian.lampung austronesian.komering
++ austronesian.sumatran | Northwest Sumatran
+    austronesian.batak austronesian.nias austronesian.gayo austronesian.simeulue austronesian.mentawai
++ austronesian.south_sulawesi | South Sulawesi
+    austronesian.buginese austronesian.makassarese austronesian.toraja austronesian.mandar
+    austronesian.tae austronesian.duri austronesian.mamasa austronesian.selayar austronesian.mamuju
++ austronesian.celebic | Celebic
+    austronesian.tolaki austronesian.muna austronesian.moronene austronesian.banggai
+    austronesian.saluan austronesian.kaili austronesian.pamona austronesian.buton
+    austronesian.tomini austronesian.lauje
++ austronesian.cmp | Central Malayo-Polynesian
+    austronesian.aru
++ austronesian.cmp.bima_lembata | Bima-Lembata (Flores, Sumba)
+    austronesian.bima austronesian.manggarai austronesian.ngada austronesian.lio
+    austronesian.lamaholot austronesian.sumba austronesian.hawu
++ austronesian.cmp.timor_babar | Timor-Babar
+    austronesian.timoric austronesian.kisar austronesian.babar
++ austronesian.cmp.tanimbar_bomberai | Tanimbar-Bomberai
+    austronesian.kei austronesian.tanimbar austronesian.arguni austronesian.mbaruan
+    austronesian.onin austronesian.sekar austronesian.uruangnirin austronesian.yarikman
++ austronesian.cmp.central_maluku | Central Maluku
+    austronesian.seram austronesian.geser_gorom austronesian.sula austronesian.buru
+    austronesian.irarutu austronesian.kowiai austronesian.nabi
+# Acehnese and Tsat are Chamic (Glottolog's Aceh-Chamic); Tetun is Timoric
+> austronesian.chamic
+    austronesian.acehnese austronesian.tsat
+> austronesian.timoric
+    austronesian.tetun
++ austronesian.oceanic.polynesian | Polynesian
+    austronesian.oceanic.maori austronesian.oceanic.cook_islands_maori austronesian.oceanic.niuean
+    austronesian.oceanic.tokelauan austronesian.oceanic.tuvaluan austronesian.oceanic.samoan
+    austronesian.oceanic.tongan austronesian.oceanic.rapanui austronesian.oceanic.nukuoro_kapingamarangi
+    austronesian.oceanic.tahitian austronesian.oceanic.rennell_bellona austronesian.oceanic.anuta
+    austronesian.oceanic.sikaiana austronesian.oceanic.hawaiian austronesian.oceanic.central_pacific
++ austronesian.oceanic.micronesian | Micronesian
+    austronesian.oceanic.gilbertese austronesian.oceanic.nauruan austronesian.oceanic.marshallese
+    austronesian.oceanic.chuukese austronesian.oceanic.kosraean austronesian.oceanic.mokilese
+    austronesian.oceanic.pingelapese austronesian.oceanic.pohnpeian austronesian.oceanic.yap_outer_islands
+    austronesian.oceanic.carolinian austronesian.oceanic.sonsorol_tobi
+
+= austronesian.malagasy | Malagasy
+    austronesian.merina austronesian.kibushi
+= austronesian.oceanic.pohnpeian | Pohnpeian
+    austronesian.oceanic.sapwuahfik
+= austronesian.philippine.cebuano | Cebuano
+    austronesian.philippine.boholano
+= austronesian.philippine.northern_luzon.kalinga.bangad | Kalinga (Bangad)
+    austronesian.philippine.northern_luzon.kalinga.sumadel
+= austronesian.malayic.minangkabau | Minangkabau
+    austronesian.malayic.aneuk_jamee
+= austronesian.malayic.brunei_malay | Brunei Malay
+    austronesian.malayic.kedayan
+= austronesian.oceanic.se_solomonic.saa | Sa'a
+    austronesian.oceanic.se_solomonic.ulawa
+# Timor-Leste's Baikenu (Oecusse) is a Glottolog dialect of Indonesia's Uab Meto (2026-10-06, xb)
+= austronesian.timoric.uab_meto | Uab Meto
+    austronesian.timoric.baikenu
+
+# ===================================================================== Cross-border groups
+# 2026-10-06, 5d7dac7e-xb (tools/audit_crossborder.py; the table in followups.md). A language or
+# cluster that neighbouring censuses name differently, so it stopped at a border. Must come before
+# the dialect rules below, since Manding holds Mahou, Koyaka and Wojenaka.
+# Manding (ISO's Mandingo macrolanguage; Glottolog's Manding): Mali's Bambara, Guinea's Maninka,
+# Côte d'Ivoire's and Burkina's Dyula... us.txt's plain "Manding" goes to its own leaf.
+= nigercongo.mande.manding | Manding | Manding (language not given)
+    nigercongo.mande.bambara nigercongo.mande.maninka nigercongo.mande.mandinka
+    nigercongo.mande.dyula nigercongo.mande.jahanka nigercongo.mande.khassonke
+    nigercongo.mande.konyanka nigercongo.mande.marka nigercongo.mande.mahou
+    nigercongo.mande.koyaka nigercongo.mande.wojenaka nigercongo.mande.worodougou
+    nigercongo.mande.koro
+# Gbe (Glottolog's Gbe): Ghana's and Togo's Ewe, Togo's Mina and Ouatchi, Benin's Fon, Aja, Gun...
+# us.txt's "Gbe (Ewe, Fon)" goes to its own leaf.
+= nigercongo.kwa.gbe | Gbe | Gbe (language not given)
+    nigercongo.kwa.ewe nigercongo.kwa.gen nigercongo.kwa.waci nigercongo.kwa.aja nigercongo.kwa.fon
+    nigercongo.kwa.gun nigercongo.kwa.saxwe nigercongo.kwa.ayizo nigercongo.kwa.kotafon
+    nigercongo.kwa.maxi nigercongo.kwa.tofin nigercongo.kwa.xwela nigercongo.kwa.defi
+    nigercongo.kwa.toli nigercongo.kwa.weme nigercongo.kwa.ci nigercongo.kwa.agouna
+# Yoruba and Ede (Glottolog's Edekiri): Benin's Nago, Idaasha, Ifè... beside Nigeria's Yoruba
++ nigercongo.voltaniger.edekiri | Yoruba and Ede
+    nigercongo.voltaniger.yoruba nigercongo.voltaniger.ede_nago nigercongo.voltaniger.ede_idaca
+    nigercongo.voltaniger.ede_ije nigercongo.voltaniger.ede_cabe nigercongo.voltaniger.ife
+    nigercongo.voltaniger.manigri
+# Kalenjin (ISO's macrolanguage, Glottolog's Kalenjin): Kenya prints "Kalenjin" and Pokot,
+# Uganda Pokot and Kupsabiny
+= nilosaharan.nilotic.kalenjin | Kalenjin | Kalenjin (variety not given)
+    nilosaharan.nilotic.pokot nilosaharan.nilotic.sabaot nilosaharan.nilotic.kupsabiny
+# Ateker (Glottolog's Teso-Turkana): Uganda's Karamojong and Teso, Kenya's Turkana, South Sudan's
+# Toposa
++ nilosaharan.nilotic.ateker | Ateker (Teso-Turkana)
+    nilosaharan.nilotic.teso nilosaharan.nilotic.turkana nilosaharan.nilotic.karamojong
+    nilosaharan.nilotic.toposa nilosaharan.nilotic.nyangatom
+# Somali: Somalia prints Benaadir (a Glottolog dialect of Somali) and Maay (a language of its own
+# in Glottolog, commonly called a Somali variety) beside Somali
+= afroasiatic.cushitic.lowland.somali | Somali
+    afroasiatic.cushitic.lowland.benaadir afroasiatic.cushitic.lowland.maay
+# Tuareg (Glottolog's Tuareg): Mali's Tamasheq, Niger's Tamajaq, Algeria's and Libya's Tamahaq
++ afroasiatic.berber.tuareg | Tuareg
+    afroasiatic.berber.tamasheq afroasiatic.berber.tamajaq afroasiatic.berber.tamahaq
+# Lugbara: Uganda prints Aringa ("Low Lugbara"; Glottolog's Lugbaric) beside Lugbara
+= nilosaharan.centralsudanic.lugbara | Lugbara
+    nilosaharan.centralsudanic.aringa
+
+# ===================================================================== Other languages and dialects
+# A Glottolog dialect drawn beside its language goes under it (Anita, 2026-10-06).
+= indoeuropean.romance.catalan | Catalan
+    indoeuropean.romance.valencian
+= indoeuropean.romance.spanish | Spanish
+    indoeuropean.romance.afrobolivian
+= indoeuropean.romance.french | French
+    indoeuropean.romance.gallo
+# Swiss German under German at Anita's request through the ch agent; Glottolog has it (Central
+# Alemannic) and Alsatian in a separate Alemannic language, so the Alemannic nodes come too.
+= indoeuropean.germanic.continental.german | German
+    indoeuropean.germanic.continental.swiss_german indoeuropean.germanic.continental.alemannic
+    indoeuropean.germanic.continental.alsatian
+= indoeuropean.slavic.south.bulgarian | Bulgarian
+    indoeuropean.slavic.south.pomak
+= indoeuropean.slavic.east.rusyn | Rusyn
+    indoeuropean.slavic.east.lemko
+= indoeuropean.iranian.shughni | Shughni
+    indoeuropean.iranian.bartangi indoeuropean.iranian.bajui
+= indoeuropean.indoaryan.central.bundeli | Bundeli
+    indoeuropean.indoaryan.central.pawari
+= indoeuropean.indoaryan.eastcentral.chhattisgarhi | Chhattisgarhi
+    indoeuropean.indoaryan.eastcentral.surgujia
+= indoeuropean.indoaryan.bihari.maithili | Maithili
+    indoeuropean.indoaryan.bihari.bajjika
+= indoeuropean.indoaryan.pahari.western.bhadrawahi | Bhadrawahi
+    indoeuropean.indoaryan.pahari.western.padari
+= indoeuropean.indoaryan.pahari.eastern.nepali | Nepali
+    indoeuropean.indoaryan.pahari.eastern.doteli indoeuropean.indoaryan.pahari.eastern.bajhangi
+= austroasiatic.munda.mundari | Mundari
+    austroasiatic.munda.bhumij
+= austroasiatic.bahnaric.brao | Brao
+    austroasiatic.bahnaric.kavet
+= austroasiatic.bahnaric.oy | Oy
+    austroasiatic.bahnaric.cheng
+= austroasiatic.chut | Chut (Chứt)
+    austroasiatic.may
+= sinotibetan.tibetic.lowa | Lowa
+    sinotibetan.tibetic.baragaunle
+= kradai.bouyei | Bouyei
+    kradai.giay
+= kradai.lao | Lao
+    kradai.lao_khrang
+# Isan is the Lao of northeast Thailand (Glottolog's Northeastern Thai, a sister of Lao in
+# Lao-Thai); Laos's Lao stopped at the Mekong without it. 2026-10-06, 5d7dac7e-xb.
+    kradai.isan
+= kartvelian.georgian | Georgian
+    kartvelian.ingilo
+= turkic.nogai | Nogai
+    turkic.yurt_tatar
+= nigercongo.kwa.akan | Akan (Twi)
+    nigercongo.kwa.twi nigercongo.kwa.asante
+# Abron (Bono): Côte d'Ivoire's census label; Ghana counts Bono as Akan (gh2021.py). Glottolog keeps
+# it a sister of Akan in Akanic. 2026-10-06, 5d7dac7e-xb.
+    nigercongo.kwa.abron
+= nigercongo.kru.nyabwa | Niaboua (Nyabwa)
+    nigercongo.kru.niedeboua
+= nigercongo.mande.mahou | Mahou
+    nigercongo.mande.baralaka nigercongo.mande.finanga
+= nigercongo.mande.koyaka | Koyaka (Koyaga)
+    nigercongo.mande.nigbi
+= nigercongo.mande.wojenaka | Wojenaka
+    nigercongo.mande.odienneka
+= nigercongo.gur.farefare | Farefare (Gurene, Frafra)
+    nigercongo.gur.talni
+= nigercongo.ubangian.banda.banda_banda | Banda-Banda
+    nigercongo.ubangian.banda.ka nigercongo.ubangian.banda.ndi
+= nigercongo.bantoid.grassfields.ngemba | Ngemba
+    nigercongo.bantoid.grassfields.mankon
+= nigercongo.bantoid.grassfields.meta | Meta'
+    nigercongo.bantoid.grassfields.moghamo
+= afroasiatic.cushitic.highland.kambaata | Kambaata
+    afroasiatic.cushitic.highland.timbaro afroasiatic.cushitic.highland.qebena
+= nilosaharan.surmic.meen | Me'en
+    nilosaharan.surmic.bodi
+= nilosaharan.nilotic.bari | Bari
+    nilosaharan.nilotic.nyepu
+= creole.english_based.ndyuka | Ndyuka (Aukan)
+    creole.english_based.pamaka
+= arawakan.baure | Baure
+    arawakan.joaquiniano
+= muran.piraha | Pirahã
+    muran.mura
+= cariban.wai_wai | Wai Wai
+    cariban.tunayana
+= guahiboan.cuiba | Cuiba
+    guahiboan.chiricoa
+= australian.pamanyungan.westerndesert.martu_wangka | Martu Wangka
+    australian.pamanyungan.westerndesert.wangkajunga
+= australian.pamanyungan.ngumpinyapa.gurindji | Gurindji
+    australian.pamanyungan.ngumpinyapa.malngin
+= australian.pamanyungan.ngumpinyapa.jaru | Jaru
+    australian.pamanyungan.ngumpinyapa.wanyjirra
+= australian.pamanyungan.yolngu.gupapuyngu | Gupapuyngu
+    australian.pamanyungan.yolngu.madarrpa
+= australian.pamanyungan.yolngu.djinba | Djinba
+    australian.pamanyungan.yolngu.ganalbingu
+= australian.maningrida.burarra | Burarra
+    australian.maningrida.gun_nartpa

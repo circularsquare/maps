@@ -13,7 +13,7 @@ def _cm_place_weight(place):
 
 
 def _cm_counts():
-    """Five pooled Afrobarometer rounds on COD-PS 2025: 7 nodes, 12 units, and EVERY ROW IS
+    """Five pooled Afrobarometer rounds on COD-PS 2025: 8 nodes, 12 units, and EVERY ROW IS
     `modelled` IN §7.
 
     CAMEROON PRINTED ITS 2005 CENSUS RELIGION FOR THE WHOLE COUNTRY ONLY, so there is no measured
@@ -64,7 +64,8 @@ ENTRY = {
             "and nothing from it is out yet. "
             "**So this map's Cameroon comes from a survey.** Five rounds of the Afrobarometer "
             "are pooled, **5,949** adults interviewed between March 2013 and April 2022, and "
-            "every dot is desaturated because nobody counted it. Each unit is drawn at the mix "
+            "nobody counted these dots, so they disappear when inferred dots are turned off. Each "
+            "unit is drawn at the mix "
             "its own respondents gave and at BUCREP's projected population for 2025, which puts "
             "the country at **74.4%** Christian, **20.1%** Muslim and 3.8% with no religion. "
             "Yaoundé and Douala are drawn apart from the Centre and Littoral regions around them, "
@@ -72,15 +73,19 @@ ENTRY = {
             "**Islam is the religion of the north.** Adamaoua is **63.1%** Muslim and Nord and "
             "Extrême-Nord about 40%, and no other region reaches 18%. The 2005 census put the "
             "same three regions at the top. "
-            "**Presbyterians and Baptists are drawn as churches of their own.** Presbyterians "
-            "are **27.2%** of Nord-Ouest and about 22% of Sud-Ouest and Sud, and Baptists about "
-            "10% of Nord-Ouest and Sud-Ouest; both hold their share from round to round. None "
-            "of the 309 people interviewed in Adamaoua was a Baptist, so none is drawn there. "
-            "The rest of Christianity is one colour, Catholics included. The share who say just "
-            "Christian instead of naming a church doubles across the five rounds, and it comes "
-            "mostly out of the Catholic answer, which moves between 26% and 41%. Lutherans hold "
-            "their share too, but they live in the north, where up to a third of Christians name "
-            "no church, so they are left inside Christianity. "
+            "**Catholics, Presbyterians and Baptists are drawn as churches of their own.** "
+            "The share who say just Christian instead of naming a church doubles across the five "
+            "rounds, and it comes mostly out of the Catholic answer. In the 2013 and 2015 rounds "
+            "Catholics are 51% of Christians, which is what the Demographic and Health Surveys of "
+            "2011 and 2018 found (51% and 54%), so each unit's Catholic share comes from those "
+            "two rounds: **38.2%** of Cameroonians, the same as the 2005 census, and most in the "
+            "Centre (64.6%) and Yaoundé. Presbyterians are **27.2%** of Nord-Ouest and about 22% "
+            "of Sud-Ouest and Sud, and Baptists about 10% of Nord-Ouest and Sud-Ouest; both hold "
+            "their share from round to round. None of the 309 people interviewed in Adamaoua was "
+            "a Baptist, so none is drawn there. The rest of Christianity is one colour. Lutherans "
+            "hold their share too, but they live in the north, where up to a third of Christians "
+            "name no church, so they are left inside Christianity; Evangelical and Pentecostal "
+            "answers move from round to round with nothing outside the survey to check them by. "
             "**Traditional religion is 0.55% on this map**, against 5.6% in the 2005 census. "
             "The survey offers it as one answer beside Christianity and Islam, so it counts only "
             "people who give it as their religion. Traditional and other religions are spread "
@@ -98,7 +103,9 @@ ENTRY = {
              "Afrobarometer R5-R9 on COD-PS 2025, on the construction of tz and ng: every row "
              "modelled, the national level computed rather than fitted. 12 UNITS: Mfoundi and "
              "Wouri are cut out of Centre and Littoral because every round samples them apart. "
-             "PRESBYTERIAN AND BAPTIST ARE DRAWN, Catholic, Evangelical and Lutheran are folded "
+             "PRESBYTERIAN AND BAPTIST ARE DRAWN, and since 2026-10-03 CATHOLIC, from rounds 5-6 "
+             "only, the rounds whose Catholic share of Christians matches the DHS 2011 and 2018 "
+             "Tableau 3.1 (sources/cm.md §9). Evangelical, Pentecostal and Lutheran are folded "
              "into christianity (sources/cm.py docstring: level by round, and the unnamed share "
              "where each church lives). Traditional and Other are the residual. The 2005 census "
              "is a witness, re-read from the PDF on every build; REOPEN on the 4th RGPH.",

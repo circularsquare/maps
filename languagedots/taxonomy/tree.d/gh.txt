@@ -1,0 +1,51 @@
+# Ghana (taxonomy/gh2021.py). Families and branches checked against Glottolog
+# (data/raw/glottolog/languages.csv): every language below is Atlantic-Congo; Guan (Guang) and
+# the Ghana-Togo Mountain languages are Kwa, Anufo and Sehwi Central Tano (Bia) beside Nzema,
+# the Oti-Volta and Grusi languages Gur (Glottolog files them under Atlantic-Congo with no Gur
+# node, as bf.txt notes).
+#
+# The census files the Ghana-Togo Mountain peoples (Buem, Akpafu, Likpe, Tafi, Bowiri, Adele)
+# under its Guan group; as languages they are their own Kwa branch, so a group of their own.
+nigercongo | Niger-Congo
+nigercongo.kwa | Kwa
+nigercongo.gur | Gur
+nigercongo.mande | Mande
+nigercongo.kwa.sehwi | Sehwi (Sefwi)
+nigercongo.kwa.anufo | Anufo (Chokosi)
+nigercongo.kwa.guan | Guan | 0.70 0.11 140
+nigercongo.kwa.guan.gonja | Gonja | 0.70 0.12 190
+nigercongo.kwa.guan.krache | Krache (Krachi)
+nigercongo.kwa.guan.gikyode | Gikyode (Akyode)
+nigercongo.kwa.guan.chumburung | Chumburung (Nchumburu)
+nigercongo.kwa.guan.nawuri | Nawuri
+nigercongo.kwa.guan.efutu | Efutu
+nigercongo.kwa.guan.larteh | Larteh (Leteh)
+nigercongo.kwa.gtm | Ghana-Togo Mountain languages | 0.72 0.11 170
+nigercongo.kwa.gtm.lelemi | Lelemi (Buem)
+nigercongo.kwa.gtm.siwu | Siwu (Akpafu)
+nigercongo.kwa.gtm.sekpele | Sekpele (Likpe)
+nigercongo.kwa.gtm.tafi | Tafi (Tegbo)
+nigercongo.kwa.gtm.tuwuli | Tuwuli (Bowiri)
+nigercongo.kwa.gtm.adele | Adele
+nigercongo.gur.dagbani | Dagbani | 0.80 0.16 92
+nigercongo.gur.mampruli | Mampruli | 0.62 0.12 60
+nigercongo.gur.farefare | Farefare (Gurene, Frafra) | 0.66 0.15 35
+nigercongo.gur.talni | Talni (Talensi)
+nigercongo.gur.nabit | Nabit (Nabdam)
+nigercongo.gur.waali | Waali (Wala)
+nigercongo.gur.buli | Buli (Builsa)
+nigercongo.gur.hanga | Hanga
+nigercongo.gur.safaliba | Safaliba
+nigercongo.gur.konkomba | Konkomba (Likpakpaln) | 0.66 0.14 330
+nigercongo.gur.bimoba | Bimoba
+nigercongo.gur.ntcham | Ntcham (Basari)
+nigercongo.gur.akaselem | Akaselem (Chamba)
+nigercongo.gur.kabiye | Kabiyè
+nigercongo.gur.tem | Tem (Kotokoli)
+nigercongo.gur.tampulma | Tampulma
+nigercongo.gur.chala | Chala
+#
+# Colours, for neighbours on the Ghanaian ground: Akan (generated, light green) against Gonja,
+# hand-picked cyan, across the Bono East / Savannah line; Dagbani a golden yellow, Mampruli a
+# dark amber to its north, Konkomba a magenta to its east (and against Ntcham's orange red);
+# Farefare (Gurene) a deep orange red between Kasem's pale pink and Kusaal's olive.

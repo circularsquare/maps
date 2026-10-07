@@ -1,0 +1,79 @@
+# Uganda, NPHC 2024 ethnicity read as language through Afrobarometer R4-R9 (taxonomy/ug2024.py,
+# sources/ug_census.py). Checked against Glottolog (data/raw/glottolog/languages.csv):
+#   Bantu (Atlantic-Congo): Soga soga1242 (Lamogi lamo1242 and Gabula gabu1247 are dialects of
+#   it), Nyankole nyan1307 (Hororo horo1246 a dialect), Chiga chig1238, Masaaba masa1299 (Lugisu),
+#   Tooro toor1238 (Tuku tuku1253 a dialect), Konzo konz1239, Gwere gwer1238, Saamia saam1283,
+#   Nyole nyol1238, Ruuli ruul1235, Kenyi keny1278, Gungu gung1250, Talinga-Bwisi tali1258,
+#   Amba amba1263; Rufumbira rufu1238 is a dialect of Kinyarwanda, drawn as a sibling because
+#   the survey's card names it apart (Kenya's Bajuni precedent). Tagwenda, Songora and Nyara
+#   have no Glottolog entry; each is a name the survey's respondents gave for their own speech,
+#   so each gets a Bantu leaf rather than a guess at the neighbour it is closest to.
+#   Nilotic: Lango lang1324, Alur alur1250 (Jonam jona1239 a dialect), Adhola adho1243, Kumam
+#   kuma1275, Karamojong kara1483 (Jie jiee1239, Dodos dodo1240 dialects), Kakwa kakw1240, Kuku
+#   kuku1285, Kupsabiny kups1238. Labwor labw1238 (Lebthur, the Ethur's language) is a dialect
+#   of Acoli; the survey names it apart, so it is a sibling of Acholi.
+#   Central Sudanic: Lugbara lugb1240, Aringa arin1244, Ndo ndoo1242 (Okebu), Lendu lend1245,
+#   Mvuba mvub1239. Ma'di stays on au.txt's `nilosaharan.madi`.
+#   Chope (Jopalwo, Dhopaluo) has no Glottolog entry; a Southern Luo variety, a Nilotic leaf.
+#   Kuliak: Ik ikkk1242 ("vulnerable" in Glottolog's endangerment field). Glottolog has Kuliak
+#   as its own family; it sits under Nilo-Saharan as most readers know it (spec §3, asks
+#   001-003). Soo sooo1256 ("moribund") and Nyang'i nyan1313 ("nearly extinct") get no node:
+#   the Tepeth, Nyangia and Napore are drawn on Karamojong, which they speak (sources/ug.md).
+#   Nubi nubi1253: Glottolog files it under Afro-Asiatic (an Arabic-based creole); under Arabic.
+#
+# Colours. Every Ugandan node is hand-picked off its parent's generated grid (chroma 0.05-0.10 or
+# 0.18-0.20, or lightness outside 0.55-0.82), as Kenya did, so no generated sibling elsewhere
+# moves (checked: a build without ug.txt gives every other node the same colour). Existing
+# Ganda pink, Nyoro ochre, Kinyarwanda red, Teso lilac, Acholi teal, Ma'di cyan keep theirs.
+# South-west: Nyankole (pl.txt's node, generated colour kept), Chiga pale cream, Rufumbira dark mauve, Tooro crimson, Konzo olive.
+# East: Soga orange, Masaaba red-orange, Gwere peach, Saamia dark olive, Nyole yellow-green,
+# Adhola dark teal, Kupsabiny plum. North: Lango deep blue, Karamojong sky blue, Kumam pale
+# sky, Labwor pale lavender, Alur purple. West Nile: Lugbara green, Aringa pale mint, Kakwa
+# dark violet.
+
+# ---- parents defined in other fragments, repeated identically ----
+nigercongo | Niger-Congo
+nigercongo.bantu | Bantu
+nilosaharan | Nilo-Saharan
+nilosaharan.nilotic | Nilotic
+nilosaharan.centralsudanic | Central Sudanic
+afroasiatic | Afroasiatic
+afroasiatic.arabic | Arabic
+
+# ---- Uganda ----
+nigercongo.bantu.soga | Soga (Lusoga) | 0.62 0.19 50
+nigercongo.bantu.nyankole | Nyankole
+nigercongo.bantu.chiga | Chiga (Rukiga) | 0.86 0.09 85
+nigercongo.bantu.masaaba | Masaaba (Lugisu) | 0.60 0.20 30
+nigercongo.bantu.tooro | Tooro (Rutooro) | 0.62 0.19 10
+nigercongo.bantu.konzo | Konzo (Lukonzo) | 0.50 0.10 70
+nigercongo.bantu.gwere | Gwere (Lugwere) | 0.86 0.08 60
+nigercongo.bantu.saamia | Saamia (Lusamia) | 0.50 0.12 90
+nigercongo.bantu.nyole | Nyole (Lunyole) | 0.84 0.19 115
+nigercongo.bantu.ruuli | Ruuli (Ruruuli) | 0.52 0.10 15
+nigercongo.bantu.kenyi | Kenyi (Lukenyi) | 0.90 0.05 45
+nigercongo.bantu.gungu | Gungu (Rugungu) | 0.48 0.08 85
+nigercongo.bantu.bwisi | Bwisi (Talinga-Bwisi) | 0.60 0.06 50
+nigercongo.bantu.amba | Amba (Kwamba) | 0.90 0.06 100
+nigercongo.bantu.rufumbira | Rufumbira | 0.50 0.10 350
+nigercongo.bantu.tagwenda | Tagwenda (Rutagwenda) | 0.86 0.09 20
+nigercongo.bantu.songora | Songora (Rusongora) | 0.62 0.05 20
+nigercongo.bantu.nyara | Nyara (Lunyara) | 0.60 0.09 100
+nilosaharan.nilotic.lango | Lango (Uganda) | 0.50 0.15 265
+nilosaharan.nilotic.alur | Alur | 0.62 0.19 300
+nilosaharan.nilotic.adhola | Adhola (Dhopadhola) | 0.52 0.12 230
+nilosaharan.nilotic.kumam | Kumam | 0.88 0.07 220
+nilosaharan.nilotic.karamojong | Karamojong (Ngakarimojong) | 0.70 0.18 225
+nilosaharan.nilotic.kakwa | Kakwa | 0.48 0.13 300
+nilosaharan.nilotic.kuku | Kuku | 0.86 0.08 300
+nilosaharan.nilotic.kupsabiny | Kupsabiny (Sabiny) | 0.50 0.16 320
+nilosaharan.nilotic.labwor | Labwor (Lebthur) | 0.90 0.06 280
+nilosaharan.centralsudanic.lugbara | Lugbara | 0.66 0.19 165
+nilosaharan.centralsudanic.aringa | Aringa | 0.88 0.08 175
+nilosaharan.centralsudanic.ndo | Ndo (Okebu) | 0.50 0.10 195
+nilosaharan.centralsudanic.lendu | Lendu | 0.60 0.06 180
+nilosaharan.centralsudanic.mvuba | Mvuba | 0.90 0.05 200
+nilosaharan.kuliak | Kuliak | 0.66 0.10 215
+nilosaharan.kuliak.ik | Ik
+nilosaharan.nilotic.chope | Chope (Dhopaluo) | 0.60 0.06 250
+afroasiatic.arabic.nubi | Nubi (Kinubi) | 0.50 0.10 150

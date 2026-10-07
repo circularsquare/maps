@@ -1,0 +1,55 @@
+# Sierra Leone (taxonomy/sl2015.py). 2015 PHC, main language of every household member,
+# by district (sources/sl_census.py).
+# Parents and languages other fragments already define are repeated with the same label and no
+# colour: Fula (ml's red), Kissi (gn's pink), Kuranko (gn's pale lime), Yalunka (sn's dark
+# olive), Susu (gn's golden yellow), Mandinka (sn's green), English, French, Arabic. Temne (au,
+# pl, uk) and Krio (au, pl, uk) were defined bare, as a few migrants; coloured here, where they
+# are two of the three big languages.
+#
+# Middle levels, checked against Glottolog (data/raw/glottolog), "families as most readers know
+# them" (AGENT_BRIEF §3), flat under Atlantic and Mande as gn.txt and sn.txt do:
+#   * Mande (mand1469): Mende (mend1266), Loko (loko1255), Kono of Sierra Leone (kono1268, a
+#     Vai-Kono language, not Guinea's Kono, which is gn.txt's `kono_guinea`), Vai (vaii1241).
+#   * Atlantic (atla1278): Limba (Glottolog's limb1267 is a two-language family directly under
+#     Atlantic-Congo; conventionally Atlantic, one leaf as the census names it), Sherbro
+#     (sher1258, Mel), Krim (krim1238, a dialect of Bom-Kim, Mel). Temne is already flat here.
+#
+# Colours, for neighbours on the Sierra Leonean ground:
+#   South and East: Mende blue, Sherbro green (Bonthe, Moyamba), Kissi pink, Kono dark teal,
+#   Krio pale mint. North: Temne orange, Limba purple, Loko pale pink, Susu golden yellow,
+#   Kuranko pale lime, Fula red, Yalunka dark olive, Mandinka green. Freetown: Krio, Temne,
+#   Mende.
+
+# ---- parents and languages defined elsewhere, repeated bare (their colours are theirs) ----
+nigercongo | Niger-Congo
+nigercongo.atlantic | Atlantic
+nigercongo.atlantic.fulah | Fula
+nigercongo.atlantic.kissi | Kissi
+nigercongo.mande | Mande
+nigercongo.mande.susu | Susu
+nigercongo.mande.kuranko | Kuranko
+nigercongo.mande.yalunka | Yalunka (Jalunga)
+nigercongo.mande.mandinka | Mandinka
+creole | Creoles
+creole.english_based | English-based creoles
+indoeuropean | Indo-European
+indoeuropean.germanic | Germanic
+indoeuropean.germanic.english | English
+indoeuropean.romance | Romance
+indoeuropean.romance.french | French
+afroasiatic | Afroasiatic
+afroasiatic.arabic | Arabic
+other | Other or unclassified
+
+# ---- defined bare elsewhere, coloured here ----
+nigercongo.atlantic.temne | Temne | 0.76 0.15 55
+creole.english_based.krio | Krio | 0.88 0.08 175
+
+# ---- new ----
+nigercongo.mande.mende | Mende | 0.62 0.14 250
+nigercongo.mande.loko | Loko | 0.86 0.09 330
+nigercongo.mande.kono | Kono (Sierra Leone) | 0.55 0.10 195
+nigercongo.mande.vai | Vai
+nigercongo.atlantic.limba | Limba | 0.60 0.15 305
+nigercongo.atlantic.sherbro | Sherbro (Bullom) | 0.64 0.13 135
+nigercongo.atlantic.krim | Krim

@@ -1,0 +1,19 @@
+# Sri Lanka, CPH 2024 ethnic groups read as languages (taxonomy/lk2024.py). Sinhala, Tamil,
+# English and `other` are defined elsewhere; the parents are repeated so this fragment builds
+# on its own under `--only lk`.
+#
+# One new leaf: Sri Lanka Malay (Glottolog sril1245, Austronesian; a Malay-based contact
+# language), filed under Malayic beside Malay as the conventional place.
+#
+# Colours. Malayic's generated teal sits on top of Tamil's (0.70 0.13 185), and Sri Lanka Malay
+# speakers live among Tamil-speaking Moors (Slave Island, Hambantota, Kirinda), so it is
+# hand-picked a light violet, apart from Tamil's teal and Sinhala's warm Indo-Aryan colour.
+indoeuropean | Indo-European
+indoeuropean.indoaryan | Indo-Aryan
+indoeuropean.indoaryan.sinhala | Sinhala
+indoeuropean.germanic | Germanic
+indoeuropean.germanic.english | English
+austronesian | Austronesian
+austronesian.malayic | Malayic
+austronesian.malayic.sri_lanka_malay | Sri Lanka Malay | 0.74 0.14 300
+other | Other or unclassified

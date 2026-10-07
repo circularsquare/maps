@@ -1,0 +1,22 @@
+# Hong Kong 2021 census, usual spoken language (taxonomy/hk2021.py). Nodes other fragments also
+# define are repeated with identical labels so Hong Kong does not depend on them.
+sinotibetan.sinitic | Chinese | 0.62 0.19 38
+sinotibetan.sinitic.cantonese | Cantonese | 0.80 0.11 15
+sinotibetan.sinitic.mandarin | Mandarin | 0.68 0.17 41
+sinotibetan.sinitic.hakka | Hakka | 0.58 0.14 5
+sinotibetan.sinitic.min_nan | Min Nan (Taiwanese, Hokkien) | 0.50 0.12 28
+sinotibetan.sinitic.wu | Wu
+# Glottolog chao1238, a dialect of Min Nan; named apart from Fukien by the census
+# hand-picked: generated, it came out #7954de beside Mandarin's #8258c9 in the same districts
+sinotibetan.sinitic.teochew | Teochew (Chiu Chau) | 0.62 0.11 28
+# Glottolog siyi1236, a dialect of Yue; the census's "Sze Yap (San Wui, Hoi Ping, Yan Ping, Toi Shan)"
+sinotibetan.sinitic.siyi | Sze Yap (Taishanese) | 0.7 0.12 18
+austronesian | Austronesian | 0.76 0.13 195
+austronesian.philippine | Philippine | 0.76 0.13 195
+austronesian.philippine.tagalog | Tagalog | 0.78 0.14 195
+austronesian.malayic | Malayic | 0.74 0.12 175
+austronesian.malayic.indonesian | Indonesian
+japonic | Japonic | 0.86 0.09 20
+japonic.japanese | Japanese | 0.86 0.09 20
+kradai | Kra-Dai (Tai-Kadai) | 0.80 0.14 125
+kradai.thai | Thai | 0.80 0.14 125

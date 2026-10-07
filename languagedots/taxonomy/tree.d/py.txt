@@ -1,0 +1,76 @@
+# Paraguay, Censo 2002, household language (taxonomy/py2002.py). Families from Glottolog
+# (data/raw/glottolog): Lengua-Mascoy (leng1261) is a new root, called Enlhet-Enenlhet as the
+# languages' own scholarship now does: Enlhet Norte, Enxet Sur, Sanapana, Angaite, Toba-Enenlhet
+# (the census's "Toba", the Toba-Maskoy people) and Guana of Paraguay (guan1268, NOT the Arawakan
+# Guana/Terena of Brazil). Ybytoso (Ebitoso) and Tomaraho are Glottolog dialects of Chamacoco
+# (cham1315, Zamucoan); the census names both, so each is a leaf under a new Chamacoco group
+# beside Ayoreo. Ache (ache1246) is Tupian; set under Tupi-Guarani, its conventional subgroup.
+# Nodes other fragments define are repeated only as parents or reused leaves, with the identical
+# label and no colour.
+#
+# Colours, for the Chaco, where these sit beside Nivacle's blue, Qom's blue-violet, Ayoreo's
+# magenta and the Mennonite colonies' German blue: Enlhet-Enenlhet takes the greens nothing in
+# the Chaco uses, Enlhet Norte (the largest, around the colonies) a clear green, Enxet Sur
+# (Presidente Hayes, by the river) yellow-green, the small ones paler or darker steps. Chamacoco
+# is pink and red, beside Ayoreo's magenta in Alto Paraguay. Ache is a purple: its communities
+# sit in Canindeyu, Caazapa and Alto Parana among Guarani, Mbya, Ava Guarani and Portuguese, and
+# every orange or yellow was taken. Four colours owned by ar.txt and br.txt were moved for
+# Paraguay (taxonomy/COLOURS.md, 2026-10-05): Paraguayan Guarani, Nivacle, Mbya, Ava Guarani.
+
+# ---- repeated parents and reused nodes ----
+indoeuropean.romance | Romance
+indoeuropean.romance.spanish | Spanish
+indoeuropean.romance.portuguese | Portuguese
+indoeuropean.romance.french | French
+indoeuropean.romance.italian | Italian
+indoeuropean.germanic | Germanic
+indoeuropean.germanic.english | English
+indoeuropean.germanic.continental | Continental West Germanic
+indoeuropean.germanic.continental.german | German
+afroasiatic.arabic | Arabic
+sinotibetan.sinitic | Chinese
+japonic | Japonic
+japonic.japanese | Japanese
+koreanic | Koreanic
+koreanic.korean | Korean
+tupian | Tupian
+tupian.tupiguarani | Tupi-Guarani
+tupian.tupiguarani.guarani | Guarani
+tupian.tupiguarani.guarani.paraguayan | Paraguayan Guarani
+tupian.tupiguarani.guarani.mbya | Guarani Mbya
+tupian.tupiguarani.guarani.kaiowa | Guarani Kaiowá
+tupian.tupiguarani.guarani.ava_guarani | Avá Guarani
+tupian.tupiguarani.guarani.chiriguano | Ava Guaraní (Chiriguano)
+tupian.tupiguarani.guarani.tapiete | Tapieté
+matacoan | Matacoan
+matacoan.nivacle | Nivaclé
+matacoan.maka | Maká
+matacoan.chorote | Chorote
+guaicuruan | Guaicuruan
+guaicuruan.toba | Qom (Toba)
+zamucoan | Zamucoan
+zamucoan.ayoreo | Ayoreo (Zamuco)
+other | Other or unclassified
+
+# ---- new family: Enlhet-Enenlhet (Glottolog Lengua-Mascoy) ----
+enlhet_enenlhet | Enlhet-Enenlhet (Lengua-Maskoy) | 0.76 0.16 150
+enlhet_enenlhet.enlhet_norte | Enlhet Norte | 0.74 0.17 148
+enlhet_enenlhet.enxet_sur | Enxet Sur | 0.81 0.16 120
+enlhet_enenlhet.sanapana | Sanapaná | 0.54 0.16 145
+enlhet_enenlhet.angaite | Angaité | 0.79 0.14 200
+enlhet_enenlhet.toba_maskoy | Toba-Maskoy (Enenlhet) | 0.66 0.16 115
+enlhet_enenlhet.guana | Guaná (Kaskihá) | 0.81 0.12 135
+
+# ---- Zamucoan: Chamacoco ----
+zamucoan.chamacoco | Chamacoco (Ishir) | 0.76 0.16 355
+zamucoan.chamacoco.ybytoso | Ybytoso (Chamacoco) | 0.79 0.16 5
+zamucoan.chamacoco.tomaraho | Tomárãho (Chamacoco) | 0.62 0.16 345
+
+# ---- Tupi-Guarani ----
+tupian.tupiguarani.ache | Aché | 0.6 0.16 300
+
+# Plautdietsch (session 5d7dac7e-br, 2026-10-06): the census's "Alemán" in the Mennonite colony
+# districts is drawn as Plautdietsch, a place-dependent split of one label (AGENT_BRIEF §3), the
+# reason in countries/py.py. Node and colour as ca.txt's, repeated here.
+indoeuropean.germanic.continental.lowgerman | Low German
+indoeuropean.germanic.continental.lowgerman.plautdietsch | Plautdietsch

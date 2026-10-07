@@ -88,7 +88,8 @@ and Ghana (`sources/estimates.md`); India's Pew 2021 split went into its dots in
   drawn unit mostly non-Theravada except a 2,300-Buddhist village in Bokeo, Laos; Mae Hong Son,
   Ratanakiri and Preah Sihanouk run about a quarter and get a note only. **South Korea was added the
   same day** (census Buddhists to `buddhism.mahayana`, 0.7% remainder), and "assigned from
-  ethnicity" is to be built as its own tier first. **Not built.**
+  ethnicity" is to be built as its own tier first. **Built 2026-10-04** with Mongolia, Russia and
+  Bhutan (`buddhism_assign.py`, spec §2.6a, the tier as spec §7e).
 
 ## Where the undivided people are (counts.json, 2026-09-14)
 
@@ -636,6 +637,8 @@ underneath.
     after the §14 flag above. The brief is `queue.md`, "Iran's Sunni/Shia split from Masaili".
     **Built 2026-09-15** (`ir_split.py`, `sources/ir.md` §9): 7,608,500 Sunnis `derived` inside the
     census's Muslim column, the rest left on `islam`, the 500,000 lump over Tehran and Alborz.
+    **The rest moved to `islam.shia` 2026-10-03** on Anita's ruling of 2026-09-15 (`sources/ir.md`
+    §11), accepting that the low Kurdish count and Kermanshah's Yarsan are drawn as Shia.
   - **The language lesson.** Anita: *"this 'gap' in estimates for religions in muslim coutnries are
     in part due to like language barrier more than they are actual gaps."* Every English chain here
     ended at the CIA Factbook; all three usable estimates (Masaili, Farmanian, Soltani) are Persian
@@ -695,3 +698,127 @@ Pakistan and India are about twice Pew's surveyed 6% (2012, 2021). The default m
 Sunni (most Omani Muslims are Ibadi) and gives Saudis, Kuwaitis and Tajikistan's Ismailis no split.
 It feeds the foreign half of `fr`, `es`, `it`, `gr`, `be`, `se`, `no`, `dk`, `fi` and `lv`. Not
 changed: a shared-code change moves drawn countries, and it is Anita's to schedule.
+
+## Administrative and institutional records, 2026-10-03 (`fafd1067-scout2`)
+
+Anita, after Lebanon was drawn from its electoral register by sect: are there other records of that
+kind for other Muslim countries? The full record is `sources.md` §scout-2026-10-03-sect-registers;
+this is the part the next sect hunt needs.
+
+- **Bahrain is the one find, and it is queued** (`queue.md`, "Sect from administrative records").
+  The Ja'fari Endowments' 2016 count (mosques Northern 344, Capital 332, Muharraq 44, Southern 33;
+  ma'tams 306, 211, 71, 31) and the Sunni Endowments' count of about 2022 (Capital 92, Muharraq 168,
+  Southern 130, Northern 89) put the Capital and Northern governorates at 78-79% Shia by mosques and
+  Muharraq and Southern at 20-21%. OSM's Shia-tagged mosques (604 of 841) fall the same way, 70-86% of
+  the register in every governorate. Arab Barometer wave I (2009, on disk) gives the level, 249 Shiite
+  and 183 Sunni of 435, 57.2%; the mosque shares applied to the 2020 census's Bahraini Muslims give
+  56.7%. §14: an ask before drawing.
+- **No other state keeps a roll by sect** that was found, except Pakistan's separate Ahmadi list
+  (167,505 in 2018, national in print; the census already places Ahmadis by tehsil).
+- **Closed in this class, with the reason**: Kuwait (Awqaf and Ministry of Justice records are
+  national; OSM has 41 Shia mosques and no husseiniyas); Iraq (no endowment table found, ownership
+  contested between the diwans); Türkiye's cemevis (Istanbul holds 6.8% of them against a third of
+  Alevis); Oman, the M'zab and Jabal Nafusa (OSM tags 9, 10 and 0 mosques Ibadi; nothing by
+  governorate); Saudi Ja'fari courts (no caseloads, two courts); Azerbaijan and Georgia (registers not
+  sect-labelled); India's Shia waqf boards (property, not people; WAMSI unreachable); Pakistan's
+  Muharram security plans (§14, and not a table).
+- **Side find, a survey**: Arab Barometer wave III asked Kuwait's interviewers to code each
+  respondent's sect (`q2005kw`), with governorate: Shia 25% of those coded in the Capital and Hawalli,
+  9% in Jahra, 18% overall, 19% undetermined. Not queued (interviewer judgement; six governorates
+  against `kw`'s 143 areas); a lead if the Gulf ruling is revisited.
+- **The rule it sharpens.** A worship-place register ranks places and does not count people: density
+  per believer differs by sect (Iran's claimed one mosque per 500 Sunnis against one per 1,000 Shia),
+  and a mosque serves foreigners too. Use one only beside a measured national figure, and check it
+  against a second, independent placement before trusting the ranking.
+
+## Muslim-majority countries, how close each is to one branch, 2026-10-04 (`658b4937`)
+
+Anita: *"looking into getting muslim breakdowns for any muslim majority countries ... morocco seems to
+be like <0.1% shia and rest sunni? maybe we can just color it sunni."* Four scouts covered the ~40
+Muslim-majority countries still drawn on bare `islam`. The full reports, with every URL and page
+number, are in `sources/branches_2026-10-04/`: `global_tables.md` (one row per country from five
+compilers), `africa.md`, `mideast_casia.md`, `south_se_balkans.md`. **Nothing was built; the rule
+below is a proposal waiting on Anita.**
+
+### The yardsticks, all national
+- **Pew 2009** Shia ranges (local PDF `data/raw/estimates/pew_muslim_population_2009.pdf`, printed pp.
+  39-41): ascription, Shia only, counts Alevis, Alawites, Ismailis, Zaydis as Shia, Ibadis not separated.
+- **Pew 2012 Q31, every surveyed country** (printed p. 30; volunteered answers in the topline, PDF
+  p. 128). Adds Morocco 67/0/30 just a Muslim, Tunisia 58/0/40, Afghanistan 90/7, Tajikistan 87/3,
+  Palestine 85/0/15, Niger 59/7 (Ahmadiyya 6), Chad 48/21 (Ahmadiyya 4), Djibouti 77/2, Mali 20/0/55,
+  Guinea-Bissau 40/6/36. **Its sub-Saharan Shia rows are label confusion** (Chad 21% against 0-2% from
+  every compiler), the Maliki-in-Morocco shape again.
+- **WRD via ARDA, one ranking page per variable, every country**: `thearda.com/world-religion/np-sort?var=`
+  `ADH_495` Muslims, `ADH_496` Sunnis, `ADH_505` Shias, `ADH_512` "Islamic schismatics" (Ibadi, Ahmadi,
+  Druze and Sanusi mixed). No other Muslim sub-variable exists. Ascription.
+- **COW WRP 2010** (local): runs high on Shia in Asia and the Gulf (Malaysia 10, Qatar 21, Maldives 6,
+  Kazakhstan 5) and has zero Ibadis in the Maghreb, besides the Comoros error.
+- **CIA Factbook is retired** (cia.gov redirects to a farewell page); last text via Wayback 2025-12-31.
+  Its Afghanistan and Pakistan lines copy Pew 2009; Somalia and UAE copy WRD.
+
+### Effectively one branch (every credible minority under about 2% of Muslims)
+ma, dz (outside Ghardaïa), tn (outside Djerba), mr, sd, so, dj, km, ml, ne, bf, gn, gm, gw, td, eg, jo,
+ps, uz, kz, kg, tm, tj (outside Gorno-Badakhshan), id, bd, my, bn, mv, ba, xk, al (the census's plain
+`Mysliman` once Bektashi is out). Best minority figures, as share of Muslims:
+
+| cc | minority figure | source |
+|---|---|---|
+| ma | Shia ~0.03% (8-12k), Ahmadi 750 | State Dept IRF 2023, sect leaders' claims |
+| dz | Ibadi 0.3-0.7%, nearly all in Ghardaïa | Minahan 2016; Ethnologue speakers |
+| tn | Ibadi ~0.5%, Djerba (Médenine) | journalism |
+| mr | Shia ~1% | a Shia leader's 45k claim (2010) |
+| sd | Shia 0.2% (surveys) to 1.3% (claims) | |
+| eg | Shia ~1% | State Dept, "scholars and NGOs"; surveys find 0 |
+| km | Shia, Ahmadi and Christians together <2%, Anjouan | State Dept |
+| gm | Ahmadi ~2% | community claim |
+| jo | Shia 2.1% | WRD; Pew 2012 0 |
+| uz | Shia 0.35% (122,000) | Uzbek government via State Dept |
+| kg | Shia <1%, Ahmadi ~1,000 | government |
+| tm | Azerbaijanis, Persians, Kurds 0.57% of people | 2022 census, already in `tm_geo.py` |
+| id | Shia 0.1-1%, Ahmadi 0.03-0.5% | Kemenag (200k) to IJABI's own claim (2.5M) |
+| bd | Shia 2% | Pew 2012, ~38 respondents; Pew 2009 <1% |
+| my, bn, mv | <1-2%; Shia banned (my, bn), citizens Sunni by law (mv) | |
+| ba, xk | Shia 0-1%; Sufi orders mostly Sunni | Pew 2012 |
+| al | "other Shia tariqas" 0.5% of adults (~1.4% of non-Bektashi Muslims, ~4 respondents) | KAS survey 2024 |
+
+**Three units inside these countries are not Sunni-majority or close, and are drawn units of their
+own:** Ghardaïa wilaya (Ibadi perhaps 40-55%, the scout's arithmetic from Minahan; the only count is
+colonial, Ghardaïa town 1955: 8,024 Ibadi, 6,022 Maliki), Gorno-Badakhshan in Tajikistan (227,916,
+Pamiri Ismaili), and Médenine in Tunisia (Djerba Ibadis, ~12% of the governorate on ~60k).
+
+### Real minorities
+- **ly**: Ibadi 300-400k, 4.5-6% (the Libyan Tmazight Congress; the State Dept range is the same figure
+  divided by 6.6M). Jabal Nafusa and Zuwara, which are drawn districts. 2017 fatwa calling Ibadis
+  infidels: §14.
+- **sl**: the **2004 census counted Muslims by branch**, the only one of 18 African censuses that did
+  (four Stats SL Population Profile PDFs on Wayback, URLs in `africa.md`): Sunni 52.8%, "Shiek" 8.0%,
+  Ahmadi 5.0%, Other Muslim 10.9% of 4.93M. Code 09 reads "Shiek Muslim", which need not mean Shia; the
+  three printed districts hold 99.8% of the national Ahmadis, so a table is wrong somewhere. National
+  Ahmadi share ~6.5% of Muslims at most. The map is on the 2015 census, Islam undivided.
+- **sa**: State Dept now prints Shia **25-30% of the Eastern Province** (1.28-1.54M on the 2022 census,
+  43-52% of the province's Saudis). Najran's circulating Ismaili figures (500-700k) exceed the census's
+  394,976 Saudis there.
+- **om** (45/45/5 Ibadi/Sunni/Shia of citizens, nothing by governorate), **ae** (citizens >85% Sunni,
+  Shia in Dubai and Sharjah, no figure), **qa** (no citizen column on the map), **af** (Shia 7-29%,
+  only Shia writers' prose by province), **az** (65/35 by the state committee; Pew 2012 37 Shia, 16
+  Sunni, 45 just a Muslim; Yunusov 2004 reprints 1913/1916 district counts, Zakatal 99% Sunni, Lankaran
+  94% Shia, too old on the Razmara ruling), **pk** (nothing new).
+
+### The proposal put to Anita
+Assign the one-branch countries' Muslims to `islam.sunni` with a stated share left on `islam`, as
+§2.6a does for Theravada; leave Ghardaïa and Gorno-Badakhshan whole on `islam`; give Médenine its own
+remainder. It needs §2.6a's tier, which is still unbuilt. Libya, Sierra Leone, Saudi Arabia and
+Azerbaijan are questions, not proposals.
+
+### Decided and built, 2026-10-04
+Anita: *"ok yeah, lets assign. and remainder can be best minority figure per coutnry ig yeah. we
+can do libya too, same treatment. saudi arabia not sure, up to you."* Built as `islam_assign.py`
+(one table: remainder per country with its source, the whole units, Médenine's own share, and the
+note paragraph), applied by `countries.py` at load and by `coverage.py`; spec §2.6b. 33 countries:
+the 31 above plus Libya (Nalut, Jabal al Gharbi and Zuwara districts whole on `islam`) and Sierra
+Leone (6.5% left for the Ahmadis, on the 2004 census). **Saudi Arabia was kept unsplit** by the
+builder: the Eastern Province figure has no traceable origin, Najran's circulating figures exceed
+its Saudis, and a Shia placement is §14 after the 2015 bombings, so the 2026-09-15 ruling stands.
+**No viewer tier was built**: counted Muslims split into `derived` Sunni rows that roll back to
+`islam` (Iran's shape), and survey-modelled countries stay `modelled`. The "assigned" label
+spec §2.6a asked for is still a viewer job, for these and the Theravada rows together.

@@ -42,7 +42,11 @@ REVIEW = {
         "cn2000.py's REVIEW deliberately keeps China's MONGOLS out of the node; that "
         "exclusion is about the unavailability of a religio-ethnic derivation for them "
         "(spec §14.5) and says nothing against a direct census answer, which is what this "
-        "is.",
+        "is. "
+        "SINCE 2026-10-04 (spec §2.6a, §7e) buddhism_assign.py moves these rows back to "
+        "`buddhism` and assigns them all to buddhism.vajrayana again as `assigned`, so the "
+        "map says the school was assigned and `inferred dots: not shown` draws the census's "
+        "own answer, `Buddhism`. The mapping is left as it is so coverage still names the node.",
     "Бөө":
         "-> indigenous.northeurasian. 50,408 people, 2.4% of adults, NSO's `Shamanism`. "
         "Mongolian shamanism (böö mörgöl) is the same North Eurasian complex the node "

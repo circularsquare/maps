@@ -34,12 +34,22 @@ Four of the twenty-four provinces cannot be drawn on their own measured shares, 
 not get the same treatment, because they are not the same case.** The line is whether anything
 measured the place at all.
 
-**Assumed at the national rate — Carchi (n=20), Pastaza (n=32), Orellana (n=55).** Each was
+**Assumed — Carchi (n=20), Pastaza (n=32), Orellana (n=55).** Each was
 sampled in the 2010 wave and no other. The split-half needs a province in both halves to rank
 it twice, so these three drop out of the test that licenses the geography the other twenty are
 drawn on: §14.16's rule about categories, applied to units. **But one wave did measure them**,
 and that is enough to anchor an assumption on. 466,909 people, 2.76% of Ecuador. Anita's call,
 2026-09-08: *"i feel like carchi is fine to assume and we can just do it."*
+
+**Which assumption is spec §12's one-round rule (2026-09-14), applied 2026-10-03.** Colombia's
+`region_fallback`, imported from `sources/co.py`: a one-round province takes its LAPOP design
+region's shares (`estratopri`: Costa, Sierra, Oriente, which nest the provinces) for the three
+placed answers when the region, leaving each of its provinces in both halves out in turn,
+predicts them better than the country. **Sierra passes for Carchi** (closer for 8 of 10, mean
+error 11.7 against 16.1 points, p=0.025), so Carchi draws 79.6% Catholic, 7.1% Evangelical and
+4.0% Ninguna against the national 75.5%, 11.0% and 6.0%. **Oriente fails** (0 of 4) and
+Pastaza and Orellana stay at the national rate. Anita ruled Carchi to Sierra on 2026-09-14
+(ask/RULINGS.md); `sources/ec.md` §12 has the record.
 
 **NOT DRAWN AT ALL — Galápagos.** LAPOP has **no code 920**. Not unsampled: not offered. There
 is no such value in the `prov_es` label set, so no Ecuadorian respondent could ever have been
@@ -114,7 +124,11 @@ countries. The verdict is the same and the reason is not; it goes at the nationa
 because a category whose definition moved mid-pool has no stable geography to claim.
 
 Usage:
-    python sources/ec.py --fetch    rebuild the slim extract from the 1.1 GB LAPOP .dta
+    python sources/ec.py --fetch    rebuild the slim extract from the 1.1 GB LAPOP .dta,
+                                    and the design-region table below
+    python sources/ec.py --fetch-regions
+                                    only data/raw/ec/lapop_ec_regions.csv (`estratopri` by
+                                    wave and province, from the same .dta, ~1 min)
     python sources/ec.py            rebuild data/normalized/ec.csv from the slim extract
 """
 
@@ -134,6 +148,7 @@ import lapop
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 POP = os.path.join(ROOT, "data", "geo", "ec", "ec_pop_2022.csv")
+REGIONS = os.path.join(ROOT, "data", "raw", "ec", "lapop_ec_regions.csv")
 LOOKUP = os.path.join(ROOT, "data", "geo", "ec", "ec_lookup.csv")
 OUT = os.path.join(ROOT, "data", "normalized", "ec.csv")
 
@@ -149,15 +164,23 @@ CENSUS_TOTAL = 16_938_986
 #   1 = Católico (+0.71), 5 = Evangélica y Pentecostal (+0.48), 4 = Ninguna, creyente (+0.63)
 CARRIES = [1, 4, 5]
 
-# The provinces the split-half cannot rank, drawn at the national rate. Each was sampled
-# once, in 2010, so there IS a reading to anchor the assumption on — it is the second reading
-# that is missing. Asserted rather than derived silently, because the set changing means
-# LAPOP's sample design changed and somebody should look.
-NATIONAL_RATE = {
+# The provinces the split-half cannot rank. Each was sampled once, in 2010, so there IS a
+# reading to anchor an assumption on; it is the second reading that is missing. Asserted
+# rather than derived silently, because the set changing means LAPOP's sample design changed
+# and somebody should look.
+ONE_ROUND = {
     "EC04": "Carchi: sampled in the 2010 wave only, so the split-half cannot rank it twice",
     "EC16": "Pastaza: sampled in the 2010 wave only, so the split-half cannot rank it twice",
     "EC22": "Orellana: sampled in the 2010 wave only, so the split-half cannot rank it twice",
 }
+# Which assumption is spec §12's one-round rule (2026-09-14, written for Colombia's La Guajira,
+# `co.region_fallback`): a one-round province takes its LAPOP design region's shares for the
+# three placed answers when that region, leaving each of its provinces in both halves out in
+# turn, predicts them better than the country does. Sierra passes (closer for 8 of 10) and
+# takes Carchi; Oriente fails (0 of 4) and Pastaza and Orellana stay at the national rate.
+# Anita, 2026-09-14 night (ask/RULINGS.md): Carchi switches to Sierra. Asserted, so a change is
+# a failure and not a redraw.
+ON_REGION = ["EC04"]           # Carchi (Sierra)
 
 # The province that is NOT DRAWN AT ALL. Anita, 2026-09-08: *"galapagos maybe we just leave
 # empty for now. no data."* LAPOP has no code 920 — Galápagos was never offered as an answer,
@@ -168,9 +191,35 @@ NATIONAL_RATE = {
 NOT_DRAWN = {"EC20": "Galápagos"}
 
 
+def fetch_regions():
+    """LAPOP's design region (`estratopri`) per wave and province, which the slim file lacks.
+
+    Respondent counts by (wave, prov, estratopri) with the region's label, so `main` can
+    assert that the regions nest the provinces without reading the 1.1 GB file again.
+    """
+    import pyreadstat
+    if not os.path.exists(lapop.DTA):
+        raise SystemExit(f"{lapop.DTA} missing — see sources/gt.md for the download")
+    print("reading pais, wave, prov, estratopri from the LAPOP grand merge…")
+    d, meta = pyreadstat.read_dta(lapop.DTA, usecols=["pais", "wave", "prov", "estratopri"],
+                                  apply_value_formats=False)
+    d = d[d["pais"] == PAIS]
+    d = d[lapop.valid(d["prov"]) & lapop.valid(d["estratopri"])].copy()
+    for c in ["wave", "prov", "estratopri"]:
+        d[c] = d[c].astype(float).astype(int)
+    lab = meta.value_labels.get(meta.variable_to_label.get("estratopri"), {})
+    t = d.groupby(["wave", "prov", "estratopri"]).size().rename("n").reset_index()
+    t["label"] = t["estratopri"].map(lambda k: lab.get(k, lab.get(float(k))))
+    os.makedirs(os.path.dirname(REGIONS), exist_ok=True)
+    t.to_csv(REGIONS, index=False, encoding="utf-8")
+    print(f"wrote {REGIONS} ({len(t)} rows)")
+
+
 def main():
     if "--fetch" in sys.argv:
         lapop.fetch()
+    if "--fetch" in sys.argv or "--fetch-regions" in sys.argv:
+        fetch_regions()
 
     df = lapop.load(PAIS, WAVES)
 
@@ -219,11 +268,11 @@ def main():
     in_both = sorted(set(df.loc[df["wave"] < cut, "geo_id"])
                      & set(df.loc[df["wave"] >= cut, "geo_id"]))
     at_national = sorted(set(lut["geo_id"]) - set(in_both) - set(NOT_DRAWN))
-    if set(at_national) != set(NATIONAL_RATE):
+    if set(at_national) != set(ONE_ROUND):
         raise SystemExit(
             f"the provinces outside the split-half are now {at_national}, not "
-            f"{sorted(NATIONAL_RATE)}. LAPOP's sample design has changed — read the wave "
-            "table before touching NATIONAL_RATE, because which provinces this country "
+            f"{sorted(ONE_ROUND)}. LAPOP's sample design has changed — read the wave "
+            "table before touching ONE_ROUND, because which provinces this country "
             "claims to know is what just moved.")
     # Galápagos must be absent from the survey entirely, not merely thin. If LAPOP ever
     # starts offering code 920 this stops, because then there IS something to draw.
@@ -232,10 +281,10 @@ def main():
         raise SystemExit(f"{seen} now has LAPOP respondents but is in NOT_DRAWN — the "
                          "province card has changed and it should be drawn")
     print(f"\n  {len(in_both)} provinces appear in BOTH halves and may carry their own "
-          f"shares; {len(at_national)} are assumed at the national rate:")
+          f"shares; {len(at_national)} were measured in one round and are assumed:")
     for gid in at_national:
         n = int((df["geo_id"] == gid).sum())
-        print(f"    {gid}  n={n:<4} {NATIONAL_RATE[gid]}")
+        print(f"    {gid}  n={n:<4} {ONE_ROUND[gid]}")
     share_nat = pop.loc[at_national, "pop"].sum() / pop["pop"].sum()
     print(f"    together {int(pop.loc[at_national, 'pop'].sum()):,} people, "
           f"{share_nat:.2%} of Ecuador")
@@ -258,26 +307,70 @@ def main():
     print(f"    -> {len(large)} categories drawn on their own province shares, "
           f"{len(small)} spread at the national rate")
 
+    # ---- the design regions (Costa, Sierra, Oriente), which must nest the provinces ----
+    reg = pd.read_csv(REGIONS) if os.path.exists(REGIONS) else None
+    if reg is None:
+        raise SystemExit(f"{REGIONS} missing — run with --fetch-regions")
+    nest = reg.groupby("prov")["estratopri"].nunique()
+    if (nest != 1).any():
+        raise SystemExit(f"provinces in two design regions: {sorted(nest[nest != 1].index)}")
+    prov_region = reg.groupby("prov")["estratopri"].first()
+    missing = sorted(set(df["prov_code"]) - set(prov_region.index))
+    if missing:
+        raise SystemExit(f"prov codes with no design region: {missing} — re-run --fetch-regions")
+    df["estratopri"] = df["prov_code"].map(prov_region)
+    region_names = reg.groupby("estratopri")["label"].first().to_dict()
+
+    # Colombia's function, imported rather than copied so the rule has one implementation.
+    # Its pool is the provinces in both halves, which in Ecuador are the ones in all four
+    # religion waves; it prints "departments" because Colombia wrote it.
+    from co import region_fallback
+    use_region = region_fallback(df, in_both, at_national, large, names=names,
+                                 region_names=region_names)
+    if sorted(use_region) != sorted(ON_REGION):
+        raise SystemExit(f"region_fallback now puts {sorted(use_region)} on their region, not "
+                         f"{ON_REGION}. Read the table above, then update ON_REGION, the "
+                         "docstring and sources/ec.md deliberately.")
+
     # ---- the 20 provinces the survey may place, on their own shares ----
     out = lapop.build(df[df["geo_id"].isin(in_both)], nat, large, small,
                       pop["pop"], in_both, unit_noun="province")
 
-    # ---- and the three it may only assume, at the national rate on their own population ----
-    rows = []
+    # ---- and the three it may only assume: on their region's shares where the rule says so,
+    # at the national rate on their own population otherwise ----
+    parts, rows = [out], []
     for gid in at_national:
+        why = ONE_ROUND[gid].split(": ", 1)[1]
+        if gid in use_region:
+            # The same construction as a province in both halves, with the region's provinces
+            # in both halves standing in for the province's own respondents.
+            r = use_region[gid]
+            rname = region_names[r]
+            pool = df[(df["estratopri"] == r) & df["geo_id"].isin(in_both)]
+            part = lapop.build(pool.assign(geo_id=gid), nat, large, small, pop["pop"], [gid],
+                               unit_noun="region")
+            part["basis_note"] = part["basis_note"].map({
+                "region share": f"share in the {rname} region's provinces sampled in every wave",
+                "national share within the region's residual":
+                    f"national share within the residual of the {rname} region's shares",
+            }) + "; " + why
+            if part["basis_note"].isna().any():
+                raise SystemExit("a region row's basis note did not map — lapop.build's "
+                                 "wording changed")
+            parts.append(part)
+            continue
         p = int(pop.loc[gid, "pop"])
         for c in nat.index:
-            rows.append((gid, lapop.CATEGORY[c], nat[c] * p,
-                         "national share; " + NATIONAL_RATE[gid].split(": ", 1)[1]))
+            rows.append((gid, lapop.CATEGORY[c], nat[c] * p, "national share; " + why))
     rest = pd.DataFrame(rows, columns=["geo_id", "source_category", "count", "basis_note"])
     rest["count"] = rest["count"].round().astype("int64")
-    for gid in at_national:
+    for gid in rest["geo_id"].unique():
         m = rest["geo_id"] == gid
         drift = int(pop.loc[gid, "pop"]) - int(rest.loc[m, "count"].sum())
         if abs(drift) > int(m.sum()):
             raise SystemExit(f"{gid}: rounding drift {drift} exceeds one person per row")
         rest.loc[rest.loc[m, "count"].idxmax(), "count"] += drift
-    out = pd.concat([out, rest], ignore_index=True)
+    out = pd.concat(parts + [rest], ignore_index=True)
 
     out["geo_level"] = "provincia"
     out["geo_name"] = out["geo_id"].map(names)

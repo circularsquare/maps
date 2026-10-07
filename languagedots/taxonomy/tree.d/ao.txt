@@ -1,0 +1,61 @@
+# Angola (taxonomy/ao2024.py). RGPH 2024, mother tongue (língua materna), ages 2 and over.
+# Parents and languages other fragments already define are repeated with the same label and no
+# colour, so their owners can retune them (br.txt moved Portuguese while this was being
+# written) and a relabel still shows up as a clash, not a dangle. Kimbundu, Umbundu, Kongo, Kwanyama and Lingala were
+# defined bare by fi.txt and pl.txt (a few immigrants each); Angola is where they are big, so
+# they get their colours here (build.py lets a later fragment colour a node defined bare).
+#
+# Middle levels, checked against Glottolog (data/raw/glottolog/languages.csv): every language
+# below is Atlantic-Congo (atla1278) there, with no finer levels in that file. The groups are
+# the conventional Guthrie ones: Ngangela (Glottolog Nyemba, nyem1238) under zm.txt's
+# Chokwe-Lunda group (K.10-20), with Luvale and Mbunda; Nyaneka (nyan1305) and Nkhumbi
+# (nkhu1238) as the Nyaneka-Nkhumbi group (R.10). Fiote, the Kongo of Cabinda (Woyo, Vili,
+# Yombe), is a language node beside Kongo rather than under it, because Kongo is a language
+# node other countries draw and making it a group would wash theirs out.
+#
+# Colours, for the neighbours on the Angolan ground:
+#   Umbundu red (the central plateau: Huambo, Bié, Benguela); Kimbundu magenta to its north
+#   (Malanje, Cuanza Norte, Bengo, Luanda's hinterland); Kikongo green further north (Uíge,
+#   Zaire), with Fiote a pale yellow-green in Cabinda; all three apart from Portuguese, which
+#   br.txt makes a blue-violet and which is the first language of most townspeople everywhere;
+#   Kwanyama orange in Cunene, next to Namibia's Oshiwambo orange (the same people across the
+#   border); Nyaneka a light gold and Nkhumbi a dark green between Nyaneka and Kwanyama (Huíla,
+#   Cunene); Ngangela a teal in the south-east, near zm.txt's Mbunda, which INE counts inside
+#   it; Lingala a light cyan (Uíge, Lunda Norte, Luanda), apart from Kikongo's green and
+#   Chokwe's pale yellow. Chokwe and Luvale keep zm.txt's colours.
+
+# ---- parents and languages defined elsewhere, repeated bare (their colours are theirs) ----
+nigercongo | Niger-Congo
+nigercongo.bantu | Bantu
+nigercongo.bantu.chokwe_lunda | Chokwe-Lunda (K.10-20, L.50)
+nigercongo.bantu.chokwe_lunda.chokwe | Chokwe
+nigercongo.bantu.chokwe_lunda.luvale | Luvale
+indoeuropean.romance | Romance
+indoeuropean.romance.portuguese | Portuguese
+indoeuropean.romance.french | French
+indoeuropean.romance.spanish | Spanish
+indoeuropean.germanic.continental | Continental West Germanic
+indoeuropean.germanic.continental.german | German
+indoeuropean.slavic | Slavic
+indoeuropean.slavic.east | East Slavic
+indoeuropean.slavic.east.russian | Russian
+sinotibetan.sinitic | Chinese
+sinotibetan.sinitic.mandarin | Mandarin
+creole | Creoles
+creole.portuguese_based | Portuguese-based creoles
+khoisan | Khoisan languages
+africa_other | Other African languages
+
+# ---- defined bare elsewhere, coloured here ----
+nigercongo.bantu.umbundu | Umbundu | 0.64 0.18 20
+nigercongo.bantu.kimbundu | Kimbundu | 0.68 0.17 335
+nigercongo.bantu.kongo | Kongo | 0.68 0.15 150
+nigercongo.bantu.kwanyama | Kwanyama | 0.70 0.17 48
+nigercongo.bantu.lingala | Lingala | 0.78 0.12 210
+
+# ---- new ----
+nigercongo.bantu.fiote | Fiote | 0.86 0.12 115
+nigercongo.bantu.chokwe_lunda.ngangela | Ngangela | 0.64 0.12 160
+nigercongo.bantu.nyaneka_nkhumbi | Nyaneka-Nkhumbi (R.10) | 0.76 0.12 110
+nigercongo.bantu.nyaneka_nkhumbi.nyaneka | Nyaneka | 0.84 0.14 90
+nigercongo.bantu.nyaneka_nkhumbi.nkhumbi | Nkhumbi | 0.58 0.12 140

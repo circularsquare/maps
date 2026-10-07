@@ -1,8 +1,9 @@
 """Afrobarometer Cameroon religion -> religiondots taxonomy.
 
-Seven categories at 12 units (the 10 regions, with Mfoundi/Yaoundé and Wouri/Douala apart), on
+Eight categories at 12 units (the 10 regions, with Mfoundi/Yaoundé and Wouri/Douala apart), on
 COD-PS 2025. `Christian` is the card's umbrella answer with every church folded back in except the
-two drawn on their own; `Muslim` likewise; the rest are the card's own boxes. `sources/cm.py`'s
+three drawn on their own (Catholic since 2026-10-03, carved out of it from rounds 5-6); `Muslim`
+likewise; the rest are the card's own boxes. `sources/cm.py`'s
 docstring has the argument for which churches are drawn and `sources/cm.md` the record. The same
 instrument and construction as `tz2022.py` and `ng2022.py`.
 
@@ -14,13 +15,14 @@ EXCLUDED = {}
 
 REVIEW = {
     "Christian":
-        "-> christianity, the bare branch, holding everything Christian except Presbyterians and "
-        "Baptists: Roman Catholics (35% of the pooled respondents), `Christian only` (10.5%), "
+        "-> christianity, the bare branch, holding everything Christian except Catholics, "
+        "Presbyterians and Baptists (23.6% as drawn): `Christian only` (10.5% of the pooled "
+        "respondents), "
         "Evangelical (5.7%; in Cameroon most likely the Reformed Eglise Evangelique du Cameroun "
         "of the Ouest and Littoral, not `christianity.evangelical`), Pentecostal (4.7%), Lutheran "
-        "(2.4%), Adventist, Orthodox and the small boxes. Catholics are not drawn because their "
-        "share moves 26.3-41.4% by round while `Christian only` doubles; Evangelical moves "
-        "2.7-8.9%. **Lutherans are level (2.1-2.4%) and pass the split-half (+0.61) and are still "
+        "(2.4%), Adventist, Orthodox and the small boxes. Evangelical moves 2.7-8.9% by round and "
+        "Pentecostal 2.0-5.6%, with no outside count to say which round is right. "
+        "**Lutherans are level (2.1-2.4%) and pass the split-half (+0.61) and are still "
         "folded in**: they live in Adamaoua, Nord and Extreme-Nord, where 18-35% of Christians "
         "name no church, so a Lutheran share would be drawn short exactly where it lives "
         "(`sources/cm.py::unnamed_where_they_live`, 22.6% against 13.0% nationally). **Orthodox** "
@@ -28,6 +30,17 @@ REVIEW = {
         "are in Nord and 10 of round 6's 20 in Extreme-Nord, which looks like one team's coding; "
         "the census counted Orthodox at 0.5% in 2005. Round 7's Cameroon-only `Protestant` code "
         "(17) names no church and stays here too.",
+    "Catholic":
+        "-> christianity.catholic. 38.2% as drawn, 51.4% of Christians; the DHS reports of 2011 "
+        "and 2018 have 51.3% and 54.1% of Christians (38.0-38.8% of everyone) and the 2005 census "
+        "38.4%. Each unit's Catholics are its share of the `Christian` pool in rounds 5-6 "
+        "(2013-2015), the two rounds whose Catholic share (51.4%, 51.5%) matches the DHS; rounds "
+        "7-9 give 37.6-47.7% as `Christian only` rises. Split-half R5 against R6 +0.657 (all five "
+        "rounds +0.706: the geography holds while the level moves). `Christian only` is 7.0% "
+        "of Christians where Catholics live against 8.0% nationally, so they are not drawn short "
+        "where they are. Centre 64.6%, Mfoundi 56.6%, Nord-Ouest 48.2%; Adamaoua 6.1%. The "
+        "Church's diocesan figures rank the regions at +0.636; the biggest disagreement is "
+        "Ouest, 44.7% drawn against 18% claimed by its dioceses and 34.7% in the 2005 census.",
     "Presbyterian":
         "-> christianity.reformed.presbyterian. 9.36% of the pooled survey, 9.00% as drawn: the "
         "Presbyterian Church in Cameroon of the Nord-Ouest (27.2%) and Sud-Ouest (22.5%) and the "
@@ -77,6 +90,7 @@ REVIEW = {
 
 MAP = {
     "Christian": "christianity",
+    "Catholic": "christianity.catholic",
     "Presbyterian": "christianity.reformed.presbyterian",
     "Baptist": "christianity.baptist",
     "Muslim": "islam",

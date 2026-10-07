@@ -1,0 +1,13 @@
+# Hungary, Népszámlálás 2022, mother tongue (taxonomy/hu2022.py). One new leaf; the other 15
+# labels were already in the tree (us.txt, cz.txt, ro.txt, ca.txt).
+#
+# Boyash (Beás): an archaic Romanian dialect spoken by Roma in south-west Hungary (Baranya,
+# Somogy, Zala), printed by KSH apart from both Romani and Romanian. Glottolog has no entry for it
+# (data/raw/glottolog/languages.csv: Romanian, roma1327, lists Banat Romanian and others, no
+# Boyash), so no glottocode. A leaf under Romance beside Romanian, not a child of it: a child would
+# make Romanian a group, drawn washed out (cz.txt's Moravian).
+#
+# Colour. Boyash villages sit among Hungarian speakers (pale blue) and often beside Romani-speaking
+# Roma (pink-magenta, 330); Romanian is a red-pink (20) on the other side of the country. A warm
+# salmon-orange keeps Boyash apart from all three while staying with Romance's warm reds.
+indoeuropean.romance.boyash | Boyash (Beás) | 0.74 0.14 48

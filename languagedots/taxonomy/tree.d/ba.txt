@@ -1,0 +1,34 @@
+# Bosnia and Herzegovina, Popis 2013, mother tongue (taxonomy/ba2013.py). Five new leaves; the
+# other eleven named answers were already in the tree (cz.txt, hr.txt, rs.txt, us.txt and others).
+#
+# All five are names BHAS printed in columns of their own for the one language Glottolog files as
+# Serbian-Croatian-Bosnian (sout1528), whose Bosnian, Croatian and Serbian standards are dialect
+# entries under it (bosn1245, croa1245, serb1264). They are census labels, not varieties, so none
+# has a glottocode, and each is a sibling of Bosnian, Croatian and Serbian under South Slavic.
+#   Bosnian-Croatian-Serbian, Bosnian-Serbian-Croatian, Bosnian-Croatian: compound answers; the
+#     two orders of the three-part one are kept apart as hr.txt keeps Croato-Serbian apart from
+#     Serbo-Croatian.
+#   Bosniak (Bosnjacki): the name Serb and Croat usage gives the language Bosniaks call Bosnian.
+#   Bosnian-Herzegovinian (Bosanskohercegovacki): a civic, non-ethnic name for the common language.
+indoeuropean.slavic.south.bosniancroatianserbian | Bosnian-Croatian-Serbian
+indoeuropean.slavic.south.bosnianserbiancroatian | Bosnian-Serbian-Croatian
+indoeuropean.slavic.south.bosniancroatian | Bosnian-Croatian
+indoeuropean.slavic.south.bosniak | Bosniak
+indoeuropean.slavic.south.bosnianherzegovinian | Bosnian-Herzegovinian
+# Bosnian, defined bare in cz.txt and others, coloured here where it is big (Anita, 2026-10-05:
+# Bosnian and Croatian a little further apart): the generated olive (0.78 0.13 110) made a
+# stronger, greener olive, 0.152 from Croatian (was 0.122), 0.124 from Serbian.
+indoeuropean.slavic.south.bosnian | Bosnian | 0.76 0.16 120
+# Montenegrin (cz.txt, generated) pinned at the colour it had, because Bosnian's move freed the
+# slot it wanted and it slid to Bosnian's old olive, 0.044 from the new Bosnian; the two meet in
+# Montenegro and the Sandzak. Pinned it is 0.102 from Bosnian.
+indoeuropean.slavic.south.montenegrin | Montenegrin | 0.84 0.13 90
+#
+# Colour, checked 2026-10-05 against that day's generated palette, no hand-picks. The three that
+# share almost every mixed municipality (OKLab distance): Bosnian (generated olive) and Serbian
+# (rs.txt's teal) 0.133, Bosnian and Croatian (generated yellow) 0.122, Serbian and Croatian 0.200;
+# all above hr.txt's working bar of about 0.11. A green Bosnian (0.68 0.16 135) would take
+# Bosnian-Croatian past 0.16 at no cost to Serbian (0.125), and is the first thing to try if
+# Mostar or the central Bosnian valley reads as one colour; not done because Bosnian is also drawn
+# in rs, hr, de, cz, fi and us. The close pairs are all among the small compound answers
+# (Bosnian-Croatian-Serbian 0.026 from Ukrainian, but one is Sarajevo and the other Prnjavor).

@@ -1,0 +1,116 @@
+# South Sudan (taxonomy/ss2015.py). HFSSS 2015-2016, tribe of the household head, read as language.
+# Parents and languages other fragments already define are repeated with the same label.
+#
+# Glottolog (data/raw/glottolog/languages.csv). Nilotic: Reel reel1238 (Atuot), Luwo luwo1239
+# (Jur Chol), Belanda Bor bela1256, Päri pari1256, Thuri thur1255, Toposa topo1242, Otuho
+# otuh1238 (Lotuko), Lokoya loko1254, Lango (South Sudan) lang1343, Lopit lopi1242, Dongotono
+# dong1294, Logir logi1239, Nyepu nyep1239; Pojulu, Mundari, Nyangwara (Bari varieties), Ifoto,
+# Imatong, Ketebo (Lotuxo groups) and Rek (a Dinka dialect group) have no language entry and are
+# leaves because the card names them. Surmic: Didinga didi1258, Tennet tenn1246, Narim nari1240.
+# Central Sudanic: Moru moru1253, Avokaya avok1242, Keliko keli1248, Baka (South Sudan)
+# baka1274, Beli (South Sudan) beli1257, Jur Modo jurm1239, Bongo bong1285, Olu'bo olub1238,
+# Nyamusa-Molo nyam1279. Ubangian (Atlantic-Congo in Glottolog): Belanda Viri bela1255, Ndogo
+# ndog1248, Bai baii1251, Golo golo1234, Indri indr1247, Feroge fero1244, Mangayat mang1387,
+# Mündü mund1326, Makaraka maka1301 (a Zande dialect, under Zande-Nzakara). Njalgulgule
+# njal1239 (Dajuic): a leaf of its own under Nilo-Saharan, since td.txt's `nilosaharan.daju` is
+# the Daju language itself and a child would turn it into a group.
+
+# ---- parents and languages defined in other fragments, repeated identically ----
+afroasiatic | Afroasiatic
+afroasiatic.sudanese_arabic | Sudanese Arabic
+afroasiatic.chadic | Chadic
+afroasiatic.chadic.hausa | Hausa
+nigercongo | Niger-Congo
+nigercongo.atlantic | Atlantic
+nigercongo.atlantic.fulah | Fula
+nigercongo.bantu | Bantu
+nigercongo.bantu.ganda | Ganda
+nigercongo.bantu.konzo | Konzo (Lukonzo)
+nigercongo.bantu.swahili | Swahili
+nigercongo.ubangian | Ubangian
+nigercongo.ubangian.zande | Zande-Nzakara
+nigercongo.ubangian.zande.zande | Zande
+nigercongo.ubangian.banda | Banda languages
+nigercongo.ubangian.banda.banda | Banda
+nigercongo.ubangian.sere | Sere
+nigercongo.ubangian.mundu_baka | Ngbaka-Mba (Mundu-Baka)
+nilosaharan | Nilo-Saharan
+nilosaharan.nilotic | Nilotic
+nilosaharan.nilotic.dinka | Dinka
+nilosaharan.nilotic.nuer | Nuer
+nilosaharan.nilotic.shilluk | Shilluk
+nilosaharan.nilotic.acholi | Acholi
+nilosaharan.nilotic.bari | Bari
+nilosaharan.nilotic.kakwa | Kakwa
+nilosaharan.nilotic.kuku | Kuku
+nilosaharan.surmic | Surmic
+nilosaharan.surmic.murle | Murle
+nilosaharan.centralsudanic | Central Sudanic
+nilosaharan.centralsudanic.logo | Logo
+nilosaharan.centralsudanic.lugbara | Lugbara
+nilosaharan.centralsudanic.kresh | Kresh
+nilosaharan.centralsudanic.binga | Binga
+nilosaharan.centralsudanic.yulu | Yulu
+nilosaharan.madi | Ma'di
+nilosaharan.fur | Fur
+nilosaharan.zaghawa | Zaghawa (Beria)
+nilosaharan.maban | Maban
+nilosaharan.maban.masalit | Masalit
+africa_other | Other African languages
+
+# ---- South Sudan: Nilotic ----
+nilosaharan.nilotic.rek | Rek (Dinka)
+nilosaharan.nilotic.reel | Reel (Atuot)
+nilosaharan.nilotic.pari | Päri | 0.68 0.16 290
+nilosaharan.nilotic.luwo | Luwo (Jur Chol)
+nilosaharan.nilotic.belanda_bor | Belanda Bor
+nilosaharan.nilotic.thuri | Thuri (Jur Shatt)
+nilosaharan.nilotic.pojulu | Pojulu | 0.80 0.11 180
+nilosaharan.nilotic.mundari | Mundari | 0.60 0.09 215
+nilosaharan.nilotic.nyangwara | Nyangwara
+nilosaharan.nilotic.nyepu | Nyepu
+nilosaharan.nilotic.toposa | Toposa
+nilosaharan.nilotic.otuho | Otuho (Lotuko)
+nilosaharan.nilotic.lokoya | Lokoya
+nilosaharan.nilotic.lango_ss | Lango (South Sudan)
+nilosaharan.nilotic.lopit | Lopit
+nilosaharan.nilotic.dongotono | Dongotono
+nilosaharan.nilotic.logir | Logir
+nilosaharan.nilotic.ifoto | Ifoto
+nilosaharan.nilotic.imatong | Imatong
+nilosaharan.nilotic.ketebo | Ketebo | 0.50 0.14 290
+
+# ---- Surmic ----
+nilosaharan.surmic.didinga | Didinga
+nilosaharan.surmic.tennet | Tennet
+nilosaharan.surmic.narim | Narim (Boya, Larim)
+
+# ---- Central Sudanic ----
+nilosaharan.centralsudanic.moru | Moru
+nilosaharan.centralsudanic.avokaya | Avokaya
+nilosaharan.centralsudanic.keliko | Keliko
+nilosaharan.centralsudanic.baka_ss | Baka (South Sudan)
+nilosaharan.centralsudanic.beli | Beli (Jur Beli)
+nilosaharan.centralsudanic.jur_modo | Jur Modo
+nilosaharan.centralsudanic.bongo | Bongo
+nilosaharan.centralsudanic.olubo | Olu'bo (Lulubo)
+nilosaharan.centralsudanic.nyamusa | Nyamusa-Molo
+
+# ---- other Nilo-Saharan ----
+nilosaharan.njalgulgule | Njalgulgule
+
+# ---- Ubangian ----
+nigercongo.ubangian.zande.makaraka | Makaraka
+nigercongo.ubangian.belanda_viri | Belanda Viri
+nigercongo.ubangian.ndogo | Ndogo
+nigercongo.ubangian.bai | Bai
+nigercongo.ubangian.golo | Golo
+nigercongo.ubangian.indri | Indri
+nigercongo.ubangian.feroge | Feroge
+nigercongo.ubangian.mangayat | Mangayat
+nigercongo.ubangian.mundu_baka.mundu | Mündü
+#
+# Colours. Generated, except four hand-picked off the Nilotic grid so neighbours part: Pojulu pale
+# aqua (Lainya, beside Kakwa's dark violet, Kuku's lavender and Dinka's blue in Juba), Mundari a
+# muted dark cyan (Terekeka, across the Nile from Reel's sky blue), Ketebo deep purple (Ikotos,
+# beside Lango of South Sudan), Päri lilac (Lafon, beside Lopit).

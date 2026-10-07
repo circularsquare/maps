@@ -1,0 +1,15 @@
+# Lesotho (Afrobarometer home language). One new node: Phuthi (Glottolog phut1246, classified
+# under Nguni: ngun1280/ngun1276), spoken in Quthing beside Sesotho and Xhosa. Hand colour: a dark
+# brown-orange, inside Nguni's warm part of the wheel but darker than Xhosa's red-orange
+# (0.60 0.16 30) and far from Sesotho's pale yellow (0.86 0.11 95). The rest are bare repeats.
+nigercongo | Niger-Congo
+nigercongo.bantu | Bantu
+nigercongo.bantu.sotho_tswana | Sotho-Tswana
+nigercongo.bantu.sotho_tswana.sesotho | Sesotho (Southern Sotho)
+nigercongo.bantu.nguni | Nguni
+nigercongo.bantu.nguni.xhosa | Xhosa
+nigercongo.bantu.nguni.phuthi | Phuthi | 0.47 0.10 60
+indoeuropean | Indo-European
+indoeuropean.germanic | Germanic
+indoeuropean.germanic.english | English
+other | Other or unclassified

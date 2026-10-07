@@ -1,0 +1,24 @@
+# El Salvador, Censo 2024 (taxonomy/sv2024.py): languages spoken besides Spanish. Four new
+# nodes, each checked against Glottolog (data/raw/glottolog/languages.csv):
+#   Náhuat   Pipil pipi1250, Uto-Aztecan (Isthmus-Pipil Nahuatl). A sister of Mexico's Náhuatl
+#            node (mx.txt), not a child of it: that node is a language, drawn as named.
+#   Pisbi    Cacaopera caca1247, Misumalpan (misu1242), ni.txt's root.
+#   Potón    Lenca-Salvador lenc1243, in Glottolog's two-language Lencan family (lenc1239).
+#            Most readers know Lenca as one language, so it sits under the shared `isolate`
+#            root, as gt.txt does with Xinka; the node is the Salvadoran variety only, so a
+#            Honduran census's Lenca can have a node of its own beside it.
+#   LESSA    Salvadoran Sign Language salv1237.
+# Nodes other fragments define are repeated only as parents, with the identical label and no
+# colour. Colours are generated: nothing new borders anything else that is new on the ground.
+
+# ---- repeated parents ----
+utoaztecan | Uto-Aztecan
+misumalpan | Misumalpan
+isolate | Language isolates
+signlanguage | Sign language
+
+# ---- new languages ----
+utoaztecan.pipil | Náhuat (Pipil)
+misumalpan.cacaopera | Cacaopera (Pisbi)
+isolate.lenca_salvador | Potón (Salvadoran Lenca) | 0.7 0.17 350
+signlanguage.lessa | Salvadoran Sign Language (LESSA)

@@ -96,7 +96,7 @@ ENTRY = {
             "ever published is from 1964. The map is drawn from the LAPOP AmericasBarometer "
             "instead: **8,919 people** interviewed across six rounds between 2010 and 2023, "
             "pooled, and applied to the 2024 population estimates. That is a thinner thing "
-            "than any census on this map, and the dots are drawn desaturated to say so. "
+            "than any census on this map, so the dots disappear when inferred dots are turned off. "
             "**A third of the country answers Evangelical or Pentecostal, and it is not "
             "spread evenly.** It is **50.7% of Izabal** on the Caribbean coast, 45.2% of "
             "Retalhuleu and 44.1% of Petén, against **12.5% of Chiquimula** and 17.0% of El "

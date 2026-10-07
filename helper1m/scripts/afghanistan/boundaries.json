@@ -1,0 +1,7 @@
+{
+  "1": {"candidates": ["helper1m/data/afghanistan/boundaries/adm1.gpkg"],
+        "code_col": "code", "name_col": "name", "group_col": "group"},
+  "2": {"candidates": ["helper1m/data/afghanistan/boundaries/adm2.gpkg"],
+        "code_col": "code", "name_col": "name",
+        "parent_col": "parent", "parent_name_col": "parent_name", "group_col": "group"}
+}

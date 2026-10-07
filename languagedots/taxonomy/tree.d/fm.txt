@@ -1,0 +1,26 @@
+# Micronesia (FSM 2010 census, home language; sources/fm_census.py). New: the Micronesian
+# languages of Pohnpei and Kosrae, Yap's outer-island Chuukic languages as the one answer the
+# census prints, and the two Polynesian outliers (Nukuoro, Kapingamarangi) as its one answer.
+# Pohnpeian, Kosraean and the outer-island leaf hand-coloured apart from Chuukese and Yapese,
+# which meet them on Pohnpei; the small Pohnpei outer-island languages are generated.
+# Yapese is au.txt's (outside Oceanic); Chuukese is us.txt's. The rest are bare repeats.
+austronesian | Austronesian
+austronesian.oceanic | Oceanic
+austronesian.oceanic.chuukese | Chuukese
+austronesian.oceanic.pohnpeian | Pohnpeian | 0.60 0.14 262
+austronesian.oceanic.kosraean | Kosraean | 0.74 0.12 190
+austronesian.oceanic.yap_outer_islands | Yap outer-island languages (Ulithian, Woleaian, Satawalese) | 0.80 0.10 215
+austronesian.oceanic.sapwuahfik | Sapwuahfik (Ngatikese) | 0.7 0.13 195.0
+austronesian.oceanic.pingelapese | Pingelapese
+austronesian.oceanic.mokilese | Mokilese (Mwoakilese)
+austronesian.oceanic.nukuoro_kapingamarangi | Nukuoro and Kapingamarangi
+austronesian.yapese | Yapese
+austronesian.philippine | Philippine
+austronesian.philippine.tagalog | Tagalog
+sinotibetan | Sino-Tibetan
+sinotibetan.sinitic | Chinese
+japonic | Japonic
+japonic.japanese | Japanese
+indoeuropean | Indo-European
+indoeuropean.germanic | Germanic
+indoeuropean.germanic.english | English

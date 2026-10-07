@@ -1,0 +1,303 @@
+# Australia (taxonomy/au2021.py). Census 2021, language used at home, ASCL 2016. Most migrant
+# languages were already added by us.txt, uk.txt and ca.txt; this file adds the rest and the
+# Australian Indigenous languages.
+#
+# AUSTRALIAN INDIGENOUS LANGUAGES. One root, `australian`, as the ABS draws the line ("Australian
+# Indigenous Languages", ASCL broad group 8): Pama-Nyungan plus the twenty-odd small families of
+# the north (Gunwinyguan, Maningrida, Iwaidjan, Mirndi, the Daly families, the Kimberley families,
+# Tangkic, Garrwan...) plus the Torres Strait's languages and the Indigenous creoles. Not a
+# family: an areal root, as `americas_other` is, because (1) readers know these as "Aboriginal
+# languages", (2) a root per small family would put two dozen roots in the legend for a few
+# thousand people, and (3) the census's unnamed remainders ("Australian Indigenous Languages,
+# nfd", "Torres Strait Island Languages, nfd") mix Pama-Nyungan, non-Pama-Nyungan, Papuan
+# (Meriam Mir) and creole speakers, and must sit on a node containing all of them (spec §3.2).
+# Under it, families and the main Pama-Nyungan subgroups follow Glottolog
+# (data/raw/glottolog): Yuulngu (Yolngu Matha), Arandic, Wati (Western Desert), Ngumpin-Yapa,
+# South-West and Southeastern Pama-Nyungan. Pama-Nyungan languages outside those six sit
+# directly under Pama-Nyungan. The Daly languages (Southern, Western and Northern Daly, three
+# families in Glottolog) are one group here, "Daly", for the same readability reason.
+# Kriol, Yumplatok (Torres Strait Creole), Gurindji Kriol and Aboriginal English sit in
+# `australian.contact`, not under `creole`: the ABS counts them as Indigenous languages and its
+# unnamed Indigenous remainders can hold their speakers. Tiwi, an isolate, stays under the
+# Australian root rather than `isolate` for the same reason. Meriam Mir is Eastern Trans-Fly
+# (Papuan) in Glottolog; it is under the Australian root as a Torres Strait language.
+# Languages with no speakers in 2021 (zero in Table 5) get no node.
+#
+# Colours: Pama-Nyungan's desert subgroups take the warm side (Western Desert reds and oranges,
+# Arandic yellows, Ngumpin-Yapa crimsons and pinks) because they meet around Alice Springs and
+# the Tanami; Yolngu greens; the Arnhem Land families violets, blues and magenta (Gunwinyguan
+# violet, Maningrida blue, Daly magenta, Tiwi teal), since Kunwinjku, Burarra and the Yolngu
+# languages border each other. Kriol, spoken across the whole Top End and Kimberley, is a pale
+# yellow-green that differs from all of them.
+
+australian | Australian Indigenous languages | 0.74 0.13 55
+australian.pamanyungan | Pama-Nyungan | 0.74 0.14 45
+
+australian.pamanyungan.westerndesert | Western Desert (Wati) | 0.70 0.17 30
+australian.pamanyungan.westerndesert.pitjantjatjara | Pitjantjatjara | 0.68 0.17 30
+australian.pamanyungan.westerndesert.yankunytjatjara | Yankunytjatjara | 0.84 0.12 55
+australian.pamanyungan.westerndesert.ngaanyatjarra | Ngaanyatjarra | 0.78 0.14 45
+australian.pamanyungan.westerndesert.luritja | Luritja | 0.60 0.16 15
+australian.pamanyungan.westerndesert.pintupi | Pintupi | 0.84 0.11 25
+australian.pamanyungan.westerndesert.martu_wangka | Martu Wangka | 0.70 0.16 5
+australian.pamanyungan.westerndesert.manyjilyjarra | Manyjilyjarra | 0.84 0.10 10
+australian.pamanyungan.westerndesert.kukatja | Kukatja | 0.64 0.15 40
+australian.pamanyungan.westerndesert.wangkatha | Wangkatha | 0.80 0.13 20
+australian.pamanyungan.westerndesert.kukatha | Kukatha
+australian.pamanyungan.westerndesert.antikarinya | Antikarinya
+australian.pamanyungan.westerndesert.wangkajunga | Wangkajunga
+australian.pamanyungan.westerndesert.yulparija | Yulparija
+australian.pamanyungan.westerndesert.tjupany | Tjupany
+australian.pamanyungan.westerndesert.warnman | Warnman
+
+australian.pamanyungan.arandic | Arandic | 0.84 0.14 95
+australian.pamanyungan.arandic.arrernte | Arrernte | 0.86 0.13 100
+australian.pamanyungan.arandic.arrernte.eastern | Eastern Arrernte | 0.88 0.15 105
+australian.pamanyungan.arandic.arrernte.western | Western Arrarnta | 0.74 0.14 80
+australian.pamanyungan.arandic.anmatyerr | Anmatyerr | 0.88 0.10 90
+australian.pamanyungan.arandic.anmatyerr.central | Central Anmatyerr | 0.80 0.12 110
+australian.pamanyungan.arandic.anmatyerr.eastern | Eastern Anmatyerr | 0.90 0.09 85
+australian.pamanyungan.arandic.alyawarr | Alyawarr | 0.78 0.15 120
+australian.pamanyungan.arandic.kaytetye | Kaytetye | 0.70 0.13 95
+
+australian.pamanyungan.ngumpinyapa | Ngumpin-Yapa | 0.66 0.18 350
+australian.pamanyungan.ngumpinyapa.warlpiri | Warlpiri | 0.64 0.19 350
+australian.pamanyungan.ngumpinyapa.gurindji | Gurindji | 0.78 0.14 330
+australian.pamanyungan.ngumpinyapa.jaru | Jaru | 0.70 0.16 10
+australian.pamanyungan.ngumpinyapa.walmajarri | Walmajarri | 0.84 0.10 345
+australian.pamanyungan.ngumpinyapa.ngarinyman | Ngarinyman | 0.68 0.14 315
+australian.pamanyungan.ngumpinyapa.mudburra | Mudburra
+australian.pamanyungan.ngumpinyapa.bilinarra | Bilinarra
+australian.pamanyungan.ngumpinyapa.malngin | Malngin
+australian.pamanyungan.ngumpinyapa.wanyjirra | Wanyjirra
+australian.pamanyungan.ngumpinyapa.warlmanpa | Warlmanpa
+
+australian.pamanyungan.yolngu | Yolngu Matha | 0.72 0.15 150
+australian.pamanyungan.yolngu.djambarrpuyngu | Djambarrpuyngu | 0.72 0.16 150
+australian.pamanyungan.yolngu.gupapuyngu | Gupapuyngu | 0.84 0.12 135
+australian.pamanyungan.yolngu.gumatj | Gumatj | 0.62 0.14 165
+australian.pamanyungan.yolngu.dhuwaya | Dhuwaya | 0.80 0.14 120
+australian.pamanyungan.yolngu.galpu | Galpu | 0.66 0.13 135
+australian.pamanyungan.yolngu.djinang | Djinang | 0.86 0.10 160
+australian.pamanyungan.yolngu.wurlaki | Wurlaki
+australian.pamanyungan.yolngu.djapu | Djapu
+australian.pamanyungan.yolngu.daatiwuy | Daatiwuy
+australian.pamanyungan.yolngu.liyagalawumirr | Liyagalawumirr
+australian.pamanyungan.yolngu.golumala | Golumala
+australian.pamanyungan.yolngu.wangurri | Wangurri
+australian.pamanyungan.yolngu.dhalwangu | Dhalwangu
+australian.pamanyungan.yolngu.ritharrngu | Ritharrngu
+australian.pamanyungan.yolngu.wagilak | Wagilak
+australian.pamanyungan.yolngu.warramiri | Warramiri
+australian.pamanyungan.yolngu.rirratjingu | Rirratjingu
+australian.pamanyungan.yolngu.madarrpa | Madarrpa
+australian.pamanyungan.yolngu.ganalbingu | Ganalbingu
+australian.pamanyungan.yolngu.djinba | Djinba
+australian.pamanyungan.yolngu.nhangu | Nhangu
+
+australian.pamanyungan.southwest | South-West Pama-Nyungan | 0.76 0.13 70
+australian.pamanyungan.southwest.nyungar | Nyungar | 0.76 0.15 70
+australian.pamanyungan.southwest.wajarri | Wajarri | 0.66 0.13 55
+australian.pamanyungan.southwest.yindjibarndi | Yindjibarndi | 0.86 0.11 75
+australian.pamanyungan.southwest.banyjima | Banyjima | 0.70 0.12 90
+australian.pamanyungan.southwest.ngarluma | Ngarluma
+australian.pamanyungan.southwest.nyamal | Nyamal
+australian.pamanyungan.southwest.kariyarra | Kariyarra
+australian.pamanyungan.southwest.badimaya | Badimaya
+australian.pamanyungan.southwest.palyku | Palyku/Nyiyaparli
+australian.pamanyungan.southwest.yinhawangka | Yinhawangka
+australian.pamanyungan.southwest.ngatjumaya | Ngatjumaya
+australian.pamanyungan.southwest.mirning | Mirning
+
+australian.pamanyungan.southeast | Southeastern Pama-Nyungan | 0.72 0.12 30
+australian.pamanyungan.southeast.wiradjuri | Wiradjuri | 0.70 0.14 25
+australian.pamanyungan.southeast.gamilaraay | Gamilaraay | 0.82 0.12 45
+australian.pamanyungan.southeast.bandjalang | Bandjalang | 0.62 0.13 5
+australian.pamanyungan.southeast.gumbaynggir | Gumbaynggir | 0.80 0.11 15
+australian.pamanyungan.southeast.yugambeh | Yugambeh
+australian.pamanyungan.southeast.yorta_yorta | Yorta Yorta
+australian.pamanyungan.southeast.dhanggatti | Dhanggatti
+australian.pamanyungan.southeast.dharawal | Dharawal
+australian.pamanyungan.southeast.batjala | Batjala
+australian.pamanyungan.southeast.githabul | Githabul
+australian.pamanyungan.southeast.muruwari | Muruwari
+australian.pamanyungan.southeast.djabwurrung | Djabwurrung
+australian.pamanyungan.southeast.wergaia | Wergaia
+
+# Pama-Nyungan outside those subgroups (Paman and other Cape York, Torres Strait, Thura-Yura,
+# Karnic, Marrngu, Maric, Lower Murray, Ganai, Baagandji, Warumungu, Yanyuwa)
+australian.pamanyungan.kalaw_lagaw_ya | Kalaw Lagaw Ya (Kala Lagaw Ya) | 0.68 0.15 215
+australian.pamanyungan.wik_mungkan | Wik Mungkan | 0.72 0.15 75
+australian.pamanyungan.guugu_yimidhirr | Guugu Yimidhirr | 0.82 0.13 55
+australian.pamanyungan.kuku_yalanji | Kuku Yalanji | 0.64 0.15 60
+australian.pamanyungan.kuuk_thayorre | Kuuk Thayorre | 0.86 0.11 85
+australian.pamanyungan.kuuku_yau | Kuuku-Ya'u
+australian.pamanyungan.koko_bera | Koko-Bera
+australian.pamanyungan.wik_ngathan | Wik Ngathan
+australian.pamanyungan.djabugay | Djabugay
+australian.pamanyungan.yidiny | Yidiny
+australian.pamanyungan.dyirbal | Dyirbal
+australian.pamanyungan.girramay | Girramay
+australian.pamanyungan.bidjara | Bidjara
+australian.pamanyungan.gudjal | Gudjal
+australian.pamanyungan.warumungu | Warumungu | 0.80 0.14 15
+australian.pamanyungan.yanyuwa | Yanyuwa
+australian.pamanyungan.adnyamathanha | Adnyamathanha | 0.70 0.14 40
+australian.pamanyungan.kaurna | Kaurna
+australian.pamanyungan.narungga | Narungga
+australian.pamanyungan.arabana | Arabana
+australian.pamanyungan.diyari | Diyari
+australian.pamanyungan.ngarrindjeri | Ngarrindjeri | 0.82 0.12 30
+australian.pamanyungan.paakantyi | Paakantyi
+australian.pamanyungan.kanai | Kanai (Gunai)
+australian.pamanyungan.nyangumarta | Nyangumarta | 0.66 0.14 50
+australian.pamanyungan.karajarri | Karajarri
+australian.pamanyungan.mangala | Mangala
+
+australian.gunwinyguan | Gunwinyguan | 0.70 0.14 275
+australian.gunwinyguan.kunwinjku | Kunwinjku | 0.66 0.16 275
+australian.gunwinyguan.kune | Kune | 0.80 0.11 260
+australian.gunwinyguan.kuninjku | Kuninjku | 0.58 0.15 295
+australian.gunwinyguan.mayali | Mayali | 0.84 0.09 280
+australian.gunwinyguan.gundjeihmi | Gundjeihmi
+australian.gunwinyguan.anindilyakwa | Anindilyakwa | 0.74 0.16 305
+australian.gunwinyguan.nunggubuyu | Nunggubuyu (Wubuy) | 0.84 0.10 300
+australian.gunwinyguan.rembarrnga | Rembarrnga
+australian.gunwinyguan.dalabon | Dalabon
+australian.gunwinyguan.ngandi | Ngandi
+australian.gunwinyguan.jawoyn | Jawoyn
+australian.gunwinyguan.kunbarlang | Kunbarlang
+
+australian.maningrida | Maningrida | 0.72 0.14 235
+australian.maningrida.burarra | Burarra | 0.70 0.15 230
+australian.maningrida.ndjebbana | Ndjebbana (Gunavidji) | 0.84 0.10 245
+australian.maningrida.na_kara | Na-kara
+australian.maningrida.gun_nartpa | Gun-nartpa
+australian.maningrida.gurr_goni | Gurr-goni
+
+australian.iwaidjan | Iwaidjan | 0.80 0.12 195
+australian.iwaidjan.maung | Maung | 0.80 0.13 195
+australian.iwaidjan.iwaidja | Iwaidja | 0.66 0.12 205
+
+australian.daly | Daly | 0.66 0.16 325
+australian.daly.murrinh_patha | Murrinh Patha | 0.66 0.18 325
+australian.daly.ngangikurunggurr | Ngan'gikurunggurr | 0.82 0.12 335
+australian.daly.marrithiyel | Marrithiyel
+australian.daly.maringarr | Maringarr
+australian.daly.marridan | Marridan (Maridan)
+australian.daly.malak_malak | Malak Malak
+
+australian.tiwi | Tiwi | 0.80 0.14 175
+australian.larrakiya | Larrakiya | 0.74 0.10 345
+australian.wagiman | Wagiman | 0.78 0.09 315
+australian.wardaman | Wardaman | 0.68 0.10 340
+
+australian.mirndi | Mirndi | 0.78 0.10 250
+australian.mirndi.jingulu | Jingulu
+australian.mirndi.wambaya | Wambaya
+australian.mirndi.gudanji | Gudanji
+australian.mirndi.jaminjung | Jaminjung
+australian.mirndi.ngaliwurru | Ngaliwurru
+australian.mirndi.nungali | Nungali
+
+australian.mangarrayi_maran | Mangarrayi-Maran | 0.72 0.11 220
+australian.mangarrayi_maran.mangarrayi | Mangarrayi
+australian.mangarrayi_maran.alawa | Alawa
+australian.mangarrayi_maran.marra | Marra
+
+australian.garrwan | Garrwan | 0.70 0.12 185
+australian.garrwan.garrwa | Garrwa
+australian.garrwan.waanyi | Waanyi
+
+australian.tangkic | Tangkic | 0.76 0.13 200
+australian.tangkic.lardil | Lardil
+australian.tangkic.kayardild | Kayardild
+
+australian.jarrakan | Jarrakan | 0.70 0.14 265
+australian.jarrakan.miriwoong | Miriwoong
+australian.jarrakan.kija | Kija
+
+australian.bunuban | Bunuban | 0.80 0.12 230
+australian.bunuban.bunuba | Bunuba
+australian.bunuban.gooniyandi | Gooniyandi
+
+australian.nyulnyulan | Nyulnyulan | 0.66 0.13 190
+australian.nyulnyulan.bardi | Bardi
+australian.nyulnyulan.nyikina | Nyikina
+australian.nyulnyulan.yawuru | Yawuru
+
+australian.worrorran | Worrorran | 0.84 0.10 285
+australian.worrorran.ngarinyin | Ngarinyin
+australian.worrorran.worrorra | Worrorra
+australian.worrorran.wunambal | Wunambal
+australian.worrorran.worla | Worla
+
+australian.meriam | Meriam Mir | 0.62 0.15 245
+
+australian.contact | Creoles and contact varieties | 0.88 0.10 115
+australian.contact.kriol | Kriol | 0.88 0.13 115
+australian.contact.yumplatok | Yumplatok (Torres Strait Creole) | 0.86 0.11 165
+australian.contact.gurindji_kriol | Gurindji Kriol
+australian.contact.aboriginal_english | Aboriginal English | 0.92 0.04 60
+
+# ---- migrant languages not yet in the tree ----
+indoeuropean.germanic.continental.luxembourgish | Luxembourgish
+indoeuropean.romance.latin | Latin | 0.66 0.11 218.18
+indoeuropean.romance.aromanian | Aromanian
+isolate.basque | Basque
+indoeuropean.iranian.hazaragi | Hazaragi | 0.84 0.11 45
+afroasiatic.mandaic | Mandaic
+# us.txt's node, defined there without a colour; generated, it came out identical to Arabic
+# (#96d5b2), and Chaldeans live among Arabic speakers in Fairfield and in Detroit alike
+afroasiatic.chaldean | Chaldean Neo-Aramaic | 0.84 0.12 85
+turkic.turkmen | Turkmen
+indoeuropean.indoaryan.dhivehi | Dhivehi
+indoeuropean.indoaryan.eastcentral.fiji_hindi | Fiji Hindi | 0.80 0.13 20
+austronesian.acehnese | Acehnese
+austronesian.balinese | Balinese
+austronesian.javanese | Javanese
+austronesian.malayic.iban | Iban
+austronesian.yapese | Yapese
+austronesian.oceanic.maori | Māori | 0.62 0.20 350
+austronesian.oceanic.cook_islands_maori | Cook Islands Māori | 0.78 0.13 350
+austronesian.oceanic.niuean | Niuean | 0.80 0.14 320
+austronesian.oceanic.tokelauan | Tokelauan | 0.84 0.10 350
+austronesian.oceanic.tuvaluan | Tuvaluan | 0.70 0.17 340
+austronesian.oceanic.gilbertese | Gilbertese (Kiribati) | 0.76 0.13 265.0
+austronesian.oceanic.nauruan | Nauruan | 0.7 0.13 205.0
+austronesian.oceanic.rotuman | Rotuman | 0.76 0.13 255.0
+austronesian.oceanic.motu | Motu (Hiri Motu) | 0.82 0.13 235.0
+sinotibetan.kukichin.hakha | Hakha Chin | 0.80 0.10 310
+sinotibetan.kukichin.zomi | Zomi (Tedim Chin)
+austroasiatic.mon | Mon
+nilosaharan.nilotic.acholi | Acholi
+nilosaharan.nilotic.bari | Bari
+nilosaharan.nilotic.luo | Luo (Dholuo)
+nilosaharan.nilotic.shilluk | Shilluk
+nilosaharan.madi | Ma'di
+nigercongo.moro | Moro (Nuba)
+nigercongo.mande.mandinka | Mandinka
+nigercongo.mande.dan | Dan
+nigercongo.mande.kpelle | Kpelle
+nigercongo.mande.loma | Loma
+nigercongo.mande.mano | Mano
+nigercongo.kru | Kru | 0.74 0.12 110
+nigercongo.kru.bassa | Bassa (Liberia)
+nigercongo.kru.krahn | Krahn
+nigercongo.atlantic.temne | Temne
+# zm.txt's, repeated identically so a change there shows up as a clash, not a dangle
+nigercongo.bantu.bemba | Bemba (M.40) | 0.74 0.14 45
+nigercongo.bantu.bemba.bemba | Bemba | 0.72 0.17 50
+nigercongo.bantu.nyanja_sena | Nyanja-Sena (N.30-40) | 0.72 0.13 335
+nigercongo.bantu.nyanja_sena.nyanja | Nyanja | 0.64 0.18 350
+afroasiatic.ethiosemitic.tigre | Tigre
+papuan | Papuan languages | 0.70 0.12 120
+papuan.kiwai | Kiwai
+creole.english_based.tok_pisin | Tok Pisin
+creole.english_based.bislama | Bislama
+creole.english_based.pijin | Solomon Islands Pijin
+creole.english_based.norfuk | Norf'k-Pitcairn
+creole.english_based.liberian | Liberian English
+creole.french_based.seselwa | Seychellois Creole
+signlanguage.auslan | Auslan | 0.88 0.03 150
+signlanguage.keyword_sign | Key Word Sign Australia

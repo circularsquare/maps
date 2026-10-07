@@ -1,0 +1,34 @@
+# Montserrat (2011 census place of birth; sources/ms_census.py, taxonomy/ms2011.py). No new
+# nodes: the Leeward creole is bb.txt's `antiguan` (Glottolog anti1245 covers MS); the block
+# below is every node the birthplaces bring in.
+# --- origin_mix borrowed nodes (python sources/origin_mix.py --fragment ms) ---
+# Every node the origin mixes bring in that tree.txt lacks, repeated without colour.
+afroasiatic.chadic | Chadic
+afroasiatic.chadic.hausa | Hausa
+creole | Creoles
+creole.english_based | English-based creoles
+creole.english_based.antiguan | Antiguan and Barbudan Creole
+creole.english_based.bajan | Bajan
+creole.english_based.grenadian | Grenadian Creole
+creole.english_based.guyanese | Guyanese Creole
+creole.english_based.jamaican | Jamaican Creole
+creole.english_based.trinidadian | Trinidadian Creole
+creole.english_based.vincentian | Vincentian Creole
+creole.english_based.virgin_islands | Virgin Islands Creole
+creole.french_based | French-based creoles
+creole.french_based.antillean | Antillean Creole (Guadeloupe, Martinique)
+creole.french_based.haitian | Haitian Creole
+creole.portuguese_based | Portuguese-based creoles
+creole.portuguese_based.papiamento | Papiamento
+indoeuropean.germanic.continental | Continental West Germanic
+indoeuropean.germanic.continental.dutch | Dutch
+indoeuropean.indoaryan.sinhala | Sinhala
+indoeuropean.romance | Romance
+indoeuropean.romance.spanish | Spanish
+nigercongo | Niger-Congo
+nigercongo.atlantic | Atlantic
+nigercongo.atlantic.fulah | Fula
+nigercongo.voltaniger | Volta-Niger
+nigercongo.voltaniger.igbo | Igbo
+nigercongo.voltaniger.yoruba | Yoruba
+# --- end origin_mix borrowed nodes ---

@@ -1,0 +1,62 @@
+# Guinea (taxonomy/gn2014.py). RGPH 2014, the national language each person aged 3+ usually
+# speaks, by région (Tableau 5.08).
+# Parents and languages other fragments already define are repeated with the same label and no
+# colour: Fula (ml's red), Maninka (ci's teal), Soninke, Yalunka, Jaad, the Tenda pair (sn),
+# Kpelle, Loma and Mano (au, pl, defined bare; coloured here, where they are big), Susu (pl, bare;
+# coloured here).
+#
+# Middle levels, checked against Glottolog (data/raw/glottolog), "families as most readers know
+# them" (AGENT_BRIEF §3). Everything is Atlantic or Mande, flat under the two, as sn.txt does:
+#   * Mande (mand1469): Susu (susu1250), Yalunka (yalu1240), Jahanka (jaha1245), Mixifore
+#     (mixi1241), Kuranko (kura1250), Lele (lele1266), Konyanka Maninka (kony1250), Manya
+#     (many1261, the census's "Tomamania", Toma-Manian), Kono of Guinea (kono1267, a Kpelle-like
+#     Southwestern Mande language, not Sierra Leone's Kono), Kpelle, Loma (Toma, toma1245) and Mano
+#     (mann1248).
+#   * Atlantic (atla1278): Kissi (kiss1245), Baga (the Baga languages, Glottolog's Northern Mel
+#     temn1245 and its Baga Koga/Sitemu/Manduri/Sobané), Landuma (land1256), Nalu (nalu1240).
+#     Kissi, Baga and Landuma are Mel languages; Temne is already flat under Atlantic (au, pl),
+#     so no Mel group is made here.
+#
+# Colours, for neighbours on the Guinean ground:
+#   Forest (N'Zérékoré, Kissidougou): Konyanka green, Kpelle light cyan, Kissi pink, Maninka
+#   ci's teal, Loma ochre, Manya pale peach (beside Loma in Macenta), Kono lavender, Mano blue,
+#   Lele dark indigo (Kissidougou, Guéckédou).
+#   Upper Guinea and Faranah: Maninka teal, Kuranko pale lime, Kissi pink, Fula red, Yalunka sn's
+#   dark olive. Coast and Fouta: Susu golden yellow, Fula red, Landuma violet, Jahanka dark steel
+#   blue, Mikhiforé pale cream (all three were generated too close to Susu or the brown of
+#   `africa_other`); Baga and Nalu generated near Atlantic. Closest pairs at 1%+ in one région
+#   (OKLab): Baga/Mikhiforé 0.111 (Boké), Fula/Loma and Kissi/Kono 0.123, Maninka/Konyanka 0.127.
+
+# ---- parents and languages defined elsewhere, repeated bare (their colours are theirs) ----
+nigercongo | Niger-Congo
+nigercongo.atlantic | Atlantic
+nigercongo.atlantic.fulah | Fula
+nigercongo.atlantic.jaad | Jaad (Badyara, Kanjad)
+nigercongo.atlantic.tenda | Tenda languages
+nigercongo.atlantic.tenda.bassari | Bassari (Oniyan)
+nigercongo.atlantic.tenda.wamey | Wamey (Konyagi)
+nigercongo.mande | Mande
+nigercongo.mande.maninka | Maninka (Malinké)
+nigercongo.mande.soninke | Soninke
+nigercongo.mande.yalunka | Yalunka (Jalunga)
+africa_other | Other African languages
+other | Other or unclassified
+
+# ---- defined bare elsewhere, coloured here ----
+nigercongo.mande.susu | Susu | 0.80 0.15 95
+nigercongo.mande.kpelle | Kpelle | 0.82 0.10 205
+nigercongo.mande.loma | Loma | 0.66 0.13 70
+nigercongo.mande.mano | Mano | 0.58 0.12 255
+
+# ---- new ----
+nigercongo.mande.konyanka | Konyanka Maninka (Koniaka) | 0.70 0.15 140
+nigercongo.mande.manya | Manya (Toma-Manian) | 0.86 0.08 15
+nigercongo.mande.kono_guinea | Kono (Guinea) | 0.78 0.10 290
+nigercongo.mande.kuranko | Kuranko | 0.88 0.13 115
+nigercongo.mande.lele | Lele (Lélé) | 0.48 0.09 270
+nigercongo.mande.jahanka | Jahanka (Diakhanké) | 0.55 0.11 210
+nigercongo.mande.mixifore | Mikhiforé (Mixifore) | 0.88 0.07 60
+nigercongo.atlantic.kissi | Kissi | 0.72 0.14 340
+nigercongo.atlantic.baga | Baga
+nigercongo.atlantic.landuma | Landuma (Landouma) | 0.60 0.14 290
+nigercongo.atlantic.nalu | Nalu

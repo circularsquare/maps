@@ -1,0 +1,17 @@
+# Lebanon (taxonomy/lb2026.py). Lebanese by pooled Arab Barometer and WVS first / home language;
+# Syrians and Palestinians on Levantine Arabic (sources/lb_build.py writes node ids). No new
+# nodes; every node below is borrowed and repeated without colour (AGENT_BRIEF section 3):
+# Levantine Arabic (sa.txt; nort3139, the Lebanese varieties are North Levantine), Armenian
+# (am.txt and others; Lebanon's is Western Armenian, homs1234, but no answer says which and the
+# map has one Armenian leaf), Syriac (the surveys' "Syriac", two answers).
+afroasiatic.levantine_arabic | Levantine Arabic
+afroasiatic.syriac | Syriac
+indoeuropean.armenian | Armenian
+indoeuropean.armenian.armenian | Armenian
+indoeuropean.iranian.kurdish | Kurdish
+indoeuropean.romance | Romance
+indoeuropean.romance.french | French
+indoeuropean.romance.spanish | Spanish
+indoeuropean.slavic | Slavic
+indoeuropean.slavic.east | East Slavic
+indoeuropean.slavic.east.ukrainian | Ukrainian

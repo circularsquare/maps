@@ -236,3 +236,37 @@ blank, as `gap` says.
 - Small: the internal `note` in `countries/ve.py` says "Monagas the national rate". §8,
   `sources/ve.py` and `note_public` agree that Monagas takes its region's Catholic and Witness
   shares and the national rate only for the state-level answers. Left for the builder.
+
+## 14. The four blank entities against a second survey, 2026-10-03 (`fafd1067-cove`)
+
+Asked after `sources.md` §scout-2026-10-03-gaps, under Anita's Ecuador line (a place nothing
+measured stays empty; no national or neighbouring fill). **Result: Nueva Esparta, Amazonas, Delta
+Amacuro and the Dependencias Federales stay blank.** Colombia's Amazonas was drawn from the same
+instrument the same day (`sources/co.md` §11); here it fails the step that licensed that.
+`python sources/ve.py --latinobarometro` reruns it and stops if it ever passes.
+
+| source | what it has | verdict |
+|---|---|---|
+| **Latinobarómetro**, every wave 1995-2024 (`data/raw/latinobarometro/`, `sources/latinobarometro.py`) | `ciudad` names state and municipality. Nueva Esparta 20 a wave in 1997, 2004-2007, 2016, 2018 (25), 2024 (24), and 5 in 2013, 2015, 2017; Delta Amacuro 20 in 2009-2011 (Tucupita, Pedernales), 7 in 2024; Amazonas 10 in 2016, 5 in 2018, 6 in 2024 (Puerto Ayacucho). Dependencias: none. In LAPOP's 2010-2016/17 window: Nueva Esparta 35, Delta Amacuro 40, Amazonas 9 | **fails** (below) |
+| WVS wave 7 (2021), IHSN `catalog/12313`, `N_REGION_ISO` | Nueva Esparta 20; no Delta Amacuro, no Amazonas | one round, cannot pass a test |
+| ENCOVI 2016, 2021, 2024 | no affiliation item (§1, §11ap) | as before |
+
+**Why Latinobarómetro fails here.** At the 17 states in every LAPOP round, its 2010-2017 state
+shares order the states as LAPOP's do only for the Protestant group (Spearman +0.62, 88 of 20,000
+random pairings reach it). Catholic is +0.10 (6,868 reach it) and none -0.04: on those two the
+instruments disagree about which states are which. Leave-one-out over the three groups, its
+readings miss LAPOP's by 14.81 points against the country's 14.37, closer in 9 of 17, so they
+are not a better guess than the national rate, and drawing from them would be the national fill
+by another name. The weakness matches §7: LAPOP's own state Catholic failed its split-half.
+
+**The witnesses are mixed too.** Delta Amacuro's 2009 respondents give an indigenous mother
+tongue at 25% against 1% nationally (the Warao), which supports the label; Amazonas's
+Puerto Ayacucho respondents name themselves white 70% (2016, n=10) and 100% (2018, n=5), which a
+state about half indigenous does not support.
+
+**What would reopen it.** A source that measures these states and agrees with LAPOP where both
+measure, or a ruling that the region-level answers (Catholic, Witnesses) may be drawn for a
+state from a design region it was never in. The Protestant group alone does transfer between the
+instruments, so if Anita accepted an oriental-region Catholic share for Nueva Esparta and Delta
+Amacuro, evangelicals could come from Latinobarómetro; that is a neighbouring rate for the
+largest answer and was not done.

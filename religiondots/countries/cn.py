@@ -387,9 +387,7 @@ ENTRY = {
         how=("no census question; ethnicity for the minorities, a pooled survey by province for "
              "everyone else"),
         fill="from the 2000 census's ethnicity table",
-        grain=("counties, 478,000 people on average; the survey layers' shares are provincial, so "
-               "Buddhism, Protestantism and folk religion vary between provinces and not within "
-               "them"),
+        grain="counties, 478,000 people on average",
         # `gap` (§6.12). It said "Han majority not shown" until §14.14 drew them, then
         # "97% of these dots say only that somebody was counted" until the CGSS layer of
         # 2026-09-08 took the grey from 97.5% to 91.6%, and "88%" until spec §3.13's altar layer
@@ -397,8 +395,7 @@ ENTRY = {
         # kept to the Han row the same day, 76.1% (cb8b206e-folkfix). The failure mode it guards against
         # has never moved: this is still the country where a reader is most likely to read
         # the grey as irreligion, which is exactly what it is not.
-        gap=("a religion for 76% of these dots; with no census question they say only that "
-             "somebody was counted"),
+        gap="a religion for 76% of these dots; they say only that somebody was counted",
         counts=_cn_counts,
         # Counts are on the GB/T 2260 county adcode; the Kontur hexes carry no adcode, so
         # sources/cn_geo.py assigns and clips every hex and writes the `unit` this reads.

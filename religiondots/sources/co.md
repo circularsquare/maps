@@ -163,6 +163,8 @@ place.
   Amazonas (87,452), San Andrés, Providencia y Santa Catalina (66,269), Guainía (53,839). LAPOP
   has no code for any of them in `prov_es`. **1,303,929 people, 2.45%** of COD-PS 2025, in `gap=`
   with `gap_share=0.0245` hand-written (nobody was in any table). They keep polygons and hexes.
+  **Superseded for Amazonas 2026-10-03 (§11)**: drawn from Latinobarómetro; the other six stay
+  blank, 1,216,477 people, 2.29%, `gap_share=0.0229`.
 
 ## 7. Mapping calls (`taxonomy/co2023.py`)
 
@@ -202,7 +204,8 @@ department the survey never reached.
   seven regions are a national and regional level check nobody has wired.
 - **DANE's ECP `P6945`** (2015-2023, five regions) is a second instrument on the same card at the
   region level: the natural test of whether traditional Protestant really has no geography.
-- The seven blank departments need any Colombian source that sampled them; ENDR did.
+- The seven blank departments need any Colombian source that sampled them; ENDR did. (Amazonas
+  filled from Latinobarómetro 2026-10-03, §11; six remain.)
 
 ## 10. Review, 2026-09-14 (session `f95259a4-corev`)
 
@@ -246,3 +249,83 @@ Checked from `lapop_co.feather`, `lapop_slim.feather` and `co.csv`, not from thi
   Atlántica's shares for the three placed answers, or one sentence in the note.** In `queue.md`.
   Not rebuilt here. **Acted on 2026-09-14 evening (`f95259a4-co2`): La Guajira and Casanare now
   take their region's shares, Quindío and Vaupés stay national, on spec §12's rule; §6.**
+
+
+## Not-drawn hatching fix batch (fafd1067-fixes3, 2026-10-03)
+
+San Andres: the not-drawn scan's report said it was not hatched. Checked 2026-10-03 after
+`not_drawn.py --countries co`: it is hatched (the DENSE_KM2/DENSE_PEOPLE floor catches it), co
+draws no dot there, and the `gap` naming it is right. Nothing changed. Natural Earth's 10m San
+Andres sits a little east of the basemap's island, so the hatch covers its eastern half at
+island zoom; it reads correctly at country zoom.
+
+## 11. The blank departments against a second survey, 2026-10-03 (`fafd1067-cove`)
+
+Asked by the supervisor after `sources.md` §scout-2026-10-03-gaps, under Anita's Ecuador line
+(2026-09-08): a place nothing measured stays empty, and it is not filled at a national or
+neighbouring rate. **Result: Amazonas drawn from Latinobarómetro; Chocó, Arauca, Vichada,
+Guaviare, Guainía and San Andrés stay blank.** Code: `sources/latinobarometro.py` (reader),
+`co.py::latinobarometro_units` (every step below asserted).
+
+### What was checked
+
+| source | what it has for the blank departments | verdict |
+|---|---|---|
+| **Latinobarómetro** 1995-2024, every wave's Stata zip (`data/raw/latinobarometro/`) | `ciudad` names the department. 2010-2023: the same 20 departments every wave at fixed sizes, **Amazonas 40 in all nine waves (360)**. Chocó only in 2000 (Bagadó 11, Tadó 10), 2008 (32), 2009 (San José del Palmar 16) and 2024 (Bojayá 20, El Carmen de Atrato 14). Amazonas also 2004-2007 (Leticia, 35-40). Arauca, Vichada, Guaviare, Guainía, San Andrés: no code in any wave | **Amazonas drawn**; Chocó fails (below) |
+| WVS wave 7 (2018), IHSN frequency page `catalog/11562`, `N_REGION_ISO` | Chocó 16, San Andrés 16, La Guajira 32, Putumayo 16, Caquetá 16; no Arauca, Vichada, Guaviare, Amazonas, Guainía | one round; cannot pass a test, not opened |
+| DANE ECP 2023, `microdatos.dane.gov.co/catalog/822` | asks `P6945`, 64,770 people, but excludes the nuevos departamentos and San Andrés by design, and the anonymised files carry only `REGION` and `DPTO_CAUCA`, so Chocó cannot be told from Valle and Nariño | closed for this |
+| ENDS 2010, DANE's copy `catalog/465` | women's file (479 variables) and roster (365) carry `QDEPTO`/`QHDEPTO` and ethnicity, no religion variable | closed for this; ENDS 2015's recode (DHS account) not opened |
+| ENDR 2019 | seven regions, no microdata (§9) | as before |
+| Diocesan or vicariate figures (Quibdó, Leticia) | the Church's baptised counts, not self-identification | not used, Greenland's roll reasoning |
+
+### Amazonas, step by step
+
+1. **Place.** `ciudad` is country + department + municipality; the department digits run
+   alphabetically (001 Amazonas, 012 Chocó) and every code carries the same label in every wave
+   (564 Colombian and Venezuelan codes, only accents differ). 2007 has 65 Colombian rows under a
+   Paraguayan code (600008002, Itapúa); they are outside the window and dropped by name.
+2. **Witness without names.** Of Amazonas's respondents 45%, 50%, 55%, 62%, 68% name themselves
+   indigenous in 2016, 2017, 2018, 2020, 2023, against 6-9% of the country (asserted at 3x). In
+   2005-2015 26-40% give an indigenous mother tongue against about 1%.
+3. **Its own split-half**, 9 waves, 126 halvings, its 19 every-wave departments, on three groups
+   (below): Catholic +0.77, Protestant +0.66, none +0.42, all p < 0.005.
+4. **Against LAPOP**, the 18 departments in every round of both: department shares Spearman
+   Catholic +0.67 (38 of 20,000 random pairings reach it), Protestant group +0.78 (1), none
+   group +0.59 (123). **Deciding test** (region_fallback's rule, Latinobarómetro in the region's
+   place; leave-one-out over Catholic, evangelical and Ninguna as drawn): Latinobarómetro mean
+   summed error **9.93 against the country's 14.22 points, closer in 12 of 18**; at readings no
+   bigger than twice Amazonas's 360, 10.58 against 14.89, 8 of 13.
+5. **Translation onto LAPOP's card.** The two cards share only three groups: Catholic;
+   Protestant (Latinobarómetro's `Evangélica` boxes, Adventist and `Protestante`, which swap from
+   wave to wave as LAPOP's do; LAPOP's codes 2 and 5); none (believer without a church, agnostic,
+   atheist, `Ninguna`; LAPOP's 4 and 11). LAPOP's evangelical share is the Protestant group times
+   LAPOP's national 5/(2+5), its `Ninguna (creyente)` the none group times 4/(4+11); the other
+   eight answers fill the residual at national proportions, exactly as in `lapop.build`.
+6. **Drawn**: Latinobarómetro Catholic 72.9%, Protestant 19.1%, none 7.8% (n=360) -> Catholic
+   72.9%, evangelical 9.8%, Ninguna 7.0%, the rest 10.3% (traditional Protestant 6.2% of it),
+   on 87,452 people. Colombia now 27 of 33 departments, 52,000,115 people; national shares move
+   in the second decimal (Catholic 71.53 -> 71.54%).
+
+### Chocó, and why it stays blank
+
+Its four readings are all outside LAPOP's 2010-2023 (2000's file numbers `Ninguna` 15 and is not
+read). Taking each department relative to the same waves' national share (2008, 2009, 2024)
+and adding LAPOP's national level, the leave-one-out passes over all 22 departments (13.02
+against 14.22, 14 of 22) **but fails at readings Chocó's size** (at most twice its 80: 15.54
+against 14.18, 9 of 16). With 2000 included it failed outright in a scratch run. A pass that
+small readings do not share does not license an 80-person reading, and Chocó's comes out close
+to the national rate anyway (relative reading +2.6 Catholic), which is the fill the rule forbids.
+`LB_OUT_PASSES = False` is asserted.
+
+### Calls someone might reverse
+
+- **The translation's fixed ratios** (point 5). The alternative, drawing Latinobarómetro's
+  Protestant group as evangelical plus traditional Protestant at its own split, would give code 2
+  a department figure the LAPOP test refused it.
+- **Raw, not offset-corrected.** Correcting Latinobarómetro by the mean LAPOP-minus-LB gap
+  (Catholic -1.8, Protestant -0.5, none +0.3 points) was closer more often (13 of 19 on groups)
+  but had the higher mean error; raw is drawn.
+- **Out of scope, noted for whoever rebuilds Colombia**: Latinobarómetro 2024 samples La Guajira
+  (39), Quindío (12), Casanare (30), Putumayo (10), Sucre (28), Caquetá (38), and 2000-2009 cover
+  La Guajira, Quindío and Sucre; a second reading for LAPOP's one-round departments. Not used:
+  it would change already-drawn numbers.

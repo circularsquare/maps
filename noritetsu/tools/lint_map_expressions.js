@@ -118,6 +118,18 @@ for (const [n, c] of declared) {
   if (c > 1) { console.log(`  ERROR ${n}: declared ${c} times at top level; the last one wins`); bad++; }
 }
 
+/* THE WHOLE SCRIPT HAS TO PARSE. Each layer above is evaluated on its own, so a syntax error
+   anywhere else passed: on 2026-10-03 a stray comment end in the header left the page blank
+   ("Unexpected identifier 'and'") with this lint saying OK. Compiled, not run. */
+try {
+  new (require('vm').Script)(src, { filename: 'inline' });
+} catch (e) {
+  const m = /inline:(\d+)/.exec(e.stack || '');
+  const line = m ? +m[1] + html.slice(0, html.lastIndexOf(src)).split('\n').length - 1 : '?';
+  console.log(`  ERROR the script does not parse: ${e.message} (html line ${line})`);
+  bad++;
+}
+
 // A SKIPPED layer counts as failure. The layer that broke was precisely the one an
 // earlier version of this script could not evaluate, so reporting "OK" while skipping
 // anything is the one answer guaranteed to be wrong.

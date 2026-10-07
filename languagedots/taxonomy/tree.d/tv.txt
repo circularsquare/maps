@@ -1,0 +1,6 @@
+# Tuvalu (2022 census ethnicity, sources/tv_census.py). No new nodes; bare repeats so the country
+# stands on its own. Tuvaluan (tuva1244) and Gilbertese (gilb1244, Nui's Nuian) are au.txt's.
+austronesian | Austronesian
+austronesian.oceanic | Oceanic
+austronesian.oceanic.tuvaluan | Tuvaluan
+austronesian.oceanic.gilbertese | Gilbertese (Kiribati)

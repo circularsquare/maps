@@ -84,6 +84,11 @@ ALIAS = {"ctbilisi": "tbilisi", "autonomousrepublicofadjara": "adjara"}
 # everything else — the city loses population to its ring and stays plausible, while the
 # ring gains a whole city's suburbs and does not.
 CITY_RING = ("Mtskheta-Mtianeti",)
+# Reported and not asserted either, since the cut to Natural Earth's South Ossetia (below):
+# Shida Kartli comes out at 0.66x once the ~67,000 Kontur people inside that line are gone.
+# About 16,000 of them sit within 2 km of the line, which is simplified, so some of them are
+# likely Georgian-held villages the census did count; their dots go to the rest of the region.
+LINE_REGION = ("Shida Kartli",)
 
 
 def fetch():
@@ -188,6 +193,21 @@ def build_units():
     return out
 
 
+def _named_geoms(entries):
+    """Shapely geometries for a country_shapes.CLIP entry list."""
+    import json
+    import shapely.geometry
+    out = []
+    for path, prop, names in entries:
+        src = json.loads(open(path, encoding="utf-8").read())
+        found = {str(f["properties"].get(prop) or "").strip(): f for f in src["features"]}
+        missing = [n for n in names if n not in found]
+        if missing:
+            raise SystemExit(f"{os.path.basename(str(path))} has no {prop} {missing}")
+        out.extend(shapely.geometry.shape(found[n]["geometry"]) for n in names)
+    return out
+
+
 def fiona_layers(path):
     import pyogrio
     return list(pyogrio.list_layers(path)[:, 0])
@@ -199,13 +219,24 @@ def build_grid(units):
     import pandas as pd
     import shapely
 
+    kontur, tmp = KONTUR, None
     if not os.path.exists(KONTUR):
-        raise SystemExit(f"missing {KONTUR} -- run sources/ge_geo.py --fetch first")
+        # the unpacked copy is deleted once a build is verified; the .gz is kept
+        if not os.path.exists(KONTUR_GZ):
+            raise SystemExit(f"missing {KONTUR} -- run sources/ge_geo.py --fetch first")
+        import gzip
+        import shutil
+        import tempfile
+        tmp = kontur = os.path.join(tempfile.gettempdir(), f"ge_geo_{os.getpid()}.gpkg")
+        with gzip.open(KONTUR_GZ, "rb") as src, open(tmp, "wb") as dst:
+            shutil.copyfileobj(src, dst)
 
-    layers = fiona_layers(KONTUR)
+    layers = fiona_layers(kontur)
     layer = "population" if "population" in layers else layers[0]
     print(f"\n  reading Kontur r8 hexes from layer {layer!r}…")
-    hexes = gpd.read_file(KONTUR, layer=layer).to_crs(4326)
+    hexes = gpd.read_file(kontur, layer=layer).to_crs(4326)
+    if tmp:
+        os.remove(tmp)
     print(f"    {len(hexes):,} hexes, {hexes['population'].sum():,.0f} people")
 
     centres = gpd.GeoDataFrame(geometry=hexes.geometry.representative_point(), crs=4326)
@@ -236,6 +267,23 @@ def build_grid(units):
           "census did not enumerate")
     hexes = hexes[~drop].copy()
 
+    # ---- and everything inside the line the map hatches (fixes3, 2026-10-03) -----------
+    # Java and Akhalgori are not all of it: Tskhinvali itself sits in geoBoundaries' Gori
+    # polygon, and its Kontur people (~57,000 across Shida Kartli's side) pulled 65 of Shida
+    # Kartli's dots into South Ossetia, inside the hatching that says nobody there was
+    # counted. So the hexes are also cut to Natural Earth's Abkhazia and South Ossetia, the
+    # same polygons country_shapes.CLIP and not_drawn.py use, so the dots and the hatch agree.
+    # Natural Earth's line is a simplified one and may take a few Georgian-held villages along
+    # it; their region's dots then land on the rest of the region, not across the line.
+    sys.path.insert(0, ROOT)
+    import country_shapes as cs
+    clip = shapely.union_all(_named_geoms(cs.CLIP["ge"]))
+    rep = hexes.geometry.representative_point()
+    inclip = shapely.contains_xy(clip, shapely.get_x(rep.values), shapely.get_y(rep.values))
+    print(f"    dropping {inclip.sum():,} more hexes ({hexes.loc[inclip, 'population'].sum():,.0f} "
+          "people) inside Natural Earth's Abkhazia and South Ossetia")
+    hexes = hexes[~inclip].copy()
+
     # ---- independent check: Kontur against the census, per region (§9p) ---------------
     df = pd.read_csv(NORM, dtype={"geo_id": str}, low_memory=False)
     tot = df[(df["geo_level"] == "region") & (df["source_category"] == "Total")]
@@ -244,8 +292,8 @@ def build_grid(units):
     name = dict(zip(units["unit"], units["geo_name"]))
 
     rows = [(u, tot[u], kon.get(u, 0.0)) for u in units["unit"] if u in tot]
-    ring = [r for r in rows if name[r[0]] in CITY_RING]
-    rest = [r for r in rows if name[r[0]] not in CITY_RING]
+    ring = [r for r in rows if name[r[0]] in CITY_RING + LINE_REGION]
+    rest = [r for r in rows if name[r[0]] not in CITY_RING + LINE_REGION]
     ratios = sorted((k / c, name[u]) for u, c, k in rest if c)
     print(f"\n  independent check — Kontur 2023 population / census 2014 count:")
     print(f"    the {len(ratios)} regions outside the Tbilisi pair: "
@@ -262,7 +310,8 @@ def build_grid(units):
     print("    every one inside 0.7-1.4x, which a scrambled join would not be")
     print("\n    THE CITY/RING PAIR (§9q), reported and NOT asserted — geoBoundaries' "
           "Tbilisi is\n    249 km² against the city's ~500, so outer Tbilisi sits in its "
-          "ring region here:")
+          "ring region here\n    (and Shida Kartli, cut at South Ossetia's line; see "
+          "LINE_REGION):")
     for u, c, k in ring:
         print(f"       {name[u]:34s} census {c:>9,}   Kontur {k:>9,.0f}   "
               f"{k / c if c else float('nan'):>5.2f}x")
@@ -277,6 +326,8 @@ def build_grid(units):
         idx = np.flatnonzero(who == unit)
         if idx.size == 0:
             continue
+        if parent.intersects(clip):
+            parent = shapely.difference(parent, clip)
         shapely.prepare(parent)
         inside = shapely.contains_properly(parent, geom[idx])
         out[idx[inside]] = geom[idx[inside]]

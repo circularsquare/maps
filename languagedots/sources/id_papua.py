@@ -1,0 +1,589 @@
+"""Indonesian New Guinea: which Papuan languages the indigenous people of each regency speak.
+Imported by sources/id_shareout.py (the province split of BPS's "Bahasa-bahasa asal Papua") and
+countries/id.py (placement inside the two 2010 provinces); run on its own to print its checks:
+
+    python sources/id_papua.py
+        -> data/normalized/id_papua_regency.csv     regency x language, indigenous people (all
+                                                     ages, ethnic, a placement and split weight)
+        -> data/normalized/id_papua_languages.csv   one row per language: node, label, estimate
+        -> taxonomy/tree.d/id.txt                    the block between the GENERATED markers
+
+THE PROBLEM. BPS's 2010 home-language table names eight languages by province. For the two
+provinces of 2010, Papua (94; since 2022 Papua, Papua Tengah, Papua Pegunungan and Papua
+Selatan) and Papua Barat (91; since 2022 also Papua Barat Daya), sources/id_shareout.py estimates
+how many people used a Papuan language at home (its stage 1, raked to L4.1's national
+"Bahasa-bahasa asal Papua"). Before 2026-10-06 that total was split among 22 ethnic clusters
+from Ananta et al.'s national table, and Glottolog's ~240 living languages there were not drawn.
+
+THE SOURCES.
+  * Ananta, Utami and Handayani, "Statistics on Ethnic Diversity in the Land of Papua,
+    Indonesia", Asia & the Pacific Policy Studies 3(3), 2016, pp.458-474 (CC BY-NC-ND), from the
+    2010 census's raw ethnicity data. Wiley answers 403; read from the Wayback Machine's copy of
+    the full text (snapshot 20230204023049, saved as data/raw/id/ananta2016_papua_*.html).
+    Tables 1-2: each province's 25 largest ethnic groups (citizens, every age); Table 3: for each
+    of the 40 regencies of 2010, the share of Papuan ethnic groups and the largest group and its
+    share; Table 4: the Javanese share of each regency.
+  * Glottolog 5 (CC BY): one point per language, the classification, the endangerment status.
+  * Joshua Project's people-group file (keyless; populations follow Ethnologue), Indonesia rows,
+    summed by ISO 639-3 code: the speaker estimates, as sources/pg_build.py uses for PNG.
+  * religiondots' 2010 census regency populations (sensus.bps.go.id, read-only) and Kontur
+    kecamatan populations (data/geo/id/id_units.csv) for where people live inside a regency.
+
+THE MODEL (rows `modelled`; ask 019's estimate route, as PNG):
+  1. Languages: every Glottolog language whose point falls in a 2010 Papua or Papua Barat
+     regency (or within SNAP_KM of one, if Glottolog lists Indonesia), less extinct, nearly
+     extinct and moribund ones, pidgins, unclassifiable entries and the Malays (Papuan Malay is
+     the share-out's own row). Estimate: Joshua Project's Indonesian figure for its ISO code; a
+     language without one takes the median of its regency's others.
+  2. Indigenous people per regency: the 2010 census population x Table 3's Papuan share.
+  3. Each language's estimate is spread over the regencies around its point (the Kontur people
+     of each regency's kecamatan, weighted by exp(-distance / H_KM)), which seeds a regency x
+     language table. Table 3's largest group is fixed in each regency where it is Papuan (Dani
+     82% of Jayawijaya, Ekari 95% of Paniai, Ngalum 43% of Pegunungan Bintang ...), shared among
+     the group's languages by the seed; the rest is raked (IPF) to each regency's remaining
+     indigenous people and to each province's count of every Papuan group Tables 1-2 name
+     (Dani 648,227, Mee 314,582, Arfak 69,182 ...), the group's languages scaled together.
+  4. Its use: a province's estimated Papuan-language speakers are shared among the languages by
+     their indigenous people (no per-language retention is published); outside the two provinces
+     by the two provinces' mix together. Inside the provinces, each language is placed by
+     regency on this table, then towards its point within the regency.
+"""
+import os
+import re
+import sys
+import unicodedata
+from pathlib import Path
+
+os.environ.setdefault("OMP_NUM_THREADS", "2")
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+
+import numpy as np  # noqa: E402
+import pandas as pd  # noqa: E402
+
+HERE = Path(__file__).resolve().parent
+ROOT = HERE.parent
+sys.path.insert(0, str(ROOT))
+from rdlink import RD, RD_GEO  # noqa: E402
+
+GLOT = ROOT / "data" / "raw" / "glottolog"
+JP_CSV = ROOT / "data" / "raw" / "pg" / "joshuaproject_pgic.csv"
+UNITS = ROOT / "data" / "geo" / "id" / "id_units.csv"
+RD_ID = RD / "data" / "normalized" / "id.csv"
+REGENCIES = RD_GEO / "id" / "id_regencies.gpkg"
+PG_LANG = ROOT / "data" / "normalized" / "pg_languages.csv"
+PG_FRAG = ROOT / "taxonomy" / "tree.d" / "pg.txt"
+OUT_REG = ROOT / "data" / "normalized" / "id_papua_regency.csv"
+OUT_LANG = ROOT / "data" / "normalized" / "id_papua_languages.csv"
+FRAG = ROOT / "taxonomy" / "tree.d" / "id.txt"
+BEGIN = "# BEGIN GENERATED by sources/id_papua.py: do not edit by hand, edit the script"
+END = "# END GENERATED by sources/id_papua.py"
+
+PROVS = ("91", "94")
+SNAP_KM = 40.0      # a point outside every regency polygon joins the nearest within this
+CITIES = ("9171", "9471")   # Kota Sorong, Kota Jayapura
+H_KM = 25.0         # how far a language's estimate spreads from its point between regencies
+SKIP_FAMILY = {"Pidgin", "Sign Language", "Bookkeeping", "Unattested", "Artificial Language",
+               "Mixed Language", "Speech Register", "Unclassifiable"}
+SKIP_AES = {"aes-extinct", "aes-nearly_extinct", "aes-moribund"}
+MALAYIC = "mala1538"
+TNG, SHWNG, OCEANIC = "nucl1709", "sout3229", "ocea1241"
+
+# Ananta et al. 2016, Table 3 (regency: Papuan share %, largest group, its share %) and Table 4
+# (Javanese share %). Codes are 2010's, as religiondots' units. Table 4 prints Biak Numfor's
+# Javanese share as 69.89, which is Table 3's Biak share for the same regency (a copy slip):
+# None, and the province's ratio is used instead.
+REGENCY = {
+    "9101": ("Fakfak", 47.61, "Baham", 32.39, 8.58),
+    "9102": ("Kaimana", 51.56, "Irahutu", 15.50, 7.50),
+    "9103": ("Teluk Wondama", 73.57, "Wandamen", 34.22, 3.61),
+    "9104": ("Teluk Bintuni", 52.97, "Aikwakai", 20.33, 14.45),
+    "9105": ("Manokwari", 56.59, "Arfak", 29.90, 18.78),
+    "9106": ("Sorong Selatan", 83.08, "Tehit", 30.87, 3.93),
+    "9107": ("Sorong", 36.07, "Javanese", 41.46, 41.46),
+    "9108": ("Raja Ampat", 73.40, "Biak-Numfor", 42.49, 4.11),
+    "9109": ("Tambrauw", 94.99, "Karon", 73.19, 0.54),
+    "9110": ("Maybrat", 95.40, "Ayfat", 74.05, 0.36),
+    "9171": ("Kota Sorong", 29.93, "Javanese", 13.79, 13.79),
+    "9401": ("Merauke", 37.27, "Javanese", 34.32, 34.32),
+    "9402": ("Jayawijaya", 90.79, "Dani", 82.02, 2.09),
+    "9403": ("Jayapura", 61.48, "Sentani", 18.15, 16.17),
+    "9404": ("Nabire", 47.54, "Javanese", 22.21, 22.21),
+    "9408": ("Kepulauan Yapen", 78.09, "Yapen", 47.86, 4.55),
+    "9409": ("Biak Numfor", 73.82, "Biak-Numfor", 69.89, None),
+    "9410": ("Paniai", 97.58, "Auwye/Mee", 94.50, 0.36),
+    "9411": ("Puncak Jaya", 98.24, "Dani", 94.31, 0.35),
+    "9412": ("Mimika", 42.51, "Mimika", 12.95, 12.85),
+    "9413": ("Boven Digoel", 66.95, "Mandobo", 21.48, 11.78),
+    "9414": ("Mappi", 88.62, "Asmat", 53.58, 2.20),
+    "9415": ("Asmat", 89.59, "Asmat", 84.26, 1.19),
+    "9416": ("Yahukimo", 98.58, "Ngalik", 48.60, 0.24),
+    "9417": ("Pegunungan Bintang", 95.31, "Ngalum", 42.61, 0.42),
+    "9418": ("Tolikara", 99.05, "Dani", 98.31, 0.12),
+    "9419": ("Sarmi", 70.25, "Biga", 14.56, 9.01),
+    "9420": ("Keerom", 41.33, "Javanese", 34.34, 34.34),
+    "9426": ("Waropen", 79.59, "Waropen", 51.32, 5.99),
+    "9427": ("Supiori", 96.48, "Biak-Numfor", 94.55, 0.42),
+    "9428": ("Mamberamo Raya", 93.07, "Waropen", 31.74, 0.45),
+    "9429": ("Nduga", 99.16, "Dauwa", 97.90, 0.0),
+    "9430": ("Lanny Jaya", 99.90, "Dani", 97.62, 0.03),
+    "9431": ("Mamberamo Tengah", 99.47, "Dani", 78.98, 0.07),
+    "9432": ("Yalimo", 99.20, "Ngalik", 96.55, 0.01),
+    "9433": ("Puncak", 99.26, "Dani", 65.99, 0.13),
+    "9434": ("Dogiyai", 99.01, "Auwye/Mee", 98.35, 0.11),
+    "9435": ("Intan Jaya", 99.81, "Moni", 74.29, 0.02),
+    "9436": ("Deiyai", 98.94, "Auwye/Mee", 97.83, 0.08),
+    "9471": ("Kota Jayapura", 34.91, "Javanese", 19.17, 19.17),
+}
+# Tables 1-2: the province's citizens, its Papuan share (Table 3's province rows), and every
+# Papuan group among its 25 largest. Kei, Seram, Ambonese, Flores, Ternate are not Papuan.
+PROVINCE = {
+    "91": (753_399, 51.49, {"Arfak": 69_182, "Biak-Numfor": 56_269, "Ayfat": 45_687,
+                            "Baham": 22_169, "Yapen": 18_769, "Mooi": 18_078, "Tehit": 15_962,
+                            "Wandamen": 13_471 + 8_734, "Irahutu": 11_814, "Kokoda": 10_026,
+                            "Inanwatan": 8_921}),
+    "94": (2_780_144, 76.31, {"Dani": 648_227, "Auwye/Mee": 314_582, "Biak-Numfor": 145_902,
+                              "Ngalik": 133_562, "Asmat": 122_941, "Dauwa": 96_928,
+                              "Yapen": 73_404, "Ketengban": 41_601, "Moni": 41_446,
+                              "Marind Anim": 36_852, "Ngalum": 29_116, "Sentani": 28_945,
+                              "Hupla": 27_323, "Waropen": 25_064, "Mimika": 23_277,
+                              "Damal": 22_409, "Yaghay": 21_025}),
+}
+# Ananta's ethnic labels -> Glottolog languages. "Wandamen" in Table 1 is Wandamen (13,471) and
+# Wamesa (8,734), two names of one language (wand1267). "Yapen" is every language whose point is
+# on Kepulauan Yapen (9408) except Biak. Ayfat is a Maybrat dialect; Karon is Abun (Karon
+# Pantai) and Karon Dori; Dauwa is Nduga (98% of Nduga regency); Ngalik is the Yali; Mimika is
+# Kamoro; Auwye/Mee is Ekari; Inanwatan is Suabo. Not identified, so not fixed: Aikwakai (Teluk
+# Bintuni) and "Biga" in Sarmi (Glottolog's Biga is a Raja Ampat language).
+GROUP_LANGS = {
+    "Arfak": ["hata1243", "meya1236", "mani1235", "mosk1236", "mans1260"],
+    "Biak-Numfor": ["biak1248"], "Ayfat": ["maib1239"], "Baham": ["baha1258"],
+    "Yapen": "9408", "Mooi": ["moii1235"], "Tehit": ["tehi1237"], "Wandamen": ["wand1267"],
+    "Irahutu": ["irar1238"], "Kokoda": ["koko1265"], "Inanwatan": ["suab1238"],
+    "Karon": ["abun1252", "karo1303"],
+    "Dani": ["west2594", "midg1235", "uppe1430", "lowe1415", "wala1269", "ngge1241"],
+    "Auwye/Mee": ["ekar1243"], "Ngalik": ["angg1239", "nini1235", "pass1247"],
+    "Asmat": ["cent2117", "casu1237", "yaos1235", "nort2917", "cita1245", "tamn1235"],
+    "Dauwa": ["ndug1245"], "Ketengban": ["kete1254"], "Moni": ["moni1261"],
+    "Marind Anim": ["nucl1622", "bian1251"], "Ngalum": ["ngal1298"], "Sentani": ["nucl1632"],
+    "Hupla": ["hupl1238"], "Waropen": ["waro1242"], "Mimika": ["kamo1255"],
+    "Damal": ["dama1272"], "Yaghay": ["yaqa1246"],
+    "Mandobo": ["mand1444", "mand1445", "koke1241"],
+}
+
+# Hand-picked colours (OKLCH) for languages that meet on the ground; the rest are generated
+# around their group. The highland valleys: the Dani languages, Yali, Nduga, Ekari, Moni, Damal
+# are each other's neighbours, so they are spread by lightness and hue within the greens and
+# yellows Papuan owns (PNG's TNG is 135).
+HAND_COLOUR = {
+    # the highlands, west to east: Ekari, Moni, Damal, the Dani languages, Nduga, Yali, Hupla,
+    # Ketengban. Neighbours differ in hue or lightness by a clear step; warm hues are allowed
+    # (PNG's Torricelli is 70, Sepik 95), but not Indonesian's cyan (195), which is in every
+    # highland town
+    "ekar1243": "0.86 0.12 110",    # Ekari (Mee): id.txt's old pale yellow-green
+    "moni1261": "0.62 0.15 40",     # Moni: rust
+    "dama1272": "0.82 0.12 60",     # Damal (an isolate): light amber
+    "west2594": "0.70 0.16 140",    # Western Dani (Lani), the biggest; id.txt's old Dani green
+    "ngge1241": "0.84 0.14 135",    # Nggem: light green
+    "wala1269": "0.66 0.14 95",     # Walak: olive
+    "midg1235": "0.60 0.14 165",    # Mid Grand Valley Dani: deep teal
+    "uppe1430": "0.82 0.12 175",    # Upper Grand Valley Dani: light aqua
+    "lowe1415": "0.86 0.13 100",    # Lower Grand Valley Dani (Baliem): pale yellow
+    "ndug1245": "0.66 0.15 15",     # Nduga: coral red
+    "hupl1238": "0.64 0.13 270",    # Hupla: blue-violet
+    "angg1239": "0.72 0.15 60",     # Angguruk Yali: amber
+    "nini1235": "0.84 0.11 80",     # Ninia Yali: pale gold
+    "pass1247": "0.60 0.13 80",     # Pass Valley Yali: dark gold
+    "kete1254": "0.76 0.15 35",     # Ketengban: orange
+    "kamo1255": "0.66 0.14 300",    # Kamoro: violet, below Ekari's yellow-green
+    "biak1248": "0.68 0.16 325",    # Biak: id.txt's old magenta
+    "maib1239": "0.72 0.14 150",    # Maybrat
+    "nucl1632": "0.80 0.13 200",    # Sentani
+    "irar1238": "0.66 0.14 300",    # Irarutu, Kaimana's largest; violet, off Indonesian's cyan
+}
+
+
+def say(ok, msg):
+    print(("  ok  " if ok else "  FAIL") + "  " + msg)
+    if not ok:
+        raise SystemExit("check failed: " + msg)
+
+
+def slug(s):
+    s = unicodedata.normalize("NFKD", s).encode("ascii", "ignore").decode()
+    s = re.sub(r"[^a-z0-9]+", "_", s.lower()).strip("_")
+    if s and s[0].isdigit():
+        s = "l" + s
+    return s or "x"
+
+
+def _jp_estimates():
+    import io
+    txt = JP_CSV.read_text(encoding="utf-8-sig")
+    jp = pd.read_csv(io.StringIO(txt[txt.index("ROG3,"):]), dtype=str)
+    jp = jp[jp["Ctry"] == "Indonesia"].copy()
+    jp["Population"] = jp["Population"].astype(int)
+    return jp.groupby("ROL3")["Population"].sum()
+
+
+def _regency_pop():
+    """The 2010 census population of each of the 40 regencies (religiondots' id.csv, the sum of
+    its religion rows; read-only)."""
+    d = pd.read_csv(RD_ID, dtype={"geo_id": str}, usecols=["geo_id", "geo_level", "count"])
+    d = pd.read_csv(RD_ID, dtype={"geo_id": str},
+                    usecols=["geo_id", "geo_level", "source_category", "count"])
+    d = d[d.geo_level.str.startswith("regency") & d.geo_id.isin(REGENCY)
+          & (d.source_category == "Total")]
+    pop = d.groupby("geo_id")["count"].sum()
+    say(set(pop.index) == set(REGENCY), f"2010 census population for all {len(REGENCY)} regencies "
+        f"of Papua and Papua Barat ({int(pop.sum()):,})")
+    return pop
+
+
+def _pg_nodes():
+    """glottocode -> pg's node, and pg.txt's lines by node id (to repeat them identically)."""
+    pgl = pd.read_csv(PG_LANG, dtype=str)
+    lines = {}
+    for ln in PG_FRAG.read_text(encoding="utf-8").splitlines():
+        if ln.strip() and not ln.startswith("#"):
+            lines[ln.split("|")[0].strip()] = ln.strip()
+    return dict(zip(pgl.glottocode, pgl.node)), lines
+
+
+def languages():
+    """The drawn languages: DataFrame indexed by glottocode with name, iso, lat, lon, regency,
+    est, est_source, path (Glottolog ancestors), family name."""
+    import geopandas as gpd
+    g = pd.read_csv(GLOT / "languages.csv", dtype=str)
+    names = g.set_index("ID")["Name"].to_dict()
+    v = pd.read_csv(GLOT / "values.csv", dtype=str,
+                    usecols=["Language_ID", "Parameter_ID", "Value", "Code_ID"])
+    cls = v[v.Parameter_ID == "classification"].set_index("Language_ID")["Value"].to_dict()
+    aes = v[v.Parameter_ID == "aes"].set_index("Language_ID")["Code_ID"].to_dict()
+    L = g[(g.Level == "language") & g.Latitude.notna()].copy()
+    L["lat"] = L.Latitude.astype(float)
+    L["lon"] = L.Longitude.astype(float)
+    L = L[L.lon.between(128.5, 141.6) & L.lat.between(-10.0, 1.5)]
+    reg = gpd.read_file(REGENCIES)[["unit", "geometry"]]
+    reg = reg[reg.unit.isin(REGENCY)].reset_index(drop=True)
+    say(len(reg) == len(REGENCY), f"religiondots' regency polygons: all {len(reg)} of Papua and "
+        "Papua Barat")
+    pts = gpd.GeoDataFrame(L, geometry=gpd.points_from_xy(L.lon, L.lat), crs=4326)
+    j = gpd.sjoin(pts, reg, how="left", predicate="within")
+    j = j[~j.index.duplicated()]
+    L["regency"] = j["unit"]
+    p3, r3 = pts.to_crs(32753), reg.to_crs(32753)
+    snapped = []
+    for i in L.index[L.regency.isna()]:
+        d = r3.distance(p3.geometry[i]) / 1000
+        k = int(d.idxmin())
+        if d[k] <= SNAP_KM and "ID" in str(L.at[i, "Countries"]).split(";"):
+            L.at[i, "regency"] = r3.at[k, "unit"]
+            snapped.append((L.at[i, "Name"], round(float(d[k]))))
+    L = L[L.regency.notna()].copy()
+    L["path"] = L.ID.map(lambda i: cls.get(i, "").split("/") if isinstance(cls.get(i), str)
+                         else [])
+    L["family"] = L.Family_ID.map(names).fillna("")
+    L["aes"] = L.ID.map(aes).fillna("")
+    n0 = len(L)
+    out_fam = L.family.isin(SKIP_FAMILY)
+    out_mal = L.path.apply(lambda p: MALAYIC in p)
+    out_aes = L.aes.isin(SKIP_AES)
+    print(f"  Glottolog points in the 40 regencies: {n0} ({len(snapped)} snapped from <= "
+          f"{SNAP_KM:.0f} km outside: {snapped}); left out: pidgin/unclassifiable "
+          f"{int(out_fam.sum())}, Malayic {int((out_mal & ~out_fam).sum())} "
+          f"{sorted(L.loc[out_mal & ~out_fam, 'Name'])}, extinct/nearly extinct/moribund "
+          f"{int((out_aes & ~out_fam & ~out_mal).sum())}")
+    L = L[~out_fam & ~out_mal & ~out_aes].copy()
+    est = _jp_estimates()
+    L["est"] = L.ISO639P3code.map(est)
+    L["est_source"] = np.where(L.est.notna(), "joshuaproject", "regency_median")
+    med = L.groupby("regency")["est"].median()
+    L["est"] = L.est.fillna(L.regency.map(med)).fillna(L.est.median())
+    L = L.rename(columns={"ID": "glottocode", "Name": "name", "ISO639P3code": "iso"})
+    print(f"  {len(L)} languages; {int((L.est_source == 'joshuaproject').sum())} with a Joshua "
+          f"Project estimate ({L.loc[L.est_source == 'joshuaproject', 'est'].sum():,.0f}), the "
+          f"rest on their regency's median")
+    return L.set_index("glottocode")[["name", "iso", "lat", "lon", "regency", "est", "est_source",
+                                       "path", "family", "aes"]], names
+
+
+def _group_members(L):
+    out = {}
+    for grp, cs in GROUP_LANGS.items():
+        if isinstance(cs, str):
+            m = [c for c in L.index[L.regency == cs] if c != "biak1248"]
+        else:
+            m = [c for c in cs if c in L.index]
+        out[grp] = m
+    return out
+
+
+def ethnic_matrix(L=None, verbose=True):
+    """Regency x language: indigenous people (2010, all ages). Returns (DataFrame, L)."""
+    if L is None:
+        L, _ = languages()
+    pop = _regency_pop()
+    u = pd.read_csv(UNITS, dtype={"unit": str, "prov": str})
+    u = u[u.unit.str[:2].isin(PROVS)].copy()
+    u["reg"] = u.unit.str[:4]
+    say(set(u.reg) == set(REGENCY), "Kontur units cover all 40 regencies")
+    regs = sorted(REGENCY)
+    ri = {r: i for i, r in enumerate(regs)}
+    langs = list(L.index)
+    # 3. homeland: each language's estimate over the regencies around its point
+    H = np.zeros((len(regs), len(langs)))
+    ux, uy, up = u.lon.to_numpy(), u.lat.to_numpy(), u["pop"].to_numpy(dtype=float)
+    uri = u.reg.map(ri).to_numpy()
+    for j, c in enumerate(langs):
+        la, lo = L.at[c, "lat"], L.at[c, "lon"]
+        d = np.hypot((ux - lo) * 111.32 * np.cos(np.radians(la)), (uy - la) * 110.57)
+        w = np.bincount(uri, weights=up * np.exp(-d / H_KM), minlength=len(regs))
+        w[ri[L.at[c, "regency"]]] += 1e-9 * max(w.sum(), 1.0)   # a point's own regency, always
+        H[:, j] = w / w.sum()
+    M = H * L.est.to_numpy()[None, :]
+    # the two cities draw Papuans from the whole province (as pg's Port Moresby takes the
+    # national mix): half their seed is the province's estimates, half the local one
+    for r in CITIES:
+        loc = M[ri[r]] / M[ri[r]].sum()
+        inprov = L.regency.str[:2].eq(r[:2]).to_numpy()
+        mix = np.where(inprov, L.est.to_numpy(), 0.0)
+        M[ri[r]] = 0.5 * loc + 0.5 * mix / mix.sum()
+    members = _group_members(L)
+    gcols = {g: [langs.index(c) for c in m] for g, m in members.items()}
+    for g, m in list(members.items()):
+        print(f"  group {g}: {[L.at[c, 'name'] for c in m] or 'NONE drawn, not constrained'}")
+        if not m:
+            del gcols[g]
+
+    E = np.zeros_like(M)
+    pins = []
+    for p in PROVS:
+        rs = [r for r in regs if r.startswith(p)]
+        ix = [ri[r] for r in rs]
+        indig = np.array([pop[r] * REGENCY[r][1] / 100 for r in rs])
+        citizens, pshare, groups = PROVINCE[p]
+        scale = indig.sum() / (citizens * pshare / 100)
+        P = np.zeros((len(rs), len(langs)))
+        for a, r in enumerate(rs):
+            grp, pct = REGENCY[r][2], REGENCY[r][3]
+            if grp not in gcols:
+                continue
+            n = pop[r] * pct / 100
+            cs = gcols[grp]
+            s = M[ri[r], cs]
+            P[a, cs] = n * s / s.sum()
+            pins.append((r, grp, n))
+        rows = indig - P.sum(1)
+        assert (rows >= -1e-6).all(), (p, rows)
+        rows = np.clip(rows, 0, None)
+        seed = M[ix].copy()
+        seed[P > 0] = 0.0
+        tg = {}
+        for grp, n in groups.items():
+            if grp not in gcols:
+                continue
+            t = n * scale - P[:, gcols[grp]].sum()
+            say(t >= 0, f"{p} {grp}: province count {n * scale:,.0f} covers its fixed regencies "
+                f"({P[:, gcols[grp]].sum():,.0f})")
+            tg[grp] = t
+        # Table 3's largest group is the largest: in a regency where it is fixed, no other
+        # group (its languages together) and no other language may exceed it
+        cap = P.sum(1)
+        blocks = [gcols[g] for g in gcols]
+        X = seed
+        for _ in range(5000):
+            X *= np.divide(rows, X.sum(1), out=np.zeros_like(rows), where=X.sum(1) > 0)[:, None]
+            for grp, t in tg.items():
+                s = X[:, gcols[grp]].sum()
+                if s > 0:
+                    X[:, gcols[grp]] *= t / s
+            for a in np.where(cap > 0)[0]:
+                X[a] = np.minimum(X[a], cap[a])
+                for b in blocks:
+                    s = X[a, b].sum()
+                    if s > cap[a]:
+                        X[a, b] *= cap[a] / s
+            err = np.abs(X.sum(1) - rows).max()
+            if err < 0.5:
+                break
+        say(err < 0.01 * rows.max(), f"{p}: capped rake converged (row miss {err:,.1f})")
+        X *= np.divide(rows, X.sum(1), out=np.zeros_like(rows), where=X.sum(1) > 0)[:, None]
+        gerr = max(abs(X[:, gcols[grp]].sum() - t) for grp, t in tg.items())
+        say(gerr < 0.01 * max(tg.values()), f"{p}: rake meets every regency's indigenous people "
+            f"and Tables 1-2's groups (largest group miss {gerr:,.0f} people)")
+        E[ix] = X + P
+    df = pd.DataFrame(E, index=regs, columns=langs)
+    if verbose:
+        _report(df, L, pop, members)
+    return df, L
+
+
+def _report(df, L, pop, members):
+    print("  regency: drawn top language (share of all people) | Table 3's largest group")
+    for r in df.index:
+        top = df.loc[r].idxmax()
+        print(f"    {r} {REGENCY[r][0]:20s} {L.at[top, 'name']:28s} "
+              f"{df.at[r, top] / pop[r]:6.1%}  | {REGENCY[r][2]} {REGENCY[r][3]:.1f}%, "
+              f"Papuan {REGENCY[r][1]:.1f}%, {int((df.loc[r] >= 0.01 * df.loc[r].sum()).sum())} "
+              "languages over 1% of its indigenous people")
+    # where Javanese is the largest group, no Papuan language may be larger
+    for r, (nm, _, grp, pct, _) in REGENCY.items():
+        if grp == "Javanese":
+            say(df.loc[r].max() / pop[r] * 100 <= pct + 1e-6,
+                f"{nm}: no Papuan language over the Javanese {pct}%")
+    nat = df.sum().sort_values(ascending=False)
+    print("  largest languages, indigenous people both provinces (JP estimate):")
+    for c in nat.index[:20]:
+        print(f"    {L.at[c, 'name']:30s} {nat[c]:>10,.0f}  ({L.at[c, 'est']:,.0f})")
+    print(f"  {int((nat > 1000).sum())} languages over 1,000 people, {int((nat > 10000).sum())} "
+          "over 10,000")
+
+
+# ---- nodes -------------------------------------------------------------------------------
+
+def nodes(L, names):
+    """glottocode -> node id, and the fragment lines (id | label [| colour]) for every node the
+    languages need, parents included. Cross-border languages take pg's node."""
+    pg_node, pg_lines = _pg_nodes()
+    tng_groups = {ln.split("|")[1].strip(): n for n, ln in pg_lines.items()
+                  if re.fullmatch(r"papuan\.tng\.[a-z0-9_]+", n)}
+    pg_fam = {ln.split("|")[1].strip(): n for n, ln in pg_lines.items()
+              if re.fullmatch(r"papuan\.[a-z0-9_]+", n)}
+    lines = {}
+
+    def add(nid, label, colour=""):
+        if nid in pg_lines:
+            lines[nid] = pg_lines[nid]
+            return
+        lines.setdefault(nid, f"{nid} | {label}" + (f" | {colour}" if colour else ""))
+
+    def parent_of(c):
+        path = L.at[c, "path"]
+        if not path:
+            return "isolate", [("isolate", "Language isolates")]
+        if path[0] == TNG:
+            anc = [names.get(a, a) for a in path[1:]]
+            for a in anc:
+                if a in tng_groups:
+                    return tng_groups[a], [("papuan", "Papuan languages"),
+                                           ("papuan.tng", "Trans-New Guinea"),
+                                           (tng_groups[a], a)]
+            grp = anc[0] if anc else None
+            if grp is None:
+                return "papuan.tng", [("papuan", "Papuan languages"),
+                                      ("papuan.tng", "Trans-New Guinea")]
+            gid = f"papuan.tng.{slug(grp)}"
+            return gid, [("papuan", "Papuan languages"), ("papuan.tng", "Trans-New Guinea"),
+                         (gid, f"{grp} languages" if grp == "Dani" else grp)]
+        top = names.get(path[0], path[0])
+        if top == "Austronesian":
+            if SHWNG in path:
+                return "austronesian.shwng", [("austronesian", "Austronesian"),
+                                              ("austronesian.shwng",
+                                               "South Halmahera-West New Guinea")]
+            if OCEANIC in path:
+                anc = [names.get(a, a) for a in path]
+                grp = "Sarmi-Jayapura Bay" if "Sarmi-Jayapura Bay" in anc else "Oceanic"
+                gid = ("austronesian.oceanic" if grp == "Oceanic"
+                       else f"austronesian.oceanic.{slug(grp)}")
+                return gid, [("austronesian", "Austronesian"),
+                             ("austronesian.oceanic", "Oceanic"), (gid, grp)]
+            return "austronesian", [("austronesian", "Austronesian")]
+        fid = pg_fam.get(top, f"papuan.{slug(top)}")
+        return fid, [("papuan", "Papuan languages"), (fid, top)]
+
+    out = {}
+    taken = set(pg_lines)
+    for c in L.index:
+        if c in pg_node:
+            n = pg_node[c]
+            out[c] = n
+            parts = n.split(".")
+            for k in range(1, len(parts) + 1):
+                add(".".join(parts[:k]), "")
+            continue
+        par, chain = parent_of(c)
+        for nid, lab in chain:
+            add(nid, lab)
+        nid = f"{par}.{slug(L.at[c, 'name'])}"
+        if nid in taken:
+            nid = f"{nid}_{c}"
+        taken.add(nid)
+        out[c] = nid
+        add(nid, L.at[c, "name"], HAND_COLOUR.get(c, ""))
+    return out, lines
+
+
+GROUP_COLOUR = {
+    # South Halmahera-West New Guinea: Austronesian's blues and violets, away from Indonesian's
+    # cyan, so Biak, Waropen and the Yapen and Raja Ampat languages read as Austronesian
+    "austronesian.shwng": "0.72 0.13 280",
+    "papuan.tng.dani": "0.76 0.10 125",
+    "austronesian.oceanic.sarmi_jayapura_bay": "0.70 0.13 250",
+}
+
+
+def write_fragment(lines):
+    txt = FRAG.read_text(encoding="utf-8")
+    body = [BEGIN,
+            "# Indonesian New Guinea (2026-10-06): Glottolog's living languages of the 2010",
+            "# Papua and Papua Barat regencies, under Glottolog's families as sources/pg_build.py",
+            "# draws PNG: Trans-New Guinea's groups (pg.txt's where a group crosses the border),",
+            "# the other Papuan families each a root under `papuan`, isolates on `isolate`, the",
+            "# Austronesian languages under South Halmahera-West New Guinea. A language PNG also",
+            "# draws keeps pg's node, so a border language is one colour on both sides. Lines",
+            "# borrowed from pg.txt are repeated as pg writes them."]
+    hand = txt.split(BEGIN, 1)[0]
+    have = {ln.split("|")[0].strip() for ln in hand.splitlines()
+            if ln.strip() and not ln.startswith("#")}
+    for nid in sorted(lines, key=lambda s: (s.count("."), s)):
+        if nid in have:         # the hand-written part of id.txt already defines it
+            continue
+        ln = lines[nid]
+        if nid in GROUP_COLOUR and ln.count("|") == 1:
+            ln = f"{ln} | {GROUP_COLOUR[nid]}"
+        body.append(ln)
+    body.append(END)
+    if BEGIN in txt:
+        a, rest = txt.split(BEGIN, 1)
+        _, b = rest.split(END, 1)
+        txt = a + "\n".join(body) + b
+    else:
+        txt = txt.rstrip("\n") + "\n" + "\n".join(body) + "\n"
+    FRAG.write_text(txt, encoding="utf-8")
+
+
+def build(verbose=True):
+    """Everything: the tables, the CSVs, the fragment block. Returns (E, L, node)."""
+    L, names = languages()
+    E, L = ethnic_matrix(L, verbose=verbose)
+    node, lines = nodes(L, names)
+    L = L.assign(node=pd.Series(node), label=[f"Papua: {L.at[c, 'name']} [{c}]" for c in L.index])
+    say(L.node.is_unique, f"{len(L)} languages on {L.node.nunique()} distinct nodes")
+    long = E.stack().rename("people").reset_index()
+    long.columns = ["regency", "glottocode", "people"]
+    long = long[long.people > 0.5]
+    long["node"] = long.glottocode.map(node)
+    long["share"] = long.people / long.regency.map(_regency_pop())   # of all the regency's people
+    OUT_REG.parent.mkdir(parents=True, exist_ok=True)
+    long.round(6).to_csv(OUT_REG, index=False, encoding="utf-8")
+    L.drop(columns=["path"]).assign(path=L.path.str.join("/")).to_csv(
+        OUT_LANG, index_label="glottocode", encoding="utf-8")
+    write_fragment(lines)
+    if verbose:
+        print(f"wrote {OUT_REG}, {OUT_LANG}, and the generated block of {FRAG} "
+              f"({len(lines)} lines)")
+    return E, L
+
+
+def province_mix(E):
+    """Province code -> Series glottocode -> weight (indigenous people); 'other' is the two
+    provinces together, for Papuan migrants elsewhere."""
+    out = {p: E.loc[[r for r in E.index if r.startswith(p)]].sum() for p in PROVS}
+    out["other"] = E.sum()
+    return out
+
+
+if __name__ == "__main__":
+    build()

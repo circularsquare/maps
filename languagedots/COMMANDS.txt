@@ -1,0 +1,61 @@
+LANGUAGEDOTS — COMMANDS, in build order. Run from the languagedots folder.
+
+Design: spec.md. Agents: AGENT_BRIEF.md. Coverage of the world: coverage/COVERAGE.md.
+
+---- AGENTS ----
+
+  /ld-super [n]                     (in Claude Code, from maps/) supervise n country agents, default 4
+  /ld [cc]                          one unsupervised country agent
+  python tools/claim.py             claimed / parked / waiting for the build tail / free
+  python tools/ask.py               open questions for Anita (ask/OPEN.md)
+  runlog.md                         one line per agent result
+
+---- ONE COUNTRY (AGENT_BRIEF.md §5) ----
+
+  python sources/<cc>_<tag>.py --fetch      -> data/normalized/<cc>.csv
+  taxonomy/<cc><year>.py, taxonomy/tree.d/<cc>.txt
+  python taxonomy/build.py                  tree + colours -> taxonomy/languages.json; checks every mapping
+  countries/<cc>.py
+  python tools/check_country.py <cc>
+  python scatter.py --country <cc>          India ~5 min, most countries under a minute
+  python tools/claim.py done <cc> --id <sid>
+
+---- BUILD TAIL (whole-map files, under a lock) ----
+
+  python tools/build_tail.py --id <sid>     taxonomy/build.py, then tiles.py over every drawn country
+                                            (2.4 min for in,np,pk; grows with the map; three detail layers to z12, ~130 MB)
+  python tiles.py --countries <all> --refresh-meta   display text only, no retile
+
+---- THE FIRST THREE COUNTRIES' DATA ----
+
+  python sources/in_fetch.py && python sources/in_c16.py
+  python sources/np_nphc.py --fetch
+  python sources/pk_t11.py --fetch          needs `pip install rdata`; checks against religiondots' Table 9
+  Glottolog (CC BY): glottolog-cldf cldf/languages.csv and values.csv -> data/raw/glottolog/
+
+---- QUEUE ----
+
+  python tools/make_queue.py --force        rebuild queue.csv from coverage/coverage.csv (loses status edits)
+
+---- LOCAL VIEWER ----
+
+  From maps/: `python serve.py`, then http://localhost:8800/languagedots/
+  (range requests, files not held open, so a build can replace the archive while served)
+
+---- DEPLOY (only on Anita's go) ----
+
+  python tools/deploy.py --dry-run          preflight, then print every upload and copy; touches nothing
+  python tools/deploy.py                    preflight, upload to R2, copy index.html, verify, STOP before git
+  python tools/deploy.py --verify           range-check the published archive on its own
+
+  Data -> r2:anitamaps/languagedots/<same relative path>: the archive raw, counts.json,
+  not_drawn.geojson, taxonomy/languages.json and country_shapes.geojson pre-gzipped (R2 compresses
+  nothing itself). index.html alone -> ../../website/languagedots/ (Jekyll front matter and the
+  analytics include added by religiondots/tools/web_wrap.py). Then commit and push the website repo
+  yourself; the script never does.
+  The page picks local data or R2 by fetching data/processed/build_tail.json (dataBaseP in
+  index.html), never by hostname: the website served at localhost:4000 is localhost too.
+  The preflight refuses while build_tail.lock is held, while claim.py shows a country waiting for
+  the tail, when an output is older than its inputs, or when a node in counts.json has no label in
+  languages.json. rclone needs --s3-no-check-bucket (the script passes it); the error meanings, the
+  token and the bucket name are in religiondots/COMMANDS.txt, DEPLOY.

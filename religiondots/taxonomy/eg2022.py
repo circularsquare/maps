@@ -21,6 +21,11 @@ the source and §14.4 rule 1 forbids inventing a magnitude, so the two answers s
 family nodes. See REVIEW, where the case for going deeper is stated properly before being
 declined, because it is a case a reader will raise.
 
+**The Christians are split since 2026-10-04**: 86.49% of every governorate's Christians to
+`christianity.oriental.coptic`, the share of Christians in the Global Flourishing Study 2023 who
+named the Orthodox church, and the rest on `christianity` (sources/eg_churches.py; REVIEW below).
+One national share, so it labels the Christians already drawn and places nobody differently.
+
 **`Atheist` never reaches this file.** Two wave V respondents chose it, wave VII's card offers
 `No religion` instead and waves III and IV offer neither, so the pooled share would measure the
 questionnaire. `sources/eg.py`'s `DROPPED` carries the argument and drops them from the universe
@@ -41,7 +46,26 @@ REVIEW = {
         "way in: §11af measured it across five Arab countries and 45-82% of respondents "
         "answer *just a Muslim*, so it records which label a person volunteers rather than "
         "which school they follow.",
+    "Christian: Orthodox (GFS 2023)":
+        "-> christianity.oriental.coptic (2026-10-04, `fafd1067-copts`, sources/eg_churches.py). "
+        "The Global Flourishing Study's `REL3` card says `Orthodox`, not `Coptic Orthodox`, and "
+        "this still files on the Coptic node rather than on `christianity.oriental`: in Egypt the "
+        "word names one church for all but a few thousand people. The other Orthodox bodies there "
+        "are the Greek Orthodox Patriarchate of Alexandria and the Armenian Apostolic church, both "
+        "small and largely of foreign descent (Arab Barometer wave V gave Armenians a box of their "
+        "own and one of 268 Christians took it). The 004-am rule (a cell that names the church "
+        "files on it) is about cells that could mean several churches in the same country; this "
+        "one could, in principle, and in practice does not. Reverse by pointing this key at "
+        "`christianity.oriental`; nothing else moves.",
+    "Christian: other church or none named (GFS 2023)":
+        "-> christianity, the parent. Catholics (4 of 131 GFS Christians), Protestants (6) and "
+        "those naming no church (12) are 13.5% together and too few for nodes of their own.",
     "Christian":
+        "SUPERSEDED 2026-10-04 for the drawn rows: countries/eg.py now splits every governorate's "
+        "`Christian` into the two GFS keys above before resolving, so this key reaches only a "
+        "build run without data/normalized/eg_churches.csv, and that build stops. The argument "
+        "below was the case against deepening from the Arab Barometer alone and still holds for "
+        "it. "
         "-> christianity, the bare family node, NOT `christianity.oriental`. This is the call "
         "in this file worth arguing, because the Copts ARE the Oriental Orthodox communion's "
         "largest church and roughly nine in ten Egyptian Christians belong to it; the "
@@ -63,6 +87,8 @@ REVIEW = {
 MAP = {
     "Muslim": "islam",
     "Christian": "christianity",
+    "Christian: Orthodox (GFS 2023)": "christianity.oriental.coptic",
+    "Christian: other church or none named (GFS 2023)": "christianity",
 }
 
 # No COLUMNS dict (spec §7a-i-1). Every row in this country is `modelled` rather than

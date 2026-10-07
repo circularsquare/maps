@@ -51,7 +51,10 @@ Markers: `open`, `taken <date> <id>`, `done <date>`, `parked <date>: <why>`.
   to find countries worth sourcing. Later batches get their own line here, about ten countries each,
   by region. Yemen from the Arab Barometer (self_id); Saudi Arabia, Kuwait, Qatar, the UAE and Oman
   from Pew 2009 (estimate), with no Sunni row for Oman. Rows use the new `of="islam"`.
-  `sources/estimates.md` has the write-up.
+  `sources/estimates.md` has the write-up. **Since 2026-10-03 Kuwait draws `islam.shia` and
+  `islam.sunni`** (citizens at one national share from Arab Barometer III, `sources/kw.md` §8), so
+  §15.3 refuses its two Pew 2009 rows on the next `estimates.py` run; they stay in
+  `estimates_hand.py` as the record and still count toward the world total. Nothing to do.
 - `done 2026-09-14` **Bahrain's Shia and Sunni: left off, Anita's call.** The only self-identified
   figure covers citizens (47% of residents), and Pew 2009's share exceeds every citizen when carried to
   2020. Anita: *"only citizens is pretty different from what we're trying."* `sources/estimates.md`,
@@ -65,7 +68,9 @@ Markers: `open`, `taken <date> <id>`, `done <date>`, `parked <date>: <why>`.
   national sect shares may survive the quota that closed its governorates, §11al, or may not) and none
   of the others; WVS wave 7 has Iran. **Iran now draws `islam.sunni`** (Masaili's province
   estimates, 2026-09-15, `sources/ir.md` §9), so a national Sunni row for Iran would restate a drawn
-  node (spec §15.3); a Shia row would not, since the rest of Iran's Muslims stay on `islam`.
+  node (spec §15.3). **Since 2026-10-03 it draws `islam.shia` too** (the rest of its Muslims, on
+  Anita's ruling of 2026-09-15, `sources/ir.md` §11), so a Shia row would restate one as well: Iran
+  needs no row in this batch.
 - `open` **Ahmadiyya.** The World Religion Project records it in Indonesia alone. Pakistan's census
   counts Ahmadis. Check which built countries already draw `islam.ahmadiyya` before sourcing any.
   §14 applies.

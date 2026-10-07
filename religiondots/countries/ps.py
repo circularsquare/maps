@@ -72,7 +72,7 @@ ENTRY = {
         grain="governorates, 292,000 people on average",
         gap="0.89%: the 40,175 people counted who are not Palestinian, whom the form did not "
             "ask about religion, and 1,509 who gave no answer; and the Israeli settlements, "
-            "which this census does not count and which are drawn as their own entry",
+            "drawn as their own entry",
         gap_share=0.0089,
         counts=_ps_counts,
         units=None,

@@ -14,7 +14,8 @@ plus tools/compare_lines.py.
 Compared per country: every line (src, name, km to 0.01, sections as station pairs, closed),
 station ids gone or new, and whether foot.json and ways.json are byte-identical. Trial builds
 go to <temp>/noritetsu_ab/<cc>/ (build_model's --out; the last build's station ids are still
-read from dist/data, so aliases carry as in a real build). Logs beside them.
+read from dist/data, so aliases carry as in a real build). Logs beside them. Set
+NORITETSU_AB_DIR to use another folder (one per session when several run at once).
 """
 import json
 import os
@@ -32,7 +33,9 @@ from rebuild import MINUTES, REGISTER, ROOT  # noqa: E402
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 DIST = ROOT / "dist" / "data"
-TMP = Path(tempfile.gettempdir()) / "noritetsu_ab"
+# NORITETSU_AB_DIR gives a session its own folder, so two sessions trialling one country at
+# once do not build over each other.
+TMP = Path(os.environ.get("NORITETSU_AB_DIR") or Path(tempfile.gettempdir()) / "noritetsu_ab")
 
 
 def load(d, name):
@@ -71,9 +74,13 @@ def compare(cc):
         if sorted(tuple(s[:2]) for s in x["sections"]) != \
                 sorted(tuple(s[:2]) for s in y["sections"]):
             d.append(f"sections {len(x['sections'])}->{len(y['sections'])}")
-        for f in ("name", "name_en", "src", "service", "closed"):
+        for f in ("name", "name_en", "src", "service"):
             if x.get(f) != y.get(f):
                 d.append(f)
+        # A set at heart: the order it is written in moves from build to build.
+        as_set = lambda v: sorted(v) if isinstance(v, list) else v
+        if as_set(x.get("closed")) != as_set(y.get("closed")):
+            d.append("closed")
         if d:
             rows.append(f"chg  {x.get('src')} {x['name']}: {', '.join(d)}")
     sa, sb = load(a, "stations.json")["stations"], load(b, "stations.json")["stations"]

@@ -73,6 +73,9 @@ def bg_ref(lid):
 
 
 COUNTRY = {
+    # join a line's pieces where RINF leaves a stretch out, over its own OSM relation
+    # (rinf.fill_holes; trialled 2026-10-05)
+    "fill_holes": True,
     "iso3": "BGR", "wikidata": "Q219", "langs": ["bg", "en"],
     "fixed": FIXED, "ref": bg_ref, "rule_certain": True,
     "no_ref": lambda lid: lid in NO_NUMBER,

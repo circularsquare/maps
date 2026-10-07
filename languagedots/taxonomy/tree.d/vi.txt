@@ -1,0 +1,7 @@
+# US Virgin Islands (2020 Island Areas Census, four language groups). No new nodes. These lines
+# repeat, bare, the fragment nodes the USVI's labels use, so the country stands on its own under
+# `build.py --only`; colours stay us.txt's, not repeated here so a retune there cannot clash.
+indoeuropean.romance | Romance
+indoeuropean.romance.spanish | Spanish
+creole | Creoles
+creole.french_based | French-based creoles

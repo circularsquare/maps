@@ -1,0 +1,78 @@
+# New Caledonia, 2019 census (taxonomy/nc2019.py): the Kanak language(s) each person aged 15+
+# speaks. ISEE prints 29 answers as "langues kanak"; every one gets a node (spec 3.1).
+#
+# `austronesian.oceanic.kanak` is an AREAL group, as `austronesian.oceanic.vanuatu` is: it holds
+# the census's "speaks a Kanak language without saying which" (10,668+ people), so it must hold
+# what the census files as Kanak. Under it, three Glottolog groups (data/raw/glottolog) and one
+# outlier:
+#   loyalty    Loyalty Islands (loya1239): Drehu, Nengone, Iaai
+#   northern   Northern New Caledonian (nort3325): Extreme Northern and Mid-Northern
+#   southern   Southern New Caledonian (sout3313): Mid-Southern and Extreme Southern
+#   west_uvean Fagauvea, a Polynesian outlier on Ouvea (west2516, Nuclear Polynesian), filed by
+#              ISEE among the Loyalty Islands' languages
+# Glottolog joins loyalty and mainland as New Caledonian (newc1243); the extra "Mainland" level
+# is left out for a shallower legend. Tayo, which ISEE also counts as Kanak, is a French-based
+# creole (Glottolog tayo1238, under Macro-French) and sits under `creole.french_based`; the
+# unnamed remainder therefore sits on a node that leaves it out, by at most Tayo's 1.6% of the
+# named mentions (taxonomy/nc2019.py).
+#
+# Two census labels are dialect areas rather than single languages, each kept as one leaf as
+# printed: "Dialectes de Voh-Kone" (Glottolog's Voh-Kone group: Haeke, Haveke, Hmwaveke, Bwatoo,
+# Vamale, Waamwang) and "Dialectes de l'extreme sud" (Numee, Glottolog nume1242, whose varieties
+# include Kwenyii of the Ile des Pins).
+#
+# COLOUR: the group sits in Oceanic's green-to-blue band; the big languages are hand-picked so
+# that ground neighbours differ (Iaai | Fagauvea on Ouvea; Paici | Cemuhi | Ajie down the east
+# coast; Xaracuu | Xaragure at Canala-Thio) and all stay clear of French's pink, which covers
+# most of the map.
+
+# ---- repeated parents and nodes other fragments define ----
+austronesian | Austronesian
+austronesian.oceanic | Oceanic
+creole | Creoles
+creole.french_based | French-based creoles
+indoeuropean.romance | Romance
+indoeuropean.romance.french | French
+
+# ---- new groups ----
+austronesian.oceanic.kanak | Kanak languages | 0.74 0.12 175
+austronesian.oceanic.kanak.loyalty | Loyalty Islands languages | 0.72 0.12 245
+austronesian.oceanic.kanak.northern | Northern New Caledonian | 0.76 0.13 145
+austronesian.oceanic.kanak.southern | Southern New Caledonian | 0.74 0.12 210
+
+# ---- Loyalty Islands ----
+austronesian.oceanic.kanak.loyalty.drehu | Drehu | 0.64 0.15 258
+austronesian.oceanic.kanak.loyalty.nengone | Nengone | 0.82 0.11 205
+austronesian.oceanic.kanak.loyalty.iaai | Iaai | 0.68 0.15 290
+austronesian.oceanic.kanak.west_uvean | Fagauvea (West Uvean) | 0.86 0.13 115
+
+# ---- Northern ----
+austronesian.oceanic.kanak.northern.caac | Caac
+austronesian.oceanic.kanak.northern.yalayu | Yalâyu (Nyelâyu) | 0.70 0.13 120
+austronesian.oceanic.kanak.northern.fwa_kumak | Fwa Kumak (Nêlêmwa-Nixumwak)
+austronesian.oceanic.kanak.northern.yuaga | Yûâga | 0.82 0.12 170
+austronesian.oceanic.kanak.northern.jawe | Jawe
+austronesian.oceanic.kanak.northern.nemi | Nèmi
+austronesian.oceanic.kanak.northern.pwapwa | Pwâpwâ
+austronesian.oceanic.kanak.northern.fwai | Fwâi | 0.64 0.12 185
+austronesian.oceanic.kanak.northern.pwaamei | Pwaamei
+austronesian.oceanic.kanak.northern.pije | Pije
+austronesian.oceanic.kanak.northern.voh_kone | Voh-Koné dialects
+austronesian.oceanic.kanak.northern.cemuhi | Cèmuhî | 0.86 0.13 100
+austronesian.oceanic.kanak.northern.paici | Paicî | 0.68 0.15 145
+
+# ---- Southern ----
+austronesian.oceanic.kanak.southern.ajie | Ajië | 0.80 0.11 230
+austronesian.oceanic.kanak.southern.arha | Arhâ
+austronesian.oceanic.kanak.southern.arho | Arhö
+austronesian.oceanic.kanak.southern.orowe | Orowe
+austronesian.oceanic.kanak.southern.neku | Nèku
+austronesian.oceanic.kanak.southern.tiri | Tîrî
+austronesian.oceanic.kanak.southern.ziche | Zîchë
+austronesian.oceanic.kanak.southern.xaracuu | Xârâcùù | 0.64 0.14 200
+austronesian.oceanic.kanak.southern.xaragure | Xârâgùrè | 0.86 0.10 160
+austronesian.oceanic.kanak.southern.drubea | Drubea | 0.78 0.11 270
+austronesian.oceanic.kanak.southern.numee | Far South dialects (Numèè) | 0.70 0.12 180
+
+# ---- creole ----
+creole.french_based.tayo | Tayo

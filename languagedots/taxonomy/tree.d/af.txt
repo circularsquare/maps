@@ -1,0 +1,52 @@
+# Afghanistan, MRRD provincial profiles c. 2006-07 (taxonomy/af2007.py). Glottolog checked:
+# Pashayi (pash1270) is four Indo-Aryan languages, drawn as one leaf under Dardic where the
+# conventional classification puts it; Nuristani (nuri1243) is its own Indo-Iranian branch,
+# drawn as one leaf directly under Indo-European because the profiles name it as one language.
+
+# Colours, for the edges on the ground: Pashto is build.py's pale sand. Dari is a clear orange
+# (2026-10-06, Anita: Dari, Tajik, Balochi and Persian looked alike; COLOURS.md): 0.17 from
+# Pashto, 0.16 from Uzbek, 0.11 from Balochi, 0.10 from Persian's amber, 0.18 from Tajik's
+# pale gold, so each neighbour across a border reads apart. Pashai sits between Pashto and Dari in Laghman and Kapisa: Dardic
+# cyan, not the generated green. Nuristani borders Pashto, Pashai and Dari: a violet none of
+# them is near.
+
+# ---- new ----
+indoeuropean.indoaryan.dardic.pashai | Pashai | 0.72 0.11 215
+indoeuropean.nuristani | Nuristani languages | 0.66 0.13 290
+
+# Languages the profiles never name, from speaker estimates (2026-10-06, sources/af.md 3b).
+# Glottolog: Munji (munj1244, in Yidgha-Munji yidg1239), Sanglechi (sang1344, in
+# Sanglechi-Ishkashimi sang1343) and Parachi (para1299, in Ormuri-Parachi ormu1249) are Eastern
+# Iranian, kept flat under Iranian as by.txt keeps the other Pamir languages; Gawar-Bati
+# (gawa1247) Indo-Aryan, filed under Dardic as conventionally grouped (Kunar group).
+# Colours. Badakhshan's Pamiri valleys sit beside Dari's orange and Uzbek's pink, the Wakhan's
+# Kyrgyz red and Wakhi's generated salmon: Shughni, Ishkashimi, Sanglechi and Munji are greens
+# and teals, apart from those and from each other. Parachi (Kapisa) a darker green beside Pashai's
+# cyan and Pashto's sand; Gawar-Bati (Kunar) a pale aqua beside Pashto and Nuristani's violet.
+indoeuropean.iranian.munji | Munji | 0.76 0.13 130
+indoeuropean.iranian.sanglechi | Sanglechi | 0.82 0.08 175
+indoeuropean.iranian.parachi | Parachi | 0.60 0.12 140
+indoeuropean.indoaryan.dardic.gawarbati | Gawar-Bati | 0.84 0.08 195
+
+# ---- parents and languages defined elsewhere, repeated identically ----
+indoeuropean | Indo-European
+indoeuropean.indoaryan | Indo-Aryan
+indoeuropean.indoaryan.dardic | Dardic
+indoeuropean.iranian | Iranian
+# us.txt defines Dari with no colour; this one also applies in the US and Australia, where Dari
+# sits beside Persian and Pashto and stays distinct from both
+indoeuropean.iranian.dari | Dari | 0.72 0.16 48
+indoeuropean.iranian.pashto | Pashto
+indoeuropean.iranian.balochi | Balochi
+turkic | Turkic
+turkic.uzbek | Uzbek | 0.74 0.15 345
+turkic.turkmen | Turkmen | 0.58 0.18 5
+# Pamir languages as by.txt defines them (pk.txt repeats Wakhi), Kyrgyz as kg.txt colours it.
+# Shughni and Ishkashimi had generated colours (Shughni a brown salmon near Wakhi's and Dari's);
+# hand-picked here, a light lime-green and a mid green. Elsewhere they are a handful of migrants
+# (by, ca), so the change moves nothing that borders them.
+indoeuropean.iranian.shughni | Shughni | 0.80 0.14 115
+indoeuropean.iranian.ishkashimi | Ishkashimi | 0.66 0.12 160
+indoeuropean.iranian.wakhi | Wakhi
+turkic.kyrgyz | Kyrgyz | 0.64 0.20 25
+other | Other or unclassified

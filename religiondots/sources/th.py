@@ -143,6 +143,10 @@ BANGKOK_TH = "กรุงเทพมหานคร"
 FINE_BUDDHIST = "พุทธ"
 FINE_MUSLIM = "อิสลาม"
 FINE_RESIDUAL = "อื่น ๆ ไม่มีศาสนา และไม่ทราบ"
+# The KPI sheets' Christian label (read_kpi). NOT a fourth fine column: printed in 15 provinces
+# only, so it rides in the province note as `christian_pct=` and countries/th.py swaps it in for
+# the allocated Christian share where it exists.
+FINE_CHRISTIAN_KPI = "นับถือศาสนาคริสต์"
 
 # KPI-sheet filename -> COD English name, for the ones that are not simply a de-spaced
 # version of each other. Each is a real difference in the NAME rather than in spelling: NSO
@@ -386,18 +390,27 @@ def _value_2010(lines, marker):
 
 
 def read_kpi(path):
-    """-> (Buddhist %, Muslim %, the sheet's own population in thousands) for 2010."""
+    """-> (Buddhist %, Muslim %, the sheet's own population in thousands, Christian % or None)
+    for 2010.
+
+    **THE CHRISTIAN ROW, read since 2026-10-04 (th.md §6).** Fifteen sheets print a
+    `นับถือศาสนาคริสต์` row, most of them INSTEAD of the Islam row: the sheet prints the
+    province's two or three largest religions, not a fixed list. It used to be ignored, so on a
+    Christianity-only sheet the Muslims read as 0 and the whole residual went to the region's
+    mix (Tak drew 5.71% Christian against its printed 4.4%). It is returned as its own figure,
+    None where unprinted or `a`, and countries/th.py puts it in place of the allocated one."""
     import fitz
     lines = fitz.open(path)[0].get_text().splitlines()
     tot = _value_2010(lines, "ประชากรรวม")
     bud = _value_2010(lines, "นับถือศาสนาพุทธ")
     isl = _value_2010(lines, "นับถือศาสนาอิสลาม")
+    chr_ = _value_2010(lines, FINE_CHRISTIAN_KPI)
     if tot is None or bud is None:
         raise SystemExit("%s: could not read the 2010 column" % path)
     # A share too small to print gets `a` or no row at all. Neither is a measured zero,
     # and both are read as one: the people land in the residual, where the allocation puts
     # them back among the small categories anyway.
-    return bud, (isl or 0.0), tot
+    return bud, (isl or 0.0), tot, chr_
 
 
 def _kpi_key(stem):
@@ -485,7 +498,7 @@ def main():
         c = region_cats[region]
         shares[code] = (100.0 * c[FINE_BUDDHIST] / c[TOTAL_ROW],
                         100.0 * c[FINE_MUSLIM] / c[TOTAL_ROW],
-                        prov_total[code] / 1000.0)
+                        prov_total[code] / 1000.0, None)
         estimated.append(code)
     if estimated:
         print("  !! %d province(s) have no KPI sheet and take their REGION's shares "
@@ -515,16 +528,19 @@ def main():
         region = prov_region[code]
         digit = REGIONS[region][0]
         total = prov_total[code]
-        bud_pct, isl_pct, kpi_pop = shares[code]
+        bud_pct, isl_pct, kpi_pop, chr_pct = shares[code]
         bud = int(round(total * bud_pct / 100.0))
         isl = int(round(total * isl_pct / 100.0))
         res = total - bud - isl
         if res < 0:
             raise SystemExit("%s: Buddhist+Muslim exceed the population" % code)
+        if chr_pct is not None and int(round(total * chr_pct / 100.0)) > res:
+            raise SystemExit("%s: the printed Christian share exceeds the residual" % code)
         gid = digit + code
         note = ("province=%s; region=%s; census_total=%d; kpi_pop_000=%.1f; "
-                "buddhist_pct=%.1f; muslim_pct=%.1f%s"
+                "buddhist_pct=%.1f; muslim_pct=%.1f%s%s"
                 % (prov_thai[code], region, total, kpi_pop, bud_pct, isl_pct,
+                   "; christian_pct=%.1f" % chr_pct if chr_pct is not None else "",
                    "; shares_from=region" if code in estimated else ""))
         for cat, n in ((FINE_BUDDHIST, bud), (FINE_MUSLIM, isl), (FINE_RESIDUAL, res)):
             if n <= 0 and cat != FINE_RESIDUAL:
@@ -555,7 +571,7 @@ def main():
         for code in prov_total:
             if prov_region[code] != region or code not in shares:
                 continue
-            b, i, _ = shares[code]
+            b, i, _, _c = shares[code]
             p_res += prov_total[code] * (100.0 - b - i) / 100.0
         rel = (p_res - t4_res) / t4_res * 100.0 if t4_res else float("nan")
         flag = "  <-- CHECK" if abs(rel) > 25 else ""

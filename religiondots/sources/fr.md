@@ -651,3 +651,52 @@ Maripasoula (11), Grand-Santi (8), Papaïchton (7), Camopi (3) and the upper-riv
 twelve more than 20 km from the list, the recognisable ones are Trois-Sauts on the upper Oyapock
 and Saint-Élie; the rest are single dots near the Maroni or the coast road between Iracoubo and
 Mana, which the list did not name.
+
+
+## Not-drawn hatching fix batch (fafd1067-fixes3, 2026-10-03)
+
+Added `gap` ("Corsica, 347,585 people or 0.51%, which the survey does not sample") and
+`gap_share=0.0051`, from the record's not-drawn row above, because the not-drawn hatching now draws
+Corsica and its hover card prints the `gap` sentence.
+
+## 15. Corsica re-checked on the gaps scout's leads, 2026-10-03: still nothing measured it
+
+Session `fafd1067-frco`, on `sources.md` §scout-2026-10-03-gaps (rank 10 by people, "any EVS/ISSP
+round with Corse"). Anita's rule of 2026-09-08 (`ask/RULINGS.md`, `ec`): a place nothing measured
+stays empty, so no national or neighbouring rate. **Result: Corsica stays hatched.** No survey or
+count found measures its religion composition on this map's basis. What was checked, with what came
+back:
+
+| lead | what it is | Corsica | verdict |
+|---|---|---|---|
+| ESS rounds 1-11 | already the citizen half | no `FRM0`/`FR83` in any round (§10) | not sampled |
+| **EVS 2017** (France fielded 2018, n 1,870) | Variable Report ZA7500 v5.0.0, `access.gesis.org/dbk/65190`, `v275b_N2` frequency table pp.1070-1071 | France runs `FR10`...`FRL0` and stops; **no `FRM0` row, 0 respondents** | not sampled |
+| **EVS 2008** | Variable Report ZA4800 v5.0.0, `access.gesis.org/dbk/59828`, `v371c_N2`/`N3` code lists pp.1238, 1256 | lists stop at `FR82`/`FR826`; the NUTS 3 list skips Lozère and Hautes-Alpes too, so it holds only codes present; **no `FR83`** | not sampled |
+| ISSP 2018 (Religion IV, France n 953) | `FR_REG` is département (ZACAT index); the frequency page (`search.gesis.org/variables/exploredata-ZA7570_VarV461`) and the GESIS ISSP pages answer 403 to scripts | count not read; 0.51% of 953 is about 5 | cannot carry a composition at any count |
+| ISSP 2008 | not opened | at most a dozen at France's sample size | same |
+| **ENEF 2024** (CEVIPOF, Ipsos web panel, Sciences Po Dataverse `data.sciencespo.fr/dataverse/ENEF2024`) | religion item `YYREL1` ("Quelle est votre religion, si vous en avez une ?"), region `YYREG13` | DDI XML (open; file id 9705) prints **Corse 25 of 10,631** in wave 1; waves 2-7 are the same panel; data files 403 without a login | 25 people, one panel; not a composition |
+| **IFOP cumulation 2005-2010** ("Le catholicisme en France en 2010", 131,141 interviews, `ifop.com/wp-content/uploads/2018/03/238-1-document_file.pdf`) | Catholic share by département, 5 bins, p.16 | **Corsica is not on the map**; no figure printed | nothing to use; Catholic share only anyway |
+| IFOP for Régions et Peuples Solidaires, July 2025 | 504 Corsicans, online | no religion item in the published analysis | no |
+| Paroles de Corse / Opinion of Corsica, Nov 2024 | 505 Corsicans, quota, on faith around the Pope's visit | importance of faith (25% important, 40% not at all) and Catholicism's social role; **no affiliation question** | no |
+| **TeO2** (INED-INSEE 2019-20, 27,000) | frame is metropolitan France incl. Corse (region code 94), ages 18-59 | religion (`R_RELSOI`, `R_RELEGQ`) is **NON DIFFUSÉE** in the PROGEDO file (user guide, `data.progedo.fr/documents/adisp/lil-1575/`, p.64); CASD only, after the Comité du secret | needs an institutional application; and 18-59 only |
+| **Diocese of Ajaccio** (Annuario Pontificio via catholic-hierarchy.org `dajac`) | Catholics per diocese, coterminous with Corsica | 301,000 of 331,000 (90.9%) in 2020, then 277,000 of 340,000 (81.5%) in 2022 | a baptismal estimate (`roll`), and a 9-point fall in two years shows it is not a count; §3.1 forbids it on a `self_id` map |
+
+France 3 Corse (2023, "La religion catholique perd-elle du terrain en Corse ?") reports the
+bishop's "around 90% say they are Catholic" and states that no recent study or statistic supports
+it with a verified figure, which matches what was found.
+
+**Why the pattern is structural.** Any national sample puts about 0.5% of its respondents in
+Corsica, and the large French cumulations either leave the island out (IFOP's map, EVS, ESS) or
+hold a few dozen (ENEF). A composition at this map's bar (ESS régions average about 600 citizens)
+would need a Corsica-specific survey with an affiliation item, and the two Corsica-only polls found
+(504 and 505 people) ask about faith, not which religion.
+
+**Leads left, for whoever reopens it:** ENEF 2017 and 2022 (CEVIPOF; 2022 due on the Dataverse in
+2026) with a login, to pool distinct panels (perhaps 25-60 Corsicans each, still thin); Eurobarometer
+waves with a religion item (GESIS login; France often coded only to NUTS 1, where Corsica sits in
+Méditerranée); Opinion of Corsica's full toplines for any poll with "religion" in its
+sociodemographics (the published articles show none); EVS 1990 and 1999 (not opened; expected 5-8
+Corsicans each).
+
+Nothing in `fr.py`, `countries/fr.py` or the outputs changed, so no rescatter and no
+`not_drawn.py` rerun were needed. The `gap` sentence stands.

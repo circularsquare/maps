@@ -152,3 +152,7 @@ original and 29 temporary districts and 34 provincial centres (457 units), 66 ci
   what it shows, not a build.
 - NSIA's district tables are ever joined (a Dari name join to 457 units).
 - UNHCR's figures for non-nationals, for ask 033's `gap`.
+
+## Review 2026-10-03 (fafd1067-rev1, full pass)
+
+Nothing changed. check_md, built_countries --check and check_rollup clean (34,935,197 modelled, none orphaned). Bare `islam` matches `mr`, `om` and `sa`. `gap_share` recomputed: 1,500,000 / 36,435,197 = 0.04117. Spec 14: no sect split and no Sikh or Hindu row are the protective choices, and drawing everyone on one node reveals nothing about any group, so no ask. One stretch noted and not reversed: the Mauritania ruling names `mr` only; `af` rests on it by analogy plus the 2026-09-15 priority ruling, which names `af`. Screenshot at 1:1,000: dots on land in every province, Kabul and the eastern valleys densest, the south-west sparse, nothing outside the outline. Still open from section 1: the 2015 DHS and 2010-11 MICS questionnaires were never checked for a religion item.

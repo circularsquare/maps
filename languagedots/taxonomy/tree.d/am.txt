@@ -1,0 +1,33 @@
+# Armenia, 2011 census mother tongue (taxonomy/am2011.py). Every node but one already exists in
+# another fragment; this file repeats them, and their parents outside tree.txt, identically so
+# Armenia does not depend on another country's fragment being in the build.
+#
+# One new node, Yezidi. Glottolog (data/raw/glottolog/languages.csv) has no Yezidi language: the
+# speech of Armenia's Yezidis and Kurds is "Erevan Kurmanji" (erev1241), a dialect of Northern
+# Kurdish (nort2641). The census prints Yezidi (`Եզդիերեն`, Armstat's English "Yezidian") apart
+# from Kurdish, and in Armenia the two names follow the two communities' identities, so Yezidi
+# is a sibling of Kurdish under Iranian, not its child (a child would turn Kurdish into a group,
+# drawn as "language not named"). No glottocode: none names Yezidi alone.
+#
+# Colours, looked at for where these languages meet: Yezidi villages on the slopes of Aragats and
+# the Ararat plain (Aragatsotn, Armavir, Ararat) among Armenian's light teal; Kurdish, much
+# smaller, in the same villages; Assyrian villages (Verin Dvin, Arzni, Dimitrov) in Ararat and
+# Kotayk; Russian (green) in Yerevan and the Molokan villages of Lori. Yezidi is hand-picked a
+# saturated orange so it stands off Armenian's teal and off Kurdish's generated sand.
+
+indoeuropean.armenian | Armenian | 0.80 0.12 170
+indoeuropean.armenian.armenian | Armenian | 0.80 0.12 170
+indoeuropean.slavic | Slavic | 0.70 0.15 140
+indoeuropean.slavic.east | East Slavic | 0.70 0.15 145
+indoeuropean.slavic.east.russian | Russian | 0.70 0.16 145
+indoeuropean.slavic.east.ukrainian | Ukrainian | 0.84 0.14 120
+indoeuropean.hellenic | Hellenic | 0.56 0.18 295
+indoeuropean.hellenic.greek | Greek | 0.56 0.18 295
+indoeuropean.iranian.kurdish | Kurdish
+indoeuropean.iranian.persian | Persian (Farsi)
+kartvelian | Kartvelian | 0.72 0.13 305
+kartvelian.georgian | Georgian | 0.72 0.13 305
+afroasiatic.assyrian | Assyrian Neo-Aramaic
+
+# ---- new ----
+indoeuropean.iranian.yezidi | Yezidi (Ezdiki) | 0.72 0.16 55

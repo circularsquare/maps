@@ -197,7 +197,8 @@ churches drawn there are those regions' majority Protestant churches, at region 
 
 ## 7. What is deliberately not drawn
 
-- Catholics, Evangelicals, Pentecostals, Lutherans and Adventists as churches (§4).
+- Evangelicals, Pentecostals, Lutherans and Adventists as churches (§4). Catholics were here
+  until 2026-10-03 and are now drawn (§9).
 - Sunni and the Tijaniyya: `Sunni only` is 53 people, 1.4-2.0% in round 7 and 0.2% in round 9.
 - `Other`'s own geography (§3).
 - **Zero cells** (§3.5): no Baptist among Adamaoua's 309; `note_public` says so.
@@ -244,3 +245,70 @@ sea. No ask, nothing rebuilt.
 - **§14: agreed** with §6. Asks 017 and 018 were decided on the same reasoning (big units).
 - `queue.csv`'s grain still says `10 regions`; the build is 12 units. Not edited, since other
   builders are writing that file.
+
+## 9. Catholics drawn, 2026-10-03 (session `fafd1067-chwa`): rounds 5-6, witnessed by two DHS reports
+
+On Anita's 2026-10-03 ruling (re-search churches for ng, cm, tz, bw). The Catholic Church is now its
+own node, `christianity.catholic`: **38.20% of Cameroonians as drawn, 11,245,727 people, 51.4% of
+Christians.** Nothing else moved: Presbyterian, Baptist, Muslim, None and the tail are as before, and
+Catholic plus the remaining `Christian` equals the old `Christian` in every unit (asserted). Code:
+`sources/cm.py` (`dhs_witness`, `carve_catholic`, `diocese_witness`), `sources/gcatholic.py` (new,
+shared with `ng`), `taxonomy/cm2025.py`, `countries/cm.py`.
+
+### The witness: two open DHS reports
+
+Tableau 3.1 (women 15-49 and men 15-49), re-read from the PDFs on every build, rows matched as
+printed:
+
+| DHS | file, PDF page | Catholique, women / men | Protestant | Autres chrétiens | Catholics as % of Christians |
+|---|---|---|---|---|---|
+| EDS-MICS 2011 | FR260 p.68 | 36.6 / 38.5 | 33.8 / 30.3 | 2.5 / 2.3 | 51.3 |
+| EDS 2018 | FR360 p.103 | 38.0 / 38.8 | 26.2 / 24.1 | 7.4 / 5.6 | 54.1 |
+
+The 2005 census (§1) had 38.4 / 69.2 = 55.5%.
+
+### Which rounds
+
+Catholics as a share of the survey's Christians: R5 51.4%, R6 51.5%, R7 42.1%, R8 37.6%, R9 47.7%,
+against a DHS mean of 52.7%. Rounds 5-6 sit 1.3 points under it; R7-R9 are 5.0 to 15.1 under. R9 is
+the near one, and against its contemporary (2018, 54.1%) it is 6.4 under, so it is left out. Each
+unit's Catholics are its share of the `Christian` pool (every Christian answer but Presbyterian and
+Baptist) in rounds 5-6, times the pool's five-round share, Namibia's construction (`sources/na.md`
+§3). Asserted: rounds 5-6 within 3 points (`CATH_DHS_GAP_MAX`), the others at least 4.5 under
+(`CATH_SWING_MIN`), the drawn share within 4 points of the DHS mean (it is 1.3 under).
+
+- **Split-half**, the pool in rounds 5-6, 12 units: **+0.657** against a null 95th of +0.510 (p
+  0.017), one halving. Over all five rounds the Catholic share of the pool is +0.706 (null +0.366),
+  so the ranking holds even in the rounds whose level is off. Thinnest cell: Adamaoua R6, 22
+  respondents in the pool.
+- **`Christian only`**: 8.0% of Christians in rounds 5-6; 7.0% averaged where Catholics live, so
+  §4's second test passes (`carve_catholic` asserts it). It stays in `Christian`, not spread over
+  the named churches, because the rounds used are the ones where almost everyone named one.
+- **As drawn**: Centre 64.6%, Mfoundi 56.6%, Nord-Ouest 48.2%, Ouest 44.7%, Wouri 43.2%, Littoral
+  42.1%, Est 39.8%, Sud 39.2%, Sud-Ouest 39.0%, Extrême-Nord 25.2%, Nord 21.1%, Adamaoua 6.1%.
+
+### The Church's own figures
+
+`data/raw/cm/gcatholic_dioceses.csv`, 26 dioceses, figures 2016-2022, summed by the cathedral's
+region: the Church claims 26.9% of its own population figure, under the DHS's 38%. Spearman
+**+0.636** over 10 regions against the drawn Catholic share (`DIOCESE_RHO_MIN` 0.60), so a pass
+close to its bar. The disagreement is Ouest (dioceses 18%, drawn 44.7%, census 2005 34.7%) and
+Littoral (24%, 42.1%; census 52.0%); on Littoral the census sides with the survey, on Ouest
+neither source does. Ouest's Christians are 58% Catholic in rounds 5, 6 and 9 together and 52% in
+rounds 7-8, so it is not one round.
+
+### Re-tested and still folded
+
+- **Pentecostal**: 6.9, 2.5, 7.3, 8.0, 6.9% of Christians by round. R6 is the low one while
+  Evangelical peaks (11.0%), a range of 5.5 points against the 3 the drawn churches hold, and it
+  fails the split-half in rounds 5, 6 and 9 (-0.070). No DHS row names it.
+- **Evangelical**: 9.9, 11.0, 6.0, 9.3, 3.4%. No witness.
+- **Lutheran**: unchanged reasoning (§4); level, passes the split-half, lives where Christians name
+  no church.
+- **Adventist**: fails the split-half (§3).
+
+### Not checked
+
+The 2018 DHS microdata (religion by region) are behind a DHS registration, as before. Reverse the
+Catholic carve by setting `frame8` back to `frame` in `cm.py::main` (the carve is the one block after
+the census witness), the `Catholic` MAP line in `cm2025.py`, and the note.

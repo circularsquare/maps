@@ -1,0 +1,31 @@
+# Belarus, 2019 census native language (taxonomy/by2019.py). Most labels reuse Russia's nodes.
+# Checked against Glottolog (data/raw/glottolog/languages.csv): Svan (svan1243) Kartvelian; Bats
+# (bats1242) Nakh; Chuvantsy (chuv1256) Yukaghir; Shughni (shug1248) with Bartangi and Bajui its
+# dialects, Wakhi (wakh1245), Ishkashimi (ishk1246) and Yazghulami, all Iranian, kept flat under
+# Iranian as Russia's are; Baraba Tatar (bara1273) a Siberian Tatar dialect, flat under Turkic;
+# Livonian flat under Uralic, as every Uralic leaf is.
+#
+# COLOUR. Belarusian and Russian are the two languages of every raion here (23-91% Belarusian),
+# and generated they were two greens at the same lightness (#00bc99 and #54b85b). Belarusian is
+# hand-picked a darker teal, so the pair differs in lightness as well as hue. Checked where else
+# Belarusian is drawn beside its neighbours: Lithuania (sources/lt.md flagged the same three
+# greens, Russian, Polish, Belarusian; this separates Belarusian from both) and Poland's Hajnowka
+# (Podlachian, hand-picked a light mid blue 0.72 0.11 215 against Belarusian, stays apart by
+# lightness).
+indoeuropean.slavic.east.belarusian | Belarusian | 0.56 0.11 185
+other.australian | Australian (the census's label; no language named)
+uralic.livonian | Livonian
+turkic.barabin | Baraba Tatar
+turkic.nagaybak | Nagaybak
+indoeuropean.iranian.shughni | Shughni
+indoeuropean.iranian.bartangi | Bartangi
+indoeuropean.iranian.bajui | Bajui
+indoeuropean.iranian.oroshori | Roshorvi (Oroshori) | 0.76 0.09 61.11
+indoeuropean.iranian.wakhi | Wakhi
+indoeuropean.iranian.ishkashimi | Ishkashimi
+indoeuropean.iranian.yazghulami | Yazghulami | 0.82 0.09 32.22
+yukaghir.chuvan | Chuvan
+kartvelian.svan | Svan
+nakhdaghestanian.nakh.bats | Bats
+indoeuropean.armenian.homshetsi | Homshetsi (Hemshin)
+sinotibetan.sinitic.taz | Taz (Primorye)

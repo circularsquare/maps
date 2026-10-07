@@ -1,0 +1,34 @@
+# Belize, 2022 census, languages spoken, several answers allowed (taxonomy/bz2022.py).
+# One new node: Belize Kriol (Glottolog beli1260, Belize Kriol English, an English-based
+# creole), a leaf under English-based creoles beside Nicaraguan Creole English and Jamaican
+# Creole. Every other language Belize's census names is already on the tree. Nodes other
+# fragments define are repeated only as parents or reused leaves, with the identical label.
+#
+# Colours. Kriol is spoken next to English (near white) and Spanish everywhere, and next to
+# Garifuna (gt.txt's light mint green) along the Stann Creek and Toledo coast, so it takes a
+# darker, more saturated green than Garifuna, inside the creole greens.
+
+# ---- repeated parents and reused nodes ----
+indoeuropean | Indo-European
+indoeuropean.germanic | Germanic
+indoeuropean.germanic.english | English
+indoeuropean.germanic.continental | Continental West Germanic
+indoeuropean.germanic.continental.german | German
+indoeuropean.romance | Romance
+indoeuropean.romance.spanish | Spanish
+mayan | Mayan
+mayan.kichean | K'iche'an
+mayan.kichean.qeqchi | Q'eqchi'
+mayan.yucatecan | Yucatecan
+mayan.yucatecan.mopan | Mopan
+mayan.yucatecan.maya | Maya (Yucatec)
+arawakan | Arawakan
+arawakan.garifuna | Garifuna
+sinotibetan | Sino-Tibetan
+sinotibetan.sinitic | Chinese
+creole | Creoles
+creole.english_based | English-based creoles
+other | Other or unclassified
+
+# ---- English-based creoles ----
+creole.english_based.belize_kriol | Belize Kriol | 0.62 0.14 128

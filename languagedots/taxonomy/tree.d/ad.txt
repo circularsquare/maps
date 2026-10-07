@@ -1,0 +1,7 @@
+# Andorra (WVS-7 2018, language at home). No new nodes; bare repeats so the country stands on its
+# own under `build.py --only`.
+indoeuropean.romance | Romance
+indoeuropean.romance.catalan | Catalan
+indoeuropean.romance.spanish | Spanish
+indoeuropean.romance.french | French
+indoeuropean.romance.portuguese | Portuguese

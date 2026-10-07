@@ -1,0 +1,24 @@
+# Syria, cited estimates (taxonomy/sy2011.py, sources/sy.md). New leaves, checked against
+# Glottolog (data/raw/glottolog/languages.csv):
+#   afroasiatic.mesopotamian_arabic: the Arabic of the Syrian Euphrates and Jazira (nort3142 North
+#     Mesopotamian, Euphrat Qeltu euph1239; meso1252's Euphrates cluster), both listing Syria.
+#   afroasiatic.western_neo_aramaic: west2763, Maaloula, Jubb'adin, Bakh'a.
+#   turkic.syrian_turkmen: Syria's Turkmen, Anatolian Turkish dialects; the people the estimate
+#     names, as Iraq's Turkmen have their own leaf.
+# COLOURS. Mesopotamian Arabic sits next to Iraqi Arabic's mint (0.80 0.08 152) but darker, and
+# well off Levantine's blue-green, since the two meet along the Euphrates below Aleppo.
+
+afroasiatic.mesopotamian_arabic | Mesopotamian Arabic (Syrian Euphrates and Jazira) | 0.86 0.10 162
+afroasiatic.western_neo_aramaic | Western Neo-Aramaic | 0.86 0.08 209
+turkic.syrian_turkmen | Syrian Turkmen
+
+# ---- parents and languages defined elsewhere, repeated identically ----
+afroasiatic | Afroasiatic
+afroasiatic.levantine_arabic | Levantine Arabic
+afroasiatic.aramaic | Aramaic
+indoeuropean | Indo-European
+indoeuropean.iranian | Iranian
+indoeuropean.iranian.kurdish | Kurdish
+indoeuropean.armenian | Armenian | 0.80 0.12 170
+indoeuropean.armenian.armenian | Armenian | 0.80 0.12 170
+turkic | Turkic | 0.68 0.16 15

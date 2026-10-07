@@ -1,0 +1,51 @@
+# Suriname, Census 7 (2004), language most spoken in the household (taxonomy/sr2004.py).
+# Families from Glottolog (data/raw/glottolog):
+#   Sarnami: Caribbean Hindustani (cari1275; Sarnami Hindustani sarn1238 is its Suriname
+#     dialect), Indo-Aryan > Bihari > Bhojpuric. A leaf beside Bhojpuri under Bihari.
+#   Saramaccan (sara1340), Ndyuka / Aukan (ndyu1242) and Pamaka / Paramaccan (para1317, which
+#     Glottolog files as an Aukan dialect) are Surinamese Creole English, like Sranan: leaves
+#     under English-based creoles. Pamaka is a sibling of Ndyuka, not its child, because the
+#     census prints it as its own answer and a child would wash Ndyuka out as a group.
+# Nodes other fragments define are repeated only as parents or reused leaves, with the identical
+# label and no colour, except Sranan Tongo (pl.txt's node, which carried none).
+#
+# Colours. On the coast Dutch (blue, cz.txt), Javanese (violet-blue, id.txt), Sarnami and Sranan
+# sit side by side in the same polders, and Lokono (pale green, ve.txt) and Kari'na (pink,
+# br.txt) villages sit among them in Para and at the Marowijne mouth. Sarnami takes an orange
+# near Bhojpuri's; Sranan a lime green, kept off Lokono's pale green. In the interior the
+# Maroon creoles meet along the rivers (Saramaccan and Ndyuka in Brokopondo, Ndyuka and Pamaka
+# on the Marowijne), so they step apart in lightness and hue inside the creole greens:
+# Saramaccan olive-yellow, Ndyuka a deep teal, Pamaka a pale cream (a pale cyan sat 0.07 from
+# Lokono, whose villages are near Albina too).
+
+# ---- repeated parents and reused nodes ----
+indoeuropean | Indo-European
+indoeuropean.germanic | Germanic
+indoeuropean.germanic.english | English
+indoeuropean.germanic.continental | Continental West Germanic
+indoeuropean.germanic.continental.dutch | Dutch
+indoeuropean.romance | Romance
+indoeuropean.romance.portuguese | Portuguese
+indoeuropean.romance.french | French
+indoeuropean.indoaryan | Indo-Aryan
+indoeuropean.indoaryan.bihari | Bihari
+austronesian | Austronesian
+austronesian.javanese | Javanese
+arawakan | Arawakan
+arawakan.lokono | Lokono (Arawak)
+cariban | Cariban
+cariban.galibi_kali_na | Galibi Kali'na
+sinotibetan | Sino-Tibetan
+sinotibetan.sinitic | Chinese
+creole | Creoles
+creole.english_based | English-based creoles
+other | Other or unclassified
+
+# ---- Indo-Aryan ----
+indoeuropean.indoaryan.bihari.sarnami | Sarnami (Caribbean Hindustani) | 0.74 0.16 50
+
+# ---- English-based creoles of Suriname ----
+creole.english_based.sranan | Sranan Tongo | 0.78 0.14 128
+creole.english_based.saramaccan | Saramaccan | 0.68 0.15 95
+creole.english_based.ndyuka | Ndyuka (Aukan) | 0.62 0.12 170
+creole.english_based.pamaka | Pamaka (Paramaccan) | 0.86 0.08 85

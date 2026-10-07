@@ -1,0 +1,21 @@
+# Moldova: 2024 census mother tongue (taxonomy/md2024.py) and the 2015 census of Transnistria
+# (taxonomy/md2015_pmr.py). Added 2026-10-06 by session 5d7dac7e-cau; md had no fragment and
+# borrowed every node. No new nodes: each line repeats another fragment, bare.
+indoeuropean.romance | Romance
+indoeuropean.romance.moldovan | Moldovan
+indoeuropean.romance.romanian | Romanian
+indoeuropean.slavic | Slavic
+indoeuropean.slavic.east | East Slavic
+indoeuropean.slavic.east.russian | Russian
+indoeuropean.slavic.east.ukrainian | Ukrainian
+indoeuropean.slavic.east.belarusian | Belarusian
+indoeuropean.slavic.south | South Slavic
+indoeuropean.slavic.south.bulgarian | Bulgarian
+indoeuropean.slavic.west | West Slavic
+indoeuropean.slavic.west.polish | Polish
+indoeuropean.germanic.continental | Continental West Germanic
+indoeuropean.germanic.continental.german | German
+turkic | Turkic
+turkic.gagauz | Gagauz
+indoeuropean.indoaryan.romani | Romani
+indoeuropean.indoaryan.romani.romani | Romani

@@ -168,3 +168,33 @@ Christians at 0.95.
 
 Citizens "Muslim by law" (the note): the same report says applicants for citizenship must attest to
 being Muslim and that children of Muslim fathers are deemed Muslim. Close enough.
+
+## 9. Fix batch, 2026-10-03 (fafd1067-fixes)
+
+**No non-Muslim dot inside Mecca's haram.** The boundary is OpenStreetMap relation 19590020
+(`حدود الحرم المكي`, version 6, 2026-07-10), tagged from Khadran and Saud al-Thubaiti, *A'lam wa hudud
+al-Haram al-Makki al-Sharif* (1433 AH / 2012, archive.org `20230127_20230127_1703`), with 27 boundary
+markers mapped as nodes; its description says entry is for Muslims only. `python sources/sa_grid.py
+--haram` reads it from the OSM API (raw at `data/raw/sa/osm_haram_19590020.json`) and writes
+`data/geo/sa/sa_haram.gpkg`, checking one ring, 560 km2 (the usual figure is about 550), the Kaaba,
+Mina and Muzdalifah inside, Arafat, Jeddah and Taif outside, and nothing outside Makkah region.
+
+`countries/sa.py`'s `_SaHaramWeighter`: in Makkah region a non-Muslim row weighs 0 in every hex that
+touches the haram (743 hexes, 934,967 Kontur people), and the Muslim rows fill those hexes, at hex
+population inside and `pop * (1 - s * P / P_out)` outside, `s` being Makkah's non-Muslim share
+(9.14%). So every hex still draws dots in proportion to its people; only who is drawn where moves,
+and no count. `islam` and `alevism` may enter; Druze and Yazidis may not. Any overlap counts
+because a dot lands anywhere in its hex: on centres only, 2 non-Muslim dots fell inside. Both
+editions rescattered: 0 of 759 dots inside the haram are non-Muslim (was 12 of 93 within 3 km of the
+Kaaba), 0 of 75 at 1:10,000. Medina's Prophet's Mosque is left as §8 judged it. Not added to
+`note_public`: the note says nothing finer than the region is placed, and this only removes an error.
+
+**Alevis, Druze and Yazidis stay on their own nodes** (supervisor's call, from §8): the `sa.py`
+docstring now says so instead of "no sect is drawn".
+
+## 10. The Gulf rule, 2026-10-03 (`fafd1067-gulf`): not applied
+
+`sources.md` §gulf-2026-10-03 rakes the layer's Christians / (Christians + Hindus) to Pew's row,
+on Indians, where the move is over 1% of the country. Here the layer gives 0.613 against Pew's
+0.625: 26,454 people would move, 0.08% of 32,175,224. Below the bar, so nothing changed and no
+rescatter. Christians stay 0.95 of Pew's share.

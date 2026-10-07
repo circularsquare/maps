@@ -197,7 +197,12 @@ def coverage():
                       ("it", "other.it"), ("fi", "other.fi"), ("be", "other.be"),
                       ("se", "other.se"), ("no", "other.no"), ("dk", "other.dk"),
                       ("lv", "other.lv"), ("is", "other.is"), ("ma", "other.ma"),
-                      ("mr", "other.mr"), ("sa", "other.sa"), ("om", "other.om")):
+                      ("mr", "other.mr"), ("sa", "other.sa"), ("om", "other.om"),
+                      ("bt", "other.bt"), ("ae", "other.ae")):
+        # United Arab Emirates, added 2026-10-03 before its scatter: 9,775,016 non-Emiratis on UN DESA
+        # 2024's national origin mix (sources/ae.py).
+        # Bhutan, added 2026-10-03 after the tail failed on it: 45,425 non-Bhutanese on UN DESA
+        # 2020's origin mix (sources/bt.py), which is where its islam and unaffiliated dots come from.
         # Oman, added 2026-09-15 before its scatter: 2,283,279 expatriates on the end-2024 register's
         # national nationality mixes for male workers, female workers and dependants (sources/om.py).
         # Saudi Arabia, added 2026-09-15 before its scatter: 13,382,962 non-Saudis on the 2022
@@ -213,6 +218,18 @@ def coverage():
     # node that model never emits.
     if "mr" in out:
         out["mr"].add("christianity.other")
+    # Muslims drawn as Sunni by assignment (islam_assign.py, Anita 2026-10-04), applied in
+    # countries.py downstream of every mapping module, so no MAP can see it. `islam` stays
+    # covered: it is the source's own column and carries the remainder.
+    import islam_assign
+    for cc in islam_assign.REMAINDER:
+        if cc in out:
+            out[cc] |= {islam_assign.NODE, islam_assign.PARENT}
+    # Buddhists on a school by assignment (buddhism_assign.py, spec §2.6a), the same reason.
+    import buddhism_assign
+    for cc, school in buddhism_assign.SCHOOL.items():
+        if cc in out:
+            out[cc] |= {school, buddhism_assign.PARENT}
     return out
 
 

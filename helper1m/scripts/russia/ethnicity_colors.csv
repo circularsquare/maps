@@ -1,0 +1,85 @@
+key,en,family,color
+Русские,Russians,slavic,#b4c0cc
+Татары,Tatars,turkic,#b82e2e
+Чеченцы,Chechens,caucasian,#732eb8
+Башкиры,Bashkirs,turkic,#d6885c
+Чуваши,Chuvash,turkic,#8f3224
+Аварцы,Avars,caucasian,#d65cc8
+Армяне,Armenians,indo_european,#b85c2e
+Украинцы,Ukrainians,slavic,#5c8ed6
+Даргинцы,Dargins,caucasian,#73248f
+Казахи,Kazakhs,turkic,#ac7339
+Кумыки,Kumyks,turkic,#cc8266
+Кабардинцы,Kabardians,caucasian,#ac3983
+Ингуши,Ingush,caucasian,#c966cc
+Лезгины,Lezgins,caucasian,#612d86
+Мордва,Mordvins,uralic,#67b82e
+Осетины,Ossetians,indo_european,#d6a45c
+Якуты,Yakuts (Sakha),turkic,#86312d
+Азербайджанцы,Azerbaijanis,turkic,#c36522
+Буряты,Buryats,mongolic,#b8952e
+Марийцы,Mari,uralic,#5cd66e
+Удмурты,Udmurts,uralic,#398f24
+Таджики,Tajiks,indo_european,#8f5224
+Узбеки,Uzbeks,turkic,#e06d52
+Тувинцы,Tuvans,turkic,#98601b
+Карачаевцы,Karachays,turkic,#b85b2e
+Белорусы,Belarusians,slavic,#24618f
+Немцы,Germans,indo_european,#ac8839
+Калмыки,Kalmyks,mongolic,#d6cb5c
+Лакцы,Laks,caucasian,#c322a2
+Цыгане,Roma,indo_european,#cc9c66
+Табасараны,Tabasarans,caucasian,#c852e0
+Коми,Komi,uralic,#39ac63
+Киргизы,Kyrgyz,turkic,#d6695c
+Балкарцы,Balkars,turkic,#8f5624
+Турки,Turks,turkic,#ac5539
+Черкесы,Circassians,caucasian,#981b60
+Грузины,Georgians,caucasian,#b82eaf
+Адыгейцы,Adyghe,caucasian,#af5cd6
+Ногайцы,Nogais,turkic,#cc6866
+Корейцы,Koreans,other,#b8b82e
+Евреи,Jews,indo_european,#864e2d
+Алтайцы,Altai,turkic,#864f2d
+Молдаване,Moldovans,indo_european,#c38722
+Хакасы,Khakas,turkic,#c33c22
+Мордва-эрзя,Erzya,uralic,#66cc68
+Коми-пермяки,Komi-Permyaks,uralic,#4a862d
+Греки,Greeks,indo_european,#e09552
+Казаки,Cossacks,slavic,#395dac
+Ненцы,Nenets,uralic,#22c348
+Абазины,Abazins,caucasian,#8f246f
+Туркмены,Turkmens,turkic,#e09c52
+Эвенки,Evenks,siberian,#2eb8a1
+Агулы,Aguls,caucasian,#a339ac
+Рутульцы,Rutuls,caucasian,#9d66cc
+Карелы,Karelians,uralic,#62e052
+Ханты,Khanty,uralic,#1b9853
+Кряшены,Kryashens,turkic,#98401b
+Курды,Kurds,indo_european,#98761b
+Эвены,Evens,siberian,#5cd1d6
+Андийцы,Andi,caucasian,#862d78
+Чукчи,Chukchi,siberian,#248f85
+Дидойцы,Tsez (Didoi),caucasian,#9e22c3
+Горные марийцы,Hill Mari,uralic,#2eb83c
+Цахуры,Tsakhurs,caucasian,#e052a9
+Манси,Mansi,uralic,#7bd65c
+Мордва-мокша,Moksha,uralic,#248f45
+Нанайцы,Nanai,siberian,#399fac
+Долганы,Dolgans,turkic,#b8382e
+Коряки,Koryaks,siberian,#66cccb
+Каратинцы,Karata,caucasian,#981b97
+Тувинцы-тоджинцы,Todzha Tuvans,turkic,#d6915c
+Бежтинцы,Bezhta,caucasian,#842eb8
+Нагайбаки,Nagaibaks,turkic,#8f3a24
+Ахвахцы,Akhvakh,caucasian,#d65cb9
+Коми-ижемцы,Izhma Komi,uralic,#3dac39
+Сойоты,Soyots,turkic,#ac7b39
+Селькупы,Selkups,uralic,#8dcc66
+Теленгиты,Telengits,turkic,#cc8a66
+Ительмены,Itelmens,siberian,#2d867a
+Ульчи,Ulchi,siberian,#22b8c3
+Бесермяне,Besermyan,uralic,#2d863d
+Эскимосы,Yupik (Eskimos),siberian,#52e0d8
+other,Other,other,#9a9a9a
+not_stated,Not stated,other,#f0f0f0

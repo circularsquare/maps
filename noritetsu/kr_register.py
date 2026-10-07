@@ -609,6 +609,7 @@ def build(path, log):
         official = len(chain) == len(sections)
 
         lid = line_id(name)
+        _AT_KM[lid] = {f"k{s}": parts for s, parts in at_km.items()}
         kinds, ops = Counter(), Counter()
         for wid in wids:
             t = ways[wid][0]
@@ -663,4 +664,93 @@ def build(path, log):
             by[line].append(nm)
         for line, nms in sorted(by.items(), key=lambda kv: -len(kv[1])):
             log(f"    {line}: {' '.join(nms[:25])}{' ...' if len(nms) > 25 else ''}")
+    # where each station is on each line's track, for split_pieces after build_model's drops
+    _ENDS[:] = [(sid, l["name"], *pts[0 if k == 0 else -1])
+                for l in lines for key, pts in geoms[l["id"]].items()
+                for k, sid in enumerate(key.split("|"))]
     return lines, stations, geoms
+
+
+# ---------------------------------------------------------------- lines in pieces
+
+# Korea's lines in pieces (kr_sources.md "Lines in pieces"), through pieces.py as gb_register:
+# a gap is bridged over the track between the pieces where trains run across, the rest is one
+# line per piece. Korea's own settings: the line's own named track costs half (OWN_COST) and
+# counts as under a route, since OSM's KTX routes lie on the conventional line beside the
+# high-speed one (호남고속선's 익산 - 정읍, where the cheapest routed track would otherwise be
+# 호남선's). `dense` (pieces.Rules): a station on straight track with no OSM vertex near it
+# still joins the track graph. KEEP_WHOLE: a line whose gap is track OSM does not have, on a
+# line trains run through, stays one line in pieces until the track is mapped (none in Korea
+# as of the 2026-10 extract; kr_sources.md has the five lines measured).
+OWN_COST = 0.5
+KEEP_WHOLE = set()
+# {line id: [the ids of the pieces split off it]}, filled by split_pieces; build_model writes it
+# into aliases.json as `pieces`.
+LINE_PIECES = {}
+_ENDS = []       # (station, line name, lon, lat) for every section end build() made
+_AT_KM = {}      # line id -> station -> {published list part: [cumulative km]}, from build()
+
+
+def official_km(lid, a, b):
+    """The published km between two stations of a line (build()'s chain rule), or None."""
+    at = _AT_KM.get(lid, {})
+    if a not in at or b not in at:
+        return None
+    parts = set(at[a]) & set(at[b])
+    if not parts:
+        return None
+    return min(abs(x - y) for i in parts for x in at[a][i] for y in at[b][i])
+
+
+def rules():
+    import pieces
+    return pieces.Rules(tag="KR", id_prefix="k", lat=36.5, own_cost=OWN_COST,
+                        keep_whole=KEEP_WHOLE, piece_name=pieces.english_piece_name,
+                        dense=True)
+
+
+def classify(wid, tags, routed):
+    """For pieces.track_graph: every way a line name is on, and every other way under an OSM
+    passenger route. The name ("" for none), or None for a way left out."""
+    if tags.get("railway") not in TRACK_KIND or tags.get("usage") in NOT_PASSENGER:
+        return None
+    nm = register_name(tags)
+    return nm if nm or routed else None
+
+
+def split_pieces(lines, stations, geoms, reg_ways, state, log):
+    """The build_model hook: pieces.split_pieces with Korea's rules, over the ways
+    register_way_lines loaded (state) and the extract's route relations."""
+    import pickle
+    import build_model as bm
+    import pieces
+    r = rules()
+
+    def graph():
+        if not state or "ways" not in state:
+            return None
+        with open(ROOT / "data" / "proc" / "kr" / "rels.pkl", "rb") as f:
+            rels = pickle.load(f)
+        return pieces.track_graph(state["ways"], bm.Coords(state["cid"], state["cx"], state["cy"]),
+                                  pieces.routed_ways(rels), classify, r, log)
+    before = {l["id"]: {(s[0], s[1]) for s in l["sections"]} for l in lines
+              if l.get("src", "osm") != "osm"}
+    pieces.split_pieces(lines, stations, geoms, reg_ways, state, log, r, LINE_PIECES, graph,
+                        _ENDS)
+    # km_official where the sections changed (a bridge added some, or the line was split): the
+    # published km of every section if the lists give them all, else none
+    origin = {p: lid for lid, ps in LINE_PIECES.items() for p in ps}
+    for l in lines:
+        if l.get("src", "osm") == "osm":
+            continue
+        secs = {(s[0], s[1]) for s in l["sections"]}
+        if before.get(l["id"]) == secs:
+            continue
+        got = [official_km(origin.get(l["id"], l["id"]), a, b) for a, b in secs]
+        if got and all(k is not None for k in got):
+            l["km_official"] = round(sum(got), 3)
+            log(f"KR: {l['name']} ({l['id']}): km_official {l['km_official']} for its new "
+                f"sections")
+        elif l.pop("km_official", None) is not None:
+            log(f"KR: {l['name']} ({l['id']}): km_official dropped, the lists give no km for "
+                f"some of its new sections")

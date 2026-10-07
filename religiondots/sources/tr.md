@@ -354,3 +354,15 @@ On Anita's ruling (`ask/RULINGS.md` 2026-09-15); the sweep's record is `sources.
   name them.
 - **Note.** A paragraph added at the end of `note_public`; `gap` gains a third clause and
   `gap_share`. Nothing rebuilt.
+
+## 9. Top text before the 75-word cut, 2026-10-03 (`fafd1067-top75`)
+
+Anita asked for the text at the top of the phone screen to come down to about 75 words
+(queue.md, "Cut the country text to about 75 words"). These are the four header fields as
+they stood before the cut, verbatim, so nothing they said is lost. The cut versions are in
+`countries/tr.py`; `note_public` was not changed.
+
+- `how`: survey, 21,632 people, 2013; no census has asked since 1965
+- `fill`: from the survey's national figures, for the religion split; the school split is regional
+- `grain`: twelve statistical regions, 7.1m people each; the source's own limit
+- `gap`: Alevis, who have no option on the questionnaire; any breakdown of the 0.4% who are not Muslim; and the 3,535,898 Syrians under temporary protection in January 2023, 4.0% of residents, whom the address register leaves out

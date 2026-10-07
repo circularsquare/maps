@@ -1,0 +1,15 @@
+# North Macedonia, Popis 2021, mother tongue (taxonomy/mk2021.py). No new nodes: every language
+# the census names was already in the tree (Macedonian, Bosnian and Turkish in de.txt and others,
+# Aromanian in au.txt and al2011, Romani in cz.txt).
+#
+# Colour. Macedonian was defined bare (de.txt, us.txt, fi.txt, cz.txt) and generated as a pale
+# olive, #d0d267, 0.089 (OKLab) from Bosnian's lime (ba.txt, hand-picked): the Bosniak villages
+# around Skopje and Veles (Chair, Dolneni, Veles, Petrovec, Studenichani) sat inside Macedonian at hardly a step of
+# colour. Macedonian is now a light yellow-green, still in South Slavic's part of the wheel:
+# 0.165 from Bosnian and further from every other language North Macedonia's census names
+# (Albanian, Turkish, Romani, Aromanian, Serbian) and from Bulgarian across the border. The yellow
+# between Bosnian and Montenegrin is crowded; the nearest left is Croatian (generated, 0.094) and
+# Slovenian (0.121), neither of which meets Macedonian on the ground. Pinning it moved no other
+# node's generated colour (languages.json diffed before and after). Elsewhere Macedonian is a
+# small migrant language, apart from Albania's Pustec, where its neighbour is Albanian's brown.
+indoeuropean.slavic.south.macedonian | Macedonian | 0.92 0.16 135

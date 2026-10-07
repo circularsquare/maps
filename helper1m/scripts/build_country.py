@@ -140,6 +140,26 @@ SHAPEFILES = {
 }
 
 
+def load_config(country_id):
+    """SHAPEFILES entry, or scripts/<id>/boundaries.json for countries that keep
+    their own. The JSON is keyed by level ("1", "2", ...) with the same fields as
+    above; candidate paths are relative to the repo root."""
+    if country_id in SHAPEFILES:
+        return SHAPEFILES[country_id]
+    path = HELPER / "scripts" / country_id / "boundaries.json"
+    if not path.exists():
+        return None
+    cfg = json.loads(path.read_text(encoding="utf-8"))
+    out = {}
+    for level, c in cfg.items():
+        c = dict(c)
+        c["candidates"] = [REPO_ROOT / p for p in c["candidates"]]
+        c.setdefault("parent_col", None)
+        c.setdefault("parent_name_col", None)
+        out[int(level)] = c
+    return out
+
+
 def find_shapefile(candidates):
     for p in candidates:
         if p.exists():
@@ -245,15 +265,16 @@ def main():
                     help="Admin levels to build (default: all configured)")
     args = ap.parse_args()
 
-    if args.country_id not in SHAPEFILES:
+    config = load_config(args.country_id)
+    if config is None:
         print(f"unknown country: {args.country_id}", file=sys.stderr)
         sys.exit(1)
 
     pops = load_populations(args.country_id)
     print(f"building {args.country_id}")
-    levels = args.levels or sorted(SHAPEFILES[args.country_id])
+    levels = args.levels or sorted(config)
     for level in levels:
-        cfg = SHAPEFILES[args.country_id].get(level)
+        cfg = config.get(level)
         if cfg is None:
             continue
         build_level(args.country_id, level, cfg, pops.get(level, {}))

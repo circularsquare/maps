@@ -778,3 +778,124 @@ rolling up (29,904 more than §12). `built_countries.py --check` ok over 187, `c
 `coverage.py` reports one problem, and it is not India's: `ug christianity.pentecostal` draws dots but is
 missing from Uganda's coverage line, while `cb8b206e-ug` is mid-upgrade. Waiting for the supervisor's build
 tail.
+
+## 14. Kerala's St Thomas Christians: searched, not drawn, 2026-10-03 (session `fafd1067-in`)
+
+Anita, 2026-09-15 (runlog, "rulings"): Kerala's St Thomas Christians wanted "if a route exists, not forced".
+They are the Syro-Malabar and Syro-Malankara Catholics, the Jacobite and Malankara Orthodox halves of the
+Malankara church, and the Mar Thoma Church (plus smaller bodies); about two thirds of Kerala's Christians on
+KMS's figures. **Nothing changed on the map.** Kerala still draws its Catholics by district on
+`christianity.catholic` (§9) and leaves the rest on `christianity`.
+
+**No single node holds them.** The tree is cut by communion, and these churches sit in three places:
+`christianity.catholic.eastern` (Syro-Malabar, Syro-Malankara), `christianity.oriental.syriac` (Jacobite),
+and `christianity.oriental` or ASARB's leaves `.malankara-orthodox` and `.marthoma` (Orthodox, Mar Thoma; both
+would need promoting, spec §2.7). So "showing" them means drawing those churches one by one, and each needs a
+share that holds up on its own.
+
+### The new check: KMS's church cells against OpenStreetMap's churches
+
+`sources/in_osm_churches.py` (raw file `data/raw/in/osm/kerala_churches.json`, Overpass, 2026-10-03): 6,532
+Christian places of worship in Kerala, 6,531 placed in a 2011 district, each given a church from its name and
+`denomination` tag. Kerala's Syrian churches nearly always name the church ("Orthodox Syrian", "Jacobite
+Syrian", "Mar Thoma", "Malankara Catholic"); Catholic parishes mostly do not (1,137 "Catholic, rite not
+named", about 3,300 unclassified), so the Catholic rites are not tested. Test: each church's share of a district's
+places against WP468 Table 6's share of its Christians, Spearman over the 14 districts (order only, since
+parish size differs between churches; mapping effort moves a whole district and drops out of a share).
+
+| church | rho | p |
+|---|---:|---:|
+| Pentecost / Church of God / Brethren | +0.89 | <0.001 |
+| CSI | +0.48 | 0.08 |
+| Mar Thoma | +0.45 | 0.10 |
+| Jacobite | +0.16 | 0.59 |
+| Orthodox | +0.12 | 0.68 |
+| Jacobite + Orthodox | +0.06 | 0.83 |
+| Syro-Malankara | -0.10 | 0.74 |
+| the four "Malankara" churches together (Jacobite, Orthodox, Mar Thoma, Syro-Malankara) | +0.60 | 0.03 |
+
+The Syrian churches replicate as a group and not one by one. That is §9's finding about the rites (people or
+coders swapping churches with near-identical names) reaching across the Catholic line, and it is why no
+grouping that a node can hold passes: Jacobite with Orthodox, the one church in two factions, scores +0.06.
+The worst cells: Syro-Malankara 34.5% of Malappuram's Christians in KMS against 1 of 70 places; Mar Thoma
+22.3% of Kozhikode's against 1 of 142; Jacobite and Orthodox 16.0% of Kasaragod's against none of 68.
+**Mar Thoma agrees in the eight Travancore and Cochin districts** (Pathanamthitta 16.8% of places against
+18.5%, Kollam 11.9 against 8.7, Thrissur 1.1 against 1.3) and fails in Malabar. Drawing it in the south only
+would be a rule picked after seeing the answer, so it is not drawn; a second witness for Malabar (below)
+could change that. A variant counting only the named non-Catholic churches (so Catholic naming drops out)
+gives Jacobite + Orthodox +0.02 and Mar Thoma +0.13.
+
+### A state-level split was considered and not drawn
+
+- **KMS 2023** (S. Irudaya Rajan and others, IIMAD, `iimad.org/wp-content/uploads/2024/06/KMS-2023-Report.pdf`,
+  Table 2.10, p. 26) prints shares of Kerala's whole population: Syro-Malabar Catholic (RC) 8.0, Latin 2.7,
+  Jacobite 1.3, Orthodox 1.3, Mar Thoma 0.9, CSI 0.6, Dalit 0.2, Pentecost/Brethren 0.9, others 1.0, all
+  Christians 16.9. As shares of Christians, Jacobite 7.7, Orthodox 7.7, Mar Thoma 5.3: close to KMS 2011's
+  7.9, 8.0 and 6.6. State only, no Syro-Malankara row, and every page is stamped "Draft Report not to be
+  quoted". The scout's KMS 2023 was a 13-page GIFT summary; this is the 82-page report.
+- **Why not one state share.** These churches follow the map more steeply than anything §12 withdrew: Mar
+  Thoma is 18.5% of Pathanamthitta's Christians and 1.3% of Thrissur's in KMS, and 16.8% against 1.1% of
+  places in OSM. One Kerala share would draw about three times too few in Pathanamthitta and several times
+  too many in Thrissur, which is the Nagaland Presbyterian failure again. Mizoram's one share was kept because
+  nothing showed its churches varying that much; here both sources show it.
+
+### Other routes, with what came back
+
+- **The Catholic rites from the diocesan rolls instead of KMS** (St Thomas Catholics against Latin). The rolls
+  look like the better side of §9's disagreement: OSM's few rite-named churches side with them (Syro-Malankara
+  places are rare in Malappuram and Ernakulam, where KMS puts 34.5% and 8.5%). But almost every Kerala eparchy
+  and diocese spans several districts and they overlap across rites (GCatholic and Wikipedia describe
+  Changanacherry as covering Kottayam, Alappuzha, Pathanamthitta, Kollam and Thiruvananthapuram districts,
+  402,275 Catholics in 2023, while its people are concentrated around Changanacherry and Kuttanad), so a
+  district split needs each roll apportioned below the diocese, by forane or parish. Not attempted: no source
+  of parish counts by place was found (GCatholic's churches tab is script-rendered; OSM names the rite on
+  354 churches, against 1,137 Catholic ones that do not and about 3,300 unclassified). This is the most promising route if someone wants it.
+- **Zachariah, *The Syrian Christians of Kerala*, CDS Working Paper 322 (2001),
+  `cds.edu/wp-content/uploads/2021/02/WP322.pdf`.** KMS 1998 coded only Syrian against non-Syrian (p. 28) and
+  prints no table by district; the text (p. 24) says Thiruvananthapuram and Kasaragod are under 6% Syrian
+  and Kannur over 80%, which KMS 2011's churches contradict (Thiruvananthapuram 41%, Kannur 48% on the five
+  St Thomas churches). Table 4 (p. 29) is the author's estimate from church authorities for 2001: Jacobite
+  (both factions) 26.7% of Christians, Mar Thoma 8.0, with the note that churches overcount. Not usable.
+- **Pre-1951 censuses**: Travancore 1931 Part II (archive.org `in.gov.ignca.31143`) and Cochin 1931
+  (`in.gov.ignca.31131`) tabulate Christians by sect by taluk (WP322 pp. 25-26 quotes them). Not opened. Eighty
+  years before 2011, and Malabar, where KMS fails, was 2% Christian then; at most a witness for the south.
+- **Church rolls for the non-Catholic churches**: none by diocese found. The Malankara Orthodox Church claims
+  2.5M in 30 dioceses (CNEWA, WCC), with no diocese figures; the Mar Thoma Church prints figures for single
+  parishes on Wikipedia only. The Justice J.B. Koshy Commission report (submitted May 2023) is reported with
+  no count by church.
+- **The book WP468 summarises** (*Christian Denominations, Hindu Castes, Muslim Sects*, announced for 2017):
+  not found online. KMS microdata is not public.
+
+### For a later session
+
+The cheapest reopening is a second witness for Mar Thoma in Malabar (the Mar Thoma Church's diocesan
+directories, or the 1931 taluk tables for the south) set against a rule stated before looking. Pentecost
+(+0.89) is not a St Thomas church and its KMS row mixes Pentecostals with Brethren, so it was not drawn here;
+it is a lead for a general Kerala upgrade, on `christianity` or a `REVIEW` call.
+
+## 15. Top text before the 75-word cut, 2026-10-03 (`fafd1067-notes75`)
+
+Anita asked for the text at the top of the phone screen to come down to about 75 words
+(queue.md, "Cut the country text to about 75 words"). These are the four header fields as
+they stood before the cut, verbatim, so nothing they said is lost. The cut versions are in
+`countries/in.py`; `note_public` was not changed.
+
+- `how`: census, 2011, answered by the head of household; Muslim branches and Christian churches from surveys, except Mizoram's churches, from church rolls
+- `fill`: from Pew's 2019 to 2020 survey regions for Muslim branches and for Christian churches in the East and South, Kerala Migration Survey districts for Kerala's Catholics, Mizoram's 2010 to 2011 church rolls for its churches, and the same census at state level for the other religions
+- `grain`: sub-districts, 200,000 people on average
+- `gap`: 0.2%, whose religion the head of household did not state; Muslim branches only at Pew's six regions, and none where Pew did not survey; Christian churches for about a third of Christians, only in Kerala, Mizoram and Pew's East and South regions
+
+
+## Not-drawn hatching fix batch (fafd1067-fixes3, 2026-10-03)
+
+The not-drawn scan hatches eight small parts of India, ~41k people by Kontur: three in the
+Sundarbans, the Little Rann and the northern Great Rann of Kutch, two at the edge of the Kashmir
+valley (Kishtwar, Anantnag hills) and one north of Pangong in Ladakh. Checked 2026-10-03: not a
+placement gap. The Rann parts lie outside every SHRUG sub-district; the rest sit inside
+sub-districts but contain no census village (one Kishtwar `Forest Block` point with population 0;
+Census_Villages has nothing else in any of them). `in_places.gpkg` only carries the sub-district
+outline where settlements leave people unaccounted for, so this ground has no placement polygon
+because the census put nobody there. Kontur's people there are model spill or seasonal (salt
+workers in the Little Rann, herders on summer pasture) and are counted in their home villages.
+Left hatched as instructed; the hatch overstates it, and a per-part exception in `not_drawn.py`
+would be the fix if that matters. Khadir island itself is drawn.

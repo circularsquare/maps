@@ -1,0 +1,67 @@
+# Senegal (taxonomy/sn2023.py). RGPH-5 2023, the language each person aged 3+ speaks most often
+# ("première langue la plus souvent parlée"), by région.
+# Parents and languages other fragments already define are repeated with the same label and no
+# colour. Wolof (bf, fi, us) and Mandinka (au) were defined bare by countries that draw a few;
+# they are coloured here, where they are big. Fula, Soninke and Hassaniya keep ml.txt's colours.
+#
+# Middle levels, checked against Glottolog (data/raw/glottolog), "families as most readers know
+# them" (AGENT_BRIEF §3). Everything new is Atlantic or Mande:
+#   * Serer (sere1260 cluster), Wolof, Fula: flat under Atlantic, as Wolof and Fula already are.
+#   * Jola: a group, with the census's Joola answer (the Jola cluster: Fonyi, Kasa, Karon, ...;
+#     Glottolog jola1264) and Bayot (bayo1262) as leaves. Bayot is its own branch in Glottolog
+#     and a Jola language in the usual classification (Sapir; Ethnologue's "Bak, Jola").
+#   * Balanta (bala1300), Manjak (mand1419), Mankanya (mank1251): flat under Atlantic (the Bak
+#     languages beside Jola; Glottolog's Joola-Manjaku and Balanta).
+#   * Tenda: a group for Bassari (the census's Oniyan, bass1258), Bedik (Mënik, bedi1235) and
+#     Wamey (Konyagi, the census's Womey, wame1240), Glottolog's Bassari-Bedik-Bapen and Wamey.
+#   * Jaad-Badyara (the census's Kanjad, bady1239) and Bainouk-Gunyuño (Guñuun): flat under
+#     Atlantic. Jaad is sometimes put with Tenda; left out of the group rather than claim it.
+#   * Yalunka (the census's Jalunga, yalu1240): Mande (Susu-Yalunka), flat as Mandinka is.
+#   * Tourka (Sénégal): printed among Senegal's national languages, 1,484 people, mostly in
+#     Kaolack and Fatick, and not identified with any language (sources/sn.md); a node of its own
+#     under `other`, as et.txt does for its unidentified names.
+#
+# Colours, for neighbours on the Senegalese ground:
+#   North and centre (Louga, Saint-Louis, Matam, Kaffrine, Kaolack, Diourbel, Thiès, Fatick):
+#   Wolof golden yellow, Fula ml.txt's strong red, Serer purple; Hassaniya ml.txt's teal (Saint-
+#   Louis). South (Ziguinchor, Sédhiou, Kolda): Jola blue, Mandinka mid green, Balanta cyan,
+#   Manjak a darker teal, Mankanya pale mint, Fula red, Wolof yellow. East (Tambacounda,
+#   Kédougou): Fula red, Mandinka green, Soninke ml.txt's light green (lighter than Mandinka),
+#   Yalunka dark olive, the Tenda languages generated around a pink-violet, away from the brown
+#   of `africa_other` (31.5% of Kédougou).
+
+# ---- parents and languages defined elsewhere, repeated bare (their colours are theirs) ----
+nigercongo | Niger-Congo
+nigercongo.atlantic | Atlantic
+nigercongo.atlantic.fulah | Fula
+nigercongo.mande | Mande
+nigercongo.mande.soninke | Soninke
+afroasiatic | Afroasiatic
+afroasiatic.hassaniya | Hassaniya (Maure)
+indoeuropean | Indo-European
+indoeuropean.romance | Romance
+indoeuropean.romance.french | French
+signlanguage | Sign language
+africa_other | Other African languages
+other | Other or unclassified
+
+# ---- defined bare elsewhere, coloured here ----
+nigercongo.atlantic.wolof | Wolof | 0.84 0.15 90
+nigercongo.mande.mandinka | Mandinka | 0.66 0.14 150
+
+# ---- new ----
+nigercongo.atlantic.serer | Serer (Sereer) | 0.64 0.15 310
+nigercongo.atlantic.jola | Jola languages | 0.66 0.11 245
+nigercongo.atlantic.jola.joola | Jola (Joola) | 0.68 0.13 250
+nigercongo.atlantic.jola.bayot | Bayot
+nigercongo.atlantic.balanta | Balanta | 0.76 0.10 205
+nigercongo.atlantic.manjak | Manjak (Mànjaku) | 0.56 0.10 205
+nigercongo.atlantic.mankanya | Mankanya (Mànkaañ) | 0.84 0.07 170
+nigercongo.atlantic.tenda | Tenda languages | 0.70 0.12 320
+nigercongo.atlantic.tenda.bassari | Bassari (Oniyan) | 0.74 0.12 270
+nigercongo.atlantic.tenda.bedik | Bedik (Mënik)
+nigercongo.atlantic.tenda.wamey | Wamey (Konyagi)
+nigercongo.atlantic.jaad | Jaad (Badyara, Kanjad)
+nigercongo.atlantic.gunyuno | Bainouk-Gunyuño (Guñuun)
+nigercongo.mande.yalunka | Yalunka (Jalunga) | 0.52 0.10 110
+other.tourka | Tourka (Senegal, unidentified)

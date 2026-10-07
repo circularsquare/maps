@@ -21,6 +21,9 @@ def pl_ref(lid):
 
 
 COUNTRY = {
+    # join a line's pieces where RINF leaves a stretch out, over its own OSM relation
+    # (rinf.fill_holes; trialled 2026-10-05)
+    "fill_holes": True,
     "iso3": "POL", "wikidata": "Q36", "langs": ["pl"],
     "ref": pl_ref, "rule_certain": True,
     "name": "Linia kolejowa nr {ref}", "name_en": "Line {ref}",

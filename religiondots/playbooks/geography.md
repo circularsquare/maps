@@ -5,10 +5,52 @@ bases, joins, placement and the build tail. Survey and census-table traps are in
 
 ## Boundaries and population base
 
+- **A census table can count displaced people where they come from, not where they are.**
+  Azerbaijan's 2019 headline (permanent) column puts 268,468 people in eight districts nobody lived in
+  (Kalbajar 71,039, every one `temporarily absent`); the same table's existing column counts people
+  where the census found them. A dot is a place, so draw the de facto column, and read both columns of
+  any table that has two. Caught by: `sources/az_geo.py::main` (prints units empty in the existing
+  column and partly emptied ones). Example: `az`. Detail: `sources/az.md` §4.
+- **An old church count can place people at their village of origin, not their home.** Kohler's
+  1978 New Caledonia count puts urban Kanak at their home village (p.9), so Nouméa has none and
+  Lifou is counted twice its residents. Before laying such a count on a census, scale each origin
+  unit by the group's growth, treat any shortfall against the census as people who left (at the
+  origin's mix) and give each unit's surplus the mix of all who left; the two pools must balance.
+  Caught by: `sources/nc.py::kanak_seeds` (asserts the balance, prints the pool). Example: `nc`.
+  Detail: `sources/nc.md` §2.
+- **A current baseline on HDX can be off limits while it still downloads, and Kontur will not stand
+  in for it.** Syria's 2025 Population Task Force baseline says in its notes it "cannot be shared for
+  academic or research purposes"; the public needs files print no population; and Kontur sat within
+  0.86-1.24 of the 2011 estimate per governorate (Idlib 1.02), because it spreads census-era admin
+  totals. Read a dataset's notes before using it, and say in the note when the dots are pre-war
+  positions. Caught by: Not checked yet (a reading step; `sources/sy_grid.py` prints Kontur per unit
+  against the base). Example: `sy`. Detail: `sources/sy.md` §4.
+- **A COD unit can hold land this map draws in another country, and the snap step puts it back.**
+  COD-AB's Quneitra includes the Golan, which `il` draws. Subtract Natural Earth's disputed-areas
+  polygon from the unit, and drop placement hexes inside it before snapping strays to the nearest
+  unit, or a village a kilometre from the line (Majdal Shams) snaps back in. Caught by:
+  `sources/sy_geo.py::main` (`GOLAN_KM2`), `sources/sy_grid.py::main`. Example: `sy`. Detail:
+  `sources/sy.md` §5.
+- **A geoBoundaries capital traced from old OSM can be nearly twice the city.** gbOpen TJK ADM1
+  (OSM, 2017) draws Dushanbe at 366 km2; the city gives 203.18 km2 and OSM's current relation is 197.
+  The extra 180 km2 is suburb the census counts in the Districts of Republican Subordination (Kontur
+  260,000 people), and Kontur over the census read 1.72 against 1.46 on today's line. Compare a
+  capital's polygon with the city's own area and the current OSM relation, and move the difference to
+  its neighbour; `polygons.openstreetmap.fr/get_geojson.py?id=<rel>` serves one relation when
+  Overpass times out. Caught by: `sources/tj_geo.py::main` (`DU_KM2`, `OLD_DU_KM2`, the overlap
+  check). Example: `tj`. Detail: `sources/tj.md` §7.
+
 - **A boundary file of the wrong vintage drops units without an error.** Use the vintage the table was published on;
   `boundaryYearRepresented` is a claim (geoBoundaries Mexico ADM2: 2,457 units against 2,469). Assert the unit count
   before joining, and where a publisher has two editions a year try both and let the leftovers pick. Caught by:
   `EXPECTED_*` counts per `<cc>_geo.py`, e.g. `sources/kr_geo.py::build_units`. Example: `de`. Detail: spec §8.1.
+
+- **A NEWER boundary file joins perfectly and still leaves land blank.** Every census unit finds its polygon, but
+  units carved out after the census have no row, so their ground is in no placement polygon and their people are
+  drawn on the parent's shrunken polygon. Indonesia lost ~7.2M Kontur people's worth of land this way for a month.
+  Give each post-census polygon to the census unit that held it (formation law for a new unit; Kontur fit for an
+  internal split). Caught by: `not_drawn.py` (hatches it); `sources/id_geo.py::add_post2010_ground` stops on an
+  unassigned polygon. Example: `id`. Detail: `sources/id.md`, fix batch 2026-10-03.
 - **The general boundary sources can carry the wrong tier.** Look on the office's own site first (census atlas, a `gis.`
   host at `/server/rest/services?f=json`, its ArcGIS Online org); "excluding" row labels or HUCs mean a tabulation tier,
   which USCB country geodatabases carry. Caught by: Not checked yet (a search step; list the hosts tried in
@@ -60,6 +102,11 @@ bases, joins, placement and the build tail. Survey and census-table traps are in
   `sources/do_geo.py::main` prints it per unit; not asserted there. Shared assertion for each `<cc>_geo.py` reading
   COD-PS: `sources/geo_checks.py::ratio_band` (tested on the Dominican figures; no builder calls it yet). Example:
   `ec`. Detail: `sources.md` §9bn; spec §12 "A COD-PS PROJECTION THAT AGREES NATIONALLY CAN BE WILDLY WRONG PER UNIT".
+- **COD-PS that is the census re-cut can carry county errors into its admin 1.** North Korea's (WFP, 2008) drops
+  Samchon county (86,042) and counts Sindo twice (on its own and inside Ryongchon), so two provinces are off by
+  0.4% in all. Match every COD-PS admin 2 value to a row of the census table before using its admin 1; where they
+  differ, rebuild the units from the census rows. Caught by: `sources/kp_geo.py::table2` (rows sum to each printed
+  total) and its pinned `MOVES`; no shared helper. Example: `kp`. Detail: `sources/kp.md` §4.
 - **A boundary file's population column can be another collection or date.** GISCO `POP_2021` is 1 January 2020 for
   Norway and 0 for seven Skopje municipalities; a check failing with the sign of growth is a vintage mismatch. Assert a
   ratio band, or equality only against the office's own figure. Caught by: `sources/mk_geo.py::main`,
@@ -199,6 +246,26 @@ bases, joins, placement and the build tail. Survey and census-table traps are in
 
 ## Placement
 
+- **Where Kontur misses most of a country, place on the office's localities instead.** Kontur 2023
+  holds ~20,000 of Greenland's 56,740; Statistics Greenland counts residents by town and settlement
+  (`BEXSTD`), so `sources/gl_geo.py` puts a weighted disc on each locality, geocoded from GeoNames.
+  **Match GeoNames on primary names only**: its alternate-name field matched dozens of places for
+  some settlement names and snapped two settlements onto Ilulissat's coordinates; tell namesakes
+  apart by distance to the district town. Caught by: `gl_geo.py`'s TOWN_KM stop (a settlement over
+  300 km from its district's town) and the printed choice for every namesake. Example: `gl`.
+  Detail: `sources/gl.md` §3.
+- **A survey codebook can list regions its data never reached.** The Global Flourishing Study's
+  codebook has Egypt's five frontier governorates (423-427); the file holds nobody there. Count the
+  data's region codes, never the codebook's. Example: `eg`. Detail: `sources/eg.md` "Frontier
+  governorates from the census".
+- **Count a small region's respondents before chasing gated microdata; the documentation often
+  prints the count.** GESIS variable reports give each region code's unweighted frequency (EVS 2017
+  `v275b_N2`, EVS 2008 `v371c_N2/N3`, where the code list itself holds only codes present), and a
+  Dataverse DDI XML carries `catStat` frequencies per category even when the data file answers 403
+  (Sciences Po's ENEF 2024). A national sample puts about its population share in a small region:
+  Corsica is 0.51% of France, so 25 of 10,631, and 0 in both EVS rounds. Example: `fr`. Detail:
+  `sources/fr.md` §15.
+
 - **A Kontur r8 hex is about 0.74 km², not 0.16.** Divide the median unit area by 0.74 before a `place_weight`: single
   digits (median unit under 5-7 km²) or many hexless units means place uniformly, and say in `sources/<cc>_geo.md` it was
   measured. Caught by: `sources/geo_checks.py::check_grid_floor`, from `scatter.py::main` for any weighter on a grid layer
@@ -217,6 +284,16 @@ bases, joins, placement and the build tail. Survey and census-table traps are in
   the census, 0.93 once shared by land). `mt_geo.py` now divides by the sum of each hex's piece areas.
   That is only right where every piece of land is in some unit; where the rest of a hex is another
   unit's land outside the file (`xs_geo.py`, `ps_geo.py`), dividing by the whole hex is correct.
+- **An equal share per placement polygon gives an uninhabited island a whole share.** INEGI makes
+  nearly every Mexican cay its own rural AGEB, so 48 of Progreso's 113 AGEBs were Arrecife
+  Alacranes and 42% of Progreso's dots sat on the reef; 171 dots in all on islands the census puts
+  under 250 people. Where placement is an unweighted equal share, split the country's land into
+  connected pieces, put the office's locality points on them, and cut islands below a bar out of
+  the layer (no unit may lose its last polygon). A cheap scan for the rest of the map: dots in no
+  populated Kontur r6 hex and on no Natural Earth land part of 2,000 km2 or more (open the r6
+  file with a `bbox` that carries its CRS; Kontur is EPSG:3857). Caught by:
+  `sources/mx_geo.py::main` (`WITNESS`, `EXPECTED_DROPPED`); the scan is not shared yet. Example:
+  `mx`. Detail: `sources/mx.md` §9.
 - **A unit missing from the `place` layer is not drawn on its polygon.** Its dots are allocated and never placed, and the
   carry hands fractions to it. Append the unit's own polygon at census population and assert the place layer's unit
   count. Caught by: `sources/geo_checks.py::check_unplaced`, from `scatter.py::main` (stops unless `sources/geo_checks.csv`
@@ -260,11 +337,20 @@ bases, joins, placement and the build tail. Survey and census-table traps are in
   the unit in proportion to Kontur, and refuses the status on a block that has a populated ring
   outside the blocks. Sudan's five went from 308,381 people to 69 (Red Sea state's median outside
   the blocks is 9.9/km2). Count each block's ring outside every block before writing rows. A
-  `capped` ring can also be only partly another block's: Sudan's Tokar block has 2 of its 4 ring
-  hexes in a neighbouring block, so its ceiling is 15,053/km2 and it keeps 11,771 people. Caught
-  by: `kontur_cap.py::apply` (stops on a ring-less `capped` row and on an `isolated` row with a
-  ring); a partly polluted ring is Not checked yet, and a print of each ring's share of block hexes
-  in `apply` is where it belongs. Example: `sd`. Detail: `sources/sd.md` §6.
+  `capped` ring can also be only partly another block's: Sudan's Tokar block had 2 of its 4 ring
+  hexes in a neighbouring block (one that never reaches the cap, so it needed no row), its ceiling
+  came out at 15,053/km2 and it kept 11,771 people. Mark such a block `capped_apart` (status added
+  2026-10-03), whose ring leaves out every dense block, and give the neighbour a row too if it is
+  part of the same artefact; Tokar's pair went from 79,526 people to 16,648. It is opt-in because
+  folding it into `capped` would move ceilings in eg, gn, mg, ng, so, uz, ve and ye. Caught by:
+  `kontur_cap.py::apply` (stops on a ring-less `capped` row and on an `isolated` row with a ring;
+  prints how many of a `capped` ring's hexes are another block's). Example: `sd`. Detail:
+  `sources/sd.md` §6 and §11.
+- **Somalia's town test can call a block real when its ring already holds the town.** Sudan's
+  Jubayt, Aroma and Rahad al Bardi blocks are 2.7-2.9x their GeoNames towns, under the test's bar
+  of 3, but as `real` they drew 107-111 dots within 3 km against towns of 12,708-30,856; capped they
+  draw 25-65. Count the dots within 3 km both ways before calling a block real on the town test.
+  Not checked in code. Example: `sd`. Detail: `sources/sd.md` §11.
 - **A Kontur extract overlaps its neighbours' at the border, and an old boundary file can leave a
   border town beyond the snap.** Kontur `SO` shares 457 h3 cells with `ET` and 273 with `KE`; COD-AB
   Somalia's 1984 line leaves Cabudwaaq (about 124,000 Kontur people) 2-7 km outside Galgaduud, so a
@@ -275,6 +361,16 @@ bases, joins, placement and the build tail. Survey and census-table traps are in
   outline from further, and put a named town witness on the far snap. Caught by:
   `sources/so_grid.py::neighbour_held`, `::town_witness` (`OUTSIDE_PINNED`); no shared helper.
   Example: `so`. Detail: `sources/so.md` §5.
+- **Across a land border, a hex outside the units is the neighbour's town, so drop it, not snap it.**
+  Kontur `BT` holds 116 hexes (72,617 people) with centroids just outside COD-AB Bhutan, 52,177 of them
+  Jaigaon in India beside Phuentsholing; a 2 km snap put them in Chhukha (1.83x its census share, 1.31
+  dropped). Snap only on coasts, and print outside hexes by nearest unit before choosing. Caught by:
+  `sources/bt_grid.py::main` (`EXPECTED_DROPPED`). Example: `bt`. Detail: `sources/bt.md` §5.
+  Where the border is a river, COD-AB's line can stop a few hundred metres short of Natural Earth's,
+  so "outside the units" is not "across the border": Namibia had 628 such hexes, half of them across
+  the Kavango and Zambezi (Calai, Sesheke; dropped) and half inside Natural Earth's Namibia or the sea
+  (snapped). Decide each hex by whether its centroid is inside a neighbour's Natural Earth polygon.
+  Caught by: `sources/na_geo.py::border_and_coast` (`SNAP_MAX_PEOPLE`). Example: `na`.
 - **A GeoNames point named for a camp can be a village of the same name.** GeoNames' `Mbera`
   (population 58,985) lies in El Megve commune, which the census counts at 15,232, while the Mbera
   camps are 33.4% of Bassiknou moughataa (about 41,200); only Vassala commune (79,508) can hold them.
@@ -289,6 +385,14 @@ bases, joins, placement and the build tail. Survey and census-table traps are in
   where capping would take it below the office's own urban count, and assert that the calibrated
   block holds no more than that count. Caught by: `sources/af_grid.py::main` (`BLOCKS`, the urban
   check). Example: `af`. Detail: `sources/af.md` §5.
+- **Kontur can swap two units' people outright.** Kontur KM puts 343,284 people on Mohéli (census
+  2017: 51,567; Fomboni hexes of 37,211, at the cap) and 67,617 on Anjouan (327,382; nothing above
+  1,529 a hex, Mutsamudu included): each island holds about the other's count, while the footprint
+  inside each is right (after scaling each island to its census, préfectures read 0.79-1.16 of
+  their census shares). Run the per-unit Kontur/census band even on a three-unit country, test a
+  failing pair against each other's counts, and where it is a swap, calibrate per unit before
+  `kontur_cap.apply` sees the layer. Caught by: `sources/km_geo.py::main` (`EXPECT_SWAPPED`,
+  `SWAP_TOL`), `::prefecture_witness`. Example: `km`. Detail: `sources/km.md` §4.
 - **Kontur can put a fifth of a country in the wrong county, and a province-level check cannot see it.**
   Iran's grid drew Sarvestan (census 38,114) at 1.78 million and Shiraz county at two-thirds of its census,
   18.3% of Iran in the wrong county, with 78 blocks at the cap; capping blocks leaves the false weight in
@@ -303,6 +407,33 @@ bases, joins, placement and the build tail. Survey and census-table traps are in
   spread the unit's total evenly over its hexes; pin the set, and print the calibrated densest hex,
   which a scaled city edge can still push high (Katanda 112,563/km2, beside Mbuji-Mayi). Caught by:
   `sources/cd_geo.py::main` (`HOLE_FACTOR`, `EXPECT_HOLES`). Example: `cd`. Detail: `sources/cd.md` §7.
+- **Kontur can be wrong across a whole Gulf city, and then only its footprint is worth keeping.**
+  Kuwait's grid holds 2,785 people in Sabah Al-Salem (census 88,904) and 257,607 in Wafra Farms
+  (11,961); per unit its share runs p10 0.12 to p90 15.6 of the census, and half its people are in
+  the wrong area. Its counts inside a unit would pile a suburb's dots on a few edge hexes. Where the
+  census units are small (Kuwait's median 4.4 km2), keep the hexes Kontur puts at 50 people/km2 or
+  more and weight them by area: uniform in a residential area, the settled 6% of a desert. Set the
+  per-unit bar before reading and print the failure. Caught by: `sources/kw_grid.py::main` (the bar,
+  printed and expected to fail; `FOOTPRINT_MIN`). Example: `kw`. Detail: `sources/kw.md` §4.
+- **Kontur can scale a whole province wrong, evenly, and fail the province rank witness on a right
+  join.** Kontur CU holds 0.17 of Granma's share of ONEI's count and about 0.4 of Santiago de
+  Cuba's and Guantánamo's, so the 16-province Spearman was +0.52 and failed its shuffle bar. Per
+  municipality the deficit is flat inside each province (Granma 0.16-0.19), and the municipal rank
+  witness passed (+0.80 over 168). Run the witness one level down before blaming the join, and
+  where the error is flat inside a unit, a per-unit scale fixes it; calibrate one level down only
+  where that level's polygons are right (COD-AB Cuba's Havana municipalities are about 2 km east).
+  Caught by: `sources/cu_grid.py::main` (both witnesses printed, `MUNI_HOLES`). Example: `cu`.
+  Detail: `sources/cu.md` §5.
+- **Where no census exists, every grid's split between units is a guess, and Kontur's cap blocks
+  pile up on secondary towns.** Eritrea's Kontur read Maekel at 0.45 and Semenawi Keih Bahri at 2.68
+  of the survey's zoba shares, with cap blocks on Massawa (268,920), Ghinda and Karora; Meta's 2020
+  high-resolution grid had the same zoba error (2.26) but sensible towns inside each zoba. Take the
+  unit totals from the survey's own weighted household population (or its frame), and use a grid
+  only inside units; try Meta's `<iso3>_general_2020.csv` on HDX before capping Kontur. Meta's CSV
+  runs into the neighbours, so drop points inside a Natural Earth neighbour before snapping. Caught
+  by: `sources/er_grid.py::main` (per-unit print, the neighbour drop, `TOWN_LOW`). Example: `er`.
+  Detail: `sources/er.md` §5. GeoNames can also file a neighbour's town under the country (ER's
+  `Himora` is Humera, Ethiopia): check a failing town's coordinates before calling it a hole.
 - **Kontur can spread a small capital into its villages, and a district band cannot see it.** Faroese
   Kontur put Tórshavn at 7,289 against the register's 13,999 and Hvítanes at 753 against 106; against
   the register of its own month N-streymoy read 1.158 and Sandoy 1.301, while moving a whole
@@ -353,6 +484,16 @@ bases, joins, placement and the build tail. Survey and census-table traps are in
   their hexes simply join nothing. Break the unjoined hexes down by where they are, and give each
   group a rule. Caught by: `sources/ma_grid.py::main` (the Tarfaya strip rule, asserted to reach
   GeoNames' Tarfaya and Akhfennir). Example: `ma`. Detail: `sources/ma.md` §5.
+- **Kontur models built-up area, so ruins and emptied towns hold people.** Kontur AZ (2023) puts 2.7
+  times Aghdam's 2019 census figure inside Aghdam, most of it on the ruins east of the 1994 line, and
+  79,000 people in Jabrayil, where the census found 420. Where a unit was partly depopulated by a war
+  or an exodus, mask the depopulated part before weighting, with a boundary of the census's own year
+  (Natural Earth's old releases keep superseded disputed-area polygons: 4.1.0 has the 1994-2020
+  Nagorno-Karabakh). Caught by: `sources/az_grid.py::main` (the per-unit Kontur/census print, and the
+  mask's area asserted). Example: `az`. Detail: `sources/az.md` §5. Same failure in peace: Kontur SJ
+  puts about 1,900 of Svalbard's 3,230 at Sveagruva, a mine closed in 2017, and 405 at Longyearbyen
+  (SSB 2,512); calibrate to the office's settlement counts and keep the ghost hexes at weight 0.
+  Caught by: `sources/no_geo.py::svalbard` (prints Kontur against SSB per settlement).
 - **Administrative units own water.** `water.py::clip` removes OSM's sea; a unit losing over 95% (`KEEP_WHOLE_ABOVE`)
   stays whole. Lakes are not removed: count dots in HydroLAKES, and read a cover of one polygon per unit (Bangladesh 544
   for 544) as water inside units. Caught by: `water.py::_keep_whole`; lakes only `sources/gh_geo.py::_drop_lakes` (a
@@ -365,6 +506,12 @@ bases, joins, placement and the build tail. Survey and census-table traps are in
   country straddles 180 (Kiribati). Caught by: `sources/geo_checks.py::check_torn`, from `scatter.py::main` after the
   reprojection (any polygon part over 180° wide stops); `sources/fj_grid.py::main`, `sources/ki_geo.py::build` where the
   layer is built. Example: `fj`. Detail: spec §12 "The shapes of failure", item 4.
+- **A survey's church cells by unit can be checked against OSM's churches, where churches are named for their
+  body.** Rank each church's share of a unit's places of worship against its share of the unit's people; order
+  only, since parish size differs between churches. Churches with near-identical names (Kerala's four
+  "Malankara" bodies) can pass as a group and fail one by one, which means the respondents or coders swapped
+  them and none of them can be drawn alone. Caught by: `sources/in_osm_churches.py::witness`; no shared helper.
+  Example: `in` (Kerala). Detail: `sources/in.md` §14.
 
 ## Build
 

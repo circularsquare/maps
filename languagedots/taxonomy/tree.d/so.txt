@@ -1,0 +1,27 @@
+# Somalia, REACH JMCNA 2021 household main language (taxonomy/so2021.py). Glottolog: Maay
+# maay1238 a language beside Somali soma1255; Benaadir bena1268 a Somali dialect, a sibling here
+# because the survey offers it beside Standard Somali; Mushungulu mush1238 (Zigula dialect,
+# Bantu); Chimwiini ("Bravanese") and Bajuni baju1245 Swahili varieties, siblings of Swahili as
+# in ke.txt.
+#
+# Colours, for neighbours on the Somali ground: Somali keeps its lime (et.txt). Maay, the
+# south-west, gold-orange; Benaadir, Mogadishu and the Shabelle valley, a darker green clearly
+# off Somali's lime. Mushungulu and Chimwiini are small; generated.
+
+# ---- parents and nodes defined in other fragments, repeated identically ----
+afroasiatic.cushitic | Cushitic
+afroasiatic.cushitic.lowland | Lowland East Cushitic
+afroasiatic.cushitic.lowland.somali | Somali
+afroasiatic.cushitic.lowland.oromo | Oromo
+nigercongo | Niger-Congo
+nigercongo.bantu | Bantu
+nigercongo.bantu.swahili | Swahili
+nigercongo.bantu.bajuni | Bajuni
+indoeuropean.romance | Romance
+indoeuropean.romance.italian | Italian
+
+# ---- Somalia ----
+afroasiatic.cushitic.lowland.maay | Maay | 0.72 0.16 70
+afroasiatic.cushitic.lowland.benaadir | Benaadir Somali | 0.58 0.14 150
+nigercongo.bantu.chimwiini | Chimwiini (Bravanese)
+nigercongo.bantu.mushungulu | Mushungulu

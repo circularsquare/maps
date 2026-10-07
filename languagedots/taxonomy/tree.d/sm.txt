@@ -1,0 +1,5 @@
+# San Marino (sources/sm_census.py). No new nodes: Romagnol is it.txt's (colour kept there);
+# bare repeats so the country stands alone.
+indoeuropean.romance | Romance
+indoeuropean.romance.italian | Italian
+indoeuropean.romance.romagnol | Romagnol

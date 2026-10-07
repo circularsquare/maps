@@ -1,0 +1,90 @@
+# Benin (taxonomy/bj2013.py). RGPH-4 2013 primary household language (IPUMS sample, CLEAR
+# Global), read as first language through Tableau 8's ethnic clusters.
+# Parents and languages other fragments already define are repeated with the same label.
+#
+# Glottolog (data/raw/glottolog): the Gbe languages fonn1241 gunn1250 ajab1235 genn1243
+# ayiz1245 maxi1236 weme1239 tofi1235 saxw1241 xwel1235 kota1272 cigb1235 defi1235; Yoruboid
+# eden1244 edec1238 edei1244 ifee1241 edei1245 mani1294; Gur yomm1242 lukp1238 dita1238
+# waam1244 bial1238 nate1242 mbel1240 moba1244; Miyobe miyo1238 (unclassified Atlantic-Congo,
+# under Gur as most readers know it); Anii anii1245 (Ghana-Togo Mountain); Boko boko1266, Boo
+# booo1257 (Mande, Busa); Dendi dend1243 (Songhay). Agouna and Toli/Seto/Kogbe have no
+# glottocode.
+nigercongo | Niger-Congo
+nigercongo.kwa | Kwa
+nigercongo.kwa.fon | Fon | 0.80 0.15 88
+nigercongo.kwa.gun | Gun (Goun) | 0.62 0.14 135
+nigercongo.kwa.aja | Aja (Adja) | 0.70 0.16 45
+nigercongo.kwa.gen | Gen (Mina) | 0.58 0.12 15
+nigercongo.kwa.ayizo | Ayizo | 0.88 0.10 115
+nigercongo.kwa.maxi | Maxi (Mahi) | 0.60 0.12 70
+nigercongo.kwa.weme | Weme | 0.76 0.12 165
+nigercongo.kwa.tofin | Tofin | 0.55 0.10 195
+nigercongo.kwa.saxwe | Saxwe | 0.85 0.12 60
+nigercongo.kwa.xwela | Xwla (Xwela) | 0.78 0.10 140
+nigercongo.kwa.kotafon | Kotafon | 0.66 0.15 100
+nigercongo.kwa.ci | Ci
+nigercongo.kwa.defi | Defi
+nigercongo.kwa.agouna | Agouna (Ajagan)
+nigercongo.kwa.toli | Toli, Seto and Kogbe (Gbe) | 0.68 0.13 20
+nigercongo.kwa.ewe | Ewe
+nigercongo.kwa.akan | Akan (Twi)
+nigercongo.kwa.gtm | Ghana-Togo Mountain languages | 0.72 0.11 170
+nigercongo.kwa.gtm.anii | Anii
+nigercongo.voltaniger | Volta-Niger
+nigercongo.voltaniger.yoruba | Yoruba
+nigercongo.voltaniger.ede_nago | Ede Nago (Nago) | 0.72 0.14 10
+nigercongo.voltaniger.ede_cabe | Ede Cabe (Tchabè)
+nigercongo.voltaniger.ede_idaca | Ede Idaca (Idaasha) | 0.62 0.12 350
+nigercongo.voltaniger.ife | Ifè | 0.82 0.10 25
+nigercongo.voltaniger.ede_ije | Ede Ije (Holli)
+nigercongo.voltaniger.manigri | Manigri-Kambolé
+nigercongo.voltaniger.igbo | Igbo
+nigercongo.gur | Gur | 0.76 0.12 65
+nigercongo.gur.bariba | Bariba (Baatonum)
+nigercongo.gur.yom | Yom | 0.70 0.14 115
+nigercongo.gur.lukpa | Lokpa (Lukpa) | 0.60 0.13 80
+nigercongo.gur.kabiye | Kabiyè
+nigercongo.gur.miyobe | Miyobe (Soruba)
+nigercongo.gur.ditammari | Ditammari | 0.64 0.14 340
+nigercongo.gur.waama | Waama | 0.82 0.11 95
+nigercongo.gur.biali | Biali | 0.58 0.12 30
+nigercongo.gur.nateni | Nateni | 0.86 0.09 10
+nigercongo.gur.mbelime | Mbelime
+nigercongo.gur.moba | Moba
+nigercongo.gur.gourmanchema | Gourmanchéma (Gulmancema)
+nigercongo.gur.moore | Mòoré
+nigercongo.gur.senufo | Senufo (Senoufo)
+nigercongo.mande | Mande
+nigercongo.mande.boko | Boko
+nigercongo.mande.boo | Boo (Bokobaru)
+nigercongo.mande.bambara | Bamanankan (Bambara)
+nigercongo.mande.bozo | Bozo
+nigercongo.mande.soninke | Soninke
+nigercongo.mande.dyula | Dyula
+nigercongo.atlantic | Atlantic
+nigercongo.atlantic.fulah | Fula
+nigercongo.atlantic.wolof | Wolof
+nigercongo.bantu | Bantu
+nigercongo.bantu.lingala | Lingala
+nilosaharan | Nilo-Saharan
+nilosaharan.songhay | Songhay languages
+nilosaharan.songhay.dendi | Dendi
+nilosaharan.songhay.zarma | Zarma (Djerma)
+nilosaharan.songhay.songhay | Songhay (Sonrhai, Zarma)
+afroasiatic | Afroasiatic
+afroasiatic.chadic | Chadic
+afroasiatic.chadic.hausa | Hausa
+afroasiatic.arabic | Arabic
+indoeuropean | Indo-European
+indoeuropean.romance | Romance
+indoeuropean.romance.french | French
+indoeuropean.germanic | Germanic
+indoeuropean.germanic.english | English
+#
+# Colours, for neighbours on the Beninese ground. The Gbe south is a patchwork: Fon (Zou,
+# Atlantique) a warm yellow, Gun (Ouémé, Porto-Novo) green, Aja (Couffo) orange, Kotafon
+# (Mono) yellow-green, Toli (Avrankou) brick, Weme (Ouémé valley) teal, Maxi (Collines) olive,
+# Ayizo (Allada) pale lime, Saxwe pale gold, Gen (Grand-Popo) deep red, Xwla pale green. The
+# Yoruboid east (Plateau, Collines) runs red to pink: Ede Nago red, Idaasha rose, Ifè salmon.
+# The north-west: Ditammari magenta, Waama pale yellow-green, Biali brown, Nateni pale pink,
+# Yom green, Lukpa olive, beside Bariba's yellow and Fula's red.

@@ -293,3 +293,77 @@ the CKGR row the printed total omits and which §3 already documents. One screen
 along the eastern corridor from Gaborone through Molepolole, Mahalapye and Serowe to
 Francistown, Kalahari sparse, nothing in the sea, Badimo drawing visibly purple. Nothing that
 needs a human eye.
+
+## 10. Two churches split out of the census's Christians (2026-10-03, `fafd1067-chea`)
+
+Anita, 2026-10-03: most of Africa now draws churches, so re-search Botswana's (`ask/RULINGS.md`).
+Code `sources/bw_churches.py` -> `data/normalized/bw_split.csv`, read by `countries/bw.py`.
+
+**What the censuses offer.** 2001, 2011 and 2022 all ask religion with one `Christian` box beside
+Badimo, no religion, Muslim, Hindu, Bahai, Rastafarian and other (2022 *Analytical Report* Vol. 1,
+PDF p.107, the 2001-2011-2022 table: Christian 71.6, 79.3, 86.5%). The 2022 volume's religion
+chapter (pp.102-107) was searched for `zion`, `catholic`, `apostolic`, `pentecostal` and
+`denomination`: only the literature review names churches. No DHS since 1988.
+
+**What the Afrobarometer offers** (R4-R9, 7,130 answers by REGION, which is the census district
+with the towns apart). Share of all respondents by round, %:
+
+| | R4 | R5 | R6 | R7 | R8 | R9 |
+|---|---:|---:|---:|---:|---:|---:|
+| `Christian only` | 5.0 | 25.6 | 28.9 | 56.9 | 54.6 | 70.7 |
+| Zion Christian Church (`ZCC` in R4) | 12.9 | 9.0 | 9.1 | 6.3 | 7.9 | 4.1 |
+| Independent | 25.3 | 15.4 | 12.4 | 2.6 | 5.3 | 2.8 |
+| Pentecostal | 7.8 | 10.1 | 13.5 | 5.7 | 4.6 | 1.5 |
+| Catholic | 3.5 | 4.3 | 3.7 | 2.7 | 3.4 | 1.2 |
+| Adventist | 2.4 | 1.6 | 2.3 | 1.7 | 1.6 | 1.0 |
+| Lutheran | 1.6 | 1.6 | 2.4 | 1.3 | 0.7 | 0.6 |
+| UCCSA | 4.3 | 1.8 | 0 | 0 | 0 | 0 |
+
+`Christian only` is 7, 33, 37, 69, 66, 84% of Christians by round: the playbook's 65.7-point swing.
+The UCCSA (the London Missionary Society's Congregational church, the old Bangwato and Bakwena
+mission) has a box only in R4-R5. The Pew Forum's 2008-09 survey (*Tolerance and Tension*, 2010,
+p.23, re-read from the PDF) puts Catholics at 22% of Christians, Pentecostals 14, AICs 27,
+Adventists 6, Lutherans 6; its Catholic figure is about four times the Afrobarometer's and three
+times the Diocese of Gaborone's own share, so it witnesses nothing here.
+
+**The test that picks the churches.** A church whose members keep naming it while `Christian only`
+climbs keeps its share of all respondents: rounds 7-8 against rounds 4-5, named Christians keep
+0.45, **Catholics 0.78, Adventists 0.81**, Lutherans 0.63, Pentecostals 0.57, Independent 0.19
+(`HOLD_MIN` 0.75, asserted both ways). Round 9 is out (84% unnamed; even these two fall). The
+split-half on the drawn quantity, each church as a share of ALL the unit's Christians, rounds 4-8,
+21 units (Jwaneng and Ngwaketse West read with Ngwaketse, Kgalagadi North with Kgalagadi South;
+30-53 Christian respondents each): Catholic +0.464, Adventist +0.481 (null 95th +0.29), Lutheran
++0.381 and Pentecostal +0.304 pass too, the Zion Christian Church +0.260 against +0.267 fails.
+
+**Known geography, which the survey reproduces without being told:** Adventists in Ngamiland West
+13.2% of Christians, Ngamiland East 9.6%, Chobe 8.9% (beside Namibia's Zambezi, 41% Adventist on
+that map) and Ngwaketse 4.5% (Kanye's Adventist hospital); Catholics in South East 13.7%, Lobatse
+12.3%, Kweneng East 8.5%, Ghanzi 8.4%; and, not drawn, the Dutch Reformed in Kgatleng 7.5% (the
+Mochudi mission), Lutherans in South East 7.5% (Ramotswa), Methodists among the Barolong 9.6%.
+
+**Construction.** Each census locality's Christians (`bw.csv`, unchanged) are split at its survey
+unit's Catholic and Adventist share of Christians, unnamed included, so both are floors. Orapa
+takes Central Boteti's mix, Sowa Town Central Tutume's, the Delta the two Ngamilands', the CKGR
+Ghanzi's. Rows `derived`, `parent_column=Christian`, rolling back to `christianity`
+(`bw2011.COLUMNS`); `rollup.py --countries bw` run. **Drawn: Catholics 53,819 aged 12+ (4.86% of
+Christians), Adventists 27,273 (2.46%).** `check_rollup bw`: 81,092 roll up, 93,435 orphaned (the
+spatial residuals of §9, down from 101,032 because some of them are now church rows).
+
+**Witnesses, printed by the build.** Catholics drawn in the southern districts 39,803 aged 12+;
+the Diocese of Gaborone counts 85,700 baptised Catholics of every age in 1,231,000 people in 2013,
+7.0% (catholic-hierarchy.org). Adventists: 47,590 baptised members, one in 49 people, in the first
+quarter of 2021 (Southern Africa-Indian Ocean Division statistics page). Both sit above what is
+drawn, as floors should.
+
+**Not drawn, and why:** Zion Christian Church (fails the split-half as a share of Christians),
+Pentecostal, Lutheran and the independent churches (fall with the unnamed), UCCSA (box dropped
+after R5), Anglican, Methodist and Dutch Reformed (fail the split-half). The ZCC is the one most
+worth another try: it is about a tenth of respondents in every round before R9.
+
+**Text changed.** `fill` was "from the same booklet's district total, where the census named no
+village"; now "district totals where no village was named; two churches from a survey" (the
+phone's 80-word cap). `note_public`'s last paragraph ("Christianity is a single undivided cell
+holding 79.9%, with no denominations at all. The London Missionary Society's Bangwato and
+Bakwena missions, the Zion Christian Church, the Anglicans and a large Pentecostal sector are all
+in there together and nothing here can separate them.") is replaced by the two churches.
+Both editions rescattered. `sources.md` §bw-2026-10-03.

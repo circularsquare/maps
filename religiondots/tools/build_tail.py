@@ -16,6 +16,9 @@ Nothing detected this before, because the symptom is not an error. It is a handf
 tiles, or a manifest missing an edition, on a map that looks built. `sources.md` already carries
 the near-miss version of this (six bad tiles all tagged `c='in'`, diagnosed from three mtimes).
 
+After step 12 it runs `not_drawn.py`, the grey hatching for ground nobody counted, which reads the
+shapes and the dots and so has to come last; a failure there is reported and does not fail the tail.
+
 **IT ALSO CLOSES "THE THREE SILENT ONES".** The country list is derived and never typed, `--coarse`
 is on both commands, and `country_shapes.py` cannot be forgotten, because all of that is here
 rather than in three commands somebody pastes.
@@ -257,6 +260,13 @@ def main():
              "--jobs", str(args.jobs)])                                         # step 11
         note("buffers")
         run([py, "buffers.py", "--countries", ccs, "--coarse"])                # step 12
+        # The grey hatching (not_drawn.py): reads country_shapes.geojson and the dots, so it goes
+        # after both, and it recomputes only the countries whose inputs moved since its cache.
+        # Not fatal: the map is whole without it, and a failure here must not cost the archive.
+        note("not_drawn")
+        print(f"\n$ {py} not_drawn.py", flush=True)
+        if subprocess.run([py, "not_drawn.py"], cwd=ROOT).returncode != 0:
+            print("!! not_drawn.py FAILED; the hatching keeps its last version. Run it by hand.")
         # claim.py compares every country's dots with `started` to list what is still waiting.
         last = os.path.join(ROOT, "data", "build_last.json")
         with open(last + ".tmp", "w", encoding="utf-8") as fh:

@@ -1,0 +1,223 @@
+# Poland, NSP 2021, language used at home (taxonomy/pl2021.py). GUS prints about 350 labels,
+# most of them a few dozen people answering from a list of the world's languages. Checked against
+# Glottolog (data/raw/glottolog/languages.csv): Silesian (sile1253), Kashubian (kash1274), Upper
+# and Lower Sorbian (uppe1395, lowe1385) are West Slavic; Lemko (lemk1239) is a Rusyn dialect in
+# Glottolog, but GUS prints it apart from Ruthenian ("ruski") and Ukrainian, so it is a sibling of
+# Rusyn, not a child (a child would make Rusyn a group, drawn washed out). Wymysorys (wymy1235),
+# the Germanic language of Wilamowice, is Continental West Germanic. Hupa (hupa1240) is
+# Athabaskan; Kanuri is Saharan (Nilo-Saharan as most readers know it, AGENT_BRIEF §3); Hiri Motu
+# is a pidgin and sits under Creoles; Esperanto (espe1235) is an "artificial language" and sits
+# under `other`. Caddoan (cadd1255), Muskogean (musk1252), Tungusic (tung1282) and Abkhaz-Adyge
+# (abkh1242) are new roots, each holding a few dozen people in Poland.
+#
+# The Polish dialects GUS prints (gwara cieszyńska, góralska, kociewska, wielkopolska, kurpiowska)
+# are leaves beside Polish under West Slavic: drawn as named, not merged into Polish.
+#
+# Colours: Silesian (Upper Silesia, Opole) and Kashubian (Pomerania) sit beside Polish's dark teal
+# and German's blue, so Silesian is a light yellow-green and Kashubian a pale cyan. Lemko (Lower
+# Silesia's copper belt and the Beskid Niski) is a darker green than Ukrainian's yellow-green.
+# Podlachian (Hajnówka, Bielsk Podlaski) sits beside Belarusian's green and Polish, so it is a mid blue.
+
+# ---- parents and nodes defined in other fragments still being built, repeated identically ----
+afroasiatic.ethiosemitic.tigre | Tigre
+austronesian.acehnese | Acehnese
+austronesian.balinese | Balinese
+austronesian.javanese | Javanese
+austronesian.malayic.iban | Iban
+austronesian.oceanic.cook_islands_maori | Cook Islands Māori
+austronesian.oceanic.gilbertese | Gilbertese (Kiribati)
+austronesian.oceanic.maori | Māori
+austronesian.oceanic.niuean | Niuean
+austronesian.oceanic.tokelauan | Tokelauan
+creole.english_based.bislama | Bislama
+creole.english_based.tok_pisin | Tok Pisin
+indoeuropean.germanic.continental.luxembourgish | Luxembourgish
+indoeuropean.indoaryan.dhivehi | Dhivehi
+indoeuropean.romance.aromanian | Aromanian
+isolate.basque | Basque
+kartvelian | Kartvelian
+kartvelian.georgian | Georgian
+nakhdaghestanian | Nakh-Daghestanian
+nakhdaghestanian.avarandic | Avar-Andic
+nakhdaghestanian.avarandic.avar | Avar
+nakhdaghestanian.lezgic | Lezgic
+nakhdaghestanian.lezgic.lezgian | Lezgian
+nigercongo.atlantic.temne | Temne
+nigercongo.bantu.bemba | Bemba (M.40)
+nigercongo.bantu.bemba.bemba | Bemba
+nigercongo.bantu.bisa_lamba | Bisa-Lamba (M.50)
+nigercongo.bantu.bisa_lamba.lamba | Lamba
+nigercongo.bantu.nyanja_sena | Nyanja-Sena (N.30-40)
+nigercongo.bantu.nyanja_sena.chewa | Chewa
+nigercongo.bantu.sotho_tswana.lozi | Lozi
+nigercongo.bantu.tumbuka | Tumbuka (N.20)
+nigercongo.bantu.tumbuka.tumbuka | Tumbuka
+nigercongo.mande.kpelle | Kpelle
+nilosaharan.nilotic.acholi | Acholi
+nilosaharan.nilotic.luo | Luo (Dholuo)
+otomanguean | Oto-Manguean
+otomanguean.zapotecan | Zapotecan
+otomanguean.zapotecan.zapoteco | Zapoteco
+turkic | Turkic
+turkic.azerbaijani | Azerbaijani
+turkic.turkmen | Turkmen
+utoaztecan | Uto-Aztecan
+utoaztecan.nahuatl | Náhuatl
+
+# ---- Slavic ----
+indoeuropean.slavic.west.silesian | Silesian | 0.84 0.16 105
+indoeuropean.slavic.west.kashubian | Kashubian | 0.86 0.11 185
+indoeuropean.slavic.west.cieszyn | Cieszyn Silesian dialect
+indoeuropean.slavic.west.goral | Goral dialect
+indoeuropean.slavic.west.kociewie | Kociewie dialect
+indoeuropean.slavic.west.greater_poland | Greater Poland (Poznań) dialect
+indoeuropean.slavic.west.kurpie | Kurpie dialect
+indoeuropean.slavic.west.upper_sorbian | Upper Sorbian
+indoeuropean.slavic.west.lower_sorbian | Lower Sorbian
+indoeuropean.slavic.east.lemko | Lemko | 0.62 0.14 115
+indoeuropean.slavic.east.ruski | Ruski (Ruthenian, or colloquial Russian)
+indoeuropean.slavic.east.podlachian | Podlachian dialects (Polish-Belarusian-Ukrainian) | 0.72 0.11 215
+
+# ---- other Indo-European ----
+indoeuropean.celtic.breton | Breton
+indoeuropean.germanic.continental.alemannic | Alemannic
+indoeuropean.germanic.continental.alsatian | Alsatian
+indoeuropean.germanic.continental.limburgish | Limburgish
+indoeuropean.germanic.continental.wymysorys | Wymysorys (Vilamovian) | 0.62 0.13 255.0
+indoeuropean.germanic.north.faroese | Faroese
+indoeuropean.iranian.ossetian | Ossetian
+indoeuropean.iranian.tajik | Tajik
+indoeuropean.iranian.zazaki | Zazaki
+indoeuropean.romance.aragonese | Aragonese
+indoeuropean.romance.asturian | Asturian
+indoeuropean.romance.corsican | Corsican
+indoeuropean.romance.friulian | Friulian
+indoeuropean.romance.galician | Galician
+indoeuropean.romance.ladino | Ladino (Judeo-Spanish) | 0.9 0.11 230.0
+indoeuropean.romance.mirandese | Mirandese
+indoeuropean.romance.neapolitan | Neapolitan
+indoeuropean.romance.sardinian | Sardinian
+indoeuropean.romance.sicilian | Sicilian
+indoeuropean.romance.walloon | Walloon | 0.78 0.11 253.64
+
+# ---- Uralic, Turkic, Mongolic, Tungusic ----
+uralic.karelian | Karelian
+uralic.saami | Sami
+uralic.komi | Komi
+uralic.udmurt | Udmurt
+uralic.mari | Mari
+uralic.erzya | Erzya
+uralic.moksha | Moksha
+uralic.selkup | Selkup
+turkic.kyrgyz | Kyrgyz
+turkic.bashkir | Bashkir
+turkic.chuvash | Chuvash
+turkic.yakut | Yakut (Sakha)
+turkic.altai | Altai
+turkic.tuvan | Tuvan
+turkic.karachay_balkar | Karachay-Balkar
+turkic.karakalpak | Karakalpak
+turkic.kumyk | Kumyk
+turkic.nogai | Nogai
+mongolic.buryat | Buryat
+mongolic.kalmyk | Kalmyk
+tungusic | Tungusic | 0.70 0.12 280
+tungusic.manchu | Manchu
+
+# ---- Caucasus ----
+abkhazadyghe | Northwest Caucasian (Abkhaz-Adyghe) | 0.76 0.12 330
+abkhazadyghe.abkhaz | Abkhaz
+abkhazadyghe.adyghe | Adyghe
+abkhazadyghe.kabardian | Kabardian
+nakhdaghestanian.nakh | Nakh
+nakhdaghestanian.nakh.chechen | Chechen
+nakhdaghestanian.nakh.ingush | Ingush
+nakhdaghestanian.dargwa | Dargwa
+
+# ---- Afroasiatic ----
+afroasiatic.judeo_arabic | Judeo-Arabic | 0.70 0.07 158
+afroasiatic.syriac | Syriac
+afroasiatic.cushitic.beja | Beja
+afroasiatic.berber.zenaga | Zenaga
+
+# ---- Niger-Congo, Nilo-Saharan ----
+nigercongo.bantu.basaa | Basaa
+nigercongo.bantu.duala | Duala
+nigercongo.bantu.ewondo | Ewondo
+nigercongo.bantu.fang | Fang
+nigercongo.bantu.herero | Herero
+nigercongo.bantu.kamba | Kamba (Kikamba)
+nigercongo.bantu.kimbundu | Kimbundu
+nigercongo.bantu.kongo | Kongo
+nigercongo.bantu.kwanyama | Kwanyama
+nigercongo.bantu.ndonga | Ndonga
+nigercongo.bantu.luba_katanga | Luba-Katanga
+nigercongo.bantu.mongo | Mongo
+nigercongo.bantu.nyamwezi | Nyamwezi
+nigercongo.bantu.sukuma | Sukuma
+nigercongo.bantu.nyankole | Nyankole
+nigercongo.bantu.nyoro | Nyoro
+nigercongo.bantu.umbundu | Umbundu
+nigercongo.bantu.yao | Yao (Chiyao)
+nigercongo.kwa.adangme | Adangme
+nigercongo.kwa.nzema | Nzema
+nigercongo.mande.dyula | Dyula
+nigercongo.mande.susu | Susu
+nigercongo.ekajuk | Ekajuk
+nigercongo.ibibio_efik | Ibibio-Efik
+nigercongo.tiv | Tiv
+nilosaharan.kanuri | Kanuri
+nilosaharan.nilotic.maasai | Maasai
+
+# ---- Asia ----
+sinotibetan.tibetic.dzongkha | Dzongkha
+sinotibetan.jingpho | Jingpho (Kachin)
+sinotibetan.yi | Yi (Nuosu)
+kradai.shan | Shan
+kradai.zhuang | Zhuang
+isolate.ainu | Ainu | 0.64 0.17 290
+
+# ---- Austronesian ----
+austronesian.buginese | Buginese
+austronesian.gayo | Gayo
+austronesian.gorontalo | Gorontalo
+austronesian.madurese | Madurese
+austronesian.malayic.minangkabau | Minangkabau
+austronesian.mandar | Mandar
+austronesian.nias | Nias
+austronesian.palauan | Palauan
+austronesian.sasak | Sasak
+austronesian.sundanese | Sundanese
+austronesian.oceanic.kosraean | Kosraean
+austronesian.oceanic.pohnpeian | Pohnpeian
+austronesian.oceanic.rapanui | Rapa Nui
+austronesian.oceanic.tahitian | Tahitian
+austronesian.oceanic.yapese | Yapese | 0.82 0.13 225.0
+
+# ---- creoles and pidgins ----
+creole.english_based.sranan | Sranan Tongo
+creole.portuguese_based.papiamento | Papiamento
+creole.hiri_motu | Hiri Motu
+
+# ---- the Americas ----
+eskimoaleut.aleut | Aleut
+eskimoaleut.greenlandic | Greenlandic (Kalaallisut)
+eskimoaleut.inupiaq | Inupiaq
+algic.arapaho | Arapaho
+algic.cheyenne | Cheyenne
+nadene.hupa | Hupa
+iroquoian.cherokee | Cherokee
+muskogean | Muskogean | 0.72 0.12 100
+muskogean.choctaw | Choctaw
+muskogean.creek | Muscogee (Creek)
+caddoan | Caddoan | 0.80 0.10 50
+caddoan.caddo | Caddo
+isolate.zuni | Zuni
+isolate.washo | Washo
+
+# ---- elsewhere in Africa ----
+isolate.sandawe | Sandawe | 0.58 0.17 310
+
+# ---- signed and constructed ----
+signlanguage.pjm | Polish Sign Language
+other.esperanto | Esperanto

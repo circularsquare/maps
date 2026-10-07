@@ -140,7 +140,7 @@
   }
   #panel-head { padding: 12px 14px 10px; border-bottom: 1px solid var(--g1e); }
   #panel-body { flex: 1; overflow-y: auto; padding: 0 14px 20px; }
-  #panel-close { display: none; }
+  #panel-close, #panel-size { display: none; }
 
   #q {
     width: 100%; background: var(--g14); border: 1px solid var(--g2c); color: var(--gee);
@@ -148,6 +148,7 @@
   }
   #q:focus { outline: none; border-color: var(--focus); }
   #results { margin-top: 6px; }
+  #loadnote { display: none; margin-top: 6px; font-size: 11.5px; color: var(--g7a); }
   .hit { padding: 5px 7px; cursor: pointer; border-left: 2px solid transparent; }
   .hit:hover { background: var(--g16); border-left-color: #4a9eff; }
   .hit .t { color: var(--ge8); }
@@ -199,6 +200,9 @@
   .st.jn { cursor: default; }
   .st.gone .nm { color: var(--g7a); }
   .st.jn .nm { color: var(--g6f); font-size: 12px; padding-top: 3px; padding-bottom: 3px; }
+  /* A junction the line only passes through: no row to see, but kept for the rails' path. */
+  .st.quiet { height: 0; overflow: hidden; }
+  .st.quiet .nm { padding: 0; }
 
   /* A loop does not end, so its diagram should not look like it does. The rail runs on past
      the first and last station and curves away to the left (drawn by drawStrip), the two
@@ -227,6 +231,11 @@
   .ride .edge { position: absolute; left: 0; top: 0; bottom: 0; width: 3px; }
   .ride:hover b { color: var(--gff); }
   .ride.editing { background: var(--g12); }
+  .ride.over { cursor: default; }
+  /* A stop past a junction end, the diagram carried on to it (drawStrip draws its dot and
+     track from CONT). A stop like any other; the line it is on says it in italics. */
+  .st.past.pick .nm { color: var(--gff); }
+  .ride.over:hover b { color: inherit; }
   .ride .legs { margin: 6px 0 2px; cursor: default; }
   .legrow { display: flex; align-items: center; gap: 7px; padding: 3px 0; font-size: 12px;
             color: var(--g9a); }
@@ -322,14 +331,23 @@
   .maplibregl-popup-content .more { color: var(--g6f); font-size: 11px; margin-top: 4px; }
   .maplibregl-popup-tip { display: none; }
 
+  /* ON A PHONE THE PANEL IS A SHEET over the bottom half, and the map shrinks to the top half
+     above it, so stations can still be tapped while a line's diagram is open (before, the
+     panel covered the whole map and picking only worked through search). "expand" gives it
+     the whole screen for a long list, "shrink" brings it back. */
   @media (max-width: 720px) {
     #map { right: 0; }
+    body.sheet #map { bottom: 52%; }
     #title { padding: 7px 11px 8px; max-width: calc(100% - 28px); }
     #panel-open { display: inline-block; margin-top: 8px; }
     #legend { bottom: 44px; padding: 7px 11px 8px; }
-    #panel { width: 100%; display: none; }
+    body.sheet #legend { display: none; }
+    #panel { width: 100%; top: auto; height: 52%; display: none;
+             border-left: none; border-top: 1px solid var(--g26); }
     #panel.open { display: flex; }
-    #panel-close { display: inline-block; float: right; }
+    #panel.full { top: 0; height: auto; border-top: none; }
+    #panel-close, #panel-size { display: inline-block; float: right; margin-left: 6px; }
+    #panel-head { padding: 8px 12px 8px; }
   }
 </style>
 </head>
@@ -358,8 +376,10 @@
 <div id="panel">
   <div id="panel-head">
     <button class="act" id="panel-close" onclick="openPanel(false)">close</button>
+    <button class="act" id="panel-size" onclick="sheetFull(!SHEET_FULL)">expand</button>
     <input id="q" placeholder="Search a line or a station" autocomplete="off" />
     <div id="results"></div>
+    <div id="loadnote"></div>
   </div>
   <div id="stale">The line data has been rebuilt since this page loaded, so some lines will
     not draw. <a href="" onclick="location.reload(); return false">Reload</a> to pick it up;
@@ -381,6 +401,16 @@
    comes in from DATA_MIN_ZOOM, and is merged into the one model everything else reads, so
    crossing a border needs nothing from the rider. Countries holding rides load at start,
    since their ridden lines are drawn at every zoom.
+
+   LINE DATA ONLY WHERE YOU ZOOM IN (Anita, 2026-10-02: "start zoomed out and see everything,
+   and only load detailed data for the places we zoom into"). The track is tiles with their
+   own levels of detail, so a view of Europe draws all of it from tiles; a country's line data
+   (lines, stations, footprints: Russia 11.7 MB, Germany 5.7) used to come in from z4 for
+   every country in view, 33 MB and 160 MB of memory for a view of Europe. Now from z8, for
+   the countries on screen. What needed it at lower zooms gets it another way: each country's
+   km of line is in regions.json (`km`), so the headline and the Countries tab need none;
+   not-running track is one file for every country (data/closed.json); a click on track, a
+   search, or opening a country loads the country it needs.
 
    Line and station ids are already distinct between countries (OSM ids are global, and each
    register reader uses its own prefix). Section ids are not: both builds number them from 0,
@@ -417,7 +447,22 @@ let FOCUS = START || (SAVED_CAMERA && SAVED_CAMERA.f) || null;
 const TILES = new Set();          // countries whose tiles are on the map
 const LOADING = new Map();        // cc -> the promise of its line data
 const LOADED = new Set();         // countries whose line data is merged in
-const DATA_MIN_ZOOM = 4;          // below this every country is in view; fetch none by panning
+/* From this zoom the countries on screen load their line data (above: line data only where
+   you zoom in). One below the zoom station bubbles appear at, so they are in by then. At z8
+   the view is about 3 degrees across; DATA_MARGIN adds a tenth of it on each side, so the
+   neighbour you are about to pan into is usually in first. */
+const DATA_MIN_ZOOM = 8;
+const DATA_MARGIN = 0.1;
+// Without the search index (data/search.json, an older deploy), a search reaches the countries
+// on screen from this zoom (the old loading gate), loading them as it is typed; below it a
+// whole continent is on screen.
+const SEARCH_MIN_ZOOM = 4;
+/* The search index (loadSearchIndex): every country's line and station names, fetched on the
+   first keystroke. State '' (not asked for), 'loading', 'ready' or 'missing'. */
+let SEARCH_IX = null;
+let SEARCH_IX_STATE = '';
+// A country's km of line from regions.json (`km`), there without loading the country.
+const hasTotal = cc => !!REGIONS[cc] && typeof REGIONS[cc].km === 'number';
 // Every ride saved before regions existed was in Japan.
 const rideRegion = r => r.region || 'jp';
 /* Every country a ride needs loaded to resolve: its own, and for a line over a border the
@@ -455,8 +500,25 @@ const TRACK_COLOUR = ['match', ['get', 'k'],
   '#8a8a8a'];
 
 const TRACK_LINE_COLOUR = ['to-color', ['get', 'c'], TRACK_COLOUR];
-const TRACK_COLOUR_RIDDEN = ['interpolate', ['linear'], 0.36, 0, '#0d0d0d', 1, TRACK_LINE_COLOUR];
-const TRACK_COLOUR_MUTED = ['interpolate', ['linear'], 0.24, 0, '#0d0d0d', 1, TRACK_LINE_COLOUR];
+
+/* TRACK NO LINE RUNS OVER (`n` in the tiles, build_tiles.mark_no_line): freight lines, yard
+   throats and disused track joined to the passenger network. A faint grey, thinner, never a
+   click target (Anita, 2026-10-04: Mexico's freight network in passenger blue read as far
+   more passenger rail than Mexico has; "a much more subtle gray ... almost invisible"). The
+   grey is THEMES' `noLine`, and the legend reads it from there. Held back with the rest in
+   Ridden mode and with a line selected, so it stays below every line. Tiles built before
+   carry no `n`, and draw as they did. */
+const NO_LINE = ['==', ['get', 'n'], 1];
+/* A BRANCH IS HELD BACK IN ITS COLOUR, not its opacity: 0.867 towards the background is what
+   0.78 opacity was beside a main line's 0.9 (0.78 / 0.9). The track's opacity has to stay one
+   constant, because muting switches it (setMuted), and switching a data-driven paint
+   property makes MapLibre re-parse every loaded tile. */
+const RANK_MIX = ['match', ['get', 'r'], 0, 1, 0.867];
+const TRACK_PAINT_DARK = ['case', NO_LINE, '#303030',
+  ['interpolate', ['linear'], RANK_MIX, 0, '#0d0d0d', 1, TRACK_LINE_COLOUR]];
+const TRACK_COLOUR_RIDDEN = ['interpolate', ['linear'], 0.36, 0, '#0d0d0d', 1, TRACK_PAINT_DARK];
+const TRACK_COLOUR_MUTED = ['interpolate', ['linear'], 0.24, 0, '#0d0d0d', 1, TRACK_PAINT_DARK];
+const TRACK_HIT_FILTER = ['!=', ['get', 'n'], 1];
 
 /* THE LIGHT THEME'S KIND COLOURS are darker and more saturated: the dark theme's tram yellow
    and narrow-gauge green all but vanish on a pale basemap. Held back towards the basemap's
@@ -472,10 +534,12 @@ const TRACK_COLOUR_LIGHT = ['match', ['get', 'k'],
   'heritage', '#c0392b',
   '#777777'];
 const TRACK_LINE_COLOUR_LIGHT = ['to-color', ['get', 'c'], TRACK_COLOUR_LIGHT];
+const TRACK_PAINT_LIGHT = ['case', NO_LINE, '#d2d2ce',
+  ['interpolate', ['linear'], RANK_MIX, 0, '#f2f3f0', 1, TRACK_LINE_COLOUR_LIGHT]];
 const TRACK_COLOUR_RIDDEN_LIGHT = ['interpolate', ['linear'], 0.36,
-  0, '#f2f3f0', 1, TRACK_LINE_COLOUR_LIGHT];
+  0, '#f2f3f0', 1, TRACK_PAINT_LIGHT];
 const TRACK_COLOUR_MUTED_LIGHT = ['interpolate', ['linear'], 0.24,
-  0, '#f2f3f0', 1, TRACK_LINE_COLOUR_LIGHT];
+  0, '#f2f3f0', 1, TRACK_PAINT_LIGHT];
 
 /* A THIN EDGE ON A LINE TOO CLOSE TO THE BACKGROUND: dark round a bright line on the light
    basemap (the Yamanote's green, the Sobu Line's yellow), light round a near-black one on the
@@ -493,10 +557,11 @@ const LUM_LIGHT = ['+',
   ['*', 0.2126, ['at', 0, ['to-rgba', TRACK_LINE_COLOUR_LIGHT]]],
   ['*', 0.7152, ['at', 1, ['to-rgba', TRACK_LINE_COLOUR_LIGHT]]],
   ['*', 0.0722, ['at', 2, ['to-rgba', TRACK_LINE_COLOUR_LIGHT]]]];
-const CASED_DARK = ['<', LUM_DARK, 45];
-const CASED_LIGHT = ['>', LUM_LIGHT, 170];
+const CASED_DARK = ['all', ['!=', ['get', 'n'], 1], ['<', LUM_DARK, 45]];
+const CASED_LIGHT = ['all', ['!=', ['get', 'n'], 1], ['>', LUM_LIGHT, 170]];
 
-const RANK_W = ['match', ['get', 'r'], 0, 1.0, 0.8];
+// Track no line runs over (NO_LINE) at 0.6 of a branch's width.
+const RANK_W = ['case', NO_LINE, 0.6, ['match', ['get', 'r'], 0, 1.0, 0.8]];
 
 /* THE RANK FACTOR MULTIPLIES EACH STOP, not the interpolate: ['*', ['interpolate', ['zoom'],
    ...], factor] is invalid, because ['zoom'] may only be the direct input of a top-level
@@ -526,8 +591,12 @@ const TRACK_WIDTH_LIGHT = ['interpolate', ['linear'], ['zoom'],
 
 /* With a line selected, everything else drops back (TRACK_COLOUR_MUTED) so the line can be
    read against it. The selected line is not drawn by this layer at all: it is redrawn on
-   top from the `sel` source, which keeps it at its own strength while the rest fades. */
+   top from the `sel` source, which keeps it at its own strength while the rest fades.
+   The muted track is a second layer over the same tiles (`track-mute-<cc>`), and muting
+   swaps the two layers' constant opacities: no tile is re-parsed, and the basemap is
+   untouched. The edge keeps the rank opacity it always had; only its colour changes. */
 const TRACK_OPACITY = ['match', ['get', 'r'], 0, 0.9, 0.78];
+const TRACK_ALPHA = 0.9;
 const HIT_WIDTH = ['interpolate', ['linear'], ['zoom'], 8, 8, 14, 16];
 
 /* Ridden track, drawn over everything. Wider than the base at every zoom, because at world
@@ -624,12 +693,14 @@ const THEMES = {
     casing: '#0a0a0a', stFill: '#0a0a0a', stStroke: '#cfd9e4', label: '#d8dee6',
     labelHalo: '#0a0a0a', gone: '#6a6a6a', selGone: '#9a9a9a', stripGone: '#555555',
     off: '#3a3a3a', dimText: '#6f6f6f',
-    track: TRACK_LINE_COLOUR, ridden: TRACK_COLOUR_RIDDEN, muted: TRACK_COLOUR_MUTED,
+    noLine: '#303030',             // TRACK_PAINT_DARK's grey, for the legend
+    track: TRACK_PAINT_DARK, ridden: TRACK_COLOUR_RIDDEN, muted: TRACK_COLOUR_MUTED,
     kinds: TRACK_COLOUR, selFill: SEL_ST_FILL, selStroke: SEL_ST_STROKE,
     // The edge under too-dark lines, and the same held back as the track is (0.36, 0.24).
     width: TRACK_WIDTH_DARK, cased: CASED_DARK,
     edge: '#d8d8d8', edgeRidden: '#565656', edgeMuted: '#3e3e3e',
-    baseHide: ['place_country_other', 'place_country_minor', 'place_country_major'],
+    // No country names, and no names of seas and lakes ("Yellow Sea"; Anita, 2026-10-04).
+    baseHide: ['place_country_other', 'place_country_minor', 'place_country_major', 'water_name'],
     basePaint: [['boundary_state', 'line-color', '#1c1c1c'],
                 ['boundary_country_z0-4', 'line-color', '#2a2a2a'],
                 ['boundary_country_z5-', 'line-color', '#2a2a2a']],
@@ -640,7 +711,8 @@ const THEMES = {
     casing: '#ffffff', stFill: '#ffffff', stStroke: '#111111', label: '#2a2f35',
     labelHalo: '#ffffff', gone: '#9a9a96', selGone: '#77776f', stripGone: '#b0b0aa',
     off: '#c4c4c0', dimText: '#8a8a86',
-    track: TRACK_LINE_COLOUR_LIGHT, ridden: TRACK_COLOUR_RIDDEN_LIGHT,
+    noLine: '#d2d2ce',             // TRACK_PAINT_LIGHT's grey, for the legend
+    track: TRACK_PAINT_LIGHT, ridden: TRACK_COLOUR_RIDDEN_LIGHT,
     muted: TRACK_COLOUR_MUTED_LIGHT, kinds: TRACK_COLOUR_LIGHT,
     selFill: SEL_ST_FILL_LIGHT, selStroke: SEL_ST_STROKE_LIGHT,
     width: TRACK_WIDTH_LIGHT, cased: CASED_LIGHT,
@@ -664,7 +736,9 @@ const THEMES = {
     /* No country names: the map is of lines and the places on them, and the country is
        plain from the panel's headline. Province and country boundaries paler than Positron
        draws them (Anita, 2026-09-30). The dark theme's entries do the same. */
-    baseHide: ['label_country_1', 'label_country_2', 'label_country_3'],
+    baseHide: ['label_country_1', 'label_country_2', 'label_country_3',
+               // Nor seas and lakes ("Yellow Sea"; Anita, 2026-10-04). Rivers keep theirs.
+               'water_name_point_label', 'water_name_line_label'],
     basePaint: [['boundary_3', 'line-color', '#dcdcd8'],
                 ['boundary_2', 'line-color', '#c8c8c4'],
                 ['boundary_disputed', 'line-color', '#c8c8c4']],
@@ -675,7 +749,7 @@ let THEME_NAME = (() => {
   const q = new URLSearchParams(location.search).get('theme');
   if (THEMES[q]) return q;
   try { const s = localStorage.getItem(THEME_KEY); if (THEMES[s]) return s; } catch (e) { }
-  return 'dark';
+  return 'light';     // the default since 2026-10-04 (Anita)
 })();
 let THEME = THEMES[THEME_NAME];
 document.documentElement.dataset.theme = THEME_NAME;
@@ -749,13 +823,12 @@ map.on('load', () => {
   for (const id of BASEMAP_RAIL)
     if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', 'none');
 
-  /* Track goes UNDER the basemap's labels but OVER every line and fill it draws. NOT `the
-     first symbol layer`: in this style that is a water label sitting before the roads, so
-     anchoring there buries the rail network under the road network. */
-  const sl = map.getStyle().layers;
-  let last = -1;
-  for (let i = 0; i < sl.length; i++) if (sl[i].type !== 'symbol') last = i;
-  const beforeLabels = sl[last + 1] ? sl[last + 1].id : undefined;
+  /* EVERYTHING THIS PAGE DRAWS GOES OVER THE WHOLE BASEMAP, its labels included (Anita,
+     2026-10-04: place names under the lines). Until then the track sat under the basemap's
+     labels and over its lines and fills. Only the page's own station names are above the
+     lines. Each country's track goes in under `sel-halo`, so still under the selection and
+     the ridden overlay. */
+  const beforeLabels = undefined;
 
   map.addSource('ridden', { type: 'geojson',
                             data: { type: 'FeatureCollection', features: [] } });
@@ -862,6 +935,7 @@ map.on('load', () => {
   paintStations();
   paintRidden();
   paintSelection();
+  paintClosed().then(drawLegend);    // every country's, from data/closed.json
   REGIONS_READY.then(startRegions);
 });
 
@@ -890,6 +964,10 @@ function applyTheme() {
    `style.load`, which comes before the first frame is drawn; waiting for `load`, which comes
    after it, showed Positron's black labels for a moment before they faded. */
 function applyBasemap() {
+  /* No fades: MapLibre eases every paint change over 300 ms unless the style says otherwise,
+     which made muting a cross-fade. State changes are instant here, as in the panel. It has
+     no setter, so the loaded stylesheet's own field is set, on every style load. */
+  if (map.style && map.style.stylesheet) map.style.stylesheet.transition = { duration: 0, delay: 0 };
   for (const id of BASEMAP_RAIL)
     if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', 'none');
   for (const [id, c] of Object.entries(THEME.baseLabels || {})) {
@@ -908,8 +986,8 @@ map.on('style.load', applyBasemap);
 
 /* Switching theme swaps the basemap style, and MapLibre's setStyle throws away every source
    and layer the page added. `carryOver` hands them to the new style instead, in the same
-   places: everything that is not a label just under the new style's labels, as on load,
-   and the station names on top. The geojson sources come across with their data. */
+   places: over the whole new basemap, as on load, in their own order. The geojson sources
+   come across with their data. */
 const OWN_SOURCES = new Set(['ridden', 'sel', 'selst', 'stations', 'closed']);
 function carryOver(prev, next) {
   if (!prev) return next;
@@ -917,11 +995,7 @@ function carryOver(prev, next) {
     || String(l.source || '').startsWith('rail-'));
   const sources = { ...next.sources };
   for (const l of ours) sources[l.source] = prev.sources[l.source];
-  let last = -1;
-  next.layers.forEach((l, i) => { if (l.type !== 'symbol') last = i; });
-  return { ...next, sources, layers: [
-    ...next.layers.slice(0, last + 1), ...ours.filter(l => l.type !== 'symbol'),
-    ...next.layers.slice(last + 1), ...ours.filter(l => l.type === 'symbol')] };
+  return { ...next, sources, layers: [...next.layers, ...ours] };
 }
 
 function setTheme(name) {
@@ -934,7 +1008,7 @@ function setTheme(name) {
   if (mapReady) {
     map.once('style.load', () => {
       applyTheme();
-      paintStations(); paintRidden(); paintClosed(); paintSelection();
+      paintStations(); paintRidden(); paintClosed(true); paintSelection();
     });
     // No diff: a diffed swap fires no style.load, and the repaint above would never run.
     map.setStyle(THEME.style, { transformStyle: carryOver, diff: false });
@@ -977,17 +1051,31 @@ modeButtons();
    legend must not claim colours the map is not drawing. Learned from the tiles as they
    load, since an archive does not say; once true it stays true. */
 let TILE_COLOUR = null;
+// The same for track no line runs over (NO_LINE), which only re-tiled countries mark.
+let TILE_NO_LINE = false;
+/* Asked again only once more tiles have arrived, and of the features that answer it: until
+   every country is re-tiled, no feature may ever carry `n`, and reading every loaded feature
+   on every idle would cost the most on the busiest views. */
+let TILE_LEARN = true;
+map.on('sourcedata', e => {
+  if (e.tile && String(e.sourceId || '').startsWith('rail-')) TILE_LEARN = true;
+});
 function learnTileColour() {
-  if (TILE_COLOUR || !mapReady) return;
+  if (!TILE_LEARN || (TILE_COLOUR && TILE_NO_LINE) || !mapReady) return;
+  TILE_LEARN = false;
   let seen = false;
+  const was = [TILE_COLOUR, TILE_NO_LINE].join();
   for (const cc of TILES) {
-    const f = map.querySourceFeatures(`rail-${cc}`, { sourceLayer: 'track' });
-    if (!f.length) continue;
-    seen = true;
-    if (f.some(x => x.properties.c)) { TILE_COLOUR = true; break; }
+    const q = filter => map.querySourceFeatures(`rail-${cc}`, { sourceLayer: 'track', filter });
+    if (!TILE_COLOUR) {
+      if (q(['has', 'c']).length) TILE_COLOUR = true;
+      else if (q(['has', 'k']).length) seen = true;
+    }
+    if (!TILE_NO_LINE && q(NO_LINE).length) TILE_NO_LINE = true;
+    if (TILE_COLOUR && TILE_NO_LINE) break;
   }
   if (seen && !TILE_COLOUR) TILE_COLOUR = false;
-  drawLegend();
+  if ([TILE_COLOUR, TILE_NO_LINE].join() !== was) drawLegend();
 }
 map.on('idle', learnTileColour);
 
@@ -1013,14 +1101,25 @@ const REGIONS_READY = fetch('regions.json').then(r => r.json())
   })
   .catch(() => { /* no index: the countries with rides still load, below */ });
 
+/* NOT-RUNNING TRACK FOR EVERY COUNTRY, one file (tools/build_regions.py write_closed):
+   [[cc, line id, [[lon, lat], ...]], ...]. Drawn at every zoom whether or not the country's
+   line data is in. Null where the file is missing: paintClosed then reads the geometry files
+   of the countries loaded, as it did before. */
+let CLOSED_ALL = null;
+const CLOSED_READY = fetch('data/closed.json')
+  .then(r => (r.ok ? r.json() : null))
+  .then(j => { CLOSED_ALL = Array.isArray(j) ? j : null; })
+  .catch(() => { });
+
 /* The start: a `?region=` link goes to that country; every country holding rides loads now,
    because its ridden lines are drawn at every zoom and its numbers are in the panel; then
    whatever is on screen. */
 function startRegions() {
   if (START && REGIONS[START]) goRegion(START);
   for (const cc of new Set(RIDES.flatMap(rideRegions))) loadRegion(cc);
-  // The headline's country, remembered with the camera, even when it is not in the middle.
-  if (FOCUS && REGIONS[FOCUS]) loadRegion(FOCUS);
+  /* The headline's country, remembered with the camera, even when it is not in the middle.
+     Its total needs no loading where regions.json has it; zoomed in, the camera loads it. */
+  if (FOCUS && REGIONS[FOCUS]) { if (!hasTotal(FOCUS)) loadRegion(FOCUS); }
   else if (FOCUS && !START) FOCUS = null;
   considerCamera();
   if (VIEW.kind === 'home') render();
@@ -1037,8 +1136,9 @@ function saveCamera() {
   } catch (e) { /* remembered for this page only */ }
 }
 
-/* A country's track, as two layers under everything the app draws on top. The same two for
-   every country, told apart only by id and source. */
+/* A country's track, as four layers under everything the app draws on top (click target,
+   edge, track, muted track). The same four for every country, told apart only by id and
+   source. */
 function addRegionTiles(cc) {
   if (TILES.has(cc) || !mapReady) return;
   TILES.add(cc);
@@ -1046,8 +1146,10 @@ function addRegionTiles(cc) {
                                 attribution: OSM_ATTR });
   // A wide, near-invisible line under the visible one: the click target. Without it, hitting
   // a 1 px line with a fingertip is luck.
+  // Track no line runs over is no target (NO_LINE).
   map.addLayer({
     id: `track-hit-${cc}`, type: 'line', source: `rail-${cc}`, 'source-layer': 'track',
+    filter: TRACK_HIT_FILTER,
     paint: { 'line-color': '#000', 'line-opacity': 0.01, 'line-width': HIT_WIDTH },
   }, 'sel-halo');
   // The edge under a line too close to the background (CASED_*), at the full track width.
@@ -1061,21 +1163,36 @@ function addRegionTiles(cc) {
   map.addLayer({
     id: `track-${cc}`, type: 'line', source: `rail-${cc}`, 'source-layer': 'track',
     layout: { 'line-cap': 'round', 'line-join': 'round' },
-    paint: { 'line-color': TRACK_LINE_COLOUR, 'line-width': TRACK_WIDTH_DARK,
-             'line-opacity': TRACK_OPACITY },
+    paint: { 'line-color': TRACK_PAINT_DARK, 'line-width': TRACK_WIDTH_DARK,
+             'line-opacity': TRACK_ALPHA },
+  }, 'sel-halo');
+  // The same track muted, shown instead of the one above while a line is selected (setMuted).
+  // Same source and layout, so MapLibre lays the geometry out once for both.
+  map.addLayer({
+    id: `track-mute-${cc}`, type: 'line', source: `rail-${cc}`, 'source-layer': 'track',
+    layout: { 'line-cap': 'round', 'line-join': 'round' },
+    paint: { 'line-color': TRACK_COLOUR_MUTED, 'line-width': TRACK_WIDTH_DARK,
+             'line-opacity': 0 },
   }, 'sel-halo');
   applyTrackColour();
 }
 const hitLayers = () => [...TILES].map(cc => `track-hit-${cc}`)
   .concat(TILES.size && map.getLayer('closed-hit') ? ['closed-hit'] : []);
 
+/* MapLibre skips a setPaintProperty whose value is unchanged, so muting changes only the
+   opacities and the edge's plain colour, none of which re-parses a tile. The colour
+   expressions change with the theme and with Browse/Ridden, which re-parse, but rarely. */
 let MUTED_NOW = false;
 function applyTrackColour() {
-  const c = MUTED_NOW ? THEME.muted : MODE === 'ridden' ? THEME.ridden : THEME.track;
+  const c = MODE === 'ridden' ? THEME.ridden : THEME.track;
   const edge = MUTED_NOW ? THEME.edgeMuted : MODE === 'ridden' ? THEME.edgeRidden : THEME.edge;
   for (const cc of TILES) {
     map.setPaintProperty(`track-${cc}`, 'line-color', c);
     map.setPaintProperty(`track-${cc}`, 'line-width', THEME.width);
+    map.setPaintProperty(`track-${cc}`, 'line-opacity', MUTED_NOW ? 0 : TRACK_ALPHA);
+    map.setPaintProperty(`track-mute-${cc}`, 'line-color', THEME.muted);
+    map.setPaintProperty(`track-mute-${cc}`, 'line-width', THEME.width);
+    map.setPaintProperty(`track-mute-${cc}`, 'line-opacity', MUTED_NOW ? TRACK_ALPHA : 0);
     map.setPaintProperty(`track-edge-${cc}`, 'line-color', edge);
     map.setFilter(`track-edge-${cc}`, THEME.cased);
   }
@@ -1130,15 +1247,14 @@ function regionsInView(margin) {
 function considerCamera() {
   if (!mapReady || !Object.keys(REGIONS).length) return;
   const z = map.getZoom();
-  for (const cc of regionsInView(0.25)) {
-    addRegionTiles(cc);
-    if (z >= DATA_MIN_ZOOM) loadRegion(cc);
-  }
+  for (const cc of regionsInView(0.25)) addRegionTiles(cc);
+  if (z >= DATA_MIN_ZOOM) for (const cc of regionsInView(DATA_MARGIN)) loadRegion(cc);
   const c = map.getCenter();
   const at = countryAt(c.lng, c.lat);
   if (at && at !== FOCUS) {
     FOCUS = at;
-    if (at) loadRegion(at);
+    // An older regions.json has no totals: then the headline needs the country loaded.
+    if (!hasTotal(at)) loadRegion(at);
     if (VIEW.kind === 'home') render();
   }
 }
@@ -1149,7 +1265,8 @@ function goRegion(cc) {
   const [w, s, e, n] = r.view || r.bbox;
   FOCUS = cc;
   map.fitBounds([[w, s], [e, n]], { padding: 40, duration: 0 });
-  loadRegion(cc);
+  // The whole country is a zoomed-out view: its lines load as you zoom in on part of it.
+  if (!hasTotal(cc)) loadRegion(cc);
   if (VIEW.kind === 'home') render();
 }
 
@@ -1166,12 +1283,19 @@ function drawLegend() {
         + `<span class="sw" style="border-top-color:${on ? sw(k) : THEME.off}"></span>`
         + `${label}</div>`;
     }).join('')
-    + (CLOSED.size ? `<div class="row"><span class="sw" style="border-top-style:dashed;`
+    // Track no line runs over (NO_LINE), in the grey it is drawn in, held back like the rest.
+    + (TILE_NO_LINE ? `<div class="row"><span class="sw" style="border-top-width:1.5px;`
+      + `border-top-color:${MODE === 'ridden' ? dimmed(THEME.noLine, 0.36) : THEME.noLine}">`
+      + `</span>No passenger line</div>` : '')
+    + (CLOSED.size || (CLOSED_ALL && CLOSED_ALL.length)
+      ? `<div class="row"><span class="sw" style="border-top-style:dashed;`
       + `border-top-color:${THEME.gone}"></span>No longer running</div>` : '');
   const note = MODE === 'ridden'
     ? 'Held back, so the lines you have ridden read over it at full strength.'
     : z < 6 ? 'Main lines only at this zoom. Zoom in for metros, trams and branches.'
     : z < 7 ? 'Metros, light rail and branches are in. Trams come in at z7.'
+    : TILE_NO_LINE ? 'All passenger track. Track no line runs on is faint; yards and sidings '
+      + 'are not drawn.'
     : 'All passenger track. Yards, sidings and freight-only lines are not drawn.';
   document.getElementById('legend-note').textContent = note;
 }
@@ -1183,6 +1307,7 @@ let LINES = [], STATIONS = {};
 const REGISTER_IN = new Set();   // countries whose build has a national register
 const ALIASES = {};        // cc -> {old station id: new}, for rides saved before a rebuild
 const LINE_ALIASES = {};   // cc -> {OSM line id: the register line it was merged into}
+const LINE_PIECES = {};    // cc -> {line id: ids of the pieces split off it} (aliases.json `pieces`)
 const LINE_BY_ID = new Map(), SEC_BY_GID = new Map();
 const CLOSED = new Set();  // section gids the register lists but no train runs over
 const OP_EN = new Map();   // raw operator string -> the English name any of its lines gives
@@ -1215,12 +1340,29 @@ function loadRegion(cc) {
       if (mapReady) drawLegend();
       paintSelection();
       render();
+      noteLoading();
     }).catch(err => {
       LOADING.delete(cc);          // a later camera stop can try again
       console.warn(`could not load ${cc}:`, err);
+      noteLoading();
     }));
+    noteLoading();
   }
   return LOADING.get(cc);
+}
+
+/* "Loading Germany's lines" under the search box while any country's line data is on its
+   way: a click on track or a search can wait seconds on a big one (Russia is 11.7 MB). The
+   search index says so too while it comes, on the first keystroke. */
+function noteLoading() {
+  const el = document.getElementById('loadnote');
+  if (!el) return;
+  const busy = [...LOADING.keys()].filter(cc => !LOADED.has(cc)).map(regionName).sort();
+  const what = [SEARCH_IX_STATE === 'loading' ? 'the search index' : '',
+    busy.length > 3 ? `the lines of ${busy.length} countries`
+    : busy.length ? `the lines of ${busy.join(', ')}` : ''].filter(Boolean);
+  el.textContent = what.length ? `Loading ${what.join(' and ')}…` : '';
+  el.style.display = what.length ? 'block' : 'none';
 }
 
 function mergeRegion(cc, l, s, f, a) {
@@ -1228,6 +1370,7 @@ function mergeRegion(cc, l, s, f, a) {
   ALIASES[cc] = (a && a.stations) || {};
   LINE_ALIASES[cc] = {};
   for (const [k, v] of Object.entries((a && a.lines) || {})) LINE_ALIASES[cc][k] = foldLine(v);
+  LINE_PIECES[cc] = (a && a.pieces) || {};
   // Any source but OpenStreetMap is a register: 'n02' in Japan, 'schienennetz' in Switzerland.
   if (l.lines.some(x => x.src !== 'osm')) REGISTER_IN.add(cc);
   // Line ids folded across countries (LINE_FOLD); `file` keeps the id its geometry is under.
@@ -1346,6 +1489,7 @@ function joinLine(had, line) {
   LINE_BY_ID.set(m.id, m);
   for (const sec of m.sections) SEC_BY_GID.set(sec[3], { line: m, sec });
   GEOM.delete(m.id);
+  GEO_READY.delete(m.id);
 }
 
 /* The joined line, from each country's line object as read. A section two countries both
@@ -1438,17 +1582,27 @@ function chainDisplays(parts) {
 }
 
 /* The other countries a line runs into, so that selecting it can load them: from the
-   shared index in regions.json, or where that is missing, any country within about 3 km of
-   one of the line's ends of track (a border crossing ends a country's piece there). */
+   shared index in regions.json, plus the countries a border point at one of its ends names.
+   A line ending at a border point under its own id (Thailand's Hat Yai - Padang Besar;
+   Malaysia's line on from the point is another id) is in no shared entry, and the walk past
+   the junction (throughEnds) needs the far country loaded to find a stop. The point's name is
+   the two countries' names ("Malaysia – Thailand border", as regions.json names them):
+   outlines simplified to 2 km cannot tell at a border town. Without the index, any country
+   within about 3 km of an end of track. */
 function lineRegionsToLoad(line) {
   const out = new Set(SHARED_LINES[line.id] || []);
-  if (!Object.keys(SHARED_LINES).length) {
+  const indexed = Object.keys(SHARED_LINES).length > 0;
+  {
     const deg = new Map();
     for (const [a, b] of line.sections) for (const s of [a, b]) deg.set(s, (deg.get(s) || 0) + 1);
     const d = 0.03;
     for (const [id, n] of deg) {
       const s = STATIONS[id];
       if (n !== 1 || !s) continue;
+      const m = s.j && /^(.+) – (.+) border$/.exec(s.n || '');
+      if (m)
+        for (const [cc, r] of Object.entries(REGIONS)) if (r.name === m[1] || r.name === m[2]) out.add(cc);
+      if (indexed) continue;
       for (const [cc, r] of Object.entries(REGIONS)) {
         if (out.has(cc)) continue;
         for (const [dx, dy] of [[0, 0], [d, 0], [-d, 0], [0, d], [0, -d]])
@@ -1497,6 +1651,42 @@ function geomFor(lineId) {
     GEOM.set(lineId, p);
   }
   return GEOM.get(lineId);
+}
+
+/* GEOMETRY ON HAND, for the walks through junctions (throughEnds, junctionRoute). Those are
+   worked out synchronously inside render, so each asks geoNow, which answers with what has
+   arrived and fetches the rest; when a file lands, the open line or journey is drawn again
+   and the walk is redone with it. A fetch that failed is kept as {}, so no walk waits on it
+   twice. */
+const GEO_READY = new Map();      // line id -> its geometry, once fetched
+const GEO_ASKED = new Set();
+let GEO_GEN = 0;                  // bumped as each file arrives
+let GEO_REDRAW = null;
+function geoNow(id) {
+  if (GEO_READY.has(id)) return GEO_READY.get(id);
+  if (!GEO_ASKED.has(id)) {
+    GEO_ASKED.add(id);
+    geomFor(id).then(g => {
+      GEO_ASKED.delete(id);
+      GEO_READY.set(id, g || {});
+      GEO_GEN++;
+      // A line whose straight-line gaps waited for this file: its rides are worked out again.
+      const ln = LINE_BY_ID.get(id);
+      if (ln && ln._gapsPending) {
+        ln._g = null;
+        for (const r of RIDES) if (r.line === id) delete r._gids;
+        GAPS_GEN++;
+        paintRidden();
+        if (VIEW.kind === 'home') render();
+      }
+      if (GEO_REDRAW) return;
+      GEO_REDRAW = setTimeout(() => {
+        GEO_REDRAW = null;
+        if (VIEW.kind === 'line' || VIEW.kind === 'trace') { render(); paintSelection(); }
+      }, 30);
+    });
+  }
+  return null;
 }
 
 /* THE DATA WAS REBUILT UNDER AN OPEN PAGE. The page holds the old line list and fetches
@@ -1553,6 +1743,29 @@ function migrateRide(r) {
       if (!STATIONS[r[k]] && st[r[k]]) { r[k] = st[r[k]]; moved++; }
     }
     if (!LINE_BY_ID.has(r.line) && ln[r.line]) { r.line = ln[r.line]; moved++; }
+    /* A line split into pieces (us_register.split_pieces, aliases.json `pieces`) keeps its id
+       on the biggest piece; a ride between two stations of another piece moves to that piece,
+       or it would silently stop counting. A whole-line ride stays: it now means the biggest. */
+    const pc = (LINE_PIECES[cc] || {})[r.line];
+    if (pc && !r.whole && LINE_BY_ID.has(r.line)) {
+      const on = id => {
+        const l = LINE_BY_ID.get(id);
+        return l && lineStations(l).has(r.from) && lineStations(l).has(r.to);
+      };
+      if (!on(r.line)) { const to = pc.find(on); if (to) { r.line = to; moved++; } }
+    }
+    // A junction a ride passes through, and the section of its line it lies along (cutGraph).
+    if (r.cuts) {
+      const m = id => (!STATIONS[id] && st[id] ? st[id] : id);
+      const out = {};
+      for (const [k, c] of Object.entries(r.cuts)) {
+        if (!Array.isArray(c)) continue;
+        const nc = [m(c[0]), m(c[1]), c[2]];
+        if (m(k) !== k || nc[0] !== c[0] || nc[1] !== c[1]) moved++;
+        out[m(k)] = nc;
+      }
+      r.cuts = out;
+    }
   }
   /* A line folded into another across countries (LINE_FOLD). `regions` is left as saved: a
      whole-line ride means the pieces it was saved with, not the countries joined since, and
@@ -1631,21 +1844,114 @@ function saveRides() {
    Dijkstra rather than walking the display order, because the display order is ONE variant
    and misses every branch, and because a loop line has two ways round and the short one is
    what a rider means. */
+/* A STRAIGHT-LINE GAP IS NO WAY TO RIDE. An OSM route listing two terminals with no track
+   between them gets a section straight across (NJ Transit's Morris & Essex Lines: Hoboken -
+   New York Penn, 3.4 km over the Hudson, and Secaucus - Hoboken, no train on either), and a
+   ride between two stations on either side took it as the shortest path, drawn as ridden
+   (Anita, 2026-10-05). On a line the build says has straight sections, a section drawn as
+   one straight segment whose two ends the line's other sections join only by more than
+   GAP_DETOUR times its length is left out of the ride graph. A real parallel or express
+   track is never that much shorter than the way round. Being straight is read from the
+   geometry (a nearly straight real section, Madison - Convent Station, has 60 points), so
+   until a line's file is in, nothing is left out; when it lands, that line's rides are
+   worked out again (geoNow, GAPS_GEN). */
+const GAP_DETOUR = 1.5;
+let GAPS_GEN = 0;
+function straightGaps(line) {
+  const out = new Set();
+  if (!line.straight_sections) return out;
+  const geo = GEO_READY.get(line.id);
+  if (!geo) { line._gapsPending = true; geoNow(line.id); return out; }
+  line._gapsPending = false;
+  const cand = line.sections.filter(([a, b]) => {
+    const pts = geo[`${a}|${b}`] || geo[`${b}|${a}`];
+    return pts && pts.length === 2;
+  });
+  if (!cand.length) return out;
+  for (const [a, b, km, gid] of cand) {
+    const dist = new Map([[a, 0]]), done = new Set();
+    for (;;) {
+      let u = null, best = Infinity;
+      for (const [k, d] of dist) if (!done.has(k) && d < best) { best = d; u = k; }
+      // Run to the end, not to the limit: a gap is dropped only if the line still joins its
+      // two ends without it (otherwise it is the only way across, and stays).
+      if (u === null || u === b) break;
+      done.add(u);
+      for (const [p, q, k2, g2] of line.sections) {
+        if (g2 === gid || (p !== u && q !== u)) continue;
+        const v = p === u ? q : p, nd = best + k2;
+        if (nd < (dist.has(v) ? dist.get(v) : Infinity)) dist.set(v, nd);
+      }
+    }
+    const round = dist.has(b) ? dist.get(b) : Infinity;
+    if (round > GAP_DETOUR * km && round < Infinity) out.add(gid);
+  }
+  return out;
+}
 function lineGraph(line) {
-  if (line._g) return line._g;
-  const g = new Map();
+  if (line._g && !(line._gapsPending && GEO_READY.has(line.id))) return line._g;
+  const g = new Map(), gaps = straightGaps(line);
   for (const [a, b, km, gid] of line.sections) {
     if (!g.has(a)) g.set(a, []);
     if (!g.has(b)) g.set(b, []);
+    if (gaps.has(gid)) continue;
     g.get(a).push([b, km, gid]);
     g.get(b).push([a, km, gid]);
   }
   return (line._g = g);
 }
 
-function pathBetween(line, from, to, avoidSt, avoidGid) {
+/* A JUNCTION ALONG A SECTION. Most junctions are a node of only the line that ends there:
+   the line that carries on past it passes through mid-section (Switzerland: 3 in 4). A ride
+   from such a junction along the other line is the part of that section beyond it, so the
+   ride carries `cuts`, {junction id: [station a, station b, t]}, the junction lying t along
+   the section a-b of its line (from a), and the line's graph gets the junction as a node
+   with the section split there. The parts are `gid~lo~hi` (VSEP), which spanOf reads back;
+   crediting and drawing take just that part of the section. */
+const VSEP = '~';
+function spanOf(g) {
+  const i = g.indexOf(VSEP);
+  if (i < 0) return [g, 0, 1];
+  const [p, lo, hi] = g.split(VSEP);
+  return [p, +lo, +hi];
+}
+const partGid = (gid, lo, hi) => (lo <= 0 && hi >= 1 ? gid
+  : `${gid}${VSEP}${+lo.toFixed(5)}${VSEP}${+hi.toFixed(5)}`);
+function cutGraph(line, cuts) {
+  const base = lineGraph(line);
+  const g = new Map([...base].map(([k, v]) => [k, [...v]]));
+  const bySec = new Map();
+  for (const [node, c] of Object.entries(cuts || {})) {
+    // A node of the line itself (since a rebuild) needs no cut.
+    if (!Array.isArray(c) || base.has(node)) continue;
+    const [a, b, t] = c;
+    const sec = line.sections.find(s => (s[0] === a && s[1] === b) || (s[0] === b && s[1] === a));
+    if (!sec) continue;
+    const f = Math.max(0, Math.min(1, sec[0] === a ? +t : 1 - t));
+    if (!bySec.has(sec)) bySec.set(sec, []);
+    bySec.get(sec).push([f, node]);
+  }
+  for (const [sec, cs] of bySec) {
+    const [a, b, km, gid] = sec;
+    const drop = (u, v) => g.set(u, g.get(u).filter(e => !(e[0] === v && e[2] === gid)));
+    drop(a, b);
+    drop(b, a);
+    const chain = [[0, a], ...cs.sort((x, y) => x[0] - y[0]), [1, b]];
+    for (let i = 1; i < chain.length; i++) {
+      const [t0, u] = chain[i - 1], [t1, v] = chain[i];
+      const pg = partGid(gid, t0, t1);
+      if (!g.has(u)) g.set(u, []);
+      if (!g.has(v)) g.set(v, []);
+      g.get(u).push([v, km * (t1 - t0), pg]);
+      g.get(v).push([u, km * (t1 - t0), pg]);
+    }
+  }
+  return g;
+}
+
+function pathBetween(line, from, to, avoidSt, avoidGid, cuts) {
   if (from === to) return { gids: [], km: 0 };
-  const g = lineGraph(line);
+  const g = cuts ? cutGraph(line, cuts) : lineGraph(line);
   if (!g.has(from) || !g.has(to)) return null;
   const dist = new Map([[from, 0]]), prev = new Map(), seen = new Set();
   while (true) {
@@ -1701,12 +2007,16 @@ function pathAround(line, from, to) {
   return own.size ? alt : null;
 }
 
-/* Every station a run of sections passes through, ends included. */
+/* Every station a run of sections passes through, ends included. A part of a section
+   (spanOf) passes only the ends it reaches. */
 function pathStations(gids) {
   const s = new Set();
-  for (const gid of gids) {
+  for (const vg of gids) {
+    const [gid, lo, hi] = spanOf(vg);
     const e = SEC_BY_GID.get(gid);
-    if (e) { s.add(e.sec[0]); s.add(e.sec[1]); }
+    if (!e) continue;
+    if (lo <= 0) s.add(e.sec[0]);
+    if (hi >= 1) s.add(e.sec[1]);
   }
   return s;
 }
@@ -1740,7 +2050,7 @@ function rideGids(ride) {
   // Stored as a flag rather than as the sections taken, because section ids are not stable
   // across rebuilds and the two stations are.
   const p = ride.around ? pathAround(line, ride.from, ride.to)
-    : pathBetween(line, ride.from, ride.to);
+    : pathBetween(line, ride.from, ride.to, null, null, ride.cuts);
   return (ride._gids = p ? p.gids : []);
 }
 
@@ -1760,6 +2070,8 @@ function newRide(lineId, from, to, date, opts = {}) {
   if (regions.length > 1) ride.regions = [...regions];
   if (opts.whole) ride.whole = true;
   if (opts.around) ride.around = true;
+  // A ride from or to a junction its line passes mid-section (cutGraph).
+  if (opts.cuts && Object.keys(opts.cuts).length) ride.cuts = opts.cuts;
   return ride;
 }
 
@@ -1958,10 +2270,31 @@ function listed(l) {
    riding the register line under an S-Bahn completes that much of the S-Bahn. */
 let CREDIT = null;
 const rideSig = r => [r.id, r.line, r.from, r.to, r.whole ? 1 : 0, r.around ? 1 : 0,
-                      (r.regions || []).join(','), r.region || '', r.wholeOf || ''].join('|');
+                      (r.regions || []).join(','), r.region || '', r.wholeOf || '',
+                      r.cuts ? JSON.stringify(r.cuts) : ''].join('|');
+/* What riding a run of sections credits: each section whole (`direct`) and its footprint on
+   the owner track; a part of a section (`gid~lo~hi`, a ride from a junction along it) only
+   the part of its footprint inside lo..hi. */
+function creditRun(gids, push, direct) {
+  for (const vg of gids) {
+    const [gid, lo, hi] = spanOf(vg);
+    if (lo <= 0 && hi >= 1) {
+      direct.add(gid);
+      push(gid, 0, 1);
+      for (const [t, from, to] of footOf(gid)) push(t, Math.min(from, to), Math.max(from, to));
+      continue;
+    }
+    for (const [t, from, to, a, b] of footOf(gid)) {
+      const x = Math.max(lo, Math.min(a, b)), y = Math.min(hi, Math.max(a, b));
+      if (y <= x || b === a) continue;
+      const at = s => from + (s - a) / (b - a) * (to - from);
+      push(t, Math.min(at(x), at(y)), Math.max(at(x), at(y)));
+    }
+  }
+}
 function creditState() {
   const rides = here();
-  const sig = DATA_GEN + '#' + rides.map(rideSig).join(';');
+  const sig = DATA_GEN + '#' + GAPS_GEN + '#' + rides.map(rideSig).join(';');
   if (CREDIT && CREDIT.sig === sig) return CREDIT;
   const raw = new Map(), direct = new Set();
   const push = (gid, lo, hi) => {
@@ -1969,13 +2302,7 @@ function creditState() {
     if (!raw.has(gid)) raw.set(gid, []);
     raw.get(gid).push([lo, hi]);
   };
-  for (const ride of rides) {
-    for (const gid of rideGids(ride)) {
-      direct.add(gid);
-      push(gid, 0, 1);
-      for (const [t, from, to] of footOf(gid)) push(t, Math.min(from, to), Math.max(from, to));
-    }
-  }
+  for (const ride of rides) creditRun(rideGids(ride), push, direct);
   const R = new Map();
   for (const [t, iv] of raw) R.set(t, mergeSpans(iv, secKm(t)));
   const touched = new Set(direct);
@@ -2011,6 +2338,66 @@ function mapBack(gid, R) {
     }
   }
   return mergeSpans(out, secKm(gid));
+}
+
+/* WHICH TRIPS RODE THIS (Anita, 2026-10-02): the trips that credit a run of sections, by
+   riding them or through track ownership from a ride on another line, so a stretch that
+   should not be ridden can be traced to the trip that did it. One ride's credit is worked
+   out the way creditState works out all of them together. */
+function rideCredit(ride) {
+  if (ride._credit && ride._credit.gen === DATA_GEN) return ride._credit;
+  const raw = new Map(), direct = new Set();
+  const push = (gid, lo, hi) => {
+    if (hi <= lo) return;
+    if (!raw.has(gid)) raw.set(gid, []);
+    raw.get(gid).push([lo, hi]);
+  };
+  creditRun(rideGids(ride), push, direct);
+  const R = new Map();
+  for (const [t, iv] of raw) R.set(t, mergeSpans(iv, secKm(t)));
+  return (ride._credit = { gen: DATA_GEN, R, direct });
+}
+
+/* [{trip, km, legs: [[ride, km]]}] over `gids`, the latest trip first; km is what each
+   credits of those sections. Cached on the rides and the sections asked about. */
+let TRIPS_OVER = { sig: null, by: new Map() };
+function tripsOver(gids) {
+  const sig = creditState().sig, key = gids.join(',');
+  if (TRIPS_OVER.sig !== sig) TRIPS_OVER = { sig, by: new Map() };
+  if (TRIPS_OVER.by.has(key)) return TRIPS_OVER.by.get(key);
+  // Owner sections under these: a ride touching none of them credits nothing here.
+  const owners = new Set();
+  for (const g of gids) for (const [t] of footOf(g)) owners.add(t);
+  const out = [];
+  for (const trip of trips()) {
+    const legs = [];
+    for (const ride of trip.rides) {
+      const { R, direct } = rideCredit(ride);
+      if (![...R.keys()].some(t => owners.has(t))) continue;
+      let km = 0;
+      for (const g of gids) {
+        const f = direct.has(g) ? 1 : spansLength(mapBack(g, R));
+        if (!CLOSED.has(g)) km += secKm(g) * f;
+      }
+      if (km > 0.01) legs.push([ride, km]);
+    }
+    if (legs.length) out.push({ trip, km: legs.reduce((s, [, k]) => s + k, 0), legs });
+  }
+  out.reverse();
+  TRIPS_OVER.by.set(key, out);
+  return out;
+}
+
+// Opens a trip in the rides list, which draws it on the map.
+function showTrip(key) {
+  VIEW = { kind: 'home' };
+  PICK = { from: null, to: null };
+  HOME_TAB = 'rides';
+  EDITING = key;
+  FIT_TRIP = key;
+  openPanel(true);
+  render();
+  paintSelection();
 }
 
 // Section gid -> fraction of it ridden, and the same as merged spans along it.
@@ -2078,6 +2465,16 @@ function stats() {
   const byRegion = new Map();
   for (const [cc, total] of regionTotals())
     byRegion.set(cc, { done: 0, total, finished: 0 });
+  /* THE TOTAL IS regions.json's WHERE IT HAS ONE, loaded or not (tools/build_regions.py
+     owned_totals: the same sum on that country's build alone). The sum here depends on which
+     neighbours are loaded and in what order (a section two countries both built counts in
+     whichever loaded first), so a country's total would move by a few km as you panned. */
+  for (const cc of Object.keys(REGIONS)) {
+    if (!hasTotal(cc)) continue;
+    const e = byRegion.get(cc) || { done: 0, total: 0, finished: 0 };
+    e.total = REGIONS[cc].km;
+    byRegion.set(cc, e);
+  }
   for (const [t, r] of R) {
     const own = OWNSP.get(t);
     if (!own || CLOSED.has(t)) continue;
@@ -2127,12 +2524,17 @@ let RIDDEN_GEN = 0;         // the same guard as paintSelection's, for the same 
 async function paintRidden() {
   if (!mapReady || !map.getSource('ridden')) return;
   const gen = ++RIDDEN_GEN;
-  const wanted = new Map();
+  const wanted = new Map();      // line id -> section gid -> the parts of it ridden
   for (const ride of here()) {
     const line = LINE_BY_ID.get(ride.line);
     if (!line) continue;
-    if (!wanted.has(line.id)) wanted.set(line.id, new Set());
-    for (const gid of rideGids(ride)) wanted.get(line.id).add(gid);
+    if (!wanted.has(line.id)) wanted.set(line.id, new Map());
+    const m = wanted.get(line.id);
+    for (const vg of rideGids(ride)) {
+      const [gid, lo, hi] = spanOf(vg);
+      if (!m.has(gid)) m.set(gid, []);
+      m.get(gid).push([lo, hi]);
+    }
   }
   const features = [];
   for (const [lineId, gids] of wanted) {
@@ -2144,8 +2546,11 @@ async function paintRidden() {
       if (!gids.has(gid)) continue;
       const pts = g[`${a}|${b}`];
       if (!pts || pts.length < 2) continue;
-      features.push({ type: 'Feature', properties: { c: colour, l: lineId },
-                      geometry: { type: 'LineString', coordinates: pts } });
+      for (const [lo, hi] of mergeSpans(gids.get(gid), 0)) {
+        const piece = hi > lo && sliceLine(pts, lo, hi);
+        if (piece) features.push({ type: 'Feature', properties: { c: colour, l: lineId },
+                                   geometry: { type: 'LineString', coordinates: piece } });
+      }
     }
   }
   map.getSource('ridden').setData({ type: 'FeatureCollection', features });
@@ -2154,9 +2559,20 @@ async function paintRidden() {
 /* Every not-running section of every loaded country, for the base map. A few lines a
    country, so their geometry is fetched as soon as the country's lines are in. */
 let CLOSED_GEN = 0;
-async function paintClosed() {
+let CLOSED_PAINTED = false;     // closed.json is drawn once; it does not change as countries load
+async function paintClosed(force) {
   if (!mapReady || !map.getSource('closed')) return;
   const gen = ++CLOSED_GEN;
+  await CLOSED_READY;          // so a country loading first does not fetch geometry files
+  if (gen !== CLOSED_GEN) return;
+  if (CLOSED_ALL) {
+    if (CLOSED_PAINTED && !force) return;
+    CLOSED_PAINTED = true;
+    map.getSource('closed').setData({ type: 'FeatureCollection', features: CLOSED_ALL.map(
+      ([cc, l, pts]) => ({ type: 'Feature', properties: { l, cc },
+                           geometry: { type: 'LineString', coordinates: pts } })) });
+    return;
+  }
   const features = [];
   for (const line of LINES) {
     if (!line.km_closed) continue;
@@ -2181,8 +2597,26 @@ let EDITING = null;        // the ride whose date and note are open for editing
 // The legs of one journey share a date, so the last one entered is the default.
 let LAST_DATE = '';
 
+/* The panel's state. On a phone (the CSS's 720 px) it is a sheet: `sheet` on the body shrinks
+   the map above it, and the map is told its new size, keeping its centre, which is where a
+   tapped station usually is. On a wider screen the classes change nothing. */
+let SHEET_FULL = false;
 function openPanel(on) {
   document.getElementById('panel').classList.toggle('open', on);
+  if (!on) SHEET_FULL = false;
+  layoutSheet();
+}
+function sheetFull(on) {
+  SHEET_FULL = on;
+  layoutSheet();
+}
+function layoutSheet() {
+  const open = document.getElementById('panel').classList.contains('open');
+  document.getElementById('panel').classList.toggle('full', open && SHEET_FULL);
+  document.body.classList.toggle('sheet', open);
+  const b = document.getElementById('panel-size');
+  if (b) b.textContent = SHEET_FULL ? 'shrink' : 'expand';
+  map.resize();
 }
 
 /* What the map draws as selected: the whole of the chosen line, every station on it, and the
@@ -2229,6 +2663,54 @@ async function paintSelection() {
       if (gen !== PAINT_GEN) return;   // moved on while fetching
       const run = pickedRun();
       drawLine(line, g, run && run.p ? run.p.gids : null, PICK.from, PICK.to, lines, mark);
+      // A run past a junction end: its legs on the other lines, in the run's colour.
+      for (const leg of (run && run.legs) || []) {
+        if (leg.line === line) continue;
+        const g2 = await geomFor(leg.line.id);
+        if (gen !== PAINT_GEN) return;
+        lines.features.push(...runFeatures(leg.line, leg.p.gids, g2, THEME.run));
+      }
+      /* The stops past its junction ends, as faint rings: the rows of the diagram that can be
+         picked there (contRows, the diagram's own list). A picked one, off this line, filled
+         like the line's own picked ends. And the track from the junction to each, drawn as
+         the line is (held back, with its halo) in the colour of the line it runs on, so a
+         stop past the junction is not left floating away from the line (Anita, 2026-10-05). */
+      const on = lineStations(line), offLine = new Set();
+      for (const [j, rows] of contEnds(line)) {
+        const J = STATIONS[j];
+        for (const r of rows) {
+          offLine.add(r.st);
+          if (r.kind === 'thru') {
+            for (const leg of r.legs) {
+              const g2 = await geomFor(leg.line.id);
+              if (gen !== PAINT_GEN) return;
+              lines.features.push(...runFeatures(leg.line, leg.gids, g2, lineColour(leg.line), 'base'));
+            }
+          } else if (r.gid && J) {
+            // The service's section runs from a stop of this line: only the part past j.
+            const e = SEC_BY_GID.get(r.gid);
+            const g2 = e && await geomFor(e.line.id);
+            if (gen !== PAINT_GEN) return;
+            const pts = e && g2[`${e.sec[0]}|${e.sec[1]}`];
+            if (!pts || pts.length < 2) continue;
+            const t = nearOnPoly(pts, J.x, J.y).t;
+            /* The half towards the stop, told by which end of the geometry lies nearer it: a
+               section's points need not run in the order of its key (the Northeast
+               Regional's Penn Station|New Rochelle runs New Rochelle first, and the half
+               drawn lay under the Hell Gate Line itself; Anita, 2026-10-05). */
+            const S = STATIONS[r.st], p0 = pts[0], p1 = pts[pts.length - 1];
+            const d2 = p => (p[0] - S.x) ** 2 + (p[1] - S.y) ** 2;
+            const piece = S && d2(p0) < d2(p1) ? sliceLine(pts, 0, t) : sliceLine(pts, t, 1);
+            if (piece) lines.features.push({ type: 'Feature',
+              properties: { part: 'base', c: lineColour(e.line) },
+              geometry: { type: 'LineString', coordinates: piece } });
+          }
+        }
+      }
+      for (const s of offLine)
+        if (!on.has(s) && s !== PICK.from && s !== PICK.to) mark(s, 'reach', THEME.stStroke);
+      for (const [s, role] of [[PICK.from, 'from'], [PICK.to, 'to']])
+        if (s && !on.has(s)) mark(s, role, THEME.run);
     }
   } else if (shown) {
     /* A trip opened in the rides list, drawn the way the line view would draw it, while the
@@ -2257,7 +2739,8 @@ async function paintSelection() {
         stops.add(r.from); stops.add(r.to);
       }
       for (const s of via) if (!stops.has(s) && isStop(s)) mark(s, 'via');
-      for (const s of stops) mark(s, 'from', THEME.run);
+      // A junction between two legs is passed through, not got off at.
+      for (const s of stops) if (isStop(s)) mark(s, 'from', THEME.run);
     }
     if (FIT_TRIP === shown.key) {
       FIT_TRIP = null;
@@ -2271,17 +2754,20 @@ async function paintSelection() {
     const via = new Set();
     for (const leg of legs) {
       if (!leg.line || !leg.p) continue;
-      const g = await geomFor(leg.line.id);
-      if (gen !== PAINT_GEN) return;
-      lines.features.push(...runFeatures(leg.line, leg.p.gids, g, lineColour(leg.line)));
-      for (const s of pathStations(leg.p.gids)) via.add(s);
+      // A leg through junctions is several lines, each drawn in its own colour.
+      for (const part of leg.parts || [{ line: leg.line, gids: leg.p.gids }]) {
+        const g = await geomFor(part.line.id);
+        if (gen !== PAINT_GEN) return;
+        lines.features.push(...runFeatures(part.line, part.gids, g, lineColour(part.line)));
+        for (const s of pathStations(part.gids)) via.add(s);
+      }
     }
     const clicked = new Set(VIEW.stops);
-    /* Every station the next click could land on, as a faint ring: anything sharing a line
-       with the last stop. Anything else would be refused, so the rings are the whole of
-       what is clickable. */
+    /* Every station the next click could land on along a line from the last stop, as a
+       faint ring. A station further on through junctions is taken too (junctionRoute), but
+       has no ring: that reach is a few hundred kilometres of network in Germany. */
     for (const s of traceReachable()) if (!clicked.has(s) && !via.has(s)) mark(s, 'reach');
-    for (const s of via) if (!clicked.has(s)) mark(s, 'via');
+    for (const s of via) if (!clicked.has(s) && isStop(s)) mark(s, 'via');
     for (const s of clicked) mark(s, 'from', THEME.run);
   }
   map.getSource('sel').setData(lines);
@@ -2345,15 +2831,17 @@ function fitIfOutside(features) {
   map.fitBounds([[minx, miny], [maxx, maxy]], { padding: 80, duration: 0, maxZoom: 14 });
 }
 
-function runFeatures(line, gids, g, colour) {
+function runFeatures(line, gids, g, colour, part = 'run') {
   const out = [];
-  for (const gid of gids) {
+  for (const vg of gids) {
+    const [gid, lo, hi] = spanOf(vg);
     const e = SEC_BY_GID.get(gid);
-    if (!e || e.line !== line) continue;
+    if (!e || e.line !== line || hi <= lo) continue;
     const c = g[`${e.sec[0]}|${e.sec[1]}`];
-    if (c && c.length > 1)
-      out.push({ type: 'Feature', properties: { part: 'run', c: colour },
-                 geometry: { type: 'LineString', coordinates: c } });
+    const piece = c && c.length > 1 && sliceLine(c, lo, hi);
+    if (piece)
+      out.push({ type: 'Feature', properties: { part, c: colour },
+                 geometry: { type: 'LineString', coordinates: piece } });
   }
   return out;
 }
@@ -2364,6 +2852,48 @@ function pickedRun() {
   if (VIEW.kind !== 'line' || !PICK.from || !PICK.to) return null;
   const line = LINE_BY_ID.get(VIEW.id);
   if (!line) return null;
+  if (PICK.through) {
+    /* Through a junction end (throughEnds): the walk from the stop picked past it back to the
+       junction, this line between its two ends of the ride, and the walk on from the other
+       junction. Either end may be a stop of this line instead. */
+    const T = PICK.through;
+    const ef = throughEntry(line, T.from), et = throughEntry(line, T.to);
+    const none = { line, short: null, alt: null, around: false, p: null };
+    if ((T.from && !ef) || (T.to && !et) || (ef && et && ef.j === et.j)) return none;
+    const a = ef ? ef.j : PICK.from, b = et ? et.j : PICK.to;
+    const mid = a === b ? { gids: [], km: 0 } : pathBetween(line, a, b);
+    if (!mid) return none;
+    const back = l => ({ ...l, from: l.to, to: l.from, gids: [...l.gids].reverse() });
+    const legs = [...(ef ? [...ef.legs].reverse().map(back) : []),
+                  ...(mid.gids.length ? [{ line, from: a, to: b, gids: mid.gids, km: mid.km }] : []),
+                  ...(et ? et.legs : [])].map(l => ({ ...l, p: { gids: l.gids, km: l.km } }));
+    const p = { gids: legs.flatMap(l => l.gids), km: legs.reduce((s, l) => s + l.km, 0) };
+    return { line, short: p, alt: null, around: false, p, legs };
+  }
+  if (PICK.past) {
+    // Two legs: this line to the boarding stop, the pattern from there past the junction (one
+    // leg when the picked stop is the boarding stop).
+    const other = LINE_BY_ID.get(PICK.past.line), board = PICK.past.board;
+    const pastAt = lineStations(line).has(PICK.from) ? PICK.to : PICK.from;
+    const mine = pastAt === PICK.to ? PICK.from : PICK.to;
+    const none = { line, short: null, alt: null, around: false, p: null };
+    const b = other && pathBetween(other, board, pastAt);
+    const a = mine === board ? { gids: [], km: 0 } : pathBetween(line, mine, board);
+    if (!a || !b) return none;
+    // A stop between the boarding stop and the junction would ride that stretch twice.
+    const toJ = s => { const q = pathBetween(line, s, PICK.past.j); return q ? q.km : Infinity; };
+    if (mine !== board && toJ(mine) < toJ(board)) return none;
+    const legs = [];
+    if (pastAt === PICK.to) {
+      if (mine !== board) legs.push({ line, from: mine, to: board, p: a });
+      legs.push({ line: other, from: board, to: pastAt, p: b });
+    } else {
+      legs.push({ line: other, from: pastAt, to: board, p: b });
+      if (mine !== board) legs.push({ line, from: board, to: mine, p: a });
+    }
+    const p = { gids: [...a.gids, ...b.gids], km: a.km + b.km };
+    return { line, short: p, alt: null, around: false, p, legs };
+  }
   const short = pathBetween(line, PICK.from, PICK.to);
   const alt = short ? pathAround(line, PICK.from, PICK.to) : null;
   const around = !!(PICK.around && alt);
@@ -2397,9 +2927,12 @@ function render() {
 
 function renderHome(el) {
   const s = stats();
-  const pct = s.totalKm ? (100 * s.doneKm / s.totalKm) : 0;
-  // The headline is the country under the middle of the map, and follows you across borders.
-  const focusIn = LOADED.has(FOCUS);
+  const pct = s.totalKm ? Math.min(100, 100 * s.doneKm / s.totalKm) : 0;
+  /* The headline is the country under the middle of the map, and follows you across borders.
+     A country not loaded holds no rides (those load at start), so its numbers are 0 of its
+     total from regions.json; one still loading may hold some, so it waits. */
+  const known = cc => LOADED.has(cc) || (hasTotal(cc) && !LOADING.has(cc));
+  const focusIn = known(FOCUS);
   let h;
   if (!FOCUS) {
     /* No country under the middle of the map (the world view a first visit opens on): the
@@ -2438,14 +2971,20 @@ function renderHome(el) {
   ).join('') + `</div>`;
 
   if (HOME_TAB === 'country') {
-    /* Every built country. One whose lines are in (you have been over it, or have rides
-       there) shows its numbers; one not yet visited shows only that, since its numbers need
-       its data. A click goes there, which loads it. */
-    for (const [k, reg] of Object.entries(REGIONS)) {
+    /* Every built country, with its numbers: its total is in regions.json, and a country
+       not loaded has no rides. Only with an older regions.json does a country not visited
+       show only that. A click goes there, which loads it. Most ridden first, then, among
+       those equal (nearly all at 0 km), the most passenger rail (Anita, 2026-10-04). */
+    const doneKm = k => (s.byRegion.get(k) || {}).done || 0;
+    const railKm = k => REGIONS[k].km || (s.byRegion.get(k) || {}).total || 0;
+    const order = Object.keys(REGIONS).sort((a, b) => (doneKm(b) - doneKm(a)) || (railKm(b) - railKm(a)));
+    for (const k of order) {
+      const reg = REGIONS[k];
       const r = s.byRegion.get(k);
       const here_ = k === FOCUS ? ' · in view' : '';
-      if (LOADED.has(k) && r) {
-        const p = r.done / Math.max(r.total, 0.001);
+      if (known(k) && r) {
+        // Done is summed here and the total in the build, so it can come out a hair over.
+        const p = Math.min(1, r.done / Math.max(r.total, 0.001));
         h += meterRow({ name: reg.name, right: `${(100 * p).toFixed(2)}%`, frac: p,
                         colour: '#4a9eff', click: `goRegion('${k}')`,
                         detail: `${r.done.toFixed(1)} of ${Math.round(r.total).toLocaleString()} km`
@@ -2453,7 +2992,8 @@ function renderHome(el) {
       } else {
         h += `<div class="lrow" style="cursor:pointer" onclick="goRegion('${k}')">`
           + `<div class="n"><b>${esc(reg.name)}</b><span>go →</span></div>`
-          + `<div class="o">not visited yet${here_}</div></div>`;
+          + `<div class="o">${LOADING.has(k) ? 'loading its lines' : 'not visited yet'}`
+          + `${here_}</div></div>`;
       }
     }
   } else if (HOME_TAB === 'op') {
@@ -2479,12 +3019,12 @@ function renderHome(el) {
 let HOME_TAB = 'rides';
 function setHomeTab(k) { HOME_TAB = k; EDITING = null; render(); paintSelection(); }
 
-/* WHAT IS OPEN IN THE PANEL IS REMEMBERED: the view (a line, a station, an operator, the
-   lines over a piece of track, a journey being traced), the ends picked on a line, the home
-   tab and the trip open in it. Saved on every render, and put back on load once the
-   countries it needs (`need`) are in. Until then the page shows home and saves nothing, so
-   the load itself cannot overwrite what is being restored; any change the reader makes
-   first wins over the restore. */
+/* ONLY THE HOME TAB IS REMEMBERED across a reload. A page opens with nothing selected
+   (Anita, 2026-10-02): a line, station or trip restored from last time muted every other
+   line, and it was not clear why the map showed so little. The view, the picked ends and the
+   open trip are still saved on every render (saveUi), but bootUi no longer puts them back;
+   restoreUi and UI_PENDING are what did, and are kept should a link ever want to open a
+   view. */
 const UI_KEY = 'noritetsu.ui';
 let UI_PENDING = null;          // {saved, sig} while a saved view waits for its countries
 
@@ -2530,17 +3070,12 @@ function saveUi() {
   } catch (e) { /* remembered for this page only */ }
 }
 
-/* At boot: the tab and the open trip straight away, since they need nothing loaded; the
-   view itself waits in UI_PENDING for restoreUi. */
+// At boot: the home tab only; no view, picked ends or open trip (see above).
 function bootUi() {
   let s = null;
   try { s = JSON.parse(localStorage.getItem(UI_KEY) || 'null'); } catch (e) { }
   if (!s || typeof s !== 'object') return;
   if (['country', 'op', 'line', 'rides'].includes(s.tab)) HOME_TAB = s.tab;
-  if (typeof s.trip === 'string') EDITING = s.trip;
-  const v = s.view;
-  if (v && ['line', 'station', 'op', 'pick', 'trace'].includes(v.kind))
-    UI_PENDING = { saved: s, sig: uiSig() };
 }
 
 function restoreUi() {
@@ -2647,9 +3182,9 @@ function shownTrip() {
   return trips().find(t => t.key === EDITING) || null;
 }
 
-const rideKm = r => rideGids(r).reduce((s, gid) => {
-  const e = SEC_BY_GID.get(gid);
-  return s + (e ? e.sec[2] : 0);
+const rideKm = r => rideGids(r).reduce((s, vg) => {
+  const [gid, lo, hi] = spanOf(vg);
+  return s + secKm(gid) * Math.max(0, hi - lo);
 }, 0);
 
 function renderRides() {
@@ -2732,9 +3267,36 @@ function renderRides() {
   return h;
 }
 
+/* The rides joined to this one through junctions: legs that meet at a junction rather than
+   a stop. They go together, since a ride may end at a junction only where the next one
+   carries on from it. */
+function throughChain(id) {
+  const i = RIDES.findIndex(x => x.id === id);
+  if (i < 0) return [];
+  const joined = (p, q) => p && q && !p.whole && !q.whole && p.to === q.from
+    && !!STATIONS[p.to] && !isStop(p.to);
+  let lo = i, hi = i;
+  while (joined(RIDES[lo - 1], RIDES[lo])) lo--;
+  while (joined(RIDES[hi], RIDES[hi + 1])) hi++;
+  return RIDES.slice(lo, hi + 1);
+}
+
 function deleteRide(id) {
   const r = RIDES.find(x => x.id === id);
-  if (!r || !confirm(`Delete this ride?\n\n${rideLabel(r)}`)) return;
+  if (!r) return;
+  const chain = throughChain(id);
+  if (chain.length > 1) {
+    if (!confirm(`Delete this ride? It goes through a junction, so its ${chain.length} legs `
+                 + `go together:\n\n${chain.map(rideLabel).join('\n')}`)) return;
+    const ids = new Set(chain.map(x => x.id));
+    remember(`Removed ${stName(chain[0].from)} → ${stName(chain[chain.length - 1].to)}`);
+    RIDES = RIDES.filter(x => !ids.has(x.id));
+    if (ids.has(EDITING)) EDITING = null;
+    saveRides();
+    afterChange();
+    return;
+  }
+  if (!confirm(`Delete this ride?\n\n${rideLabel(r)}`)) return;
   removeRide(id);
 }
 
@@ -2851,7 +3413,10 @@ function traceAdd(id) {
   const last = s[s.length - 1];
   VIEW.note = '';
   if (last === id) return traceBack();
-  if (last && !traceReachable().has(id)) {
+  // Not on a line from the last stop: taken if register lines join the two through
+  // junctions, or while that is still being worked out (the leg says so).
+  const jr = last && !traceReachable().has(id) ? junctionRoute(last, id) : null;
+  if (jr && !jr.route && !jr.pending) {
     VIEW.note = `No line from ${stName(last)} goes to ${stName(id)}. Click the station `
       + `where you changed trains first.`;
     render();
@@ -2951,7 +3516,18 @@ function traceLegs() {
     cands = cands.filter(c => c.p.km <= best * 1.3 + 1);
     cands.sort((x, y) => (x.straight - y.straight) || (x.p.km - y.p.km)
                          || lineOrder(x.line, y.line));
-    all.push({ i, a, b, cands, ids: new Set(cands.map(c => c.line.id)) });
+    /* No one line calls at both: the way over register lines through junctions, where there
+       is one (junctionRoute), as one candidate of several lines (`parts`). */
+    let pending = false;
+    if (!cands.length) {
+      const jr = junctionRoute(a, b);
+      if (jr.route) {
+        cands.push({ line: jr.route.legs[0].line, parts: jr.route.legs, straight: false,
+                     p: { gids: jr.route.gids, km: jr.route.km } });
+      }
+      pending = !jr.route && jr.pending;
+    }
+    all.push({ i, a, b, cands, pending, ids: new Set(cands.map(c => c.line.id)) });
   }
   const reach = (id, i) => {
     let n = 0;
@@ -2973,7 +3549,8 @@ function traceLegs() {
     const pick = [...leg.cands].sort((x, y) => lex(rank(x), rank(y)))[0] || null;
     leg.line = pick && pick.line;
     leg.p = pick && pick.p;
-    prev = leg.line;
+    leg.parts = pick && pick.parts;
+    prev = leg.parts ? leg.parts[leg.parts.length - 1].line : leg.line;
   }
   return all;
 }
@@ -2986,8 +3563,13 @@ function traceRides(legs, date) {
   const rides = [];
   let cur = null;
   const same = (p, km) => p && Math.abs(p.km - km) < 0.05;
-  for (const leg of legs) {
-    if (cur && cur.line === leg.line) {
+  // A leg through junctions is a ride per line, joined at the junctions.
+  const units = legs.flatMap(leg => (leg.parts
+    ? leg.parts.map(pt => ({ line: pt.line, a: pt.from, b: pt.to, cuts: pt.cuts,
+                             p: { gids: pt.gids, km: pt.km } }))
+    : [leg]));
+  for (const leg of units) {
+    if (cur && cur.line === leg.line && !cur.cuts && !leg.cuts) {
       const km = cur.km + leg.p.km;
       const short = pathBetween(leg.line, cur.from, leg.b);
       const around = !same(short, km) && pathAround(leg.line, cur.from, leg.b);
@@ -2999,10 +3581,12 @@ function traceRides(legs, date) {
       }
     }
     if (cur) rides.push(cur);
-    cur = { line: leg.line, from: leg.a, to: leg.b, km: leg.p.km, around: false };
+    cur = { line: leg.line, from: leg.a, to: leg.b, km: leg.p.km, around: false,
+            cuts: leg.cuts };
   }
   if (cur) rides.push(cur);
-  return rides.map(r => newRide(r.line.id, r.from, r.to, date, { around: r.around }));
+  return rides.map(r => newRide(r.line.id, r.from, r.to, date,
+                                { around: r.around, cuts: r.cuts }));
 }
 
 function renderTrace(el) {
@@ -3012,9 +3596,10 @@ function renderTrace(el) {
   let h = `<div class="btnrow"><button class="act" onclick="goHome()">← cancel</button></div>`
     + `<h2 class="sec">Trace a journey</h2>`
     + `<p class="muted">Click the stations on the map in the order you passed them, or search `
-    + `them above. Each leg needs one line calling at both ends, so click at least every `
-    + `station where you changed trains. The faint rings are where the next click can go; `
-    + `click the last stop again to take it back.</p>`;
+    + `them above. Each leg needs one line calling at both ends, or lines meeting at junctions `
+    + `between them, so click at least every station where you changed trains. The faint `
+    + `rings are the stations on a line from the last stop; click the last stop again to `
+    + `take it back.</p>`;
 
   /* The journey as a small strip diagram: a white dot per stop, and between two stops the
      leg's line in its own colour down the rail. A leg with a choice of line looks the same
@@ -3027,10 +3612,14 @@ function renderTrace(el) {
     const c = leg.line ? lineColour(leg.line) : THEME.off;
     h += `<div class="tleg${leg.line ? '' : ' bad'}" style="--c:${c}"><div class="rail"></div>`
       + `<div class="what">`;
-    if (!leg.line) {
+    if (!leg.line && leg.pending) {
+      h += `Looking for a way through the junctions…`;
+    } else if (!leg.line) {
       h += `No one line calls at both. Take this stop back and click where you changed.`;
     } else {
-      const name = `<span class="nm">${esc(lineName(leg.line))}</span>`;
+      // Through junctions: the lines it goes over, in order.
+      const name = `<span class="nm">${esc(leg.parts
+        ? leg.parts.map(pt => lineName(pt.line)).join(' · ') : lineName(leg.line))}</span>`;
       h += leg.cands.length > 1
         ? `<label class="pickline">${name}<span class="caret">▾</span>`
           + `<select onchange="traceChoose(${leg.i}, this.value)">`
@@ -3373,6 +3962,7 @@ function layoutPiece(line, nodes, adj, other) {
   const intervals = [[]];                 // per lane, the [lo, hi] spans already taken
   // The main route's two ends, until a loop hanging off one of them carries it on (below).
   const ends = { first: null, last: null };
+  let main = null;                        // the main route: its stations and sections, in order
   if (best.d < 0) {                       // a single station, or two joined only to each other
     pos.set(nodes[0], 0); laneOf.set(nodes[0], 0);
   } else {
@@ -3443,11 +4033,46 @@ function layoutPiece(line, nodes, adj, other) {
     for (const e of pedges) { used.add(e); placedEdges.push({ ...e, lane: 0 }); }
     intervals[0].push([0, km]);
     ends.first = path[0]; ends.last = path[path.length - 1];
+    main = { path, pedges, at: new Map(path.map((id, i) => [id, i])) };
   }
+
+  /* WHICH SIDE A BRANCH HANGS ON. Anita (2026-10-04): a branch sits on the side of the end its
+     trains run to, so the Northeast Regional's Springfield branch is listed ABOVE New Haven,
+     reading Springfield ... Wallingford, New Haven, then on down to New York, the way its
+     trains run. The data says nothing about where trains run, so the track's shape stands in:
+     a train off a branch carries on the way the curve points, not back on itself. The branch
+     leaves the junction heading north, the main route leaves it east towards Boston and
+     south-west towards New York; the branch is nearer the Boston heading, so its trains run
+     on towards New York, and it goes on the Boston side. Headings are taken to a station
+     about 5 km out on each, so a station a few hundred metres off the junction cannot swing
+     it. Only a branch off the main route's middle is turned; from anywhere else it hangs
+     below, as before. */
+  const bearing = (a, b) => {
+    const p = STATIONS[a], q = STATIONS[b];
+    if (!p || !q) return null;
+    return Math.atan2(q.y - p.y, (q.x - p.x) * Math.cos(p.y * Math.PI / 180));
+  };
+  const out5 = (ids, kms) => {             // the station ~5 km along a run of stations
+    let km = 0, i = 1;
+    for (; i < ids.length - 1 && km + kms[i - 1] < 5; i++) km += kms[i - 1];
+    return ids[Math.min(i, ids.length - 1)];
+  };
+  const turn = (x, y) => { const d = Math.abs(x - y) % (2 * Math.PI); return Math.min(d, 2 * Math.PI - d); };
+  const branchSide = (start, route, redges) => {
+    const k = main ? main.at.get(start) : undefined;
+    if (k == null || k === 0 || k === main.path.length - 1) return 1;
+    const b = bearing(start, out5(route, redges.map(e => e.km)));
+    const upIds = main.path.slice(0, k + 1).reverse();
+    const up = bearing(start, out5(upIds, main.pedges.slice(0, k).reverse().map(e => e.km)));
+    const down = bearing(start, out5(main.path.slice(k), main.pedges.slice(k).map(e => e.km)));
+    if (b == null || up == null || down == null) return 1;
+    return turn(b, up) < turn(b, down) ? -1 : 1;
+  };
 
   // Everything else, one route at a time, each in the nearest lane free over its span.
   const EPS = 1e-6;
-  const blockAt = new Map();   // station -> how many side-route stations already follow it
+  // `station|dir` -> how many side-route stations already sit on that side of it
+  const blockAt = new Map();
   const freeLane = (lo, hi, above) => {
     for (let L = above + 1; ; L++) {
       if (!intervals[L]) intervals[L] = [];
@@ -3518,10 +4143,11 @@ function layoutPiece(line, nodes, adj, other) {
       if (T === ends.last) ends.last = null; else ends.first = null;   // once per end
       continue;
     }
-    const dir = p1 >= p0 ? 1 : -1;
-    const k0 = blockAt.get(start) || 0;
+    const dir = rejoins ? (p1 >= p0 ? 1 : -1) : branchSide(start, route, redges);
+    // Blocks above a station and blocks below it are counted apart.
+    const bk = `${start}|${dir}`, k0 = blockAt.get(bk) || 0;
     interior.forEach((id, i) => pos.set(id, p0 + EPS * (k0 + i + 1) * dir));
-    blockAt.set(start, k0 + interior.length);
+    blockAt.set(bk, k0 + interior.length);
     if (!rejoins) p1 = pos.get(end);
     /* TRACK WITH NO STATION OF ITS OWN shares one outer lane, drawn thin. Given a lane each,
        the freight bypasses around Tokyo took the Tohoku Line to 11 lanes; they count towards
@@ -3556,12 +4182,18 @@ const laneX = L => STRIP_X0 + L * STRIP_LANE;
    actually are, since a name that wraps makes its row taller. Redrawn when the web font
    arrives or the panel is resized, both of which move rows. */
 let STRIP_REDRAW = null;
+/* The diagram's continuations past junction ends, written by renderLine as it lays out the
+   rows (`data-cont` rows): `dots` [{n, lane, colour, pick}], `segs` [{n, lane, colour, run,
+   from: {id, lane} (the junction's row) or {n, lane} (the stop before)}], and the lanes the
+   whole diagram needs. */
+let CONT = { segs: [], dots: [], lanes: 1 };
 function drawStrip(strip, line, lay, st) {
   if (!strip || !strip.isConnected) return;
   const old = strip.querySelector(':scope > svg');
   if (old) old.remove();
   const y = new Map();
-  for (const row of strip.querySelectorAll('.st'))
+  // A hidden stub's junction gets no place, so no track is drawn to it (renderLine `stub`).
+  for (const row of strip.querySelectorAll('.st:not(.stub)'))
     y.set(row.dataset.st, row.offsetTop + row.offsetHeight / 2);
   const capY = k => {
     const c = strip.querySelector(`[data-cap="${k}"]`);
@@ -3616,6 +4248,7 @@ function drawStrip(strip, line, lay, st) {
       const pick = row && row.classList.contains('pick');
       const via = row && row.classList.contains('via');
       const jn = row && row.classList.contains('jn');
+      if (row && row.classList.contains('quiet')) continue;     // no dot for a hidden junction
       const stroke = pick || via ? THEME.run : st.reached(r.id) ? own
         : row && row.classList.contains('gone') ? THEME.stripGone : dotDim;
       dots.push(`<circle cx="${laneX(r.lane)}" cy="${y.get(r.id)}" r="${jn ? 3 : 5}" `
@@ -3623,8 +4256,32 @@ function drawStrip(strip, line, lay, st) {
         + `stroke-width="${jn ? 1.5 : 2}"/>`);
     }
   });
+  /* Past the junction ends (CONT): in the colour of the line the track runs on to, held
+     back as the line's own unridden sections are until that track has been ridden (Anita,
+     2026-10-04: full colour read as ridden), white as far as a picked stop. */
+  const cont = st.cont || { segs: [], dots: [] };
+  const yc = new Map();
+  for (const row of strip.querySelectorAll('.st[data-cont]'))
+    yc.set(+row.dataset.cont, row.offsetTop + row.offsetHeight / 2);
+  for (const s of cont.segs) {
+    const ya = s.from.id != null ? y.get(s.from.id) : yc.get(s.from.n), yb = yc.get(s.n);
+    if (ya == null || yb == null) continue;
+    const xa = laneX(s.from.lane), xb = laneX(s.lane);
+    const dir = Math.sign(yb - ya) || 1, h = Math.min(14, Math.abs(yb - ya) / 2);
+    const d = `M${xa} ${ya}` + (xa !== xb ? `C${xa} ${ya + dir * h / 2} ${xb} ${ya + dir * h / 2} `
+      + `${xb} ${ya + dir * h}` : '') + `L${xb} ${yb}`;
+    // As the line's own sections: dimmed until ridden, white while picked; 3 px, not 4.
+    paths.push([s.run ? THEME.run : s.ridden ? s.colour : dimmed(s.colour, 0.30), d, 3]);
+  }
+  for (const c of cont.dots) {
+    const cy = yc.get(c.n);
+    if (cy == null) continue;
+    const stroke = c.pick ? THEME.run : c.ridden ? c.colour : dimmed(c.colour, 0.45);
+    dots.push(`<circle cx="${laneX(c.lane)}" cy="${cy}" r="5" `
+      + `fill="${c.pick ? THEME.run : THEME.panel}" stroke="${stroke}" stroke-width="2"/>`);
+  }
   paths.sort((p, q) => rank(p[0]) - rank(q[0]));
-  const w = laneX(lay.lanes - 1) + STRIP_X0, hgt = strip.scrollHeight;
+  const w = laneX(Math.max(lay.lanes, cont.lanes || 1) - 1) + STRIP_X0, hgt = strip.scrollHeight;
   strip.insertAdjacentHTML('afterbegin',
     `<svg width="${w}" height="${hgt}" viewBox="0 0 ${w} ${hgt}">`
     + paths.map(([c, d, sw, dash]) => `<path d="${d}" fill="none" stroke="${c}" `
@@ -3681,6 +4338,45 @@ function endJoins(line) {
     if (best) out.set(s, best);
   }
   return (line._ends = out);
+}
+
+/* The trips over the open line, or over the picked stretch of it: each with the legs that
+   credit it and how much, openable in the rides list and deletable behind the usual confirm.
+   A leg on another line credits this one through the track the two share. */
+function tripsOverHtml(line, runGids) {
+  const gids = runGids || partsOf(line).flatMap(p => p.sections.map(s => s[3]));
+  const list = tripsOver(gids);
+  if (!list.length) return '';
+  const mine = new Set(partsOf(line).map(p => p.id).concat(line.id));
+  let h = `<h2 class="sec" id="tripsover">${runGids
+    ? `Trips over ${esc(stName(PICK.from))} → ${esc(stName(PICK.to))}`
+    : 'Trips on this line'} (${list.length})</h2>`;
+  for (const { trip, km, legs } of list.slice(0, 100)) {
+    const first = trip.rides[0], last = trip.rides[trip.rides.length - 1];
+    const title = trip.rides.length === 1 ? rideLabel(first)
+      : `${stName(first.from)} → ${stName(last.to)}, ${trip.rides.length} legs`;
+    const shared = legs.every(([r]) => !mine.has(r.line));
+    const tail = [`${km.toFixed(1)} km here${shared ? ', ridden on another line over this track' : ''}`,
+                  first.date, first.note].filter(Boolean).map(esc);
+    h += `<div class="ride over"><i class="edge" style="background:${lineColour(line)}"></i>`
+      + `<div><b>${esc(title)}</b></div><div class="o muted">${tail.join(' · ')}</div>`;
+    // A trip of several legs lists the ones that credit this, each removable on its own.
+    if (trip.rides.length > 1) {
+      h += `<div class="legs">` + legs.map(([r, k]) => {
+        const l = LINE_BY_ID.get(r.line);
+        return `<div class="legrow"><span class="sw" style="background:`
+          + `${l ? lineColour(l) : THEME.off}"></span><span class="t"><b>`
+          + `${esc(l ? lineName(l) : r.line)}</b> `
+          + `${esc(stName(r.from))} → ${esc(stName(r.to))}</span>`
+          + `<span class="km">${k.toFixed(1)} km</span>`
+          + `<button class="act del small" onclick="deleteRide('${r.id}')">remove</button></div>`;
+      }).join('') + `</div>`;
+    }
+    h += `<div class="edit"><button class="act" onclick="showTrip('${trip.key}')">show trip</button>`
+      + `<button class="act del" onclick="deleteTrip('${trip.key}')">delete</button></div></div>`;
+  }
+  if (list.length > 100) h += `<p class="muted">and ${list.length - 100} older.</p>`;
+  return h;
 }
 
 /* The strip diagram: the rows are names, and the rails and dots are drawn over them. */
@@ -3742,7 +4438,12 @@ function renderLine(el) {
   h += `<div class="meter" style="margin-top:8px"><i style="width:`
     + `${Math.min(100, 100 * riddenKm / Math.max(line.km, 0.001)).toFixed(1)}%"></i></div>`
     + `<div class="o muted">${riddenKm.toFixed(1)} of ${line.km.toFixed(1)} km ridden`
-    + ` · ${done} of ${running.length} sections</div>`;
+    + ` · ${done} of ${running.length} sections` + (() => {
+      if (riddenKm <= 0.001) return '';
+      const n = tripsOver(partsOf(line).flatMap(p => p.sections.map(s => s[3]))).length;
+      return n ? ` · <a href="" onclick="document.getElementById('tripsover')`
+        + `.scrollIntoView(); return false">${n} trip${n === 1 ? '' : 's'}</a>` : '';
+    })() + `</div>`;
   if (line.km_closed) {
     h += `<p class="muted" style="margin-top:8px">The dashed part is still on the register `
       + `but has no rails on the map: closed, suspended or replaced by a bus. It does not `
@@ -3756,6 +4457,8 @@ function renderLine(el) {
   // Stations no train calls at: no running section of this line beside them, nor of any
   // other line there (夜明, the 日田彦山線's end, is on the running 久大線).
   const joins = endJoins(line);
+  const past = pastEnds(line);
+  const thru = throughEnds(line);
   const live = new Set(running.flatMap(s => [s[0], s[1]]));
   const gone = id => line.km_closed && !live.has(id)
     && !((STATIONS[id] || {}).l || []).some(lid => {
@@ -3771,9 +4474,70 @@ function renderLine(el) {
         + `onclick="showLine('${l.id}'); return false">${esc(lineName(l))}</a>`).join(', ')
       + `</p>`;
   }
+  /* The stops past a junction end, by the line taken out of it: [{line, rows: [{st, on,
+     click, note}]}], nearest first. pastEnds' (a mapped service runs on there) and
+     throughEnds' (the register track does), the two never naming the same stop. */
+  const lineLink = o => `<a href="" class="also" style="--c:${lineColour(o)}" `
+    + `onclick="event.stopPropagation(); showLine('${o.id}'); return false">`
+    + `${esc(lineName(o))}</a>`;
+  /* Whether the track from the junction to a stop past it has been ridden: the run's
+     sections, or the parts of them (spanOf, a junction mid-section), against what the rides
+     credit along each (creditSpans: foot.json's owner track, as the rest of the diagram). */
+  const spansNow = creditSpans();
+  const riddenRun = gids => {
+    let all = 0, done = 0;
+    for (const vg of gids) {
+      const [gid, lo, hi] = spanOf(vg);
+      if (hi <= lo) continue;
+      all += secKm(gid) * (hi - lo);
+      done += secKm(gid) * spansMeet(spansNow.get(gid) || [], [[lo, hi]]);
+    }
+    return all > 0 && done >= 0.99 * all;
+  };
+  const contGroups = j => {
+    const by = new Map();
+    const add = (o, row) => {
+      if (!by.has(o.id)) by.set(o.id, { line: o, rows: [] });
+      by.get(o.id).rows.push(row);
+    };
+    // The same rows the map rings and draws (contRows), so the two cannot disagree.
+    for (const c of contRows(line, j)) {
+      if (c.kind === 'past') {
+        const { st, line: o, board, km, gid } = c;
+        add(o, { st, km, ridden: riddenRun(gid ? [gid] : []),
+                 on: (PICK.from === st || PICK.to === st) && !!PICK.past
+                   && PICK.past.line === o.id,
+                 click: `pickPast('${st}', '${o.id}', '${board}', '${j}')`,
+                 note: `on ${lineLink(o)}` });
+        continue;
+      }
+      const r = c.r;
+      const T = PICK.through || {};
+      const is = ref => ref && ref.j === j && ref.st === r.st && ref.key === r.key;
+      add(r.legs[0].line, { st: r.st, km: r.km, ridden: riddenRun(r.legs.flatMap(l => l.gids)),
+        on: (PICK.from === r.st && is(T.from)) || (PICK.to === r.st && is(T.to)),
+        click: `pickThrough('${r.st}', '${j}', '${r.key}')`,
+        note: `on ${r.legs.map(l => lineLink(l.line)).join(', then ')}` });
+    }
+    const groups = [...by.values()];
+    for (const g of groups) g.rows.sort((x, y) => x.km - y.km);
+    return groups.sort((x, y) => x.rows[0].km - y.rows[0].km);
+  };
+  const hasPast = id => past.has(id) || (!thru.pending && thru.map.has(id));
+  // The lanes the continuations need, beside the line's own.
+  let lanes = lay.lanes;
+  for (const piece of lay.pieces) for (const { id, lane } of piece.rows)
+    if (hasPast(id)) lanes = Math.max(lanes, lane + contGroups(id).length);
+  CONT = { segs: [], dots: [], lanes };
   h += `<div id="strip" style="--c:${lineColour(line)};`
-    + `--w:${STRIP_X0 * 2 + (lay.lanes - 1) * STRIP_LANE}px">`;
+    + `--w:${STRIP_X0 * 2 + (lanes - 1) * STRIP_LANE}px">`;
   lay.pieces.forEach((piece, k) => {
+    /* A JUNCTION THE LINE ONLY PASSES THROUGH is not listed (Anita, 2026-10-05: the WCML's
+       "Junction near St Enoch", "near Crosshill" ... between Glasgow and Carstairs): one with
+       two sections of this line at it, not an end, nothing past it and no branch. Its row is
+       kept at no height, so the rails are drawn through it as before. */
+    const pdeg = new Map();
+    for (const e of piece.edges) for (const s of [e.a, e.b]) pdeg.set(s, (pdeg.get(s) || 0) + 1);
     if (k) {
       const via = joinedBy(line, lay.pieces[k - 1], piece);
       // A line over a border: the next piece is another country's.
@@ -3786,7 +4550,34 @@ function renderLine(el) {
         : `the line continues elsewhere`) + `</div>`;
     }
     if (piece.loop) h += `<div class="loopcap top" data-cap="${k}t"><b>continues round</b></div>`;
-    for (const { id } of piece.rows) {
+    /* THE DIAGRAM CARRIES ON PAST A JUNCTION END to the stops beyond it (contGroups), so a
+       ride is always picked station to station (Anita, 2026-10-04). Outside the junction's
+       row: above it at the head of a piece, below it at the foot, the nearest stop next to
+       the junction. Each line taken out of the junction has its own lane, drawn thin in that
+       line's colour by drawStrip from CONT. */
+    const pastRows = (j, jLane, head) => {
+      const groups = contGroups(j);
+      let out = '';
+      const order = head ? [...groups.keys()].reverse() : [...groups.keys()];
+      for (const g of order) {
+        const { line: o, rows } = groups[g];
+        const lane = jLane + g;
+        const pickAt = rows.findIndex(r => r.on);
+        const html = rows.map((r, i) => {
+          const n = CONT.dots.length;
+          CONT.dots.push({ n, lane, colour: lineColour(o), pick: r.on, ridden: r.ridden });
+          CONT.segs.push({ n, lane, colour: lineColour(o), run: pickAt >= i, ridden: r.ridden,
+                           from: i ? { n: n - 1, lane } : { id: j, lane: jLane } });
+          return `<div class="st past${r.on ? ' in pick' : ''}" data-cont="${n}" `
+            + `onclick="${r.click}"><div class="nm">${esc(stName(r.st))}<i>${r.note}</i>`
+            + `</div></div>`;
+        });
+        out += (head ? html.reverse() : html).join('');
+      }
+      return out;
+    };
+    for (const [ri, { id, lane: jLane }] of piece.rows.entries()) {
+      if (ri === 0 && hasPast(id)) h += pastRows(id, jLane, true);
       const end = PICK.from === id || PICK.to === id;
       const cls = [reached.has(id) ? 'reached' : '', inRun.has(id) || end ? 'in' : '',
                    end ? 'pick' : inRun.has(id) ? 'via' : ''].filter(Boolean).join(' ');
@@ -3799,10 +4590,19 @@ function renderLine(el) {
       const joinNote = join ? `<i>to ${esc(stName(join.to))} by <a href="" class="also" `
         + `style="--c:${lineColour(join.line)}" onclick="event.stopPropagation(); `
         + `showLine('${join.line.id}'); return false">${esc(lineName(join.line))}</a></i>` : '';
-      h += `<div class="st ${cls}${junction ? ' jn' : ''}${gone(id) ? ' gone' : ''}" data-st="${id}"`
+      const inner = junction && !end && !join && ri > 0 && ri < piece.rows.length - 1 && !hasPast(id);
+      const quiet = inner && pdeg.get(id) === 2;
+      /* A junction a short side stub ends at, nothing past it (the Midland Main Line's curve
+         ending near Cricklewood; Anita, 2026-10-05: "a junction that doesnt connect to
+         anything"): no row and no track drawn to it. Its km still count. */
+      const stub = inner && pdeg.get(id) === 1;
+      h += `<div class="st ${cls}${junction ? ' jn' : ''}${quiet || stub ? ' quiet' : ''}`
+        + `${stub ? ' stub' : ''}`
+        + `${gone(id) ? ' gone' : ''}" data-st="${id}"`
         + `${junction ? '' : ` onclick="pickStop('${id}')"`}>`
-        + `<div class="nm">${esc(stName(id))}${junction ? '<i>junction, not a stop</i>'
+        + `<div class="nm">${esc(stName(id))}${junction ? '<i>junction</i>'
           : note ? `<i>${esc(note)}</i>` : ''}${joinNote}</div></div>`;
+      if (ri > 0 && hasPast(id)) h += pastRows(id, jLane, false);
     }
     if (piece.loop) h += `<div class="loopcap bottom" data-cap="${k}b"><b>back to `
       + `${esc(stName(piece.rows[0].id))}</b></div>`;
@@ -3811,11 +4611,25 @@ function renderLine(el) {
 
   if (run) {
     h += `<div id="addbar">`;
-    if (!run.p) {
+    if (!run.p && PICK.past) {
+      h += `<p class="muted">The trains past the junction are mapped from `
+        + `${esc(stName(PICK.past.board))}: pick it, or a stop before it.</p>`;
+    } else if (!run.p && PICK.through && (thru.pending || (PICK.through.from && PICK.through.to
+               && PICK.through.from.j === PICK.through.to.j))) {
+      h += `<p class="muted">${thru.pending ? 'Looking past the junction…'
+        : 'Those two are past the same junction: pick a stop of this line, or one past its '
+          + 'other end.'}</p>`;
+    } else if (!run.p) {
       h += `<p class="muted">No run of sections joins those two on this line.</p>`;
     } else {
       h += `<div class="o" style="margin-bottom:6px">${esc(stName(PICK.from))} → `
         + `${esc(stName(PICK.to))} · ${run.p.km.toFixed(1)} km</div>`;
+      // Through a junction: the lines it goes over, each saved as a ride of its own.
+      if (PICK.through && run.legs && run.legs.length > 1) {
+        h += `<div class="o muted" style="margin:-2px 0 6px">${run.legs.map(l =>
+          `${esc(lineName(l.line))} ${l.km.toFixed(1)} km`).join(', then ')}, through `
+          + `${esc(run.legs.slice(1).map(l => stName(l.from)).join(' and '))}</div>`;
+      }
       /* Offered only where there IS another way: on a loop, or where a line's branches
          close into one. The short way is the default because it is nearly always meant. */
       if (run.alt) {
@@ -3830,12 +4644,15 @@ function renderLine(el) {
     }
     h += `</div>`;
   }
+  h += tripsOverHtml(line, run && run.p ? run.p.gids : null);
   el.innerHTML = h;
 
+  const cont = CONT;
   STRIP_REDRAW = () => drawStrip(el.querySelector('#strip'), line, lay, {
     ridden: gid => (frac.get(gid) || 0) > 0.999,
     run: gid => pathSet.has(gid),
     reached: id => reached.has(id),
+    cont,
   });
   STRIP_REDRAW();
 
@@ -3846,6 +4663,655 @@ function renderLine(el) {
     const row = el.querySelector(`.st[data-st="${PICK.from}"]`);
     if (row) row.scrollIntoView({ block: 'nearest' });
   }
+}
+
+/* PAST A JUNCTION END (Anita, 2026-10-02: "I want to be able to go past it to Woodside").
+   A register line that ends at a junction, not a stop, ends where its trains do not: the
+   FRA's Port Washington Branch stops 1 km short of Woodside, where it meets the Main Line.
+   The operating patterns know where the trains go on to: "LIRR Port Washington Branch (as
+   operated)" has a section Flushing -> Woodside whose footprint (foot.json) covers the
+   branch's last stretch into the junction. So for each junction end, every stop beyond it
+   that some pattern's section reaches from a stop of this line over that last stretch; a
+   ride to it is two legs, this line to the boarding stop and the pattern from there. Cutting
+   the register at such junctions was tried in us_register and dropped (it moved sections on
+   double track). Returns {junction: [{st, line, board}]}. */
+function pastEnds(line) {
+  if (line._past && line._past.gen === DATA_GEN) return line._past.map;
+  const out = new Map();
+  const deg = new Map();
+  for (const [a, b] of line.sections) for (const s of [a, b]) deg.set(s, (deg.get(s) || 0) + 1);
+  const own = lineStations(line);
+  for (const [j, n] of deg) {
+    if (n !== 1 || isStop(j)) continue;
+    const last = line.sections.find(s => s[0] === j || s[1] === j);
+    // Where the junction is on the track under this line's last section: the owner section
+    // and the position along it of the footprint entry at the junction's end. A pattern
+    // counts only if it runs over that very point: sharing any of a long last section was too
+    // loose (the Simplon line's Brig - tunnel portal took the RE1 Brig - Eggerberg).
+    const atEnd = last[1] === j ? 1 : 0;
+    const endOn = footOf(last[3]).filter(e => (atEnd ? e[4] : e[3]) === atEnd)
+      .map(e => [e[0], atEnd ? e[2] : e[1]]);
+    if (!endOn.length) continue;
+    const covers = gid => footOf(gid).some(e => endOn.some(([t, pos]) => e[0] === t
+      && pos >= Math.min(e[1], e[2]) - 0.02 && pos <= Math.max(e[1], e[2]) + 0.02));
+    const found = new Map();                    // stop past it -> {st, line, board, km}
+    for (const s of own) {
+      if (!isStop(s)) continue;
+      for (const lid of (STATIONS[s] || {}).l || []) {
+        const o = LINE_BY_ID.get(lid);
+        if (!o || o === line || o.service) continue;
+        for (const p of partsOf(o)) for (const [a, b, km, gid] of p.sections) {
+          const w = a === s ? b : b === s ? a : null;
+          if (!w || own.has(w) || !isStop(w)) continue;
+          if (!covers(gid)) continue;
+          const back = pathBetween(line, s, j);
+          const d = (back ? back.km : 1e9) + km;
+          const was = found.get(w);
+          if (!was || d < was.km) found.set(w, { st: w, line: o, board: s, km: d, gid });
+        }
+      }
+    }
+    // Not past a hub the line ends just beyond (hubStop): ridden from the hub instead.
+    const hub = hubStop(line, j);
+    const keep = [...found.values()].filter(f => !hub || !oneLineFrom(hub, f.st));
+    if (keep.length) out.set(j, keep.sort((x, y) => x.km - y.km).slice(0, 2));
+  }
+  line._past = { gen: DATA_GEN, map: out };
+  return out;
+}
+
+/* Picking a stop past a junction: as the end of a ride from a picked stop of this line, or
+   as its start, with a stop of this line picked next. */
+function pickPast(st, lineId, board, j) {
+  if (PICK.from && !PICK.to && PICK.from !== st && !PICK.past && !PICK.through) {
+    PICK.to = st;
+    PICK.past = { line: lineId, board, j };
+  } else {
+    PICK = { from: st, to: null, around: false, past: { line: lineId, board, j } };
+  }
+  render();
+  paintSelection();
+}
+
+/* ---------------------------------------------------------------- through junctions
+
+   THROUGH A JUNCTION (Anita, 2026-10-04: "if after the junction it splits into 2 other lines
+   and goes on to 2 other stations maybe we can show those two other stations ... as is, if
+   theres no named route that crosses the junction, theres just no way to make this trip").
+   Of 8,744 register lines, 3,606 end at a junction and 630 have no stop at all (a base
+   tunnel, a cut-off, a curve). pastEnds only knows the stops a mapped service runs on to;
+   this walks the register network itself. From a junction end, along every other register
+   line meeting there, to the first stop: through further junctions on the way, never
+   reversing (a train cannot turn back at a junction, so a turn sharper than THROUGH_TURN
+   between the track in and the track out is no way on), within THROUGH_MAX_KM.
+
+   A junction is usually a node of only the line that ends there; the line it meets passes
+   through mid-section (passThrough finds it by drawn track, within JUNCTION_SNAP_KM: the
+   junction's point lies on the other line's track to 20 m in 9 cases of 10 in Switzerland).
+   A ride from there is that part of the section (cutGraph), so the credited km are the
+   track's.
+
+   A ride through a junction is saved as rides back to back, each line its own ride, joined
+   at the junction: the only place a ride may end at a junction is where the next ride of
+   the same trip carries on from it. trips() joins them like any trip's legs, and they are
+   deleted together (throughChain). */
+const JUNCTION_SNAP_KM = 0.08;
+const THROUGH_MAX_KM = 80;
+const THROUGH_MAX_STEPS = 6;      // sections walked past the junction, at most
+const THROUGH_TURN = 100;         // degrees
+const THROUGH_MAX_ROWS = 6;       // stops listed past one junction
+const THROUGH_MAX_PATHS = 4000;   // branches tried per junction, so a walk without geometry stays quick
+const HEADING_KM = 0.3;           // the stretch of track a direction is measured along
+const JR_MAX_STATES = 4000;       // junctionRoute's search, at most
+const JR_MAX_CHANGES = 4;         // changes of line at junctions in one leg of a journey
+
+// Lines a walk may take: register lines that are not named trains.
+const walkable = l => !!l && !l.service && isRegisterLine(l);
+const kindOf = l => (l.kind === 'train' ? 'rail' : l.kind || 'rail');
+
+// Running sections of walkable lines by their two ends, rebuilt as countries load.
+let NODE_SECS = { gen: -1, by: new Map() };
+function nodeSecs(u) {
+  if (NODE_SECS.gen !== DATA_GEN) {
+    const by = new Map();
+    for (const line of LINES) {
+      if (!walkable(line)) continue;
+      for (const sec of line.sections) {
+        if (sec[0] === sec[1] || CLOSED.has(sec[3])) continue;
+        for (const s of [sec[0], sec[1]]) {
+          if (!by.has(s)) by.set(s, []);
+          by.get(s).push({ line, sec });
+        }
+      }
+    }
+    NODE_SECS = { gen: DATA_GEN, by };
+  }
+  return NODE_SECS.by.get(u) || [];
+}
+
+/* A polyline in km on a local flat projection, the one sliceLine and the build's fractions
+   use, with the distance along it to each point. Cached per array. */
+const POLY = new WeakMap(), REVERSED = new WeakMap();
+function polyOf(pts) {
+  let p = POLY.get(pts);
+  if (p) return p;
+  const kx = Math.cos(pts[0][1] * Math.PI / 180) * 111.32, ky = 110.57;
+  const xy = pts.map(([x, y]) => [x * kx, y * ky]);
+  const cum = [0];
+  for (let i = 1; i < xy.length; i++)
+    cum.push(cum[i - 1] + Math.hypot(xy[i][0] - xy[i - 1][0], xy[i][1] - xy[i - 1][1]));
+  p = { xy, cum, total: cum[cum.length - 1], kx, ky };
+  POLY.set(pts, p);
+  return p;
+}
+function polyPoint(p, d) {
+  let i = 1;
+  while (i < p.xy.length - 1 && p.cum[i] < d) i++;
+  const seg = p.cum[i] - p.cum[i - 1];
+  const t = seg ? Math.max(0, Math.min(1, (d - p.cum[i - 1]) / seg)) : 0;
+  const A = p.xy[i - 1], B = p.xy[i];
+  return [A[0] + t * (B[0] - A[0]), A[1] + t * (B[1] - A[1])];
+}
+/* The way the track runs leaving fraction t of a polyline, towards its end (dir 1) or its
+   start (-1), in radians; null where there is no track to measure. */
+function headingAlong(pts, t, dir) {
+  if (!pts) return null;
+  const p = polyOf(pts);
+  if (!(p.total > 0)) return null;
+  const d0 = t * p.total;
+  const d1 = Math.max(0, Math.min(p.total, d0 + dir * Math.min(HEADING_KM, p.total / 2)));
+  if (Math.abs(d1 - d0) < 1e-6) return null;
+  const A = polyPoint(p, d0), B = polyPoint(p, d1);
+  return Math.atan2(B[1] - A[1], B[0] - A[0]);
+}
+const flip = h => (h == null ? null : h + Math.PI);
+// The point of a polyline nearest (lon, lat): how far, in km, and the fraction along it.
+function nearOnPoly(pts, lon, lat) {
+  const p = polyOf(pts);
+  const P = [lon * p.kx, lat * p.ky];
+  let best = Infinity, at = 0;
+  for (let i = 1; i < p.xy.length; i++) {
+    const A = p.xy[i - 1], B = p.xy[i], dx = B[0] - A[0], dy = B[1] - A[1];
+    const L2 = dx * dx + dy * dy;
+    const u = L2 ? Math.max(0, Math.min(1, ((P[0] - A[0]) * dx + (P[1] - A[1]) * dy) / L2)) : 0;
+    const d = Math.hypot(P[0] - A[0] - u * dx, P[1] - A[1] - u * dy);
+    if (d < best) { best = d; at = p.cum[i - 1] + u * (p.cum[i] - p.cum[i - 1]); }
+  }
+  return { d: best, t: p.total ? at / p.total : 0 };
+}
+function turnOk(hIn, hOut) {
+  if (hIn == null || hOut == null) return true;
+  let d = Math.abs(hOut - hIn) % (2 * Math.PI);
+  if (d > Math.PI) d = 2 * Math.PI - d;
+  return d <= THROUGH_TURN * Math.PI / 180;
+}
+
+/* A section's drawn track from its first station to its second: null while its line's
+   geometry is still on the way (geoNow fetches it), false where there is none. */
+function secPts(line, sec) {
+  const g = geoNow(line.id);
+  if (!g) return null;
+  const f = g[`${sec[0]}|${sec[1]}`];
+  if (f && f.length > 1) return f;
+  const b = g[`${sec[1]}|${sec[0]}`];
+  if (!b || b.length < 2) return false;
+  if (!REVERSED.has(b)) REVERSED.set(b, b.slice().reverse());
+  return REVERSED.get(b);
+}
+
+/* The walkable sections whose drawn track passes through junction u without u being one of
+   their ends: [{line, sec, t}], t the fraction along the section from its first station.
+   Candidates by chord first (a section's track rarely bows from the line between its ends
+   by more than a quarter of its length), then measured on the track. Lines whose geometry
+   is not in yet go in `missing`; such an answer is worked out again when more arrives. */
+let PASS = { gen: -1, by: new Map() };
+function passThrough(u, missing, kind) {
+  if (PASS.gen !== DATA_GEN) PASS = { gen: DATA_GEN, by: new Map() };
+  const key = `${u}|${kind || ''}`;
+  const c = PASS.by.get(key);
+  if (c && (!c.need.size || c.geo === GEO_GEN)) {
+    c.need.forEach(id => missing.add(id));
+    return c.out;
+  }
+  const U = STATIONS[u];
+  if (!U) return [];
+  const kx = Math.cos(U.y * Math.PI / 180) * 111.32, ky = 110.57;
+  const out = [], need = new Set();
+  for (const line of LINES) {
+    if (!walkable(line) || (kind && kindOf(line) !== kind)) continue;
+    for (const sec of line.sections) {
+      if (sec[0] === u || sec[1] === u || sec[0] === sec[1] || CLOSED.has(sec[3])) continue;
+      const A = STATIONS[sec[0]], B = STATIONS[sec[1]];
+      if (!A || !B) continue;
+      const m = 0.25 * sec[2] + 0.3;
+      if (U.x < Math.min(A.x, B.x) - m / kx || U.x > Math.max(A.x, B.x) + m / kx
+          || U.y < Math.min(A.y, B.y) - m / ky || U.y > Math.max(A.y, B.y) + m / ky) continue;
+      const pts = secPts(line, sec);
+      if (pts === null) { need.add(line.id); continue; }
+      if (!pts) continue;
+      const r = nearOnPoly(pts, U.x, U.y);
+      if (r.d <= JUNCTION_SNAP_KM) out.push({ line, sec, t: r.t });
+    }
+  }
+  need.forEach(id => missing.add(id));
+  PASS.by.set(key, { out, need, geo: GEO_GEN });
+  return out;
+}
+
+/* Junction nodes by 0.1° cell, for finding the junctions a section's track passes. */
+let JGRID = { gen: -1, cells: new Map() };
+function junctionsIn(w, s, e, n) {
+  if (JGRID.gen !== DATA_GEN) {
+    const cells = new Map();
+    for (const [id, st] of Object.entries(STATIONS)) {
+      if (!st.j || !nodeSecs(id).length) continue;
+      const key = `${Math.floor(st.x * 10)},${Math.floor(st.y * 10)}`;
+      if (!cells.has(key)) cells.set(key, []);
+      cells.get(key).push(id);
+    }
+    JGRID = { gen: DATA_GEN, cells };
+  }
+  const out = [];
+  for (let i = Math.floor(w * 10); i <= Math.floor(e * 10); i++)
+    for (let k = Math.floor(s * 10); k <= Math.floor(n * 10); k++)
+      for (const id of JGRID.cells.get(`${i},${k}`) || []) out.push(id);
+  return out;
+}
+/* The junctions a section's track passes between its two ends, [{k, t}] in order: where
+   another line ends on it mid-section (Wengi-Ey on Spiez - Frutigen, where the Lötschberg
+   base tunnel leaves). A walk along the section can change there. */
+let SECJ = { gen: -1, by: new Map() };
+function secJunctions(sec, pts) {
+  if (SECJ.gen !== DATA_GEN) SECJ = { gen: DATA_GEN, by: new Map() };
+  if (SECJ.by.has(sec[3])) return SECJ.by.get(sec[3]);
+  let w = 180, e = -180, s = 90, n = -90;
+  for (const [x, y] of pts) { w = Math.min(w, x); e = Math.max(e, x); s = Math.min(s, y); n = Math.max(n, y); }
+  const out = [];
+  for (const k of junctionsIn(w - 0.002, s - 0.002, e + 0.002, n + 0.002)) {
+    if (k === sec[0] || k === sec[1]) continue;
+    const K = STATIONS[k];
+    const r = nearOnPoly(pts, K.x, K.y);
+    if (r.d <= JUNCTION_SNAP_KM && r.t > 0.001 && r.t < 0.999) out.push({ k, t: r.t });
+  }
+  out.sort((x, y) => x.t - y.t);
+  SECJ.by.set(sec[3], out);
+  return out;
+}
+
+/* Every way out of node u: along each walkable section ending there, and at a junction both
+   ways along each section passing through it; each as far as the section's far end, and as
+   far as each junction it passes on the way. Each is {line, sec, to, km, gid (the part of the
+   section taken, partGid), cut (where the junctions at either end lie on it, for the ride),
+   hOut (the way the track leaves u), hArr (the way a train is heading on arriving at `to`)}. */
+function departures(u, missing, kind) {
+  const out = [];
+  const pos = (sec, t) => [sec[0], sec[1], +t.toFixed(5)];
+  const add = (line, sec, t, dir, cut, pts, k, tk) => {
+    // Only onto track of the same kind: a tram in the street beside a station throat is not
+    // a way on from a railway junction.
+    if (kind && kindOf(line) !== kind) return;
+    const end = k ? tk : dir > 0 ? 1 : 0;
+    const lo = Math.min(t, end), hi = Math.max(t, end);
+    out.push({ line, sec, to: k || (dir > 0 ? sec[1] : sec[0]), km: sec[2] * (hi - lo),
+               gid: partGid(sec[3], lo, hi), pts: pts || null, t, dir,
+               cut: k ? { ...(cut || {}), [k]: pos(sec, tk) } : cut,
+               hOut: pts ? headingAlong(pts, t, dir) : null,
+               hArr: pts ? flip(headingAlong(pts, end, -dir)) : null });
+  };
+  // Along a section from fraction t, to its end and to each junction on the way.
+  const along = (line, sec, t, dir, cut) => {
+    if (kind && kindOf(line) !== kind) return;
+    const pts = secPts(line, sec);
+    if (pts === null) missing.add(line.id);
+    add(line, sec, t, dir, cut, pts);
+    if (!pts) return;
+    for (const { k, t: tk } of secJunctions(sec, pts))
+      if (k !== u && (dir > 0 ? tk > t + 1e-4 : tk < t - 1e-4)) add(line, sec, t, dir, cut, pts, k, tk);
+  };
+  for (const { line, sec } of nodeSecs(u)) {
+    const first = sec[0] === u;
+    along(line, sec, first ? 0 : 1, first ? 1 : -1, null);
+  }
+  if (!isStop(u)) {
+    for (const { line, sec, t } of passThrough(u, missing, kind)) {
+      const cut = { [u]: pos(sec, t) };
+      along(line, sec, t, 1, cut);
+      along(line, sec, t, -1, cut);
+    }
+  }
+  return out;
+}
+
+/* TWO LINES ON ONE TRACK. Where the line a walk is on carries on through a junction, another
+   line leaving the same way is often the same rails (Russia's tariff sections overlap at
+   their ends, and a walk from Chernyakhovsk zigzagged between two of them for 50 km). Such a
+   step is left out: the walk stays on its line. Same rails means the same drawn track, half a
+   kilometre and a kilometre on (or as far as both go), within SAME_RAILS_KM: a line of its
+   own beside it is further off (the Lötschberg base line runs 20-50 m from the old line from
+   Wengi-Ey to Frutigen, and 60 m took it for the same rails). */
+const SAME_RAILS_KM = 0.012;
+function depPoint(d, km) {
+  const p = polyOf(d.pts);
+  const at = Math.max(0, Math.min(p.total, d.t * p.total + d.dir * km));
+  const [x, y] = polyPoint(p, at);
+  return [x / p.kx, y / p.ky];
+}
+function sameRails(d, e) {
+  if (!d.pts || !e.pts) return false;
+  const left = x => (x.dir > 0 ? 1 - x.t : x.t) * polyOf(x.pts).total;
+  const room = Math.min(1, left(d), left(e));
+  if (!(room > 0.05)) return false;
+  return [room / 2, room].every(km => {
+    const [x1, y1] = depPoint(d, km), [x2, y2] = depPoint(e, km);
+    const kx = Math.cos(y1 * Math.PI / 180) * 111.32;
+    return Math.hypot((x1 - x2) * kx, (y1 - y2) * 110.57) <= SAME_RAILS_KM;
+  });
+}
+// The ways out of u for a walk that reached it on `line` heading h: with steps onto the
+// same rails as the line's own way on left out (sameRails).
+function waysOn(u, line, h, missing, kind) {
+  const deps = departures(u, missing, kind);
+  if (!line) return deps;
+  const own = deps.filter(d => d.line === line && turnOk(h, d.hOut));
+  if (!own.length) return deps;
+  return deps.filter(d => d.line === line || !own.some(o => sameRails(o, d)));
+}
+
+/* A walk's legs, one per line: a step on along the same line from where its last leg ended
+   lengthens that leg; anything else starts a new one. */
+function extendLegs(legs, d, u) {
+  const last = legs[legs.length - 1];
+  if (last && last.line === d.line && last.to === u) {
+    const cuts = last.cuts || d.cut ? { ...(last.cuts || {}), ...(d.cut || {}) } : null;
+    return [...legs.slice(0, -1), { ...last, to: d.to, cuts, gids: [...last.gids, d.gid],
+                                    km: last.km + d.km }];
+  }
+  return [...legs, { line: d.line, from: u, to: d.to, cuts: d.cut, gids: [d.gid], km: d.km }];
+}
+
+/* Between ways of the same length, the one in fewer rides: 50 m a leg. */
+const walkCost = (km, legs) => km + 0.05 * legs.length;
+
+/* From junction j, arriving heading hIn, the first stop along each way on: [{st, km, legs}],
+   the nearest way to each stop. `skip` holds lines not to walk (the line ending there). */
+function walkFrom(j, hIn, skip, missing, kind) {
+  const found = new Map();
+  const open = [{ u: j, km: 0, cost: 0, h: hIn, legs: [], steps: 0, seen: new Set([j]) }];
+  const best = new Map();
+  // Nearest first, so each stop is reached first by its shortest way, and the walk stops there.
+  for (let n = 0; open.length && n < THROUGH_MAX_PATHS; n++) {
+    let bi = 0;
+    for (let i = 1; i < open.length; i++) if (open[i].cost < open[bi].cost) bi = i;
+    const s = open.splice(bi, 1)[0];
+    if (s.u !== j && isStop(s.u)) {
+      if (!found.has(s.u)) found.set(s.u, { st: s.u, km: s.km, legs: s.legs });
+      continue;
+    }
+    const on = s.legs.length ? s.legs[s.legs.length - 1].line : null;
+    for (const d of waysOn(s.u, on, s.h, missing, kind)) {
+      if (skip.has(d.line.id) || s.seen.has(d.to) || !turnOk(s.h, d.hOut)) continue;
+      const km = s.km + d.km;
+      if (km > THROUGH_MAX_KM) continue;
+      /* A hop of no length is to a second junction at the same point (Russia files one per
+         line meeting there): not a step, and the train is still heading the way it was. */
+      const hop = d.km < 0.005;
+      const steps = s.steps + (hop ? 0 : 1);
+      if (steps > THROUGH_MAX_STEPS) continue;
+      const legs = extendLegs(s.legs, d, s.u), cost = walkCost(km, legs);
+      const k = `${d.to}|${d.gid}`;
+      if (best.has(k) && best.get(k) <= cost) continue;
+      best.set(k, cost);
+      open.push({ u: d.to, km, cost, h: hop ? s.h : d.hArr, legs, steps,
+                  seen: new Set([...s.seen, d.to]) });
+    }
+  }
+  return [...found.values()];
+}
+
+/* ONLY THE WAYS ON THAT TRAINS TAKE (Anita, 2026-10-04: at Hanau, 4113 Eberbach - Hanau's
+   end offered stops on four lines, "a bit aggressive ... only show the ones that are
+   actually usually run"). The walk follows any track; a way on is kept only where a mapped
+   service (an OSM route, named trains included) runs both over this line's last stretch into
+   the junction and onto the first leg of the way out. Where no service crosses the junction
+   end at all, there is nothing to tell them apart by, and every way on is offered as before:
+   that is the case the walk was added for. Measured on 250 lines each: de 283 -> 230 rows,
+   ch 386 -> 323; at Hanau, Offenbach (3600) and Steinheim (3670/3680) go, Hanau West
+   (3660, where RE85 runs) stays beside RE85's own Frankfurt East. */
+const nonRegisterLineOf = g => {
+  const e = SEC_BY_GID.get(g);
+  return e && !isRegisterLine(e.line) ? e.line.id : null;
+};
+// The owner-track stretches [own, lo, hi] under fractions f0..f1 of section gid.
+function ownerRanges(gid, f0, f1) {
+  const out = [];
+  const lo0 = Math.min(f0, f1), hi0 = Math.max(f0, f1);
+  for (const [own, from, to, a, b] of footOf(gid)) {
+    const lo = Math.max(Math.min(a, b), lo0), hi = Math.min(Math.max(a, b), hi0);
+    if (hi < lo) continue;
+    const at = x => from + (b !== a ? (x - a) / (b - a) : 0) * (to - from);
+    out.push([own, Math.min(at(lo), at(hi)), Math.max(at(lo), at(hi))]);
+  }
+  return out;
+}
+// Lines of mapped services whose footprint overlaps any of those stretches (50 m slack).
+function servicesOver(ranges) {
+  const out = new Set();
+  for (const [own, lo, hi] of ranges) {
+    const tol = 0.05 / Math.max(secKm(own), 0.001);
+    for (const g of FOOT_INTO.get(own) || []) {
+      const lid = nonRegisterLineOf(g);
+      if (lid && footOf(g).some(e => e[0] === own && Math.max(e[1], e[2]) >= lo - tol
+                                && Math.min(e[1], e[2]) <= hi + tol)) out.add(lid);
+    }
+  }
+  return out;
+}
+// The services over this line's end at junction j: its last section's very end there.
+function servicesAtEnd(last, j) {
+  const atEnd = last[1] === j ? 1 : 0;
+  const ranges = footOf(last[3]).filter(e => (atEnd ? e[4] : e[3]) === atEnd)
+    .map(e => { const p = atEnd ? e[2] : e[1]; return [e[0], p, p]; });
+  return servicesOver(ranges);
+}
+// A way on is run if a service at the end also runs over its first leg of any length.
+function wayRun(row, atEnd) {
+  const leg = row.legs.find(l => l.km >= 0.05) || row.legs[0];
+  const [base, lo, hi] = spanOf(leg.gids[0]);
+  for (const lid of servicesOver(ownerRanges(base, lo, hi))) if (atEnd.has(lid)) return true;
+  return false;
+}
+
+/* A LINE THAT ENDS JUST PAST A HUB (Anita, 2026-10-05: 3700 Gießen - Fulda starts at
+   "Gießen, W 46", a junction 0.x km past Gießen, and offered Großen Linden and Dutenhofen past
+   it; "ideally here we actually just stop the line at giessen"). Where the junction is within
+   HUB_THROAT_KM of the line's last stop, a stop past it that one line takes from that last
+   stop is not offered: the ride is entered on that line from the hub. Further out (the Port
+   Washington Branch's end before Woodside) the stub is a real stretch, and stays. */
+const HUB_THROAT_KM = 1.5;
+function hubStop(line, j) {
+  let best = null;
+  for (const s of lineStations(line)) {
+    if (!isStop(s)) continue;
+    const p = pathBetween(line, s, j);
+    if (p && (!best || p.km < best.km)) best = { st: s, km: p.km };
+  }
+  return best && best.km <= HUB_THROAT_KM ? best.st : null;
+}
+const oneLineFrom = (s, t) => ((STATIONS[s] || {}).l || []).some(lid => {
+  const o = LINE_BY_ID.get(lid);
+  return o && lineStations(o).has(t);
+});
+/* A STOP PASSED ON THE WAY: a way on whose track runs by a nearer stop listed past the same
+   junction is left out (Anita, 2026-10-05, the Midland Main Line's north end: Swinton, and
+   two stops beyond it on lines that pass Swinton). Within PASS_BY_KM of the track. */
+const PASS_BY_KM = 0.2;
+function passesBy(row, st) {
+  const S = STATIONS[st];
+  if (!S) return false;
+  for (const leg of row.legs) for (const g of leg.gids) {
+    const [base, lo, hi] = spanOf(g);
+    const e = SEC_BY_GID.get(base);
+    const pts = e && secPts(e.line, e.sec);
+    if (!pts) continue;
+    const r = nearOnPoly(pts, S.x, S.y);
+    if (r.d <= PASS_BY_KM && r.t >= lo - 0.01 && r.t <= hi + 0.01) return true;
+  }
+  return false;
+}
+
+/* THE STOPS PAST ONE JUNCTION END, AS SHOWN: the services' (pastEnds) and the walk's
+   (throughEnds) together, less any whose track runs past another listed stop (passesBy: at
+   the Midland Main Line's north end the services' Doncaster and Wakefield Westgate lie
+   beyond Swinton; Anita, 2026-10-05). [{kind: 'past', st, km, line, board, gid} or {kind:
+   'thru', st, km, line (its first leg's), legs, key, r}]. The ONE source for the diagram's
+   rows (renderLine's contGroups) and the map's rings and track (paintSelection), so the two
+   cannot disagree (they did, 2026-10-05). A service row's track is its section from the
+   boarding stop, on this line up to the junction, so only stops past it can be passed. */
+function contRows(line, j) {
+  const past = pastEnds(line).get(j) || [];
+  const thru = throughEnds(line);
+  const walk = thru.pending ? [] : thru.map.get(j) || [];
+  const stops = [...past, ...walk].map(r => r.st);
+  const passedOn = (path, own) => stops.some(s => s !== own && passesBy(path, s));
+  const out = [];
+  for (const p of past)
+    if (!(p.gid && passedOn({ legs: [{ gids: [p.gid] }] }, p.st))) out.push({ kind: 'past', ...p });
+  for (const r of walk)
+    if (!passedOn(r, r.st))
+      out.push({ kind: 'thru', st: r.st, km: r.km, line: r.legs[0].line, legs: r.legs, key: r.key, r });
+  return out;
+}
+// Every junction end of the line with stops past it, and those stops (contRows).
+function contEnds(line) {
+  const js = new Set([...pastEnds(line).keys(), ...throughEnds(line).map.keys()]);
+  return new Map([...js].map(j => [j, contRows(line, j)]).filter(([, rows]) => rows.length));
+}
+
+/* For each junction end of a line, the stops past it: {map: junction -> [{st, km, legs, j,
+   key}], pending}. Grouped by the line taken out of the junction, nearest first. Stops the
+   line itself calls at, or that pastEnds already offers there, are left out, and so are ways
+   on no mapped train takes where some do (wayRun). `pending` while geometry the walk needs
+   is on its way; the rows wait for it rather than appear and then change. Cached per data
+   and geometry generation. */
+function throughEnds(line) {
+  const c = line._thru;
+  if (c && c.gen === DATA_GEN && (!c.pending || c.geo === GEO_GEN)) return c;
+  const missing = new Set(), map = new Map();
+  const deg = new Map();
+  for (const [a, b] of line.sections) for (const s of [a, b]) deg.set(s, (deg.get(s) || 0) + 1);
+  const own = lineStations(line), past = pastEnds(line), skip = new Set([line.id]);
+  for (const [j, n] of deg) {
+    if (n !== 1 || isStop(j) || !STATIONS[j]) continue;
+    const last = line.sections.find(s => s[0] === j || s[1] === j);
+    if (CLOSED.has(last[3])) continue;
+    const pts = secPts(line, last);
+    if (pts === null) missing.add(line.id);
+    // The way a train is heading as it reaches j along this line.
+    const hIn = flip(pts ? headingAlong(pts, last[1] === j ? 1 : 0, last[1] === j ? -1 : 1) : null);
+    const offered = new Set((past.get(j) || []).map(p => p.st));
+    const atEnd = FOOT_REGIONS.has(regionOfGid(last[3])) ? servicesAtEnd(last, j) : new Set();
+    const all = walkFrom(j, hIn, skip, missing, kindOf(line))
+      .filter(r => !own.has(r.st) && !offered.has(r.st));
+    /* Where the filter would leave the end with nothing to pick (its services run on beyond
+       the walk's reach), the walk's ways on stay: 6 of ~380 ends in de and in ch. */
+    const run = atEnd.size ? all.filter(r => wayRun(r, atEnd)) : all;
+    const hub = hubStop(line, j);
+    // Nearest first; a way on that passes a stop already listed goes (passesBy).
+    const listed = [...offered], rows = [];
+    for (const r of (run.length || offered.size ? run : all).sort((x, y) => x.km - y.km)) {
+      if (hub && oneLineFrom(hub, r.st)) continue;
+      if (listed.some(st => passesBy(r, st))) continue;
+      listed.push(r.st);
+      rows.push({ ...r, j, key: r.legs.map(l => l.line.id).join('>') });
+    }
+    const out1 = r => r.legs[0].line.id;
+    const near = new Map();
+    for (const r of rows) near.set(out1(r), Math.min(near.has(out1(r)) ? near.get(out1(r)) : Infinity, r.km));
+    rows.sort((x, y) => (near.get(out1(x)) - near.get(out1(y)))
+      || (out1(x) < out1(y) ? -1 : out1(x) > out1(y) ? 1 : 0) || (x.km - y.km));
+    if (rows.length) map.set(j, rows.slice(0, THROUGH_MAX_ROWS));
+  }
+  return (line._thru = { gen: DATA_GEN, geo: GEO_GEN, map, pending: missing.size > 0 });
+}
+
+function throughEntry(line, ref) {
+  if (!ref) return null;
+  const t = throughEnds(line);
+  if (t.pending) return null;
+  return (t.map.get(ref.j) || []).find(r => r.st === ref.st && r.key === ref.key) || null;
+}
+// The nearest row past any junction end of the line that is stop `st`, if one is.
+function throughAt(line, st) {
+  const t = throughEnds(line);
+  if (t.pending) return null;
+  let best = null;
+  for (const rows of t.map.values())
+    for (const r of rows) if (r.st === st && (!best || r.km < best.km)) best = r;
+  return best;
+}
+
+/* Picking a stop past a junction end: as the end of a ride from a picked stop of this line
+   (or from a stop past its other end), or as its start, with the other end picked next. */
+function pickThrough(st, j, key) {
+  const ref = { j, st, key };
+  const T = PICK.through || {};
+  if (PICK.from && !PICK.to && PICK.from !== st && !PICK.past && !(T.from && T.from.j === j)) {
+    PICK.to = st;
+    PICK.through = { from: T.from || null, to: ref };
+  } else {
+    PICK = { from: st, to: null, around: false, through: { from: ref, to: null } };
+  }
+  render();
+  paintSelection();
+}
+
+/* A LEG OF A TRACED JOURNEY THROUGH JUNCTIONS: from stop a to stop b over register lines,
+   changing line only at junctions (at a stop the rider would have clicked it), never turning
+   back at one. Asked only where no one line calls at both. The shortest such way, within
+   1.6 times the distance as the crow flies plus 15 km and JR_MAX_CHANGES changes: {route:
+   {legs, km, gids} or null, pending}, `pending` while geometry it needs is on its way. */
+let JR = { gen: -1, by: new Map() };
+function junctionRoute(a, b) {
+  if (JR.gen !== DATA_GEN) JR = { gen: DATA_GEN, by: new Map() };
+  const key = `${a}>${b}`;
+  const c = JR.by.get(key);
+  if (c && (!c.pending || c.geo === GEO_GEN)) return c;
+  const res = { geo: GEO_GEN, pending: false, route: null };
+  JR.by.set(key, res);
+  const A = STATIONS[a], B = STATIONS[b];
+  if (!A || !B || a === b) return res;
+  const missing = new Set();
+  const cap = 1.6 * crowKm(A, B) + 15;
+  const open = [{ u: a, km: 0, cost: 0, h: null, line: null, legs: [], changes: 0,
+                  seen: new Set([a]) }];
+  const best = new Map();
+  for (let n = 0; open.length && n < JR_MAX_STATES; n++) {
+    let bi = 0;
+    for (let i = 1; i < open.length; i++) if (open[i].cost < open[bi].cost) bi = i;
+    const s = open.splice(bi, 1)[0];
+    if (s.u === b) {
+      res.route = { legs: s.legs, km: s.km, gids: s.legs.flatMap(l => l.gids) };
+      break;
+    }
+    const atStop = s.u !== a && isStop(s.u);
+    // The kind of track the journey set off on, kept to all the way.
+    for (const d of waysOn(s.u, s.line, s.h, missing, s.line ? kindOf(s.line) : null)) {
+      if (s.seen.has(d.to)) continue;
+      if (atStop && (d.line !== s.line || d.cut)) continue;       // no change at a stop
+      if (s.line && !turnOk(s.h, d.hOut)) continue;
+      const changes = s.changes + (s.line && d.line !== s.line ? 1 : 0);
+      const km = s.km + d.km;
+      if (changes > JR_MAX_CHANGES || km > cap) continue;
+      const legs = extendLegs(s.legs, d, s.u), cost = walkCost(km, legs);
+      const k = `${d.to}|${d.gid}`;
+      if (best.has(k) && best.get(k) <= cost) continue;
+      best.set(k, cost);
+      open.push({ u: d.to, km, cost, h: d.km < 0.005 ? s.h : d.hArr, line: d.line, legs,
+                  changes, seen: new Set([...s.seen, d.to]) });
+    }
+  }
+  res.pending = missing.size > 0;
+  return res;
 }
 
 function pickStop(id) {
@@ -3882,6 +5348,14 @@ function commitRide() {
   const d = document.getElementById('ridedate');
   const arrived = PICK.to;
   LAST_DATE = d ? d.value : '';
+  if (run.legs) {
+    // One trip of two legs, back to back: trips() groups them by the shared junction.
+    const rides = run.legs.map(l => newRide(l.line.id, l.from, l.to, LAST_DATE,
+                                            { cuts: l.cuts }));
+    addRides(rides, `Added ${rides.map(rideLabel).join(' and ')}`);
+    showStation(arrived);
+    return;
+  }
   addRide(VIEW.id, PICK.from, PICK.to, LAST_DATE, { around: run.around });
   /* Hand back to the STATION arrived at, not to the line just ridden. The next leg nearly
      always starts by choosing a different line, and staying on the old one meant backing
@@ -3902,13 +5376,78 @@ const norm = s => String(s || '').normalize('NFD')
    the two hundred lines run by Tokyo Metro and Tokyo Metropolitan Bureau of Transportation
    before ever reaching Tokyo station. */
 function score(q, primary, secondary, all) {
+  // `all` holds both names, so anything not in it scores 0: checked first, as nearly
+  // everything of the 125,000 names in the index fails it.
+  if (!all.includes(q)) return 0;
   if (q === primary || q === secondary) return 3;
   for (const n of [primary, secondary]) {
     if (!n) continue;
     if (n.startsWith(q)) return 2;
     if (n.split(/\s+/).some(w => w.startsWith(q))) return 2;
   }
-  return all.includes(q) ? 1 : 0;
+  return 1;
+}
+
+/* THE SEARCH INDEX, data/search.json (tools/build_regions.py, `write_search`): every
+   country's line and station names in one file, about 2 MB gzipped, fetched on the first
+   keystroke. Line data loads only zoomed in (DATA_MIN_ZOOM), and a search over a zoomed-out
+   view used to load every country on screen before it could answer (Europe at z4: 33 MB,
+   5.7 s); now it searches this, and picking a hit loads only that hit's country (pickHit).
+   A country loaded but not in the index (built after it was written) is still searched from
+   its loaded data. Without the file (an older deploy) search loads the countries on screen
+   as it did before (searchWiden). */
+function loadSearchIndex() {
+  if (SEARCH_IX_STATE) return;
+  SEARCH_IX_STATE = 'loading';
+  noteLoading();
+  fetch('data/search.json').then(r => {
+    if (!r.ok) throw new Error(`search.json: ${r.status}`);
+    return r.json();
+  }).then(d => {
+    SEARCH_IX = readSearchIndex(d);
+    SEARCH_IX_STATE = 'ready';
+  }).catch(err => {
+    console.warn('no search index; searching the countries on screen instead:', err);
+    SEARCH_IX_STATE = 'missing';
+  }).then(() => {
+    noteLoading();
+    if (document.getElementById('q').value.trim()) runSearch();
+  });
+}
+
+/* The file is columns per country (write_search's docstring); this turns it into objects
+   shaped enough like a loaded line or station for search, lineName, lineColour and the hit
+   rows. A station's position is in thousandths of a degree, each the step from the one
+   before it in its country's list. */
+function readSearchIndex(d) {
+  const ops = d.ops.map(([raw, en, shown]) => ({ shown, k: `${raw} ${en}` }));
+  const lines = [], stations = [];
+  for (const [cc, [ids, ns, es, refs, oi, ki, cols, kms, fl]] of Object.entries(d.lines)) {
+    for (let i = 0; i < ids.length; i++) {
+      const o = ops[oi[i]];
+      const l = { id: ids[i], region: cc, name: ns[i], name_en: es[i], ref: refs[i],
+                  colour: cols[i], kind: d.kinds[ki[i]], km: kms[i],
+                  service: !!(fl[i] & 1), dup: !!(fl[i] & 2), opShown: o.shown };
+      l._n = norm(l.name_en || l.name);
+      l._n2 = norm(l.name);
+      l._k = norm(`${l.name} ${l.name_en} ${l.ref} ${o.k}`);
+      lines.push(l);
+    }
+  }
+  for (const [cc, [ids, ns, es, dx, dy, nl]] of Object.entries(d.stations)) {
+    let x = 0, y = 0;
+    for (let i = 0; i < ids.length; i++) {
+      x += dx[i]; y += dy[i];
+      const s = { id: ids[i], region: cc, n: ns[i], e: es[i], x: x / 1000, y: y / 1000,
+                  nl: nl[i] };
+      s._n = norm(s.e);
+      s._n2 = norm(s.n);
+      s._k = norm(`${s.n} ${s.e}`);
+      stations.push(s);
+    }
+  }
+  return { lines, stations,
+           covers: new Set([...Object.keys(d.lines), ...Object.keys(d.stations)]) };
 }
 
 function search(raw) {
@@ -3921,10 +5460,21 @@ function search(raw) {
   q = q.replace(/\s+/g, ' ').trim();
   if (!q) return [];
 
+  // The index where it is in, plus any loaded country it does not cover; else what is loaded.
+  const ix = SEARCH_IX;
+  const outside = ix ? [...LOADED].filter(cc => !ix.covers.has(cc)) : [];
   const out = [];
   if (want !== 'station') {
-    for (const l of LINES) {
-      const sc = score(q, l._n, l._n2, l._k);
+    const lines = !ix ? LINES : !outside.length ? ix.lines
+      : ix.lines.concat(LINES.filter(l => regionsOf(l).every(cc => !ix.covers.has(cc))));
+    /* A line named for its two ends ("GWR: London Paddington - Oxford") that matches only by
+       one of the places in it ranks just below a station of that name: "paddington" listed
+       13 GWR lines before London Paddington, since within a score a line's km beat a
+       station's count of lines. A line whose own name it is ("Chūō Line") is unaffected. */
+    const ROUTE_NAME = /\s[-–—]\s|[→↔⇔]|<=?>|=>/;
+    for (const l of lines) {
+      let sc = score(q, l._n, l._n2, l._k);
+      if (sc === 2 && ROUTE_NAME.test(l.name_en || l.name)) sc = 1.5;
       if (sc) out.push({ kind: 'line', l, sc, w: l.km });
     }
   }
@@ -3935,26 +5485,66 @@ function search(raw) {
     });
   }
   if (want !== 'line') {
-    for (const [id, s] of Object.entries(STATIONS)) {
-      if (s.j) continue;
-      const sc = score(q, s._n, s._n2, s._k);
-      if (sc) out.push({ kind: 'station', id, s, sc, w: (s.l || []).length });
+    if (ix) {
+      for (const s of ix.stations) {
+        const sc = score(q, s._n, s._n2, s._k);
+        if (sc) out.push({ kind: 'station', id: s.id, s, sc, w: s.nl });
+      }
+    }
+    if (!ix || outside.length) {
+      for (const [id, s] of Object.entries(STATIONS)) {
+        if (s.j || (ix && ix.covers.has(s.region))) continue;
+        const sc = score(q, s._n, s._n2, s._k);
+        if (sc) out.push({ kind: 'station', id, s, sc, w: (s.l || []).length });
+      }
+    }
+  }
+  // Countries by name, loaded or not: a way to one whose lines are not in yet.
+  if (!want) {
+    for (const [cc, r] of Object.entries(REGIONS)) {
+      const n = norm(r.name);
+      const sc = score(q, n, '', n);
+      if (sc) out.push({ kind: 'country', cc, r, sc, w: Infinity });
     }
   }
   out.sort((a, b) => (b.sc - a.sc) || (b.w - a.w));
   return out.slice(0, 14);
 }
 
+/* WITHOUT THE SEARCH INDEX, A SEARCH REACHES WHAT IS ON SCREEN. Line data loads only zoomed
+   in (DATA_MIN_ZOOM), so a search over a view of Europe would find only the countries already
+   loaded. It loads the countries on screen instead, from SEARCH_MIN_ZOOM (where loading used
+   to start anyway), and searches again as each arrives; noteLoading says it is waiting. */
+function searchWiden() {
+  if (!mapReady || map.getZoom() < SEARCH_MIN_ZOOM) return;
+  for (const cc of regionsInView(0)) {
+    if (LOADING.has(cc)) continue;
+    loadRegion(cc).then(() => {
+      if (document.getElementById('q').value.trim()) runSearch();
+    });
+  }
+}
+
 function runSearch() {
   const q = document.getElementById('q').value;
+  if (q.trim()) {
+    loadSearchIndex();
+    // Until the index is in, what is loaded is searched; it searches again when it arrives.
+    if (SEARCH_IX_STATE === 'missing') searchWiden();
+  }
   const hits = search(q);
   const el = document.getElementById('results');
   if (!hits.length) { el.innerHTML = ''; return; }
-  el.innerHTML = hits.map(h => h.kind === 'line'
+  el.innerHTML = hits.map(h => h.kind === 'country'
+    ? `<div class="hit" onclick="pickHit('country','${h.cc}')">`
+      + `<div class="t">${esc(h.r.name)}</div>`
+      + `<div class="s">country${hasTotal(h.cc)
+        ? ` · ${Math.round(h.r.km).toLocaleString()} km of line` : ''}</div></div>`
+    : h.kind === 'line'
     ? `<div class="hit" onclick="pickHit('line','${h.l.id}')">`
       + `<div class="t"><span class="bar" style="background:${lineColour(h.l)}"></span>`
       + `${esc(lineName(h.l))}</div>`
-      + `<div class="s">${esc(opName(h.l))} · `
+      + `<div class="s">${esc(h.l.opShown || opName(h.l))} · `
       + `${h.l.km.toFixed(0)} km${h.l.service ? ' · named train' : ''}</div></div>`
     : h.kind === 'op'
     ? `<div class="hit" onclick="pickHit('op','${h.i}')">`
@@ -3963,15 +5553,46 @@ function runSearch() {
       + ` · ${Math.round(h.o.km).toLocaleString()} km</div></div>`
     : `<div class="hit" onclick="pickHit('station','${h.id}')">`
       + `<div class="t">${esc(h.s.e || h.s.n)}</div>`
-      + `<div class="s">station · ${(h.s.l || []).length} line`
-      + `${(h.s.l || []).length === 1 ? '' : 's'}</div></div>`).join('');
+      + `<div class="s">station · ${h.w} line${h.w === 1 ? '' : 's'}</div></div>`).join('');
 }
 
+/* A HIT FROM THE INDEX WHOSE COUNTRY IS NOT LOADED: load that country, then open the hit as
+   a loaded one opens. A station moves the camera at once, so the map is there while its
+   country comes in (noteLoading says so). Opened only if nothing else was picked or opened
+   meanwhile. An index older than the country's build can name an id the build has since
+   moved: aliases.json's map, then the nearest station of that name within 300 m. */
+let PICK_GEN = 0;
 function pickHit(kind, id) {
   document.getElementById('q').value = '';
   document.getElementById('results').innerHTML = '';
+  const gen = ++PICK_GEN;
+  const ix = SEARCH_IX;
+  const e = !ix ? null
+    : kind === 'line' && !LINE_BY_ID.has(id) ? ix.lines.find(l => l.id === id)
+    : kind === 'station' && !STATIONS[id] ? ix.stations.find(s => s.id === id) : null;
+  if (!e) return openHit(kind, id);
+  if (kind === 'station')
+    map.easeTo({ center: [e.x, e.y], zoom: Math.max(map.getZoom(), 12), duration: 0 });
+  const view = VIEW;
+  loadRegion(e.region).then(() => {
+    if (gen !== PICK_GEN || VIEW !== view) return;
+    let to = id;
+    if (kind === 'line' && !LINE_BY_ID.has(to)) to = (LINE_ALIASES[e.region] || {})[id];
+    if (kind === 'station' && !STATIONS[to]) {
+      to = (ALIASES[e.region] || {})[id];
+      if (!STATIONS[to]) {
+        const near = nearestStation(e.x, e.y, 300), s = STATIONS[near];
+        to = s && (s.n === e.n || (e.e && s.e === e.e)) ? near : null;
+      }
+    }
+    if (to && (kind === 'line' ? LINE_BY_ID.has(to) : STATIONS[to])) openHit(kind, to);
+  });
+}
+
+function openHit(kind, id) {
   if (kind === 'line') showLine(id);
   else if (kind === 'op') showOp(+id);
+  else if (kind === 'country') goRegion(id);
   else {
     const s = STATIONS[id];
     if (s) map.easeTo({ center: [s.x, s.y], zoom: Math.max(map.getZoom(), 12), duration: 0 });
@@ -4039,6 +5660,7 @@ function importRides(input) {
 const CLICK_SLOP = 10;
 
 map.on('click', (e) => {
+  const clickGen = ++CLICK_WAIT;
   const hits = map.queryRenderedFeatures(e.point, { layers: ['sel-station', 'station'] });
   const tracing = VIEW.kind === 'trace';
   const near = hits.length ? [] : tracksNear(e.point, CLICK_SLOP);
@@ -4059,16 +5681,35 @@ map.on('click', (e) => {
     if (VIEW.kind === 'line') {
       const line = LINE_BY_ID.get(VIEW.id);
       if (line && lineStations(line).has(id)) return pickStop(id);
+      // A stop past one of its junction ends picks it, as its row does.
+      const r = line && throughAt(line, id);
+      if (r) return pickThrough(r.st, r.j, r.key);
     }
     return showStation(id);
   }
   if (tracing) return;
-  // Not-running track is drawn from the model, and names its line.
-  if (near[0].layer.id === 'closed-hit') return showLine(near[0].properties.l);
+  // Not-running track names its line, and its country (data/closed.json), loaded first.
+  if (near[0].layer.id === 'closed-hit') {
+    const { l, cc } = near[0].properties;
+    return (cc && !LOADED.has(cc) ? loadRegion(cc) : Promise.resolve())
+      .then(() => {
+        if (clickGen === CLICK_WAIT && LINE_BY_ID.has(foldLine(l))) showLine(foldLine(l));
+      });
+  }
   const withWay = near.find(f => f.properties.w);
-  if (withWay) pickTrack(withWay);
-  else pickByChord(e.point);
+  if (withWay) return pickTrack(withWay);
+  /* Below z10 the click is resolved from the line data, which a country zoomed out on does
+     not have yet (DATA_MIN_ZOOM): the countries whose track was hit load first, and the
+     click is placed again where it landed, in case the map moved meanwhile. */
+  const need = [...new Set(near.map(f => f.layer.id).filter(id => id.startsWith('track-hit-'))
+    .map(id => id.slice('track-hit-'.length)))].filter(cc => !LOADED.has(cc));
+  if (!need.length) return pickByChord(e.point);
+  const at = e.lngLat;
+  Promise.all(need.map(loadRegion)).then(() => {
+    if (clickGen === CLICK_WAIT) pickByChord(map.project(at));
+  });
 });
+let CLICK_WAIT = 0;     // any later click replaces one waiting on a country's data
 
 /* Track features in a box around the point, nearest first by their drawn geometry. */
 function tracksNear(p, r) {

@@ -1,0 +1,84 @@
+# Vietnam 2019 census, ethnic group read as language under AGENT_BRIEF section 2's ethnicity rule
+# (taxonomy/vn2019.py has the mapping and the Glottolog checks; countries/vn.py). Nodes other
+# fragments already define are repeated identically, so Vietnam does not depend on them.
+#
+# New group: Khmuic (Glottolog khmu1236): Khmu, Ksingmul (Xinh Mun) and O'du. New leaves: the
+# Vietic Muong, Tho and Chut beside Vietnamese; Tay, Tai Dam/Don, Nung, Cao Lan, Giay, Tai Lue
+# and the Kra languages La Chi, La Ha and Qabiao under Kra-Dai; Dao and Pa-Hng under Hmong-Mien;
+# Roglai and Chru under Chamic; nine Bahnaric and three Katuic leaves; Khang and Mang directly
+# under Austroasiatic; four Loloish leaves; San Diu under Chinese.
+#
+# Colours, for the neighbours on the ground:
+#   * the northeast (Cao Bang, Lang Son, Ha Giang): Tay a light yellow-green, Nung a deeper green,
+#     Hmong mid teal (its existing colour), Dao a pale mint, all apart from Vietnamese's purple;
+#   * the northwest (Son La, Dien Bien, Hoa Binh, Thanh Hoa): Tai a pale yellow, Muong a rose
+#     (Vietic, so in the Austroasiatic reds, but clear of Vietnamese), Khmu a deep magenta;
+#   * the Central Highlands: Jarai light sky blue and Rade a deeper blue (Chamic blues), Bahnar a
+#     deep violet, Sedang a pale lilac, Koho a blue-lavender, Mnong its existing rose.
+austroasiatic | Austroasiatic
+austroasiatic.vietnamese | Vietnamese | 0.68 0.17 310
+austroasiatic.muong | Muong (Mường) | 0.76 0.15 355
+austroasiatic.tho | Tho (Thổ) | 0.72 0.15 340.0
+austroasiatic.chut | Chut (Chứt) | 0.84 0.15 280.0
+austroasiatic.khmer | Khmer | 0.82 0.10 330
+austroasiatic.bahnaric | Bahnaric | 0.66 0.15 285
+austroasiatic.bahnaric.bahnar | Bahnar (Ba Na) | 0.60 0.17 292
+austroasiatic.bahnaric.sedang | Sedang (Xơ Đăng) | 0.84 0.08 300
+austroasiatic.bahnaric.koho | Koho (Cơ Ho) | 0.76 0.12 255
+austroasiatic.bahnaric.hre | Hre (Hrê)
+austroasiatic.bahnaric.bunong | Bunong (Mnong) | 0.70 0.16 350
+austroasiatic.bahnaric.stieng | Stieng
+austroasiatic.bahnaric.gie_trieng | Gie-Trieng (Giẻ Triêng)
+austroasiatic.bahnaric.maa | Maa (Mạ)
+austroasiatic.bahnaric.chrau | Chrau (Chơ Ro)
+austroasiatic.bahnaric.cua | Cua (Co)
+austroasiatic.bahnaric.brao | Brao | 0.70 0.14 265
+austroasiatic.bahnaric.romam | Romam (Rơ Măm)
+austroasiatic.katuic | Katuic | 0.66 0.17 20
+austroasiatic.katuic.bru | Bru (Bru-Vân Kiều)
+austroasiatic.katuic.katu | Katu (Cơ Tu)
+austroasiatic.katuic.taoih | Ta'oih (Tà Ôi)
+austroasiatic.khmuic | Khmuic | 0.60 0.17 340
+austroasiatic.khmuic.khmu | Khmu (Khơ Mú) | 0.60 0.17 340
+austroasiatic.khmuic.puoc | Ksingmul (Xinh Mun)
+austroasiatic.khmuic.iduh | O'du (Ơ Đu)
+austroasiatic.khang | Khang (Kháng) | 0.84 0.15 310.0
+austroasiatic.mang | Mang (Mảng) | 0.6 0.15 280.0
+kradai | Kra-Dai (Tai-Kadai) | 0.80 0.14 125
+kradai.tay | Tay (Tày) | 0.80 0.15 118
+kradai.tai_vietnam | Tai Dam and Tai Don (Thái) | 0.88 0.14 98
+kradai.nung | Nung (Nùng) | 0.62 0.14 150
+kradai.cao_lan | Cao Lan (Sán Chay)
+kradai.giay | Giay (Giáy)
+kradai.bouyei | Bouyei
+kradai.lao | Lao | 0.68 0.14 110
+kradai.tai_lue | Tai Lue (Lự)
+kradai.lachi | Lachi (La Chí)
+kradai.laha | Laha (La Ha)
+kradai.gelao | Gelao
+kradai.qabiao | Qabiao (Pu Péo) | 0.86 0.14 115.0
+hmongmien | Hmong-Mien | 0.66 0.15 170
+hmongmien.hmong | Hmong | 0.66 0.16 170
+hmongmien.dao | Dao (Iu Mien and Kim Mun) | 0.86 0.09 160
+hmongmien.hmongic | Hmongic (Miao languages) | 0.70 0.14 185
+hmongmien.hmongic.pa_hng | Pa-Hng (Pà Thẻn)
+austronesian | Austronesian | 0.76 0.13 195
+austronesian.chamic | Chamic | 0.74 0.13 205
+austronesian.chamic.cham | Cham | 0.70 0.14 190
+austronesian.chamic.jarai | Jarai | 0.84 0.11 230
+austronesian.chamic.rade | Rade (Ede) | 0.62 0.13 218
+# hand-picked: generated, Roglai came out #00aebe beside Cham's #00b9b2 in Ninh Thuan
+austronesian.chamic.roglai | Roglai (Raglay) | 0.86 0.08 180
+austronesian.chamic.chru | Chru (Chu Ru)
+sinotibetan.loloish | Loloish (Yi languages) | 0.66 0.14 268
+sinotibetan.loloish.hani | Hani
+sinotibetan.loloish.lahu | Lahu
+sinotibetan.loloish.lolo_vietnam | Lolo (Lô Lô)
+sinotibetan.loloish.phula | Phula (Phù Lá)
+sinotibetan.loloish.sila | Sila (Si La)
+sinotibetan.loloish.cong | Cong (Cống)
+sinotibetan.sinitic | Chinese | 0.62 0.19 38
+sinotibetan.sinitic.hakka | Hakka | 0.58 0.14 5
+# hand-picked: generated, San Diu came out #ff6ca7, Muong's pink, in the provinces beside Phu Tho
+sinotibetan.sinitic.san_diu | San Diu (Sán Dìu) | 0.76 0.14 62
+seasia_other | Other indigenous languages of mainland Southeast Asia | 0.68 0.06 300

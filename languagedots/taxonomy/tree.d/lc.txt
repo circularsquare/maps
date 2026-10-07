@@ -1,0 +1,7 @@
+# Saint Lucia, Census 2022 (taxonomy/lc2022.py). No new nodes: bare repeats of dm.txt's Kweyol
+# and English.
+creole | Creoles
+creole.french_based | French-based creoles
+creole.french_based.antillean | Antillean Creole (Guadeloupe, Martinique)
+indoeuropean.germanic | Germanic
+indoeuropean.germanic.english | English

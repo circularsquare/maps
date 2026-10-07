@@ -322,6 +322,9 @@ published census ethnicity table predicts them at R² 0.964; Egypt has no such p
 * **`Q1012A_CHRISTIAN`** (wave VII only) would split Coptic Orthodox from the rest. Sixty-six
   Egyptian Christians answer it, which cannot carry a national split let alone a governorate
   one. `taxonomy/eg2022.py`'s REVIEW has the argument for staying on `christianity`.
+  **Corrected 2026-10-04:** the column is empty for all 66 Egyptian Christians in
+  `AB7_ENG_Release_Version6.sav`; nobody in Egypt answered it. Waves III and V do carry a
+  denomination answer for Egypt, see *The Copts* below.
 * **`Q1012A_MUSLIM`** is not a madhhab column; §11af measured 45–82% answering *just a Muslim*
   across five Arab countries.
 
@@ -558,3 +561,136 @@ The other nine Egyptian blocks at the limit are registered `real`, Cairo's, Alex
 Said's among them. Damietta's (11 hexes, one at the limit, 16.4% of EG11) failed the scan's
 distance test only because worldcities matched Ras el-Barr; the block is on the city, 1.5 km
 from its centre, where Kontur is 43,331/km².
+
+## Frontier governorates from the census, 2026-10-03 (scout `fafd1067-gaps`)
+
+Anita, 2026-10-03, on the new not-drawn hatching: *"greenland and sinai feel quite prominent."* New
+Valley, North Sinai and South Sinai have polygons and no rows. Her 2026-09-08 Ecuador ruling is the
+test: *"the line is whether anything measured the place ... Galápagos, never measured, is drawn
+empty."* So the question was not "what rate to fill at" but "did anything measure them".
+
+**What was searched, and what came back:**
+
+| source | New Valley | North Sinai | South Sinai |
+|---|---|---|---|
+| Arab Barometer III-VII (built) | none | none | none |
+| Afrobarometer R5 2013 (religion asked), R6 2015 (`Q98A` "not asked in this country"); `data/raw/afrobarometer/` | none | none | none |
+| Global Flourishing Study wave 1 (`data/raw/gfs/`): codebook (OSF 285w7) has codes 423-427 Matruh, Red Sea, New Valley, North Sinai, South Sinai; the data hold 401-422 only | none | none | none |
+| UNSD DYB table 28 (`tools/oracle.py Egypt`) | absent | absent | absent |
+| 1996 census, governorate table copied in the CAPMAS library by Arab-West Report interns, 2007 and 2011 (`paper52_tablecensus1996capmas.pdf`, Wayback 20231227122900; saved `data/raw/eg/awr_paper52_tablecensus1996capmas.pdf`) | blank ("no information available") | blank | **2,739 Christians, 51,723 Muslims, 33 others, 54,495; 5.03%** |
+| 1976 census, Chitam, *The Coptic Community in Egypt: Spatial and Social Change*, Durham CMEIS Occasional Paper 32, 1986, Table 4.1, source "Census for all Egypt, 1976" (Wayback 20230521143125 of dro.dur.ac.uk/132/1/32CMEIS.pdf; page saved as `data/raw/eg/chitam1986_table4-1_census1976.png`) | **1.8%** | "Sinai" 1.0%, 100% urban: the strip Egypt held in 1976, not today's governorate | (same) |
+| Denis, "Cent ans de localisation de la population chrétienne égyptienne", *Astrolabe* 2, 1999 (HAL hal-00591299 behind an Anubis wall; Wayback 20240705063406) | a 1996 bar chart by province, no figures | chart only | chart only |
+| DHS Egypt | no religion item | | |
+
+**Witnesses that the two printed tables are what they say.** The 1996 table's Cairo is 8.57%, the
+figure this record already checks against; its South Sinai total, 54,495, is the 1996 census count;
+its columns add (33 + 2,739 + 51,723 = 54,495, asserted in `sources/eg_census.py`). Chitam's Cairo is
+10.1% and all Egypt 6.3%, the two 1976 figures in Courbage and Fargues and in Denis; Minya 19.4%
+against the 1996 table's 19.45%.
+
+**Built.** `sources/eg_census.py` writes `data/normalized/eg_census.csv`: South Sinai at 5.03% of
+CAPMAS's 119,540 (6,012 Christians), New Valley at 1.8% of 275,527 (4,959). `countries/eg.py` reads
+both files; 26 units, every row `modelled`. Egypt as drawn: 108,053,187 people, 6.01% Christian (was
+6.02%). Rescattered: 108,052 / 10,804 dots. `gap` is North Sinai only, 475,331, gap_share 0.0044.
+
+**North Sinai stays empty.** Nothing printed measures it. The options, for Anita (ask filed):
+
+- **Stay empty** (as built): 475,331 people, 0.44%, hatched.
+- **South Sinai's 1996 rate (5.03%)**: about 23,900 Christians. Too high on its face: South Sinai's
+  share is a tourist-coast workforce (Sharm el-Sheikh; 2,258 foreigners in 1996), North Sinai is
+  al-Arish and Bedouin, and Coptic families were widely reported leaving al-Arish after the killings
+  of February 2017 (EIPR has a page on Copts in North Sinai, found by search and not read).
+- **The national rate (6.01%)**: about 28,600; asserts North Sinai looks like Egypt, which nobody
+  thinks.
+- **The 1976 "Sinai" 1.0%**: about 4,750; the right order of magnitude but measured on a different
+  piece of land.
+- The 1986 census governorate volumes (published religion) are the real route; not found online.
+
+**Red Sea, found on the way and not changed.** The Arab Barometer draws the Red Sea 0% Christian on
+28 respondents; the 1996 census table counts **10.48%** (16,315 of 155,695, 11,078 of them
+foreigners), and Chitam's 1976 figure is 4.4%. note_public now cites the 10.5% beside the 0/28. Moving
+the Red Sea to a census rate changes a drawn governorate, so it is in the same ask.
+
+## The Copts, 2026-10-04 (`fafd1067-copts`)
+
+Anita, 2026-10-04: *"would be really nice if we could place copts vs noncopts in egypt. since
+otherwise we're not really showing representation of copts anywhere."* Egypt's Christians were on
+the bare `christianity` node; `christianity.oriental.coptic` already existed (ASARB 186, au2021,
+nz2023, pl2021), so no new node and no new legend row.
+
+**Built.** `sources/eg_churches.py` -> `data/normalized/eg_churches.csv`: one national share,
+**86.49% of Christians Coptic Orthodox**, from the Global Flourishing Study wave 1 (2023). In
+`countries/eg.py` every governorate's `Christian` row (Arab Barometer and census rows alike) is
+split at that share into `christianity.oriental.coptic` and the rest, which stays on
+`christianity`. As drawn: 5,618,463 Coptic Orthodox, 877,419 other Christians, Egypt's total
+unchanged at 108,053,187. Every row stays `modelled`. Rescattered: 108,052 / 10,803 dots.
+
+**The sources, self-identification first:**
+
+| source | Egyptian Christians | Orthodox | Catholic | Protestant | other | none named / DK / refused |
+|---|---:|---:|---:|---:|---:|---:|
+| **GFS wave 1, 2023**, `REL3_Y1` (codebook OSF 285w7 p.21), `COUNTRY` 4 | 131 (2.54% of 4,729, weighted) | **86.49%** (109) | 2.76% (4) | 2.89% (Anglican 3, Presbyterian 1, Independent/Evangelical 2) | | 7.87% (97: 10, refused: 2) |
+| Arab Barometer V, 2018-19, `Q1012A` (one card for Muslims and Christians) | 268 | 71.7% (197) | 16.2% (43) | no box taken | Armenian 0.6% (1) | 11.5% (DK 2, refused 25) |
+| Arab Barometer III, 2013, `q1012a` | 69, of whom 25 answered | 20 | 4 | | | 44 blank, 1 refused |
+| Arab Barometer VII, 2022, `Q1012A_CHRISTIAN` | 66 | empty for all of them | | | | |
+| WVS 7, 2018, `Q289` / `Q289CS9` (IHSN catalogue 11567, frequency pages) | 37 (3.1% of 1,200) | all coded `Other Christian (Jehova witness...)` / `80000000 Other Christian; nfd`: no church | | | | |
+
+Weighted shares are the surveys' own weights (GFS `ANNUAL_WEIGHT_C1`, AB `wt`). The GFS figure's
+Kish effective sample is 83, so **86.5% is about plus or minus 7.4 points.**
+
+**Why the GFS and not wave V, or an average.** The two disagree by 15 points, more than noise
+(about 3.4 and 3.2 points of standard error). The witness that separates them is the Catholic
+Church's own count: **348,000 Catholics in Egypt in 2023**, all rites including Latin-rite
+foreigners (GCatholic's country page, from the Annuarium Statisticum), about 5% of the 6.5 million
+Christians drawn. A church's own figure is the high side. Wave V's 16.2% Catholic is three times
+it; the GFS's 2.8% is under it, as a self-identification share should be. Wave V's card was one
+list for both religions with no Protestant box, and 10.8% of its Christians refused, so it reads
+as a card problem rather than a different population; it is printed as a witness and not used.
+The Coptic Orthodox Church's own claims (nine in ten Christians, on a total of 10-15% of Egypt)
+are an interested party's and are not used either; the GFS level sits inside the bracket they
+imply. Pew (2011, "How many Christians are there in Egypt?") gives no denominational figure and no
+survey of its own.
+
+**`Orthodox` -> the Coptic node.** The GFS card says `Orthodox`, not `Coptic Orthodox`. In Egypt
+that word names the Coptic Orthodox Church for all but a few thousand Greek Orthodox and Armenian
+Apostolic faithful, mostly of foreign descent; wave V gave the Armenians their own box and one
+Christian in 268 took it. `taxonomy/eg2022.py` REVIEW; reversible by pointing that key at
+`christianity.oriental`.
+
+**National, not by governorate.** 131 Christians over 18 GFS regions and 42 of 125 PSUs. Random
+halves inside each region, Spearman on the Orthodox share over the 11 regions with 4 or more
+Christians: median **+0.515** against a bar of **+0.536** for 11 units
+(`spearman_null.critical_rho(11)`), and halves that share PSUs flatter it. Fails, so one share.
+Wave V's 268 by governorate (Catholic 6 of 33 in Minya, 6 of 33 in Cairo, 6 of 27 in Giza) is too
+thin and its Catholic level is the doubtful part, so it cannot carry geography either.
+
+**One thing to know about the GFS sample.** It found Christians at 2.54% of Egypt, under half the
+census share (5.7% in 1986) and the Arab Barometer's 5.93%. Its Christians may therefore not be a
+cross-section of Egypt's; if it missed Christians unevenly by church, the level moves. Nothing on
+disk measures that. Not drawn from: the GFS's Christian share itself (the Arab Barometer stays the
+Christian level).
+
+**Spec §14.** Copts are a minority that has faced attacks. This adds the Coptic label to
+Christians already drawn at governorate on Anita's 2026-09-08 ruling, at one national share, so
+the Coptic dots sit exactly where the Christian dots already sat and nothing is placed more finely
+than before. It does not clear AGENT_BRIEF §3 and no ask was filed.
+
+**The top text, old wording kept here** (cut to stay under the 80-word cap when the churches were
+added): `how` was "survey, four rounds 2013 to 2022 pooled; New Valley and South Sinai from the
+1976 and 1996 censuses"; now "survey, four rounds 2013 to 2022 pooled; two frontier governorates
+from old censuses; Copts from a 2023 survey".
+
+**Leads, not chased.** Pew's 2011 piece cites the **2008 Egypt DHS** (16,527 women 15-49, about 5%
+Christian), so at least one EDHS carried religion, against this file's earlier "DHS Egypt: no
+religion item"; a governorate witness to the Christian level, not to churches. The same file's wave 2
+answer, `REL3_Y2`, is there for 77 of the 131 wave 1 Christians (the rest have no wave 2 row): 63
+Orthodox, 82% unweighted. The same people a year later, so a consistency check and not a second
+sample; not used. Better still: the Coptic Catholic eparchies' and the Evangelical
+Synod of the Nile's own membership by place, as witnesses to where the non-Coptic minority sits.
+
+
+## `gap` cut for the top-text cap (658b4937, 2026-10-04)
+
+The `assigned` row (spec §7e, Muslims drawn as Sunni by assignment, spec §2.6b) added words under the title and took this country over the 80-word cap, so `gap` was shortened by leaving things out. The wording before:
+
+> North Sinai, 0.44% of Egypt, where the survey interviewed nobody and no census table for it has been published

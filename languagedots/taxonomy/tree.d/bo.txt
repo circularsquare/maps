@@ -1,0 +1,134 @@
+# Bolivia, Censo 2024, mother tongue (taxonomy/bo2024.py). Families from Glottolog
+# (data/raw/glottolog): Mosetenan (Tsimane', Mosetén; Glottolog's Mosetén-Chimané, one isolate
+# with dialects, given as the two-language family most readers know because the census names
+# both), Uru-Chipaya and Zamucoan (Ayoreo) are new roots. Tacanan stays the root pe.txt made
+# (Glottolog: inside Pano-Tacanan). Movima, Itonama, Cayubaba, Canichana, Leco, Yuracaré and
+# Puquina are Glottolog isolates. Kallawaya (Glottolog Callawalla, a speech register) sits
+# under Quechuan by its grammar. Joaquiniano, a Baure dialect in Glottolog, is a sibling of
+# Baure so that Baure stays a leaf; Valencian likewise beside Catalan; Afro-Bolivian Spanish
+# beside Spanish. Nodes other fragments define are repeated here only as parents or reused
+# leaves, with the identical label and no colour.
+#
+# Colours, for contrast on the ground in the Beni and Pando lowlands: Tsimane' (the largest
+# lowland language, San Borja to Rurrenabaque) is a deep cyan-blue, away from Mojeño's greens
+# and the Tacanan pinks around it; Mosetén a paler blue beside it. Uru-Chipaya is a yellow-green
+# inside the Aymara altiplano's lavender. Ayoreo is a magenta in the Chiquitania, between
+# Chiquitano's olive, Guarani's yellows and German's blue.
+
+# ---- repeated parents and reused nodes ----
+indoeuropean.romance | Romance
+indoeuropean.romance.spanish | Spanish
+indoeuropean.romance.portuguese | Portuguese
+indoeuropean.romance.french | French
+indoeuropean.romance.italian | Italian
+indoeuropean.romance.catalan | Catalan
+indoeuropean.romance.galician | Galician
+indoeuropean.romance.romanian | Romanian
+indoeuropean.romance.latin | Latin
+indoeuropean.germanic.continental | Continental West Germanic
+indoeuropean.germanic.continental.german | German
+indoeuropean.germanic.continental.dutch | Dutch
+indoeuropean.germanic.north | North Germanic
+indoeuropean.germanic.north.danish | Danish
+indoeuropean.germanic.north.norwegian | Norwegian
+indoeuropean.germanic.north.swedish | Swedish
+indoeuropean.slavic.east.russian | Russian
+indoeuropean.slavic.east.ukrainian | Ukrainian
+indoeuropean.slavic.west.polish | Polish
+indoeuropean.slavic.west.czech | Czech
+indoeuropean.slavic.south.croatian | Croatian
+indoeuropean.slavic.south.serbian | Serbian
+indoeuropean.slavic.south.bulgarian | Bulgarian
+indoeuropean.hellenic.greek | Greek
+indoeuropean.albanian | Albanian
+indoeuropean.albanian.albanian | Albanian
+indoeuropean.iranian.persian | Persian (Farsi)
+uralic.hungarian | Hungarian
+uralic.finnish | Finnish
+turkic.turkish | Turkish
+afroasiatic.hebrew | Hebrew
+sinotibetan.sinitic | Chinese
+sinotibetan.sinitic.min_nan | Min Nan (Taiwanese, Hokkien)
+japonic.japanese | Japanese
+koreanic | Koreanic
+koreanic.korean | Korean
+kradai.thai | Thai
+austroasiatic.vietnamese | Vietnamese
+quechuan | Quechuan
+quechuan.quechua | Quechua
+aymaran | Aymaran
+aymaran.aymara | Aimara
+tupian | Tupian
+tupian.tupiguarani | Tupi-Guarani
+tupian.tupiguarani.guarani | Guarani
+tupian.tupiguarani.guarani.chiriguano | Ava Guaraní (Chiriguano)
+tupian.tupiguarani.guarani.tapiete | Tapieté
+tupian.tupiguarani.guarayu | Guarayu
+arawakan | Arawakan
+arawakan.manchineri | Manchineri
+panoan | Panoan
+panoan.yaminawa | Yamináwa
+tacanan | Tacanan
+tacanan.ese_eja | Ese Eja | 0.66 0.16 317.5
+chapacuran | Chapacuran
+matacoan | Matacoan
+matacoan.weenhayek | Weenhayek
+chiquitano | Chiquitano
+chiquitano.chiquitano | Chiquitáno
+isolate | Language isolates
+isolate.basque | Basque
+signlanguage | Sign language
+
+# ---- new families ----
+mosetenan | Mosetenan | 0.7 0.16 215
+uruchipayan | Uru-Chipaya | 0.79 0.16 165
+zamucoan | Zamucoan | 0.68 0.16 320
+
+# ---- Romance ----
+indoeuropean.romance.afrobolivian | Afro-Bolivian Spanish
+indoeuropean.romance.valencian | Valencian
+
+# ---- Quechuan, Uru-Chipaya, Puquina ----
+quechuan.kallawaya | Kallawaya (Machaj Juyay)
+uruchipayan.uru_chipaya | Uru-Chipaya | 0.79 0.16 165
+isolate.puquina | Puquina
+
+# ---- Tupi-Guarani ----
+tupian.tupiguarani.siriono | Sirionó | 0.79 0.16 68
+tupian.tupiguarani.yuqui | Yuqui | 0.74 0.16 358
+tupian.tupiguarani.pauserna | Guarasu'we (Pauserna) | 0.79 0.16 8
+
+# ---- Arawakan ----
+arawakan.mojeno | Mojeño | 0.72 0.16 145
+arawakan.mojeno.trinitario | Mojeño Trinitario | 0.76 0.16 150
+arawakan.mojeno.ignaciano | Mojeño Ignaciano | 0.64 0.16 147
+arawakan.baure | Baure | 0.66 0.16 115
+arawakan.joaquiniano | Joaquiniano | 0.84 0.16 115
+
+# ---- Tacanan, Panoan ----
+tacanan.tacana | Tacana | 0.81 0.16 350
+tacanan.cavinena | Cavineña (Kabineña) | 0.72 0.16 317.5
+tacanan.araona | Araona | 0.78 0.16 22.5
+tacanan.reyesano | Reyesano (Maropa) | 0.84 0.16 328.33
+panoan.chacobo | Chácobo | 0.64 0.16 207.5
+panoan.pacahuara | Pacahuara | 0.8 0.16 142.5
+
+# ---- Mosetenan, Chapacuran, Zamucoan ----
+mosetenan.tsimane | Tsimane' (Chimane) | 0.7 0.16 215
+mosetenan.moseten | Mosetén | 0.81 0.15 228
+chapacuran.itene | Itene (Moré) | 0.79 0.16 174
+zamucoan.ayoreo | Ayoreo (Zamuco) | 0.68 0.16 320
+
+# ---- isolates ----
+isolate.movima | Movima | 0.76 0.17 340
+isolate.itonama | Itonama | 0.64 0.17 330
+isolate.cayubaba | Cayubaba | 0.8 0.17 340
+isolate.canichana | Canichana | 0.76 0.17 290
+isolate.leco | Leco | 0.7 0.17 0
+isolate.yurakare | Yuracaré
+
+# Plautdietsch (session 5d7dac7e-br, 2026-10-06): the census's "Alemán" in the Mennonite colony
+# municipalities is drawn as Plautdietsch, a place-dependent split of one label (AGENT_BRIEF §3), the
+# reason in countries/bo.py. Node and colour as ca.txt's, repeated here.
+indoeuropean.germanic.continental.lowgerman | Low German
+indoeuropean.germanic.continental.lowgerman.plautdietsch | Plautdietsch

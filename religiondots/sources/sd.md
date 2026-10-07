@@ -263,6 +263,8 @@ Christians the surveys find among citizens. Not started, on the context rule (br
 7. Foreigners and refugees in `gap` on UN DESA mid-2020, not drawn from UNHCR by state.
 8. Five ring-less cap blocks `isolated`, lowered to Red Sea state's median density outside the
    blocks (§6), not to a wider ring.
+9. Tokar and the sub-cap group beside it `capped_apart`; Jubayt, Aroma and Rahad al Bardi kept
+   `capped` against Somalia's town test (§11).
 
 ## 10. Review, 2026-09-15 (session `cb8b206e-rev8`)
 
@@ -301,3 +303,46 @@ Afrobarometer's 2013 round, and the no-religion comparison (Pew 0.56% against 0.
 with it. Added: Sudanese who have become Christian or left Islam may not say so to an interviewer,
 since leaving Islam carried the death penalty until 2020 and four of the seven rounds came before
 that (AF5, AF6, AF7, AB V). The coverage line waits for a technical report, as before.
+
+## 11. Fix batch, 2026-10-03 (fafd1067-fixes): Tokar's ring, and the three towns
+
+**Tokar.** The block's 3 km ring is four populated hexes, two of them a 2-hex dense group beside it
+(43,398 people at up to 37,674/km2) that never reaches the cap and so had no row. With the two ramp
+hexes (9,596 and 1,503) that makes a 5-hex cluster of about 90,000 people with no GeoNames populated
+place within 10 km. Making `capped` leave every dense block out of its ring would have fixed it, but
+re-running the registry with that rule moved ceilings in eg, gn, mg, ng, so, uz, ve and ye (Luxor
+117,569 to 92,304 over 73 hexes, Tashkent 121,926 to 98,807), so it is a new opt-in status in
+`kontur_cap.py`, `capped_apart`, and the change leaves every other country's `apply` output
+identical (checked against the old module on all 11 countries with `capped` rows). The Tokar row
+is `capped_apart` and the neighbouring group has its own `capped_apart` row: both go to the two ramp
+hexes' median of 7,097/km2, 79,526 people to 16,648; 28 dots within 3 km (65 before). `apply` now also
+prints how many of a `capped` ring's hexes are another block's (Sinkat 1 of 19, Tashkent 10 of 128 and
+13 of 40), as a lead, not a fix.
+
+**Jubayt, Aroma, Rahad al Bardi stay `capped`.** Somalia's town test (`sources/so.md` §5) would call
+all three real: a GeoNames town within 5 km holds over a third of each block (2.7-2.9x), and each block
+is 0.23-0.37 of the 2025 COD-PS estimate of the locality it touches (bar 1.5; the 2022 table has no
+localities). But the hexes around each block already hold the town. Scattered both ways at 1:1,000:
+
+| | GeoNames | dots within 3 km, capped | as `real` |
+|---|---:|---:|---:|
+| Jubayt | 30,856 | 25 | 109 |
+| Aroma | 12,708 | 65 | 111 |
+| Rahad al Bardi | 24,768 | 45 | 107 |
+
+Capped is the closer of the two for every town, so §6's "may be too thin" does not hold once the ring
+is counted; the registry rows say so. Both editions rescattered on the final registry; 46,933 and 4,692
+dots, unchanged.
+
+
+## Not-drawn hatching fix batch (fafd1067-fixes3, 2026-10-03)
+
+Checked 2026-10-03: `gap` already names Abyei ("and Abyei, which the projection leaves out"),
+so nothing to add.
+
+
+## `gap` cut for the top-text cap (658b4937, 2026-10-04)
+
+The `assigned` row (spec §7e, Muslims drawn as Sunni by assignment, spec §2.6b) added words under the title and took this country over the 80-word cap, so `gap` was shortened by leaving things out. The wording before:
+
+> foreign residents and refugees, whom neither survey interviews: about 1.38 million in 2020 by the UN Population Division's estimate, 2.9% of residents; and Abyei, which the projection leaves out

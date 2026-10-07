@@ -28,3 +28,6 @@ nystreets/nystreets.png
 posters/*/build/
 # hand-edit backup written by posters/nycriders/nudge/serve.py on each save:
 posters/*/nudge/nudges.backup.json
+# transient files from serve.py add/remove:
+served.json.lock
+served.json.tmp

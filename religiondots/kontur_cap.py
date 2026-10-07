@@ -18,6 +18,11 @@ block, a point inside it, and a status.
     real         a genuine dense core. Drawn as Kontur has it; one summary line.
     capped       a false concentration. Every hex in the block is lowered to the median density
                  of the populated hexes within 3 km around it (below).
+    capped_apart as `capped`, but the ring leaves out the hexes of every dense block, not only
+                 its own: for a false block whose ring is largely another false block's ramp or
+                 top (Sudan's Tokar, 2026-10-03). Opt-in per row, because making it the rule for
+                 `capped` moves ceilings in eg, gn, mg, ng, so, uz, ve and ye (checked against the
+                 registry 2026-10-03, sources/sd.md §11); look at those before folding it in.
     isolated     a false concentration with no ring to set a ceiling: no populated hex within
                  3 km lies outside every dense block (Sudan's Red Sea hills, 2026-09-15). Every
                  hex in the block is lowered to the median density of the populated hexes of
@@ -75,7 +80,7 @@ OVER_CAP = 1.005 * CAP      # a layer with any hex above this is not raw Kontur
 HI = 15_000.0               # per km2: block membership
 RING_KM = 3.0
 MATCH_KM = 1.0
-STATUSES = ("real", "capped", "isolated", "unreviewed")
+STATUSES = ("real", "capped", "capped_apart", "isolated", "unreviewed")
 FIELDS = ["cc", "lon", "lat", "status", "place", "unit", "unit_share", "why", "reviewed"]
 
 _LAYER = re.compile(r"(_hexes|_grid_\d+k?m)\.gpkg$")
@@ -181,8 +186,8 @@ def apply(place, cc, src, verbose=True):
 
     problems = []
     for r in stale:
-        if r["status"] == "capped":
-            problems.append(f"registry row ({r['lon']}, {r['lat']}) '{r['place']}' is `capped` "
+        if r["status"] in ("capped", "capped_apart"):
+            problems.append(f"registry row ({r['lon']}, {r['lat']}) '{r['place']}' is `{r['status']}` "
                             "but no longer lands on a dense block, so the fix would silently "
                             "not apply")
         elif verbose:
@@ -230,15 +235,28 @@ def apply(place, cc, src, verbose=True):
                 print(f"  !! kontur cap: UNREVIEWED block '{name}', {d['n']} hexes, "
                       f"{d['n_cap']} at the cap, {100 * d['share']:.1f}% of unit {d['unit']}; "
                       f"drawn as Kontur has it ({REGISTRY.name})")
-        elif status == "capped":
-            inblock = np.zeros(len(pop), dtype=bool)
-            inblock[idx] = True
+        elif status in ("capped", "capped_apart"):
             near = b["tree"].query_ball_point(b["xy"][idx], RING_KM * 1000.0)
             ring = np.unique(np.concatenate([np.asarray(n, dtype=np.int64) for n in near]))
-            ring = ring[~inblock[ring] & (pop[ring] > 0)]
+            if status == "capped":
+                inblock = np.zeros(len(pop), dtype=bool)
+                inblock[idx] = True
+                ring = ring[~inblock[ring] & (pop[ring] > 0)]
+                n_other = int((b["label"][ring] >= 0).sum())
+                if verbose and n_other:
+                    print(f"  kontur cap: {n_other} of {len(ring)} ring hexes of '{name}' are in "
+                          f"another dense block and set its ceiling too (`capped_apart` would "
+                          f"leave them out)")
+            else:
+                # `capped_apart`: the ring leaves out every dense block, the ring `isolated` tests
+                # for. Sudan's Tokar block kept 11,771 of 36,128 as `capped` because 2 of its 4
+                # ring hexes are another block's (sources/sd.md §11).
+                ring = ring[(b["label"][ring] < 0) & (pop[ring] > 0)]
             if len(ring) == 0:
-                raise SystemExit(f"!! kontur cap STOPPED the scatter: capped block '{name}' "
-                                 f"has no populated hex within {RING_KM:g} km to set its ceiling")
+                raise SystemExit(f"!! kontur cap STOPPED the scatter: {status} block '{name}' "
+                                 f"has no populated hex within {RING_KM:g} km to set its ceiling"
+                                 + ("" if status == "capped" else
+                                    " outside every dense block; if it is false, it is `isolated`"))
             ceiling = float(np.median(dens[ring]))
             new[idx] = np.minimum(pop[idx], ceiling * area[idx])
             if verbose:
@@ -246,7 +264,7 @@ def apply(place, cc, src, verbose=True):
                 after = (utot[u] - pop[idx][unit[idx] == u].sum()
                          + new[idx][unit[idx] == u].sum())
                 share_after = float(new[idx][unit[idx] == u].sum()) / max(after, 1.0)
-                print(f"  kontur cap: CAPPED '{name}', {d['n']} hexes holding "
+                print(f"  kontur cap: {status.upper()} '{name}', {d['n']} hexes holding "
                       f"{d['people']:,.0f} ({100 * d['share']:.1f}% of unit {u}) lowered to the "
                       f"{RING_KM:g} km ring's median of {ceiling:,.0f}/km2: now "
                       f"{new[idx].sum():,.0f} ({100 * share_after:.1f}%)")

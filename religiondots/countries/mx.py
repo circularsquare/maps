@@ -31,9 +31,12 @@ ENTRY = {
         # and INEGI builds them to a population target — urban ones to about 2,500 people
         # — which is what §8.2 asks for. Both urban and rural AGEBs are present and every
         # municipio has at least one, so nothing falls through.
+        # mx_place.gpkg is 00a less the islands with under 250 people in ITER 2020
+        # (sources/mx_geo.py): INEGI gives each cay its own AGEB, and an equal share put 42%
+        # of Progreso's dots on Arrecife Alacranes.
         units=None,
         unit_key=None,
-        place=HERE / "data" / "geo" / "mx" / "mg2020" / "conjunto_de_datos" / "00a.shp",
+        place=HERE / "data" / "geo" / "mx" / "mx_place.gpkg",
         place_unit=lambda g: g["CVE_ENT"].astype(str) + g["CVE_MUN"].astype(str),
         note="INEGI is self_id; every category except Catolica is allocated from entidad "
              "level (spec §3.9).",

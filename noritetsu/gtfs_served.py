@@ -196,6 +196,47 @@ FEEDS = {
     # missing from the feed. The file also holds four ferry companies, which never count.
     "gr": [("gr_hellenic-train.gtfs.zip", "https://jbb.ghsq.de/gtfs/gr-hellenic-train.gtfs.zip",
             False)],
+    # gtfs.de (CC BY 4.0, from DELFI): long distance and regional rail, every operator, a
+    # rolling 30-day window. Its own stop ids, so names.
+    "de": [("de_fv_free.gtfs.zip", "https://download.gtfs.de/germany/fv_free/latest.zip", False),
+           ("de_rv_free.gtfs.zip", "https://download.gtfs.de/germany/rv_free/latest.zip", False)],
+    # Trenitalia from deryclem's conversion of its NeTEx on the NAP (CC BY 4.0), and the other
+    # managers' operators Transitous carries (Trenord for FERROVIENORD, EAV, Ferrotramviaria,
+    # La Ferroviaria Italiana, GTT). FER's, FSE's, Gargano's and FUC's own trains are in none:
+    # their sections stay "unknown" (the manager test).
+    "it": [("it_trenitalia.gtfs.zip", "https://raw.githubusercontent.com/deryclem/"
+            "trenitalia-gtfs/refs/heads/main/gtfs-trenitalia.zip", False),
+           ("it_trenord.gtfs.zip", TX + "it_Lombardia-Trenord.gtfs.zip", True),
+           ("it_eav.gtfs.zip", TX + "it_Campania-EAV.gtfs.zip", True),
+           ("it_ferrotramviaria.gtfs.zip", TX + "it_Puglia-Ferrotramviaria.gtfs.zip", True),
+           ("it_tft.gtfs.zip", TX + "it_Toscana-TFT.gtfs.zip", True),
+           ("it_gtt.gtfs.zip", TX + "it_Piemonte-Gruppo-Torinese-Trasporti.gtfs.zip", True)],
+    # Renfe direct (CC BY 4.0): AVE and long and medium distance, Cercanías; FEVE's metre
+    # gauge, FGC (Lleida - La Pobla) and Ouigo from Transitous.
+    "es": [("es_renfe_av_ld.gtfs.zip",
+            "https://ssl.renfe.com/gtransit/Fichero_AV_LD/google_transit.zip", False),
+           ("es_renfe_cercanias.gtfs.zip",
+            "https://ssl.renfe.com/ftransit/Fichero_CER_FOMENTO/fomento_transit.zip", False),
+           # No FEVE feed: Transitous' es_Feve repeats the Cercanías feed's metre-gauge networks,
+           # was months stale and types a bus as a train (es_sources.md, 2026-10-03).
+           ("es_fgc.gtfs.zip", TX + "es_Ferrocarriles-de-la-Generalitat-de-Catalu%C3%B1a.gtfs.zip",
+            True),
+           ("es_ouigo.gtfs.zip", TX + "es_Ouigo.gtfs.zip", False)],
+    # Samtrafiken's national feed (every operator) via Transitous's open mirror of Trafiklab's
+    # keyed one; slimmed to rail. Its own stop ids, so names. OSM Sweden has no route at all
+    # for Mälartåg (Mälarbanan, Svealandsbanan, Nyköpingsbanan), and RINF has freight-only
+    # stretches between named stations (Bergslagsbanan Kil - Ställdalen): the feed decides.
+    "se": [("se_trafiklab.gtfs.zip", TX + "se_Trafiklab.gtfs.zip", True)],
+    "dk": [("dk_rejseplanen.gtfs.zip", TX + "dk_rejseplanen.gtfs.zip", True)],
+    "ie": [("ie_irish_rail.gtfs.zip",
+            "https://www.transportforireland.ie/transitData/Data/GTFS_Irish_Rail.zip", False)],
+    "rs": [("srbijavoz.zip", "https://gitlab.com/api/v4/projects/vekejsn%2Fgtfs-generators/"
+            "packages/generic/srbijavoz-merged-gtfs/latest/srbijavoz_merged.zip", False)],
+    "ba": [("zfbih.zip", "https://owncloud.cesnet.cz/index.php/s/yWJhi9wjUIc3IC2/download", False)],
+    "me": [("zpcg.zip", TX + "me_zpcg.gtfs.zip", False)],
+    "mk": [("mzi.zip", "https://hoermalmeister.github.io/gtfs-rehost/mzi/mzi.zip", False)],
+    "xk": [("trainkos.zip", "https://hoermalmeister.github.io/gtfs-rehost/trainkos/trainkos.zip",
+            False)],
 }
 # Past snapshots of a short-window feed, kept in data/raw/gtfs/<cc>/past/ (`--fetch-past`):
 # trains in them mark a section the current feed has none on as seasonal, drawn as running.
@@ -220,6 +261,8 @@ CODE = {
     "pt": (re.compile(r"^94_(\d{1,5})$"), lambda m: f"PT{int(m.group(1)):05d}"),
     # the Romanian feed's 60309 is RINF's RO60309 (Tecuci)
     "ro": (re.compile(r"^(\d{5})$"), lambda m: f"RO{m.group(1)}"),
+    # Renfe's stop_id is Adif's station code, RINF's uopid less "ES" (03216, Valencia J. Sorolla)
+    "es": (re.compile(r"^(\d{5})$"), lambda m: f"ES{m.group(1)}"),
 }
 # Feed station names the register spells otherwise: another name tried as well.
 NAME_ALIAS = {
@@ -248,10 +291,31 @@ BORDER_SEEN_KM = 30.0           # the feed knows a border when it calls abroad t
 LINK_KM = 1.0                   # a register line end meeting nothing is joined to a node this close
 LINK_EXTRA_KM = 0.5             # a link weighs 2x its length plus this in paths
 LINK_REACH_KM = 5.0            # ... unless the register already joins them within this + 3x
+MID_M = 15.0                    # another line's end this close to a section's middle splits it
+MID_END_KM = 0.2                # ... if at least this far along it from either end
+MID_SHARE = 0.5                 # a piece run over counts for the section from this share of it
 LONG_RUN_KM = 40.0              # a no-OSM junction section on longer non-stop runs only: not rescued
 STRAIGHT = 1.3                  # ... nor on runs whose path is longer than this x crow-fly + 1 km
+# Regions where a run found only over the split graph (`mid_splits`) is strong evidence for a
+# whole section it crosses on the main pass's terms: the run starts or ends at the section's
+# own end, or is short and direct. Sweden: RINF merges a junction away inside the line it
+# joins, so Nyköpingsbanan ends partway along Södra stambanan's Katrineholm - Norrköping and
+# Svealandsbanan partway along Mälarbanan's Köping - Arboga; Mälartåg's Kolmården -
+# Norrköping and Kungsör - Arboga runs are found only in the split graph, and Kolmården - Åby
+# södra (11.7 km) and Kungsör - Valskog (9.0 km) were "weak" and dropped.
+SPLIT_STRONG = {"se"}
 OSM_TIE = 0.05                 # paths weigh a section with no OSM passenger route this much more
 NEEDS_ROUTE_SHARE = 0.5         # as build_model's: an OSM route runs over it
+# Countries whose feeds carry every operator on the register's track: an OSM route over a
+# section with no train is stale, not a sign of a missing operator. Spain (2026-10-03): it
+# closes 120 La Alamedilla - Ciudad Rodrigo (no passenger train since March 2020) and 822
+# Ourense - A Gudiña (the conventional line beside the high-speed one), which stale OSM
+# routes kept drawn as running.
+FEED_COMPLETE = {"es"}
+# Feeds known to lack a service OSM's routes show, where a closed line must not grow over a
+# section those routes run on: Serbia's Srbijavoz feed has no Smederevo - Mala Krsna -
+# Požarevac trains (in Srbijavoz's timetable to 12 December 2026, and OSM's Re 6750-6761).
+NO_GROW_OVER_ROUTES = {"rs"}
 PASSENGER_TYPES = {"10", "20", "30", "70"}
 BORDER_TYPES = {"90"}
 
@@ -300,8 +364,24 @@ def _days(z, names):
 
 
 def _table(z, name):
+    # GTFS says UTF-8; Renfe writes Windows-1252 ("Madrid-Chamartín" with a lone 0xED byte)
     with z.open(name) as f:
-        yield from csv.DictReader(io.TextIOWrapper(f, "utf-8-sig"))
+        head = f.read(1 << 20)
+    enc = "utf-8-sig"
+    try:
+        head.decode("utf-8")
+    except UnicodeDecodeError as e:
+        if e.start < len(head) - 3:          # not just a character cut at the sample's end
+            enc = "cp1252"
+    with z.open(name) as f:
+        rd = csv.DictReader(io.TextIOWrapper(f, enc))
+        if all(k == k.strip() for k in rd.fieldnames or ()):
+            yield from rd
+        else:
+            # Renfe pads every line with spaces to a fixed width, the header too ("end_date   ")
+            for row in rd:
+                yield {k.strip(): (v.strip() if isinstance(v, str) else v)
+                       for k, v in row.items() if k is not None}
 
 
 def read_feed(path, prefix, skip_agency, log):
@@ -436,7 +516,13 @@ GENERIC = {"zastavka", "zast", "mh", "megallohely", "megallo", "allomas", "stati
 # words in company names that say nothing about which company
 ORG_WORDS = {"a", "s", "as", "r", "o", "sro", "se", "ag", "gmbh", "co", "kg", "mbh", "sa", "z",
              "sp", "spolek", "ops", "bv", "rail", "railway", "railways", "drahy", "draha",
-             "vlaky", "zrt", "kft", "nv", "spa", "srl", "ltd", "the", "und", "of"}
+             "vlaky", "zrt", "kft", "nv", "spa", "srl", "ltd", "the", "und", "of",
+             # Italy: "Ferrovie del Gargano" must not count as present through Trenitalia's
+             # "Ferrovie dello Stato" (it closed San Severo - Peschici, reopened 2026-06-01)
+             "ferrovie", "ferrovia", "del", "della", "dello", "divisione"}
+# Feed stations a feed places far from where they are: name -> (lon, lat), per country.
+# Trenitalia puts Vigna Clara 5.5 km off, which closed Valle Aurelia - Vigna Clara.
+STOP_AT = {"it": {"Vigna Clara PES": (12.4714, 41.9494)}}
 
 
 def tokens(s):
@@ -612,6 +698,7 @@ def match_stations(cc, feed_st, nodes, points, log):
         return best
 
     for fid, (fname, flon, flat, raw_id) in feed_st.items():
+        flon, flat = STOP_AT.get(cc, {}).get(fname, (flon, flat))
         if code:
             m = code[0].search(raw_id)
             if m:
@@ -726,7 +813,59 @@ def dangling_links(reg, nodes, border, graph):
     return links
 
 
-def call_pairs(patterns, feed_st, fmatch, border_between, find_path):
+def mid_splits(reg, nodes, geoms):
+    """[(x, y, km, section index)]: where another register line ends partway along a section,
+    the section split there for paths, as two edges that credit it. RINF does not always cut a
+    line at a junction on it: Germany's 6362 runs Werdau - Neumark (Sachs) as one 8.3 km
+    section, and 6258 from Zwickau ends at the Werdau Bogendreieck's Neumarker Spitze halfway
+    along it, so RB 2 (Zwickau - Steinpleis - Neumark) had no path onto 6362 and the section
+    came out closed. A train over part of a section keeps it from being closed; it is never
+    strong evidence (`check`), so it rescues nothing that was dropped."""
+    if not geoms:
+        return []
+    from shapely.geometry import LineString, Point
+    from shapely import STRtree
+
+    def xy(lon, lat):
+        return lon * 111320.0 * math.cos(math.radians(lat)), lat * 110570.0
+    ends_of = defaultdict(set)
+    for l in reg:
+        for s in l["sections"]:
+            for n in s[:2]:
+                ends_of[n].add(l["id"])
+    ids = list(ends_of)
+    tree = STRtree([Point(xy(nodes[n][1], nodes[n][2])) for n in ids])
+    out, i = [], -1
+    for l in reg:
+        g = geoms.get(l["id"], {})
+        for s in l["sections"]:
+            i += 1
+            a, b, km = s[0], s[1], float(s[2])
+            if km < 2 * MID_END_KM:
+                continue
+            pts, rev = g.get(f"{a}|{b}"), False
+            if not pts:
+                pts, rev = g.get(f"{b}|{a}"), True
+            if not pts or len(pts) < 2:
+                continue
+            line = LineString([xy(x, y) for x, y in pts])
+            if line.length <= 0:
+                continue
+            for k in tree.query(line, predicate="dwithin", distance=MID_M):
+                n = ids[k]
+                if n in (a, b) or ends_of[n] <= {l["id"]}:
+                    continue
+                f = line.project(Point(xy(nodes[n][1], nodes[n][2]))) / line.length
+                if rev:
+                    f = 1.0 - f
+                if f * km < MID_END_KM or (1.0 - f) * km < MID_END_KM:
+                    continue
+                out.append((a, n, f * km, i))
+                out.append((n, b, (1.0 - f) * km, i))
+    return out
+
+
+def call_pairs(patterns, feed_st, fmatch, border_between, find_path, on_miss=None):
     """Consecutive matched calls of every pattern -> {(u, v): [path km, trips, tripdays,
     [edge index, ...]]}, and the number of calls stepped over for want of a path.
 
@@ -746,6 +885,8 @@ def call_pairs(patterns, feed_st, fmatch, border_between, find_path):
             return True
         got = find_path(a, b, DETOUR * along + SLACK_KM)
         if got is None:
+            if on_miss is not None:
+                on_miss(a, b, along, trips, tdays)
             return False
         u, v = (a, b) if a < b else (b, a)
         rec = pairs.get((u, v))
@@ -807,7 +948,7 @@ def call_pairs(patterns, feed_st, fmatch, border_between, find_path):
 
 # ================================================================ the check
 
-def check(region, lines, stations, route_share, log):
+def check(region, lines, stations, route_share, log, geoms=None):
     """Decide per register section from the region's timetable feed. Returns None when the
     region has no feed (the build then runs exactly as before); otherwise sets route_share to
     1.0 for every junction-ended section a train runs over, and returns what `mark` closes."""
@@ -897,6 +1038,12 @@ def check(region, lines, stations, route_share, log):
             f"that is no section: "
             + ", ".join(f"{nodes[a][0]} - {nodes[b][0]} ({km:.2f} km)" for a, b, km in links))
     edges += links
+    splits = mid_splits(reg, nodes, geoms)
+    split_of = {len(edges) + k: s[3] for k, s in enumerate(splits)}
+    edges += [(x, y, km) for x, y, km, _ in splits]
+    if splits:
+        log(f"timetable: {len({s[3] for s in splits})} sections with another line ending "
+            f"partway along them, split there for paths ({len(splits) // 2} junctions)")
     # Paths are weighed with OSM_TIE added to sections no OSM passenger route runs over, so of
     # two paths of about the same length the one OSM's routes take wins: Portugal's freight
     # loops beside the Linha do Norte (Plataforma de Cacia, Bobadela, Ramal TER-TIR) are as long
@@ -906,28 +1053,36 @@ def check(region, lines, stations, route_share, log):
         (eref[i][0]["id"], eref[i][1]), 0.0) < NEEDS_ROUTE_SHARE)
     # A link weighs twice its crow-fly length plus LINK_EXTRA_KM, so it never beats real track
     # (at Olen a 0.1 km siding fragment with both ends linked came out shorter than line 15).
-    wedges = [(a, b, km * (1.0 + OSM_TIE) if i in no_osm else
-               2 * km + LINK_EXTRA_KM if i >= n_reg else km)
+    # A split piece weighs as its section does.
+    wedges = [(a, b, km * (1.0 + OSM_TIE) if split_of.get(i, i) in no_osm else
+               2 * km + LINK_EXTRA_KM if i >= n_reg and i not in split_of else km)
               for i, (a, b, km) in enumerate(edges)]
-    g = Graph(wedges, no_osm)
-    sp_cache = {}
+    # The split pieces are a separate pass only, for call pairs with no path without them
+    # (`misses`): in the main graph they rerouted paths that had one and rescued 13 more Czech
+    # sections, and as a fallback inside the main pass they moved which call the next path
+    # starts from (Poland's 200 lost its rescue).
+    n_main = len(edges) - len(splits)
+    g = Graph(wedges[:n_main], no_osm)
+    g_split = Graph(wedges, no_osm | {i for i, sec in split_of.items() if sec in no_osm}) \
+        if splits else None
+    caches = {id(g): {}, id(g_split): {}}
+    misses = []
 
-    def find_path(u, v, cap):
-        """(weighed km, [edge index, ...]) of the shortest register path from u to v, if its
-        real length is within cap."""
-        got = sp_cache.get(u)
+    def path_in(gr, u, v, cap):
+        cache = caches[id(gr)]
+        got = cache.get(u)
         wcap = cap * (1.0 + OSM_TIE)
         if got is None or (got[0] < wcap and v not in got[1]):
             lim = max(wcap, got[0] if got else 0.0, 60.0)
-            dist, prev = g.dijkstra(u, lim)
-            got = sp_cache[u] = (lim, dist, prev)
+            dist, prev = gr.dijkstra(u, lim)
+            got = cache[u] = (lim, dist, prev)
         _, dist, prev = got
         if dist.get(v, 1e18) > wcap:
             return None
         path, x, real = [], v, 0.0
         while x != u:
             p = prev[x]
-            step = g.step_edges(p, x)
+            step = gr.step_edges(p, x)
             real += min(edges[i][2] for i in step)
             path += step
             x = p
@@ -935,7 +1090,17 @@ def check(region, lines, stations, route_share, log):
             return None
         return dist[v], path
 
-    pairs, n_skip = call_pairs(feed["patterns"], feed_st, fmatch, border_between, find_path)
+    def find_path(u, v, cap):
+        """(weighed km, [edge index, ...]) of the shortest register path from u to v, if its
+        real length is within cap."""
+        return path_in(g, u, v, cap)
+
+    def on_miss(a, b, along, n, d):
+        if g_split is not None:
+            misses.append((a, b, along, n, d))
+
+    pairs, n_skip = call_pairs(feed["patterns"], feed_st, fmatch, border_between, find_path,
+                               on_miss)
     trips = [0] * len(edges)
     tdays = [0] * len(edges)
     # Whether some run crossing a section is good evidence for it: one that starts or ends at
@@ -945,6 +1110,7 @@ def check(region, lines, stations, route_share, log):
     # Chałupki (74 km) ran over Zabrze Makoszowy colliery track, and Amsterdam Muiderpoort -
     # Centraal (3 km apart, 7 km path, a register gap) through the Watergraafsmeer depot.
     strong = [False] * len(edges)
+    n_part = set()
     for (u, v), (km, n, d, path, along) in pairs.items():
         good = km <= LONG_RUN_KM and km <= STRAIGHT * along + 1.0
         for i in path:
@@ -952,8 +1118,32 @@ def check(region, lines, stations, route_share, log):
             tdays[i] += d
             if good or u in edges[i][:2] or v in edges[i][:2]:
                 strong[i] = True
+    # The separate pass over the split graph, for the pairs the main pass found no path for: a
+    # section run over this way (wholly or in part) has trains, but never strong evidence,
+    # except a whole section on a short, direct run in a SPLIT_STRONG region.
+    for a, b, along, n, d in misses:
+        got = path_in(g_split, a, b, DETOUR * along + SLACK_KM)
+        if got is None:
+            continue
+        good = got[0] <= LONG_RUN_KM and got[0] <= STRAIGHT * along + 1.0
+        for i in got[1]:
+            if i in split_of:
+                # a piece counts for its section only if it is most of it: trains over 6 of
+                # Werdau - Neumark's 8.3 km, not over a tip of Mezőfalva - Előszállás
+                if edges[i][2] < MID_SHARE * edges[split_of[i]][2]:
+                    continue
+                i = split_of[i]
+                n_part.add(i)
+            elif region in SPLIT_STRONG and (good or a in edges[i][:2] or b in edges[i][:2]):
+                strong[i] = True
+            trips[i] += n
+            tdays[i] += d
     log(f"timetable: {len(pairs):,} pairs of consecutive calls with a register path within "
         f"{DETOUR}x crow-fly + {SLACK_KM:.0f} km; {n_skip:,} calls stepped over for want of one")
+    if n_part:
+        log(f"timetable: {len(n_part)} sections run over in part, from a junction partway along "
+            f"them: " + ", ".join(f"{eref[i][0]['name']} {nodes[edges[i][0]][0]} - "
+                                  f"{nodes[edges[i][1]][0]}" for i in sorted(n_part)[:30]))
     # Direct evidence beats the path search: a section whose two ends some train calls at one
     # after the other (calls matched to nothing in between skipped) is run over, even where a
     # wrong match one call earlier sent the path search astray (Austria's Jauntalbahn: Mittlern
@@ -994,6 +1184,7 @@ def check(region, lines, stations, route_share, log):
                                find_path)
         for (u, v), (km, n, d, path, along) in ppairs.items():
             for i in path:
+                i = split_of.get(i, i)
                 past_trips[i] += n
                 past_days[i] += d
         pdirect = defaultdict(lambda: [0, 0])
@@ -1097,7 +1288,8 @@ def check(region, lines, stations, route_share, log):
             state[i] = "ambiguous"
         elif a in unseen_border or b in unseen_border or i in border_reach:
             state[i] = "border"
-        elif (route_share.get((l["id"], key), 0.0) >= NEEDS_ROUTE_SHARE
+        elif ((route_share.get((l["id"], key), 0.0) >= NEEDS_ROUTE_SHARE
+               and region not in FEED_COMPLETE)
               or l.get("operator", "") in absent) and \
                 not all(n in known for n, j in ((a, ja), (b, jb)) if not j):
             state[i] = "unknown"
@@ -1124,7 +1316,10 @@ def check(region, lines, stations, route_share, log):
             for i in idx:
                 a, b, _ = edges[i]
                 if state[i] == "unknown" and not nodes[a][3] and not nodes[b][3] and \
-                        (a in reach or b in reach):
+                        (a in reach or b in reach) and not (
+                            region in NO_GROW_OVER_ROUTES
+                            and route_share.get((eref[i][0]["id"], eref[i][1]), 0.0)
+                            >= NEEDS_ROUTE_SHARE):
                     state[i] = "closed"
                     n_grown += 1
                     reach |= {a, b} - train_nodes

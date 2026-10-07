@@ -1,0 +1,24 @@
+# Vanuatu, 2020 census (taxonomy/vu2020.py): first language learnt to speak. The census prints
+# English, French, Bislama and "Indigenous (Vernacular)", the last being all of the country's
+# hundred-odd languages in one answer.
+#
+# `austronesian.oceanic.vanuatu` holds that one answer. It is an areal group, as `australian` is:
+# Glottolog (data/raw/glottolog) lists 118 spoken indigenous languages of Vanuatu, and every one
+# is Oceanic (ocea1241), but they fall in three Oceanic branches, North and Central Vanuatu (106),
+# Southern Melanesian (9: Tanna, Erromango, Aneityum) and Central Pacific (3 Polynesian outliers:
+# Emae, Futuna-Aniwa, Mele-Fila), and no Glottolog subgroup below Oceanic holds just them. A node
+# under Oceanic labelled for the country tells the reader more than bare "Oceanic, language not
+# named" would, and it contains exactly what the census filed there (spec 3.2). Any Vanuatu
+# language a later source names can go beneath it. Colour: Oceanic's own; it is drawn washed out.
+
+# ---- repeated parents and nodes other fragments define ----
+austronesian | Austronesian
+austronesian.oceanic | Oceanic
+creole | Creoles
+creole.english_based | English-based creoles
+creole.english_based.bislama | Bislama
+indoeuropean.romance | Romance
+indoeuropean.romance.french | French
+
+# ---- new group ----
+austronesian.oceanic.vanuatu | Vanuatu languages | 0.70 0.13 225

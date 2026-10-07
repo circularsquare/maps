@@ -4,6 +4,9 @@ no name in RINF; theirs below are read off the lines they hold."""
 import re
 
 COUNTRY = {
+    # join a line's pieces where RINF leaves a stretch out, over its own OSM relation
+    # (rinf.fill_holes; trialled 2026-10-05)
+    "fill_holes": True,
     "iso3": "AUT", "wikidata": "Q40", "langs": ["de", "en"],
     "ref": lambda lid: lid if re.fullmatch(r"\d{5}", lid or "") else None,
     # The id IS the number. OSM's route=railway relations here carry Kursbuch

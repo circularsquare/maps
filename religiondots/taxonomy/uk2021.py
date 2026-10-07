@@ -26,9 +26,12 @@ mechanism applied inside a religion rather than at the root: the census keeps ev
 magnitude, a current register of churches says where each denomination is, and a survey says
 how many belong to each. **None of those five categories comes from a census of England**,
 they are marked `derived`, and they roll back to this file's `Christian` when a reader turns
-inferred dots off. Wales has no equivalent — the English Church Census stopped at the
-border and Wales has had no church census since 1995 — so Welsh Christians stay one node and
-the England/Wales edge is now visible on the map. That is a property of the sources.
+inferred dots off. Wales has no church source (the English Church Census stopped at the
+border and Wales has had no church census since 1995), so since 2026-10-04 `uk_split_wales.py`
+splits Welsh Christians from the British Election Study alone, placed at twelve ITL3 areas where
+its split-half test passes. It writes the same five category strings as England, so the two
+share nodes; its `Christian` remainder is larger (about 36%), because the survey names a church
+for only 70% of the census's Welsh Christians and four small churches are too thin to draw.
 
 The other two do better and differently. Scotland names the Church of Scotland and Roman
 Catholics and stops. Northern Ireland, where the denomination is the political fact, names
@@ -103,6 +106,13 @@ REVIEW = {
         "collects the Anglican-identifying who are not Church of England members, and the "
         "placement counts every church on the CofE's register. 16.9M people, 64.6% of "
         "England's Christians and the single largest figure this file maps.",
+    "Christian: Methodist":
+        "-> methodist, in Wales as in England, though in Wales it very likely holds members of "
+        "the Presbyterian Church of Wales (the Calvinistic Methodists until 1928), which has no "
+        "box on the British Election Study's list. The leg peaks at 13-19% of Christians in "
+        "Anglesey, Conwy and Gwynedd, Calvinistic Methodist country. Drawn as Methodist because "
+        "that is the word the respondents chose; refiling part of it on `reformed.presbyterian` "
+        "would be guessing who meant which (uk_split_wales.py, sources/uk.md §12).",
     "Christian: Free Presbyterian":
         "-> reformed.presbyterian, with Presbyterian Church in Ireland, Reformed "
         "Presbyterian and Non-Subscribing Presbyterian. Four Presbyterian bodies in one "
@@ -127,8 +137,9 @@ MAP = {
     # carries the argument; sources/uk_churches.md carries the sources.
     #
     # Anything not on this list stays on the census's own `Christian` above, which is
-    # 8.0% of England and holds the Pentecostal, New church, Orthodox and residual legs
-    # until a census-proxy placement exists for them.
+    # 5.8% of England and holds the Pentecostal, New church and residual legs.
+    # uk_split_wales.py writes Anglican, Roman Catholic, Methodist, Baptist and Reformed for
+    # Wales under these same strings (2026-10-04); Wales's remainder is about 36%.
     "Christian: Anglican": "christianity.anglican",
     "Christian: Roman Catholic": "christianity.catholic.latin",
     "Christian: Methodist": "christianity.methodist",

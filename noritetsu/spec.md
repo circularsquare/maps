@@ -494,8 +494,9 @@ needs the most, 8.
 
 **3. Tracker gaps.**
 
-- [ ] On a phone the open panel covers the whole map, so picking on the map, and tracing a
-      journey by clicking, only work through search there
+- [x] On a phone the open panel covers the whole map, so picking on the map, and tracing a
+      journey by clicking, only work through search there. Done 2026-10-04: a bottom sheet
+      over half the screen, the map above it (HANDOFF thread 10)
 - [ ] Undo lasts only as long as the page. Enough for a slip; not a history
 - [ ] Where a line's far end is itself a loop, the diagram walks the loop in one column but
       cannot know which station of it is the terminus: the Chuo Line ends at Shiojiri, and

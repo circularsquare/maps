@@ -1,0 +1,230 @@
+# United Kingdom (taxonomy/uk2021.py). Censuses of England and Wales 2021, Scotland 2022 and
+# Northern Ireland 2021: Britain's own languages and its migrant languages. Most branches were
+# already added by br.txt, et.txt and us.txt; the parents this file hangs nodes on are repeated
+# here identically (label and colour), so a change there shows up as a clash, not a dangle.
+# Checked against Glottolog (data/raw/glottolog): Angloromani (Romany English) is Indo-European,
+# Shelta (Irish Traveller Cant) is a "speech register" there; it sits under Celtic, beside Irish,
+# because its lexicon is Irish and that is where readers look for it (Anita, 2026-10-05).
+#
+# Colours: Scots and Ulster Scots are hand-picked because Germanic's own colour is English's
+# near-white and generated members would be grey beside English. Welsh and Scottish Gaelic are
+# hand-picked to stand out from English in Wales and the Highlands.
+
+# ---- parents defined elsewhere, repeated identically ----
+indoeuropean.germanic.north | North Germanic | 0.78 0.09 225
+indoeuropean.celtic | Celtic | 0.72 0.13 150
+indoeuropean.romance | Romance | 0.78 0.11 230
+indoeuropean.slavic | Slavic | 0.70 0.15 140
+indoeuropean.slavic.south | South Slavic | 0.78 0.13 130
+uralic | Uralic | 0.64 0.17 15
+nigercongo | Niger-Congo | 0.72 0.14 75
+nigercongo.bantu | Bantu | 0.70 0.14 60
+sinotibetan.sinitic | Chinese | 0.62 0.19 38
+austronesian | Austronesian | 0.76 0.13 195
+austronesian.philippine | Philippine | 0.76 0.13 195
+austronesian.oceanic | Oceanic | 0.70 0.13 225
+creole | Creoles | 0.84 0.06 200
+creole.english_based | English-based creoles | 0.80 0.10 135
+
+# ---- Germanic ----
+indoeuropean.germanic.scots | Scots | 0.84 0.12 95
+indoeuropean.germanic.ulsterscots | Ulster Scots | 0.76 0.12 80
+indoeuropean.germanic.north.icelandic | Icelandic
+
+# ---- Celtic (us.txt has Irish directly under Celtic; the rest sit beside it) ----
+indoeuropean.celtic.welsh | Welsh | 0.68 0.17 140
+indoeuropean.celtic.scottishgaelic | Scottish Gaelic | 0.80 0.12 165
+indoeuropean.celtic.cornish | Cornish
+indoeuropean.celtic.manx | Manx
+
+# ---- Romance, Slavic ----
+indoeuropean.romance.catalan | Catalan
+indoeuropean.romance.rhaetoromance | Rhaeto-Romance
+indoeuropean.slavic.south.slovenian | Slovenian
+
+# ---- other Indo-European ----
+indoeuropean.celtic.shelta | Shelta (Irish Traveller Cant) | 0.74 0.10 120
+indoeuropean.indoaryan.romani | Romani | 0.58 0.13 30
+indoeuropean.indoaryan.romani.angloromani | Angloromani (Romany English)
+
+# ---- Afroasiatic ----
+afroasiatic.maltese | Maltese
+afroasiatic.chadic | Chadic | 0.78 0.12 110
+afroasiatic.chadic.hausa | Hausa
+
+# ---- Niger-Congo ----
+nigercongo.bantu.lingala | Lingala
+nigercongo.bantu.sotho_tswana | Sotho-Tswana | 0.76 0.12 100
+nigercongo.bantu.sotho_tswana.setswana | Setswana | 0.68 0.14 130
+nigercongo.bantu.nguni | Nguni | 0.66 0.13 40
+nigercongo.bantu.nguni.zulu | Zulu
+nigercongo.bantu.nguni.xhosa | Xhosa
+nigercongo.bantu.nguni.siswati | Swati
+nigercongo.bantu.nguni.ndebele_zw | Ndebele (Zimbabwe)
+nigercongo.bantu.nguni.ndebele_za | Ndebele (South Africa)
+
+# ---- Uralic, Kartvelian (new family) ----
+uralic.estonian | Estonian
+kartvelian | Kartvelian | 0.72 0.13 305
+kartvelian.georgian | Georgian | 0.72 0.13 305
+
+# ---- East and Southeast Asia ----
+sinotibetan.sinitic.hakka | Hakka
+austronesian.philippine.bisayan | Bisayan
+austronesian.tetun | Tetun | 0.66 0.13 170
+austronesian.oceanic.fijian | Fijian
+
+# ---- creoles, sign languages ----
+creole.english_based.krio | Krio
+signlanguage.bsl | British Sign Language | 0.90 0.03 90
+signlanguage.isl | Irish Sign Language | 0.80 0.03 90
+signlanguage.makaton | Makaton | 0.84 0.02 250
+
+# ---- Scotland's "Other language" split (sources/uk_scot_other.py, 2026-10-06): labels of the
+# 2011 census's AT_002_2011 that no file had a node for. Kachchi: Glottolog kach1277 sits in
+# Sindhi-Kachchi, so beside Sindhi under Northwestern. Runyakitara: the written standard over
+# Nyankole, Chiga, Nyoro and Tooro (Glottolog's Nkore-Kiga-Nyoro-Tooro), a leaf beside them.
+indoeuropean.indoaryan.northwestern | Northwestern
+indoeuropean.indoaryan.northwestern.kachchi | Kachchi
+nigercongo.bantu.runyakitara | Runyakitara
+# --- origin_mix borrowed nodes (python sources/origin_mix.py --fragment uk) ---
+# Every node the origin mixes bring in that tree.txt lacks, repeated without colour.
+afroasiatic.berber | Berber
+afroasiatic.cushitic | Cushitic
+afroasiatic.cushitic.lowland | Lowland East Cushitic
+afroasiatic.cushitic.lowland.somali | Somali
+afroasiatic.ethiosemitic | Ethiopian Semitic
+afroasiatic.ethiosemitic.amharic | Amharic
+afroasiatic.ethiosemitic.tigrinya | Tigrinya
+afroasiatic.hebrew | Hebrew
+afroasiatic.sudanese_arabic | Sudanese Arabic
+austroasiatic.khmer | Khmer
+austroasiatic.vietnamese | Vietnamese
+austronesian.malayic | Malayic
+austronesian.malayic.iban | Iban
+austronesian.malayic.indonesian | Indonesian
+austronesian.malayic.malay | Malay
+austronesian.oceanic.maori | Māori
+austronesian.philippine.cebuano | Cebuano
+austronesian.philippine.hiligaynon | Hiligaynon
+austronesian.philippine.ilocano | Ilocano
+austronesian.philippine.tagalog | Tagalog
+creole.english_based.jamaican | Jamaican Creole
+creole.english_based.nigerian_pidgin | Nigerian Pidgin
+creole.french_based | French-based creoles
+creole.french_based.morisyen | Morisyen
+indoeuropean.albanian | Albanian
+indoeuropean.albanian.albanian | Albanian
+indoeuropean.armenian | Armenian
+indoeuropean.armenian.armenian | Armenian
+indoeuropean.baltic | Baltic
+indoeuropean.baltic.latvian | Latvian
+indoeuropean.baltic.lithuanian | Lithuanian
+indoeuropean.celtic.irish | Irish
+indoeuropean.germanic.continental | Continental West Germanic
+indoeuropean.germanic.continental.afrikaans | Afrikaans
+indoeuropean.germanic.continental.dutch | Dutch
+indoeuropean.germanic.continental.german | German
+indoeuropean.germanic.continental.luxembourgish | Luxembourgish
+indoeuropean.germanic.continental.swiss_german | Swiss German
+indoeuropean.germanic.continental.yiddish | Yiddish
+indoeuropean.germanic.frisian | Frisian
+indoeuropean.germanic.north.danish | Danish
+indoeuropean.germanic.north.faroese | Faroese
+indoeuropean.germanic.north.norwegian | Norwegian
+indoeuropean.germanic.north.swedish | Swedish
+indoeuropean.hellenic | Hellenic
+indoeuropean.hellenic.greek | Greek
+indoeuropean.indoaryan.dhivehi | Dhivehi
+indoeuropean.indoaryan.romani.romani | Romani
+indoeuropean.indoaryan.sinhala | Sinhala
+indoeuropean.iranian.kurdish | Kurdish
+indoeuropean.iranian.persian | Persian (Farsi)
+indoeuropean.romance.french | French
+indoeuropean.romance.italian | Italian
+indoeuropean.romance.portuguese | Portuguese
+indoeuropean.romance.romanian | Romanian
+indoeuropean.romance.spanish | Spanish
+indoeuropean.slavic.east | East Slavic
+indoeuropean.slavic.east.russian | Russian
+indoeuropean.slavic.east.ukrainian | Ukrainian
+indoeuropean.slavic.south.bosnian | Bosnian
+indoeuropean.slavic.south.bulgarian | Bulgarian
+indoeuropean.slavic.south.croatian | Croatian
+indoeuropean.slavic.south.macedonian | Macedonian
+indoeuropean.slavic.south.serbian | Serbian
+indoeuropean.slavic.south.serbocroatian | Serbo-Croatian
+indoeuropean.slavic.west | West Slavic
+indoeuropean.slavic.west.czech | Czech
+indoeuropean.slavic.west.polish | Polish
+indoeuropean.slavic.west.slovak | Slovak
+isolate | Language isolates
+isolate.basque | Basque
+japonic | Japonic
+japonic.japanese | Japanese
+koreanic | Koreanic
+koreanic.korean | Korean
+kradai | Kra-Dai (Tai-Kadai)
+kradai.thai | Thai
+mongolic | Mongolic
+mongolic.mongolian | Mongolian
+nakhdaghestanian | Nakh-Daghestanian
+nakhdaghestanian.nakh | Nakh
+nakhdaghestanian.nakh.chechen | Chechen
+nigercongo.atlantic | Atlantic
+nigercongo.atlantic.fulah | Fula
+nigercongo.atlantic.wolof | Wolof
+nigercongo.bantu.bemba | Bemba (M.40)
+nigercongo.bantu.bemba.bemba | Bemba
+nigercongo.bantu.ganda | Ganda
+nigercongo.bantu.gikuyu | Gikuyu
+nigercongo.bantu.herero | Herero
+nigercongo.bantu.kinyarwanda | Kinyarwanda
+nigercongo.bantu.kirundi | Kirundi (Rundi)
+nigercongo.bantu.nyanja_sena | Nyanja-Sena (N.30-40)
+nigercongo.bantu.nyanja_sena.chewa | Chewa
+nigercongo.bantu.shona | Shona
+nigercongo.bantu.soga | Soga (Lusoga)
+nigercongo.bantu.sotho_tswana.sesotho | Sesotho (Southern Sotho)
+nigercongo.bantu.swahili | Swahili
+nigercongo.bantu.tumbuka | Tumbuka (N.20)
+nigercongo.bantu.tumbuka.tumbuka | Tumbuka
+nigercongo.ibibio_efik | Ibibio-Efik
+nigercongo.ijoid | Ijoid
+nigercongo.ijoid.kalabari | Kalabari
+nigercongo.kru | Kru
+nigercongo.kru.guere | Guéré (Wè)
+nigercongo.kwa | Kwa
+nigercongo.kwa.akan | Akan (Twi)
+nigercongo.kwa.ewe | Ewe
+nigercongo.kwa.ga | Ga
+nigercongo.mande | Mande
+nigercongo.mande.manding | Manding
+nigercongo.tiv | Tiv
+nigercongo.voltaniger | Volta-Niger
+nigercongo.voltaniger.ebira | Ebira
+nigercongo.voltaniger.edoid | Edoid (Edo)
+nigercongo.voltaniger.edoid.edo | Edo
+nigercongo.voltaniger.edoid.esan | Esan
+nigercongo.voltaniger.edoid.urhobo | Urhobo
+nigercongo.voltaniger.edoid.yekhee | Yekhee (Etsako)
+nigercongo.voltaniger.idoma | Idoma
+nigercongo.voltaniger.igala | Igala
+nigercongo.voltaniger.igbo | Igbo
+nigercongo.voltaniger.ikwere | Ikwere
+nigercongo.voltaniger.yoruba | Yoruba
+nilosaharan | Nilo-Saharan
+nilosaharan.nilotic | Nilotic
+nilosaharan.nilotic.luo | Luo (Dholuo)
+sinotibetan.burmish.burmese | Burmese
+sinotibetan.sinitic.cantonese | Cantonese
+sinotibetan.sinitic.mandarin | Mandarin
+sinotibetan.sinitic.min_nan | Min Nan (Taiwanese, Hokkien)
+turkic | Turkic
+turkic.azerbaijani | Azerbaijani
+turkic.kazakh | Kazakh
+turkic.turkish | Turkish
+turkic.uzbek | Uzbek
+uralic.finnish | Finnish
+uralic.hungarian | Hungarian
+# --- end origin_mix borrowed nodes ---

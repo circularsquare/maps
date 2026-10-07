@@ -1,0 +1,81 @@
+# Laos 2015 census, ethnic group read as language under AGENT_BRIEF section 2's ethnicity rule
+# (taxonomy/la2015.py has the mapping and the Glottolog checks; countries/la.py). Nodes other
+# fragments already define are repeated with the same label (colours left to the first
+# definition), so Laos does not depend on them. Shared with Vietnam: Hmong, Dao (the Lao
+# "Iu Mien" group takes in the Lanten, who speak Kim Mun), Tai Dam/Don, Tai Lue, Giay (Lao
+# "Yang"), Khmu, Ksingmul, O'du, Bru, Katu, Ta'oih, Brao, Gie-Trieng, Sedang, Sila, Lolo, Hani.
+#
+# New leaves: Phu Thai, Northern Thai (Lao "Nhuan"), Saek, Tai Nua under Kra-Dai; Prai,
+# Phong-Kniang, Then under Khmuic; Katang, Tri, Kriang, Pacoh under Katuic; Laven, Jeh, Alak,
+# Oy, Cheng, Nyaheun, Lavi under Bahnaric; the Palaungic Lamet, Samtao and Bit and the Vietic
+# Phong, Tum, Nguon, May and Kri directly under Austroasiatic (as Vietnam's Khang and Muong);
+# Phunoi under Loloish.
+#
+# Colours, for the neighbours on the ground:
+#   * the Mekong lowlands and the south: Lao keeps its colour; Phu Thai (Savannakhet,
+#     Khammouane) a lighter, yellower green so the two read apart; Katang and Makong (Bru),
+#     who live among the Phu Thai, in Katuic's reds;
+#   * the north: Tai Lue a pale lime, Tai (Dam) its pale yellow from Vietnam, Khmu its magenta,
+#     Hmong its teal, Akha and Phunoi in the Loloish violets but apart.
+austroasiatic | Austroasiatic
+austroasiatic.khmer | Khmer
+austroasiatic.khmuic | Khmuic
+austroasiatic.khmuic.khmu | Khmu (Khơ Mú)
+austroasiatic.khmuic.puoc | Ksingmul (Xinh Mun)
+austroasiatic.khmuic.iduh | O'du (Ơ Đu)
+austroasiatic.khmuic.prai | Prai (Phai) | 0.48 0.13 300
+austroasiatic.khmuic.phong_kniang | Phong-Kniang
+austroasiatic.khmuic.then | Then (Thaen)
+# hand-picked: generated Lamet and Prai sat close to Khmu's magenta in Luang Namtha and Xayabury
+austroasiatic.lamet | Lamet (Lamed) | 0.84 0.08 350
+austroasiatic.samtao | Samtao | 0.66 0.15 350.0
+austroasiatic.bit | Bit (Bid) | 0.72 0.15 290.0
+austroasiatic.phong_vietic | Phong (Vietic) | 0.78 0.15 330.0
+austroasiatic.tum | Tum (Toum) | 0.66 0.15 300.0
+austroasiatic.nguon | Nguon (Ngouan) | 0.6 0.15 320.0
+austroasiatic.may | May (Moy) | 0.84 0.15 0.0
+austroasiatic.kri | Kri (Kree) | 0.6 0.15 300.0
+austroasiatic.katuic | Katuic
+austroasiatic.katuic.bru | Bru (Bru-Vân Kiều)
+austroasiatic.katuic.katu | Katu (Cơ Tu)
+austroasiatic.katuic.taoih | Ta'oih (Tà Ôi)
+austroasiatic.katuic.kuy | Kuy
+austroasiatic.katuic.katang | Katang | 0.60 0.16 35
+austroasiatic.katuic.tri | Tri
+austroasiatic.katuic.kriang | Kriang (Ngeq)
+austroasiatic.katuic.pacoh | Pacoh
+austroasiatic.bahnaric | Bahnaric
+austroasiatic.bahnaric.brao | Brao
+austroasiatic.bahnaric.gie_trieng | Gie-Trieng (Giẻ Triêng)
+austroasiatic.bahnaric.sedang | Sedang (Xơ Đăng)
+austroasiatic.bahnaric.laven | Laven (Jru', Yrou)
+austroasiatic.bahnaric.jeh | Jeh (Yae)
+austroasiatic.bahnaric.alak | Alak (Harak)
+austroasiatic.bahnaric.oy | Oy
+austroasiatic.bahnaric.cheng | Cheng (Jeng)
+austroasiatic.bahnaric.nyaheun | Nyaheun
+austroasiatic.bahnaric.lavi | Lavi (Lave)
+kradai | Kra-Dai (Tai-Kadai)
+kradai.lao | Lao
+# hand-picked: Phu Thai and Lao share Savannakhet and Khammouane
+kradai.phu_thai | Phu Thai | 0.84 0.15 100
+kradai.tai_vietnam | Tai Dam and Tai Don (Thái)
+kradai.tai_lue | Tai Lue (Lự)
+kradai.northern_thai | Northern Thai (Tai Yuan, Nhuan)
+kradai.giay | Giay (Giáy) | 0.92 0.14 125.0
+kradai.saek | Saek | 0.92 0.14 165.0
+kradai.tai_nua | Tai Nua (Thai Neua) | 0.68 0.14 85.0
+hmongmien | Hmong-Mien
+hmongmien.hmong | Hmong
+hmongmien.dao | Dao (Iu Mien and Kim Mun)
+sinotibetan | Sino-Tibetan
+sinotibetan.loloish | Loloish (Yi languages)
+sinotibetan.loloish.akha | Akha
+sinotibetan.loloish.lahu | Lahu
+sinotibetan.loloish.hani | Hani
+sinotibetan.loloish.sila | Sila (Si La)
+sinotibetan.loloish.lolo_vietnam | Lolo (Lô Lô)
+sinotibetan.loloish.phunoi | Phunoi (Singsali)
+sinotibetan.sinitic | Chinese
+sinotibetan.sinitic.mandarin | Mandarin
+other | Other or unclassified

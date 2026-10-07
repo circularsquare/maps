@@ -1,0 +1,11 @@
+# Americas — language coverage
+
+51 rows (every sovereign state plus the main territories). Swept 2026-10-04, 12 web searches.
+
+**Overall picture.** Only a handful of censuses ask a real first-language question: Canada (mother tongue, dissemination area), Guatemala 2018, Peru 2017 and Bolivia 2024 (mother tongue, municipality or district), plus home language in the US/Puerto Rico ACS (tract), Suriname 2012 (district), Aruba and Curaçao. Most of Latin America asks only about indigenous languages, often only of people who first self-identify as indigenous (Mexico, Colombia, Argentina, Chile, Nicaragua, Costa Rica, Venezuela, Brazil). For those, Spanish or Portuguese is the residual, which works for a first-language map as long as immigrant languages don't matter. Ecuador, Paraguay, Belize and El Salvador ask "languages spoken" (multi-response), so bilinguals can't be assigned one language.
+
+**Best sources.** REDATAM servers are excellent: Guatemala, Peru, Bolivia, Paraguay, Colombia, Chile, Argentina, Nicaragua, Costa Rica, Panama and Honduras all gave variable dictionaries straight away (the `Dictionary?ITEM=DIC...` page works where `Frequency` fails). On prod.redatam.org the Caribbean bases need `lang=eng`. Canada's DA profile and the ACS (C16001 by tract, PUMS for full detail) are the strongest. IBGE's SIDRA API gives Brazil's 295 indigenous languages by state and by indigenous territory.
+
+**Biggest gaps.** Paraguay 2022 dropped the "language spoken most at home" item it had in 2002, so the Guaraní/Spanish split can't be made; 2002 is the better source. Mexico's municipal basic tables give speaker yes/no only; counts by language at municipality level come from the open sample microdata. Costa Rica's 2022 indigenous results are still unpublished. Ecuador's INEC servers return 403. The anglophone and francophone Caribbean, Haiti, Cuba, the Dominican Republic, Guyana, French Guiana and Greenland ask nothing; birthplace (Haiti-born, Suriname-born) is the only proxy.
+
+**Surprises.** Bolivia 2024 asks both mother tongue and languages ranked by use. Chile 2024 added a language item, but it is "speaks *or understands*", so it overcounts. Honduras and Panama ask pueblo but no language. Uruguay's Portuñol border and Brazil's German/Pomeranian enclaves are invisible because only indigenous people are asked.

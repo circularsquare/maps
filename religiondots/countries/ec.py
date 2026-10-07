@@ -50,8 +50,10 @@ def _ec_counts():
     in the 2010 wave and no other, so the split-half cannot rank them twice and drops them
     from the test that licenses the other twenty -- §14.16's rule about categories applied to
     units. But one wave DID measure them, which is enough to anchor an assumption, so they are
-    drawn at the national rate on their own census population: 466,909 people, 2.76% of
-    Ecuador. Anita, 2026-09-08: "i feel like carchi is fine to assume and we can just do it."
+    drawn on their own census population: 466,909 people, 2.76% of Ecuador. Anita,
+    2026-09-08: "i feel like carchi is fine to assume and we can just do it." Since
+    2026-10-03 Carchi is at the Sierra design region's shares and Pastaza and Orellana at the
+    national rate, by the one-round rule written for Colombia (sources.md §ec-2026-10-03).
     GALAPAGOS IS NOT DRAWN AT ALL. LAPOP has no code 920 -- not unsampled, not OFFERED -- so
     no respondent could ever have been placed there and there is no reading of any kind to
     anchor an assumption on. Its 28,583 people are in `gap=` and are not drawn as a §3.5
@@ -145,7 +147,7 @@ ENTRY = {
             "themselves, what languages they speak and which indigenous nationality they "
             "belong to, and then stops. The map is drawn from the LAPOP AmericasBarometer "
             "instead, **7,387 people** across four rounds between 2010 and 2023, pooled. "
-            "The dots are drawn desaturated to say so. "
+            "Nobody counted these dots, so they disappear when inferred dots are turned off. "
             "**What the survey is laid on is a real count, which is unusual here.** "
             "Guatemala and El Salvador are drawn on population projections because neither "
             "has counted recently. Ecuador counted 16,938,986 people in November 2022, and "
@@ -170,15 +172,21 @@ ENTRY = {
             "so no Ecuadorian could have been recorded there. Rather than paint 28,583 "
             "people the same colours as the mainland and let the map look as confident about "
             "the archipelago as about Quito, it is left empty. "
-            "**Three more provinces are drawn at the national rate rather than their own "
-            "numbers.** Carchi, Pastaza and Orellana were visited in the 2010 round and no "
-            "other, on twenty, thirty-two and fifty-five interviews, so there is no second "
-            "reading to check the first against. They hold 2.76% of the country. Carchi is "
-            "the reason it matters: its twenty interviews contain no evangelicals at all, and "
-            "drawing that would have put a hard zero across a province of 172,828 people in a "
-            "country that is 11% evangelical. Using neighbouring provinces instead of the "
-            "national figure was tried and measured, and it predicted the rest of the country "
-            "slightly worse, because religion here changes sharply at province lines rather "
+            "**Three more provinces are not drawn on their own numbers.** Carchi, Pastaza and "
+            "Orellana were visited in the 2010 round and no other, on twenty, thirty-two and "
+            "fifty-five interviews, so there is no second reading to check the first against. "
+            "They hold 2.76% of the country. Carchi, in the northern highlands, is drawn at "
+            "the average of the survey's Sierra region, taken over the ten provinces of it "
+            "that were visited in every round: **79.6% Catholic** and 7.1% evangelical, "
+            "against 75.5% and 11.0% for the country. Leaving each of those ten out in turn, "
+            "the Sierra average predicted eight of them better than the national figure did. "
+            "The Oriente average, tried the same way, predicted none of its four Amazon "
+            "provinces better, so Pastaza and Orellana are drawn at the national rate. "
+            "Carchi's own twenty interviews contain no "
+            "evangelicals at all, and drawing them would have put a hard zero across a "
+            "province of 172,828 people. Averaging each province's bordering neighbours was "
+            "also tried, and it predicted the rest of the country slightly worse than the "
+            "national figure, because religion here changes sharply at province lines rather "
             "than blending across them. "
             "**0.06% for traditional religion is a floor, in a country that is 7.69% "
             "indigenous by its own 2022 census.** The card offers one worldwide "
@@ -236,8 +244,12 @@ ENTRY = {
              "THREE PROVINCES ARE ASSUMED AND ONE IS BLANK, AND THE LINE IS WHETHER ANYTHING "
              "MEASURED THE PLACE. Carchi, Pastaza and Orellana are in the 2010 wave only, so "
              "the split-half cannot rank them twice -- §14.16 applied to units instead of "
-             "categories -- but one wave did measure them, so they are assumed at the "
-             "national rate (2.76%, Anita's call). GALAPAGOS IS NOT DRAWN: LAPOP has no code "
+             "categories -- but one wave did measure them, so they are assumed (2.76%, "
+             "Anita's call). Carchi takes the Sierra design region's shares under the "
+             "one-round rule written for Colombia's La Guajira (Sierra closer for 8 of 10 "
+             "provinces, 11.7 against 16.1 points, p=0.025; Anita, 2026-09-14 night); Pastaza "
+             "and Orellana stay at the national rate (Oriente closer for 0 of 4); "
+             "sources.md §ec-2026-10-03. GALAPAGOS IS NOT DRAWN: LAPOP has no code "
              "920, so nothing measured it at all and there is nothing to assume from. Its "
              "28,583 people are in `gap=`. sources/ec.py has the three reasons drawing the "
              "three on their own shares would have been worse, of which the sharpest is "

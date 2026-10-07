@@ -12,3 +12,4 @@ line,operator,colour,source,url,note
 輕鐵,,#DBB400,mtr-routemap,https://www.mtr.com.hk/archive/en/services/routemap.pdf,"MTR system map stroke (the thin gold line); the numbered routes keep their own OSM colours"
 香港電車,,#1E7B45,picked,,"no published line colour; picked from the trams' green livery"
 山頂纜車,,#8A1C2B,picked,,"no published line colour; picked from the Peak Tram's maroon livery"
+廣深港高速鐵路,,#9C948B,mtr-routemap,https://www.mtr.com.hk/archive/en/services/routemap.pdf,"MTR system map stroke (the grey 16.3 pt path, the high-speed line); the line is joined to cn's 广深港高速线 under one id, which has no colour of its own"

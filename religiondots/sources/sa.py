@@ -58,9 +58,15 @@ everywhere within a sex, which is weaker than the same mix everywhere; `main` pr
     not know that. So India's Hindu share is set so the layer's Hindus equal Pew 2020's Saudi Hindu
     share of the census count, every other nationality kept at its own row, and the Hindus removed
     are drawn on Islam. Indian Christians stay at India's row. Printed; see sources/sa.md §4.
-  * **everyone else**: Pew 2020 per country through `taxonomy/origin_religion.py`, Muslim branches
-    folded to `islam` (no sect is drawn anywhere in Saudi Arabia), Pew's unplaced `Other religions`
-    on `other.sa`.
+  * **everyone else**: Pew 2020 per country through `taxonomy/origin_religion.py`, every node under
+    `islam` folded to `islam` (Sunni and Shia are not split, ask 040), Pew's unplaced `Other
+    religions` on `other.sa`. `fold()` touches only ids starting `islam`, so three groups that
+    `origin_religion.py` gives families of their own stay on their own nodes: Türkiye's Alevis
+    (`alevism`, 5,019), Druze (1,918) and Yazidis (9), about seven dots. Kept on purpose (fix batch
+    2026-10-03, after review cb8b206e-rev9): Druze on their own node is the project's convention,
+    and Alevis are shown apart from Islam as Anita ruled for the estimate layer (ask/RULINGS.md
+    2026-09-14, spec §15.11). For Mecca's haram, `alevism` counts as Muslim and
+    Druze and Yazidis do not (`countries/sa.py`).
 
 `christian_witness` holds the layer's Christians against Pew 2020's Saudi share inside
 `CHRISTIAN_BAND`. The band was written after a rough sum over the largest nationalities while

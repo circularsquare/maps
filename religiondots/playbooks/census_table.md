@@ -28,6 +28,11 @@ asked religion; boundaries, name joins, population bases and placement are in `p
 - `us` United States (Sikhs, Yazidis): 2020 Census Detailed DHC-A race write-in by county and tract, noise-infused and thresholded, subtracted from a survey line (sources.md §us-2026-09-15).
 - `tk` Tokelau: counts by atoll in a workbook for the usual residents present on census night, a fifth short of the official de jure count; UNSD's 2016 row is 4 people off, its 2011 row equal (sources.md §tk-2026-09-15).
 - `mn` Mongolia: 22 per-aimag PDF volumes of chained one-decimal shares, each table found by its identity; Ulaanbaatar's düüregs measured off a vector chart (§9bt, sources.md §mn-2026-09-15).
+- `mv` Maldives: foreigners only were asked; UNSD's Urban row is Malé, so Malé is measured and the atolls' answers are spread by sex and citizenship with an IPF (sources.md §mv-2026-10-03).
+- `dj` Djibouti: counts by région in a 2025 thematic volume, listed by the API behind a JavaScript site; the
+  table's universe is ordinary households, the homeless and collective households in `gap` (sources.md §dj-2026-10-03).
+- `lb` Lebanon: no census; the 2022 electoral register by sect, published by electoral district in a
+  magazine, raked to cazas on a 2014 caza table from a third-party site (sources.md §lb-2026-10-03).
 - `pw` `ck` `tv` and eight more: UNSD table 28 is the whole source (`sources/micro.py`); `vg` `aw` in `sources/terr.py`.
 - `pe` Peru, `ni` Nicaragua: REDATAM. `et` Ethiopia: USCB geodatabase (also `bd`, `jm`, `vc`, `cf`, `pk2017`).
 - `lc` Saint Lucia: questionnaire catches a mislabelled column. `cv` Cabo Verde: UNSD `Unknown` is the under-15s.
@@ -52,12 +57,37 @@ asked religion; boundaries, name joins, population bases and placement are in `p
   the national-language tree, and the national statistical yearbook (Iran's 1395 census tree has no religion
   topic; the 1395 yearbook's population chapter prints it by province); record what was asked, of what, when. Caught by: Not checked yet
   (`WORKFLOW_PLAN.md` item 8). Detail: spec §12 "No country is closed for good", "A VOLUME'S TITLE IS NOT ITS TABLE LIST".
+- **A census can ask religion and tabulate nothing, and only the variable list shows it.** Bhutan's 2005
+  census was closed on its topic list and report; the IHSN DDI (`catalog.ihsn.org/index.php/metadata/export/<id>/ddi`,
+  no login) has `q4ca` "Religion" with its three codes and an interviewer instruction. Grep the DDI for
+  religio/language/ethnic before closing a census, and check a withheld item against spec §14 rule 2 (the
+  Egypt shape). A national survey institute may publish the proxy the census withheld (Bhutan's GNH
+  surveys print mother tongue by dzongkhag). Caught by: Not checked yet (`tools/negatives.py --shape` could
+  grep cached DDIs). Example: `bt`. Detail: `sources/bt.md` §1.
+- **A "main religion" line per unit is an anchor, not a dead end.** PNG's National Reports print, in
+  their Summary Indicators, one church per province and its share; a scout read it as "not a partition"
+  and blocked the country. With the national table it fixes every unit's largest cell, and an IPF of the
+  rest to the national totals (each held under the largest) reproduces every printed number; a second
+  vintage's line and a church's own diocese figures can seed it. Check what the line's share is OF: PNG
+  2011 labels it "% of population" and its national value equals the churches' figure, which sums to 100
+  over Christians. Older series of the same office may print the full table on paper only (PNG's 2000
+  provincial Basic Tables). Caught by: `sources/pg.py::check_2011_text` (transcription against the text
+  layer), `::fit` (positive margins, convergence). Example: `pg`. Detail: `sources/pg.md` §2-3.
 - **UNSD table 28 is a floor and a transcription.** Absence proves only nothing was forwarded. A row can be the
   under-15s (Cabo Verde) or collective households (Guinea); a value can be a typo (Burundi 494,533 for 484,533)
   or a later edit (Mozambique). `NOT a partition` means open the office's table; the office wins. Caught by:
   `tools/oracle.py::main`, `sources/micro.py::normalise`, `sources/terr.py::ORACLE`, `sources/gn.py::check`,
   `sources/cv.py::check`; a known disagreement pinned, `sources/mz.py::check` via
   `sources/fetch_checks.py::pinned_differences`. Detail: spec §12 "AN ORACLE CATEGORY COUNT COUNTS ROWS", "UNSD'S NUMBERS CAN BE WRONG TOO".
+- **UNSD's urban row can be one city, and a census that asked only foreigners can still be drawn.**
+  The Maldives' 2014 form asks religion of foreign residents only and codes every Maldivian Islam;
+  a scout blocked it because no release prints religion below the nation. UNSD's `Urban` row is
+  Malé alone (153,904, the office's Malé row), so `Urban` and `Rural` by sex, less the nationals,
+  are the foreigners' answers for the capital and for the rest. Compare each urban row's total with
+  the office's city counts before calling a table national-only, and fetch the by-sex rows
+  (`oracle(name, year, sex="Male")`): foreign women were a third Christian, men 7%. Caught by:
+  `sources/mv.py::main` (step 2 asserts the urban total is Malé's and every derived cell is
+  non-negative). Example: `mv`. Detail: `sources/mv.md` §2.
 - **Ask for a REDATAM server before reading PDFs.** Nicaragua prints 17 departments and serves 2,579 comarcas.
   `RpWebStats.exe/Frequency?BASE=<base>&ITEM=FREQPOB` lists variables (unclosed `<option>` tags); a bad program
   answers `Tabla vacía` with 200; `prod.redatam.org` does not namespace `BASE=` by country. Caught by:
@@ -87,7 +117,10 @@ asked religion; boundaries, name joins, population bases and placement are in `p
   coverage of `uploads` and WPFD Not checked yet. Detail: spec §12 "A WP FILE DOWNLOAD INSTALL IS INVISIBLE".
 - **A JavaScript portal or dashboard sits on a real API.** Compare the 404s, grep the bundle (or its Wayback
   copy) for `/api`, search `<host> api`; a Qlik dashboard held Kazakhstan's microdata. PxWeb: try
-  `/pxweb/api/v1/en/` and `/api/v1/en/`; a 403 can be a cell limit. Caught by: Not checked yet. Detail: spec §12
+  `/pxweb/api/v1/en/` and `/api/v1/en/`; a 403 can be a cell limit. A Nuxt or Vue page that is
+  empty to WebFetch prints its API in `window.__NUXT__.config` (`baseURL`): Djibouti was closed three
+  times on "the 2024 form is not found" while `instad.dj`'s Heroku API listed the census's 22 volumes,
+  one with religion by région (`sources/dj.py` docstring). Caught by: Not checked yet. Detail: spec §12
   "Finding the data".
 - **A 200 is not the file.** Assert magic bytes: `%PDF-`, `PK\x03\x04` (xlsx), `\xd0\xcf\x11\xe0` (xls); `<?xm` is
   SpreadsheetML, read by `xml.etree` (honour `ss:Index`). A slow openpyxl open is `xl/styles.xml`: drop it, open
@@ -98,6 +131,11 @@ asked religion; boundaries, name joins, population bases and placement are in `p
   fetch one capture per digest, check pages and text on every page. Caught by: `sources/fetch_checks.py::check_body`
   (a pin is the verdict; unpinned without `%%EOF` stops and says where the markers are), from `gw.py`, `gn.py`,
   `cg.py`, `td.py`; `::check_pdf_doc`; `sources/gw.py::check`, `sources/cg.py::check`. Detail: spec §12 "A TRUNCATED WAYBACK CAPTURE OPENS AS THE WHOLE DOCUMENT".
+- **A volume broken at the office can be whole at a donor's.** ISTEEBU's *État et structure de la population*
+  (Burundi 2008) was truncated as published; USAID's Burundi mission had hosted the whole 2011 analysis series,
+  and the Wayback CDX of `usaid.gov/sites/default/files/documents/<mission id>/*` lists it intact. A citation
+  line naming another host (lifetable.de's copy said "Downloaded from usaid.gov") is the lead. Caught by: Not
+  checked yet (a search step). Detail: `sources/bi.md` §0.1.
 - **Cells that look like numbers.** Classify every cell through one function that raises on the unknown; never
   `errors="coerce"` or filter by type (Germany lost 2.2M counts stored as text). List count columns; a `%` twin
   sits beside each. A clipped PDF cell parses short (Guyana `38,96`): assert it prefixes the sum. Caught by:
@@ -112,6 +150,10 @@ asked religion; boundaries, name joins, population bases and placement are in `p
   (`sources/jp_checks.py`). Caught by: `sources/fetch_checks.py::image_pages`; no reader calls it yet (belongs in
   each PDF reader). Detail: spec §12 "A PDF CAN
   HAVE A TEXT LAYER FOR ITS PROSE AND PICTURES FOR ITS TABLES".
+  When transcribing, read the men and women columns too: the total must lie between them. Mongolia's
+  Darkhan-Uul table 3.10 swaps two religion rows in the sex columns only, and its prose follows the swap
+  (`sources/mn.py::check_transcribed`, `sources/mn.md` §13). The age-by-religion table's total row is a
+  second witness.
 - **A chart in a PDF is usually vector, so measure it, and its prose can name the wrong segment.**
   Ulaanbaatar's 2020 volume gives religion by düüreg only as two charts: every bar is a filled
   rectangle in `page.get_drawings()`, and the labels and names are glyph outlines with no text.
@@ -231,6 +273,28 @@ asked religion; boundaries, name joins, population bases and placement are in `p
   page, then assert the values are on the page and that each overall bar follows from its two parts. Caught by:
   `sources/sa.py::report_checks`, `::main` (the Rohingya and India lines, the by-sex against one-mix table).
   Example: `sa`. Detail: `sources/sa.md` §4.
+- **The by-sex split only pays where the two sexes' origin mixes differ.** UN DESA's UAE origins give
+  Christians 9.0% of the men's mix and 9.7% of the women's, so splitting by sex moved almost nothing,
+  while the emirates' sex splits were of mixed years and Dubai's had to be a fitted residual (0.635 men,
+  under Abu Dhabi's 0.668). Print the religion of each sex's mix before building the split. Caught by:
+  `sources/ae.py::main` (prints both and draws one mix). Example: `ae`. Detail: `sources/ae.md` §3.
+- **In the Gulf, origins through Pew get the Christian and Hindu split backwards, so anchor it.**
+  Bahrain's census counts its foreign non-Muslims (387,807) but prints only Muslim / Others. UN
+  DESA's origins through Pew make them 67% Hindu and 23% Christian; Pew's own Bahrain row says 43%
+  and 53%, and the 2001 census, the last to print Christians, 48% Christian. The Gulf's Indians are
+  not India's mix. Where the host's Muslim count by nationality and sex exists, close each sex on it
+  (a logit shift on the worker groups), and rake the non-Muslim split to the country's own row or
+  census Christian line. A group with no non-Muslims (Gulf nationals) gives a 0/0 row in the rake:
+  fill it, or its NaN wipes every governorate's `Others`. Caught by: `sources/bh.py::main` (the
+  2001 witness, the NaN check, the per-cell sums). Example: `bh`. Detail: `sources/bh.md` §2.
+  **Where nothing is counted (the Gulf rule):** fit India's Hindu share to Pew's Hindu count as
+  before, then call `origin_religion.gulf_christian_hindu` to move Indians from Hindu to Christian
+  until Christians / (Christians + Hindus) is Pew's country ratio (a counted ratio if one exists).
+  Apply only where the move is over 1% of the country (`GULF_MATERIAL`); leave the non-Muslim total
+  and Buddhists alone (Pew's Gulf rows are one template, Buddhists 0.6% everywhere). Do not fit
+  Pew's Christian count as well: on Oman's register it needs Indians under 2% Muslim. Caught by:
+  `sources/ae.py::main`, `sources/om.py::main` (refuse a move under the bar; print Indians' end
+  mix). Example: `ae`, `om`; `sa` under the bar. Detail: sources.md §gulf-2026-10-03.
 - **`other.<cc>`, `unknown` and tiers.** A source's `Other` gets a new `other.<cc>` in `taxonomy/branches.py`,
   a real religion (§6.3a-iv); `unknown` is counted people no geography can place (§6.3a-ii). Own-geography counts
   and shares times a total in the same publication (Benin) are `measured`; spread from coarser is `derived` with
@@ -276,6 +340,26 @@ asked religion; boundaries, name joins, population bases and placement are in `p
   cells; pin the misprint and keep the districts. Caught by: `sources/mz_2007.py::read_volume`,
   `::check_volume` (`GAZA_PRINTED`, `GAZA_MEANT`). Detail: `sources/mz.md` §7.
 
+- **A dashboard's packaged workbook can be the record-level file, with names.** L'Orient Today's
+  Tableau Public view of Lebanon's register serves a CSV export of what the view shows (`<view>.csv?:showVizHome=no`,
+  aggregates), and also the whole packaged workbook (`/workbooks/<name>.twb`, 58 MB), whose extract
+  was the voter roll: names, parents' names, birth dates and sect for 3.97 million people. Use the
+  view export; never fetch the packaged workbook, and if one arrives, read only the `.twb`'s column
+  list and delete it. Caught by: Not checked yet (a reading step). Detail: `sources/lb.md` §10.2.
+- **A register can carry two religions per person.** Lebanon's roll has a personal sect and a sect
+  of the family register; a married woman's record moves to her husband's family. Third-party
+  tables count one or the other, and the sex split shows which (a minority sect that is mostly
+  women is the personal count). Say which one is drawn, and do not rake one onto the other's
+  margins without saying so. Caught by: `sources/lb.py::build` (the growth band, `GROWTH_PINNED`).
+  Detail: `sources/lb.md` §10.3.
+- **A region the national office leaves out of its tables can be in its own government's yearbook.**
+  PBS printed no religion for Azad Kashmir; the AJK Bureau of Statistics' yearbook prints the same
+  census's district table, citing PBS, with shortened headers and a different column order. Before
+  writing "not published", look for the region's statistics bureau or planning department yearbook.
+  Check the transcription against a second table in the same book (here rural/urban by sex, and
+  tehsil populations that must fall into the districts by exact cumulative sums). Caught by:
+  `sources/pk_ajk.py::read`. Detail: `sources/pk.md` §10.
+
 ## Shared code
 Import these, do not copy them.
 - `tools/oracle.py`: `fetch`, `oracle(name, year)`, `latest`, `table`, `partition`, `TOTAL`.
@@ -293,8 +377,8 @@ Import these, do not copy them.
 - **Microstates** (2026-09-08): a national table is complete for a country of tens of dots; not for larger ones.
 - **004-am, 005-rw**: record what the source says; ADEPR stays on `christianity.pentecostal`. Not new nodes generally.
 - **§2.7a** (2026-09-14): a large unspecified share does not stop a named split being drawn.
-- **No-religion boxes** (2026-09-14): Mozambique `unaffiliated` (drawn); Laos to traditional religion (queued;
-  `la2015.py` still maps `unknown`); China stays `unknown`. A merged node is Anita's, undecided.
+- **No-religion boxes** (2026-09-14): Mozambique `unaffiliated` (drawn); Laos to traditional religion (drawn
+  2026-10-03 on `indigenous.laos`, LSIS); China stays `unknown`. A merged node is Anita's, undecided.
 - **002-za, 008-ug**: accounts are Anita's to make; UBOS: extract what is needed, delete the rest.
 - **003-cn**: mixed vintages in one country are fine when the method is sound; Tibet was declined on size only.
 - **017-td, 018** (2026-09-14): draw Chad at 22 régions, Burkina Faso at 45 provinces, Mali at 20 régions, as

@@ -1,0 +1,2 @@
+# Liechtenstein, Volkszählung 2020 main language (taxonomy/li2020.py). No new nodes: every
+# category maps onto a node Switzerland's ch2000 or another country already made.

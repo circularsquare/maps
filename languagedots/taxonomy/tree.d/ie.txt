@@ -1,0 +1,82 @@
+# Ireland, Census 2022, language other than English or Irish spoken at home (taxonomy/ie2022.py).
+# One new node: Edo (Glottolog bini1246, "Bini"), 1,228 people, a leaf under the Edoid group us.txt
+# made. The other nodes Ireland draws on are repeated here bare (same labels, colours left to the
+# fragments that set them), so the country does not depend on another fragment staying put.
+africa_other | Other African languages
+afroasiatic.cushitic | Cushitic
+afroasiatic.cushitic.lowland | Lowland East Cushitic
+afroasiatic.cushitic.lowland.somali | Somali
+afroasiatic.hebrew | Hebrew
+austroasiatic.vietnamese | Vietnamese
+austronesian | Austronesian
+austronesian.malayic | Malayic
+austronesian.malayic.malay | Malay
+austronesian.philippine | Philippine
+austronesian.philippine.filipino | Filipino
+austronesian.philippine.tagalog | Tagalog
+indoeuropean.albanian | Albanian
+indoeuropean.albanian.albanian | Albanian
+indoeuropean.baltic | Baltic
+indoeuropean.baltic.latvian | Latvian
+indoeuropean.baltic.lithuanian | Lithuanian
+indoeuropean.celtic | Celtic
+indoeuropean.celtic.irish | Irish
+indoeuropean.celtic.shelta | Shelta (Irish Traveller Cant)
+indoeuropean.germanic.continental | Continental West Germanic
+indoeuropean.germanic.continental.afrikaans | Afrikaans
+indoeuropean.germanic.continental.dutch | Dutch
+indoeuropean.germanic.continental.german | German
+indoeuropean.germanic.north | North Germanic
+indoeuropean.germanic.north.danish | Danish
+indoeuropean.germanic.north.swedish | Swedish
+indoeuropean.hellenic | Hellenic
+indoeuropean.hellenic.greek | Greek
+indoeuropean.iranian.kurdish | Kurdish
+indoeuropean.iranian.persian | Persian (Farsi)
+indoeuropean.romance | Romance
+indoeuropean.romance.french | French
+indoeuropean.romance.italian | Italian
+indoeuropean.romance.portuguese | Portuguese
+indoeuropean.romance.romanian | Romanian
+indoeuropean.romance.spanish | Spanish
+indoeuropean.slavic | Slavic
+indoeuropean.slavic.east | East Slavic
+indoeuropean.slavic.east.russian | Russian
+indoeuropean.slavic.east.ukrainian | Ukrainian
+indoeuropean.slavic.south | South Slavic
+indoeuropean.slavic.south.bosnian | Bosnian
+indoeuropean.slavic.south.bulgarian | Bulgarian
+indoeuropean.slavic.south.croatian | Croatian
+indoeuropean.slavic.south.serbian | Serbian
+indoeuropean.slavic.west | West Slavic
+indoeuropean.slavic.west.czech | Czech
+indoeuropean.slavic.west.polish | Polish
+indoeuropean.slavic.west.slovak | Slovak
+japonic | Japonic
+japonic.japanese | Japanese
+kartvelian | Kartvelian
+kartvelian.georgian | Georgian
+koreanic | Koreanic
+koreanic.korean | Korean
+kradai | Kra-Dai (Tai-Kadai)
+kradai.thai | Thai
+nigercongo | Niger-Congo
+nigercongo.bantu | Bantu
+nigercongo.bantu.lingala | Lingala
+nigercongo.bantu.nyanja_sena | Nyanja-Sena (N.30-40)
+nigercongo.bantu.nyanja_sena.nyanja | Nyanja
+nigercongo.bantu.shona | Shona
+nigercongo.bantu.swahili | Swahili
+nigercongo.voltaniger | Volta-Niger
+nigercongo.voltaniger.edoid | Edoid (Edo)
+nigercongo.voltaniger.edoid.edo | Edo
+nigercongo.voltaniger.igbo | Igbo
+nigercongo.voltaniger.yoruba | Yoruba
+signlanguage.isl | Irish Sign Language
+sinotibetan.sinitic | Chinese
+turkic | Turkic
+turkic.turkish | Turkish
+uralic | Uralic
+uralic.estonian | Estonian
+uralic.finnish | Finnish
+uralic.hungarian | Hungarian

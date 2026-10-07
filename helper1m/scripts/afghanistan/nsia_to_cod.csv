@@ -1,0 +1,458 @@
+province,sno,name_1404,target,note
+Kabul,1,Provincial Capital (Kabul ),AF0101,
+Kabul,2,Paghman,AF0102,
+Kabul,3,Chahar Asyab,AF0103,
+Kabul,4,Bagrami,AF0104,
+Kabul,5,Dehsabz,AF0105,
+Kabul,6,Shakardarah,AF0106,
+Kabul,7,Mosahi,AF0107,
+Kabul,8,Mirbachakot,AF0108,
+Kabul,9,KhakJabar,AF0109,
+Kabul,10,Kalakan,AF0110,
+Kabul,11,Gul Darah,AF0111,
+Kabul,12,Farzah,AF0112,
+Kabul,13,Istalef,AF0113,
+Kabul,14,Qarabagh,AF0114,
+Kabul,15,Surobi,AF0115,
+Kapisa,1,Kapisa Center (Mahmood raqi),AF0201,
+Kapisa,2,Hisa-e- Duwom-e- Kohistan,AF0202,
+Kapisa,3,Koh Band,AF0203,
+Kapisa,4,Hisa-e Awal-e Kohistan,AF0204,
+Kapisa,5,Nejrab,AF0205,
+Kapisa,6,Tagab,AF0206,
+Kapisa,7,Alasai,AF0207,
+Parwan,1,provincial Capital (Charikar ),AF0301,
+Parwan,2,Bagram,AF0302,
+Parwan,3,Shinwari,AF0303,
+Parwan,4,Sayed khel,AF0304,
+Parwan,5,Jabal Saraj,AF0305,
+Parwan,6,Salang,AF0306,
+Parwan,7,Ghorband,AF0307,
+Parwan,8,Koh-e- Safi,AF0308,
+Parwan,9,Surkh-e-Parsa,AF0309,
+Parwan,10,Shaykh Ali,AF0310,
+Maydanwardag,1,Province Center (Maydanshahr),AF0401,
+Maydanwardag,2,Narkh,AF0402,
+Maydanwardag,3,Jalrez,AF0403,
+Maydanwardag,4,Chak,AF0404,
+Maydanwardag,5,Sayedabad,AF0405,
+Maydanwardag,6,Daimirdad,AF0406,
+Maydanwardag,7,Hesa-e- Awal-e Behsood,AF0407,
+Maydanwardag,8,Jaghato,AF0408,
+Maydanwardag,9,Markaz-e- Behsood,AF0409,COD Dari name misspelt (مدکز)
+Logar,1,Provincial Capital(Pul-e- Alam),AF0501,
+Logar,2,Baraki Barak,AF0502,
+Logar,3,Charkh,AF0503,
+Logar,4,Khoshi,AF0504,
+Logar,5,Mohammad Agha,AF0505,
+Logar,6,Kharwar,AF0506,
+Logar,7,Azra,AF0507,
+Nangarhar,1,Provincial Capital (Jalalabad),AF0601,
+Nangarhar,2,Behsood,AF0602,
+Nangarhar,3,Surkhrod,AF0603,
+Nangarhar,4,Chaparhar,AF0604,
+Nangarhar,5,Kama,AF0605,
+Nangarhar,6,Kuz Kunar,AF0606,
+Nangarhar,7,Rodat,AF0607,
+Nangarhar,8,Khogyani,AF0608,
+Nangarhar,9,Batikot,AF0609,substring rule also hits Kot
+Nangarhar,10,Deh Bala,AF0610,
+Nangarhar,11,Pachiragam,AF0611,
+Nangarhar,12,Darah-e- Noor,AF0612,
+Nangarhar,13,Kot,AF0613,
+Nangarhar,14,Goshta,AF0614,
+Nangarhar,15,Achin,AF0615,
+Nangarhar,16,Shinwar,AF0616,
+Nangarhar,17,Momand Darah,AF0617,Muhmand Dara
+Nangarhar,18,Lalpura,AF0618,
+Nangarhar,19,Sherzad,AF0619,
+Nangarhar,20,Nazyan,AF0620,
+Nangarhar,21,Hisarak,AF0621,
+Nangarhar,22,Door Baba,AF0622,Dur Baba
+Nangarhar,23,Spinghar,AF0615,temporary; Wikipedia Nangarhar Province: Achin 'includes the Spin Ghar District'
+Laghman,1,Provincial Capital (Mehtarlam),AF0701,
+Laghman,2,Qarghayee,AF0702,Qarghayi
+Laghman,3,Alishang,AF0703,
+Laghman,4,Alingar,AF0704,
+Laghman,5,Dawlat Shah,AF0705,
+Laghman,6,Badpash,AF0701,temporary; Wikipedia Laghman Province: Mihtarlam 'includes the Badpash District'
+Laghman,7,Frashgan,AF0705,"new in 1404; Dawlat Shah fell 40,283 -> 22,719 that year"
+Panjsher,1,Province Center (Bazarak),AF0801,
+Panjsher,2,Rukha,AF0802,
+Panjsher,3,Darah,AF0803,
+Panjsher,4,Hesa-e Awal,AF0804,Khenj (Hisa-e-Awal)
+Panjsher,5,Onaba,AF0805,
+Panjsher,6,Shutol,AF0806,Shutul
+Panjsher,7,Paryan,AF0807,
+Panjsher,8,Abshar,AF0803,"temporary; parent not found in any source. Dara chosen: Wikipedia puts Abshar in the south-east, and Dara alone reads 0.39 of COD-PS against 0.74 for the province (0.70 with Abshar)"
+Baghlan,1,Provincial Capital ('Baghlan-e- Markazi),AF0905,Baghlan-e-Jadid; in 1405 NSIA moves the 'provincial capital' label to Pul-e-Khumri
+Baghlan,2,Dahana-e-Ghori,AF0902,
+Baghlan,3,Doshi,AF0903,
+Baghlan,4,Nahrin,AF0904,
+Baghlan,5,Pul-e-Khumri,AF0901,
+Baghlan,6,Khenjan,AF0906,
+Baghlan,7,Andarab,AF0907,
+Baghlan,8,Dehsalah,AF0908,
+Baghlan,9,Jolga,AF0909,Khwaja Hejran (Jalga) in NSIA 1402
+Baghlan,10,Borka,AF0910,Burka
+Baghlan,11,Tala-o-Barfak,AF0911,
+Baghlan,12,Pul-e Hesar,AF0912,
+Baghlan,13,Khost wa Fereng,AF0913,
+Baghlan,14,Guzargah-e- Noor,AF0914,
+Baghlan,15,Fereng-o-Gharu,AF0915,
+Baghlan,16,Dand-e- Ghori,AF0901,"new in 1403; Pul-e-Khumri fell 258,335 -> 225,324 that year"
+Bamyan,1,Provincial Capital (Bamyan ),AF1001,
+Bamyan,2,Shibarr,AF1002,
+Bamyan,3,Sayghan,AF1003,
+Bamyan,4,Kahmard,AF1004,
+Bamyan,5,Yakawlang,AF1005,
+Bamyan,6,Panjab,AF1006,
+Bamyan,7,Waras,AF1007,
+Bamyan,8,Yakawlang Dowm,AF1005,temporary (Yakawlang No. 2)
+Ghazni,1,Provincial Capital(Ghazni),AF1101,
+Ghazni,2,Walimohammad-e-Shahid,AF1102,
+Ghazni,3,Khwaja Omari,AF1103,
+Ghazni,4,Waghaz,AF1104,
+Ghazni,5,Deh Yak,AF1105,
+Ghazni,6,Jaghatu,AF1106,
+Ghazni,7,Andar,AF1107,
+Ghazni,8,Zana Khan,AF1108,
+Ghazni,9,Rashidan,AF1109,
+Ghazni,10,Nawur,AF1110,
+Ghazni,11,Qarabagh,AF1111,
+Ghazni,12,Giro,AF1112,
+Ghazni,13,Aab Band,AF1113,
+Ghazni,14,Jaghori,AF1114,
+Ghazni,15,Maqur,AF1115,
+Ghazni,16,Malistan,AF1116,
+Ghazni,17,Gelan,AF1117,
+Ghazni,18,Ajristan,AF1118,
+Ghazni,19,Nawa,AF1119,
+Paktika,1,Provincial Capital(Sharan),AF1201,
+Paktika,2,Mata Khan,AF1202,
+Paktika,3,Yosuf khel,AF1203,
+Paktika,4,Yahyakhel,AF1204,
+Paktika,5,Sar Rawza,AF1205,Sar Rawzah
+Paktika,6,Omna,AF1206,
+Paktika,7,Zarghunshar,AF1207,
+Paktika,8,Gomal,AF1208,
+Paktika,9,Jani Khel,AF1209,
+Paktika,10,Surobi,AF1210,
+Paktika,11,Urgon,AF1211,
+Paktika,12,Ziruk,AF1212,
+Paktika,13,Neka,AF1213,Nika
+Paktika,14,Barmal,AF1214,
+Paktika,15,Giyan,AF1215,
+Paktika,16,Delah,AF1216,
+Paktika,17,Wazakhwa,AF1217,
+Paktika,18,Wormamay,AF1218,
+Paktika,19,Tarwo,AF1219,
+Paktika,20,Chahar Buran,AF1208:30.9;AF1209:9.2;AF1207:14.2,"pool: new in 1403 with Shkin, Bakkhil, Shakhil Abad, Nemat Abad; Gomal, Jani Khel and Zarghun Shahr lost these amounts (54.3k against the five's 54.4k)"
+Paktika,21,Khoshamand,AF1216,NSIA 1402 'Dila wa Khushamand' split into Delah + Khoshamand in 1403
+Paktika,22,Shkin,AF1208:30.9;AF1209:9.2;AF1207:14.2,"pool, as Chahar Buran (temporary)"
+Paktika,23,Bakkhil,AF1208:30.9;AF1209:9.2;AF1207:14.2,"pool, as Chahar Buran (temporary)"
+Paktika,24,Shakhil Abad,AF1208:30.9;AF1209:9.2;AF1207:14.2,"pool, as Chahar Buran (temporary)"
+Paktika,25,Nemat Abad,AF1208:30.9;AF1209:9.2;AF1207:14.2,"pool, as Chahar Buran (temporary)"
+Paktia,1,Provincial Capital(Gardez),AF1301,
+Paktia,2,Ahmad Abad,AF1302,
+Paktia,3,Zurmat,AF1303,
+Paktia,4,Shawak,AF1304,
+Paktia,5,Waza Zadran,AF1305,Zadran
+Paktia,6,Sayed Karam,AF1306,
+Paktia,7,Zazi,AF1307,Jaji (Aryob Zazi)
+Paktia,8,Laj-e-Ahmadkhel,AF1308,Lija Ahmad Khel
+Paktia,9,Jani Khel,AF1309,
+Paktia,10,Chamkani,AF1310,
+Paktia,11,Dand-e-Patan,AF1311,Dand Wa Patan
+Paktia,12,Laja Mangal,AF1308,temporary; GeoNames 'Laja Mangal' falls in Lija Ahmad Khel
+Paktia,13,Mirzaka,AF1302,temporary; Wikipedia Paktia Province: Ahmad Aba 'includes the unofficial district Mirzaka'
+Paktia,14,Gerda Seari,AF1305,temporary; Wikipedia Paktia Province: Zadran 'sub-divided in 2005 to create Gerda Serai'
+Paktia,15,Rohani Baba,AF1303,temporary; AAN election report: Rohani Baba was formerly part of Zurmat
+Khost,1,"Provincial Capital(Khost ""Matun"")",AF1401,
+Khost,2,Esmaeelkhel Aw Mandozai,AF1402,Mandozayi
+Khost,3,Gurbaz,AF1403,
+Khost,4,Tani,AF1404,
+Khost,5,Musakhel,AF1405,
+Khost,6,Nadershahkot,AF1406,
+Khost,7,Sabari and yaqubi,AF1407,
+Khost,8,Alisher Aw Terizi,AF1408,Terezayi
+Khost,9,Bak,AF1409,
+Khost,10,Qalandar,AF1410,
+Khost,11,Sperah,AF1411,Spera
+Khost,12,Shumul,AF1412,
+Khost,13,Zazi maydan,AF1413,Jaji Maydan
+Kunar,1,Provincial Capital (Asadabad),AF1501,Asad Abad
+Kunar,2,Marawara,AF1502,
+Kunar,3,Watapor,AF1503,
+Kunar,4,Narang,AF1504,
+Kunar,5,Sarkani,AF1505,
+Kunar,6,Shigal,AF1506,
+Kunar,7,Darah-e-Pech,AF1507,
+Kunar,8,Bar Kunar,AF1508,
+Kunar,9,Sawkai,AF1509,Chawkay
+Kunar,10,Khas Kunar,AF1510,
+Kunar,11,Ghazi Abad,AF1511,
+Kunar,12,Dangam,AF1512,
+Kunar,13,Chapa Darah,AF1513,
+Kunar,14,Noorgal,AF1514,
+Kunar,15,Narai,AF1515,
+Kunar,16,Sheltan,AF1506,temporary; COD's district is 'Shigal wa Sheltan'
+Nuristan,1,Provincial Capital (Paroon),AF1601,Parun
+Nuristan,2,Waygal,AF1602,
+Nuristan,3,Waama,AF1603,
+Nuristan,4,Noorgeram,AF1604,
+Nuristan,5,Dowab,AF1605,
+Nuristan,6,Kamdesh,AF1606,
+Nuristan,7,Mandol,AF1607,
+Nuristan,8,Barg-e-Matal,AF1608,
+Nuristan,9,Kantowa,AF1601,"new in 1403; Paroon fell 16,091 -> 11,367 that year"
+Nuristan,10,Want,AF1602,"new in 1403; Waygal fell 23,367 -> 19,748 that year (Wanat village is in Waygal)"
+Badakhshan,1,Provincial Capital (Faizabad),AF1701,
+Badakhshan,2,Argo,AF1702,
+Badakhshan,3,Arghanchkhwah,AF1703,Arghanj Khwah
+Badakhshan,4,Yaftal,AF1704,Yaftal-e-Sufla
+Badakhshan,5,Khash,AF1705,
+Badakhshan,6,Baharak,AF1706,
+Badakhshan,7,Darayem,AF1707,
+Badakhshan,8,Kohistan,AF1708,
+Badakhshan,9,Yawan,AF1709,
+Badakhshan,10,Jurm,AF1710,
+Badakhshan,11,Teshkan,AF1711,
+Badakhshan,12,Shohada,AF1712,
+Badakhshan,13,Shahr-e- Buzorg,AF1713,
+Badakhshan,14,Raghistan,AF1714,
+Badakhshan,15,Keshm,AF1715,
+Badakhshan,16,Warduj,AF1716,
+Badakhshan,17,Tagab,AF1717,
+Badakhshan,18,Yamgan,AF1718,
+Badakhshan,19,Shighnan,AF1719,
+Badakhshan,20,Khwahan,AF1720,
+Badakhshan,21,Kofab,AF1721,
+Badakhshan,22,Darwaz,AF1722,Darwaz-e-Payin (Mamay) in NSIA 1402
+Badakhshan,23,Eshkashem,AF1723,
+Badakhshan,24,Shakai,AF1724,
+Badakhshan,25,Zibak,AF1725,
+Badakhshan,26,Keran-o-Monjan,AF1726,
+Badakhshan,27,Darwaz-e- Bala,AF1727,Darwaz-e-Balla
+Badakhshan,28,Wakhan,AF1728,
+Badakhshan,29,Pamir,AF1728,new in 1404; Wakhan dipped that year
+Takhar,1,Province Center (Taloqan),AF1801,
+Takhar,2,Hazarsumech,AF1802,
+Takhar,3,Baharak,AF1803,
+Takhar,4,Bangi,AF1804,
+Takhar,5,Chal,AF1805,
+Takhar,6,Namakab,AF1806,
+Takhar,7,Kalafgan,AF1807,
+Takhar,8,Farkhar,AF1808,
+Takhar,9,Khwajahghar,AF1809,
+Takhar,10,Rustaq,AF1810,Rostaq
+Takhar,11,Eshkamesh,AF1811,
+Takhar,12,Dasht-e-Qala,AF1812,
+Takhar,13,Warsaj,AF1813,
+Takhar,14,Khwajabahawuddin,AF1814,
+Takhar,15,Darqad,AF1815,
+Takhar,16,Chah Aab,AF1816,
+Takhar,17,Yangi Qalah,AF1817,
+Kunduz,1,Provincial Capital (Kunduz),AF1901,
+Kunduz,2,Chahardarah,AF1902,
+Kunduz,3,Aliabad,AF1903,
+Kunduz,4,Khanabad,AF1904,
+Kunduz,5,Imamsaheb,AF1905,
+Kunduz,6,Dasht-e-Archi,AF1906,
+Kunduz,7,Qala-e-zal,AF1907,
+Kunduz,8,Kalbad,AF1905,temporary; Wikipedia Kunduz Province: Imam Sahib 'includes the Kalbaad District'
+Kunduz,9,Gul Tepa,AF1901,temporary; Wikipedia: Kunduz District 'includes the Gul Tepah District'
+Kunduz,10,Aqtash,AF1904,temporary; Wikipedia: Khan Abad 'includes the Aqtash District'
+Samangan,1,Provincial Capital (Aybak),AF2001,
+Samangan,2,Hazrat-e Sultan,AF2002,
+Samangan,3,Khuram-o-Sarbagh,AF2003,
+Samangan,4,Feroznakhchir,AF2004,
+Samangan,5,Royi Doab,AF2005,Ruy-e-Duab
+Samangan,6,Darah-e-sof-e-Payeen,AF2006,
+Samangan,7,Darah-e-sof-e-Bala,AF2007,
+Samangan,8,Khulum,AF2008,
+Balkh,1,Provincial Capital (Mazar-e- sharif),AF2101,
+Balkh,2,Nahr-e-Shahi,AF2102,
+Balkh,3,Dehdadi,AF2103,
+Balkh,4,Charkent,AF2104,
+Balkh,5,Marmal,AF2105,Marmul
+Balkh,6,Balkh,AF2106,
+Balkh,7,Sholgarah,AF2107,
+Balkh,8,Chemtal,AF2108,
+Balkh,9,Dawlat Abad,AF2109,
+Balkh,10,Chaharbolak,AF2111,
+Balkh,11,Shortepa,AF2112,
+Balkh,12,Kaldar,"split:AF2113,AF2116","COD carves Sharak-e-Hayratan out of Kaldar; NSIA has no Hayratan unit, so Kaldar is split by Kontur"
+Balkh,13,Kushenda,AF2114,
+Balkh,14,Zari,AF2115,
+Balkh,15,Chahi,AF2109,"new in 1403; Dawlat Abad fell 125,672 -> 82,322 that year"
+Balkh,16,Kohi-e-Alborz,AF2108,"new in 1403; Chimtal fell 109,138 -> 72,995 that year"
+Sar-e- Pul,1,Provincial Capital (Sar-e-Pul),AF2201,
+Sar-e- Pul,2,Sayad,AF2202,
+Sar-e- Pul,3,Kohestanat,AF2203,
+Sar-e- Pul,4,Sozmaqalah,AF2204,
+Sar-e- Pul,5,Sancharak,AF2205,
+Sar-e- Pul,6,Gosfandi,AF2206,
+Sar-e- Pul,7,Balkhab,AF2207,
+Sar-e- Pul,8,SayedAbad,AF2203:47.5;AF2201:58.2,pool: these four new 1403 units = Kohistanat's and Sar-e-Pul centre's losses that year
+Sar-e- Pul,9,Albader,AF2203:47.5;AF2201:58.2,"pool, as SayedAbad"
+Sar-e- Pul,10,Alfateh,AF2203:47.5;AF2201:58.2,"pool, as SayedAbad"
+Sar-e- Pul,11,Aljihad,AF2203:47.5;AF2201:58.2,"pool, as SayedAbad"
+Ghor,1,Province Center (Feroz Koh),AF2301,
+Ghor,2,Dolyna,AF2302,
+Ghor,3,Dawlatyar,AF2303,
+Ghor,4,Chaharsada,AF2304,Charsadra
+Ghor,5,Pasaband,AF2305,
+Ghor,6,Shahrak,AF2306,
+Ghor,7,Lal-o-Sarjangal,AF2307,
+Ghor,8,Taywarah,AF2308,
+Ghor,9,Tolak,AF2309,
+Ghor,10,Saghar,AF2310,
+Ghor,11,Murghab,AF2301,new in 1402; Chighcheran (Feroz Koh) fell by the same amount
+Ghor,12,Alfarooq,AF2301:14.9;AF2304:3.5;AF2306:3.4,"pool: new in 1403 with Allah Yar; Feroz Koh, Chaharsada and Shahrak lost these amounts"
+Ghor,13,Allah yar,AF2301:14.9;AF2304:3.5;AF2306:3.4,"pool, as Alfarooq"
+Daykundi,1,Provincial Capital (Nili),AF2401,
+Daykundi,2,Shahristan,AF2402,
+Daykundi,3,Ashtarlay,AF2403,
+Daykundi,4,Khedir,AF2404,
+Daykundi,5,kiti,AF2405,
+Daykundi,6,Miramor,AF2406,
+Daykundi,7,Sang-e-Takht,AF2407,
+Daykundi,8,Kejran,AF2408,
+Daykundi,9,pato,AF2409,
+Urozgan,1,Provincial Capital (Terinkot),AF2501,Tirinkot
+Urozgan,2,Dehrawud,AF2502,
+Urozgan,3,Chorah,AF2503,
+Urozgan,4,Chahar Chino,AF2504,Shahid-e-Hassas (Shahidhassas in NSIA 1402)
+Urozgan,5,Khas Urozgan,AF2505,
+Urozgan,6,Gizab,AF2507,
+Urozgan,7,Chinarto,AF2506,
+Zabul,1,Provincial Capital (Qalat),AF2601,
+Zabul,2,Tarnak-o-Jaldak,AF2602,
+Zabul,3,Shinkai,AF2603,
+Zabul,4,Mizana,AF2604,
+Zabul,5,Arghandab,AF2605,
+Zabul,6,Shahjoy,AF2606,
+Zabul,7,Daichopan,AF2607,
+Zabul,8,Atghar,AF2608,
+Zabul,9,Nawbahar,AF2609,
+Zabul,10,Shamolzai,AF2610,
+Zabul,11,Khak-e-Afghan,AF2611,Kakar (Khak-e-Afghan) in NSIA 1402
+Zabul,12,Seorai,AF2603,"new in 1403; Shinkai fell 33,608 -> 20,151 that year"
+Kandahar,1,Provincial Capital (Kandahar),AF2701,
+Kandahar,2,Arghandab,AF2702,
+Kandahar,3,Daman,AF2703,
+Kandahar,4,Panjwaee,AF2704,
+Kandahar,5,Zheray,AF2705,
+Kandahar,6,Shah Walikot,AF2706,
+Kandahar,7,Khakrez,AF2707,
+Kandahar,8,Arghistan,AF2708,
+Kandahar,9,Ghorak,AF2709,
+Kandahar,10,Maiwand,AF2710,
+Kandahar,11,Speenboldak,AF2711,
+Kandahar,12,Neash,AF2712,Nesh
+Kandahar,13,Meyanishin,AF2713,
+Kandahar,14,Shorabak,AF2714,
+Kandahar,15,Marof,AF2715,
+Kandahar,16,Reg,AF2716,
+Kandahar,17,Dand,AF2701,temporary; GeoNames 'Hukumati Dand' falls in COD's Kandahar district
+Kandahar,18,Takhtapul,AF2711,temporary; GeoNames 'Takhtah Pul' falls in Spin Boldak
+Kandahar,19,Kshata Shahwalikot,AF2706,"Lower Shah Wali Kot, new in 1403; Shah Walikot fell by the same amount"
+Kandahar,20,Kshata Maiwand,AF2710,
+Jawzjan,1,Provincial Capital (Sheberghan),AF2801,
+Jawzjan,2,Khwajadokoh,AF2802,
+Jawzjan,3,Khanaqa,AF2803,
+Jawzjan,4,Mingajek,AF2804,
+Jawzjan,5,Qoshtepah,AF2805,
+Jawzjan,6,Kham AaSb,AF2806,Khamyab
+Jawzjan,7,Aqchah,AF2807,
+Jawzjan,8,Faizabad,AF2808,
+Jawzjan,9,Mardyan,AF2809,
+Jawzjan,10,Qarqin,AF2810,
+Jawzjan,11,Darz Aab,AF2811,
+Faryab,1,Provincial Capital (Maimanah),AF2901,
+Faryab,2,Pashtun Kot,AF2902,
+Faryab,3,Khwaja Sabzposh,AF2903,
+Faryab,4,Almar,AF2904,
+Faryab,5,Balchiragh,AF2905,
+Faryab,6,Shirin Tagab,AF2906,
+Faryab,7,Qaisar,AF2907,
+Faryab,8,Garziwan,AF2908,
+Faryab,9,Dawlatabad,AF2909,
+Faryab,10,Kohistan,AF2910,
+Faryab,11,Qaramqul,AF2911,
+Faryab,12,Qurghan,AF2912,
+Faryab,13,Andkhoy,AF2913,
+Faryab,14,Khan Chaharbagh,AF2914,
+Faryab,15,Chehel Gazi,AF2902:48.9;AF2904:10.2;AF2907:40.2,"pool: new in 1403 with Khawaja Musa and Khaibar; Pashtun Kot, Almar and Qaisar lost these amounts"
+Faryab,16,Khawaja Musa,AF2902:48.9;AF2904:10.2;AF2907:40.2,"pool, as Chehel Gazi"
+Faryab,17,Khaibar,AF2902:48.9;AF2904:10.2;AF2907:40.2,"pool, as Chehel Gazi"
+Faryab,18,Bandar,AF2910,new in 1403; Kohistan fell by 30.9k against Bandar's 30.9k; GeoNames Bandar-e Mullaha is in Kohistan
+Faryab,19,Ferdows,AF2902,"new in 1404; Pashtun Kot fell 179,849 -> 162,232 that year"
+Helmand,1,Provincial Capital (Lashkargah),AF3001,
+Helmand,2,Nadali,AF3002,
+Helmand,3,Nawa,AF3003,Nawa-e-Barakzaiy
+Helmand,4,Gereshk,AF3004,"new in 1403 out of Nahr-e-Saraj (184,343 -> 24,587); Gereshk is Nahr-e-Saraj's town"
+Helmand,5,Washir,AF3005,
+Helmand,6,Garmser,AF3006,
+Helmand,7,Nawzad,AF3007,
+Helmand,8,Sangin,AF3008,
+Helmand,9,Musa Qala,AF3009,
+Helmand,10,Kajaki,AF3010,
+Helmand,11,khanneshin,AF3011,Reg-i-Khan Nishin
+Helmand,12,Baghran,AF3012,
+Helmand,13,Disho,AF3013,
+Helmand,14,Marja,AF3002,temporary; Wikipedia: 'used to belong to Nad Ali District'; GeoNames Marjah in Nad-e-Ali
+Helmand,15,Nawahmesh,AF3012,temporary; Etilaat-e Roz (etilaatroz.com/43917): Nawamish was part of Baghran (its administration later handed to Daykundi; NSIA keeps it in Helmand)
+Helmand,16,Bahramcha,AF3013:12.7;AF3006:6.1,pool: new in 1403; Dishu and Garmser lost these amounts
+Helmand,17,Bughni,AF3012,"new in 1403; Baghran fell 116,566 -> 84,024 that year"
+Helmand,18,Babaji,AF3001:22.8;AF3002:15.5;AF3004:19.1,"pool: new in 1403; Lashkargah, Nad-e-Ali and Nahr-e-Saraj lost these amounts"
+Helmand,19,Nahr-e-Saraj,AF3004,
+Badghis,1,Provincial Capital (Qalah-e- Now),AF3101,
+Badghis,2,Abkamari,AF3102,
+Badghis,3,Muqur,AF3103,
+Badghis,4,Qades,AF3104,Qadis
+Badghis,5,Bala Murghab,AF3105,
+Badghis,6,Jawand,AF3106,
+Badghis,7,Ghormach,AF3107,
+Badghis,8,Darah-e-Bom,AF3104:15.3;AF3105:26.0;AF3103:2.0;AF3106:32.0,"pool: new in 1403 with Tagab Alam; Qadis, Bala Murghab, Muqur and Jawand lost these amounts"
+Badghis,9,Sang-e-Atash,AF3102,new in 1403; Abkamari lost 27.1k against Sang-e-Atash's 27.3k; GeoNames Sang Atesh is in Ab Kamari
+Badghis,10,Tagab Alam,AF3104:15.3;AF3105:26.0;AF3103:2.0;AF3106:32.0,"pool, as Darah-e-Bom"
+Herat,1,Province Center (Herat),AF3201,
+Herat,2,Enjil,AF3202,
+Herat,3,Guzara,AF3203,
+Herat,4,Karukh,AF3204,
+Herat,5,Zindajan,AF3205,
+Herat,6,Pashtun Zarghun,AF3206,
+Herat,7,Kushk,AF3207,
+Herat,8,Gulran,AF3208,
+Herat,9,Adraskan,AF3209,
+Herat,10,Kushk-e-Kohna,AF3210,
+Herat,11,Ghoryan,AF3211,
+Herat,12,Obey,AF3212,Obe
+Herat,13,Kuhsan,AF3213,Kohsan
+Herat,14,Shindand,AF3214,
+Herat,15,Farsi,AF3215,
+Herat,16,Chesht-e-Sharif,AF3216,
+Herat,17,Zerekoh,AF3214,temporary; one of the five 2018 parts of Shindand
+Herat,18,Pusht-e- koh,AF3214,temporary; part of Shindand
+Herat,19,Kohezor,AF3214,temporary; part of Shindand
+Herat,20,Zawal,AF3214,temporary; part of Shindand
+Farah,1,Provincial Capital (Farah),AF3301,
+Farah,2,Pushterod,AF3302,
+Farah,3,Khak-e-safid,AF3303,
+Farah,4,Qalah-e-Kah,AF3304,
+Farah,5,Shebkoh,AF3305,
+Farah,6,Balaboluk,AF3306,
+Farah,7,Anardara,AF3307,
+Farah,8,Bakwa,AF3308,
+Farah,9,Lash Jowain,AF3309,
+Farah,10,Gulistan,AF3310,
+Farah,11,Purchaman,AF3311,
+Farah,12,Farahrod,AF3306:36.2;AF3310:16.3,pool: new in 1403; Bala Buluk and Gulistan lost these amounts (substring rule would wrongly pick Farah city)
+Nimroz,1,Provincial Capital (Zaranj),AF3401,
+Nimroz,2,Kang,AF3402,
+Nimroz,3,Chakhansur,AF3403,
+Nimroz,4,Chahar Burjak,AF3404,
+Nimroz,5,Khashrod,AF3405,
+Nimroz,6,Delaram,AF3405,temporary; GeoNames Dilaram is in Khashrod

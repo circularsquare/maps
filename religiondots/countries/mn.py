@@ -34,7 +34,7 @@ def _mn_place_weight(place):
 
 
 def _mn_counts():
-    """NSO 2020 PHC: 6 drawn categories on 19 aimags and Ulaanbaatar's 9 düüregs (20 of 22 units).
+    """NSO 2020 PHC: 6 drawn categories on 21 aimags and Ulaanbaatar's 9 düüregs (all 22 units).
 
     ULAANBAATAR IS DRAWN BY DÜÜREG since 2026-09-15: the capital's own volume charts religion
     for its nine düüregs (figures 3.5 and 3.6), which sources/mn_ub.py measures off the vector
@@ -55,9 +55,9 @@ def _mn_counts():
     35.1% of 15-19 year olds in Ulaanbaatar to 74.5% of the over-70s, so a flat scale-up
     would assert something about children that the census went out of its way not to ask.
 
-    TWO AIMAGS ARE ABSENT and it is a typesetting accident rather than a suppression:
-    Darkhan-Uul and Dundgovi published their volumes with the tables as pasted-in IMAGES,
-    so there is no text to read. Together they are 148,869 people. See sources/mn.md §7.
+    DARKHAN-UUL AND DUNDGOVI ARE TRANSCRIBED BY HAND (2026-10-03): their volumes print the
+    tables as pasted-in images, so sources/mn.py carries the four shares each needs in
+    TRANSCRIBED, checked against the same volumes' prose and age tables. sources/mn.md §13.
     """
     from mn2020 import resolve
 
@@ -80,8 +80,8 @@ def _mn_counts():
                          "sources/mn_geo.py")
     if "MN11" in set(df["unit"]):
         raise SystemExit("mn.csv carries Ulaanbaatar city-wide as well as by düüreg")
-    if df["unit"].nunique() != 28:
-        raise SystemExit(f"{df['unit'].nunique()} units, expected 19 aimags and 9 düüregs")
+    if df["unit"].nunique() != 30:
+        raise SystemExit(f"{df['unit'].nunique()} units, expected 21 aimags and 9 düüregs")
 
     df["node"] = df["source_category"].map(resolve)
     df = df[df["node"].notna() & (df["count"] > 0)]
@@ -118,7 +118,7 @@ ENTRY = {
             "the nineteenth century and are still most of the aimag; the capital's census "
             "volume puts Nalaikh's share down to the many Kazakhs living there. Bayan-Olgii "
             "is also the second most religious unit drawn, **88.7%** against a national "
-            "59.6%, behind Ovorkhangai's **89.6%**. "
+            "59.5%, behind Ovorkhangai's **89.6%**. "
             "**Ulaanbaatar, nearly half the adults drawn, is split into its nine districts.** "
             "The city's own census volume charts religion for each, from **58.2%** religious "
             "in Chingeltei to **47.1%** in Bagakhangai, against 53.7% for the city. The "
@@ -128,20 +128,21 @@ ENTRY = {
             "It is **10.9%** of the religious in Dornod and **7.1%** in Khovsgol, against "
             "**0.4%** in Ovorkhangai: the north and the east, the Buryat and Darkhad "
             "country, rather than the Buddhist heartland in the Khangai. Nationally it is "
-            "2.4%, which is nearly twice the Christian share. "
+            "4.2% of the religious, which is nearly twice the Christian share. "
             "**Forty per cent report no religion, and that number has a history.** The "
             "state suppressed religious practice from the 1920s, destroyed almost every "
             "monastery in the purges of 1937 and 1938, and did not permit open practice "
             "again until 1990. The share is not a settled figure; it was 38.6% at the 2010 "
             "census, and it rose in some aimags while falling in others. "
-            "**Two of the twenty-two aimags are missing and it is an accident of "
-            "typesetting.** Darkhan-Uul and Dundgovi issued their census volumes with the "
-            "tables as scanned pictures rather than text, so their figures cannot be read "
-            "out. They are 148,869 people between them, 4.7% of Mongolia, and nothing about "
-            "them is suppressed or unpublished."),
+            "**Darkhan-Uul and Dundgovi were typed in by hand.** Their census volumes print "
+            "the tables as pictures rather than text, so their figures were read off the "
+            "page and checked against the same volumes' own prose and age tables. "
+            "Darkhan-Uul's religion table prints its shamanist and Muslim rows swapped in "
+            "the columns for men and women; the totals column, which two other tables in "
+            "the volume repeat, is the one drawn."),
         how="census long form, 2020, a 10% sample of adults",
-        grain="aimags, and the nine districts of Ulaanbaatar; 74,000 adults on average",
-        gap="children under 15; Darkhan-Uul and Dundgovi, whose volumes are scans",
+        grain="aimags, and the nine districts of Ulaanbaatar; 72,000 adults on average",
+        gap="children under 15",
         counts=_mn_counts,
         units=None,
         unit_key=None,
@@ -157,12 +158,14 @@ ENTRY = {
              "tables carry one decimal place, so a category's count is good to roughly a "
              "tenth of a per cent of the aimag's adults before the sampling error is even "
              "considered. The check that this is right is the national reconstruction: "
-             "summed over the 20 aimags drawn it gives 51.9% Buddhist, 40.4% no religion, "
-             "3.3% Muslim, 2.4% shamanist, 1.3% Christian and 0.7% other, against NSO's own "
-             "published 51.7 / 40.6 / 3.2 / 2.5 / 1.3 / 0.7. "
+             "summed over all 22 units it gives 51.8% Buddhist, 40.5% no religion, "
+             "3.2% Muslim, 2.5% shamanist, 1.3% Christian and 0.6% other, against NSO's own "
+             "published 51.7 / 40.6 / 3.2 / 2.5 / 1.3 / 0.7. Darkhan-Uul and Dundgovi print "
+             "their tables as images and were transcribed by hand (sources/mn.py TRANSCRIBED, "
+             "sources/mn.md §13). "
              "THE UNIVERSE IS ADULTS AND IS NOT SCALED UP to the whole population (Chile's "
-             "rule, §3.5a). 2,067,841 people aged 15 and over in the 20 aimags drawn, out "
-             "of a resident population of 3,197,020 for all 22; religiosity climbs steeply "
+             "rule, §3.5a). 2,170,573 people aged 15 and over, out of a resident population "
+             "of 3,197,020; religiosity climbs steeply "
              "with age here, 35.1% at 15-19 against 74.5% over 70 in Ulaanbaatar, so a flat "
              "scale-up would put a claim on children that the census declined to make. "
              "The dots are spread across 121,265 Kontur 400m hexagons weighted by hex "

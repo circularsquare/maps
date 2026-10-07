@@ -1,0 +1,45 @@
+# Zimbabwe (taxonomy/zw2022.py). Census 2022, mother tongue, persons aged 3+, by province.
+#   * Nambya (namb1291) is inside Shona (S.10) in Glottolog; Shona is a leaf other countries draw
+#     on, so Nambya hangs from Bantu beside bw.txt's Kalanga, as Kalanga does.
+#   * Sotho (Zimbabwe): the Gwanda and Beitbridge Sotho, a leaf under Sotho-Tswana; zw2022.py says
+#     why it is not put on Sesotho or Sepedi.
+#   * Tonga is zm.txt's Tonga (tong1318), the same language across the Zambezi.
+#
+# Colours, for the neighbours on the Zimbabwe ground. Shona and Ndebele were generated (no
+# fragment coloured them) and came out two near browns, though they meet across Midlands and
+# around Bulawayo: Shona is hand-set to the same brick, Ndebele to a light sand, apart by
+# lightness and hue. Both are drawn in bw too (North East), where Kalanga's blue-violet stays
+# apart from either. Hwange holds Nambya, Tonga (zm's green),
+# Ndebele and Kalanga (bw's blue-violet); Nambya is a dark red-brown, apart from all three.
+# Sotho (Zimbabwe) sits beside Venda (za's purple) and Ndebele in Beitbridge and Gwanda: a yellow-green,
+# the Sotho-Tswana part of the wheel, apart from Ndebele's sand.
+
+# ---- parents and languages defined elsewhere, repeated bare (their colours live there) ----
+nigercongo | Niger-Congo
+nigercongo.bantu | Bantu
+nigercongo.bantu.shona | Shona | 0.58 0.14 38
+nigercongo.bantu.ndau | Cindau (Ndau)
+nigercongo.bantu.kalanga | Kalanga
+nigercongo.bantu.nguni | Nguni
+nigercongo.bantu.nguni.ndebele_zw | Ndebele (Zimbabwe) | 0.84 0.12 82
+nigercongo.bantu.nguni.xhosa | Xhosa
+nigercongo.bantu.botatwe | Botatwe (M.60)
+nigercongo.bantu.botatwe.tonga | Tonga (Zambia)
+nigercongo.bantu.tswa_ronga | Tswa-Ronga
+nigercongo.bantu.tswa_ronga.tsonga | Xitsonga (Tsonga)
+nigercongo.bantu.venda | Tshivenda (Venda)
+nigercongo.bantu.sotho_tswana | Sotho-Tswana
+nigercongo.bantu.sotho_tswana.setswana | Setswana
+nigercongo.bantu.nyanja_sena | Nyanja-Sena (N.30-40)
+nigercongo.bantu.nyanja_sena.chewa | Chewa
+nigercongo.bantu.nyanja_sena.barwe | Chibalke (Barwe)
+khoisan | Khoisan languages
+indoeuropean | Indo-European
+indoeuropean.germanic | Germanic
+indoeuropean.germanic.english | English
+signlanguage | Sign language
+other | Other or unclassified
+
+# ---- new ----
+nigercongo.bantu.nambya | Nambya | 0.46 0.10 15
+nigercongo.bantu.sotho_tswana.sotho_zw | Sotho (Zimbabwe) | 0.76 0.13 125

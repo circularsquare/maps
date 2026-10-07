@@ -1,6 +1,7 @@
 """Norway — the placement layer, and the counting units it rolls up to.
 
-Writes data/geo/no/no_lau.gpkg, one row per municipality (kommune):
+Writes data/geo/no/no_lau.gpkg, one row per municipality (kommune), plus Svalbard's Kontur hexes
+(below):
 
     lau      the SSB kommune number, zero-padded to 4 ("0301" Oslo)
     unit     its NUTS 3 2021 county, THE COUNTING UNIT, 11 of them (the 2020-2023 fylker)
@@ -22,6 +23,19 @@ measured. Norway went back to 15 counties on 1 January 2024; the census, GISCO L
 NUTS 2021 all predate that and all use the 11, which is spec §8.1's rule (the vintage the data
 was published on). ESS gives Norway at NUTS 2 only, and in two vintages that do not nest in
 each other; sources/no.py has that problem and says how it is handled.
+
+SVALBARD, ADDED 2026-10-04 (Anita's ruling, ask/RULINGS.md: draw it as part of Norway so its
+outline is not an empty hatch). Svalbard is in no county and no kommune, so it is one more
+counting unit, `NO-21` (its ISO 3166-2 code), appended after the 356 kommuner. Its placement is
+Kontur's SJ layer (H3 r8, 2023-11-01) inside Natural Earth's Svalbard map unit, and KONTUR ALONE
+IS WRONG HERE: it puts about 1,900 of its 3,290 Svalbard people at Sveagruva, a mine that closed
+in 2017 and has been cleared, and only about 350 at Longyearbyen. So the weight is SSB's count
+(table 07430, 1 January 2026) shared over each settlement's hexes in Kontur's proportions, the
+Faroes' calibration (fo_geo.py): Longyearbyen takes SSB's "Longyearbyen and Ny-Alesund" row,
+Barentsburg its "Barentsburg and Pyramiden" row, Hornsund its own. Every other Svalbard hex is
+kept at weight 0, so the unit reaches the places Kontur thinks are lived in (not_drawn.py's test)
+and draws no dot there. Ny-Alesund and Pyramiden are inside SSB's group rows and are not split
+out by it; at a few dozen people each they get weight 0.
 
 Usage:
     python sources/no_geo.py
@@ -77,6 +91,80 @@ SSB_POP_2020 = {
 }
 POP_GISCO = 5_367_580
 
+KONTUR_SJ = os.path.join(ROOT, "data", "geo", "kontur", "kontur_population_SJ_20231101.gpkg.gz")
+KONTUR_SJ_URL = ("https://geodata-eu-central-1-kontur-public.s3.amazonaws.com/kontur_datasets/"
+                 "kontur_population_SJ_20231101.gpkg.gz")
+NE_UNITS = os.path.join(ROOT, "data", "geo", "ne_10m_admin_0_map_units.geojson")
+SVALBARD_UNIT = "NO-21"
+# SSB table 07430, persons in the settlements, 2026H1 (1 January 2026), read 2026-10-04 from
+# data.ssb.no/api/v0/en/table/07430. Longyearbyen and Ny-Alesund is the sum of its two rows
+# (registered on the mainland 1,648; from abroad 864). The four rows sum to 2,914.
+# (settlement point lat, lon), placement radius in km, SSB persons.
+SVALBARD_SETTLEMENTS = {
+    "Longyearbyen": ((78.2232, 15.6267), 8.0, 1_648 + 864),
+    "Barentsburg":  ((78.0648, 14.2335), 5.0, 392),
+    "Hornsund":     ((77.0013, 15.5428), 3.0, 10),
+}
+SVALBARD_POP = 2_914
+
+
+def svalbard():
+    """Svalbard's placement rows: every Kontur hex inside its outline, weighted by SSB's
+    settlement counts (module docstring)."""
+    import gzip
+    import shutil
+
+    import pandas as pd
+
+    gpkg = KONTUR_SJ[:-3]
+    if not os.path.exists(gpkg):
+        if not os.path.exists(KONTUR_SJ):
+            import requests
+            r = requests.get(KONTUR_SJ_URL, timeout=300)
+            r.raise_for_status()
+            with open(KONTUR_SJ + ".part", "wb") as fh:
+                fh.write(r.content)
+            os.replace(KONTUR_SJ + ".part", KONTUR_SJ)
+        with gzip.open(KONTUR_SJ, "rb") as src, open(gpkg + ".part", "wb") as dst:
+            shutil.copyfileobj(src, dst)
+        os.replace(gpkg + ".part", gpkg)
+
+    mu = gpd.read_file(NE_UNITS)
+    outline = mu[mu["GEOUNIT"] == "Svalbard"]
+    if len(outline) != 1:
+        sys.exit(f"!! Natural Earth map units: {len(outline)} Svalbard features, expected 1")
+    k = gpd.read_file(gpkg)
+    k = k[k["population"] > 0].to_crs(4326).reset_index(drop=True)
+    utm = "EPSG:32633"
+    cent = k.to_crs(utm).centroid
+    inside = cent.to_crs(4326).within(outline.geometry.iloc[0].buffer(0.05))
+    k, cent = k[inside].reset_index(drop=True), cent[inside].reset_index(drop=True)
+    print(f"  Kontur SJ: {len(k)} populated hexes inside Svalbard, {k['population'].sum():,.0f} "
+          "people by Kontur")
+
+    k["pop"] = 0.0
+    k["name"] = "Svalbard"
+    taken = pd.Series(False, index=k.index)
+    for name, ((lat, lon), km, persons) in SVALBARD_SETTLEMENTS.items():
+        pt = gpd.GeoSeries(gpd.points_from_xy([lon], [lat]), crs=4326).to_crs(utm).iloc[0]
+        near = (cent.distance(pt) <= km * 1000) & ~taken
+        kp = float(k.loc[near, "population"].sum())
+        if kp <= 0:
+            sys.exit(f"!! no Kontur hex within {km} km of {name}")
+        k.loc[near, "pop"] = k.loc[near, "population"] / kp * persons
+        k.loc[near, "name"] = name
+        taken |= near
+        print(f"    {name}: {int(near.sum())} hexes, Kontur {kp:,.0f} -> SSB {persons:,}")
+    left = k.loc[~taken, "population"].sum()
+    print(f"    {int((~taken).sum())} other hexes ({left:,.0f} Kontur people, most of them at "
+          "Sveagruva) kept at weight 0")
+    if round(k["pop"].sum()) != SVALBARD_POP:
+        sys.exit(f"!! Svalbard weight sums to {k['pop'].sum():,.1f}, not SSB's {SVALBARD_POP:,}")
+    k["lau"] = SVALBARD_UNIT
+    k["unit"] = SVALBARD_UNIT
+    k["nuts2"] = "NO0B"
+    return k[["lau", "unit", "nuts2", "pop", "name", "geometry"]]
+
 
 def main():
     if not os.path.exists(LAU_SHP):
@@ -128,17 +216,25 @@ def main():
         print(f"  !! {int((g['pop'] <= 0).sum())} kommuner have no population and will "
               "attract no dots")
 
-    # Norway reaches 31°E at Vardø and 71°N at Nordkapp; Svalbard is not a kommune and is not
-    # in the file, and the census counts nobody there (NO0B is zero in cens_21ctz_r3).
+    # Norway reaches 31°E at Vardø and 71°N at Nordkapp; Svalbard is not a kommune, the census
+    # counts nobody there (NO0B is zero in cens_21ctz_r3), and it is appended below, after this
+    # check, as its own unit.
     minx, miny, maxx, maxy = g.total_bounds
     print(f"  bbox {minx:.2f},{miny:.2f} .. {maxx:.2f},{maxy:.2f}")
     if not (4 < minx < 5.5 and 57.5 < miny < 58.5 and 30.5 < maxx < 31.5 and 70.5 < maxy < 71.5):
         sys.exit("!! bbox is not mainland Norway's — check the CRS and the country filter")
 
+    print("Svalbard (unit NO-21):")
+    sv = svalbard()
+    import pandas as pd
+    out = gpd.GeoDataFrame(
+        pd.concat([g[["lau", "unit", "nuts2", "pop", "name", "geometry"]].to_crs(4326), sv],
+                  ignore_index=True), geometry="geometry", crs=4326)
+
     os.makedirs(OUT_DIR, exist_ok=True)
-    out = g[["lau", "unit", "nuts2", "pop", "name", "geometry"]].reset_index(drop=True)
-    out.to_file(OUT, driver="GPKG", layer="lau")
-    print(f"wrote {OUT}  ({len(out):,} kommuner)")
+    out.to_file(OUT + ".part.gpkg", driver="GPKG", layer="lau")
+    os.replace(OUT + ".part.gpkg", OUT)
+    print(f"wrote {OUT}  ({len(g):,} kommuner and {len(sv):,} Svalbard hexes)")
 
 
 if __name__ == "__main__":

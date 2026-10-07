@@ -1,0 +1,22 @@
+# Morocco (taxonomy/ma2024.py). RGPH 2024, local languages used, several allowed.
+# Parents and languages other fragments already define are repeated with the same label and no
+# colour: Berber (ca.txt colours it), Tamazight (ca.txt), Hassaniya (ml.txt).
+#
+# Glottolog (data/raw/glottolog): Moroccan Arabic moro1292, Tachelhit tach1250, Central Atlas
+# Tamazight cent2194, Tarifit tari1263, Hassaniyya hass1238; all Afroasiatic. Darija sits beside
+# `arabic` because `arabic` is a leaf many countries draw on.
+afroasiatic | Afroasiatic
+afroasiatic.darija | Moroccan Arabic (Darija) | 0.84 0.10 180
+afroasiatic.hassaniya | Hassaniya (Maure)
+afroasiatic.berber | Berber
+afroasiatic.berber.tamazight | Tamazight
+afroasiatic.berber.tachelhit | Tachelhit | 0.87 0.18 97
+afroasiatic.berber.tarifit | Tarifit (Riffian)
+#
+# Colours, for neighbours on the Moroccan ground: Darija Arabic's mint turned a little bluer
+# (it is drawn nearly everywhere, beside every other answer); Tachelhit a strong yellow (Souss,
+# Anti-Atlas, western High Atlas); Tamazight keeps ca.txt's generated olive green (Middle Atlas,
+# eastern High Atlas), which reads apart from both; Tarifit generated orange-brown (Rif);
+# Hassaniya ml.txt's dark teal (the south), darker than Darija's mint.
+# 2026-10-06: every Berber colour is now set in build.py HAND, more saturated: Tachelhit a full
+# yellow, Tamazight a lime, Tarifit a red-orange (taxonomy/COLOURS.md).

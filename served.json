@@ -1,0 +1,22 @@
+[
+  {
+    "name": "religiondots",
+    "folder": "religiondots",
+    "about": "World religion dot map"
+  },
+  {
+    "name": "noritetsu",
+    "folder": "noritetsu/dist",
+    "about": "Global rail map and ridden-lines tracker"
+  },
+  {
+    "name": "helper1m",
+    "folder": "helper1m",
+    "about": "Population by admin division, for 1M-per-region maps"
+  },
+  {
+    "name": "languagedots",
+    "folder": "languagedots",
+    "about": "World mother-tongue dot map (India, Nepal, Pakistan so far)"
+  }
+]

@@ -143,6 +143,9 @@ drawn; and mixing two instruments' levels is §3.1a's problem for no gain, since
 
 ## 5. Mainland and Zanzibar, and the §14 read
 
+*Superseded for Zanzibar's Christians by Anita's ruling, §8: they are now one pooled share across
+the five regions. The rest of this section is the original reasoning, kept as written.*
+
 **Considered and not asked.** Zanzibar is semi-autonomous, 1,889,773 people, and is drawn as its
 five regions at 97.2-98.9% Muslim. The candidate §14 question is Zanzibar's small Christian
 minority: rule 2 says a persecuted group is drawn no finer than the state publishes, and Tanzania
@@ -158,7 +161,8 @@ both parts, and the survey's Zanzibar oversample is absorbed by composing per un
 
 ## 6. What is deliberately not drawn
 
-- **Denominations and Muslim traditions.** `Christian only` runs 6.4% to 21.3% across the drawn
+- **Denominations and Muslim traditions** (churches drawn since 2026-10-03 with the GFS, §9;
+  Muslim traditions still not). `Christian only` runs 6.4% to 21.3% across the drawn
   rounds (3.6% in R5); **round 7's card is a different card** (Methodist 7.1% there and 0.0-0.2%
   elsewhere, Anglican 0.5% against about 4.5%, and `Tanzania Assemblies of God`, `Pentecoste`,
   `Evangelical Assemblies of God` only there). `Sunni only` runs 0.4% to 4.7%.
@@ -166,7 +170,8 @@ both parts, and the survey's Zanzibar oversample is absorbed by composing per un
   their own wording; this card offers `Traditional/ethnic religion` separately in every drawn
   round (`report_card()` reads the value labels). None is 24.0% of Shinyanga and 23.5% of Simiyu.
 - **Zero cells** (§3.5): no Christians in Kaskazini Unguja (n=152), Kusini Unguja (104) and
-  Kaskazini Pemba (160); no `None` in seven mainland and five Zanzibar units.
+  Kaskazini Pemba (160); no `None` in seven mainland and five Zanzibar units. (The three
+  Christian zeros are no longer drawn: §8 pools Zanzibar's Christians.)
 
 ## 7. What would improve it
 
@@ -260,3 +265,130 @@ live, so nothing finer than the region is shown. If she wants it coarser, one op
 Christian share across Zanzibar's five regions (13 Christians among 1,072 interviews), which
 removes both the one-respondent figure and the zeros. §2 also does not list Zanzibar's own
 statistics office (OCGS), the other government rule 2's "the state" could mean; not checked here.
+
+## 8. Zanzibar's Christians, one share across the five regions (2026-10-03, `fafd1067-tz`)
+
+**Anita's ruling** (`ask/RULINGS.md`, 2026-09-14 night): draw one Christian share across all five
+Zanzibar regions, not region by region, because of the attacks on Christians in 2012-13 and
+because the regional figures rested on single respondents (the review above, items 2 and 3).
+Not decided by it, and not touched here: the mainland's grain, adding round 5 back, whether rule 2
+protects only groups the state proscribes (§5's assumption), and whether OCGS counts as "the
+state".
+
+**How it is pooled.** `sources/tz.py::pool_zanzibar()`, after `compose()`:
+
+- The pooled share is the survey-weighted Christian share among all 1,072 Zanzibar respondents
+  (13 Christians: 12 in Mjini Magharibi, 1 in Kusini Pemba), 0.945% of the weight. It then goes
+  through the same flat-tail scaling every unit gets (carried categories fill 1 minus the
+  national Traditional and Other shares), so it is drawn at **0.934%** in each region.
+- **Survey weights, not a census recomposition.** Recomposing each region's own share on its
+  census population gives 0.893%, but that is the region-by-region figure again, weighted by
+  population, with Mjini Magharibi's 12 respondents carrying almost all of it. Pooling the
+  respondents is the plain reading of "one share" and is what the review proposed. The
+  difference is small anyway: within Zanzibar the survey's weights track the census closely
+  (Mjini Magharibi 50.6% of the weight against 47.3% of the population; the other four within
+  1.8 points). Unweighted it would be 1.21%. By round: R4 2 of 112, R6 0 of 240, R7 2, R8 2 and
+  R9 7 of 240 each.
+- **What gives way.** Muslim and None keep each region's own measured proportions and are
+  scaled to fill what the pooled Christian share leaves. None is 0 in all five regions (no
+  respondent gave it), so in practice the change is Christian against Muslim, one for one.
+  Traditional and Other stay at the flat national shares. Every region keeps its census total
+  (asserted in `tz.py`, and checked against the old `tz.csv`: 30 of 30 totals equal, all 125
+  mainland rows unchanged).
+
+| region | pop | n | Christians in sample | Christian before | after | Muslim before | after |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| Kaskazini Unguja | 257,290 | 152 | 0 | 0.000% (0) | 0.934% (2,403) | 98.86% | 97.93% |
+| Kusini Unguja | 195,873 | 104 | 0 | 0.000% (0) | 0.934% (1,829) | 98.86% | 97.93% |
+| Mjini Magharibi | 893,169 | 512 | 12 | 1.662% (14,848) | 0.934% (8,341) | 97.20% | 97.93% |
+| Kaskazini Pemba | 272,091 | 160 | 0 | 0.000% (0) | 0.934% (2,541) | 98.86% | 97.93% |
+| Kusini Pemba | 271,350 | 144 | 1 | 0.678% (1,839) | 0.934% (2,534) | 98.19% | 97.93% |
+| **Zanzibar** | 1,889,773 | 1,072 | 13 | 0.883% (16,687) | 0.934% (17,648) | | |
+
+Tanzania as drawn moves by 0.002 points (Christian 64.132% to 64.134%). Both editions were
+rescattered (61,738 dots at 1:1,000; 6,171 at 1:10,000). `note_public` now says Zanzibar's
+Christians are one share of 0.9% and why; the "97 to 99% Muslim" phrase became "98%".
+`sources.md` §tz-2026-10-03.
+
+## 9. The churches (2026-10-03, `fafd1067-chea`)
+
+Anita, 2026-10-03: most of Africa now draws churches, so re-search Tanzania's (`ask/RULINGS.md`).
+§6's reason for not drawing them stands for the Afrobarometer alone; what changed is a second
+survey that names a church for almost every Christian.
+
+**Searched.** The TDHS 2015-16 report (FR321, 630 pp) and the TDHS-MIS 2022 report (FR382, 919 pp)
+were read for `catholic`, `christian`, `muslim` and the religion question: **neither asks religion
+at all** (the only hits are the FGM item "required by your religion" and a Christian medical
+centre in the acknowledgements), so §7 item 1's microdata would not help either. The Global
+Flourishing Study wave 1, already on disk, has `REL3_Y1` (codebook wave 2, OSF 285w7, p.21): "Which
+of the following denominations or churches do you most identify with, if any?", asked of everyone
+giving Christianity. Tanzania: 5,937 Christians, 23 naming none, DK or refusing (0.49% weighted).
+
+**The two surveys' levels**, as shares of Christians:
+
+| church | GFS 2023 | Afrobarometer named (R4, R6, R8, R9) | that + all `Christian only` | drawn |
+|---|---:|---:|---:|---:|
+| Catholic | 43.2 | 42.1 | 63.2 | 43.1 |
+| Pentecostal | 21.6 | 8.6 | 29.7 | 21.7 |
+| Lutheran | 14.4 | 10.8 | 31.9 | 13.2 |
+| Anglican | 9.8 | 6.8 | 27.9 | 9.9 |
+| Adventist | 6.1 | 4.0 | 25.1 | 6.1 |
+| other Christian | 4.8 | 6.1 | | 5.9 |
+
+The Afrobarometer's `Christian only` is 21.1% of Christians in those rounds (13, 10, 22, 35% by
+round). Every GFS level sits inside the Afrobarometer's bounds; Catholic is at the floor, so the
+unnamed are essentially not Catholic. Spreading the unnamed at the Afrobarometer's own named
+proportions instead would draw Catholic at 54-56% and Pentecostal at 10%. Round 7 is left out of
+the church side (Methodist 11.0% of its Christians, 0.0-0.3% elsewhere; Pentecostal 0.1%).
+
+**Construction** (`tz.py::church_shares`). Each mainland unit's Christian count is unchanged.
+Its split is the average, weighted by Christian respondents, of (a) the GFS's own unit shares with
+its 23 unnamed spread at the GFS's national proportions, and (b) the Afrobarometer's named unit
+shares with its `Christian only` spread at one set of national proportions inside every unit,
+chosen so each church meets the GFS level weighted by the drawn Christians (Pentecostal 61.5% of
+the unnamed, Lutheran 16.4%, Anglican 14.1%, Adventist 8.6%, Catholic 0, clipped from -0.6%;
+`SPREAD_NEG_TOL`). `Other Christian` keeps the Afrobarometer's named share and takes none of the
+unnamed. So the GFS sets the levels and both surveys say where.
+
+**Tests.** No within-survey split-half by rounds is possible: the Afrobarometer's rounds leave
+Christian-empty (round, unit) cells (Pwani, Lindi), and the GFS is one wave. The test is the two
+independent surveys as the two halves: Spearman over the 25 mainland units, GFS against
+Afrobarometer named shares, 5,000-draw permutation null:
+
+| church | rho | null 95th | p |
+|---|---:|---:|---:|
+| Catholic | +0.675 | +0.335 | 0.0006 |
+| Lutheran | +0.764 | +0.337 | 0.0002 |
+| Anglican | +0.565 | +0.341 | 0.0016 |
+| Pentecostal | +0.584 | +0.340 | 0.0014 |
+| Adventist | +0.396 | +0.333 | 0.0244 |
+
+Asserted (`CHURCH_P_MAX` 0.05, and the level bounds). Within the GFS, respondents dealt into
+random halves inside each unit give medians +0.88, +0.86, +0.72, +0.64, +0.63 (scratch only; it
+shares enumeration areas between halves, so it flatters). Adventist is the weakest; the GFS's
+Kilimanjaro 14% of Christians is not in the Afrobarometer (3%).
+
+**Where the surveys disagree, by unit** (% of Christians, GFS / Afrobarometer spread / drawn):
+Mbeya and Songwe Pentecostal 45 / 24 / 34.9; Lindi Catholic 83 / 20 / 54.2 and Pentecostal 9 / 44
+/ 25.4 (34 and 29 respondents); Mtwara Anglican 4 / 16 / 11.0 (Masasi); Tanga Catholic 54 / 21 /
+37.4; Kilimanjaro Lutheran 28 / 40 / 33.0. The thin coastal units (Pwani, Lindi, Mtwara: 29-47
+Christians a survey) are the least certain.
+
+**Not drawn.** Moravians (no GFS box; Afrobarometer only R7-R9, about 1% of Christians) stay in
+`Other Christian` or Lutheran. Zanzibar's pooled Christians stay on `christianity` (two GFS
+Christians there). Islam stays one colour (§6: `Sunni only` 0.4-4.7% by round).
+
+**As drawn**: Catholic 27.6% of Tanzania, Pentecostal 13.9%, Lutheran 8.5%, Anglican 6.3%,
+Adventist 3.9%, other Christian 3.8%. Both editions rescattered (61,736 and 6,168 dots). Every row
+stays `modelled`. `sources.md` §tz-2026-10-03b.
+
+**What would improve it:** the Catholic dioceses' own counts (Annuarium Statisticum, by diocese)
+as a membership witness to Catholic geography; the ELCT's diocese membership likewise; GFS wave 2.
+
+**A third witness, found while doing Botswana: the Pew Forum's 2008-09 survey** (*Tolerance and
+Tension*, 2010, p.23, 907 Tanzanian Christians): Catholic 51%, Lutheran 13, Anglican 10,
+Pentecostal 10, African independent 5, Adventist 3, Baptist 1. Lutheran and Anglican match what is
+drawn (13.2, 9.9); Pentecostal is half the GFS's 2023 figure and Catholic 8 points above it. The
+Afrobarometer's named shares move the same way between 2008 and 2022 (Pentecostal 5.6% of named
+Christians in R4, 11.1% in R9), so part of the GFS-Pew gap is likely growth, and the drawn
+Pentecostal level is a 2023 level on a 2008-2022 Christian pool. Not asserted.

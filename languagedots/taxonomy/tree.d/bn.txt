@@ -1,0 +1,64 @@
+# Brunei (taxonomy/bn2021.py). Census race by district (BPP 2021 A3) split into languages with
+# published speaker estimates (sources/bn_build.py, sources/bn.md).
+#
+# Glottolog (data/raw/glottolog) for the new nodes, flat leaves of my.txt's North Borneo group
+# as Malaysia's Sarawak and Sabah languages are:
+#   * Tutong tuto1241 (ttg), Lower Baram (cent2094) in North Sarawakan.
+#   * Belait: Glottolog's Lemeting bela1260 (beg), Lower Baram.
+#   * Brunei Dusun: Brunei Bisaya-Dusun brun1245 (bsb), Dusunic, with Brunei Dusun brun1250 and
+#     Brunei Bisaya brun1251 as its dialects; one node for both puak, since Brunei's Bisaya are
+#     inside the Dusun figure. Not my.txt's `bisaya`, which is Sabah Bisaya (saba1267).
+#   * Brunei Malay brun1242/brun1243, Kedayan keda1250 (a dialect of it in Glottolog, a puak and
+#     a language of its own in Brunei's usage) and Iban iban1264: my.txt's Malayic leaves,
+#     repeated. Murut (Lun Bawang lunb1237) on my.txt's Lundayeh (lund1271).
+#
+# Colours: in Tutong District, Tutong, Dusun, Kedayan and Brunei Malay share the same villages,
+# and Iban sits beside them up the Belait and Tutong rivers. Brunei Malay keeps my.txt's teal,
+# Kedayan its salmon, Iban its blue; Tutong takes a magenta and Brunei Dusun a yellow near
+# Kadazan-Dusun's (a related language, far away in Sabah). Belait is generated.
+austronesian | Austronesian
+austronesian.malayic | Malayic
+austronesian.malayic.brunei_malay | Brunei Malay | 0.70 0.13 165
+austronesian.malayic.kedayan | Kedayan | 0.80 0.11 30
+austronesian.malayic.iban | Iban | 0.64 0.15 205
+austronesian.north_borneo | North Borneo | 0.80 0.13 95
+austronesian.north_borneo.lundayeh | Lundayeh (Lun Bawang)
+austronesian.north_borneo.tutong | Tutong | 0.60 0.15 335
+austronesian.north_borneo.belait | Belait
+austronesian.north_borneo.brunei_dusun | Brunei Dusun (Bisaya) | 0.80 0.15 110
+sinotibetan.sinitic | Chinese
+# --- origin_mix borrowed nodes (python sources/origin_mix.py --fragment bn) ---
+# Every node the origin mixes bring in that tree.txt lacks, repeated without colour.
+austronesian.acehnese | Acehnese
+austronesian.balinese | Balinese
+austronesian.buginese | Buginese
+austronesian.cirebonese | Cirebonese
+austronesian.javanese | Javanese
+austronesian.madurese | Madurese
+austronesian.malayic.banjar | Banjar
+austronesian.malayic.betawi | Betawi
+austronesian.malayic.indonesian | Indonesian
+austronesian.malayic.malay | Malay
+austronesian.malayic.minangkabau | Minangkabau
+austronesian.philippine | Philippine
+austronesian.philippine.bikol | Bikol
+austronesian.philippine.boholano | Boholano
+austronesian.philippine.cebuano | Cebuano
+austronesian.philippine.hiligaynon | Hiligaynon
+austronesian.philippine.ilocano | Ilocano
+austronesian.philippine.kapampangan | Kapampangan
+austronesian.philippine.maguindanao | Maguindanao
+austronesian.philippine.maranao | Maranao
+austronesian.philippine.pangasinan | Pangasinan
+austronesian.philippine.tagalog | Tagalog
+austronesian.philippine.tausug | Tausug
+austronesian.philippine.waray | Waray-Waray
+austronesian.sasak | Sasak
+austronesian.sundanese | Sundanese
+indonesia_other | Other regional languages of Indonesia
+sinotibetan.sinitic.cantonese | Cantonese
+sinotibetan.sinitic.hakka | Hakka
+sinotibetan.sinitic.mandarin | Mandarin
+sinotibetan.sinitic.min_dong | Min Dong
+sinotibetan.sinitic.min_nan | Min Nan (Taiwanese, Hokkien)
+# --- end origin_mix borrowed nodes ---

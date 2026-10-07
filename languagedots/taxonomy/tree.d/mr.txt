@@ -1,0 +1,47 @@
+# Mauritania (Afrobarometer R10; taxonomy/mr2024.py). No new languages: every node is repeated
+# from other fragments (AGENT_BRIEF §3).
+afroasiatic.hassaniya | Hassaniya (Maure)
+nigercongo | Niger-Congo
+nigercongo.atlantic | Atlantic
+nigercongo.atlantic.fulah | Fula
+nigercongo.atlantic.wolof | Wolof
+nigercongo.mande | Mande
+nigercongo.mande.soninke | Soninke
+# --- origin_mix borrowed nodes (python sources/origin_mix.py --fragment mr) ---
+# Every node the origin mixes bring in that tree.txt lacks, repeated without colour.
+africa_other | Other African languages
+afroasiatic.algerian_arabic | Algerian Arabic (Darija)
+afroasiatic.berber | Berber
+afroasiatic.berber.chaouia | Chaoui (Chaouia)
+afroasiatic.berber.kabyle | Kabyle
+afroasiatic.berber.tachelhit | Tachelhit
+afroasiatic.berber.tamasheq | Tamasheq (Tuareg)
+afroasiatic.berber.tamazight | Tamazight
+afroasiatic.berber.tarifit | Tarifit (Riffian)
+afroasiatic.chadic | Chadic
+afroasiatic.chadic.hausa | Hausa
+afroasiatic.darija | Moroccan Arabic (Darija)
+indoeuropean.romance | Romance
+indoeuropean.romance.french | French
+nigercongo.atlantic.jola | Jola languages
+nigercongo.atlantic.jola.joola | Jola (Joola)
+nigercongo.atlantic.serer | Serer (Sereer)
+nigercongo.dogon | Dogon languages
+nigercongo.dogon.dogon | Dogon
+nigercongo.gur | Gur
+nigercongo.gur.bomu | Bomu (Bwamu, Bobo)
+nigercongo.gur.mamara | Mamara (Minyanka)
+nigercongo.gur.moore | Mòoré
+nigercongo.gur.senufo | Senufo (Senoufo)
+nigercongo.mande.bambara | Bamanankan (Bambara)
+nigercongo.mande.bozo | Bozo
+nigercongo.mande.duungooma | Duungooma (Samogo)
+nigercongo.mande.khassonke | Khassonké (Xaasongaxango)
+nigercongo.mande.konabere | Konabéré (Northern Bobo Madaré)
+nigercongo.mande.mandinka | Mandinka
+nigercongo.mande.maninka | Maninka (Malinké)
+nigercongo.mande.marka | Marka (Dafing)
+nilosaharan | Nilo-Saharan
+nilosaharan.songhay | Songhay languages
+nilosaharan.songhay.songhay | Songhay (Sonrhai, Zarma)
+# --- end origin_mix borrowed nodes ---

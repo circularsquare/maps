@@ -1,0 +1,20 @@
+# Switzerland, Volkszählung 2000 main language (taxonomy/ch2000.py).
+#
+# Swiss German (2026-10-06): the census's "Deutsch" is split into Swiss German and Standard
+# German (sources/ch_vz2000.py). The node already exists as a sibling of German under
+# Continental West Germanic (uk.txt, us.txt, ca2021); repeated here so ch does not depend on
+# those fragments. Its colour is us.txt's, repeated exactly (a differing colour stops the
+# build): #8cc4f4, a pale sky blue beside German's #359bd9. In Switzerland Swiss German is
+# the bulk and Standard German the scatter inside it, so a lighter Swiss German with the
+# darker German dots in it reads clearly; French (#b9579c) and Italian (#fdb171) across the
+# language borders are far from both.
+indoeuropean.germanic.continental | Continental West Germanic
+indoeuropean.germanic.continental.german | German
+indoeuropean.germanic.continental.swiss_german | Swiss German | 0.80 0.09 245
+#
+# Colour. Rhaeto-Romance (Romansh) is defined bare in uk.txt and was generated as #7e94dc, a
+# periwinkle next to German's #359bd9; in Graubünden the two share valleys commune by commune
+# (Surselva, Engadin), and Italian's orange borders it in the south. So Romansh is a deep rose
+# here, apart from German's blue, French's lavender and Italian's orange. The node is otherwise
+# only uk2021's and pl2021's few dozen people.
+indoeuropean.romance.rhaetoromance | Rhaeto-Romance | 0.58 0.17 10

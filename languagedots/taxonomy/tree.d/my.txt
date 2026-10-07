@@ -1,0 +1,82 @@
+# Malaysia 2020 census, ethnic and sub-ethnic group read as language under AGENT_BRIEF §2's
+# ethnicity rule (taxonomy/my2020.py, countries/my.py, sources/my.md). Nodes other fragments
+# already define are repeated with identical labels, so Malaysia does not depend on them.
+#
+# Glottolog (data/raw/glottolog, classification paths) for the new nodes:
+#   * North Borneo (nort3253) holds the Sabahan languages (Dusunic: Kadazan Dusun cent2100,
+#     Rungus rung1259, Sabah Bisaya saba1267; Paitanic: Upper Kinabatangan uppe1427, the Orang
+#     Sungai's languages; Murutic: Tagal Murut taga1273; Ida'an idaa1241) and the Sarawak ones
+#     (North Sarawakan: Kelabit kela1258, Lundayeh lund1271 with Lun Bawang lunb1237 as its
+#     dialect, Kenyah, Penan pena1271, Berawan bera1264, Kiput, Narom, Miri, Sa'ban; Central
+#     Sarawak: Melanau mela1255, Kajang kaja1255, Ukit, Bukitan, Sihan; Kayan bara1370). One
+#     group, as a reader would expect "the languages of Sabah and Sarawak's interior" to be,
+#     with the census's groups as flat leaves; Glottolog's five middle levels are not drawn.
+#   * Bidayuh (bida1240) is Land Dayak (land1261), outside North Borneo: a leaf of Austronesian.
+#   * Bajau: Sabah's Bajau speak West Coast Bajau (west2560) and the Sama languages (cent2092,
+#     sout2918), Sama-Bajaw (sama1302): one leaf, "Bajau", under ph.txt's Sama-Bajaw group,
+#     since the census does not say which.
+#   * Suluk speak Tausug (taus1251), Iranun Iranun (iran1262), Balabak Molbog (molb1237): all
+#     Greater Central Philippine, so leaves of the existing Philippine group.
+#   * Brunei Malay (brun1242) and Kedayan (keda1250, a dialect of it in Glottolog, but a census
+#     group of its own in both Sabah and Sarawak) are Malayic leaves.
+#   * Aslian (asli1243): the Orang Asli's Senoi (Semai sema1266, Temiar temi1246, Jah Hut...) and
+#     Negrito (Jahai, Batek, Kensiu: North Aslian) peoples speak Aslian languages. The census
+#     names peoples, not languages, so both sit on the group, unnamed.
+#
+# Colours: Sabah's interior (Kadazan-Dusun, Murut, Rungus) has to stand apart from Malay's light
+# green, Bajau and Chinese on the coast; Sarawak's Iban from Bidayuh and Malay around Kuching,
+# and Melanau on the Mukah coast. North Borneo takes the yellows, Bajau a blue, Bidayuh a rose.
+austronesian | Austronesian
+austronesian.malayic | Malayic
+austronesian.malayic.malay | Malay
+austronesian.malayic.brunei_malay | Brunei Malay | 0.70 0.13 165
+# hand-picked: generated, Kedayan came out #8fd28a beside Malay's #75df8f in Sipitang and Miri
+austronesian.malayic.kedayan | Kedayan | 0.80 0.11 30
+# hand-picked: generated, Iban sat beside Malay's light green and Malayic's teal around Kuching
+austronesian.malayic.iban | Iban | 0.64 0.15 205
+austronesian.javanese | Javanese
+austronesian.philippine | Philippine
+austronesian.philippine.tausug | Tausug
+austronesian.philippine.iranun | Iranun
+austronesian.philippine.molbog | Molbog
+austronesian.sama_bajaw | Sama-Bajaw
+austronesian.sama_bajaw.bajau | Bajau | 0.62 0.14 245
+austronesian.bidayuh | Bidayuh | 0.70 0.14 0
+austronesian.north_borneo | North Borneo | 0.80 0.13 95
+austronesian.north_borneo.kadazandusun | Kadazan-Dusun | 0.84 0.15 90
+austronesian.north_borneo.rungus | Rungus
+austronesian.north_borneo.bisaya | Bisaya
+# hand-picked: generated, Orang Sungai came out #86bd67, a second light green beside Malay
+austronesian.north_borneo.orang_sungai | Orang Sungai | 0.76 0.10 270
+austronesian.north_borneo.murut | Murut | 0.64 0.13 70
+austronesian.north_borneo.tagal | Tagal
+austronesian.north_borneo.idaan | Ida'an
+austronesian.north_borneo.lundayeh | Lundayeh (Lun Bawang)
+austronesian.north_borneo.bulongan | Bulongan
+# hand-picked: a yellow-green Melanau sat beside Malay's light green on the Mukah coast
+austronesian.north_borneo.melanau | Melanau | 0.66 0.14 300
+austronesian.north_borneo.kajang | Kajang
+austronesian.north_borneo.kayan | Kayan
+austronesian.north_borneo.kenyah | Kenyah
+austronesian.north_borneo.kelabit | Kelabit
+austronesian.north_borneo.penan | Penan
+austronesian.north_borneo.berawan | Berawan
+austronesian.north_borneo.bakong | Bakong
+austronesian.north_borneo.dali | Dali'
+austronesian.north_borneo.kiput | Kiput
+austronesian.north_borneo.miriek | Miriek
+austronesian.north_borneo.narom | Narom
+austronesian.north_borneo.lugat | Lugat
+austronesian.north_borneo.saban | Sa'ban
+austronesian.north_borneo.sihan | Sihan
+austronesian.north_borneo.tabun | Tabun
+austronesian.north_borneo.tatau | Tatau
+austronesian.north_borneo.tanjong | Tanjong
+austronesian.north_borneo.ukit | Ukit
+austronesian.north_borneo.bukitan | Bukitan
+austronesian.north_borneo.segan | Segan
+austronesian.north_borneo.sabup | Sabup
+austronesian.north_borneo.kanowit | Kanowit
+austroasiatic | Austroasiatic
+austroasiatic.aslian | Aslian | 0.66 0.15 335
+sinotibetan.sinitic | Chinese

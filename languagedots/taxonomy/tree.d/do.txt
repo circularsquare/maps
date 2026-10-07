@@ -1,0 +1,9 @@
+# Dominican Republic (ENHOGAR-MICS6 2019, mother tongue of the household head). No new nodes;
+# these repeat, bare, the fragment nodes its labels use so the country stands on its own under
+# `build.py --only`. Colours stay us.txt's.
+indoeuropean.romance | Romance
+indoeuropean.romance.spanish | Spanish
+indoeuropean.romance.french | French
+creole | Creoles
+creole.french_based | French-based creoles
+creole.french_based.haitian | Haitian Creole

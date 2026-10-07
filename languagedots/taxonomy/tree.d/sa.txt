@@ -1,0 +1,273 @@
+# Saudi Arabia (taxonomy/sa2022.py). No language question; 2022 census Saudis and non-Saudis by
+# region, non-Saudis by nationality and sex, each nationality read as a language or a home mix
+# (sources/sa_census.py, sources/sa.md).
+#
+# Four new leaves beside `arabic`, as Morocco's Darija, Iraq's and Sudan's Arabic are (`arabic`
+# is a leaf many countries draw on). Glottolog (data/raw/glottolog):
+#   * Saudi Arabic: the citizens' varieties, Najdi (najd1235), Hijazi (hija1235), Gulf
+#     (gulf1241) and the southern dialects; no source counts them apart, so one node.
+#   * Yemeni Arabic: Sanaani (sana1295), Ta'izzi-Adeni (taiz1242), Hadrami (hadr1236).
+#   * Egyptian Arabic: egyp1253.
+#   * Levantine Arabic: nort3139 (South Levantine sout3123 a dialect of it), for Syrians,
+#     Jordanians, Palestinians and Lebanese.
+# Colours: four shades in Arabic's mint, apart from each other because all four live side by
+# side in every Saudi city; Saudi Arabic (58% of the country) the calmest.
+afroasiatic | Afroasiatic
+afroasiatic.arabic | Arabic
+afroasiatic.saudi_arabic | Saudi Arabic | 0.84 0.10 140
+afroasiatic.yemeni_arabic | Yemeni Arabic | 0.70 0.06 140
+afroasiatic.egyptian_arabic | Egyptian Arabic | 0.66 0.06 166
+afroasiatic.levantine_arabic | Levantine Arabic | 0.74 0.06 168
+#
+# Borrowed nodes, repeated without colour (AGENT_BRIEF §3): every node the home mixes of India,
+# Pakistan, the Philippines, Indonesia, Nepal, Ethiopia, Afghanistan, Uganda, Kenya, Sri Lanka,
+# Nigeria, Sudan, Mali and Niger, and the single-language origins, bring in that tree.txt lacks.
+africa_other | Other African languages
+afroasiatic.berber | Berber
+afroasiatic.berber.kabyle | Kabyle
+afroasiatic.berber.tachelhit | Tachelhit
+afroasiatic.berber.tamajaq | Tamajaq (Tuareg)
+afroasiatic.berber.tamasheq | Tamasheq (Tuareg)
+afroasiatic.berber.tamazight | Tamazight
+afroasiatic.berber.tarifit | Tarifit (Riffian)
+afroasiatic.chadic | Chadic
+afroasiatic.chadic.hausa | Hausa
+afroasiatic.cushitic | Cushitic
+afroasiatic.cushitic.highland | Highland East Cushitic
+afroasiatic.cushitic.highland.gedeo | Gedeo
+afroasiatic.cushitic.highland.hadiyya | Hadiyya
+afroasiatic.cushitic.highland.sidama | Sidama
+afroasiatic.cushitic.lowland | Lowland East Cushitic
+afroasiatic.cushitic.lowland.afar | Afar
+afroasiatic.cushitic.lowland.oromo | Oromo
+afroasiatic.cushitic.lowland.somali | Somali
+afroasiatic.darija | Moroccan Arabic (Darija)
+afroasiatic.ethiosemitic | Ethiopian Semitic
+afroasiatic.ethiosemitic.amharic | Amharic
+afroasiatic.ethiosemitic.gurage | Gurage
+afroasiatic.ethiosemitic.silte | Silt'e
+afroasiatic.ethiosemitic.tigrinya | Tigrinya
+afroasiatic.hassaniya | Hassaniya (Maure)
+afroasiatic.iraqi_arabic | Iraqi Arabic
+afroasiatic.maltese | Maltese
+afroasiatic.omotic | Omotic
+afroasiatic.omotic.gonga | Gonga (Kefoid)
+afroasiatic.omotic.gonga.kafa | Kafa
+afroasiatic.omotic.ometo | Ometo
+afroasiatic.omotic.ometo.gamo | Gamo
+afroasiatic.omotic.ometo.wolaytta | Wolaytta
+afroasiatic.sudanese_arabic | Sudanese Arabic
+austroasiatic.khmer | Khmer
+austroasiatic.vietnamese | Vietnamese
+austronesian | Austronesian
+austronesian.acehnese | Acehnese
+austronesian.balinese | Balinese
+austronesian.batak | Batak
+austronesian.buginese | Buginese
+austronesian.javanese | Javanese
+austronesian.madurese | Madurese
+austronesian.malagasy | Malagasy
+austronesian.malayic | Malayic
+austronesian.malayic.banjar | Banjar
+austronesian.malayic.betawi | Betawi
+austronesian.malayic.indonesian | Indonesian
+austronesian.malayic.malay | Malay
+austronesian.malayic.minangkabau | Minangkabau
+austronesian.philippine | Philippine
+austronesian.philippine.bikol | Bikol
+austronesian.philippine.boholano | Boholano
+austronesian.philippine.cebuano | Cebuano
+austronesian.philippine.hiligaynon | Hiligaynon
+austronesian.philippine.ilocano | Ilocano
+austronesian.philippine.kapampangan | Kapampangan
+austronesian.philippine.maguindanao | Maguindanao
+austronesian.philippine.maranao | Maranao
+austronesian.philippine.pangasinan | Pangasinan
+austronesian.philippine.tagalog | Tagalog
+austronesian.philippine.tausug | Tausug
+austronesian.philippine.waray | Waray-Waray
+austronesian.sasak | Sasak
+austronesian.sundanese | Sundanese
+creole | Creoles
+creole.english_based | English-based creoles
+creole.english_based.krio | Krio
+creole.english_based.nigerian_pidgin | Nigerian Pidgin
+indoeuropean.albanian | Albanian
+indoeuropean.albanian.albanian | Albanian
+indoeuropean.armenian | Armenian
+indoeuropean.armenian.armenian | Armenian
+indoeuropean.baltic | Baltic
+indoeuropean.baltic.latvian | Latvian
+indoeuropean.baltic.lithuanian | Lithuanian
+indoeuropean.germanic.continental | Continental West Germanic
+indoeuropean.germanic.continental.dutch | Dutch
+indoeuropean.germanic.continental.german | German
+indoeuropean.germanic.continental.luxembourgish | Luxembourgish
+indoeuropean.germanic.north | North Germanic
+indoeuropean.germanic.north.danish | Danish
+indoeuropean.germanic.north.icelandic | Icelandic
+indoeuropean.germanic.north.norwegian | Norwegian
+indoeuropean.germanic.north.swedish | Swedish
+indoeuropean.hellenic | Hellenic
+indoeuropean.hellenic.greek | Greek
+indoeuropean.indoaryan.dardic.pashai | Pashai
+indoeuropean.indoaryan.dhivehi | Dhivehi
+indoeuropean.indoaryan.eastern.rohingya | Rohingya
+indoeuropean.indoaryan.sinhala | Sinhala
+indoeuropean.iranian.dari | Dari
+indoeuropean.iranian.persian | Persian (Farsi)
+indoeuropean.iranian.tajik | Tajik
+indoeuropean.romance | Romance
+indoeuropean.romance.catalan | Catalan
+indoeuropean.romance.french | French
+indoeuropean.romance.italian | Italian
+indoeuropean.romance.portuguese | Portuguese
+indoeuropean.romance.romanian | Romanian
+indoeuropean.romance.spanish | Spanish
+indoeuropean.slavic | Slavic
+indoeuropean.slavic.east | East Slavic
+indoeuropean.slavic.east.russian | Russian
+indoeuropean.slavic.east.ukrainian | Ukrainian
+indoeuropean.slavic.south | South Slavic
+indoeuropean.slavic.south.bosnian | Bosnian
+indoeuropean.slavic.south.bulgarian | Bulgarian
+indoeuropean.slavic.south.croatian | Croatian
+indoeuropean.slavic.south.macedonian | Macedonian
+indoeuropean.slavic.south.serbian | Serbian
+indoeuropean.slavic.south.slovenian | Slovenian
+indoeuropean.slavic.west | West Slavic
+indoeuropean.slavic.west.czech | Czech
+indoeuropean.slavic.west.polish | Polish
+indoeuropean.slavic.west.slovak | Slovak
+indonesia_other | Other regional languages of Indonesia
+japonic | Japonic
+japonic.japanese | Japanese
+kartvelian | Kartvelian
+kartvelian.georgian | Georgian
+koreanic | Koreanic
+koreanic.korean | Korean
+kradai | Kra-Dai (Tai-Kadai)
+kradai.lao | Lao
+kradai.thai | Thai
+mongolic | Mongolic
+mongolic.mongolian | Mongolian
+nigercongo | Niger-Congo
+nigercongo.atlantic | Atlantic
+nigercongo.atlantic.fulah | Fula
+nigercongo.atlantic.wolof | Wolof
+nigercongo.bantu | Bantu
+nigercongo.bantu.chiga | Chiga (Rukiga)
+nigercongo.bantu.embu | Embu (Kiembu)
+nigercongo.bantu.ganda | Ganda
+nigercongo.bantu.gikuyu | Gikuyu
+nigercongo.bantu.gusii | Gusii (Ekegusii)
+nigercongo.bantu.gwere | Gwere (Lugwere)
+nigercongo.bantu.kamba | Kamba (Kikamba)
+nigercongo.bantu.kinyarwanda | Kinyarwanda
+nigercongo.bantu.kirundi | Kirundi (Rundi)
+nigercongo.bantu.konzo | Konzo (Lukonzo)
+nigercongo.bantu.luhya | Luhya (Luyia)
+nigercongo.bantu.masaaba | Masaaba (Lugisu)
+nigercongo.bantu.meru | Meru (Kimeru)
+nigercongo.bantu.mijikenda | Mijikenda
+nigercongo.bantu.nguni | Nguni
+nigercongo.bantu.nguni.zulu | Zulu
+nigercongo.bantu.nyankole | Nyankole
+nigercongo.bantu.nyole | Nyole (Lunyole)
+nigercongo.bantu.nyoro | Nyoro
+nigercongo.bantu.rufumbira | Rufumbira
+nigercongo.bantu.saamia | Saamia (Lusamia)
+nigercongo.bantu.shona | Shona
+nigercongo.bantu.soga | Soga (Lusoga)
+nigercongo.bantu.swahili | Swahili
+nigercongo.bantu.tooro | Tooro (Rutooro)
+nigercongo.crossriver | Cross River
+nigercongo.crossriver.efik | Efik
+nigercongo.crossriver.ibibio | Ibibio
+nigercongo.dogon | Dogon languages
+nigercongo.dogon.dogon | Dogon
+nigercongo.gur | Gur
+nigercongo.gur.bomu | Bomu (Bwamu, Bobo)
+nigercongo.gur.mamara | Mamara (Minyanka)
+nigercongo.gur.moore | Mòoré
+nigercongo.gur.senufo | Senufo (Senoufo)
+nigercongo.ijoid | Ijoid
+nigercongo.ijoid.ijaw | Ijaw (Izon)
+nigercongo.kwa | Kwa
+nigercongo.kwa.fon | Fon
+nigercongo.kwa.twi | Twi
+nigercongo.mande | Mande
+nigercongo.mande.bambara | Bamanankan (Bambara)
+nigercongo.mande.bozo | Bozo
+nigercongo.mande.khassonke | Khassonké (Xaasongaxango)
+nigercongo.mande.mandinka | Mandinka
+nigercongo.mande.maninka | Maninka (Malinké)
+nigercongo.mande.soninke | Soninke
+nigercongo.tiv | Tiv
+nigercongo.voltaniger | Volta-Niger
+nigercongo.voltaniger.edoid | Edoid (Edo)
+nigercongo.voltaniger.edoid.edo | Edo
+nigercongo.voltaniger.idoma | Idoma
+nigercongo.voltaniger.igala | Igala
+nigercongo.voltaniger.igbo | Igbo
+nigercongo.voltaniger.nupe | Nupe
+nigercongo.voltaniger.yoruba | Yoruba
+nilosaharan | Nilo-Saharan
+nilosaharan.centralsudanic | Central Sudanic
+nilosaharan.centralsudanic.aringa | Aringa
+nilosaharan.centralsudanic.lugbara | Lugbara
+nilosaharan.kanuri | Kanuri
+nilosaharan.nilotic | Nilotic
+nilosaharan.nilotic.acholi | Acholi
+nilosaharan.nilotic.adhola | Adhola (Dhopadhola)
+nilosaharan.nilotic.alur | Alur
+nilosaharan.nilotic.kalenjin | Kalenjin
+nilosaharan.nilotic.karamojong | Karamojong (Ngakarimojong)
+nilosaharan.nilotic.lango | Lango (Uganda)
+nilosaharan.nilotic.luo | Luo (Dholuo)
+nilosaharan.nilotic.maasai | Maasai
+nilosaharan.nilotic.pokot | Pokot (Pökoot)
+nilosaharan.nilotic.teso | Teso (Ateso)
+nilosaharan.nilotic.turkana | Turkana
+nilosaharan.songhay | Songhay languages
+nilosaharan.songhay.songhay | Songhay (Sonrhai, Zarma)
+nilosaharan.songhay.zarma | Zarma (Djerma)
+sinotibetan.sinitic | Chinese
+sinotibetan.sinitic.mandarin | Mandarin
+turkic | Turkic
+turkic.azerbaijani | Azerbaijani
+turkic.kazakh | Kazakh
+turkic.kyrgyz | Kyrgyz
+turkic.turkish | Turkish
+turkic.turkmen | Turkmen
+turkic.uzbek | Uzbek
+uralic | Uralic
+uralic.estonian | Estonian
+uralic.finnish | Finnish
+uralic.hungarian | Hungarian
+# --- origin_mix borrowed nodes (python sources/origin_mix.py --fragment sa) ---
+# Every node the origin mixes bring in that tree.txt lacks, repeated without colour.
+afroasiatic.cushitic.beja | Beja
+indoeuropean.celtic | Celtic
+indoeuropean.celtic.irish | Irish
+indoeuropean.germanic.continental.limburgish | Limburgish
+indoeuropean.germanic.continental.lowgerman | Low German
+indoeuropean.germanic.continental.lowgerman.westphalian | Westphalian
+indoeuropean.germanic.frisian | Frisian
+indoeuropean.indoaryan.romani | Romani
+indoeuropean.indoaryan.romani.romani | Romani
+indoeuropean.romance.emilian | Emilian
+indoeuropean.romance.galician | Galician
+indoeuropean.romance.lombard | Lombard
+indoeuropean.romance.neapolitan | Neapolitan
+indoeuropean.romance.sicilian | Sicilian
+indoeuropean.romance.valencian | Valencian
+indoeuropean.romance.venetian | Venetian
+isolate | Language isolates
+isolate.basque | Basque
+nigercongo.voltaniger.edoid.urhobo | Urhobo
+nilosaharan.fur | Fur
+nilosaharan.maban | Maban
+nilosaharan.maban.masalit | Masalit
+nilosaharan.nobiin | Nobiin (Fadicca)
+# --- end origin_mix borrowed nodes ---

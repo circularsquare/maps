@@ -160,8 +160,7 @@ ENTRY = {
             "inferred and disappear under `inferred dots: not shown`."),
         how="census, 2024, ages 2 and over",
         grain="municipalities, 106,000 people on average",
-        fill="from the same census at province level, for the ten bodies Uíge's and Moxico "
-             "Leste's volumes did not print",
+        fill="from the same census at province level",
         gap=("the 2.3% who did not answer or did not know; and children under 2, who were not "
              "asked the religion question"),
         gap_share=0.02301,

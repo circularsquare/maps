@@ -1,0 +1,5 @@
+# Marshall Islands (2021 census, sources/mh_census.py). No new nodes; bare repeats so the country
+# stands on its own. Marshallese (Glottolog mars1254) is us.txt's.
+austronesian | Austronesian
+austronesian.oceanic | Oceanic
+austronesian.oceanic.marshallese | Marshallese

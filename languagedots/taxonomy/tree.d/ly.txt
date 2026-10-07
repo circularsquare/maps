@@ -1,0 +1,18 @@
+# Libya, surveys plus cited estimates (taxonomy/ly2020.py, sources/ly.md). New leaf, checked
+# against Glottolog: afroasiatic.berber.nafusi = Nafusi (nafu1238, LY;TN), the Berber of the
+# Nafusa mountains and Zuwara. Libyan Arabic keeps eg.txt's colour; Nafusi is hand-set a deeper
+# green than Berber's default so it stands apart from Libyan Arabic's teal in Nalut and Zuwara.
+
+afroasiatic.berber.nafusi | Nafusi (Libyan Berber) | 0.72 0.16 115
+
+# ---- parents and languages defined elsewhere, repeated identically ----
+afroasiatic | Afroasiatic
+afroasiatic.libyan_arabic | Libyan Arabic | 0.60 0.10 172
+afroasiatic.berber | Berber | 0.80 0.16 95
+afroasiatic.berber.tamahaq | Tamahaq (Tuareg)
+nilosaharan | Nilo-Saharan | 0.72 0.12 255
+nilosaharan.tubu | Tubu (Teda-Daza) | 0.58 0.12 228
+indoeuropean | Indo-European
+indoeuropean.germanic | Germanic
+indoeuropean.germanic.english | English
+other | Other or unclassified

@@ -97,10 +97,9 @@ ENTRY = {
         grain="subcounties, 20,000 people on average",
         fill="from the same sample at county and district level",
         gap_share=0.033257,
-        gap="3.33% of the country: the 1,517,205 people counted outside households, in "
-            "boarding schools, barracks, prisons, hospitals and transit centres, whose sample "
-            "records carry no religion; and Apaa's 9,456 people, counted as a unit of their "
-            "own with no sample record",
+        gap="3.33% of the country, almost all of them the 1,517,205 people counted outside "
+            "households, in boarding schools, barracks, prisons and hospitals, whose sample "
+            "records carry no religion",
         counts=_ug_counts,
         units=None,
         unit_key=None,

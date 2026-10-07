@@ -1,0 +1,22 @@
+# Barbados (2010 census birthplace and ethnic origin, sources/bb_census.py). New: Bajan
+# (Glottolog baja1265), hand-coloured; the English-speaking Caribbean's creoles for immigrants
+# (Guyanese creo1235, Vincentian vinc1243, Trinidadian trin1276, Grenadian gren1247, Antigua and
+# Barbuda / Leeward anti1245), coloured by build.py. The rest are bare repeats.
+creole | Creoles
+creole.english_based | English-based creoles
+creole.english_based.antiguan | Antiguan and Barbudan Creole
+creole.english_based.bahamian | Bahamian Creole
+creole.english_based.bajan | Bajan | 0.58 0.13 128
+creole.english_based.grenadian | Grenadian Creole
+creole.english_based.guyanese | Guyanese Creole
+creole.english_based.jamaican | Jamaican Creole
+creole.english_based.sranan | Sranan Tongo
+creole.english_based.trinidadian | Trinidadian Creole
+creole.english_based.vincentian | Vincentian Creole
+creole.french_based | French-based creoles
+creole.french_based.antillean | Antillean Creole (Guadeloupe, Martinique)
+creole.french_based.haitian | Haitian Creole
+indoeuropean.romance | Romance
+indoeuropean.romance.spanish | Spanish
+sinotibetan.sinitic | Chinese
+sinotibetan.sinitic.mandarin | Mandarin

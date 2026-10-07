@@ -109,6 +109,9 @@ has 26, the Republic has fourteen.
 > each (`sources/uk_bes.md`). Those five categories exist in no census of England, are marked
 > `derived`, and roll back to `Christian` when a reader turns inferred dots off.
 >
+> **Wales is split too since 2026-10-04, by a different method: §12.** The paragraph below
+> is why England's method cannot cross the border, and still true.
+>
 > **Wales gets none of it.** The English Church Census stopped at the border, and Wales has
 > had **no church attendance census since 1995** — the 2007 Gweini *Faith in Wales* survey
 > reached all 22 unitary authorities but reports congregation counts and total churchgoing,
@@ -448,3 +451,113 @@ stays. Scotland's and Northern Ireland's tables have no row for either.
 Both rows are allocated from MSOA to Output Area and are under one dot, so no dot or ring; legend
 counts only. Both editions rescattered: 62,958 and 6,279 dots. The whole change is
 `sources/folk_practice.md` §11.
+
+## 12. Wales's Christians split by the British Election Study, 2026-10-04 (session `fafd1067-wales`)
+
+Anita, 2026-10-04: *"we should also look into getting christianity breakdown for wales. its the
+most prominent undifferentiated christianity left in europe."* England's census is no more
+detailed than Wales's (same ONS question, no denomination), but England has been split since
+2026-09-07 (§2); Wales was the flat patch.
+
+**Built.** `sources/uk_bes_wales.py` -> `data/normalized/uk_bes_wales.csv` (survey shares, the
+test, the decisions); `uk_split_wales.py` -> `data/normalized/uk_split_wales.csv` (61,650 rows,
+per Output Area, conserving all 1,354,738 census Christians); `countries/uk.py` swaps Wales's
+`Christian` rows for it exactly as it does England's.
+
+### Source: the BES panel, already on disk, every Welsh respondent once
+
+England's other two inputs do not cross the border (no church census in Wales since 1995), so
+the survey both sizes and places. `oslaua` (authority from full postcode) is filled for every
+Welsh row. Wave 21 alone has 1,557 Welsh respondents and 581 Christians, too thin for areas, so
+each of the **8,630 distinct Welsh respondents in waves 1-31 is counted once**, on the answer
+from the wave nearest 21: **2,970 Christians**. This is not the repeated-person pooling
+`uk_bes.py` rejects. `p_religion` has identical value labels in all 31 waves (checked in code).
+Weights are rescaled to mean 1 within each wave among the Welsh (waves 1 and 19 have none).
+
+The Wales-wide level comes from **wave 21 alone, weighted**, as England's does: Christians are
+**33.0%** of Welsh adults there against the census's **47.1%** (1,171,591 of 2,489,882 adults,
+ONS API `religion_tb x resident_age_7a`, `ctry`). So the survey names a church for **70.1%** of
+Welsh census Christians. (Pooled with mixed weights it would be 29.7%, 63%; not used.)
+
+### The option list was written for England and Scotland
+
+| BES box | Wales n | weighted share of Welsh Christians | leg |
+|---|---:|---:|---|
+| Church of England/Anglican/Episcopal | 1,773 | 57.0% | anglican (the Church in Wales) |
+| Roman Catholic | 472 | 17.2% | catholic |
+| Methodist | 220 | 7.2% | methodist |
+| Baptist | 203 | 6.9% | baptist |
+| Presbyterian/Church of Scotland + URC + Free Presbyterian | 113 | 3.4% | reformed |
+| Orthodox | 51 | 3.2% | not drawn |
+| Evangelical independent | 84 | 3.0% | not drawn |
+| Pentecostal | 45 | 1.9% | not drawn |
+| Brethren | 9 | 0.2% | not drawn |
+
+- **The Presbyterian Church of Wales has no box that names it.** It was the Calvinistic
+  Methodist church until 1928. `methodist` peaks at 18.5% of Christians in Anglesey, 16.5% in
+  Gwynedd and 12.2% in Conwy-Denbighshire, where Wesleyan Methodism was always weak, so many of
+  its members very likely answered Methodist. Drawn as Methodist (their word); REVIEW note in
+  `taxonomy/uk2021.py`. `reformed` still peaks in Gwynedd (13.4%), so some answered Presbyterian.
+- **The Union of Welsh Independents (Annibynwyr) has no box at all.** BES "Other" is 3.6% of
+  Welsh adults against England's 2.4%, and pools non-Christians; not separable, not drawn.
+
+### The test and the decisions
+
+Split-half rank correlation on 6 random respondent folds (10 halvings), null by relabelling
+units within fold (999 permutations), plus the chi-square; both under 0.05 to pass
+(`playbooks/ess.md`, `sources/stability.py`). At the 22 authorities (fewest Christians 35,
+Merthyr Tydfil) and at the 12 ITL3 groups (fewest 67, Anglesey):
+
+| leg | rho, 22 LAs (null95) | rho, 12 ITL3 (null95) | p, ITL3 | chi2 p, ITL3 | decision |
+|---|---|---|---:|---:|---|
+| anglican | +0.585 (+0.269) | +0.811 (+0.350) | 0.001 | 4e-06 | placed at ITL3 |
+| catholic | +0.065 (+0.275) | +0.047 (+0.350) | 0.406 | 0.003 | flat, Welsh share |
+| methodist | +0.452 (+0.262) | +0.717 (+0.371) | 0.001 | 7e-08 | placed |
+| baptist | +0.287 (+0.266) | +0.507 (+0.361) | 0.008 | 8e-04 | placed |
+| reformed | +0.192 (+0.270) | +0.401 (+0.374) | 0.035 | 3e-05 | placed |
+| newchurch, orthodox, pentecostal, brethren | | | | | under 100 respondents: left on `Christian` |
+
+ITL3 was chosen over the authorities because every leg that passes at one passes at the other
+with a higher correlation at ITL3, and the thinnest unit doubles. MIN_N = 100 is a floor on the
+Wales-wide share, not part of the playbook test; four of the five legs under it fail anyway.
+Catholic fails the rank test although the chi-square is significant: its only clear outliers
+are Cardiff high and Monmouthshire/Powys low, and the halves do not order the rest alike.
+Face validity of the passes: Baptists highest in the Valleys and Pembrokeshire, Anglicans in
+Powys and the north-east border, Methodists and Reformed in the Welsh-speaking north-west.
+
+### As drawn
+
+Wales's 1,354,738 census Christians: **Anglican 40.0%, Roman Catholic 12.1%, Methodist 5.0%,
+Baptist 4.9%, Reformed 2.4%**, and **35.7%** left on the census's `Christian`. The remainder is
+the 29.9% the survey names no church for plus the four thin legs. All drawn rows are `derived`
+with `parent_column=Christian`, so they roll back when inferred dots are hidden.
+
+**Method differs from England at the border, on purpose.** England (2026-09-07, Anita) gives
+every Christian a denomination; Wales follows the later "unspecified is fine" rule and leaves
+the unnamed share on the parent. So Wales draws about 36% plain Christian beside England's
+5.8%. Reversing it is one line in `uk_split_wales.py` (set `classified` to 1).
+
+> **REVERSED THE SAME DAY: Wales is now spread like England (Anita, 2026-10-04, "ok lets spread
+> wales lik england").** `SPREAD_UNNAMED = True` in `uk_split_wales.py` sets `classified` to 1, so
+> the ~30% of census Christians the survey names no church for take the survey's mix. The reason
+> that made it the right call: BES offers no "Christian, no denomination" box, so that share is the
+> census/survey gap (47.1% against 33.0% of Welsh adults), not people who declined a church; the
+> "unspecified is fine" rule was made for answers like Pew's "no sect". As drawn now, of 1,354,738
+> census Christians: **Anglican 57.0%, Catholic 17.2%, Methodist 7.2%, Baptist 6.9%, Reformed
+> 3.4%**, and **8.2%** left on `Christian` (only the four churches too thin to draw, as England
+> keeps Pentecostal and New church at 5.8%). Both editions rescattered (62,958 / 6,279).
+
+### Checked and not used
+
+- **National Survey for Wales**: religion is `Christian (all denominations)` with no follow-up
+  (2021-22 questionnaire, question `Religion`, and derived `DvReligion`, read 2026-10-04 from
+  gov.wales `national-survey-for-wales-questionnaire-april-2021-to-march-2022.pdf`).
+- **ESS UK rounds**: open and carry a UK denomination card, but Wales is roughly a hundred
+  respondents a round against BES's 2,970 Christians, and the card has no Welsh churches either.
+  Not fetched.
+- **British Social Attitudes, Understanding Society, Welsh Election Study**: UK Data Service
+  registration; not needed with BES on disk.
+- **Church witnesses not run**: Church in Wales diocesan electoral rolls, GCatholic for the
+  Cardiff, Menevia and Wrexham dioceses, the chapels' yearbooks. They would test placement, and
+  the Catholic one could justify placing Catholics by diocese through an override; left for a
+  later session.

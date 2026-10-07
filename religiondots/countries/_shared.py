@@ -47,11 +47,11 @@ def _add_roll(df, columns, key="parent_column"):
     col = df["note"].map(lambda n: _column_of(n, key))
     df["roll"] = col.map(lambda c: columns.get(c) if c is not None else None)
     # A measured row is already at a level somebody counted and must never be moved.
-    df.loc[df["tier"] != "derived", "roll"] = None
+    df.loc[~df["tier"].isin(["derived", "assigned"]), "roll"] = None   # §7e: assigned rolls too
     return df
 
 
-def _allocated_counts(cc, fine, module):
+def _allocated_counts(cc, fine, module, adjust=None):
     """The shared shape for a source that arrived through allocate.py.
 
     au / ie / mx all split fine categories from fine geography (spec §3.9), so the file
@@ -64,6 +64,10 @@ def _allocated_counts(cc, fine, module):
     """
     df = pd.read_csv(HERE / "data" / "normalized" / f"{cc}_{fine}_allocated.csv",
                      dtype={"geo_id": str}, low_memory=False)
+    # A country-specific correction to the allocated rows, in source categories, before they
+    # are mapped (Thailand's printed Christian shares, countries/th.py).
+    if adjust is not None:
+        df = adjust(df)
     df["node"] = df["source_category"].map(module.resolve)
     df = df[df["node"].notna()]
     # An allocated zero is an absence, and an absence must not become a presence ring

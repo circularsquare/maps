@@ -1,8 +1,9 @@
-"""Iran: split the 1395 census `Muslim` column into Sunni by Masaili's province estimates.
+"""Iran: split the 1395 census `Muslim` column into Sunni and Shia by Masaili's province estimates.
 
 Writes data/normalized/ir_split.csv: every province's census `مسلمان` (Muslim) count again, as a
-Sunni row where Masaili gives one plus the census's own `مسلمان` for the rest, summing to the census
-figure to the person. countries/ir.py::_ir_counts swaps these in for ir.csv's Muslim rows.
+Sunni row where Masaili gives one plus a Shia row for the rest (the whole column where he gives no
+row), summing to the census figure to the person. countries/ir.py::_ir_counts swaps these in for
+ir.csv's Muslim rows.
 
 WHY THIS EXISTS
 ---------------
@@ -48,25 +49,30 @@ THE CALLS, argued in sources/ir.md §9 and taxonomy/ir2016.py REVIEW
 * THE PRINTED COUNT IS DRAWN, not the percentage times the census's Muslims. The count is the
   figure the author published and it sums to his total; the percentage is an integer and carries
   less. The Sunni row is taken out of the census `مسلمان` column, never added beside it.
-* THE REST STAYS ON `islam`, as the census's own `مسلمان`, `measured`, just smaller (spec §2.7a,
-  in_split.py's REMAINDER). Masaili names Sunnis and prints no Shia figure. The remainder is mostly
-  Twelver Shia, but a Shia layer made of it would be a number nobody published, would carry the
-  low lean he states (a Sunni author puts the Kurds about two million higher, so the excess lands
-  on "Shia" in exactly the Kurdish provinces), and nothing could contradict it.
+* THE REST GOES ON `islam.shia`, in every province (Anita's ruling, ask/RULINGS.md 2026-09-15:
+  "ok lets record (a)"). This reverses the first build (2026-09-15, d743fc47-irsect), which left
+  the remainder on `islam` as the census's own `مسلمان`. Masaili prints no Shia figure but says
+  Twelver Shia are the majority of Iran's Muslims, so the Shia row is census Muslims less his
+  Sunni estimate. The accepted costs: his low Kurdish count (a Sunni author puts the Kurds about
+  two million higher) is drawn as Shia in Kurdistan, West Azerbaijan and Kermanshah, and
+  Kermanshah's Yarsan (Ahl-e Haqq), who answered Muslim on the census, are drawn as Shia.
 * THE 500,000 LUMP names no province. It goes to Tehran and Alborz in proportion to their census
   Muslims, by largest remainder: Tehran is named, Alborz was Tehran province until 2010 and Karaj is
   part of the same city region, and Soltani (2015) counts Alborz with Tehran. The other central
   provinces (Qom, Markazi, Isfahan, Qazvin, Semnan, Yazd) get none of it; nothing read names a
   Sunni community in any of them. See LUMP_PROVINCES.
-* PROVINCES WITH NO ROW (15, Khuzestan and Isfahan among them) keep every Muslim on `islam`.
+* PROVINCES WITH NO ROW (15, Khuzestan and Isfahan among them) put every Muslim on `islam.shia`.
 
 TIER: `derived`, AND THE ROLL-UP IS THE REASON
 ----------------------------------------------
 The census counted these Muslims in each province; only which branch comes from Masaili. So the
-Sunni rows are `derived` with `parent_column=مسلمان`, and taxonomy/ir2016.py COLUMNS rolls them back
-to `islam` when a reader turns inferred dots off (spec §7a-i-1). `modelled` would make the viewer
-delete 7.6M counted Muslims instead. Basis is `estimate` on the Sunni rows (spec §3.1: a compiler's
-judgement may split a category, never add to one).
+Sunni and the Shia rows are both `derived` with `parent_column=مسلمان`, and taxonomy/ir2016.py
+COLUMNS rolls them back to `islam` when a reader turns inferred dots off (spec §7a-i-1): with
+inferred dots hidden Iran draws every Muslim on `islam`, as the census counted them. `modelled`
+would make the viewer delete counted Muslims instead. Basis is `estimate` on both (spec §3.1: a
+compiler's judgement may split a category, never add to one). No Muslim stays on bare `islam`, so
+Iran has no `measured` islam row and rollup.py must be re-run after this (the ancestor walk would
+find nothing to roll to; the recorded `roll` is what carries them).
 
 Usage:
     python ir_split.py             build data/normalized/ir_split.csv
@@ -124,10 +130,14 @@ NOTE_SUNNI = ("level=leaf; derivation=compiler_estimate; structure={sid}; "
 NOTE_LUMP = ("level=leaf; derivation=compiler_estimate; structure={sid}; "
              "structure_geo=lump:Tehran and the central provinces; lump=500000 spread over "
              "Tehran and Alborz by census Muslims; parent_column=" + COL)
-NOTE_REST = ("level=leaf; cat=" + COL + "; derivation=exact_single_child; branch not named "
-             "(Masaili names Sunnis only; the rest is mostly Twelver Shia and no source counts it)")
-NOTE_UNSPLIT = ("level=leaf; cat=" + COL + "; derivation=exact_single_child; no Sunni row in "
-                "Masaili's table for this province")
+LABEL_SHIA = "Muslim: Shia, census Muslims less Masaili's Sunnis"
+# parent_column must stay the LAST field: countries/_shared.py::_column_of reads up to the next `;`.
+NOTE_REST = ("level=leaf; derivation=census_less_compiler_estimate; structure={sid}; "
+             "branch by subtraction: census Muslims less Masaili's Sunni estimate, on islam.shia "
+             "by Anita's ruling of 2026-09-15; parent_column=" + COL)
+NOTE_UNSPLIT = ("level=leaf; derivation=census_less_compiler_estimate; structure={sid}; no Sunni "
+                "row in Masaili's table for this province, every Muslim on islam.shia by Anita's "
+                "ruling of 2026-09-15; parent_column=" + COL)
 OUT_COLUMNS = ["geo_id", "geo_level", "geo_name", "source_category", "count", "basis",
                "year", "source_id", "tier", "note"]
 
@@ -250,14 +260,15 @@ def build():
         base = dict(geo_id=r.geo_id, geo_level=r.geo_level, geo_name=r.geo_name, year=r.year)
         m = int(r.count)
         if r.geo_id not in sunni:
-            rows.append(dict(base, source_category=COL, count=m, basis=r.basis,
-                             source_id=r.source_id, tier="measured", note=NOTE_UNSPLIT))
+            rows.append(dict(base, source_category=LABEL_SHIA, count=m, basis="estimate",
+                             source_id=SOURCE_ID, tier="derived",
+                             note=NOTE_UNSPLIT.format(sid=SOURCE_ID)))
             continue
         n, note, label = sunni[r.geo_id]
         rows.append(dict(base, source_category=label, count=n, basis="estimate",
                          source_id=SOURCE_ID, tier="derived", note=note))
-        rows.append(dict(base, source_category=COL, count=m - n, basis=r.basis,
-                         source_id=r.source_id, tier="measured", note=NOTE_REST))
+        rows.append(dict(base, source_category=LABEL_SHIA, count=m - n, basis="estimate",
+                         source_id=SOURCE_ID, tier="derived", note=NOTE_REST.format(sid=SOURCE_ID)))
     out = pd.DataFrame(rows, columns=OUT_COLUMNS)
     _check(out, muslims)
     return out
@@ -269,14 +280,22 @@ def _check(out, muslims):
         raise SystemExit("ir_split does not conserve each province's census Muslims")
     if (out["count"] < 0).any():
         raise SystemExit("a remainder went negative")
-    sun = out[out["tier"] == "derived"]
+    sun = out[out["source_category"].isin([LABEL, LABEL_LUMP])]
     if int(sun["count"].sum()) != TOTAL:
         raise SystemExit(f"{int(sun['count'].sum()):,} Sunnis drawn, the table prints {TOTAL:,}")
+    shia = out[out["source_category"] == LABEL_SHIA]
+    if set(out["source_category"]) - {LABEL, LABEL_LUMP, LABEL_SHIA}:
+        raise SystemExit("a Muslim row is on neither branch (the 2026-09-15 ruling puts the rest "
+                         "on islam.shia in every province)")
+    if (out["tier"] != "derived").any() or not out["note"].str.endswith("parent_column=" + COL).all():
+        raise SystemExit("every split row must be `derived` and end in parent_column=" + COL)
+    if set(shia["geo_id"]) != set(muslims.index):
+        raise SystemExit("a province has no Shia row")
     total = int(muslims.sum())
     print(f"  OK every province's rows sum to its census Muslims, {total:,} in all; "
-          f"{TOTAL:,} Sunni drawn")
+          f"{TOTAL:,} Sunni and {int(shia['count'].sum()):,} Shia drawn, all `derived`")
 
-    print("\n  province                    Muslims      Sunni  of Muslims   on islam")
+    print("\n  province                    Muslims      Sunni  of Muslims       Shia")
     s = sun.groupby("geo_id")["count"].sum()
     for geo in s.sort_values(ascending=False).index:
         mm = int(muslims[geo])

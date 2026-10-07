@@ -110,8 +110,17 @@ def main():
             return
 
     gpkg = os.path.join(RAW, GPKG_NAME)
+    tmp = None
     if not os.path.exists(gpkg):
-        raise SystemExit(f"missing {gpkg} -- run with --fetch first")
+        # the unpacked copy is deleted once a build is verified; the .gz is kept
+        gz = os.path.join(RAW, GZ_NAME)
+        if not os.path.exists(gz):
+            raise SystemExit(f"missing {gpkg} and {gz} -- run with --fetch first")
+        import tempfile
+        tmp = os.path.join(tempfile.gettempdir(), f"id_grid_{os.getpid()}.gpkg")
+        with gzip.open(gz, "rb") as src, open(tmp, "wb") as dst:
+            shutil.copyfileobj(src, dst, length=1 << 22)
+        gpkg = tmp
     if not os.path.exists(DRAWN):
         raise SystemExit(f"missing {DRAWN} -- run sources/id_geo.py first")
 
@@ -122,6 +131,8 @@ def main():
 
     print("reading Kontur …")
     hexes = gpd.read_file(gpkg)
+    if tmp:
+        os.remove(tmp)
     if len(hexes) == 0:
         raise SystemExit("Kontur gpkg read returned ZERO features")
     popcol = next((c for c in hexes.columns if c.lower() == "population"), None)

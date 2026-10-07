@@ -1,0 +1,46 @@
+# Botswana (taxonomy/bw2011.py). Census 2011, language spoken at home, persons aged 2+. Parents and
+# languages other fragments already define are repeated identically (label and colour).
+#
+# Three new leaves, placed by Glottolog (data/raw/glottolog/values.csv, classification):
+#   * Shekgalagadi (kgal1244) is inside Sotho-Tswana (soth1248): beside Setswana.
+#   * Kalanga (kala1384) is inside Shona (S.10, shon1250). us.txt's Shona is a leaf other countries
+#     draw on, so Kalanga hangs from Bantu beside it.
+#   * Yeyi (yeyi1239) sits directly under Eastern Narrow Bantu: from Bantu.
+# Sesarwa ("language of the Basarwa") is drawn on na.txt's Khoisan root (bw2011.py says why).
+#
+# Colours, for the neighbours on the Botswana ground:
+#   Setswana is za.txt's olive and is everywhere. Shekgalagadi, its neighbour across Kweneng West,
+#   Ghanzi and the Kgalagadi, is a light sand, apart from the olive by lightness and from the
+#   washed Khoisan green it also meets. Kalanga, the North East and Tutume, is a blue-violet, apart
+#   from Setswana and from the warm Shona and Ndebele (Zimbabwe) it shares those districts with.
+#   Ngamiland holds Mbukushu, Otjiherero, Yeyi and the washed Khoisan together. Mbukushu (zm.txt's
+#   node, bare there; Zambia draws a few thousand) generated as a pale mint that read as the washed
+#   Khoisan green, so it is given a light periwinkle here; Yeyi a dark brick red, apart from
+#   Otjiherero's magenta and, by lightness, from Shona's light pink, which it meets in Ngamiland East.
+
+# ---- parents and languages defined elsewhere, repeated bare (their colours live there) ----
+nigercongo | Niger-Congo
+nigercongo.bantu | Bantu
+nigercongo.bantu.sotho_tswana | Sotho-Tswana
+nigercongo.bantu.sotho_tswana.setswana | Setswana
+nigercongo.bantu.shona | Shona
+nigercongo.bantu.nguni | Nguni
+nigercongo.bantu.nguni.ndebele_zw | Ndebele (Zimbabwe)
+nigercongo.bantu.botatwe | Botatwe (M.60)
+nigercongo.bantu.botatwe.subiya | Subiya
+nigercongo.bantu.luyana | Luyana (K.30)
+nigercongo.bantu.luyana.mbukushu | Mbukushu | 0.78 0.12 250
+nigercongo.bantu.otjiherero | Otjiherero
+khoisan | Khoisan languages
+indoeuropean | Indo-European
+indoeuropean.germanic | Germanic
+indoeuropean.germanic.english | English
+indoeuropean.germanic.continental | Continental West Germanic
+indoeuropean.germanic.continental.afrikaans | Afrikaans
+africa_other | Other African languages
+other | Other or unclassified
+
+# ---- new ----
+nigercongo.bantu.sotho_tswana.shekgalagadi | Shekgalagadi | 0.84 0.13 85
+nigercongo.bantu.kalanga | Kalanga | 0.58 0.14 285
+nigercongo.bantu.yeyi | Yeyi | 0.56 0.13 30

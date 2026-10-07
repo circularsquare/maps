@@ -6,7 +6,11 @@ priority of 2026-09-15 (`ask/RULINGS.md`, top line), which lifted her deferral o
 
 ## 0. Outcome
 
-**Parked at checkpoint A.** The one source with religion below the nation is the World Bank's High
+**Drawn 2026-10-03 (session `fafd1067-ss`), six of ten former states, 6,886,052 people; §5 is the
+build.** Jonglei, Unity, Upper Nile and Warrap are blank. §1-§4 are the 2026-09-15 scouting record and stay
+as written.
+
+*2026-09-15:* **Parked at checkpoint A.** The one source with religion below the nation is the World Bank's High
 Frequency South Sudan Survey (HFSSS), waves 1 and 2, whose files need a free World Bank Microdata Library
 login (Anita's, brief §3). Every open route checked on 2026-09-15 is national only or has no religion item
 (§2). §14 is heavy; ask 042 carries the evidence and the recommended grain (§3).
@@ -124,3 +128,122 @@ None has religion below the nation.
    large countries (ask 014), and Pew's traditional level disagrees with every survey that asks.
 2. The recommendation to leave the three unsampled states empty rather than fill them.
 3. The Catholic diocese figures kept as a witness only.
+
+## 5. The build, 2026-10-03 (`fafd1067-ss`)
+
+Files: `sources/ss_geo.py`, `sources/ss.py`, `taxonomy/ss2015.py`, `countries/ss.py`; `data/raw/ss/` holds
+Anita's two zips (licence: research use, no redistribution; nothing leaves but state shares), COD-AB,
+COD-PS and Kontur.
+
+### 5.1 What the files hold, checked
+
+- The household key is `(state, ea, hh)`; `hh` alone repeats. `hhsize` equals the `hhm` roster lines in
+  all 3,550 (wave 1) and 1,189 (wave 2) households. `weight` / `weight_x` is constant inside each EA, a
+  household weight, so persons = weight x hhsize: 4,394,838 in wave 1's six states, 722,045 in wave 2.
+- The handoff's warning holds: `hhq_w1_w2` has no religion; the per-wave `hhq` files do.
+- **Wave 2 is towns only**: no `urban` variable, no rural EAs, 101 EAs in seven states (Warrap 15). Wave 1
+  is 50 EAs per state, urban and rural. So wave 1 is drawn and wave 2 is a replicate of its urban half.
+- Card (`lreligion`): Christianity, Islam, Traditional African Religion, Judaism, Buddhism, Hinduism,
+  Agnostic, Atheism, Other. `religion1` is card order, not preference: 32 heads ticked two boxes and every
+  one has Christianity first. Each is split equally between its answers. 58 heads (47 in rural Eastern
+  Equatoria, a few EAs) have no answer; kept as `Not recorded`, mapped to nothing.
+
+### 5.2 Checks
+
+- **Decode**: the files' own `lState` labels matched to COD-AB names letter for letter; both waves decode
+  the same. Held-out (no religion): survey state shares against the 2025 estimate, r +0.805, 9 of 719
+  other orderings reach it. Printed only; six units cannot carry a join (spec §12, São Tomé), and the
+  decode is by label.
+- **Wave 2 against wave 1, towns only**, person-weighted, six states: Islam r +0.992 (mean gap 1.9
+  points), traditional r +0.973 (0.5 points). Western Bahr el Ghazal's towns 19.7% Muslim in 2015, 14.0%
+  in 2016; Northern Bahr el Ghazal's 7.2% and 7.3% traditional.
+- **Split-half**: `lits.stability`, 300 EAs, median of 400 random EA halves against a 400-draw null that
+  deals the EAs into states (family 5 in `sources/stability.py`), with its chi-square and one-EA vetoes.
+  Christianity +0.943, traditional +1.000, Not recorded +0.898, Islam +0.829 (all p 0.0025); Atheism
+  +0.920 (p 0.005, 8 heads); Buddhism +1.000 (p 0.027, 3 heads, all Central Equatoria) carry. Judaism
+  (2 heads) fails, Agnostic (1) is untestable; both flat at the national share. `CARRIES` asserted.
+
+### 5.3 As drawn (six states, 2025 estimate)
+
+| state | heads | Christian | traditional | Muslim | not recorded |
+|---|---|---|---|---|---|
+| Central Equatoria | 600 | 98.6 | 0.0 | 1.3 | 0.0 |
+| Eastern Equatoria | 569 | 75.1 | 10.6 | 0.3 | 12.8 |
+| Lakes | 598 | 93.9 | 6.1 | 0.0 | 0.0 |
+| Northern Bahr el Ghazal | 600 | 75.0 | 23.4 | 0.8 | 0.8 |
+| Western Bahr el Ghazal | 585 | 84.6 | 2.6 | 10.5 | 1.2 |
+| Western Equatoria | 598 | 99.6 | 0.0 | 0.4 | 0.0 |
+
+Six states: Christianity 88.77%, traditional 6.74%, not recorded 2.48%, Islam 1.62%, Atheism 0.33%,
+Buddhism 0.03%, Judaism 0.01%. Traditional 6.7% sits beside IRI 2013's 7% (national) and a fifth of Pew
+2020's 32.8%.
+
+### 5.4 Geography and population
+
+- COD-AB v03: 10 states; admin2 has 78 counties plus `SS0001 Abyei` under a parent `SS00` that admin1
+  lacks (dropped by pcode, as Sudan drops its SD19).
+- **Population: the 2025 county estimates** (`SSD_2024_population_estimates_data.xlsx`, "displacement
+  adjusted", cleared with NBS, IMWG-adopted), 13,297,196 without Abyei's 145,358, rather than the 2022
+  COD-PS (12,394,970): newer, and by county, which the grid calibration needs. Every state is 1.03x-1.11x
+  its 2022 figure. The workbook files Uror (SS0311) under SS04; parent taken from COD-AB, pinned in
+  `MISFILED_PARENT`.
+- Kontur `SS` 2023: 0.830 of the estimate overall, 2.21x in Eastern Equatoria (Kapoeta East, Torit and Budi
+  read 2.7x-4.8x their county totals) and 0.51x in Western Bahr el Ghazal, so every hex is scaled to its
+  county's 2025 total (`cd_geo.py`'s construction). No county is a Kontur hole (Nagero 4.2x is the
+  largest factor; `HOLE_FACTOR` 10). No raw block reaches the cap (densest 42,059/km2). 1,537 hex
+  centroids fall outside every county, 179,655 Kontur people: 1,028 hexes (31,062) in Abyei, 394 within
+  2 km of the border (115,328), 91 more than 20 km out (the Kafia Kingi area, which Sudan administers). Dropped;
+  the calibration puts each county's total back on its own hexes, so only border placement moves.
+  Calibrated densest hex 44,694/km2 in Pochalla (Jonglei, which draws nothing).
+
+### 5.5 The not-drawn part (`gap_share` 0.5146)
+
+(6,411,144 in the four blank states + 171,087 not recorded + 535,471 refugees and asylum seekers, UNHCR
+2024) over (13,297,196 + 535,471). Refugees are counted outside the 2025 estimate, which adjusts for
+internal displacement and returns; if the estimate does hold them, the share is 53.5% and part of the
+refugee figure (Maban, Jamjang, Renk are in Upper Nile and Unity) overlaps the blank states. Their
+states were not read: UNHCR's portal answered with a JavaScript bot wall on 2026-10-03.
+
+### 5.6 Calls someone might reverse
+
+1. **Warrap left blank.** Its only sample is wave 2's towns (149 heads; 91.8% Christian, 6.3%
+   traditional), and wave 1's town/countryside gap on traditional religion is 7.2 against 24.8 in
+   Northern Bahr el Ghazal and 2.1 against 13.4 in Eastern Equatoria. Drawing it from towns would put
+   the state at a third of its likely traditional share; modelling the countryside from neighbours was
+   not tried because Northern Bahr el Ghazal (24.8) and Lakes (4.4) disagree too much to borrow from.
+   Reversing: add 81 to the drawn set in `ss.py` from wave 2.
+2. **Wave 1 alone**, wave 2 as witness, rather than pooling the towns of both waves.
+3. **Buddhism and Atheism drawn where found** on 3 and 8 heads, because they pass the stated test and
+   both vetoes; Judaism kept on its node at 0.01% flat rather than dropped.
+4. **The 2025 county estimates** as the base, not the endorsed 2022 COD-PS.
+5. Refugees added outside the estimate in `gap_share` (§5.5).
+
+### 5.7 Not done
+
+- The roster in `hhm` has no religion item; nothing prices the head-for-household assumption here.
+- The six states' refugee counts (UNHCR portal) and the IRI 2013 sample size.
+- Wave 3 (catalog 2914, religion variables empty) and the 2017 Crisis Recovery Survey were not reopened.
+
+## 6. Review, 2026-10-03 (`fafd1067-rev2`, full pass)
+
+Checks clean (check_md, built_countries, check_rollup: 6,714,965 all modelled, nothing orphaned).
+The normalized CSV reproduces every figure in the note and in §5.3 (six states 6,886,052; the four
+blank states 48.2% of 13,297,196; `gap_share` 0.5146 recomputed). Mapping matches precedent (bare
+`christianity` for a one-box card, Atheism and Agnostic on `secular`). The grain is the one ask 042
+recommended, and Warrap's blanking is argued in §5.6. Screenshot: Jonglei, Unity, Upper Nile and
+Warrap empty, dots along the Nile and in Aweil, Wau, Rumbek, Juba and Yambio, none in the sea.
+
+- **`gap` reworded:** "about 535,000 refugees and asylum seekers" read as South Sudanese abroad (2.3
+  million, the better-known figure); they are UNHCR's refugees *in* South Sudan, mostly from Sudan
+  (§3). Now says so. refresh-meta run.
+
+## 7. Top text before the 75-word cut, 2026-10-03 (`fafd1067-notes75`)
+
+Anita asked for the text at the top of the phone screen to come down to about 75 words
+(queue.md, "Cut the country text to about 75 words"). These are the four header fields as
+they stood before the cut, verbatim, so nothing they said is lost. The cut versions are in
+`countries/ss.py`; `note_public` was not changed.
+
+- `how`: household survey, one round in 2015
+- `grain`: former states, 1.1 million people on average
+- `gap`: 51.5% of residents: Jonglei, Unity, Upper Nile and Warrap, which the survey did not sample or sampled in towns only (6.4 million); households whose head's religion was not recorded (171,000); and about 535,000 refugees and asylum seekers from other countries living in South Sudan, most from Sudan (UNHCR, 2024)

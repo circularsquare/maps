@@ -13,7 +13,10 @@ Usage:
 THE 2023 DISTRICT SET IS NOT IN ANY ONE BOUNDARY FILE (spec §8.1). The census tabulates 136
 districts, which is PBS's own list "as on 01-03-2023". OCHA's COD-AB v01 for Pakistan
 (valid_on 2022-09-09, reviewed 2024-09-27) has 160 ADM2 units, of which 24 are Azad Kashmir
-and Gilgit-Baltistan, outside the census. The other 136 are NOT the census's 136:
+and Gilgit-Baltistan, outside PBS's tables. Azad Kashmir's 10 join by name, 1:1, to the ten
+districts of the AJK government's yearbook (sources/pk_ajk.py, added 2026-10-03), with the
+yearbook's tehsil names as the second key; Gilgit-Baltistan's 14 stay out. COD's AJK follows the
+Line of Control, which is spec §14.18's de facto rule. The other 136 are NOT the census's 136:
 
   * **Lehri** is a COD district and not a census one. It was folded back in, and not into one
     parent: the census prints its LEHRI sub-division under Sibi and its BHAG sub-division under
@@ -80,13 +83,15 @@ OUT_UNITS = os.path.join(GEO, "pk_districts.gpkg")
 OUT_HEXES = os.path.join(GEO, "pk_hexes.gpkg")
 OUT_LOOKUP = os.path.join(GEO, "pk_lookup.csv")
 
-DISTRICTS = 136
+# 136 from PBS Table 9 and, since 2026-10-03, Azad Kashmir's 10 from the AJK yearbook (sources/pk_ajk.py)
+DISTRICTS = 146
 COD_ADM2 = 160
-COD_OUTSIDE_CENSUS = {"Azad Kashmir", "Gilgit Baltistan"}
+COD_OUTSIDE_CENSUS = {"Gilgit Baltistan"}
 
 # census province (as pk.csv's note names it) -> COD adm1_name
 PROVINCE = {"Khyber Pakhtunkhwa": "Khyber Pakhtunkhwa", "Punjab": "Punjab", "Sindh": "Sindh",
-            "Balochistan": "Balochistan", "Islamabad": "Islamabad"}
+            "Balochistan": "Balochistan", "Islamabad": "Islamabad",
+            "Azad Jammu and Kashmir": "Azad Kashmir"}
 
 # census district (without " DISTRICT") -> COD adm2_name, where the two do not fold together
 ALIAS = {
@@ -234,6 +239,11 @@ def census():
     wide["census_pop"] = wide[cats].sum(axis=1)
     t = df[df["geo_level"] == "tehsil"][["geo_name", "district", "province"]].drop_duplicates()
     tehsils = t.groupby(["province", "district"])["geo_name"].apply(list).to_dict()
+    # AJK has no tehsil rows in pk.csv (the yearbook prints religion by district only); its
+    # tehsil NAMES come from the yearbook's Table 15.15, grouped by sources/pk_ajk.py
+    import pk_ajk
+    for d, names in pk_ajk.tehsils().items():
+        tehsils[(pk_ajk.PROVINCE, d)] = names
     if len(wide) != DISTRICTS:
         raise SystemExit(f"{len(wide)} census districts in {NORM}, expected {DISTRICTS}")
     return wide, tehsils
@@ -317,7 +327,7 @@ def main():
           f"{miss_p}, {len(dup)} COD used twice {dup}); {len(ALIAS)} via ALIAS")
     print(f"      not joined by name, on purpose: 7 Karachi districts (OSM), COD's Lehri "
           f"(split by tehsil), and COD's {int(a2['adm1_name'].isin(COD_OUTSIDE_CENSUS).sum())} "
-          f"AJK/GB districts (outside the census)")
+          f"Gilgit-Baltistan districts (no published religion table)")
 
     # ---- 2. the second key: COD tehsil names against the census tehsils of the same district
     worst = []
@@ -460,8 +470,8 @@ def main():
     outside = j["unit"].isna()
     lost = float(pts.loc[outside, popcol].sum())
     print(f"  hexes in no drawn district: {int(outside.sum()):,} ({lost:,.0f} people, "
-          f"{100.0 * lost / pts[popcol].sum():.2f}%) -- Azad Kashmir and Gilgit-Baltistan, which "
-          f"the census does not cover, plus border overrun")
+          f"{100.0 * lost / pts[popcol].sum():.2f}%) -- Gilgit-Baltistan, which no published "
+          f"religion table covers, plus border overrun")
     keep = ~outside
     out = gpd.GeoDataFrame({"unit": j.loc[keep, "unit"].to_numpy(),
                             "pop": pts.loc[keep, popcol].to_numpy(dtype=float)},

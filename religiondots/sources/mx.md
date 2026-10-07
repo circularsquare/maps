@@ -317,3 +317,50 @@ open output.
    entidad-level detail proves too coarse to draw.
 3. **ITER locality rows + their lon/lat** as the placement layer for the four groups
    (spec §8.2), accepting the 42% masking at that level.
+
+## 9. Islands nobody lives on (placement fix, 2026-10-04)
+
+Anita, from a screenshot: dots on Arrecife Alacranes, Cayo Arenas, Triángulos and the other
+cays off Yucatán. The cause was the placement rule, not the counts. Mexico places each
+municipio's dots in equal shares across its AGEBs, and **INEGI gives nearly every island and
+cay a rural AGEB of its own**, so each cay took as many dots as a mainland AGEB of a thousand
+people: 48 of Progreso's 113 AGEBs are Alacranes cays (42% of Progreso's dots were on the
+reef), 49 of San Quintín's 165 are Pacific and Gulf of California islands, 27 of La Huerta's 68
+are islets off the Jalisco coast, 5 of Celestún's 16 are Triángulos and its neighbours. In all
+171 dots at 1:1,000 and 16 at 1:10,000 sat on islands where the 2020 census counts under 250
+people. Mexico has no rings; the "rings" in the screenshot are the viewer's derived-tier dots.
+
+**Fix: `sources/mx_geo.py` writes `data/geo/mx/mx_place.gpkg`**, `00a` less every island
+holding fewer than 250 people (a quarter of a dot) in ITER 2020. Islands are the connected
+pieces of the union of `00ent` other than the mainland (350 pieces); each ITER locality goes on
+the piece it lies on, nearest within 2 km (none were further). 343 of 349 islands are cut,
+3,983 km2: 225 AGEBs dropped whole, 8 mainland AGEBs trimmed of island parts, 81,451 -> 81,226.
+Every municipio keeps at least one AGEB (asserted), so no count moves; per-(node, tier) dot
+totals are identical before and after in both editions. The carry's unit order can shift for
+the 34 municipios that lost an AGEB, if their first polygon on the Hilbert curve was an island, which can move a
+carried dot between neighbouring municipios; that is the carry, not a count change.
+
+Cut with people (193 in all, each would otherwise have taken a whole AGEB's share): Isla
+Guadalupe 113 (`Tepeyac (Campamento Weste)`, a fishing camp), Tiburón 16, Isla Grande de
+Ixtapa 16, San Martín 15, El Pardito 13, San Benito Oeste 8, Venados 5, La Palma Sola
+(Espíritu Santo) 4, Boca Nueva 2, Isla del Carmen (BCS) 1. Revillagigedo (Socorro, Clarión),
+the Islas Marías (penal colony closed 2019), Ángel de la Guarda and Cayos Arcas have nobody.
+Kept: Cozumel, Isla Mujeres, Holbox, Cedros, Natividad (268), San Marcos (367). Witnesses for
+all of these are asserted in `mx_geo.py` (`WITNESS`).
+
+Island dots after: 0 on any cut island (269 -> 103 on islands, all on the kept ones). **Not
+fixed, and a different problem:** a Kontur r6 scan still finds 71 dots at 1:1,000 on barrier
+islands and spits (Sinaloa's Topolobampo bars, Oaxaca's Laguna Superior, Cabo Rojo, the east
+end of Isla del Carmen). INEGI's AGEBs include the lagoons behind them, so these pieces join
+the mainland and take an area share of a rural AGEB like any empty mainland ground. That is the
+rural-AGEB spread `mx_geo.md` §6 describes, and its fix is the one written there (place at the
+`00lpr` locality points).
+
+**Same scan over the other countries placed without weights** (ca cz au ie nz uk pl ro ee hr hu
+mk lk gh pt vc il md bq; Kontur-weighted countries cannot do this, an empty hex has no weight):
+Portugal has 3 dots on uninhabited islands, 2 on the Ilhas Desertas (-16.50 32.50, -16.49 32.44)
+and 1 on Selvagem Grande (-16.03 30.04), from area-uniform freguesia placement; Canada 1 on Sable
+Island (-59.94 43.94); Australia 1 near Robbins Island in Bass Strait (144.76 -40.56). The other
+hits are inhabited islands Kontur r6 misses (Silba and Olib in hr, the Danube delta in ro,
+Saibai, K'gari and Curtis in au, Belcher Islands in ca, Bonaire itself in bq). Not fixed here;
+each is one to three dots.

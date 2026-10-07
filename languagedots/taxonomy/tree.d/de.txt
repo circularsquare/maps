@@ -1,0 +1,169 @@
+# Germany, Mikrozensus 2023, language spoken predominantly at home (taxonomy/de2023.py).
+# No new nodes: every language Destatis names is already on the tree. The nodes Germany draws
+# on are repeated here bare (same labels, colours left to the fragments that set them), so the
+# country does not depend on another country's fragment staying put.
+
+indoeuropean.germanic.continental | Continental West Germanic
+indoeuropean.germanic.continental.german | German
+indoeuropean.germanic.continental.dutch | Dutch
+indoeuropean.germanic.north | North Germanic
+indoeuropean.germanic.north.danish | Danish
+indoeuropean.romance | Romance
+indoeuropean.romance.french | French
+indoeuropean.romance.italian | Italian
+indoeuropean.romance.spanish | Spanish
+indoeuropean.romance.portuguese | Portuguese
+indoeuropean.romance.romanian | Romanian
+indoeuropean.slavic | Slavic
+indoeuropean.slavic.west | West Slavic
+indoeuropean.slavic.west.polish | Polish
+indoeuropean.slavic.east | East Slavic
+indoeuropean.slavic.east.russian | Russian
+indoeuropean.slavic.east.ukrainian | Ukrainian
+indoeuropean.slavic.south | South Slavic
+indoeuropean.slavic.south.bosnian | Bosnian
+indoeuropean.slavic.south.bulgarian | Bulgarian
+indoeuropean.slavic.south.croatian | Croatian
+indoeuropean.slavic.south.macedonian | Macedonian
+indoeuropean.slavic.south.serbian | Serbian
+indoeuropean.albanian | Albanian
+indoeuropean.albanian.albanian | Albanian
+indoeuropean.hellenic | Hellenic
+indoeuropean.hellenic.greek | Greek
+indoeuropean.iranian.kurdish | Kurdish
+indoeuropean.iranian.persian | Persian (Farsi)
+turkic | Turkic
+turkic.turkish | Turkish
+uralic | Uralic
+uralic.hungarian | Hungarian
+austroasiatic.vietnamese | Vietnamese
+sinotibetan.sinitic | Chinese
+africa_other | Other African languages
+# --- origin_mix borrowed nodes (python sources/origin_mix.py --fragment de) ---
+# Every node the origin mixes bring in that tree.txt lacks, repeated without colour.
+afroasiatic.berber | Berber
+afroasiatic.berber.tachelhit | Tachelhit
+afroasiatic.berber.tamazight | Tamazight
+afroasiatic.chadic | Chadic
+afroasiatic.chadic.hausa | Hausa
+afroasiatic.cushitic | Cushitic
+afroasiatic.cushitic.agaw | Agaw
+afroasiatic.cushitic.agaw.bilen | Bilen
+afroasiatic.cushitic.lowland | Lowland East Cushitic
+afroasiatic.cushitic.lowland.benaadir | Benaadir Somali
+afroasiatic.cushitic.lowland.maay | Maay
+afroasiatic.cushitic.lowland.oromo | Oromo
+afroasiatic.cushitic.lowland.saho | Saho (Irob)
+afroasiatic.cushitic.lowland.somali | Somali
+afroasiatic.ethiosemitic | Ethiopian Semitic
+afroasiatic.ethiosemitic.amharic | Amharic
+afroasiatic.ethiosemitic.tigre | Tigre
+afroasiatic.ethiosemitic.tigrinya | Tigrinya
+afroasiatic.hebrew | Hebrew
+austronesian | Austronesian
+austronesian.javanese | Javanese
+austronesian.malagasy | Malagasy
+austronesian.malayic | Malayic
+austronesian.malayic.indonesian | Indonesian
+austronesian.malayic.malay | Malay
+austronesian.philippine | Philippine
+austronesian.philippine.cebuano | Cebuano
+austronesian.philippine.hiligaynon | Hiligaynon
+austronesian.philippine.ilocano | Ilocano
+austronesian.philippine.tagalog | Tagalog
+austronesian.sundanese | Sundanese
+indoeuropean.armenian | Armenian
+indoeuropean.armenian.armenian | Armenian
+indoeuropean.baltic | Baltic
+indoeuropean.baltic.latvian | Latvian
+indoeuropean.baltic.lithuanian | Lithuanian
+indoeuropean.germanic.continental.luxembourgish | Luxembourgish
+indoeuropean.germanic.north.icelandic | Icelandic
+indoeuropean.germanic.north.norwegian | Norwegian
+indoeuropean.germanic.north.swedish | Swedish
+indoeuropean.indoaryan.dardic.pashai | Pashai
+indoeuropean.indoaryan.romani | Romani
+indoeuropean.indoaryan.romani.romani | Romani
+indoeuropean.indoaryan.sinhala | Sinhala
+indoeuropean.iranian.luri | Luri (Lurish and Bakhtiari)
+indoeuropean.iranian.mazandarani | Mazandarani
+indoeuropean.iranian.tajik | Tajik
+indoeuropean.iranian.zazaki | Zazaki
+indoeuropean.romance.catalan | Catalan
+indoeuropean.romance.galician | Galician
+indoeuropean.romance.valencian | Valencian
+indoeuropean.slavic.east.belarusian | Belarusian
+indoeuropean.slavic.south.montenegrin | Montenegrin
+indoeuropean.slavic.south.slovenian | Slovenian
+indoeuropean.slavic.west.czech | Czech
+indoeuropean.slavic.west.slovak | Slovak
+isolate | Language isolates
+isolate.basque | Basque
+japonic | Japonic
+japonic.japanese | Japanese
+kartvelian | Kartvelian
+kartvelian.georgian | Georgian
+koreanic | Koreanic
+koreanic.korean | Korean
+kradai | Kra-Dai (Tai-Kadai)
+kradai.isan | Isan (Northeastern Thai)
+kradai.northern_thai | Northern Thai (Tai Yuan, Nhuan)
+kradai.southern_thai | Southern Thai (Pak Tai)
+kradai.thai | Thai
+mongolic | Mongolic
+mongolic.mongolian | Mongolian
+nakhdaghestanian | Nakh-Daghestanian
+nakhdaghestanian.nakh | Nakh
+nakhdaghestanian.nakh.chechen | Chechen
+nigercongo | Niger-Congo
+nigercongo.atlantic | Atlantic
+nigercongo.atlantic.fulah | Fula
+nigercongo.atlantic.wolof | Wolof
+nigercongo.bantu | Bantu
+nigercongo.bantu.ewondo | Ewondo
+nigercongo.bantu.gikuyu | Gikuyu
+nigercongo.bantu.kinyarwanda | Kinyarwanda
+nigercongo.bantu.shona | Shona
+nigercongo.gur | Gur
+nigercongo.gur.dagbani | Dagbani
+nigercongo.kwa | Kwa
+nigercongo.kwa.akan | Akan (Twi)
+nigercongo.kwa.ewe | Ewe
+nigercongo.kwa.ga | Ga
+nigercongo.mande | Mande
+nigercongo.mande.mandinka | Mandinka
+nigercongo.mande.maninka | Maninka (Malinké)
+nigercongo.mande.susu | Susu
+nigercongo.voltaniger | Volta-Niger
+nigercongo.voltaniger.igbo | Igbo
+nigercongo.voltaniger.yoruba | Yoruba
+nilosaharan | Nilo-Saharan
+nilosaharan.nara | Nara
+turkic.azerbaijani | Azerbaijani
+turkic.bashkir | Bashkir
+turkic.iraqi_turkmen | Iraqi Turkmen
+turkic.kyrgyz | Kyrgyz
+turkic.syrian_turkmen | Syrian Turkmen
+turkic.tatar | Tatar
+turkic.turkmen | Turkmen
+turkic.uzbek | Uzbek
+uralic.estonian | Estonian
+uralic.finnish | Finnish
+# --- end origin_mix borrowed nodes ---
+
+# --- regional and minority languages (sources/de_regional.py, session 5d7dac7e-dereg) ---
+# Low German: Adler et al. 2016 report one figure per Land for "Plattdeutsch". In NRW the
+# surveyed area (Westfalen-Lippe) is Westphalian, so NRW's share goes on nl's Westphalian node
+# (Glottolog Westphalic, west2356); the other Laender mix Northern Low Saxon, Eastphalian and
+# East Low German, so they get one leaf under the Low German group (a named label must not sit
+# on the group). Light teal, away from German's mid blue across the whole north.
+# North and Saterland Frisian (Glottolog nort2626, sate1242) are siblings of `frisian`, not its
+# children: `frisian` is a leaf West Frisian draws in nl and elsewhere, and children would make it
+# a group, drawn washed out. Yellow-greens near Frisian's 135, apart from each other.
+indoeuropean.germanic.continental.lowgerman | Low German
+indoeuropean.germanic.continental.lowgerman.plattdeutsch | Low German (Plattdeutsch) | 0.80 0.12 180
+indoeuropean.germanic.continental.lowgerman.westphalian | Westphalian
+indoeuropean.germanic.north_frisian | North Frisian | 0.78 0.15 120
+indoeuropean.germanic.saterland_frisian | Saterland Frisian | 0.72 0.15 100
+indoeuropean.slavic.west.upper_sorbian | Upper Sorbian
+indoeuropean.slavic.west.lower_sorbian | Lower Sorbian

@@ -52,8 +52,8 @@ ENTRY = {
             "This map uses the Arab Barometer instead: **7,191 Libyan adults** who named a "
             "religion in five rounds of interviews between 2018 and 2022, with the share who were "
             "not Muslim applied to each district's Libyans in the Bureau of Statistics and "
-            "Census's estimate for 2020, **6,872,674** people. Nobody counted these dots, and they "
-            "are drawn desaturated to say so. "
+            "Census's estimate for 2020, **6,872,674** people. Nobody counted these dots, so they "
+            "disappear when inferred dots are turned off. "
             "**Non-Muslims are 0.10% of Libyans as drawn, at the same share in every district.** "
             "7 of the 7,191 said they were not Muslim: 6 Christian and 1 atheist. Seven answers "
             "cannot show where anyone lives, so every district is drawn at one share and one mix, "
@@ -67,8 +67,7 @@ ENTRY = {
             "2020 estimate, which covers everyone living in Libya, is 0.52% Christian, 0.26% "
             "Buddhist and 0.09% Hindu, against 0.08% Christian drawn here for Libyans alone. "
             "**Ibadis are not drawn.** Five answers to the follow-up question on branch name the "
-            "Ibadis, in Jafara, Zuwara, Murqub and Tripoli, which is too few to draw, so every "
-            "Muslim is on the one Islam colour. "
+            "Ibadis, in Jafara, Zuwara, Murqub and Tripoli, which is too few to draw. "
             "**One earlier round is left out.** Its answer card, in the 2012 to 2014 round, had no "
             "box for having no religion."),
         how="survey, five rounds 2018 to 2022 pooled, one national share",

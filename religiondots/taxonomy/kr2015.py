@@ -42,7 +42,11 @@ REVIEW = {
         "exactly that reason. Anita confirmed the same treatment on 2026-09-05. The cost is "
         "that `buddhism.mahayana` stays empty, which its own node note already laments; the "
         "gain is that the map never asserts a school a census did not ask about. If that "
-        "trade is ever reversed, Korea is the country to reverse it with.",
+        "trade is ever reversed, Korea is the country to reverse it with. "
+        "REVERSED 2026-10-04 (spec §2.6a, §7e): the mapping still files 불교 on the parent, "
+        "and buddhism_assign.py then assigns 99.3% of it to buddhism.mahayana as `assigned`, "
+        "rolling back to buddhism when inferred dots are hidden, with the World Religion "
+        "Database's 0.7% Theravada and Tibetan share left on the parent.",
     "기독교(개신교)":
         "-> christianity.protestant, the 'named no body' node. 9,675,761 people, 19.7%, the "
         "largest religion in South Korea. The census offers one Protestant box and no "

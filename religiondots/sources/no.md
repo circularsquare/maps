@@ -425,3 +425,49 @@ excluded.
 Rogaland and Agder against 2.1% of Nordland". Those are both halves, and the foreign half's
 `christianity.protestant` is about half of Nordland's figure. The survey answer among citizens is
 7.18% and 1.04%, and the note now says 7.2% of citizens against 1.0%.
+
+
+## Not-drawn hatching fix batch (fafd1067-fixes3, 2026-10-03)
+
+Appended "and Svalbard, which is in no county" to `gap`, because the hatching now draws
+Svalbard. `gap_share` unchanged: Svalbard's few thousand residents are not quantified in it, and
+Norwegian citizens there are registered in mainland municipalities.
+
+
+## Svalbard drawn, 2026-10-04 (fafd1067-sj)
+
+Anita's ruling (ask/RULINGS.md, 2026-10-04): draw Svalbard as part of Norway, a named exception
+to the never-measured rule, because its empty hatched outline stood out on the Mercator map.
+Before this, `gap` ended "Svalbard is in no county and is not drawn"; that clause is gone and
+note_public's last paragraph says Svalbard is drawn at Norway's national mix because nothing
+measures religion there.
+
+- **Population: SSB table 07430, 1 January 2026 (2026H1)**, read from the PxWeb API: Longyearbyen
+  and Ny-Alesund 2,512 (1,648 "resident on the mainland", 864 "from abroad, not resident on the
+  mainland"), Barentsburg and Pyramiden 392, Hornsund 10; 2,914 in all. SSB's article for the
+  release says 1,598 of the 2,904 outside Hornsund are Norwegian citizens and lists the largest
+  foreign groups (Russia 305, Philippines 136, Thailand 115, Tajikistan 83, Ukraine 78, Germany 78,
+  Sweden 59), but no StatBank table gives citizenship by settlement.
+- **Religion: none measured.** SSB's Church of Norway statistics cover "alle geografiske sokn i
+  Den norske kirke, unntatt Svalbard" (kirke_kostra, Om statistikken), and 12025 has no Svalbard
+  row. A roll figure would not have fitted anyway, since Norway is drawn from what people say. So
+  unit `NO-21` (ISO 3166-2) takes the mix `_no_counts` draws for the whole country, both halves,
+  `modelled`. Barentsburg's people were not given the Russian origin mix: SSB's nationality list
+  covers Svalbard as a whole and does not split Barentsburg by citizenship.
+- **No double counting.** The 1,648 "resident on the mainland" are registered in a mainland
+  kommune and so are already inside the census counts. They are moved rather than added: every
+  mainland row is scaled down by the same 0.03%, since SSB does not say which counties they are
+  registered in. Norway's total rises by 1,266, the people no Norwegian table counted.
+- **Placement: Kontur SJ (2023-11-01) calibrated to SSB's settlements** (sources/no_geo.py, the
+  Faroes' method). Kontur alone is wrong here: of its 3,230 people inside Svalbard it puts about
+  1,900 at Sveagruva, a mine closed in 2017 and since cleared, 405 at Longyearbyen and 80 at
+  Barentsburg. So each SSB row is shared over its settlement's hexes in Kontur's proportions
+  (Longyearbyen within 8 km takes 2,512, Barentsburg within 5 km 392, Hornsund within 3 km 10) and
+  the other 193 hexes stay in the layer at weight 0, so the unit reaches every place Kontur thinks
+  is lived in and not_drawn.py does not hatch Sveagruva, while no dot goes there.
+- **Result:** 2 dots at 1:1,000, both in Longyearbyen (one Lutheran, one no religion); none at
+  1:10,000, which is right for 2,914 people. `not_drawn.py --countries no` now reports nothing for
+  Norway. `gap_share` unchanged (0.35%; gap_share.py refuses this country as before, and Svalbard
+  moves the denominator by 0.02%).
+- One Barentsburg hex (weight 4.9 of 392) is 96.5% sea and water.py leaves it unclipped; harmless
+  at this weight.

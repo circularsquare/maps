@@ -1,6 +1,7 @@
 """Lines, stations and sections for France, from SNCF Réseau's register of the national network.
 
     python fr_register.py --fetch             # download the register files into data/raw/fr
+    python fr_register.py --clip              # after every extract: the UK's half of the Channel Tunnel out
     python build_model.py --region fr --register fr_register:data/raw/fr
 
 Files, all open data (ODbL, SNCF Réseau; Wikidata CC0), in data/raw/fr, fetched by --fetch:
@@ -69,6 +70,9 @@ HOW IT DIFFERS FROM SWITZERLAND:
   its id, so the neighbour's half joins there (`snap_borders`): cut where the point lies on
   the track short of the end (Basel 900 m, Portbou 860 m, Le Locle 710 m, Geneva 15 km), or
   drawn on where the end stops up to BORDER_GAP_M short of it (Jeumont 89 m).
+- THE CHANNEL TUNNEL is not RFN (Getlink's concession): its French half, border point
+  eEU00228 to 216 000's Bif. Fréthun-lès-Calais, is one line made from OSM's track
+  (`channel_tunnel`, TUNNEL_*), meeting gb's High Speed 1 at the point.
 - LINES SNCF'S LINE FILES LACK. lignes-par-statut has no rows at all for some exploited lines
   that the per-track file (voies-de-ligne.geojson, "Fichier de formes des voies du réseau
   ferré national", line tracks only) has: the LGV Interconnexion Est (226310), Douai -
@@ -1236,6 +1240,9 @@ def build(path, log=log_default):
     # --- stop-to-stop sections that no passenger train runs over (see the docstring)
     lines = question_stop_sections(ridden, lines, stations, geoms, log)
 
+    # --- the Channel Tunnel's French half, which is not RFN (see TUNNEL_*)
+    channel_tunnel(region, lines, stations, geoms, log)
+
     used = {s for l in lines for sec in l["sections"] for s in sec[:2]}
     stations = {k: v for k, v in stations.items() if k in used}
     for s in stations.values():
@@ -1251,6 +1258,145 @@ def build(path, log=log_default):
         f"{n_j} are line ends that are not stops; {sum(1 for l in lines if l.get('highspeed'))} "
         f"LGV")
     return lines, stations, geoms
+
+
+# THE CHANNEL TUNNEL (2026-10-05; fr_sources.md "The Channel Tunnel"). The tunnel and its
+# French approach are Getlink's (Eurotunnel's concession), not SNCF Réseau's, so the RFN has no
+# line there: Fretin - Fréthun (216 000) stops at Bif. Fréthun-lès-Calais, 400 m short of the
+# French portal, and the 22.7 km from the portal to the border under the Channel belonged to no
+# line, so no ride from London could reach France. The UK's half is High Speed 1's
+# (gb_register), ending at the border point eEU00228. This line is the French half: from that
+# point along OSM's north bore and the approach track to 216 000's junction, one section, its
+# track OSM's (Getlink publishes no line register; SNCF's per-track file stops at the RFN
+# boundary too). ownership.py pairs the south bore with it, as it does for HS1's half.
+TUNNEL_KEY = "tunnel-sous-la-manche"     # line_id's input: a stable id, no RFN code
+TUNNEL_BORDER = "eEU00228"
+TUNNEL_JOIN_CODE = "216000"              # the RFN line the tunnel's track runs on to
+TUNNEL_BOX = (1.45, 50.88, 1.86, 51.04)  # lon/lat: the track the path may use
+TUNNEL_SNAP_M = 150                      # the border point and the junction are on track this close
+TUNNEL_MAX_KM = 40.0
+
+
+def channel_tunnel(region, lines, stations, geoms, log):
+    """Add the Channel Tunnel's French half (TUNNEL_*) as a register line, in place."""
+    import borders
+    from build_model import Coords, TrackGraph
+    pts = {p["id"]: p for p in borders.load(canonical_only=True)}
+    bp = pts.get(TUNNEL_BORDER)
+    join = next((l for l in lines if l.get("ref") == code_ref(TUNNEL_JOIN_CODE)), None)
+    d = ROOT / "data" / "proc" / region
+    if bp is None or join is None or not (d / "ways.pkl").exists():
+        log(f"FR: no Channel Tunnel line (border point {bp is not None}, "
+            f"{code_ref(TUNNEL_JOIN_CODE)} {join is not None})")
+        return
+    # 216 000's end nearest the border point: Bif. Fréthun-lès-Calais
+    ends = {s for sec in join["sections"] for s in sec[:2] if stations.get(s, {}).get("junction")}
+    if not ends:
+        log("FR: no Channel Tunnel line (216 000 has no junction end)")
+        return
+    jid = min(ends, key=lambda s: dist_m(stations[s]["lon"], stations[s]["lat"],
+                                         bp["lon"], bp["lat"]))
+    with open(d / "ways.pkl", "rb") as fh:
+        ways = pickle.load(fh)
+    c = np.load(d / "coords.npz")
+    co = Coords(c["id"], c["x"], c["y"])
+    w0, s0, e0, n0 = TUNNEL_BOX
+    keep = []
+    for wid, (t, nodes) in ways.items():
+        if t.get("railway") != "rail" or t.get("service") or not len(nodes):
+            continue
+        p = co.get(int(nodes[0]))
+        q = co.get(int(nodes[-1]))
+        if p and q and all(w0 <= x <= e0 and s0 <= y <= n0 for x, y in (p, q)):
+            keep.append(wid)
+    g = TrackGraph(keep, ways, co)
+
+    def near(lon, lat):
+        return sorted((n for n in g.xy if dist_m(lon, lat, *g.xy[n]) <= TUNNEL_SNAP_M),
+                      key=lambda n: dist_m(lon, lat, *g.xy[n]))
+    starts = near(bp["lon"], bp["lat"])
+    ends_on = near(stations[jid]["lon"], stations[jid]["lat"])
+    paths = [got for a in starts
+             for got in [g.path(a, ends_on[0], TUNNEL_MAX_KM * 1000) if ends_on else None]
+             if got is not None]
+    if not paths:
+        log(f"FR: no Channel Tunnel line (no track from {TUNNEL_BORDER} to {jid}: "
+            f"{len(starts)} and {len(ends_on)} track nodes near its ends)")
+        return
+    plen = lambda p: sum(dist_m(*p[i], *p[i + 1]) for i in range(len(p) - 1))
+    # From the border point: the shortest way on (the south bore's track leads round the
+    # Coquelles terminal, 27.8 km), drawn from the point itself, which lies between the bores.
+    xy, ids = min(paths, key=lambda p: plen(p[0]) + dist_m(bp["lon"], bp["lat"], *p[0][0]))
+    xy = np.vstack([[[bp["lon"], bp["lat"]]], xy])
+    # The line runs between the two bores, 45-58 m apart in OSM: drawn along one, the other
+    # lay outside build_model's WAY_BUFFER_M (40 m) for 70% of its length and was owned by
+    # nobody. So each point of the path (one per TUNNEL_STEP_M) moves halfway to the other
+    # bore where that lies within TUNNEL_PAIR_M: 16-29 m from each.
+    on_path = set(ids.tolist())
+    other = [np.array([co.get(int(n)) for n in ways[w][1] if co.get(int(n))])
+             for w in keep if ways[w][0].get("tunnel") == "yes"
+             and not set(int(n) for n in ways[w][1]) <= on_path
+             and not (set(int(n) for n in ways[w][1][1:-1]) & on_path)]
+    xy, moved = _between(xy, [o for o in other if len(o) >= 2])
+    km = plen(xy) / 1000
+    if TUNNEL_BORDER not in stations:
+        stations[TUNNEL_BORDER] = {"id": TUNNEL_BORDER, "name": bp.get("name") or TUNNEL_BORDER,
+                                   "name_en": "", "lon": bp["lon"], "lat": bp["lat"],
+                                   "lines": set(), "junction": True}
+    lid = line_id(TUNNEL_KEY)
+    key = f"{TUNNEL_BORDER}|{jid}"
+    lines.append({
+        "id": lid, "src": "getlink", "service": False,
+        "name": "Tunnel sous la Manche", "name_en": "Channel Tunnel", "ref": "",
+        "colour": "", "operator": "Eurotunnel", "operator_en": "Eurotunnel (Getlink)",
+        "network": "", "kind": "rail",
+        "km": round(km, 3), "variants": 1, "straight_sections": 0,
+        "display": [TUNNEL_BORDER, jid],
+        "sections": [[TUNNEL_BORDER, jid, round(km, 3)]],
+        # Both ends are junctions; Eurostar and Le Shuttle run here every day whatever the
+        # route relations say (build_model.drop_unridden_sections).
+        "served_sections": [key],
+    })
+    geoms[lid] = {key: [[round(float(x), 5), round(float(y), 5)] for x, y in xy]}
+    log(f"FR: the Channel Tunnel's French half: {TUNNEL_BORDER} - {stations[jid]['name']} "
+        f"({jid}), {km:.2f} km over OSM track, {moved:.1f} km of it between the two bores")
+
+
+TUNNEL_STEP_M = 50.0
+TUNNEL_PAIR_M = 80.0
+
+
+def _between(xy, others):
+    """The polyline xy (rows of lon, lat), one point per TUNNEL_STEP_M, each but the two ends
+    moved halfway to the nearest of `others` where that is within TUNNEL_PAIR_M; and the km so
+    moved."""
+    from shapely import STRtree
+    from shapely.geometry import LineString, Point
+    xy = np.asarray(xy, dtype=np.float64)
+    kx = math.cos(math.radians(float(xy[:, 1].mean()))) * 111320
+    ky = 110570.0
+    m = np.column_stack([xy[:, 0] * kx, xy[:, 1] * ky])
+    cum = np.concatenate([[0.0], np.cumsum(np.hypot(*np.diff(m, axis=0).T))])
+    n = max(2, int(cum[-1] / TUNNEL_STEP_M) + 1)
+    t = np.unique(np.concatenate([np.linspace(0.0, cum[-1], n), cum]))
+    pts = np.column_stack([np.interp(t, cum, m[:, 0]), np.interp(t, cum, m[:, 1])])
+    if not others:
+        return np.column_stack([pts[:, 0] / kx, pts[:, 1] / ky]), 0.0
+    geo = [LineString(np.column_stack([o[:, 0] * kx, o[:, 1] * ky])) for o in others]
+    tree = STRtree(geo)
+    out, moved = [], 0
+    for i, (x, y) in enumerate(pts):
+        p = Point(x, y)
+        j = tree.nearest(p)
+        q = geo[j].interpolate(geo[j].project(p))
+        # the ends stay: the border point already lies between the bores
+        if 0 < i < len(pts) - 1 and p.distance(q) <= TUNNEL_PAIR_M:
+            out.append(((x + q.x) / 2, (y + q.y) / 2))
+            moved += 1
+        else:
+            out.append((x, y))
+    out = np.asarray(out)
+    return np.column_stack([out[:, 0] / kx, out[:, 1] / ky]), moved / len(pts) * cum[-1] / 1000
 
 
 def route_ways(region):
@@ -1451,5 +1597,9 @@ if __name__ == "__main__":
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     if "--fetch" in sys.argv:
         fetch(ROOT / "data" / "raw" / "fr")
+    elif "--clip" in sys.argv:
+        # after every extract: the UK's half of the Channel Tunnel out (gb_register.clip_channel)
+        import gb_register
+        gb_register.clip_channel("fr")
     else:
         print(__doc__)

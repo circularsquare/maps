@@ -185,6 +185,8 @@ ENTRY = {
             "which Pew does not publish separately because it is not a territory."),
         how="survey, 12,678 people; foreign residents by nationality",
         grain="departments for foreign residents (680,000 people); regions for French citizens",
+        gap="Corsica, 347,585 people or 0.51%, which the survey does not sample",
+        gap_share=0.0051,
         counts=_fr_counts,
         units=None,
         unit_key=None,

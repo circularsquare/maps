@@ -1,0 +1,120 @@
+# China 2020 census, nationality (minzu) read as language under AGENT_BRIEF §2's ethnicity rule
+# (taxonomy/cn2020.py, countries/cn.py). Nodes other fragments already define are repeated with
+# identical labels (and colours where one gives them), so China does not depend on them.
+#
+# Han (everyone on Chinese) are drawn on their county's main dialect group, below the Sinitic line;
+# the census itself does not split Mandarin, Cantonese, Wu, Min, Hakka...
+#
+# New groups, each because a nationality speaks several languages that no source splits:
+#   * Loloish (Glottolog lolo1267, the Ngwi branch): the Yi nationality's Nuosu, Nasu, Nisu,
+#     Sani, Azhe... are drawn on the group, unnamed. Lisu, Lahu, Hani and Jino are its leaves
+#     (Glottolog lisu1250, lahu1253, hani1248, youl1235). Poland's `sinotibetan.yi` "Yi (Nuosu)"
+#     is one Yi language and stays where it is.
+#   * Qiangic (qian1263): Qiang (qian1264), Pumi (nort2723/sout2729), and unnamed, the Qiangic
+#     and rGyalrongic languages of Sichuan's Tibetans (Gyalrong, Ergong, Ersu, Minyak, Zhaba...),
+#     filed here as Chinese linguistics conventionally does.
+#   * Hmongic (hmon1337): the Miao nationality's three Hmongic languages (Xong, Hmu, and the
+#     Chuanqiandian cluster) unnamed on the group; Bunu (buna1273), spoken by Yao, and She
+#     (shee1238) as leaves. `hmongmien.hmong` (Hmong of Laos and Thailand) stays a sibling.
+# Kra-Dai, Mongolic, Turkic and Tungusic members are flat leaves, as `kradai.zhuang` and
+# `tungusic.manchu` already are. Gelao is filed under Kra-Dai as Chinese and most Western
+# linguistics do (Glottolog lists gela1261 under a bookkeeping node). Tshangla (tsha1245), spoken
+# by most of China's Monpa nationality, is its own Sino-Tibetan branch in Glottolog, so a leaf
+# under the root. Tsat (Utsul) is the Chamic language of Sanya's Hui, a leaf under Austronesian.
+sinotibetan.sinitic | Chinese | 0.62 0.19 38
+#
+# Chinese dialect groups (Anita, 2026-10-05): each county's Han are drawn on its main group from the
+# Language Atlas of China (sources/cn_dialect.py, taxonomy/cn2020.py DIALECT). Mandarin is drawn
+# whole on `sinitic.mandarin` (Anita, same day: "we probably shouldn't split all the different
+# Mandarins"); its eight atlas groups had their own leaves for a few hours and were retired. Other
+# leaves are flat under Sinitic, as Mandarin, Cantonese, Min Nan, Min Dong, Wu and Hakka are.
+# Glottolog: Jinyu jiny1235, Gan ganc1239, Xiang xian1251, Hui huiz1242, Pinghua ping1245, Min Bei
+# minb1236, Min Zhong minz1235, Pu-Xian puxi1243, Shaojiang shao1234, Leizhou leiz1236, Hainanese
+# hain1238.
+#
+# Colours hand-picked so groups that meet on the ground differ (checked over shared county borders,
+# sources/cn.md §6). The southern groups pinks, mauves and violets; the existing Mandarin, Wu, Hakka,
+# Cantonese, Min Nan and Min Dong keep their colours.
+sinotibetan.sinitic.jin | Jin | 0.6 0.15 60
+sinotibetan.sinitic.gan | Gan | 0.80 0.11 340
+sinotibetan.sinitic.xiang | Xiang | 0.56 0.15 345
+sinotibetan.sinitic.hui | Hui (Huizhou) | 0.70 0.14 320
+sinotibetan.sinitic.pinghua | Pinghua and Tuhua | 0.72 0.13 300
+sinotibetan.sinitic.min_bei | Min Bei | 0.72 0.13 10
+sinotibetan.sinitic.min_zhong | Min Zhong | 0.86 0.07 20
+sinotibetan.sinitic.puxian | Pu-Xian Min | 0.62 0.09 350
+sinotibetan.sinitic.shaojiang | Shao-Jiang Min | 0.60 0.11 290
+sinotibetan.sinitic.leizhou | Leizhou Min | 0.56 0.12 45
+sinotibetan.sinitic.hainanese | Hainanese (Qiong-Wen Min) | 0.74 0.14 345
+# repeated from other fragments, same labels and colours
+sinotibetan.sinitic.mandarin | Mandarin | 0.68 0.17 41
+sinotibetan.sinitic.cantonese | Cantonese | 0.80 0.11 15
+sinotibetan.sinitic.siyi | Sze Yap (Taishanese) | 0.7 0.12 18
+sinotibetan.sinitic.hakka | Hakka | 0.58 0.14 5
+sinotibetan.sinitic.min_nan | Min Nan (Taiwanese, Hokkien) | 0.50 0.12 28
+sinotibetan.sinitic.teochew | Teochew (Chiu Chau) | 0.62 0.11 28
+sinotibetan.sinitic.min_dong | Min Dong | 0.50 0.10 350
+sinotibetan.sinitic.wu | Wu | 0.66 0.18 5
+sinotibetan.burmish | Burmish
+sinotibetan.burmish.achang | Achang
+# mm.txt's Kachin group, repeated: the Jingpo nationality (Jingpho, Zaiwa, Lashi, Lhaovo) sits on it
+sinotibetan.kachin | Kachin languages (Jingpho, Zaiwa, Lhaovo, Rawang)
+sinotibetan.loloish | Loloish (Yi languages) | 0.66 0.14 268
+sinotibetan.loloish.lisu | Lisu
+sinotibetan.loloish.lahu | Lahu
+sinotibetan.loloish.hani | Hani
+sinotibetan.loloish.jino | Jino
+sinotibetan.qiangic | Qiangic | 0.80 0.11 195
+sinotibetan.qiangic.qiang | Qiang
+sinotibetan.qiangic.pumi | Pumi
+sinotibetan.tujia | Tujia
+sinotibetan.bai | Bai
+# hand-picked: generated, Naxi came out #008db8 beside Lisu's #008dcc in Lijiang and Nujiang
+sinotibetan.naxi | Naxi | 0.58 0.12 305
+sinotibetan.derung | Derung
+sinotibetan.tshangla | Tshangla (Cangluo Monpa)
+turkic | Turkic | 0.68 0.16 15
+turkic.uyghur | Uyghur | 0.58 0.16 312
+turkic.kazakh | Kazakh | 0.84 0.09 15
+turkic.kyrgyz | Kyrgyz | 0.64 0.20 25
+turkic.uzbek | Uzbek | 0.74 0.15 345
+turkic.tatar | Tatar | 0.72 0.17 28
+turkic.salar | Salar
+mongolic | Mongolic | 0.76 0.12 70
+mongolic.mongolian | Mongolian | 0.76 0.12 70
+mongolic.santa | Dongxiang (Santa)
+mongolic.monguor | Tu (Monguor)
+mongolic.daur | Daur
+mongolic.bonan | Bonan
+tungusic | Tungusic | 0.70 0.12 280
+tungusic.xibe | Xibe
+tungusic.oroqen | Oroqen
+tungusic.evenki | Evenki
+tungusic.nanai | Nanai
+kradai | Kra-Dai (Tai-Kadai) | 0.80 0.14 125
+kradai.zhuang | Zhuang
+kradai.bouyei | Bouyei
+# hand-picked: generated, Dong came out #bce177 beside Zhuang's #94e997 and Mulam's #cff58a in northern Guangxi
+kradai.kam | Dong (Kam) | 0.66 0.13 145
+kradai.hlai | Li (Hlai)
+kradai.sui | Sui | 0.8 0.14 145.0
+kradai.mulam | Mulam (Mulao) | 0.74 0.14 155.0
+kradai.maonan | Maonan
+kradai.gelao | Gelao
+hmongmien | Hmong-Mien | 0.66 0.15 170
+hmongmien.hmongic | Hmongic (Miao languages) | 0.70 0.14 185
+hmongmien.hmongic.bunu | Bunu
+hmongmien.hmongic.she | She (Ho Ne)
+austroasiatic.wa | Wa | 0.72 0.15 280.0
+austroasiatic.blang | Blang | 0.72 0.15 0.0
+austroasiatic.palaung | De'ang (Palaung) | 0.66 0.15 0.0
+austroasiatic.vietnamese | Vietnamese | 0.68 0.17 310
+koreanic | Koreanic | 0.76 0.17 0
+koreanic.korean | Korean | 0.76 0.17 0
+austronesian | Austronesian | 0.76 0.13 195
+austronesian.taiwan | Taiwan indigenous languages | 0.76 0.15 150
+austronesian.tsat | Tsat (Utsul)
+indoeuropean.iranian | Iranian
+indoeuropean.slavic | Slavic | 0.70 0.15 140
+indoeuropean.slavic.east | East Slavic | 0.70 0.15 145
+indoeuropean.slavic.east.russian | Russian | 0.70 0.16 145

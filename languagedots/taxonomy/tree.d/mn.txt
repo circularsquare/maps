@@ -1,0 +1,36 @@
+# Mongolia, 2020 census ethnic group read as language (taxonomy/mn2020.py).
+# New nodes, checked against Glottolog (data/raw/glottolog/languages.csv):
+#   mongolic.oirat: Kalmyk-Oirat (kalm1243) as spoken in Mongolia; a sibling leaf of Kyrgyzstan's
+#     mongolic.kalmyk rather than a child, so Kalmyk does not turn into a group drawn "not named".
+#     Glottolog files Darkhat (dark1243) as a dialect of it too.
+#   mongolic.khamnigan: Khamnigan Mongol (kham1281), a language of its own in Glottolog.
+#   turkic.dukha: Dukha (dukh1234), filed in Glottolog under Karagas (Tofa), Tuvinic.
+# COLOURS. Mongolian keeps cn.txt's khaki; Oirat, the west, is a deeper orange-brown so it parts
+# from Mongolian in Uvs and Khovd and from Kazakh's pale rose in Bayan-Olgii; Buryat (Dornod,
+# Selenge) a pale yellow-green against Mongolian. Tuvan keeps ru.txt's colour.
+
+mongolic.oirat | Oirat | 0.60 0.13 50
+mongolic.khamnigan | Khamnigan Mongol
+turkic.dukha | Dukha
+
+# ---- parents and languages defined elsewhere, repeated identically ----
+mongolic | Mongolic | 0.76 0.12 70
+mongolic.mongolian | Mongolian | 0.76 0.12 70
+mongolic.buryat | Buryat
+mongolic.kalmyk | Kalmyk
+turkic | Turkic | 0.68 0.16 15
+turkic.kazakh | Kazakh | 0.84 0.09 15
+turkic.tuvan | Tuvan | 0.74 0.16 45
+turkic.uzbek | Uzbek | 0.74 0.15 345
+indoeuropean | Indo-European
+indoeuropean.slavic | Slavic
+indoeuropean.slavic.east | East Slavic
+indoeuropean.slavic.east.russian | Russian
+indoeuropean.germanic | Germanic
+indoeuropean.germanic.english | English
+sinotibetan | Sino-Tibetan
+sinotibetan.sinitic | Chinese
+sinotibetan.sinitic.mandarin | Mandarin
+koreanic | Koreanic | 0.76 0.17 0
+koreanic.korean | Korean | 0.76 0.17 0
+other | Other or unclassified

@@ -1,0 +1,17 @@
+# Eritrea (EPHS 2010 ethnicity read as language; taxonomy/er2010.py). Every node is repeated from
+# other fragments (AGENT_BRIEF §3) except Nara (nara1262), new under Nilo-Saharan beside Kunama.
+# Tigre gets a hand colour: it borders Tigrinya (red) and Bilen in Anseba and Gash-Barka.
+afroasiatic.ethiosemitic | Ethiopian Semitic
+afroasiatic.ethiosemitic.tigrinya | Tigrinya
+afroasiatic.ethiosemitic.tigre | Tigre | 0.66 0.13 85
+afroasiatic.cushitic | Cushitic
+afroasiatic.cushitic.lowland | Lowland East Cushitic
+afroasiatic.cushitic.lowland.saho | Saho (Irob)
+afroasiatic.cushitic.lowland.afar | Afar
+afroasiatic.cushitic.agaw | Agaw
+afroasiatic.cushitic.agaw.bilen | Bilen
+afroasiatic.cushitic.beja | Beja
+afroasiatic.saudi_arabic | Saudi Arabic
+nilosaharan | Nilo-Saharan
+nilosaharan.kunama | Kunama
+nilosaharan.nara | Nara

@@ -1,0 +1,18 @@
+# Croatia, Popis 2021, mother tongue (taxonomy/hr2021.py). One new leaf; the other 23 named
+# languages were already in the tree (cz.txt, us.txt, rs.txt, bo.txt and others).
+#
+# Croato-Serbian (Hrvatsko-srpski): the other word order of the Yugoslav-era name Serbo-Croatian,
+# official in socialist Croatia. DZS prints it in a column of its own beside Serbo-Croatian
+# (Srpsko-hrvatski), both in the old Serb areas, so it is a sibling of serbocroatian, not merged.
+# No glottocode of its own: Glottolog files the whole complex as Serbian-Croatian-Bosnian
+# (sout1528), and the census label is a name for that, not a variety.
+indoeuropean.slavic.south.croatoserbian | Croato-Serbian
+#
+# Colour, checked 2026-10-05 against the generated palette of that day, no hand-picks needed.
+# The pairs that share municipalities here (OKLab distance): Croatian and Italian 0.117 (Istria),
+# Croatian and Serbian 0.200, Croatian and Slovenian 0.160, Croatian and Hungarian over 0.2,
+# Serbian and Croato-Serbian 0.110, Serbian and Serbo-Croatian over 0.18, Croato-Serbian and
+# Serbo-Croatian 0.167. Closest calls, all among small scattered minorities: Croatian against
+# Montenegrin 0.063 and Macedonian 0.064, Serbo-Croatian against Rusyn 0.055 (both near Vukovar,
+# 1-2% each). An earlier palette had Croatian at #f9d46b, 0.090 from Italian; if the generator
+# moves Croatian back towards orange, Istria is the place to look.

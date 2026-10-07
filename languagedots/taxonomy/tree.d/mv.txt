@@ -1,0 +1,36 @@
+# Maldives (taxonomy/mv2022.py). No language question; 2022 census Maldivians on Dhivehi and
+# foreign residents by nationality at their countries' drawn mixes (sources/mv_census.py,
+# sources/mv.md). No new nodes: every line below is a bare repeat of a node another fragment
+# defines (or its parent), so the Maldives stand on their own under `build.py --only`. Generated
+# from data/normalized/mv.csv and languages.json; colours stay the defining fragments'.
+austronesian | Austronesian
+austronesian.acehnese | Acehnese
+austronesian.balinese | Balinese
+austronesian.batak | Batak
+austronesian.buginese | Buginese
+austronesian.javanese | Javanese
+austronesian.madurese | Madurese
+austronesian.malayic | Malayic
+austronesian.malayic.banjar | Banjar
+austronesian.malayic.betawi | Betawi
+austronesian.malayic.indonesian | Indonesian
+austronesian.malayic.malay | Malay
+austronesian.malayic.minangkabau | Minangkabau
+austronesian.philippine | Philippine
+austronesian.philippine.bikol | Bikol
+austronesian.philippine.boholano | Boholano
+austronesian.philippine.cebuano | Cebuano
+austronesian.philippine.hiligaynon | Hiligaynon
+austronesian.philippine.ilocano | Ilocano
+austronesian.philippine.kapampangan | Kapampangan
+austronesian.philippine.maguindanao | Maguindanao
+austronesian.philippine.maranao | Maranao
+austronesian.philippine.pangasinan | Pangasinan
+austronesian.philippine.tagalog | Tagalog
+austronesian.philippine.tausug | Tausug
+austronesian.philippine.waray | Waray-Waray
+austronesian.sasak | Sasak
+austronesian.sundanese | Sundanese
+indoeuropean.indoaryan.sinhala | Sinhala
+indonesia_other | Other regional languages of Indonesia
+indoeuropean.indoaryan.dhivehi | Dhivehi

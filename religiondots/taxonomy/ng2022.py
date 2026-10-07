@@ -1,9 +1,11 @@
 """Afrobarometer Nigeria religion -> religiondots taxonomy.
 
-Five categories, at state. Three of them are the Afrobarometer's own answer boxes verbatim;
+Seven categories, at state. Three of them are the Afrobarometer's own answer boxes verbatim;
 `Christian` and `Muslim` are that card's umbrella answers with their denominational children
-folded back in. `sources/ng.py`'s docstring has the argument for the folding and
-`sources/ng.md` the acquisition record.
+folded back in; `Catholic` and `Anglican` (since 2026-10-03) are carved back out of `Christian`,
+Catholics from the three rounds whose Catholic share matches the NDHS, Anglicans levelled by the
+Global Flourishing Study. `sources/ng.py`'s
+docstring has the argument and `sources/ng.md` §5 the record.
 
 **THE INTERESTING MAPPING QUESTIONS ARE BOTH ONES THIS SOURCE CANNOT ANSWER**, and Nigeria is
 the country on this map where that costs the most. The card names about twenty Christian
@@ -23,17 +25,38 @@ EXCLUDED = {}
 
 REVIEW = {
     "Christian":
-        "-> christianity, the bare branch, and it is the largest single cell on this map "
-        "drawn at a parent node. **No Nigerian census has ever split it, because no Nigerian "
-        "census since 1963 has asked about religion at all.** What is inside it is not a "
-        "mystery, only unmeasured: the Catholic Church of the south-east, the Anglican "
-        "Church of Nigeria and the Methodists out of the 19th-century missions, the Aladura "
-        "churches (Christ Apostolic, Cherubim and Seraphim, the Celestial Church of Christ), "
-        "the Redeemed Christian Church of God and the rest of the Pentecostal sector that is "
-        "now the largest Christian bloc in the country, and the Church of Christ in Nations "
-        "on the Plateau. The pooled Afrobarometer can see all of them and cannot level them: "
-        "Roman Catholic runs 11.4% of respondents in round 4 and 2.2% in round 8, which is "
-        "the fieldwork rather than the country. Left at the parent rather than guessed at.",
+        "-> christianity, the bare branch: every Christian but Catholics and Anglicans (37.0% "
+        "of Nigeria as drawn), and still the largest single cell on this map drawn at a parent "
+        "node. **No Nigerian census since 1963 has asked about religion at all.** Inside it: "
+        "the Redeemed Christian Church of God and the rest of the Pentecostal sector, the "
+        "Methodists and Baptists out of the 19th-century missions, the Aladura churches (Christ "
+        "Apostolic, Cherubim and Seraphim, the Celestial Church of Christ), ECWA in the Middle "
+        "Belt, and the Church of Christ in Nations on the Plateau. **Pentecostals are the big "
+        "one and are not drawn**: the Global Flourishing Study (2023) puts them at 39.9% of "
+        "Nigerian Christians, and it and the Afrobarometer do not rank the states alike once "
+        "Catholics are taken out (+0.20, p 0.15), so nothing checks where they are. The GFS "
+        "codes 87% of Plateau's and 72% of Bauchi's Christians `Orthodox`, most likely COCIN and "
+        "ECWA members, so its small boxes are not used either.",
+    "Anglican":
+        "-> christianity.anglican. 4.2% of Nigeria as drawn, 8.1% of Christians. Level from the "
+        "Global Flourishing Study 2023 (`REL3_Y1`): 10.0% of non-Catholic Christians, applied to "
+        "the non-Catholic Christians left once the NDHS-levelled Catholics are out. The "
+        "Afrobarometer's named Anglicans in rounds 4-6 are 8.9% of non-Catholic Christians, so the "
+        "GFS level sits just above that floor and only 1.9% of `Christian only` is given to it. "
+        "Each state's share averages the two surveys by respondents. The two surveys rank 27 "
+        "states alike at +0.550 (p 0.0014). Anambra 22.1%, Enugu 15.6%, Imo 12.8%, Ekiti and "
+        "Delta 12%; near zero in the far north.",
+    "Catholic":
+        "-> christianity.catholic. 10.2% as drawn, 19.9% of Christians. Each state's Catholics "
+        "as a share of its Christians in rounds 4-6 (2008-2015), the rounds whose 19-21% matches "
+        "the four NDHS reports' 19.4-23.9%; rounds 7-9 give 4-13% as `Christian only` swells. "
+        "Eight far-northern states with under 30 Christian respondents in those rounds take the "
+        "national 19.7%. Split-half on Christians, rounds 4-6, 27 states: +0.753. The Church's "
+        "diocesan statistics by cathedral state rank the states alike (+0.833, 31 states). "
+        "**Short where Christians name no church**: in Lagos, Rivers, Ogun and Oyo 58-73% of "
+        "Christians answered `Christian only` in those rounds, and Lagos is drawn 5.8% Catholic "
+        "where its archdiocese claims 25%. Zero in Kwara and Osun, where none of 40 and 84 "
+        "Christians named it.",
     "Muslim":
         "-> islam, with no branch. **Nigeria is overwhelmingly Sunni Maliki with a large "
         "Sufi presence, and `islam.sunni` would still be an inference rather than a "
@@ -77,6 +100,8 @@ REVIEW = {
 
 MAP = {
     "Christian": "christianity",
+    "Catholic": "christianity.catholic",
+    "Anglican": "christianity.anglican",
     "Muslim": "islam",
     "Traditional/ethnic religion": "indigenous.african",
     "Other": "other.ng",
@@ -85,7 +110,8 @@ MAP = {
 
 # What this source actually MEASURED, for spec §7a-i-1's roll-up: every row is measured at the
 # node it is drawn on, because the five grouped categories are the five nodes. Nothing here is
-# inferred downward, so `inferred dots: not shown` removes nothing from Nigeria.
+# inferred downward, so `inferred dots: not shown` removes nothing from Nigeria. (Six since
+# 2026-10-03; `Catholic` is measured at christianity.catholic, a share the survey's respondents gave.)
 COLUMNS = {v: v for v in MAP.values()}
 
 

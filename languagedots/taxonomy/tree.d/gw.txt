@@ -1,0 +1,44 @@
+# Guinea-Bissau (taxonomy/gw2009.py). RGPH 2009, principal ethnic language ("dialecto") of
+# Guinean nationals, national table, placed by região through each etnia's answers.
+# Parents and languages other fragments already define are repeated with the same label and no
+# colour: Balanta, Manjak, Mankanya, the Jola group (sn), Fula, Mandinka, Nalu, Susu, Soninke.
+#
+# Middle levels, checked against Glottolog (data/raw/glottolog): everything new is Atlantic
+# (atla1278), flat under it as sn.txt and gn.txt do: Papel (pape1239; Glottolog's
+# Manjaku-Mankanya-Pepel group, whose other two sn.txt already put flat), Biafada (biaf1240),
+# Mansoanka (mans1259), the Bijagó languages (kamo1256, bidy1244; one census answer), and the
+# Balanta Mané (no code of their own; a sibling of Balanta). Ejamat (ejam1238, "Felupe") goes
+# under sn.txt's Jola group, where Glottolog puts it (Her-Ejamat, inside Jola).
+#
+# "Sem dialecto" gets a leaf under `other`: no ethnic language named as principal, which the
+# census files Kriol, Portuguese and foreign answers under alike (taxonomy/gw2009.py).
+#
+# Colours, for neighbours on the ground. Bissau and Biombo: Papel purple beside Balanta's light
+# cyan, Manjak's dark teal, Mankanya's pale mint. Oio and Cacheu: Balanta Mané rose and
+# Mansoanka pale yellow beside Balanta, Mandinka green, Manjak, Felupe (Jola blue). Quinara and
+# Tombali: Biafada ochre beside Balanta, Fula red, Nalu (gn's generated mauve). Bijagós: Bijagó
+# orange-brown, an archipelago of its own.
+
+# ---- parents and languages defined elsewhere, repeated bare (their colours are theirs) ----
+nigercongo | Niger-Congo
+nigercongo.atlantic | Atlantic
+nigercongo.atlantic.fulah | Fula
+nigercongo.atlantic.balanta | Balanta
+nigercongo.atlantic.manjak | Manjak (Mànjaku)
+nigercongo.atlantic.mankanya | Mankanya (Mànkaañ)
+nigercongo.atlantic.jola | Jola languages
+nigercongo.atlantic.nalu | Nalu
+nigercongo.mande | Mande
+nigercongo.mande.mandinka | Mandinka
+nigercongo.mande.susu | Susu
+nigercongo.mande.soninke | Soninke
+other | Other or unclassified
+
+# ---- new ----
+nigercongo.atlantic.papel | Papel (Pepel) | 0.56 0.15 315
+nigercongo.atlantic.biafada | Biafada (Beafada) | 0.72 0.13 75
+nigercongo.atlantic.mansoanka | Mansoanka | 0.88 0.10 100
+nigercongo.atlantic.bijago | Bijagó | 0.62 0.13 45
+nigercongo.atlantic.balanta_mane | Balanta Mané | 0.78 0.11 355
+nigercongo.atlantic.jola.ejamat | Ejamat (Felupe) | 0.58 0.13 260
+other.no_ethnic_language | No ethnic language as main language (Guinea-Bissau's "sem dialecto"; mostly Kriol)

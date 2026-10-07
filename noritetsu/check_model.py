@@ -84,14 +84,17 @@ REGISTER = {
         ("경의선", "", 56.0, "서울-도라산, YB23 영업거리"),
         ("경인선", "", 27.0, "구로-인천, YB23 영업거리"),
         ("경강선", "", 177.7, "성남-여주 57.0 + 원주-강릉 120.7, YB23 영업거리; OSM names "
-                              "both halves 경강선"),
+                              "both halves 경강선, built as two lines (여주-원주 not built), "
+                              "summed here"),
         ("중부내륙선", "", 56.9, "부발-충주, YB23 영업거리; 충주-문경 opened 2024-12, "
                                 "so expect about 1.7 if OSM includes it"),
         ("서해선", "", 38.5, "대곡-원시, YB23 영업거리; OSM also names the 2024 "
-                              "홍성-서화성 intercity line 서해선, which is not in the figure"),
+                              "홍성-서화성 intercity line 서해선, which is not in the figure "
+                              "(built as two lines, one operator, so summed: expect ~2.7)"),
         ("분당선", "", 52.9, "왕십리-수원, YB23 영업거리"),
-        ("수인선", "", 38.8, "수원-인천 less the 한대앞-오이도 section shared with 안산선, "
-                              "YB23 영업거리; 거리표 51.6 with it"),
+        ("수인선", "", 51.6, "수원-인천 거리표, with the 한대앞-오이도 section shared with "
+                              "안산선 (since 2026-10-04 a borrowed section, crediting 안산선); "
+                              "YB23 영업거리 38.8 without it"),
         ("안산선", "", 26.0, "금정-오이도, YB23 영업거리"),
         ("과천선", "", 14.4, "금정-남태령, YB23 영업거리"),
         ("일산선", "", 19.2, "지축-대화, YB23 영업거리"),
@@ -135,8 +138,9 @@ REGISTER = {
                                         "own track"),
         ("대구 도시철도 2호선", "", 31.4, "YB23 영업거리"),
         ("대구 도시철도 3호선", "", 23.1, "YB23 영업거리"),
-        ("인천 도시철도 1호선", "", 30.3, "계양-송도달빛축제공원, YB23 영업거리; the 2025-06 "
-                                        "검단 extension makes it about 37 (KRIC 1294)"),
+        ("인천 도시철도 1호선", "", 37.0, "검단호수공원-송도달빛축제공원, KRIC 1294 (its "
+                                        "km to the neighbour, summed); YB23 영업거리 30.3 is "
+                                        "계양-송도달빛축제공원, before the 2025-06 검단 extension"),
         ("인천 도시철도 2호선", "", 29.2, "YB23 영업거리"),
         ("광주 도시철도 1호선", "", 20.5, "YB23 영업거리"),
         ("대전 도시철도 1호선", "", 20.5, "YB23 영업거리"),
@@ -205,6 +209,8 @@ REGISTER = {
         ("東鐵綫", "", 46.0, "金鐘-羅湖/落馬洲, HyD 'approximately 46km'; WP: 紅磡-羅湖 34 + "
                            "落馬洲支綫 7.4; 馬場 (race days only) is not in MTR's list"),
         ("屯馬綫", "", 56.193, "屯門-烏溪沙, WP"),
+        ("廣深港高速鐵路", "", 26.0, "香港西九龍-border (the HK section), en.wikipedia; to the "
+                                     "platform ends"),
         ("觀塘綫", "", 17.32, "黃埔-調景嶺, WP"),
         ("荃灣綫", "", 15.59, "中環-荃灣, WP"),
         ("港島綫", "", 14.93, "堅尼地城-柴灣, WP (track length 16.3)"),
@@ -248,6 +254,39 @@ REGISTER = {
                                  "relations' own ways 9.7, so the figure counts track no "
                                  "service runs over, perhaps the depot link"),
         ("Sentosa Express", "", 2.1, "WP, 4 stations; track 1.99, all of it built"),
+    ],
+    # Register lines as my_register.LINES names them. Sources in my_sources.md:
+    #   RD    en.wikipedia's route diagram {{KTM West Coast Line}}: chainage from Butterworth
+    #         (Bukit Mertajam 10.2, Ipoh 181.0, KL Sentral 388.0, Gemas 562.2, JB Sentral
+    #         756.8) and from Bukit Mertajam north (Padang Besar 157.8); it predates the
+    #         2014 Ipoh - Padang Besar and 2025 Gemas - JB double-track realignments
+    #   WP    en.wikipedia line infoboxes and text (2026-10-03)
+    # The build runs station centre to station centre; metro figures run to the track ends.
+    "my": [
+        ("Laluan Pantai Barat", "", 906.1, "RD: Padang Besar - Bukit Mertajam 157.8 + Bukit "
+                                          "Mertajam - JB Sentral 746.6, plus the build's "
+                                          "1.7 km of border tails; realignments: ~0.99"),
+        ("Laluan Pantai Timur", "", 526.0, "Gemas - Tumpat, WP and Wikivoyage; 527.75 also "
+                                          "quoted"),
+        ("Laluan Cawangan Butterworth", "", 10.2, "RD, Bukit Mertajam - Butterworth"),
+        ("Laluan Cawangan Skypark", "", 10.9, "WP's KL Sentral - Terminal Skypark 26 km less "
+                                             "the build's KL Sentral - Subang Jaya 15.1; WP's "
+                                             "26 is rounded: ~0.83. Suspended since 2023-02"),
+        ("Laluan Keretapi Barat Sabah", "", 134.0, "Tanjung Aru - Tenom, WP Sabah State "
+                                                  "Railway"),
+        ("Laluan Kelana Jaya", "", 46.4, "WP, 37 stations"),
+        ("Laluan Kajang", "", 47.0, "WP, 29 stations"),
+        ("Laluan Putrajaya", "", 57.7, "WP, 36 stations; tail tracks at both ends: ~0.97"),
+        ("Laluan Shah Alam", "", 37.8, "WP, Bandar Utama - Johan Setia, 20 stations open of 25"),
+        ("Laluan Monorel KL", "", 8.6, "WP, 11 stations"),
+        ("Laluan Sri Petaling", "", 38.1, "Sentul Timur - Putra Heights: WP's network 45.1 "
+                                         "less the Ampang Line's own Chan Sow Lin - Ampang "
+                                         "(the build's 7.0); network built 43.9 of 45.1: "
+                                         "~0.97"),
+        ("KLIA Transit", "", 59.1, "WP's 57 km KL Sentral - KLIA T1 (built 56.1) plus the "
+                                  "build's own 2.5 km on to KLIA T2: ~0.99"),
+        ("Keretapi Bukit Bendera", "", 1.996, "WP, along the slope; it climbs about 700 m, so "
+                                             "about 1.87 on the map: ~0.94"),
     ],
     # Register lines as rinf.py names them (Infrabel's "L.36"). Sources in be_sources.md:
     #   WP    the LENGTE field of each line's nl.wikipedia infobox (retrieved 2026-09-30). It
@@ -727,9 +766,10 @@ REGISTER = {
                             "so 广汉北-成都 is missing: expect about 0.90"),
         ("青藏线", "", 1971.0, "西宁-拉萨, WP 青藏铁路; the built line starts at 湟源, so "
                              "西宁-湟源 (about 50 km) is not in it: expect about 0.93"),
-        ("成昆线", "", 1100.0, "成都-昆明 operating length, WP 成昆铁路; the built line is two "
-                             "pieces, 成都南-花棚子 and 元谋西-昆明, whose 61 km crow-fly gap "
-                             "cn_register.join_pieces leaves open: expect about 0.91"),
+        ("成昆线", "", 1100.0, "成都-昆明 operating length, WP 成昆铁路; OSM's 成昆线 is the "
+                             "old line's two pieces, 成都南-花棚子 and 元谋西-昆明, the new "
+                             "line 峨广线 between; built as two lines since 2026-10-04 "
+                             "(cn_register.NO_BRIDGE), summed here: expect about 0.91"),
     ],
     # Register lines as rinf.py names them from CFL's line number and name ("Ligne 1
     # Luxembourg – Troisvierges-frontière", rinf_countries/lu.py). Figures are the "Distance"
@@ -914,6 +954,180 @@ REGISTER = {
         ("Kotkan rata", "", 52.0, "WP Kouvola - Kotkan satama"),
         ("Hangon rata", "", 49.3, "WP Karjaa - Hanko"),
         ("Kehärata", "", 27.0, "WP Huopalahti - Hiekkaharju"),
+    ],
+    # Register lines as rinf_countries/se.py names them (Trafikverket's stråk names, split where
+    # a stråk holds another named line). Figures are sv.wikipedia line articles' infobox
+    # `längd` (WP), raw wikitext retrieved 2026-10-02. Where the built line is not the
+    # article's extent, the note says by how much; se_sources.md has end-to-end checks along
+    # the built lines (Stockholm C - Göteborg C 452.3 for 455, and so on).
+    "se": [
+        ("Västra stambanan", "", 455.0, "WP Stockholm C - Göteborg C; built also has the old "
+                                        "line Flemingsberg - Södertälje - Järna (pendeltåg, "
+                                        "31 km), Södertälje C and Hallsberg rangerbangård - "
+                                        "Skymossen, so expect 1.06"),
+        ("Södra stambanan", "", 483.0, "WP Katrineholm - Malmö"),
+        ("Västkustbanan", "", 283.0, "WP Göteborg - Lund; built also has Ängelholm - Åstorp "
+                                     "(14 km, stråk 3), so expect 1.04"),
+        ("Kust till kust-banan", "", 406.0, "WP text: Göteborg - Kalmar ~350 + Emmaboda - "
+                                            "Karlskrona 56; Göteborg C - Almedal is "
+                                            "Västkustbanan's"),
+        ("Ostkustbanan", "", 400.0, "WP Stockholm - Sundsvall"),
+        ("Dalabanan", "", 265.0, "WP Uppsala - Mora"),
+        ("Stambanan genom övre Norrland", "", 626.0, "WP Bräcke - Boden; Bräcke - Vännäs has no "
+                                                     "passenger trains (WP, and none in the "
+                                                     "feed), so expect 0.45"),
+        ("Norra stambanan", "", 267.0, "WP Gävle - Ockelbo 38 + Ockelbo - Ånge 229"),
+        ("Godsstråket genom Bergslagen", "", 311.0, "WP Storvik - Mjölby; Hovsta - Örebro "
+                                                    "(8 km) is built as Mälarbanan"),
+        ("Bergslagsbanan", "", 337.0, "WP Kil - Gävle; built also has Frövi - Ställdalen (63 km "
+                                      "in RINF), so expect 1.18"),
+        ("Norge/Vänerbanan", "", 300.0, "WP Göteborg - Kil and Skälebol - Kornsjö"),
+        ("Värmlandsbanan", "", 202.0, "WP Laxå - Charlottenberg"),
+        ("Jönköpingsbanan", "", 112.0, "WP"),
+        ("Älvsborgsbanan", "", 133.0, "WP Uddevalla - Borås"),
+        ("Mälarbanan", "", 187.0, "WP Stockholm C - Hovsta; built from Tomteboda to Örebro C, "
+                                  "so expect 1.06"),
+        ("Svealandsbanan", "", 115.0, "WP Södertälje - Valskog"),
+        ("Nynäsbanan", "", 55.0, "WP"),
+        ("Mittbanan", "", 358.0, "WP Sundsvall - Storlien"),
+        ("Malmbanan", "", 473.0, "WP Luleå - Narvik; Riksgränsen - Narvik is Norway's "
+                                 "Ofotbanen (43 km), so expect 0.92"),
+        ("Botniabanan", "", 185.0, "WP"),
+        ("Haparandabanan", "", 159.0, "WP Boden - Haparanda; Boden - Buddbyn is Malmbanan's"),
+        ("Ådalsbanan", "", 175.0, "WP Sundsvall - Långsele; Västeraspby - Långsele has no "
+                                  "passenger trains (WP), so expect 0.69"),
+        ("Blekinge kustbana", "", 130.0, "WP Kristianstad - Karlskrona; Gullberna - Karlskrona "
+                                         "is Kust till kust-banan's"),
+        ("Bohusbanan", "", 180.0, "WP"),
+        ("Kinnekullebanan", "", 121.0, "WP"),
+        ("Stångådalsbanan", "", 235.0, "WP Linköping - Kalmar; built also has Berga - "
+                                       "Oskarshamn (28 km, stråk 65), so expect 1.11"),
+        ("Tjustbanan", "", 116.0, "WP Linköping - Västervik; Linköping - Bjärka-Säby (20 km) "
+                                  "is Stångådalsbanan's, so expect 0.82"),
+        ("Nyköpingsbanan", "", 109.0, "WP"),
+        ("Skånebanan", "", 106.0, "WP Helsingborg - Kristianstad"),
+        ("Ystadbanan", "", 113.0, "WP Malmö - Ystad via Citytunneln 67 + Österlenbanan "
+                                  "Ystad - Simrishamn 46 (stråk 90 is both); Malmö C - "
+                                  "Hyllie is Citytunneln's"),
+        ("Fryksdalsbanan", "", 82.0, "WP"),
+        ("Viskadalsbanan", "", 84.0, "WP"),
+        ("Rååbanan", "", 45.0, "WP"),
+        ("Vaggerydsbanan", "", 38.0, "WP"),
+        ("Citybanan", "", 6.0, "WP tunnel"),
+        ("Inlandsbanan", "", 1288.0, "WP Kristinehamn - Gällivare; Kristinehamn - Mora is not "
+                                     "in RINF (no trains), Brunflo - Östersund is Mittbanan's"),
+    ],
+    # Register lines as no_register.py names them: Bane NOR's banestrekninger (Banenettverk's
+    # banenavn). WP is no.wikipedia's infobox `lengde` (raw wikitext, 2026-10-03), JiN the
+    # table in no.wikipedia's "Jernbane i Norge", BN Bane NOR's own chainage at the line's two
+    # ends in Banenettverk (startposisjon/sluttposisjon, the register's kilometrering). Lines
+    # are built stop to stop on Bane NOR's centre line, so a line whose end station is not at
+    # its chainage end reads short by that much (noted).
+    "no": [
+        ("Nordlandsbanen", "", 729.0, "WP Trondheim S - Bodø"),
+        ("Dovrebanen", "", 482.8, "BN km 70.9 - 553.7, Eidsvoll - Trondheim S (WP says 492)"),
+        ("Sørlandsbanen", "", 549.0, "WP Drammen - Stavanger; Drammen - Hokksund's first km "
+                                     "lie on Drammenbanen's centre line"),
+        ("Rørosbanen", "", 382.0, "JiN Hamar - Støren (WP infobox 348)"),
+        ("Bergensbanen", "", 380.6, "BN km 90.6 - 471.2, Hønefoss - Bergen; Hønefoss station "
+                                    "lies on Roa-Hønefossbanen's centre line"),
+        ("Østfoldbanen vestre linje", "", 170.0, "WP Oslo S - Kornsjø border"),
+        ("Vestfoldbanen", "", 129.0, "WP Drammen - Skien (ca.)"),
+        ("Gjøvikbanen", "", 123.8, "WP Oslo S - Gjøvik"),
+        ("Raumabanen", "", 114.2, "WP Dombås - Åndalsnes"),
+        ("Kongsvingerbanen", "", 113.4, "BN km 22.9 - 136.3, Lillestrøm - border"),
+        ("Meråkerbanen", "", 71.5, "BN km 30.7 - 102.2, Hell - border (WP's 106 runs on to "
+                                   "Storlien)"),
+        ("Ofotbanen", "", 43.0, "WP Narvik - border; Narvik station lies about 4 km short of "
+                                "the line's km 0 at the ore harbour, so expect about 0.9"),
+        ("Flåmsbana", "", 20.2, "WP Myrdal - Flåm"),
+        ("Arendalsbanen", "", 36.3, "BN km 281.7 - 318.0, Nelaug - Arendal"),
+        ("Follobanen", "", 22.0, "BN km 1.0 - 22.9 with the approach to Oslo S; built from "
+                                 "where it leaves Østfoldbanen's tracks, so expect about 0.92"),
+    ],
+    # Register lines as rinf_countries/dk.py names them (da.wikipedia's article titles).
+    # Figures are da.wikipedia's infobox `linjelængde` (WP), raw wikitext retrieved 2026-10-03,
+    # else Wikidata's length (P2043, WD). RINF's own Danish lengths leave out the station
+    # areas, so there is no chainage check (rinf.py `km_floor`); these are the outside numbers.
+    "dk": [
+        ("Vestbanen", "", 111.0, "WP København - Korsør"),
+        ("København-Køge-Ringsted-banen", "", 60.0, "WP; built from København H via "
+                                                     "København G and Vigerslev (about 4 km) "
+                                                     "with the Hvidovre curve, so expect 1.07"),
+        ("Sydbanen", "", 142.3, "WP Ringsted - Rødby Færge and Gedser; built Ringsted - "
+                                "Nykøbing F (Gedser is Gedserbanen, Rødby not in RINF), so "
+                                "expect about 0.6"),
+        ("Lille Syd", "", 61.4, "WD Roskilde - Køge - Næstved"),
+        ("Nordvestbanen", "", 79.3, "WP Roskilde - Kalundborg"),
+        ("Kystbanen", "", 46.0, "WP København H - Helsingør"),
+        ("Lille Nord", "", 24.4, "WP Hillerød - Helsingør; Snekkersten - Helsingør (about "
+                                 "3.5 km) is Kystbanen's, so expect about 0.86"),
+        ("Svendborgbanen", "", 46.8, "WP"),
+        ("Den fynske hovedbane", "", 88.57, "WP Nyborg - Fredericia"),
+        ("Fredericia-Aarhus-banen", "", 108.0, "WP"),
+        ("Aarhus-Randers-banen", "", 59.2, "WP"),
+        ("Randers-Aalborg Jernbane", "", 80.7, "WP"),
+        ("Vendsysselbanen", "", 80.7, "WP Aalborg - Frederikshavn; built 84.5 (1.05)"),
+        ("Fredericia-Vamdrup-banen", "", 38.9, "WP"),
+        ("Vamdrup-Padborg-banen", "", 71.7, "WD Fredericia - Padborg 110.6 less WP Fredericia "
+                                            "- Vamdrup 38.9; built to the border"),
+        ("Sønderborgbanen", "", 42.0, "WP text, Tinglev - Sønderborg"),
+        ("Bramming-Tønder-banen", "", 67.9, "WP to the border; built to Tønder (Tønder - "
+                                            "border is not in RINF), so expect about 0.95"),
+        ("Den vestjyske længdebane", "", 146.0, "WP Esbjerg - Struer"),
+        ("Langå-Struer-banen", "", 102.4, "WP"),
+        ("Vejle-Holstebro-banen", "", 115.0, "WD"),
+        ("Thybanen", "", 73.6, "WP Struer - Thisted"),
+        ("Skanderborg-Skjern-banen", "", 111.9, "WP"),
+        ("Varde-Nørre Nebel Jernbane", "", 37.6, "WP"),
+        ("Hirtshalsbanen", "", 17.9, "WP"),
+        ("Skagensbanen", "", 39.7, "WP"),
+        ("Nærumbanen", "", 7.8, "WP"),
+        ("Frederiksværkbanen", "", 39.7, "WP Hillerød - Hundested"),
+        ("Hornbækbanen", "", 25.0, "WP Helsingør - Gilleleje"),
+        ("Gribskovbanen", "", 50.6, "WP, both branches; Hillerød - Gilleleje and Kagerup - "
+                                    "Tisvildeleje trace 42 km on OSM's track and RINF's points, "
+                                    "and the article gives no split: expect 0.83 until a "
+                                    "source says what the 50.6 counts"),
+        ("Odsherredsbanen", "", 49.6, "WP"),
+        ("Østbanen", "", 49.6, "WP, both branches"),
+        ("Lollandsbanen", "", 50.2, "WP"),
+        ("Nordbanen", "", 36.5, "WP København H - Hillerød (S-bane)"),
+        ("Klampenborgbanen", "", 5.5, "WP Hellerup - Klampenborg (S-bane)"),
+        ("Høje Taastrup-banen", "", 19.5, "WP sporlængde, København H - Høje Taastrup"),
+        ("Køge Bugt-banen", "", 39.0, "WP sporlængde, København H - Køge"),
+        ("Storebæltsforbindelsen", "", 17.0, "WP: the link is about 17 km; built Korsør - "
+                                             "Nyborg station to station, so expect about 1.37"),
+    ],
+    # Register lines as rinf_countries/ie.py names them (en.wikipedia's article titles). The
+    # figures are Iarnród Éireann's 2022 Network Statement as en.wikipedia's infoboxes quote it
+    # (WP, raw wikitext retrieved 2026-10-03), miles converted. RINF's own Irish section
+    # lengths are too often wrong to check against (rinf.py `no_chain`); these are the check.
+    "ie": [
+        ("Dublin–Cork line", "", 266.75, "WP Heuston - Cork Kent"),
+        ("Dublin–Sligo line", "", 216.05, "WP Connolly - Sligo; built from Connolly Junction "
+                                          "by Newcomen Junction with the 0.8 km Docklands spur"),
+        ("Dublin–Rosslare line", "", 167.97, "WP 104 3/8 mi, Connolly - Rosslare Europort"),
+        ("Dublin–Galway line", "", 141.46, "WP Portarlington - Athlone 63 + Athlone - Galway "
+                                           "78.46"),
+        ("Dublin–Westport line", "", 133.374, "WP Athlone - Westport; built from Athlone West "
+                                              "Junction, 1 km on"),
+        ("Dublin–Waterford line", "", 122.8, "WP Kildare - Waterford 119 + the Kilkenny spur "
+                                             "3.8; built from Cherryville Junction, 3.9 km past "
+                                             "Kildare, with the Lavistown triangle"),
+        ("Limerick–Rosslare line", "", 123.1, "WP Limerick - Waterford, the operational part; "
+                                              "built to Dunkitt Junction (the last 2.7 km are "
+                                              "the Dublin–Waterford line's), so expect 0.98"),
+        ("Limerick–Ballybrophy line", "", 84.49, "WP 52.5 mi"),
+        ("Mallow–Tralee line", "", 98.97, "WP 61.5 mi, with the Killarney reversal"),
+        ("Western Railway Corridor", "", 97.16, "WP 60 3/8 mi, Limerick - Athenry, the "
+                                                "operational part"),
+        ("Ballina branch", "", 33.19, "WP 20 5/8 mi, Manulla Junction - Ballina"),
+        ("Great Northern Railway Main Line", "", 95.76, "WP: the border is at milepost 59 1/2 "
+                                                        "from Connolly"),
+        ("Glounthaune–Midleton line", "", 10.0, "WP Cork Suburban Rail: 10 km, opened 2009"),
+        ("Dublin–Navan line", "", 7.5, "WP: 7.5 km from the junction west of Clonsilla to M3 "
+                                       "Parkway"),
     ],
     # Register lines as rinf_countries/lt.py names them. Figures are LTG Infra's line lengths
     # as lt.wikipedia's "Lietuvos geležinkelių transportas" lists them (WP, raw wikitext,
@@ -1125,21 +1339,87 @@ REGISTER = {
         ("Вырица — Поселок", "", 7.0, "WD; tariff 7; the last point, Платформа № 4, has no OSM "
                                       "node, so the line ends 0.7 km short at Платформа № 3"),
     ],
+    # Ukraine: tariff sections (ua_register.py), named by their two ends as shown. The tariff
+    # km is every line's own chainage (km_official); these are the outside figures, Wikidata
+    # P2043 of the line's item (retrieved 2026-10-03, data/raw/ua/wd_lines.json). Nearly all
+    # of Wikidata's 74 Ukrainian lengths are corridors or narrow gauge, not tariff sections.
+    "ua": [
+        ("Батьово — Королево", "", 68.0, "WD Q801907; tariff 68"),
+        ("Стрий — Івано-Франківськ", "", 108.0, "WD Q15856795; tariff 108"),
+        ("Антонівка — Зарічне (взк.)", "", 106.6, "WD Q801847, the narrow-gauge line; tariff 97"),
+    ],
+    # Georgia, Armenia, Azerbaijan (caucasus_register.py; tariff sections named by their ends).
+    # de.WP = de.wikipedia's route diagrams' chainage, "Bahnstrecke Poti–Baku" and
+    # "Bahnstrecke Tiflis–Jerewan" (2026-10-03); WD = Wikidata P2043. Lines ending at a border
+    # point add Book 1's km from the station to its export code there.
+    "ge": [
+        ("სამტრედია-1 — ხაშური", "", 124.0, "de.WP, Samtredia-1 244.0 - Khashuri 120.0"),
+        ("ხაშური — ნავთლუღი", "", 125.7, "de.WP, Khashuri 120.0 - Tbilisi 0 - Navtlughi 5.7"),
+        ("სენაკი — სამტრედია-1", "", 28.1, "de.WP, Senaki 272.1 - Samtredia-1 244.0"),
+        ("ნატანები — ოზურგეთი", "", 20.0, "WD Q135997954; tariff 18"),
+    ],
+    "am": [
+        ("Գյումրի — Մասիս", "", 140.2, "de.WP, Gyumri 211.0 - Masis 351.2"),
+        ("Այրում — Գյումրի", "", 143.1, "de.WP, Ayrum 71.9 - Gyumri 211.0, + 4 to the border"),
+    ],
+    "az": [
+        ("Hacıqabul — Böyük Kəsik", "", 375.1, "de.WP, Beük-Kasik 46.1 - Hacıqabul 417.2, "
+                                               "+ 4 to the border"),
+        ("Baş Ələt — Hacıqabul", "", 42.9, "de.WP, Ələt 460.1 - Hacıqabul 417.2"),
+        ("Yevlax — Balakən", "", 165.0, "WD Q141328728; tariff 163"),
+    ],
+    # Abkhazia (caucasus_register.py; the Abkhazian part of Book 1's 57-001, built from the
+    # Psou bridge to Ochamchira, where OSM's track ends). ru.WP = ru.wikipedia's route diagram
+    # in "Абхазская железная дорога" (2026-10-04): Psou 1998.0, Ochamchyra 2153.0. Psou
+    # platform is 0.4 km east of the border point the line starts at.
+    "xa": [
+        ("Ԥсоу — Очамчыра", "", 155.0, "ru.WP, Psou 1998.0 - Ochamchyra 2153.0; tariff 157"),
+    ],
+    # Belarus: the tariff guide's Belarusian Railway sheet, as Ukraine (by_sources.md). Outside
+    # figures: Wikidata P2043 of pl.wikipedia's line articles (retrieved 2026-10-03); the
+    # Polish-border lines' figures run on to the border, where the build stops at the last
+    # station before it.
+    "by": [
+        ("Гродна — Масты", "", 58.146, "WD Q73919142 (pl.WP); tariff 58"),
+        ("Гродна — Брузгі", "", 21.755, "WD Q56315886 (pl.WP); tariff 23 to the border"),
+        ("Ліда — Беняконі", "", 42.647, "WD Q79121736 (pl.WP); tariff 45 to the border"),
+        ("Ліда — Баранавічы Цэнтральныя", "", 105.504, "WD Q79121797 (pl.WP); tariff 114"),
+        ("Варапаева — Друя", "", 88.9, "WD Q109642867 (pl.WP); tariff 89"),
+        ("Брэст-Цэнтральны — Высока-Літоўск", "", 48.408,
+         "WD Q60863027 (pl.WP), to the border; built to Vysokaye station: expect ~0.85"),
+        ("Брэст-Палескі — Хаціслаў", "", 57.568,
+         "WD Q66331616 (pl.WP), to the border; built to Khotislav station: expect ~0.87"),
+    ],
+    # Moldova: the tariff guide's CFM sheet, as Ukraine (md_sources.md). No Wikidata or
+    # Wikipedia length exists for any CFM section; CFM's timetable km (merstren.md, train
+    # 826Г: Ungheni km 0, Chișinău km 107) is the one outside figure.
+    "md": [
+        ("Ungheni — Chișinău", "", 107.0, "CFM timetable km (826Г, merstren.md); tariff 107"),
+    ],
     # Italy: RFI publishes no per-line length table that is open (the PIR's line list is on
     # the ePIR portal). CH = it.wikipedia's station table (Percorso) chainage, differenced
     # between the line's two ends as built; WP = it.wikipedia infobox `lunghezza`; WD =
-    # Wikidata P2043 of the it.wikipedia article's item. Retrieved 2026-10-02. RFI's F lines
-    # run node to node (Milano - Bologna is Rogoredo - Lavino), so their figures are the
-    # chainage between those points, not the whole Wikipedia line. it_sources.md.
+    # Wikidata P2043 of the it.wikipedia article's item. Retrieved 2026-10-02/03. RFI's F lines
+    # run node to node (Milano - Bologna is Rogoredo - Lavino); since 2026-10-03 the city nodes
+    # are split into the lines inside them (rinf_countries/it.py NODE_SPLIT), so most F lines
+    # now reach their city stations and their figures are the chainage between the built
+    # ends. it_sources.md.
     "it": [
         # fundamental lines (CH)
         ("Brennero – Verona", "", 238.71, "CH Verona Porta Nuova 0 - Brennero 238.711"),
-        ("Firenze – Roma (Direttissima)", "", 237.63, "CH Firenze Rovezzano 254.004 - "
-                                                      "Settebagni 16.379"),
-        ("Milano – Bologna", "", 199.23, "CH Milano Rogoredo 208.751 - PM Lavino 9.522; RINF "
-                                         "also files the Rogoredo - Bivio Melegnano - "
-                                         "Tavazzano pair (18.2 km) under F41-F42: ~1.09"),
-        ("Bologna – Ancona", "", 193.09, "CH PM Mirandola-Ozzano 10.906 - Ancona 203.996"),
+        ("Firenze – Roma (Direttissima)", "", 249.50, "CH Firenze Rovezzano 254.004 - Roma "
+                                                      "Tiburtina 4.505 (Settebagni - Tiburtina "
+                                                      "from the Nodo di Roma); built also has "
+                                                      "the Chiusi and Valdarno interconnections "
+                                                      "(15.8 km, kept by the timetable): ~1.06"),
+        ("Firenze – Roma (linea lenta)", "", 314.0, "WP, Firenze SMN - Roma Termini (both city "
+                                                    "ends from the Nodi di Firenze and Roma)"),
+        ("Milano – Bologna", "", 214.54, "CH Milano Rogoredo 208.751 + Lambrate - Rogoredo "
+                                         "5.79 (RINF, from the Nodo di Milano) - Bologna "
+                                         "Centrale 0; RINF also files the Rogoredo - Bivio "
+                                         "Melegnano - Tavazzano pair (18.2 km) under F41-F42: "
+                                         "~1.08"),
+        ("Bologna – Ancona", "", 204.0, "CH Bologna Centrale 0 - Ancona 203.996"),
         ("Ancona – Foggia", "", 322.03, "CH Ancona 203.996 - Foggia 526.027"),
         ("Orte – Ancona", "", 211.63, "CH Orte 82.503 - Falconara 285.429 = 195.299, - "
                                       "Ancona 203.996"),
@@ -1149,20 +1429,30 @@ REGISTER = {
                                              "as RINF does: ~1.10"),
         ("Catanzaro Lido – Reggio Calabria", "", 177.55, "CH Jonica 294.720 - 472.270"),
         ("Sibari – Catanzaro Lido", "", 172.48, "CH Jonica 122.237 - 294.720"),
-        ("Genova – Pisa", "", 147.70, "CH Genova Nervi 10.791 - La Spezia Centrale 86.162 = "
-                                      "172.462 - Pisa San Rossore 100.133; built has both "
+        ("Genova – Pisa", "", 158.49, "CH Genova Piazza Principe 0 - La Spezia Centrale 86.162 "
+                                      "= 172.462 - Pisa San Rossore 100.133; built has both "
                                       "Vezzano - La Spezia routes (Migliarina, Cà di "
                                       "Boschetti) and Pisa Centrale: ~1.06"),
         ("Venezia – Trieste", "", 141.10, "CH Venezia Carpenedo 3.904 - 131.315 = 13.687 - "
-                                          "Trieste Centrale 0"),
+                                          "Trieste Centrale 0; built also has Bivio d'Aurisina "
+                                          "- Villa Opicina (14.9 km, the Trieste - Ljubljana "
+                                          "trains, kept by the timetable) and Mestre Olimpia - "
+                                          "Carpenedo (1.9): ~1.13"),
         ("Milano – Torino", "", 118.81, "CH Settimo 15.763 - Rho 134.571"),
-        ("Torino – Arquata Scrivia", "", 110.10, "CH Trofarello 13.030 - Arquata Scrivia "
+        ("Torino – Arquata Scrivia", "", 123.13, "CH Torino Porta Nuova 0 - Arquata Scrivia "
                                                  "123.132"),
-        ("Verona – Bologna", "", 103.01, "CH Verona Porta Nuova 114.951 - PM Tavernelle "
-                                         "11.941; built also has the Verona Porta Vescovo "
-                                         "leg (6.8 km): ~1.06"),
-        ("Bologna – Padova", "", 99.04, "CH San Pietro in Casale 23.879 - Padova 122.921"),
-        ("Bologna – Firenze (Direttissima)", "", 97.0, "WD"),
+        ("Verona – Bologna", "", 110.79, "CH Verona Porta Nuova 114.951 - PM Santa Viola ~4.16 "
+                                         "(RINF Bologna Centrale - S.Viola 4.158); built also "
+                                         "has the Verona Porta Vescovo leg (6.8 km): ~1.06"),
+        ("Bologna – Padova", "", 122.92, "CH Bologna Centrale 0 - Padova 122.921"),
+        ("Bologna – Firenze (Direttissima)", "", 97.0, "WD; built runs Bologna San Vitale - "
+                                                       "Firenze SMN with the Castello - "
+                                                       "Olmatello link (1.9 km): ~1.08"),
+        ("Bologna – Porretta Terme", "", 54.31, "CH Porrettana, Santa Viola 127.676 - "
+                                                "Porretta Terme 73.367 (the Nodo di Bologna's "
+                                                "part of the Porrettana)"),
+        ("Roma – Avezzano", "", 107.08, "CH Roma Termini 0 - Avezzano 107.080; built also has "
+                                        "Tiburtina - Prenestina (2.9 km)"),
         ("Alessandria – Piacenza", "", 96.51, "CH; built also has the Bressana Bottarone - "
                                               "Barbianello - Broni leg towards Pavia (13.3 "
                                               "km) and Alessandria Smistamento: ~1.15"),
@@ -1170,7 +1460,9 @@ REGISTER = {
                                          "335.485"),
         ("Palermo – Fiumetorto", "", 43.22, "CH"),
         # high speed
-        ("AV Torino – Milano", "", 125.0, "WD (WP 127)"),
+        ("AV Torino – Milano", "", 125.0, "WD (WP 127); built also has the Novara "
+                                          "interconnection (4.0 km, kept by the timetable) and "
+                                          "the Rho and Torino Stura links (4.4): ~1.07"),
         ("AV Bologna – Firenze", "", 78.5, "WD, the line proper; built runs from Bologna "
                                            "Centrale's underground AV station (WP 86): ~1.09"),
         # complementary lines and groups (WP, WD)
@@ -1196,7 +1488,9 @@ REGISTER = {
         ("Asciano – Monte Antico", "", 51.0, "WD"),
         ("Savigliano – Saluzzo – Cuneo", "", 48.0, "WD (WP 49)"),
         ("Vairano – Isernia", "", 45.0, "WD"),
-        ("Milano – Mortara", "", 44.0, "WD"),
+        ("Milano – Mortara", "", 44.0, "WD; built also has the southern belt Milano Rogoredo "
+                                       "- Romolo - San Cristoforo (9.8 km, from the Nodo di "
+                                       "Milano), the S9's way into the city: ~1.23"),
         ("Lamezia Terme – Catanzaro Lido", "", 43.0, "WD"),
         ("Torino – Ceres", "", 42.0, "WP (WD 42.88)"),
         ("Castel Bolognese – Ravenna", "", 41.0, "WD"),
@@ -1325,8 +1619,15 @@ REGISTER = {
          "catalogue; Montcada - La Garriga is railway=construction in OSM (doubling works, R3 "
          "runs La Garriga - Puigcerdà only): ~0.85"),
         ("320 Chinchilla de Montearagón-aguja km 298,4 – Murcia del Carmen", "", 146.2,
-         "catalogue; Chinchilla - Hellín (51 km) has no OSM passenger route and ends at a "
-         "junction, so it is dropped as unridden: ~0.65"),
+         "catalogue; Chinchilla - Hellín (no OSM route) kept by the timetable check since "
+         "2026-10-03 (es.py CUT_AT)"),
+        ("422 Bifurcación Utrera – Fuente de Piedra", "", 113.4,
+         "catalogue; Arahal - Bif. Utrera kept by the timetable check since 2026-10-03"),
+        ("500 Bifurcación Planetario – Bifurcación Casa de la Torre", "", 322.7,
+         "catalogue; Cañaveral - Bif. Casa de la Torre kept by the timetable check since "
+         "2026-10-03"),
+        ("984 Pola de Lena – Bifurcación Pajares", "", 49.3,
+         "catalogue; the Pajares base tunnel, kept by the timetable check since 2026-10-03"),
         ("710 Altsasu – Castejón de Ebro", "", 139.2,
          "catalogue"),
         ("204 Bifurcación Canfranc – Canfranc", "", 138.5,
@@ -1433,9 +1734,752 @@ REGISTER = {
          "VDE 8 Nürnberg–Erfurt–Leipzig, WP item Q136766768; DB's own list says 284.0 and "
          "RINF 284.2, so expect 0.96: the gap is between the published figures"),
     ],
+    # FRA NARN subdivisions (us_register.py), against Wikipedia's lengths and mileposts (WP).
+    # NARN's own KM is the chainage check above, for every line; these are the outside
+    # numbers. The build log's "path check" lines test the network as a whole the same way:
+    # Washington - Boston over NARN against the Northeast Corridor's 735 km (457 mi).
+    "us": [
+        # No operator, so its pieces are summed: the Michigan Line runs over CN's track through
+        # Battle Creek, and us_register.split_pieces makes each side a line of its own.
+        ("Michigan Line", "", 373.0, "Porter - Dearborn, WP 232 mi: Amtrak's 98 mi and "
+                                     "MDOT's 135 mi, both filed AMTK in NARN"),
+        ("Hartford Line", "Amtrak", 100.0, "New Haven - Springfield, WP 62 mi"),
+        ("Keystone Corridor", "Amtrak", 168.3, "Philadelphia 30th St - Harrisburg, WP MP 104.6; "
+                                               "NARN's line starts at Zoo, 3-4 km out"),
+        ("New Haven Line", "Metro-North", 97.4, "Woodlawn MP 11.8 - New Haven MP 72.3, WP"),
+        ("Main Line", "Long Island", 151.8, "Long Island City - Greenport, WP MP 94.3"),
+        ("Port Jefferson Branch", "Long Island", 52.6, "Hicksville MP 24.8 - Port Jefferson "
+                                                       "MP 57.5, WP"),
+        ("Montauk Branch", "Long Island", 171.9, "Jamaica MP 9.0 - Montauk MP 115.8, WP; "
+                                                 "NARN's branch starts at Jamaica"),
+        ("Anchorage Subdivision", "Alaska", 573.0, "Anchorage - Fairbanks, WP 356 mi"),
+        ("Seward Subdivision", "Alaska", 183.0, "Seward - Anchorage, WP 114 mi"),
+    ],
+    # FRA NARN subdivisions in Canada (ca_register.py), against Wikipedia's km posts (WP).
+    # NARN's KM is the chainage check for every line; ca_register's path checks (build log)
+    # test the network: Toronto - Montréal 539, Toronto - Vancouver 4,466 and others.
+    "ca": [
+        ("Wekusko Subdivision", "Hudson Bay", 219.0, "The Pas km 0 - Wabowden km 219, WP route "
+                                                     "diagram (Template:Hudson Bay Railway)"),
+        ("Thicket Subdivision", "Hudson Bay", 305.0, "Wabowden km 219 - Gillam km 524, WP"),
+        ("Herchmer Subdivision", "Hudson Bay", 296.0, "Gillam km 524 - Churchill km 820, WP"),
+        ("Island Falls Subdivision", "Ontario Northland", 299.0, "Cochrane - Moosonee, the "
+                                                                 "Polar Bear Express, WP 186 mi"),
+        ("Alexandria Subdivision", "VIA", 123.0, "Ottawa km 446 - Coteau Junction km 569, WP "
+                                                 "route diagram (Template:Via Corridor routing)"),
+        ("Kingston Subdivision", "Canadian National", 483.0, "Dorval - Pickering, WP "
+                                                             "'approximately 300 miles'"),
+    ],
+    # Geoscience Australia's Foundation Rail Infrastructure line names (au_register.py),
+    # against Wikipedia (WP). A line is built only where passenger trains run, so the figure
+    # is the line's passenger extent. GA's own length is the chainage check above (it is the
+    # length of GA's geometry, so it checks the tracing more than the register). The build
+    # log's "path check" lines test the network as a whole: Sydney - Perth by the Indian
+    # Pacific's shortest path against 3,961 km.
+    "au": [
+        ("Main Southern Railway", "", 617.8, "Cabramatta km 28.43 - Albury km 646.24, WP route "
+                                             "table; GA's line starts at Cabramatta"),
+        ("Main Northern Railway", "", 567.0, "Strathfield km 12 - Armidale km 579, WP; no "
+                                             "passenger trains beyond Armidale"),
+        ("North Coast Railway", "", 683.0, "Maitland km 193 - Queensland border km 876, WP"),
+        ("Orange Broken Hill Railway", "", 801.0, "Orange - Broken Hill, WP 801 km"),
+        ("Illawarra Railway", "", 153.0, "Illawarra Junction - Bomaderry, WP 153 km"),
+        ("Blacktown Richmond Railway", "", 25.81, "Blacktown km 34.87 - Richmond km 60.68, WP"),
+        ("Perth Kalgoorlie Railway", "", 653.0, "East Perth - Kalgoorlie, the Prospector, WP"),
+        ("Perth Mandurah Railway", "", 70.8, "Mandurah line, Perth Underground - Mandurah, WP"),
+        ("Belair Line", "", 21.5, "Adelaide - Belair, WP"),
+        ("North Coast Line", "Queensland Rail", 1681.0, "Roma Street - Cairns, WP; QR's "
+                                                       "deviations since have shortened it"),
+    ],
+    # India: Wikidata's IR line items (in_register.py), named by their English label, against
+    # the en.wikipedia article's infobox length (WP, `tracklength`/`length`, main line only;
+    # read 2026-10-03 into data/raw/in/wp_lengths.json) or Wikidata's P2043 (WD). Only lines
+    # whose Wikipedia extent is the Wikidata chain's are listed; in_sources.md has the rest
+    # and why they differ. The register's own km (the IR timetable's, km_official) checks
+    # every line as well. Before OSM the timetable km came to 0.97-1.07 of these.
+    "in": [
+        ("Mathura–Vadodara Section", "", 852.0, "WP main line (article 'Mathura–Gangapur "
+                                                "City–Kota section'); timetable 860"),
+        ("Konkan Railway", "", 756.25, "WP, Roha - Thokur; timetable 757"),
+        ("Jaipur–Ahmedabad line", "", 630.0, "WP"),
+        ("Jodhpur–Bathinda line", "", 600.0, "WP"),
+        ("Jabalpur–Bhusaval section", "", 551.0, "WP, the 2004 alignment; timetable 574 "
+                                                 "(expect about 1.04)"),
+        ("Agra–Bhopal section", "", 508.0, "WP main line"),
+        ("Tatanagar–Bilaspur section", "", 468.0, "WP main line"),
+        ("Bengaluru–Arsikere–Hubballi line", "", 469.0, "WP"),
+        ("Pune–Miraj–Londa line", "", 468.0, "WP; timetable 479"),
+        ("Guntakal–Vasco da Gama section", "", 457.0, "WP, WD"),
+        ("Kanpur–Delhi section", "", 441.0, "WP (article 'New Delhi–Kanpur section')"),
+        ("Viramgam-Okha line", "", 433.0, "WP"),
+        ("Khurda Road–Visakhapatnam section", "", 424.0, "WP; timetable 440"),
+        ("Bilaspur–Nagpur section", "", 414.0, "WP main line"),
+        ("Bhopal–Nagpur section", "", 390.0, "WP"),
+        ("Solapur–Guntakal section", "", 379.0, "WP main line"),
+        ("Lumding–Dibrugarh section", "", 380.0, "WP (WD 376); the chain is carried on to "
+                                                 "Dhamalgaon over the feed: expect about 1.07"),
+        ("Duvvada–Vijayawada section", "", 350.0, "WP"),
+        ("Pandit Deen Dayal Upadhyaya Nagar–Kanpur section", "", 346.0, "WP main line"),
+        ("Lucknow–Moradabad line", "", 326.0, "WP main line"),
+        ("Varanasi–Lucknow line", "", 324.0, "WP, via Jaunpur and Ayodhya"),
+        ("Jammu–Baramulla line", "", 324.0, "WP; no Wikidata chain, laid over the feed by name"),
+        ("Bilaspur-Katni line", "", 318.6, "WP main line"),
+        ("Barkakana–Son Nagar line", "", 313.0, "WP; no Wikidata chain, laid over the feed"),
+        ("Muzaffarpur-Gorakhpur main line", "", 309.72, "WP"),
+        ("Delhi–Jaipur line", "", 305.0, "WP (article 'New Delhi–Jaipur main line'); "
+                                         "timetable 317"),
+        ("Secunderabad–Dhone section", "", 295.0, "WP (WD 379.69 is wrong)"),
+        ("Cuttack–Sambalpur line", "", 284.0, "WP"),
+        ("Moradabad–Ambala line", "", 274.0, "WP"),
+        ("Ambala–Attari line", "", 273.0, "WP"),
+        ("Bina–Katni railway line", "", 262.0, "WP"),
+        ("Asansol–Gaya section", "", 267.0, "WP"),
+        ("Nallapadu–Nandyal section", "", 256.91, "WP"),
+        ("New Jalpaiguri–New Bongaigaon section", "", 252.0, "WP"),
+        ("Mysuru–Bengaluru line", "", 138.25, "WP"),
+        ("Ernakulam–Kollam line (via Kottayam and Kayamkulam)", "", 156.0, "WP"),
+        ("Kalka–Shimla Railway", "", 96.6, "WP (WD 96); the chain ends at Barog in Wikidata "
+                                           "and is carried on to Shimla over the feed"),
+        ("Darjeeling Himalayan Railway", "", 83.9, "WP (WD 86)"),
+        ("Kollam-Thiruvananthapuram trunk line", "", 65.0, "WP"),
+        ("Nilgiri Mountain Railway", "", 46.0, "WP, WD"),
+        ("Kolkata Circular Railway", "", 36.2, "WP (WD 38.8)"),
+        ("Western Line", "", 123.78, "WD, Churchgate - Dahanu Road; no NTES train calls at "
+                                     "most of it, so the register's km are crow-fly x 1.1"),
+        ("Central Line", "", 180.0, "WP, Mumbai CSMT - Kasara and Khopoli; crow-fly km in "
+                                    "the register as for the Western Line"),
+    ],
+    # Register lines are OSM's track names (gb_register.py). Figures: the en.wikipedia
+    # infobox length (miles and chains converted), fetched 2026-10-03. OSM's name does not
+    # always cover what Wikipedia's article does; the note says which way it should be off.
+    "gb": [
+        ("East Coast Main Line", "", 632.73, "WP 393 mi 13 ch, King's Cross - Edinburgh"),
+        ("West Coast Main Line", "", 642.13, "WP 399 mi, Euston - Glasgow; OSM's name also covers "
+                                             "the Liverpool and Edinburgh branches, and Rugby - "
+                                             "Stafford is borrowed over the Trent Valley Line "
+                                             "(high, ~1.1)"),
+        ("Great Western Main Line", "", 190.28, "WP 118 mi 19 ch, Paddington - Bristol"),
+        ("Chiltern Main Line", "", 180.33, "WP 112 mi 4 ch, Marylebone - Birmingham Snow Hill"),
+        ("Cornish Main Line", "", 127.94, "WP 79.5 mi, Plymouth - Penzance"),
+        ("Reading to Taunton Line", "", 166.79, "WP 103 mi 51 ch"),
+        ("North Wales Coast Line", "", 169.78, "WP 105.5 mi, Crewe - Holyhead"),
+        ("Welsh Marches Line", "", 135.80, "WP 84.38 mi, Newport - Shrewsbury"),
+        ("Cotswold Line", "", 138.89, "WP 86.3 mi, Oxford - Hereford"),
+        ("Settle-Carlisle Railway", "", 115.47, "WP 71.75 mi, Settle Jn - Carlisle"),
+        ("Heart of Wales Line", "", 144.84, "WP 90 mi, Craven Arms - Llanelli"),
+        ("Conwy Valley Line", "", 49.57, "WP 30.8 mi, Llandudno - Blaenau Ffestiniog"),
+        ("Far North Line", "", 259.77, "WP 161 mi 33 ch, Inverness - Wick; Thurso branch apart"),
+        ("Kyle of Lochalsh Line", "", 102.67, "WP 63 mi 64 ch, Dingwall - Kyle"),
+        ("Highland Main Line", "", 190.08, "WP 118 mi 9 ch, Perth - Inverness"),
+        ("Aberdeen to Inverness Line", "", 174.23, "WP 108 mi 21 ch"),
+        ("Borders Railway", "", 56.83, "WP 35 mi 25 ch, Edinburgh - Tweedbank"),
+        ("Newcastle and Carlisle Railway", "", 93.34, "WP 'Tyne Valley line' 58 mi"),
+        ("Durham Coast Line", "", 63.57, "WP 39.5 mi, Newcastle - Middlesbrough"),
+        ("Cumbrian Coast Line", "", 137.60, "WP 85.5 mi, Carlisle - Barrow"),
+        ("Furness Line", "", 45.97, "WP 28 mi 45 ch, Barrow - Carnforth"),
+        ("Lakes Line", "", 16.40, "WP 'Windermere branch line' 10 mi 15 ch"),
+        ("Esk Valley Line", "", 56.33, "WP 35 mi, Middlesbrough - Whitby"),
+        ("York to Scarborough Line", "", 67.71, "WP 42 mi 6 ch"),
+        ("East Suffolk Line", "", 78.76, "WP 48 mi 75 ch, Ipswich - Lowestoft"),
+        ("Bittern Line", "", 48.72, "WP 30 mi 22 ch, Norwich - Sheringham"),
+        ("Breckland Line", "", 82.24, "WP 51 mi 8 ch, Ely - Norwich"),
+        ("Fen Line", "", 66.93, "WP 41 mi 47 ch, Cambridge - King's Lynn"),
+        ("Felixstowe Branch Line", "", 19.41, "WP 12 mi 5 ch"),
+        ("Crouch Valley Line", "", 26.55, "WP 16 mi 40 ch, Wickford - Southminster"),
+        ("Shenfield to Southend Line", "", 35.93, "WP 22 mi 26 ch"),
+        ("Hertford Loop Line", "", 38.62, "WP 24 mi"),
+        ("Marston Vale Line", "", 26.78, "WP 16 mi 51 ch, Bletchley - Bedford"),
+        ("Gospel Oak to Barking Line", "", 22.09, "WP 13 mi 58 ch"),
+        ("Medway Valley Line", "", 34.18, "WP 21 mi 19 ch"),
+        ("Marshlink Line", "", 42.27, "WP 26 mi 21 ch, Ashford - Hastings"),
+        ("Hastings Line", "", 52.93, "WP 32 mi 71 ch, Tonbridge - Hastings"),
+        ("Sheerness Line", "", 12.31, "WP 7 mi 52 ch"),
+        ("North Downs Line", "", 73.22, "WP 45 mi 40 ch, Reading - Redhill"),
+        ("West Coastway Line", "", 99.86, "WP 62 mi 4 ch, Brighton - Southampton; OSM's name "
+                                          "also has the Littlehampton and Bognor branches"),
+        ("Wessex Main Line", "", 137.78, "WP 85 mi 49 ch, Bristol - Southampton"),
+        ("Heart of Wessex Line", "", 140.41, "WP 87 mi 20 ch, Bristol - Weymouth; OSM's name is "
+                                             "Castle Cary - Dorchester only (low)"),
+        ("Tamar Valley Line", "", 22.53, "WP 14 mi"),
+        ("Looe Valley Line", "", 13.5, "WD (no WP length)"),
+        ("The Maritime Line", "", 18.91, "WP 11.75 mi, Truro - Falmouth"),
+        ("Avocet Line", "", 18.11, "WP 11.25 mi, Exeter - Exmouth"),
+        ("Tarka Line", "", 62.76, "WP 39 mi, Exeter - Barnstaple"),
+        ("Dartmoor Line", "", 24.94, "WP 15.5 mi, Crediton (Coleford Jn) - Okehampton"),
+        ("Island Line", "", 13.68, "WP 8.5 mi, Ryde Pier Head - Shanklin"),
+        ("Ebbw Valley Line", "", 31.72, "WP 19 mi 57 ch"),
+        ("Maesteg Line", "", 13.46, "WP 8 mi 29 ch, Bridgend - Maesteg"),
+        ("Marlow Branch Line", "", 11.47, "WP 7 mi 10 ch"),
+        ("High Speed 1", "", 109.9, "WP, St Pancras - Channel Tunnel portal; the register line "
+                                    "goes on through the tunnel to the border (high, ~1.2)"),
+    ],
+    # Thailand: SRT's lines (th_register.py, th_sources.md). EN = en.wikipedia "Rail transport
+    # in Thailand" (SRT's line list with chainage); NE = en.wikipedia "Northeastern Line
+    # (Thailand)" km posts; WD = Wikidata P2043.
+    "th": [
+        ("สายเหนือ", "", 751.48, "EN Bangkok - Chiang Mai; built also has the 2025 Lop Buri "
+                               "bypass (Ban Klap - Lopburi 2 - Khok Kathiam, 19 km beside the "
+                               "old line) and the elevated Krung Thep Aphiwat approach: ~1.02"),
+        ("สายสวรรคโลก", "", 29.007, "EN Ban Dara Jn - Sawankhalok"),
+        ("สายชุมทางบ้านภาชี–อุบลราชธานี", "", 485.15, "NE: Ubon km 575.10 less Ban Phachi "
+                                                     "Jn km 89.95"),
+        ("สายชุมทางถนนจิระ–หนองคาย", "", 354.82, "NE: Nong Khai km 621.10 less Thanon Chira "
+                                               "Jn km 266.28; built goes on 2.7 km over the "
+                                               "Friendship Bridge to the border: ~1.01"),
+        ("สายชุมทางแก่งคอย–ชุมทางบัวใหญ่", "", 249.887, "EN Kaeng Khoi Jn - Bua Yai Jn"),
+        ("สายตะวันออก", "", 255.0, "EN Bangkok - Aranyaprathet; built runs Yommarat (2.2 km "
+                                  "out, the trunk to Hua Lamphong is the Northern Line's) to Ban "
+                                  "Khlong Luk Border (+5.7): ~1.01"),
+        ("สายชุมทางฉะเชิงเทรา–สัตหีบ", "", 134.0, "EN Chachoengsao Jn - Chuk Samet (the Laem "
+                                                "Chabang freight branch left out)"),
+        ("สายใต้", "", 1144.16, "EN Thon Buri - Su-ngai Kolok; built also has Bang Sue Jn - "
+                               "Taling Chan, the way in from Krung Thep Aphiwat: ~1.01"),
+        ("สายสุพรรณบุรี", "", 78.09, "EN Nong Pladuk Jn - Suphan Buri"),
+        ("สายน้ำตก", "", 130.989, "EN Nong Pladuk Jn - Nam Tok"),
+        ("สายคีรีรัฐนิคม", "", 31.25, "EN Ban Thung Pho Jn - Khiri Rat Nikhom"),
+        ("สายกันตัง", "", 92.802, "EN Thung Song Jn - Kantang"),
+        ("สายนครศรีธรรมราช", "", 35.081, "EN Khao Chum Thong Jn - Nakhon Si Thammarat"),
+        ("สายชุมทางหาดใหญ่–ปาดังเบซาร์", "", 45.0, "EN Hat Yai Jn - Padang Besar (Malaysia's "
+                                                 "station, 0.5 km past the border)"),
+        ("สายแม่กลอง (วงเวียนใหญ่–มหาชัย)", "", 31.22, "EN Wongwian Yai - Maha Chai"),
+        ("สายแม่กลอง (บ้านแหลม–แม่กลอง)", "", 33.75, "EN Ban Laem - Mae Klong"),
+    ],
+    # Register lines are OSM's named passenger track (mx_register.py). Figures fetched
+    # 2026-10-03; mx_sources.md has each source. Metro figures are revenue (in-service) lengths.
+    "mx": [
+        ("Tren Maya", "", 1554.0, "WP, the seven tramos; OSM's track measures ~4% short "
+                                   "(tramo III Calkiní - Izamal 142 against 172)"),
+        ("El Insurgente", "", 57.7, "es.WP, Zinacantepec - Observatorio"),
+        ("Tren Suburbano", "", 50.7, "es.WP 27 km Buenavista - Cuautitlán + SICT 23.7 km "
+                                     "Lechería - AIFA"),
+        ("Chihuahua al Pacífico", "", 668.0, "WP, Chihuahua - Los Mochis"),
+        ("Ferrocarril del Istmo de Tehuantepec (Línea Z)", "", 308.0,
+         "WP, Coatzacoalcos - Salina Cruz (suspended)"),
+        ("Ferrocarril del Istmo de Tehuantepec (Línea FA)", "", 329.0,
+         "Diario del Istmo, Coatzacoalcos - Pakal Ná (suspended)"),
+        ("Línea 1", "", 16.654, "WP, Observatorio - Pantitlán"),
+        ("Línea 2", "", 20.713, "WP, Cuatro Caminos - Tasqueña"),
+        ("Línea 3", "", 21.278, "WP, Indios Verdes - Universidad"),
+        ("Línea 4", "", 9.363, "WP, Martín Carrera - Santa Anita"),
+        ("Línea 5", "", 14.435, "WP, Politécnico - Pantitlán"),
+        ("Línea 6", "", 11.434, "WP, El Rosario - Martín Carrera"),
+        ("Línea 7", "", 17.011, "WP, El Rosario - Barranca del Muerto"),
+        ("Línea 8", "", 17.679, "WP, Garibaldi - Constitución de 1917"),
+        ("Línea 9", "", 13.033, "WP, Tacubaya - Pantitlán"),
+        ("Línea A", "", 14.893, "WP, Pantitlán - La Paz"),
+        ("Línea B", "", 20.278, "WP, Ciudad Azteca - Buenavista"),
+        ("Línea 12", "", 24.110, "WP, Mixcoac - Tláhuac"),
+        ("Metrorrey Línea 1", "", 18.8, "WP, Talleres - Exposición"),
+        ("Metrorrey Línea 2", "", 13.7, "WP, Sendero - General Zaragoza"),
+        ("Metrorrey Línea 3", "", 7.5, "WP, Hospital Metropolitano - General Zaragoza"),
+        ("Mi Tren Línea 1", "", 16.5, "WP, Auditorio - Periférico Sur"),
+        ("Mi Tren Línea 2", "", 8.7, "WP, Juárez - Tetlán"),
+        ("Mi Tren Línea 3", "", 21.5, "WP, Central de Autobuses - Arcos de Zapopan"),
+        ("Mi Tren Línea 4", "", 21.2, "WP, Las Juntas - Tlajomulco Centro"),
+    ],
+    # Brazil: the passenger track of the train lines (br_register.py), named as OSM's route
+    # masters. en.WP = the line's en.wikipedia infobox; pt.WP SV = pt.wikipedia "SuperVia"
+    # (lengths from Central do Brasil; a branch's register line starts where it leaves the
+    # trunk, so the trunk is taken off); WD = Wikidata P2043. Fetched 2026-10-03.
+    "br": [
+        ("Linha 7 - Rubi", "", 62.7, "en.WP, Palmeiras-Barra Funda - Jundiaí, 17 stations as "
+                                     "built; OSM's route also 56.9: the figure is likely from "
+                                     "Brás (~0.91)"),
+        ("Linha 8 - Diamante", "", 42.0, "en.WP, Júlio Prestes - Amador Bueno"),
+        ("Linha 9 - Esmeralda", "", 39.1, "en.WP, Osasco - Varginha; OSM's route also 35.9 "
+                                          "(~0.92)"),
+        ("Linha 10 - Turquesa", "", 38.0, "WD; built from Palmeiras-Barra Funda (OSM names "
+                                          "Barra Funda - Luz - Brás Line 10's track); en.WP has "
+                                          "35 (~1.07)"),
+        ("Linha 11 - Coral", "", 50.5, "en.WP 54.1 Palmeiras-Barra Funda - Estudantes, less "
+                                       "Barra Funda - Luz 3.6 (Line 10's track)"),
+        ("Linha 12 - Safira", "", 39.0, "en.WP, Brás - Calmon Viana"),
+        ("Linha 13 - Jade", "", 12.2, "en.WP, Engenheiro Goulart - Aeroporto-Guarulhos; OSM's "
+                                      "route and track 8.7-8.9, the ends 7.7 km apart as the "
+                                      "crow flies (~0.72)"),
+        ("Linha Deodoro", "", 23.0, "pt.WP SV, Central - Deodoro (the four-track trunk, both "
+                                    "pairs one line)"),
+        ("Linha Japeri", "", 38.75, "pt.WP SV 61.75 less the trunk 23: Deodoro - Japeri"),
+        ("Linha Santa Cruz", "", 31.75, "pt.WP SV 54.75 less the trunk 23; built from Vila "
+                                        "Militar, where the branch leaves the Japeri line "
+                                        "(~0.96)"),
+        ("Linha Paracambi", "", 8.26, "pt.WP SV, Japeri - Paracambi"),
+        ("Linha Vila Inhomirim", "", 15.35, "pt.WP SV, Saracuruna - Vila Inhomirim"),
+        ("Estrada de Ferro Vitória a Minas", "", 698.0, "Vale 664 Cariacica - Belo Horizonte "
+                                                        "+ the Itabira connection 34 (OSM)"),
+        ("Estrada de Ferro Carajás", "", 892.0, "Vale/WD, São Luís - Parauapebas"),
+        ("Linha 1 do Metrô de Teresina", "", 16.8, "WD 13.5 Eng. Alberto Tavares Silva - "
+                                                   "Itararé + the May 2026 branch Boa "
+                                                   "Esperança - Todos os Santos 3.3 (OSM)"),
+    ],
+    # South Africa: za_register.py's track pieces. Hardly any South African line has a published
+    # length of its own, so these are Metrorail's published route lengths less the stretch
+    # into Cape Town another register line owns (measured on the build). The build log's
+    # "path check" lines test the network the same way, unreduced: Cape Town - Worcester
+    # 175.4 / 174, Cape Town - Malmesbury 79.3 / 79.4, Cape Town - Simon's Town 36.0 / 36,
+    # Pretoria - Cape Town 1,588 / 1,600 (the Blue Train), Pretoria - Polokwane 289 / 284.4.
+    # za_sources.md has the sources.
+    "za": [
+        ("Salt River–Simon's Town", "", 32.23, "WP Southern Line 36 km Cape Town - Simon's "
+                                                "Town, less Cape Town - Salt River (3.77 built)"),
+        ("Maitland–Heathfield", "", 16.33, "WP Cape Flats Line 23.8 km Cape Town - Retreat, "
+                                           "less Cape Town - Maitland (5.87) and Heathfield - "
+                                           "Retreat (1.6), both built"),
+        ("Kraaifontein–Malmesbury", "", 47.4, "WP Malmesbury Line 79.4 km, less Cape Town - "
+                                              "Kraaifontein (32.0 built)"),
+    ],
+    # Indonesia: id.wikipedia's line articles (id_register.py), named as the article less
+    # "Jalur kereta api", against the article's infobox length (`linelength`/`tracklength`,
+    # read 2026-10-03 into data/raw/id/idwiki_articles.json). Only lines whose infobox extent
+    # is what runs; the note says where branches or closed ends make it differ. KAI's own km
+    # posts (km_official) check every line as well. id_sources.md has the rest.
+    "id": [
+        ("Cikampek–Cirebon–Kroya", "", 293.0, "id.WP"),
+        ("Cirebon–Semarang", "", 225.6, "id.WP, Cirebon - Semarang Tawang"),
+        ("Gundih–Surabaya Pasarturi", "", 230.0, "id.WP"),
+        ("Kertosono–Bangil", "", 215.5, "id.WP, via Kediri, Blitar, Malang"),
+        ("Surabaya–Bangil–Kalisat", "", 214.4, "id.WP"),
+        ("Bogor–Padalarang–Kasugihan", "", 388.0, "id.WP; Cipatat - Padalarang (16 km) closed "
+                                                  "and left out: ~0.96, in two pieces"),
+        ("Cilacap–Yogyakarta", "", 175.0, "id.WP main line; + YIA (5.5) and Karangtalun (3.4) "
+                                          "branches: ~1.04"),
+        ("Brumbung–Gambringan", "", 46.0, "id.WP"),
+        ("Tegal–Prupuk", "", 38.5, "id.WP"),
+        ("Anyer Kidul–Kampung Bandan", "", 147.0, "id.WP Merak - Kampung Bandan; KAI's posts sum "
+                                                  "to 154.5 (Tanah Abang - Kampung Bandan by "
+                                                  "Duri and Angke in): ~1.07"),
+        ("Kereta Cepat Jakarta–Bandung", "", 142.3, "id.WP (en.WP 142.8), Halim - Tegalluar"),
+        ("Medan–Tebing Tinggi", "", 80.5, "id.WP; + Kualanamu branch (~4.7): ~1.06"),
+        ("Tebing Tinggi–Kisaran", "", 73.0, "id.WP; Kuala Tanjung freight branch left out"),
+        ("Tebing Tinggi–Siantar", "", 48.0, "id.WP"),
+        ("Kisaran–Rantau Prapat", "", 114.0, "id.WP"),
+        ("Kisaran–Tanjungbalai", "", 20.7, "id.WP"),
+        ("Belawan–Medan", "", 22.0, "id.WP"),
+        ("Lubuk Alung–Naras–Sungai Limau", "", 27.8, "id.WP, Lubuk Alung - Naras"),
+        ("Prabumulih–Kertapati", "", 78.0, "id.WP"),
+        ("Prabumulih–Panjang", "", 324.0, "id.WP to Panjang; passengers end at Tanjungkarang, "
+                                          "the goods line beyond left out: ~0.96"),
+        ("Lubuk Linggau–Prabumulih", "", 227.2, "KAI km posts, Lubuk Linggau km 549.448 - "
+                                                "Prabumulih km 322.295 (no infobox length)"),
+        ("Makassar–Parepare", "", 109.0, "DJKA, Sulawesi's active km (2025); built Mandai - "
+                                         "Garongkong without the Tonasa goods branch: ~0.93"),
+    ],
+    # Serbia: IŽS Network Statement 2026, Appendix 6 chainage (data/raw/rs_ns2026_appendix6.txt),
+    # over the stretch built. Border stubs with no train are dropped, as in Croatia.
+    "rs": [
+        ("101 Београд Центар – Шид", "", 116.365, "IŽS, BC 0.000 - Šid 116.365; Šid - border "
+                                                  "(5.6, no train) dropped: ~0.97"),
+        ("102 Београд Центар – Ниш – Прешево", "", 392.309, "IŽS, BC - Preševo; BC - Rakovica "
+                                                              "traces 5.8 for IŽS's 8.5: ~0.98"),
+        ("103 Раковица – Мала Крсна – Велика Плана", "", 93.4, "IŽS by its passenger distances "
+                                                               "(Rakovica - K1 3.0, K1 - Jajinci 1.6)"),
+        ("104 Ћуприја – Параћин", "", 7.420, "IŽS"),
+        ("105 Стара Пазова – Нови Сад – Суботица", "", 141.606, "IŽS, Stara Pazova 34.944 - "
+                                                                "Subotica 176.550"),
+        ("106 Ниш – Димитровград", "", 97.182, "IŽS, Niš 0.241 - Dimitrovgrad 97.423"),
+        ("107 Београд Центар – Панчево – Вршац", "", 87.777, "IŽS distances via Pančevo Glavna"),
+        ("108 Ресник – Пожега – Врбница", "", 287.013, "IŽS, Resnik 0.425 - border 287.438 (ŽICG "
+                                                       "287+438.70); Štrpci's 9 km in BiH included"),
+        ("109 Лапово – Краљево – Рудница", "", 161.322, "IŽS, Lapovo 0.666 - Rudnica 161.988"),
+        ("110 Суботица – Сомбор – Богојево", "", 88.057, "IŽS, Bogojevo 43.815 - Subotica 131.872"),
+        ("120 Карађорђев парк – Дедиње", "", 1.491, "IŽS; OSM's Dedinje junction is 0.6 km "
+                                                    "nearer: ~0.6"),
+        ("121 Инђија – Голубинци", "", 5.476, "IŽS passenger distance via Inđija TT"),
+        ("201 Суботица – Хоргош", "", 24.018, "IŽS Subotica - Horgoš; + Horgoš - border 1.0 "
+                                              "traced: ~1.04"),
+        ("202 Панчево Главна – Зрењанин – Кикинда", "", 154.316, "IŽS to Banatsko Veliko Selo"),
+        ("205 Банатско Милошево – Сента – Суботица", "", 78.045, "IŽS distances across Senta"),
+        ("207 Нови Сад – Оџаци – Богојево", "", 73.614, "IŽS distances, Sajlovo - Bogojevo"),
+        ("208 Нови Сад – Римски Шанчеви – Орловат", "", 53.030, "IŽS, Sajlovo - Perlez (OSM has "
+                                                                "no station beyond)"),
+        ("211 Рума – Шабац – Брасина", "", 99.998, "IŽS, Ruma 0.517 - Donja Borina 100.515"),
+        ("213 Сталаћ – Краљево – Пожега", "", 135.733, "IŽS"),
+        ("216 Смедерево – Мала Крсна", "", 10.929, "IŽS"),
+        ("218 Мала Крсна – Пожаревац – Бор – Вражогрнац", "", 178.773, "IŽS 71.272 - 250.045"),
+        ("219 Ниш – Зајечар – Прахово Пристаниште", "", 183.621, "IŽS, Crveni Krst - Prahovo "
+                                                                 "Pristanište"),
+        ("223 Дољевац – Прокупље – Куршумлија – Мердаре", "", 86.169, "IŽS via the Kuršumlija "
+                                                                     "stub, which is no stop"),
+        ("308 Доња Борина – Зворник Град", "", 5.654, "IŽS, Donja Borina - Zvornik"),
+        ("309 Панчево Варош – Панчево Војловица", "", 2.346, "IŽS to Vojlovica's axis; OSM's "
+                                                             "station node is past it: ~1.19"),
+        ("501 Шарган Витаси – Мокра Гора", "", 15.440, "IŽS; the Šargan Eight's loops trace "
+                                                       "2.8 short: ~0.81"),
+    ],
+    # Montenegro: ŽICG Network Statement 2017, Annex 4 (data/raw/me_zicg_izjava_o_mrezi_2017.pdf).
+    "me": [
+        ("Bar – Vrbnica", "", 167.408, "ŽICG, border 287+438.70 - Bar 454+847"),
+        ("Podgorica – Nikšić", "", 56.215, "ŽICG, Nikšić 0+293 - Podgorica 56+508"),
+        ("Podgorica – Tuzi – državna granica", "", 13.683, "ŽICG Podgorica - Tuzi; Tuzi - border "
+                                                           "(11.1, freight) dropped"),
+    ],
+    # North Macedonia: Wikidata's lengths (P2043).
+    "mk": [
+        ("Табановце – Гевгелија", "", 214.9, "Wikidata Q3239944, with both border stubs "
+                                             "(dropped): ~0.97"),
+        ("Скопје – Волково – Блаце", "", 31.1, "Wikidata Q3239932"),
+        ("Ѓорче Петров – Кичево", "", 102.6, "Wikidata Q3239602"),
+        ("Велес – Битола – Кременица", "", 145.3, "Wikidata Q3239995 to Kremenica; built ends at "
+                                                  "Žabeni (no OSM track beyond): ~0.96"),
+        ("Велес – Кочани", "", 85.5, "Wikidata Q3239994"),
+    ],
+    # Bosnia and Herzegovina: ŽFBH's chainage and Wikidata.
+    "ba": [
+        ("11 Sarajevo – Čapljina", "", 177.7, "ŽFBH Sarajevo 0+000 - Čapljina 170+390 (its "
+                                              "infrastructure page) + Čapljina - border 7.3 "
+                                              "traced"),
+        ("12 Šamac – Doboj – Sarajevo", "", 242.0, "Wikidata Q1279793; Šamac - Doboj (no train, "
+                                                   "no OSM station or route) dropped: ~0.71"),
+    ],
+    # Albania: Wikidata's lengths.
+    "al": [
+        ("Elbasan – Pogradec", "", 78.0, "Wikidata Q31667925"),
+        ("Fier – Ballsh", "", 25.0, "Wikidata Q130927911"),
+    ],
+    # Türkiye: register lines are OSM's track names (tr_register.py). Figures: TCDD's 2025
+    # network statement, Ek-3.3 (data/raw/tr/sb2025_ek33_sections.csv: route-km per section,
+    # whole km), summed over the line's extent; WD = Wikidata P2043; KHY = the 2026 decree's
+    # public-service distances. A sum of whole-km rows is good to about 1%.
+    "tr": [
+        ("Ankara-Kars demiryolu", "", 1360.0, "KHY Ankara - Kars 1,360 (= Ek-3.3 sum); trains "
+                                              "use the Tecer - Kangal variant, its own line"),
+        ("İstanbul - Ankara demiryolu", "", 545.0, "Ek-3.3 Söğütlüçeşme - Gebze - Köseköy - "
+                                                   "Arifiye - Eskişehir - Ankara; Köseköy - "
+                                                   "Sapanca bridged in since 2026-10-04 "
+                                                   "(its own track, cut at the YHT's joint)"),
+        ("Ankara - İstanbul yüksek hızlı demiryolu", "", 414.0,
+         "Ek-3.3 YHT rows 8-15; OSM has the YHT on the old line Karaköy - Yayla and "
+         "Doğançay - Arifiye - Sapanca, bridged in since 2026-10-04 (borrowed where on the "
+         "old line's track), so a little high (1.05)"),
+        ("Ankara - Sivas yüksek hızlı demiryolu", "", 405.0, "tr.wikipedia, Ankara - Sivas"),
+        ("Polatlı - Konya yüksek hızlı demiryolu", "", 224.0, "Ek-3.3 row 14"),
+        ("Eskişehir-Konya demiryolu", "", 427.0, "Ek-3.3 rows 214-218"),
+        ("İzmir-Afyonkarahisar demiryolu", "", 420.0, "Ek-3.3 Basmane - Afyon; WD 421.7"),
+        ("İzmir-Alsancak-Eğirdir demiryolu", "", 430.0, "Ek-3.3 Alsancak - Goncalı - Karakuyu "
+                                                        "- Gümüşgün (Eğirdir closed)"),
+        ("Irmak-Zonguldak demiryolu", "", 414.0, "Ek-3.3 rows 72-82; tr.wikipedia 415.2"),
+        ("Fevzipaşa-Kurtalan demiryolu", "", 413.0, "Ek-3.3 Malatya - Kurtalan only: no "
+                                                    "passenger train Fevzipaşa - Malatya"),
+        ("Samsun-Kalın demiryolu", "", 377.0, "Ek-3.3 rows 155-156; WD 377.8"),
+        ("Yolçatı-Tatvan demiryolu", "", 373.0, "Ek-3.3 rows 177-185"),
+        ("Manisa-Bandırma demiryolu", "", 276.0, "Ek-3.3 rows 103-108; WD 275.1"),
+        ("Alayunt-Balıkesir demiryolu", "", 262.0, "Ek-3.3 rows 219-224"),
+        ("İstanbul – Pythion demiryolu", "", 244.0, "KHY Halkalı - Uzunköprü 229 + Bakırköy - "
+                                                    "Halkalı ~15; Uzunköprü - border no train"),
+        ("Boğazköprü-Ulukışla demiryolu", "", 172.0, "Ek-3.3 rows 67-71"),
+        ("Malatya-Çetinkaya demiryolu", "", 141.0, "Ek-3.3 rows 157-161"),
+        ("Afyonkarahisar-Karakuyu demiryolu", "", 114.0, "Ek-3.3 rows 228-229; WD 114.2"),
+        ("Ulukışla-Yenice demiryolu", "", 108.0, "Ek-3.3 rows 198-199"),
+        ("Pehlivanköy – Svilengrad demiryolu", "", 68.0, "Ek-3.3 row 18 + to the border"),
+        ("Toprakkale-İskenderun demiryolu", "", 58.9, "WD; Ek-3.3 row 204 58"),
+        ("Torbalı-Ödemiş demiryolu", "", 62.9, "WD; OSM's line also has Ödemiş Gar - Şehir "
+                                               "and both legs at Torbalı (high)"),
+        ("Kars-Gümrü-Tiflis demiryolu", "", 55.0, "KHY Kars - Akyaka 55"),
+        ("Gümüşgün-Isparta şube demiryolu", "", 28.0, "Ek-3.3 rows 233, 235; WD 13.4 from "
+                                                      "Bozanönü"),
+        ("Gümüşgün-Burdur şube demiryolu", "", 23.9, "WD; Ek-3.3 row 236 23"),
+        ("Ortaklar-Söke şube demiryolu", "", 22.0, "WD 22.0; Ek-3.3 row 95 22"),
+        ("Goncalı-Denizli şube demiryolu", "", 9.4, "WD; Ek-3.3 row 94 10"),
+        ("Arifiye - Adapazarı şube demiryolu", "", 8.5, "tr.wikipedia; Ek-3.3 row 32 8"),
+        ("Menemen-Aliağa demiryolu", "", 24.9, "WD; OSM's line has both legs of the Menemen "
+                                               "triangle (high)"),
+        ("Marmaray", "", 76.6, "WD, Halkalı - Gebze"),
+        ("Başkentray", "", 36.0, "Ek-3.3 Sincan - Ankara 24 + Ankara - Kayaş 12"),
+        ("Gaziray", "", 24.0, "Ek-3.3 rows 6, 208 Başpınar - Taşlıca; WD 25.5"),
+    ],
+    # Iran: RAI's railways as OSM's route=railway relations (ir_register.py, ir_sources.md).
+    # RAI = RAI's station table with each station's km (fa.wikipedia "فهرست ایستگاه‌های
+    # راه‌آهن ایران", data/raw/ir/wp/); EN = en.wikipedia "Rail transport in Iran", its table of
+    # lines with lengths; WD = Wikidata P2043.
+    "ir": [
+        ("راه آهن تهران – مشهد", "", 923.0, "RAI Mashhad km 923.0 from Tehran by Garmsar; WD "
+                                            "Garmsar - Mashhad 812"),
+        ("خط راه‌آهن تهران – تبریز", "", 735.9, "WD 735.9; RAI Tabriz km 735.855 (by Maragheh)"),
+        ("راه آهن تبریز – جلفا", "", 146.1, "RAI Jolfa 882.0 - Tabriz 735.9; EN 148"),
+        ("راه آهن بافق – بندرعباس", "", 612.1, "RAI Bandar Abbas 1482.2 - Bafq 870.1"),
+        ("راه آهن کرمان – زاهدان", "", 539.2, "RAI Zahedan 1658.7 - Kerman 1104.6, less Kerman "
+                                             "- junction (14.9 km, Qom - Kerman's)"),
+        ("راه آهن قم – کرمان", "", 825.0, "RAI by Nain: Kashan - Kerman 742 (Ardakan 582.4, "
+                                         "Meybod - Yazd 60, Yazd - Kerman 351.8) + Mohammadieh "
+                                         "- Kashan 80 + Kerman - junction 14.9 (built, "
+                                         "unchecked); EN's Qom - Zarand 847 is longer"),
+        ("خط ریلی بادرود – شیراز", "", 732.2, "RAI Shiraz 1074.5 - Badrud 342.3 (by Isfahan)"),
+        ("راه آهن اصفهان – اردکان", "", 184.3, "RAI Meybod 692.75 - Sistan 508.5 (by Varzaneh, "
+                                             "Aqda)"),
+        ("راه آهن مشهد – بافق", "", 777.0, "RAI Bafq - Torbat-e Heydarieh 672.0 + Torbat - the "
+                                          "Mashhad line at Kashmar ~105 (EN's table: Bafq - "
+                                          "Torbat 800)"),
+        ("راه آهن تربت حیدریه – خواف", "", 121.5, "RAI (from Bafq) Khaf 793.5 - Torbat 672.0"),
+        ("راه‌آهن گرمسار – اینچه‌برون", "", 457.9, "RAI Garmsar - Bandar Torkaman 346.3, BT - "
+                                                 "Gorgan 35.1, Yampi - Incheh Borun 58.0, + "
+                                                 "the fork - Yampi 18.5 (built)"),
+        ("راه‌آهن سراسری ایران (تهران – بندر امام خمینی)", "", 938.6,
+         "RAI Tehran - Ahvaz 815.9 (by Parandak) + Ahvaz - Mahshahr 111.4, + the Robat Karim - "
+         "Parand branch 11.3 (built); Mahshahr - Bandar Imam has no passenger train"),
+        ("راه آهن اهواز – خرمشهر", "", 120.9, "RAI Khorramshahr 936.8 - Ahvaz 815.9; EN 121"),
+        ("مسیر جدید میانه – تبریز", "", 173.6, "RAI Khavaran 612.8 - Mianeh 439.2"),
+        ("راه آهن میانه – اردبیل", "", 174.0, "EN; built from the fork on the new Tabriz line "
+                                             "north of Mianeh"),
+        ("راه‌آهن مراغه – ارومیه", "", 183.0, "EN; WD 184"),
+        ("راه آهن قزوین – رشت", "", 164.0, "EN"),
+        ("خط ریلی یزد – اقلید", "", 271.0, "EN"),
+        ("راه آهن همدان – سنندج", "", 151.0, "EN; RAI 148.0"),
+        ("راه آهن اراک – کرمانشاه", "", 267.0, "EN; RAI Kermanshah 603.0 - Arak 320.3 = 282.7, "
+                                              "of which Arak - the Shazand junction is the "
+                                              "Trans-Iranian's"),
+        ("راه آهن فریمان – سرخس", "", 175.0, "EN Mashhad - Sarakhs 165; RAI Fariman - Sarakhs "
+                                            "162.0 + the Salam - Shahid Motahari link ~13"),
+        ("راه آهن چابهار – زاهدان", "", 155.0, "EN Zahedan - Khash, the open part"),
+        ("راه آهن صوفیان – رازی", "", 190.4, "RAI Razi 957.6 - Sufian 767.2 (suspended)"),
+    ],
+    # Morocco, Algeria, Tunisia, Egypt: nafrica_register.py's hand-written lists, traced over
+    # OSM track (nafrica_sources.md). The km are ours, so these published lengths are the only
+    # outside check.
+    # Morocco: en.wikipedia / fr.wikipedia figures (ONCF publishes no line lengths).
+    "ma": [
+        ("LGV Tanger – Kénitra", "", 186.0, "en.WP; built platform to platform, with both "
+                                            "approaches on their own track: ~1.04"),
+        ("Casablanca – Rabat – Kénitra", "", 137.0, "en.WP Kenitra - Casablanca; built Casa "
+                                                    "Voyageurs - Kénitra + Casa Port's 6 km"),
+        ("Sidi Yahya – Mechraa Bel Ksiri", "", 45.0, "fr.WP; built from the junction 3.3 km out"),
+        ("Tanger – Tanger Med", "", 45.0, "fr.WP Tanger - port; built from the junction 3 km out"),
+        ("Taourirt – Nador – Beni Ansar", "", 110.0, "fr.WP; built from the junction 6.5 km west of "
+                                        "Taourirt to Beni Nsar Ville"),
+    ],
+    # Algeria: SNTF's km in its timetables (fahrplancenter.com's transcriptions, 2017-2019,
+    # data/raw/dz/fahrplancenter/), else the opening news or fr.WP's list.
+    "dz": [
+        ("Alger – Blida – Chlef – Oran", "", 419.0, "SNTF 302, Alger 0 - Oran 419"),
+        ("El Harrach – Thénia – Bouira – Sétif – Constantine", "", 454.0,
+         "SNTF 102, El Harrach 10 - Constantine 464"),
+        ("Thénia – Tizi Ouzou – Oued Aïssi", "", 62.0, "fr.WP; SNTF 101 says 67"),
+        ("Beni Mansour – Béjaïa", "", 88.0, "SNTF 103"),
+        ("Constantine – Ramdane Djamel – Skikda", "", 86.0, "SNTF 205"),
+        ("Ramdane Djamel – Azzaba – Annaba", "", 99.0, "SNTF 102, 532 - 631"),
+        ("El Guerrah – Batna – Biskra – Touggourt", "", 419.0, "SNTF 203, El Gourzi 38 - "
+                                                               "Touggourt 457; fr.WP 417"),
+        ("Aïn Touta – Barika – M'Sila", "", 148.0, "SNTF 202, 151 - 299; fr.WP 145"),
+        ("Bordj Bou Arreridj – M'Sila", "", 55.0, "fr.WP"),
+        ("M'Sila – Boughezoul – Tissemsilt", "", 290.0, "opening news, 2022"),
+        ("Boughezoul – Djelfa – Laghouat", "", 250.0, "opening news, 2023"),
+        ("Annaba – Souk Ahras – Tébessa", "", 231.0, "SNTF 209"),
+        ("Souk Ahras – frontière tunisienne", "", 53.0, "fr.WP; built to the outline"),
+        ("Annaba – Sidi Amar", "", 13.9, "fr.WP"),
+        ("Oued Tlelat – Sidi Bel Abbès – Béchar", "", 649.0, "SNTF 402, Béchar 0 - Oued Tlelat "
+                                                             "649; fr.WP 648"),
+        ("Tabia – Tlemcen – Maghnia – Ghazaouet", "", 185.0, "SNTF 403, Tabia 99 - Maghnia 219, "
+                                                             "Akid Abbas 229 - Ghazaouet 284"),
+        ("Moulay Slissen – Saïda – Frenda", "", 221.0, "SNTF 407 Moulay Slissen - Saïda 101 + "
+                                                       "Saïda - Frenda 120 (opening, 2023)"),
+        ("Oran – Aïn Témouchent", "", 70.0, "SNTF 401, Es Sénia 6 - Aïn Témouchent 76"),
+        ("Oran – Arzew", "", 41.7, "fr.WP"),
+        ("Mohammadia – Mostaganem", "", 47.0, "SNTF 404"),
+    ],
+    # Tunisia: SNCFT's own GTFS (shape_dist_traveled, median over trips) between the ends.
+    "tn": [
+        ("Tunis – Djedeida – Béja – Ghardimaou", "", 211.1, "SNCFT GTFS"),
+        ("Djedeida – Mateur – Bizerte", "", 72.5, "SNCFT GTFS"),
+        ("Tunis – Pont du Fahs – Dahmani – Kalaâ Khasba", "", 229.7, "SNCFT GTFS, Djebel Jelloud - Kalaâ Khasba"),
+        ("Les Salines – Le Kef", "", 31.2, "SNCFT GTFS"),
+        ("Ghraïba – Gafsa – Metlaoui – Tozeur", "", 234.1, "SNCFT GTFS"),
+        ("Bir Bou Rekba – Hammamet – Nabeul", "", 17.1, "SNCFT GTFS"),
+        ("Metlaoui – Redeyef", "", 44.1, "SNCFT GTFS"),
+        ("Tabeddit – Om El Araies", "", 8.8, "SNCFT GTFS"),
+    ],
+    # Egypt: ENR's km per train as egypttrains.com lists them (data/raw/eg/enr_train_list.json).
+    "eg": [
+        ("القاهرة – طنطا – الإسكندرية", "", 208.0, "ENR Cairo - Alexandria"),
+        ("القاهرة – أسيوط – الأقصر – أسوان", "", 879.0, "ENR Cairo - Aswan"),
+        ("أسوان – السد العالي", "", 20.0, "ENR Cairo - High Dam 899 less 879; 19 listed"),
+        ("الواسطى – الفيوم", "", 38.0, "ENR"),
+        ("الزقازيق – أبو حماد – الإسماعيلية", "", 78.0, "ENR"),
+        ("الإسماعيلية – القنطرة – بورسعيد", "", 79.0, "ENR"),
+        ("الإسماعيلية – فايد – السويس", "", 92.0, "ENR"),
+        ("القنطرة شرق – بئر العبد", "", 68.0, "ENR"),
+        ("بنها – منيا القمح – الزقازيق", "", 35.0, "ENR"),
+        ("طنطا – زفتى – ميت غمر – الزقازيق", "", 56.0, "ENR"),
+        ("بنها – ميت غمر", "", 35.0, "ENR"),
+        ("الزقازيق – السنبلاوين – المنصورة", "", 71.0, "ENR"),
+        ("طنطا – المحلة – المنصورة – دمياط", "", 119.0, "ENR"),
+        ("المنصورة – دكرنس – المنزلة – المطرية", "", 73.0, "ENR"),
+        ("طنطا – قلين – كفر الشيخ", "", 63.0, "ENR"),
+        ("دمنهور – دسوق – قلين", "", 43.0, "ENR"),
+        ("دسوق – فوه – مطوبس – البوصيلي", "", 40.0, "ENR"),
+        ("المعمورة – إدكو – البوصيلي – رشيد", "", 49.0, "ENR (40 for the trains that end short)"),
+        ("السنطة – محلة روح – المحلة الكبرى", "", 32.0, "ENR"),
+        ("بنها – منوف", "", 27.0, "ENR"),
+        ("منوف – شبين الكوم – تلا – طنطا", "", 42.0, "ENR"),
+        ("منوف – كفر الزيات", "", 50.0, "ENR"),
+        ("بشتيل – وردان – إيتاي البارود", "", 115.0, "ENR"),
+        ("الزقازيق – أبو كبير – فاقوس – الصالحية", "", 57.0, "ENR"),
+        ("محرم بك – الحمام – العلمين – مرسى مطروح", "", 298.0, "ENR"),
+        ("23 يوليو – الخانكة – شبين القناطر", "", 19.0, "ENR"),
+    ],
+    # New Zealand: KiwiRail's lines (nz_register.py), the stretches with passenger trains, by
+    # KiwiRail's name, against en.wikipedia's infobox lengths (WP, read 2026-10-03). KiwiRail's
+    # own km posts check every line as well (km_official).
+    "nz": [
+        ("North Island Main Trunk", "", 684.98, "WP, Wellington - Maungawhau through the City "
+                                                "Rail Link; two short kms in the posts (km 274, "
+                                                "357) make KiwiRail's own chainage 1.5 km long"),
+        ("Main North Line", "", 348.04, "WP, Addington - Picton"),
+        ("Midland Line", "", 212.0, "WP, Rolleston - Greymouth"),
+        ("Johnsonville Line", "", 10.49, "WP Johnsonville Branch, Wellington - Johnsonville"),
+        ("Wairarapa Line", "", 89.16, "WP: Masterton km 90.96; the line as built starts at "
+                                      "KiwiRail's first post, km 1.8, where it leaves the NIMT"),
+        ("Taieri Gorge Railway", "", 42.0, "WP: Pukerangi 19 km short of Middlemarch, the line "
+                                           "60 km from the Taieri Branch's 4 km peg; built from "
+                                           "Taieri (km 3)"),
+    ],
+    # Vietnam: VNR's lines as OSM names the track (vn_register.py, vn_sources.md). VI = the
+    # vi.wikipedia line article's infobox; its station chainage (from VNR) where a line starts
+    # at a junction, since OSM gives the shared trunk out of Hà Nội to one line only: Gia Lâm
+    # km 5, Yên Viên km 11, Đông Anh km 21. The North-South line also has km_official from the
+    # 175-station chainage table, checked section by section.
+    "vn": [
+        ("Đường sắt Bắc Nam", "", 1726.0, "VI, Hà Nội - Sài Gòn"),
+        ("Đường sắt Hà Nội - Lào Cai", "", 283.0, "VI chainage Yên Viên km 11 - Lào Cai km 294 "
+                                                 "(the 296 of the infobox is from Hà Nội)"),
+        ("Đường sắt Hà Nội - Đồng Đăng", "", 166.5, "VI 162 Hà Nội - Đồng Đăng + the 4.5 km to "
+                                                   "the border traced"),
+        ("Đường sắt Hà Nội - Hải Phòng", "", 97.0, "VI 102 less Hà Nội - Gia Lâm (km 5): "
+                                                  "DRVN's Gia Lâm - Hải Phòng"),
+        ("Đường sắt Hà Nội - Quan Triều", "", 54.0, "VI 75 less Hà Nội - Đông Anh (km 21): "
+                                                   "DRVN's Đông Anh - Quán Triều"),
+        ("Đường sắt Kép - Cái Lân", "", 109.4, "en.WP Kép - Hạ Long 106 + Hạ Long - Cái Lân 3.4 "
+                                              "traced (VI's infobox 126 counts more); greyed"),
+        ("Đường sắt Diêu Trì - Quy Nhơn", "", 10.5, "VI; built from Diêu Trì station along the "
+                                                   "branch's own track: ~0.94"),
+        ("Đường sắt Bình Thuận - Phan Thiết", "", 10.0, "VI \"Ga Phan Thiết\": about 10 km from "
+                                                       "Mương Mán (now Bình Thuận)"),
+        ("Đường sắt Đà Lạt - Trại Mát", "", 7.0, "VI/en.WP 7 km; built from the station "
+                                                "building's centre: ~0.93"),
+        ("Tàu hỏa leo núi Mường Hoa", "", 2.0, "Sun World: \"2 km\" Sa Pa - Mường Hoa, a round "
+                                              "figure; OSM's track is 1.69 km whole: ~0.84"),
+    ],
+    # Argentina: the track of the passenger routes, grouped by hand (ar_register.py,
+    # ar_sources.md). "post" = the transport ministry's station km posts (Estaciones de Trenes
+    # y Servicios activos a 2022, datos.transporte.gob.ar); `python ar_register.py --chainage`
+    # checks every section that has one at both ends (239 sections, median 0.997). The Roca,
+    # Mitre and Belgrano Sur have branches whose posts start elsewhere, so no line total here.
+    "ar": [
+        ("Línea Sarmiento", "", 169.24, "posts: Once - Moreno 36.382 + Moreno - Mercedes 61.649 "
+                                        "+ Merlo - Lobos 71.206"),
+        ("Línea San Martín", "", 72.308, "post, Retiro - Dr. Cabred"),
+        ("Línea Belgrano Norte", "", 51.944, "post, Retiro - Villa Rosa"),
+        ("Línea Urquiza", "", 25.612, "post, Federico Lacroze - General Lemos"),
+        ("Tren de la Costa", "", 15.203, "post, Avenida Maipú - Delta"),
+        ("Ferrocarril Roca: Chascomús – Mar del Plata", "", 283.5,
+         "the 400 km given for Constitución - Mar del Plata less Chascomús' post 116.5"),
+        ("Ferrocarril San Martín: Cabred – Junín", "", 181.7, "es.WP Junín 254 km from Retiro "
+                                                              "less Cabred's post 72.3"),
+        ("Ferrocarril Sarmiento: Mercedes – Bragado", "", 110.97, "es.WP Bragado 209 km from "
+                                                                  "Once less Mercedes' post 98.03"),
+        ("Ferrocarril Roca: Viedma – Bariloche", "", 827.0, "es.WP Tren Patagónico"),
+        ("Tren del Valle", "", 21.0, "es.WP, Cipolletti - Plottier"),
+        ("Tren al Desarrollo", "", 8.0, "es.WP, Forum - La Banda"),
+        ("Tren Solar de la Quebrada", "", 42.0, "es.WP, Volcán - Tilcara"),
+        ("Metrotranvía de Mendoza", "", 17.0, "es.WP, Gutiérrez - Avellaneda: ~0.97"),
+    ],
+    # Chile: the legal lines' passenger stretches, or the one service that runs a stretch
+    # whole (cl_register.py, cl_sources.md). es.WP infoboxes of the services.
+    "cl": [
+        ("Línea Central Sur (Alameda – Chillán)", "", 397.6, "es.WP Tren Estación Central - "
+                                                            "Chillán"),
+        ("Línea Central Sur (Victoria – Pitrufquén)", "", 95.1, "es.WP Tren Victoria - Temuco "
+                                                               "65.5 + Tren Pitrufquén - "
+                                                               "Temuco 29.6"),
+        ("Tren Laja – Talcahuano", "", 87.3, "es.WP"),
+        ("Tren Talca – Constitución", "", 88.0, "es.WP"),
+        ("Tren Limache – Puerto", "", 43.0, "es.WP"),
+    ],
+    # Central Asia: the tariff guide's sections (casia_register.py, casia_sources.md). Every
+    # line is also checked against its own tariff km (km_official); outside figures are few.
+    "kz": [
+        ("Ақтоғай — Достық", "", 304.0, "WD Q12532221 Aktogay - Dostyk; tariff 310 to Dostyk"),
+    ],
+    "uz": [
+        ("Angren — Pop-1", "", 123.1, "WD Q24088913 Angren - Pap; tariff 124"),
+    ],
+    "tm": [
+        ("Türkmenabat demirýol menzili — Gazojak", "", 322.0,
+         "railway.gov.tm timetable, train 609 Türkmenabat km 0 - Gazojak km 322"),
+        ("Мары — Serhetabat", "", 316.0,
+         "railway.gov.tm timetable, train 601 Mary km 343 - Serhetabat km 659; built short: "
+         "Saryýazy - Sandykgaçy's trace is rejected (casia_sources.md)"),
+    ],
 }
 
 KNOWN = {
+    # Almaty's and Tashkent's metros and Astana's LRT (OSM lines; casia agent). Published
+    # lengths: Wikidata (Almaty Q484433, Astana Q779673, Chilonzor Q4515924), en.WP's
+    # Tashkent Metro line table; published lengths take in depot tails.
+    "kz": [
+        ("Первая линия", "", 13.4, 11, "Almaty Metro, WD"),
+        ("Astana LRT", "", 22.4, 18, "WD; opened 16 May 2026; all 18 stations, built station "
+                                     "to station (0.94)"),
+    ],
+    "uz": [
+        ("Chilonzor yoʻli", "", 23.7, 17, "WD/en.WP; all 17 stations, built station to station "
+                                          "(0.91)"),
+        ("Узбекистанская линия", "", 14.3, 11, "en.WP"),
+        ("Юнусабадская линия", "", 10.5, 8, "en.WP (to Shahriston); all 8 stations, built "
+                                           "station to station (0.90)"),
+        ("Circle Line", "", 21.9, 14, "en.WP, after the March 2025 extension"),
+    ],
+    # Iran's metros (OSM lines; ir agent). en.WP infoboxes and line tables; published lengths
+    # take in depot tails and unopened ends, so station-to-station runs short.
+    "ir": [
+        ("خط ۱", "Tehran", 92.0, 32, "Tehran L1 with the Parand and airport branches, en.WP"),
+        ("خط ۲", "Tehran", 26.0, 22, "Tehran L2, en.WP"),
+        ("خط ٣", "Tehran", 37.0, 25, "Tehran L3, en.WP (short: station to station)"),
+        ("خط ۴", "Tehran", 26.0, 25, "Tehran L4, en.WP; + Mehrabad branch 2.8"),
+        ("خط ۵", "Tehran", 69.0, 13, "Tehran L5 Sadeghiyeh - Hashtgerd, en.WP"),
+        ("خط ۶", "Tehran", 32.0, 26, "Tehran L6, en.WP"),
+        ("خط ۷", "Tehran", 28.0, 22, "Tehran L7, en.WP"),
+        ("خط ۱", "Mashhad", 24.0, 24, "Mashhad L1, en.WP"),
+        ("خط ۲", "Mashhad", 14.5, 13, "Mashhad L2, en.WP"),
+        ("خط ۱", "شیراز", 22.5, 20, "Shiraz L1, en.WP"),
+        ("خط ۱", "اصفهان", 20.2, 20, "Isfahan L1, en.WP"),
+        ("خط یک قطار شهری تبریز", "", 17.2, 12, "Tabriz L1, en.WP (OSM lists 18 stops; WP: 6 "
+                                                "intermediate not open)"),
+    ],
+    # Cairo Metro (OSM lines; nafrica agent). en.WP infoboxes.
+    "eg": [
+        ("الخط الأول", "", 44.3, 35, "Helwan - New El Marg, en.WP"),
+        ("الخط الثاني", "", 21.6, 20, "Shubra El Kheima - El Mounib, en.WP"),
+    ],
+    # Buenos Aires' Subte (OSM lines). es.WP's table, commercial lengths.
+    "ar": [
+        ("Línea A", "", 9.7, 18, "Plaza de Mayo - San Pedrito"),
+        ("Línea B", "", 11.8, 17, "Leandro N. Alem - Juan Manuel de Rosas"),
+        ("Línea C", "", 4.4, 9, "Retiro - Constitución"),
+        ("Línea D", "", 10.4, 16, "Catedral - Congreso de Tucumán"),
+        ("Línea E", "", 11.9, 18, "Retiro - Plaza de los Virreyes"),
+        ("Línea H", "", 8.8, 12, "Facultad de Derecho - Hospitales; OSM's routes 8.0: ~0.91"),
+    ],
+    # Santiago's Metro (OSM lines). es.WP's article text; published lengths take in tails.
+    "cl": [
+        ("Línea 1", "Metro S.A.", 20.0, 27, "San Pablo - Los Dominicos: ~0.95"),
+        ("Línea 2", "Metro S.A.", 25.9, 26, "Vespucio Norte - Hospital El Pino: ~0.94"),
+        ("Línea 4", "Metro S.A.", 24.7, 23, "Tobalaba - Plaza de Puente Alto: ~0.94"),
+        ("Línea 6", "Metro S.A.", 15.0, 10, "Cerrillos - Los Leones: ~0.96"),
+    ],
+    # Vietnam's metros (OSM lines). en.WP; published lengths take in depot tails.
+    "vn": [
+        ("Tuyến số 2A", "", 13.05, 12, "Hà Nội 2A Cát Linh - Yên Nghĩa"),
+        ("Tuyến số 3", "", 8.5, 8, "Hà Nội 3, the elevated Nhổn - Cầu Giấy open since Aug 2024 "
+                                   "(the 4 km underground to Ga Hà Nội opens end 2027)"),
+        ("Line 1 (Ho Chi Minh City Metro)", "", 19.7, 14, "HCMC 1 Bến Thành - Suối Tiên"),
+    ],
+    # KTM Komuter's lines (OSM lines over the register's KTM lines). WP infoboxes; RD as in
+    # REGISTER["my"].
+    "my": [
+        ("Seremban Line", "", 135.0, 27, "Batu Caves - Pulau Sebang/Tampin, WP"),
+        ("Port Klang Line", "", 126.0, 35, "Tanjung Malim - Pelabuhan Klang, WP"),
+        ("Butterworth–Padang Besar", "", 169.8, 13, "WP; RD 168.0"),
+        ("Butterworth–Ipoh", "", 181.0, 13, "RD; WP's infobox says 162: ~0.96 on RD"),
+    ],
     "jp": [
         ("山手線", "東日本", 34.5, 30, "JR East, loop"),
         ("東海道本線", "", 589.5, None, "Tokyo-Kobe"),
@@ -1451,6 +2495,68 @@ KNOWN = {
         ("東西線", "東京", 30.8, 23, "Tokyo Metro"),
         ("南北線", "東京", 21.3, 19, "Tokyo Metro"),
         ("京浜東北線", "", 81.2, None, "JR East, operating pattern"),
+    ],
+    # Bangkok's urban lines (OSM lines). Published lengths take in the track past the end
+    # stations, so station-to-station runs a few per cent short.
+    "th": [
+        ("สายสีแดงเข้ม", "", 26.3, 10, "EN, Krung Thep Aphiwat - Rangsit; SRT's chainage, "
+                                      "Bang Sue km 7.5 to Rangsit km 30.5, gives ~23: ~0.86"),
+        ("สายสีแดงอ่อน", "", 15.26, 4, "Krung Thep Aphiwat - Taling Chan, EN"),
+        ("รถไฟฟ้าเชื่อมท่าอากาศยานสุวรรณภูมิ", "", 28.6, 8, "Airport Rail Link, EN"),
+        ("รถไฟฟ้าบีทีเอส สายสุขุมวิท", "", 54.25, 47, "EN, Khu Khot - Kheha with the depot "
+                                                    "tails: ~0.94"),
+        ("รถไฟฟ้าบีทีเอส สายสีลม", "", 14.0, 14, "EN: ~0.94"),
+        ("รถไฟฟ้ามหานคร สายสีน้ำเงิน", "", 48.0, 38, "EN: ~0.97"),
+        ("รถไฟฟ้ามหานคร สายสีม่วง", "", 23.0, 16, "EN, with the depot: ~0.91"),
+        ("รถไฟฟ้าสายสีเหลือง", "", 30.4, 23, "EN: ~0.94"),
+        ("รถไฟฟ้ามหานคร สายสีชมพู", "", 34.5, 30, "EN, main line: ~0.98"),
+    ],
+    # Kyiv's, Kharkiv's and Dnipro's metros (OSM lines; ua agent, 2026-10-03).
+    "ua": [
+        ("M1 line", "", 22.64, 18, "Kyiv Святошинсько-Броварська, WD"),
+        ("M2 line", "", 20.95, 18, "WD"),
+        ("M3 line", "", 23.86, 16, "WD"),
+        ("Холодногірсько-Заводська", "", 17.3, 13, "Kharkiv, WD"),
+        ("Олексіївська", "", 10.98, 10, "Kharkiv, WD"),
+        ("Салтівська", "", 10.2, 8, "en.wikipedia"),
+        ("Дніпровський метрополітен", "", 7.8, 6, "en.wikipedia; counts to the depot, built 7.0"),
+    ],
+    # The Minsk Metro (OSM lines; by-md agent, 2026-10-03).
+    "by": [("Маскоўская лінія", "", 19.2, 15, "Minsk Metro 1, WD Q28604"),
+           ("Аўтазаводская лінія", "", 18.1, 14, "Minsk Metro 2, WD Q2638932")],
+    # Tbilisi's and Baku's metros (OSM lines; caucasus agent, 2026-10-03).
+    "ge": [("ახმეტელი-ვარკეთილის ხაზი", "", 19.6, 16, "en.WP"),
+           ("საბურთალოს ხაზი", "", 7.7, 7, "en.WP")],
+    "az": [("Line 1", "Bakı Metropoliteni", 20.1, 13, "en.WP"),
+           ("Line 3", "Bakı Metropoliteni", 6.1, 4, "en.WP"),
+           ("Line 2B", "Bakı Metropoliteni", 2.3, 2, "en.WP")],
+    # Jakarta's and Palembang's urban lines and KAI Commuter's (OSM lines). en.WP infoboxes;
+    # published lengths take in depot tails, so station-to-station runs a little short.
+    "id": [
+        ("MRT North-South Line", "", 15.7, 13, "en.WP, Lebak Bulus - Bundaran HI"),
+        ("LRT Jakarta", "", 12.2, 11, "en.WP, Kelapa Gading - Velodrome 5.8 + to Manggarai 6.4"),
+        ("Jabodebek LRT Bekasi Line", "", 29.5, 14, "en.WP, Dukuh Atas - Cawang 11.1 + "
+                                                     "Cawang - Jatimulya 18.4"),
+        ("Jabodebek LRT Cibubur Line", "", 25.4, 12, "en.WP, Dukuh Atas - Cawang 11.1 + "
+                                                      "Cawang - Harjamukti 14.3"),
+        ("LRT Palembang", "", 23.4, 13, "en.WP"),
+        ("Lin Tangerang", "", 19.3, 11, "KAI km posts, Tangerang km 19.297 - Duri 0.000"),
+        ("Lin Rangkasbitung", "", 72.8, 19, "en.WP, Tanah Abang - Rangkasbitung"),
+    ],
+    # Brazil's metros, light rail and the like (OSM lines; br_sources.md). WD = Wikidata
+    # P2043, read 2026-10-03 (data/raw/br/wikidata_lines.json).
+    "br": [
+        ("Linha 1 - Azul", "Metropolitano", 20.4, 23, "WD, Jabaquara - Tucuruvi"),
+        ("Linha 3 - Vermelha", "Metropolitano", 22.0, 18, "WD"),
+        ("Linha 4 - Amarela", "ViaQuatro", 12.8, 11, "WD, Luz - Vila Sônia"),
+        ("Linha 5 - Lilás", "ViaMobilidade", 19.9, 17, "WD, Capão Redondo - Chácara Klabin"),
+        ("Metrô Rio Linha 1", "", 16.0, None, "WD (Q2333617), Uruguai - General Osório"),
+        ("Metrô Rio Linha 2", "", 30.0, None, "WD (Q2333639), Pavuna - Botafogo"),
+        ("Linha 1", "Trensurb", 43.4, 22, "WD, Mercado - Novo Hamburgo"),
+        ("Linha Norte", "CBTU", 38.5, None, "WD, Natal's Linha Norte"),
+        ("Trem do Corcovado", "", 3.824, 4, "WD, Cosme Velho - Corcovado"),
+        ("Aeromóvel GRU", "", 2.7, None, "WD"),
+        ("Linha 1 do VLT da Baixada Santista", "", 11.5, 15, "WD, Barreiros - Porto: ~0.90"),
     ],
 }
 

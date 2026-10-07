@@ -16,6 +16,8 @@ python build_model.py --region es --register rinf:data/raw/rinf/es   # ~80 s
 python build_tiles.py --region es                                    # ~40 s, es.pmtiles 4.7 MB
 python check_model.py --region es
 python rinf.py --dry es          # the reader alone, with its full log
+python gtfs_served.py --fetch es # the timetable feeds into data/raw/gtfs/es/ (then delete es_feve.gtfs.zip
+                                 # unless FEEDS has dropped it; see "Timetable check")
 ```
 
 `inspect_region.py` crashed at its very end on this extract (a route kind of `None` in the
@@ -125,7 +127,12 @@ and every item is logged by the build.
 
 ## What is in the register and what stays OSM
 
-Kept: **166 register lines, 14,366 km** (Adif 131 lines 10,561 km, Adif AV 33 lines 3,697 km,
+Since the timetable check (2026-10-03): **171 register lines, 14,660 km**, of which 252 km
+(27 sections, 11 lines) are drawn as not running; 2,755 stations, 43,126 route-km. One
+station id went with nothing to carry it to: Riquelme - Sucina (no longer a stop). The rest
+of this section is the build before it.
+
+Kept on 2026-10-02: **166 register lines, 14,366 km** (Adif 131 lines 10,561 km, Adif AV 33 lines 3,697 km,
 FGC 1 line 89 km, LFP 1 line 20 km). The reader built 248 lines (14,987 km); build_model then
 dropped 107 junction-ended sections (621 km) that no OSM passenger route runs over, which
 emptied 82 lines, nearly all freight links, yards and closed lines.
@@ -138,11 +145,9 @@ Left out as unridden or untraceable, which is right as far as OSM knows:
   Cotos (116), Aranjuez - Tarancón and Tarancón - Utiel (310), Córdoba - Almorchón (528),
   Valencia de Alcántara - border (502), Toral de los Vados - Villafranca del Bierzo (802), the
   old Bobadilla - Granada line (466).
-- **In service, but no OSM route over it** (these are what a timetable check would rescue):
-  **984, the Pajares base-tunnel line** (La Robla - Pola de Lena, 49 km, open since 2023): it
-  traces correctly (49.0 km) but OSM's Asturias Alvia/AVE relations still run over the old
-  Pajares ramp, so 98% of it is under no route; and **320 Chinchilla - Hellín** (51 km;
-  Hellín - Cieza - Murcia stays, being stop to stop).
+- **In service, but no OSM route over it**: 984, the Pajares base-tunnel line (OSM's Asturias
+  Alvia/AVE relations still run over the old ramp) and 320 Chinchilla - Hellín. Both are kept
+  since 2026-10-03 by the timetable check (below).
 
 Stay OSM lines (256): Renfe's services over the register lines (Cercanías in Madrid,
 Barcelona/Rodalies, València, Sevilla, Málaga, Murcia/Alicante, Bilbao, Asturias, Cantabria,
@@ -183,7 +188,8 @@ No `colours/es.csv`: Adif publishes no line colours; 171 lines (41%) carry OSM's
 `python check_model.py --region es`: against RINF's own section lengths, 141 lines of 2 km or
 more, median 0.999, 30 off by more than 5%, all short links and junction curves where RINF's
 length is itself off (162 Solvay - Sierrapando is 0.00 km in RINF, 314 0.14 km for 2.8 km of
-track, 726 1.05 for 2.4). Against the catalogue, 53 lines, 50 within 5% and 41 within 2%:
+track, 726 1.05 for 2.4). Against the catalogue, 53 lines, 50 within 5% and 41 within 2% (2026-10-03: 56 lines with 422,
+500 and 984 added, all but 222 and 036 within 5%; 320 now 1.00):
 
 | line | built | catalogue | ratio |
 |---|---|---|---|
@@ -206,8 +212,8 @@ track, 726 1.05 for 2.4). Against the catalogue, 53 lines, 50 within 5% and 41 w
 
 - **222** (0.85): Montcada - La Garriga is under doubling works and `railway=construction` in
   OSM; OSM's R3 runs only La Garriga - Puigcerdà.
-- **320** (0.65): Chinchilla - Hellín has no OSM passenger route and ends at a junction, so it is
-  dropped as unridden.
+- **320** was 0.65 before the timetable check kept Chinchilla - Hellín (2026-10-03); about 1.00
+  now.
 - **036** (0.91): RINF's own line is 114.6 km; the catalogue figure covers more than RINF does.
 - **982** (1.04): the build runs on over the mixed-gauge Taboadela - Ourense stretch RINF files
   under 982 (15.4 km, shared with 822); less that, 312.5 against 313.9.
@@ -230,8 +236,8 @@ drawn across.
 
 ## Still off, and why
 
-- **984 Pajares base-tunnel line** missing (49 km, in service), and **320 Chinchilla - Hellín**
-  (51 km): no OSM route over them. A timetable check would put them back.
+- **120 west of Salamanca and 822 Ourense - A Gudiña** are drawn as running though no
+  passenger train runs (timetable section, "Left drawn").
 - **520 Ciudad Real - Badajoz** lies on the 010 high-speed rails for 33.7 km near Puertollano:
   the conventional track runs about 10 m beside the high-speed one, both stations are shared,
   and no OSM relation exists to make the trace prefer the conventional ways. That stretch counts
@@ -245,14 +251,106 @@ drawn across.
   sections around them are kept wherever an OSM route runs.
 - **Canary Islands** (Tenerife tram) not in the extract.
 
-## Timetable check, for later
+## Timetable check (live since 2026-10-03)
 
-Not wired (gtfs_served.py is shared). The feeds to use, per `gtfs_sources.md`:
-- Renfe long and medium distance: `https://ssl.renfe.com/gtransit/Fichero_AV_LD/google_transit.zip`
-- Renfe Cercanías: `https://ssl.renfe.com/ftransit/Fichero_CER_FOMENTO/fomento_transit.zip`
-- Renfe FEVE (metre gauge) via data.renfe.com; FGC, Euskotren, FGV, SFM and Ouigo are separate
-  feeds. All CC BY 4.0 for Renfe.
-- Renfe's `stop_id` is Adif's 5-digit station code, which is RINF's uopid without "ES"
-  (ES17000 Madrid-Chamartín = stop 17000, ES60000 Madrid-Puerta de Atocha = 60000), so stops
-  join by code, as in Czechia. It would rescue 984 and 320 and grey stop-to-stop sections with
-  no trains.
+Later on 2026-10-03 `gtfs_served.FEED_COMPLETE = {"es"}` landed (Spain's feeds carry every
+operator on Adif track, so an OSM route over a section no train runs is stale): 120 Villar
+Formoso – Medina del Campo closes 90.8 km west of Salamanca, and 822 closes 138.9 km, Ourense –
+A Gudiña plus Puebla de Sanabria – A Gudiña (the Valladolid regional ends at Puebla de
+Sanabria). Spain's closed total: 31 sections, 482 km on 13 lines (was 252 km on 11).
+
+`gtfs_served.py` reads `data/raw/gtfs/es/` (fetched 2026-10-02; landed from
+`data/raw/gtfs_pending/es/` on 2026-10-03, the parked folder deleted):
+
+| file | what is in it | window |
+|---|---|---|
+| `es_renfe_av_ld.gtfs.zip` (Renfe, CC BY 4.0) | AVE, AVE INT, Avlo, Alvia, Euromed, Intercity, Avant, MD, Regional, Regional Exprés, Proximidad, the Celta, and the four metre-gauge regionals (Ferrol - Oviedo, Oviedo - Santander, Santander - Bilbao, Bilbao - León) | 1 Oct 2026 - 24 Jan 2027 |
+| `es_renfe_cercanias.gtfs.zip` (Renfe) | every Cercanías/Rodalies network, metre gauge included (Asturias C4-C8, Cantabria C2/C3, Bilbao C4/C5, Ferrol, León, Cartagena), Rodalies' regional R lines (R11-R17, RG1, RL3, RL4, RT1, RT2); replacement buses as route_type 3 | 24 Sep - 23 Oct 2026 |
+| `es_fgc.gtfs.zip` (Transitous) | FGC, slimmed to rail: Lleida - La Pobla (RL1, RL2) is the only FGC line in the register | 15 Sep - 31 Dec 2026 |
+| `es_ouigo.gtfs.zip` (Transitous) | Ouigo España | 26 Jun - 12 Dec 2026 |
+
+Left out: Transitous' `es_Feve` (FEED entry `es_feve.gtfs.zip`). It is the Cercanías
+feed's León, Ferrol and Cartagena networks again, dated 13 April - 13 May 2026, and it types
+the León FEVE - La Asunción bus as a train (route_type 2). FEEDS still lists it; the managing
+session is asked to drop it, or `--fetch es` brings it back.
+
+Not in any feed, and why it does not matter here: Iryo (runs only on high-speed lines Renfe
+and Ouigo also run), Euskotren, FGV, SFM, Tren de Sóller, metros and trams (none of their
+track is in the register). Renfe's stop_id is Adif's station code, RINF's uopid less "ES"
+(`CODE["es"]`); Ouigo's 9-digit ids and FGC's letters match by name. 2,104 of 2,252 feed
+stations matched.
+
+**A trap in Renfe's long-distance feed**: road legs can be typed as trains. Its "Intercity"
+Murcia - Lorca - Águilas and València - Murcia - Totana - Lorca trips are route_type 2 and run
+daily, but the line beyond Murcia has had no train for five years (the Murcia - Almería
+high-speed works; the Cercanías feed has the same C2 trips as buses). It does no harm here
+only because the register has no traceable Murcia - Lorca track.
+
+**Branch lines meeting nothing** (`CUT_AT` in es.py, rinf.py `cut_at_junctions` taking a set
+of point names since 2026-10-03). The reader merges a junction point away inside a line when
+it has two neighbours on that line, so a branch leaving there ends at a node no other section
+touches, and the check finds no path onto it: 984 had 2 trips, Chinchilla - Hellín none.
+Cutting at every junction (as Portugal does) was tried: it rescued those, but split main lines
+into junction-ended pieces that a parallel line made "ambiguous" or long non-stop runs "weak",
+and dropped real track (Valladolid - Venta de Baños on 080, 38 km; Albacete - Chinchilla on
+300, 19 km; pieces of 084, 822, 400). So es.py cuts at eight named points only: Chinchilla
+aguja km 298,4, Bif. Pajares, Bif. Utrera, Bif. Casa de la Torre, El Reguerón aguja km 522,1,
+Bif. Angueira, Bif. San Amaro, Bif. Teruel. And Riquelme-Sucina is no stop (no train calls;
+as a stop it left El Reguerón - Riquelme a piece crossed only by the 41.5 km Murcia - Balsicas
+run, "weak" by 1.5 km).
+
+**Kept that OSM routes alone dropped** (20 sections, 419 km before ownership):
+- 984 Pola de Lena - Bif. Pajares, the Pajares base tunnel (49.0 km, 75 trips)
+- 320 Chinchilla - Hellín (50.4 km, 10 trips; 320 is now 146.0 km against the catalogue's
+  146.2)
+- 500 Cañaveral - Bif. Casa de la Torre (39.3 km, Madrid - Cáceres regionals) and 026
+  Plasencia - Bif. Casa de la Torre (70.6 km, the Extremadura high-speed line; it was in the
+  build before as one Cáceres - Plasencia section)
+- 422 Arahal - Bif. Utrera (27.0 km, Sevilla - Málaga/Osuna MD)
+- 352 Balsicas - El Reguerón (32.7 km, of which 22.6 new: Murcia - Cartagena)
+- 300 Albacete - Chinchilla aguja - Almansa (two pieces now, both served)
+- 640 Camp de Tarragona - Cambiador de La Boella (12.0), 444 Sevilla Santa Justa - La Salud
+  (7.7), 818 Padrón - Bif. Angueira (6.8), 702 Cabañas de Ebro - Grisén (6.0), 402
+  Mengíbar-Artichuela - Espeluy (4.2), 354 Murcia - El Reguerón (3.8), 828 A Portela - Bif.
+  San Amaro (3.8), 130 La Robla - Bif. Pajares and León approaches, 132 Olloniego (1.6), 270
+  Portbou - border (1.1)
+
+**Closed, no train in the feed** (27 sections, 252 km, 11 lines), each checked:
+- 430 Córdoba - Montilla - Puente Genil - La Roda - Fuente de Piedra (112.6 km): no passenger
+  train since the Córdoba - Málaga high-speed line opened; Puente Genil is served only at
+  Puente Genil-Herrera (cordopolis, puentegenilok.es, 2024-2026). 50.2 km of it (Montilla -
+  Córdoba) was dropped before and is now drawn grey.
+- 310 Utiel - Requena - Siete Aguas - Buñol (45.4 km): works after the October 2024 DANA;
+  Buñol reopened 22 Dec 2025, Buñol - Utiel by bus until the end of 2026 (eldiario.es,
+  utiel.es). Refetch when it reopens.
+- 764 Trubia - Fuso de la Reina - Soto de Ribera - Peñamiel (17.1 km): no passengers since
+  4 May 2009 (C-8 runs Baiña - Collanzo only).
+- 154 Lugo de Llanera - Tudela-Veguín (13.8 km): freight bypass of Oviedo.
+- 322 Águilas - Jaravía (11.9 km): Murcia - Lorca - Águilas closed for the Murcia - Almería
+  high-speed works, buses (C2) in the feed and in the news (see the trap above).
+- 792 La Robla - Matallana (10.9 km, metre gauge): freight branch; Bilbao - León runs via
+  Matallana to León.
+- 754 Sotiello - Aboño - El Musel (9.4 km): port freight.
+- 222 Granollers-Canovelles - Parets del Vallès (9.4 km): R3 doubling works, Montcada - La
+  Garriga closed 7 Oct 2025 to January 2027, buses in the feed (3cat). Refetch then.
+- 782 Ariz - Basurto Hospital (8.1 km, metre gauge): closed, greyed in the catalogue.
+- 116 Puerto de Navacerrada - Los Cotos (7.1 km): C9 Cercedilla - Los Cotos runs as buses.
+- 260 Figueres-Vilafant - Vilamalla (6.5 km): freight branch.
+
+**Left drawn though no train runs** ("unknown": OSM routes still run over it, and the check
+reads that as an operator missing from the feed). Both are closed to passengers:
+- 120 La Alamedilla - La Fuente de San Esteban - Ciudad Rodrigo (90.8 km) and Ciudad
+  Rodrigo - Fuentes de Oñoro border ("border", 32.2 km): no passenger train since March 2020
+  (salamancahoy.es 2025-2026; a return is only being discussed).
+- 822 Ourense - A Gudiña (89.1 km) and Puebla de Sanabria - A Gudiña ("ambiguous", 49.8 km):
+  the conventional line beside the high-speed one; the Valladolid regional ends at Puebla de
+  Sanabria.
+Closing them needs gtfs_served to stop reading OSM routes as a missing operator for Spain,
+whose feeds carry every operator on Adif track (a diff is in the 2026-10-03 report).
+
+Still dropped as "weak" (on long non-stop runs only, no OSM route): gauge-changer links at
+Antequera, Valdestillas, Plasencia de Jalón, Alcolea (a few km), 024 Yeles - Los Blancales (5.6
+km), 460 Fuente de Piedra - Bif. Las Maravillas (11.7), 610 Cuarte de Huerva - Bif. Teruel (3.5;
+cutting at Bif. Teruel did not help, the Zaragoza junctions are a tangle), 536 (2.6), 302
+Alcázar curve (1.9), 512 Gibraleón - Huelva-Mercancías (14.1, rightly: only a nonsense 739 km
+path crosses it), Madrid's Santa Catalina freight links.

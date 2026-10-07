@@ -1,0 +1,8 @@
+{
+  "1": {"candidates": ["helper1m/data/kazakhstan/boundaries/adm1.gpkg"],
+        "code_col": "code", "name_col": "name", "group_col": "group",
+        "extra_cols": ["name_cn"]},
+  "2": {"candidates": ["helper1m/data/kazakhstan/boundaries/adm2.gpkg"],
+        "code_col": "code", "name_col": "name", "parent_col": "parent",
+        "group_col": "group", "extra_cols": ["name_cn"]}
+}

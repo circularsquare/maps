@@ -1,0 +1,35 @@
+# Trinidad and Tobago, Census 2011 (taxonomy/tt2011.py). New: Tobagonian Creole English
+# (Glottolog toba1282), a hand colour a step from Trinidadian's so the two islands read apart.
+# The rest are bare repeats of other fragments' nodes (bb.txt, dm.txt).
+creole | Creoles
+creole.english_based | English-based creoles
+creole.english_based.trinidadian | Trinidadian Creole
+creole.english_based.tobagonian | Tobagonian Creole | 0.66 0.12 160
+creole.english_based.bajan | Bajan
+creole.english_based.grenadian | Grenadian Creole
+creole.english_based.guyanese | Guyanese Creole
+creole.english_based.jamaican | Jamaican Creole
+creole.english_based.vincentian | Vincentian Creole
+creole.french_based | French-based creoles
+creole.french_based.antillean | Antillean Creole (Guadeloupe, Martinique)
+indoeuropean.germanic | Germanic
+indoeuropean.germanic.english | English
+# --- origin_mix borrowed nodes (python sources/origin_mix.py --fragment tt) ---
+# Every node the origin mixes bring in that tree.txt lacks, repeated without colour.
+arawakan | Arawakan
+arawakan.wayuu | Wayuu
+indoeuropean.romance | Romance
+indoeuropean.romance.spanish | Spanish
+kradai | Kra-Dai (Tai-Kadai)
+kradai.zhuang | Zhuang
+sinotibetan.sinitic | Chinese
+sinotibetan.sinitic.cantonese | Cantonese
+sinotibetan.sinitic.gan | Gan
+sinotibetan.sinitic.hakka | Hakka
+sinotibetan.sinitic.jin | Jin
+sinotibetan.sinitic.mandarin | Mandarin
+sinotibetan.sinitic.min_nan | Min Nan (Taiwanese, Hokkien)
+sinotibetan.sinitic.teochew | Teochew (Chiu Chau)
+sinotibetan.sinitic.wu | Wu
+sinotibetan.sinitic.xiang | Xiang
+# --- end origin_mix borrowed nodes ---

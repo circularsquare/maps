@@ -168,10 +168,12 @@ meanwhile is to draw it and to say all four numbers.
 
 ## 5. What is deliberately not drawn
 
-- **Every Christian denomination.** The card names about twenty and Nigerians fill nearly all
+- **Every Christian denomination but the Catholic Church** (Catholics drawn since 2026-10-03,
+  see "Catholics, 2026-10-03" below). The card names about twenty and Nigerians fill nearly all
   of them, Roman Catholic at 8.6% of respondents and Pentecostal at 4.8%. The share answering
   `Christian only` rather than naming one runs 19.4% to 47.3% between rounds with no trend, so
-  a pooled denominational share measures the fieldwork (§11ai).
+  a pooled denominational share measures the fieldwork (§11ai). Anglican and Pentecostal were
+  re-tested on 2026-10-03 and stay folded (below).
 - **Sunni and Shia, and the brotherhoods.** Same reason, plus a second: `report_card()` reads
   each round's value-label set and finds **Izala on three of the six cards** and the Shia box
   renamed between rounds (`Shia only` in R4 and R5, `Shia` in R6 to R9). A zero in a crosstab
@@ -234,3 +236,127 @@ Kontur has them:
 
 Lagos, Kano and the other blocks at the limit are registered `real`. To act on an `unreviewed`
 block: set its `status` to `capped` and re-scatter.
+
+## Catholics and Anglicans, 2026-10-03 (session `fafd1067-chwa`)
+
+On Anita's 2026-10-03 ruling (re-search churches for ng, cm, tz, bw). Two churches are now their own
+nodes: **Catholic (`christianity.catholic`) 10.21% of Nigerians, 22,132,249 people, 19.9% of
+Christians**, from Afrobarometer rounds 4-6 with four NDHS reports as the level witness; and
+**Anglican (`christianity.anglican`) 4.18%, 9,064,122, 8.1% of Christians**, levelled by the Global
+Flourishing Study. `christianity` keeps 37.02%. Code: `sources/ng.py` (`dhs_witness`,
+`catholic_fraction`, `church_split`, `diocese_witness`), the new shared `sources/gcatholic.py`,
+`taxonomy/ng2022.py`, `countries/ng.py`. Nothing else moved: the Christian/Muslim balance, the
+tail and every state total are as before (asserted: the three Christian rows sum to the old
+`Christian` per state, within rounding).
+
+### The witness: four open NDHS final reports
+
+Each names `Catholic` and `Other Christian` in Table 3.1 (women and men 15-49), no other church.
+All four are now in `data/raw/ng/` and re-read on every build.
+
+| NDHS | file, PDF page | Catholic, women / men | Other Christian | Catholics as % of Christians |
+|---|---|---|---|---|
+| 2008 | FR222 p.63 | 11.5 / 11.6 | 42.1 / 42.1 | 21.5 |
+| 2013 | FR293 p.59 | 11.1 / 11.6 | 35.7 / 35.6 | 23.9 |
+| 2018 | FR359 p.91 | 10.4 / 11.3 | 35.6 / 34.5 | 23.1 |
+| 2024 | FR395 p.93 | 8.2 / 7.6 | 33.7 / 33.2 | 19.4 |
+
+FR395 is the 2023-24 NDHS final report (October 2025); its Islam row is 57.6% of women and 58.2% of
+men, against 53.5% in 2018. Not used for the Christian/Muslim balance, which is unchanged; worth a
+line in §3's table on the next rebuild.
+
+### Which rounds
+
+Catholics as a share of the survey's Christians: R4 21.2%, R5 18.9%, R6 19.1%, then R7 8.4%, R8 4.3%,
+R9 12.5%, against an NDHS mean of 22.0%. Rounds 4-6 sit within 3.1 points of it; rounds 7-9 are 9.5
+to 17.6 points under, as `Christian only` swells (32, 19, 28% of respondents in R4-R6; 45, 47, 41%
+in R7-R9). That is Namibia's case (`sources/na.md` §3), so each state's Catholics are its Catholic
+share of Christians in rounds 4-6 times its Christian share from all six rounds. Asserted both ways
+(`CATH_DHS_GAP_MAX` 4 points, `CATH_SWING_MIN` 8).
+
+- **Split-half**, Christians in rounds 4-6, the 27 states with Christian respondents in all three:
+  **+0.753** against a null 95th of +0.265 (p 0.0005). Over all six rounds it is +0.818, so the
+  geography holds while the level moves.
+- **Thin states**: Kano 4, Jigawa 5, Yobe 5, Zamfara 6, Katsina 7, Kebbi 7, Sokoto 14 and Adamawa 14
+  Christian respondents in rounds 4-6. They take the national 19.7% (`MIN_CHRISTIANS` 30; every
+  other state has at least 40). Adamawa's own figure was 18.8%, so it barely matters there.
+- **Zero cells**: Kwara (0 of 40 Christian respondents) and Osun (0 of 84) are drawn with no
+  Catholics. Osun's diocese claims 3.2% of its people; on the survey's Osun Christian share that is
+  about 6 expected respondents, under the playbook's 8, so the zero stands as the survey's.
+- **Level as drawn**: 19.9% of Christians, 2.1 points under the NDHS mean (`CATH_DRAWN_GAP_MAX` 4).
+  10.2% of everyone, inside the NDHS's 7.6-11.6% of respondents.
+
+### How `Christian only` is handled, and why not Togo's way
+
+Togo (`sources/tg.py`) spreads `Christian only` over the named churches of its own unit. Here that
+would make Catholics 29-66% of Christians (their share of NAMED Christians by round) against the
+NDHS's 19-24% of ALL Christians: the people who name no church are mostly not Catholic. So Catholics
+are a share of all Christians, and `Christian only` stays in `Christian` with every other church.
+Cameroon's second test (`cm.py::unnamed_where_they_live`): in rounds 4-6 the unnamed share is 33.1%
+of Christians averaged where Catholics live, against 46.0% nationally, so nationally they are not
+drawn short. **Per state they are**, where the unnamed share is high: Lagos 71%, Oyo 73%, Ogun 66%,
+Rivers 58%. Lagos is drawn 5.8% Catholic; its archdiocese claims 25%. Said in the note.
+
+### The Church's own figures as a geography witness
+
+`sources/gcatholic.py` (new, shared) reads every diocese page on gcatholic.org (robots.txt allows it;
+one request a second) into `data/raw/ng/gcatholic_dioceses.csv`: 59 territorial dioceses, mostly
+2022 figures, summed by the state the cathedral stands in (31 states). **Spearman +0.833** against
+the drawn Catholic share (`DIOCESE_RHO_MIN` 0.60). The Church claims 14.6% of its own population
+figure (35,097,000 of 222,205,000 at the country level for 2023), far above the NDHS: a count of the
+baptised, never a level. Biggest disagreements: Lagos (25/6), Cross River (27/7), Rivers (19/7),
+Ekiti (14/3) where the survey's Christians name no church; Delta and Edo the other way (7/23,
+11/23), not looked into.
+
+### Anglicans: the Global Flourishing Study as the level
+
+The GFS wave 1 file on disk (`data/raw/gfs/`, CC BY, the one `tz` and `jp` use) has Nigeria as
+`COUNTRY` 12: 6,827 respondents, 2023, Christians 50.9% and Muslims 48.4% weighted (this map:
+51.4/47.9). `REL3_Y1` asks each Christian the church they most identify with; 1.2% of 3,849 name
+none, against the Afrobarometer's 46% `Christian only` in rounds 4-6. `REGION1_Y1` labels were read
+from the value labels of the GFS `.sav` (OSF `eadfm`, only its first 40 MB needed for the header),
+since the wave-2 codebook PDF (OSF `285w7`) does not list regions; they are in `ng.py::GFS_REGION`.
+Adamawa, Borno, Taraba and Yobe have no GFS respondents; the weighted state shares track COD-PS at
+r = +0.68, Bauchi and Gombe sampled at 2.6x.
+
+GFS shares of Christians naming a church: Pentecostal 39.9%, Catholic 27.9%, Anglican 7.3%, Orthodox
+5.8%, Presbyterian 5.0%, Independent/Evangelical 3.7%, Baptist 3.4%, Methodist 2.6%, the rest under
+1.1% each. Two things to know: its Catholic share is above all four NDHS reports (19.4-23.9%), so
+it is not used for Catholics; and it codes 87% of Plateau's and 72% of Bauchi's Christians
+`Orthodox` and 42% of Gombe's `Independent/Evangelical`, which in those states can only be COCIN and
+ECWA. Its small boxes are not used.
+
+Construction (`church_split`, Tanzania's, on the non-Catholic Christians): the GFS level as a share
+of non-Catholic Christians, recomposed on the drawn ones; the Afrobarometer's named share in rounds
+4-6 plus `Christian only` spread at one national proportion that meets that level; each state the
+average of the GFS and Afrobarometer shares weighted by non-Catholic Christian respondents.
+
+| | GFS level | AB named (floor) | AB ceiling | share of unnamed given | two-survey rank, 27 states | |
+|---|---:|---:|---:|---:|---:|---|
+| Anglican | 10.0% | 8.9% | 66.0% | 1.9% | +0.550, p 0.0014 | drawn |
+| Pentecostal | 55.9% | 15.1% | 72.2% | 71.5% | +0.201, p 0.153 | not drawn |
+
+(shares of non-Catholic Christians; `CHURCHES_CARRIED` asserts the verdicts.) Anglican as drawn:
+Anambra 22.1%, Enugu 15.6%, Imo 12.8%, Ekiti 12.2%, Delta 12.1%, Bayelsa 11.4%, Rivers 10.0%; under
+1% across the far north.
+
+### Re-tested and still folded
+
+- **Pentecostal** (above): the level is plausible and the place is not checkable. As a share of
+  ALL Christians the two surveys do agree (+0.40, p 0.019), but that is mostly the Catholic pattern
+  inverted. Within the Afrobarometer alone it runs 0.3-21.4% of Christians by round and fails its
+  rounds 4-5 split-half (+0.137). Rounds 8-9 also carry a second box, "Pentecostal (e.g., Born
+  Again ...)" (33 answers), beside the plain one; `key()` folds both to the same answer. The first reversal to try if someone wants it drawn
+  flat inside the non-Catholic Christians at the GFS level.
+- **Baptist, Methodist, ECWA, Aladura** (`Independent`): each under 3% of Christians in every round;
+  `Evangelical` (where ECWA members might answer) is 1.8-3.1% in R4-R6 and near zero after.
+
+### Routes checked this time, for the record
+
+- **NDHS 2023-24 final report** FR395: open, read (above).
+- **General Household Survey / NLSS**: NOT CHECKED this session. IPUMS `ng2010` (the 2010-11 GHS)
+  stays blocked on the account; whether the World Bank Microdata Library's GHS-Panel or NLSS
+  2018-19 files carry religion, and whether they need a login, is the next thing to open.
+- **Pew 2010 sub-Saharan Africa survey** (*Tolerance and Tension*): NOT CHECKED this session,
+  neither the report's appendix tables nor the terms of its data set.
+- **Catholic diocesan statistics**: read, used as a rank witness (above).

@@ -1,0 +1,45 @@
+# Togo (taxonomy/tg2017.py). Afrobarometer R5-R7 first-language answers by region.
+# Parents and languages other fragments already define are repeated with the same label
+# (Gen, Aja, Fon, Moba, Ifè from bj.txt; Ghana-Togo Mountain and Anufo from gh.txt).
+#
+# Glottolog (data/raw/glottolog): Waci Gbe waci1239, Ikposo ikpo1238, Akebu akeb1238 (Kwa,
+# Ghana-Togo Mountain), Lamba lamb1271 and Nawdm (Gur). Ngangam has no glottocode found here.
+nigercongo | Niger-Congo
+nigercongo.kwa | Kwa
+nigercongo.kwa.ewe | Ewe | 0.72 0.15 95
+nigercongo.kwa.gen | Gen (Mina) | 0.58 0.12 15
+nigercongo.kwa.waci | Ouatchi (Waci) | 0.82 0.12 140
+nigercongo.kwa.aja | Aja (Adja) | 0.70 0.16 45
+nigercongo.kwa.fon | Fon | 0.80 0.15 88
+nigercongo.kwa.anufo | Anufo (Chokosi)
+nigercongo.kwa.gtm | Ghana-Togo Mountain languages | 0.72 0.11 170
+nigercongo.kwa.gtm.ikposo | Ikposo (Akposso) | 0.60 0.12 190
+nigercongo.kwa.gtm.akebu | Akebu | 0.80 0.10 200
+nigercongo.voltaniger | Volta-Niger
+nigercongo.voltaniger.ife | Ifè | 0.82 0.10 25
+nigercongo.voltaniger.yoruba | Yoruba
+nigercongo.gur | Gur | 0.76 0.12 65
+nigercongo.gur.kabiye | Kabiyè | 0.64 0.15 320
+nigercongo.gur.moba | Moba | 0.78 0.14 75
+nigercongo.gur.tem | Tem (Kotokoli) | 0.72 0.14 30
+nigercongo.gur.nawdm | Nawdm (Losso) | 0.84 0.10 350
+nigercongo.gur.lama | Lama (Lamba) | 0.56 0.12 10
+nigercongo.gur.gourmanchema | Gourmanchéma (Gulmancema)
+nigercongo.gur.konkomba | Konkomba (Likpakpaln)
+nigercongo.gur.ntcham | Ntcham (Basari)
+nigercongo.gur.ngangam | Ngangam (Gangam)
+nigercongo.gur.akaselem | Akaselem (Chamba)
+nigercongo.atlantic | Atlantic
+nigercongo.atlantic.fulah | Fula
+afroasiatic | Afroasiatic
+afroasiatic.chadic | Chadic
+afroasiatic.chadic.hausa | Hausa
+indoeuropean | Indo-European
+indoeuropean.romance | Romance
+indoeuropean.romance.french | French
+africa_other | Other African languages
+#
+# Colours, for neighbours on the Togolese ground. South: Ewe a green-yellow, Ouatchi pale green,
+# Mina deep red, Aja orange; Plateaux's mountains Ikposo and Akebu blue-green. North: Kabiyè
+# magenta against Tem's orange and Lama's brick, Nawdm pale pink, Moba yellow beside Gourma's
+# dark ochre. Ewe, Kabiyè, Moba and Tem had generated colours elsewhere (immigrant rows).

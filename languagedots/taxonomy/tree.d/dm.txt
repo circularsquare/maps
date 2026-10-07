@@ -1,0 +1,9 @@
+# Dominica (2011 census settlement counts, no language question; sources/dm.md). Bare repeats:
+# Kokoy is Glottolog's anti1245 (Antiguan and Barbudan Creole, node from bb.txt / ag.txt);
+# Kweyol sits on Antillean Creole (fr.txt); Haitian Creole from ht.txt.
+creole | Creoles
+creole.english_based | English-based creoles
+creole.english_based.antiguan | Antiguan and Barbudan Creole
+creole.french_based | French-based creoles
+creole.french_based.antillean | Antillean Creole (Guadeloupe, Martinique)
+creole.french_based.haitian | Haitian Creole

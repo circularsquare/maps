@@ -1,0 +1,11 @@
+{
+  "1": {"candidates": ["helper1m/data/kyrgyzstan/boundaries/adm1.gpkg"],
+        "code_col": "code", "name_col": "name", "group_col": "group",
+        "extra_cols": ["name_cn"]},
+  "2": {"candidates": ["helper1m/data/kyrgyzstan/boundaries/adm2.gpkg"],
+        "code_col": "code", "name_col": "name", "parent_col": "parent",
+        "group_col": "group", "extra_cols": ["name_cn"]},
+  "3": {"candidates": ["helper1m/data/kyrgyzstan/boundaries/adm3.gpkg"],
+        "code_col": "code", "name_col": "name", "parent_col": "parent",
+        "group_col": "group", "extra_cols": ["name_cn"], "simplify": 0.001}
+}

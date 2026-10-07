@@ -1,0 +1,104 @@
+# Solomon Islands, 2019 census (taxonomy/sb2019.py): first language learnt as a child. The report
+# names Pidgin and 58 local languages (Tables 9.6.1-9.6.3); everything else is one remainder on
+# `other` (sb2019.py says why).
+#
+# Middle levels, checked against Glottolog (data/raw/glottolog, classification paths):
+#   * Northwest Solomonic (Glottolog: Oceanic > Western Oceanic > Meso Melanesian > ... >
+#     Northwest Solomonic): Choiseul, New Georgia, Santa Isabel, the Shortlands (Mono-Alu).
+#     Dororo and Guliguli have no Glottolog classification (extinct, unclassified); the report
+#     calls them variants of Kazukuru, which Glottolog puts in New Georgia, so they go here too.
+#   * Southeast Solomonic (Glottolog's own node): Gela, Guadalcanal, Malaita, Makira, Ulawa.
+#   * Temotu (Glottolog's own node): Reefs-Santa Cruz, Utupua and Vanikoro languages.
+#   * The Polynesian outliers (Rennell-Bellona, Anuta, Sikaiana, Tauma) sit directly under
+#     Oceanic, as Samoan, Tongan and the other Polynesian languages already do on this map.
+#   * Bilua, Touo and Lavukaleve: the Central Solomons languages, non-Austronesian. Glottolog
+#     leaves each one unclassified (an isolate); the usual reading (Ethnologue, Wikipedia,
+#     Terrill's work) is a small Central Solomons family, and readers know them as Papuan, so
+#     they go under the existing `papuan` root as `papuan.central_solomons` (the brief's
+#     "families as most readers know them").
+# Colours: Northwest Solomonic blue-violet and Southeast Solomonic cyan-teal either side of
+# Oceanic's 225, so Isabel and Gela, which face each other across a strait, differ by family as
+# well as by language; Temotu greener; the Central Solomons languages yellow-green, apart from
+# the Oceanic blues around them in Western Province.
+
+# ---- repeated parents and nodes other fragments define ----
+austronesian | Austronesian
+austronesian.oceanic | Oceanic
+austronesian.oceanic.gilbertese | Gilbertese (Kiribati)
+creole | Creoles
+creole.english_based | English-based creoles
+creole.english_based.pijin | Solomon Islands Pijin
+papuan | Papuan languages
+
+# ---- new groups ----
+austronesian.oceanic.nw_solomonic | Northwest Solomonic | 0.72 0.13 262
+austronesian.oceanic.se_solomonic | Southeast Solomonic | 0.76 0.12 198
+austronesian.oceanic.temotu | Temotu | 0.76 0.12 165
+papuan.central_solomons | Central Solomons | 0.76 0.13 100
+
+# ---- Northwest Solomonic ----
+austronesian.oceanic.nw_solomonic.babatana | Babatana
+austronesian.oceanic.nw_solomonic.varisi | Varisi
+austronesian.oceanic.nw_solomonic.vaghua | Vaghua
+austronesian.oceanic.nw_solomonic.ririo | Ririo
+austronesian.oceanic.nw_solomonic.mono_alu | Mono-Alu
+austronesian.oceanic.nw_solomonic.roviana | Roviana
+austronesian.oceanic.nw_solomonic.marovo | Marovo
+austronesian.oceanic.nw_solomonic.vangunu | Vangunu
+austronesian.oceanic.nw_solomonic.ughele | Ughele | 0.84 0.08 300
+austronesian.oceanic.nw_solomonic.simbo | Simbo
+austronesian.oceanic.nw_solomonic.lungga | Lungga
+austronesian.oceanic.nw_solomonic.nduke | Duke (Nduke) | 0.84 0.08 240
+austronesian.oceanic.nw_solomonic.kazukuru | Kazukuru
+austronesian.oceanic.nw_solomonic.dororo | Dororo
+austronesian.oceanic.nw_solomonic.guliguli | Guliguli
+austronesian.oceanic.nw_solomonic.cheke_holo | Cheke Holo
+austronesian.oceanic.nw_solomonic.mae | Mae
+austronesian.oceanic.nw_solomonic.ghoighoi | Ghoighoi
+austronesian.oceanic.nw_solomonic.zazao | Zazao (Kilokaka)
+austronesian.oceanic.nw_solomonic.laghu | Laghu
+
+# ---- Southeast Solomonic ----
+austronesian.oceanic.se_solomonic.gela | Gela | 0.76 0.12 160
+austronesian.oceanic.se_solomonic.lengo | Lengo | 0.64 0.12 236
+austronesian.oceanic.se_solomonic.ghari | Ghari | 0.86 0.09 160
+austronesian.oceanic.se_solomonic.talise | Tolo/Talise | 0.80 0.11 185
+austronesian.oceanic.se_solomonic.birao | Birao | 0.66 0.12 195
+austronesian.oceanic.se_solomonic.kwaraae | Kwara'ae | 0.70 0.13 165
+austronesian.oceanic.se_solomonic.areare | 'Are'are | 0.80 0.12 185
+austronesian.oceanic.se_solomonic.lau | Lau | 0.60 0.12 252
+austronesian.oceanic.se_solomonic.kwaio | Kwaio | 0.62 0.11 222
+austronesian.oceanic.se_solomonic.toabaita | To'abaita | 0.84 0.10 160
+austronesian.oceanic.se_solomonic.baegu | Baegu | 0.88 0.07 215
+austronesian.oceanic.se_solomonic.baelelea | Baelelea | 0.72 0.12 200
+austronesian.oceanic.se_solomonic.wala | Wala | 0.86 0.08 190
+austronesian.oceanic.se_solomonic.gulaalaa | Gula'alaa | 0.74 0.10 240
+austronesian.oceanic.se_solomonic.dorio | Dori'o | 0.86 0.07 170
+austronesian.oceanic.se_solomonic.saa | Sa'a | 0.66 0.12 205
+austronesian.oceanic.se_solomonic.ulawa | Ulawa | 0.62 0.11 185
+austronesian.oceanic.se_solomonic.arosi | Arosi | 0.80 0.11 165
+austronesian.oceanic.se_solomonic.bauro | Bauro (Tairaha) | 0.66 0.12 215
+austronesian.oceanic.se_solomonic.kahua | Kahua | 0.86 0.08 200
+austronesian.oceanic.se_solomonic.owa | Owa | 0.70 0.12 240
+
+# ---- Temotu ----
+austronesian.oceanic.temotu.aiwoo | Äiwoo
+austronesian.oceanic.temotu.nalogo | Nalögo
+austronesian.oceanic.temotu.engdewu | Engdewu
+austronesian.oceanic.temotu.noipa | Noipa
+austronesian.oceanic.temotu.amba | Amba
+austronesian.oceanic.temotu.asumboa | Asumboa
+austronesian.oceanic.temotu.tanimbili | Tanimbili
+austronesian.oceanic.temotu.lovono | Lovono
+austronesian.oceanic.temotu.tanema | Tanema
+
+# ---- Polynesian outliers ----
+austronesian.oceanic.rennell_bellona | Rennell-Bellona | 0.64 0.18 355
+austronesian.oceanic.anuta | Anuta | 0.80 0.12 0
+austronesian.oceanic.sikaiana | Sikaiana | 0.72 0.16 340
+austronesian.oceanic.tauma | Tauma | 0.84 0.10 320
+
+# ---- Central Solomons ----
+papuan.central_solomons.bilua | Bilua
+papuan.central_solomons.touo | Touo
+papuan.central_solomons.lavukaleve | Lavukaleve (Laube)

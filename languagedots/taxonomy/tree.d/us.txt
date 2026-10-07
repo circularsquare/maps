@@ -1,0 +1,164 @@
+# United States (ACS 2020-2024, PUMS language codes). Families and branches checked against
+# Glottolog (data/raw/glottolog/languages.csv); where Glottolog splits a conventional grouping
+# (Niger-Congo: Atlantic-Congo and Mande are separate families there; Nilo-Saharan: not a
+# family there at all) the conventional one is used, because it is what the census's own codes
+# are named after ("Other Niger-Congo languages", "Nilo-Saharan languages").
+#
+# Colours (L C h): chosen for contrast with the neighbours each language has on the US ground:
+# English (near white) everywhere, Spanish (red-orange) in most cities, and the city clusters
+# (Chinese violet-blue, Vietnamese magenta, Tagalog teal, Korean pink, Slavic green, Haitian
+# amber). Haitian is amber rather than yellow because Bengali (yellow) lives next door in
+# Brooklyn; Korean and Vietnamese are pulled apart for Orange County. Groups get a colour so their own "language not named" people have one.
+
+# ---- Indo-European branches the tree did not have ----
+# Romance and its colour are br.txt's (repeated identically); Spanish is hand-picked here
+indoeuropean.romance | Romance | 0.78 0.11 230
+indoeuropean.romance.spanish | Spanish | 0.78 0.10 95
+indoeuropean.romance.portuguese | Portuguese
+indoeuropean.romance.french | French | 0.60 0.15 340
+indoeuropean.romance.cajun_french | Cajun French | 0.48 0.15 345
+indoeuropean.romance.italian | Italian | 0.82 0.12 60
+indoeuropean.romance.romanian | Romanian | 0.78 0.09 345
+indoeuropean.germanic.continental | Continental West Germanic | 0.68 0.13 235
+indoeuropean.germanic.continental.german | German | 0.66 0.13 240
+indoeuropean.germanic.continental.swiss_german | Swiss German | 0.80 0.09 245
+indoeuropean.germanic.continental.pennsylvania_german | Pennsylvania German | 0.76 0.14 215
+indoeuropean.germanic.continental.yiddish | Yiddish | 0.56 0.12 225
+indoeuropean.germanic.continental.dutch | Dutch | 0.80 0.14 225
+indoeuropean.germanic.continental.afrikaans | Afrikaans | 0.62 0.11 220
+indoeuropean.germanic.north | North Germanic | 0.78 0.09 225
+indoeuropean.germanic.north.swedish | Swedish
+indoeuropean.germanic.north.danish | Danish
+indoeuropean.germanic.north.norwegian | Norwegian
+indoeuropean.celtic | Celtic | 0.72 0.13 150
+indoeuropean.celtic.irish | Irish
+indoeuropean.hellenic | Hellenic | 0.56 0.18 295
+indoeuropean.hellenic.greek | Greek | 0.56 0.18 295
+indoeuropean.albanian | Albanian | 0.60 0.13 70
+indoeuropean.albanian.albanian | Albanian | 0.60 0.13 70
+indoeuropean.armenian | Armenian | 0.80 0.12 170
+indoeuropean.armenian.armenian | Armenian | 0.80 0.12 170
+indoeuropean.baltic | Baltic | 0.76 0.11 110
+indoeuropean.baltic.lithuanian | Lithuanian
+indoeuropean.baltic.latvian | Latvian
+indoeuropean.slavic | Slavic | 0.70 0.15 140
+indoeuropean.slavic.east | East Slavic | 0.70 0.15 145
+indoeuropean.slavic.east.russian | Russian | 0.70 0.16 145
+indoeuropean.slavic.east.ukrainian | Ukrainian | 0.84 0.14 120
+indoeuropean.slavic.west | West Slavic | 0.64 0.14 160
+indoeuropean.slavic.west.polish | Polish | 0.64 0.15 160
+indoeuropean.slavic.west.czech | Czech
+indoeuropean.slavic.west.slovak | Slovak
+indoeuropean.slavic.south | South Slavic | 0.78 0.13 130
+indoeuropean.slavic.south.bulgarian | Bulgarian
+indoeuropean.slavic.south.macedonian | Macedonian
+indoeuropean.slavic.south.serbocroatian | Serbo-Croatian
+indoeuropean.slavic.south.bosnian | Bosnian
+indoeuropean.slavic.south.croatian | Croatian
+indoeuropean.slavic.south.serbian | Serbian
+indoeuropean.iranian.persian | Persian (Farsi)
+indoeuropean.iranian.dari | Dari
+indoeuropean.iranian.kurdish | Kurdish
+indoeuropean.indoaryan.sinhala | Sinhala
+
+# ---- creoles: br.txt's root and French-based group (repeated identically) ----
+creole | Creoles | 0.84 0.06 200
+creole.french_based | French-based creoles | 0.84 0.08 190
+creole.french_based.haitian | Haitian Creole | 0.78 0.12 305
+creole.portuguese_based | Portuguese-based creoles | 0.80 0.08 170
+creole.portuguese_based.kabuverdianu | Kabuverdianu | 0.76 0.13 125
+creole.english_based | English-based creoles | 0.80 0.10 135
+creole.english_based.jamaican | Jamaican Creole | 0.74 0.13 145
+
+# ---- Sino-Tibetan, Austroasiatic, Afroasiatic: additions under existing roots ----
+sinotibetan.sinitic | Chinese | 0.62 0.19 38
+sinotibetan.sinitic.mandarin | Mandarin | 0.68 0.17 41
+sinotibetan.sinitic.cantonese | Cantonese | 0.80 0.11 15
+sinotibetan.sinitic.min_nan | Min Nan (Taiwanese, Hokkien) | 0.50 0.12 28
+sinotibetan.burmish.burmese | Burmese
+sinotibetan.kukichin.chin | Chin
+sinotibetan.karen | Karen | 0.80 0.11 215
+austroasiatic.vietnamese | Vietnamese | 0.68 0.17 310
+austroasiatic.khmer | Khmer | 0.82 0.10 330
+afroasiatic.hebrew | Hebrew
+afroasiatic.assyrian | Assyrian Neo-Aramaic
+afroasiatic.chaldean | Chaldean Neo-Aramaic
+# Ethiopian Semitic and Cushitic as et.txt has them (repeated identically)
+afroasiatic.ethiosemitic | Ethiopian Semitic | 0.76 0.14 60
+afroasiatic.ethiosemitic.amharic | Amharic | 0.78 0.15 70
+afroasiatic.ethiosemitic.tigrinya | Tigrinya | 0.58 0.14 15
+afroasiatic.cushitic | Cushitic | 0.76 0.13 150
+afroasiatic.cushitic.lowland | Lowland East Cushitic | 0.76 0.14 140
+afroasiatic.cushitic.lowland.oromo | Oromo | 0.72 0.16 145
+afroasiatic.cushitic.lowland.somali | Somali | 0.84 0.13 120
+
+# ---- new families ----
+uralic | Uralic | 0.64 0.17 15
+uralic.finnish | Finnish
+uralic.hungarian | Hungarian
+turkic | Turkic | 0.68 0.16 15
+turkic.turkish | Turkish | 0.70 0.16 330
+mongolic | Mongolic | 0.76 0.12 70
+mongolic.mongolian | Mongolian | 0.76 0.12 70
+koreanic | Koreanic | 0.76 0.17 0
+koreanic.korean | Korean | 0.76 0.17 0
+japonic | Japonic | 0.86 0.09 20
+japonic.japanese | Japanese | 0.86 0.09 20
+kradai | Kra-Dai (Tai-Kadai) | 0.80 0.14 125
+kradai.thai | Thai | 0.80 0.14 125
+kradai.lao | Lao | 0.68 0.14 110
+hmongmien | Hmong-Mien | 0.66 0.15 170
+hmongmien.hmong | Hmong | 0.66 0.16 170
+hmongmien.iu_mien | Iu Mien | 0.80 0.11 160
+austronesian | Austronesian | 0.76 0.13 195
+austronesian.philippine | Philippine | 0.76 0.13 195
+austronesian.philippine.tagalog | Tagalog | 0.78 0.14 195
+austronesian.philippine.filipino | Filipino | 0.68 0.12 210
+austronesian.philippine.cebuano | Cebuano | 0.64 0.12 185
+austronesian.philippine.ilocano | Ilocano | 0.86 0.09 180
+austronesian.malayic | Malayic | 0.74 0.12 175
+austronesian.malayic.malay | Malay
+austronesian.malayic.indonesian | Indonesian
+austronesian.chamorro | Chamorro | 0.70 0.13 160
+austronesian.oceanic | Oceanic | 0.70 0.13 225
+austronesian.oceanic.marshallese | Marshallese
+austronesian.oceanic.chuukese | Chuukese
+austronesian.oceanic.samoan | Samoan | 0.74 0.17 325
+austronesian.oceanic.tongan | Tongan
+austronesian.oceanic.hawaiian | Hawaiian | 0.66 0.19 340
+nigercongo | Niger-Congo | 0.72 0.14 75
+nigercongo.bantu | Bantu | 0.70 0.14 60
+nigercongo.bantu.swahili | Swahili | 0.70 0.15 55
+nigercongo.bantu.ganda | Ganda
+nigercongo.bantu.shona | Shona
+nigercongo.mande | Mande | 0.72 0.13 130
+nigercongo.mande.manding | Manding
+nigercongo.atlantic | Atlantic | 0.66 0.12 45
+nigercongo.atlantic.fulah | Fula
+nigercongo.atlantic.wolof | Wolof
+nigercongo.kwa | Kwa | 0.82 0.12 85
+nigercongo.kwa.akan | Akan (Twi)
+nigercongo.kwa.ga | Ga
+nigercongo.kwa.gbe | Gbe (Ewe, Fon)
+nigercongo.voltaniger | Volta-Niger | 0.68 0.15 30
+nigercongo.voltaniger.yoruba | Yoruba | 0.68 0.15 30
+nigercongo.voltaniger.igbo | Igbo | 0.80 0.12 50
+nigercongo.voltaniger.edoid | Edoid (Edo)
+nilosaharan | Nilo-Saharan | 0.72 0.12 255
+
+# ---- indigenous languages of North America: one root per family, as br.txt does for South
+# America, checked against Glottolog (Athabaskan-Eyak-Tlingit, Algic, Siouan, Uto-Aztecan,
+# Eskimo-Aleut). The census's two cross-family remainders ("Other Native North American
+# languages", 178 languages from a dozen families; "Other Central and South American languages",
+# Mayan, Oto-Manguean, Quechua...) have no family node to sit on, so they get a root of their
+# own rather than grey `other`, labelled for what they are.
+nadene | Na-Dene (Athabaskan) | 0.68 0.16 155
+nadene.navajo | Navajo | 0.66 0.17 160
+nadene.apache | Apache | 0.82 0.13 130
+algic | Algic | 0.74 0.14 120
+algic.ojibwe | Ojibwe | 0.74 0.14 120
+siouan | Siouan | 0.70 0.15 90
+siouan.dakota | Dakota (Sioux) | 0.70 0.15 90
+utoaztecan | Uto-Aztecan | 0.80 0.15 24
+eskimoaleut | Inuit-Yupik-Aleut (Eskimo-Aleut) | 0.76 0.13 200
+americas_other | Other indigenous languages of the Americas | 0.72 0.13 135

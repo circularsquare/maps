@@ -13,6 +13,7 @@ survey that does (MICS `HC1A` included); Uruguay, the Dominican Republic and Hon
 - `pa` Panama: drawn, merge, 10 units; Guna Yala and Emberá-Wounaan blank, Panamá Oeste merged.
 - `cr` Costa Rica: drawn, merge, 7 provinces on INEC's 2022 estimate.
 - `co` Colombia: drawn, merge, 5 waves, 26 of 33 departments; the current stability test and one-round rule.
+  Amazonas, which LAPOP never sampled, drawn from Latinobarómetro 2010-2023 (`co.py::latinobarometro_units`).
 - `bo` Bolivia: drawn from LAPOP's single-country files 2010-2023, 9 departments, decoded by municipality name.
 - `hn` Honduras: drawn from ENDESA-MICS 2019; LAPOP 2012/2014/2018/2023 is the cross-check.
 - `do` Dominican Republic, `uy` Uruguay: drawn from office surveys; LAPOP is the cross-check (`do.py::cross_check`, `uy.py::cross_check`).
@@ -111,6 +112,19 @@ survey that does (MICS `HC1A` included); Uruguay, the Dominican Republic and Hon
   Caught by: `co.py::main` asserts `ONE_ROUND`, `ON_REGION`, `NOT_DRAWN`; `ec.py::main` asserts
   `NATIONAL_RATE`, `NOT_DRAWN`. Detail: spec §12 "A UNIT MEASURED IN ONE ROUND TAKES ITS REGION'S SHARES";
   `sources/co.md` §6.
+- **A unit LAPOP never sampled can come from Latinobarómetro, only if that survey agrees with LAPOP
+  where both went.** Latinobarómetro (direct zips, every wave, `sources/latinobarometro.py`) places
+  respondents by `ciudad`, not `reg` (`reg` changes meaning by wave); Colombia's 2010-2023 waves
+  sample the same 20 departments every wave. The test is `region_fallback`'s rule with
+  Latinobarómetro in the region's place: leave-one-out over the units both surveys sampled every
+  round, on the placed answers translated to LAPOP's card (only Catholic, Protestant and none
+  groups match), at all readings and at readings no bigger than twice the unit's own. It passed for
+  Colombia (9.93 against 14.22 points) and failed for Venezuela (14.81 against 14.37; Catholic
+  Spearman +0.10), and readings outside LAPOP's window failed at small sizes (Chocó). Witness the
+  label without names: race or mother tongue where the unit is distinctive. Caught by:
+  `co.py::latinobarometro_units` (asserts `LB_DRAWN`, `LB_N`, `LB_OUT_PASSES`),
+  `ve.py --latinobarometro` (stops if it ever passes). Detail: `sources/co.md` §11, `sources/ve.md`
+  §14. Bolivia's Latinobarómetro 2023 `REG` is its nine departments and has not been tested.
 - **The tail construction degenerates in two cases.** `lapop.build` spreads each unit's remainder over the
   failing answers at national proportions. With exactly one failing answer that is its own measured share
   (and a division by zero where it is 0): set it flat and rescale the carried shares (`do.py::main`). And
@@ -165,6 +179,8 @@ Import these, do not copy them.
   (Galápagos). Dominican Republic: "probably cant do DR without additional data".
 - **One-round rule** (supervisor, 2026-09-14; Anita deferred, leaning "use the most granular thing
   available"): `co.py::region_fallback`. **Carchi (`ec`) switches to Sierra's shares** (Anita, 2026-09-14
-  night); Pastaza and Orellana stay national. Not yet applied: `ec.py` still lists `EC04` in `NATIONAL_RATE`.
+  night); Pastaza and Orellana stay national. Applied 2026-10-03: `ec.py` imports `region_fallback`
+  and asserts `ON_REGION = ["EC04"]`; `estratopri` is not in the slim file, so `ec.py --fetch-regions`
+  reads it from the `.dta`, which a third country using the rule will need too.
 - **The tail** (Anita, 2026-09-08, sources.md §11ad): supplement non-Christian religions from another
   source; a country built from LAPOP alone goes on `queue.md`'s refinement list. Does not name the source.

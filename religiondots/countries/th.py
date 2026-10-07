@@ -34,7 +34,8 @@ def _th_counts():
     **98.5% OF THE COUNTRY IS THEREFORE `measured` AND 1.5% IS `derived`**, which is a much
     better split than an allocation usually buys, and the reason is that the two categories
     published per province are the two that hold 98.5% of Thailand. Canada's allocation is
-    71.3% derived; this is 1.5%.
+    71.3% derived; this is 1.5%. (0.8% since 2026-10-04, when the 14 printed Christian shares
+    replaced the allocated ones: `_th_printed_christians`.)
 
     THE RESIDUAL IS SPLIT PER REGION AND NOT NATIONALLY, and that is the whole reason for
     `--within`: Christianity is 3.05% of the North and 0.35% of the Northeast, so a pooled
@@ -48,7 +49,61 @@ def _th_counts():
     province here whose headline figures are not its own.
     """
     import th2010
-    return _allocated_counts("th", "province", th2010)
+    return _allocated_counts("th", "province", th2010, adjust=_th_printed_christians)
+
+
+_TH_CHRISTIAN = "คริสต์"
+_TH_RESIDUAL = "อื่น ๆ ไม่มีศาสนา และไม่ทราบ"
+
+
+def _th_printed_christians(df):
+    """Put each province's PRINTED Christian share in place of the allocated one (th.md §6).
+
+    Fourteen KPI sheets print a Christian percentage (sources/th.py `read_kpi`, carried as
+    `christian_pct=` on the province's rows in th.csv). There the Christian row becomes that
+    figure, `measured`, and the province's other residual rows (Hindu, Confucian, Sikh, other,
+    none) are scaled together to fill what is left: the same as splitting the residual by the
+    region's mix with Christians taken out. Elsewhere nothing changes. Each province's residual
+    total is conserved to the person, and so is every province.
+
+    Before this, Tak drew 5.71% Christian against the 4.4% its sheet prints, because the reader
+    saw no Islam row and handed the whole residual to the North's mix, which is mostly
+    Christian. Muslims a sheet does not print are still inside the residual, as before."""
+    norm = pd.read_csv(HERE / "data" / "normalized" / "th.csv", dtype={"geo_id": str})
+    prov = norm[norm["geo_level"] == "province"].drop_duplicates("geo_id")
+    pct = prov.set_index("geo_id")["note"].str.extract(r"christian_pct=([\d.]+)")[0].dropna()
+    total = prov.set_index("geo_id")["note"].str.extract(r"census_total=(\d+)")[0].astype(int)
+    df = df.copy()
+    in_res = df["note"].str.contains("parent_column=" + _TH_RESIDUAL, regex=False)
+    done = 0
+    for gid, p in pct.items():
+        rows = df["geo_id"].eq(gid) & in_res
+        chr_row = rows & df["source_category"].eq(_TH_CHRISTIAN)
+        others = rows & ~chr_row
+        resid = float(df.loc[rows, "count"].sum())
+        printed = round(total[gid] * float(p) / 100.0)
+        if chr_row.sum() != 1:
+            raise SystemExit(f"th {gid}: expected one allocated Christian row, found "
+                             f"{int(chr_row.sum())}")
+        if printed > resid + 1:
+            raise SystemExit(f"th {gid}: printed Christians {printed:,} exceed the residual "
+                             f"{resid:,.0f}")
+        rest = float(df.loc[others, "count"].sum())
+        df.loc[others, "count"] = (df.loc[others, "count"] * ((resid - printed) / rest)
+                                   if rest > 0 else 0.0)
+        df.loc[chr_row, "count"] = float(printed)
+        df.loc[chr_row, "tier"] = "measured"
+        df.loc[chr_row, "note"] = (f"level=leaf; cat={_TH_CHRISTIAN}; derivation=kpi_sheet; "
+                                   f"christian_pct={p}; census_total={total[gid]}")
+        if abs(float(df.loc[rows, "count"].sum()) - resid) > 1:
+            raise SystemExit(f"th {gid}: the residual moved")
+        done += 1
+    # 14: fifteen province sheets print the label, Buri Ram's with `a` for a value, and Bueng
+    # Kan's sheet is dropped because the province did not exist at the census.
+    if done != 14:
+        raise SystemExit(f"th: {done} provinces have a printed Christian share, expected 14 "
+                         "(th.md §6); the KPI reader or the archive has changed")
+    return df
 
 
 ENTRY = {
@@ -74,9 +129,9 @@ ENTRY = {
             "and Akha of the hills were reached by missions from the 1880s while the "
             "lowland Thai were not. Those are the same peoples China draws across the "
             "border in Yunnan, and this is the census that counts them rather than "
-            "inferring them from ethnicity. **Mae Hong Son, on the Myanmar border, comes "
-            "out the most Christian province in the country** — but see the last paragraph, "
-            "because that figure is inferred rather than counted. "
+            "inferring them from ethnicity. **Mae Hong Son, on the Myanmar border, is the most "
+            "Christian province in the country**, 22.8% on its provincial sheet, ahead of "
+            "Chiang Rai (8.8%) and Chiang Mai (7.7%). "
             "**Bangkok is where the small religions are.** It holds most of the country's "
             "Hindus and Sikhs — the Punjabi merchant community of Phahurat and the Tamil "
             "community around Silom — and at 4.6% Muslim it has more Muslims than any "
@@ -89,15 +144,11 @@ ENTRY = {
             "attends to alongside the wat. **0.07% of Thailand answers `no religion`, the "
             "smallest such share on this map**, and that is a fact about the question "
             "rather than about the country. "
-            "**And only two of the nine categories are counted where you see them.** "
-            "Buddhist and Muslim are published for every province; Christian, Hindu, "
-            "Confucian, Sikh, other and none are published only for five regions, and each "
-            "province's share of them here is its own region's. Turn on the `inferred dots` "
-            "control to see which is which — 98.5% of Thailand stays. **Mae Hong Son is "
-            "where that assumption is doing the most work**: a quarter of the province is "
-            "neither Buddhist nor Muslim, and this map calls almost all of that Christian "
-            "because almost all of the North's is. Its Karen and Lahu villages hold both "
-            "churches and older traditions, and nothing published separates them."),
+            "**And the small religions are counted only by region.** Buddhist and Muslim are "
+            "published for every province, and Christian for the fourteen provinces whose "
+            "sheet prints it; Hindu, Confucian, Sikh, other and none are published only for "
+            "five regions, and each province's share of them here is its own region's. Turn "
+            "the `inferred dots` control off to see which is which: 99% of Thailand stays."),
         how="census, 2010",
         fill="from the same census at region level",
         grain="provinces, 868,000 people on average",
@@ -118,7 +169,8 @@ ENTRY = {
              "**The two halves are §3.10:** nine categories at five regions from the "
              "regional volumes' Table 4, and Buddhist/Muslim percentages at 76 provinces "
              "from the `kpi_stat` indicator sheets, reunited by `allocate.py --within 1`. "
-             "100% of the census population is drawn, 98.5% of it `measured`. "
+             "100% of the census population is drawn, 99.2% of it `measured` since the 14 "
+             "printed Christian shares went in (2026-10-04, th.md §6; 98.5% before). "
              "**The check is the residual.** Each region's province residuals, summed, "
              "against that region's own Table 4 non-Buddhist non-Muslim total: -1.8% "
              "Bangkok, -0.8% Central, +4.0% North, +2.2% Northeast, -0.3% South. Those are "

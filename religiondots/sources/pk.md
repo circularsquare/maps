@@ -1,7 +1,8 @@
 # Pakistan — 2017 Population and Housing Census, via the U.S. Census Bureau
 
 **Since 2026-09-14 the drawn build is the 2023 census, PBS Table 9, at 136 districts: see §9.** Sections 1 to
-8 describe the 2017 build, which is kept and no longer drawn.
+8 describe the 2017 build, which is kept and no longer drawn. **Since 2026-10-03 Azad Kashmir's ten districts
+are drawn too, from the AJK government's own yearbook (§10); Gilgit-Baltistan is still not.**
 
 `sources/pk.py` → `data/normalized/pk.csv`. 207,684,626 people, **135 districts drawn**,
 6 source categories → 5 nodes, 100% of the published tabulation.
@@ -477,3 +478,100 @@ of which 24 are AJK and GB. The remaining 136 differ from the census's 136 in ex
 - **Karachi's outer edge is COD's and its internal lines are OSM's**; a hex near the join of the two sources can
   land one district over. 18 hexes needed the nearest-district rule, so this is small.
 - **The 1998 census** is still unchecked.
+
+---
+
+## 10. Azad Kashmir added from its own government's yearbook; Gilgit-Baltistan still blank, 2026-10-03
+
+Session `fafd1067-pkgb`, on the gaps scout's lead (`sources.md` §scout-2026-10-03-gaps, rank 2 by people):
+*"AJK and GB governments' own census reports and yearbooks"*.
+
+### 10.1 The AJK source
+
+The **AJK Bureau of Statistics** (Planning & Development Department, Muzaffarabad) prints the 2023 census's
+AJK results in its *Statistical Year Book 2025*, every table citing "Population & Housing Census Report 2023,
+Pakistan Bureau of Statistics". So PBS did tabulate AJK; it published the result through the AJK government,
+not on pbs.gov.pk.
+
+    https://pndajk.gov.pk/uploadfiles/downloads/Statistical%20Year%20Book%202025.pdf
+    (listed at https://pndajk.gov.pk/statyearbook.php; 295 pages, 11,484,834 bytes, no login, browser UA)
+
+| table | what | pdf page |
+|---|---|---|
+| 15.24 | District wise Population of AJ&K by Religion (Census 2023) | 223 |
+| 15.23 | Rural & Urban Population by Religion of AJ&K (Census 2023), by sex | 223 |
+| 15.15 | Tehsil-wise Area, Population and Nos. of Households (Census 2023) | 220 |
+
+Columns are Table 9's eight in a different order (Muslim, Hindu, Christian, Qadiani/Ahmadi, Scheduled Caste,
+Sikh, Parsi, Others, Total). Two headers are shortened, `Hindu` for `Hindu Jati` and `Scheduled Caste` for
+`Scheduled Castes`; `sources/pk_ajk.py` writes them under Table 9's names because they are the same answers
+on the same form, and says so in `HEADER_TO_T9`. pk2023.py's mapping is then unchanged.
+
+`sources/pk_ajk.py` reads by word geometry and asserts: header order on both tables; every row adds; the ten
+districts sum to the AJ&K row on every column; 15.23 adds across sexes and rural/urban and its AJ&K row equals
+15.24's cell by cell; and 15.15's 32 tehsils, in printed order, fall into the ten districts by **exact
+cumulative population sums**, which is also the tehsil list the boundary join uses as its second key.
+`sources/pk_2023.py` imports it and appends the rows to `pk.csv` (146 districts, 244,791,556 people).
+
+| AJK 2023 | people | share |
+|---|---|---|
+| Muslim | 4,313,509 | 99.54% |
+| Christian | 12,892 | 0.30% |
+| Others | 3,645 | 0.08% |
+| Qadiani/Ahmadi | 3,137 | 0.07% |
+| Sikh 128, Hindu 77, Scheduled Caste 61, Parsi 18 | 284 | |
+| **total** | **4,333,467** | |
+
+Every district is over 99% Muslim. Christians are 0.45 to 0.50% in Bhimber and Mirpur; Ahmadis are Kotli
+2,153 (0.27%) and Mirpur 903; Others peak in Poonch (1,241, 0.23%) and Sudhnoti, which nothing printed
+explains.
+
+**One oddity worth knowing, not acted on.** The same yearbook series' 2017 table (Year Book 2023, Table 15.24,
+six categories) has AJK at 2,934 Christians; 2023 has 12,892, and Sudhnoti goes from none to 775, Neelum from
+2 to 378. Ahmadis are steady (3,402 to 3,137, Kotli 2,272 to 2,153), so it is the Christian cell and not the
+table. Either 2017 undercounted or 2023 counts differently; both are PBS's figures and 2023 is drawn.
+
+### 10.2 Boundaries and the dispute
+
+COD-AB v01's Azad Kashmir has the same ten districts; all join by name, 1:1, in `sources/pk_2023_geo.py`
+(PROVINCE gains `Azad Jammu and Kashmir` -> `Azad Kashmir`), and the second key is COD's tehsil names against
+15.15's. Kontur over census runs 0.74 (Mirpur) to 0.99 (Sudhnoti). Hexes in no drawn district fell from
+16,435 (5.43m people) to 7,166 (1.53m), which is Gilgit-Baltistan and border overrun.
+
+**Spec §14.18 is satisfied by the data rather than by a clip.** COD's AJK polygons stop at the Line of
+Control: before this change, India's 1:10,000 dots inside them numbered **4** (Bhimber 2, Haveli 2) and
+China's 0, which is boundary noise of the size §14.18 accepted for cn/in. `note_public` says that each side of
+the Line of Control is drawn with the country that administers it.
+
+### 10.3 Gilgit-Baltistan: not found, and what was searched
+
+**No published table gives GB's religion, for 2017 or 2023.** GB's 2023 census population is published
+(1,709,049 by district, *GB at a Glance 2025*, P&DD Statistical & Research Cell, citing PBS), which is what
+lets `gap_share` count it: (1,709,049 + 1,041,342 restricted-area people) / 247,541,947 = **1.111%**. That
+denominator is the census's own full count with AJK and GB, and it reconciles: 241,499,431 + 4,333,467 +
+1,709,049.
+
+What was looked at, 2026-10-03:
+
+- **pnd.gog.pk** (GB Planning & Development). `pages/downloads` and `pages/reports` list ADPs, MICS 2024-25
+  and *GB AT Glance 2025.1.pdf* (18 pages, read: population, sex, households, literacy, mother tongue,
+  housing; no religion). The GB MICS 2024-25 report has no religion item (searched the full 22.8 MB text).
+- **portal.pnd.gog.pk**, the old portal, does not resolve. Wayback holds *GB at a Glance* 2020 (read, no
+  religion), 2022 and 2024, and ten 2024 district brochures, but the 2022, 2024 and brochure captures are cut
+  at exactly 1 MiB or 5 MiB and do not open. Wayback went "Temporarily Offline" mid-session, so a second CDX
+  sweep (`pnd.gog.pk/storage/*`, `gilgitbaltistan.gov.pk/storage/*`) is undone.
+- **pbs.gov.pk**: `census_tables/tables/table_{1,4,9}_{gb,gilgit_baltistan,ajk,...}.pdf` all 404 (33 names
+  probed); the census page lists only the four provinces and Islamabad; the WordPress search and media API
+  find nothing for "gilgit" or "kashmir"; the 1998 census archive has no Northern Areas reports.
+- WebSearch for a GB yearbook or census religion table found only sect shares (Shia 39.85%, Sunni 30.05%,
+  Ismaili 24%, Noorbakhshi 6.1%), which are not census figures and are not used.
+
+**Routes left**: the GB Statistical & Research Cell itself (an email, which is Anita's identity, so not
+taken); Wayback's CDX for `pnd.gog.pk/storage/` once it is back; the *1998 Census Report of Northern Areas*
+(printed, district religion likely, a 25-year-old vintage). If a table turns up and gives sect, that is §14:
+ask before drawing it.
+
+### 10.4 Not done
+
+- The AJK 2017 table (Year Book 2023, p.209) is not ingested; it is a vintage behind the rest of Pakistan.
+- AJK has no religion below district in the yearbook, so nothing finer exists to decline.

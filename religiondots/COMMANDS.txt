@@ -172,6 +172,19 @@ Run in order.  Every step, every time, even when only one country changed.
                                            #   China's sparse Yunnan dots won the tally.
   11. python tiles.py --countries "$(python tools/built_countries.py)" --coarse --no-atomic
   12. python buffers.py --countries "$(python tools/built_countries.py)" --coarse
+  13. python not_drawn.py                  # the viewer's grey hatching: ground inside a built
+                                           #   country that no counted unit reaches (Abkhazia,
+                                           #   Karabakh, South Sudan's four unsampled states),
+                                           #   and every country with no entry.  Reads the
+                                           #   shapes from step 10 and the dots, so it runs last.
+                                           #   Cached per country in data/not_drawn_cache.json
+                                           #   against its inputs' mtimes; a run that changes
+                                           #   nothing takes ~30 s, the first one ~40 min.
+                                           #   `--countries cc,cc` recomputes just those.
+                                           #   build_tail.py runs it, and a failure there does
+                                           #   not fail the tail.  Territory a source says it
+                                           #   left out but Kontur shows nobody living in (South
+                                           #   Ossetia) goes in NAMED in not_drawn.py.
 
       DO NOT TYPE THE COUNTRY LIST BY HAND.  tools/built_countries.py derives it from the
       dots files actually on disk, intersected with countries.py's COUNTRIES, and prints it

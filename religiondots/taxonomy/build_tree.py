@@ -24,7 +24,7 @@ import pandas as pd
 HERE = Path(__file__).parent
 sys.path.insert(0, str(HERE))
 
-from branches import BRANCHES, LINEAGE, PUBLIC_NOTE   # noqa: E402
+from branches import BRANCHES, LEAF_LABEL, LINEAGE, PUBLIC_NOTE   # noqa: E402
 from usrc2020 import MAP, UNMAPPED, REVIEW         # noqa: E402
 import cz2021                                      # noqa: E402
 import br2010                                      # noqa: E402
@@ -48,6 +48,7 @@ UK_NI = HERE.parent / "data" / "normalized" / "uk_ni_allocated.csv"
 # countries.py swaps them in for England's `Christian` rows. Without this the check below
 # reports them as typos, which is what it did on 2026-09-07.
 UK_SPLIT = HERE.parent / "data" / "normalized" / "uk_split.csv"
+UK_SPLIT_WALES = HERE.parent / "data" / "normalized" / "uk_split_wales.csv"   # 2026-10-04
 CSV = HERE / "usrc_groups.csv"
 OUT = HERE / "religions.json"
 
@@ -237,7 +238,7 @@ def main():
         if target not in branch_ids:
             problems.append(f"uk2021: {cat!r} -> {target!r}, which is not in branches.py")
     uk_cats, missing_file = set(), False
-    for path, where in [(UK_EW, None), (UK_NI, None), (UK_SPLIT, None),
+    for path, where in [(UK_EW, None), (UK_NI, None), (UK_SPLIT, None), (UK_SPLIT_WALES, None),
                         (UK, "uk_sc_census_2022")]:
         if not path.exists():
             missing_file = True
@@ -290,11 +291,15 @@ def main():
             if code in REVIEW:
                 node["review"] = REVIEW[code]
         nodes.append(node)
+    stale = sorted(set(LEAF_LABEL) - set(leaves))
+    if stale:
+        print(f"branches.LEAF_LABEL names nodes that are not ASARB leaves: {stale}")
+        return 1
     for path, codes in sorted(leaves.items()):
         if path in labels:
             continue
         code = codes[0]
-        nodes.append({"id": path, "label": names[code], "kind": "leaf",
+        nodes.append({"id": path, "label": LEAF_LABEL.get(path, names[code]), "kind": "leaf",
                       "sources": {"usrc2020": code},
                       **({"review": REVIEW[code]} if code in REVIEW else {})})
 

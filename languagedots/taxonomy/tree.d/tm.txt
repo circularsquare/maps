@@ -1,0 +1,21 @@
+# Turkmenistan, 2022 census mother tongue (taxonomy/tm2022.py). Adds no node: all ten columns are
+# languages other fragments or tree.txt define, repeated here identically so the fragment stands
+# alone.
+
+# ---- parents and languages defined elsewhere, repeated identically ----
+turkic | Turkic
+turkic.turkmen | Turkmen | 0.58 0.18 5
+turkic.uzbek | Uzbek | 0.74 0.15 345
+turkic.kazakh | Kazakh | 0.84 0.09 15
+turkic.tatar | Tatar
+turkic.azerbaijani | Azerbaijani
+indoeuropean | Indo-European
+indoeuropean.iranian | Iranian
+indoeuropean.iranian.balochi | Balochi
+indoeuropean.armenian | Armenian | 0.80 0.12 170
+indoeuropean.armenian.armenian | Armenian | 0.80 0.12 170
+indoeuropean.slavic | Slavic
+indoeuropean.slavic.east | East Slavic
+indoeuropean.slavic.east.russian | Russian
+indoeuropean.slavic.east.ukrainian | Ukrainian
+other | Other or unclassified

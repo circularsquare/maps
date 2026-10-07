@@ -184,3 +184,15 @@ Full pass, including the `territory=False` change to shared code. `check_md.py` 
   Palestine's entry", while `note_public` and §3 say the non-Arab Christians among them (at most
   6,275) are on neither entry. Not edited; a wording point.
 - **§8 is closed.** The build tail after this entry reported coverage ok for 171 countries.
+
+## 10. Top text before the 75-word cut, 2026-10-03 (`fafd1067-top75`)
+
+Anita asked for the text at the top of the phone screen to come down to about 75 words
+(queue.md, "Cut the country text to about 75 words"). These are the four header fields as
+they stood before the cut, verbatim, so nothing they said is lost. The cut versions are in
+`countries/xs.py`; `note_public` was not changed.
+
+- `how`: population register, not a census question
+- `fill`: from each area's own household-lifestyle table
+- `grain`: statistical areas and localities, about 2,700 people each
+- `gap`: 373,257 Muslims and Christians in the same areas, nearly all in East Jerusalem and left to Palestine's entry, except the non-Arab Christians among them (at most 6,275), who are on neither entry

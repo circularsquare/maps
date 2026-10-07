@@ -1,0 +1,35 @@
+# New Zealand (taxonomy/nz2023.py). Census 2023, languages spoken, level 1 of the classification.
+#
+# One new node, New Zealand Sign Language. Colour: a pale mauve, so its few dots read apart from
+# English's near-white beside them (Auslan, BSL and ASL are pale green, cream and yellow).
+signlanguage.nzsl | New Zealand Sign Language | 0.84 0.06 320
+
+# Repeated from other fragments with their labels unchanged, so this fragment stands alone.
+austronesian | Austronesian
+austronesian.oceanic | Oceanic
+austronesian.oceanic.maori | Māori
+austronesian.oceanic.samoan | Samoan
+signlanguage | Sign language
+
+# The eleven languages Aotearoa Data Explorer names inside level 1's Other (2026-10-05). Every one
+# already exists in another fragment; repeated here, labels unchanged, no colours.
+austronesian.oceanic.tongan | Tongan | 0.86 0.10 335
+austronesian.philippine | Philippine
+austronesian.philippine.tagalog | Tagalog
+sinotibetan | Sino-Tibetan
+sinotibetan.sinitic | Chinese
+sinotibetan.sinitic.mandarin | Mandarin
+sinotibetan.sinitic.cantonese | Cantonese
+indoeuropean | Indo-European
+indoeuropean.indoaryan | Indo-Aryan
+indoeuropean.indoaryan.central | Central (Western Hindi)
+indoeuropean.indoaryan.central.hindi | Hindi
+indoeuropean.indoaryan.northwestern | Northwestern
+indoeuropean.indoaryan.northwestern.punjabi | Punjabi
+indoeuropean.romance | Romance
+indoeuropean.romance.french | French
+indoeuropean.romance.spanish | Spanish
+indoeuropean.germanic | Germanic
+indoeuropean.germanic.continental | Continental West Germanic
+indoeuropean.germanic.continental.afrikaans | Afrikaans
+indoeuropean.germanic.continental.german | German

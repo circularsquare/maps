@@ -1,0 +1,38 @@
+# Puerto Rico (Puerto Rico Community Survey 2020-2024, the ACS's PUMS language codes). No new
+# nodes: every label is one the United States already has (taxonomy/pr2024.py takes us2024's
+# mapping). These lines repeat, bare, the fragment nodes Puerto Rico's labels use, so the
+# country stands on its own under `build.py --only`; colours stay us.txt's (and br.txt's, hk.txt's),
+# not repeated here so a retune there cannot clash with this file.
+indoeuropean.romance | Romance
+indoeuropean.romance.spanish | Spanish
+indoeuropean.romance.portuguese | Portuguese
+indoeuropean.romance.french | French
+indoeuropean.romance.italian | Italian
+indoeuropean.romance.romanian | Romanian
+indoeuropean.germanic.continental | Continental West Germanic
+indoeuropean.germanic.continental.german | German
+indoeuropean.germanic.continental.dutch | Dutch
+indoeuropean.germanic.north | North Germanic
+indoeuropean.germanic.north.norwegian | Norwegian
+indoeuropean.slavic | Slavic
+indoeuropean.slavic.east | East Slavic
+indoeuropean.slavic.east.russian | Russian
+creole | Creoles
+creole.french_based | French-based creoles
+creole.french_based.haitian | Haitian Creole
+sinotibetan.sinitic | Chinese
+sinotibetan.sinitic.mandarin | Mandarin
+sinotibetan.sinitic.cantonese | Cantonese
+austroasiatic.vietnamese | Vietnamese
+afroasiatic.hebrew | Hebrew
+koreanic | Koreanic
+koreanic.korean | Korean
+japonic | Japonic
+japonic.japanese | Japanese
+kradai | Kra-Dai (Tai-Kadai)
+kradai.thai | Thai
+austronesian | Austronesian
+austronesian.philippine | Philippine
+austronesian.philippine.filipino | Filipino
+nigercongo | Niger-Congo
+nigercongo.bantu | Bantu

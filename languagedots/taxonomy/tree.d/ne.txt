@@ -1,0 +1,34 @@
+# Niger (taxonomy/ne2001.py). RGP/H 2001 ethnic group read as language, Afrobarometer retention.
+# Parents and languages other fragments already define are repeated with the same label:
+# Afroasiatic, Chadic, Hausa, Berber, Arabic, Shuwa Arabic (ng.txt), Hassaniya (ml.txt),
+# Nilo-Saharan, Songhay, Zarma (ng.txt, bf.txt), Kanuri (ng.txt), Niger-Congo, Atlantic, Fula,
+# Gur, Gourmanchéma (bf.txt), Indo-European, Romance, French.
+#
+# Glottolog (data/raw/glottolog): Tawallammat Tamajaq tawa1286 and Tayart Tamajeq taya1257
+# (Afro-Asiatic, Berber as conventionally grouped); Dazaga daza1242 and Tedaga teda1241 (Saharan,
+# under Nilo-Saharan as most readers know it, AGENT_BRIEF section 3).
+afroasiatic | Afroasiatic
+afroasiatic.chadic | Chadic
+afroasiatic.chadic.hausa | Hausa
+afroasiatic.berber | Berber
+afroasiatic.berber.tamajaq | Tamajaq (Tuareg) | 0.72 0.165 62
+afroasiatic.arabic | Arabic
+afroasiatic.arabic.shuwa | Shuwa Arabic
+afroasiatic.hassaniya | Hassaniya (Maure)
+nilosaharan | Nilo-Saharan
+nilosaharan.songhay | Songhay languages
+nilosaharan.songhay.zarma | Zarma (Djerma)
+nilosaharan.kanuri | Kanuri
+nilosaharan.tubu | Tubu (Teda-Daza) | 0.58 0.12 228
+nigercongo | Niger-Congo
+nigercongo.atlantic | Atlantic
+nigercongo.atlantic.fulah | Fula
+nigercongo.gur | Gur
+nigercongo.gur.gourmanchema | Gourmanchéma (Gulmancema)
+indoeuropean | Indo-European
+indoeuropean.romance | Romance
+indoeuropean.romance.french | French
+#
+# Colours, for neighbours on the Nigerien ground. Tamajaq a shade off Mali's Tamasheq (ml.txt,
+# 0.76 0.14 70), so the Tuareg read as one belt across the border yet stay apart from Hausa's
+# pale yellow-green. Tubu a deep steel blue in Diffa and Kawar, away from Kanuri.

@@ -1,0 +1,138 @@
+# DR Congo, Enquete 1-2-3 2005+2012 ethnic groups read as languages (taxonomy/cd2012.py).
+# Checked against Glottolog (data/raw/glottolog/languages.csv):
+#   Bantu (Atlantic-Congo): Yaka yaka1270 (Pelende pele1244 a dialect of it, printed apart), Suku
+#   suku1259, Mbala mbal1257, Yansi yans1239, Mbuun mpuo1241, Kwese kwes1244, Ngongo ngon1267,
+#   Sakata saka1287, Sengele seng1278, Boma (Boma Nkuu/Yumu/Nord), Ntomba ntom1248, Libinza
+#   libi1244, Mpama mpam1239, Ngombe ngom1268, Budza budz1238, Ngando ngan1308, Nkutu nkut1238,
+#   Ekonda ekon1238 (a Mongo dialect), Luntu lunt1238, Kete kete1252, Kanyok kany1247, Songe
+#   song1303, Tetela tete1250, Bushoong bush1247, Lele lele1265, Dengese deng1250, Sanga
+#   sang1331, Kusu kusu1252, Lega-Shabunda lega1249, Lega-Mwenga lega1250, Bangubangu bang1350,
+#   Komo komo1260, Nande nand1264, Shi shii1238, Havu havu1238, Hunde hund1239, Fuliiru
+#   fuli1240, Nyanga nyan1304, Poke poke1238, Lombo lomb1260, Lengola leng1258, Mbesa mbes1238,
+#   Budu budu1250, Bwa bwaa1238, Benza benz1238, Nyali nyal1250 (Bantu, though in Ituri), Yombe
+#   yomb1244. Tere, Kundu and Benye Nonda have no Glottolog entry under these names; each is a
+#   name the survey's heads gave for their own people, so each gets a Bantu leaf where they live
+#   (Mai-Ndombe, Mai-Ndombe, Maniema).
+#   Kongo: the survey names Kikongo's speech varieties (Ndibu, Manyanga, Ntandu, Mbata, Lemfu,
+#   Besi Ngombe, "Bakongo du Sud-Est du fleuve", Mboma) and Yombe; they sit under a group of their
+#   own, `kongo_dialects`, beside ao.txt's `kongo` language node, which stays a language.
+#   Ubangian: Northern Ngbandi nort2774, Mbandja mban1263 and Mono mono1270 (Banda), Mayogo
+#   mayo1261 and Mba mbaa1245 (Ngbaka-Mba, conventionally; Glottolog files both under
+#   Atlantic-Congo). Ngbaka Minagende is cf.txt's node under Gbaya-Manza-Ngbaka.
+#   Central Sudanic: Logo logo1259, Mamvu mamv1243, Makere make1250 (a Mangbetu dialect).
+#
+# Colours (AGENT_BRIEF §3): the Kongo varieties greens around ao.txt's Kongo, Kinshasa's
+# Lingala stays ao.txt's cyan. Every other new leaf is hand-coloured, at a chroma at least 0.05
+# off its parent's (0.20 or 0.08 under Bantu's 0.14), because Bantu's generated slots are full:
+# leaving these 60-odd leaves to the generator moved 34 other countries' Bantu colours
+# (Kinyarwanda, Luba-Kasai, Mongo, Ganda...). Off the parent's chroma, no hand colour can sit within
+# 0.04 of a generated slot, so no existing node moves. Neighbours on the ground alternate the two
+# chromas and sit far apart in hue.
+
+nigercongo | Niger-Congo
+nigercongo.bantu | Bantu
+nigercongo.ubangian | Ubangian
+nigercongo.ubangian.banda | Banda languages
+nigercongo.ubangian.ngbandi | Ngbandi
+nigercongo.ubangian.mundu_baka | Ngbaka-Mba (Mundu-Baka)
+nilosaharan | Nilo-Saharan
+nilosaharan.centralsudanic | Central Sudanic
+
+# ---- Kongo
+nigercongo.bantu.kongo_dialects | Kongo varieties (H.10) | 0.70 0.14 150
+nigercongo.bantu.kongo_dialects.yombe | Yombe (Kikongo) | 0.62 0.15 165
+nigercongo.bantu.kongo_dialects.ndibu | Ndibu | 0.74 0.16 135
+nigercongo.bantu.kongo_dialects.manyanga | Manyanga | 0.82 0.13 120
+nigercongo.bantu.kongo_dialects.ntandu | Ntandu | 0.66 0.13 180
+nigercongo.bantu.kongo_dialects.mbata | Mbata | 0.86 0.08 140
+nigercongo.bantu.kongo_dialects.lemfu | Lemfu | 0.58 0.08 120
+nigercongo.bantu.kongo_dialects.besingombe | Besi Ngombe
+nigercongo.bantu.kongo_dialects.kongo_se | Kongo of the south-east bank
+nigercongo.bantu.kongo_dialects.mboma | Mboma
+
+# ---- Kwilu, Kwango, Mai-Ndombe
+nigercongo.bantu.yaka | Yaka | 0.72 0.20 340
+nigercongo.bantu.suku | Suku | 0.82 0.20 70
+nigercongo.bantu.pelende | Pelende | 0.62 0.08 340
+nigercongo.bantu.mbala | Mbala | 0.84 0.08 20
+nigercongo.bantu.pende | Pende | 0.64 0.20 40
+nigercongo.bantu.yansi | Yansi | 0.76 0.20 105
+nigercongo.bantu.mbuun | Mbunda (Mbuun) | 0.70 0.08 280
+nigercongo.bantu.kwese | Kwese | 0.86 0.08 145
+nigercongo.bantu.ngongo | Ngongo | 0.60 0.08 60
+nigercongo.bantu.teke | Teke | 0.80 0.08 230
+nigercongo.bantu.sakata | Sakata | 0.70 0.20 10
+nigercongo.bantu.sengele | Sengele | 0.86 0.08 50
+nigercongo.bantu.boma | Boma | 0.64 0.08 160
+nigercongo.bantu.tere | Tere | 0.78 0.20 45
+nigercongo.bantu.kundu | Kundu | 0.66 0.08 15
+
+# ---- Equateur, Tshuapa, Mongala
+nigercongo.bantu.ekonda | Ekonda | 0.82 0.20 55
+nigercongo.bantu.ntomba | Ntomba | 0.62 0.20 25
+nigercongo.bantu.nunu | Nunu | 0.76 0.08 220
+nigercongo.bantu.libinza | Libinza | 0.86 0.08 70
+nigercongo.bantu.mpama | Mpama | 0.64 0.08 330
+nigercongo.bantu.ngombe | Ngombe | 0.76 0.20 350
+nigercongo.bantu.budza | Budza | 0.66 0.08 230
+nigercongo.bantu.ngando | Ngando | 0.80 0.08 300
+nigercongo.bantu.nkutu | Nkutu (Kutshu) | 0.66 0.08 100
+
+# ---- Kasai, Sankuru, Lomami
+nigercongo.bantu.luntu | Luntu | 0.66 0.08 200
+nigercongo.bantu.kete | Kete | 0.80 0.20 100
+nigercongo.bantu.kanyok | Kanyok | 0.62 0.20 350
+nigercongo.bantu.songe | Songe (Songye) | 0.74 0.08 280
+nigercongo.bantu.tetela | Tetela | 0.70 0.20 50
+nigercongo.bantu.bushoong | Bushoong (Kuba) | 0.82 0.08 160
+nigercongo.bantu.lele | Lele | 0.68 0.20 0
+nigercongo.bantu.dengese | Dengese | 0.86 0.08 25
+
+# ---- Katanga
+# Luba-Katanga was 0.022 OKLab from Zambia's Tabwa and 0.043 from Luba-Kasai under the old
+# generator. Since the stable generator (2026-10-05) its generated colour is 0.192 from Tabwa and
+# 0.159 from Luba-Kasai; pinned here at that colour (colour pass 2026-10-05, COLOURS.md).
+nigercongo.bantu.luba_katanga | Luba-Katanga | 0.64 0.14 40
+nigercongo.bantu.zela | Zela | 0.84 0.08 200
+nigercongo.bantu.sanga | Sanga (Kisanga) | 0.66 0.20 110
+nigercongo.bantu.hemba | Hemba | 0.76 0.08 200
+
+# ---- Maniema, the Kivus
+nigercongo.bantu.kusu | Kusu | 0.80 0.20 60
+nigercongo.bantu.lega | Lega | 0.74 0.20 115
+nigercongo.bantu.lega_mwenga | Rega (Lega-Mwenga) | 0.62 0.20 15
+nigercongo.bantu.songola | Songola | 0.66 0.08 300
+nigercongo.bantu.bangubangu | Bangubangu | 0.84 0.08 40
+nigercongo.bantu.benye_nonda | Benye Nonda | 0.62 0.08 130
+nigercongo.bantu.ngengele | Ngengele | 0.76 0.08 330
+nigercongo.bantu.komo | Komo (Kumu) | 0.70 0.08 220
+nigercongo.bantu.nande | Nande | 0.72 0.20 35
+nigercongo.bantu.shi | Shi | 0.66 0.20 330
+nigercongo.bantu.havu | Havu | 0.84 0.08 95
+nigercongo.bantu.hunde | Hunde | 0.64 0.08 250
+nigercongo.bantu.fuliiru | Fuliiru | 0.84 0.20 85
+nigercongo.bantu.vira | Vira | 0.58 0.08 20
+nigercongo.bantu.nyanga | Nyanga | 0.78 0.08 175
+
+# ---- Tshopo, the Uele, Ituri
+nigercongo.bantu.lokele | Lokele | 0.80 0.08 250
+nigercongo.bantu.poke | Poke (Topoke) | 0.84 0.08 120
+nigercongo.bantu.lombo | Lombo (Turumbu) | 0.62 0.08 75
+nigercongo.bantu.lengola | Lengola | 0.66 0.20 300
+nigercongo.bantu.mbesa | Mbesa | 0.70 0.08 210
+nigercongo.bantu.budu | Budu | 0.80 0.20 30
+nigercongo.bantu.bwa | Bwa (Boa) | 0.66 0.20 95
+nigercongo.bantu.benza | Benza | 0.78 0.08 0
+nigercongo.bantu.nyali | Nyali | 0.72 0.08 150
+
+# ---- Ubangian
+nigercongo.ubangian.ngbandi.ngbandi_north | Northern Ngbandi | 0.76 0.20 60
+nigercongo.ubangian.banda.mbandja | Mbandja | 0.66 0.11 350
+nigercongo.ubangian.banda.mono | Mono | 0.80 0.11 320
+nigercongo.ubangian.mundu_baka.mayogo | Mayogo | 0.70 0.17 190
+nigercongo.ubangian.mundu_baka.mba | Mba | 0.62 0.05 120
+
+# ---- Central Sudanic
+nilosaharan.centralsudanic.logo | Logo | 0.66 0.18 170
+nilosaharan.centralsudanic.mamvu | Mamvu | 0.82 0.06 200
+nilosaharan.centralsudanic.makere | Makere (Mangbetu) | 0.80 0.18 260

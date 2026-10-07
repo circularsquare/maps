@@ -245,3 +245,11 @@ are registered `real`.
 To act on any of the six: set its `status` to `capped` in `kontur_cap.csv` and re-scatter. The
 fix lowers every hex in the block to the median density of the populated hexes within 3 km and
 cannot move a count.
+
+
+## Not-drawn hatching fix batch (fafd1067-fixes3, 2026-10-03)
+
+Added `gap` ("four woredas with no 2007 figure, three of them in Afar, which the census did
+not fully count"), because the hatching now shows two areas of Afar. The four are USCB's Adear,
+Bedu and an unnamed Afar unit ("Population data not available") and blank Beltu in Oromia
+(sources/et.py docstring). No `gap_share`: nobody has a figure for them.

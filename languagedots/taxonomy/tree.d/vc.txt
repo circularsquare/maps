@@ -1,0 +1,5 @@
+# Saint Vincent and the Grenadines (2012 census ethnicity by ED). Vincentian Creole (Glottolog
+# vinc1243) is defined in bb.txt; repeated here, hand-coloured, since St Vincent is its home.
+creole | Creoles
+creole.english_based | English-based creoles
+creole.english_based.vincentian | Vincentian Creole | 0.62 0.12 185

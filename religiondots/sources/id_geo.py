@@ -33,6 +33,10 @@ dissolving COD's ADM3 by the FIRST FOUR DIGITS OF THE 2010 KECAMATAN CODE recons
 2010 regency exactly, from BPS's own geography rather than from a guess about parentage.
 That needs `id.py`'s kecamatan pull, which is the next thing to do anyway.
 
+**AND THE UNPAINTED GROUND IS PAINTED BACK** (2026-10-03): `add_post2010_ground` gives every
+post-2010 COD sub-district to the drawn 2010 unit that held it, so the drawn layer covers the
+whole country again. See NEW_REGENCY_PARENT.
+
 Usage:
     python sources/id_geo.py --fetch    one 218 MB zip from HDX, then extract
     python sources/id_geo.py            build from data/raw/id_geo/
@@ -75,6 +79,44 @@ ENGINE = "fiona"          # see the module docstring; pyogrio silently returns n
 # is exactly the 2010 territory the residual counts, because they were carved wholly out of
 # Kalimantan Timur and nothing else joined them.
 RESIDUAL_MEMBERS = {"65": ["6501", "6502", "6503", "6504", "6571"]}
+
+# POST-2010 GROUND, painted back onto the 2010 unit that held it (fixes3, 2026-10-03). COD is
+# 2020, so 464 of its 7,069 sub-district polygons have no 2010 census row: the 17 regencies
+# carved out after the census, the kecamatan split inside a regency after it, and COD's lake
+# and forest polygons. Until 2026-10-03 they were left out of `id_drawn.gpkg`, so their people
+# were drawn in the rest of the parent and the land read blank: Pangandaran (~474k by Kontur),
+# Malaka, PALI, and seven new kecamatan of Bandar Lampung among them, ~7.2M people by Kontur in
+# all. The not-drawn hatching (not_drawn.py) is what showed it. Counts per unit do not change;
+# each 2010 unit's polygon grows back to the 2010 ground.
+#
+# A NEW REGENCY goes to the 2010 regency it was carved from, named in its formation law (UU
+# 2012-2014). Every parent here is drawn whole, because BPS serves the 2010 census through the
+# post-split geography and the parent's kecamatan listing is short of the child's; asserted.
+NEW_REGENCY_PARENT = {
+    "1612": "1603",   # Penukal Abab Lematang Ilir <- Muara Enim (UU 7/2013)
+    "1613": "1605",   # Musi Rawas Utara <- Musi Rawas (UU 16/2013)
+    "1813": "1801",   # Pesisir Barat <- Lampung Barat (UU 22/2012)
+    "3218": "3207",   # Pangandaran <- Ciamis (UU 21/2012)
+    "5321": "5306",   # Malaka <- Belu (UU 3/2013)
+    "6411": "6402",   # Mahakam Hulu <- Kutai Barat (UU 2/2013)
+    "7211": "7201",   # Banggai Laut <- Banggai Kepulauan (UU 5/2013)
+    "7212": "7203",   # Morowali Utara <- Morowali (UU 12/2013)
+    "7411": "7404",   # Kolaka Timur <- Kolaka (UU 8/2013)
+    "7412": "7403",   # Konawe Kepulauan <- Konawe (UU 13/2013)
+    "7413": "7402",   # Muna Barat <- Muna (UU 14/2014)
+    "7414": "7401",   # Buton Tengah <- Buton (UU 15/2014)
+    "7415": "7401",   # Buton Selatan <- Buton (UU 16/2014)
+    "7606": "7604",   # Mamuju Tengah <- Mamuju (UU 4/2013)
+    "8208": "8203",   # Pulau Taliabu <- Kepulauan Sula (UU 6/2013)
+    "9111": "9105",   # Manokwari Selatan <- Manokwari (UU 23/2012)
+    "9112": "9105",   # Pegunungan Arfak <- Manokwari (UU 24/2012)
+}
+# A KECAMATAN MOVED BETWEEN REGENCIES after 2010: UU 14/2013 gave Tambrauw four districts of
+# Manokwari. Their COD codes carry Tambrauw's prefix and their 2010 people are Manokwari's.
+MOVED_KECAMATAN = {"9109070": "9105", "9109080": "9105", "9109090": "9105", "9109100": "9105"}
+# COD's lake, reservoir and forest polygons, which are no regency: codes x88/x99 at ADM2 and
+# x000 at ADM3. They go to the drawn unit they share the most boundary with.
+WATER_NAMES = ("danau", "waduk", "wadung", "hutan")
 
 
 def fetch():
@@ -341,6 +383,7 @@ def write_drawn(adm2, adm3, drawn_reg, drawn_kec):
     if extra:
         parts.append(gpd.GeoDataFrame(extra, crs=adm2.crs))
     out = gpd.GeoDataFrame(pd.concat(parts, ignore_index=True), crs=adm3.crs)
+    out = add_post2010_ground(out, adm2, adm3)
     os.makedirs(OUT_DIR, exist_ok=True)
     out.to_file(OUT_DRAWN, layer="drawn", driver="GPKG")
     print(f"\nwrote {OUT_DRAWN} -- {len(out):,} polygons "
@@ -352,6 +395,186 @@ def write_drawn(adm2, adm3, drawn_reg, drawn_kec):
         for _, x in out.sort_values("unit").iterrows():
             w.writerow([x["unit"], x["unit"], x["name"], x["level"], x["regency"]])
     print(f"wrote {LOOKUP_DRAWN}")
+
+
+def add_post2010_ground(out, adm2, adm3):
+    """Grow each drawn unit back over the post-2010 sub-district polygons that were its ground
+    in 2010 (see NEW_REGENCY_PARENT above). Units and counts are unchanged; only polygons grow.
+
+    Four cases, for a COD ADM3 polygon that is neither a drawn kecamatan nor inside a regency
+    drawn whole:
+      * MOVED_KECAMATAN, or inside a NEW_REGENCY_PARENT child: the named 2010 regency;
+      * inside a regency drawn at kecamatan (a kecamatan split after 2010, Bandar Lampung's
+        seven, Palu's four): one of the same regency's drawn kecamatan it borders, the one
+        whose 2010 census count is most out of proportion to the Kontur people on its 2020
+        polygon, i.e. the one that lost ground. Picking the longest shared border instead
+        made 80 of 231 grown kecamatan fit Kontur worse than before (Nias Selatan's 5,799
+        people spread over 33,000 Kontur people). The 2010 parent is not published, so this is
+        a fit, and an error stays inside one regency;
+      * a lake or forest polygon: the drawn unit it shares the most boundary with;
+      * anything else stops the build, because it is a new regency missing from the table.
+    """
+    import geopandas as gpd
+
+    whole = set(out.loc[out["level"] != "kecamatan", "regency"])
+    whole |= {m for ms in RESIDUAL_MEMBERS.values() for m in ms}
+    kec_regs = set(out.loc[out["level"] == "kecamatan", "regency"])
+    drawn_kec = set(out.loc[out["level"] == "kecamatan", "unit"])
+    names2 = dict(zip(adm2["unit"], adm2["adm2_name"]))
+
+    a3 = adm3.copy()
+    a3["reg"] = a3["unit"].str[:4]
+    orphan = a3[~a3["unit"].isin(drawn_kec) & ~a3["reg"].isin(whole)].to_crs(3857)
+    o = out.to_crs(3857)
+    geom = dict(zip(o["unit"], o.geometry))
+    reg_of = dict(zip(o["unit"], o["regency"]))
+    unit_of_reg = {g: u for u, g, lv in zip(o["unit"], o["regency"], o["level"])
+                   if lv != "kecamatan"}
+    for code, members in RESIDUAL_MEMBERS.items():
+        for m in members:
+            unit_of_reg[m] = code
+
+    def is_water(reg, unit):
+        n = str(names2.get(reg, "")).lower()
+        return (reg[2:] in ("88", "99") or unit.endswith("000")
+                or any(n.startswith(w) for w in WATER_NAMES))
+
+    assigned = {}      # adm3 unit -> drawn unit
+    pending = []       # (adm3 unit, geometry, candidate drawn units or None for any)
+    for u, reg, g in zip(orphan["unit"], orphan["reg"], orphan.geometry):
+        tgt = MOVED_KECAMATAN.get(u) or NEW_REGENCY_PARENT.get(reg)
+        if tgt:
+            if tgt not in unit_of_reg:
+                raise SystemExit(f"{u}: its 2010 regency {tgt} is not drawn whole; "
+                                 "NEW_REGENCY_PARENT assumes it is")
+            assigned[u] = unit_of_reg[tgt]
+        elif reg in kec_regs:
+            pending.append((u, g, {x for x in geom if reg_of[x] == reg and x in drawn_kec}))
+        elif is_water(reg, u):
+            pending.append((u, g, None))
+        else:
+            raise SystemExit(f"{u} ({names2.get(reg, '?')}): a post-2010 regency with no "
+                             "2010 parent; add it to NEW_REGENCY_PARENT in sources/id_geo.py")
+    for u, tgt in assigned.items():
+        g = orphan.loc[orphan["unit"] == u].geometry.iloc[0]
+        geom[tgt] = geom[tgt].union(g)
+
+    # For the kecamatan case: 2010 census per drawn kecamatan against Kontur people on its
+    # polygon, and each regency's own ratio, so the neighbour that lost ground can be told.
+    import numpy as np
+    import shapely
+    kx, ky, kp = kontur_points_3857()
+
+    def kpop(g):
+        w, s, e, n = g.bounds
+        m = (kx >= w) & (kx <= e) & (ky >= s) & (ky <= n)
+        return float(kp[m][shapely.contains_xy(g, kx[m], ky[m])].sum()) if m.any() else 0.0
+
+    cen = census_totals()
+    # a kecamatan-case orphan's candidates are its own regency's, so its regency is u[:4]
+    regs_needed = {u[:4] for u, _, c in pending if c is not None}
+    K = {x: kpop(geom[x]) for x in geom if x in drawn_kec and reg_of[x] in regs_needed}
+    kchild = {u: kpop(g) for u, g, c in pending if c is not None}
+    r_reg = {}
+    for reg in regs_needed:
+        xs = [x for x in K if reg_of[x] == reg]
+        tot_k = sum(K[x] for x in xs) + sum(kchild[u] for u in kchild if u[:4] == reg)
+        r_reg[reg] = sum(cen.get(x, 0) for x in xs) / max(tot_k, 1.0)
+
+    def misfit(x, k_extra=0.0):
+        r = cen.get(x, 0) / max(K[x] + k_extra, 1.0)
+        return abs(np.log(max(r, 1e-6) / max(r_reg[reg_of[x]], 1e-6)))
+
+    # the biggest new kecamatan first, so it goes to the parent with the most room for it
+    pending.sort(key=lambda t: -kchild.get(t[0], 0.0))
+
+    # In passes, so a new kecamatan that only touches another new one is placed once its
+    # neighbour is; whatever touches nothing (an island) takes the nearest.
+    for final in (False, True):
+        while pending:
+            tree_units = list(geom)
+            tree = shapely.STRtree([geom[x] for x in tree_units])
+            left = []
+            for u, g, cand in pending:
+                near = [tree_units[i] for i in tree.query(g.buffer(50))]
+                if cand is not None:
+                    near = [x for x in near if x in cand]
+                edge = g.boundary
+                score = {x: edge.intersection(geom[x].buffer(50)).length for x in near}
+                score = {x: s for x, s in score.items() if s > 0}
+                if not score and final:
+                    pool = list(cand) if cand else tree_units
+                    score = {min(pool, key=lambda x: geom[x].distance(g)): 1.0}
+                if score and cand is not None:
+                    # how much better (negative) each neighbour's fit gets by taking it
+                    k = kchild[u]
+                    score = {x: misfit(x) - misfit(x, k) for x in score}
+                if score:
+                    tgt = max(score, key=score.get)
+                    assigned[u] = tgt
+                    geom[tgt] = geom[tgt].union(g)
+                    if cand is not None:
+                        K[tgt] += kchild[u]
+                else:
+                    left.append((u, g, cand))
+            if len(left) == len(pending):
+                break
+            pending = left
+        if not pending:
+            break
+
+    o["geometry"] = [geom[u] for u in o["unit"]]
+    o = gpd.GeoDataFrame(o, geometry="geometry", crs=3857).to_crs(out.crs)
+    grown = pd_value_counts(assigned)
+    print(f"\n  post-2010 ground: {len(assigned)} of {len(orphan)} unpainted COD sub-districts "
+          f"added to {len(grown)} drawn units (largest: "
+          + ", ".join(f"{u} +{n}" for u, n in grown[:6]) + ")")
+    left = set(orphan["unit"]) - set(assigned)
+    if left:
+        raise SystemExit(f"{len(left)} post-2010 sub-districts still unpainted: {sorted(left)[:5]}")
+    return o
+
+
+def pd_value_counts(assigned):
+    from collections import Counter
+    return Counter(assigned.values()).most_common()
+
+
+def census_totals():
+    """{drawn kecamatan code: SP2010 total}, from the `Total` rows of id.csv."""
+    out = {}
+    with open(NORM, encoding="utf-8", newline="") as fh:
+        for row in csv.DictReader(fh):
+            if row["geo_level"] == "kecamatan" and row["source_category"] == "Total":
+                out[row["geo_id"]] = out.get(row["geo_id"], 0) + float(row["count"])
+    return out
+
+
+def kontur_points_3857():
+    """Kontur's 400 m hex centroids for Indonesia, in EPSG:3857 as Kontur ships them, from the
+    .gz that sources/id_grid.py downloads."""
+    import gzip
+    import shutil
+    import tempfile
+    import numpy as np
+    import pyogrio
+    import shapely
+    sys.path.insert(0, HERE)
+    import id_grid
+    gz = os.path.join(id_grid.RAW, id_grid.GZ_NAME)
+    if not os.path.exists(gz):
+        raise SystemExit(f"missing {gz} -- run sources/id_grid.py --fetch")
+    tmp = os.path.join(tempfile.gettempdir(), f"id_geo_kontur_{os.getpid()}.gpkg")
+    with gzip.open(gz, "rb") as src, open(tmp, "wb") as dst:
+        shutil.copyfileobj(src, dst, length=1 << 22)
+    try:
+        df = pyogrio.read_dataframe(tmp, columns=["population"])
+    finally:
+        os.remove(tmp)
+    if str(df.crs).upper() != "EPSG:3857":
+        df = df.to_crs(3857)
+    c = shapely.centroid(df.geometry.values)
+    return shapely.get_x(c), shapely.get_y(c), df["population"].to_numpy(dtype=float)
 
 
 def main():

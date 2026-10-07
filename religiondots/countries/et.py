@@ -115,6 +115,8 @@ ENTRY = {
             "published."),
         how="census, 2007",
         grain="woredas, 100,000 people on average",
+        gap="four woredas with no 2007 figure, three of them in Afar, which the census did not "
+            "fully count",
         counts=_et_counts,
         units=None,
         unit_key=None,

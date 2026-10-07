@@ -1,0 +1,70 @@
+# Malawi (taxonomy/mw2018.py). 2018 PHC tribe by district, read as home language through
+# Afrobarometer (sources/mw_census.py). Parents and languages other fragments define are repeated
+# bare (their colours are theirs): Chewa, Nyanja, Ngoni (Nyanja variety), Kunda and Chikunda,
+# Tumbuka and Senga (zm.txt), Yao and Nyungwe (mz.txt), Nyakyusa and Ndali (tz.txt), the
+# Mambwe-Nyiha languages (zm.txt, tz.txt). Lambya, defined bare by zm.txt, is coloured here.
+#
+# Middle levels, checked against Glottolog (data/raw/glottolog/values.csv, classification):
+#   * Malawi Lomwe (mala1256) and Malawi Sena (mala1475) are languages of their own in Glottolog,
+#     beside Mozambique Lomwe and Sena, so they get nodes of their own under mz.txt's groups.
+#   * Tonga (Nyasa) tong1321 is in Glottolog's Tumbuka group (tumb1252), so under zm.txt's
+#     Tumbuka (N.20), not with Zambia's Botatwe Tonga.
+#   * Chingoni: Glottolog's Ngoni (Nyanja) ngon1270 is zm.txt's `nyanja_sena.ngoni`; Ngoni
+#     (Tumbuka) ngon1272, the Mzimba Ngoni's speech, is new here under Tumbuka.
+#   * Mang'anja (mang1391) is a dialect of Nyanja: under Nyanja-Sena.
+#   * Nkhonde is Glottolog's Ngonde (ngon1268), a dialect of Nyakyusa-Ngonde; Sukwa (sukw1242)
+#     a dialect of Ndali. Both hang from Bantu beside tz.txt's Nyakyusa and Ndali, as tz.txt
+#     hangs those.
+#   * Kokola (koko1267, the survey's "Khokhola") is Glottolog's Lolo-Kokola, Chuwaboic, under
+#     mz.txt's Makhuwa (P.30) group as Lolo is.
+#
+# Colours, for the neighbours on the Malawian ground: Chichewa is zm.txt's pale pink and covers
+# the centre; Mang'anja a deeper rose in the Shire valley beside a dark Malawi Sena purple
+# (Chikwawa, Nsanje); Malawi Lomwe green (Mulanje, Thyolo, Phalombe) apart from mz.txt's
+# Mozambique Lomwe across the border by lightness; Yao is mz.txt's dark teal (Mangochi, Machinga);
+# Tumbuka zm.txt's blue in the north, with Tonga a lighter cyan on the Nkhata Bay shore and
+# northern Ngoni a pale lavender in Mzimba; Chitipa's Lambya brown-orange, Sukwa olive and
+# Ndali (tz.txt) pale green; Nkhonde a magenta near tz.txt's Nyakyusa in Karonga.
+
+# ---- parents and languages defined elsewhere, repeated bare ----
+nigercongo | Niger-Congo
+nigercongo.bantu | Bantu
+nigercongo.bantu.nyanja_sena | Nyanja-Sena (N.30-40)
+nigercongo.bantu.nyanja_sena.chewa | Chewa
+nigercongo.bantu.nyanja_sena.nyanja | Nyanja
+nigercongo.bantu.nyanja_sena.ngoni | Ngoni
+nigercongo.bantu.nyanja_sena.nyungwe | Cinyungwe (Nyungwe)
+nigercongo.bantu.nyanja_sena.chikunda | Chikunda
+nigercongo.bantu.tumbuka | Tumbuka (N.20)
+nigercongo.bantu.tumbuka.tumbuka | Tumbuka
+nigercongo.bantu.tumbuka.senga | Senga
+nigercongo.bantu.makhuwa | Makhuwa (P.30)
+nigercongo.bantu.yao | Yao (Chiyao)
+nigercongo.bantu.nyakyusa | Nyakyusa
+nigercongo.bantu.ndali | Ndali
+nigercongo.bantu.mambwe_nyiha | Mambwe-Nyiha (M.10-20)
+nigercongo.bantu.mambwe_nyiha.nyiha | Nyiha
+nigercongo.bantu.mambwe_nyiha.namwanga | Namwanga
+nigercongo.bantu.mambwe_nyiha.wandya | Wandya
+nigercongo.bantu.mambwe_nyiha.mambwe | Mambwe
+nigercongo.bantu.bisa_lamba | Bisa-Lamba (M.50)
+nigercongo.bantu.bisa_lamba.bisa | Bisa
+nigercongo.bantu.swahili | Swahili
+nigercongo.bantu.nguni | Nguni
+nigercongo.bantu.nguni.ndebele_zw | Ndebele (Zimbabwe)
+indoeuropean.germanic.english | English
+indoeuropean.romance.portuguese | Portuguese
+other | Other or unclassified
+
+# ---- defined bare elsewhere, coloured here ----
+nigercongo.bantu.mambwe_nyiha.lambya | Lambya | 0.60 0.13 45
+
+# ---- new ----
+nigercongo.bantu.nyanja_sena.manganja | Mang'anja | 0.60 0.16 350
+nigercongo.bantu.nyanja_sena.sena_mw | Sena (Malawi) | 0.46 0.14 305
+nigercongo.bantu.makhuwa.lomwe_mw | Lomwe (Malawi) | 0.70 0.15 128
+nigercongo.bantu.makhuwa.kokola | Kokola (Khokhola) | 0.80 0.11 155
+nigercongo.bantu.tumbuka.tonga_mw | Tonga (Malawi) | 0.76 0.12 215
+nigercongo.bantu.tumbuka.ngoni_tumbuka | Ngoni (Tumbuka) | 0.80 0.08 270
+nigercongo.bantu.nkhonde | Nkhonde (Ngonde) | 0.64 0.17 322
+nigercongo.bantu.sukwa | Sukwa | 0.68 0.14 85

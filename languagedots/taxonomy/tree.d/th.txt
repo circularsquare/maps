@@ -1,0 +1,96 @@
+# Thailand 2010 census, language usually spoken in the household (taxonomy/th2010.py). Nodes other
+# fragments already define are repeated identically (label, and colour where one gives it), so
+# Thailand does not depend on them being in the build.
+#
+# Three new leaves and one new areal root:
+#   * Lao Khrang (Glottolog laok1241, a dialect of Lao, laoo1244): the census's "ลาวครั่ง/ลาวขี้ครั่ง".
+#     Beside `lao`, not under it: a child would make Lao a group node and wash out every Lao dot
+#     drawn elsewhere (hk.txt's Teochew, for the same reason).
+#   * "Tai Khün, Thai Loei or Lao Loei": the census's one answer "ไทยขึน/ไทยเลย/ลาวเลย", which
+#     puts Khün (khun1259) of the north and the Loei speech of Loei province in one box. Both
+#     are Tai, so it is a Kra-Dai leaf; nothing published separates the two.
+#   * Pattani Malay (patt1254, a dialect of Malay): the census's "มลายูถิ่น/นายู/ยาวี", local
+#     Malay, Nayu, Yawi. Beside `malay`, for the same reason as Lao Khrang.
+#   * `seasia_other`: the census's two unnamed boxes, "ภาษาถิ่น" (local language) and
+#     "ภาษาพื้นเมืองและชาวเขาอื่นๆ" (other indigenous and hill-tribe languages). What they hold
+#     crosses Austroasiatic (Northern Khmer, Kuy, Lawa, Khmu), Sino-Tibetan (Lahu, Akha, Lisu),
+#     Hmong-Mien (Mien) and Kra-Dai (Phu Thai, Tai Lue), so no family node is narrow enough; an
+#     areal root as `indonesia_other` and `americas_other` are (AGENT_BRIEF §3).
+#
+#
+# The regional Thai varieties (2026-10-06, session 5d7dac7e-th; countries/th.py splits the
+# census's Thai by World Values Survey shares, sources/th_wvs.py). `kradai.thai` stays "Thai" and
+# now holds Central Thai (standard Thai, Thai Korat included). Three leaves beside it, as
+# Glottolog has them (each a language under Southwestern Tai, taik1256):
+#   * Isan (Glottolog "Northeastern Thai", nort2741, a sibling of Lao, laoo1244, in its Lao-Phutai
+#     group). Labelled "Isan" because that is the name readers and Thai speakers use; Glottolog's
+#     and Ethnologue's "Northeastern Thai" goes in brackets. Its own leaf, not under Lao: it is the
+#     speech of Thai citizens written in Thai script, and a child would wash out Laos's Lao.
+#   * Northern Thai (nort2740, Kham Mueang): the node Laos already defines for its Nhuan
+#     (la.txt), repeated with the same label.
+#   * Southern Thai (sout2746, Pak Tai).
+#
+# Colours. Thai is nearly everyone, so each minority is set off from Thai's light green: Pattani
+# Malay a mid teal-blue (Malay's own 150 green sat on Thai's 125 in the deep south), Lao Khrang a
+# pale yellow-green (beside Hmong's teal in Phetchabun), and `seasia_other` a low-chroma
+# grey-lilac so it reads as a remainder (552,000 of it in Surin). The regional varieties:
+#   * Isan a warm orange, well away from Thai's light green to the west and Lao's olive across
+#     the Mekong, and from Khmer's pink to the south;
+#   * the Khün/Loei box moved from amber to a pale cream, because amber sat on Isan's orange in
+#     Loei;
+#   * Northern Thai a darker green-teal, apart from Thai to the south and Lao to the east (this
+#     also colours Laos's Nhuan, which had a generated one);
+#   * Southern Thai a darker olive-gold, apart from Thai to the north and from Pattani Malay's
+#     blue and Malay's green to the south.
+kradai | Kra-Dai (Tai-Kadai) | 0.80 0.14 125
+kradai.thai | Thai | 0.80 0.14 125
+kradai.lao | Lao | 0.68 0.14 110
+kradai.lao_khrang | Lao Khrang | 0.64 0.13 100
+kradai.khun_loei | Tai Khün, Thai Loei or Lao Loei | 0.88 0.09 70
+kradai.isan | Isan (Northeastern Thai) | 0.89 0.13 120
+kradai.northern_thai | Northern Thai (Tai Yuan, Nhuan) | 0.66 0.14 145
+kradai.southern_thai | Southern Thai (Pak Tai) | 0.76 0.17 108
+austronesian | Austronesian | 0.76 0.13 195
+austronesian.malayic | Malayic | 0.74 0.12 175
+austronesian.malayic.malay | Malay | 0.82 0.15 150
+austronesian.malayic.pattani_malay | Pattani Malay (Yawi) | 0.70 0.12 215
+austronesian.malayic.indonesian | Indonesian | 0.86 0.10 195
+austronesian.philippine | Philippine | 0.76 0.13 195
+austronesian.philippine.tagalog | Tagalog | 0.78 0.14 195
+austroasiatic | Austroasiatic
+austroasiatic.mon | Mon
+austroasiatic.khmer | Khmer | 0.82 0.10 330
+austroasiatic.vietnamese | Vietnamese | 0.68 0.17 310
+hmongmien | Hmong-Mien | 0.66 0.15 170
+hmongmien.hmong | Hmong | 0.66 0.16 170
+sinotibetan | Sino-Tibetan
+sinotibetan.karen | Karen | 0.80 0.11 215
+sinotibetan.burmish | Burmish
+sinotibetan.burmish.burmese | Burmese
+sinotibetan.sinitic | Chinese | 0.62 0.19 38
+koreanic | Koreanic | 0.76 0.17 0
+koreanic.korean | Korean | 0.76 0.17 0
+japonic | Japonic | 0.86 0.09 20
+japonic.japanese | Japanese | 0.86 0.09 20
+indoeuropean.germanic.continental | Continental West Germanic | 0.68 0.13 235
+indoeuropean.germanic.continental.german | German | 0.66 0.13 240
+indoeuropean.germanic.north | North Germanic | 0.78 0.09 225
+indoeuropean.germanic.north.danish | Danish
+indoeuropean.germanic.north.swedish | Swedish | 0.76 0.13 265
+indoeuropean.hellenic | Hellenic | 0.56 0.18 295
+indoeuropean.hellenic.greek | Greek | 0.56 0.18 295
+indoeuropean.romance | Romance | 0.78 0.11 230
+indoeuropean.romance.french | French | 0.60 0.15 340
+indoeuropean.romance.italian | Italian | 0.82 0.12 60
+indoeuropean.romance.portuguese | Portuguese | 0.64 0.11 265
+indoeuropean.romance.spanish | Spanish | 0.78 0.10 95
+indoeuropean.slavic | Slavic | 0.70 0.15 140
+indoeuropean.slavic.east | East Slavic | 0.70 0.15 145
+indoeuropean.slavic.east.russian | Russian | 0.70 0.16 145
+indoeuropean.slavic.west | West Slavic | 0.64 0.14 160
+indoeuropean.slavic.west.polish | Polish | 0.64 0.15 160
+uralic | Uralic | 0.64 0.17 15
+uralic.finnish | Finnish | 0.66 0.19 355
+uralic.hungarian | Hungarian | 0.62 0.20 10
+africa_other | Other African languages | 0.58 0.06 40
+seasia_other | Other indigenous languages of mainland Southeast Asia | 0.68 0.06 300

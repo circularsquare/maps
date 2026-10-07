@@ -17,13 +17,25 @@ WHO OWNS A DRAWN WAY (the ways build_tiles draws), in this order:
      (two register lines drawn over the same rails) falls to the fixed rule below. Tram, light
      rail and subway may own each other's ways on the same rails (SAME_RAILS_M), never for a
      guided line: Lausanne's m1 is light_rail on the ground and "subway" in the register.
+     In Japan (OPERATOR_TAG_REGIONS), where that would be another operator's line, a register
+     line of the operator the way's tag names, within THROAT_M and not disagreeing on high
+     speed, takes it instead (here and at a station throat): JR East's tracks at 品川 and 新橋
+     had gone to Keikyu and the Shinkansen, whose N02 lines were drawn nearer than JR's own.
   2. Station throats: a way no register line passed for, used only by operating patterns
      (OSM lines whose route ways are mostly register track), lying mostly within THROAT_M of a
      register line of its kind, goes to the nearest such line.
   3. The register line an OSM twin was merged into, where that twin's relation used the way.
   4. One OSM line, not a named train, whose route relation uses the way, by the fixed rule.
-  5. Nobody: only named trains run there, nothing does, or the way lies abroad (outside the
-     country's outline in dist/regions.json): the neighbour's.
+  5. Nobody: only named trains run there, nothing does, or the way lies abroad: the
+     neighbour's. Abroad is outside the country's outline in dist/regions.json AND on another
+     country's land (abroad_mask, 2026-10-05): that outline is simplified to ~2 km and a coast
+     leaves out the water a tunnel crosses, so PATH under Greenwich Village and the Hudson,
+     New York's East River tunnels and Athens' coastal trams had been owned by nobody.
+  Then A LINE'S TWO DIRECTIONS ARE ONE TRACK (Anita, 2026-10-05): a way no register line owns,
+  paired with the other direction's track of a line that runs one way on it and back on the
+  other (directional_pairs: the line's own relations are the evidence, never closeness
+  alone), takes its pair's owner: the register line owning the pair, else the fixed rule
+  over the lines on both tracks.
 
 THE FIXED RULE, for shared track no register decides: the lowest line ref by natural sort
 ("2" < "10" < "A3"), empty refs last, then the name, then the line id.
@@ -76,10 +88,18 @@ SAME_RAILS_M = 8.0
 OWN_TRAMLIKE = {"tram", "light_rail", "subway"}
 THROAT_M, THROAT_SHARE, PATTERN_REG_SHARE = 150.0, 0.6, 0.6
 ABROAD_M = 150.0
+WATER_REACH_DEG = 0.3     # a way over water goes with the nearest land within this (abroad_mask)
+# A line's two directions (directional_pairs): the other direction's track lies within PAIR_M
+# of at least PAIR_SHARE of a way, travelled the other way (cosine below -PAIR_COS).
+PAIR_M, PAIR_SHARE, PAIR_COS = 25.0, 0.5, 0.7
+# Countries whose ways' operator tags name the company that owns the line, as the register's
+# operator does: there the tag picks between two operators' register lines (see run()).
+OPERATOR_TAG_REGIONS = {"jp"}
 JUMP_M = 100.0            # a footprint run breaks where the owner position jumps this far
 LOST_MIN_KM = 0.05        # a register section loses a stretch to another only from this long
 # Single-track companions
 COMP_M, COMP_SHARE, COMP_TRACKS, COMP_LEN, COMP_FAR_M = 250.0, 0.4, 1.4, 1.5, 600.0
+DECLARED_FAR_M = 3500.0   # a register-declared companion's pieces project this far (us)
 
 
 # ---------------------------------------------------------------- small helpers
@@ -87,6 +107,11 @@ COMP_M, COMP_SHARE, COMP_TRACKS, COMP_LEN, COMP_FAR_M = 250.0, 0.4, 1.4, 1.5, 60
 def natkey(s):
     return tuple((0, int(p)) if p.isdigit() else (1, p.lower())
                  for p in re.findall(r"\d+|\D+", s or ""))
+
+
+def op_key(s):
+    """An operator as compared between a way's tag and a register line: case and spacing out."""
+    return re.sub(r"\s+", " ", (s or "").strip()).casefold()
 
 
 def owner_key(line):
@@ -185,7 +210,8 @@ class Sec:
 
 # ---------------------------------------------------------------- the step
 
-def run(region, lines, geoms, route_users, stations, log, state=None, built_regions=None):
+def run(region, lines, geoms, route_users, stations, log, state=None, built_regions=None,
+        variants=None):
     from build_model import kind_family, norm_line_name, WAY_MIN_FRAC
     import time
     t_start = time.time()
@@ -199,6 +225,7 @@ def run(region, lines, geoms, route_users, stations, log, state=None, built_regi
 
     # -------------------------------------------------- sections
     secs = {}
+    sec_hs = {}                          # section -> its line's high-speed flag there, or None
     by_line = defaultdict(list)
     for li, l in enumerate(lines):
         shut = set(l.get("closed") or [])
@@ -208,10 +235,13 @@ def run(region, lines, geoms, route_users, stations, log, state=None, built_regi
             if not pts or len(pts) < 2:
                 continue
             s = Sec(gid, li, l, km, pts, f"{a}|{b}" in shut)
+            sec_hs[gid] = (l.get("highspeed_sections") or {}).get(f"{a}|{b}", l.get("highspeed"))
             secs[gid] = s
             if not s.closed:
                 by_line[li].append(gid)
     say(f"{len(secs)} sections with geometry")
+    rsec = [g for g, s in secs.items() if s.reg and not s.closed]
+    rtree = STRtree([secs[g].geom for g in rsec]) if rsec else None
     n_gid = 1 + max((sec[3] for l in lines for sec in l["sections"]), default=-1)
     sec_km = np.ones(n_gid + 1)          # the extra slot answers for -1
     sec_reg = np.zeros(n_gid + 1, dtype=bool)
@@ -321,10 +351,12 @@ def run(region, lines, geoms, route_users, stations, log, state=None, built_regi
     off = np.concatenate([[0], np.cumsum(np.bincount(seg_w, minlength=nW))]).astype(np.int64)
     W_nodes = [alln[start[j]:start[j] + cnt[j]] for j in range(nW)]
     W_kind = state["wkind"]
-    W_hs, W_names, W_tracks = [], [], []
+    W_hs, W_names, W_tracks, W_op, W_layer = [], [], [], [], []
     for wid in wids:
         tags = ways[wid][0]
+        W_layer.append(str(tags.get("layer") or "0").strip())
         W_hs.append(tags.get("highspeed") == "yes")
+        W_op.append(op_key(tags.get("operator")))
         name = tags.get("name")
         W_names.append({norm_line_name(p, tags.get("operator", ""))
                         for p in re.split(r"[・;/]", name) if p.strip()} if name else set())
@@ -357,6 +389,50 @@ def run(region, lines, geoms, route_users, stations, log, state=None, built_regi
 
     # -------------------------------------------------- 1. register lines, by geometry
     reg_lines = [l for l in lines if l.get("src", "osm") != "osm"]
+    # THE WAY'S OWN OPERATOR FIRST. A way whose owner would be another operator's register
+    # line goes to a register line of the operator its tag names, where one lies along it
+    # within THROAT_M, of its kind, not disagreeing on high speed. N02 draws one line per
+    # route, so at 品川 Keikyu's 本線 lay 11-45 m from JR East's 山手線 ways and JR East's 東海道線
+    # 54-65 m off, and a Yamanote ride credited Keikyu; at 新橋 the Tokaido Shinkansen took 18.
+    # A preference, never a refusal: OSM tags JR East's 東海道線 south of 品川 as JR Central's
+    # (wrongly), and 新京成線's track as 京成's since the 2025 merger, and refusing on the tag
+    # took both from their own lines.
+    # Japan only (OPERATOR_TAG_REGIONS). Tried everywhere 2026-10-02 with tools/ab.py: China tags
+    # each way with the railway bureau whose territory it is in and its lines carry one bureau,
+    # so lines lost track to other lines at bureau borders (沪昆线 to 焦柳线 at 怀化); Spain's
+    # Adif / Adif AV split is the build's, OSM says "Adif", so high-speed track went to the
+    # conventional 520 at Ciudad Real; Switzerland writes MGB where the register says MGI.
+    reg_ops = ({op_key(l.get("operator")) for l in reg_lines} - {""}
+               if region in OPERATOR_TAG_REGIONS else set())
+
+    def foreign(j, l):
+        lop = op_key(l.get("operator"))
+        return W_op[j] in reg_ops and lop != "" and lop != W_op[j]
+
+    def own_op_line(j):
+        if W_op[j] not in reg_ops or rtree is None:
+            return None
+        sc = W_sc[j]
+        w = W_geo[j]
+        mid = w.interpolate(0.5, normalized=True)
+        best = None
+        for i in rtree.query(w.buffer(THROAT_M * sc, quad_segs=2)):
+            s = secs[rsec[i]]
+            l = lines[s.li]
+            if op_key(l.get("operator")) != W_op[j]:
+                continue
+            if kind_family(l["kind"]) != kind_family(W_kind[j]):
+                continue
+            hs = sec_hs.get(s.gid)
+            if hs is not None and bool(hs) != W_hs[j]:
+                continue
+            share = (w.intersection(s.geom.buffer(THROAT_M * sc, quad_segs=2)).length
+                     / max(w.length, 1e-9))
+            dd = s.geom.distance(mid)
+            if share >= THROAT_SHARE and (best is None or dd < best[0]):
+                best = (dd, s.li)
+        return best[1] if best else None
+    n_own_op = 0
     skey_gid = {}
     for l in reg_lines:
         shut = set(l.get("closed") or [])
@@ -406,7 +482,8 @@ def run(region, lines, geoms, route_users, stations, log, state=None, built_regi
 
     owner = np.full(nW, -1, dtype=np.int64)       # line index
     status = np.zeros(nW, dtype=np.int8)          # see STATUS
-    STATUS = ["none", "reg", "reg-throat", "reg-twin", "osm", "svc", "abroad", "reg-pair"]
+    STATUS = ["none", "reg", "reg-throat", "reg-twin", "osm", "svc", "abroad", "reg-pair",
+              "dir-pair"]
     losers = defaultdict(set)                     # way -> register lines on its rails that lost
     same_rails = []                               # (way, owner, [lines tied exactly])
     n_hs_override = n_tie_geom = n_tie_rule = 0
@@ -432,16 +509,22 @@ def run(region, lines, geoms, route_users, stations, log, state=None, built_regi
                 n_tie_rule += 1
             exact = exact2
         o = min(exact, key=lambda k: okey[k])
-        owner[j], status[j] = lidx[o], 1
-        if len(exact) > 1:
+        k_own = own_op_line(j) if foreign(j, byid[o]) else None
+        if k_own is not None:
+            losers[j].add(o)
+            o = lines[k_own]["id"]
+            n_own_op += 1
+        elif len(exact) > 1:
             same_rails.append((j, o, sorted(set(exact) - {o})))
+        owner[j], status[j] = lidx[o], 1
         for k, v in cd.items():
             if k != o and v[0] <= dmin + TIE_M:
                 losers[j].add(k)
     say(f"{int((status == 1).sum())} ways owned by a register line by geometry; "
         f"{n_hs_override} took a register line whose high-speed flag disagrees (none agreeing "
         f"near); midpoint ties: {n_tie_geom} settled by mean distance, {n_tie_rule} by the "
-        f"fixed rule (register lines drawn on the same rails)")
+        f"fixed rule (register lines drawn on the same rails); {n_own_op} given to their "
+        f"tagged operator's line over another operator's nearer one")
 
     # -------------------------------------------------- route users
     users = {}
@@ -473,14 +556,23 @@ def run(region, lines, geoms, route_users, stations, log, state=None, built_regi
             shapely.prepare(outline)
     wmid = shapely.points(np.array([W_geo[j].interpolate(0.5, normalized=True).coords[0]
                                     for j in range(nW)])) if nW else np.array([])
+    n_home_water = 0
     if outline is not None:
         free = np.flatnonzero(owner < 0)
         if free.size:
             out_ = ~shapely.contains(outline, wmid[free])
-            status[free[out_]] = 6
-            n_abroad = int(out_.sum())
+            cand = free[out_]
+            # regions.json's outline is simplified to ~2 km and has no islets, and a coast
+            # leaves out the water a tunnel or bridge crosses: only a way on another country's
+            # land (or over water nearer it) is the neighbour's (abroad_mask).
+            far = abroad_mask(region, np.array([wmid[j].coords[0] for j in cand])) \
+                if cand.size else np.zeros(0, bool)
+            status[cand[far]] = 6
+            n_abroad = int(far.sum())
+            n_home_water = int((~far).sum())
     say(f"{n_abroad} drawn ways outside the country's outline and owned by no register line: "
-        f"left to the neighbour")
+        f"left to the neighbour; {n_home_water} more outside the simplified outline but on "
+        f"this country's land or over its water kept")
 
     # -------------------------------------------------- 2. station throats
     reg_share = {}
@@ -491,8 +583,6 @@ def run(region, lines, geoms, route_users, stations, log, state=None, built_regi
         tot = sum(W_len[j] for j in js)
         regk = sum(W_len[j] for j in js if status[j] == 1)
         reg_share[lid] = regk / tot if tot else 0.0
-    rsec = [g for g, s in secs.items() if s.reg and not s.closed]
-    rtree = STRtree([secs[g].geom for g in rsec]) if rsec else None
     n_throat, km_throat = 0, 0.0
     if rtree is not None:
         for j in range(nW):
@@ -515,6 +605,11 @@ def run(region, lines, geoms, route_users, stations, log, state=None, built_regi
                 dd = s.geom.distance(wmid[j])
                 if share >= THROAT_SHARE and (best is None or dd < best[0]):
                     best = (dd, s.li)
+            if best and foreign(j, lines[best[1]]):
+                k_own = own_op_line(j)
+                if k_own is not None:
+                    best = (0.0, k_own)
+                    n_own_op += 1
             if best:
                 owner[j], status[j] = best[1], 2
                 n_throat += 1
@@ -547,16 +642,85 @@ def run(region, lines, geoms, route_users, stations, log, state=None, built_regi
         f"by several (the fixed rule decides); {int((status == 5).sum())} run over only by "
         f"named trains, owned by nobody")
 
+    # -------------------------------------------------- a line's two directions, one track
+    # Anita, 2026-10-05 (PATH's 33rd Street - Hoboken and Journal Square - 33rd Street): the
+    # two directions of a line are one track. An OSM section is cut from one relation, so it
+    # lies on one direction's track, and its footprint credits whoever owns that track. Where
+    # the two tracks have different owners (a line mapped in one direction only shares one of
+    # them; one track lies within a register line's buffer and the other not), a ride on one
+    # line did not credit another line mapped over the other track. So each way paired with
+    # its other-direction track (directional_pairs) takes the pair's owner: a register line
+    # owning the pair, else the fixed rule over the lines on both tracks. One step only, from
+    # the owners before this step, so a corridor's owner never spreads along a network.
+    n_pair = n_pair_reg = 0
+    km_pair = 0.0
+    if variants:
+        pairs = directional_pairs(variants, widx, W_geo, W_sc, W_kind, W_layer, wtree, status,
+                                  kind_family)
+        def reaches(li, j):
+            """Line li has a running section within OWNER_SEC_M of way j's middle, so the
+            way's pieces will find it when projected."""
+            got = segs_of(li)
+            if got is None:
+                return False
+            hit = got[0].query_nearest(wmid[j], max_distance=OWNER_SEC_M * W_sc[j],
+                                       all_matches=False)
+            return len(hit) > 0
+        new = {}
+        for a, bs in pairs.items():
+            if status[a] not in (0, 4, 5):
+                continue
+            regs = Counter()
+            for b in bs:
+                if status[b] in (1, 2, 3) and owner[b] >= 0:
+                    regs[int(owner[b])] += W_len[b]
+            if regs:
+                cands = sorted(regs, key=lambda k: (-regs[k], okey[lines[k]["id"]]))
+            else:
+                us = {k for x in [a, *bs] if status[x] in (0, 4, 5)
+                      for k in users.get(x, ()) if not byid[k].get("service")}
+                cands = [lidx[k] for k in sorted(us, key=lambda k: okey[k])]
+            # The first candidate with a section near enough to take the way's pieces: a line
+            # whose own sections lie elsewhere (its other variant's route) would own track
+            # that credits nothing.
+            o = next((k for k in cands if k == owner[a] or reaches(k, a)), None)
+            if o is not None and o != owner[a]:
+                new[a] = o
+        for a, o in new.items():
+            n_pair_reg += lines[o].get("src", "osm") != "osm"
+            owner[a], status[a] = o, 8
+            km_pair += W_len[a] / 1000
+        n_pair = len(new)
+        say(f"a line's two directions: {sum(1 for a in pairs if status[a] in (0, 4, 5, 8))} "
+            f"ways paired with the other direction's track; {n_pair} ({km_pair:.1f} km of "
+            f"way) take their pair's owner, {n_pair_reg} of them a register line's")
+
     # -------------------------------------------------- single-track companions
     companions = find_companions(lines, byid, lidx, okey, secs, by_line, owner, status, users,
                                  W_geo, W_len, W_sc, W_tracks, W_kind, wtree, kind_family, say)
+    # Companions a register declares (`companion_of`): USA's second tracks, the other half of
+    # a paired or split double track up to 3 km off its line (us_register). Riding either
+    # track credits the main line, as for the companions found above; their pieces may lie
+    # further from the main line's sections, so they project within DECLARED_FAR_M.
+    declared = set()
+    for l in lines:
+        y = l.get("companion_of")
+        if y in byid and y != l["id"] and l["id"] not in companions:
+            companions[l["id"]] = (y, {"declared": True})
+            declared.add(l["id"])
+    if declared:
+        say(f"{len(declared)} declared companions folded into their lines: "
+            + ", ".join(byid[x]["name"] for x in sorted(declared))[:400])
     pair_far = np.zeros(nW, dtype=bool)
+    far_m = np.zeros(nW)
     for x, (y, _info) in companions.items():
         xi, yi = lidx[x], lidx[y]
         for j in np.flatnonzero(owner == xi):
             owner[j], status[j] = yi, 7
             losers[int(j)].add(x)
             pair_far[j] = True
+            if x in declared:
+                far_m[j] = DECLARED_FAR_M
 
     # -------------------------------------------------- pieces of every owned way, projected
     # Each way segment is cut into pieces of at most PIECE_M, the same cut everywhere, so a
@@ -583,7 +747,8 @@ def run(region, lines, geoms, route_users, stations, log, state=None, built_regi
                 W_sc[seg_w[s]])
 
     P_own = owner[P_way] if P else np.zeros(0, np.int64)
-    radius = np.where(pair_far[P_way], COMP_FAR_M, OWNER_SEC_M) if P else np.zeros(0)
+    radius = np.maximum(np.where(pair_far[P_way], COMP_FAR_M, OWNER_SEC_M), far_m[P_way]) \
+        if P else np.zeros(0)
     order_own = np.argsort(P_own, kind="stable")
     bounds = np.searchsorted(P_own[order_own], np.arange(len(lines) + 1))
     for li in np.unique(P_own[P_own >= 0]):
@@ -923,6 +1088,114 @@ def find_companions(lines, byid, lidx, okey, secs, by_line, owner, status, users
     return out
 
 
+def directional_pairs(variants, widx, W_geo, W_sc, W_kind, W_layer, wtree, status,
+                      kind_family):
+    """A line's two directions' tracks, paired: {way index: {way indices}}.
+
+    Ways a and b are a pair when one route relation of a line runs over a and not b, another
+    relation of the SAME line runs over b and not a, in the opposite direction (their travel
+    directions, taken where they lie side by side, at least PAIR_COS apart from parallel), b
+    lies within PAIR_M of at least PAIR_SHARE of a, they are of one kind family and one `layer`
+    tag (stacked tunnels are not side by side: the Eastern Parkway Line's express tracks run
+    under its local ones, and the 4 runs express by day and local at night), and no other
+    drawn way lies between them at a's middle (the two tracks are neighbours). Only pairs with
+    at least one way no register line owns are looked for (status none, osm or svc), and none
+    abroad.
+
+    The evidence is the line's own relations, never closeness alone: two lines on separate
+    double tracks a few metres apart (the Yamanote and Keihin-Tohoku lines, the Chuo Rapid and
+    the Chuo-Sobu local) are never paired, because no one line runs one way on one and back
+    on the other. A line whose express runs on the inner tracks and whose night service on
+    the outer ones is not paired across the four tracks either: the same direction is not
+    opposite, and the other direction's track is not the neighbour."""
+    free = (status == 0) | (status == 4) | (status == 5)
+    pairs = defaultdict(set)
+
+    def tangent(j, s):
+        """Unit direction of way j at distance s along it (Mercator), in node order."""
+        g = W_geo[j]
+        d = 5.0 * W_sc[j]
+        p = np.asarray(g.interpolate(max(0.0, s - d)).coords[0])
+        q = np.asarray(g.interpolate(min(g.length, s + d)).coords[0])
+        v = q - p
+        n = math.hypot(v[0], v[1])
+        return v / n if n > 0 else None
+
+    for lid, vs in variants.items():
+        vj = []
+        for v in vs:
+            d = {}
+            for wid, sgn in v.items():
+                j = widx.get(wid)
+                if j is not None and status[j] != 6:
+                    d[j] = sgn
+            if d:
+                vj.append(d)
+        if len(vj) < 2:
+            continue
+        allj = sorted(set().union(*vj))
+        if not any(free[j] for j in allj):
+            continue
+        tree = STRtree([W_geo[j] for j in allj])
+        for a in allj:
+            if not free[a]:
+                continue
+            ga = W_geo[a]
+            if ga.length <= 0:
+                continue
+            sa = ga.length / 2
+            ma = ga.interpolate(sa)
+            ta = None
+            for ib in tree.query(ma, predicate="dwithin", distance=PAIR_M * W_sc[a]):
+                b = allj[int(ib)]
+                if b == a or b in pairs[a]:
+                    continue
+                if kind_family(W_kind[a]) != kind_family(W_kind[b]) or W_layer[a] != W_layer[b]:
+                    continue
+                gb = W_geo[b]
+                sb = gb.project(ma)
+                if ta is None:
+                    ta = tangent(a, sa)
+                tb = tangent(b, sb)
+                if ta is None or tb is None:
+                    continue
+                opposite = False
+                for da in vj:
+                    if a not in da or b in da:
+                        continue
+                    for db in vj:
+                        if b in db and a not in db and \
+                                float(np.dot(ta * da[a], tb * db[b])) < -PAIR_COS:
+                            opposite = True
+                            break
+                    if opposite:
+                        break
+                if not opposite:
+                    continue
+                share = (ga.intersection(gb.buffer(PAIR_M * W_sc[a], quad_segs=2)).length
+                         / ga.length)
+                if share < PAIR_SHARE:
+                    continue
+                pb = gb.interpolate(sb)
+                conn = LineString([ma.coords[0], pb.coords[0]])
+                between = False
+                if conn.length > 0:
+                    eps = 0.3 * W_sc[a]
+                    for k in wtree.query(conn, predicate="intersects"):
+                        k = int(k)
+                        if k in (a, b):
+                            continue
+                        x = W_geo[k].intersection(conn)
+                        if not x.is_empty and x.distance(ma) > eps and x.distance(pb) > eps:
+                            between = True
+                            break
+                if between:
+                    continue
+                pairs[a].add(b)
+                pairs[b].add(a)
+    return pairs
+
+
 # ---------------------------------------------------------------- report
 
 def nearest_name(stations, lon, lat):
@@ -1059,6 +1332,113 @@ def log_report(rep, stations, say):
     comp = rep["comp"]
     say("OSM section km by the track under it: "
         + ", ".join(f"{k} {v:,.1f}" for k, v in comp.most_common()))
+
+
+# ---------------------------------------------------------------- abroad
+
+_LAND = {}
+
+
+def _land():
+    """Natural Earth 1:10m's country polygons (borders.NAMES) as an STRtree and each polygon's
+    lower-case ISO code ("-99" for the few it gives none), loaded once."""
+    if "tree" not in _LAND:
+        import borders
+        from shapely.geometry import shape
+        codes, geos = [], []
+        try:
+            feats = json.loads(borders.NAMES.read_text(encoding="utf-8"))["features"]
+        except OSError:
+            feats = []
+        for f in feats:
+            cc = (f["properties"].get("ISO_A2_EH") or "-99").lower()
+            g = shape(f["geometry"])
+            for p in getattr(g, "geoms", [g]):
+                codes.append(cc)
+                geos.append(p)
+        _LAND.update(tree=STRtree(geos) if geos else None, codes=np.array(codes, dtype=object),
+                     geos=geos)
+    return _LAND
+
+
+def _home_shape(region):
+    """The country's own outline at full resolution, lon/lat: borders.outline (religiondots'
+    ~200 m shape, or a register's own OUTLINE) plus build_regions' EXTRA_AREAS (Russia's
+    annexed railways), the same areas regions.json's coarse outline is made of."""
+    if ("home", region) in _LAND:
+        return _LAND[("home", region)]
+    import importlib.util
+    import borders
+    from shapely.geometry import shape
+    gs = []
+    g = borders.outline(region)
+    if g is not None:
+        gs.append(g)
+    try:
+        spec = importlib.util.spec_from_file_location(
+            "_build_regions", ROOT / "tools" / "build_regions.py")
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        for p in mod.EXTRA_AREAS.get(region, []):
+            if p.exists():
+                fs = json.loads(p.read_text(encoding="utf-8"))
+                gs += [shape(f.get("geometry", f)) for f in fs.get("features", [fs])]
+    except Exception:
+        pass
+    home = shapely.union_all(gs) if gs else None
+    _LAND[("home", region)] = home
+    return home
+
+
+def abroad_mask(region, xy):
+    """Which of these points (Web Mercator), all outside the country's coarse outline (regions.json,
+    ~2 km), really lie abroad. Before 2026-10-05 every way there was the neighbour's, and so
+    owned by no line here: PATH's tracks under Greenwich Village (188 m past the simplified
+    Manhattan shore) and under the Hudson credited nothing, nor did New York's East River
+    tunnels. Now a point is abroad only when it is
+      - more than ABROAD_M from the country's own full outline (_home_shape), and
+      - on another country's land in Natural Earth 1:10m (or on this country's own Natural
+        Earth land where a register's OUTLINE cuts it out: Crimea for Ukraine, Abkhazia for
+        Georgia), or over water whose nearest land within WATER_REACH_DEG is such land and
+        nearer than this country's outline.
+    Water nobody's land is near, and this country's own land, stay here."""
+    import borders
+    n = len(xy)
+    if not n:
+        return np.zeros(0, dtype=bool)
+    lon = xy[:, 0] / R
+    lat = np.degrees(2 * np.arctan(np.exp(xy[:, 1] / R * np.pi / 180)) - np.pi / 2)
+    pts = shapely.points(lon, lat)
+    home = _home_shape(region)
+    if home is not None:
+        near_home = shapely.distance(home, pts) * 111320.0 <= ABROAD_M
+        d_home = shapely.distance(home, pts)
+    else:
+        near_home = np.zeros(n, dtype=bool)
+        d_home = np.full(n, np.inf)
+    L = _land()
+    if L["tree"] is None:
+        return ~near_home                 # no land file: the old rule
+    me = borders.ISO.get(region, region.upper()).lower()
+    cut = region in borders.OUTLINE
+    codes = L["codes"]
+
+    def theirs(c):
+        return (c != me) | (cut & (c == me))
+    foreign = np.zeros(n, dtype=bool)
+    on_land = np.zeros(n, dtype=bool)
+    pi, gi = L["tree"].query(pts, predicate="within")
+    if pi.size:
+        on_land[pi] = True
+        hit = theirs(codes[gi])
+        foreign[pi[hit]] = True
+    water = np.flatnonzero(~on_land)
+    if water.size:
+        (wi, gi), d = L["tree"].query_nearest(pts[water], max_distance=WATER_REACH_DEG,
+                                              return_distance=True, all_matches=False)
+        ok = theirs(codes[gi]) & (d < d_home[water[wi]])
+        foreign[water[wi[ok]]] = True
+    return foreign & ~near_home
 
 
 # ---------------------------------------------------------------- without a register

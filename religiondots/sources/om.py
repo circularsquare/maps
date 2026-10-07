@@ -67,6 +67,11 @@ register count, every other nationality kept at its own row, and the Hindus remo
 Islam. Myanmar's 33,059 workers (98.9% women) stay at Pew's Myanmar row: nothing found says who they
 are (origin_religion rule 2).
 
+**The Gulf rule** (2026-10-03, sources.md §gulf-2026-10-03, `origin_religion.gulf_christian_hindu`):
+then Indians are moved from Hindu to Christian until the layer's Christians / (Christians + Hindus)
+equals Pew's Oman row (0.459; the layer gave 0.210). 158,151 move; Indians end 34.6% Hindu, 23.0%
+Christian, 39.2% Muslim. The non-Muslim total (720,302) and every other family are unchanged.
+
 `christian_witness`: the layer's Christians against Pew 2020's Oman share inside `CHRISTIAN_BAND`.
 The band was written after a rough sum over the largest nationalities while scouting gave about
 0.3, and the State Department's 2023 report puts Hindus, Buddhists and Christians together at 5% of
@@ -180,9 +185,9 @@ ARAB_ROW = ["All Middle East-North Africa"]
 INDIA = "IN"
 
 CHRISTIAN_BAND = (0.2, 2.0)
-# note_public's figures, measured 2026-09-15 and asserted
+# note_public's figures, measured 2026-09-15, re-measured 2026-10-03 under the Gulf rule, asserted
 NOTE = dict(omanis=2984793, expatriates=2283279, foreign_muslim=1562977, non_muslim=720302,
-            christians=133118, hindus=502123, buddhists=60559, unaffiliated=1406)
+            christians=291264, hindus=343975, buddhists=60559, unaffiliated=1405)
 
 
 def fetch():
@@ -489,6 +494,17 @@ def main():
         raise SystemExit("India's Hindu share from Pew's Oman estimate is not between 0 and India's row")
     comps[INDIA]["islam"] = comps[INDIA].get("islam", 0.0) + (h_row - h)
     comps[INDIA]["hinduism"] = h
+    # The Gulf rule (origin_religion.gulf_christian_hindu): Christians / (Christians + Hindus) of the
+    # layer raked to Pew 2020's Oman row, on Indians
+    ratio_cw = pew_share(pew, "Christians") / (pew_share(pew, "Christians") + pew_share(pew, "Hindus"))
+    moved = origin.gulf_christian_hindu(people, comps, INDIA, ratio_cw)
+    if moved < origin.GULF_MATERIAL * POPULATION:
+        raise SystemExit(f"the Gulf rule moves {moved:,.0f}, under {origin.GULF_MATERIAL:.0%} of the "
+                         "country; it should not be applied here")
+    c_in = sum(s for n, s in comps[INDIA].items() if n.startswith("christianity"))
+    print(f"  Gulf rule: Christians / (Christians + Hindus) raked to Pew's Oman {ratio_cw:.3f}; "
+          f"{moved:,.0f} Indians moved from Hindu to Christian (Indians now {comps[INDIA]['hinduism']:.2%} "
+          f"Hindu, {c_in:.2%} Christian, {comps[INDIA]['islam']:.2%} Muslim)")
     for k, c in comps.items():
         if abs(sum(c.values()) - 1) > 1e-9:
             raise SystemExit(f"composition {k} sums to {sum(c.values())}")

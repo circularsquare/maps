@@ -69,7 +69,7 @@ ENTRY = {
             "2019, with each governorate's answers applied to that governorate's 2025 "
             "population as the humanitarian Population Task Force estimates it: **34,879,018** "
             "people, projected from the 2004 census and corrected for displacement. None of "
-            "the dots was counted, and they are drawn desaturated to say so. "
+            "the dots was counted, so they disappear when inferred dots are turned off. "
             "**Sunnis are 58.0% of the country as drawn and Zaydis 17.7%, and the Zaydis are "
             "in the northern highlands.** Sa'dah is **62.5%** Zaydi, Amran 51.3%, Dhamar 39.4%, "
             "Hajjah 34.6% and Sana'a City 28.1%. Ta'iz, Aden, Lahj, Abyan, Al Bayda, Ad Dali', "

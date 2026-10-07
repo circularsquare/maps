@@ -196,3 +196,13 @@ because the card offers `Animiste` separately, so the 2026-09-14 lumped-box proc
   say what the box holds, the REVIEW names no source for it, and DHS 2023-24 prints "non-denominational
   churches". Suggested: "the other Christian churches of Kasaï" in the second, and "which are probably
   much of what this survey recorded as other Christian" in the first.
+
+## 11. Fix batch, 2026-10-03 (fafd1067-fixes)
+
+Both §10 wording points applied to `note_public` in `countries/cd.py`. The heads sentence now reads "35.3% of
+household heads gave Catholic ... not 35.3% of Congolese asked one by one", and says it is the share of people
+only if Catholic heads' households are the same size as everyone else's, which the Census Bureau's tables cannot
+check. The other-Christian box is no longer named as the revival churches: DHS's non-denominational churches
+"are probably much of what this survey recorded as other Christian", and the Kasaï line is "the other
+Christian churches of Kasaï". `check_md.py` clean; `tiles.py --refresh-meta` run. §4 and §5 still say
+"revival churches" as the builder's reading; that is the record, not the map.

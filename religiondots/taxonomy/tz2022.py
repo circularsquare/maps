@@ -1,8 +1,10 @@
 """Afrobarometer Tanzania religion -> religiondots taxonomy.
 
-Five categories, at 30 units (the 31 regions of the 2022 census with Songwe inside Mbeya's unit).
-`Christian` and `Muslim` are the card's umbrella answers with their denominational children
-folded back in; the other three are its own boxes. `sources/tz.py`'s docstring has the argument
+Eleven categories, at 30 units (the 31 regions of the 2022 census with Songwe inside Mbeya's
+unit). `Christian` and `Muslim` are the card's umbrella answers with their denominational children
+folded back in; since 2026-10-03 the mainland's Christians are split into five churches and
+`Other Christian` from the GFS 2023 and the Afrobarometer together (`sources/tz.md` §9), and
+`Christian` remains for Zanzibar only. `sources/tz.py`'s docstring has the argument
 for the folding and `sources/tz.md` the acquisition record. The same construction as
 `ng2022.py`, on the same instrument, and the same ruling (ask/answered/010-ng).
 
@@ -14,15 +16,45 @@ EXCLUDED = {}
 
 REVIEW = {
     "Christian":
-        "-> christianity, the bare branch. **No Tanzanian census since 1967 has asked about "
-        "religion**, so nothing has ever split it by church. What is inside it is known in "
-        "outline: the Catholic Church, the Evangelical Lutheran Church in Tanzania (strongest "
-        "in Kilimanjaro, Arusha and Kagera), the Anglican Church of Tanzania, the Moravians of "
-        "the south-west, the Seventh-day Adventists and the Pentecostal churches. The pooled "
-        "survey names all of them and cannot level them: the share answering `Christian only` "
-        "runs from 6.4% to 21.3% across the drawn rounds, and round 7's card gives Methodist "
-        "7.1% and Anglican 0.5% where every other round gives about 0.1% and 4.5%, which is a "
-        "different card rather than a different country. Left at the parent.",
+        "-> christianity, the bare branch. **Zanzibar only** since 2026-10-03: its five regions' "
+        "Christians are one pooled share (Anita's ruling) from 13 respondents, and the GFS has two "
+        "Christians there, so they are not split by church. On the mainland the Christians are "
+        "split into the five churches below and `Other Christian`.",
+    "Roman Catholic":
+        "-> christianity.catholic, the bare branch, as `na2023.py` and `zm2022.py`. 27.6% of "
+        "Tanzania, 43.1% of mainland Christians as drawn; the GFS 2023 has 43.2% and the "
+        "Afrobarometer names 42.1% (a floor). Ruvuma 79.9% of Christians (Songea), Rukwa 68.5%, "
+        "Katavi 61.2%; Dodoma 19.6%. Rank over 25 mainland units, GFS against Afrobarometer, "
+        "+0.675 (null 95th +0.335). The level is the Afrobarometer's floor: the GFS's level is "
+        "0.13 points of Christians under it, so Catholics take none of the `Christian only` answers.",
+    "Lutheran":
+        "-> christianity.lutheran (the Evangelical Lutheran Church in Tanzania, the only large "
+        "Lutheran body). 8.5% of Tanzania, 13.2% of mainland Christians; GFS 14.4%, Afrobarometer "
+        "floor 10.8%. Arusha 49.2% of Christians, Njombe 36.6%, Tanga 35.1%, Kilimanjaro 33.0%. "
+        "Rank +0.764. Moravians have no box on the GFS card and some may answer Lutheran.",
+    "Anglican":
+        "-> christianity.anglican. 6.3% of Tanzania, 9.9% of mainland Christians; GFS 9.8%, "
+        "floor 6.8%. Dodoma 54.6% of Christians (the Diocese of Central Tanganyika), Kigoma 22.9%, "
+        "Singida 16.5%; Mtwara 11.0% (Masasi), where the GFS's 33 Christians found 4% and the "
+        "Afrobarometer 16%. Rank +0.565.",
+    "Pentecostal":
+        "-> christianity.pentecostal. 13.9% of Tanzania, 21.7% of mainland Christians. **The "
+        "largest gap between the surveys**: the GFS's card says Pentecostal/Charismatic and 21.6% "
+        "of its Christians take it; the Afrobarometer names 8.6%, and its `Christian only` (21.1% "
+        "of Christians) has to be 61.5% Pentecostal for the two to agree. Drawn at the GFS's level "
+        "because it is the survey where almost everyone named a church. Mbeya and Songwe 34.9% of "
+        "Christians (GFS 45%, Afrobarometer 24%), Kigoma 32.9%, Pwani 33.2%. Rank +0.584.",
+    "Seventh Day Adventist":
+        "-> christianity.adventist.sda. 3.9% of Tanzania, 6.1% of mainland Christians; GFS 6.1%, "
+        "floor 4.0%. Simiyu 21.5% of Christians, Mara 19.7% (the church's Lake Victoria field). "
+        "**The weakest pass**: rank +0.396 against a null 95th of +0.333 (p 0.024); the GFS's "
+        "Kilimanjaro 14% is not in the Afrobarometer (3%).",
+    "Other Christian":
+        "-> christianity, bare. The GFS's Independent/Holiness/Evangelical (154, mostly Mwanza and "
+        "Simiyu), Baptist (85), Presbyterian, Jehovah's Witness, Latter-day Saints, Methodist and "
+        "other answers; the Afrobarometer's Independent, Evangelical, Baptist, Mennonite, Moravian "
+        "and the rest. 5.9% of mainland Christians. Not spread into: the Afrobarometer names more "
+        "of it than the GFS. Moravians (the south-west) are here or in Lutheran.",
     "Muslim":
         "-> islam, with no branch. Tanzanian Islam is mostly Sunni (Shafi'i on the coast and "
         "in Zanzibar), with Khoja Shia Ithna'ashari, Bohra and Ismaili communities in Dar es "
@@ -55,6 +87,12 @@ REVIEW = {
 
 MAP = {
     "Christian": "christianity",
+    "Roman Catholic": "christianity.catholic",
+    "Lutheran": "christianity.lutheran",
+    "Anglican": "christianity.anglican",
+    "Pentecostal": "christianity.pentecostal",
+    "Seventh Day Adventist": "christianity.adventist.sda",
+    "Other Christian": "christianity",
     "Muslim": "islam",
     "Traditional/ethnic religion": "indigenous.african",
     "Other": "other.tz",

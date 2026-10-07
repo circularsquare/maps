@@ -52,6 +52,14 @@ typed technical. STOP_NAMES and NOT_STOPS say which.
 TRACING (`osm_rel`): three OSM route=railway relations carry no ref; REL_REF reads them as
 Adif's number, so the second trace pass keeps 982 and 984 on the high-speed line.
 
+JUNCTIONS (`cut_at_junctions`, CUT_AT; for the timetable check, live since 2026-10-03): eight
+points where a branch leaves a main line at a junction the reader would merge away inside the
+main line, so the branch's end met nothing and gtfs_served found no path onto it. Cutting
+there kept 984 (the Pajares base tunnel), 320 Chinchilla - Hellín, 422 Arahal - Utrera, 500
+Cañaveral - Cáceres, 818 Padrón - Bif. Angueira and 828 A Portela. Riquelme-Sucina (NOT_STOPS),
+where no train calls, is no stop, so 352 El Reguerón - Balsicas is one section the Murcia -
+Cartagena trains run to the end of.
+
 What is still off, and the numbers: es_sources.md.
 """
 import re
@@ -435,7 +443,12 @@ STOP_NAMES = {
 # the conventional station of the town; La Sagrera, the unopened station 690 m from the OSM
 # "La Sagrera" on the Meridiana tunnel; La Felguera on the Iberian line 140, whose only OSM
 # station of that name is FEVE's (335 m). Each stays a section end at RINF's coordinate.
-NOT_STOPS = {"LESPLUGA DE FRANCOLI-A. V.", "CAMPOMANES  AV", "LA SAGRERA", "LA FELGUERA"}
+NOT_STOPS = {"LESPLUGA DE FRANCOLI-A. V.", "CAMPOMANES  AV", "LA SAGRERA", "LA FELGUERA",
+             # No train calls (Renfe's feed, Oct 2026: Murcia > Balsicas-Mar Menor non-stop).
+             # As a stop it left El Reguerón - Riquelme a junction-ended piece that only the
+             # 41.5 km Murcia - Balsicas run crosses, "weak" by 1.5 km, and 22.6 km of the
+             # Murcia - Cartagena line went undrawn.
+             "RIQUELME-SUCINA"}
 
 
 def es_stop_name(p):
@@ -465,6 +478,24 @@ MOVE = {
 # the conventional Zamora - A Coruña line beside the high-speed one (108.6 km near Lubián).
 REL_REF = {"LAV Olmedo-Zamora-Galicia": "982", "LAV Variante de Pajares": "984",
            "Liña Zamora-A Coruña": "822"}
+
+
+# Junctions where a branch leaves a main line at a point that is no stop (`cut_at_junctions`):
+# the reader merges such a point away inside the main line (two neighbours on it), so the
+# branch ends at a node nothing else touches and the timetable check finds no path onto it.
+# Cut there, and only there: cutting at every junction (tried) split main lines into
+# junction-ended pieces that a parallel line made "ambiguous" or long non-stop runs "weak",
+# and dropped real track (Valladolid - Venta de Baños on 080, Albacete - Chinchilla on 300).
+CUT_AT = {
+    "CHINCHILLA MONTEAR.AG.KM.298,4",   # 320 to Hellín and Murcia leaves 300
+    "BIF. PAJARES",                     # 984, the Pajares base tunnel, leaves 130 at La Robla
+    "BIF. UTRERA",                      # 422 to Arahal - Osuna - Bobadilla leaves 400
+    "BIF. CASA DE LA TORRE",            # 500 Cañaveral - Cáceres joins 026 near Cáceres
+    "EL REGUERON AG KM 522,1",          # 352 to Cartagena leaves 336 (Murcia - Cartagena)
+    "BIF. ANGUEIRA",                    # 818 Padrón - Vilagarcía leaves 824 (the Atlantic axis)
+    "BIF. SAN AMARO",                   # 828 A Portela leaves 824 near Pontevedra
+    "BIF. TERUEL",                      # 610 to Teruel leaves the Zaragoza lines at Cuarte
+}
 
 
 def es_osm_rel(tags):
@@ -569,4 +600,5 @@ COUNTRY = {
     "im_of": es_im,
     "name": EsName("{ref} {route}"), "name_en": EsName("Line {ref} ({route})"),
     "im": {"0071_IM": "Adif"},
+    "cut_at_junctions": CUT_AT,
 }

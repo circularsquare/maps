@@ -1,0 +1,11 @@
+# Malta, Census 2021, main language spoken from early childhood (taxonomy/mt2021.py). Every
+# answer the census prints is already a node; Maltese (Glottolog malt1254) is repeated here
+# because Malta is its home, with a hand-picked colour.
+#
+# Colour: generated, Maltese came out steel blue (#71b6d1), between English's pale blue and
+# German's blue, which are the two languages most mixed with it on the ground (Is-Swieqi is 38%
+# English among Maltese citizens; German is 2% of the Northern Harbour). A darker green in
+# Afroasiatic's part of the wheel (#3b9555) is apart from both and from Arabic's pale mint, and
+# its nearest colour among the nodes drawn in Australia, Canada and the UK, where Maltese also
+# appears, is Malayalam's (OKLab distance 0.039).
+afroasiatic.maltese | Maltese | 0.60 0.13 150

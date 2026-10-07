@@ -23,8 +23,10 @@ def _co_counts():
     wave: `municipio` (2012-2023) and `upm` (2010, which carries DANE municipality codes) name
     the respondent's department independently of `prov`, and each wave's sample share tracks
     COD-PS. 24 Florida interviews printed under Nariño in 2012 are Valle del Cauca's and were
-    moved. Seven departments with no LAPOP code (Chocó, Arauca, San Andrés, Amazonas, Guainía,
-    Guaviare, Vichada) are NOT in co.csv and are in `gap=`. Of the four measured in one round,
+    moved. Seven departments have no LAPOP code. Amazonas is drawn from Latinobarómetro
+    2010-2023 (360 interviews, sources/co.md §11, co.py::latinobarometro_units); the other six
+    (Chocó, Arauca, San Andrés, Guainía, Guaviare, Vichada) are NOT in co.csv and are in
+    `gap=`. Of the four measured in one round,
     La Guajira and Casanare take their LAPOP design region's shares for the three placed
     answers and Quindío and Vaupés the national rate (spec §12, 2026-09-14,
     co.py::region_fallback).
@@ -40,9 +42,9 @@ def _co_counts():
     if missing:
         raise SystemExit(f"co.csv departments with no polygon: {missing} -- re-run "
                          "sources/co_geo.py, the lookup is stale")
-    if df["unit"].nunique() != 26:
-        raise SystemExit(f"{df['unit'].nunique()} departments, expected 26")
-    blank = {"CO27", "CO81", "CO88", "CO91", "CO94", "CO95", "CO99"}
+    if df["unit"].nunique() != 27:
+        raise SystemExit(f"{df['unit'].nunique()} departments, expected 27")
+    blank = {"CO27", "CO81", "CO88", "CO94", "CO95", "CO99"}
     if blank & set(df["unit"]):
         raise SystemExit(f"{sorted(blank & set(df['unit']))} is in co.csv and must not be")
 
@@ -63,14 +65,16 @@ ENTRY = {
     "co": dict(
         name="Colombia",
         source="AmericasBarometer, five rounds 2010 to 2023 (LAPOP Lab, Vanderbilt "
-               "University), against OCHA COD-PS 2025 department populations (DANE projections)",
+               "University), and Latinobarómetro 2010 to 2023 for Amazonas, against OCHA COD-PS "
+               "2025 department populations (DANE projections)",
         basis="self-identification, adults 18 and over",
         view=[-79.5, -4.4, -66.7, 12.6],
         note_public=(
             "**Colombia's census does not ask about religion, so this is a survey standing "
             "where a census would be.** The map is drawn from the LAPOP AmericasBarometer, "
             "**7,532 people** across five rounds between 2010 and 2023, pooled and applied to "
-            "DANE's 2025 population projections. The dots are drawn desaturated to say so. "
+            "DANE's 2025 population projections. Nobody counted these dots, so they disappear when "
+            "inferred dots are turned off. "
             "**The Caribbean departments are the least Catholic part of the country.** "
             "Atlántico, Cesar, Magdalena, Sucre and Córdoba are 61% to 65% Catholic, against "
             "81% or more in Boyacá, Caldas and Cauca. Evangelicals run the other way, "
@@ -80,9 +84,12 @@ ENTRY = {
             "survey could not show a difference between departments that held up when its "
             "rounds were split in half, so they are spread at the national rate; that "
             "includes traditional Protestants, who are 7.0% of the country. "
-            "**Seven departments are blank because the survey never went there.** Chocó, "
-            "Arauca, Vichada, Guaviare, Amazonas, Guainía and San Andrés hold **2.45%** of "
-            "Colombians. La Guajira, Quindío, Casanare and Vaupés were visited in one round "
+            "**Six departments are blank because no survey went there between 2010 and "
+            "2023.** Chocó, Arauca, Vichada, Guaviare, Guainía and San Andrés hold **2.29%** of "
+            "Colombians. LAPOP never went to Amazonas either; it is drawn from Latinobarómetro, "
+            "which interviewed 40 people there in each of its nine rounds over the same years "
+            "(**73% Catholic**), because that survey's department figures match LAPOP's where "
+            "both went. La Guajira, Quindío, Casanare and Vaupés were visited in one round "
             "only. La Guajira and Casanare are drawn at the rates of the survey's Caribbean and "
             "eastern regions, and Quindío and Vaupés at the national rate. "
             "**The level is a fourteen-year average.** Catholic identification runs 75.8% in "
@@ -92,9 +99,9 @@ ENTRY = {
             "their own, so both are undercounts."),
         how="survey, five rounds 2010 to 2023 pooled",
         grain="departments, 2.0 million people on average",
-        gap=("Chocó, Arauca, Vichada, Guaviare, Amazonas, Guainía and San Andrés, 1,303,929 "
-             "people, 2.45% of the country, which the survey never sampled"),
-        gap_share=0.0245,
+        gap=("Chocó, Arauca, Vichada, Guaviare, Guainía and San Andrés, 1,216,477 people, "
+             "2.29% of the country, which neither survey sampled from 2010 to 2023"),
+        gap_share=0.0229,
         counts=_co_counts,
         units=None,
         unit_key=None,
@@ -127,7 +134,14 @@ ENTRY = {
              "shares for the three placed answers, because Atlántica (6 of 6, mean error 6.1 "
              "against 15.2 points) and Oriental (4 of 5, 9.7 against 12.6) predict their "
              "every-round departments better than the country; Quindío (Central, 2 of 5) and "
-             "Vaupés (1 of 2) stay at the national rate. `Religiones Tradicionales` is on other.co, not "
+             "Vaupés (1 of 2) stay at the national rate. "
+             "AMAZONAS FROM LATINOBARÓMETRO, 2026-10-03 (sources/co.md §11): 40 interviews in each "
+             "of its nine 2010-2023 waves, placed by `ciudad` and witnessed by 45-68% indigenous "
+             "self-identification against 6-9% nationally; at the 18 departments both surveys "
+             "sampled every round its readings, translated to LAPOP's card, predict LAPOP's three "
+             "placed answers better than the country (mean 9.9 against 14.2 points, 12 of 18). "
+             "Chocó's readings (2008, 2009, 2024, n=80) fail the same test at their size; blank. "
+             "`Religiones Tradicionales` is on other.co, not "
              "indigenous: 18 of its 37 respondents are in Bogotá (taxonomy/co2023.py).",
     ),
 }

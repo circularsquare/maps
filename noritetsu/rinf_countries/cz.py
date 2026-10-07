@@ -148,6 +148,9 @@ def cz_skip(lid):
 
 
 COUNTRY = {
+    # join a line's pieces where RINF leaves a stretch out, over its own OSM relation
+    # (rinf.fill_holes; trialled 2026-10-05)
+    "fill_holes": True,
     "iso3": "CZE", "wikidata": None, "langs": ["cs"],
     "osm_rel": cz_rel, "no_ref": cz_no_ref, "skip_line": cz_skip,
     # RINF names no infrastructure manager; these are read off the lines each one holds and

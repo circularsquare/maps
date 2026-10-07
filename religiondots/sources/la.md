@@ -166,13 +166,13 @@ catchment is a statement about *where*, which is the only thing the weight is us
 
 ## 7. The 31.45%, which is the whole argument
 
-> **REDRAWN 2026-09-14 AS `unknown`, on Anita's ruling.** Laos's `No religion` and Mozambique's
-> `Sem religião (ateu, animista, agnóstico,...)` are both drawn as `unknown`, the treatment China
-> uses, until a national source measures how each splits between traditional religion and none.
-> §10 records what was searched. `indigenous.laos` is retired (a comment in `branches.py` marks
-> where it stood). Everything below is kept because it is the case for splitting the cell; it
-> is no longer the drawn call, and the paragraph rejecting `unknown` at the end of §7a is
-> superseded.
+> **DRAWN AS `indigenous.laos` AGAIN SINCE 2026-10-03, on Anita's night ruling of 2026-09-14
+> (§11).** The history: `indigenous.laos` from 2026-09-08 on the case below; `unknown` from
+> Anita's evening ruling of 2026-09-14, together with Mozambique's `Sem religião`, until a
+> national source split the box; then LSIS (§10) put it at about 99.8% animist, over her 80%
+> bar, and the node was revived. Mozambique went the other way, to `unaffiliated`
+> (`sources/mz.md` §3). Everything below is the case made before LSIS was found; the paragraph
+> rejecting `unknown` at the end of §7a stands again.
 
 The census's own English label is `no religion`. It is **not** filed on `unaffiliated`, and
 `taxonomy/la2015.py` and the `indigenous.laos` entry in `branches.py` carry the case. In
@@ -282,11 +282,11 @@ ethical weight is the one it declined to name rather than one it named and suppr
 - **The 2011 agricultural census** is on the same server with ethnicity per village, and
   1995 is not.
 
-## 10. How the 31.45% splits, from national sources (researched 2026-09-14, NOT drawn)
+## 10. How the 31.45% splits, from national sources (researched 2026-09-14; drawn 2026-10-03, §11)
 
 Anita, 2026-09-14: *"are we able to find any national level source for roughly how many of these
 people are indigenous religion and how many are no religion?"* **For Laos, yes, and almost none of
-it is no religion.** Recorded here and not drawn; splitting the category is Anita's call.
+it is no religion.** Recorded here on 2026-09-14 and not drawn until Anita ruled (§11).
 
 **The source that measures it is the Lao Social Indicator Survey (LSIS, Laos's MICS round).** Both
 rounds ask the religion of the household head, question HC1A, with `Animist` and `No religion` as
@@ -341,3 +341,48 @@ Front for National Construction's 2010 UPR submission (no figures); the US State
 the 2015 census and churches' own estimates). **LSIS III 2023 is unchecked**: LSB's copy failed
 TLS twice and UNICEF's key-indicators PDF carries no religion. As a third round of the same
 question it is the next place to look.
+
+## 11. Drawn as traditional religion, 2026-10-03 (`fafd1067-la`)
+
+Anita's ruling, 2026-09-14 night (`ask/RULINGS.md`): redraw the census `No religion` box as
+traditional religion, since LSIS puts it at about 99.8% animist, over her 80% bar, following the
+draft "no religion" procedure (`WORKFLOW_PLAN.md`, spec §3.12). Applied 2026-10-03.
+
+The procedure, step by step for this box:
+
+1. **The wording.** The 2015 box is `No religion` (Lao subtitle: *following other religions or
+   not following any religion*), and the census defined religion as a system with written
+   doctrines (§7, point 1).
+2. **Not a separate box.** The form offers Buddhist, Christian, Muslim, Baha'i and nothing for
+   traditional religion, so the box is lumped (`tools/check_no_religion.py` classifies it so).
+3. **Lumped, so `unknown` until a split source**, which is what it was from 2026-09-14.
+4. **The split source is LSIS**, the Lao MICS round, which asks the household head's religion
+   with `Animist` and `No religion` as separate answers (§10). Among heads giving either,
+   `Animist` is 7,141 of 7,150 (99.87%) in 2011-12 and 8,307 of 8,325 (99.78%) in 2017. That is
+   over 80%, so the box is drawn as that reading.
+   - **What it measures:** self-description, the religion a household reports for its head, not
+     observed practice.
+   - **What it is not:** weighted, or a count of persons. These are unweighted case counts off
+     the World Bank variable pages. A weighted split was not decided in the ruling and needs the
+     microdata; nothing here uses one.
+5. **Recorded** here, in `taxonomy/la2015.py`'s `REVIEW` and in `sources.md §la-2026-10-03`.
+
+**The node is `indigenous.laos`, revived rather than replaced.** Its retirement on 2026-09-14
+was clean: no other mapping ever used the id, the comment left in `branches.py` said reinstating
+it was one tuple and one line of the mapping, and the label "Traditional religions of Laos"
+still says what the cell is. A new id would have bought nothing and broken the continuity with
+`sources.md` §9bk and this file. Its tree note was rewritten around the LSIS split, and it has
+a reader-facing legend tooltip (`PUBLIC_NOTE`) saying the census recorded these people as having
+no religion, because the label alone would suggest the census counted traditional religion.
+
+**What moved:** 2,038,393 people (2,038 dots at 1:1,000, 203 at 1:10,000) from `unknown` to
+`indigenous.laos`. Nothing else: the other five categories are unchanged, and all 8,499 village
+totals were asserted identical before and after (6,481,482 people).
+
+**Colour.** In the default all-religions view Laos's 31% draws in the indigenous family's own
+purple (`#7d4bf1`); that is the prominent purple Anita noticed in her map review, and the LSIS
+evidence is what made it clear. At depth 3 the node is `#af96e3`, dE 22.8 from Laos's
+`Other or not stated` (133 dots); the same pair measured 22.7 when the node first existed and is
+listed among the accepted pairs in `index.html`'s note on `other`. Focused on the indigenous
+family across all countries it is `#26ba12`, dE 2.4 from Vodun (Benin, 1,160 dots); no single
+country draws both.

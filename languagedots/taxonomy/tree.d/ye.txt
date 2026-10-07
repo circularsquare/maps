@@ -1,0 +1,9 @@
+# Yemen (taxonomy/ye2013.py). Arab Barometer III first language, Socotra on Soqotri.
+# Yemeni Arabic is sa.txt's node (Sanaani sana1295, Ta'izzi-Adeni taiz1242, Hadrami hadr1236);
+# Glottolog splits the three, but no source places or counts them, so one node (sa's rule, and
+# Iraq's Kurdish). Repeated without colour.
+# Soqotri soqo1240, Modern South Arabian (Semitic, Afroasiatic); a leaf under `afroasiatic`, flat
+# like the other Afroasiatic leaves. Hand-coloured a warm sand, off Yemeni Arabic's teal-mint.
+afroasiatic | Afroasiatic
+afroasiatic.yemeni_arabic | Yemeni Arabic
+afroasiatic.soqotri | Soqotri | 0.78 0.12 75

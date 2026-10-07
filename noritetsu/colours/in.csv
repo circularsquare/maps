@@ -1,0 +1,5 @@
+line,operator,colour,source,url,note
+Central Line,,#FF0000,osm,https://www.openstreetmap.org/relation/10423828,"Mumbai Suburban Railway route_master colour (read 2026-10-03); no official map colour found yet"
+Trans-Harbour Line,,#4B0082,osm,https://www.openstreetmap.org/relation/11490693,Mumbai Suburban Railway route_master colour
+Port line,,#F0D808,osm,https://www.openstreetmap.org/relation/11490692,"Nerul-Uran line, Mumbai Suburban Railway route_master colour"
+Vasai Road - Roha line,,#B82880,osm,https://www.openstreetmap.org/relation/11491143,Mumbai Suburban Railway route colour (Vasai Road - Diva)

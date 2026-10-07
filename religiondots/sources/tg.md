@@ -199,3 +199,14 @@ the sea. No ask, nothing rebuilt, no edit to the entry or the mapping.
   Muslims are 52.7% in the note and 54.2% in §6. Under 1.5 points and neither is wrong.
 - **§14: agreed with §7.** Nothing drawn locates a group below a region of a million people, and dots
   inside a region follow Kontur.
+
+## 10. Top text before the 75-word cut, 2026-10-03 (`fafd1067-top75`)
+
+Anita asked for the text at the top of the phone screen to come down to about 75 words
+(queue.md, "Cut the country text to about 75 words"). These are the four header fields as
+they stood before the cut, verbatim, so nothing they said is lost. The cut versions are in
+`countries/tg.py`; `note_public` was not changed.
+
+- `how`: census totals, 2022, given a regional pattern by a pooled survey
+- `grain`: regions, with Lomé apart; 1.35 million people on average
+- `gap`: 3.4%: 2.9% whose religion the census gives as not stated or unknown, and 0.5% who are in the census count and in none of its religion rows

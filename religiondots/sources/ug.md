@@ -605,3 +605,15 @@ none of these), and names the three directories that fell out.
 **`ask/008-ug` was not touched beyond appending a reviewer paragraph.** Nothing was
 downloaded from `microdata.ubos.org:7070`, no ask was filed, and the builder's decision to
 stop at a 512-byte range probe was right.
+
+## 13. Top text before the 75-word cut, 2026-10-03 (`fafd1067-notes75`)
+
+Anita asked for the text at the top of the phone screen to come down to about 75 words
+(queue.md, "Cut the country text to about 75 words"). These are the four header fields as
+they stood before the cut, verbatim, so nothing they said is lost. The cut versions are in
+`countries/ug.py`; `note_public` was not changed.
+
+- `how`: census, 2024, 10% household sample
+- `fill`: from the same sample at county and district level
+- `grain`: subcounties, 20,000 people on average
+- `gap`: 3.33% of the country: the 1,517,205 people counted outside households, in boarding schools, barracks, prisons, hospitals and transit centres, whose sample records carry no religion; and Apaa's 9,456 people, counted as a unit of their own with no sample record

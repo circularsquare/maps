@@ -91,7 +91,9 @@ def table_for(cc, df):
         return {}, [], 0.0, 0.0
     df = df.assign(tier=df["tier"].fillna("measured"))
     measured = set(df.loc[df["tier"] == "measured", "node"])
-    der = df[df["tier"] == "derived"]
+    # `assigned` (spec §7e) rolls exactly as derived does: the religion was counted, the branch
+    # was not, and the column it came out of is in `roll`.
+    der = df[df["tier"].isin(["derived", "assigned"])]
     if der.empty:
         return {}, [], 0.0, 0.0
 

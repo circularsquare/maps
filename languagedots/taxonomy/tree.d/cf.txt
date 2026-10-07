@@ -1,0 +1,142 @@
+# Central African Republic (RGPH03 2003, language commonly spoken). Nodes for taxonomy/cf2003.py.
+#
+# Families checked against Glottolog (data/raw/glottolog). Middle levels are the conventional
+# ones, which here mostly are Glottolog's own:
+#   * Ubangian (Glottolog `Ubangi`, uban1244): Banda (Bandaic), Ngbandi (Ngbandic: Yakoma,
+#     Sango Riverain, Ngbandjiri), Zande-Nzakara (Zandic), Ngbaka-Mba (Mundu-Baka, whose river
+#     branch holds Ngbaka Ma'bo, Gbanziri, Monzombo and Kpala), Sere (Sereic). Kpatili is a
+#     Glottolog bookkeeping entry, so it sits on Ubangian directly, where Ethnologue puts it.
+#   * Gbaya-Manza-Ngbaka (gbay1279) is its own branch of North Volta-Congo in Glottolog and in
+#     Monino's work, and Ubangian in Greenberg's; a group of its own here, under Niger-Congo.
+#     It holds Mandja (Glottolog `Manza`), Ngbaka-Manza, Ngbaka Minagende, Ali, Bofi, Gbanu,
+#     Suma, Bokoto, and the Gbaya dialect names the census prints (Kara is Glottolog's Gbaya
+#     Kara and Lay its Lai, both Northwest Gbaya; Buli, Bokare, Budigiri, Gbaguiri, Gbadok,
+#     Tongo, Bouar, Boda and Mboundjia are not in Glottolog and sit here because the census
+#     files them in its Gbaya block, between Gbaya and Mandjia).
+#   * Adamawa, for the Mbum languages (Glottolog `Mbumic`): Mbum, Kare, Pana, Tale (Glottolog
+#     a dialect of Kare; the census prints it apart).
+#   * Central Sudanic (cent2225) under Nilo-Saharan: Sara, Ngam, Yulu, Binga, Gula, Birri, and
+#     Kresh (Glottolog's Kresh-Aja family; Central Sudanic in the conventional account). Barar is
+#     not in Glottolog; the census files it in its Sara block, and Central Sudanic is the
+#     likeliest home for it. Runga is Maban (maba1274), a group of its own.
+#   * Bantu: Mpiemo, Kako (the census's "Kaka", 97% in Mambere-Kadei, where Kako is spoken),
+#     Pomo, Mbati (the census's "Issongo"), Bonzio (a Mbati dialect in Glottolog, printed apart),
+#     Bomitaba, Babango, Aka, Bobangi, Kari, Bodo.
+#   * Fula: the census prints Fulfulde, Peulh, Mbororo and Fulata as four answers, so four nodes,
+#     siblings under Atlantic (Fula is us.txt's leaf and stays one).
+#
+# Sango is ca.txt's `nigercongo.sango`, directly under Niger-Congo; it belongs inside Ngbandi
+# with Yakoma, but moving it would change Canada's node, so it is reused where it is and only
+# given a colour here (ca.txt sets none).
+#
+# Colours (AGENT_BRIEF §3): neighbours on the ground told apart. West (Ouham-Pende): Fula (us.txt's
+# brick), Gbaya green, the Mbum languages blue-violet, Sara cyan. Centre: Gbaya green, Mandja
+# dark teal, Banda pink, Sango pale yellow. East: Banda pinks, Yakoma amber, Nzakara and Zande
+# violets. North-east: Runga blue, Arabic (tree.txt's pale green), Yulu pale blue, Sara cyan.
+
+nigercongo | Niger-Congo | 0.72 0.14 75
+nilosaharan | Nilo-Saharan | 0.72 0.12 255
+afroasiatic | Afroasiatic
+afroasiatic.chadic | Chadic | 0.78 0.12 110
+nigercongo.atlantic | Atlantic | 0.66 0.12 45
+nigercongo.bantu | Bantu | 0.70 0.14 60
+nigercongo.sango | Sango | 0.88 0.09 100
+# zm.txt's root for unnamed indigenous remainders: "Autres langues locales" goes here
+africa_other | Other African languages | 0.58 0.06 40
+
+# ---- Ubangian ----
+nigercongo.ubangian | Ubangian | 0.74 0.14 340
+nigercongo.ubangian.banda | Banda languages | 0.70 0.17 350
+nigercongo.ubangian.banda.banda | Banda | 0.70 0.18 350
+nigercongo.ubangian.banda.ngbugu | Ngbugu | 0.82 0.12 15
+nigercongo.ubangian.banda.langbashe | Langbashe | 0.62 0.15 330
+nigercongo.ubangian.banda.langba | Langba | 0.80 0.12 320
+nigercongo.ubangian.banda.yakpa | Yakpa ("Yaka") | 0.62 0.17 10
+nigercongo.ubangian.banda.dakpa | Dakpa
+nigercongo.ubangian.banda.gbi | Gbi
+nigercongo.ubangian.banda.banda_banda | Banda-Banda
+nigercongo.ubangian.banda.yangere | Banda-Yangere
+nigercongo.ubangian.banda.ka | Ka
+nigercongo.ubangian.banda.ndi | Ndi
+nigercongo.ubangian.banda.baba | Baba
+nigercongo.ubangian.banda.bidjori | Bidjori
+nigercongo.ubangian.ngbandi | Ngbandi | 0.76 0.15 70
+nigercongo.ubangian.ngbandi.yakoma | Yakoma | 0.74 0.16 65
+nigercongo.ubangian.ngbandi.sango_riverain | Sango Riverain
+nigercongo.ubangian.ngbandi.ngbandjiri | Ngbandjiri
+nigercongo.ubangian.zande | Zande-Nzakara | 0.68 0.15 300
+nigercongo.ubangian.zande.zande | Zande | 0.66 0.16 295
+nigercongo.ubangian.zande.nzakara | Nzakara | 0.82 0.11 285
+nigercongo.ubangian.mundu_baka | Ngbaka-Mba (Mundu-Baka) | 0.72 0.11 220
+nigercongo.ubangian.mundu_baka.ngbaka_mabo | Ngbaka Ma'bo
+nigercongo.ubangian.mundu_baka.gbanziri | Gbanziri
+nigercongo.ubangian.mundu_baka.monzombo | Monzombo
+nigercongo.ubangian.mundu_baka.buraka | Buraka
+nigercongo.ubangian.mundu_baka.kpala | Kpala
+nigercongo.ubangian.sere | Sere
+nigercongo.ubangian.kpatili | Kpatili
+
+# ---- Gbaya-Manza-Ngbaka ----
+nigercongo.gbaya | Gbaya-Manza-Ngbaka | 0.74 0.15 140
+nigercongo.gbaya.gbaya | Gbaya | 0.74 0.17 135
+nigercongo.gbaya.mandja | Mandja | 0.62 0.12 185
+nigercongo.gbaya.suma | Suma | 0.84 0.12 155
+nigercongo.gbaya.gbanu | Gbanu | 0.66 0.14 115
+nigercongo.gbaya.bokoto | Bokoto | 0.60 0.12 160
+nigercongo.gbaya.kara | Gbaya Kara ("Kara")
+nigercongo.gbaya.lai | Lai ("Lay")
+nigercongo.gbaya.buli | Buli
+nigercongo.gbaya.bokare | Bokare
+nigercongo.gbaya.budigiri | Budigiri
+nigercongo.gbaya.gbaguiri | Gbaguiri
+nigercongo.gbaya.gbadok | Gbadok
+nigercongo.gbaya.tongo | Tongo
+nigercongo.gbaya.bouar | Bouar
+nigercongo.gbaya.boda | Boda
+nigercongo.gbaya.mboundjia | Mboundjia
+nigercongo.gbaya.ngbaka_manza | Ngbaka-Manza
+nigercongo.gbaya.ngbaka_minagende | Ngbaka Minagende
+nigercongo.gbaya.ali | Ali
+nigercongo.gbaya.bofi | Bofi
+
+# ---- Adamawa (Mbum) ----
+nigercongo.adamawa | Adamawa (Mbum) | 0.70 0.15 270
+nigercongo.adamawa.pana | Pana | 0.64 0.17 275
+nigercongo.adamawa.kare | Kare | 0.80 0.12 255
+nigercongo.adamawa.tale | Tale | 0.72 0.14 305
+nigercongo.adamawa.mbum | Mbum | 0.88 0.07 335
+
+# ---- Bantu ----
+nigercongo.bantu.mpiemo | Mpiemo | 0.74 0.14 75
+nigercongo.bantu.kako | Kako ("Kaka")
+nigercongo.bantu.mbati | Mbati ("Issongo")
+nigercongo.bantu.bonzio | Bonzio
+nigercongo.bantu.pomo | Pomo
+nigercongo.bantu.bomitaba | Bomitaba
+nigercongo.bantu.babango | Babango | 0.84 0.10 20
+nigercongo.bantu.aka | Aka
+nigercongo.bantu.bobangi | Bobangi
+nigercongo.bantu.kari | Kari
+nigercongo.bantu.bodo | Bodo
+
+# ---- Fula: four answers ----
+nigercongo.atlantic.fulah | Fula
+nigercongo.atlantic.mbororo | Mbororo
+nigercongo.atlantic.peulh | Peulh
+nigercongo.atlantic.fulata | Fulata
+
+# ---- Nilo-Saharan ----
+nilosaharan.centralsudanic | Central Sudanic | 0.78 0.12 195
+nilosaharan.centralsudanic.sara | Sara | 0.78 0.13 195
+nilosaharan.centralsudanic.ngam | Ngam | 0.64 0.12 240
+nilosaharan.centralsudanic.kresh | Kresh | 0.84 0.09 260
+nilosaharan.centralsudanic.yulu | Yulu | 0.86 0.08 225
+nilosaharan.centralsudanic.binga | Binga
+nilosaharan.centralsudanic.gula | Gula ("Yamegi")
+nilosaharan.centralsudanic.birri | Birri ("Irri")
+nilosaharan.centralsudanic.barar | Barar
+nilosaharan.maban | Maban | 0.62 0.15 255
+nilosaharan.maban.runga | Runga | 0.62 0.15 255
+
+# ---- Afroasiatic ----
+afroasiatic.chadic.hausa | Hausa

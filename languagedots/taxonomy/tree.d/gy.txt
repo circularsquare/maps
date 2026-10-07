@@ -1,0 +1,7 @@
+# Guyana, Census 2012 ethnic background (taxonomy/gy2012.py). No new nodes: bare repeats.
+creole | Creoles
+creole.english_based | English-based creoles
+creole.english_based.guyanese | Guyanese Creole
+indoeuropean.germanic | Germanic
+indoeuropean.germanic.english | English
+americas_other | Other indigenous languages of the Americas

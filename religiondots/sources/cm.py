@@ -57,8 +57,27 @@ A reviewer (2026-09-14, `sources/cm.md` §4) argued for folding all three; this 
 about the north and not its conclusion.
 
 `LEVEL_RANGE_MAX` asserts the two stay level, `unnamed_where_they_live` that they still pass and
-Lutherans still fail, and `CATHOLIC_RANGE_MIN` the Catholic swing that keeps Catholics folded in,
-so a re-release that changes any of them re-opens the call.
+Lutherans still fail, and `CATHOLIC_RANGE_MIN` the Catholic swing that keeps the Catholic share
+from being pooled over all five rounds, so a re-release that changes any of them re-opens the call.
+
+## THE CATHOLIC CHURCH, FROM THE TWO ROUNDS THE DHS AGREES WITH (2026-10-03)
+
+Namibia's rule (`sources/na.md` §3): a church whose answer drifts by round is taken from the rounds
+that match an outside witness to its level. The witness is the two open DHS reports (EDS-MICS 2011,
+EDS 2018), whose Tableau 3.1 names `Catholique` beside `Protestant` and `Autres chrétiens` for women
+and men 15-49: Catholics are 51.3% and 54.1% of Christians (`dhs_witness`; the 2005 census had
+55.5%). The survey's Catholics as a share of its Christians run 51.4 and 51.5% in rounds 5 and 6 and
+42.1, 37.6 and 47.7% in rounds 7-9. So each unit's Catholics are its share of the `Christian` pool
+(everything Christian but the two churches above) in rounds 5-6, times the pool's five-round share
+(`carve_catholic`). The R5-against-R6 split-half passes (+0.657); over all five rounds the Catholic
+share of the pool passes too (+0.706), which says the geography holds while the level moves.
+`Christian only` stays in `Christian`: it is 8% of Christians in rounds 5-6, and the unnamed share
+where Catholics live is under the national one, so they are not drawn short where they are. The
+Church's diocesan statistics by cathedral region are printed beside it (`diocese_witness`).
+
+Pentecostal (2.5-8.0% of Christians by round, R6 the low one while Evangelical peaks) and
+Evangelical (3.4-11.0%) still move with the fieldwork and have no witness of their own; Adventist
+fails the split-half. They stay in `Christian`.
 
 ## `Other` IS NOT PLACED
 
@@ -177,6 +196,33 @@ CATHOLIC_RANGE_MIN = 0.10
 # Spec §12 (Norway): the pooled level against rounds 8-9.
 LEVEL_GAP_MAX = 0.035
 
+# ---- the Catholic Church, carved out of `Christian` (see the docstring) ----
+OUT_CATEGORIES = ["Christian", "Catholic", *CHURCHES, "Muslim", "Traditional/ethnic religion",
+                  "None", "Other"]
+CATHOLIC_ROUNDS = [5, 6]
+CATH_DHS_GAP_MAX = 0.03     # rounds 5 and 6 within 3 points of the DHS mean (gaps 1.3, 1.2)
+CATH_SWING_MIN = 0.045      # rounds 7-9 at least 4.5 points under it (10.6, 15.1, 5.0)
+CATH_DRAWN_GAP_MAX = 0.04   # the drawn Catholic share of Christians within 4 points of the DHS mean
+DIOCESE_RHO_MIN = 0.60      # drawn Catholic share against the dioceses' by cathedral region
+# The two open DHS reports, Tableau 3.1, the rows exactly as the PDF prints them (women: %, weighted
+# n, unweighted n; men the same). The weighted n's are repeated as numbers for the arithmetic.
+DHS = {
+    "2011": ("FR260.pdf", 68, {
+        "Catholique": ("Catholique 36,6 5 642 5 735 38,5 2 484 2 471", 5642, 2484),
+        "Protestant": ("Protestant 33,8 5 221 5 415 30,3 1 953 2 104", 5221, 1953),
+        "Autre chrétien": ("Autre chrétien 2,5 390 398 2,3 151 147", 390, 151)}),
+    "2018": ("FR360.pdf", 103, {
+        "Catholique": ("Catholique 38,0 5 179 5 061 38,8 2 375 2 333", 5179, 2375),
+        "Protestant": ("Protestant 26,2 3 565 3 877 24,1 1 478 1 579", 3565, 1478),
+        "Autres chrétiens": ("Autres chrétiens 7,4 1 013 1 073 5,6 346 367", 1013, 346)}),
+}
+DHS_URLS = {"FR260.pdf": "https://dhsprogram.com/pubs/pdf/FR260/FR260.pdf",
+            "FR360.pdf": "https://dhsprogram.com/pubs/pdf/FR360/FR360.pdf"}
+# GCatholic's region names (English) -> the census's ten regions.
+DIOCESE_REGION = {"Adamaoua": "CM001", "Centre": "CM002", "East": "CM003", "Far North": "CM004",
+                  "Littoral": "CM005", "North": "CM006", "North-West": "CM007", "West": "CM008",
+                  "South": "CM009", "South-West": "CM010"}
+
 # Tableau 5.8, "Ensemble, les deux sexes", printed p.97 (PDF page 124), per cent.
 CENSUS_PAGE = 124
 CENSUS_T58 = {"Catholique": 38.4, "Orthodoxe": 0.5, "Protestant": 26.3, "Autres chrétiens": 4.0,
@@ -234,6 +280,135 @@ def fetch():
         f.write(r.content)
     os.replace(CENSUS_PDF + ".part", CENSUS_PDF)
     print(f"  got  {os.path.basename(CENSUS_PDF)} ({len(r.content):,} bytes)")
+
+
+def fetch_witnesses():
+    """The two DHS reports and the GCatholic diocese table, into data/raw/cm/."""
+    import requests
+    import gcatholic
+
+    for name, url in DHS_URLS.items():
+        dst = os.path.join(RAW, name)
+        if os.path.exists(dst) and os.path.getsize(dst) > 1_000_000:
+            print(f"  have {name}")
+            continue
+        r = requests.get(url, headers={"User-Agent": ab.UA}, timeout=600)
+        r.raise_for_status()
+        if r.content[:4] != b"%PDF" or b"%%EOF" not in r.content[-2048:]:
+            raise SystemExit(f"{name} is not a complete PDF ([[reference_pdf_truncated_at_source]])")
+        with open(dst + ".part", "wb") as f:
+            f.write(r.content)
+        os.replace(dst + ".part", dst)
+        print(f"  got  {name} ({len(r.content):,} bytes)")
+    gcatholic.fetch("CM", "cm")
+
+
+def dhs_witness():
+    """Catholics as a share of Christians in each DHS, re-read from Tableau 3.1; women and men
+    pooled by weighted number. Returns {year: fraction}."""
+    import fitz
+
+    out = {}
+    for year, (name, page, rows) in DHS.items():
+        path = os.path.join(RAW, name)
+        if not os.path.exists(path):
+            raise SystemExit(f"missing {path}; run with --fetch")
+        t = " ".join(fitz.open(path)[page - 1].get_text().split())
+        if "Tableau 3.1" not in t:
+            raise SystemExit(f"{name} PDF page {page} is not Tableau 3.1")
+        for lab, (line, _wn, _mn) in rows.items():
+            if line not in t:
+                raise SystemExit(f"DHS {year}: the row {line!r} is not on PDF page {page}")
+        wn = {lab: wn + mn for lab, (_l, wn, mn) in rows.items()}
+        out[year] = wn["Catholique"] / sum(wn.values())
+    print("\n  DHS Tableau 3.1 re-read from both reports and equal; Catholics as a share of "
+          "Christians, women and men 15-49 pooled: "
+          + ", ".join(f"{y} {100 * v:.1f}%" for y, v in out.items()))
+    return out
+
+
+def carve_catholic(df, units, nm, dhs):
+    """Each unit's Catholics as a share of the `Christian` pool in CATHOLIC_ROUNDS, with the checks
+    that justify those rounds. Returns a Series over `units`."""
+    chr_ = df[df["category"].isin(["Christian", *CHURCHES])]
+    by_round = (chr_[chr_["k"] == "roman catholic"].groupby("round")["w"].sum()
+                / chr_.groupby("round")["w"].sum())
+    ref = float(np.mean(list(dhs.values())))
+    print(f"\n  Catholics as a share of the survey's Christians by round, against the DHS mean "
+          f"{100 * ref:.1f}%:")
+    for r, v in by_round.items():
+        print(f"    R{r}  {100 * v:5.1f}%  ({100 * (v - ref):+5.1f})"
+              + ("  used" if r in CATHOLIC_ROUNDS else ""))
+    off = {r: round(float(v), 3) for r, v in by_round.items()
+           if r in CATHOLIC_ROUNDS and abs(v - ref) > CATH_DHS_GAP_MAX}
+    if off:
+        raise SystemExit(f"rounds {CATHOLIC_ROUNDS} no longer sit within "
+                         f"{100 * CATH_DHS_GAP_MAX:.0f} points of the DHS Catholic share: {off}")
+    near = {r: round(float(v), 3) for r, v in by_round.items()
+            if r not in CATHOLIC_ROUNDS and ref - v < CATH_SWING_MIN}
+    if near:
+        raise SystemExit(f"rounds outside {CATHOLIC_ROUNDS} now come within "
+                         f"{100 * CATH_SWING_MIN:.1f} points of the DHS: {near}; decide again")
+
+    pool = df[df["round"].isin(CATHOLIC_ROUNDS) & (df["category"] == "Christian")]
+    tot = pool.groupby("geo_id")["w"].sum().reindex(units, fill_value=0.0)
+    cat = pool[pool["k"] == "roman catholic"].groupby("geo_id")["w"].sum().reindex(units,
+                                                                                     fill_value=0.0)
+    if (tot <= 0).any():
+        raise SystemExit("a unit has no Christian-pool respondent in rounds 5-6")
+    frac = cat / tot
+    print(f"    Catholic share of the pool in rounds 5-6, by unit: "
+          + ", ".join(f"{nm[u]} {100 * v:.0f}%" for u, v in frac.sort_values(ascending=False).items()))
+
+    dfw = pool.assign(code=np.where(pool["k"] == "roman catholic", "Catholic", "rest of the pool"))
+    dfw = dfw.rename(columns={"round": "wave"})[["wave", "geo_id", "code", "w"]]
+    passed, _t = cab.stability(dfw, ["Catholic", "rest of the pool"], units,
+                               f"{len(units)} units, the Christian pool in rounds 5-6")
+    if "Catholic" not in passed:
+        raise SystemExit("the Catholic share of the pool no longer passes the R5-R6 split-half")
+
+    # the unnamed share where Catholics live, in the rounds used (sources/cm.md §4's second test)
+    c56 = chr_[chr_["round"].isin(CATHOLIC_ROUNDS)]
+    by = c56.groupby("geo_id")["w"].sum()
+    un = c56[c56["k"] == "christian only"].groupby("geo_id")["w"].sum().reindex(by.index, fill_value=0)
+    ufrac = un / by
+    national = float(un.sum() / by.sum())
+    w = c56[c56["k"] == "roman catholic"].groupby("geo_id")["w"].sum()
+    where = float((w * ufrac.reindex(w.index)).sum() / w.sum())
+    print(f"    `Christian only` in rounds 5-6: {100 * national:.1f}% of Christians nationally, "
+          f"{100 * where:.1f}% averaged where the Catholics are")
+    if where > national:
+        raise SystemExit("Catholics now live where more Christians name no church than nationally; "
+                         "their share would be drawn short where they are")
+    return frac
+
+
+def diocese_witness(share, pop, nm):
+    """The drawn Catholic share by region against the Church's diocesan figures, summed by the
+    region each cathedral stands in. A rank check, printed with its bar; not a level."""
+    import gcatholic
+    from scipy.stats import spearmanr
+
+    g = gcatholic.by_seat("cm", rename=DIOCESE_REGION)
+    unknown = sorted(set(g.index) - set(DIOCESE_REGION.values()))
+    if unknown:
+        raise SystemExit(f"GCatholic cathedral regions not in DIOCESE_REGION: {unknown}")
+    reg = pd.Series({u: REGION_OF.get(u, u) for u in pop.index})
+    drawn = (share["Catholic"] * pop).groupby(reg).sum() / pop.groupby(reg).sum()
+    both = g.join(drawn.rename("drawn"), how="inner")
+    rho = float(spearmanr(both["share"], both["drawn"]).statistic)
+    rname = {"CM002": "Centre", "CM005": "Littoral", **{u: nm[u] for u in both.index
+                                                         if u not in ("CM002", "CM005")}}
+    print(f"\n  the Catholic Church's diocesan figures (GCatholic, 2016-2022), by the cathedral's "
+          f"region, {len(both)} regions: Spearman {rho:+.3f} against the drawn Catholic share")
+    print("    " + ", ".join(f"{rname[u]} {100 * r.share:.0f}/{100 * r.drawn:.0f}"
+                             for u, r in both.sort_values("share", ascending=False).iterrows())
+          + " (church/drawn, %)")
+    print(f"    the Church claims {100 * g.catholics.sum() / g.population.sum():.1f}% of its own "
+          "population figure nationally; a count of the baptised, not a level")
+    if rho < DIOCESE_RHO_MIN:
+        raise SystemExit(f"the drawn Catholic geography ranks the regions at {rho:+.2f} against the "
+                         f"Church's dioceses, under {DIOCESE_RHO_MIN}")
 
 
 def report_card():
@@ -393,6 +568,8 @@ def census_witness(df, frame_share, pop, nm):
 def main():
     if "--fetch" in sys.argv:
         fetch()
+        fetch_witnesses()
+    dhs = dhs_witness()
     print("=== Afrobarometer, Cameroon ===")
     raw = ab.load(COUNTRY, expect_rounds=ROUNDS, regroup=True, extra=["LOCATION.LEVEL.1"])
     print(f"\n  pooled: {len(raw):,} respondents with a religion answer over five rounds")
@@ -504,11 +681,43 @@ def main():
           f"{100 * drawn['Muslim']:.1f}%, traditional {100 * drawn['Traditional/ethnic religion']:.2f}%, "
           f"none {100 * drawn['None']:.1f}%, other {100 * drawn['Other']:.2f}%")
 
+    # ---- carve the Catholic Church out of `Christian` (docstring; sources/na.md §3's rule) ----
+    cath = carve_catholic(df, units, nm, dhs)
+    frame8 = frame.copy()
+    frame8["Catholic"] = frame["Christian"] * cath.reindex(units)
+    frame8["Christian"] = frame["Christian"] - frame8["Catholic"]
+    frame8 = frame8[OUT_CATEGORIES]
+    if (frame8 < -1e-12).any().any() or (frame8.sum(axis=1) - 1).abs().max() > 1e-9:
+        raise SystemExit("the eight shares are not a closed partition of every unit")
+    counts7 = counts
+    counts = ab.round_within_rows(frame8.mul(pop.reindex(units), axis=0))
+    if not (counts.sum(axis=1) == pop.reindex(units).round().astype("int64")).all():
+        raise SystemExit("a unit's drawn total is not its COD-PS population")
+    if not ((counts["Christian"] + counts["Catholic"] - counts7["Christian"]).abs() <= 1).all():
+        raise SystemExit("carving the Catholics out moved a unit's Christian total")
+    all_chr = counts[["Christian", "Catholic", *CHURCHES]].sum().sum()
+    cath_nat = float(counts["Catholic"].sum() / all_chr)
+    ref = float(np.mean(list(dhs.values())))
+    print(f"\n  Catholics as drawn: {100 * cath_nat:.1f}% of Christians and "
+          f"{100 * counts['Catholic'].sum() / counts.sum().sum():.1f}% of everyone; DHS mean "
+          f"{100 * ref:.1f}% of Christians")
+    if abs(cath_nat - ref) > CATH_DRAWN_GAP_MAX:
+        raise SystemExit(f"the drawn Catholic share of Christians is more than "
+                         f"{100 * CATH_DRAWN_GAP_MAX:.0f} points from the DHS mean")
+    share = counts.div(counts.sum(axis=1), axis=0)
+    diocese_witness(share, pop.reindex(units), nm)
+
     # ---- write ----
     n_by = df.groupby("geo_id").size()
+    n56 = df[df["round"].isin(CATHOLIC_ROUNDS) & (df["category"] == "Christian")] \
+        .groupby("geo_id").size()
     basis_note = {c: ("the unit's own measured share" if c in carries else
                       "the national share" if flat else
                       "the national proportion within the unit's remainder") for c in CATEGORIES}
+    basis_note["Catholic"] = ("the unit's own Christian share (less Presbyterians and Baptists) "
+                              "times its Catholics' share of it in rounds 5-6")
+    basis_note["Christian"] = ("the unit's own measured share of Christians other than "
+                               "Presbyterians and Baptists, less the Catholics")
     out = counts.stack().rename("count").reset_index()
     out.columns = ["geo_id", "source_category", "count"]
     out["geo_level"] = "region"
@@ -519,7 +728,9 @@ def main():
     out["note"] = out.apply(
         lambda r: ("COD-PS 2025 population composed with the unit's own mix from Afrobarometer "
                    f"rounds 5-9 pooled (n={int(n_by[r.geo_id])} here); "
-                   f"{basis_note[r.source_category]}"), axis=1)
+                   f"{basis_note[r.source_category]}"
+                   + (f" ({int(n56[r.geo_id])} pool respondents here in rounds 5-6)"
+                      if r.source_category == "Catholic" else "")), axis=1)
     total = int(out["count"].sum())
     if total != CODPS_2025:
         raise SystemExit(f"drawn {total:,} against COD-PS {CODPS_2025:,}")
@@ -534,10 +745,10 @@ def main():
     for c, n in counts.sum(axis=0).sort_values(ascending=False).items():
         print(f"    {100 * n / total:6.2f}%  {c}  ({n:,})")
     print("\n  as drawn, by unit, most Muslim first (pooled n in brackets):")
-    print(f"    {'':<20}" + "".join(f"{c[:7]:>8}" for c in CATEGORIES))
+    print(f"    {'':<20}" + "".join(f"{c[:7]:>8}" for c in OUT_CATEGORIES))
     for u in share.sort_values("Muslim", ascending=False).index:
         s = share.loc[u]
-        print(f"    {nm[u]:<20}" + "".join(f"{100 * s[c]:7.1f}%" for c in CATEGORIES)
+        print(f"    {nm[u]:<20}" + "".join(f"{100 * s[c]:7.1f}%" for c in OUT_CATEGORIES)
               + f"{int(pop[u]):>12,}  n={int(n_by[u])}")
     zero = [(nm[u], c) for u in units for c in carries if counts.loc[u, c] == 0]
     print(f"  drawn at zero in a carried category (no pooled respondent gave it): {zero or 'none'}")

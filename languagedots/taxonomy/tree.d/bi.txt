@@ -1,0 +1,9 @@
+# Burundi (Afrobarometer home language: Kirundi, Swahili, French). No new nodes; bare repeats so
+# the country stands on its own under `build.py --only`.
+nigercongo | Niger-Congo
+nigercongo.bantu | Bantu
+nigercongo.bantu.kirundi | Kirundi (Rundi)
+nigercongo.bantu.swahili | Swahili
+indoeuropean | Indo-European
+indoeuropean.romance | Romance
+indoeuropean.romance.french | French

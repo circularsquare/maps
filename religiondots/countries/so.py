@@ -56,7 +56,8 @@ ENTRY = {
             "estimate are drawn as Muslim. The published estimates agree: Pew Research Center puts "
             "Somalia at 99.833% Muslim in 2020, and the US State Department's 2023 report cites "
             "Somalia's Ministry of Endowments and Religious Affairs for more than 99% Sunni "
-            "Muslim. Nobody counted these dots, and they are drawn desaturated to say so. "
+            "Muslim. Nobody counted these dots, so they disappear when inferred dots are turned "
+            "off. "
             "**Somalis who are not Muslim are not on this map.** The same State Department report "
             "gives a Christian community of about 1,000, a figure it takes from World Atlas, and "
             "reports that al-Shabaab threatened to execute anyone suspected of converting to "
@@ -74,11 +75,10 @@ ENTRY = {
             "in mid-2024, 28,964 of them from Ethiopia and 17,680 from Yemen, and UNHCR counted "
             "41,763 refugees and asylum seekers at the end of 2024. No source says how many live "
             "in each region, so they are the not drawn part of the bar."),
-        how="no source asks; everyone drawn as Muslim, on published national estimates",
+        how="no source asks; everyone drawn as Muslim",
         grain="regions, 1.08 million people on average",
-        gap="foreign residents and refugees, whom no source counts by region: 77,972 in mid-2024 "
-            "by the UN Population Division's estimate, 0.4% of residents; and Somalis who are not "
-            "Muslim, whom no source has counted",
+        gap="foreign residents and refugees, 0.4% of residents, whom no source counts by region; "
+            "and Somalis who are not Muslim, whom no source has counted",
         gap_share=0.00399,
         counts=_so_counts,
         units=None,

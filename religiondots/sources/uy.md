@@ -668,3 +668,18 @@ is 0.4; `uy_geo.py` and `uy.py` rerun, both editions rescattered (3,225 and 321 
 - Whether any ECH after 2006 repeated `e29` (§10, still open).
 - Secciones censales as a grain.
 - The barrio figures are 2006's; the note says the level is 2006 and that holds here too.
+
+## 13. Review, 2026-10-03 (fafd1067-rev4, light pass)
+
+Checks clean (check_md, built_countries, check_rollup: 3,228,150, all modelled). Every barrio and
+department figure in `note_public` re-summed from `data/normalized/uy.csv` and matches (Palermo 29.8,
+Lezica 14.7, Carrasco Norte 63.8, La Paloma 31.8, Villa Garcia 14.9, Barrio Sur 3.1, Punta Carretas
+8.45 and Pocitos 7.96 Jewish, the three Jewish barrios 69.1%, the city 0.87% against 0.06%;
+`grain` 112,257 and 19,476). 7+ total and `gap_share` 0.0767 consistent. Screenshot of Montevideo:
+dots on land, Jewish dots on the Pocitos/Punta Carretas shore, none in the river.
+
+- **Changed:** the note said six answers "ordered the barrios the same way in both" halves. The
+  median split-half Spearman is +0.41 to +0.59 (§12.2), so that overstated it; now "put the barrios
+  in a similar order in both, far closer than chance would give". refresh-meta run.
+- **Not changed:** `note` (internal) still says Montevideo is 0.92% Jewish, the pre-barrio
+  figure; the drawn city share is 0.87%.

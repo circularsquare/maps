@@ -21,8 +21,10 @@ def _uk_counts():
     every English Output Area, and they sum to exactly the census figure they replace. So
     the England rows whose category is `Christian` are dropped from the allocated file
     before uk_split's are concatenated in — adding them would double England's Christians,
-    and the check below is what makes that impossible to do quietly. Wales keeps its own
-    `Christian` rows untouched, because nothing places Welsh denominations.
+    and the check below is what makes that impossible to do quietly. Wales's `Christian`
+    rows are replaced the same way by uk_split_wales.csv (2026-10-04), whose reduced
+    `Christian` remainder is 8.2%: the churches too thin in the Welsh sample to draw (the
+    unnamed share is spread like England's since Anita's call the same day).
     """
     import uk2021
 
@@ -41,7 +43,18 @@ def _uk_counts():
                 raise SystemExit(
                     f"uk_split.csv draws {drawn:,.0f} English Christians against the "
                     f"{replaced:,.0f} it replaces; re-run uk_split.py")
-            d = pd.concat([d, split], ignore_index=True)
+            # Wales, the same way, from uk_split_wales.py (2026-10-04): a survey-named church
+            # for 70% of Welsh Christians, the rest left on the census's `Christian`.
+            wales = d["geo_id"].str.startswith("W")
+            w_replaced = d.loc[wales & (d["source_category"] == "Christian"), "count"].sum()
+            d = d[~(wales & (d["source_category"] == "Christian"))]
+            w_split = pd.read_csv(HERE / "data" / "normalized" / "uk_split_wales.csv",
+                                  dtype={"geo_id": str}, low_memory=False)
+            if abs(w_split["count"].sum() - w_replaced) > 1.0:
+                raise SystemExit(
+                    f"uk_split_wales.csv draws {w_split['count'].sum():,.0f} Welsh Christians "
+                    f"against the {w_replaced:,.0f} it replaces; re-run uk_split_wales.py")
+            d = pd.concat([d, split, w_split], ignore_index=True)
         d["may_ring"] = d["tier"] == "measured"
         frames.append(d[["geo_id", "source_category", "count", "may_ring", "tier", "note"]])
 
@@ -98,15 +111,24 @@ ENTRY = {
             "in and dropped: Black African England is heavily Anglican and Catholic too, so "
             "it would say where the Black-majority congregations are rather than where the "
             "Pentecostals are.\n\n"
-            "Wales is the flat patch now. It has had no church attendance census since 1995, "
-            "so nothing places a Welsh denomination and its Christians stay one colour. "
+            "Wales is split too, more thinly. No church census has been taken there since "
+            "1995, so the British Election Study does both jobs: 2,970 Welsh Christians, each "
+            "counted once across its waves, name their church, and the mix is read for twelve "
+            "groups of council areas. Anglican, Methodist, Baptist and Reformed differ between "
+            "those areas consistently enough to place; Catholics do not, so they are drawn at "
+            "the Welsh share everywhere. As in England, the census Christians the survey names "
+            "no church for, about 30%, are given the survey's mix; the survey has no box for a "
+            "Christian of no particular church. The Presbyterian Church "
+            "of Wales has no box of its own either, and many of its members seem to have "
+            "answered Methodist, which is why Methodism peaks in Anglesey and Gwynedd. The "
+            "Union of Welsh Independents has no box at all.\n\n"
             "Scotland names the Church of Scotland and the Roman Catholics and stops. "
             "Northern Ireland, where the denomination is the political fact, names "
             "twenty-two Christian bodies including four kinds of Presbyterian, and is the "
             "only agency here that counts people as Mixed Catholic / Protestant."),
         how="censuses, 2021 and 2022, voluntary in England and Wales",
-        fill=("from the same censuses at a coarser geography; England's denominations from "
-              "church registers, a 2005 church census and the British Election Study"),
+        fill=("from the same censuses at a coarser geography; Christian denominations from "
+              "church registers, a 2005 English church census and the British Election Study"),
         grain="output areas, 260 people on average",
         counts=_uk_counts,
         # The counts are already on the finest units published — Output Areas in England,

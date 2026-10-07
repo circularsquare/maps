@@ -1,0 +1,196 @@
+# Canada (taxonomy/ca2021.py). Census 2021 mother tongue: Canada's Indigenous languages in
+# StatCan's own classification, and the migrant languages the other fragments mostly already had.
+# Families and branches checked against Glottolog (data/raw/glottolog/languages.csv):
+#   * Michif is Algic there ("Heritage Michif", algi1248), not a mixed language, so it sits
+#     under algic.
+#   * Kutenai is an isolate (Is_Isolate true). Haida is a two-language family there (haid1248);
+#     it goes under br.txt's `isolate` root, the conventional reading, because Canada's census
+#     has one Haida row.
+#   * Tlingit is Athabaskan-Eyak-Tlingit (atha1245), so it is under nadene, beside Northern
+#     Athabaskan, as StatCan also files it.
+#   * Iroquoian, Salishan, Wakashan and Tsimshianic are Glottolog families with no node yet: new
+#     roots, as us.txt made Algic and Siouan (ask 003 asks whether families-as-roots is right for
+#     North America; these four follow whatever it decides).
+#   * Sango is Atlantic-Congo (sang1328), not a creole, though StatCan lists it with the creoles.
+#   * Wojenaka (woje1238) and Bamanankan are Mande; Mwani (mwan1247) is Bantu.
+#   * Morisyen sits under French-based creoles, as br.txt and us.txt file creoles.
+# Mina is placed where StatCan places it, under Chadic (Glottolog's Mina (Cameroon), mina1276).
+# Many Canadians who answer "Mina" may speak Gen (Gbe, Togo); the census's classification is
+# followed because nothing published says which.
+#
+# Colours (L C h): chosen for the neighbours on Canada's ground. English is near-white and French
+# violet everywhere; in the north Cree (yellow-green), Ojibwe and Oji-Cree (greens) meet across
+# northern Ontario and Manitoba, Inuktitut (pale blue) and Dene (green-teal) meet at the
+# treeline, and in British Columbia the Salishan (gold), Wakashan (pink) and Tsimshianic (salmon)
+# languages sit beside Athabaskan Dakelh and Tsilhqot'in.
+
+# ---- parents defined elsewhere, repeated identically ----
+algic | Algic | 0.74 0.14 120
+algic.ojibwe | Ojibwe | 0.74 0.14 120
+nadene | Na-Dene (Athabaskan) | 0.68 0.16 155
+eskimoaleut | Inuit-Yupik-Aleut (Eskimo-Aleut) | 0.76 0.13 200
+siouan | Siouan | 0.70 0.15 90
+siouan.dakota | Dakota (Sioux) | 0.70 0.15 90
+isolate | Language isolates | 0.70 0.17 330
+americas_other | Other indigenous languages of the Americas | 0.72 0.13 135
+afroasiatic.cushitic.agaw | Agaw | 0.80 0.10 110
+afroasiatic.chadic | Chadic | 0.78 0.12 110
+afroasiatic.ethiosemitic.harari | Harari | 0.82 0.13 80
+nigercongo | Niger-Congo | 0.72 0.14 75
+nigercongo.bantu | Bantu | 0.70 0.14 60
+nigercongo.bantu.nguni | Nguni | 0.66 0.13 40
+nigercongo.mande | Mande | 0.72 0.13 130
+nilosaharan | Nilo-Saharan | 0.72 0.12 255
+nilosaharan.nilotic | Nilotic | 0.70 0.13 250
+creole | Creoles | 0.84 0.06 200
+creole.french_based | French-based creoles | 0.84 0.08 190
+austronesian | Austronesian | 0.76 0.13 195
+austronesian.philippine | Philippine | 0.76 0.13 195
+indoeuropean.germanic.continental | Continental West Germanic | 0.68 0.13 235
+indoeuropean.slavic | Slavic | 0.70 0.15 140
+indoeuropean.slavic.east | East Slavic | 0.70 0.15 145
+sinotibetan.sinitic | Chinese | 0.62 0.19 38
+sinotibetan.karen | Karen | 0.80 0.11 215
+turkic | Turkic | 0.68 0.16 15
+signlanguage | Sign language
+
+# ---- Algic ----
+algic.blackfoot | Blackfoot | 0.66 0.15 60
+algic.creeinnu | Cree-Innu | 0.80 0.13 95
+algic.creeinnu.cree | Cree | 0.80 0.13 95
+algic.creeinnu.cree.plains | Plains Cree (Nehiyawewin) | 0.84 0.14 85
+algic.creeinnu.cree.woods | Woods Cree (Nihithawiwin) | 0.70 0.14 105
+algic.creeinnu.cree.swampy | Swampy Cree (Nehinawewin) | 0.88 0.12 105
+algic.creeinnu.cree.moose | Moose Cree (Ililimowin) | 0.70 0.13 65
+algic.creeinnu.cree.northeast | Northern East Cree (Iyiyiw-Ayimiwin) | 0.74 0.15 80
+algic.creeinnu.cree.southeast | Southern East Cree (Inu Ayimun)
+algic.creeinnu.atikamekw | Atikamekw | 0.72 0.14 140
+algic.creeinnu.innu | Innu (Montagnais) | 0.64 0.15 20
+algic.creeinnu.naskapi | Naskapi | 0.86 0.10 50
+algic.eastern | Eastern Algonquian | 0.70 0.14 170
+algic.eastern.mikmaq | Mi'kmaq | 0.70 0.15 170
+algic.eastern.wolastoqey | Wolastoqey (Malecite)
+algic.algonquin | Algonquin (Anicinabemowin) | 0.80 0.11 185
+algic.ojicree | Oji-Cree | 0.64 0.15 150
+algic.chippewa | Chippewa (Anishinaabemowin)
+algic.odawa | Odawa (Daawaamwin)
+algic.saulteaux | Saulteaux (Western Ojibwe) | 0.84 0.12 130
+algic.michif | Michif | 0.76 0.12 40
+
+# ---- Na-Dene ----
+nadene.northern | Northern Athabaskan | 0.68 0.16 155
+nadene.northern.dene | Dene | 0.64 0.16 170
+nadene.northern.dakelh | Dakelh (Carrier) | 0.80 0.13 160
+nadene.northern.danezaa | Dane-zaa (Beaver)
+nadene.northern.gwichin | Gwich'in
+nadene.northern.slavey | Slavey | 0.78 0.13 185
+nadene.northern.slavey.south | South Slavey (Deh Gah Ghotie Zhatie)
+nadene.northern.slavey.north | North Slavey (Satuotine Yati) | 0.86 0.09 200
+nadene.northern.tahltan | Tahltan languages | 0.76 0.13 135
+nadene.northern.tahltan.kaska | Kaska (Nahani)
+nadene.northern.tahltan.tahltan | Tahltan
+nadene.northern.tlicho | Tlicho (Dogrib) | 0.82 0.12 135
+nadene.northern.sekani | Tse'khene (Sekani)
+nadene.northern.tsilhqotin | Tsilhqot'in (Chilcotin) | 0.70 0.15 140
+nadene.northern.tsuutina | Tsuut'ina (Sarsi)
+nadene.northern.tutchone | Tutchone | 0.74 0.13 170
+nadene.northern.tutchone.north | Northern Tutchone
+nadene.northern.tutchone.south | Southern Tutchone
+nadene.northern.wetsuweten | Wet'suwet'en-Babine
+nadene.tlingit | Tlingit
+
+# ---- Inuit ----
+eskimoaleut.inuktitut | Inuktitut | 0.84 0.10 215
+eskimoaleut.westcanadian | Inuinnaqtun and Inuvialuktun | 0.70 0.13 230
+eskimoaleut.westcanadian.inuinnaqtun | Inuinnaqtun
+eskimoaleut.westcanadian.inuvialuktun | Inuvialuktun
+
+# ---- other North American families ----
+iroquoian | Iroquoian | 0.72 0.15 50
+iroquoian.cayuga | Cayuga
+iroquoian.mohawk | Mohawk | 0.72 0.15 50
+iroquoian.oneida | Oneida
+salishan | Salishan | 0.80 0.13 75
+salishan.halkomelem | Halkomelem
+salishan.lillooet | Lillooet (St'at'imcets) | 0.84 0.10 100
+salishan.thompson | Nlaka'pamux (Thompson) | 0.86 0.11 30
+salishan.shuswap | Secwepemctsin (Shuswap) | 0.74 0.12 115
+salishan.squamish | Squamish
+salishan.straits | Straits Salish
+salishan.okanagan | Syilx (Okanagan) | 0.70 0.15 55
+siouan.assiniboine | Assiniboine
+siouan.stoney | Stoney (Nakoda)
+tsimshianic | Tsimshianic | 0.78 0.12 20
+tsimshianic.gitxsan | Gitxsan
+tsimshianic.nisgaa | Nisga'a
+tsimshianic.tsimshian | Tsimshian (Sm'algyax)
+wakashan | Wakashan | 0.70 0.15 345
+wakashan.haisla | Haisla
+wakashan.heiltsuk | Heiltsuk
+wakashan.kwakwala | Kwak'wala (Kwakiutl)
+wakashan.nuuchahnulth | Nuu-chah-nulth (Nootka)
+isolate.haida | Haida
+isolate.ktunaxa | Ktunaxa (Kutenai) | 0.64 0.17 300
+
+# ---- Afroasiatic ----
+afroasiatic.berber | Berber | 0.80 0.16 95
+afroasiatic.berber.kabyle | Kabyle
+afroasiatic.berber.tamazight | Tamazight
+afroasiatic.chadic.mina | Mina
+afroasiatic.coptic | Coptic
+afroasiatic.cushitic.agaw.bilen | Bilen
+afroasiatic.aramaic | Aramaic
+
+# ---- Austronesian ----
+austronesian.philippine.bikol | Bikol
+austronesian.philippine.bisayan | Bisayan
+austronesian.philippine.hiligaynon | Hiligaynon
+austronesian.philippine.kankanaey | Kankanaey
+austronesian.philippine.kinaraya | Kinaray-a
+austronesian.philippine.kapampangan | Kapampangan
+austronesian.philippine.pangasinan | Pangasinan
+austronesian.philippine.waray | Waray-Waray
+austronesian.malagasy | Malagasy | 0.72 0.12 165
+austronesian.merina | Merina
+
+# ---- creoles ----
+creole.french_based.morisyen | Morisyen
+
+# ---- Indo-European ----
+indoeuropean.slavic.east.belarusian | Belarusian
+indoeuropean.slavic.east.rusyn | Rusyn
+indoeuropean.germanic.frisian | Frisian | 0.84 0.14 135
+indoeuropean.germanic.continental.lowgerman | Low German | 0.70 0.13 205
+indoeuropean.germanic.continental.lowgerman.plautdietsch | Plautdietsch | 0.72 0.15 190
+indoeuropean.germanic.continental.lowgerman.lowsaxon | Low Saxon
+indoeuropean.germanic.continental.flemish | Vlaams (Flemish)
+indoeuropean.indoaryan.eastern.rohingya | Rohingya
+indoeuropean.iranian.parsi | Parsi
+
+# ---- Niger-Congo, Nilo-Saharan ----
+nigercongo.sango | Sango
+nigercongo.mande.bambara | Bamanankan (Bambara)
+nigercongo.mande.wojenaka | Wojenaka
+nigercongo.mande.soninke | Soninke
+nigercongo.gur | Gur | 0.76 0.12 65
+nigercongo.gur.moore | Mòoré
+nigercongo.bantu.gikuyu | Gikuyu
+nigercongo.bantu.kinyarwanda | Kinyarwanda
+nigercongo.bantu.kirundi | Kirundi (Rundi)
+nigercongo.bantu.luba_kasai | Luba-Kasai
+nigercongo.bantu.mwani | Mwani
+nigercongo.bantu.sotho_tswana | Sotho-Tswana | 0.76 0.12 100
+nilosaharan.nilotic.dinka | Dinka
+
+# ---- sign languages ----
+signlanguage.asl | American Sign Language | 0.90 0.03 60
+signlanguage.lsq | Quebec Sign Language (LSQ) | 0.84 0.04 300
+
+# ---- East and Central Asia ----
+sinotibetan.sinitic.min_dong | Min Dong | 0.50 0.10 350
+sinotibetan.sinitic.wu | Wu | 0.66 0.18 5
+sinotibetan.karen.sgaw | S'gaw Karen
+turkic.azerbaijani | Azerbaijani
+turkic.kazakh | Kazakh
+turkic.uyghur | Uyghur
+turkic.uzbek | Uzbek

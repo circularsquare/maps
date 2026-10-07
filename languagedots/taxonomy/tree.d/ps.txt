@@ -1,0 +1,4 @@
+# Palestine (taxonomy/ps2017.py). Levantine Arabic is sa.txt's node, coloured there; repeated
+# without colour (AGENT_BRIEF section 3).
+afroasiatic | Afroasiatic
+afroasiatic.levantine_arabic | Levantine Arabic

@@ -1,0 +1,16 @@
+# Israeli settlers beyond the Green Line (taxonomy/xs2021.py). Every node is Israel's (il.txt,
+# which defined them from sa.txt, et.txt, fi.txt, fr.txt); repeated here without colour so the
+# entry builds on its own (AGENT_BRIEF section 3). Hebrew's hand colour is il.txt's.
+afroasiatic | Afroasiatic
+afroasiatic.arabic | Arabic
+afroasiatic.hebrew | Hebrew
+afroasiatic.ethiosemitic | Ethiopian Semitic
+afroasiatic.ethiosemitic.amharic | Amharic
+indoeuropean.slavic | Slavic
+indoeuropean.slavic.east | East Slavic
+indoeuropean.slavic.east.russian | Russian
+indoeuropean.romance | Romance
+indoeuropean.romance.french | French
+indoeuropean.romance.spanish | Spanish
+indoeuropean.germanic.continental | Continental West Germanic
+indoeuropean.germanic.continental.yiddish | Yiddish

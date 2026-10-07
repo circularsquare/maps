@@ -92,6 +92,6 @@ over 80%? if so then yeah totally chill."*
      the source measures.
 5. **Record the split source and the percentage** in `sources/<cc>.md` and the mapping `REVIEW`.
 
-Applied so far: Laos goes to traditional religion (LSIS, about 99.8% animist; queued in
-`queue.md`), and Mozambique to `unaffiliated` (Afrobarometer and Pew, 93-98% no religion as a
+Applied so far: Laos goes to traditional religion (LSIS, about 99.8% animist; drawn 2026-10-03 on
+the revived `indigenous.laos`), and Mozambique to `unaffiliated` (Afrobarometer and Pew, 93-98% no religion as a
 self-description; drawn 2026-09-14).

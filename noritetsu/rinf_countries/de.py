@@ -32,6 +32,18 @@ platforms; `fix` also moves those onto their OSM station by exact name (`relocat
 
 S-BAHN. OSM maps the Berlin and Hamburg S-Bahn as railway=light_rail, so `light_rail_track`
 (rinf.py) adds that track and its stations; lines traced mostly on it are kind light_rail.
+
+SWITZERLAND. DB InfraGO owns and registers track on Swiss soil: Basel Badischer Bahnhof with
+its lines to Weil am Rhein, Grenzach and Riehen - Lörrach, and the Hochrhein line from
+Trasadingen through Schaffhausen to Thayngen. Border track counts in the country it lies in
+(Anita), and Switzerland's register (schienennetz.py) has the same track up to its
+"Landesgrenze" nodes, so `fix` drops every section with an end in SWISS_SOIL: DB's lines then
+end at DB's own border points ("Weil am Rhein BW/CH", type 120 in RINF, not 90), which
+borders.EXTRA lists under those ids at the Swiss nodes, and both countries' halves join there.
+
+FREIGHT. Lines with no passenger train that the timetable check cannot close, because they
+run between two passenger stations beside a passenger line and a path nearly as short as the
+trains' own runs over them (`FREIGHT`, greyed through rinf.py's `suspended`).
 """
 import csv
 import re
@@ -60,7 +72,49 @@ def de_fix(secs, points):
     secs[:] = keep
     yield (f"{sum(dropped.values())} sections not valid on {today} left out "
            f"(by first year: {dict(dropped)}), {len(keep)} kept")
+    uop = {op: p.get("uopid") for op, p in points.items()}
+    swiss = [s for s in secs if uop.get(s["a"]) in SWISS_SOIL or uop.get(s["b"]) in SWISS_SOIL]
+    secs[:] = [s for s in secs if not (uop.get(s["a"]) in SWISS_SOIL
+                                       or uop.get(s["b"]) in SWISS_SOIL)]
+    yield (f"{len(swiss)} sections on Swiss soil left to Switzerland's register, on lines "
+           f"{sorted({s.get('line') for s in swiss})}")
+    # Bad Brambach - Plesná: DB files the uopid EU00039 on "Bad Brambach Grenze 3", 690 m from
+    # the crossing, where it also has its own DE0DXBC; Czechia files EU00039 at the crossing,
+    # 11 m from DB's "Bad Brambach Grenze" (DE00DXB), where both registers' 6270 / 147 end.
+    # Swapped, so line 6270 ends at the crossing under the id Czechia's line ends at.
+    for p in points.values():
+        if p.get("uopid") == "EU00039":
+            p["uopid"] = "DE0DXBC"
+        elif p.get("uopid") == "DE00DXB":
+            p["uopid"] = "EU00039"
     yield from relocate(points)
+
+
+# DB InfraGO's RINF points on Swiss soil (see the module docstring). The border points
+# themselves ("Weil am Rhein BW/CH", "Basel Bad Bf CH/BW", "Riehen (b Basel) CH/BW", "Erzingen
+# (Baden) BW/CH", "Thayngen CH/BW", and the freight yard's "Basel Bad Rbf BW/CH 4405/4416",
+# "Basel Grenze Klein Hüningen") are not in it: DB's lines end at them.
+SWISS_SOIL = {
+    # Basel: the Badischer Bahnhof, its switches and connections to Basel SBB, Riehen
+    "DE000RB", "DE97218", "DE97220", "DE97388", "DE95743", "DE0RRID", "DE0RRIE",
+    # the Swiss end of the Badischer Rangierbahnhof (freight)
+    "DE97391", "DERBA G", "DERBA E",
+    # the Hochrhein line Trasadingen - Schaffhausen - Thayngen
+    "DE000RT", "DE0RWIN", "DE00RNK", "DE00RBE", "DE0RBEF", "DE0RNHN", "DE0RSCF", "DE0RHRB",
+    "DE00RTG",
+}
+
+# Freight lines between passenger stations (module docstring), each checked:
+# - 1280 Buchholz - Hamburg-Allermöhe, the freight bypass by Maschen Rbf (de.wikipedia
+#   "Bahnstrecke Buchholz–Hamburg-Allermöhe": "vor allem vom Güterverkehr genutzt"). erixx's
+#   RB 38 weekend extension Buchholz - Harburg runs via Hittfeld, on 1720, not here. The feed
+#   (2026-09-26..10-26) has ICE 77 Berlin - Amsterdam calling Bergedorf then Harburg, 26 trips,
+#   a works diversion past Hamburg Hbf: not counted.
+# - 1750 Wunstorf - Lehrte and 1751 Wunstorf - Gümmerwald, Hannover's freight bypass
+#   (de.wikipedia "Güterumgehungsbahn Hannover": Kursbuchstrecke "nur Güterverkehr").
+# Not here: 5230 Waigolshausen - Gemünden (the Werntalbahn) has RE 55 "Freizeit-Express
+# Frankenland", two pairs every weekend (de.wikipedia), 18 trips in the feed: running.
+FREIGHT = {"1280", "1750", "1751"}
 
 
 PROC = ROOT / "data" / "proc" / "de"
@@ -339,6 +393,9 @@ def rinf_ends(base):
 
 
 COUNTRY = {
+    # join a line's pieces where RINF leaves a stretch out, over its own OSM relation
+    # (rinf.fill_holes; trialled 2026-10-05)
+    "fill_holes": True,
     "iso3": "DEU", "wikidata": None, "langs": ["de"],
     "ref": lambda lid: lid if re.fullmatch(r"\d{4}", lid or "") else None,
     "rule_certain": True,
@@ -349,4 +406,5 @@ COUNTRY = {
     # railway=light_rail with light-rail stations; without this they had no track to trace on.
     "light_rail_track": True,
     "im": {"0080_IM": "DB InfraGO"},
+    "suspended": lambda ref, _ids: ref in FREIGHT,
 }

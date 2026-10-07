@@ -1,0 +1,158 @@
+# Tanzania, Afrobarometer R4 and R6-R9 home language (taxonomy/tz2022.py). Checked against
+# Glottolog (data/raw/glottolog/languages.csv), every Bantu language below Atlantic-Congo >
+# Narrow Bantu: Sukuma suku1261, Nyamwezi nyam1276, Sumbwa sumb1240, Kimbu kimb1242, Konongo
+# kono1265 (Sukuma-Nyamwezi F.20); Ha haaa1252, Hangaza hang1260, Shubi shub1238 (Rundic);
+# Haya haya1250, Nyambo nyam1277, Zinza zinz1238, Kerewe kere1283 (Rutara); Jita jita1239, Kwaya
+# kway1241 (Ruri is its dialect), Kara kara1481, Zanaki zana1238, Ikizu ikiz1238 (Sizaki its
+# dialect), Ikoma ikom1245, Kabwa kabw1241, Suba-Simbiti suba1252, Kuria kuri1259 (Mara);
+# Nyaturu nyat1246, Nilamba nila1242, Langi (Rangi) lang1320, Mbugwe mbug1242; Gogo gogo1263,
+# Kagulu kagu1239, Luguru lugu1238, Zaramo zara1247, Kwere kwer1261, Kutu kutu1263, Sagala
+# saga1256 (Ruvu); Zigula zigu1244, Ngulu ngul1246, Shambala sham1280, Bondei bond1247 (Seuta);
+# Asu (Pare) asut1235; Chaga: Glottolog's Chaga subgroup (Machame, Vunjo, Rombo, Mochi, Kahe),
+# drawn as one language because the card offers it as one; Rwa rwaa1238 (Meru of Arusha,
+# NOT Kenya's Meru meru1245); Temi (Sonjo) temi1247; Hehe hehe1240, Bena bena1262, Kinga
+# nucl1379, Magoma mago1246, Pangwa pang1287, Sangu sang1330, Vwanji vwan1235 (Southern
+# Tanzania Highlands); Tanzanian Ngoni tanz1241 (NOT the Nyanja-like Ngoni of Zambia and
+# Malawi); Nyakyusa-Ngonde nyak1260, Ndali ndal1241; Fipa fipa1238, Pimbwe pimb1238, Rungwa
+# rung1255, Bungu bung1265, Safwa safw1238, Malila mali1279 beside Mambwe, Nyamwanga, Nyiha
+# (Glottolog's Mbozi, under zm.txt's Mambwe-Nyiha); Pogolo pogo1243, Ndamba ndam1239
+# (Kilombero); Matengo mate1258, Ndengereko nden1248, Matumbi matu1259, Ndendeule nden1249,
+# Ngindo ngin1244 (Rufijic); Mwera (Chimwera) mwer1248 (Yaoic); Mwera (Nyasa) mwer1247
+# (Nyanjaic, so under Nyanja-Sena); Tongwe tong1320; Bembe bemb1255; Mpoto mpot1240 (Lake
+# Nyasa shore, Ruvuma), Isanzu isan1243, Kisi kisi1243, Lambya lamb1272 (zm.txt's node): each
+# named by two or three respondents once R7's mother-tongue free text was read, added 2026-10-05.
+# Manyema has no Glottolog entry: the card's Kimanyema, the language of people of Manyema
+# (eastern Congo) origin around Kigoma, kept as a Bantu leaf of its own.
+# Shirazi: the card's Kishirazi, the Zanzibar Swahili of people who call themselves Shirazi,
+# a sibling of Swahili (as Bajuni in ke.txt), so Swahili stays a leaf.
+# Nilotic: Arusha (the Il-Arusa Maa of Arusha, a sibling of Maasai, both on the card); Datooga
+# (Glottolog's Gemein Datooga, Southern Nilotic). South Cushitic (Glottolog West Rift South
+# Cushitic): Iraqw iraq1241, Gorowa goro1270, Alagwa alag1248. Sandawe on isolate.sandawe.
+#
+# Colours, for neighbours on the Tanzanian ground, whole wheel as ke.txt and zm.txt do; Swahili
+# keeps its orange. Lake: Sukuma green, Nyamwezi yellow-green south of it, Haya violet, Nyambo
+# pink, Zinza pale cyan, Sumbwa blue, Ha rose, Shubi pale blue, Hangaza blue-violet; Mara:
+# Jita pale yellow, Kerewe blue, Zanaki violet, Kuria (existing dark red), Luo (existing blue),
+# Ikizu green. Centre: Gogo blue, Nyaturu pink, Nilamba teal, Rangi pale yellow, Iraqw red,
+# Sandawe (existing). North: Chaga purple, Pare light green, Shambala cyan, Zigua pink, Bondei
+# olive, Maasai (existing), Arusha periwinkle, Rwa cream. Southwest: Nyakyusa magenta, Ndali
+# pale green, Fipa yellow, Nyamwanga (existing violet), Hehe salmon, Bena green, Kinga cyan,
+# Sangu violet. South: Makonde (existing red), Yao (existing teal), Makhuwa (existing yellow),
+# Mwera pale teal, Ngoni periwinkle, Matengo green, Ndendeule peach. East: Luguru green,
+# Kaguru lilac, Zaramo blue, Kwere pale cyan, Nguu coral, Pogoro light blue.
+
+# ---- parents and nodes defined in other fragments, repeated identically ----
+nigercongo | Niger-Congo
+nigercongo.bantu | Bantu
+nigercongo.bantu.swahili | Swahili
+nigercongo.bantu.kuria | Kuria | 0.52 0.15 20
+nigercongo.bantu.mijikenda | Mijikenda | 0.62 0.19 0
+nigercongo.bantu.bajuni | Bajuni | 0.66 0.08 95
+nigercongo.bantu.yao | Yao (Chiyao)
+nigercongo.bantu.makonde | Shimakonde (Makonde)
+nigercongo.bantu.makhuwa | Makhuwa (P.30)
+nigercongo.bantu.makhuwa.emakhuwa | Emakhuwa | 0.82 0.16 95
+nigercongo.bantu.mambwe_nyiha | Mambwe-Nyiha (M.10-20)
+nigercongo.bantu.mambwe_nyiha.mambwe | Mambwe | 0.70 0.14 195
+nigercongo.bantu.mambwe_nyiha.namwanga | Namwanga | 0.64 0.15 285
+nigercongo.bantu.mambwe_nyiha.lambya | Lambya
+nigercongo.bantu.nyanja_sena | Nyanja-Sena (N.30-40)
+nilosaharan | Nilo-Saharan
+nilosaharan.nilotic | Nilotic
+nilosaharan.nilotic.luo | Luo (Dholuo)
+nilosaharan.nilotic.maasai | Maasai
+afroasiatic | Afroasiatic
+afroasiatic.cushitic | Cushitic
+afroasiatic.arabic | Arabic
+indoeuropean | Indo-European
+indoeuropean.germanic | Germanic
+indoeuropean.germanic.english | English
+isolate | Language isolates
+isolate.sandawe | Sandawe
+africa_other | Other African languages
+other | Other or unclassified
+
+# ---- defined bare elsewhere, coloured here ----
+nigercongo.bantu.sukuma | Sukuma | 0.66 0.16 150
+nigercongo.bantu.nyamwezi | Nyamwezi | 0.84 0.14 115
+nigercongo.bantu.mambwe_nyiha.nyiha | Nyiha | 0.84 0.10 250
+
+# ---- Tanzania: Bantu ----
+nigercongo.bantu.ha | Ha (Kiha) | 0.66 0.16 355
+nigercongo.bantu.hangaza | Hangaza | 0.62 0.13 270
+nigercongo.bantu.shubi | Shubi (Subi) | 0.82 0.09 225
+nigercongo.bantu.haya | Haya (Ruhaya) | 0.58 0.17 305
+nigercongo.bantu.nyambo | Nyambo | 0.82 0.12 340
+nigercongo.bantu.zinza | Zinza | 0.84 0.09 195
+nigercongo.bantu.kerewe | Kerewe | 0.60 0.13 225
+nigercongo.bantu.sumbwa | Sumbwa | 0.70 0.12 250
+nigercongo.bantu.kimbu | Kimbu
+nigercongo.bantu.konongo | Konongo
+nigercongo.bantu.jita | Jita | 0.86 0.11 85
+nigercongo.bantu.kwaya | Kwaya
+nigercongo.bantu.kara | Kara (Regi)
+nigercongo.bantu.zanaki | Zanaki | 0.62 0.14 290
+nigercongo.bantu.ikizu | Ikizu | 0.66 0.13 135
+nigercongo.bantu.ikoma | Ikoma
+nigercongo.bantu.kabwa | Kabwa
+nigercongo.bantu.suba_simbiti | Suba-Simbiti | 0.84 0.10 160
+nigercongo.bantu.nyaturu | Nyaturu (Rimi) | 0.80 0.13 340
+nigercongo.bantu.nilamba | Nilamba (Nyiramba) | 0.68 0.12 180
+nigercongo.bantu.rangi | Rangi (Langi) | 0.88 0.11 100
+nigercongo.bantu.mbugwe | Mbugwe
+nigercongo.bantu.gogo | Gogo (Cigogo) | 0.64 0.15 245
+nigercongo.bantu.kaguru | Kaguru | 0.80 0.11 305
+nigercongo.bantu.luguru | Luguru | 0.64 0.16 135
+nigercongo.bantu.zaramo | Zaramo | 0.62 0.13 260
+nigercongo.bantu.kwere | Kwere | 0.86 0.09 205
+nigercongo.bantu.kutu | Kutu
+nigercongo.bantu.sagala | Sagala
+nigercongo.bantu.zigua | Zigua (Zigula) | 0.80 0.13 340
+nigercongo.bantu.nguu | Nguu (Ngulu) | 0.70 0.14 25
+nigercongo.bantu.shambala | Shambala (Kisambaa) | 0.68 0.13 205
+nigercongo.bantu.bondei | Bondei | 0.62 0.12 105
+nigercongo.bantu.pare | Pare (Asu) | 0.84 0.13 135
+nigercongo.bantu.chaga | Chaga | 0.60 0.17 305
+nigercongo.bantu.rwa | Meru (Rwa, Tanzania) | 0.90 0.08 80
+nigercongo.bantu.sonjo | Sonjo (Temi)
+nigercongo.bantu.hehe | Hehe | 0.78 0.13 25
+nigercongo.bantu.bena | Bena | 0.64 0.15 155
+nigercongo.bantu.kinga | Kinga | 0.78 0.11 205
+nigercongo.bantu.magoma | Magoma
+nigercongo.bantu.pangwa | Pangwa
+nigercongo.bantu.sangu | Sangu | 0.66 0.13 275
+nigercongo.bantu.wanji | Wanji (Vwanji)
+nigercongo.bantu.ngoni_tz | Ngoni (Tanzania) | 0.78 0.11 265
+nigercongo.bantu.nyakyusa | Nyakyusa | 0.60 0.18 335
+nigercongo.bantu.ndali | Ndali | 0.86 0.11 130
+nigercongo.bantu.mambwe_nyiha.fipa | Fipa | 0.84 0.15 95
+nigercongo.bantu.mambwe_nyiha.pimbwe | Pimbwe | 0.64 0.13 30
+nigercongo.bantu.mambwe_nyiha.rungwa | Rungwa
+nigercongo.bantu.mambwe_nyiha.bungu | Bungu | 0.76 0.12 320
+nigercongo.bantu.mambwe_nyiha.safwa | Safwa | 0.86 0.10 165
+nigercongo.bantu.mambwe_nyiha.malila | Malila | 0.66 0.15 0
+nigercongo.bantu.pogoro | Pogoro (Pogolo) | 0.80 0.10 240
+nigercongo.bantu.ndamba | Ndamba | 0.62 0.12 330
+nigercongo.bantu.matengo | Matengo | 0.62 0.15 140
+nigercongo.bantu.ndengereko | Ndengereko
+nigercongo.bantu.matumbi | Matumbi
+nigercongo.bantu.ndendeule | Ndendeule | 0.84 0.11 40
+nigercongo.bantu.ngindo | Ngindo | 0.70 0.12 300
+nigercongo.bantu.mwera | Mwera (Chimwera) | 0.84 0.10 175
+nigercongo.bantu.nyanja_sena.nyasa | Nyasa (Mwera of Lake Nyasa)
+nigercongo.bantu.tongwe | Tongwe
+nigercongo.bantu.bembe | Bembe
+nigercongo.bantu.manyema | Manyema
+nigercongo.bantu.segeju | Segeju
+nigercongo.bantu.mpoto | Mpoto
+nigercongo.bantu.isanzu | Isanzu
+nigercongo.bantu.kisi | Kisi (Tanzania)
+nigercongo.bantu.shirazi | Shirazi (Zanzibar Swahili) | 0.80 0.11 65
+
+# ---- Tanzania: Nilotic and Cushitic ----
+nilosaharan.nilotic.arusha | Arusha (Maa) | 0.76 0.10 250
+nilosaharan.nilotic.datooga | Datooga | 0.86 0.08 200
+afroasiatic.cushitic.south | South Cushitic | 0.68 0.14 15
+afroasiatic.cushitic.south.iraqw | Iraqw | 0.62 0.17 10
+afroasiatic.cushitic.south.gorowa | Gorowa (Fiome) | 0.82 0.10 350
+afroasiatic.cushitic.south.alagwa | Alagwa (Wasi) | 0.76 0.12 35

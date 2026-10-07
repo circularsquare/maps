@@ -1,0 +1,5 @@
+# Grenada (2021 census ethnicity by parish). Grenadian Creole (Glottolog gren1247) is defined in
+# bb.txt; repeated here, hand-coloured, since Grenada is the language's home. Bare repeats else.
+creole | Creoles
+creole.english_based | English-based creoles
+creole.english_based.grenadian | Grenadian Creole | 0.64 0.13 100

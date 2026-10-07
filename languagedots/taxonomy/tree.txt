@@ -1,0 +1,371 @@
+# The language tree. One node per line:  id | label
+#
+# The id's dots ARE the hierarchy: `indoeuropean.indoaryan.eastern.bengali` sits under
+# `indoeuropean.indoaryan.eastern`, and every prefix must itself be a line. Roots are families
+# (or one of the three non-family roots at the bottom). A node may hold people of its own:
+# a census row that names no finer language is drawn on the nearest node that contains it
+# (spec §3), so "Others under HINDI" is drawn on Indo-Aryan, not guessed into a language.
+#
+# The middle levels are the conventional ones (Masica's zones for Indo-Aryan, the usual
+# Tibeto-Burman subgroups), checked against Glottolog, chosen because they are what a reader
+# expects to find and what the colours are banded by. Glottolog's own deeper trees are a
+# reference, not the display.
+#
+# Order within a parent is the legend order.
+
+indoeuropean | Indo-European
+indoeuropean.indoaryan | Indo-Aryan
+indoeuropean.indoaryan.central | Central (Western Hindi)
+indoeuropean.indoaryan.central.hindi | Hindi
+indoeuropean.indoaryan.central.urdu | Urdu
+indoeuropean.indoaryan.central.haryanvi | Haryanvi
+indoeuropean.indoaryan.central.braj | Braj
+indoeuropean.indoaryan.central.bundeli | Bundeli
+indoeuropean.indoaryan.central.lodhi | Lodhi
+indoeuropean.indoaryan.central.pawari | Pawari
+indoeuropean.indoaryan.central.musalman | Musalman
+indoeuropean.indoaryan.eastcentral | East Central (Eastern Hindi)
+indoeuropean.indoaryan.eastcentral.awadhi | Awadhi
+indoeuropean.indoaryan.eastcentral.bagheli | Bagheli
+indoeuropean.indoaryan.eastcentral.chhattisgarhi | Chhattisgarhi
+indoeuropean.indoaryan.eastcentral.surgujia | Surgujia
+indoeuropean.indoaryan.bihari | Bihari
+indoeuropean.indoaryan.bihari.bhojpuri | Bhojpuri
+indoeuropean.indoaryan.bihari.magahi | Magahi
+indoeuropean.indoaryan.bihari.maithili | Maithili
+indoeuropean.indoaryan.bihari.bajjika | Bajjika
+indoeuropean.indoaryan.bihari.angika | Angika
+indoeuropean.indoaryan.bihari.sadri | Sadri (Nagpuri)
+indoeuropean.indoaryan.bihari.khortha | Khortha
+indoeuropean.indoaryan.bihari.panchpargania | Panchpargania
+indoeuropean.indoaryan.bihari.kurmali | Kurmali
+indoeuropean.indoaryan.bihari.surjapuri | Surjapuri
+indoeuropean.indoaryan.bihari.palmuha | Palmuha
+indoeuropean.indoaryan.tharu | Tharu
+indoeuropean.indoaryan.tharu.tharu | Tharu
+indoeuropean.indoaryan.tharu.rana | Rana Tharu
+indoeuropean.indoaryan.tharu.sonaha | Sonaha
+indoeuropean.indoaryan.eastern | Eastern
+indoeuropean.indoaryan.eastern.bengali | Bengali
+indoeuropean.indoaryan.eastern.assamese | Assamese
+indoeuropean.indoaryan.eastern.odia | Odia
+indoeuropean.indoaryan.eastern.sambalpuri | Sambalpuri
+indoeuropean.indoaryan.eastern.desia | Desia
+indoeuropean.indoaryan.eastern.bhatri | Bhatri
+indoeuropean.indoaryan.eastern.halbi | Halbi
+indoeuropean.indoaryan.eastern.rajbanshi | Rajbanshi
+indoeuropean.indoaryan.eastern.chakma | Chakma
+indoeuropean.indoaryan.eastern.hajong | Hajong
+indoeuropean.indoaryan.eastern.bishnupriya | Bishnupriya Manipuri
+indoeuropean.indoaryan.eastern.tajpuriya | Tajpuriya
+indoeuropean.indoaryan.rajasthani | Rajasthani
+indoeuropean.indoaryan.rajasthani.rajasthani | Rajasthani
+indoeuropean.indoaryan.rajasthani.marwari | Marwari
+indoeuropean.indoaryan.rajasthani.mewari | Mewari
+indoeuropean.indoaryan.rajasthani.dhundhari | Dhundhari
+indoeuropean.indoaryan.rajasthani.harauti | Harauti
+indoeuropean.indoaryan.rajasthani.malvi | Malvi
+indoeuropean.indoaryan.rajasthani.nimadi | Nimadi
+indoeuropean.indoaryan.rajasthani.bagri | Bagri
+indoeuropean.indoaryan.rajasthani.mewati | Mewati
+indoeuropean.indoaryan.rajasthani.gujari | Gujari (Gojri)
+indoeuropean.indoaryan.rajasthani.lambadi | Lambadi (Banjari)
+indoeuropean.indoaryan.rajasthani.sondwari | Sondwari
+indoeuropean.indoaryan.rajasthani.bishnoi | Bishnoi
+indoeuropean.indoaryan.rajasthani.gawari | Gawari
+indoeuropean.indoaryan.gujarati | Gujarati
+indoeuropean.indoaryan.gujarati.gujarati | Gujarati
+indoeuropean.indoaryan.gujarati.saurashtra | Saurashtra
+indoeuropean.indoaryan.bhil | Bhil
+indoeuropean.indoaryan.bhil.bhili | Bhili
+indoeuropean.indoaryan.bhil.wagdi | Wagdi
+indoeuropean.indoaryan.bhil.barel | Barel
+indoeuropean.indoaryan.bhil.bhilali | Bhilali
+indoeuropean.indoaryan.bhil.pawri | Pawri
+indoeuropean.indoaryan.bhil.kokna | Kokna
+indoeuropean.indoaryan.bhil.varli | Varli
+indoeuropean.indoaryan.bhil.vasava | Vasava
+indoeuropean.indoaryan.bhil.gamit | Gamit
+indoeuropean.indoaryan.bhil.chodhari | Chodhari
+indoeuropean.indoaryan.bhil.mawchi | Mawchi
+indoeuropean.indoaryan.bhil.garasia | Garasia
+indoeuropean.indoaryan.bhil.khandeshi | Khandeshi (Ahirani)
+indoeuropean.indoaryan.bhil.bhagoria | Bhagoria
+indoeuropean.indoaryan.bhil.baori | Baori
+indoeuropean.indoaryan.bhil.dhodia | Dhodia
+indoeuropean.indoaryan.bhil.paradhi | Paradhi
+indoeuropean.indoaryan.bhil.rathi | Rathi
+indoeuropean.indoaryan.bhil.tadavi | Tadavi
+indoeuropean.indoaryan.bhil.dangi | Dangi
+indoeuropean.indoaryan.southern | Southern
+indoeuropean.indoaryan.southern.marathi | Marathi
+indoeuropean.indoaryan.southern.konkani | Konkani
+indoeuropean.indoaryan.northwestern | Northwestern
+indoeuropean.indoaryan.northwestern.punjabi | Punjabi
+indoeuropean.indoaryan.northwestern.saraiki | Saraiki
+indoeuropean.indoaryan.northwestern.hindko | Hindko
+indoeuropean.indoaryan.northwestern.pahari_pothwari | Pahari-Pothwari
+indoeuropean.indoaryan.northwestern.sindhi | Sindhi
+indoeuropean.indoaryan.northwestern.kachchhi | Kachchhi
+indoeuropean.indoaryan.northwestern.dogri | Dogri
+indoeuropean.indoaryan.pahari | Northern (Pahari)
+indoeuropean.indoaryan.pahari.western | Western Pahari
+indoeuropean.indoaryan.pahari.western.pahari | Pahari (Himachal)
+indoeuropean.indoaryan.pahari.western.kangri | Kangri
+indoeuropean.indoaryan.pahari.western.mandeali | Mandeali
+indoeuropean.indoaryan.pahari.western.kullui | Kullui
+indoeuropean.indoaryan.pahari.western.chambeali | Chambeali
+indoeuropean.indoaryan.pahari.western.bilaspuri | Bilaspuri
+indoeuropean.indoaryan.pahari.western.sirmauri | Sirmauri
+indoeuropean.indoaryan.pahari.western.jaunsari | Jaunsari
+indoeuropean.indoaryan.pahari.western.gaddi | Gaddi
+indoeuropean.indoaryan.pahari.western.bhadrawahi | Bhadrawahi
+indoeuropean.indoaryan.pahari.western.baghati | Baghati
+indoeuropean.indoaryan.pahari.western.churahi | Churahi
+indoeuropean.indoaryan.pahari.western.handuri | Handuri
+indoeuropean.indoaryan.pahari.western.padari | Padari
+indoeuropean.indoaryan.pahari.western.pangwali | Pangwali
+indoeuropean.indoaryan.pahari.western.bhateali | Bhateali
+indoeuropean.indoaryan.pahari.central | Central Pahari
+indoeuropean.indoaryan.pahari.central.garhwali | Garhwali
+indoeuropean.indoaryan.pahari.central.kumaoni | Kumaoni
+indoeuropean.indoaryan.pahari.eastern | Eastern Pahari
+indoeuropean.indoaryan.pahari.eastern.nepali | Nepali
+indoeuropean.indoaryan.pahari.eastern.doteli | Doteli
+indoeuropean.indoaryan.pahari.eastern.baitadeli | Baitadeli
+indoeuropean.indoaryan.pahari.eastern.achhami | Achhami
+indoeuropean.indoaryan.pahari.eastern.bajhangi | Bajhangi
+indoeuropean.indoaryan.pahari.eastern.bajureli | Bajureli
+indoeuropean.indoaryan.pahari.eastern.darchuleli | Darchuleli
+indoeuropean.indoaryan.pahari.eastern.dadeldhuri | Dadeldhuri
+indoeuropean.indoaryan.pahari.eastern.khash | Khash
+indoeuropean.indoaryan.pahari.eastern.jumli | Jumli
+indoeuropean.indoaryan.pahari.eastern.dailekhi | Dailekhi
+indoeuropean.indoaryan.pahari.eastern.mugali | Mugali
+indoeuropean.indoaryan.pahari.eastern.dolpali | Dolpali
+indoeuropean.indoaryan.dardic | Dardic
+indoeuropean.indoaryan.dardic.kashmiri | Kashmiri
+indoeuropean.indoaryan.dardic.shina | Shina
+indoeuropean.indoaryan.dardic.kohistani | Kohistani
+indoeuropean.indoaryan.dardic.kalasha | Kalasha
+indoeuropean.indoaryan.inner_terai | Inner Terai
+indoeuropean.indoaryan.inner_terai.danuwar | Danuwar
+indoeuropean.indoaryan.inner_terai.majhi | Majhi
+indoeuropean.indoaryan.inner_terai.kumal | Kumal
+indoeuropean.indoaryan.inner_terai.darai | Darai
+indoeuropean.indoaryan.inner_terai.bote | Bote
+indoeuropean.indoaryan.sanskrit | Sanskrit
+indoeuropean.indoaryan.puran | Puran Bhasha
+indoeuropean.indoaryan.kewarat | Kewarat
+indoeuropean.indoaryan.done | Done
+indoeuropean.indoaryan.dhuleli | Dhuleli
+indoeuropean.indoaryan.malpande | Malpande
+indoeuropean.iranian | Iranian
+indoeuropean.iranian.pashto | Pashto
+indoeuropean.iranian.balochi | Balochi
+indoeuropean.germanic | Germanic
+indoeuropean.germanic.english | English
+dravidian | Dravidian
+dravidian.southern | South Dravidian
+dravidian.southern.tamil | Tamil
+dravidian.southern.malayalam | Malayalam
+dravidian.southern.kannada | Kannada
+dravidian.southern.tulu | Tulu
+dravidian.southern.kodava | Kodava
+dravidian.southern.badaga | Badaga
+dravidian.southern.irula | Irula
+dravidian.southern.yerukula | Yerukula
+dravidian.southern.korava | Korava
+dravidian.southern.kaikadi | Kaikadi
+dravidian.southern.kurumba | Kurumba
+dravidian.southern.paniya | Paniya
+dravidian.southern.ravula | Ravula (Yerava)
+dravidian.southcentral | South-Central Dravidian
+dravidian.southcentral.telugu | Telugu
+dravidian.southcentral.gondi | Gondi
+dravidian.southcentral.koya | Koya
+dravidian.southcentral.kui | Kui
+dravidian.southcentral.kuvi | Kuvi
+dravidian.southcentral.konda | Konda
+dravidian.central | Central Dravidian
+dravidian.central.kolami | Kolami
+dravidian.central.parji | Parji (Dhurwa)
+dravidian.northern | North Dravidian
+dravidian.northern.kurukh | Kurukh
+dravidian.northern.malto | Malto
+dravidian.northern.brahui | Brahui
+austroasiatic | Austroasiatic
+austroasiatic.munda | Munda
+austroasiatic.munda.santali | Santali
+austroasiatic.munda.mundari | Mundari
+austroasiatic.munda.ho | Ho
+austroasiatic.munda.kharia | Kharia
+austroasiatic.munda.korku | Korku
+austroasiatic.munda.sora | Sora
+austroasiatic.munda.juang | Juang
+austroasiatic.munda.gutob | Gutob (Gadaba)
+austroasiatic.munda.bhumij | Bhumij
+austroasiatic.munda.koda | Koda
+austroasiatic.munda.korwa | Korwa
+austroasiatic.munda.mahali | Mahali
+austroasiatic.khasian | Khasian
+austroasiatic.khasian.khasi | Khasi
+austroasiatic.khasian.pnar | Pnar
+austroasiatic.khasian.war | War
+austroasiatic.khasian.lyngngam | Lyngngam
+austroasiatic.nicobarese | Nicobarese
+sinotibetan | Sino-Tibetan
+sinotibetan.tibetic | Tibetic
+sinotibetan.tibetic.tibetan | Tibetan
+sinotibetan.tibetic.ladakhi | Ladakhi
+sinotibetan.tibetic.balti | Balti
+sinotibetan.tibetic.purgi | Purgi
+sinotibetan.tibetic.bhotia | Bhotia
+sinotibetan.tibetic.sherpa | Sherpa
+sinotibetan.tibetic.hyolmo | Hyolmo
+sinotibetan.tibetic.jirel | Jirel
+sinotibetan.tibetic.lhomi | Lhomi
+sinotibetan.tibetic.walung | Walung
+sinotibetan.tibetic.nubri | Nubri
+sinotibetan.tibetic.lhopa | Lhopa (Loke)
+sinotibetan.tibetic.kagate | Kagate
+sinotibetan.tibetic.tichurong | Tichurong
+sinotibetan.tibetic.karmarong | Karmarong
+sinotibetan.tibetic.bhote | Bhote
+sinotibetan.tibetic.baragaunle | Baragaunle
+sinotibetan.tibetic.lowa | Lowa
+sinotibetan.eastbodish | East Bodish
+sinotibetan.eastbodish.monpa | Monpa
+sinotibetan.tamangic | Tamangic
+sinotibetan.tamangic.tamang | Tamang
+sinotibetan.tamangic.gurung | Gurung
+sinotibetan.tamangic.thakali | Thakali
+sinotibetan.tamangic.manange | Manange
+sinotibetan.tamangic.narphu | Nar-Phu
+sinotibetan.tamangic.ghale | Ghale
+sinotibetan.tamangic.chhantyal | Chhantyal
+sinotibetan.magaric | Magaric
+sinotibetan.magaric.magar_dhut | Magar Dhut
+sinotibetan.magaric.magar_kham | Magar Kham
+sinotibetan.magaric.kaike | Kaike
+sinotibetan.chepangic | Chepangic
+sinotibetan.chepangic.chepang | Chepang
+sinotibetan.chepangic.bhujel | Bhujel
+sinotibetan.chepangic.bankariya | Bankariya
+sinotibetan.newaric | Newaric
+sinotibetan.newaric.newar | Newar (Nepal Bhasa)
+sinotibetan.newaric.thangmi | Thangmi (Thami)
+sinotibetan.newaric.baram | Baram
+sinotibetan.newaric.pahari | Pahari (Nepal)
+sinotibetan.kiranti | Kiranti
+sinotibetan.kiranti.limbu | Limbu
+sinotibetan.kiranti.bantawa | Bantawa
+sinotibetan.kiranti.chamling | Chamling
+sinotibetan.kiranti.kulung | Kulung
+sinotibetan.kiranti.thulung | Thulung
+sinotibetan.kiranti.sampang | Sampang
+sinotibetan.kiranti.khaling | Khaling
+sinotibetan.kiranti.wambule | Wambule
+sinotibetan.kiranti.bahing | Bahing
+sinotibetan.kiranti.yakkha | Yakkha
+sinotibetan.kiranti.yamphu | Yamphu
+sinotibetan.kiranti.nachhiring | Nachhiring
+sinotibetan.kiranti.dumi | Dumi
+sinotibetan.kiranti.mewahang | Mewahang
+sinotibetan.kiranti.puma | Puma
+sinotibetan.kiranti.athpahariya | Athpahariya
+sinotibetan.kiranti.dungmali | Dungmali
+sinotibetan.kiranti.lohorung | Lohorung
+sinotibetan.kiranti.koyee | Koyee
+sinotibetan.kiranti.jerung | Jerung
+sinotibetan.kiranti.chhintang | Chhintang
+sinotibetan.kiranti.chhiling | Chhiling
+sinotibetan.kiranti.tilung | Tilung
+sinotibetan.kiranti.lungkhim | Lungkhim
+sinotibetan.kiranti.phangduwali | Phangduwali
+sinotibetan.kiranti.belhare | Belhare
+sinotibetan.kiranti.sam | Sam
+sinotibetan.kiranti.sunuwar | Sunuwar
+sinotibetan.kiranti.surel | Surel
+sinotibetan.kiranti.hayu | Hayu
+sinotibetan.kiranti.rai | Rai
+sinotibetan.westhimalayish | West Himalayish
+sinotibetan.westhimalayish.kinnauri | Kinnauri
+sinotibetan.westhimalayish.lahuli | Lahuli
+sinotibetan.westhimalayish.byansi | Byangsi
+sinotibetan.westhimalayish.raji | Raji
+sinotibetan.westhimalayish.raute | Raute
+sinotibetan.dhimalish | Dhimalish
+sinotibetan.dhimalish.dhimal | Dhimal
+sinotibetan.dura | Dura
+sinotibetan.lepcha | Lepcha
+sinotibetan.boro_garo | Bodo-Garo
+sinotibetan.boro_garo.bodo | Bodo
+sinotibetan.boro_garo.mech | Mech
+sinotibetan.boro_garo.dimasa | Dimasa
+sinotibetan.boro_garo.kachari | Kachari
+sinotibetan.boro_garo.kokborok | Kokborok (Tripuri)
+sinotibetan.boro_garo.reang | Reang
+sinotibetan.boro_garo.garo | Garo
+sinotibetan.boro_garo.rabha | Rabha
+sinotibetan.boro_garo.tiwa | Tiwa (Lalung)
+sinotibetan.boro_garo.deori | Deori
+sinotibetan.boro_garo.koch | Koch
+sinotibetan.meitei | Meitei (Manipuri)
+sinotibetan.karbi | Karbi
+sinotibetan.kukichin | Kuki-Chin
+sinotibetan.kukichin.mizo | Mizo
+sinotibetan.kukichin.thadou | Thadou
+sinotibetan.kukichin.paite | Paite
+sinotibetan.kukichin.hmar | Hmar
+sinotibetan.kukichin.kuki | Kuki
+sinotibetan.kukichin.vaiphei | Vaiphei
+sinotibetan.kukichin.gangte | Gangte
+sinotibetan.kukichin.zou | Zou
+sinotibetan.kukichin.kom | Kom
+sinotibetan.kukichin.halam | Halam
+sinotibetan.kukichin.lai | Lai (Pawi)
+sinotibetan.kukichin.mara | Mara
+sinotibetan.kukichin.anal | Anal
+sinotibetan.naga | Naga
+sinotibetan.naga.angami | Angami
+sinotibetan.naga.chakhesang | Chakhesang
+sinotibetan.naga.chokri | Chokri
+sinotibetan.naga.khezha | Khezha
+sinotibetan.naga.pochuri | Pochuri
+sinotibetan.naga.rengma | Rengma
+sinotibetan.naga.sumi | Sumi (Sema)
+sinotibetan.naga.mao | Mao
+sinotibetan.naga.poumai | Poumai (Paola)
+sinotibetan.naga.maram | Maram
+sinotibetan.naga.ao | Ao
+sinotibetan.naga.lotha | Lotha
+sinotibetan.naga.sangtam | Sangtam
+sinotibetan.naga.yimchungru | Yimchungru
+sinotibetan.naga.tangkhul | Tangkhul
+sinotibetan.naga.maring | Maring
+sinotibetan.naga.zeme | Zeme
+sinotibetan.naga.liangmai | Liangmai
+sinotibetan.naga.rongmei | Rongmei
+sinotibetan.naga.zeliang | Zeliang
+sinotibetan.naga.konyak | Konyak
+sinotibetan.naga.phom | Phom
+sinotibetan.naga.chang | Chang
+sinotibetan.naga.khiamniungan | Khiamniungan
+sinotibetan.naga.wancho | Wancho
+sinotibetan.naga.nocte | Nocte
+sinotibetan.naga.tangsa | Tangsa
+sinotibetan.tani | Tani
+sinotibetan.tani.adi | Adi
+sinotibetan.tani.galo | Galo
+sinotibetan.tani.nyishi | Nyishi
+sinotibetan.tani.apatani | Apatani
+sinotibetan.tani.tagin | Tagin
+sinotibetan.tani.mising | Mising
+sinotibetan.mishmi | Mishmi
+sinotibetan.burmish | Burmish
+sinotibetan.burmish.marma | Marma (Mogh)
+afroasiatic | Afroasiatic
+afroasiatic.arabic | Arabic
+signlanguage | Sign language
+other | Other or unclassified

@@ -1,0 +1,9 @@
+# Fiji (2007 census ethnicity by province; sources/fj_census.py). No new languages. Fijian is
+# hand-coloured here, since Fiji is its home, away from Fiji Hindi's warm hue (au.txt). The rest
+# are bare repeats.
+austronesian | Austronesian
+austronesian.oceanic | Oceanic
+austronesian.oceanic.fijian | Fijian | 0.66 0.14 232
+austronesian.oceanic.rotuman | Rotuman
+austronesian.oceanic.gilbertese | Gilbertese (Kiribati)
+indoeuropean.indoaryan.eastcentral.fiji_hindi | Fiji Hindi

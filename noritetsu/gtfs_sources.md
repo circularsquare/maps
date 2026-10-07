@@ -617,6 +617,49 @@ The snapshot is in `data/raw/gtfs/pl/past/` (7.2 MB slimmed from 28.3). Its own
 patterns.pkl cache sits beside it. Poland's row in the table above is now 910 km closed on
 28 lines.
 
+### Germany, and two fixes (2026-10-02, maps-12)
+
+**Germany** is live: gtfs.de `fv_free` + `rv_free` (CC BY 4.0, from DELFI; 5,728 long-distance
+and 103,942 regional rail trips, 26 Sep - 26 Oct 2026; its own stop ids, so names). 5,840 of
+8,298 feed stations matched (1,249 of the rest are abroad, most others on non-DB railways
+outside the register). Kept: 21 junction-ended sections (34 km) OSM alone drops, all station
+approaches and links trains use (München-Laim - Pasing 912 trips, München Ost Pbf - Rbf,
+Braunschweig Rbf - Okerbrücke, Köln West - Longerich, Rauschwald - Großkrotzenburg...). Closed
+182 km on 8 lines: 2250 Herten - Hamm (51.7, goods), 5365 Landsberg - Schongau (Fuchstalbahn,
+no regular trains), 6624 Annaberg-Buchholz - Schwarzenberg (the Erzgebirgische Aussichtsbahn's
+few days a year), 5062 Amberg - Schnaittenbach (goods), 6328 Angermünde - Passow (no train to
+Szczecin that way in the window; the upgrade works, Szczecin is served via Pasewalk), 1575
+Ihrhove - Weener (the Friesenbrücke), 6619 Pockau-Lengefeld - Marienberg, 2871 Erndtebrück -
+Bad Berleburg (RB 93 runs to Birkelbach, nothing calls at Bad Berleburg: works). The last two
+groups are works closures and come back with the next fetch. Of 33,116 register km, 28,725
+served. A 30-day window: anything seasonal reads as closed.
+
+**Junctions a section was never cut at** (`mid_splits`, `MID_M`, `MID_SHARE`): RINF runs
+Germany's 6362 Werdau - Neumark (Sachs) as one 8.3 km section, and 6258 from Zwickau ends at
+the Werdau Bogendreieck's Neumarker Spitze partway along it, so RB 2 (Zwickau - Steinpleis -
+Neumark) had no path and the section came out closed. Where another register line ends within
+15 m of a section's middle, the section is split there, in a separate pass only for call pairs
+the normal paths cannot join (`misses`); a piece counts for its section if it is at least half
+of it, and never as strong evidence, so it rescues nothing. Tried first inside the main graph:
+it rerouted paths that had one (Czechia rescued 13 more sections); then as a fallback inside
+the main pass: it moved which call the next path starts from (Poland's 200 lost its rescue).
+As built, every other timetable country is unchanged except Poland's 171 (goods; its second
+section, 17 km, is now dropped instead of drawn closed).
+
+**Feeds that are not UTF-8 or are padded**: `_table` falls back to cp1252 when a file is not
+UTF-8, and strips padding when the header has it. Renfe writes Windows-1252 and pads every
+line to a fixed width ("end_date   ").
+
+**Italy and Spain: fetched, not live.** The feeds are in `data/raw/gtfs_pending/it` and `/es`
+(move a folder to `data/raw/gtfs/` to switch the check on). Their entries are in `FEEDS`, and
+`CODE["es"]` (Renfe's stop_id is Adif's code, RINF's uopid less "ES": 17000 Madrid-Chamartín).
+Italy's trial closed 20-odd lines; some are right (Novara - Romagnano, Fabriano - Pergola,
+Termoli - Campobasso, Palermo - Giachery), but Sibari - Catanzaro Lido has regional trains, so
+deryclem's Trenitalia conversion may miss a region; check per line before landing. Spain's
+trial failed on Renfe's padding (fixed since, not re-run). The rescues are what matter there:
+Italy's AV Treviglio - Brescia (672 km of real passenger track dropped for want of OSM routes)
+and Spain's Pajares base tunnel.
+
 ### Things to know
 
 - **Inspecting data only reads it** (Anita, 2026-10-01). Inspection scripts set

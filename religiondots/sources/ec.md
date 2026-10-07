@@ -191,13 +191,14 @@ place at all.**
 
 | province | n | treatment | why |
 |---|---:|---|---|
-| Carchi | 20 | national rate | 2010 wave only, so the split-half cannot rank it twice |
+| Carchi | 20 | **Sierra region's shares** (since 2026-10-03, §12) | 2010 wave only, so the split-half cannot rank it twice |
 | Pastaza | 32 | national rate | 2010 wave only |
 | Orellana | 55 | national rate | 2010 wave only |
 | **Galápagos** | **0** | **NOT DRAWN** | **LAPOP has no code 920. Not sampled: not offered.** |
 
-The three assumed provinces are **466,909 people, 2.76% of Ecuador**, drawn at the national
-rate on each province's own census population. The split-half needs a province in both halves
+The three assumed provinces are **466,909 people, 2.76% of Ecuador**, drawn on each
+province's own census population: Pastaza and Orellana at the national rate, Carchi at the
+Sierra design region's shares since 2026-10-03 (§12). The split-half needs a province in both halves
 to rank it twice, so these drop out of the test that licenses the other twenty — §14.16's rule
 about categories applied to units. **But one wave did measure them**, and that is enough to
 anchor an assumption on. Anita, 2026-09-08: *"i feel like carchi is fine to assume and we can
@@ -342,3 +343,56 @@ say they do not believe in God, and the two are nine times apart.
   never supply one, because the province is not on its card. INEC's 2006 Galápagos census
   (`censo_galapagos_2006.zip`, open on `ecuadorencifras.gob.ec`) was **not** checked for a
   religion question and is the obvious first place to look.
+
+## 12. Carchi at the Sierra rate (2026-10-03)
+
+Anita's ruling, 2026-09-14 night (`ask/RULINGS.md`): Carchi switches to the Sierra region's
+rate under the one-round rule written for Colombia's La Guajira (spec §12, `sources/co.md` §6);
+Pastaza and Orellana stay at the national rate; Galápagos stays empty. Applied 2026-10-03 by
+`fafd1067-ec`; `sources.md` §ec-2026-10-03.
+
+**The rule.** A province sampled in one round takes its LAPOP design region's shares for the
+three placed answers (Católico, Evangélica y Pentecostal, Ninguna) when the region, leaving
+each of its provinces in both halves out in turn, predicts them better than the country: lower
+mean summed absolute error and closer for more than half. Otherwise the national rate. The
+answers spread at the national rate fill each province's residual at their national
+proportions, as everywhere else in the country. `sources/ec.py` imports
+`region_fallback` from `sources/co.py`, so the rule has one implementation.
+
+**The regions.** `estratopri` is not in `lapop.USECOLS`, so `ec.py --fetch-regions` reads it
+from the local `.dta` into `data/raw/ec/lapop_ec_regions.csv` (respondents by wave, province
+and region, 148 rows). Three regions, Costa (901), Sierra (902) and Oriente (903), and every
+province is in exactly one in every wave, which `ec.py` asserts. Carchi is Sierra; Pastaza and
+Orellana are Oriente. The 20 provinces in both halves are also the 20 in all four religion
+waves, so Colombia's "every-round" pool and Ecuador's split-half pool are the same set here.
+
+| region | one-round provinces | region closer | mean error, region vs country | p (random set) | result |
+|---|---|---:|---|---:|---|
+| Costa | none | 4 of 6 | 14.59 vs 14.89 | 0.378 | passes, nothing to apply |
+| Sierra | Carchi | 8 of 10 | 11.74 vs 16.12 | 0.025 | **Carchi on Sierra** |
+| Oriente | Pastaza, Orellana | 0 of 4 | 22.27 vs 18.86 | 0.718 | national rate |
+
+These are the figures `sources/co.md` §6 reported from a scratch script, now reproduced by the
+build. Pichincha is the one Sierra province the region predicts much worse than the country
+(15.5 against 3.9): Quito sits near the national average and the rest of the highlands do not.
+
+**Carchi, before and after** (172,828 people either way):
+
+| answer | national rate (before) | Sierra (now) |
+|---|---:|---:|
+| Católico | 75.54% | **79.63%** |
+| Evangélica y Pentecostal | 10.95% | **7.09%** |
+| Ninguna (creyente) | 5.97% | **3.96%** |
+| Protestante Tradicional | 2.60% | 3.21% |
+| Otro | 2.05% | 2.54% |
+| Testigos de Jehová | 1.43% | 1.77% |
+| the five under 1% | 1.46% | 1.80% |
+
+Sierra's residual is 9.3% against 7.5% nationally, so the eight answers at the national
+proportions each rise by about a quarter. Carchi's own twenty interviews (18 Catholic, 1
+Ninguna, 1 agnostic) point the same way as the region and are still not drawn on their own.
+
+**Nothing else moved.** Every other province's 11 rows are identical, Pastaza and Orellana
+included; Galápagos has no rows; the country total is 16,910,403 as before. National as drawn:
+Católico 75.31% → 75.35%, Evangélica 11.09% → 11.05%, Ninguna 6.10% → 6.08%. Rescattered at
+both scales: 16,904 dots at 1:1,000, 1,686 at 1:10,000.

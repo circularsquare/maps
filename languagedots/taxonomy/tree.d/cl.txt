@@ -1,0 +1,71 @@
+# Chile, Censo 2024 (taxonomy/cl2024.py): the indigenous language each person aged 5+ speaks or
+# understands best. INE prints seven languages and "another indigenous language of Chile"; all but
+# Kawésqar already have nodes (Mapuche, Aimara and Quechua in br.txt, Kunza and Yagán in ar.txt,
+# Rapa Nui in pl.txt), repeated here only as parents with identical labels and no colour.
+#
+# Kawésqar is new. Glottolog (data/raw/glottolog) makes it a family of its own, Kawesqar
+# (kawe1237), the Alacalufan languages: Qawasqar (qawa1238), Alacalufe-Central and -Austral. INE
+# prints one "Kawésqar", so it is one language under a new root. Colour: a mid blue, away from
+# Mapuche's green and Yagán's magenta, its two indigenous neighbours in Magallanes, and from
+# Spanish's red-orange.
+
+# ---- repeated parents and nodes other fragments define ----
+indoeuropean.romance | Romance
+indoeuropean.romance.spanish | Spanish
+americas_other | Other indigenous languages of the Americas
+isolate | Language isolates
+isolate.kunza | Kunza (Atacama)
+isolate.yagan | Yagán
+araucanian | Araucanian
+araucanian.mapuche | Mapuche
+aymaran | Aymaran
+aymaran.aymara | Aimara
+quechuan | Quechuan
+quechuan.quechua | Quechua
+austronesian | Austronesian
+austronesian.oceanic | Oceanic
+austronesian.oceanic.rapanui | Rapa Nui | 0.66 0.18 345
+
+# ---- new family ----
+kawesqar | Kawesqar (Alacalufan) | 0.72 0.16 245
+kawesqar.kawesqar | Kawésqar | 0.72 0.16 245
+# --- origin_mix borrowed nodes (python sources/origin_mix.py --fragment cl) ---
+# Every node the origin mixes bring in that tree.txt lacks, repeated without colour.
+creole | Creoles
+creole.french_based | French-based creoles
+creole.french_based.haitian | Haitian Creole
+creole.french_based.reunionese | Reunion Creole
+indoeuropean.germanic.continental | Continental West Germanic
+indoeuropean.germanic.continental.german | German
+indoeuropean.romance.catalan | Catalan
+indoeuropean.romance.emilian | Emilian
+indoeuropean.romance.french | French
+indoeuropean.romance.galician | Galician
+indoeuropean.romance.italian | Italian
+indoeuropean.romance.lombard | Lombard
+indoeuropean.romance.neapolitan | Neapolitan
+indoeuropean.romance.portuguese | Portuguese
+indoeuropean.romance.sicilian | Sicilian
+indoeuropean.romance.valencian | Valencian
+indoeuropean.romance.venetian | Venetian
+isolate.basque | Basque
+kradai | Kra-Dai (Tai-Kadai)
+kradai.zhuang | Zhuang
+quechuan.kichwa | Kichwa
+sinotibetan.sinitic | Chinese
+sinotibetan.sinitic.cantonese | Cantonese
+sinotibetan.sinitic.gan | Gan
+sinotibetan.sinitic.hakka | Hakka
+sinotibetan.sinitic.jin | Jin
+sinotibetan.sinitic.mandarin | Mandarin
+sinotibetan.sinitic.min_nan | Min Nan (Taiwanese, Hokkien)
+sinotibetan.sinitic.teochew | Teochew (Chiu Chau)
+sinotibetan.sinitic.wu | Wu
+sinotibetan.sinitic.xiang | Xiang
+tupian | Tupian
+tupian.tupiguarani | Tupi-Guarani
+tupian.tupiguarani.guarani | Guarani
+tupian.tupiguarani.guarani.paraguayan | Paraguayan Guarani
+utoaztecan | Uto-Aztecan
+utoaztecan.nahuatl | Náhuatl
+# --- end origin_mix borrowed nodes ---

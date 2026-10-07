@@ -1,0 +1,129 @@
+# Zambia (taxonomy/zm2022.py). Census 2022, widely spoken language of communication.
+# Parents and languages other fragments already define are repeated identically (label and
+# colour), so a change there shows up as a clash, not a dangle.
+#
+# Middle levels: the conventional Zambian groupings with Guthrie zones, checked against Glottolog
+# (zm2022.py's docstring says where they differ: Nsenga is under Sabi in Glottolog, here under
+# Nyanja-Sena). Lozi is Sotho-Tswana (Glottolog Sesotho-Lozi), under za.txt's group.
+#
+# Colours, for the neighbours on the Zambian ground, using the whole wheel as za.txt does:
+#   Bemba orange (north, Luapula, Copperbelt); Bisa-Lamba yellows around it (Lala, Lamba, Bisa);
+#   Nyanja-Sena magentas and violets (Lusaka, Eastern: Nyanja, Chewa, Nsenga, Ngoni);
+#   Tumbuka blues (Lundazi, beside Chewa and Senga); Botatwe greens and teals (Tonga, Ila, Lenje,
+#   Soli, Toka-Leya); Lozi a mid blue against the Luyana varieties' pale cyan; North-Western:
+#   Kaonde blue-violet (a red sat on Solwezi's Nyanja pink), Lunda pale lavender,
+#   Luvale light green, Mbunda green-teal (apart from Lozi's blue in Kalabo and Lukulu); Nkoya pink (Kaoma, between
+#   Lozi and Mbunda); Mambwe-Nyiha cyan and purple (Mbala, Nakonde, against Bemba's orange).
+
+# ---- parents and languages defined elsewhere, repeated identically ----
+nigercongo | Niger-Congo | 0.72 0.14 75
+nigercongo.bantu | Bantu | 0.70 0.14 60
+nigercongo.bantu.sotho_tswana | Sotho-Tswana | 0.76 0.12 100
+nigercongo.bantu.swahili | Swahili | 0.70 0.15 55
+indoeuropean.romance | Romance | 0.78 0.11 230
+indoeuropean.romance.french | French | 0.60 0.15 340
+sinotibetan.sinitic | Chinese | 0.62 0.19 38
+sinotibetan.sinitic.mandarin | Mandarin | 0.68 0.17 41
+
+# ---- new: a remainder root, as americas_other ----
+africa_other | Other African languages | 0.58 0.06 40
+
+# ---- new: Bantu groups and languages ----
+nigercongo.bantu.bemba | Bemba (M.40) | 0.74 0.14 45
+nigercongo.bantu.bemba.bemba | Bemba | 0.72 0.17 50
+nigercongo.bantu.bemba.aushi | Aushi | 0.84 0.10 35
+nigercongo.bantu.bemba.bwile | Bwile | 0.62 0.13 30
+nigercongo.bantu.bemba.chishinga | Chishinga
+nigercongo.bantu.bemba.kabende | Kabende
+nigercongo.bantu.bemba.mukulu | Mukulu
+nigercongo.bantu.bemba.ngumbo | Ngumbo
+nigercongo.bantu.bemba.unga | Unga
+nigercongo.bantu.bemba.lunda_luapula | Lunda (Luapula)
+nigercongo.bantu.bemba.shila | Shila
+nigercongo.bantu.bemba.tabwa | Tabwa
+nigercongo.bantu.bemba.ushi | Ushi
+
+nigercongo.bantu.bisa_lamba | Bisa-Lamba (M.50) | 0.80 0.12 90
+nigercongo.bantu.bisa_lamba.lala | Lala | 0.86 0.13 98
+nigercongo.bantu.bisa_lamba.lamba | Lamba | 0.78 0.14 120
+nigercongo.bantu.bisa_lamba.bisa | Bisa | 0.66 0.13 80
+nigercongo.bantu.bisa_lamba.ambo | Ambo
+nigercongo.bantu.bisa_lamba.luano | Luano
+nigercongo.bantu.bisa_lamba.swaka | Swaka
+nigercongo.bantu.bisa_lamba.lima | Lima
+
+nigercongo.bantu.nyanja_sena | Nyanja-Sena (N.30-40) | 0.72 0.13 335
+nigercongo.bantu.nyanja_sena.nyanja | Nyanja | 0.64 0.18 350
+nigercongo.bantu.nyanja_sena.chewa | Chewa | 0.82 0.12 330
+nigercongo.bantu.nyanja_sena.nsenga | Nsenga | 0.62 0.15 305
+nigercongo.bantu.nyanja_sena.ngoni | Ngoni | 0.86 0.08 300
+nigercongo.bantu.nyanja_sena.kunda | Kunda | 0.74 0.12 320
+nigercongo.bantu.nyanja_sena.chikunda | Chikunda | 0.70 0.10 345
+
+nigercongo.bantu.tumbuka | Tumbuka (N.20) | 0.70 0.12 250
+nigercongo.bantu.tumbuka.tumbuka | Tumbuka | 0.64 0.14 255
+nigercongo.bantu.tumbuka.senga | Senga | 0.82 0.10 240
+nigercongo.bantu.tumbuka.fungwe | Fungwe
+nigercongo.bantu.tumbuka.yombe | Yombe
+
+nigercongo.bantu.botatwe | Botatwe (M.60) | 0.72 0.13 150
+nigercongo.bantu.botatwe.tonga | Tonga (Zambia) | 0.70 0.16 145
+nigercongo.bantu.botatwe.ila | Ila | 0.84 0.13 125
+nigercongo.bantu.botatwe.lenje | Lenje | 0.60 0.12 195
+nigercongo.bantu.botatwe.soli | Soli | 0.82 0.10 185
+nigercongo.bantu.botatwe.toka_leya | Toka-Leya | 0.86 0.11 160
+nigercongo.bantu.botatwe.sala | Sala | 0.74 0.10 112
+nigercongo.bantu.botatwe.toka | Toka
+nigercongo.bantu.botatwe.totela | Totela
+nigercongo.bantu.botatwe.subiya | Subiya
+nigercongo.bantu.botatwe.twa | Twa
+nigercongo.bantu.botatwe.fwe | Fwe
+nigercongo.bantu.botatwe.lundwe | Lundwe
+nigercongo.bantu.botatwe.lumbu | Lumbu
+nigercongo.bantu.botatwe.gowa | Gowa
+
+nigercongo.bantu.sotho_tswana.lozi | Lozi | 0.68 0.15 222
+
+nigercongo.bantu.luyana | Luyana (K.30) | 0.84 0.08 200
+nigercongo.bantu.luyana.luyana | Luyana
+nigercongo.bantu.luyana.kwandi | Kwandi
+nigercongo.bantu.luyana.kwangwa | Kwangwa
+nigercongo.bantu.luyana.mbowe | Mbowe
+nigercongo.bantu.luyana.mbumi | Mbumi
+nigercongo.bantu.luyana.wina | Wina
+nigercongo.bantu.luyana.simaa | Simaa
+nigercongo.bantu.luyana.imilangu | Imilangu
+nigercongo.bantu.luyana.mwenyi | Mwenyi
+nigercongo.bantu.luyana.nyengo | Nyengo
+nigercongo.bantu.luyana.koma | Koma
+nigercongo.bantu.luyana.liyuwa | Liyuwa
+nigercongo.bantu.luyana.mulonga | Mulonga
+nigercongo.bantu.luyana.mashi | Mashi
+nigercongo.bantu.luyana.mbukushu | Mbukushu
+
+nigercongo.bantu.chokwe_lunda | Chokwe-Lunda (K.10-20, L.50) | 0.76 0.12 140
+nigercongo.bantu.chokwe_lunda.lunda | Lunda | 0.80 0.10 300
+nigercongo.bantu.chokwe_lunda.ndembu | Ndembu
+nigercongo.bantu.chokwe_lunda.luvale | Luvale | 0.82 0.14 132
+nigercongo.bantu.chokwe_lunda.mbunda | Mbunda | 0.62 0.13 162
+nigercongo.bantu.chokwe_lunda.luchazi | Luchazi | 0.74 0.10 150
+nigercongo.bantu.chokwe_lunda.chokwe | Chokwe | 0.88 0.08 100
+
+nigercongo.bantu.luban | Luban (L.40-60) | 0.70 0.13 10
+nigercongo.bantu.luban.kaonde | Kaonde | 0.60 0.13 265
+nigercongo.bantu.luban.nkoya | Nkoya | 0.76 0.13 340
+nigercongo.bantu.luban.lukolwe | Lukolwe (Mbwela)
+nigercongo.bantu.luban.lushangi | Lushangi
+nigercongo.bantu.luban.mashasha | Mashasha
+
+nigercongo.bantu.mambwe_nyiha | Mambwe-Nyiha (M.10-20) | 0.74 0.12 200
+nigercongo.bantu.mambwe_nyiha.mambwe | Mambwe | 0.70 0.14 195
+nigercongo.bantu.mambwe_nyiha.lungu | Lungu | 0.84 0.09 180
+nigercongo.bantu.mambwe_nyiha.namwanga | Namwanga | 0.64 0.15 285
+nigercongo.bantu.mambwe_nyiha.lambya | Lambya
+nigercongo.bantu.mambwe_nyiha.nyiha | Nyiha
+nigercongo.bantu.mambwe_nyiha.wandya | Wandya
+nigercongo.bantu.mambwe_nyiha.iwa | Iwa
+nigercongo.bantu.mambwe_nyiha.tambo | Tambo
+
+nigercongo.bantu.swahili_congo | Congo Swahili

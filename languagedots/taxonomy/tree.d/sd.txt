@@ -1,0 +1,108 @@
+# Sudan (taxonomy/sd2026.py; sources/sd_estimate.py). Speaker estimates by homeland, ask 019.
+# Parents and languages other fragments already define are repeated with the same label:
+# Afroasiatic, Cushitic, Beja (pl), Chadic, Hausa, Omotic and Mao (et), Niger-Congo, Atlantic,
+# Fula, Gbaya (cf), Moro (au), Nilo-Saharan, Fur, Zaghawa, Maban, Masalit, Maba, Tama, Daju,
+# Tubu, Nobiin (eg), Berta, Gumuz, Koman, Komo (et), Nilotic, Central Sudanic, Kresh, Yulu,
+# Gula, Sara (cf).
+#
+# Glottolog (data/raw/glottolog): codes per language in sources/sd_estimate.py's NODE. Families
+# as most readers know them (AGENT_BRIEF section 3): Glottolog's Nubian, Furan, Maban, Saharan,
+# Tamaic, Dajuic, Nyimang, Temeinic, Eastern Jebel, Koman, Gumuz, Berta and Kadugli-Krongo all
+# under Nilo-Saharan; its Heibanic, Talodi, Rashad, Katla-Tima and Tegem (Lafofa) under one
+# Kordofanian group in Niger-Congo. The Nubian languages are leaves directly under
+# Nilo-Saharan, as eg.txt has Nobiin and Kenzi, rather than a Nubian group eg would not share.
+afroasiatic | Afroasiatic
+afroasiatic.sudanese_arabic | Sudanese Arabic | 0.78 0.06 140
+afroasiatic.cushitic | Cushitic
+afroasiatic.cushitic.beja | Beja | 0.62 0.14 115
+afroasiatic.chadic | Chadic
+afroasiatic.chadic.hausa | Hausa
+afroasiatic.chadic.sokoro | Sokoro
+afroasiatic.omotic | Omotic
+afroasiatic.omotic.mao | Mao
+nigercongo | Niger-Congo
+nigercongo.atlantic | Atlantic
+nigercongo.atlantic.fulah | Fula
+nigercongo.gbaya | Gbaya-Manza-Ngbaka
+nigercongo.gbaya.gbaya | Gbaya
+nigercongo.moro | Moro (Nuba)
+nigercongo.kordofanian | Kordofanian (Nuba Mountains) | 0.76 0.13 55
+nigercongo.kordofanian.koalib | Koalib
+nigercongo.kordofanian.laro | Laro
+nigercongo.kordofanian.tira | Tira
+nigercongo.kordofanian.logol | Logol
+nigercongo.kordofanian.otoro | Otoro
+nigercongo.kordofanian.ko | Ko (Fungor)
+nigercongo.kordofanian.heiban | Heiban
+nigercongo.kordofanian.shwai | Shwai
+nigercongo.kordofanian.warnang | Warnang
+nigercongo.kordofanian.dagik | Dagik (Masakin)
+nigercongo.kordofanian.ngile | Ngile
+nigercongo.kordofanian.acheron | Acheron
+nigercongo.kordofanian.talodi | Talodi
+nigercongo.kordofanian.tocho | Tocho
+nigercongo.kordofanian.nding | Nding
+nigercongo.kordofanian.lumun | Lumun
+nigercongo.kordofanian.tegali | Tegali
+nigercongo.kordofanian.tagoi | Tagoi
+nigercongo.kordofanian.katla | Katla
+nigercongo.kordofanian.tima | Tima
+nigercongo.kordofanian.lafofa | Lafofa
+nilosaharan | Nilo-Saharan
+nilosaharan.fur | Fur | 0.55 0.16 262
+nilosaharan.amdang | Amdang
+nilosaharan.zaghawa | Zaghawa (Beria) | 0.78 0.11 215
+nilosaharan.tubu | Tubu (Teda-Daza)
+nilosaharan.maban | Maban
+nilosaharan.maban.masalit | Masalit | 0.64 0.16 310
+nilosaharan.maban.maba | Maba (Ouaddaïen)
+nilosaharan.tama | Tama
+nilosaharan.mararit | Mararit
+nilosaharan.assangori | Assangori (Sungor)
+nilosaharan.daju | Daju (Dadjo)
+nilosaharan.daju_darfur | Dar Fur Daju
+nilosaharan.shatt | Shatt
+nilosaharan.logorik | Logorik
+nilosaharan.nobiin | Nobiin (Fadicca)
+nilosaharan.dongolawi | Dongolawi (Andaandi)
+nilosaharan.midob | Midob
+nilosaharan.ghulfan | Ghulfan
+nilosaharan.kadaru | Kadaru
+nilosaharan.karko | Karko
+nilosaharan.dilling | Dilling
+nilosaharan.dair | Dair
+nilosaharan.wali | Wali
+nilosaharan.nyimang | Nyimang (Ama)
+nilosaharan.afitti | Afitti
+nilosaharan.temein | Temein
+nilosaharan.tese | Tese (Keiga Jirru)
+nilosaharan.kadu | Kadu (Kadugli-Krongo) | 0.70 0.12 195
+nilosaharan.kadu.katcha_kadugli_miri | Katcha-Kadugli-Miri
+nilosaharan.kadu.tulishi | Tulishi
+nilosaharan.kadu.tumtum | Tumtum
+nilosaharan.kadu.kanga | Kanga
+nilosaharan.kadu.keiga | Keiga
+nilosaharan.kadu.krongo | Krongo
+nilosaharan.gaam | Gaam (Ingessana)
+nilosaharan.aka | Aka (Sudan)
+nilosaharan.kelo | Kelo (Tornasi)
+nilosaharan.berta | Berta
+nilosaharan.berta.berta | Berta
+nilosaharan.gumuz | Gumuz
+nilosaharan.koman | Koman
+nilosaharan.koman.komo | Komo
+nilosaharan.koman.uduk | Uduk
+nilosaharan.nilotic | Nilotic
+nilosaharan.nilotic.jumjum | Jumjum
+nilosaharan.nilotic.burun | Burun
+nilosaharan.centralsudanic | Central Sudanic
+nilosaharan.centralsudanic.kresh | Kresh
+nilosaharan.centralsudanic.yulu | Yulu
+nilosaharan.centralsudanic.gula | Gula ("Yamegi")
+nilosaharan.centralsudanic.sara | Sara
+nilosaharan.centralsudanic.fongoro | Fongoro
+#
+# Colours, for neighbours on the Sudanese ground. Sudanese Arabic one shade off Darija's and
+# Algerian Arabic's mint. Beja a darker olive in Red Sea and Kassala. Darfur: Fur deep blue,
+# Zaghawa pale sky blue, Masalit violet. Kordofanian orange, away from Moro's gold and from the
+# blue Nilo-Saharan languages it shares the Nuba Mountains with; Kadu teal.

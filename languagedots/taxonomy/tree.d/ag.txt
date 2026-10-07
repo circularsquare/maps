@@ -1,0 +1,17 @@
+# Antigua and Barbuda (2011 census country of birth). Antiguan and Barbudan Creole (Glottolog
+# anti1245) is defined in bb.txt; repeated here, hand-coloured, since Antigua is its home. New:
+# Virgin Islands Creole (virg1240). The rest are bare repeats.
+africa_other | Other African languages
+afroasiatic.levantine_arabic | Levantine Arabic
+creole | Creoles
+creole.english_based | English-based creoles
+creole.english_based.antiguan | Antiguan and Barbudan Creole | 0.55 0.12 160
+creole.english_based.guyanese | Guyanese Creole
+creole.english_based.jamaican | Jamaican Creole
+creole.english_based.trinidadian | Trinidadian Creole
+creole.english_based.vincentian | Vincentian Creole
+creole.english_based.virgin_islands | Virgin Islands Creole
+creole.french_based | French-based creoles
+creole.french_based.antillean | Antillean Creole (Guadeloupe, Martinique)
+indoeuropean.romance | Romance
+indoeuropean.romance.spanish | Spanish

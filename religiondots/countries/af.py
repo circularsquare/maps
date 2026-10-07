@@ -51,7 +51,7 @@ ENTRY = {
             "province by province, and inside each province they follow Kontur's population grid. "
             "That estimate is projected from a household listing made between 2002 and 2006; the "
             "US government's own figure for mid-2023 is 39.2 million. Nobody counted these dots, "
-            "and they are drawn desaturated to say so. "
+            "so they disappear when inferred dots are turned off. "
             "**Shia and Sunni Muslims are drawn as one.** The World Religion Database's 2022 "
             "estimate is 89% Sunni and 11% Shia, Columbia University's Gulf 2000 project puts the "
             "Shia as high as 29%, and in Pew Research Center's 2011 survey 90% of Afghan Muslims "

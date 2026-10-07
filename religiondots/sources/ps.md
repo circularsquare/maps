@@ -180,3 +180,10 @@ Full pass. `check_md.py` clean, `built_countries.py --check` ok, `check_rollup.p
   would be right. Not edited here; a note wording fix for the supervisor or Anita.
 - **Screenshot** (all-countries view, framed on Palestine): West Bank and Gaza dots on land and
   green, settlement clusters blue inside the West Bank, nothing in the sea, nothing blank.
+
+
+## `gap` cut for the top-text cap (658b4937, 2026-10-04)
+
+The `assigned` row (spec §7e, Muslims drawn as Sunni by assignment, spec §2.6b) added words under the title and took this country over the 80-word cap, so `gap` was shortened by leaving things out. The wording before:
+
+> 0.89%: the 40,175 people counted who are not Palestinian, whom the form did not ask about religion, and 1,509 who gave no answer; and the Israeli settlements, which this census does not count and which are drawn as their own entry

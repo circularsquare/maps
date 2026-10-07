@@ -1,0 +1,22 @@
+# Montenegro, Popis 2023, mother tongue (taxonomy/me2023.py). Five new leaves; the other 19 named
+# answers were already in the tree (ba.txt, hr.txt, rs.txt, lu.txt, cz.txt and others).
+#
+# Montenegrin-Serbian, Serbian-Montenegrin, Montenegrin-Serbian-Bosnian-Croatian: compound answers
+# MONSTAT prints in columns of their own for the one language Glottolog files as
+# Serbian-Croatian-Bosnian (sout1528). Census labels, not varieties, so no glottocode; siblings of
+# Montenegrin and Serbian under South Slavic, the two orders kept apart as ba.txt does.
+indoeuropean.slavic.south.montenegrinserbian | Montenegrin-Serbian
+indoeuropean.slavic.south.serbianmontenegrin | Serbian-Montenegrin
+indoeuropean.slavic.south.montenegrinserbianbosniancroatian | Montenegrin-Serbian-Bosnian-Croatian
+# Bokelj (Bokeljski): the regional name for the speech of the Bay of Kotor; a census label, no
+# glottocode.
+indoeuropean.slavic.south.bokelj | Bokelj
+# Gorani (Goranski): the Slavic speech of Gora, on the Kosovo-Albania-North Macedonia border.
+# Glottolog gora1268 "Gora (Serbian-Macedonian)", a dialect it files under Macedonian; a sibling
+# of Macedonian here, since a child would make Macedonian a group, drawn washed out.
+# Colour: generated, it sat 0.044 (OKLab) from Montenegrin and 0.026 from Ukrainian; a darker
+# olive keeps it apart from both (0.060 from Albanian, which it rarely meets). Only this census
+# names it. Pinning it moved the generated colours of this file's three compound answers only:
+# Montenegrin-Serbian is now 0.044 from Montenegrin, left as it is (1,336 people, scattered,
+# and a compound of Montenegrin).
+indoeuropean.slavic.south.gorani | Gorani | 0.62 0.12 95

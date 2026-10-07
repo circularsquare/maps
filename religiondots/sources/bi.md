@@ -1,9 +1,76 @@
-# Burundi — scouted to the end 2026-09-08, NOT DRAWN
+# Burundi: drawn 2026-10-03 at 17 provinces (2008), census totals on an Afrobarometer pattern
 
-**Closed on what the offices publish, not on reachability.** Every host below answered. The
-2008 census asked religion of every household member and published the answer at **national
-and urban/rural only**; no subnational religion table exists anywhere in either office's
-catalogue. `sources.md` §11ah is the long version.
+**Drawn by `fafd1067-bi` on 2026-10-03** (`sources.md` §bi-2026-10-03), reopened from §11ah's close
+by the survey ruling (§scout-2026-10-03-negatives). §0 below is the build; §1-§6 are the 2026-09-08
+scouting record, still correct, with §4 and §6 updated.
+
+## 0. The build
+
+| | |
+|---|---|
+| level | the 2008 census's religion rows by urban and rural (Tableau 1.13, ordinary households, 7,964,078) |
+| geography | the 17 provinces of 2008; 2008 census populations by urban and rural (Tableau 1.5) and collective households (Tableau 1.4) |
+| pattern | Afrobarometer R5 (Nov-Dec 2012) and R6 (Sep-Oct 2014), 2,395 adults, 17 provinces both rounds |
+| fit | three-way IPF, province x urban/rural x religion, to three exact census tables (`sources/bi.py::ipf3`) |
+| carried | Catholic (+0.639), Protestant (+0.659), Muslim (+0.467); R5 against R6, nulls +0.42-0.43 |
+| tier | every row `modelled` |
+| files | `sources/bi.py`, `sources/bi_geo.py`, `taxonomy/bi2008.py`, `countries/bi.py`, node `other.bi` |
+
+**0.1 Did the 2008 census print religion below the nation anywhere? No; checked again 2026-10-03.**
+- USCB's HDX geodatabases: 34 datasets (`package_search?fq=organization:us-census-bureau`), no Burundi.
+- IHSN catalog 4167 (RGPH 2008): questionnaire and the population répartition only, no microdata.
+- **The thematic volume §4 could not open is intact at USAID.** USAID's Burundi mission hosted the
+  2011 analysis series, and the Wayback Machine holds it:
+  `web.archive.org/web/20170202013857id_/https://www.usaid.gov/sites/default/files/documents/1866/2008%20Burundi%20Population%20Survey_Status%20and%20Structure%20of%20Population.pdf`
+  (88 pages, opens cleanly). Its §4.2 Religion is Tableau 4.4, religion by urban/rural and sex only,
+  and says *"la différenciation par rapport à la religion se traitera dans les autres rapports
+  thématiques"*. The same directory (CDX `usaid.gov/sites/default/files/documents/1866/*`) has
+  *Birth and Fertility* (religion against completed fertility, national) and *Marriage and Marital
+  Status* (marital status and polygamy by religion, national), both read; *Household and Housing*,
+  *Literacy*, *Mortality* (lifetable.de holds its copy) and *Poverty* are listed and were not opened.
+  None of the read ones crosses religion with geography.
+- PARIS21's `BURUNDI-population-2008.PDF` is an 8-page population summary.
+
+**0.2 Geography.** COD-AB Burundi v02 (July 2026) is the 2025 map (5 provinces, 42 communes) and
+HDX keeps no older edition. geoBoundaries gbOpen BDI has the 18 provinces of 2015 and the 119
+pre-2025 communes; the 116 outside the Mairie join the census's own commune list one to one inside
+their province (four aliases, ten-letter truncation), Rumonge's five go back to Bururi (Burambi,
+Buyengero, Rumonge) and Bujumbura Rural (Bugarama, Muhuta), and the Mairie's three are one unit.
+R6's commune column puts all 1,199 of its respondents in their REGION province. **The census prints
+`MAKAMBA` twice in Makamba province and no Mabanda; the first is Mabanda** (alphabetical order;
+Kontur 1.34x and 1.20x that way round, 0.66x and 2.46x the other). Dots are placed on Kontur 2023
+calibrated to each commune's 2008 count, hexes cut to the national outline.
+
+**0.3 Why three dimensions, and the seed.** Liberia's and Togo's two-margin fit uses the census's
+national rows and unit populations. Burundi's table also has the urban and rural split, and it is
+large (Muslims 14.3% of urban Burundi, 1.3% of rural), so it is a third margin. Seeding the carried
+rows flat across urban and rural double counts the town: the survey's province shares already
+contain it, and the fit put 20.0% Muslims in the Mairie (survey 12.6%, n=175) and 4.9% in every
+other town. Splitting each carried province share by the survey's own national urban and rural
+multiple (Muslim 3.26x / 0.59x) and letting the fit move it to the census's gives the Mairie 14.4%
+and the other towns 14.1%, beside 14.3% for all urban Burundi (asserted, `TOWN_BAND`). The two-margin
+fit with no urban dimension gave the Mairie 9.3%.
+
+**0.4 The survey against the census.** Survey over census, national: Catholic 0.91x, Protestant
+1.34x, Muslim 1.52x, Adventist 1.03x, None 0.14x, Other 0.30x. `Christian only` is 4.2% of
+Christians nationally and 10-16% in Bujumbura Rural, Gitega, Mwaro and Karuzi, with no order that
+repeats between rounds (+0.028); it is spread over the two carried Christian rows of its own
+province, which leaves their balance untouched (`UNNAMED_RANGE_MAX` raised to 0.17 with the reason).
+The survey's Adventists are 15.7% of Cibitoke and fail the split-half, so Cibitoke is drawn at 2.7%.
+Muslims are drawn at zero in Muramvya, Mwaro and Rutana, where the survey found none (about 2
+expected in each).
+
+**0.5 What is not used.** The 2024 census (RGPHAE) publishes on the five new provinces only and has
+no religion table; it is the reopen trigger (§2). The dots are the 8,053,574 people of August 2008.
+Rescaling to 2024 would need the 2024 counts on the old provinces, which only the commune tables
+could give (new communes merge old ones), and was not attempted.
+
+---
+
+*The scouting record of 2026-09-08 follows, as written then.* It was closed on what the offices
+publish, not on reachability. Every host below answered. The 2008 census asked religion of every
+household member and published the answer at **national and urban/rural only**; no subnational
+religion table exists anywhere in either office's catalogue. `sources.md` §11ah is the long version.
 
 | | |
 |---|---|
@@ -160,6 +227,9 @@ So this is the single genuinely untried thing about Burundi. It is a coin flip, 
 better PDF surgeon than was available here (no qpdf, mutool or pikepdf on this box), and even
 intact it would analyse the same national tables the workbooks carry.
 
+*Settled 2026-10-03 (§0.1): an intact copy is on USAID's site via the Wayback Machine, and its
+religion table is national by urban and rural only.*
+
 ## 5. What was checked and came back empty
 
 Written out so nobody repeats it.
@@ -195,6 +265,10 @@ Written out so nobody repeats it.
 
 ## 6. If Burundi is ever wanted before RGPHAE 2024 publishes
 
+*2026-10-03: this urban/rural composition is now one of the three margins of the drawn build (§0.3),
+with the Afrobarometer supplying the provincial pattern on top, under the survey ruling of
+2026-09-15. As written on 2026-09-08:*
+
 There is a buildable fallback and it is **a model, not counted geography**, which is why it was
 not taken.
 
@@ -212,3 +286,37 @@ that is far above the microstate tier where a national table stands on its own (
 would be a modelled country of real size resting on a single binary. That is a shared-rule call
 and it belongs to Anita, not to a build agent; it is written down here so the option is costed
 rather than rediscovered.
+
+## 7. Review, 2026-10-03 (`fafd1067-rev10`, full pass)
+
+Checks clean (`check_md`, `built_countries --check`, `check_rollup bi`: 7,830,122 modelled, none
+orphaned). Province shares re-computed from `data/normalized/bi.csv` match every note figure
+(Bururi 48.6% and Makamba 46.8% Protestant, Gitega 81.9% Catholic and 6.7% Protestant, Mairie 14.8%
+Muslim, Muyinga 4.6% the next highest, zero in Muramvya, Mwaro, Rutana); national rows reproduce
+Tableau 1.13 to rounding, and the zero cells follow the afrobarometer playbook (§3.5, about 2
+expected, well under the 8 that would make the zero the instrument). Mappings follow `rw2022`;
+`other.bi` is the routine node. Screenshot: Burundi fully covered, nothing in Lake Tanganyika.
+
+Two note fixes. *"Muslims were 14.3% of the towns"* sat under *"Of the people whose religion was
+recorded"*, but 14.3% is of all urban residents including `ND`; of those recorded it is 109,748 /
+746,950 = **14.7%** (rural stays 1.3%). And *"The dots are the 8.05 million people counted"*: the
+dots are 7,830,122, the 2.8% in `gap` being undrawn; the figure is dropped from that sentence.
+`refresh-meta` run. `tools/check_no_religion.py` did not recognise `Aucune religion` as a
+no-religion box, so bi was never linted; the pattern is added, and bi passes (`Traditionnelle` is
+separate, step 2, `unaffiliated`).
+
+Not raised, for whoever looks next: the census's `Aucune religion` is 6.2% and 94% rural while the
+Afrobarometer's None and Atheist are 0.85%, a seventh. Step 2 is applied as written and the REVIEW
+entry gives a reason; if Burundi's rural "no religion" is in fact Kiranga practice with no church
+(`Traditionnelle` is only 2,747), the box is closer to step 3's lumped case. Nothing found measures it.
+
+## 8. Top text before the 75-word cut, 2026-10-03 (`fafd1067-top75`)
+
+Anita asked for the text at the top of the phone screen to come down to about 75 words
+(queue.md, "Cut the country text to about 75 words"). These are the four header fields as
+they stood before the cut, verbatim, so nothing they said is lost. The cut versions are in
+`countries/bi.py`; `note_public` was not changed.
+
+- `how`: census totals by town and country, 2008, given a provincial pattern by a pooled survey
+- `grain`: provinces as of 2008; 474,000 people on average
+- `gap`: 2.8%: 1.7% whose religion the census gives as not declared, and 1.1% in collective households (barracks, boarding schools, prisons), whom the religion table leaves out

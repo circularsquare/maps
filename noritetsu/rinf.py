@@ -85,7 +85,7 @@ manager's name from a section dict, where RINF's manager code does not tell them
 Hungary), and `skip_line(id)` for ids that are never lines (Portugal's private sidings), and
 `tol_abs` where the register's section lengths leave out station track (Hungary's MÁV, 1.0 km),
 `cut_at_junctions: True` to end sections where other lines meet as well as at stops
-(Portugal), `name_m` where RINF places stops further than NAME_M from their OSM station
+(Portugal), or a set of RINF point names or uopids to do so only there (Spain), `name_m` where RINF places stops further than NAME_M from their OSM station
 (Slovenia, 1500 m), `stop_names` for points the register types as depots or yards that are
 passenger stops (Slovenia's Kamnik Graben), `osm_stops` (True: OSM stations an OSM train route
 stops at become stops on the stop-to-stop sections they lie on, for registers that list only
@@ -100,7 +100,29 @@ and `netref_wkt: True` where the points' coordinates are only on their netRefere
 geometry (Luxembourg), and `direct_near_m` (metres) where an end-to-end retrace must pass
 near every placed point of the section it replaces (Russia, 1500), and `light_rail_track: True`
 where OSM maps some of the register's lines as railway=light_rail and their stations as
-light-rail stations (Germany: the Berlin and Hamburg S-Bahn). Then --fetch, extract,
+light-rail stations (Germany: the Berlin and Hamburg S-Bahn), and `station_en(point, name)`
+returning an English name for a section end OSM gave none (Russia: Wikidata's label by the
+point's ESR code), and `km_floor: True` where the register's section lengths leave out the
+station areas and so are a floor on the track's length (Denmark: a trace is then judged against
+that floor and the crow-fly distance, and no km_official is shipped), and `way_line(tags)`
+naming the line a track way's own tags give (Denmark's ways carry their line's name), whose
+ways pass 2 then prefers as a numbered relation's, and `osm_stop_route(tags)` for routes
+besides route=train whose stops `osm_stops` takes (Denmark: the S-tog's route=light_rail), and
+`osm_stop_extra(name)` for OSM stations no route lists that a national list says are served
+(Denmark: the timetable's), and `no_chain: True` where the register's section lengths are too
+often wrong to check a line against (Ireland: Mallow - Killarney Junction is 59 km in RINF for
+1 km of track): they still guide the traces, but no km_official is shipped, and
+`plain_name(tags)` giving the name OSM rail stops are read by, where OSM names them after
+their platform (New Zealand: "Maungawhau 3", "Petone Station"), and `osm_stops_skip(lids)` for
+lines `osm_stops` leaves alone, whose trains stop at their listed stations only (Morocco's LGV
+runs beside the old line past its halts), and `fill_holes: True` where RINF leaves stretches
+out of lines that trains run straight through (Austria's Tauernbahn came out in four pieces):
+a line's pieces are joined over its own numbered OSM relation's track (fill_holes), and
+`bridge_pieces` (True, or pieces.Rules settings) to bridge what is left over other lines'
+track (written, never yet trialled). Every country's 0 km links between a stop and a junction
+beside it (the tariff-guide readers' clones) are folded back into the stop by split_pieces,
+build_model's hook, which the wrapper readers pass on.
+Then --fetch, extract,
 build, and add its published lengths to check_model.REGISTER.
 
     python rinf.py --dry <cc>     runs build() alone and prints its log (about 25 s for Belgium)
@@ -163,6 +185,9 @@ OWN_DIRECT = 0.5          # ... and a retrace past a failed piece must lie this 
 AGREE = 0.03              # piecewise and end-to-end traces this close agree with each other
 DETOUR = 1.3              # ... and are believed over RINF if no longer than this times crow-fly
 SHORT = 0.8               # a trace shorter than this times crow-fly (less 0.1 km) is never kept
+KM_FLOOR_SHARE = 0.95     # `km_floor`: a trace may be this share of the register's length, less 0.2 km,
+KM_FLOOR_SLACK = 3.0      # ... and up to DETOUR x crow-fly + 0.5 km, or the length + TOL_REL + this
+                          # (the two station areas left out; Vejle - Børkop winds round the fjord)
 GRID_M = 500
 
 
@@ -739,12 +764,17 @@ class Track:
 
 # ================================================================ OSM stations
 
-def osm_stations(stops, light_rail=False):
+def osm_stations(stops, light_rail=False, plain=None):
     """OSM's rail stations a main-line train calls at: railway=station/halt, or a
     public_transport=station saying train=yes; never a metro, tram or light-rail stop, unless
-    `light_rail` (a country's `light_rail_track`), when a light-rail station counts too."""
+    `light_rail` (a country's `light_rail_track`), when a light-rail station counts too.
+    `plain(tags)`: the name to read instead of `name` (a country's `plain_name`: New Zealand
+    names stop positions after their platform, "Maungawhau 3", "Petone Station")."""
     out = {}
     lr_ok = ("light_rail",) if light_rail else ()
+    if plain is not None:
+        stops = {nid: (dict(tags, name=plain(tags)) if tags.get("name") else tags, lon, lat)
+                 for nid, (tags, lon, lat) in stops.items()}
     for nid, (tags, lon, lat) in stops.items():
         rw, pt = tags.get("railway"), tags.get("public_transport")
         if not tags.get("name"):
@@ -846,16 +876,18 @@ OSM_STOP_BAND_M = 40      # ... and no further than this beyond its own nearest 
 OSM_STOP_END_M = 400      # ... and not this close to either end, is a stop on it (`osm_stops`)
 
 
-def served_stations(rels, stops, ost):
+def served_stations(rels, stops, ost, also=None, plain=None):
     """OSM stations a passenger train route stops at: the route's stop node itself, or a
-    station of its name within STOP_TO_STATION_M of it."""
+    station of its name within STOP_TO_STATION_M of it. `also(tags)`: another route that
+    counts (a country's `osm_stop_route`); `plain(tags)` as in osm_stations."""
     by_key = defaultdict(list)
     for sid, s in ost.items():
         for k in s["keys"]:
             by_key[k].append(sid)
     out = set()
     for tags, members in rels.values():
-        if tags.get("type") != "route" or tags.get("route") != "train":
+        if tags.get("type") != "route" or (tags.get("route") != "train"
+                                           and not (also and also(tags))):
             continue
         for ty, ref, role in members:
             if ty != "n" or not role.startswith(("stop", "platform")):
@@ -867,7 +899,7 @@ def served_stations(rels, stops, ost):
             if rec is None or not rec[0].get("name"):
                 continue
             t, lon, lat = rec
-            for k in name_variants(t.get("name")):
+            for k in name_variants(plain(t) if plain is not None else t.get("name")):
                 for sid in by_key.get(k, ()):
                     if dist_m(lon, lat, ost[sid]["lon"], ost[sid]["lat"]) <= STOP_TO_STATION_M:
                         out.add(sid)
@@ -878,7 +910,7 @@ ROUTE_NEAR_M = 15         # track this close to a train route's ways is that rou
 ROUTE_SHARE_CUT = 0.5     # a junction-ended section this much on route track may be cut too
 
 
-def route_track_share(ways, rels, coords, kx, ky):
+def route_track_share(ways, rels, coords, kx, ky, also=None):
     """A function giving the share of a section's trace (in kx/ky metres) that lies on ways an
     OSM route=train relation has as members: the question drop_unridden_sections asks before
     keeping a junction-ended section, asked here before cutting one at OSM stops."""
@@ -886,7 +918,8 @@ def route_track_share(ways, rels, coords, kx, ky):
     from shapely.geometry import LineString
     from shapely.ops import unary_union
     wids = {r for tags, ms in rels.values()
-            if tags.get("type") == "route" and tags.get("route") == "train"
+            if tags.get("type") == "route" and (tags.get("route") == "train"
+                                                or (also is not None and also(tags)))
             for ty, r, _ in ms if ty == "w"}
     geoms = []
     for w in wids:
@@ -973,14 +1006,148 @@ def split_at_osm_stops(out_secs, cands, kx, ky, stop_nodes, route_share=None):
                 ppts = ppts[::-1]
             new[k2] = {"km": path_km(ppts), "pts": ppts,
                        "chain": v["chain"] * (ts[i + 1] - ts[i]) / L if L else 0.0,
-                       "how": v["how"], "fast": v["fast"]}
+                       "how": v["how"], "fast": v["fast"],
+                       # light-rail km shared out like the chain, or a cut S-bane line
+                       # reads as rail (`light_rail_track`)
+                       "lr": v.get("lr", 0.0) * (ts[i + 1] - ts[i]) / L if L else 0.0}
         added |= set(order)
     return new, added
+
+
+DEBUG = []                # fill_holes' refused candidates, for RINF_FILL_DEBUG
+LINK_M = 50               # a 0 km register section between a stop and a junction this close is a link
+HOLE_MAX_KM = 25.0       # `fill_holes`: a gap in a line's RINF sections is filled over at most
+HOLE_DETOUR = 1.5         # ... this much track, no more than this times crow-fly
+HOLE_PLUS_KM = 1.0        # ... plus this,
+HOLE_OWN = 0.9            # ... at least this share of it on the line's own OSM relation's ways,
+HOLE_OVERLAP = 0.3        # ... and at most this share of it on the line's other sections
+HOLE_END_M = 300          # (the overlap is not counted this close to either end)
+HOLE_OTHER = 0.3          # ... and at most this share on track other RINF lines were traced over
+FILL_SAME_NAME_M = 1000   # a fill's OSM stop this close to a register stop of its name is that stop
+
+
+def _union(keys):
+    parent = {}
+
+    def find(x):
+        parent.setdefault(x, x)
+        while parent[x] != x:
+            parent[x] = parent[parent[x]]
+            x = parent[x]
+        return x
+    for a, b in keys:
+        parent[find(a)] = find(b)
+    return find
+
+
+def fill_holes(out_secs, own, snap_node, pos_node, track, edge_lines=None, mine=frozenset()):
+    """Join the pieces of a line whose RINF sections do not connect, over its own OSM track.
+
+    RINF leaves stretches out of a line: ÖBB's 222 01, the Tauernbahn, has no section from
+    Mühldorf-Möllbrücke to Pusarnitz-Süd, from Markt Paternion to Paternion-Feistritz, or from
+    Gummern to Villach (none under any other id either), so the line came out in four pieces
+    that trains run straight through. A loose end of one piece (a node with one section) is
+    joined to a loose end of another where the track between them is the line's own: the
+    shortest trace preferring the ways of the line's OSM relation (`own`, from pass 2), at most
+    HOLE_MAX_KM and HOLE_DETOUR x crow-fly + HOLE_PLUS_KM, at least HOLE_OWN of it on those
+    ways, and at most HOLE_OVERLAP of it on the line's other sections (so it does not run back
+    over a piece between), and at most HOLE_OTHER of it on track another RINF line's sections
+    were traced over (`edge_lines`: edge -> RINF ids; `mine`, this line's): there the line
+    runs over another line's track, which is a bridge's job, and a fill would put a second
+    line on track one already owns (Wien Penzing - Hütteldorf, 48%, is refused).
+    The nearest pair is joined first, then again until nothing joins.
+    A line with no numbered OSM relation is never filled: nothing else says the track between
+    is the line's. Returns [(a, b, km, crow, own share)] and adds each as a section, its
+    "chain" (RINF km) the traced length, "how" "hole"."""
+    from shapely.geometry import LineString, Point
+    filled = []
+    if not own:
+        return filled
+    kx, ky = track.kx, track.ky
+    tried = set()
+    while True:
+        find = _union(out_secs.keys())
+        deg = Counter()
+        for a, b in out_secs:
+            deg[a] += 1
+            deg[b] += 1
+        if len({find(n) for n in deg}) < 2:
+            break
+        ends = sorted(n for n in deg if deg[n] == 1 and pos_node(n) is not None)
+        cand = []
+        for i, a in enumerate(ends):
+            for b in ends[i + 1:]:
+                if find(a) == find(b) or (a, b) in tried:
+                    continue
+                crow = dist_m(*pos_node(a), *pos_node(b)) / 1000
+                if crow <= HOLE_MAX_KM:
+                    cand.append((crow, a, b))
+        geo = [LineString([(x * kx, y * ky) for x, y in v["pts"]])
+               for v in out_secs.values() if len(v["pts"]) >= 2]
+        best, passed = None, []
+        for crow, a, b in sorted(cand):
+            if best is not None and crow >= best[0]:
+                break
+            tried.add((a, b))
+            sa, sb = snap_node(a), snap_node(b)
+            if sa is None or sb is None:
+                DEBUG.append((a, b, crow, "an end does not snap to track"))
+                continue
+            got = track.trace(sa, sb, HOLE_DETOUR * crow + HOLE_PLUS_KM, own, prefer_main=True)
+            if got is None:
+                DEBUG.append((a, b, crow, "no path"))
+                continue
+            pts, km, fast, edges, okm = got
+            if (km > HOLE_MAX_KM or km > HOLE_DETOUR * crow + HOLE_PLUS_KM
+                    or km < SHORT * crow - 0.1 or okm < HOLE_OWN * km):
+                DEBUG.append((a, b, crow, f"km {km:.2f}, own {okm / km if km else 0:.0%}"))
+                continue
+            other = 0.0
+            if edge_lines:
+                other = sum(float(track.elen[e]) for e in edges
+                            if edge_lines.get(int(e)) and not (edge_lines[int(e)] & mine)) / 1000
+                if other > HOLE_OTHER * km:
+                    DEBUG.append((a, b, crow, f"other line's track {other / km:.0%}"))
+                    continue
+            seq = [pos_node(a)] + pts + [pos_node(b)]
+            g = LineString([(x * kx, y * ky) for x, y in seq])
+            if g.length > 2 * HOLE_END_M and geo:
+                n = max(2, int(g.length // 50) + 1)
+                ts = [g.length * i / (n - 1) for i in range(n)]
+                mid = [g.interpolate(t) for t in ts if HOLE_END_M <= t <= g.length - HOLE_END_M]
+                on = sum(1 for p in mid if min(h.distance(p) for h in geo) <= PARALLEL_M)
+                if mid and on > HOLE_OVERLAP * len(mid):
+                    DEBUG.append((a, b, crow, f"overlap {on / len(mid):.0%}"))
+                    continue
+            passed.append((a, b))
+            if best is None or km < best[0]:
+                best = (km, a, b, seq, fast, crow, okm / km if km else 0.0, track.lr_km(edges),
+                        other / km if km else 0.0,
+                        sorted({x for e in edges for x in edge_lines.get(int(e), ())} - mine)
+                        if edge_lines else [])
+        if best is None:
+            break
+        # A pair that passed but lost to a shorter fill is asked again next round (Kamptalbahn:
+        # Stiefern - Schönberg lost to Buchberg - Gars and was never filled).
+        tried.difference_update(passed)
+        km, a, b, seq, fast, crow, own_share, lr, other_share, others = best
+        if os.environ.get("RINF_FILL_DEBUG"):
+            DEBUG.append((a, b, crow, f"FILLED: other lines' track {other_share:.0%} "
+                                      f"({', '.join(others[:6])})"))
+        key = (a, b) if a <= b else (b, a)
+        if key[0] != a:
+            seq = seq[::-1]
+        out_secs[key] = {"km": km, "pts": seq, "chain": km, "how": "hole",
+                         "fast": fast >= 0.5, "lr": lr}
+        filled.append((a, b, km, crow, own_share))
+    return filled
 
 
 def build(path, log, ref_date=None):
     cc = Path(path).name
     conf = country(cc)
+    GROUPS.clear()
+    LAST_CC[0] = cc
     secs, points = load_rinf(path, log, ref_date)
     # A country's own corrections to RINF's data, made in place before anything reads it
     # (Slovakia: stations typed 110, coordinates kilometres off, lengths in metres, one ŽSR
@@ -1010,7 +1177,10 @@ def build(path, log, ref_date=None):
     track = Track(ways, coords, log, light_rail)
 
     # --- which point is which station (docstring, 2)
-    ost = osm_stations(stops, light_rail)
+    # `plain_name(tags)`: a rail stop's name as the country reads it, without its platform
+    # (New Zealand; unset, names as tagged).
+    plain = conf.get("plain_name")
+    ost = osm_stations(stops, light_rail, plain)
     sidx = StationIndex(ost)
 
     # A point with no coordinate at all (all 93 of the Steiermärkische Landesbahnen's in
@@ -1115,8 +1285,17 @@ def build(path, log, ref_date=None):
     # (Bulgaria has 16).
     osm_stop_cands, extra_nodes = [], set()
     if conf.get("osm_stops"):
+        # `osm_stop_route(tags)`: another route whose stops count (Denmark: the S-tog lines
+        # are route=light_rail, and RINF lists about one S-bane halt in three).
         served = (set(ost) if conf["osm_stops"] == "all"
-                  else served_stations(rels, stops, ost))
+                  else served_stations(rels, stops, ost, conf.get("osm_stop_route"), plain))
+        # `osm_stop_extra(name)`: an OSM station no route lists as a stop that counts anyway,
+        # where a national list says trains call there (Denmark: the timetable's rail stations;
+        # OSM's Danish routes leave out Brejning, Gelsted, Jerne...).
+        if conf.get("osm_stop_extra") and conf["osm_stops"] != "all":
+            n0 = len(served)
+            served |= {sid for sid, s in ost.items() if conf["osm_stop_extra"](s["name"])}
+            log(f"RINF: osm_stop_extra: {len(served) - n0} more OSM stations a list names")
         for sid in sorted(served):
             s = ost[sid]
             sn = track.snap(s["lon"], s["lat"])
@@ -1124,7 +1303,8 @@ def build(path, log, ref_date=None):
                 osm_stop_cands.append((f"e{sid}", s["lon"], s["lat"], sn["d0"]))
         log(f"RINF: osm_stops: {len(served)} OSM stations a train route stops at, "
             f"{len(osm_stop_cands)} of them within {OSM_STOP_M} m of track")
-        on_route = route_track_share(ways, rels, coords, track.kx, track.ky)
+        on_route = route_track_share(ways, rels, coords, track.kx, track.ky,
+                                     conf.get("osm_stop_route"))
     else:
         on_route = None
 
@@ -1169,8 +1349,17 @@ def build(path, log, ref_date=None):
         return out
 
     tol_abs = conf.get("tol_abs", TOL_ABS)
+    # `km_floor`: the register's section lengths leave out the station areas, so they are a
+    # floor on the track's length, not its length (Denmark: Sorø - Slagelse is 12.3 km in RINF
+    # for 13.7 km as the crow flies; København - Korsør sums to 78 km for 111). A trace is then
+    # judged against that floor and the crow-fly distance between its ends, and no chainage is
+    # shipped (km_official), since it would only measure the station areas.
+    km_floor = bool(conf.get("km_floor"))
 
-    def within_tol(km, chain):
+    def within_tol(km, chain, crow=None):
+        if km_floor and crow is not None:
+            return (KM_FLOOR_SHARE * chain - 0.2 <= km
+                    <= max(DETOUR * crow + 0.5, (1 + TOL_REL) * chain + KM_FLOOR_SLACK))
         return abs(km - chain) <= TOL_REL * chain + tol_abs
 
     t0 = time.time()
@@ -1337,6 +1526,24 @@ def build(path, log, ref_date=None):
     for r, rr in rel_ref.items():
         ways_of_ref[rr] |= rel_ways[r]
     own_of = {lid: ways_of_ref[ref] for lid, ref in ref_of.items() if ways_of_ref.get(ref)}
+    # `way_line(tags)`: the line a track way's own tags name, where OSM names each way for its
+    # line (Denmark: "Vestbanen" beside the S-bane's "Høje Taastrup-banen"). Those ways are the
+    # line's own track in pass 2, as a numbered relation's are.
+    way_line = conf.get("way_line")
+    if way_line:
+        named_ways = defaultdict(set)
+        for wid, tags in track.way_tags.items():
+            nm = way_line(tags)
+            if nm:
+                named_ways[nm].add(wid)
+        n_named = 0
+        for lid in by_line:
+            ws = named_ways.get(base_of[lid])
+            if ws:
+                own_of[lid] = own_of.get(lid, set()) | ws
+                n_named += 1
+        log(f"RINF: way_line: {sum(len(v) for v in named_ways.values())} track ways name "
+            f"{len(named_ways)} lines; {n_named} line ids prefer them")
     t0 = time.time()
     tr = trace_all(own_of)
     log(f"RINF: pass 2 traced in {time.time() - t0:.0f} s: {Counter(v[0] for v in tr.values())}")
@@ -1385,17 +1592,25 @@ def build(path, log, ref_date=None):
     # do Sul at Bifurcação de Águas de Moura-Sul lost 12.4 km of Intercidades track). A
     # per-country flag for now: it makes more junction-ended sections answer to OSM's routes.
     cut_at_junctions = conf.get("cut_at_junctions", False)
+    # ... or a set of RINF point names / uopids: cut only there (Spain, whose branch lines end
+    # at a junction merged away inside the main line, so the timetable check found no path)
+    cut_pts = None if cut_at_junctions is True or not cut_at_junctions else {
+        op for op, p in points.items()
+        if p.get("name") in cut_at_junctions or p.get("uopid") in cut_at_junctions}
     net_nbrs = defaultdict(set)
     if cut_at_junctions:
         for s in secs:
             na, nb = node_of(s["a"]), node_of(s["b"])
             if na != nb:
-                net_nbrs[na].add(nb)
-                net_nbrs[nb].add(na)
+                if cut_pts is None or s["a"] in cut_pts:
+                    net_nbrs[na].add(nb)
+                if cut_pts is None or s["b"] in cut_pts:
+                    net_nbrs[nb].add(na)
     # `direct_near_m`: an end-to-end retrace (below) is believed only if every placed point
     # of the merged section lies within this many metres of it (Russia). Unset, no test.
     direct_near_m = conf.get("direct_near_m")
     n_direct_far = 0
+    floor_km = [0.0]                              # `km_floor`: RINF km of lines shipped without it
 
     def passes_near(pts, chain_secs, r):
         from shapely.geometry import LineString, Point
@@ -1408,6 +1623,52 @@ def build(path, log, ref_date=None):
                 if p and g.distance(Point(p[0] * track.kx, p[1] * track.ky)) > r:
                     return False
         return True
+
+    # `fill_holes: True`: join a line's pieces over its own OSM track (fill_holes). Its stops
+    # there are the OSM stations a train route stops at, found once, when first needed.
+    fill_on = bool(conf.get("fill_holes"))
+    n_hole, km_hole = 0, 0.0
+    lazy = {}
+
+    def fill_cands():
+        if "cands" not in lazy:
+            served = served_stations(rels, stops, ost, conf.get("osm_stop_route"), plain)
+            # An OSM station of a register stop's name near it is that stop again, not a new
+            # one: OSM has two "Wien Hauptbahnhof" nodes 230 m apart, and a fill near the
+            # car-train terminal made the second a station of its own, taking 30 lines.
+            named = defaultdict(list)
+            for sid0 in set(stop_of.values()):
+                for k in ost[sid0]["keys"]:
+                    named[k].append((ost[sid0]["lon"], ost[sid0]["lat"]))
+            lazy["cands"] = []
+            for sid in sorted(served):
+                s = ost[sid]
+                if any(dist_m(s["lon"], s["lat"], *p) <= FILL_SAME_NAME_M
+                       for k in s["keys"] for p in named.get(k, ())):
+                    continue
+                sn = track.snap(s["lon"], s["lat"])
+                if sn is not None and sn["d0"] <= OSM_STOP_M:
+                    lazy["cands"].append((f"e{sid}", s["lon"], s["lat"], sn["d0"]))
+        return lazy["cands"]
+
+    def fill_route_share():
+        if "share" not in lazy:
+            lazy["share"] = route_track_share(ways, rels, coords, track.kx, track.ky,
+                                              conf.get("osm_stop_route"))
+        return lazy["share"]
+
+    def edge_lines():
+        # the RINF ids whose traced sections run over each track edge, for fill_holes' test
+        # that a fill is not another line's track
+        if "edges" not in lazy:
+            el = defaultdict(set)
+            for s in secs:
+                st_, got_ = tr[s["sol"]]
+                if st_ == "ok":
+                    for e in got_[3]:
+                        el[int(e)].add(s["line"])
+            lazy["edges"] = el
+        return lazy["edges"]
 
     for gkey, lids in sorted(groups.items()):
         pieces = []                                   # (node a, node b, sol, op a, op b)
@@ -1496,7 +1757,7 @@ def build(path, log, ref_date=None):
                 # Rennweg traced 0.00 km: the S-Bahn trunk is missing from OSM there, and both
                 # ends snapped onto the same distant track.
                 return x >= SHORT * crow - 0.1
-            if (not bad and not within_tol(km, v["chain"]) and km
+            if (not bad and not within_tol(km, v["chain"], crow) and km
                     and own_km >= OWN_SHARE * km and not_short(km)):
                 # On the line's own relation track all the way: the routing is right, and it
                 # is RINF's length that is misallocated between neighbouring sections
@@ -1506,7 +1767,7 @@ def build(path, log, ref_date=None):
                 length_off.append(f"{'/'.join(lids)[:24]:>24} {stations_name(v['nodes'][0])} -> "
                                   f"{stations_name(v['nodes'][-1])}: RINF {v['chain']:.2f} km, "
                                   f"traced {km:.2f} km")
-            elif bad or not within_tol(km, v["chain"]):
+            elif bad or not within_tol(km, v["chain"], crow):
                 # Straight from one end to the other, ignoring the points between.
                 sa, sb = snap_of(op0), snap_of(op1)
                 got = (track.trace(sa, sb, v["chain"], own or None,
@@ -1526,7 +1787,7 @@ def build(path, log, ref_date=None):
                     # Ełk, disused through Mrągowo) traced 135 km over Korsze and Giżycko with
                     # 1% on its own ways, inside the 15% tolerance of RINF's 121 km.
                     got = None
-                if got is not None and within_tol(got[1], v["chain"]) and not_short(got[1]):
+                if got is not None and within_tol(got[1], v["chain"], crow) and not_short(got[1]):
                     pts, km, fast, _e, _o = got
                     pts_all = [p0] + pts + [p1]
                     fast_km = fast * km
@@ -1554,7 +1815,48 @@ def build(path, log, ref_date=None):
                 pts_all.reverse()
             out_secs[key] = {"km": km, "pts": pts_all, "chain": v["chain"], "how": how_ok,
                              "fast": fast_km >= 0.5 * km if km else False, "lr": lr_km}
-        if osm_stop_cands:
+        # `fill_holes`: a line whose RINF sections do not connect is joined over its own OSM
+        # relation's track where RINF left a stretch out (fill_holes' docstring). The filled
+        # sections then take the stops a train route makes on them, as `osm_stops` does.
+        if fill_on and len(_component_km([(a, b, 0.0) for a, b in out_secs])) > 1:
+            op_at = {}
+            for na, nb, s in pieces:
+                op_at.setdefault(na, s["a"])
+                op_at.setdefault(nb, s["b"])
+            got = fill_holes(out_secs, own, lambda n: snap_of(op_at[n]),
+                             lambda n: pos_of(op_at[n]), track, edge_lines(), set(lids))
+            if got:
+                n_hole += len(got)
+                km_hole += sum(g[2] for g in got)
+                for a, b, km, crow, osh in got:
+                    log(f"    hole filled: {'/'.join(lids)[:24]:>24} {stations_name(a)} - "
+                        f"{stations_name(b)}: {km:.2f} km of track ({crow:.2f} crow-fly, "
+                        f"{osh:.0%} on its own relation)")
+                if not osm_stop_cands:
+                    holes = {tuple(sorted((a, b))) for a, b, *_r in got}
+                    cut, extra = split_at_osm_stops(
+                        {k: out_secs.pop(k) for k in holes}, fill_cands(), track.kx, track.ky,
+                        stop_nodes, fill_route_share())
+                    out_secs.update(cut)
+                    stop_nodes |= extra
+                    extra_nodes |= extra
+                    if extra:
+                        log(f"    hole stops: {'/'.join(lids)[:24]}: "
+                            + ", ".join(ost[int(n[1:])]["name"] for n in sorted(extra)))
+            still = len(_component_km([(a, b, 0.0) for a, b in out_secs]))
+            if still > 1:
+                log(f"    hole left: {'/'.join(lids)[:24]:>24} still {still} pieces"
+                    + ("" if own else " (no own OSM relation)"))
+            if os.environ.get("RINF_FILL_DEBUG"):
+                for a, b, crow, why in [d for d in DEBUG if d[3].startswith("FILLED")] + \
+                        ([d for d in DEBUG if not d[3].startswith("FILLED")][:8] if still > 1 else []):
+                    log(f"        {'' if why.startswith('FILLED') else 'refused '}"
+                        f"{stations_name(a)} - {stations_name(b)} ({crow:.2f} crow-fly): {why}")
+            DEBUG.clear()
+        # `osm_stops_skip(lids) -> bool`: lines `osm_stops` leaves alone, whose trains stop at
+        # their listed stations only (Morocco's LGV runs beside the old line past its halts).
+        if osm_stop_cands and not (conf.get("osm_stops_skip")
+                                   and conf["osm_stops_skip"](lids)):
             n_before = len(out_secs)
             out_secs, extra = split_at_osm_stops(out_secs, osm_stop_cands, track.kx, track.ky,
                                                  stop_nodes, on_route)
@@ -1564,6 +1866,21 @@ def build(path, log, ref_date=None):
                 log(f"    osm_stops: {'/'.join(lids)[:40]}: {len(extra)} stops added, "
                     f"{n_before} -> {len(out_secs)} sections: "
                     f"{', '.join(ost[int(n[1:])]['name'] for n in sorted(extra))}"[:400])
+        # A 0 km section from a stop to a junction at the same place is a register's link,
+        # not track (ru_register's clones: "<esr>@<section>" beside its stop, so a long
+        # stretch ends at a junction and answers to OSM's routes). Kept here so split_pieces
+        # can fold the junction back into its stop once build_model has judged the stretch.
+        def same_place(a, b):
+            pa, pb = pos_of(op_of_node[a]), pos_of(op_of_node[b])
+            return pa is not None and pb is not None and dist_m(*pa, *pb) <= LINK_M
+        op_of_node = {}
+        for na, nb, s in pieces:
+            op_of_node.setdefault(na, s["a"])
+            op_of_node.setdefault(nb, s["b"])
+        links = [(k[0], k[1]) if k[1] in stop_nodes else (k[1], k[0])
+                 for k, v in sections.items()
+                 if not v["chain"] and (k[0] in stop_nodes) != (k[1] in stop_nodes)
+                 and same_place(*k)]
         for key in redundant(out_secs, stop_nodes, track.kx, track.ky):
             n_parallel += 1
             km_parallel += out_secs.pop(key)["km"]
@@ -1596,6 +1913,12 @@ def build(path, log, ref_date=None):
                     stations[n] = {"id": n, "name": display_name(p.get("name")),
                                    "name_en": "", "lon": p["lon"], "lat": p["lat"],
                                    "lines": set(), "junction": True}
+                # `station_en(point, name)`: an English name from the register's side where
+                # OSM gave none (Russia: Wikidata's label by ESR code, checked against the
+                # name shown, which may be OSM's).
+                if conf.get("station_en") and not stations[n]["name_en"]:
+                    stations[n]["name_en"] = conf["station_en"](points.get(op, {}),
+                                                                stations[n]["name"]) or ""
         rel_names = [rel_name[r] for lid in lids for r in [rel_of.get(lid) or named_rel.get(lid)]
                      if r and rel_name.get(r)]
         if ref:
@@ -1666,6 +1989,11 @@ def build(path, log, ref_date=None):
             "display": order,
             "sections": [[a, b, round(v["km"], 3)] for (a, b), v in out_secs.items()],
         })
+        # What RINF itself gave this line, for the lines-in-pieces measurement and split_pieces:
+        # the RINF km of each connected piece of its section graph (stops merged), before
+        # any trace was rejected.
+        GROUPS[lid_out] = {"raw_pieces": _component_km(
+            [(na, nb, s["km"] or 0.0) for na, nb, s in pieces]), "links": links}
         susp = conf.get("suspended")
         if susp and susp(key_ref, sorted(lids)):
             # The register's own country says no passenger train runs (Slovakia: the
@@ -1678,17 +2006,26 @@ def build(path, log, ref_date=None):
             # ICE's 316 km OSM section Athens - Larissa, under half on highspeed=yes track,
             # credited nothing of the new Tithorea - Lianokladi alignment).
             lines[-1].pop("highspeed_sections", None)
+        if km_floor or conf.get("no_chain"):
+            # A floor, not the track's length (or, `no_chain`, too often wrong): kept out of
+            # check_model's chainage check.
+            floor_km[0] += lines[-1].pop("km_official")
+            lines[-1].pop("chain")
         geoms[lid_out] ={f"{a}|{b}": [[round(x, 5), round(y, 5)] for x, y in v["pts"]]
                           for (a, b), v in out_secs.items()}
 
     total = sum(l["km"] for l in lines)
     n_j = sum(1 for s in stations.values() if s.get("junction"))
     log(f"RINF: {len(lines)} lines ({sum(1 for l in lines if l['ref'])} with a public number), "
-        f"{total:,.0f} km traced against {sum(l['km_official'] for l in lines):,.0f} km of "
+        f"{total:,.0f} km traced against "
+        f"{sum(l.get('km_official', 0) for l in lines) + floor_km[0]:,.0f} km of "
         f"RINF length; {len(stations)} section ends of which {n_j} are not stops; "
         f"{n_rejected_secs} sections left out for a rejected trace, {n_direct} traced "
         f"end to end because the pieces did not add up; {n_parallel} sections "
         f"({km_parallel:.0f} km) dropped as a second track pair of their own line")
+    if fill_on:
+        log(f"RINF: fill_holes: {n_hole} gaps in lines' RINF sections filled over "
+            f"{km_hole:.1f} km of their own OSM track")
     if direct_near_m:
         log(f"RINF: {n_direct_far} end-to-end traces passed a placed point by more than "
             f"{direct_near_m} m and were not used")
@@ -1703,7 +2040,178 @@ def build(path, log, ref_date=None):
         missing = sorted(set(wd) - built, key=lambda r: (len(r), r))
         log(f"RINF: Wikidata has {len(wd)} route numbers; {len(missing)} of them built as no "
             f"line: {' '.join(missing[:60])}")
+    # `line_alias` in COUNTRY ({old RINF key: new RINF key}): line ids a country's change
+    # dropped, and the line saved rides on them belong on now (Italy's split "Nodo di ..."
+    # lines). Kept here as LINE_ALIAS (line id -> line id) for build_model to add to
+    # aliases.json `lines`; empty unless the country sets it.
+    LINE_ALIAS.clear()
+    live = {l["id"] for l in lines}
+    for old, new in (conf.get("line_alias") or {}).items():
+        a, b = line_hash(cc, old), line_hash(cc, new)
+        if a not in live and b in live:
+            LINE_ALIAS[a] = b
+    if LINE_ALIAS:
+        log(f"RINF: {len(LINE_ALIAS)} line ids gone, aliased for saved rides: "
+            + ", ".join(f"{a} -> {b}" for a, b in LINE_ALIAS.items()))
     return lines, stations, geoms
+
+
+LINE_ALIAS = {}
+# Per built line id: {"raw_pieces": [RINF km of each connected piece of its RINF sections],
+# "links": [(junction, stop), ...] (the 0 km links build() found)}.
+GROUPS = {}
+LAST_CC = [None]                   # the region build() last read, for split_pieces
+LINE_PIECES = {}                   # {line id: [ids split off it]}, for aliases.json `pieces`
+
+
+def _rename_node(l, old, new, geoms, state):
+    """Section end `old` of line l becomes `new`: sections, their geometry and per-section
+    dicts, display, and ownership's state["sec_ways"]. A section left from `new` to `new` goes."""
+    lid = l["id"]
+    g = geoms.get(lid, {})
+    sec_ways = (state or {}).get("sec_ways")
+    keep = []
+    for sec in l["sections"]:
+        a, b = sec[0], sec[1]
+        if old not in (a, b):
+            keep.append(sec)
+            continue
+        k0 = f"{a}|{b}"
+        a2, b2 = (new if a == old else a), (new if b == old else b)
+        k1 = f"{a2}|{b2}"
+        dicts = [d for d in (l.get("highspeed_sections"), l.get("chain")) if isinstance(d, dict)]
+        if a2 == b2:
+            g.pop(k0, None)
+            for d in dicts:
+                d.pop(k0, None)
+            if sec_ways is not None:
+                sec_ways.pop((lid, k0), None)
+            continue
+        sec[0], sec[1] = a2, b2
+        if k0 in g:
+            g[k1] = g.pop(k0)
+        for d in dicts:
+            if k0 in d:
+                d[k1] = d.pop(k0)
+        if sec_ways is not None and (lid, k0) in sec_ways:
+            sec_ways[(lid, k1)] = sec_ways.pop((lid, k0))
+        keep.append(sec)
+    l["sections"] = keep
+    disp = []
+    for s in l.get("display", []):
+        s = new if s == old else s
+        if not disp or disp[-1] != s:
+            disp.append(s)
+    l["display"] = disp
+
+
+def split_pieces(lines, stations, geoms, reg_ways, state, log):
+    """build_model's hook, after drop_unridden_sections (HANDOFF, "What build() returns").
+
+    1. LINKS. A junction a register put beside a stop with a 0 km section between them
+    (ru_register's clones, so that a long stop-to-stop stretch is judged by OSM's routes) is
+    folded back into its stop once the stretch has been judged: build_model drops the 0 km
+    link, which no route runs over, and the line came out in pieces at every clone whose
+    stretch was kept (Лена-Восточная — Хани in 14). Every RINF-read country; only a register
+    with such links moves."""
+    cc = LAST_CC[0]
+    LINE_PIECES.clear()
+    n_fold, n_lines = 0, 0
+    for l in lines:
+        if l.get("src") != "rinf":
+            continue
+        links = (GROUPS.get(l["id"]) or {}).get("links") or ()
+        if not links:
+            continue
+        ends = {s for sec in l["sections"] for s in sec[:2]}
+        did = 0
+        for j, s in links:
+            if j in ends and s in stations:
+                _rename_node(l, j, s, geoms, state)
+                stations[j]["lines"].discard(l["id"])
+                stations[s]["lines"].add(l["id"])
+                ends = {x for sec in l["sections"] for x in sec[:2]}
+                did += 1
+        if did:
+            n_fold += did
+            n_lines += 1
+            l["km"] = round(sum(sec[2] for sec in l["sections"]), 3)
+    log(f"RINF: split_pieces ({cc}): {n_fold} link junctions folded into their stops "
+        f"on {n_lines} lines")
+    conf = country(cc) if cc else {}
+    if conf.get("bridge_pieces"):
+        _bridge(conf, lines, stations, geoms, reg_ways, state, log)
+
+
+def _bridge(conf, lines, stations, geoms, reg_ways, state, log):
+    """2. BRIDGES (`bridge_pieces` in COUNTRY: True, or a dict of pieces.Rules settings). A
+    line still in pieces is joined over the passenger track between them by
+    pieces.bridge_gaps, as the UK's are: where build_model dropped a section of it no train
+    runs over and trains take another line's track instead (Portugal's Linha do Sul, whose
+    old line Pinheiro - Grândola Norte is dropped and whose trains run the Alcácer variant).
+    A way's name for the bridge is the register line it belongs to (reg_ways); track under
+    a passenger route that no register line holds is in the graph unnamed. Nothing is split:
+    what no bridge joins stays one line in pieces (the rest is track missing from OSM)."""
+    import pickle
+    import build_model as bm
+    import pieces as pc
+    cc = LAST_CC[0]
+    reg = {l["id"]: l["name"] for l in lines
+           if l.get("src", "osm") != "osm" and not l.get("service")}
+    name_of = {}
+    for wid, lids in reg_ways.items():
+        names = sorted(reg[x] for x in lids if x in reg)
+        if names:
+            name_of[wid] = names[0]
+    lat = np.mean([s["lat"] for s in stations.values()]) if stations else 50.0
+    opts = conf["bridge_pieces"] if isinstance(conf["bridge_pieces"], dict) else {}
+    rules = pc.Rules(**{"tag": f"RINF {cc}", "id_prefix": "q", "lat": float(lat), **opts})
+
+    def classify(wid, tags, routed):
+        if tags.get("railway") not in TRACK:
+            return None
+        nm = name_of.get(wid)
+        return nm if nm is not None else ("" if routed else None)
+
+    def graph():
+        if not state or "ways" not in state:
+            return None
+        f = ROOT / "data" / "proc" / cc / "rels.pkl"
+        if not f.exists():
+            return None
+        with open(f, "rb") as fh:
+            rels = pickle.load(fh)
+        return pc.track_graph(state["ways"], bm.Coords(state["cid"], state["cx"], state["cy"]),
+                              pc.routed_ways(rels), classify, rules, log)
+    before = {l["id"]: {f"{s[0]}|{s[1]}" for s in l["sections"]} for l in lines
+              if l["id"] in reg}
+    pc.bridge_gaps(lines, stations, geoms, reg_ways, state, log, rules, graph)
+    # A bridge has no register chainage: its traced km joins km_official, so check_model
+    # still compares the register's own sections with their traces.
+    for l in lines:
+        if l["id"] not in before:
+            continue
+        new = [s for s in l["sections"] if f"{s[0]}|{s[1]}" not in before[l["id"]]]
+        if new and "km_official" in l:
+            l["km_official"] = round(l["km_official"] + sum(s[2] for s in new), 3)
+
+
+def _component_km(edges):
+    """The km of each connected piece of [(a, b, km)], biggest first."""
+    parent = {}
+
+    def find(x):
+        parent.setdefault(x, x)
+        while parent[x] != x:
+            parent[x] = parent[parent[x]]
+            x = parent[x]
+        return x
+    for a, b, _km in edges:
+        parent[find(a)] = find(b)
+    by = defaultdict(float)
+    for a, _b, km in edges:
+        by[find(a)] += km
+    return sorted(by.values(), reverse=True)
 
 
 if __name__ == "__main__":

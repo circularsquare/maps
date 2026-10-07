@@ -616,6 +616,299 @@ landing it (a generic change that moves another country's output gets scoped or 
 and ran `tools/build_regions.py` when a country was final. Since 2026-10-02 the measuring is
 `tools/ab.py`, run only on the countries a change can touch (`HANDOFF.md`).
 
+## 2026-10-02 (evening): what maps-12 did
+
+Took the first three of HANDOFF's "next session, first" items. Each `build_model` change was
+trialled with `tools/ab.py --all` (twice: the first run showed the English-name merge missed
+Shanghai, whose two records are both made from bare stop nodes in `build_stations`, and that
+first-word alone split jp's "小倉 => 下関" from its other direction), then cn ru jp be bg tw
+were rebuilt (13 min, register lines unchanged in all six) and `build_regions.py` run.
+
+- Named trains on a shared ref: now also the same first word, or the same two ends either
+  way round. Every ref-only decision is logged ("twins on ref").
+- Stations with the same English name within 50 m are one: Shanghai Line 14 whole again,
+  12 other records merged, each logged ("stations: ...").
+- App: the line view lists the trips over the line or the picked stretch (`tripsOver`).
+  Checked headless on jp with a two-leg test trip: remove a leg, undo, show trip, delete.
+- `tools/ab.py` compares `closed` as a set: ch's order changes from build to build and showed
+  as two changed lines.
+- jp's foot.json let a Yamanote ride credit Keikyu (0.48 km at 品川) and the Tokaido
+  Shinkansen (0.76 km at 新橋). Fixed in ownership.py for Japan only (a way's tagged operator
+  picks between two operators' register lines); tried everywhere first, and declined for cn,
+  es, ch with the reasons in run()'s comment. jp rebuilt.
+- Anita's answers: same-brand named trains stay merged (no preference); timetables are lower
+  priority than new countries ("mostly just to verify details"), so de landed and it, es were
+  parked in data/raw/gtfs_pending/; the USA next; a load-by-zoom system eventually (HANDOFF 9).
+- GTFS: Germany live (gtfs.de); `mid_splits` for junctions RINF never cut a section at
+  (Werdau - Neumark), in a separate pass after three tries (gtfs_sources.md); Renfe's cp1252
+  and padded headers read. de and pl rebuilt.
+- USA built: NARN's US passenger segments (`us_register.py --fetch`, 18,232 segments, 43,570
+  km, public domain) plus its other segments under OSM passenger routes (`--fetch-holes`),
+  OSM stations from the Geofabrik extract (deleted after; data/proc/us kept). A country agent
+  wrote the reader; the managing session landed its build_model diff (us `looks_like_service`
+  branch, Brightline changed to a line; `ROUTE_SHARE_BY_LENGTH`) and ran build_regions. 448
+  register lines, 39,807 km.
+- Later the same day: US second tracks folded into their lines (`companion_of`, her "both
+  directions one track unless far apart"); US metro stations merge within 150 m (Manhattan's
+  23rd Streets); a reload opens with nothing selected; the app offers the stop past a
+  junction end through the operating patterns (`pastEnds`). Tried and dropped, numbers in
+  the code: cutting US lines where another line ends on them, and three station-placement
+  rules for Long Island City.
+- Canada, Sweden and Australia built by three country agents in parallel while the managing
+  session ran the downloads, extracts and shared diffs; Finland rebuilt for Haparanda.
+  34 countries.
+
+The detail of that day's finished queue items, moved out of HANDOFF's thread 0:
+
+- **Named trains no longer merge on a shared ref alone.** `merge_osm_twins` also wants the
+  same first word (`first_word`) or the same two ends either way round (`arrow_ends`, for
+  jp's "小倉 => 下関" / "下関 => 小倉"), and logs every ref-only decision ("twins on ref ...
+  merged / kept apart"). be: both European Sleepers are their own named train again, the
+  Eurostar 205 -> 177 km; jp: はやて and はやぶさ (same OSM ref) are two trains. Still merged,
+  as the same word allows: NJ 40235's directions (de at it), AVE Madrid - Málaga (es), it's
+  EC Basel - Milano with EC Genève - Milano, nl's Eurostar London and Paris routes, be's two
+  European Sleepers. Left merged: Anita had no preference, and credit is the same either way.
+- **Stale renames.** `merge_duplicate_stations` folds records with the same English name
+  within `EN_DUP_RADIUS_M` (50 m), and `build_stations` joins a record made from a bare stop
+  node to an earlier one with the same English name within 50 m, naming it after the native
+  name most of its stop nodes carry. Shanghai Line 14 runs 封浜 - 桂桥路 through 浦东南路 (the
+  OSM node still says 东昌路); 12 other records merged, all the same station.
+- **App, which trips rode this?** The line view lists "Trips on this line", or "Trips over
+  A → B" once two stations are picked (`rideCredit` / `tripsOver`).
+- **False credits in jp's foot.json.** 23 JR East ways had gone to Keikyu and the Shinkansen,
+  whose N02 lines are drawn nearer; `ownership.py` now prefers the register line of the
+  operator a way's tag names (`OPERATOR_TAG_REGIONS`, Japan only: tried everywhere, it
+  misassigned in cn, es and ch). jp: 360 of 98k ways changed owner, register to register.
+- **The GTFS check**: Germany live (gtfs.de); Italy's and Spain's feeds parked in
+  `data/raw/gtfs_pending/`; `mid_splits` for junctions RINF never cut a section at.
+
+## 2026-10-03: ten agents at once (managing session maps-0d)
+
+Anita: "feel free to start lots of agents". One managing session ran ten agents in parallel,
+each owning a list of files written into its brief (`agent_rules.md` in the session scratch,
+summarised in HANDOFF "How the work is run"). Mid-session she paused big downloads for a while
+("please dont do any big downloads rn"), so the four new-country agents started on research
+and readers from small sources and built once the extracts arrived ("downloads fine now").
+
+New for running many agents at once:
+- `tools/slot.py`: every build, extract, trial and tiling run takes one of six shared slots
+  (OS file locks in data/logs/slots/, released however the process ends), and numpy/osmium
+  threads are capped to the slots held. Ten agents stayed inside Anita's 6-core cap with no
+  counting.
+- `tools/ab.py` takes `NORITETSU_AB_DIR`, so two agents trialling one country do not build
+  over each other.
+- `rules/<cc>.py` (refactor agent): build_model.py names no country any more. Every
+  per-country rule (named trains, the Finland all-routes rule, Australia's platform names, the
+  US metro duplicate radius, US/Canada share-by-length) moved to its country's file, shared
+  regexes to `rules/shared.py`; `country_rules()`'s docstring lists the hooks. Checked two
+  ways: the old and new functions on every relation and stop of all 34 countries' data/proc
+  (0 differences; a deliberately broken copy failed it), and ab.py before/after plus
+  side-by-side builds (0 differences). `tests/test_rules.py`. `norm_line_name`'s prefixes
+  stay shared: ownership.py and line_colours.py call it without a region.
+
+What each agent did (detail in each `<cc>_sources.md`):
+- **Denmark** (RINF; a six-digit RINF id is Banedanmark's line number in its first three
+  digits, named from da.wikipedia): 46 register lines, 2,408 km; Rejseplanen's timetable
+  live. RINF's Danish lengths leave out station areas (København - Korsør sums to 78 km
+  against 111), so da.wikipedia lengths are the check. Five no-op rinf.py hooks (`km_floor`,
+  `way_line`, `osm_stop_route`, `osm_stop_extra`) and a fix in `split_at_osm_stops` (it
+  dropped the light-rail share of a cut piece, so ownership gave Høje Taastrup-banen to
+  Vestbanen).
+- **Norway** from Bane NOR's own track register (Banenettverk, Geonorge, NLOD), not RINF
+  (RINF's Norwegian sections are in four unconnected pieces, Støren missing); stops and "is
+  it run over" from Entur's journey planner. 25 register lines, 3,689 km, all within
+  0.92-1.01 of published lengths or explained. All four Swedish crossings end on RINF points.
+- **India**: Wikidata's IR line items and station chains, section km from the unofficial IR
+  GTFS (Neo2308), written in rinf.py's input format and traced by rinf.py. 720 register lines,
+  67,135 km (IR publishes 69,393 route km with freight). 421 junction-to-junction lines named
+  after their ends fill what Wikidata does not cover (`FILL` in in_register.py). Korea's
+  named-track recipe fails here: 30% of track is named for its line.
+- **UK** (`gb`): OSM's named track (97.2% of passenger track-km named), with repairs; 464
+  register lines, 15,291 km. ELRs, OSM route=railway relations and Wikipedia lines measured
+  and set aside (gb_sources.md). Heritage railways left out of the register.
+- **Italy**: timetable check live (Trenitalia, Trenord, EAV); 209 km kept that OSM routes
+  dropped, 809 km closed and each checked. "Nodo di ..." city lines split into the
+  it.wikipedia lines (`NODE_SPLIT`); five dropped ids carried by `LINE_ALIAS`, which
+  build_model now ships. AV Treviglio - Brescia still dropped (needs a high-speed rule).
+- **Spain**: timetable check live; Pajares base tunnel and Chinchilla - Hellín kept, 252 km
+  closed and checked. rinf.py's `cut_at_junctions` now also takes a set of points.
+- **Germany and borders**: every Swiss-German crossing, Konstanz, Selb, Kehl tram, Tønder
+  and the Öresund bridge share one border id on both sides (`borders.EXTRA`, new `MOVE` and
+  `SAME`); DB's track on Swiss soil now counts only in Switzerland; freight bypasses 1280 and
+  1750/1751 greyed; DB InfraGO's licence confirmed CC BY 4.0.
+- **Russia**: English station names from Wikidata by ESR code (P2815), kept only where the
+  label reads as a romanisation of the Russian (register stops with one 21% -> 41%), line
+  English names from their ends (5% -> 46% of lines); one picked colour per regional railway.
+- **App**: line data loads from z8, not z4; country totals precomputed into regions.json
+  (`owned_totals`, a Python copy of the app's ownTrack + regionTotals); not-running track
+  from one `dist/data/closed.json`. Europe at z4: 33 MB of JSON and 158 MB heap -> none and
+  23 MB; first track 5.3 s -> 1.3 s.
+- **US station placement** (Long Island City): stopped. LIC and Hunterspoint Avenue are in
+  no OSM route's stop list, so they have no stop nodes and the HANDOFF idea cannot reach
+  them; two more rules tried, numbers in us_register's place_stations comment.
+
+## 2026-10-03: decisions settled by the agents' leans
+
+Anita: "i trust your leans", and from now on local specifics outside the US and Japan are
+decided by the session, not put to her (HANDOFF standing decisions). As built:
+- au: Puffing Billy and Kuranda (daily) count, 2-3-day heritage lines left out; Queensland's
+  Caboolture / Ipswich lines folded into the North Coast Line and Main Line. ca: the Rocky
+  Mountaineer a named train whose ex-BC Rail track counts nowhere. se: Tågab's weekly Sunday
+  train kept running, Dal Västra Värmland's summer trains greyed.
+- gb: OSM track names are the line unit (ELRs set aside); heritage railways' own OSM routes
+  count as lines, as in the US; Chiltern's track Harrow - Amersham left to the Metropolitan line.
+- in: 421 junction-to-junction lines fill what Wikidata lacks (`FILL`); Jammu & Kashmir and
+  Arunachal drawn as India, as trains run.
+- no: long-distance F-lines and Oslo - Stockholm are lines, only Nattåg 93 a named train;
+  Flåmsbana a line; freight-only and closed track left off; the old Nykirke - Barkåker line
+  built until the new alignments open.
+- dk: Gedserbanen greyed; Storebæltsforbindelsen its own line; SJ's Tog 80 a line.
+- es: Riquelme-Sucina not a stop; 120 west of Salamanca and 822 Ourense - A Gudiña closed
+  through `FEED_COMPLETE` in gtfs_served (landed the same day).
+- it: Villa Opicina - Bivio d'Aurisina kept; the Nodo split as built.
+- de: DB's track on Swiss soil counts only in Switzerland; 1280 greyed despite ICE
+  diversions; the Rafzerfeld left to ch.
+- ru: one picked colour per regional railway; Crimea's Ukrainian-based English spellings kept.
+- app: unvisited countries show "0.00% · 0.0 of N km".
+
+Asked for by her the same evening: the names-only search index (dist/data/search.json, built
+by build_regions) and a US station override list (us_register). The search agent found that
+Russia's picked colours had been written as bare hex (`2F7FD8`), which draws nothing:
+ru_register now writes `#`, and line_colours.apply adds a missing `#` to any table's colour.
+
+## 2026-10-03 (evening): thirteen more regions, eight agents
+
+Anita: "anything else to do? maybe move onto more countries?", and no factual questions to
+her at all, the US included ("ill let you know if i see something thats wrong"). The
+managing session downloaded and extracted all thirteen Geofabrik files in one script (four
+downloads at a time, each extract through the slot tool as it landed; ~4.5 GB, 25 min) while
+eight agents researched; each built its country once `data/proc/<cc>` was ready.
+
+- **ie**: RINF's per-section ids grouped into 17 IÉ lines by a section table; the extract
+  clipped to the Republic (NI is gb's); NTA's rail feed live; the Dublin - Belfast line joins
+  gb at Ireland's own RINF border point moved onto the boundary (`eIEOP42`). 14 published
+  lengths all within 3%.
+- **tr**: OSM's named track (98.4% named); TCDD's ticketing CDN list decides stops; YHT
+  services are lines, the "Ekspresi" trains named. 32 checked lines, 28 within 5%.
+- **ua**: the six UZ sheets of Russia's tariff guide, through rinf.py like Russia; outline OSM
+  Ukraine less Crimea less the annexed area; no national feed, so poizdato.net's 1,086 train
+  pages were crawled (robots.txt allows) into a GTFS for gtfs_served; frontline track OSM had
+  retagged disused put back so the timetable greys it by the usual rules. 3,359 km greyed.
+- **Balkans** (rs, ba, me, mk, al, xk) by one agent and one reader: Serbia from IŽS's network
+  statement chainage, the others from hand lists; five community feeds decide what runs.
+  Kosovo is its own region (Trainkos, de facto); the Belgrade - Bar line's stretch through
+  Štrpci stays Serbia's.
+- **my**: lines laid by shortest path through KTM's and Prasarana's GTFS stops (the KTM track
+  is mostly named just "KTM"); ETS a named train; Komuter lines OSM lines over the register.
+- **th**: OSM named track plus route=railway relations; SRT's numbered trains are named
+  trains, the Red Lines, ARL, BTS, MRT lines. 3,919 km = SRT's 4,044 less 125.6 freight-only.
+- **mx**: passenger track only (99.4% named); Tren Maya one line; the three Interoceánico
+  lines greyed since the December 2025 derailment.
+- **id**: id.wikipedia's 38 line articles (station tables with KAI's km posts) through
+  rinf.py; KAI's intercity trains named, commuter and airport trains lines. Median 1.000
+  against the km posts.
+
+Shared changes landed by the managing session: `extra_route_stops` (us/ca),
+`TWIN_ON_STATIONS` (mx), `served_sections` (one hook for th and my, popped before shipping),
+`norm_line_name`'s "Laluan" rule (my), `NO_GROW_OVER_ROUTES` (rs), `FEED_COMPLETE` (es),
+borders.EXTRA/MOVE for Dundalk, Padang Besar, Woodlands, Nong Khai, Aranyaprathet,
+Vrbnica, Metković, Röszke, Jimbolia; build_regions' `OUTLINE` (Ukraine's own). Then one
+batch rebuild of the 19 countries the changes or new neighbours touched.
+
+## 2026-10-03 (night): twenty-one more regions, ten agents
+
+Anita went away ("feel free to keep going"). Same set-up as the evening round: one download
+script for all 21 extracts, ten agents, the managing session landing shared diffs and
+rebuilding at the end.
+
+- **vn** (OSM named track cut as DRVN's list; North-South 1.00), **nz** (KiwiRail's own
+  register and km posts; 15 passenger lines, median 0.997), **za** (a hand list traced by
+  rinf.py; PRASA's recovery reports decide what runs), **br** (passenger track only; CPTM by
+  named track, SuperVia and Vale's railways by their routes' ways), **ar, cl** (the ways of
+  hand-listed passenger routes; Argentina's chainage checked against the ministry's km posts),
+  **ir** (OSM route=railway relations; RAI's timetable crawled from iranrail.net).
+- **ma, dz, tn, eg** by one reader from the operators' timetables (Annaba - Tunis restarted
+  2026-09-15: Algeria built to the border).
+- **by, md, kz, uz, kg, tj, tm, ge, am, az** from the same tariff guide Book 1 that Russia and
+  Ukraine use, one sheet per railway; timetables crawled where robots.txt allows (poezdato,
+  merstren.md, KTZ's ticket site) or written by hand (Azerbaijan, Turkmenistan, Tajikistan).
+- Who the map depicts, asked and not acted on (HANDOFF thread 0): Abkhazia and Transnistria
+  built as no region's; Donetsk/Luhansk still no region's though a source now shows trains.
+- Shared changes landed: `SKIP_ROUTES` (br), rinf.py's `osm_stops_skip` (nafrica) and
+  `plain_name` (nz), build_regions' OUTLINE for ge and md, border points for Đồng Đăng,
+  Sadakhlo, Gardabani, Souk Ahras, five Belarus - Russia, one Moldova - Ukraine and twenty
+  Central Asian crossings. A separate agent then gave Russia and Ukraine their sides of the
+  new crossings.
+
+## 2026-10-05: the three handed-off threads finished (maps-33)
+
+The 10-04/05 managing session stopped three agents mid-work (HANDOFF thread 0 then;
+`handoff_notes/` has their notes and tools). maps-33 finished all three, in two rounds of
+rebuilds.
+
+**Round 1: ownership and the Channel Tunnel.** The previous session's all-country trial
+(`aball3`) was still running from 09:42 and finished all 73 countries; gb was re-trialled alone
+with the narrowed rules/gb.py stop rule (5 lines differ: HS1 and four named trains). No
+register line moved anywhere else. The new-owner rows were read for ru, de, pl, at, us, jp
+and gb: the 7509/7510 suburban pair, Kazan's ring trams 5/5a and Magnitogorsk's 9/10 now
+share an owner; the Crimean bridge's second track went to the Kerch - Anapa diesel, the
+Sheremetyevo Aeroexpress's track to the Savyolovsky register line; Poland's tourist tram 0
+takes both tracks where it ran one way (the lowest-ref rule, as before, now over both). No
+pair of genuinely different lines. One unrelated fault found in the trial and fixed:
+`us_register.osm_line_name` took `Counter.most_common` over votes added in set order, so a
+tie between two OSM relations over one track (Melbourne's standard gauge is both the
+Adelaide and the Sydney corridor) came out differently per run; ties now go by name. Rebuilt:
+gb and fr with tiles, 44 more model-only (13 min and 37 min, 0 failed), then build_regions.
+compare_lines: no register line changed but HS1 (+0.29 km) and the new Tunnel sous la Manche.
+PATH as Anita rode it, on the shipped data: JSQ-33rd 94.9%, 33rd-Hoboken 96.8%.
+
+**Round 2: RINF lines in pieces.** The dev copy landed in rinf.py with the env switches
+removed. Two faults found on the way and fixed before landing:
+- Germany's 4721 Untertürkheim - Nürnberger Str vanished in the dev trial. A guard was
+  added (a fill at most 30% on track another RINF line was traced over, `HOLE_OTHER`), but
+  the fill was not the cause: 4713's fill Nürnberger Straße - Bad Cannstatt is 0% on other
+  lines and is the S-Bahn's real track. With 4713's section a hole, the timetable check had
+  routed S-Bahn trains over 4721 instead; with the hole filled, nothing is left on 4721.
+  Its loss is a false credit removed. The guard stays; it refuses one fill (Wien Penzing -
+  Hütteldorf, 48%).
+- A fill's stops came from every OSM station a train route stops at, and OSM has a second
+  "Wien Hauptbahnhof" node 230 m from the register's: the fill from the car-train terminal
+  made it a station of its own and 30 of 33 lines moved to it. A fill now leaves out an OSM
+  station with a register stop of its name within 1 km (`FILL_SAME_NAME_M`).
+Trial with fills on in all 50 RINF-read countries: only at, be, cz, pl, bg and de fill
+anything, so `fill_holes: True` is set in those six; folding moves ru, ua, by, kz, uz. The
+1,297 junction ids that go (ru 1,142, ua 115, kz 26, by 8, uz 6) are all junctions. Station
+ids that become register stops through a fill (Pusarnitz, Wolfurt, Traismauer) are aliased.
+`bridge_pieces` is written and still untrialled.
+
+**Round 3 (after Anita's look at the map the same evening).** She found small gaps left in
+Austria, the Eurostar missing a stretch, a French line far apart in pieces, UK "branches that
+lead to no station", and a stop past a junction whose track was not drawn on the map; and
+asked for a list of every line in pieces, to go through one by one. RINF was queried for the
+Tauernbahn's holes (her OK): nothing under any id or country. Landed, each trialled on every
+country it could touch, then rebuilt (gb, tr, de, fr, kg, kz, at with tiles; ru, ch model):
+- `tools/pieces_report.py` and `handoff_notes/lines_in_pieces.md` (the worklist);
+- `build_model.transit_tail`: a route with no stop in a country crosses it border to border
+  (Eurostar Amsterdam - London across France; railjets across Germany; Russian trains across
+  Kazakhstan; Kazakh trains across Kyrgyzstan);
+- `rinf.fill_holes` asks again a pair that passed but lost to a shorter fill (Kamptalbahn);
+- `build_model.fold_spurs`: out-and-back spurs at a line's middle junction cut out, or the
+  detour dropped beside the line's own direct section. Three tries: guarded first by another
+  line ending at the junction (gb's junctions have none, so 1 of 56 folded), then by track
+  leaving the junction off the spur (Chodov-úvrať's switchback still folded), finally by the
+  angle the line's two legs leave the fork at (a switchback's legs leave in a V);
+- dist/index.html: a continuation's track was sliced from the wrong half of a section whose
+  points run against its key (Hell Gate Line -> Penn Station).
+
+**Round 4: far pieces split** (Anita: "ok we can split lines", then stop and wrap up).
+`build_model.split_far_pieces`, after fold_spurs in main(): a register line's piece over 25 km
+from its biggest piece, with two stops or more, is a line of its own (id from the line's id
+and the piece's lowest stop; name_en "<name> (<first> – <last>)"; km_official shared by km;
+reg_ways, sec_ways and aliases.json `pieces` moved). The register module's KEEP_WHOLE holds
+(cn's 青荣城际线). Trialled on the 20 countries with such lines: 54 lines made 75 more in
+15 (au 17, fr 8, kz 6, de 6, pl 5, jp 4, in 4, ru 2, ua 2, tm 2, bg, pt, az, nl, al 1); no
+station id moved. Rebuilt with tiles. The rest of the worklist is parked at her request.
+
 ## The reader contract's notes, as of 2026-10-01
 
 `HANDOFF.md` keeps the contract itself (what `build()` returns) in short form. The longer notes

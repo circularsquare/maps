@@ -1,0 +1,38 @@
+# Liberia (taxonomy/lr2018.py). Afrobarometer R4-R7 first-language answers by county.
+# Parents and languages other fragments already define are repeated with the same label
+# (Kpelle, Loma, Mano, Kissi from gn.txt; Dan, Maninka from ci.txt; Mende from sl.txt; Bassa,
+# Krahn, Vai, Liberian English from earlier fragments).
+#
+# Glottolog (data/raw/glottolog): Bandi band1352 (Mande); Klao klao1243, Sapo sapo1251, Dewoin
+# dewo1238, Kuwaa kuwa1247, Grebo greb1257 (a family of Grebo varieties; one leaf), all Kru;
+# Gola gola1255 (unclassified Atlantic-Congo; Atlantic as conventionally grouped).
+nigercongo | Niger-Congo
+nigercongo.mande | Mande | 0.72 0.13 130
+nigercongo.mande.kpelle | Kpelle | 0.82 0.10 205
+nigercongo.mande.loma | Loma | 0.66 0.13 70
+nigercongo.mande.mano | Mano | 0.58 0.12 255
+nigercongo.mande.dan | Dan | 0.68 0.16 125
+nigercongo.mande.vai | Vai | 0.56 0.13 330
+nigercongo.mande.mende | Mende | 0.62 0.14 250
+nigercongo.mande.bandi | Bandi (Gbandi) | 0.86 0.09 115
+nigercongo.mande.maninka | Maninka (Malinké) | 0.60 0.12 175
+nigercongo.kru | Kru | 0.74 0.12 110
+nigercongo.kru.bassa | Bassa (Liberia) | 0.70 0.15 50
+nigercongo.kru.krahn | Krahn | 0.58 0.12 20
+nigercongo.kru.grebo | Grebo | 0.62 0.14 300
+nigercongo.kru.klao | Klao (Kru) | 0.82 0.12 95
+nigercongo.kru.sapo | Sapo | 0.75 0.10 160
+nigercongo.kru.dewoin | Dewoin (Dei)
+nigercongo.kru.kuwaa | Kuwaa (Belle)
+nigercongo.atlantic | Atlantic
+nigercongo.atlantic.kissi | Kissi | 0.72 0.14 340
+nigercongo.atlantic.gola | Gola | 0.76 0.14 30
+creole | Creoles
+creole.english_based | English-based creoles | 0.80 0.10 135
+creole.english_based.liberian | Liberian English
+africa_other | Other African languages
+#
+# Colours, for neighbours on the Liberian ground: Kpelle's pale blue (gn.txt) in the centre,
+# Bassa orange on the coast beside it, Gola orange-tan and Vai magenta in the north-west, Mende
+# blue; Lofa's Loma olive, Kissi rose, Bandi pale green; Nimba's Mano blue against Dan green;
+# the south-east's Krahn brick, Grebo purple, Klao yellow-green, Sapo pale teal.

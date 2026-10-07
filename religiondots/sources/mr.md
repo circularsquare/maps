@@ -224,3 +224,14 @@ On Anita's ruling (`ask/RULINGS.md` 2026-09-15, ask 033), which the gap sweep (`
   estimate, which adds the unregistered and the 19,000 who arrived in January and February 2024.
   Türkiye's `gap` is a registration count too (`sources.md` §gapsweep-2026-09-15).
 - Written into `gap`, `gap_share`, `note_public`'s last paragraph and the internal `note`.
+
+## 9. Top text before the 75-word cut, 2026-10-03 (`fafd1067-top75`)
+
+Anita asked for the text at the top of the phone screen to come down to about 75 words
+(queue.md, "Cut the country text to about 75 words"). These are the four header fields as
+they stood before the cut, verbatim, so nothing they said is lost. The cut versions are in
+`countries/mr.py`; `note_public` was not changed.
+
+- `how`: no source asks; nationals drawn as Muslim, foreign residents by nationality
+- `grain`: wilayas, 328,000 people on average
+- `gap`: refugees and asylum seekers the census did not count, 1.4% of residents: UNHCR's 118,476 registered at the end of 2023 less the census's 46,800; and Mauritanians who are not Muslim, whom no source has counted

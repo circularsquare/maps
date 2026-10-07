@@ -1,0 +1,55 @@
+# Slovakia, SODB 2021, mother tongue (taxonomy/sk2021.py). The census prints 27 languages, "iný"
+# (other) and "nezistený" (not ascertained). Two new leaves, checked against Glottolog
+# (data/raw/glottolog/languages.csv):
+#   Slovak Sign Language: Glottolog's Slovakian Sign Language (slov1263), under sign languages.
+#   Yiddish or Hebrew: the census prints "jidiš alebo hebrejský" as ONE answer, 273 people. The two
+#     are in different families (Yiddish Germanic, Hebrew Semitic), so no family node holds both;
+#     a named leaf under `other`, as az.txt's "Jewish" is, rather than guessed into either.
+#
+# Colours. Slovak is the colour of the whole country, so it is hand-picked here: a deep green,
+# in with the other West Slavic greens (Anita, 2026-10-05: the gold it had before stood out
+# against Czech and Polish). Its neighbours on the ground are Hungarian's sky blue along the whole
+# southern strip (0.24 OKLab), Czech's teal (0.128) and Moravian's pale mint to the west, Polish's
+# lighter green to the north (0.098), and Rusyn's olive (0.164) and Ukrainian's yellow-green in
+# the north-east, with Romani's purple scattered through the east and south. Darker than Polish
+# and Russian on purpose: every lighter green sat within 0.09 of one of them or Serbian, which
+# Slovaks live beside in Vojvodina.
+
+# ---- parents and nodes defined in other fragments, repeated identically ----
+austroasiatic.vietnamese | Vietnamese | 0.68 0.17 310
+indoeuropean.albanian | Albanian | 0.60 0.13 70
+indoeuropean.albanian.albanian | Albanian | 0.60 0.13 70
+indoeuropean.germanic.continental | Continental West Germanic | 0.68 0.13 235
+indoeuropean.germanic.continental.german | German | 0.66 0.13 240
+indoeuropean.indoaryan.romani | Romani | 0.58 0.13 30
+indoeuropean.indoaryan.romani.romani | Romani
+indoeuropean.iranian.persian | Persian (Farsi)
+indoeuropean.romance | Romance | 0.78 0.11 230
+indoeuropean.romance.french | French | 0.60 0.15 340
+indoeuropean.romance.italian | Italian | 0.82 0.12 60
+indoeuropean.romance.romanian | Romanian | 0.78 0.09 345
+indoeuropean.romance.spanish | Spanish | 0.78 0.10 95
+indoeuropean.slavic | Slavic | 0.70 0.15 140
+indoeuropean.slavic.east | East Slavic | 0.70 0.15 145
+indoeuropean.slavic.east.russian | Russian | 0.70 0.16 145
+indoeuropean.slavic.east.rusyn | Rusyn
+indoeuropean.slavic.east.ukrainian | Ukrainian | 0.84 0.14 120
+indoeuropean.slavic.south | South Slavic | 0.78 0.13 130
+indoeuropean.slavic.south.bulgarian | Bulgarian | 0.60 0.12 185
+indoeuropean.slavic.south.croatian | Croatian
+indoeuropean.slavic.south.serbian | Serbian | 0.77 0.14 168
+indoeuropean.slavic.west | West Slavic | 0.64 0.14 160
+indoeuropean.slavic.west.czech | Czech | 0.60 0.10 192
+indoeuropean.slavic.west.polish | Polish | 0.64 0.15 160
+koreanic | Koreanic | 0.76 0.17 0
+koreanic.korean | Korean | 0.76 0.17 0
+sinotibetan.sinitic | Chinese | 0.62 0.19 38
+turkic | Turkic | 0.68 0.16 15
+turkic.turkish | Turkish | 0.70 0.16 330
+uralic | Uralic | 0.64 0.17 15
+uralic.hungarian | Hungarian | 0.62 0.20 10
+
+# ---- Slovakia's own ----
+indoeuropean.slavic.west.slovak | Slovak | 0.56 0.15 138
+signlanguage.spj | Slovak Sign Language
+other.yiddish_hebrew | Yiddish or Hebrew

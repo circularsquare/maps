@@ -1,0 +1,57 @@
+# Bhutan (GNH 2015 Table A1.5, taxonomy/bt2015.py). Classification per Glottolog, East Bodish as
+# conventionally grouped; Olekha, Gongduk and Lhokpu are branches of their own under Sino-Tibetan.
+# Hand colours keep the East Bodish languages apart from Dzongkha's cyan and Tshangla's lilac,
+# which border them on the ground. Dzongkha and Tshangla repeat other fragments' lines (AGENT_BRIEF §3).
+sinotibetan.tibetic.dzongkha | Dzongkha
+sinotibetan.tibetic.chocangacakha | Chocangacakha (Kurmedkha) | 0.62 0.13 340
+sinotibetan.tibetic.brokpa | Brokpa (Merak-Sakteng)
+sinotibetan.tibetic.lakha | Lakha
+sinotibetan.tibetic.layakha | Layakha (Layap)
+sinotibetan.tshangla | Tshangla (Cangluo Monpa)
+sinotibetan.eastbodish.bumthang | Bumthangkha | 0.60 0.12 250
+sinotibetan.eastbodish.kheng | Khengkha | 0.55 0.11 160
+sinotibetan.eastbodish.kurtop | Kurtöp | 0.80 0.08 225
+sinotibetan.eastbodish.nyenkha | Nyenkha (Mangdebikha) | 0.48 0.09 215
+sinotibetan.eastbodish.dzala | Dzalakha | 0.55 0.12 265
+sinotibetan.eastbodish.dakpa | Dakpa
+sinotibetan.eastbodish.chali | Chalikha
+sinotibetan.olekha | Olekha (Black Mountain Monpa)
+sinotibetan.lhokpu | Lhokpu
+sinotibetan.gongduk | Gongduk
+# --- origin_mix borrowed nodes (python sources/origin_mix.py --fragment bt) ---
+# Every node the origin mixes bring in that tree.txt lacks, repeated without colour.
+austronesian | Austronesian
+austronesian.philippine | Philippine
+austronesian.philippine.cebuano | Cebuano
+austronesian.philippine.tagalog | Tagalog
+indoeuropean.germanic.continental | Continental West Germanic
+indoeuropean.germanic.continental.dutch | Dutch
+indoeuropean.germanic.continental.german | German
+indoeuropean.germanic.north | North Germanic
+indoeuropean.germanic.north.danish | Danish
+indoeuropean.germanic.north.swedish | Swedish
+indoeuropean.indoaryan.sinhala | Sinhala
+indoeuropean.romance | Romance
+indoeuropean.romance.french | French
+indoeuropean.romance.italian | Italian
+indoeuropean.romance.spanish | Spanish
+japonic | Japonic
+japonic.japanese | Japanese
+koreanic | Koreanic
+koreanic.korean | Korean
+kradai | Kra-Dai (Tai-Kadai)
+kradai.thai | Thai
+kradai.zhuang | Zhuang
+sinotibetan.burmish.burmese | Burmese
+sinotibetan.karen | Karen
+sinotibetan.sinitic | Chinese
+sinotibetan.sinitic.cantonese | Cantonese
+sinotibetan.sinitic.gan | Gan
+sinotibetan.sinitic.hakka | Hakka
+sinotibetan.sinitic.jin | Jin
+sinotibetan.sinitic.mandarin | Mandarin
+sinotibetan.sinitic.min_nan | Min Nan (Taiwanese, Hokkien)
+sinotibetan.sinitic.teochew | Teochew (Chiu Chau)
+sinotibetan.sinitic.wu | Wu
+sinotibetan.sinitic.xiang | Xiang
+# --- end origin_mix borrowed nodes ---

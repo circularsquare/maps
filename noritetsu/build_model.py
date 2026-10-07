@@ -39,7 +39,7 @@ import re
 import sys
 import time
 import unicodedata
-from collections import defaultdict
+from collections import Counter, defaultdict
 from pathlib import Path
 
 os.environ.setdefault("OMP_NUM_THREADS", "4")
@@ -79,6 +79,23 @@ BLIND_RADIUS_M = 250
 
 # Two station records with the same name closer than this are one station mapped twice.
 DUP_RADIUS_M = 500
+# ... and two with the same English name but different native ones, closer than this.
+EN_DUP_RADIUS_M = 50
+# ... and for metro stations where the country's rules set METRO_DUP, closer than this
+# (merge_duplicate_stations).
+METRO_DUP_RADIUS_M = 150
+METRO_NAME_RADIUS_M = 200      # ... and a metro stop node finds its station within this
+
+
+def plain_name(tags, region):
+    """A rail stop's name, without its platform where the country's rules give a
+    PLATFORM_SUFFIX (never a tram stop: Melbourne's are "Stop 35: ...")."""
+    name = tags.get("name") or ""
+    suffix = getattr(country_rules(region), "PLATFORM_SUFFIX", None)
+    if (suffix is not None and tags.get("railway") != "tram_stop"
+            and tags.get("tram") != "yes"):
+        return suffix.sub("", name) or name
+    return name
 
 # Which station record to keep when several describe one station.
 STATION_RANK = {"station": 0, "halt": 2, "tram_stop": 3}
@@ -161,7 +178,7 @@ def fold_dashes(name):
     return DASHES.sub("-", name or "")
 
 
-def merge_duplicate_stations(stations):
+def merge_duplicate_stations(stations, log=None, region=None):
     """Collapse station records that are the same station twice.
 
     OSM frequently carries BOTH a railway=station node and a public_transport=station node
@@ -173,13 +190,49 @@ def merge_duplicate_stations(stations):
     Same name and within `DUP_RADIUS_M` is the test.  Different operators' platforms under
     one name -- JR and Odakyu at Shinjuku -- merge deliberately: to a rider that is one
     station.  Genuinely different stations sharing a name are far enough apart to survive.
+
+    Then the same English name within `EN_DUP_RADIUS_M`, for a rename OSM caught only half
+    of: Shanghai's 东昌路 became 浦东南路 in 2021, and one node 16 m from the new record still
+    says 东昌路 (name:en "South Pudong Road"), so Line 14's two platforms landed on two
+    records and no section joined them. Which native name survives is decided by how many
+    records the first pass folded into each: the current name is mapped several times over
+    (station node, stop area, each line's platforms), a stale one is a lone node.
+
+    Where the country's rules set METRO_DUP, a metro station merges only within
+    METRO_DUP_RADIUS_M (rules/us.py says why).
     """
+    alias = {}
+    metro_dup = getattr(country_rules(region), "METRO_DUP", False)
+
+    def radius(a, b):
+        if metro_dup and (a.get("_metro") or b.get("_metro")):
+            return METRO_DUP_RADIUS_M
+        return DUP_RADIUS_M
+    _merge_by(stations, lambda s: fold_dashes(s["name"]), radius, alias)
+    folded = Counter(alias.values())
+    en = _merge_by(stations, lambda s: fold_dashes(s["name_en"]).casefold(), EN_DUP_RADIUS_M,
+                   alias, prefer=lambda n: -folded[n])
+    for x in alias:                    # what the first pass folded into a record now gone
+        while alias[x] in alias:
+            alias[x] = alias[alias[x]]
+    if log:
+        for c, rep, name in en:
+            log(f"stations: {name!r} folded into {stations[rep]['name']!r} "
+                f"(n{rep}), same English name {stations[rep]['name_en']!r}")
+    return alias
+
+
+def _merge_by(stations, key, radius, alias, prefer=lambda n: 0):
+    """Fold records with the same key within `radius` m (a number, or a function of the two
+    records) into one; return (gone, kept, name)."""
+    merged = []
+    far = radius if callable(radius) else (lambda a, b, r=radius: r)
     by_name = defaultdict(list)
     for nid, s in stations.items():
-        if s["name"]:
-            by_name[fold_dashes(s["name"])].append(nid)
+        k = key(s)
+        if k:
+            by_name[k].append(nid)
 
-    alias = {}
     for name, ids in by_name.items():
         if len(ids) < 2:
             continue
@@ -189,7 +242,7 @@ def merge_duplicate_stations(stations):
             cluster, rest = [seed], []
             for other in remaining:
                 a, b = stations[seed], stations[other]
-                if dist_m(a["lon"], a["lat"], b["lon"], b["lat"]) <= DUP_RADIUS_M:
+                if dist_m(a["lon"], a["lat"], b["lon"], b["lat"]) <= far(a, b):
                     cluster.append(other)
                 else:
                     rest.append(other)
@@ -198,7 +251,7 @@ def merge_duplicate_stations(stations):
                 continue
             # Keep the most station-like record, then one with an English name, then the
             # lowest id so the choice is the same on every build.
-            rep = min(cluster, key=lambda n: (stations[n]["_rank"],
+            rep = min(cluster, key=lambda n: (prefer(n), stations[n]["_rank"],
                                               0 if stations[n]["name_en"] else 1, n))
             for c in cluster:
                 if c == rep:
@@ -206,11 +259,12 @@ def merge_duplicate_stations(stations):
                 if stations[c]["name_en"] and not stations[rep]["name_en"]:
                     stations[rep]["name_en"] = stations[c]["name_en"]
                 alias[c] = rep
+                merged.append((c, rep, stations[c]["name"]))
                 del stations[c]
-    return alias
+    return merged
 
 
-def build_stations(stops, rels, coords, log):
+def build_stations(stops, rels, coords, log, region=None):
     """One record per real station, and a map from every stop node to the station it serves.
 
     Route relations point at stop_position nodes, which exist one per platform track, so a
@@ -228,15 +282,17 @@ def build_stations(stops, rels, coords, log):
                     and (tags.get("railway") or tags.get("station")
                          or any(tags.get(m) == "yes" for m in RAIL_MODES)))):
             stations[nid] = {
-                "id": f"n{nid}", "name": tags.get("name") or "",
+                "id": f"n{nid}", "name": plain_name(tags, region),
                 "name_en": tags.get("name:en") or "",
                 "lon": lon, "lat": lat, "lines": set(),
                 "_rank": (STATION_RANK.get(tags.get("railway"), 3)
                           if tags.get("railway") else 1),
                 "_tram": tags.get("railway") == "tram_stop",
+                "_metro": (tags.get("station") in ("subway", "light_rail", "monorail")
+                           or tags.get("subway") == "yes" or tags.get("light_rail") == "yes"),
             }
 
-    alias = merge_duplicate_stations(stations)
+    alias = merge_duplicate_stations(stations, log, region)
 
     by_name = defaultdict(list)
     for nid, s in stations.items():
@@ -255,6 +311,10 @@ def build_stations(stops, rels, coords, log):
         used.update(stop_members(members))
 
     resolved, invented, unplaced = {}, 0, 0
+    # Records made from bare stop nodes, by English name, and the native names of the stop
+    # nodes each one took: see the 东昌路 note below.
+    by_en, names_of = defaultdict(list), {}
+    metro_dup = getattr(country_rules(region), "METRO_DUP", False)
     for nid in used:
         if nid in alias:
             resolved[nid] = alias[nid]
@@ -267,11 +327,17 @@ def build_stations(stops, rels, coords, log):
             unplaced += 1
             continue
         tags, lon, lat = rec
-        name = tags.get("name") or ""
+        name = plain_name(tags, region)
+        # Where the country's rules set METRO_DUP, a metro stop finds its station by name
+        # only within METRO_NAME_RADIUS_M (rules/us.py says why).
+        metro = metro_dup and (
+            tags.get("subway") == "yes" or tags.get("light_rail") == "yes"
+            or tags.get("station") in ("subway", "light_rail", "monorail"))
+        name_r = METRO_NAME_RADIUS_M if metro else NAME_RADIUS_M
         best, best_d = None, None
         for cand in by_name.get(fold_dashes(name), ()) if name else ():
             d = dist_m(lon, lat, stations[cand]["lon"], stations[cand]["lat"])
-            if d <= NAME_RADIUS_M and (best_d is None or d < best_d):
+            if d <= name_r and (best_d is None or d < best_d):
                 best, best_d = cand, d
         if best is None and ids.size:
             dx = (pos[:, 0] - lon) * math.cos(math.radians(lat)) * 111320
@@ -282,8 +348,18 @@ def build_stations(stops, rels, coords, log):
             if tags.get("railway") != "tram_stop" and tags.get("tram") != "yes":
                 dd = np.where(tram_rec, np.inf, dd)
             j = int(np.argmin(dd))
-            if dd[j] <= BLIND_RADIUS_M:
+            if dd[j] <= (min(BLIND_RADIUS_M, METRO_NAME_RADIUS_M) if metro else BLIND_RADIUS_M):
                 best = int(ids[j])
+        # A stale rename on a stop node with no station node near: Shanghai's 东昌路 became
+        # 浦东南路 in 2021, and one of Line 14's stop nodes still has the old name (name:en
+        # "South Pudong Road" on both, 16 m apart). By native name the two never meet, and
+        # Line 14 broke there. The same English name within EN_DUP_RADIUS_M is one station.
+        en = fold_dashes(tags.get("name:en") or "").casefold()
+        if best is None and en:
+            for cand in by_en.get(en, ()):
+                if dist_m(lon, lat, stations[cand]["lon"], stations[cand]["lat"]) <= EN_DUP_RADIUS_M:
+                    best = cand
+                    break
         if best is None:
             # No station node anywhere near: the stop node IS the station. Common for tram
             # stops and rural halts mapped only as a stop_position.
@@ -300,7 +376,24 @@ def build_stations(stops, rels, coords, log):
             # doubled stops, line 151 counted Pougny-Chancy - Russin twice, Görlitz was 4).
             if name:
                 by_name[fold_dashes(name)].append(nid)
+            if en:
+                by_en[en].append(nid)
+            names_of[nid] = Counter()
+        if best in names_of and name:
+            names_of[best][name] += 1
         resolved[nid] = best
+
+    # Which native name such a record keeps: the one most of its stop nodes carry, so a lone
+    # stale node does not name the station (ties: the name it was made with).
+    for nid, c in names_of.items():
+        if len(c) < 2:
+            continue
+        top = max(c.values())
+        if c[stations[nid]["name"]] < top:
+            new = min(n for n, k in c.items() if k == top)
+            log(f"stations: n{nid} named {new!r}, not {stations[nid]['name']!r} "
+                f"(stop nodes {dict(c)})")
+            stations[nid]["name"] = new
 
     log(f"{len(stations)} stations ({len(alias)} duplicate records merged away, "
         f"{invented} created from a bare stop node), {len(resolved)} stop nodes resolved, "
@@ -356,6 +449,29 @@ def assemble(members, ways, coords):
             continue
         xy = np.column_stack([coords.x[p[ok]] / 1e7, coords.y[p[ok]] / 1e7])
         out.append((arr[ok], xy))
+    return out
+
+
+def travel_dirs(members, ways, runs):
+    """{way id: +1 or -1}: whether a route relation, as assemble() joined it into runs,
+    travels each of its ways along (+1) or against (-1) the way's node order. A way whose two
+    end nodes are not both found on one run in order (a way it runs over twice, a broken
+    run) is left out."""
+    pos = {}
+    for ri, (ids, _xy) in enumerate(runs):
+        for k, n in enumerate(ids.tolist()):
+            pos.setdefault(n, (ri, k))
+    out = {}
+    for ty, ref, role in members:
+        if ty != "w" or (role and not role.startswith(("forward", "backward"))):
+            continue
+        w = ways.get(ref)
+        if w is None or len(w[1]) < 2:
+            continue
+        a, b = pos.get(w[1][0]), pos.get(w[1][-1])
+        if a is None or b is None or a[0] != b[0] or a[1] == b[1]:
+            continue
+        out[ref] = 1 if b[1] > a[1] else -1
     return out
 
 
@@ -487,199 +603,100 @@ def group_lines(rels, log):
     return groups, routes
 
 
+_RULES = {}
+
+
+def country_rules(region):
+    """A country's own rules for this file: `rules/<cc>.py`, owned by that country's agent so
+    it never has to wait on a change here. Every name in it is optional, and a country without
+    the file (or without a name) builds by the default given here. Patterns several countries
+    share live in `rules/shared.py` (`from rules.shared import EU_TRAIN`). Read:
+
+      looks_like_service(tags, name, name_en) -> bool
+            Is this route=train relation (or route_master) a named train rather than a line?
+            Called for route=train only; metro, tram, light rail, monorail and funicular are
+            never named trains. `name`, `name_en` are its name and name:en tags ("" if
+            unset). Default: False, every train route is a line.
+      SERVICE_IF_ALL_ROUTES_ARE = True
+            A line whose own tags do not say named train is one anyway when every one of
+            its route relations is (is_service). Default: off.
+      PLATFORM_SUFFIX = re.compile(...)
+            Rail stop names (station records and stop nodes, never tram stops) are read with
+            whatever this matches taken off (plain_name). Default: names as tagged.
+      METRO_DUP = True
+            Same-named metro stations merge within METRO_DUP_RADIUS_M rather than
+            DUP_RADIUS_M, and a metro stop node finds its station by name only within
+            METRO_NAME_RADIUS_M (merge_duplicate_stations, build_stations). Default: off.
+      ROUTE_SHARE_BY_LENGTH = True
+            A register section's share run over by OSM passenger routes is measured against
+            the section's own length, not the length of its ways (register_way_lines).
+            Default: off.
+      extra_route_stops(ways, rels, stops, coords, stations, resolved, log)
+            -> {route rel id: {station key: set(node id)}}: stations a route relation does
+            not list that are stops of it all the same, added to its line's stops in build()
+            with those nodes (of the route's own track) as their stop nodes. Called once,
+            after build_stations. Default: none, a line's stops are its relations' own.
+      SKIP_ROUTES = {relation id, ...}
+            Route relations the OSM half leaves out: stale or broken routes (Brazil's
+            Teresina route runs on over a disused railway). Default: none.
+      TWIN_ON_STATIONS = True
+            An OSM line whose stations all lie on its register match is dropped as its twin
+            (merge_sources), whatever its length: Mexico's broken metro routes (Metrorrey
+            1-3, Línea 4) whose stop order gives a false end-to-end section. Default: off.
+
+    Returns the module, or None where the country has no file.
+    """
+    if not region:
+        return None
+    if region not in _RULES:
+        import importlib.util
+        p = ROOT / "rules" / f"{region}.py"
+        mod = None
+        if p.exists():
+            # A rules file imports the shared patterns as `rules.shared`, which needs this
+            # folder on the path whoever imported build_model.
+            if str(ROOT) not in sys.path:
+                sys.path.insert(0, str(ROOT))
+            spec = importlib.util.spec_from_file_location(f"rules_{region}", p)
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+        _RULES[region] = mod
+    return _RULES[region]
+
+
 def looks_like_service(tags, kind, region):
     """Is this a named TRAIN rather than a LINE?
 
-    OpenStreetMap in Japan maps both, as route relations, with no tag that separates them:
-    東海道本線 (a line) and のぞみ (a train that runs over the Tokaido Shinkansen) are the
-    same kind of object.  So Japan's lines total 49,500 km against a real passenger network
-    of about 27,500 -- the Shinkansen corridors are counted once as lines and again under
-    every named service over them.
-
-    The rule is deliberately crude and region-specific: a Japanese line name almost always
-    ends in 線, and a train's does not.  Metro, tram, light rail and monorail are never
-    services, so only route=train is tested.  It misfires on operators whose line is named
-    without 線 -- 嵯峨野観光鉄道 is a railway, not a train -- so this sets a FLAG and drops
-    nothing.  What the flag is for is deciding which lines a completion percentage counts,
-    and that is a judgement about what the hobby means, not a data question.
-
-    Operating patterns (京浜東北線, 中央線快速) are a third category this does not catch, as
-    they are named with 線 and are lines to a rider but not to the operator's line register.
+    OpenStreetMap maps both as route relations, often with no tag that separates them: a line
+    and a named train that runs over it are the same kind of object, so a corridor is counted
+    once as a line and again under every named train over it. Which is which is a rule per
+    country, in its `rules/<cc>.py` (`looks_like_service`; a country without one has no named
+    trains). Metro, tram, light rail and monorail are never services, so only route=train is
+    tested. This sets a FLAG and drops nothing: what the flag is for is deciding which lines
+    a completion percentage counts, and that is a judgement about what the hobby means, not
+    a data question.
     """
     if kind != "train":
         return False
-    name = tags.get("name", "")
-    name_en = tags.get("name:en", "")
-    if region == "jp":
-        # 線 is the usual suffix, but an operating pattern introduced since the war is as
-        # likely to be ライン: 上野東京ライン and 湘南新宿ライン are lines a rider rides, not
-        # trains, and were being flagged as trains and sorted to the bottom of every list.
-        if "線" in name or "ライン" in name:
-            return False
-        return "line" not in name_en.lower()
-    if region == "kr":
-        # Korea's lines and operating patterns are named 선 (경부선, 경의·중앙선) and so are
-        # its trains ("경부선 KTX: 서울 → 부산"), so the suffix says nothing. The train brand
-        # does: every named train carries one, and no line or pattern does.
-        return any(b in name for b in KR_TRAIN_BRANDS)
-    if region == "tw":
-        # OSM in Taiwan maps every THSR and some TRA trains by train number, one relation
-        # each ("台灣高鐵 821 南港->左營"). A line's name carries no train number.
-        return bool(TRAIN_NUMBER.search(name))
-    if region == "fr":
-        # OSM France maps each long-distance train (TGV 723, Intercités 3731, Ouigo TC 4071,
-        # Eurostar, Lyria) as its own relation. TER, Transilien and RER relations are lines.
-        # An unnamed relation is called by its ref, and judged by it too: route 5945159
-        # ("Ouigo", Marne-la-Vallée - Lyon) has only ref=Ouigo.
-        return bool(FR_TRAIN_BRAND.match(name or tags.get("ref") or ""))
-    if region == "cn":
-        # OSM China maps single trains by number: "D2661西安北-西宁", "K27/28", "Z164/5：上海 ->
-        # 拉萨", "6072：宝鸡 -> 平凉", or no name and a ref "C8600". Lines and patterns carry no
-        # number up front (北京市郊铁路S2线, 金山铁路, 广清城际).
-        return bool(CN_TRAIN.match(tags.get("name") or tags.get("ref") or ""))
-    if region == "pt":
-        # CP's long-distance products (Alfa Pendular, Intercidades) and the Celta to Vigo are
-        # named trains; Regional, InterRegional and the Urbanos of Lisbon and Porto are lines.
-        return bool(PT_TRAIN.match(name))
-    if region == "hu":
-        # OSM Hungary maps each international and InterCity train as its own relation (IC 929
-        # Savaria, EC 173, EN 462, ICE 90, "Hungaria EuroCity"). S, G, Z, Sz, R/REX and the
-        # InterRégió patterns (IR87 AGRIA, KISKUN IR, IR CÍVIS) run every hour or two: lines.
-        return bool(HU_TRAIN.search(name))
-    if region == "pl":
-        # PKP Intercity maps each train as its own relation ("IC1213 Czechowicz: Warszawa
-        # Wschodnia => Lublin Główny", "EIP: Kraków Główny <=> Gdynia Główna", "TLK 38190
-        # Bursztyn", "EC 57 Wawel"). Polregio's IR and the regional/agglomeration lines
-        # (Linia K5, S1, RE, ŁKA, SKM) carry no such brand: lines.
-        return bool(PL_TRAIN.search(name))
-    if region == "fi":
-        # OSM Finland maps VR's interval patterns as lines ("Juna 13: Helsinki => Oulu", the
-        # commuter letters R, Z, H), and single trains by number: the night trains "Juna PYO
-        # 273: Helsinki => Rovaniemi" and the Parikkala - Savonlinna "Taajamajuna 751".
-        return bool(FI_TRAIN.search(name))
-    if region == "ro":
-        # OSM Romania maps CFR Călători's, Regio's and Transferoviar's trains one relation per
-        # train ("IR 1582 Constanța => București Nord", "R 3127 Arad => Brad", "Tren R9132/4:
-        # Calafat - Craiova", or no name and ref "R-E 9263"); Romanian trains are known by
-        # number and none runs as a branded interval line. The airport and Obor shuttles
-        # (service=commuter), MÁV's "Sz: Debrecen => Valea lui Mihai" patterns and unnumbered
-        # relations stay lines.
-        if tags.get("service") == "commuter":
-            return False
-        return bool(RO_TRAIN.search(name) or RO_TRAIN.search(tags.get("ref") or ""))
-    if region == "hr":
-        # OSM Croatia groups HŽPP's regional trains under their timetable line number,
-        # "Vlak 23" (Vlak 2300 Kloštar => Zagreb, 2301, ...): lines. Its fast and long-distance
-        # trains are mapped one train or one pair per route_master: "Vlak B 182" (brzi, Split -
-        # Zagreb), "IC 58 Podravka", "ICN 52", "Vlak B 188 Dalmacija", "EuroNight Lisinski".
-        return bool(HR_TRAIN.search(name) or EU_TRAIN.search(name))
-    if region == "ru":
-        # OSM Russia maps every long-distance train one relation per train, by its number of
-        # three digits and a letter: "Скорый поезд 124Ы: Красноярск → Абакан", "Высокоскоростной
-        # поезд 752А «Сапсан»", "Скорый электропоезд 839В «Ласточка»" (ref "124Ы"). Suburban
-        # trains ("Пригородный электропоезд: Дубна => Савёловский вокзал", МЦД-2, Novosibirsk's
-        # numbered "Пригородный электропоезд 6323") are lines.
-        ref = tags.get("ref") or ""
-        return bool(RU_TRAIN.search(name) or RU_TRAIN.search(ref)
-                    or RU_TRAIN_PAIR.search(name) or RU_TRAIN_PAIR.search(ref)
-                    or RU_TRAIN_KIND.match(name))
-    if region == "it":
-        # OSM Italy maps Trenitalia's and Italo's long-distance brands route by route, with
-        # no train number ("Frecciarossa (Milano Centrale → Napoli Centrale)", ".italo (Roma
-        # Ostiense → Milano Porta Garibaldi)", "Frecciabianca (Roma Termini - Genova Piazza
-        # Principe)", "InterCity Milano-Ventimiglia"), and the EuroCity, Nightjet, TGV and
-        # European Sleeper trains one relation each. Regionale (R), Regionale Veloce (RV),
-        # RegioExpress (RE), the Leonardo Express and the suburban S, FL, SFM and FM lines
-        # are lines.
-        return bool(IT_TRAIN.search(name) or EU_TRAIN.search(name))
-    if region == "es":
-        # OSM Spain maps Renfe's long-distance products and the open-access operators one
-        # relation per train or train pair ("Alvia 00194 Madrid → Badajoz", "AVE Madrid -
-        # Sevilla", "Train Iryo ...", "Intercity 00283 Irun → A Coruña", "Renfe-SNCF 9736",
-        # "Train IN: Porto - Campanhã → Vigo-Guixar"). Cercanías and Rodalies (C-1, R2),
-        # Media Distancia, Regional, Avant and the FGC, Euskotren, FGV and SFM lines are lines.
-        # The network decides too, but only networks that hold nothing else: "Renfe Alvia" is
-        # also on a Bilbao Cercanías C-3 relation, bare "TGV" on a liO TER one. 80 of 527 train
-        # relations (2026-10-02 extract).
-        return bool(ES_TRAIN.match(name) or EU_TRAIN.search(name)
-                    or tags.get("network", "") in ES_TRAIN_NETWORKS)
-    if region == "de":
-        # OSM Germany maps DB Fernverkehr's ICE and IC by DB's own line number, not by train:
-        # 27 "ICE 10"-style and 20 "IC 26"-style route_masters, each an hourly or two-hourly
-        # interval product a rider uses as a line, as Swiss IC 1 and ÖBB's Railjet are: lines.
-        # Single trains are named trains: EC, EN, NJ, European Sleeper, Eurostar, TGV
-        # (EU_TRAIN), an ICE or IC by a train number of 3-5 digits, PKP Intercity's named IC
-        # (IC Łużyce), Leo Express and KD Premium.
-        if DE_LINE.match(name):
-            return False
-        return bool(EU_TRAIN.search(name) or DE_TRAIN.search(name))
-    if region in EU_TRAIN_REGIONS:
-        # International and long-distance trains mapped one relation per train (EC 112, EN
-        # 40467, ICE 43, Eurostar, European Sleeper, Nightjet), as France, Poland, Hungary and
-        # Portugal flag theirs. The interval products that are lines to a rider, IC, IR and
-        # Railjet (Swiss IC 1, ÖBB's half-hourly Railjet), are left as lines.
-        return bool(EU_TRAIN.search(name))
-    return False
+    rules = country_rules(region)
+    if rules is None or not hasattr(rules, "looks_like_service"):
+        return False
+    return bool(rules.looks_like_service(tags, tags.get("name", ""), tags.get("name:en", "")))
 
 
-FI_TRAIN = re.compile(r"\bPYO\s?\d|^Taajamajuna\s+\d")
-RU_TRAIN = re.compile(r"(?<![0-9A-Za-zА-Яа-яЁё])\d{3}\s?[А-ЯЁA-Z](?![0-9A-Za-zА-Яа-яЁё])")
-# A pair numbered without its letter ("Скорый поезд 001/002 «Красная стрела»", ref 001/002),
-# and long-distance trains named by their kind and no number ("Скоростной поезд «Аврора»").
-RU_TRAIN_PAIR = re.compile(r"(?<![0-9A-Za-zА-Яа-яЁё])\d{3}\s?[А-ЯЁA-Z]?/\d{3}(?!\d)")
-RU_TRAIN_KIND = re.compile(r"(?:Скорый|Скоростной|Высокоскоростной|Пассажирский|Фирменный)"
-                           r"\s+поезд\b")
-RO_TRAIN = re.compile(r"\b(?:R|R-E|RE|IR|IRN|IC|INT|EC|EN|ICN)\s?-?\s?\d{2,5}\b")
-HR_TRAIN = re.compile(r"^(?:Vlak\s+)?(?:B|IC|ICN|EC|EN)\s?\d")
-IT_TRAIN = re.compile(r"^(?:Treno\s+|Train\s+)?(?:Freccia(?:rossa|argento|bianca)|\.?[Ii]talo\b"
-                      r"|Inter[Cc]ity\b|ICN?\s?\d)")
-ES_TRAIN = re.compile(r"^(?:Train\s+|Tren\s+)?(?:AVE|AV City|Alvia|ALVIA|Avlo|AVLO|Euromed|"
-                      r"Intercity|InterCity|Intercités|Iryo|IRYO|Ouigo|OUIGO|Trenhotel|Talgo|TLG|"
-                      r"Renfe-SNCF|TGV|IN)(?=[\s\d:]|$)")
-ES_TRAIN_NETWORKS = {"Renfe AVE", "Iryo", "Ouigo España", "OUIGO España", "Renfe InterCity",
-                     "TGV Europe"}
-EU_TRAIN_REGIONS = {"at", "be", "nl", "ch", "cz", "si", "bg", "sk"}
-# "ICE" followed by a one- or two-digit number is a DB interval line ("ICE 43", "ICE 91"), the
-# same route_master built in Germany, where it is a line (DE_LINE); not a single train.
-EU_TRAIN = re.compile(r"^(?:Train\s+)?(?:EC|EN|ICE(?!\s?\d{1,2}(?:\.\d)?(?!\d))|NJ|TGV|ES|ECE"
-                      r"|INT)(?:[\s\d:]|$)"
-                      r"|\bEuro(?:City|Night)\b|\bNightjet\b|\bEuropean Sleeper\b"
-                      r"|^(?:Eurostar|Thalys|TGV Lyria|Lyria)\b")
-# Germany: "ICE 10", "IC 26.1", "ICE 42/ICE 47" are DB's interval lines; "ICE 1001",
-# "IC Łużyce" single trains.
-DE_LINE = re.compile(r"^(?:ICE|IC)\s?\d{1,2}(?:\.\d)?(?!\d)")
-DE_TRAIN = re.compile(r"^(?:ICE|IC)\s?\d{3,5}\b|^IC\s+[A-ZÀ-ŽŁ][a-ząćęłńóśźż]"
-                      r"|^Leo Express\b|^KD Premium\b")
-
-
-# "EIP:" is written with a colon straight after the brand.
-PL_TRAIN = re.compile(r"^(?:EIC|EIP|IC|TLK|EC|EN|ICE|RJX?|NJ)(?:[\s\d:]|$)"
-                      r"|\bEuro(?:City|Night)\b|\bRailjet\b")
-
-
-# "Train EC Hornád: Budapest => Košice" is mapped the Slovak way, with "Train " in front.
-HU_TRAIN = re.compile(r"^(?:Train\s+)?(?:IC|EC|EN|ICE|RJX?)(?:\s|\d|$)"
-                      r"|\bEuro(?:City|Night)\b|\bRailjet\b")
-
-
-PT_TRAIN = re.compile(r"^(?:CP )?(?:Alfa Pendular|Intercidades)\b|^Comboio Celta|^Train IN\b")
-
-
-CN_TRAIN = re.compile(r"^(?:火车|Train\s*)?[GDCZTKYLSP]?\d{1,5}(?:/[A-Z]?\d{1,5})?(?![0-9号線线])")
-
-
-# Case-sensitive, so "ICE" is the German train and not a word that starts "Ice".
-FR_TRAIN_BRAND = re.compile(r"^(TGV|OUIGO|Ouigo|OUIGo|Eurostar|Lyria|ICE|Intercités|"
-                            r"INTERCITÉS|ICN?\s|Renfe|RENFE|Frecciarossa|Nightjet|Thalys|"
-                            r"Train de nuit)")
+def is_service(mtags, kind, rids, routes, region):
+    """A line's `service` flag: its own tags say named train (looks_like_service) or, where
+    the country's rules set SERVICE_IF_ALL_ROUTES_ARE, every one of its routes does."""
+    if looks_like_service(mtags, kind, region):
+        return True
+    return (bool(getattr(country_rules(region), "SERVICE_IF_ALL_ROUTES_ARE", False))
+            and bool(rids)
+            and all(looks_like_service(routes[r][0], kind, region) for r in rids))
 
 
 # A free-standing train number: 821 in "台灣高鐵 821", 1 in "のぞみ1号". Not the 1 of "S1" or
 # "S11", whose numbers are the line's name.
 TRAIN_NUMBER = re.compile(r"(?<![A-Za-z0-9])\d{1,4}(?![A-Za-z0-9])")
-
-
-KR_TRAIN_BRANDS = ("KTX", "SRT", "ITX", "새마을", "무궁화", "누리로", "직통열차", "마음")
 
 
 def pretty_line_name(name):
@@ -822,6 +839,15 @@ def norm_line_name(name, operator=""):
     m = re.match(r"^LRT (.+) Line$", s)
     if m:
         s = f"{m.group(1)} LRT"
+    # Malaysia: the register writes the Klang Valley's lines in Malay, "Laluan Kelana Jaya",
+    # "Laluan Monorel KL"; OSM's route masters are Malay or English, "Laluan Kajang",
+    # "Kelana Jaya Line", "KL Monorail". Only names that start "Laluan" change.
+    m = re.match(r"^Laluan Monorel (.+)$", s)
+    if m:
+        s = f"{m.group(1)} Monorail"
+    m = re.match(r"^Laluan (.+)$", s)
+    if m:
+        s = f"{m.group(1)} Line"
     # Taiwan's metro systems prefix their lines (台北捷運板南線) where the register writes
     # 板南線; the system names come before bare 捷運.
     for pre in ("JR", "ＪＲ", "東京メトロ", "東京地下鉄", "都営", "Osaka Metro", "大阪市営",
@@ -971,6 +997,20 @@ def untrained(name):
     return re.sub(r"\s+", " ", TRAIN_NUMBER.sub("", strip_direction(name or ""))).strip()
 
 
+def first_word(name):
+    """A name's first word once the direction is out: 'Eurostar: Paris - Amsterdam' -> 'eurostar'."""
+    return (re.split(r"[\s:：]+", strip_direction(name or "").strip()) or [""])[0].casefold()
+
+
+_ARROW = re.compile(r"\s*(?:-->|->|=>|→|⇒|↔|<=>|⇄)\s*")
+
+
+def arrow_ends(name):
+    """The places either side of a name's arrows, as a set: '小倉 => 下関' -> {小倉, 下関}."""
+    parts = [p.strip() for p in _ARROW.split(name or "")]
+    return frozenset(parts) if len(parts) > 1 and all(parts) else None
+
+
 def merge_osm_twins(lines, geoms, log):
     """Drop OSM lines that are another OSM line again, and return {dropped id: kept id}.
 
@@ -1032,8 +1072,23 @@ def merge_osm_twins(lines, geoms, log):
                                  and untrained(l["name"]))
                 same_en = (strip_direction(l["name_en"]) == strip_direction(m["name_en"])
                            and strip_direction(l["name_en"]))
-                if not (refs[l["id"]] & refs[o] or same_name or same_en):
+                shared_ref = refs[l["id"]] & refs[o]
+                if not (shared_ref or same_name or same_en):
                     continue
+                # A shared ref alone does not make two named trains one: in be both European
+                # Sleeper routes and the Eurostar are ref "ES". Their names must also start
+                # with the same word, which keeps a train's two directions together ("NJ
+                # 40235 ..." / "NJ 235 ...", "AVE Madrid - Málaga" / "AVE Málaga - Madrid"),
+                # and parts はやて and はやぶさ, which OSM gives the same ref.
+                # Or the same two ends either way round: OSM Japan names some trains by their
+                # ends alone, "小倉 => 下関" and "下関 => 小倉".
+                if l["service"] and not (same_name or same_en):
+                    ok = (first_word(l["name"]) == first_word(m["name"])
+                          or (arrow_ends(l["name"]) or 0) == arrow_ends(m["name"]))
+                    log(f"twins on ref {'/'.join(sorted(shared_ref))} alone, "
+                        f"{'merged' if ok else 'kept apart'}: {l['name']!r} / {m['name']!r}")
+                    if not ok:
+                        continue
                 parent[find(o)] = find(l["id"])
 
     groups = defaultdict(list)
@@ -1117,7 +1172,7 @@ def merge_osm_twins(lines, geoms, log):
     return alias
 
 
-def merge_sources(osm, n02, log):
+def merge_sources(osm, n02, log, region=None):
     """Put the register's lines and OSM's on one footing, sharing one station registry.
 
     THE STATIONS HAVE TO BE ONE SET or the app breaks in a way that looks like missing data:
@@ -1271,7 +1326,9 @@ def merge_sources(osm, n02, log):
         l["display"] = dedup
         l["km"] = round(sum(s[2] for s in secs), 3)
         hit = l.pop("_twin", None)
-        if hit is not None and is_twin(l, hit):
+        if hit is not None and (is_twin(l, hit) or (
+                getattr(country_rules(region), "TWIN_ON_STATIONS", False)
+                and line_stations(l) and line_stations(l) <= line_stations(hit))):
             line_alias[l["id"]] = hit["id"]
             continue
         geoms[l["id"]] = newg
@@ -1468,15 +1525,71 @@ def border_tails(placed, runs, members, resolved, bidx):
     return out
 
 
+# A transit section is at least this long between its two border points.
+TRANSIT_MIN_KM = 1.0
+
+
+def transit_tail(runs, members, resolved, bidx, region):
+    """A route that crosses this country without a stop in it: its track from the border point
+    where it comes in to the one where it leaves, as one section between the two (London -
+    Amsterdam through France: OSM lists no French stop, so France built nothing of it and the
+    line had a hole from the tunnel to Belgium; Anita, 2026-10-05). Only where the route lists
+    stops this extract does not have (it runs on abroad), and only between two different
+    points of this country's own borders at least TRANSIT_MIN_KM apart along the track, so a
+    route wholly abroad that the extract's margin happens to hold never counts. The longest
+    such stretch over the route's runs, as a border_tails row with "bp0" for its first end, or
+    None."""
+    if all(n in resolved for n in stop_members(members)):
+        return None
+    best = None
+    for ids, xy in runs:
+        hits = [h for h in bidx.along(xy) if region in h[1]["countries"]]
+        if len(hits) < 2:
+            continue
+        h0, h1 = hits[0], hits[-1]
+        if h0[1]["id"] == h1[1]["id"] or (h1[0] - h0[0]) / 1000 < TRANSIT_MIN_KM:
+            continue
+        _a0, p0, k0, fx0, fy0, _o0 = h0
+        _a1, p1, k1, fx1, fy1, _o1 = h1
+        g = np.vstack([[[fx0, fy0]], xy[k0 + 1:k1 + 1], [[fx1, fy1]]])
+        km = path_length_m(g) / 1000
+        if best is None or km > best["km"]:
+            best = {"st": None, "bp0": p0, "bp": p1, "geom": g, "km": km,
+                    "digest": track_key(ids[k0:k1 + 2]),
+                    "ids": np.concatenate([[-1], ids[k0 + 1:k1 + 1], [-1]])}
+    return best
+
+
 def build(region, log):
     ways, rels, stops, cid, cx, cy = load(region, log)
     coords = Coords(cid, cx, cy)
-    stations, resolved = build_stations(stops, rels, coords, log)
+    stations, resolved = build_stations(stops, rels, coords, log, region)
     groups, routes = group_lines(rels, log)
+    # Stops the country's rules add to relations that do not list them (rules/<cc>.py).
+    rules = country_rules(region)
+    extra_stops = {}
+    if rules is not None and hasattr(rules, "extra_route_stops"):
+        extra_stops = rules.extra_route_stops(ways, rels, stops, coords, stations, resolved,
+                                              log) or {}
+    # Route relations the country's rules leave out (rules/<cc>.py SKIP_ROUTES): stale or
+    # broken OSM routes (Teresina's runs on over a disused railway to the coast).
+    skip = set(getattr(rules, "SKIP_ROUTES", ()) or ())
+    if skip:
+        n0 = len(groups)
+        groups = [(lid, mtags, [r for r in rids if r not in skip])
+                  for lid, mtags, rids in groups]
+        groups = [g for g in groups if g[2]]
+        log(f"  {len(skip)} route relations left out by the country's rules (SKIP_ROUTES); "
+            f"{n0 - len(groups)} lines with no route left")
 
     lines, geoms = [], {}
     way_lines = defaultdict(set)     # OSM way id -> the lines that run over it
-    n_gap = n_sec = n_nostop = n_ends = 0
+    # Line id -> one {way id: +1 / -1} per route relation: which way the relation travels each
+    # of its ways, along or against the way's node order. ownership.py pairs a line's two
+    # directions' tracks from it (directional_pairs).
+    variant_dirs = defaultdict(list)
+    build.variant_dirs = variant_dirs
+    n_gap = n_sec = n_nostop = n_ends = n_transit = 0
     n_own = n_net = 0
     import borders
     bidx = borders.Index(borders.load(canonical_only=True))
@@ -1510,12 +1623,39 @@ def build(region, log):
                 st = resolved.get(ref)
                 if st is not None:
                     station_nodes[st].add(ref)
+            for st, nodes in extra_stops.get(rid, {}).items():
+                if st in stations:
+                    station_nodes[st].update(nodes)
         if len(station_nodes) < 2 and pick(mtags, "route", "route_master") == "funicular":
             n_ends += funicular_ends(rids, routes, ways, coords, stations, station_nodes)
         # One station is enough when the route runs on over the border from it (a line whose
         # only stop in this country is its last before the border); border_tails decides.
         if not station_nodes:
-            n_nostop += 1
+            # No stop here at all: a route passing through on its way between two other
+            # countries keeps its track from border to border (transit_tail).
+            tr = None
+            for rid in rids:
+                runs = assemble(routes[rid][1], ways, coords)
+                t = transit_tail(runs, routes[rid][1], resolved, bidx, region) if runs else None
+                if t is not None and (tr is None or t["km"] > tr["km"]):
+                    tr = t
+            if tr is None:
+                n_nostop += 1
+                continue
+            n_transit += 1
+            for rid in rids:
+                for ty, ref, role in routes[rid][1]:
+                    if ty == "w" and (not role or role.startswith(("forward", "backward"))):
+                        way_lines[ref].add(lid)
+            kind = pick(mtags, "route", "route_master")
+            build.border_only.append({
+                "id": lid, "service": is_service(mtags, kind, rids, routes, region),
+                "name": pick(mtags, "name") or pick(mtags, "ref"),
+                "name_en": pick(mtags, "name:en"), "ref": pick(mtags, "ref"),
+                "colour": pick(mtags, "colour", "color"), "operator": pick(mtags, "operator"),
+                "operator_en": pick(mtags, "operator:en"), "network": pick(mtags, "network"),
+                "kind": kind, "km": 0.0, "variants": 0, "straight_sections": 0,
+                "display": [], "sections": [], "_digest": [], "_tails": [tr]})
             continue
 
         sections = {}
@@ -1552,6 +1692,7 @@ def build(region, log):
             runs = assemble(members, ways, coords)
             if not runs:
                 continue
+            variant_dirs[lid].append(travel_dirs(members, ways, runs))
             placed = place_stations(runs, station_nodes, stations)
             if not placed:
                 continue
@@ -1636,14 +1777,7 @@ def build(region, log):
             display = [next(iter(tails))[0]]
         (lines if sections else build.border_only).append({
             "id": lid,
-            # In Finland a route_master whose every route is a named train is one too: "Juna 7"
-            # holds the night trains PYO 273 and PYO 276 and says so nowhere else. Finland
-            # only: in jp and tw it would wrongly flag JR宝塚線・福知山線 and 內灣六家線,
-            # lines whose routes are all rapid or numbered services.
-            "service": (looks_like_service(mtags, kind, region)
-                        or (region == "fi" and bool(rids)
-                            and all(looks_like_service(routes[r][0], kind, region)
-                                    for r in rids))),
+            "service": is_service(mtags, kind, rids, routes, region),
             # A relation with only a ref (China's "C8600") is called by it rather than nothing.
             "name": pick(mtags, "name") or pick(mtags, "ref"),
             "name_en": pick(mtags, "name:en"),
@@ -1676,7 +1810,8 @@ def build(region, log):
 
     log(f"{len(lines)} lines, {n_sec} sections, {n_gap} sections had no path along the "
         f"route and fell back to a straight line, {n_nostop} variants had under two stops; "
-        f"{n_ends} funiculars mapped with no stops took the two ends of their track")
+        f"{n_ends} funiculars mapped with no stops took the two ends of their track; "
+        f"{n_transit} lines with no stop here cross it border to border")
     log(f"  gaps in a route relation traced along track instead: {n_own} over the line's own "
         f"ways, {n_net} over the wider network")
     n_t = sum(len(l["_tails"]) for l in lines + build.border_only)
@@ -1737,8 +1872,14 @@ def drop_unridden_sections(lines, stations, geoms, route_share, log):
     cannot tell them apart, so OpenStreetMap's passenger routes do. A section between two
     stops is never questioned: the register saying passengers board at both ends is enough.
 
+    A register that knows trains run over a junction-ended section no OSM route maps lists it
+    in the line's `served_sections` ("a|b" keys), and it is kept: Thailand's Padang Besar -
+    border (SRT 45/46, the Hat Yai shuttles), Malaysia's run-ons to Padang Besar and over the
+    Johor Causeway. Taken off the line here, so never shipped.
+
     Returns the ids of lines left with no sections at all, which the caller drops.
     """
+    served = {(l["id"], k) for l in lines for k in (l.pop("served_sections", None) or ())}
     junction = {sid for sid, s in stations.items() if s.get("junction")}
     if not junction:
         return set()
@@ -1754,7 +1895,8 @@ def drop_unridden_sections(lines, stations, geoms, route_share, log):
             if a not in junction and b not in junction:
                 keep.append(sec)
                 continue
-            if route_share.get((l["id"], f"{a}|{b}"), 0.0) >= NEEDS_ROUTE_SHARE:
+            if (route_share.get((l["id"], f"{a}|{b}"), 0.0) >= NEEDS_ROUTE_SHARE
+                    or (l["id"], f"{a}|{b}") in served):
                 keep.append(sec)
                 n_kept += 1
                 km_kept += km
@@ -1942,11 +2084,25 @@ def register_way_lines(region, lines, geoms, log):
     # freight line into Basel's goods and marshalling yards, which runs beside the main line:
     # the yard track is not drawn (it is freight), so the only drawn track in its buffer was
     # the main line's, all of it on a passenger route.
+    # Where the country's rules set ROUTE_SHARE_BY_LENGTH, the share is of the section's own
+    # length: the metres of its ways a route runs over, against the section, not against all
+    # its ways (rules/us.py says why).
+    sec_len = {}
+    if getattr(country_rules(region), "ROUTE_SHARE_BY_LENGTH", False):
+        for l in lines:
+            for skey, pts in geoms.get(l["id"], {}).items():
+                if len(pts) >= 2:
+                    a = np.asarray(pts, dtype=np.float64)
+                    sec_len[(l["id"], skey)] = LineString(proj(a[:, 0], a[:, 1])).length
     for (lid, skey), beside in sec_ways.items():
         mine = [(j, got) for j, got, _d in beside if lid in out.get(wids[j], ())]
         total = sum(got for _j, got in mine)
         on = sum(got for j, got in mine if wids[j] in on_route)
-        route_share[(lid, skey)] = on / total if total else 0.0
+        if (lid, skey) in sec_len:
+            route_share[(lid, skey)] = min(1.0, on / sec_len[(lid, skey)]) \
+                if sec_len[(lid, skey)] else 0.0
+        else:
+            route_share[(lid, skey)] = on / total if total else 0.0
 
     # Kept for ownership.run, which gives each way ONE owner once the sections are final and
     # would otherwise load the ways and measure every buffer again.
@@ -1978,15 +2134,18 @@ def add_border_sections(region, lines, stations, geoms, alias, border_only, log)
         g = geoms.setdefault(l["id"], {})
         have = {frozenset(s[:2]) for s in l["sections"]}
         for t in tails:
-            a, p = alias.get(t["st"], t["st"]), t["bp"]
+            p = t["bp"]
             b = p["id"]
-            if a not in stations or frozenset((a, b)) in have:
+            # A transit section (transit_tail) starts at a border point too.
+            a = t["bp0"]["id"] if t.get("bp0") else alias.get(t["st"], t["st"])
+            if (not t.get("bp0") and a not in stations) or frozenset((a, b)) in have:
                 continue
-            if b not in stations:
-                stations[b] = {"id": b, "name": p["name"], "name_en": "",
-                               "lon": p["lon"], "lat": p["lat"], "lines": set(),
-                               "junction": True}
-                new_st += 1
+            for q in ([t["bp0"]] if t.get("bp0") else []) + [p]:
+                if q["id"] not in stations:
+                    stations[q["id"]] = {"id": q["id"], "name": q["name"], "name_en": "",
+                                         "lon": q["lon"], "lat": q["lat"], "lines": set(),
+                                         "junction": True}
+                    new_st += 1
             stations[a]["lines"].add(l["id"])
             stations[b]["lines"].add(l["id"])
             l["sections"].append([a, b, round(t["km"], 3)])
@@ -2009,6 +2168,327 @@ def add_border_sections(region, lines, stations, geoms, alias, border_only, log)
         f"{new_st} border points new as stations here")
 
 
+# A line's two sections at a junction that leave it along the same rails for this long are one
+# section with the spur cut out (fold_spurs); closer than SPUR_NEAR_M counts as the same rails.
+SPUR_MIN_M = 150
+SPUR_NEAR_M = 25
+# ... and only where the line runs through the fork: its two legs, each taken this far out,
+# part at more than this angle (a switchback's legs leave the fork together, in a V).
+SPUR_HEAD_M = 200
+SPUR_THROUGH_DEG = 100
+# A detour x - spur - y beside the line's own direct section x - y goes if, without its spur,
+# it is within this (or 5%) of the direct section's length.
+SPUR_SAME_KM = 0.5
+
+
+def _spur_len(p, q, near_m=SPUR_NEAR_M):
+    """p and q both start at a junction: how many leading points of p run within near_m of
+    q's first points, and the metres they cover."""
+    if len(p) < 2 or len(q) < 2:
+        return 0, 0.0
+    k = math.cos(math.radians(p[0][1])) * 111320
+    head = np.asarray(q[:400], dtype=np.float64)
+    run, i = 0.0, 0
+    for i in range(1, len(p)):
+        x = p[i]
+        d = np.hypot((head[:, 0] - x[0]) * k, (head[:, 1] - x[1]) * 110570).min()
+        if d > near_m:
+            return i - 1, run
+        run += math.hypot((x[0] - p[i - 1][0]) * k, (x[1] - p[i - 1][1]) * 110570)
+    return len(p) - 1, run
+
+
+def fold_spurs(lines, stations, geoms, log, state=None):
+    """A junction in a line's middle that the line reaches up a spur and leaves down it again:
+    the two sections meeting there leave the junction along the same rails, so the line's
+    track drawn on the map has a branch going nowhere (gb's South Wales Main Line ran up the
+    Westerleigh curve to 'Junction near Yate' and back; Anita, 2026-10-05: "branches that
+    don't actually lead to any stations, but they're still highlighted"). The two sections
+    become one, from the fork where they part: the spur is cut out of both, its length off
+    the line's km; the register's chainage and the per-section flags move to the new key.
+    Only at a junction (never a stop) with exactly two of the line's sections, where they share
+    at least SPUR_MIN_M, and where the line runs through the fork (through_at_fork): at a
+    switchback trains do reverse up the headshunt, and its two legs leave the fork together
+    (Czechia's 143 Chodov - Nová Role reverses at Chodov-úvrať). Runs after the register's
+    split_pieces, whose bridges can make them, and moves state["sec_ways"] (what ownership
+    reads) to the new section."""
+    n, km_cut = 0, 0.0
+    sec_ways = (state or {}).get("sec_ways")
+    near = None
+
+    def oriented(pts, st):
+        d0 = (pts[0][0] - st["lon"]) ** 2 + (pts[0][1] - st["lat"]) ** 2
+        d1 = (pts[-1][0] - st["lon"]) ** 2 + (pts[-1][1] - st["lat"]) ** 2
+        return d0 <= d1
+
+    def through_at_fork(ra, rb):
+        """ra, rb: the two legs from the fork (where the spur's rails part) to the far ends.
+        A route through the fork leaves it both ways (an angle over SPUR_THROUGH_DEG between
+        the legs, each taken SPUR_HEAD_M out); a switchback's legs leave it together, in a V."""
+        def head(r):
+            k = math.cos(math.radians(r[0][1])) * 111320
+            run = 0.0
+            for i in range(1, len(r)):
+                run += math.hypot((r[i][0] - r[i - 1][0]) * k, (r[i][1] - r[i - 1][1]) * 110570)
+                if run >= SPUR_HEAD_M:
+                    break
+            return ((r[i][0] - r[0][0]) * k, (r[i][1] - r[0][1]) * 110570)
+        (ax, ay), (bx, by) = head(ra), head(rb)
+        na, nb = math.hypot(ax, ay), math.hypot(bx, by)
+        if not na or not nb:
+            return False
+        cos = (ax * bx + ay * by) / (na * nb)
+        return math.degrees(math.acos(max(-1.0, min(1.0, cos)))) > SPUR_THROUGH_DEG
+
+    for l in lines:
+        if l.get("service"):
+            continue
+        g = geoms.get(l["id"])
+        if not g:
+            continue
+        changed = False
+        while True:
+            ends = defaultdict(list)
+            for sec in l["sections"]:
+                ends[sec[0]].append(sec)
+                ends[sec[1]].append(sec)
+            done = False
+            for j, secs in ends.items():
+                st = stations.get(j)
+                if len(secs) != 2 or not st or not st.get("junction"):
+                    continue
+                (sa, sb) = secs
+                ka, kb = f"{sa[0]}|{sa[1]}", f"{sb[0]}|{sb[1]}"
+                pa, pb = g.get(ka), g.get(kb)
+                if not pa or not pb or len(pa) < 2 or len(pb) < 2 or ka == kb:
+                    continue
+
+                fa, fb = oriented(pa, st), oriented(pb, st)
+                ca = list(pa) if fa else list(pa)[::-1]
+                cb = list(pb) if fb else list(pb)[::-1]
+                ia, ma = _spur_len(ca, cb)
+                ib, mb = _spur_len(cb, ca)
+                if min(ma, mb) < SPUR_MIN_M or ia >= len(ca) - 1 or ib >= len(cb) - 1:
+                    continue
+                if not through_at_fork(ca[ia:], cb[ib:]):
+                    continue
+                x = sa[1] if sa[0] == j else sa[0]
+                y = sb[1] if sb[0] == j else sb[0]
+                kn = f"{x}|{y}"
+                if x == y:
+                    continue
+                direct = next((s for s in l["sections"] if {s[0], s[1]} == {x, y}), None)
+                if direct is not None:
+                    # The line already runs x - y directly, and x - j - y is the same track
+                    # with a spur up to j (gb's Peterborough to Lincoln, 16.8 km up and back at
+                    # Lincoln): the detour goes, if without its spur it is the direct one's
+                    # length. Anything else is a real second route and stays.
+                    via = (path_length_m(ca[ia:]) + path_length_m(cb[ib:])) / 1000
+                    if abs(via - direct[2]) > max(SPUR_SAME_KM, 0.05 * direct[2]):
+                        continue
+                    l["sections"] = [s for s in l["sections"] if s is not sa and s is not sb]
+                    for k in (ka, kb):
+                        g.pop(k, None)
+                        for name in ("chain", "highspeed_sections"):
+                            if isinstance(l.get(name), dict):
+                                l[name].pop(k, None)
+                        for name in ("served_sections", "borrowed"):
+                            v = l.get(name)
+                            if v and k in v:
+                                rest = [q for q in v if q != k]
+                                l[name] = set(rest) if isinstance(v, set) else type(v)(rest)
+                        if sec_ways is not None:
+                            sec_ways.pop((l["id"], k), None)
+                    km_cut += sa[2] + sb[2]
+                    l["display"] = [s for s in l.get("display", []) if s != j]
+                    st["lines"].discard(l["id"])
+                    log(f"  spur detour dropped: {l['name'][:50]} at {st.get('name', j)}: "
+                        f"{min(ma, mb):.0f} m up and back beside its own direct section")
+                    n += 1
+                    changed = done = True
+                    break
+                if kn in g or f"{y}|{x}" in g:
+                    continue
+                ida = getattr(pa, "ids", None)
+                idb = getattr(pb, "ids", None)
+                if ida is not None:
+                    ida = list(ida) if fa else list(ida)[::-1]
+                if idb is not None:
+                    idb = list(idb) if fb else list(idb)[::-1]
+                # x ... fork (A from its far end back to the spur's base), then fork ... y
+                coords = ca[ia:][::-1] + cb[ib:]
+                ids = (ida[ia:][::-1] + idb[ib:]) if ida is not None and idb is not None else None
+                km = round(path_length_m(coords) / 1000, 3)
+                km_cut += sa[2] + sb[2] - km
+                l["sections"] = [s for s in l["sections"] if s is not sa and s is not sb]
+                l["sections"].append([x, y, km])
+                del g[ka], g[kb]
+                g[kn] = Pts(coords, ids)
+                for name in ("chain", "highspeed_sections"):
+                    d = l.get(name)
+                    if isinstance(d, dict) and (ka in d or kb in d):
+                        va, vb = d.pop(ka, None), d.pop(kb, None)
+                        if name == "chain":
+                            d[kn] = round((va or 0.0) + (vb or 0.0), 3)
+                        else:
+                            d[kn] = bool(va) or bool(vb)
+                for name in ("served_sections", "borrowed"):
+                    v = l.get(name)
+                    if v and (ka in v or kb in v):
+                        rest = [k for k in v if k not in (ka, kb)]
+                        l[name] = type(v)(rest + [kn]) if not isinstance(v, set) else set(rest) | {kn}
+                l["display"] = [s for s in l.get("display", []) if s != j]
+                st["lines"].discard(l["id"])
+                if sec_ways is not None:
+                    sec_ways.pop((l["id"], ka), None)
+                    sec_ways.pop((l["id"], kb), None)
+                    if near is None:
+                        import pieces
+                        near = pieces.WaysNear(state)
+                    sec_ways[(l["id"], kn)] = near.beside(coords, l.get("kind", "rail"))
+                log(f"  spur folded: {l['name'][:50]} at {st.get('name', j)}: "
+                    f"{min(ma, mb):.0f} m up and back")
+                n += 1
+                changed = done = True
+                break
+            if not done:
+                break
+        if changed:
+            l["km"] = round(sum(s[2] for s in l["sections"]), 3)
+    log(f"spurs: {n} out-and-back spurs at a line's junction folded out ({km_cut:,.1f} km)")
+
+
+# A register line's piece more than this far (crow-fly, nearest stations) from its biggest piece
+# is a line of its own (split_far_pieces).
+FAR_PIECE_KM = 25
+
+
+def split_far_pieces(lines, stations, geoms, reg_ways, state, log, keep_whole=()):
+    """A register line whose passenger pieces lie far apart becomes one line per far piece
+    (Anita, 2026-10-05: "ok we can split lines", for lines whose pieces are separate services
+    on one register line with a closed or freight middle: France's Chartres - Bordeaux in four
+    pieces up to 229 km apart). As the US and Canada have done since 2026-10-04 (pieces.py),
+    but only for a piece over FAR_PIECE_KM from the line's biggest piece: a nearer one is
+    more likely a hole trains run through, on handoff_notes/lines_in_pieces.md's list. A far
+    piece with under two stops cannot be ridden as a trip and stays with its line. The biggest
+    piece keeps the id; a split piece takes a hash of the line's id and its lowest stop, and a
+    name_en from its end stops; km_official is shared out by km; reg_ways and
+    state["sec_ways"] move to the new ids. A name in `keep_whole` (the register module's
+    KEEP_WHOLE: cn's 青荣城际线, whose gap is track missing from OSM) is left alone. Returns
+    {line id: [split ids]} for aliases.json's `pieces`, which lets a ride saved on the old id
+    find its piece."""
+    import pieces as pc
+    from n02 import walk_order
+    sec_ways = (state or {}).get("sec_ways") or {}
+    wids = (state or {}).get("wids") or []
+    made, out = [], {}
+
+    def km_apart(a, b):
+        return min(dist_m(stations[x]["lon"], stations[x]["lat"],
+                          stations[y]["lon"], stations[y]["lat"]) for x in a for y in b) / 1000
+
+    for l in list(lines):
+        if (l.get("src", "osm") == "osm" or l.get("service") or not l.get("sections")
+                or l["name"] in keep_whole):
+            continue
+        ps = pc.section_pieces(l["sections"])
+        if len(ps) < 2:
+            continue
+        lid, secs = l["id"], l["sections"]
+        nodes = [{s for i in ix for s in secs[i][:2]} for ix in ps]
+        big = nodes[0]
+        far = []
+        for ix, ns in zip(ps[1:], nodes[1:]):
+            stops = sorted(s for s in ns if not stations[s].get("junction"))
+            if len(stops) >= 2 and km_apart(ns, big) > FAR_PIECE_KM:
+                far.append((ix, ns, stops))
+        if not far:
+            continue
+        total = sum(s[2] for s in secs) or 1.0
+        old_geo = geoms.get(lid, {})
+        moved = set()
+        news = []
+        for ix, ns, stops in far:
+            sub = [secs[i] for i in ix]
+            keys = {f"{s[0]}|{s[1]}" for s in sub}
+            moved |= set(ix)
+            p = dict(l)
+            p["id"] = lid[0] + hashlib.blake2b(f"{lid}|piece|{stops[0]}".encode("utf-8"),
+                                               digest_size=5).hexdigest()
+            p["sections"] = sub
+            p["km"] = round(sum(s[2] for s in sub), 3)
+            p["display"] = walk_order([(s[0], s[1]) for s in sub])
+            for k in ("borrowed", "highspeed_sections", "closed"):
+                v = l.get(k)
+                if isinstance(v, list):
+                    p[k] = [x for x in v if x in keys]
+                elif isinstance(v, dict):
+                    p[k] = {x: y for x, y in v.items() if x in keys}
+            if l.get("km_official"):
+                p["km_official"] = round(l["km_official"] * p["km"] / total, 3)
+            geoms[p["id"]] = {k: old_geo.pop(k) for k in keys if k in old_geo}
+            ws = set()
+            for k in keys:
+                got = sec_ways.pop((lid, k), None)
+                if got is not None:
+                    sec_ways[(p["id"], k)] = got
+                    ws |= {wids[j] for j, *_r in got}
+            for wid in ws:
+                if lid in reg_ways.get(wid, ()):
+                    reg_ways[wid].add(p["id"])
+            for sid in ns:
+                stations[sid]["lines"].add(p["id"])
+            news.append(p)
+        rest = [s for i, s in enumerate(secs) if i not in moved]
+        keep_nodes = {s for sec in rest for s in sec[:2]}
+        for _ix, ns, _st in far:
+            for sid in ns - keep_nodes:
+                stations[sid]["lines"].discard(lid)
+        # a way only the moved sections lay beside is no longer this line's
+        own_ws = {wids[j] for k in (f"{s[0]}|{s[1]}" for s in rest)
+                  for j, *_r in sec_ways.get((lid, k), ())}
+        for wid, ls in reg_ways.items():
+            if lid in ls and wid not in own_ws and any(p["id"] in ls for p in news):
+                ls.discard(lid)
+        km_before = l["km"]
+        l["sections"] = rest
+        l["km"] = round(sum(s[2] for s in rest), 3)
+        l["display"] = [s for s in l.get("display", []) if s in keep_nodes] or \
+            walk_order([(s[0], s[1]) for s in rest])
+        if l.get("km_official"):
+            l["km_official"] = round(l["km_official"] * l["km"] / total, 3)
+        for k in ("borrowed", "highspeed_sections", "closed"):
+            v = l.get(k)
+            keys = {f"{s[0]}|{s[1]}" for s in rest}
+            if isinstance(v, list):
+                l[k] = [x for x in v if x in keys]
+            elif isinstance(v, dict):
+                l[k] = {x: y for x, y in v.items() if x in keys}
+        # the name_en from before the split, less any "(first – last)" a register already gave
+        # it (au names two lines of one name by their ends: no second pair of brackets)
+        base = dict(l, name_en=re.sub(r" \([^()]* – [^()]*\)$", "",
+                                      news[0].get("name_en") or ""))
+        for p in [l] + news:
+            st_ = [s for s in p["display"] if not stations[s].get("junction")] or p["display"]
+            if len(st_) >= 2 and st_[0] != st_[-1]:
+                p["name_en"] = pc.english_piece_name(l["name"], base, stations, st_[0], st_[-1])
+        lines.extend(news)
+        out[lid] = [p["id"] for p in news]
+        made.append((km_before, l["name"], [l["km"]] + [p["km"] for p in news]))
+    log(f"far pieces: {len(made)} register lines with pieces over {FAR_PIECE_KM} km apart made "
+        f"{sum(len(m[2]) - 1 for m in made)} more lines")
+    for km, name, kms in sorted(made, reverse=True):
+        log(f"    {km:7.1f} km  {name} -> " + " + ".join(f"{k:.1f}" for k in kms))
+    return out
+
+
+# A section with neither end on the register is cut only if one end is at least this much deeper
+# inside this country's outline than the other (the outline is a few hundred metres off).
+SIDE_M = 300
+# ... and only if one end is at most this far outside it and the other at most this far inside.
+OUTLINE_SLACK_M = 1500
+
+
 def split_at_borders(region, lines, stations, geoms, log):
     """A section built whole across a border, because this extract happens to hold the station
     on the far side as well, is cut at the border point on it: this country's part stays, and
@@ -2016,7 +2496,8 @@ def split_at_borders(region, lines, stations, geoms, log):
     then has it from the border point, under the same point id. Without this the two
     countries' pieces overlap and only this country's register is credited by a ride over it.
     A side is told by which end is a station of this country's register (merge has put the
-    register's ids on them); a section with neither or both is left alone."""
+    register's ids on them); with neither, by which end lies deeper inside this country's
+    outline (borders.depth_m, at least SIDE_M apart); a section with both is left alone."""
     import borders
     bidx = borders.Index(borders.load(canonical_only=True))
     try:
@@ -2048,7 +2529,7 @@ def split_at_borders(region, lines, stations, geoms, log):
         best = min(same or near, default=None)
         return best[1] if best else None
     split_at_borders.abroad = abroad
-    n_split = n_drop = 0
+    n_split = n_drop = n_osm = 0
     km_drop = 0.0
     for l in lines:
         if l.get("src") != "osm":
@@ -2065,9 +2546,33 @@ def split_at_borders(region, lines, stations, geoms, log):
             total = path_length_m(pts)
             hits = [h for h in bidx.along(pts) if 50 < h[0] < total - 50]
             home_a, home_b = a in reg_st, b in reg_st
-            if len(hits) != 1 or home_a == home_b:
+            if len(hits) != 1 or (home_a and home_b):
                 out.append(sec)
                 continue
+            if not home_a and not home_b:
+                # NEITHER END ON THIS COUNTRY'S REGISTER: an OSM line over a crossing (Euskotren's
+                # E2 Irun Ficoba - Hendaia, Varnsdorf's trains over the Czech border). One hit
+                # puts the two ends on two sides, so the end further inside this country's
+                # outline is home; the outline is coarse, so a near tie is left alone.
+                sa, sb = stations.get(a), stations.get(b)
+                if not sa or not sb or region not in hits[0][1]["countries"]:
+                    out.append(sec)
+                    continue
+                da = borders.depth_m(region, sa["lon"], sa["lat"])
+                db = borders.depth_m(region, sb["lon"], sb["lat"])
+                # Both ends well outside this country is a section crossing twice with a point at
+                # only one crossing (Ebersbach - Neugersdorf dips into Czechia, both ends in
+                # Germany); both well inside, the same the other way. OUTLINE_SLACK_M allows for
+                # the outline: it puts Irun Ficoba 1.1 km inside France.
+                if da is None or db is None or abs(da - db) < SIDE_M \
+                        or max(da, db) < -OUTLINE_SLACK_M or min(da, db) > OUTLINE_SLACK_M:
+                    out.append(sec)
+                    continue
+                home_a, home_b = da > db, db > da
+                n_osm += 1
+                h, f = (sa, sb) if home_a else (sb, sa)
+                log(f"border: {l['name']}: {h['name']} ({max(da, db):,.0f} m in) kept, "
+                    f"{f['name']} ({min(da, db):,.0f} m) beyond {hits[0][1]['id']}")
             _along, p, k, fx, fy, _off = hits[0]
             # A section's geometry runs the way its route did, not from its first station
             # to its second.
@@ -2117,7 +2622,8 @@ def split_at_borders(region, lines, stations, geoms, log):
                     seen.add(s)
                     d.append(s)
             l["display"] = d
-    log(f"border: {n_split} sections built whole over a border cut at its border point; the far "
+    log(f"border: {n_split} sections built whole over a border cut at its border point "
+        f"({n_osm} with neither end on the register, sided by the outline); the far "
         f"part left to the built neighbour in {n_drop} ({km_drop:,.1f} km); "
         f"{len(abroad)} far stations aliased to the neighbour's id")
 
@@ -2210,7 +2716,7 @@ def main():
         print(f"[{time.time()-t0:6.1f}s] {msg}", flush=True)
 
     lines, stations, geoms, way_lines = build(args.region, log)
-    station_alias, line_alias = {}, {}
+    station_alias, line_alias, line_pieces = {}, {}, {}
     for l in lines:
         l.setdefault("src", "osm")
     register = args.register or (f"n02:{args.n02}" if args.n02 else None)
@@ -2231,9 +2737,13 @@ def main():
             sys.exit(f"register data not found: {z}")
         mod = importlib.import_module(mod_name)
         lines, stations, geoms = merge_sources(
-            (lines, stations, geoms), canon_border_ids(mod.build(str(z), log), log), log)
+            (lines, stations, geoms), canon_border_ids(mod.build(str(z), log), log), log,
+            region=args.region)
         station_alias = getattr(merge_sources, "alias", {})
         line_alias = getattr(merge_sources, "line_alias", {})
+        # A register's own line aliases (rinf.py's LINE_ALIAS, from a COUNTRY's `line_alias`:
+        # line ids it no longer builds -> their successors), so rides saved on them still credit.
+        line_alias.update(getattr(mod, "LINE_ALIAS", {}))
         add_border_sections(args.region, lines, stations, geoms, station_alias,
                             getattr(build, "border_only", []), log)
         split_at_borders(args.region, lines, stations, geoms, log)
@@ -2252,9 +2762,24 @@ def main():
         # their route_share to 1.0), and sections no train runs over are marked not running
         # after not_running.mark. A region with no feed gets None and builds as before.
         import gtfs_served
-        timetable = gtfs_served.check(args.region, lines, stations, route_share, log)
+        timetable = gtfs_served.check(args.region, lines, stations, route_share, log, geoms)
         drop = drop_unridden_sections(lines, stations, geoms, route_share, log)
         lines = [l for l in lines if l["id"] not in drop]
+        # A register line whose sections no longer all connect: one line per piece, where the
+        # register module has `split_pieces` (us_register, ca_register; Anita, 2026-10-04: a
+        # trip is entered station to station, so a line in pieces cannot be ridden across its
+        # gap). It appends the pieces to `lines` and moves reg_ways and
+        # register_way_lines.state["sec_ways"] to their ids; the biggest keeps the line's id.
+        if hasattr(mod, "split_pieces"):
+            mod.split_pieces(lines, stations, geoms, reg_ways, register_way_lines.state, log)
+            line_pieces.update(getattr(mod, "LINE_PIECES", {}))
+        # Out-and-back spurs at a line's middle junctions, after any bridges were drawn.
+        fold_spurs(lines, stations, geoms, log, register_way_lines.state)
+        # A register line's pieces far apart: one line each (Anita, 2026-10-05).
+        for lid, ids in split_far_pieces(lines, stations, geoms, reg_ways,
+                                         register_way_lines.state, log,
+                                         set(getattr(mod, "KEEP_WHOLE", ()) or ())).items():
+            line_pieces.setdefault(lid, []).extend(ids)
         for wid, lids in reg_ways.items():
             way_lines[wid] |= lids - drop
         # Register sections with no rails on the map: listed, but no longer running.
@@ -2311,7 +2836,8 @@ def main():
         built = {}
     foot, report = ownership.run(args.region, lines, geoms, route_users, stations, log,
                                  state=getattr(register_way_lines, "state", None),
-                                 built_regions=built)
+                                 built_regions=built,
+                                 variants=getattr(build, "variant_dirs", None))
     ownership.write(out, args.region, foot)
     if (out / "credits.json").exists():
         (out / "credits.json").unlink()
@@ -2365,7 +2891,10 @@ def main():
     # `lines` is the same for a line dropped as a register line's twin: a ride saved against
     # it names stations the register line also has, so the ride moves across whole.
     with open(out / "aliases.json", "w", encoding="utf-8") as f:
-        json.dump({"region": args.region, "stations": station_alias, "lines": line_alias},
+        # `pieces`: a line split into pieces -> the ids of the pieces split off it, so a ride
+        # between two stations of another piece moves there (the app's migrateRide).
+        json.dump({"region": args.region, "stations": station_alias, "lines": line_alias,
+                   **({"pieces": line_pieces} if line_pieces else {})},
                   f, ensure_ascii=False, separators=(",", ":"))
 
     for lid, g in geoms.items():

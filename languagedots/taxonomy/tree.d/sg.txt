@@ -1,0 +1,14 @@
+# Singapore 2020 census, language most frequently spoken at home (taxonomy/sg2020.py). Nothing
+# new: every node is repeated from tree.txt's neighbours in hk.txt and us.txt, with identical
+# labels and colours, so Singapore does not depend on those fragments being in the build.
+sinotibetan.sinitic | Chinese | 0.62 0.19 38
+sinotibetan.sinitic.mandarin | Mandarin | 0.68 0.17 41
+sinotibetan.sinitic.min_nan | Min Nan (Taiwanese, Hokkien) | 0.50 0.12 28
+sinotibetan.sinitic.teochew | Teochew (Chiu Chau) | 0.62 0.11 28
+sinotibetan.sinitic.cantonese | Cantonese | 0.80 0.11 15
+austronesian | Austronesian | 0.76 0.13 195
+austronesian.malayic | Malayic | 0.74 0.12 175
+# hand-picked: generated near Malayic (175) it sat on top of Tamil (0.70 0.13 185), and Malay
+# and Tamil share every HDB block in Singapore. A lighter green keeps it in the Austronesian
+# part of the wheel and clear of Tamil's teal. (Malay is also drawn, small, in au, ca and us.)
+austronesian.malayic.malay | Malay | 0.82 0.15 150

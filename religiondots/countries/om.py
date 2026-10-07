@@ -17,7 +17,7 @@ def _om_counts():
 
     EVERY ROW IS `modelled` (§7b). No source asks religion in Oman, so every Omani is drawn on
     Islam; each governorate's male workers, female workers and dependants take their own national
-    nationality mix through Pew 2020, with India's Hindu share set by Pew's Oman estimate, and each
+    nationality mix through Pew 2020, with India's Hindu share set by Pew's Oman estimate and its Christian share by the Gulf rule, and each
     wilaya's expatriates take their governorate's mix. Both halves are the register's counts per
     wilaya, so they partition each unit. Two register wilayat newer than the boundaries (Sinaw, Al
     Jabal al Akhdar) are drawn inside the polygons that hold their seats. sources/om.py, om.md.
@@ -65,7 +65,7 @@ ENTRY = {
             "small Shia minority in Muscat and on the Batinah coast. Published estimates of the "
             "Ibadi share among Omanis run from under half to three quarters, and none gives a "
             "figure for any governorate or wilaya, so the map does not split them. Nobody counted "
-            "these dots, and they are drawn desaturated to say so. "
+            "these dots, so they disappear when inferred dots are turned off. "
             "**Every non-Muslim drawn is a foreign resident.** The register counts **2,283,279** "
             "expatriates, 43.3% of the people living in Oman, in every wilaya. It gives the "
             "nationality of expatriate workers only for the whole country, by sex, and the number "
@@ -77,15 +77,22 @@ ENTRY = {
             "mix of expatriates who were not workers in 2018, the latest year found with both "
             "counts. Each nationality is drawn at Pew Research Center's 2020 estimate for its home "
             "country, which cannot see anyone who converted or stopped practising. "
-            "**Indians are not drawn at India's own figure.** Pew says of its own migration "
-            "estimates that Indians in Muslim-majority Middle Eastern countries are mostly Muslim, "
-            "so Indians are drawn at the Hindu share that gives Pew's figure for Hindus in Oman "
-            "(9.5% of everyone): 55.4% of Indians, not India's 79%. "
-            "That puts **720,302** people on religions other than Islam: 502,123 Hindus, 133,118 "
-            "Christians, 60,559 Buddhists and 16,477 Sikhs. Pew's estimate for everyone living in "
-            "Oman is 81.8% Muslim and 8.1% Christian, and the US State Department's is 95% "
-            "Muslim; this map draws 86.3% and 2.5%. Its Buddhists are about ten times Pew's "
-            "figure, most of them workers from Myanmar and Sri Lanka."),
+            "**Indians are not drawn at India's own figure.** Pew's migration estimates count more "
+            "of the Indians in Muslim-majority Middle Eastern countries as Muslim than India's own "
+            "share, taking Egypt's census of its Indian residents as the guide. So Indians are "
+            "drawn at the Hindu share that gives Pew's figure for Hindus in Oman (9.5% of "
+            "everyone), with the difference drawn as Muslim. Figures by home country also give "
+            "the Gulf too few Christians: Kuwait, the one Gulf state that records religion by "
+            "region of origin, counts about ten times as many Christians among its Asian residents as "
+            "they give. So some of those Indian Hindus are then drawn as Christian, until "
+            "Christians and Hindus stand in the same proportion as in Pew's Oman estimate. "
+            "Indians end up 39% Muslim, 35% Hindu and 23% Christian, against India's own 15%, "
+            "79% and 2%. That puts **720,302** people on religions other than Islam: 343,975 "
+            "Hindus, 291,264 Christians, 60,559 Buddhists and 16,477 Sikhs. Pew's estimate for "
+            "everyone living in Oman is 81.8% Muslim and 8.1% Christian, and the US State "
+            "Department's is 95% Muslim; this map draws 86.3% and 5.5%. Pew's figures here are "
+            "estimates too, not counts. The Buddhists drawn are about ten times Pew's figure, most of "
+            "them workers from Myanmar and Sri Lanka."),
         how="no source asks; Omanis drawn as Muslim, foreign residents by nationality and sex",
         grain="wilayat, 86,000 people on average",
         gap="Omanis who are not Muslim, whom no source counts; and foreign residents outside the "
@@ -108,8 +115,10 @@ ENTRY = {
              "Indonesia, Ethiopia and Nepal women, other men on the named men's mix, other Arabs on "
              "Pew's MENA row; dependants at mid-2018 population less 2018 workers by nationality "
              "(GLMM). Pew 2020 per nationality, Muslim branches folded; India's Hindu share 55.38% "
-             "so the layer's Hindus equal Pew's Oman 9.531%. WITNESS: Christians 0.31 of Pew's Oman "
-             "share (band 0.2-2.0, written after a scouting sum); Buddhists 10x, not corrected. "
+             "so the layer's Hindus equal Pew's Oman 9.531%, then the Gulf rule (sources.md "
+             "§gulf-2026-10-03) moves 158,151 Indians Hindu to Christian so C/(C+H) is Pew's 0.459 "
+             "(Indians 34.6% H, 23.0% C). WITNESS: Christians 0.69 of Pew's Oman share (band "
+             "0.2-2.0, written after a scouting sum; 0.31 before the rule); Buddhists 10x, not corrected. "
              "GEOGRAPHY: geoBoundaries OMN ADM2, NCSI's 2020 wilayat (61), Sinaw and Al Jabal al "
              "Akhdar merged by seat; COD-AB not used (governorate lines pre-2011). PLACEMENT: "
              "Kontur OM uncalibrated (0.889 of the register; rank witness +0.837); no block at the "

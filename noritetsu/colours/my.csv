@@ -1,0 +1,18 @@
+line,operator,colour,source,url,note
+Laluan Kelana Jaya,,#D50032,prasarana-gtfs,https://api.data.gov.my/gtfs-static/prasarana?category=rapid-rail-kl,route_color of route KJ in Prasarana's own GTFS (2026-10-03)
+Laluan Ampang,,#E57200,prasarana-gtfs,https://api.data.gov.my/gtfs-static/prasarana?category=rapid-rail-kl,route_color of route AG
+Laluan Sri Petaling,,#76232F,prasarana-gtfs,https://api.data.gov.my/gtfs-static/prasarana?category=rapid-rail-kl,route_color of route PH (the Sri Petaling Line)
+Laluan Kajang,,#047940,prasarana-gtfs,https://api.data.gov.my/gtfs-static/prasarana?category=rapid-rail-kl,route_color of route KGL
+Laluan Putrajaya,,#FFCD00,prasarana-gtfs,https://api.data.gov.my/gtfs-static/prasarana?category=rapid-rail-kl,route_color of route PYL
+Laluan Shah Alam,,#00A9E0,prasarana-gtfs,https://api.data.gov.my/gtfs-static/prasarana?category=rapid-rail-kl,route_color of route SA
+Laluan Monorel KL,,#84BD00,prasarana-gtfs,https://api.data.gov.my/gtfs-static/prasarana?category=rapid-rail-kl,route_color of route MR
+KLIA Transit,,#139593,osm,https://www.openstreetmap.org/relation/8119877,OSM route_master colour; in no open feed
+Laluan Pantai Barat,,#FFC72C,ktm-gtfs,https://api.data.gov.my/gtfs-static/ktmb,picked: route_color of KTM's ETS (the service that runs the whole line) in KTM's GTFS
+Laluan Pantai Timur,,#2E8B57,picked,,picked: KTM's GTFS gives its Intercity trains grey (6E6E6E) which reads as not running here
+Laluan Cawangan Pelabuhan Klang,,#DC2420,ktm-gtfs,https://api.data.gov.my/gtfs-static/ktmb,picked: route_color of the Komuter Port Klang Line that runs it
+Laluan Cawangan Batu Caves,,#3C5A9F,ktm-gtfs,https://api.data.gov.my/gtfs-static/ktmb,picked: route_color of the Komuter Seremban Line that runs it
+Laluan Cawangan Butterworth,,#1964B7,ktm-gtfs,https://api.data.gov.my/gtfs-static/ktmb,picked: route_color of the Komuter Butterworth - Ipoh line
+Laluan Cawangan Pasir Gudang,,#0A3D7A,ktm-gtfs,https://api.data.gov.my/gtfs-static/ktmb,picked: route_color of KTM's Shuttle Selatan
+Laluan Cawangan Skypark,,#A52A2A,osm,https://www.openstreetmap.org/relation/9985661,picked: OSM's Skypark Link route_master colour; the service is suspended
+Laluan Keretapi Barat Sabah,,#B5651D,picked,,picked: no official colour found
+Keretapi Bukit Bendera,,#8B0000,picked,,picked: no official colour found

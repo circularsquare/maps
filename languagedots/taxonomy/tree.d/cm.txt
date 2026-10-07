@@ -1,0 +1,149 @@
+# Cameroon (taxonomy/cm2022.py). Afrobarometer R5-R9, home language, by unit
+# (sources/cm_afro.py). Every coded answer and every free-text language named by two or more
+# respondents has a node.
+#
+# Middle levels, checked against Glottolog (data/raw/glottolog), "families as most readers know
+# them" (AGENT_BRIEF §3):
+#   * Grassfields (Glottolog's Wide Grassfields, under Southern Bantoid), a group of its own
+#     under Bantoid, with Bamileke (Glottolog's Bamileke, inside Mbam-Nkam) as a subgroup:
+#     Ghomala' (Bandjoun; Glottolog lists it only as the parent of its Ngemba dialect ngem1253),
+#     Fe'fe' fefe1239 (Bafang; Nufi), Medumba medu1238 (Bangangte), Yemba yemb1246 (Dschang),
+#     Ngiemboon ngie1241 (Batcham), Ngombale ngom1271 (Babadjou), Ngwe ngwe1238 (Nweh; the
+#     Bangwa of Lebialem). "Mbouda" is a card label naming the Bamboutos town, whose chiefdoms
+#     speak Ngombale, Ngiemboon and Mengaka: a leaf, as the card printed it.
+#     The rest of Grassfields: Bamun bamu1253, Mungaka mung1266 (Bali Nyonga), Bafanji
+#     bafa1249 (Mbam-Nkam Nun); Ngemba ngem1255 and Mankon (its dialect mank1253, a card label
+#     of its own), Bafut; Limbum limb1268, Yamba yamb1251 (Nkambe); Lamnso' lamn1239, Kom
+#     komc1235, Oku okuu1243, Aghem aghe1239, Mmen mmen1238 (Ring); Meta' meta1238, Moghamo
+#     (mogh1246, a Meta' dialect the survey names apart), Ngie ngie1242, Ngwo ngwo1241, Oshie
+#     (Ngie-Oshie), Mundani mund1327 (Momo); Befang (nucl1410, Menchum).
+#   * Other Bantoid, flat under Bantoid as ng.txt has Ejagham: Kenyang keny1279 (Mamfe),
+#     Esimbi esim1238 (Tivoid), Tikar tika1246 (Northern Bantoid), Ncane ncan1245 and Noni
+#     (Beboid).
+#   * Bantu (zone A), flat under Bantu beside us.txt's Ewondo, Basaa, Duala and Fang: Eton
+#     eton1253, Bene (an Ewondo variety; the survey names it apart), Bulu bulu1251, Ntumu (a
+#     Fang variety), Mvele (Bamvele, bamv1238), Batanga bata1285, Akoose akoo1248, Mokpwe
+#     mokp1239 (Bakweri), Oroko orok1266, Bakundu (Lundu-Balong; not under this name in
+#     Glottolog), Mbo, Bakoko bako1249, Abo (Bankon), Bafia bafi1243, Tunen tune1261 (Banen),
+#     Yambassa (Glottolog's Yambassa A.60 group, as respondents named it), Nomaande noma1260
+#     (Lemande), Makaa maka1304, Koonzime koon1245, Bajwe'e, Pol pomo1271. cf.txt's Kako reused.
+#   * Chadic: Mafa mafa1239, Kapsiki (Psikye psik1239; Nigeria's Kamwe kamw1239 is Glottolog's
+#     other Higic language, kept apart), Massa (Masana masa1322), Guiziga (North and South
+#     Giziga, one answer), Kotoko (Glottolog's Kotoko-Buduma languages, one answer), Wandala
+#     wand1278 (Mandara), Musgum musg1254, Guidar gida1247, Jimi jimi1254, Daba nucl1683, Gavar
+#     gava1241, Hina, Mada mada1293, Podoko (Parkwa park1239), Zulgo (zulg1242), Lele.
+#   * Adamawa, cf.txt's group (Glottolog's Cameroun-Ubangian): Tupuri tupu1244, Mundang
+#     mund1325, Dii diii1241, Fali (North and South Fali, Glottolog's "Adamawa Fali" under
+#     unclassified Volta-Congo; Adamawa as most readers know it), Mubako (the speech of the Bali
+#     chiefdoms Bali Gashu, Balikumbat and Bali Gham, a Samba Leko variety; ng.txt's Chamba is
+#     not split into a group to hold it, so a sibling).
+#   * Cameroonian Pidgin, beside Nigerian Pidgin under English-based creoles.
+#
+# Colours. Bantu's and Chadic's generated slots are crowded (sources/cd.md §6), so every new
+# leaf there is hand-coloured off the generated grid (chroma 0.20 or 0.08 against Bantu's 0.14;
+# 0.18 or 0.06 against Chadic's 0.12; Adamawa 0.21 or 0.09 against 0.15; Bantoid 0.19 or 0.07),
+# and no node outside Cameroon moves (checked against a build without this fragment). Grassfields
+# and Bamileke are new groups whose members are generated around them. South: Ewondo red, Eton
+# pale pink, Bulu deep orange, Basaa olive, Bafia orange. North: Fulfulde (us.txt's brick), Mafa
+# gold, Kapsiki pale green, Massa green, Tupuri violet, Mundang deep blue, Guiziga yellow.
+# West and North-West: Bamileke violets, the rest of Grassfields blues.
+
+# ---- parents defined elsewhere, repeated bare (their colours are theirs) ----
+nigercongo | Niger-Congo
+nigercongo.bantu | Bantu
+nigercongo.bantoid | Bantoid
+nigercongo.adamawa | Adamawa (Mbum)
+afroasiatic | Afroasiatic
+afroasiatic.chadic | Chadic
+creole | Creoles
+creole.english_based | English-based creoles
+
+# ---- Grassfields ----
+nigercongo.bantoid.grassfields | Grassfields languages | 0.72 0.13 235
+nigercongo.bantoid.grassfields.bamileke | Bamileke languages | 0.70 0.15 290
+nigercongo.bantoid.grassfields.bamileke.ghomala | Ghomala' (Bandjoun) | 0.70 0.15 285
+nigercongo.bantoid.grassfields.bamileke.fefe | Fe'fe' (Bafang) | 0.74 0.17 320
+nigercongo.bantoid.grassfields.bamileke.medumba | Medumba (Bangangte) | 0.60 0.17 300
+nigercongo.bantoid.grassfields.bamileke.yemba | Yemba (Dschang) | 0.82 0.11 265
+nigercongo.bantoid.grassfields.bamileke.ngiemboon | Ngiemboon
+nigercongo.bantoid.grassfields.bamileke.ngombale | Ngombale
+nigercongo.bantoid.grassfields.bamileke.ngwe | Ngwe (Nweh, Bangwa)
+nigercongo.bantoid.grassfields.bamileke.mbouda | Mbouda
+nigercongo.bantoid.grassfields.bamun | Bamun | 0.62 0.12 200
+nigercongo.bantoid.grassfields.mungaka | Mungaka (Bali)
+nigercongo.bantoid.grassfields.bafanji | Bafanji
+nigercongo.bantoid.grassfields.ngemba | Ngemba | 0.82 0.11 250
+nigercongo.bantoid.grassfields.mankon | Mankon
+nigercongo.bantoid.grassfields.bafut | Bafut | 0.56 0.11 225
+nigercongo.bantoid.grassfields.limbum | Limbum | 0.72 0.13 185
+nigercongo.bantoid.grassfields.yamba | Yamba
+nigercongo.bantoid.grassfields.lamnso | Lamnso' (Nso) | 0.78 0.13 220
+nigercongo.bantoid.grassfields.kom | Kom | 0.62 0.16 265
+nigercongo.bantoid.grassfields.oku | Oku | 0.90 0.06 240
+nigercongo.bantoid.grassfields.aghem | Aghem
+nigercongo.bantoid.grassfields.mmen | Mmen (Bafmen)
+nigercongo.bantoid.grassfields.meta | Meta' | 0.70 0.13 160
+nigercongo.bantoid.grassfields.moghamo | Moghamo | 0.86 0.09 175
+nigercongo.bantoid.grassfields.ngie | Ngie
+nigercongo.bantoid.grassfields.ngwo | Ngwo
+nigercongo.bantoid.grassfields.oshie | Oshie
+nigercongo.bantoid.grassfields.mundani | Mundani
+nigercongo.bantoid.grassfields.befang | Befang
+
+# ---- other Bantoid ----
+nigercongo.bantoid.kenyang | Kenyang (Banyangi) | 0.62 0.19 210
+nigercongo.bantoid.esimbi | Esimbi | 0.78 0.07 175
+nigercongo.bantoid.tikar | Tikar | 0.82 0.19 255
+nigercongo.bantoid.ncane | Ncane | 0.86 0.07 200
+nigercongo.bantoid.noni | Noni | 0.60 0.07 230
+
+# ---- Bantu (zone A) ----
+nigercongo.bantu.eton | Eton | 0.84 0.08 25
+nigercongo.bantu.bene | Bene | 0.72 0.08 5
+nigercongo.bantu.bulu | Bulu | 0.62 0.20 45
+nigercongo.bantu.ntumu | Ntumu | 0.88 0.08 95
+nigercongo.bantu.mvele | Mvele | 0.64 0.08 60
+nigercongo.bantu.batanga | Batanga | 0.78 0.20 75
+nigercongo.bantu.akoose | Akoose (Bakossi) | 0.84 0.20 90
+nigercongo.bantu.mokpwe | Mokpwe (Bakweri) | 0.68 0.20 35
+nigercongo.bantu.oroko | Oroko | 0.80 0.08 120
+nigercongo.bantu.bakundu | Bakundu | 0.66 0.20 100
+nigercongo.bantu.mbo | Mbo | 0.70 0.20 20
+nigercongo.bantu.bakoko | Bakoko | 0.62 0.08 20
+nigercongo.bantu.abo | Abo (Bankon) | 0.76 0.08 140
+nigercongo.bantu.bafia | Bafia | 0.74 0.20 60
+nigercongo.bantu.tunen | Tunen (Banen) | 0.80 0.08 75
+nigercongo.bantu.yambassa | Yambassa | 0.86 0.08 50
+nigercongo.bantu.nomaande | Nomaande (Lemande) | 0.68 0.08 105
+nigercongo.bantu.makaa | Makaa (Maka) | 0.76 0.20 15
+nigercongo.bantu.koonzime | Koonzime (Nzime) | 0.56 0.20 55
+nigercongo.bantu.bajwee | Bajwe'e (Badjoue) | 0.90 0.08 15
+nigercongo.bantu.pol | Pol | 0.64 0.08 125
+
+# ---- Chadic ----
+afroasiatic.chadic.mafa | Mafa | 0.74 0.18 90
+afroasiatic.chadic.kapsiki | Kapsiki (Psikye) | 0.88 0.06 135
+afroasiatic.chadic.massa | Massa (Masana) | 0.66 0.18 135
+afroasiatic.chadic.guiziga | Guiziga | 0.86 0.18 105
+afroasiatic.chadic.kotoko | Kotoko | 0.60 0.06 85
+afroasiatic.chadic.wandala | Wandala (Mandara) | 0.80 0.06 65
+afroasiatic.chadic.musgum | Musgum | 0.76 0.18 150
+afroasiatic.chadic.guidar | Guidar | 0.64 0.18 75
+afroasiatic.chadic.jimi | Jimi | 0.70 0.06 120
+afroasiatic.chadic.daba | Daba | 0.84 0.06 100
+afroasiatic.chadic.gavar | Gavar | 0.56 0.18 110
+afroasiatic.chadic.hina | Hina | 0.92 0.06 80
+afroasiatic.chadic.mada_cm | Mada (Cameroon) | 0.66 0.06 145
+afroasiatic.chadic.podoko | Podoko (Parkwa) | 0.80 0.18 125
+afroasiatic.chadic.zulgo | Zulgo | 0.58 0.06 105
+afroasiatic.chadic.lele | Lele | 0.90 0.18 115
+
+# ---- Adamawa ----
+nigercongo.adamawa.tupuri | Tupuri | 0.78 0.21 310
+nigercongo.adamawa.mundang | Mundang | 0.60 0.21 255
+nigercongo.adamawa.dii | Dii (Duru) | 0.66 0.09 300
+nigercongo.adamawa.fali | Fali | 0.86 0.09 235
+nigercongo.adamawa.mubako | Mubako (Bali) | 0.74 0.21 335
+
+# ---- creole ----
+creole.english_based.cameroonian_pidgin | Cameroonian Pidgin | 0.84 0.09 165

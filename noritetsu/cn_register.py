@@ -813,8 +813,12 @@ def extend_ends(adj, xy, named_v, centre, st, st_tree, st_ids, net, net_tree, ne
         if best is None:
             continue
         sid = best[1]
-        a = net_ids[net_tree.query((centre[last][0] * k, centre[last][1]))[1]]
-        b = net_ids[net_tree.query((st[sid]["lon"] * k, st[sid]["lat"]))[1]]
+        # The tree's x is lon * cos(lat) at each node's own latitude, so each point is queried
+        # with its own: the named end's `k` put the nearest "node" 2-24 km off (fixed 2026-10-04).
+        ka = math.cos(math.radians(centre[last][1]))
+        kb = math.cos(math.radians(st[sid]["lat"]))
+        a = net_ids[net_tree.query((centre[last][0] * ka, centre[last][1]))[1]]
+        b = net_ids[net_tree.query((st[sid]["lon"] * kb, st[sid]["lat"]))[1]]
         crow = dist_m(*centre[last], st[sid]["lon"], st[sid]["lat"]) / 1000
         got = net.path(a, b, GAP_DETOUR * crow + GAP_EXTRA_KM)
         if got is None:
@@ -863,6 +867,124 @@ def bypasses(sections):
     return out
 
 
+# Crossings with passenger trains whose track this build carries on from the line's last
+# station here to the border point (borders.py), so the two countries' pieces meet there:
+#   (border point, the line here it leaves from, the neighbour whose line the piece joins)
+# With no neighbour, the section is added to the line itself, and the neighbour's piece takes
+# this line's id (hk_register's 廣深港高速鐵路). With one, the piece is a line of its own under
+# the id of the neighbour's line ending at that point, read from the neighbour's shipped
+# build (dist/data/<cc>/lines.json): the app joins lines of one id across countries into one,
+# so a ride over the border is one ride on one line and credits both; without that line it
+# falls back to the line itself. The sections end at a junction no OSM route runs over, so
+# each is listed in `served_sections` (build_model.drop_unridden_sections).
+#   xFutian: 福田 - border, the high-speed line to 香港西九龍 (trains every few minutes).
+#   xDongDang: 凭祥 - border towards Đồng Đăng, MR1/MR2 Nanning - Gia Lâm daily since
+#     2025-05-25 (vn_sources.md); OSM leaves the last 2.6 km to the border unnamed, so the
+#     piece runs over any track (Net). It joins Vietnam's Hà Nội - Đồng Đăng line, which those
+#     trains run on, rather than 湘桂线: Pingxiang -> Đồng Đăng is then one ride.
+CN_BORDERS = [("xFutian", "广深港高速线", None), ("xDongDang", "湘桂线", "vn")]
+PIECE_BORDER_M = 60        # the border point is this close to a node of the track
+PIECE_STATION_M = 300      # and the line's station this close to a node joined to it
+
+
+def border_pieces(lines, stations, geoms, net, net_tree, net_ids, log):
+    import borders
+    pts = {p["id"]: p for p in borders.load(canonical_only=True)}
+    by_name = {l["name"]: l for l in lines}
+    for pid, name, nb in CN_BORDERS:
+        p, line = pts.get(pid), by_name.get(name)
+        if p is None or line is None:
+            log(f"  CN: border {pid}: " + ("no such border point" if p is None
+                                           else f"no line {name}"))
+            continue
+        on = {s for sec in line["sections"] for s in sec[:2]}
+        sid = min(on, key=lambda s: dist_m(stations[s]["lon"], stations[s]["lat"],
+                                           p["lon"], p["lat"]))
+        # where the line's own sections put the station, on its track
+        start = (stations[sid]["lon"], stations[sid]["lat"])
+        for key, g in geoms.get(line["id"], {}).items():
+            a, b = key.split("|")
+            if a == sid:
+                start = tuple(g[0])
+                break
+            if b == sid:
+                start = tuple(g[-1])
+                break
+        k = math.cos(math.radians(p["lat"]))
+        nb_node = net_ids[net_tree.query((p["lon"] * k, p["lat"]))[1]]
+        off = dist_m(*net.xy[nb_node], p["lon"], p["lat"])
+        crow = dist_m(*start, p["lon"], p["lat"]) / 1000
+        # The station's end: the node nearest it among those the border's track reaches (the
+        # nearest node outright can be on a parallel line's platform, 广深城际's at 福田).
+        got = None
+        if off <= PIECE_BORDER_M:
+            import heapq
+            cap = GAP_DETOUR * crow + GAP_EXTRA_KM
+            dist, heap = {nb_node: 0.0}, [(0.0, nb_node)]
+            while heap:
+                dd, u = heapq.heappop(heap)
+                if dd > dist.get(u, INF):
+                    continue
+                for v, w, _h, _f in net.adj.get(u, ()):
+                    if dd + w <= cap and dd + w < dist.get(v, INF):
+                        dist[v] = dd + w
+                        heapq.heappush(heap, (dd + w, v))
+            na = min(dist, key=lambda n: dist_m(*net.xy[n], *start))
+            if dist_m(*net.xy[na], *start) <= PIECE_STATION_M:
+                got = net.path(na, nb_node, cap)
+        if got is None:
+            log(f"  CN: border {pid}: no track from {stations[sid]['name']} "
+                f"(point {off:.0f} m from the nearest node)")
+            continue
+        nodes, km, fast, _fr = got
+        geom = [start] + [net.xy[n] for n in nodes] + [(p["lon"], p["lat"])]
+        km += dist_m(*net.xy[nodes[-1]], p["lon"], p["lat"]) / 1000
+        key = f"{sid}|{pid}"
+        tgt = line
+        if nb:
+            other = None
+            try:
+                other = next((l for l in json.loads(
+                    (ROOT / "dist" / "data" / nb / "lines.json").read_text("utf-8"))["lines"]
+                    if l.get("src", "osm") != "osm"
+                    and any(pid in sec[:2] for sec in l["sections"])), None)
+            except (OSError, ValueError, KeyError):
+                pass
+            if other is not None:
+                tgt = {"id": other["id"], "src": "cn", "service": False,
+                       "name": other["name"], "name_en": other.get("name_en", ""),
+                       "ref": other.get("ref", ""), "colour": "",
+                       # the track here is China Railway's, whoever runs the trains
+                       "operator": line.get("operator", ""),
+                       "operator_en": line.get("operator_en", ""), "network": "",
+                       "kind": other.get("kind", "rail"), "highspeed_sections": {},
+                       "km": 0.0, "variants": 1, "straight_sections": 0,
+                       "display": [], "sections": []}
+                lines.append(tgt)
+            else:
+                log(f"  CN: border {pid}: {nb} has no line ending there; the section goes to "
+                    f"{name}")
+        if pid not in stations:
+            stations[pid] = {"id": pid, "name": p["name"], "name_en": "", "lon": p["lon"],
+                             "lat": p["lat"], "lines": set(), "junction": True}
+        stations[pid]["lines"].add(tgt["id"])
+        stations[sid]["lines"].add(tgt["id"])
+        tgt["sections"].append([sid, pid, round(km, 3)])
+        tgt["highspeed_sections"][key] = fast >= 0.5 * km if km else False
+        tgt["served_sections"] = tgt.get("served_sections", []) + [key]
+        tgt["km"] = round(sum(s[2] for s in tgt["sections"]), 3)
+        d = tgt["display"]
+        if not d:
+            d.extend([sid, pid])
+        elif d[-1] == sid:
+            d.append(pid)
+        elif d[0] == sid:
+            d.insert(0, pid)
+        geoms.setdefault(tgt["id"], {})[key] = [[round(x, 5), round(y, 5)] for x, y in geom]
+        log(f"  CN: border {pid}: {stations[sid]['name']} - {p['name']} {km:.2f} km "
+            f"({fast:.1f} high-speed), on {tgt['name']} ({tgt['id']})")
+
+
 def build(path, log):
     from kr_register import Near, between, line_graph, neighbours
     from n02 import walk_order
@@ -873,6 +995,17 @@ def build(path, log):
     by_line = assign_ways(ways, infra, traffic, log)
     named_ways = {k: set(v) for k, v in by_line.items()}
     bridge_ways(ways, by_line, coords, log)
+    # each way's line for split_pieces' track graph: its own name tag's first line, else the
+    # first (by name) of the lines it was given
+    wname = {}
+    for nm in sorted(by_line):
+        for w in by_line[nm]:
+            wname.setdefault(w, nm)
+    for w in wname:
+        own = line_names(ways[w][0])
+        if own:
+            wname[w] = own[0]
+    _S["wname"] = wname
     rinfo = relation_info(infra)
 
     st_ids = list(st)
@@ -1103,6 +1236,9 @@ def build(path, log):
         geoms[lid] = {f"{a}|{b}": [[round(x, 5), round(y, 5)] for x, y in v["geom"]]
                       for (a, b), v in sections.items()}
 
+    if not only:
+        border_pieces(lines, stations, geoms, net, net_tree, net_ids, log)
+
     total = sum(l["km"] for l in lines)
     hs = sum(1 for l in lines if sum(l["highspeed_sections"].values()) * 2
              >= len(l["highspeed_sections"]))
@@ -1139,7 +1275,79 @@ def build(path, log):
     big = sorted((d for d in dropped if d[1] < 2), key=lambda d: d[0])
     log(f"CN: {len(dropped)} line names built no line (under two passenger stations, or none "
         f"joined): {' '.join(n for n, _k in big[:300])}")
+    # where each station is on each line's track, for split_pieces
+    _S["ends"] = [(sid, l["name"], *pts[0 if k == 0 else -1])
+                  for l in lines for key, pts in geoms[l["id"]].items()
+                  for k, sid in enumerate(key.split("|"))]
     return lines, stations, geoms
+
+
+# =========================================================================== lines in pieces
+
+# Lines still in pieces after join_pieces (cn_sources.md "Lines in pieces"), through pieces.py
+# as gb_register: a gap is bridged over the track between the pieces where trains run across,
+# the rest is one line per piece. China's own settings: OSM China has almost no train route
+# relations (134), so no route is asked of a bridge and none is preferred (ROUTE_SHARE 0,
+# UNROUTED_COST 1); instead the line's own named track costs half and, for a high-speed line,
+# track not tagged highspeed=yes four times its length. MAX_KM 150: 京港高速线 runs 145 km over
+# 昌九城际线 and Nanchang's lines between 庐山 and 南昌东, its own 南昌 - 九江 section being
+# still under construction. KEEP_WHOLE: a gap that is track OSM does not have, on a line trains
+# run through, stays one line in pieces until the track is mapped.
+MAX_KM = 150.0
+ROUTE_SHARE = 0.0
+UNROUTED_COST = 1.0
+OWN_COST = 0.5
+SLOW_COST = 4.0
+KEEP_WHOLE = {
+    # OSM's track breaks at 烟台南 (121.38 E): the named track stops 0.8 km either side of the
+    # station and its unnamed station roads join neither side, so the nearest track joining
+    # 桃村北 and 牟平 is 284 km round by 桃威线 and 蓝烟线
+    "青荣城际线",
+}
+# Never bridged, split instead. 成昆线's two pieces are what is left of the old line (成都 -
+# 峨眉 - the mountain line to 攀枝花 and 花棚子, and 元谋西 - 昆明); the new line between,
+# OSM's 峨广线 (峨眉 - 广通, 552 km), carries the through trains from 峨眉. Bridged, 攀枝花 -
+# 元谋西 went over 121 km of 峨广线, and a ride 成都 - 昆明 entered on 成昆线 would have
+# credited the old mountain line that no through train runs on.
+NO_BRIDGE = {"成昆线"}
+_S = {}          # wname (way -> line), ends, filled by build()
+# {line id: [the ids of the pieces split off it]}, filled by split_pieces; build_model writes it
+# into aliases.json as `pieces`.
+LINE_PIECES = {}
+
+
+def rules():
+    import pieces
+    return pieces.Rules(tag="CN", id_prefix="c", lat=32.0, max_km=MAX_KM,
+                        route_share=ROUTE_SHARE, unrouted_cost=UNROUTED_COST,
+                        own_cost=OWN_COST, slow_cost=SLOW_COST, keep_whole=KEEP_WHOLE,
+                        piece_name=pieces.english_piece_name, dense=True,
+                        no_bridge=NO_BRIDGE)
+
+
+def classify(wid, tags, routed):
+    """For pieces.track_graph: all heavy-rail track but industrial, military and test track
+    (as `Net`), under the line build() gave each way ("" for none)."""
+    if tags.get("railway") not in HEAVY or tags.get("usage") in ("industrial", "military",
+                                                                  "test"):
+        return None
+    return _S.get("wname", {}).get(wid, "")
+
+
+def split_pieces(lines, stations, geoms, reg_ways, state, log):
+    """The build_model hook: pieces.split_pieces with China's rules, over the ways
+    register_way_lines loaded (state)."""
+    import build_model as bm
+    import pieces
+    r = rules()
+
+    def graph():
+        if not state or "ways" not in state or "wname" not in _S:
+            return None
+        return pieces.track_graph(state["ways"], bm.Coords(state["cid"], state["cx"], state["cy"]),
+                                  set(), classify, r, log)
+    pieces.split_pieces(lines, stations, geoms, reg_ways, state, log, r, LINE_PIECES, graph,
+                        _S.get("ends", ()))
 
 
 if __name__ == "__main__":

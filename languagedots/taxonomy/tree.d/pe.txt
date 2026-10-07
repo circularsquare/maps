@@ -1,0 +1,95 @@
+# Peru, Censo 2017, mother tongue (taxonomy/pe2017.py). Families from Glottolog
+# (data/raw/glottolog): Chicham (Awajun, Wampis, Achuar), Cahuapanan (Shawi, Shiwilu), Harakmbut,
+# Zaparoan (Arabela) and Tacanan (Ese Eja) are new roots. Glottolog puts Tacanan inside
+# Pano-Tacanan; br.txt already has Panoan as a root of its own, so Tacanan gets one too, the
+# split most readers know. Kandozi-Chapra and Urarina are Glottolog isolates; Tikuna joins br.txt's
+# isolate.tikuna. Where the census names a language another fragment already has (Cashinahua =
+# Kaxinawa, Yaminahua = Yaminawa, Matses, Kukama kukamiria = Kokama, Murui-Muinani = Witoto,
+# Ocaina, Yagua) the mapping reuses that node; nodes other fragments define are repeated here only
+# as parents, with the identical label and no colour.
+#
+# Colours, for contrast on the ground: Spanish (red-orange) against Quechua across the Andes is
+# the map's main edge, and Quechua was a salmon only slightly lighter than Spanish; its colour is
+# raised to a light peach in br.txt, which defines it (see sources/pe.md). Aymara stays lavender.
+# Chicham is violet, apart from the isolates' pinks it borders in Loreto (Kandozi, Urarina,
+# hand-picked away from Achuar). Cahuapanan is lime beside Chicham and Kichwa's amber. Shipibo
+# is a teal set off from Ashaninka's olive; the Campa languages (Matsigenka, Nomatsigenga,
+# Kakinte) and Yine and Yanesha step through the Arawakan greens around Ashaninka.
+
+# ---- repeated parents ----
+indoeuropean.romance | Romance
+indoeuropean.romance.spanish | Spanish
+indoeuropean.romance.portuguese | Portuguese
+americas_other | Other indigenous languages of the Americas
+isolate | Language isolates
+isolate.tikuna | Tikúna
+quechuan | Quechuan
+quechuan.quechua | Quechua
+aymaran | Aymaran
+aymaran.aymara | Aimara
+arawakan | Arawakan
+arawakan.ashaninka | Ashaninka
+panoan | Panoan
+panoan.matses | Matsés
+panoan.yaminawa | Yamináwa
+panoan.kaxinawa | Kaxinawá
+tupian | Tupian
+tupian.tupiguarani | Tupi-Guarani
+tupian.tupiguarani.kokama | Kokama
+pebayaguan | Peba-Yaguan
+pebayaguan.yagua | Yagua
+tucanoan | Tucanoan
+witotoan | Witotoan
+witotoan.witoto | Witóto
+witotoan.ocaina | Ocaina
+signlanguage | Sign language
+
+# ---- new families ----
+chicham | Chicham (Jivaroan) | 0.7 0.16 300
+cahuapanan | Cahuapanan | 0.8 0.16 150
+harakmbut | Harakmbut | 0.74 0.16 222
+zaparoan | Zaparoan | 0.78 0.15 35
+tacanan | Tacanan | 0.78 0.16 350
+
+# ---- Quechuan, Aymaran ----
+quechuan.kichwa | Kichwa | 0.76 0.16 30
+aymaran.jaqaru | Jaqaru | 0.7 0.16 269.17
+aymaran.cauqui | Cauqui (Kawki) | 0.8 0.16 280
+
+# ---- Chicham, Cahuapanan ----
+chicham.awajun | Awajún (Aguaruna) | 0.70 0.16 300
+chicham.wampis | Wampis (Huambisa) | 0.81 0.15 285
+chicham.achuar | Achuar | 0.62 0.16 322
+cahuapanan.shawi | Shawi (Chayahuita) | 0.8 0.16 152
+cahuapanan.shiwilu | Shiwilu (Jebero) | 0.68 0.16 140
+
+# ---- Arawakan (root from br.txt) ----
+arawakan.matsigenka | Matsigenka (Machiguenga) | 0.8 0.16 160
+arawakan.nomatsigenga | Nomatsigenga | 0.62 0.16 148
+arawakan.kakinte | Kakinte (Caquinte) | 0.83 0.15 140
+arawakan.yine | Yine | 0.74 0.16 170
+arawakan.yanesha | Yanesha | 0.82 0.16 142
+
+# ---- Panoan (root from br.txt) ----
+panoan.shipibo | Shipibo-Konibo | 0.72 0.16 192
+panoan.kakataibo | Kakataibo | 0.81 0.15 170
+panoan.amahuaca | Amahuaca | 0.7 0.16 207.5
+panoan.nahua | Nahua (Yora) | 0.58 0.16 207.5
+panoan.capanahua | Capanahua | 0.64 0.16 131.67
+panoan.sharanahua | Sharanahua | 0.8 0.16 185.83
+panoan.isconahua | Isconahua | 0.76 0.16 131.67
+
+# ---- Tupian, Tucanoan, Zaparoan, Harakmbut, Tacanan ----
+tupian.tupiguarani.omagua | Omagua | 0.68 0.16 78
+tucanoan.secoya | Secoya
+tucanoan.maijuna | Maijuna (Orejón) | 0.82 0.16 164.55
+zaparoan.arabela | Arabela | 0.84 0.15 22
+harakmbut.harakbut | Harakbut | 0.62 0.16 242
+tacanan.ese_eja | Ese Eja
+
+# ---- isolates ----
+isolate.kandozi | Kandozi-Chapra | 0.79 0.16 0
+isolate.urarina | Urarina | 0.66 0.16 340
+
+# ---- sign language ----
+signlanguage.lsp | Peruvian Sign Language (LSP)

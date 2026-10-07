@@ -1,7 +1,19 @@
 {
   "countries": [
+    { "id": "afghanistan", "name": "Afghanistan" },
+    { "id": "bangladesh", "name": "Bangladesh" },
     { "id": "china", "name": "China" },
     { "id": "india", "name": "India" },
-    { "id": "indonesia", "name": "Indonesia" }
+    { "id": "indonesia", "name": "Indonesia" },
+    { "id": "iran", "name": "Iran" },
+    { "id": "kazakhstan", "name": "Kazakhstan" },
+    { "id": "kyrgyzstan", "name": "Kyrgyzstan" },
+    { "id": "nepal", "name": "Nepal" },
+    { "id": "pakistan", "name": "Pakistan" },
+    { "id": "russia", "name": "Russia" },
+    { "id": "srilanka", "name": "Sri Lanka" },
+    { "id": "tajikistan", "name": "Tajikistan" },
+    { "id": "turkmenistan", "name": "Turkmenistan" },
+    { "id": "uzbekistan", "name": "Uzbekistan" }
   ]
 }

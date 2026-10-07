@@ -1,0 +1,15 @@
+# Austria, Volkszählung 2001, Umgangssprache (taxonomy/at2001.py). Two new leaves; the other 44
+# labels map onto nodes other countries already made.
+#
+# Burgenland Croatian: printed by Statistik Austria apart from Croatian (the immigrants'
+# language). Glottolog burg1244, a Chakavian dialect under Serbian-Croatian-Bosnian (sout1528).
+# A sibling of Croatian, not a child: a child would make Croatian a group, drawn washed out.
+# Windisch: the census's box for Carinthian Slovene dialect speakers who did not call their
+# language Slovene. No Glottolog entry of its own. A sibling of Slovenian for the same reason.
+#
+# Colour. Burgenland Croatian villages sit among German (blue) and Hungarian (light blue)
+# speakers, so a warm orange, clear of both and of Croatian's yellow. Windisch sits beside
+# Slovenian (mint) and German in southern Carinthia: a khaki, apart from the mint.
+indoeuropean.slavic.south | South Slavic
+indoeuropean.slavic.south.burgenland_croatian | Burgenland Croatian | 0.72 0.16 55
+indoeuropean.slavic.south.windisch | Windisch (Carinthian Slovene) | 0.66 0.12 95

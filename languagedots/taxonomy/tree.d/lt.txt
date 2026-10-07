@@ -1,0 +1,22 @@
+# Lithuania, Gyventojų surašymas 2021, mother tongue (taxonomy/lt2021.py). Every language the
+# census prints is already a node; the one new node is the census's "two mother tongues", a leaf
+# under `other` (not a language; the pair is never published), grey like other.jewish.
+
+# ---- parents and nodes defined in other fragments, repeated identically ----
+indoeuropean.baltic | Baltic | 0.76 0.11 110
+indoeuropean.baltic.latvian | Latvian
+indoeuropean.baltic.lithuanian | Lithuanian
+indoeuropean.germanic.continental | Continental West Germanic | 0.68 0.13 235
+indoeuropean.germanic.continental.german | German | 0.66 0.13 240
+indoeuropean.indoaryan.romani | Romani | 0.58 0.13 30
+indoeuropean.indoaryan.romani.romani | Romani
+indoeuropean.slavic | Slavic | 0.70 0.15 140
+indoeuropean.slavic.east | East Slavic | 0.70 0.15 145
+indoeuropean.slavic.east.belarusian | Belarusian
+indoeuropean.slavic.east.russian | Russian | 0.70 0.16 145
+indoeuropean.slavic.east.ukrainian | Ukrainian | 0.84 0.14 120
+indoeuropean.slavic.west | West Slavic | 0.64 0.14 160
+indoeuropean.slavic.west.polish | Polish | 0.64 0.15 160
+
+# ---- Lithuania's own ----
+other.two_mother_tongues | Two mother tongues (the census does not say which)

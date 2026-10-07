@@ -465,3 +465,52 @@ Metros, light rail and private lines:
 Figures still needing a named source: every line in the "Covered by no dataset" list,
 the 대구 1호선 and 인천 1호선 extended lengths (1294's sums are the only numbers on
 disk), 별내선, and the tourist lines.
+
+## Lines in pieces (2026-10-04)
+
+Anita, 2026-10-04 ("yes, we can continue doing bridge over shared track"): the UK fix
+(gb_sources.md "Lines in pieces") carried to Korea. A trip is entered station to station on a
+line's strip diagram, so a register line whose sections do not all connect cannot be ridden
+across its gap. kr_register now has the `split_pieces` hook build_model calls after
+`drop_unridden_sections`, through the shared `pieces.py`: a gap is bridged over the track
+between the pieces where trains run across (the `borrowed` sections credit the line whose
+track it is), what cannot be bridged becomes one line per piece (the biggest keeps the id,
+aliases.json `pieces` moves saved rides).
+
+**Measured** on the build shipped 2026-10-03: 5 of 83 register lines in pieces, 168 km outside
+each one's biggest piece. Each one, by what lies in the gap (the track found between the pieces
+in data/proc/kr):
+
+| line | pieces (km) | gap | cause | done |
+|---|---|---|---|---|
+| 수인선 | 19.8 + 18.9 | 오이도 - 한대앞 | shared track: 수인선 trains run over 안산선 there (the 거리표 lists the section on both lines) | bridged, 12.6 km over 안산선, 7 borrowed sections through 정왕, 신길온천, 안산, 초지, 고잔, 중앙 |
+| 호남고속선 | 89.6 + 50.4 | 익산 - 정읍 | the line's own track: its named track enters 익산 over 0.8 km of 호남선 and unnamed station roads, so it never reached 익산 from the south | bridged over its own track, 43.0 km (40.7 its own name) |
+| 인천 도시철도 1호선 | 30.2 + 2.9 | 계양 - 아라 | the line's own track: the 2025 검단 extension is mapped and named, but 0.6 km of unnamed track at 계양 cut it off | bridged over its own track, 계양 - 아라 4.0 km |
+| 경강선 | 120.4 + 55.9 | 여주 - 서원주 | no track: 여주 - 원주 is being built. Two services today, the metro line 판교 - 여주 and the KTX line 서원주 - 강릉 | split |
+| 서해선 | 63.9 + 40.1 | 원시 - 서화성 | no track: the link to 원시 is not built; the 2024 intercity line's trains reach Seoul by 안중 and 평택선 | split |
+
+Two Korean settings beside the UK's (`kr_register.rules()`): the line's own named track costs
+half and counts as under a route (`OWN_COST`), because OSM's KTX route relations lie on
+호남선 beside 호남고속선 (the cheapest routed track from 익산 to 정읍 would otherwise have
+been 호남선's); and `dense`, so a station on straight track with no OSM vertex within 150 m
+still joins the track graph. Where a bridge or a split changed a line's sections,
+`km_official` is worked out again from the published lists, or dropped if they do not give
+every section.
+
+**Split lines**: 경강선 keeps its id (`kfd60f34d9d`) on 서원주 - 강릉 (name_en "경강선
+(Seowonju – Gangneung)"); 판교 - 여주 is `ked379c6f7e` ("경강선 (Pangyo – Yeoju)"). 서해선
+keeps `kfa00e3def3` on 서화성 - 합덕 (the bigger piece by km); 대곡 - 원시, the metro line, is
+`kb6b28601a6` ("서해선 (Wonsi – Daegok)"). Rides saved on the old ids between two stations of
+the other piece move to it through aliases.json `pieces`.
+
+**Crediting**: the only borrowed sections are 수인선's 12.6 km over 안산선, and riding them
+credits 안산선 (12.3 km) and 안산연결선 (0.3); 0.4 km at 오이도 credits 수인선 itself where
+its own track is. 호남고속선 and 인천 1호선 own their new sections (their own track). The
+country's owned total (build_regions.owned_totals) goes 4,906.9 -> 4,950.2 km: the 43.3 km is
+the two own-track bridges' track, newly owned; the borrowed km count once, for 안산선.
+
+**Before -> after** (trial 2026-10-04): register lines 83 -> 85, 4,897.0 -> 4,956.6 km
+(borrowed 12.6 km among them); lines in pieces 5 -> 0. check_model: 호남고속선 0.76 -> 1.00
+(183.0 of 183.8), 수인선 now against the 거리표's 51.6 with the shared section (51.2), 인천
+1호선 against KRIC 1294's 37.0 with the 검단 extension (37.1); 경강선 and 서해선 sum their
+pieces as before (0.99, and 2.70 from the intercity piece the figure leaves out).

@@ -1,0 +1,112 @@
+# Oman (taxonomy/om2024.py). No language question; NCSI register end 2024, Omanis and expatriates
+# by wilaya, expatriates by nationality (workers by sex, dependants) read as languages or home
+# mixes (sources/om_build.py, sources/gulf.md).
+#
+# Omani Arabic (Glottolog oman1239), a language apart from Gulf Arabic in Glottolog, for every
+# Omani citizen (sources/gulf.md §1): Dhofari Arabic (dhof1235), the Modern South Arabian
+# languages, Kumzari and Baluchi are not split out, no source counting them. Colour: Arabic's
+# mint turned yellower than the UAE's Gulf Arabic (0.64 0.08 150) and Saudi Arabic, its
+# neighbours across the land borders.
+afroasiatic.omani_arabic | Omani Arabic | 0.60 0.10 140
+#
+# Borrowed nodes, repeated without colour (AGENT_BRIEF §3): every node the home mixes and
+# single-language origins bring in that tree.txt lacks.
+africa_other | Other African languages
+afroasiatic.egyptian_arabic | Egyptian Arabic
+afroasiatic.ethiosemitic | Ethiopian Semitic
+afroasiatic.ethiosemitic.amharic | Amharic
+afroasiatic.levantine_arabic | Levantine Arabic
+afroasiatic.sudanese_arabic | Sudanese Arabic
+austroasiatic.mon | Mon
+austronesian | Austronesian
+austronesian.malayic | Malayic
+austronesian.malayic.indonesian | Indonesian
+austronesian.philippine | Philippine
+austronesian.philippine.bikol | Bikol
+austronesian.philippine.boholano | Boholano
+austronesian.philippine.cebuano | Cebuano
+austronesian.philippine.hiligaynon | Hiligaynon
+austronesian.philippine.ilocano | Ilocano
+austronesian.philippine.kapampangan | Kapampangan
+austronesian.philippine.maguindanao | Maguindanao
+austronesian.philippine.maranao | Maranao
+austronesian.philippine.pangasinan | Pangasinan
+austronesian.philippine.tagalog | Tagalog
+austronesian.philippine.tausug | Tausug
+austronesian.philippine.waray | Waray-Waray
+indoeuropean.indoaryan.sinhala | Sinhala
+kradai | Kra-Dai (Tai-Kadai)
+kradai.shan | Shan
+nigercongo | Niger-Congo
+nigercongo.bantu | Bantu
+nigercongo.bantu.chiga | Chiga (Rukiga)
+nigercongo.bantu.ganda | Ganda
+nigercongo.bantu.gogo | Gogo (Cigogo)
+nigercongo.bantu.gwere | Gwere (Lugwere)
+nigercongo.bantu.ha | Ha (Kiha)
+nigercongo.bantu.haya | Haya (Ruhaya)
+nigercongo.bantu.kinyarwanda | Kinyarwanda
+nigercongo.bantu.konzo | Konzo (Lukonzo)
+nigercongo.bantu.mambwe_nyiha | Mambwe-Nyiha (M.10-20)
+nigercongo.bantu.mambwe_nyiha.fipa | Fipa
+nigercongo.bantu.masaaba | Masaaba (Lugisu)
+nigercongo.bantu.nyamwezi | Nyamwezi
+nigercongo.bantu.nyankole | Nyankole
+nigercongo.bantu.nyole | Nyole (Lunyole)
+nigercongo.bantu.nyoro | Nyoro
+nigercongo.bantu.rufumbira | Rufumbira
+nigercongo.bantu.saamia | Saamia (Lusamia)
+nigercongo.bantu.soga | Soga (Lusoga)
+nigercongo.bantu.sukuma | Sukuma
+nigercongo.bantu.swahili | Swahili
+nigercongo.bantu.tooro | Tooro (Rutooro)
+nilosaharan | Nilo-Saharan
+nilosaharan.centralsudanic | Central Sudanic
+nilosaharan.centralsudanic.aringa | Aringa
+nilosaharan.centralsudanic.lugbara | Lugbara
+nilosaharan.nilotic | Nilotic
+nilosaharan.nilotic.acholi | Acholi
+nilosaharan.nilotic.adhola | Adhola (Dhopadhola)
+nilosaharan.nilotic.alur | Alur
+nilosaharan.nilotic.karamojong | Karamojong (Ngakarimojong)
+nilosaharan.nilotic.lango | Lango (Uganda)
+nilosaharan.nilotic.teso | Teso (Ateso)
+sinotibetan.burmish.burmese | Burmese
+sinotibetan.burmish.rakhine | Rakhine
+sinotibetan.kachin | Kachin languages (Jingpho, Zaiwa, Lhaovo, Rawang)
+sinotibetan.karen | Karen
+sinotibetan.karen.pao | Pa'o
+# --- origin_mix borrowed nodes (python sources/origin_mix.py --fragment om) ---
+# Every node the origin mixes bring in that tree.txt lacks, repeated without colour.
+afroasiatic.cushitic | Cushitic
+afroasiatic.cushitic.beja | Beja
+afroasiatic.cushitic.south | South Cushitic
+afroasiatic.cushitic.south.iraqw | Iraqw
+indoeuropean.indoaryan.eastern.rohingya | Rohingya
+nigercongo.bantu.bena | Bena
+nigercongo.bantu.chaga | Chaga
+nigercongo.bantu.hehe | Hehe
+nigercongo.bantu.jita | Jita
+nigercongo.bantu.kaguru | Kaguru
+nigercongo.bantu.kuria | Kuria
+nigercongo.bantu.luguru | Luguru
+nigercongo.bantu.makonde | Shimakonde (Makonde)
+nigercongo.bantu.mambwe_nyiha.nyiha | Nyiha
+nigercongo.bantu.mwera | Mwera (Chimwera)
+nigercongo.bantu.ndali | Ndali
+nigercongo.bantu.ngoni_tz | Ngoni (Tanzania)
+nigercongo.bantu.nilamba | Nilamba (Nyiramba)
+nigercongo.bantu.nyakyusa | Nyakyusa
+nigercongo.bantu.nyaturu | Nyaturu (Rimi)
+nigercongo.bantu.pare | Pare (Asu)
+nigercongo.bantu.rangi | Rangi (Langi)
+nigercongo.bantu.shambala | Shambala (Kisambaa)
+nigercongo.bantu.zaramo | Zaramo
+nigercongo.bantu.zigua | Zigua (Zigula)
+nilosaharan.fur | Fur
+nilosaharan.maban | Maban
+nilosaharan.maban.masalit | Masalit
+nilosaharan.nilotic.luo | Luo (Dholuo)
+nilosaharan.nilotic.maasai | Maasai
+nilosaharan.nobiin | Nobiin (Fadicca)
+# --- end origin_mix borrowed nodes ---

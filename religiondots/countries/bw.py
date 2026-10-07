@@ -17,7 +17,8 @@ def _bw_place_weight(place):
 
 
 def _bw_counts():
-    """Botswana — eight categories at 519 ADM3 localities, 2011 census.
+    """Botswana — eight categories at 519 ADM3 localities, 2011 census, with Catholics and
+    Adventists split out of `Christian` from the Afrobarometer (the block below).
 
     THE UNIVERSE IS AGE 12 AND OVER, which is Peru's shape. 1,384,276 people answered a
     religion question in the eighteen district booklets that exist; the under-twelves were
@@ -47,7 +48,25 @@ def _bw_counts():
     if orphan:
         raise SystemExit(f"bw.csv places with no lookup row: {orphan[:6]} -- re-run "
                          "sources/bw_geo.py, the lookup is stale")
+    # THE TWO CHURCHES (2026-10-03, sources/bw_churches.py, sources/bw.md §10) come out of each
+    # locality's census `Christian` cell: subtracted here, added back as their own rows, always
+    # `derived`, rolling back to `christianity` (bw2011.COLUMNS) when inferred dots are hidden.
+    sp = pd.read_csv(HERE / "data" / "normalized" / "bw_split.csv",
+                     dtype={"geo_id": str}, keep_default_na=False, na_values=[""])
+    chr_rows = df["source_category"] == "Christian"
+    taken = sp.groupby("geo_id")["count"].sum()
+    have = df.loc[chr_rows].set_index("geo_id")["count"].astype(int)
+    stray = sorted(set(taken.index) - set(have.index))
+    if stray or (taken.reindex(have.index, fill_value=0) > have).any():
+        raise SystemExit("bw_split.csv does not fit inside bw.csv's Christians -- re-run "
+                         "sources/bw_churches.py")
+    df.loc[chr_rows, "count"] = (df.loc[chr_rows, "count"].astype(int)
+                                 - df.loc[chr_rows, "geo_id"].map(taken).fillna(0).astype(int))
+    df["split"] = False
+    sp["split"] = True
+    df = pd.concat([df, sp], ignore_index=True)
     m = df.merge(lut, on="geo_id", how="left")
+    m.loc[m["split"], "tier"] = "derived"
     m["node"] = m["source_category"].map(resolve)
     m = m[m["node"].notna()].copy()
     m["count"] = m["count"].astype(float) * m["weight"].astype(float)
@@ -59,16 +78,21 @@ def _bw_counts():
     # part spreading, and the weaker tier is the honest label for it.
     g = m.groupby(["unit", "node"], as_index=False).agg(
         count=("count", "sum"),
-        tier=("tier", lambda s: "derived" if (s == "derived").any() else "measured"))
+        tier=("tier", lambda s: "derived" if (s == "derived").any() else "measured"),
+        split=("split", "any"))
+    # Only the church rows roll; a district residual is `derived` in the spatial sense and has
+    # no coarser cell to fall back to (sources/bw.md §9).
+    g["roll"] = g["split"].map(lambda s: "christianity" if s else None)
     g["congregations"] = 0
-    return g[["unit", "node", "count", "tier", "congregations"]]
+    return g[["unit", "node", "count", "tier", "congregations", "roll"]]
 
 
 ENTRY = {
     "bw": dict(
         name="Botswana",
         source="Population and Housing Census 2011 Selected Indicators, the eighteen "
-               "district booklets (Statistics Botswana)",
+               "district booklets (Statistics Botswana); Catholics and Adventists from "
+               "Afrobarometer rounds 4 to 8",
         basis="self-identification, population aged 12 and over",
         note_public=(
             "**Botswana recorded 14.8% of the people it asked as having no religion, and "
@@ -109,13 +133,20 @@ ENTRY = {
             "total the office reported to the UN, but Badimo comes to only 88.2% of its "
             "national figure, so the two missing districts are more traditional than the "
             "country as a whole and this map understates Badimo slightly. "
-            "**Christianity is a single undivided cell holding 79.9%, with no denominations "
-            "at all.** The London Missionary Society's Bangwato and Bakwena missions, the "
-            "Zion Christian Church, the Anglicans and a large Pentecostal sector are all in "
-            "there together and nothing here can separate them."),
+            "**Two churches come from a survey, and both are floors.** The census has one "
+            "Christian box, 79.9%. The Afrobarometer names churches, but the share of its "
+            "Christians who named none rose from 7% in 2008 to two thirds by 2019, and most "
+            "churches' answers fell with it. Catholics and Seventh-day Adventists kept their "
+            "share while it rose, so each village's census Christians are split at their "
+            "district's survey share: Catholics are **4.9%** of Christians, highest in South "
+            "East, Lobatse and Kweneng East, and Adventists 2.5%, highest in Ngamiland and "
+            "Chobe. Some of their members will have answered just Christian, so both are "
+            "low. The Zion Christian Church, the Congregational church of the London "
+            "Missionary Society, the Anglicans, Methodists, Lutherans and Pentecostals stay "
+            "in the one Christian colour."),
         how="census, 2011",
         grain="census localities, 2,900 people on average",
-        fill="from the same booklet's district total, where the census named no village",
+        fill="district totals where no village was named; two churches from a survey",
         gap="under-twelves, who were not asked, and the Central Boteti and Central "
             "Bobonong districts, whose census booklets were never published",
         counts=_bw_counts,
@@ -141,6 +172,10 @@ ENTRY = {
              "matched only within their own district. The log-log correlation between "
              "census locality population and Kontur's modelled population is 0.744 against "
              "0.174 for the best of 500 random pairings, which is the quantity the join "
-             "does not determine.",
+             "does not determine. "
+             "CATHOLICS AND ADVENTISTS ARE SPLIT OUT OF EACH LOCALITY'S CENSUS CHRISTIANS "
+             "(2026-10-03, sources/bw_churches.py, sources/bw.md §10) at their survey unit's "
+             "Afrobarometer share, rounds 4-8, `derived`, rolling back to christianity; the "
+             "other churches fall with the rising `Christian only` and are not drawn.",
         view=[19.6, -27.2, 29.6, -17.6]),
 }

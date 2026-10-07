@@ -330,8 +330,11 @@ Single-country, but each is one download and fills what the multi-country source
   name, with owner and user; NRWN also has stations (name, type, user) and marker posts.
   Subdivisions are the North American equivalent of a legal line.
 - **Australia, Geoscience Australia Foundation Rail Infrastructure** (CC BY 4.0, ArcGIS REST at
-  `services.ga.gov.au/gis/rest/services/Foundation_Rail_Infrastructure/MapServer`): `ROUTENAME`
-  and `SECTIONNAME` on every rail line, plus stations. A geometry register with names.
+  `services.ga.gov.au/gis/rest/services/Foundation_Rail_Infrastructure/MapServer`): a geometry
+  register with names, plus stations. Correction 2026-10-02 (Australia agent): the service
+  has no `ROUTENAME` / `SECTIONNAME`; each segment carries `name` (the state's line name,
+  "MAIN SOUTHERN RAILWAY"), owner, gauge, tracks, length_km and operational_status, with no
+  passenger flag and no node topology (`au_sources.md`).
 - **Hong Kong, MTR open data**: `https://opendata.mtr.com.hk/data/mtr_lines_and_stations.csv`
   (every line except Light Rail, stations in sequence) and `light_rail_routes_and_stops.csv`.
 - **India, datameet/railways** (CC0): stations, trains and schedules; distances per train, not

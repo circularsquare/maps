@@ -1,0 +1,87 @@
+# Qatar (taxonomy/qa2020.py). No language question; 2020 census population by municipality and
+# sex, Qataris estimated from the 10+ count, non-Qataris by UN DESA 2020 origin read as languages
+# or home mixes (sources/qa_build.py, sources/gulf.md).
+#
+# Gulf Arabic (gulf1241) is ae.txt's node, shared by the Gulf states' citizens (sources/gulf.md
+# §1); repeated here with its colour so Qatar builds without the UAE.
+afroasiatic.gulf_arabic | Gulf Arabic | 0.76 0.10 160
+#
+# Borrowed nodes, repeated without colour (AGENT_BRIEF §3): every node the home mixes and
+# single-language origins bring in that tree.txt lacks.
+afroasiatic.berber | Berber
+afroasiatic.berber.tachelhit | Tachelhit
+afroasiatic.berber.tamazight | Tamazight
+afroasiatic.berber.tarifit | Tarifit (Riffian)
+afroasiatic.chadic | Chadic
+afroasiatic.chadic.hausa | Hausa
+afroasiatic.cushitic | Cushitic
+afroasiatic.cushitic.lowland | Lowland East Cushitic
+afroasiatic.cushitic.lowland.somali | Somali
+afroasiatic.darija | Moroccan Arabic (Darija)
+afroasiatic.egyptian_arabic | Egyptian Arabic
+afroasiatic.ethiosemitic | Ethiopian Semitic
+afroasiatic.ethiosemitic.amharic | Amharic
+afroasiatic.ethiosemitic.tigrinya | Tigrinya
+afroasiatic.hassaniya | Hassaniya (Maure)
+afroasiatic.levantine_arabic | Levantine Arabic
+afroasiatic.saudi_arabic | Saudi Arabic
+afroasiatic.sudanese_arabic | Sudanese Arabic
+afroasiatic.yemeni_arabic | Yemeni Arabic
+austronesian | Austronesian
+austronesian.acehnese | Acehnese
+austronesian.balinese | Balinese
+austronesian.batak | Batak
+austronesian.buginese | Buginese
+austronesian.javanese | Javanese
+austronesian.madurese | Madurese
+austronesian.malayic | Malayic
+austronesian.malayic.banjar | Banjar
+austronesian.malayic.betawi | Betawi
+austronesian.malayic.indonesian | Indonesian
+austronesian.malayic.malay | Malay
+austronesian.malayic.minangkabau | Minangkabau
+austronesian.philippine | Philippine
+austronesian.philippine.bikol | Bikol
+austronesian.philippine.boholano | Boholano
+austronesian.philippine.cebuano | Cebuano
+austronesian.philippine.hiligaynon | Hiligaynon
+austronesian.philippine.ilocano | Ilocano
+austronesian.philippine.kapampangan | Kapampangan
+austronesian.philippine.maguindanao | Maguindanao
+austronesian.philippine.maranao | Maranao
+austronesian.philippine.pangasinan | Pangasinan
+austronesian.philippine.tagalog | Tagalog
+austronesian.philippine.tausug | Tausug
+austronesian.philippine.waray | Waray-Waray
+austronesian.sasak | Sasak
+austronesian.sundanese | Sundanese
+indoeuropean.germanic.continental | Continental West Germanic
+indoeuropean.germanic.continental.dutch | Dutch
+indoeuropean.indoaryan.sinhala | Sinhala
+indoeuropean.iranian.dari | Dari
+indoeuropean.romance | Romance
+indoeuropean.romance.french | French
+indonesia_other | Other regional languages of Indonesia
+kradai | Kra-Dai (Tai-Kadai)
+kradai.thai | Thai
+nilosaharan | Nilo-Saharan
+nilosaharan.centralsudanic | Central Sudanic
+nilosaharan.centralsudanic.sara | Sara
+nilosaharan.nilotic | Nilotic
+nilosaharan.nilotic.dinka | Dinka
+turkic | Turkic
+turkic.turkish | Turkish
+# --- origin_mix borrowed nodes (python sources/origin_mix.py --fragment qa) ---
+# Every node the origin mixes bring in that tree.txt lacks, repeated without colour.
+afroasiatic.cushitic.beja | Beja
+afroasiatic.tunisian_arabic | Tunisian Arabic
+indoeuropean.germanic.continental.limburgish | Limburgish
+indoeuropean.germanic.continental.lowgerman | Low German
+indoeuropean.germanic.continental.lowgerman.westphalian | Westphalian
+indoeuropean.germanic.frisian | Frisian
+indoeuropean.romance.spanish | Spanish
+nilosaharan.fur | Fur
+nilosaharan.maban | Maban
+nilosaharan.maban.masalit | Masalit
+nilosaharan.nobiin | Nobiin (Fadicca)
+# --- end origin_mix borrowed nodes ---

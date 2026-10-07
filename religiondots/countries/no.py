@@ -2,6 +2,13 @@
 # helpers that two or more countries use are in countries/_shared.py.
 from countries._shared import *  # noqa: F401,F403
 
+# Svalbard's residents, SSB table 07430, 1 January 2026: Longyearbyen and Ny-Alesund 2,512,
+# Barentsburg and Pyramiden 392, Hornsund 10. sources/no_geo.py carries the same rows. Of the
+# Longyearbyen and Ny-Alesund figure, 1,648 are "resident on the mainland" (registered in a
+# mainland kommune, so inside the census counts) and 864 came "from abroad".
+_NO_SVALBARD_POP = 2_914
+_NO_SVALBARD_ON_MAINLAND = 1_648
+
 
 def _no_counts():
     """Norway at the 11 counties of 2020-2023, from two halves of one census table.
@@ -19,6 +26,15 @@ def _no_counts():
       * **Foreign residents, 600k.** `cens_21ctz_r3` at NUTS 3 crossed with Pew.
 
     Viken straddles two NUTS 2016 regions and takes a population-weighted blend of them.
+
+    **Svalbard, unit `NO-21`, added 2026-10-04** (Anita's ruling, ask/RULINGS.md: a named
+    exception to the never-measured rule). It is in no county, the census basis has nobody
+    there, and SSB's church statistics cover every parish "except Svalbard", so nothing measures
+    its religion. Its 2,914 people (SSB 07430, 1 January 2026, all four settlements) are drawn
+    at the mix the rest of this function draws for Norway as a whole, both halves together.
+    The 1,648 of them registered in a mainland kommune are taken back out of the mainland rows,
+    pro rata, so nobody is drawn twice. sources/no_geo.py places them on Longyearbyen,
+    Barentsburg and Hornsund.
     """
     from no2024 import resolve
 
@@ -36,9 +52,18 @@ def _no_counts():
 
     df = pd.concat([cit[["geo_id", "node", "count"]], ext[["geo_id", "node", "count"]]],
                    ignore_index=True)
+    mix = df.groupby("node")["count"].sum()
+    # 1,648 of Svalbard's people are registered in a mainland kommune and so are already in the
+    # census counts above. They are moved, not added: every mainland row gives up the same
+    # 0.03%, because SSB does not say which counties they are registered in.
+    df["count"] = df["count"] * (1 - _NO_SVALBARD_ON_MAINLAND / df["count"].sum())
+    sv = (mix / mix.sum() * _NO_SVALBARD_POP).rename("count").reset_index()
+    sv["geo_id"] = "NO-21"
+    df = pd.concat([df, sv[["geo_id", "node", "count"]]], ignore_index=True)
+
     df["congregations"] = 0
     # A survey, a nationality model and a communion split from a national list: nothing here is
-    # `measured`.
+    # `measured`. Svalbard is Norway's own mix, `modelled` too.
     df["tier"] = "modelled"
     return df.rename(columns={"geo_id": "unit"})[
         ["unit", "node", "count", "congregations", "tier"]]
@@ -92,7 +117,8 @@ ENTRY = {
             "nothing about where they live. The Human-Etisk Forbund is on the same grant roll "
             "as the churches, but the survey has no humanist answer, so its members are inside "
             "no religion. Norway's 599,825 foreign citizens are drawn by nationality from the "
-            "2021 census."),
+            "2021 census. Svalbard is in no county and nothing measures religion there, so its "
+            "2,914 residents are drawn at Norway's national mix."),
         how="survey, 9,611 people; foreign residents by nationality",
         grain="counties, 490,000 people on average",
         gap_share=0.003465,
@@ -123,7 +149,9 @@ ENTRY = {
              "own county changes are both proportional. The Orthodox answer is split 59.49 / "
              "40.51 Eastern / Oriental on the ministry's 2018 grant list, which overstates the "
              "Oriental share of a citizen cell because Norway's Eritreans are recent (the "
-             "reverse of Sweden). GISCO's POP_2021 for Norway is 1 January 2020. sources/no.md, "
-             "sources.md §9dd.",
+             "reverse of Sweden). GISCO's POP_2021 for Norway is 1 January 2020. SVALBARD IS "
+             "UNIT NO-21 SINCE 2026-10-04, Norway's drawn national mix on SSB 07430's 2,914 "
+             "people, placed on Kontur calibrated to its settlements. sources/no.md, "
+             "sources.md §9dd, §no-2026-10-04.",
     ),
 }

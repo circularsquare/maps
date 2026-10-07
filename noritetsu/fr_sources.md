@@ -143,6 +143,70 @@ why:
   them, and T13 owns the same ways as an OSM line. T12 (Massy - Évry, rail track) credits
   990 000. Open: a register line has one kind.
 
+## The Channel Tunnel (2026-10-05)
+
+Anita, 2026-10-05: "at some point we seem to have removed the train between uk and europe".
+Nothing on the map ran from the UK to France: the tunnel drew as faint grey track with no line.
+
+**Why.** Three things together, none of them a recent regression (it never drew right):
+
+- The tunnel and its French approach are Getlink's (Eurotunnel's concession), not SNCF
+  Réseau's. The RFN's 216 000 (Fretin - Fréthun) stops at Bif. Fréthun-lès-Calais, 400 m short
+  of the French portal, so the 22.7 km from there to the border under the sea belonged to no
+  line in France. gb's High Speed 1 did own the UK half (both bores) up to the border point.
+- RINF's border point eEU00228 lies 450 m off OSM's bores, and build_model.border_tails only
+  finds a point within 60 m of a route's track (borders.NEAR_M), so no Eurostar or Le Shuttle
+  route in gb or fr got its run on to the border: fr built Eurostar only to Belgium, gb built
+  no Eurostar at all.
+- Geofabrik keeps a way whole when any node is inside, and OSM cuts both bores at the
+  boundary, so fr's extract held the UK's half of the tunnel and gb's held France's. Each
+  country's tiles drew the other's half as track no line runs on (faint grey), on top of or
+  under the neighbour's line.
+
+**What changed.**
+
+- `borders.MOVE` puts eEU00228 between the two bores' boundary nodes (1.496109, 51.014814;
+  25 m from each), landed by the managing session.
+- `fr_register.channel_tunnel`: a register line **"Tunnel sous la Manche"** (Channel Tunnel,
+  operator Eurotunnel, `src` "getlink", id `line_id("tunnel-sous-la-manche")`), one section from
+  eEU00228 to 216 000's junction Bif. Fréthun-lès-Calais, ~23.1 km, its geometry OSM's north
+  bore and approach track, each point moved halfway to the south bore where that is within
+  80 m (the bores are 45-58 m apart; drawn along one bore, the other lay outside
+  build_model's 40 m way buffer for 70% of its length and was owned by nobody). It is
+  `served_sections`, as Eurostar and Le Shuttle run every day. A ride Calais-Fréthun or Lille
+  - London walks 216 000 -> the junction -> this line -> the border point -> High Speed 1.
+  Getlink publishes no line register to check against; the tunnel is 50.45 km portal to
+  portal, and this half plus HS1's tunnel part (27.6 km of bore) make 50.3 km.
+- `fr_register.py --clip` (gb_register.clip_channel) takes the UK's half of the tunnel out of
+  data/proc/fr, and `gb_register.py --clip` France's half out of data/proc/gb: **run both after
+  every fr or gb extract.**
+- `rules/fr.py`: Le Shuttle (service=car_shuttle) is a named train, as in gb; and a Eurostar
+  relation's `via` station is one of its stops (`extra_route_stops`). OSM's London - Brussels
+  relations (112662, 2905886) list only St Pancras and Brussels-Midi, via=Lille Europe, where
+  those trains call; with no stop in France they built nothing here. The hook also inserts the
+  stop into this build's copy of the relation, because border_tails runs ends on to the
+  border only from stops the relation lists.
+
+**What now crosses** (trial, 2026-10-05): fr gains "Tunnel sous la Manche" (register), and
+the named trains "Eurostar : Paris ↔ London" (Paris-Nord - border, 350.8 km), "Eurostar :
+Bruxelles ↔ London" (border - Lille-Europe - Belgian border eEU00083, 145.5 km) and "Eurotunnel
+Le Shuttle" (Coquelles terminal - border, 30.0 km). gb gains the London ends of all three
+Eurostar route masters (St Pancras - border, 138.8-138.9 km) and Le Shuttle (Folkestone
+terminal - border, 29.0 km). be already had its parts of the Brussels and Amsterdam trains.
+Each Eurostar route master's id is the same in every country, so the app joins the pieces.
+
+**Le Shuttle is a named train, not a line** (decided 2026-10-05). It is scheduled, up to four
+departures an hour, and carries people, but only in their cars and coaches: it has one origin
+and one destination, no stops, and no foot passengers. Counting it as a line of its own would
+give a percentage to a car ferry by rail. As a named train it counts nowhere itself, and a
+ride on it credits the tunnel's track, which is the two register lines' (High Speed 1's
+tunnel part and this one); its terminal loops at Folkestone and Coquelles count for nobody.
+
+**Left open.** "Eurostar: Amsterdam ↔ London" has no French part: its relations list no stop
+in France (via Rotterdam only) and the London - Amsterdam trains do not call at Lille, so it
+draws London - border and Belgium - Amsterdam with a gap through France (a ride over it still
+credits the register lines it runs on). Calais-Fréthun has no Eurostar stop in OSM.
+
 ## Running it
 
 Ile-de-France (the development region, `data/proc/fr` as it stands now):
@@ -163,6 +227,7 @@ curl -L -o data/raw/fr/france-260929.osm.pbf https://download.geofabrik.de/europ
     # 5.1 GB; the plain france-latest.osm.pbf URL may redirect-loop, as Switzerland's did
 python fr_register.py --fetch                                                    # 30 s, refreshes the register files
 python extract.py --region fr --pbf data/raw/fr/france-260929.osm.pbf            # about 8 min
+python fr_register.py --clip                                                     # the UK's half of the Channel Tunnel out
 python build_model.py --region fr --register fr_register:data/raw/fr             # about 3-6 min (estimate)
 python build_tiles.py --region fr                                                # about 2-4 min (estimate)
 python check_model.py --region fr

@@ -122,3 +122,16 @@ not in REGISTER; the RINF comparison covers every line.
 - **Short connecting routes** (101 12, 114 11, 130 11 and the like) come out as their own lines
   named "first - last", because ÖBB numbers every connecting curve. They are real routes that
   passenger trains use, but a rider will rarely think of them as lines.
+- **RINF leaves stretches out of lines** (2026-10-05). Our fetch has no section of 222 01, the
+  Tauernbahn, from Mühldorf-Möllbrücke to Pusarnitz-Süd, Markt Paternion to Paternion-
+  Feistritz, or Gummern to Villach, under any id, so it came out in four pieces; 47 of
+  Austria's lines were in pieces. `fill_holes: True` (rinf.fill_holes) joins a line's pieces
+  over its own OSM `route=tracks` relation: 113 gaps, 373 km, the Tauernbahn whole (114.5 km,
+  Pusarnitz a stop) and the Kamptalbahn whole (Stiefern - Schönberg am Kamp, once a pair
+  that lost to a shorter fill was asked again). 10 lines stay in pieces, each with a reason
+  in RINF_FILL_DEBUG=1's log: no own relation (10111), the gap over another line's track
+  (10101 Wien Penzing - Hütteldorf), too little of it on the own relation (10105 into
+  Innsbruck Hbf, 62%), no path in OSM (12201 Stammstrecke through Wien Mitte; 10701 the
+  Leobersdorfer Bahn's Weissenbach - Hainfeld, probably closed). Unnumbered lines whose ends
+  moved are renamed "first - last" accordingly (ids unchanged). RINF itself has no section
+  of the Tauernbahn's three holes under any id or country (queried 2026-10-05).

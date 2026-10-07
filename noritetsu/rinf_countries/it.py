@@ -39,6 +39,16 @@ FIXES TO RINF (`it_fix`):
 - Point names in capitals are written in the usual case (`title_it`), accents restored
   ("MONDOVI`" is Mondovì). Matching is case- and accent-blind, so no match changes.
 
+CITY NODES (NODE_SPLIT, 2026-10-03): RFI's N1-N8 lump every line inside Torino, Milano,
+Venezia, Genova, Bologna, Firenze, Roma and Napoli into one id. Each node section is handed to
+the it.wikipedia line it belongs to: mostly the F/C line that ended at the node's edge, which
+now reaches the city's stations under its old id (Firenze - Roma (linea lenta) runs Firenze SMN
+- Roma Termini), plus new lines where it.wikipedia has one inside the city (Roma - Fiumicino,
+Milano - Gallarate, the Passanti of Milano and Torino, Bologna - Porretta Terme, Valle Aurelia
+- Vigna Clara). Roma, Milano, Bologna and Torino keep their node id on one of the new lines;
+Genova, Firenze, Napoli and Venezia's ids go, aliased through `line_alias` (NODE_ALIAS). Track
+left over (yards, freight belts) is "<node>R".
+
 LEFT OUT (`skip_line`, SKIP): GTT's copy of the Canavesana, the Messina strait ferry berths
 (M), and the Padova Interporto freight pieces of F25-F26, F31-F32 and C82.
 """
@@ -72,6 +82,168 @@ ZERO = [
 
 # (id, other id): sections of the first that the second also has are the second's.
 DUP_DROP = [("F61-F62", "C141")]
+
+
+# RFI's city nodes (N1-N8) split into the lines inside each city, as it.wikipedia lists them
+# (Anita, 2026-10-02). Each entry is (target id, [uopid, uopid, ...]): every pair of
+# neighbours in a list is one RINF section of the node, given to the target. A target that is
+# an existing F/C/AV id extends that line into the city (Firenze - Roma (linea lenta) now runs
+# Firenze SMN - Roma Termini, as it.wikipedia's line does), keeping its line id. The node's own
+# id is kept by the one new line most of its stations went to (Roma - Fiumicino, Milano -
+# Gallarate, Bologna - Porretta Terme, the Passante di Torino), so rides saved on it between
+# those stations still credit; its other sections go to "<node>R", the freight and yard track
+# left over (the cintura), which build_model drops where no train runs. A list pair that is no
+# section of the node is logged.
+NODE_SPLIT = {
+    "N7": [   # Roma
+        ("F55-F56", ["IT08217", "IT08026"]),                       # Tiburtina - Bivio Settebagni (DD)
+        ("F53-F54", ["IT08409", "IT08217", "IT08236", "IT08238", "IT08219", "IT08237",
+                     "IT08235", "IT08026", "IT08216", "IT08215", "IT08222", "IT08214"]),
+        ("F53-F54", ["IT08217", "IT08232", "IT08014", "IT08128", "IT08219"]),
+        ("F53-F54", ["IT08128", "IT08127", "IT08238"]),
+        ("F53-F54", ["IT08127", "IT08231", "IT08237"]),             # Nuovo Salario
+        ("AV/AC1-AV/AC2", ["IT08217", "IT08220", "IT08500"]),
+        ("AV/AC1-AV/AC2", ["IT08220", "IT08409"]),
+        ("C132", ["IT08409", "IT08500", "IT08505", "IT08509", "IT08501", "IT08513", "IT08514",
+                  "IT08502", "IT08529", "IT08503", "IT08013", "IT08504", "IT08023"]),
+        ("C132", ["IT08217", "IT08500"]),
+        ("F57-F58", ["IT08409", "IT08674", "IT08600"]),            # Termini - Casilina - Torricola
+        ("F57-F58", ["IT08217", "IT08674"]),
+        ("F57-F58", ["IT08408", "IT08674"]),
+        ("F61-F62", ["IT08674", "IT08672", "IT08650"]),            # Casilina - Capannelle - Ciampino
+        ("F51-F52", ["IT08409", "IT08408", "IT08406", "IT08405", "IT08323", "IT08025",
+                     "IT08020"]),                                  # Tirrenica to Termini (FL5)
+        ("F51-F52", ["IT08217", "IT08408"]),
+        ("F51-F52", ["IT08403", "IT08020"]),                       # Ponte Galeria - Maccarese
+        ("C129", ["IT08405", "IT08005", "IT08323", "IT08329", "IT08328", "IT08327", "IT08326",
+                  "IT08322", "IT08017", "IT08325", "IT08324", "IT08330", "IT08321", "IT08320",
+                  "IT08333", "IT08319"]),                          # Roma - Viterbo (FL3)
+        ("N7V", ["IT08329", "IT08332", "IT08331"]),                # Valle Aurelia - Vigna Clara
+        ("N7", ["IT08405", "IT08399", "IT08404", "IT08400", "IT08403", "IT08413", "IT08412",
+                "IT08411"]),                                       # Roma - Fiumicino (FL1)
+    ],
+    "N2": [   # Milano
+        ("N2", ["IT01030", "IT01031", "IT01033", "IT01034", "IT01035", "IT01036", "IT01090",
+                "IT01037", "IT01039", "IT01640"]),                 # Gallarate - Rho - Certosa
+        ("N2", ["IT01037", "IT01100", "IT01039"]),
+        ("N2", ["IT01640", "IT01639", "IT01055", "IT01645"]),      # to Porta Garibaldi
+        ("N2", ["IT01640", "IT01048", "IT01049", "IT01700"]),      # to Centrale
+        ("N2", ["IT01639", "IT01048"]),
+        ("N2", ["IT01640", "IT01049"]),
+        ("AV/AC3-AV/AC4", ["IT01100", "IT01171", "IT01039"]),
+        ("N2P", ["IT01642", "IT01643", "IT01647", "IT01648", "IT01649", "IT01650", "IT01633",
+                 "IT01820"]),                                      # Passante
+        ("N2P", ["IT01639", "IT01643"]),
+        ("N2P", ["IT01633", "IT01492"]),
+        ("F17-F18", ["IT01318", "IT01320", "IT01321", "IT01322", "IT01325", "IT01326",
+                     "IT01700"]),                                  # Seregno - Monza - Centrale
+        ("F17-F18", ["IT01326", "IT01047", "IT01645"]),
+        ("F23-F24", ["IT01700", "IT01701", "IT01703"]),            # Centrale - Lambrate - Pioltello
+        ("F23-F24", ["IT01700", "IT01051", "IT01701"]),
+        ("F23-F24", ["IT01701", "IT01719", "IT01715", "IT01703"]),
+        ("F23-F24", ["IT01492", "IT01719"]),
+        ("F41-F42", ["IT01701", "IT01820"]),                       # Lambrate - Rogoredo
+        ("C58", ["IT01820", "IT01044", "IT01632", "IT01022", "IT01032", "IT01630"]),
+    ],
+    "N5": [   # Bologna
+        ("N5", ["IT05321", "IT05100", "IT05102", "IT05111", "IT05101", "IT05152", "IT05103",
+                "IT05104", "IT05121", "IT05105", "IT05114", "IT05106", "IT05107", "IT05120",
+                "IT05108", "IT05109", "IT05110"]),                 # S.Viola - Porretta Terme
+        ("F41-F42", ["IT05043", "IT05321", "IT05041"]),            # Centrale - S.Viola - Lavino
+        ("F29-F30", ["IT05322", "IT05061", "IT05010", "IT05321"]),
+        ("F31-F32", ["IT05722", "IT05723", "IT05726", "IT05724", "IT05725", "IT05082",
+                     "IT05078", "IT05043"]),
+        ("F63-F64", ["IT05051", "IT05049", "IT05076", "IT05081", "IT05043"]),
+        ("F43-F44", ["IT05130", "IT05140", "IT05077", "IT05081"]),
+    ],
+    "N6": [   # Firenze
+        ("F43-F44", ["IT06419", "IT06420", "IT06421"]),
+        ("F43-F44", ["IT06419", "IT06048"]),
+        ("F49-F50", ["IT06420", "IT06048", "IT06515"]),
+        ("F53-F54", ["IT06901", "IT06900", "IT06062", "IT06421"]),
+        ("F53-F54", ["IT06900", "IT06431", "IT06430", "IT06420"]),
+        ("F53-F54", ["IT06431", "IT06421"]),
+        ("C112", ["IT06950", "IT06957", "IT06900"]),
+        ("C112", ["IT06950", "IT06062"]),
+    ],
+    "N3": [   # Venezia
+        ("F33-F34", ["IT02588", "IT02591", "IT02589", "IT02592", "IT02542", "IT02593"]),
+        ("F37-F38", ["IT02717", "IT02551", "IT02517", "IT02719", "IT02549", "IT02589"]),
+        ("C92", ["IT02512", "IT02561", "IT02516", "IT02591"]),
+        ("F35-F36", ["IT02674", "IT02672"]),                       # Mestre Olimpia - Carpenedo
+    ],
+    "N1": [   # Torino
+        ("F1-F2", ["IT00216", "IT00217", "IT00059", "IT00025", "IT00223", "IT00024",
+                   "IT00219"]),
+        ("F1-F2", ["IT00223", "IT00026", "IT00035"]),
+        ("F1-F2", ["IT00024", "IT00026"]),
+        ("F11-F12", ["IT00229", "IT00225", "IT00228"]),
+        ("AV/AC3-AV/AC4", ["IT00228", "IT00760", "IT00225"]),
+        ("N1", ["IT00452", "IT00035", "IT00060", "IT00228"]),      # Passante: Lingotto - Stura
+        ("N1", ["IT00035", "IT00228"]),
+        ("F3-F4", ["IT00455", "IT00453", "IT00452", "IT00219"]),
+        ("F3-F4", ["IT00028", "IT00453"]),
+        ("F3-F4", ["IT00219", "IT00450", "IT00452"]),
+        ("F3-F4", ["IT00024", "IT00450"]),
+        ("C8", ["IT00452", "IT00028"]),
+    ],
+    "N4": [   # Genova
+        ("F7-F8", ["IT04534", "IT04545", "IT04546", "IT04535", "IT04539", "IT04536", "IT04537",
+                   "IT04538", "IT04126", "IT04220", "IT04700"]),
+        ("F7-F8", ["IT04220", "IT04223", "IT04603", "IT04701"]),   # by Via di Francia
+        ("F45-F46", ["IT04700", "IT04124", "IT04702", "IT04703", "IT04704", "IT04705",
+                     "IT04707"]),
+        ("F45-F46", ["IT04701", "IT04124"]),
+        ("F19-F20", ["IT04212", "IT04213", "IT04115", "IT04122", "IT04700"]),
+        ("F19-F20", ["IT04115", "IT04116", "IT04117"]),
+        ("F19-F20", ["IT04219", "IT04114", "IT04220"]),
+        ("C98", ["IT04109", "IT04117", "IT04114"]),
+    ],
+    "N8": [   # Napoli
+        ("F59-F60", ["IT09101", "IT09102", "IT09113", "IT09103", "IT09104", "IT09105",
+                     "IT09106", "IT09107", "IT09108", "IT09109", "IT09123"]),   # linea 2
+        ("F73-F74", ["IT09218", "IT09123", "IT09110", "IT09121", "IT09800", "IT09801",
+                     "IT09802"]),
+        ("F73-F74", ["IT09217", "IT09121"]),
+        ("F57-F58", ["IT09008", "IT09009", "IT09112", "IT09218"]),
+        ("F57-F58", ["IT09112", "IT09217"]),
+        ("NABA", ["IT09116", "IT09112"]),
+        ("NABA", ["IT09116", "IT09122", "IT09110"]),
+    ],
+}
+# Where the node's freight and yard track goes: the node's own id when no new line kept it.
+NODE_REST = {"N7": "N7R", "N2": "N2R", "N5": "N5R", "N1": "N1R",
+             "N6": "N6R", "N3": "N3R", "N4": "N4R", "N8": "N8R"}
+# The node ids no new line kept, and the line most of their stations went to, for saved rides
+# (`LINE_ALIAS`: build_model has no hook to ship it in aliases.json yet; it_sources.md).
+# Venezia's ids are its two old pieces, N3#1 (Mestre - Santa Lucia and the rest) and N3#2.
+NODE_ALIAS = {"N4": "F7-F8", "N6": "F53-F54", "N8": "F59-F60", "N3#1": "F33-F34",
+              "N3#2": "F35-F36"}
+
+
+def split_nodes(secs, uop, out):
+    """Hand each node section to the line NODE_SPLIT names for its two ends (it_fix)."""
+    want = {}
+    for node, groups in NODE_SPLIT.items():
+        for target, chain in groups:
+            for a, b in zip(chain[:-1], chain[1:]):
+                want.setdefault((node, frozenset((a, b))), target)
+    used, moved = set(), defaultdict(float)
+    for s in secs:
+        node = s["base"].split("#")[0]
+        if node not in NODE_SPLIT:
+            continue
+        key = (node, frozenset((uop(s["a"]), uop(s["b"]))))
+        target = want.get(key, NODE_REST[node])
+        used.add(key)
+        s["line"] = s["base"] = target
+        moved[(node, target)] += s["km"] or 0.0
+    for node in NODE_SPLIT:
+        parts = sorted(((t, km) for (n, t), km in moved.items() if n == node), key=lambda x: -x[1])
+        out.append(f"node {node} split: " + ", ".join(f"{t} {km:.1f} km" for t, km in parts))
+    missing = sorted(f"{n} {'-'.join(sorted(k))}" for (n, k) in want if (n, k) not in used)
+    if missing:
+        out.append(f"NODE_SPLIT pairs that are no section of their node: {', '.join(missing)}")
 
 
 def _crow_km(points, a, b):
@@ -175,6 +347,8 @@ def it_fix(secs, points):
                      "a": a, "b": b, "km": round(199.138 - 191.471, 3), "im": "0083_IM",
                      "label": "ALTAVILLA TAVERNELLE - VICENZA (added in it.py)"})
         out.append("added Altavilla Tavernelle - Vicenza to F25-F26, 7.667 km")
+    # RFI's city nodes into the lines inside each city (NODE_SPLIT)
+    split_nodes(secs, uop, out)
     # The same section filed under two ids. Logged; dropped from the first id where it is
     # another line's track: F61-F62 (Roma - Cassino - Napoli) files Vairano - Sesto Campano -
     # Venafro, which is C141 Vairano - Isernia, beside its own Rocca d'Evandro - Venafro link.
@@ -266,7 +440,7 @@ NAMES = {
     "F11-F12": "Milano – Torino",
     "F13-F14": "Gallarate – Domodossola – Iselle",
     "F15-F16": "Gallarate – Luino – Pino",
-    "F17-F18": "Seregno – Como – Chiasso",
+    "F17-F18": "Milano – Como – Chiasso",
     "F19-F20": "Arquata Scrivia – Genova",
     "F21-F22": "Alessandria – Piacenza",
     "F23-F24": "Milano – Verona",
@@ -287,7 +461,7 @@ NAMES = {
     "F53-F54": "Firenze – Roma (linea lenta)",
     "F55-F56": "Firenze – Roma (Direttissima)",
     "F57-F58": "Roma – Formia – Napoli",
-    "F59-F60": "Villa Literno – Pozzuoli",
+    "F59-F60": "Villa Literno – Napoli Gianturco",
     "F61-F62": "Roma – Cassino – Napoli",
     "F63-F64": "Bologna – Ancona",
     "F65-F66": "Orte – Ancona",
@@ -297,10 +471,14 @@ NAMES = {
     "F73-F74": "Napoli – Salerno",
     "F75-F76": "Salerno – Paola",
     "F77-F78": "Paola – Reggio Calabria",
-    # node lines: RFI's own unit, every line inside one city's node
-    "N1": "Nodo di Torino", "N2": "Nodo di Milano", "N3": "Nodo di Venezia",
-    "N4": "Nodo di Genova", "N5": "Nodo di Bologna", "N6": "Nodo di Firenze",
-    "N7": "Nodo di Roma", "N8": "Nodo di Napoli",
+    # node lines (NODE_SPLIT): the new lines that keep a node's id, the other new lines, and
+    # the freight and yard track left over
+    "N7": "Roma – Fiumicino", "N2": "Milano – Gallarate", "N5": "Bologna – Porretta Terme",
+    "N1": "Passante di Torino", "N7V": "Valle Aurelia – Vigna Clara",
+    "N2P": "Passante di Milano",
+    "N7R": "Nodo di Roma", "N2R": "Cintura di Milano", "N5R": "Cintura di Bologna",
+    "N1R": "Nodo di Torino", "N3R": "Nodo di Venezia", "N4R": "Nodo di Genova",
+    "N6R": "Nodo di Firenze", "N8R": "Nodo di Napoli",
     # complementary lines
     "C1": "Castagnole delle Lanze – Asti", "C2": "Chivasso – Ivrea",
     "C4": "Casale Popolo – Casale Monferrato", "C5": "Chivasso – Casale Monferrato",
@@ -338,7 +516,7 @@ NAMES = {
     "C87": "Cittadella – Castelfranco Veneto", "C88": "Castelfranco Veneto – Treviso",
     "C89": "Bassano del Grappa – Cittadella", "C90": "Cittadella – Camposampiero",
     "C91": "Castelfranco Veneto – Bassano del Grappa",
-    "C92": "Castelfranco Veneto – Maerne", "C93": "Savona – San Giuseppe di Cairo",
+    "C92": "Venezia Mestre – Castelfranco Veneto", "C93": "Savona – San Giuseppe di Cairo",
     "C94": "Udine – Palmanova", "C95": "Palmanova – Cervignano",
     "C96": "San Giuseppe di Cairo – Ferrania", "C97": "Ferrania – Savona",
     "C98": "Genova – Ovada", "C99": "Ferrara – Portomaggiore",
@@ -355,7 +533,7 @@ NAMES = {
     "C124": "Porto d'Ascoli – Ascoli Piceno", "C125": "Pescara – Sulmona",
     "C126": "Civitanova Marche – Albacina", "C127": "Terontola – Foligno",
     "C129": "Roma – Viterbo", "C130": "Campoleone – Nettuno",
-    "C131": "Sulmona – Avezzano", "C132": "Guidonia – Avezzano",
+    "C131": "Sulmona – Avezzano", "C132": "Roma – Avezzano",
     "C133": "Avezzano – Roccasecca", "C134": "Ciampino – Albano Laziale",
     "C135": "Ciampino – Velletri", "C136": "Battipaglia – Potenza",
     "C137": "Caserta – Aversa", "C138": "Villa Literno – Cancello",
@@ -438,7 +616,6 @@ NAMES = {
     "C245": "Savigliano – Saluzzo – Cuneo", "C189": "Decimomannu – Iglesias",
     # pieces (it_fix)
     "F61-F62#1": "Roma – Cassino – Caserta", "F61-F62#2": "Cancello – Maddaloni Marcianise",
-    "N3#1": "Nodo di Venezia", "N3#2": "Venezia Mestre – Carpenedo",
     "C224#1": "Rocchetta Sant'Antonio – San Nicola di Melfi",
     "C224#2": "Gravina in Puglia – Gioia del Colle",
     "F25-F26#1": "Verona – Padova", "F31-F32#2": "Bologna – Padova",
@@ -466,4 +643,7 @@ COUNTRY = {
            "3379_IM": "Ferrovie Udine Cividale"},
     # The same Settimo - Rivarolo track is filed twice, under RFI (C262) and GTT.
     "skip_line": lambda lid: lid in SKIP,
+    # node ids no new line kept (NODE_ALIAS): rides saved on them move to the line most of
+    # their stations went to, once build_model ships rinf.LINE_ALIAS in aliases.json
+    "line_alias": dict(NODE_ALIAS),
 }

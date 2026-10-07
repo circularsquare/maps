@@ -45,13 +45,42 @@ sample shares per unit against rounds 7 and 9, and its weighted shares against t
 
 `sources/tz_geo.py` has why. 30 units: 25 mainland regions, Mbeya with Songwe, and Zanzibar's 5.
 
-## THE DENOMINATIONS ARE NOT DRAWN
+## ZANZIBAR'S CHRISTIANS ARE ONE SHARE ACROSS ITS FIVE REGIONS
+
+Anita's ruling, 2026-09-14 night (`ask/RULINGS.md`, `sources/tz.md` §8): Zanzibar's Christians
+were attacked in 2012-13, and region by region the figures rest on single respondents (Kusini
+Pemba's one Christian of 144) or on none (three regions). So the five regions' respondents are
+pooled, survey-weighted, for the Christian share only, and every Zanzibar region is drawn at it.
+Muslim and None keep each region's own measurement, scaled to fill what is left; the flat tail
+is untouched, and every region keeps its census total. `pool_zanzibar()`.
+
+## THE AFROBAROMETER'S CHURCH ANSWERS ARE GROUPED
 
 §11ai's reason. The share answering `Christian only` runs from 3.6% (R5) to 21.3% (R9), and round
 7's card is a different card: Methodist takes 7.1% there and 0.0-0.2% in every other round while
 Anglican falls from about 4.5% to 0.5%, and `Tanzania Assemblies of God`, `Pentecoste` and
 `Evangelical Assemblies of God` appear in that round only. Grouping to the five categories below
-makes every one of those harmless.
+makes every one of those harmless, and the Afrobarometer's Christians are one category here.
+
+## THE CHURCHES: THE GFS SETS THE LEVELS, BOTH SURVEYS SAY WHERE (2026-10-03, `sources/tz.md` §9)
+
+Each mainland unit's Christians (the Afrobarometer's count, unchanged) are split into Catholic,
+Lutheran, Anglican, Pentecostal, Adventist and other Christian. The Global Flourishing Study 2023
+asked every Christian which church they most identify with, and 0.5% named none; the
+Afrobarometer's `Christian only` is 10-35% of Christians by round. So:
+
+  * the GFS's church shares per unit, its few unnamed spread at its national proportions;
+  * the Afrobarometer's (rounds 4, 6, 8, 9; round 7's card is a different card) with its
+    `Christian only` spread at one set of national proportions inside every unit, chosen so each
+    church lands on the GFS's level (Pentecostal takes 61.5% of the unnamed, Catholic none);
+  * the two averaged per unit by respondents.
+
+Two tests per church: the surveys must rank the 25 mainland units alike (`CHURCH_P_MAX`), and the
+GFS's level must sit between the Afrobarometer's named share (a floor) and that share plus every
+`Christian only` answer. All five pass. Spreading the unnamed at the Afrobarometer's own named
+proportions would put Pentecostals at about 10% of Christians against the GFS's 21.6%: the
+unnamed are mostly not Catholic. Zanzibar's pooled Christians stay one category; the GFS has two
+Christians there. `church_shares()`.
 
 Usage:
     python sources/tz.py        rebuild data/normalized/tz.csv (the .sav files are shared; fetch
@@ -179,9 +208,48 @@ TAIL_FLAT = True
 # Spec §12 (Norway): the pooled level against the recent rounds. Measured 2026-09-14 at under
 # 0.9 points for every carried category, so no §3.4 rescale; asserted under Sweden's 3.5.
 LEVEL_GAP_MAX = 0.035
+# Anita's ruling, 2026-09-14 night: one Christian share across Zanzibar's five regions, pooled from
+# their respondents with the survey's weights (13 Christians of 1,072 interviews, 0.945%; the
+# weights put 50.6% of the pool in Mjini Magharibi against its 47.3% of the census). Asserted
+# against `tz_lookup.csv`'s `zanzibar` column so a renamed region cannot drop out silently.
+ZANZIBAR = ("Kaskazini Unguja", "Kusini Unguja", "Mjini Magharibi", "Kaskazini Pemba",
+            "Kusini Pemba")
+ZANZIBAR_POOLED = ["Christian"]
 # The GFS witness: both drawn-on categories must order the shared units the same way.
 GFS_RHO_MIN = 0.80
 GFS_P_MAX = 0.01
+
+# THE CHURCHES (2026-10-03, `fafd1067-chea`; docstring "THE CHURCHES COME FROM THE GLOBAL
+# FLOURISHING STUDY"). `REL3_Y1`, asked of everyone who gave Christianity in `REL2_Y1` (GFS codebook
+# wave 2, OSF 285w7, p.21): "Which of the following denominations or churches do you most identify
+# with, if any?". Codes not named here (2 Orthodox, 4 Presbyterian/Reformed, 6 Methodist, 7 Baptist,
+# 9 Independent/Holiness/Evangelical, 10 Latter-day Saints, 11 Jehovah's Witness, 13 African
+# Initiated, 96 other) are `Other Christian`. 97 (no denomination in particular), 98 and 99 are the
+# unnamed pool, spread at the national proportions inside each unit.
+GFS_CHURCH = {1: "Roman Catholic", 3: "Anglican", 5: "Lutheran", 8: "Pentecostal",
+              12: "Seventh Day Adventist"}
+GFS_CHURCH_UNNAMED = {97, 98, 99, -98}
+CHURCHES = ["Roman Catholic", "Lutheran", "Anglican", "Pentecostal", "Seventh Day Adventist"]
+OTHER_CHRISTIAN = "Other Christian"
+# The Afrobarometer's boxes for the same churches, keyed through `key()`. Round 7 is left out of
+# the church witness: its card is a different card (Methodist 11.0% of Christians there, 0.0-0.3%
+# in every other round; Anglican 0.7% against 7.4%; Pentecostal 0.1% against 4.9-11.3%).
+AB_CHURCH = {"roman catholic": "Roman Catholic", "lutheran": "Lutheran", "anglican": "Anglican",
+             "pentecostal": "Pentecostal", "seventh day adventist": "Seventh Day Adventist"}
+AB_UNNAMED = "christian only"
+AB_CHURCH_ROUNDS = [4, 6, 8, 9]
+# Each church must order the 25 mainland units alike in the two surveys (Spearman, permutation
+# p under 0.05). Measured 2026-10-03: Catholic +0.69, Lutheran +0.77, Anglican +0.57, Pentecostal
+# +0.66, Adventist +0.40 (null 95th about +0.34).
+CHURCH_P_MAX = 0.05
+# And the GFS's national level must lie inside the Afrobarometer's bounds: no lower than the
+# church's named share of Christians (a floor) and no higher than that plus everyone answering
+# `Christian only`.
+GFS_CHURCH_N = 5_937
+# Weighted by the drawn Christians, the GFS's Catholic level sits 0.13 points of Christians under
+# the Afrobarometer's named Catholic share (2026-10-03): the unnamed hold essentially no Catholics.
+# A church that far under its floor takes none of the unnamed; any further and the build stops.
+SPREAD_NEG_TOL = 0.02
 
 # The Global Flourishing Study, wave 1, Tanzania: `REGION1_Y1` labels from the GFS codebook
 # (`gfs_sample_data_variables`, OSF c8hbk), mapped to this map's units. The codebook has no
@@ -426,6 +494,47 @@ def compose(df, nat, units, carried, stand):
     return frame, own, nraw, flat
 
 
+def pool_zanzibar(frame, df, zan, carried, nm):
+    """Anita's ruling: one Christian share across Zanzibar's five regions (docstring).
+
+    The pooled share is the survey-weighted share among all of Zanzibar's respondents, taken
+    through the same flat-tail scaling `compose()` gave every unit (the carried categories fill
+    1 minus the national tail). In each region the other carried categories (Muslim, None) keep
+    their own proportions and are scaled to fill what is left. The tail is not touched.
+    """
+    if not TAIL_FLAT:
+        raise SystemExit("pool_zanzibar() assumes the flat tail; re-read it before pooling")
+    z = df[df["geo_id"].isin(zan)]
+    w = z.groupby("category")["w"].sum().reindex(CATEGORIES).fillna(0.0)
+    own_pool = w / w.sum()
+    rest = [c for c in carried if c not in ZANZIBAR_POOLED]
+    out = frame.copy()
+    print(f"\n  Zanzibar pooled (Anita's ruling): {len(z):,} respondents, "
+          + ", ".join(f"{int((z['category'] == c).sum())} {c}" for c in ZANZIBAR_POOLED))
+    for u in zan:
+        budget = float(frame.loc[u, carried].sum())
+        pooled = {c: float(own_pool[c] / own_pool[carried].sum() * budget) for c in ZANZIBAR_POOLED}
+        left = budget - sum(pooled.values())
+        have = float(frame.loc[u, rest].sum())
+        if have <= 0:
+            raise SystemExit(f"{nm[u]}: nothing left to scale after pooling {ZANZIBAR_POOLED}")
+        for c in rest:
+            out.loc[u, c] = frame.loc[u, c] * left / have
+        for c, v in pooled.items():
+            out.loc[u, c] = v
+        print(f"    {nm[u]:<18} n={int((z['geo_id'] == u).sum()):4d}  "
+              + ", ".join(f"{c} {100 * frame.loc[u, c]:.3f}% -> {100 * out.loc[u, c]:.3f}%"
+                          for c in ZANZIBAR_POOLED + rest))
+    if (out.sum(axis=1) - 1.0).abs().max() > 1e-9:
+        raise SystemExit("a unit's shares do not sum to 1 after pooling Zanzibar")
+    if not out.drop(index=zan).equals(frame.drop(index=zan)):
+        raise SystemExit("pooling Zanzibar moved a mainland unit")
+    for c in ZANZIBAR_POOLED:
+        if out.loc[zan, c].max() - out.loc[zan, c].min() > 1e-12:
+            raise SystemExit(f"Zanzibar's {c} share is not one share across the five regions")
+    return out
+
+
 def gfs_witness(own_ab, units, pop, nm):
     """The Global Flourishing Study, 2023, as an independent second sample. Prints; asserts the
     decode and the direction of agreement, never used to draw."""
@@ -478,6 +587,135 @@ def gfs_witness(own_ab, units, pop, nm):
     print(f"    GFS recomposed on the census over its {len(shared)} units: Christian "
           f"{100 * recomposed['Christian']:.1f}%, Muslim {100 * recomposed['Muslim']:.1f}%")
     return out, gnat, recomposed
+
+
+def church_shares(df, mainland, nm, christians):
+    """Each mainland unit's Christians split into churches (docstring): the GFS 2023 sets each
+    church's level, both surveys say where. Returns a units x (CHURCHES + Other Christian) frame
+    of shares among Christians, rows summing to 1, and the pieces for the record.
+
+    `christians` is each mainland unit's drawn Christian count, the weight for every national
+    figure here, so the levels compared are the levels drawn.
+    """
+    from scipy.stats import rankdata
+
+    if not os.path.exists(GFS_CSV):
+        raise SystemExit("the churches need data/raw/gfs/gfs_all_countries_wave2.csv; "
+                         "`python sources/jp_gfs.py --fetch`")
+    g = pd.read_csv(GFS_CSV, usecols=["COUNTRY", "REGION1_Y1", "REL2_Y1", "REL3_Y1",
+                                      "ANNUAL_WEIGHT_C1"], low_memory=False)
+    g = g[pd.to_numeric(g["COUNTRY"], errors="coerce") == GFS_COUNTRY]
+    g = g[pd.to_numeric(g["REL2_Y1"], errors="coerce") == 1].copy()
+    if len(g) != GFS_CHURCH_N:
+        raise SystemExit(f"GFS Tanzania has {len(g):,} Christians, this was written against "
+                         f"{GFS_CHURCH_N:,}")
+    g["d"] = pd.to_numeric(g["REL3_Y1"], errors="coerce")
+    if g["d"].isna().any():
+        raise SystemExit("a GFS Christian has no REL3 answer")
+    g["w"] = pd.to_numeric(g["ANNUAL_WEIGHT_C1"], errors="coerce")
+    name_to_id = {v: k for k, v in nm.items()}
+    g["geo_id"] = g["REGION1_Y1"].astype(int).map(GFS_REGION).map(name_to_id)
+    unnamed = g["d"].isin(GFS_CHURCH_UNNAMED)
+    g["c"] = g["d"].map(GFS_CHURCH).fillna(OTHER_CHRISTIAN)
+    cats = CHURCHES + [OTHER_CHRISTIAN]
+    print(f"\n  churches: GFS wave 1 (2023), {len(g):,} Christians; "
+          f"{int(unnamed.sum())} name no church ({100 * g.loc[unnamed, 'w'].sum() / g['w'].sum():.2f}% "
+          "weighted), spread at the national proportions inside each unit")
+    named = g[~unnamed]
+    gnat = named.groupby("c")["w"].sum().reindex(cats, fill_value=0.0)
+    gnat = gnat / gnat.sum()
+    gu = g[g["geo_id"].isin(mainland)]
+    missing = sorted(set(mainland) - set(gu["geo_id"]))
+    if missing:
+        raise SystemExit(f"mainland units with no GFS Christian: {[nm[u] for u in missing]}")
+    by = gu[~gu["d"].isin(GFS_CHURCH_UNNAMED)].groupby(["geo_id", "c"])["w"].sum().unstack(
+        fill_value=0.0).reindex(index=mainland, columns=cats, fill_value=0.0)
+    un = gu[gu["d"].isin(GFS_CHURCH_UNNAMED)].groupby("geo_id")["w"].sum().reindex(
+        mainland, fill_value=0.0)
+    by = by + un.to_numpy()[:, None] * gnat.to_numpy()[None, :]
+    share = by.div(by.sum(axis=1), axis=0)
+    n_g = gu.groupby("geo_id").size().reindex(mainland)
+
+    # The Afrobarometer's answers for the same churches: named shares per unit (the rank test)
+    # and, nationally, each church's floor and ceiling among Christians.
+    a = df[(df["category"] == "Christian") & df["round"].isin(AB_CHURCH_ROUNDS)].copy()
+    a["c"] = a["raw_category"].map(key).map(lambda k: AB_CHURCH.get(k, "UNNAMED" if k == AB_UNNAMED
+                                                                    else OTHER_CHRISTIAN))
+    an = a[a["c"] != "UNNAMED"]
+    ab_u = an[an["geo_id"].isin(mainland)].groupby(["geo_id", "c"])["w"].sum().unstack(
+        fill_value=0.0).reindex(index=mainland, columns=cats, fill_value=0.0)
+    ab_u = ab_u.div(ab_u.sum(axis=1), axis=0)
+    floor = a.groupby("c")["w"].sum() / a["w"].sum()
+    unnamed_ab = float(floor.get("UNNAMED", 0.0))
+
+    # The Afrobarometer's unit shares with its unnamed pool spread at one set of national
+    # proportions inside every unit, the proportions chosen so that, weighted by the drawn
+    # Christians, each church lands on the GFS's own level. A negative proportion would mean the
+    # GFS level is under the Afrobarometer's floor; asserted not.
+    am = a[a["geo_id"].isin(mainland)]
+    full = am.groupby(["geo_id", "c"])["w"].sum().unstack(fill_value=0.0).reindex(
+        index=mainland, columns=cats + ["UNNAMED"], fill_value=0.0)
+    full = full.div(full.sum(axis=1), axis=0)
+    cw = christians.reindex(mainland).astype(float)
+    # `Other Christian` is not a church and is not spread into: the Afrobarometer names more of
+    # it (Independent, Evangelical, Mennonite, Baptist, 6.1% of Christians) than the GFS (5.0%),
+    # so it keeps its own named share, and the five churches take the unnamed in the GFS's
+    # proportions among them.
+    target = share.mul(cw, axis=0).sum()
+    room = float(cw.sum() - (full[OTHER_CHRISTIAN] * cw).sum())
+    target = target[CHURCHES] * room / float(target[CHURCHES].sum())
+    spread_p = ((target - full[CHURCHES].mul(cw, axis=0).sum())
+                / float((full["UNNAMED"] * cw).sum())).reindex(cats, fill_value=0.0)
+    print("    the Afrobarometer's `Christian only` answers, spread so each church meets the GFS level: "
+          + ", ".join(f"{c} {100 * spread_p[c]:.1f}%" for c in cats))
+    if (spread_p < -SPREAD_NEG_TOL).any() or abs(float(spread_p.sum()) - 1.0) > 1e-9:
+        raise SystemExit(f"the GFS's church levels cannot be reached by spreading the unnamed: "
+                         f"{spread_p.round(4).to_dict()}")
+    if (spread_p < 0).any():
+        print(f"    {', '.join(spread_p[spread_p < 0].index)} is under the Afrobarometer's floor by "
+              "a hair; it takes none of the unnamed and sits at that floor")
+        spread_p = spread_p.clip(lower=0.0)
+        spread_p = spread_p / spread_p.sum()
+    ab_spread = full[cats] + full["UNNAMED"].to_numpy()[:, None] * spread_p.to_numpy()[None, :]
+    n_ab = am.groupby("geo_id").size().reindex(mainland).astype(float)
+    pooled = (share.mul(n_g, axis=0) + ab_spread.mul(n_ab, axis=0)).div(n_g + n_ab, axis=0)
+
+    def rho(x, y):
+        return float(np.corrcoef(rankdata(x), rankdata(y))[0, 1])
+
+    rng = np.random.default_rng(0)
+    print(f"    {'church':<24}{'GFS':>7}{'AB floor':>10}{'AB ceil':>9}{'rho':>8}{'null95':>8}"
+          f"{'p':>8}   (share of Christians; rank over {len(mainland)} mainland units, "
+          f"Afrobarometer R{', R'.join(map(str, AB_CHURCH_ROUNDS))})")
+    bad = []
+    for c in CHURCHES:
+        r = rho(share[c], ab_u[c])
+        null = np.array([rho(share[c], rng.permutation(ab_u[c].to_numpy())) for _ in range(5000)])
+        p = (1 + int((null >= r).sum())) / (1 + len(null))
+        lo, hi = float(floor.get(c, 0.0)), float(floor.get(c, 0.0)) + unnamed_ab
+        print(f"    {c:<24}{100 * gnat[c]:6.1f}%{100 * lo:9.1f}%{100 * hi:8.1f}%{r:+8.3f}"
+              f"{np.quantile(null, 0.95):+8.3f}{p:8.4f}")
+        if p > CHURCH_P_MAX:
+            bad.append(f"{c} ranks the units differently in the two surveys (p {p:.3f})")
+        if not lo <= gnat[c] <= hi:
+            bad.append(f"{c}'s GFS level {100 * gnat[c]:.1f}% is outside the Afrobarometer's "
+                       f"{100 * lo:.1f}-{100 * hi:.1f}%")
+    if bad:
+        raise SystemExit("the churches no longer pass: " + "; ".join(bad))
+    print(f"    Afrobarometer `Christian only`: {100 * unnamed_ab:.1f}% of Christians in those rounds")
+    print("    per unit, % of Christians: drawn (both surveys, by respondents) / GFS / Afrobarometer "
+          "spread; n GFS + Afrobarometer:")
+    for u in mainland:
+        print(f"      {nm[u]:<18}" + "".join(
+            f"{100 * pooled.loc[u, c]:5.1f}/{100 * share.loc[u, c]:4.0f}/{100 * ab_spread.loc[u, c]:<4.0f}"
+            for c in cats) + f"  {int(n_g[u])}+{int(n_ab[u])}")
+    print(f"      columns: {', '.join(cats)}")
+    drawn = pooled.mul(cw, axis=0).sum() / cw.sum()
+    print("    national, % of mainland Christians: drawn " + ", ".join(
+        f"{c} {100 * drawn[c]:.1f}" for c in cats))
+    if (pooled.sum(axis=1) - 1).abs().max() > 1e-9 or (pooled < -1e-12).any().any():
+        raise SystemExit("the pooled church shares are not a partition of each unit's Christians")
+    return pooled, gnat, int(len(g)), int(n_ab.sum())
 
 
 def main():
@@ -577,6 +815,11 @@ def main():
     if flat != TAIL_FLAT:
         raise SystemExit(f"the small-category rule now gives flat={flat}, against TAIL_FLAT="
                          f"{TAIL_FLAT}; read the multiples above and decide deliberately")
+    zan = [name_to_id[n] for n in ZANZIBAR]
+    flagged = sorted(lut.loc[lut["zanzibar"].astype(str).str.lower() == "true", "geo_id"])
+    if sorted(zan) != flagged:
+        raise SystemExit(f"ZANZIBAR names {sorted(zan)}, tz_lookup.csv flags {flagged}")
+    frame = pool_zanzibar(frame, df, zan, carries, nm)
     counts = round_within_rows(frame.mul(pop.reindex(units), axis=0))
     if not (counts.sum(axis=1) == pop.reindex(units).round().astype("int64")).all():
         raise SystemExit("a unit's drawn total is not its census population")
@@ -606,9 +849,7 @@ def main():
 
     # A smoke test on the decode, not corroboration of the fine pattern: Zanzibar is Muslim to
     # a degree no mainland region is, and a join that had crossed the channel would fail this.
-    zan = [name_to_id[n] for n in ("Kaskazini Unguja", "Kusini Unguja", "Mjini Magharibi",
-                                   "Kaskazini Pemba", "Kusini Pemba")]
-    share = counts.div(counts.sum(axis=1), axis=0)
+    share =counts.div(counts.sum(axis=1), axis=0)
     mainland_max = share.drop(index=zan)["Muslim"].max()
     print(f"\n  Zanzibar's five units, Muslim share as drawn: "
           + ", ".join(f"{nm[z]} {100 * share.loc[z, 'Muslim']:.1f}%" for z in zan)
@@ -618,11 +859,37 @@ def main():
         raise SystemExit("a mainland unit is drawn more Muslim than a Zanzibar one; check the "
                          "Zanzibar decode before drawing")
 
+    # ---- the churches: each mainland unit's Christians split at the GFS's church shares ----
+    mainland = [u for u in units if u not in zan]
+    csh, gnat_church, n_gfs_chr, n_ab_chr = church_shares(df, mainland, nm,
+                                                           counts.loc[mainland, "Christian"])
+    church_cats = CHURCHES + [OTHER_CHRISTIAN]
+    split = round_within_rows(csh.mul(counts.loc[mainland, "Christian"].astype(float), axis=0))
+    if not (split.sum(axis=1) == counts.loc[mainland, "Christian"]).all():
+        raise SystemExit("a unit's churches do not sum to its Christians")
+    counts = counts.join(pd.DataFrame(0, index=units, columns=church_cats).add(
+        split.reindex(units, fill_value=0), fill_value=0).astype("int64"))
+    counts.loc[mainland, "Christian"] = 0
+    if not (counts.sum(axis=1) == pop.reindex(units).round().astype("int64")).all():
+        raise SystemExit("a unit's drawn total moved when its Christians were split")
+    share = counts.div(counts.sum(axis=1), axis=0)
+    chr_total = float(counts[church_cats + ["Christian"]].sum().sum())
+    print("\n  churches as drawn, % of Tanzania (and of its Christians):")
+    for c in church_cats + ["Christian"]:
+        n = float(counts[c].sum())
+        print(f"    {c:<24}{100 * n / counts.sum().sum():6.2f}%  ({100 * n / chr_total:5.1f}%)")
+
     # ---- write ----
     n_by = df.groupby("geo_id").size()
     basis_note = {c: ("the unit's own measured share" if c in carries else
                       "the national share" if flat else
                       "the national proportion within the unit's remainder") for c in CATEGORIES}
+    for c in church_cats:
+        basis_note[c] = (f"the unit's Christians (its own measured share) split at the unit's own "
+                         f"church shares from the Global Flourishing Study 2023 ({n_gfs_chr:,} "
+                         f"Christians nationally) and Afrobarometer rounds 4, 6, 8 and 9 "
+                         f"({n_ab_chr:,} mainland Christians), pooled by respondents, at the GFS's "
+                         "national level")
     out = counts.stack().rename("count").reset_index()
     out.columns = ["geo_id", "source_category", "count"]
     out["geo_level"] = "region"
@@ -630,10 +897,23 @@ def main():
     out["basis"] = "self_id"
     out["year"] = YEARS
     out["source_id"] = SOURCE_ID
+    n_zan = int(n_by.reindex(zan).sum())
+
+    out = out[~((out["source_category"] == "Christian") & out["geo_id"].isin(mainland))
+              & ~(out["source_category"].isin(church_cats) & out["geo_id"].isin(zan))]
+
+    def basis(r):
+        if r.geo_id in zan and r.source_category in ZANZIBAR_POOLED:
+            return (f"one share for Zanzibar's five regions, pooled from their {n_zan:,} "
+                    "respondents (Anita's ruling, 2026-09-14)")
+        if r.geo_id in zan and r.source_category in carries:
+            return "the unit's own measured share, scaled around Zanzibar's pooled Christian share"
+        return basis_note[r.source_category]
+
     out["note"] = out.apply(
         lambda r: ("NBS 2022 census population composed with the unit's own mix from "
                    f"Afrobarometer rounds 4 and 6-9 pooled (n={int(n_by[r.geo_id])} here); "
-                   f"{basis_note[r.source_category]}"), axis=1)
+                   f"{basis(r)}"), axis=1)
     total = int(out["count"].sum())
     if total != CENSUS_2022:
         raise SystemExit(f"drawn {total:,} against the census {CENSUS_2022:,}")
@@ -650,10 +930,11 @@ def main():
     print("\n  as drawn, by unit, most Muslim first (pooled n in brackets):")
     for u in share.sort_values("Muslim", ascending=False).index:
         s = share.loc[u]
-        print(f"    {nm[u]:<20}" + "".join(f"{100 * s[c]:7.1f}%" for c in CATEGORIES)
+        print(f"    {nm[u]:<20}" + "".join(f"{100 * s[c]:7.1f}%" for c in CATEGORIES + church_cats)
               + f"{int(pop[u]):>12,}  n={int(n_by[u])}")
-    print(f"    columns: {', '.join(CATEGORIES)}")
-    zero = [(nm[u], c) for u in units for c in carries if counts.loc[u, c] == 0]
+    print(f"    columns: {', '.join(CATEGORIES + church_cats)}")
+    zero = [(nm[u], c) for u in units for c in carries if c != "Christian" and counts.loc[u, c] == 0]
+    zero += [(nm[u], c) for u in mainland for c in CHURCHES if counts.loc[u, c] == 0]
     print(f"  drawn at zero in a carried category (no pooled respondent gave it): {zero or 'none'}")
     print(f"  thinnest unit {nm[n_by.idxmin()]} n={int(n_by.min())}; median n={int(n_by.median())}; "
           f"total n={int(n_by.sum()):,}")

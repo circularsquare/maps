@@ -335,3 +335,15 @@ clean.
 
 **Fixed the same day** (session `cb8b206e-folkfix`): the share now reaches the `Chinese` row only, and
 section 10 carries the corrected figures (13.13%, 972,949; `unknown` 52.26%).
+
+## 12. Top text before the 75-word cut, 2026-10-03 (`fafd1067-notes75`)
+
+Anita asked for the text at the top of the phone screen to come down to about 75 words
+(queue.md, "Cut the country text to about 75 words"). These are the four header fields as
+they stood before the cut, verbatim, so nothing they said is lost. The cut versions are in
+`countries/hk.py`; `note_public` was not changed.
+
+- `how`: no census question; ethnicity for three migrant nationalities, two surveys for everyone else
+- `fill`: from the 2021 census's ethnicity table
+- `grain`: 18 District Council districts, 412,000 people on average; the survey layer is territory-wide, so most religions do not vary between districts
+- `gap`: a religion for 52% of these dots; with no census question they say only that somebody was counted

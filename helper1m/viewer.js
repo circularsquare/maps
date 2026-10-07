@@ -5,10 +5,6 @@ const CURRENT_YEAR = new Date().getFullYear();
 // Fallback years for the detail panel history table when a country's meta.json
 // doesn't name its own (India's five-yearly projections were the first case).
 const DISPLAY_YEARS = [2011, 2026];
-// A split level is one geojson per adm1 region, loaded only for what's on
-// screen. Above this many regions in view we load nothing — the point of
-// splitting is that the whole level never gets fetched at once.
-const SPLIT_MAX_GROUPS = 4;
 const state = {
   country: null,   // {id, name, meta}
   level: null,     // int
@@ -243,8 +239,9 @@ async function setLevel(level) {
 
 // ---- split levels ----
 
-// Which adm1 regions overlap the current viewport, of the ones ticked. Keeps a
-// 43,655-township level usable by never holding more than a few provinces.
+// Which adm1 regions overlap the current viewport, of the ones ticked. There is
+// no cap: zoomed out, a split level loads whole (China's townships are 92 MB),
+// and unticking regions is how to keep it light.
 function groupsInView() {
   const b = map.getBounds();
   const [w, s, e, n] = [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()];
@@ -264,14 +261,11 @@ async function loadSplitLevel() {
   const key = wanted.join(",");
   if (key === state.loadedSplitKey) return;
 
-  if (!wanted.length || wanted.length > SPLIT_MAX_GROUPS) {
+  if (!wanted.length) {
     state.loadedSplitKey = key;
     state.featuresByCode.clear();
     renderLayer({ type: "FeatureCollection", features: [] });
-    const label = cfg.label.toLowerCase();
-    showInfo(`<div class="empty">Zoom in to load ${label}s — this level is
-      stored per ${groupLabel()} and loads what's on screen, up to
-      ${SPLIT_MAX_GROUPS} at a time.</div>`);
+    showInfo(`<div class="empty">No ticked ${groupLabel()} on screen.</div>`);
     return;
   }
 

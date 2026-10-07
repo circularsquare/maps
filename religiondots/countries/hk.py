@@ -214,10 +214,8 @@ ENTRY = {
         how="no census question; ethnicity for three migrant nationalities, two surveys for "
             "everyone else",
         fill="from the 2021 census's ethnicity table",
-        grain=("18 District Council districts, 412,000 people on average; the survey layer is "
-               "territory-wide, so most religions do not vary between districts"),
-        gap=("a religion for 52% of these dots; with no census question they say only that "
-             "somebody was counted"),
+        grain="18 districts, 412,000 people on average",
+        gap="the religion of the 52% drawn grey",
         counts=_hk_counts,
         # The hexes carry the district letter and there is no separate unit layer, which is
         # China's and Tonga's wiring. sources/hk_geo.py labels them.

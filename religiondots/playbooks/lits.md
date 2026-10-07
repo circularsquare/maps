@@ -13,6 +13,9 @@ the sample can never grow.
   (`playbooks/cab.md`).
 - `tj` Tajikistan: closed; 5 of 5 regions, but zero Orthodox and a one-respondent Buddhist cell
   (`sources/tj.md` §3).
+- `az` Azerbaijan: checked and not used for religion (2026-10-03): 1,510 of 1,510 MUSLIM over 8 regions,
+  the three Russians included, against about ten Orthodox expected at the census's 0.7% Russian; the
+  minority half is the instrument. Drawn as an ethnicity model instead (`sources/az.md` §1).
 - `tm` is not a LiTS country. `kz` is drawn from its census; do not take LiTS for it (`queue.md` §B).
 - `lits.held_out` is also run by `uz`, `tm` and `bo`, and `lits.lean` by `uz`.
 

@@ -1,0 +1,5 @@
+# Haiti (no language question; everyone on Haitian Creole). No new nodes; bare repeats so the
+# country stands on its own under `build.py --only`. Colour stays us.txt's.
+creole | Creoles
+creole.french_based | French-based creoles
+creole.french_based.haitian | Haitian Creole

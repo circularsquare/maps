@@ -1,0 +1,11 @@
+# Luxembourg 2021 census main language (taxonomy/lu2021.py). One new node: "Yougoslave", an
+# answer 331 people gave, kept apart from Serbo-Croatian as ba.txt keeps the Yugoslav-era names
+# apart. Glottolog has no separate languoid for it; it sits beside the other names of the same
+# language under South Slavic.
+indoeuropean.slavic.south.yugoslav | Yugoslav
+#
+# Colour. Luxembourgish was generated as #348dcf, next to German's #359bd9 and Portuguese's
+# #6b8acf, and here it is half the country with German and Portuguese mixed in every commune.
+# A teal keeps it in Germanic's blue region while clearly apart from both. The node is otherwise
+# only au2021's, fi2025's and pl2021's few hundred people.
+indoeuropean.germanic.continental.luxembourgish | Luxembourgish | 0.54 0.10 170

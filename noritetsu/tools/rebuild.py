@@ -33,10 +33,47 @@ REGISTER = {
     "cn": "cn_register:data/raw/cn",
     "hk": "hk_register:data/raw/hk",
     "sg": "sg_register:data/raw/sg",
+    "us": "us_register:data/raw/us/narn_passenger.geojson",
+    "ca": "ca_register:data/raw/ca/narn_passenger.geojson",
+    "au": "au_register:data/raw/au/ga_rail_lines.geojson",
+    "in": "in_register:data/raw/in",
+    "no": "no_register:data/raw/no",
+    "gb": "gb_register:data/raw/gb",
+    "mx": "mx_register:data/raw/mx",
+    "th": "th_register:data/raw/th",
+    "my": "my_register:data/raw/my",
+    "id": "id_register:data/raw/id",
+    "tr": "tr_register:data/raw/tr",
+    "nz": "nz_register:data/raw/nz",
+    "vn": "vn_register:data/raw/vn",
+    "za": "za_register:data/raw/rinf/za",
+    "br": "br_register:data/raw/br",
+    "ar": "ar_register:data/raw/ar",
+    "cl": "cl_register:data/raw/cl",
+    "ir": "ir_register:data/raw/ir",
+    # Central Asia: the tariff guide's sheets through rinf.py (casia_register.py)
+    "kz": "casia_register:data/raw/rinf/kz", "uz": "casia_register:data/raw/rinf/uz",
+    "kg": "casia_register:data/raw/rinf/kg", "tj": "casia_register:data/raw/rinf/tj",
+    "tm": "casia_register:data/raw/rinf/tm",
+    # The Caucasus: Russia's tariff guide sheets through rinf.py (`caucasus_register.py --clip
+    # <cc>` after every extract of the three).
+    "ge": "caucasus_register:data/raw/rinf/ge", "am": "caucasus_register:data/raw/rinf/am",
+    "az": "caucasus_register:data/raw/rinf/az",
+    # Abkhazia: cut from Georgia's extract (`caucasus_register.py --clip xa` after Georgia's).
+    "xa": "caucasus_register:data/raw/rinf/xa",
+    # North Africa: one reader writes rinf.py's inputs (nafrica_register.py). After an
+    # extract (with --station-areas): `--clip <cc>` then `--fill <cc>`.
+    "ma": "nafrica_register:data/raw/rinf/ma", "dz": "nafrica_register:data/raw/rinf/dz",
+    "tn": "nafrica_register:data/raw/rinf/tn", "eg": "nafrica_register:data/raw/rinf/eg",
+    # The Balkans: one reader writes rinf.py's inputs (balkans_register.py; `--clip ba` after
+    # every Bosnia extract).
+    "rs": "balkans_register:data/raw/rinf/rs", "ba": "balkans_register:data/raw/rinf/ba",
+    "me": "balkans_register:data/raw/rinf/me", "mk": "balkans_register:data/raw/rinf/mk",
+    "al": "balkans_register:data/raw/rinf/al", "xk": "balkans_register:data/raw/rinf/xk",
 }
 # Rough build_model + build_tiles minutes on 2026-10-01, for ordering only.
-MINUTES = {"cn": 11, "ru": 9, "fr": 6, "jp": 4, "pl": 4, "de": 8, "it": 5, "es": 4,
-           "ch": 2, "at": 2, "cz": 2, "be": 1, "nl": 1}
+MINUTES = {"us": 12, "au": 11, "cn": 11, "ru": 9, "de": 8, "fr": 6, "it": 5, "jp": 4, "pl": 4,
+           "es": 4, "in": 6, "gb": 6, "ca": 3, "se": 2, "no": 2, "ie": 1, "mx": 1, "th": 1, "my": 1, "id": 1, "ua": 2, "tr": 1, "nz": 1, "vn": 1, "za": 1, "br": 1, "ar": 2, "cl": 1, "ir": 1, "ch": 2, "at": 2, "cz": 2, "be": 1, "nl": 1}
 
 
 def run_country(cc, model_only):

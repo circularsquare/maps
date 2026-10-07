@@ -1,0 +1,19 @@
+# Tunisia (taxonomy/tn2016.py). Arab Barometer II-IV first language, plus Gabsi 2011's Berber.
+# Parents and languages other fragments already define are repeated with the same label and no
+# colour: Berber (ca.txt colours it), French (ao.txt and others), Italian (sa.txt and others).
+#
+# Glottolog (data/raw/glottolog): Tunisian Arabic tuni1259, a node beside `arabic` as Algeria's
+# and Morocco's Darija are. Tunisian Berber: Glottolog's Tunisian-Zuwara Berber (tuni1262, with
+# Douiret-Chenini doui1234 a dialect of it) holds the Djerba, Chenini and Douiret speech; Gabsi
+# 2011 treats the surviving varieties as one Tunisian Berber, so one leaf.
+afroasiatic | Afroasiatic
+afroasiatic.tunisian_arabic | Tunisian Arabic | 0.70 0.10 180
+afroasiatic.berber | Berber
+afroasiatic.berber.tunisian_berber | Tunisian Berber
+indoeuropean | Indo-European
+indoeuropean.romance | Romance
+indoeuropean.romance.french | French
+indoeuropean.romance.italian | Italian
+#
+# Colours: Tunisian Arabic a lighter shade between Algerian Arabic's and Libyan-side mints, so the
+# Maghreb Arabics read as one continuum; Tunisian Berber keeps a generated Berber yellow-green.

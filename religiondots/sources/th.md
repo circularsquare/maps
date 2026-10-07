@@ -139,7 +139,21 @@ on every run and flags anything past 25%.
 with a per-province median of 0.90 and **not one of the 76 outside a factor of two** — against
 **38 of 76** for a shuffled null, which is what says the join is real.
 
-## 6. The KPI reader misses the Christianity row — FOUND 2026-09-15, NOT FIXED
+## 6. The KPI reader misses the Christianity row — FOUND 2026-09-15, FIXED 2026-10-04
+
+**Fixed 2026-10-04 (658b4937), with the spec §2.6a rebuild.** `read_kpi` now also reads
+`นับถือศาสนาคริสต์` and `th.py` writes it as `christian_pct=` on the province's rows. It is not a
+fourth fine column, because only some provinces print it: `countries/th.py::_th_printed_christians`
+puts the printed share in place of the allocated Christian row, `measured`, and scales the
+province's other residual rows (Hindu, Confucian, Sikh, other, none) to fill what is left, which is
+the region's mix with Christians taken out. Every province's residual is conserved. **Fourteen
+provinces**, not the list's sixteen: Buri Ram prints the label with `a` for a value, and Bueng Kan's
+sheet is dropped (the province postdates the census). Tak now draws 4.40% Christian against 5.71%
+before. Derived people fell from 987,213 to 550,574 (0.8% of Thailand). Muslims a sheet does not
+print still sit inside the residual and go to the small categories, as before. The old files are
+not kept; `python sources/th.py` and the `allocate.py` line in COMMANDS.txt rebuild them.
+
+What follows is the finding as recorded.
 
 `read_kpi` in `th.py` reads only `นับถือศาสนาอิสลาม` and treats a missing row as 0. Many sheets
 print a Christianity row (`นับถือศาสนาคริสต์`) instead of the Islam row, and a few print both. On a

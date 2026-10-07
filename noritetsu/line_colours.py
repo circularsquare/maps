@@ -32,6 +32,7 @@ colour is left alone.
 """
 import argparse
 import json
+import re
 import sys
 import urllib.parse
 import urllib.request
@@ -111,8 +112,11 @@ def apply(region, lines, log):
         name, op = r["line"].strip(), (r.get("operator") or "").strip()
         hits = [l for l in lines if l.get("src", "osm") != "osm" and l["name"] == name
                 and (not op or op in (l.get("operator") or ""))]
+        col = r["colour"].strip().upper()
+        if re.fullmatch(r"[0-9A-F]{6}", col):
+            col = "#" + col          # a bare hex draws nothing in the app (ru.csv, 2026-10-03)
         for l in hits:
-            l["colour"] = r["colour"].strip().upper()
+            l["colour"] = col
             l["colour_src"] = f"table:{(r.get('source') or '').strip()}"
         n_table += len(hits)
         if not hits:
