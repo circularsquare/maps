@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en" data-set="a" data-font="zen">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>trainworld mock</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&family=Zen+Maru+Gothic:wght@400;700&display=swap">
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.css">
+<link rel="stylesheet" href="mock.css">
+</head>
+<body>
+
+<div id="game">
+
+  <aside id="dock">
+    <nav class="tabs">
+      <button class="tab" data-tab="build">Build</button>
+      <button class="tab on" data-tab="lines">Lines</button>
+      <button class="tab" data-tab="stations">Stations</button>
+      <button class="tab" data-tab="money">Money</button>
+      <button class="tab" data-tab="city">City</button>
+      <button class="tab menu" title="Save and settings"><svg viewBox="0 0 16 16"><path d="M3 4.5h10M3 8h10M3 11.5h10"/></svg></button>
+    </nav>
+
+    <section class="pane" id="pane-build" hidden></section>
+    <section class="pane" id="pane-lines"></section>
+    <section class="pane" id="pane-stations" hidden></section>
+    <section class="pane" id="pane-money" hidden></section>
+    <section class="pane" id="pane-city" hidden></section>
+
+    <section id="inspector"></section>
+  </aside>
+
+  <div id="main">
+    <header id="topbar">
+      <div class="city">New York</div>
+      <div class="split" title="How people in New York get around today">
+        <span class="split-train"><i class="sw sw-train"></i>Train <b class="big">9.2%</b></span>
+        <span class="bar">
+          <i class="seg seg-train" style="width:9.2%"></i><i class="seg seg-walk" style="width:6.7%"></i><i class="seg seg-drive" style="width:84.1%"></i>
+        </span>
+        <span class="split-other"><i class="sw sw-walk"></i>Walking 6.7%</span>
+        <span class="split-other"><i class="sw sw-drive"></i>Driving 84.1%</span>
+      </div>
+      <div class="cash">$1.84B</div>
+      <div class="clock">
+        <span class="day muted">Tue, day 38</span>
+        <b class="time big">08:42</b>
+        <span class="period muted">Morning peak</span>
+      </div>
+      <div class="group speed">
+        <button class="btn icon" data-speed="0" title="Pause"><svg viewBox="0 0 16 16"><path d="M5.5 3.5v9M10.5 3.5v9"/></svg></button>
+        <button class="btn icon on" data-speed="1" title="Normal speed"><svg viewBox="0 0 16 16"><path d="M5 3.5l7 4.5-7 4.5z"/></svg></button>
+        <button class="btn icon" data-speed="2" title="Fast"><svg viewBox="0 0 16 16"><path d="M2.5 4l5.5 4-5.5 4zM8 4l5.5 4L8 12z"/></svg></button>
+        <button class="btn icon" data-speed="4" title="Fastest"><svg viewBox="0 0 16 16"><path d="M1.5 5l4 3-4 3zM6 5l4 3-4 3zM10.5 5l4 3-4 3z"/></svg></button>
+      </div>
+    </header>
+
+    <div id="map"></div>
+
+    <div id="tools">
+      <div class="group">
+        <button class="btn icon on" data-tool="track" title="Track"><svg viewBox="0 0 16 16"><path d="M2.5 10.5l8-8M5.5 13.5l8-8M3 9l4 4M6 6l4 4M9 3l4 4"/></svg></button>
+        <button class="btn icon" data-tool="station" title="Station"><svg viewBox="0 0 16 16"><path d="M1.5 8h3.5M11 8h3.5"/><circle cx="8" cy="8" r="3"/></svg></button>
+      </div>
+      <span class="muted label">Level</span>
+      <div class="group levels">
+        <button class="btn lv" data-level="-3">−3</button>
+        <button class="btn lv" data-level="-2">−2</button>
+        <button class="btn lv on" data-level="-1">−1</button>
+        <button class="btn lv" data-level="0">0</button>
+        <button class="btn lv" data-level="1">+1</button>
+        <button class="btn lv" data-level="2">+2</button>
+        <button class="btn lv" data-level="3">+3</button>
+      </div>
+      <span class="muted level-cost">Tunnel at $180M per km</span>
+    </div>
+  </div>
+</div>
+
+<footer id="mockbar">
+  <span class="mb-label">Mock only</span>
+  <span class="mb-group">Colours
+    <button data-set="a">A cream</button><button data-set="b">B sky</button><button data-set="c">C matcha</button>
+  </span>
+  <span class="mb-group">Font
+    <button data-font="zen">Zen Maru Gothic</button><button data-font="mplus">M PLUS Rounded 1c</button>
+  </span>
+</footer>
+
+<script src="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.js"></script>
+<script src="data.js"></script>
+<script src="mock.js"></script>
+</body>
+</html>

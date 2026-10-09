@@ -1,0 +1,7 @@
+node_modules/
+sim/target/
+app/src/wasm/
+app/dist/
+data/raw/
+data/packs/
+data/work/

@@ -1,0 +1,62 @@
+[package]
+name = "trainworld-sim"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[features]
+default = ["track-api"]
+# T-051: the clock worker's `TrackApi` (src/track/wasm.rs). On by default; the demand workers'
+# module is built with `--no-default-features --features demand`, so it carries no track model.
+track-api = []
+# Demand kernel (src/demand/, T-005, T-019, T-020). The app's wasm build enables it (T-026: the
+# demand workers' `DemandApi`); plain `cargo test` and the pipeline-free builds leave it off.
+demand = ["dep:serde_json"]
+# T-005: also export the demand benchmark (`demand_bench`) from the wasm build.
+demand-bench = ["demand"]
+# T-040: export the track benchmark from the wasm build too.
+track-bench = ["track-api"]
+
+[dependencies]
+wasm-bindgen = "0.2"
+serde_json = { version = "1", optional = true, features = ["preserve_order"] }
+
+[[bin]]
+name = "demand_bench"
+path = "src/bin/demand_bench.rs"
+required-features = ["demand"]
+
+# T-040: track model benchmark.
+[[bin]]
+name = "track_bench"
+path = "src/bin/track_bench.rs"
+
+# T-019: the pipeline's gravity step (pipeline/build_city.py runs it).
+[[bin]]
+name = "pack_gravity"
+path = "src/bin/pack_gravity.rs"
+required-features = ["demand"]
+
+# T-007: a day of demand on a given network (the real New York network), for the comparison
+# with measured ridership (pipeline/realnet.py).
+[[bin]]
+name = "realnet"
+path = "src/bin/realnet.rs"
+required-features = ["demand"]
+
+# T-007: the real New York network as a track-model save, and its demand snapshot.
+[[bin]]
+name = "realsave"
+path = "src/bin/realsave.rs"
+required-features = ["demand"]
+
+[profile.release]
+opt-level = 3
+lto = true
+
+# T-051: the app's two wasm modules (app/package.json). One codegen unit: 2-5% smaller.
+[profile.wasm]
+inherits = "release"
+codegen-units = 1

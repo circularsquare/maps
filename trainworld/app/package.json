@@ -1,0 +1,22 @@
+{
+  "name": "trainworld",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "wasm": "npm run wasm:track && npm run wasm:demand",
+    "wasm:track": "wasm-pack build ../sim --target web --profile wasm --out-dir ../app/src/wasm/track --out-name sim",
+    "wasm:demand": "wasm-pack build ../sim --target web --profile wasm --out-dir ../app/src/wasm/demand --out-name sim -- --no-default-features --features demand",
+    "dev": "vite",
+    "build": "npm run wasm && tsc --noEmit && vite build",
+    "check": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^7.0.2",
+    "vite": "^8.3.4"
+  },
+  "dependencies": {
+    "@preact/signals": "^2.11.3",
+    "maplibre-gl": "^6.13.0",
+    "preact": "^11.0.1"
+  }
+}

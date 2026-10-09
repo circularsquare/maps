@@ -1,0 +1,247 @@
+/* trainworld UI mock (T-009). The UI has three colour tokens per set: --bg, --text, --accent.
+   Everything else in the UI is mixed from those. The sets change the UI only: the map, the
+   line palette, trains and stations are the same in every set. No transitions anywhere. */
+
+:root[data-set="a"] {           /* cream: warm off-white, cocoa text, sakura accent */
+  --bg: #fbf7f0;
+  --text: #4b403a;
+  --accent: #d9788e;
+}
+:root[data-set="b"] {           /* sky: cool white, slate text, cornflower accent */
+  --bg: #f6f9fb;
+  --text: #2f4255;
+  --accent: #4f8ac6;
+}
+:root[data-set="c"] {           /* matcha: pale tea, moss text, matcha accent */
+  --bg: #f6f6ec;
+  --text: #3d4535;
+  --accent: #7f9f4f;
+}
+
+/* Network and basemap: one set, independent of the UI tokens. Line colours are a plain
+   saturated metro palette (player-settable in the game); the basemap is neutral and faint. */
+:root {
+  --l1: #d7263d; --l2: #1f6fd1; --l3: #1a9a4a; --l4: #f08a00;
+  --l5: #8a3fb8; --l6: #f2c200; --l7: #8f5a2a; --l8: #0e9a9a;
+  --net-ink: #2b2b2b;           /* station rings and station names on the map */
+  --map-land: #f2f2ef;
+  --map-water: #cbd8df;
+  --map-park: #e3e8df;
+  --map-label: #a9abad;
+}
+
+:root[data-font="zen"]   { --font: "Zen Maru Gothic", system-ui, sans-serif; }
+:root[data-font="mplus"] { --font: "M PLUS Rounded 1c", system-ui, sans-serif; }
+
+:root {
+  --muted: color-mix(in srgb, var(--text) 58%, var(--bg));
+  --rule: color-mix(in srgb, var(--text) 22%, var(--bg));
+  --shade: color-mix(in srgb, var(--text) 6%, var(--bg));
+  --tint: color-mix(in srgb, var(--accent) 18%, var(--bg));
+  --dock-w: clamp(304px, 24vw, 352px);
+  --bar-h: 46px;
+  --mock-h: 28px;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 14px;
+  line-height: 1.45;
+  overflow: hidden;
+}
+[hidden] { display: none !important; }
+* { scrollbar-width: thin; scrollbar-color: var(--rule) transparent; }
+.muted { color: var(--muted); }
+.big { font-size: 18px; font-weight: 700; }
+small, .small { font-size: 12px; }
+b { font-weight: 700; }
+.num { font-variant-numeric: tabular-nums; }
+
+#game { position: absolute; inset: 0 0 var(--mock-h) 0; display: flex; }
+
+/* ---------- buttons ---------- */
+
+button { font: inherit; color: inherit; }
+.btn {
+  height: 28px; min-width: 28px; padding: 0 8px;
+  border: 1px solid var(--rule); border-radius: 0;
+  background: var(--bg); color: var(--text);
+  cursor: pointer; display: inline-grid; place-items: center;
+}
+.btn:hover { background: var(--shade); }
+.btn.on { background: var(--tint); border-color: var(--accent); position: relative; z-index: 1; }
+.btn.icon { width: 28px; padding: 0; }
+.btn:disabled { color: var(--rule); cursor: default; background: var(--bg); }
+.group { display: inline-flex; }
+.group > .btn + .btn { margin-left: -1px; }
+svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.5;
+      stroke-linejoin: round; stroke-linecap: round; display: block; }
+.speed svg path, #tools svg path { stroke-linejoin: round; }
+[data-speed] svg path { fill: currentColor; }
+[data-speed="0"] svg path { fill: none; stroke-width: 2; }
+
+/* ---------- dock ---------- */
+
+#dock {
+  width: var(--dock-w); flex: none;
+  border-right: 1px solid var(--rule);
+  display: flex; flex-direction: column;
+  min-height: 0;
+}
+.tabs { display: flex; flex: none; }
+.tab {
+  flex: 1; height: 36px; padding: 0;
+  border: 0; border-right: 1px solid var(--rule); border-bottom: 1px solid var(--rule);
+  background: var(--shade); color: var(--muted); cursor: pointer;
+}
+.tab:hover { color: var(--text); }
+.tab.on { background: var(--bg); color: var(--text); border-bottom-color: var(--bg);
+          box-shadow: inset 0 3px 0 var(--accent); }
+.tab.menu { flex: none; width: 36px; border-right: 0; display: grid; place-items: center; }
+
+.pane { flex: none; max-height: 34%; overflow-y: auto; padding: 10px 14px 12px; }
+#inspector { flex: 1; min-height: 0; overflow-y: auto; padding: 12px 14px 16px;
+             border-top: 1px solid var(--rule); }
+
+.h { display: flex; align-items: center; gap: 7px; font-weight: 700; margin: 14px 0 4px; }
+.h::before { content: ""; width: 8px; height: 8px; background: var(--accent); flex: none; }
+.h:first-child { margin-top: 0; }
+.h .right { margin-left: auto; font-weight: 400; }
+
+.rows { list-style: none; margin: 0; padding: 0; }
+.rows > li { display: flex; align-items: center; gap: 8px; min-height: 28px;
+             border-bottom: 1px dotted var(--rule); }
+.rows > li:last-child { border-bottom: 0; }
+.rows .grow { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rows .val { font-variant-numeric: tabular-nums; text-align: right; }
+
+.lines-list li { cursor: pointer; padding: 0 6px; margin: 0 -6px; }
+.lines-list li:hover { background: var(--shade); }
+.lines-list li.on { background: var(--tint); }
+.pane-foot { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
+.btn.text { gap: 6px; grid-auto-flow: column; }
+.btn.text svg { width: 14px; height: 14px; }
+
+.chip {
+  display: inline-grid; place-items: center; flex: none;
+  width: 20px; height: 20px; border-radius: 50%;
+  background: var(--c); color: var(--ct, #fff);
+  font-size: 12px; font-weight: 700; line-height: 1;
+}
+.chip.lg { width: 30px; height: 30px; font-size: 18px; }
+.chip.sm { width: 16px; height: 16px; font-size: 12px; }
+
+/* inspector: line */
+.title { display: flex; align-items: center; gap: 10px; }
+.title .name { font-size: 18px; font-weight: 700; flex: 1; }
+.sub { margin: 2px 0 0 40px; }
+.swatch { width: 28px; height: 28px; padding: 0; border: 1px solid var(--rule); border-radius: 0;
+          background: var(--c); box-shadow: inset 0 0 0 3px var(--bg); cursor: pointer; }
+
+table.sched { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+table.sched th { font-weight: 400; color: var(--muted); font-size: 12px; text-align: right; padding: 0 0 2px; }
+table.sched th:first-child, table.sched td:first-child { text-align: left; }
+table.sched td { text-align: right; padding: 3px 0; border-bottom: 1px dotted var(--rule); }
+table.sched tr:last-child td { border-bottom: 0; }
+table.sched tr.off td { color: var(--muted); }
+
+.stepper { display: inline-flex; vertical-align: middle; }
+.stepper .btn { height: 24px; min-width: 24px; width: 24px; padding: 0; }
+.stepper .v { min-width: 38px; height: 24px; display: grid; place-items: center;
+              border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule);
+              font-variant-numeric: tabular-nums; }
+.stepper.wide .v { min-width: 52px; }
+
+.check { display: inline-flex; align-items: center; gap: 7px; cursor: pointer; margin-top: 6px; }
+.check input { appearance: none; width: 14px; height: 14px; margin: 0;
+               border: 1px solid var(--rule); background: var(--bg); display: grid; place-items: center; }
+.check input:checked { border-color: var(--accent); background: var(--tint); }
+.check input:checked::after { content: ""; width: 6px; height: 6px; background: var(--accent); }
+
+/* stops strip, drawn in the line's colour */
+.stops { list-style: none; margin: 0; padding: 0; }
+.stops li { position: relative; display: flex; align-items: center; gap: 6px;
+            min-height: 25px; padding-left: 28px; }
+.stops li::before { content: ""; position: absolute; left: 7px; width: 6px; top: 0; bottom: 0; background: var(--c); }
+.stops li:first-child::before { top: 50%; }
+.stops li:last-child::before { bottom: 50%; }
+.stops li::after { content: ""; position: absolute; left: 4px; top: 50%; margin-top: -6px;
+                   width: 8px; height: 8px; border-radius: 50%; background: #fff; border: 2px solid var(--net-ink); }
+.stops li.xfer::after { left: 3px; margin-top: -7px; width: 10px; height: 10px; }
+.stops .grow { flex: 1; }
+
+/* ---------- main: top bar, map, tools ---------- */
+
+#main { position: relative; flex: 1; min-width: 0; display: flex; flex-direction: column; }
+#topbar {
+  flex: none; height: var(--bar-h); display: flex; align-items: center; gap: 18px;
+  padding: 0 10px 0 16px; border-bottom: 1px solid var(--rule); white-space: nowrap;
+}
+.city { font-weight: 700; }
+.split { flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px; }
+.split-train { display: inline-flex; align-items: baseline; gap: 6px; }
+.split-train .sw { align-self: center; }
+.split-other { color: var(--muted); display: inline-flex; align-items: center; gap: 6px; }
+.bar { flex: 1 1 340px; max-width: 440px; min-width: 120px; height: 14px; display: flex; border: 1px solid var(--rule); background: var(--bg); }
+.seg { display: block; height: 100%; }
+.seg-train, .sw-train { background: var(--accent); }
+.seg-walk, .sw-walk { background: color-mix(in srgb, var(--accent) 35%, var(--bg)); }
+.seg-drive, .sw-drive { background: color-mix(in srgb, var(--text) 13%, var(--bg)); }
+.sw { display: inline-block; width: 10px; height: 10px; flex: none; }
+.sw-drive { border: 1px solid var(--rule); }
+.cash { font-variant-numeric: tabular-nums; }
+.clock { display: flex; align-items: baseline; gap: 8px; font-variant-numeric: tabular-nums; }
+.clock .time { min-width: 46px; }
+
+#map { position: relative; flex: 1; min-height: 0; background: var(--map-land); }
+
+#tools {
+  position: absolute; left: 0; bottom: 0; z-index: 2;
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 12px 8px 8px; background: var(--bg);
+  border-top: 1px solid var(--rule); border-right: 1px solid var(--rule);
+}
+.btn.lv { min-width: 32px; padding: 0 4px; font-variant-numeric: tabular-nums; }
+
+/* station names for the selected line, in the UI font */
+.stn-label { font-family: var(--font); font-size: 12px; color: var(--net-ink); white-space: nowrap;
+             pointer-events: none;
+             text-shadow: 0 0 2px var(--map-land), 0 0 2px var(--map-land), 0 0 3px var(--map-land); }
+
+/* MapLibre's own CSS fades markers in; no motion on UI state here. */
+.maplibregl-marker, .maplibregl-ctrl, .maplibregl-ctrl * { transition: none !important; animation: none !important; }
+
+/* MapLibre's attribution, made to match */
+.maplibregl-ctrl-attrib, .maplibregl-ctrl-attrib-button { border-radius: 0 !important; }
+.maplibregl-ctrl-bottom-right .maplibregl-ctrl { margin: 0 !important; }
+
+/* ---------- narrower screens (1280 x 800) ---------- */
+
+@media (max-width: 1360px) {
+  #topbar { gap: 12px; }
+  .split { gap: 9px; }
+  .clock .day { display: none; }
+}
+@media (max-height: 820px) {
+  .pane { max-height: 30%; }
+  .rows > li { min-height: 28px; }
+  .stops li { min-height: 24px; }
+}
+
+/* ---------- mock switcher: outside the game, deliberately plain ---------- */
+
+#mockbar {
+  position: absolute; left: 0; right: 0; bottom: 0; height: var(--mock-h);
+  display: flex; align-items: center; justify-content: flex-end; gap: 18px; padding: 0 10px;
+  background: #e6e6e6; border-top: 1px solid #c4c4c4; color: #555;
+  font: 12px "Segoe UI", Arial, sans-serif;
+}
+#mockbar .mb-label { margin-right: auto; color: #888; }
+#mockbar .mb-group { display: inline-flex; align-items: center; gap: 4px; }
+#mockbar button { font: inherit; padding: 1px 7px; border: 1px solid #bbb; background: #f6f6f6;
+                  color: #444; cursor: pointer; border-radius: 0; }
+#mockbar button.on { background: #fff; border-color: #777; color: #000; }
