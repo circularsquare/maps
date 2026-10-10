@@ -154,7 +154,7 @@ nigercongo.plateau.numana | Numana
 nigercongo.plateau.irigwe | Irigwe
 nigercongo.plateau.izere | Izere
 nigercongo.plateau.migili | Migili (Koro Lafia)
-nigercongo.plateau.koro | Koro
+nigercongo.plateau.koro | Koro (Nigeria)
 
 # ---- Kainji ----
 nigercongo.kainji | Kainji | 0.62 0.11 85

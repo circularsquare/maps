@@ -12,18 +12,18 @@ export const THEMES: Theme[] = ["pink", "blue", "green"];
 const OLD_THEME: Record<string, Theme> = { cream: "pink", sky: "blue", matcha: "green" };
 
 export interface DisplaySettings {
-  /** what the track colour means: the line's colour, or its height (level) */
-  trackColour: "line" | "height";
+  /** Track display: plain lines, traffic-weighted lines, height, or geometry speed limit. */
+  trackColour: "line" | "traffic" | "height" | "speed";
   trains: boolean;
   stationNames: boolean;
   capacity: boolean;
   basemapLabels: boolean;
-  /** demand views (T-084): line width by riders on each stretch, in the period in force */
-  lineLoad: boolean;
   /** station circles sized by riders a day */
   stationRiders: boolean;
   /** trains filled by how full they are */
   trainLoad: boolean;
+  /** Period average or its busiest hour; also selects the train inspector's gauge. */
+  trainLoadBasis: "average" | "busiest";
   /** the commuter dot map, coloured by how people get to work */
   commuters: boolean;
   /** the dot map's end of the commute: where commuters live, or where they work */
@@ -33,14 +33,14 @@ export interface DisplaySettings {
 }
 
 const DEFAULT_DISPLAY: DisplaySettings = {
-  trackColour: "line",
+  trackColour: "traffic",
   trains: true,
   stationNames: true,
   capacity: true,
   basemapLabels: true,
-  lineLoad: true,
   stationRiders: true,
   trainLoad: true,
+  trainLoadBasis: "busiest",
   commuters: false,
   commuterEnd: "home",
   bubbleSize: 1,
@@ -62,10 +62,16 @@ function load(): Partial<{ tab: Tab; theme: Theme; display: Partial<DisplaySetti
   }
 }
 const saved = load();
+// Migrate the former Line + separate width checkbox into the four-way display choice.
+const oldDisplay = saved.display as (Partial<DisplaySettings> & { lineLoad?: boolean }) | undefined;
+const { lineLoad: legacyLineLoad, ...migratedDisplay } = oldDisplay ?? {};
+const trackColour = oldDisplay?.trackColour === "line" && legacyLineLoad !== undefined
+  ? legacyLineLoad === false ? "line" : "traffic"
+  : oldDisplay?.trackColour ?? DEFAULT_DISPLAY.trackColour;
 
 export const tab = signal<Tab>(saved.tab ?? "lines");
 export const selection = signal<Selection>(null);
-export const display = signal<DisplaySettings>({ ...DEFAULT_DISPLAY, ...saved.display });
+export const display = signal<DisplaySettings>({ ...DEFAULT_DISPLAY, ...migratedDisplay, trackColour });
 export const dockLayout = signal<DockLayout>({ dockW: saved.dock?.dockW ?? null, paneH: saved.dock?.paneH ?? null });
 const savedTheme = OLD_THEME[saved.theme as string] ?? saved.theme;
 export const theme = signal<Theme>(THEMES.includes(savedTheme as Theme) ? (savedTheme as Theme) : "pink");

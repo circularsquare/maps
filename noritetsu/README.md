@@ -34,6 +34,43 @@ range requests, and SimpleHTTPRequestHandler ignores `Range` and answers 200 wit
 file. pmtiles.js reads that as a broken server and the map comes up with a basemap and no
 rail on it, which looks exactly like a bad build.
 
+## Deploy
+
+Live at https://anita.garden/noritetsu/ (first published 2026-10-09, marked "In progress").
+
+```powershell
+python tools/deploy.py --check       # preflight and sizes only
+python tools/deploy.py --dry-run     # preflight, then what rclone would send and delete
+python tools/deploy.py               # upload data to R2, copy the page into the website repo, verify
+python tools/deploy.py --verify      # check the published copy on its own
+python tools/deploy.py --skip-data   # page files only (index.html, poster.js, share.js)
+```
+
+Then commit and push the website repo by hand (`git add noritetsu/` there); the script never
+does. What goes where: `regions.json` and all of `dist/data/` go to Cloudflare R2 under
+`r2:anitamaps/noritetsu/` (public at
+`https://pub-ae551368cea941f39101e13c84d60bde.r2.dev/noritetsu/`); `index.html`, `poster.js`
+and `share.js` go to `website/noritetsu/`. The page finds its data by asking for
+`regions.json` beside itself (index.html, "WHERE THE DATA IS"), so **never copy regions.json
+or data/ into the website repo**: the published page would then look for its data on GitHub
+Pages, which also breaks the range requests a .pmtiles needs. The json goes up gzipped
+(`Content-Encoding: gzip`, staged in `data/deploy_gz/`), because R2 compresses nothing; the
+.pmtiles and logos go up raw. Both uploads are `rclone sync` limited to noritetsu/data, so a
+geometry file the build stopped writing is deleted from R2 too.
+
+The preflight refuses to upload while a build looks active (dist/data or a build log written
+in the last 10 minutes, a `tools/slot.py` slot held, a build script running) and when a
+country in regions.json lacks any of lines / stations / foot / ways / aliases / types json or
+its .pmtiles, when an old `data/<cc>/credits.json` is still there (`logos/credits.json` is the
+logos' attribution and ships), when search.json, closed.json or operators.json is missing, or
+when the expression lint fails. A full first upload was ~0.9 GB in ~22,000 files.
+
+rclone's `r2:` remote is configured already; only the token goes stale. A 403 on `rclone lsd
+r2:` means nothing (listing buckets is an admin call); test with `rclone lsf r2:anitamaps
+--max-depth 1`. `SignatureDoesNotMatch` is a bad secret, `directory not found` a wrong bucket
+name, any other 403 an expired token: Cloudflare dashboard > R2 > API tokens, Object Read &
+Write, into `%APPDATA%\rclone\rclone.conf` under `[r2]`.
+
 ## Build
 
 ```powershell

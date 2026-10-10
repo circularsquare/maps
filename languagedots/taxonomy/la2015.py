@@ -1,9 +1,10 @@
 """Laos 2015 census ETHNIC GROUP -> the language node it is drawn as. A proxy: the census asked no
 language question. Keyed by Table P2.7's English spelling, as sources/la_census.py writes it.
 
-Anita allowed the proxy on 2026-10-05 (AGENT_BRIEF section 2); every row is `derived`. The
-village file gives ten categories; sources/la_census.py splits them into these 49 groups on the
-2011 agricultural census's village groups and rakes to P2.7's national totals (sources/la.md).
+Anita allowed the proxy on 2026-10-05 (AGENT_BRIEF section 2). The village file gives ten
+categories; sources/la_census.py splits them into these 49 groups on the 2011 agricultural
+census's village groups and rakes to P2.7's national totals (sources/la.md). Since 2026-10-09
+sources/la_mics.py moves part of each non-Tai group onto Lao (SHIFT below).
 
 Glottolog checks (data/raw/glottolog, values.csv's Austroasiatic subclassification): Prai is
 `phai1238` under Mal-Phai (Khmuic); Phong-Kniang `phon1246`, O'du and Then `thee1239` together
@@ -86,6 +87,12 @@ NAMES = {
 
 EXTRA_NODES = []
 
+# sources/la_mics.py moves each non-Tai group's Lao-speaking share (LSIS III 2023, children's
+# home language) onto rows labelled "Lao-speaking <group>"; they are drawn as Lao.
+SHIFT = "Lao-speaking "
+
 
 def resolve(label):
+    if label.startswith(SHIFT) and label[len(SHIFT):] in NAMES:
+        return NAMES["Lao"]
     return NAMES.get(label)

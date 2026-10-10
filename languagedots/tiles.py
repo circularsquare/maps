@@ -159,7 +159,9 @@ def main():
             "bbox": [float(b["lon"].min()), float(b["lat"].min()),
                      float(b["lon"].max()), float(b["lat"].max())],
             "dots": d["n"].value_counts().to_dict(),
-            "rings": {n: int(p) for n, p in zip(r["n"], r["p"])},
+            # people per language in marks other than whole dots: a sub-dot language's one
+            # ring, and since 2026-10-08 every unit's leftover (scatter.py), many per language
+            "rings": {n: int(p) for n, p in r.groupby("n")["p"].sum().items()},
         }
     (out.parent / "counts.json").write_text(json.dumps({"dot_value": 1000, "countries": per},
                                                  ensure_ascii=False, allow_nan=False),
@@ -175,8 +177,7 @@ def main():
     pp = allp["p"].to_numpy(dtype=float)
     wx, wy = allp["wx"].to_numpy(), allp["wy"].to_numpy()
 
-    rng = np.random.default_rng(SHUFFLE_SEED)
-    tmp = out.with_suffix(".pmtiles.tmp")
+    tmp =out.with_suffix(".pmtiles.tmp")
     n_tiles = 0
     with open(tmp, "wb") as f:
         w = Writer(f)
@@ -208,8 +209,12 @@ def main():
             px, py = (pos >> 10) & 1023, pos & 1023
             pc, p_table = mvt.intern(d["p"].to_numpy(), kind="int")
             tc, t_table = mvt.intern(d["t"].to_numpy(), kind="int")
-            # shuffled within each tile, as each grid's layer was: the draw order of equal marks
-            key, o = bucket(tkey // nt, tkey % nt, z, rng)
+            # in position order within each tile (2026-10-07): neighbouring marks then share
+            # most of their bytes, and big low-zoom tiles gzip about half smaller than shuffled.
+            # The draw order of equal marks no longer comes from here; the viewer breaks those
+            # ties on a hash of position and language (index.html, markHash).
+            o = np.argsort(pos, kind="stable")
+            key = tkey[o]
             codes = np.stack([d["n"].to_numpy(), d["c"].to_numpy(), pc, tc, lv,
                               np.zeros(len(d), dtype=np.int64)], axis=1)[o]
             keys = ["n", "c", "p", "t", "l", "z"]

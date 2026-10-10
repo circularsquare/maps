@@ -19,6 +19,7 @@ export interface LayerSwitches {
   lineLoad: boolean;
   stationRiders: boolean;
   trainLoad: boolean;
+  trainLoadBasis?: "average" | "busiest";
 }
 
 /**
@@ -55,7 +56,7 @@ const pristine = new WeakMap<NetworkBuffers, { offset: Float32Array; sampleOff: 
 
 /** Per line id: per stop-to-stop stretch of run 0, riders an hour (both directions) and the two
  * runs' gauges; absent when demand has no answer for it that fits its stops. */
-function lineNumbers(w: WorldView, dv: DemandView | null, period: number) {
+function lineNumbers(w: WorldView, dv: DemandView | null, period: number, basis: "average" | "busiest") {
   const out = new Map<number, { perHour: Float32Array; g0: Float32Array; g1: Float32Array }>();
   if (!dv) return out;
   const P = PERIODS[period];
@@ -67,13 +68,14 @@ function lineNumbers(w: WorldView, dv: DemandView | null, period: number) {
     const loads = dm?.loads[period];
     if (!st || st.status !== "running" || !loads || n < 2 || loads.length !== 2 * (n - 1)) continue;
     const trains = l.tph[P.demand] * hours;
+    const factor = basis === "busiest" ? dv.peakHourFactor[period] ?? 1 : 1;
     const perHour = new Float32Array(n - 1), g0 = new Float32Array(n - 1), g1 = new Float32Array(n - 1);
     for (let k = 0; k < n - 1; k++) {
       // run 1 runs the stops backwards: its stretch j covers run 0's stretch n - 2 - j
       const a = loads[k], b = loads[n - 1 + (n - 2 - k)];
       perHour[k] = (a + b) / hours;
-      g0[k] = trains > 0 ? gauge(a / trains, st.cars) : -1;
-      g1[k] = trains > 0 ? gauge(b / trains, st.cars) : -1;
+      g0[k] = trains > 0 ? gauge(a / trains * factor, st.cars) : -1;
+      g1[k] = trains > 0 ? gauge(b / trains * factor, st.cars) : -1;
     }
     out.set(l.num, { perHour, g0, g1 });
   }
@@ -90,7 +92,7 @@ export function buildLayers(net: NetworkBuffers, w: WorldView, dv: DemandView | 
     base = { offset: (L.offset ?? new Float32Array(nSeg)).slice(), sampleOff: (net.sampleOff ?? new Float32Array(nSamples)).slice() };
     pristine.set(net, base);
   }
-  const nums = lineNumbers(w, dv, period);
+  const nums = lineNumbers(w, dv, period, on.trainLoadBasis ?? "busiest");
   const info = L.info;
 
   // The segments of one line along one edge are consecutive and share everything below: work per

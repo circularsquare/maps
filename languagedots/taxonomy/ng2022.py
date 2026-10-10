@@ -1,13 +1,21 @@
-"""Nigeria, Afrobarometer R4-R9 (2008-2022), home language -> node.
+"""Nigeria, MICS6 2021 (language of the household head) + Afrobarometer R4-R9 (2008-2022, home
+language) -> node.
 
-Keyed by the answers sources/ng_afro.py writes to data/normalized/ng.csv: the survey's coded
-labels (two spellings or two names of one language merged there, in CODED), and the languages
-its "Other (specify)" free text names (VERBATIM there). The tree, and the Glottolog check of
-every family and branch, is taxonomy/tree.d/ng.txt.
+Keyed by the answers sources/ng_mics.py writes to data/normalized/ng.csv (and ng_afro.py to
+ng_afro.csv, the comparison build). MICS's nine named answers are written under the
+Afrobarometer's names for the same languages (FULANI as "Fula"; HAUSA, IGBO, YORUBA, KANURI,
+IJAW, TIV, IBIBIO, EDO as themselves), so no new key: each was checked to mean the same narrow
+language in both (MICS's Ijaw excludes Kalabari and Okrika, its Ibibio Efik and Anaang, its Edo
+Esan and Urhobo; sources/ng_mics.py). The rest are the Afrobarometer's coded labels (two
+spellings or two names of one language merged in ng_afro.py's CODED) and the languages its
+"Other (specify)" free text names (VERBATIM there). The tree, and the Glottolog check of every
+family and branch, is taxonomy/tree.d/ng.txt.
 
 Remainders:
   * "Other Nigerian language": a free-text answer naming a language only one respondent gave,
-    a place that holds several languages, or nothing identifiable. `africa_other`.
+    a place that holds several languages, or nothing identifiable; since 2026-10-09 also the
+    part of MICS's "other language" the Afrobarometer has too few respondents to split
+    (ng_mics.K_OTHER). `africa_other`.
   * "Gwoza": coded by the survey in R5 (7 respondents, Borno); Gwoza is an LGA whose people
     speak several Chadic languages (Glavda, Guduf, Dghwede, Lamang). On `afroasiatic.chadic`,
     the narrowest node holding them all, so drawn as an unnamed Chadic language.

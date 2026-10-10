@@ -13,3 +13,7 @@ nigercongo.bantu.comorian_mwali | Mwali Comorian (Shimwali) | 0.48 0.13 5
 indoeuropean | Indo-European
 indoeuropean.romance | Romance
 indoeuropean.romance.french | French
+
+# Colour pass 2026-10-09 (taxonomy/COLOURS.md): pinned at the colour they were generated at, so
+# the DR Congo regrouping of colours does not move them
+nigercongo.bantu.shimaore | Shimaore (Comorian of Mayotte) | 0.7 0.14 80

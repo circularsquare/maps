@@ -1,6 +1,10 @@
-"""Chad RGPH2 2009, first national language spoken, national -> data/normalized/td.csv.
+"""Chad RGPH2 2009, first national language spoken, national -> data/normalized/td_rgph.csv.
 
     python sources/td_rgph.py [--fetch]
+
+SUPERSEDED 2026-10-09 as the drawn source by sources/td_mics.py (MICS6 2019, by province), which
+imports this module's transcribed tables (T510, T502, T507) as census weights. It wrote td.csv
+until then; it now writes td_rgph.csv, which nothing draws.
 
 SOURCE. INSEED, Deuxième Recensement Général de la Population et de l'Habitat (RGPH2, 2009),
 *Analyse thématique: État et structures de la population* (Nov 2013, 210 pp), the volume
@@ -63,7 +67,7 @@ RAW = HERE / "data" / "raw" / "td"
 PDF = RAW / "rgph2_etat_structures.pdf"
 RD_PDF = RD / "data" / "raw" / "td" / "rgph2_etat_structures.pdf"
 SHA1 = "0967fb250dd4c57aa50c3b8b6b7c5fe280bd568e"
-OUT = HERE / "data" / "normalized" / "td.csv"
+OUT = HERE / "data" / "normalized" / "td_rgph.csv"
 
 URBAN, RURAL, TOTAL = 1_833_267, 6_255_476, 8_088_816
 

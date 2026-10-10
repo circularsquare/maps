@@ -8,8 +8,14 @@ colour and width rules and there are only ever a few thousand sections of it.
 
 LOD.  The whole point is that this feels smooth on a phone, so what a zoom carries is decided
 by `MINZOOM`: main line at z2, branch and unclassified rail at z6, urban rail at z6, industrial
-spurs at z9, yards and sidings at z12.  Geometry is Douglas-Peucker'd per zoom to about half a
-screen pixel, and features whose whole bounding box is under a pixel are dropped outright.
+spurs at z9, yards and sidings at z12; and a way some long line runs over sooner, from z3 or z5
+(`LONG_LINE_MINZOOM`), whatever OSM's usage tag says.  Geometry is Douglas-Peucker'd per zoom to
+about half a screen pixel, and features whose whole bounding box is under a pixel are dropped
+outright.
+
+    python build_tiles.py --region ca --max-zoom 9 --out <tmp>/ca.pmtiles [--no-long-lines]
+
+writes a trial archive elsewhere (the model is still read from dist/data/<region>/).
 
 MAXZOOM IS 13 AND CARRIES UNSIMPLIFIED GEOMETRY, deliberately.  MapLibre overzooms vector
 tiles happily, so z13 tiles serve z14-z18 as well; if z13 were simplified at its own one-pixel
@@ -75,6 +81,16 @@ MINZOOM = {
     ("funicular", 0): 10, ("funicular", 1): 10,
 }
 URBAN = {"subway", "light_rail", "tram", "monorail", "funicular"}
+
+# LONG LINES FROM FURTHER OUT (Anita, 2026-10-09: "for really long lines they should always
+# show at farther zoom out"). MINZOOM goes by OSM's usage tag, and OSM tags long stretches of
+# passenger main line usage=branch where freight has gone elsewhere: VIA's Ocean through New
+# Brunswick (CN's Newcastle Subdivision, 330 km of usage=branch) vanished below z6 while
+# Québec and Nova Scotia either side of it showed. So a way also gets a minzoom from the
+# longest line in the model that runs over it (ways.json: register lines, OSM lines and named
+# trains), measured on its running sections (closed ones left out): (km at least, minzoom at
+# most), first match wins. Track no line runs over (`n`) is never promoted. `promote_long_lines`.
+LONG_LINE_MINZOOM = ((500, 3), (150, 5))
 
 # Station nodes worth a bubble.  A bare public_transport=stop_position is one per platform
 # track, so including those would put five dots on one station.
@@ -263,6 +279,44 @@ def ways_on_lines(region):
         return None
 
 
+def long_line_km(region):
+    """OSM way id -> running km of the longest line over it (ways.json, lines.json), or {}
+    before the model is built. A line's running km is the sum of its sections not `closed`."""
+    d = ROOT / "dist" / "data" / region
+    try:
+        with open(d / "ways.json", encoding="utf-8") as f:
+            ways = json.load(f)
+        with open(d / "lines.json", encoding="utf-8") as f:
+            lines = json.load(f)["lines"]
+    except FileNotFoundError:
+        return {}
+    run = {}
+    for l in lines:
+        shut = set(l.get("closed") or [])
+        run[l["id"]] = sum(s[2] for s in l["sections"] if f"{s[0]}|{s[1]}" not in shut)
+    names = ways["lines"]
+    return {int(w): max((run.get(names[i], 0.0) for i in idxs), default=0.0)
+            for w, idxs in ways["ways"].items()}
+
+
+def promote_long_lines(region, feats, log):
+    """Lower a way's minzoom to LONG_LINE_MINZOOM's for the longest line over it."""
+    km = long_line_km(region)
+    moved = Counter()
+    for f in feats:
+        if f.get("n"):
+            continue
+        L = km.get(f["wid"], 0.0)
+        for at_least, z in LONG_LINE_MINZOOM:
+            if L >= at_least:
+                if z < f["minzoom"]:
+                    moved[(f["minzoom"], z)] += 1
+                    f["minzoom"] = z
+                break
+    log("long lines: " + (", ".join(f"{n} ways z{a} -> z{b}" for (a, b), n in sorted(moved.items()))
+                          or "nothing moved"))
+
+
 def mark_no_line(region, feats, log):
     """`n` = 1 on track no line runs over, which the app draws a faint grey and never offers as
     a line (Anita, 2026-10-04: Mexico's freight network drawn in passenger blue read as far more
@@ -347,26 +401,39 @@ def merged_chains(feats, log):
     degree-two connections only, so chains break at real junctions, which is what we want,
     and ways of different colours are never merged, so a chain is one line's colour. Nor are
     track with a line and track without (`n`, mark_no_line).
+
+    PER ZOOM, over the ways live at that zoom: {z: chains}. Since promote_long_lines a group
+    (say rank-1 rail of one colour) has ways starting at z3, z5 and z6, and one merge of the
+    whole group would draw nothing of it before z6; one merge per minzoom would break chains
+    where a promoted way meets an unpromoted one, and at z6-9 those breaks show as round-cap
+    dots and reshuffle which colour lies on top. Merging the live ways per zoom leaves every
+    zoom whose live ways did not change byte for byte as before (z7-9 on the trial countries;
+    z6 too, but where a z7 kind was promoted). A group whose live ways are the same at two
+    zooms is merged once (`done`).
     """
-    out = []
-    keys = sorted({(f["kind"], f["rank"], f["pax"], f["c"], f.get("n", 0)) for f in feats})
-    for kind, rank, pax, c, n in keys:
-        group = [LineString(f["xy"]) for f in feats
-                 if f["kind"] == kind and f["rank"] == rank and f["pax"] == pax
-                 and f["c"] == c and f.get("n", 0) == n]
-        if not group:
-            continue
-        merged = linemerge(group) if len(group) > 1 else group[0]
-        parts = (list(merged.geoms) if merged.geom_type == "MultiLineString"
-                 else [merged])
-        for p in parts:
-            out.append({
-                "kind": kind, "rank": rank, "pax": pax, "c": c, "n": n,
-                "minzoom": MINZOOM.get((kind, rank), 7),
-                "name": "", "wid": 0,
-                "xy": np.asarray(p.coords),
-            })
-    log(f"merged {len(feats)} ways into {len(out)} chains for z<{SPLIT}")
+    out, done = {}, {}
+    for z in range(MINZ, SPLIT):
+        groups = {}
+        for i, f in enumerate(feats):
+            if f["minzoom"] <= z:
+                key = (f["kind"], f["rank"], f["pax"], f["c"], f.get("n", 0))
+                groups.setdefault(key, []).append(i)
+        chains = []
+        for key in sorted(groups):
+            idx = tuple(groups[key])
+            if idx not in done:
+                kind, rank, pax, c, n = key
+                group = [LineString(feats[i]["xy"]) for i in idx]
+                merged = linemerge(group) if len(group) > 1 else group[0]
+                parts = (list(merged.geoms) if merged.geom_type == "MultiLineString"
+                         else [merged])
+                done[idx] = [{"kind": kind, "rank": rank, "pax": pax, "c": c, "n": n,
+                              "minzoom": z, "name": "", "wid": 0,
+                              "xy": np.asarray(p.coords)} for p in parts]
+            chains.extend(done[idx])
+        out[z] = chains
+    log(f"merged {len(feats)} ways into {len(out[SPLIT - 1])} chains for z<{SPLIT} "
+        f"({len(done)} merges)")
     return out
 
 
@@ -374,8 +441,7 @@ def tile_features(z, feats, chains, pts):
     """Every tile at zoom z that has anything in it, as {(x, y): (lines, points)}."""
     n = 1 << z
     span = n * EXTENT
-    src = feats if z >= SPLIT else chains
-    live = [f for f in src if f["minzoom"] <= z]
+    live = [f for f in feats if f["minzoom"] <= z] if z >= SPLIT else chains[z]
 
     geoms, props = [], []
     for f in live:
@@ -471,6 +537,10 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--region", required=True)
     ap.add_argument("--max-zoom", type=int, default=MAXZ)
+    ap.add_argument("--out", help="write the archive here instead of dist/data/<region>.pmtiles "
+                    "(trials; the model is still read from dist/data/<region>/)")
+    ap.add_argument("--no-long-lines", action="store_true",
+                    help="leave out promote_long_lines (an A/B baseline)")
     args = ap.parse_args()
 
     t0 = time.time()
@@ -484,12 +554,14 @@ def main():
     for f in feats:
         f["c"] = colours.get(f["wid"], "")
     mark_no_line(args.region, feats, log)
+    if not args.no_long_lines:
+        promote_long_lines(args.region, feats, log)
     chains = merged_chains(feats, log)
     # No station layer any more: bubbles come from the model (stations.json), and the tile
     # layer was one point per OSM station node, which nothing has read since.
     pts = []
 
-    out = ROOT / "dist" / "data" / f"{args.region}.pmtiles"
+    out = Path(args.out) if args.out else ROOT / "dist" / "data" / f"{args.region}.pmtiles"
     out.parent.mkdir(parents=True, exist_ok=True)
     tmp = out.with_suffix(".pmtiles.tmp")
 

@@ -1,13 +1,9 @@
-// The bar along the map's bottom left (T-082): undo and redo, the blueprint's cost and Construct,
-// which are needed from any tab while working on the map; the build tools themselves are in the
-// Build tab (ui/tabs.tsx). Above the bar, a hint for the tool in use and the last message (why an
-// edit was refused, what was built).
+// Tool hints, removal questions and the last edit's message, at the map's bottom left.
+// Construction controls and the blueprint quote live together in Build (T-100).
 
 import { useEffect, useState } from "preact/hooks";
-import { money } from "../game/format";
 import { ask, lineDraft, tool, type Tool } from "../game/ui";
-import { edit, notice, redo, say, undo, world } from "../game/world";
-import { Icon } from "./widgets";
+import { notice } from "../game/world";
 
 const HINT: Record<Tool, string> = {
   select: "",
@@ -60,31 +56,9 @@ function Notice() {
 }
 
 export function Toolbar() {
-  const w = world.value;
-  const blueprint = w?.money.blueprintCost ?? 0;
-  const construct = async () => {
-    const a = await edit({ op: "constructAll" });
-    if (a.ok) say(`Constructed for ${money(a.charge * 1e6)}.`);
-  };
   return (
     <div id="tools">
       {ask.value ? <Ask /> : <Notice />}
-      <div class="tools-row">
-        <div class="group">
-          <button class="btn icon" title="Undo (Ctrl+Z)" disabled={!w?.canUndo} onClick={() => void undo()}>
-            <Icon.undo />
-          </button>
-          <button class="btn icon" title="Redo (Ctrl+Y)" disabled={!w?.canRedo} onClick={() => void redo()}>
-            <Icon.redo />
-          </button>
-        </div>
-        <span class="blueprint">
-          Blueprint <b class="num">{money(blueprint)}</b>
-        </span>
-        <button class="btn text" disabled={blueprint <= 0} onClick={construct}>
-          Construct blueprints
-        </button>
-      </div>
     </div>
   );
 }

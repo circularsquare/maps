@@ -74,7 +74,7 @@ guahiboan.mapayerri | Mapayerri | 0.83 0.15 20
 
 # ---- Saliban, Peba-Yaguan ----
 saliban.piaroa | Piaroa | 0.74 0.16 225
-saliban.saliba | Sáliba | 0.82 0.14 210
+saliban.saliba | Sáliba (Colombia) | 0.82 0.14 210
 pebayaguan.yagua | Yagua | 0.79 0.16 10
 
 # ---- isolates (root from br.txt) ----
@@ -543,7 +543,7 @@ nigercongo.bantu.basaa | Basaa
 nigercongo.bantu.bemba | Bemba (M.40)
 nigercongo.bantu.bemba.bemba | Bemba
 nigercongo.bantu.bisa_lamba | Bisa-Lamba (M.50)
-nigercongo.bantu.bisa_lamba.lala | Lala
+nigercongo.bantu.bisa_lamba.lala | Lala (Zambia)
 nigercongo.bantu.bisa_lamba.lamba | Lamba
 nigercongo.bantu.botatwe | Botatwe (M.60)
 nigercongo.bantu.botatwe.lenje | Lenje
@@ -862,7 +862,7 @@ sinotibetan.eastbodish.kheng | Khengkha
 sinotibetan.eastbodish.kurtop | Kurtöp
 sinotibetan.eastbodish.nyenkha | Nyenkha (Mangdebikha)
 sinotibetan.kachin | Kachin languages (Jingpho, Zaiwa, Lhaovo, Rawang)
-sinotibetan.karen | Karen
+sinotibetan.karen | Karen languages
 sinotibetan.karen.pao | Pa'o
 sinotibetan.loloish | Loloish (Yi languages)
 sinotibetan.loloish.akha | Akha

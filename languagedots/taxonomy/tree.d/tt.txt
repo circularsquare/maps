@@ -1,9 +1,11 @@
 # Trinidad and Tobago, Census 2011 (taxonomy/tt2011.py). New: Tobagonian Creole English
 # (Glottolog toba1282), a hand colour a step from Trinidadian's so the two islands read apart.
+# Trinidadian's own hand colour, coral (Anita, 2026-10-07: its generated gold was too close to
+# Spanish across the Gulf of Paria).
 # The rest are bare repeats of other fragments' nodes (bb.txt, dm.txt).
 creole | Creoles
 creole.english_based | English-based creoles
-creole.english_based.trinidadian | Trinidadian Creole
+creole.english_based.trinidadian | Trinidadian Creole | 0.72 0.14 20
 creole.english_based.tobagonian | Tobagonian Creole | 0.66 0.12 160
 creole.english_based.bajan | Bajan
 creole.english_based.grenadian | Grenadian Creole

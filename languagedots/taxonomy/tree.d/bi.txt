@@ -2,7 +2,7 @@
 # the country stands on its own under `build.py --only`.
 nigercongo | Niger-Congo
 nigercongo.bantu | Bantu
-nigercongo.bantu.kirundi | Kirundi (Rundi)
+nigercongo.bantu.kirundi | Kirundi (Rundi) | 0.78 0.13 6
 nigercongo.bantu.swahili | Swahili
 indoeuropean | Indo-European
 indoeuropean.romance | Romance

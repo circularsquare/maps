@@ -40,9 +40,11 @@ ENTRY = dict(
     view=[34.2, 29.4, 35.95, 33.35],
     counts=_counts,
     mappings=["il2021"],
-    place=RD_GEO / "il" / "il_units.gpkg",
+    # il_units.gpkg cut by Kontur hexes, so an area's dots follow where its people live
+    # (sources/kontur_cut.py; 2026-10-08)
+    place=GEO / "il" / "il_konturcut.gpkg",
     place_unit=lambda g: g["unit"].astype(str),
-    place_weight=None,
+    place_weight=pop_weight,
     note_public=(
         "Israel's census asks no language question. The Social Survey of 2021 asked adults "
         "their native language; its shares by sub-district, for Arabs and for Jews and others, "

@@ -148,7 +148,14 @@ def main():
     for cc in out:
         f = DIST / "data" / cc / "foot.json"
         foots[cc] = json.loads(f.read_text(encoding="utf-8")) if f.exists() else {}
-    for cc, km in owned_totals(lines, foots, fold).items():
+    # The routes' countries also need who runs each route and its type (route_rows).
+    opsjs, types = {}, {}
+    for cc in ROUTE_CCS:
+        for name, into in (("ops.json", opsjs), ("types.json", types)):
+            f = DIST / "data" / cc / name
+            if cc in out and f.exists():
+                into[cc] = json.loads(f.read_text(encoding="utf-8"))
+    for cc, km in owned_totals(lines, foots, fold, opsjs, types).items():
         out[cc]["km"] = round(km, 1)
     print("  km of line: " + ", ".join(f"{cc} {out[cc]['km']:,.0f}" for cc in out))
     write_closed(lines, fold, (out_dir or DIST / "data") / "closed.json")
@@ -195,57 +202,247 @@ def merge_spans(spans, km):
     return out
 
 
-def owned_totals(lines, foots, fold):
-    """{cc: km of line}: the track every line owns in that country, each piece once, closed
-    sections left out. The sum index.html's ownTrack + regionTotals make, on that country's
-    build alone; the app shows this as the country's total whenever regions.json has it.
+OFF_REGISTER_SHARE = 0.4     # index.html's: an OSM line this far off the register is listed
+
+# index.html's routes (ROUTE_CCS, routesOf; HANDOFF "Routes in the US, Canada and Australia"):
+# the same constants, change both together.
+ROUTE_CCS = ("us", "ca", "au")
+ROUTE_GAP_KM, ROUTE_GAP_SHARE = 0.15, 0.01
+CORRIDOR_KM, CORRIDOR_SERVICES, CORRIDOR_OPERATORS, CORRIDOR_SHARE = 20, 3, 2, 0.25
+ROUTE_ON_KM, ROUTE_ON_SHARE = 0.5, 0.05
+ROUTE_NETWORK = {"ARR": "Alaska Railroad", "VIA Rail": "VIA Rail Canada"}
+
+
+def spans_meet(a, b):
+    """index.html's spansMeet: the length two runs of merged spans share."""
+    out, i, j = 0.0, 0, 0
+    while i < len(a) and j < len(b):
+        lo, hi = max(a[i][0], b[j][0]), min(a[i][1], b[j][1])
+        if hi > lo:
+            out += hi - lo
+        if a[i][1] < b[j][1]:
+            i += 1
+        else:
+            j += 1
+    return out
+
+
+def span_len(sp):
+    return min(1.0, sum(hi - lo for lo, hi in sp))
+
+
+def route_ops(l, opsj):
+    """index.html's opKeysOf for an OSM line, with routeOpKeys for one with no operator."""
+    keys = (opsj or {}).get("keys") or {}
+    sw = ((opsj or {}).get("lines") or {}).get(l["id"])
+    if sw:
+        return {x[0] for x in sw}
+    raw = (l.get("operator") or "").strip()
+    if raw:
+        out = set()
+        for s in (x.strip() for x in raw.split(";")):
+            if s:
+                k = keys.get(s, s)
+                out |= set(k) if isinstance(k, list) else {k}
+        return out
+    vals = [v for k in keys.values() for v in (k if isinstance(k, list) else [k])]
+    out = set()
+    for s in (x.strip() for x in (l.get("network") or "").split(";")):
+        if not s:
+            continue
+        if s in keys:
+            k = keys[s]
+            out |= set(k) if isinstance(k, list) else {k}
+        else:
+            named = next((v for v in vals if isinstance(v, str) and v.endswith(f"({s})")), None)
+            out.add(ROUTE_NETWORK.get(s) or named or s)
+    return out
+
+
+def route_rows(cc, piece, tracks, foot_of, cc_lines, fold, opsj, types):
+    """The folded ids index.html's routesOf lists in a ROUTE_CCS country: every OSM piece with
+    track (a route), and a register line the routes leave uncovered, a corridor, or one with
+    no running track. Measured on footprints as the app's pieceFoot does."""
+    ps, foot, sec_of, closed = piece
+    by_fid = {}
+    for l in cc_lines.values():
+        by_fid.setdefault(fold.get(l["id"], l["id"]), []).append(l)
+
+    def piece_foot(p):
+        raw = {}
+        for s in p["sections"]:
+            if s[3] in closed:
+                continue
+            for t, fr, to, a, b in foot_of(foot, s[3]):
+                if to == fr or t in closed or t not in sec_of:
+                    continue
+                raw.setdefault(t, []).append((min(fr, to), max(fr, to)))
+        return {t: merge_spans(iv, sec_of[t][1]) for t, iv in raw.items()}
+
+    routes = [fid for fid, p in ps.items() if p["src"] == "osm" and p["km"] > 0.05]
+    rfoot = [piece_foot(ps[fid]) for fid in routes]
+    on = {}
+    for i, f in enumerate(rfoot):
+        for t, sp in f.items():
+            on.setdefault(t, []).append((i, sp))
+    ops = [set().union(*[route_ops(l, opsj) for l in by_fid[fid]]) for fid in routes]
+    def ltype(l):                      # types.json: a type, or {type, also}
+        t = (types or {}).get(l["id"])
+        return t if isinstance(t, str) else (t or {}).get("type")
+    tourist = [next((ltype(l) for l in by_fid[fid] if ltype(l)), None) == "tourist"
+               for fid in routes]
+    rows = set(routes)
+    for fid in tracks:
+        km = gap = 0.0
+        by = {}
+        for t, sp in piece_foot(ps[fid]).items():
+            k, mine = sec_of[t][1], span_len(sp)
+            rs = on.get(t, [])
+            km += k * mine
+            allsp = merge_spans([x for _, s2 in rs for x in s2], k) if rs else []
+            gap += k * max(0.0, mine - spans_meet(sp, allsp))
+            for i, s2 in rs:
+                m = k * spans_meet(sp, s2)
+                if m > 0:
+                    by[i] = by.get(i, 0.0) + m
+        on2 = [(i, m) for i, m in by.items() if m >= min(ROUTE_ON_KM, ROUTE_ON_SHARE * km)]
+        covered = gap <= max(ROUTE_GAP_KM, ROUTE_GAP_SHARE * km)
+        many = [i for i, m in on2 if m >= CORRIDOR_SHARE * km and not tourist[i]]
+        corridor = (km >= CORRIDOR_KM and len(many) >= CORRIDOR_SERVICES
+                    and len(set().union(*[ops[i] for i in many])) >= CORRIDOR_OPERATORS)
+        if not covered or corridor or not ps[fid]["km"] > 0.05:
+            rows.add(fid)
+    return rows
+
+
+def owned_totals(lines, foots, fold, opsjs=None, types=None):
+    """{cc: km of line}: the track the country's listed lines run over, each piece once,
+    closed sections left out. The sum index.html's unionTotals makes for `c:<cc>` (Anita,
+    2026-10-08: a country is the union of its lines, so riding every line reads 100%), on
+    that country's build alone; the app shows this as the country's total until the country
+    is loaded, and its own sum after.
 
     A section's footprint (foot.json; [owner section, from, to, a, b] in `scale` units, a
-    short entry taking a from the last b) says which owner track riding it covers. A line owns
-    the part of each of its own sections that its own sections' footprints cover. Named trains
-    own nothing. Line ids are folded across countries (line_aliases) as the app folds them.
+    short entry taking a from the last b, one of three also running to b = 1) says which owner
+    track riding it covers. The total is the union of the footprints of every running section
+    of every listed line's piece in the country. Which lines are listed is index.html's
+    `listed`: a register line unless it owns nothing (ownTrack: the part of each of its own
+    sections its own sections' footprints cover; named trains own nothing), an OSM line not a
+    named train with at least OFF_REGISTER_SHARE of it on track an OSM line owns; a line over
+    a border is listed if any country's piece is. Line ids are folded across countries
+    (line_aliases) as the app folds them.
 
     ON ONE COUNTRY'S BUILD ALONE, because the app's own sum depends on which neighbours are
     loaded and in what order: a line over a border joined with a neighbour's drops the
     sections both countries built (the same two stations; a Basel tram stop is in both
-    extracts) from whichever loaded second, and a line that is a named train in one country
-    stops owning in the other only if that one loaded first. Measured 2026-10-03 against the
-    app with all 34 countries loaded: 30 within 0.05 km, then Czechia 6.5 km (of 9,526), Poland
-    4.2, Luxembourg 2.6, France 0.6, all from border sections both countries built.
+    extracts) from whichever loaded second. Measured 2026-10-03 (the owned-track sum then)
+    against the app with all 34 countries loaded: 30 within 0.05 km, then Czechia 6.5 km (of
+    9,526), Poland 4.2, Luxembourg 2.6, France 0.6, all from border sections both countries
+    built.
+
+    In ROUTE_CCS (the US, Canada, Australia; 2026-10-09) the listed lines are index.html's
+    routesOf rows instead (route_rows): every OSM line, and the register lines the routes leave
+    uncovered or that are corridors. That needs each country's ops.json (`opsjs`, for the
+    corridors' operators) and types.json (`types`, tourist trains aside).
     """
-    totals = {}
+    opsjs, types = opsjs or {}, types or {}
+    pieces, service = {}, {}          # cc -> fid -> piece; fid -> named train anywhere
     for cc, ls in lines.items():
-        service = {}
-        for l in ls.values():
-            fid = fold.get(l["id"], l["id"])
-            service[fid] = service.get(fid, False) or bool(l.get("service"))
         f = foots.get(cc) or {}
         scale = f.get("scale") or 1
         foot = {}
         for k, v in (f.get("foot") or {}).items():
-            # Only the owner and the span along it matter here, not where on this section.
-            foot[int(k)] = [(int(e[0]), e[1] / scale, e[2] / scale) for e in v]
+            prev, out = 0, []
+            for e in v:
+                a = e[3] if len(e) == 5 else prev
+                b = e[4] if len(e) == 5 else e[3] if len(e) == 4 else scale
+                prev = b
+                out.append((int(e[0]), e[1] / scale, e[2] / scale, a / scale, b / scale))
+            foot[int(k)] = out
         sec_of, closed = {}, set()
+        ps = {}
         for l in ls.values():
             fid = fold.get(l["id"], l["id"])
+            service[fid] = service.get(fid, False) or bool(l.get("service"))
             shut = set(l.get("closed") or [])
+            p = ps.setdefault(fid, {"src": l.get("src", "osm"), "km": 0.0, "sections": [],
+                                    "seen": set()})
+            off = 0.0
             for s in l["sections"]:
                 sec_of[s[3]] = (fid, s[2])
                 if f"{s[0]}|{s[1]}" in shut:
                     closed.add(s[3])
+                    off += s[2]
+            p["km"] += max(0.0, (l.get("km") or 0) - off)
+            for s in l["sections"]:
+                k = (min(s[0], s[1]), max(s[0], s[1]))
+                if k in p["seen"]:          # combineParts keeps a section two lines share once
+                    if s[3] not in closed:
+                        p["km"] -= s[2]
+                    continue
+                p["seen"].add(k)
+                p["sections"].append(s)
+        for p in ps.values():
+            p["km"] = max(0.0, p["km"])
+        pieces[cc] = (ps, foot, sec_of, closed)
+
+    def foot_of(foot, gid):
+        return foot[gid] if gid in foot else [(gid, 0.0, 1.0, 0.0, 1.0)]
+
+    # Which pieces are listed, per country, then which folded ids (any piece listed).
+    listed, base_tracks = set(), {}
+    for cc, (ps, foot, sec_of, closed) in pieces.items():
         raw = {}
-        for l in ls.values():
-            fid = fold.get(l["id"], l["id"])
+        for fid, p in ps.items():
             if service[fid]:
                 continue
-            for s in l["sections"]:
-                gid = s[3]
-                if gid in closed:
+            for s in p["sections"]:
+                if s[3] in closed:
                     continue
-                # An empty footprint owns nothing; only a missing one owns itself whole.
-                for t, fr, to in foot[gid] if gid in foot else [(gid, 0.0, 1.0)]:
+                for t, fr, to, a, b in foot_of(foot, s[3]):
                     te = sec_of.get(t)
                     if te is None or te[0] != fid or t in closed or to == fr:
+                        continue
+                    raw.setdefault(t, []).append((min(fr, to), max(fr, to)))
+        own = {t: min(1.0, sum(hi - lo for lo, hi in merge_spans(iv, sec_of[t][1])))
+               for t, iv in raw.items()}
+        for fid, p in ps.items():
+            running = [s for s in p["sections"] if s[3] not in closed]
+            if p["src"] != "osm":
+                owned = sum(s[2] * own.get(s[3], 0.0) for s in running)
+                ok = not (p["km"] > 0.05) or owned > 0.05
+            elif service[fid]:
+                ok = False
+            else:
+                offreg = 0.0
+                for s in running:
+                    for t, fr, to, a, b in foot_of(foot, s[3]):
+                        te = sec_of.get(t)
+                        if te is not None and ps[te[0]]["src"] == "osm":
+                            offreg += s[2] * abs(b - a)
+                ok = offreg > 0.05 and offreg >= OFF_REGISTER_SHARE * p["km"]
+            if ok and cc not in ROUTE_CCS:
+                listed.add(fid)
+            if ok and cc in ROUTE_CCS and p["src"] != "osm":
+                base_tracks.setdefault(cc, []).append(fid)
+
+    # The US, Canada and Australia list routes in place of the register track they cover.
+    for cc in ROUTE_CCS:
+        if cc in pieces:
+            listed |= route_rows(cc, pieces[cc], base_tracks.get(cc, []), foot_of,
+                                 lines[cc], fold, opsjs.get(cc), types.get(cc))
+
+    totals = {}
+    for cc, (ps, foot, sec_of, closed) in pieces.items():
+        raw = {}
+        for fid, p in ps.items():
+            if fid not in listed:
+                continue
+            for s in p["sections"]:
+                if s[3] in closed:
+                    continue
+                for t, fr, to, a, b in foot_of(foot, s[3]):
+                    if to == fr or t in closed or t not in sec_of:
                         continue
                     raw.setdefault(t, []).append((min(fr, to), max(fr, to)))
         total = 0.0
@@ -296,13 +493,8 @@ def write_closed(lines, fold, path):
           f"{path.stat().st_size / 1024:.0f} KB")
 
 
-def op_display(lines):
-    """{(operator, operator_en): the name index.html's opName gives a line with them}.
-
-    The app learns one English name per raw operator string from the single-operator lines
-    that carry one (most votes, the first seen on a tie; mergeRegion's OP_EN), then names a
-    line by its own operator_en, or failing that by each part of its operator translated,
-    deduplicated and sorted (opKey). Learned here over every country at once."""
+def op_votes(lines):
+    """{raw operator: the English name its single-operator lines give most} (OP_EN)."""
     votes = {}
     for ls in lines.values():
         for l in ls.values():
@@ -311,7 +503,47 @@ def op_display(lines):
                 continue
             m = votes.setdefault(raw, {})
             m[en] = m.get(en, 0) + 1
-    op_en = {raw: max(m.items(), key=lambda kv: kv[1])[0] for raw, m in votes.items()}
+    return {raw: max(m.items(), key=lambda kv: kv[1])[0] for raw, m in votes.items()}
+
+
+def passenger_ops(ps, opsj, op_en):
+    """The names index.html's opName gives a line (opKeysInOrder, opKeysOf, opLabel) where any
+    piece's country has an ops.json (tools/operators.py), else []: a register line's passenger
+    operators by share, else each part of its operator tag through that country's key table,
+    else through OP_EN; each key by its short name in operators.json, deduplicated in order.
+    Before 2026-10-08 search showed the track owner (DB InfraGO, Network Rail, BNSF) here."""
+    if not any(cc in opsj for _, cc, _ in ps):
+        return []
+    keys = []
+    for _, cc, l in ps:
+        m = opsj.get(cc) or {}
+        sw = (m.get("lines") or {}).get(l["id"])
+        if sw:
+            keys += [x[0] for x in sw]
+            continue
+        raw = (l.get("operator") or "").strip()
+        for s in (x.strip() for x in raw.split(";")):
+            if not s:
+                continue
+            k = (m.get("keys") or {}).get(s)
+            keys += ([k] if isinstance(k, str) else list(k)) if k is not None else [op_en.get(s, s)]
+    out = []
+    for k in keys:
+        name = opsj["_short"].get(k, k)
+        if name not in out:
+            out.append(name)
+    return out
+
+
+def op_display(lines):
+    """{(operator, operator_en): the name index.html's opName gave a line with them before
+    ops.json, still used where a country has none (passenger_ops).
+
+    The app learns one English name per raw operator string from the single-operator lines
+    that carry one (most votes, the first seen on a tie; mergeRegion's OP_EN), then names a
+    line by its own operator_en, or failing that by each part of its operator translated,
+    deduplicated and sorted (opKey). Learned here over every country at once."""
+    op_en = op_votes(lines)
     out = {}
     for ls in lines.values():
         for l in ls.values():
@@ -357,13 +589,32 @@ def write_search(lines, fold, path):
     positions, was 7.6 MB, 2.6 MB gzipped; this is about 2 MB gzipped.
 
         {"v": 2, "ops": [[operator, operator_en, shown as], ...], "kinds": [kind, ...],
-         "lines": {cc: [ids, names, names_en, refs, ops, kinds, colours, kms, flags]},
+         "types": [type, ...],
+         "lines": {cc: [ids, names, names_en, refs, ops, kinds, colours, kms, flags, types]},
                                                  # flags: 1 named train, 2 as operated
+                                                 # types: index into "types", -1 for none
+                                                 # (tools/line_types.py's types.json)
          "stations": {cc: [ids, names, names_en, lon steps, lat steps, line counts]}}
     """
     ccs = sorted(lines)
     shown = op_display(lines)
+    op_en = op_votes(lines)
+    opsj = {}
+    for cc in ccs:
+        f = DIST / "data" / cc / "ops.json"
+        if f.exists():
+            opsj[cc] = json.loads(f.read_text(encoding="utf-8"))
+    f = DIST / "data" / "operators.json"
+    brands = json.loads(f.read_text(encoding="utf-8")) if f.exists() else {}
+    opsj["_short"] = {k: v["short"] for k, v in brands.items() if v.get("short")}
+    # Line types (tools/line_types.py, types.json): a line's main type, by its own id.
+    tyj = {}
+    for cc in ccs:
+        f = DIST / "data" / cc / "types.json"
+        if f.exists():
+            tyj[cc] = json.loads(f.read_text(encoding="utf-8"))
     ops, opi, kinds, kindi = [], {}, [], {}
+    types, typei = [], {}
 
     def intern(table, index, key, value):
         if key not in index:
@@ -400,13 +651,21 @@ def write_search(lines, fold, path):
         # The operator pair of the piece that gave the name, so the two belong together.
         lead = next((p[2] for p in ps if p[2].get("operator")), ps[0][2])
         pair = (lead.get("operator") or "", lead.get("operator_en") or "")
-        op = intern(ops, opi, pair, [pair[0], pair[1], shown[pair]])
+        # Shown as the app's opName shows it once loaded: the passenger operators
+        # (ops.json, operators.json's short names) where the country has them.
+        names = passenger_ops(ps, opsj, op_en)
+        show = " · ".join(names) if names else shown[pair]
+        op = intern(ops, opi, (pair, show), [pair[0], pair[1], show])
         kind = intern(kinds, kindi, first("kind"), first("kind"))
+        # The first piece with a type (the piece loaded for the hit comes first).
+        t = next((tyj[cc][l["id"]] for _, cc, l in ps if l["id"] in tyj.get(cc, {})), None)
+        t = t["type"] if isinstance(t, dict) else t
+        ty = intern(types, typei, t, t) if t else -1
         flags = (1 if any(p[2].get("service") for p in ps) else 0) \
             | (2 if any(p[2].get("dup") for p in ps) else 0)
-        cols = out_lines.setdefault(ps[0][1], [[] for _ in range(9)])
+        cols = out_lines.setdefault(ps[0][1], [[] for _ in range(10)])
         row = [fid, name, "" if name_en == name else name_en, first("ref"), op, kind,
-               first("colour"), round(km, 1), flags]
+               first("colour"), round(km, 1), flags, ty]
         for col, v in zip(cols, row):
             col.append(v)
         nlines += 1
@@ -434,7 +693,8 @@ def write_search(lines, fold, path):
         for col, v in zip(cols, [sid, n, e, x - px, y - py, len(calls)]):
             col.append(v)
 
-    doc = {"v": 2, "ops": ops, "kinds": kinds, "lines": out_lines, "stations": out_st}
+    doc = {"v": 2, "ops": ops, "kinds": kinds, "types": types, "lines": out_lines,
+           "stations": out_st}
     tmp = path.with_suffix(".json.tmp")
     tmp.write_text(json.dumps(doc, ensure_ascii=False, separators=(",", ":")),
                    encoding="utf-8")

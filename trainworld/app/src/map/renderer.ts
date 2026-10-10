@@ -33,6 +33,7 @@ uniform int u_sel_line;
 uniform int u_sel_edge;
 uniform int u_only_sel;
 uniform int u_by_level;
+uniform int u_by_speed;
 uniform float u_px_per_unit;
 uniform float u_slot;        // px between side-by-side lines (T-062)
 uniform vec3 u_level_colours[7];
@@ -45,6 +46,7 @@ in uint a_colour;
 in uint a_edge;
 in float a_level;
 in float a_flags;
+in float a_speed;
 in float a_dist;
 in float a_offset;           // line widths to the left of the segment's direction
 in float a_wmul;             // width as a multiple of the line width (riders, T-084); 1 otherwise
@@ -81,6 +83,13 @@ void main() {
   if (u_casing > 0.0) v_color = vec3(1.0);
   else if ((flags & 16) != 0) v_color = u_bad;
   else if (u_kind == 2 || u_by_level == 1) v_color = lc;
+  else if (u_by_speed == 1) {
+    vec3 slow = vec3(0.8471, 0.3569, 0.2941), medium = vec3(0.8510, 0.6431, 0.2157);
+    vec3 fast = vec3(0.3333, 0.6588, 0.5255), top = vec3(0.2235, 0.4824, 0.7569);
+    v_color = a_speed < 80.0 ? mix(slow, medium, clamp((a_speed - 40.0) / 40.0, 0.0, 1.0))
+      : a_speed < 120.0 ? mix(medium, fast, (a_speed - 80.0) / 40.0)
+      : mix(fast, top, clamp((a_speed - 120.0) / 40.0, 0.0, 1.0));
+  }
   else if (u_kind == 0) v_color = sel ? u_sel : u_track;
   else v_color = texelFetch(u_line_colours, ivec2(int(a_colour) % ${LINES_W}, int(a_colour) / ${LINES_W}), 0).rgb;
 }`;
@@ -208,7 +217,9 @@ uniform mat4 u_matrix;
 uniform vec2 u_viewport;
 uniform float u_px_per_unit;
 uniform vec2 u_min_px;      // minimum length, width in px
-uniform vec2 u_size_units;  // real length, width in local units
+uniform bool u_detail;
+uniform float u_dpr;
+uniform highp sampler2D u_cars;
 uniform highp sampler2D u_line_colours;
 uniform highp sampler2D u_soff;  // R32F per sample: sideways offset, line widths (T-062)
 uniform highp sampler2D u_fill;  // RG32F per sample: how full run 0's and run 1's trains are (T-084)
@@ -220,18 +231,30 @@ out vec3 v_color;
 out vec3 v_empty;
 out float v_fill;
 out float v_front;
+out vec2 v_consist;
+out float v_detail;
+out float v_cab;
 
 void main() {
   vec4 L;
   float d;
   int line;
   if (!trainDist(L, d, line)) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
-  vec2 p = lineAt(L, d);
-  vec2 px = max(u_min_px, u_size_units * u_px_per_unit);
+  float cars = max(1.0, texelFetch(u_cars, tc(line, ${LINES_W}), 0).x);
+  int car = u_detail ? gl_VertexID / 6 : 0;
+  if (float(car) >= cars) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
+  float totalM = min(cars * 20.0, L.z);
+  float pitchM = totalM / cars;
+  float centre = clamp(d, totalM * 0.5, max(totalM * 0.5, L.z - totalM * 0.5));
+  float offsetM = u_detail ? (float(car) + 0.5) * pitchM - totalM * 0.5 : 0.0;
+  float carD = u_detail ? centre + offsetM : d;
+  vec2 p = lineAt(L, carD);
+  vec2 px = max(u_min_px, vec2(cars * 20.0 * ${MERC_K.toFixed(6)}, 0.0) * u_px_per_unit);
+  if (u_detail) px = vec2(max(2.0 * u_dpr, pitchM * ${MERC_K.toFixed(6)} * u_px_per_unit - max(1.5 * u_dpr, ${MERC_K.toFixed(6)} * u_px_per_unit)), max(6.0 * u_dpr, 3.0 * ${MERC_K.toFixed(6)} * u_px_per_unit));
   // Heading along the chord between the train's two ends (as its bogies sit on the track), not
   // the sample segment under its centre, which turns in steps on curves (T-047).
   float h = max(0.5 * px.x / u_px_per_unit / ${MERC_K.toFixed(6)}, 1.0);
-  vec2 back = lineAt(L, d - h), front = lineAt(L, d + h);
+  vec2 back = lineAt(L, carD - h), front = lineAt(L, carD + h);
   vec4 c = u_matrix * vec4(p, 0.0, 1.0);
   vec4 cb = u_matrix * vec4(back, 0.0, 1.0);
   vec4 cf = u_matrix * vec4(front, 0.0, 1.0);
@@ -240,31 +263,37 @@ void main() {
   float sl = length(sdir);
   sdir = sl > 1e-6 ? sdir / sl : vec2(1.0, 0.0);
   vec2 nrm = vec2(-sdir.y, sdir.x);
-  int id = gl_VertexID;
+  // Two independent triangles per car, so adjacent cars never share a strip across a bend.
+  int tri = gl_VertexID % 6;
+  int id = u_detail ? (tri == 0 ? 0 : tri == 1 ? 1 : tri == 2 ? 2 : tri == 3 ? 2 : tri == 4 ? 1 : 3) : gl_VertexID;
   vec2 corner = vec2(float(id & 1) * 2.0 - 1.0, id < 2 ? -1.0 : 1.0);
   // 1 px larger than the train all round, so the soft edge is never cut by the quad (T-047).
   vec2 halfq = px * 0.5 + 1.0;
   // on its line's own stroke where lines run side by side; sdir is run 0's direction, as the
   // offsets are (T-062)
-  float side = u_slot > 0.0 ? lineOff(u_soff, L, d) * u_slot : 0.0;
+  float side = u_slot > 0.0 ? lineOff(u_soff, L, carD) * u_slot : 0.0;
   vec2 off = sdir * corner.x * halfq.x + nrm * (corner.y * halfq.y + side);
   c.xy += off / half_vp * c.w;
   gl_Position = c;
   v_uv = corner * halfq;
   v_px = px;
   vec3 lc = texelFetch(u_line_colours, ivec2(line % ${LINES_W}, line / ${LINES_W}), 0).rgb;
-  v_color = lc * 0.62;
+  v_color = lc * 0.48;
   // How full it is (T-084): the stretch it runs, from the sample ahead of it on its way.
   int run = (int(a_trip.x + 0.5) / 3) % 2;
   float i = floor(clamp(d, 0.0, L.z) / L.w) + (run == 0 ? 1.0 : 0.0);
   vec2 f = texelFetch(u_fill, tc(int(L.x + clamp(i, 0.0, L.y - 1.0)), ${TEX_W}), 0).xy;
   v_fill = run == 0 ? f.x : f.y;
-  v_empty = mix(lc, vec3(1.0), 0.6);
+  v_empty = mix(lc, vec3(1.0), 0.18);
   v_front = run == 0 ? 1.0 : -1.0;
+  v_consist = vec2(u_detail ? totalM * ${MERC_K.toFixed(6)} * u_px_per_unit : px.x, offsetM * ${MERC_K.toFixed(6)} * u_px_per_unit);
+  v_detail = u_detail ? 1.0 : 0.0;
+  v_cab = u_detail && (run == 0 ? float(car) == cars - 1.0 : car == 0) ? 1.0 : 0.0;
 }`;
 
-// A capsule with a 1 px white edge blended into the core (T-047). With riders known (T-084) the
-// core fills from the back like a gauge: dark up to how full the train is, a pale tint of the line
+// A capsule at city scale, or separate rounded cars close up (T-103), with a white edge.
+// With riders known (T-084) the core fills from the back across the whole consist: dark up to
+// how full the train is, a slight tint of the line
 // colour beyond; half way means every seat taken, full means packed to crush; an over-full train
 // is full and has a red edge.
 const TRAIN_FS = `#version 300 es
@@ -275,20 +304,31 @@ in vec3 v_color;
 in vec3 v_empty;
 in float v_fill;
 in float v_front;
+in vec2 v_consist;
+in float v_detail;
+in float v_cab;
+uniform float u_dpr;
 uniform vec3 u_bad;
 out vec4 o;
 void main() {
   vec2 p = v_uv;
-  float r = v_px.y * 0.5;
-  float hx = max(v_px.x * 0.5 - r, 0.0);
-  float d = length(vec2(max(abs(p.x) - hx, 0.0), p.y)) - r;
+  float r = v_detail > 0.5 ? min(2.0 * u_dpr, v_px.y * 0.22) : v_px.y * 0.5;
+  vec2 q = abs(p) - (v_px * 0.5 - r);
+  float d = length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - r;
   float a = clamp(0.5 - d, 0.0, 1.0);
   vec3 core = v_color;
   vec3 rim = vec3(1.0);
   if (v_fill >= 0.0) {
-    float back = p.x * v_front + v_px.x * 0.5;   // px from the back of the train
-    core = mix(v_empty, v_color, clamp(min(v_fill, 1.0) * v_px.x - back + 0.5, 0.0, 1.0));
+    float back = (p.x + v_consist.y) * v_front + v_consist.x * 0.5;
+    core = mix(v_empty, v_color, clamp(min(v_fill, 1.0) * v_consist.x - back + 0.5, 0.0, 1.0));
     if (v_fill > 1.5) rim = u_bad;
+  }
+  // Window strips and a front cab read as a train once each car is large enough to see them.
+  if (v_detail > 0.5 && v_px.x > 18.0 * u_dpr) {
+    bool window = abs(p.y) > v_px.y * 0.22 && abs(p.y) < v_px.y * 0.36
+      && abs(p.x) < v_px.x * 0.36 && mod(p.x + v_px.x * 0.5, 5.0 * u_dpr) < 3.0 * u_dpr;
+    bool cab = v_cab > 0.5 && p.x * v_front > v_px.x * 0.30 && abs(p.y) < v_px.y * 0.30;
+    if (window || cab) core *= 0.55;
   }
   vec3 col = mix(core, rim, clamp(d + 1.7, 0.0, 1.0));
   o = vec4(col * a, a);
@@ -356,6 +396,7 @@ export function plainStationSize(stations: Float32Array, count: number): Float32
 export interface DrawOptions {
   showTrains: boolean;
   byLevel: boolean;
+  bySpeed?: boolean;
   /** selected line id, -1 for none */
   selLine: number;
   /** selected edge id, -1 for none */
@@ -407,7 +448,10 @@ export class NetworkRenderer {
   private trainVao: WebGLVertexArrayObject | null = null;
   private probeVao: WebGLVertexArrayObject | null = null;
   private tripBuf: WebGLBuffer | null = null;
-  private tex: Record<"phases" | "meta" | "samples" | "lines" | "colours" | "soff" | "fill", WebGLTexture | null> = { phases: null, meta: null, samples: null, lines: null, colours: null, soff: null, fill: null };
+  private tex: Record<"phases" | "meta" | "samples" | "lines" | "colours" | "soff" | "fill" | "cars", WebGLTexture | null> = { phases: null, meta: null, samples: null, lines: null, colours: null, soff: null, fill: null, cars: null };
+  private maxCars = 8;
+  /** Used by picking to follow the same close-up representation. */
+  detailedTrains = false;
   private stationSizeBuf: WebGLBuffer | null = null;
   /** CSS px between side-by-side lines at the last draw, 0 when lines are not drawn (picking) */
   slotPx = 0;
@@ -437,9 +481,9 @@ export class NetworkRenderer {
     this.strokeProg = compile(gl, STROKE_VS, STROKE_FS);
     this.stationProg = compile(gl, STATION_VS, STATION_FS);
     this.trainProg = compile(gl, TRAIN_VS, TRAIN_FS);
-    this.strokeU = uniforms(gl, this.strokeProg, ["u_matrix", "u_viewport", "u_width", "u_casing", "u_kind", "u_sel_line", "u_sel_edge", "u_only_sel", "u_by_level", "u_px_per_unit", "u_slot", "u_level_colours", "u_track", "u_bad", "u_sel", "u_line_colours"]);
+    this.strokeU = uniforms(gl, this.strokeProg, ["u_matrix", "u_viewport", "u_width", "u_casing", "u_kind", "u_sel_line", "u_sel_edge", "u_only_sel", "u_by_level", "u_by_speed", "u_px_per_unit", "u_slot", "u_level_colours", "u_track", "u_bad", "u_sel", "u_line_colours"]);
     this.stationU = uniforms(gl, this.stationProg, ["u_matrix", "u_viewport", "u_radius", "u_ring", "u_ink", "u_sel", "u_slot"]);
-    this.trainU = uniforms(gl, this.trainProg, ["u_matrix", "u_viewport", "u_time", "u_px_per_unit", "u_min_px", "u_size_units", "u_phases", "u_meta", "u_samples", "u_lines", "u_line_colours", "u_soff", "u_fill", "u_bad", "u_slot"]);
+    this.trainU = uniforms(gl, this.trainProg, ["u_matrix", "u_viewport", "u_time", "u_px_per_unit", "u_min_px", "u_phases", "u_meta", "u_samples", "u_lines", "u_line_colours", "u_soff", "u_fill", "u_bad", "u_slot", "u_detail", "u_dpr", "u_cars"]);
     this.timerExt = gl.getExtension("EXT_disjoint_timer_query_webgl2");
     this.tripBuf = gl.createBuffer();
   }
@@ -500,6 +544,7 @@ export class NetworkRenderer {
     this.attrib(p, "a_edge", this.buffer(s.count ? s.edge : new Uint32Array(1), list), 1, gl.UNSIGNED_INT, 1, true);
     this.attrib(p, "a_level", this.buffer(one(s.level, 1), list), 1, gl.FLOAT, 1);
     this.attrib(p, "a_flags", this.buffer(one(s.flags, 1), list), 1, gl.FLOAT, 1);
+    this.attrib(p, "a_speed", this.buffer(s.count && s.speed ? s.speed : new Float32Array(Math.max(1, s.count)).fill(160), list), 1, gl.FLOAT, 1);
     this.attrib(p, "a_dist", this.buffer(one(s.dist, 1), list), 1, gl.FLOAT, 1);
     const offsetBuf = this.buffer(s.count && s.offset ? s.offset : new Float32Array(Math.max(1, s.count)), list);
     this.attrib(p, "a_offset", offsetBuf, 1, gl.FLOAT, 1);
@@ -559,6 +604,9 @@ export class NetworkRenderer {
     this.tex.colours = this.texture(n.lineColours, "rgba8", LINES_W);
     this.tex.soff = this.texture(n.sampleOff?.length ? n.sampleOff : new Float32Array(Math.max(1, n.samples.length / 2)), "r32f", TEX_W);
     this.tex.fill = this.texture(new Float32Array(Math.max(1, n.samples.length / 2) * 2).fill(-1), "rg32f", TEX_W);
+    const cars = n.lineCars ?? new Float32Array(Math.max(1, n.lineTable.length / 4)).fill(8);
+    this.maxCars = Math.max(1, ...cars);
+    this.tex.cars = this.texture(cars, "r32f", LINES_W);
 
     this.stationVao = gl.createVertexArray()!;
     const sv = this.stationVao;
@@ -659,10 +707,11 @@ export class NetworkRenderer {
     gl.uniform1i(u.u_sel_line, opt.selLine);
     gl.uniform1i(u.u_sel_edge, opt.selEdge);
     gl.uniform1i(u.u_by_level, opt.byLevel ? 1 : 0);
+    gl.uniform1i(u.u_by_speed, opt.bySpeed ? 1 : 0);
     gl.uniform1f(u.u_px_per_unit, pxPerUnit);
     // Lines sharing track sit side by side, one line width apart (T-062); not when the track
     // is coloured by height (no line strokes then).
-    const slot = opt.byLevel ? 0 : wLine;
+    const slot = opt.byLevel || opt.bySpeed ? 0 : wLine;
     this.slotPx = slot / dpr;
     gl.uniform1f(u.u_slot, slot);
     gl.uniform3fv(u.u_level_colours, this.levelColours);
@@ -686,8 +735,8 @@ export class NetworkRenderer {
       }
     };
     // Colour by height: the track itself, at line width, and no line strokes over it.
-    stroke(this.track, 0, opt.byLevel ? wLine : wTrack, opt.selEdge >= 0);
-    if (!opt.byLevel) stroke(this.lines, 1, wLine, opt.selLine >= 0);
+    stroke(this.track, 0, opt.byLevel || opt.bySpeed ? wLine : wTrack, opt.selEdge >= 0);
+    if (!opt.byLevel && !opt.bySpeed) stroke(this.lines, 1, wLine, opt.selLine >= 0);
     stroke(this.preview, 2, wLine, false);
 
     if (n.stationCount) {
@@ -706,6 +755,7 @@ export class NetworkRenderer {
     }
 
     if (opt.showTrains && this.tripCount) {
+      this.detailedTrains = zoom >= 15.5;
       const tw = interp(zoom, [[9, 5], [12, 8], [15, 12]]) * dpr;
       gl.useProgram(this.trainProg);
       gl.uniformMatrix4fv(this.trainU.u_matrix, false, m);
@@ -713,7 +763,6 @@ export class NetworkRenderer {
       gl.uniform1f(this.trainU.u_time, uTime);
       gl.uniform1f(this.trainU.u_px_per_unit, pxPerUnit);
       gl.uniform2f(this.trainU.u_min_px, tw * 2.2, tw);
-      gl.uniform2f(this.trainU.u_size_units, 160 * MERC_K, 0);
       this.bindTrainTextures(this.trainU);
       gl.uniform1i(this.trainU.u_line_colours, 2);
       gl.activeTexture(gl.TEXTURE5);
@@ -724,8 +773,13 @@ export class NetworkRenderer {
       gl.uniform1i(this.trainU.u_fill, 6);
       gl.uniform3fv(this.trainU.u_bad, BAD_RGB);
       gl.uniform1f(this.trainU.u_slot, slot);
+      gl.uniform1i(this.trainU.u_detail, this.detailedTrains ? 1 : 0);
+      gl.uniform1f(this.trainU.u_dpr, dpr);
+      gl.activeTexture(gl.TEXTURE7);
+      gl.bindTexture(gl.TEXTURE_2D, this.tex.cars);
+      gl.uniform1i(this.trainU.u_cars, 7);
       gl.bindVertexArray(this.trainVao);
-      gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, this.tripCount);
+      gl.drawArraysInstanced(this.detailedTrains ? gl.TRIANGLES : gl.TRIANGLE_STRIP, 0, this.detailedTrains ? 6 * this.maxCars : 4, this.tripCount);
     }
 
     gl.bindVertexArray(null);

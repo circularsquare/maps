@@ -1,5 +1,68 @@
 # Iraq (iq): record
 
+**Since 2026-10-09 (session 32a047f0) Iraq is drawn from MICS6 2018 microdata** (§0). Sections
+1-7 are the survey pool it replaced, kept as the comparison (`sources/iq_surveys.py`, now
+writing `data/normalized/iq_surveys.csv`).
+
+## 0. MICS6 2018 (`sources/iq_mics6.py`, `taxonomy/iq2018.py`, `countries/iq.py`)
+
+Why: a viewer said Iraqi Turkmen were underrepresented (Kirkuk especially; also Baghdad's Raghiba
+Khatun, and Ottawa's diaspora). The pool had Kirkuk 71% Arabic, 11% Turkmen. Anita made a
+UNICEF MICS account (mics.unicef.org) and downloaded `IRQ_2018_MICS6_v01_M.zip`; its SPSS files
+are in `data/raw/iq/mics6/` (gitignored: research use, no redistribution, and the readme asks
+that copies of reports and publications based on the data go to the CSO and UNICEF Iraq). The
+published report (washdata.org/report/iraq-mics-2018-sfr) tabulates no language at all.
+
+Item: HC1B, language of the household head (Arabic / Kurdish / Turkman / Asserian / others),
+read as every member's: hl.sav members x hhweight, per governorate (HH7). 20,214 interviewed
+households, 131,394 members. Kurdish is split by HH16 (native language of the household's
+respondent, with Kurdish Surani / Kurdish Badinani apart) inside each governorate's
+Kurdish-headed households; where the respondent answered something else the Kurdish stays on
+the parent `kurdish` (171,374 people, mostly Baghdad and Diyala, plausibly Feyli). Shares x the
+2024 census governorate populations, largest remainder; 46,118,793 people, 46,114 dots.
+
+HH16 alone was drawn first (same day) and dropped: where the interview was in Arabic it slides
+to Arabic. Of Kurdish-headed households 107 answer HH16 Arabic (Baghdad 8 of 8; Diyala has 74
+Kurdish heads and 20 Kurdish respondents); of Turkmen-headed, 36. Every Baghdad interview (HH15) was in Arabic. WM14 (women 15-49,
+own native language) sits between the two.
+
+| | Arabic | Sorani | Badini | Kurdish | Turkmen | Assyrian | other |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| Iraq | 81.94 | 11.57 | 3.24 | 0.37 | 1.98 | 0.18 | 0.71 |
+| Kirkuk (pool was 71 Ar / 18 Ku / 11 Tk) | 37.8 | 28.6 | 0 | 1.2 | 30.8 | 1.6 | 0 |
+| Nineveh (pool 85 / 4 / 11) | 87.0 | 0.7 | 0.6 | 0.4 | 4.0 | 0 | 7.2 |
+| Salah al-Din (pool 0 Turkmen) | 96.6 | 0.2 | 0 | 0 | 3.3 | 0 | 0 |
+| Diyala | 96.4 | 0.7 | 0 | 2.3 | 0.6 | 0 | 0 |
+| Baghdad | 99.5 | 0 | 0 | 0.5 | 0 | 0 | 0 |
+
+So: national Turkmen was about right (pool 1.6%, MICS 2.0%) but sat in the wrong place. Kirkuk is
+the "roughly a third each" of the usual estimates, and Nineveh's Turkmen fall from 469,000 to
+about 170,000 (Tal Afar was retaken from ISIS only in August 2017, so displacement may still show
+in the 2018 fieldwork). National Kurdish 15.2%, inside 15-20%.
+
+**Baghdad's Turkmen** (the viewer named Raghiba Khatun): none of Baghdad's 2,153 households has a
+Turkmen head or respondent, and none of its 3,261 women. But the sample is 180 clusters, so an
+enclave holding 0.25% of Baghdad (about 25,000 people) is missed entirely 64% of the time, 0.5%
+41%, 1% 16%: the zero says Turkmen speakers are under about 1-2% of Baghdad, not that there are
+none. Arab Barometer VI-3 + VII's ethnicity question found 2 Turkmen of 767 Baghdad respondents
+(0.26%). **Anita, 2026-10-09: draw Baghdad's Turkmen from that ethnicity share** (`ETHNIC_FILL`
+in `iq_mics6.py`): 2 of 764 valid answers, 25,603 people (about 26 dots), taken pro rata from
+Baghdad's other rows; national Turkmen 2.04%. Inside a governorate dots follow population, so
+they spread over all of Baghdad, not gather in Raghiba Khatun (Adhamiyah).
+
+Mapping: Sorani -> new `indoeuropean.iranian.kurdish.central` (cent1972), Badini -> new
+`...kurdish.northern` (nort2641, Kurmanji); every other country's Kurdish stays on the parent.
+Colours in `tree.d/iq.txt` (Badini nearly the parent, so Duhok runs on into Turkey and Syria).
+Nineveh's 7.2% "others" go on `other`: HC1B's "others" (mostly Nineveh) are 95% Muslim by
+HC1A, so plausibly Shabak (usually put at 200,000-250,000; this is about 307,000), but MICS
+does not name it. Shabaki is no longer drawn.
+
+Still weak: placement inside a governorate is by population (Tal Afar's and Tuz Khurmatu's
+Turkmen spread over Nineveh and Salah al-Din); Yazidis are few (HC1A Yazidi 25 households) and
+Sinjar barely sampled; Feyli Kurds in Diyala and Baghdad hardly appear.
+
+## The survey pool (2026-10-05 to 2026-10-09, superseded)
+
 Drawn 2026-10-05 (session edd42a8c-iq). Five survey rounds with a first or home language
 question, pooled per governorate and applied to the 2024 census governorate populations:
 46,118,793 people, 18 governorates, 6 nodes, every row `modelled`. Duhok, which no language

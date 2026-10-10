@@ -36,6 +36,8 @@ pub const CRUSH_PER_CAR: f32 = 160.0;
 /// driving are judged on perceived time and cost alone, which puts the real network's rail share
 /// at 20.5% against ACS's 20.3% with T-090's soft reach and drive (notes/T-090.md).
 pub const ASC_RAIL: f32 = 0.0;
+/// US value of time: $20/hour, or 3 perceived minutes per dollar (T-067).
+pub const FARE_MIN_PER_USD: f32 = 3.0;
 /// `flows` leaves out the far cells holding this share of the selection's commuters, the
 /// smallest first (they go to the cut totals), to keep the answer small (T-098).
 pub const FLOW_CUT: f64 = 0.01;
@@ -195,6 +197,8 @@ pub struct DemandApi {
     svc: Option<Service>,
     sz: Option<Subzones>,
     per: Vec<Option<Period>>,
+    fare_per_km: f32,
+    fare_km: Vec<f32>,
     open_ms: f64,
 }
 
@@ -372,7 +376,7 @@ impl DemandApi {
         let (z, gr, _) = city_gravity(&city, &base);
         let (walk_home_zone, walk_work_zone) = gr.walk_trips_by_zone(&z);
         let walk_all = walk_home_zone.iter().sum();
-        Ok(DemandApi { city, z, gr, base, walk_all, walk_home_zone, walk_work_zone, svc: None, sz: None, per: (0..PERIODS).map(|_| None).collect(), open_ms: now_ms() - t0 })
+        Ok(DemandApi { city, z, gr, base, walk_all, walk_home_zone, walk_work_zone, svc: None, sz: None, per: (0..PERIODS).map(|_| None).collect(), fare_per_km: 0.0, fare_km: vec![], open_ms: now_ms() - t0 })
     }
 
     /// Cells, zones, home -> work trips a day, the walk share of all trips with no rail at all,
@@ -413,6 +417,7 @@ impl DemandApi {
             cars: cars.to_vec(),
         };
         self.per.iter_mut().for_each(|p| *p = None);
+        self.fare_km.clear();
         self.sz = None;
         if ns > 0 && nl > 0 {
             let net = Self::period_net(&svc, 0);
@@ -421,6 +426,22 @@ impl DemandApi {
         }
         self.svc = Some(svc);
         Ok(now_ms() - t0)
+    }
+
+    /// Set the player's price. Base is paid once per trip, including transfers; distance is
+    /// charged on ride edges, so route choice and mode choice both see the actual route's fare.
+    /// `hop_km` follows route nodes: each line's forward stops then reverse stops, 0 at ends.
+    pub fn set_fares(&mut self, base_usd: f32, per_km_usd: f32, hop_km: &[f32]) -> Result<(), String> {
+        let count = self.svc.as_ref().map_or(0, |s| 2 * s.stops.len());
+        if !base_usd.is_finite() || base_usd < 0.0 || !per_km_usd.is_finite() || per_km_usd < 0.0
+            || hop_km.len() != count || hop_km.iter().any(|v| !v.is_finite() || *v < 0.0) {
+            return Err("invalid fare or segment distances".into());
+        }
+        self.base.fare_min = base_usd * FARE_MIN_PER_USD;
+        self.fare_per_km = per_km_usd * FARE_MIN_PER_USD;
+        self.fare_km = hop_km.to_vec();
+        self.per.iter_mut().for_each(|p| *p = None);
+        Ok(())
     }
 
     /// Run one solve and one crowding round on a small cross of two lines at the pack origin,
@@ -465,7 +486,12 @@ impl DemandApi {
         let trips = self.gr.total * p.period_share as f64;
         let walk0 = self.walk_all * p.period_share as f64;
         let net = Self::period_net(svc, q);
-        let g = build_graph(&net, &p);
+        let mut g = build_graph(&net, &p);
+        for (r, fare) in g.rn_fare.iter_mut().enumerate() {
+            *fare = self.fare_km.get(r).copied().unwrap_or(0.0) * self.fare_per_km;
+        }
+        let no_crowding = vec![1.0; g.rn_ride.len()];
+        set_crowding(&mut g, &no_crowding);
         let (rail, rail_walk, avg, pairs, sub) = if self.sz.is_some() {
             self.pass(&g, &p, q)
         } else {
@@ -1052,6 +1078,82 @@ mod tests {
         let tph = vec![20.0, 10.0, 4.0, 12.0, 6.0, 0.0];
         let cars = vec![10.0, 8.0];
         (api, xy, vec![17, 17], stops, times, tph, cars)
+    }
+
+    #[test]
+    fn fares_change_ridership_and_preserve_legacy_price() {
+        let (mut api, xy, n, stops, times, tph, cars) = small();
+        api.set_network(&xy, &n, &stops, &times, &tph, &cars).unwrap();
+        let mut km = vec![];
+        for &count in &n { for _ in 0..2 { for k in 0..count { km.push(if k + 1 == count { 0.0 } else { 1.0 }); } } }
+        api.solve(0);
+        let legacy = api.summary(0)[2];
+        api.set_fares(2.0, 0.0, &km).unwrap();
+        assert_eq!(api.solved_mask(), 0);
+        api.solve(0);
+        assert_eq!(legacy, api.summary(0)[2], "legacy $2 flat fare is exactly 6 minutes");
+        api.set_fares(0.0, 0.0, &km).unwrap(); api.solve(0);
+        let free = api.summary(0)[2];
+        api.set_fares(1.5, 0.1, &km).unwrap(); api.solve(0);
+        let default = api.summary(0)[2];
+        api.set_fares(20.0, 0.0, &km).unwrap(); api.solve(0);
+        let expensive = api.summary(0)[2];
+        api.set_fares(0.0, 10.0, &km).unwrap(); api.solve(0);
+        let distance = api.summary(0)[2];
+        assert!(free > default && default > expensive && free > distance,
+            "free {free}, default {default}, expensive {expensive}, distance {distance}");
+        // Crowding stretches riding time, never the fare; transfers do not add another base.
+        api.crowd(0);
+        let st = api.per[0].as_ref().unwrap();
+        for e in 0..st.g.adj_to.len() {
+            let seg = st.g.adj_seg[e];
+            if seg != u32::MAX { let r = seg as usize - st.g.n_st; assert_eq!(st.g.rn_fare[r], km[r] * 30.0); }
+        }
+        assert!(api.set_fares(f32::NAN, 0.0, &km).is_err());
+        assert!(api.set_fares(0.0, -1.0, &km).is_err());
+        assert!(api.set_fares(0.0, 0.0, &[]).is_err());
+        println!("fare riders: legacy={legacy:.0} free={free:.0} default={default:.0} expensive={expensive:.0} distance={distance:.0}");
+    }
+
+    #[test]
+    fn fare_distances_follow_each_runs_track_and_base_is_once() {
+        let (mut api, xy, n, stops, times, tph, cars) = small();
+        api.set_network(&xy, &n, &stops, &times, &tph, &cars).unwrap();
+        let mut km = vec![0.0; 2 * stops.len()];
+        // First line: 2 km forward segments and 3 km reverse segments.
+        km[..16].fill(2.0);
+        km[17..33].fill(3.0);
+        api.set_fares(0.0, 0.0, &km).unwrap();
+        api.solve(0);
+        let st = api.per[0].as_ref().unwrap();
+        let free = skims(&st.g, &st.p);
+        api.set_fares(5.0, 0.5, &km).unwrap();
+        api.solve(0);
+        let st = api.per[0].as_ref().unwrap();
+        let priced = skims(&st.g, &st.p);
+        // Stations 0 and 1 are joined by the first forward/reverse segment respectively.
+        assert!((priced.r[1] - free.r[1] - 3.0).abs() < 1e-5);
+        assert!((priced.r[priced.s] - free.r[free.s] - 4.5).abs() < 1e-5);
+        assert_eq!(st.p.fare_min, 15.0);
+        // A two-line trip through the centre also sees no extra $5 in its route graph.
+        let other = stops[17] as usize;
+        assert!(priced.r[other].is_finite());
+        let sk_before = priced.r.clone();
+        api.set_fares(50.0, 0.5, &km).unwrap();
+        api.solve(0);
+        let st = api.per[0].as_ref().unwrap();
+        assert_eq!(skims(&st.g, &st.p).r, sk_before);
+        // Explicit multiplier check: fares stay unscaled even at double riding disutility.
+        let mut graph = build_graph(&st.net, &st.p);
+        graph.rn_fare = km.iter().map(|v| v * 1.5).collect();
+        let factor = vec![2.0; graph.rn_ride.len()];
+        set_crowding(&mut graph, &factor);
+        for e in 0..graph.adj_to.len() {
+            if graph.adj_seg[e] != u32::MAX {
+                let r = graph.adj_seg[e] as usize - graph.n_st;
+                assert_eq!(graph.adj_cost[e], 2.0 * graph.rn_ride[r] + km[r] * 1.5);
+            }
+        }
     }
 
     #[test]

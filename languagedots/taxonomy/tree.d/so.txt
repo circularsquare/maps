@@ -23,5 +23,5 @@ indoeuropean.romance.italian | Italian
 # ---- Somalia ----
 afroasiatic.cushitic.lowland.maay | Maay | 0.72 0.16 70
 afroasiatic.cushitic.lowland.benaadir | Benaadir Somali | 0.58 0.14 150
-nigercongo.bantu.chimwiini | Chimwiini (Bravanese)
-nigercongo.bantu.mushungulu | Mushungulu
+nigercongo.bantu.chimwiini | Chimwiini (Bravanese) | 0.64 0.14 20
+nigercongo.bantu.mushungulu | Mushungulu | 0.64 0.14 20

@@ -17,6 +17,18 @@ $('about').onclick=()=>dialog.showModal();$('close-about').onclick=()=>dialog.cl
 dialog.addEventListener('click',event=>{if(event.target===dialog){const b=dialog.getBoundingClientRect();if(event.clientX<b.left||event.clientX>b.right||event.clientY<b.top||event.clientY>b.bottom)dialog.close();}});
 function fail(message){$('status').hidden=false;$('status').textContent=message;}
 if(typeof maplibregl==='undefined')throw(fail('The map renderer could not load. Check your connection and reload.'),new Error('MapLibre unavailable'));
+// Right-to-left place names (Arabic, Hebrew...) need MapLibre's RTL text plugin, or they are drawn unjoined and reversed (2026-10-08). Lazy: fetched only once such a label is on screen.
+if(maplibregl.getRTLTextPluginStatus()==='unavailable')
+  maplibregl.setRTLTextPlugin('https://unpkg.com/@mapbox/mapbox-gl-rtl-text@0.2.3/mapbox-gl-rtl-text.min.js',true).catch(()=>{});
+// OpenFreeMap's tiles give Türkiye name_en "T" (2026-10-08); labels reading name_en fall back to the local Latin name when it is under 3 letters.
+function guardEnglishName(id){
+  const f=map.getLayoutProperty(id,'text-field');
+  if(!f||!JSON.stringify(f).includes('"name_en"'))return;
+  const fix=e=>Array.isArray(e)?(e.length===2&&e[0]==='get'&&e[1]==='name_en'
+    ?['case',['>=',['length',['to-string',['coalesce',['get','name_en'],'']]],3],['get','name_en'],['coalesce',['get','name:latin'],['get','name']]]
+    :e.map(fix)):e;
+  map.setLayoutProperty(id,'text-field',fix(f));
+}
 const map=new maplibregl.Map({container:'map',style:'https://tiles.openfreemap.org/styles/dark',center:[25.2,64.2],zoom:4.5,maxZoom:15,attributionControl:true});
 map.addControl(new maplibregl.NavigationControl({showCompass:false}),'top-right');
 map.addControl(new maplibregl.ScaleControl({maxWidth:100,unit:'metric'}),'bottom-right');
@@ -103,6 +115,7 @@ async function loadDataset(id){
 }
 $('dataset-select').onchange=()=>loadDataset($('dataset-select').value);
 map.on('load',async()=>{
+  for(const l of map.getStyle().layers)if(l.type==='symbol')guardEnglishName(l.id);
   try{
     catalog=await json('data/datasets.json');
     $('dataset-select').replaceChildren(...catalog.map(dataset=>{const option=text('option',dataset.label);option.value=dataset.id;return option;}));

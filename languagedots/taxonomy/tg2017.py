@@ -1,5 +1,7 @@
-"""Togo, Afrobarometer R5-R7 (2012-2017) first-language answers by region (sources/tg_afro.py)
--> node. Labels are the survey's language card, spellings merged in sources/tg_afro.py.
+"""Togo, MICS6 2017 head-of-household mother tongue by region, split inside each MICS group by
+Afrobarometer R5-R7 (2012-2017) first-language answers (sources/tg_mics.py; until 2026-10-09
+Afrobarometer alone, sources/tg_afro.py) -> node. Labels are Afrobarometer's language card,
+spellings merged in sources/tg_afro.py, plus MICS's own "Foreign language" and "French".
 
   * Gbe (Kwa): Ewe; Mina (Gen, genn1243, bj.txt's leaf); Ouatchi (Waci Gbe, waci1239, a leaf
     of its own); Aja and Fon (bj.txt).
@@ -8,7 +10,13 @@
     Tchamba people's language), existing leaves; Moba (bj.txt); Nawdm (Losso) and Lama (Lamba,
     lamb1271) new; Ngangam (Gangam, Gurma group; no glottocode found) new.
   * Anufo (Tchokossi), Kwa: gh.txt's leaf. Ifè (Ana): bj.txt's `voltaniger.ife`.
-  * "Other" (the card's own catch-all, 2.8%; 13% of Centrale): `africa_other`.
+  * "Other" (the card's own catch-all; since MICS, its share of MICS's "autres langues
+    nationales", 1.4%): `africa_other`.
+  * "Foreign language" (MICS's LANGUES ETRANGERES, 4.7%): `africa_other`, as Burkina Faso's
+    "Autre langue africaine" (bf2006.py). MICS does not say which, but 236 of its 308 heads give
+    "other nationalities" as ethnic group, 58% are Muslim and a third live in rural households
+    in every region: residents from the neighbouring countries, so African languages, the
+    narrowest node that holds nearly all of it.
 """
 G = "nigercongo.gur"
 K = "nigercongo.kwa"
@@ -38,6 +46,7 @@ NAMES = {
     "Fulfulde": "nigercongo.atlantic.fulah",
     "French": "indoeuropean.romance.french",
     "Other": "africa_other",
+    "Foreign language": "africa_other",
 }
 
 

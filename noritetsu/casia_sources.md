@@ -163,6 +163,17 @@ without a login; ticket.railway.kg is a script page with no data in it.
 The .pbf files are no longer needed: --esr has written data/raw/<cc>/osm_esr.json and
 osm_stations.json, and data/proc/<cc>/full holds the unclipped extract.
 
+## Lines deleted as track to no station (checked 2026-10-08)
+
+`prune_dead_track` deleted kz Тараз — Жаңатас (66.5 km), Ақтаутас — Бугунь (13.2) and uz Nókis —
+Shımbay (56.2) on 2026-10-07. None has a passenger train: KTZ's site (crawled for every station
+with an Express code) shows none at Жаңатас or Бугунь, and UTY's Nukus trains run to Tashkent
+and Mangistau, none to Shımbay. Phosphate and freight branches; left deleted. The lines still
+not finishable by picks in kz, uz, tj, tm end at a border point whose next stop is in the
+neighbour (Shemonaikha, Shyngyrlau, Xojeli, Takhiatash, Bekobod, 4613 km) or, in tm, at Owadan
+Depe, a junction towards the Daşoguz line where no train stops (not in railway.gov.tm's
+schedule): not missing stops.
+
 ## What is still off
 
 - **672 of 2,348 Book 1 points have no source position** (no OSM ESR node, no name match):

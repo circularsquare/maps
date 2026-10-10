@@ -10,7 +10,11 @@ entry is `rinf_countries/es.py`, whose docstring explains each fix. Downloads li
 ```powershell
 python rinf.py --fetch es                                   # RINF + Wikidata, ~1 min
 curl -L -o data/raw/es/spain-latest.osm.pbf https://download.geofabrik.de/europe/spain-latest.osm.pbf
-$env:OSMIUM_POOL_THREADS=2; python extract.py --region es --pbf data/raw/es/spain-latest.osm.pbf   # ~4 min, 1.5 GB; delete the .pbf after
+curl -L -o data/raw/ic/canary-islands-latest.osm.pbf https://download.geofabrik.de/africa/canary-islands-latest.osm.pbf
+python tools/slot.py -- python extract.py --region ic --pbf data/raw/ic/canary-islands-latest.osm.pbf   # ~7 s, 57 MB
+python tools/slot.py 2 -- python extract.py --region es --pbf data/raw/es/spain-latest.osm.pbf   # ~2 min, 1.5 GB
+python -m rinf_countries.es --canaries   # fold data/proc/ic into data/proc/es; after EVERY es extract
+# delete both .pbf files after; data/proc/ic too once the build is checked (re-extract it next time)
 python inspect_region.py --region es
 python build_model.py --region es --register rinf:data/raw/rinf/es   # ~80 s
 python build_tiles.py --region es                                    # ~40 s, es.pmtiles 4.7 MB
@@ -33,9 +37,10 @@ route-kinds table, line 118 of the script); everything it prints before that is 
   Lleida - La Pobla, see below), Euskotren, FGV, SFM, Tren de Sóller, every metro and tram.
 - **OpenStreetMap**, Geofabrik `spain-latest.osm.pbf` downloaded 2026-10-02, ODbL: 45,594
   track ways, 44,286 stops, 785 route relations (396 `route=train`), 224 `route=railway`
-  relations, 122 of them with a three-digit Adif number as `ref`. Geofabrik files the **Canary
-  Islands** under Africa (`africa/canary-islands-latest.osm.pbf`), so Tenerife's tram (lines 1
-  and 2) is not in this build; adding it needs that second extract merged into `es`. **Andorra**
+  relations, 122 of them with a three-digit Adif number as `ref`. Re-extracted 2026-10-08
+  (45,614 track ways, 44,403 stops, 785 relations). Geofabrik files the **Canary
+  Islands** under Africa (`africa/canary-islands-latest.osm.pbf`, 2026-10-08), so Tenerife's
+  tram comes from that second extract, folded in (see "The Canary Islands" below). **Andorra**
   has no railway. Ceuta and Melilla have none. The Balearics are in (SFM T1-T3, Palma metro M1
   and M2, Tren de Sóller, Tranvía de Sóller).
 - **The line catalogue**: es.wikipedia "Anexo:Líneas de la Red Ferroviaria de Interés General"
@@ -249,7 +254,6 @@ drawn across.
 - **Stations RINF lists but OSM names differently** become junctions (482 of 2,018); the ones
   with passengers are few (Cocentaina, Lebrija, Limpias, Bellaterra, Villena AV) and the
   sections around them are kept wherever an OSM route runs.
-- **Canary Islands** (Tenerife tram) not in the extract.
 
 ## Timetable check (live since 2026-10-03)
 
@@ -354,3 +358,44 @@ km), 460 Fuente de Piedra - Bif. Las Maravillas (11.7), 610 Cuarte de Huerva - B
 cutting at Bif. Teruel did not help, the Zaragoza junctions are a tangle), 536 (2.6), 302
 Alcázar curve (1.9), 512 Gibraleón - Huelva-Mercancías (14.1, rightly: only a nonsense 739 km
 path crosses it), Madrid's Santa Catalina freight links.
+
+## The Canary Islands (built 2026-10-08)
+
+Tenerife's tram is in `es` (Anita, 2026-10-08: "sure we can fold it into spain"); research in
+`canaries_survey.md`. It is the islands' only railway. Geofabrik ships the islands as their own
+extract, so they are extracted as region `ic` and folded into `data/proc/es` by `python -m
+rinf_countries.es --canaries` (`canaries()` in es.py): the two extracts' ways, relations, stops
+and coordinates joined by OSM id, nothing shared with the mainland file. extract.py is
+unchanged. No register, no rules: two OSM tram lines, operator MetroTenerife.
+
+| line | built | stops | published (en.WP) |
+|---|---|---|---|
+| m20282579 Tranvía Línea 1 (L1) Intercambiador - La Trinidad | 12.4 km | 21 | 12.5 km, 21 |
+| m16267950 Tranvía Línea 2 (L2) La Cuesta - Tíncer | 3.4 km | 6 | 3.6 km, 6 |
+
+Hospital Universitario and El Cardonal are one station each, on both lines (25 stations).
+L2's route_master (16267950) has no tags in OSM but a wikidata id, so `CANARY_MASTERS` gives it
+the name and ref in the form L1's master has ("Tranvía Línea 2", L2; Metrotenerife's feed calls
+the lines "Linea 1"/"Linea 2", L1/L2), and its routes' operator and network. No colours: the
+feed has none and OSM's "blue" is on L2's routes only.
+
+Checked: Spain's outline (religiondots' country shape) holds the islands (the tram's stops lie
+0.4-7 km inside it), and regions.json's es bbox reaches -18.2 W. The timetable check judges
+register sections only, so the tram, with none, is never greyed for missing from Renfe's feeds.
+
+## Rebuild of 2026-10-08 (fresh extract + the Canaries)
+
+422 lines, 2,773 stations, 43,087 route-km; 168 register lines (unchanged). `compare_lines.py
+diff es`: 8 register lines differ, all by 0.01-0.03 km. ab.py of the fresh mainland extract
+alone against the 2026-10-02 one, then with the islands folded in: the islands add exactly the
+two tram lines and their 25 stations. What the newer OSM moved:
+- Station renames in OSM (ids change, sections the same): València Cabanyal, Lantueno, Curuxona,
+  Montiana, Ḷḷinares-Congostinas, Candás Apeaderu, Veiga d'Anzu and others; OSM re-mapped
+  several Galician and Asturian metre-gauge halts as new nodes.
+- **Las Mazas/Les Maces** became "Les Maces", which no spelling of RINF's "LAS MAZAS" reaches,
+  so 760 Oviedo - Trubia lost the stop: `STOP_NAMES["LAS MAZAS"] = "Les Maces"` puts it back.
+- Halts OSM no longer has: Bolunburu (C4/R4 and 790, now La Herrera - Ibarra in one section) and
+  El Turujal (Regional Oviedo - Santander, Cabezón de la Sal - Treceño).
+- 204 Canfranc gains Villanúa-Letranz as a stop (now mapped as a station); the Alvia Ferrol -
+  Madrid relation no longer calls at A Gudiña (named train, -18.6 km); Madrid Metro 10 +0.3 km,
+  11 -0.04 km; Euskotren's Larreineta funicular took an operator.

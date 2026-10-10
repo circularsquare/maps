@@ -6,6 +6,7 @@ foreign languages, which are `derived`).
 
 ```
 python sources/ml_rgph.py --fetch     # copies religiondots' PDF, digest pinned
+python sources/ml_place.py            # placement layer with each hex's old cercle, ml_clear.csv
 python taxonomy/build.py
 python tools/check_country.py ml
 python scatter.py --country ml
@@ -133,9 +134,42 @@ cells), read-only, `pop_weight`. The two Bamako cap blocks are registered `real`
 religiondots' kontur_cap.csv and scatter found them. Kontur against the census is 0.27x in
 Ménaka and 2.5x in Douentza (religiondots/sources/ml.md §6): a within-région weight only.
 
+### Inside régions: CLEAR Global's cercle shares (2026-10-07, fix-place)
+
+Placement-only proxy (AGENT_BRIEF §4.4): counts stay A06's per région; inside one, a
+language's dots go to hexes by Kontur population x CLEAR Global's share of that language in the
+hex's old cercle. `python sources/ml_place.py` writes `data/geo/ml/ml_hexes.gpkg` (religiondots'
+hexes plus `cercle` and `zone`) and `data/normalized/ml_clear.csv`; `countries/ml.py` now places
+on it with `sources/clear_place.py::ClearWeighter` (shared with Senegal).
+
+- **Source.** CLEAR Global `mali-languages` (HDX, CC BY-SA), admin2 CSV: "main language spoken
+  in the household", IPUMS sample of the 2009 census, 45 named cercles plus Kidal and Bamako as
+  "level 2 unknown" rows. Downloaded 2026-10-07 to `data/raw/ml/clearglobal_mli_admin{0,1,2}.csv`.
+  2009 household language against 2022 mother tongue: used only for where inside a région.
+- **Old pcodes.** CLEAR uses the pre-2016 COD pcodes (its ML0102 is Diéma; COD-AB v03's ML0102
+  is Bafoulabé), so cercles are joined by name to religiondots' geoBoundaries ADM2 (50 old
+  cercles; one alias, Baraoueli = Baroueli; Kidal's four cercles take `ML08XXX`), asserted both
+  ways. Each hex takes the old cercle its centroid falls in (475 nearest).
+- **Calls.** (a) A cercle holding under 5% of a région's Kontur people there is a sliver of
+  mismatched lines and takes the région's mean (65 pairs, 116,304 Kontur people). (b) All of
+  Bamako région takes Bamako's row: COD-AB v03's Bamako runs into old Kati cercle's suburbs (1.48M
+  Kontur people), which are the city's sprawl, not rural Kati.
+- **Effect.** Twelve régions are split (Bandiagara, Bougouni, Gao, Kayes, Koulikoro, Koutiala,
+  Mopti, Nioro, San, Sikasso, Ségou, Tombouctou); the eight one-cercle régions stay on
+  population. 234 (région, language) rows by CLEAR, 52 on population (Kunabere, Mossi, foreign
+  languages, remainders). Share of a language's dots moved off plain population: Maninka in
+  Bougouni 66% (Yanfolila), in Kayes 52%; Soninke in Koulikoro 68%; Mamara in Ségou 69%;
+  people-weighted over languages of 20,000+ in split régions 13.3%. Counts untouched: 19,133 dots
+  and 4 rings before and after.
+- **Not touched:** the 941,335 people in areas not enumerated. Kontur still has people there, so
+  enumerated people's dots can fall in those areas (Ségou's and Mopti's insecure cercles), as
+  before.
+
 ## Terms
 
 INSTAT's report is a public download. COD-AB Mali CC BY-IGO; Kontur CC BY 4.0; Glottolog CC BY.
+CLEAR Global's shares CC BY-SA 4.0 (from an IPUMS sample; a placement weight, as in gn and sl);
+geoBoundaries ADM2 (religiondots' copy) only keys hexes, nothing of it is drawn.
 
 ## Cross-border groups (2026-10-06, 5d7dac7e-xb)
 

@@ -2,10 +2,11 @@
 # Papiamentu, Spanish, Dutch, English, other. Papiamentu reuses pl.txt's node (Glottolog
 # papi1253; Glottolog files it under Indo-European, the project files creoles under `creole` as
 # readers know them); repeated here with its parents because Curaçao is its home. Spanish and
-# Dutch repeat the nodes bo.txt, fi.txt and ie.txt define.
+# Dutch repeat the nodes bo.txt, fi.txt and ie.txt define. Papiamento's hand colour is a violet
+# (Anita, 2026-10-07: its generated pale yellow-green read too close to Spanish).
 creole | Creoles
 creole.portuguese_based | Portuguese-based creoles
-creole.portuguese_based.papiamento | Papiamento
+creole.portuguese_based.papiamento | Papiamento | 0.68 0.14 320
 indoeuropean.romance | Romance
 indoeuropean.romance.spanish | Spanish
 indoeuropean.germanic.continental | Continental West Germanic

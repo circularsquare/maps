@@ -6,7 +6,7 @@
 
 import { clock } from "../game/clock";
 import type { Selection } from "../game/types";
-import { tripAt } from "./network";
+import { trainCarAt, tripAt } from "./network";
 import type { Overlay } from "./overlay";
 
 const SLOP_PX = 7;
@@ -53,6 +53,24 @@ export function pick(ov: Overlay, px: number, py: number, trainsShown: boolean, 
       const prof = trips[i * 2], dep = trips[i * 2 + 1] + r.tripsEpoch;
       const at = tripAt(n, prof, dep, t);
       if (!at) continue;
+      if (r.detailedTrains) {
+        const cars = Math.max(1, n.lineCars?.[at.line] ?? 8);
+        for (let car = 0; car < cars; car++) {
+          const p = trainCarAt(n, at, car);
+          let [x0, y0] = ov.toScreen(...p.back), [x1, y1] = ov.toScreen(...p.front);
+          const dx = x1 - x0, dy = y1 - y0, len = Math.hypot(dx, dy) || 1;
+          const o = p.off * r.slotPx;
+          x0 += dy / len * o; y0 -= dx / len * o;
+          x1 += dy / len * o; y1 -= dx / len * o;
+          const u = Math.max(0, Math.min(1, ((px - x0) * dx + (py - y0) * dy) / (len * len)));
+          const d = (x0 + u * dx - px) ** 2 + (y0 + u * dy - py) ** 2;
+          if (d < best) {
+            best = d;
+            hit = { kind: "train", line: String(at.line), profile: prof, dep };
+          }
+        }
+        continue;
+      }
       let [x, y] = ov.toScreen(at.x, at.y);
       const o = at.off * r.slotPx;
       if (o) {

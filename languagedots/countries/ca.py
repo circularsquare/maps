@@ -144,10 +144,11 @@ ENTRY = dict(
     view=[-128.0, 42.0, -55.0, 58.0],
     counts=_counts,
     mappings=["ca2021"],
-    place=DA_SHP,
-    place_unit=lambda g: g["DGUID"].astype(str),
-    # one cartographic polygon per dissemination area, nothing finer to weight by
-    place_weight=None,
+    # the dissemination areas (DA_SHP) cut by Kontur hexes, so a rural DA's dots follow where its
+    # people live instead of spreading over all its land (sources/kontur_cut.py; 2026-10-08)
+    place=GEO / "ca" / "ca_konturcut.gpkg",
+    place_unit=lambda g: g["unit"].astype(str),
+    place_weight=pop_weight,
     note_public=(
         "The census asks everyone the first language they learned at home in childhood and "
         "still understand. About 4% gave more than one; each such person is split equally "

@@ -98,6 +98,14 @@ pub fn level_of(z: f64) -> i8 {
 /// Cost of one edge's track, US$M: per sub-interval, the level's multiplier (a ramp at the dearer
 /// of its two levels), 2x over water, 0.6x for single track.
 pub fn track_cost(len: f64, vert: &[[f64; 2]], water: &[[f64; 2]], tracks: u8) -> f64 {
+    let mut c = 0.0;
+    track_cost_parts(len, vert, water, tracks, |_, _, _, _, cost| c += cost);
+    c
+}
+
+/// Visit each priced interval: charged level, water, ramp, metres, US$M.
+/// Shared by the price and its explanation, including the dearer end of a ramp.
+pub fn track_cost_parts(len: f64, vert: &[[f64; 2]], water: &[[f64; 2]], tracks: u8, mut part: impl FnMut(i8, bool, bool, f64, f64)) {
     let mut cuts: Vec<f64> = Vec::with_capacity(vert.len() + 2 * water.len() + 2);
     cuts.push(0.0);
     cuts.push(len);
@@ -109,7 +117,6 @@ pub fn track_cost(len: f64, vert: &[[f64; 2]], water: &[[f64; 2]], tracks: u8) -
     cuts.sort_by(|a, b| a.total_cmp(b));
     cuts.dedup_by(|a, b| (*a - *b).abs() < 1e-9);
     let track_f = if tracks == 1 { SINGLE_TRACK_COST } else { 1.0 };
-    let mut c = 0.0;
     for w in cuts.windows(2) {
         let (u, v) = (w[0].max(0.0), w[1].min(len));
         if v <= u {
@@ -117,15 +124,17 @@ pub fn track_cost(len: f64, vert: &[[f64; 2]], water: &[[f64; 2]], tracks: u8) -
         }
         let m = 0.5 * (u + v);
         let i = vert.partition_point(|p| p[0] <= m).clamp(1, vert.len().max(2) - 1);
-        let mult = if vert.len() < 2 {
-            level_mult(level_of(vert.first().map_or(0.0, |p| p[1])))
+        let (level, ramp) = if vert.len() < 2 {
+            (level_of(vert.first().map_or(0.0, |p| p[1])), false)
         } else {
-            level_mult(level_of(vert[i - 1][1])).max(level_mult(level_of(vert[i][1])))
+            let a = level_of(vert[i - 1][1]);
+            let b = level_of(vert[i][1]);
+            (if level_mult(a) >= level_mult(b) { a } else { b }, (vert[i - 1][1] - vert[i][1]).abs() > 1e-9)
         };
         let wet = water.iter().any(|s| m >= s[0] && m < s[1]);
-        c += (v - u) / 1000.0 * BASE_COST_PER_KM * mult * if wet { WATER_COST } else { 1.0 };
+        let c = (v - u) / 1000.0 * BASE_COST_PER_KM * level_mult(level) * if wet { WATER_COST } else { 1.0 } * track_f;
+        part(level, wet, ramp, v - u, c);
     }
-    c * track_f
 }
 
 /// Station cost, US$M: the 200 m price for its level scaled by `0.4 + 0.6 x length / 200`.
@@ -200,6 +209,18 @@ mod tests {
         assert!((junction_cost(0, true, false) - (6.75 + 0.6 * 72.0)).abs() < 1e-9);
         assert!((junction_cost(-2, true, false) - (0.25 * 99.0 + 0.6 * 108.0)).abs() < 1e-9);
         assert!((crossing_cost(0, false) - 2.7).abs() < 1e-9);
+    }
+
+    #[test]
+    fn breakdown_splits_water_ramps_and_single_track() {
+        let vert = [[0.0, 0.0], [300.0, 0.0], [700.0, -16.0], [1000.0, -16.0]];
+        let mut rows = vec![];
+        track_cost_parts(1000.0, &vert, &[[500.0, 900.0]], 1, |l, wet, ramp, m, c| rows.push((l, wet, ramp, m, c)));
+        assert_eq!(rows.iter().map(|r| r.3).sum::<f64>(), 1000.0);
+        assert_eq!(rows.iter().filter(|r| r.1).map(|r| r.3).sum::<f64>(), 400.0);
+        assert_eq!(rows.iter().filter(|r| r.2).map(|r| r.3).sum::<f64>(), 400.0);
+        assert!(rows.iter().filter(|r| r.2).all(|r| r.0 == -2));
+        assert!((rows.iter().map(|r| r.4).sum::<f64>() - 70.2).abs() < 1e-9);
     }
 
     #[test]

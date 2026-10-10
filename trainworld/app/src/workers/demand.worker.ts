@@ -95,6 +95,7 @@ async function run() {
       pending = null;
       const n = job.net;
       let setupMs = api.set_network(n.stXY, n.lineN, n.stops, n.times, n.tph, n.cars);
+      api.set_fares(n.fare.base, n.fare.perKm, n.hopKm);
       current = job.version;
       let stale = false;
       for (let round = 0; round <= job.rounds && !stale; round++) {

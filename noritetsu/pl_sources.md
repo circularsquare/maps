@@ -109,6 +109,22 @@ Left out of REGISTER because part of the line is closed to passengers or being r
 the build rightly does not draw: 29, 97, 103, 104, 108, 181, 190, 201 (Żukowo - Kościerzyna),
 209, 229, 275, 281, 285, 309, 356, 368, 369.
 
+## Olecko, lines 39 and 41 (2026-10-08)
+
+PKP Intercity's TLK "Gryf" (18106/81107 Szczecin - Suwałki) runs Ełk - Olecko - Suwałki over
+lines 41 and 39, calling at Olecko (PKP Intercity's feed: 19 days each way between 22
+September and 31 December 2026, so more than once a week). OSM has no station node at Olecko,
+so rinf.py made RINF's Olecko a junction; line 39 was then one junction-ended section the
+timetable rescued, and `prune_dead_track` (2026-10-07) deleted it as track leading to no
+station, 42.8 km. `rinf_countries/pl.py` now names Olecko a stop through rinf's `stop_name`
+hook (`STOPS`, placed at RINF's coordinate, station id `erPL01195`). Rebuilt: line 39 Suwałki -
+Olecko (42.8 km) is back, and line 41 Ełk - Olecko (27.4 km) is built for the first time; line
+41's Olecko - Gołdap stays out (no OSM track to trace, no trains). The halts between on line 39
+(Wilkasy, Cimochy, Wasilówka, Poddubówek) have no station in OSM and no train stops there.
+
+The other Polish ids prune_dead_track deleted are track with no passenger train: 200, 303,
+973, 259 (handovers to industrial or regional owners).
+
 ## Still off, and why
 
 - **Lines closed or being rebuilt have no OSM track to trace.** 312 RINF sections are more

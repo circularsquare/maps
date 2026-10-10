@@ -51,7 +51,7 @@ PUBLIC = "https://pub-ae551368cea941f39101e13c84d60bde.r2.dev/languagedots"
 # DATA_BASE, so a rename here is a rename there.
 RAW_FILES = ["data/processed/languagedots.pmtiles"]
 GZ_FILES = ["data/processed/counts.json", "data/processed/not_drawn.geojson",
-            "taxonomy/languages.json", "country_shapes.geojson"]
+            "taxonomy/languages.json", "country_shapes.geojson", "admin1_shapes.geojson"]
 REPO_FILES = ["index.html"]
 
 # Under data/, which is gitignored, so the compressed copies never reach a repo.

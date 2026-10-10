@@ -69,9 +69,9 @@ export function startDemandViews(overlay: Overlay, map: MlMap): DemandViews {
     const n = renderer.net, w = world.peek();
     if (!n || !w) return;
     const d = display.peek();
-    const on = { lineLoad: d.lineLoad && d.trackColour === "line", stationRiders: d.stationRiders, trainLoad: d.trainLoad };
+    const on = { lineLoad: d.trackColour === "traffic", stationRiders: d.stationRiders, trainLoad: d.trainLoad, trainLoadBasis: d.trainLoadBasis };
     // an edit changes the network and then the world: one build for both when nothing else moved
-    const now = [n, w, demandView.peek(), period.peek(), on.lineLoad, on.stationRiders, on.trainLoad];
+    const now = [n, w, demandView.peek(), period.peek(), on.lineLoad, on.stationRiders, on.trainLoad, on.trainLoadBasis];
     if (now.every((v, i) => v === inputs[i])) return;
     inputs = now;
     const t0 = performance.now();
@@ -97,7 +97,7 @@ export function startDemandViews(overlay: Overlay, map: MlMap): DemandViews {
     demandView.value;
     period.value;
     const d = display.value;
-    void [d.lineLoad, d.stationRiders, d.trainLoad, d.trackColour];
+    void [d.stationRiders, d.trainLoad, d.trainLoadBasis, d.trackColour];
     schedule();
   });
 

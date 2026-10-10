@@ -439,7 +439,7 @@ sinotibetan.burmish.burmese | Burmese
 sinotibetan.burmish.rakhine | Rakhine
 sinotibetan.eastbodish.kheng | Khengkha
 sinotibetan.kachin | Kachin languages (Jingpho, Zaiwa, Lhaovo, Rawang)
-sinotibetan.karen | Karen
+sinotibetan.karen | Karen languages
 sinotibetan.karen.pao | Pa'o
 sinotibetan.loloish | Loloish (Yi languages)
 sinotibetan.loloish.akha | Akha

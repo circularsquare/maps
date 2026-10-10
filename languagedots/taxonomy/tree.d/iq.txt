@@ -1,24 +1,32 @@
-# Iraq (taxonomy/iq2018.py). WVS waves 4, 6, 7 and Arab Barometer II, III, first / home language.
-# Parents and languages other fragments already define are repeated with the same label and no
-# colour: Iranian, Kurdish (am.txt and others), Assyrian Neo-Aramaic (am.txt), Turkic.
+# Iraq (taxonomy/iq2018.py). MICS6 2018, native language of the household respondent (since
+# 2026-10-09; WVS waves 4, 6, 7 and Arab Barometer II, III before). Parents and languages other
+# fragments already define are repeated with the same label and no colour: Iranian, Kurdish (am.txt
+# and others), Assyrian Neo-Aramaic (am.txt), Turkic.
 #
 # Glottolog (data/raw/glottolog): Iraqi Arabic is Mesopotamian Arabic, Gilit (meso1252, Baghdad
 # and the south) and North Mesopotamian (nort3142, qeltu: Mosul, the Tigris above Baghdad);
-# the surveys' "Arabic" does not tell them apart, so one node beside `arabic`, as Morocco's
-# Darija and Sudan's Sudanese Arabic. Iraqi Turkmen is Glottolog's Kirkuk dialect (kirk1242)
-# of South Azerbaijani, not the Turkmen of Turkmenistan (`turkic.turkmen`), so a leaf of its own.
-# Shabaki shab1251, Zaza-Gorani branch of Iranian; flat under `indoeuropean.iranian` like the
-# rest there.
+# MICS's "Arabic" does not tell them apart, so one node beside `arabic`, as Morocco's Darija and
+# Sudan's Sudanese Arabic. Iraqi Turkmen is Glottolog's Kirkuk dialect (kirk1242) of South
+# Azerbaijani, not the Turkmen of Turkmenistan (`turkic.turkmen`), so a leaf of its own.
+# Kurdish gets two children here, because MICS names Sorani (Central Kurdish, cent1972) and
+# Badini (Northern Kurdish / Kurmanji, nort2641) apart; every other country's Kurdish stays on the
+# parent. Shabaki shab1251 (Zaza-Gorani) was drawn from the survey pool and is not in MICS; kept
+# so iq_surveys.py's labels still resolve.
 afroasiatic | Afroasiatic
 afroasiatic.iraqi_arabic | Iraqi Arabic | 0.66 0.10 150
 afroasiatic.assyrian | Assyrian Neo-Aramaic
 indoeuropean | Indo-European
 indoeuropean.iranian | Iranian
 indoeuropean.iranian.kurdish | Kurdish | 0.66 0.13 45
+indoeuropean.iranian.kurdish.central | Central Kurdish (Sorani) | 0.66 0.13 45
+indoeuropean.iranian.kurdish.northern | Northern Kurdish (Kurmanji, Badini) | 0.76 0.12 62
 indoeuropean.iranian.shabaki | Shabaki | 0.58 0.10 70
 turkic | Turkic
 turkic.iraqi_turkmen | Iraqi Turkmen
 #
 # Colours: Iraqi Arabic one shade off Sudanese Arabic's and Darija's mint, so the Arabics read as
 # one family; Kurdish (generated olive-sand) and Iraqi Turkmen (generated, Turkic magenta side)
-# meet it in Kirkuk and Nineveh.
+# meet it in Kirkuk and Nineveh. Sorani, most of Iraq's Kurds, keeps the parent's exact orange
+# (Anita, 2026-10-09: she liked it; a first darker rust is gone), so Iraq reads as before and runs
+# on into Iran's Kurdish; Badini is a lighter amber-orange, so the Duhok / Erbil line shows, still
+# near enough the parent that Turkey's and Syria's Kurdish across the border does not jump.

@@ -27,8 +27,6 @@ import { MERC_K, toLocal } from "./geo";
 import { pick } from "./pick";
 import type { Overlay } from "./overlay";
 
-/** The legend: commuters by mode, the whole city, for the bubbles drawn. */
-export const commuterLegend = signal<{ end: "home" | "work"; totals: [number, number, number] } | null>(null);
 
 export interface Place {
   name: string;
@@ -123,7 +121,6 @@ export function startCommuterView(map: MlMap, overlay: Overlay, view: DemandOver
       shown = { dv, end, bubbles: b, modes };
       view.setBubbles(b.levels.map((l) => l.discs));
       commuterStats.uploadMs = view.uploadMs;
-      commuterLegend.value = { end, totals: b.totals };
       if (selection.peek()?.kind === "commuters") refreshPick();
     })();
   });

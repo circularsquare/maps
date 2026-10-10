@@ -7,20 +7,22 @@ P3 = later. Finished or abandoned tasks move to `ARCHIVE.md`.
 drawing and editing track (corners, node drags, hotkeys, delete tool), stations, lines, schedules,
 money, saves, demand with soft station reach, and the demand views (riders on the network,
 commuter bubbles with click-through). Nothing is in progress. The batch headings below are
-history; for what to do next, the open P2s are T-067 (demand reads the fare: a higher fare
-should cost riders), T-069 (common lines), T-074 (station labels while panning) and T-010 (the M1
+history; fare-sensitive demand (T-067), busiest-hour train views (T-087) and annotation cleanup
+(T-100 to T-102) are done as of 2026-10-10. The next open P2s are T-069 (common lines) and T-010 (the M1
 doc tidy), then M2 (Northeast, long distance). The whole `trainworld/` folder was still untracked in git at
 this point; Anita commits.
 
+- T-104 [P1] Schedule whole trains on a line with derived headways and persistent allocations. taking, 2026-10-10, train_counts.
+
 ## M1, New York sandbox
+
+- T-105 [P1] Four track display modes: Line, traffic thickness (default), Height and Max speed. Taking, 2026-10-10. notes/T-105.md.
+
+
 
 ### Batch 2 (started 2026-10-08, paused overnight, resumed 2026-10-09): foundations, one agent per area
 
 Performance follow-ups (T-045, T-050, T-051 done, ARCHIVE; measurements in notes/T-045.md):
-- T-074 [P2] Station labels while the camera moves: 24 DOM labels cost 8.5 points of a core while
-  dragging (38.5% -> 30%), in paint and raster; a compositor layer per label won back only 2-6.
-  Try moving the whole label box by one transform during a pure pan and placing labels again on
-  zoom and at the end of the move, or drawing names in the overlay; measure with ~300 stations.
 - T-075 [P3] The overlay draws twice per frame while dragging and playing (122 draws a second):
   skipping the frame loop's draw when MapLibre has a frame queued (`?perfTry=noDouble`) saved
   about 2 points, inside the noise. Adopt only with T-074 if it is cheap to keep.
@@ -87,11 +89,6 @@ Basemap agent (the basemap style module in `app/src/map/` and `app/public/fonts/
   size and the main-thread cost of drawing them. notes/T-056.md.
 
 Later in M1:
-- T-067 [P2] Demand reads the player's fare (demand side): the kernel prices rail with a fixed
-  fare of 6 perceived minutes, so a higher fare only earns more. `NetworkSnapshot.fare` now
-  carries the curve (base + per km, US$); turn it into minutes by the value of time (SPEC 4.3) per
-  station pair and re-solve when it changes (the demand client's key ignores it today).
-  notes/T-028.md.
 - T-068 [P3] Several save slots in the browser and a guard against two tabs sharing the one
   autosave (T-029 has one slot). notes/T-029.md.
 
@@ -153,9 +150,6 @@ is rough). T-089 covered by T-090 (ARCHIVE).
 
 Gameplay agent (rest of `app/`, `sim/src/track/`): T-081, T-082, T-083, T-080, T-079 and T-085
 done (ARCHIVE). Follow-ups:
-- T-087 [P3] Riders on board at the busiest hour as well as the period's average train: needs the
-  per-period busiest-hour factor from the demand side (`peak_hour_factor`, sim/src/demand/api.rs)
-  in `game/demand.ts` (now there: `DemandView.peakHourFactor`, T-078). notes/T-083.md.
   (T-088 tool keys: covered by T-096, ARCHIVE.)
 
 ### Batch 6 (started 2026-10-09): Anita's answers on demand views, reach, money, drawing

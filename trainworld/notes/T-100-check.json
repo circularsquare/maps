@@ -1,0 +1,59 @@
+{
+  "fixture": {
+    "items": [
+      {
+        "kind": 0,
+        "level": -2,
+        "tracks": 1,
+        "wet": false,
+        "ramp": false,
+        "quantity": 1000,
+        "cost": 59400000.00000001
+      },
+      {
+        "kind": 0,
+        "level": 0,
+        "tracks": 2,
+        "wet": false,
+        "ramp": false,
+        "quantity": 1000,
+        "cost": 27000000
+      },
+      {
+        "kind": 0,
+        "level": 1,
+        "tracks": 2,
+        "wet": false,
+        "ramp": false,
+        "quantity": 1000,
+        "cost": 72000000
+      },
+      {
+        "kind": 1,
+        "level": 0,
+        "tracks": 2,
+        "wet": false,
+        "ramp": false,
+        "quantity": 2,
+        "cost": 20000000
+      },
+      {
+        "kind": 5,
+        "level": 0,
+        "tracks": 0,
+        "wet": false,
+        "ramp": false,
+        "quantity": 60,
+        "cost": 150000000
+      }
+    ],
+    "total": 328400000,
+    "before": 6000
+  },
+  "charge": 328.39999999999964,
+  "layout": {
+    "width": 303,
+    "scrollWidth": 303
+  },
+  "errors": []
+}

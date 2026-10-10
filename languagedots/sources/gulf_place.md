@@ -96,4 +96,72 @@ published nowhere below the federation (one UN DESA mix for all). Searched 2026-
 
 Room for improvement: a building-height or villa/apartment layer (GHSL built-up height, OSM
 `building=` tags where complete) would find the villa suburbs that Kontur density cannot; Qatar's
-zone sex ratios could locate the labour areas.
+zone sex ratios could locate the labour areas (done for qa and ae in §6).
+
+## 6. Families and single men apart (qa, ae; 2026-10-07, session fix-gulf)
+
+Anita, 2026-10-07: the UAE and Qatar still read as one even mix of Indian, Filipino and Arabic
+languages everywhere. Placement only (AGENT_BRIEF §4.4): no unit's counts move; checked with
+`tools/check_country.py` (ok) and the scatter's dot totals (qa 2,794, ae 11,243, as before).
+Code: `node_sex_pools`, `row_pools`, `PoolWeighter`, `fit_sex` in `sources/gulf_place.py`;
+`_weight()` in `countries/qa.py` and `countries/ae.py`.
+
+```
+python sources/gulf_place.py --fit-sex   # the DELTA / EPS search on Qatar's zones
+```
+
+**Rule.** Each nationality's migrants (UN DESA by sex: Qatar 2020, UAE 2024) split into three
+pools: *family*, min(men, women) of each sex; *single men*, the men beyond that; *single women*,
+the women beyond that (live-in domestic workers). Each (unit, language) row's foreign people are
+shared over the pools at its languages' national sex make-up; Qatar's rows at each
+municipality's own foreign men and women (census Table 1 less the Qatari estimate), pairs being
+min(men x P/M, women x P/W). Then, inside the unit:
+- single men: a hex share `logit t_i = b + 10 industrial_i + 0.5 (ln density_i - ln 1000)` of
+  the hex's placed foreigners, `b` solved to the pool's total;
+- family: the rest of the foreign weight, `foreign_i (1 - t_i)`;
+- single women: with households, `citizens_i + family_i`.
+- **Qatar** also has census Table 2, 87 zones by sex. Each zone's foreign men and women are its
+  men and women less the citizens placed there (at the municipality's Qatari sex ratio); the men
+  beyond the women are that zone's single men, and `b` is solved per zone to that count.
+
+**Fit** (`--fit-sex`): single men placed by the hex rule alone within each municipality, against
+each zone's own single-men count; foreigner-weighted rms of the zone's single-men share. Even
+spread 0.254; DELTA 10 / EPS 0.5 0.137 (best 0.135 at 14 / 1.0, flat past 8; r 0.22). Most of
+the gain is the labour zones: Industrial Area (57) 99.6% single men, placed 95.1% (even 52.5%);
+Rawdat Rashed (82) 99.9%, placed 90.9%. Among the residential zones the rule hardly beats even.
+
+**Before and after** (expected shares, no dot sampling; South Asian = Indo-Aryan incl. Bengali
+and Nepali, plus Dravidian):
+
+| place | South Asian | Bengali | Arabic (not Gulf) | Austronesian |
+|---|---|---|---|---|
+| Doha Industrial Area (zone 57) | 66.5 -> 71.4% | 13.4 -> 17.4% | 14.7 -> 13.0% | 9.4 -> 6.8% |
+| West Bay (zones 61, 66) | 57.1 -> 52.1% | 11.5 -> 7.6% | 12.6 -> 14.2% | 8.1 -> 10.5% |
+| Mussafah / ICAD (5 km) | 60.4 -> 70.3% | 14.6 -> 21.0% | 18.3 -> 12.8% | 9.6 -> 7.2% |
+| Al Quoz industrial (3 km) | 60.7 -> 70.4% | 14.7 -> 20.9% | 18.5 -> 13.1% | 9.7 -> 7.4% |
+| Dubai Marina / JLT (2 km) | 57.4 -> 56.9% | 13.9 -> 13.6% | 17.4 -> 17.7% | 9.1 -> 9.2% |
+
+**Limits.** The contrast is modest, for two reasons. (1) DESA's Qatar split by sex is nearly flat
+across origins (most at 2.7-3.1 men per woman; Nepal 3.1, which origin-country permit records
+would put far higher), so Qatar's family and single-men mixes differ little; the UAE's split
+varies more (Bangladesh 3.9, Indonesia 0.5, Egypt 1.6). (2) Nothing separates nationalities
+*among families*: Arab, Indian and Filipino neighbourhoods are real (Dubai's Karama and Bur Dubai
+against Al Nahda; Doha's Najma against West Bay), but no table places them, so every residential
+district keeps the national family mix.
+
+**What would do more** (not fetched, URLs for Anita):
+- Dubai Statistics Center, population by community and sex (2022 estimates, 200-odd
+  communities; Statistical Yearbook "Population and Vital Statistics"). The DSC site now forwards
+  to https://data.dubai/services (an app; `dsc.gov.ae/Report/...` paths 404 to scripts). With it,
+  Dubai gets the zone treatment Qatar has. Drop the Excel in `data/raw/ae/`; community polygons
+  also needed (Dubai Municipality's community layer on the same portal).
+- Origin-country records of women's share by destination (Nepal DoFE labour permits, Bangladesh
+  BMET, Sri Lanka SLBFE, Philippines DMW) would replace DESA's flat Qatar sex split; that moves
+  municipality counts by sex, so it is Anita's call, not placement.
+
+**Data note.** `data/normalized/qa.csv` (and possibly `ae.csv`) predates later home-mix changes
+(Bangladesh's Chittagonian and Sylheti, Indonesia's Cirebonese, `afroasiatic.arabic.*` ids):
+`resolve_pools` matches pool ids to the CSV on the last id component and leaves out the three
+nodes the CSVs lack, and a row node the pools lack takes the country's overall sex ratios.
+Rebuilding the two CSVs (`sources/qa_build.py`, `sources/ae_build.py`) would pick up the new
+mixes; not done here (counts).

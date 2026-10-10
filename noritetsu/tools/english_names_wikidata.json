@@ -1,0 +1,7598 @@
+{
+"Q101419570": {
+"en": "Train #29: Uzhhorod-Kyiv"
+},
+"Q101582370": {
+"en": "Sombor railway station"
+},
+"Q102047169": {
+"en": "Kokshetau-1 station",
+"wp": "Kokshetau-1 station"
+},
+"Q102367730": {
+"en": "Gongzhufu station",
+"wp": "Gongzhufu station"
+},
+"Q102367978": {
+"en": "Neida Nanxiaoqu station",
+"wp": "Neida Nanxiaoqu station"
+},
+"Q102371470": {
+"en": "Horgoš railway station"
+},
+"Q102390278": {
+"en": "Shuaijiaying station",
+"wp": "Shuaijiaying station"
+},
+"Q1032126": {
+"en": "Tram line 1 (Lviv)"
+},
+"Q1033905": {
+"en": "Yongsan Line",
+"wp": "Yongsan Line"
+},
+"Q1037409": {
+"en": "Hokuriku Shinkansen",
+"wp": "Hokuriku Shinkansen"
+},
+"Q1039041": {
+"en": "Furano Line",
+"wp": "Furano Line"
+},
+"Q1039166": {
+"en": "Nanakuma Line",
+"wp": "Nanakuma Line"
+},
+"Q1039452": {
+"en": "Batong line",
+"wp": "Batong line"
+},
+"Q104097198": {
+"en": "Novoselivka halt"
+},
+"Q104361937": {
+"en": "137 km"
+},
+"Q104365265": {},
+"Q104366951": {
+"en": "Kruhavyets",
+"en-gb": "Kruhavyets"
+},
+"Q104369515": {
+"en": "218 km"
+},
+"Q1043806": {
+"en": "Tsurumai Line",
+"wp": "Tsurumai Line"
+},
+"Q1043958": {
+"en": "Yahiko Line",
+"wp": "Yahiko Line"
+},
+"Q104848849": {},
+"Q104855878": {},
+"Q104861254": {},
+"Q1049419": {
+"en": "Kohata Station",
+"wp": "Kohata Station"
+},
+"Q105452470": {
+"en": "Tuolongshan Station"
+},
+"Q1056040": {
+"en": "Yamada Line",
+"wp": "Yamada Line (JR East)"
+},
+"Q105605424": {},
+"Q105686782": {},
+"Q1057102": {
+"en": "Hakushin Line",
+"wp": "Hakushin Line"
+},
+"Q105741245": {
+"en": "Xuzhou Central Hospital Station"
+},
+"Q105955524": {},
+"Q106099181": {
+"en": "Linhai South railway station"
+},
+"Q1061397": {
+"en": "Red Arrow",
+"wp": "Red Arrow (Russian train)"
+},
+"Q106374782": {
+"en": "Wuhan Road station"
+},
+"Q106374783": {
+"en": "Chang'an Road station"
+},
+"Q106384016": {
+"en": "Alyaksandrawka",
+"en-gb": "Alyaksandrawka"
+},
+"Q1064188": {
+"en": "Hakata-Minami Line",
+"wp": "Hakataminami Line"
+},
+"Q106432002": {
+"en": "line 1M"
+},
+"Q106432003": {
+"en": "line 2M"
+},
+"Q106432004": {
+"en": "line 3M"
+},
+"Q106683557": {
+"en": "Wumingshangongyuan station"
+},
+"Q1067927": {
+"en": "Karasuyama Line",
+"wp": "Karasuyama Line"
+},
+"Q107059791": {
+"en": "Baishuiqiao Station"
+},
+"Q107059792": {
+"en": "Qilinmen Station"
+},
+"Q107059793": {
+"en": "Dongjiaoxiaozhen Station"
+},
+"Q107059795": {
+"en": "Guquan station"
+},
+"Q107059796": {
+"en": "Nanjingyuanrendong Station",
+"wp": "Nanjingyuanrendong station"
+},
+"Q107059797": {
+"en": "Tangshan station"
+},
+"Q107059798": {},
+"Q107059799": {
+"en": "Huangmei Station"
+},
+"Q107059800": {
+"en": "Tongshijie Station"
+},
+"Q107059801": {
+"en": "Huayang station"
+},
+"Q107059803": {
+"en": "Chongming station"
+},
+"Q107059815": {
+"en": "Qinglianjie station"
+},
+"Q107191041": {
+"en": "Tram Line ST"
+},
+"Q107191059": {
+"en": "Tram Line ST2"
+},
+"Q1073881": {
+"en": "Hakozaki Line",
+"wp": "Hakozaki Line"
+},
+"Q107413904": {
+"en": "29 km"
+},
+"Q1074266": {
+"en": "Chitose Line",
+"wp": "Chitose Line"
+},
+"Q107978565": {
+"en": "Peony Square station"
+},
+"Q107978572": {
+"en": "Zhouwangcheng Square station"
+},
+"Q107978575": {
+"en": "Yingtianmen station"
+},
+"Q107996364": {
+"en": "Jiamaying station"
+},
+"Q107996366": {
+"en": "South Qiming Road station"
+},
+"Q108474241": {
+"en": "Divnoye"
+},
+"Q10877999": {
+"en": "Wuerqihan Railway Station"
+},
+"Q108783862": {
+"en": "7"
+},
+"Q108783893": {
+"en": "1"
+},
+"Q108783914": {
+"en": "3"
+},
+"Q108783918": {
+"en": "4"
+},
+"Q108783922": {
+"en": "5"
+},
+"Q108783961": {
+"en": "6"
+},
+"Q108783965": {
+"en": "8"
+},
+"Q108783971": {
+"en": "10"
+},
+"Q108783975": {
+"en": "11"
+},
+"Q108783976": {
+"en": "12"
+},
+"Q108783978": {
+"en": "18"
+},
+"Q108783981": {
+"en": "20"
+},
+"Q108783982": {
+"en": "22"
+},
+"Q108783983": {
+"en": "23"
+},
+"Q10881327": {
+"en": "Yunjinlu station",
+"wp": "Yunjinlu station"
+},
+"Q108816882": {
+"en": "Tiyuguan station"
+},
+"Q108816884": {
+"en": "Nanzhonghuan station"
+},
+"Q108816885": {
+"en": "Nanneihuan station"
+},
+"Q108816886": {
+"en": "Jiajie station"
+},
+"Q108816887": {
+"en": "Dabeimen station"
+},
+"Q108816890": {
+"en": "Jiancaoping station"
+},
+"Q108816892": {
+"en": "Kangningjie station"
+},
+"Q108816893": {
+"en": "Kaihuasijie station"
+},
+"Q108816894": {
+"en": "Jinyangjie station"
+},
+"Q108816895": {
+"en": "Jianhe station"
+},
+"Q108816896": {
+"en": "Wangcunnanjie station"
+},
+"Q108816897": {
+"en": "Dianzixijie station"
+},
+"Q108816898": {
+"en": "Jihuying station"
+},
+"Q108816899": {
+"en": "Shenglijie station"
+},
+"Q108816902": {
+"en": "Tongdajie station"
+},
+"Q108816903": {
+"en": "Changfengjie station"
+},
+"Q108816904": {
+"en": "Longxingjie station"
+},
+"Q108816905": {
+"en": "Longchenggongyuan station"
+},
+"Q10884294": {
+"en": "Xianlinzhongxin station",
+"wp": "Xianlinzhongxin station"
+},
+"Q10884376": {
+"en": "Xianhemen station",
+"wp": "Xianhemen station"
+},
+"Q10885610": {
+"en": "Puppet Regime Palace Museum station",
+"en-gb": "Puppet Regime Palace Museum station"
+},
+"Q108987457": {},
+"Q10906687": {
+"en": "Line 7",
+"wp": "Line 7 (Nanjing Metro)"
+},
+"Q10907290": {
+"en": "NJU Xianlin Campus Station",
+"wp": "Nanjing University Xianlin Campus station"
+},
+"Q109124060": {
+"en": "Sormovskaya-2 line"
+},
+"Q109251708": {},
+"Q109332447": {},
+"Q109371166": {},
+"Q109375696": {
+"en": "Avtobaza"
+},
+"Q109380192": {},
+"Q109380781": {},
+"Q109380785": {},
+"Q10938159": {
+"en": "Line 13",
+"wp": "Line 13 (Dalian Metro)"
+},
+"Q10938438": {
+"en": "Dayan station"
+},
+"Q10940016": {
+"en": "Line 4",
+"wp": "Line 4 (Tianjin Metro)"
+},
+"Q10945834": {
+"en": "Line S6",
+"wp": "Line S6 (Nanjing Metro)"
+},
+"Q10946023": {
+"en": "Line 4",
+"wp": "Line 4 (Ningbo Rail Transit)"
+},
+"Q109544975": {},
+"Q109638352": {},
+"Q109663932": {},
+"Q109673554": {},
+"Q109673557": {},
+"Q109673558": {},
+"Q109673559": {},
+"Q109673567": {},
+"Q109673570": {
+"en": "306 km railway station, Ryazan Oblast"
+},
+"Q109676312": {},
+"Q109676313": {},
+"Q109676314": {},
+"Q109676315": {},
+"Q109676383": {},
+"Q109676384": {},
+"Q109923446": {},
+"Q109930262": {},
+"Q109935293": {
+"en": "135 km"
+},
+"Q109947655": {},
+"Q110020275": {
+"en": "Älmät"
+},
+"Q110020286": {
+"en": "Tügäräk Qır"
+},
+"Q110063148": {
+"en": "98 km"
+},
+"Q110063211": {
+"en": "94 km"
+},
+"Q110086319": {
+"en": "87 km"
+},
+"Q110086841": {
+"en": "82 km"
+},
+"Q110115627": {
+"en": "Romanovka"
+},
+"Q110141950": {
+"en": "52 km"
+},
+"Q110218955": {
+"en": "30 km (Sokol)"
+},
+"Q110219415": {
+"en": "Tereshkino (station)"
+},
+"Q110219458": {
+"en": "Ilyinskoye (station)"
+},
+"Q110219635": {
+"en": "7 kilometer (station)"
+},
+"Q110259535": {},
+"Q110265042": {},
+"Q110271360": {},
+"Q110295066": {},
+"Q110295068": {},
+"Q110304564": {
+"en": "Oleksandra Makhova Street Fast Tram Station"
+},
+"Q110315656": {
+"en": "Tram line 1"
+},
+"Q110315870": {
+"en": "Tram line 2"
+},
+"Q110319410": {
+"en": "Olgino"
+},
+"Q110365894": {
+"en": "Tram line 4"
+},
+"Q110493772": {
+"en": "Les Ateliers"
+},
+"Q110539558": {},
+"Q110647115": {},
+"Q110728134": {},
+"Q110728135": {},
+"Q110728136": {},
+"Q110728138": {},
+"Q110728139": {},
+"Q110728140": {},
+"Q110728143": {},
+"Q110738009": {},
+"Q110756093": {},
+"Q110821459": {},
+"Q110883480": {},
+"Q110929056": {
+"en": "République"
+},
+"Q110946749": {},
+"Q110954999": {},
+"Q11102442": {
+"en": "Line 3",
+"wp": "Line 3 (Hangzhou Metro)"
+},
+"Q11102444": {
+"en": "Line 4",
+"wp": "Line 4 (Hangzhou Metro)"
+},
+"Q11102449": {
+"en": "Line 6",
+"wp": "Line 6 (Hangzhou Metro)"
+},
+"Q11102450": {
+"en": "Line 7",
+"wp": "Line 7 (Hangzhou Metro)"
+},
+"Q11102451": {
+"en": "Line 8",
+"wp": "Line 8 (Hangzhou Metro)"
+},
+"Q111154088": {},
+"Q111154089": {},
+"Q111193511": {},
+"Q111222314": {},
+"Q111225517": {},
+"Q111225520": {
+"en": "Zhongguo Keda Dongqu Station",
+"mul": "Zhongguo Keda Dongqu Station"
+},
+"Q11124505": {
+"en": "Line 16",
+"wp": "Line 16 (Wuhan Metro)"
+},
+"Q111301121": {},
+"Q11142545": {
+"en": "Youfangqiao station",
+"wp": "Youfangqiao station"
+},
+"Q111429917": {
+"en": "Hapi-Line Fukui Line",
+"wp": "Hapi-Line Fukui Line"
+},
+"Q111481942": {
+"en": "Uzkij"
+},
+"Q111529307": {
+"en": "981 km"
+},
+"Q111535083": {
+"en": "957 km"
+},
+"Q111541246": {},
+"Q111585571": {},
+"Q111754617": {
+"en": "Kamendin railway station",
+"wp": "Kamendin railway station"
+},
+"Q11176477": {
+"en": "Tōkaidō Line (JR East)",
+"wp": "Tōkaidō Line (JR East)"
+},
+"Q1121692": {
+"en": "Oktyabrskaya",
+"wp": "Oktyabrskaya station"
+},
+"Q11235800": {
+"en": "Donghae Line",
+"mul": "Donghaeseon",
+"wp": "Donghae Line"
+},
+"Q11263131": {
+"en": "Urusanmachi Station"
+},
+"Q112632137": {},
+"Q112657142": {},
+"Q11300344": {
+"en": "Grand Plaza-mae Station"
+},
+"Q113055617": {},
+"Q11313171": {
+"en": "Sports Koen Station",
+"wp": "Sports Kōen Station"
+},
+"Q1132780": {
+"en": "Sakura-dōri Line",
+"wp": "Sakura-dōri Line"
+},
+"Q1132799": {
+"en": "Higashiyama Line",
+"wp": "Higashiyama Line"
+},
+"Q113434898": {
+"en": "Vladivostok tram line 6"
+},
+"Q113435078": {
+"en": "Chuangxinyilu station"
+},
+"Q113435079": {
+"en": "Zhongyanggongyuan station"
+},
+"Q113435091": {
+"en": "Shengbowuguan station"
+},
+"Q1134785": {
+"en": "Rokujizō Station",
+"wp": "Rokujizō Station (JR West)"
+},
+"Q113481533": {
+"en": "Shilinsi station",
+"wp": "Shilinsi station"
+},
+"Q113483186": {
+"en": "Toyama Chihō Railway Tram Line Route 4"
+},
+"Q113483187": {
+"en": "Toyama Chihō Railway Tram Line Route 5"
+},
+"Q113483188": {
+"en": "Toyama Chihō Railway Tram Line Route 6"
+},
+"Q1135370": {
+"en": "Azusa",
+"wp": "Azusa (train)"
+},
+"Q11359131": {
+"en": "Kamihonmachi Station"
+},
+"Q1136178": {
+"en": "Sekishō Line",
+"wp": "Sekishō Line"
+},
+"Q113636568": {},
+"Q11367955": {
+"en": "Marunouchi Station"
+},
+"Q11373568": {
+"en": "Ido Station",
+"wp": "Ido Station"
+},
+"Q11380603": {
+"en": "Jukkokutōge Cable Car",
+"wp": "Jukkokutōge Cable Car"
+},
+"Q113876706": {
+"en": "Salmoni railway station"
+},
+"Q113876731": {
+"en": "Railroad station of Strefi"
+},
+"Q113876861": {
+"en": "Railroad station of Pelopio"
+},
+"Q113876881": {
+"en": "Railroad station of Platanos"
+},
+"Q11390653": {
+"en": "Yachiyo-machi Station"
+},
+"Q11391460": {
+"en": "Yakuri-sanjō Station"
+},
+"Q11391462": {
+"en": "Yakuri-tozanguchi Station"
+},
+"Q113928809": {},
+"Q11401365": {
+"en": "Kita-Osaka Kyuko railway Namboku Line"
+},
+"Q114017472": {},
+"Q11415786": {
+"en": "limited express of Meitetsu"
+},
+"Q11416650": {
+"en": "Azuma Station",
+"wp": "Azuma Station"
+},
+"Q1142127": {
+"en": "Osaka Loop Line",
+"wp": "Osaka Loop Line"
+},
+"Q11424714": {
+"en": "Chitetsubirumae Station"
+},
+"Q11427429": {
+"en": "Horikawakoizumi Station"
+},
+"Q114339748": {},
+"Q11435540": {
+"en": "Ōte Mall Station"
+},
+"Q11437454": {
+"en": "Ourakaigan-dori Station"
+},
+"Q11438005": {
+"en": "Ohmachi Station"
+},
+"Q1144130": {
+"en": "Utsunomiya Line",
+"wp": "Utsunomiya Line"
+},
+"Q11448185": {
+"en": "Gakuendori Station",
+"wp": "Gakuen-dōri Station"
+},
+"Q11452647": {
+"en": "Takara-machi Station"
+},
+"Q11462552": {
+"en": "Koizumicho Station"
+},
+"Q11471105": {
+"en": "Sanmon Station"
+},
+"Q114736778": {
+"en": "Tennōji-Ekimae Station"
+},
+"Q11483042": {
+"en": "Hiragi Station",
+"wp": "Hiragi Station"
+},
+"Q11483463": {
+"en": "Hirafuku Station",
+"wp": "Hirafuku Station"
+},
+"Q11485733": {
+"en": "Kokandomae Station"
+},
+"Q11501888": {
+"en": "Toyota Mobility Toyama G Square Gofuku-mae (Gofukusuehirocho) Station"
+},
+"Q11501896": {
+"en": "Shintomichou Station"
+},
+"Q115058463": {},
+"Q11518282": {
+"en": "Kita-Higashiguchi Station",
+"wp": "Kita-Higashiguchi Station"
+},
+"Q11520699": {
+"en": "Hommachi 3 Station"
+},
+"Q11520700": {
+"en": "Hommachi 5 Station"
+},
+"Q11526756": {
+"en": "Higashiyama / Okaden Museum Station"
+},
+"Q11529903": {
+"en": "Peace Park Station"
+},
+"Q11533344": {
+"en": "Hayashimichi Station",
+"wp": "Hayashimichi Station"
+},
+"Q11538120": {
+"en": "Sakurabashi Station"
+},
+"Q1154538": {
+"en": "Fukuchiyama Line",
+"wp": "Fukuchiyama Line"
+},
+"Q11545642": {
+"en": "Sofukuji Temple Station"
+},
+"Q1154800": {
+"en": "Hanwa Line",
+"wp": "Hanwa Line"
+},
+"Q11551608": {
+"en": "Ikenobe Station",
+"wp": "Ikenobe Station"
+},
+"Q11557579": {
+"en": "Atomic Bomb Museum Station"
+},
+"Q11560658": {
+"en": "Seimei Station",
+"wp": "Seimei Station"
+},
+"Q1157044": {
+"en": "Nara Line",
+"wp": "Nara Line (JR West)"
+},
+"Q115790411": {
+"en": "Kalotina railway station"
+},
+"Q11579619": {
+"en": "Shirayama Station",
+"wp": "Shirayama Station"
+},
+"Q115805764": {},
+"Q11582655": {
+"en": "Kenchoumae Station"
+},
+"Q115860837": {
+"en": "Ano Liosia railway halt"
+},
+"Q11588698": {
+"en": "Kohjiro Station",
+"wp": "Kōjiro Station (Nagasaki)"
+},
+"Q11598546": {
+"en": "Kyōteijō-mae Station",
+"wp": "Miyajima Boat Race Jō Station"
+},
+"Q116008696": {
+"en": "Amorio railway stop"
+},
+"Q116008700": {
+"en": "Iasmos"
+},
+"Q116008703": {
+"en": "Lavara"
+},
+"Q11603517": {
+"en": "Shinchi Chinatown Station"
+},
+"Q11604591": {
+"en": "Awajima Station"
+},
+"Q11608638": {
+"en": "Yangshangongyuan station",
+"wp": "Yangshangongyuan station"
+},
+"Q11611941": {
+"en": "Nissei line",
+"wp": "Nissei Line"
+},
+"Q116151941": {
+"en": "Pythion Stop railway station"
+},
+"Q11615214": {
+"en": "Hanazono Station",
+"wp": "Hanazono Station (Kagawa)"
+},
+"Q11618815": {
+"en": "Aramachi Station"
+},
+"Q116207957": {
+"en": "Utsunomiya Haga Light Rail Line",
+"wp": "Utsunomiya Light Rail"
+},
+"Q11627125": {
+"en": "Nishinakano Station"
+},
+"Q11627144": {
+"en": "Alye Rozy"
+},
+"Q11627289": {
+"en": "Nishi-Maeda Station",
+"wp": "Nishi-Maeda Station"
+},
+"Q11627558": {
+"en": "Saidaiji-cho Okayama Arts and Crafts Theater Harenowa-mae Station"
+},
+"Q11629316": {
+"en": "Nishichou Station"
+},
+"Q11631865": {
+"en": "Suwanokawara Station"
+},
+"Q11635049": {
+"en": "Meganebashi Bridge Station"
+},
+"Q11637945": {
+"en": "Nogakubumae Station",
+"wp": "Nōgakubumae Station"
+},
+"Q11647012": {
+"en": "Jinshanwei Railway Station",
+"wp": "Jinshanwei railway station"
+},
+"Q11650267": {
+"en": "Zenza-machi Station"
+},
+"Q11656377": {
+"en": "Kansai line"
+},
+"Q11657622": {
+"en": "Aso-Shimodajō Station",
+"wp": "Aso-Shimodajyō Station"
+},
+"Q11660391": {
+"en": "Denkibirumae Station"
+},
+"Q11672251": {
+"en": "Takata Station",
+"wp": "Takata Station (Kagawa)"
+},
+"Q117075490": {},
+"Q117075528": {},
+"Q117288429": {},
+"Q11815719": {},
+"Q118225303": {},
+"Q118225306": {},
+"Q11863699": {
+"en": "Hrodna",
+"en-gb": "Hrodna"
+},
+"Q119172612": {},
+"Q1191886": {
+"en": "Umeda Station",
+"wp": "Umeda Station"
+},
+"Q12060995": {
+"en": "Kiato railway station",
+"mul": "Kiato",
+"wp": "Kiato railway station"
+},
+"Q12062006": {
+"en": "3 km"
+},
+"Q12062096": {
+"en": "5 km"
+},
+"Q12080147": {
+"en": "Baherove"
+},
+"Q12085076": {
+"en": "Briulovetskyi"
+},
+"Q12089699": {
+"en": "Vyshhorod"
+},
+"Q12099570": {
+"en": "Darnytsia-Depo"
+},
+"Q120998332": {
+"en": "Cangjiang Road Station"
+},
+"Q12100187": {
+"en": "Depreradivka"
+},
+"Q12104126": {},
+"Q12108331": {},
+"Q12112828": {
+"en": "Korzhivtsi"
+},
+"Q121132934": {},
+"Q121133004": {},
+"Q121133044": {},
+"Q121140561": {},
+"Q121140865": {},
+"Q121140903": {},
+"Q12116617": {
+"en": "İslâm Terek"
+},
+"Q12123151": {},
+"Q12131303": {
+"en": "Milova"
+},
+"Q121335113": {
+"en": "Mitkovo"
+},
+"Q121537239": {
+"en": "Line 3"
+},
+"Q121537241": {
+"en": "Line 5"
+},
+"Q121537242": {
+"en": "Line 6"
+},
+"Q121537243": {
+"en": "Line 7"
+},
+"Q121537244": {
+"en": "Line 9"
+},
+"Q121537245": {
+"en": "Line 11"
+},
+"Q121537880": {},
+"Q121537929": {},
+"Q121539702": {
+"en": "Line 2"
+},
+"Q121539704": {
+"en": "Line 3"
+},
+"Q121539706": {
+"en": "Line 6"
+},
+"Q121539707": {
+"en": "Line 7"
+},
+"Q121539708": {
+"en": "Line 8"
+},
+"Q121539710": {
+"en": "Line 9"
+},
+"Q121545133": {
+"en": "27"
+},
+"Q121662891": {},
+"Q12167723": {
+"en": "Khatsislaw",
+"en-gb": "Khatsislaw"
+},
+"Q12169846": {
+"en": "Zdorivka"
+},
+"Q12173821": {
+"en": "Janaŭ-Palieski train station",
+"en-gb": "Yanaw-Palyeski"
+},
+"Q12173902": {
+"en": "Yarka"
+},
+"Q121834206": {
+"en": "L2 line"
+},
+"Q121834229": {
+"en": "L1 line"
+},
+"Q122585344": {
+"en": "Line 1"
+},
+"Q122585345": {
+"en": "Line 3"
+},
+"Q122585346": {
+"en": "Line 4"
+},
+"Q122585347": {
+"en": "Line 6"
+},
+"Q122585349": {
+"en": "Line 7"
+},
+"Q122585350": {
+"en": "Line 9"
+},
+"Q122585351": {
+"en": "Line 10"
+},
+"Q122585352": {
+"en": "Line 11"
+},
+"Q122585353": {
+"en": "Line 12"
+},
+"Q122585354": {
+"en": "Line 13"
+},
+"Q122585355": {
+"en": "Line 14"
+},
+"Q122585356": {
+"en": "Line 16"
+},
+"Q122585357": {
+"en": "Line 17"
+},
+"Q122585359": {
+"en": "Line 25"
+},
+"Q122585360": {
+"en": "Line 26"
+},
+"Q122585361": {
+"en": "Line 32"
+},
+"Q122585362": {
+"en": "Line 36"
+},
+"Q122585364": {
+"en": "Line 38"
+},
+"Q122585365": {
+"en": "Line 39"
+},
+"Q122585366": {
+"en": "Line 43"
+},
+"Q122585368": {
+"en": "Line 46"
+},
+"Q122585369": {
+"en": "Line 47"
+},
+"Q122585370": {
+"en": "Line 49"
+},
+"Q122585371": {
+"en": "Line 50"
+},
+"Q123155973": {
+"en": "Izhevsk tram line 2"
+},
+"Q123158516": {
+"en": "Izhevsk tram line 5"
+},
+"Q123158535": {
+"en": "Izhevsk tram line 12"
+},
+"Q123158574": {
+"en": "Izhevsk tram line 11"
+},
+"Q123158593": {
+"en": "Izhevsk tram line 9"
+},
+"Q123158615": {
+"en": "Izhevsk tram line 10"
+},
+"Q123158699": {
+"en": "Izhevsk tram line 7"
+},
+"Q123167877": {
+"en": "Izhevsk tram line 4"
+},
+"Q123168034": {
+"en": "line 3"
+},
+"Q123168035": {
+"en": "line 6"
+},
+"Q123168036": {
+"en": "line 7"
+},
+"Q123168037": {
+"en": "line 8"
+},
+"Q123168038": {
+"en": "line 9"
+},
+"Q123168039": {
+"en": "line 10"
+},
+"Q123168040": {
+"en": "line 16"
+},
+"Q123168041": {
+"en": "line 18"
+},
+"Q123168042": {
+"en": "line 19"
+},
+"Q123168043": {
+"en": "line 20"
+},
+"Q123168044": {
+"en": "line 21"
+},
+"Q123168045": {
+"en": "line 23"
+},
+"Q123168050": {
+"en": "line 30"
+},
+"Q123168051": {
+"en": "line 36"
+},
+"Q123168052": {
+"en": "line 38"
+},
+"Q123168054": {
+"en": "line 40"
+},
+"Q123168058": {
+"en": "line 45"
+},
+"Q123168061": {
+"en": "line 48"
+},
+"Q123168062": {
+"en": "line 49"
+},
+"Q123168067": {
+"en": "line 58"
+},
+"Q123168069": {
+"en": "line 60"
+},
+"Q123168070": {
+"en": "line 61"
+},
+"Q123168072": {
+"en": "line 63"
+},
+"Q123168073": {
+"en": "line 64"
+},
+"Q123168076": {
+"en": "line 7a"
+},
+"Q123168077": {
+"en": "line A"
+},
+"Q123221543": {},
+"Q123221544": {},
+"Q123221545": {},
+"Q123221546": {},
+"Q123221547": {},
+"Q123221548": {},
+"Q123221549": {},
+"Q123221551": {},
+"Q123221552": {},
+"Q123221553": {},
+"Q123221554": {},
+"Q123221555": {},
+"Q123224636": {},
+"Q123224637": {},
+"Q123224638": {},
+"Q123224640": {},
+"Q123224642": {},
+"Q123224643": {},
+"Q123224644": {},
+"Q123224645": {},
+"Q123224646": {},
+"Q123337413": {},
+"Q123337615": {},
+"Q123339541": {},
+"Q123339544": {},
+"Q123339545": {},
+"Q123339546": {
+"en": "Tram #12"
+},
+"Q123339547": {},
+"Q123339548": {},
+"Q123339549": {},
+"Q123339551": {},
+"Q123339552": {},
+"Q123339553": {},
+"Q123339554": {},
+"Q123339556": {},
+"Q123339557": {},
+"Q123339558": {},
+"Q123339559": {},
+"Q123344569": {},
+"Q123344581": {},
+"Q123346559": {},
+"Q123346613": {},
+"Q123346615": {},
+"Q123352876": {},
+"Q123352902": {},
+"Q123352923": {},
+"Q123352951": {},
+"Q123353000": {},
+"Q123353077": {},
+"Q123353078": {},
+"Q123353080": {},
+"Q123353082": {},
+"Q123353083": {},
+"Q123353084": {},
+"Q123353085": {},
+"Q123353086": {},
+"Q123353087": {},
+"Q123353088": {},
+"Q123353089": {},
+"Q123353091": {},
+"Q123353092": {},
+"Q123353093": {},
+"Q123353095": {},
+"Q123353097": {},
+"Q123353098": {},
+"Q123353099": {},
+"Q123353101": {},
+"Q123353102": {},
+"Q123353103": {},
+"Q123353104": {},
+"Q123353105": {},
+"Q123353106": {},
+"Q123353107": {},
+"Q123353108": {},
+"Q123353109": {},
+"Q123353111": {},
+"Q123353112": {},
+"Q123353113": {},
+"Q123353114": {},
+"Q123363012": {},
+"Q123363013": {},
+"Q123363016": {},
+"Q123363017": {},
+"Q123363026": {},
+"Q123363027": {},
+"Q123363036": {},
+"Q1239900": {
+"en": "Wonjuk Station"
+},
+"Q12444433": {},
+"Q124444330": {},
+"Q124639341": {},
+"Q124639342": {},
+"Q124639344": {},
+"Q124639345": {},
+"Q124639346": {},
+"Q124639347": {},
+"Q124639348": {},
+"Q124639349": {},
+"Q124639350": {},
+"Q124639351": {},
+"Q124639352": {},
+"Q124639354": {},
+"Q124639355": {},
+"Q124639356": {},
+"Q124639358": {},
+"Q124639359": {},
+"Q124657531": {},
+"Q124657533": {},
+"Q124657535": {},
+"Q124657536": {},
+"Q124657537": {},
+"Q124657538": {},
+"Q124709803": {
+"en": "Tram line 2 (Lviv)"
+},
+"Q124709844": {
+"en": "Tram line 3 (Lviv)"
+},
+"Q124735420": {
+"en": "Tram line 4 (Lviv)"
+},
+"Q124735422": {
+"en": "Tram line 6 (Lviv)"
+},
+"Q124735426": {
+"en": "Tram line 8 (Lviv)"
+},
+"Q124735446": {
+"en": "Tram line 9 (Lviv)"
+},
+"Q124750727": {},
+"Q124750729": {},
+"Q124750730": {},
+"Q124750731": {},
+"Q124750732": {},
+"Q124750733": {},
+"Q124750734": {},
+"Q124750735": {},
+"Q124750736": {},
+"Q124750737": {},
+"Q125537227": {
+"en": "Hagoromo Line",
+"wp": "Hagoromo Line"
+},
+"Q125699239": {},
+"Q125699775": {},
+"Q125846730": {},
+"Q125846731": {},
+"Q125846732": {},
+"Q125846733": {},
+"Q125846734": {},
+"Q125846735": {},
+"Q125846736": {},
+"Q125846737": {},
+"Q125846738": {},
+"Q125846739": {},
+"Q126339": {
+"en": "Sakuragawa Station",
+"wp": "Sakuragawa Station (Osaka)"
+},
+"Q127043412": {
+"en": "Humble Administrator's Garden Suzhou Museum station"
+},
+"Q127171835": {
+"en": "Qingshanqiaobang station"
+},
+"Q12884415": {
+"en": "Rentis railway station",
+"wp": "Rentis railway station"
+},
+"Q12884436": {
+"en": "Avlonas railway station",
+"wp": "Avlona railway station"
+},
+"Q12884437": {
+"en": "Avlida railway station",
+"wp": "Avlida railway station"
+},
+"Q12884439": {
+"en": "Irakleio railway station",
+"wp": "Irakleio railway station"
+},
+"Q12884446": {
+"en": "Lefka railway station",
+"wp": "Lefka railway station"
+},
+"Q12884448": {
+"en": "Livadeia railway station",
+"wp": "Livadeia railway station"
+},
+"Q12884456": {
+"en": "Metamorfosi railway station",
+"wp": "Metamorfosi railway station"
+},
+"Q12884459": {
+"en": "Paiania-Kantza station",
+"wp": "Paiania–Kantza station"
+},
+"Q12884460": {
+"en": "Pallini station",
+"wp": "Pallini station"
+},
+"Q12906446": {
+"en": "Železarnica railway stop"
+},
+"Q12906468": {
+"en": "Tetovo railway station"
+},
+"Q13032784": {
+"en": "Lupolava",
+"en-gb": "Lupolava"
+},
+"Q13033409": {
+"en": "Byčycha",
+"en-gb": "Byčycha",
+"wp": "Bychikha railway station"
+},
+"Q13134305": {
+"en": "Čornaja Natapa",
+"en-gb": "Čornaja Natapa"
+},
+"Q131370434": {
+"en": "Berrechid train station"
+},
+"Q131444108": {
+"en": "Meichonghu station"
+},
+"Q131444109": {
+"en": "Jinmei Lu station"
+},
+"Q1323112": {
+"en": "Keiō Line",
+"wp": "Keiō Line"
+},
+"Q1325668": {
+"en": "Nikkō Line",
+"wp": "Nikkō Line"
+},
+"Q1329642": {
+"en": "Linimo",
+"wp": "Linimo"
+},
+"Q133100868": {
+"en": "Tram line 7 (Lviv)"
+},
+"Q133145434": {},
+"Q13360833": {},
+"Q13361373": {
+"en": "Yukhnove"
+},
+"Q134128625": {},
+"Q134133423": {},
+"Q134416494": {
+"en": "Trojkrsti railway stop"
+},
+"Q134740653": {},
+"Q134740665": {},
+"Q134740666": {},
+"Q134740706": {},
+"Q134740726": {},
+"Q134740729": {},
+"Q134740731": {},
+"Q134740742": {},
+"Q134740746": {},
+"Q135184": {
+"en": "Hirano Station",
+"wp": "Hirano Station (Osaka Metro)"
+},
+"Q135234220": {},
+"Q135234999": {
+"en": "Chailou Station",
+"mul": "Chailou Station"
+},
+"Q136378282": {
+"en": "Saidalu station"
+},
+"Q136392078": {},
+"Q136392330": {},
+"Q13640710": {
+"en": "Zhaltyr"
+},
+"Q1364115": {
+"en": "Hokkaido Shinkansen",
+"wp": "Hokkaido Shinkansen"
+},
+"Q136546962": {
+"en": "Priokskaya line"
+},
+"Q136549894": {
+"en": "Yakhtennaya ulitsa"
+},
+"Q136549984": {
+"en": "Razyezzhaya ulitsa"
+},
+"Q136549985": {
+"en": "Sotsialisticheskaya ulitsa"
+},
+"Q136549986": {
+"en": "ulitsa Marata"
+},
+"Q136549987": {
+"en": "Zvenigorodskaya ulitsa"
+},
+"Q136549990": {
+"en": "Kameny Ostrov"
+},
+"Q136550004": {
+"en": "Novosibirskaya ulitsa"
+},
+"Q136566554": {
+"en": "Tram 27"
+},
+"Q136566556": {
+"en": "Tram 26"
+},
+"Q136566557": {
+"en": "Tram 20"
+},
+"Q136566559": {
+"en": "Tram 11"
+},
+"Q136566560": {
+"en": "Tram 28"
+},
+"Q136566561": {
+"en": "Tram 17"
+},
+"Q136566562": {
+"en": "Tram 13"
+},
+"Q136566564": {
+"en": "Tram 21"
+},
+"Q136566566": {
+"en": "Tram 5"
+},
+"Q13661649": {
+"en": "Yelshanka"
+},
+"Q136680309": {},
+"Q136680327": {},
+"Q136926380": {
+"en": "Diminio railway station",
+"wp": "Diminio railway station"
+},
+"Q137259312": {
+"en": "Jinan SkyShuttle",
+"wp": "Jinan SkyShuttle"
+},
+"Q137395876": {},
+"Q137395884": {},
+"Q137395891": {},
+"Q137395900": {},
+"Q137551678": {
+"en": "Nurly Jol",
+"mul": "Nūrly jol"
+},
+"Q137589959": {
+"en": "line 2"
+},
+"Q137918944": {},
+"Q138939020": {
+"en": "Xingwennan Railway Station"
+},
+"Q138982": {
+"en": "Zhytomyr tramway"
+},
+"Q139450481": {
+"en": "Ohu North Line"
+},
+"Q139895117": {
+"en": "Nanbu Branch Line"
+},
+"Q140302125": {
+"mul": "2"
+},
+"Q140302127": {
+"mul": "15"
+},
+"Q140302129": {
+"mul": "10"
+},
+"Q140302130": {
+"mul": "13"
+},
+"Q140302131": {
+"mul": "18"
+},
+"Q140302132": {
+"mul": "8"
+},
+"Q140454234": {},
+"Q140454235": {},
+"Q140454236": {},
+"Q140454237": {},
+"Q140454238": {},
+"Q140454239": {},
+"Q140454240": {},
+"Q140465754": {},
+"Q140465755": {},
+"Q140465756": {},
+"Q140465757": {},
+"Q140465758": {},
+"Q140465759": {},
+"Q140465760": {},
+"Q140465761": {},
+"Q140465762": {},
+"Q140465763": {},
+"Q140465764": {},
+"Q140465765": {},
+"Q140465766": {},
+"Q140465767": {},
+"Q140465768": {},
+"Q140465769": {},
+"Q140635435": {},
+"Q140635436": {},
+"Q140635437": {},
+"Q140635439": {},
+"Q140635441": {},
+"Q140866206": {},
+"Q140866276": {},
+"Q140866282": {},
+"Q141069051": {},
+"Q141069052": {},
+"Q141069053": {},
+"Q141069054": {},
+"Q141069056": {},
+"Q141069057": {},
+"Q141069058": {},
+"Q141223977": {
+"en": "Main Terminal Building"
+},
+"Q141312233": {},
+"Q141312333": {},
+"Q141490508": {},
+"Q141490594": {},
+"Q141491609": {},
+"Q141501264": {
+"en": "Category:Vinnytsia tram route 1"
+},
+"Q141501410": {
+"en": "Category:Vinnytsia tram route 2"
+},
+"Q141501415": {},
+"Q141501469": {},
+"Q141501493": {},
+"Q141501496": {},
+"Q14348616": {
+"en": "Sfendali railway station",
+"en-gb": "Sfendali railway station",
+"wp": "Sfendali railway station"
+},
+"Q1459627": {
+"en": "Line 2",
+"en-gb": "Line 2",
+"wp": "Line 2 (Saint Petersburg Metro)"
+},
+"Q14621058": {},
+"Q14629819": {
+"en": "Volnovakha Railway Station"
+},
+"Q14769813": {
+"en": "Oinoi railway station",
+"wp": "Oinoi railway station"
+},
+"Q14771486": {
+"en": "Larissa railway station",
+"wp": "Larissa railway station"
+},
+"Q14771535": {
+"en": "Platy railway station",
+"wp": "Platy railway station"
+},
+"Q14927533": {},
+"Q14927538": {
+"en": "Usha",
+"en-gb": "Usha"
+},
+"Q14927633": {
+"en": "Debaltseve Railway Station"
+},
+"Q14927635": {},
+"Q14927647": {
+"en": "Kosava-Palyeskaye",
+"en-gb": "Kosava-Palyeskaye"
+},
+"Q14927658": {
+"en": "Kryčaŭ I",
+"en-gb": "Kryčaŭ I",
+"mul": "Kryčaŭ I"
+},
+"Q14927668": {
+"en": "Laryshchava",
+"en-gb": "Laryshchava"
+},
+"Q14927670": {
+"en": "Prybar",
+"en-gb": "Prybar"
+},
+"Q14927684": {
+"en": "Dzyemyakhi",
+"en-gb": "Dzyemyakhi"
+},
+"Q14927686": {
+"en": "Nakhaw",
+"en-gb": "Nakhaw"
+},
+"Q14927687": {
+"en": "Halyavitsy",
+"en-gb": "Halyavitsy"
+},
+"Q14943091": {
+"en": "Thebes railway station",
+"wp": "Thebes railway station"
+},
+"Q14943093": {
+"en": "Domokos railway station",
+"wp": "Domokos railway station"
+},
+"Q1509576": {
+"en": "Line 3",
+"wp": "Line 3 (Saint Petersburg Metro)"
+},
+"Q15116515": {
+"en": "Adendro railway station",
+"wp": "Adendro railway station"
+},
+"Q15116561": {
+"en": "Katerini railway station",
+"wp": "Katerini railway station"
+},
+"Q15116567": {
+"en": "Korinos railway station",
+"wp": "Korinos railway station"
+},
+"Q15116568": {
+"en": "Leptokarya railway station",
+"wp": "Leptokarya railway station"
+},
+"Q15116599": {
+"en": "Neoi Poroi railway station",
+"wp": "Neoi Poroi railway station"
+},
+"Q15116600": {
+"en": "Rapsani Railway Station",
+"wp": "Rapsani railway station"
+},
+"Q15116601": {
+"en": "Tavros railway station",
+"wp": "Tavros railway station"
+},
+"Q15215243": {
+"en": "Pythion railway station",
+"wp": "Pythio railway station"
+},
+"Q15223648": {
+"en": "Myōken Line",
+"wp": "Myōken Line"
+},
+"Q15242217": {
+"en": "Leianokladi railway station",
+"wp": "Leianokladi railway station"
+},
+"Q15614538": {
+"en": "Zhonglingjie station",
+"wp": "Zhonglingjie station"
+},
+"Q15614541": {
+"en": "Muxuyuan station",
+"wp": "Muxuyuan station"
+},
+"Q15614544": {
+"en": "Minggugong station",
+"wp": "Minggugong station"
+},
+"Q15614546": {
+"en": "Xi'anmen station",
+"wp": "Xi'anmen station"
+},
+"Q15614548": {
+"en": "Daxinggong station",
+"wp": "Daxinggong station"
+},
+"Q15614551": {
+"en": "Hanzhongmen station",
+"wp": "Hanzhongmen station"
+},
+"Q15614554": {
+"en": "Jiqingmendajie station",
+"wp": "Jiqingmendajie station"
+},
+"Q15614555": {
+"en": "Xinglongdajie station",
+"wp": "Xinglongdajie station"
+},
+"Q15614556": {
+"en": "Olympic Stadium East station",
+"wp": "Olympic Stadium East station"
+},
+"Q15614557": {
+"en": "Yurundajie station",
+"wp": "Yurundajie station"
+},
+"Q15698320": {
+"en": "Hiroden Streetcar Route 6",
+"wp": "Hiroden Streetcar Route 6"
+},
+"Q1575425": {
+"en": "Kyiv Funicular",
+"wp": "Kyiv Funicular"
+},
+"Q1579583": {
+"en": "Line 5",
+"wp": "Line 5 (Saint Petersburg Metro)"
+},
+"Q1590535": {
+"en": "Sil Railway Station"
+},
+"Q15910427": {
+"en": "Line S1",
+"wp": "Line S1 (Wenzhou Rail Transit)"
+},
+"Q15916702": {
+"en": "Jimingsi station",
+"wp": "Jimingsi station"
+},
+"Q15919659": {
+"en": "Southeast University Jiulonghu Campus station",
+"wp": "Southeast University Jiulonghu Campus station"
+},
+"Q15925715": {},
+"Q15934124": {
+"en": "Line T1"
+},
+"Q15939013": {
+"en": "Nanjing–Chuzhou Line",
+"wp": "Line S4 (Nanjing Metro)"
+},
+"Q1599221": {
+"en": "Mindungsan Station"
+},
+"Q16266": {
+"en": "Bundang Line",
+"en-gb": "Bundang Line",
+"wp": "Bundang Line"
+},
+"Q16271835": {},
+"Q16271947": {},
+"Q16273281": {
+"en": "Arzamas-I",
+"wp": "Arzamas I railway station"
+},
+"Q16274652": {
+"en": "Buda-Kašalioŭskaja",
+"mul": "Buda-Kašalioŭskaja"
+},
+"Q16330274": {
+"en": "Pyrgos Vasilissis railway station",
+"wp": "Pyrgos Vasilissis railway station"
+},
+"Q16354558": {
+"en": "Solone Ozero"
+},
+"Q16470175": {},
+"Q16495706": {},
+"Q16582012": {
+"en": "Yefremivska"
+},
+"Q16651331": {},
+"Q16654645": {
+"en": "Zyuzino",
+"wp": "Zyuzino (Moscow Metro)"
+},
+"Q16657791": {
+"en": "Kamistibas"
+},
+"Q16666452": {},
+"Q16673164": {
+"en": "Maginai"
+},
+"Q16677183": {
+"en": "Mnyovniki",
+"wp": "Mnyovniki (Moscow Metro)"
+},
+"Q16678933": {
+"en": "Minkol"
+},
+"Q16686630": {},
+"Q16686997": {
+"en": "10"
+},
+"Q16687022": {
+"en": "1217 km"
+},
+"Q16687121": {},
+"Q16687361": {
+"en": "898 km"
+},
+"Q16689562": {
+"en": "Yeremiivka"
+},
+"Q16692069": {
+"en": "Aslanove"
+},
+"Q16694109": {
+"en": "Velyko-Anadol"
+},
+"Q16695089": {
+"en": "Vuhlehirsk"
+},
+"Q16696014": {},
+"Q16698138": {
+"en": "Dolia Railway Station"
+},
+"Q16698540": {
+"en": "Dubrynychi railway station"
+},
+"Q16699164": {
+"en": "Zhelanna"
+},
+"Q16699435": {},
+"Q16700701": {
+"en": "Kalchyk"
+},
+"Q16700994": {
+"en": "Karan"
+},
+"Q16701735": {},
+"Q16703220": {
+"en": "Boranhar"
+},
+"Q16706446": {
+"en": "Mariupol-Port"
+},
+"Q16708683": {},
+"Q16709990": {
+"en": "Olenivka Railway Station"
+},
+"Q16710729": {},
+"Q16713308": {
+"en": "Prolotna"
+},
+"Q16713618": {
+"en": "Pivdennodonbaska"
+},
+"Q16713628": {
+"en": "Pivnichnyi"
+},
+"Q16714630": {
+"en": "Rokosiv"
+},
+"Q16715445": {
+"en": "Sartana"
+},
+"Q16716404": {
+"en": "Chashcha"
+},
+"Q16717217": {
+"en": "Solia"
+},
+"Q16717243": {
+"en": "Sonechko"
+},
+"Q16717830": {},
+"Q16718030": {
+"en": "Stepanky"
+},
+"Q16720590": {
+"en": "Tukhlia"
+},
+"Q16722125": {},
+"Q16891621": {
+"en": "Maniatika metro station",
+"wp": "Maniatika metro station"
+},
+"Q16895562": {
+"en": "Magoula Attica railway station",
+"wp": "Magoula railway station"
+},
+"Q16895601": {
+"en": "Kinetta railway station",
+"wp": "Kineta railway station"
+},
+"Q16934349": {
+"en": "Hiroden Streetcar Route 1",
+"wp": "Hiroden Streetcar Route 1"
+},
+"Q16934367": {
+"en": "Hiroden Streetcar Route 2",
+"wp": "Hiroden Streetcar Route 2"
+},
+"Q16948": {
+"en": "Suin Line",
+"en-gb": "Suin Line",
+"wp": "Suin Line"
+},
+"Q17029788": {
+"en": "Line 11",
+"wp": "Line 11 (Suzhou Metro)"
+},
+"Q17029889": {
+"en": "Line 7",
+"wp": "Line 7 (Suzhou Metro)"
+},
+"Q17030015": {
+"en": "S2 line",
+"wp": "Line S2 (Wenzhou Rail Transit)"
+},
+"Q17030080": {
+"en": "Wenzhouxi Railway Station"
+},
+"Q17066738": {
+"en": "Mozhoudonglu station",
+"wp": "Mozhoudonglu station"
+},
+"Q1714062": {
+"en": "Kyiv Urban Rail",
+"wp": "Kyiv Urban Electric Train"
+},
+"Q17147571": {
+"en": "Stara Pazova railway station",
+"mul": "Stara Pazova",
+"wp": "Stara Pazova railway station"
+},
+"Q17200": {
+"en": "Gyeongbu line",
+"wp": "Gyeongbu Line"
+},
+"Q17220593": {
+"en": "Tendōminami Station",
+"wp": "Tendō-Minami Station"
+},
+"Q17227023": {
+"en": "Nakamachi (Nishichō-kita) Station"
+},
+"Q17230180": {
+"en": "Heiwadori 1 Station"
+},
+"Q17333373": {},
+"Q173919": {
+"en": "Ikebukuro Station",
+"wp": "Ikebukuro Station"
+},
+"Q17435878": {
+"en": "Agios Thomas railway station",
+"wp": "Agios Thomas railway station"
+},
+"Q17449588": {
+"en": "Lamia railway station",
+"wp": "Lamia railway station"
+},
+"Q17449764": {
+"en": "Drama railway station",
+"wp": "Drama railway station"
+},
+"Q17502243": {
+"en": "Xiangyulubei station",
+"wp": "Xiangyulubei station"
+},
+"Q17523970": {
+"en": "Murino"
+},
+"Q17525399": {
+"en": "Aliartos railway station",
+"wp": "Aliartos railway station"
+},
+"Q17525417": {
+"en": "Amfikleia railway station",
+"wp": "Amfikleia railway station"
+},
+"Q1771527": {
+"en": "Sormovsko-Meshcherskaya line",
+"wp": "Line 2 (Nizhny Novgorod Metro)"
+},
+"Q1771534": {
+"en": "Avtozavodskaya",
+"wp": "Line 1 (Nizhny Novgorod Metro)"
+},
+"Q1784097": {
+"en": "Line 4",
+"wp": "Line 4 (Saint Petersburg Metro)"
+},
+"Q17853994": {
+"en": "Kato Acharnai railway station",
+"wp": "Kato Acharnes railway station"
+},
+"Q18009299": {
+"en": "Diakopto railway station",
+"wp": "Diakopto railway station"
+},
+"Q18009300": {
+"en": "Agios Georgios railway station",
+"wp": "Agios Georgios railway station"
+},
+"Q18009302": {
+"en": "Dilesi railway station",
+"wp": "Dilesi railway station"
+},
+"Q18009309": {
+"en": "Kalochori–Panteichi station",
+"wp": "Kalochori-Panteichi railway station"
+},
+"Q18009311": {
+"en": "Karditsa railway station",
+"wp": "Karditsa railway station"
+},
+"Q18009317": {
+"en": "Lilaia railway station",
+"wp": "Lilaia railway station"
+},
+"Q18009322": {
+"en": "Bralos Railway Station",
+"wp": "Bralos railway station"
+},
+"Q18009330": {
+"en": "Sofades railway station",
+"wp": "Sofades railway station"
+},
+"Q18009333": {
+"en": "Stavroupoli railway station"
+},
+"Q18009336": {
+"en": "Tithorea railway station",
+"wp": "Tithorea railway station"
+},
+"Q18009340": {
+"en": "Trikala railway station",
+"wp": "Trikala railway station"
+},
+"Q18110896": {},
+"Q18125551": {
+"en": "Hexi tram",
+"wp": "Hexi tram"
+},
+"Q18228535": {
+"en": "Fanari railway stop",
+"wp": "Fanari railway station"
+},
+"Q18239278": {
+"en": "Troitskaya line",
+"wp": "Troitskaya line"
+},
+"Q18335558": {},
+"Q18335572": {
+"en": "Velestino railway station",
+"wp": "Velestino railway station"
+},
+"Q18335587": {
+"en": "Doirani railway station",
+"wp": "Doirani railway station"
+},
+"Q18335621": {
+"en": "Kypseli railway station",
+"wp": "Kypseli railway station"
+},
+"Q18335627": {
+"en": "Alexandroupolis railway station",
+"wp": "Alexandroupolis railway station"
+},
+"Q18335656": {
+"en": "Nikiforos railway station",
+"wp": "Nikiforos railway station"
+},
+"Q18335666": {
+"en": "Platania railway station"
+},
+"Q18335696": {
+"en": "Skotoussa railway station"
+},
+"Q18335706": {},
+"Q18337765": {
+"en": "Nea Vyssa railway station",
+"wp": "Nea Vyssa railway station"
+},
+"Q18337766": {
+"en": "Dikaia railway station",
+"wp": "Dikaia railway station"
+},
+"Q18337767": {
+"en": "Dilofos railway station",
+"wp": "Dilofos railway station"
+},
+"Q18337768": {
+"en": "Kastanies railway station",
+"wp": "Kastanies railway station"
+},
+"Q18337771": {
+"en": "Marasia railway station",
+"wp": "Marasia railway station"
+},
+"Q18337772": {
+"en": "Orestiada railway station",
+"wp": "Orestiada railway station"
+},
+"Q18395256": {},
+"Q18398720": {},
+"Q18399123": {
+"en": "Yakawchytsy",
+"en-gb": "Yakawchytsy"
+},
+"Q18399823": {
+"en": "Koshalyeva",
+"en-gb": "Koshalyeva"
+},
+"Q18399943": {
+"en": "Tsukrovy Zavod",
+"en-gb": "Tsukrovy Zavod"
+},
+"Q18400479": {
+"en": "Byelaazyorsk",
+"en-gb": "Byelaazyorsk"
+},
+"Q18400607": {
+"en-gb": "Byaroza-Kartuzskaya"
+},
+"Q18401430": {
+"en": "Lyasy",
+"en-gb": "Lyasy"
+},
+"Q18401737": {
+"en": "Mamut"
+},
+"Q18401919": {
+"en": "Stawpy",
+"en-gb": "Stawpy"
+},
+"Q18401929": {
+"en": "Matsyeyevichy",
+"en-gb": "Matsyeyevichy"
+},
+"Q18404774": {
+"en": "Festival'naya"
+},
+"Q18405483": {
+"en": "Naharany",
+"en-gb": "Naharany"
+},
+"Q18406852": {
+"en": "Aranchytsy",
+"en-gb": "Aranchytsy"
+},
+"Q18407043": {
+"en": "Ostanine"
+},
+"Q18407119": {},
+"Q18407227": {
+"en": "Pawlavichy",
+"en-gb": "Pawlavichy"
+},
+"Q18408536": {
+"en": "Prylutchyna",
+"en-gb": "Prylutchyna"
+},
+"Q18408686": {
+"en": "Kabaki",
+"en-gb": "Kabaki"
+},
+"Q18409162": {},
+"Q18409513": {
+"en": "Tkachy",
+"en-gb": "Tkachy"
+},
+"Q18653896": {
+"en": "Line 10",
+"en-gb": "Line 10",
+"wp": "Line 10 (Hangzhou Metro)"
+},
+"Q18653898": {
+"en": "Line 9",
+"wp": "Line 9 (Hangzhou Metro)"
+},
+"Q18810122": {
+"en": "Yasynuvata"
+},
+"Q188250": {
+"en": "Echigo Line",
+"wp": "Echigo Line"
+},
+"Q19407011": {
+"en": "Salé-Tabriquet train station",
+"wp": "Salé-Tabriquet railway station"
+},
+"Q19578407": {
+"en": "Myōkō Haneuma Line",
+"wp": "Myōkō Haneuma Line"
+},
+"Q19581616": {
+"en": "Nihonkai Hisui Line",
+"wp": "Nihonkai Hisui Line"
+},
+"Q19594612": {
+"en": "Ainokaze Toyama Railway Line",
+"wp": "Ainokaze Toyama Railway Line"
+},
+"Q1977185": {
+"en": "Iwashimizu-hachimangū Station",
+"wp": "Iwashimizu-hachimangū Station"
+},
+"Q1978532": {
+"en": "Solntsevskaya Line",
+"wp": "Solntsevskaya line"
+},
+"Q19851601": {
+"en": "Shangyuanmen Station",
+"wp": "Shangyuanmen station"
+},
+"Q19851634": {
+"en": "Southeast University Chengxian College station",
+"wp": "Southeast University Chengxian College station"
+},
+"Q19851781": {
+"en": "Jiulonghu station",
+"wp": "Jiulonghu station"
+},
+"Q19852251": {
+"en": "Daminglu station",
+"wp": "Daminglu station"
+},
+"Q19852282": {
+"en": "Tianyuanxilu station",
+"wp": "Tianyuanxilu station"
+},
+"Q19852374": {
+"en": "Hongyundadao station",
+"wp": "Hongyundadao station"
+},
+"Q19852420": {
+"en": "Xiaoshi station",
+"wp": "Xiaoshi station"
+},
+"Q19852470": {
+"en": "Changfujie station",
+"wp": "Changfujie station"
+},
+"Q19852719": {
+"en": "Mingfaguangchang station",
+"wp": "Mingfaguangchang station"
+},
+"Q19852725": {
+"en": "Xinghuolu station",
+"wp": "Xinghuolu station"
+},
+"Q19852732": {
+"en": "Puding Railway Station"
+},
+"Q19852832": {
+"en": "Linchang station",
+"wp": "Linchang station"
+},
+"Q19852861": {
+"en": "Liuzhoudonglu station",
+"wp": "Liuzhoudonglu station"
+},
+"Q19853002": {
+"en": "Taifenglu station",
+"wp": "Taifenglu station"
+},
+"Q19853022": {
+"en": "Fuqiao station",
+"wp": "Fuqiao station"
+},
+"Q19853311": {
+"en": "Zhijin Railway Station"
+},
+"Q19853342": {
+"en": "Shengtaixilu station",
+"wp": "Shengtaixilu station"
+},
+"Q19854000": {
+"en": "Yuhuamen station",
+"wp": "Yuhuamen station"
+},
+"Q19909786": {
+"en": "Kuolemajärvi station"
+},
+"Q19910061": {
+"en": "Mesterjärvi platform"
+},
+"Q19910405": {},
+"Q19911172": {
+"en": "Sim Kolodiaziv Railway Station"
+},
+"Q20023052": {
+"en": "Osaka-Umeda Station (Hanshin)"
+},
+"Q20023053": {
+"en": "Osaka-Umeda Station (Hankyu)"
+},
+"Q20073795": {
+"en": "Bohemka"
+},
+"Q20077093": {
+"en": "Zachativska train station"
+},
+"Q20077601": {
+"en": "Kvasy"
+},
+"Q20077683": {
+"en": "Hutsulshchyna"
+},
+"Q20079977": {
+"en": "Namba Station"
+},
+"Q20082202": {},
+"Q20095981": {
+"en": "Khlibodarivka"
+},
+"Q20192": {
+"en": "Gyeongchun Line",
+"en-gb": "Gyeongchun Line",
+"wp": "Gyeongchun Line"
+},
+"Q20246822": {
+"en": "Chishmy"
+},
+"Q20388": {
+"en": "Shinbundang Line",
+"en-gb": "Shinbundang Line",
+"wp": "Shinbundang Line"
+},
+"Q20391": {
+"en": "Seoul Metro Line 3"
+},
+"Q2047989": {
+"en": "Central Line"
+},
+"Q20505767": {
+"en": "Prudok",
+"en-gb": "Prudok"
+},
+"Q20552790": {
+"en": "Nikaia metro station",
+"wp": "Nikaia metro station"
+},
+"Q2056658": {
+"en": "Senri-chuo Station",
+"wp": "Senri-Chūō Station"
+},
+"Q20668834": {
+"en": "Petrades railway station",
+"wp": "Petrades railway station"
+},
+"Q20668835": {
+"en": "Rigio railway station"
+},
+"Q20668836": {
+"en": "Sofiko railway station"
+},
+"Q20668837": {
+"en": "Thourio railway station"
+},
+"Q20668839": {
+"en": "Kavyli railway station"
+},
+"Q20670310": {
+"en": "Sakkos railway station"
+},
+"Q20897764": {
+"en": "Pyrgos Railway Station"
+},
+"Q20998": {
+"en": "Gyeongin Line",
+"en-gb": "Gyeongin Line",
+"wp": "Gyeongin Line"
+},
+"Q21060694": {
+"en": "Hanam Line"
+},
+"Q21140239": {
+"en": "Davydkovo",
+"wp": "Davydkovo (Moscow Metro)"
+},
+"Q21570297": {
+"en": "ZIP (Krasnodar)"
+},
+"Q21640181": {},
+"Q21640493": {
+"en": "Koptevo",
+"wp": "Koptevo (Moscow Central Circle)"
+},
+"Q21640692": {},
+"Q21644579": {
+"en": "Stodolische"
+},
+"Q218649": {
+"en": "Seibu Tamako Line",
+"wp": "Seibu Tamako Line"
+},
+"Q2188273": {
+"en": "Kirovsky Zavod",
+"wp": "Kirovsky Zavod (Saint Petersburg Metro)"
+},
+"Q219220": {
+"en": "Petäjärvi Station"
+},
+"Q22056426": {},
+"Q22056432": {},
+"Q22056433": {},
+"Q22056450": {},
+"Q22056470": {},
+"Q22056484": {
+"en": "394 km"
+},
+"Q22056488": {
+"en": "407 km"
+},
+"Q22056498": {
+"en": "43 km"
+},
+"Q22056517": {
+"en": "47 km"
+},
+"Q22056572": {},
+"Q22057703": {
+"en": "Bairak"
+},
+"Q22057794": {
+"en": "Bulavyn"
+},
+"Q22057859": {
+"en": "Volyntseve"
+},
+"Q22058012": {
+"en": "Hrodivka"
+},
+"Q22058040": {},
+"Q22058055": {},
+"Q22058073": {
+"en": "Dolomit"
+},
+"Q22058121": {
+"en": "Yenakiieve railway station"
+},
+"Q22058165": {
+"en": "Ilovaisk"
+},
+"Q22058183": {},
+"Q22058210": {},
+"Q22058249": {
+"en": "Krasnogorovka Railway Station"
+},
+"Q22058250": {
+"en": "Kryvyi Torets Station"
+},
+"Q22058251": {
+"en": "Krynychna"
+},
+"Q22058253": {
+"en": "Kurakhivka"
+},
+"Q22058258": {
+"en": "Laryne railway station"
+},
+"Q22058270": {
+"en": "Mospyne Railway Station"
+},
+"Q22058274": {
+"en": "Novobakhmutivka"
+},
+"Q22058283": {
+"en": "Puteprovid"
+},
+"Q22058285": {
+"en": "Rodakove"
+},
+"Q22058300": {},
+"Q22058301": {
+"en": "Khartsyzk Train Station"
+},
+"Q22058303": {
+"en": "Chumakove"
+},
+"Q22058304": {},
+"Q22058310": {
+"en": "Shchebenka"
+},
+"Q22910": {
+"en": "Seoul Subway Line 7",
+"en-gb": "Seoul Subway Line 7",
+"wp": "Seoul Subway Line 7"
+},
+"Q22973701": {
+"en": "Jajinci railway station",
+"mul": "Jajinci",
+"wp": "Jajinci railway station"
+},
+"Q23070494": {
+"en": "Alfeios Railway Station"
+},
+"Q23070500": {
+"en": "Katakolo railway station",
+"wp": "Katakolo railway station"
+},
+"Q2332390": {
+"en": "Saltivska Line",
+"wp": "Line 2 (Kharkiv Metro)"
+},
+"Q23670650": {
+"en": "Kommunarka",
+"wp": "Kommunarka (Moscow Metro)"
+},
+"Q23670652": {
+"en": "Kornilovskaya",
+"wp": "Kornilovskaya (Moscow Metro)"
+},
+"Q23670653": {
+"en": "Universitet Druzhby Narodov",
+"wp": "Universitet Druzhby Narodov (Moscow Metro)"
+},
+"Q23670654": {
+"en": "Generala Tyuleneva",
+"wp": "Generala Tyuleneva (Moscow Metro)"
+},
+"Q23670656": {
+"en": "Tyutchevskaya",
+"wp": "Tyutchevskaya (Moscow Metro)"
+},
+"Q2368223": {
+"en": "Ploshcha Pyeramohi",
+"wp": "Ploshcha Pyeramohi (Minsk Metro)"
+},
+"Q2368263": {
+"en": "Instytut Kultury",
+"wp": "Instytut Kultury (Minsk Metro)"
+},
+"Q2368287": {
+"en": "Kowata Station",
+"wp": "Kowata Station"
+},
+"Q2371109": {
+"en": "Maskowskaya",
+"wp": "Maskoŭskaja (Minsk Metro)"
+},
+"Q23830414": {
+"en": "Yelshanka railway station"
+},
+"Q2384688": {
+"en": "Tekhnopark",
+"wp": "Tekhnopark (Zamoskvoretskaya line)"
+},
+"Q23933773": {
+"en": "Kraljevci railway station"
+},
+"Q23933779": {
+"en": "Sremska Mitrovica railway station",
+"wp": "Sremska Mitrovica railway station"
+},
+"Q24008142": {
+"en": "Zaperevalny Railway Halt"
+},
+"Q24046577": {
+"en": "Novomoskovskaya",
+"wp": "Novomoskovskaya (Sokolnicheskaya line)"
+},
+"Q2446510": {
+"en": "tram system in Novotroitsk"
+},
+"Q2455059": {
+"en": "Irakleio metro station",
+"wp": "Irakleio metro station"
+},
+"Q24886992": {
+"en": "Line 6",
+"wp": "Line 6 (Fuzhou Metro)"
+},
+"Q2520333": {
+"en": "Nakatsu Station",
+"wp": "Nakatsu Station (Osaka Metro)"
+},
+"Q25305553": {
+"en": "Line 5",
+"wp": "Line 5 (Fuzhou Metro)"
+},
+"Q253391": {
+"en": "Ryōmō Line",
+"wp": "Ryōmō Line"
+},
+"Q2535646": {
+"en": "Ligovsky Prospekt",
+"wp": "Ligovsky Prospekt (Saint Petersburg Metro)"
+},
+"Q25381082": {
+"en": "Mohammadieh railway station",
+"wp": "Mohammadieh railway station"
+},
+"Q25394120": {
+"en": "Zavod Imeni Sedina railway station"
+},
+"Q25394365": {
+"en": "Lyntupy",
+"en-gb": "Lyntupy"
+},
+"Q25394517": {},
+"Q25432202": {},
+"Q25432364": {
+"en": "Zovna"
+},
+"Q25432482": {},
+"Q25434680": {},
+"Q25434704": {},
+"Q25435585": {
+"en": "Sionitnyi"
+},
+"Q25435800": {},
+"Q25435839": {},
+"Q25436020": {
+"en": "Kumshatskyi"
+},
+"Q25436306": {
+"en": "Orlova Sloboda"
+},
+"Q25444199": {
+"en": "230 km"
+},
+"Q25444459": {
+"en": "Kolhospna"
+},
+"Q25445009": {},
+"Q25445053": {
+"en": "Ridkodub"
+},
+"Q25445094": {
+"en": "Serdyte"
+},
+"Q25445184": {
+"en": "Svydovets"
+},
+"Q25445801": {
+"en": "Velychko"
+},
+"Q25445804": {
+"en": "Borysivka"
+},
+"Q25446111": {
+"en": "Dora"
+},
+"Q25446127": {},
+"Q25446200": {},
+"Q25446226": {
+"en": "Ulianivka"
+},
+"Q25446485": {
+"en": "235 km"
+},
+"Q25446487": {
+"en": "232 km"
+},
+"Q25446541": {
+"en": "Polatsk train station",
+"en-gb": "Polatsk"
+},
+"Q25446552": {
+"en": "Andrusove"
+},
+"Q2551495": {
+"en": "Shosse Entuziastov",
+"wp": "Shosse Entuziastov (Moscow Metro)"
+},
+"Q25714343": {
+"en": "5 km",
+"wp": "5 km, Perm Krai"
+},
+"Q2598752": {
+"en": "Keihan Main Line",
+"wp": "Keihan Main Line"
+},
+"Q2625686": {
+"en": "Ploshcha Yakuba Kolasa",
+"wp": "Ploshcha Yakuba Kolasa (Minsk Metro)"
+},
+"Q26262006": {
+"en": "Line 8",
+"wp": "Line 8 (Chengdu Metro)"
+},
+"Q2638932": {
+"en": "Awtazavodskaya line",
+"wp": "Awtazavodskaya line"
+},
+"Q26849010": {
+"en": "Cherkizovo"
+},
+"Q26856861": {
+"en": "Moscow Central Circle",
+"en-gb": "Moscow Central Circle",
+"wp": "Moscow Central Circle"
+},
+"Q26857851": {
+"en": "Shosse Entuziastov",
+"wp": "Shosse Entuziastov (Moscow Central Circle)"
+},
+"Q2710248": {
+"en": "Kholodnohirsko–Zavodska Line",
+"wp": "Line 1 (Kharkiv Metro)"
+},
+"Q2711371": {
+"en": "Dzerzhinskaya Line",
+"wp": "Dzerzhinskaya Line"
+},
+"Q2721373": {
+"en": "Medvedkovo",
+"wp": "Medvedkovo (Moscow Metro)"
+},
+"Q27888116": {
+"en": "Prokshino",
+"wp": "Prokshino (Moscow Metro)"
+},
+"Q27891514": {
+"en": "Filatov Lug",
+"wp": "Filatov Lug (Moscow Metro)"
+},
+"Q27921408": {
+"en": "Olkhovaya",
+"wp": "Olkhovaya (Moscow Metro)"
+},
+"Q27948999": {
+"en": "Ningdong Railway Station"
+},
+"Q28052628": {
+"en": "Pykhtino",
+"wp": "Pykhtino (Moscow Metro)"
+},
+"Q2829306": {
+"en": "Al Bidaoui",
+"wp": "Al Bidaoui"
+},
+"Q283196": {
+"en": "Tokyo Station",
+"en-gb": "Tokyo Station",
+"wp": "Tokyo Station"
+},
+"Q28379957": {
+"en": "11 km",
+"en-gb": "11 km"
+},
+"Q28379958": {
+"en": "15 km",
+"en-gb": "15 km"
+},
+"Q28379959": {
+"en": "331 km",
+"en-gb": "331 km"
+},
+"Q28379962": {
+"en": "Adrowka",
+"en-gb": "Adrowka"
+},
+"Q28379963": {
+"en": "Alyeksandryya",
+"en-gb": "Alyeksandryya"
+},
+"Q28379965": {
+"en": "Alionuška",
+"en-gb": "Alionuška"
+},
+"Q28379967": {
+"en": "Antonawka",
+"en-gb": "Antonawka"
+},
+"Q28379969": {
+"en": "Antopal′",
+"en-gb": "Antopal′"
+},
+"Q28379970": {
+"en": "Apalonawka",
+"en-gb": "Apalonawka"
+},
+"Q28379974": {
+"en": "Babina",
+"en-gb": "Babina"
+},
+"Q28379976": {
+"en": "Barkalabava",
+"en-gb": "Barkalabava"
+},
+"Q28379977": {
+"en": "Barsuki",
+"en-gb": "Barsuki"
+},
+"Q28379978": {
+"en": "Batali",
+"en-gb": "Batali"
+},
+"Q28379979": {
+"en": "Batcha",
+"en-gb": "Batcha"
+},
+"Q28379980": {
+"en": "Byazvyerkhavichy",
+"en-gb": "Byazvyerkhavichy"
+},
+"Q28379981": {
+"en": "Byelahruda",
+"en-gb": "Byelahruda"
+},
+"Q28379982": {
+"en": "Byel′",
+"en-gb": "Byel′"
+},
+"Q28379983": {
+"en": "Byenislawskaha",
+"en-gb": "Byenislawskaha"
+},
+"Q28379985": {
+"en": "Byerazhok",
+"en-gb": "Byerazhok"
+},
+"Q28379987": {
+"en": "Byerazina",
+"en-gb": "Byerazina"
+},
+"Q28379988": {
+"en": "Byerazinskaye",
+"en-gb": "Byerazinskaye"
+},
+"Q28379989": {
+"en": "Byarozavy Hay",
+"en-gb": "Byarozavy Hay"
+},
+"Q28379990": {
+"en": "Byarezawtsy",
+"en-gb": "Byarezawtsy"
+},
+"Q28379991": {
+"en": "Bibkawshchyna",
+"en-gb": "Bibkawshchyna"
+},
+"Q28379993": {
+"en": "Birulichy",
+"en-gb": "Birulichy"
+},
+"Q28379994": {
+"en": "Blahavichy",
+"en-gb": "Blahavichy"
+},
+"Q28379997": {
+"en": "Blazhewshchyna",
+"en-gb": "Blazhewshchyna"
+},
+"Q28379999": {
+"en": "Bluzha",
+"en-gb": "Bluzha"
+},
+"Q28380001": {
+"en": "Babry",
+"en-gb": "Babry"
+},
+"Q28380004": {
+"en": "Babry",
+"en-gb": "Babry"
+},
+"Q28380005": {
+"en": "Bahutsichy",
+"en-gb": "Bahutsichy"
+},
+"Q28380006": {
+"en": "Bahushowka train station",
+"en-gb": "Bahushowka"
+},
+"Q28380007": {
+"en": "Bakuny train station",
+"en-gb": "Bakuny"
+},
+"Q28380008": {
+"en": "Bal′nitsa",
+"en-gb": "Bal′nitsa"
+},
+"Q28380009": {
+"en": "Boni",
+"en-gb": "Boni"
+},
+"Q28380010": {
+"en": "Baravaya",
+"en-gb": "Baravaya"
+},
+"Q28380012": {
+"en": "Barowka",
+"en-gb": "Barowka"
+},
+"Q28380013": {
+"en": "Barok",
+"en-gb": "Barok"
+},
+"Q28380014": {
+"en": "Babrechcha",
+"en-gb": "Babrechcha"
+},
+"Q28380016": {
+"en": "Bastyn′",
+"en-gb": "Bastyn′"
+},
+"Q28380017": {
+"en": "Brytsalavichy",
+"en-gb": "Brytsalavichy"
+},
+"Q28380018": {
+"en": "Bradzishcha",
+"en-gb": "Bradzishcha"
+},
+"Q28380019": {
+"en": "Branislaw",
+"en-gb": "Branislaw"
+},
+"Q28380021": {
+"en": "Budatsyen′",
+"en-gb": "Budatsyen′"
+},
+"Q28380022": {
+"en": "Budy",
+"en-gb": "Budy"
+},
+"Q28380024": {
+"en": "Busly",
+"en-gb": "Busly"
+},
+"Q28380026": {
+"en": "Bushawka",
+"en-gb": "Bushawka"
+},
+"Q28380030": {
+"en": "Vanyelyevichy",
+"en-gb": "Vanyelyevichy"
+},
+"Q28380031": {
+"en": "Vas′kawshchyna",
+"en-gb": "Vas′kawshchyna"
+},
+"Q28380032": {
+"en": "Vyedrych",
+"en-gb": "Vyedrych"
+},
+"Q28380034": {
+"en": "Vyandzyezh",
+"en-gb": "Vyandzyezh"
+},
+"Q28380035": {
+"en": "Vyerasy",
+"en-gb": "Vyerasy"
+},
+"Q28380036": {
+"en": "Vyarba",
+"en-gb": "Vyarba"
+},
+"Q28380037": {
+"en": "Vyaren′ki",
+"en-gb": "Vyaren′ki"
+},
+"Q28380038": {
+"en": "Vyeratsyei train station",
+"en-gb": "Vyeratsyei"
+},
+"Q28380039": {
+"en": "Vyeravoysha",
+"en-gb": "Vyeravoysha"
+},
+"Q28380040": {
+"en": "Viarchi",
+"en-gb": "Viarchi",
+"mul": "Viarchi"
+},
+"Q28380043": {
+"en": "Vyetryna",
+"en-gb": "Vyetryna"
+},
+"Q28380044": {
+"en": "Vayhany",
+"en-gb": "Vayhany"
+},
+"Q28380045": {
+"en": "Voytkavichy",
+"en-gb": "Voytkavichy"
+},
+"Q28380046": {
+"en": "Vaŭkavysk-Horad",
+"en-gb": "Vawkavysk-Horad"
+},
+"Q28380047": {
+"en": "Valowniki",
+"en-gb": "Valowniki"
+},
+"Q28380048": {
+"en": "Valodz′ki",
+"en-gb": "Valodz′ki"
+},
+"Q28380049": {
+"en": "Valoki",
+"en-gb": "Valoki"
+},
+"Q28380051": {
+"en": "Valatava",
+"en-gb": "Valatava"
+},
+"Q28380052": {
+"en": "Voranava train station",
+"en-gb": "Voranava"
+},
+"Q28380054": {
+"en": "Uskhod",
+"en-gb": "Uskhod"
+},
+"Q28380056": {
+"en": "Vul′ka Antopal′skaya",
+"en-gb": "Vul′ka Antopal′skaya"
+},
+"Q28380057": {
+"en": "Vul′ka Luninyetskaya",
+"en-gb": "Vul′ka Luninyetskaya"
+},
+"Q28380058": {
+"en": "Vidershchyna",
+"en-gb": "Vidershchyna"
+},
+"Q28380059": {
+"en": "Vydreja",
+"en-gb": "Vydreja",
+"mul": "Vydreja"
+},
+"Q28380060": {
+"en": "Vylazy",
+"en-gb": "Vylazy"
+},
+"Q28380061": {
+"en": "Vysokaje-Horad",
+"en-gb": "Vysokaye-Horad"
+},
+"Q28380062": {
+"en": "Vyatny",
+"en-gb": "Vyatny"
+},
+"Q28380063": {
+"en": "Hay",
+"en-gb": "Hay"
+},
+"Q28380064": {
+"en": "Hyeolah",
+"en-gb": "Hyeolah"
+},
+"Q28380065": {
+"en": "Hlyebava Rudnya",
+"en-gb": "Hlyebava Rudnya"
+},
+"Q28380067": {
+"en": "Hlyadki",
+"en-gb": "Hlyadki"
+},
+"Q28380068": {
+"en": "Adutiškis train station",
+"en-gb": "Hadutsishki"
+},
+"Q28380069": {
+"en": "Haloshawka",
+"en-gb": "Haloshawka"
+},
+"Q28380070": {
+"en": "Halynka",
+"en-gb": "Halynka"
+},
+"Q28380071": {
+"en": "Homanawka",
+"en-gb": "Homanawka"
+},
+"Q28380072": {
+"en": "Hanchary",
+"en-gb": "Hanchary"
+},
+"Q28380073": {
+"en": "Harozha",
+"en-gb": "Harozha"
+},
+"Q28380074": {
+"en": "Hrabawka",
+"en-gb": "Hrabawka"
+},
+"Q28380075": {
+"en": "Hrabyanyova",
+"en-gb": "Hrabyanyova"
+},
+"Q28380076": {
+"en": "Hrynki",
+"en-gb": "Hrynki"
+},
+"Q28380078": {
+"en": "Hrushawka",
+"en-gb": "Hrushawka"
+},
+"Q28380079": {
+"en": "Hrada",
+"en-gb": "Hrada"
+},
+"Q28380081": {
+"en": "Dalyokiya",
+"en-gb": "Dalyokiya"
+},
+"Q28380084": {
+"en": "Danilawtsy",
+"en-gb": "Danilawtsy"
+},
+"Q28380085": {
+"en": "Darlivaye",
+"en-gb": "Darlivaye"
+},
+"Q28380086": {
+"en": "Dary",
+"en-gb": "Dary"
+},
+"Q28380087": {
+"en": "Dachnaya",
+"en-gb": "Dachnaya"
+},
+"Q28380088": {
+"en": "Dachnaye",
+"en-gb": "Dachnaye"
+},
+"Q28380089": {
+"en": "Dachny",
+"en-gb": "Dachny"
+},
+"Q28380090": {
+"en": "Dvarets",
+"en-gb": "Dvarets"
+},
+"Q28380092": {
+"en": "Dzyahtsyany",
+"en-gb": "Dzyahtsyany"
+},
+"Q28380093": {
+"en": "Dzyednava",
+"en-gb": "Dzyednava"
+},
+"Q28380094": {
+"en": "Dzyedawka",
+"en-gb": "Dzyedawka"
+},
+"Q28380096": {
+"en": "Depo",
+"en-gb": "Depo"
+},
+"Q28380097": {
+"en": "Depowski",
+"en-gb": "Depowski"
+},
+"Q28380098": {
+"en": "Dzyetkavichy",
+"en-gb": "Dzyetkavichy"
+},
+"Q28380099": {
+"en": "Dzikalawka",
+"en-gb": "Dzikalawka"
+},
+"Q28380101": {
+"en": "Dzitva",
+"en-gb": "Dzitva"
+},
+"Q28380102": {
+"en": "Dzitryki",
+"en-gb": "Dzitryki"
+},
+"Q28380103": {
+"en": "Dobryna",
+"en-gb": "Dobryna"
+},
+"Q28380104": {
+"en": "Dawhyerdzishki",
+"en-gb": "Dawhyerdzishki"
+},
+"Q28380105": {
+"en": "Damanawski",
+"en-gb": "Damanawski"
+},
+"Q28380106": {
+"en": "Damachava",
+"en-gb": "Damachava"
+},
+"Q28380107": {
+"en": "Damašany",
+"en-gb": "Damašany",
+"mul": "Damašany"
+},
+"Q28380108": {
+"en": "Dranukha",
+"en-gb": "Dranukha"
+},
+"Q28380109": {
+"en": "Drebsk",
+"en-gb": "Drebsk"
+},
+"Q28380111": {
+"en": "Drychyn",
+"en-gb": "Drychyn"
+},
+"Q28380112": {
+"en": "Drahichyn-Horad",
+"en-gb": "Drahichyn-Horad"
+},
+"Q28380115": {
+"en": "Dubnavichy",
+"en-gb": "Dubnavichy"
+},
+"Q28380116": {
+"en": "Dubok",
+"en-gb": "Dubok"
+},
+"Q28380118": {
+"en": "Dubrovichy",
+"en-gb": "Dubrovichy"
+},
+"Q28380120": {
+"en": "Dudzichy",
+"en-gb": "Dudzichy"
+},
+"Q28380121": {
+"en": "Dziatlavičy",
+"en-gb": "Dziatlavičy"
+},
+"Q28380123": {
+"en": "Dzyatlava (train station)",
+"en-gb": "Dzyatlava"
+},
+"Q28380124": {
+"en": "Yaromina",
+"en-gb": "Yaromina"
+},
+"Q28380126": {
+"en": "Yotkishki train station",
+"en-gb": "Yotkishki"
+},
+"Q28380128": {
+"en": "Zhalyeznitsa",
+"en-gb": "Zhalyeznitsa"
+},
+"Q28380129": {
+"en": "Chyhunachny",
+"en-gb": "Chyhunachny"
+},
+"Q28380130": {
+"en": "Zhaludok",
+"en-gb": "Zhaludok"
+},
+"Q28380131": {
+"en": "Zhamchuzhyna",
+"en-gb": "Zhamchuzhyna"
+},
+"Q28380132": {
+"en": "Žarabkovičy",
+"en-gb": "Žarabkovičy",
+"mul": "Žarabkovičy"
+},
+"Q28380133": {
+"en": "Zhastsyanka",
+"en-gb": "Zhastsyanka"
+},
+"Q28380134": {
+"en": "Zhafarava train station",
+"en-gb": "Zhafarava"
+},
+"Q28380136": {
+"en": "Zhylichy",
+"en-gb": "Zhylichy"
+},
+"Q28380137": {
+"en": "Zhodzina-Pawdnyovaye",
+"en-gb": "Zhodzina-Pawdnyovaye"
+},
+"Q28380138": {
+"en": "Zhuravinka",
+"en-gb": "Zhuravinka"
+},
+"Q28380139": {
+"en": "Zhuravinka",
+"en-gb": "Zhuravinka"
+},
+"Q28380140": {
+"en-gb": "Zhurbin"
+},
+"Q28380142": {
+"en": "Zabozzye",
+"en-gb": "Zabozzye"
+},
+"Q28380143": {
+"en": "Zahorbashsha",
+"en-gb": "Zahorbashsha"
+},
+"Q28380144": {
+"en": "Zahorye",
+"en-gb": "Zahorye"
+},
+"Q28380146": {
+"en": "Zahraddzye",
+"en-gb": "Zahraddzye"
+},
+"Q28380148": {
+"en": "Zadrutstsye",
+"en-gb": "Zadrutstsye"
+},
+"Q28380150": {
+"en": "Zazyerka",
+"en-gb": "Zazyerka"
+},
+"Q28380151": {
+"en": "Zakazanka",
+"en-gb": "Zakazanka"
+},
+"Q28380152": {
+"en": "Zalyeskaya Slabada",
+"en-gb": "Zalyeskaya Slabada"
+},
+"Q28380155": {
+"en": "Zalichynka",
+"en-gb": "Zalichynka"
+},
+"Q28380159": {
+"en-gb": "Zamuzhannye"
+},
+"Q28380161": {
+"en": "Zaazyershchyna",
+"en-gb": "Zaazyershchyna"
+},
+"Q28380163": {
+"en": "Zakhodnyaye",
+"en-gb": "Zakhodnyaye"
+},
+"Q28380165": {
+"en": "Zapollye",
+"en-gb": "Zapollye"
+},
+"Q28380168": {
+"en": "Zashchobye",
+"en-gb": "Zashchobye"
+},
+"Q28380169": {
+"en": "Zbunin",
+"en-gb": "Zbunin"
+},
+"Q28380172": {
+"en": "Zorny",
+"en-gb": "Zorny"
+},
+"Q28380176": {
+"en": "Zyalyony Vostraw",
+"en-gb": "Zyalyony Vostraw"
+},
+"Q28380180": {
+"en": "Zubki",
+"en-gb": "Zubki"
+},
+"Q28380181": {
+"en": "Zubry",
+"en-gb": "Zubry"
+},
+"Q28380182": {
+"en": "Zyaby",
+"en-gb": "Zyaby"
+},
+"Q28380184": {
+"en": "Ivaki",
+"en-gb": "Ivaki"
+},
+"Q28380185": {
+"en": "Iwnaya",
+"en-gb": "Iwnaya"
+},
+"Q28380187": {
+"en": "Izbyn′",
+"en-gb": "Izbyn′"
+},
+"Q28380188": {
+"en": "Ilava",
+"en-gb": "Ilava"
+},
+"Q28380192": {
+"en": "Isa",
+"en-gb": "Isa"
+},
+"Q28380194": {
+"en": "Istobki",
+"en-gb": "Istobki"
+},
+"Q28380196": {
+"en": "Kazimirava",
+"en-gb": "Kazimirava"
+},
+"Q28380198": {
+"en": "Kalininski",
+"en-gb": "Kalininski"
+},
+"Q28380201": {
+"en": "Kalinkavichy-Zakhodniya",
+"en-gb": "Kalinkavichy-Zakhodniya"
+},
+"Q28380202": {
+"en": "Kalinkavichy-Pawdnyovyya",
+"en-gb": "Kalinkavichy-Pawdnyovyya"
+},
+"Q28380203": {
+"en": "Kalybawka",
+"en-gb": "Kalybawka"
+},
+"Q28380206": {
+"en": "Kamyen′",
+"en-gb": "Kamyen′"
+},
+"Q28380207": {
+"en": "Kaplitsa train station",
+"en-gb": "Kaplitsa"
+},
+"Q28380208": {
+"en": "Karavyshan′",
+"en-gb": "Karavyshan′"
+},
+"Q28380209": {
+"en": "Kastrychnik",
+"en-gb": "Kastrychnik"
+},
+"Q28380211": {
+"en": "Kvietka",
+"en-gb": "Kvyetka",
+"mul": "Kvietka"
+},
+"Q28380213": {
+"en": "Kireyeva",
+"en-gb": "Kireyeva"
+},
+"Q28380214": {
+"en": "Kiryanawtsy",
+"en-gb": "Kiryanawtsy"
+},
+"Q28380219": {
+"en": "Klishavichy",
+"en-gb": "Klishavichy"
+},
+"Q28380220": {
+"en": "Klachki train station",
+"en-gb": "Klachki"
+},
+"Q28380222": {
+"en": "Knyazikowtsy",
+"en-gb": "Knyazikowtsy"
+},
+"Q28380223": {
+"en": "Kabyolka",
+"en-gb": "Kabyolka"
+},
+"Q28380224": {
+"en": "Kavali",
+"en-gb": "Kavali"
+},
+"Q28380226": {
+"en": "Kazlovichy",
+"en-gb": "Kazlovichy"
+},
+"Q28380227": {
+"en": "Kazlyakyevichy",
+"en-gb": "Kazlyakyevichy"
+},
+"Q28380228": {
+"en": "Kamarowka",
+"en-gb": "Kamarowka"
+},
+"Q28380229": {
+"en": "Kamarova",
+"en-gb": "Kamarova"
+},
+"Q28380230": {
+"en": "Kanstantsinaw Dvor train station",
+"en-gb": "Kanstantsinaw Dvor"
+},
+"Q28380231": {
+"en": "Kapan′",
+"en-gb": "Kapan′"
+},
+"Q28380232": {
+"en": "Koptsi",
+"en-gb": "Koptsi"
+},
+"Q28380233": {
+"en": "Karobchytsy train station",
+"en-gb": "Karobchytsy"
+},
+"Q28380234": {
+"en": "Kastsyani",
+"en-gb": "Kastsyani"
+},
+"Q28380235": {
+"en": "Kosh",
+"en-gb": "Kosh"
+},
+"Q28380236": {
+"en": "Krawtsowka",
+"en-gb": "Krawtsowka"
+},
+"Q28380238": {
+"en": "Krayeva",
+"en-gb": "Krayeva"
+},
+"Q28380240": {
+"en": "Krasnaya Buda",
+"en-gb": "Krasnaya Buda"
+},
+"Q28380241": {
+"en": "Krasnaya Horka",
+"en-gb": "Krasnaya Horka"
+},
+"Q28380242": {
+"en": "Krasnawka",
+"en-gb": "Krasnawka"
+},
+"Q28380243": {
+"en": "Krasnaruchcha",
+"en-gb": "Krasnaruchcha"
+},
+"Q28380244": {
+"en": "Krasny Byerazhok",
+"en-gb": "Krasny Byerazhok"
+},
+"Q28380245": {
+"en": "Syalyanka",
+"en-gb": "Syalyanka"
+},
+"Q28380246": {
+"en": "Kryvichy",
+"en-gb": "Kryvichy"
+},
+"Q28380247": {
+"en": "Krynichyna",
+"en-gb": "Krynichyna"
+},
+"Q28380248": {
+"en": "Kruhlitsa",
+"en-gb": "Kruhlitsa"
+},
+"Q28380249": {
+"en": "Kulyani",
+"en-gb": "Kulyani"
+},
+"Q28380250": {
+"en": "Kul′shychy",
+"en-gb": "Kul′shychy"
+},
+"Q28380251": {
+"en": "Kurhan",
+"en-gb": "Kurhan"
+},
+"Q28380254": {
+"en": "Lazoviki",
+"en-gb": "Lazoviki"
+},
+"Q28380255": {
+"en": "Lastayantsy",
+"en-gb": "Lastayantsy"
+},
+"Q28380256": {
+"en": "Lyebyadzi",
+"en-gb": "Lyebyadzi"
+},
+"Q28380257": {
+"en": "Lyenindar",
+"en-gb": "Lyenindar"
+},
+"Q28380258": {
+"en": "Lyaplyowka",
+"en-gb": "Lyaplyowka"
+},
+"Q28380259": {
+"en": "Lyesniki",
+"en-gb": "Lyesniki"
+},
+"Q28380260": {
+"en": "Liotcy",
+"en-gb": "Liotcy",
+"mul": "Liotcy"
+},
+"Q28380261": {
+"en": "Lipinki",
+"en-gb": "Lipinki"
+},
+"Q28380262": {
+"en": "Lipniki",
+"en-gb": "Lipniki"
+},
+"Q28380263": {
+"en": "Lipava",
+"en-gb": "Lipava"
+},
+"Q28380265": {
+"en": "Listapady",
+"en-gb": "Listapady",
+"mul": "Listapady"
+},
+"Q28380266": {
+"en": "Litva",
+"en-gb": "Litva"
+},
+"Q28380267": {
+"en": "Likhachy train station",
+"en-gb": "Likhachy"
+},
+"Q28380268": {
+"en": "Labachy",
+"en-gb": "Labachy"
+},
+"Q28380271": {
+"en": "Lohviny",
+"en-gb": "Lohviny"
+},
+"Q28380272": {
+"en": "Lozki",
+"en-gb": "Lozki"
+},
+"Q28380274": {
+"en": "Lamachyna",
+"en-gb": "Lamachyna"
+},
+"Q28380275": {
+"en": "Losyeva train station",
+"en-gb": "Losyeva"
+},
+"Q28380277": {
+"en": "Lukyanawka",
+"en-gb": "Lukyanawka"
+},
+"Q28380278": {
+"en": "Lychkowskaha",
+"en-gb": "Lychkowskaha"
+},
+"Q28380279": {
+"en": "Lyuban′",
+"en-gb": "Lyuban′"
+},
+"Q28380280": {
+"en": "Lyubashava",
+"en-gb": "Lyubashava"
+},
+"Q28380281": {
+"en": "Lyubazherdzye",
+"en-gb": "Lyubazherdzye"
+},
+"Q28380282": {
+"en": "Lyudzyanyevichy",
+"en-gb": "Lyudzyanyevichy"
+},
+"Q28380283": {
+"en": "Lyusina",
+"en-gb": "Lyusina"
+},
+"Q28380284": {
+"en": "Lyuta",
+"en-gb": "Lyuta"
+},
+"Q28380285": {
+"en": "Lyakhawshchyna train station",
+"en-gb": "Lyakhawshchyna"
+},
+"Q28380286": {
+"en": "Mayski",
+"en-gb": "Mayski"
+},
+"Q28380287": {
+"en": "Makanavichy",
+"en-gb": "Makanavichy"
+},
+"Q28380288": {
+"en": "Malyevichy",
+"en-gb": "Malyevichy"
+},
+"Q28380289": {
+"en": "Malinniki",
+"en-gb": "Malinniki"
+},
+"Q28380290": {
+"en": "Malyatsichy",
+"en-gb": "Malyatsichy"
+},
+"Q28380291": {
+"en": "Martsyukhova",
+"en-gb": "Martsyukhova"
+},
+"Q28380292": {
+"en": "Mashkova",
+"en-gb": "Mashkova"
+},
+"Q28380294": {
+"en": "Miĺkaŭščyna",
+"en-gb": "Miĺkaŭščyna",
+"mul": "Miĺkaŭščyna"
+},
+"Q28380295": {
+"en": "Myel′kambinat",
+"en-gb": "Myel′kambinat"
+},
+"Q28380296": {
+"en": "Mieĺniki",
+"en-gb": "Mieĺniki"
+},
+"Q28380297": {
+"en": "Myanyutsyeva",
+"en-gb": "Myanyutsyeva"
+},
+"Q28380298": {
+"en": "Myetalurh",
+"en-gb": "Myetalurh"
+},
+"Q28380300": {
+"en": "Myetalurh",
+"en-gb": "Myetalurh"
+},
+"Q28380301": {
+"en": "Myekhavoye",
+"en-gb": "Myekhavoye"
+},
+"Q28380302": {
+"en": "Mikyelyewshchyna",
+"en-gb": "Mikyelyewshchyna"
+},
+"Q28380303": {
+"en": "Mikulichy",
+"en-gb": "Mikulichy"
+},
+"Q28380304": {
+"en": "Miloye",
+"en-gb": "Miloye"
+},
+"Q28380307": {
+"en": "Mits′ki",
+"en-gb": "Mits′ki"
+},
+"Q28380308": {
+"en": "Mikhyeyevichy",
+"en-gb": "Mikhyeyevichy"
+},
+"Q28380309": {
+"en": "Mikhnava",
+"en-gb": "Mikhnava"
+},
+"Q28380310": {
+"en": "Mokraye",
+"en-gb": "Mokraye"
+},
+"Q28380311": {
+"en": "Maladzyozhny",
+"en-gb": "Maladzyozhny"
+},
+"Q28380313": {
+"en": "Mowchadz′",
+"en-gb": "Mowchadz′"
+},
+"Q28380314": {
+"en": "Montawty",
+"en-gb": "Montawty"
+},
+"Q28380316": {
+"en": "Matykaly Vyalikiya",
+"en-gb": "Matykaly Vyalikiya"
+},
+"Q28380317": {
+"en": "Moshny",
+"en-gb": "Moshny"
+},
+"Q28380318": {
+"en": "Mashok",
+"en-gb": "Mashok"
+},
+"Q28380319": {
+"en": "Mstsibava",
+"en-gb": "Mstsibava"
+},
+"Q28380320": {
+"en": "Muravanka",
+"en-gb": "Muravanka"
+},
+"Q28380324": {
+"en": "Nyestsyeravichy",
+"en-gb": "Nyestsyeravichy"
+},
+"Q28380325": {
+"en": "Niwki",
+"en-gb": "Niwki"
+},
+"Q28380327": {
+"en": "Nivy",
+"en-gb": "Nivy"
+},
+"Q28380328": {
+"en": "Mikol′sk",
+"en-gb": "Mikol′sk"
+},
+"Q28380331": {
+"en": "Novaya Dubrova",
+"en-gb": "Novaya Dubrova"
+},
+"Q28380332": {
+"en": "Novaye Zhytstsyo",
+"en-gb": "Novaye Zhytstsyo"
+},
+"Q28380334": {
+"en": "Novaya Niva",
+"en-gb": "Novaya Niva"
+},
+"Q28380335": {
+"en": "Novaya Rudnya",
+"en-gb": "Novaya Rudnya"
+},
+"Q28380336": {
+"en": "Navahorki",
+"en-gb": "Navahorki"
+},
+"Q28380337": {
+"en": "Navadrutsk train station",
+"en-gb": "Navadrutsk"
+},
+"Q28380338": {
+"en": "Navalipawski",
+"en-gb": "Navalipawski"
+},
+"Q28380339": {
+"en": "Navasyolki train station",
+"en-gb": "Navasyolki"
+},
+"Q28380340": {
+"en": "Novyya Luki",
+"en-gb": "Novyya Luki"
+},
+"Q28380341": {
+"en": "Nasovichy",
+"en-gb": "Nasovichy"
+},
+"Q28380342": {
+"en-gb": "Ahdemyer"
+},
+"Q28380343": {
+"en": "Aholichy",
+"en-gb": "Aholichy"
+},
+"Q28380344": {
+"en": "Azyemlya",
+"en-gb": "Azyemlya"
+},
+"Q28380346": {
+"en": "Azyornaya",
+"en-gb": "Azyornaya"
+},
+"Q28380347": {
+"en": "Aktsyabrski",
+"en-gb": "Aktsyabrski"
+},
+"Q28380348": {
+"en": "Al′khowka",
+"en-gb": "Al′khowka"
+},
+"Q28380350": {
+"en": "Amyal′nya",
+"en-gb": "Amyal′nya"
+},
+"Q28380352": {
+"en": "Orsichy",
+"en-gb": "Orsichy"
+},
+"Q28380353": {
+"en": "Asmolavichy",
+"en-gb": "Asmolavichy"
+},
+"Q28380354": {
+"en": "Vosaw",
+"en-gb": "Vosaw"
+},
+"Q28380355": {
+"en": "Vosava",
+"en-gb": "Vosava"
+},
+"Q28380357": {
+"en": "Atochka",
+"en-gb": "Atochka"
+},
+"Q28380358": {
+"en": "Parshyna",
+"en-gb": "Parshyna"
+},
+"Q28380359": {
+"en": "Pasyeka",
+"en-gb": "Pasyeka"
+},
+"Q28380360": {
+"en": "Pyeramozhnik",
+"en-gb": "Pyeramozhnik"
+},
+"Q28380361": {
+"en": "Pyerasyel′tsy train station",
+"en-gb": "Pyerasyel′tsy"
+},
+"Q28380362": {
+"en": "Pyetukhowshchyna",
+"en-gb": "Pyetukhowshchyna"
+},
+"Q28380363": {
+"en": "Pyetsyuny train station",
+"en-gb": "Pyetsyuny"
+},
+"Q28380364": {
+"en": "Pyachynski",
+"en-gb": "Pyachynski"
+},
+"Q28380365": {
+"en": "Pihanovichy",
+"en-gb": "Pihanovichy"
+},
+"Q28380366": {
+"en": "Pichawka",
+"en-gb": "Pichawka"
+},
+"Q28380368": {
+"en": "Pliecianičy",
+"en-gb": "Pliecianičy",
+"mul": "Pliecianičy"
+},
+"Q28380370": {
+"en": "Pludzim",
+"en-gb": "Pludzim"
+},
+"Q28380371": {
+"en": "Pawstyn′",
+"en-gb": "Pawstyn′"
+},
+"Q28380372": {
+"en": "Paharelaye",
+"en-gb": "Paharelaye"
+},
+"Q28380373": {
+"en": "Padlyessye",
+"en-gb": "Padlyessye"
+},
+"Q28380376": {
+"en": "Pazhezhyn",
+"en-gb": "Pazhezhyn"
+},
+"Q28380377": {
+"en": "Paznyakova",
+"en-gb": "Paznyakova"
+},
+"Q28380378": {
+"en": "Palyevachy",
+"en-gb": "Palyevachy"
+},
+"Q28380379": {
+"en": "Palyeski Park train station",
+"en-gb": "Palyeski Park"
+},
+"Q28380381": {
+"en": "Palykavickija Chutary",
+"en-gb": "Palykavitskiya Khutary"
+},
+"Q28380382": {
+"en": "Panizoŭ",
+"en-gb": "Panizoŭ",
+"mul": "Panizoŭ"
+},
+"Q28380385": {
+"en": "Parachany",
+"en-gb": "Parachany"
+},
+"Q28380386": {
+"en": "Porplishcha",
+"en-gb": "Porplishcha"
+},
+"Q28380388": {
+"en": "Patapawka",
+"en-gb": "Patapawka"
+},
+"Q28380389": {
+"en": "Prybarava",
+"en-gb": "Prybarava"
+},
+"Q28380390": {
+"en": "Prybuzhzha",
+"en-gb": "Prybuzhzha"
+},
+"Q28380398": {
+"en": "Skrebni",
+"en-gb": "19 km"
+},
+"Q28380399": {
+"en": "25 km",
+"en-gb": "25 km"
+},
+"Q28380400": {
+"en": "Adamova",
+"en-gb": "Adamova"
+},
+"Q28380402": {
+"en": "Alyoshcha",
+"en-gb": "Alyoshcha"
+},
+"Q28380403": {
+"en": "Andreyevichy",
+"en-gb": "Andreyevichy"
+},
+"Q28380405": {
+"en": "Aul′s",
+"en-gb": "Aul′s"
+},
+"Q28380406": {
+"en": "Babichy",
+"en-gb": "Babichy"
+},
+"Q28380407": {
+"en": "Baravukha",
+"en-gb": "Baravukha"
+},
+"Q28380411": {
+"en": "Barsuki",
+"en-gb": "Barsuki"
+},
+"Q28380413": {
+"en": "Bastuny train station",
+"en-gb": "Bastuny"
+},
+"Q28380414": {
+"en": "Byalynkavichy",
+"en-gb": "Byalynkavichy"
+},
+"Q28380415": {
+"en": "Byenyakoni train station",
+"en-gb": "Byenyakoni"
+},
+"Q28380418": {
+"en": "Byarozki",
+"en-gb": "Byarozki"
+},
+"Q28380420": {
+"en": "Bihosava",
+"mul": "Bihosava"
+},
+"Q28380423": {
+"en": "Bahdanaŭ",
+"en-gb": "Bahdanaŭ",
+"mul": "Bahdanaŭ"
+},
+"Q28380424": {
+"en": "Bahushewskaya",
+"en-gb": "Bahushewskaya"
+},
+"Q28380426": {
+"en": "Borkavichy",
+"en-gb": "Borkavichy"
+},
+"Q28380427": {
+"en": "Baravoye",
+"en-gb": "Baravoye"
+},
+"Q28380429": {
+"en": "Barawtsy",
+"en-gb": "Barawtsy"
+},
+"Q28380434": {
+"en": "Brynyova",
+"en-gb": "Brynyova"
+},
+"Q28380435": {
+"en": "Brozha",
+"en-gb": "Brozha"
+},
+"Q28380436": {
+"en": "Bruzhi train station",
+"en-gb": "Bruzhi"
+},
+"Q28380438": {
+"en": "Budslaw",
+"en-gb": "Budslaw"
+},
+"Q28380440": {
+"en": "Buynichy",
+"en-gb": "Buynichy"
+},
+"Q28380441": {
+"en": "Bumazhkova",
+"en-gb": "Bumazhkova"
+},
+"Q28380445": {
+"en": "Viendryž",
+"en-gb": "Viendryž",
+"mul": "Viendryž"
+},
+"Q28380447": {
+"en": "Vieramiejki",
+"en-gb": "Vieramiejki",
+"mul": "Vieramiejki"
+},
+"Q28380448": {
+"en": "Vyerkhnyadzvinsk",
+"en-gb": "Vyerkhnyadzvinsk"
+},
+"Q28380449": {
+"en-gb": "Vyarkhutsina"
+},
+"Q28380450": {
+"en": "Vidzibor",
+"en-gb": "Vidzibor"
+},
+"Q28380453": {
+"en": "Virski",
+"en-gb": "Virski"
+},
+"Q28380462": {
+"en": "Vawkavysk-Tsentral′ny",
+"en-gb": "Vawkavysk-Tsentral′ny"
+},
+"Q28380464": {
+"en": "Valožyn",
+"en-gb": "Valožyn",
+"mul": "Valožyn"
+},
+"Q28380467": {
+"en": "Valaskownya",
+"en-gb": "Valaskownya"
+},
+"Q28380469": {
+"en-gb": "Vonichy"
+},
+"Q28380473": {
+"en": "Varapayeva train station",
+"en-gb": "Varapayeva"
+},
+"Q28380476": {
+"en": "Vyhada",
+"en-gb": "Vyhada"
+},
+"Q28380478": {
+"en": "Hawya",
+"en-gb": "Hawya"
+},
+"Q28380481": {
+"en": "Hibulichy train station",
+"en-gb": "Hibulichy"
+},
+"Q28380482": {
+"en": "Hlybokaye train station",
+"en-gb": "Hlybokaye"
+},
+"Q28380484": {
+"en": "Haradzyets",
+"en-gb": "Haradzyets"
+},
+"Q28380486": {
+"en": "Haradzishcha",
+"en-gb": "Haradzishcha"
+},
+"Q28380488": {
+"en": "Haradok",
+"en-gb": "Haradok"
+},
+"Q28380489": {
+"en": "Harochychy",
+"en-gb": "Harochychy"
+},
+"Q28380493": {
+"en": "Harany",
+"en-gb": "Harany"
+},
+"Q28380494": {
+"en": "Hrybachy",
+"en-gb": "Hrybachy"
+},
+"Q28380495": {
+"en": "Hryshany",
+"en-gb": "Hryshany"
+},
+"Q28380496": {
+"en": "Hradzyanka",
+"en-gb": "Hradzyanka"
+},
+"Q28380497": {
+"en": "Hudy train station",
+"en-gb": "Hudy"
+},
+"Q28380500": {
+"en": "Hutna",
+"en-gb": "Hutna"
+},
+"Q28380501": {
+"en": "Darahanava",
+"en-gb": "Darahanava"
+},
+"Q28380502": {
+"en": "Dashkawka",
+"en-gb": "Dashkawka"
+},
+"Q28380504": {
+"en": "Dzyerawtsy",
+"en-gb": "Dzyerawtsy"
+},
+"Q28380505": {
+"en": "Damashevichy",
+"en-gb": "Damashevichy"
+},
+"Q28380508": {
+"en": "Dretuń",
+"en-gb": "Dretun′"
+},
+"Q28380510": {
+"en": "Druja",
+"en-gb": "Druja",
+"mul": "Druja"
+},
+"Q28380511": {
+"en": "Druć",
+"en-gb": "Druć",
+"mul": "Druć"
+},
+"Q28380512": {
+"en": "Dubitsa",
+"en-gb": "Dubitsa"
+},
+"Q28380513": {
+"en": "Jeziaryšča",
+"en-gb": "Jeziaryšča",
+"mul": "Jeziaryšča"
+},
+"Q28380514": {
+"en": "Yalizava",
+"en-gb": "Yalizava"
+},
+"Q28380515": {
+"en": "Yel′sk",
+"en-gb": "Yel′sk"
+},
+"Q28380517": {
+"en": "Zherdz′",
+"en-gb": "Zherdz′"
+},
+"Q28380518": {
+"en": "Zhytkavichy",
+"en-gb": "Zhytkavichy"
+},
+"Q28380520": {
+"en": "Žytomlia",
+"en-gb": "Žytomlia",
+"mul": "Žytomlia"
+},
+"Q28380521": {
+"en": "Zhlobin-Zakhodni",
+"en-gb": "Zhlobin-Zakhodni"
+},
+"Q28380522": {
+"en": "Zhlobin-Padol′ski",
+"en-gb": "Zhlobin-Padol′ski"
+},
+"Q28380523": {
+"en": "Zhlobin-Pawnochny",
+"en-gb": "Zhlobin-Pawnochny"
+},
+"Q28380528": {
+"en": "Zabalotsinka",
+"en-gb": "Zabalotsinka"
+},
+"Q28380529": {
+"en": "Zavadzichy",
+"en-gb": "Zavadzichy"
+},
+"Q28380530": {
+"en": "Zahatstsye",
+"en-gb": "Zahatstsye"
+},
+"Q28380532": {
+"en": "Zakrutsin",
+"en-gb": "Zakrutsin"
+},
+"Q28380534": {
+"en": "Zaluchcha",
+"en-gb": "Zaluchcha"
+},
+"Q28380535": {
+"en": "Zamastochcha",
+"en-gb": "Zamastochcha"
+},
+"Q28380536": {
+"en": "Zavol′sha",
+"en-gb": "Zavol′sha"
+},
+"Q28380538": {
+"en": "Zeĺva",
+"en-gb": "Zeĺva",
+"mul": "Zeĺva"
+},
+"Q28380539": {
+"en": "Ziabki",
+"en-gb": "Ziabki",
+"mul": "Ziabki"
+},
+"Q28380543": {
+"en": "Kalyedzino",
+"en-gb": "Kalyedzino"
+},
+"Q28380544": {
+"en": "Kaliy I",
+"en-gb": "Kaliy I"
+},
+"Q28380545": {
+"en": "Kaliy III",
+"en-gb": "Kaliy III"
+},
+"Q28380547": {
+"en-gb": "Katsury"
+},
+"Q28380548": {
+"en": "Klyetsk",
+"en-gb": "Klyetsk"
+},
+"Q28380551": {
+"en": "Klinsk",
+"en-gb": "Klinsk"
+},
+"Q28380552": {
+"en": "Knyahinin",
+"en-gb": "Knyahinin"
+},
+"Q28380553": {
+"en": "Knyazhytsa",
+"en-gb": "Knyazhytsa"
+},
+"Q28380557": {
+"en": "Kaptsevichy",
+"en-gb": "Kaptsevichy"
+},
+"Q28380558": {
+"en": "Kopys′",
+"en-gb": "Kopys′"
+},
+"Q28380560": {
+"en-gb": "Korzhawka"
+},
+"Q28380562": {
+"en": "Čyrvony Sciah",
+"en-gb": "Čyrvony Sciah",
+"mul": "Čyrvony Sciah"
+},
+"Q28380565": {
+"en": "Krasny Brod",
+"en-gb": "Krasny Brod"
+},
+"Q28380568": {
+"en": "Krulyawshchyna train station",
+"en-gb": "Krulyawshchyna"
+},
+"Q28380571": {
+"en": "Ksty",
+"en-gb": "Ksty"
+},
+"Q28380572": {
+"en": "Kuranyets",
+"en-gb": "Kuranyets"
+},
+"Q28380573": {
+"en": "Lazurnaya",
+"en-gb": "Lazurnaya"
+},
+"Q28380574": {
+"en": "Lyemnitsa",
+"en-gb": "Lyemnitsa"
+},
+"Q28380575": {
+"en": "Lyepyel′",
+"en-gb": "Lyepyel′"
+},
+"Q28380576": {
+"en": "Lida train station",
+"en-gb": "Lida"
+},
+"Q28380577": {
+"en": "Liozna",
+"en-gb": "Lyozna"
+},
+"Q28380579": {
+"en": "Lisichki",
+"en-gb": "Lisichki"
+},
+"Q28380581": {
+"en": "Lowcha",
+"en-gb": "Lowcha"
+},
+"Q28380582": {
+"en": "Lowsha",
+"en-gb": "Lowsha"
+},
+"Q28380583": {
+"en": "Losvida",
+"en-gb": "Losvida"
+},
+"Q28380585": {
+"en": "Latva",
+"en-gb": "Latva"
+},
+"Q28380586": {
+"en": "Ludchytsy",
+"en-gb": "Ludchytsy"
+},
+"Q28380587": {
+"en": "Lužasna",
+"en-gb": "Lužasna",
+"mul": "Lužasna"
+},
+"Q28380588": {
+"en": "Lukskaye",
+"en-gb": "Lukskaye"
+},
+"Q28380590": {
+"en": "Luchosa",
+"en-gb": "Luchosa"
+},
+"Q28380591": {
+"en": "Lyshchytsy",
+"en-gb": "Lyshchytsy"
+},
+"Q28380592": {
+"en": "Lyushcha",
+"en-gb": "Lyushcha"
+},
+"Q28380593": {
+"en": "Lyakhavichy",
+"en-gb": "Lyakhavichy"
+},
+"Q28380594": {
+"en": "Mal′kavichy",
+"en-gb": "Mal′kavichy"
+},
+"Q28380595": {
+"en": "Myadzvyodka",
+"en-gb": "Myadzvyodka"
+},
+"Q28380598": {
+"en": "Mikashevichy",
+"en-gb": "Mikashevichy"
+},
+"Q28380599": {
+"en": "Minojty",
+"en-gb": "Minojty",
+"mul": "Minojty"
+},
+"Q28380601": {
+"en": "Pryharadny train station",
+"en-gb": "Pryharadny"
+},
+"Q28380603": {
+"en": "Pryluki",
+"en-gb": "Pryluki"
+},
+"Q28380606": {
+"en": "Pryazyorny",
+"en-gb": "Pryazyorny"
+},
+"Q28380608": {
+"en": "Pralietarskaja Pabieda",
+"en-gb": "Pralietarskaja Pabieda"
+},
+"Q28380610": {
+"en": "Prudowka",
+"en-gb": "Prudowka"
+},
+"Q28380611": {
+"en": "Miradzina",
+"en-gb": "Miradzina"
+},
+"Q28380612": {
+"en": "Pushcha",
+"en-gb": "Pushcha"
+},
+"Q28380614": {
+"en": "Pyachkavichy",
+"en-gb": "Pyachkavichy"
+},
+"Q28380615": {
+"en": "Mitskyevichy",
+"en-gb": "Mitskyevichy"
+},
+"Q28380616": {
+"en": "Rawnapollye",
+"en-gb": "Rawnapollye"
+},
+"Q28380618": {
+"en": "Radzyeyeva",
+"en-gb": "Radzyeyeva"
+},
+"Q28380621": {
+"en": "Raduha",
+"en-gb": "Raduha"
+},
+"Q28380623": {
+"en": "Razvadava",
+"en-gb": "Razvadava"
+},
+"Q28380628": {
+"en": "Rakitna",
+"en-gb": "Rakitna"
+},
+"Q28380630": {
+"en": "Raklyowtsy",
+"en-gb": "Raklyowtsy"
+},
+"Q28380631": {
+"en": "Mordzichy",
+"en-gb": "Mordzichy"
+},
+"Q28380633": {
+"en": "Mormal′",
+"en-gb": "Mormal′"
+},
+"Q28380635": {
+"en": "Rekta",
+"en-gb": "Rekta"
+},
+"Q28380636": {
+"en": "Remyestava",
+"en-gb": "Remyestava"
+},
+"Q28380637": {
+"en": "Matykaly",
+"en-gb": "Matykaly"
+},
+"Q28380638": {
+"en": "Rytm",
+"en-gb": "Rytm"
+},
+"Q28380639": {
+"en": "Mulyarawka",
+"en-gb": "Mulyarawka"
+},
+"Q28380641": {
+"en": "Myshanka",
+"en-gb": "Myshanka"
+},
+"Q28380642": {
+"en": "Ramanowshchyna",
+"en-gb": "Ramanowshchyna"
+},
+"Q28380643": {
+"en": "Nyekrashy",
+"en-gb": "Nyekrashy"
+},
+"Q28380644": {
+"en": "Ramatova",
+"en-gb": "Ramatova"
+},
+"Q28380645": {
+"en": "Nioman",
+"en-gb": "Nioman"
+},
+"Q28380646": {
+"en": "Rudawka",
+"en-gb": "Rudawka"
+},
+"Q28380647": {
+"en": "Nyemyayshchyna train station",
+"en-gb": "Nyemyayshchyna"
+},
+"Q28380648": {
+"en": "Rudzyeya",
+"en-gb": "Rudzyeya"
+},
+"Q28380649": {
+"en": "Nyasyata",
+"en-gb": "Nyasyata"
+},
+"Q28380650": {
+"en": "Rudnyanski",
+"en-gb": "Rudnyanski"
+},
+"Q28380651": {
+"en": "Navadvortsy",
+"en-gb": "Navadvortsy"
+},
+"Q28380652": {
+"en": "Rybnitsa train station",
+"en-gb": "Rybnitsa"
+},
+"Q28380653": {
+"en": "Navajeĺnia",
+"en-gb": "Navajeĺnia",
+"mul": "Navajeĺnia"
+},
+"Q28380654": {
+"en": "Savyelyenki",
+"en-gb": "Savyelyenki"
+},
+"Q28380656": {
+"en": "Savichy",
+"en-gb": "Savichy"
+},
+"Q28380659": {
+"en": "Navasady",
+"en-gb": "Navasady"
+},
+"Q28380660": {
+"en": "Sadki",
+"en-gb": "Sadki"
+},
+"Q28380661": {
+"en": "Obaĺ",
+"en-gb": "Obaĺ",
+"mul": "Obaĺ"
+},
+"Q28380662": {
+"en": "Sadovy",
+"en-gb": "Sadovy"
+},
+"Q28380663": {
+"en": "Aziarnica",
+"en-gb": "Aziarnica",
+"mul": "Aziarnica"
+},
+"Q28380664": {
+"en": "Sady",
+"en-gb": "Sady"
+},
+"Q28380666": {
+"en": "Saki",
+"en-gb": "Saki"
+},
+"Q28380668": {
+"en": "Salatstsye train station",
+"en-gb": "Salatstsye"
+},
+"Q28380670": {
+"en": "Samulki",
+"en-gb": "Samulki"
+},
+"Q28380672": {
+"en": "Sar'yanka",
+"en-gb": "Saryanka"
+},
+"Q28380674": {
+"en": "Svislach",
+"en-gb": "Svislach"
+},
+"Q28380676": {
+"en": "Syewruki",
+"en-gb": "Syewruki"
+},
+"Q28380677": {
+"en": "Asavyets",
+"en-gb": "Asavyets"
+},
+"Q28380678": {
+"en": "Syedcha",
+"en-gb": "Syedcha"
+},
+"Q28380679": {
+"en": "Astankavichy",
+"en-gb": "Astankavichy"
+},
+"Q28380680": {
+"en": "Syakyerawshchyna",
+"en-gb": "Syakyerawshchyna"
+},
+"Q28380681": {
+"en": "Parafyanava",
+"en-gb": "Parafyanava"
+},
+"Q28380682": {
+"en": "Syel′naye",
+"en-gb": "Syel′naye"
+},
+"Q28380683": {
+"en": "Parakhonsk",
+"en-gb": "Parakhonsk"
+},
+"Q28380684": {
+"en": "Syelyakhi",
+"en-gb": "Syelyakhi"
+},
+"Q28380686": {
+"en": "Syemashki",
+"en-gb": "Syemashki"
+},
+"Q28380688": {
+"en": "Syemukovichy",
+"en-gb": "Syemukovichy"
+},
+"Q28380691": {
+"en": "Padsvillye",
+"en-gb": "Padsvillye"
+},
+"Q28380692": {
+"en": "Syeradnyaki",
+"en-gb": "Syeradnyaki"
+},
+"Q28380693": {
+"en": "Palonka",
+"en-gb": "Palonka"
+},
+"Q28380694": {
+"en": "Syechki",
+"en-gb": "Syechki"
+},
+"Q28380696": {
+"en": "Sidarawka",
+"en-gb": "Sidarawka"
+},
+"Q28380698": {
+"en": "Palachany",
+"en-gb": "Palachany"
+},
+"Q28380699": {
+"en": "Sinyuha",
+"en-gb": "Sinyuha"
+},
+"Q28380700": {
+"en": "Parečča train station",
+"en-gb": "Parechcha"
+},
+"Q28380702": {
+"en": "Pastavy train station",
+"en-gb": "Pastavy"
+},
+"Q28380703": {
+"en": "Skoki",
+"en-gb": "Skoki"
+},
+"Q28380707": {
+"en": "Slabodka",
+"en-gb": "Slabodka"
+},
+"Q28380708": {
+"en": "Prypyats′",
+"en-gb": "Prypyats′"
+},
+"Q28380709": {
+"en": "Slabodski",
+"en-gb": "Slabodski"
+},
+"Q28380712": {
+"en": "Prokshyna",
+"en-gb": "Prokshyna"
+},
+"Q28380713": {
+"en": "Snitava",
+"en-gb": "Snitava"
+},
+"Q28380714": {
+"en": "Ptsich",
+"en-gb": "Ptsich"
+},
+"Q28380715": {
+"en": "Sabalyowka",
+"en-gb": "Sabalyowka"
+},
+"Q28380716": {
+"en": "Pkhow",
+"en-gb": "Pkhow"
+},
+"Q28380717": {
+"en": "Savyetski",
+"en-gb": "Savyetski"
+},
+"Q28380718": {
+"en": "Rabkor",
+"en-gb": "Rabkor"
+},
+"Q28380719": {
+"en": "Sonyechny",
+"en-gb": "Sonyechny"
+},
+"Q28380720": {
+"en": "Ratmiravichy",
+"en-gb": "Ratmiravichy"
+},
+"Q28380721": {
+"en": "Salanoye",
+"en-gb": "Salanoye"
+},
+"Q28380722": {
+"en": "Rabusa",
+"en-gb": "Rabusa"
+},
+"Q28380723": {
+"en": "Sasnowka",
+"en-gb": "Sasnowka"
+},
+"Q28380724": {
+"en": "Raytanaw",
+"en-gb": "Raytanaw"
+},
+"Q28380726": {
+"en": "Resta",
+"en-gb": "Resta"
+},
+"Q28380727": {
+"en": "Staraja Vieś",
+"en-gb": "Staraja Vieś",
+"mul": "Staraja Vieś"
+},
+"Q28380728": {
+"en": "Rahachow",
+"en-gb": "Rahachow"
+},
+"Q28380729": {
+"en": "Staraya Rudnya",
+"en-gb": "Staraya Rudnya"
+},
+"Q28380731": {
+"en": "Razhanka",
+"en-gb": "Razhanka"
+},
+"Q28380736": {
+"en": "Stayalava",
+"en-gb": "Stayalava"
+},
+"Q28380737": {
+"en": "Roś",
+"en-gb": "Roś",
+"mul": "Roś"
+},
+"Q28380738": {
+"en": "Stradzyech",
+"en-gb": "Stradzyech"
+},
+"Q28380739": {
+"en": "Raslyaki",
+"en-gb": "Raslyaki"
+},
+"Q28380740": {
+"en": "Strazhy",
+"en-gb": "Strazhy"
+},
+"Q28380741": {
+"en": "Rumina",
+"en-gb": "Rumina"
+},
+"Q28380742": {
+"en": "Budawnik",
+"en-gb": "Budawnik"
+},
+"Q28380743": {
+"en": "Rusino",
+"en-gb": "Rusino"
+},
+"Q28380744": {
+"en": "Susha",
+"en-gb": "Susha"
+},
+"Q28380746": {
+"en": "Tachanka",
+"en-gb": "Tachanka"
+},
+"Q28380747": {
+"en": "Savichy",
+"en-gb": "Savichy"
+},
+"Q28380748": {
+"en": "Tekstyl′shchyk",
+"en-gb": "Tekstyl′shchyk"
+},
+"Q28380749": {
+"en": "Saltanawka",
+"en-gb": "Saltanawka"
+},
+"Q28380750": {
+"en": "Tekhnikum",
+"en-gb": "Tekhnikum"
+},
+"Q28380753": {
+"en": "Tsimirazyeva",
+"en-gb": "Tsimirazyeva"
+},
+"Q28380756": {
+"en": "Sinkyevichy",
+"en-gb": "Sinkyevichy"
+},
+"Q28380757": {
+"en": "Tsishowka",
+"en-gb": "Tsishowka"
+},
+"Q28380758": {
+"en": "Syenazavod",
+"en-gb": "Syenazavod"
+},
+"Q28380759": {
+"en": "Takary",
+"en-gb": "Takary",
+"mul": "Takary"
+},
+"Q28380761": {
+"en": "Tratsylava",
+"en-gb": "Tratsylava"
+},
+"Q28380763": {
+"en": "Trud",
+"en-gb": "Trud"
+},
+"Q28380764": {
+"en": "Skrybawtsy",
+"en-gb": "Skrybawtsy"
+},
+"Q28380765": {
+"en": "Tuholitsa",
+"en-gb": "Tuholitsa"
+},
+"Q28380767": {
+"en": "Turya",
+"en-gb": "Turya"
+},
+"Q28380768": {
+"en": "Slavyechna",
+"en-gb": "Slavyechna"
+},
+"Q28380773": {
+"en": "Uborak",
+"en-gb": "Uborak"
+},
+"Q28380774": {
+"en": "Smal′yany",
+"en-gb": "Smal′yany"
+},
+"Q28380776": {
+"en": "Uzhlyatsina",
+"en-gb": "Uzhlyatsina"
+},
+"Q28380778": {
+"en": "Uzbyerazh train station",
+"en-gb": "Uzbyerazh"
+},
+"Q28380779": {
+"en": "Sosnitsa",
+"en-gb": "Sosnitsa"
+},
+"Q28380780": {
+"en": "Uzdorniki",
+"en-gb": "Uzdorniki"
+},
+"Q28380782": {
+"en": "Uznazh",
+"en-gb": "Uznazh"
+},
+"Q28380783": {
+"en": "Staroye Syalo",
+"en-gb": "Staroye Syalo"
+},
+"Q28380784": {
+"en": "Ul′yanawka",
+"en-gb": "Ul′yanawka"
+},
+"Q28380785": {
+"en": "Starasyel′ski",
+"en-gb": "Starasyel′ski"
+},
+"Q28380787": {
+"en": "Starushki",
+"en-gb": "Starushki"
+},
+"Q28380788": {
+"en": "Fabrychny",
+"en-gb": "Fabrychny"
+},
+"Q28380789": {
+"en": "Staryja Darohi",
+"en-gb": "Staryja Darohi",
+"mul": "Staryja Darohi"
+},
+"Q28380790": {
+"en": "Fyedzyuki",
+"en-gb": "Fyedzyuki"
+},
+"Q28380791": {
+"en": "Stsyapyanka",
+"en-gb": "Stsyapyanka"
+},
+"Q28380792": {
+"en": "Khalyechyna",
+"en-gb": "Khalyechyna"
+},
+"Q28380793": {
+"en": "Tatarka",
+"en-gb": "Tatarka"
+},
+"Q28380794": {
+"en": "Kharsy",
+"en-gb": "Kharsy"
+},
+"Q28380795": {
+"en": "Tsyalusha",
+"en-gb": "Tsyalusha"
+},
+"Q28380796": {
+"en": "Khvayetskaye",
+"en-gb": "Khvayetskaye"
+},
+"Q28380797": {
+"en-gb": "Tsyomny Lyes"
+},
+"Q28380798": {
+"en": "Khvaynyany",
+"en-gb": "Khvaynyany"
+},
+"Q28380799": {
+"en": "Tsyerukha",
+"en-gb": "Tsyerukha"
+},
+"Q28380800": {
+"en": "Khonava",
+"en-gb": "Khonava"
+},
+"Q28380801": {
+"en": "Cimkavičy",
+"en-gb": "Cimkavičy",
+"mul": "Cimkavičy"
+},
+"Q28380803": {
+"en": "Khorabrava",
+"en-gb": "Khorabrava"
+},
+"Q28380805": {
+"en": "Kharashki",
+"en-gb": "Kharashki"
+},
+"Q28380806": {
+"en": "Toshchytsa",
+"en-gb": "Toshchytsa"
+},
+"Q28380807": {
+"en": "Tsvyermy",
+"en-gb": "Tsvyermy"
+},
+"Q28380808": {
+"en": "Trudavaya",
+"en-gb": "Trudavaya"
+},
+"Q28380811": {
+"en": "Charavachytsy",
+"en-gb": "Charavachytsy"
+},
+"Q28380812": {
+"en": "Urechcha",
+"en-gb": "Urechcha"
+},
+"Q28380813": {
+"en": "Charatok",
+"en-gb": "Charatok"
+},
+"Q28380814": {
+"en": "Uts′",
+"en-gb": "Uts′"
+},
+"Q28380816": {
+"en": "Falichy",
+"en-gb": "Falichy"
+},
+"Q28380817": {
+"en": "Charnitsy",
+"en-gb": "Charnitsy"
+},
+"Q28380819": {
+"en": "Farynava",
+"en-gb": "Farynava"
+},
+"Q28380821": {
+"en": "Khal′ch",
+"en-gb": "Khal′ch"
+},
+"Q28380824": {
+"en": "Chornyya Brady",
+"en-gb": "Chornyya Brady"
+},
+"Q28380825": {
+"en": "Chliuscina",
+"en-gb": "Chliuscina",
+"mul": "Chliuscina"
+},
+"Q28380826": {
+"en": "Chyzhowka",
+"en-gb": "Chyzhowka"
+},
+"Q28380828": {
+"en": "Khodasy",
+"en-gb": "Khodasy"
+},
+"Q28380829": {
+"en": "Shalavichy",
+"en-gb": "Shalavichy"
+},
+"Q28380831": {
+"en": "Khoyniki",
+"en-gb": "Khoyniki"
+},
+"Q28380833": {
+"en": "Sharabai train station",
+"en-gb": "Sharabai"
+},
+"Q28380834": {
+"en": "Khalodniki",
+"en-gb": "Khalodniki"
+},
+"Q28380838": {
+"en": "Šachi",
+"en-gb": "Šachi",
+"mul": "Šachi"
+},
+"Q28380839": {
+"en": "Chavusy",
+"en-gb": "Chavusy"
+},
+"Q28380840": {
+"en": "Shakhtsyorski",
+"en-gb": "Shakhtsyorski"
+},
+"Q28380842": {
+"en": "Shybyeki",
+"en-gb": "Shybyeki"
+},
+"Q28380845": {
+"en": "Shypulichy",
+"en-gb": "Shypulichy"
+},
+"Q28380846": {
+"en": "Chervina",
+"en-gb": "Chervina"
+},
+"Q28380848": {
+"en": "Čarliona",
+"en-gb": "Čarliona",
+"mul": "Čarliona"
+},
+"Q28380849": {
+"en": "Shchara",
+"en-gb": "Shchara"
+},
+"Q28380850": {
+"en": "Charnazyomawka",
+"en-gb": "Charnazyomawka"
+},
+"Q28380851": {
+"en": "Shchezhar",
+"en-gb": "Shchezhar"
+},
+"Q28380853": {
+"en": "Shchepichy",
+"en-gb": "Shchepichy"
+},
+"Q28380854": {
+"en": "Sharkawshchyna train station",
+"en-gb": "Sharkawshchyna"
+},
+"Q28380855": {
+"en": "Shcherbawka",
+"en-gb": "Shcherbawka"
+},
+"Q28380857": {
+"en": "Shchytniki",
+"en-gb": "Shchytniki"
+},
+"Q28380860": {
+"en": "Jubiliejny",
+"en-gb": "Jubiliejny",
+"mul": "Jubiliejny"
+},
+"Q28380862": {
+"en": "Pawdnyovy Zakhad",
+"en-gb": "Pawdnyovy Zakhad"
+},
+"Q28380863": {
+"en": "Shklow",
+"en-gb": "Shklow"
+},
+"Q28380864": {
+"en": "Yurkawka",
+"en-gb": "Yurkawka"
+},
+"Q28380865": {
+"en": "Shumilina",
+"en-gb": "Shumilina"
+},
+"Q28380868": {
+"en": "Yuratsishki",
+"en-gb": "Yuratsishki"
+},
+"Q28380871": {
+"en": "Yukhnavichy",
+"en-gb": "Yukhnavichy"
+},
+"Q28380872": {
+"en": "Yazhawki",
+"en-gb": "Yazhawki"
+},
+"Q28380873": {
+"en": "Yushki",
+"en-gb": "Yushki"
+},
+"Q28380874": {
+"en": "Yakuba Kolasa",
+"en-gb": "Yakuba Kolasa"
+},
+"Q28380876": {
+"en": "Yazvina",
+"en-gb": "Yazvina"
+},
+"Q28380878": {
+"en": "Yakimawka",
+"en-gb": "Yakimawka"
+},
+"Q28380879": {
+"en": "Yasyen′",
+"en-gb": "Yasyen′"
+},
+"Q28380880": {
+"en": "Yasyel′da",
+"en-gb": "Yasyel′da"
+},
+"Q28380881": {
+"en": "Yakhimawshchyna",
+"en-gb": "Yakhimawshchyna"
+},
+"Q28380882": {
+"en": "Yashchytsy",
+"en-gb": "Yashchytsy"
+},
+"Q28380883": {
+"en": "Yatsuki",
+"en-gb": "Yatsuki"
+},
+"Q28381619": {
+"en": "Hlushanina",
+"en-gb": "Hlushanina"
+},
+"Q28413914": {
+"en": "Fengshun Railway Station"
+},
+"Q28415059": {
+"en": "Shenyang Tram Line 5"
+},
+"Q28417": {
+"en": "Ämät"
+},
+"Q28469460": {},
+"Q28667619": {
+"en": "Izhevsk tram line 1"
+},
+"Q28667741": {},
+"Q28667848": {},
+"Q28704178": {
+"en": "Zlahoda"
+},
+"Q28704397": {
+"en": "Karakuba"
+},
+"Q28706769": {
+"en": "Kozachyi Khutir"
+},
+"Q28706770": {
+"en": "Ivanhorod"
+},
+"Q28706925": {
+"en": "Moryntsi"
+},
+"Q28706926": {
+"en": "Samoridnia"
+},
+"Q28706932": {
+"en": "Dyrdyn"
+},
+"Q28706933": {
+"en": "Karierna"
+},
+"Q28706936": {
+"en": "Valiava"
+},
+"Q28707837": {},
+"Q28707841": {},
+"Q28707842": {},
+"Q28707845": {},
+"Q28707857": {},
+"Q28730684": {
+"en": "Renbu Railway Station"
+},
+"Q28946500": {
+"en": "Nagatinsky Zaton",
+"wp": "Nagatinsky Zaton (Moscow Metro)"
+},
+"Q28973088": {
+"en": "Sebeš railway station",
+"wp": "Sebeš railway station"
+},
+"Q28973151": {
+"en": "Line 17",
+"wp": "Line 17 (Chengdu Metro)"
+},
+"Q29044745": {},
+"Q2948533": {
+"en": "Taourirt railway station",
+"mul": "Taourirt"
+},
+"Q2948664": {
+"en": "Nador-Ville railway station"
+},
+"Q3022451": {
+"en": "Suwanomori Station",
+"wp": "Suwanomori Station"
+},
+"Q30642068": {
+"en": "Astana Nurly Zhol station",
+"wp": "Astana-Nurly Zhol station"
+},
+"Q3095848": {
+"en": "Oujda train station"
+},
+"Q30958667": {
+"en": "Prisnovodna"
+},
+"Q3095917": {
+"en": "Batajnica railway station",
+"wp": "Batajnica railway station"
+},
+"Q3096139": {
+"en": "Casa-Port railway station",
+"wp": "Casa-Port Railway Terminal"
+},
+"Q30963448": {
+"en": "13 km"
+},
+"Q30963455": {
+"en": "İçki"
+},
+"Q30963472": {
+"en": "Petrove"
+},
+"Q3096936": {
+"en": "Larissa Station metro station"
+},
+"Q3097247": {
+"en": "Pančevački most railway station"
+},
+"Q3097371": {
+"en": "Rakovica railway station",
+"mul": "Rakovica",
+"wp": "Rakovica railway station"
+},
+"Q3097660": {
+"en": "Salé-City train station",
+"wp": "Salé-City railway station"
+},
+"Q3097759": {
+"en": "Skopje Train Station",
+"wp": "Transportation Center Skopje"
+},
+"Q3098104": {
+"en": "Zemun Polje railway station",
+"wp": "Zemun Polje railway station"
+},
+"Q3107262": {
+"en": "Novi Sad railway station",
+"en-gb": "Novi Sad railway station",
+"wp": "Novi Sad railway station"
+},
+"Q31182299": {
+"en": "Bela Reka railway station"
+},
+"Q31182300": {
+"en": "Veliki Borak railway station"
+},
+"Q31182304": {
+"en": "Stepojevac railway station"
+},
+"Q31182319": {
+"en": "Sopot Kosmajski railway station"
+},
+"Q31182395": {
+"en": "Vrbnica railway station"
+},
+"Q31182717": {
+"en": "Zuce railway station"
+},
+"Q31182719": {
+"en": "Beli Potok railway station"
+},
+"Q31182720": {
+"en": "Lipe railway station"
+},
+"Q31182721": {
+"en": "Vrčin railway station"
+},
+"Q31182725": {
+"en": "Mala Ivanča railway station"
+},
+"Q31182726": {
+"en": "Mali Požarevac railway station"
+},
+"Q31182727": {
+"en": "Umčari railway station"
+},
+"Q3179335": {
+"en": "Vakzaĺnaja",
+"wp": "Vakzaĺnaja (Minsk Metro)"
+},
+"Q3180019": {
+"en": "Lenin Square"
+},
+"Q32713": {
+"en": "Jungang Line",
+"wp": "Jungang Line"
+},
+"Q33820": {
+"en": "Wastaniä"
+},
+"Q3537063": {
+"en": "Tram transport in Orsk"
+},
+"Q3615450": {
+"en": "Yamato-Shinjō Station",
+"wp": "Yamato-Shinjō Station"
+},
+"Q3663002": {
+"en": "Chkalovskaya",
+"wp": "Chkalovskaya (Yekaterinburg Metro)"
+},
+"Q3743605": {},
+"Q3743639": {
+"en": "Tangier - Casablanca"
+},
+"Q385051": {
+"en": "Ōito Line",
+"wp": "Ōito Line"
+},
+"Q389415": {
+"en": "Astram Line",
+"wp": "Astram Line"
+},
+"Q390676": {
+"en": "Nijūbashimae Station",
+"wp": "Nijūbashimae Station"
+},
+"Q391568": {
+"en": "Agatsuma Line",
+"wp": "Agatsuma Line"
+},
+"Q3969857": {
+"en": "Kawanishi-Noseguchi Station",
+"wp": "Kawanishi-Noseguchi Station"
+},
+"Q4028250": {},
+"Q4028485": {
+"en": "119 km"
+},
+"Q4028625": {
+"en": "126 km"
+},
+"Q4028815": {
+"en": "142 km"
+},
+"Q4028940": {
+"en": "Borovoye"
+},
+"Q4029170": {
+"en": "170 km"
+},
+"Q4030104": {
+"en": "21st km railway station"
+},
+"Q4030266": {
+"en": "23 km"
+},
+"Q4030429": {},
+"Q4030430": {
+"en": "Kuzminsky Most"
+},
+"Q4030929": {
+"en": "Yasnaya Polyana railway station"
+},
+"Q4030996": {
+"en": "352 km railway station, Kurgan"
+},
+"Q4030999": {},
+"Q4031048": {
+"en": "37 km platform"
+},
+"Q4031491": {},
+"Q4031770": {
+"en": "54 km platform"
+},
+"Q4032044": {
+"en": "Mukhinskoye Boloto"
+},
+"Q4032148": {
+"en": "Nikitino"
+},
+"Q4032329": {},
+"Q4032420": {
+"en": "Elecon"
+},
+"Q4032514": {
+"en": "Novoye"
+},
+"Q4032546": {
+"en": "81 km railway station, Sakhalin Oblast"
+},
+"Q4032746": {},
+"Q4032769": {
+"en": "Ryndela"
+},
+"Q4056543": {
+"en": "Aqadyr"
+},
+"Q4060383": {
+"en": "Alabinskaya",
+"wp": "Alabinskaya (Samara Metro)"
+},
+"Q4061399": {},
+"Q4061403": {
+"en": "Alexandrovskaya railway station",
+"wp": "Alexandrovskaya railway station"
+},
+"Q4063168": {},
+"Q4063339": {},
+"Q4065680": {},
+"Q4067693": {
+"en": "Anusina",
+"en-gb": "Anusina"
+},
+"Q4068331": {
+"en": "Apsheronsk narrow-gauge railway",
+"wp": "Apsheronsk narrow-gauge railway"
+},
+"Q4068652": {},
+"Q4070437": {
+"en": "Bakhmut railway station"
+},
+"Q4071150": {
+"en": "Asanawski train station",
+"en-gb": "Asanawski"
+},
+"Q4079832": {
+"en": "Bakhmach-Pasazhyrskyi"
+},
+"Q4082796": {
+"en": "Byelasyel′ski train station",
+"en-gb": "Byelasyel′ski"
+},
+"Q4083070": {},
+"Q4083704": {
+"en": "Bendery-1"
+},
+"Q4083706": {
+"en": "Bendery-3 railway station"
+},
+"Q4084560": {
+"en": "Bereznyaki railway station"
+},
+"Q4092997": {
+"en": "Gorny Institut",
+"wp": "Gorny Institut (Saint Petersburg Metro)"
+},
+"Q4095547": {
+"en": "Bayary",
+"en-gb": "Bayary"
+},
+"Q4097514": {
+"en": "Bryansk-Remontnyi"
+},
+"Q4097517": {
+"en": "Bryansk I railway station"
+},
+"Q4099622": {},
+"Q4099741": {},
+"Q4100403": {
+"en": "Butyrskaya",
+"wp": "Butyrskaya (Moscow Metro)"
+},
+"Q4105431": {
+"en": "Vakhrushev railway station"
+},
+"Q4106150": {
+"en": "Vyalyenski",
+"en-gb": "Vyalyenski"
+},
+"Q41070951": {
+"en": "560 km"
+},
+"Q41071546": {
+"en": "515 km"
+},
+"Q4108589": {
+"en": "Verkhniye Likhobory",
+"wp": "Verkhniye Likhobory"
+},
+"Q4109239": {
+"en": "Vershina railway station"
+},
+"Q4112971": {
+"en": "Vladivostok Funicular"
+},
+"Q41136800": {
+"en": "209 km"
+},
+"Q4114160": {},
+"Q4124158": {},
+"Q4125919": {
+"en": "Varatsishcha",
+"en-gb": "Varatsishcha"
+},
+"Q4126602": {
+"en": "Vostochny railway station, Sakhalin Oblast"
+},
+"Q4126764": {},
+"Q4127225": {},
+"Q412941": {
+"en": "Hirnyk",
+"wp": "Hirnyk"
+},
+"Q4129901": {
+"en": "Vykhodnoy",
+"wp": "Vykhodnoy"
+},
+"Q4130353": {
+"en": "Viazynka",
+"en-gb": "Vyazynka"
+},
+"Q4134246": {
+"en": "Havuci",
+"en-gb": "Havuci",
+"mul": "Havuci"
+},
+"Q413735": {
+"en": "Akabane Line",
+"wp": "Akabane Line"
+},
+"Q4139376": {},
+"Q4141514": {
+"en": "Golikovka railway station"
+},
+"Q4145125": {
+"en": "Haradzyeya",
+"en-gb": "Haradzyeya"
+},
+"Q4151080": {},
+"Q4151082": {},
+"Q4151630": {
+"en": "Hudahaj train station",
+"en-gb": "Hudahaj",
+"mul": "Hudahaj train station"
+},
+"Q4153372": {
+"en": "DVRZ"
+},
+"Q4155458": {},
+"Q4156290": {},
+"Q4163823": {
+"en": "Dobruš",
+"en-gb": "Dobruš",
+"mul": "Dobruš"
+},
+"Q4166173": {
+"en": "Donetsk 2nd Railway Station"
+},
+"Q4167575": {
+"en": "Ronalda Reihana",
+"wp": "Ronalda Reihana (Kyiv Light Rail)"
+},
+"Q4170114": {
+"en": "Dudarava",
+"en-gb": "Dudarava"
+},
+"Q4172937": {},
+"Q4174794": {},
+"Q4176901": {},
+"Q4177934": {
+"en": "Zhalagash",
+"wp": "Jalagash"
+},
+"Q4178501": {
+"en": "Zhdanovichy train station",
+"en-gb": "Zhdanovichy"
+},
+"Q4182312": {
+"en": "Zababye",
+"en-gb": "Zababye"
+},
+"Q4185297": {
+"en": "Zaliessie",
+"en-gb": "Zaliessie",
+"mul": "Zaliessie"
+},
+"Q4187881": {
+"en": "Zaskavichy train station",
+"en-gb": "Zaskavichy"
+},
+"Q4190735": {
+"en": "Zyalyonaye",
+"en-gb": "Zyalyonaye"
+},
+"Q4197823": {
+"en": "Ida railway station"
+},
+"Q4199680": {
+"en": "Ilyinsk railway station"
+},
+"Q4203031": {
+"en": "Iputs′",
+"en-gb": "Iputs′"
+},
+"Q4203432": {},
+"Q4204449": {},
+"Q4205312": {},
+"Q4206601": {},
+"Q4210373": {
+"en": "Kaluga II"
+},
+"Q4211024": {
+"en": "Kamyenka train station",
+"en-gb": "Kamyenka"
+},
+"Q4212856": {},
+"Q4214713": {
+"en": "Karginskaya railway station"
+},
+"Q4216154": {},
+"Q4216893": {},
+"Q4220098": {
+"en": "Kyiv Express"
+},
+"Q4220402": {},
+"Q4225655": {
+"en": "Kovalyovo Post"
+},
+"Q4226438": {
+"en": "Nekrasovskaya Line",
+"wp": "Nekrasovskaya line"
+},
+"Q4228184": {
+"en": "Kalodziščy railway station"
+},
+"Q4228557": {
+"en": "Kolasava",
+"en-gb": "Kolasava"
+},
+"Q4229079": {
+"en": "Kalyadzichy",
+"en-gb": "Kalyadzichy"
+},
+"Q4230170": {
+"en": "Komsomolskaya"
+},
+"Q4232920": {
+"en": "Karanyowka",
+"en-gb": "Karanyowka"
+},
+"Q4235550": {},
+"Q4235677": {
+"en": "Kastsyukowka",
+"en-gb": "Kastsyukowka"
+},
+"Q4235947": {
+"en": "Kotelniki",
+"wp": "Kotelniki (Moscow Metro)"
+},
+"Q4236287": {},
+"Q4237722": {},
+"Q4238654": {
+"en": "Krasnoye Station"
+},
+"Q4238906": {
+"en": "Yañı Qapu"
+},
+"Q4239044": {
+"en": "Line 6",
+"wp": "Line 6 (Saint Petersburg Metro)"
+},
+"Q4239213": {},
+"Q4240160": {},
+"Q4241063": {
+"en": "Krynitsa",
+"en-gb": "Krynitsa"
+},
+"Q4242722": {
+"en": "Kryžoŭka",
+"en-gb": "Kryžoŭka",
+"mul": "Kryžoŭka"
+},
+"Q4247850": {},
+"Q4248196": {},
+"Q4250052": {
+"en": "Kuchkuny",
+"en-gb": "Kuchkuny"
+},
+"Q4262400": {
+"en": "Lipa",
+"en-gb": "Lipa"
+},
+"Q4263417": {},
+"Q4265860": {
+"en": "Lakamatywnaye Depo",
+"en-gb": "Lakamatywnaye Depo"
+},
+"Q4266887": {},
+"Q4267196": {
+"en": "Lasi",
+"en-gb": "Lasi"
+},
+"Q4267639": {
+"en": "Loshytsa",
+"en-gb": "Loshytsa"
+},
+"Q4267881": {
+"en": "Luga railway station"
+},
+"Q4272381": {},
+"Q4276831": {
+"en": "Far East Children's Railway",
+"wp": "Far East Children's Railway"
+},
+"Q4278500": {},
+"Q4279815": {},
+"Q4280332": {
+"en": "Mandrykine Railway Station"
+},
+"Q4281425": {
+"en": "Mari El"
+},
+"Q4285677": {
+"en": "Makhachkala I — Sortirovachnaya station"
+},
+"Q4286054": {
+"en": "Mačuliščy railway station",
+"en-gb": "Machulishchy"
+},
+"Q4288691": {
+"en": "Mezheg"
+},
+"Q4295177": {
+"en": "Minsk-Pawdnyovy",
+"en-gb": "Minsk-Pawdnyovy"
+},
+"Q4297663": {},
+"Q4299183": {
+"en": "Mahilyow II",
+"en-gb": "Mahilyow II"
+},
+"Q4299184": {
+"en": "Mahilioŭ train station"
+},
+"Q4300811": {
+"en": "Maladzyozhny train station",
+"en-gb": "Maladzyozhny"
+},
+"Q4300899": {},
+"Q4301735": {},
+"Q4303166": {
+"en": "Maros′ki train station",
+"en-gb": "Maros′ki"
+},
+"Q4310053": {
+"en": "Myullyupelto station"
+},
+"Q4310205": {},
+"Q4310378": {
+"en": "Myasata",
+"en-gb": "Myasata"
+},
+"Q4311510": {
+"en": "Klenovy Bulvar",
+"wp": "Klenovy Bulvar (Moscow Metro)"
+},
+"Q4313890": {
+"en": "Nasilava train station",
+"en-gb": "Nasilava"
+},
+"Q4315621": {},
+"Q4315976": {
+"en": "Nieharelaje",
+"en-gb": "Nieharelaje",
+"mul": "Nieharelaje"
+},
+"Q4319534": {},
+"Q4320684": {},
+"Q4320901": {},
+"Q4323215": {
+"en": "Navabyelitskaya",
+"en-gb": "Navabyelitskaya"
+},
+"Q4323857": {
+"en": "Novaye Syalo",
+"en-gb": "Novaye Syalo"
+},
+"Q4325901": {
+"en": "Novosyelovo railway station"
+},
+"Q4328281": {},
+"Q4331943": {},
+"Q4332004": {
+"en": "Azyaryshcha",
+"en-gb": "Azyaryshcha"
+},
+"Q4333637": {},
+"Q4333685": {
+"en": "Alyakhnovichy",
+"en-gb": "Alyakhnovichy"
+},
+"Q4335661": {
+"en": "Oranienbaum I station"
+},
+"Q4335662": {
+"en": "Oranienbaum II station"
+},
+"Q4337933": {
+"en": "Asipawshchyna",
+"en-gb": "Asipawshchyna"
+},
+"Q4339169": {
+"en": "Ostriakove"
+},
+"Q4340195": {
+"en": "Attseda",
+"en-gb": "Attseda"
+},
+"Q4340815": {
+"en": "Ashmyany train station",
+"en-gb": "Ashmyany"
+},
+"Q4342628": {},
+"Q4345850": {},
+"Q434787": {
+"en": "Enoshima Electric Railway Line"
+},
+"Q4348461": {},
+"Q4349061": {
+"en": "line 1"
+},
+"Q4352910": {
+"en": "Smolensk railway station",
+"wp": "Smolensk railway station"
+},
+"Q4361142": {},
+"Q4363097": {},
+"Q4363138": {
+"en": "Pionerskaya (Volgograd metrotram station)"
+},
+"Q4363179": {
+"en": "Pionery railway station"
+},
+"Q4363622": {
+"en": "Piscaly railway station"
+},
+"Q4365831": {
+"en": "Jubiliejnaja Plošča",
+"wp": "Jubiliejnaja plošča (Minsk Metro)"
+},
+"Q4366181": {
+"en": "Kroshyn",
+"en-gb": "Kroshyn"
+},
+"Q4366205": {
+"en": "Pobedino railway station"
+},
+"Q4366267": {},
+"Q4366746": {
+"en": "Paharel′tsy",
+"en-gb": "Paharel′tsy"
+},
+"Q4370744": {
+"en": "Polpinskaya"
+},
+"Q4371795": {
+"en": "Pamyslišča",
+"en-gb": "Pamyslishcha"
+},
+"Q4373619": {
+"en": "Vyritsa - Posyolok railway line"
+},
+"Q4374170": {
+"en": "Post 5 km"
+},
+"Q4374174": {
+"en": "81 km"
+},
+"Q4374179": {
+"en": "Post 1",
+"en-gb": "Post 1"
+},
+"Q4374401": {
+"en": "Posyolok"
+},
+"Q4375378": {
+"en": "Poshtova"
+},
+"Q4376422": {
+"en": "Pralyeski",
+"en-gb": "Pralyeski"
+},
+"Q4376629": {
+"en": "Predportovaya railway station"
+},
+"Q4377762": {},
+"Q4382029": {
+"en": "Profsoyuznaya"
+},
+"Q4382490": {},
+"Q4382529": {
+"en": "Prudy train station",
+"en-gb": "Prudy"
+},
+"Q4382970": {},
+"Q4387884": {
+"en": "Radashkovichy",
+"en-gb": "Radashkovichy"
+},
+"Q4388026": {},
+"Q4388824": {},
+"Q4388832": {
+"en": "Proezd Stankostroiteley"
+},
+"Q4388837": {},
+"Q4388840": {},
+"Q4390681": {},
+"Q4390811": {
+"en": "Ratamka",
+"en-gb": "Ratamka"
+},
+"Q4390966": {
+"en": "Line S2",
+"wp": "Line S2 (BCR)"
+},
+"Q4395210": {
+"en": "Rovenky"
+},
+"Q4396918": {},
+"Q4397442": {
+"en": "Ramany",
+"en-gb": "Ramany"
+},
+"Q4397758": {},
+"Q4399357": {
+"en": "Rudziensk train station",
+"en-gb": "Rudzyensk"
+},
+"Q4401685": {
+"en": "Rybtsy",
+"en-gb": "Rybtsy"
+},
+"Q4403626": {
+"en": "Serzha Lyfaria",
+"wp": "Serzha Lyfaria (Kyiv Light Rail)"
+},
+"Q4404672": {},
+"Q4404904": {},
+"Q4405907": {
+"en": "Salmi"
+},
+"Q4410371": {
+"en": "Svetlogorsk-II railway station",
+"wp": "Svetlogorsk-II railway station"
+},
+"Q4410395": {},
+"Q4410565": {
+"en": "Svietač",
+"en-gb": "Svietač",
+"mul": "Svietač"
+},
+"Q4413742": {
+"en": "Syelivonawka",
+"en-gb": "Syelivonawka"
+},
+"Q4413756": {
+"en": "Seligerskaya",
+"wp": "Seligerskaya"
+},
+"Q4419462": {},
+"Q4420577": {
+"en": "Sinyava",
+"en-gb": "Sinyava"
+},
+"Q4421203": {
+"en": "Siuch (station), Vologda Oblast",
+"wp": "Siuch (station), Vologda Oblast"
+},
+"Q4421662": {},
+"Q4422501": {
+"en": "Skirstsiny train station",
+"en-gb": "Skirstsiny"
+},
+"Q4422822": {},
+"Q4423181": {
+"en": "Slantsy platform"
+},
+"Q4424074": {
+"en": "Slucki Hasciniec",
+"wp": "Slutski Hastsinets"
+},
+"Q4424854": {},
+"Q4426517": {
+"en": "Sovetskoye railway station"
+},
+"Q4426779": {
+"en": "Sozh",
+"en-gb": "Sozh"
+},
+"Q4427041": {
+"en": "Sakolka",
+"en-gb": "Sakolka"
+},
+"Q4429523": {},
+"Q4440306": {},
+"Q4440589": {},
+"Q4441528": {},
+"Q4443666": {
+"en": "Strelka",
+"wp": "Strelka (Nizhny Novgorod Metro)"
+},
+"Q4443787": {
+"en": "Strelna station"
+},
+"Q4445496": {},
+"Q4445655": {
+"en": "Suyda platform"
+},
+"Q4450667": {
+"en": "Tal′ka",
+"en-gb": "Tal′ka"
+},
+"Q4452534": {},
+"Q4452547": {
+"en": "Tatarshchyna",
+"en-gb": "Tatarshchyna"
+},
+"Q4453121": {},
+"Q4455721": {
+"en": "Cierachoŭka",
+"en-gb": "Cierachoŭka",
+"mul": "Cierachoŭka"
+},
+"Q4455735": {
+"en": "Terekhovo",
+"wp": "Terekhovo (Moscow Metro)"
+},
+"Q4457106": {},
+"Q4458340": {},
+"Q4459797": {},
+"Q4460570": {},
+"Q4461074": {
+"en": "Chystiakove"
+},
+"Q4461236": {},
+"Q4461840": {
+"en": "Traktarny",
+"en-gb": "Traktarny"
+},
+"Q4461887": {},
+"Q4461892": {},
+"Q4461919": {
+"en": "Tram route A (Moscow)"
+},
+"Q4468088": {
+"en": "Tsyomnyya Lyady",
+"en-gb": "Tsyomnyya Lyady"
+},
+"Q4469847": {
+"en": "Uzlovaya railway station"
+},
+"Q4471102": {
+"en": "Yakhromskaya",
+"wp": "Yakhromskaya"
+},
+"Q4477190": {},
+"Q4477409": {},
+"Q4482628": {
+"en": "Fenolna"
+},
+"Q4483273": {
+"en": "Fiestyvaĺny",
+"en-gb": "Fiestyvaĺny",
+"mul": "Fiestyvaĺny"
+},
+"Q4485034": {},
+"Q4491638": {
+"en": "Fonvizinskaya",
+"wp": "Fonvizinskaya (Moscow Metro)"
+},
+"Q4495486": {},
+"Q4496863": {
+"en": "Khvoyeva",
+"en-gb": "Khvoyeva"
+},
+"Q4498379": {
+"en": "Chmielieŭka",
+"en-gb": "Khmyelyewka"
+},
+"Q4499223": {
+"en": "Kholmsk-Sortirovochnyi station"
+},
+"Q4501526": {},
+"Q4504162": {
+"en": "Tsentralno–Zavodska Line (Dnipro Metro)",
+"wp": "Tsentralno–Zavodska line"
+},
+"Q4505520": {},
+"Q45068226": {
+"en": "Terminal 3 of Jiangbei Airport station",
+"wp": "Terminal 3 of Jiangbei Airport station"
+},
+"Q4515212": {
+"en": "Chekhov railway station"
+},
+"Q4516058": {
+"en": "Shyngyrlau",
+"en-gb": "Shyngyrlau",
+"wp": "Shyngyrlau"
+},
+"Q4517549": {},
+"Q4517550": {},
+"Q4530645": {
+"en": "Express"
+},
+"Q4533918": {
+"en": "Yuznaya Handasa railway station"
+},
+"Q4533981": {
+"en": "Kita Toyohara Station"
+},
+"Q4534064": {
+"en": "Yuzhnouralsk"
+},
+"Q4535567": {
+"en": "Yushkavichy",
+"en-gb": "Yushkavichy"
+},
+"Q4535975": {},
+"Q4537723": {
+"en": "Yampil Railway Station"
+},
+"Q4539075": {},
+"Q45400941": {
+"en": "Mokra Gora (Užice) train station"
+},
+"Q45407025": {
+"en": "Jatare train station"
+},
+"Q45409136": {
+"en": "Šargan-Vitasi train station"
+},
+"Q45409204": {
+"en": "Golubići train station"
+},
+"Q46162": {
+"en": "Uskhod",
+"wp": "Uschod"
+},
+"Q46461818": {
+"en": "Line 19",
+"wp": "Line 19 (Chengdu Metro)"
+},
+"Q4689236": {
+"en": "Afidnes railway station",
+"wp": "Afidnes railway station"
+},
+"Q4692669": {
+"en": "Agios Stefanos railway station",
+"wp": "Agios Stefanos railway station"
+},
+"Q46929050": {
+"en": "Fiztekh",
+"wp": "Fiztekh (Moscow Metro)"
+},
+"Q4808225": {
+"en": "Aspropyrgos railway station",
+"wp": "Aspropyrgos railway station"
+},
+"Q482938": {
+"en": "Jeolla Line",
+"wp": "Jeolla Line"
+},
+"Q483023": {
+"en": "Gyeongbuk Line",
+"wp": "Gyeongbuk Line"
+},
+"Q48753104": {
+"en": "Haijima Liner"
+},
+"Q4890933": {
+"en": "Beppu Rakutenchi Cable Line",
+"wp": "Beppu Rakutenchi Cable Line"
+},
+"Q48929153": {
+"en": "Hanghai line",
+"wp": "Hangzhou–Haining intercity railway"
+},
+"Q48953472": {},
+"Q4980774": {
+"en": "Honshi-Bisan Line",
+"wp": "Honshi–Bisan Line"
+},
+"Q498157": {
+"en": "Kururi Line",
+"en-gb": "Kururi Line",
+"wp": "Kururi Line"
+},
+"Q5017774": {
+"en": "Cairo Metro Line 1",
+"wp": "Cairo Metro Line 1"
+},
+"Q50402054": {
+"en": "Mykoly Prykhodka"
+},
+"Q50407093": {
+"en": "Voskresenska"
+},
+"Q50808828": {
+"en": "Babakivka"
+},
+"Q50808829": {
+"en": "Karpylivka"
+},
+"Q50808830": {
+"en": "Klepaly"
+},
+"Q50808833": {
+"en": "Stepanivka"
+},
+"Q50808843": {
+"en": "Lobkivka"
+},
+"Q50808845": {
+"en": "15 km"
+},
+"Q50808848": {
+"en": "Ulianivka"
+},
+"Q50808850": {
+"en": "24 km"
+},
+"Q50808856": {
+"en": "Likarske"
+},
+"Q50808858": {
+"en": "40 km"
+},
+"Q50808859": {
+"en": "52 km"
+},
+"Q50808868": {
+"en": "7 km"
+},
+"Q50808870": {
+"en": "59 km"
+},
+"Q50808874": {
+"en": "70 km"
+},
+"Q50808875": {
+"en": "85 km"
+},
+"Q50808878": {
+"en": "102 km"
+},
+"Q50808886": {
+"en": "29 km"
+},
+"Q50808892": {
+"en": "Kholmivka"
+},
+"Q50808893": {
+"en": "149 km"
+},
+"Q50808894": {
+"en": "133 km"
+},
+"Q50808897": {
+"en": "Sobychiv"
+},
+"Q50808898": {
+"en": "Slout"
+},
+"Q50808901": {
+"en": "Berizka"
+},
+"Q50808935": {
+"en": "Matlakhove"
+},
+"Q50808937": {
+"en": "67 km"
+},
+"Q50808943": {
+"en": "Pohreby"
+},
+"Q50808944": {
+"en": "Zhytne"
+},
+"Q50808946": {
+"en": "81 km"
+},
+"Q50808949": {
+"en": "507 km"
+},
+"Q50913": {
+"en": "Baltic rail terminal"
+},
+"Q51044787": {
+"en": "Novomoskovskaya",
+"wp": "Novomoskovskaya (Troitskaya line)"
+},
+"Q511543": {
+"en": "Wakayama Line",
+"wp": "Wakayama Line"
+},
+"Q51952119": {
+"en": "Dahe Station"
+},
+"Q519861": {
+"en": "Line 1",
+"en-gb": "Line 1",
+"wp": "Line 1 (Saint Petersburg Metro)"
+},
+"Q5277775": {
+"en": "Dimotiko Theatro metro station",
+"wp": "Dimotiko Theatro metro station"
+},
+"Q5302218": {
+"en": "Doukissis Plakentias metro station",
+"wp": "Doukissis Plakentias station"
+},
+"Q5350140": {
+"en": "Ejiri Station",
+"wp": "Ejiri Station"
+},
+"Q5357471": {
+"en": "Nanao Line",
+"wp": "Nanao Line"
+},
+"Q5357911": {
+"en": "Hida-Kokufu Station",
+"wp": "Hida-Kokufu Station"
+},
+"Q5357982": {
+"en": "Etsumi-Hoku Line",
+"wp": "Etsumi-Hoku Line"
+},
+"Q5358021": {
+"en": "Kisuki Line",
+"wp": "Kisuki Line"
+},
+"Q5358422": {
+"en": "Oga Line",
+"wp": "Oga Line"
+},
+"Q5358722": {
+"en": "Hida-Miyada Station",
+"wp": "Hida-Miyada Station"
+},
+"Q5359442": {
+"en": "Meishō Line",
+"wp": "Meishō Line"
+},
+"Q5359548": {
+"en": "Kashii Line",
+"wp": "Kashii Line"
+},
+"Q5359712": {
+"en": "Gotōji Line",
+"wp": "Gotōji Line"
+},
+"Q5362509": {
+"en": "Gumyōji Station",
+"wp": "Gumyōji Station (Keikyu)"
+},
+"Q5364831": {
+"en": "Nagao Line",
+"wp": "Kotoden Nagao Line"
+},
+"Q5364907": {
+"en": "Shido Line",
+"wp": "Kotoden Shido Line"
+},
+"Q5370092": {
+"en": "Tenryū-Futamata Station",
+"wp": "Tenryū-Futamata Station"
+},
+"Q5371397": {
+"en": "Kotohira Line",
+"wp": "Kotoden Kotohira Line"
+},
+"Q5396093": {
+"en": "Erweilu station",
+"wp": "Erweilu station"
+},
+"Q55112012": {
+"en": "Taman-Passenger railway station"
+},
+"Q55491606": {
+"en": "Xinlan Station"
+},
+"Q55526005": {
+"en": "Shiji Plaza station"
+},
+"Q55575735": {
+"en": "61 km"
+},
+"Q55576146": {
+"en": "193 km"
+},
+"Q55576169": {
+"en": "197 km"
+},
+"Q5563368": {
+"en": "Gion-shinbashi-kita Station",
+"wp": "Gion-shinbashi-kita Station"
+},
+"Q55642756": {
+"en": "Zevgolatio railway station",
+"mul": "Zevgolatio",
+"wp": "Zevgolatio railway station"
+},
+"Q55657687": {},
+"Q55718267": {
+"en": "Qianmen Streetcar"
+},
+"Q55762977": {
+"en": "Nyrkove"
+},
+"Q5582338": {
+"en": "Gonōkōmae Station",
+"wp": "Gonōkōmae Station"
+},
+"Q55973994": {
+"en": "Chystopillia"
+},
+"Q56277837": {
+"en": "Line 1",
+"en-gb": "Line 1",
+"wp": "Line 1 (Thessaloniki Metro)"
+},
+"Q56277844": {
+"en": "Line 2",
+"en-gb": "Line 2",
+"wp": "Line 2 (Thessaloniki Metro)"
+},
+"Q56307961": {
+"en": "Vasylia Domanytskoho Street Fast Tram Station"
+},
+"Q56308260": {},
+"Q56368607": {
+"en": "Bohunove"
+},
+"Q56368612": {
+"en": "Kalator"
+},
+"Q56368627": {
+"en": "Zalissia"
+},
+"Q56368630": {
+"en": "Bohuslavets"
+},
+"Q56368634": {
+"en": "Boikivshchyna"
+},
+"Q56368686": {
+"en": "111 km"
+},
+"Q56368695": {
+"en": "227 km"
+},
+"Q5643976": {
+"en": "Hamaderakōen Station",
+"wp": "Hamaderakōen Station"
+},
+"Q5644006": {
+"en": "Hamakita Station",
+"wp": "Hamakita Station"
+},
+"Q5648522": {
+"en": "Hankai Line",
+"wp": "Hankai Line"
+},
+"Q56810834": {},
+"Q56810839": {},
+"Q5681851": {
+"en": "Hatsukaichi-shiyakusho-mae Station",
+"wp": "Hatsukaichi-shiyakusho-mae Station"
+},
+"Q5753983": {
+"en": "Higashi Shinminato Station",
+"wp": "Higashi Shinminato Station"
+},
+"Q5770095": {
+"en": "Hiroden Streetcar Route 3",
+"wp": "Hiroden Streetcar Route 3"
+},
+"Q5770102": {
+"en": "Hiroden Streetcar Route 7",
+"wp": "Hiroden Streetcar Route 7"
+},
+"Q5770106": {
+"en": "Hiroden Streetcar Route 8",
+"wp": "Hiroden Streetcar Route 8"
+},
+"Q5770109": {
+"en": "Hiroden Streetcar Route 9",
+"wp": "Hiroden Streetcar Route 9"
+},
+"Q57987752": {
+"en": "Altynkol railway station",
+"wp": "Altynkol railway station"
+},
+"Q580349": {
+"en": "Gumyōji Station",
+"wp": "Gumyōji Station (Yokohama Municipal Subway)"
+},
+"Q5891910": {
+"en": "Hon-Isahaya Station",
+"wp": "Hon-Isahaya Station"
+},
+"Q5903317": {
+"en": "Horita Station",
+"wp": "Horita Station (Meitetsu)"
+},
+"Q59453": {
+"en": "Nankai Main Line",
+"en-gb": "Nankai Main Line",
+"wp": "Nankai Main Line"
+},
+"Q594532": {
+"en": "Leninskaya Line",
+"wp": "Leninskaya Line"
+},
+"Q59514": {
+"en": "Tsugaru Line",
+"wp": "Tsugaru Line"
+},
+"Q5974179": {
+"en": "Nanlou station",
+"wp": "Nanlou station"
+},
+"Q60024499": {
+"en": "Darivka"
+},
+"Q6004206": {
+"en": "Dai-ichi inn Shinminato Crossbay-mae Station"
+},
+"Q60429444": {
+"en": "Esen-Platforma"
+},
+"Q60682777": {
+"en": "Penshuichi station"
+},
+"Q60686277": {
+"en": "Vilkhova train station"
+},
+"Q60748166": {
+"en": "Line 6",
+"wp": "Line 6 (Suzhou Metro)"
+},
+"Q6080210": {
+"en": "Ishii Station",
+"wp": "Ishii Station (Hyōgo)"
+},
+"Q60985725": {
+"en": "Stanychnyi"
+},
+"Q610516": {
+"en": "Nakatsu Station",
+"wp": "Nakatsu Station (Hankyu)"
+},
+"Q61115691": {
+"en": "Petrovenky"
+},
+"Q61117043": {},
+"Q6127265": {
+"en": "Xinjiekou station",
+"wp": "Xinjiekou station (Nanjing Metro)"
+},
+"Q615964": {
+"en": "San'yō Shinkansen",
+"wp": "San'yō Shinkansen"
+},
+"Q617574": {
+"en": "Bolshaya Koltsevaya Line",
+"wp": "Bolshaya Koltsevaya line"
+},
+"Q61883430": {
+"en": "Line 19",
+"wp": "Line 19 (Wuhan Metro)"
+},
+"Q6202618": {
+"en": "Jinmalu Station",
+"wp": "Jinmalu station (Nanjing Metro)"
+},
+"Q62091003": {
+"en": "D1",
+"wp": "Line D1 (Moscow Central Diameters)"
+},
+"Q62091175": {
+"en": "D2",
+"wp": "Line D2 (Moscow Central Diameters)"
+},
+"Q623754": {
+"en": "Gaya Line",
+"en-gb": "Gaya Line",
+"wp": "Gaya Line"
+},
+"Q62472974": {
+"en": "Rias Line"
+},
+"Q626574": {
+"en": "Ilsan Line",
+"wp": "Ilsan Line"
+},
+"Q63371273": {
+"en": "Kuberpur railway station"
+},
+"Q6348766": {
+"en": "Kaiōmaru Station",
+"wp": "Kaiōmaru Station"
+},
+"Q6357161": {
+"en": "Kami-Kumagaya Station",
+"wp": "Kami-Kumagaya Station"
+},
+"Q6375003": {
+"en": "Kataharamachi Station",
+"wp": "Kataharamachi Station (Toyama)"
+},
+"Q6378238": {
+"en": "Katsuyama Eiheiji Line",
+"wp": "Katsuyama Eiheiji Line"
+},
+"Q6383576": {
+"en": "Keifuku Cable Line",
+"wp": "Keifuku Cable Line"
+},
+"Q6383610": {
+"en": "Ishiyama Sakamoto Line",
+"wp": "Keihan Ishiyama Sakamoto Line"
+},
+"Q63890946": {
+"en": "Tram line 1 (Kiev)"
+},
+"Q63890965": {
+"en": "Kyiv tram line 2"
+},
+"Q63928373": {
+"en": "D4",
+"wp": "Line D4 (Moscow Central Diameters)"
+},
+"Q6405881": {
+"en": "Kifisias railway station",
+"wp": "Kifisias railway station"
+},
+"Q6417340": {
+"en": "Kisuki Station",
+"wp": "Kisuki Station"
+},
+"Q6433137": {
+"en": "Koshinokata Station",
+"wp": "Koshinokata Station"
+},
+"Q6477403": {
+"en": "Vysoka-Litowsk",
+"en-gb": "Vysoka-Litowsk"
+},
+"Q648763": {
+"en": "Tazawako Line",
+"en-gb": "Tazawako Line",
+"wp": "Tazawako Line"
+},
+"Q648904": {
+"en": "Iwate Galaxy Railway Line",
+"en-gb": "Iwate Galaxy Railway Line",
+"wp": "Iwate Galaxy Railway Line"
+},
+"Q65124188": {
+"en": "Ruskeala express"
+},
+"Q65127499": {},
+"Q65127568": {},
+"Q65127804": {
+"en": "Line D3 (Moscow Central Diameters)",
+"wp": "Line D3 (Moscow Central Diameters)"
+},
+"Q65150860": {},
+"Q65150876": {},
+"Q65151192": {
+"en": "168 km"
+},
+"Q65151249": {
+"en": "157 km"
+},
+"Q6516228": {
+"en": "Myezyenawka",
+"en-gb": "Myezyenawka"
+},
+"Q65195225": {
+"en": "Sari Railway Station"
+},
+"Q65200573": {
+"en": "122 km"
+},
+"Q65200576": {
+"en": "136 km"
+},
+"Q65200577": {
+"en": "146 km"
+},
+"Q65200587": {},
+"Q65200594": {},
+"Q65200960": {
+"en": "17 km"
+},
+"Q65200965": {
+"en": "23 km"
+},
+"Q65200967": {
+"en": "34 km"
+},
+"Q65200968": {
+"en": "45 km"
+},
+"Q65201000": {
+"en": "Benovo railway halt"
+},
+"Q65201007": {
+"en": "Busovysko"
+},
+"Q65201018": {
+"en": "Verkhnii Luzhok"
+},
+"Q65201091": {
+"en": "Zahorb"
+},
+"Q65201125": {
+"en": "Lopushanka"
+},
+"Q65201126": {
+"en": "Luh railway station"
+},
+"Q65201165": {
+"en": "Rozluch"
+},
+"Q65201183": {
+"en": "Stavne II"
+},
+"Q65201190": {
+"en": "Turochky railway station"
+},
+"Q65201191": {
+"en": "Uzhok"
+},
+"Q65205790": {
+"en": "7 km"
+},
+"Q65205865": {},
+"Q65205873": {},
+"Q65205875": {
+"en": "23 km"
+},
+"Q65206308": {
+"en": "Strilkovychi"
+},
+"Q65206318": {
+"en": "Teresiv-Spas"
+},
+"Q6535596": {
+"en": "Stan′kava",
+"en-gb": "Stan′kava"
+},
+"Q6553113": {
+"en": "Line 3",
+"wp": "Line 3 (Beijing Subway)"
+},
+"Q6553157": {
+"en": "Line 8",
+"wp": "Line 8 (Suzhou Metro)"
+},
+"Q660895": {
+"en": "Tōkaidō Shinkansen",
+"wp": "Tokaido Shinkansen"
+},
+"Q66486533": {
+"en": "Malyi Bereznyi"
+},
+"Q6788024": {
+"en": "Dokkyodaigakumae Station (Soka-Matsubara)",
+"wp": "Dokkyodaigakumae Station"
+},
+"Q6808823": {
+"en": "Megara railway station",
+"wp": "Megara railway station"
+},
+"Q6841658": {
+"en": "Yangchenghuzhonglu station",
+"wp": "Yangchenghuzhonglu station"
+},
+"Q68495308": {
+"en": "Myrcha"
+},
+"Q6850277": {
+"en": "Mikuni Awara Line",
+"wp": "Mikuni Awara Line"
+},
+"Q6884337": {
+"en": "Miyamoto-Musashi Station",
+"wp": "Miyamoto-Musashi Station"
+},
+"Q693036": {
+"en": "Yamanote Line",
+"wp": "Yamanote Line"
+},
+"Q6960106": {
+"en": "Naka Shinminato Station",
+"wp": "Naka Shinminato Station"
+},
+"Q6960118": {
+"en": "Nakafushiki Station",
+"wp": "Nakafushiki Station"
+},
+"Q69866457": {},
+"Q7035321": {
+"en": "Kōkimae Station",
+"wp": "Kōkimae Station"
+},
+"Q7071608": {
+"en": "Nōmachiguchi Station",
+"wp": "Nōmachiguchi Station"
+},
+"Q7080069": {
+"en": "Ogino Station",
+"wp": "Ogino Station (Toyama)"
+},
+"Q7108964": {
+"en": "Cable-hachimangū-sanjō Station",
+"wp": "Cable-hachimangū-sanjō Station"
+},
+"Q72937394": {
+"en": "Osnytsk"
+},
+"Q7360056": {
+"en": "Rokkō Island Line",
+"wp": "Rokkō Island Line"
+},
+"Q7360098": {
+"en": "Rokudōji Station",
+"wp": "Rokudōji Station"
+},
+"Q7402852": {
+"en": "Sakashitamachi Station",
+"wp": "Sakashitamachi Station"
+},
+"Q743932": {
+"en": "Uruchcha",
+"en-gb": "Uručča (Minsk Metro)",
+"wp": "Uručča (Minsk Metro)"
+},
+"Q7496531": {
+"en": "Shikaka Station",
+"wp": "Shikaka Station"
+},
+"Q7497123": {
+"en": "Shin-Nōmachi Station",
+"wp": "Shin-Nōmachi Station"
+},
+"Q7497145": {
+"en": "Shin-Yoshihisa Station",
+"wp": "Shin-Yoshihisa Station"
+},
+"Q7497663": {
+"en": "Shinmachiguchi Station",
+"wp": "Shinmachiguchi Station"
+},
+"Q7498286": {
+"en": "Shirasagi",
+"wp": "Shirasagi (train)"
+},
+"Q7506111": {
+"en": "Shōgawaguchi Station",
+"wp": "Shōgawaguchi Station"
+},
+"Q761471": {
+"en": "Nador South train station"
+},
+"Q762347": {
+"en": "Karasuma Line",
+"wp": "Karasuma Line"
+},
+"Q76377422": {
+"en": "Kirki railway station",
+"wp": "Kirki railway station"
+},
+"Q766391": {
+"en": "Niyama Station",
+"wp": "Niyama Station"
+},
+"Q7677086": {
+"en": "Takaishi Station",
+"wp": "Takaishi Station"
+},
+"Q7695516": {
+"en": "Tekuno-Sakaki Station",
+"wp": "Tekuno-Sakaki Station"
+},
+"Q7700549": {
+"en": "Tenoko Station",
+"wp": "Tenoko Station"
+},
+"Q781667": {
+"en": "Vukov Spomenik railway station",
+"wp": "Vukov Spomenik railway station"
+},
+"Q7850362": {
+"en": "Tsuyama Line",
+"wp": "Tsuyama Line"
+},
+"Q7877931": {
+"en": "Uguisuno Station",
+"wp": "Uguisuno Station"
+},
+"Q7878203": {
+"en": "Ujina 2-chome Station",
+"wp": "Ujina 2-chōme Station"
+},
+"Q7878204": {
+"en": "Ujina 3-chome Station",
+"wp": "Ujina 3-chōme Station"
+},
+"Q80009623": {
+"en": "Tsehlivka"
+},
+"Q80011534": {
+"en": "Kholmok"
+},
+"Q801196": {
+"en": "Minsk Pasažyrski railway station",
+"en-gb": "Minsk Pasažyrski railway station",
+"wp": "Minsk railway station"
+},
+"Q801207": {
+"en": "Musashi-Kosugi Station",
+"wp": "Musashi-Kosugi Station"
+},
+"Q801389": {
+"en": "Ryōgoku Station",
+"wp": "Ryōgoku Station"
+},
+"Q80429": {
+"en": "Meiji-Jingūmae Station",
+"wp": "Meiji-jingumae Station"
+},
+"Q8044250": {
+"en": "Xiaobitan line",
+"wp": "Xiaobitan branch line"
+},
+"Q8045236": {
+"en": "Xuezelu station",
+"wp": "Xuezelu station"
+},
+"Q80545": {
+"en": "Oshiage Station",
+"wp": "Oshiage Station"
+},
+"Q8054924": {
+"en": "Yonejimaguchi Station",
+"wp": "Yonejimaguchi Station"
+},
+"Q8056076": {
+"en": "Yoshihisa Station",
+"wp": "Yoshihisa Station"
+},
+"Q8061543": {
+"en": "Chōkai Sanroku Line",
+"wp": "Chōkai Sanroku Line"
+},
+"Q80899771": {
+"en": "Olonets"
+},
+"Q81171199": {},
+"Q81206200": {
+"en": "Vrekhnosadova"
+},
+"Q81523880": {
+"en": "Oarks Canal Park Hotel Toyama-mae Station"
+},
+"Q81553492": {
+"en": "Ilyinskaya (railway halt)"
+},
+"Q8192723": {
+"en": "Yudakinshūko Station",
+"wp": "Yudakinshūko Station"
+},
+"Q81973288": {
+"en": "Donggulu station"
+},
+"Q83163977": {
+"en": "Veliko Tarnovo"
+},
+"Q83386": {
+"en": "Därwişlär"
+},
+"Q841672": {
+"en": "Sendai Airport Line",
+"wp": "Sendai Airport Line"
+},
+"Q842649": {
+"en": "Seibu Chichibu Line",
+"wp": "Seibu Chichibu Line"
+},
+"Q844666": {
+"en": "Hakubi Line",
+"wp": "Hakubi Line"
+},
+"Q845455": {
+"en": "Hokuhoku Line",
+"wp": "Hokuhoku Line"
+},
+"Q84597958": {
+"en": "Tuuksa"
+},
+"Q846367": {
+"en": "Sōtetsu Izumino Line",
+"wp": "Sōtetsu Izumino Line"
+},
+"Q846381": {
+"en": "New Shuttle",
+"wp": "New Shuttle"
+},
+"Q851226": {
+"en": "Yamaguchi Line",
+"wp": "Yamaguchi Line"
+},
+"Q85168358": {
+"en": "Khayyam Railway Station"
+},
+"Q85168420": {},
+"Q85168440": {},
+"Q85168453": {},
+"Q85168490": {},
+"Q85168533": {},
+"Q85168686": {},
+"Q852064": {
+"en": "Ōmura Line",
+"wp": "Ōmura Line"
+},
+"Q856598": {
+"en": "Hirano Station",
+"wp": "Hirano Station (JR West)"
+},
+"Q85791262": {
+"en": "Ormenio railway station",
+"wp": "Ormenio railway station"
+},
+"Q85792785": {
+"en": "Peplos railway station",
+"wp": "Peplos railway station"
+},
+"Q85816444": {},
+"Q85884847": {
+"en": "Ryukokutoyamakōkō-mae (Eirakuchō) Station"
+},
+"Q85988629": {
+"en": "Bedevlia"
+},
+"Q85988694": {
+"en": "Berlybash"
+},
+"Q85989339": {
+"en": "Bilyn"
+},
+"Q85989587": {
+"en": "Velyka Kopania"
+},
+"Q85990023": {
+"en": "Vilshanka railway station"
+},
+"Q85991870": {
+"en": "Dibrova"
+},
+"Q85998195": {
+"en": "Rokosiv"
+},
+"Q85998365": {
+"en": "Ruske Pole"
+},
+"Q85998930": {
+"en": "Sokyrnytsia"
+},
+"Q85998951": {
+"en": "Solotvyno-Likarnia"
+},
+"Q85999148": {
+"en": "Steblivka"
+},
+"Q860478": {
+"en": "Mugi Line",
+"wp": "Mugi Line"
+},
+"Q862374": {
+"en": "Horita Station",
+"wp": "Horita Station (Nagoya Municipal Subway)"
+},
+"Q864284": {
+"en": "Futamata Station",
+"wp": "Futamata Station (Hokkaido)"
+},
+"Q864604": {
+"en": "Ōyama Cable Car",
+"wp": "Ōyama Cable Car"
+},
+"Q86467": {
+"en": "Busan Metro Line 2",
+"en-gb": "Busan Subway Line 2",
+"wp": "Busan Metro Line 2"
+},
+"Q86469": {
+"en": "Busan Metro Line 4",
+"en-gb": "Busan Subway Line 4",
+"wp": "Busan Metro Line 4"
+},
+"Q865516": {
+"en": "Kusatsu Line",
+"wp": "Kusatsu Line"
+},
+"Q865801": {
+"en": "Sakurai Line",
+"wp": "Sakurai Line"
+},
+"Q86668857": {},
+"Q86669310": {},
+"Q86678618": {},
+"Q86679982": {},
+"Q86684683": {},
+"Q86730401": {
+"en": "Line 27 (Chengdu Metro)",
+"wp": "Line 27 (Chengdu Metro)"
+},
+"Q869221": {
+"en": "Kishin Line",
+"wp": "Kishin Line"
+},
+"Q869325": {
+"en": "Ibusuki Makurazaki Line",
+"wp": "Ibusuki Makurazaki Line"
+},
+"Q871999": {
+"en": "Kitto Line",
+"wp": "Kitto Line"
+},
+"Q872023": {
+"en": "Sangū Line",
+"wp": "Sangū Line"
+},
+"Q872902": {
+"en": "Gonō Line",
+"wp": "Gonō Line"
+},
+"Q873082": {
+"en": "Kitakami Line",
+"wp": "Kitakami Line"
+},
+"Q874056": {
+"en": "Rikuu West Line",
+"wp": "Rikuu West Line"
+},
+"Q874067": {
+"en": "Hida-Hagiwara Station",
+"wp": "Hida-Hagiwara Station"
+},
+"Q87443978": {
+"en": "Aigio railway station",
+"wp": "Aigio railway station"
+},
+"Q874467": {
+"en": "Kakogawa Line",
+"wp": "Kakogawa Line"
+},
+"Q898921": {
+"en": "Sakai Line",
+"wp": "Sakai Line"
+},
+"Q899085": {
+"en": "Gantoku Line",
+"wp": "Gantoku Line"
+},
+"Q899331": {
+"en": "Onoda Line",
+"wp": "Onoda Line"
+},
+"Q899394": {
+"en": "Fukuen Line",
+"wp": "Fukuen Line"
+},
+"Q899418": {
+"en": "Yodo Line",
+"wp": "Yodo Line"
+},
+"Q899464": {
+"en": "Uchiko Line",
+"wp": "Uchiko Line"
+},
+"Q899509": {
+"en": "Inbi Line",
+"wp": "Inbi Line"
+},
+"Q903437": {
+"en": "Nagoya Dome-mae Yada Station",
+"wp": "Nagoya Dome-mae Yada Station"
+},
+"Q906775": {
+"en": "Meijō Line",
+"wp": "Meijō Line"
+},
+"Q908188": {
+"en": "Kūkō Line",
+"wp": "Airport Line (Fukuoka)"
+},
+"Q912219": {
+"en": "Jōetsu Shinkansen",
+"wp": "Jōetsu Shinkansen"
+},
+"Q92495875": {
+"en": "Wenlan Station"
+},
+"Q92501": {
+"en": "Seoul Subway Line 1",
+"en-gb": "Seoul Metro Line 1"
+},
+"Q92502": {
+"en": "Seoul Metro Line 4"
+},
+"Q93169387": {
+"en": "Jinli Station"
+},
+"Q93169773": {
+"en": "Hexi Station"
+},
+"Q93169909": {
+"en": "Guancheng Station"
+},
+"Q93277410": {
+"en": "Dabutou Station"
+},
+"Q93277414": {
+"en": "Shijiaotou Station"
+},
+"Q93277615": {
+"en": "Hedong station"
+},
+"Q94090917": {
+"en": "Futog railway station"
+},
+"Q94232905": {
+"en": "47 km"
+},
+"Q949628": {
+"en": "Mariupol railway station",
+"wp": "Mariupol railway station"
+},
+"Q95729908": {
+"en": "Locomotive"
+},
+"Q96359551": {
+"en": "Yizhuang T1 line",
+"wp": "Yizhuang T1 line"
+},
+"Q96986147": {
+"en": "Dongtang Station",
+"wp": "Dongtang station"
+},
+"Q97172544": {
+"en": "Ptelea railway station",
+"wp": "Ptelea railway station"
+},
+"Q97188375": {},
+"Q97324865": {},
+"Q97324903": {
+"en": "Chirpan train station"
+},
+"Q97324905": {},
+"Q97324944": {},
+"Q97324966": {},
+"Q97325004": {},
+"Q97325026": {},
+"Q97325039": {},
+"Q97325064": {},
+"Q97325078": {},
+"Q97325088": {},
+"Q97325112": {},
+"Q97325115": {},
+"Q97325127": {},
+"Q97325128": {},
+"Q97325132": {},
+"Q97325146": {},
+"Q97325148": {},
+"Q97325165": {
+"en": "Dragomirovo"
+},
+"Q97325169": {
+"en": "Isperih"
+},
+"Q97325179": {},
+"Q97325226": {},
+"Q97325232": {},
+"Q97325300": {},
+"Q97325302": {},
+"Q97325320": {},
+"Q97325329": {},
+"Q97325379": {},
+"Q97325401": {},
+"Q97325404": {},
+"Q97325408": {},
+"Q97325410": {},
+"Q97325415": {},
+"Q97325439": {},
+"Q97325461": {},
+"Q97325463": {},
+"Q97325465": {},
+"Q97325470": {},
+"Q97325474": {},
+"Q97325493": {},
+"Q97325499": {},
+"Q97325503": {},
+"Q97325512": {},
+"Q97325515": {},
+"Q97325520": {},
+"Q97325528": {},
+"Q97325531": {},
+"Q97325548": {},
+"Q97325550": {},
+"Q97325556": {},
+"Q97325569": {
+"en": "Topolite"
+},
+"Q97325613": {},
+"Q97325620": {},
+"Q97325623": {},
+"Q97325625": {},
+"Q97325628": {},
+"Q97325637": {
+"en": "Karnare"
+},
+"Q97325639": {},
+"Q97325651": {},
+"Q97325677": {},
+"Q97325688": {},
+"Q97325702": {},
+"Q97325711": {},
+"Q97325721": {},
+"Q97325753": {},
+"Q97325776": {
+"en": "Chelopech"
+},
+"Q97325779": {},
+"Q97325799": {},
+"Q97325807": {},
+"Q97325834": {},
+"Q97325841": {},
+"Q97325849": {},
+"Q97325901": {},
+"Q97325903": {},
+"Q97326018": {},
+"Q97326023": {
+"en": "Sopot"
+},
+"Q97326042": {},
+"Q97326058": {},
+"Q97326062": {},
+"Q97326072": {},
+"Q97326097": {},
+"Q97326102": {
+"en": "Kalipetrovo station"
+},
+"Q97326106": {},
+"Q97326116": {},
+"Q97326151": {},
+"Q97326185": {},
+"Q97326216": {},
+"Q97326228": {},
+"Q97326231": {},
+"Q97326243": {
+"en": "Dalga Laka"
+},
+"Q97326253": {},
+"Q97326258": {},
+"Q97326272": {},
+"Q97326287": {},
+"Q97326302": {},
+"Q97326303": {},
+"Q97381200": {
+"en": "Sasovo-Zakarpatske"
+},
+"Q97381248": {
+"en": "Khust"
+},
+"Q97381249": {
+"en": "Karier"
+},
+"Q97381379": {
+"en": "Fanchykovo"
+},
+"Q97381380": {
+"en": "Nove Selo"
+},
+"Q97381384": {
+"en": "Chetovo"
+},
+"Q97381386": {
+"en": "Dobrosillia"
+},
+"Q97381387": {
+"en": "Velyka Bakhta"
+},
+"Q97381392": {
+"en": "Batrad"
+},
+"Q97381421": {
+"en": "Onokivtsi"
+},
+"Q97381422": {
+"en": "Nevytske"
+},
+"Q97381424": {
+"en": "Vorochevo"
+},
+"Q97381425": {
+"en": "Zarichevo"
+},
+"Q97381426": {
+"en": "Dubrynychi"
+},
+"Q97381790": {
+"en": "Shkola-Internat"
+},
+"Q97381791": {
+"en": "Zabrid"
+},
+"Q97451659": {
+"en": "215 km"
+},
+"Q97459173": {
+"en": "Svetloyarskaya railway station"
+},
+"Q97660735": {},
+"Q97708358": {},
+"Q98560210": {
+"en": "Psathades railway station"
+},
+"Q986313": {
+"en": "Nanjing railway station",
+"wp": "Nanjing railway station"
+},
+"Q98716763": {
+"en": "Gurbansoltan railway station"
+},
+"Q993679": {
+"en": "Okinawa Urban Monorail Line",
+"wp": "Okinawa Urban Monorail"
+},
+"Q99571347": {
+"en": "Kara-Ketken railway station"
+},
+"Q99571364": {
+"en": "Josaly railway station"
+}
+}

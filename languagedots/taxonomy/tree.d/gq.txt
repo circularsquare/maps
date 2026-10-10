@@ -6,7 +6,7 @@ nigercongo.bantu | Bantu
 nigercongo.bantu.fang | Fang
 nigercongo.bantu.bube | Bubi (Bube) | 0.55 0.13 20
 nigercongo.bantu.ndowe | Ndowe (Kombe, Benga)
-nigercongo.bantu.kwasio | Kwasio (Bisio)
+nigercongo.bantu.kwasio | Kwasio (Bisio) | 0.58 0.14 30
 creole | Creoles
 creole.portuguese_based | Portuguese-based creoles
 creole.portuguese_based.fadambo | Fa d'Ambô (Annobonese)

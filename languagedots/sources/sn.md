@@ -6,6 +6,7 @@ nodes from 23 table categories, every row `measured`. 15,932 dots at 1:1000, no 
 ```
 python sources/sn_rgph.py --fetch     # the 14 regional reports + chapter 1 of the national report
 python sources/sn_geo.py              # religiondots' hexes re-keyed to the 14 régions (read-only)
+python sources/sn_place.py            # + département and CLEAR zone per hex, sn_clear.csv
 python taxonomy/build.py
 python tools/check_country.py sn
 python scatter.py --country sn
@@ -25,7 +26,7 @@ python scatter.py --country sn
 - **Lead not used.** The coverage sweep had only Tableau I-32 (national) and pointed to CLEAR
   Global's département shares from the 2013 IPUMS sample. The regional reports came out in
   April 2026 and give 2023 counts by région from ANSD itself, so the 2013 sample was not
-  fetched.
+  used for counts. Since 2026-10-07 it places dots inside régions (Geography, below).
 - **Question.** B18 "première langue la plus souvent parlée": the language the person speaks
   most often, residents aged 3+, one answer. B19 (second language) is not tabulated by
   région. Not a mother-tongue question, so `how` says "language spoken most often" and
@@ -68,7 +69,45 @@ on COD-AB v02 with Kontur 2023-11 hexes. Each 1988 unit is one of today's régio
 or part of Diourbel, so `sources/sn_geo.py` keeps religiondots' hexes (with its coastal snaps)
 and only splits the four merged units (Saint-Louis/Matam, Tambacounda/Kédougou,
 Kaolack/Kaffrine, Kolda/Sédhiou) by the COD-AB admin1 polygon of each hex centroid. Output
-`data/geo/sn/sn_hexes.gpkg`, `pop_weight`. No Kontur cap block (religiondots' check found none).
+`data/geo/sn/sn_hexes.gpkg`. No Kontur cap block (religiondots' check found none).
+
+### Placement inside régions (2026-10-07, fix-place)
+
+Placement-only proxy (AGENT_BRIEF §4.4): counts stay the census's per région; inside one, a
+language's dots go to hexes by Kontur population x CLEAR Global's share of that language in the
+hex's département. `sources/sn_place.py` writes `data/geo/sn/sn_hexes_dept.gpkg` (adds `dept`,
+COD-AB admin2 pcode kept inside its own région, and `zone`) and `data/normalized/sn_clear.csv`;
+the weighter is `sources/clear_place.py::ClearWeighter`, shared with Mali.
+
+- **Source.** CLEAR Global `senegal-languages` (HDX, CC BY-SA), admin2 CSV: "main language
+  spoken in the household", from the IPUMS sample of the 2013 census. Downloaded 2026-10-07 to
+  `data/raw/sn/clearglobal_sen_admin{0,1,2}.csv`. A different year and question from the counts
+  (2023, language spoken most often); used only for where inside a région.
+- **Coverage is partial.** 18 of 46 départements have their own row; six régions have a "level 2
+  unknown" row (`SN01XXX` etc.); Kaffrine and Matam have no row at all (IPUMS files them under
+  their pre-2008 parents). Zones: own pcode; else the région's unknown row (Dakar's Guédiawaye,
+  Pikine, Keur Massar; Kolda's Kolda and Médina Yoro Foulah); else the région's mean (Gossas,
+  Guinguinéo, Linguère). Eight régions are split (Dakar, Diourbel, Fatick, Kaolack, Kolda, Louga,
+  Thiès, Ziguinchor); Kaffrine, Kédougou, Matam, Saint-Louis, Sédhiou and Tambacounda are one
+  zone and stay on population.
+- **Label -> CLEAR codes** (`CLEAR_CODES`): Wolof + Lebu Wolof; Pulaar + Bilkire Fulani;
+  Màndienka = Mandinka + West Manding + Western Maninkakan + Jahanka. Bayot, Tourka, sign
+  language and the remainders go on population. Node ids are passed through `regroup.move`, so
+  the moved Mandinka and French nodes match.
+- **Effect.** 130 (région, language) rows placed by CLEAR, 45 on population. Share of a
+  language's dots moved off a plain population spread (half the absolute difference by
+  département): Serer in Diourbel 46% (to Bambey), French in Dakar 41% (to Dakar département),
+  Serer in Kaolack 31% and Thiès 31% (Mbour), Wolof in Ziguinchor 31%, Joola in Ziguinchor 21%
+  (Bignona, Oussouye). People-weighted over languages of 20,000+ in split régions: 7.7%.
+- **Checks** (all pass): shares sum to 1 per location; every CLEAR code is a COD pcode or a
+  région unknown row; every hex's département is in its région, all 46 hit (604 hexes on the
+  nearest one); population and hex count equal to sn_geo's layer. Counts untouched: 15,932 dots
+  before and after.
+- **Sanity, CLEAR région shares against the census:** mostly within 10 points. Exceptions:
+  Saint-Louis (Pulaar 22 against 53; CLEAR's Saint-Louis is likely a different footprint) and
+  Kédougou Manding 33.8% against the census's 5.0% Màndienka, which supports the reading below
+  that Kédougou's 31.5% "Autres langues africaines" is mostly Malinké. Neither affects placement
+  (both régions are one zone).
 
 ## Mapping calls (`taxonomy/sn2023.py`, `taxonomy/tree.d/sn.txt`)
 
@@ -112,7 +151,8 @@ Mandinka are all 0.15 or more apart.
 ## Terms
 
 ANSD's reports are public downloads. COD-AB Senegal (OCHA/HDX) CC BY-IGO; Kontur CC BY 4.0;
-Glottolog CC BY.
+Glottolog CC BY. CLEAR Global's shares CC BY-SA 4.0 (they rest on an IPUMS sample; used as a
+placement weight, as in gn and sl).
 
 ## Moved from countries/sn.py text (2026-10-06 sweep)
 

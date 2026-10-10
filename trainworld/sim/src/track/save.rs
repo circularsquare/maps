@@ -12,7 +12,8 @@ use super::params::*;
 /// thru`); they are kept so such an edge reshapes from its clicks, and are written back as long
 /// as it is unchanged. TWT2 (T-055: constructed flags on stations, node flag 4, and edges,
 /// tracks | 4) has none and still loads.
-const MAGIC: &[u8; 4] = b"TWT3";
+const MAGIC: &[u8; 4] = b"TWT4";
+const MAGIC_TWT3: &[u8; 4] = b"TWT3";
 const MAGIC_TWT2: &[u8; 4] = b"TWT2";
 
 struct W(Vec<u8>);
@@ -145,9 +146,11 @@ pub fn encode(net: &Network) -> Vec<u8> {
         let d = net.line_data(l).unwrap();
         w.s(&d.name);
         w.u(d.colour as u64);
-        for t in d.tph {
+        for t in if d.trains.is_some() { [0.0; 3] } else { d.tph } {
             w.tenth(t);
         }
+        w.u(d.trains.is_some() as u64);
+        if let Some(trains) = d.trains { for count in trains { w.u(count as u64); } }
         w.tenth(d.dwell_s);
         w.tenth(d.turnaround_s);
         w.u(d.cars as u64);
@@ -171,7 +174,7 @@ pub fn encode(net: &Network) -> Vec<u8> {
 
 /// Decode into a fresh network (dense ids). Derive with `TrackWorld::new`.
 pub fn decode(bytes: &[u8]) -> Result<Network, String> {
-    if bytes.len() < 20 || (&bytes[..4] != MAGIC && &bytes[..4] != MAGIC_TWT2) {
+    if bytes.len() < 20 || (&bytes[..4] != MAGIC && &bytes[..4] != MAGIC_TWT3 && &bytes[..4] != MAGIC_TWT2) {
         return Err("not a trainworld track save".into());
     }
     let f = |o: usize| f64::from_le_bytes(bytes[o..o + 8].try_into().unwrap());
@@ -229,6 +232,7 @@ pub fn decode(bytes: &[u8]) -> Result<Network, String> {
         let name = r.s()?;
         let colour = r.u()? as u32;
         let tph = [r.tenth()?, r.tenth()?, r.tenth()?];
+        let trains = if &bytes[..4] == MAGIC && r.u()? != 0 { Some([r.u()? as u32, r.u()? as u32, r.u()? as u32]) } else { None };
         let (dwell_s, turnaround_s) = (r.tenth()?, r.tenth()?);
         let cars = r.u()? as u8;
         let mut stops = vec![];
@@ -244,7 +248,7 @@ pub fn decode(bytes: &[u8]) -> Result<Network, String> {
             prev += v >> 1;
             path.push((prev as u32) << 1 | (v & 1) as u32);
         }
-        net.set_line(id, Some(LineData { name, colour, stops, path, tph, dwell_s, turnaround_s, cars })).map_err(|e| format!("{e:?}"))?;
+        net.set_line(id, Some(LineData { trains, name, colour, stops, path, tph, dwell_s, turnaround_s, cars })).map_err(|e| format!("{e:?}"))?;
     }
     net.take_touch();
     Ok(net)

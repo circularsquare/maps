@@ -55,8 +55,9 @@ export function poolSize(): number {
 
 /** The service demand reads, with the UI's ids. */
 interface Service {
+  fare: { base: number; perKm: number };
   stations: { id: string; x: number; y: number }[];
-  lines: { id: string; stops: string[]; tph: [number, number, number]; hopS: number[][][]; dwellS: number[][][]; cars: number }[];
+  lines: { id: string; stops: string[]; tph: [number, number, number]; hopS: number[][][]; hopKm?: number[][]; dwellS: number[][][]; cars: number }[];
 }
 
 type Result = Extract<FromDemand, { kind: "result" }>;
@@ -95,8 +96,9 @@ interface Solve {
 
 function serviceFromSnapshot(s: NetworkSnapshot): Service {
   return {
+    fare: s.fare ?? { base: 2, perKm: 0 }, // legacy fixed 6 perceived minutes
     stations: s.stations.map((st) => ({ id: String(st.id), x: st.x, y: st.y })),
-    lines: s.lines.map((l) => ({ id: String(l.id), stops: l.stops.map(String), tph: l.tph, hopS: l.hopS, dwellS: l.dwellS, cars: l.cars })),
+    lines: s.lines.map((l) => ({ id: String(l.id), stops: l.stops.map(String), tph: l.tph, hopS: l.hopS, hopKm: l.hopKm, dwellS: l.dwellS, cars: l.cars })),
   };
 }
 
@@ -112,6 +114,8 @@ function packService(svc: Service): { net: DemandNetwork; layout: Solve["layout"
     times: new Float32Array(6 * nStops),
     tph: new Float32Array(lines.flatMap((l) => l.tph)),
     cars: new Float32Array(lines.map((l) => l.cars)),
+    fare: svc.fare,
+    hopKm: new Float32Array(2 * nStops),
   };
   const layout: Solve["layout"] = [];
   let a = 0;
@@ -126,6 +130,12 @@ function packService(svc: Service): { net: DemandNetwork; layout: Solve["layout"
       for (let k = 0; k < n - 1; k++) net.times[at(0) + k] = (h0[k] ?? 0) + (d0[k] ?? 0);
       // run 1 travels the stops reversed: its j-th hop leaves stop n - 1 - j
       for (let j = 0; j < n - 1; j++) net.times[at(1) + n - 1 - j] = (h1[j] ?? 0) + (d1[j] ?? 0);
+    }
+    // Fare distances use actual track length. Old/test snapshots fall back to station distance.
+    for (let run = 0; run < 2; run++) for (let k = 0; k < n - 1; k++) {
+      const i = run === 0 ? k : n - 1 - k, j = run === 0 ? k + 1 : n - 2 - k;
+      const from = svc.stations[index.get(l.stops[i])!], to = svc.stations[index.get(l.stops[j])!];
+      net.hopKm[2 * a + run * n + k] = l.hopKm?.[run]?.[k] ?? Math.hypot(to.x - from.x, to.y - from.y) / 1000;
     }
     a += n;
   }

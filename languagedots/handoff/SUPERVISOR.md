@@ -1,3 +1,33 @@
+# Supervisor handoff — 2026-10-07 (project set aside)
+
+Session `da1b1b09`. Anita: "its in a very good state i think", leaving it for a while after this
+publish. Everything below the line is the 2026-10-06 handoff, still true unless said here.
+
+- **Deployed 2026-10-07** (R2 data + index.html copied to the website repo; she commits/pushes).
+  Archive 513 MB (tiles now stored in position order; ties drawn by markHash in the viewer).
+- **Viewer added:** colour picker on legend dots (religiondots' popover; `copyOverrides()` in the
+  console gives fragment lines), language search under the legend, double-click a tooltip language
+  to select it, round Size stops, Auto needs 65% of the centre-weighted visible land (narrow
+  countries need a deep zoom: fine by her), world copies off while the world fits on screen, pies
+  read the dots' decode cache (~4x faster).
+- **Data added:** ci foreign residents, ss's three hatched states, bd Sylheti/Chittagonian/Rohingya,
+  India's Barak Valley and North Tripura as Sylheti, cd city Swahili/Lingala, ru settlement
+  placement, pk tehsils, om/sn/ml placement, qa/ae expat pools by sex. Moldovan under Romanian,
+  Dari and Tajik under Persian (regroup.txt). One line each in runlog.md.
+- **Next, if picked up:** followups.md "weakest places, queued" is the list; "speed and size
+  catalog" has what is still open there (archive per Aggregation step, side-file trims, caching).
+- **2026-10-08, published:** Draw as "none"; long-press merge box in pies mode; tooltip place
+  line (`placeLine`: nearest basemap place by class and rank, else Natural Earth province from
+  `admin1_shapes.geojson` built by `tools/make_admin1.py`, then the country); RTL text plugin and
+  a `name_en` guard (Türkiye read "T") in both languagedots and religiondots. The same two label
+  fixes were added to the other MapLibre maps (flights, cityhistory, citybrowser, noritetsu,
+  neighborhoods, chinaethnicity, ancestrydots, traincounts, the riders maps) but NOT published.
+- **Her open calls:** Italian (and French d'oïl) regional languages under their roof language: she
+  was unsure; left ungrouped. qa.csv predates the latest home mixes (re-running qa_build.py
+  changes counts).
+
+---
+
 # Supervisor handoff — 2026-10-06 (afternoon)
 
 Written by the ld-super session `5d7dac7e` as it handed back. Read this, then `runlog.md` (one
@@ -47,8 +77,9 @@ line per result, newest last; the 2026-10-06 lines cover this session), `followu
 
 ## Paused 2026-10-06 late (Anita went to sleep)
 
-- Deployed to R2 (languagedots 572 MB archive, religiondots), pages copied into the website repo,
-  NOT committed or pushed; Anita commits and pushes herself.
+- Deployed to R2 (languagedots 572 MB archive, religiondots) and **live at anita.garden**
+  (Anita pushed the website repo 2026-10-07; working). Later updates: rerun `tools/deploy.py`,
+  then she commits and pushes.
 - Since that copy, index.html changed locally: ring opacity floor 0.32 (copied), "Mother tongues"
   heading removed, tile-blanking fix (pies built per tile with parent/child stand-ins) and phone
   info panel closed by default. All of it is now in the website copy (deploy.py rerun 2026-10-07,
@@ -57,8 +88,8 @@ line per result, newest last; the 2026-10-06 lines cover this session), `followu
 ## Publishing
 
 - `tools/deploy.py` (`--dry-run`, `--verify`) and COMMANDS.txt DEPLOY are ready; nothing uploaded.
-  Upload only on Anita's explicit go. **When languagedots is deployed, redeploy religiondots
-  too** (Anita, 2026-10-06), with `religiondots/tools/deploy.py` and its own preflight.
+  Upload only on Anita's explicit go. (A 2026-10-06 rule to redeploy religiondots with every
+  languagedots deploy was dropped by Anita on 2026-10-08: deploy each map only when it changed.)
 - `country_shapes.geojson` must ship with the data (`tools/make_shapes.py` rebuilds it).
 
 ## Open

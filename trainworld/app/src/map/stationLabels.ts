@@ -1,7 +1,8 @@
 // Station names as DOM labels above the overlay canvas, in the UI font (Zen Maru Gothic). A
 // MapLibre symbol layer would sit under the overlay, with track drawn through the names. Labels
-// move on MapLibre's frames only (the camera does not change otherwise); a greedy pass hides any
-// label that overlaps a more important one (transfers first, then lines, then constructed).
+// move on MapLibre's frames only (the camera does not change otherwise). A flat pan translates
+// one compositor layer; other camera changes re-place names. A greedy pass hides any label that
+// overlaps a more important one (transfers first, then lines, then constructed).
 //
 // Winning over basemap place names (T-032): an invisible symbol layer on top of the basemap holds
 // the same names at the same spots. MapLibre places symbols from the top layer down, so basemap
@@ -14,10 +15,12 @@ import type { WorldView } from "../game/types";
 import { toLocal } from "./geo";
 import type { Overlay } from "./overlay";
 import { perfOff, perfTry } from "../perfFlags";
+import { MIN_LABEL_ZOOM, labelPadding } from "./labelLayout";
 
 /** ?perfOff=labels (T-045, measurement only): DOM labels never placed. */
 const NO_LABELS = perfOff("labels");
 const LAYERED = perfTry("labelLayers");
+const PAN = !perfOff("labelPan");
 
 interface Label {
   el: HTMLDivElement;
@@ -31,22 +34,41 @@ interface Label {
 
 const GAP = 10; // px from the station centre
 const SHADOW = "tw-station-shadow";
+// Keep names beyond the viewport ready to enter during a pan. Rebase before this runs out.
+const PAN_MARGIN = 256;
 
 export class StationLabels {
   private box: HTMLDivElement;
+  private plane: HTMLDivElement;
   private labels: Label[] = [];
   private visible = true;
+  private shown = false;
   private shadow: FeatureCollection = { type: "FeatureCollection", features: [] };
   private key = "";
+  private placedMatrix: number[] | null = null;
+  private placedSize: [number, number] = [0, 0];
+  private anchor: [number, number] = [0, 0];
+  private needsPlacement = true;
 
   constructor(container: HTMLElement, private overlay: Overlay, private map: MlMap) {
     this.box = document.createElement("div");
     this.box.className = "stn-labels";
+    this.box.style.display = "none";
     container.appendChild(this.box);
+    this.plane = document.createElement("div");
+    this.plane.className = "stn-label-plane";
+    if (PAN) this.plane.style.willChange = "transform";
+    this.box.appendChild(this.plane);
     overlay.afterMapFrame.push(() => this.place());
+    // moveend can precede the final rendered camera: place on that frame, not the old matrix.
+    map.on("moveend", () => {
+      this.needsPlacement = true;
+      map.triggerRepaint();
+    });
     // widths measured before the web font arrived are wrong: measure again once it has
     document.fonts?.ready.then(() => {
       for (const l of this.labels) l.w = 0;
+      this.needsPlacement = true;
       this.place();
     });
     map.on("style.load", () => this.addShadow());
@@ -62,6 +84,7 @@ export class StationLabels {
     if (!map.getSource(SHADOW)) map.addSource(SHADOW, { type: "geojson", data: this.shadow });
     map.addLayer({
       id: SHADOW,
+      minzoom: MIN_LABEL_ZOOM,
       type: "symbol",
       source: SHADOW,
       layout: {
@@ -87,13 +110,14 @@ export class StationLabels {
     const key = st.map((s) => `${s.id}|${s.name}|${s.built}|${s.lng}|${s.lat}|${s.heading}|${lines.get(s.id) ?? 0}`).join("\n");
     if (key === this.key) return;
     this.key = key;
-    this.box.textContent = "";
+    this.plane.textContent = "";
+    this.needsPlacement = true;
     this.labels = st.map((s) => {
       const el = document.createElement("div");
       el.className = "stn-label" + (s.built ? "" : " plan");
       if (LAYERED) el.style.willChange = "transform"; // ?perfTry=labelLayers (T-045)
       el.textContent = s.name;
-      this.box.appendChild(el);
+      this.plane.appendChild(el);
       const [x, y] = toLocal(s.lng, s.lat);
       return { el, x, y, below: Math.abs(Math.cos(s.heading)) > Math.abs(Math.sin(s.heading)), w: 0, h: 0 };
     });
@@ -111,14 +135,45 @@ export class StationLabels {
 
   setVisible(on: boolean) {
     this.visible = on;
-    this.box.style.display = on ? "" : "none";
     if (this.map.getLayer(SHADOW)) this.map.setLayoutProperty(SHADOW, "visibility", on ? "visible" : "none");
-    if (on) this.place();
+    this.needsPlacement = true;
+    this.place();
   }
 
   place() {
-    if (!this.visible || !this.overlay.camMatrix || NO_LABELS) return;
+    const zoom = this.map.getZoom();
+    const show = this.visible && zoom >= MIN_LABEL_ZOOM && !NO_LABELS;
+    if (show !== this.shown) {
+      this.shown = show;
+      this.box.style.display = show ? "" : "none";
+      this.needsPlacement = true;
+    }
+    if (!show || !this.overlay.camMatrix) return;
     const W = this.overlay.canvas.clientWidth, H = this.overlay.canvas.clientHeight;
+    const m = this.overlay.camMatrix;
+    const prev = this.placedMatrix;
+    // A flat mercator pan changes only translation. Zoom, rotation, pitch, padding and resize
+    // fall back to individual placement, using the same camera as the network's draw.
+    const same = (a: number, b: number) => Math.abs(a - b) <= 1e-10 * Math.max(1, Math.abs(a), Math.abs(b));
+    if (PAN && !this.needsPlacement && prev && W === this.placedSize[0] && H === this.placedSize[1]
+      && m[3] === 0 && m[7] === 0
+      && prev.every((v, i) => i === 12 || i === 13 || i === 14 || same(v, m[i]))) {
+      const [x, y] = this.overlay.toScreen(0, 0);
+      const dx = x - this.anchor[0], dy = y - this.anchor[1];
+      if (Math.abs(dx) < PAN_MARGIN / 2 && Math.abs(dy) < PAN_MARGIN / 2) {
+        const transform = `translate(${dx}px, ${dy}px)`;
+        if (this.plane.style.transform !== transform) this.plane.style.transform = transform;
+        return;
+      }
+    }
+    this.needsPlacement = false;
+    this.placedMatrix = Array.from(m);
+    this.placedSize = [W, H];
+    this.anchor = this.overlay.toScreen(0, 0);
+    this.plane.style.transform = "";
+    const margin = PAN ? PAN_MARGIN : 0;
+    // Reserve breathing room around each name, especially at neighbourhood scale.
+    const [padX, padY] = labelPadding(zoom);
     const taken: [number, number, number, number][] = [];
     // measure every new label first, then move them: reads between writes force a layout each
     for (const l of this.labels) {
@@ -132,13 +187,14 @@ export class StationLabels {
       const x = l.below ? sx - l.w / 2 : sx + GAP;
       const y = l.below ? sy + GAP - 2 : sy - l.h / 2;
       const r: [number, number, number, number] = [x, y, x + l.w, y + l.h];
-      const off = r[2] < 0 || r[0] > W || r[3] < 0 || r[1] > H;
-      const hit = !off && taken.some((t) => r[0] < t[2] && r[2] > t[0] && r[1] < t[3] && r[3] > t[1]);
+      const collision: [number, number, number, number] = [r[0] - padX, r[1] - padY, r[2] + padX, r[3] + padY];
+      const off = r[2] < -margin || r[0] > W + margin || r[3] < -margin || r[1] > H + margin;
+      const hit = !off && taken.some((t) => collision[0] < t[2] && collision[2] > t[0] && collision[1] < t[3] && collision[3] > t[1]);
       if (off || hit) {
         l.el.style.visibility = "hidden";
         continue;
       }
-      taken.push(r);
+      taken.push(collision);
       l.el.style.visibility = "";
       l.el.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px)`;
     }

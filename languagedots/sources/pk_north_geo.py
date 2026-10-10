@@ -1,4 +1,5 @@
-"""Pakistan's placement layer with Gilgit-Baltistan added -> data/geo/pk/pk_hexes.gpkg.
+"""Pakistan's district hex layer with Gilgit-Baltistan added -> data/geo/pk/pk_district_hexes.gpkg
+(then sources/pk_tehsil_geo.py -> pk_hexes.gpkg, the place layer).
 
     python sources/pk_north_geo.py
 
@@ -35,7 +36,9 @@ import pk_north  # noqa: E402
 
 RD_LAYER = RD_GEO / "pk2023" / "pk_hexes.gpkg"
 COD = RD / "data" / "raw" / "pk2023" / "cod" / "pak_admin2.shp"
-OUT = HERE / "data" / "geo" / "pk" / "pk_hexes.gpkg"
+# Since 2026-10-07 this is an intermediate: sources/pk_tehsil_geo.py re-keys the four provinces'
+# and Islamabad's hexes onto tehsils and writes the place layer, pk_hexes.gpkg.
+OUT = HERE / "data" / "geo" / "pk" / "pk_district_hexes.gpkg"
 OUT_UNITS = HERE / "data" / "geo" / "pk" / "pk_gb_districts.gpkg"
 
 FOLD = {"Diamir": "Diamer", "Darel": "Diamer", "Tangir": "Diamer", "Gupis-Yasin": "Ghizer",

@@ -53,7 +53,7 @@ nigercongo.mande.konyanka | Konyanka Maninka (Koniaka) | 0.70 0.15 140
 nigercongo.mande.manya | Manya (Toma-Manian) | 0.86 0.08 15
 nigercongo.mande.kono_guinea | Kono (Guinea) | 0.78 0.10 290
 nigercongo.mande.kuranko | Kuranko | 0.88 0.13 115
-nigercongo.mande.lele | Lele (Lélé) | 0.48 0.09 270
+nigercongo.mande.lele | Lele (Guinea) | 0.48 0.09 270
 nigercongo.mande.jahanka | Jahanka (Diakhanké) | 0.55 0.11 210
 nigercongo.mande.mixifore | Mikhiforé (Mixifore) | 0.88 0.07 60
 nigercongo.atlantic.kissi | Kissi | 0.72 0.14 340

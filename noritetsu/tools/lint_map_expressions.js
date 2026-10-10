@@ -44,10 +44,14 @@ const CONSTS = [
 for (const re of CONSTS)
   for (const m of src.matchAll(re)) prelude += `var ${m[1]} = ${m[2]};\n`;
 
-// Pull the object literal out of each map.addLayer({...}) by brace matching.
+// Pull the object literal out of each map.addLayer({...}) by brace matching, and out of
+// addTrackLayer({...}) (index.html's per-country layers, added without MapLibre's own check
+// after the first country: this lint is then the only check they get).
 const layers = [];
-let idx = 0;
-while ((idx = src.indexOf('map.addLayer(', idx)) !== -1) {
+const CALL = /\b(?:map\.addLayer|addTrackLayer)\(\s*\{/g;
+let idx = 0, m0;
+while ((m0 = CALL.exec(src))) {
+  idx = m0.index;
   const start = src.indexOf('{', idx);
   let depth = 0, end = start;
   for (; end < src.length; end++) {
@@ -55,7 +59,7 @@ while ((idx = src.indexOf('map.addLayer(', idx)) !== -1) {
     else if (src[end] === '}') { depth--; if (depth === 0) break; }
   }
   layers.push(src.slice(start, end + 1));
-  idx = end;
+  CALL.lastIndex = end;
 }
 
 let bad = 0, skipped = 0;

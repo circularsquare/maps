@@ -2,6 +2,7 @@
 
     python tools/rebuild.py be nl at          # build_model then build_tiles, per country
     python tools/rebuild.py --model-only cz   # skip the tiles
+    python tools/rebuild.py --tiles-only cz   # only the tiles, from the model as it is
     python tools/rebuild.py -j 1 jp           # one country at a time (default: 3 at once)
 
 Each step's output goes to data/logs/rebuild_<cc>_<step>.txt; one line per step is printed.
@@ -70,15 +71,52 @@ REGISTER = {
     "rs": "balkans_register:data/raw/rinf/rs", "ba": "balkans_register:data/raw/rinf/ba",
     "me": "balkans_register:data/raw/rinf/me", "mk": "balkans_register:data/raw/rinf/mk",
     "al": "balkans_register:data/raw/rinf/al", "xk": "balkans_register:data/raw/rinf/xk",
+    # The Middle East: hand lists through rinf.py (mideast_register.py, nafrica's code).
+    # After an extract: `mideast_register.py --clip <cc>`; then `--join iq` for Iraq and
+    # `--fill jo` for Jordan. Qatar is all metro and tram: no register (None).
+    "sa": "mideast_register:data/raw/rinf/sa", "ae": "mideast_register:data/raw/rinf/ae",
+    "iq": "mideast_register:data/raw/rinf/iq", "jo": "mideast_register:data/raw/rinf/jo",
+    "qa": None,
+    "pk": "pk_register:data/raw/pk",
+    # Sri Lanka and Bangladesh: hand lists through rinf.py (lk_register.py is the engine for
+    # both); after an extract `lk_register.py --clip` / `bd_register.py --clip`, then `--fill`
+    # (handoff_notes/bd_lk_build.md).
+    "lk": "lk_register:data/raw/rinf/lk", "bd": "bd_register:data/raw/rinf/bd",
+    # West and Central Africa: hand lists through rinf.py (wafrica_register.py; after an
+    # extract `--clip <cc>`, then `--fill`; handoff_notes/wafrica_build.md).
+    **{cc: f"wafrica_register:data/raw/rinf/{cc}"
+       for cc in ("ng", "cm", "ao", "ga", "cg", "sn", "gh", "bf", "cd")},
+    # East and Southern Africa: the same pattern (eafrica_register.py; --clip <cc>, --fill;
+    # handoff_notes/eafrica_build.md). Mauritius is all metro: no register (None).
+    **{cc: f"eafrica_register:data/raw/rinf/{cc}"
+       for cc in ("ke", "et", "dj", "mz", "zm", "zw", "tz", "mg", "mw", "ug")},
+    "mu": None,
+    # Latin America: the ways of hand-listed OSM routes (latam_register.py on ar_register's
+    # code; `--clip <cc>` after every extract; handoff_notes/latam_build.md). Santo Domingo
+    # and Puerto Rico are metro only: no register (None).
+    **{cc: f"latam_register:data/raw/{cc}"
+       for cc in ("cr", "pa", "cu", "pe", "bo", "ec", "uy", "ve", "co")},
+    "do": None, "pr": None,
+    # The rest of Asia: lk_register's engine (asia_register.py; --clip <cc>, --join, --fill;
+    # handoff_notes/asia_build.md).
+    **{cc: f"asia_register:data/raw/rinf/{cc}" for cc in ("kh", "la", "ph", "mm", "mn", "np")},
+    # Israel: hand-listed infrastructure lines on OSM track, stops from the MOT feed's rail
+    # subset (il_register.py on my_register's Track; `--clip` after an extract;
+    # handoff_notes/il_build.md).
+    "il": "il_register:data/raw/il",
+    # North Korea: OSM named track + line relations (kp_register.py; `python kp_register.py
+    # --clip` after an extract; kp_sources.md).
+    "kp": "kp_register:data/raw/kp",
 }
 # Rough build_model + build_tiles minutes on 2026-10-01, for ordering only.
 MINUTES = {"us": 12, "au": 11, "cn": 11, "ru": 9, "de": 8, "fr": 6, "it": 5, "jp": 4, "pl": 4,
-           "es": 4, "in": 6, "gb": 6, "ca": 3, "se": 2, "no": 2, "ie": 1, "mx": 1, "th": 1, "my": 1, "id": 1, "ua": 2, "tr": 1, "nz": 1, "vn": 1, "za": 1, "br": 1, "ar": 2, "cl": 1, "ir": 1, "ch": 2, "at": 2, "cz": 2, "be": 1, "nl": 1}
+           "es": 4, "in": 6, "gb": 6, "ca": 3, "se": 2, "no": 2, "ie": 1, "mx": 1, "th": 1, "my": 1, "id": 1, "ua": 2, "tr": 1, "nz": 1, "vn": 1, "za": 1, "br": 1, "ar": 2, "cl": 1, "ir": 1, "ch": 2, "at": 2, "cz": 2, "be": 1, "nl": 1, "pk": 1, "lk": 1, "bd": 1}
 
 
-def run_country(cc, model_only):
+def run_country(cc, model_only, tiles_only=False):
     reg = REGISTER.get(cc, f"rinf:data/raw/rinf/{cc}")
-    steps = [["build_model.py", "--region", cc, "--register", reg]]
+    steps = [] if tiles_only else [["build_model.py", "--region", cc]
+                                   + (["--register", reg] if reg else [])]
     if not model_only:
         steps.append(["build_tiles.py", "--region", cc])
     out = []
@@ -99,6 +137,7 @@ def run_country(cc, model_only):
 def main():
     args = sys.argv[1:]
     model_only = "--model-only" in args
+    tiles_only = "--tiles-only" in args
     jobs = 3
     if "-j" in args:
         jobs = max(1, int(args[args.index("-j") + 1]))
@@ -112,7 +151,7 @@ def main():
     regions.sort(key=lambda cc: -MINUTES.get(cc, 1))
     t0 = time.time()
     with ThreadPoolExecutor(max_workers=jobs) as pool:
-        results = list(pool.map(lambda cc: run_country(cc, model_only), regions))
+        results = list(pool.map(lambda cc: run_country(cc, model_only, tiles_only), regions))
     failed = [r for rs in results for r in rs if " exit 0," not in r]
     print(f"done: {len(regions)} countries in {(time.time() - t0) / 60:.1f} min, "
           f"{len(failed)} failed steps" + ("".join(f"\n  {f}" for f in failed)))

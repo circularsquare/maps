@@ -18,7 +18,7 @@ NAMES = {
     "Punu": f"{B}.punu",
     "Nzebi": f"{B}.nzebi",
     "Mbede": f"{B}.mbere",
-    "Kota": f"{B}.kota_gabon",
+    "Kota": f"{B}.kota",   # Congo's node: same language (kota1274); merged 2026-10-08
     "Tsogho": f"{B}.tsogo",
     "Myene": f"{B}.myene",
     "Baloumbou": f"{B}.lumbu_gabon",

@@ -407,6 +407,45 @@ A BPS table of ethnicity by regency with more than the largest group (Ananta wor
 2010 file); any measure of home-language retention by group or regency; language polygons
 instead of one Glottolog point each.
 
+## 11. Indonesian placed by regency, 2020 long form (2026-10-09, session 32a047f0)
+
+Viewers saw a sharp Betawi / Indonesian edge at the DKI Jakarta border, and earlier "too
+Sundanese" in places (followups.md). Cause: Indonesian had an even seed, so West Java's 19% and
+Banten's 39% (2010, measured) were spread over every kecamatan, and Bekasi, Depok and Tangerang
+drew their province's rural mix beside Jakarta's 89%; Betawi, seeded to its Glottolog point,
+crowded the same fringe (Kota Bekasi 10.8%).
+
+**Source.** Sensus Penduduk 2020 Long Form (fieldwork 2022), table 201: persons 5+ by regency,
+"uses a regional language to talk daily in the family", Ya / Tidak (Tidak = Indonesian or foreign).
+All 514 regencies, open JSON at `https://sensus.bps.go.id/topik/tabular/sp2022/201/<area>/3`.
+`sources/id_lf2020.py` -> `data/normalized/id_lf2020_regency.csv` (raw in `data/raw/id/lf2020/`);
+its docstring has the checks (regencies sum to provinces within 3, national 253,679,348). Tidak
+nationally 25.2%. It names no regional language below the nation, and a family using both answers
+Ya, so it is not comparable to 2010's Indonesian-first boxes; used for placement only.
+
+**Seed** (`countries/id.py`, `_lf2020_tidak`, every province but Papua and Papua Barat): t = the
+regency's Tidak share, clipped to 0.005-0.995; Indonesian and foreign (`other`) seeds x t, every
+regional language's seed (Glottolog-pointed or even) x (1 - t), sign language unchanged. The rake
+then shifts each province's log-odds to meet its 2010 counts. The layer's regencies are 2010's:
+the 17 created since are folded into their parents (`LF2020_PARENT`), Kalimantan Utara's five
+into the residual unit 65.
+
+**Effect** (drawn share of Kontur population, before -> after): Kota Bekasi Indonesian 13 -> 63,
+Sundanese 48 -> 8, Betawi 10.8 -> 3.0; Depok 15 -> 58; Tangerang Selatan 26 -> 63; Kota Tangerang
+26 -> 60; Kab. Bekasi 14 -> 40; Garut and Tasikmalaya 15 -> 0, Sundanese 52 -> 66; Serang 28 -> 5;
+Medan 57 -> 72; Makassar 25 -> 61; Surabaya 3 -> 13; Jakarta's five cities unchanged (74-78).
+Across 452 regencies outside Papua, drawn Indonesian against 2020 Tidak: Pearson 0.72 -> 0.93.
+
+Calls someone might reverse:
+- Betawi moves with every regional language out of the cities, so West Java's 1.42M modelled
+  Betawi now sit more in Kab. Bogor, Kab. Bekasi and Karawang (7.9%, was 4.5); Karawang is
+  Sundanese, so some of that is likely too much. BPS's *Profil Suku* (2024, Fig. 3.19-3.20) says
+  98.69% of ethnic Betawi use Indonesian or a foreign language in the family, so 2010's 2.24M
+  Betawi speakers (L4.1) may themselves be the shaky part.
+- 2020 shares placing 2010 counts: twelve years of urban growth are assumed not to move the
+  pattern, only its level.
+- Papua and Papua Barat left on their own regency model (Indonesian even there).
+
 ## Moved from countries/id.py text (2026-10-06 sweep)
 
 From `note_public`: "In Papua and Papua Barat (the 2010 provinces, six since 2022), ..."

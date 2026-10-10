@@ -203,6 +203,40 @@ python probe_ru_wplengths.py > data/raw/ru/probe_wplengths.txt        # the ru.w
   (colours/ru.csv); 151 OSM lines keep OSM's. `line_colours.py` needs no `ru` entry (its
   Wikidata fill matches line names, and no tariff section is a Wikidata item with a colour).
 
+## Stops missing from the data (2026-10-08)
+
+57 Russian lines (3,164 km) could not be ridden to 100% by picking stops (handoff_notes/
+missing_stops.md has the whole list and the probe). Two causes:
+
+- **Clones never folded back.** A stretch left to OSM's routes ends at clones of its stops
+  (`<code>@<section>`), and rinf.split_pieces folds them back once build_model has judged the
+  stretch, but only into a stop that has a station record; rinf.py makes records only for
+  stops some traced section reaches. Where every pair beside a stop is a stretch (all of
+  Томмот — Нижний Бестях, the Yakutsk line, 0 stops; Карталы I — Никель; Мариинск — Ачинск I;
+  Светлоград — Элиста; Сыня — Усинск) the clone stayed a junction. The fix is a shared
+  rinf.py diff (in the notes file), trialled: lines with fewer than two stops 68 -> 42, clone
+  ids left 179 -> 0, register km unchanged. Not landed by this agent (shared file).
+- **Book 2's passenger letters lag behind the trains.** Воткинск (Izhevsk - Votkinsk suburban
+  trains), Переславль, Волгореченск, Неман-Новый, Готня, Соломбалка, Пяозеро, Великие Луки,
+  Валуйки have no П/Б/О in Book 2, yet OSM's train routes stop there under the point's own
+  name. `convert()` now makes a point a stop when an OSM train route stops within
+  `OSM_NAMED_STOP_M` (600 m) at a stop member of the point's name, or at any stop member beside
+  an OSM station of that name (`named_stop`); export, transshipment and border-junction codes
+  ("(эксп.)", "(стык)", "(бп)") are left out, since their names fold onto the station's. 123
+  points became stops (log: "stops with no passenger operation in Book 2 that OSM's trains
+  stop at by name"). My call: OSM's route members are what decides service here anyway, and a
+  route stopping at a station of that name is better evidence than Book 2's missing letter.
+  A guard (`convert()` runs `_convert` three times, 5 s each): a new stop at a run's end can
+  turn the run into a stretch and clone an existing stop on both sides, which under the clone
+  fault above loses that stop's station id (the first rebuild lost Салми, Лебедянь and
+  Картымская: Питкяранта and Олонец had become stops). Named stops on such a stop's sections
+  are vetoed (4: logged "named stops vetoed"), so no existing stop goes. And a named stop
+  must sit where its tariff km put it between its placed neighbours (crow-fly share within
+  0.25 of the km share, `fits`): Дуки (рзд) on 96-010, 12 tariff km from both Болен and
+  Постышево, is placed 4 km from Болен; as a stop its trace to Постышево was rejected and 19 km
+  of the BAM (Ургал I — Комсомольск-Сортировочный) dropped. 116 points are stops now that
+  were not.
+
 ## The annexed railways: what runs (2026-10-04)
 
 Anita, 2026-10-04: "donetsk luhansk to russia makes sense if theres trains run, yeah, lets do

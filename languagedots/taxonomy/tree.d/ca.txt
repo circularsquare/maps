@@ -50,7 +50,7 @@ indoeuropean.germanic.continental | Continental West Germanic | 0.68 0.13 235
 indoeuropean.slavic | Slavic | 0.70 0.15 140
 indoeuropean.slavic.east | East Slavic | 0.70 0.15 145
 sinotibetan.sinitic | Chinese | 0.62 0.19 38
-sinotibetan.karen | Karen | 0.80 0.11 215
+sinotibetan.karen | Karen languages | 0.80 0.11 215
 turkic | Turkic | 0.68 0.16 15
 signlanguage | Sign language
 

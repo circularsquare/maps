@@ -78,7 +78,7 @@ nigercongo.bantoid.grassfields.bafut | Bafut | 0.56 0.11 225
 nigercongo.bantoid.grassfields.limbum | Limbum | 0.72 0.13 185
 nigercongo.bantoid.grassfields.yamba | Yamba
 nigercongo.bantoid.grassfields.lamnso | Lamnso' (Nso) | 0.78 0.13 220
-nigercongo.bantoid.grassfields.kom | Kom | 0.62 0.16 265
+nigercongo.bantoid.grassfields.kom | Kom (Cameroon) | 0.62 0.16 265
 nigercongo.bantoid.grassfields.oku | Oku | 0.90 0.06 240
 nigercongo.bantoid.grassfields.aghem | Aghem
 nigercongo.bantoid.grassfields.mmen | Mmen (Bafmen)
@@ -147,3 +147,9 @@ nigercongo.adamawa.mubako | Mubako (Bali) | 0.74 0.21 335
 
 # ---- creole ----
 creole.english_based.cameroonian_pidgin | Cameroonian Pidgin | 0.84 0.09 165
+
+# Colour pass 2026-10-09 (taxonomy/COLOURS.md): pinned at the colour they were generated at, so
+# the DR Congo regrouping of colours does not move them
+nigercongo.bantu.duala | Duala | 0.76 0.14 20
+nigercongo.bantu.ewondo | Ewondo | 0.76 0.14 90
+nigercongo.bantu.fang | Fang | 0.58 0.14 50

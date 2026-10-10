@@ -7,6 +7,11 @@ Drawn 2026-10-05 (session d9e44929-ci). 21,295,162 people (Ivorians aged 3 and o
 into the 82 labels annex 20 names nationally, rows `modelled` (§"The share-out" below). 94 nodes,
 21,249 dots, 4 rings. Needs the build tail.
 
+**Foreign residents added 2026-10-07 (fix-ci, Anita: "give it a stab"):** the 6,460,061
+residents of other nationalities are drawn, rows `derived` (§"Residents of other nationalities"
+below). 27,755,209 people, 210 nodes, 27,661 dots, 23 rings. Baoulé recoloured. Needs the build
+tail.
+
 ## Source
 
 - **Table.** ANStat (Agence Nationale de la Statistique), RGPH 2021, *Rapport thématique tome 1:
@@ -170,18 +175,80 @@ Guémon (24%); Gouro in Marahoué (33%); Bété in Goh (17%) and Haut-Sassandra 
 trade language, is in every région and is a fifth or more in Kabadougou, Folon, Tchologo,
 Bagoué, Loh-Djiboua and the towns.
 
+## Residents of other nationalities (`sources/ci_foreign.py` -> `data/normalized/ci_foreign.csv`)
+
+The census asked them the same question but published no answers for them. What it does
+publish, all in tome 1:
+
+- **Tableau 4.24** (p113): non-Ivorians per région and district, by sex, with their share of the
+  région's population (Poids**). Measured counts on our 33 units. San-Pedro 425,181, Nawa
+  422,973, Haut-Sassandra 519,323, Cavally 309,122, Abidjan 1,346,197 ... Bafing 44,674.
+- **Tableau 4.21** (p110): non-Ivorians by nationality, national only. Burkina Faso 4,056,444
+  (62.8%), Mali 1,108,628 (17.2%), Guinea 301,163, Niger 221,338, Togo 190,660, Benin 165,017,
+  Ghana 122,758, Nigeria 99,250, Senegal 42,409, other Africa 37,594, other countries 36,085,
+  Liberia 24,522, Europe 24,358, Mauritania 15,117, other/not declared 10,348, and four tiny ones.
+- Tableau 4.23 (p112): two thirds (66.5%) of them were born in Côte d'Ivoire.
+
+**No nationality x région table exists** that I could find. Searched: tome 1 (all of chapter
+4.3); tome 2 *Migration* (`Analyses_Thematiques_Tome2_Migration.pdf`, Wayback capture
+20250723231504 of `anstat.ci/assets/publications/files/`, 25,354,541 bytes, %%EOF; saved to
+`data/raw/ci/`), whose Tableau 2.11 has lifetime international migrants (foreign-born, 2,234,800)
+by région but only by sex, and whose nationality tables are national; the CDX listing of
+ANStat's other files (Tome 5 mortality, indicators); a 2016 INS Korhogo workshop paper on the
+2014 census (nationality national only); two web searches. So:
+
+1. **Count per région: measured** (Tableau 4.24), all ages (no age-by-région table for
+   foreigners, so nothing is taken off for under-threes, unlike the Ivorian rows).
+2. **Nationality mix: national**, the same in every région. This is the weak step: Ghanaians are
+   surely more in the east, Guineans and Liberians in the west, Malians in the north and the
+   towns; nothing measures it. Burkinabè are 63% everywhere here.
+3. **Languages: each nationality's home mix** (`origin_mix.mix(iso, "ci")`, no overrides; drawn
+   ids mapped back to written ids as `no_svalbard.py` does). Europe, other countries and
+   other/not declared on `other` (70,791; no language can be named; Europeans are probably
+   mostly French but no source splits them); other Africa on `africa_other`.
+
+Result nationally: Mòoré 2,159,765 (33%), Fula 655,061, Bambara 569,444, Gourmantché 268,138,
+unnamed African 264,330 (Burkina's own unnamed remainder), Dyula 209,104, Hausa, Maninka, Bissa.
+The cocoa south-west now carries its 30-44% of foreigners.
+
+**Checks** (`python sources/ci_foreign.py`, all pass): (1) Tableau 4.24's 33 units sum to
+6,460,061 against the printed 6,460,062; each of its 12 grouping districts equals its régions
+(note the table files **Bafing under Denguélé**, not Woroba); M + F = total on every row.
+(2) Foreigners / (foreigners + annex 25's Ivorians) reproduces the printed Poids** in all 33
+within 0.21 points (six régions 0.1-0.21 high: the printed figure looks truncated, or its
+denominator includes the 4,558 of undeclared nationality). (3) Tableau 4.21's rows sum to its
+total and its West Africa subtotal; every 2021 figure equals Tableau 4.22's, whose other-West-
+Africa row equals Cape Verde + Gambia + Guinea-Bissau + Sierra Leone. (4) Each unit's output
+rows sum to its Tableau 4.24 total. Joined to the hex units by folded name, two aliases (the
+autonomous districts), one to one.
+
+**What the census hints at and does not give.** The language question to non-Ivorians asked
+for an *Ivorian* language, so their unpublished answers would mostly be Dioula, not Mòoré: of
+naturalised Ivorians (Tableau 4.18) 54.3% gave Dioula, 8.2% Malinké, 14.1% none. Drawing them
+on their home languages fits the map's aim (first languages) better than the census's own
+question would, but for the two thirds born in the country it overstates the home language by
+an unknown amount. `note_public` says so.
+
+**Room for improvement:** a nationality x région table (the RGPH 2021 regional monographs, if
+ANStat publishes them, or IPUMS once it has the 2021 sample) would replace step 2; the census's
+own language answers for non-Ivorians would replace step 3.
+
+**Colour.** Mòoré (bf.txt, 0.84 0.14 88) sat 0.030 OKLab from Baoulé (0.82 0.16 85) at 2%+ in
+25 régions. Baoulé, ci's own, moved to amber 0.76 0.17 72 (about 0.09 from Mòoré, Senoufo and
+Koulango). Left: Attié/Bambara 0.032 in Abidjan only (Bambara 2.5% there).
+
 ## Limits
 
-- **Foreign nationals are not drawn**: 6,460,062 residents (22% of the census) were asked the
-  question but are in no published table. Against religiondots' census totals per région
-  (`ci_lookup.csv`), they are 44% of Cavally, 40% of San-Pedro, 36% of Nawa and 21% of Abidjan
-  but 9% of Poro, so the cocoa south-west looks thinner than it is. In `gap` and `note_public`.
+- **Foreign residents are estimated, not measured** beyond their count per région: the
+  nationality mix is national and the languages are home-country proxies (above).
 - **Children under three**, about 1.5 million Ivorians, were not asked. One national factor
   removes them; régions with more young children are slightly overstated, which the per-category
   rescale (all within 1.6%) bounds.
 - **Placement** inside each région is by Kontur population (religiondots' layer), which includes
   the foreign residents; nothing says where inside a région each language's speakers live. That
-  holds for the share-out too: the model only says how many per région.
+  holds for the share-out too: the model only says how many per région. The foreign residents
+  are placed the same way; nothing finer than région gives where they live (53% are rural,
+  tome 2 Tableau 5.1, but not by région).
 - **The share-out's régions are modelled**: about a quarter of each language's speakers would be
   in the wrong région, judging by the 12-language test. `note_public` says so.
 - **The question is "spoken most"**, so Dioula is drawn where people use it day to day, not

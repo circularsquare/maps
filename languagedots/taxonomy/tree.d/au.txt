@@ -257,7 +257,7 @@ austronesian.acehnese | Acehnese
 austronesian.balinese | Balinese
 austronesian.javanese | Javanese
 austronesian.malayic.iban | Iban
-austronesian.yapese | Yapese
+austronesian.oceanic.yapese | Yapese
 austronesian.oceanic.maori | Māori | 0.62 0.20 350
 austronesian.oceanic.cook_islands_maori | Cook Islands Māori | 0.78 0.13 350
 austronesian.oceanic.niuean | Niuean | 0.80 0.14 320
@@ -266,7 +266,8 @@ austronesian.oceanic.tuvaluan | Tuvaluan | 0.70 0.17 340
 austronesian.oceanic.gilbertese | Gilbertese (Kiribati) | 0.76 0.13 265.0
 austronesian.oceanic.nauruan | Nauruan | 0.7 0.13 205.0
 austronesian.oceanic.rotuman | Rotuman | 0.76 0.13 255.0
-austronesian.oceanic.motu | Motu (Hiri Motu) | 0.82 0.13 235.0
+austronesian.oceanic.peripheral_papuan_tip | Peripheral Papuan Tip
+austronesian.oceanic.peripheral_papuan_tip.motu | Motu
 sinotibetan.kukichin.hakha | Hakha Chin | 0.80 0.10 310
 sinotibetan.kukichin.zomi | Zomi (Tedim Chin)
 austroasiatic.mon | Mon

@@ -153,6 +153,40 @@ EXTRA = [
     # crosses OSM's boundary of Abkhazia (relation 1152720). Moscow, St Petersburg and Dioskuria
     # trains to Sukhum (caucasus_register.BORDER_XY, ru_register.BORDER).
     ("eXARUPSOU", 40.008443, 43.393733, ["ru", "xa"]),
+    # Iran - Pakistan, ML-4 at Taftan / Mirjaveh (2026-10-08, pk built; greyed, no passenger
+    # train since 2020). Where OSM's track crosses the boundary, 550 m west of Taftan station.
+    ("eXIRPK1", 61.551797, 28.974554, ["ir", "pk"]),
+    # Djibouti - Ethiopia at Dewele / Guelile, and Tanzania - Zambia (TAZARA) at Tunduma /
+    # Nakonde (2026-10-08): where OSM's track crosses OSM's boundary.
+    ("eXDJET1", 42.642891, 11.090904, ["dj", "et"]),
+    ("eXTZZM1", 32.763516, -9.315615, ["tz", "zm"]),
+    # Laos - China at Boten / Mohan, inside the Friendship Tunnel: OSM way 732797364 over
+    # boundary way 1482078930. The Laos-China Railway's trains (Kunming - Vientiane D887/D888
+    # daily) cross; la's line runs Vientiane - Boten - here (asia agent, 2026-10-08).
+    ("xBotenMohan", 101.687244, 21.179426, ["cn", "la"]),
+    # Mongolia - Russia at Sükhbaatar / Naushki: way 27366656 over boundary way 497684885.
+    # UB - Irkutsk 305/306, Moscow - UB.
+    ("xNaushkiSukhbaatar", 106.096798, 50.334187, ["mn", "ru"]),
+    # Mongolia - China at Zamyn-Üüd / Erenhot: the middle of three tracks (ways 232541719,
+    # 232643093, 757746890) over boundary way 205080589. Beijing - UB K23/K24, Hohhot - UB.
+    ("xZamynUudErenhot", 111.946562, 43.690326, ["cn", "mn"]),
+    # Mongolia - Russia at Ereentsav / Solovyevsk: ways 755589400/1435673744 over boundary way
+    # 129134986. No passenger train found; mn's Choibalsan line is greyed and stops at
+    # Ereentsav station, so nothing reaches the point yet.
+    ("xEreentsavSolovyevsk", 115.742761, 49.885818, ["mn", "ru"]),
+    # India - Nepal at Jaynagar / Inarwa: way 1433667171 over boundary way 534202189.
+    # Nepal Railway Company's Jaynagar - Janakpur - Bhangaha trains (daily).
+    ("xJaynagarInarwa", 86.137098, 26.606175, ["in", "np"]),
+    # North Korea (kp agent, 2026-10-08): where OSM's track crosses OSM's boundary.
+    # Sinŭiju - Dandong on the Friendship Bridge (way 288979790): K27/28 Beijing - P'yŏngyang
+    # four a week, Dandong - P'yŏngyang daily since 12 March 2026.
+    ("xSinuijuDandong", 124.392329, 40.115133, ["cn", "kp"]),
+    # Tumangang - Khasan on the Tumen bridge (ways 42510186 / 1475326893, boundary way
+    # 140244396): 645/646 Khasan - Tumangang three a week, Moscow through cars.
+    ("eXKPRUTUMANGANG", 130.641271, 42.415217, ["kp", "ru"]),
+    # Manp'o - Ji'an (way 839022580): one passenger car on the daily freight (en.wikipedia
+    # Manp'o Line), for DPRK citizens and ethnic Koreans from China.
+    ("xManpoJian", 126.273205, 41.154877, ["cn", "kp"]),
 ]
 
 # id -> (lon, lat): a fetched point RINF places off the track, put on it. Tracing finds a point

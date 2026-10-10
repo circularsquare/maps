@@ -19,7 +19,7 @@ afroasiatic.chadic | Chadic
 afroasiatic.chadic.hausa | Hausa
 afroasiatic.chadic.sokoro | Sokoro
 afroasiatic.omotic | Omotic
-afroasiatic.omotic.mao | Mao
+afroasiatic.omotic.mao | Mao (Ethiopia)
 nigercongo | Niger-Congo
 nigercongo.atlantic | Atlantic
 nigercongo.atlantic.fulah | Fula

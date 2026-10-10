@@ -74,7 +74,7 @@ nilosaharan.nilotic.teso | Teso (Ateso)
 sinotibetan.burmish.burmese | Burmese
 sinotibetan.burmish.rakhine | Rakhine
 sinotibetan.kachin | Kachin languages (Jingpho, Zaiwa, Lhaovo, Rawang)
-sinotibetan.karen | Karen
+sinotibetan.karen | Karen languages
 sinotibetan.karen.pao | Pa'o
 # --- origin_mix borrowed nodes (python sources/origin_mix.py --fragment om) ---
 # Every node the origin mixes bring in that tree.txt lacks, repeated without colour.

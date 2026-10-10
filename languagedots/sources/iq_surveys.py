@@ -1,5 +1,8 @@
 """Iraq: first / home language by governorate from five survey rounds, pooled, as shares applied
-to the 2024 census governorate populations -> data/normalized/iq.csv.
+to the 2024 census governorate populations -> data/normalized/iq_surveys.csv.
+
+SUPERSEDED 2026-10-09 by sources/iq_mics6.py (MICS6 2018 microdata), which writes iq.csv. Kept as
+the comparison: it put Kirkuk at 71% Arabic and 11% Turkmen against MICS6's 37% and 31%.
 
     python sources/iq_surveys.py [--fetch]
 
@@ -64,7 +67,7 @@ from rdlink import RD, RD_GEO  # noqa: E402
 from ir_wvs import counts as wvs_counts  # noqa: E402  (the same online-tool page parser)
 
 RAW = HERE / "data" / "raw" / "iq"
-OUT = HERE / "data" / "normalized" / "iq.csv"
+OUT = HERE / "data" / "normalized" / "iq_surveys.csv"
 ARB = RD / "data" / "raw" / "arabbarometer"
 LOOKUP = RD_GEO / "iq" / "iq_lookup.csv"          # religiondots, read-only: 2024 census
 UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124.0 Safari/537.36"

@@ -92,4 +92,44 @@ empty), **Oshiwambo** (Kwanyama, Ndonga), **Nyakyusa** (Nkhonde), **Lomwe** (Mal
 Clusters of separate languages: **Gbe** (`=`, 17 languages, with us.txt's "Gbe (language not
 given)" leaf), **Manding** (`=`, 13, with us.txt's "Manding (language not given)"; it must stay
 above the Mahou, Koyaka and Wojenaka rules in regroup.txt), and new `+` groups **Rwanda-Rundi**,
-**Konzo-Nande**, **Ateker (Teso-Turkana)**, **Tuareg**, **Yoruba and Ede**.
+**Konzo-Nande**, **Ateker (Teso-Turkana)**, **Tuareg**, **Yoruba and Ede**. Added 2026-10-09:
+**Sara** (`=`; Ngambay, Sar, Sara Kaba, and "Sara (language not given)" for plain Sara: Chad's
+MICS names Ngambay and Sar, CAR's census and the diaspora print only "Sara"); td cf sd ae bh kw
+fr ga and the countries carrying Sara under a dot were rescattered.
+
+
+## Cross-border survey (2026-10-08)
+
+A survey of every node pair that might be one language split by a border (scratch scripts, not
+kept). Anita approved the result: "the goal is to reflect how people think about languages and how
+they identify them". Members keep their leaves and their colours.
+
+Merged, true duplicates from building countries separately: **Kota** (ga onto cg's `kota`, same
+Glottolog language kota1274; Gabon's hand colour dropped), **Yapese** (one node, under Oceanic as in
+Glottolog), **Motu** (au onto pg's node). The census mappings point at the surviving id, and the
+origin-mix CSVs (be, be_communes, fr, se, it, pt, nl_weights) were renamed in place.
+
+New groups (`=`): **Aramaic** ("Aramaic (variety not given)" beside Assyrian, Chaldean, Turoyo,
+Syriac, Western Neo-Aramaic, Mandaic), **Sami** ("Sami (language not given)" beside North, Lule and
+South Sami), **Serbo-Croatian (BCMS)** (one ISO macrolanguage: Serbian, Croatian, Bosnian,
+Montenegrin, Bosniak, Bunjevac, Burgenland Croatian, Yugoslav, Bokelj and the plain Serbo-Croatian
+answer), **Venetian** (Talian), **Dutch** (Flemish), **Dao** (Iu Mien), **Fula** (Peulh, Fulata,
+Mbororo); Hazaragi joins **Persian** (Hazaras broadly call it a variety of Persian/Dari), reversing
+the earlier "not grouped" above.
+
+Folded: the eight small BCMS compound answers (Croato-Serbian, Bosnian-Croatian-Serbian,
+Bosnian-Serbian-Croatian, Bosnian-Croatian, Bosnian-Herzegovinian, Montenegrin-Serbian,
+Serbian-Montenegrin, Montenegrin-Serbian-Bosnian-Croatian; 0.6-5k people each, ba, me, hr) now map
+to `serbocroatian`. This reverses brief section 3's every-printed-label rule for them, at Anita's
+request.
+
+Relabelled so no two nodes read the same: Bai (South Sudan), Bodo (Central African Republic),
+Dakpa (Central African Republic), Kom (Cameroon), Koro (Nigeria), Mao (Ethiopia), Karen languages,
+Lala (Zambia), Lele (DR Congo), Lele (Guinea), Saliba (Colombia). Not done: Maring and Sam, whose
+twins are in tree.txt and in the generated pg.txt.
+
+Left as they are: the two **Ndebeles** (separate languages, nbl and nde; Anita: keep);
+**Yezidi/Ezdiki** (Armenia's census and Yazidis themselves keep it apart from Kurdish);
+**Filipino** beside Tagalog and **Bisayan** beside Cebuano (printed apart where people chose the
+name); **Sotho (Zimbabwe)** (unclear whether Sesotho or Sepedi, zw2022.py); Hindi and Urdu, Malay
+and Indonesian (siblings already; Indonesia's Malay is regional Malay, not Indonesian).

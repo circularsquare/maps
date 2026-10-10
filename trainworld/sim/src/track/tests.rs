@@ -31,7 +31,7 @@ pub fn station(w: &mut TrackWorld, n: u32, platform: u16) {
 pub fn line(w: &mut TrackWorld, stops: &[u32], tph: [f32; 3]) -> u32 {
     let path = w.net.route(stops).expect("no route");
     let id = w.net.alloc_line();
-    let d = LineData { name: format!("L{id}"), colour: 0, stops: stops.to_vec(), path, tph, dwell_s: 30.0, turnaround_s: 180.0, cars: 0 };
+    let d = LineData { trains: None, name: format!("L{id}"), colour: 0, stops: stops.to_vec(), path, tph, dwell_s: 30.0, turnaround_s: 180.0, cars: 0 };
     w.apply(Op::Line { id, data: Some(d) }).unwrap();
     id
 }
@@ -215,6 +215,20 @@ fn junction_delay_matches_the_spec_example() {
 }
 
 #[test]
+fn blueprint_quote_accounts_for_partial_junctions_and_flyovers() {
+    let (mut w, _, _, j) = y_junction([12.0, 6.0, 3.0], true);
+    let e = w.net.node_ports[j as usize].ends()[2] >> 1;
+    let mut data = w.net.edge_data(e).unwrap();
+    data.built = false;
+    w.apply(Op::Edge { id: e, data: Some(data) }).unwrap();
+    let rows = w.net.blueprint_cost_items();
+    assert!(rows.chunks_exact(7).any(|r| r[0] == 2.0));
+    assert!(rows.chunks_exact(7).any(|r| r[0] == 3.0));
+    let quoted: f64 = rows.chunks_exact(7).map(|r| r[6]).sum();
+    assert!((quoted - (w.net.total_cost() - w.net.built_cost())).abs() < 1e-8);
+}
+
+#[test]
 fn schedule_change_dirties_shared_lines_and_demand() {
     let (mut w, a, b, _) = y_junction([10.0, 6.0, 3.0], false);
     let r = w.apply(Op::Schedule { id: a, tph: [16.0, 6.0, 3.0] }).unwrap();
@@ -330,4 +344,56 @@ fn write_bench_save() {
     let (stations, lines) = ((km * 0.24) as usize, (km * 0.03).max(3.0) as usize);
     let w = TrackWorld::new(super::bench::synth(km, stations, lines, 7));
     std::fs::write(&path, super::save::encode(&w.net)).unwrap();
+}
+
+
+#[test]
+fn whole_line_counts_survive_route_changes_save_and_undo() {
+    let (mut w, nodes, _, id) = simple();
+    let tph = w.net.line_tph[id as usize];
+    w.apply(Op::TrainCounts { id, trains: Some([9, 5, 0]), tph }).unwrap();
+    for lev in 0..LEVELS {
+        assert_eq!(w.svc.lines[id as usize].trains[lev], [9, 5, 0][lev]);
+        let implied = w.net.line_tph[id as usize][lev] as f64 * w.svc.lines[id as usize].round_trip[lev] / 3600.0;
+        assert!((implied - [9, 5, 0][lev] as f64).abs() < 0.001, "{implied}");
+    }
+    let mut d = w.net.line_data(id).unwrap();
+    d.stops = vec![nodes[0], nodes[2]];
+    w.apply(Op::Line { id, data: Some(d) }).unwrap();
+    assert_eq!(w.svc.lines[id as usize].trains, [9, 5, 0]);
+    let bytes = super::save::encode(&w.net);
+    let reloaded = TrackWorld::new(super::save::decode(&bytes).unwrap());
+    assert_eq!(reloaded.net.line_trains[0], Some([9, 5, 0]));
+    assert_eq!(reloaded.svc.lines[0].trains, [9, 5, 0]);
+    assert_eq!(super::save::encode(&reloaded.net), bytes);
+    w.undo().unwrap().unwrap();
+    w.undo().unwrap().unwrap();
+    assert_eq!(w.net.line_trains[id as usize], None);
+    assert_eq!(w.net.line_tph[id as usize], tph);
+    w.redo().unwrap().unwrap();
+    assert_eq!(w.svc.lines[id as usize].trains, [9, 5, 0]);
+}
+
+#[test]
+fn whole_line_counts_include_congestion_and_odd_fleets() {
+    let mut w = world();
+    let a = node(&mut w, 0.0, 0.0, 0);
+    let b = node(&mut w, 1000.0, 0.0, 0);
+    edge(&mut w, a, b, &[], 0).unwrap();
+    station(&mut w, a, 200); station(&mut w, b, 200);
+    let first = line(&mut w, &[a, b], [8.0, 3.0, 1.0]);
+    w.apply(Op::TrainCounts { id: first, trains: Some([9, 3, 0]), tph: [8.0, 3.0, 1.0] }).unwrap();
+    let free_hw = w.net.line_tph[first as usize][0];
+    let second = line(&mut w, &[a, b], [8.0, 3.0, 1.0]);
+    w.apply(Op::TrainCounts { id: second, trains: Some([9, 3, 0]), tph: [8.0, 3.0, 1.0] }).unwrap();
+    assert!(w.net.line_tph[first as usize][0] < free_hw);
+    for id in [first, second] {
+        let ls = &w.svc.lines[id as usize];
+        assert_eq!(ls.trains, [9, 3, 0]);
+        let implied = w.net.line_tph[id as usize][0] as f64 * ls.round_trip[0] / 3600.0;
+        assert!((implied - 9.0).abs() < 0.001, "{implied}");
+        let t = 8.0 * 3600.0 + 37.0;
+        let trips = w.svc.trips(&w.net, t, t + 0.001);
+        assert_eq!(trips.iter().filter(|tr| tr.line == id).count(), 9, "odd whole-line fleet at steady demand");
+    }
 }

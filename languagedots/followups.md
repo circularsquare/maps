@@ -143,7 +143,7 @@ accident above; **place?** = a group label a place split could resolve (spec §3
 | 5 | my | Chinese | 6.89M | 23.2% | Chinese (ethnic group) | group; DOSM dialect table would fix |
 | 6 | cn | Tibetic | 5.43M | 0.4% | Tibetan nationality | group; place? (U-Tsang/Amdo/Kham by prefecture) |
 | 7 | dz | Berber | 3.45M | 10.1% | Amazigh | group; place? (Kabylie, Aures, M'zab) |
-| 8 | pk | Other | 3.41M | 1.4% | OTHERS | remainder |
+| 8 | pk | Other | 3.41M | 1.4% | OTHERS | remainder; 2026-10-09 KP's part named by MICS 2019 (Khowar 422k, Gujari 365k, Torwali 70k, Gawri 91k, the last three partly named by place), now 2.45M (`sources/pk.md` §0.2) |
 | 9 | tr | Arabic | 3.39M | 3.8% | Arapca, incl. Syrians under protection | tree |
 | 10 | mm | Karen | 3.20M | 6.6% | Karen (national race) | group |
 | 11 | cn | Hmong-Mien | 2.85M | 0.2% | Yao nationality (Bunu split out) | group |
@@ -287,7 +287,7 @@ Pulling member colours towards one hue is the next step if the map still shows a
 | Kirundi, Kinyarwanda, Ha colours | rw-bi-tz | left (colour) | grouped above; their colours stay far apart |
 | Shi, Havu, Hunde vs Kinyarwanda | cd-rw | left | separate languages (Glottolog's Kivu) |
 | Swati | sz/za-mz: 894k vs 0 | data gap | Mozambique 2017 prints no Swati; its speakers are inside "Outras línguas moçambicanas" (on Bantu, 947k). Not invented |
-| Kanuri / Kanembu | ng-td: 785k vs 202k | left | Kanembu is its own Glottolog language; whether Chad's census counts its Kanuri under Kanembu was not checked |
+| Kanuri / Kanembu | ng-td: 785k vs 202k | left | Kanembu is its own Glottolog language; whether Chad's census counts its Kanuri under Kanembu was not checked. 2026-10-09: RGPH2 Annexe 3 p208 lists "Kanembou/Kanouro/Bornou" in the Kanembou row but also Kanouri in "Autres"; MICS 2019 has Kanembou only, and Kanembou-group heads answering "other" (Lac, N'Djaména) are drawn unnamed |
 | Luo / Adhola, Acholi, Alur | ke-ug, cd-ug | left | separate Southern Lwoo languages |
 | Gusii / Kuria, Mòoré / Farefare, Maba / Masalit, Tigre / Tigrinya, Saho / Afar, Yom / Nawdm, Lukpa / Kabiyè, Chokwe / Luvale, Kaonde / Sanga, Moba / Bimoba, Konkomba / Gangam | various | left | separate languages in Glottolog and in common use |
 | Zarma / Songhay, Dendi; Tumbuka / Senga; Lunda / Ndembu; Kinyarwanda / Rufumbira; Arabic varieties; Swati / Zulu | various | already grouped | the earlier regroup or an existing group |
@@ -299,6 +299,173 @@ Pulling member colours towards one hue is the next step if the map still shows a
 People moved between nodes: none. The groups gather about 218M people; the largest are
 Yoruba-Ede 41.4M, Rwanda-Rundi 32.5M, Somali 27.9M, Manding 21.9M, Isan 18.9M. Outside Africa the
 scan finds almost only real language borders (German, Dutch, Polish, Czech...).
+
+## 2026-10-07: speed and size catalog (session da1b1b09, measured, nothing changed)
+
+Scripts in that session's scratchpad `perf/`. Biggest first:
+- **Tiles fetched twice at desktop world zoom**: repeated world copies refetch every z1 tile
+  (3.4 of 6.9 MB). `renderWorldCopies: false`, or a min zoom, or a byte cache in the protocol.
+- **Shuffle -> position order inside tiles** (tiles.py `bucket()`): big low-zoom tiles ~50% smaller,
+  archive ~15%; equal-size ties then break on a position hash in sortMarks/sortPies.
+- **Low-zoom tiles carry all four Aggregation steps**: the default uses 27-29% of z0's 191k marks.
+  One archive per step (world view 3.4 -> 0.9 MB; storage x1.5) or one grid per zoom (archive
+  x0.45-0.6). z0 alone is 2.2 MB, 2/2/1 is 2.75 MB; 53 tiles over 500 kB.
+- **Pies rebuild 330-450 ms per rebuild, ~1 s per jump** (rebuildPies via querySourceFeatures, then
+  pieWedges for every pie; the `sourcedata` handler re-runs it as tiles land). Read raw tile bytes as
+  decodeMarks does, cache per tile, rebuild only changed tiles: ~3-5x less.
+- Smaller: the invisible `dots` circle layer still lays out every mark (filter to nothing); a 9k-node
+  composition bar on every buildPanel; `gl.readPixels` every frame while something is selected;
+  DOT_CACHE ~100 MB (cap lower on phones); mousemove not throttled to a frame.
+- Side files: counts.json drop `note_public` (unused, 256 -> 195 kB gz) and index node ids
+  (-> 127); languages.json drop `parent`; country_shapes simplify (603 -> 257 kB, recheck Auto);
+  brotli instead of gzip on all (~35%); `cache: 'no-store'` -> `'no-cache'` and set Cache-Control on
+  upload (R2 sends none); r2.dev is not CDN-cached, a custom domain is.
+- Brotli inside tiles ~29% more (needs a JS decoder); a column tile format ~50% (large).
+
+**Done 2026-10-07 (da1b1b09):** world copies off while the whole world fits on screen (on again
+when zoomed in, so the date line still pans); pies read the dot layer's decoded-marks cache instead
+of querySourceFeatures (India z5 ~540 -> 142 ms; same cells, people and parts in four views checked);
+tiles.py stores marks in position order (np/fr/jp trial 14.3 MB vs ~16), ties between equal dots
+and pies broken by markHash (position and language) so no direction is favoured. The rest above is
+still open.
+
+## 2026-10-07: weakest places, queued (session da1b1b09 review; Anita: "note all the weakest
+places as things we can follow up in the future")
+
+Weighted by people. **Tried 2026-10-07, all drawn and in the archive; cd only partly closed (no
+open province table; four cities shifted)** (fix agents, Anita's pick of the worst
+plus the placement ones): ci foreign residents (6.46M not drawn), ss Jonglei/Unity/Upper Nile
+(5M hatched), bd Sylheti/Chittagonian (~24M drawn as Bengali) and the Rohingya camps (~1M, in no
+census), cd Swahili/Lingala (ethnicity read as language, far under MICS; closed 2026-10-09 by
+MICS-Palu 2017-18 microdata, `sources/cd.md` §0), ru placement by
+tochno.st settlements, pk at tehsil grain, om Al Mazyunah (~492k in a near-empty wilayat), sn/ml
+placement by CLEAR Global département/cercle shares. Outcomes go in runlog.md and sources/<cc>.md.
+
+**Queued, not started:**
+- [ ] ng (217M): language from Afrobarometer, ~280 respondents per state, state grain, ~119 of
+      ~500 languages named. Hard limit unless a finer survey turns up.
+      **Partly closed 2026-10-09 by MICS6 2021 microdata** (`sources/ng.md` §0): the nine
+      languages MICS names (Hausa, Yoruba, Igbo, Fulfulde, Kanuri, Tiv, Ibibio, Ijaw, Edo; 74%
+      of people) now rest on ~1,000 households a state; Benue Tiv 36 -> 63%, Yobe Kanuri 9 ->
+      22%, Fulfulde 3.7 -> 7.1% nationally (an upper reading, HH16 gives 5.4%). Still open:
+      MICS's "other language" (25%) is split by the same Afrobarometer, still state grain, and
+      3.8% is now drawn unnamed where the Afrobarometer met too few speakers (Ekiti, Oyo).
+- [ ] cn: nationality -> language with one retention share; Han on the county's main dialect
+      (Hakka 27M vs the usual 40-50M); 15 provinces on 2000 mixes; Guangxi off its gazetteer
+      (Hakka, Pinghua, Yue); Hainan Putonghua 10% vs WVS 52%; Luhe filed as Yue. Tibetan (Ü-Tsang /
+      Amdo / Kham by prefecture) and Dai (Xishuangbanna / Dehong) could be split by place.
+      Viewers, 2026-10-09: Xiang, Gan and Wu still look too strong in the big cities (Changsha,
+      Nanchang, the Wu cities). Anita: a lot of time has gone into this already, but it is still
+      doubtful. What the map rests on (`sources/cn.md` §10): CLDS 2016 settled locals' "main
+      language after work" is only 7.6% Putonghua in Hunan's non-Mandarin cities, 3.4% in
+      Jiangxi's, 5.1% in Jiangsu's Wu cities, and the share is one per city across every age,
+      though CLDS's own age split is far steeper (Zhejiang 32 / 19 / 5% at 15-30 / 31-45 /
+      46-64). WVS 2018 disagrees in both directions (Jiangxi 26% against CLDS's 3.3; Hunan 1.8%).
+      Open: no source settles it. Leads are an age-weighted share, or a city-core vs county split.
+- [ ] id: 2010, 8 languages measured, the rest from ethnicity; Javanese, Sundanese, Malay, Banjar
+      seeded evenly across provinces (Madurese of the Tapal Kuda missing). Regency homelands for
+      the even-seeded languages would help.
+- [ ] id, "too Sundanese" in places (viewers' complaints, Anita 2026-10-08: "the totals are
+      reasonable but its probably just like allocation / shifting"). Likely the even seed above:
+      West Java's and Banten's Sundanese spread by population alone, so it also lands where other
+      languages hold (Bekasi, Depok and the Jakarta fringe: Betawi/Indonesian; Cirebon and
+      Indramayu: Cirebonese/Javanese; northern Banten, Serang: Banten Javanese). Placement only:
+      keep province counts, move Sundanese towards its regencies (a regency-level ethnicity or
+      language source, e.g. the 2010 census by kabupaten, or Glottolog points as id.py does for
+      smaller languages). Ask which spots people named, if she has them.
+      Viewers, 2026-10-09: a sharp Betawi / Indonesian edge at the DKI Jakarta border. Same cause:
+      DKI is measured 89% Indonesian (7.93M), West Java 19% (7.28M) and Banten 39%, and Indonesian
+      is seeded evenly, so Bekasi, Depok and Tangerang draw their province's rural mix. Betawi is
+      seeded towards its Glottolog point, so West Java's 1.42M and Banten's 0.44M modelled Betawi
+      crowd the fringe, against DKI's own 0.29M. **Found:** the SP2020 long form (2022 fieldwork)
+      has, open and keyless, "uses a regional language in the family" Ya / Tidak by all 514
+      regencies: `https://sensus.bps.go.id/topik/tabular/sp2022/201/<area>/<fmt>` (area 1 the
+      nation, 2-35 the provinces in code order, DKI 12, Jawa Barat 13, Banten 17; fmt 3 JSON).
+      Also 198 (first language: Indonesian / regional / foreign / sign) and 204 (with neighbours).
+      Tidak (Indonesian or foreign) runs Kota Bekasi 95%, Depok 92%, Tangerang Selatan 95%, Kota
+      Tangerang 93%, Kab. Bekasi 81%, Kab. Tangerang 54%, Kab. Bogor 42%, Karawang 20%, against
+      DKI 95-97% and 1-4% in Garut, Tasikmalaya, Cianjur. Names no regional language below the
+      nation. **Done 2026-10-09** (Anita: "lets do that for indonesia"): placement only, 2010
+      counts kept, Indonesian seeded by regency Tidak share; `sources/id.md` §11 has the before
+      and after (Kota Bekasi Indonesian 13 -> 63%, Garut 15 -> 0%). BPS's *Profil Suku* (2024)
+      also says 98.69% of ethnic Betawi use Indonesian or a foreign language in the family, so
+      the 2.24M Betawi speakers of 2010's L4.1 may be mostly older people or a coding artefact.
+- [ ] iq, Iraqi Turkmen too few (viewer, 2026-10-09): drawn 1.6% (728k), Kirkuk 11%, Salah
+      al-Din and Diyala 0, Baghdad 0.03%. Arab Barometer's 2020-22 ethnicity question is lower
+      still (28 of 3,476, 0.8%; Kirkuk 7-13%), so every survey runs low the same way. Turkmen
+      dots are also spread over the whole governorate (Tal Afar's land in Mosul). The open MICS6
+      2018 report (washdata.org/report/iraq-mics-2018-sfr, 592 pp.) tabulates no language,
+      ethnicity or religion anywhere, though HC1B asks the head's mother tongue (Arabic, Kurdish,
+      Turkman, Assyrian, Other) and HH16 / WM14 / FS14 the respondent's (Sorani and Badini apart).
+      Only the microdata has it (UNICEF registration). **Done 2026-10-09:** Anita's UNICEF
+      account; Iraq now drawn from MICS6 HC1B, Kurdish split by HH16 (`sources/iq_mics6.py`,
+      `sources/iq.md` §0): Kirkuk 38 Arabic / 30 Kurdish / 31 Turkmen, Nineveh Turkmen 11 -> 4%,
+      Salah al-Din 0 -> 3.3%, national Turkmen 2.0%; Sorani and Badini split. Open: placement
+      inside governorates; Baghdad's Turkmen (MICS 0 of 2,153 households, but 180 clusters can
+      miss an enclave of 1% one time in six; Arab Barometer ethnicity 2 of 767).
+- MICS rebuilds, Anita's answers 2026-10-09 ("use your own discretion for what aligns best with
+  language at home ... bias toward splitting"): kept as built: la RETENTION on (children's home
+  language), cd Nord-Kivu 71% Swahili and Kinshasa on HC1B (CLEAR Global's North Kivu map, from
+  CAID, also puts Swahili at roughly 80-100% spoken by territory), ng Fulfulde on HC1B and MICS
+  Hausa replacing the ask 018 mother-tongue step, af Brahui 44,592 (not taken from measured
+  Pashto), tg foreign languages on `africa_other`. Changed: tg French back to Afrobarometer's
+  home-language share; pk Swat/Dir/Shangla Indo-Aryan split by place; td Sara regrouped over
+  Ngambay and Sar; Bantu colour pass so Swahili reads in DR Congo; Kurdish Sorani back to the
+  old orange.
+- [ ] MICS microdata, now that Anita has a UNICEF account (2026-10-09): countries whose notes
+      name MICS as the blocker or best improvement: cd (2010 / 2017-18 HC1B by province; **done
+      2026-10-09**, 2017-18 HC1B drawn for the national languages, `sources/cd.md` §0; open:
+      Nord-Kivu reads 71% Swahili, so Nande falls 5.0M -> 1.5M, worth a second source), pk
+      Gilgit-Baltistan (2016-17 / 2024-25 HC1B by district; **done 2026-10-09**, 2016-17
+      weighted microdata seeds GB, which reproduces the Pamir Times table exactly, and KP MICS6
+      2019 splits KP's census OTHERS, `sources/pk.md` §0; open: "other" in GB has no finer
+      item, and MICS's one Kohistani/Gujari code is named by place outside Hazara, from
+      knowledge: Behrain's Torwali/Gawri split evenly, since Joshua Project has no Pakistan row for
+      trw or gwc; a published speaker estimate would replace it), la (done 2026-10-09 with LSIS III
+      2023: HH16 follows the interview language, so retention comes from FL7, children's home
+      language, `sources/la.md` §0; open: children overstate the shift for adults), sd (2014), af (done 2026-10-09 with MICS6 2022-23, `sources/af.md` §0), ne,
+      tg (done 2026-10-09 with MICS6 2017: HC1B's eleven groups by region, split by the
+      Afrobarometer pool, `sources/tg.md` §0; open: MICS's 4.7% foreign languages unnamed,
+      still six units); gy (done 2026-10-09 with MICS6 2019-20: HC1B retention per region for
+      the census Amerindians, five interviewers who recorded no indigenous heads dropped,
+      `sources/gy.md` §0; open: languages still unnamed, North Rupununi possibly a team effect,
+      MICS5 2014 not tried); td done 2026-10-09
+      with MICS6 2019 (HC1B by région, "other" split by the head's ethnic group, `sources/td.md`
+      §0; open: nomads and refugee camps probably thin in the frame). dz's
+      MICS6 has no language item; tn's codes only French / Arabic / other.
+- [ ] ir, tr: small surveys by region, minorities spread evenly, Kurdish varieties not split.
+      ir: Mazandaran 0% Persian; Golestan's ~0.95M `other` probably Turkmen; WVS microdata form.
+- [ ] No measured source at all: sd (ad hoc 80% non-Arabic cap; war displacement not shown;
+      Eritreans/Ethiopians drawn Arabic), eg, sy, pg. (af closed 2026-10-09: MICS6 2022-23 replaced
+      the c.2006 village majorities.)
+- [ ] Zoomed right in, every dot is 1,000 people at one point (viewers noticed; Anita 2026-10-08:
+      "not sure if we have a good reason to keep it like that, maybe we could more evenly
+      distribute. it does kinda look good as is though"). Each dot sits at one random spot in its
+      placement polygon (a Kontur hex, ~0.74 km², or a settlement), so a village of 1,000 is a
+      single blob and the space around it looks empty. Options: (a) in the viewer, past ~z11,
+      split each dot into 10 dots of 100 scattered within a hex-sized radius (~500 m) around it,
+      no data change, positions no less invented than today's single point; (b) scatter at
+      1 dot = 100 people for the top zooms only (an archive several times bigger at z11-12, a
+      re-scatter of everything); (c) leave it. (a) is the cheap try; judge it on screen.
+- [ ] Old censuses draw fewer people than today (et 56%, td 54% since 2026-10-09 (was 40%, the
+      6+ universe), bf 53%, mz 62%, ne 63%):
+      a density step at borders. Rescaling to today's population is against spec §1 (Anita's call).
+- [ ] Coverage: af 1.5M Kuchis (Takhar/Kunduz drawn from MICS since 2026-10-09); my non-citizens 2.69M (23.7% of
+      Sabah); sg non-residents 1.64M; mm Wa/Mongla 433k; ml 941k not enumerated; ly 827k
+      non-Libyans; Tindouf camps 174k; no entry for Isle of Man, Channel Islands, American Samoa,
+      Northern Marianas, Cook Islands, Falklands (~0.4M).
+- [ ] Lumped: mm Karen/Chin/Kachin on groups; my Chinese 6.9M not by dialect (DOSM table?); dz
+      Berber 3.45M (place split possible: Kabylie, Aurès, M'zab); tj Pamiri as Tajik; pg Tok
+      Pisin not drawn; th Bangkok ~1% Isan. (af's Dari/Pashto split in Kabul, Herat, Kandahar
+      closed 2026-10-09 by MICS6; Hazaragi still drawn as Dari, MICS does not name it.)
+- [ ] Placement, coarse: ir, tr, et zones, iq governorates, td régions (measured by MICS since
+      2026-10-09; was national), mz provinces, ne, tz/cm/zw survey
+      districts, ke counties, uz (Tajik in Samarkand/Bukhara evened), mm Kontur cap blocks, India
+      layer across the LoC near Poonch, az Karabakh resettlers counted twice.
+- [ ] Unanswered shares likely not random: ru 16.6M no native language, ro 13%, hu 12%, bg 10%.
+- [ ] Logins only Anita can use: za 2022 by municipality (DataFirst), ss World Bank phone survey.
+- [ ] Record conflict: the Shenzhen item under "Not ours" vs sources/cn.md §9, which says county
+      totals were rescaled to 2020 on 2026-10-06.
 
 ## Not ours, noted for religiondots
 
@@ -313,6 +480,10 @@ scan finds almost only real language borders (German, Dutch, Polish, Czech...).
 - **Senegal 2023 regional reports** (found by the sn agent, 2026-10-05). ANSD published 14 RGPH-5
   regional reports in April 2026 (https://www.ansd.sn/rapports/rgph-5-2023), with tables by région;
   religiondots' Senegal still uses 1988 data. Details in `sources/sn.md`.
+- **Oman Kontur false desert blocks** (found by fix-place, 2026-10-07). religiondots' `om_hexes.gpkg`
+  places Thumrayt's people 29% on the Fasad oil field (one hex 44,302/km2) and Hayma's 14% on one
+  empty hex; counts per wilaya are unaffected. languagedots lowers hexes above 8,000/km2 away from
+  a wilaya seat (`sources/om_place.py`); the same rule would suit religiondots. Details in `sources/om.md`.
 
 ## Done
 
@@ -336,4 +507,6 @@ scan finds almost only real language borders (German, Dutch, Polish, Czech...).
 - **si.csv: Bosnian and Serbian both sum to exactly 31,294 at municipality level** (national rows 31,499 and 31,329). Looks like a copied column. (2026-10-06, s-z sweep)
 - **cn: county totals in chinaethnicity's 15 estimated provinces use a 2000 pattern** (2026-10-06, cnmig agent): Shenzhen draws 10.5M against the 2020 census 17.6M; the same for any fast-growing city there. Fix belongs in chinaethnicity's fallback.py (Dong and Wang's 2020 county panel in helper1m has the right totals).
 - **cn: Luhe (Shanwei) filed as Yue in the county dialect table; it is Hakka-speaking** (2026-10-06, mcp agent). Fix in sources/cn_dialect.py.
-- **om: religiondots' om_hexes put ~492k people in Al Mazyunah wilayat** (register 11,117): a false Kontur block or keying error, in religiondots' layer (2026-10-06, Gulf agent).
+- **om: religiondots' om_hexes put ~492k people in Al Mazyunah wilayat** (register 11,117): a false Kontur block or keying error, in religiondots' layer (2026-10-06, Gulf agent). **Done 2026-10-07 (fix-place)**: Kontur's own blocks; dots always followed the register per wilaya (Mazyunah ~11 dots), only placement inside Thumrayt, Hayma and Mazyunah was off. Own layer `sources/om_place.py`; `sources/om.md`.
+- **bs: the answer "GHANA" is mapped to Twi** (2026-10-08, cross-border survey): a guess at a nationality answer; Akan is likelier than Twi alone but still a guess. `taxonomy/bs2010.py`.
+- **Maring and Sam still read the same as another node** (2026-10-08): one twin in tree.txt, the other in pg.txt, which sources/pg_build.py regenerates; relabel at the source.

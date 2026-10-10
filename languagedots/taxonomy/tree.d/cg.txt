@@ -7,23 +7,23 @@
 # Mbere keeps ga.txt's dark violet (against Kongo green and Teke in Niari, Lekoumou); Kituba pale lime and Laari deep
 # green beside Kongo, both Kongo-based; Teke-Laali a darker grey-blue than Teke; Kota pale sand.
 
-nigercongo.bantu.mbosi | Mbosi (Mbochi) | 0.66 0.20 25
+nigercongo.bantu.mbosi | Mbosi (Mbochi) | 0.56 0.1 195
 nigercongo.bantu.mbere | Mbere (Mbédé) | 0.50 0.12 300
-nigercongo.bantu.kituba | Kituba (Munukutuba) | 0.86 0.08 120
+nigercongo.bantu.kituba | Kituba (Munukutuba) | 0.78 0.15 138
 nigercongo.bantu.laari | Laari (Lari) | 0.58 0.20 165
 nigercongo.bantu.teke_laali | Teke-Laali | 0.62 0.08 240
 nigercongo.bantu.kota | Kota | 0.80 0.08 60
-nigercongo.bantu.likuba | Likuba
-nigercongo.bantu.akwa | Akwa (Makoua)
-nigercongo.bantu.beembe | Beembe
-nigercongo.bantu.suundi | Suundi
-nigercongo.bantu.koyo | Koyo
+nigercongo.bantu.likuba | Likuba | 0.58 0.14 60
+nigercongo.bantu.akwa | Akwa (Makoua) | 0.58 0.14 70
+nigercongo.bantu.beembe | Beembe | 0.64 0.14 90
+nigercongo.bantu.suundi | Suundi | 0.76 0.12 145
+nigercongo.bantu.koyo | Koyo | 0.64 0.14 50
 
 # ---- parents and languages defined elsewhere, repeated identically ----
 nigercongo | Niger-Congo
 nigercongo.bantu | Bantu
 nigercongo.bantu.kongo | Kongo | 0.68 0.15 150
-nigercongo.bantu.teke | Teke | 0.80 0.08 230
+nigercongo.bantu.teke | Teke | 0.82 0.13 314
 nigercongo.bantu.lingala | Lingala | 0.78 0.12 210
 nigercongo.bantu.makaa | Makaa (Maka) | 0.76 0.20 15
 nigercongo.bantu.sira | Sira (Eshira) | 0.45 0.10 60

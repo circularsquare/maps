@@ -57,9 +57,11 @@ ENTRY = dict(
         dict(covers="England and Wales, other answers",
              source="2021 census, main language, aged 3 and over", rest=True),
     ],
-    place=RD_GEO / "uk" / "uk_units.gpkg",
+    # uk_units.gpkg cut by Kontur hexes, so an area's dots follow where its people live
+    # (sources/kontur_cut.py; 2026-10-08)
+    place=GEO / "uk" / "uk_konturcut.gpkg",
     place_unit=lambda g: g["unit"].astype(str),
-    place_weight=None,
+    place_weight=pop_weight,
     note_public=(
         "Three censuses asked the same question, what is your main language, of everyone "
         "aged 3 and over: England, Wales and Northern Ireland in 2021, Scotland in 2022.\n\n"

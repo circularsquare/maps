@@ -1,5 +1,128 @@
 # Afghanistan (af): record
 
+**Since 2026-10-09 (session 32a047f0) Afghanistan is drawn from MICS6 2022-23 microdata** (§0).
+Sections 1-6 are the village-majority proxy it replaced, kept as the comparison
+(`sources/af_mrrd.py`, now writing `data/normalized/af_mrrd.csv`; `taxonomy/af2007.py`).
+
+## 0. MICS6 2022-23 (`sources/af_mics.py`, `taxonomy/af2022.py`, `countries/af.py`)
+
+**Data.** Anita made a UNICEF MICS account (mics.unicef.org) and downloaded the Afghanistan
+MICS6 2022-23 SPSS files, unpacked in `data/raw/af/mics_2022/` (gitignored; research use, no
+redistribution; only per-province aggregates are written). 23,338 households sampled, 23,213
+interviewed, 199,354 members. Every one of the 34 provinces was reached under the Taliban
+administration: 28 clusters each, 34 in Kabul, Herat and Nangarhar, 33 in Kandahar, 25 in Balkh.
+
+**Item: HC1B, language of the household head**, read as every member's (hl.sav members x
+hhweight). Answers: Dari, Pashto, Uzbaki, Turkmani, Nooristani, Balochi, Pashaie, other. Not
+HH16 (native language of the respondent), which leans to the interview language:
+
+- Households: 338 Pashto-headed answer HH16 Dari (315 of them interviewed in Dari), 166 the
+  other way; 123 Uzbek-headed answer Dari. HC1B and HH16 agree in 96.0%.
+- Where the respondent *is* the head (3,465 households), the two items still disagree 3.9% of
+  the time (Pashto head / Dari respondent 50, the reverse 29), the same rate as where the
+  respondent is someone else (4.0%). So the gap is not mixed marriages; it is the same person
+  recorded twice. HH16 sits on the cover panel the interviewer fills; HC1B is asked.
+- Per province, Pashto by HC1B / HH16 / interview language / WM14 (women's own): Kabul 37.5 /
+  30.2 / 29.7 / 29.1; Herat 17.1 / 10.5 / 8.6 / 10.4; Nimroz 49.8 / 43.3 / 28.6 / 40.1. HH16
+  and WM14 track the interview language; HC1B does not. In the provinces with one interview
+  language the items agree to within two or three points.
+- 1,221 interviews were held in a language other than Dari or Pashto (Uzbek, Turkmen and
+  Nuristani areas), and a translator was used in 933, so minority answers were not forced into
+  the two big languages.
+
+WM14 reading a bit more Dari than HC1B in Kabul and Herat could also be real (urban households
+where a Pashtun head's family speaks Dari). If so, HC1B's Pashto there is the upper end.
+
+**Strata and base.** Where a province's urban and rural strata (HH6) each have at least 5
+clusters and NSIA counts people in both (13 provinces: Kabul, Parwan, Nangarhar, Baghlan, Bamyan,
+Paktya, Kunduz, Balkh, Kandahar, Jawzjan, Faryab, Herat, Nimroz), each stratum's shares go on
+NSIA's 1404 urban or rural population; elsewhere the pooled province shares (MICS's weights) go
+on the province's settled population. Largest remainder, so every province keeps NSIA's figure
+and the total is 34,935,197 as before. Kabul's rural stratum is 6 clusters (about 140
+households), the thinnest one used.
+
+**Placement.** In those 13 provinces each language's urban part goes on the province's urban
+hexes, the rest on its rural ones (`countries/af.py` `_AfWeighter`). Religiondots' layer has no
+municipal boundaries, so urban hexes are the densest (hexes are equal, about 0.82 km²), taken
+until they hold NSIA's urban share. Checked: Kabul's 321 urban hexes are 95% within 15 km of
+the centre; Nangarhar 90% (Jalalabad), Balkh 87%, Herat 79%, Kandahar 77%. Weaker where Kontur
+has a single dense hex in the countryside: Jawzjan's densest hex is at 35.98N 65.37E, not
+Sheberghan, and Faryab's and Parwan's include one such hex each, so a few town dots land in a
+big village. The profiles' within-province information was only Kabul's rural 60/40, which
+MICS now measures itself (rural Kabul 60.6% Pashto), so the profiles have no placement role.
+
+**Carve-outs.** MICS lists no Pamiri languages, Kyrgyz, Parachi, Gawar-Bati or Brahui. The
+speaker estimates of §3b are kept, carved out of the rows their speakers would most likely
+have given, from the rural stratum where there is one: MICS's "other" first, then Dari
+(Pamiri languages, Parachi), Uzbek then Dari (Kyrgyz), Pashto (Gawar-Bati). Badakhshan's "other"
+is 0.0%, so the Pamiri figures come out of Dari; Kapisa's "other" (1.2%, about 6,400 people)
+holds Parachi's 3,500. **Brahui** now comes out of Balochi (at most half, as before) and
+"other" only, never out of Pashto, which MICS measures (Helmand 93.0% Pashto, 2.1% Balochi,
+0.2% other): 44,592 drawn (Nimroz 16,121, Helmand 19,435, Kandahar 9,036) of the 200,000
+estimate, which MICS's southern answers cannot hold.
+
+**Before and after** (% of the province; before = §2-3b, not-drawn share in brackets):
+
+| province | Dari | Pashto | Uzbek | Turkmen | Pashai | Balochi | before not drawn |
+|---|---|---|---|---|---|---|---:|
+| Kabul | 85.5 -> 62.8 | 14.5 -> 35.4 | 0 -> 1.0 | | 0 -> 0.6 | | |
+| Herat | 90.5 -> 79.4 | 7.5 -> 17.2 | (Turkic 2.0) -> 0.2 | -> 1.0 | | | |
+| Kandahar | 0 -> 3.3 | 97.9 -> 95.5 | | | | (Iranian 1.0) -> 0.5, Brahui 1.1 -> 0.6 | |
+| Balkh | 50.0 -> 65.2 | 27.0 -> 17.5 | 10.7 -> 14.8 | 11.9 -> 2.0 | | | |
+| Nangarhar | 3.0 -> 7.8 | 92.1 -> 89.5 | | | 4.9 -> 2.3 | | |
+| Kunduz | -> 26.2 | -> 47.8 | -> 12.5 | -> 12.9 | | | 100 |
+| Takhar | -> 57.7 | -> 7.4 | -> 34.6 | | | | 100 |
+| Ghazni | 47.0 -> 38.4 | 50.0 -> 61.6 | | | | | 0.8 |
+| Helmand | 0 -> 4.7 | 86.1 -> 93.0 | | | | (Iranian 4.0) -> 1.0, Brahui 9.9 -> 1.2 | |
+| Baghlan | 70.0 -> 83.6 | 22.0 -> 10.4 | 0 -> 5.2 | | | | 8.0 |
+| Nimroz | 9.3 -> 31.6 | 25.0 -> 51.1 | 9.3 -> 0.9 | | | 43.4 -> 8.4, Brahui 13.1 -> 8.0 | |
+| Farah | 50.0 -> 34.3 | 48.0 -> 65.4 | | | | | 2.0 |
+
+National (34,935,197 settled people):
+
+| | before | after |
+|---|---:|---:|
+| Dari | 15,826,281 (45.3%) | 15,789,562 (45.2%) |
+| Pashto | 12,919,413 (37.0%) | 15,417,320 (44.1%) |
+| Uzbek | 1,539,992 (4.4%) | 2,391,302 (6.8%) |
+| Turkmen | 382,026 (1.1%) | 537,221 (1.5%) |
+| Pashai | 399,299 (1.1%) | 368,840 (1.1%) |
+| Nuristani | 163,990 (0.5%) | 176,280 (0.5%) |
+| other | 46,941 | 98,880 |
+| Balochi | 87,839 | 52,200 |
+| Brahui (estimate) | 200,000 | 44,592 |
+| Iranian / Turkic not split | 126,558 | 0 |
+| not drawn (Takhar, Kunduz, undescribed) | 3,183,858 (9.1%) | 0 |
+
+The old map's national Dari:Pashto was forced to the Asia Foundation's 2006 49:40 (§3a); MICS
+gives 45:44. Kabul city's 93/7 split (§3a) was the largest error: MICS's urban Kabul is 66.5%
+Dari, 31.6% Pashto. Balkh's Turkmen fall from 11.9% to 2.0% and Nimroz's Balochi from 43% to
+8% (16.4% with Brahui); both were the profiles' village counts.
+
+**Zeros in a cluster sample.** With 28 clusters, a group living in one part of a province and
+holding 1% of it is missed entirely about 75% of the time, 2% 57%, 5% 24%, 10% 5%. So a zero
+says a concentrated group is under roughly 5-10% of the province, no more. Where this matters:
+Badakhshan's Pamiri valleys (about 4% of the province; MICS "other" 0.0, so either missed or
+answered Dari; drawn from estimates either way), the Wakhan Kyrgyz, Kabul's and Kunar's
+Pashai and Nuristani (0.6%, 0.9% and 1.3% found), Ghazni's "other" (the profiles had 2.1%,
+MICS 0).
+
+**Unchanged.** Hazaragi and Aimaq are not separated by MICS (Hazara households answer Dari), so
+Bamyan and Daykundi are 98-100% Dari as before. MICS's "other" stays on `other` (Jawzjan 3.5%,
+rural Herat 3.1%, small elsewhere; perhaps Central Asian Arabic in Jawzjan, not checked). The
+1.5 million Kuchis are still not drawn: they have no province in NSIA's figures, and a
+household survey on a settled frame does not reach them.
+
+**Calls someone might reverse.**
+- HC1B over HH16 (reversing: Kabul about 70/30, Herat 89/11 Dari/Pashto).
+- Urban and rural tabulated apart, at a 5-cluster floor per stratum (`MIN_CLUSTERS`); setting
+  it high enough to pool everywhere moves Kabul from 62.8/35.4 to 60.7/37.5.
+- Brahui held to what MICS's Balochi and "other" can give (`BRAHUI_TAKE`); adding
+  `("Pashto", 1)` back restores 200,000.
+- The density-ranked urban mask, a stand-in for municipal boundaries.
+
+---
+
 **Drawn, 2026-10-05**, session `edd42a8c-af2`, from the Ministry of Rural Rehabilitation and
 Development (MRRD) provincial profiles' village-majority language figures, c. 2006-07, on NSIA's
 1404 settled population. A proxy, `tier="derived"` on every row, allowed by Anita in ask 017

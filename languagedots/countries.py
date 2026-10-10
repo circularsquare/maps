@@ -83,19 +83,45 @@ def regrouped(entry):
     from regroup import move
     entry = dict(entry)
     counts = entry["counts"]
+    written = {}            # drawn id -> written id, for the weighter below
 
     def moved_counts(*a, **k):
         df = counts(*a, **k)
         if "node" in getattr(df, "columns", ()):
             df = df.copy()
+            for n in df["node"].dropna().unique():
+                written.setdefault(move(n), n)
             df["node"] = df["node"].map(move)
         return df
     entry["counts"] = moved_counts
+
+    # A per-language weighter (kh, td, id, ...) is keyed by WRITTEN ids, but scatter.py asks it
+    # with the drawn ones from counts(); translate back (2026-10-08: kh and id had been failing on
+    # regrouped ids since 2026-10-06, hidden because their dots were rewritten in place).
+    pw = entry.get("place_weight")
+    if callable(pw):
+        def place_weight(place):
+            w = pw(place)
+            return None if w is None else _WrittenIds(w, written)
+        entry["place_weight"] = place_weight
     if isinstance(entry.get("parts"), (list, tuple)):
         entry["parts"] = [dict(p, nodes=[move(n) for n in p["nodes"]])
                           if isinstance(p, dict) and isinstance(p.get("nodes"), (list, tuple)) else p
                           for p in entry["parts"]]
     return entry
+
+
+class _WrittenIds:
+    """A weighter whose weights() is asked with drawn ids and answers with its written ones."""
+
+    def __init__(self, inner, written):
+        self._inner, self._written = inner, written
+
+    def weights(self, node, *a, **k):
+        return self._inner.weights(self._written.get(node, node), *a, **k)
+
+    def __getattr__(self, name):
+        return getattr(self._inner, name)
 
 
 def parts_problem(parts):

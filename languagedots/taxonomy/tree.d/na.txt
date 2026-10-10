@@ -38,3 +38,7 @@ nigercongo.bantu.otjiherero | Otjiherero | 0.64 0.17 340
 khoisan | Khoisan languages | 0.74 0.14 160
 khoisan.khoe | Khoe | 0.78 0.14 110
 khoisan.khoe.khoekhoe | Khoekhoegowab (Nama/Damara) | 0.86 0.15 100
+
+# Colour pass 2026-10-09 (taxonomy/COLOURS.md): pinned at the colour they were generated at, so
+# the DR Congo regrouping of colours does not move them
+nigercongo.bantu.ndonga | Ndonga | 0.58 0.14 50

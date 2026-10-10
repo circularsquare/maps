@@ -21,6 +21,13 @@ def looks_like_service(tags, name, name_en):
     return bool(FR_TRAIN_BRAND.match(name or tags.get("ref") or ""))
 
 
+# A station is snapped onto a route's path only where the track its stop node lies on runs
+# alongside that path (build_model.place_stations). Without it each direction of Métro 10's
+# one-way loop at Auteuil took the other arm's stations (150-330 m away) and the loop shipped
+# as one chain of 22 sections (fr_sources.md "One-way loops"). No-op until build_model reads it
+# (handoff_notes/metro10_loop.md).
+SNAP_ALONGSIDE = True
+
 # A Eurostar relation's `via` station is one of its stops when the relation does not list it:
 # OSM's London - Brussels relations (112662, 2905886) list only St Pancras and Brussels-Midi,
 # with via=Lille Europe, where Eurostar's London - Brussels trains call. With no stop in France

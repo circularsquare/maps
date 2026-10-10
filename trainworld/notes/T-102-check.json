@@ -1,0 +1,54 @@
+{
+  "samples": [
+    {
+      "zoom": 11.2,
+      "total": 80,
+      "visible": 0,
+      "overlaps": 0
+    },
+    {
+      "zoom": 11.99,
+      "total": 80,
+      "visible": 0,
+      "overlaps": 0
+    },
+    {
+      "zoom": 12,
+      "total": 80,
+      "visible": 11,
+      "overlaps": 0
+    },
+    {
+      "zoom": 12.5,
+      "total": 80,
+      "visible": 13,
+      "overlaps": 0
+    },
+    {
+      "zoom": 13,
+      "total": 80,
+      "visible": 10,
+      "overlaps": 0
+    },
+    {
+      "zoom": 14.5,
+      "total": 80,
+      "visible": 2,
+      "overlaps": 0
+    },
+    {
+      "zoom": 11.5,
+      "total": 80,
+      "visible": 0,
+      "overlaps": 0
+    },
+    {
+      "zoom": 13,
+      "total": 80,
+      "visible": 10,
+      "overlaps": 0
+    }
+  ],
+  "tooltip": "Junction at 110% of capacity\nEach train waits 2m00s here at high demand\nClick to see the junction and its flyover",
+  "errors": []
+}

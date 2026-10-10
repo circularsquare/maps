@@ -20,6 +20,11 @@ Design: spec.md. Agents: AGENT_BRIEF.md. Coverage of the world: coverage/COVERAG
   python scatter.py --country <cc>          India ~5 min, most countries under a minute
   python tools/claim.py done <cc> --id <sid>
 
+---- EVERY COUNTRY AT ONCE (after a change to scatter.py or regroup.txt) ----
+
+  python tools/rescatter_all.py             4 at a time, biggest first; logs in data/processed/scatter_logs/
+                                            (--only us,uk  --skip zw  -j 3); then the build tail
+
 ---- BUILD TAIL (whole-map files, under a lock) ----
 
   python tools/build_tail.py --id <sid>     taxonomy/build.py, then tiles.py over every drawn country

@@ -6,7 +6,8 @@ The 2011 census predates the 2017 arrivals, and the camps were not in it, but Ko
 puts close to half of Ukhia upazila's people inside them. Placed on Kontur as is, Ukhia's and
 Teknaf's census-counted (Bengali-speaking) residents would be drawn mostly in the camps.
 countries/bd.py zeroes the weight of hexes whose centre lies in a camp, so those residents are
-drawn where they live. Nobody in the camps is drawn: no census counts them (sources/bd.md).
+drawn where they live. Since 2026-10-07 the camps' own people are drawn as Rohingya from UNHCR's
+registered figures (sources/bd_unhcr.py), placed on these outlines by countries/bd.py.
 
 Source: RRRC / ISCG Site Management Sector / UNHCR / IOM, "Outline of camps sites of Rohingya
 refugees in Cox's Bazar, Bangladesh", A1 camp outlines of 2023-04-12, on HDX, CC0.
@@ -46,7 +47,8 @@ def main():
         raise SystemExit(f"bd_camps: {len(g)} camp polygons, expected 33-34")
     area = g.to_crs(32646).area.sum() / 1e6
     OUT.parent.mkdir(parents=True, exist_ok=True)
-    g[["geometry"]].to_file(OUT, driver="GPKG")
+    # names kept for the UNHCR join (sources/bd_unhcr.py, 2026-10-07)
+    g[["CampName", "Upazila", "geometry"]].to_file(OUT, driver="GPKG")
     print(f"bd_camps.gpkg: {len(g)} camps, {area:.1f} km2, bounds {[round(x, 3) for x in g.total_bounds]}")
     return 0
 

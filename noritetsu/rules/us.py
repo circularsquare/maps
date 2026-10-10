@@ -16,6 +16,15 @@ METRO_DUP = True
 # Kansas City (the Southwest Chief, 19 km) came out 0.45 and was dropped as unridden.
 ROUTE_SHARE_BY_LENGTH = True
 
+# Register lines keep the register's kind ("rail"), never the kind of the OSM track beside them
+# (register_way_lines; needs build_model to read it, handoff_notes/boston_tucson.md). Every NARN
+# line us_register keeps is a railroad's (PASSNGR R, rapid transit, is left out), and the track
+# test called three of them metro or light rail from the line running alongside: the MBTA's Old
+# Colony Line beside the Red Line from JFK/UMass to Braintree (so its stops were offered past
+# the East Subdivision on the Kingston/Plymouth train, not on the Old Colony itself, and the
+# Red Line's ways were the Old Colony's to own), NS's Amtrak Connection, CPKC's Canpa.
+REGISTER_KIND_SURE = True
+
 
 def extra_route_stops(ways, rels, stops, coords, stations, resolved, log):
     # Stations no route relation lists, as stops of the passing routes of their own network:
@@ -25,6 +34,17 @@ def extra_route_stops(ways, rels, stops, coords, stations, resolved, log):
     # until build_model.build() calls the hook (proposed 2026-10-03, us_sources.md).
     import us_register
     return us_register.osm_extra_stops(ways, rels, stops, coords, stations, resolved, log)
+
+
+def route_runs(rid, runs, members, ways, coords, station_nodes, stations):
+    # A route relation whose ways are in no order (NJ Transit's, Metro-North's and a few
+    # others' old both-ways relations: the Morris & Essex Lines came out of 79 and 231 runs),
+    # its runs rebuilt from its own track and stops (us_register.repair_route_runs); None, so
+    # assemble's runs stand, for every other route. Unused until build_model.build() calls the
+    # hook (proposed 2026-10-08, handoff_notes/njt_morristown.md).
+    import us_register
+    return us_register.repair_route_runs(rid, runs, members, ways, coords, station_nodes,
+                                         stations)
 
 
 def looks_like_service(tags, name, name_en):

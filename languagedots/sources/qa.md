@@ -70,3 +70,12 @@ wedges or a larger PIE_K; `followups.md`).
 ## Placement inside units (2026-10-06)
 
 Citizens and foreign residents are now placed apart inside each unit (session 5d7dac7e-gulf): foreign dots lean to dense hexes and fill OSM industrial land and labour camps, citizens take the rest; one rule for the six Gulf states, fitted on Kuwait's areas and Oman's wilayat. Method, fit, data searched: `sources/gulf_place.md`. Doha's Industrial Area 90.3 -> 95.8% non-Qatari; municipalities otherwise barely move (Qatar's zones carry no citizenship).
+
+## Families and single men (2026-10-07, session fix-gulf)
+
+Foreign residents are now split into family, single-men and single-women pools (UN DESA 2020 by
+sex) and placed by census Table 2's 87 zones by sex: each zone's foreign men beyond its foreign
+women are its single men. Counts unchanged. Industrial Area: South Asian languages 66.5 -> 71.4%,
+Bengali 13.4 -> 17.4%; West Bay 57.1 -> 52.1%. Modest, because DESA's Qatar sex split is nearly
+the same for every origin. Method, fit and limits: `sources/gulf_place.md` §6. Note: `qa.csv`
+predates the current home mixes (Chittagonian, Sylheti, Cirebonese); `qa_build.py` not rerun.

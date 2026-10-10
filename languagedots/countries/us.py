@@ -48,11 +48,13 @@ ENTRY = dict(
     view=[-125.0, 24.0, -66.5, 49.8],
     counts=_counts,
     mappings=["us2024"],
-    place=GEO / "us" / "us_tracts.gpkg",
-    place_unit=lambda g: g["unit"].astype(str),
     # One polygon per unit, except two Suffolk County units of 12 and 2 tracts that share equally
-    # (sources/us_geo.py); no population layer to weight by, so no weighter.
-    place_weight=None,
+    # (sources/us_geo.py). The tracts are cut by Kontur hexes, each tract keeping its equal share,
+    # so a rural tract's dots follow where its people live instead of spreading over all its land
+    # (sources/kontur_cut.py; 2026-10-08)
+    place=GEO / "us" / "us_konturcut.gpkg",
+    place_unit=lambda g: g["unit"].astype(str),
+    place_weight=pop_weight,
     note_public=(
         "The American Community Survey asks whether each person aged 5 or over speaks a language "
         "other than English at home, and if so which one. Someone who speaks Spanish and English "

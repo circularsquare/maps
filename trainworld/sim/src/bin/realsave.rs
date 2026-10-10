@@ -97,7 +97,7 @@ fn main() {
         let tph: Vec<f32> = l["tph"].as_array().unwrap().iter().map(|v| v.as_f64().unwrap() as f32).collect();
         let id = net.alloc_line();
         let name = format!("{} {}", l["feed"].as_str().unwrap(), l["name"].as_str().unwrap());
-        let r = net.set_line(id, Some(LineData { name, colour: PALETTE[li % PALETTE.len()], stops: nodes.clone(), path, tph: [tph[0], tph[1], tph[2]], dwell_s: 30.0, turnaround_s: 180.0, cars }));
+        let r = net.set_line(id, Some(LineData { trains: None, name, colour: PALETTE[li % PALETTE.len()], stops: nodes.clone(), path, tph: [tph[0], tph[1], tph[2]], dwell_s: 30.0, turnaround_s: 180.0, cars }));
         if r.is_ok() {
             n_lines_ok += 1;
         }

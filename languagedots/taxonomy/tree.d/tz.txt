@@ -47,7 +47,7 @@ nigercongo.bantu | Bantu
 nigercongo.bantu.swahili | Swahili
 nigercongo.bantu.kuria | Kuria | 0.52 0.15 20
 nigercongo.bantu.mijikenda | Mijikenda | 0.62 0.19 0
-nigercongo.bantu.bajuni | Bajuni | 0.66 0.08 95
+nigercongo.bantu.bajuni | Bajuni | 0.74 0.14 108
 nigercongo.bantu.yao | Yao (Chiyao)
 nigercongo.bantu.makonde | Shimakonde (Makonde)
 nigercongo.bantu.makhuwa | Makhuwa (P.30)
@@ -86,27 +86,27 @@ nigercongo.bantu.nyambo | Nyambo | 0.82 0.12 340
 nigercongo.bantu.zinza | Zinza | 0.84 0.09 195
 nigercongo.bantu.kerewe | Kerewe | 0.60 0.13 225
 nigercongo.bantu.sumbwa | Sumbwa | 0.70 0.12 250
-nigercongo.bantu.kimbu | Kimbu
-nigercongo.bantu.konongo | Konongo
+nigercongo.bantu.kimbu | Kimbu | 0.7 0.14 30
+nigercongo.bantu.konongo | Konongo | 0.82 0.14 40
 nigercongo.bantu.jita | Jita | 0.86 0.11 85
-nigercongo.bantu.kwaya | Kwaya
+nigercongo.bantu.kwaya | Kwaya | 0.82 0.14 80
 nigercongo.bantu.kara | Kara (Regi)
 nigercongo.bantu.zanaki | Zanaki | 0.62 0.14 290
 nigercongo.bantu.ikizu | Ikizu | 0.66 0.13 135
-nigercongo.bantu.ikoma | Ikoma
-nigercongo.bantu.kabwa | Kabwa
+nigercongo.bantu.ikoma | Ikoma | 0.76 0.14 70
+nigercongo.bantu.kabwa | Kabwa | 0.64 0.14 30
 nigercongo.bantu.suba_simbiti | Suba-Simbiti | 0.84 0.10 160
 nigercongo.bantu.nyaturu | Nyaturu (Rimi) | 0.80 0.13 340
 nigercongo.bantu.nilamba | Nilamba (Nyiramba) | 0.68 0.12 180
 nigercongo.bantu.rangi | Rangi (Langi) | 0.88 0.11 100
-nigercongo.bantu.mbugwe | Mbugwe
+nigercongo.bantu.mbugwe | Mbugwe | 0.82 0.14 20
 nigercongo.bantu.gogo | Gogo (Cigogo) | 0.64 0.15 245
 nigercongo.bantu.kaguru | Kaguru | 0.80 0.11 305
 nigercongo.bantu.luguru | Luguru | 0.64 0.16 135
 nigercongo.bantu.zaramo | Zaramo | 0.62 0.13 260
 nigercongo.bantu.kwere | Kwere | 0.86 0.09 205
-nigercongo.bantu.kutu | Kutu
-nigercongo.bantu.sagala | Sagala
+nigercongo.bantu.kutu | Kutu | 0.58 0.14 20
+nigercongo.bantu.sagala | Sagala | 0.82 0.14 100
 nigercongo.bantu.zigua | Zigua (Zigula) | 0.80 0.13 340
 nigercongo.bantu.nguu | Nguu (Ngulu) | 0.70 0.14 25
 nigercongo.bantu.shambala | Shambala (Kisambaa) | 0.68 0.13 205
@@ -114,14 +114,14 @@ nigercongo.bantu.bondei | Bondei | 0.62 0.12 105
 nigercongo.bantu.pare | Pare (Asu) | 0.84 0.13 135
 nigercongo.bantu.chaga | Chaga | 0.60 0.17 305
 nigercongo.bantu.rwa | Meru (Rwa, Tanzania) | 0.90 0.08 80
-nigercongo.bantu.sonjo | Sonjo (Temi)
+nigercongo.bantu.sonjo | Sonjo (Temi) | 0.7 0.14 90
 nigercongo.bantu.hehe | Hehe | 0.78 0.13 25
 nigercongo.bantu.bena | Bena | 0.64 0.15 155
 nigercongo.bantu.kinga | Kinga | 0.78 0.11 205
-nigercongo.bantu.magoma | Magoma
-nigercongo.bantu.pangwa | Pangwa
+nigercongo.bantu.magoma | Magoma | 0.76 0.14 40
+nigercongo.bantu.pangwa | Pangwa | 0.7 0.14 60
 nigercongo.bantu.sangu | Sangu | 0.66 0.13 275
-nigercongo.bantu.wanji | Wanji (Vwanji)
+nigercongo.bantu.wanji | Wanji (Vwanji) | 0.76 0.14 60
 nigercongo.bantu.ngoni_tz | Ngoni (Tanzania) | 0.78 0.11 265
 nigercongo.bantu.nyakyusa | Nyakyusa | 0.60 0.18 335
 nigercongo.bantu.ndali | Ndali | 0.86 0.11 130
@@ -134,20 +134,20 @@ nigercongo.bantu.mambwe_nyiha.malila | Malila | 0.66 0.15 0
 nigercongo.bantu.pogoro | Pogoro (Pogolo) | 0.80 0.10 240
 nigercongo.bantu.ndamba | Ndamba | 0.62 0.12 330
 nigercongo.bantu.matengo | Matengo | 0.62 0.15 140
-nigercongo.bantu.ndengereko | Ndengereko
-nigercongo.bantu.matumbi | Matumbi
+nigercongo.bantu.ndengereko | Ndengereko | 0.82 0.14 70
+nigercongo.bantu.matumbi | Matumbi | 0.58 0.14 50
 nigercongo.bantu.ndendeule | Ndendeule | 0.84 0.11 40
 nigercongo.bantu.ngindo | Ngindo | 0.70 0.12 300
 nigercongo.bantu.mwera | Mwera (Chimwera) | 0.84 0.10 175
 nigercongo.bantu.nyanja_sena.nyasa | Nyasa (Mwera of Lake Nyasa)
-nigercongo.bantu.tongwe | Tongwe
+nigercongo.bantu.tongwe | Tongwe | 0.7 0.14 50
 nigercongo.bantu.bembe | Bembe
-nigercongo.bantu.manyema | Manyema
-nigercongo.bantu.segeju | Segeju
-nigercongo.bantu.mpoto | Mpoto
-nigercongo.bantu.isanzu | Isanzu
-nigercongo.bantu.kisi | Kisi (Tanzania)
-nigercongo.bantu.shirazi | Shirazi (Zanzibar Swahili) | 0.80 0.11 65
+nigercongo.bantu.manyema | Manyema | 0.7 0.14 20
+nigercongo.bantu.segeju | Segeju | 0.58 0.14 90
+nigercongo.bantu.mpoto | Mpoto | 0.58 0.14 80
+nigercongo.bantu.isanzu | Isanzu | 0.76 0.14 50
+nigercongo.bantu.kisi | Kisi (Tanzania) | 0.76 0.14 100
+nigercongo.bantu.shirazi | Shirazi (Zanzibar Swahili) | 0.8 0.16 128
 
 # ---- Tanzania: Nilotic and Cushitic ----
 nilosaharan.nilotic.arusha | Arusha (Maa) | 0.76 0.10 250

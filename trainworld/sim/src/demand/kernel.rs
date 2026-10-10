@@ -888,6 +888,8 @@ pub struct Graph {
     pub rn_line: Vec<u32>,
     /// Real ride minutes to the next stop in this direction (0 at the end).
     pub rn_ride: Vec<f32>,
+    /// Distance fare in perceived minutes, kept separate from the crowding multiplier.
+    pub rn_fare: Vec<f32>,
     pub adj_off: Vec<u32>,
     pub adj_to: Vec<u32>,
     pub adj_cost: Vec<f32>,
@@ -975,6 +977,7 @@ pub fn build_graph(net: &Network, p: &Params) -> Graph {
         n,
         rn_station,
         rn_line,
+        rn_fare: vec![0.0; rn_ride.len()],
         rn_ride,
         adj_off,
         adj_to: edges.iter().map(|e| e.1).collect(),
@@ -989,7 +992,7 @@ pub fn set_crowding(g: &mut Graph, factor: &[f32]) {
         let seg = g.adj_seg[e];
         if seg != NONE {
             let r = seg as usize - g.n_st;
-            g.adj_cost[e] = g.rn_ride[r] * factor[r];
+            g.adj_cost[e] = g.rn_ride[r] * factor[r] + g.rn_fare[r];
         }
     }
 }

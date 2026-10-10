@@ -1919,6 +1919,21 @@ def build(path, log, ref_date=None):
                 if conf.get("station_en") and not stations[n]["name_en"]:
                     stations[n]["name_en"] = conf["station_en"](points.get(op, {}),
                                                                 stations[n]["name"]) or ""
+        # A stop reached only through a clone link (its every neighbouring pair a long
+        # stretch ending at "<code>@<section>" junctions) gets its station record too, so
+        # split_pieces can fold the clone back into it (2026-10-08, handoff_notes/
+        # missing_stops.md: Tommot - Nizhny Bestyakh had 0 stops, Artsyz - Izmail 1 of 8).
+        for _j, n in links:
+            if n in stations:
+                continue
+            op = op_of_node.get(n)
+            if op in stop_of:
+                o = ost[stop_of[op]]
+                stations[n] = {"id": n, "name": o["name"], "name_en": o["name_en"],
+                               "lon": o["lon"], "lat": o["lat"], "lines": set()}
+                if conf.get("station_en") and not stations[n]["name_en"]:
+                    stations[n]["name_en"] = conf["station_en"](points.get(op, {}),
+                                                                stations[n]["name"]) or ""
         rel_names = [rel_name[r] for lid in lids for r in [rel_of.get(lid) or named_rel.get(lid)]
                      if r and rel_name.get(r)]
         if ref:

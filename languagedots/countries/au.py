@@ -180,11 +180,13 @@ ENTRY = dict(
     view=[112.0, -44.0, 154.5, -9.5],
     counts=_counts,
     mappings=["au2021"],
-    place=SA1_SHP,
-    place_unit=lambda g: g["SA2_CODE21"].astype(str),
     # SA1s are built to about 400 people, so equal shares per SA1 are already a population
-    # weighting (religiondots sources/au_geo.md §4 measured it)
-    place_weight=None,
+    # weighting (religiondots sources/au_geo.md §4 measured it). That stays: the SA1s (SA1_SHP)
+    # are cut by Kontur hexes, each SA1 keeps an equal share, and Kontur only moves dots inside
+    # one, off the empty land of a big rural SA1 (sources/kontur_cut.py; 2026-10-08)
+    place=GEO / "au" / "au_konturcut.gpkg",
+    place_unit=lambda g: g["unit"].astype(str),
+    place_weight=pop_weight,
     note_public=(
         "The census asks which language other than English each person uses at home, so "
         "this map shows home language, not mother tongue. The small-area table names English "

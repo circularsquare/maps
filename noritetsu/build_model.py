@@ -104,6 +104,15 @@ RAIL_MODES = ("train", "subway", "light_rail", "monorail", "tram", "funicular")
 
 # How far a stop node may sit off the route's own path before we stop believing the match.
 STOP_SNAP_M = 400
+# ... unless the stop node lies on another variant's track (SNAP_ALONGSIDE in the country's
+# rules): then only where that track runs alongside this path (place_stations, _alongside).
+# Measured on fr 2026-10-08: parallel tracks keep 0-2 m of spread over the window (Lille-Europe
+# 42 m off, Le Mans 40 m, Gare du Nord 79 m); a one-way loop's arms, branches and crossings
+# move 20-90 m (Mirabeau 2 m off at the stop node, 38 m within 150 m; RER A's Marne-la-Vallée
+# branch past Fontenay-sous-Bois 11 m, 47 m) or lie 150-400 m apart (Métro 10, 7bis's Danube).
+ALONGSIDE_M = 100
+ALONGSIDE_WIN_M = 150
+ALONGSIDE_SPREAD_M = 15
 
 
 def dist_m(lon1, lat1, lon2, lat2):
@@ -475,7 +484,60 @@ def travel_dirs(members, ways, runs):
     return out
 
 
-def place_stations(runs, station_nodes, stations):
+def track_at(allruns, station_nodes):
+    """{stop node: [(xy, metres along, index), ...]}: where each of a line's stop nodes lies
+    on its variants' assembled runs (allruns: {rel id: runs}), for place_stations' test of
+    whether another variant runs alongside a station."""
+    want = np.fromiter((n for ns in station_nodes.values() for n in ns), dtype=np.int64)
+    out = defaultdict(list)
+    if not want.size:
+        return out
+    for runs in allruns.values():
+        for ids, xy in runs:
+            hit = np.flatnonzero(np.isin(ids, want))
+            if not hit.size:
+                continue
+            lat = math.radians(float(xy[:, 1].mean()))
+            c = np.concatenate([[0.0], np.cumsum(np.hypot(np.diff(xy[:, 0]) * math.cos(lat) * 111320,
+                                                          np.diff(xy[:, 1]) * 110570))])
+            for k in hit.tolist():
+                out[int(ids[k])].append((xy, c, k))
+    return out
+
+
+def _alongside(xy, c, k, runs):
+    """Does the track through point k of xy run alongside this variant's runs: its stop node
+    within ALONGSIDE_M of them, and ALONGSIDE_WIN_M along it either way never more than
+    ALONGSIDE_SPREAD_M further off than that? Parallel tracks stay at one distance; a one-way
+    loop's other arm, a branch or a crossing line moves away."""
+    pts = xy[(c >= c[k] - ALONGSIDE_WIN_M) & (c <= c[k] + ALONGSIDE_WIN_M)]
+    lat = math.radians(float(xy[k, 1]))
+    kx = math.cos(lat) * 111320
+    P = np.column_stack([pts[:, 0] * kx, pts[:, 1] * 110570])
+    p0 = np.array([xy[k, 0] * kx, xy[k, 1] * 110570])
+    reach = ALONGSIDE_M + ALONGSIDE_SPREAD_M + ALONGSIDE_WIN_M
+    best = np.full(len(P), np.inf)
+    best0 = np.inf
+    for _ids, rxy in runs:
+        R = np.column_stack([rxy[:, 0] * kx, rxy[:, 1] * 110570])
+        A, B = R[:-1], R[1:]
+        near = (np.minimum(A, B) <= p0 + reach).all(1) & (np.maximum(A, B) >= p0 - reach).all(1)
+        if not near.any():
+            continue
+        A, B = A[near], B[near]
+        AB = B - A
+        L2 = np.maximum((AB ** 2).sum(1), 1e-9)
+        for i, q in enumerate(np.vstack([P, p0])):
+            t = np.clip(((q - A) * AB).sum(1) / L2, 0, 1)
+            d = float(np.hypot(*(A + AB * t[:, None] - q).T).min())
+            if i == len(P):
+                best0 = min(best0, d)
+            else:
+                best[i] = min(best[i], d)
+    return best0 <= ALONGSIDE_M and float(best.max()) <= best0 + ALONGSIDE_SPREAD_M
+
+
+def place_stations(runs, station_nodes, stations, track=None):
     """EVERY station of the line, in the order this variant's path passes it.
 
     NOT just the stations this variant stops at, and that distinction is the whole reason
@@ -489,6 +551,14 @@ def place_stations(runs, station_nodes, stations):
     stop nodes pooled over every variant.  An express's path physically runs through the
     local stations, so the sections it yields are the fine ones, and the union across
     variants is then a partition of the line's track rather than a pile of overlaps.
+
+    With `track` (track_at's index; build() passes it where the country's rules set
+    SNAP_ALONGSIDE), a station whose stop node lies on another variant's track is snapped onto
+    this path only where that track runs alongside it (_alongside). Paris Métro 10's one-way
+    loop at Auteuil: each direction's path came within 400 m of the other arm's stations and
+    took them, so both arms were threaded into one chain of 0.06-0.2 km sections (Mirabeau -
+    Église d'Auteuil, Michel-Ange-Molitor - Porte d'Auteuil) and the loop was lost. A stop
+    node beside the track (on no variant's path) is snapped as before.
     """
     node2st = {n: st for st, nodes in station_nodes.items() for n in nodes}
     if not node2st:
@@ -517,8 +587,14 @@ def place_stations(runs, station_nodes, stations):
             j = int(np.argmin(dd))
             if best is None or dd[j] < best[2]:
                 best = (r, j, float(dd[j]))
-        if best and best[2] <= STOP_SNAP_M:
-            out.append((best[0], best[1], st))
+        if not best or best[2] > STOP_SNAP_M:
+            continue
+        if track is not None:
+            on = [t for n in station_nodes[st] for t in track.get(n, ())]
+            if on and not any(_alongside(xy, c, k, runs) for xy, c, k in on):
+                place_stations.refused += 1
+                continue
+        out.append((best[0], best[1], st))
 
     out.sort(key=lambda t: (t[0], t[1]))
     dedup = []
@@ -527,6 +603,9 @@ def place_stations(runs, station_nodes, stations):
             continue                      # the same station twice running is one visit
         dedup.append(e)
     return dedup
+
+
+place_stations.refused = 0
 
 
 def slice_path(runs, a, b):
@@ -639,10 +718,23 @@ def country_rules(region):
       SKIP_ROUTES = {relation id, ...}
             Route relations the OSM half leaves out: stale or broken routes (Brazil's
             Teresina route runs on over a disused railway). Default: none.
+      route_runs(rid, runs, members, ways, coords, station_nodes, stations) -> runs or None
+            A route relation's runs rebuilt (assemble's [(node ids, lon/lat)]) where its
+            ways are in no order; None keeps assemble's. Called per variant before
+            travel_dirs and place_stations. Default: none.
+      REGISTER_KIND_SURE = True
+            Register lines keep the register's kind: register_way_lines never re-kinds them
+            from the OSM track they lie on (NARN: the Old Colony beside the Red Line came out
+            "subway"). Default: off.
       TWIN_ON_STATIONS = True
             An OSM line whose stations all lie on its register match is dropped as its twin
             (merge_sources), whatever its length: Mexico's broken metro routes (Metrorrey
             1-3, Línea 4) whose stop order gives a false end-to-end section. Default: off.
+      SNAP_ALONGSIDE = True
+            A station whose stop node lies on another variant's track is snapped onto a
+            variant's path only where that track runs alongside it (place_stations): keeps a
+            one-way loop's two arms apart (Paris Métro 10 at Auteuil). Default: off, every
+            station within STOP_SNAP_M is snapped.
 
     Returns the module, or None where the country has no file.
     """
@@ -1581,6 +1673,11 @@ def build(region, log):
         groups = [g for g in groups if g[2]]
         log(f"  {len(skip)} route relations left out by the country's rules (SKIP_ROUTES); "
             f"{n0 - len(groups)} lines with no route left")
+    # Snap a station onto a variant's path only where the track its stop node lies on runs
+    # alongside (place_stations; rules/<cc>.py SNAP_ALONGSIDE).
+    snap_alongside = bool(getattr(rules, "SNAP_ALONGSIDE", False))
+    place_stations.refused = 0
+    snap_refused = []
 
     lines, geoms = [], {}
     way_lines = defaultdict(set)     # OSM way id -> the lines that run over it
@@ -1687,13 +1784,22 @@ def build(region, log):
                 return (*got, "own")
             got = network().path(na, nb, crow * NET_DETOUR + NET_MARGIN_M)
             return (*got, "net") if got is not None else None
+        allruns = {rid: assemble(routes[rid][1], ways, coords) for rid in rids}
+        track = track_at(allruns, station_nodes) if snap_alongside else None
+        refused0 = place_stations.refused
         for rid in rids:
             tags, members = routes[rid]
-            runs = assemble(members, ways, coords)
+            runs = allruns[rid]
+            # A country's repair of a route relation whose ways are in no order (rules/<cc>.py
+            # route_runs; the US's old both-ways NJ Transit relations, 2026-10-08): its runs
+            # rebuilt from its own track and stops, or None to keep assemble's.
+            if runs and rules is not None and hasattr(rules, "route_runs"):
+                runs = rules.route_runs(rid, runs, members, ways, coords, station_nodes,
+                                        stations) or runs
             if not runs:
                 continue
             variant_dirs[lid].append(travel_dirs(members, ways, runs))
-            placed = place_stations(runs, station_nodes, stations)
+            placed = place_stations(runs, station_nodes, stations, track)
             if not placed:
                 continue
             for t in border_tails(placed, runs, members, resolved, bidx):
@@ -1757,6 +1863,9 @@ def build(region, log):
                                  "straight": straight, "digest": digest, "ids": ids}
             if len(seq) > best_len:
                 display, best_len = seq, len(seq)
+        if place_stations.refused > refused0:
+            snap_refused.append((lid, pick(mtags, "name") or pick(mtags, "ref"),
+                                 place_stations.refused - refused0))
 
         if not sections and not tails:
             n_nostop += 1
@@ -1814,6 +1923,12 @@ def build(region, log):
         f"{n_transit} lines with no stop here cross it border to border")
     log(f"  gaps in a route relation traced along track instead: {n_own} over the line's own "
         f"ways, {n_net} over the wider network")
+    if snap_alongside:
+        log(f"  {place_stations.refused} times a station within {STOP_SNAP_M} m of a variant's "
+            f"path was not snapped onto it: its stop node lies on another variant's track, "
+            f"which does not run alongside; {len(snap_refused)} lines:")
+        for lid, name, n in sorted(snap_refused, key=lambda t: -t[2]):
+            log(f"    {n:3d}  {lid} {name}")
     n_t = sum(len(l["_tails"]) for l in lines + build.border_only)
     km_t = sum(t["km"] for l in lines + build.border_only for t in l["_tails"])
     # Only near a border: elsewhere a stop the extract lacks is an untagged node, not abroad.
@@ -1933,6 +2048,220 @@ def drop_unridden_sections(lines, stations, geoms, route_share, log):
     return drop_lines
 
 
+# A junction end within this of another line's track joins it. Measured on the shipped data
+# (2026-10-07): of the leaf junctions not shared with another line, us 342 lie within 25 m of
+# another line, 47 within 25-300 m and nearly all of those are real meetings of two FRA
+# subdivisions drawn a little apart (St Paul / Staples 28 m, end of Elko 76 and 237 m: the
+# Empire Builder's and the California Zephyr's track); past 300 m, yards and terminals.
+CONTACT_M = 300.0
+# ... unless its name says the track ends there: a depot, a yard, a siding's end. The
+# registers name such points plainly (Schienennetz's "Gleisende", "Depot", "Abstellgruppe",
+# "(Agl)"; RINF's "Gbf", "Rbf", "Abstellbahnhof"; "fin de voie", "cul-de-sac").
+DEAD_END_NAME = re.compile(
+    r"gleisende|fin de voie|fine binario|cul-de-sac|\bdepot\b|\bdép[ôo]t\b|\bdep\.|abstell|"
+    r"unterhalt|rangier|\brb\b|\bgb\b|\bgbf\b|\brbf\b|\bbw\b|fracht|\(agl\)|übergabe|triage|"
+    r"\byard\b|\bshops?\b|stahlwerk|\bmüll\b", re.I)
+
+
+BORDER_ANCHOR_DEG = 0.03   # ~3 km: a junction end this near another country's land leads abroad
+STOP_NEAR_M = 500.0        # ... and one this near a station not on its own line leads there
+
+
+def prune_dead_track(region, lines, stations, geoms, log):
+    """Drop track of a line that leads to no station (Anita, 2026-10-07: "if past a junction
+    there are no stations, we should not be drawing this track at all ... we shouldnt consider
+    it as having passenger rail").
+
+    A section is kept when it lies on some way between two ANCHORS of its line: its stops,
+    border points and junctions within BORDER_ANCHOR_DEG of another country's land (the line
+    goes on abroad: Stabio to Varese has no border point), and junctions where the line meets
+    other track (a section of another line ends there, or another line passes within
+    CONTACT_M, unless the junction's name says the track ends: DEAD_END_NAME), from which
+    trains run on to other stations, or a station not on the line lies within STOP_NEAR_M. What is left
+    is track with no station beyond it: a stub siding, a yard, a register line's run to the
+    "end of" a subdivision, a turning loop with no stop, a stop alone on its piece of the
+    line with its stub. Leaf track off a non-anchor is pruned repeatedly; then any block of
+    the line's graph (a loop, a pair of parallel tracks) reached from fewer than two anchors
+    goes too, until nothing changes. A line left with nothing is dropped.
+
+    Kept as before: a line's run to a junction where it meets other lines, however long (the
+    Hastings Subdivision's 154 km to Creston: the app rides it through the junction to the
+    stops beyond). Returns the ids of lines dropped whole."""
+    import networkx as nx
+    from shapely import LineString as LS, Point, STRtree
+    import borders
+    border_ids = {p["id"] for p in borders.load()}
+    is_stop = lambda n: n in stations and not stations[n].get("junction")
+
+    node_lines = defaultdict(set)
+    for l in lines:
+        for s in l["sections"]:
+            node_lines[s[0]].add(l["id"]); node_lines[s[1]].add(l["id"])
+    lats = [p[1] for g in geoms.values() for pts in g.values() for p in pts[:1]]
+    lat0 = float(np.median(lats)) if lats else 0.0
+    kx, ky = math.cos(math.radians(lat0)) * 111320.0, 110570.0
+    tgeo, towner, tfam = [], [], []
+    for l in lines:
+        fam = kind_family(l.get("kind"))
+        for k, pts in geoms.get(l["id"], {}).items():
+            if len(pts) < 2:
+                continue
+            a = np.asarray(pts, dtype=np.float64)[:, :2]
+            tgeo.append(LS(np.column_stack([a[:, 0] * kx, a[:, 1] * ky])))
+            towner.append(l["id"]); tfam.append(fam)
+    tree = STRtree(tgeo) if tgeo else None
+
+    import ownership
+    land = ownership._land()
+    me = borders.ISO.get(region, region.upper()).lower()
+
+    def near_abroad(s):
+        if land.get("tree") is None:
+            return False
+        hit = land["tree"].query(Point(s["lon"], s["lat"]), predicate="dwithin",
+                                 distance=BORDER_ANCHOR_DEG)
+        return any(land["codes"][i] not in (me, "-99") for i in hit)
+
+    stop_ids = [sid for sid, s in stations.items() if not s.get("junction") and "lon" in s]
+    stop_tree = STRtree([Point(stations[sid]["lon"] * kx, stations[sid]["lat"] * ky)
+                         for sid in stop_ids]) if stop_ids else None
+
+    def contact(n, lid, fam, own=frozenset()):
+        if node_lines[n] - {lid}:
+            return True
+        s = stations.get(n)
+        if not s:
+            return False
+        if near_abroad(s):
+            return True
+        if DEAD_END_NAME.search(s.get("name") or "") or DEAD_END_NAME.search(s.get("name_en") or ""):
+            return False
+        # A station of another line, or of none, close by: the track leads to it (Halifax's
+        # station is 400 m past the end of the Bedford Subdivision, and no line is drawn there
+        # but the VIA Ocean's, which stops short of it at Truro in Canada's data).
+        if stop_tree is not None:
+            p = Point(s["lon"] * kx, s["lat"] * ky)
+            if any(stop_ids[i] not in own
+                   for i in stop_tree.query(p, predicate="dwithin", distance=STOP_NEAR_M)):
+                return True
+        # The FRA's (us_register's) name for a junction by a station: "near Halifax", where the
+        # station is in OSM but on no line of the model. Not the line's own last stop.
+        m = re.match(r"near (.+)$", s.get("name") or "")
+        if m and m.group(1) not in {stations[x]["name"] for x in own
+                                    if x in stations and is_stop(x)}:
+            return True
+        if tree is None:
+            return False
+        p = Point(s["lon"] * kx, s["lat"] * ky)
+        # Any kind: a register's legal "rail" line can be a tram link (Zürich's Tramstrasse).
+        return any(towner[i] != lid
+                   for i in tree.query(p, predicate="dwithin", distance=CONTACT_M))
+
+    drop_lines, per_line, dead_nodes, dead_keys = set(), [], {}, {}
+    n_sec = 0
+    km_total = 0.0
+    for l in lines:
+        secs = [s for s in l["sections"] if s[0] != s[1]]
+        if not secs:
+            continue
+        fam = kind_family(l.get("kind"))
+        G = nx.Graph()
+        for s in secs:
+            G.add_edge(s[0], s[1])
+        anchor = {}
+
+        own_nodes = frozenset(G.nodes)
+
+        def is_anchor(n):
+            if n not in anchor:
+                anchor[n] = (is_stop(n) or n in border_ids or contact(n, l["id"], fam, own_nodes))
+            return anchor[n]
+
+        changed = True
+        while changed:
+            changed = False
+            todo = [n for n in G if G.degree(n) <= 1 and not is_anchor(n)]
+            while todo:
+                n = todo.pop()
+                if n not in G or G.degree(n) > 1 or is_anchor(n):
+                    continue
+                nb = list(G.neighbors(n))
+                G.remove_node(n)
+                changed = True
+                todo += [m for m in nb if G.degree(m) <= 1 and not is_anchor(m)]
+            for comp in list(nx.biconnected_component_edges(G)):
+                if len(comp) < 2:
+                    continue        # a bridge: leaf pruning above has settled it
+                block = {x for e in comp for x in e}
+                H = G.copy()
+                H.remove_edges_from(comp)
+                ports = 0
+                for x in block:
+                    if is_anchor(x) or any(is_anchor(y) for y in nx.node_connected_component(H, x)):
+                        ports += 1
+                        if ports >= 2:
+                            break
+                if ports < 2:
+                    G.remove_edges_from(comp)
+                    G.remove_nodes_from([x for x in block if G.degree(x) == 0])
+                    changed = True
+            # a piece of the line with fewer than two anchors leads nowhere either
+            for comp in list(nx.connected_components(G)):
+                if sum(1 for x in comp if is_anchor(x)) < 2:
+                    G.remove_nodes_from(comp)
+                    changed = True
+        keep = [s for s in l["sections"]
+                if (s[0] == s[1] and s[0] in G) or G.has_edge(s[0], s[1])]
+        if len(keep) == len(l["sections"]):
+            continue
+        gone = [s for s in l["sections"] if s not in keep]
+        km = sum(s[2] for s in gone)
+        n_sec += len(gone)
+        km_total += km
+        per_line.append((km, l["name"], l["id"], len(gone), not keep))
+        if not keep and os.environ.get("PRUNE_DEBUG"):
+            for n in sorted({x for s in gone for x in s[:2]}):
+                s_ = stations.get(n) or {}
+                log(f"      {l['name']}: {s_.get('name')} stop={is_stop(n)} anchor={anchor.get(n)} "
+                    f"lines_here={sorted(node_lines[n] - {l['id']})[:4]}")
+        dead = {f"{s[0]}|{s[1]}" for s in gone}
+        g = geoms.get(l["id"], {})
+        ids_of = lambda ss: {int(x) for s in ss
+                             for x in (getattr(g.get(f"{s[0]}|{s[1]}"), "ids", None)
+                                       if getattr(g.get(f"{s[0]}|{s[1]}"), "ids", None) is not None
+                                       else ()) if x > 0}
+        dead_nodes[l["id"]] = ids_of(gone) - ids_of(keep)
+        dead_keys[l["id"]] = (dead, {f"{s[0]}|{s[1]}" for s in keep})
+        for s in gone:
+            g.pop(f"{s[0]}|{s[1]}", None)
+        l["sections"] = keep
+        l["km"] = round(sum(s[2] for s in keep), 3)
+        ends = {x for s in keep for x in s[:2]}
+        l["display"] = [x for x in l["display"] if x in ends]
+        for k in ("closed", "highspeed_sections", "borrowed", "suspended"):
+            v = l.get(k)
+            if isinstance(v, list):
+                l[k] = [x for x in v if not (isinstance(x, str) and x in dead)]
+            elif isinstance(v, dict):
+                l[k] = {x: y for x, y in v.items() if x not in dead}
+        for x in {y for s in gone for y in s[:2]} - ends:
+            if x in stations:
+                stations[x]["lines"].discard(l["id"])
+        if not keep:
+            drop_lines.add(l["id"])
+            geoms.pop(l["id"], None)
+    for s in stations.values():
+        s["lines"] -= drop_lines
+    log(f"track leading to no station: {n_sec} sections, {km_total:,.1f} km dropped from "
+        f"{len(per_line)} lines, {len(drop_lines)} lines left with nothing")
+    for km, name, lid, n, whole in sorted(per_line, reverse=True)[:25]:
+        log(f"    {km:8.2f} km  {n:3d} sec  {name} ({lid}){'  WHOLE LINE' if whole else ''}")
+    prune_dead_track.report = per_line
+    prune_dead_track.dead_nodes = dead_nodes      # line id -> OSM nodes only its dropped track had
+    prune_dead_track.dead_keys = dead_keys        # line id -> ("a|b" dropped, "a|b" kept)
+    return drop_lines
+
+
 def register_way_lines(region, lines, geoms, log):
     """For each OSM way on the map, the REGISTER lines whose track it is; and for each
     register section, the share of the track beside it that an OSM passenger route runs over.
@@ -2015,6 +2344,10 @@ def register_way_lines(region, lines, geoms, log):
     route_share = {}                   # (line id, "a|b") -> share of that section OSM routes use
     sec_ways = {}                      # (line id, "a|b") -> [(way index, metres inside)]
     rekinded = []
+    # A country whose register knows its lines' kind (rules REGISTER_KIND_SURE: NARN's are all
+    # railroads) keeps it: the track test called the MBTA's Old Colony Line "subway" from the
+    # Red Line running beside it.
+    kind_sure = bool(getattr(country_rules(region), "REGISTER_KIND_SURE", False))
     for l in lines:
         if l.get("src") == "osm":
             continue
@@ -2049,7 +2382,7 @@ def register_way_lines(region, lines, geoms, log):
         # "rail" and "tram" are the register's LEGAL categories, which say little about the
         # track: every Osaka Metro line is legally a tramway. Anything more specific than
         # that (monorail, funicular) is kept as the register says.
-        if (fam in ("rail", "tram") and top != fam
+        if (fam in ("rail", "tram") and top != fam and not kind_sure
                 and by_fam[top] > 0.5 * sum(by_fam.values())):
             rekinded.append((l["name"], l["operator"], top))
             l["kind"] = fam = top
@@ -2786,6 +3119,37 @@ def main():
         import not_running
         not_running.mark(args.region, lines, geoms, log)
         gtfs_served.mark(timetable, lines, log)
+        # Track that leads to no station: not passenger rail (Anita, 2026-10-07).
+        dead = prune_dead_track(args.region, lines, stations, geoms, log)
+        if dead:
+            lines = [l for l in lines if l["id"] not in dead]
+        # Its ways no longer name the line (ways.json, and so the tiles: a way no line runs
+        # over is drawn as the faint rail with no passenger trains). An OSM section's ways by
+        # their nodes; a register section's by the ways found beside it (sec_ways).
+        st_ = getattr(register_way_lines, "state", None) or {}
+        raw_ways, wids_, sec_ways_ = st_.get("ways", {}), st_.get("wids", []), st_.get("sec_ways", {})
+        dn = getattr(prune_dead_track, "dead_nodes", {})
+        unlink = defaultdict(set)              # way id -> line ids to take off it
+        for lid, (dk, kk) in getattr(prune_dead_track, "dead_keys", {}).items():
+            w_dead = {wids_[j] for k in dk for j, _got, _d in sec_ways_.get((lid, k), ())}
+            w_keep = {wids_[j] for k in kk for j, _got, _d in sec_ways_.get((lid, k), ())}
+            for w in w_dead - w_keep:
+                unlink[w].add(lid)
+        n_unlinked = 0
+        for users in (way_lines, route_users):
+            for wid, lids in users.items():
+                lids -= dead
+                if not lids:
+                    continue
+                gone_here = unlink.get(wid, set()) & lids
+                nodes = raw_ways.get(wid, (None, ()))[1]
+                for lid in [x for x in lids if dn.get(x)]:
+                    if len(nodes) and sum(1 for n in nodes if int(n) in dn[lid]) >= 0.5 * len(nodes):
+                        gone_here.add(lid)
+                if gone_here:
+                    lids -= gone_here
+                    n_unlinked += len(gone_here) if users is way_lines else 0
+        log(f"track leading to no station: {n_unlinked} way-line links dropped")
         # Section ids are handed out again, because merging changed which sections exist.
         gid = 0
         for l in lines:
@@ -2842,6 +3206,10 @@ def main():
     if (out / "credits.json").exists():
         (out / "credits.json").unlink()
     log(f"foot.json: {(out / 'foot.json').stat().st_size / 1e6:.2f} MB")
+    # Sections running alongside one another, for the app's crediting (along.py).
+    import along
+    along.write(out, args.region, along.compute(args.region, lines, geoms, foot, log))
+    log(f"along.json: {(out / 'along.json').stat().st_size / 1e6:.2f} MB")
 
     # WAY TO LINE, for resolving a click on track. Fetched by the viewer only when someone
     # actually clicks a line. ways.json is

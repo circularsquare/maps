@@ -42,7 +42,7 @@ afroasiatic.arabic | Arabic
 
 # ---- Uganda ----
 nigercongo.bantu.soga | Soga (Lusoga) | 0.62 0.19 50
-nigercongo.bantu.nyankole | Nyankole
+nigercongo.bantu.nyankole | Nyankole | 0.7 0.14 30
 nigercongo.bantu.chiga | Chiga (Rukiga) | 0.86 0.09 85
 nigercongo.bantu.masaaba | Masaaba (Lugisu) | 0.60 0.20 30
 nigercongo.bantu.tooro | Tooro (Rutooro) | 0.62 0.19 10
@@ -77,3 +77,12 @@ nilosaharan.kuliak | Kuliak | 0.66 0.10 215
 nilosaharan.kuliak.ik | Ik
 nilosaharan.nilotic.chope | Chope (Dhopaluo) | 0.60 0.06 250
 afroasiatic.arabic.nubi | Nubi (Kinubi) | 0.50 0.10 150
+
+# Colour pass 2026-10-09 (taxonomy/COLOURS.md): pinned at the colour they were generated at, so
+# the DR Congo regrouping of colours does not move them
+nigercongo.bantu.ganda | Ganda | 0.7 0.14 90
+
+# Colour pass 2026-10-09 (taxonomy/COLOURS.md): pinned at the colour they were generated at, so
+# the DR Congo regrouping of colours does not move them
+nigercongo.bantu.nyoro | Nyoro | 0.7 0.14 60
+nigercongo.bantu.runyakitara | Runyakitara | 0.76 0.14 70

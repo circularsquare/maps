@@ -4,6 +4,11 @@ Keyed by the English half of BHAS's bilingual header in Knjiga 2 table 6.1, exac
 data/normalized/ba.csv carries them. BHAS prints 16 named answers, "Other" and "Unknown" at every
 level; the national tables of the same book (6, and 4 by ethnicity) split nothing further.
 
+FOLDED 2026-10-08 (Anita): Croato-Serbian, the three compound answers and Bosnian-Herzegovinian
+now all go on `serbocroatian`, reversing the per-label leaves described below. Each names the
+common language rather than one standard, they were 0.6-2k people apiece, and drawn apart they
+cluttered the legend; the BCMS group (regroup.txt) holds the standards and this together.
+
 CALLS (sources/ba.md says more):
   Bosnian, Serbian, Croatian: three leaves, as printed (rs2022, hr2021). Glottolog files all
     three standards as dialects of Serbian-Croatian-Bosnian (sout1528). The labels follow
@@ -38,12 +43,12 @@ NAMES = {
     "Serbian": f"{SL}.serbian",
     "Croatian": f"{SL}.croatian",
     "Serbo-Croatian": f"{SL}.serbocroatian",
-    "Croato-Serbian": f"{SL}.croatoserbian",
-    "Bosnian-Croatian-Serbian": f"{SL}.bosniancroatianserbian",
-    "Bosnian-Serbian-Croatian": f"{SL}.bosnianserbiancroatian",
-    "Bosnian-Croatian": f"{SL}.bosniancroatian",
+    "Croato-Serbian": f"{SL}.serbocroatian",
+    "Bosnian-Croatian-Serbian": f"{SL}.serbocroatian",
+    "Bosnian-Serbian-Croatian": f"{SL}.serbocroatian",
+    "Bosnian-Croatian": f"{SL}.serbocroatian",
     "Bosniak": f"{SL}.bosniak",
-    "Bosnian-Herzegovinian": f"{SL}.bosnianherzegovinian",
+    "Bosnian-Herzegovinian": f"{SL}.serbocroatian",
     "Romani": f"{IE}.indoaryan.romani.romani",
     "Albanian": f"{IE}.albanian.albanian",
     "Turkish": "turkic.turkish",

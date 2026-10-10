@@ -1,6 +1,9 @@
 """Afghanistan: the village-majority language of each province, from the Ministry of Rural
 Rehabilitation and Development's provincial profiles (c. 2006-07), on NSIA's 1404 (2025-26)
-settled population -> data/normalized/af.csv.
+settled population -> data/normalized/af_mrrd.csv.
+
+SUPERSEDED 2026-10-09 by sources/af_mics.py (MICS6 2022-23 microdata), which writes af.csv. This
+script is kept as the comparison (sources/af.md §0); taxonomy/af2007.py still maps its labels.
 
     python sources/af_mrrd.py [--fetch]
 
@@ -70,7 +73,9 @@ if hasattr(sys.stdout, "reconfigure"):
 
 HERE = Path(__file__).resolve().parent.parent
 RAW = HERE / "data" / "raw" / "af"
-OUT = HERE / "data" / "normalized" / "af.csv"
+# Superseded 2026-10-09 by sources/af_mics.py (MICS6 2022-23), which writes af.csv; this proxy is
+# kept as the comparison and writes af_mrrd.csv (sources/af.md §0)
+OUT = HERE / "data" / "normalized" / "af_mrrd.csv"
 LOOKUP = HERE.parent / "religiondots" / "data" / "geo" / "af" / "af_lookup.csv"
 URL = "https://www.globalsecurity.org/military/library/report/call/call_11-16_appa.htm"
 PAGE = RAW / "call_11-16_appa.htm"

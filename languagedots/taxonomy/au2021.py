@@ -487,7 +487,7 @@ NAMES = {
     "Maori (New Zealand)": f"{OC}.maori",
     "Mauritian Creole": f"{CR}.french_based.morisyen",
     "Moro (Nuba Moro)": f"{NC}.moro",
-    "Motu (HiriMotu)": f"{OC}.motu",
+    "Motu (HiriMotu)": f"{OC}.peripheral_papuan_tip.motu",   # pg's node, merged 2026-10-08
     "Nauruan": f"{OC}.nauruan",
     "Ndebele": f"{NC}.bantu.nguni.ndebele_zw",
     "Niue": f"{OC}.niuean",
@@ -521,7 +521,7 @@ NAMES = {
     "Tswana": f"{NC}.bantu.sotho_tswana.setswana",
     "Tuvaluan": f"{OC}.tuvaluan",
     "Xhosa": f"{NC}.bantu.nguni.xhosa",
-    "Yapese": f"{AN}.yapese",
+    "Yapese": f"{OC}.yapese",   # merged with fm/pl's node 2026-10-08
     "Yoruba": f"{NC}.voltaniger.yoruba",
     "Zulu": f"{NC}.bantu.nguni.zulu",
     # ---- supplementary codes ----

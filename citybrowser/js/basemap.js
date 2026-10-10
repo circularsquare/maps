@@ -67,6 +67,14 @@ export const vpW = () => box.clientWidth || innerWidth;
 export const vpH = () => box.clientHeight || innerHeight;
 export const worldFitZoom = () => Math.log2(vpW() / 512);
 
+// Arabic, Hebrew and other right-to-left place names need MapLibre's RTL text
+// plugin, or they are drawn letter by letter, unjoined and in reverse (a
+// languagedots viewer's report, 2026-10-08). Lazy: fetched only once such a
+// label is on screen.
+if (maplibregl.getRTLTextPluginStatus() === 'unavailable')
+  maplibregl.setRTLTextPlugin('https://unpkg.com/@mapbox/mapbox-gl-rtl-text@0.2.3/mapbox-gl-rtl-text.min.js', true)
+    .catch(() => {});
+
 export const map = new maplibregl.Map({
   container: 'map',
   style: styleOf(current),
@@ -117,9 +125,29 @@ function tune() {
     for (const l of map.getStyle().layers) {
       if (l.type === 'symbol') map.removeLayer(l.id);
     }
+  } else {
+    for (const l of map.getStyle().layers) {
+      if (l.type === 'symbol') guardEnglishName(l.id);
+    }
   }
 }
 map.on('style.load', tune);
+
+// The OpenFreeMap tiles give Türkiye an English name of just "T" (2026-10-08,
+// `name_en`), and these styles show `name_en` first, so the country read "T".
+// Every label that reads `name_en` falls back to the local Latin name when the
+// English one is under 3 letters.
+function guardEnglishName(id) {
+  const f = map.getLayoutProperty(id, 'text-field');
+  if (!f || !JSON.stringify(f).includes('"name_en"')) return;
+  const fix = e => Array.isArray(e)
+    ? (e.length === 2 && e[0] === 'get' && e[1] === 'name_en'
+        ? ['case', ['>=', ['length', ['to-string', ['coalesce', ['get', 'name_en'], '']]], 3],
+           ['get', 'name_en'], ['coalesce', ['get', 'name:latin'], ['get', 'name']]]
+        : e.map(fix))
+    : e;
+  map.setLayoutProperty(id, 'text-field', fix(f));
+}
 
 // Everything here is an ES module, so nothing is reachable from the console or
 // from a headless probe without this. Both are how this page gets checked.

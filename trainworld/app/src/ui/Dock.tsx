@@ -89,7 +89,7 @@ export function Dock() {
           <Icon.gear />
         </button>
       </nav>
-      <section class="pane">
+      <section class={"pane" + (t === "build" ? " build-pane" : "")}>
         <Pane />
       </section>
       <div class="pane-resize" title="Drag to resize" onPointerDown={dragDivider} />

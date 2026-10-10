@@ -539,7 +539,7 @@ other.two_mother_tongues | Two mother tongues (the census does not say which)
 quechuan | Quechuan
 quechuan.quechua | Quechua
 sinotibetan.burmish.rakhine | Rakhine
-sinotibetan.karen | Karen
+sinotibetan.karen | Karen languages
 sinotibetan.sinitic.cantonese | Cantonese
 sinotibetan.sinitic.gan | Gan
 sinotibetan.sinitic.hakka | Hakka

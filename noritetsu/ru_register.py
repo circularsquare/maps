@@ -139,6 +139,7 @@ ANNEX_OBLASTS = {"UA14", "UA44", "UA23", "UA65"}
 ANNEX_BBOX = (32.0, 45.9, 40.3, 50.2)          # what extract.py --bbox takes from Ukraine's .pbf
 
 SERVED_M = 400            # an OSM train route stopping this close makes a flagged point a stop
+OSM_NAMED_STOP_M = 600    # ... and one stopping this close under the point's own name, any point
 UNSERVED_KM = 10          # a stop-to-stop stretch this long past a flagged, unserved point ...
 BARE_KM = 25              # ... or this long with no passenger point at all answers to OSM routes
 NAME_REACH_KM = 10        # a name match may lie this much further than the tariff km say
@@ -188,6 +189,9 @@ BORDER = [
     # Abkhazia (caucasus_register.BORDER_XY, 2026-10-04): 51-032 ends at "Веселое (эксп.)", 2
     # km past Веселое, the Psou bridge. Moscow, St Petersburg and Dioskuria trains to Sukhum.
     ("XARUPSOU", "532701", "532608", "at"),         # Веселое (51-032): Adler - Sukhum
+    # Tumangang (North Korea, kp built 2026-10-08): 96-045 ends at "Хасан (эксп.)" 987106,
+    # 2 tariff km past Хасан, the Tumen bridge. 645/646 Khasan - Tumangang, Moscow cars.
+    ("XKPRUTUMANGANG", "987002", "987106", "at"),   # Хасан (96-045)
     # 61-017 Krasny Kut - Verkhny Baskunchak crosses Kazakhstan twice (Astrakhan trains)
     ("XKZRU01", "618226", "618230", "split"),       # Шунгули | Молодость
     ("XKZRU02", "618616", "618601", "split"),       # Полынный | Сайхин
@@ -1077,6 +1081,19 @@ def osm_side():
             if ty == "n" and role.startswith(("stop", "platform")) and ref in stops:
                 served.append((stops[ref][1], stops[ref][2]))
     served = np.array(sorted(set(served))) if served else np.zeros((0, 2))
+    # The named stops trains make, for points Book 2 gives no passenger operation (see
+    # convert(), "OSM_NAMED_STOP"): name key -> places.
+    served_named = defaultdict(list)
+    for tags, members in rels.values():
+        if tags.get("type") != "route" or tags.get("route") != "train":
+            continue
+        for ty, ref, role in members:
+            if ty == "n" and role.startswith(("stop", "platform")) and ref in stops:
+                t, lon, lat = stops[ref]
+                for nm in (t.get("name"), t.get("name:ru")):
+                    if nm:
+                        served_named[nkey(nm)].append((lon, lat))
+    osm_side.served_named = served_named
     return by_name, served
 
 
@@ -1347,6 +1364,34 @@ ANNEX_FUZZY = 0.7         # an unmatched call is the point on its path this alik
 
 
 def convert():
+    """Book 1 + Book 2 + OSM -> rinf.py's input files. Three passes of _convert (5 s each):
+    a point Book 2 gives no passenger operation that OSM's trains stop at by name becomes a
+    stop (`named_stop`), but not where that leaves an existing stop with no section of its
+    own. A new stop at a run's end can make the run a stretch left to OSM's routes, cloning
+    the old stop on both sides; rinf.py makes station records only for stops a traced section
+    reaches, so the old stop lost its record and its id (Салми, Лебедянь, Картымская in the
+    first trial). Named stops on the sections of such a stop are vetoed. With rinf.py's link
+    record fix (handoff_notes/missing_stops.md) this guard changes nothing it needs to."""
+    base, _, base_stops = _convert(named_ok=False, write=False)
+    veto = set()
+    for _round in range(3):
+        lonely, sec_named, _ = _convert(veto=veto, write=False)
+        # Only stops that had a section of their own before: a named stop that is itself
+        # left with none (Пяозеро, at the end of a 101 km stretch) loses nothing it had.
+        new = (lonely - base) & base_stops
+        if not new:
+            break
+        add = {c for sid in {sid for c in new for sid in sec_named.get(("of", c), ())}
+               for c in sec_named.get(sid, ())}
+        if not add - veto:
+            break
+        veto |= add
+    log(f"named stops vetoed (would leave an existing stop with no section of its own): "
+        f"{len(veto)}; existing stops still left with none: {len(new)}")
+    _convert(veto=veto)
+
+
+def _convert(named_ok=True, veto=frozenset(), write=True):
     from scipy.spatial import cKDTree
     import shapely
     roads = {**ROADS, **FOREIGN}
@@ -1532,15 +1577,70 @@ def convert():
     for s in secs:
         for p in s["pts"]:
             sheet_of.setdefault(p["esr"], s["sheet"])
+    name_of_code = {}
+    for s in secs:
+        for p in s["pts"]:
+            name_of_code.setdefault(p["esr"], p["name"])
+    served_named = getattr(osm_side, "served_named", {})
+    # Where a point sits between its placed neighbours, as a share of the crow-fly distance
+    # against the share of tariff km: Дуки (рзд) on 96-010 is 12 tariff km from both Болен and
+    # Постышево, but its place is 4 km from Болен (the trace was rejected and 19 km of the BAM
+    # dropped when it became a stop).
+    fits = {}
+    for s in secs:
+        pts = s["pts"]
+        for i, p in enumerate(pts):
+            c = p["esr"]
+            if c not in pos:
+                continue
+            a = next((q for q in reversed(pts[:i]) if q["esr"] in pos), None)
+            b = next((q for q in pts[i + 1:] if q["esr"] in pos), None)
+            if a is None or b is None:
+                continue
+            ka, kb = abs((p["km0"] or 0) - (a["km0"] or 0)), abs((b["km0"] or 0) - (p["km0"] or 0))
+            da, db = dist_m(*pos[a["esr"]], *pos[c]), dist_m(*pos[c], *pos[b["esr"]])
+            if ka + kb > 0 and da + db > 0:
+                ok = abs(da / (da + db) - ka / (ka + kb)) <= 0.25
+                fits[c] = fits.get(c, True) and ok
+
+    def named_stop(code):
+        """An OSM train route stops here under this point's own name: at a stop member of
+        that name within OSM_NAMED_STOP_M, or at any stop member within it beside an OSM
+        station of that name (stop positions are often unnamed)."""
+        q = pos.get(code)
+        nm = name_of_code.get(code, "")
+        # Not an extra code of a station ("Багратионовск (эксп.)", "Армянск (стык)": nkey
+        # drops the bracket, so they would match their station) nor a border post.
+        if (q is None or EXTRA_CODE.search(nm) or re.search(r"\(бп\)|^Граница", nm)
+                or not fits.get(code, True)):
+            return False
+        k = nkey(clean(nm))
+        if not k:
+            return False
+        if any(dist_m(*q, *x) <= OSM_NAMED_STOP_M for x in served_named.get(k, ())):
+            return True
+        return is_served(code) and any(dist_m(*q, lon, lat) <= OSM_NAMED_STOP_M
+                                       for lon, lat, _nid in by_name.get(k, ()))
+
     kind = {}
+    n_named = 0
+    named_codes = set()
     for c in codes:
         flag = passenger_op(ops.get(c))
         annexed = sheet_of[c] in ANNEXED
         if flag and (is_served(c) or (annexed and in_annex(c))):
             kind[c] = "stop"
+        elif named_ok and c not in veto and not flag and not annexed and named_stop(c):
+            # Book 2's operations lag behind the trains: Воткинск, Переславль, Волгореченск,
+            # Неман-Новый and Готня have no П/Б/О, yet OSM's trains stop there by name (and
+            # the line's last stop was otherwise a junction, so no ride could end there).
+            kind[c] = "stop"
+            n_named += 1
+            named_codes.add(c)
         else:
             kind[c] = "flag, not served" if flag else "no passenger op"
-    log(f"point kinds: {dict(Counter(kind.values()))}")
+    log(f"point kinds: {dict(Counter(kind.values()))}; {n_named} stops with no passenger "
+        f"operation in Book 2 that OSM's trains stop at by name")
 
     # --- 4. sections: drop node lists, cut at the outline, give each shared pair one owner
     owner = {}
@@ -1856,6 +1956,20 @@ def convert():
             r["lon"], r["lat"] = q
         pts_out.append(r)
     pts_out += [border_pts[k] for k in sorted(border_pts)]
+    if not write:
+        # Stops whose every row is a clone link (no section of their own reaches them), and
+        # per section the named stops on it, for convert()'s veto.
+        plain = {r[k][4:] for r in rows if r["label"] not in ("clone", "stub")
+                 for k in ("a", "b")}
+        linked = {r["a"][4:] for r in rows if r["label"] == "clone"}
+        lonely = {c for c in linked if kind.get(c) == "stop" and c not in plain}
+        sec_named = defaultdict(set)
+        for s in secs:
+            for p in s["pts"]:
+                sec_named[("of", p["esr"])].add(s["id"])
+                if p["esr"] in named_codes:
+                    sec_named[s["id"]].add(p["esr"])
+        return lonely, sec_named, {c for c, k in kind.items() if k == "stop"}
     OUT.mkdir(parents=True, exist_ok=True)
     stamp = {"endpoint": f"Тарифное руководство № 4, {b1name}, {b2name}",
              "fetched": date.today().isoformat()}

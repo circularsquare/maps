@@ -1,7 +1,11 @@
-# Guyana, Census 2012 ethnic background (taxonomy/gy2012.py). No new nodes: bare repeats.
+# Guyana, 2012 census ethnic groups + MICS6 2019-20 language of the household head
+# (taxonomy/gy2019.py; gy2012.py is the superseded census-only reading). No new nodes: bare repeats.
 creole | Creoles
 creole.english_based | English-based creoles
 creole.english_based.guyanese | Guyanese Creole
 indoeuropean.germanic | Germanic
 indoeuropean.germanic.english | English
+indoeuropean.romance | Romance
+indoeuropean.romance.spanish | Spanish
+indoeuropean.romance.portuguese | Portuguese
 americas_other | Other indigenous languages of the Americas

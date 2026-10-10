@@ -266,6 +266,20 @@ overrides), and the functions `read_narn` (country
 (data/proc/ca), `line_id` (hashes "ca|owner|key") and `is_passenger_route` (+
 `NOT_A_SERVICE`). A rename of any of these in us_register breaks Canada loudly.
 
+## Station-twinned stubs and kinds (2026-10-09)
+
+From us_register's changes for South Station (us_sources.md "South Station, Tucson, and
+kinds"): a dead-end stub of 50 m or less past a stop is left out, so the stop ends the line.
+Five in Canada: Vancouver Waterfront, Saint-Jérôme (two tracks), LaSalle, Arnaud Junction
+(Adirondack 2.59 -> 2.56 km, Cascade 65.85 -> 65.84, Parc 32.68 -> 32.61, Wacouna 1.84 ->
+1.79). `REGISTER_KIND_SURE` in rules/ca.py (waiting on build_model) keeps CPKC's Canpa
+Subdivision "rail"; the track test called it "subway".
+
+Open, found on the way: the Westmount Subdivision's last 3.6 km past Vendôme ends "near
+Lucien-L'Allier", and the model has Lucien-L'Allier only as the Orange Line's metro station.
+OSM's exo1 and exo4 routes both end at Vendôme. Either the trains still run to
+Lucien-L'Allier and its train station is missing, or that stretch has no passenger trains.
+
 ## Commands
 
     python ca_register.py --fetch          # NARN Canada + layer metadata, under a minute

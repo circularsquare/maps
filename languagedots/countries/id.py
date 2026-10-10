@@ -127,6 +127,34 @@ def _papua_seeds():
     return by, reg
 
 
+# Indonesian by regency (2026-10-09; sources/id_lf2020.py, sources/id.md §11). The 2010 counts
+# are by province only, and Indonesian had an even seed, so Jakarta's suburbs in West Java and
+# Banten drew their province's rural mix and the map had an edge at the DKI border. The 2020
+# long form's regency share of people who use no regional language in the family (`tidak`:
+# Indonesian or foreign) now seeds Indonesian and foreign languages by t, and every regional
+# language by 1 - t, so a province's split moves by one log-odds shift to meet the 2010 counts.
+# Not in Papua and Papua Barat, which have their own regency seeds.
+LF2020_T = (0.005, 0.995)   # t clipped so no regency closes to either side
+TIDAK_NODES = {"austronesian.malayic.indonesian", "other"}
+EVEN_NODES = {"signlanguage"}
+# regencies created after 2010, folded into the 2010 regency they came out of (the hex layer's
+# units are 2010's); Kalimantan Utara's five are the layer's residual unit "65"
+LF2020_PARENT = {"1612": "1603", "1613": "1605", "1813": "1801", "3218": "3207", "5321": "5306",
+                 "6411": "6402", "7211": "7201", "7212": "7203", "7411": "7404", "7412": "7403",
+                 "7413": "7402", "7414": "7401", "7415": "7401", "7606": "7604", "8208": "8203",
+                 "9111": "9105", "9112": "9105", "6501": "65", "6502": "65", "6503": "65",
+                 "6504": "65", "6571": "65"}
+
+
+def _lf2020_tidak():
+    """2010 regency code (and "65") -> 2020 share of people 5+ using no regional language at
+    home."""
+    t = pd.read_csv(NORM / "id_lf2020_regency.csv", dtype={"regency": str})
+    t["reg"] = t["regency"].map(lambda r: LF2020_PARENT.get(r, r))
+    g = t.groupby("reg")[["tidak", "total"]].sum()
+    return (g["tidak"] / g["total"]).to_dict()
+
+
 class _IdWeighter:
     """Where inside its province each language's dots go. A placement weight only: every count
     is the province's.
@@ -169,6 +197,10 @@ class _IdWeighter:
 
         counts = _counts().groupby(["unit", "node"])["count"].sum()
         pap_by, pap_reg = _papua_seeds()
+        tidak = _lf2020_tidak()
+        missing = sorted({r for r, p in zip(ureg, uprov) if p not in PAPUA} - set(tidak))
+        if missing:
+            raise SystemExit(f"id: regencies with no 2020 home-language share: {missing}")
         self.n_papua = 0
         self.share = {}          # node -> per-unit people of that language per Kontur person
         self.n_point = self.n_even = 0
@@ -196,6 +228,13 @@ class _IdWeighter:
                     self.n_point += 1
                 else:
                     self.n_even += 1
+            if p not in PAPUA:
+                t = np.clip([tidak[r] for r in ureg[us]], *LF2020_T)
+                for j, n in enumerate(nodes):
+                    if n in TIDAK_NODES:
+                        seed[:, j] *= t
+                    elif n not in EVEN_NODES:
+                        seed[:, j] *= 1 - t
             X = _ipf(seed, rows, cols)
             if np.abs(X.sum(0) - cols).max() > max(1.0, 1e-6 * cols.sum()):
                 raise SystemExit(f"id: the placement rake does not meet province {p}'s counts")
@@ -231,7 +270,8 @@ class _IdWeighter:
     def summary(self):
         return (f"placed inside provinces by kecamatan rakes: {self.n_point} (province, "
                 f"language) pairs seeded by Glottolog points, {self.n_even} even, "
-                f"{self.n_papua} in Papua and Papua Barat by regency")
+                f"{self.n_papua} in Papua and Papua Barat by regency; elsewhere Indonesian and "
+                f"regional languages by the 2020 regency share using no regional language")
 
 
 ENTRY = dict(
@@ -240,7 +280,8 @@ ENTRY = dict(
             "Penduduk Indonesia, Tables L4.1, L4.2, L4.5 and L2.6 (Badan Pusat Statistik, "
             "2011); Ananta et al., Demography of Indonesia's Ethnicity (2015), and IUSSP 2013 "
             "paper; Ananta, Utami and Handayani, Statistics on Ethnic Diversity in the Land of "
-            "Papua, Indonesia (2016); Joshua Project; Glottolog"),
+            "Papua, Indonesia (2016); Joshua Project; Glottolog; Sensus Penduduk 2020 Long Form, "
+            "table 201, regional language used in the family, by regency (placement only)"),
     how=("census, 2010, language used daily at home, eight languages by province; the other "
          "regional languages, 20%, estimated from the census's ethnic groups and national "
          "language table; Papuan languages in Papua and Papua Barat estimated by regency"),
@@ -259,7 +300,8 @@ ENTRY = dict(
              rest=True),
     ],
     grain=("33 provinces, 6.5 million people on average; inside a province each language is "
-           "placed by where Glottolog puts it; in Papua and Papua Barat, by regency"),
+           "placed by where Glottolog puts it, and Indonesian by regency from the 2020 census; "
+           "in Papua and Papua Barat, by regency"),
     gap=("22.7 million children under five, who were not asked; 905,695 people counted on the "
          "census's shorter forms, which did not ask it; and 561,711 who gave no answer"),
     view=[95.0, -11.0, 141.0, 6.1],
@@ -279,7 +321,9 @@ ENTRY = dict(
         "province. About 2 million people, of peoples nobody has counted one by one, are drawn "
         "as other regional languages of Indonesia. Inside a province, each regional language "
         "is drawn towards where Glottolog places it, and the large languages fill the rest by "
-        "population, so a district's mix is an estimate. In Papua and Papua Barat (the 2010 "
+        "population, so a district's mix is an estimate. Indonesian is drawn more thickly in "
+        "the regencies where the 2020 census found more families using no regional language at "
+        "home, such as Jakarta's suburbs, and the province's totals stay those of 2010. In Papua and Papua Barat (the 2010 "
         "provinces), the people who spoke a Papuan language at home are shared among about 230 "
         "languages by regency, using Ananta and colleagues' 2016 count of the largest groups "
         "and Joshua Project's speaker estimates for the rest. A household that used Indonesian "

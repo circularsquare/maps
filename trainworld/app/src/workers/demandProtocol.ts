@@ -29,6 +29,9 @@ export interface DemandNetwork {
   tph: Float32Array;
   /** cars per train, per line */
   cars: Float32Array;
+  fare: { base: number; perKm: number };
+  /** km per route node: each line's forward stops then reverse stops, 0 at each end */
+  hopKm: Float32Array;
 }
 
 export type ToDemand =

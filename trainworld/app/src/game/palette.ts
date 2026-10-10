@@ -22,7 +22,7 @@ export const NET_INK = "#2b2b2b";
 
 /**
  * How commuters travel (T-097, Anita: Subway Builder's scheme, red car, blue train, green walk):
- * the commuter bubbles, their legend and the mode-split bar in the top bar use these, whatever the
+ * the commuter bubbles and the mode-split bar in the top bar use these, whatever the
  * theme. Hand-tunable. Near-pure primaries, so a bubble's mix (`modeMix`) reads as RGB: all car
  * red, all train blue, half and half magenta.
  */

@@ -207,6 +207,41 @@ in France (via Rotterdam only) and the London - Amsterdam trains do not call at 
 draws London - border and Belgium - Amsterdam with a gap through France (a ride over it still
 credits the register lines it runs on). Calais-Fréthun has no Eurostar stop in OSM.
 
+## One-way loops (2026-10-08)
+
+Paris Métro 10 runs one way round a loop at Auteuil: towards Boulogne by Javel, Église
+d'Auteuil, Michel-Ange-Auteuil, Porte d'Auteuil; towards Austerlitz by Michel-Ange-Molitor,
+Chardon-Lagache, Mirabeau, Javel. It shipped as one chain of 22 sections with both arms'
+stations threaded together (Mirabeau - Église d'Auteuil 0.135 km, Michel-Ange-Molitor - Porte
+d'Auteuil 0.057 km), so the strip diagram had no loop to draw.
+
+**Why.** OSM is right: each direction's relation lists its own stops, each a separate station.
+build_model.place_stations walks each direction's path against every station of the line and
+snaps any within 400 m onto it (meant for an express on parallel track passing a local
+station). The arms are 150-330 m apart, so each direction took the other arm's three stations.
+
+**Fix** (a shared diff, `handoff_notes/metro10_loop.md` and `.diff`, waiting on the managing
+session): a station whose stop node lies on another route's track snaps onto a path only where
+that track runs alongside it (within 100 m, and no more than 15 m further off anywhere within
+150 m along it). `rules/fr.py` sets `SNAP_ALONGSIDE = True`; nothing reads it until the diff
+lands, then rebuild fr.
+
+**Trial** (patched build against the shipped one): 22 OSM lines change, no register line, no
+station id. Line 10 becomes the loop, 14.73 km (both arms counted, as both are track a rider
+covers going round): Javel - Église d'Auteuil 0.78 - Michel-Ange-Auteuil 0.37 - Porte d'Auteuil
+0.38 - Boulogne-Jean Jaurès 1.67, and Boulogne-Jean Jaurès - Michel-Ange-Molitor 1.64 -
+Chardon-Lagache 0.45 - Mirabeau 0.37 - Javel 0.53. The same false chords go from RER A (the
+Cergy/Poissy and Marne-la-Vallée branches had taken Nanterre-Université, Achères Grand
+Cormier and Fontenay-sous-Bois), RER C, RER D, Transilien J, TER 04 at Cannes and 13 tram or
+light-metro lines (Brest, Montpellier, Saint-Étienne, Nantes, Lyon, Clermont, Caen, Rouen).
+Three TGV named trains via Nîmes grow 149 km each: their Nîmes Centre variants no longer take
+Nîmes Pont du Gard as a stop and overlap the bypass variants as far as Valence; named trains
+count nowhere, so this is left.
+
+**Checked:** Métro 7bis's loop (Botzaris - Place des Fêtes - Pré-Saint-Gervais - Danube) was
+already a loop and does not change. Valenciennes T1/T2's loop at La Briquette refuses snaps
+with no change to its sections.
+
 ## Running it
 
 Ile-de-France (the development region, `data/proc/fr` as it stands now):

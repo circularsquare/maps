@@ -43,3 +43,12 @@ Egyptian Arabic 8.9%, Malayalam 8.7%, Punjabi 5.5%, Tamil 3.3%, Levantine Arabic
 ## Placement inside units (2026-10-06)
 
 Citizens and foreign residents are now placed apart inside each unit (session 5d7dac7e-gulf): foreign dots lean to dense hexes and fill OSM industrial land and labour camps, citizens take the rest; one rule for the six Gulf states, fitted on Kuwait's areas and Oman's wilayat. Method, fit, data searched: `sources/gulf_place.md`. Abu Dhabi emirate is split into its three regions (2023 census totals, SCAD's 2016 Emiratis by region): non-Emirati 87.0% Abu Dhabi Region, 75.2% Al Ain, 87.8% Al Dhafra (was 83.9% everywhere). Placement layer is now `data/geo/ae/ae_hexes.gpkg`. Non-Emirati share before -> after: Dubai city 91.8 -> 93.0%, Sharjah city 90.0 -> 92.9%, Abu Dhabi island + Mussafah 83.9 -> 90.3%, Al Ain city 83.9 -> 79.3%. The cities stay mixed: they are 89-93% foreign and nationality is one national mix.
+
+## Families and single men (2026-10-07, session fix-gulf)
+
+Foreign residents are now split into family, single-men and single-women pools (UN DESA 2024 by
+sex), single men leaning to industrial land and labour camps by a rule fitted on Qatar's census
+zones by sex, single women (domestic workers) with households. Counts unchanged. Mussafah/ICAD:
+South Asian languages 60.4 -> 70.3%, non-Gulf Arabic 18.3 -> 12.8%; Al Quoz industrial similar;
+residential districts move under a point. Dubai Statistics Center's community-by-sex table would
+let Dubai be placed as Qatar's zones are: `sources/gulf_place.md` §6.

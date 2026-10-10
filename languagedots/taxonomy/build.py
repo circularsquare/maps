@@ -114,7 +114,7 @@ HAND = {
     "indoeuropean.indoaryan.dardic.shina": (0.66, 0.10, 190),
     "indoeuropean.indoaryan.dardic.kohistani": (0.84, 0.08, 195),
     "indoeuropean.iranian.pashto": (0.82, 0.09, 105),
-    "indoeuropean.iranian.balochi": (0.66, 0.09, 75),
+    "indoeuropean.iranian.balochi": (0.64, 0.10, 48),   # 2026-10-07: hue off Persian's 75
     # a light but real blue, not near-white (Anita 2026-10-05: the US read drab)
     "indoeuropean.germanic.english": (0.90, 0.05, 245),
     # Dravidian

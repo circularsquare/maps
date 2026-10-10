@@ -1,0 +1,156 @@
+cc   reg km before -> after (diff)   osm lines km before -> after   ids gone / new
+al       369.9 ->      369.9 (    +0.0)        65.5 ->      65.5 (   +0.0)   0 / 0
+am       572.8 ->      554.5 (   -18.3)       655.4 ->     655.4 (   +0.0)   0 / 0
+ar      3217.6 ->     3217.6 (    +0.0)       268.0 ->     268.0 (   +0.0)   0 / 0
+at      4679.1 ->     4669.4 (    -9.7)     12251.0 ->   12249.9 (   -1.1)   2 / 0
+      gone rd906b64f42 [5.846, 'rinf', False, 'Lokalbahn Ober-Grafendorf–Gresten']
+      gone re1d751ddc8 [1.863, 'rinf', False, 'Leoben Hauptbahnhof - Leoben Göss (in Leb)']
+au     17070.2 ->    16978.8 (   -91.4)      5605.6 ->    5605.6 (   +0.0)   0 / 0
+az      1594.8 ->     1594.8 (    +0.0)      1273.7 ->    1273.7 (   +0.0)   0 / 0
+ba       648.7 ->      648.7 (    +0.0)       240.8 ->     240.8 (   +0.0)   0 / 0
+be      3203.5 ->     3161.6 (   -41.9)      8015.5 ->    8015.5 (   +0.0)   8 / 0
+      gone r01ece63093 [2.522, 'rinf', False, 'Virton - Racc.Burgo Ardennes']
+      gone r219b82c914 [4.128, 'rinf', False, 'L.126']
+      gone r22eb06c73f [4.612, 'rinf', False, 'L.106']
+      gone r4001269f75 [6.347, 'rinf', False, 'L.204']
+      gone rbee1892839 [1.061, 'rinf', False, 'L.202B/1']
+      gone rc5a24385ed [3.388, 'rinf', False, 'Verb.GTS - Y.Wippelgem']
+      gone rf294dbe518 [1.02, 'rinf', False, 'Inrit Verb.Prayon-Rupel - Verb.Prayon-Rupel']
+      gone rf6fef879ba [7.082, 'rinf', False, 'L.100']
+bg      3617.3 ->     3611.2 (    -6.1)       853.8 ->     853.8 (   +0.0)   0 / 0
+br      2136.5 ->     2136.5 (    +0.0)       990.1 ->     990.1 (   +0.0)   0 / 0
+by      4930.7 ->     4896.3 (   -34.4)      3527.7 ->    3527.7 (   +0.0)   1 / 0
+      gone r494ba140d9 [18.616, 'rinf', False, 'Віцебск — Прыдзвінская']
+ca     13477.2 ->    13477.2 (    +0.0)      3212.2 ->    3212.2 (   +0.0)   0 / 0
+ch      5606.9 ->     5583.1 (   -23.8)     15521.9 ->   15521.9 (   +0.0)   12 / 0
+      gone c302f130069 [0.943, 'schienennetz', False, 'Oberwinterthur - Oberw. Unterhaltanlage']
+      gone c36e1519100 [1.415, 'schienennetz', False, 'Wohlen - Villmergen Rangieranlage']
+      gone c65ff47b6c2 [0.732, 'schienennetz', False, 'Biel Depot Ost - Biel Aebistrasse']
+      gone c6d69c0294a [8.782, 'schienennetz', False, 'Sursee - Triengen']
+      gone c839095027a [1.92, 'schienennetz', False, 'Langenthal GB - Bützberg Ost (Agl)']
+      gone c846364414d [0.029, 'schienennetz', False, 'Bern, Eigerplatz - Dep. Eigerplatz']
+      gone cc33e8375f1 [0.312, 'schienennetz', False, 'Lausanne-Triage D - Denges B']
+      gone cc5d82f563f [0.055, 'schienennetz', False, 'Bern, Zytglogge']
+      gone cdb8044c1a5 [0.697, 'schienennetz', False, 'Lausanne-Triage F - Lonay A (bif)']
+      gone cdba3b8b279 [1.328, 'schienennetz', False, 'Zürich Hardbrücke - Zürich Herdern']
+      gone cf4562a9475 [0.275, 'schienennetz', False, 'Tramstrasse - Zürich Sternen Oerlikon']
+      gone cf7e2f6cb2e [0.834, 'schienennetz', False, 'Archy A - Lausanne-Triage Nord']
+cl       767.5 ->      767.5 (    +0.0)      1024.4 ->    1024.4 (   +0.0)   0 / 0
+cn    123009.0 ->   123009.0 (    +0.0)     15474.7 ->   15474.7 (   +0.0)   0 / 0
+cz      9163.8 ->     9160.9 (    -2.9)     12093.4 ->   12093.4 (   +0.0)   2 / 0
+      gone r91a55e342d [0.671, 'rinf', False, 'Chomutov prum.kolej - Chomutov St.2']
+      gone rbf265e998e [2.254, 'rinf', False, 'Nymburk st. 3 - Nymburk ser.n.']
+de     31436.8 ->    31343.1 (   -93.7)     97097.7 ->   97097.7 (   +0.0)   13 / 0
+      gone r083e075cd6 [2.138, 'rinf', False, '2419 Düsseldorf Hbf – Abstellbf (Wechselgleis)']
+      gone r1c86c52342 [0.825, 'rinf', False, '6398 Schkeuditz – LUB']
+      gone r222580041c [4.043, 'rinf', False, '2881 Siegen – Siegen Ost']
+      gone r2e33c42a6a [1.955, 'rinf', False, '1922 Groß Gleidingen – Beddingen']
+      gone r31608ecccd [1.876, 'rinf', False, '6415 Rodleben – Roßlau']
+      gone r37d550437a [4.114, 'rinf', False, '4050 Mannheim Rbf, W 105 – W 580']
+      gone r46422af1ba [2.118, 'rinf', False, '2414 Düsseldorf Hbf – Düsseldorf Abstellbf (Hochgl)']
+      gone r7da9f2e8ce [32.46, 'rinf', False, '1744 Nienburg – Diepholz']
+      gone r83be58d69d [2.179, 'rinf', False, '3720 Dillenburg – Ewersbach']
+      gone re339d32b35 [1.962, 'rinf', False, '2923 Hamm Rbf, W 431 – Hamm Pbf']
+      gone rf06fd614a0 [0.866, 'rinf', False, '1115 Lübeck-Dänischburg – Lübeck-Herrenwyk']
+      gone rf2b888d320 [1.052, 'rinf', False, '3215 Abzw Dillingen Süd – Abzw Ost']
+      gone rfb26c5515f [1.435, 'rinf', False, '5611 München Ost Rbf – Trudering']
+dk      2407.6 ->     2407.6 (    +0.0)      5524.5 ->    5524.5 (   +0.0)   0 / 0
+dz      4850.4 ->     4850.4 (    +0.0)       832.1 ->     832.1 (   +0.0)   0 / 0
+ee       721.2 ->      721.2 (    +0.0)      1918.0 ->    1918.0 (   +0.0)   0 / 0
+eg      2949.0 ->     2949.0 (    +0.0)       253.2 ->     253.2 (   +0.0)   0 / 0
+es     14660.5 ->    14623.8 (   -36.6)     18073.2 ->   18073.2 (   +0.0)   3 / 0
+      gone r27d4dbf907 [0.544, 'rinf', False, '832 Aguja km 545,4 – Bifurcación San Diego']
+      gone rad6d1e9f6c [26.184, 'rinf', False, '238 Castellbisbal-Agujas Llobregat – Barcelona-Morrot']
+      gone rff1b230001 [6.195, 'rinf', False, '234 Reus – Constantí']
+fi      4029.5 ->     4029.5 (    +0.0)      3692.5 ->    3692.5 (   +0.0)   0 / 0
+fr     24363.6 ->    24275.9 (   -87.7)     69095.1 ->   69095.1 (   +0.0)   5 / 0
+      gone f2ce9908126 [3.788, 'rfn', False, 'Ligne de Livron à La Voulte']
+      gone f4d909ee68b [5.664, 'rfn', False, 'Ligne de Réding à Diemeringen']
+      gone f9d72e7548a [8.663, 'rfn', False, 'Ligne de Saint-Roch à Frévent']
+      gone fdeae50af29 [20.008, 'rfn', False, 'Ligne de Pont-de-Braye à Blois']
+      gone fe2cc1a810b [11.462, 'rfn', False, 'Ligne de Poitiers à Arçay']
+gb     15251.7 ->    15242.2 (    -9.4)     43061.5 ->   43061.5 (   +0.0)   0 / 0
+ge       948.4 ->      948.4 (    +0.0)       906.8 ->     906.8 (   +0.0)   0 / 0
+gr      1725.6 ->     1725.6 (    +0.0)      2946.4 ->    2946.4 (   +0.0)   0 / 0
+hk       318.8 ->      318.8 (    +0.0)       165.0 ->     165.0 (   +0.0)   0 / 0
+hr      2339.2 ->     2333.6 (    -5.6)      4641.8 ->    4641.8 (   +0.0)   1 / 0
+      gone r42069a1997 [5.636, 'rinf', False, 'L213 Lupoglav – Raša']
+hu      6736.2 ->     6732.0 (    -4.3)      9160.3 ->    9160.3 (   +0.0)   2 / 0
+      gone r0a779af422 [1.624, 'rinf', False, '280-as vasútvonal']
+      gone r24593a2aa8 [2.628, 'rinf', False, '391-es vasútvonal']
+id      4273.5 ->     4259.1 (   -14.5)      2376.0 ->    2376.0 (   +0.0)   0 / 0
+ie      1625.2 ->     1625.2 (    +0.0)      2795.1 ->    2795.1 (   +0.0)   0 / 0
+in     67135.1 ->    67135.1 (    +0.0)      2895.2 ->    2895.2 (   +0.0)   0 / 0
+ir      9397.6 ->     9397.6 (    +0.0)      1747.1 ->    1747.1 (   +0.0)   0 / 0
+it     16856.1 ->    16828.6 (   -27.5)     16212.8 ->   16212.8 (   +0.0)   2 / 0
+      gone r156a50fa27 [4.822, 'rinf', False, 'Nodo di Torino']
+      gone rb63034813d [2.374, 'rinf', False, 'Nodo di Venezia']
+jp     27121.6 ->    27121.6 (    +0.0)     18042.8 ->   18042.8 (   +0.0)   0 / 0
+kg       285.0 ->      285.0 (    +0.0)        58.3 ->      58.3 (   +0.0)   0 / 0
+kr      4956.6 ->     4956.6 (    +0.0)      2011.1 ->    2011.1 (   +0.0)   0 / 0
+kz     15015.6 ->    14725.7 (  -289.9)       273.4 ->     273.4 (   +0.0)   2 / 0
+      gone r7eda11f668 [66.459, 'rinf', False, 'Тараз — Жаңатас']
+      gone rb8c457a465 [13.219, 'rinf', False, 'Ақтаутас — Бугунь']
+lt      1215.4 ->     1215.4 (    +0.0)      1924.8 ->    1924.8 (   +0.0)   0 / 0
+lu       237.1 ->      237.1 (    +0.0)       821.3 ->     821.3 (   +0.0)   0 / 0
+lv       922.8 ->      922.8 (    +0.0)      2938.3 ->    2938.3 (   +0.0)   0 / 0
+ma      1868.4 ->     1868.4 (    +0.0)      2436.9 ->    2436.9 (   +0.0)   0 / 0
+md      1025.3 ->     1025.3 (    +0.0)         0.0 ->       0.0 (   +0.0)   0 / 0
+me       236.7 ->      236.7 (    +0.0)        56.0 ->      56.0 (   +0.0)   0 / 0
+mk       599.6 ->      599.6 (    +0.0)       131.6 ->     131.6 (   +0.0)   0 / 0
+mx      3375.9 ->     3375.9 (    +0.0)        28.5 ->      28.5 (   +0.0)   0 / 0
+my      1961.7 ->     1961.7 (    +0.0)       665.7 ->     665.7 (   +0.0)   0 / 0
+nl      2780.2 ->     2744.3 (   -35.9)     11017.3 ->   11017.3 (   +0.0)   5 / 0
+      gone r1ca9918a2e [3.152, 'rinf', False, 'Amersfoort Centraal - Amersfoort racc. Pon']
+      gone r33612d69ba [7.398, 'rinf', False, 'Lage Zwaluwe - Hooge zwaluwe']
+      gone r4db114a46b [6.952, 'rinf', False, 'Lage Zwaluwe - Moerdijk']
+      gone r8b26e98d31 [1.871, 'rinf', False, 'Arnhem Goederenstation - Velperbroek aansl.']
+      gone recbddf6e78 [8.823, 'rinf', False, 'Stadskanaal Hoofdstation - Musselkanaal-Valthermond']
+no      3688.9 ->     3688.9 (    +0.0)      5649.9 ->    5649.9 (   +0.0)   0 / 0
+nz      1454.8 ->     1454.8 (    +0.0)       435.7 ->     435.7 (   +0.0)   0 / 0
+pl     16270.3 ->    16192.8 (   -77.5)     27270.6 ->   27270.6 (   +0.0)   5 / 0
+      gone r2f44285c71 [42.803, 'rinf', False, 'Linia kolejowa nr 39']
+      gone r62966293e6 [5.062, 'rinf', False, 'Linia kolejowa nr 200']
+      gone rc3d43b6c0c [6.824, 'rinf', False, 'Linia kolejowa nr 303']
+      gone rc4253ce6da [2.732, 'rinf', False, 'Linia kolejowa nr 973']
+      gone rfc6d09d8fa [2.338, 'rinf', False, 'Linia kolejowa nr 259']
+pt      2145.4 ->     2145.4 (    +0.0)      3296.9 ->    3296.9 (   +0.0)   0 / 0
+ro      9014.8 ->     9004.5 (   -10.3)       819.2 ->     819.2 (   +0.0)   0 / 0
+rs      2562.8 ->     2562.8 (    +0.0)      6169.6 ->    6169.6 (   +0.0)   0 / 0
+ru     77913.4 ->    77786.8 (  -126.6)    198382.7 ->  198382.7 (   +0.0)   11 / 0
+      gone r134f309714 [2.645, 'rinf', False, 'Череповец I — Череповец-Пристань']
+      gone r532d560667 [2.22, 'rinf', False, 'Кашира-Пассажирская — Кашира-Товарная']
+      gone r63c751bfe1 [1.566, 'rinf', False, 'Самара — Бухта (перев.)']
+      gone r646d646782 [16.859, 'rinf', False, 'Ай — Титан']
+      gone r6a26fbfb94 [5.306, 'rinf', False, 'Саратов II-Товарный — Саратов-Порт']
+      gone r787e90800c [3.253, 'rinf', False, 'Полянки — Новоярославская']
+      gone r8e9c952452 [7.851, 'rinf', False, 'Жигулевское Море — Химическая']
+      gone r988238c884 [12.458, 'rinf', False, 'Троицк — Троицк-ГРЭС']
+      gone ra93a3d758b [21.685, 'rinf', False, 'Крымская — Грушевая (эксп.)']
+      gone rb5198518e3 [3.31, 'rinf', False, 'Безымянка — Самарка']
+      gone rd86d2e0df5 [6.815, 'rinf', False, 'Челябинск-Главный — Челябинск-Грузовой']
+se      9130.7 ->     9127.7 (    -3.0)     10506.4 ->   10506.4 (   +0.0)   0 / 0
+sg       269.5 ->      269.5 (    +0.0)        11.3 ->      11.3 (   +0.0)   0 / 0
+si      1156.8 ->     1142.2 (   -14.6)       379.4 ->     379.4 (   +0.0)   0 / 0
+sk      3388.8 ->     3385.4 (    -3.4)      5459.1 ->    5459.1 (   +0.0)   0 / 0
+th      3919.1 ->     3919.1 (    +0.0)       265.0 ->     265.0 (   +0.0)   0 / 0
+tj       405.5 ->      405.5 (    +0.0)         0.0 ->       0.0 (   +0.0)   0 / 0
+tm      2937.1 ->     2922.5 (   -14.6)         0.0 ->       0.0 (   +0.0)   0 / 0
+tn      1364.3 ->     1364.3 (    +0.0)        87.2 ->      87.2 (   +0.0)   0 / 0
+tr      8093.0 ->     8093.0 (    +0.0)      7444.3 ->    7444.3 (   +0.0)   0 / 0
+tw      1792.4 ->     1792.4 (    +0.0)       120.3 ->     120.3 (   +0.0)   0 / 0
+ua     15734.0 ->    15662.6 (   -71.4)      4985.0 ->    4985.0 (   +0.0)   3 / 0
+      gone ra1a0872dc1 [17.738, 'rinf', False, 'Миронівка — Богуслав']
+      gone rb882fb5f44 [9.749, 'rinf', False, 'Богодухів — Гути']
+      gone rbf6da7e275 [6.684, 'rinf', False, 'Верхньодніпровськ — Дніпровська']
+us     39812.1 ->    39726.4 (   -85.7)     22645.8 ->   22645.8 (   +0.0)   3 / 0
+      gone u459ba5a778 [7.747, 'narn', False, 'Lordsburg Subdivision (second track)']
+      gone u7f3096bc18 [1.378, 'narn', False, 'Alhambra Subdivision']
+      gone ua870adc5cd [24.865, 'narn', False, 'Terminal Subdivision']
+uz      3573.5 ->     3493.0 (   -80.5)        78.6 ->      78.6 (   +0.0)   1 / 0
+      gone r7a9518b2b4 [56.228, 'rinf', False, 'Nókis — Shımbay']
+vn      2455.9 ->     2455.9 (    +0.0)        39.2 ->      39.2 (   +0.0)   0 / 0
+xa       156.3 ->      156.3 (    +0.0)         0.0 ->       0.0 (   +0.0)   0 / 0
+xk       223.9 ->      223.9 (    +0.0)        46.9 ->      46.9 (   +0.0)   0 / 0
+za      4700.4 ->     4700.4 (    +0.0)      1527.6 ->    1527.6 (   +0.0)   0 / 0
+all   679857.1 ->   678536.1 ( -1321.0)    700494.4 ->  700493.3 (   -1.1)

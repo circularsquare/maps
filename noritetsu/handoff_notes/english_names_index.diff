@@ -1,0 +1,87 @@
+--- a/dist/index.html
++++ b/dist/index.html
+@@ -1391,6 +1391,8 @@
+       get('aliases.json').catch(() => ({})),
+       REGIONS_READY,               // LINE_FOLD has to be in before any line id is read
+-    ]).then(([l, s, f, a]) => {
+-      mergeRegion(cc, l, s, f, a);
++      // English names filled after the build (tools/english_names.py); none is fine.
++      get('names_en.json').catch(() => ({})),
++    ]).then(([l, s, f, a, , ne]) => {
++      mergeRegion(cc, l, s, f, a, ne);
+       LOADED.add(cc);
+       // A line over a border may have just grown a piece, so every ride's run is redone.
+@@ -1429,6 +1431,7 @@
+ }
+ 
+-function mergeRegion(cc, l, s, f, a) {
++function mergeRegion(cc, l, s, f, a, ne) {
+   DATA_GEN++;
++  fillEnglish(l.lines, s.stations, ne);
+   ALIASES[cc] = (a && a.stations) || {};
+   LINE_ALIASES[cc] = {};
+@@ -1529,4 +1532,21 @@
+   }
+   buildOps();
++}
++
++/* ENGLISH NAMES FILLED AFTER THE BUILD (names_en.json, tools/english_names.py): OSM name:en
++   a station merge dropped, Wikidata English labels, "<station>線" from the station's English,
++   pinyin for Chinese and Revised Romanization for Korean. Only where the shipped file has no
++   English, keyed by the shipped ids (before LINE_FOLD), and before the search keys are made
++   so search finds them. `enFill` marks a filled name: English mode shows it like any other,
++   local mode still shows the local name first (stName, lineName), with this as the second. */
++function fillEnglish(lines, stations, ne) {
++  if (!ne) return;
++  for (const [id, e] of Object.entries(ne.st || {})) {
++    const st = stations[id];
++    if (st && !st.e) { st.e = e; st.enFill = 1; }
++  }
++  const ln = ne.ln || {};
++  for (const line of lines)
++    if (!line.name_en && ln[line.id]) { line.name_en = ln[line.id]; line.enFill = 1; }
+ }
+ 
+@@ -6172,9 +6192,14 @@
+   SEARCH_IX_STATE = 'loading';
+   noteLoading();
+-  fetch('data/search.json').then(r => {
+-    if (!r.ok) throw new Error(`search.json: ${r.status}`);
+-    return r.json();
+-  }).then(d => {
+-    SEARCH_IX = readSearchIndex(d);
++  Promise.all([
++    fetch('data/search.json').then(r => {
++      if (!r.ok) throw new Error(`search.json: ${r.status}`);
++      return r.json();
++    }),
++    // Every country's filled English in one file (80 KB), so search finds 北陸新幹線 as
++    // "Hokuriku Shinkansen" before Japan is loaded.
++    fetch('data/names_en.json').then(r => (r.ok ? r.json() : {})).catch(() => ({})),
++  ]).then(([d, ne]) => {
++    SEARCH_IX = readSearchIndex(d, ne);
+     SEARCH_IX_STATE = 'ready';
+   }).catch(err => {
+@@ -6191,5 +6216,5 @@
+    rows. A station's position is in thousandths of a degree, each the step from the one
+    before it in its country's list. */
+-function readSearchIndex(d) {
++function readSearchIndex(d, ne = {}) {
+   const ops = d.ops.map(([raw, en, shown]) => ({ shown, k: `${raw} ${en}` }));
+   const lines = [], stations = [];
+@@ -6197,5 +6222,6 @@
+     for (let i = 0; i < ids.length; i++) {
+       const o = ops[oi[i]];
+-      const l = { id: ids[i], region: cc, name: ns[i], name_en: es[i], ref: refs[i],
++      const l = { id: ids[i], region: cc, name: ns[i],
++                  name_en: es[i] || (ne[cc] && ne[cc].ln[ids[i]]) || '', ref: refs[i],
+                   colour: cols[i], kind: d.kinds[ki[i]], km: kms[i],
+                   service: !!(fl[i] & 1), dup: !!(fl[i] & 2), opShown: o.shown };
+@@ -6210,5 +6236,6 @@
+     for (let i = 0; i < ids.length; i++) {
+       x += dx[i]; y += dy[i];
+-      const s = { id: ids[i], region: cc, n: ns[i], e: es[i], x: x / 1000, y: y / 1000,
++      const s = { id: ids[i], region: cc, n: ns[i], e: es[i] || (ne[cc] && ne[cc].st[ids[i]]) || '',
++                  x: x / 1000, y: y / 1000,
+                   nl: nl[i] };
+       s._n = norm(s.e);

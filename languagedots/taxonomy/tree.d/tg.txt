@@ -1,4 +1,5 @@
-# Togo (taxonomy/tg2017.py). Afrobarometer R5-R7 first-language answers by region.
+# Togo (taxonomy/tg2017.py). MICS6 2017 language groups by region, split by Afrobarometer
+# R5-R7 first-language answers (sources/tg_mics.py). MICS's foreign languages on africa_other.
 # Parents and languages other fragments already define are repeated with the same label
 # (Gen, Aja, Fon, Moba, Ifè from bj.txt; Ghana-Togo Mountain and Anufo from gh.txt).
 #

@@ -411,14 +411,28 @@ CODES = {
 
 
 # nodes resolve() returns that are not CODES values, for taxonomy/build.py's check
-EXTRA_NODES = [f"{IA}.northwestern.pahari_pothwari", f"{IA}.pahari.western.pahari"]
+EXTRA_NODES = [f"{IA}.northwestern.pahari_pothwari", f"{IA}.pahari.western.pahari",
+               f"{IA}.eastern.sylheti"]
+
+# BENGALI IN THE SYLHETI-SPEAKING DISTRICTS (Anita, 2026-10-07: "barak: yeah lets do it"). C-16
+# files Sylheti under Bengali, as Bangladesh's census does; Bangladesh's Sylhet is drawn as Sylheti
+# by place (countries/bd.py, sources/bd.md §4a), and the same people live across the border. The
+# Barak Valley (Cachar 18316, Karimganj 18317, Hailakandi 18318; 2.93M Bengali) is Sylheti-
+# speaking, as is north Tripura (North Tripura 16292, which in 2011 held today's Unakoti:
+# Dharmanagar, Kailashahar, Kumarghat; 465k), part of greater Sylhet's speech area. The rest of
+# Tripura (Comilla-Noakhali speech) and Assam's scattered Bengali stay Bengali. Every Bengali there
+# goes over, as in Sylhet; Silchar town's Bengalis from elsewhere are not taken out (no figure).
+SYLHETI_DISTRICTS = {"18316", "18317", "18318", "16292"}
 
 
-def resolve(code, state=None):
-    """Node for a mother-tongue code. `state` is the two-digit census state code."""
+def resolve(code, state=None, district=None):
+    """Node for a mother-tongue code. `state` is the two-digit census state code, `district` the
+    five-digit state + district code."""
     if code == "006439":
         # "Pahari" means two different things. In Jammu and Kashmir (977,860) it is
         # Pahari-Pothwari of Poonch and Rajouri, a Lahnda variety; in Himachal (2,190,065) and
         # elsewhere it is the Western Pahari of Mahasu and Shimla.
         return f"{IA}.northwestern.pahari_pothwari" if state == "01" else f"{IA}.pahari.western.pahari"
+    if code == "002007" and district in SYLHETI_DISTRICTS:
+        return f"{IA}.eastern.sylheti"
     return CODES[code]

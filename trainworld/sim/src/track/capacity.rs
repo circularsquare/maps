@@ -437,6 +437,7 @@ pub fn build(net: &Network, lines: &[LineSvc]) -> Capacity {
 /// Utilisation and delay of one resource's users for each demand level.
 fn solve_one(us: &[User], net: &Network, streams: &mut Vec<((u32, u8), f64)>) -> ([f64; 3], [f64; 3]) {
     let (mut rho_r, mut delay_r) = ([0.0; 3], [0.0; 3]);
+    let continuous = us.iter().any(|u| net.line_trains[u.line as usize].is_some());
     for lev in 0..LEVELS {
         let (mut load, mut trains) = (0.0, 0.0);
         streams.clear();
@@ -458,9 +459,10 @@ fn solve_one(us: &[User], net: &Network, streams: &mut Vec<((u32, u8), f64)>) ->
         let rho = load / 3600.0;
         let tot: f64 = streams.iter().map(|s| s.1).sum();
         let mix = 1.0 - streams.iter().map(|s| (s.1 / tot).powi(2)).sum::<f64>();
-        let w = kingman(rho, mix, load / trains).round();
+        let raw = kingman(rho, mix, load / trains);
+        let w = if continuous { raw } else { raw.round() };
         rho_r[lev] = rho;
-        delay_r[lev] = if w < HOLD_MIN_S { 0.0 } else { w };
+        delay_r[lev] = if !continuous && w < HOLD_MIN_S { 0.0 } else { w };
     }
     (rho_r, delay_r)
 }

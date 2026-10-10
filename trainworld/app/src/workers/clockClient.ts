@@ -106,7 +106,13 @@ function toWorld(s: ClockState, city: { population: number; jobs: number }): Wor
     edges,
     nodes,
     city: { name: "New York", population: city.population, jobs: city.jobs, split: { train: 0, walk: 0, drive: 100 }, trainShareByPeriod: [] },
-    money: { builtValue: s.builtCost * 1e6, blueprintCost: s.blueprintCost * 1e6 },
+    money: {
+      builtValue: s.builtCost * 1e6, blueprintCost: s.blueprintCost * 1e6,
+      blueprintItems: Array.from({ length: s.blueprintItems.length / 7 }, (_, i) => {
+        const r = s.blueprintItems.slice(i * 7, i * 7 + 7);
+        return { kind: r[0], level: r[1] as any, tracks: r[2], wet: !!r[3], ramp: !!r[4], quantity: r[5], cost: r[6] * 1e6 };
+      }),
+    },
     canUndo: s.canUndo,
     canRedo: s.canRedo,
   };

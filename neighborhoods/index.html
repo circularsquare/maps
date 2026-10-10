@@ -417,6 +417,12 @@ const BASEMAP = {dark: 'https://tiles.openfreemap.org/styles/dark',
 try { theme = localStorage.getItem('nbhd-theme') === 'light' ? 'light' : 'dark'; } catch {}
 document.documentElement.dataset.theme = theme;
 
+/* Arabic, Hebrew and other right-to-left place names need MapLibre's RTL text plugin, or they are
+   drawn letter by letter, unjoined and in reverse (a languagedots viewer's report, 2026-10-08).
+   Lazy: fetched only once such a label is on screen. */
+if (maplibregl.getRTLTextPluginStatus() === 'unavailable')
+  maplibregl.setRTLTextPlugin('https://unpkg.com/@mapbox/mapbox-gl-rtl-text@0.2.3/mapbox-gl-rtl-text.min.js', true)
+    .catch(() => {});
 const map = new maplibregl.Map({
   container: 'map',
   style: BASEMAP[theme],
@@ -486,6 +492,21 @@ function quietBasemapLabels() {
   }
 }
 
+/* The basemap's tiles give Türkiye an English name of just "T" (2026-10-08; OpenFreeMap's data,
+ * `name_en`), and both styles show `name_en` first, so the country read "T". Every label that
+ * reads `name_en` falls back to the local Latin name when the English one is under 3 letters. */
+function guardEnglishName(id) {
+  const f = map.getLayoutProperty(id, 'text-field');
+  if (!f || !JSON.stringify(f).includes('"name_en"')) return;
+  const fix = e => Array.isArray(e)
+    ? (e.length === 2 && e[0] === 'get' && e[1] === 'name_en'
+        ? ['case', ['>=', ['length', ['to-string', ['coalesce', ['get', 'name_en'], '']]], 3],
+           ['get', 'name_en'], ['coalesce', ['get', 'name:latin'], ['get', 'name']]]
+        : e.map(fix))
+    : e;
+  map.setLayoutProperty(id, 'text-field', fix(f));
+}
+
 /** Swap the whole theme: the panel, the palette, the basemap and the overlay.
  *
  * `setStyle` throws away every source and layer added to the old style, so this is a
@@ -516,6 +537,7 @@ function setTheme(next) {
     if (selId) map.setFilter('dot-sel', ['==', ['get', 'i'], selId]);
     applyThemePaint();
     quietBasemapLabels();
+    for (const l of map.getStyle().layers) if (l.type === 'symbol') guardEnglishName(l.id);
     applyDots();
     // The open details panel has the old palette's colour baked into its level pill. It
     // is rebuilt from the record rather than from what it is currently showing, so it
@@ -854,6 +876,7 @@ map.on('load', () => {
   addLayers();
   applyThemePaint();
   quietBasemapLabels();
+  for (const l of map.getStyle().layers) if (l.type === 'symbol') guardEnglishName(l.id);
   applyDots();
   // Data may already be in and a city already chosen; draw it now that there is
   // somewhere to draw it.

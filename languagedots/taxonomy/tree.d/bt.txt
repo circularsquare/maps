@@ -43,7 +43,7 @@ kradai | Kra-Dai (Tai-Kadai)
 kradai.thai | Thai
 kradai.zhuang | Zhuang
 sinotibetan.burmish.burmese | Burmese
-sinotibetan.karen | Karen
+sinotibetan.karen | Karen languages
 sinotibetan.sinitic | Chinese
 sinotibetan.sinitic.cantonese | Cantonese
 sinotibetan.sinitic.gan | Gan

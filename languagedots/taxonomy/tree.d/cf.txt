@@ -52,7 +52,7 @@ nigercongo.ubangian.banda.ngbugu | Ngbugu | 0.82 0.12 15
 nigercongo.ubangian.banda.langbashe | Langbashe | 0.62 0.15 330
 nigercongo.ubangian.banda.langba | Langba | 0.80 0.12 320
 nigercongo.ubangian.banda.yakpa | Yakpa ("Yaka") | 0.62 0.17 10
-nigercongo.ubangian.banda.dakpa | Dakpa
+nigercongo.ubangian.banda.dakpa | Dakpa (Central African Republic)
 nigercongo.ubangian.banda.gbi | Gbi
 nigercongo.ubangian.banda.banda_banda | Banda-Banda
 nigercongo.ubangian.banda.yangere | Banda-Yangere
@@ -95,7 +95,7 @@ nigercongo.gbaya.bouar | Bouar
 nigercongo.gbaya.boda | Boda
 nigercongo.gbaya.mboundjia | Mboundjia
 nigercongo.gbaya.ngbaka_manza | Ngbaka-Manza
-nigercongo.gbaya.ngbaka_minagende | Ngbaka Minagende
+nigercongo.gbaya.ngbaka_minagende | Ngbaka Minagende | 0.74 0.12 138
 nigercongo.gbaya.ali | Ali
 nigercongo.gbaya.bofi | Bofi
 
@@ -108,16 +108,16 @@ nigercongo.adamawa.mbum | Mbum | 0.88 0.07 335
 
 # ---- Bantu ----
 nigercongo.bantu.mpiemo | Mpiemo | 0.74 0.14 75
-nigercongo.bantu.kako | Kako ("Kaka")
-nigercongo.bantu.mbati | Mbati ("Issongo")
-nigercongo.bantu.bonzio | Bonzio
-nigercongo.bantu.pomo | Pomo
-nigercongo.bantu.bomitaba | Bomitaba
+nigercongo.bantu.kako | Kako ("Kaka") | 0.64 0.14 70
+nigercongo.bantu.mbati | Mbati ("Issongo") | 0.7 0.14 80
+nigercongo.bantu.bonzio | Bonzio | 0.82 0.14 90
+nigercongo.bantu.pomo | Pomo | 0.82 0.14 70
+nigercongo.bantu.bomitaba | Bomitaba | 0.82 0.14 70
 nigercongo.bantu.babango | Babango | 0.84 0.10 20
-nigercongo.bantu.aka | Aka
-nigercongo.bantu.bobangi | Bobangi
-nigercongo.bantu.kari | Kari
-nigercongo.bantu.bodo | Bodo
+nigercongo.bantu.aka | Aka | 0.88 0.07 192
+nigercongo.bantu.bobangi | Bobangi | 0.82 0.14 20
+nigercongo.bantu.kari | Kari | 0.58 0.14 100
+nigercongo.bantu.bodo | Bodo (Central African Republic) | 0.64 0.14 60
 
 # ---- Fula: four answers ----
 nigercongo.atlantic.fulah | Fula

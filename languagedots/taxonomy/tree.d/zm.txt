@@ -19,7 +19,7 @@
 nigercongo | Niger-Congo | 0.72 0.14 75
 nigercongo.bantu | Bantu | 0.70 0.14 60
 nigercongo.bantu.sotho_tswana | Sotho-Tswana | 0.76 0.12 100
-nigercongo.bantu.swahili | Swahili | 0.70 0.15 55
+nigercongo.bantu.swahili | Swahili | 0.92 0.21 122
 indoeuropean.romance | Romance | 0.78 0.11 230
 indoeuropean.romance.french | French | 0.60 0.15 340
 sinotibetan.sinitic | Chinese | 0.62 0.19 38
@@ -44,7 +44,7 @@ nigercongo.bantu.bemba.tabwa | Tabwa
 nigercongo.bantu.bemba.ushi | Ushi
 
 nigercongo.bantu.bisa_lamba | Bisa-Lamba (M.50) | 0.80 0.12 90
-nigercongo.bantu.bisa_lamba.lala | Lala | 0.86 0.13 98
+nigercongo.bantu.bisa_lamba.lala | Lala (Zambia) | 0.86 0.13 98
 nigercongo.bantu.bisa_lamba.lamba | Lamba | 0.78 0.14 120
 nigercongo.bantu.bisa_lamba.bisa | Bisa | 0.66 0.13 80
 nigercongo.bantu.bisa_lamba.ambo | Ambo
@@ -102,19 +102,19 @@ nigercongo.bantu.luyana.mashi | Mashi
 nigercongo.bantu.luyana.mbukushu | Mbukushu
 
 nigercongo.bantu.chokwe_lunda | Chokwe-Lunda (K.10-20, L.50) | 0.76 0.12 140
-nigercongo.bantu.chokwe_lunda.lunda | Lunda | 0.80 0.10 300
-nigercongo.bantu.chokwe_lunda.ndembu | Ndembu
+nigercongo.bantu.chokwe_lunda.lunda | Lunda | 0.62 0.12 84
+nigercongo.bantu.chokwe_lunda.ndembu | Ndembu | 0.88 0.1 69
 nigercongo.bantu.chokwe_lunda.luvale | Luvale | 0.82 0.14 132
 nigercongo.bantu.chokwe_lunda.mbunda | Mbunda | 0.62 0.13 162
 nigercongo.bantu.chokwe_lunda.luchazi | Luchazi | 0.74 0.10 150
-nigercongo.bantu.chokwe_lunda.chokwe | Chokwe | 0.88 0.08 100
+nigercongo.bantu.chokwe_lunda.chokwe | Chokwe | 0.76 0.12 84
 
 nigercongo.bantu.luban | Luban (L.40-60) | 0.70 0.13 10
-nigercongo.bantu.luban.kaonde | Kaonde | 0.60 0.13 265
+nigercongo.bantu.luban.kaonde | Kaonde | 0.8 0.12 30
 nigercongo.bantu.luban.nkoya | Nkoya | 0.76 0.13 340
 nigercongo.bantu.luban.lukolwe | Lukolwe (Mbwela)
-nigercongo.bantu.luban.lushangi | Lushangi
-nigercongo.bantu.luban.mashasha | Mashasha
+nigercongo.bantu.luban.lushangi | Lushangi | 0.82 0.13 40
+nigercongo.bantu.luban.mashasha | Mashasha | 0.58 0.13 30
 
 nigercongo.bantu.mambwe_nyiha | Mambwe-Nyiha (M.10-20) | 0.74 0.12 200
 nigercongo.bantu.mambwe_nyiha.mambwe | Mambwe | 0.70 0.14 195

@@ -36,7 +36,7 @@ nigercongo.ubangian.sere | Sere
 nigercongo.ubangian.mundu_baka | Ngbaka-Mba (Mundu-Baka)
 nilosaharan | Nilo-Saharan
 nilosaharan.nilotic | Nilotic
-nilosaharan.nilotic.dinka | Dinka
+nilosaharan.nilotic.dinka | Dinka | 0.53 0.16 268
 nilosaharan.nilotic.nuer | Nuer
 nilosaharan.nilotic.shilluk | Shilluk
 nilosaharan.nilotic.acholi | Acholi
@@ -103,14 +103,26 @@ nilosaharan.njalgulgule | Njalgulgule
 nigercongo.ubangian.zande.makaraka | Makaraka
 nigercongo.ubangian.belanda_viri | Belanda Viri
 nigercongo.ubangian.ndogo | Ndogo
-nigercongo.ubangian.bai | Bai
+nigercongo.ubangian.bai | Bai (South Sudan)
 nigercongo.ubangian.golo | Golo
 nigercongo.ubangian.indri | Indri
 nigercongo.ubangian.feroge | Feroge
 nigercongo.ubangian.mangayat | Mangayat
 nigercongo.ubangian.mundu_baka.mundu | Mündü
+
+# ---- Jonglei, Unity, Upper Nile (taxonomy/ss2025.py, sources/ss_homeland.py; fix-ss 2026-10-07) ----
+# Repeated from et.txt: Anuak anua1242, Koman, Opo opuu1239. New: Mabaan maba1273 (Western
+# Nilotic, Burun-Mabaan, beside sd.txt's Burun), Kacipo-Balesi kaci1244 (Surmic; Pibor's Kachipo).
+nilosaharan.nilotic.anuak | Anuak
+nilosaharan.koman | Koman
+nilosaharan.koman.opo | Opo
+nilosaharan.nilotic.mabaan | Mabaan
+nilosaharan.surmic.kacipo | Kacipo-Balesi (Kachipo)
 #
 # Colours. Generated, except four hand-picked off the Nilotic grid so neighbours part: Pojulu pale
 # aqua (Lainya, beside Kakwa's dark violet, Kuku's lavender and Dinka's blue in Juba), Mundari a
 # muted dark cyan (Terekeka, across the Nile from Reel's sky blue), Ketebo deep purple (Ikotos,
 # beside Lango of South Sudan), Päri lilac (Lafon, beside Lopit).
+# fix-ss, 2026-10-07: Dinka hand-picked a deeper indigo (0.53 0.16 268, was generated #347ec4) once
+# Jonglei, Unity and Upper Nile were drawn: the generated blue sat too close to et.txt's Nuer
+# (#4c94ec), and the two border each other along most of those states.

@@ -7,6 +7,10 @@ CA_TRAIN_NETWORKS = {"Ontario Northland", "TSH", "Keewatin Railway Company", "Ro
 # as in the US (rules/us.py says why): Canada's register is NARN too, read by us_register.
 ROUTE_SHARE_BY_LENGTH = True
 
+# Register lines keep the register's kind, as in the US (rules/us.py says why): CPKC's Canpa
+# Subdivision near the TTC's Line 2 at Kipling came out "subway".
+REGISTER_KIND_SURE = True
+
 
 def extra_route_stops(ways, rels, stops, coords, stations, resolved, log):
     # As the US (rules/us.py): unlisted stations as stops of their own network's passing

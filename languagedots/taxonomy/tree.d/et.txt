@@ -72,7 +72,7 @@ afroasiatic.omotic.gonga.shekkacho | Shekkacho | 0.84 0.11 285
 afroasiatic.omotic.gonga.shinasha | Shinasha (Boro) | 0.62 0.14 280
 afroasiatic.omotic.bench | Bench | 0.82 0.10 300
 afroasiatic.omotic.yem | Yem | 0.76 0.13 320
-afroasiatic.omotic.mao | Mao | 0.66 0.14 335
+afroasiatic.omotic.mao | Mao (Ethiopia) | 0.66 0.14 335
 afroasiatic.omotic.dizoid | Dizoid | 0.76 0.12 285
 afroasiatic.omotic.dizoid.sheko | Sheko | 0.74 0.12 270
 afroasiatic.omotic.dizoid.dizi | Dizi | 0.86 0.08 280

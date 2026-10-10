@@ -3,6 +3,194 @@
 One line per change: node, old → new (OKLCH `L C h`, hex), why. Newest pass first. Distances are
 OKLab; the important ones were judged by eye on the map too.
 
+## 2026-10-09, DR Congo's Bantu in subgroup bands, Swahili lemon-lime, Konkomba blue (session 32a047f0-col)
+
+Anita, after DR Congo's rebuild from MICS 2017 (sources/cd.md §0; Swahili about 20% of the country):
+"the drc is kinda like colors all over the place so we should maybe slightly narrow them into
+tighter subfamily based color groups to make a little bit of room for swahili. currently at a
+glance its quite hard to see swahili." Congo Swahili (generated #ffa86d) sat 0.048 from Luba-Kasai
+(generated #ffa08d) over 135 shared cells, and DR Congo's Bantu languages ran round the whole wheel.
+Also asked: Kabiyè and Konkomba apart in Togo (0.033; Konkomba is 12.5% of Kara).
+
+**How.** Each Guthrie zone or Glottolog subgroup the tree has (taxonomy/GROUPING.md) got a narrow
+hue band, and its members differ mostly by lightness and chroma: Kongo green, Rivers Bantu cyan
+round Lingala, Mongo orange, Kele-Poke coral, Luba red and rose, Zone K tan and ochre, Zone B violet,
+Zone D blue, Western Lakes magenta and orchid. That leaves hue 108-128 (lemon-lime) to Swahili
+alone among the Bantu languages of the region. Lightness and chroma inside each band were picked by
+a small search (scratch scripts, not kept) over every pair that meets on the ground (dots in 0.5°
+cells, both at 5% of a cell, same or neighbouring cell, over cd ao zm tz ug rw bi cf cg ss ke mw mz),
+weighted by how many people meet, plus every pair drawn in one country at 0.05% or more, starting
+from a hand plan and kept near it. Distances below are OKLab on the drawn hex, with the old distance
+to the same neighbour in brackets; "~" marks an old colour read back from its hex (generated ones
+had no fragment colour). Rendered on a trial archive of the current dots (cd, tg rescattered
+2026-10-09) at http://localhost:8800, not yet judged by Anita.
+
+**Swahili now.** Congo Swahili is at least 0.156 from every language it meets inside DR Congo
+(nearest Pende and Ndembu, pale sands; Luba-Kasai, the old clash, 0.358). Swahili (Tanzania, Kenya,
+Burundi) is the same lemon-lime a shade brighter, 0.023 from Congo Swahili, and at least 0.11 from
+what it meets on the coast and inland (Nyamwezi 0.109, Somali 0.113, Pare 0.118, Rangi 0.121,
+Kamba 0.137, Emakhuwa 0.140); it was orange, 0.054-0.062 from Gikuyu and Luhya. The yellows and
+yellow-greens that sat near that hue in DR Congo moved out of it (Kete, Sanga,
+Yansi, Lega, Bembe, Tabwa, Ngbaka Minagende, Manyanga, Kituba).
+
+**Wider moves, so a language keeps one colour on both sides of a border:** Kinyarwanda (Rwanda)
+olive to orchid, Kirundi (Burundi) salmon to rose, Teke and Mbosi (Congo), Chokwe and Lunda
+(Angola, Zambia), Kaonde (Zambia) blue to light coral with the Luba, Kongo's Fiote (Cabinda) and
+Suundi (Congo) into the Kongo greens, Aka (Congo, CAR) into Rivers cyan. Not moved: Lingala,
+Tetela, Shi, Kongo, Yombe, Bemba (anchors); Kimbundu (Zone H but Angola-only, pink beside Kongo's
+green and Umbundu's red); Luvale, Ngangela, Mbunda (Zone K, Angola and Zambia only, left green);
+the `chokwe_lunda` group colour (zm.txt, green); Konzo, Ha, Hangaza, Rufumbira; Northern Ngbandi,
+Mbandja and the other Ubangian, Central Sudanic and Nilotic languages except Logo.
+
+**Group colours (regroup.txt `+` lines),** so the legend's group rows match their members (they
+were generated slot colours, Zone L an olive above red members, Rivers Bantu an orange above
+cyan ones): `zone_l` #b39f18 -> 0.72 0.14 15 #ef7d88; `zone_c.mongo` #ff9caf -> 0.76 0.15 55
+#f99549; `zone_c.rivers` #f7945a -> 0.76 0.11 210 #49c4d8; `zone_c.kele_poke` #ce6489 -> 0.74 0.10
+32 #e39383; `zone_d` #b46200 -> 0.72 0.11 258 #79a6e9; `zone_b` #9a7400 -> 0.74 0.11 298 #b39be7;
+`zone_k` #c17a00 -> 0.74 0.10 78 #cea35f; `zone_h` #e67d58 -> 0.72 0.13 155 #57bc80;
+`zone_j.western_lakes` #ffa9bc -> 0.72 0.15 335 #dd7eca. Its two generated subgroups follow it:
+`rwanda_rundi` #ffbdf2 -> #efabff, `konzo_nande` #f68675 -> #c95463. Zones E, F and S, which these
+moved, are pinned at their old slots in regroup.txt (0.64 0.14 40, 0.58 0.14 40, 0.70 0.14 20).
+Zone C (Rivers and Mongo together) and the zones outside DR Congo keep generated colours.
+
+**Generated colours.** Fourteen nodes got their first fragment colour: Congo Swahili, Luba-Kasai, Mongo,
+Bembe, Tabwa (added to cd.txt, under a colour-pass comment), Kinyarwanda (rw.txt), Kirundi (bi.txt),
+Ndembu (zm.txt), Aka and Ngbaka Minagende (cf.txt), Suundi (cg.txt), Besi Ngombe, Mboma and Kongo of
+the south-east bank (cd.txt). Freeing and taking slots under `nigercongo.bantu` moved 53 generated
+Bantu siblings; each is pinned at its exact old slot, so its hex is unchanged: Duala, Ewondo, Fang
+(cm.txt); Basaa, Kele, Lumbu, Ndowe, Sangu, Vili, Vumbu (ga.txt); Bobangi, Bodo, Bomitaba, Kako,
+Kari, Mbati, Bonzio, Pomo (cf.txt); Akwa, Beembe, Koyo, Likuba (cg.txt); Kwasio (gq.txt);
+Ganda, Nyankole, Nyoro, Runyakitara (ug.txt); Lushangi, Mashasha (zm.txt); Ndonga (na.txt);
+Shimaore (km.txt); Mushungulu, Chimwiini (so.txt); Ikoma, Isanzu, Kabwa, Kimbu, Kisi, Konongo,
+Kutu, Kwaya, Magoma, Manyema, Matumbi, Mbugwe, Mpoto, Ndengereko, Pangwa, Sagala, Segeju, Sonjo,
+Tongwe, Wanji (tz.txt). Diffed after: every Bantu node whose drawn colour changed is listed below.
+Nine Austronesian group colours (`austronesian.cmp` and its four branches, Lampungic, Northwest
+Sumatran, South Sulawesi, Yarikman) changed in the same build, from another session's edits made
+meanwhile (bare `austronesian.yapese` and `nigercongo.bantu.kota_gabon` lines in ar, br, co, cr,
+pa.txt, nodes the 2026-10-08 merge had folded away), not from this pass.
+
+**Leftovers on the ground, under 0.08:** Kituba | Ndibu 0.058 and Fiote | Ndibu 0.072 (one Kongo
+cluster), Tabwa | Bisa 0.062 and Tongwe | Tabwa 0.066 (Tabwa beside other oranges), Bushoong |
+Songe 0.068, Kirundi | Nyambo 0.069 (Kagera), Shirazi | Kamba 0.077, Kongo | Mbata 0.077,
+Lega | Songola 0.080. In one country's legend, not meeting: Teke | Mono 0.031, Luba-Katanga |
+Ntomba 0.031 (cd), Lunda | Kabende 0.028 (zm).
+
+**Swahili (G): lemon-lime, hue 108-128, the one Bantu colour there.**
+- `zone_g.swahili.swahili_congo` Congo Swahili: ~0.81 0.13 54 #ffa86d -> 0.9 0.2 120 #cef034. Nearest on the ground: Nyamwezi 0.087 (was 0.140); Lala (Zambia) 0.101 (was 0.111).
+- `zone_g.swahili.swahili` Swahili: ~0.70 0.15 55 #e48233 -> 0.92 0.21 122 #cef934. Nearest on the ground: Somali 0.113 (was 0.205); Pare (Asu) 0.118 (was 0.229).
+- `zone_g.swahili.shirazi` Shirazi (Zanzibar Swahili): ~0.80 0.11 65 #efaf6f -> 0.8 0.16 128 #a0d157. Nearest on the ground: Kamba (Kikamba) 0.077 (was 0.083); Swahili 0.130 (was 0.110).
+- `zone_g.swahili.bajuni` Bajuni: ~0.66 0.08 95 #a19258 -> 0.74 0.14 108 #b4b136. Nearest on the ground: Somali 0.104 (was 0.192); Gikuyu 0.115 (was 0.133).
+
+**Western Lakes (J), with Rwanda-Rundi and Konzo-Nande: magenta, pink and orchid, hue 312-6.**
+- `zone_j.western_lakes.rwanda_rundi.kinyarwanda.kinyarwanda` Kinyarwanda: ~0.64 0.13 100 #a08d00 -> 0.76 0.19 315 #de87ff. Nearest on the ground: Nyambo 0.109 (was 0.283); Shi 0.110 (was 0.303).
+- `zone_j.western_lakes.rwanda_rundi.kirundi` Kirundi (Rundi): ~0.76 0.14 30 #fd8c7b -> 0.78 0.13 6 #fd93ab. Nearest on the ground: Nyambo 0.069 (was 0.127); Vira 0.112 (was 0.188).
+- `zone_j.western_lakes.havu` Havu: ~0.84 0.08 95 #dbcb8e -> 0.66 0.19 6 #ec5480. Nearest on the ground: Fuliiru 0.120 (was 0.094); Shi 0.122 (was 0.313).
+- `zone_j.western_lakes.hunde` Hunde: ~0.64 0.08 250 #6690bb -> 0.86 0.08 330 #f0bfea. Nearest on the ground: Nande 0.124 (was 0.268); Nyanga 0.131 (was 0.172).
+- `zone_j.western_lakes.konzo_nande.nande` Nande: ~0.70 0.19 36 #ff6a43 -> 0.78 0.16 354 #ff88be. Nearest on the ground: Kinyarwanda 0.112 (was 0.189); Nyankole 0.120 (was 0.053).
+- `zone_j.western_lakes.fuliiru` Fuliiru: ~0.84 0.17 83 #ffbd00 -> 0.58 0.1 3 #ab6074. Nearest on the ground: Havu 0.120 (was 0.094); Shi 0.151 (was 0.357).
+- `zone_j.western_lakes.vira` Vira: ~0.58 0.08 20 #a56767 -> 0.86 0.13 330 #ffb1fa. Nearest on the ground: Kirundi (Rundi) 0.112 (was 0.188); Kinyarwanda 0.119 (was 0.155).
+
+**Luba (L), with Kaonde: red, rose and coral, hue 0-36.**
+- `zone_l.luba_kasai` Luba-Kasai: ~0.80 0.12 32 #ffa08d -> 0.74 0.17 0 #fe77a6. Nearest on the ground: Ha (Kiha) 0.081 (was 0.167); Kaonde 0.108 (was 0.296).
+- `zone_l.luba_katanga` Luba-Katanga: ~0.64 0.14 40 #d26b46 -> 0.62 0.17 36 #d85734. Nearest on the ground: Kete 0.105 (was 0.220); Bemba 0.109 (was 0.088).
+- `zone_l.songe` Songe (Songye): ~0.74 0.08 279 #a0a6dd -> 0.84 0.09 5 #feb2c3. Nearest on the ground: Bushoong (Kuba) 0.068 (was 0.161); Hemba 0.105 (was 0.105).
+- `zone_l.kete` Kete: ~0.80 0.17 97 #ddbe00 -> 0.62 0.17 0 #d35182. Nearest on the ground: Luba-Katanga 0.105 (was 0.220); Luntu 0.116 (was 0.246).
+- `zone_l.kanyok` Kanyok: ~0.62 0.20 350 #d84497 -> 0.7 0.07 36 #c68f80. Nearest on the ground: Lunda 0.120 (was 0.237); Other African languages 0.121 (was 0.172).
+- `zone_l.luntu` Luntu: ~0.66 0.08 200 #4fa1a5 -> 0.68 0.07 0 #bd8696. Nearest on the ground: Nkutu (Kutshu) 0.106 (was 0.121); Other African languages 0.110 (was 0.160).
+- `zone_l.sanga` Sanga (Kisanga): ~0.66 0.14 108 #9c9900 -> 0.58 0.17 0 #c54476. Nearest on the ground: Luba-Katanga 0.112 (was 0.161); Other African languages 0.129 (was 0.158).
+- `zone_l.hemba` Hemba: ~0.76 0.08 200 #6fc1c5 -> 0.74 0.07 24 #d49a95. Nearest on the ground: Songe (Songye) 0.105 (was 0.105); Luba-Kasai 0.110 (was 0.200).
+- `zone_l.zela` Zela: ~0.84 0.08 200 #89dbdf -> 0.72 0.12 0 #e183a1. Nearest on the ground: Bwile 0.118 (was 0.303); Bemba 0.130 (was 0.271).
+- `zone_l.bangubangu` Bangubangu: ~0.84 0.08 40 #f9b9a3 -> 0.86 0.07 30 #fcc1b6. Meets nothing else at 5% of a cell.
+- `zone_l.luban.kaonde` Kaonde: ~0.60 0.13 265 #5a7dce -> 0.8 0.12 30 #ffa08f. Nearest on the ground: Bemba 0.106 (was 0.310); Luba-Kasai 0.108 (was 0.296).
+
+**Mongo and Kasai (C.60-80) and Sakata: orange, apricot and amber, hue 40-73.**
+- `zone_c.mongo.mongo` Mongo: ~0.70 0.14 50 #e28247 -> 0.84 0.13 70 #ffbb65. Nearest on the ground: Kundu 0.088 (was 0.096); Northern Ngbandi 0.108 (was 0.067).
+- `zone_c.mongo.ekonda` Ekonda: ~0.77 0.17 64 #ff9a11 -> 0.74 0.07 73 #c6a47a. Nearest on the ground: Sakata 0.099 (was 0.187); Sengele 0.102 (was 0.128).
+- `zone_c.mongo.ntomba` Ntomba: ~0.62 0.20 25 #e64343 -> 0.64 0.19 40 #e65719. Nearest on the ground: Sakata 0.110 (was 0.094); Sengele 0.120 (was 0.272).
+- `zone_c.mongo.sengele` Sengele: ~0.86 0.08 50 #fdc2a2 -> 0.76 0.16 40 #ff8a5e. Nearest on the ground: Ekonda 0.102 (was 0.128); Mongo 0.115 (was 0.170).
+- `zone_c.sakata` Sakata: ~0.70 0.20 10 #ff5c82 -> 0.66 0.13 73 #c28421. Nearest on the ground: Ekonda 0.099 (was 0.187); Ntomba 0.110 (was 0.094).
+- `zone_c.mongo.kusu` Kusu: ~0.77 0.17 64 #ff9800 -> 0.8 0.16 73 #fbab29. Nearest on the ground: Tetela 0.132 (was 0.091); Songe (Songye) 0.158 (was 0.245).
+- `zone_c.mongo.bushoong` Bushoong (Kuba): ~0.82 0.08 160 #96d5b2 -> 0.84 0.1 46 #ffb693. Nearest on the ground: Songe (Songye) 0.068 (was 0.161); Pende 0.076 (was 0.309).
+- `zone_c.mongo.lele` Lele (DR Congo): ~0.68 0.20 0 #f45693 -> 0.68 0.16 55 #e1791b. Nearest on the ground: Kwese 0.111 (was 0.322); Chokwe 0.112 (was 0.302).
+- `zone_c.mongo.dengese` Dengese: ~0.86 0.08 25 #ffbdb7 -> 0.58 0.19 40 #d14300. Nearest on the ground: Lele (DR Congo) 0.116 (was 0.221); Tetela 0.123 (was 0.201).
+- `zone_c.mongo.ngando` Ngando: ~0.80 0.08 300 #c5b3ea -> 0.62 0.16 52 #ce6400. Nearest on the ground: Other African languages 0.109 (was 0.246); Nkutu (Kutshu) 0.109 (was 0.210).
+- `zone_c.mongo.nkutu` Nkutu (Kutshu): ~0.66 0.08 101 #9d9459 -> 0.7 0.1 73 #c49454. Nearest on the ground: Luntu 0.106 (was 0.121); Ngando 0.109 (was 0.210).
+- `zone_c.mongo.kundu` Kundu: ~0.66 0.08 15 #be7e82 -> 0.88 0.07 40 #ffc9b5. Nearest on the ground: Mongo 0.088 (was 0.096); Yansi 0.111 (was 0.204).
+
+**Kele-Poke (C.50), round Kisangani: coral, hue 24-41.**
+- `zone_c.kele_poke.lokele` Lokele: ~0.80 0.08 251 #97c2f0 -> 0.74 0.12 26 #ed8c83. Meets nothing else at 5% of a cell.
+- `zone_c.kele_poke.poke` Poke (Topoke): ~0.84 0.08 120 #c3d398 -> 0.7 0.12 41 #dd8362. Nearest on the ground: Mbandja 0.108 (was 0.250); Mbesa 0.114 (was 0.181).
+- `zone_c.kele_poke.lombo` Lombo (Turumbu): ~0.62 0.08 74 #a37f4d -> 0.86 0.08 38 #ffbfab. Meets nothing else at 5% of a cell.
+- `zone_c.kele_poke.mbesa` Mbesa: ~0.70 0.08 210 #5dacba -> 0.8 0.07 29 #e7ada4. Nearest on the ground: Poke (Topoke) 0.114 (was 0.181); Mbandja 0.157 (was 0.183).
+
+**Rivers Bantu (C.10-40), round Lingala (not moved, 0.78 0.12 210 #3ecce2): cyan and azure, hue 190-237.**
+- `zone_c.rivers.ngombe` Ngombe: ~0.75 0.19 347 #ff73c3 -> 0.62 0.13 237 #1690ca. Nearest on the ground: Mbosi (Mbochi) 0.104 (was 0.153); Mpama 0.105 (was 0.158).
+- `zone_c.rivers.budza` Budza: ~0.66 0.08 229 #5b9cba -> 0.88 0.13 192 #55f2ed. Nearest on the ground: Lingala 0.107 (was 0.130); Ngbaka Minagende 0.179 (was 0.290).
+- `zone_c.rivers.bwa` Bwa (Boa): ~0.66 0.14 86 #b98c00 -> 0.66 0.08 200 #4fa1a5. Nearest on the ground: Lingala 0.129 (was 0.255); Makere (Mangbetu) 0.147 (was 0.276).
+- `zone_c.rivers.benza` Benza: ~0.78 0.08 360 #e3a2b5 -> 0.7 0.07 216 #69aaba. Meets nothing else at 5% of a cell.
+- `zone_c.rivers.libinza` Libinza: ~0.86 0.08 70 #f3c898 -> 0.68 0.11 192 #23adaa. Nearest on the ground: Lingala 0.108 (was 0.204); Ngombe 0.110 (was 0.226).
+- `zone_c.rivers.mpama` Mpama: ~0.64 0.08 330 #a87aa3 -> 0.68 0.07 201 #61a6aa. Nearest on the ground: Ngombe 0.105 (was 0.158); Tere 0.111 (was 0.205).
+- `zone_c.rivers.nunu` Nunu: ~0.76 0.08 220 #74bdd4 -> 0.88 0.07 228 #a7e1fc. Nearest on the ground: Lingala 0.115 (was 0.049); Kundu 0.137 (was 0.185).
+- `zone_c.rivers.mbosi` Mbosi (Mbochi): ~0.66 0.20 25 #f4514f -> 0.56 0.1 195 #008687. Nearest on the ground: Ngombe 0.104 (was 0.153); Other or unclassified 0.112 (was 0.204).
+- `zone_c.rivers.aka` Aka: ~0.81 0.13 54 #ffa86d -> 0.88 0.07 192 #a1e7e3. Nearest on the ground: Lingala 0.116 (was 0.244); Ngbaka Minagende 0.170 (was 0.124).
+
+**Zone D (Maniema, Kivu forest, Ituri): blue, hue 242-272.**
+- `zone_d.lega` Lega: ~0.74 0.17 115 #a9b700 -> 0.58 0.13 272 #6073c7. Nearest on the ground: Songola 0.080 (was 0.262); Bembe 0.117 (was 0.067).
+- `zone_d.lega_mwenga` Rega (Lega-Mwenga): ~0.62 0.20 15 #e4405e -> 0.82 0.11 242 #81cdff. Nearest on the ground: Bembe 0.150 (was 0.246); Vira 0.171 (was 0.126).
+- `zone_d.bembe` Bembe: ~0.70 0.14 100 #b39f18 -> 0.68 0.07 272 #8996c4. Nearest on the ground: Songola 0.106 (was 0.220); Nyanga 0.108 (was 0.164).
+- `zone_d.nyanga` Nyanga: ~0.78 0.08 174 #7ec9b4 -> 0.78 0.07 242 #90bee1. Nearest on the ground: Bembe 0.108 (was 0.164); Hunde 0.131 (was 0.172).
+- `zone_d.komo` Komo (Kumu): ~0.70 0.08 220 #61aac1 -> 0.62 0.11 260 #5e86c8. Nearest on the ground: Other African languages 0.166 (was 0.185); Nyanga 0.169 (was 0.103).
+- `zone_d.budu` Budu: ~0.75 0.16 32 #ff836c -> 0.78 0.11 272 #9fb3fe. Nearest on the ground: Mamvu 0.114 (was 0.227); Lingala 0.119 (was 0.278).
+- `zone_d.nyali` Nyali: ~0.72 0.08 150 #80b38a -> 0.72 0.11 266 #84a3ea. Nearest on the ground: Ma'di 0.121 (was 0.209); Lingala 0.123 (was 0.122).
+- `zone_d.lengola` Lengola: ~0.66 0.20 300 #a76ef8 -> 0.76 0.13 266 #8aaeff. Nearest on the ground: Lingala 0.115 (was 0.262); Other African languages 0.247 (was 0.233).
+- `zone_d.songola` Songola: ~0.66 0.08 301 #9a87bc -> 0.58 0.07 242 #5480a0. Nearest on the ground: Lega 0.080 (was 0.262); Bembe 0.106 (was 0.220).
+- `zone_d.benye_nonda` Benye Nonda: ~0.62 0.08 130 #76905c -> 0.82 0.07 269 #b1c3f3. Nearest on the ground: Songe (Songye) 0.122 (was 0.196); Bembe 0.140 (was 0.114).
+- `zone_d.ngengele` Ngengele: ~0.76 0.08 331 #cf9fc9 -> 0.84 0.08 265 #b1caff. Meets nothing else at 5% of a cell.
+
+**Zone B (Kwilu, Mai-Ndombe, Teke): violet and lilac, hue 284-314.**
+- `zone_b.mbuun` Mbunda (Mbuun): ~0.70 0.08 280 #9499d0 -> 0.62 0.13 314 #a26cbc. Nearest on the ground: Ngongo 0.114 (was 0.180); Kete 0.122 (was 0.268).
+- `zone_b.yansi` Yansi: ~0.76 0.16 103 #c6b500 -> 0.88 0.07 284 #d1d2ff. Nearest on the ground: Teke 0.101 (was 0.222); Kundu 0.111 (was 0.204).
+- `zone_b.ngongo` Ngongo: ~0.60 0.08 60 #a4754e -> 0.72 0.13 290 #a495f0. Nearest on the ground: Mbunda (Mbuun) 0.114 (was 0.180); Teke 0.114 (was 0.255).
+- `zone_b.teke` Teke: ~0.80 0.08 230 #87c8e8 -> 0.82 0.13 314 #e3aaff. Nearest on the ground: Yansi 0.101 (was 0.222); Tere 0.112 (was 0.260).
+- `zone_b.boma` Boma: ~0.64 0.08 160 #5f9b7b -> 0.62 0.11 290 #857ac4. Nearest on the ground: Tere 0.126 (was 0.237); Mpama 0.144 (was 0.159).
+- `zone_b.tere` Tere: ~0.74 0.17 50 #ff8534 -> 0.74 0.07 284 #a5a5d6. Nearest on the ground: Mpama 0.111 (was 0.205); Teke 0.112 (was 0.260).
+
+**Zone K (Chokwe, Lunda, Pende, Mbala, Kwese): tan, ochre and sand, hue 60-92, low chroma.**
+- `zone_k.chokwe_lunda.chokwe` Chokwe: ~0.88 0.08 100 #e3d99c -> 0.76 0.12 84 #d5aa4f. Nearest on the ground: Nyaneka 0.084 (was 0.074); Kwese 0.099 (was 0.064).
+- `zone_k.chokwe_lunda.lunda.lunda` Lunda: ~0.80 0.10 300 #c7aff5 -> 0.62 0.12 84 #a87f19. Nearest on the ground: Kwese 0.085 (was 0.185); Other African languages 0.097 (was 0.253).
+- `zone_k.chokwe_lunda.lunda.ndembu` Ndembu: ~0.82 0.12 184 #56ddcc -> 0.88 0.1 69 #ffcc8e. Nearest on the ground: Kaonde 0.110 (was 0.272); Chokwe 0.121 (was 0.149).
+- `zone_k.pende` Pende: ~0.64 0.20 40 #ea5202 -> 0.88 0.06 84 #ead5ab. Nearest on the ground: Bushoong (Kuba) 0.076 (was 0.309); Yansi 0.120 (was 0.228).
+- `zone_k.mbala` Mbala: ~0.84 0.08 20 #fbb6b5 -> 0.78 0.12 60 #efa464. Nearest on the ground: Kundu 0.116 (was 0.180); Kwese 0.120 (was 0.143).
+- `zone_k.kwese` Kwese: ~0.86 0.08 145 #b1dfb1 -> 0.68 0.06 84 #aa966e. Nearest on the ground: Lunda 0.085 (was 0.185); Chokwe 0.099 (was 0.064).
+
+**Kongo (H), round Kongo (not moved, 0.68 0.15 150 #45b164): green, hue 138-186.**
+- `zone_h.kongo.ntandu` Ntandu: ~0.66 0.12 179 #00ab95 -> 0.56 0.08 190 #2f837f. Nearest on the ground: Yombe (Kikongo) 0.102 (was 0.055); Lemfu 0.121 (was 0.136).
+- `zone_h.kongo.ndibu` Ndibu: ~0.74 0.16 135 #7dc052 -> 0.84 0.15 138 #98e17f. Nearest on the ground: Kituba (Munukutuba) 0.058 (was 0.147); Fiote 0.072 (was 0.136).
+- `zone_h.kongo.manyanga` Manyanga: ~0.82 0.13 120 #b9d06b -> 0.84 0.15 180 #17eace. Nearest on the ground: Besi Ngombe 0.090 (was 0.155); Lingala 0.097 (was 0.181).
+- `zone_h.kongo.mbata` Mbata: ~0.86 0.08 140 #b6dead -> 0.74 0.15 168 #00c899. Nearest on the ground: Kongo (variety not given) 0.077 (was 0.195); Fiote 0.087 (was 0.059).
+- `zone_h.kongo.lemfu` Lemfu: ~0.58 0.08 120 #74814a -> 0.58 0.15 138 #488e2c. Nearest on the ground: Yombe (Kikongo) 0.078 (was 0.106); Kongo (variety not given) 0.104 (was 0.135).
+- `zone_h.kongo.besingombe` Besi Ngombe: ~0.82 0.14 190 #12e0d8 -> 0.88 0.07 177 #a6e7d7. Nearest on the ground: Manyanga 0.090 (was 0.155); Ndibu 0.113 (was 0.161).
+- `zone_h.kongo.mboma` Mboma: ~0.58 0.14 120 #708500 -> 0.76 0.07 138 #9cbc91. Nearest on the ground: Mbata 0.098 (was 0.288); Ndibu 0.112 (was 0.166).
+- `zone_h.kongo.kongo_se` Kongo of the south-east bank: ~0.82 0.14 140 #92da82 -> 0.66 0.09 168 #55a488. Meets nothing else at 5% of a cell.
+- `zone_h.kituba` Kituba (Munukutuba): ~0.86 0.08 120 #cad99e -> 0.78 0.15 138 #85ce6c. Nearest on the ground: Ndibu 0.058 (was 0.147); Mbata 0.088 (was 0.028).
+- `zone_h.yaka` Yaka: ~0.72 0.20 340 #f269cb -> 0.88 0.07 138 #c1e3b6. Nearest on the ground: Ndibu 0.089 (was 0.351); Manyanga 0.115 (was 0.326).
+- `zone_h.suku` Suku: ~0.80 0.17 72 #ffa800 -> 0.58 0.09 141 #5c8855. Nearest on the ground: Yombe (Kikongo) 0.077 (was 0.278); Lunda 0.111 (was 0.250).
+- `zone_h.pelende` Pelende: ~0.62 0.08 340 #a77395 -> 0.7 0.07 138 #89a97f. Nearest on the ground: Kongo (variety not given) 0.085 (was 0.236); Mbata 0.104 (was 0.286).
+- `zone_h.kongo.fiote` Fiote: ~0.86 0.12 115 #cedb7c -> 0.78 0.11 138 #94c883. Nearest on the ground: Ndibu 0.072 (was 0.136); Mbata 0.087 (was 0.059).
+- `zone_h.kongo.suundi` Suundi: ~0.76 0.14 80 #dfa635 -> 0.76 0.12 145 #7fc581. Meets nothing else at 5% of a cell.
+
+**Bemba (M): Tabwa out of the yellows, beside Bemba's orange.**
+- `zone_m.bemba.tabwa` Tabwa: ~0.80 0.14 85 #e7b643 -> 0.72 0.14 76 #d69727. Nearest on the ground: Bisa 0.062 (was 0.141); Tongwe 0.066 (was 0.130).
+
+**Outside Bantu.**
+- `nigercongo.gbaya.ngbaka_minagende` Ngbaka Minagende: ~0.86 0.15 100 #e8d34f -> 0.74 0.12 138 #84bd71. Nearest on the ground: Ngbaka Ma'bo 0.113 (was 0.240); Libinza 0.122 (was 0.091).
+- `nilosaharan.centralsudanic.logo` Logo: ~0.68 0.14 165 #00b381 -> 0.56 0.12 145 #418646. Nearest on the ground: Lendu 0.087 (was 0.118); Lugbara 0.130 (was 0.019).
+**Togo.** `nigercongo.gur.konkomba` (gh.txt): 0.66 0.14 330 #c170bb -> 0.66 0.16 250 #3496ef, an
+azure, out of Kabiyè's purple. Kabiyè 0.178 (was 0.033, over 1,355 dots' worth of contact in Kara and
+across into Ghana), Ditammari (Benin) over 0.16, Dendi 0.143, Gonja 0.150, Ikposo 0.150, Dagbani
+and the other northern Ghana languages further. A periwinkle (0.62 0.15 268) was tried first: it
+sat 0.023 from Zarma in Ghana's list; now 0.068. Kabiyè (tg.txt) not moved.
+
 ## 2026-10-06, Berber more saturated (session 5d7dac7e-ber)
 
 Anita: "up the saturation of the Berber group because it's mostly a minority group... stand out a

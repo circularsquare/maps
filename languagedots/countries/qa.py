@@ -36,9 +36,23 @@ def _counts():
 
 
 def _weight(place):
-    """citizens and foreign residents on their own weights inside each unit (gulf_place.py)"""
+    """citizens and foreign residents on their own weights inside each unit, and the foreign
+    residents in family / single-men / single-women pools placed by the 2020 zones' men and
+    women (sources/gulf_place.py, gulf_place.md §6)"""
+    import sys
+    sys.path.insert(0, str(ROOT / "sources"))
+    import qa_build
+    import qa_geo
     gp = _gp()
-    return gp.GulfWeighter("qa", place, *gp.citizen_tables(_rows()))
+    rows = _rows()
+    u = qa_build.units_by_sex()
+    mw = gp.resolve_pools(gp.node_sex_pools("Qatar", "QA", 2020), rows["source_category"])
+    pools = gp.row_pools(rows, mw,
+                         {m: (u.at[m, "men"], u.at[m, "women"]) for m in u.index})
+    cit_male = {m: u.at[m, "q_men"] / (u.at[m, "q_men"] + u.at[m, "q_women"]) for m in u.index}
+    return gp.PoolWeighter("qa", place, *gp.citizen_tables(rows), pools,
+                           zone=place["zone"].astype(int).to_numpy(),
+                           zone_sex=qa_geo.table2(), cit_male=cit_male)
 
 
 ENTRY = dict(
@@ -81,5 +95,7 @@ ENTRY = dict(
         "(Keralites as Malayalam) and Pakistanis by province. Each municipality's foreign men "
         "and women are drawn at the national mix for their sex. Inside each municipality, "
         "foreign residents are placed more heavily in dense districts and wholly in industrial "
-        "areas and labour camps, and Qataris in the rest; that is an estimate, not a count."),
+        "areas and labour camps, and Qataris in the rest. Each nationality's men beyond its "
+        "number of women are placed in the census zones with more men than women, such as the "
+        "Industrial Area, and the rest with families; that is an estimate, not a count."),
 )

@@ -2,9 +2,14 @@
 
     python sources/ng_afro.py --fetch   extract Nigeria's rows from religiondots' six merged
                                         .sav files (read-only) -> data/raw/ng/ab_ng_language.csv
-    python sources/ng_afro.py           -> data/normalized/ng.csv      (state x answer, counts)
+    python sources/ng_afro.py           -> data/normalized/ng_afro.csv (state x answer, counts;
+                                                                        the comparison build)
                                            data/normalized/ng_lga.csv  (LGA x answer, weighted
                                                                         respondents, placement)
+
+SINCE 2026-10-09 the map is drawn by sources/ng_mics.py (MICS6 2021 for the ten languages MICS
+names), which imports this file's harmonising steps for the split of MICS's "other language".
+This script's own state build now writes ng_afro.csv, kept as the comparison (sources/ng.md §0).
 
 Nigeria's censuses have asked no language (or ethnicity) question since 1963, so this is the
 survey route of AGENT_BRIEF §2: shares from the survey with the most regions, times a population
@@ -50,7 +55,7 @@ RAW = HERE / "data" / "raw" / "ng"
 EXTRACT = RAW / "ab_ng_language.csv"
 LOOKUP = RD / "data" / "geo" / "ng" / "ng_lookup.csv"
 ADM2 = RD / "data" / "raw" / "ng" / "shp" / "nga_admin2.shp"
-OUT = HERE / "data" / "normalized" / "ng.csv"
+OUT = HERE / "data" / "normalized" / "ng_afro.csv"   # ng.csv is sources/ng_mics.py's since 2026-10-09
 OUT_LGA = HERE / "data" / "normalized" / "ng_lga.csv"
 
 CODPS_2022 = 216_798_930

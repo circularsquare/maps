@@ -4,9 +4,11 @@ asked no language question. Keyed by the USCB file's English spelling of BBS's g
 Anita allowed the proxy on 2026-10-05 (relayed by the supervisor); every row is `derived`.
 sources/bd.md has the reasoning and the known misfits, which are the point of reading it:
 
-  * `Not an ethnic minority` (98.9%) is drawn as Bengali. It also holds Sylheti and Chittagonian
-    speakers (counted as Bengalis, and languages of their own in Glottolog), the Urdu-speaking
-    "Bihari" camps (not an ethnic category), and the Rohingya outside the camps.
+  * `Not an ethnic minority` (98.9%) is Bengali in NAMES, but countries/bd.py splits it by place
+    through split_remainder() below (2026-10-07): Sylheti in the Sylheti-speaking upazilas,
+    Chittagonian in Chittagong (but Sandwip) and Cox's Bazar, 56% of it in Chittagong city.
+    It also holds the Urdu-speaking "Bihari" camps (not an ethnic category) and the Rohingya
+    outside the camps, drawn with their neighbours.
   * A group is drawn on its heritage language, so language shift is invisible: many Garo,
     Santal, Oraon and Munda households speak Bengali or Sadri at home.
   * Groups with no established language of their own (Barmon, Dalu, Mong) and the census's
@@ -55,6 +57,52 @@ NAMES = {
 }
 
 EXCLUDED = set()
+
+# ---- Place split of `Not an ethnic minority` (spec §3.3; 2026-10-07, fix-bd, Anita asked for it).
+# The census's Bengali remainder holds the Sylheti and Chittagonian speakers, which Glottolog
+# files as languages of their own (sylh1242 under Eastern Bengali, chit1275 under Southeastern
+# Bengali). No source counts them, so the remainder is drawn by where it lives. Boundaries and
+# their sources are in sources/bd.md §4; countries/bd.py applies split_remainder().
+SYLHETI = f"{IA}.eastern.sylheti"
+CHITTAGONIAN = f"{IA}.eastern.chittagonian"
+ROHINGYA = f"{IA}.eastern.rohingya"   # the camps, from UNHCR (sources/bd_unhcr.py), not the census
+EXTRA_NODES = [SYLHETI, CHITTAGONIAN, ROHINGYA]
+
+# Sylheti: all of Sylhet and Moulvibazar districts, eastern Sunamganj and north-eastern Habiganj.
+# Western Sunamganj (Derai, Dharampasha, Jamalganj, Sulla, Tahirpur, the haors next to Netrokona)
+# and the rest of Habiganj speak varieties closer to Mymensingh and Brahmanbaria, and stay Bengali.
+SYLHETI_UNITS = (
+    {f"BGD_08_04_{i:02d}" for i in range(1, 13)}            # Sylhet district, 12
+    | {f"BGD_08_02_{i:02d}" for i in range(1, 8)}           # Moulvibazar district, 7
+    | {"BGD_08_03_01", "BGD_08_03_02", "BGD_08_03_03",      # Bishwambarpur, Chhatak, Dakshin Sunamganj
+       "BGD_08_03_06", "BGD_08_03_07", "BGD_08_03_10"}      # Dowarabazar, Jagannathpur, Sunamganj Sadar
+    | {"BGD_08_01_02", "BGD_08_01_08"}                      # Bahubal, Nabiganj (Habiganj)
+)
+# Chittagonian: Chittagong district but Sandwip (whose island speech goes with Noakhali), and all
+# of Cox's Bazar (Teknaf's and Ukhia's local speech included; it is Chittagonian, close to Rohingya).
+CHITTAGONIAN_UNITS = (
+    {f"BGD_02_04_{i:02d}" for i in range(1, 26)} - {"BGD_02_04_23"}
+    | {f"BGD_02_06_{i:02d}" for i in range(1, 9)}
+)
+# Chittagong City Corporation's eleven 2011 thanas: a city of in-migrants. The World Bank's 2019
+# Dhaka-Chittagong spatial survey found 48.0% of Chittagong respondents born in the community and
+# 8.2% from elsewhere in Chittagong; that 56% is drawn as Chittagonian, the rest as Bengali.
+CHITTAGONG_CITY = {f"BGD_02_04_{i:02d}" for i in (2, 4, 7, 8, 9, 11, 13, 14, 17, 18, 20)}
+CITY_SHARE = 0.48 + 0.082
+
+assert len(SYLHETI_UNITS) == 27 and len(CHITTAGONIAN_UNITS) == 32 and CHITTAGONG_CITY < CHITTAGONIAN_UNITS
+
+
+def split_remainder(unit):
+    """[(node, share)] for the Bengali remainder of one upazila; shares sum to 1."""
+    bengali = NAMES["Not an ethnic minority"]
+    if unit in SYLHETI_UNITS:
+        return [(SYLHETI, 1.0)]
+    if unit in CHITTAGONG_CITY:
+        return [(CHITTAGONIAN, CITY_SHARE), (bengali, 1.0 - CITY_SHARE)]
+    if unit in CHITTAGONIAN_UNITS:
+        return [(CHITTAGONIAN, 1.0)]
+    return [(bengali, 1.0)]
 
 
 def resolve(label):

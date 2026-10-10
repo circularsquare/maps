@@ -185,7 +185,7 @@ austronesian.timoric.tetun_prasa | Tetun Prasa (Tetun Dili)
 austronesian.timoric.tetun_terik | Tetun Terik
 austronesian.timoric.tokodede | Tokodede
 austronesian.timoric.waimaa | Waima'a
-austronesian.yapese | Yapese
+austronesian.oceanic.yapese | Yapese
 creole | Creoles
 creole.english_based | English-based creoles
 creole.english_based.antiguan | Antiguan and Barbudan Creole
@@ -362,7 +362,7 @@ nigercongo.bantu.bemba.tabwa | Tabwa
 nigercongo.bantu.bembe | Bembe
 nigercongo.bantu.bena | Bena
 nigercongo.bantu.bisa_lamba | Bisa-Lamba (M.50)
-nigercongo.bantu.bisa_lamba.lala | Lala
+nigercongo.bantu.bisa_lamba.lala | Lala (Zambia)
 nigercongo.bantu.bisa_lamba.lamba | Lamba
 nigercongo.bantu.botatwe | Botatwe (M.60)
 nigercongo.bantu.botatwe.lenje | Lenje
@@ -411,7 +411,6 @@ nigercongo.bantu.kongo_dialects.ndibu | Ndibu
 nigercongo.bantu.kongo_dialects.yombe | Yombe (Kikongo)
 nigercongo.bantu.konzo | Konzo (Lukonzo)
 nigercongo.bantu.kota | Kota
-nigercongo.bantu.kota_gabon | Kota
 nigercongo.bantu.kuria | Kuria
 nigercongo.bantu.kwanyama | Kwanyama
 nigercongo.bantu.laari | Laari (Lari)
@@ -688,7 +687,7 @@ sinotibetan.eastbodish.kheng | Khengkha
 sinotibetan.eastbodish.kurtop | Kurtöp
 sinotibetan.eastbodish.nyenkha | Nyenkha (Mangdebikha)
 sinotibetan.kachin | Kachin languages (Jingpho, Zaiwa, Lhaovo, Rawang)
-sinotibetan.karen | Karen
+sinotibetan.karen | Karen languages
 sinotibetan.karen.pao | Pa'o
 sinotibetan.sinitic | Chinese
 sinotibetan.sinitic.cantonese | Cantonese

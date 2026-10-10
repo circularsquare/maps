@@ -36,12 +36,12 @@ export async function edit(op: EditOp, quiet = false): Promise<EditAnswer> {
 
 const num = (id: LineId) => Number(id);
 
-export function setFrequency(id: LineId, demand: Demand, tph: number) {
-  const l = lineById(id);
-  if (!l) return;
-  const t: [number, number, number] = [l.tph.high, l.tph.medium, l.tph.low];
-  t[DEMAND_INDEX[demand]] = Math.max(0, Math.min(40, tph));
-  void edit({ op: "setFrequency", line: num(id), tph: t });
+export function setTrainCount(id: LineId, demand: Demand, trains: number) {
+  const st = world.value?.lineStats[id];
+  if (!st) return;
+  const t: [number, number, number] = [...st.trainsNeeded] as [number, number, number];
+  t[DEMAND_INDEX[demand]] = Math.max(0, Math.round(trains));
+  void edit({ op: "setTrainCount", line: num(id), trains: t });
 }
 
 /** The fare curve for the whole network (T-028): US$ a ride plus US$ a km. */

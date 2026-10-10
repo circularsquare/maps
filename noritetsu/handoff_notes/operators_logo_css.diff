@@ -1,0 +1,15 @@
+--- a/dist/index.html
++++ b/dist/index.html
+@@ -289,7 +289,11 @@
+                font-variant-numeric: tabular-nums; letter-spacing: -0.2px; }
+   .flag { width: 16px; height: 12px; vertical-align: -1px; margin-right: 6px;
+           box-shadow: 0 0 0 1px var(--g26); }
+-  .oplogo { height: 14px; max-width: 40px; vertical-align: -2px; margin-right: 6px; }
++  /* Operator logos are 2x PNGs, 28 px high or, for a wordmark wider than 2:1, 56 px wide
++     and shorter (tools/operators.py LOGO_H, LOGO_W). Shown at half size with the aspect
++     kept: at most 14 px high and 28 px wide, so a long logo is smaller, never squashed. */
++  .oplogo { width: auto; height: auto; max-height: 14px; max-width: 28px;
++            vertical-align: middle; margin-right: 6px; }
+   /* Small, in the row's top right corner (Anita, 2026-10-07). */
+   button.star { flex: none; align-self: flex-start; background: none; border: none;
+                 padding: 1px 0 4px 4px; cursor: pointer; color: var(--g3a); line-height: 0; }

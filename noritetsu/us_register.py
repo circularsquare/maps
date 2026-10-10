@@ -192,7 +192,17 @@ KEY_ALIAS = {"LIRR MAIN LINE": "MAIN LINE", "LIRR ML": "MAIN LINE"}
 #   it, and Penn Station's west end reached neither New Jersey nor the Hudson Line (2026-10-04).
 #   As the Northeast Corridor's, the corridor runs into node 489969, where the West
 #   Subdivision and the Empire Connection now both end: one junction for all three.
-SEGMENT_NAME = {387399: "NORTHEAST CORRIDOR", 389167: "NORTHEAST CORRIDOR"}
+#   379801, 380038, 374683: South Station's approach to the Old Colony (1.1 km, MBTA, coded C:
+#   commuter only), node 495039 by the station throat to node 495012 where the Fairmount Line
+#   leaves. NARN files the first two under SUBDIV "EAST" (the third has no name and joined
+#   East as the line it touches), so the East Subdivision ran a 1.1 km stub off its Back Bay
+#   approach that only Old Colony and Fairmount trains use, and its strip diagram opened with
+#   Newmarket and JFK/UMass ahead of South Station (Anita, 2026-10-09). Every Old Colony
+#   train (Kingston, Middleborough, Greenbush, Fall River/New Bedford) runs over it, so it is
+#   the Old Colony's; the Fairmount Line still ends where it leaves at 495012.
+SEGMENT_NAME = {387399: "NORTHEAST CORRIDOR", 389167: "NORTHEAST CORRIDOR",
+                379801: "(MBTA) OLD COLONY", 380038: "(MBTA) OLD COLONY",
+                374683: "(MBTA) OLD COLONY"}
 # Register names that are no name at all: a valuation map, a bare number, the agency's own
 # word for a shared stretch. Named from OSM instead (see the docstring).
 NOT_A_LINE_NAME = re.compile(r"^(?:\d+|VS[- ]?\d+ MAP \d+|\(MBTA\) (?:CONCURRENT|CONNECTOR))$")
@@ -1476,6 +1486,11 @@ NOT_ON = [
      "LIRR terminal beside the tunnel approach; no train through the tunnels stops"),
     ("Hunterspoint Avenue", (-73.94756, 40.74205), "AMTK", "WEST",
      "LIRR station beside the tunnel approach; no train through the tunnels stops"),
+    # New Providence is a Gladstone Branch stop, 560 m from the Morristown Line where the two
+    # part west of Summit; the old NJ Transit Gladstone relation lists a Morristown Line way
+    # there, so it went on the Morristown Line too, between Chatham and Summit (2026-10-08).
+    ("New Providence", (-74.38642, 40.71211), "NJT", "MORRISTOWN LINE",
+     "Gladstone Branch stop; the Morristown Line passes 560 m off"),
     # Not stops of any train the map counts (each was a stop on a register line only because
     # a passenger route passes within UNLISTED_M):
     ("Cedar Park", (-97.82685, 30.52376), None, "*",
@@ -1770,6 +1785,320 @@ def osm_extra_stops(ways, rels, stops, coords, stations, resolved, log):
     return dict(extra)
 
 
+# ---------------------------------------------------------------- broken route relations
+
+# A route relation whose way members are in no order (2026-10-08, Anita's notes: the NJ Transit
+# Morris & Essex Lines' strip diagram had Dover, Denville, Convent Station and Mount Arlington
+# on side lanes and the Gladstone Branch's stops interleaved with the Morristown Line's). The
+# old one-relation-both-ways NJ Transit routes ("Morristown Line: New York <=> Hackettstown")
+# list their ways in no order: build_model.assemble joins them into 79 runs (the Gladstone
+# Branch's into 231), place_stations reads the stops in run order, and each pair of stops
+# consecutive across two runs became a section traced from one to the other over whatever track
+# was shortest: Dover - Mount Tabor past Denville, Mount Arlington - Denville past Dover,
+# Denville - Convent Station, East Orange - Hoboken. Such a route's runs are rebuilt here
+# (`repair_route_runs`, through rules/us.py's `route_runs`): its own track as a graph, the
+# stops as regions of it (each track node goes to the nearest stop along the track), stops
+# joined where their regions touch, the shortest such joins that connect them all (a spanning
+# tree), and that tree walked from one end of its longest path to the other as ONE run that
+# goes out along each branch and back, so place_stations reads every pair of neighbouring stops
+# from the same run. Track the relation lacks between two parts of it is left to build_model's
+# tracing as before (a run ends there and the next starts at the stop nearest across the gap).
+# Only routes whose own runs are this broken: REPAIR_MIN_RUNS runs or more holding stops.
+REPAIR_MIN_RUNS = 4
+REPAIR_ABSORB_M = 120   # track within this of a stop node belongs to that stop
+REPAIR_SNAP_M = 400     # a stop further than ABSORB_M from the track takes its nearest node
+REPAIR_GAP_M = 3000     # a loose end of the route's track this near another part is a gap
+REPAIR_JOIN_M = 30      # ... and this near, track (two ways that do not quite share a node)
+REPAIRED = {}           # route rel id -> (runs holding stops before, stops in the tree)
+
+
+def repair_route_runs(rid, runs, members, ways, coords, station_nodes, stations):
+    """New runs for route relation `rid` if its own are in pieces (see above), else None.
+
+    runs: build_model.assemble's [(node ids, lon/lat)]; station_nodes: {station key: set(stop
+    node id)}, the line's stops over all its routes (place_stations reads them all, so they are
+    all placed here too where this route's track passes them)."""
+    allnodes = {n for ns in station_nodes.values() for n in ns}
+    if not allnodes:
+        return None
+    arr = np.fromiter(allnodes, dtype=np.int64)
+    holding = sum(1 for ids, _xy in runs if np.isin(ids, arr).any())
+    if holding < REPAIR_MIN_RUNS:
+        return None
+
+    # The route's own track as a graph.
+    adj = defaultdict(dict)
+    pos = {}
+    for ty, ref, role in members:
+        if ty != "w" or (role and not role.startswith(("forward", "backward"))):
+            continue
+        w = ways.get(ref)
+        if w is None or len(w[1]) < 2:
+            continue
+        nodes = np.asarray(w[1], dtype=np.int64)
+        p, ok = coords.many(nodes)
+        prev = None
+        for n, k, good in zip(nodes.tolist(), p.tolist(), ok.tolist()):
+            if not good:
+                prev = None
+                continue
+            pos[n] = (coords.x[k] / 1e7, coords.y[k] / 1e7)
+            if prev is not None and prev != n:
+                d = dist_m(*pos[prev], *pos[n])
+                if d < adj[prev].get(n, INF):
+                    adj[prev][n] = adj[n][prev] = d
+            prev = n
+    if not pos:
+        return None
+    gids = np.fromiter(pos.keys(), dtype=np.int64)
+    gxy = np.asarray([pos[n] for n in gids.tolist()])
+
+    # Each stop's sources: the track nodes within ABSORB_M of its stop nodes, at that distance.
+    src = {}                                   # station key -> {node: metres}
+    stop_at = {}                               # station key -> the stop node put in the run
+    for st, ns in station_nodes.items():
+        pts = [(n, pos.get(n) or coords.get(n)) for n in ns]
+        pts = [(n, p) for n, p in pts if p is not None]
+        if not pts and st in stations:
+            pts = [(None, (stations[st]["lon"], stations[st]["lat"]))]
+        got, best = {}, None
+        for n, (lon, lat) in pts:
+            dd = np.hypot((gxy[:, 0] - lon) * math.cos(math.radians(lat)) * 111320,
+                          (gxy[:, 1] - lat) * 110570)
+            k = int(np.argmin(dd))
+            if best is None or dd[k] < best[0]:
+                best = (float(dd[k]), int(gids[k]), n)
+            for i in np.nonzero(dd <= REPAIR_ABSORB_M)[0].tolist():
+                g = int(gids[i])
+                got[g] = min(got.get(g, INF), float(dd[i]))
+        if not got and best is not None and best[0] <= REPAIR_SNAP_M:
+            got = {best[1]: best[0]}
+        if got and best is not None and best[2] is not None:
+            src[st] = got
+            stop_at[st] = best[2]
+    if len(src) < 2:
+        return None
+
+    # Parts of the route's track with no way between them (a way missing from the relation:
+    # the Morristown Line's ends 450 m short of the Hoboken approach) are joined where their
+    # loose ends come nearest another part holding a stop, by a link marked as a gap: a stop
+    # pair joined over it is traced by build_model as any gap in a relation is.
+    comp = {}
+    for n0 in pos:
+        if n0 in comp:
+            continue
+        comp[n0] = n0
+        todo = [n0]
+        while todo:
+            u = todo.pop()
+            for v in adj[u]:
+                if v not in comp:
+                    comp[v] = n0
+                    todo.append(v)
+    gap_links = set()
+    holding_comps = {comp[g] for nodes in src.values() for g in nodes}
+    cuf = UF()
+    for c in holding_comps:
+        cuf.find(c)
+    gcomp = np.asarray([comp[n] for n in gids.tolist()])
+    loose = [n for n in pos if len(adj[n]) <= 1 and comp[n] in holding_comps]
+    links = []
+    for n in loose:
+        lon, lat = pos[n]
+        dd = np.hypot((gxy[:, 0] - lon) * math.cos(math.radians(lat)) * 111320,
+                      (gxy[:, 1] - lat) * 110570)
+        other = (gcomp != comp[n]) & np.isin(gcomp, list(holding_comps))
+        if not other.any():
+            continue
+        k = int(np.argmin(np.where(other, dd, INF)))
+        if dd[k] <= REPAIR_GAP_M:
+            links.append((float(dd[k]), n, int(gids[k])))
+    for d, a, b in sorted(links):
+        if cuf.find(comp[a]) == cuf.find(comp[b]):
+            continue
+        cuf.union(comp[a], comp[b])
+        adj[a][b] = adj[b][a] = d
+        if d > REPAIR_JOIN_M:                  # nearer, two ways mapped not quite meeting
+            gap_links.add((a, b))
+            gap_links.add((b, a))
+        if os.environ.get("REPAIR_DEBUG"):
+            print("   gap link", a, b, round(d), pos[a], pos[b])
+
+    # Every track node to its nearest stop along the track (a node two stops both reach at
+    # the same cost goes to either).
+    lab, dist, pred = {}, {}, {}
+    heap = []
+    for st, nodes in src.items():
+        for g, d in nodes.items():
+            if d < dist.get(g, INF):
+                dist[g], lab[g] = d, st
+                pred.pop(g, None)
+    heap = [(d, g) for g, d in dist.items()]
+    heapq.heapify(heap)
+    done = set()
+    while heap:
+        d, u = heapq.heappop(heap)
+        if u in done:
+            continue
+        done.add(u)
+        for v, w in adj[u].items():
+            if d + w < dist.get(v, INF):
+                dist[v], lab[v], pred[v] = d + w, lab[u], u
+                heapq.heappush(heap, (d + w, v))
+
+    # Stops whose regions touch, by the cheapest track between them.
+    cand = {}
+    for u, nb in adj.items():
+        if u not in lab:
+            continue
+        for v, w in nb.items():
+            if v not in lab or lab[u] == lab[v]:
+                continue
+            a, b = lab[u], lab[v]
+            c = dist[u] + w + dist[v]
+            key = (a, b) if a < b else (b, a)
+            if key not in cand or c < cand[key][0]:
+                cand[key] = (c, u, v) if a < b else (c, v, u)
+    uf = UF()
+    tree = defaultdict(dict)                   # station -> {neighbour: (km, nodes or None)}
+
+    def chain(x):
+        out = [x]
+        while out[-1] in pred:
+            out.append(pred[out[-1]])
+        return out
+    for key, (c, u, v) in sorted(cand.items(), key=lambda kv: kv[1][0]):
+        a, b = key
+        if uf.find(a) == uf.find(b):
+            continue
+        uf.union(a, b)
+        nodes = chain(u)[::-1] + chain(v)      # a's source ... u, v ... b's source
+        if any((x, y) in gap_links for x, y in zip(nodes[:-1], nodes[1:])):
+            tree[a][b] = tree[b][a] = (c, None)
+            continue
+        tree[a][b] = (c, nodes)
+        tree[b][a] = (c, nodes[::-1])
+    # Parts of the route with no track between them: joined at their nearest stops, with no
+    # nodes (build_model traces the gap as it did).
+    sts = list(src)
+    for st in sts:
+        uf.find(st)
+    while len({uf.find(s) for s in sts}) > 1:
+        best = None
+        for a in sts:
+            for b in sts:
+                if uf.find(a) == uf.find(b):
+                    continue
+                pa = stations[a] if a in stations else None
+                pb = stations[b] if b in stations else None
+                if not pa or not pb:
+                    continue
+                d = dist_m(pa["lon"], pa["lat"], pb["lon"], pb["lat"])
+                if best is None or d < best[0]:
+                    best = (d, a, b)
+        if best is None:
+            break
+        _d, a, b = best
+        uf.union(a, b)
+        tree[a][b] = tree[b][a] = (best[0] * 1.5, None)
+
+    # The walk: from one end of the tree's longest path to the other, out along each branch
+    # and back, the longest path's own branch last so it is not walked back.
+    def farthest(s):
+        seen, todo, far = {s: 0.0}, [s], (0.0, s)
+        prevs = {s: None}
+        while todo:
+            u = todo.pop()
+            for v, (c, _n) in tree[u].items():
+                if v not in seen:
+                    seen[v] = seen[u] + c
+                    prevs[v] = u
+                    todo.append(v)
+                    if seen[v] > far[0]:
+                        far = (seen[v], v)
+        return far[1], prevs
+    start = next(iter(tree)) if tree else sts[0]
+    s, _ = farthest(start)
+    t, prevs = farthest(s)
+    spine = set()
+    x = t
+    while x is not None:
+        spine.add(x)
+        x = prevs[x]
+    out_runs, cur = [], []
+
+    def put_stop(st, toward=None):
+        n = stop_at[st]
+        if toward is not None:
+            # Across a gap build_model traces from this stop node: of the stop's nodes, the one
+            # nearest the stop on the other side (30th Street's two, for Suburban Station).
+            q = coords.get(stop_at[toward])
+            got = [(dist_m(*q, *p), m) for m in station_nodes[st]
+                   for p in [pos.get(m) or coords.get(m)] if p is not None] if q else []
+            if got:
+                n = min(got)[1]
+        g = cur[-1] if cur else None
+        p = pos.get(g) if g is not None else (pos.get(n) or coords.get(n))
+        if p is None:
+            p = (stations[st]["lon"], stations[st]["lat"])
+        if not cur or cur[-1][0] != n:
+            cur.append((n, p))
+
+    def put_nodes(nodes):
+        for g in nodes:
+            if cur and cur[-1][0] == g:
+                continue
+            cur.append((g, pos[g]))
+
+    def edge(a, b):
+        nonlocal cur
+        _c, nodes = tree[a][b]
+        if nodes is None:                      # a gap: end this run, start the next at b
+            if cur:
+                out_runs.append(cur)
+            cur = []
+            put_stop(b, toward=a)
+            return
+        put_nodes(nodes)
+        put_stop(b)
+
+    stack = [(s, None, iter(sorted(tree[s], key=lambda v: (v in spine, v))))]
+    put_stop(s)
+    while stack:
+        u, parent, it = stack[-1]
+        v = next((v for v in it if v != parent), None)
+        if v is None:
+            stack.pop()
+            if parent is not None and u not in spine:
+                edge(u, parent)                # back to the branch point
+            continue
+        edge(u, v)
+        stack.append((v, u, iter(sorted(tree[v], key=lambda x: (x in spine, x)))))
+    if cur:
+        out_runs.append(cur)
+    if not out_runs:
+        return None
+    # A run of one stop between two gaps (Hoboken, past the missing way) still has to be read
+    # by place_stations: the stop twice, at one point, so it is a run of two nodes.
+    out_runs = [r if len(r) >= 2 else r * 2 for r in out_runs]
+    # A run's first stop node, where it is no track node, sits where its track starts (as the
+    # others sit where their track arrives), so no section starts with a hop off the track.
+    for r in out_runs:
+        if r[0][0] not in pos:
+            r[0] = (r[0][0], r[1][1])
+    REPAIRED[rid] = (holding, len(src))
+    if os.environ.get("REPAIR_DEBUG"):
+        for a in stop_at:
+            print("   stop", stations[a]["name"], stop_at[a], stop_at[a] in pos,
+                  sorted(station_nodes[a]))
+        for a in tree:
+            print("   tree", stations[a]["name"], "->",
+                  [(stations[b]["name"], round(c / 1000, 2), n is not None)
+                   for b, (c, n) in tree[a].items()])
+    return [(np.asarray([n for n, _p in r], dtype=np.int64),
+             np.asarray([p for _n, p in r], dtype=float)) for r in out_runs]
+
+
 class OsmTrack:
     """OSM rail ways, for drawing a register section on the track its trains run on."""
 
@@ -2019,6 +2348,7 @@ def build(path, log):
     n_traced = n_fallback = 0
     fallback = []
     n_merged = 0
+    twin_stubs = []
     for li, g in enumerate(groups):
         lg = LineGraph(g["segs"])
         # --- one station per place on this line (MERGE_M), the most-served kept
@@ -2086,10 +2416,32 @@ def build(path, log):
             sgeo[f"{sa}|{sb}"] = [[round(x, 5), round(y, 5)] for x, y in pts]
             SECTION_SEGS[(lid, f"{sa}|{sb}")] = sorted({e[5] for e in v["edges"]})
             SECTION_CHAIN[(lid, f"{sa}|{sb}")] = round(v["chain"], 3)
+        node_of = {sid: n for n, sid in at.items()}
+        # A stop a few metres short of its line's dead end (South Station, 5 m before the end
+        # of NARN's track; Rockport, Needham Heights, Downtown Carrollton): the junction there
+        # is the stop itself, and its stub only gave the app a junction end to offer every
+        # line near the station from (Anita, 2026-10-09: the Red Line past South Station).
+        # Left out where no other line meets that node and it is no border.
+        deg = Counter(s for sec in sections for s in sec[:2])
+        for sec in [s for s in sections if s[2] <= TWIN_STUB_KM]:
+            j = sec[0] if sec[0].startswith("uj") else sec[1] if sec[1].startswith("uj") else None
+            stop = sec[1] if j == sec[0] else sec[0]
+            if j is None or stop.startswith("uj") or deg[j] != 1:
+                continue
+            n = node_of[j]
+            if node_lines.get(n, set()) - {li} or any(
+                    dist_m(*lg.pos[n], bx, by) <= BORDER_M for bx, by, _bn in BORDERS):
+                continue
+            key = f"{sec[0]}|{sec[1]}"
+            sections.remove(sec)
+            chain.pop(key, None)
+            sgeo.pop(key, None)
+            SECTION_SEGS.pop((lid, key), None)
+            SECTION_CHAIN.pop((lid, key), None)
+            twin_stubs.append((sec[2], name, g["owner"], stop, j))
         if not sections:
             continue
         used = {s for sec in sections for s in sec[:2]}
-        node_of = {sid: n for n, sid in at.items()}
         for sid in used:
             if sid not in out_st:
                 if sid.startswith("uj"):
@@ -2141,6 +2493,7 @@ def build(path, log):
             l["companion_of"] = main
         log(f"    second track {'folded into its line' if p90 <= COMPANION_KM * 1000 else 'kept'}: "
             f"{l['name']} {l['km']:.1f} km, 90% within {p90:,.0f} m")
+    fold_second_track_stubs(out_lines, out_st, geoms, log)
     # Two lines of one name and owner more than JOIN_KM apart: the same name, and an English
     # name that tells them apart by their end stops ("Northeast Corridor (Washington -
     # New Rochelle)"), which the app shows. check_model sums them under the one name. A line
@@ -2159,6 +2512,10 @@ def build(path, log):
         for l in sorted(hole_lines, key=lambda l: -l["km"]):
             log(f"    {l['km']:7.1f} km  {l['name']} [{l['operator']}]  "
                 f"{len(l['sections'])} sections")
+    log(f"US: {len(twin_stubs)} dead-end stubs of {TWIN_STUB_KM * 1000:.0f} m or less past a stop "
+        f"left out (the stop ends the line)")
+    for km, name, owner, stop, j in sorted(twin_stubs, reverse=True):
+        log(f"    {km * 1000:5.0f} m  {name} [{owner}]  {out_name(st, stop, out_st)} - {j}")
     total = sum(l["km"] for l in out_lines)
     n_j = sum(1 for s in out_st.values() if s.get("junction"))
     log(f"US: {len(out_lines)} register lines, {total:,.0f} km, {len(out_st)} stations of "
@@ -2178,8 +2535,86 @@ def build(path, log):
     return out_lines, out_st, geoms
 
 
+def fold_second_track_stubs(lines, out_st, geoms, log):
+    """A line's stop-less stub from one of its branch points to a dead end where its own folded
+    second track carries on is that second track's start, NARN having coded its first stretch
+    as passenger and the rest not (the holes file brought the rest in as "<line> (second
+    track)"). Moved into that companion, so ownership gives its ways to the line too. Left in
+    the line it was a junction end leading nowhere on the line's own track, and the app offered
+    whatever passed near it: the Lordsburg Subdivision's 13.1 km to the Pantano second main
+    east of Tucson offered Tucson again, on the Sunset Limited (Anita, 2026-10-09). Only where
+    the stub lies within COMPANION_KM of the line's other track (90% of it), as the companion
+    itself must."""
+    from n02 import walk_order
+    byid = {l["id"]: l for l in lines}
+    comps = defaultdict(list)
+    for l in lines:
+        if l.get("companion_of") in byid:
+            comps[l["companion_of"]].append(l)
+    moved = []
+    for mid, cs in comps.items():
+        m = byid[mid]
+        while True:
+            deg = Counter(s for sec in m["sections"] for s in sec[:2])
+            hit = None
+            for j, d in deg.items():
+                if d != 1 or not out_st[j].get("junction"):
+                    continue
+                c = next((c for c in cs if any(j in sec[:2] for sec in c["sections"])), None)
+                if c is None:
+                    continue
+                chain, u, prev = [], j, None
+                while True:
+                    sec = next(s for s in m["sections"] if u in s[:2] and s is not prev)
+                    chain.append(sec)
+                    u = sec[0] if sec[1] == u else sec[1]
+                    prev = sec
+                    if deg[u] != 2 or not out_st[u].get("junction"):
+                        break
+                # From a branch point of the line: not a stop, not the line's own other end.
+                if not out_st[u].get("junction") or deg[u] < 3:
+                    continue
+                keys = {f"{s[0]}|{s[1]}" for s in chain}
+                g = geoms[mid]
+                rest = {k: v for k, v in g.items() if k not in keys}
+                if track_apart_m({k: g[k] for k in keys}, rest) > COMPANION_KM * 1000:
+                    continue
+                hit = (c, chain, keys)
+                break
+            if hit is None:
+                break
+            c, chain, keys = hit
+            for sec in chain:
+                key = f"{sec[0]}|{sec[1]}"
+                m["sections"].remove(sec)
+                c["sections"].append(sec)
+                geoms[c["id"]][key] = geoms[mid].pop(key)
+                c["chain"][key] = m["chain"].pop(key)
+                for d in (SECTION_SEGS, SECTION_CHAIN):
+                    if (mid, key) in d:
+                        d[(c["id"], key)] = d.pop((mid, key))
+                for s in sec[:2]:
+                    out_st[s]["lines"].add(c["id"])
+            left = {s for sec in m["sections"] for s in sec[:2]}
+            for sec in chain:
+                for s in sec[:2]:
+                    if s not in left:
+                        out_st[s]["lines"].discard(mid)
+            for l in (m, c):
+                l["km"] = round(sum(s[2] for s in l["sections"]), 3)
+                l["km_official"] = round(sum(l["chain"].values()), 3)
+                l["display"] = display_order(l["sections"], walk_order)
+            moved.append((sum(s[2] for s in chain), m["name"], m["operator"], c["id"],
+                          [out_name(None, s, out_st) for s in chain[0][:2]]))
+    log(f"US: {len(moved)} stubs of a line to where its own second track carries on moved into "
+        f"that second track ({sum(x[0] for x in moved):.1f} km)")
+    for km, name, op, cid, ends in sorted(moved, reverse=True):
+        log(f"    {km:7.3f} km  {name} [{op}] -> {cid}  ({' - '.join(ends)})")
+
+
 TRACE = True
 PARALLEL_M = 80        # a station cuts every track of its line this close to it
+TWIN_STUB_KM = 0.05    # a dead-end stub this short past a stop is the stop's own (no junction end)
 
 
 def not_a_name(g):

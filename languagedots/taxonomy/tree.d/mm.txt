@@ -21,7 +21,7 @@ sinotibetan.burmish.rakhine | Rakhine
 sinotibetan.burmish.danu | Danu
 sinotibetan.burmish.intha | Intha
 sinotibetan.burmish.taungyo | Taungyo
-sinotibetan.karen | Karen | 0.80 0.11 215
+sinotibetan.karen | Karen languages | 0.80 0.11 215
 sinotibetan.karen.pao | Pa'o | 0.56 0.12 232
 sinotibetan.karen.kayan | Kayan (Padaung)
 sinotibetan.karen.kayah | Kayah (Karenni) | 0.70 0.12 228

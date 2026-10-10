@@ -10,7 +10,7 @@ import { compass, stationTowards } from "../../game/places";
 import { DEMAND_INDEX, type Level, type LineInput, type Selection } from "../../game/types";
 import { queryClock } from "../../workers/clockClient";
 import { parseEdgePis, type EdgePi, type EdgePis } from "../../map/edgeEdit";
-import { selection } from "../../game/ui";
+import { display, selection } from "../../game/ui";
 import { edit, linesAt, say, world } from "../../game/world";
 import { live } from "../../map/live";
 import { removeThing } from "../../game/remove";
@@ -151,7 +151,7 @@ const CRUSH_PER_CAR = 160;
 /**
  * Who is on a train now (T-083, SPEC 8): the riders demand puts on the segment it is running
  * (`LineDemand.loads`, riders over the whole period) shared among the trains the line runs in
- * that period, so an average train of the period; against its seats and its crush load.
+ * that period, with both the average and busiest hour; against seats and crush load.
  */
 function OnBoard({ line, run, s, stopS, cars }: { line: LineInput; run: number; s: number; stopS: number[]; cars: number }) {
   const dm = lineDemand(line.id);
@@ -171,18 +171,20 @@ function OnBoard({ line, run, s, stopS, cars }: { line: LineInput; run: number; 
       </ul>
     );
   const atEnd = s >= stopS[n - 1] - 1;
-  const aboard = atEnd ? 0 : loads[run === 0 ? seg : n - 1 + seg] / trains;
+  const average = atEnd ? 0 : loads[run === 0 ? seg : n - 1 + seg] / trains;
+  const busiest = average * (demandView.value.peakHourFactor[p] ?? 1);
+  const basis = display.value.trainLoadBasis;
+  const aboard = basis === "average" ? average : busiest;
   const seats = SEATS_PER_CAR * cars, crush = CRUSH_PER_CAR * cars;
   const state = aboard <= 0.5 ? "Empty" : aboard <= seats ? "Seats free" : aboard <= crush ? "Standing" : "Over full";
   return (
     <>
       <div class="h">
-        On board<span class="right muted small">{PERIODS[p].name.toLowerCase()}, an average train</span>
+        On board<span class="right muted small">{PERIODS[p].name.toLowerCase()}, {basis === "average" ? "average" : "busiest hour"}</span>
       </div>
       <ul class="rows">
-        <Row label="Riders" bold>
-          {Math.round(aboard).toLocaleString("en-US")}
-        </Row>
+        <Row label="Average riders" bold={basis === "average"}>{Math.round(average).toLocaleString("en-US")}</Row>
+        <Row label="Busiest hour" bold={basis === "busiest"}>{Math.round(busiest).toLocaleString("en-US")}</Row>
         <li>
           <span class="grow">
             <span class="load-bar">

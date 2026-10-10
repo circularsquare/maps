@@ -1,7 +1,24 @@
 # Mali. RGPH5 2022, mother tongue by région (sources/ml_rgph.py: annex A06's shares x its
 # populations, the foreign languages split by annex A03), on religiondots' Kontur hexes for the
-# same 20 régions.
+# same 20 régions. Inside a région, each language's dots go to its old (2009) cercles by CLEAR
+# Global's shares (sources/ml_place.py, sources/clear_place.py), a placement weight only.
 from _shared import *  # noqa: F401,F403
+
+
+def _load(name):
+    import importlib.util
+    spec = importlib.util.spec_from_file_location(name, ROOT / "sources" / f"{name}.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def _weight(place):
+    if "zone" not in place.columns:
+        raise SystemExit("data/geo/ml/ml_hexes.gpkg has no `zone` column: run sources/ml_place.py")
+    shares = pd.read_csv(NORM / "ml_clear.csv")
+    return _load("clear_place").ClearWeighter(place, shares, _load("ml_place").node_codes(),
+                                              label="CLEAR Global's cercle")
 
 
 def _counts():
@@ -21,7 +38,8 @@ def _counts():
 ENTRY = dict(
     name="Mali",
     source=("Fifth General Census of Population and Housing (RGPH5) 2022, Caractéristiques "
-            "culturelles de la population, annexes A03 and A06 (INSTAT)"),
+            "culturelles de la population, annexes A03 and A06 (INSTAT); placement inside "
+            "régions from CLEAR Global's cercle shares (IPUMS sample of the 2009 census)"),
     how="census, 2022, mother tongue, aged 3 and over",
     parts=[
         dict(covers="Foreign languages",
@@ -30,15 +48,16 @@ ENTRY = dict(
         dict(covers="Everyone else", source="2022 census, mother tongue, aged 3 and over",
              rest=True),
     ],
-    grain="20 regions, 957,000 people on average",
+    grain=("20 regions, 957,000 people on average; in twelve of them, placed by cercle "
+           "inside"),
     gap=("about 2.2 million children under three (not asked), 941,335 people in areas not "
          "enumerated because of insecurity, and 106,567 in collective households or homeless"),
     view=[-12.3, 10.1, 4.3, 25.0],
     counts=_counts,
     mappings=["ml2022"],
-    place=RD_GEO / "ml" / "ml_hexes.gpkg",
+    place=GEO / "ml" / "ml_hexes.gpkg",
     place_unit=lambda g: g["unit"].astype(str),
-    place_weight=pop_weight,
+    place_weight=_weight,
     note_public=(
         "The census asked each person's mother tongue, the first language they learnt as a "
         "child. Bambara is the mother tongue of half the people counted, and more speak it as "
@@ -49,5 +68,6 @@ ENTRY = dict(
         "not known and they are not drawn. The 0.4% who gave no answer are spread over the "
         "languages of their own region, as the census's percentages do. In Ménaka, 10% have a "
         "language of Mali that the census does not name; it is drawn as other African "
-        "languages."),
+        "languages. Inside twelve regions, each language's dots are spread across the old "
+        "cercles using CLEAR Global's figures from a sample of the 2009 census."),
 )

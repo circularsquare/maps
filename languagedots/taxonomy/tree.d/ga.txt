@@ -8,15 +8,14 @@ nigercongo.bantu.teke | Teke
 nigercongo.bantu.punu | Punu | 0.52 0.15 30
 nigercongo.bantu.nzebi | Nzebi (Njebi) | 0.62 0.14 140
 nigercongo.bantu.mbere | Mbere (Mbédé) | 0.50 0.12 300
-nigercongo.bantu.kota_gabon | Kota | 0.64 0.12 200
 nigercongo.bantu.tsogo | Tsogo | 0.75 0.12 330
 nigercongo.bantu.myene | Myene | 0.58 0.12 250
-nigercongo.bantu.lumbu_gabon | Lumbu (Baloumbou)
-nigercongo.bantu.kele_gabon | Kele (Kélé)
-nigercongo.bantu.sangu_gabon | Sangu (Masangu)
+nigercongo.bantu.lumbu_gabon | Lumbu (Baloumbou) | 0.58 0.14 80
+nigercongo.bantu.kele_gabon | Kele (Kélé) | 0.64 0.14 80
+nigercongo.bantu.sangu_gabon | Sangu (Masangu) | 0.7 0.14 70
 nigercongo.bantu.sira | Sira (Eshira) | 0.45 0.10 60
-nigercongo.bantu.vumbu | Vumbu (Bavungu)
-nigercongo.bantu.vili | Vili
+nigercongo.bantu.vumbu | Vumbu (Bavungu) | 0.7 0.14 60
+nigercongo.bantu.vili | Vili | 0.76 0.14 20
 indoeuropean.romance | Romance
 indoeuropean.romance.french | French
 # --- origin_mix borrowed nodes (python sources/origin_mix.py --fragment ga) ---
@@ -95,7 +94,7 @@ nigercongo.bantoid.grassfields.bamun | Bamun
 nigercongo.bantoid.grassfields.lamnso | Lamnso' (Nso)
 nigercongo.bantu.bafia | Bafia
 nigercongo.bantu.bakundu | Bakundu
-nigercongo.bantu.basaa | Basaa
+nigercongo.bantu.basaa | Basaa | 0.58 0.14 90
 nigercongo.bantu.bemba | Bemba (M.40)
 nigercongo.bantu.bemba.tabwa | Tabwa
 nigercongo.bantu.bembe | Bembe
@@ -132,7 +131,7 @@ nigercongo.bantu.mbosi | Mbosi (Mbochi)
 nigercongo.bantu.mbuun | Mbunda (Mbuun)
 nigercongo.bantu.mongo | Mongo
 nigercongo.bantu.nande | Nande
-nigercongo.bantu.ndowe | Ndowe (Kombe, Benga)
+nigercongo.bantu.ndowe | Ndowe (Kombe, Benga) | 0.76 0.14 40
 nigercongo.bantu.ngombe | Ngombe
 nigercongo.bantu.nguni | Nguni
 nigercongo.bantu.nguni.ndebele_za | Ndebele (South Africa)

@@ -332,7 +332,7 @@ nigercongo.bantu.bemba | Bemba (M.40)
 nigercongo.bantu.bemba.bemba | Bemba
 nigercongo.bantu.bena | Bena
 nigercongo.bantu.bisa_lamba | Bisa-Lamba (M.50)
-nigercongo.bantu.bisa_lamba.lala | Lala
+nigercongo.bantu.bisa_lamba.lala | Lala (Zambia)
 nigercongo.bantu.bisa_lamba.lamba | Lamba
 nigercongo.bantu.botatwe | Botatwe (M.60)
 nigercongo.bantu.botatwe.lenje | Lenje
@@ -622,7 +622,7 @@ seasia_other | Other indigenous languages of mainland Southeast Asia
 sinotibetan.burmish.burmese | Burmese
 sinotibetan.burmish.rakhine | Rakhine
 sinotibetan.kachin | Kachin languages (Jingpho, Zaiwa, Lhaovo, Rawang)
-sinotibetan.karen | Karen
+sinotibetan.karen | Karen languages
 sinotibetan.karen.pao | Pa'o
 sinotibetan.loloish | Loloish (Yi languages)
 sinotibetan.loloish.akha | Akha

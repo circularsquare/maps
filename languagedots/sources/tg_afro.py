@@ -1,7 +1,11 @@
 """Togo: Afrobarometer first-language answers by region, on the 2022 census's region populations.
 
     python sources/wafr_afro.py tg     the respondents -> data/raw/tg/tg_afro.csv (read-only .sav)
-    python sources/tg_afro.py          -> data/normalized/tg.csv (unit x language, counts)
+    python sources/tg_afro.py          -> data/normalized/tg_afro.csv (unit x language, counts)
+
+SINCE 2026-10-09 (session 32a047f0) Togo is drawn by sources/tg_mics.py: MICS6 2017's language
+groups per region, split inside each group by this survey's answers (load() and shares() below).
+This script's own output is kept as the comparison and no longer writes tg.csv.
 
 NO CENSUS TABLE. Togo's 2010 RGPH-4 asked ethnicity (IPUMS ETHNICTG; IPUMS account blocked)
 and INSEED published no ethnic or language table from it or from RGPH-5 (2022; the coverage
@@ -36,7 +40,7 @@ HERE = Path(__file__).resolve().parent.parent
 RD = HERE.parent / "religiondots"
 EXTRACT = HERE / "data" / "raw" / "tg" / "tg_afro.csv"
 LOOKUP = RD / "data" / "geo" / "tg" / "tg_lookup.csv"
-OUT = HERE / "data" / "normalized" / "tg.csv"
+OUT = HERE / "data" / "normalized" / "tg_afro.csv"   # was tg.csv until 2026-10-09 (tg_mics.py)
 SOURCE_ID = "afrobarometer_r5_r7_togo"
 
 FIRST_ROUNDS = (5, 6, 7)     # (8, 9) = "language spoken in home"

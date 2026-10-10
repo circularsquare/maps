@@ -159,6 +159,8 @@ pub struct LineData {
     pub path: Vec<u32>,
     /// Trains per hour for high, medium and low demand (SPEC 6.3).
     pub tph: [f32; 3],
+    /// Whole trains allocated across both directions, or legacy frequency scheduling.
+    pub trains: Option<[u32; 3]>,
     pub dwell_s: f32,
     pub turnaround_s: f32,
     /// Cars per train; 0 = as many as the shortest platform allows.
@@ -292,6 +294,7 @@ pub struct Network {
     pub line_stops: Vec<Span>,
     pub line_path: Vec<Span>,
     pub line_tph: Vec<[f32; 3]>,
+    pub line_trains: Vec<Option<[u32; 3]>>,
     pub line_dwell: Vec<f32>,
     pub line_turn: Vec<f32>,
     pub line_cars: Vec<u8>,
@@ -373,6 +376,7 @@ impl Network {
             line_stops: vec![],
             line_path: vec![],
             line_tph: vec![],
+            line_trains: vec![],
             line_dwell: vec![],
             line_turn: vec![],
             line_cars: vec![],
@@ -482,6 +486,7 @@ impl Network {
         self.line_stops.push(Span::default());
         self.line_path.push(Span::default());
         self.line_tph.push([0.0; 3]);
+        self.line_trains.push(None);
         self.line_dwell.push(DEFAULT_DWELL_S);
         self.line_turn.push(DEFAULT_TURNAROUND_S);
         self.line_cars.push(0);
@@ -545,6 +550,7 @@ impl Network {
                 stops: self.stops.get(self.line_stops[i]).to_vec(),
                 path: self.paths.get(self.line_path[i]).to_vec(),
                 tph: self.line_tph[i],
+                trains: self.line_trains[i],
                 dwell_s: self.line_dwell[i],
                 turnaround_s: self.line_turn[i],
                 cars: self.line_cars[i],
@@ -758,6 +764,7 @@ impl Network {
                 self.line_stops[i] = self.stops.replace(self.line_stops[i], &d.stops);
                 self.line_path[i] = self.paths.replace(self.line_path[i], &d.path);
                 self.line_tph[i] = d.tph;
+                self.line_trains[i] = d.trains;
                 self.line_dwell[i] = d.dwell_s;
                 self.line_turn[i] = d.turnaround_s;
                 self.line_cars[i] = d.cars;
@@ -789,6 +796,7 @@ impl Network {
         }
         let old = self.line_tph[id as usize];
         self.line_tph[id as usize] = tph;
+        self.line_trains[id as usize] = None;
         self.touch.schedules.push(id);
         Ok(old)
     }
@@ -1277,6 +1285,50 @@ impl Network {
     }
 
     // ---------------------------------------------------------------- cost
+
+    /// Unbuilt costs grouped by kind, charged level, track count, water and ramp.
+    /// Seven numbers per row: those five keys, metres/count, US$M.
+    pub fn blueprint_cost_items(&self) -> Vec<f64> {
+        let mut rows = std::collections::BTreeMap::<(u8, i8, u8, bool, bool), (f64, f64)>::new();
+        let mut add = |kind, level, tracks, wet, ramp, qty, cost| {
+            let r = rows.entry((kind, level, tracks, wet, ramp)).or_default();
+            r.0 += qty;
+            r.1 += cost;
+        };
+        for e in 0..self.edge_count() {
+            if self.edge_alive[e] && !self.edge_built[e] {
+                cost::track_cost_parts(self.edge_len[e], self.edge_vert(e as u32), self.edge_water(e as u32), self.edge_tracks[e], |level, wet, ramp, m, c| {
+                    add(0, level, self.edge_tracks[e], wet, ramp, m, c);
+                });
+            }
+        }
+        for n in 0..self.node_count() {
+            if !self.node_alive[n] { continue; }
+            let wet = self.water_mask.is_water(self.node_x[n], self.node_y[n]);
+            let level = self.node_level[n];
+            if self.node_platform[n] > 0 && !self.node_built[n] {
+                let tracks = self.node_tracks(n as u32);
+                add(1, level, tracks, wet, false, 1.0, cost::station_cost(level, self.node_platform[n], tracks, wet));
+            }
+            if self.node_ports[n].n >= 3 && self.built_ports(n as u32) < 3 {
+                let base = cost::junction_cost(level, false, wet);
+                add(2, level, 0, wet, false, 1.0, base);
+                if self.node_flying[n] {
+                    add(3, level, 0, wet, false, 1.0, cost::junction_cost(level, true, wet) - base);
+                }
+            }
+        }
+        for x in &self.crossings {
+            if let CrossKind::Flat(level) = x.kind {
+                if !self.edge_built[x.e1 as usize] || !self.edge_built[x.e2 as usize] {
+                    let wet = self.water_mask.is_water(x.x, x.y);
+                    add(4, level, 0, wet, false, 1.0, cost::crossing_cost(level, wet));
+                }
+            }
+        }
+        rows.into_iter().flat_map(|((kind, level, tracks, wet, ramp), (qty, cost))|
+            [kind as f64, level as f64, tracks as f64, wet as u8 as f64, ramp as u8 as f64, qty, cost]).collect()
+    }
 
     /// Build cost of everything standing, US$M.
     pub fn total_cost(&self) -> f64 {

@@ -110,6 +110,22 @@ def share_10_14():
     return q / tot
 
 
+def units_by_sex():
+    """{municipality: q_men, q_women, q, men, women} (men/women = non-Qatari); also used by
+    countries/qa.py for the family / single-men placement (sources/gulf_place.md §6)."""
+    t1 = table1()
+    q10 = qatari_10p()
+    u_m, u_f = under10(4), under10(5)
+    s = share_10_14()
+    units = pd.DataFrame(index=MUNIS)
+    units["q_men"] = [q10[m]["men"] + s * u_m[m] for m in MUNIS]
+    units["q_women"] = [q10[m]["women"] + s * u_f[m] for m in MUNIS]
+    units["q"] = (units["q_men"] + units["q_women"]).round().astype(int)
+    units["men"] = [t1[m]["men"] - units.at[m, "q_men"] for m in MUNIS]
+    units["women"] = [t1[m]["total"] - units.at[m, "q"] - units.at[m, "men"] for m in MUNIS]
+    return units
+
+
 def main():
     t1 = table1()
     q10 = qatari_10p()

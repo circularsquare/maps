@@ -1,17 +1,18 @@
-# Afghanistan. The village-majority language of each province, from the Ministry of Rural
-# Rehabilitation and Development's provincial profiles (c. 2006-07, reprinted in CALL Handbook
-# 11-16 Annex A), on NSIA's 1404 settled population (sources/af_mrrd.py), placed on religiondots'
-# 34-province Kontur hexes. A proxy Anita allowed on 2026-10-05 (ask/017-af.md). Minority
-# languages the profiles never name come from cited speaker estimates (ask 019 route), kept to
-# their homeland (ZONES). Record: sources/af.md.
+# Afghanistan. MICS6 2022-23 (UNICEF and NSIA), language of the household head, read as every
+# member's: weighted shares per province (urban and rural apart in 13 provinces) applied to
+# NSIA's 1404 settled population (sources/af_mics.py), placed on religiondots' 34-province Kontur
+# hexes. Languages MICS does not list come from cited speaker estimates (ask 019 route), kept to
+# their homeland (ZONES). The 2006-07 village-majority proxy this replaced is sources/af_mrrd.py,
+# kept as a comparison (data/normalized/af_mrrd.csv). Record: sources/af.md.
 from _shared import *  # noqa: F401,F403
 import numpy as np
 
 SETTLED = 34_935_197
 KUCHI = 1_500_000
+SOURCE_IDS = {"mics6_2022_hc1b", "af_speaker_estimates"}
 
-# The languages drawn from speaker estimates (sources/af_mrrd.py MINORITIES, BRAHUI) are kept to
-# their homeland inside the province (a placement only; the counts are af_mrrd.py's either way).
+# The languages drawn from speaker estimates (sources/af_mics.py MINORITIES, BRAHUI) are kept to
+# their homeland inside the province (a placement only; the counts are af_mics.py's either way).
 # Glottolog points where they sit in Afghanistan, else the district from the sources:
 #   Shughni: Afghan Shighnan along the Panj, 37.2-38.0N, 71.2-71.8E (Glottolog's point is Khorog,
 #     across the river); Wakhi: the Wakhan corridor 71.7-73.6E, east of Ishkashim town;
@@ -39,30 +40,57 @@ ZONES = {
 }
 
 
-def _counts():
-    import af2007
+def _table():
+    import af2022
     df = pd.read_csv(NORM / "af.csv", dtype={"geo_id": str})
     if df["geo_id"].nunique() != 34:
         raise SystemExit(f"af.csv: {df['geo_id'].nunique()} provinces, expected 34")
     if df["count"].sum() != SETTLED:
         raise SystemExit(f"af.csv sums to {df['count'].sum():,}, expected {SETTLED:,}")
-    df["node"] = df["source_category"].map(af2007.resolve)
-    df = df[df["node"].notna()]
+    if not set(df["source_id"]) <= SOURCE_IDS:
+        raise SystemExit(f"af.csv sources {sorted(set(df['source_id']))}: rerun sources/af_mics.py")
+    df["node"] = df["source_category"].map(af2022.resolve)
     # religiondots' hex layer is keyed by the same AF01-AF34 ids (its af_lookup.csv: unit == geo_id)
     df["unit"] = df["geo_id"]
-    df["tier"] = np.where(df["source_category"].isin(af2007.MODELLED), "modelled", "derived")
+    return df
+
+
+def _counts():
+    df = _table()
+    df["tier"] = "modelled"
     return df.groupby(["unit", "node", "tier"], as_index=False)["count"].sum()
 
 
 class _AfWeighter:
-    """Population weights, cut to a homeland zone for the (province, language) pairs in ZONES."""
+    """Population weights, with two refinements inside a province (placement only; the counts
+    are af.csv's either way):
+    - in the 13 provinces where sources/af_mics.py tabulates MICS's urban and rural strata apart,
+      each language's urban part goes on the province's urban hexes and the rest on the rural
+      ones. Urban hexes are the densest, taken in order of population until they hold NSIA's
+      urban share of the province (a stand-in for municipal boundaries, which the layer lacks);
+    - the (province, language) pairs in ZONES are cut to their homeland."""
 
     def __init__(self, place):
         self.pop = place["pop"].to_numpy(dtype=float)
         c = place.geometry.to_crs(3857).centroid.to_crs(4326)
         self.x, self.y = c.x.to_numpy(), c.y.to_numpy()
         self.unit = place["unit"].astype(str).to_numpy()
-        self.n = {"zone": 0, "pop": 0, "none": 0}
+        self.n = {"zone": 0, "strata": 0, "pop": 0, "none": 0}
+        t = _table()
+        st = t[t["stratum"].isin(["urban", "rural"])]
+        g = st.groupby(["unit", "node", "stratum"])["count"].sum().unstack(fill_value=0)
+        self.f_urban = (g["urban"] / (g["urban"] + g["rural"])).to_dict()
+        ushare = (st[st["stratum"] == "urban"].groupby("unit")["count"].sum()
+                  / st.groupby("unit")["count"].sum())
+        self.urban = np.zeros(len(self.pop), dtype=bool)
+        for u, s in ushare.items():
+            i = np.where(self.unit == u)[0]
+            if not len(i):
+                raise SystemExit(f"af: province {u} has no hexes")
+            o = i[np.argsort(-self.pop[i], kind="stable")]
+            cum = np.cumsum(self.pop[o])
+            k = int(np.searchsorted(cum, s * cum[-1])) + 1
+            self.urban[o[:k]] = True
 
     def _mask(self, z, idx):
         x, y = self.x[idx], self.y[idx]
@@ -92,11 +120,19 @@ class _AfWeighter:
                 raise SystemExit(f"af: zone {z} holds no population for {node}")
             self.n["zone"] += 1
             return w
+        f = self.f_urban.get((self.unit[idx[0]], node))
+        if f is not None:
+            u = self.urban[idx]
+            up, rp = pop[u].sum(), pop[~u].sum()
+            if (f == 0 or up > 0) and (f == 1 or rp > 0):
+                self.n["strata"] += 1
+                return np.where(u, pop * (f / up if up else 0), pop * ((1 - f) / rp if rp else 0))
         self.n["pop"] += 1
         return pop
 
     def summary(self):
         return (f"{self.n['zone']} (province, language) rows kept to their homeland, "
+                f"{self.n['strata']} placed by MICS's urban and rural strata, "
                 f"{self.n['pop']:,} on population, {self.n['none']} on equal shares")
 
 
@@ -108,15 +144,15 @@ def _weight(place):
 
 ENTRY = dict(
     name="Afghanistan",
-    source=("Ministry of Rural Rehabilitation and Development provincial profiles, c. 2006-07, as "
-            "reprinted in the US Army's CALL Handbook 11-16 (2011), Annex A; on the National "
-            "Statistics and Information Authority's settled population for 2025-26; the Asia "
-            "Foundation, Afghanistan in 2006: A Survey of the Afghan People, Q-45; speaker "
-            "estimates for minority languages from Ethnologue (via Wikipedia and Bashir 2003), "
-            "the Endangered Language Alliance and Callahan (2007)"),
-    how=("no census or open survey asks; each village's majority language as a share of each "
-         "province; Kabul city and Herat split to the Asia Foundation's 2006 national shares; "
-         "minority languages from speaker estimates, placed in their home valleys"),
+    source=("Afghanistan Multiple Indicator Cluster Survey 2022-23 (MICS6; UNICEF and the "
+            "National Statistics and Information Authority), microdata; the National Statistics "
+            "and Information Authority's settled population for 2025-26; speaker estimates for "
+            "minority languages from Ethnologue (via Wikipedia and Bashir 2003), the Endangered "
+            "Language Alliance and Callahan (2007)"),
+    how=("a household survey, 2022-23, language of the household head, read as every member's; "
+         "weighted shares per province (towns and countryside apart in 13 provinces) applied to "
+         "each province's 2025-26 population; languages the survey does not list from speaker "
+         "estimates, placed in their home valleys"),
     parts=[
         dict(covers="Pamiri languages, Kyrgyz, Parachi, Gawar-Bati and Brahui",
              source="published speaker estimates (Ethnologue and others), placed in their "
@@ -124,41 +160,31 @@ ENTRY = dict(
              nodes=[f"{IR}.shughni", f"{IR}.wakhi", f"{IR}.munji", f"{IR}.sanglechi",
                     f"{IR}.ishkashimi", f"{IR}.parachi", "turkic.kyrgyz",
                     "indoeuropean.indoaryan.dardic.gawarbati", "dravidian.northern.brahui"]),
-        dict(covers="Kabul city and Herat, Dari and Pashto",
-             source="no figure of their own; drawn 92% Dari and 8% Pashto to match the Asia "
-                    "Foundation's 2006 national first-language shares",
-             people=7_696_871),
         dict(covers="Everyone else",
-             source="Ministry of Rural Rehabilitation and Development profiles, c. 2006-07, "
-                    "village majority language, on the 2025-26 population",
+             source="UNICEF MICS 2022-23, about 23,000 households, language of the household "
+                    "head, on the 2025-26 population",
              rest=True),
     ],
     grain="34 provinces, 1,028,000 people on average",
-    gap=("Takhar and Kunduz (2.5 million), whose profiles give no usable figure; 0.7 million the "
-         "profiles leave out elsewhere; and 1.5 million nomadic Kuchis, who have no province. "
-         "4.7 million in all, 13%"),
+    gap="1.5 million nomadic Kuchis, who have no province in the population figures (4.1%)",
     view=[60.5, 29.3, 75.0, 38.5],
     counts=_counts,
-    mappings=["af2007"],
+    mappings=["af2022"],
     place=RD_GEO / "af" / "af_hexes.gpkg",
     place_unit=lambda g: g["unit"].astype(str),
     place_weight=_weight,
     note_public=(
-        "Afghanistan has had no census since 1979, and the one survey that asked the language "
-        "spoken at home, the Asia Foundation's Survey of the Afghan People, withdrew its data in "
-        "2021. This map uses the Ministry of Rural Rehabilitation and Development's provincial "
-        "profiles from about 2006-07, which give the share of each province's people living in "
-        "villages where most people speak each language. Everyone in a village is counted under "
-        "that language, so minorities inside mixed villages vanish, and Hazaragi is drawn as "
-        "Dari because the profiles do not name it. The shares are applied to the statistics "
-        "authority's population for 2025-26. Kabul's figure describes its villages, so Kabul "
-        "city has none, and Herat's gives one figure for Dari and Pashto together. Both are "
-        "drawn 92% Dari and 8% Pashto, the split that brings the whole map to the Asia "
-        "Foundation's 2006 national shares of first languages. It is a national figure, not a "
-        "measure of either place. The profiles never name the Pamiri languages of Badakhshan, "
-        "the Kyrgyz of the Wakhan, Parachi, Gawar-Bati or Brahui. These are drawn from "
-        "published speaker estimates, mostly Ethnologue's, placed in their home valleys and "
-        "taken out of the people each profile leaves undescribed (Brahui out of Balochi and "
-        "Pashto). They are estimates of speakers, not counts. Takhar and Kunduz are left empty because their profiles give "
-        "no usable figure, and the 1.5 million nomadic Kuchis are not on the map."),
+        "Afghanistan has had no census since 1979. These shares come from UNICEF's household "
+        "survey of 2022-23, about 23,000 households in all 34 provinces, interviewed under the "
+        "Taliban administration. Each household is drawn on the language of its head, and the "
+        "shares are applied to the statistics authority's population for 2025-26. In 13 "
+        "provinces the survey counted towns and countryside apart, and there each language's "
+        "town share is placed in the province's most densely settled places; elsewhere dots "
+        "follow population. The survey does not list Hazaragi, so Hazaras are drawn as Dari. "
+        "Nor does it list the Pamiri languages of Badakhshan, the Kyrgyz of the Wakhan, "
+        "Parachi, Gawar-Bati or Brahui. These are drawn from published speaker estimates, "
+        "mostly Ethnologue's, placed in their home valleys and taken out of the language their "
+        "speakers would most likely have given (Brahui out of Balochi). They are estimates, not "
+        "counts. The survey visited 28 places in most provinces, so a minority living in a few "
+        "valleys can be missed. The 1.5 million nomadic Kuchis are not on the map."),
 )

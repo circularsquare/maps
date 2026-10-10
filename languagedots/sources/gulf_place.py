@@ -234,6 +234,279 @@ class GulfWeighter:
                 f"on equal shares")
 
 
+# ------------------------------------------------- foreign residents in three pools (2026-10-07)
+# sources/gulf_place.md §6. Each nationality's men and women (UN DESA, by sex) are read as
+#   family:       min(men, women) of each sex, people living as households;
+#   single men:   the men beyond that, who live in shared or labour accommodation;
+#   single women: the women beyond that, nearly all live-in domestic workers.
+# The pools are then placed apart inside each unit: single men by a hex share fitted on Qatar's
+# 2020 census zones by sex (`--fit-sex`), family on the rest of the foreign weight, single women
+# with households (citizens and families). In Qatar the zones' own sex counts fix each zone's
+# single men and families; elsewhere the fitted hex rule alone. Counts per unit never move.
+#
+# fitted 2026-10-07 on Qatar's 87 zones within its 8 municipalities (`--fit-sex`; gulf_place.md §6)
+DELTA = 10.0     # industrial share of the hex
+EPS = 0.5        # ln(people per km2), centred on 1,000
+
+
+def node_sex_pools(dest, dest_cc, year):
+    """{node: (men, women, paired)} of `dest`'s migrants from UN DESA by origin and sex, each
+    origin on its language mix as the country's build reads it (gulf_mix.origin_mix with the
+    origin's both-sexes count; DESA's `Others` on `other`). paired = min(men, women) per origin."""
+    import gulf_mix as g
+    origins, others, _ = g.desa(dest, year=year)
+    out = {}
+
+    def add(mix, m, w):
+        p = min(m, w)
+        for n, s in mix.items():
+            a = out.setdefault(n, [0.0, 0.0, 0.0])
+            a[0] += m * s
+            a[1] += w * s
+            a[2] += p * s
+    for iso, (b, m, w) in origins.items():
+        add(g.origin_mix(iso, dest_cc, b), m, w)
+    add({g.OTHER: 1.0}, others[1], others[2])
+    return {n: tuple(v) for n, v in out.items()}
+
+
+def resolve_pools(node_mw, known):
+    """node_sex_pools keyed by today's home-mix node ids -> keyed by the ids the country's
+    normalized CSV holds (`known`). Home mixes elsewhere get re-keyed after a Gulf CSV is written
+    (2026-10-07: `afroasiatic.arabic.sudanese_arabic` against qa.csv's
+    `afroasiatic.sudanese_arabic`), so an id the CSV lacks is matched on its last component."""
+    known = set(known)
+    last = {}
+    for n in known:
+        last.setdefault(n.split(".")[-1], []).append(n)
+    out, miss = {}, []
+    for k, v in node_mw.items():
+        if k in known:
+            key = k
+        elif len(last.get(k.split(".")[-1], [])) == 1:
+            key = last[k.split(".")[-1]][0]
+        else:
+            miss.append(k)
+            continue
+        a = out.setdefault(key, [0.0, 0.0, 0.0])
+        for j in range(3):
+            a[j] += v[j]
+    if miss:
+        print(f"  gulf pools: {len(miss)} home-mix nodes not in the CSV, left out of the sex "
+              f"ratios: {miss[:5]}")
+    return {n: tuple(v) for n, v in out.items()}
+
+
+def row_pools(df, node_mw, unit_mw=None):
+    """{(unit, node): (family, single men, single women)} for the foreign rows of df.
+    node_mw: node_sex_pools(). unit_mw: {unit: (foreign men, foreign women)} where a census gives
+    them (Qatar), else each row splits at its node's national sex ratio. With unit_mw, a unit's
+    pairs are min(its men x P/M, its women x P/W) and each sex's family share is scaled to that."""
+    M = sum(v[0] for v in node_mw.values())
+    W = sum(v[1] for v in node_mw.values())
+    P = sum(v[2] for v in node_mw.values())
+    out = {}
+    d = df[~df["origin"].map(is_citizen)]
+    for u, g in d.groupby("unit"):
+        rows = g.groupby("node")["count"].sum()
+        if unit_mw is not None:
+            fm, fw = unit_mw[u]
+            pair = min(fm * P / M, fw * P / W)
+            km, kw = pair / (fm * P / M), pair / (fw * P / W)
+        for node, c in rows.items():
+            # a node today's home mixes no longer give (the CSV predates a re-keyed mix) takes
+            # the country's overall sex ratios
+            m, w, p = node_mw.get(node, (M, W, P))
+            if m + w <= 0:
+                m, w, p = M, W, P
+            if unit_mw is None:
+                fam_m = fam_w = p
+                mm, ww = m, w
+            else:
+                mm, ww = fm * m / M, fw * w / W
+                fam_m, fam_w = mm * (p / m if m else 0) * km, ww * (p / w if w else 0) * kw
+            tot = mm + ww
+            out[(u, node)] = (c * (fam_m + fam_w) / tot, c * (mm - fam_m) / tot,
+                              c * (ww - fam_w) / tot)
+    return out
+
+
+def _solve_share(f, z, target):
+    """t with logit t = a + z, sum(f t) == target, by bisection."""
+    tot = f.sum()
+    if tot <= 0 or target <= 0:
+        return np.zeros(len(f))
+    if target >= tot:
+        return np.ones(len(f))
+    lo, hi = -60.0 - z.max(), 60.0 - z.min()
+    for _ in range(80):
+        mid = (lo + hi) / 2
+        if (f * _sig(mid + z)).sum() > target:
+            hi = mid
+        else:
+            lo = mid
+        if hi - lo < 1e-10:
+            break
+    return _sig((lo + hi) / 2 + z)
+
+
+def single_men_score(dens, ind, delta=None, eps=None):
+    delta = DELTA if delta is None else delta
+    eps = EPS if eps is None else eps
+    return delta * ind + eps * (np.log(np.maximum(dens, 1.0)) - L0)
+
+
+class PoolWeighter(GulfWeighter):
+    """GulfWeighter with each row's foreign dots split over three pools (row_pools), each on its
+    own hex weight. zone: per-hex zone ids and {zone: (people, men, women)} from a census, with
+    {unit: citizen men share}; the zones then fix where single men and families go."""
+
+    def __init__(self, cc, place, cit_frac, unit_cf, pools, zone=None, zone_sex=None,
+                 cit_male=None, delta=None, eps=None):
+        super().__init__(cc, place, cit_frac, unit_cf)
+        self.pools = pools
+        self.zone = None if zone is None else np.asarray(zone)
+        self.zone_sex = zone_sex
+        self.cit_male = cit_male or {}
+        self.z = single_men_score(self.dens, self.ind, delta, eps)
+        self._pw = {}
+        self.n["pooled"] = 0
+        print(f"  gulf pools: single men by industrial share and density (DELTA "
+              f"{DELTA if delta is None else delta}, EPS {EPS if eps is None else eps})"
+              + (", per census zone by sex" if zone is not None else ""))
+
+    def split(self, idx):
+        """(citizens, foreigners) per hex of one unit, people of the layer, or None."""
+        u = self.unit[idx[0]]
+        p = self.pop[idx]
+        c_, f_ = self.unit_cf.get(u, (0.0, 0.0))
+        if p.sum() <= 0 or c_ + f_ <= 0:
+            return None
+        F = p.sum() * f_ / (c_ + f_)
+        s = foreign_share(p, self.dens[idx], self.ind[idx], F, self.beta, self.gamma)
+        return p * (1 - s), p * s
+
+    def zone_single_men(self, idx, cit, fr):
+        """{zone: single foreign men} of one unit from the census zones by sex: each zone's men
+        and women less its placed citizens (at the unit's citizen sex ratio), and the foreign
+        men beyond the foreign women. Capped just under the zone's placed foreigners."""
+        u = self.unit[idx[0]]
+        p = self.pop[idx]
+        zn = self.zone[idx]
+        qm = self.cit_male.get(u, 0.5)
+        out = {}
+        for zz in np.unique(zn):
+            k = zn == zz
+            N, Mz, _Wz = self.zone_sex.get(int(zz), (0, 0, 0))
+            if N <= 0 or fr[k].sum() <= 0:
+                continue
+            lay = p[k].sum()
+            fm = max(0.0, lay * Mz / N - cit[k].sum() * qm)
+            fw = max(0.0, lay * (N - Mz) / N - cit[k].sum() * (1 - qm))
+            out[zz] = min(fm - min(fm, fw), 0.999 * fr[k].sum())
+        return out
+
+    def unit_shapes(self, idx):
+        """(citizens, family, single men, single women) hex weights of one unit, or None."""
+        u = self.unit[idx[0]]
+        if u in self._pw:
+            return self._pw[u]
+        cs = self.split(idx)
+        if cs is None:
+            self._pw[u] = None
+            return None
+        cit, fr = cs
+        keys = [k for k in self.pools if k[0] == u]
+        sm = sum(self.pools[k][1] for k in keys)
+        tot = sum(sum(self.pools[k]) for k in keys)
+        z = self.z[idx]
+        if self.zone is None or tot <= 0:
+            t = _solve_share(fr, z, fr.sum() * sm / tot if tot > 0 else 0)
+        else:
+            t = np.zeros(len(idx))
+            zn = self.zone[idx]
+            for zz, single in self.zone_single_men(idx, cit, fr).items():
+                k = zn == zz
+                t[k] = _solve_share(fr[k], z[k], single)
+        w_sm = fr * t
+        w_fam = fr * (1 - t)
+        w_sw = cit + w_fam
+        sh = []
+        for w in (w_fam, w_sm, w_sw):
+            sh.append(w / w.sum() if w.sum() > 0 else fr / fr.sum())
+        self._pw[u] = (cit / cit.sum() if cit.sum() > 0 else p / p.sum(), *sh)
+        return self._pw[u]
+
+    def weights(self, node, idx, count, plain=False):
+        sh = self.unit_shapes(idx)
+        if sh is None:
+            return super().weights(node, idx, count, plain)
+        u = self.unit[idx[0]]
+        cf = self.cit_frac.get((u, node), 0.0)
+        pl = self.pools.get((u, node))
+        if pl is None or sum(pl) <= 0:
+            fw = super()._unit_weights(idx)[1]
+        else:
+            a = np.array(pl) / sum(pl)
+            fw = a[0] * sh[1] + a[1] * sh[2] + a[2] * sh[3]
+            self.n["pooled"] += 1
+        self.n["split"] += 1
+        return cf * sh[0] + (1 - cf) * fw
+
+    def summary(self):
+        return super().summary() + f"; {self.n['pooled']:,} foreign rows in family / single pools"
+
+
+def fit_sex(cc="qa"):
+    """DELTA / EPS search on Qatar's 2020 zones: each municipality's single foreign men (its
+    zones' foreign men beyond foreign women) placed by the hex rule alone, against each zone's
+    own count. Loss: foreigner-weighted squared error of the zone's single-men share."""
+    import geopandas as gpd
+    sys.path[:0] = [str(ROOT), str(ROOT / "countries"), str(ROOT / "taxonomy")]
+    from countries import COUNTRIES
+    cfg = COUNTRIES[cc]
+    place = gpd.read_file(cfg["place"])
+    place["unit"] = cfg["place_unit"](place)
+    w = cfg["place_weight"](place)
+    units = {u: g.index.to_numpy() for u, g in place.groupby("unit")}
+    base = {}
+    for u, idx in units.items():
+        cit, fr = w.split(idx)
+        tg = w.zone_single_men(idx, cit, fr)
+        base[u] = (idx, fr, tg)
+
+    def run(delta, eps):
+        rows = []
+        for u, (idx, fr, tg) in base.items():
+            z = single_men_score(w.dens[idx], w.ind[idx], delta, eps)
+            t = _solve_share(fr, z, sum(tg.values()))
+            zn = w.zone[idx]
+            for zz, s in tg.items():
+                k = zn == zz
+                F = fr[k].sum()
+                rows.append((u, zz, F, s / F, (fr[k] * t[k]).sum() / F))
+        return pd.DataFrame(rows, columns=["unit", "zone", "foreign", "share", "pred"])
+
+    def err(r):
+        return float(np.sqrt((r["foreign"] * (r["pred"] - r["share"]) ** 2).sum() / r["foreign"].sum()))
+    grid = []
+    for delta in [0, 1, 2, 4, 6, 8, 10, 14]:
+        for eps in [-1.0, -0.5, -0.25, 0, 0.25, 0.5, 1.0]:
+            grid.append((err(run(delta, eps)), delta, eps))
+    grid.sort()
+    print(f"even within each municipality (0, 0): rms {err(run(0, 0)):.3f}")
+    for e, d, ep in grid[:12]:
+        print(f"  DELTA {d:>4} EPS {ep:>5}: rms {e:.3f}")
+    r = run(grid[0][1], grid[0][2])
+    r0 = run(0, 0)
+    print(f"r (best) {np.corrcoef(r['share'], r['pred'])[0, 1]:.2f}; zones by foreigners:")
+    r["even"] = r0["pred"]
+    for _, x in r.sort_values("foreign", ascending=False).head(15).iterrows():
+        print(f"    zone {int(x['zone']):>3} {x['unit'][:14]:<14} foreign {x['foreign']:>9,.0f}  "
+              f"single men {x['share']:.1%}  even {x['even']:.1%}  placed {x['pred']:.1%}")
+    return grid[0]
+
+
 def citizen_tables(df):
     """From rows with unit, node, origin, count: ({(unit, node): citizen share},
     {unit: (citizens, foreign)})."""
@@ -468,7 +741,10 @@ if __name__ == "__main__":
     ap.add_argument("--fit", action="store_true")
     ap.add_argument("--layers", action="store_true")
     ap.add_argument("--report", nargs=3, type=float, metavar=("BETA", "BETA2", "GAMMA"))
+    ap.add_argument("--fit-sex", action="store_true")
     a = ap.parse_args()
+    if a.fit_sex:
+        fit_sex()
     if a.layers:
         build_layers()
     if a.fit:

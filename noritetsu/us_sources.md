@@ -420,6 +420,86 @@ ends, Metrolink's River Subdivision near Chinatown, Dallas, Prosper (Fargo), San
 (Atlanta). They are register gaps of the kind the holes file and the dropped junction
 sections leave, each to look at on its own; not changed here.
 
+## Route relations in no order, and New Providence (2026-10-08)
+
+Anita's notes of 2026-10-08: the NJ Transit Morris & Essex Lines' strip diagram had Dover,
+Denville, Convent Station and Mount Arlington on side lanes and the Gladstone Branch's stops
+interleaved with the Morristown Line's. The diagram was right for the data; the data was wrong.
+NJ Transit's old both-ways relations ("Morristown Line: New York <=> Hackettstown", "Gladstone
+Branch: New York <=> Gladstone") list their ways in no order, so build_model joined them into
+79 and 231 runs and read the stops in run order, and each pair consecutive across two runs
+became a section over the shortest track: Dover - Mount Tabor past Denville, Mount Arlington -
+Denville past Dover, Denville - Convent Station, East Orange - Hoboken. The line came to 246.8
+km for about 145 km of route. 23 US train relations are this broken (4 or more runs holding
+stops): most NJ Transit lines, Metro-North's Hudson, Harlem and New Haven, the LIRR's Port
+Jefferson, Oyster Bay and Port Washington, several MBTA and SEPTA ones.
+
+`repair_route_runs` (through rules/us.py's `route_runs`, a build_model hook proposed in
+handoff_notes/njt_morristown.md, not yet called) rebuilds such a route's runs from its own
+track: each track node goes to the nearest stop along the track, stops whose regions touch are
+neighbours, the cheapest neighbours joining all stops are the line (a spanning tree), and the
+tree is walked as one run out along each branch and back. Where the relation lacks a way (the
+Morristown relation stops 450 m short of the Hoboken approach), the two parts are joined at
+their nearest loose ends and that pair of stops is left to build_model's gap tracing, as
+before; ends under 30 m apart are taken as track.
+
+Trial (2026-10-08, the hook patched in at run time, against the shipped build): 18 OSM lines
+change, none of their ids, no station id; register lines unchanged but the Morristown Line
+(New Providence, below). Lengths now near the published routes: Morris & Essex 246.8 -> 148.5
+km, Montclair-Boonton 180.8 -> 98.9 (Hoboken - Hackettstown 60 mi), North Jersey Coast 181.5 ->
+107.0 (66.8 mi), Hudson 252.8 -> 117.2 (74 mi), Harlem 160.5 -> 131.6 (82 mi), New Haven 298.0
+-> 178.7, Port Washington 51.7 -> 31.7, Haverhill 95.2 -> 53.3 (33 mi), Providence/Stoughton
+156.8 -> 107.3. Commuter OSM lines with a section passing one of their own stops: 15 -> 3 (the
+LIRR Hempstead and West Hempstead Branches and SEPTA Manayunk/Norristown, express track, which
+the diagram hides as before). Three SEPTA lines grow where their partial relations now reach
+Center City across a gap traced over other track with no stop on it (Chestnut Hill West
+Suburban Station - Queen Lane 11.6 km, Trenton Suburban Station - Bridesburg 16.1, Cynwyd
+Suburban Station - 30th Street 4.5 km where 1.5 km is right: build_model's network trace from
+the stop node goes round).
+
+**New Providence** was on the Morristown Line between Chatham and Summit (3.1 + 2.3 km). It is
+a Gladstone Branch stop; the Morristown Line passes 560 m off where the two part west of Summit
+(inside STATION_M), and the broken Gladstone relation lists a Morristown Line way there. A
+NOT_ON row takes it off (NJT MORRISTOWN LINE): Chatham - Summit is one section again, 58.51 km.
+
+## South Station, Tucson, and kinds (2026-10-09)
+
+Anita's notes of 2026-10-09 (handoff_notes/boston_tucson.md has the app half and the numbers):
+the East Subdivision's diagram opened with Newmarket, JFK/UMass and the Red Line ahead of
+South Station, and the Lordsburg Subdivision's had Tucson twice.
+
+- **South Station's Old Colony approach** (segments 379801, 380038, 374683; 1.1 km, coded C)
+  is filed under SUBDIV "EAST". `SEGMENT_NAME` reads it as the Old Colony's: every Old Colony
+  train runs over it, and no East Subdivision train does. East is now South Station - Back Bay
+  - Attleboro (56.08 -> 54.54 km), and South Station became the Old Colony's own end stop
+  (South Station - JFK/UMass 3.71 km; 16.66 -> 18.23 km). The Fairmount Line still ends where
+  it leaves, node 495012, now mid-section on the Old Colony.
+- **A stop a few metres short of its line's dead end** (`TWIN_STUB_KM`, 50 m): South Station
+  stood 5 m before NARN's end of track, which made a junction end "near South Station", and
+  the app offered every line near the station from it. Such a stub is left out where no other
+  line meets the node and it is no border. 20 in the US (South Station on East and on the Old
+  Colony, Rockport, Newburyport, Needham Heights, Gladstone, Elburn, Seward, South Bend
+  Airport, Downtown Carrollton, Chestnut Hill West, Greenbush...). The MBTA's 0.19 km "South
+  Side Subdivision" at Greenbush, which was little more than such a stub, no longer ships.
+- **A stub that is the start of the line's own second track** (`fold_second_track_stubs`):
+  between Vail and Benson, UP's second main runs on its own alignment 0.1-1.1 km from the
+  first. NARN codes its first 13.1 km as passenger, so it was a Lordsburg section ending 48 m
+  from Lordsburg's other main track, and the rest not (the holes file's "Lordsburg Subdivision
+  (second track)"). The app found no way on from that end but the Sunset Limited, so it
+  offered Tucson there, which the line's other end already reaches on the Gila Subdivision.
+  Such a stub (stop-less, from a branch point of the line to a dead end where its own folded
+  second track carries on, within COMPANION_KM) now goes into that second track, and
+  ownership gives its ways to the line: Lordsburg 506.57 -> 493.45 km (its second track
+  13.12 km, owning nothing), Pittsburgh Line 0.30 km, Gallup 0.15, Cajon 0.12. Left alone:
+  the Elko Subdivision's paired track, which also has long stubs ending on its own track
+  (151.8 km and 55.2 km, the first 3.2 km from the line for 90% of it), offering Winnemucca on
+  the California Zephyr. It needs its own look.
+- **Kinds** (`REGISTER_KIND_SURE` in rules/us.py; needs the build_model change in the note):
+  `register_way_lines` called the Old Colony Line "subway" from the Red Line beside it, so it
+  owned Red Line track and the same-kind walk could not reach JFK/UMass on it. NS's Amtrak
+  Connection at Cleveland came out light rail. Until build_model reads the flag, the Old
+  Colony stays "subway".
+
 ## Commands
 
     python us_register.py --fetch          # NARN, about a minute

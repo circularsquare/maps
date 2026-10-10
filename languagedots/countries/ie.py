@@ -31,9 +31,11 @@ ENTRY = dict(
     view=[-10.7, 51.4, -5.9, 55.45],
     counts=_counts,
     mappings=["ie2022"],
-    place=RD_GEO / "ie" / "smallareas2022" / "SMALL_AREA_2022.shp",
-    place_unit=lambda g: g["SA_GUID__1"].astype(str),
-    place_weight=None,
+    # the 2022 small areas cut by Kontur hexes, so an area's dots follow where its people live
+    # (sources/kontur_cut.py; 2026-10-08)
+    place=GEO / "ie" / "ie_konturcut.gpkg",
+    place_unit=lambda g: g["unit"].astype(str),
+    place_weight=pop_weight,
     note_public=(
         "The census does not ask anyone's first language. It asks which language other than "
         "English or Irish a person speaks at home. Of the 1.87 million who say they can speak "

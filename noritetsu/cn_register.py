@@ -882,7 +882,14 @@ def bypasses(sections):
 #     2025-05-25 (vn_sources.md); OSM leaves the last 2.6 km to the border unnamed, so the
 #     piece runs over any track (Net). It joins Vietnam's Hà Nội - Đồng Đăng line, which those
 #     trains run on, rather than 湘桂线: Pingxiang -> Đồng Đăng is then one ride.
-CN_BORDERS = [("xFutian", "广深港高速线", None), ("xDongDang", "湘桂线", "vn")]
+CN_BORDERS = [("xFutian", "广深港高速线", None), ("xDongDang", "湘桂线", "vn"),
+              # 2026-10-08, la and mn built (handoff_notes/asia_build.md).
+              ("xBotenMohan", "中老昆万线", "la"),
+              ("xZamynUudErenhot", "集二线", "mn"),
+              # 2026-10-08, kp built (handoff_notes/kp_build.md): 丹东 - the Yalu bridge, K27/28
+              # and Dandong - P'yŏngyang; 集安 - the Ji'an bridge, the one car to Manp'o.
+              ("xSinuijuDandong", "沈丹线", "kp"),
+              ("xManpoJian", "梅集线", "kp")]
 PIECE_BORDER_M = 60        # the border point is this close to a node of the track
 PIECE_STATION_M = 300      # and the line's station this close to a node joined to it
 

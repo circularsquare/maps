@@ -1,5 +1,7 @@
 """Guyana, Census 2012 Table 2.3 ethnic background -> {node: share}. No language question; every
 row `derived` (sources/gy.md). Built as Barbados and Trinidad (bb2010.py, tt2011.py).
+SUPERSEDED 2026-10-09 by gy2019.py (MICS6 retention per region, sources/gy_mics.py); kept as the
+first build's reading, no longer used by countries/gy.py.
 
   White                      English
   Amerindian                 20% on americas_other ("Amerindian language, not named": the census

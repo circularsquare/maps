@@ -370,7 +370,11 @@ impl Service {
                     let d0 = ((t0 - dur) / 86400.0).floor() as i64;
                     let d1 = (t1 / 86400.0).floor() as i64;
                     for day in d0..=d1 {
-                        let (ps, pe) = (day as f64 * 86400.0 + h0 * 3600.0, day as f64 * 86400.0 + h1 * 3600.0);
+                        let (start, pe) = (day as f64 * 86400.0 + h0 * 3600.0, day as f64 * 86400.0 + h1 * 3600.0);
+                        // The reverse departure follows the forward trip's turnaround, so an
+                        // odd whole-line fleet stays evenly spaced around the complete circuit.
+                        let offset = if r == 1 && net.line_trains[l].is_some() { ls.trip_len(net, l as u32, 0, lev) % hw } else { 0.0 };
+                        let ps = start + offset;
                         let k0 = ((t0 - dur - ps) / hw).ceil().max(0.0) as i64;
                         let mut k = k0;
                         loop {

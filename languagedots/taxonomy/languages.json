@@ -272,7 +272,7 @@
 "id": "indoeuropean.indoaryan.eastern.rajbanshi",
 "label": "Rajbanshi",
 "parent": "indoeuropean.indoaryan.eastern",
-"color": "#cbc24a"
+"color": "#fbc959"
 },
 {
 "id": "indoeuropean.indoaryan.eastern.chakma",
@@ -952,7 +952,7 @@
 "id": "indoeuropean.iranian.balochi",
 "label": "Balochi",
 "parent": "indoeuropean.iranian",
-"color": "#b38a50"
+"color": "#be7955"
 },
 {
 "id": "indoeuropean.germanic",
@@ -2640,6 +2640,13 @@
 "id": "indoeuropean.germanic.continental.dutch",
 "label": "Dutch",
 "parent": "indoeuropean.germanic.continental",
+"color": "#35d0ff",
+"color_own": "#a9d2e3"
+},
+{
+"id": "indoeuropean.germanic.continental.dutch.dutch",
+"label": "Dutch",
+"parent": "indoeuropean.germanic.continental.dutch",
 "color": "#35d0ff"
 },
 {
@@ -2649,16 +2656,24 @@
 "color": "#ea899e"
 },
 {
-"id": "indoeuropean.iranian.dari",
-"label": "Dari",
+"id": "indoeuropean.iranian.persian",
+"label": "Persian",
 "parent": "indoeuropean.iranian",
+"color": "#e4ac59",
+"color_own": "#d5c1a7"
+},
+{
+"id": "indoeuropean.iranian.persian.dari",
+"label": "Dari",
+"parent": "indoeuropean.iranian.persian",
 "color": "#f3813f"
 },
 {
 "id": "indoeuropean.iranian.kurdish",
 "label": "Kurdish",
 "parent": "indoeuropean.iranian",
-"color": "#d2764a"
+"color": "#d2764a",
+"color_own": "#b89687"
 },
 {
 "id": "indoeuropean.iranian.zazaki",
@@ -2703,6 +2718,13 @@
 "id": "nilosaharan.centralsudanic.sara",
 "label": "Sara",
 "parent": "nilosaharan.centralsudanic",
+"color": "#1ad1d1",
+"color_own": "#a3cecd"
+},
+{
+"id": "nilosaharan.centralsudanic.sara.sara",
+"label": "Sara (language not given)",
+"parent": "nilosaharan.centralsudanic.sara",
 "color": "#1ad1d1"
 },
 {
@@ -2716,7 +2738,7 @@
 "id": "nilosaharan.nilotic.dinka",
 "label": "Dinka",
 "parent": "nilosaharan.nilotic",
-"color": "#347ec4"
+"color": "#4463c7"
 },
 {
 "id": "turkic",
@@ -2914,7 +2936,7 @@
 "id": "creole.english_based.trinidadian",
 "label": "Trinidadian Creole",
 "parent": "creole.english_based",
-"color": "#ddb870"
+"color": "#ef7e80"
 },
 {
 "id": "creole.english_based.vincentian",
@@ -2994,9 +3016,9 @@
 "color": "#7f57d1"
 },
 {
-"id": "indoeuropean.iranian.persian",
+"id": "indoeuropean.iranian.persian.persian",
 "label": "Persian (Farsi)",
-"parent": "indoeuropean.iranian",
+"parent": "indoeuropean.iranian.persian",
 "color": "#e4ac59"
 },
 {
@@ -3020,9 +3042,16 @@
 "color": "#b88fe6"
 },
 {
-"id": "afroasiatic.assyrian",
-"label": "Assyrian Neo-Aramaic",
+"id": "afroasiatic.aramaic",
+"label": "Aramaic",
 "parent": "afroasiatic",
+"color": "#f5e5a8",
+"color_own": "#e4deca"
+},
+{
+"id": "afroasiatic.aramaic.assyrian",
+"label": "Assyrian Neo-Aramaic",
+"parent": "afroasiatic.aramaic",
 "color": "#aaf1ff"
 },
 {
@@ -3049,8 +3078,8 @@
 "id": "nigercongo.bantu.zone_k",
 "label": "Zone K (eastern Angola, western Zambia)",
 "parent": "nigercongo.bantu",
-"color": "#c17a00",
-"color_own": "#ac9478"
+"color": "#cea35f",
+"color_own": "#c4b59f"
 },
 {
 "id": "nigercongo.bantu.zone_k.chokwe_lunda",
@@ -3063,7 +3092,7 @@
 "id": "nigercongo.bantu.zone_k.chokwe_lunda.chokwe",
 "label": "Chokwe",
 "parent": "nigercongo.bantu.zone_k.chokwe_lunda",
-"color": "#e3d99c"
+"color": "#d5aa4f"
 },
 {
 "id": "nigercongo.bantu.zone_k.chokwe_lunda.luvale",
@@ -3127,8 +3156,8 @@
 "id": "nigercongo.bantu.zone_h",
 "label": "Zone H (Kongo, Kimbundu)",
 "parent": "nigercongo.bantu",
-"color": "#e67d58",
-"color_own": "#c7a194"
+"color": "#57bc80",
+"color_own": "#9bbaa5"
 },
 {
 "id": "nigercongo.bantu.zone_h.kimbundu",
@@ -3173,8 +3202,8 @@
 "id": "nigercongo.bantu.zone_c.rivers",
 "label": "Rivers Bantu (C.10-40)",
 "parent": "nigercongo.bantu.zone_c",
-"color": "#f7945a",
-"color_own": "#d9b5a2"
+"color": "#49c4d8",
+"color_own": "#a2c5cb"
 },
 {
 "id": "nigercongo.bantu.zone_c.rivers.lingala",
@@ -3186,7 +3215,7 @@
 "id": "nigercongo.bantu.zone_h.kongo.fiote",
 "label": "Fiote",
 "parent": "nigercongo.bantu.zone_h.kongo",
-"color": "#cedb7c"
+"color": "#94c883"
 },
 {
 "id": "nigercongo.bantu.zone_k.chokwe_lunda.ngangela",
@@ -4158,7 +4187,7 @@
 "id": "creole.portuguese_based.papiamento",
 "label": "Papiamento",
 "parent": "creole.portuguese_based",
-"color": "#dceeb2"
+"color": "#be7ace"
 },
 {
 "id": "hmongmien",
@@ -4322,9 +4351,16 @@
 "color": "#2591c4"
 },
 {
-"id": "indoeuropean.romance.moldovan",
-"label": "Moldovan",
+"id": "indoeuropean.romance.romanian",
+"label": "Romanian",
 "parent": "indoeuropean.romance",
+"color": "#e2a0c5",
+"color_own": "#d4bcc9"
+},
+{
+"id": "indoeuropean.romance.romanian.moldovan",
+"label": "Moldovan",
+"parent": "indoeuropean.romance.romanian",
 "color": "#ffb86a"
 },
 {
@@ -4340,9 +4376,9 @@
 "color": "#5188cd"
 },
 {
-"id": "indoeuropean.romance.romanian",
+"id": "indoeuropean.romance.romanian.romanian",
 "label": "Romanian",
-"parent": "indoeuropean.romance",
+"parent": "indoeuropean.romance.romanian",
 "color": "#e2a0c5"
 },
 {
@@ -4361,6 +4397,13 @@
 "id": "indoeuropean.romance.venetian",
 "label": "Venetian",
 "parent": "indoeuropean.romance",
+"color": "#3bc4e0",
+"color_own": "#a0c5cf"
+},
+{
+"id": "indoeuropean.romance.venetian.venetian",
+"label": "Venetian",
+"parent": "indoeuropean.romance.venetian",
 "color": "#3bc4e0"
 },
 {
@@ -4377,9 +4420,16 @@
 "color_own": "#bacbac"
 },
 {
-"id": "indoeuropean.slavic.south.bosnian",
-"label": "Bosnian",
+"id": "indoeuropean.slavic.south.serbocroatian",
+"label": "Serbo-Croatian (BCMS)",
 "parent": "indoeuropean.slavic.south",
+"color": "#769c03",
+"color_own": "#909f79"
+},
+{
+"id": "indoeuropean.slavic.south.serbocroatian.bosnian",
+"label": "Bosnian",
+"parent": "indoeuropean.slavic.south.serbocroatian",
 "color": "#a5bf36"
 },
 {
@@ -4396,9 +4446,9 @@
 "color": "#00978a"
 },
 {
-"id": "indoeuropean.slavic.south.croatian",
+"id": "indoeuropean.slavic.south.serbocroatian.croatian",
 "label": "Croatian",
-"parent": "indoeuropean.slavic.south",
+"parent": "indoeuropean.slavic.south.serbocroatian",
 "color": "#f2e075"
 },
 {
@@ -4408,21 +4458,21 @@
 "color": "#b5fc8c"
 },
 {
-"id": "indoeuropean.slavic.south.montenegrin",
+"id": "indoeuropean.slavic.south.serbocroatian.montenegrin",
 "label": "Montenegrin",
-"parent": "indoeuropean.slavic.south",
+"parent": "indoeuropean.slavic.south.serbocroatian",
 "color": "#ebc75e"
 },
 {
-"id": "indoeuropean.slavic.south.serbian",
+"id": "indoeuropean.slavic.south.serbocroatian.serbian",
 "label": "Serbian",
-"parent": "indoeuropean.slavic.south",
+"parent": "indoeuropean.slavic.south.serbocroatian",
 "color": "#3bd0a3"
 },
 {
-"id": "indoeuropean.slavic.south.serbocroatian",
+"id": "indoeuropean.slavic.south.serbocroatian.serbocroatian",
 "label": "Serbo-Croatian",
-"parent": "indoeuropean.slavic.south",
+"parent": "indoeuropean.slavic.south.serbocroatian",
 "color": "#769c03"
 },
 {
@@ -4714,6 +4764,13 @@
 "id": "nigercongo.atlantic.fulah",
 "label": "Fula",
 "parent": "nigercongo.atlantic",
+"color": "#e15955",
+"color_own": "#ba8a86"
+},
+{
+"id": "nigercongo.atlantic.fulah.fulah",
+"label": "Fula",
+"parent": "nigercongo.atlantic.fulah",
 "color": "#e15955"
 },
 {
@@ -4927,20 +4984,20 @@
 "id": "nigercongo.bantu.zone_m.bemba.tabwa",
 "label": "Tabwa",
 "parent": "nigercongo.bantu.zone_m.bemba",
-"color": "#e7b643"
+"color": "#d69727"
 },
 {
 "id": "nigercongo.bantu.zone_d",
 "label": "Zone D (Maniema, Ituri)",
 "parent": "nigercongo.bantu",
-"color": "#b46200",
-"color_own": "#9d8069"
+"color": "#79a6e9",
+"color_own": "#a2b2ca"
 },
 {
 "id": "nigercongo.bantu.zone_d.bembe",
 "label": "Bembe",
 "parent": "nigercongo.bantu.zone_d",
-"color": "#b39f18"
+"color": "#8996c4"
 },
 {
 "id": "nigercongo.bantu.zone_g",
@@ -4971,7 +5028,7 @@
 },
 {
 "id": "nigercongo.bantu.zone_m.bisa_lamba.lala",
-"label": "Lala",
+"label": "Lala (Zambia)",
 "parent": "nigercongo.bantu.zone_m.bisa_lamba",
 "color": "#e8d266"
 },
@@ -5070,14 +5127,14 @@
 "id": "nigercongo.bantu.zone_k.chokwe_lunda.lunda",
 "label": "Lunda",
 "parent": "nigercongo.bantu.zone_k.chokwe_lunda",
-"color": "#c7aff5",
-"color_own": "#cec6df"
+"color": "#a87f19",
+"color_own": "#9e9175"
 },
 {
 "id": "nigercongo.bantu.zone_k.chokwe_lunda.lunda.lunda",
 "label": "Lunda",
 "parent": "nigercongo.bantu.zone_k.chokwe_lunda.lunda",
-"color": "#c7aff5"
+"color": "#a87f19"
 },
 {
 "id": "nigercongo.bantu.zone_s",
@@ -5202,15 +5259,15 @@
 "id": "nigercongo.bantu.zone_j.western_lakes",
 "label": "Western Lakes (Rwanda, Burundi, Kivu)",
 "parent": "nigercongo.bantu.zone_j",
-"color": "#ffa9bc",
-"color_own": "#fdd1d6"
+"color": "#dd7eca",
+"color_own": "#c7a5be"
 },
 {
 "id": "nigercongo.bantu.zone_j.western_lakes.rwanda_rundi",
 "label": "Rwanda-Rundi",
 "parent": "nigercongo.bantu.zone_j.western_lakes",
-"color": "#ffbdf2",
-"color_own": "#f9d1e3"
+"color": "#efabff",
+"color_own": "#e5cef0"
 },
 {
 "id": "nigercongo.bantu.zone_j.western_lakes.rwanda_rundi.ha",
@@ -5258,8 +5315,8 @@
 "id": "nigercongo.bantu.zone_b",
 "label": "Zone B (Gabon, Congo)",
 "parent": "nigercongo.bantu",
-"color": "#9a7400",
-"color_own": "#928564"
+"color": "#b39be7",
+"color_own": "#bab3cd"
 },
 {
 "id": "nigercongo.bantu.zone_b.kele_gabon",
@@ -5271,39 +5328,39 @@
 "id": "nigercongo.bantu.zone_l",
 "label": "Zone L (Luba)",
 "parent": "nigercongo.bantu",
-"color": "#b39f18",
-"color_own": "#b2ac89"
+"color": "#ef7d88",
+"color_own": "#cea5a7"
 },
 {
 "id": "nigercongo.bantu.zone_l.kete",
 "label": "Kete",
 "parent": "nigercongo.bantu.zone_l",
-"color": "#ddbe00"
+"color": "#d35182"
 },
 {
 "id": "nigercongo.bantu.zone_j.western_lakes.rwanda_rundi.kinyarwanda",
 "label": "Kinyarwanda",
 "parent": "nigercongo.bantu.zone_j.western_lakes.rwanda_rundi",
-"color": "#a08d00",
-"color_own": "#9f9977"
+"color": "#de87ff",
+"color_own": "#ceb1dc"
 },
 {
 "id": "nigercongo.bantu.zone_j.western_lakes.rwanda_rundi.kinyarwanda.kinyarwanda",
 "label": "Kinyarwanda",
 "parent": "nigercongo.bantu.zone_j.western_lakes.rwanda_rundi.kinyarwanda",
-"color": "#a08d00"
+"color": "#de87ff"
 },
 {
 "id": "nigercongo.bantu.zone_j.western_lakes.rwanda_rundi.kirundi",
 "label": "Kirundi (Rundi)",
 "parent": "nigercongo.bantu.zone_j.western_lakes.rwanda_rundi",
-"color": "#fd8c7b"
+"color": "#fd93ab"
 },
 {
 "id": "nigercongo.bantu.zone_h.kituba",
 "label": "Kituba (Munukutuba)",
 "parent": "nigercongo.bantu.zone_h",
-"color": "#cad99e"
+"color": "#85ce6c"
 },
 {
 "id": "nigercongo.bantu.zone_h.kongo_dialects",
@@ -5315,13 +5372,13 @@
 "id": "nigercongo.bantu.zone_h.kongo.manyanga",
 "label": "Manyanga",
 "parent": "nigercongo.bantu.zone_h.kongo",
-"color": "#b9d06b"
+"color": "#17eace"
 },
 {
 "id": "nigercongo.bantu.zone_h.kongo.ndibu",
 "label": "Ndibu",
 "parent": "nigercongo.bantu.zone_h.kongo",
-"color": "#7dc052"
+"color": "#98e17f"
 },
 {
 "id": "nigercongo.bantu.zone_h.kongo.yombe",
@@ -5333,8 +5390,8 @@
 "id": "nigercongo.bantu.zone_j.western_lakes.konzo_nande",
 "label": "Konzo-Nande",
 "parent": "nigercongo.bantu.zone_j.western_lakes",
-"color": "#f68675",
-"color_own": "#d5aca5"
+"color": "#c95463",
+"color_own": "#aa8082"
 },
 {
 "id": "nigercongo.bantu.zone_j.western_lakes.konzo_nande.konzo",
@@ -5349,10 +5406,10 @@
 "color": "#e5b28a"
 },
 {
-"id": "nigercongo.bantu.zone_b.kota_gabon",
+"id": "nigercongo.bantu.kota_gabon",
 "label": "Kota",
-"parent": "nigercongo.bantu.zone_b",
-"color": "#00a1a9"
+"parent": "nigercongo.bantu",
+"color": "#a08d00"
 },
 {
 "id": "nigercongo.bantu.zone_j.east_nyanza.kuria",
@@ -5370,19 +5427,19 @@
 "id": "nigercongo.bantu.zone_d.lega",
 "label": "Lega",
 "parent": "nigercongo.bantu.zone_d",
-"color": "#a9b700"
+"color": "#6073c7"
 },
 {
 "id": "nigercongo.bantu.zone_l.luba_kasai",
 "label": "Luba-Kasai",
 "parent": "nigercongo.bantu.zone_l",
-"color": "#ffa08d"
+"color": "#fe77a6"
 },
 {
 "id": "nigercongo.bantu.zone_l.luba_katanga",
 "label": "Luba-Katanga",
 "parent": "nigercongo.bantu.zone_l",
-"color": "#d26b46"
+"color": "#d85734"
 },
 {
 "id": "nigercongo.bantu.zone_l.luban",
@@ -5395,7 +5452,7 @@
 "id": "nigercongo.bantu.zone_l.luban.kaonde",
 "label": "Kaonde",
 "parent": "nigercongo.bantu.zone_l.luban",
-"color": "#5a7dce"
+"color": "#ffa08f"
 },
 {
 "id": "nigercongo.bantu.zone_g.ruvu.luguru",
@@ -5534,7 +5591,7 @@
 "id": "nigercongo.bantu.zone_k.mbala",
 "label": "Mbala",
 "parent": "nigercongo.bantu.zone_k",
-"color": "#fbb6b5"
+"color": "#efa464"
 },
 {
 "id": "nigercongo.bantu.zone_b.mbere",
@@ -5546,13 +5603,13 @@
 "id": "nigercongo.bantu.zone_c.rivers.mbosi",
 "label": "Mbosi (Mbochi)",
 "parent": "nigercongo.bantu.zone_c.rivers",
-"color": "#f4514f"
+"color": "#008687"
 },
 {
 "id": "nigercongo.bantu.zone_b.mbuun",
 "label": "Mbunda (Mbuun)",
 "parent": "nigercongo.bantu.zone_b",
-"color": "#9499d0"
+"color": "#a26cbc"
 },
 {
 "id": "nigercongo.bantu.zone_e.meru",
@@ -5570,14 +5627,14 @@
 "id": "nigercongo.bantu.zone_c.mongo",
 "label": "Mongo and Kasai (C.60-80)",
 "parent": "nigercongo.bantu.zone_c",
-"color": "#ff9caf",
-"color_own": "#efc4ca"
+"color": "#f99549",
+"color_own": "#d9b69e"
 },
 {
 "id": "nigercongo.bantu.zone_c.mongo.mongo",
 "label": "Mongo",
 "parent": "nigercongo.bantu.zone_c.mongo",
-"color": "#e28247"
+"color": "#ffbb65"
 },
 {
 "id": "nigercongo.bantu.zone_p.mwera",
@@ -5595,7 +5652,7 @@
 "id": "nigercongo.bantu.zone_j.western_lakes.konzo_nande.nande",
 "label": "Nande",
 "parent": "nigercongo.bantu.zone_j.western_lakes.konzo_nande",
-"color": "#ff6a43"
+"color": "#ff88be"
 },
 {
 "id": "nigercongo.bantu.zone_m.ndali",
@@ -5633,7 +5690,7 @@
 "id": "nigercongo.bantu.zone_c.rivers.ngombe",
 "label": "Ngombe",
 "parent": "nigercongo.bantu.zone_c.rivers",
-"color": "#ff73c3"
+"color": "#1690ca"
 },
 {
 "id": "nigercongo.bantu.zone_n",
@@ -5876,7 +5933,7 @@
 "id": "nigercongo.bantu.zone_l.sanga",
 "label": "Sanga (Kisanga)",
 "parent": "nigercongo.bantu.zone_l",
-"color": "#9c9900"
+"color": "#c54476"
 },
 {
 "id": "nigercongo.bantu.zone_g.seuta",
@@ -5919,7 +5976,7 @@
 "id": "nigercongo.bantu.zone_l.songe",
 "label": "Songe (Songye)",
 "parent": "nigercongo.bantu.zone_l",
-"color": "#a0a6dd"
+"color": "#feb2c3"
 },
 {
 "id": "nigercongo.bantu.zone_s.sotho_tswana",
@@ -5968,20 +6025,20 @@
 "id": "nigercongo.bantu.zone_g.swahili",
 "label": "Swahili",
 "parent": "nigercongo.bantu.zone_g",
-"color": "#e48233",
-"color_own": "#c6a38c"
+"color": "#cef934",
+"color_own": "#d5e6b0"
 },
 {
 "id": "nigercongo.bantu.zone_g.swahili.swahili",
 "label": "Swahili",
 "parent": "nigercongo.bantu.zone_g.swahili",
-"color": "#e48233"
+"color": "#cef934"
 },
 {
 "id": "nigercongo.bantu.zone_b.teke",
 "label": "Teke",
 "parent": "nigercongo.bantu.zone_b",
-"color": "#87c8e8"
+"color": "#e3aaff"
 },
 {
 "id": "nigercongo.bantu.zone_c.mongo.tetela",
@@ -6049,7 +6106,7 @@
 "id": "nigercongo.bantu.zone_h.yaka",
 "label": "Yaka",
 "parent": "nigercongo.bantu.zone_h",
-"color": "#f269cb"
+"color": "#c1e3b6"
 },
 {
 "id": "nigercongo.bantu.zone_p.yao",
@@ -6124,7 +6181,7 @@
 "id": "nigercongo.gbaya.ngbaka_minagende",
 "label": "Ngbaka Minagende",
 "parent": "nigercongo.gbaya",
-"color": "#e8d34f"
+"color": "#84bd71"
 },
 {
 "id": "nigercongo.gbaya.suma",
@@ -6210,7 +6267,7 @@
 "id": "nigercongo.gur.konkomba",
 "label": "Konkomba (Likpakpaln)",
 "parent": "nigercongo.gur",
-"color": "#c170bb"
+"color": "#3496ef"
 },
 {
 "id": "nigercongo.gur.kulango",
@@ -6461,7 +6518,7 @@
 "id": "nigercongo.kwa.baoule",
 "label": "Baoulé",
 "parent": "nigercongo.kwa",
-"color": "#f3ba25"
+"color": "#f29c00"
 },
 {
 "id": "nigercongo.kwa.gbe.ewe",
@@ -6958,9 +7015,9 @@
 "color": "#00b474"
 },
 {
-"id": "nilosaharan.centralsudanic.sara_kaba",
+"id": "nilosaharan.centralsudanic.sara.sara_kaba",
 "label": "Sara Kaba",
-"parent": "nilosaharan.centralsudanic",
+"parent": "nilosaharan.centralsudanic.sara",
 "color": "#0091ce"
 },
 {
@@ -7059,7 +7116,7 @@
 "id": "nilosaharan.nilotic.maasai",
 "label": "Maasai",
 "parent": "nilosaharan.nilotic",
-"color": "#b0a2fe"
+"color": "#8c7dd5"
 },
 {
 "id": "nilosaharan.nilotic.kalenjin.pokot",
@@ -7288,9 +7345,9 @@
 "color": "#ef6661"
 },
 {
-"id": "indoeuropean.slavic.south.burgenland_croatian",
+"id": "indoeuropean.slavic.south.serbocroatian.burgenland_croatian",
 "label": "Burgenland Croatian",
-"parent": "indoeuropean.slavic.south",
+"parent": "indoeuropean.slavic.south.serbocroatian",
 "color": "#ef852e"
 },
 {
@@ -8487,21 +8544,21 @@
 "color": "#ccd8ff"
 },
 {
-"id": "indoeuropean.iranian.hazaragi",
+"id": "indoeuropean.iranian.persian.hazaragi",
 "label": "Hazaragi",
-"parent": "indoeuropean.iranian",
+"parent": "indoeuropean.iranian.persian",
 "color": "#ffb48e"
 },
 {
-"id": "afroasiatic.mandaic",
+"id": "afroasiatic.aramaic.mandaic",
 "label": "Mandaic",
-"parent": "afroasiatic",
+"parent": "afroasiatic.aramaic",
 "color": "#baab70"
 },
 {
-"id": "afroasiatic.chaldean",
+"id": "afroasiatic.aramaic.chaldean",
 "label": "Chaldean Neo-Aramaic",
-"parent": "afroasiatic",
+"parent": "afroasiatic.aramaic",
 "color": "#eec469"
 },
 {
@@ -8523,10 +8580,10 @@
 "color": "#00a4b7"
 },
 {
-"id": "austronesian.yapese",
+"id": "austronesian.oceanic.yapese",
 "label": "Yapese",
-"parent": "austronesian",
-"color": "#41dfcf"
+"parent": "austronesian.oceanic",
+"color": "#0089b4"
 },
 {
 "id": "austronesian.oceanic.polynesian.cook_islands_maori",
@@ -8578,10 +8635,17 @@
 "color": "#76b4ff"
 },
 {
-"id": "austronesian.oceanic.motu",
-"label": "Motu (Hiri Motu)",
+"id": "austronesian.oceanic.peripheral_papuan_tip",
+"label": "Peripheral Papuan Tip",
 "parent": "austronesian.oceanic",
-"color": "#64d1ff"
+"color": "#00a2b1",
+"color_own": "#77a1a6"
+},
+{
+"id": "austronesian.oceanic.peripheral_papuan_tip.motu",
+"label": "Motu",
+"parent": "austronesian.oceanic.peripheral_papuan_tip",
+"color": "#009b6f"
 },
 {
 "id": "sinotibetan.kukichin.hakha",
@@ -8775,34 +8839,10 @@
 "color": "#959595"
 },
 {
-"id": "indoeuropean.slavic.south.bosniancroatianserbian",
-"label": "Bosnian-Croatian-Serbian",
-"parent": "indoeuropean.slavic.south",
-"color": "#aedc7f"
-},
-{
-"id": "indoeuropean.slavic.south.bosnianserbiancroatian",
-"label": "Bosnian-Serbian-Croatian",
-"parent": "indoeuropean.slavic.south",
-"color": "#d8b349"
-},
-{
-"id": "indoeuropean.slavic.south.bosniancroatian",
-"label": "Bosnian-Croatian",
-"parent": "indoeuropean.slavic.south",
-"color": "#d3eb85"
-},
-{
-"id": "indoeuropean.slavic.south.bosniak",
+"id": "indoeuropean.slavic.south.serbocroatian.bosniak",
 "label": "Bosniak",
-"parent": "indoeuropean.slavic.south",
+"parent": "indoeuropean.slavic.south.serbocroatian",
 "color": "#89e29d"
-},
-{
-"id": "indoeuropean.slavic.south.bosnianherzegovinian",
-"label": "Bosnian-Herzegovinian",
-"parent": "indoeuropean.slavic.south",
-"color": "#c4a032"
 },
 {
 "id": "indoeuropean.indoaryan.eastern.tanchangya",
@@ -8883,6 +8923,24 @@
 "label": "Kol",
 "parent": "austroasiatic.munda",
 "color": "#ffa0d8"
+},
+{
+"id": "indoeuropean.indoaryan.eastern.sylheti",
+"label": "Sylheti",
+"parent": "indoeuropean.indoaryan.eastern",
+"color": "#c1cf51"
+},
+{
+"id": "indoeuropean.indoaryan.eastern.chittagonian",
+"label": "Chittagonian",
+"parent": "indoeuropean.indoaryan.eastern",
+"color": "#e69825"
+},
+{
+"id": "indoeuropean.indoaryan.eastern.rohingya",
+"label": "Rohingya",
+"parent": "indoeuropean.indoaryan.eastern",
+"color": "#a79300"
 },
 {
 "id": "bangladesh_other",
@@ -9318,15 +9376,9 @@
 "color": "#71f3ca"
 },
 {
-"id": "indoeuropean.indoaryan.eastern.rohingya",
-"label": "Rohingya",
-"parent": "indoeuropean.indoaryan.eastern",
-"color": "#a79300"
-},
-{
-"id": "indoeuropean.iranian.tajik",
+"id": "indoeuropean.iranian.persian.tajik",
 "label": "Tajik",
-"parent": "indoeuropean.iranian",
+"parent": "indoeuropean.iranian.persian",
 "color": "#edcf6f"
 },
 {
@@ -9370,19 +9422,19 @@
 "id": "nigercongo.bantu.zone_h.kongo.ntandu",
 "label": "Ntandu",
 "parent": "nigercongo.bantu.zone_h.kongo",
-"color": "#00ab95"
+"color": "#2f837f"
 },
 {
 "id": "nigercongo.bantu.zone_d.nyanga",
 "label": "Nyanga",
 "parent": "nigercongo.bantu.zone_d",
-"color": "#7ec9b4"
+"color": "#90bee1"
 },
 {
 "id": "nigercongo.bantu.zone_b.yansi",
 "label": "Yansi",
 "parent": "nigercongo.bantu.zone_b",
-"color": "#c6b500"
+"color": "#d1d2ff"
 },
 {
 "id": "papuan.central_solomons",
@@ -9574,7 +9626,7 @@
 },
 {
 "id": "sinotibetan.karen",
-"label": "Karen",
+"label": "Karen languages",
 "parent": "sinotibetan",
 "color": "#5cd0ea",
 "color_own": "#afd1da"
@@ -12084,9 +12136,9 @@
 "color": "#009d90"
 },
 {
-"id": "indoeuropean.romance.talian",
+"id": "indoeuropean.romance.venetian.talian",
 "label": "Talian (Brazilian Venetian)",
-"parent": "indoeuropean.romance",
+"parent": "indoeuropean.romance.venetian",
 "color": "#f58b4b"
 },
 {
@@ -12753,9 +12805,9 @@
 "color": "#9a9d62"
 },
 {
-"id": "afroasiatic.aramaic",
-"label": "Aramaic",
-"parent": "afroasiatic",
+"id": "afroasiatic.aramaic.aramaic",
+"label": "Aramaic (variety not given)",
+"parent": "afroasiatic.aramaic",
 "color": "#f5e5a8"
 },
 {
@@ -12802,9 +12854,9 @@
 "color": "#009fbd"
 },
 {
-"id": "indoeuropean.germanic.continental.flemish",
+"id": "indoeuropean.germanic.continental.dutch.flemish",
 "label": "Vlaams (Flemish)",
-"parent": "indoeuropean.germanic.continental",
+"parent": "indoeuropean.germanic.continental.dutch",
 "color": "#7195e8"
 },
 {
@@ -12851,6 +12903,12 @@
 "color": "#5bc19d"
 },
 {
+"id": "nigercongo.bantu.zone_g.swahili.swahili_congo",
+"label": "Congo Swahili",
+"parent": "nigercongo.bantu.zone_g.swahili",
+"color": "#cef034"
+},
+{
 "id": "nigercongo.ubangian.mundu_baka",
 "label": "Ngbaka-Mba (Mundu-Baka)",
 "parent": "nigercongo.ubangian",
@@ -12861,308 +12919,308 @@
 "id": "nigercongo.bantu.zone_h.kongo.mbata",
 "label": "Mbata",
 "parent": "nigercongo.bantu.zone_h.kongo",
-"color": "#b6dead"
+"color": "#00c899"
 },
 {
 "id": "nigercongo.bantu.zone_h.kongo.lemfu",
 "label": "Lemfu",
 "parent": "nigercongo.bantu.zone_h.kongo",
-"color": "#74814a"
+"color": "#488e2c"
 },
 {
 "id": "nigercongo.bantu.zone_h.kongo.besingombe",
 "label": "Besi Ngombe",
 "parent": "nigercongo.bantu.zone_h.kongo",
-"color": "#12e0d8"
+"color": "#a6e7d7"
 },
 {
 "id": "nigercongo.bantu.zone_h.kongo.kongo_se",
 "label": "Kongo of the south-east bank",
 "parent": "nigercongo.bantu.zone_h.kongo",
-"color": "#92da82"
+"color": "#55a488"
 },
 {
 "id": "nigercongo.bantu.zone_h.kongo.mboma",
 "label": "Mboma",
 "parent": "nigercongo.bantu.zone_h.kongo",
-"color": "#708500"
+"color": "#9cbc91"
 },
 {
 "id": "nigercongo.bantu.zone_h.suku",
 "label": "Suku",
 "parent": "nigercongo.bantu.zone_h",
-"color": "#ffa800"
+"color": "#5c8855"
 },
 {
 "id": "nigercongo.bantu.zone_h.pelende",
 "label": "Pelende",
 "parent": "nigercongo.bantu.zone_h",
-"color": "#a77395"
+"color": "#89a97f"
 },
 {
 "id": "nigercongo.bantu.zone_k.pende",
 "label": "Pende",
 "parent": "nigercongo.bantu.zone_k",
-"color": "#ea5202"
+"color": "#ead5ab"
 },
 {
 "id": "nigercongo.bantu.zone_k.kwese",
 "label": "Kwese",
 "parent": "nigercongo.bantu.zone_k",
-"color": "#b1dfb1"
+"color": "#aa966e"
 },
 {
 "id": "nigercongo.bantu.zone_b.ngongo",
 "label": "Ngongo",
 "parent": "nigercongo.bantu.zone_b",
-"color": "#a4754e"
+"color": "#a495f0"
 },
 {
 "id": "nigercongo.bantu.zone_c.sakata",
 "label": "Sakata",
 "parent": "nigercongo.bantu.zone_c",
-"color": "#ff5c82"
+"color": "#c28421"
 },
 {
 "id": "nigercongo.bantu.zone_c.mongo.sengele",
 "label": "Sengele",
 "parent": "nigercongo.bantu.zone_c.mongo",
-"color": "#fdc2a2"
+"color": "#ff8a5e"
 },
 {
 "id": "nigercongo.bantu.zone_b.boma",
 "label": "Boma",
 "parent": "nigercongo.bantu.zone_b",
-"color": "#5f9b7b"
+"color": "#857ac4"
 },
 {
 "id": "nigercongo.bantu.zone_b.tere",
 "label": "Tere",
 "parent": "nigercongo.bantu.zone_b",
-"color": "#ff8534"
+"color": "#a5a5d6"
 },
 {
 "id": "nigercongo.bantu.zone_c.mongo.kundu",
 "label": "Kundu",
 "parent": "nigercongo.bantu.zone_c.mongo",
-"color": "#be7e82"
+"color": "#ffc9b5"
 },
 {
 "id": "nigercongo.bantu.zone_c.mongo.ekonda",
 "label": "Ekonda",
 "parent": "nigercongo.bantu.zone_c.mongo",
-"color": "#ff9a11"
+"color": "#c6a47a"
 },
 {
 "id": "nigercongo.bantu.zone_c.mongo.ntomba",
 "label": "Ntomba",
 "parent": "nigercongo.bantu.zone_c.mongo",
-"color": "#e64343"
+"color": "#e65719"
 },
 {
 "id": "nigercongo.bantu.zone_c.rivers.nunu",
 "label": "Nunu",
 "parent": "nigercongo.bantu.zone_c.rivers",
-"color": "#74bdd4"
+"color": "#a7e1fc"
 },
 {
 "id": "nigercongo.bantu.zone_c.rivers.libinza",
 "label": "Libinza",
 "parent": "nigercongo.bantu.zone_c.rivers",
-"color": "#f3c898"
+"color": "#23adaa"
 },
 {
 "id": "nigercongo.bantu.zone_c.rivers.mpama",
 "label": "Mpama",
 "parent": "nigercongo.bantu.zone_c.rivers",
-"color": "#a87aa3"
+"color": "#61a6aa"
 },
 {
 "id": "nigercongo.bantu.zone_c.rivers.budza",
 "label": "Budza",
 "parent": "nigercongo.bantu.zone_c.rivers",
-"color": "#5b9cba"
+"color": "#55f2ed"
 },
 {
 "id": "nigercongo.bantu.zone_c.mongo.ngando",
 "label": "Ngando",
 "parent": "nigercongo.bantu.zone_c.mongo",
-"color": "#c5b3ea"
+"color": "#ce6400"
 },
 {
 "id": "nigercongo.bantu.zone_c.mongo.nkutu",
 "label": "Nkutu (Kutshu)",
 "parent": "nigercongo.bantu.zone_c.mongo",
-"color": "#9d9459"
+"color": "#c49454"
 },
 {
 "id": "nigercongo.bantu.zone_l.luntu",
 "label": "Luntu",
 "parent": "nigercongo.bantu.zone_l",
-"color": "#4fa1a5"
+"color": "#bd8696"
 },
 {
 "id": "nigercongo.bantu.zone_l.kanyok",
 "label": "Kanyok",
 "parent": "nigercongo.bantu.zone_l",
-"color": "#d84497"
+"color": "#c68f80"
 },
 {
 "id": "nigercongo.bantu.zone_c.mongo.bushoong",
 "label": "Bushoong (Kuba)",
 "parent": "nigercongo.bantu.zone_c.mongo",
-"color": "#96d5b2"
+"color": "#ffb693"
 },
 {
 "id": "nigercongo.bantu.zone_c.mongo.lele",
-"label": "Lele",
+"label": "Lele (DR Congo)",
 "parent": "nigercongo.bantu.zone_c.mongo",
-"color": "#f45693"
+"color": "#e1791b"
 },
 {
 "id": "nigercongo.bantu.zone_c.mongo.dengese",
 "label": "Dengese",
 "parent": "nigercongo.bantu.zone_c.mongo",
-"color": "#ffbdb7"
+"color": "#d14300"
 },
 {
 "id": "nigercongo.bantu.zone_l.zela",
 "label": "Zela",
 "parent": "nigercongo.bantu.zone_l",
-"color": "#89dbdf"
+"color": "#e183a1"
 },
 {
 "id": "nigercongo.bantu.zone_l.hemba",
 "label": "Hemba",
 "parent": "nigercongo.bantu.zone_l",
-"color": "#6fc1c5"
+"color": "#d49a95"
 },
 {
 "id": "nigercongo.bantu.zone_c.mongo.kusu",
 "label": "Kusu",
 "parent": "nigercongo.bantu.zone_c.mongo",
-"color": "#ff9800"
+"color": "#fbab29"
 },
 {
 "id": "nigercongo.bantu.zone_d.lega_mwenga",
 "label": "Rega (Lega-Mwenga)",
 "parent": "nigercongo.bantu.zone_d",
-"color": "#e4405e"
+"color": "#81cdff"
 },
 {
 "id": "nigercongo.bantu.zone_d.songola",
 "label": "Songola",
 "parent": "nigercongo.bantu.zone_d",
-"color": "#9a87bc"
+"color": "#5480a0"
 },
 {
 "id": "nigercongo.bantu.zone_l.bangubangu",
 "label": "Bangubangu",
 "parent": "nigercongo.bantu.zone_l",
-"color": "#f9b9a3"
+"color": "#fcc1b6"
 },
 {
 "id": "nigercongo.bantu.zone_d.benye_nonda",
 "label": "Benye Nonda",
 "parent": "nigercongo.bantu.zone_d",
-"color": "#76905c"
+"color": "#b1c3f3"
 },
 {
 "id": "nigercongo.bantu.zone_d.ngengele",
 "label": "Ngengele",
 "parent": "nigercongo.bantu.zone_d",
-"color": "#cf9fc9"
+"color": "#b1caff"
 },
 {
 "id": "nigercongo.bantu.zone_d.komo",
 "label": "Komo (Kumu)",
 "parent": "nigercongo.bantu.zone_d",
-"color": "#61aac1"
+"color": "#5e86c8"
 },
 {
 "id": "nigercongo.bantu.zone_j.western_lakes.havu",
 "label": "Havu",
 "parent": "nigercongo.bantu.zone_j.western_lakes",
-"color": "#dbcb8e"
+"color": "#ec5480"
 },
 {
 "id": "nigercongo.bantu.zone_j.western_lakes.hunde",
 "label": "Hunde",
 "parent": "nigercongo.bantu.zone_j.western_lakes",
-"color": "#6690bb"
+"color": "#f0bfea"
 },
 {
 "id": "nigercongo.bantu.zone_j.western_lakes.fuliiru",
 "label": "Fuliiru",
 "parent": "nigercongo.bantu.zone_j.western_lakes",
-"color": "#ffbd00"
+"color": "#ab6074"
 },
 {
 "id": "nigercongo.bantu.zone_j.western_lakes.vira",
 "label": "Vira",
 "parent": "nigercongo.bantu.zone_j.western_lakes",
-"color": "#a56767"
+"color": "#ffb1fa"
 },
 {
 "id": "nigercongo.bantu.zone_c.kele_poke",
 "label": "Kele-Poke (C.50)",
 "parent": "nigercongo.bantu.zone_c",
-"color": "#ce6489",
-"color_own": "#b38c97"
+"color": "#e39383",
+"color_own": "#cdb0aa"
 },
 {
 "id": "nigercongo.bantu.zone_c.kele_poke.lokele",
 "label": "Lokele",
 "parent": "nigercongo.bantu.zone_c.kele_poke",
-"color": "#97c2f0"
+"color": "#ed8c83"
 },
 {
 "id": "nigercongo.bantu.zone_c.kele_poke.poke",
 "label": "Poke (Topoke)",
 "parent": "nigercongo.bantu.zone_c.kele_poke",
-"color": "#c3d398"
+"color": "#dd8362"
 },
 {
 "id": "nigercongo.bantu.zone_c.kele_poke.lombo",
 "label": "Lombo (Turumbu)",
 "parent": "nigercongo.bantu.zone_c.kele_poke",
-"color": "#a37f4d"
+"color": "#ffbfab"
 },
 {
 "id": "nigercongo.bantu.zone_d.lengola",
 "label": "Lengola",
 "parent": "nigercongo.bantu.zone_d",
-"color": "#a76ef8"
+"color": "#8aaeff"
 },
 {
 "id": "nigercongo.bantu.zone_c.kele_poke.mbesa",
 "label": "Mbesa",
 "parent": "nigercongo.bantu.zone_c.kele_poke",
-"color": "#5dacba"
+"color": "#e7ada4"
 },
 {
 "id": "nigercongo.bantu.zone_d.budu",
 "label": "Budu",
 "parent": "nigercongo.bantu.zone_d",
-"color": "#ff836c"
+"color": "#9fb3fe"
 },
 {
 "id": "nigercongo.bantu.zone_c.rivers.bwa",
 "label": "Bwa (Boa)",
 "parent": "nigercongo.bantu.zone_c.rivers",
-"color": "#b98c00"
+"color": "#4fa1a5"
 },
 {
 "id": "nigercongo.bantu.zone_c.rivers.benza",
 "label": "Benza",
 "parent": "nigercongo.bantu.zone_c.rivers",
-"color": "#e3a2b5"
+"color": "#69aaba"
 },
 {
 "id": "nigercongo.bantu.zone_d.nyali",
 "label": "Nyali",
 "parent": "nigercongo.bantu.zone_d",
-"color": "#80b38a"
+"color": "#84a3ea"
 },
 {
 "id": "nigercongo.ubangian.ngbandi.ngbandi_north",
@@ -13198,7 +13256,7 @@
 "id": "nilosaharan.centralsudanic.logo",
 "label": "Logo",
 "parent": "nilosaharan.centralsudanic",
-"color": "#00b381"
+"color": "#418646"
 },
 {
 "id": "nilosaharan.centralsudanic.mamvu",
@@ -13220,7 +13278,7 @@
 },
 {
 "id": "nigercongo.ubangian.banda.dakpa",
-"label": "Dakpa",
+"label": "Dakpa (Central African Republic)",
 "parent": "nigercongo.ubangian.banda",
 "color": "#e05b4a"
 },
@@ -13482,7 +13540,7 @@
 "id": "nigercongo.bantu.zone_c.rivers.aka",
 "label": "Aka",
 "parent": "nigercongo.bantu.zone_c.rivers",
-"color": "#ffa86d"
+"color": "#a1e7e3"
 },
 {
 "id": "nigercongo.bantu.zone_c.rivers.bobangi",
@@ -13498,26 +13556,26 @@
 },
 {
 "id": "nigercongo.bantu.zone_c.rivers.bodo",
-"label": "Bodo",
+"label": "Bodo (Central African Republic)",
 "parent": "nigercongo.bantu.zone_c.rivers",
 "color": "#c8741d"
 },
 {
-"id": "nigercongo.atlantic.mbororo",
+"id": "nigercongo.atlantic.fulah.mbororo",
 "label": "Mbororo",
-"parent": "nigercongo.atlantic",
+"parent": "nigercongo.atlantic.fulah",
 "color": "#ac5440"
 },
 {
-"id": "nigercongo.atlantic.peulh",
+"id": "nigercongo.atlantic.fulah.peulh",
 "label": "Peulh",
-"parent": "nigercongo.atlantic",
+"parent": "nigercongo.atlantic.fulah",
 "color": "#d57672"
 },
 {
-"id": "nigercongo.atlantic.fulata",
+"id": "nigercongo.atlantic.fulah.fulata",
 "label": "Fulata",
-"parent": "nigercongo.atlantic",
+"parent": "nigercongo.atlantic.fulah",
 "color": "#dab658"
 },
 {
@@ -13596,7 +13654,7 @@
 "id": "nigercongo.bantu.zone_h.kongo.suundi",
 "label": "Suundi",
 "parent": "nigercongo.bantu.zone_h.kongo",
-"color": "#dfa635"
+"color": "#7fc581"
 },
 {
 "id": "nigercongo.bantu.zone_c.rivers.koyo",
@@ -14131,7 +14189,7 @@
 },
 {
 "id": "nigercongo.bantoid.grassfields.kom",
-"label": "Kom",
+"label": "Kom (Cameroon)",
 "parent": "nigercongo.bantoid.grassfields",
 "color": "#5680e6"
 },
@@ -14955,7 +15013,7 @@
 },
 {
 "id": "saliban.saliba",
-"label": "Sáliba",
+"label": "Sáliba (Colombia)",
 "parent": "saliban",
 "color": "#13dcf6"
 },
@@ -15331,6 +15389,12 @@
 "label": "Yap outer-island languages (Ulithian, Woleaian, Satawalese)",
 "parent": "austronesian.oceanic.micronesian",
 "color": "#69cee6"
+},
+{
+"id": "austronesian.yapese",
+"label": "Yapese",
+"parent": "austronesian",
+"color": "#41dfcf"
 },
 {
 "id": "creole.french_based.guianese",
@@ -15854,7 +15918,7 @@
 },
 {
 "id": "afroasiatic.omotic.mao",
-"label": "Mao",
+"label": "Mao (Ethiopia)",
 "parent": "afroasiatic.omotic",
 "color": "#c66eb4"
 },
@@ -16101,6 +16165,13 @@
 "id": "uralic.saami",
 "label": "Sami",
 "parent": "uralic",
+"color": "#df92d8",
+"color_own": "#cfb4cc"
+},
+{
+"id": "uralic.saami.saami",
+"label": "Sami (language not given)",
+"parent": "uralic.saami",
 "color": "#df92d8"
 },
 {
@@ -16443,7 +16514,7 @@
 },
 {
 "id": "nigercongo.mande.lele",
-"label": "Lele (Lélé)",
+"label": "Lele (Guinea)",
 "parent": "nigercongo.mande",
 "color": "#4a5a90"
 },
@@ -16646,12 +16717,6 @@
 "label": "Bay Islands English",
 "parent": "creole.english_based",
 "color": "#f8e597"
-},
-{
-"id": "indoeuropean.slavic.south.croatoserbian",
-"label": "Croato-Serbian",
-"parent": "indoeuropean.slavic.south",
-"color": "#d0d267"
 },
 {
 "id": "indoeuropean.romance.boyash",
@@ -18870,6 +18935,18 @@
 "color": "#c5bda8"
 },
 {
+"id": "indoeuropean.iranian.kurdish.central",
+"label": "Central Kurdish (Sorani)",
+"parent": "indoeuropean.iranian.kurdish",
+"color": "#d2764a"
+},
+{
+"id": "indoeuropean.iranian.kurdish.northern",
+"label": "Northern Kurdish (Kurmanji, Badini)",
+"parent": "indoeuropean.iranian.kurdish",
+"color": "#e79f5c"
+},
+{
 "id": "indoeuropean.iranian.shabaki",
 "label": "Shabaki",
 "parent": "indoeuropean.iranian",
@@ -18939,7 +19016,7 @@
 "id": "indoeuropean.slavic.south.slavomolisano",
 "label": "Molise Croatian (Slavomolisano)",
 "parent": "indoeuropean.slavic.south",
-"color": "#bdbe53"
+"color": "#9df7b0"
 },
 {
 "id": "indoeuropean.germanic.continental.cimbrian",
@@ -19060,7 +19137,7 @@
 "id": "nigercongo.bantu.zone_g.swahili.bajuni",
 "label": "Bajuni",
 "parent": "nigercongo.bantu.zone_g.swahili",
-"color": "#a19258"
+"color": "#b4b136"
 },
 {
 "id": "nigercongo.bantu.zone_g.sheng",
@@ -19497,6 +19574,13 @@
 "id": "hmongmien.dao",
 "label": "Dao (Iu Mien and Kim Mun)",
 "parent": "hmongmien",
+"color": "#9ce4bd",
+"color_own": "#cde5d7"
+},
+{
+"id": "hmongmien.dao.dao",
+"label": "Dao (variety not given)",
+"parent": "hmongmien.dao",
 "color": "#9ce4bd"
 },
 {
@@ -19518,9 +19602,9 @@
 "color": "#d3a1ff"
 },
 {
-"id": "afroasiatic.syriac",
+"id": "afroasiatic.aramaic.syriac",
 "label": "Syriac",
-"parent": "afroasiatic",
+"parent": "afroasiatic.aramaic",
 "color": "#bfc387"
 },
 {
@@ -19548,33 +19632,15 @@
 "color": "#834b14"
 },
 {
-"id": "indoeuropean.slavic.south.yugoslav",
+"id": "indoeuropean.slavic.south.serbocroatian.yugoslav",
 "label": "Yugoslav",
-"parent": "indoeuropean.slavic.south",
-"color": "#76cf8a"
+"parent": "indoeuropean.slavic.south.serbocroatian",
+"color": "#d3eb85"
 },
 {
-"id": "indoeuropean.slavic.south.montenegrinserbian",
-"label": "Montenegrin-Serbian",
-"parent": "indoeuropean.slavic.south",
-"color": "#8af9c0"
-},
-{
-"id": "indoeuropean.slavic.south.serbianmontenegrin",
-"label": "Serbian-Montenegrin",
-"parent": "indoeuropean.slavic.south",
-"color": "#65a556"
-},
-{
-"id": "indoeuropean.slavic.south.montenegrinserbianbosniancroatian",
-"label": "Montenegrin-Serbian-Bosnian-Croatian",
-"parent": "indoeuropean.slavic.south",
-"color": "#31be98"
-},
-{
-"id": "indoeuropean.slavic.south.bokelj",
+"id": "indoeuropean.slavic.south.serbocroatian.bokelj",
 "label": "Bokelj",
-"parent": "indoeuropean.slavic.south",
+"parent": "indoeuropean.slavic.south.serbocroatian",
 "color": "#9ab04b"
 },
 {
@@ -20922,7 +20988,7 @@
 },
 {
 "id": "nigercongo.plateau.koro",
-"label": "Koro",
+"label": "Koro (Nigeria)",
 "parent": "nigercongo.plateau",
 "color": "#00a9a6"
 },
@@ -21223,9 +21289,9 @@
 "color": "#42a878"
 },
 {
-"id": "uralic.saami_north",
+"id": "uralic.saami.saami_north",
 "label": "North Sami",
-"parent": "uralic",
+"parent": "uralic.saami",
 "color": "#ca5794"
 },
 {
@@ -21764,13 +21830,6 @@
 "parent": "austronesian.oceanic",
 "color": "#9bc2ff",
 "color_own": "#c2d1f0"
-},
-{
-"id": "austronesian.oceanic.peripheral_papuan_tip",
-"label": "Peripheral Papuan Tip",
-"parent": "austronesian.oceanic",
-"color": "#00a2b1",
-"color_own": "#77a1a6"
 },
 {
 "id": "austronesian.oceanic.schouten",
@@ -23764,12 +23823,6 @@
 "label": "Misima-Paneati",
 "parent": "austronesian.oceanic.peripheral_papuan_tip",
 "color": "#009b8d"
-},
-{
-"id": "austronesian.oceanic.peripheral_papuan_tip.motu",
-"label": "Motu",
-"parent": "austronesian.oceanic.peripheral_papuan_tip",
-"color": "#009b6f"
 },
 {
 "id": "austronesian.oceanic.peripheral_papuan_tip.muyuw",
@@ -27810,6 +27863,18 @@
 "color": "#80ecf1"
 },
 {
+"id": "indoeuropean.indoaryan.dardic.torwali",
+"label": "Torwali",
+"parent": "indoeuropean.indoaryan.dardic",
+"color": "#56ae6c"
+},
+{
+"id": "indoeuropean.indoaryan.dardic.gawri",
+"label": "Gawri (Kalami)",
+"parent": "indoeuropean.indoaryan.dardic",
+"color": "#055959"
+},
+{
 "id": "indoeuropean.slavic.west.kashubian",
 "label": "Kashubian",
 "parent": "indoeuropean.slavic.west",
@@ -28015,12 +28080,6 @@
 "color": "#8d75eb"
 },
 {
-"id": "austronesian.oceanic.yapese",
-"label": "Yapese",
-"parent": "austronesian.oceanic",
-"color": "#51d5ff"
-},
-{
 "id": "creole.hiri_motu",
 "label": "Hiri Motu",
 "parent": "creole",
@@ -28193,9 +28252,9 @@
 "color": "#9065d0"
 },
 {
-"id": "indoeuropean.slavic.south.bunjevac",
+"id": "indoeuropean.slavic.south.serbocroatian.bunjevac",
 "label": "Bunjevac",
-"parent": "indoeuropean.slavic.south",
+"parent": "indoeuropean.slavic.south.serbocroatian",
 "color": "#8a9527"
 },
 {
@@ -29147,21 +29206,21 @@
 "color": "#f98662"
 },
 {
-"id": "uralic.saami_lule",
+"id": "uralic.saami.saami_lule",
 "label": "Lule Sami",
-"parent": "uralic",
+"parent": "uralic.saami",
 "color": "#f59ecf"
 },
 {
-"id": "uralic.saami_south",
+"id": "uralic.saami.saami_south",
 "label": "South Sami",
-"parent": "uralic",
+"parent": "uralic.saami",
 "color": "#a25492"
 },
 {
-"id": "afroasiatic.turoyo",
+"id": "afroasiatic.aramaic.turoyo",
 "label": "Turoyo",
-"parent": "afroasiatic",
+"parent": "afroasiatic.aramaic",
 "color": "#00b3c2"
 },
 {
@@ -29282,7 +29341,7 @@
 "id": "nilosaharan.nilotic.dongotono",
 "label": "Dongotono",
 "parent": "nilosaharan.nilotic",
-"color": "#8c7dd5"
+"color": "#0c82bf"
 },
 {
 "id": "nilosaharan.nilotic.logir",
@@ -29312,7 +29371,7 @@
 "id": "nilosaharan.surmic.tennet",
 "label": "Tennet",
 "parent": "nilosaharan.surmic",
-"color": "#3eb59e"
+"color": "#bed3ff"
 },
 {
 "id": "nilosaharan.surmic.narim",
@@ -29382,7 +29441,7 @@
 },
 {
 "id": "nigercongo.ubangian.bai",
-"label": "Bai",
+"label": "Bai (South Sudan)",
 "parent": "nigercongo.ubangian",
 "color": "#be7ace"
 },
@@ -29417,6 +29476,18 @@
 "color": "#268bb6"
 },
 {
+"id": "nilosaharan.nilotic.mabaan",
+"label": "Mabaan",
+"parent": "nilosaharan.nilotic",
+"color": "#b0a2fe"
+},
+{
+"id": "nilosaharan.surmic.kacipo",
+"label": "Kacipo-Balesi (Kachipo)",
+"parent": "nilosaharan.surmic",
+"color": "#3eb59e"
+},
+{
 "id": "creole.portuguese_based.lungie",
 "label": "Lung'ie (Principense)",
 "parent": "creole.portuguese_based",
@@ -29447,10 +29518,22 @@
 "color": "#bebebe"
 },
 {
-"id": "afroasiatic.western_neo_aramaic",
+"id": "afroasiatic.aramaic.western_neo_aramaic",
 "label": "Western Neo-Aramaic",
-"parent": "afroasiatic",
+"parent": "afroasiatic.aramaic",
 "color": "#90e0ed"
+},
+{
+"id": "nilosaharan.centralsudanic.sara.ngambay",
+"label": "Ngambay",
+"parent": "nilosaharan.centralsudanic.sara",
+"color": "#b1caff"
+},
+{
+"id": "nilosaharan.centralsudanic.sara.sar",
+"label": "Sar",
+"parent": "nilosaharan.centralsudanic.sara",
+"color": "#008668"
 },
 {
 "id": "nilosaharan.maban.mimi",
@@ -30099,7 +30182,7 @@
 "id": "nigercongo.bantu.zone_g.swahili.shirazi",
 "label": "Shirazi (Zanzibar Swahili)",
 "parent": "nigercongo.bantu.zone_g.swahili",
-"color": "#efaf6f"
+"color": "#a0d157"
 },
 {
 "id": "nilosaharan.nilotic.arusha",
@@ -30241,6 +30324,12 @@
 "color": "#337344"
 },
 {
+"id": "nigercongo.bantu.zone_j.west_nyanza.runyakitara",
+"label": "Runyakitara",
+"parent": "nigercongo.bantu.zone_j.west_nyanza",
+"color": "#e9a03e"
+},
+{
 "id": "indoeuropean.germanic.scots",
 "label": "Scots",
 "parent": "indoeuropean.germanic",
@@ -30295,12 +30384,6 @@
 "color": "#be5a0a"
 },
 {
-"id": "nigercongo.bantu.zone_j.west_nyanza.runyakitara",
-"label": "Runyakitara",
-"parent": "nigercongo.bantu.zone_j.west_nyanza",
-"color": "#e9a03e"
-},
-{
 "id": "nigercongo.mande.manding.manding",
 "label": "Manding (language not given)",
 "parent": "nigercongo.mande.manding",
@@ -30325,9 +30408,9 @@
 "color": "#72cfff"
 },
 {
-"id": "hmongmien.iu_mien",
+"id": "hmongmien.dao.iu_mien",
 "label": "Iu Mien",
-"parent": "hmongmien",
+"parent": "hmongmien.dao",
 "color": "#7ad4a5"
 },
 {
@@ -30792,7 +30875,7 @@
 "id": "nigercongo.bantu.zone_k.chokwe_lunda.lunda.ndembu",
 "label": "Ndembu",
 "parent": "nigercongo.bantu.zone_k.chokwe_lunda.lunda",
-"color": "#56ddcc"
+"color": "#ffcc8e"
 },
 {
 "id": "nigercongo.bantu.zone_k.chokwe_lunda.mbunda",
@@ -30854,12 +30937,6 @@
 "label": "Tambo",
 "parent": "nigercongo.bantu.zone_m.mambwe_nyiha",
 "color": "#63c18c"
-},
-{
-"id": "nigercongo.bantu.zone_g.swahili.swahili_congo",
-"label": "Congo Swahili",
-"parent": "nigercongo.bantu.zone_g.swahili",
-"color": "#ffa86d"
 },
 {
 "id": "nigercongo.bantu.zone_s.nambya",

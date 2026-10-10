@@ -41,7 +41,6 @@ import { TopBar } from "./ui/TopBar";
 import { ClockClient, clockWorkerStatus, onNetworkSnapshot, packOrigin } from "./workers/clockClient";
 import { startDemand, submitNetwork } from "./workers/demandClient";
 import { startDemandViews, viewStats } from "./map/demandViews";
-import { CommuterLegend } from "./ui/CommuterLegend";
 import { MODE_COLOURS } from "./game/palette";
 
 // The mode colours are the network's, not the theme's (T-084): the top bar's split uses them.
@@ -72,6 +71,7 @@ const overlay = new Overlay(map, renderer, () => {
   return {
     showTrains: d.trains,
     byLevel: d.trackColour === "height",
+    bySpeed: d.trackColour === "speed",
     selLine: sel?.kind === "line" || sel?.kind === "train" ? Number(sel.line) : -1,
     selEdge: sel?.kind === "track" ? sel.edge : -1,
     selStation: sel?.kind === "station" && n ? n.stationIds.indexOf(sel.station) : -1,
@@ -99,9 +99,6 @@ if (SYNTH) {
     views.networkChanged();
     overlay.invalidate();
   };
-  const legendRoot = document.createElement("div");
-  map.getContainer().appendChild(legendRoot);
-  render(h(CommuterLegend, null), legendRoot);
   if (DEBUG) (window as any).twViews = { stats: viewStats, overlay: views.overlay, hover: views.hover, click: views.click };
   client.onTrips = (epoch, version, trips) => {
     renderer.setTrips(epoch, version, trips);
@@ -137,7 +134,7 @@ effect(() => {
   if (w && !SYNTH) labels.set(w);
 });
 effect(() => labels.setVisible(display.value.stationNames && !SYNTH));
-const capacity = new CapacityMarkers(map.getContainer(), overlay);
+const capacity = new CapacityMarkers(map.getContainer(), overlay, map);
 effect(() => {
   const w = world.value;
   const level = DEMAND_INDEX[clock.demand.value];

@@ -17,6 +17,7 @@ pub enum Op {
     Station { node: u32, data: Option<StationData> },
     Line { id: u32, data: Option<LineData> },
     Schedule { id: u32, tph: [f32; 3] },
+    TrainCounts { id: u32, trains: Option<[u32; 3]>, tph: [f32; 3] },
     /// Split `edge` at chainage `s` with a new node `node`; the far part becomes `new_edge`.
     /// Line paths through it are rewritten. Geometry does not change.
     Split { edge: u32, s: f64, node: u32, new_edge: u32 },
@@ -84,6 +85,52 @@ impl TrackWorld {
         let t = self.net.take_touch();
         self.net.derive(&t);
         self.svc.update_all(&self.net);
+        self.settle_train_counts();
+    }
+
+    /// Solve headways from a fixed whole-line fleet and the capacity-adjusted round trip.
+    /// A positive derivative bound damps feedback from shared resources.
+    /// Runs on edits only, with a bounded number of global capacity solves.
+    fn settle_train_counts(&mut self) -> Vec<u32> {
+        let ids: Vec<u32> = (0..self.net.line_count() as u32)
+            .filter(|&l| self.net.line_ok(l) && self.net.line_trains[l as usize].is_some() && self.svc.lines[l as usize].ok).collect();
+        if ids.is_empty() { return vec![]; }
+        let before = self.net.line_tph.clone();
+        for _ in 0..80 {
+            let trips: Vec<[f64; 3]> = ids.iter().map(|&id| self.svc.lines[id as usize].round_trip).collect();
+            let rates: Vec<[f32; 3]> = ids.iter().map(|&id| self.net.line_tph[id as usize]).collect();
+            let mut initial_error = 0.0f64;
+            for (j, &id) in ids.iter().enumerate() {
+                let counts = self.net.line_trains[id as usize].unwrap();
+                for lev in 0..LEVELS { initial_error = initial_error.max((rates[j][lev] as f64 * trips[j][lev] / 3600.0 - counts[lev] as f64).abs()); }
+            }
+            if initial_error < 0.0001 { break; }
+            // A common 1% upward probe measures the sum of positive congestion derivatives.
+            // Dividing by this bound damps shared-track feedback even close to saturation.
+            for &id in &ids {
+                for lev in 0..LEVELS { self.net.line_tph[id as usize][lev] *= 1.01; }
+            }
+            self.svc.update_scoped(&self.net, &[], &ids, true, Some((&[], &[])));
+            let mut error = 0.0f64;
+            for (j, &id) in ids.iter().enumerate() {
+                let i = id as usize;
+                let counts = self.net.line_trains[i].unwrap();
+                for lev in 0..LEVELS {
+                    let trip = trips[j][lev];
+                    let rise = ((self.svc.lines[i].round_trip[lev] - trip) / 0.01).max(0.0);
+                    let old = rates[j][lev] as f64;
+                    let residual = old * trip - counts[lev] as f64 * 3600.0;
+                    error = error.max(residual.abs() / 3600.0);
+                    self.net.line_tph[i][lev] = (if counts[lev] == 0 || trip <= 0.0 { 0.0 } else {
+                        (old - residual / (trip + rise)).max(0.0)
+                    }) as f32;
+                }
+            }
+            self.svc.update_scoped(&self.net, &[], &ids, true, Some((&[], &[])));
+            if error < 0.0001 { break; }
+        }
+        for &id in &ids { self.svc.lines[id as usize].trains = self.net.line_trains[id as usize].unwrap(); }
+        ids.into_iter().filter(|&id| before[id as usize] != self.net.line_tph[id as usize]).collect()
     }
 
     pub fn can_undo(&self) -> bool {
@@ -163,9 +210,15 @@ impl TrackWorld {
     /// What an edit would do, without doing it: applied, measured and rolled back. The drawing
     /// tool's preview, with every check a real edit gets (crossings, ports, platforms).
     pub fn trial(&mut self, op: Op) -> Result<EditResult, Vec<Issue>> {
+        self.trial_with(op, |_| ()).map(|(r, _)| r)
+    }
+
+    /// Inspect the derived constructed state, then restore it without spending or undo edits.
+    pub fn trial_with<T>(&mut self, op: Op, inspect: impl FnOnce(&TrackWorld) -> T) -> Result<(EditResult, T), Vec<Issue>> {
         let (r, inv) = self.commit(op)?;
+        let value = inspect(self);
         let _ = self.commit(inv);
-        Ok(r)
+        Ok((r, value))
     }
 
     pub fn undo(&mut self) -> Option<Result<EditResult, Vec<Issue>>> {
@@ -235,7 +288,16 @@ impl TrackWorld {
         // The capacity pass rebuilds only around what was touched (T-050).
         let mut cap_nodes = der.nodes.clone();
         cap_nodes.extend_from_slice(&t.stations);
-        let svc = self.svc.update_scoped(&self.net, &lines, &t.schedules, cap_dirty, Some((&der.edges, &cap_nodes)));
+        let mut svc = self.svc.update_scoped(&self.net, &lines, &t.schedules, cap_dirty, Some((&der.edges, &cap_nodes)));
+        if cap_dirty || !lines.is_empty() || !t.schedules.is_empty() {
+            let counts = self.settle_train_counts();
+            for id in counts {
+                svc.demand.push(id);
+                svc.recomputed.push(id);
+            }
+            svc.demand.sort_unstable(); svc.demand.dedup();
+            svc.recomputed.sort_unstable(); svc.recomputed.dedup();
+        }
         let mut direct = lines.clone();
         direct.extend_from_slice(&t.schedules);
         direct.sort_unstable();
@@ -297,7 +359,17 @@ impl TrackWorld {
             Op::Edge { id, data } => Op::Edge { id, data: n.set_edge(id, data)? },
             Op::Station { node, data } => Op::Station { node, data: n.set_station(node, data)? },
             Op::Line { id, data } => Op::Line { id, data: n.set_line(id, data)? },
-            Op::Schedule { id, tph } => Op::Schedule { id, tph: n.set_schedule(id, tph)? },
+            Op::Schedule { id, tph } => {
+                let old = n.line_data(id).ok_or(Issue::NoSuchLine { line: id })?;
+                n.set_schedule(id, tph)?;
+                Op::TrainCounts { id, trains: old.trains, tph: old.tph }
+            },
+            Op::TrainCounts { id, trains, tph } => {
+                let old = n.line_data(id).ok_or(Issue::NoSuchLine { line: id })?;
+                n.set_schedule(id, tph)?;
+                n.line_trains[id as usize] = trains;
+                Op::TrainCounts { id, trains: old.trains, tph: old.tph }
+            },
             Op::Split { edge, s, node, new_edge } => {
                 if n.node_ok(node) {
                     return Err(Issue::NoSuchNode { node });

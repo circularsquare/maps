@@ -1,0 +1,13 @@
+{
+  "stations": 1756,
+  "frames": 360,
+  "maxError": 0.7466912154327474,
+  "maxOverlaps": 0,
+  "final": {
+    "max": 0.666126473489328,
+    "n": 114,
+    "overlaps": 0
+  },
+  "renamed": 1,
+  "errors": []
+}

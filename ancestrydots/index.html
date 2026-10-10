@@ -967,6 +967,26 @@
       map.setPaintProperty('dots', 'circle-radius', scaledRadius(parseFloat(sizeSlider.value)));
     }
 
+    // The basemap's tiles give Türkiye an English name of just "T" (2026-10-08; OpenFreeMap's
+    // data, `name_en`), and the style shows `name_en` first. Every label that reads `name_en`
+    // falls back to the local Latin name when the English one is under 3 letters.
+    function guardEnglishName(id) {
+      const f = map.getLayoutProperty(id, 'text-field');
+      if (!f || !JSON.stringify(f).includes('"name_en"')) return;
+      const fix = e => Array.isArray(e)
+        ? (e.length === 2 && e[0] === 'get' && e[1] === 'name_en'
+            ? ['case', ['>=', ['length', ['to-string', ['coalesce', ['get', 'name_en'], '']]], 3],
+               ['get', 'name_en'], ['coalesce', ['get', 'name:latin'], ['get', 'name']]]
+            : e.map(fix))
+        : e;
+      map.setLayoutProperty(id, 'text-field', fix(f));
+    }
+    // Arabic, Hebrew and other right-to-left place names need MapLibre's RTL text plugin, or
+    // they are drawn letter by letter, unjoined and in reverse (a languagedots viewer's report,
+    // 2026-10-08). Lazy: fetched only once such a label is on screen.
+    if (maplibregl.getRTLTextPluginStatus() === 'unavailable')
+      maplibregl.setRTLTextPlugin('https://unpkg.com/@mapbox/mapbox-gl-rtl-text@0.2.3/mapbox-gl-rtl-text.min.js', true)
+        .catch(() => {});
     const map = new maplibregl.Map({
       container: 'map',
       style: 'https://tiles.openfreemap.org/styles/dark',
@@ -976,6 +996,7 @@
     });
 
     map.on('load', () => {
+      for (const l of map.getStyle().layers) if (l.type === 'symbol') guardEnglishName(l.id);
       // Add PMTiles vector source — only tiles for the current viewport are fetched
       const isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
       const tilesUrl = isLocal

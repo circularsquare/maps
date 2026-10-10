@@ -18,5 +18,15 @@
     "name": "languagedots",
     "folder": "languagedots",
     "about": "World mother-tongue dot map (India, Nepal, Pakistan so far)"
+  },
+  {
+    "name": "trainworld",
+    "folder": "trainworld/app/dist",
+    "about": "rail building game (skeleton)"
+  },
+  {
+    "name": "trainworld-mock",
+    "folder": "trainworld/mock",
+    "about": "trainworld UI mock"
   }
 ]

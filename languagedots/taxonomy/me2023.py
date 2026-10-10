@@ -4,6 +4,10 @@ Keyed by MONSTAT's own labels (Montenegrin, Latin script) in Tabela 3 of the ope
 exactly as data/normalized/me.csv carries them. 25 labels and "Ne zeli da se izjasni" (does not
 wish to declare); one answer per person.
 
+FOLDED 2026-10-08 (Anita): Hrvatsko-Srpski and the three compound answers now go on
+`serbocroatian`, reversing the separate leaves described below; as ba2013, the BCMS group
+(regroup.txt) holds the standards and this together.
+
 CALLS (sources/me.md says more):
   Crnogorski (Montenegrin), Srpski (Serbian), Bosanski (Bosnian), Hrvatski (Croatian): four
     leaves, as rs2022, hr2021 and ba2013 keep them. Glottolog files all four standards as
@@ -45,12 +49,12 @@ NAMES = {
     "Bosanski": f"{SL}.bosnian",
     "Hrvatski": f"{SL}.croatian",
     "Srpsko-Hrvatski": f"{SL}.serbocroatian",
-    "Hrvatsko-Srpski": f"{SL}.croatoserbian",
+    "Hrvatsko-Srpski": f"{SL}.serbocroatian",
     "Bošnjački": f"{SL}.bosniak",
     "Jugoslovenski": f"{SL}.yugoslav",
-    "Crnogorski-Srpski": f"{SL}.montenegrinserbian",
-    "Srpski-Crnogorski": f"{SL}.serbianmontenegrin",
-    "Crnogorski-Srpski-Bosanski-Hrvatski": f"{SL}.montenegrinserbianbosniancroatian",
+    "Crnogorski-Srpski": f"{SL}.serbocroatian",
+    "Srpski-Crnogorski": f"{SL}.serbocroatian",
+    "Crnogorski-Srpski-Bosanski-Hrvatski": f"{SL}.serbocroatian",
     "Bokeljski": f"{SL}.bokelj",
     "Goranski": f"{SL}.gorani",
     "Makedonski": f"{SL}.macedonian",

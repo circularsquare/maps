@@ -4,7 +4,7 @@
 OC = "austronesian.oceanic"
 NAMES = {
     "English": "indoeuropean.germanic.english",
-    "Yapese": "austronesian.yapese",
+    "Yapese": "austronesian.oceanic.yapese",   # under Oceanic (Glottolog), merged 2026-10-08
     # Ulithian, Woleaian, Satawalese and the other Chuukic languages of Yap's outer islands; the
     # census prints them as one answer, so one leaf (a named label never sits on a group node)
     "Yapese - Outer Island Languages": f"{OC}.yap_outer_islands",

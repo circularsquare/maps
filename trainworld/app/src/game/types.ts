@@ -160,6 +160,18 @@ export interface MoneyStats {
   /** what is constructed cost, and what the blueprint would, US$ */
   builtValue: number;
   blueprintCost: number;
+  blueprintItems: BlueprintItem[];
+}
+
+/** Construction model's grouped quote, US$. Track quantities are metres; others are counts. */
+export interface BlueprintItem {
+  kind: number;
+  level: Level;
+  tracks: number;
+  wet: boolean;
+  ramp: boolean;
+  quantity: number;
+  cost: number;
 }
 
 export interface WorldView {

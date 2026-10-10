@@ -9,6 +9,7 @@
 //   overlay  the overlay's WebGL draw (the clock still ticks)
 //   markers  capacity marker DOM tags
 //   idle     the idle-frame fix (adopted as default in T-073): frames again with no trips
+//   labelPan station labels placed individually every map frame (before T-074)
 //
 // `?perfTry=...` turns on candidate fixes, measured in notes/T-045.md before anyone adopts them:
 //   labelLayers  each station label and capacity tag on its own compositor layer
@@ -22,5 +23,5 @@ const q = new URLSearchParams(location.search);
 const off = new Set((q.get("perfOff") ?? "").split(",").filter(Boolean));
 const tries = new Set((q.get("perfTry") ?? "").split(",").filter(Boolean));
 
-export const perfOff = (part: "labels" | "shadow" | "hover" | "clock" | "overlay" | "markers" | "idle") => off.has(part);
+export const perfOff = (part: "labels" | "shadow" | "hover" | "clock" | "overlay" | "markers" | "idle" | "labelPan") => off.has(part);
 export const perfTry = (fix: "labelLayers" | "hoverCursor" | "idle" | "noDouble") => tries.has(fix);

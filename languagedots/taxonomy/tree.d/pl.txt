@@ -192,7 +192,7 @@ austronesian.oceanic.kosraean | Kosraean
 austronesian.oceanic.pohnpeian | Pohnpeian
 austronesian.oceanic.rapanui | Rapa Nui
 austronesian.oceanic.tahitian | Tahitian
-austronesian.oceanic.yapese | Yapese | 0.82 0.13 225.0
+austronesian.oceanic.yapese | Yapese
 
 # ---- creoles and pidgins ----
 creole.english_based.sranan | Sranan Tongo

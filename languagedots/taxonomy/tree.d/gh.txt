@@ -36,7 +36,7 @@ nigercongo.gur.waali | Waali (Wala)
 nigercongo.gur.buli | Buli (Builsa)
 nigercongo.gur.hanga | Hanga
 nigercongo.gur.safaliba | Safaliba
-nigercongo.gur.konkomba | Konkomba (Likpakpaln) | 0.66 0.14 330
+nigercongo.gur.konkomba | Konkomba (Likpakpaln) | 0.66 0.16 250
 nigercongo.gur.bimoba | Bimoba
 nigercongo.gur.ntcham | Ntcham (Basari)
 nigercongo.gur.akaselem | Akaselem (Chamba)

@@ -5,9 +5,6 @@
 # MONSTAT prints in columns of their own for the one language Glottolog files as
 # Serbian-Croatian-Bosnian (sout1528). Census labels, not varieties, so no glottocode; siblings of
 # Montenegrin and Serbian under South Slavic, the two orders kept apart as ba.txt does.
-indoeuropean.slavic.south.montenegrinserbian | Montenegrin-Serbian
-indoeuropean.slavic.south.serbianmontenegrin | Serbian-Montenegrin
-indoeuropean.slavic.south.montenegrinserbianbosniancroatian | Montenegrin-Serbian-Bosnian-Croatian
 # Bokelj (Bokeljski): the regional name for the speech of the Bay of Kotor; a census label, no
 # glottocode.
 indoeuropean.slavic.south.bokelj | Bokelj

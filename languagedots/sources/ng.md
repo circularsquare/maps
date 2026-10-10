@@ -1,4 +1,131 @@
-# Nigeria: Afrobarometer R4-R9 home language, by state, placed by LGA
+# Nigeria: MICS 2021 and Afrobarometer R4-R9, by state, placed by LGA
+
+**Since 2026-10-09 (session 32a047f0) the nine languages MICS names are drawn from MICS6 2021
+microdata** (§0); the Afrobarometer build below now writes `data/normalized/ng_afro.csv`, kept as
+the comparison, and still supplies the split of MICS's "other language", English, Pidgin's spread
+and the placement inside states.
+
+```
+python sources/ng_afro.py           # ng_afro.csv (comparison) and ng_lga.csv (placement)
+python sources/ng_mics.py           # ng.csv, the drawn counts
+python tools/check_country.py ng
+python scatter.py --country ng
+```
+
+## 0. MICS6 2021 (`sources/ng_mics.py`, 2026-10-09)
+
+Anita made a UNICEF MICS account and downloaded Nigeria's MICS6 2021 (with the National
+Immunization Coverage Survey; NBS and UNICEF); the SPSS files are in `data/raw/ng/mics_2021/`
+(gitignored: research use, no redistribution). 41,532 households, 39,632 interviewed, 207,496
+members, 2,079 clusters, all 37 states (38 to 78 clusters, 745 to 1,477 households a state). The
+published tables are national only, which is why §1 had it under "not used".
+
+**Item: HC1B, language of the household head**, read as every member's (members x hhweight).
+Nine named answers plus "other language": Hausa, Igbo, Yoruba, Fulani, Kanuri, Ijaw, Tiv,
+Ibibio, Edo. Three items were compared household by household:
+
+| | HC1B head | HH16 respondent | WM14 women 15-49 |
+|---|---:|---:|---:|
+| Hausa | 28.15 | 30.67 | 27.53 |
+| Yoruba | 16.41 | 16.97 | 17.70 |
+| Igbo | 14.23 | 14.11 | 15.29 |
+| Fulani | 7.17 | 5.44 | 4.98 |
+| Tiv | 2.23 | 2.15 | 2.38 |
+| Kanuri | 2.14 | 1.98 | 1.69 |
+| Ibibio / Ijaw / Edo | 1.91 / 1.33 / 1.24 | 1.91 / 1.35 / 1.19 | 1.94 / 1.36 / 1.29 |
+| other | 25.20 | 24.22 | 25.84 |
+
+(% of persons nationally, the survey's own weights.) HC1B and HH16 differ in 2,609 households.
+In 24,072 the respondent is the head, so both describe one person, and they still differ in
+1,419, following the interview language: heads interviewed in Hausa give HH16 Hausa though their
+language is Kanuri 60 times in 335, Fulani 299 in 1,315; heads interviewed in Yoruba give HH16
+Yoruba though theirs is Igbo (23 of 56), Hausa (18 of 54), Fulani (20 of 82), Tiv (8 of 21), Edo
+(9 of 16); in English interviews the two agree almost always (52 of 4,446 non-Hausa heads say
+Hausa, 21 of 4,361 say Yoruba). HH16 slides to the interview language as Iraq's did, so HC1B is
+drawn. HC1B equals the head's ethnic group (HC2) in 96% of households, but is answered as
+language: 246 Edo and 215 Ijaw heads by ethnicity give "other language" (Esan, Yekhee, Kalabari,
+Okrika...).
+
+**Fulfulde is the call most worth reversing.** HC1B is the high reading (7.2% against HH16 5.4%,
+WM14 5.0%): Bauchi 29.7 / 18.6 / 19.3, Gombe 49.8 / 36.6 / 34.0, Kano 17.2 / 12.8 / 12.5, Kebbi
+13.8 / 8.4 / 8.9. Of the 1,545 heads who answered both items themselves with HC1B Fulani, 322 gave
+HH16 Hausa, nearly all in Hausa interviews; some of those may really be first-language Hausa
+speakers of Fulani descent. Drawn at HC1B for one rule across the nine; `note_public` says it
+may run high. The Afrobarometer had Fula at 3.7%: its Kano Fulani are 1.7%, while MICS finds
+Fulani households in 34 of Kano's 50 clusters, eight of them entirely Fulani (rural settlements
+the Afrobarometer's sample seems to miss).
+
+**How MICS enters, per state.**
+1. The nine named shares as measured. Each is the Afrobarometer answer of the same name only,
+   checked state by state: Rivers Ijaw MICS 3.0% against the Afrobarometer's Ijaw 3.6% (its
+   Kalabari, Okrika, Nembe and Ibani are another 26%); Akwa Ibom Ibibio 54 against 68 (Anaang and
+   Efik 25 more); Cross River Ibibio 12 against 9 (Efik 40); Delta Igbo 19 against 25 (Ika and
+   Ukwuani 13 more); Delta Edo 1.7 against 1.9 (Urhobo and Isoko 39). Across the 37 states the
+   two surveys agree on where each is (Pearson r: Hausa 0.97, Yoruba 1.00, Igbo 1.00, Ijaw,
+   Ibibio, Edo, Tiv 0.99, Kanuri 0.91, Fulani 0.80).
+2. MICS's "other language" split across the Afrobarometer's other answers in the state, with 8
+   pseudo-respondents on "Other Nigerian language" (`K_OTHER`): weight = (respondents naming it
+   + 8 if it is the unnamed remainder) / (all other-answer respondents + 8). Where the
+   Afrobarometer has many such respondents (Rivers 359, Benue 198, Plateau 179, Kogi 176) its
+   split stands; where it has a handful against a real MICS share (Oyo 3 respondents against
+   6.9%, Ekiti 3 against 12.1%, Ondo 13 against 10.0%) most of the share is drawn unnamed rather
+   than multiplying three people. The southwest's "other" households are spread over a third of
+   the clusters, mostly rural, mostly Christian, with an ethnic group that is also "other": read
+   as migrants of other groups, not Yoruba naming a dialect.
+3. English (Afrobarometer R7 mother tongue, shrunk as before) and Pidgin (Ethnologue's 4.7M,
+   spread by the R7-R9 Pidgin-at-home answers) keep their levels, since HC1B offers neither;
+   everything else scaled to what is left.
+4. §2a's "Hausa outside Hausaland" step is dropped: HC1B is itself a mother-tongue item, with
+   ~1,000 households a state against R7's 16-128 respondents. Hausa rises where that step had cut
+   it (FCT 4.7 -> 20.2%, Plateau 5.1 -> 12.9%, Yobe 20 -> 33%, Taraba 16 -> 27%), and all three
+   MICS items agree there (FCT HC1B 21.5, HH16 22.0, WM14 18.4).
+
+**Weights.** hhweight varies up to 200-fold inside a state. In Ebonyi three urban clusters carry
+87% of the state's weighted people (about 4 effective clusters of 46; Anambra 7, Bayelsa 11, Imo
+11), and Ebonyi's 7.4% Hausa is three households in two of them (7 of its 10 Hausa-coded heads
+give Igbo as ethnic group and respondent's language). Each household weight is capped at 5 times
+its state's median. That moves a named share by more than a point in four states: Ebonyi Hausa
+7.4 -> 2.6%, Igbo 92.6 -> 97.3; Bayelsa Ijaw 61.8 -> 71.3%; Kaduna and Kwara about a point. In
+Ebonyi and Bayelsa it moves MICS towards the Afrobarometer (Igbo 97.5, Ijaw 72.6). The cost:
+Bayelsa's urban share by weight falls from 29 to 9%. Every state then has 22+ effective clusters.
+
+**Zeros.** A group living in enclaves holding a share p of a state is missed by every sampled
+cluster with probability (1 - p)^clusters: in the smallest state (Sokoto, 38 clusters) an
+enclave of 2% is missed 46% of the time, 5% 14%; at the median 56 clusters, 32% and 6%. Two cells
+where the Afrobarometer had 1%+ and MICS none: Benue Kanuri 6.9% (an Afrobarometer oddity, not
+Kanuri country) and Bayelsa Edo 1.3%. Drawn as MICS says.
+
+**Before (Afrobarometer build) -> after, % of each state's people:**
+
+| state | |
+|---|---|
+| Kano | Hausa 94.8 -> 77.4, Fulfulde 1.7 -> 17.0, Kanuri 0.5 -> 1.6 |
+| Bauchi | Hausa 68.5 -> 45.3, Fulfulde 14.8 -> 29.3, Kanuri 1.3 -> 6.3, Zaar 4.3 -> 6.6 |
+| Jigawa | Hausa 92.6 -> 72.5, Fulfulde 2.1 -> 18.2, Kanuri 1.4 -> 7.0 |
+| Gombe | Fulfulde 38.2 -> 48.7, Hausa 13.3 -> 17.7, Tangale 16.1 -> 10.0, Waja 13.2 -> 8.2 |
+| Borno | Kanuri 38.2 -> 36.3, Bura-Pabir 17.7 -> 15.9, Hausa 14.0 -> 15.7, Fulfulde 5.2 -> 7.8 |
+| Yobe | Hausa 20.4 -> 32.6, Kanuri 8.5 -> 21.5, Fulfulde 17.7 -> 20.4, Karekare 28.3 -> 11.3, Bade 15.8 -> 6.3 |
+| Adamawa | Fulfulde 39.7 -> 16.9, Hausa 11.5 -> 17.2, Kamwe 7.4 -> 10.2, unnamed 2.3 -> 10.0 |
+| Benue | Tiv 36.4 -> 63.3, Idoma 32.7 -> 17.8, Igede 6.4 -> 3.5, Kanuri 6.7 -> 0 |
+| Plateau | Tarok 20.6 -> 18.6, Berom 14.8 -> 13.3, Hausa 5.1 -> 12.9 |
+| FCT | Hausa 4.7 -> 20.2, Yoruba 15.7 -> 8.3, Igbo 16.9 -> 6.4, Gbagyi 9.1 -> 9.0 |
+| Lagos | Yoruba 67.5 -> 55.7, Igbo 14.6 -> 22.2 |
+| Oyo / Ekiti | Yoruba 94.3 -> 85.1 / 95.1 -> 80.9; unnamed 0 -> 5.0 / 0.1 -> 8.9 |
+| Delta | Urhobo 30.0 -> 32.6, Igbo 23.7 -> 18.0, Ijaw 12.4 -> 8.7 |
+| Akwa Ibom | Ibibio 58.3 -> 46.7, Anaang 12.6 -> 16.6, Efik 8.9 -> 11.7 |
+| Rivers | within half a point everywhere |
+
+Nationally: Hausa 29.6 -> 27.7%, Yoruba 18.3 -> 15.8%, Igbo 13.7 -> 13.4%, Fulfulde 3.7 -> 7.1%,
+other Nigerian (unnamed) 1.8 -> 3.8%, Tiv 1.2 -> 2.1%, Kanuri 1.7 -> 2.1%, Ibibio 1.7 -> 1.7%,
+Nupe 1.8 -> 1.6%, Ijaw 1.3 -> 1.3%, Edo 1.3 -> 1.1%, Idoma 1.4 -> 0.9%; English 1.8% and Pidgin
+2.2% unchanged. 119 answers, as before; total unchanged (216,798,930, COD-PS 2022).
+
+Against REACH's household surveys (language used, so more Hausa expected): Yobe Kanuri 21.5% vs
+18 (was 8.5), Hausa 33 vs 53 (was 20); Borno Kanuri 36 vs 44; Adamawa Fulfulde 17 vs 24 (was 40).
+
+Calls someone might reverse: HC1B rather than HH16 (Fulfulde 7.1% vs ~5.4%); the 5x weight
+trim; K_OTHER = 8; dropping the Hausa-outside-Hausaland step; English and Pidgin taken pro rata
+from every language rather than from MICS's "other" alone.
 
 Drawn 2026-10-05 (session edd42a8c-ng). 216,798,930 people (COD-PS 2022), 37 states, 119
 nodes from 120 answers, every row `modelled`. 216,747 dots at 1:1000, no rings. Inside each
@@ -31,7 +158,8 @@ python scatter.py --country ng
   is REACH, those six states only. Used as a check (§4), not drawn: pooling six rounds gives
   seven times the sample in every state, and one source for all 37.
 - **Not used:** DHS (language of interview only, and its microdata needs an institutional
-  registration); MICS 2021 (ethnicity of household head, national tables); GHS-Panel/LSMS
+  registration); MICS 2021 (ethnicity of household head, national tables; used since
+  2026-10-09 from its microdata, §0); GHS-Panel/LSMS
   (needs a World Bank account; not tried, since the Afrobarometer covers every state).
 - **Population**: COD-PS 2022 state totals (NPC/UNFPA projection off the disputed 2006 census),
   religiondots' `ng_lookup.csv`, so both maps stand on the same base.
@@ -100,7 +228,8 @@ shrunk towards a prior by 50 respondents: (Q2A answers + 50 x prior) / (responde
   home give Igbo, Edo, Ijaw, Esan, "other"). Drawn 0, its 122 pooled answers moved to the
   respondent's ethnic group's language like English's (8 new group spellings in ETH_VERBATIM).
   Before: 3.9M (1.8%), Bayelsa 10%, Rivers 10%, Akwa Ibom 8.5%. **Superseded 2026-10-06, §2b.**
-- **Hausa outside Hausaland** (29 states where R7's Q2A Hausa share is under 50%): Q2A share,
+- **Hausa outside Hausaland** (superseded 2026-10-09: MICS's head's-language share is drawn
+  instead, §0; the step still runs in `ng_afro.csv`) (29 states where R7's Q2A Hausa share is under 50%): Q2A share,
   shrunk towards the pooled share x 0.37, the Q2A/Q2B ratio of those states' R7 respondents.
   Hausaland's 8 states (Bauchi, Jigawa, Kaduna, Kano, Katsina, Kebbi, Sokoto, Zamfara) keep
   the pooled share. Hausa 32.8% -> 29.7% nationally: Borno 30 -> 14%, Adamawa 35 -> 11%, Gombe

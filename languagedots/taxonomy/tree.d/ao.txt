@@ -54,7 +54,7 @@ nigercongo.bantu.kwanyama | Kwanyama | 0.70 0.17 48
 nigercongo.bantu.lingala | Lingala | 0.78 0.12 210
 
 # ---- new ----
-nigercongo.bantu.fiote | Fiote | 0.86 0.12 115
+nigercongo.bantu.fiote | Fiote | 0.78 0.11 138
 nigercongo.bantu.chokwe_lunda.ngangela | Ngangela | 0.64 0.12 160
 nigercongo.bantu.nyaneka_nkhumbi | Nyaneka-Nkhumbi (R.10) | 0.76 0.12 110
 nigercongo.bantu.nyaneka_nkhumbi.nyaneka | Nyaneka | 0.84 0.14 90

@@ -111,6 +111,14 @@ sides; 305 line ids shared between countries).
 - **Completion counts everything with scheduled passenger service** ("if it is scheduled at
   all, more often than about once a week"). **Named trains (option B)** have no percentage of
   their own and totals leave them out; their track counts through the lines it lies on.
+  **Except in the US, Canada and Australia** (Anita, 2026-10-09: "for US and canada and
+  australia lets do this change yeah. routes become what operator lists show. though we can
+  leave corridors that are well known and/or have lots of different services on them like
+  northeast corridor"): there the register is track (FRA subdivisions, Geoscience Australia's
+  names), so the lists show the routes riders know, every OSM line of the country, named
+  trains included, each with its own percentage and in the totals; a register line stays
+  listed only as a corridor or where the routes leave part of it uncovered. Crediting is
+  unchanged. App: "Working on the app", routes.
 - **One owner per piece of track**: "no double counting, every piece of track belongs to
   exactly one line; for crediting only, trips can still be entered on any service or path"
   (`ownership.py`).
@@ -130,6 +138,10 @@ sides; 305 line ids shared between countries).
   Melitopol - Kherson whole). ru_sources.md "The annexed railways: what runs". Crimea is
   built with Russia. **Abkhazia is its own region, `xa`; Transnistria is Moldova's, greyed**
   (Anita, 2026-10-04).
+- **Israel and North Korea** (Anita, 2026-10-08): "jerusalem: if israel administers it we can
+  draw it under israel" (the Red Line through East Jerusalem, and the high-speed line's West
+  Bank stretch, both under `il`); "north korea: if it runs passenger service to the best of our
+  knowledge, we should build it". Tenerife's tram goes into `es`.
 - **Croatia's single "B" fast trains stay named trains.** Czechia's JHMD (228/229 out of
   Jindřichův Hradec): unknown whether it runs, leave as is.
 - **Where it is going (Anita, 2026-10-02)**: eventually timetables for every country and real
@@ -144,6 +156,191 @@ sides; 305 line ids shared between countries).
   new downloads or anything else that writes to data beyond an agreed build.
 
 ### Open threads, in the order I would take them
+
+**NEXT SESSION, START HERE: Anita's notes from 2026-10-08 (after testing the 10-07 work).**
+She liked: one ride filling a line ("works much better now"), same-track crediting, the
+operators, the English names. To do, in her words where they matter:
+1. DONE (app session, 2026-10-08). **100% must hold for countries and operators too.** "if you
+   click everything you should be able to 100% a line ... should also apply to countries.
+   100%ing a country should be possible. it should be the union of 100%ing all the individual
+   lines. same for an agency." A country's (`c:<cc>`), operator's (`o:<key>`) and
+   operator-in-a-country's (`r:<cc>|<key>`) total is now the union of the footprints of its
+   listed lines' running sections (`unionTotals`); km ridden is each of those sections' credited
+   part carried through the same footprints, a line at 100% counting whole (`unionDone`), so
+   both sums add the same terms when every line is done. Used by `stats()`, `buildOps`,
+   `renderOp`; `regionTotals` and `ownedDone` are gone, `creditState` now wraps
+   `creditFor(rides)`. A loaded country shows its own union; regions.json `km` only before it
+   loads (cz differs by 6.5 km with neighbours loaded, from border sections both built).
+   `build_regions.owned_totals` does the same union (listed lines per `listed`, across
+   countries); country totals fell 0-942 km (ru -942, de -329, pl -140, it -112: track only
+   operating patterns or named trains owned). `line_100_probe.js` part 3 (`groups`,
+   `groupsWhole`): 22 countries probed in three batches (ch lu be; de at nl dk cz pl fr; jp
+   us ca gb ie it es pt kr tw hk sg), every group whose lines all finish reads exactly 100%
+   (done === total in 1,829 of 1,829 groups; 1,996 of 1,996 with the lines the picks cannot
+   finish ridden whole: jp, ie, pt, kr, tw already 100% on picks alone). The country groups
+   held back are by lines the per-line test still fails (stops missing, item 6).
+2. DONE. **Operator name in the line view is a link** (`opLinks`, `goOp`): to the Operators
+   tab with that operator's row open, drawn and scrolled to, as a click on the row does; an
+   operator with nothing ridden (no row there) or in "View all lines" opens `showOp`'s view.
+3. DONE. **Default line order** (`lineListOrder`, `lineDone`): longest not at 100% first,
+   then the 100% ones longest first; Lines tab, an operator's open row (Operators tab and
+   Countries tree) and the operator view. In "View all lines", longest first. The Lines tab's
+   reset button reads "unfinished longest first".
+4. **NJ Transit Morristown Line, Dover -> Hoboken Terminal can't be entered**: picks work
+   Denville - Newark Broad St but not past the junction at either end. Picking through a
+   junction end to stops on the far side must work in one ride.
+5. **The Morris & Essex Lines' diagram branches wrongly**: stops out of order and not on the
+   right branches (her screenshot: Dover / Denville / Convent Station / Mount Arlington on
+   side lanes, the Gladstone branch's stops interleaved, Madison / Chatham on a side lane
+   beside Summit). Look at the us register/OSM pieces there (Morristown Line, Gladstone
+   Branch, Montclair-Boonton) and the strip layout.
+6. Still open from 10-07 (below): stops missing from the data (Russian tariff lines, a few
+   deleted ids like Myronivka - Bohuslav). Paris Metro 10's loop: FIXED IN TRIAL, WAITING ON
+   A SHARED DIFF (fr agent, 2026-10-08). Cause: build_model.place_stations snapped each
+   direction's path onto the other arm's stations (150-330 m away, under STOP_SNAP_M 400), so
+   both arms were threaded into one chain. `handoff_notes/metro10_loop.md` / `.diff`: snap a
+   station whose stop node is on another route's track only where that track runs alongside,
+   gated on `SNAP_ALONGSIDE` (rules/fr.py already sets it; other countries build exactly as
+   before). Trial: line 10 a real loop (14.73 km, both arms), 22 fr OSM lines change (false
+   chords gone from RER A/C/D, J, 13 tram lines; 3 TGV named trains +149 km at Nîmes), no
+   register line or station id moves; the diagram draws the loop in headless Chrome. To land:
+   apply the diff, rebuild fr, `build_regions.py`. search.json's operator
+   text: DONE 2026-10-08 (`build_regions.passenger_ops`, from ops.json and operators.json'
+   short names, as the app's opName; 9,863 of 19,754 lines changed: La Junta
+   Subdivision "BNSF Railway" -> "Amtrak", Spain's 200 "Adif" -> "Renfe", ICE 91 "DB
+   Fernverkehr" -> "DB"); the app's search matches the shown names too.
+
+**Countries not yet built: surveyed 2026-10-08** (six research agents, nothing built or
+downloaded beyond small samples in `data/raw/<cc>/survey/`). Each country with service has a
+`<cc>_sources.md` with a "Survey (2026-10-08)" section (sources, licence, recipe, size, what
+runs, extract name and size); countries with none are one line in `wafrica_survey.md`,
+`eafrica_survey.md`, `mideast_survey.md`, `latam_survey.md`, `asia_survey.md`.
+- South Asia: pk (priority), bd, lk, np. Hand lists through rinf.py; lk on id's recipe.
+- West/Central Africa: ng (priority), gh, sn, bf, cm, ga, cg, cd, ao; one shared reader
+  proposed (`wafrica_register.py`, nafrica's pattern). Nigeria needs a gauge preference
+  (three parallel railways Ebute Metta - Agbado).
+- East/Southern Africa: ke, tz, et+dj, ug, zm, zw, mz, mw, mg, mu; one shared reader proposed
+  (`eafrica_register.py`); border points needed at Tunduma/Nakonde and Dewele/Guelile.
+  Decided by the managing session: Malawi kept running, Sudan out until a timetable, Bulawayo -
+  Harare and Nairobi - Kisumu greyed.
+- Middle East: il (MOT GTFS via Mobility Database mdb-2519, my's recipe), sa+ae+qa (one Gulf
+  reader, gcc-states extract), iq (ir's recipe), jo (Hejaz excursion, counted). Jerusalem's
+  light rail through East Jerusalem is Anita's call (asked 2026-10-08).
+- Latin America: pe, bo, co, ec, ve, pa, cr, uy, cu, do, pr (pr is not in us); ar's recipe,
+  six small ones could share one reader.
+- Rest of Asia: ph, mm, kh, la, mn (UBTZ timetable blocks scripts: Anita's browser), kp
+  (Anita's call whether to depict), Canary Islands into es (`canaries_survey.md`).
+**Built the same day (Anita: "we can start building")**: 45 new regions, each by a country
+agent, each probed with line_100_probe.js (every line, operator and country exact unless noted):
+pk (`pk_register.py`); lk, bd (`lk_register.py` is the engine for both); sa ae qa iq jo
+(`mideast_register.py`, nafrica's code; qa no register); ng cm ao ga cg sn gh bf cd
+(`wafrica_register.py`); ke et dj mz zm zw tz mg mw ug mu (`eafrica_register.py`; mu no
+register); cr pa cu pe bo ec uy ve co + do pr with no register (`latam_register.py`, ar's code);
+kh la ph mm mn np (`asia_register.py`, lk's engine). Each `<cc>_sources.md` has a "Build
+(2026-10-08)" section, each reader's shared diffs are in `handoff_notes/<group>_build.md` and are
+landed (rebuild.py REGISTER, `"<cc>": None` = no register, run_country skips --register; new
+borders.EXTRA points eXIRPK1, eXDJET1, eXTZZM1, xBotenMohan, xNaushkiSukhbaatar,
+xZamynUudErenhot, xEreentsavSolovyevsk, xJaynagarInarwa; cn_register CN_BORDERS for Boten and
+Zamyn-Üüd; cn la mn np et dj tz zm rebuilt for them). **Not done**: Russia's side at Naushki
+(~6 km under mn's line id) and India's at Jaynagar (~3 km) are in handoff_notes/asia_build.md:
+until then mn's Sükhbaatar - border tail is unfinishable (mn 99.3% whole); Iran's side at Taftan
+(ML-4 greyed anyway). The Tenerife tram is in es since 2026-10-08 (Anita: fold it into
+Spain): `python -m rinf_countries.es --canaries` after every es extract joins the islands'
+extract (region `ic`, extract only) into data/proc/es; es_sources.md "The Canary Islands". Doha's two campus trams
+count (no "drawn, not counted" mechanism yet; proposal in handoff_notes/mideast_build.md).
+**Later the same day, after her answers**: Israel built (`il_register.py`, my's Track, MOT feed
+rail subset in data/raw/il/gtfs; East Jerusalem and the A1's West Bank stretch under il as she
+ruled); North Korea built (`kp_register.py`, Korea's recipe; running by evidence class A-D in
+kp_sources.md; borders xSinuijuDandong, eXKPRUTUMANGANG, xManpoJian; cn CN_BORDERS and
+ru_register BORDER for them, cn and ru rebuilt). **Open**: Manp'o - Ji'an does not join (cn's
+track ends 74 m from the point, PIECE_BORDER_M is 60); two Pyongyang tram lines named "2"/"3"
+(unnamed route_masters). Probe: il exact, kp 99.8% (the Manp'o and Tumangang tails).
+
+**Missing stops (item 6), landed 2026-10-08**: `rinf.py` gives a stop reached only through a
+clone link its station record, so `split_pieces` folds the clone in (handoff_notes/
+missing_stops.md; ab.py on kz uz kg tj tm by md ge am az xa: only kz moved). `ru_register`
+makes a no-letter point a stop where an OSM train stops by name (116 points); pl's Olecko a stop
+(lines 39 and 41 back). ru ua kz pl rebuilt. Probe: ru 57 lines / 3,164 km unfinishable -> 14 /
+187 km, ua 5 / 33, kz 4 / 32, mostly border tails with the neighbour unloaded and points Book 1
+does not place (Kartaly I, Orsk, Rossosh). The deleted ids (Myronivka - Bohuslav, Taraz -
+Zhanatas, Nukus - Shymbay...) were checked: no passenger trains, they stay deleted.
+
+**Flavour stats (Anita, 2026-10-09)**: line type and station ridership are being added as
+post-build files (`tools/line_types.py` -> `types.json`, `tools/station_riders.py` ->
+`riders.json`, app patches in handoff_notes/). **Ridership per line and per segment: later**
+("a thing to look into later"); flavour_stats_checklist.md §3-4 has the sources.
+
+Every new extract needs Anita's say-so (asked 2026-10-08).
+
+**2026-10-08, landed by the managing session:** `build_model.py` got two hooks, both no-ops
+unless a rules file sets them: `SNAP_ALONGSIDE` (fr only: Métro 10's Auteuil loop and 21 other
+false links; handoff_notes/metro10_loop.md) and `route_runs` (us only: 23 OSM relations whose
+ways are in no order, the Morris & Essex; handoff_notes/njt_morristown.md). fr and us rebuilt,
+compare_lines clean (only the Morristown Line moved, New Providence off it), build_regions run.
+`line_100_probe.js` on us+ca: every group exact; 5 us and 5 ca lines unfinishable (stopless
+tails, e.g. Bellingham - border 40.8 km). The app's junction-pick crash (no "Add ride" for any
+pick through/past a junction end, every country) fixed in `pickedRun`.
+
+**2026-10-07, app session (dist/index.html, dist/poster.js; no build change, nothing rebuilt).**
+Landed: the poster as a shareable 2400 px image (`poster.js`: auto insets with a city map for
+every city with 15 km+ ridden, starred stats as rings, zoom/pan preview, Download and Copy);
+stars on countries/operators/lines/trips (`STARS`, `starredStats()`); rings instead of bars in
+"Travel tracker" mode, none in "View all lines" (the buttons renamed); no all-caps headings and
+no "Ridden in <country>" headline; Countries tab a tree (country > operators > lines), every
+list drag-reorderable (`ORDERS`, one key per list, "sort by distance ridden" per tab); a joint
+line counts under each of its operators (`opKeys`); an operator row draws its lines on the map,
+a click on open map clears it; lines picked from a list are brought into view; one blue for
+every line without a colour (kind colours gone, legend three rows); pale line colours darkened
+in the light theme (`forTheme`, `LIGHT_MAX_LUM`, the tiles' TRACK_LINE_COLOUR_LIGHT); a solid
+selection halo (the translucent one stacked into spikes at curves); flags from flag-icons
+(jsdelivr); English / local names menu with Cyrillic, Greek, Georgian, Armenian transliteration
+(`translit(s, cc)`, per language: Ukrainian 2010, Bulgarian, Serbian Latin, Kazakh, ELOT
+digraphs; generic line words "Ligne N" / "N号线" / "Пригородный электропоезд" in English via
+`englishLine`; the rest of translation_coverage.md's order, build-side, is open); intercity stations (named train or high-speed) from z8 (`station-ic`); "Also on
+this track" folds after six; register/ownership notes gone from the line view; OP_EN no longer
+lets one line's operator:en rename Network Rail. Crediting (handoff_notes/full_line_not_100.md):
+a fully ridden line is exactly 100%, stubs under 1 km / 10% past a stop come with the stop,
+"siblings" (same two stops, 80%+ shared track) credit each other on their own lines, and
+`SAME_TRACK` pairs NYC 6/<6>, 7/<7>, F/<F>.
+Later the same day: every line 100%-able from its own diagram (picks ride the drawn way,
+junction ends pickable only where nothing else reaches, "by the other track" choices;
+`tools/line_100_probe.js` passes all 12,428 listed lines; handoff_notes/full_line_not_100.md);
+a selected line's rings sit on its own track (`linePoint`); English names filled after the
+build (`tools/english_names.py` -> `dist/data/<cc>/names_en.json` and `dist/data/names_en.json`,
+upload with the data); view-only share links with the rides packed into the URL hash
+(`dist/share.js`, `#s=`; a short-link Worker later if wanted); opening a country moves the
+camera only when none of it is on screen; poster: Osaka + Kyoto style merged city maps, a
+city map needs a trip that began and ended there, inset count 0-25 in the dialog.
+Research written up: `operator_branding_sources.md` (colours, logos, short names: no bulk
+colour source; Wikidata linking 86%; `data/operators.json` is read by the app if present,
+`{key: {short, colour, logo}}`, not yet written), `flavour_stats_checklist.md` and
+`translation_coverage.md` (agents, check they landed).
+**Round 2, same evening (all 73 countries rebuilt):** junction ride ends removed (Anita: track
+past a junction with no station is not passenger rail); `build_model.prune_dead_track` drops
+it (-1,321 km, 81 line ids gone: handoff_notes/dead_track_km_2026-10-07.txt); `along.py`
+writes `dist/data/<cc>/along.json` (sections within 30 m, same kind, not HSR vs conventional,
+not different register lines) and the app credits a section 90% alongside a ride (60% with
+both ends stops passed) on its own line: SAME_TRACK hand list deleted; one end-to-end pick
+fills 9,226 of 9,313 unbranched lines. Legend removed; "View all lines" shows only Countries
+and Trips, countries by length. **Open: stops missing from the data.** Most of the 147 lines
+no picks can finish (57 Russian, 3,164 km, e.g. Tommot - Nizhny Bestyakh with 0 stops), and
+a few of the 81 deleted ids (ua Myronivka - Bohuslav, kz Taraz - Zhanatas, uz Nukus - Shymbay,
+pl 39) are lines whose stations the build never marked as stops: add the stops (tariff guide
+/ timetables), then they come back. Anita's calls: Indian Railways one row; Italy stays RFI
+until timetables. Upload `along.json` with the data.
+
+**Operators are the passenger companies now** (Anita's call): `tools/operators.py`
+(measure / seed / logos / build) writes `dist/data/<cc>/ops.json` (register line -> its
+passenger operators by share, from the OSM services over its track), `dist/data/operators.json`
+(short name, colour from Wikidata or the logo, logo, group) and `dist/data/logos/` (216 free
+PNGs, `credits.json`); `colours/operators.csv` is the hand-editable table (filled cells are
+never overwritten). DB, SNCF, RZD, Indian Railways, China Railway, metros by brand (Shanghai
+Metro...) are one row each. Left: it 5,848 km still under RFI (no OSM services there).
+`search.json`'s operator text names the passenger operators since 2026-10-08. Upload
+`ops.json`, `operators.json`, `logos/` with the data. Paris Métro 10's one-way loop at Auteuil is drawn as one sequence in the strip
+diagram: the fr build ships it as one chain (2026-10-08 list, item 6: a build_model diff waits
+in handoff_notes/metro10_loop.md), not a layoutPiece case. Operators of the same name in two
+countries share a row (India's and the UK's Southern Railway): key by country.
 
 0. **Next session, start here (written 2026-10-05 by maps-33, which finished the three
    threads the 10-04/05 managing session handed off).** Nothing from 10-02 onward is
@@ -658,6 +855,10 @@ panel. Things that will bite:
   the lines. Seas' and lakes' names are hidden (`baseHide`). The basemap's own near-black
   railways are hidden on load. Station bubbles come from the model, never from the tiles.
 - The Countries tab lists the most ridden first, then by km of line (Anita, 2026-10-04).
+- **A country's or operator's total is the union of its lines** (`unionTotals` /
+  `unionDone`, Anita 2026-10-08): never sum owned track or per-line km for a group, or riding
+  every line stops short of 100%. `build_regions.owned_totals` is its Python copy for
+  regions.json; change both together. `line_100_probe.js` part 3 checks it.
 - **No CSS transitions anywhere**: state changes are instant.
 - **A reload opens with nothing selected** (Anita, 2026-10-02): only the home tab survives
   (`bootUi`); a line, station, trip or traced journey from last time muted every other line.
@@ -721,6 +922,118 @@ panel. Things that will bite:
   constant opacities (`track-<cc>` / `track-mute-<cc>`, `applyTrackColour`); the colour
   expressions change only with the theme and Browse/Ridden. A constant opacity must stay
   constant (constant <-> data-driven reloads too).
+- **Keep the main thread free** (2026-10-08, Anita: "freezy for the first 3 or so seconds",
+  and on selecting a line). Measured with `tools/perf_probe.js` (headless, CPU profile + long
+  tasks; numbers in `handoff_notes/app_perf.md`). What it changed, and what not to undo:
+  - MapLibre checks every `addSource`/`addLayer`/`setFilter`/`setPaintProperty` by
+    serializing the WHOLE style, so with ~120 countries adding them was cubic (8.7 s in one
+    task at the world view). Per-country layers go through `addTrackLayer`: only the first
+    country is checked, later ones pass `{validate: false}` (the lint now reads
+    `addTrackLayer({...})` too, and is their only check). Each is created with the current
+    theme/mode/muting values (`trackNow`), noted in `TRACK_SET`, and `applyTrackColour` only
+    sets what differs from that note. Countries are added a few per task, nearest the view
+    first (`queueRegionTiles` / `drainRegionTiles`, 30 ms budget).
+  - A country's arrival only merges its data; the redraws (stations, ridden, selection,
+    panel) run once per burst (`dataArrived`, 80 ms), then `warmIndexes` builds the walk
+    indexes and OPS in idle time. `OPS` is built when read: call `opsNow()` before reading
+    `OPS`/`OP_INDEX`. `along.json` is kept raw and expanded per country on first lookup
+    (`ALONG`/`ALONG_INTO` are small objects with `get`/`clear`). `renderHome` calls `stats()`
+    only on the tabs that show it (not Trips).
+  - `passThrough` and `nearRows` look sections up in a 0.25° grid (`sectionsNear`, built
+    per DATA_GEN) instead of scanning every loaded section per junction; `hubStop` rules out
+    stops farther than `HUB_THROAT_KM` with one search from the junction. Same rows as
+    before on de/gb/ch/us/jp (old and new functions swapped in one page), 10-23x faster.
+  - Any new loop over every loaded line or station on a click, a selection or a country's
+    arrival should be cached per DATA_GEN or indexed like these.
+  - **The selection has a MapLibre worker of its own** (2026-10-08, Anita: a line sometimes
+    took ~600 ms to draw, "feels random"). MapLibre 4 parses all tiles and GeoJSON in one
+    worker, so the selection's setData queued behind tiles in flight after a pan (0.2-1 s).
+    `setWorkerCount(2)` (before `setRTLTextPlugin`, which starts the workers) and
+    `selectionWorker` puts `sel`/`selst` alone on the second; everything else stays on the
+    first. Patches 4.7 internals (`Dispatcher.getActor`, `GeoJSONSource._updateWorkerData`):
+    recheck on a MapLibre upgrade. `opLinks` no longer builds OPS for a listed line.
+    `tools/perf_probe.js selects` measures click to drawn; numbers in handoff_notes/app_perf.md.
+  - **The dimming lands with the selected line, never before it** (2026-10-09, Anita: "could we
+    prioritize redrawing the selected line"). Do not call `setMuted` directly: `paintSelection`
+    asks `wantMuted`, and the mute goes on when the `sel` source's new tiles are loaded
+    (`selDrawn` / `selLinesDrawn`; cap `MUTE_HOLD_MS`). A clear undims and hides the selection
+    layers by constant opacity (`selHidden`) in one frame. Selection data goes through `selSet`
+    (one setData in flight). `showLine` paints before it renders the panel. A newly selected
+    line goes out alone first only when the rest would wait on a fetch or uncached walks.
+    `perf_probe.js frames` shows it frame by frame (app_perf.md).
+- **Browse draws a selected line at full colour, ridden or not** (Anita, 2026-10-09): the held
+  back colour and the `done` overlay mean "not ridden", which is the tracker's (`drawLine`,
+  `heldBack`, `drawStrip` check `MODE === 'ridden'`). **"View all lines" shows no ridden state
+  at all** (same day): the ridden overlay goes to opacity 0 there (`riddenShown`, a constant
+  swap, called by `setMode` and `setMuted`; its data is kept, so switching back is instant);
+  the line view has no "Trips on this line", the operator view no ring or "rode every line",
+  a country's operators sort by length, and the strip's closed stops are grey whether reached
+  or not. Station bubbles never carried ridden state. The Trips tab stays (Anita, 2026-10-07).
+- **Line types** (`types.json` per country, `tools/line_types.py`, line_types.md; read in
+  `fillTypes` before LINE_FOLD): the type leads the line view's small line ("Commuter rail ·
+  Metro-North · 109.0 km") and a search hit's. The muted "Intercity trains also run here."
+  went (Anita, 2026-10-09); `lalso` is still read, nothing shows it. search.json has a `types`
+  column (build_regions `write_search`) for countries not loaded.
+- **Station ridership** (`riders.json` per country, `riders_sources.json`,
+  `tools/station_riders.py`, station_riders.md): one small grey line under a station's name,
+  "450,000 passengers / day" (Anita, 2026-10-09: no "about", no year in the text; two
+  significant figures, "2.7 million passengers / day" from a million up; "/ weekday" where
+  every source counts working days, as NS does; nothing when there is no figure). The source
+  and year are the hover (`title`), and the line links to a single source. riders.json is
+  fetched on the first station view of its country (`fetchRiders`), never with the lines, and
+  the view re-renders once when it lands.
+- **A mode switch redraws everything the mode decides at once** (Anita, 2026-10-09: it "doesn't
+  correct whats dimmed and whats not until you actually click a line"): `setMode` calls
+  `applyTrackColour` (the track's colour expression and edge differ per mode, and only
+  muting called it), `riddenShown`, `render`, then `paintSelection`. A colour expression
+  changing reloads the tiles: fine on a mode switch, as on a theme switch; never on a selection.
+- **Routes in the US, Canada and Australia** (`ROUTE_CCS`, `routesOf`, `listed` vs
+  `listedBase`; Anita, 2026-10-09, see the standing decisions). In these countries `listed()`
+  is: every OSM line of the country with track (a ROUTE: metro and tram lines as before, and
+  operating patterns and named trains, now with percentages), plus a register line that is a
+  CORRIDOR or that the routes leave uncovered. `listedBase` is the old rule and still decides
+  which register lines own track (`openTrackLines`, `joinedBy`, `endJoins`). All measured on
+  footprints, as unionTotals counts track (`pieceFoot`):
+  - Covered: the routes' union leaves at most ROUTE_GAP_KM (0.15) or ROUTE_GAP_SHARE (1%) of
+    the register line's footprint. What a hidden line leaves (a few hundred metres past a
+    terminus, a siding) drops out of the totals, as an operating pattern's register gaps
+    always did: us 33.6 km over 86 of 337 hidden lines, ca 10.1 km, au 32.7 km. Everything
+    else stays listed (us 124 register lines, ca 30, au 71), so riding every listed line still
+    reads 100%.
+  - Corridor: 20 km or more, at least 3 routes of at least 2 operators each over a quarter of
+    it or more, tourist trains aside (types.json). Many routes of one operator (Amtrak's
+    Florida trains, au's duplicated XPT relations) do not make one. As of 2026-10-09: us,
+    Northeast Corridor (both pieces), Keystone Corridor, RF&P, Hudson Line (both: Metro-North's,
+    and Amtrak's north of Poughkeepsie with Mohawk, Rochester and Buffalo Terminal
+    Subdivisions, the Empire Corridor, because the Maple Leaf is VIA's too), New Haven Line,
+    Hartford Line, Washington District, Miami and Orlando Subdivisions, San Diego, Orange,
+    Ventura, San Bernardino and River Subdivisions (LOSSAN and Metrolink), Seattle and Lakewood
+    Subdivisions, East Subdivision (Boston), Chicago, C&M and Joliet Subdivisions; ca, Oakville,
+    Kingston, Weston (Malton - Bloor) and St-Hyacinthe Subdivisions; au, Main Suburban, East
+    Hills, North Shore Railway, Main Northern (Asquith - Cowan), Main Western (Orange East Fork -
+    Dubbo), North Eastern (Springhurst - Broadmeadows) and Melbourne's Pakenham Line.
+  - Single: a covered register line exactly one route runs over (at least 0.5 km or 5% of it;
+    us 224, ca 73, au 23). A click on its track opens that route, with "Track: Nevada
+    Subdivision" under the name (`VIEW.track`); search and the Lines tab still open the
+    register line itself.
+  - A route's line view says "Track:" with the register lines it runs over in the order it
+    reaches them (`routeTracks`), folded; a register line says "Routes on this track:", the
+    routes most of whose length lies on it first. Rows in lists note "corridor" or "track";
+    track rows come after the routes and corridors in the default order (`lineListOrder`).
+  - A route with no operator tag goes under its network (`routeOpKeys`; "CTrail", "SunRail";
+    `ROUTE_NETWORK` maps ARR and "VIA Rail"), else "(no operator)" as before.
+  - Names (`lineName`, display only): a route there drops "(as operated)" (its register twin is
+    the "track" row beside it); other bracketed parts of OSM names there are real ("MBTA Green
+    Line (D)") and stay. A ref of one letter and one or two digits goes before a name that
+    lacks it (`PUBLIC_REF`): "T1 North Shore & Western Line", "M1 Metro North West &
+    Bankstown Line", "L2 Randwick Line". Longer refs are internal codes (Melbourne's "FKN") or
+    abbreviations (Metra's "UP-N", Amtrak's "CZ") and are not shown.
+  - Totals: us 43,069.8 -> 43,127.1 km, ca 13,970.2 -> 13,983.1, au 17,192.8 -> 17,207.5 (route
+    track no register line owned in, slivers out). `build_regions.owned_totals` has the same
+    rule (`route_rows`, `ROUTE_CCS` and the constants copied; change both together), and
+    matches the app to 0.0001 km for each country loaded alone (2026-10-09).
+  - `line_100_probe.js` tests every listed line (routes included) and prints `routes` per
+    country; us/ca/au groups exact and 100% once every listed line is ridden (2026-10-09).
 - **A new colour goes in both themes** (the two `:root` blocks, and `THEMES` for map paint and
   the strip's SVG). Layers are added with the dark theme's literals so the lint checks them.
 - **To see a change**: `python serve.py`, then `node tools/screenshot.js
@@ -752,7 +1065,11 @@ for line ids dropped as a register twin.
 **Publishing** (to live at anita.garden/noritetsu) must upload foot.json and remove any old
 credits.json; every country needs a foot.json before index.html goes up (without one the app
 counts that country's OSM lines whole). The .pmtiles need a server that answers HTTP range
-requests (why `serve.py`, not `python -m http.server`).
+requests (why `serve.py`, not `python -m http.server`). **`python tools/deploy.py`** does it
+(first run 2026-10-09; README.md "Deploy"): data and regions.json to R2, the page and its two
+scripts to the website repo, the page switching between the two by `regions.json` beside it.
+A new file the app fetches needs nothing extra if it is under `dist/data/`; anything outside
+it has to be added to deploy.py.
 
 ## Pointers
 

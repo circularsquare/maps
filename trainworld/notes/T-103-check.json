@@ -1,0 +1,54 @@
+{
+  "actualCars": {
+    "lines": 109,
+    "min": 2,
+    "max": 13
+  },
+  "checks": [
+    {
+      "zoom": 15.49,
+      "detail": false,
+      "error": 0
+    },
+    {
+      "zoom": 15.5,
+      "detail": true,
+      "error": 0
+    },
+    {
+      "zoom": 18,
+      "detail": true,
+      "error": 0
+    }
+  ],
+  "picks": [
+    {
+      "car": 0,
+      "hit": {
+        "kind": "train",
+        "line": "0",
+        "profile": 0,
+        "dep": 111600
+      }
+    },
+    {
+      "car": 3,
+      "hit": {
+        "kind": "train",
+        "line": "0",
+        "profile": 0,
+        "dep": 111600
+      }
+    },
+    {
+      "car": 7,
+      "hit": {
+        "kind": "train",
+        "line": "0",
+        "profile": 0,
+        "dep": 111600
+      }
+    }
+  ],
+  "errors": []
+}

@@ -3,6 +3,51 @@
 Newest first. One entry per decision: what, and why. The spec states the result; this keeps the
 reasoning and what it replaced.
 
+## 2026-10-10
+
+- **Close-up trains bend car by car; quieter crowding colours** (T-103, Anita). Switch at zoom
+  15.5 from a compact capsule to the line's actual 20 m cars. Each has its own route position,
+  chord heading and line-bundle offset; keep one GPU instanced draw and the existing analytic
+  trip timing. Clamp the full consist onto its route at terminals. Picking follows every car.
+  Reduce the empty tint from 60% white to 18%, and darken the filled core from 62% to 48% of
+  line RGB. The crowding gauge spans the whole consist rather than repeating in every car.
+  notes/T-103.md.
+
+- **Player fares affect riders** (T-067, Anita). Use the saved base-plus-km curve in demand,
+  at a US value of time of $20/hour (3 perceived minutes per dollar, chosen for play). Charge
+  the base once even with transfers; charge distance on actual track length, so route searches
+  see it too. Keep fare outside the ride-time crowding multiplier. Fare-only edits start a new
+  debounced solve; identical prices do not. notes/T-067.md.
+
+- **See busiest-hour train crowding as well as averages** (T-087). Default train gauges to the
+  busiest hour, matching the crowding model and the line's fullest-train statistic. Settings
+  can show the period average; the inspector keeps both counts visible and uses the chosen
+  basis for its load bar. This changes display only, not schedules or demand. notes/T-087.md.
+
+- **Delay tags leave room and disappear at city scale** (T-102, Anita). Share station names'
+  zoom-12 cutoff and spacing rules; show larger delays first when tags compete, then higher
+  utilisation. Keep resource positions, tooltip explanations and junction clicks. notes/T-102.md.
+
+- **Fewer station names, one UI font, no commuter corner summary** (T-101, Anita). Hide names
+  below zoom 12 and reserve more space around them, particularly before zoom 14. Keep transfer
+  priority and T-074's shared-layer pan. MapLibre's Helvetica container font was overriding the
+  project's font on station labels and other map DOM text; explicitly use Zen Maru Gothic there
+  and on form controls. Remove the commuter legend and its unused state: the top bar already
+  shows mode shares, and hover/inspectors retain local numbers. notes/T-101.md.
+- **All construction controls live in Build; Select has no button** (T-100, Anita). The blueprint
+  total, undo/redo and Construct stay visible at the bottom of the Build pane, while settings and
+  the grouped cost breakdown scroll. Esc and clicking the active tool still return to selection.
+  Costs come from the simulation's pricing intervals, with stations, junctions, flyovers and
+  crossings separate. Include the actual new fleet charge: starting lines together changes
+  delays and train needs, so quote a reversible preview of Construct all, not individual planned
+  train estimates. notes/T-100.md.
+- **Station names pan as one compositor layer** (T-074). The outer box clips to the viewport;
+  the inner box moves from the same camera matrix as the network. Keep a 256 px margin of
+  names ready and re-place at 128 px, after movement ends, or when the projection changes.
+  Retains DOM text and overlap priorities while reducing browser CPU during the 300-station
+  drag benchmark by 34%. `?perfOff=labelPan` restores individual placement for comparison.
+  notes/T-074.md.
+
 ## 2026-10-09
 
 - **Capacity markers go under the demand views; their tooltip is a styled tag** (T-099, Anita: the

@@ -77,7 +77,7 @@ sinotibetan.sinitic.cantonese | Cantonese | 0.80 0.11 15
 sinotibetan.sinitic.min_nan | Min Nan (Taiwanese, Hokkien) | 0.50 0.12 28
 sinotibetan.burmish.burmese | Burmese
 sinotibetan.kukichin.chin | Chin
-sinotibetan.karen | Karen | 0.80 0.11 215
+sinotibetan.karen | Karen languages | 0.80 0.11 215
 austroasiatic.vietnamese | Vietnamese | 0.68 0.17 310
 austroasiatic.khmer | Khmer | 0.82 0.10 330
 afroasiatic.hebrew | Hebrew
@@ -128,7 +128,7 @@ austronesian.oceanic.tongan | Tongan
 austronesian.oceanic.hawaiian | Hawaiian | 0.66 0.19 340
 nigercongo | Niger-Congo | 0.72 0.14 75
 nigercongo.bantu | Bantu | 0.70 0.14 60
-nigercongo.bantu.swahili | Swahili | 0.70 0.15 55
+nigercongo.bantu.swahili | Swahili | 0.92 0.21 122
 nigercongo.bantu.ganda | Ganda
 nigercongo.bantu.shona | Shona
 nigercongo.mande | Mande | 0.72 0.13 130

@@ -1,7 +1,8 @@
 # Oman. No census or survey asks language. NCSI register, end 2024: Omanis on Omani Arabic per
 # wilaya, expatriates per governorate by nationality (male workers, female workers, dependants)
 # read as their languages (sources/om_build.py, sources/gulf_mix.py), 63 register wilayat on
-# religiondots' 61 units and Kontur 400 m hexes. Every row derived. Record: sources/om.md.
+# religiondots' 61 units and Kontur 400 m hexes (false desert blocks lowered by
+# sources/om_place.py). Every row derived. Record: sources/om.md.
 from _shared import *  # noqa: F401,F403
 
 REGISTER_2024 = 5_268_072
@@ -72,7 +73,8 @@ ENTRY = dict(
     view=[51.8, 16.6, 60.0, 26.5],
     counts=_counts,
     mappings=["om2024"],
-    place=RD_GEO / "om" / "om_hexes.gpkg",
+    # religiondots' hexes with Kontur's false desert blocks lowered (sources/om_place.py)
+    place=GEO / "om" / "om_hexes.gpkg",
     place_unit=lambda g: g["unit"].astype(str),
     place_weight=_weight,
     note_public=(

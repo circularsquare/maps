@@ -179,6 +179,26 @@ impl TrackApi {
         (self.w.net.total_cost() - self.w.net.built_cost()).max(0.0)
     }
 
+    /// Cost rows for Construct all, including new cars after using the spare fleet.
+    /// Infrastructure rows come from the same pricing intervals as track_cost.
+    pub fn blueprint_cost_items(&mut self) -> Vec<f64> {
+        let mut rows = self.w.net.blueprint_cost_items();
+        if !rows.is_empty() && self.w.svc.lines.iter().any(|s| s.ok && !s.running) {
+            let net = &self.w.net;
+            let edges: Vec<u32> = (0..net.edge_count() as u32).filter(|&e| net.edge_ok(e) && !net.edge_built[e as usize]).collect();
+            let stations: Vec<u32> = (0..net.node_count() as u32).filter(|&n| net.node_ok(n) && net.node_platform[n as usize] > 0 && !net.node_built[n as usize]).collect();
+            let ops = self.construct_ops(&edges, &stations);
+            let fleet = self.fleet;
+            // Starting several lines together can change junction delays and their fleet needs.
+            // Quote the derived constructed service, not a sum of the planned lines' estimates.
+            let cost = self.w.trial_with(Op::Batch(ops), |w| trains_to_buy(w, fleet)).map_or(0.0, |(_, c)| c);
+            if cost > 0.0 {
+                rows.extend([5.0, 0.0, 0.0, 0.0, 0.0, cost / CAR_PRICE, cost]);
+            }
+        }
+        rows
+    }
+
     // ---- ids for new objects (claimed when the edit using them applies)
     pub fn new_node_id(&mut self) -> u32 {
         self.w.net.alloc_node()
@@ -809,7 +829,18 @@ impl TrackApi {
         let Some(path) = self.w.net.route(stops) else {
             return self.refuse(Issue::LinePath { line: id });
         };
-        self.run(Op::Line { id, data: Some(LineData { name, colour, stops: stops.to_vec(), path, tph: [high, medium, low], dwell_s, turnaround_s, cars }) })
+        self.run(Op::Line { id, data: Some(LineData { trains: None, name, colour, stops: stops.to_vec(), path, tph: [high, medium, low], dwell_s, turnaround_s, cars }) })
+    }
+    /// Add a line with a whole-line fleet at each demand level.
+    #[allow(clippy::too_many_arguments)]
+    pub fn set_line_with_trains(&mut self, id: u32, stops: &[u32], high: u32, medium: u32, low: u32, dwell_s: f32, turnaround_s: f32, cars: u8, colour: u32, name: String) -> u32 {
+        if stops.len() < 2 {
+            return self.refuse(Issue::LineStops { line: id });
+        }
+        let Some(path) = self.w.net.route(stops) else {
+            return self.refuse(Issue::LinePath { line: id });
+        };
+        self.run(Op::Line { id, data: Some(LineData { trains: Some([high, medium, low]), name, colour, stops: stops.to_vec(), path, tph: [6.0, 3.0, 1.0], dwell_s, turnaround_s, cars }) })
     }
     /// Change a line's stops, keeping everything else; the path is found again.
     pub fn set_stops(&mut self, id: u32, stops: &[u32]) -> u32 {
@@ -834,6 +865,12 @@ impl TrackApi {
     }
     pub fn set_schedule(&mut self, id: u32, high: f32, medium: f32, low: f32) -> u32 {
         self.run(Op::Schedule { id, tph: [high, medium, low] })
+    }
+
+    /// Allocate whole trains to the entire line, across both directions.
+    pub fn set_train_counts(&mut self, id: u32, high: u32, medium: u32, low: u32) -> u32 {
+        let Some(d) = self.w.net.line_data(id) else { return self.refuse(Issue::NoSuchLine { line: id }) };
+        self.run(Op::TrainCounts { id, trains: Some([high, medium, low]), tph: d.tph })
     }
 
     // ---- undo
@@ -917,6 +954,19 @@ impl TrackApi {
         out
     }
     /// An edge's centre line for drawing: x, y, height (m) triples.
+    /// Curve-limited km/h for every consecutive segment in edge_render's point triples.
+    pub fn edge_render_speeds(&self, e: u32) -> Vec<f32> {
+        let n = &self.w.net;
+        if !n.edge_ok(e) { return vec![]; }
+        let pieces = n.edge_pieces(e);
+        let ss = render_chainages(pieces, n.edge_vert(e));
+        ss.windows(2).map(|pair| {
+            let mid = (pair[0] + pair[1]) * 0.5;
+            let i = pieces.partition_point(|p| p.s0 <= mid).saturating_sub(1);
+            (pieces[i].v_limit() * 3.6) as f32
+        }).collect()
+    }
+
     pub fn edge_render(&self, e: u32) -> Vec<f64> {
         let mut out = vec![];
         if self.w.net.edge_ok(e) {
@@ -1296,7 +1346,7 @@ fn lead_in_along(x: f64, y: f64, level: i8, dir: f64, toward: (f64, f64)) -> Opt
 
 /// Points along an alignment for drawing: x, y, height triples; arcs within 5 cm, straights
 /// every 100 m (so ramps show), ramp ends included.
-fn render_samples(pieces: &[geom::Piece], vert: &[[f64; 2]], out: &mut Vec<f64>) {
+fn render_chainages(pieces: &[geom::Piece], vert: &[[f64; 2]]) -> Vec<f64> {
     let mut ss: Vec<f64> = vec![];
     for p in pieces {
         let step = if p.k == 0.0 { 100.0 } else { 50.0f64.min((8.0 * p.radius() * 0.05).sqrt()) };
@@ -1313,7 +1363,11 @@ fn render_samples(pieces: &[geom::Piece], vert: &[[f64; 2]], out: &mut Vec<f64>)
     }
     ss.sort_by(|a, b| a.total_cmp(b));
     ss.dedup_by(|a, b| (*a - *b).abs() < 0.5);
-    for s in ss {
+    ss
+}
+
+fn render_samples(pieces: &[geom::Piece], vert: &[[f64; 2]], out: &mut Vec<f64>) {
+    for s in render_chainages(pieces, vert) {
         let (x, y, _) = geom::pos_at(pieces, s);
         out.extend([x, y, geom::height_at(vert, s)]);
     }
@@ -1400,7 +1454,13 @@ mod tests {
         a.set_cash(6000.0);
         let trains = a.line_train_cost(id);
         assert!(trains > 0.0);
+        let quote = a.blueprint_cost_items();
+        let total: f64 = quote.chunks_exact(7).map(|r| r[6]).sum();
+        assert!((total - (a.blueprint_cost() + trains)).abs() < 1e-8);
+        assert_eq!(quote.chunks_exact(7).filter(|r| r[0] == 1.0).map(|r| r[5]).sum::<f64>(), 3.0);
         assert_eq!(a.construct_line(id), 0, "{}", a.issues());
+        assert!((total - a.last_charge()).abs() < 1e-8, "quote must include the actual fleet charge");
+        assert!(a.blueprint_cost_items().is_empty());
         // Construction plus the trains its busiest schedule needs (T-028).
         assert_eq!(a.fleet(), a.cars_needed());
         assert!((a.fleet() as f64 * CAR_PRICE - trains).abs() < 1e-9);
@@ -1440,6 +1500,31 @@ mod tests {
         assert_eq!(a.delete_edge(e0), 0, "{}", a.issues());
         assert_eq!(a.cash(), cash);
         assert!(a.trips(8.0 * 3600.0).is_empty());
+    }
+
+    #[test]
+    fn blueprint_quote_shared_lines_matches_charge_without_changing_game() {
+        let mut a = api();
+        let ends: Vec<f64> = free(0.0, 0.0).iter().chain(free(1000.0, 0.0).iter()).copied().collect();
+        assert_eq!(a.add_route(&ends, &[], 2, false), 0);
+        let n0 = a.w.net.edge_a[0];
+        let n1 = a.w.net.edge_b[0];
+        for n in [n0, n1] { assert_eq!(a.add_station(1, n, 0.0, 0.0, 200, format!("S{n}")), 0); }
+        for i in 0..2 {
+            let id = a.new_line_id();
+            assert_eq!(a.set_line(id, &[n0, n1], 20.0, 10.0, 4.0, 30.0, 180.0, 0, 0, format!("L{i}")), 0);
+        }
+        let saved = save::encode(&a.w.net);
+        let cash = a.cash();
+        let quote = a.blueprint_cost_items();
+        assert_eq!(quote, a.blueprint_cost_items());
+        assert_eq!(saved, save::encode(&a.w.net));
+        assert_eq!(cash, a.cash());
+        assert!(a.can_undo());
+        let total: f64 = quote.chunks_exact(7).map(|r| r[6]).sum();
+        assert_eq!(a.construct_all(), 0);
+        assert!((total - a.last_charge()).abs() < 1e-8, "quote {total}, charge {}", a.last_charge());
+        assert!(a.blueprint_cost_items().is_empty());
     }
 
     #[test]
@@ -1723,7 +1808,7 @@ mod tests {
         let op = Op::Edge { id: e, data: Some(EdgeData { a: n0, b: n1, tracks: 2, pis: fitted.clone(), built: false, thru: clicks.clone() }) };
         assert!(a.w.apply(op).is_ok());
         let bytes = a.save();
-        assert_eq!(&bytes[..4], b"TWT3");
+        assert_eq!(&bytes[..4], b"TWT4");
         let mut b = api();
         assert!(b.load(&bytes));
         assert_eq!(b.edges_info(), a.edges_info(), "loads as it was");

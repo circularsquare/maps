@@ -60,6 +60,10 @@ Cañaveral - Cáceres, 818 Padrón - Bif. Angueira and 828 A Portela. Riquelme-S
 where no train calls, is no stop, so 352 El Reguerón - Balsicas is one section the Murcia -
 Cartagena trains run to the end of.
 
+THE CANARY ISLANDS: Tenerife's tram comes from Geofabrik's separate islands extract, folded
+into data/proc/es by `python -m rinf_countries.es --canaries` after every es extract (see
+`canaries` at the end).
+
 What is still off, and the numbers: es_sources.md.
 """
 import re
@@ -438,6 +442,9 @@ STOP_NAMES = {
     # Typed 40 (technical) in RINF, so line 270 ended at a junction called PORTBOU instead of
     # at the station every R11 and French TER calls at.
     "PORTBOU": "Portbou",
+    # OSM renamed "Las Mazas/Les Maces" to the Asturian "Les Maces" (2026-10-08 extract), which
+    # no spelling of RINF's name reaches: line 760 lost the stop C7 still calls at.
+    "LAS MAZAS": "Les Maces",
 }
 # Never stops: the high-speed technical points at l'Espluga and Campomanes ("A.V."), which took
 # the conventional station of the town; La Sagrera, the unopened station 690 m from the OSM
@@ -602,3 +609,81 @@ COUNTRY = {
     "im": {"0071_IM": "Adif"},
     "cut_at_junctions": CUT_AT,
 }
+
+
+# THE CANARY ISLANDS (2026-10-08, Anita: "sure we can fold it into spain"). Geofabrik files the
+# islands under Africa, so Tenerife's tram is not in spain-latest. It is extracted on its own
+# (`extract.py --region ic --pbf canary-islands-latest.osm.pbf`) and folded into data/proc/es
+# by `python -m rinf_countries.es --canaries` after every es extract. OSM ids are global, so the
+# two extracts are joined as they are (the islands share no object with the mainland file).
+# L2's route_master (16267950) carries no tags but a wikidata id, so the line would be
+# nameless: it takes the name and ref Metrotenerife's own feed gives it ("Linea 2", "L2") in
+# the form L1's master has in OSM ("Tranvía Línea 1", ref L1), and its routes' operator and
+# network. No colour: OSM's "blue" on L2's routes is a mapper's, and the feed has none.
+CANARY_MASTERS = {16267950: {"name": "Tranvía Línea 2", "ref": "L2"}}
+
+
+def canaries(log=print):
+    """Fold data/proc/ic into data/proc/es (written via temp files). Idempotent."""
+    import os
+    import pickle
+    from pathlib import Path
+    import numpy as np
+    proc = Path(__file__).resolve().parents[1] / "data" / "proc"
+    es, ic = proc / "es", proc / "ic"
+    out = {}
+    for fn in ("ways.pkl", "rels.pkl", "stops.pkl", "infra.pkl"):
+        with open(es / fn, "rb") as f:
+            a = pickle.load(f)
+        with open(ic / fn, "rb") as f:
+            b = pickle.load(f)
+        if fn == "rels.pkl":
+            b = dict(b)
+            for mid, fill in CANARY_MASTERS.items():
+                if mid not in b:
+                    log(f"  route_master {mid} not in the islands' extract")
+                    continue
+                tags, members = b[mid]
+                kids = [b[r][0] for t, r, _ in members if t == "r" and r in b]
+                tags = dict(tags)
+                for k in ("operator", "network"):
+                    vals = {t.get(k) for t in kids if t.get(k)}
+                    if len(vals) == 1 and k not in tags:
+                        tags[k] = vals.pop()
+                for k, v in fill.items():
+                    tags.setdefault(k, v)
+                b[mid] = (tags, members)
+        both = set(a) & set(b)
+        same = sum(1 for k in both if repr(a[k]) == repr(b[k]))
+        log(f"  {fn}: {len(a)} + {len(b)} islands' ({len(both)} in both, {same} identical)")
+        a.update(b)
+        out[fn] = a
+    ca, cb = {}, {}
+    for d, c in ((es, ca), (ic, cb)):
+        with np.load(d / "coords.npz") as z:      # closed before coords.npz is replaced
+            c.update({k: z[k] for k in ("id", "x", "y")})
+    nid = np.concatenate([ca["id"], cb["id"]])
+    nx = np.concatenate([ca["x"], cb["x"]])
+    ny = np.concatenate([ca["y"], cb["y"]])
+    nid, first = np.unique(nid, return_index=True)       # sorted, as extract.py writes it
+    nx, ny = nx[first], ny[first]
+    log(f"  coords: {ca['id'].size} + {cb['id'].size} -> {nid.size}")
+    for fn, obj in out.items():
+        tmp = es / (fn + ".tmp")
+        with open(tmp, "wb") as f:
+            pickle.dump(obj, f, protocol=4)
+        os.replace(tmp, es / fn)
+    tmp = es / "coords.tmp.npz"
+    np.savez_compressed(tmp, id=nid, x=nx, y=ny)
+    os.replace(tmp, es / "coords.npz")
+    log("es: the Canary Islands folded in")
+
+
+if __name__ == "__main__":
+    import sys
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    if "--canaries" in sys.argv:
+        canaries()
+    else:
+        print(__doc__)

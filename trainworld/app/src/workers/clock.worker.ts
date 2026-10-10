@@ -20,8 +20,8 @@ const SAMPLE_STEP = 50;
 const SNAPSHOT_DEBOUNCE_MS = 500;
 /** SPEC 6.4: US$6B to start, in US$M. */
 const START_CASH = 6000;
-/** Default schedule for a new line: trains an hour at high, medium, low demand. */
-const NEW_LINE_TPH: [number, number, number] = [12, 8, 4];
+/** Whole trains on a new line across both directions, high/medium/low demand. */
+const NEW_LINE_TRAINS: [number, number, number] = [8, 4, 2];
 /** Default fare curve (T-028): US$ a ride plus US$ a km. */
 const START_FARES = { base: 1.5, perKm: 0.1 };
 /** Autosave (T-029): this long after the last one if anything changed, wall ms; at once after a
@@ -98,14 +98,16 @@ function hex(c: number) {
 // What the renderer draws, per edge and per line, in local units, kept between edits: an edit
 // re-renders only the edges and lines it dirtied (T-063). Cleared when a game is loaded.
 const edgeDrawn = new Map<number, Float32Array>();
+const edgeSpeedDrawn = new Map<number, Float32Array>();
 const lineDrawn = new Map<number, Float32Array>();
 function forget(all = false) {
   if (all) {
     edgeDrawn.clear();
+    edgeSpeedDrawn.clear();
     lineDrawn.clear();
     return;
   }
-  for (const e of api!.dirty_edges()) edgeDrawn.delete(e);
+  for (const e of api!.dirty_edges()) { edgeDrawn.delete(e); edgeSpeedDrawn.delete(e); }
   for (const l of api!.dirty_lines()) lineDrawn.delete(l);
 }
 
@@ -133,12 +135,15 @@ function buildState(): ClockState {
         d[k + 2] = r[k + 2];
       }
       edgeDrawn.set(id, d);
+      edgeSpeedDrawn.set(id, a.edge_render_speeds(id));
     }
     drawn.push(d);
     total += d.length;
     off.push(total / 3);
   }
   const pts = new Float32Array(total);
+  const edgeSpeed = new Float32Array(total / 3);
+  edges.forEach((e, i) => edgeSpeed.set(edgeSpeedDrawn.get(e.id) ?? [], off[i]));
   drawn.reduce((o, d) => (pts.set(d, o), o + d.length), 0);
   const ni = a.nodes_info();
   const nodes: ClockNode[] = [];
@@ -201,6 +206,7 @@ function buildState(): ClockState {
     cash: a.cash(),
     builtCost: a.built_cost(),
     blueprintCost: a.blueprint_cost(),
+    blueprintItems: Array.from(a.blueprint_cost_items()),
     canUndo: a.can_undo(),
     canRedo: a.can_redo(),
     edges,
@@ -208,6 +214,7 @@ function buildState(): ClockState {
     lines,
     render: {
       edgePts: pts,
+      edgeSpeed,
       edgeOff: new Uint32Array(off),
       phases: a.phases(),
       meta,
@@ -350,8 +357,9 @@ function sendState() {
   s.ms = [t1 - t0, performance.now() - t1];
   const r = s.render;
   const bufs = new Set<ArrayBufferLike>([r.edgePts.buffer, r.edgeOff.buffer, r.phases.buffer, r.meta.buffer, r.samples.buffer, r.lineTable.buffer]);
-  for (const st of [n.track, n.lines]) for (const v of [st.seg, st.colour, st.edge, st.level, st.flags, st.dist, st.offset]) if (v) bufs.add(v.buffer);
-  for (const v of [n.lineColours, n.stations, n.junctions, n.sampleOff]) if (v) bufs.add(v.buffer);
+  if (r.edgeSpeed) bufs.add(r.edgeSpeed.buffer);
+  for (const st of [n.track, n.lines]) for (const v of [st.seg, st.colour, st.edge, st.level, st.flags, st.dist, st.offset, st.speed]) if (v) bufs.add(v.buffer);
+  for (const v of [n.lineColours, n.lineCars, n.stations, n.junctions, n.sampleOff]) if (v) bufs.add(v.buffer);
   send({ kind: "state", state: s }, [...bufs] as Transferable[]);
   sendTrips();
 }
@@ -391,6 +399,7 @@ function buildSnapshot(): NetworkSnapshot {
     }
     lines.push({
       id, name: a.line_name(id), stops: [...a.line_stops(id)], tph: [li[i + 5], li[i + 6], li[i + 7]], hopS, dwellS,
+      hopKm: [0, 1].map((run) => { const s = a.line_stop_s(id, run); return Array.from({ length: s.length - 1 }, (_, k) => (s[k + 1] - s[k]) / 1000); }),
       turnaroundS: li[i + 20], cars: li[i + 21],
     });
   }
@@ -447,13 +456,13 @@ function apply(op: EditOp): { r: number; line?: number } {
       return { r: a.construct_line(op.line) };
     case "addLine": {
       const id = a.new_line_id();
-      const [h, m, l] = NEW_LINE_TPH;
-      return { r: a.set_line(id, new Uint32Array(op.stops), h, m, l, 30, 180, 0, colourInt(op.colour), op.name), line: id };
+      const [h, m, l] = NEW_LINE_TRAINS;
+      return { r: a.set_line_with_trains(id, new Uint32Array(op.stops), h, m, l, 30, 180, 0, colourInt(op.colour), op.name), line: id };
     }
     case "setStops":
       return { r: a.set_stops(op.line, new Uint32Array(op.stops)) };
-    case "setFrequency":
-      return { r: a.set_schedule(op.line, ...op.tph) };
+    case "setTrainCount":
+      return { r: a.set_train_counts(op.line, ...op.trains) };
     case "lineLook":
       return { r: a.set_line_look(op.line, op.name, colourInt(op.colour)) };
     case "removeLine":
@@ -567,6 +576,7 @@ function handle(msg: ToClock) {
       apply(msg.op);
       dirty = true;
       sendMoney();
+      scheduleSnapshot();
       send({ kind: "edited", seq: msg.seq, ok: true, issues: [], charge: 0 });
       return;
     }

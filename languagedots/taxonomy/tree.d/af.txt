@@ -1,4 +1,5 @@
-# Afghanistan, MRRD provincial profiles c. 2006-07 (taxonomy/af2007.py). Glottolog checked:
+# Afghanistan, MICS6 2022-23 (taxonomy/af2022.py, drawn since 2026-10-09) and the MRRD provincial
+# profiles c. 2006-07 it replaced (taxonomy/af2007.py); both use only the nodes below. Glottolog checked:
 # Pashayi (pash1270) is four Indo-Aryan languages, drawn as one leaf under Dardic where the
 # conventional classification puts it; Nuristani (nuri1243) is its own Indo-Iranian branch,
 # drawn as one leaf directly under Indo-European because the profiles name it as one language.

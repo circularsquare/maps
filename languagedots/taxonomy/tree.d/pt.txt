@@ -143,7 +143,7 @@ nigercongo.bantu.shona | Shona | 0.58 0.14 38
 nigercongo.bantu.sotho_tswana | Sotho-Tswana | 0.76 0.12 100
 nigercongo.bantu.sotho_tswana.sesotho | Sesotho (Southern Sotho) | 0.86 0.11 95
 nigercongo.bantu.sotho_tswana.setswana | Setswana | 0.68 0.14 130
-nigercongo.bantu.swahili | Swahili | 0.70 0.15 55
+nigercongo.bantu.swahili | Swahili | 0.92 0.21 122
 nigercongo.gur | Gur | 0.76 0.12 65
 nigercongo.gur.moore | Mòoré | 0.84 0.14 88
 nigercongo.kwa | Kwa | 0.82 0.12 85
@@ -319,7 +319,7 @@ austronesian.timoric.naueti | Naueti
 austronesian.timoric.tetun_terik | Tetun Terik
 austronesian.timoric.tokodede | Tokodede
 austronesian.timoric.waimaa | Waima'a
-austronesian.yapese | Yapese
+austronesian.oceanic.yapese | Yapese
 aymaran | Aymaran
 aymaran.aymara | Aimara
 chibchan | Chibchan
@@ -447,7 +447,7 @@ nigercongo.bantu.bemba.tabwa | Tabwa
 nigercongo.bantu.bembe | Bembe
 nigercongo.bantu.bena | Bena
 nigercongo.bantu.bisa_lamba | Bisa-Lamba (M.50)
-nigercongo.bantu.bisa_lamba.lala | Lala
+nigercongo.bantu.bisa_lamba.lala | Lala (Zambia)
 nigercongo.bantu.bisa_lamba.lamba | Lamba
 nigercongo.bantu.botatwe | Botatwe (M.60)
 nigercongo.bantu.botatwe.lenje | Lenje
@@ -493,7 +493,6 @@ nigercongo.bantu.kongo_dialects.ndibu | Ndibu
 nigercongo.bantu.kongo_dialects.yombe | Yombe (Kikongo)
 nigercongo.bantu.konzo | Konzo (Lukonzo)
 nigercongo.bantu.kota | Kota
-nigercongo.bantu.kota_gabon | Kota
 nigercongo.bantu.kuria | Kuria
 nigercongo.bantu.kwanyama | Kwanyama
 nigercongo.bantu.laari | Laari (Lari)
@@ -794,7 +793,7 @@ sinotibetan.eastbodish.kheng | Khengkha
 sinotibetan.eastbodish.kurtop | Kurtöp
 sinotibetan.eastbodish.nyenkha | Nyenkha (Mangdebikha)
 sinotibetan.kachin | Kachin languages (Jingpho, Zaiwa, Lhaovo, Rawang)
-sinotibetan.karen | Karen
+sinotibetan.karen | Karen languages
 sinotibetan.karen.pao | Pa'o
 sinotibetan.loloish | Loloish (Yi languages)
 sinotibetan.loloish.akha | Akha

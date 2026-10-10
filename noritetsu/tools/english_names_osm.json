@@ -1,0 +1,8173 @@
+{
+"around": {
+"e-125567517": [
+{
+"@id": "w125567517",
+"addr:city": "بنزرت",
+"building": "train_station",
+"name": "بنزرت",
+"name:ar": "بنزرت",
+"name:fr": "Bizerte",
+"public_transport": "station",
+"railway": "station"
+}
+],
+"e-1314611875": [
+{
+"@id": "w1314611875",
+"name": "محطة محلة موسى",
+"public_transport": "station",
+"railway": "station",
+"train": "yes"
+}
+],
+"e-456791383": [
+{
+"@id": "w456791383",
+"building": "yes",
+"name": "Gare de Salé Ville محطة سلا المدينة",
+"name:ar": "محطة سلا المدينة",
+"name:fr": "Gare de Salé Ville",
+"public_transport": "station",
+"railway": "station",
+"wikidata": "Q3097660"
+}
+],
+"e1041084561": [
+{
+"@id": "n1041084561",
+"name": "كفر سعد البلد",
+"name:ar": "كفر سعد البلد",
+"public_transport": "station",
+"railway": "station",
+"train": "yes"
+}
+],
+"e1041084565": [
+{
+"@id": "n1041084565",
+"name": "كفر سعد",
+"name:ar": "كفر سعد",
+"public_transport": "station",
+"railway": "station",
+"train": "yes"
+}
+],
+"e10570274721": [
+{
+"@id": "n10570274721",
+"name": "محطة قطار برطس",
+"public_transport": "station",
+"railway": "station",
+"train": "yes"
+}
+],
+"e10570283368": [
+{
+"@id": "n10570283368",
+"name": "محطه قطار أوسيم (سقيل)",
+"public_transport": "station",
+"railway": "station",
+"train": "yes"
+}
+],
+"e10598591181": [
+{
+"@id": "n10598591181",
+"name": "محطة سخا",
+"public_transport": "station",
+"railway": "station",
+"train": "yes"
+}
+],
+"e10685533579": [
+{
+"@id": "n10685533579",
+"name": "محطة قطار",
+"public_transport": "station",
+"railway": "station",
+"train": "yes"
+}
+],
+"e1195329123": [
+{
+"@id": "n1195329123",
+"addr:city": "رادس",
+"name": "رادس",
+"name:ar": "رادس",
+"name:fr": "Radès",
+"public_transport": "station",
+"railway": "station",
+"stop_id": "146Y"
+}
+],
+"e1198783652": [
+{
+"@id": "n1198783652",
+"addr:city": "حاسي بونيف",
+"addr:city:ar": "حاسي بونيف",
+"name": "Hassi Bounif;حاسي بونيف",
+"name:ar": "حاسي بونيف",
+"name:fr": "Hassi Bounif",
+"operator": "الشركة الوطنية للنقل بالسكك الحديدية",
+"operator:ar": "الشركة الوطنية للنقل بالسكك الحديدية",
+"operator:wikidata": "Q1275038",
+"operator:wikipedia": "ar:الشركة الوطنية للنقل بالسكك الحديدية",
+"public_transport": "station",
+"railway": "halt",
+"wikidata": "Q118225306",
+"wikipedia": "fr:Gare de Hassi Bounif"
+}
+],
+"e1210723435": [
+{
+"@id": "n1210723435",
+"alt_name:ar": "بن جرير;بن كرير;بنكرير",
+"name": "Ben Guerir ابن جرير",
+"name:ar": "ابن جرير",
+"name:azb": "ابن جریر",
+"name:fa": "ابن جریر",
+"name:fr": "Ben Guerir",
+"name:ks": "ابن جریر",
+"name:ur": "ابن جریر",
+"operator": "المكتب الوطني للسكك الحديدية",
+"operator:ar": "المكتب الوطني للسكك الحديدية",
+"operator:website": "https://www.oncf.ma/ar/",
+"operator:wikidata": "Q1815809",
+"operator:wikipedia": "ar:المكتب الوطني للسكك الحديدية (المغرب)",
+"operator:wikipedia:ar": "المكتب الوطني للسكك الحديدية (المغرب)",
+"public_transport": "station",
+"railway": "station"
+}
+],
+"e12188302081": [
+{
+"@id": "n12188302081",
+"loc_name": "Hay Riad",
+"name": "Rabat Riad الرباط الرياض",
+"name:ar": "الرباط الرياض",
+"name:fr": "Rabat Riad",
+"public_transport": "stop_position",
+"railway": "stop",
+"train": "yes"
+}
+],
+"e13207879348": [
+{
+"@id": "n13207879348",
+"name": "Gare de Sidi Hrazem محطة سيدي حرازم",
+"name:ar": "محطة سيدي حرازم",
+"name:fr": "Gare de Sidi Hrazem",
+"public_transport": "station",
+"railway": "station",
+"train": "yes"
+}
+],
+"e13290620648": [
+{
+"@id": "n13290620648",
+"name": "محطة قطار الكوم الأحمر",
+"public_transport": "station",
+"railway": "station",
+"train": "yes"
+}
+],
+"e1480989522": [
+{
+"@id": "n1480989522",
+"name": "Matmata مطماطة",
+"name:ar": "مطماطة",
+"name:fr": "Matmata",
+"public_transport": "station",
+"railway": "station",
+"train": "yes"
+}
+],
+"e1481071655": [
+{
+"@id": "n1481071655",
+"name": "El Aïoun Sidi Mellouk العيون سيدي ملوك",
+"name:ar": "العيون سيدي ملوك",
+"name:fr": "El Aïoun Sidi Mellouk",
+"public_transport": "stop_position",
+"railway": "station",
+"train": "yes"
+}
+],
+"e1588103622": [
+{
+"@id": "n1588103622",
+"addr:city": "مكناس",
+"addr:city:ar": "مكناس",
+"addr:city:es": "Mequinez",
+"internet_access": "wlan",
+"name": "Meknès مكناس",
+"name:ar": "مكناس",
+"name:be": "Мекнес",
+"name:be-tarask": "Мэкнэс",
+"name:de": "Meknes",
+"name:el": "Μεκνές",
+"name:es": "Mequinez",
+"name:fr": "Meknès",
+"name:sr": "Мекнес",
+"name:uk": "Мекнес",
+"name:ur": "مکناس",
+"operator": "ONCF",
+"platforms": "2",
+"public_transport": "station",
+"railway": "station",
+"train": "yes",
+"wheelchair": "no"
+},
+{
+"@id": "n12168872398",
+"name": "Meknès مكناس",
+"public_transport": "stop_position",
+"public_transport:version": "2",
+"railway": "stop",
+"train": "yes"
+},
+{
+"@id": "n12168872399",
+"name": "Meknès مكناس",
+"public_transport": "stop_position",
+"public_transport:version": "2",
+"railway": "stop",
+"train": "yes"
+}
+],
+"e1698212199": [
+{
+"@id": "n1698212199",
+"name": "Taza تازة",
+"name:ar": "تازة",
+"name:ary": "تازة",
+"name:arz": "تازة",
+"name:az-Arab": "تازه",
+"name:azb": "تازه",
+"name:de": "Taza",
+"name:es": "Taza",
+"name:fr": "Taza",
+"name:kab-Arab": "تازة",
+"name:kk-Arab": "تازا",
+"name:ur": "تازہ",
+"public_transport": "station",
+"railway": "station",
+"train": "yes"
+},
+{
+"@id": "n12173815221",
+"name": "Taza تازة",
+"name:ar": "تازة",
+"name:ary": "تازة",
+"name:arz": "تازة",
+"name:az-Arab": "تازه",
+"name:azb": "تازه",
+"name:de": "Taza",
+"name:es": "Taza",
+"name:fr": "Taza",
+"name:kab-Arab": "تازة",
+"name:kk-Arab": "تازا",
+"name:ur": "تازہ",
+"public_transport": "stop_position",
+"public_transport:version": "2",
+"railway": "stop",
+"train": "yes"
+}
+],
+"e1857285509": [
+{
+"@id": "n1857285509",
+"name": "بلي",
+"name:fr": "Belli",
+"public_transport": "stop_position",
+"railway": "stop",
+"train": "yes"
+},
+{
+"@id": "n2006313404",
+"name": "بلي",
+"name:fr": "Belli",
+"public_transport": "stop_position",
+"railway": "stop",
+"train": "yes"
+},
+{
+"@id": "n7831856330",
+"name": "بلي",
+"name:ar": "بلي",
+"name:fr": "Belli",
+"public_transport": "station",
+"railway": "halt",
+"stop_id": "165X",
+"train": "yes"
+},
+{
+"@id": "r21425516",
+"name": "بلي",
+"name:fr": "Belli",
+"public_transport": "stop_area",
+"type": "public_transport"
+}
+],
+"e1871674762": [
+{
+"@id": "n1871674762",
+"name": "Aïn Dalia عين الدالية",
+"name:ar": "عين الدالية",
+"name:es": "Aín Dalía",
+"name:fr": "Aïn Dalia",
+"operator": "ONCF",
+"public_transport": "station",
+"public_transport:version": "2",
+"railway": "station",
+"train": "yes"
+}
+],
+"e2006930886": [
+{
+"@id": "n2006930886",
+"name": "الملعب",
+"name:ar": "الملعب",
+"operator": "الشركة الوطنية للسكك الحديدية التونسية",
+"operator:ar": "الشركة الوطنية للسكك الحديدية التونسية",
+"operator:website": "http://www.sncft.com.tn/Ar/",
+"operator:wikidata": "Q2297197",
+"operator:wikipedia": "ar:الشركة الوطنية للسكك الحديدية التونسية",
+"operator:wikipedia:ar": "الشركة الوطنية للسكك الحديدية التونسية",
+"public_transport": "stop_position",
+"railway": "stop",
+"train": "yes"
+},
+{
+"@id": "n2006930892",
+"name": "الملعب",
+"name:ar": "الملعب",
+"operator": "الشركة الوطنية للسكك الحديدية التونسية",
+"operator:ar": "الشركة الوطنية للسكك الحديدية التونسية",
+"operator:website": "http://www.sncft.com.tn/Ar/",
+"operator:wikidata": "Q2297197",
+"operator:wikipedia": "ar:الشركة الوطنية للسكك الحديدية التونسية",
+"operator:wikipedia:ar": "الشركة الوطنية للسكك الحديدية التونسية",
+"public_transport": "stop_position",
+"railway": "stop",
+"train": "yes"
+}
+],
+"e2014339686": [
+{
+"@id": "n2014339686",
+"disused:railway": "station",
+"name": "أوذنة",
+"name:fr": "Oudna",
+"railway": "halt"
+}
+],
+"e2014339853": [
+{
+"@id": "n2014339853",
+"disused:railway": "station",
+"name": "الخليدية",
+"name:fr": "Khledia",
+"railway": "halt",
+"stop_id": "91"
+}
+],
+"e2020535321": [
+{
+"@id": "n2020535321",
+"disused:railway": "station",
+"name": "الزوارين",
+"public_transport": "halt",
+"railway": "halt"
+}
+],
+"e2180731298": [
+{
+"@id": "n2180731298",
+"name": "Selouane سلوان",
+"name:ar": "سلوان",
+"name:es": "Zeluán",
+"name:fr": "Selouane",
+"public_transport": "stop_position",
+"public_transport:version": "2",
+"railway": "station",
+"train": "yes"
+}
+],
+"e2206932295": [
+{
+"@id": "n2206932295",
+"name": "لخضارة",
+"name:fr": "Khedara",
+"public_transport": "station",
+"railway": "halt",
+"train": "yes",
+"wikidata": "Q117075490",
+"wikipedia": "fr:Gare de Khedara"
+}
+],
+"e2297920672": [
+{
+"@id": "n2297920672",
+"name": "Bni Nsar (Ville) بني انصار",
+"name:ar": "بني انصار",
+"name:es": "Beni Enzar",
+"name:fr": "Bni Nsar (Ville)",
+"public_transport": "stop_position",
+"public_transport:version": "2",
+"railway": "station",
+"train": "yes"
+}
+],
+"e2375967092": [
+{
+"@id": "n2375967092",
+"esr:user": "144531",
+"int_name": "Piacihorje",
+"name": "Пяцігорʼе",
+"name:be": "Пяцігорʼе",
+"name:ru": "Пятигорье",
+"network": "Беларуская чыгунка",
+"operator": "БЧ",
+"railway": "halt",
+"train": "yes",
+"uic_ref": "2100920"
+},
+{
+"@id": "n3352635754",
+"name": "Пяцігорʼе",
+"name:be": "Пяцігорʼе",
+"name:ru": "Пятигорье",
+"public_transport": "stop_position",
+"railway": "stop",
+"train": "yes"
+},
+{
+"@id": "n3352635755",
+"name": "Пяцігорʼе",
+"name:be": "Пяцігорʼе",
+"name:ru": "Пятигорье",
+"public_transport": "stop_position",
+"railway": "stop",
+"train": "yes"
+},
+{
+"@id": "r18111382",
+"name": "Пяцігорʼе",
+"name:be": "Пяцігорʼе",
+"name:ru": "Пятигорье",
+"public_transport": "stop_area",
+"type": "public_transport"
+}
+],
+"e247041544": [
+{
+"@id": "n247041544",
+"esr": "741401",
+"esr:user": "741401",
+"name": "Uchqoʻrgʻon",
+"name:ru": "Учкурган",
+"name:uz": "Uchqoʻrgʻon",
+"public_transport": "station",
+"railway": "station",
+"uic_ref": "2900683"
+}
+],
+"e2718667236": [
+{
+"@id": "n2718667236",
+"int_name": "Al Fant",
+"name": "الفنت",
+"name:ar": "الفنت",
+"public_transport": "station",
+"railway": "station"
+}
+],
+"e2723571740": [
+{
+"@id": "n2723571740",
+"name": "دشنا",
+"name:ar": "دشنا",
+"railway": "station"
+}
+],
+"e2723654248": [
+{
+"@id": "n2723654248",
+"name": "قفـط",
+"name:ar": "قفـط",
+"railway": "station"
+}
+],
+"e2990165307": [
+{
+"@id": "n2990165307",
+"name": "Ksar-el-Kebir القصر الكبير",
+"name:ar": "القصر الكبير",
+"name:fr": "El Ksar El Kebir",
+"public_transport": "station",
+"railway": "station",
+"train": "yes"
+}
+],
+"e3107158164": [
+{
+"@id": "n3107158164",
+"name": "Naima النعيمة",
+"name:ar": "النعيمة",
+"name:fr": "Naima",
+"public_transport": "stop_position",
+"railway": "station",
+"train": "yes"
+}
+],
+"e318014918": [
+{
+"@id": "n318014918",
+"name": "برج العرب",
+"name:ar": "برج العرب",
+"name:azb": "برج العرب",
+"name:de": "Borg el-Arab",
+"name:fa": "برج العرب جدیده",
+"name:fr": "Borg el-Arab",
+"name:ru": "Борг-эль-Араб",
+"name:ur": "برج العرب",
+"public_transport": "station",
+"railway": "station",
+"train": "yes"
+}
+],
+"e3240994964": [
+{
+"@id": "n3240994964",
+"name": "محطه القطار",
+"name:ar": "محطه القطار",
+"public_transport": "halt",
+"railway": "halt",
+"train": "yes"
+}
+],
+"e334211864": [
+{
+"@id": "n334211864",
+"addr:city": "حاسي عامر",
+"addr:city:ar": "حاسي عامر",
+"name": "Hassi Ameur;حاسي عامر",
+"name:ar": "حاسي عامر",
+"name:fr": "Hassi Ameur",
+"operator": "الشركة الوطنية للنقل بالسكك الحديدية",
+"operator:ar": "الشركة الوطنية للنقل بالسكك الحديدية",
+"operator:wikidata": "Q1275038",
+"operator:wikipedia": "ar:الشركة الوطنية للنقل بالسكك الحديدية",
+"public_transport": "station",
+"railway": "station",
+"wheelchair": "no",
+"wikidata": "Q118225303",
+"wikipedia": "fr:Gare de Hassi Ameur"
+}
+],
+"e3732837776": [
+{
+"@id": "n3732837776",
+"gtfs_id": "123",
+"name": "المرازقة",
+"name:ar": "المرازقة",
+"name:fr": "Mrezka",
+"operator": "الشركة الوطنية للسكك الحديدية التونسية",
+"operator:ar": "الشركة الوطنية للسكك الحديدية التونسية",
+"operator:website": "http://www.sncft.com.tn/Ar/",
+"operator:wikidata": "Q2297197",
+"operator:wikipedia": "ar:الشركة الوطنية للسكك الحديدية التونسية",
+"operator:wikipedia:ar": "الشركة الوطنية للسكك الحديدية التونسية",
+"public_transport": "station",
+"railway": "halt",
+"train": "yes"
+}
+],
+"e3732837794": [
+{
+"@id": "n3732837794",
+"gtfs_id": "57",
+"name": "زانوش",
+"name:ar": "زانوش",
+"name:fr": "Zannouch",
+"operator": "الشركة الوطنية للسكك الحديدية التونسية",
+"operator:ar": "الشركة الوطنية للسكك الحديدية التونسية",
+"operator:website": "http://www.sncft.com.tn/Ar/",
+"operator:wikidata": "Q2297197",
+"operator:wikipedia": "ar:الشركة الوطنية للسكك الحديدية التونسية",
+"operator:wikipedia:ar": "الشركة الوطنية للسكك الحديدية التونسية",
+"public_transport": "station",
+"railway": "station",
+"stop_id": "504A",
+"train": "yes"
+}
+],
+"e3827703993": [
+{
+"@id": "n3827703993",
+"name": "Sidi el Aïdi سيدي العايدي",
+"name:ar": "سيدي العايدي",
+"name:fr": "Sidi el Aïdi",
+"public_transport": "station",
+"railway": "station",
+"train": "yes"
+},
+{
+"@id": "n12204985128",
+"name": "Sidi el Aïdi سيدي العايدي",
+"name:ar": "سيدي العايدي",
+"name:fr": "Sidi el Aïdi",
+"public_transport": "stop_position",
+"public_transport:version": "2",
+"railway": "stop",
+"train": "yes"
+}
+],
+"e3885025884": [
+{
+"@id": "n3885025884",
+"addr:city": "بوتليليس",
+"disused:railway": "station",
+"name": "بوتليليس",
+"name:ar": "بوتليليس",
+"name:azb": "بوتلیلیس",
+"name:fa": "بوتلیلیس",
+"name:fr": "Boutelilis",
+"operator": "الشركة الوطنية للنقل بالسكك الحديدية",
+"public_transport": "station",
+"railway": "halt",
+"train": "yes",
+"wikidata": "Q119172612",
+"wikipedia": "fr:Gare de Boutlélis"
+}
+],
+"e4215515532": [
+{
+"@id": "n4215515532",
+"addr:city": "النواصر",
+"addr:city:ar": "النواصر",
+"addr:city:es": "Nawácir",
+"addr:postcode": "27000",
+"name": "النواصر",
+"name:ar": "النواصر",
+"name:es": "Nawácir",
+"name:ur": "نواصر",
+"public_transport": "station",
+"railway": "station",
+"train": "yes"
+}
+],
+"e5227817740": [
+{
+"@id": "n5227817740",
+"gtfs_id": "12",
+"name": "دخان",
+"name:ar": "دخان",
+"name:fr": "Dokhane",
+"operator": "الشركة الوطنية للسكك الحديدية التونسية",
+"operator:ar": "الشركة الوطنية للسكك الحديدية التونسية",
+"operator:website": "http://www.sncft.com.tn/Ar/",
+"operator:wikidata": "Q2297197",
+"operator:wikipedia": "ar:الشركة الوطنية للسكك الحديدية التونسية",
+"operator:wikipedia:ar": "الشركة الوطنية للسكك الحديدية التونسية",
+"public_transport": "station",
+"railway": "station",
+"route_ref": "18;21;24",
+"stop_id": "214E",
+"train": "yes"
+}
+],
+"e5227817751": [
+{
+"@id": "n5227817751",
+"gtfs_id": "122",
+"name": "عمر الخيام",
+"name:ar": "عمر الخيام",
+"name:fr": "Omar Khayem",
+"operator": "الشركة الوطنية للسكك الحديدية التونسية",
+"operator:ar": "الشركة الوطنية للسكك الحديدية التونسية",
+"operator:website": "http://www.sncft.com.tn/Ar/",
+"operator:wikidata": "Q2297197",
+"operator:wikipedia": "ar:الشركة الوطنية للسكك الحديدية التونسية",
+"operator:wikipedia:ar": "الشركة الوطنية للسكك الحديدية التونسية",
+"public_transport": "station",
+"railway": "halt",
+"route_ref": "17;45;46",
+"train": "yes"
+}
+],
+"e5227817758": [
+{
+"@id": "n5227817758",
+"gtfs_id": "5",
+"name": "الشعال",
+"name:ar": "الشعال",
+"name:fr": "Chaal",
+"operator": "SNCFT",
+"public_transport": "station",
+"railway": "station",
+"route_ref": "21;24",
+"stop_id": "464C",
+"train": "yes"
+}
+],
+"e5227817762": [
+{
+"@id": "n5227817762",
+"addr:city": "نقطة",
+"gtfs_id": "7",
+"name": "قرقور",
+"name:ar": "قرقور",
+"name:fr": "Gargour",
+"operator": "الشركة الوطنية للسكك الحديدية التونسية",
+"operator:ar": "الشركة الوطنية للسكك الحديدية التونسية",
+"operator:website": "http://www.sncft.com.tn/Ar/",
+"operator:wikidata": "Q2297197",
+"operator:wikipedia": "ar:الشركة الوطنية للسكك الحديدية التونسية",
+"operator:wikipedia:ar": "الشركة الوطنية للسكك الحديدية التونسية",
+"public_transport": "station",
+"railway": "station",
+"route_ref": "21;24",
+"stop_id": "462A",
+"train": "yes"
+}
+],
+"e5227817764": [
+{
+"@id": "n5227817764",
+"gtfs_id": "8",
+"name": "سيدي عبيد",
+"name:ar": "سيدي عبيد",
+"name:fr": "Sidi Abid",
+"operator": "الشركة الوطنية للسكك الحديدية التونسية",
+"operator:ar": "الشركة الوطنية للسكك الحديدية التونسية",
+"operator:website": "http://www.sncft.com.tn/Ar/",
+"operator:wikidata": "Q2297197",
+"operator:wikipedia": "ar:الشركة الوطنية للسكك الحديدية التونسية",
+"operator:wikipedia:ar": "الشركة الوطنية للسكك الحديدية التونسية",
+"public_transport": "station",
+"railway": "station",
+"route_ref": "21;24",
+"stop_id": "461Z",
+"train": "yes"
+}
+],
+"e5227817773": [
+{
+"@id": "n5227817773",
+"gtfs_id": "26",
+"name": "تركي",
+"name:ar": "تركي",
+"name:fr": "Turki",
+"operator": "الشركة الوطنية للسكك الحديدية التونسية",
+"operator:ar": "الشركة الوطنية للسكك الحديدية التونسية",
+"operator:website": "http://www.sncft.com.tn/Ar/",
+"operator:wikidata": "Q2297197",
+"operator:wikipedia": "ar:الشركة الوطنية للسكك الحديدية التونسية",
+"operator:wikipedia:ar": "الشركة الوطنية للسكك الحديدية التونسية",
+"public_transport": "station",
+"railway": "station",
+"route_ref": "17;18;46",
+"stop_id": "164W",
+"train": "yes"
+}
+],
+"e5227817776": [
+{
+"@id": "n1316641715",
+"name": "بئر الباي",
+"name:ar": "بئر الباي",
+"railway": "stop"
+},
+{
+"@id": "n1316643504",
+"name": "بئر الباي",
+"name:ar": "بئر الباي",
+"railway": "stop"
+},
+{
+"@id": "n5227817776",
+"gtfs_id": "29",
+"name": "بئر الباي",
+"name:ar": "بئر الباي",
+"name:fr": "Bir El Bey",
+"operator": "الشركة الوطنية للسكك الحديدية التونسية",
+"operator:ar": "الشركة الوطنية للسكك الحديدية التونسية",
+"operator:website": "http://www.sncft.com.tn/Ar/",
+"operator:wikidata": "Q2297197",
+"operator:wikipedia": "ar:الشركة الوطنية للسكك الحديدية التونسية",
+"operator:wikipedia:ar": "الشركة الوطنية للسكك الحديدية التونسية",
+"public_transport": "station",
+"railway": "station",
+"route_ref": "19",
+"stop_id": "159N",
+"train": "yes"
+}
+],
+"e5227817787": [
+{
+"@id": "n1203247118",
+"name": "حمام الشط",
+"name:ar": "حمام الشط",
+"public_transport": "stop_position",
+"railway": "stop",
+"train": "yes"
+},
+{
+"@id": "n1203249116",
+"name": "حمام الشط",
+"name:ar": "حمام الشط",
+"public_transport": "stop_position",
+"railway": "stop",
+"train": "yes"
+},
+{
+"@id": "n5227817787",
+"gtfs_id": "30",
+"name": "حمام الشط",
+"name:ar": "حمام الشط",
+"name:fr": "Hammam Chatt",
+"operator": "الشركة الوطنية للسكك الحديدية التونسية",
+"operator:ar": "الشركة الوطنية للسكك الحديدية التونسية",
+"operator:website": "http://www.sncft.com.tn/Ar/",
+"operator:wikidata": "Q2297197",
+"operator:wikipedia": "ar:الشركة الوطنية للسكك الحديدية التونسية",
+"operator:wikipedia:ar": "الشركة الوطنية للسكك الحديدية التونسية",
+"public_transport": "station",
+"railway": "station",
+"route_ref": "19",
+"stop_id": "156K",
+"train": "yes"
+}
+],
+"e5227817788": [
+{
+"@id": "n1203242133",
+"name": "الطاهر صفر",
+"name:ar": "الطاهر صفر",
+"public_transport": "stop_position",
+"railway": "stop",
+"train": "yes"
+},
+{
+"@id": "n1203245387",
+"name": "الطاهر صفر",
+"name:ar": "الطاهر صفر",
+"public_transport": "stop_position",
+"railway": "stop",
+"train": "yes"
+},
+{
+"@id": "n5227817788",
+"gtfs_id": "31",
+"name": "الطاهر صفر",
+"name:ar": "الطاهر صفر",
+"name:fr": "Tahar Sfar",
+"operator": "الشركة الوطنية للسكك الحديدية التونسية",
+"operator:ar": "الشركة الوطنية للسكك الحديدية التونسية",
+"operator:website": "http://www.sncft.com.tn/Ar/",
+"operator:wikidata": "Q2297197",
+"operator:wikipedia": "ar:الشركة الوطنية للسكك الحديدية التونسية",
+"operator:wikipedia:ar": "الشركة الوطنية للسكك الحديدية التونسية",
+"public_transport": "station",
+"railway": "station",
+"route_ref": "19",
+"stop_id": "158M",
+"train": "yes"
+}
+],
+"e5227817793": [
+{
+"@id": "n5227817793",
+"gtfs_id": "36",
+"name": "رادس مليان",
+"name:ar": "رادس مليان",
+"name:fr": "Radès Méliane",
+"operator": "الشركة الوطنية للسكك الحديدية التونسية",
+"operator:ar": "الشركة الوطنية للسكك الحديدية التونسية",
+"operator:website": "http://www.sncft.com.tn/Ar/",
+"operator:wikidata": "Q2297197",
+"operator:wikipedia": "ar:الشركة الوطنية للسكك الحديدية التونسية",
+"operator:wikipedia:ar": "الشركة الوطنية للسكك الحديدية التونسية",
+"public_transport": "station",
+"railway": "station",
+"route_ref": "19",
+"stop_id": "146Z",
+"train": "yes"
+}
+],
+"e5227817795": [
+{
+"@id": "n5227817795",
+"gtfs_id": "38",
+"name": "معهد رادس",
+"name:ar": "معهد رادس",
+"name:fr": "Lycée Technique Radès",
+"operator": "الشركة الوطنية للسكك الحديدية التونسية",
+"operator:ar": "الشركة الوطنية للسكك الحديدية التونسية",
+"operator:website": "http://www.sncft.com.tn/Ar/",
+"operator:wikidata": "Q2297197",
+"operator:wikipedia": "ar:الشركة الوطنية للسكك الحديدية التونسية",
+"operator:wikipedia:ar": "الشركة الوطنية للسكك الحديدية التونسية",
+"public_transport": "station",
+"railway": "station",
+"route_ref": "19",
+"stop_id": "144X",
+"train": "yes"
+}
+],
+"e5227817810": [
+{
+"@id": "n5227817810",
+"gtfs_id": "43",
+"name": "سوسة بضائع",
+"name:ar": "سوسة بضائع",
+"name:fr": "Sousse Marchandise",
+"operator": "الشركة الوطنية للسكك الحديدية التونسية",
+"operator:ar": "الشركة الوطنية للسكك الحديدية التونسية",
+"operator:website": "http://www.sncft.com.tn/Ar/",
+"operator:wikidata": "Q2297197",
+"operator:wikipedia": "ar:الشركة الوطنية للسكك الحديدية التونسية",
+"operator:wikipedia:ar": "الشركة الوطنية للسكك الحديدية التونسية",
+"public_transport": "station",
+"railway": "station",
+"route_ref": "16;18;21;22;24",
+"train": "yes"
+}
+],
+"e5227817812": [
+{
+"@id": "n5227817812",
+"gtfs_id": "45",
+"name": "معهد الزهراء",
+"name:ar": "معهد الزهراء",
+"name:fr": "Lycée Ezzahra",
+"operator": "الشركة الوطنية للسكك الحديدية التونسية",
+"operator:ar": "الشركة الوطنية للسكك الحديدية التونسية",
+"operator:website": "http://www.sncft.com.tn/Ar/",
+"operator:wikidata": "Q2297197",
+"operator:wikipedia": "ar:الشركة الوطنية للسكك الحديدية التونسية",
+"operator:wikipedia:ar": "الشركة الوطنية للسكك الحديدية التونسية",
+"public_transport": "station",
+"railway": "station",
+"route_ref": "19",
+"stop_id": "152F",
+"train": "yes"
+}
+],
+"e5227817932": [
+{
+"@id": "n5227817932",
+"gtfs_id": "55",
+"name": "منزل بوزيان",
+"name:ar": "منزل بوزيان",
+"name:fr": "Menzel Bouzaiane",
+"operator": "الشركة الوطنية للسكك الحديدية التونسية",
+"operator:ar": "الشركة الوطنية للسكك الحديدية التونسية",
+"operator:website": "http://www.sncft.com.tn/Ar/",
+"operator:wikidata": "Q2297197",
+"operator:wikipedia": "ar:الشركة الوطنية للسكك الحديدية التونسية",
+"operator:wikipedia:ar": "الشركة الوطنية للسكك الحديدية التونسية",
+"public_transport": "station",
+"railway": "station",
+"route_ref": "24",
+"train": "yes"
+}
+],
+"e5227817935": [
+{
+"@id": "n5227817935",
+"gtfs_id": "58",
+"name": "وادي القصب",
+"name:ar": "وادي القصب",
+"name:fr": "Oued El Ksab (23/24)",
+"operator": "الشركة الوطنية للسكك الحديدية التونسية",
+"operator:ar": "الشركة الوطنية للسكك الحديدية التونسية",
+"operator:website": "http://www.sncft.com.tn/Ar/",
+"operator:wikidata": "Q2297197",
+"operator:wikipedia": "ar:الشركة الوطنية للسكك الحديدية التونسية",
+"operator:wikipedia:ar": "الشركة الوطنية للسكك الحديدية التونسية",
+"public_transport": "station",
+"railway": "station",
+"route_ref": "24",
+"train": "yes"
+}
+],
+"e5234854553": [
+{
+"@id": "n5234854553",
+"gtfs_id": "11",
+"name": "سيدي صالح",
+"name:ar": "سيدي صالح",
+"name:fr": "Sidi Salah",
+"operator": "Socite Nationale des chemins de fer tunisien",
+"public_transport": "station",
+"railway": "station",
+"route_ref": "18;21;24",
+"train": "yes"
+}
+],
+"e5234854564": [
+{
+"@id": "n5234854564",
+"gtfs_id": "1",
+"name": "العوينات",
+"name:ar": "العوينات",
+"name:fr": "Aouinet",
+"operator": "الشركة الوطنية للسكك الحديدية التونسية",
+"operator:ar": "الشركة الوطنية للسكك الحديدية التونسية",
+"operator:website": "http://www.sncft.com.tn/Ar/",
+"operator:wikidata": "Q2297197",
+"operator:wikipedia": "ar:الشركة الوطنية للسكك الحديدية التونسية",
+"operator:wikipedia:ar": "الشركة الوطنية للسكك الحديدية التونسية",
+"public_transport": "station",
+"railway": "station",
+"route_ref": "21",
+"stop_id": "475P",
+"train": "yes"
+}
+],
+"e5234854582": [
+{
+"@id": "n5234854582",
+"gtfs_id": "21",
+"name": "عين الرحمة",
+"name:ar": "عين الرحمة",
+"name:fr": "Ain Rahma",
+"operator": "الشركة الوطنية للسكك الحديدية التونسية",
+"operator:ar": "الشركة الوطنية للسكك الحديدية التونسية",
+"operator:website": "http://www.sncft.com.tn/Ar/",
+"operator:wikidata": "Q2297197",
+"operator:wikipedia": "ar:الشركة الوطنية للسكك الحديدية التونسية",
+"operator:wikipedia:ar": "الشركة الوطنية للسكك الحديدية التونسية",
+"public_transport": "station",
+"railway": "station",
+"route_ref": "21",
+"stop_id": "173F",
+"train": "yes"
+}
+],
+"e5234854584": [
+{
+"@id": "n5234854584",
+"gtfs_id": "23",
+"name": "سيدي مطير",
+"name:ar": "سيدي مطير",
+"name:fr": "Sidi Mtir",
+"operator": "Socite Nationale des chemins de fer tunisien",
+"public_transport": "station",
+"railway": "station",
+"route_ref": "21",
+"stop_id": "171D",
+"train": "yes"
+}
+],
+"e5539076778": [
+{
+"@id": "n5539076778",
+"name": "Tamdrost تامدروست",
+"name:ar": "تامدروست",
+"name:fr": "Tamdrost",
+"public_transport": "station",
+"railway": "station",
+"train": "yes"
+}
+],
+"e6102322694": [
+{
+"@id": "n6102322694",
+"name": "قرية بهيج",
+"name:ar": "قرية بهيج",
+"public_transport": "station",
+"railway": "station",
+"train": "yes"
+}
+],
+"e635977791": [
+{
+"@id": "n635977791",
+"name": "Settat ⵙⵟⵟⴰⵜ سطات",
+"name:ar": "سطات",
+"name:ary": "سطات",
+"name:arz": "سطات",
+"name:azb": "سطات",
+"name:ber": "ⵙⵟⵟⴰⵜ",
+"name:de": "Settat",
+"name:es": "Settat",
+"name:fa": "سطات",
+"name:fr": "Settat",
+"name:ur": "سطات",
+"public_transport": "stop_position",
+"public_transport:version": "2",
+"railway": "stop",
+"train": "yes"
+}
+],
+"e6487641608": [
+{
+"@id": "n6487641608",
+"name": "الرجدية",
+"name:ar": "الرجدية",
+"network": "الرجدية",
+"public_transport": "halt",
+"railway": "halt",
+"train": "yes"
+}
+],
+"e6487641609": [
+{
+"@id": "n6487641609",
+"name": "شبشير الحصة",
+"name:ar": "شبشير الحصة",
+"public_transport": "halt",
+"railway": "halt",
+"train": "yes"
+}
+],
+"e6487641610": [
+{
+"@id": "n6487641610",
+"name": "صفط تراب",
+"name:ar": "صفط تراب",
+"public_transport": "halt",
+"railway": "halt",
+"train": "yes"
+}
+],
+"e6487641611": [
+{
+"@id": "n6487641611",
+"name": "منية شنتنا عياش",
+"name:ar": "منية شنتنا عياش",
+"public_transport": "halt",
+"railway": "halt",
+"train": "yes"
+}
+],
+"e6487641612": [
+{
+"@id": "n6487641612",
+"name": "منشأة البكري",
+"name:ar": "منشأة البكري",
+"public_transport": "halt",
+"railway": "halt",
+"train": "yes"
+}
+],
+"e6487641613": [
+{
+"@id": "n6487641613",
+"name": "غزل المحلة",
+"name:ar": "غزل المحلة",
+"public_transport": "halt",
+"railway": "halt",
+"train": "yes"
+}
+],
+"e6487765585": [
+{
+"@id": "n6487765585",
+"name": "محلة أبو علي",
+"name:ar": "محلة أبو علي",
+"public_transport": "station",
+"railway": "station",
+"train": "yes"
+}
+],
+"e6487765586": [
+{
+"@id": "n6487765586",
+"name": "الراهبين",
+"name:ar": "الراهبين",
+"public_transport": "station",
+"railway": "station",
+"train": "yes"
+}
+],
+"e6487765588": [
+{
+"@id": "n6487765588",
+"name": "ميت خلف",
+"name:ar": "ميت خلف",
+"public_transport": "halt",
+"railway": "halt",
+"train": "yes"
+}
+],
+"e6487765589": [
+{
+"@id": "n6487765589",
+"name": "ميت عساس",
+"name:ar": "ميت عساس",
+"public_transport": "halt",
+"railway": "halt",
+"train": "yes"
+}
+],
+"e6487765590": [
+{
+"@id": "n6487765590",
+"name": "كفر العرب",
+"name:ar": "كفر العرب",
+"public_transport": "halt",
+"railway": "halt",
+"train": "yes"
+}
+],
+"e6487765591": [
+{
+"@id": "n6487765591",
+"name": "ميت الكرما",
+"name:ar": "ميت الكرما",
+"public_transport": "station",
+"railway": "station",
+"train": "yes"
+}
+],
+"e6487765592": [
+{
+"@id": "n6487765592",
+"name": "سماد طلخا",
+"name:ar": "سماد طلخا",
+"public_transport": "halt",
+"railway": "halt",
+"train": "yes"
+}
+],
+"e6487765593": [
+{
+"@id": "n6487765593",
+"name": "ميت عنتر",
+"name:ar": "ميت عنتر",
+"public_transport": "halt",
+"railway": "halt",
+"train": "yes"
+}
+],
+"e6487765594": [
+{
+"@id": "n6487765594",
+"name": "شرنقاش",
+"name:ar": "شرنقاش",
+"public_transport": "halt",
+"railway": "halt",
+"train": "yes"
+}
+],
+"e6487765595": [
+{
+"@id": "n6487765595",
+"name": "الطويلة",
+"name:ar": "الطويلة",
+"public_transport": "station",
+"railway": "station",
+"train": "yes"
+}
+],
+"e6487765596": [
+{
+"@id": "n6487765596",
+"name": "ديسط",
+"name:ar": "ديسط",
+"public_transport": "station",
+"railway": "halt",
+"train": "yes"
+}
+],
+"e6487765597": [
+{
+"@id": "n6487765597",
+"name": "بطرة",
+"name:ar": "بطرة",
+"public_transport": "station",
+"railway": "station",
+"train": "yes"
+}
+],
+"e6487765598": [
+{
+"@id": "n6487765598",
+"name": "الحاج خليل",
+"name:ar": "الحاج خليل",
+"public_transport": "halt",
+"railway": "halt",
+"train": "yes"
+}
+],
+"e6487765599": [
+{
+"@id": "n6487765599",
+"name": "كفر الحطبة",
+"name:ar": "كفر الحطبة",
+"public_transport": "station",
+"railway": "station",
+"train": "yes"
+}
+],
+"e6487765600": [
+{
+"@id": "n6487765600",
+"name": "كفر الدبوسي",
+"name:ar": "كفر الدبوسي",
+"public_transport": "halt",
+"railway": "halt",
+"train": "yes"
+}
+],
+"e6487833439": [
+{
+"@id": "n6487833439",
+"name": "السعادوة",
+"name:ar": "السعادوة",
+"public_transport": "station",
+"railway": "station",
+"train": "yes"
+}
+],
+"e6487833440": [
+{
+"@id": "n6487833440",
+"name": "الصبرية",
+"name:ar": "الصبرية",
+"public_transport": "station",
+"railway": "station",
+"train": "yes"
+}
+],
+"e6487833441": [
+{
+"@id": "n6487833441",
+"name": "رأس الخليج",
+"name:ar": "رأس الخليج",
+"public_transport": "halt",
+"railway": "halt",
+"train": "yes"
+}
+],
+"e6487833442": [
+{
+"@id": "n6487833442",
+"name": "محطة قطار جمصة",
+"name:ar": "محطة قطار جمصة",
+"public_transport": "station",
+"railway": "station",
+"train": "yes"
+}
+],
+"e6487833443": [
+{
+"@id": "n6487833443",
+"name": "السوالم",
+"name:ar": "السوالم",
+"public_transport": "station",
+"railway": "station",
+"train": "yes"
+}
+],
+"e6487833444": [
+{
+"@id": "n6487833444",
+"name": "التوفيقية البلد",
+"name:ar": "التوفيقية البلد",
+"public_transport": "station",
+"railway": "station",
+"train": "yes"
+}
+],
+"e6487833445": [
+{
+"@id": "n6487833445",
+"name": "كفر البطيخ",
+"name:ar": "كفر البطيخ",
+"public_transport": "station",
+"railway": "station",
+"train": "yes"
+}
+],
+"e6487833446": [
+{
+"@id": "n6487833446",
+"name": "بستاين كفر البطيخ",
+"name:ar": "بستاين كفر البطيخ",
+"public_transport": "halt",
+"railway": "halt",
+"train": "yes"
+}
+],
+"e694068569": [
+{
+"@id": "n694068569",
+"gtfs_id": "222",
+"name": "مقرون",
+"name:ar": "مقرون",
+"name:fr": "Magroun",
+"operator": "الشركة الوطنية للسكك الحديدية التونسية",
+"operator:ar": "الشركة الوطنية للسكك الحديدية التونسية",
+"operator:website": "http://www.sncft.com.tn/Ar/",
+"operator:wikidata": "Q2297197",
+"operator:wikipedia": "ar:الشركة الوطنية للسكك الحديدية التونسية",
+"operator:wikipedia:ar": "الشركة الوطنية للسكك الحديدية التونسية",
+"public_transport": "halt",
+"railway": "halt",
+"route_ref": "31;42",
+"train": "yes"
+}
+],
+"e694673717": [
+{
+"@id": "n694673717",
+"name": "Ain Taoujdate عين تاوجطات",
+"name:ar": "عين تاوجطات",
+"name:fr": "Ain Taoujdate",
+"public_transport": "station",
+"railway": "station",
+"train": "yes"
+}
+],
+"e7677959231": [
+{
+"@id": "n7677959231",
+"name": "برج التومي",
+"name:ar": "برج التومي",
+"name:fr": "Borj Ettoumi",
+"public_transport": "station",
+"railway": "halt",
+"train": "yes"
+}
+],
+"e7678085027": [
+{
+"@id": "n7678085027",
+"name": "جبل الوسط",
+"name:fr": "Cheylus",
+"public_transport": "station",
+"railway": "station",
+"train": "yes"
+}
+],
+"e7829854811": [
+{
+"@id": "n7829854811",
+"addr:city": "سوسة",
+"name": "سوسة",
+"name:ar": "سوسة",
+"name:es": "Susa",
+"name:fr": "Sousse",
+"name:it": "Susa",
+"public_transport": "station",
+"railway": "station",
+"stop_id": "193E",
+"train": "yes",
+"wheelchair": "no"
+}
+],
+"e7830239214": [
+{
+"@id": "n7830239214",
+"name": "مساكن",
+"name:ar": "مساكن",
+"name:fr": "Msaken",
+"public_transport": "station",
+"railway": "station",
+"train": "yes"
+}
+],
+"e7830667498": [
+{
+"@id": "n7830667498",
+"name": "القلعة الصغرى",
+"name:ar": "القلعة الصغرى",
+"name:fr": "Kalaa Seghira",
+"public_transport": "station",
+"railway": "station",
+"stop_id": "191C",
+"train": "yes"
+}
+],
+"e7830774022": [
+{
+"@id": "n7830774022",
+"name": "القلعة الكبرى",
+"name:ar": "القلعة الكبرى",
+"name:fr": "Kalaa Kebira",
+"public_transport": "station",
+"railway": "station",
+"stop_id": "183S",
+"train": "yes"
+}
+],
+"e7830774024": [
+{
+"@id": "n7830774024",
+"name": "سيدي بوعلي",
+"name:ar": "سيدي بوعلي",
+"name:fr": "Sidi Bou Ali",
+"public_transport": "station",
+"railway": "halt",
+"stop_id": "182R",
+"train": "yes"
+}
+],
+"e7830836236": [
+{
+"@id": "n7830836236",
+"name": "بوقرنين",
+"name:ar": "بوقرنين",
+"name:fr": "Boukornine",
+"public_transport": "station",
+"railway": "station",
+"stop_id": "153G",
+"train": "yes"
+}
+],
+"e7830836244": [
+{
+"@id": "n1203240634",
+"name": "حمام الأنف",
+"name:ar": "حمام الأنف",
+"name:fr": "Hammam-Lif",
+"public_transport": "stop_position",
+"railway": "stop",
+"train": "yes"
+},
+{
+"@id": "n1203242879",
+"name": "حمام الأنف",
+"name:ar": "حمام الأنف",
+"name:fr": "Hammam-Lif",
+"public_transport": "stop_position",
+"railway": "stop",
+"train": "yes"
+},
+{
+"@id": "n1203245733",
+"name": "حمام الأنف",
+"name:ar": "حمام الأنف",
+"name:fr": "Hammam-Lif",
+"public_transport": "stop_position",
+"railway": "stop",
+"train": "yes"
+},
+{
+"@id": "n1203245972",
+"name": "حمام الأنف",
+"name:ar": "حمام الأنف",
+"name:fr": "Hammam-Lif",
+"public_transport": "stop_position",
+"railway": "stop",
+"train": "yes"
+},
+{
+"@id": "n1203247434",
+"name": "حمام الأنف",
+"name:ar": "حمام الأنف",
+"name:fr": "Hammam-Lif",
+"public_transport": "stop_position",
+"railway": "stop",
+"train": "yes"
+},
+{
+"@id": "n1203247904",
+"name": "حمام الأنف",
+"name:ar": "حمام الأنف",
+"name:fr": "Hammam-Lif",
+"public_transport": "stop_position",
+"railway": "stop",
+"train": "yes"
+},
+{
+"@id": "n7830836244",
+"name": "حمام الأنف",
+"name:ar": "حمام الأنف",
+"name:fr": "Hammam Lif",
+"public_transport": "station",
+"railway": "station",
+"stop_id": "154H",
+"train": "yes"
+}
+],
+"e7831546092": [
+{
+"@id": "n7831546092",
+"name": "فندق الجديد",
+"name:ar": "فندق الجديد",
+"name:fr": "Fondouk Jedid",
+"public_transport": "station",
+"railway": "station",
+"stop_id": "161R",
+"train": "yes"
+}
+],
+"e7831856312": [
+{
+"@id": "n7831856312",
+"name": "قرمبالية",
+"name:ar": "قرمبالية",
+"name:fr": "Grombalia",
+"public_transport": "station",
+"railway": "station",
+"stop_id": "163T",
+"train": "yes",
+"wheelchair": "no"
+}
+],
+"e7831856331": [
+{
+"@id": "n7831856331",
+"name": "بوعرقوب",
+"name:ar": "بوعرقوب",
+"name:fr": "Bou Argoub",
+"public_transport": "station",
+"railway": "station",
+"stop_id": "166Y",
+"train": "yes"
+}
+],
+"e7831856332": [
+{
+"@id": "n7831856332",
+"name": "بئر بورقبة",
+"name:ar": "بئر بورقبة",
+"name:fr": "Bir Bouregba",
+"public_transport": "station",
+"railway": "station",
+"stop_id": "221M",
+"train": "yes",
+"wheelchair": "yes"
+}
+],
+"e7831856333": [
+{
+"@id": "n7831856333",
+"name": "بوفيشة",
+"name:ar": "بوفيشة",
+"name:fr": "Bou Ficha",
+"public_transport": "station",
+"railway": "station",
+"stop_id": "172E",
+"train": "yes"
+}
+],
+"e7831856339": [
+{
+"@id": "n7831856339",
+"name": "منزل المحطة",
+"name:ar": "منزل المحطة",
+"name:fr": "Menzel Gare",
+"public_transport": "station",
+"railway": "station",
+"stop_id": "181P"
+}
+],
+"e7832503623": [
+{
+"@id": "n7832503623",
+"name": "بوقبرين",
+"name:ar": "بوقبرين",
+"name:fr": "Bougabrine",
+"public_transport": "station",
+"railway": "station",
+"train": "yes"
+}
+],
+"e7832846864": [
+{
+"@id": "n7832846864",
+"name": "كركر",
+"name:ar": "كركر",
+"name:fr": "Kerker",
+"public_transport": "station",
+"railway": "station",
+"stop_id": "202P",
+"train": "yes"
+}
+],
+"e7833063360": [
+{
+"@id": "n7833063360",
+"name": "الجم",
+"name:ar": "الجم",
+"name:fr": "El Jem",
+"public_transport": "station",
+"railway": "station",
+"stop_id": "204S",
+"train": "yes"
+}
+],
+"e7833063361": [
+{
+"@id": "n7833063361",
+"name": "الحنشة",
+"name:ar": "الحنشة",
+"name:fr": "El Hencha",
+"public_transport": "station",
+"railway": "station",
+"stop_id": "212C",
+"train": "yes"
+}
+],
+"e7833555209": [
+{
+"@id": "n7833555209",
+"addr:city": "المحرس",
+"addr:city:ar": "المحرس",
+"addr:postcode": "3060",
+"name": "المحرس",
+"name:ar": "المحرس",
+"name:fr": "Mahrès",
+"operator": "الشركة الوطنية للسكك الحديدية التونسية",
+"operator:ar": "الشركة الوطنية للسكك الحديدية التونسية",
+"operator:website": "http://www.sncft.com.tn/Ar/",
+"operator:wikidata": "Q2297197",
+"operator:wikipedia": "ar:الشركة الوطنية للسكك الحديدية التونسية",
+"operator:wikipedia:ar": "الشركة الوطنية للسكك الحديدية التونسية",
+"public_transport": "station",
+"railway": "station",
+"stop_id": "463B",
+"train": "yes"
+}
+],
+"e7833555210": [
+{
+"@id": "n2589797135",
+"name": "الغريبة",
+"name:ar": "الغريبة",
+"name:fr": "Ghraiba",
+"public_transport": "stop_position",
+"railway": "stop",
+"train": "yes"
+},
+{
+"@id": "n7833555210",
+"name": "الغريبة",
+"name:ar": "الغريبة",
+"name:fr": "Ghraiba",
+"public_transport": "station",
+"railway": "station",
+"stop_id": "465D"
+}
+],
+"e7833555211": [
+{
+"@id": "n7833555211",
+"addr:city": "الفوني",
+"name": "الفوني",
+"name:ar": "الفوني",
+"name:fr": "Founi",
+"operator": "الشركة الوطنية للسكك الحديدية التونسية",
+"operator:ar": "الشركة الوطنية للسكك الحديدية التونسية",
+"operator:website": "http://www.sncft.com.tn/Ar/",
+"operator:wikidata": "Q2297197",
+"operator:wikipedia": "ar:الشركة الوطنية للسكك الحديدية التونسية",
+"operator:wikipedia:ar": "الشركة الوطنية للسكك الحديدية التونسية",
+"public_transport": "station",
+"railway": "station",
+"stop_id": "491J"
+}
+],
+"e7833555212": [
+{
+"@id": "n7833555212",
+"name": "الحمادة",
+"name:ar": "الحمادة",
+"name:fr": "El Hamada",
+"public_transport": "station",
+"railway": "station",
+"stop_id": "471K"
+}
+],
+"e7833555213": [
+{
+"@id": "n7833555213",
+"addr:city": "الصخيرة",
+"name": "الصخيرة",
+"name:ar": "الصخيرة",
+"name:fr": "Skhira",
+"operator": "الشركة الوطنية للسكك الحديدية التونسية",
+"operator:ar": "الشركة الوطنية للسكك الحديدية التونسية",
+"operator:website": "http://www.sncft.com.tn/Ar/",
+"operator:wikidata": "Q2297197",
+"operator:wikipedia": "ar:الشركة الوطنية للسكك الحديدية التونسية",
+"operator:wikipedia:ar": "الشركة الوطنية للسكك الحديدية التونسية",
+"public_transport": "station",
+"railway": "station",
+"stop_id": "472L",
+"train": "yes"
+}
+],
+"e7833555214": [
+{
+"@id": "n7833555214",
+"name": "غنوش",
+"name:ar": "غنوش",
+"name:fr": "Ghannouch",
+"public_transport": "station",
+"railway": "station",
+"stop_id": "481Y",
+"train": "yes"
+}
+],
+"e7833555215": [
+{
+"@id": "n7833555215",
+"name": "قابس",
+"name:ar": "قابس",
+"name:azb": "قابس",
+"name:fr": "Gabès",
+"name:ur": "قابس",
+"public_transport": "station",
+"railway": "station",
+"stop_id": "488F"
+}
+],
+"e7833812090": [
+{
+"@id": "n7833812090",
+"addr:city": "المزونة",
+"name": "المزونة",
+"name:ar": "المزونة",
+"name:fr": "Mezzouna",
+"operator": "الشركة الوطنية للسكك الحديدية التونسية",
+"operator:ar": "الشركة الوطنية للسكك الحديدية التونسية",
+"operator:website": "http://www.sncft.com.tn/Ar/",
+"operator:wikidata": "Q2297197",
+"operator:wikipedia": "ar:الشركة الوطنية للسكك الحديدية التونسية",
+"operator:wikipedia:ar": "الشركة الوطنية للسكك الحديدية التونسية",
+"public_transport": "station",
+"railway": "station",
+"stop_id": "493L",
+"train": "yes"
+}
+],
+"e7833812091": [
+{
+"@id": "n7833812091",
+"addr:city": "المكناسي",
+"name": "المكناسي",
+"name:ar": "المكناسي",
+"name:fr": "Meknassy",
+"operator": "الشركة الوطنية للسكك الحديدية التونسية",
+"operator:ar": "الشركة الوطنية للسكك الحديدية التونسية",
+"operator:website": "http://www.sncft.com.tn/Ar/",
+"operator:wikidata": "Q2297197",
+"operator:wikipedia": "ar:الشركة الوطنية للسكك الحديدية التونسية",
+"operator:wikipedia:ar": "الشركة الوطنية للسكك الحديدية التونسية",
+"public_transport": "station",
+"railway": "station",
+"stop_id": "495N",
+"train": "yes"
+}
+],
+"e7833812093": [
+{
+"@id": "n7833812093",
+"name": "السند",
+"name:ar": "السند",
+"name:fr": "Sened",
+"public_transport": "station",
+"railway": "station",
+"stop_id": "502Y"
+}
+],
+"e7867290326": [
+{
+"@id": "n7867290326",
+"name": "سيدي عياد",
+"name:ar": "سيدي عياد",
+"name:fr": "Sidi Ayed",
+"public_transport": "station",
+"railway": "station",
+"train": "yes"
+}
+],
+"e7867580426": [
+{
+"@id": "n7867580426",
+"name": "الكريب",
+"name:ar": "الكريب",
+"name:fr": "Le Krib",
+"public_transport": "station",
+"railway": "station",
+"train": "yes"
+}
+],
+"e7882921283": [
+{
+"@id": "n7882921283",
+"name": "الخوات",
+"name:ar": "الخوات",
+"name:fr": "Lakhwat",
+"public_transport": "station",
+"railway": "station",
+"train": "yes"
+}
+],
+"e8027925515": [
+{
+"@id": "n8027925515",
+"addr:city": "سيدي عثمان",
+"addr:city:ar": "سيدي عثمان",
+"name": "سيدي عثمان",
+"name:ar": "سيدي عثمان",
+"name:fr": "Sidi Othman",
+"operator": "الشركة الوطنية للسكك الحديدية التونسية",
+"operator:ar": "الشركة الوطنية للسكك الحديدية التونسية",
+"operator:website": "http://www.sncft.com.tn/Ar/",
+"operator:wikidata": "Q2297197",
+"operator:wikipedia": "ar:الشركة الوطنية للسكك الحديدية التونسية",
+"operator:wikipedia:ar": "الشركة الوطنية للسكك الحديدية التونسية",
+"public_transport": "station",
+"railway": "station",
+"train": "yes"
+}
+],
+"e8037521486": [
+{
+"@id": "n8037521486",
+"addr:city": "باجة",
+"name": "باجة",
+"name:ar": "باجة",
+"name:fr": "Béja",
+"operator": "الشركة الوطنية للسكك الحديدية التونسية",
+"operator:ar": "الشركة الوطنية للسكك الحديدية التونسية",
+"operator:website": "http://www.sncft.com.tn/Ar/",
+"operator:wikidata": "Q2297197",
+"operator:wikipedia": "ar:الشركة الوطنية للسكك الحديدية التونسية",
+"operator:wikipedia:ar": "الشركة الوطنية للسكك الحديدية التونسية",
+"public_transport": "station",
+"railway": "station",
+"train": "yes"
+}
+],
+"e8037521489": [
+{
+"@id": "n8037521489",
+"name": "سيدي إسماعيل",
+"name:ar": "سيدي إسماعيل",
+"name:fr": "Sidi Smail",
+"public_transport": "station",
+"railway": "station"
+}
+],
+"e8037521490": [
+{
+"@id": "n8037521490",
+"addr:city": "Bou Salem",
+"addr:postcode": "8170",
+"addr:street": "Gare",
+"name": "بوسالم",
+"name:ar": "بوسالم",
+"name:fr": "Bou Salem",
+"operator": "Société Nationale de Chemins de Fer Tunisiens (SNCFT)",
+"public_transport": "station",
+"railway": "station",
+"train": "yes"
+}
+],
+"e8213917790": [
+{
+"@id": "n8213917790",
+"name": "الفحص",
+"name:ar": "الفحص",
+"name:fr": "Pont du Fahs",
+"public_transport": "station",
+"railway": "station",
+"train": "yes"
+}
+],
+"e8231372189": [
+{
+"@id": "n8231372189",
+"name": "وادي الزرقاء",
+"name:fr": "Oued Zarga",
+"public_transport": "station",
+"railway": "station",
+"stop_id": "205",
+"train": "yes"
+}
+],
+"e8231372199": [
+{
+"@id": "n8231372199",
+"name": "غار الدماء",
+"name:fr": "Ghardimaou",
+"public_transport": "station",
+"railway": "station",
+"stop_id": "195",
+"train": "yes"
+}
+],
+"e8231372200": [
+{
+"@id": "n8231372200",
+"name": "وادي مليز",
+"name:fr": "Oued Meliz",
+"public_transport": "station",
+"railway": "station",
+"stop_id": "194",
+"train": "yes"
+}
+],
+"e8231372201": [
+{
+"@id": "n8231372201",
+"name": "جندوبة",
+"name:fr": "Jendouba",
+"public_transport": "station",
+"railway": "station",
+"stop_id": "193",
+"train": "yes"
+}
+],
+"e8231372208": [
+{
+"@id": "n8231372208",
+"name": "مجاز الباب",
+"name:fr": "Mejez El Bab",
+"public_transport": "station",
+"railway": "station",
+"stop_id": "186",
+"train": "yes"
+}
+],
+"e8231384478": [
+{
+"@id": "n2021623348",
+"name": "القلعة الخصبة",
+"name:ar": "القلعة الخصبة",
+"name:fr": "Kalaat Khasba",
+"operator": "الشركة الوطنية للسكك الحديدية التونسية",
+"operator:ar": "الشركة الوطنية للسكك الحديدية التونسية",
+"operator:website": "http://www.sncft.com.tn/Ar/",
+"operator:wikidata": "Q2297197",
+"operator:wikipedia": "ar:الشركة الوطنية للسكك الحديدية التونسية",
+"operator:wikipedia:ar": "الشركة الوطنية للسكك الحديدية التونسية",
+"railway": "stop"
+},
+{
+"@id": "n2021623349",
+"name": "القلعة الخصبة",
+"name:ar": "القلعة الخصبة",
+"name:fr": "Kalaat Khasba",
+"operator": "الشركة الوطنية للسكك الحديدية التونسية",
+"operator:ar": "الشركة الوطنية للسكك الحديدية التونسية",
+"operator:website": "http://www.sncft.com.tn/Ar/",
+"operator:wikidata": "Q2297197",
+"operator:wikipedia": "ar:الشركة الوطنية للسكك الحديدية التونسية",
+"operator:wikipedia:ar": "الشركة الوطنية للسكك الحديدية التونسية",
+"railway": "stop"
+},
+{
+"@id": "n2021623350",
+"name": "القلعة الخصبة",
+"name:ar": "القلعة الخصبة",
+"name:fr": "Kalaat Khasba",
+"operator": "الشركة الوطنية للسكك الحديدية التونسية",
+"operator:ar": "الشركة الوطنية للسكك الحديدية التونسية",
+"operator:website": "http://www.sncft.com.tn/Ar/",
+"operator:wikidata": "Q2297197",
+"operator:wikipedia": "ar:الشركة الوطنية للسكك الحديدية التونسية",
+"operator:wikipedia:ar": "الشركة الوطنية للسكك الحديدية التونسية",
+"railway": "stop"
+},
+{
+"@id": "n8231384478",
+"name": "القلعة الخصبة",
+"name:fr": "Kalaa Khasba",
+"public_transport": "station",
+"railway": "station",
+"stop_id": "116",
+"train": "yes"
+}
+],
+"e8231384482": [
+{
+"@id": "n8231384482",
+"name": "الدهماني",
+"name:fr": "Dahmani",
+"public_transport": "station",
+"railway": "station",
+"stop_id": "112",
+"train": "yes"
+}
+],
+"e8231384485": [
+{
+"@id": "n8231384485",
+"name": "السرس",
+"name:fr": "Le Sers",
+"public_transport": "station",
+"railway": "station",
+"stop_id": "109",
+"train": "yes"
+}
+],
+"e8231384487": [
+{
+"@id": "n8231384487",
+"name": "سيدي بورويس",
+"name:fr": "Sidi Bou Rouis",
+"public_transport": "station",
+"railway": "station",
+"stop_id": "107",
+"train": "yes"
+}
+],
+"e8231384494": [
+{
+"@id": "n8231384494",
+"name": "بوعرادة",
+"name:fr": "Bou Arada",
+"public_transport": "station",
+"railway": "station",
+"stop_id": "100",
+"train": "yes"
+}
+],
+"e8231384499": [
+{
+"@id": "n8231384499",
+"name": "سمنجة",
+"name:fr": "Depienne",
+"public_transport": "station",
+"railway": "station",
+"stop_id": "95",
+"train": "yes"
+}
+],
+"e8231384504": [
+{
+"@id": "n8231384504",
+"name": "محطة نعسان",
+"name:fr": "Nassen",
+"public_transport": "station",
+"railway": "station",
+"stop_id": "90",
+"train": "yes"
+}
+],
+"e8231384505": [
+{
+"@id": "n8231384505",
+"name": "بئر القصعة",
+"name:fr": "Bir Kassa",
+"public_transport": "station",
+"railway": "station",
+"stop_id": "89",
+"train": "yes"
+}
+],
+"e8231384509": [
+{
+"@id": "n8231384509",
+"name": "الملاحة",
+"name:fr": "Les Salines",
+"public_transport": "station",
+"railway": "station",
+"stop_id": "85",
+"train": "yes"
+}
+],
+"e8231384517": [
+{
+"@id": "n2012097539",
+"addr:city": "ماطر",
+"addr:city:ar": "ماطر",
+"name": "ماطر",
+"name:ar": "ماطر",
+"operator": "الشركة الوطنية للسكك الحديدية التونسية",
+"operator:ar": "الشركة الوطنية للسكك الحديدية التونسية",
+"operator:website": "http://www.sncft.com.tn/Ar/",
+"operator:wikidata": "Q2297197",
+"operator:wikipedia": "ar:الشركة الوطنية للسكك الحديدية التونسية",
+"operator:wikipedia:ar": "الشركة الوطنية للسكك الحديدية التونسية",
+"railway": "stop"
+},
+{
+"@id": "n2012097540",
+"addr:city": "ماطر",
+"addr:city:ar": "ماطر",
+"name": "ماطر",
+"name:ar": "ماطر",
+"operator": "الشركة الوطنية للسكك الحديدية التونسية",
+"operator:ar": "الشركة الوطنية للسكك الحديدية التونسية",
+"operator:website": "http://www.sncft.com.tn/Ar/",
+"operator:wikidata": "Q2297197",
+"operator:wikipedia": "ar:الشركة الوطنية للسكك الحديدية التونسية",
+"operator:wikipedia:ar": "الشركة الوطنية للسكك الحديدية التونسية",
+"railway": "stop"
+},
+{
+"@id": "n2012097541",
+"addr:city": "ماطر",
+"addr:city:ar": "ماطر",
+"name": "ماطر",
+"name:ar": "ماطر",
+"operator": "الشركة الوطنية للسكك الحديدية التونسية",
+"operator:ar": "الشركة الوطنية للسكك الحديدية التونسية",
+"operator:website": "http://www.sncft.com.tn/Ar/",
+"operator:wikidata": "Q2297197",
+"operator:wikipedia": "ar:الشركة الوطنية للسكك الحديدية التونسية",
+"operator:wikipedia:ar": "الشركة الوطنية للسكك الحديدية التونسية",
+"railway": "stop"
+},
+{
+"@id": "n8231384517",
+"name": "ماطر",
+"name:fr": "Mateur",
+"public_transport": "station",
+"railway": "station",
+"stop_id": "77",
+"train": "yes"
+}
+],
+"e8231384555": [
+{
+"@id": "n8231384555",
+"name": "سيدي رزيق",
+"name:fr": "Sidi Rezig",
+"public_transport": "station",
+"railway": "station",
+"stop_id": "39",
+"train": "yes"
+}
+],
+"e8266107633": [
+{
+"@id": "n8266107633",
+"name": "الحمامات",
+"name:ar": "الحمامات",
+"name:fr": "Hammamet",
+"public_transport": "station",
+"railway": "halt",
+"train": "yes"
+}
+],
+"e8266107634": [
+{
+"@id": "n8266107634",
+"addr:city": "نابل",
+"addr:postcode": "8000",
+"addr:street": "شارع الحبيب بورقيبة",
+"addr:street:ar": "شارع الحبيب بورقيبة",
+"name": "نابل",
+"name:ar": "نابل",
+"name:fr": "Nabeul",
+"operator": "الشركة الوطنية للسكك الحديدية التونسية",
+"operator:ar": "الشركة الوطنية للسكك الحديدية التونسية",
+"operator:wikidata": "Q2297197",
+"operator:wikipedia": "ar:الشركة الوطنية للسكك الحديدية التونسية",
+"operator:wikipedia:ar": "الشركة الوطنية للسكك الحديدية التونسية",
+"public_transport": "station",
+"railway": "station"
+}
+],
+"e8589212730": [
+{
+"@id": "n8589212730",
+"name": "العروسة",
+"name:ar": "العروسة",
+"name:fr": "El Aroussa",
+"public_transport": "station",
+"railway": "station",
+"train": "yes"
+}
+],
+"e8676317696": [
+{
+"@id": "n8676317696",
+"name": "بئر مشارقة",
+"name:ar": "بئر مشارقة",
+"name:fr": "Bir Mcherga",
+"public_transport": "station",
+"railway": "station",
+"train": "yes"
+}
+],
+"e9016197592": [
+{
+"@id": "n9016197592",
+"name": "تينجة",
+"name:ar": "تينجة",
+"name:fr": "Tinja",
+"public_transport": "station",
+"railway": "station",
+"train": "yes"
+}
+],
+"e9306396343": [
+{
+"@id": "n9306396343",
+"name": "المصيدة",
+"name:fr": "La Pêcherie",
+"public_transport": "station",
+"railway": "halt",
+"train": "yes"
+}
+],
+"e9399822512": [
+{
+"@id": "n9399822512",
+"name": "سيدي بادر ⵙⵉⴷⵉ ⴱⴰⴷⴻⵔ",
+"name:ar": "سيدي بادر",
+"name:ber": "ⵙⵉⴷⵉ ⴱⴰⴷⴻⵔ",
+"name:fr": "Sidi Bader",
+"public_transport": "station",
+"railway": "halt",
+"train": "yes",
+"wikidata": "Q117075528",
+"wikipedia": "fr:Gare de Sidi Bader"
+}
+],
+"e9951183311": [
+{
+"@id": "n9951183310",
+"name": "الزهراء",
+"name:ar": "الزهراء",
+"name:fr": "Ezzahra",
+"public_transport": "stop_position",
+"railway": "stop",
+"train": "yes"
+},
+{
+"@id": "n9951183311",
+"name": "الزهراء",
+"name:ar": "الزهراء",
+"name:fr": "Ezzahra",
+"public_transport": "stop_position",
+"railway": "stop",
+"train": "yes"
+},
+{
+"@id": "n9951183312",
+"name": "الزهراء",
+"name:ar": "الزهراء",
+"name:fr": "Ezzahra",
+"public_transport": "stop_position",
+"railway": "stop",
+"train": "yes"
+},
+{
+"@id": "w1086033434",
+"building": "yes",
+"gtfs_id": "35",
+"name": "الزهراء",
+"name:ar": "الزهراء",
+"name:fr": "Ezzahra",
+"operator": "الشركة الوطنية للسكك الحديدية التونسية",
+"operator:ar": "الشركة الوطنية للسكك الحديدية التونسية",
+"operator:website": "http://www.sncft.com.tn/Ar/",
+"operator:wikidata": "Q2297197",
+"operator:wikipedia": "ar:الشركة الوطنية للسكك الحديدية التونسية",
+"operator:wikipedia:ar": "الشركة الوطنية للسكك الحديدية التونسية",
+"public_transport": "station",
+"railway": "station",
+"route_ref": "19",
+"stop_id": "151E",
+"train": "yes"
+}
+],
+"erXA574117": [],
+"g000003": [],
+"g000009": [],
+"g000012": [],
+"g000026": [
+{
+"@id": "n9861786055",
+"name": "名寄高校",
+"public_transport": "station",
+"railway": "station",
+"train": "yes"
+}
+],
+"g000078": [],
+"g000084": [],
+"g000093": [],
+"g000099": [],
+"g000115": [],
+"g000141": [],
+"g000673": [],
+"g001834": [],
+"g001842": [
+{
+"@id": "n335656239",
+"name": "市民病院前",
+"name:ja": "市民病院前",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"source": "KSJ2",
+"tram": "yes"
+},
+{
+"@id": "n10925334678",
+"name": "市民病院前",
+"name:ja": "市民病院前",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"source": "KSJ2",
+"tram": "yes"
+}
+],
+"g001845": [
+{
+"@id": "n335656182",
+"name": "志貴野中学校前",
+"name:ja": "志貴野中学校前",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"source": "KSJ2",
+"tram": "yes",
+"wheelchair": "yes"
+},
+{
+"@id": "n10925334675",
+"name": "志貴野中学校前",
+"name:ja": "志貴野中学校前",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"source": "KSJ2",
+"tram": "yes",
+"wheelchair": "yes"
+}
+],
+"g001851": [
+{
+"@id": "n335656243",
+"name": "広小路",
+"name:ja": "広小路",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"source": "KSJ2",
+"tram": "yes",
+"wheelchair": "yes"
+},
+{
+"@id": "n10925334670",
+"name": "広小路",
+"name:ja": "広小路",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"source": "KSJ2",
+"tram": "yes",
+"wheelchair": "yes"
+}
+],
+"g001854": [
+{
+"@id": "n335656200",
+"name": "急患医療センター前",
+"name:ja": "急患医療センター前",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"source": "KSJ2",
+"tram": "yes"
+},
+{
+"@id": "n10925334664",
+"name": "急患医療センター前",
+"name:ja": "急患医療センター前",
+"operator": "万葉線",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+}
+],
+"g001866": [
+{
+"@id": "n5208423447",
+"name": "末広町",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"source": "KSJ2",
+"tram": "yes"
+}
+],
+"g001991": [
+{
+"@id": "n270026697",
+"name": "南富山駅前",
+"name:ja": "南富山駅前",
+"operator": "富山地方鉄道",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"ref": "C01",
+"source": "KSJ2",
+"tram": "yes",
+"wikipedia": "ja:南富山駅前停留場"
+}
+],
+"g002155": [],
+"g002466": [],
+"g002502": [],
+"g002594": [
+{
+"@id": "n4755786036",
+"name": "ソシオ流通センター",
+"name:ko": "소시오유통센터",
+"operator": "秩父鉄道",
+"public_transport": "station",
+"railway": "station"
+},
+{
+"@id": "n5445622346",
+"name": "ソシオ流通センター",
+"public_transport": "stop_position",
+"railway": "stop",
+"train": "yes"
+}
+],
+"g002646": [],
+"g005306": [
+{
+"@id": "w591976890",
+"building": "train_station",
+"building:levels": "1",
+"ele": "45.1",
+"height": "13.9",
+"name": "小幡緑地駅",
+"public_transport": "station",
+"source": "MLIT_PLATEAU bldg_9675669f-ea23-46e5-b30c-6a0eaeffc8e7",
+"wikidata": "Q7074641",
+"wikipedia": "ja:小幡緑地駅"
+},
+{
+"@id": "r20707405",
+"name": "小幡緑地",
+"network": "ゆとりーとライン",
+"public_transport": "stop_area",
+"type": "public_transport"
+}
+],
+"g005309": [
+{
+"@id": "r20707404",
+"name": "白沢渓谷",
+"network": "ゆとりーとライン",
+"public_transport": "stop_area",
+"type": "public_transport"
+}
+],
+"g005314": [
+{
+"@id": "r20707403",
+"name": "川村",
+"network": "ゆとりーとライン",
+"public_transport": "stop_area",
+"type": "public_transport"
+}
+],
+"g005325": [
+{
+"@id": "r20707402",
+"name": "川宮",
+"network": "ゆとりーとライン",
+"public_transport": "stop_area",
+"type": "public_transport"
+}
+],
+"g005343": [
+{
+"@id": "r20707401",
+"name": "金屋",
+"network": "ゆとりーとライン",
+"public_transport": "stop_area",
+"type": "public_transport"
+}
+],
+"g005360": [
+{
+"@id": "r20707400",
+"name": "守山",
+"network": "ゆとりーとライン",
+"public_transport": "stop_area",
+"type": "public_transport"
+}
+],
+"g006386": [
+{
+"@id": "n6057440275",
+"name": "西尾口",
+"operator": "名古屋鉄道",
+"public_transport": "station",
+"railway": "station"
+},
+{
+"@id": "n8093609586",
+"name": "西尾口",
+"operator": "名古屋鉄道",
+"public_transport": "stop_position",
+"railway": "stop",
+"train": "yes"
+},
+{
+"@id": "w244938146",
+"building": "yes",
+"name": "西尾口",
+"operator": "名古屋鉄道",
+"public_transport": "station"
+},
+{
+"@id": "r11856797",
+"name": "西尾口",
+"operator": "名古屋鉄道",
+"public_transport": "stop_area",
+"type": "public_transport"
+}
+],
+"g006940": [
+{
+"@id": "r11522266",
+"name": "虹",
+"public_transport": "stop_area",
+"type": "public_transport"
+}
+],
+"g008006": [],
+"g008045": [
+{
+"@id": "r11812599",
+"name": "猿猴橋町",
+"public_transport": "stop_area",
+"type": "public_transport"
+}
+],
+"g008076": [],
+"g008106": [],
+"g008143": [],
+"g008146": [],
+"g008170": [],
+"g008716": [],
+"g008725": [],
+"g008735": [],
+"g008746": [],
+"g008756": [],
+"g009101": [
+{
+"@id": "n265022007",
+"name": "田辺島通",
+"name:ja": "田辺島通",
+"name:ja-Hira": "たべしまどおり",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"source": "MLIT Japan",
+"tram": "yes"
+},
+{
+"@id": "n6199995549",
+"name": "田辺島通",
+"name:ja-Hira": "たべしまどおり",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"source": "MLIT Japan",
+"tram": "yes"
+}
+],
+"g009121": [],
+"g009154": [],
+"g009190": [],
+"g009209": [],
+"g009249": [],
+"g009287": [],
+"g009314": [],
+"g009326": [],
+"g009336": [],
+"g009361": [],
+"g009432": [
+{
+"@id": "n1058466677",
+"KSJ2:LIN": "別府ラクテンチケーブル線",
+"KSJ2:RAS": "eb03_527",
+"KSJ2:STN": "雲泉寺",
+"KSJ2:segment": "eb02_976",
+"name": "雲泉寺",
+"name:ja": "雲泉寺",
+"name:ja-Hira": "うんせんじ",
+"name:ko": "운센지",
+"note": "National-Land Numerical Information (Railway) 2007, MLIT Japan",
+"note:ja": "国土数値情報（鉄道データ）平成19年　国土交通省",
+"public_transport": "station",
+"railway": "station",
+"source": "KSJ2",
+"source_ref": "http://nlftp.mlit.go.jp/ksj/jpgis/datalist/KsjTmplt-N02-v1_1.html",
+"wikidata": "Q4890933",
+"wikipedia": "ja:別府ラクテンチケーブル線"
+}
+],
+"g009433": [
+{
+"@id": "n1058466623",
+"KSJ2:LIN": "別府ラクテンチケーブル線",
+"KSJ2:RAS": "eb03_526",
+"KSJ2:STN": "乙原",
+"KSJ2:segment": "eb02_974",
+"name": "乙原",
+"name:ja": "乙原",
+"name:ja-Hira": "おとばる",
+"name:ko": "오토바루",
+"note": "National-Land Numerical Information (Railway) 2007, MLIT Japan",
+"note:ja": "国土数値情報（鉄道データ）平成19年　国土交通省",
+"public_transport": "station",
+"railway": "station",
+"source": "KSJ2",
+"source_ref": "http://nlftp.mlit.go.jp/ksj/jpgis/datalist/KsjTmplt-N02-v1_1.html",
+"wikidata": "Q4890933",
+"wikipedia": "ja:別府ラクテンチケーブル線"
+}
+],
+"g009697": [],
+"g009772": [],
+"g009899": [],
+"i12526496465": [],
+"i1346791484": [],
+"i13534829431": [],
+"i1896328824": [],
+"i3144516900": [],
+"i4281015663": [],
+"i4413853645": [],
+"i4813936821": [
+{
+"@id": "n4813936821",
+"name": "بکران",
+"railway": "halt",
+"wikidata": "Q85168533"
+}
+],
+"i6764719075": [],
+"i6805219938": [
+{
+"@id": "n6805219938",
+"name": "جوین",
+"railway": "station",
+"wikidata": "Q85168453"
+}
+],
+"i684207459": [],
+"i703787912": [],
+"i8371477953": [
+{
+"@id": "n8371477953",
+"name": "اسفراین",
+"railway": "halt",
+"wikidata": "Q85168440"
+},
+{
+"@id": "n8371477969",
+"name": "اسفراین",
+"public_transport": "stop_position",
+"train": "yes"
+}
+],
+"i8375814842": [
+{
+"@id": "n8375814842",
+"name": "گیلان",
+"railway": "halt",
+"wikidata": "Q85168490"
+}
+],
+"n1094476493": [
+{
+"@id": "n1094476493",
+"access": "disabled",
+"light_rail": "yes",
+"name": "ابن رشيق",
+"name:ar": "ابن رشيق",
+"name:es": "Ibn Rashíq",
+"name:fr": "Ibn Rachiq",
+"opening_hours": "closed",
+"public_transport": "stop_position",
+"railway": "halt",
+"ref": "2;3;4;5"
+}
+],
+"n1094902351": [
+{
+"@id": "n1094902351",
+"light_rail": "yes",
+"name": "فلسطين",
+"name:ar": "فلسطين",
+"name:fr": "Palestine",
+"public_transport": "stop_position",
+"railway": "station",
+"wheelchair": "no"
+},
+{
+"@id": "n1094915850",
+"light_rail": "yes",
+"name": "فلسطين",
+"name:ar": "فلسطين",
+"name:fr": "Palestine",
+"public_transport": "stop_position",
+"railway": "halt"
+}
+],
+"n1094915522": [
+{
+"@id": "n1094915522",
+"light_rail": "yes",
+"name": "الحدائق",
+"name:ar": "الحدائق",
+"name:fr": "Station Les Jardins",
+"public_transport": "stop_position",
+"railway": "station"
+}
+],
+"n1095145955": [
+{
+"@id": "n1095145955",
+"light_rail": "yes",
+"name": "حبيب ثامر",
+"name:ar": "حبيب ثامر",
+"name:fr": "Habib Thameur",
+"note": "Le tramway ne marque plus l'arrêt à cet endroit (Mars 2019)",
+"public_transport": "stop_position",
+"railway": "halt",
+"ref": "Ligne 2, 3, 4, 5"
+}
+],
+"n1095146798": [
+{
+"@id": "n1095146798",
+"light_rail": "yes",
+"name": "باب العسل",
+"name:ar": "باب العسل",
+"name:fr": "Bab El Assel",
+"public_transport": "station",
+"railway": "station",
+"wheelchair": "yes"
+},
+{
+"@id": "n5807318593",
+"light_rail": "yes",
+"name": "باب العسل",
+"name:ar": "باب العسل",
+"name:fr": "Bab El Assel",
+"public_transport": "stop_position",
+"railway": "stop",
+"wheelchair": "yes"
+},
+{
+"@id": "r8501146",
+"name": "باب العسل",
+"name:ar": "باب العسل",
+"name:fr": "Bab El Assel",
+"public_transport": "stop_area",
+"type": "public_transport"
+}
+],
+"n1095697116": [
+{
+"@id": "n1095697116",
+"light_rail": "yes",
+"name": "المنتزه",
+"name:ar": "المنتزه",
+"name:fr": "El Montazah",
+"public_transport": "stop_position",
+"railway": "stop"
+},
+{
+"@id": "n1095697397",
+"light_rail": "yes",
+"name": "المنتزه",
+"name:ar": "المنتزه",
+"name:fr": "El Montazah",
+"public_transport": "stop_position",
+"railway": "stop"
+},
+{
+"@id": "n1095697751",
+"light_rail": "yes",
+"name": "المنتزه",
+"name:ar": "المنتزه",
+"name:fr": "El Montazah",
+"public_transport": "stop_position",
+"railway": "stop"
+},
+{
+"@id": "w688042775",
+"area": "yes",
+"light_rail": "yes",
+"name": "المنتزه",
+"name:ar": "المنتزه",
+"name:fr": "El Montazah",
+"public_transport": "station",
+"railway": "station",
+"station": "light_rail"
+}
+],
+"n1095697614": [
+{
+"@id": "n1095697614",
+"light_rail": "yes",
+"name": "المروج 4",
+"name:ar": "المروج 4",
+"name:fr": "El Mourouj 4",
+"public_transport": "stop_position",
+"railway": "stop"
+},
+{
+"@id": "n6450732827",
+"light_rail": "yes",
+"name": "المروج 4",
+"name:ar": "المروج 4",
+"name:fr": "El Mourouj 4",
+"public_transport": "stop_position",
+"railway": "stop"
+},
+{
+"@id": "w688042807",
+"area": "yes",
+"name": "المروج 4",
+"name:ar": "المروج 4",
+"name:fr": "El Mourouj 4",
+"public_transport": "station",
+"railway": "station",
+"station": "light_rail"
+}
+],
+"n1095698025": [
+{
+"@id": "n1095698025",
+"light_rail": "yes",
+"name": "النسري",
+"name:ar": "النسري",
+"name:fr": "Ennesri",
+"public_transport": "stop_position",
+"railway": "stop"
+},
+{
+"@id": "n6450830509",
+"light_rail": "yes",
+"name": "النسري",
+"name:ar": "النسري",
+"name:fr": "Ennesri",
+"public_transport": "stop_position",
+"railway": "stop"
+},
+{
+"@id": "w688053327",
+"area": "yes",
+"name": "النسري",
+"name:ar": "النسري",
+"name:fr": "Ennesri",
+"public_transport": "station",
+"railway": "station",
+"station": "light_rail"
+},
+{
+"@id": "r9561210",
+"light_rail": "yes",
+"name": "النسري",
+"name:ar": "النسري",
+"name:fr": "Ennesri",
+"public_transport": "stop_area",
+"public_transport:version": "2",
+"type": "public_transport"
+}
+],
+"n1095698207": [
+{
+"@id": "n1095698207",
+"light_rail": "yes",
+"name": "الطاهر حداد",
+"name:ar": "الطاهر حداد",
+"name:fr": "Tahar Haddad",
+"public_transport": "stop_position",
+"railway": "stop"
+}
+],
+"n12942528103": [
+{
+"@id": "n12942528103",
+"name": "Chuqub yoʻl",
+"public_transport": "stop_position",
+"tram": "yes"
+}
+],
+"n1311854956": [
+{
+"@id": "n1311854956",
+"name": "Madinat Al Irfane مدينة العرفان",
+"name:ar": "مدينة العرفان",
+"name:fr": "Madinat Al Irfane",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+},
+{
+"@id": "n4592816489",
+"name": "Madinat Al Irfane مدينة العرفان",
+"name:ar": "مدينة العرفان",
+"name:fr": "Madinat Al Irfane",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+}
+],
+"n1311857650": [
+{
+"@id": "n1311857650",
+"name": "Cité Universitaire Souissi الحي الجامعي السويسي",
+"name:ar": "الحي الجامعي السويسي",
+"name:fr": "Cité Universitaire Souissi",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+},
+{
+"@id": "n4592815886",
+"name": "Cité Universitaire Souissi الحي الجامعي السويسي",
+"name:ar": "الحي الجامعي السويسي",
+"name:fr": "Cité Universitaire Souissi",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+}
+],
+"n1311859342": [
+{
+"@id": "n1311859342",
+"description": "Tramway station",
+"name": "Agdal-Avenue de France أكدال-شارع فرنسا",
+"name:ar": "أكدال-شارع فرنسا",
+"name:fr": "Agdal-Avenue de France",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes",
+"wheelchair": "limited"
+},
+{
+"@id": "n4592815883",
+"description": "Tramway station",
+"name": "Agdal-Avenue de France أكدال-شارع فرنسا",
+"name:ar": "أكدال-شارع فرنسا",
+"name:fr": "Agdal-Avenue de France",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes",
+"wheelchair": "limited"
+}
+],
+"n1311859666": [
+{
+"@id": "n1311859666",
+"description": "Tramway station",
+"name": "Nations Unies الأمم المتحدة",
+"name:ar": "الأمم المتحدة",
+"name:fr": "Nations Unies",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes",
+"wheelchair": "limited"
+},
+{
+"@id": "n4592816491",
+"description": "Tramway station",
+"name": "Nations Unies الأمم المتحدة",
+"name:ar": "الأمم المتحدة",
+"name:fr": "Nations Unies",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes",
+"wheelchair": "limited"
+}
+],
+"n13591363928": [
+{
+"@id": "n621885811",
+"light_rail": "yes",
+"name": "بن عروس",
+"name:ar": "بن عروس",
+"name:fr": "Ben Arous",
+"public_transport": "stop_position",
+"railway": "stop"
+},
+{
+"@id": "n11483877209",
+"light_rail": "yes",
+"name": "بن عروس",
+"name:ar": "بن عروس",
+"name:fr": "Ben Arous",
+"public_transport": "stop_position",
+"railway": "stop"
+},
+{
+"@id": "n13591363928",
+"light_rail": "yes",
+"name": "بن عروس",
+"name:ar": "بن عروس",
+"name:fr": "Ben Arous",
+"public_transport": "station",
+"railway": "halt"
+},
+{
+"@id": "r20251731",
+"light_rail": "yes",
+"name": "بن عروس",
+"name:ar": "بن عروس",
+"name:fr": "Ben Arous",
+"public_transport": "stop_area",
+"type": "public_transport"
+}
+],
+"n13591363929": [
+{
+"@id": "n1094498822",
+"light_rail": "yes",
+"name": "أبو القاسم الشابي",
+"name:ar": "أبو القاسم الشابي",
+"name:etymology": "أبو القاسم الشابي",
+"name:etymology:wikidata": "Q335543",
+"name:etymology:wikipedia": "ar:أبو القاسم الشابي",
+"name:fr": "Abou El Kacem Echebbi",
+"public_transport": "stop_position",
+"railway": "stop"
+},
+{
+"@id": "n11483877208",
+"light_rail": "yes",
+"name": "أبو القاسم الشابي",
+"name:ar": "أبو القاسم الشابي",
+"name:etymology": "أبو القاسم الشابي",
+"name:etymology:wikidata": "Q335543",
+"name:etymology:wikipedia": "ar:أبو القاسم الشابي",
+"name:fr": "Abou El Kacem Echebbi",
+"public_transport": "stop_position",
+"railway": "stop"
+},
+{
+"@id": "n13591363929",
+"light_rail": "yes",
+"name": "أبو القاسم الشابي",
+"name:ar": "أبو القاسم الشابي",
+"name:etymology": "أبو القاسم الشابي",
+"name:etymology:wikidata": "Q335543",
+"name:etymology:wikipedia": "ar:أبو القاسم الشابي",
+"name:fr": "Abou El Kacem Echebbi",
+"public_transport": "station",
+"railway": "halt"
+},
+{
+"@id": "r20251732",
+"light_rail": "yes",
+"name": "أبو القاسم الشابي",
+"name:ar": "أبو القاسم الشابي",
+"name:fr": "Abou El Kacem Echebbi",
+"public_transport": "stop_area",
+"type": "public_transport"
+}
+],
+"n1385104799": [
+{
+"@id": "n1385104799",
+"name": "Diar ديار",
+"name:ar": "ديار",
+"name:fr": "Diar",
+"public_transport": "stop_position",
+"railway": "tram_stop"
+},
+{
+"@id": "n2972388882",
+"name": "Diar ديار",
+"name:ar": "ديار",
+"name:fr": "Diar",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+}
+],
+"n1385104813": [
+{
+"@id": "n1385104813",
+"name": "Hay Karima حي كريمة",
+"name:ar": "حي كريمة",
+"name:fr": "Hay Karima",
+"public_transport": "stop_position",
+"railway": "tram_stop"
+},
+{
+"@id": "n4592889795",
+"name": "Hay Karima حي كريمة",
+"name:ar": "حي كريمة",
+"name:fr": "Hay Karima",
+"public_transport": "stop_position",
+"railway": "tram_stop"
+}
+],
+"n1385104814": [
+{
+"@id": "n1385104814",
+"name": "Tabriquet تابريكت",
+"name:ar": "تابريكت",
+"name:fr": "Tabriquet",
+"public_transport": "stop_position",
+"railway": "tram_stop"
+},
+{
+"@id": "n2972388834",
+"name": "Tabriquet تابريكت",
+"name:ar": "تابريكت",
+"name:fr": "Tabriquet",
+"public_transport": "stop_position",
+"railway": "tram_stop"
+}
+],
+"n1385104815": [
+{
+"@id": "n1385104815",
+"name": "Mohammed V-Opéra محمد الخامس-أوبرا",
+"name:ar": "محمد الخامس-أوبرا",
+"name:fr": "Mohammed V-Opéra",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+},
+{
+"@id": "n2972378149",
+"name": "Mohammed V-Opéra محمد الخامس-أوبرا",
+"name:ar": "محمد الخامس-أوبرا",
+"name:fr": "Mohammed V-Opéra",
+"public_transport": "stop_position",
+"railway": "tram_stop"
+}
+],
+"n1385104817": [
+{
+"@id": "n1385104817",
+"name": "Place du 16 Novembre ساحة 16 نونبر",
+"name:ar": "ساحة 16 نونبر",
+"name:fr": "Place du 16 Novembre",
+"network": "STRS",
+"network:wikidata": "Q948685",
+"operator": "Transdev",
+"operator:wikidata": "Q442637",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+},
+{
+"@id": "n2972388903",
+"name": "Place du 16 Novembre ساحة 16 نونبر",
+"name:ar": "ساحة 16 نونبر",
+"name:fr": "Place du 16 Novembre",
+"network": "L1/L2",
+"operator": "TRANSDEV",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+}
+],
+"n1385104828": [
+{
+"@id": "n1385104828",
+"name": "La Poste البريد",
+"name:ar": "البريد",
+"name:fr": "La Poste",
+"public_transport": "stop_position",
+"railway": "tram_stop"
+},
+{
+"@id": "n4592889798",
+"name": "La Poste البريد",
+"name:ar": "البريد",
+"name:fr": "La Poste",
+"public_transport": "stop_position",
+"railway": "tram_stop"
+}
+],
+"n1385128920": [
+{
+"@id": "n1385128920",
+"name": "Arrazi الرازي",
+"name:ar": "الرازي",
+"name:fr": "Arrazi",
+"network": "STRS",
+"network:wikidata": "Q948685",
+"operator": "Transdev",
+"operator:wikidata": "Q442637",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"ref": "12",
+"tram": "yes"
+},
+{
+"@id": "n4592889789",
+"name": "Arrazi الرازي",
+"name:ar": "الرازي",
+"name:fr": "Arrazi",
+"network": "STRS",
+"network:wikidata": "Q948685",
+"operator": "Transdev",
+"operator:wikidata": "Q442637",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"ref": "3",
+"tram": "yes"
+}
+],
+"n1385128927": [
+{
+"@id": "n1385128927",
+"name": "Ibn Rochd ابن رشد",
+"name:ar": "ابن رشد",
+"name:fr": "Ibn Rochd",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+},
+{
+"@id": "n4592889797",
+"name": "Ibn Rochd ابن رشد",
+"name:ar": "ابن رشد",
+"name:fr": "Ibn Rochd",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+}
+],
+"n1385128949": [
+{
+"@id": "n1385128949",
+"name": "Ibn Sina ابن سينا",
+"name:ar": "ابن سينا",
+"name:fr": "Ibn Sina",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+},
+{
+"@id": "n4592815888",
+"name": "Ibn Sina ابن سينا",
+"name:ar": "ابن سينا",
+"name:fr": "Ibn Sina",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+}
+],
+"n1385128950": [
+{
+"@id": "n1385128950",
+"name": "Place de Russie ساحة روسيا",
+"name:ar": "ساحة روسيا",
+"name:fr": "Place de Russie",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+},
+{
+"@id": "n4592889801",
+"name": "Place de Russie ساحة روسيا",
+"name:ar": "ساحة روسيا",
+"name:fr": "Place de Russie",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+}
+],
+"n1385128952": [
+{
+"@id": "n1385128952",
+"name": "Hassan II الحسن الثاني",
+"name:ar": "الحسن الثاني",
+"name:fr": "Hassan II",
+"network": "STRS",
+"network:wikidata": "Q948685",
+"operator": "Transdev",
+"operator:wikidata": "Q442637",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"ref": "14",
+"tram": "yes"
+},
+{
+"@id": "n4592889794",
+"name": "Hassan II الحسن الثاني",
+"name:ar": "الحسن الثاني",
+"name:fr": "Hassan II",
+"network": "L2",
+"operator": "TRANSDEV",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"ref": "1",
+"tram": "yes"
+}
+],
+"n1385128984": [
+{
+"@id": "n1385128984",
+"name": "Bab El Had باب الحد",
+"name:ar": "باب الحد",
+"name:fr": "Bab El Had",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+},
+{
+"@id": "n4592889791",
+"name": "Bab El Had باب الحد",
+"name:ar": "باب الحد",
+"name:fr": "Bab El Had",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+}
+],
+"n1385129016": [
+{
+"@id": "n1385129016",
+"name": "Bettana بطانة",
+"name:ar": "بطانة",
+"name:fr": "Bettana",
+"network": "STRS",
+"network:wikidata": "Q948685",
+"operator": "Transdev",
+"operator:wikidata": "Q442637",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"ref": "13",
+"tram": "yes"
+},
+{
+"@id": "n4592889793",
+"name": "Bettana بطانة",
+"name:ar": "بطانة",
+"name:fr": "Bettana",
+"network": "STRS",
+"network:wikidata": "Q948685",
+"operator": "Transdev",
+"operator:wikidata": "Q442637",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"ref": "2",
+"tram": "yes"
+}
+],
+"n1626899500": [
+{
+"@id": "n1626899500",
+"name": "حي 5 جويلية",
+"name:ar": "حي 5 جويلية",
+"name:fr": "Cité 5 juillet",
+"network": "ترامواي الجزائر",
+"network:wikidata": "Q1688502",
+"operator": "SETRAM",
+"operator:wikidata": "Q22688489",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+},
+{
+"@id": "n3513576390",
+"name": "حي 5 جويلية",
+"name:ar": "حي 5 جويلية",
+"name:fr": "Cité 5 juillet",
+"network": "ترامواي الجزائر",
+"network:wikidata": "Q1688502",
+"operator": "SETRAM",
+"operator:wikidata": "Q22688489",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+}
+],
+"n1653197101": [
+{
+"@id": "n1653197101",
+"name": "Bab Chellah باب شالة",
+"name:ar": "باب شالة",
+"name:fr": "Bab Chellah",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+},
+{
+"@id": "n4592889790",
+"name": "Bab Chellah باب شالة",
+"name:ar": "باب شالة",
+"name:fr": "Bab Chellah",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+}
+],
+"n1653197102": [
+{
+"@id": "n1653197102",
+"name": "Bab Rouah باب الرواح",
+"name:ar": "باب الرواح",
+"name:fr": "Bab Rouah",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes",
+"wheelchair": "limited"
+},
+{
+"@id": "n4592815884",
+"name": "Bab Rouah باب الرواح",
+"name:ar": "باب الرواح",
+"name:fr": "Bab Rouah",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes",
+"wheelchair": "limited"
+}
+],
+"n1653197107": [
+{
+"@id": "n1653197107",
+"name": "Medina Rabat الرباط المدينة العتيقة",
+"name:ar": "الرباط المدينة العتيقة",
+"name:fr": "Medina Rabat",
+"name:ko": "메디나 라바트",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+},
+{
+"@id": "n4592889799",
+"name": "Medina Rabat الرباط المدينة العتيقة",
+"name:ar": "الرباط المدينة العتيقة",
+"name:fr": "Medina Rabat",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+}
+],
+"n1654142232": [
+{
+"@id": "n1654142232",
+"name": "Pont Hassan II قنطرة الحسن الثاني",
+"name:ar": "قنطرة الحسن الثاني",
+"name:fr": "Pont Hassan II",
+"network": "STRS",
+"network:wikidata": "Q948685",
+"operator": "Transdev",
+"operator:wikidata": "Q442637",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"ref": "10",
+"tram": "yes"
+},
+{
+"@id": "n2972378141",
+"name": "Pont Hassan II قنطرة الحسن الثاني",
+"name:ar": "قنطرة الحسن الثاني",
+"name:fr": "Pont Hassan II",
+"network": "STRS",
+"network:wikidata": "Q948685",
+"operator": "Transdev",
+"operator:wikidata": "Q442637",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+},
+{
+"@id": "w152606703",
+"bridge": "viaduct",
+"electrified": "contact_line",
+"frequency": "0",
+"gauge": "1435",
+"layer": "1",
+"name": "Pont Hassan II قنطرة الحسن الثاني",
+"name:ar": "قنطرة الحسن الثاني",
+"name:fr": "Pont Hassan II",
+"railway": "tram",
+"voltage": "750",
+"wikidata": "Q3396654",
+"wikipedia": "fr:Pont Moulay-Hassan"
+},
+{
+"@id": "w293629374",
+"bridge": "viaduct",
+"electrified": "contact_line",
+"frequency": "0",
+"gauge": "1435",
+"layer": "1",
+"name": "Pont Hassan II قنطرة الحسن الثاني",
+"name:ar": "قنطرة الحسن الثاني",
+"name:en": "Hassan II Bridge",
+"name:fr": "Pont Hassan II",
+"railway": "tram",
+"voltage": "750"
+}
+],
+"n1654158466": [
+{
+"@id": "n1654158466",
+"name": "Bab Lamrissa باب لمريسة",
+"name:ar": "باب لمريسة",
+"name:fr": "Bab Lamrissa",
+"network": "STRS",
+"network:wikidata": "Q948685",
+"operator": "Transdev",
+"operator:wikidata": "Q442637",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+},
+{
+"@id": "n4592889792",
+"name": "Bab Lamrissa باب لمريسة",
+"name:ar": "باب لمريسة",
+"name:fr": "Bab Lamrissa",
+"network": "STRS",
+"network:wikidata": "Q948685",
+"operator": "Transdev",
+"operator:wikidata": "Q442637",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"ref": "4",
+"tram": "yes"
+}
+],
+"n1781193981": [
+{
+"@id": "n1781193981",
+"funicular": "yes",
+"name": "山頂",
+"name:ja-Latn": "Sanchō",
+"network": "もーりすカー",
+"public_transport": "stop_position",
+"railway": "stop"
+}
+],
+"n2235605394": [
+{
+"@id": "n2235605394",
+"name": "Ali Yata علي يعتة",
+"name:ar": "علي يعتة",
+"name:fr": "Ali Yata",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"ref": "13",
+"tram": "yes"
+},
+{
+"@id": "n2238332442",
+"name": "Ali Yata علي يعتة",
+"name:ar": "علي يعتة",
+"name:fr": "Ali Yata",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"ref": "13",
+"tram": "yes"
+}
+],
+"n2253518514": [
+{
+"@id": "n2253518514",
+"name": "الهواء الجميل",
+"name:ar": "الهواء الجميل",
+"name:fr": "La Glacière",
+"network": "ترامواي الجزائر",
+"network:wikidata": "Q1688502",
+"operator": "SETRAM",
+"operator:wikidata": "Q22688489",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+},
+{
+"@id": "n3513712819",
+"name": "الهواء الجميل",
+"name:ar": "الهواء الجميل",
+"name:fr": "La Glacière",
+"network": "ترامواي الجزائر",
+"network:wikidata": "Q1688502",
+"operator": "SETRAM",
+"operator:wikidata": "Q22688489",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+}
+],
+"n2402077544": [
+{
+"@id": "n2402077544",
+"name": "طرابلس- الثعالبية",
+"name:ar": "طرابلس- الثعالبية",
+"name:fr": "Tripoli - Thâalibia",
+"operator": "SETRAM",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+},
+{
+"@id": "n3513729589",
+"name": "طرابلس- الثعالبية",
+"name:ar": "طرابلس- الثعالبية",
+"name:fr": "Tripoli - Thâalibia",
+"network": "ترامواي الجزائر",
+"network:wikidata": "Q1688502",
+"operator": "SETRAM",
+"operator:wikidata": "Q22688489",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+}
+],
+"n2537049183": [
+{
+"@id": "n974490567",
+"alt_name:ar": "10 كانون الأول 1984",
+"light_rail": "yes",
+"name": "10 ديسمبر 1984",
+"name:ar": "10 ديسمبر 1984",
+"name:fr": "10 Décembre 1948",
+"public_transport": "stop_position",
+"railway": "stop"
+},
+{
+"@id": "n2526623450",
+"alt_name:ar": "10 كانون الأول 1984",
+"light_rail": "yes",
+"name": "10 ديسمبر 1984",
+"name:ar": "10 ديسمبر 1984",
+"name:fr": "10 Décembre 1948",
+"public_transport": "stop_position",
+"railway": "stop"
+},
+{
+"@id": "n5815305346",
+"alt_name:ar": "10 كانون الأول 1984",
+"light_rail": "yes",
+"name": "10 ديسمبر 1984",
+"name:ar": "10 ديسمبر 1984",
+"name:fr": "10 Décembre 1948",
+"public_transport": "station",
+"railway": "station",
+"ref": "خط 2, 12",
+"station": "light_rail"
+},
+{
+"@id": "r8510910",
+"name": "10 ديسمبر 1984",
+"name:ar": "10 ديسمبر 1984",
+"name:fr": "10 Décembre 1948",
+"public_transport": "stop_area",
+"type": "public_transport"
+}
+],
+"n2972388898": [
+{
+"@id": "n2972388898",
+"name": "Gare de Salé محطة القطار سلا",
+"name:ar": "محطة القطار سلا",
+"name:fr": "Gare de Salé",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+}
+],
+"n3220011760": [
+{
+"@id": "n3220011760",
+"name": "مقهى شرقي",
+"name:ar": "مقهى شرقي",
+"name:fr": "Café Chergui",
+"network": "ترامواي الجزائر",
+"network:wikidata": "Q1688502",
+"operator": "SETRAM",
+"operator:wikidata": "Q22688489",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"source": "local knowledge",
+"tram": "yes"
+},
+{
+"@id": "n3513515526",
+"name": "مقهى شرقي",
+"name:ar": "مقهى شرقي",
+"name:fr": "Café Chergui",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+}
+],
+"n3694495396": [
+{
+"@id": "n3694495396",
+"name": "الحي الدبلوماسي",
+"name:ar": "الحي الدبلوماسي",
+"name:fr": "Cité Diplomatique",
+"network": "ترامواي الجزائر",
+"network:wikidata": "Q1688502",
+"operator": "SETRAM",
+"operator:wikidata": "Q22688489",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"source": "local knowledge",
+"tram": "yes"
+},
+{
+"@id": "n4377305014",
+"name": "الحي الدبلوماسي",
+"name:fr": "Cité Diplomatique",
+"operator": "SETRAM",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+}
+],
+"n3694495413": [
+{
+"@id": "n3694495413",
+"name": "جامعة درقانة",
+"name:ar": "جامعة درقانة",
+"name:fr": "Faculté Biomédicale",
+"operator": "SETRAM",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"source": "local knowledge",
+"tram": "yes"
+},
+{
+"@id": "n4377305016",
+"name": "جامعة درقانة",
+"name:ar": "جامعة درقانة",
+"name:fr": "Faculté Biomédicale",
+"network": "ترامواي الجزائر",
+"network:wikidata": "Q1688502",
+"operator": "SETRAM",
+"operator:wikidata": "Q22688489",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"source": "local knowledge",
+"tram": "yes"
+}
+],
+"n3843950316": [
+{
+"@id": "n1037170496",
+"light_rail": "yes",
+"name": "الانطلاقة",
+"name:ar": "الانطلاقة",
+"name:fr": "Intilaka",
+"public_transport": "stop_position",
+"railway": "stop"
+},
+{
+"@id": "n3843950316",
+"addr:city": "تونس",
+"addr:city:ar": "تونس",
+"light_rail": "yes",
+"name": "الانطلاقة",
+"name:ar": "الانطلاقة",
+"name:fr": "Intilaka",
+"public_transport": "station",
+"railway": "station",
+"station": "light_rail"
+},
+{
+"@id": "n5814938565",
+"light_rail": "yes",
+"name": "الانطلاقة",
+"name:ar": "الانطلاقة",
+"name:fr": "Intilaka",
+"public_transport": "stop_position",
+"railway": "stop"
+},
+{
+"@id": "r8510680",
+"name": "الانطلاقة",
+"name:ar": "الانطلاقة",
+"name:fr": "Intilaka",
+"public_transport": "stop_area",
+"type": "public_transport"
+}
+],
+"n3843956271": [
+{
+"@id": "n3843956271",
+"light_rail": "yes",
+"name": "التضامن",
+"name:ar": "التضامن",
+"name:fr": "Ettadhamen",
+"public_transport": "station",
+"railway": "station"
+},
+{
+"@id": "r8510681",
+"name": "التضامن",
+"name:ar": "التضامن",
+"name:fr": "Ettadhamen",
+"public_transport": "stop_area",
+"type": "public_transport"
+}
+],
+"n3995088058": [
+{
+"@id": "n3995088058",
+"light_rail": "yes",
+"name": "العمران الأعلى",
+"name:ar": "العمران الأعلى",
+"name:fr": "Omrane Superieur",
+"operator": "شركة النقل بتونس",
+"public_transport": "station",
+"railway": "station"
+},
+{
+"@id": "n5814938595",
+"light_rail": "yes",
+"name": "العمران الأعلى",
+"name:ar": "العمران الأعلى",
+"name:fr": "Omrane Superieur",
+"operator": "شركة النقل بتونس",
+"public_transport": "stop_position"
+},
+{
+"@id": "n5814938596",
+"light_rail": "yes",
+"name": "العمران الأعلى",
+"name:ar": "العمران الأعلى",
+"name:fr": "Omrane Superieur",
+"operator": "شركة النقل بتونس",
+"public_transport": "stop_position"
+},
+{
+"@id": "r8510682",
+"name": "العمران الأعلى",
+"name:ar": "العمران الأعلى",
+"name:fr": "Omrane Superieur",
+"operator": "شركة النقل بتونس",
+"public_transport": "stop_area",
+"type": "public_transport"
+}
+],
+"n3995088067": [
+{
+"@id": "n1095146413",
+"light_rail": "yes",
+"name": "الياسمين",
+"name:ar": "الياسمين",
+"name:fr": "Les Jasmins",
+"operator": "شركة النقل بتونس",
+"public_transport": "stop_position"
+},
+{
+"@id": "n3995088067",
+"light_rail": "yes",
+"name": "الياسمين",
+"name:ar": "الياسمين",
+"name:fr": "Les Jasmins",
+"operator": "شركة النقل بتونس",
+"public_transport": "station",
+"railway": "station"
+},
+{
+"@id": "n5814938633",
+"light_rail": "yes",
+"name": "الياسمين",
+"name:ar": "الياسمين",
+"name:fr": "Les Jasmins",
+"operator": "شركة النقل بتونس",
+"public_transport": "stop_position"
+},
+{
+"@id": "r8510684",
+"name": "الياسمين",
+"name:ar": "الياسمين",
+"name:fr": "Les Jasmins",
+"operator": "شركة النقل بتونس",
+"public_transport": "stop_area",
+"type": "public_transport"
+}
+],
+"n4018753114": [
+{
+"@id": "n4018753114",
+"addr:city": "سيدي بلعباس",
+"addr:city:ar": "سيدي بلعباس",
+"name": "الأمير عبد القادر",
+"name:ar": "الأمير عبد القادر",
+"name:kab-Arab": "الأمير عبدالقادر",
+"operator": "سيترام",
+"operator:ar": "سيترام",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"shelter": "yes",
+"tram": "yes"
+},
+{
+"@id": "n9064774959",
+"addr:city": "سيدي بلعباس",
+"addr:city:ar": "سيدي بلعباس",
+"name": "الأمير عبد القادر",
+"name:ar": "الأمير عبد القادر",
+"name:kab-Arab": "الأمير عبدالقادر",
+"operator": "سيترام",
+"operator:ar": "سيترام",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"shelter": "yes",
+"tram": "yes"
+}
+],
+"n4244309716": [
+{
+"@id": "n4244309716",
+"name": "Derb Ghalef درب غلف",
+"name:ar": "درب غلف",
+"name:fr": "Derb Ghalef",
+"network": "Casa Tramway",
+"network:wikidata": "Q1522904",
+"operator": "RATP Dev",
+"operator:wikidata": "Q16040901",
+"public_transport": "stop_position",
+"public_transport:version": "2",
+"railway": "tram_stop",
+"ref": "36",
+"tram": "yes"
+},
+{
+"@id": "n4244309717",
+"name": "Derb Ghalef درب غلف",
+"name:ar": "درب غلف",
+"name:fr": "Derb Ghalef",
+"network": "Casa Tramway",
+"network:wikidata": "Q1522904",
+"operator": "RATP Dev",
+"operator:wikidata": "Q16040901",
+"public_transport": "stop_position",
+"public_transport:version": "2",
+"railway": "tram_stop",
+"ref": "36",
+"tram": "yes"
+}
+],
+"n452418787": [
+{
+"@id": "n452418787",
+"name": "حي مختار زرهوني",
+"name:ar": "حي مختار زرهوني",
+"name:fr": "Cité Mokhtar Zerhouni",
+"network": "ترامواي الجزائر",
+"network:wikidata": "Q1688502",
+"operator": "SETRAM",
+"operator:wikidata": "Q22688489",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+},
+{
+"@id": "n3513613686",
+"name": "حي مختار زرهوني",
+"name:ar": "حي مختار زرهوني",
+"name:fr": "Cité Mokhtar Zerhouni",
+"network": "ترامواي الجزائر",
+"network:wikidata": "Q1688502",
+"operator": "SETRAM",
+"operator:wikidata": "Q22688489",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+}
+],
+"n4592815885": [
+{
+"@id": "n4592815885",
+"name": "Bibliothèque Nationale المكتبة الوطنية",
+"name:ar": "المكتبة الوطنية",
+"name:fr": "Bibliothèque Nationale",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes",
+"wheelchair": "limited"
+}
+],
+"n4592816492": [
+{
+"@id": "n4592816492",
+"name": "Place Al Joulane L1 ساحة الجولان الخط الأول",
+"name:ar": "ساحة الجولان الخط الأول",
+"name:fr": "Place Al Joulane L1",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+}
+],
+"n4592889796": [
+{
+"@id": "n4592889796",
+"name": "Hôpital Moulay Youssef مستشفى مولاي يوسف",
+"name:ar": "مستشفى مولاي يوسف",
+"name:fr": "Hôpital Moulay Youssef",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+}
+],
+"n4592889800": [
+{
+"@id": "n4592889800",
+"name": "Place Al Joulane L2 ساحة الجولان الخط الثاني",
+"name:ar": "ساحة الجولان الخط الثاني",
+"name:fr": "Place Al Joulane L2",
+"public_transport": "platform",
+"railway": "tram_stop"
+}
+],
+"n4592889802": [
+{
+"@id": "n4592889802",
+"name": "Sidi Mohammed Ben Abdellah سيدي محمد ابن عبد الله",
+"name:ar": "سيدي محمد ابن عبد الله",
+"name:fr": "Sidi Mohammed Ben Abdellah",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+}
+],
+"n472084248": [
+{
+"@id": "n472084248",
+"alt_name:ft": "RUBE 1",
+"name": "الإقامة الجامعية - ح ج ب 1",
+"name:ar": "الإقامة الجامعية - ح ج ب 1",
+"name:fr": "Cité Universitaire - CUB 1",
+"network": "ترامواي الجزائر",
+"network:wikidata": "Q1688502",
+"operator": "SETRAM",
+"operator:wikidata": "Q22688489",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+},
+{
+"@id": "n3513575500",
+"name": "الإقامة الجامعية - ح ج ب 1",
+"name:ar": "الإقامة الجامعية - ح ج ب 1",
+"name:fr": "Cité Universitaire - CUB 1",
+"network": "ترامواي الجزائر",
+"network:wikidata": "Q1688502",
+"operator": "SETRAM",
+"operator:wikidata": "Q22688489",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+}
+],
+"n472084262": [
+{
+"@id": "n472084262",
+"name": "باب الزوار - الجسر",
+"name:ar": "باب الزوار - الجسر",
+"name:fr": "Bab Ezzouar - Le Pont",
+"network": "ترامواي الجزائر",
+"network:wikidata": "Q1688502",
+"operator": "SETRAM",
+"operator:wikidata": "Q22688489",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+},
+{
+"@id": "n3513574204",
+"name": "باب الزوار - الجسر",
+"name:ar": "باب الزوار - الجسر",
+"name:fr": "Bab Ezzouar - Le Pont",
+"network": "ترامواي الجزائر",
+"network:wikidata": "Q1688502",
+"operator": "SETRAM",
+"operator:wikidata": "Q22688489",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+}
+],
+"n472084274": [
+{
+"@id": "n472084274",
+"alt_name:ar": "جامعة العلوم و التكنولوجيا هواري بومدين",
+"alt_name:fr": "Université USTHB",
+"name": "جامعة باب الزوار",
+"name:ar": "جامعة باب الزوار",
+"name:fr": "Université de Bab Ezzouar",
+"network": "ترامواي الجزائر",
+"network:wikidata": "Q1688502",
+"operator": "SETRAM",
+"operator:wikidata": "Q22688489",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+},
+{
+"@id": "n3513604611",
+"name": "جامعة باب الزوار",
+"name:ar": "جامعة باب الزوار",
+"name:fr": "Université de Bab Ezzouar",
+"network": "ترامواي الجزائر",
+"network:wikidata": "Q1688502",
+"operator": "SETRAM",
+"operator:wikidata": "Q22688489",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+}
+],
+"n472084279": [
+{
+"@id": "n472084279",
+"name": "حي رابية",
+"name:ar": "حي رابية",
+"name:fr": "Cité Rabia",
+"network": "ترامواي الجزائر",
+"network:wikidata": "Q1688502",
+"operator": "SETRAM",
+"operator:wikidata": "Q22688489",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+},
+{
+"@id": "n3513576791",
+"name": "حي رابية",
+"name:ar": "حي رابية",
+"name:fr": "Cité Rabia",
+"network": "ترامواي الجزائر",
+"network:wikidata": "Q1688502",
+"operator": "SETRAM",
+"operator:wikidata": "Q22688489",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+}
+],
+"n472084291": [
+{
+"@id": "n472084291",
+"name": "حي المندرين",
+"name:ar": "حي المندرين",
+"name:fr": "Tamaris",
+"network": "ترامواي الجزائر",
+"network:wikidata": "Q1688502",
+"operator": "SETRAM",
+"operator:wikidata": "Q22688489",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+},
+{
+"@id": "n3513616950",
+"name": "حي المندرين",
+"name:ar": "حي المندرين",
+"name:fr": "Tamaris",
+"network": "ترامواي الجزائر",
+"network:wikidata": "Q1688502",
+"operator:wikidata": "Q22688489",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+}
+],
+"n472084293": [
+{
+"@id": "n472084293",
+"name": "الصنوبر",
+"name:ar": "الصنوبر",
+"name:fr": "Les Pins",
+"network": "ترامواي الجزائر",
+"network:wikidata": "Q1688502",
+"operator": "SETRAM",
+"operator:wikidata": "Q22688489",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+},
+{
+"@id": "n3513613882",
+"name": "الصنوبر",
+"name:ar": "الصنوبر",
+"name:fr": "Les Pins",
+"network": "ترامواي الجزائر",
+"network:wikidata": "Q1688502",
+"operator": "SETRAM",
+"operator:wikidata": "Q22688489",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+}
+],
+"n472084301": [
+{
+"@id": "n472084301",
+"name": "قصر المعارض",
+"name:ar": "قصر المعارض",
+"name:fr": "Foire d'Alger",
+"network": "ترامواي الجزائر",
+"network:wikidata": "Q1688502",
+"operator": "SETRAM",
+"operator:wikidata": "Q22688489",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+},
+{
+"@id": "n3513651506",
+"name": "قصر المعارض",
+"name:ar": "قصر المعارض",
+"name:fr": "Foire d'Alger",
+"network": "ترامواي الجزائر",
+"network:wikidata": "Q1688502",
+"operator": "SETRAM",
+"operator:wikidata": "Q22688489",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+}
+],
+"n472089383": [
+{
+"@id": "n472089383",
+"alt_name:ar": "سان ميزون",
+"name": "الديار الخمس",
+"name:ar": "الديار الخمس",
+"name:fr": "Cinq Maisons",
+"network": "ترامواي الجزائر",
+"network:wikidata": "Q1688502",
+"operator": "SETRAM",
+"operator:wikidata": "Q22688489",
+"railway": "tram_stop"
+},
+{
+"@id": "n3513668361",
+"name": "الديار الخمس",
+"name:ar": "الديار الخمس",
+"name:fr": "Cinq Maisons",
+"network": "ترامواي الجزائر",
+"network:wikidata": "Q1688502",
+"operator:wikidata": "Q22688489",
+"railway": "tram_stop"
+}
+],
+"n472089401": [
+{
+"@id": "n472089401",
+"name": "جسر الحراش",
+"name:ar": "جسر الحراش",
+"name:fr": "Pont El Harrach",
+"network": "ترامواي الجزائر",
+"network:wikidata": "Q1688502",
+"operator": "SETRAM",
+"operator:wikidata": "Q22688489",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+},
+{
+"@id": "n3513698842",
+"name": "جسر الحراش",
+"name:ar": "جسر الحراش",
+"name:fr": "Pont El-Harrach",
+"network": "ترامواي الجزائر",
+"network:wikidata": "Q1688502",
+"operator": "SETRAM",
+"operator:wikidata": "Q22688489",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+}
+],
+"n472089412": [
+{
+"@id": "n472089412",
+"name": "طرابلس - المقرية",
+"name:ar": "طرابلس - المقرية",
+"name:fr": "Tripoli - Makaria",
+"network": "ترامواي الجزائر",
+"network:wikidata": "Q1688502",
+"operator": "SETRAM",
+"operator:wikidata": "Q22688489",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+},
+{
+"@id": "n3513726622",
+"name": "طرابلس - المقرية",
+"name:ar": "طرابلس - المقرية",
+"name:fr": "Tripoli-Magharia",
+"network": "ترامواي الجزائر",
+"network:wikidata": "Q1688502",
+"operator:wikidata": "Q22688489",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+}
+],
+"n472089415": [
+{
+"@id": "n472089415",
+"name": "طرابلس - حمداش",
+"name:ar": "طرابلس - حمداش",
+"name:fr": "Tripoli - Hamadeche",
+"operator": "SETRAM",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+}
+],
+"n472089416": [
+{
+"@id": "n472089416",
+"name": "طرابلس - المسجد",
+"name:ar": "طرابلس - المسجد",
+"name:fr": "Tripoli - Mosquée",
+"network": "ترامواي الجزائر",
+"network:wikidata": "Q1688502",
+"operator": "SETRAM",
+"operator:wikidata": "Q22688489",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+},
+{
+"@id": "n3513729802",
+"name": "طرابلس - المسجد",
+"name:ar": "طرابلس - المسجد",
+"name:fr": "Tripoli - Mosquée",
+"network": "ترامواي الجزائر",
+"network:wikidata": "Q1688502",
+"operator": "SETRAM",
+"operator:wikidata": "Q22688489",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+}
+],
+"n472089428": [
+{
+"@id": "n472089428",
+"name": "المعدومين",
+"name:ar": "المعدومين",
+"name:fr": "Les Fusillés",
+"network": "ترامواي الجزائر",
+"network:wikidata": "Q1688502",
+"operator": "SETRAM",
+"operator:wikidata": "Q22688489",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+},
+{
+"@id": "n3512265690",
+"name": "المعدومين",
+"name:ar": "المعدومين",
+"name:fr": "Les Fusillés",
+"network": "ترامواي الجزائر",
+"network:wikidata": "Q1688502",
+"operator": "SETRAM",
+"operator:wikidata": "Q22688489",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+}
+],
+"n4744043898": [
+{
+"@id": "n4744043898",
+"name": "Yoshlik bogʻi",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+},
+{
+"@id": "n12942486438",
+"name": "Yoshlik bogʻi",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+}
+],
+"n5189495426": [
+{
+"@id": "n5189495426",
+"name": "الكولونيل صديقي العربي",
+"name:ar": "الكولونيل صديقي العربي",
+"name:fr": "Colonel Seddiki Larbi",
+"public_transport": "stop_position",
+"railway": "tram_stop"
+},
+{
+"@id": "n8907462427",
+"name": "الكولونيل صديقي العربي",
+"name:ar": "الكولونيل صديقي العربي",
+"name:fr": "Colonel Seddiki Larbi",
+"public_transport": "stop_position",
+"railway": "tram_stop"
+}
+],
+"n5189495434": [
+{
+"@id": "n5189495434",
+"name": "بن عباس حمادي",
+"name:ar": "بن عباس حمادي",
+"name:fr": "Ben Abbas Hammadi",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+},
+{
+"@id": "n8907462428",
+"name": "بن عباس حمادي",
+"name:ar": "بن عباس حمادي",
+"name:fr": "Ben Abbas Hammadi",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+}
+],
+"n5189495446": [
+{
+"@id": "n5189495446",
+"name": "حساني الطيب",
+"name:ar": "حساني الطيب",
+"name:fr": "Hassani Taib",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+},
+{
+"@id": "n8907462430",
+"name": "حساني الطيب",
+"name:ar": "حساني الطيب",
+"name:fr": "Hassani Taib",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+}
+],
+"n5189495455": [
+{
+"@id": "n5189495455",
+"name": "المخادمة",
+"name:ar": "المخادمة",
+"name:fr": "Mekhadma",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+},
+{
+"@id": "n8907462431",
+"name": "المخادمة",
+"name:ar": "المخادمة",
+"name:fr": "Mekhadma",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+}
+],
+"n5189495493": [
+{
+"@id": "n5189495493",
+"name": "تمام أحمد",
+"name:ar": "تمام أحمد",
+"name:fr": "Tamam Ahmed",
+"public_transport": "stop_position",
+"railway": "tram_stop"
+},
+{
+"@id": "n8906957121",
+"name": "تمام أحمد",
+"name:ar": "تمام أحمد",
+"name:fr": "Tamam Ahmed",
+"public_transport": "stop_position",
+"railway": "tram_stop"
+}
+],
+"n5190429100": [
+{
+"@id": "n5190429100",
+"name": "سيد روحو",
+"name:ar": "سيد روحو",
+"name:fr": "Sid Rouhou",
+"public_transport": "stop_position",
+"railway": "tram_stop"
+},
+{
+"@id": "n8907462424",
+"name": "سيد روحو",
+"name:ar": "سيد روحو",
+"name:fr": "Sid Rouhou",
+"public_transport": "stop_position",
+"railway": "tram_stop"
+}
+],
+"n5201114708": [
+{
+"@id": "n5201114708",
+"name": "صفراني عبد القادر",
+"name:ar": "صفراني عبد القادر",
+"name:fr": "Safrani Abdelkader",
+"public_transport": "stop_position",
+"railway": "tram_stop"
+},
+{
+"@id": "n8906957019",
+"name": "صفراني عبد القادر",
+"name:ar": "صفراني عبد القادر",
+"name:fr": "Safrani Abdelkader",
+"public_transport": "stop_position",
+"railway": "tram_stop"
+}
+],
+"n5201117522": [
+{
+"@id": "n5201117522",
+"name": "خليل عبد القادر",
+"name:ar": "خليل عبد القادر",
+"name:fr": "Khalil Abdelkader",
+"public_transport": "stop_position",
+"railway": "tram_stop"
+},
+{
+"@id": "n8906957027",
+"name": "خليل عبد القادر",
+"name:ar": "خليل عبد القادر",
+"name:fr": "Khalil Abdelkader",
+"public_transport": "stop_position",
+"railway": "tram_stop"
+}
+],
+"n5501907013": [
+{
+"@id": "n5501907013",
+"name": "شنين قدور",
+"name:ar": "شنين قدور",
+"name:fr": "Chenine Kadour",
+"public_transport": "stop_position",
+"railway": "tram_stop"
+}
+],
+"n5501907014": [
+{
+"@id": "n5501907014",
+"name": "27 فيفري 1962",
+"name:ar": "27 فيفري 1962",
+"name:fr": "27 février 1962",
+"public_transport": "stop_position",
+"railway": "tram_stop"
+},
+{
+"@id": "n8906956982",
+"name": "27 فيفري 1962",
+"name:ar": "27 فيفري 1962",
+"name:fr": "27 février 1962",
+"public_transport": "stop_position",
+"railway": "tram_stop"
+}
+],
+"n5501907127": [
+{
+"@id": "n5501907127",
+"name": "المحطة متعددة الخدمات",
+"name:ar": "المحطة متعددة الخدمات",
+"name:fr": "Station multimodale",
+"public_transport": "stop_position",
+"railway": "tram_stop"
+},
+{
+"@id": "n8906956976",
+"name": "المحطة متعددة الخدمات",
+"name:ar": "المحطة متعددة الخدمات",
+"name:fr": "Station multimodale",
+"public_transport": "stop_position",
+"railway": "tram_stop"
+}
+],
+"n5501907128": [
+{
+"@id": "n5501907128",
+"name": "القطب الجامعي الجديد",
+"name:ar": "القطب الجامعي الجديد",
+"name:fr": "Le nouveau pôle universitaire",
+"public_transport": "stop_position",
+"railway": "tram_stop"
+},
+{
+"@id": "n8906957088",
+"name": "القطب الجامعي الجديد",
+"name:ar": "القطب الجامعي الجديد",
+"name:fr": "Le nouveau pôle universitaire",
+"public_transport": "stop_position",
+"railway": "tram_stop"
+}
+],
+"n5501907130": [
+{
+"@id": "n5501907130",
+"name": "العلامة محمد بن حاج عيسى",
+"name:ar": "العلامة محمد بن حاج عيسى",
+"name:fr": "Mohamed ben Hadj Aissa",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+},
+{
+"@id": "n8906957132",
+"name": "العلامة محمد بن حاج عيسى",
+"name:ar": "العلامة محمد بن حاج عيسى",
+"name:fr": "Mohamed ben Hadj Aissa",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+}
+],
+"n5501907131": [
+{
+"@id": "n5501907131",
+"name": "الشيخ بن عطية جلول",
+"name:ar": "الشيخ بن عطية جلول",
+"name:fr": "Cheikh ben Attia Djelloul",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+},
+{
+"@id": "n8906957143",
+"name": "الشيخ بن عطية جلول",
+"name:ar": "الشيخ بن عطية جلول",
+"name:fr": "Cheikh ben Attia Djelloul",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+}
+],
+"n5501907132": [
+{
+"@id": "n5501907132",
+"name": "الشطي الوكال",
+"name:ar": "الشطي الوكال",
+"name:fr": "el Chatti el Wakal",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+},
+{
+"@id": "n8907462433",
+"name": "الشطي الوكال",
+"name:ar": "الشطي الوكال",
+"name:fr": "el Chatti el Wakal",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+}
+],
+"n5501907134": [
+{
+"@id": "n5501907134",
+"name": "زوبيدي عبد القادر",
+"name:ar": "زوبيدي عبد القادر",
+"name:fr": "Zoubidi Abdelkader",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+},
+{
+"@id": "n8907462429",
+"name": "زوبيدي عبد القادر",
+"name:ar": "زوبيدي عبد القادر",
+"name:fr": "Zoubidi Abdelkader",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+}
+],
+"n5806301475": [
+{
+"@id": "n5625819236",
+"light_rail": "yes",
+"name": "المركب الجامعي",
+"name:ar": "المركبالجامعي",
+"name:fr": "Campus Universitaire",
+"operator": "شركة النقل بتونس",
+"public_transport": "stop_position"
+},
+{
+"@id": "n5625819238",
+"light_rail": "yes",
+"name": "المركب الجامعي",
+"name:ar": "المركب الجامعي",
+"name:fr": "Campus Universitaire",
+"operator": "شركة النقل بتونس",
+"public_transport": "stop_position",
+"railway": "stop"
+},
+{
+"@id": "n5806301475",
+"addr:city": "منوبة",
+"light_rail": "yes",
+"name": "المركب الجامعي",
+"name:ar": "المركب الجامعي",
+"name:fr": "Campus Universitaire",
+"operator": "شركة النقل بتونس",
+"public_transport": "station",
+"railway": "station"
+},
+{
+"@id": "r8499864",
+"name": "المركب الجامعي",
+"name:ar": "المركب الجامعي",
+"name:fr": "Campus Universitaire",
+"operator": "شركة النقل بتونس",
+"public_transport": "stop_area",
+"type": "public_transport"
+}
+],
+"n5807318010": [
+{
+"@id": "n1095328908",
+"light_rail": "yes",
+"name": "خزندار",
+"name:ar": "خزندار",
+"name:fr": "Khasnadar",
+"public_transport": "stop_position"
+},
+{
+"@id": "n5807318010",
+"light_rail": "yes",
+"name": "خزندار",
+"name:ar": "خزندار",
+"name:fr": "Khasnadar",
+"public_transport": "station",
+"railway": "station"
+},
+{
+"@id": "n5807318012",
+"light_rail": "yes",
+"name": "خزندار",
+"name:ar": "خزندار",
+"name:fr": "Khasnadar",
+"public_transport": "stop_position"
+},
+{
+"@id": "r8501142",
+"name": "خزندار",
+"name:ar": "خزندار",
+"name:fr": "Khasnadar",
+"public_transport": "stop_area",
+"type": "public_transport"
+}
+],
+"n5807318035": [
+{
+"@id": "n1094907123",
+"light_rail": "yes",
+"name": "نيلسون مانديلا",
+"name:ar": "نيلسون مانديلا",
+"name:fr": "Nelson Mandela",
+"public_transport": "stop_position",
+"railway": "stop"
+},
+{
+"@id": "n5807318035",
+"light_rail": "yes",
+"name": "نيلسون مانديلا",
+"name:ar": "نيلسون مانديلا",
+"name:fr": "Nelson Mandela",
+"public_transport": "station",
+"railway": "station",
+"ref": "خط 2، 12",
+"station": "light_rail"
+},
+{
+"@id": "n5807318037",
+"light_rail": "yes",
+"name": "نيلسون مانديلا",
+"name:ar": "نيلسون مانديلا",
+"name:fr": "Nelson Mandela",
+"public_transport": "stop_position",
+"railway": "stop"
+},
+{
+"@id": "r8501144",
+"name": "نيلسون مانديلا",
+"name:ar": "نيلسون مانديلا",
+"name:fr": "Nelson Mandela",
+"public_transport": "stop_area",
+"type": "public_transport"
+}
+],
+"n5807318586": [
+{
+"@id": "n1095144771",
+"light_rail": "yes",
+"name": "باب الخضراء",
+"name:ar": "باب الخضراء",
+"name:fr": "Bab El Khadra",
+"public_transport": "stop_position",
+"railway": "stop"
+},
+{
+"@id": "n5807318586",
+"light_rail": "yes",
+"name": "باب الخضراء",
+"name:ar": "باب الخضراء",
+"name:fr": "Bab El Khadra",
+"public_transport": "station",
+"railway": "station",
+"station": "light_rail"
+},
+{
+"@id": "n5807318588",
+"light_rail": "yes",
+"name": "باب الخضراء",
+"name:ar": "باب الخضراء",
+"name:fr": "Bab El Khadra",
+"public_transport": "stop_position",
+"railway": "stop"
+},
+{
+"@id": "r8501145",
+"name": "باب الخضراء",
+"name:ar": "باب الخضراء",
+"name:fr": "Bab El Khadra",
+"public_transport": "stop_area",
+"type": "public_transport"
+}
+],
+"n5807318617": [
+{
+"@id": "n1095145544",
+"light_rail": "yes",
+"name": "باب سعدون",
+"name:ar": "باب سعدون",
+"name:fr": "Bab Saadoun",
+"public_transport": "stop_position",
+"railway": "stop"
+},
+{
+"@id": "n5807318617",
+"light_rail": "yes",
+"name": "باب سعدون",
+"name:ar": "باب سعدون",
+"name:fr": "Bab Saadoun",
+"public_transport": "station",
+"railway": "station",
+"station": "light_rail"
+},
+{
+"@id": "n5807318625",
+"light_rail": "yes",
+"name": "باب سعدون",
+"name:ar": "باب سعدون",
+"name:fr": "Bab Saadoun",
+"public_transport": "stop_position",
+"railway": "stop"
+},
+{
+"@id": "r8501147",
+"name": "باب سعدون",
+"name:ar": "باب سعدون",
+"name:fr": "Bab Saadoun",
+"public_transport": "stop_area",
+"type": "public_transport"
+}
+],
+"n5807318670": [
+{
+"@id": "n1095327902",
+"light_rail": "yes",
+"name": "بوشوشة",
+"name:ar": "بوشوشة",
+"name:fr": "Bouchoucha",
+"public_transport": "stop_position",
+"railway": "stop"
+},
+{
+"@id": "n1095328655",
+"light_rail": "yes",
+"name": "بوشوشة",
+"name:ar": "بوشوشة",
+"name:fr": "Bouchoucha",
+"public_transport": "stop_position",
+"railway": "stop"
+},
+{
+"@id": "n5807318670",
+"addr:city": "تونس",
+"addr:city:ar": "تونس",
+"light_rail": "yes",
+"name": "بوشوشة",
+"name:ar": "بوشوشة",
+"name:fr": "Bouchoucha",
+"public_transport": "station",
+"railway": "station",
+"station": "light_rail"
+},
+{
+"@id": "r8501152",
+"name": "بوشوشة",
+"name:ar": "بوشوشة",
+"name:fr": "Bouchoucha",
+"public_transport": "stop_area",
+"type": "public_transport"
+}
+],
+"n5807318671": [
+{
+"@id": "n708687557",
+"light_rail": "yes",
+"name": "شارع 20 مارس",
+"name:ar": "شارع 20 مارس",
+"name:fr": "Boulevard 20 Mars",
+"public_transport": "stop_position",
+"railway": "stop"
+},
+{
+"@id": "n1095326595",
+"light_rail": "yes",
+"name": "شارع 20 مارس",
+"name:ar": "شارع 20 مارس",
+"name:fr": "Boulevard 20 Mars",
+"public_transport": "stop_position",
+"railway": "stop"
+},
+{
+"@id": "n5807318671",
+"addr:city": "تونس",
+"addr:city:ar": "تونس",
+"light_rail": "yes",
+"name": "شارع 20 مارس",
+"name:ar": "شارع 20 مارس",
+"name:fr": "Boulevard 20 Mars",
+"public_transport": "station",
+"railway": "station",
+"station": "light_rail"
+},
+{
+"@id": "r8501153",
+"name": "شارع 20 مارس",
+"name:ar": "شارع 20 مارس",
+"name:fr": "Boulevard 20 Mars",
+"public_transport": "stop_area",
+"type": "public_transport"
+}
+],
+"n5807318672": [
+{
+"@id": "n1095328814",
+"light_rail": "yes",
+"name": "صناعات تقليدية",
+"name:ar": "صناعات تقليدية",
+"name:fr": "L'Artisanat",
+"public_transport": "stop_position"
+},
+{
+"@id": "n1827137612",
+"light_rail": "yes",
+"name": "صناعات تقليدية",
+"name:ar": "صناعات تقليدية",
+"name:fr": "L'Artisanat",
+"public_transport": "stop_position"
+},
+{
+"@id": "n5807318672",
+"light_rail": "yes",
+"name": "صناعات تقليدية",
+"name:ar": "صناعات تقليدية",
+"name:fr": "L'Artisanat",
+"public_transport": "station",
+"railway": "station"
+},
+{
+"@id": "r8501154",
+"name": "صناعات تقليدية",
+"name:ar": "صناعات تقليدية",
+"name:fr": "L'Artisanat",
+"public_transport": "stop_area",
+"type": "public_transport"
+}
+],
+"n5807445623": [
+{
+"@id": "n1094476124",
+"light_rail": "yes",
+"name": "فرحات حشاد",
+"name:ar": "فرحات حشاد",
+"name:fr": "Farhat Hached",
+"public_transport": "stop_position"
+},
+{
+"@id": "n5807445623",
+"light_rail": "yes",
+"name": "فرحات حشاد",
+"name:ar": "فرحات حشاد",
+"name:fr": "Farhat Hached",
+"public_transport": "station",
+"railway": "station",
+"station": "light_rail"
+},
+{
+"@id": "n5807445626",
+"light_rail": "yes",
+"name": "فرحات حشاد",
+"name:ar": "فرحات حشاد",
+"name:fr": "Farhat Hached",
+"public_transport": "stop_position"
+},
+{
+"@id": "r8501601",
+"name": "فرحات حشاد",
+"name:ar": "فرحات حشاد",
+"name:fr": "Farhat Hached",
+"public_transport": "stop_area",
+"type": "public_transport"
+}
+],
+"n5807446756": [
+{
+"@id": "n621885709",
+"light_rail": "yes",
+"name": "حي النور",
+"name:ar": "حي النور",
+"name:fr": "Cité Ennour",
+"public_transport": "stop_position",
+"railway": "stop"
+},
+{
+"@id": "n1904828358",
+"light_rail": "yes",
+"name": "حي النور",
+"name:ar": "حي النور",
+"name:fr": "Cité Ennour",
+"public_transport": "stop_position",
+"railway": "stop"
+},
+{
+"@id": "n5807446756",
+"light_rail": "yes",
+"name": "حي النور",
+"name:ar": "حي النور",
+"name:fr": "Cité Ennour",
+"railway": "halt"
+},
+{
+"@id": "r8501602",
+"name": "حي النور",
+"name:ar": "حي النور",
+"name:fr": "Cité Ennour",
+"public_transport": "stop_area",
+"type": "public_transport"
+}
+],
+"n5807446776": [
+{
+"@id": "n1668047217",
+"light_rail": "yes",
+"name": "الكبارية",
+"name:ar": "الكبارية",
+"name:fr": "El Kabaria",
+"public_transport": "stop_position",
+"railway": "stop",
+"ref": "1"
+},
+{
+"@id": "n5807446771",
+"light_rail": "yes",
+"name": "الكبارية",
+"name:ar": "الكبارية",
+"name:fr": "El Kabaria",
+"public_transport": "stop_position",
+"railway": "stop",
+"ref": "1"
+},
+{
+"@id": "n5807446776",
+"light_rail": "yes",
+"name": "الكبارية",
+"name:ar": "الكبارية",
+"name:fr": "El Kabaria",
+"railway": "halt",
+"ref": "1"
+},
+{
+"@id": "r8501603",
+"name": "الكبارية",
+"name:ar": "الكبارية",
+"name:fr": "El Kabaria",
+"public_transport": "stop_area",
+"type": "public_transport"
+}
+],
+"n5807446778": [
+{
+"@id": "n1094508140",
+"light_rail": "yes",
+"name": "ابن سينا",
+"name:ar": "ابن سينا",
+"name:etymology": "ابن سينا",
+"name:etymology:wikidata": "Q8011",
+"name:etymology:wikipedia": "ar:ابن سينا",
+"name:fr": "Ibn Sina",
+"public_transport": "stop_position",
+"railway": "stop"
+},
+{
+"@id": "n1904829065",
+"light_rail": "yes",
+"name": "ابن سينا",
+"name:ar": "ابن سينا",
+"name:etymology": "ابن سينا",
+"name:etymology:wikidata": "Q8011",
+"name:etymology:wikipedia": "ar:ابن سينا",
+"name:fr": "Ibn Sina",
+"public_transport": "stop_position",
+"railway": "stop"
+},
+{
+"@id": "n5807446778",
+"light_rail": "yes",
+"name": "ابن سينا",
+"name:ar": "ابن سينا",
+"name:etymology": "ابن سينا",
+"name:etymology:wikidata": "Q8011",
+"name:etymology:wikipedia": "ar:ابن سينا",
+"name:fr": "Ibn Sina",
+"railway": "halt",
+"ref": "1;12;14"
+}
+],
+"n5814938955": [
+{
+"@id": "n402094607",
+"light_rail": "yes",
+"name": "14 يناير 2011",
+"name:ar": "14 يناير 2011",
+"name:fr": "14 Janvier 2011",
+"public_transport": "stop_position"
+},
+{
+"@id": "n5814938651",
+"light_rail": "yes",
+"name": "14 يناير 2011",
+"name:ar": "14 يناير 2011",
+"name:fr": "14 Janvier 2011",
+"public_transport": "stop_position"
+},
+{
+"@id": "n5814938955",
+"light_rail": "yes",
+"name": "14 يناير 2011",
+"name:ar": "14 يناير 2011",
+"name:fr": "14 Janvier 2011",
+"public_transport": "station",
+"railway": "station"
+},
+{
+"@id": "r8510685",
+"name": "14 يناير 2011",
+"name:ar": "14 يناير 2011",
+"name:fr": "14 Janvier 2011",
+"public_transport": "stop_area",
+"type": "public_transport"
+}
+],
+"n5814938967": [
+{
+"@id": "n402089990",
+"light_rail": "yes",
+"name": "حرم الجامعة",
+"name:ar": "حرم الجامعة",
+"name:fr": "Campus",
+"public_transport": "stop_position"
+},
+{
+"@id": "n5814938966",
+"light_rail": "yes",
+"name": "حرم الجامعة",
+"name:ar": "حرم الجامعة",
+"name:fr": "Campus",
+"public_transport": "stop_position"
+},
+{
+"@id": "n5814938967",
+"light_rail": "yes",
+"name": "حرم الجامعة",
+"name:ar": "حرم الجامعة",
+"name:fr": "Campus",
+"public_transport": "station",
+"railway": "station"
+},
+{
+"@id": "r8510686",
+"name": "حرم الجامعة",
+"name:ar": "حرم الجامعة",
+"name:fr": "Campus",
+"public_transport": "stop_area",
+"type": "public_transport"
+}
+],
+"n5815305342": [
+{
+"@id": "n1094916324",
+"light_rail": "yes",
+"name": "الشباب",
+"name:ar": "الشباب",
+"name:fr": "La Jeunesse",
+"public_transport": "stop_position",
+"railway": "stop"
+},
+{
+"@id": "n1894017614",
+"light_rail": "yes",
+"name": "الشباب",
+"name:ar": "الشباب",
+"name:fr": "La Jeunesse",
+"public_transport": "stop_position",
+"railway": "stop"
+},
+{
+"@id": "n5815305342",
+"light_rail": "yes",
+"name": "الشباب",
+"name:ar": "الشباب",
+"name:fr": "La Jeunesse",
+"public_transport": "station",
+"railway": "station",
+"ref": "Ligne 2, 12",
+"station": "light_rail"
+}
+],
+"n5815305343": [
+{
+"@id": "n633618318",
+"light_rail": "yes",
+"name": "الحي الرياضي",
+"name:ar": "الحي الرياضي",
+"name:fr": "Cité Sportive",
+"public_transport": "stop_position",
+"railway": "stop"
+},
+{
+"@id": "n1894017613",
+"light_rail": "yes",
+"name": "الحي الرياضي",
+"name:ar": "الحي الرياضي",
+"name:fr": "Cité Sportive",
+"public_transport": "stop_position",
+"railway": "stop"
+},
+{
+"@id": "n5815305343",
+"light_rail": "yes",
+"name": "الحي الرياضي",
+"name:ar": "الحي الرياضي",
+"name:fr": "Cité Sportive",
+"public_transport": "station",
+"railway": "station",
+"ref": "خط 2, 12",
+"station": "light_rail"
+},
+{
+"@id": "r8510909",
+"name": "الحي الرياضي",
+"name:ar": "الحي الرياضي",
+"name:fr": "Cité Sportive",
+"public_transport": "stop_area",
+"type": "public_transport"
+}
+],
+"n5815305348": [
+{
+"@id": "n974490536",
+"light_rail": "yes",
+"name": "مدينة العلوم",
+"name:ar": "مدينة العلوم",
+"name:fr": "Cité des sciences",
+"old_name": "الفل",
+"old_name:ar": "الفل",
+"old_name:fr": "El Fell",
+"public_transport": "stop_position",
+"railway": "stop",
+"source:name": "https://www.transtu.tn/fr/article/0091-changement-du-nom-de-station"
+},
+{
+"@id": "n2526623407",
+"light_rail": "yes",
+"name": "مدينة العلوم",
+"name:ar": "مدينة العلوم",
+"name:fr": "Cité des sciences",
+"old_name": "الفل",
+"old_name:ar": "الفل",
+"old_name:fr": "El Fell",
+"public_transport": "stop_position",
+"railway": "stop",
+"source:name": "https://www.transtu.tn/fr/article/0091-changement-du-nom-de-station"
+},
+{
+"@id": "n5815305348",
+"light_rail": "yes",
+"name": "مدينة العلوم",
+"name:ar": "مدينة العلوم",
+"name:fr": "Cité des sciences",
+"old_name": "الفل",
+"old_name:ar": "الفل",
+"old_name:fr": "El Fell",
+"railway": "halt",
+"source:name": "https://www.transtu.tn/fr/article/0091-changement-du-nom-de-station"
+}
+],
+"n5815305349": [
+{
+"@id": "n974490535",
+"light_rail": "yes",
+"name": "الاستقلال",
+"name:ar": "الاستقلال",
+"name:fr": "L'Indépendance",
+"public_transport": "stop_position"
+},
+{
+"@id": "n2526623335",
+"light_rail": "yes",
+"name": "الاستقلال",
+"name:ar": "الاستقلال",
+"name:fr": "L'Indépendance",
+"public_transport": "stop_position"
+},
+{
+"@id": "n5815305349",
+"light_rail": "yes",
+"name": "الاستقلال",
+"name:ar": "الاستقلال",
+"name:fr": "L'Indépendance",
+"public_transport": "station",
+"railway": "station"
+},
+{
+"@id": "r8510912",
+"name": "الاستقلال",
+"name:ar": "الاستقلال",
+"name:fr": "L'Indépendance",
+"public_transport": "stop_area",
+"type": "public_transport"
+}
+],
+"n621885652": [
+{
+"@id": "n621885652",
+"light_rail": "yes",
+"name": "13 أوت",
+"name:ar": "13 أوت",
+"name:fr": "13 Août",
+"public_transport": "stop_position",
+"railway": "stop"
+},
+{
+"@id": "n6450830134",
+"designation": "ligne 1 direction ben arous, ligne 6 direction mourouj",
+"light_rail": "yes",
+"name": "13 أوت",
+"name:ar": "13 أوت",
+"name:fr": "13 Août",
+"public_transport": "stop_position",
+"railway": "stop",
+"ref": "Ligne 1, 6, 12, 14",
+"source": "survey"
+},
+{
+"@id": "w688053298",
+"area": "yes",
+"name": "13 أوت",
+"name:ar": "13 أوت",
+"name:fr": "13 Août",
+"public_transport": "station",
+"railway": "station",
+"station": "light_rail"
+},
+{
+"@id": "r9561205",
+"light_rail": "yes",
+"name": "13 أوت",
+"name:ar": "13 أوت",
+"name:fr": "13 Août",
+"public_transport": "stop_area",
+"public_transport:version": "2",
+"type": "public_transport"
+}
+],
+"n6416450569": [
+{
+"@id": "n6416450569",
+"light_rail": "yes",
+"name": "الوردية",
+"name:ar": "الوردية",
+"name:fr": "El Ouardia",
+"public_transport": "station",
+"railway": "station",
+"station": "light_rail"
+}
+],
+"n6450732606": [
+{
+"@id": "n634993918",
+"light_rail": "yes",
+"name": "المروج 2",
+"name:ar": "المروج 2",
+"name:fr": "El Mourouj 2",
+"public_transport": "stop_position",
+"railway": "stop",
+"ref": "Ligne 6"
+},
+{
+"@id": "n6450732606",
+"light_rail": "yes",
+"name": "المروج 2",
+"name:ar": "المروج 2",
+"name:fr": "El Mourouj 2",
+"public_transport": "stop_position",
+"railway": "stop"
+},
+{
+"@id": "w688042779",
+"area": "yes",
+"name": "المروج 2",
+"name:ar": "المروج 2",
+"name:fr": "El Mourouj 2",
+"public_transport": "station",
+"railway": "station",
+"station": "light_rail"
+},
+{
+"@id": "r9560968",
+"light_rail": "yes",
+"name": "المروج 2",
+"name:ar": "المروج 2",
+"name:fr": "El Mourouj 2",
+"public_transport": "stop_area",
+"public_transport:version": "2",
+"type": "public_transport"
+}
+],
+"n6450732654": [
+{
+"@id": "n1095698921",
+"light_rail": "yes",
+"name": "المروج 1",
+"name:ar": "المروج 1",
+"name:fr": "El Mourouj 1",
+"public_transport": "stop_position",
+"railway": "stop"
+},
+{
+"@id": "n6450732654",
+"light_rail": "yes",
+"name": "المروج 1",
+"name:ar": "المروج 1",
+"name:fr": "El Mourouj 1",
+"public_transport": "stop_position",
+"railway": "stop"
+},
+{
+"@id": "w688042797",
+"area": "yes",
+"name": "المروج 1",
+"name:ar": "المروج 1",
+"name:fr": "El Mourouj 1",
+"public_transport": "station",
+"railway": "station",
+"station": "light_rail"
+},
+{
+"@id": "r9560969",
+"light_rail": "yes",
+"name": "المروج 1",
+"name:ar": "المروج 1",
+"name:fr": "El Mourouj 1",
+"public_transport": "stop_area",
+"public_transport:version": "2",
+"type": "public_transport"
+}
+],
+"n6450732693": [
+{
+"@id": "n1095697169",
+"light_rail": "yes",
+"name": "البيئة",
+"name:ar": "البيئة",
+"name:fr": "Environnement",
+"public_transport": "stop_position",
+"railway": "stop"
+},
+{
+"@id": "n6450732693",
+"light_rail": "yes",
+"name": "البيئة",
+"name:ar": "البيئة",
+"name:fr": "Environnement",
+"public_transport": "stop_position",
+"railway": "stop"
+},
+{
+"@id": "w688042801",
+"area": "yes",
+"name": "البيئة",
+"name:ar": "البيئة",
+"name:fr": "Environnement",
+"public_transport": "station",
+"railway": "station",
+"station": "light_rail"
+},
+{
+"@id": "r9560970",
+"light_rail": "yes",
+"name": "البيئة",
+"name:ar": "البيئة",
+"name:fr": "Environnement",
+"public_transport": "stop_area",
+"public_transport:version": "2",
+"type": "public_transport"
+}
+],
+"n6450732725": [
+{
+"@id": "n1095698182",
+"light_rail": "yes",
+"name": "الشهداء",
+"name:ar": "الشهداء",
+"name:fr": "Martyrs",
+"public_transport": "stop_position",
+"railway": "stop"
+},
+{
+"@id": "n6450732725",
+"light_rail": "yes",
+"name": "الشهداء",
+"name:ar": "الشهداء",
+"name:fr": "Martyrs",
+"public_transport": "stop_position",
+"railway": "stop"
+},
+{
+"@id": "w688042806",
+"area": "yes",
+"light_rail": "yes",
+"name": "الشهداء",
+"name:ar": "الشهداء",
+"name:fr": "Martyrs",
+"public_transport": "station",
+"railway": "station",
+"station": "light_rail"
+},
+{
+"@id": "r9560972",
+"light_rail": "yes",
+"name": "الشهداء",
+"name:ar": "الشهداء",
+"name:fr": "Martyrs",
+"public_transport": "stop_area",
+"public_transport:version": "2",
+"type": "public_transport"
+}
+],
+"n6450732754": [
+{
+"@id": "n1095698228",
+"light_rail": "yes",
+"name": "المروج 3",
+"name:ar": "المروج 3",
+"name:fr": "El Mourouj 3",
+"public_transport": "stop_position",
+"railway": "stop"
+},
+{
+"@id": "n6450732754",
+"light_rail": "yes",
+"name": "المروج 3",
+"name:ar": "المروج 3",
+"name:fr": "El Mourouj 3",
+"public_transport": "stop_position",
+"railway": "stop"
+},
+{
+"@id": "w688042805",
+"area": "yes",
+"name": "المروج 3",
+"name:ar": "المروج 3",
+"name:fr": "El Mourouj 3",
+"public_transport": "station",
+"railway": "station",
+"station": "light_rail"
+},
+{
+"@id": "r9560971",
+"light_rail": "yes",
+"name": "المروج 3",
+"name:ar": "المروج 3",
+"name:fr": "El Mourouj 3",
+"public_transport": "stop_area",
+"public_transport:version": "2",
+"type": "public_transport"
+}
+],
+"n6450829976": [
+{
+"@id": "n1094912328",
+"light_rail": "yes",
+"name": "محمد مناشو",
+"name:ar": "محمد مناشو",
+"name:fr": "Mohamed Manachou",
+"public_transport": "stop_position",
+"railway": "stop"
+},
+{
+"@id": "n6450829976",
+"light_rail": "yes",
+"name": "محمد مناشو",
+"name:ar": "محمد مناشو",
+"name:fr": "Mohamed Manachou",
+"public_transport": "stop_position",
+"railway": "stop"
+},
+{
+"@id": "w688053294",
+"area": "yes",
+"name": "محمد مناشو",
+"name:ar": "محمد مناشو",
+"name:fr": "Mohamed Manachou",
+"public_transport": "station",
+"railway": "station",
+"station": "light_rail"
+},
+{
+"@id": "r9561204",
+"light_rail": "yes",
+"name": "محمد مناشو",
+"name:ar": "محمد مناشو",
+"name:fr": "Mohamed Manachou",
+"public_transport": "stop_area",
+"public_transport:version": "2",
+"type": "public_transport"
+}
+],
+"n6450830111": [
+{
+"@id": "n1094507510",
+"light_rail": "yes",
+"name": "باب عليوة",
+"name:ar": "باب عليوة",
+"name:fr": "Bab Alioua",
+"public_transport": "stop_position",
+"railway": "stop"
+},
+{
+"@id": "n6450830111",
+"light_rail": "yes",
+"name": "باب عليوة",
+"name:ar": "باب عليوة",
+"name:fr": "Bab Alioua",
+"public_transport": "stop_position",
+"railway": "stop"
+},
+{
+"@id": "w688053293",
+"light_rail": "yes",
+"name": "باب عليوة",
+"name:ar": "باب عليوة",
+"name:fr": "Bab Alioua",
+"public_transport": "station",
+"railway": "station",
+"station": "light_rail"
+},
+{
+"@id": "r9567631",
+"light_rail": "yes",
+"name": "باب عليوة",
+"name:ar": "باب عليوة",
+"name:fr": "Bab Alioua",
+"public_transport": "stop_area",
+"public_transport:version": "2",
+"type": "public_transport"
+}
+],
+"n6450830163": [
+{
+"@id": "n1094503260",
+"light_rail": "yes",
+"name": "محمد علي",
+"name:ar": "محمد علي",
+"name:fr": "Mohammed Ali",
+"public_transport": "stop_position",
+"railway": "stop"
+},
+{
+"@id": "n6450830163",
+"light_rail": "yes",
+"name": "محمد علي",
+"name:ar": "محمد علي",
+"name:fr": "Mohammed Ali",
+"public_transport": "stop_position",
+"railway": "stop"
+},
+{
+"@id": "w688053307",
+"area": "yes",
+"name": "محمد علي",
+"name:ar": "محمد علي",
+"name:fr": "Mohammed Ali",
+"public_transport": "station",
+"railway": "station",
+"station": "light_rail"
+},
+{
+"@id": "r9561206",
+"light_rail": "yes",
+"name": "محمد علي",
+"name:ar": "محمد علي",
+"name:fr": "Mohammed Ali",
+"public_transport": "stop_area",
+"public_transport:version": "2",
+"type": "public_transport"
+}
+],
+"n6450830370": [
+{
+"@id": "n6450830370",
+"alt_name": "الطاهر حداد",
+"alt_name:ar": "الطاهر حداد",
+"light_rail": "yes",
+"name": "الطاهر الحداد",
+"name:ar": "الطاهر الحداد",
+"name:etymology": "الطاهر الحداد",
+"name:etymology:wikidata": "Q969533",
+"name:etymology:wikipedia": "ar:الطاهر الحداد",
+"name:fr": "Tahar Haddad",
+"public_transport": "stop_position",
+"railway": "stop"
+},
+{
+"@id": "w688053309",
+"alt_name": "الطاهر حداد",
+"alt_name:ar": "الطاهر حداد",
+"area": "yes",
+"light_rail": "yes",
+"name": "الطاهر الحداد",
+"name:ar": "الطاهر الحداد",
+"name:etymology": "الطاهر الحداد",
+"name:etymology:wikidata": "Q969533",
+"name:etymology:wikipedia": "ar:الطاهر الحداد",
+"name:fr": "Tahar Haddad",
+"public_transport": "station",
+"railway": "station",
+"station": "light_rail"
+},
+{
+"@id": "r9561207",
+"alt_name": "الطاهر حداد",
+"alt_name:ar": "الطاهر حداد",
+"light_rail": "yes",
+"name": "الطاهر الحداد",
+"name:ar": "الطاهر الحداد",
+"name:etymology": "الطاهر الحداد",
+"name:etymology:wikidata": "Q969533",
+"name:etymology:wikipedia": "ar:الطاهر الحداد",
+"name:fr": "Tahar Haddad",
+"public_transport": "stop_area",
+"public_transport:version": "2",
+"type": "public_transport"
+}
+],
+"n6450830486": [
+{
+"@id": "n634993937",
+"light_rail": "yes",
+"name": "الغزالي",
+"name:ar": "الغزالي",
+"name:fr": "Ghazeli",
+"public_transport": "stop_position",
+"railway": "stop"
+},
+{
+"@id": "n6450830486",
+"light_rail": "yes",
+"name": "الغزالي",
+"name:ar": "الغزالي",
+"name:fr": "Ghazeli",
+"public_transport": "stop_position",
+"railway": "stop"
+},
+{
+"@id": "w688053315",
+"area": "yes",
+"light_rail": "yes",
+"name": "الغزالي",
+"name:ar": "الغزالي",
+"name:fr": "Ghazeli",
+"public_transport": "station",
+"railway": "station",
+"station": "light_rail"
+},
+{
+"@id": "r9561208",
+"light_rail": "yes",
+"name": "الغزالي",
+"name:ar": "الغزالي",
+"name:fr": "Ghazeli",
+"public_transport": "stop_area",
+"public_transport:version": "2",
+"type": "public_transport"
+}
+],
+"n6450830503": [
+{
+"@id": "n1095697593",
+"light_rail": "yes",
+"name": "الحي البلدي",
+"name:ar": "الحي البلدي",
+"name:fr": "Cité Municipale",
+"public_transport": "stop_position",
+"railway": "stop"
+},
+{
+"@id": "n6450830503",
+"light_rail": "yes",
+"name": "الحي البلدي",
+"name:ar": "الحي البلدي",
+"name:fr": "Cité Municipale",
+"public_transport": "stop_position",
+"railway": "stop"
+},
+{
+"@id": "w688053320",
+"area": "yes",
+"name": "الحي البلدي",
+"name:ar": "الحي البلدي",
+"name:fr": "Cité Municipale",
+"public_transport": "station",
+"railway": "station",
+"station": "light_rail"
+},
+{
+"@id": "r9561209",
+"light_rail": "yes",
+"name": "الحي البلدي",
+"name:ar": "الحي البلدي",
+"name:fr": "Cité Municipale",
+"public_transport": "stop_area",
+"public_transport:version": "2",
+"type": "public_transport"
+}
+],
+"n661316493": [
+{
+"@id": "n661316493",
+"light_rail": "yes",
+"name": "حي الخضراء",
+"name:ar": "حي الخضراء",
+"name:fr": "Cité El Khadra",
+"public_transport": "stop_position",
+"railway": "station",
+"ref": "Ligne 2, 12"
+}
+],
+"n689997704": [
+{
+"@id": "n689997704",
+"name": "برج الكيفان - العيادة",
+"name:ar": "برج الكيفان - العيادة",
+"name:fr": "Bordj El Kiffan - Polyclinique",
+"network": "ترامواي الجزائر",
+"network:wikidata": "Q1688502",
+"operator": "SETRAM",
+"operator:wikidata": "Q22688489",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+},
+{
+"@id": "n3513552241",
+"name": "برج الكيفان - العيادة",
+"name:ar": "برج الكيفان - العيادة",
+"name:fr": "Bordj El Kiffan - Polyclinique",
+"network": "ترامواي الجزائر",
+"network:wikidata": "Q1688502",
+"operator": "SETRAM",
+"operator:wikidata": "Q22688489",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+}
+],
+"n689997724": [
+{
+"@id": "n689997724",
+"name": "برج الكيفان - وسط",
+"name:ar": "برج الكيفان - وسط",
+"name:fr": "Bordj El Kiffan - Centre",
+"network": "ترامواي الجزائر",
+"network:wikidata": "Q1688502",
+"operator": "SETRAM",
+"operator:wikidata": "Q22688489",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+},
+{
+"@id": "n3513552242",
+"name": "برج الكيفان - وسط",
+"name:ar": "برج الكيفان - وسط",
+"name:fr": "Bordj El Kiffan - Centre",
+"network": "ترامواي الجزائر",
+"network:wikidata": "Q1688502",
+"operator": "SETRAM",
+"operator:wikidata": "Q22688489",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+}
+],
+"n689997745": [
+{
+"@id": "n689997745",
+"alt_name:fr": "Lycée",
+"name": "برج الكيفان - الثانوية",
+"name:ar": "برج الكيفان - الثانوية",
+"name:fr": "Bordj El Kifane - Lycée",
+"network": "ترامواي الجزائر",
+"operator": "SETRAM",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+},
+{
+"@id": "n3513552990",
+"name": "برج الكيفان - الثانوية",
+"name:ar": "برج الكيفان - الثانوية",
+"name:fr": "Bordj El Kiffan - Lycée",
+"network": "ترامواي الجزائر",
+"network:wikidata": "Q1688502",
+"operator": "SETRAM",
+"operator:wikidata": "Q22688489",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+}
+],
+"n689997751": [
+{
+"@id": "n689997751",
+"name": "حي الصباح",
+"name:ar": "حي الصباح",
+"name:fr": "Cité Claire Matin",
+"network": "ترامواي الجزائر",
+"network:wikidata": "Q1688502",
+"operator": "SETRAM",
+"operator:wikidata": "Q22688489",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+},
+{
+"@id": "n3513571593",
+"name": "حي الصباح",
+"name:ar": "حي الصباح",
+"name:fr": "Cité Clair Matin",
+"network": "ترامواي الجزائر",
+"network:wikidata": "Q1688502",
+"operator": "SETRAM",
+"operator:wikidata": "Q22688489",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+}
+],
+"n689997781": [
+{
+"@id": "n689997781",
+"name": "حي 8 ماي 1945",
+"name:ar": "حي 8 ماي 1945",
+"name:fr": "Cité 8 Mai 1945",
+"network": "ترامواي الجزائر",
+"network:wikidata": "Q1688502",
+"operator": "SETRAM",
+"operator:wikidata": "Q22688489",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+},
+{
+"@id": "n3513573388",
+"name": "حي 8 ماي 1945",
+"name:ar": "حي 8 ماي 1945",
+"name:fr": "Cité 8 mai 1945",
+"network": "ترامواي الجزائر",
+"network:wikidata": "Q1688502",
+"operator": "SETRAM",
+"operator:wikidata": "Q22688489",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+}
+],
+"n7213813771": [
+{
+"@id": "n7213813771",
+"name": "Hay Essalam حي السلام",
+"name:ar": "حي السلام",
+"name:fr": "Hay Essalam",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+},
+{
+"@id": "n7213813772",
+"name": "Hay Essalam حي السلام",
+"name:ar": "حي السلام",
+"name:fr": "Hay Essalam",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+}
+],
+"n7446934254": [
+{
+"@id": "n7446934254",
+"name": "Zarbia زربية",
+"name:ar": "Zarbia زربية",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"train": "yes",
+"tram": "yes"
+},
+{
+"@id": "n7446934255",
+"name": "Zarbia زربية",
+"name:ar": "Zarbia زربية",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"train": "yes",
+"tram": "yes"
+}
+],
+"n761243748": [
+{
+"@id": "n761243748",
+"name": "вулиця Левка Лукʼяненка",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+},
+{
+"@id": "n1758868295",
+"name": "вулиця Левка Лукʼяненка",
+"name:uk": "вулиця Левка Лукʼяненка",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+}
+],
+"n7660579362": [
+{
+"@id": "n7660579362",
+"name": "La Rocade الطريق المداري",
+"name:ar": "La Rocade الطريق المداري",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+},
+{
+"@id": "n7660579363",
+"name": "La Rocade الطريق المداري",
+"name:ar": "La Rocade الطريق المداري",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+}
+],
+"n7660579364": [
+{
+"@id": "n7660579364",
+"name": "Bab Karia باب القرية",
+"name:ar": "Bab Karia باب القرية",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+},
+{
+"@id": "n7660579365",
+"name": "Bab Karia باب القرية",
+"name:ar": "Bab Karia باب القرية",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+}
+],
+"n7660579366": [
+{
+"@id": "n7660579366",
+"name": "Hssaine حصين",
+"name:ar": "Hssaine حصين",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+},
+{
+"@id": "n7660579367",
+"name": "Hssaine حصين",
+"name:ar": "Hssaine حصين",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+}
+],
+"n7660579368": [
+{
+"@id": "n7660579368",
+"name": "Hay El Wafaa حي الوفاء",
+"name:ar": "Hay El Wafaa حي الوفاء",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+},
+{
+"@id": "n7660579369",
+"name": "Hay El Wafaa حي الوفاء",
+"name:ar": "Hay El Wafaa حي الوفاء",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+}
+],
+"n7660579370": [
+{
+"@id": "n7660579370",
+"name": "Hôpital Moulay Abdellah مستشفى مولاي عبدالله",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+},
+{
+"@id": "n7660579371",
+"name": "Hôpital Moulay Abdellah مستشفى مولاي عبدالله",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+}
+],
+"n956392789": [
+{
+"@id": "n956392789",
+"alt_name:ar": "رويسو",
+"name": "العناصر",
+"name:ar": "العناصر",
+"name:fr": "Ruisseau",
+"network": "ترامواي الجزائر",
+"network:wikidata": "Q1688502",
+"operator": "SETRAM",
+"operator:wikidata": "Q22688489",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+},
+{
+"@id": "n7301592854",
+"alt_name:ar": "رويسو",
+"name": "العناصر",
+"name:ar": "العناصر",
+"name:fr": "Ruisseau",
+"network": "ترامواي الجزائر",
+"network:wikidata": "Q1688502",
+"operator": "SETRAM",
+"operator:wikidata": "Q22688489",
+"public_transport": "stop_position",
+"railway": "tram_stop",
+"tram": "yes"
+}
+],
+"t12000624997": [
+{
+"@id": "n12000624997",
+"name": "ค่ายลูกเสือวชิราวุธ",
+"name:th": "ค่ายลูกเสือวชิราวุธ",
+"public_transport": "station",
+"railway": "halt",
+"railway:station_category": "ที่หยุดรถ",
+"train": "yes"
+}
+],
+"t12122842058": [
+{
+"@id": "n12122842058",
+"abandoned": "station",
+"name": "คลองมอญ",
+"name:th": "คลองมอญ",
+"railway": "halt",
+"train": "yes"
+}
+],
+"t12898495293": [
+{
+"@id": "n12898495293",
+"name": "มวกเหล็กใหม่",
+"network": "การรถไฟแห่งประเทศไทย",
+"network:en": "State Railway of Thailand",
+"network:th": "การรถไฟแห่งประเทศไทย",
+"network:wikidata": "Q2165702",
+"public_transport": "station",
+"railway": "station",
+"railway:ref": "มล.2",
+"train": "yes"
+}
+],
+"t4919461484": [
+{
+"@id": "n4919461484",
+"name": "เนินสวัสดิ์",
+"name:th": "เนินสวัสดิ์",
+"operator": "การรถไฟแห่งประเทศไทย",
+"public_transport": "station",
+"railway": "halt",
+"railway:ref": "เว",
+"railway:station_category": "ที่หยุดรถ",
+"ref": "เว.",
+"ref:station": "2137",
+"train": "yes"
+}
+],
+"t8872057172": [
+{
+"@id": "n8872057172",
+"name": "นาปรือ",
+"name:th": "Na Prue",
+"public_transport": "station",
+"railway": "halt",
+"railway:ref": "ปร",
+"railway:station_category": "ที่หยุดรถ",
+"ref": "ปร.",
+"ref:station": "4326",
+"train": "yes"
+}
+]
+},
+"node": {
+"-125567517": {},
+"-1314611875": {},
+"-456791383": {},
+"1037170496": {},
+"1041084561": {},
+"1041084565": {},
+"10570274721": {},
+"10570283368": {},
+"1058466623": {},
+"1058466677": {},
+"10598591181": {},
+"10685533579": {},
+"10925334664": {},
+"10925334670": {},
+"10925334675": {},
+"10925334678": {},
+"1094476124": {},
+"1094476493": {},
+"1094498822": {},
+"1094503260": {},
+"1094507510": {},
+"1094508140": {},
+"1094902351": {},
+"1094907123": {},
+"1094912328": {},
+"1094915522": {},
+"1094915850": {},
+"1094916324": {},
+"1095144771": {},
+"1095145544": {},
+"1095145955": {},
+"1095146413": {},
+"1095146798": {},
+"1095326595": {},
+"1095327902": {},
+"1095328655": {},
+"1095328814": {},
+"1095328908": {},
+"1095697116": {},
+"1095697169": {},
+"1095697397": {},
+"1095697593": {},
+"1095697614": {},
+"1095697751": {},
+"1095698025": {},
+"1095698182": {},
+"1095698207": {},
+"1095698228": {},
+"1095698921": {},
+"11483877208": {},
+"11483877209": {},
+"1195329123": {},
+"1198783652": {},
+"11992660877": {},
+"12000624997": {},
+"1203240634": {},
+"1203242133": {},
+"1203242879": {},
+"1203245387": {},
+"1203245733": {},
+"1203245972": {},
+"1203247118": {},
+"1203247434": {},
+"1203247904": {},
+"1203249116": {},
+"1210723435": {},
+"12122842058": {},
+"12167273490": {},
+"12168872398": {},
+"12168872399": {},
+"12169457624": {},
+"12173815221": {},
+"12188302081": {},
+"12204985128": {},
+"12526496465": {},
+"12898495293": {},
+"12942486438": {},
+"12942528103": {},
+"1311854956": {},
+"1311857650": {},
+"1311859342": {},
+"1311859666": {},
+"1316641715": {},
+"1316643504": {},
+"13207879348": {},
+"13290620648": {},
+"1346791484": {},
+"13534829431": {},
+"13591363928": {},
+"13591363929": {},
+"1385104795": {},
+"1385104799": {},
+"1385104813": {},
+"1385104814": {},
+"1385104815": {},
+"1385104817": {},
+"1385104828": {},
+"1385128920": {},
+"1385128927": {},
+"1385128949": {},
+"1385128950": {},
+"1385128952": {},
+"1385128984": {},
+"1385129016": {},
+"14123912105": {},
+"1480989522": {},
+"1481071655": {},
+"1524304330": {},
+"1588103622": {},
+"1626899500": {},
+"1653197101": {},
+"1653197102": {},
+"1653197107": {},
+"1654142232": {},
+"1654158466": {},
+"1668047217": {},
+"1698212199": {},
+"1758868295": {},
+"1781193981": {},
+"1827137612": {},
+"1857285509": {},
+"1871674762": {},
+"1894017613": {},
+"1894017614": {},
+"1896328824": {},
+"1904828358": {},
+"1904829065": {},
+"2006313404": {},
+"2006930886": {},
+"2006930892": {},
+"2008351668": {},
+"2012097539": {},
+"2012097540": {},
+"2012097541": {},
+"2014339686": {},
+"2014339853": {},
+"2020535321": {},
+"2021623348": {},
+"2021623349": {},
+"2021623350": {},
+"2042447463": {},
+"2042447473": {},
+"2180731298": {},
+"2206932295": {},
+"2235605394": {},
+"2238332442": {},
+"2253518514": {},
+"2297920672": {},
+"2375967092": {},
+"2402077544": {},
+"247041544": {},
+"2526623335": {},
+"2526623407": {},
+"2526623450": {},
+"2537049183": {},
+"2589797135": {},
+"265022007": {},
+"270026697": {},
+"2718667236": {},
+"2723571740": {},
+"2723654248": {},
+"2972378141": {},
+"2972378149": {},
+"2972388834": {},
+"2972388882": {},
+"2972388898": {},
+"2972388903": {},
+"2990165307": {},
+"3107158164": {},
+"3144516900": {},
+"318014918": {},
+"3220011760": {},
+"3240994964": {},
+"334211864": {},
+"3352635754": {},
+"3352635755": {},
+"335656182": {},
+"335656200": {},
+"335656239": {},
+"335656243": {},
+"335656305": {},
+"3512265690": {},
+"3513515526": {},
+"3513552241": {},
+"3513552242": {},
+"3513552990": {},
+"3513571593": {},
+"3513573388": {},
+"3513574204": {},
+"3513575500": {},
+"3513576390": {},
+"3513576791": {},
+"3513604611": {},
+"3513613686": {},
+"3513613882": {},
+"3513616950": {},
+"3513651506": {},
+"3513668361": {},
+"3513698842": {},
+"3513712819": {},
+"3513726622": {},
+"3513729589": {},
+"3513729802": {},
+"3694495396": {},
+"3694495413": {},
+"3732837776": {},
+"3732837794": {},
+"3827703993": {},
+"3843950316": {},
+"3843956271": {},
+"3885025884": {},
+"3995088058": {},
+"3995088067": {},
+"4018753114": {},
+"402089990": {},
+"402094607": {},
+"4215515532": {},
+"4244309716": {},
+"4244309717": {},
+"4281015663": {},
+"4377305014": {},
+"4377305016": {},
+"4413853645": {},
+"452418787": {},
+"4592815883": {},
+"4592815884": {},
+"4592815885": {},
+"4592815886": {},
+"4592815888": {},
+"4592816489": {},
+"4592816491": {},
+"4592816492": {},
+"4592889789": {},
+"4592889790": {},
+"4592889791": {},
+"4592889792": {},
+"4592889793": {},
+"4592889794": {},
+"4592889795": {},
+"4592889796": {},
+"4592889797": {},
+"4592889798": {},
+"4592889799": {},
+"4592889800": {},
+"4592889801": {},
+"4592889802": {},
+"472084248": {},
+"472084262": {},
+"472084274": {},
+"472084279": {},
+"472084291": {},
+"472084293": {},
+"472084301": {},
+"472089383": {},
+"472089401": {},
+"472089412": {},
+"472089415": {},
+"472089416": {},
+"472089428": {},
+"4744043898": {},
+"4755786036": {},
+"4813936821": {},
+"4919461484": {},
+"5189495426": {},
+"5189495434": {},
+"5189495446": {},
+"5189495455": {},
+"5189495493": {},
+"5190429100": {},
+"5201114708": {},
+"5201117522": {},
+"5208423447": {},
+"5227817740": {},
+"5227817751": {},
+"5227817758": {},
+"5227817762": {},
+"5227817764": {},
+"5227817773": {},
+"5227817776": {},
+"5227817787": {},
+"5227817788": {},
+"5227817789": {},
+"5227817793": {},
+"5227817795": {},
+"5227817810": {},
+"5227817812": {},
+"5227817932": {},
+"5227817935": {},
+"5234854553": {},
+"5234854564": {},
+"5234854582": {},
+"5234854584": {},
+"5445622346": {},
+"5501907013": {},
+"5501907014": {},
+"5501907127": {},
+"5501907128": {},
+"5501907130": {},
+"5501907131": {},
+"5501907132": {},
+"5501907134": {},
+"5539076778": {},
+"5625819236": {},
+"5625819238": {},
+"5806301475": {},
+"5807318010": {},
+"5807318012": {},
+"5807318035": {},
+"5807318037": {},
+"5807318586": {},
+"5807318588": {},
+"5807318593": {},
+"5807318617": {},
+"5807318625": {},
+"5807318670": {},
+"5807318671": {},
+"5807318672": {},
+"5807445623": {},
+"5807445626": {},
+"5807446756": {},
+"5807446771": {},
+"5807446776": {},
+"5807446778": {},
+"5814938565": {},
+"5814938595": {},
+"5814938596": {},
+"5814938633": {},
+"5814938651": {},
+"5814938955": {},
+"5814938966": {},
+"5814938967": {},
+"5815305342": {},
+"5815305343": {},
+"5815305346": {},
+"5815305348": {},
+"5815305349": {},
+"6057440275": {},
+"6102322694": {},
+"6199995549": {},
+"621885652": {},
+"621885709": {},
+"621885811": {},
+"633618318": {},
+"634993918": {},
+"634993937": {},
+"635977791": {},
+"6416450569": {},
+"6450732606": {},
+"6450732654": {},
+"6450732693": {},
+"6450732725": {},
+"6450732754": {},
+"6450732827": {},
+"6450829976": {},
+"6450830111": {},
+"6450830134": {},
+"6450830163": {},
+"6450830370": {},
+"6450830486": {},
+"6450830503": {},
+"6450830509": {},
+"6487641608": {},
+"6487641609": {},
+"6487641610": {},
+"6487641611": {},
+"6487641612": {},
+"6487641613": {},
+"6487765585": {},
+"6487765586": {},
+"6487765588": {},
+"6487765589": {},
+"6487765590": {},
+"6487765591": {},
+"6487765592": {},
+"6487765593": {},
+"6487765594": {},
+"6487765595": {},
+"6487765596": {},
+"6487765597": {},
+"6487765598": {},
+"6487765599": {},
+"6487765600": {},
+"6487833439": {},
+"6487833440": {},
+"6487833441": {},
+"6487833442": {},
+"6487833443": {},
+"6487833444": {},
+"6487833445": {},
+"6487833446": {},
+"661316493": {},
+"6764719075": {},
+"6805219938": {},
+"684207459": {},
+"689997704": {},
+"689997724": {},
+"689997745": {},
+"689997751": {},
+"689997781": {},
+"694068569": {},
+"694673717": {},
+"703787912": {},
+"708687557": {},
+"7213813771": {},
+"7213813772": {},
+"7301592854": {},
+"7446934254": {},
+"7446934255": {},
+"761243748": {},
+"7660579362": {},
+"7660579363": {},
+"7660579364": {},
+"7660579365": {},
+"7660579366": {},
+"7660579367": {},
+"7660579368": {},
+"7660579369": {},
+"7660579370": {},
+"7660579371": {},
+"7677959231": {},
+"7678085027": {},
+"7829854811": {},
+"7830239214": {},
+"7830667498": {},
+"7830774022": {},
+"7830774024": {},
+"7830836236": {},
+"7830836244": {},
+"7831546092": {},
+"7831856312": {},
+"7831856330": {},
+"7831856331": {},
+"7831856332": {},
+"7831856333": {},
+"7831856339": {},
+"7832503623": {},
+"7832846864": {},
+"7833063360": {},
+"7833063361": {},
+"7833555209": {},
+"7833555210": {},
+"7833555211": {},
+"7833555212": {},
+"7833555213": {},
+"7833555214": {},
+"7833555215": {},
+"7833812090": {},
+"7833812091": {},
+"7833812093": {},
+"7867290326": {},
+"7867580426": {},
+"7882921283": {},
+"8027925515": {},
+"8037521486": {},
+"8037521489": {},
+"8037521490": {},
+"8093609586": {},
+"8213917790": {},
+"8231372189": {},
+"8231372199": {},
+"8231372200": {},
+"8231372201": {},
+"8231372208": {},
+"8231384478": {},
+"8231384482": {},
+"8231384485": {},
+"8231384487": {},
+"8231384494": {},
+"8231384499": {},
+"8231384504": {},
+"8231384505": {},
+"8231384509": {},
+"8231384517": {},
+"8231384555": {},
+"8266107633": {},
+"8266107634": {},
+"8371477953": {},
+"8371477969": {},
+"8375814842": {},
+"8589212730": {},
+"8676317696": {},
+"8872057172": {},
+"8906956976": {},
+"8906956982": {},
+"8906957019": {},
+"8906957027": {},
+"8906957088": {},
+"8906957121": {},
+"8906957132": {},
+"8906957143": {},
+"8907462424": {},
+"8907462427": {},
+"8907462428": {},
+"8907462429": {},
+"8907462430": {},
+"8907462431": {},
+"8907462433": {},
+"9016197592": {},
+"9064774959": {},
+"9306396343": {},
+"9399822512": {},
+"956392789": {},
+"974490535": {},
+"974490536": {},
+"974490567": {},
+"9861786055": {},
+"9951183310": {},
+"9951183311": {},
+"9951183312": {}
+},
+"rel": {
+"10138178": {
+"duration": "2:17",
+"from": "博多",
+"from:de": "Hakata",
+"interval": "00:30",
+"name": "ソニック",
+"name:de": "Sonic: Hakata => Ōita",
+"name:ja": "ソニック (博多=>大分)",
+"name:ja-Latn": "sonikku",
+"operator": "九州旅客鉄道",
+"operator:en": "JR Kyushu",
+"public_transport:version": "2",
+"route": "train",
+"to": "大分",
+"to:de": "Ōita",
+"type": "route"
+},
+"10138179": {
+"duration": "2:17",
+"from": "大分",
+"from:de": "Ōita",
+"interval": "00:30",
+"name": "ソニック",
+"name:de": "Sonic: Ōita => Hakata",
+"name:ja": "ソニック (大分=>博多)",
+"name:ja-Latn": "sonikku",
+"operator": "九州旅客鉄道",
+"operator:en": "JR Kyushu",
+"public_transport:version": "2",
+"route": "train",
+"to": "博多",
+"to:de": "Hakata",
+"type": "route"
+},
+"10138308": {
+"duration": "2:17",
+"from": "Hakata",
+"interval": "00:30",
+"name": "ソニック sonikku",
+"name:de": "Sonic",
+"name:ja": "ソニック",
+"name:ja-Latn": "sonikku",
+"operator": "JR Kyushu",
+"route_master": "train",
+"to": "Ōita",
+"type": "route_master"
+},
+"10150960": {
+"from": "京都 (Kyoto)",
+"name": "まいづる: 京都 =>",
+"name:de": "Maizuru: Kioto => Maizuru",
+"operator": "JR West",
+"route": "train",
+"to": "Maizuru",
+"type": "route"
+},
+"10151039": {
+"from": "Maizuru",
+"name": "まいづる",
+"name:de": "Maizuru: Maizuru => Kioto",
+"operator": "JR West",
+"route": "train",
+"to": "京都 (Kyoto)",
+"type": "route"
+},
+"10151040": {
+"from": "京都 (Kyoto)",
+"name": "まいづる",
+"name:de": "Maizuru Ltd Express",
+"operator": "JR West",
+"route_master": "train",
+"to": "Maizuru",
+"type": "route_master"
+},
+"10152316": {
+"from": "Kinosaki Onsen",
+"name": "きのさき: => 京都",
+"name:de": "Kinosaki: Kinosaki => Kioto",
+"operator": "JR West",
+"route": "train",
+"to": "京都 (Kyoto)",
+"type": "route"
+},
+"10152317": {
+"from": "京都 (Kyoto)",
+"name": "きのさき: 京都 =>",
+"name:de": "Kinosaki: Kioto => Kinosaki",
+"operator": "JR West",
+"route": "train",
+"to": "Kinosaki Onsen",
+"type": "route"
+},
+"10152318": {
+"from": "京都 (Kyoto)",
+"name": "きのさき",
+"name:de": "Kinosaki Ltd Express",
+"operator": "JR West",
+"route_master": "train",
+"to": "Kinosaki Onsen",
+"type": "route_master"
+},
+"10996103": {
+"from": "貝塚",
+"name": "水間鉄道(下り)",
+"operator": "水間鉄道",
+"public_transport:version": "2",
+"route": "train",
+"to": "水間観音",
+"type": "route"
+},
+"10996112": {
+"from": "水間観音",
+"name": "水間鉄道(上り)",
+"operator": "水間鉄道",
+"public_transport:version": "2",
+"route": "train",
+"to": "貝塚",
+"type": "route"
+},
+"11507263": {
+"colour": "#36b558",
+"from": "桂川",
+"name": "JR原田線",
+"name:ja": "JR原田線 (桂川=>原田)",
+"network": "北部九州エリア",
+"network:en": "Northern Kyushu area",
+"operator": "九州旅客鉄道",
+"public_transport:version": "2",
+"ref": "JG",
+"route": "train",
+"to": "原田",
+"type": "route"
+},
+"11507426": {
+"colour": "#36b558",
+"from": "原田",
+"name": "JR原田線",
+"name:ja": "JR原田線 (原田=>桂川)",
+"network": "北部九州エリア",
+"network:en": "Northern Kyushu area",
+"operator": "九州旅客鉄道",
+"public_transport:version": "2",
+"ref": "JG",
+"route": "train",
+"to": "桂川",
+"type": "route"
+},
+"11507427": {
+"colour": "#36b558",
+"name": "JR原田線",
+"network": "北部九州エリア",
+"network:en": "Northern Kyushu area",
+"operator": "九州旅客鉄道",
+"ref": "JG",
+"route_master": "train",
+"type": "route_master"
+},
+"11507621": {
+"colour": "#8f3e97",
+"from": "新飯塚",
+"name": "JR後藤寺線",
+"name:en": "JR Gotōji Line",
+"name:ja": "JR後藤寺線 (新飯塚=>田川後藤寺)",
+"name:ja_rm": "JR Gotōji-sen",
+"network": "北部九州エリア",
+"network:en": "Northern Kyushu area",
+"operator": "九州旅客鉄道",
+"operator:en": "Kyushu Railway Company",
+"public_transport:version": "2",
+"ref": "JJ",
+"route": "train",
+"to": "田川後藤寺",
+"type": "route"
+},
+"11507643": {
+"colour": "#8f3e97",
+"from": "田川後藤寺",
+"name": "JR後藤寺線",
+"name:en": "JR Gotōji Line",
+"name:ja": "JR後藤寺線 (田川後藤寺=>新飯塚)",
+"name:ja_rm": "JR Gotōji-sen",
+"network": "北部九州エリア",
+"network:en": "Northern Kyushu area",
+"operator": "九州旅客鉄道",
+"operator:en": "Kyushu Railway Company",
+"public_transport:version": "2",
+"ref": "JJ",
+"route": "train",
+"to": "新飯塚",
+"type": "route"
+},
+"11507644": {
+"colour": "#8f3e97",
+"name": "JR後藤寺線",
+"network": "北部九州エリア",
+"network:en": "Northern Kyushu area",
+"operator": "九州旅客鉄道",
+"ref": "JJ",
+"route_master": "train",
+"type": "route_master"
+},
+"11510150": {
+"name": "西日本鉄道天神大牟田線",
+"network": "西鉄",
+"operator": "西日本鉄道",
+"ref": "T",
+"route_master": "train",
+"type": "route_master"
+},
+"11519346": {
+"from": "高松",
+"from:en": "Takamatsu",
+"name": "JR予讃線 (高松=>松山)",
+"name:de": "JR Yosan-Linie",
+"name:en": "JR Yosan Line (Takamatsu => Matsuyama)",
+"name:ja": "JR予讃線 (高松=>松山)",
+"operator": "四国旅客鉄道",
+"operator:en": "Shikoku Railway Company",
+"operator:ja": "四国旅客鉄道",
+"public_transport:version": "2",
+"ref": "Y",
+"route": "train",
+"to": "松山",
+"to:en": "Matsuyama",
+"type": "route"
+},
+"11519758": {
+"name": "JR予讃線 (松山=>高松)",
+"name:de": "JR Yosan-Linie",
+"name:en": "JR Yosan Line (Matsuyama => Takamatsu)",
+"name:ja": "JR予讃線 (松山=>高松)",
+"operator": "四国旅客鉄道",
+"operator:en": "Shikoku Railway Company",
+"operator:ja": "四国旅客鉄道",
+"public_transport:version": "2",
+"ref": "Y",
+"route": "train",
+"to": "高松",
+"to:en": "Takamatsu",
+"type": "route"
+},
+"11519929": {
+"name": "JR予讃線",
+"operator": "四国旅客鉄道",
+"ref": "Y",
+"route_master": "train",
+"type": "route_master"
+},
+"11533962": {
+"colour": "#ee3d49",
+"from": "博多",
+"name": "JR鹿児島本線",
+"name:ja": "JR鹿児島本線 (博多=>門司港)",
+"network": "北部九州エリア",
+"network:en": "Northern Kyushu area",
+"operator": "九州旅客鉄道",
+"public_transport:version": "2",
+"ref": "JA",
+"route": "train",
+"to": "門司港",
+"type": "route"
+},
+"11534997": {
+"colour": "#ee3d49",
+"from": "大牟田",
+"from:en": "Omuta",
+"name": "JR鹿児島本線 普通 (大牟田 => 八代)",
+"name:en": "JR Kagoshima Line Local (Omuta => Yatsushiro)",
+"name:ja": "JR鹿児島本線 普通 (大牟田 => 八代)",
+"operator": "九州旅客鉄道",
+"public_transport:version": "2",
+"route": "train",
+"to": "八代",
+"to:en": "Yatsushiro",
+"type": "route"
+},
+"11547355": {
+"colour": "#0095D9",
+"from": "折尾",
+"name": "JR若松線",
+"name:ja": "JR若松線 (折尾=>若松)",
+"network": "北部九州エリア",
+"network:en": "Northern Kyushu area",
+"operator": "九州旅客鉄道",
+"public_transport:version": "2",
+"ref": "JE",
+"route": "train",
+"to": "若松",
+"type": "route"
+},
+"11548856": {
+"colour": "#0095D9",
+"from": "若松",
+"name": "JR若松線",
+"name:ja": "JR若松線 (若松=>折尾)",
+"network": "北部九州エリア",
+"network:en": "Northern Kyushu area",
+"operator": "九州旅客鉄道",
+"public_transport:version": "2",
+"ref": "JE",
+"route": "train",
+"to": "折尾",
+"type": "route"
+},
+"11548857": {
+"colour": "#0095D9",
+"from": "折尾",
+"name": "JR若松線",
+"name:ja": "JR若松線 (折尾<=>若松)",
+"network": "北部九州エリア",
+"network:en": "Northern Kyushu area",
+"operator": "九州旅客鉄道",
+"public_transport:version": "2",
+"ref": "JE",
+"route_master": "train",
+"to": "若松",
+"type": "route_master"
+},
+"11556389": {
+"name": "JR鹿児島本線 (福間=>南福岡)",
+"operator": "九州旅客鉄道",
+"public_transport:version": "2",
+"route": "train",
+"type": "route"
+},
+"11921892": {
+"colour": "#ee3d49",
+"from": "八代",
+"from:en": "Yatsushiro",
+"name": "JR鹿児島本線 普通 (八代 => 銀水)",
+"name:en": "JR Kagoshima Line Local (Yatsushiro => Ginsui)",
+"name:ja": "JR鹿児島本線 普通 (八代 => 銀水)",
+"operator": "九州旅客鉄道",
+"public_transport:version": "2",
+"route": "train",
+"to": "銀水",
+"to:en": "Ginsui",
+"type": "route"
+},
+"12101726": {
+"colour": "#ee3d49",
+"name": "JR鹿児島本線",
+"name:ja": "JR鹿児島本線 (荒尾<=>八代)",
+"operator": "九州旅客鉄道",
+"public_transport:version": "2",
+"route_master": "train",
+"type": "route_master"
+},
+"12119115": {
+"colour": "#ee3d49",
+"from": "鹿児島",
+"name": "JR鹿児島本線",
+"name:ja": "JR鹿児島本線 (鹿児島=>川内)",
+"operator": "九州旅客鉄道",
+"public_transport:version": "2",
+"route": "train",
+"to": "川内",
+"type": "route"
+},
+"12119116": {
+"colour": "#ee3d49",
+"from": "川内",
+"name": "JR鹿児島本線",
+"name:ja": "JR鹿児島本線 (川内=>鹿児島)",
+"operator": "九州旅客鉄道",
+"public_transport:version": "2",
+"route": "train",
+"to": "鹿児島",
+"type": "route"
+},
+"12119117": {
+"colour": "#ee3d49",
+"name": "JR鹿児島本線",
+"name:ja": "JR鹿児島本線 (川内<=>鹿児島)",
+"operator": "九州旅客鉄道",
+"route_master": "train",
+"type": "route_master"
+},
+"12176977": {
+"from": "高松",
+"from:en": "Takamatsu",
+"name": "うずしお (高松 => 徳島)",
+"name:de": "Uzushio (Takamatsu => Tokushima)",
+"name:en": "Uzushio (Takamatsu => Tokushima)",
+"name:ja": "うずしお",
+"public_transport:version": "2",
+"ref": "うずしお",
+"route": "train",
+"to": "徳島",
+"to:en": "Tokushima",
+"type": "route",
+"via": "高松",
+"via:en": "Takamatsu"
+},
+"12176979": {
+"from": "岡山",
+"from:en": "Okayama",
+"name": "うずしお Uzushio (岡山=>宇多津)",
+"name:de": "Uzushio: Okayama => Utazu",
+"name:en": "Uzushio",
+"name:ja": "うずしお",
+"public_transport:version": "2",
+"ref": "うずしお",
+"route": "train",
+"to": "宇多津",
+"to:en": "Utazu",
+"type": "route",
+"via": "高松",
+"via:en": "Takamatsu"
+},
+"12176980": {
+"from": "徳島",
+"from:en": "Tokushima",
+"name": "うずしお Uzushio (徳島 => 高松 => 宇多津 =>岡山)",
+"route_master": "train",
+"to": "岡山",
+"to:en": "Okayama",
+"type": "route_master",
+"via": "高松;宇多津",
+"via:en": "Takamatsu;Utazu"
+},
+"12176981": {
+"from": "岡山",
+"from:en": "Okayama",
+"name": "うずしお Uzushio (岡山=>宇多津 => 高松 => 徳島)",
+"route_master": "train",
+"to": "徳島",
+"to:en": "Tokushima",
+"type": "route_master",
+"via": "宇多津;高松",
+"via:en": "Utazu;Takamatsu"
+},
+"12294667": {
+"colour": "pink",
+"from": "تهران",
+"name": "تهران-هشتگرد",
+"network": "RAI",
+"operator": "Commuter",
+"public_transport:version": "2",
+"route": "train",
+"service": "commuter",
+"to": "هشتگرد",
+"type": "route"
+},
+"12528457": {
+"duration": "01:00",
+"from": "大阪梅田",
+"interval": "00:30",
+"name": "直通特急 (大阪梅田 => 山陽姫路)",
+"name:de": "RE: Osaka Umeda => Himeji",
+"public_transport:version": "2",
+"route": "train",
+"to": "山陽姫路",
+"type": "route"
+},
+"12528458": {
+"duration": "01:00",
+"from": "山陽姫路",
+"interval": "00:30",
+"name": "直通特急 (山陽姫路 => 大阪梅田)",
+"name:de": "RE: Himeji => Osaka Umeda",
+"name:ja": "直通特急 (山陽姫路 => 大阪梅田)",
+"public_transport:version": "2",
+"route": "train",
+"to": "大阪梅田",
+"type": "route"
+},
+"12528459": {
+"duration": "01:00",
+"from": "大阪梅田 (Osaka Umeda)",
+"interval": "00:30",
+"name": "直通特急 (大阪梅田 <=> 山陽姫路)",
+"name:de": "RE: Osaka Umeda - Himeji",
+"name:ja": "直通特急 (大阪梅田 <=> 山陽姫路)",
+"public_transport:version": "2",
+"route_master": "train",
+"to": "山陽姫路 (Sanyo Himeji)",
+"type": "route_master"
+},
+"12607541": {
+"duration": "02:33",
+"from": "秋田 (Akita)",
+"name": "つがる: 秋田 => 青森",
+"name:de": "Tsugaru Express: Akita => Aomori",
+"network": "奥羽北線",
+"operator": "JR東日本",
+"public_transport:version": "2",
+"route": "train",
+"to": "青森 (Aomori)",
+"type": "route",
+"wikidata": "Q139450481"
+},
+"12607542": {
+"duration": "02:33",
+"from": "青森 (Aomori)",
+"name": "つがる: 青森 => 秋田",
+"name:de": "Tsugaru Express: Aomori => Akita",
+"operator": "JR東日本",
+"public_transport:version": "2",
+"route": "train",
+"to": "秋田 (Akita)",
+"type": "route"
+},
+"12607543": {
+"duration": "02:33",
+"from": "秋田 (Akita)",
+"name": "つがる: 秋田 => 青森",
+"name:de": "Tsugaru Express: Akita => Aomori",
+"operator": "JR東日本",
+"public_transport:version": "2",
+"route_master": "train",
+"to": "青森 (Aomori)",
+"type": "route_master"
+},
+"13145429": {
+"carriages": "2",
+"duration": "33",
+"from": "佐伯",
+"interval": "1:34",
+"name": "Train 普通: 佐伯 => 重岡",
+"network": "九州旅客鉄道",
+"opening_hours": "17:29-19:36",
+"operator": "九州旅客鉄道",
+"route": "train",
+"to": "重岡",
+"type": "route"
+},
+"13177298": {
+"carriages": "4",
+"duration": "1:08",
+"from": "佐伯",
+"interval": "24:00",
+"name": "Train 普通: 佐伯 => 延岡",
+"network": "JR九州",
+"opening_hours": "06:18-07:26",
+"operator": "九州旅客鉄道",
+"route": "train",
+"to": "延岡",
+"type": "route"
+},
+"13408515": {
+"carriages": "2",
+"duration": "24:00",
+"from": "重岡",
+"name": "Train 普通: 重岡 => 佐伯",
+"network": "九州旅客鉄道",
+"operator": "九州旅客鉄道",
+"operator:en": "Kyushu Railway Company",
+"operator:ja": "九州旅客鉄道",
+"operator:wikidata": "Q498366",
+"route": "train",
+"to": "佐伯",
+"type": "route"
+},
+"13603633": {
+"carriages": "2-4",
+"duration": "85",
+"from": "佐伯",
+"interval": "13:09",
+"interval:conditional": "60 @ (18:57-21:14)",
+"name": "Train 普通: 佐伯 => 大分",
+"network": "日豊本線",
+"opening_hours": "05:46-21:14",
+"operator": "九州旅客鉄道",
+"operator:en": "Kyushu Railway Company",
+"operator:ja": "九州旅客鉄道",
+"operator:wikidata": "Q498366",
+"ref": "1",
+"route": "train",
+"to": "大分",
+"type": "route"
+},
+"14095727": {
+"name": "北条鉄道北条線",
+"network": "北条鉄道",
+"operator": "北条鉄道",
+"route_master": "train",
+"type": "route_master"
+},
+"15937465": {
+"from": "甲府",
+"from:ja-Latn": "Kofu",
+"name": "ふじかわ (甲府 => 静岡)",
+"name:ja-Latn": "Fujikawa (Kofu => Shizuoka)",
+"operator": "東海旅客鉄道",
+"operator:en": "Central Japan Railway Company",
+"public_transport:version": "2",
+"route": "train",
+"to": "静岡",
+"to:ja-Latn": "Shizuoka",
+"type": "route"
+},
+"15937702": {
+"from": "静岡",
+"from:ja-Latn": "Shizuoka",
+"name": "ふじかわ (静岡 => 甲府)",
+"name:ja-Latn": "Fujikawa (Shizuoka => Kofu)",
+"operator": "東海旅客鉄道",
+"operator:en": "Central Japan Railway Company",
+"public_transport:version": "2",
+"route": "train",
+"to": "甲府",
+"to:ja-Latn": "Kofu",
+"type": "route"
+},
+"15937703": {
+"name": "ふじかわ",
+"name:ja-Latn": "Fujikawa",
+"operator": "東海旅客鉄道",
+"operator:en": "Central Japan Railway Company",
+"public_transport:version": "2",
+"route_master": "train",
+"type": "route_master"
+},
+"16003005": {
+"from": "سيدي عمار",
+"name": "سيدي عمار ← عنابة",
+"name:ar": "سيدي عمار ← عنابة",
+"name:fr": "Sidi Amar → Annaba",
+"operator": "الشركة الوطنية للنقل بالسكك الحديدية",
+"operator:ar": "الشركة الوطنية للنقل بالسكك الحديدية",
+"operator:wikidata": "Q1275038",
+"operator:wikipedia": "ar:الشركة الوطنية للنقل بالسكك الحديدية",
+"public_transport:version": "2",
+"route": "train",
+"service": "commuter",
+"to": "عنابة",
+"type": "route",
+"wikidata": "Q117288429"
+},
+"16003009": {
+"name": "عنابة ↔ سيدي عمار",
+"name:fr": "Annaba ↔ Sidi Amar",
+"operator": "الشركة الوطنية للنقل بالسكك الحديدية",
+"operator:ar": "الشركة الوطنية للنقل بالسكك الحديدية",
+"operator:wikidata": "Q1275038",
+"operator:wikipedia": "ar:الشركة الوطنية للنقل بالسكك الحديدية",
+"route_master": "train",
+"service": "commuter",
+"type": "route_master",
+"wikidata": "Q117288429"
+},
+"16003176": {
+"from": "عنابة",
+"name": "عنابة - برحال",
+"name:ar": "عنابة - برحال",
+"name:fr": "Annaba - Berrahal",
+"operator": "الشركة الوطنية للنقل بالسكك الحديدية",
+"operator:ar": "الشركة الوطنية للنقل بالسكك الحديدية",
+"operator:wikidata": "Q1275038",
+"operator:wikipedia": "ar:الشركة الوطنية للنقل بالسكك الحديدية",
+"public_transport:version": "2",
+"route": "train",
+"to": "برحال",
+"type": "route"
+},
+"16006851": {
+"from": "شيحاني",
+"name": "شيحاني ← عنابة",
+"name:ar": "شيحاني ← عنابة",
+"name:fr": "Chihani → Annaba",
+"operator": "الشركة الوطنية للنقل بالسكك الحديدية",
+"operator:ar": "الشركة الوطنية للنقل بالسكك الحديدية",
+"operator:wikidata": "Q1275038",
+"operator:wikipedia": "ar:الشركة الوطنية للنقل بالسكك الحديدية",
+"public_transport:version": "2",
+"route": "train",
+"service": "commuter",
+"to": "عنابة",
+"type": "route"
+},
+"16006855": {
+"from": "عنابة",
+"name": "عنابة ← شيحاني",
+"name:ar": "عنابة ← شيحاني",
+"name:fr": "Annaba → Chihani",
+"operator": "الشركة الوطنية للنقل بالسكك الحديدية",
+"operator:ar": "الشركة الوطنية للنقل بالسكك الحديدية",
+"operator:wikidata": "Q1275038",
+"operator:wikipedia": "ar:الشركة الوطنية للنقل بالسكك الحديدية",
+"public_transport:version": "2",
+"route": "train",
+"service": "commuter",
+"to": "شيحاني",
+"type": "route"
+},
+"16006857": {
+"name": "عنابة ↔ شيحاني",
+"name:ar": "عنابة ↔ شيحاني",
+"name:fr": "Annaba ↔ Chihani",
+"operator": "الشركة الوطنية للنقل بالسكك الحديدية",
+"operator:ar": "الشركة الوطنية للنقل بالسكك الحديدية",
+"operator:wikidata": "Q1275038",
+"operator:wikipedia": "ar:الشركة الوطنية للنقل بالسكك الحديدية",
+"route_master": "train",
+"service": "commuter",
+"type": "route_master"
+},
+"17328967": {
+"duration": "0:38",
+"from": "札幌",
+"interval": "0:12",
+"name": "快速エアポート(新千歳空港行)",
+"name:de": "Flughafen-Zubringer (stadtauswärts)",
+"public_transport:version": "2",
+"route": "train",
+"to": "新千歳空港",
+"type": "route"
+},
+"17335342": {
+"duration": "0:38",
+"from": "新千歳空港",
+"interval": "0:12",
+"name": "快速エアポート(札幌行)",
+"name:de": "Flughafen-Zubringer (stadteinwärts)",
+"public_transport:version": "2",
+"route": "train",
+"to": "札幌",
+"type": "route"
+},
+"17335343": {
+"duration": "0:38",
+"from": "札幌",
+"interval": "0:12",
+"name": "快速エアポート",
+"name:de": "Flughafen-Zubringer",
+"public_transport:version": "2",
+"route_master": "train",
+"to": "新千歳空港",
+"type": "route_master"
+},
+"17399882": {
+"duration": "2:05",
+"from": "新潟",
+"from:de": "Niigata",
+"interval": "3:00",
+"name": "特急 新潟=>新井",
+"name:de": "Regionalexpress Niigata => Arai",
+"name:ja": "特急 新潟=>新井",
+"network": "JR東日本",
+"operator": "JR東日本",
+"operator:en": "JR East",
+"operator:ja": "東日本旅客鉄道株式会社",
+"public_transport:version": "2",
+"route": "train",
+"to": "新井",
+"to:de": "Arai",
+"type": "route"
+},
+"17400016": {
+"duration": "1:30",
+"from": "新井",
+"from:de": "Arai",
+"interval": "3:00",
+"name": "特急 新井=>新潟",
+"name:de": "Regionalexpress Arai => Niigata",
+"name:ja": "特急 新井=>新潟",
+"network": "JR東日本",
+"operator": "JR東日本",
+"operator:en": "JR East",
+"operator:ja": "東日本旅客鉄道株式会社",
+"public_transport:version": "2",
+"route": "train",
+"to": "新潟",
+"to:de": "Niigata",
+"type": "route"
+},
+"17400017": {
+"duration": "2:05",
+"interval": "1:00",
+"name": "特急 新潟<=>新井",
+"name:de": "Regionalexpress Nagaoka <=> Arai",
+"name:ja": "特急 新潟<=>新井",
+"network": "JR東日本",
+"operator": "JR東日本",
+"operator:en": "JR East",
+"operator:ja": "東日本旅客鉄道株式会社",
+"public_transport:version": "2",
+"route_master": "train",
+"type": "route_master"
+},
+"17406006": {
+"duration": "00:39",
+"from": "郡山駅 (Koriyama)",
+"interval": "01:00",
+"name": "普通 郡山=>新白河",
+"name:de": "Regionalbahn Koriyama => Shin-Shirakawa",
+"operator": "JR東北線",
+"public_transport:version": "2",
+"route": "train",
+"to": "新白河駅 (Shin-Shirakawa)",
+"type": "route"
+},
+"17406007": {
+"duration": "00:39",
+"from": "新白河駅 (Shin-Shirakawa)",
+"interval": "01:00",
+"name": "普通 新白河=>郡山",
+"name:de": "Regionalbahn Shin-Shirakawa => Koriyama",
+"operator": "JR東北線",
+"public_transport:version": "2",
+"route": "train",
+"to": "郡山駅 (Koriyama)",
+"type": "route"
+},
+"17406008": {
+"from": "新白河 (Shin-Shirakawa)",
+"name": "普通 新白河<=>郡山",
+"name:de": "Regionalbahn Shin-Shirakawa <=> Koriyama",
+"operator": "JR東北線",
+"public_transport:version": "2",
+"route_master": "train",
+"to": "郡山駅 (Koriyama)",
+"type": "route_master"
+},
+"17406046": {
+"duration": "01:05",
+"from": "福島駅 (Fukushima)",
+"interval": "01:00",
+"name": "普通 福島=>郡山",
+"name:de": "Regionalbahn Fukushima => Koriyama",
+"operator": "JR東北線",
+"public_transport:version": "2",
+"route": "train",
+"to": "郡山駅 (Koriyama)",
+"type": "route"
+},
+"17406047": {
+"duration": "01:05",
+"from": "郡山駅 (Koriyama)",
+"interval": "01:00",
+"name": "普通 郡山=>福島",
+"name:de": "Regionalbahn Koriyama => Fukushima",
+"operator": "JR東北線",
+"public_transport:version": "2",
+"route": "train",
+"to": "福島駅 (Fukushima)",
+"type": "route"
+},
+"17406048": {
+"from": "郡山駅 (Koriyama)",
+"name": "普通 郡山<=>福島",
+"name:de": "Regionalbahn Koriyama <=> Fukushima",
+"operator": "JR東北線",
+"public_transport:version": "2",
+"route_master": "train",
+"to": "福島駅 (Fukushima)",
+"type": "route_master"
+},
+"17522244": {
+"colour": "#DC143C",
+"contact:website": "https://wakayama-dentetsu.co.jp/station/",
+"name": "貴志川線",
+"operator": "和歌山電鐵",
+"route_master": "train",
+"type": "route_master"
+},
+"1821827": {
+"from": "Fes",
+"from:ar": "فاس",
+"name": "Fes - Marrakech فاس - مراكش",
+"name:ar": "فاس - مراكش",
+"name:fr": "Fes - Marrakech",
+"network": "AL ATLAS",
+"operator": "المكتب الوطني للسكك الحديدية",
+"operator:ar": "المكتب الوطني للسكك الحديدية",
+"operator:website": "https://www.oncf.ma/ar/",
+"operator:wikidata": "Q1815809",
+"operator:wikipedia": "ar:المكتب الوطني للسكك الحديدية (المغرب)",
+"operator:wikipedia:ar": "المكتب الوطني للسكك الحديدية (المغرب)",
+"public_transport:version": "2",
+"ref": "FM",
+"ref:ar": "فم",
+"route": "train",
+"to": "Marrakech",
+"to:ar": "مراكش",
+"type": "route"
+},
+"18529522": {
+"from": "Marrakech",
+"from:ar": "مراكش",
+"name": "Marrakech - Fes فاس - مراكش",
+"name:ar": "فاس - مراكش",
+"name:fr": "Fes - Marrakech",
+"network": "AL ATLAS",
+"operator": "المكتب الوطني للسكك الحديدية",
+"operator:ar": "المكتب الوطني للسكك الحديدية",
+"operator:website": "https://www.oncf.ma/ar/",
+"operator:wikidata": "Q1815809",
+"operator:wikipedia": "ar:المكتب الوطني للسكك الحديدية (المغرب)",
+"operator:wikipedia:ar": "المكتب الوطني للسكك الحديدية (المغرب)",
+"public_transport:version": "2",
+"ref": "FM",
+"ref:ar": "فم",
+"route": "train",
+"to": "Fes",
+"to:ar": "فاس",
+"type": "route"
+},
+"18659004": {
+"from": "岡山",
+"name": "特急やくも (岡山 => 出雲市)",
+"operator": "西日本旅客鉄道",
+"route": "train",
+"to": "出雲市",
+"type": "route",
+"via": "新見;米子"
+},
+"18755638": {
+"colour": "#3366FF",
+"from": "逗子・葉山",
+"from:en": "Zushi・Hayama",
+"name": "京急逗子線•本線•空港線 急行 (逗子・葉山 => 羽田空港第１・第２ターミナル)",
+"name:en": "Keikyu Zushi-Main-Airport Lines Express (Zushi・Hayama => Haneda Airport Terminal 1・2)",
+"network": "京急逗子線;京急本線;京急空港線",
+"operator": "京浜急行電鉄",
+"operator:en": "Keikyu Corporation",
+"operator:ja": "京浜急行電鉄",
+"operator:wikidata": "Q1322206",
+"public_transport:version": "2",
+"ref": "KK",
+"route": "train",
+"to": "羽田空港第１・第２ターミナル",
+"to:en": "Haneda Airport Terminal 1・2",
+"type": "route"
+},
+"18755639": {
+"colour": "#3366FF",
+"from": "羽田空港第１・第２ターミナル",
+"from:en": "Haneda Airport Terminal 1・2",
+"name": "京急空港線•本線•逗子線 急行 (羽田空港第１・第２ターミナル => 逗子・葉山)",
+"name:en": "Keikyu Airport-Main-Zushi Lines Express (Haneda Airport Terminal 1・2 => Zushi・Hayama)",
+"network": "京急空港線;京急本線;京急逗子線",
+"operator": "京浜急行電鉄",
+"operator:en": "Keikyu Corporation",
+"operator:ja": "京浜急行電鉄",
+"operator:wikidata": "Q1322206",
+"public_transport:version": "2",
+"ref": "KK",
+"route": "train",
+"to": "逗子・葉山",
+"to:en": "Zushi・Hayama",
+"type": "route"
+},
+"18755640": {
+"name": "京急空港線•本線•逗子線 急行",
+"operator": "京浜急行電鉄",
+"operator:en": "Keikyu Corporation",
+"operator:ja": "京浜急行電鉄",
+"operator:wikidata": "Q1322206",
+"ref": "KK",
+"route_master": "train",
+"type": "route_master"
+},
+"18788965": {
+"from": "立川",
+"name": "JR中央線・青梅線　立川 => 西立川",
+"operator": "東日本旅客鉄道",
+"route": "train",
+"to": "西立川",
+"type": "route",
+"wikidata": "Q137918944"
+},
+"18924602": {
+"from": "釧路",
+"name": "根室本線: 釧路 => 根室",
+"operator": "北海道旅客鉄道",
+"route": "train",
+"to": "根室",
+"type": "route"
+},
+"18924603": {
+"name": "JR根室本線",
+"operator": "北海道旅客鉄道",
+"reg_name": "花咲線",
+"route_master": "train",
+"type": "route_master"
+},
+"1953908": {
+"from": "宇多津",
+"from:en": "Utazu",
+"name": "うずしお Uzushio (宇多津 =>高松)",
+"name:de": "Uzushio: Utazu => Takamatsu",
+"name:en": "Uzushio",
+"name:ja": "うずしお",
+"public_transport:version": "2",
+"ref": "うずしお",
+"route": "train",
+"to": "高松",
+"to:en": "Takamatsu",
+"type": "route"
+},
+"20297846": {
+"colour": "#7b4cc2",
+"from": "広電本社前",
+"name": "広島電鉄循環線内回り",
+"opening_date": "2026-03-28",
+"operator": "広島電鉄株式会社",
+"ref": "L",
+"route": "tram",
+"to": "広電本社前",
+"type": "route",
+"via": "皆実町六丁目;比治山下;的場町;紙屋町東"
+},
+"20297847": {
+"colour": "#7b4cc2",
+"from": "広電本社前",
+"name": "広島電鉄循環線外回り",
+"operator": "広島電鉄株式会社",
+"ref": "L",
+"route": "tram",
+"to": "広電本社前",
+"type": "route",
+"via": "紙屋町東;的場町;比治山下;皆実町6丁目"
+},
+"20297848": {
+"colour": "#7b4cc2",
+"name": "広島電鉄循環線",
+"operator": "広島電鉄株式会社",
+"ref": "L",
+"route_master": "tram",
+"type": "route_master"
+},
+"20513473": {
+"colour": "#1968ab",
+"duration": "01:15",
+"from": "กรุงเทพอภิวัฒน์",
+"name": "9001 กรุงเทพอภิวัฒน์ - อยุธยา",
+"network": "Bangkok Connex",
+"opening_hours": "Mo-Fr 05:15-06:30",
+"operator": "SRT",
+"ref": "9001",
+"route": "train",
+"to": "อยุธยา",
+"type": "route",
+"wheelchair": "yes"
+},
+"20513474": {
+"colour": "#1968ab",
+"from": "อยุธยา",
+"name": "9002 อยุธยา - กรุงเทพอภิวัฒน์",
+"name:th": "9002 อยุธยา - กรุงเทพอภิวัฒน์",
+"network": "Bangkok Connex",
+"opening_hours": "Mo-Fr 06:50-08:05",
+"operator": "SRT",
+"ref": "9002",
+"route": "train",
+"to": "กรุงเทพอภิวัฒน์",
+"type": "route",
+"wheelchair": "yes"
+},
+"20513475": {
+"colour": "#1968ab",
+"name": "9001/9002 กรุงเทพอภิวัฒน์ - อยุธยา - กรุงเทพอภิวัฒน์",
+"network": "Bangkok Connex",
+"operator": "SRT",
+"ref": "9001/9002",
+"route": "train",
+"route_master": "train",
+"type": "route_master",
+"wheelchair": "yes"
+},
+"20513557": {
+"colour": "#1968ab",
+"name": "9003/9004 กรุงเทพอภิวัฒน์ - อยุธยา - กรุงเทพอภิวัฒน์",
+"network": "Bangkok Connex",
+"operator": "SRT",
+"ref": "9003/9004",
+"route": "train",
+"route_master": "train",
+"type": "route_master",
+"wheelchair": "yes"
+},
+"20513752": {
+"colour": "#1968ab",
+"name": "9005/9006 กรุงเทพอภิวัฒน์ - อยุธยา - กรุงเทพอภิวัฒน์",
+"network": "Bangkok Connex",
+"operator": "SRT",
+"ref": "9005/9006",
+"route": "train",
+"route_master": "train",
+"type": "route_master",
+"wheelchair": "yes"
+},
+"21361373": {
+"from": "釧路",
+"name": "JR根室本線（釧路->帯広）",
+"public_transport:version": "2",
+"route": "train",
+"to": "帯広",
+"type": "route"
+},
+"21361374": {
+"from": "帯広",
+"name": "JR根室本線（帯広->釧路）",
+"public_transport:version": "2",
+"route": "train",
+"to": "釧路",
+"type": "route"
+},
+"21361375": {
+"from": "帯広",
+"name": "JR根室本線（帯広->新得）",
+"public_transport:version": "2",
+"route": "train",
+"to": "新得",
+"type": "route"
+},
+"21361376": {
+"from": "新得",
+"name": "JR根室本線（新得->帯広）",
+"operator": "北海道旅客鉄道",
+"public_transport:version": "2",
+"route": "train",
+"to": "帯広",
+"type": "route"
+},
+"21361377": {
+"name": "JR根室本線（新得<-->釧路）",
+"operator": "北海道旅客鉄道",
+"route_master": "train",
+"type": "route_master"
+},
+"3134885": {
+"description": "13 Ürümqi -> Almaty / 14 Almaty -> Ürümqi",
+"from": "乌鲁木齐",
+"name": "13/14 乌鲁木齐<=>Алматы",
+"name:de": "13/14 Urumchi<=>Almaty",
+"name:ru": "13/14 Урумчи<=>Алматы",
+"network": "unknown",
+"public_transport:version": "1",
+"ref": "13/14",
+"route": "train",
+"to": "Алматы",
+"type": "route"
+},
+"3395930": {
+"electrified": "no",
+"from": "Beni Nsar بني انصار",
+"name": "Nador الناظور - Taourirt تاوريرت",
+"name:ar": "الناظور - تاوريرت",
+"name:fr": "Nador - Taourirt",
+"network": "AL ATLAS",
+"operator": "ONCF المكتب الوطني للسكك الحديدية",
+"operator:ar": "المكتب الوطني للسكك الحديدية",
+"public_transport:version": "2",
+"route": "train",
+"to": "Taourirt تاوريرت",
+"train": "regular",
+"type": "route"
+},
+"4508663": {
+"from": "Safi",
+"from:ar": "أسفي",
+"name": "Safi - Ben Guerir أسفي - ابن جرير",
+"name:ar": "أسفي - ابن جرير",
+"name:fr": "Safi - Ben Guerir",
+"network": "AL ATLAS",
+"operator": "المكتب الوطني للسكك الحديدية",
+"operator:ar": "المكتب الوطني للسكك الحديدية",
+"operator:website": "https://www.oncf.ma/ar/",
+"operator:wikidata": "Q1815809",
+"operator:wikipedia": "ar:المكتب الوطني للسكك الحديدية (المغرب)",
+"public_transport:version": "2",
+"ref": "SB",
+"route": "train",
+"to": "Ben Guerir",
+"to:ar": "ابن جرير",
+"type": "route",
+"wikidata": "Q3743605"
+},
+"4509023": {
+"from": "Casablanca",
+"from:ar": "الدار البيضاء",
+"name": "Casablanca - Oued Zem الدار البيضاء - وادي زم",
+"name:ar": "الدار البيضاء - وادي زم",
+"name:fr": "Casablanca - Oued Zem",
+"network": "AL ATLAS",
+"operator": "المكتب الوطني للسكك الحديدية",
+"operator:ar": "المكتب الوطني للسكك الحديدية",
+"operator:website": "https://www.oncf.ma/ar/",
+"operator:wikidata": "Q1815809",
+"operator:wikipedia": "ar:المكتب الوطني للسكك الحديدية (المغرب)",
+"operator:wikipedia:ar": "المكتب الوطني للسكك الحديدية (المغرب)",
+"public_transport:version": "2",
+"ref": "CO",
+"ref:ar": "بو",
+"route": "train",
+"to": "Oued Zem",
+"to:ar": "وادي زم",
+"type": "route"
+},
+"4679900": {
+"from": "ロムニー",
+"name": "ロムニー鉄道",
+"public_transport:version": "2",
+"route": "train",
+"to": "ネルソン",
+"type": "route"
+},
+"6780746": {
+"from": "عنابة",
+"name": "عنابة - تبسة",
+"name:ar": "عنابة - تبسة",
+"name:fr": "Annaba - Tébessa",
+"operator": "الشركة الوطنية للنقل بالسكك الحديدية",
+"operator:ar": "الشركة الوطنية للنقل بالسكك الحديدية",
+"operator:wikidata": "Q1275038",
+"operator:wikipedia": "ar:الشركة الوطنية للنقل بالسكك الحديدية",
+"public_transport:version": "2",
+"route": "train",
+"to": "تبسة",
+"type": "route"
+},
+"8688078": {
+"from": "عنابة",
+"name": "عنابة ← سيدي عمار",
+"name:ar": "عنابة ← سيدي عمار",
+"name:fr": "Annaba → Sidi Amar",
+"operator": "الشركة الوطنية للنقل بالسكك الحديدية",
+"operator:ar": "الشركة الوطنية للنقل بالسكك الحديدية",
+"operator:wikidata": "Q1275038",
+"operator:wikipedia": "ar:الشركة الوطنية للنقل بالسكك الحديدية",
+"public_transport:version": "2",
+"route": "train",
+"service": "commuter",
+"to": "سيدي عمار",
+"type": "route",
+"wikidata": "Q117288429"
+},
+"9407555": {
+"from": "有馬口",
+"from:en": "Arimaguchi",
+"name": "有馬線 普通 (有馬口 => 有馬温泉)",
+"name:en": "Arima Line Local (Arimaguchi => Arima Onsen)",
+"name:ja": "有馬線 普通 (有馬口 => 有馬温泉)",
+"network": "神戸電鉄有馬線",
+"operator": "神戸電鉄",
+"public_transport:version": "2",
+"route": "train",
+"to": "有馬温泉",
+"to:en": "Arima Onsen",
+"type": "route"
+},
+"9407556": {
+"from": "有馬温泉",
+"name": "有馬線 普通 (有馬温泉 => 有馬口)",
+"name:en": "Arima Line Local (Arima Onsen => Arimaguchi)",
+"name:ja": "有馬温泉 普通 (有馬温泉 => 有馬口)",
+"network": "神戸電鉄有馬線",
+"operator": "神戸電鉄",
+"public_transport:version": "2",
+"ref": "KB",
+"route": "train",
+"to": "有馬口",
+"type": "route"
+},
+"9407557": {
+"name": "神戸電鉄 有馬口-有馬温泉",
+"network": "神戸電鉄有馬線",
+"operator": "神戸電鉄",
+"route_master": "train",
+"type": "route_master"
+},
+"9813408": {
+"colour": "#004898",
+"duration": "28",
+"from": "Central Japan International Airport",
+"interval": "30",
+"name": "μSKY Limited Express (ミュースカイ)",
+"name:de": "μSKY Limited Express: Flughafen - Stadt",
+"name:en": "μSKY Limited Express",
+"name:ja": "ミュースカイ",
+"network": "μSKY",
+"opening_hours": "Mo-Su 07:30-20:30",
+"operator": "Meitetsu",
+"public_transport:version": "2",
+"ref": "μSKY",
+"route": "train",
+"source:interval": "https://www.meitetsu.co.jp/eng/timetable/centrair/timetable/access_e05_01.html",
+"to": "Nagoya",
+"type": "route"
+},
+"9813651": {
+"duration": "28",
+"from": "Nagoya",
+"interval": "30",
+"name": "μSKY Limited Express (ミュースカイ)",
+"name:de": "μSKY Limited Express: Stadt - Flughafen",
+"name:en": "μSKY Limited Express",
+"name:ja": "ミュースカイ",
+"network": "μSKY",
+"opening_hours": "Mo-Su 07:30-20:30",
+"operator": "Meitetsu",
+"public_transport:version": "2",
+"ref": "μSKY",
+"route": "train",
+"source:interval": "https://www.meitetsu.co.jp/eng/timetable/centrair/timetable/access_e05_01.html",
+"to": "Central Japan International Airport",
+"type": "route"
+},
+"9813652": {
+"colour": "#004898",
+"name": "μSKY Limited Express (ミュースカイ)",
+"name:de": "μSKY Limited Express",
+"name:ja": "ミュースカイ",
+"network": "μSKY",
+"opening_hours": "Mo-Su 07:30-20:30",
+"operator": "Meitetsu",
+"ref": "μSKY",
+"route_master": "train",
+"type": "route_master",
+"wikidata": "Q11415786",
+"wikipedia": "ja:名鉄特急"
+}
+}
+}

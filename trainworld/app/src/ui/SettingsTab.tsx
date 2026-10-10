@@ -34,15 +34,20 @@ export function SettingsTab() {
           <input type="range" min="0.5" max="2" step="0.05" value={d.bubbleSize} onInput={(e) => setDisplay("bubbleSize", Number((e.target as HTMLInputElement).value))} />
         </label>
       )}
-      <div class="h">Track colour</div>
-      <Segmented<"line" | "height">
+      <div class="h">Track display</div>
+      <div class="track-modes"><Segmented<"line" | "traffic" | "height" | "speed">
         options={[
           ["line", "Line"],
+          ["traffic", "Line + traffic thickness"],
           ["height", "Height"],
+          ["speed", "Max speed"],
         ]}
         value={d.trackColour}
         onChange={(v) => setDisplay("trackColour", v)}
-      />
+      /></div>
+      {d.trackColour === "speed" && <ul class="speed-key">
+        {[[40, "#d85b4b"], [80, "#d9a437"], [120, "#55a886"], [160, "#397bc1"]].map(([v, colour]) => <li><i style={{background: String(colour)}} />{v} km/h</li>)}
+      </ul>}
       {d.trackColour === "height" && (
         <ul class="levels-key">
           {LEVELS.map((l) => (
@@ -70,9 +75,6 @@ export function SettingsTab() {
       </div>
       <div class="h">Riders on the network</div>
       <div class="checks">
-        <Check checked={d.lineLoad} onChange={(v) => setDisplay("lineLoad", v)}>
-          Line width
-        </Check>
         <Check checked={d.stationRiders} onChange={(v) => setDisplay("stationRiders", v)}>
           Station size
         </Check>
@@ -80,6 +82,14 @@ export function SettingsTab() {
           How full trains are
         </Check>
       </div>
+      {d.trainLoad && <>
+        <div class="h">Train crowding</div>
+        <Segmented<"average" | "busiest">
+          options={[["average", "Average"], ["busiest", "Busiest hour"]]}
+          value={d.trainLoadBasis}
+          onChange={(v) => setDisplay("trainLoadBasis", v)}
+        />
+      </>}
       <div class="h">Theme</div>
       <Segmented options={THEMES.map((t) => [t, THEME_NAME[t]] as [Theme, string])} value={theme.value} onChange={(v) => (theme.value = v)} />
       <GameSaves />

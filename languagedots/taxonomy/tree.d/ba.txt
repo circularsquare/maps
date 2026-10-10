@@ -10,11 +10,7 @@
 #     Serbo-Croatian.
 #   Bosniak (Bosnjacki): the name Serb and Croat usage gives the language Bosniaks call Bosnian.
 #   Bosnian-Herzegovinian (Bosanskohercegovacki): a civic, non-ethnic name for the common language.
-indoeuropean.slavic.south.bosniancroatianserbian | Bosnian-Croatian-Serbian
-indoeuropean.slavic.south.bosnianserbiancroatian | Bosnian-Serbian-Croatian
-indoeuropean.slavic.south.bosniancroatian | Bosnian-Croatian
 indoeuropean.slavic.south.bosniak | Bosniak
-indoeuropean.slavic.south.bosnianherzegovinian | Bosnian-Herzegovinian
 # Bosnian, defined bare in cz.txt and others, coloured here where it is big (Anita, 2026-10-05:
 # Bosnian and Croatian a little further apart): the generated olive (0.78 0.13 110) made a
 # stronger, greener olive, 0.152 from Croatian (was 0.122), 0.124 from Serbian.

@@ -27,6 +27,8 @@ export interface Strokes {
   /** per segment: level at its start (height / 8 m, rounded) */
   level: Float32Array;
   flags: Float32Array;
+  /** Geometry speed limit km/h, per stroke segment (bare track). */
+  speed?: Float32Array;
   /** per segment: distance along its edge or line at its start, local units (dashes) */
   dist: Float32Array;
   /** per segment: sideways offset in line widths, to the left of the segment's direction
@@ -59,6 +61,8 @@ export interface NetworkBuffers {
   meta: Float32Array;
   samples: Float32Array;
   lineTable: Float32Array;
+  /** Actual 20 m cars per train, indexed by line id; absent in old synthetic fixtures. */
+  lineCars?: Float32Array;
   /** per sample of `samples`: the line's sideways offset there, line widths to the left of run
    * 0's direction (T-062), so trains ride their own stroke; absent = 0 */
   sampleOff?: Float32Array;
@@ -256,14 +260,19 @@ export function networkFromState(s: ClockState): NetworkBuffers {
   const edgePts = new Map<number, Float32Array>();
   const builtEdge = new Map<number, boolean>();
   const track = new StrokeBuilder();
+  const speeds = new Float32Array(Math.max(0, r.edgePts.length / 3 - s.edges.length));
+  let speedAt = 0;
   s.edges.forEach((e, i) => {
     const pts = r.edgePts.subarray(r.edgeOff[i] * 3, r.edgeOff[i + 1] * 3);
     edgePts.set(e.id, pts);
     builtEdge.set(e.id, e.built);
     track.add(pts, TRACK, e.id, e.built ? 0 : F_BLUEPRINT);
+    for (let k = r.edgeOff[i]; k < r.edgeOff[i + 1] - 1; k++) speeds[speedAt++] = r.edgeSpeed?.[k] ?? e.vminKmh;
   });
   const maxLine = s.lines.reduce((m, l) => Math.max(m, l.id), -1);
   const lineColours = new Uint8Array(Math.max(1, maxLine + 1) * 4);
+  const lineCars = new Float32Array(r.lineTable.length / 4).fill(8);
+  for (const l of s.lines) lineCars[l.id] = Math.max(1, l.cars);
   const lines = new StrokeBuilder(true);
   const lineIds: string[] = [];
   const { sigma, onEdge } = layoutBundles(s, edgePts);
@@ -336,7 +345,7 @@ export function networkFromState(s: ClockState): NetworkBuffers {
   const junctions = new Float32Array(jn.length * 2);
   jn.forEach((n, i) => junctions.set(nodeLocal.get(n.id) ?? lngLatLocal(n.lng, n.lat), i * 2));
   return {
-    track: track.build(),
+    track: { ...track.build(), speed: speeds.subarray(0, speedAt) },
     lines: lines.build(),
     lineIds,
     lineColours,
@@ -349,6 +358,7 @@ export function networkFromState(s: ClockState): NetworkBuffers {
     meta: r.meta,
     samples: r.samples,
     lineTable: r.lineTable,
+    lineCars,
     sampleOff,
     sampleStroke,
     edgePts,
@@ -399,6 +409,11 @@ export function tripAt(n: NetworkBuffers, profile: number, dep: number, t: numbe
   const s = profileS(n, profile, tau);
   const len = n.meta[profile * 4 + 3];
   const d = run === 0 ? s : len - s;
+  return { ...pointAt(n, line, d), s, run, line };
+}
+
+/** Position and stroke offset used by both train and car picking. */
+function pointAt(n: NetworkBuffers, line: number, d: number) {
   const [x, y] = lineAt(n, line, d);
   const [bx, by] = lineAt(n, line, d - 5), [fx, fy] = lineAt(n, line, d + 5);
   let off = 0;
@@ -408,5 +423,16 @@ export function tripAt(n: NetworkBuffers, profile: number, dep: number, t: numbe
     const f = Math.max(0, Math.min(1, d / step - i0));
     off = n.sampleOff[first + i0] * (1 - f) + (n.sampleOff[first + i0 + 1] ?? 0) * f;
   }
-  return { x, y, s, run, line, off, dx: fx - bx, dy: fy - by };
+  return { x, y, off, dx: fx - bx, dy: fy - by };
+}
+
+/** A close-up car's centre and bogies, matching the GPU's terminal clamp and 20 m pitch. */
+export function trainCarAt(n: NetworkBuffers, at: NonNullable<ReturnType<typeof tripAt>>, car: number) {
+  const cars = Math.max(1, n.lineCars?.[at.line] ?? 8);
+  const len = n.lineTable[at.line * 4 + 2], total = Math.min(cars * 20, len);
+  const d = at.run === 0 ? at.s : len - at.s;
+  const centre = Math.max(total / 2, Math.min(len - total / 2, d));
+  const carD = centre + (car + 0.5) * total / cars - total / 2;
+  const half = Math.max(total / cars / 2 - 0.5, 1);
+  return { ...pointAt(n, at.line, carD), back: lineAt(n, at.line, carD - half), front: lineAt(n, at.line, carD + half) };
 }

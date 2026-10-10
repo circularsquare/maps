@@ -13,7 +13,7 @@ import { LINE_PALETTE } from "../../game/palette";
 import { DEMAND_INDEX, DEMANDS, type Demand, type LineStats } from "../../game/types";
 import { lineDraft, selection, tool } from "../../game/ui";
 import { income } from "../../game/money";
-import { edit, linesAt, renameLine, say, setFrequency, setLineColour, world } from "../../game/world";
+import { edit, linesAt, renameLine, say, setTrainCount, setLineColour, world } from "../../game/world";
 import { live } from "../../map/live";
 import { Chip, Icon, Row, Stepper } from "../widgets";
 
@@ -172,21 +172,20 @@ export function LineInspector({ id }: { id: string }) {
       )}
 
       <div class="h">Schedule</div>
+      <p class="muted small">Trains on the entire line, in both directions.</p>
       <table class="sched">
         <tr>
           <th>Demand</th>
-          <th>Trains an hour</th>
+          <th>Trains on line</th>
           <th>Headway</th>
-          <th>Trains</th>
         </tr>
         {DEMANDS.map((d) => (
           <tr class={d === now ? "now" : ""}>
             <td>{DEMAND_LABEL[d]}</td>
             <td>
-              <Stepper value={l.tph[d]} label="trains an hour" onStep={(s) => setFrequency(l.id, d, l.tph[d] + s)} />
+              <Stepper value={st.trainsNeeded[DEMAND_INDEX[d]]} label="trains on the entire line" onStep={(s) => setTrainCount(l.id, d, st.trainsNeeded[DEMAND_INDEX[d]] + s)} />
             </td>
             <td>{headway(l.tph[d])}</td>
-            <td>{st.trainsNeeded[DEMAND_INDEX[d]]}</td>
           </tr>
         ))}
       </table>

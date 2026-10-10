@@ -104,7 +104,8 @@ NODE = {
     "krs": f"{NS}.centralsudanic.kresh",     # gbay1288 Kresh-Aja (Central Sudanic as usually grouped)
     "yul": f"{NS}.centralsudanic.yulu",      # yulu1243
     "kcm": f"{NS}.centralsudanic.gula",      # gula1266, cf.txt's leaf
-    "sba": f"{NS}.centralsudanic.sara",      # ngam1268 Ngambay, a Sara language: cf.txt's leaf
+    "sba": f"{NS}.centralsudanic.ngambay",   # ngam1268 Ngambay: td.txt's leaf since 2026-10-09
+                                             # (was the plain Sara leaf, cf.txt's)
     "fgr": f"{NS}.centralsudanic.fongoro",   # fong1243
     "gya": f"{NC}.gbaya.gbaya",              # nort2775 Northwest Gbaya, cf.txt's leaf
     "hau": f"{AA}.chadic.hausa",

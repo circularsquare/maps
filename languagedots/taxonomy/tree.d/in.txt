@@ -1,0 +1,4 @@
+# India, Census 2011 C-16 (taxonomy/in2011.py). India's own nodes are in tree.txt; this fragment
+# holds the ones added later. Sylheti (2026-10-07): the Bengali of the Barak Valley and north
+# Tripura drawn by place (in2011.SYLHETI_DISTRICTS); colour and node from bd.txt, repeated bare.
+indoeuropean.indoaryan.eastern.sylheti | Sylheti

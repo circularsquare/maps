@@ -1,0 +1,182 @@
+--- a/dist/index.html
++++ b/dist/index.html
+@@ -1373,6 +1373,12 @@
+ const LINE_BY_ID = new Map(), SEC_BY_GID = new Map();
+ const CLOSED = new Set();  // section gids the register lists but no train runs over
+ const OP_EN = new Map();   // raw operator string -> the English name any of its lines gives
++/* WHO RUNS THE TRAINS, per country (data/<cc>/ops.json, tools/operators.py): `keys` maps each
++   operator string of that country to the key it counts under (DB Regio NRW -> "DB"; India's
++   Southern Railway -> "Indian Railways", so it no longer shares a row with the British one),
++   `lines` gives a register line that names its track owner (DB InfraGO, BNSF, Network Rail)
++   the companies whose passenger trains run over it, [key, share of its km], biggest first. */
++const OPS_CC = {};
+ // Latin letters, accents included, and the IPA block (Azerbaijani ə is U+0259).
+ const LATIN = /^[\u0000-ʯḀ-ỿ\s]+$/;
+ const GEOM = new Map();    // line id -> promise of {"from|to": [[lon,lat],...]}, on demand
+@@ -1393,7 +1399,9 @@
+       REGIONS_READY,               // LINE_FOLD has to be in before any line id is read
+       // English names filled after the build (tools/english_names.py); none is fine.
+       get('names_en.json').catch(() => ({})),
+-    ]).then(([l, s, f, a, , ne]) => {
++      get('ops.json').catch(() => null),
++    ]).then(([l, s, f, a, , ne, o]) => {
++      if (o) OPS_CC[cc] = o;       // before mergeRegion: its buildOps reads it
+       mergeRegion(cc, l, s, f, a, ne);
+       LOADED.add(cc);
+       // A line over a border may have just grown a piece, so every ride's run is redone.
+@@ -1992,20 +2000,31 @@
+    run line still counts as one combined operator rather than towards each of them, which is
+    a question left open in spec.md §13. */
+ function opKey(line) {
+-  const raw = (line.operator || '').trim();
+-  if (!raw) return '(no operator)';
+-  const parts = raw.split(';').map(s => s.trim()).filter(Boolean)
+-    .map(s => OP_EN.get(s) || s);
+-  return [...new Set(parts)].sort().join(' · ');
++  return opKeys(line).join(' · ');
++}
++/* One country's piece of a line (or a line in one country), in its own order: a register
++   line's passenger operators by share (Anita, 2026-10-07: "switch to companies running
++   passenger trains"), else each part of its operator tag through the country's key table,
++   else through OP_EN as before. */
++function opKeysOf(p) {
++  const m = OPS_CC[p.region];
++  const sw = m && m.lines && m.lines[p.file || p.id];
++  if (sw && sw.length) return sw.map(x => x[0]);
++  const raw = (p.operator || '').trim();
++  if (!raw) return [];
++  return raw.split(';').map(s => s.trim()).filter(Boolean)
++    .flatMap(s => (m && m.keys && m.keys[s] != null ? [].concat(m.keys[s]) : [OP_EN.get(s) || s]));
++}
++// Every piece of a line joined over a border, deduplicated, in the pieces' order.
++function opKeysInOrder(line) {
++  return [...new Set(partsOf(line).flatMap(p => p.origs || [p]).flatMap(opKeysOf))];
+ }
+ /* EACH OPERATOR OF A JOINTLY RUN LINE ON ITS OWN (Anita, 2026-10-07: "if its ambiguous and
+    they are in multiple operators we can assign to both"). The line then counts towards each
+    of them; opKey's combined name is kept for search and saved views. */
+ function opKeys(line) {
+-  const raw = (line.operator || '').trim();
+-  if (!raw) return ['(no operator)'];
+-  return [...new Set(raw.split(';').map(s => s.trim()).filter(Boolean)
+-    .map(s => OP_EN.get(s) || s))].sort();
++  const ks = opKeysInOrder(line).sort();
++  return ks.length ? ks : ['(no operator)'];
+ }
+ /* Listed lines (register lines, and OSM lines mostly off the register), then operating
+    patterns, then named trains, longest first inside each. */
+@@ -2013,8 +2032,8 @@
+   const rank = l => (listed(l) ? 0 : l.service ? 2 : 1);
+   return (rank(a) - rank(b)) || (b.km - a.km);
+ }
+-const opName = l => (l.operator_en && !l.operator_en.includes(';'))
+-  ? l.operator_en : opKey(l);
++// What a line's operator reads as: its operators' short names, the biggest share first.
++const opName = l => opKeysInOrder(l).map(opLabel).join(' · ');
+ /* A LINE TOO PALE FOR THE LIGHT BASEMAP IS DARKENED (Anita, 2026-10-07: the Auto Train's
+    yellow all but vanished), towards black until its luminance is LIGHT_MAX_LUM: yellow comes
+    out a mustard, still itself. The tiles do the same sum in TRACK_LINE_COLOUR_LIGHT, so the
+@@ -2044,12 +2063,15 @@
+ // The colour of a country's or operator's ring where nothing more particular is known.
+ const accent = () => (THEME_NAME === 'light' ? '#1f6fd1' : '#4a9eff');
+ 
+-/* OPERATORS' SHORT NAMES AND COLOURS, from data/operators.json where it has a row ("JR West"
+-   for West Japan Railway Company, Korail, SBB), keyed by the operator key opKey gives.
+-   Missing rows fall back to the key and the accent. */
++/* OPERATORS' SHORT NAMES, COLOURS AND LOGOS, from data/operators.json where it has a row
++   ("JR West" for West Japan Railway Company, Korail, SBB), keyed by the operator key opKeys
++   gives (tools/operators.py, from colours/operators.csv). The colour is Wikidata's or the
++   logo's own; the logo a 28 px high PNG from Wikimedia Commons, credited in
++   data/logos/credits.json. Missing rows fall back to the key and the accent. */
+ let OP_BRAND = {};
+ fetch('data/operators.json').then(r => (r.ok ? r.json() : {})).then(d => {
+   OP_BRAND = d || {};
++  if (LINES.length) buildOps();      // search finds an operator by its short name too
+   if (typeof render === 'function' && mapReady) render();
+ }).catch(() => { });
+ const opLabel = key => (OP_BRAND[key] && OP_BRAND[key].short) || key;
+@@ -3064,7 +3086,9 @@
+   const doneKm = f.done, totalKm = f.total;
+ 
+   /* Operators overall, and per country (`byRegionOp`: cc -> operator -> its piece of that
+-     country), for the Countries tab's tree. A joint line goes under each operator. */
++     country), for the Countries tab's tree. A joint line goes under each operator. A line
++     over a border goes, in each country, under the operators of that country's piece: a
++     Munich - Salzburg line is DB's in Germany and ÖBB's in Austria. */
+   const byOp = new Map(), byRegionOp = new Map();
+   const add = (m, op) => {
+     if (!m.has(op)) m.set(op, { op, label: op, km: 0, total: 0, lines: 0, done: 0, list: [] });
+@@ -3074,19 +3098,22 @@
+     if (!listed(line)) continue;
+     const km = lineKm(line, frac);
+     const fin = km / Math.max(line.km, 0.001) > 0.999;
++    const pieces = partsOf(line).map(p => ({ p, t: ownedKm(p), d: ownedDone(p, R) }));
+     for (const op of opKeys(line)) {
+       const e = add(byOp, op);
+-      for (const p of partsOf(line)) {
+-        const t = ownedKm(p), d = ownedDone(p, R);
+-        e.total += t; e.km += d;
+-        if (!byRegionOp.has(p.region)) byRegionOp.set(p.region, new Map());
++      for (const { t, d } of pieces) { e.total += t; e.km += d; }
++      e.lines++;
++      e.list.push(line);
++      if (fin) e.done++;
++    }
++    for (const { p, t, d } of pieces) {
++      if (!byRegionOp.has(p.region)) byRegionOp.set(p.region, new Map());
++      const here = [...new Set((p.origs || [p]).flatMap(opKeysOf))];
++      for (const op of (here.length ? here : opKeys(line))) {
+         const c = add(byRegionOp.get(p.region), op);
+         c.total += t; c.km += d;
+         if (!c.list.includes(line)) { c.lines++; c.list.push(line); if (fin) c.done++; }
+       }
+-      e.lines++;
+-      e.list.push(line);
+-      if (fin) e.done++;
+     }
+   }
+   const ops = [...byOp.values()].filter(e => e.km > 0.001).sort((a, b) => b.km - a.km);
+@@ -4619,8 +4646,11 @@
+       if (!by.has(key)) by.set(key, { key, lines: [], km: 0, raw: new Set() });
+       const o = by.get(key);
+       o.lines.push(line);
+-      if (line.operator) o.raw.add(line.operator);
+-      if (line.operator_en) o.raw.add(line.operator_en);
++      // A register line switched to its passenger operators no longer answers to its owner.
++      const sw = partsOf(line).flatMap(p => p.origs || [p])
++        .some(x => OPS_CC[x.region] && OPS_CC[x.region].lines[x.file || x.id]);
++      if (line.operator && !sw) o.raw.add(line.operator);
++      if (line.operator_en && !sw) o.raw.add(line.operator_en);
+     }
+   }
+   /* An operator's length is the track its lines own, not the sum of its lines: Prague's
+@@ -4633,7 +4663,7 @@
+   OPS.forEach((o, i) => {
+     OP_INDEX.set(o.key, i);
+     o._n = norm(o.key);
+-    o._k = norm([o.key, ...o.raw].join(' '));
++    o._k = norm([o.key, opLabel(o.key), ...o.raw].join(' '));
+   });
+ }
+ 
+@@ -4674,7 +4704,9 @@
+ 
+   let h = `<div class="btnrow"><button class="act" onclick="goHome()">← back</button></div>`
+     + `<h2 class="sec">Operator</h2>`
+-    + `<div class="big" style="font-size:19px">${esc(opLabel(o.key))}`
++    + `<div class="big" style="font-size:19px">`
++    + `${opLogo(o.key) ? `<img class="oplogo" src="${esc(opLogo(o.key))}" alt="" />` : ''}`
++    + `${esc(opLabel(o.key))}`
+     + `<small>${opLabel(o.key) !== o.key ? `${esc(o.key)} · ` : ''}`
+     + `${rows.length} line${rows.length === 1 ? '' : 's'} · `
+     + `${Math.round(o.km).toLocaleString()} km</small></div>`
+@@ -6612,7 +6644,8 @@
+       + `${h.l.km.toFixed(0)} km${h.l.service ? ' · named train' : ''}</div></div>`
+     : h.kind === 'op'
+     ? `<div class="hit" onclick="pickHit('op','${h.i}')">`
+-      + `<div class="t">${esc(h.o.key)}</div>`
++      + `<div class="t">${opLogo(h.o.key) ? `<img class="oplogo" src="${esc(opLogo(h.o.key))}" alt="" />` : ''}`
++      + `${esc(opLabel(h.o.key))}</div>`
+       + `<div class="s">operator · ${h.o.lines.length} line${h.o.lines.length === 1 ? '' : 's'}`
+       + ` · ${Math.round(h.o.km).toLocaleString()} km</div></div>`
+     : `<div class="hit" onclick="pickHit('station','${h.id}')">`

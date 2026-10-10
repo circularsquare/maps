@@ -64,7 +64,7 @@ austroasiatic.vietnamese | Vietnamese | 0.68 0.17 310
 hmongmien | Hmong-Mien | 0.66 0.15 170
 hmongmien.hmong | Hmong | 0.66 0.16 170
 sinotibetan | Sino-Tibetan
-sinotibetan.karen | Karen | 0.80 0.11 215
+sinotibetan.karen | Karen languages | 0.80 0.11 215
 sinotibetan.burmish | Burmish
 sinotibetan.burmish.burmese | Burmese
 sinotibetan.sinitic | Chinese | 0.62 0.19 38

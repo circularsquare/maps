@@ -103,7 +103,7 @@ seasia_other | Other indigenous languages of mainland Southeast Asia
 sinotibetan.burmish.burmese | Burmese
 sinotibetan.burmish.rakhine | Rakhine
 sinotibetan.kachin | Kachin languages (Jingpho, Zaiwa, Lhaovo, Rawang)
-sinotibetan.karen | Karen
+sinotibetan.karen | Karen languages
 sinotibetan.karen.pao | Pa'o
 sinotibetan.loloish | Loloish (Yi languages)
 sinotibetan.loloish.akha | Akha

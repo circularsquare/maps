@@ -1,0 +1,96 @@
+{
+  "samples": [
+    {
+      "zoom": 11.2,
+      "shown": false,
+      "visible": 0,
+      "overlaps": 0,
+      "font": "\"Zen Maru Gothic\", system-ui, sans-serif",
+      "shadowMinZoom": 12,
+      "legend": false
+    },
+    {
+      "zoom": 11.99,
+      "shown": false,
+      "visible": 0,
+      "overlaps": 0,
+      "font": "\"Zen Maru Gothic\", system-ui, sans-serif",
+      "shadowMinZoom": 12,
+      "legend": false
+    },
+    {
+      "zoom": 12,
+      "shown": true,
+      "visible": 38,
+      "overlaps": 0,
+      "font": "\"Zen Maru Gothic\", system-ui, sans-serif",
+      "shadowMinZoom": 12,
+      "legend": false
+    },
+    {
+      "zoom": 12.5,
+      "shown": true,
+      "visible": 40,
+      "overlaps": 0,
+      "font": "\"Zen Maru Gothic\", system-ui, sans-serif",
+      "shadowMinZoom": 12,
+      "legend": false
+    },
+    {
+      "zoom": 13,
+      "shown": true,
+      "visible": 29,
+      "overlaps": 0,
+      "font": "\"Zen Maru Gothic\", system-ui, sans-serif",
+      "shadowMinZoom": 12,
+      "legend": false
+    },
+    {
+      "zoom": 14.5,
+      "shown": true,
+      "visible": 12,
+      "overlaps": 0,
+      "font": "\"Zen Maru Gothic\", system-ui, sans-serif",
+      "shadowMinZoom": 12,
+      "legend": false
+    },
+    {
+      "zoom": 11.5,
+      "shown": false,
+      "visible": 0,
+      "overlaps": 0,
+      "font": "\"Zen Maru Gothic\", system-ui, sans-serif",
+      "shadowMinZoom": 12,
+      "legend": false
+    },
+    {
+      "zoom": 13,
+      "shown": true,
+      "visible": 29,
+      "overlaps": 0,
+      "font": "\"Zen Maru Gothic\", system-ui, sans-serif",
+      "shadowMinZoom": 12,
+      "legend": false
+    },
+    {
+      "zoom": 13,
+      "shown": true,
+      "visible": 33,
+      "overlaps": 0,
+      "font": "\"Zen Maru Gothic\", system-ui, sans-serif",
+      "shadowMinZoom": 12,
+      "legend": false
+    }
+  ],
+  "fonts": {
+    "fonts": [
+      {
+        "familyName": "Zen Maru Gothic",
+        "postScriptName": "ZenMaruGothic-Regular",
+        "isCustomFont": true,
+        "glyphCount": 9
+      }
+    ]
+  },
+  "errors": []
+}

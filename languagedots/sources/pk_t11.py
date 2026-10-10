@@ -10,11 +10,11 @@ Rows are (tehsil, language) with all sexes / female / male / transgender, overal
 urban; only ALL_SEXES_OVERALL is kept. Fourteen named languages plus OTHERS and a TOTAL row,
 which is checked against the languages and then dropped.
 
-GEOGRAPHY. Tehsils are summed to districts and matched to religiondots' 2023 district ids
-(PK23-<province>/<district>) on name, because religiondots' placement hexes are cut by district.
-Its district set is the census's own, so the match is checked to be one-to-one and complete.
-Tehsil resolution is available in this table and is a later step (the hexes would need a
-tehsil key first).
+GEOGRAPHY. Written at TEHSIL grain (591 tehsils, sub-divisions and talukas), each keyed by
+religiondots' Table 9 tehsil id (PK23-<province>/<district>/<tehsil>), since 2026-10-07.
+Tehsils are also summed to districts and matched to religiondots' 2023 district ids on name,
+checked one-to-one and complete and against Table 9's district totals. Which tehsils are drawn
+on their own polygon and which are grouped is sources/pk_tehsil_geo.py's business.
 """
 import argparse
 import re
@@ -44,14 +44,14 @@ def slug(s):
     return re.sub(r"[^a-z0-9]+", "-", str(s).lower()).strip("-")
 
 
-def read_table():
+def read_table(name="TABLE_11"):
     import rdata
     with tarfile.open(RAW) as t:
-        raw = t.extractfile("PakPC2023/data/TABLE_11.RData").read()
+        raw = t.extractfile(f"PakPC2023/data/{name}.RData").read()
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         conv = rdata.conversion.convert(rdata.parser.parse_data(raw))
-    df = conv["TABLE_11"]
+    df = conv[name]
     df.columns = [str(c) for c in df.columns]
     return df
 
@@ -115,12 +115,54 @@ def main():
         raise SystemExit(f"district totals differ from religiondots' Table 9:\n{off[off > 0].head(10)}")
     print(f"  all {len(lang)} district totals equal Table 9's (religiondots/data/normalized/pk.csv)")
 
-    out = dist.rename(columns={"DISTRICT": "geo_name", "LANGUAGE": "source_category"})
-    out["geo_level"] = "district"
+    # TEHSILS (2026-10-07, fix-pk). Each Table 11 tehsil is given religiondots' Table 9 tehsil
+    # id. Two keys, both asserted: the tehsil's total population, unique within its district
+    # in all 136, and the name (folded; Table 9 prints "SUB-DIVISION KUCHLAK" where Table 11
+    # prints KUCHLAK). Table 9 is a separate transcription (PBS's PDFs) of the same census,
+    # so equal totals per tehsil are also the check that the two tables agree.
+    tdf = df.groupby(["PROVINCE", "DISTRICT", "TEHSIL", "ADMIN_UNIT", "LANGUAGE"],
+                     as_index=False)["count"].sum()
+    tdf["district_id"] = [f"PK23-{PROVINCE[p]}/{ALIAS.get(slug(d), slug(d) + '-district')}"
+                          for p, d in zip(tdf["PROVINCE"], tdf["DISTRICT"])]
+    ttot = tdf.groupby(["district_id", "TEHSIL", "ADMIN_UNIT"])["count"].sum().reset_index()
+    rt = pd.read_csv(RD / "data" / "normalized" / "pk.csv", dtype={"geo_id": str})
+    rt = rt[rt["geo_level"] == "tehsil"].groupby(["geo_id", "geo_name"])["count"].sum().reset_index()
+    rt["district_id"] = rt["geo_id"].str.rsplit("/", n=1).str[0]
+    if len(rt) != len(ttot):
+        raise SystemExit(f"Table 9 has {len(rt)} tehsils, Table 11 {len(ttot)}")
+    fold_words = re.compile(r"\b(SUB-DIVISION|SUB DIVISION|SUB-TEHSIL|TEHSIL|TALUKA|TOWN|CITY|"
+                            r"SADDAR|SADAR)\b", re.I)
+
+    def fold(s):
+        return re.sub(r"[^a-z]", "", fold_words.sub(" ", str(s)).lower())
+
+    tid, bad = {}, []
+    for r in ttot.itertuples():
+        hit = rt[(rt["district_id"] == r.district_id) & (rt["count"] == r.count)]
+        if len(hit) != 1:
+            bad.append((r.district_id, r.TEHSIL, r.count, "population not unique", list(hit["geo_name"])))
+            continue
+        a, b = fold(r.TEHSIL), fold(hit["geo_name"].iloc[0])
+        if not (a == b or a in b or b in a):
+            bad.append((r.district_id, r.TEHSIL, r.count, "name differs", hit["geo_name"].iloc[0]))
+            continue
+        tid[(r.district_id, r.TEHSIL, r.ADMIN_UNIT)] = hit["geo_id"].iloc[0]
+    if bad or len(set(tid.values())) != len(rt):
+        raise SystemExit(f"Table 11 tehsils -> Table 9 ids failed: {bad[:10]}; "
+                         f"{len(set(tid.values()))} of {len(rt)} ids used")
+    print(f"  all {len(tid)} tehsils paired 1:1 with Table 9's on total population and name; "
+          f"every tehsil total equal")
+    tdf["geo_id"] = [tid[k] for k in zip(tdf["district_id"], tdf["TEHSIL"], tdf["ADMIN_UNIT"])]
+
+    out = tdf.rename(columns={"TEHSIL": "geo_name", "LANGUAGE": "source_category"})
+    out["geo_level"] = "tehsil"
     out = out[out["count"] > 0][["geo_id", "geo_level", "geo_name", "source_category", "count"]]
+    if out["count"].sum() != dist["count"].sum():
+        raise SystemExit("tehsil rows do not add to the district rows")
     OUT.parent.mkdir(parents=True, exist_ok=True)
     out.to_csv(OUT, index=False, encoding="utf-8")
-    print(f"wrote {OUT}: {len(out):,} rows, {out['geo_id'].nunique()} districts, "
+    print(f"wrote {OUT}: {len(out):,} rows, {out['geo_id'].nunique()} tehsils in "
+          f"{out['geo_id'].str.rsplit('/', n=1).str[0].nunique()} districts, "
           f"{out['count'].sum():,} people")
 
 

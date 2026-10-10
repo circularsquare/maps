@@ -5,19 +5,32 @@ This is religiondots' scatter.py with the religion-only parts taken out (congreg
 US demographic weights). The allocation is unchanged and its long comments are not repeated:
 read religiondots/scatter.py for why.
 
-  * Each language's dots are allocated by carrying fractions ALONG A HILBERT CURVE through the
-    units, dropping a dot wherever the running total passes the dot value. Nothing is ranked;
-    a unit holding a third of a dot's worth of speakers gets a dot about a third of the time,
-    and it lands among them.
+  * LEFTOVERS ARE SWITCHED OFF (LEFTOVERS below; Anita, 2026-10-08, too heavy for now), so
+    every row goes through the carry in the next bullet but one. When on:
+  * MEASURED rows (2026-10-08, Anita): a unit's count of a language is drawn as its whole dots,
+    floor(count / DOT_VALUE), plus ONE LEFTOVER MARK carrying the remainder at its true weight,
+    so 400 speakers draw as 400, never as 0 or 1,000. Until then every row went through the
+    carry below, which drew a full dot in a unit holding a few hundred speakers (the "1,000
+    Vietnamese on a Minnesota island" complaint). The leftover sits exactly ON one of the unit's
+    own dots, picked at random per leftover (any language's), so in pies mode it becomes a
+    slice of a pie that is already there rather than a speck too small to hover; random rather
+    than one dot per unit, so no pie collects a unit's every small language. A unit with no
+    whole dot puts its leftovers on one shared point, placed like a dot. No leftover leaves its
+    unit. The trial (us, za, zw) put the archive at 2.2x.
+  * DERIVED and MODELLED rows keep the old allocation: each language's dots are carried ALONG A
+    HILBERT CURVE through the units, dropping a dot wherever the running total passes the dot
+    value. Their per-unit counts are a split of a larger total, and drawing every unit's
+    remainder would assert speakers in every unit the split touched.
   * Inside a unit, dots are split across the placement polygons by the same carry, weighted by
     the polygon's population.
-  * A language that reaches no whole dot anywhere in the country gets ONE ring of its national
-    total, at its largest concentration, measured or not (see the comment at the rings). Small languages are most of a language map, so rings matter more here than
-    in religiondots.
+  * A language that draws nothing at all (no dot, no leftover: derived or modelled rows under
+    one dot) gets ONE ring of its national total, at its largest concentration (see the comment
+    at the rings).
 
 Outputs:
     data/processed/dots_<cc>.geojson    one feature per DOT_VALUE people, property n = node
-    data/processed/rings_<cc>.geojson   one feature per language that draws no dot
+    data/processed/rings_<cc>.geojson   marks of their own weight (`count`): every leftover
+                                        (why=leftover) and every national ring (why=under_dot)
 
 Usage:
     python scatter.py --country np
@@ -44,6 +57,13 @@ HERE = Path(__file__).parent
 OUT = HERE / "data" / "processed"
 DOT_VALUE = 1000
 SEED = 20261004
+LEFT_MIN = 0.5      # a leftover under half a person is arithmetic (a fractional row), not a speaker
+# OFF (Anita, 2026-10-08, after the full build): leftovers made the archive 710 MB, 2.2x, and a
+# view at country zoom (z3-6) about twice the download and the marks to draw, which is not worth
+# it yet. With this False every row goes through the carry, exactly as before 2026-10-08. The
+# docstring's MEASURED bullet describes the switched-on behaviour; one idea for turning it back
+# on cheaply is to fold leftovers into their cell's slices in the tiles below about z7.
+LEFTOVERS = False
 
 
 def write_json_atomic(path: Path, obj) -> None:
@@ -144,15 +164,24 @@ def main():
     agg["_h"] = agg["unit"].map(hb.groupby(level=0).min())
     agg = agg.sort_values(["node", "_h", "unit", "tier"], kind="mergesort").reset_index(drop=True)
     counts_arr = agg["count"].to_numpy(dtype=float)
+    meas = (agg["tier"].to_numpy() == 0) & LEFTOVERS
     alloc = np.zeros(len(agg), dtype=np.int64)
-    for node, idx in agg.groupby("node", sort=False).indices.items():
-        crossed = np.floor(np.cumsum(counts_arr[idx]) / dot_value).astype(np.int64)
-        alloc[idx] = np.diff(np.concatenate([[0], crossed]))
+    # measured: the unit's own whole dots, the remainder a leftover mark (docstring)
+    alloc[meas] = np.floor(counts_arr[meas] / dot_value).astype(np.int64)
+    left = np.where(meas, counts_arr - alloc * dot_value, 0.0)
+    agg["left"] = np.where(left >= LEFT_MIN, np.maximum(1, np.rint(left)), 0).astype(np.int64)
+    # derived / modelled: the carry, among those rows only
+    nm = np.flatnonzero(~meas)
+    for node, idx in agg.iloc[nm].groupby("node", sort=False).indices.items():
+        ii = nm[idx]
+        crossed = np.floor(np.cumsum(counts_arr[ii]) / dot_value).astype(np.int64)
+        alloc[ii] = np.diff(np.concatenate([[0], crossed]))
     agg["dots"] = alloc
     total = float(counts_arr.sum())
-    print(f"  {total - alloc.sum() * dot_value:,.0f} of {total:,.0f} people "
-          f"({(total - alloc.sum() * dot_value) / total:.2%}) are under one dot per language "
-          "nationally and draw no dot")
+    undrawn = total - alloc.sum() * dot_value - agg["left"].sum()
+    print(f"  {int((agg['left'] > 0).sum()):,} leftover marks ({agg['left'].sum():,} people); "
+          f"{undrawn:,.0f} of {total:,.0f} people ({undrawn / total:.2%}) are carried rows "
+          "under one dot per language nationally and draw no dot")
 
     # ---- rings: ONE mark per language that reaches no dot anywhere in the country.
     #
@@ -181,8 +210,12 @@ def main():
     # (Australia's shared remainders: 0.07; Poland's multi-answer sharing: 28 languages at 0.41
     # each). Measured rows can be fractional too: Brazil had 9 rings carrying 0 people, int() of
     # a placed row under 1, which tiles.py dropped; they now carry their total, at least 1.
+    #
+    # Since 2026-10-08 measured rows draw every remainder as a leftover mark, so a ring is only
+    # for a language that draws neither: in practice one whose rows are all derived or modelled
+    # and under one dot after the carry. A language drawn by leftovers alone gets no ring.
     RING_MIN = 0.5
-    drawn = set(agg.loc[agg["dots"] > 0, "node"])
+    drawn = set(agg.loc[(agg["dots"] > 0) | (agg["left"] > 0), "node"])
     sub = agg[~agg["node"].isin(drawn)]
     node_total = sub.groupby("node")["count"].sum()
     keep = set(node_total.index[node_total >= RING_MIN])
@@ -230,16 +263,18 @@ def main():
 
     print("placing…")
     feats = []
+    unit_of = place["unit"].to_numpy()
+    unit_dots = {}          # unit -> its dots' coordinates, for the leftovers to sit on
     for t, items in per_poly.items():
         pts = random_points_in_polygon(geoms[t], sum(k for _, k, _ in items), rng)
         i = 0
         for node, k, tier in items:
             props = {"n": node} if not tier else {"n": node, "t": tier}
             for x, y in pts[i:i + k]:
-                feats.append({"type": "Feature",
-                              "geometry": {"type": "Point",
-                                           "coordinates": [round(float(x), 4), round(float(y), 4)]},
+                xy = [round(float(x), 4), round(float(y), 4)]
+                feats.append({"type": "Feature", "geometry": {"type": "Point", "coordinates": xy},
                               "properties": dict(props)})
+                unit_dots.setdefault(unit_of[t], []).append(xy)
             i += k
 
     stem = cc if dot_value == DOT_VALUE else f"{cc}_{dot_value // 1000}k"
@@ -256,10 +291,12 @@ def main():
     # this moves rings only.
     pop_all = place["pop"].to_numpy(dtype=float) if "pop" in place.columns else None
     n_ring_area = 0
-    rfeats = []
-    for row in ring_rows.itertuples(index=False):
+
+    def place_one(row, count):
+        """One point in row's unit, on the weights row's language's dots would get there."""
+        nonlocal n_ring_area
         idx = by_unit[row.unit]
-        w = (weighter.weights(row.node, idx, float(row.count), plain=bool(row.tier))
+        w = (weighter.weights(row.node, idx, float(count), plain=bool(row.tier))
              if weighter else None)
         if w is None and pop_all is not None and np.nansum(pop_all[idx]) > 0:
             w = pop_all[idx]
@@ -269,11 +306,32 @@ def main():
             n_ring_area += 1
         t = int(rng.choice(idx, p=w / w.sum()))
         (x, y), = random_points_in_polygon(geoms[t], 1, rng)
+        return [round(float(x), 4), round(float(y), 4)]
+
+    rfeats = []
+    # LEFTOVERS (docstring): each on a random one of its unit's own dots, so it joins a pie that
+    # is already drawn; a unit with no dot puts all its leftovers on one shared point
+    n_on_dot = n_shared = 0
+    for unit, g in agg[agg["left"] > 0].groupby("unit", sort=False):
+        mine = unit_dots.get(unit)
+        if mine:
+            spots = [mine[int(k)] for k in rng.integers(len(mine), size=len(g))]
+            n_on_dot += 1
+        else:
+            big = g.loc[g["left"].idxmax()]
+            spots = [place_one(big, float(g["left"].sum()))] * len(g)
+            n_shared += 1
+        for row, xy in zip(g.itertuples(index=False), spots):
+            rfeats.append({"type": "Feature", "geometry": {"type": "Point", "coordinates": xy},
+                           "properties": {"n": row.node, "why": "leftover", "count": int(row.left)}})
+    n_left = len(rfeats)
+    for row in ring_rows.itertuples(index=False):
         rfeats.append({"type": "Feature",
-                       "geometry": {"type": "Point", "coordinates": [round(float(x), 4), round(float(y), 4)]},
+                       "geometry": {"type": "Point", "coordinates": place_one(row, row.count)},
                        "properties": {"n": row.node, "why": "under_dot", "count": int(row.count)}})
     write_json_atomic(OUT / f"rings_{stem}.geojson", {"type": "FeatureCollection", "features": rfeats})
-    print(f"wrote {len(rfeats):,} rings -> rings_{stem}.geojson"
+    print(f"wrote {n_left:,} leftovers ({n_on_dot:,} units on their own dots, {n_shared:,} on one "
+          f"shared point) and {len(rfeats) - n_left:,} rings -> rings_{stem}.geojson"
           + (f" ({n_ring_area} placed by area, their unit has no population)" if n_ring_area else ""))
 
 

@@ -1,5 +1,16 @@
-# Chad (taxonomy/td2009.py). RGPH2 2009, first national language spoken (Tableau 5.10), every
-# printed row a node.
+# Chad (taxonomy/td2019.py, drawn since 2026-10-09; taxonomy/td2009.py before). MICS6 2019,
+# mother tongue of the household head, every answer a node, and the RGPH2 2009 rows (Tableau
+# 5.10) that "other" answers are sent to by the head's ethnic group.
+#
+# Added 2026-10-09 (MICS): Ngambay (ngam1268) and Sar (sarr1246), Sara languages in Glottolog,
+# as siblings of cf.txt's Sara leaf rather than children (a child would wash out the Central
+# African Republic's and the diaspora's Sara, as fr.txt's Kibushi and Fon notes say); in Chad
+# the Sara leaf now holds the census's other Sara languages (Mbay, Gulay, Gor, Laka...).
+# regroup.txt then makes Sara the group over Ngambay, Sar, Sara Kaba and plain Sara, drawn as
+# "Sara (language not given)" (2026-10-09). Musgum
+# (cm.txt's) for the Massa group's Mousgoum; French for MICS's "Français". Colours: Ngambay
+# pale periwinkle (light, against Mundang's deep blue in Mayo Kebbi Ouest) and Sar dark teal,
+# against Sara's light cyan (Logone Oriental, Mandoul) and Sara Kaba's blue (Moyen Chari).
 #
 # Families and branches checked against Glottolog (data/raw/glottolog), "families as most
 # readers know them" (AGENT_BRIEF §3): Nilo-Saharan is one root; Saharan, Maban, Tamaic and
@@ -58,8 +69,14 @@ nigercongo.adamawa.mundang | Mundang
 nigercongo.adamawa.tupuri | Tupuri
 nigercongo.adamawa.mbum | Mbum
 africa_other | Other African languages
+afroasiatic.chadic.musgum | Musgum
+indoeuropean | Indo-European
+indoeuropean.romance | Romance
+indoeuropean.romance.french | French
 
 # ---- new ----
+nilosaharan.centralsudanic.ngambay | Ngambay | 0.84 0.08 265
+nilosaharan.centralsudanic.sar | Sar | 0.55 0.11 170
 nilosaharan.kanembu | Kanembu | 0.60 0.15 295
 nilosaharan.maban.maba | Maba (Ouaddaïen) | 0.80 0.12 350
 nilosaharan.maban.mimi | Mimi

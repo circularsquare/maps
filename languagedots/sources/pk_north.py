@@ -9,13 +9,16 @@ GILGIT-BALTISTAN (10 census districts, 1,709,030 people). The 2023 census did as
 there, but the only published result is GB-wide: *GB at a Glance 2025* (P&DD Statistical &
 Research Cell, citing "Census 2023, Pakistan Bureau of Statistics"), p.9: Shina 50.21, Balti
 29.94, Pushto 0.86, Kohistani 0.86, Urdu 0.38, Others 17.74 percent. The district split comes
-from the GB MICS 2016-17 household sample, language of the household head, printed by district
-in Shah Zaman, "Treading the Sacred Linguistic Landscape of Gilgit-Baltistan", Pamir Times,
-2023-12-23 (6,213 sampled households, ~600 per district). The census "Others" is divided among
-Burushaski, Khowar, Wakhi and a remainder by the GB MICS 2024-25 report, Table SR.3.1 (6,929
-households, language of household head: Shina 48.0, Balti 29.2, Burushaski 12.3, Khowar 5.2,
-Wakhi 1.0, Other 4.2). The district x language table is then raked (IPF) to the census 2023
-district populations (GB at a Glance p.4) and to those GB totals.
+from the GB MICS 2016-17 microdata, mother tongue of the household head, weighted shares of
+persons per district (sources/pk_mics.py -> data/normalized/pk_mics_gb2016.csv, since
+2026-10-09). Until then it was the same survey's unweighted household counts as printed in Shah
+Zaman, "Treading the Sacred Linguistic Landscape of Gilgit-Baltistan", Pamir Times, 2023-12-23;
+that table is kept below (MICS17) as the check pk_mics.py runs against the microdata. The census
+"Others" is divided among Burushaski, Khowar, Wakhi and a remainder by the GB MICS 2024-25
+report, Table SR.3.1 (6,929 households, language of household head: Shina 48.0, Balti 29.2,
+Burushaski 12.3, Khowar 5.2, Wakhi 1.0, Other 4.2), turned from households into persons with
+2016-17's persons per household for each language. The district x language table is then raked
+(IPF) to the census 2023 district populations (GB at a Glance p.4) and to those GB totals.
 
 AZAD JAMMU & KASHMIR (10 districts, 4,333,467 people). AJK Statistical Year Book 2025, Table
 15.31 "Languages Spoken in AJ&K", percent by district (source: Kashmir Liberation Cell,
@@ -69,7 +72,8 @@ MICS25 = {"Shina": 48.0, "Balti": 29.2, "Brushaski": 12.3, "Khowar": 5.2, "Wakhi
           "Other": 4.2}
 
 # GB MICS 2016-17 sampled households by language of household head and district, as printed in
-# the Pamir Times article (second table). Columns: Balti, Shina, Burushaski, Khowar, Wakhi,
+# the Pamir Times article (second table). No longer drawn (the weighted microdata is, through
+# pk_mics_gb2016.csv); kept because sources/pk_mics.py asserts the microdata reproduces it. Columns: Balti, Shina, Burushaski, Khowar, Wakhi,
 # Other languages; then the printed row total. MICS 2016-17's "Sikardu" is pre-2019 Skardu
 # (with Rondu), as the census's is.
 MICS17_COLS = ["Balti", "Shina", "Burushaski", "Khowar", "Wakhi", "Other"]
@@ -181,13 +185,38 @@ def gilgit_baltistan():
 
     pop = pd.Series({d: m + f for d, (m, f) in GB_POP.items()})
     total = pop.sum()
+
+    # MICS 2016-17 microdata (sources/pk_mics.py): weighted shares per district
+    mp = HERE / "data" / "normalized" / "pk_mics_gb2016.csv"
+    if not mp.exists():
+        raise SystemExit(f"{mp} missing: run sources/pk_mics.py first")
+    m17 = pd.read_csv(mp)
+    if set(m17["district"]) != set(pop.index):
+        raise SystemExit(f"pk_mics_gb2016.csv districts {sorted(set(m17['district']))}")
+    share17 = m17.pivot(index="district", columns="label", values="persons_share").fillna(0)
+    # persons per household by language, GB-wide, 2016-17 (district shares weighted by 2023
+    # population): turns 2024-25's household shares into persons' shares (Wakhi households are
+    # small, Burushaski ones a little small)
+    hp = m17.assign(p=m17.persons_share * pop.reindex(m17.district).values,
+                    h=m17.households_share * pop.reindex(m17.district).values)
+    hp = hp.groupby("label")[["p", "h"]].sum()
+    ratio = (hp.p / hp.p.sum()) / (hp.h / hp.h.sum())
+    ratio["Other"] = ((hp.p["Other"] + hp.p["Urdu"]) / hp.p.sum()) / \
+                     ((hp.h["Other"] + hp.h["Urdu"]) / hp.h.sum())   # 2024-25 has Urdu in Other
+    m25 = {"Shina": MICS25["Shina"], "Balti": MICS25["Balti"], "Burushaski": MICS25["Brushaski"],
+           "Khowar": MICS25["Khowar"], "Wakhi": MICS25["Wakhi"], "Other": MICS25["Other"]}
+    m25p = {k: v * ratio[k] for k, v in m25.items()}
+    m25p = {k: v * 100 / sum(m25p.values()) for k, v in m25p.items()}
+    print("MICS 2024-25 households -> persons (%): " + ", ".join(
+        f"{k} {m25[k]:.1f} -> {m25p[k]:.1f}" for k in m25))
+
     # GB-wide targets: the census's own categories, and its Others divided by MICS 2024-25
     pku = GB_CENSUS["Pushto"] + GB_CENSUS["Kohistani"] + GB_CENSUS["Urdu"]
-    rest = MICS25["Other"] - pku          # MICS "Other" also holds what the census names apart
+    rest = m25p["Other"] - pku            # MICS "Other" also holds what the census names apart
     if rest <= 0:
         raise SystemExit("MICS 'Other' smaller than the census's Pashto+Kohistani+Urdu")
-    others = {"Burushaski": MICS25["Brushaski"], "Khowar": MICS25["Khowar"],
-              "Wakhi": MICS25["Wakhi"], "Other": rest}
+    others = {"Burushaski": m25p["Burushaski"], "Khowar": m25p["Khowar"],
+              "Wakhi": m25p["Wakhi"], "Other": rest}
     osum = sum(others.values())
     target = {"Shina": GB_CENSUS["Shina"], "Balti": GB_CENSUS["Balti"],
               "Pashto": GB_CENSUS["Pushto"], "Kohistani": GB_CENSUS["Kohistani"],
@@ -196,18 +225,19 @@ def gilgit_baltistan():
     cols = pd.Series(target) / 100 * total
     cols = cols * total / cols.sum()
 
-    # seed: MICS 2016-17 district shares x 2023 population; "Other" split four ways
+    # seed: MICS 2016-17 weighted district shares x 2023 population; "Other" split four ways,
+    # Urdu its own answer plus its part of "Other"
     seed = pd.DataFrame(0.0, index=pop.index, columns=cols.index)
-    for d, (row, tot) in MICS17.items():
-        share = dict(zip(MICS17_COLS, [x / tot for x in row]))
+    for d in pop.index:
+        share = share17.loc[d]
         for k in ("Shina", "Balti", "Burushaski", "Khowar", "Wakhi"):
-            seed.loc[d, k] = share[k] * pop[d]
-        oth = share["Other"] * pop[d]
-        seed.loc[d, "Other"] = oth * rest / MICS25["Other"]
-        seed.loc[d, "Pashto"] = oth * GB_CENSUS["Pushto"] / MICS25["Other"]
-        seed.loc[d, "Urdu"] = oth * GB_CENSUS["Urdu"] / MICS25["Other"]
+            seed.loc[d, k] = share.get(k, 0) * pop[d]
+        oth = share.get("Other", 0) * pop[d]
+        seed.loc[d, "Other"] = oth * rest / m25p["Other"]
+        seed.loc[d, "Pashto"] = oth * GB_CENSUS["Pushto"] / m25p["Other"]
+        seed.loc[d, "Urdu"] = share.get("Urdu", 0) * pop[d] + oth * GB_CENSUS["Urdu"] / m25p["Other"]
         if d in KOHISTANI_DISTRICTS:
-            seed.loc[d, "Kohistani"] = oth * GB_CENSUS["Kohistani"] / MICS25["Other"]
+            seed.loc[d, "Kohistani"] = oth * GB_CENSUS["Kohistani"] / m25p["Other"]
     fit = ipf(seed, pop.astype(float), cols)
     err_r = (fit.sum(axis=1) - pop).abs().max()
     err_c = (fit.sum(axis=0) - cols).abs().max()
@@ -217,7 +247,8 @@ def gilgit_baltistan():
     print(f"\nGilgit-Baltistan, {total:,} people; raked shares per district (%):")
     print((fit.div(pop, axis=0) * 100).round(1).to_string())
     raw = seed.sum(axis=0) / seed.values.sum() * 100
-    print("GB-wide, seed (MICS 2016-17 shares x 2023 population) against target (census 2023):")
+    print("GB-wide, seed (MICS 2016-17 weighted shares x 2023 population) against target "
+          "(census 2023):")
     for k in cols.index:
         print(f"  {k:11s} seed {raw[k]:5.2f}%  target {cols[k] / total * 100:5.2f}%")
 
@@ -234,8 +265,9 @@ def gilgit_baltistan():
                 rows.append(dict(geo_id=f"PK23-gilgit-baltistan/{d.lower()}-district",
                                  geo_level="district", geo_name=d.upper(), source_category=k,
                                  count=int(c), year=2023, source_id="pk_gb_census2023_mics_ipf",
-                                 note="modelled: MICS 2016-17 district shares raked to census "
-                                      "2023 district population and GB mother-tongue totals"))
+                                 note="modelled: MICS 2016-17 weighted district shares raked to "
+                                      "census 2023 district population and GB mother-tongue "
+                                      "totals"))
     df = pd.DataFrame(rows)
     assert df.groupby("geo_id")["count"].sum().sum() == total
     return df

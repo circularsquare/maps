@@ -6,7 +6,6 @@
 # (Srpsko-hrvatski), both in the old Serb areas, so it is a sibling of serbocroatian, not merged.
 # No glottocode of its own: Glottolog files the whole complex as Serbian-Croatian-Bosnian
 # (sout1528), and the census label is a name for that, not a variety.
-indoeuropean.slavic.south.croatoserbian | Croato-Serbian
 #
 # Colour, checked 2026-10-05 against the generated palette of that day, no hand-picks needed.
 # The pairs that share municipalities here (OKLab distance): Croatian and Italian 0.117 (Istria),

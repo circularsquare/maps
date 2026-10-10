@@ -1,12 +1,15 @@
-# South Sudan: HFSSS 2015-2016, tribe of the household head, read as language, by former state
+# South Sudan: HFSSS 2015-2016 tribe by former state; Jonglei, Unity, Upper Nile by homeland county
 
-Drawn 2026-10-05 (session edd42a8c-ss). 8,252,228 people in 7 of 10 former states (2025
-county-based estimates), 69 nodes, every row `modelled`. 8,217 dots at 1:1000, 6 rings.
-**Jonglei, Unity and Upper Nile are empty** (never sampled). Ask 020 asks Anita to download the
-2025 phone survey, which has a real language question in every state.
+Drawn 2026-10-05 (session edd42a8c-ss): 8,252,228 people in 7 of 10 former states (2025
+county-based estimates), every row `modelled`. **Filled 2026-10-07 (fix-ss)**: Jonglei, Unity and
+Upper Nile, 5,043,986 people in 32 counties, each county on its homeland group's language
+(section 7). Now 13,296,214 people, 39 units (7 states + 32 counties), 73 nodes, every row
+`modelled`. 13,260 dots at 1:1000, 6 rings. Ask 020 (the 2025 phone survey, Anita's login)
+would still replace section 7 with a measured language question.
 
 ```
-python sources/ss_hfs.py     # religiondots' HFSSS zips, read-only -> ss.csv, ss_birth.csv
+python sources/ss_hfs.py       # religiondots' HFSSS zips, read-only -> ss.csv, ss_birth.csv
+python sources/ss_homeland.py  # -> ss_homeland.csv (the three states, by county)
 python taxonomy/build.py
 python tools/check_country.py ss
 python scatter.py --country ss
@@ -91,7 +94,7 @@ lingua franca of the towns and the first language of many town-born children; En
 taught. Rural retention of the home language is believed high, but nothing here measures it,
 and no one is moved to Arabic or English.
 
-## 5. An outside-estimate version (ask 019's question; not drawn)
+## 5. An outside-estimate version (ask 019's question; drawn since 2026-10-07 as section 7)
 
 If ask 019 is answered yes for Sudan, the same construction would fill South Sudan's three empty
 states: per-group speaker estimates (Ethnologue's as Wikipedia carries them; the 1955-56 census
@@ -110,12 +113,88 @@ unnecessary.
 - Warrap drawn from 173 town heads (section 2).
 - Birth county as a placement proxy, K = 12.
 - Kakowa merged into Kakwa; card "Luo" on Luwo; "Moro Nuba" on Moru.
+- Jonglei, Unity, Upper Nile: one homeland group per county (section 7).
+- Dinka recoloured 0.53 0.16 268 (indigo, #4463c7) in `tree.d/ss.txt`, away from et.txt's Nuer.
+
+## 7. Jonglei, Unity and Upper Nile by homeland county (fix-ss, 2026-10-07)
+
+Anita (2026-10-07) asked for "a stab" at the hatched states without ask 020's login. Built under
+ask 019's ruling (published estimates placed by homeland, rows `modelled`, `sources/eg.md` the
+model), at county grain since the 2025 estimates are per county. `sources/ss_homeland.py`.
+
+**Searched, nothing measured and open** (6 web searches): CLEAR Global/TWB (still no South Sudan
+layer); the 2025 HFPS (catalog 8589) variable page over the open NADA API
+(`/index.php/api/catalog/SSD_2025_HFPS-W1_v01_M/variable/V13`) prints only national unweighted
+frequencies of b1_7, 2,020 adults: Dinka 1,029, Juba Arabic 248, Other 228, Nuer 200, Arabic 115,
+Zande 108, English 92, **Shilluk 0, Bari 0** (two card codes empty nationally: a coding or
+routing fault, worth knowing before ask 020's data is used). 22% name Arabic, Juba Arabic or
+English, a phone-owner sample's town lean and a hint at the retention question in section 4. No
+state split, so not drawn. The HFSSS's own 111 heads living elsewhere but born in the three states
+(waves 1-2, born-county x tribe; scratch tabulation) agree where they are many: Bor South 49 of 53
+Dinka, Twic East 21/21, Duk 8/8 Dinka; Pibor 3/3 Murle; Pochalla 1/1 Anyuak. Too few and too
+migrant-biased (Fangak's 3 born heads are all Dinka) to draw from. REACH's Malakal City Profile
+(Feb 2025, `data/raw/ss/`) names Shilluk, Dinka, Nuer without shares.
+
+**Sources used**
+- **CSRF county profiles** (Conflict Sensitivity Resource Facility, csrf-southsudan.org/county_profile/<slug>/,
+  read 2026-10-07; the "Ethnic groups" line of each saved in `data/raw/ss/csrf_county_profiles_ethnic.json`).
+  The profiles also print the 2025 OCHA estimate the map already uses (Malakal 204,041 both). The
+  first-named group is the county's; the script asserts each against the saved line.
+- **JICA**, *Project for Comprehensive Planning and Support for Urgent Development on Social
+  Economic Infrastructure in Malakal Town*, final report July 2014, appendix I, attachment II,
+  A1-270 "Tribe and Ethnic Group" (openjicareport.jica.go.jp/pdf/12228961_05.pdf, saved in
+  `data/raw/ss/`): 884 households in 24 bomas of Malakal Town, Shilluk 445 (50.3%), Nuer 201
+  (22.7%), Dinka 134 (15.2%), others 104 (11.8%). Fieldwork date not printed in the appendix;
+  it must predate the town's destruction in 2014. Applied to all Malakal county (town, PoC,
+  countryside); "others" on `africa_other`.
+- **Joshua Project** (`data/raw/pg/joshuaproject_pgic.csv`, ROG3 = OD), scaled 1.0769 (2025
+  estimate 13,297,196 / JP 12,348,000), for two small groups the profiles name second and whose
+  JP point falls in that county: Kacipo-Balesi (JP "Suri", koe) 5,061 in Pibor; Opo (JP "Opo" +
+  "Buldit", lgn) 15,938 in Maiwut (the profile's "Koma").
+
+| county (2025 est.) | drawn |
+|---|---|
+| Akobo, Nyirol, Uror (Lou), Ayod (Gawaar), Fangak (Thiang, Lak); Guit, Koch, Leer, Mayendit, Mayom, Panyijiar, Rubkona; Longochuk, Luakpiny/Nasir, Ulang (Jikany) | Nuer |
+| Maiwut 147,823 | Nuer 131,885, Opo 15,938 |
+| Bor South, Duk, Twic East (Southeastern Dinka); Canal/Pigi, Abiemnhom, Pariang, Baliet (Padang); Melut (Ageer, Nyiel); Renk (Abialang) | Dinka |
+| Fashoda, Manyo, Panyikang | Shilluk |
+| Malakal 204,041 | Shilluk 102,713, Nuer 46,394, Dinka 30,929, other African 24,005 |
+| Pibor 237,649 | Murle 232,588, Kacipo-Balesi 5,061 |
+| Pochalla | Anyuak |
+| Maban | Mabaan |
+
+**Not split** (named second by a profile, no figure in that county): Anyuak in Akobo; Gawaar and
+Lou Nuer and Shilluk in Canal/Pigi; Jie in Pibor (Glottolog jiye1239, a Toposa dialect); Nuer
+in Maban; Koma in Longochuk (JP's Komo, 26,000 with its point there, would be 35% of the county;
+the script caps a small group at a fifth); Padang Dinka in Panyikang; Shilluk in Renk. Refugees
+from Sudan (Maban's Blue Nile camps: Uduk, Jumjum; Pariang's Nuba camps) are outside the county
+estimates, as in the other states.
+
+**Checks** (drawn in the three states against JP's whole-country figure, scaled): Nuer 2,800,928
+vs 1,581,923; Dinka 1,458,351 vs 4,425,937 (with the seven states, 5.10M); Shilluk 339,997 vs
+575,049; Murle 232,588 vs 213,220; Mabaan 84,550 vs 97,995; Anyuak 82,568 vs 160,454. The Nuer gap
+is the 2025 county estimates, not the rule: the ten Nuer homeland counties' estimates (Rubkona
+361,802 with Bentiu's IDP camp, Nasir 350,742) run high against JP's older figure, and the phone
+survey's unweighted 10% Nuer is nearer JP. National now: Dinka 38.4%, Nuer 21.1%. Shilluk low
+against JP fits Craze (Small Arms Survey 2019): many Shilluk were displaced to Sudan.
+
+**Placement**: the three states' units are counties (`countries/ss.py` `_place_unit`: the hexes'
+`county` column for SS03/06/07), placed on religiondots' county-calibrated Kontur population.
+
+**Tree**: new `nilosaharan.nilotic.mabaan` (maba1273) and `nilosaharan.surmic.kacipo`
+(kaci1244); Anuak, Koman, Opo repeated from et.txt. `taxonomy/ss2025.py` is the identity.
+
+**Room for improvement**: ask 020's 2025 phone survey (language by state and county) replaces
+all of this. Short of it, any open survey or IDP-camp registration by ethnicity per county would
+split the mixed counties above.
 
 ## Terms
 
 HFSSS: World Bank Microdata Library public-use terms (no redistribution of microdata; aggregates
 may be reported, study cited): only state and county aggregates leave the zips, which stay in
-religiondots' raw folder. COD-AB and COD-PS: OCHA, CC BY-IGO. Glottolog CC BY. Kontur CC BY 4.0.
+religiondots' raw folder. CSRF county profiles: public web pages, cited per county, one line of
+each kept. JICA report: public on openjicareport. Joshua Project: as sources/sd_estimate.py.
+COD-AB and COD-PS: OCHA, CC BY-IGO. Glottolog CC BY. Kontur CC BY 4.0.
 Citation: Pape, Utz J. (World Bank) and National Bureau of Statistics, *South Sudan High
 Frequency Survey 2015, Wave 1* (DOI 10.48529/bn2b-8q88) and *2016, Wave 2* (DOI
 10.48529/xz60-7w58).

@@ -3,6 +3,31 @@
 Finished and abandoned tasks, newest first. Each: id, date, one-line outcome (or why abandoned).
 Never delete entries.
 
+- T-103 done 2026-10-10. Close-up trains have actual car counts, cars following curves, windows
+  and front cab; any car is pickable. Crowding colours use less white and a darker filled side.
+  Real-save counts, curve fixture, zoom, direction, gauge and WebGL checks pass. notes/T-103.md.
+
+- T-067 done 2026-10-10. Fares affect route/mode choice and fare-only edits recompute demand;
+  base charged once, distance fare uses track length and stays separate from crowding. Native
+  demand 16 tests pass, real-save fare/recompute checks pass. notes/T-067.md.
+
+- T-087 done 2026-10-10. Train gauges choose period average or busiest hour (default); inspector
+  lists both rider counts. Real-save gauge math, inspector and setting persistence pass.
+  notes/T-087.md.
+
+- T-102 done 2026-10-10. Delay indicators share station names' zoom cutoff and spacing; worst
+  delays win collisions. Real-save pan/zoom and fixture priority, tooltip, inspector and display
+  toggle checks pass. notes/T-102.md.
+
+- T-101 done 2026-10-10. Station names hidden below zoom 12 and spaced more generously above;
+  restored Zen Maru Gothic in map UI and form controls; commuter corner legend removed. Real-save
+  zoom, spacing, font and visibility checks pass. notes/T-101.md.
+- T-100 done 2026-10-10. Blueprint quote, undo/redo and Construct moved into Build; Select button
+  removed; itemised track conditions, stations, junctions, flyovers, crossings and actual new
+  fleet costs. Narrow UI and quote-to-charge checks pass. notes/T-100.md.
+- T-074 done 2026-10-10. Station names move together during flat pans, with a padded viewport
+  and periodic placement for incoming names; 300-station drag benchmark browser CPU 59.7% ->
+  39.4% of one core. Real-save animated camera checks pass. notes/T-074.md.
 - T-099 done 2026-10-09. Capacity markers sit under the demand bubbles and catchment and get a
   plain tooltip ("Junction at 104% of capacity", "Each train waits 1m03s here at high demand");
   a new game (or any network with no running line) now gives bubbles with no rail instead of

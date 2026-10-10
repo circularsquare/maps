@@ -3,7 +3,7 @@ sources/pk_north.py for Gilgit-Baltistan and Azad Kashmir, which Table 11 leaves
 
 Fourteen named languages and OTHERS. OTHERS (3.34M) covers Khowar, Burushaski, Wakhi,
 Gujari, Persian and Dari, Hazaragi, Marwari and more, and nothing in the table separates them;
-it is drawn on `other`. PBS spells Kohistani "KOHIOSTANI" and Brahui "BRAHVI".
+it is drawn on `other`, except in Khyber Pakhtunkhwa (below). PBS spells Kohistani "KOHIOSTANI" and Brahui "BRAHVI".
 
 Gilgit-Baltistan and Azad Kashmir (sources/pk_north.py, sources/pk.md) use mixed-case labels, so
 they cannot collide with Table 11's capitals.
@@ -19,6 +19,15 @@ they cannot collide with Table 11's capitals.
   table is an estimate in whole percents, not a census answer list; splitting it into five
   dialect nodes would claim more than it measures.
 - Kundal Shahi (kund1257) is Shinaic in Glottolog: Dardic. AJK "Others" goes on `other`.
+
+Khyber Pakhtunkhwa's OTHERS split by MICS 2019 (sources/pk_mics.py, 2026-10-09), labels prefixed
+"MICS: ". Khowar is MICS's own answer. MICS codes Kohistani and Gujari as one answer; what is left
+of it after the census's own KOHIOSTANI is Gujari in Hazara, where no other language of that code
+is spoken, and "Kohistani or Gujari" elsewhere (Swat's Behrain, Dir Kohistan, Shangla, where
+Torwali and Gawri are also called Kohistani). That part was first put on Indo-Aryan; since
+Anita's word the same day (split rather than lump) it is named by tehsil from knowledge: Torwali
+and Gawri in Behrain, Gawri in Dir Kohistan, Kohistani in Bisham, Gujari elsewhere. Only Upper
+Chitral's small share stays on Indo-Aryan, drawn as a language not named.
 """
 IA = "indoeuropean.indoaryan"
 
@@ -61,6 +70,15 @@ NAMES = {
     "Dogri": f"{IA}.northwestern.dogri",
     "Punjabi": f"{IA}.northwestern.punjabi",
     "Others": "other",
+    # Khyber Pakhtunkhwa, census OTHERS split by MICS 2019 (sources/pk_mics.py)
+    "MICS: Khowar": f"{IA}.dardic.khowar",
+    "MICS: Gujari": f"{IA}.rajasthani.gujari",
+    "MICS: Kohistani or Gujari": IA,
+    # the same code outside Hazara, named by tehsil from knowledge (sources/pk_mics.py BY_PLACE)
+    "MICS Kohistani/Gujari by place: Torwali": f"{IA}.dardic.torwali",
+    "MICS Kohistani/Gujari by place: Gawri": f"{IA}.dardic.gawri",
+    "MICS Kohistani/Gujari by place: Kohistani": f"{IA}.dardic.kohistani",
+    "MICS Kohistani/Gujari by place: Gujari": f"{IA}.rajasthani.gujari",
 }
 
 

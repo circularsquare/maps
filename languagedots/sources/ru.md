@@ -5,7 +5,9 @@ before it wrote anything to disk (nothing under `sources/ru*`, `taxonomy/ru*`, `
 `countries/ru.py` existed; the handoff said so).
 
 Files: `sources/ru_census.py` (normaliser, `--fetch`), `sources/ru_geo.py` (placement layer),
-`taxonomy/ru2021.py`, `taxonomy/tree.d/ru.txt`, `countries/ru.py`. Outputs
+`taxonomy/ru2021.py`, `taxonomy/tree.d/ru.txt`, `countries/ru.py`,
+`sources/ru_settlements.py` (placement weight, §6, added 2026-10-07). Outputs
+`data/geo/ru/ru_settlement_nat.parquet`,
 `data/raw/ru/` (Tom5_tab6, Tom5_tab7, the Institute of Linguistics' list, the methodology PDF),
 `data/normalized/ru.csv`, `data/geo/ru/ru_grid_3km.gpkg`, `dots_ru.geojson` (130,474 dots),
 `rings_ru.geojson` (64).
@@ -165,11 +167,60 @@ bottom of the fragment, and the `other.*` greys, which have no chroma and so do 
 change. Not checked on the rendered map: whether the generated Andic and Tsezic colours read
 apart from Avar inside western Dagestan.
 
-## 6. What the map cannot show
+## 6. Placement inside a unit: nationality by settlement (2026-10-07, session `fix-ru`)
 
-Every dot in a subject's towns comes from one mixture and every dot in its countryside from
-another. Nothing places a language inside a subject: Tatar villages in western Bashkortostan and
-Bashkir villages in the east are drawn from the same rural mixture. tochno.st publishes the
-census's nationality by settlement (CC BY), which would place languages tied to a nationality far
-better, but that is an ethnicity proxy for placement, which is Anita's to allow; not done, and no
-ask filed since nothing is held back.
+Until 2026-10-07 every language in a unit was spread by Kontur population alone, so rural
+Dagestan's ~30 languages shared one mixture and Bashkortostan's Tatar and Bashkir villages were
+not told apart. Now each language is placed by where people of its nationality live. This only
+moves people inside the subject x urban/rural unit the census counted them in, which AGENT_BRIEF
+§4.4 allows without an ask (this record's earlier view that it was Anita's call predates that).
+
+**Source.** To Be Precise (tochno.st), "Settlements of Russia: population, ethnic composition and
+geographic coordinates", https://tochno.st/datasets/allsettlements, CC BY 4.0: the 2021 census's
+194 nationality columns for every settlement, with coordinates. File
+`data_allsettlements_anon_156_v20260925.parquet`, copied from helper1m's download
+(`helper1m/data/russia/raw/tochno/`) to `data/raw/ru/tochno/`. Settlements of 10 people or fewer
+have their nationality blanked by the publisher (154,449 people); they weigh nothing.
+
+**`sources/ru_settlements.py`** writes `data/geo/ru/ru_settlement_nat.parquet`: 155,750 points
+(every settlement, plus the three federal cities' own rows), urban if a town, urban-type
+settlement or federal city (2,337 points), its subject by the placement hex it falls in (4,099
+points outside every hex take the nearest). Checks: the points hold 147,213,131 people against
+the federation row's 147,182,123 (1.0002); position agrees with the publisher's region name for
+99.6% of people, 85 regions onto 85 subjects one to one.
+
+**`countries/ru.py` `_RuWeighter`** (the `place_weight` hook, the same mechanism as ph's
+`_PhWeighter`; scatter.py unchanged):
+- each hex takes a nationality mixture from its 24 nearest settlements of its own kind (urban
+  hexes from towns, rural from villages) in the same subject, weighted exp(-(d - d_nearest) / 4 km)
+  times their people, shares of people stating a nationality;
+- `NAT` maps each census language label to the nationality columns whose people it follows
+  (Tatar: Tatars, Astrakhan and Siberian Tatars, Kryashens, Mishars, Nagaibaks; Mordvin, Erzya and
+  Moksha each to all three Mordva columns; Kurdish to Kurds, Kurmanj and Yazidis; and so on, 151
+  labels). Russian follows the share no listed nationality claims (Russians, Cossacks, Pomors,
+  and unlisted groups). Labels with no nationality (Dagestani, other answers, Albanian, sign
+  language, a few foreign languages) follow population;
+- per unit, a hex x language table is raked (IPF) to the hexes' Kontur population, scaled to the
+  unit's drawn total, and the unit's census count of each language, from the seed: the
+  language's nationality share in the hex plus 5% of its unit mean (so no hex is ruled out). The
+  rake is asserted to meet every unit's counts.
+
+**Checks.** check_country ok, still 130,543,591 people in 168 units; the scatter draws the same
+130,474 dots and 64 rings as before, per (unit, language) counts untouched. Weighted centres
+inside units (before, every language sat at the unit's population centre):
+- rural Bashkortostan (centre 56.04E): Tatar 55.50E, Bashkir 56.49E, Chuvash 55.24E 53.92N, Mari
+  55.27E 55.56N (the north-west). In the drawn dots, 73% of Tatar dots in a Bashkortostan box lie
+  west of 56E against 51% of Bashkir;
+- rural Dagestan (centre 47.20E 42.61N): Lezgian 48.13E 41.72N and Tabasaran 47.99E 41.95N in
+  the south, Rutul 47.44E 41.71N, Agul 47.67E 41.90N, Nogai 45.93E 44.19N in the northern steppe,
+  Kumyk 47.21E 42.92N on the lowland, Avar 46.77E 42.85N and Andi 46.54E 42.96N in the west,
+  Chechen 46.65E 43.22N (Khasavyurt). Tsez lands at 46.39E 42.63N against 46.11E 42.48N for the
+  Didoi nationality: 16,399 rural Tsez speakers against 13,749 Didoi, so the surplus goes with
+  the floor and the rake;
+- rural Krasnoyarsk: Evenki at 65.9N (Evenkia), Dolgan and Nenets at 70N (Taimyr), Russian at
+  57.0N.
+
+**What it cannot show.** Language and nationality differ: a Tatar-speaking Bashkir in the
+north-west is placed among Bashkirs, not Tatars, and urban Tatars who name Russian are placed by
+the Russian residual. Inside a town nothing varies (one settlement point per town). The hexes'
+urban/rural line is still the density stand-in of §3.

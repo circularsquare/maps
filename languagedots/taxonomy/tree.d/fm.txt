@@ -14,7 +14,7 @@ austronesian.oceanic.sapwuahfik | Sapwuahfik (Ngatikese) | 0.7 0.13 195.0
 austronesian.oceanic.pingelapese | Pingelapese
 austronesian.oceanic.mokilese | Mokilese (Mwoakilese)
 austronesian.oceanic.nukuoro_kapingamarangi | Nukuoro and Kapingamarangi
-austronesian.yapese | Yapese
+austronesian.oceanic.yapese | Yapese
 austronesian.philippine | Philippine
 austronesian.philippine.tagalog | Tagalog
 sinotibetan | Sino-Tibetan

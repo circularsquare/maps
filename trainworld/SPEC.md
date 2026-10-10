@@ -198,7 +198,10 @@ number, set so a realistic network gives roughly realistic mode share. New York'
 rail and driving are judged on perceived time and cost alone. **Catchment is soft** (T-090): there
 is no circle the player sees. A farther station makes the walk, and so the whole trip, worse, and
 the station loses riders where that trip gets worse than driving. Value of time is per country so
-fares compare across countries.
+fares compare across countries. The US uses $20/hour (3 perceived minutes per dollar, a gameplay
+judgement). The base fare is charged once per trip, including transfers; the per-km rate uses
+actual track length. Distance fare affects route choice as well as mode choice, and crowding
+multiplies ride time without multiplying fare (T-067).
 
 **Walking.** Of the trips that do not take rail, a share walks by distance:
 `1 / (1 + exp((d - 1.7 km) / 0.4 km))` on zone-centre distance, so 84% of trips within a 2 km
@@ -527,7 +530,9 @@ queue at a tangle.
 A marker reads "+1:03" (each train's wait there) or, with no wait yet, "81%"; hovering it shows
 a tooltip in plain words ("Junction at 104% of capacity", "Each train waits 1m03s here at high
 demand", and for a junction "Click to see the junction and its flyover"). Markers sit over the
-network and under the demand views' bubbles and catchment (T-099).
+network and under the demand views' bubbles and catchment (T-099). Like station names, they hide
+below zoom 12 and reserve space around each tag (48 px horizontally / 28 px vertically before
+zoom 14, then 20 / 12 px). Larger delays win collisions, then higher utilisation (T-102).
 The junction inspector (T-031) draws the junction as a small diagram and lists its moves (from
 one station or direction to another), with the lines on each, trains an hour at the level in
 force, the wait per train, which moves each crosses, and the busiest crossing's utilisation. The
@@ -595,9 +600,8 @@ multiplier per level (Anita, 2026-10-08):
   are settled each game hour by the clock worker into the cash and a per-day ledger. Fare per ride
   = a base plus a rate per km of the ride, one curve for the network, set in the Money tab ($1.50
   + $0.10 a km to start); a ride that changes lines pays the base once. Fare income comes from
-  demand's riders and passenger-km per period (`app/src/game/money.ts`). Demand does not respond
-  to the fare yet (its rail cost has a fixed fare), so a higher fare only earns more (follow-up
-  on the demand side). Running costs can take the cash below zero; edits that cost nothing still
+  demand's riders and passenger-km per period (`app/src/game/money.ts`). Changing the fare
+  recalculates demand: higher prices can lose riders (T-067). Running costs can take the cash below zero; edits that cost nothing still
   work then. notes/T-028.md.
 - **Starting money $6B**, sized in T-008 for one real first line and rechecked in T-028: a 20 km
   line at -2 with 18 stations is US$3.78B plus about US$0.43B of trains, leaving room for a short
@@ -624,7 +628,8 @@ main thread; at 10,000 km 130-214 ms and 23-36 ms, where sending only what chang
 render tiles (zoom-12 grid) of the old and new extent, crossings of the touched edges, the
 resources on them, and the lines whose path uses them, then the other lines sharing those
 resources (one step; loads never depend on delay). A city's demand is dirtied only by service
-changes: a line's stops or frequency, or a station-to-station time moving 5 s or more. Drawing
+changes: a line's stops or frequency, a station-to-station time moving 5 s or more, or the fare
+curve changing. Fare edits use the same debounce and supersede older solves. Drawing
 track no line uses never wakes demand. Demand starts after edits pause (~0.5 s), and a newer edit
 cancels a running solve. An edit is refused only for problems it adds (radius, ramps, crossings,
 platforms, ground over water); problems already there, say from a newer water mask, do not block
@@ -658,8 +663,15 @@ Web first, so it can be shared as a link.
   matrix on every frame MapLibre draws, and the overlay is drawn right there, in the same frame
   with the same matrix; our own frame loop drives the overlay only for the clock. Drawn from our
   own loop alone, it trailed the basemap by one frame on every panning frame (notes/T-015.md).
-  Station names are DOM labels above the overlay in the UI font, moved on MapLibre's frames, with
-  a greedy overlap pass (transfers first, then lines); a MapLibre symbol layer would sit under
+  Station names are DOM labels above the overlay in the UI font, moved on MapLibre's frames.
+  A flat pan moves their shared compositor layer; placement and the greedy overlap pass
+  (transfers first, then lines) run on other camera changes, edits, font loading and showing
+  labels again, and after movement ends. A 256 px margin prepares names entering the screen;
+  a pan re-places them after 128 px of travel (T-074, notes/T-074.md).
+  Names and their invisible collision layer are hidden below zoom 12 (T-101). Above that,
+  padded collision rectangles keep names apart: 48 px horizontally and 28 px vertically until
+  zoom 14, then 20 px and 12 px. Transfer and constructed-station priorities still apply.
+  A MapLibre symbol layer would sit under
   the overlay with track drawn through it. They win over basemap place names through an invisible
   symbol layer of the same names above the basemap, which MapLibre's own collision then honours
   (T-032).
@@ -715,9 +727,10 @@ bars). The network is not styled by us: lines, trains and stations take the line
 - **Fixed layout, not floating windows.** One dock on the left with tabs (build, lines, stations,
   money, city) and an inspector area under the tab content. A top bar for the mode split, money,
   day and time, the demand level ("High demand"), pause and three speeds. **The build tools
-  (select, draw track, place station, level, single track) live in the Build tab of the dock**,
-  not a toolbar along the map's bottom (Anita, 2026-10-09; T-082); the map keeps only the blueprint
-  total, undo/redo and Construct where they are easy to reach. No floating windows; the player may
+  (draw track, place station, delete, level, single track) live in the Build tab of the dock**,
+  together with the blueprint total, undo/redo and Construct (Anita, 2026-10-10; T-100).
+  Those controls stay at the bottom of the Build pane while its settings and cost breakdown
+  scroll. The map keeps only tool hints, messages and removal questions. No floating windows; the player may
   drag the dock a little wider or narrower and move the divider between the tab area and the
   inspector (Anita, 2026-10-09), both remembered per browser; switching tabs still never moves the
   inspector. "Construct blueprints" builds every blueprint. While drawing, the tooltip gives the
@@ -728,7 +741,14 @@ bars). The network is not styled by us: lines, trains and stations take the line
 - **Trains show who is on board** (T-083): the train inspector shows riders aboard now and its load
   against seats and crush (a bar with a tick at the seats; "Seats free", "Standing", "Over
   full"), from demand's riders on the segment it is running, divided among the trains the line
-  runs in that period (an average train of the period, not its busiest hour).
+  runs in that period. Both the average and busiest-hour counts are listed; the gauge uses the
+  Average / Busiest hour display choice, busiest by default (T-087).
+- **Close-up trains** (T-103): from zoom 15.5, trains show the line's actual number of 20 m cars,
+  each positioned on the route and angled along its own chord, so the consist snakes around
+  curves. Cars have small gaps, rounded rectangular bodies, and windows/front cab when large
+  enough. The whole consist stays on the route at terminals. Clicking any car selects the train.
+  Further out, trains use a compact capsule with length based on their car count; all positions
+  remain GPU-derived from keyframes, with one instanced draw call for trains at either scale.
 - **The inspector shows whatever is selected**: a line, a station, a stretch of track, a junction,
   a train, commuter bubbles, a cell or zone. Nothing selected means it is blank (no text at all), not a default line. **Its top edge
   never moves when the tab changes**: the tab content area has a fixed height and scrolls.
@@ -745,13 +765,13 @@ bars). The network is not styled by us: lines, trains and stations take the line
   stands at), else station, else (while commuter bubbles show) a bubble, else line, else junction,
   else track, within 7 px; clicking the line already selected selects the track under
   it. An empty click or Escape clears the selection.
-- **Tools** in the Build tab: select, draw track (key 1), station (2), delete (3), the level with
+- **Tools** in the Build tab: draw track (key 1), station (2), delete (3), the level with
   its price, double or single track, platform length for new stations. The number keys work from
   any tab and open the Build tab (the level and platform settings are there); the key of the tool
   already on does nothing. Each button shows its key. **Delete** (T-096): hovering shows what a
   click removes (a stretch of track drawn red, a station or a flyover ringed, its name by the
   cursor); blueprint is removed at once (undoable), and anything constructed is removed only after
-  a yes in the hint area above the bottom bar ("Remove 1.2 km of constructed track? Nothing is
+  a yes in the hint area at the map's bottom left ("Remove 1.2 km of constructed track? Nothing is
   refunded." with Remove and Keep; Esc is Keep). The inspectors' Remove buttons ask the same way.
   Lines are removed from the line panel. **Esc** undoes one thing at a time: a question waiting is
   answered Keep, a drag goes back, a half-drawn route is dropped (the tool stays on), then the tool
@@ -760,10 +780,14 @@ bars). The network is not styled by us: lines, trains and stations take the line
   stretch (its corners) and any blueprint track end, junction or station can be dragged (6.1);
   the cursor turns to a move cursor over a node that can be; a line is made from the Lines tab ("New line",
   then click stations in order, Enter to end) and extended from the line panel. Ctrl+Z undoes,
-  Ctrl+Y or Ctrl+Shift+Z redoes. Blueprint is drawn dashed and faded; the bar on the map's bottom
-  left has undo, redo, the blueprint's cost and "Construct blueprints" (there because they are
-  needed from every tab while working on the map). A hint for the tool and a refused edit's reason
-  show above that bar.
+  Ctrl+Y or Ctrl+Shift+Z redoes. There is no Select button: clicking the active tool again or
+  leaving it with Esc returns to selecting. Blueprint is drawn dashed and faded. Build has the
+  total and "Construct blueprints", including the new train cars that constructing starts,
+  after spare cars. Its expandable cost breakdown shows track by priced level, single/double,
+  land/water and ramps (charged at the dearer end), stations, junction switches, flyovers and
+  flat crossings, with lengths/counts and prices from the track model. The fleet quote previews
+  the constructed service, so starting several lines together includes their resulting delays
+  without changing the game. Tool hints and a refused edit's reason show at the map's bottom left.
 - **A new game** starts on day 1 at 07:00 in an empty New York with $6B. Opening the page
   continues the last game (section 11).
 - **Money tab**: cash; yesterday and today (fares, running trains, new trains, construction,
@@ -785,9 +809,13 @@ bars). The network is not styled by us: lines, trains and stations take the line
   - **Station size by riders**: a station's circle grows with the square root of its boardings
     plus alightings a day, to 2.6 times its radius at 150,000.
   - **How full trains are**: a train's core fills from its back like a gauge, in the dark shade
-    of its line colour over a pale tint of it: half full means every seat taken, full means packed
+    of its line colour over a slight tint of it: filled is 48% of the line RGB, empty mixes only
+    18% white into the line colour (T-103). The gauge spans the whole consist across car gaps;
+    half full means every seat taken, full means packed
     to crush, and an over-full train is full with a red rim. The numbers are the train inspector's
-    (an average train of the period on the stretch it is running).
+    on the stretch it is running. Settings choose Average or Busiest hour (the default), using
+    the period's busiest-hour factor from the demand model. The train inspector lists both
+    counts, and its gauge uses the same choice (T-087).
 
   **Commuter bubbles**, the main demand view (T-097, Anita's Subway Builder style view, notes/
   T-097.md): "Commuters on the map" in the settings pane, Off, Homes or Jobs. Every commuter at
@@ -800,9 +828,9 @@ bars). The network is not styled by us: lines, trains and stations take the line
   T-099); no minimum size,
   and nobody means no bubble. **Colour mixes the three mode colours by share** (RGB: all car red,
   all train blue, half and half magenta), at 80% opacity, biggest bubbles under smaller ones.
-  The bubbles are drawn over the network and its capacity markers, under station names. A legend in the map's top left
-  corner while they are on: the three colours with commuters and shares, and the mixes from all
-  driving to all train.
+  The bubbles are drawn over the network and its capacity markers, under station names.
+  There is no corner summary box: the city mode split is in the top bar, and local splits are
+  shown on hover and in the inspector (T-101, Anita).
 
   Hovering a bubble shows a tag by the pointer: commuters there and their split ("47k commuters
   live here", "Train 49%, walking 3%, driving 47%"). **A click on a bubble selects it**; a click
@@ -840,7 +868,9 @@ bars). The network is not styled by us: lines, trains and stations take the line
   oranges, purples, as on real metro maps), not pastel. New lines take the next default; the player
   can set any line's colour (later in M1 or after).
 - **Zen Maru Gothic** (Anita's pick over M PLUS Rounded 1c) everywhere, including station names
-  and the basemap's labels: Regular only, faint grey, from glyph tiles we generate and host beside
+  and the map's DOM controls. The map container explicitly inherits the project font rather
+  than MapLibre's default Helvetica (T-101). Form controls inherit it too. The font on
+  the basemap's labels is Regular only, faint grey, from glyph tiles we generate and host beside
   the app (`app/public/fonts/`, `pipeline/glyphs.py`), with Noto Sans merged in for scripts Zen
   Maru lacks. Kana and kanji on the basemap are drawn by the browser in the system font for now
   (T-057). notes/T-056.md. Few font sizes and weights (the mock's 3 sizes and 2 weights is the

@@ -31,6 +31,101 @@ ROOT = Path(__file__).resolve().parent
 # Register lines, as 国土数値情報 N02 names them and as the operators publish their 営業キロ.
 # N02 writes 山陰線 where the timetable writes 山陰本線, and the register is what it means.
 REGISTER = {
+    # ---- the rest of Asia (asia_register.py; <cc>_sources.md; asia agent, 2026-10-08)
+    "kh": [
+        ("ខ្សែផ្លូវដែកភាគខាងជើង", "Royal", 273.0, "seat61: Phnom Penh - Battambang 273 km"),
+        ("ខ្សែផ្លូវដែកភាគខាងត្បូង", "Royal", 263.0, "seat61: Phnom Penh - Sihanoukville 263 km "
+                                                 "(en.WP 266 with the port spur)"),
+        ("ខ្សែផ្លូវដែកភាគខាងជើង (បាត់ដំបង - ប៉ោយប៉ែត)", "Royal", 113.0, "en.WP Northern Line 386 km Phnom Penh - "
+                                               "Poipet, less seat61's 273 to Battambang"),
+    ],
+    "la": [
+        ("ທາງລົດໄຟ ລາວ-ຈີນ", "", 406.0, "en.WP Boten - Vientiane station table, plus Boten - "
+                                         "border traced (~3 km, into the tunnel; 422 with the freight branch)"),
+        ("สายชุมทางถนนจิระ–หนองคาย", "", 10.0, "Laos's part, under Thailand's line id: border "
+                                            "- Thanaleng ~2.5 (crow-fly 2.6) + Thanaleng - "
+                                            "Khamsavath 7.5 (en.WP)"),
+    ],
+    "ph": [
+        ("South Main Line (Calamba - Lucena)", "", 77.0, "en.WP PNR South Main Line: the "
+                                                          "Inter-Provincial Commuter, 77 km"),
+        ("South Main Line (Naga - Legazpi)", "", 100.0, "en.WP Bicol Commuter Naga - Legazpi "
+                                                        "about 100 km (greyed)"),
+    ],
+    # Mongolia: the main line is checked whole by asia_register's path check (border to
+    # border 1,110 km, en.WP), not per half.
+    "mn": [
+        ("Салхит – Эрдэнэт", "", 164.0, "en.WP Erdenet branch, about 164 km"),
+        ("Дархан – Шарын гол", "", 63.0, "survey (en.WP Rail transport in Mongolia), about 63"),
+        ("Эрээнцав – Чойбалсан", "", 237.5, "en.WP 238 / ru.WP 237 from the border; built from "
+                                             "Ereentsav station (greyed)"),
+    ],
+    # Myanmar: MR's mileposts as en.WP "List of railway stations in Myanmar" gives them (miles
+    # from Yangon unless said), converted at 1.609 km.
+    "mm": [
+        ("Yangon–Mandalay line", "", 620.0, "en.WP Yangon–Mandalay Railway, 620 km"),
+        ("Yangon–Mawlamyine line", "", 218.5, "Bago 46 1/2 - Mawlamyaing 182 1/4 mi"),
+        ("Yangon–Pyay line", "", 259.1, "Pyay 161 mi"),
+        ("Kyangin–Hinthada–Pathein line", "", 236.6, "Kyangin 174 1/4 - Hinthada 109 1/2 - "
+                                                     "Pathein 191 3/4 mi (from Yangon by ferry)"),
+        ("Thazi–Shwenyaung line", "", 157.7, "Thazi 306 - Kalaw 369 - Shwe Nyaung 404 mi"),
+        ("Mandalay–Lashio line (Pyin Oo Lwin – Gokteik)", "", 65.2, "Pyin U Lwin 422 1/2 - "
+                                                                   "Gokteik 463 mi"),
+        ("Mandalay–Lashio line (Gokteik – Lashio)", "", 157.3, "Gokteik 463 - Lashio 560 3/4 mi"),
+        ("Mandalay–Myitkyina line", "", 532.3, "Sagaing 392 - Myitkyina 722 3/4 mi"),
+        ("Naba–Katha line", "", 24.1, "Naba 590 - Katha 605 mi"),
+        ("Tanintharyi line", "", 307.0, "Mawlamyaing 182 1/4 - Dawei 373 mi"),
+        ("Shwenyaung–Lawksawk line", "", 60.4, "Shwe Nyaung 404 - Lawksauk 441 1/2 mi"),
+    ],
+    "np": [
+        ("जयनगर–जनकपुर–भंगाहा रेलमार्ग", "", 49.0, "en.WP Jaynagar - Bhangaha 52 km operational, "
+                                                   "less ~3 km Jaynagar - border in India"),
+    ],
+    # ---- end the rest of Asia
+    # ---- Latin America (latam_register.py; <cc>_sources.md; latam agent, 2026-10-08)
+    # Costa Rica: INCOFER's GTFS shapes, each line's longest pattern.
+    "cr": [
+        ("San José - Heredia - Alajuela", "INCOFER", 20.83, "GTFS shape atlantico_alajuela"),
+        ("San José - Cartago", "INCOFER", 24.62, "GTFS shape atlantico_paraiso"),
+        ("Curridabat - San José - Pavas - Belén", "INCOFER", 21.9,
+         "GTFS shape cfia_metropoli (runs CFIA - Belén)"),
+    ],
+    # Cuba: es.WP "Ferrocarriles de Cuba", the Línea Central La Habana - Santiago.
+    "cu": [
+        ("Línea Central: La Habana – Santiago de Cuba", "", 835.0, "es.WP"),
+    ],
+    # Peru (pe_sources.md).
+    "pe": [
+        ("Ferrocarril Huancayo – Huancavelica (Chilca – Cuenca)", "", 57.0,
+         "ProActivo, Dec 2024: phase one Chilca - Cuenca 57 km"),
+        ("Ferrocarril Huancayo – Huancavelica (Cuenca – Huancavelica)", "", 71.0,
+         "en.WP 128 km for the whole line less Chilca - Cuenca's 57"),
+    ],
+    # Bolivia (bo_sources.md): Ferroviaria Oriental's sectors, es.WP.
+    "bo": [
+        ("Ferrocarril Santa Cruz – Puerto Quijarro", "", 651.0, "FO sector Este"),
+        ("Ferrocarril Santa Cruz – Yacuiba", "", 539.0, "FO sector Sur, to Pocitos (~3 km "
+                                                         "past Yacuiba)"),
+    ],
+    # Colombia (co_sources.md): en.WP "Medellín Metro". The Sabana train has no published
+    # Usaquén - Zipaquirá length (built from Usaquén: OSM's track stops short of La Sabana).
+    "co": [
+        ("Tranvía de Ayacucho", "", 4.2, "en.WP, San Antonio - Oriente"),
+    ],
+    # Venezuela (ve_sources.md): es.WP "Sistema Ferroviario Ezequiel Zamora".
+    "ve": [
+        ("Sistema Ferroviario Ezequiel Zamora: Caracas – Cúa", "", 41.4, "es.WP"),
+    ],
+    # Uruguay: no published Tacuarembó - Rivera length (gub.uy's "100 km" is rounded). AFE's
+    # request halts are km posts and are stations of the line: km 457 to km 552 builds 95.6
+    # km for 95 (1.01), section by section within 1 km (uy_sources.md).
+    # Ecuador (ec_sources.md).
+    "ec": [
+        ("Tren Nariz del Diablo", "", 12.5, "Primicias; built 9.2, ~0.74: the switchback's "
+                                            "reversing tails are not on a shortest path "
+                                            "(OSM's route ways are 11.2 km)"),
+    ],
+    # ---- end Latin America
     "jp": [
         ("山陰線", "西日本", 673.8, "Kyoto-Hatabu, JR West"),
         ("東海道線", "東海", 341.3, "Atami-Maibara, JR Central"),
@@ -287,6 +382,35 @@ REGISTER = {
                                   "build's own 2.5 km on to KLIA T2: ~0.99"),
         ("Keretapi Bukit Bendera", "", 1.996, "WP, along the slope; it climbs about 700 m, so "
                                              "about 1.87 on the map: ~0.94"),
+    ],
+    # Israel (il_register.py; il_sources.md "Build (2026-10-08)"). en.wikipedia (WP) gives few
+    # lengths, mostly rounded; a branch is built from where it leaves the line before it, so
+    # the note says what the published figure counts beyond that.
+    "il": [
+        ("מסילת תל אביב–ירושלים", "", 56.0, "WP 'about 56 km' from the Ganot interchange; the "
+                                          "build has Ganot - Navon 46.9 and the Modi'in branch "
+                                          "6.8 apart: ~0.84 (0.96 with it)"),
+        ("מסילת לוד–אשקלון", "", 50.0, "WP 'approximately 50 km' Lod - Ashkelon; the build "
+                                     "starts 0.8 km past Lod, Lod - Ashkelon is 40 km crow-fly: "
+                                     "~0.83"),
+        ("מסילת אשקלון–באר שבע", "", 60.0, "WP 'approximately 60 km' Ashkelon - Be'er Sheva North "
+                                         "(its table says 70)"),
+        ("המסילה לבאר שבע", "", 87.0, "WP: the doubling project Lod - Be'er Sheva Center was "
+                                    "87 km; the build's Lod - Na'an junction is the Jaffa - "
+                                    "Jerusalem line's 10.6: ~0.87"),
+        ("מסילת העמק", "", 60.0, "he.WP Haifa - Beit She'an 60 km; the build is from its "
+                                "junction by HaMifrats Central: ~0.95"),
+        ("מסילת עכו–כרמיאל", "", 23.0, "he.WP Acre - Karmiel 23 km; the build starts at the "
+                                     "junction 2.5 km south of Acre: ~0.90"),
+        ("מסילת יפו–ירושלים: בית שמש–ירושלים מלחה", "", 36.3, "WP's station table: Beit Shemesh 50.3, Malha 86.6 "
+                                           "km from Jaffa (the Ottoman line, before the 2005 "
+                                           "realignments): ~0.86. Greyed"),
+        ("הרכבת הקלה בירושלים – הקו האדום", "", 22.5, "WP, 35 stations; built stop to stop, "
+                                                     "no tail or depot track: ~0.89"),
+        ("הרכבת הקלה בירושלים – הקו הירוק", "", 7.0, "WP, Malha - HaTurim, opened 2026-08-21, "
+                                                    "13 stations"),
+        ("הקו האדום", "תבל", 24.0, "WP, 34 stations incl. the Kiryat Arye branch"),
+        ("כרמלית", "", 1.8, "WP, 6 stations"),
     ],
     # Register lines as rinf.py names them (Infrabel's "L.36"). Sources in be_sources.md:
     #   WP    the LENGTE field of each line's nl.wikipedia infobox (retrieved 2026-09-30). It
@@ -2028,6 +2152,110 @@ REGISTER = {
         ("Kraaifontein–Malmesbury", "", 47.4, "WP Malmesbury Line 79.4 km, less Cape Town - "
                                               "Kraaifontein (32.0 built)"),
     ],
+    # Pakistan: pk_register.py's lines (pk_lines.py). Seven carry PR's km posts from
+    # en.wikipedia's route diagrams (km_official, checked line by line above); these are the
+    # outside figures: en.WP's list of lines and train articles' published distances. The
+    # build log's "PK path check" lines test whole train routes over several lines the same
+    # way (Jaffar Express 1,628 / 1,632, Khushhal Khan Khattak Express 1,504 / 1,512, Fareed
+    # Express 1,251 / 1,250, Hazara Express 1,576 / 1,594, Kohat Express 176 / 177, Thal
+    # Express 571 / 595). pk_sources.md has the rest.
+    "pk": [
+        ("Karachi–Peshawar Line", "", 1682.0, "WP ML-1 1,687 km Kiamari - Peshawar Cantt, "
+                                              "less Kiamari - Karachi City (5, RDT)"),
+        ("Quetta–Chaman", "", 142.0, "WP Chaman Passenger, Quetta - Chaman"),
+        ("Rohri–Quetta", "", 384.0, "WP ML-3 526 km Rohri - Chaman, less Quetta - Chaman "
+                                    "(142, the Chaman Passenger's)"),
+    ],
+    # West and Central Africa: wafrica_register.py's hand lists traced over OSM track
+    # (<cc>_sources.md). The km are ours; these published lengths are the outside check.
+    "ng": [
+        ("Lagos – Ibadan", "Railway", 156.8, "NRC / WP Lagos–Ibadan SGR, Ebute Metta - Moniya"),
+        ("Abuja – Kaduna", "Railway", 186.5, "NRC; WP 187, Idu - Rigasa"),
+        ("Warri – Itakpe", "Railway", 326.0, "WP Warri–Itakpe Railway (with the Warri port "
+                                             "extension; built Ujevwu - Itakpe)"),
+        ("Port Harcourt – Aba", "Railway", 63.0, "nairametrics, NRC handover 2024"),
+        ("Red Line", "Lagos", 27.0, "LAMATA's phase 1 figure; built Agbado - Oyingbo "
+                                    "platform to platform, 24.4"),
+        # No published length found for Iddo - Ijoko (built 28.7 km to where OSM's Cape
+        # gauge track ends) or for either Abuja metro line alone (45 km for both: built
+        # 26.5 + 17.8 = 44.3).
+    ],
+    "ga": [
+        ("Transgabonais : Owendo – Franceville", "SETRAG", 670.0, "SETRAG's 2019 timetable, Owendo 0 - Franceville "
+                                          "670 (fahrplancenter.com)"),
+    ],
+    "cg": [
+        ("Pointe-Noire – Brazzaville", "CFCO", 512.0, "CFCO's PK, fr.WP line diagram"),
+    ],
+    "sn": [
+        ("TER Dakar – AIBD", "SETER", 55.0, "WP Dakar - Diamniadio 36 + press Diamniadio - "
+                                            "AIBD ~19 (Sept 2026)"),
+    ],
+    # Ghana: Tema - Mpakadan is 96.7 km (WP, Railway Gazette); built as Tema - Adome 74.7 +
+    # Adome - Mpakadan 19.8 = 94.5, from Tema Harbour station. Accra - Tema has no
+    # authoritative length (about 30 km; built 33.5).
+    "bf": [
+        ("Ouagadougou – Bobo-Dioulasso", "Sitarail", 345.0, "fr.WP: line 1,145 km, Bobo-"
+                                                             "Dioulasso at PK 800"),
+    ],
+    "cm": [
+        ("Douala – Yaoundé", "Camrail", 263.0, "seat61 / Camrail"),
+        ("Yaoundé – Ngaoundéré", "Camrail", 622.0, "WP Transcamerounais"),
+    ],
+    # Angola: the railways' own km in their timetables (fahrplancenter.com's transcriptions,
+    # CFL 2019, CFM 2019).
+    "ao": [
+        ("Luanda (Bungo) – Baía", "Luanda", 36.0, "CFL, Bungo 0 - Baía 36"),
+        ("Baía – Malanje", "Luanda", 386.0, "CFL, Baía 36 - Malanje 422"),
+        ("Zenza do Itombe – Dondo", "Luanda", 46.0, "CFL, Zenza 134 - Dondo 180 (greyed)"),
+        ("Namibe – Lubango", "Moçâmedes", 246.0, "CFM, Namibe 0 - Lubango 246"),
+        ("Lubango – Matala – Menongue", "Moçâmedes", 510.0, "CFM, Lubango 246 - Menongue 756"),
+        ("Lobito – Huambo – Luau", "Benguela", 1344.0, "CFB, Lobito - Luau ~1,344 (the line "
+                                                       "rebuilt 2006-2014 on shorter "
+                                                       "alignments; no new figure found)"),
+    ],
+    "cd": [
+        ("Train urbain : Gare Centrale – Ndjili", "SCTP", 25.0, "press: 'nearly 25 km', Tshenke - Gare Centrale; "
+                                       "built Gare Centrale - Ndjili Aéroport"),
+    ],
+    # Bangladesh: bd_register.py's lines (bd_lines.py), lengths our own traces. Few lines have
+    # a published length of their own; where the built line is one stretch BR's East Zone fare
+    # list or the Information Book 2024 measures, that is the check. More, as paths over the
+    # network, in the build log's "path check" lines (bd_lines.PATH_CHECKS). bd_sources.md.
+    "bd": [
+        ("Akhaura–Laksam–Chittagong line", "", 204.0, "BR fare list, Akhaura - Chattogram"),
+        ("Akhaura–Kulaura–Chhatak line", "", 177.0, "BR fare list, Akhaura - Sylhet (Sylhet "
+                                                     "- Chhatak not built: no track in OSM)"),
+        ("Khulna–Mongla Port line", "", 63.82, "Information Book 2024, Khulna - Mongla "
+                                               "(Phultala - Mongla)"),
+        ("Pabna–Dhalarchar line", "", 78.8, "Information Book 2024, Pabna - Dhalarchar"),
+        ("Chittagong–Cox's Bazar line", "", 149.0, "Information Book 2024, Dohazari - Cox's "
+                                                   "Bazar 102 + Chittagong - Dohazari 47 "
+                                                   "(en.wikipedia)"),
+    ],
+    # Sri Lanka: lk_register.py's lines (en.wikipedia's by-line station tables, km from
+    # Colombo Fort), cut where Cyclone Ditwah's damage still stops trains. Wikidata's line
+    # lengths (P2043) where the built line is the whole line, else the table's own km between
+    # the two ends (that is also km_official, so those rows check the trace, not the source).
+    # lk_sources.md has the rest.
+    "lk": [
+        ("Northern Line", "", 339.0, "Wikidata, Polgahawela - Kankesanturai (table 336.4)"),
+        ("Batticaloa Line", "", 212.0, "Wikidata, Maho - Batticaloa (table 210.6)"),
+        ("Coastal Line", "", 184.65, "Wikidata, Colombo Fort - Matara 157.9 + Matara - "
+                                     "Beliatta 26.75 (table 185.2)"),
+        ("Mannar Line", "", 106.0, "Wikidata, Medawachchiya - Talaimannar Pier; OSM's track "
+                                   "ends at Talaimannar, 2.4 km short of the pier"),
+        ("Trincomalee Line", "", 70.0, "Wikidata, Gal Oya - Trincomalee (table 69.8)"),
+        ("Puttalam Line", "", 116.82, "table, Ragama 16.42 - Puttalam 133.24 (Wikidata's 133 "
+                                      "is from Colombo Fort)"),
+        ("Kelani Valley Line", "", 56.9, "table, Maradana 2.08 - Avissawella 58.98"),
+        ("Main Line", "", 127.38, "table, Colombo Fort - Gampola (Wikidata 292 to Badulla)"),
+        ("Main Line (Gampola - Nanu Oya)", "", 79.52, "table, Gampola 127.38 - Nanu Oya 206.9"),
+        ("Main Line (Nanu Oya - Badulla)", "", 84.7, "table, Nanu Oya 206.9 - Badulla 291.6"),
+        ("Matale Line", "", 27.64, "table, Kandy 119.5 - Matale 147.14"),
+        # Matale Line (Peradeniya - Kandy), greyed, 5.9 km traced: the table's 4.16 (Peradeniya
+        # 115.34 - Kandy 119.5) is shorter than the crow flies, so no number checks it.
+    ],
     # Indonesia: id.wikipedia's line articles (id_register.py), named as the article less
     # "Jalur kereta api", against the article's infobox length (`linelength`/`tracklength`,
     # read 2026-10-03 into data/raw/id/idwiki_articles.json). Only lines whose infobox extent
@@ -2408,9 +2636,195 @@ REGISTER = {
          "railway.gov.tm timetable, train 601 Mary km 343 - Serhetabat km 659; built short: "
          "Saryýazy - Sandykgaçy's trace is rejected (casia_sources.md)"),
     ],
+    # Saudi Arabia (mideast_register.py; sa_sources.md). en.WP.
+    "sa": [
+        ("قطار الشمال: الرياض – القريات", "", 1242.0, "en.WP Riyadh–Qurayyat railway"),
+        ("قطار الشرق: الرياض – الدمام", "", 449.0, "en.WP Dammam–Riyadh railway"),
+        ("قطار الحرمين السريع", "", 453.0, "en.WP Haramain high-speed railway"),
+    ],
+    # Iraq (mideast_register.py; iq_sources.md).
+    "iq": [
+        ("الخط الجنوبي: بغداد – البصرة", "", 552.9,
+         "en.WP IRR Southern Line, Basra Maqal's km post"),
+        ("الخط الشمالي: بغداد – سامراء", "", 120.0, "about 120 (en.WP Rail transport in Iraq)"),
+        ("الخط الغربي: بغداد – الفلوجة", "", 65.0, "Shafaq News 2023, 65 km"),
+    ],
+    # Jordan (mideast_register.py; jo_sources.md).
+    "jo": [
+        ("سكة حديد الحجاز: عمان – الجيزة", "", 37.3,
+         "en.WP Hejaz railway's chainage: Amman km 222.4, Al-Jizah km 259.7"),
+    ],
+    # The UAE: no published length for Etihad Rail's passenger route (ae_sources.md); its
+    # journey times check it instead (Al Dhaid - Fujairah 25 min for 59 km).
+    # Kenya (eafrica_register.py; ke_sources.md).
+    "ke": [
+        ("Mombasa – Nairobi SGR", "", 472.0, "en.WP Mombasa–Nairobi SGR; built station to "
+                                             "station (~0.98)"),
+    ],
+    # Ethiopia and Djibouti: en.WP's station table, the line's chainage from Sebeta (Furi-Lebu
+    # 15.5, Dewele 663.1, Nagad 743.9); the border is 4.0 km past Dewele on OSM's track.
+    "et": [
+        ("Addis Ababa – Djibouti Railway", "", 651.6, "Furi-Lebu - Dewele 647.6 + 4.0"),
+    ],
+    "dj": [
+        ("Chemin de fer Addis-Abeba – Djibouti", "", 76.8, "Dewele - Nagad 80.8 less 4.0"),
+    ],
+    # Mozambique: CFM's line pages and AIM (mz_sources.md).
+    "mz": [
+        ("Linha de Ressano Garcia", "", 88.0, "CFM, Maputo - Ressano Garcia"),
+        ("Linha de Machipanda", "", 317.0, "AIM Nov 2023, Beira - Machipanda"),
+    ],
+    # TAZARA: en.WP's chainage from Dar es Salaam (Tunduma 969.6, Nakonde 971.0, New Kapiri
+    # Mposhi 1,860); the border taken at 970.3.
+    "zm": [
+        ("TAZARA: New Kapiri Mposhi – Nakonde", "", 889.7, "1,860 less 970.3"),
+    ],
+    # Zimbabwe: seat61's distances (zw_sources.md).
+    "zw": [
+        ("Bulawayo – Victoria Falls", "", 472.0, "seat61"),
+        ("Harare – Mutare", "", 273.0, "seat61 (~0.98)"),
+        ("Bulawayo – Gweru – Harare", "", 486.0, "seat61 (~0.98); greyed"),
+    ],
+    # Tanzania (tz_sources.md). TAZARA: en.WP's chainage to the border, as Zambia's.
+    "tz": [
+        ("SGR: Dar es Salaam – Dodoma", "", 444.0, "TRC"),
+        ("Central Line: Dar es Salaam – Kigoma", "", 1254.0, "en.WP Central Line (Tanzania); "
+                                                             "built from Kamata"),
+        ("Mwanza Line: Tabora – Mwanza", "", 378.0, "TRC"),
+        ("Mpanda Line: Kaliua – Mpanda", "", 210.0, "TRC"),
+        ("TAZARA: Dar es Salaam – Tunduma", "", 970.3, "Tunduma 969.6, Nakonde 971.0"),
+    ],
+    # Madagascar (mg_sources.md).
+    "mg": [
+        ("FCE : Fianarantsoa – Manakara", "", 163.0, "en.WP Fianarantsoa-Côte Est railway"),
+    ],
+    # Malawi: CEAR's km in its 2015 timetable (fahrplancenter.com; mw_sources.md).
+    "mw": [
+        ("Limbe – Balaka", "", 112.0, "CEAR"),
+        ("Nkaya – Nayuchi", "", 99.0, "CEAR"),
+    ],
+    # Nairobi - Suswa SGR (greyed) has no length of its own: the 120 km published for phase
+    # 2A runs to Naivasha's container depot, past the passenger station (built 99.9).
+    # North Korea (kp agent, 2026-10-08; kp_sources.md): en.wikipedia's line tables (after
+    # the South Korean literature). Running lines first, then the greyed ones.
+    "kp": [
+        ("평라선", "", 782.8, "Kalli - Rajin (P'yŏngyang - Kalli is the P'yŏngŭi Line's)"),
+        ("평의선", "", 226.4, "Sinŭiju Ch'ŏngnyŏn 225.4 + ~1 km on to the border on the bridge"),
+        ("만포선", "", 302.8, "Sunch'ŏn - Manp'o Ch'ŏngnyŏn 299.8 + ~3 km to the Ji'an bridge"),
+        ("북부내륙선", "", 249.2, "Manp'o Ch'ŏngnyŏn - Hyesan Ch'ŏngnyŏn"),
+        ("함북선", "", 222.0, "Ch'ŏngjin - Onsŏng 180.4 and Mulgol - Rajin 41.6, two pieces "
+                             "either side of the greyed Onsŏng - Mulgol"),
+        ("평덕선", "", 192.3, "Taedonggang - Kujang Ch'ŏngnyŏn"),
+        ("평부선", "", 187.3, "P'yŏngyang - Kaesŏng"),
+        ("강원선", "", 145.8, "Kowŏn - P'yŏnggang"),
+        ("백두산청년선", "", 141.7, "Kilju Ch'ŏngnyŏn - Hyesan Ch'ŏngnyŏn"),
+        ("청년이천선", "", 141.3, "P'yŏngsan - Sep'o Ch'ŏngnyŏn"),
+        ("평북선", "", 120.5, "Chŏngju Ch'ŏngnyŏn - Ch'ŏngsu"),
+        ("은률선", "", 117.8, "Ŭnp'a - Ch'ŏlgwang (the Sariwŏn spur not built)"),
+        ("금강산청년선", "", 101.0, "Anbyŏn - Kŭmgangsan Ch'ŏngnyŏn, the part in use"),
+        ("황해청년선", "", 91.4, "Sariwŏn Ch'ŏngnyŏn - Haeju Ch'ŏngnyŏn"),
+        ("신흥선", "", 91.6, "Hamhŭng - Sinhŭng 41.0 + Sinhŭng - Pujŏnhoban 50.6"),
+        ("평남선", "", 85.4, "P'yŏngyang - P'yŏngnam Onch'ŏn 89.3 less P'yŏngyang - "
+                             "Pot'onggang 3.9, which is P'yŏngŭi Line track here"),
+        ("허천선", "", 80.3, "Tanch'ŏn Ch'ŏngnyŏn - Honggun"),
+        ("금골선", "", 83.4, "Yŏhaejin - Muhak; OSM's stations end at Taesin (68.9), so "
+                             "expect about 0.92 or more where the track winds"),
+        ("장진선", "", 58.6, "Yŏnggwang - Sasu"),
+        ("무산선", "", 57.9, "Komusan - Musan"),
+        ("덕성선", "", 51.7, "Sinbukch'ŏng - Sangri"),
+        ("백마선", "", 39.6, "Yŏmju - South Sinŭiju"),
+        ("덕현선", "", 37.3, "South Sinŭiju - Tŏkhyŏn"),
+        ("개천선", "", 29.5, "Sinanju Ch'ŏngnyŏn - Kaech'ŏn"),
+        ("서해갑문선", "", 26.7, "Ch'ŏlgwang - Sillyŏngri"),
+        ("룡강선", "", 18.3, "Ryonggang - Mayŏng"),
+        ("고원탄광선", "", 17.6, "Tunjŏn - Changdong"),
+        ("장연선", "", 17.7, "Sugyo - Changyŏn"),
+        ("세천선", "", 14.4, "Sinhakp'o - Chungbong"),
+        ("서창선", "", 12.9, "Tŏkch'ŏn - Ch'ŏlgisan 8.7 + the Hyŏngbong Line 4.2"),
+        ("천성탄광선", "", 11.5, "Sinch'ang - Ch'ŏnsŏng 9.2; built from Suyang, the trains' "
+                               "way in, ~2.3 km more"),
+        ("만덕선", "", 10.3, "Hŏch'ŏn - Mandŏk"),
+        ("홍의선", "", 9.5, "Hongŭi - Tumangang; OSM draws Chŏkchi - Tumangang twice, as this "
+                            "and 두만강선, so built ~0.7"),
+        ("함북선 (온성 - 물골)", "", 103.1, "greyed"),
+        ("평부선 (판문 - 개성)", "", 10.3, "greyed"),
+        ("금강산청년선 (감호 - 금강산청년)", "", 13.8, "greyed"),
+        ("백무선", "", 191.7, "greyed; Paeg'am Ch'ŏngnyŏn - Musan, OSM in two pieces"),
+        ("삼지연선", "", 64.0, "greyed; the new standard-gauge line to Samjiyŏn Motka"),
+        ("배천선", "", 56.6, "greyed; Changbang - Ŭnbit (64.4 from East Haeju)"),
+        ("강계선", "", 56.8, "greyed"),
+        ("옹진선", "", 43.5, "greyed"),
+        ("부포선", "", 19.1, "greyed"),
+        ("송림선", "", 11.3, "greyed; to Songrim Ch'ŏngnyŏn"),
+        ("비날론선", "", 14.1, "greyed"),
+    ],
 }
 
 KNOWN = {
+    # The Pyongyang Metro (OSM lines; kp agent, 2026-10-08). en.wikipedia's round figures,
+    # "approximately 12 km" and "approximately 10 km", do not fit the track OSM draws (8.7 and
+    # 12.3 km station to station); the stops (8 each) do. Left failing until a better figure.
+    "kp": [
+        ("천리마선", "", 12.0, 8, "en.WP Puhŭng - Pulgŭnbyŏl, \"approximately\": ~0.73"),
+        ("혁신선", "", 10.0, 8, "en.WP Kwangbok - Ragwŏn, \"approximately\": ~1.23"),
+    ],
+    # ---- the rest of Asia (OSM lines; asia agent, 2026-10-08). en.WP infoboxes.
+    "ph": [
+        ("LRT Line 1", "", 26.0, 25, "Fernando Poe Jr. - Dr. Santos (Cavite extension phase 1, "
+                                     "Nov 2024); built station to station (0.95)"),
+        ("LRT Line 2", "", 17.6, 13, "Recto - Antipolo; built station to station (0.94)"),
+        ("MRT Line 3", "", 16.9, 13, "North Avenue - Taft Avenue"),
+    ],
+    "mm": [
+        ("Yangon Circular Railway", "", 45.9, 38, "en.WP Yangon Circular Railway"),
+    ],
+    # ---- end the rest of Asia
+    # ---- Latin America's metros and trams (OSM lines; latam agent, 2026-10-08)
+    # Cochabamba's Mi Tren: Los Tiempos (Sep 2023, Apr 2024: Línea Verde 27 km to Suticollo).
+    "bo": [
+        ("Línea Verde", "Mi Tren", 27.0, None, "San Antonio - Suticollo"),
+    ],
+    # Quito's metro and Cuenca's tram: the operators' figures (ec_sources.md).
+    "ec": [
+        ("Metro Línea 1", "", 22.6, 15, "Quitumbe - El Labrador, with the tails: ~0.95"),
+        ("Cuatro Ríos", "Cuenca", 10.7, None, "Río Tarqui - Parque Industrial: ~0.93"),
+    ],
+    # Santo Domingo Metro: en.WP / OPRET (2C open since 24 Feb 2026).
+    "do": [
+        ("Línea 1", "OPRET", 14.5, 16, "Mamá Tingó - Centro de los Héroes, with the tails: "
+                                       "~0.90"),
+        ("Línea 2", "OPRET", 21.0, 23, "Pablo Adón Guzmán - Concepción Bona, 2A + 2B + 2C"),
+    ],
+    # Puerto Rico's Tren Urbano (OSM line): en.WP.
+    "pr": [
+        ("Tren Urbano", "", 17.2, 16, "Bayamón - Sagrado Corazón, with the tails: ~0.96"),
+    ],
+    # Medellín's metro (OSM lines): en.WP. OSM has Poblado twice (a stop and "Estación del
+    # Metro Poblado"), so Línea A shows 22 stations for 21.
+    "co": [
+        ("Metro Línea A", "", 25.8, 21, "Niquía - La Estrella"),
+        ("Metro Línea B", "", 5.5, 7, "San Antonio - San Javier"),
+    ],
+    # Venezuela's metros (OSM lines): urbanrail.net / es.WP.
+    "ve": [
+        ("Línea 1 del Metro de Caracas", "", 20.4, 22, "Propatria - Palo Verde"),
+        ("Metro Los Teques", "", 10.7, 5, "Las Adjuntas - Independencia (survey)"),
+    ],
+    # Lima Metro: en.WP.
+    "pe": [
+        ("Línea 1", "AATE", 34.6, 26, "Villa El Salvador - Bayóvar: ~0.96"),
+        ("Línea 2", "Línea 2", 5.0, 5, "stage 1A Evitamiento - Mercado Santa Anita, news "
+                                       "figure 5 km (rounded; takes in the tunnel past "
+                                       "both ends): station to station 4.1, ~0.83"),
+    ],
+    # Panama Metro: en.WP; published lengths take in the tails, so station to station is short.
+    "pa": [
+        ("Línea 1", "Metro de Panamá", 18.1, 15, "Albrook - Villa Zaita: ~0.95"),
+        ("Línea 2", "Metro de Panamá", 22.5, 18, "20.4 + the airport branch 2.1; the branch's "
+                                                 "Corredor Sur makes 18 stations, ITSE and "
+                                                 "Aeropuerto 2 more"),
+    ],
+    # ---- end Latin America
     # Almaty's and Tashkent's metros and Astana's LRT (OSM lines; casia agent). Published
     # lengths: Wikidata (Almaty Q484433, Astana Q779673, Chilonzor Q4515924), en.WP's
     # Tashkent Metro line table; published lengths take in depot tails.
@@ -2443,6 +2857,11 @@ KNOWN = {
         ("خط ۱", "اصفهان", 20.2, 20, "Isfahan L1, en.WP"),
         ("خط یک قطار شهری تبریز", "", 17.2, 12, "Tabriz L1, en.WP (OSM lists 18 stops; WP: 6 "
                                                 "intermediate not open)"),
+    ],
+    # Lahore Metro (OSM line; pk agent). en.WP infobox.
+    "pk": [
+        ("Orange Line", "", 27.1, 26, "Ali Town - Dera Gujran, en.WP; OSM's routes run "
+                                      "station to station, 25.3 (~0.93)"),
     ],
     # Cairo Metro (OSM lines; nafrica agent). en.WP infoboxes.
     "eg": [
@@ -2542,6 +2961,45 @@ KNOWN = {
         ("LRT Palembang", "", 23.4, 13, "en.WP"),
         ("Lin Tangerang", "", 19.3, 11, "KAI km posts, Tangerang km 19.297 - Duri 0.000"),
         ("Lin Rangkasbitung", "", 72.8, 19, "en.WP, Tanah Abang - Rangkasbitung"),
+    ],
+    # Riyadh Metro (OSM lines; mideast agent). en.WP's line table.
+    "sa": [
+        ("Blue Line", "", 38.0, 25, "Line 1"),
+        ("Red Line", "", 25.3, 15, "Line 2"),
+        ("Orange line", "", 40.7, 22, "Line 3"),
+        ("المسار 4 - الخط الأصفر", "", 29.6, 9, "Line 4, over Line 6's track to KAFD"),
+        ("Green Line", "", 12.9, 12, "Line 5"),
+        ("Purple Line", "", 29.9, 11, "Line 6"),
+    ],
+    # Dubai Metro (OSM lines). en.WP; the Red Line's 67.1 takes in Route 2020 and the tails.
+    "ae": [
+        ("Red Line", "Dubai", 67.1, 35, "with Route 2020 (15 km) and the tails past both "
+                                        "ends: station to station ~0.93"),
+        ("Green Line", "Dubai", 22.5, 20, ""),
+    ],
+    # Doha Metro (OSM lines). en.WP.
+    "qa": [
+        ("الخط الأحمر للمترو", "", 40.0, 18, "with the airport branch"),
+        ("الخط الأخضر للمترو", "", 22.0, 11, ""),
+        ("الخط الذهبي للمترو", "", 14.0, 11, ""),
+    ],
+    # Addis Ababa's light rail (OSM lines; eafrica agent). en.WP.
+    "et": [
+        ("Addis Ababa LRT East–West", "", 17.35, 22, "Ayat - Tor Hailoch"),
+        ("Addis Ababa LRT North–South", "", 16.9, 22, "Menelik II Square - Kality"),
+    ],
+    # Mauritius' Metro Express (OSM lines, no register; eafrica agent). mu_sources.md.
+    "mu": [
+        ("Metro Express: Port Louis – Curepipe", "", 26.0, 19, "Port Louis Victoria - Curepipe "
+                                                               "Central"),
+        ("Metro Express: Rose Hill – Réduit", "", 3.4, 3, "Rose Hill - Mahatma Gandhi; built "
+                                                          "platform to platform (~0.89)"),
+    ],
+    # Tenerife's tram, folded into es from the Canary Islands extract (es agent, 2026-10-08;
+    # canaries_survey.md). en.WP; built stop to stop, so a little short.
+    "es": [
+        ("Tranvía Línea 1", "MetroTenerife", 12.5, 21, "Intercambiador - La Trinidad"),
+        ("Tranvía Línea 2", "MetroTenerife", 3.6, 6, "La Cuesta - Tíncer: ~0.95"),
     ],
     # Brazil's metros, light rail and the like (OSM lines; br_sources.md). WD = Wikidata
     # P2043, read 2026-10-03 (data/raw/br/wikidata_lines.json).

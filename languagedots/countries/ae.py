@@ -41,8 +41,16 @@ def _counts():
 
 
 def _weight(place):
+    """citizens and foreign residents on their own weights inside each unit, and the foreign
+    residents in family / single-men / single-women pools (UN DESA 2024 by sex), single men by
+    the hex rule fitted on Qatar's zones (sources/gulf_place.py, gulf_place.md §6)"""
+    import sys
+    sys.path.insert(0, str(ROOT / "sources"))
     gp = _gp()
-    return gp.GulfWeighter("ae", place, *gp.citizen_tables(_rows()))
+    rows = _rows()
+    mw = gp.resolve_pools(gp.node_sex_pools("United Arab Emirates", "AE", 2024),
+                          rows["source_category"])
+    return gp.PoolWeighter("ae", place, *gp.citizen_tables(rows), gp.row_pools(rows, mw))
 
 
 ENTRY = dict(
@@ -86,6 +94,7 @@ ENTRY = dict(
         "regions, with Emiratis per region from the emirate's statistics centre (a quarter of "
         "Al Ain region's people, an eighth of the others'). Inside each unit, foreign residents "
         "are placed more heavily in dense districts and wholly in industrial areas and labour "
-        "camps, and Emiratis in the rest; that is an estimate of where people live, not a "
-        "count."),
+        "camps, and Emiratis in the rest. Each nationality's men beyond its number of women "
+        "lean towards industrial land and labour camps, by a rule fitted on Qatar's census "
+        "zones; that is an estimate of where people live, not a count."),
 )

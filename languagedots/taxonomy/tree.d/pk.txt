@@ -17,3 +17,9 @@ isolate.burushaski | Burushaski | 0.58 0.19 312
 indoeuropean.indoaryan.dardic.khowar | Khowar | 0.50 0.09 225
 indoeuropean.indoaryan.dardic.kundal_shahi | Kundal Shahi
 indoeuropean.iranian.wakhi | Wakhi
+# Swat and Dir Kohistan (sources/pk_mics.py, 2026-10-09). Glottolog: Torwali torw1241 and Gawri
+# kala1373 (Kalami), both Dir-Swat Kohistani (dirs1236), Indo-Aryan; filed under Dardic with
+# Kohistani. Colours: Torwali a mid green, Gawri a deep teal, apart from Pashto's khaki around
+# them, Kohistani's pale cyan to the east and Khowar's dark blue-teal over the passes.
+indoeuropean.indoaryan.dardic.torwali | Torwali | 0.68 0.13 150
+indoeuropean.indoaryan.dardic.gawri | Gawri (Kalami) | 0.42 0.07 195

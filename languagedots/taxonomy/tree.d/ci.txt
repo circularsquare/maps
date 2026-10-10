@@ -33,7 +33,9 @@ nigercongo.gur | Gur | 0.76 0.12 65
 nigercongo.kru | Kru | 0.74 0.12 110
 other | Other or unclassified
 
-nigercongo.kwa.baoule | Baoulé | 0.82 0.16 85
+# Baoulé moved from golden (0.82 0.16 85) to amber (fix-ci, 2026-10-07): the foreign residents
+# added Mòoré (bf.txt, 0.84 0.14 88) beside it in 25 régions, 0.030 apart in OKLab.
+nigercongo.kwa.baoule | Baoulé | 0.76 0.17 72
 nigercongo.kwa.anyi | Anyi (Agni) | 0.58 0.13 75
 nigercongo.kwa.attie | Attié (Akyé) | 0.74 0.14 105
 nigercongo.kwa.abbey | Abbey (Abé) | 0.72 0.14 5
@@ -135,3 +137,137 @@ nigercongo.gur.komono | Komono (Khisa)
 nigercongo.gur.siti | Siti
 nigercongo.conja | Conja
 nigercongo.doma | Doma
+# --- origin_mix borrowed nodes (python sources/origin_mix.py --fragment ci) ---
+# Every node the origin mixes bring in that tree.txt lacks, repeated without colour.
+africa_other | Other African languages
+afroasiatic.berber | Berber
+afroasiatic.berber.tamajaq | Tamajaq (Tuareg)
+afroasiatic.berber.tamasheq | Tamasheq (Tuareg)
+afroasiatic.chadic | Chadic
+afroasiatic.chadic.hausa | Hausa
+afroasiatic.hassaniya | Hassaniya (Maure)
+creole | Creoles
+creole.english_based | English-based creoles
+creole.english_based.krio | Krio
+creole.english_based.nigerian_pidgin | Nigerian Pidgin
+creole.portuguese_based | Portuguese-based creoles
+creole.portuguese_based.kabuverdianu | Kabuverdianu
+indoeuropean.romance | Romance
+indoeuropean.romance.french | French
+nigercongo.atlantic.balanta | Balanta
+nigercongo.atlantic.biafada | Biafada (Beafada)
+nigercongo.atlantic.bijago | Bijagó
+nigercongo.atlantic.gola | Gola
+nigercongo.atlantic.jola | Jola languages
+nigercongo.atlantic.jola.ejamat | Ejamat (Felupe)
+nigercongo.atlantic.jola.joola | Jola (Joola)
+nigercongo.atlantic.kissi | Kissi
+nigercongo.atlantic.limba | Limba
+nigercongo.atlantic.manjak | Manjak (Mànjaku)
+nigercongo.atlantic.mankanya | Mankanya (Mànkaañ)
+nigercongo.atlantic.mansoanka | Mansoanka
+nigercongo.atlantic.papel | Papel (Pepel)
+nigercongo.atlantic.serer | Serer (Sereer)
+nigercongo.atlantic.sherbro | Sherbro (Bullom)
+nigercongo.atlantic.temne | Temne
+nigercongo.atlantic.wolof | Wolof
+nigercongo.crossriver | Cross River
+nigercongo.crossriver.efik | Efik
+nigercongo.crossriver.ibibio | Ibibio
+nigercongo.dogon | Dogon languages
+nigercongo.dogon.dogon | Dogon
+nigercongo.gur.bariba | Bariba (Baatonum)
+nigercongo.gur.biali | Biali
+nigercongo.gur.bomu | Bomu (Bwamu, Bobo)
+nigercongo.gur.bwamu | Bwamu
+nigercongo.gur.dagara | Dagara (Dagaare)
+nigercongo.gur.dagbani | Dagbani
+nigercongo.gur.ditammari | Ditammari
+nigercongo.gur.farefare | Farefare (Gurene, Frafra)
+nigercongo.gur.gourmanchema | Gourmanchéma (Gulmancema)
+nigercongo.gur.kabiye | Kabiyè
+nigercongo.gur.konkomba | Konkomba (Likpakpaln)
+nigercongo.gur.kusaal | Kusaal (Koussassé)
+nigercongo.gur.lama | Lama (Lamba)
+nigercongo.gur.lukpa | Lokpa (Lukpa)
+nigercongo.gur.lyele | Lyélé
+nigercongo.gur.mamara | Mamara (Minyanka)
+nigercongo.gur.mampruli | Mampruli
+nigercongo.gur.moba | Moba
+nigercongo.gur.moore | Mòoré
+nigercongo.gur.nawdm | Nawdm (Losso)
+nigercongo.gur.ngangam | Ngangam (Gangam)
+nigercongo.gur.ntcham | Ntcham (Basari)
+nigercongo.gur.nuni | Nuni
+nigercongo.gur.tem | Tem (Kotokoli)
+nigercongo.gur.yom | Yom
+nigercongo.ijoid | Ijoid
+nigercongo.ijoid.ijaw | Ijaw (Izon)
+nigercongo.kru.bassa | Bassa (Liberia)
+nigercongo.kru.grebo | Grebo
+nigercongo.kru.klao | Klao (Kru)
+nigercongo.kru.krahn | Krahn
+nigercongo.kru.kuwaa | Kuwaa (Belle)
+nigercongo.kwa.adangme | Adangme
+nigercongo.kwa.aja | Aja (Adja)
+nigercongo.kwa.akan | Akan (Twi)
+nigercongo.kwa.ayizo | Ayizo
+nigercongo.kwa.ewe | Ewe
+nigercongo.kwa.fon | Fon
+nigercongo.kwa.ga | Ga
+nigercongo.kwa.gen | Gen (Mina)
+nigercongo.kwa.gtm | Ghana-Togo Mountain languages
+nigercongo.kwa.gtm.akebu | Akebu
+nigercongo.kwa.gtm.ikposo | Ikposo (Akposso)
+nigercongo.kwa.guan | Guan
+nigercongo.kwa.guan.gonja | Gonja
+nigercongo.kwa.gun | Gun (Goun)
+nigercongo.kwa.kotafon | Kotafon
+nigercongo.kwa.maxi | Maxi (Mahi)
+nigercongo.kwa.saxwe | Saxwe
+nigercongo.kwa.tofin | Tofin
+nigercongo.kwa.toli | Toli, Seto and Kogbe (Gbe)
+nigercongo.kwa.waci | Ouatchi (Waci)
+nigercongo.kwa.weme | Weme
+nigercongo.kwa.xwela | Xwla (Xwela)
+nigercongo.mande.bandi | Bandi (Gbandi)
+nigercongo.mande.bissa | Bissa
+nigercongo.mande.bobo | Bobo (Bobo Madaré)
+nigercongo.mande.bozo | Bozo
+nigercongo.mande.jahanka | Jahanka (Diakhanké)
+nigercongo.mande.khassonke | Khassonké (Xaasongaxango)
+nigercongo.mande.kono | Kono (Sierra Leone)
+nigercongo.mande.konyanka | Konyanka Maninka (Koniaka)
+nigercongo.mande.kpelle | Kpelle
+nigercongo.mande.kuranko | Kuranko
+nigercongo.mande.loko | Loko
+nigercongo.mande.loma | Loma
+nigercongo.mande.mandinka | Mandinka
+nigercongo.mande.mano | Mano
+nigercongo.mande.marka | Marka (Dafing)
+nigercongo.mande.mende | Mende
+nigercongo.mande.san | San (Samo)
+nigercongo.mande.soninke | Soninke
+nigercongo.mande.susu | Susu
+nigercongo.mande.vai | Vai
+nigercongo.tiv | Tiv
+nigercongo.voltaniger | Volta-Niger
+nigercongo.voltaniger.ede_idaca | Ede Idaca (Idaasha)
+nigercongo.voltaniger.ede_ije | Ede Ije (Holli)
+nigercongo.voltaniger.ede_nago | Ede Nago (Nago)
+nigercongo.voltaniger.edoid | Edoid (Edo)
+nigercongo.voltaniger.edoid.edo | Edo
+nigercongo.voltaniger.idoma | Idoma
+nigercongo.voltaniger.ife | Ifè
+nigercongo.voltaniger.igala | Igala
+nigercongo.voltaniger.igbo | Igbo
+nigercongo.voltaniger.nupe | Nupe
+nigercongo.voltaniger.yoruba | Yoruba
+nilosaharan | Nilo-Saharan
+nilosaharan.kanuri | Kanuri
+nilosaharan.songhay | Songhay languages
+nilosaharan.songhay.dendi | Dendi
+nilosaharan.songhay.songhay | Songhay (Sonrhai, Zarma)
+nilosaharan.songhay.zarma | Zarma (Djerma)
+other.no_ethnic_language | No ethnic language as main language (Guinea-Bissau's "sem dialecto"; mostly Kriol)
+# --- end origin_mix borrowed nodes ---

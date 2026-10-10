@@ -11,6 +11,7 @@ import { income, moneyState } from "../game/money";
 import type { DayLedger } from "../workers/protocol";
 import { live } from "../map/live";
 import { Chip, Icon, Row, Segmented, Stepper } from "./widgets";
+import { BlueprintBreakdown, BlueprintControls } from "./Blueprint";
 
 const STATUS: Record<string, string> = { running: "", planned: "Planned", broken: "Broken" };
 
@@ -29,7 +30,6 @@ const LEVEL_NAME: Record<Level, string> = {
 
 /** The build tools and their keys (T-096: Esc goes back to Select from anywhere, main.ts). */
 const TOOLS: [Tool, string, () => JSX.Element, string, string][] = [
-  ["select", "Select", Icon.pointer, "Esc", "Select"],
   ["track", "Track", Icon.track, "1", "Draw track"],
   ["station", "Station", Icon.station, "2", "Place stations"],
   ["delete", "Delete", Icon.bin, "3", "Delete track, stations and flyovers"],
@@ -45,42 +45,45 @@ export function pickTool(v: Tool) {
   if (t !== v && v !== "select") tool.value = v;
 }
 
-/** The build tools (T-082, SPEC 8): tool, level and its price, single or double track, new
- * platforms. The blueprint total, undo, redo and Construct stay on the map (ui/Toolbar.tsx). */
+/** All building controls: tools, blueprint quote and construction, level, track and platforms. */
 export function BuildTab() {
   const t = tool.value;
   const lv = buildLevel.value;
   return (
     <>
-      <div class="group tool-pick">
-        {TOOLS.map(([id, label, I, key, title]) => (
-          <button class={"btn text" + (t === id ? " on" : "")} title={`${title} (${key})`} onClick={() => pickTool(id)}>
-            <I />
-            {label}
-            {key !== "Esc" && <span class="key muted">{key}</span>}
-          </button>
-        ))}
+      <div class="build-options">
+        <div class="group tool-pick">
+          {TOOLS.map(([id, label, I, key, title]) => (
+            <button class={"btn text" + (t === id ? " on" : "")} title={`${title} (${key})`} onClick={() => pickTool(id)}>
+              <I />
+              {label}
+              {key !== "Esc" && <span class="key muted">{key}</span>}
+            </button>
+          ))}
+        </div>
+        <div class="h">Level</div>
+        <div class="group levels">
+          {LEVELS.map((l) => (
+            <button class={"btn lv" + (l === lv ? " on" : "")} onClick={() => (buildLevel.value = l)}>
+              {levelLabel(l)}
+            </button>
+          ))}
+        </div>
+        <p class="muted small price">
+          {LEVEL_NAME[lv]} at ${Math.round(BASE_M_PER_KM * MULT[lv])}M per km ({MULT[lv].toFixed(1)}x)
+        </p>
+        <div class="h">Track</div>
+        <Segmented<boolean> options={[[false, "Double"], [true, "Single"]]} value={singleTrack.value} onChange={(v) => (singleTrack.value = v)} />
+        <div class="h">New stations</div>
+        <ul class="rows">
+          <li>
+            <span class="grow">Platform length</span>
+            <Stepper value={buildPlatform.value + " m"} wide label="platform length" onStep={(s) => (buildPlatform.value = Math.max(60, Math.min(400, buildPlatform.value + s * 20)))} />
+          </li>
+        </ul>
+        <BlueprintBreakdown />
       </div>
-      <div class="h">Level</div>
-      <div class="group levels">
-        {LEVELS.map((l) => (
-          <button class={"btn lv" + (l === lv ? " on" : "")} onClick={() => (buildLevel.value = l)}>
-            {levelLabel(l)}
-          </button>
-        ))}
-      </div>
-      <p class="muted small price">
-        {LEVEL_NAME[lv]} at ${Math.round(BASE_M_PER_KM * MULT[lv])}M per km ({MULT[lv].toFixed(1)}x)
-      </p>
-      <div class="h">Track</div>
-      <Segmented<boolean> options={[[false, "Double"], [true, "Single"]]} value={singleTrack.value} onChange={(v) => (singleTrack.value = v)} />
-      <div class="h">New stations</div>
-      <ul class="rows">
-        <li>
-          <span class="grow">Platform length</span>
-          <Stepper value={buildPlatform.value + " m"} wide label="platform length" onStep={(s) => (buildPlatform.value = Math.max(60, Math.min(400, buildPlatform.value + s * 20)))} />
-        </li>
-      </ul>
+      <BlueprintControls />
     </>
   );
 }

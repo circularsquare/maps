@@ -42,7 +42,7 @@ SL = f"{IE}.slavic"
 
 NAMES = {
     "Croatian": f"{SL}.south.croatian",
-    "Croato-Serbian": f"{SL}.south.croatoserbian",
+    "Croato-Serbian": f"{SL}.south.serbocroatian",   # folded 2026-10-08 (Anita), see ba2013
     "Albanian": f"{IE}.albanian.albanian",
     "Bosnian": f"{SL}.south.bosnian",
     "Bulgarian": f"{SL}.south.bulgarian",

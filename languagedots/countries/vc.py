@@ -32,9 +32,11 @@ ENTRY = dict(
     view=[-61.60, 12.50, -61.05, 13.42],
     counts=_counts,
     mappings=["vc2012"],
-    place=RD_GEO / "vc" / "vc_eds.gpkg",
+    # vc_eds.gpkg cut by Kontur hexes, so a district's dots follow where its people live
+    # (sources/kontur_cut.py; 2026-10-08)
+    place=GEO / "vc" / "vc_konturcut.gpkg",
     place_unit=lambda g: g["unit"].astype(str),
-    place_weight=None,
+    place_weight=pop_weight,
     note_public=(
         "The census of Saint Vincent and the Grenadines does not ask about language. Most "
         "Vincentians grow up speaking Vincentian Creole, an English-based creole, and learn "

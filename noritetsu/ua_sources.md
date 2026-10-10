@@ -227,6 +227,19 @@ Tried and not usable: uz.gov.ua and swrailway.gov.ua (the official suburban time
 railway) time out from here; dp.uz.gov.ua has an expired certificate and only frames
 swrailway; the Wayback Machine has only scattered swrailway station pages; egtre.info 403.
 
+## Lines deleted as track to no station (checked 2026-10-08)
+
+`prune_dead_track` deleted three ua ids on 2026-10-07; none runs: Миронівка — Богуслав (17.7
+km; uk.wikipedia's station article: closed in 2020 with the whole branch, and poizdato has no
+Bohuslav page), Богодухів — Гути and Верхньодніпровськ — Дніпровська (no train calls there on
+poizdato). Left deleted.
+
+Арциз — Ізмаїл (1 stop of 8), Вербка — Камінь-Каширський and Одеса-Пересип — Колосівка (an end
+left a junction) are the clone fault in rinf.split_pieces (handoff_notes/missing_stops.md):
+a stop whose every pair is a stretch left to the timetable gets no station record, so its
+clone is never folded back. Fixed by the rinf.py diff there (trialled: Арциз — Ізмаїл 8 of 8
+stops); ua needs a rebuild once it lands.
+
 ## What is still off
 
 - **The timetable is a third party's copy.** poizdato does not say where its data comes from;

@@ -1,10 +1,13 @@
-# Nigeria. Afrobarometer R4-R9 (2008-2022, 11,915 respondents), home language, shares per state
-# applied to COD-PS 2022 state populations (sources/ng_afro.py); every row `modelled`. On
-# religiondots' Kontur hexes with each hex's LGA added (sources/ng_place.py). Inside a state,
-# each language's dots lean towards the LGAs where the survey's own respondents named it. The
+# Nigeria. Since 2026-10-09: MICS6 2021 (39,632 households), language of the household head, for
+# the ten languages MICS names, per state; MICS's "other language" split by the pooled
+# Afrobarometer R4-R9 (2008-2022) home-language answers; English and Pidgin as before
+# (sources/ng_mics.py). Shares applied to COD-PS 2022 state populations; every row `modelled`.
+# On religiondots' Kontur hexes with each hex's LGA added (sources/ng_place.py). Inside a state,
+# each language's dots lean towards the LGAs where the Afrobarometer's respondents named it. The
 # record is sources/ng.md.
 from _shared import *  # noqa: F401,F403
 import numpy as np
+import ng2022 as _map
 
 STATES = 37
 CODPS_2022 = 216_798_930
@@ -17,7 +20,7 @@ def _counts():
     df = pd.read_csv(NORM / "ng.csv", dtype={"geo_id": str})
     if df["geo_id"].nunique() != STATES:
         raise SystemExit(f"ng.csv: {df['geo_id'].nunique()} states, expected {STATES} -- "
-                         "re-run sources/ng_afro.py")
+                         "re-run sources/ng_mics.py")
     if int(df["count"].sum()) != CODPS_2022:
         raise SystemExit(f"ng.csv sums to {int(df['count'].sum()):,}, not {CODPS_2022:,}")
     df["node"] = df["source_category"].map(ng2022.resolve)
@@ -152,24 +155,36 @@ def _weight(place):
 
 ENTRY = dict(
     name="Nigeria",
-    source=("Afrobarometer rounds 4 to 9 (2008-2022), Nigeria, home language; state "
-            "populations from COD-PS 2022 (NPC/UNFPA projection)"),
-    how=("a survey, 2008-2022, home language, shares per state applied to projected "
-         "populations; English and Hausa outside the north at their 2017 mother-tongue share; "
-         "Pidgin at Ethnologue's estimate of first-language speakers"),
+    source=("MICS6 2021 (NBS/UNICEF), language of the household head; Afrobarometer rounds 4 "
+            "to 9 (2008-2022), home language; state populations from COD-PS 2022 (NPC/UNFPA "
+            "projection)"),
+    how=("two surveys, shares per state applied to projected populations: MICS 2021, language "
+         "of the household head, for the nine languages it names; its other languages split by "
+         "the Afrobarometer's 2008-2022 home-language answers; English at its 2017 "
+         "mother-tongue share; Pidgin at Ethnologue's estimate of first-language speakers"),
     parts=[
-        dict(covers="Most languages",
-             source="Afrobarometer 2008-2022, home language, about 11,900 adults; English and "
-                    "Hausa at their 2017 mother-tongue share",
-             rest=True),
+        dict(covers="Hausa, Yoruba, Igbo, Fulfulde, Kanuri, Tiv, Ibibio, Ijaw, Edo",
+             source="MICS 2021, language of the household head, about 39,600 households",
+             nodes=[_map.NAMES[k] for k in ("Hausa", "Yoruba", "Igbo", "Fula", "Kanuri",
+                                            "Tiv", "Ibibio", "Ijaw", "Edo")]),
+        dict(covers="English",
+             source="Afrobarometer 2017, mother tongue, about 1,600 adults",
+             nodes=[_map.NAMES["English"]]),
         dict(covers="Nigerian Pidgin",
              source="Ethnologue (2023), 4.7 million first-language speakers, shared by the "
-                    "survey's Pidgin-at-home answers",
-             nodes=["creole.english_based.nigerian_pidgin"]),
+                    "Afrobarometer's Pidgin-at-home answers",
+             nodes=[_map.NAMES["Nigerian Pidgin"]]),
+        dict(covers="Other languages",
+             source="MICS 2021's other languages, split by Afrobarometer 2008-2022 home "
+                    "language, about 11,900 adults",
+             rest=True),
     ],
-    grain="37 states, 5.9 million people on average, placed by LGA from the survey's respondents",
+    grain=("37 states, 5.9 million people on average, placed by LGA from the Afrobarometer's "
+           "respondents"),
     gap=("every figure is a survey share, as Nigeria has asked no language question since 1963; "
-         "languages named by a single respondent are drawn as other Nigerian languages"),
+         "languages outside MICS's nine rest on the Afrobarometer's few hundred interviews a "
+         "state, and where it met few speakers of them, part of MICS's other-language share is "
+         "drawn as other Nigerian languages"),
     view=[2.6, 4.2, 14.7, 13.95],
     counts=_counts,
     mappings=["ng2022"],
@@ -178,13 +193,19 @@ ENTRY = dict(
     place_weight=_weight,
     note_public=(
         "Nigeria's census has not asked about language since 1963, so this map is built from "
-        "a survey: the Afrobarometer asked about 11,900 adults in six rounds from 2008 to 2022 "
-        "which language they speak at home. Each state's shares rest on 120 to 940 interviews "
-        "and are applied to its 2022 projected population, so small languages can be over or "
-        "under drawn. Many people name English or Hausa as their home language without it "
-        "being their first, so both are drawn at their share of the 2017 round's mother-tongue "
-        "answers. Pidgin, the first language of many people in the cities of the south, is "
-        "drawn at Ethnologue's estimate of 4.7 million speakers, in each state's densest "
-        "neighbourhoods. Within each state, the other languages follow the local government "
-        "areas where respondents named them."),
+        "two surveys. The 2021 Multiple Indicator Cluster Survey (MICS) asked about 40,000 "
+        "households, around 1,000 in each state, the language of the household head, and its "
+        "figures are used for the nine languages it lists: Hausa, Yoruba, Igbo, Fulfulde, "
+        "Kanuri, Tiv, Ibibio, Ijaw and Edo. Everyone in a household is drawn on the head's "
+        "language. The quarter of Nigerians whose head speaks another language are divided "
+        "among those languages using the Afrobarometer, which asked about 11,900 adults from "
+        "2008 to 2022 which language they speak at home; where it met few such speakers in a "
+        "state, part of that share is drawn as other Nigerian languages. The MICS figure for "
+        "Fulfulde may run high: about one Fulfulde-speaking head in five gave Hausa as their "
+        "native language in another question of the same interview. English is drawn at its "
+        "share of the Afrobarometer's 2017 mother-tongue answers, and Pidgin, the first "
+        "language of many people in the cities of the south, at Ethnologue's estimate of 4.7 "
+        "million speakers, in each state's densest neighbourhoods. Shares are applied to each "
+        "state's 2022 projected population. Within each state, languages follow the local "
+        "government areas where Afrobarometer respondents named them."),
 )

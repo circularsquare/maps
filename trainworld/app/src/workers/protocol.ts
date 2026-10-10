@@ -56,7 +56,7 @@ export type EditOp =
   | { op: "constructLine"; line: number }
   | { op: "addLine"; stops: NodeId[]; name: string; colour: string }
   | { op: "setStops"; line: number; stops: NodeId[] }
-  | { op: "setFrequency"; line: number; tph: [number, number, number] }
+  | { op: "setTrainCount"; line: number; trains: [number, number, number] }
   | { op: "lineLook"; line: number; name: string; colour: string }
   | { op: "removeLine"; line: number }
   /** the fare curve (T-028): US$ a ride plus US$ a km; not undoable, a setting */
@@ -191,6 +191,8 @@ export interface ClockRender {
   meta: Float32Array;
   samples: Float32Array;
   lineTable: Float32Array;
+  /** Geometry speed limit km/h per rendered edge segment; indexed as edge vertices. */
+  edgeSpeed?: Float32Array;
 }
 
 /** A busy resource (SPEC 6.2: 75% and up), local units. `kind`: 0 track, 1 single track,
@@ -211,6 +213,8 @@ export interface ClockState {
   cash: number;
   builtCost: number;
   blueprintCost: number;
+  /** Seven-number cost rows from TrackApi.blueprint_cost_items, amounts in US$M. */
+  blueprintItems: number[];
   canUndo: boolean;
   canRedo: boolean;
   edges: ClockEdge[];
@@ -283,8 +287,7 @@ export interface NetworkSnapshot {
   city: string;
   stations: SnapshotStation[];
   lines: SnapshotLine[];
-  /** the player's fare curve (T-028): US$ a ride plus US$ a km of the ride. Demand does not read
-   * it yet (its fare is a fixed 6 perceived minutes); a change does not send a new snapshot. */
+  /** The player's fare curve: US$ once per trip plus US$ per km ridden. */
   fare?: { base: number; perKm: number };
 }
 
@@ -314,6 +317,8 @@ export interface SnapshotLine {
    * `hopS[run][level].length === stops.length - 1`; run 1's hops are in its own travel order.
    */
   hopS: number[][][];
+  /** Actual track km per segment, in each run's travel order. Legacy snapshots omit it. */
+  hopKm?: number[][];
   /** dwell at each stop, s, per run and level, in the run's own stop order (0 at both ends) */
   dwellS: number[][][];
   /** layover at each end, s */

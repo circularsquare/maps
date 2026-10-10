@@ -31,35 +31,35 @@
 + nigercongo.bantu.zone_a.makaa_kako | Makaa-Kako (A.80-90)
     nigercongo.bantu.makaa nigercongo.bantu.mpiemo nigercongo.bantu.kako nigercongo.bantu.pomo
     nigercongo.bantu.pol nigercongo.bantu.koonzime nigercongo.bantu.bajwee nigercongo.bantu.kwasio
-+ nigercongo.bantu.zone_b | Zone B (Gabon, Congo)
-    nigercongo.bantu.myene nigercongo.bantu.kele_gabon nigercongo.bantu.kota nigercongo.bantu.kota_gabon
++ nigercongo.bantu.zone_b | Zone B (Gabon, Congo) | 0.74 0.11 298
+    nigercongo.bantu.myene nigercongo.bantu.kele_gabon nigercongo.bantu.kota
     nigercongo.bantu.tsogo nigercongo.bantu.sira nigercongo.bantu.punu nigercongo.bantu.lumbu_gabon
     nigercongo.bantu.sangu_gabon nigercongo.bantu.vumbu nigercongo.bantu.nzebi nigercongo.bantu.mbere
     nigercongo.bantu.teke nigercongo.bantu.teke_laali nigercongo.bantu.yansi nigercongo.bantu.mbuun
     nigercongo.bantu.boma nigercongo.bantu.ngongo nigercongo.bantu.tere
 + nigercongo.bantu.zone_c | Zone C (Congo Basin)
     nigercongo.bantu.sakata
-+ nigercongo.bantu.zone_c.rivers | Rivers Bantu (C.10-40)
++ nigercongo.bantu.zone_c.rivers | Rivers Bantu (C.10-40) | 0.76 0.11 210
     nigercongo.bantu.lingala nigercongo.bantu.bobangi nigercongo.bantu.likuba nigercongo.bantu.libinza
     nigercongo.bantu.mpama nigercongo.bantu.nunu nigercongo.bantu.budza nigercongo.bantu.babango
     nigercongo.bantu.ngombe nigercongo.bantu.benza nigercongo.bantu.bwa nigercongo.bantu.kari
     nigercongo.bantu.mbati nigercongo.bantu.bomitaba nigercongo.bantu.aka nigercongo.bantu.mbosi
     nigercongo.bantu.akwa nigercongo.bantu.koyo nigercongo.bantu.bodo
-+ nigercongo.bantu.zone_c.mongo | Mongo and Kasai (C.60-80)
++ nigercongo.bantu.zone_c.mongo | Mongo and Kasai (C.60-80) | 0.76 0.15 55
     nigercongo.bantu.mongo nigercongo.bantu.ekonda nigercongo.bantu.kundu nigercongo.bantu.ntomba
     nigercongo.bantu.sengele nigercongo.bantu.ngando nigercongo.bantu.nkutu nigercongo.bantu.bushoong
     nigercongo.bantu.lele nigercongo.bantu.dengese nigercongo.bantu.tetela nigercongo.bantu.kusu
-+ nigercongo.bantu.zone_c.kele_poke | Kele-Poke (C.50)
++ nigercongo.bantu.zone_c.kele_poke | Kele-Poke (C.50) | 0.74 0.10 32
     nigercongo.bantu.poke nigercongo.bantu.lombo nigercongo.bantu.lokele nigercongo.bantu.mbesa
-+ nigercongo.bantu.zone_d | Zone D (Maniema, Ituri)
++ nigercongo.bantu.zone_d | Zone D (Maniema, Ituri) | 0.72 0.11 258
     nigercongo.bantu.bembe nigercongo.bantu.lega nigercongo.bantu.lega_mwenga nigercongo.bantu.nyanga
     nigercongo.bantu.songola nigercongo.bantu.benye_nonda nigercongo.bantu.ngengele nigercongo.bantu.komo
     nigercongo.bantu.lengola nigercongo.bantu.budu nigercongo.bantu.nyali nigercongo.bantu.amba
-+ nigercongo.bantu.zone_e | Zone E (Kenya, Kilimanjaro)
++ nigercongo.bantu.zone_e | Zone E (Kenya, Kilimanjaro) | 0.64 0.14 40
     nigercongo.bantu.gikuyu nigercongo.bantu.embu nigercongo.bantu.meru nigercongo.bantu.kamba
     nigercongo.bantu.chaga nigercongo.bantu.rwa nigercongo.bantu.taita nigercongo.bantu.mijikenda
     nigercongo.bantu.pokomo nigercongo.bantu.sonjo nigercongo.bantu.segeju
-+ nigercongo.bantu.zone_f | Zone F (western Tanzania)
++ nigercongo.bantu.zone_f | Zone F (western Tanzania) | 0.58 0.14 40
     nigercongo.bantu.sukuma nigercongo.bantu.nyamwezi nigercongo.bantu.sumbwa nigercongo.bantu.kimbu
     nigercongo.bantu.konongo nigercongo.bantu.nyaturu nigercongo.bantu.nilamba nigercongo.bantu.isanzu
     nigercongo.bantu.rangi nigercongo.bantu.mbugwe nigercongo.bantu.tongwe
@@ -75,7 +75,7 @@
 + nigercongo.bantu.zone_g.southern_highlands | Southern Highlands (G.60)
     nigercongo.bantu.hehe nigercongo.bantu.bena nigercongo.bantu.sangu nigercongo.bantu.wanji
     nigercongo.bantu.kinga nigercongo.bantu.magoma nigercongo.bantu.pangwa nigercongo.bantu.kisi
-+ nigercongo.bantu.zone_h | Zone H (Kongo, Kimbundu)
++ nigercongo.bantu.zone_h | Zone H (Kongo, Kimbundu) | 0.72 0.13 155
     nigercongo.bantu.kongo nigercongo.bantu.kongo_dialects nigercongo.bantu.kimbundu
     nigercongo.bantu.kituba nigercongo.bantu.beembe nigercongo.bantu.vili nigercongo.bantu.yaka nigercongo.bantu.suku
     nigercongo.bantu.pelende
@@ -90,7 +90,7 @@
     nigercongo.bantu.jita nigercongo.bantu.kwaya nigercongo.bantu.kara nigercongo.bantu.zanaki
     nigercongo.bantu.ikizu nigercongo.bantu.ikoma nigercongo.bantu.kabwa nigercongo.bantu.suba
     nigercongo.bantu.suba_simbiti nigercongo.bantu.gusii nigercongo.bantu.kuria
-+ nigercongo.bantu.zone_j.western_lakes | Western Lakes (Rwanda, Burundi, Kivu)
++ nigercongo.bantu.zone_j.western_lakes | Western Lakes (Rwanda, Burundi, Kivu) | 0.72 0.15 335
     nigercongo.bantu.shi nigercongo.bantu.havu nigercongo.bantu.hunde
     nigercongo.bantu.fuliiru nigercongo.bantu.vira
 # Cross-border groups (2026-10-06, 5d7dac7e-xb, followups.md): Rwanda-Rundi (Glottolog's West
@@ -101,10 +101,10 @@
     nigercongo.bantu.konzo nigercongo.bantu.nande
 + nigercongo.bantu.zone_j.luyia | Luyia (J.30)
     nigercongo.bantu.luhya nigercongo.bantu.masaaba nigercongo.bantu.saamia nigercongo.bantu.nyole
-+ nigercongo.bantu.zone_k | Zone K (eastern Angola, western Zambia)
++ nigercongo.bantu.zone_k | Zone K (eastern Angola, western Zambia) | 0.74 0.10 78
     nigercongo.bantu.chokwe_lunda nigercongo.bantu.luyana nigercongo.bantu.kwese nigercongo.bantu.pende
     nigercongo.bantu.mbala
-+ nigercongo.bantu.zone_l | Zone L (Luba)
++ nigercongo.bantu.zone_l | Zone L (Luba) | 0.72 0.14 15
     nigercongo.bantu.luba_kasai nigercongo.bantu.luba_katanga nigercongo.bantu.luban
     nigercongo.bantu.songe nigercongo.bantu.kete nigercongo.bantu.kanyok nigercongo.bantu.sanga
     nigercongo.bantu.hemba nigercongo.bantu.bangubangu nigercongo.bantu.luntu nigercongo.bantu.zela
@@ -121,7 +121,7 @@
     nigercongo.bantu.umbundu nigercongo.bantu.nyaneka_nkhumbi
     nigercongo.bantu.oshiwambo nigercongo.bantu.herero
     nigercongo.bantu.otjiherero nigercongo.bantu.yeyi
-+ nigercongo.bantu.zone_s | Zone S (Southern Africa)
++ nigercongo.bantu.zone_s | Zone S (Southern Africa) | 0.7 0.14 20
     nigercongo.bantu.shona nigercongo.bantu.kalanga nigercongo.bantu.nambya
     nigercongo.bantu.nguni nigercongo.bantu.sotho_tswana
     nigercongo.bantu.venda nigercongo.bantu.tswa_ronga nigercongo.bantu.chopi
@@ -301,11 +301,27 @@
 # Lugbara: Uganda prints Aringa ("Low Lugbara"; Glottolog's Lugbaric) beside Lugbara
 = nilosaharan.centralsudanic.lugbara | Lugbara
     nilosaharan.centralsudanic.aringa
+# Sara (Glottolog's Sara subgroup of Sara-Bagirmi), 2026-10-09, 32a047f0-td: Chad's MICS 2019
+# names Ngambay and Sar, the 2009 census lumps them into "Sara" and prints Sara Kaba beside it;
+# CAR's census and the diaspora print plain "Sara". One cluster, like Gbe and Manding; plain
+# Sara goes to "Sara (language not given)" (in Chad: Mbay, Gulay, Gor, Laka... unnamed)
+= nilosaharan.centralsudanic.sara | Sara | Sara (language not given)
+    nilosaharan.centralsudanic.ngambay nilosaharan.centralsudanic.sar
+    nilosaharan.centralsudanic.sara_kaba
 
 # ===================================================================== Other languages and dialects
 # A Glottolog dialect drawn beside its language goes under it (Anita, 2026-10-06).
 = indoeuropean.romance.catalan | Catalan
     indoeuropean.romance.valencian
+# Moldovan under Romanian, and Dari and Tajik under Persian (Anita, 2026-10-07: "moldovan being
+# a child of romanian is fine, and dari/tajik/farsi"). One language each by most accounts (Persian:
+# ISO's macrolanguage; Glottolog keeps Western Farsi, Dari and Tajik apart as Farsic languages);
+# the names follow the country, as with Valencian. Hazaragi joined them 2026-10-08 (GROUPING.md):
+# Hazaras broadly call it a variety of Persian/Dari, and it keeps its own leaf.
+= indoeuropean.romance.romanian | Romanian
+    indoeuropean.romance.moldovan
+= indoeuropean.iranian.persian | Persian
+    indoeuropean.iranian.dari indoeuropean.iranian.tajik indoeuropean.iranian.hazaragi
 = indoeuropean.romance.spanish | Spanish
     indoeuropean.romance.afrobolivian
 = indoeuropean.romance.french | French
@@ -401,3 +417,36 @@
     australian.pamanyungan.yolngu.ganalbingu
 = australian.maningrida.burarra | Burarra
     australian.maningrida.gun_nartpa
+
+# ===================================================================== Cross-border groups, 2026-10-08
+# From the cross-border survey, approved by Anita ("the goal is to reflect how people think about
+# languages and how they identify them"). Leaves kept, colours kept; GROUPING.md has the reasons.
+# Aramaic: the census "Aramaic" answer on its own leaf beside the named Neo-Aramaic languages
+= afroasiatic.aramaic | Aramaic | Aramaic (variety not given)
+    afroasiatic.assyrian afroasiatic.chaldean afroasiatic.turoyo afroasiatic.syriac
+    afroasiatic.western_neo_aramaic afroasiatic.mandaic
+# Sami: Finland's and Russia's registers say only "Sami"; Norway and Sweden name three
+= uralic.saami | Sami | Sami (language not given)
+    uralic.saami_north uralic.saami_lule uralic.saami_south
+# BCMS: one ISO macrolanguage (hbs), mutually intelligible standards. The standards keep their
+# leaves (people choose the name); Serbo-Croatian answers, the Yugoslav-era compounds folded into
+# it, Yugoslav and Bokelj sit beside them.
+= indoeuropean.slavic.south.serbocroatian | Serbo-Croatian (BCMS) | Serbo-Croatian
+    indoeuropean.slavic.south.serbian indoeuropean.slavic.south.croatian
+    indoeuropean.slavic.south.bosnian indoeuropean.slavic.south.montenegrin
+    indoeuropean.slavic.south.bosniak indoeuropean.slavic.south.bunjevac
+    indoeuropean.slavic.south.burgenland_croatian indoeuropean.slavic.south.yugoslav
+    indoeuropean.slavic.south.bokelj
+# Talian is Brazil's Venetian (Glottolog files it as a Venetian dialect)
+= indoeuropean.romance.venetian | Venetian
+    indoeuropean.romance.talian
+# Flemish: printed beside Dutch in ca, pl, lu; one language
+= indoeuropean.germanic.continental.dutch | Dutch
+    indoeuropean.germanic.continental.flemish
+# Iu Mien (us) is one of the Dao label's two languages (vn, la)
+= hmongmien.dao | Dao (Iu Mien and Kim Mun) | Dao (variety not given)
+    hmongmien.iu_mien
+# Fula: Peulh is the French name, Fulata and Mbororo are Fula communities; ci and cf print them
+# beside Fula, so the leaves stay
+= nigercongo.atlantic.fulah | Fula
+    nigercongo.atlantic.peulh nigercongo.atlantic.fulata nigercongo.atlantic.mbororo

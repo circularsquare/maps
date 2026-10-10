@@ -38,4 +38,14 @@ sinotibetan.luish.chak | Chak
 sinotibetan.mruic | Mruic | 0.66 0.13 205
 sinotibetan.mruic.mru | Mru
 austroasiatic.munda.kol | Kol
+# 2026-10-07 (fix-bd): the census's Bengali remainder split by place (taxonomy/bd2011.py), and the
+# Rohingya camps from UNHCR. Glottolog: Sylheti sylh1242 (Eastern Bengali), Chittagonian chit1275
+# (Southeastern Bengali, beside Noakhali), Rohingya rohi1238; all under Gauda-Banga with Bengali,
+# so siblings of Bengali under Eastern here, as Rohingya already was (mm.txt). Colours: Sylheti a
+# yellow-green, clear of Bengali's yellow and of the Khasi magenta, Garo blue and Meitei violet
+# around Sylhet; Chittagonian an amber between Bengali's yellow and Chakma's orange-red, apart from
+# Rohingya's olive and Marma's violet where they meet in Cox's Bazar and the Hill Tracts.
+indoeuropean.indoaryan.eastern.sylheti | Sylheti | 0.82 0.15 115
+indoeuropean.indoaryan.eastern.chittagonian | Chittagonian | 0.74 0.15 70
+indoeuropean.indoaryan.eastern.rohingya | Rohingya
 bangladesh_other | Other languages of Bangladesh's ethnic minorities | 0.64 0.04 60
