@@ -129,12 +129,29 @@ body.resizing, body.resizing * { user-select: none; }
 
 .chip {
   display: inline-grid; place-items: center; flex: none;
-  width: 20px; height: 20px; border-radius: 50%;
+  min-width: 20px; width: max-content; height: 20px; padding: 0 5px; box-sizing: border-box; border-radius: 999px;
   background: var(--c); color: var(--ct, #fff);
   font-size: 12px; font-weight: 700; line-height: 1;
 }
-.chip.lg { width: 30px; height: 30px; font-size: 18px; }
-.chip.sm { width: 16px; height: 16px; font-size: 12px; }
+.chip > span { transform: translateY(-1px); }
+.chip.lg { min-width: 30px; height: 30px; padding: 0 7px; font-size: 18px; }
+.chip.sm { min-width: 16px; height: 16px; padding: 0 4px; font-size: 12px; }
+.badge-edit { display: inline-flex; padding: 0; border: 0; background: transparent; cursor: pointer; flex: none; font: inherit; }
+.badge-edit:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.line-list-actions, .line-stop-actions { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.line-list-actions label { display: flex; align-items: center; gap: 5px; }
+.line-list-actions select, .line-identity input { font: inherit; color: var(--text); background: var(--bg); border: 1px solid var(--rule); }
+.line-identity { margin-top: 8px; }
+.line-identity label { display: flex; align-items: center; gap: 8px; }
+.line-identity input { width: 100px; min-width: 0; padding: 3px 5px; }
+.btn.danger { color: #b23a3a; }
+.confirmation { width: min(380px, calc(100vw - 40px)); box-sizing: border-box; padding: 20px;
+  border: 1px solid var(--rule); background: var(--bg); color: var(--text); font: inherit; }
+.confirmation::backdrop { background: rgb(0 0 0 / 28%); }
+.confirmation h2 { font-size: 18px; margin: 0 0 12px; }
+.confirmation p { margin: 0 0 18px; }
+.confirmation-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 8px; }
+.city-navigation { display: flex; flex-wrap: wrap; gap: 6px; }
 
 /* ---------- inspector ---------- */
 
@@ -190,17 +207,19 @@ table.ledger tr.b td { font-weight: 700; border-bottom: 0; }
 
 /* ---------- main: top bar, map, tools ---------- */
 
-#main { position: relative; flex: 1; min-width: 0; display: flex; flex-direction: column; }
+#main { position: relative; flex: 1; min-width: 0; display: flex; flex-direction: column;
+        container-type: inline-size; container-name: map-column; }
 #topbar {
   flex: none; height: var(--bar-h); display: flex; align-items: center; gap: 18px;
   padding: 0 10px 0 16px; border-bottom: 1px solid var(--rule); white-space: nowrap;
 }
-.city { font-weight: 700; }
+.city { font-weight: 700; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .split { flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px; }
 .split-train { display: inline-flex; align-items: baseline; gap: 6px; }
 .split-train .sw { align-self: center; }
+.demand-busy { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; flex: none; }
 .split-other { color: var(--muted); display: inline-flex; align-items: center; gap: 6px; }
-.bar { flex: 1 1 340px; max-width: 440px; min-width: 120px; height: 14px; display: flex;
+.bar { flex: 1 1 340px; max-width: 440px; min-width: 60px; height: 14px; display: flex;
        border: 1px solid var(--rule); background: var(--bg); }
 .seg { display: block; height: 100%; }
 /* train, walking, driving: the commuter dot map's colours whatever the theme (T-084;
@@ -212,8 +231,16 @@ table.ledger tr.b td { font-weight: 700; border-bottom: 0; }
 .clock { display: flex; align-items: baseline; gap: 8px; font-variant-numeric: tabular-nums; }
 .clock .time { min-width: 46px; }
 .clock .demand { min-width: 108px; }
+.save-notice { flex: none; padding: 6px 10px; border-bottom: 1px solid var(--accent);
+  background: var(--tint); display: flex; align-items: center; gap: 8px; font-size: 12px; }
+.save-notice span { flex: 1; min-width: 0; }
+.save-notice button { flex: none; }
 
 #map { position: relative; flex: 1; min-height: 0; background: var(--map-land); }
+.demand-selector { position: absolute; left: 10px; top: 10px; z-index: 4;
+  display: flex; flex-wrap: wrap; max-width: calc(100% - 20px); background: var(--bg); }
+.demand-selector .btn { font-size: 12px; padding: 4px 8px; }
+.demand-selector .btn + .btn { margin-left: -1px; }
 /* MapLibre sets Helvetica on its container. Map UI must use the same font as the dock. */
 #map, #map .maplibregl-ctrl { font-family: var(--font); }
 #map canvas.overlay { position: absolute; left: 0; top: 0; pointer-events: none; z-index: 1; }
@@ -290,6 +317,13 @@ table.ledger tr.b td { font-weight: 700; border-bottom: 0; }
 .btn.icon.mini svg { width: 12px; height: 12px; }
 .stop-name { cursor: pointer; }
 .stop-name:hover { text-decoration: underline; }
+.blueprint-corners { margin-top: 8px; }
+.blueprint-corners .add-corner { width: 100%; font-size: 12px; }
+.corner { min-width: 0; margin: 6px 0; padding: 6px; border: 1px solid var(--rule); }
+.corner legend { font-size: 12px; padding: 0 4px; }
+.corner-row { display: flex; gap: 6px; align-items: center; }
+.corner-row + .corner-row { margin-top: 6px; }
+.corner-row .grow { flex: 1; min-width: 0; }
 
 /* Station and commuter inspectors' marks. */
 .mk { width: 10px; height: 10px; border-radius: 50%; flex: none; display: inline-block; }
@@ -298,6 +332,9 @@ table.ledger tr.b td { font-weight: 700; border-bottom: 0; }
 .demand-tag { position: absolute; left: 0; top: 0; z-index: 4; pointer-events: none; white-space: nowrap !important; }
 .demand-box { position: absolute; z-index: 4; pointer-events: none; border: 1px solid var(--net-ink);
               background: color-mix(in srgb, var(--net-ink) 8%, transparent); }
+.intercity-labels { position: absolute; inset: 0; z-index: 3; pointer-events: none; overflow: hidden; }
+.intercity-label { position: absolute; left: 0; top: 0; white-space: nowrap; font-size: 12px;
+  padding: 2px 5px; background: var(--bg); color: var(--text); border: 1px solid var(--rule); }
 
 #debug {
   position: absolute; right: 0; top: var(--bar-h); z-index: 3; margin: 0;
@@ -308,13 +345,73 @@ table.ledger tr.b td { font-weight: 700; border-bottom: 0; }
 .maplibregl-ctrl-attrib, .maplibregl-ctrl-attrib-button { border-radius: 0 !important; }
 .maplibregl-ctrl-bottom-right .maplibregl-ctrl { margin: 0 !important; }
 
-/* ---------- narrower screens (1280 x 800) ---------- */
-
-@media (max-width: 1360px) {
+/* The dock is resizable, so adapt to the map column rather than the browser width. */
+@container map-column (max-width: 1100px) {
   #topbar { gap: 12px; }
   .split { gap: 9px; }
   .clock .day { display: none; }
 }
+@container map-column (max-width: 900px) {
+  .split-other { display: none; }
+}
+@container map-column (max-width: 760px) {
+  .clock .demand { display: none; }
+  .bar { min-width: 40px; }
+}
+@container map-column (max-width: 520px) {
+  #topbar { height: auto; min-height: 76px; padding: 6px 10px;
+    display: grid; grid-template-columns: minmax(0, 1fr) auto auto;
+    grid-template-areas: "city cash clock" "split split speed"; gap: 4px 10px; }
+  #topbar .city { grid-area: city; }
+  #topbar .cash { grid-area: cash; }
+  #topbar .clock { grid-area: clock; justify-self: end; }
+  #topbar .split { grid-area: split; }
+  #topbar .speed { grid-area: speed; justify-self: end; }
+}
+@container map-column (max-width: 300px) {
+  #topbar { grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: "city cash" "split split" "clock speed"; }
+  #topbar .clock { justify-self: start; }
+}
+
+/* ---------- shorter screens ---------- */
+
 @media (max-height: 820px) {
   .stops li { min-height: 24px; }
 }
+
+/* Browser save slots (T-068). */
+.save-slot-new { display: flex; flex-wrap: wrap; gap: 5px; margin: 8px 0; }
+.save-slot-new input { width: 100%; min-width: 0; padding: 4px 6px; border: 1px solid var(--rule); background: var(--bg); }
+.save-slots { list-style: none; padding: 0; margin: 8px 0; }
+.save-slots > li { padding: 8px 0; border-bottom: 1px dotted var(--rule); }
+.save-slot-title { display: flex; gap: 8px; justify-content: space-between; overflow-wrap: anywhere; }
+.save-slots .pane-foot { margin-top: 4px; }
+.purpose-scope { display: flex; gap: 6px; margin: 8px 0; }
+.purpose-scope button { background: transparent; border: 1px solid currentColor; border-radius: 4px; padding: 4px 8px; color: inherit; opacity: .65; cursor: pointer; }
+.purpose-scope button.on { opacity: 1; background: #8882; }
+.purpose-item { padding: 10px 0; border-bottom: 1px solid #8883; }
+.purpose-heading { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; margin-bottom: 8px; }
+.purpose-chart-row { display: grid; grid-template-columns: 92px 1fr; gap: 8px; align-items: center; margin-top: 5px; }
+.purpose-bars { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; height: 28px; }
+.purpose-bar-slot { display: flex; align-items: flex-end; background: #8881; height: 100%; }
+.purpose-bar-slot i { display: block; width: 100%; background: #5486a9; min-height: 0; }
+.purpose-axis { display: grid; grid-template-columns: 100px repeat(5, 1fr); gap: 5px; font-size: 10px; opacity: .7; margin-top: 4px; text-align: center; }
+
+/* Focused-city demand and purpose charts (T-143). */
+.demand-selector .demand-pending { opacity: .45; cursor: wait; }
+.city-trip-total { margin-top: 8px; }
+.corridors { list-style: none; padding: 0; margin: 0; }
+.corridors li { padding: 5px 0; border-bottom: 1px solid var(--rule); }
+.corridor-heading { display: flex; justify-content: space-between; gap: 8px; }
+.corridor-heading .num { white-space: nowrap; }
+.corridor-bar { width: 100%; max-width: none; height: 5px; box-sizing: border-box; margin: 3px 0 0; }
+.purpose-summary { display: flex; align-items: center; gap: 12px; margin: 12px 0; }
+.purpose-pie { width: 88px; height: 88px; flex: 0 0 88px; }
+.purpose-legend { list-style: none; padding: 0; margin: 0; flex: 1; min-width: 0; font-size: 12px; }
+.purpose-legend li { display: flex; align-items: center; gap: 6px; margin: 5px 0; }
+.purpose-legend li span { flex: 1; min-width: 0; }
+.purpose-legend b { font-variant-numeric: tabular-nums; }
+
+/* T-144: platform placement preview, aligned with its track. */
+.station-ghost { border: 2px solid var(--accent); background: #ffffffb3; opacity: .7; transform-origin: 0 0; }

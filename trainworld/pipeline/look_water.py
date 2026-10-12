@@ -78,10 +78,11 @@ def main(city, out):
                              (r1 - r0) * cell / 1e3, fill=False, color="#333333", lw=0.6)
         ax.add_patch(rect)
     fig.tight_layout()
+    os.makedirs(os.path.dirname(os.path.abspath(out)), exist_ok=True)
     fig.savefig(out, facecolor="white")
     print(f"wrote {out}")
 
 
 if __name__ == "__main__":
     city = sys.argv[1] if len(sys.argv) > 1 else "nyc"
-    main(city, sys.argv[2] if len(sys.argv) > 2 else os.path.join(ROOT, "T-030.png"))
+    main(city, sys.argv[2] if len(sys.argv) > 2 else os.path.join(ROOT, "..", "artifacts", "trainworld", "T-030.png"))

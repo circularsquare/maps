@@ -57,7 +57,7 @@ for (const old of [true, false, false, true]) {
   await page.evaluate(()=>{window.tw.display.value={...window.tw.display.value,stationNames:true};});await page.waitForTimeout(200);checks.push(await page.evaluate(()=>window.checkLabels()));
   const result={old,elapsed,cpuPct:(endCPU-startCPU)*100000/elapsed,taskPct:(metric(endMetrics,'TaskDuration')-metric(startMetrics,'TaskDuration'))*100000/elapsed,during,checks,hidden,errors};
   results.push(result);console.log(JSON.stringify(result));
-  if(!old) await page.screenshot({path:'trainworld/notes/t074-check/labels.png'});
+  if(!old) await page.screenshot({path:'artifacts/trainworld/t074-check/labels.png'});
   if(during.alignment.max>1 || checks.some(c=>c.max>1) || !hidden || errors.length) throw Error('Browser check failed');
   await context.close();
 }

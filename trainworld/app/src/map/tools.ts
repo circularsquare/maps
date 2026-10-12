@@ -18,17 +18,19 @@
 // Everything drawn is blueprint until constructed (SPEC 6.4).
 
 import type { Geometry } from "geojson";
+import { effect } from "@preact/signals";
 import type { Map as MlMap, MapMouseEvent } from "maplibre-gl";
 import { lngLatToPack } from "../game/coords";
 import { describeIssues } from "../game/issues";
 import { km, money, moneyShort } from "../game/format";
 import { ask, buildLevel, buildPlatform, lineDraft, selection, singleTrack, tool } from "../game/ui";
 import { describeRemovable, removeThing, type Removable } from "../game/remove";
-import { edit, nextFreeColour, nextLineName, say, world } from "../game/world";
+import { edit, say, world } from "../game/world";
 import type { PiInput, RouteEnd } from "../workers/protocol";
 import type { ClockClient, PreviewAnswer } from "../workers/clockClient";
 import { toLngLat, toLocal } from "./geo";
 import { strokesFromPreview } from "./network";
+import { platformAxis, stationBox, stationRadii } from "./stationGeometry";
 import type { Overlay } from "./overlay";
 
 const SNAP_NODE_PX = 12;
@@ -57,6 +59,9 @@ export class Tools {
   private marks: HTMLDivElement[] = [];
   private tag: HTMLDivElement;
   private ring: HTMLDivElement;
+  private lineSession = 0;
+  private editingLine: number | null = null;
+  private stopClicks: Promise<void> = Promise.resolve();
 
   constructor(private map: MlMap, private overlay: Overlay, private client: ClockClient) {
     this.box = document.createElement("div");
@@ -68,6 +73,24 @@ export class Tools {
     this.ring.className = "snap-ring";
     this.box.append(this.tag, this.ring);
     overlay.afterMapFrame.push(() => this.place());
+    effect(() => { buildPlatform.value; if (tool.value === "station") this.place(); });
+    effect(() => { buildLevel.value; singleTrack.value; if (tool.peek() === "track" && this.start) this.requestPreview(); });
+    effect(() => {
+      const active = tool.value === "line" ? lineDraft.value.line : null;
+      const w = world.value;
+      if (active !== this.editingLine) {
+        this.editingLine = active;
+        this.lineSession++;
+      }
+      if (active === null || !w) return;
+      const line = w.save.lines.find((l) => Number(l.id) === active);
+      if (!line) {
+        this.exit();
+        return;
+      }
+      const stops = line.stops.map(Number);
+      if (!sameStops(stops, lineDraft.peek().stops)) lineDraft.value = { line: active, stops };
+    });
   }
 
   get drawing() {
@@ -250,7 +273,7 @@ export class Tools {
     this.client.preview({ from: this.start.end, to, pis: this.pis.map((p) => p.pi), single: singleTrack.peek() }, (a) => {
       if (!this.start) return;
       this.lastPreview = a;
-      this.overlay.renderer.setPreview(a.pts.length >= 6 ? strokesFromPreview(a.pts, !a.ok) : null);
+      this.overlay.renderer.setPreview(a.pts.length >= 6 ? strokesFromPreview(a.pts, !a.ok, a.speeds, true) : null);
       this.overlay.invalidate();
       this.place();
     });
@@ -334,11 +357,8 @@ export class Tools {
       return d < slop ? d : Infinity;
     };
     let best = Infinity, hit: (Removable & { lx: number; ly: number }) | null = null;
-    for (let i = 0; i < n.stationCount; i++) {
-      const lx = n.stations[i * 3], ly = n.stations[i * 3 + 1];
-      const d = near(lx, ly, 10);
-      if (d < best) [best, hit] = [d, { kind: "station", node: Number(n.stationIds[i]), lx, ly }];
-    }
+    const station=this.overlay.renderer.stationAt(px,py,(x,y)=>this.screen(x,y),5);
+    if (station>=0) return {kind:"station",node:Number(n.stationIds[station]),lx:n.stations[station*3],ly:n.stations[station*3+1]};
     if (hit) return hit;
     for (const node of w.nodes.values()) {
       if (!node.flying || node.ports < 3) continue;
@@ -392,43 +412,51 @@ export class Tools {
   private lineClick(e: MapMouseEvent) {
     const n = this.overlay.renderer.net;
     if (!n) return;
-    let best = 12 * 12, hit = -1;
-    for (let i = 0; i < n.stationCount; i++) {
-      const [x, y] = this.screen(n.stations[i * 3], n.stations[i * 3 + 1]);
-      const d = (x - e.point.x) ** 2 + (y - e.point.y) ** 2;
-      if (d < best) {
-        best = d;
-        hit = Number(n.stationIds[i]);
-      }
-    }
+    const station=this.overlay.renderer.stationAt(e.point.x,e.point.y,(x,y)=>this.screen(x,y),7);
+    const hit=station>=0?Number(n.stationIds[station]):-1;
     if (hit < 0) {
       say("Click a station to add it to the line. Press Enter when the line is done.");
       return;
     }
-    void this.addStop(hit);
+    const session = this.lineSession;
+    this.stopClicks = this.stopClicks.then(() => this.addStop(hit, session)).catch(() => {
+      if (session === this.lineSession) say("Could not add that stop. Please try again.", true);
+    });
   }
 
-  private async addStop(station: number) {
-    const d = lineDraft.peek();
-    if (d.stops[d.stops.length - 1] === station) {
-      this.exit();
-      return;
-    }
-    const stops = [...d.stops, station];
-    if (d.line === null) {
-      if (stops.length < 2) {
-        lineDraft.value = { line: null, stops };
+  private async addStop(station: number, session: number) {
+    // Read the authoritative stops for every queued click: removals and undo may have changed
+    // them while the previous click was waiting for the worker.
+    for (let attempt = 0; attempt < 3; attempt++) {
+      if (session !== this.lineSession || tool.peek() !== "line") return;
+      const id = lineDraft.peek().line;
+      if (id === null) return; // The Lines pane creates the line before entering this tool.
+      const w = world.peek();
+      const line = w?.save.lines.find((l) => Number(l.id) === id);
+      if (!line) return;
+      const before = line.stops.map(Number);
+      if (before.includes(station)) {
+        say("That station is already a stop on this line.");
         return;
       }
-      const a = await edit({ op: "addLine", stops, name: nextLineName(), colour: nextFreeColour() });
-      if (a.ok && a.line !== undefined) {
-        lineDraft.value = { line: a.line, stops };
-        selection.value = { kind: "line", line: String(a.line) };
+      const result = await this.client.query({ what: "insertStop", line: id, station });
+      if (session !== this.lineSession || tool.peek() !== "line" || lineDraft.peek().line !== id) return;
+      const current = world.peek()?.save.lines.find((l) => Number(l.id) === id);
+      if (!current) return;
+      if (world.peek()?.version !== w!.version || !sameStops(current.stops.map(Number), before)) continue;
+      if (!result.length) {
+        say("No track joins these stations with that stop inserted. Check the track connections.", true);
+        return;
+      }
+      const stops = Array.from(result);
+      const a = await edit({ op: "setStops", line: id, stops });
+      if (a.ok && session === this.lineSession && tool.peek() === "line") {
+        const latest = world.peek()?.save.lines.find((l) => Number(l.id) === id);
+        if (latest) lineDraft.value = { line: id, stops: latest.stops.map(Number) };
       }
       return;
     }
-    const a = await edit({ op: "setStops", line: d.line, stops });
-    if (a.ok) lineDraft.value = { line: d.line, stops };
+    say("The network changed while adding that stop. Please try again.", true);
   }
 
   // ---------------------------------------------------------------- markers
@@ -443,6 +471,30 @@ export class Tools {
     m.textContent = "";
     m.style.display = "";
     return m;
+  }
+
+  /** The placement ghost uses the same platform length and screen minimum as built stations. */
+  private stationGhost(h: Exclude<Snap,{kind:"free"}>) {
+    const n=this.overlay.renderer.net,w=world.peek();
+    if (!n || !w) return;
+    const candidates=h.kind==="edge"?[h.edge]:w.edges.filter(e=>e.a===h.node||e.b===h.node).map(e=>e.id);
+    const usage=new Map<number,Set<number>>();
+    for (let i=0;i<n.lines.count;i++) {
+      const edge=n.lines.edge[i];
+      if (!candidates.includes(edge)) continue;
+      if (!usage.has(edge)) usage.set(edge,new Set());
+      usage.get(edge)!.add(n.lines.colour[i]);
+    }
+    candidates.sort((a,b)=>(usage.get(b)?.size??0)-(usage.get(a)?.size??0)||a-b);
+    const edge=candidates[0],bundle=usage.get(edge)?.size??0;
+    const [,lat]=toLngLat(h.lx,h.ly);
+    const [ax,ay]=platformAxis(n.edgePts.get(edge),h.lx,h.ly,buildPlatform.peek()/2/Math.cos(lat*Math.PI/180));
+    const box=stationBox(h.lx,h.ly,ax,ay,(x,y)=>this.screen(x,y),stationRadii(this.map.getZoom())[0],bundle,this.overlay.renderer.slotPx);
+    this.ring.className="station-ghost";
+    this.ring.style.width=`${box.halfLength*2}px`;
+    this.ring.style.height=`${box.halfWidth*2}px`;
+    this.ring.style.margin="0";
+    this.ring.style.transform=`translate(${box.x}px,${box.y}px) rotate(${Math.atan2(box.uy,box.ux)}rad) translate(-50%,-50%)`;
   }
 
   /** Move the DOM markers to the camera (after each MapLibre frame and each change). */
@@ -467,6 +519,11 @@ export class Tools {
     }
     for (let i = k; i < this.marks.length; i++) this.marks[i].style.display = "none";
 
+    // Reset the shared marker after a platform ghost before using a snap/delete ring.
+    this.ring.className="snap-ring";
+    this.ring.style.removeProperty("width");
+    this.ring.style.removeProperty("height");
+    this.ring.style.removeProperty("margin");
     // the delete tool: a ring on the station or flyover, and what a click removes by the cursor
     if (t === "delete") {
       const d = this.delHover, what = d && describeRemovable(d);
@@ -486,7 +543,8 @@ export class Tools {
     const h = this.hover;
     if ((t === "track" || t === "station") && h && h.kind !== "free") {
       this.ring.style.display = "";
-      put(this.ring, h.lx, h.ly);
+      if (t === "station") this.stationGhost(h);
+      else put(this.ring, h.lx, h.ly);
     } else this.ring.style.display = "none";
     const pv = this.lastPreview;
     if (t === "track" && this.start && h && pv) {
@@ -498,6 +556,10 @@ export class Tools {
       put(this.tag, h.lx, h.ly, 14, 12);
     } else this.tag.style.display = "none";
   }
+}
+
+function sameStops(a: readonly number[], b: readonly number[]) {
+  return a.length === b.length && a.every((s, i) => s === b[i]);
 }
 
 /**

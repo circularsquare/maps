@@ -48,7 +48,7 @@ await page.evaluate(()=>window.tw.map.jumpTo({center:[-73.97,40.75],zoom:12.6,pi
 const result=await page.evaluate(()=>({stations:window.tw.world.value.save.stations.length,frames:window.labelSamples.length,maxError:Math.max(...window.labelSamples.map(x=>x.max)),maxOverlaps:Math.max(...window.labelSamples.map(x=>x.overlaps)),final:window.verifyLabels()}));
 result.renamed=renamed;result.errors=errors;
 console.log(JSON.stringify(result));
-await page.screenshot({path:'trainworld/notes/t074-check/real-network.png'});
+await page.screenshot({path:'artifacts/trainworld/t074-check/real-network.png'});
 await writeFile('trainworld/notes/t074-check/verification.json',JSON.stringify(result,null,2));
 if(result.maxError>1||result.maxOverlaps>0||renamed!==1||errors.length)throw Error('Real-network verification failed');
 }finally{await browser.close();}

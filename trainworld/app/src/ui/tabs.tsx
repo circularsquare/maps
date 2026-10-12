@@ -1,11 +1,14 @@
 // Tab contents: build, lines, stations, money, city.
 
 import { clock } from "../game/clock";
-import { lineDemand, stationDemand, demandView } from "../game/demand";
+import { activeCity, CITIES, cityById } from "../game/cities";
+import { useState } from "preact/hooks";
+import { createLine } from "../game/lineActions";
+import { lineDemand, stationDemand, demandView, intercityDemand, INTERCITY_PLACES } from "../game/demand";
 import type { JSX } from "preact";
 import { count, levelLabel, money } from "../game/format";
 import { DEMAND_INDEX, LEVELS, type Level } from "../game/types";
-import { buildLevel, buildPlatform, lineDraft, selection, singleTrack, tool, type Tool } from "../game/ui";
+import { buildLevel, buildPlatform, lineSort, selection, singleTrack, tool, type Tool } from "../game/ui";
 import { linesAt, setFares, world } from "../game/world";
 import { income, moneyState } from "../game/money";
 import type { DayLedger } from "../workers/protocol";
@@ -89,21 +92,33 @@ export function BuildTab() {
 }
 
 export function LinesTab() {
+  const [creating, setCreating] = useState(false);
   const w = world.value;
   if (!w) return null;
   const sel = selection.value;
   const lev = DEMAND_INDEX[clock.demand.value];
   const total = w.save.lines.reduce((s, l) => s + (lineDemand(l.id)?.ridersPerDay ?? 0), 0);
-  const newLine = () => {
-    live.tools?.exit();
-    lineDraft.value = { line: null, stops: [] };
-    tool.value = "line";
+  const newLine = async () => {
+    if (creating) return;
+    setCreating(true);
+    try { await createLine(); } finally { setCreating(false); }
   };
+  const natural = (a: string, b: string) => a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" });
+  const lines = [...w.save.lines].sort((a, b) =>
+    (lineSort.value === "passengers" ? (lineDemand(b.id)?.ridersPerDay ?? 0) - (lineDemand(a.id)?.ridersPerDay ?? 0) : 0)
+    || natural(a.name, b.name) || a.num - b.num);
   return (
     <>
-      {w.save.lines.length === 0 && <p class="muted">No lines yet. Put stations on track, then make a line through them.</p>}
+      <div class="line-list-actions">
+        <button class="btn text" onClick={newLine} disabled={creating}><Icon.plus />New line</button>
+        <label>Sort <select aria-label="Sort lines" value={lineSort.value} onChange={e => lineSort.value = e.currentTarget.value as "name" | "passengers"}>
+          <option value="name">Name</option><option value="passengers">Forecast riders</option>
+        </select></label>
+      </div>
+      {w.save.lines.length > 0 && <p class="muted small">Riders are steady-state forecasts for the current network and schedules.</p>}
+      {w.save.lines.length === 0 && <p class="muted">No lines yet. Create a line, then choose its stations.</p>}
       <ul class="rows pick">
-        {w.save.lines.map((l) => {
+        {lines.map((l) => {
           const st = w.lineStats[l.id];
           const on = (sel?.kind === "line" || sel?.kind === "train") && sel.line === l.id;
           const dm = lineDemand(l.id);
@@ -115,7 +130,7 @@ export function LinesTab() {
                 <span class="val muted">{STATUS[st.status]}</span>
               ) : (
                 <>
-                  <span class="val">{dm ? count(dm.ridersPerDay) : ""}</span>
+                  <span class="val" title={dm ? `${count(dm.ridersPerDay)} forecast riders a day` : undefined}>{dm ? count(dm.ridersPerDay) : ""}</span>
                   <span class="val muted w-trains">{st.trainsNeeded[lev]} trains</span>
                 </>
               )}
@@ -124,11 +139,7 @@ export function LinesTab() {
         })}
       </ul>
       <div class="pane-foot">
-        <span class="muted">{demandView.value ? count(total) + " riders a day" : ""}</span>
-        <button class={"btn text" + (tool.value === "line" ? " on" : "")} onClick={newLine}>
-          <Icon.plus />
-          New line
-        </button>
+        <span class="muted">{demandView.value ? count(total) + " forecast riders a day" : ""}</span>
       </div>
     </>
   );
@@ -247,28 +258,41 @@ export function MoneyTab() {
 }
 
 export function CityTab() {
-  const w = world.value;
-  if (!w) return null;
-  const by = demandView.value?.trainShareByPeriod ?? w.city.trainShareByPeriod;
-  const max = Math.max(1e-9, ...by.map((p) => p[1]));
-  return (
-    <>
-      <ul class="rows">
-        <Row label="People">{count(w.city.population)}</Row>
-        <Row label="Jobs">{count(w.city.jobs)}</Row>
+  const city = cityById(activeCity.value);
+  const market = intercityDemand.value;
+  // The market publishes undirected corridors: each row includes both travel directions.
+  const corridors = market?.corridors
+    .filter(c => c.from !== c.to && (c.from === city.market || c.to === city.market) && c.trips > 0)
+    .sort((a, b) => b.trips - a.trips);
+  const total = corridors?.reduce((sum, c) => sum + c.trips, 0) ?? 0;
+  const rail = corridors?.reduce((sum, c) => sum + c.rail, 0) ?? 0;
+  return <>
+    <div class="h">{city.name}</div>
+    <div class="city-navigation">
+      <button class="btn text" onClick={() => live.map?.flyTo({center: city.center, zoom: city.zoom})}>City centre</button>
+      <button class="btn text" onClick={() => {
+        const lon = CITIES.map(c => c.center[0]), lat = CITIES.map(c => c.center[1]);
+        live.map?.fitBounds([[Math.min(...lon) - 0.7, Math.min(...lat) - 0.5], [Math.max(...lon) + 0.7, Math.max(...lat) + 0.5]], {padding:40});
+      }}>Whole region</button>
+    </div>
+    {!market ? <p class="note muted" role="status">Calculating demand…</p> : <>
+      <p class="city-trip-total small"><b>{count(total)}</b> intercity trips · <b>{count(rail)}</b> by train</p>
+      <p class="muted small">Both directions per day · Top 5 connections</p>
+      <ul class="corridors">
+        {corridors?.slice(0, 5).map(c => {
+          const other = c.from === city.market ? c.to : c.from;
+          const share = Math.max(0, Math.min(100, 100 * c.rail / c.trips));
+          const description = `${INTERCITY_PLACES[other]}: ${count(c.trips)} trips a day; train ${count(c.rail)} (${Math.round(share)}%), other ${count(c.trips - c.rail)} (${Math.round(100-share)}%)`;
+          return <li key={other} title={description}>
+            <div class="corridor-heading"><span>{INTERCITY_PLACES[other]}</span><span class="num">{count(c.rail)}/{count(c.trips)} trips</span></div>
+            <div class="bar corridor-bar" role="img" aria-label={description}>
+              <i class="seg seg-train" style={{width: `${share}%`}} />
+              <i class="seg seg-drive" style={{width: `${100-share}%`}} />
+            </div>
+          </li>;
+        })}
       </ul>
-      {by.length > 0 && <div class="h">Trips by train</div>}
-      <ul class="rows">
-        {by.map(([n, v]) => (
-          <li>
-            <span class="w-period">{n}</span>
-            <span class="grow">
-              <i class="hbar" style={{ width: (v / max) * 100 + "%" }} />
-            </span>
-            <span class="val w-num">{v.toFixed(1)}%</span>
-          </li>
-        ))}
-      </ul>
-    </>
-  );
+      {!corridors?.length && <p class="muted small">No intercity demand is modelled here yet.</p>}
+    </>}
+  </>;
 }

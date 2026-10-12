@@ -33,8 +33,8 @@ export function widthFor(ridersPerHour: number): number {
   return W_MIN + (W_MAX - W_MIN) * Math.sqrt(Math.min(1, Math.max(0, ridersPerHour) / LINE_FULL));
 }
 
-/** Station size: boardings plus alightings a day; the circle grows with the square root up to
- * 2.6 times its normal radius at `STATION_FULL` and above (the shader's `1 + 1.6 x`). */
+/** Analytical circle area follows boardings plus alightings a day, capped at STATION_FULL.
+ * Platform boxes are unchanged; nearby platforms retain their full measured circle size. */
 export const STATION_FULL = 150000;
 export function stationScale(ridersPerDay: number): number {
   return Math.sqrt(Math.min(1, Math.max(0, ridersPerDay) / STATION_FULL));

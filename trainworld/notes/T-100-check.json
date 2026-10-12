@@ -43,14 +43,14 @@
         "tracks": 0,
         "wet": false,
         "ramp": false,
-        "quantity": 60,
-        "cost": 150000000
+        "quantity": 160,
+        "cost": 400000000
       }
     ],
-    "total": 328400000,
+    "total": 578400000,
     "before": 6000
   },
-  "charge": 328.39999999999964,
+  "charge": 578.3999999999996,
   "layout": {
     "width": 303,
     "scrollWidth": 303

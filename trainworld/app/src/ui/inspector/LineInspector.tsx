@@ -3,7 +3,7 @@
 // cost a day (T-028), the stops with each stop's time from the start of the line, and the round
 // trip split into running, dwell, turning and waiting, with where it waits (T-031).
 
-import { useEffect, useState } from "preact/hooks";
+import { useEffect, useRef, useState } from "preact/hooks";
 import { nearestStation } from "../../game/places";
 import { queryClock } from "../../workers/clockClient";
 import { clock } from "../../game/clock";
@@ -11,7 +11,7 @@ import { lineDemand } from "../../game/demand";
 import { count, duration, headway, money } from "../../game/format";
 import { LINE_PALETTE } from "../../game/palette";
 import { DEMAND_INDEX, DEMANDS, type Demand, type LineStats } from "../../game/types";
-import { lineDraft, selection, tool } from "../../game/ui";
+import { ask, lineDraft, renameLinePrompt, selection, tool } from "../../game/ui";
 import { income } from "../../game/money";
 import { edit, linesAt, renameLine, say, setTrainCount, setLineColour, world } from "../../game/world";
 import { live } from "../../map/live";
@@ -77,11 +77,25 @@ function RoundTrip({ st, lev, stops, spots }: { st: LineStats; lev: number; stop
 export function LineInspector({ id }: { id: string }) {
   const w = world.value;
   const [editing, setEditing] = useState(false);
+  const nameInput = useRef<HTMLInputElement>(null);
+  const nameCommitted = useRef(false);
+  const [nameDraft, setNameDraft] = useState("");
+  useEffect(() => { if (editing) { nameCommitted.current = false; nameInput.current?.focus(); nameInput.current?.select(); } }, [editing]);
   const [colours, setColours] = useState(false);
+  const [copying, setCopying] = useState(false);
   const [spots, setSpots] = useState<{ text: string; s: number }[]>([]);
   const l = w?.save.lines.find((l) => l.id === id);
+  const [symbol, setSymbol] = useState("");
+  useEffect(() => { setSymbol(l?.letter ?? ""); }, [l?.letter]);
   const now = clock.demand.value;
   const lev = DEMAND_INDEX[now];
+  useEffect(() => {
+    if (renameLinePrompt.value === id) {
+      setNameDraft(l?.name ?? "");
+      setEditing(true);
+      renameLinePrompt.value = null;
+    }
+  }, [id, renameLinePrompt.value]);
   // where it loses time to busy track, asked again after every edit and when the level turns
   useEffect(() => {
     if (!l) return;
@@ -97,8 +111,11 @@ export function LineInspector({ id }: { id: string }) {
   const lm = income.value.lines.get(l.id); // fares and running cost a day (T-028)
   const name = new Map(w.save.stations.map((s) => [s.id, s.name]));
   const times = st.fromStartByLevel[lev] ?? st.fromStartS;
+  const editingStops = tool.value === "line" && lineDraft.value.line === l.num;
 
   const commit = (e: Event) => {
+    if (nameCommitted.current) return;
+    nameCommitted.current = true;
     renameLine(l.id, (e.target as HTMLInputElement).value);
     setEditing(false);
   };
@@ -107,54 +124,83 @@ export function LineInspector({ id }: { id: string }) {
     if (a.ok) say(`${l.name} constructed for ${money(a.charge * 1e6)}. Its trains start with the next departure.`);
   };
   const addStops = () => {
+    if (editingStops) { live.tools?.exit(); return; }
     live.tools?.exit();
     lineDraft.value = { line: l.num, stops: l.stops.map(Number) };
     tool.value = "line";
     selection.value = { kind: "line", line: l.id };
   };
-  const removeStop = (i: number) => void edit({ op: "setStops", line: l.num, stops: l.stops.filter((_, k) => k !== i).map(Number) });
-  const remove = async () => {
-    const a = await edit({ op: "removeLine", line: l.num });
-    if (a.ok) selection.value = null;
+  const removeStop = async (i: number) => {
+    const stops = l.stops.filter((_, k) => k !== i).map(Number);
+    const a = await edit({ op: "setStops", line: l.num, stops });
+    if (a.ok && lineDraft.peek().line === l.num) lineDraft.value = { line: l.num, stops };
+  };
+  const remove = () => {
+    ask.value = { text: `Delete ${l.name}? This removes the line and its schedule. Track and stations stay.`, yes: "Delete line", no: "Keep line", run: () => {
+      ask.value = null;
+      void edit({ op: "removeLine", line: l.num }).then(a => {
+        if (!a.ok) return;
+        if (lineDraft.peek().line === l.num) live.tools?.exit();
+        const selected = selection.peek();
+        if (selected?.kind === "line" && selected.line === l.id) selection.value = null;
+      });
+    }};
+  };
+  const copy = async () => {
+    if (copying) return;
+    setCopying(true);
+    try {
+      const a = await edit({ op: "copyLine", line: l.num });
+      if (!a.ok || a.line === undefined) return;
+      live.tools?.exit();
+      lineDraft.value = { line: a.line, stops: l.stops.map(Number) };
+      renameLinePrompt.value = String(a.line);
+      selection.value = { kind: "line", line: String(a.line) };
+      tool.value = "line";
+    } finally { setCopying(false); }
   };
 
   return (
     <>
       <div class="title">
-        <Chip line={l} size="lg" />
+        <button class={"badge-edit" + (colours ? " on" : "")} title="Edit line colour and symbol" aria-label="Edit line colour and symbol" onClick={() => setColours(!colours)}><Chip line={l} size="lg" /></button>
         {editing ? (
           <input
             class="name-edit"
-            value={l.name}
-            ref={(el) => el?.focus()}
+            value={nameDraft}
+            onInput={e => setNameDraft(e.currentTarget.value)}
+            ref={nameInput}
             onBlur={commit}
             onKeyDown={(e) => {
               if (e.key === "Enter") commit(e);
-              if (e.key === "Escape") setEditing(false);
+              if (e.key === "Escape") { nameCommitted.current = true; setEditing(false); }
             }}
           />
         ) : (
           <span class="name">{l.name}</span>
         )}
-        <button class={"swatch" + (colours ? " on" : "")} style={{ "--c": l.colour }} title="Line colour" onClick={() => setColours(!colours)} />
-        <button class="btn icon" title="Rename" onClick={() => setEditing(true)}>
+        <button class="btn icon" title="Rename" onClick={() => { setNameDraft(l.name); setEditing(true); }}>
           <Icon.pencil />
         </button>
       </div>
       {colours && (
-        <div class="palette">
+        <div class="line-identity">
+          <label>Symbol <input aria-label="Line symbol" value={symbol} onInput={e => setSymbol(e.currentTarget.value)} onChange={e => void edit({op:"lineLook",line:l.num,name:l.name,colour:l.colour,letter:e.currentTarget.value.trim()})} /></label>
+          <div class="palette">
           {LINE_PALETTE.map((c) => (
             <button class={"swatch" + (c === l.colour ? " on" : "")} style={{ "--c": c }} title={c} onClick={() => setLineColour(l.id, c)} />
           ))}
           <label class="swatch custom" title="Any colour" style={{ "--c": l.colour }}>
             <input type="color" value={l.colour} onChange={(e) => setLineColour(l.id, (e.target as HTMLInputElement).value)} />
           </label>
+          </div>
         </div>
       )}
       <div class="sub muted">
         {l.stops.length} stops, {st.km.toFixed(1)} km{st.cars ? `, ${st.cars} car trains` : ""}
       </div>
-      {st.status === "planned" && (
+      {l.stops.length < 2 && <p class="muted small">Choose at least two stations to give this line a route.</p>}
+      {st.status === "planned" && l.stops.length >= 2 && (
         <div class="callout">
           <p>
             Planned. Trains run once its track and stations are constructed.
@@ -172,7 +218,6 @@ export function LineInspector({ id }: { id: string }) {
       )}
 
       <div class="h">Schedule</div>
-      <p class="muted small">Trains on the entire line, in both directions.</p>
       <table class="sched">
         <tr>
           <th>Demand</th>
@@ -190,14 +235,17 @@ export function LineInspector({ id }: { id: string }) {
         ))}
       </table>
 
-      <div class="h">Riders</div>
+      <div class="h">Demand forecast</div>
+      <p class="muted small">Steady state for the current network and schedule.</p>
       <ul class="rows">
         <Row label="Riders a day">{dm ? count(dm.ridersPerDay) : ""}</Row>
+        <Row label="Local trips">{dm ? count(Math.max(0,dm.ridersPerDay-(dm.intercityRidersPerDay ?? 0))) : ""}</Row>
+        <Row label="Longer trips">{dm ? count(dm.intercityRidersPerDay ?? 0) : ""}</Row>
         <Row label="Fullest train at high demand">{dm ? dm.fullestPct + "%" : ""}</Row>
       </ul>
       {st.status === "running" && (
         <>
-          <div class="h">Money a day</div>
+          <div class="h">Finances</div>
           <ul class="rows">
             <Row label="Fares">{dm && lm ? money(lm.faresPerDay) : ""}</Row>
             <Row label="Running trains">{lm ? money(-lm.runningPerDay) : ""}</Row>
@@ -206,8 +254,14 @@ export function LineInspector({ id }: { id: string }) {
       )}
 
       <div class="h">
-        Stops<span class="right muted small">boardings a day</span>
+        Stops<span class="right muted small">forecast boardings per day</span>
       </div>
+      <div class="line-stop-actions">
+        <button class={"btn text" + (editingStops ? " on" : "")} onClick={addStops}><Icon.pencil />{editingStops ? "Done editing stops" : "Edit stops"}</button>
+        <button class="btn text" onClick={copy} disabled={copying}>Copy line</button>
+        <button class="btn text danger" onClick={remove}>Delete line</button>
+      </div>
+      {editingStops && <p class="muted small">Click stations to insert stops. Red crosses remove stops; Enter or Escape finishes editing.</p>}
       <ul class="stops" style={{ "--c": l.colour }}>
         {l.stops.map((s, i) => {
           const others = linesAt(s).filter((o) => o.id !== l.id);
@@ -223,8 +277,8 @@ export function LineInspector({ id }: { id: string }) {
                 <Chip line={o} size="sm" />
               ))}
               <span class="n num">{dm ? count(dm.boardings[i]) : ""}</span>
-              {l.stops.length > 2 && (
-                <button class="btn icon mini" title="Take this stop out of the line" onClick={() => removeStop(i)}>
+              {editingStops && (
+                <button class="btn icon mini danger" title="Take this stop out of the line" aria-label={`Remove stop ${name.get(s)}`} onClick={() => removeStop(i)}>
                   <Icon.cross />
                 </button>
               )}
@@ -232,16 +286,7 @@ export function LineInspector({ id }: { id: string }) {
           );
         })}
       </ul>
-      {st.status !== "broken" && <RoundTrip st={st} lev={lev} stops={l.stops.length} spots={spots} />}
-      <div class="pane-foot">
-        <button class={"btn text" + (tool.value === "line" && lineDraft.value.line === l.num ? " on" : "")} onClick={addStops}>
-          <Icon.plus />
-          Add stops
-        </button>
-        <button class="btn text" onClick={remove}>
-          Delete line
-        </button>
-      </div>
+      {st.status !== "broken" && l.stops.length >= 2 && <RoundTrip st={st} lev={lev} stops={l.stops.length} spots={spots} />}
     </>
   );
 }

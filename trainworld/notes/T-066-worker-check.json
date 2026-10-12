@@ -1,0 +1,11 @@
+{
+  "cities": 9,
+  "periods": 5,
+  "sharedCrowdingRounds": 1,
+  "tripLegs": 64620858.97777404,
+  "railTripLegs": 342928.84052663005,
+  "nycPurposeQuery": true,
+  "otherCitiesCommuteOnly": true,
+  "versionedSnapshotMatchesPurposeQuery": true,
+  "wasmMemoryMiB": 277.6875
+}

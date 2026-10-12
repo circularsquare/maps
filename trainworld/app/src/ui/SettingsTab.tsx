@@ -6,7 +6,7 @@
 import { useState } from "preact/hooks";
 import { levelLabel } from "../game/format";
 import { lastSaved } from "../game/money";
-import { exportGame, importGame, newGame } from "../workers/clockClient";
+import { exportGame, importGame, newGame, manageSaveSlot, saveSlotsState } from "../workers/clockClient";
 import { LEVEL_COLOURS } from "../game/palette";
 import { LEVELS } from "../game/types";
 import { display, setDisplay, theme, THEMES, type Theme } from "../game/ui";
@@ -18,22 +18,19 @@ export function SettingsTab() {
   const d = display.value;
   return (
     <>
-      <div class="h">Commuters on the map</div>
-      <Segmented<"off" | "home" | "work">
-        options={[
-          ["off", "Off"],
-          ["home", "Homes"],
-          ["work", "Jobs"],
-        ]}
-        value={d.commuters ? d.commuterEnd : "off"}
-        onChange={(v) => (display.value = v === "off" ? { ...d, commuters: false } : { ...d, commuters: true, commuterEnd: v })}
-      />
+      <div class="h">Local trips on the map</div>
       {d.commuters && (
         <label class="slider">
           <span>Bubble size</span>
           <input type="range" min="0.5" max="2" step="0.05" value={d.bubbleSize} onInput={(e) => setDisplay("bubbleSize", Number((e.target as HTMLInputElement).value))} />
         </label>
       )}
+      <div class="h">Longer trips</div>
+      <div class="checks">
+        <Check checked={d.intercity} onChange={(v) => setDisplay("intercity", v)}>
+          Bubbles outside the selected city
+        </Check>
+      </div>
       <div class="h">Track display</div>
       <div class="track-modes"><Segmented<"line" | "traffic" | "height" | "speed">
         options={[
@@ -73,17 +70,19 @@ export function SettingsTab() {
           Map labels
         </Check>
       </div>
-      <div class="h">Riders on the network</div>
+      <div class="h">Demand forecast on the network</div>
       <div class="checks">
         <Check checked={d.stationRiders} onChange={(v) => setDisplay("stationRiders", v)}>
-          Station size
+          Station demand circles
         </Check>
         <Check checked={d.trainLoad} onChange={(v) => setDisplay("trainLoad", v)}>
-          How full trains are
+          Train load forecast
         </Check>
       </div>
+      {d.stationRiders && <p class="note muted small">Circle area shows daily entries and exits, up to 150,000. Click the platform box to inspect a station.</p>}
       {d.trainLoad && <>
-        <div class="h">Train crowding</div>
+        <p class="note muted small">Steady-state loads by stretch, not live passenger counts.</p>
+        <div class="h">Train load</div>
         <Segmented<"average" | "busiest">
           options={[["average", "Average"], ["busiest", "Busiest hour"]]}
           value={d.trainLoadBasis}
@@ -100,7 +99,12 @@ export function SettingsTab() {
 /** Saves (T-029): the game saves itself in this browser; a file can be exported and loaded. */
 function GameSaves() {
   const [confirm, setConfirm] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [rename, setRename] = useState<{ key: string; name: string } | null>(null);
+  const [removing, setRemoving] = useState<string | null>(null);
+  const saves = saveSlotsState.value;
   const at = lastSaved.value;
+  const activeName = saves.slots.find(s => s.key === saves.active)?.name ?? "Original game";
   const pick = () => {
     const input = document.createElement("input");
     input.type = "file";
@@ -110,8 +114,36 @@ function GameSaves() {
   };
   return (
     <>
-      <div class="h">Game</div>
-      <p class="note muted">{at ? `Saved in this browser at ${new Date(at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}.` : "Saved in this browser as you play."}</p>
+      <div class="h">Saved games in this browser</div>
+      <p class="note muted">Playing: <strong>{activeName}</strong>. {saves.writable ? "This slot saves as you play." : saves.reason}</p>
+      {saves.error && <p class="callout bad">{saves.error}</p>}
+      <form class="save-slot-new" onSubmit={(e) => { e.preventDefault(); manageSaveSlot("create", undefined, newName); setNewName(""); }}>
+        <input type="text" aria-label="New save slot name" placeholder="Name a new slot" maxLength={80} value={newName} onInput={(e) => setNewName((e.target as HTMLInputElement).value)} />
+        <button class="btn text" type="submit">Save to new slot</button>
+      </form>
+      <ul class="save-slots">
+        {saves.slots.map((slot) => <li data-slot={slot.key}>
+          {rename?.key === slot.key ? <form class="save-slot-new" onSubmit={(e) => { e.preventDefault(); manageSaveSlot("rename", slot.key, rename.name); setRename(null); }}>
+            <input type="text" aria-label="Save slot name" maxLength={80} value={rename.name} onInput={(e) => setRename({ key: slot.key, name: (e.target as HTMLInputElement).value })} />
+            <button class="btn text" type="submit">Rename</button>
+            <button class="btn text" type="button" onClick={() => setRename(null)}>Cancel</button>
+          </form> : <>
+            <div class="save-slot-title"><strong>{slot.name}</strong>{slot.key === saves.active && <span class="muted small">Playing</span>}</div>
+            <div class="muted small">Day {slot.day} - {new Date(slot.at).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}</div>
+            <div class="pane-foot">
+              {slot.key !== saves.active && <button class="btn text" onClick={() => manageSaveSlot("open", slot.key)}>Open</button>}
+              <button class="btn text" onClick={() => setRename({ key: slot.key, name: slot.name })}>Rename</button>
+              {slot.key !== saves.active && <button class="btn text" onClick={() => setRemoving(slot.key)}>Delete</button>}
+            </div>
+          </>}
+          {removing === slot.key && <div class="callout bad">
+            <p>Delete "{slot.name}" from this browser?</p>
+            <div class="pane-foot"><button class="btn text" onClick={() => { manageSaveSlot("delete", slot.key); setRemoving(null); }}>Delete saved game</button><button class="btn text" onClick={() => setRemoving(null)}>Keep it</button></div>
+          </div>}
+        </li>)}
+      </ul>
+      <div class="h">Save files</div>
+      <p class="note muted">{saves.writable && at ? `Saved in this browser at ${new Date(at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}.` : "Download a copy to keep outside this browser."}</p>
       <div class="pane-foot">
         <button class="btn text" onClick={exportGame}>
           Save to a file
@@ -122,7 +154,7 @@ function GameSaves() {
       </div>
       {confirm ? (
         <div class="callout bad">
-          <p>Start again in an empty city? This game is lost unless you save it to a file first.</p>
+          <p>Start again in an empty city? The game in this slot is replaced. Save to a new slot or a file first to keep it.</p>
           <div class="pane-foot">
             <button
               class="btn text"

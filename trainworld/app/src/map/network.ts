@@ -9,6 +9,7 @@
 import { rgb } from "../game/palette";
 import type { ClockState } from "../workers/protocol";
 import { toLocal } from "./geo";
+import { platformAxis } from "./stationGeometry";
 
 /** Colour index of bare track (not a line). */
 export const TRACK = 0xffffff;
@@ -16,6 +17,8 @@ export const TRACK = 0xffffff;
 export const F_BLUEPRINT = 1;
 export const F_FADED = 2;
 export const F_BAD = 16;
+/** Live placement only: solid body/casing without changing its blueprint status. */
+export const F_PLACEMENT = 32;
 
 export interface Strokes {
   /** per segment: x0, y0, x1, y1 */
@@ -51,6 +54,8 @@ export interface NetworkBuffers {
   lineColours: Uint8Array;
   /** per station: x, y, flags (1 transfer, 2 blueprint) */
   stations: Float32Array;
+  /** Per station: half-platform vector along its track, in local mercator units. */
+  stationAxis?: Float32Array;
   stationIds: string[];
   stationCount: number;
   /** junction nodes (3+ edge ends, no station): x, y per node, for picking */
@@ -249,10 +254,15 @@ function slotOf(onEdge: Map<number, number[]>, edge: number, line: number): numb
   return v.indexOf(line) - (v.length - 1) / 2;
 }
 
-export function strokesFromPreview(pts: Float32Array, bad: boolean): Strokes {
+export function strokesFromPreview(pts: Float32Array, bad: boolean, speed?: Float32Array, placement = false): Strokes {
   const b = new StrokeBuilder();
-  b.add(pts, TRACK, 0xffffffff, F_BLUEPRINT | (bad ? F_BAD : 0));
-  return b.build();
+  b.add(pts, TRACK, 0xffffffff, F_BLUEPRINT | (bad ? F_BAD : 0) | (placement ? F_PLACEMENT : 0));
+  const strokes = b.build();
+  if (speed) {
+    if (speed.length !== strokes.count) throw new Error("Preview speed/segment length mismatch");
+    strokes.speed = speed;
+  }
+  return strokes;
 }
 
 export function networkFromState(s: ClockState): NetworkBuffers {
@@ -329,6 +339,11 @@ export function networkFromState(s: ClockState): NetworkBuffers {
   }
   const st = s.nodes.filter((n) => n.platform > 0);
   const stations = new Float32Array(st.length * 3);
+  const stationAxis = new Float32Array(st.length * 2);
+  // Widest bundle first, then edge id: junction platform direction is stable across rebuilds.
+  const platformEdge = new Map<number, number>();
+  for (const e of [...s.edges].sort((a,b) => (onEdge.get(b.id)?.length ?? 0)-(onEdge.get(a.id)?.length ?? 0) || a.id-b.id))
+    for (const node of [e.a,e.b]) if (!platformEdge.has(node)) platformEdge.set(node,e.id);
   // The station dot sits on the track: its node position, from the local polyline of an edge
   // that ends there (exact), else converted from lng/lat by the label code.
   const nodeLocal = new Map<number, [number, number]>();
@@ -339,6 +354,7 @@ export function networkFromState(s: ClockState): NetworkBuffers {
   });
   st.forEach((n, i) => {
     const p = nodeLocal.get(n.id) ?? lngLatLocal(n.lng, n.lat);
+    stationAxis.set(platformAxis(edgePts.get(platformEdge.get(n.id) ?? -1),p[0],p[1],n.platform/2/Math.cos(n.lat*Math.PI/180)),i*2);
     stations.set([p[0], p[1], ((served.get(n.id) ?? 0) > 1 ? 1 : 0) | (n.stationBuilt ? 0 : 2) | (Math.min(bundle.get(n.id) ?? 0, 63) << 2)], i * 3);
   });
   const jn = s.nodes.filter((n) => n.ports >= 3 && n.platform === 0);
@@ -350,6 +366,7 @@ export function networkFromState(s: ClockState): NetworkBuffers {
     lineIds,
     lineColours,
     stations,
+    stationAxis,
     stationIds: st.map((n) => String(n.id)),
     stationCount: st.length,
     junctions,

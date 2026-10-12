@@ -5,6 +5,8 @@ import { count } from "../../game/format";
 import { BUBBLE_ALPHA, modeMix } from "../../game/palette";
 import { commuterPick } from "../../map/commuterView";
 import { Row } from "../widgets";
+import { SelectionLongerTrips } from "./LongerTrips";
+import { PurposeBreakdown } from "./PurposeBreakdown";
 
 const PLACES = 8;
 
@@ -23,7 +25,7 @@ function Modes({ totals }: { totals: [number, number, number] }) {
   ];
   return (
     <ul class="rows">
-      <Row label="Commuters a day" bold>
+      <Row label="Local trip legs a day" bold>
         {count(all)}
       </Row>
       {rows.map(([name, v, m]) => (
@@ -46,13 +48,15 @@ export function CommutersInspector() {
     <>
       <div class="title">
         {swatch(...p.totals)}
-        <span class="name">{home ? "Commuters who live here" : "Commuters who work here"}</span>
+        <span class="name">{home ? "Trips from homes here" : "Trips to destinations here"}</span>
       </div>
       <div class="sub muted">{p.sel.areas === 1 ? "One area" : `${p.sel.areas} areas`}</div>
       <Modes totals={p.totals} />
+      <p class="muted small">Outward and return legs included. Longer trips are counted separately below.</p>
+      <PurposeBreakdown purposes={p.purposes} />
       <div class="h">
-        {home ? "Where they work" : "Where they live"}
-        <span class="right muted small">{p.far ? "commuters a day" : ""}</span>
+        {home ? "Where they go" : "Where their homes are"}
+        <span class="right muted small">{p.far ? "trip legs a day" : ""}</span>
       </div>
       {p.far ? (
         <ul class="rows">
@@ -63,6 +67,7 @@ export function CommutersInspector() {
       ) : (
         <p class="muted">Working it out.</p>
       )}
+      <SelectionLongerTrips />
     </>
   );
 }

@@ -3,10 +3,9 @@
 //
 // Staying glued to the basemap: an empty custom layer hands over MapLibre's camera matrix on each
 // frame MapLibre draws, and the overlay is drawn right there, in the same frame with the same
-// matrix. Our own animation-frame loop runs only for the clock; it usually runs before
-// MapLibre's callback in a frame (it asked for its frame earlier), so on its own it drew the
-// previous frame's camera while panning, a frame behind. When both draw in one frame the later
-// draw wins, and both canvases present together. Measured in notes/T-015.md.
+// matrix. The clock's animation loop skips its draw when MapLibre has a frame queued, avoiding
+// a second draw with the previous camera during panning (T-075). With the camera still, the
+// clock loop draws normally and MapLibre stays idle.
 //
 // Frames (SPEC 7): every frame while the clock runs and the window has focus; 10 fps while visible
 // but unfocused; none while hidden or paused, apart from MapLibre's own frames (camera moves,
@@ -16,17 +15,17 @@ import type { Map as MlMap } from "maplibre-gl";
 import { clock, SPEEDS } from "../game/clock";
 import type { DrawOptions, NetworkRenderer } from "./renderer";
 import { localToMerc } from "./geo";
-import { perfOff, perfTry } from "../perfFlags";
+import { perfOff } from "../perfFlags";
 
 /** ?perfOff=overlay (T-045, measurement only): skip the WebGL draw. */
 const NO_DRAW = perfOff("overlay");
 /**
  * Idle frames (T-073, adopted from T-045's ?perfTry=idle): with no trips this hour, no frames at
  * all; the clock wakes once a game minute. New game 13% -> 0.6% of a core. ?perfOff=idle reverts.
- * ?perfTry=noDouble is still a measurement-only candidate.
+ * Skip duplicate clock-loop draws when MapLibre has queued a frame (T-075).
  */
 const IDLE = !perfOff("idle");
-const NO_DOUBLE = perfTry("noDouble");
+const NO_DOUBLE = !perfOff("noDouble");
 
 /** Frame interval while the window is visible but does not have focus. */
 const UNFOCUSED_MS = 100;

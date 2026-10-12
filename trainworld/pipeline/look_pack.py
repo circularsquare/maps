@@ -49,18 +49,19 @@ def main(city, out):
         ax.set_aspect("equal")
         ax.set_title(f"{title}, {int(v.sum()):,} total", fontsize=11, color="#333333")
         ax.tick_params(labelsize=8, colors="#666666")
-        ax.set_xlabel("km east of Midtown", fontsize=9, color="#666666")
+        ax.set_xlabel("km east of pack origin", fontsize=9, color="#666666")
         for s in ax.spines.values():
             s.set_color("#cccccc")
         cb = fig.colorbar(sc, ax=ax, shrink=0.6, pad=0.01)
         cb.ax.tick_params(labelsize=8)
-    axes[0].set_ylabel("km north of Midtown", fontsize=9, color="#666666")
+    axes[0].set_ylabel("km north of pack origin", fontsize=9, color="#666666")
     fig.suptitle(f"{city} pack: {header['cells']:,} H3 res-{header['h3_res']} cells", fontsize=12, color="#333333")
     fig.tight_layout()
+    os.makedirs(os.path.dirname(os.path.abspath(out)), exist_ok=True)
     fig.savefig(out, facecolor="white")
     print(f"wrote {out}")
 
 
 if __name__ == "__main__":
     city = sys.argv[1] if len(sys.argv) > 1 else "nyc"
-    main(city, sys.argv[2] if len(sys.argv) > 2 else os.path.join(ROOT, "T-004.png"))
+    main(city, sys.argv[2] if len(sys.argv) > 2 else os.path.join(ROOT, "..", "artifacts", "trainworld", "T-004.png"))

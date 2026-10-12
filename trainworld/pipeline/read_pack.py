@@ -120,6 +120,16 @@ def is_water(m, x, y):
 
 # Places the T-030 mask must get right (lon, lat), per city.
 WATER_TESTS = {
+    "phl": {
+        True: {"Delaware at Penn's Landing": (-75.1350, 39.9460),
+               "Schuylkill by 30th Street": (-75.1795, 39.9560),
+               "Delaware River by Wilmington": (-75.4980, 39.7150),
+               "Chesapeake Bay by Cecil": (-76.0150, 39.4350)},
+        False: {"Philadelphia City Hall": (-75.1636, 39.9526),
+                "30th Street Station": (-75.1820, 39.9553),
+                "Camden City Hall": (-75.1196, 39.9450),
+                "Wilmington station": (-75.5518, 39.7373)},
+    },
     "nyc": {
         True: {"Hudson at 34th St": (-74.0150, 40.7500), "East River at the Williamsburg Br": (-73.9700, 40.7135),
                "Upper Bay": (-74.0450, 40.6700), "Jamaica Bay": (-73.8692, 40.6110), "Grassy Bay": (-73.7795, 40.6206),
@@ -184,7 +194,10 @@ def check(city):
     if "commute_home" in a or "commute_work" in a:
         h, w = a["commute_home"].astype(np.float64), a["commute_work"].astype(np.float64)
         assert len(h) == n and len(w) == n and h.min() >= 0 and w.min() >= 0
-        assert np.all(h <= a["pop"] * 1.0001 + 1e-3), "more home commuters than people in a cell"
+        # RAC counts jobs held by residents, not unique people, and is newer than the
+        # census population. New housing / multiple jobs can exceed POP20 locally.
+        assert np.isfinite(h).all() and np.isfinite(w).all(), "non-finite commute weight"
+        assert h.sum() <= a["pop"].astype(np.float64).sum(), "regional home commuters exceed population"
         assert np.all(w <= a["jobs"] * 1.0001 + 1e-3), "more commuting jobs than jobs in a cell"
         for k, v in (("commute_home", h), ("commute_work", w)):
             assert abs(v.sum() - header["totals"][k]) < 1.0, k

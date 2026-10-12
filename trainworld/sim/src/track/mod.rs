@@ -3,6 +3,7 @@
 //!
 //! - `params`: every constant (speeds, levels, costs, capacity).
 //! - `geom`: PIs to arcs and straights, heights and ramps, positions, sampling.
+//! - `frame`: the world frames, planar metres to and from longitude and latitude (T-125).
 //! - `cost`: build costs and the water mask interface.
 //! - `cross`: exact intersections and the 1 km grid.
 //! - `net`: the network as flat arrays with stable ids, derived geometry, ports, crossings,
@@ -21,6 +22,7 @@ pub mod bench;
 pub mod capacity;
 pub mod cost;
 pub mod cross;
+pub mod frame;
 pub mod geom;
 pub mod net;
 pub mod params;
@@ -32,5 +34,7 @@ pub mod service;
 pub mod wasm;
 pub mod world;
 
+#[cfg(test)]
+mod frame_tests;
 #[cfg(test)]
 mod tests;

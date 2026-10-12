@@ -10,7 +10,8 @@
 //! real; it, removing constructed track or stations, and changing a constructed junction or
 //! platform are final (they clear the undo history). Money is US$M.
 
-use super::cost::RunMask;
+use super::cost::{GeoMask, NoWater, RunMask, TransformedMask, UnionMask, WaterMask};
+use super::frame::FrameKind;
 use super::geom::{self, GeomIssue, Pi};
 use super::net::{EdgeData, Issue, LineData, Network, NodeData, StationData};
 use super::params::*;
@@ -18,6 +19,7 @@ use super::profile;
 use super::save;
 use super::world::{ChargeError, EditResult, Op, TrackWorld};
 use std::f64::consts::PI;
+use std::sync::Arc;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
@@ -36,6 +38,18 @@ pub struct TrackApi {
     last_trains: f64,
     /// The last route the drawing tool asked about: (cost, length, issues), and its vertices.
     route_vertices: Vec<Pi>,
+    /// Per rendered segment of the last route/edge preview, authoritative geometry speed km/h.
+    preview_speeds: Vec<f32>,
+    /// The pack rasters installed with `add_pack_water`, kept so the water mask can be rebuilt
+    /// when a loaded save is in another frame (T-125).
+    rasters: Vec<PackWater>,
+}
+
+/// A pack's water raster and the origin of the pack's own frame.
+struct PackWater {
+    mask: Arc<RunMask>,
+    lon: f64,
+    lat: f64,
 }
 
 /// Cars the running lines need: each line's busiest schedule's trains times its cars (T-028).
@@ -94,15 +108,93 @@ impl TrackApi {
             fleet: 0,
             last_trains: 0.0,
             route_vertices: vec![],
+            preview_speeds: vec![],
+            rasters: vec![],
         }
+    }
+
+    /// Make the network empty and put it in the world frame (Lambert conformal, `frame.rs`) or the
+    /// legacy one. False, changing nothing, if anything is drawn: a network's metres cannot be
+    /// reinterpreted, only converted (`convert_save_frame`).
+    pub fn set_empty_frame(&mut self, world: bool) -> bool {
+        let n = &self.w.net;
+        if (0..n.node_count() as u32).any(|i| n.node_ok(i)) || (0..n.line_count() as u32).any(|l| n.line_ok(l)) {
+            return false;
+        }
+        let kind = if world { FrameKind::Lcc } else { FrameKind::Equirect };
+        let mut net = Network::new_in(kind, n.origin_lon, n.origin_lat, n.right_hand);
+        std::mem::swap(&mut net.water_mask, &mut self.w.net.water_mask);
+        self.w = TrackWorld::new(net);
+        self.rebuild_water();
+        true
+    }
+
+    /// The frame of the loaded network: 0 legacy equirectangular, 1 world (Lambert conformal).
+    pub fn frame_kind(&self) -> u8 {
+        self.w.net.frame_kind as u8
+    }
+    /// The frame's origin: [lon, lat] in degrees.
+    pub fn frame_origin(&self) -> Vec<f64> {
+        vec![self.w.net.origin_lon, self.w.net.origin_lat]
+    }
+    /// Plane metres to [lon, lat] in the loaded network's frame.
+    pub fn to_lonlat(&self, x: f64, y: f64) -> Vec<f64> {
+        let (lon, lat) = self.w.net.frame().to_lonlat(x, y);
+        vec![lon, lat]
+    }
+    /// [lon, lat] to plane metres in the loaded network's frame.
+    pub fn from_lonlat(&self, lon: f64, lat: f64) -> Vec<f64> {
+        let (x, y) = self.w.net.frame().from_lonlat(lon, lat);
+        vec![x, y]
+    }
+    /// Many points at once: x, y pairs in, lon, lat pairs out.
+    pub fn many_to_lonlat(&self, xy: &[f64]) -> Vec<f64> {
+        let f = self.w.net.frame();
+        let mut out = Vec::with_capacity(xy.len());
+        for p in xy.chunks_exact(2) {
+            let (lon, lat) = f.to_lonlat(p[0], p[1]);
+            out.push(lon);
+            out.push(lat);
+        }
+        out
     }
 
     /// The pack's water mask (notes/T-004.md): header `cell_m`, `origin_m`, `size`, and the
     /// `water_row` (u32) and `water_x` (u16) arrays.
     pub fn set_water(&mut self, cell: f64, x0: f64, y0: f64, w: u32, h: u32, row: &[u32], xs: &[u16]) {
         let m = RunMask { x0, y0, cell, w, h, row: row.to_vec(), xs: xs.to_vec() };
+        self.rasters.clear();
         self.w.net.set_water_mask(Box::new(m));
         self.w.reload();
+    }
+
+    /// Reset coverage before installing the region's pack rasters.
+    pub fn clear_water(&mut self) {
+        self.rasters.clear();
+        self.w.net.set_water_mask(Box::new(NoWater));
+        self.w.reload();
+    }
+
+    /// Append a pack raster transformed into the fixed network frame by an offset and scale
+    /// (the legacy frame only; `add_pack_water` serves every frame).
+    pub fn append_water(&mut self, cell: f64, x0: f64, y0: f64, w: u32, h: u32, row: &[u32], xs: &[u16], offset_x: f64, offset_y: f64, scale_x: f64, scale_y: f64) {
+        assert!(scale_x.is_finite() && scale_x > 0.0 && scale_y.is_finite() && scale_y > 0.0);
+        let m = TransformedMask {
+            mask: Arc::new(RunMask { x0, y0, cell, w, h, row: row.to_vec(), xs: xs.to_vec() }),
+            offset: [offset_x, offset_y], scale: [scale_x, scale_y],
+        };
+        let previous = std::mem::replace(&mut self.w.net.water_mask, Box::new(NoWater));
+        self.w.net.set_water_mask(Box::new(UnionMask(previous, Box::new(m))));
+        self.w.reload();
+    }
+
+    /// Add a pack's water raster (T-125). `pack_lon`, `pack_lat` are the origin of the pack's own
+    /// equirectangular frame, in which the raster's grid is laid out. The mask follows the loaded
+    /// network's frame and is rebuilt when a save in another frame is loaded.
+    pub fn add_pack_water(&mut self, cell: f64, x0: f64, y0: f64, w: u32, h: u32, row: &[u32], xs: &[u16], pack_lon: f64, pack_lat: f64) {
+        let mask = Arc::new(RunMask { x0, y0, cell, w, h, row: row.to_vec(), xs: xs.to_vec() });
+        self.rasters.push(PackWater { mask, lon: pack_lon, lat: pack_lat });
+        self.rebuild_water();
     }
 
     /// Replace the network with a saved one. False if the bytes are not a save.
@@ -111,10 +203,19 @@ impl TrackApi {
             Ok(mut net) => {
                 std::mem::swap(&mut net.water_mask, &mut self.w.net.water_mask);
                 self.w = TrackWorld::new(net);
+                if !self.rasters.is_empty() {
+                    self.rebuild_water();
+                }
                 true
             }
             Err(_) => false,
         }
+    }
+
+    /// The save's bytes in another frame (0 legacy, 1 world), see `save::convert_frame`. Empty if
+    /// the bytes are not a save.
+    pub fn convert_save_frame(bytes: &[u8], world: bool) -> Vec<u8> {
+        save::convert_frame(bytes, if world { FrameKind::Lcc } else { FrameKind::Equirect }).unwrap_or_default()
     }
     pub fn save(&self) -> Vec<u8> {
         save::encode(&self.w.net)
@@ -295,6 +396,7 @@ impl TrackApi {
 
     /// What `set_edge_pis` would do, without doing it: the layout of `preview_route`.
     pub fn preview_edge(&mut self, id: u32, pis: &[f64]) -> Vec<f64> {
+        self.preview_speeds.clear();
         let d = match self.reshaped(id, pis) {
             Ok(d) => d,
             Err(i) => {
@@ -519,7 +621,14 @@ impl TrackApi {
         let mut out = vec![ok, cost, f.len, verts.len() as f64, mult];
         vertex_rows(&f, verts, &mut out);
         render_samples(&f.pieces, &f.vert, &mut out);
+        self.preview_speeds = render_speeds(&f.pieces, &f.vert);
         out
+    }
+
+    /// Curve-limited km/h per consecutive segment in the last route/edge preview polyline.
+    /// Separate from its stable vertex/point layout; empty after an unrenderable refusal.
+    pub fn preview_render_speeds(&self) -> Vec<f32> {
+        self.preview_speeds.clone()
     }
 
     // ---- the drawing tool (T-023, T-092)
@@ -636,6 +745,7 @@ impl TrackApi {
     /// speed limit km/h, then the polyline as x, y, height (m) triples]. `issue_kinds()` holds
     /// the problems when not ok.
     pub fn preview_route(&mut self, ends: &[f64], pis: &[f64], tracks: u8, flying: bool) -> Vec<f64> {
+        self.preview_speeds.clear();
         let (op, verts, nn, ne) = match self.route_op(ends, pis, tracks, flying) {
             Ok(v) => v,
             Err(i) => {
@@ -823,31 +933,22 @@ impl TrackApi {
     /// Add or replace a line; its path is the fastest route through the stops.
     #[allow(clippy::too_many_arguments)]
     pub fn set_line(&mut self, id: u32, stops: &[u32], high: f32, medium: f32, low: f32, dwell_s: f32, turnaround_s: f32, cars: u8, colour: u32, name: String) -> u32 {
-        if stops.len() < 2 {
-            return self.refuse(Issue::LineStops { line: id });
-        }
         let Some(path) = self.w.net.route(stops) else {
             return self.refuse(Issue::LinePath { line: id });
         };
-        self.run(Op::Line { id, data: Some(LineData { trains: None, name, colour, stops: stops.to_vec(), path, tph: [high, medium, low], dwell_s, turnaround_s, cars }) })
+        self.run(Op::Line { id, data: Some(LineData { symbol: String::new(), trains: None, name, colour, stops: stops.to_vec(), path, tph: [high, medium, low], dwell_s, turnaround_s, cars }) })
     }
     /// Add a line with a whole-line fleet at each demand level.
     #[allow(clippy::too_many_arguments)]
     pub fn set_line_with_trains(&mut self, id: u32, stops: &[u32], high: u32, medium: u32, low: u32, dwell_s: f32, turnaround_s: f32, cars: u8, colour: u32, name: String) -> u32 {
-        if stops.len() < 2 {
-            return self.refuse(Issue::LineStops { line: id });
-        }
         let Some(path) = self.w.net.route(stops) else {
             return self.refuse(Issue::LinePath { line: id });
         };
-        self.run(Op::Line { id, data: Some(LineData { trains: Some([high, medium, low]), name, colour, stops: stops.to_vec(), path, tph: [6.0, 3.0, 1.0], dwell_s, turnaround_s, cars }) })
+        self.run(Op::Line { id, data: Some(LineData { symbol: String::new(), trains: Some([high, medium, low]), name, colour, stops: stops.to_vec(), path, tph: if stops.len() < 2 { [0.0; 3] } else { [6.0, 3.0, 1.0] }, dwell_s, turnaround_s, cars }) })
     }
     /// Change a line's stops, keeping everything else; the path is found again.
     pub fn set_stops(&mut self, id: u32, stops: &[u32]) -> u32 {
         let Some(mut d) = self.w.net.line_data(id) else { return self.refuse(Issue::NoSuchLine { line: id }) };
-        if stops.len() < 2 {
-            return self.refuse(Issue::LineStops { line: id });
-        }
         let Some(path) = self.w.net.route(stops) else { return self.refuse(Issue::LinePath { line: id }) };
         d.stops = stops.to_vec();
         d.path = path;
@@ -859,6 +960,43 @@ impl TrackApi {
         d.name = name;
         d.colour = colour;
         self.run(Op::Line { id, data: Some(d) })
+    }
+    /// Custom badge symbol; omitted look edits retain it.
+    pub fn set_line_badge(&mut self, id: u32, name: String, colour: u32, symbol: String) -> u32 {
+        let Some(mut d) = self.w.net.line_data(id) else { return self.refuse(Issue::NoSuchLine { line: id }) };
+        d.name = name; d.colour = colour; d.symbol = symbol;
+        self.run(Op::Line { id, data: Some(d) })
+    }
+    pub fn copy_line(&mut self, source: u32, id: u32, name: String) -> u32 {
+        let Some(mut d) = self.w.net.line_data(source) else { return self.refuse(Issue::NoSuchLine { line: source }) };
+        d.name = name;
+        let r = self.run(Op::Line { id, data: Some(d) });
+        if r == 0 { self.w.net.next_line_number = self.w.net.next_line_number.saturating_add(1); }
+        r
+    }
+    pub fn next_line_name(&mut self) -> String {
+        loop {
+            let name = format!("Line {}", self.w.net.next_line_number);
+            self.w.net.next_line_number = self.w.net.next_line_number.saturating_add(1);
+            if !(0..self.w.net.line_count() as u32).any(|l| self.w.net.line_ok(l) && self.w.net.line_name[l as usize] == name) { return name; }
+        }
+    }
+    /// Try every insertion slot using the same turn-valid route as set_stops.
+    pub fn insert_stop(&self, line: u32, station: u32) -> Vec<f64> {
+        if !self.w.net.line_ok(line) { return vec![]; }
+        let net = &self.w.net;
+        let old = net.line_stops(line);
+        if old.contains(&station) { return vec![]; }
+        let mut best = None;
+        let mut best_len = f64::INFINITY;
+        for slot in (0..=old.len()).rev() {
+            let mut stops = old.to_vec(); stops.insert(slot, station);
+            if let Some(path) = net.route(&stops) {
+                let len: f64 = path.iter().map(|p| net.edge_len[(p >> 1) as usize]).sum();
+                if len < best_len - 0.001 { best_len = len; best = Some(stops); }
+            }
+        }
+        best.unwrap_or_default().iter().map(|&s| s as f64).collect()
     }
     pub fn remove_line(&mut self, id: u32) -> u32 {
         self.run(Op::Line { id, data: None })
@@ -898,10 +1036,6 @@ impl TrackApi {
         }
     }
 
-    /// The last refusal's problems, one per line, debug text.
-    pub fn issues(&self) -> String {
-        self.issues.iter().map(|i| format!("{i:?}")).collect::<Vec<_>>().join("\n")
-    }
     /// The last refusal's problems as kinds the UI turns into plain words, one per line:
     /// the `Issue` variant (`GroundOverWater`, `Crossing`, `CrossingOverlap`, ...), or
     /// `Geom:<GeomIssue variant>`, or `Money:<need>:<have>` (US$M).
@@ -958,13 +1092,7 @@ impl TrackApi {
     pub fn edge_render_speeds(&self, e: u32) -> Vec<f32> {
         let n = &self.w.net;
         if !n.edge_ok(e) { return vec![]; }
-        let pieces = n.edge_pieces(e);
-        let ss = render_chainages(pieces, n.edge_vert(e));
-        ss.windows(2).map(|pair| {
-            let mid = (pair[0] + pair[1]) * 0.5;
-            let i = pieces.partition_point(|p| p.s0 <= mid).saturating_sub(1);
-            (pieces[i].v_limit() * 3.6) as f32
-        }).collect()
+        render_speeds(n.edge_pieces(e), n.edge_vert(e))
     }
 
     pub fn edge_render(&self, e: u32) -> Vec<f64> {
@@ -1023,7 +1151,9 @@ impl TrackApi {
                     out.extend([n.line_dwell[i] as f64, n.line_turn[i] as f64, s.cars as f64]);
                 }
                 None => {
-                    out.extend([0.0; 10]);
+                    out.extend([0.0; 4]);
+                    out.extend(n.line_trains[i].unwrap_or([0; 3]).iter().map(|&t| t as f64));
+                    out.extend([0.0; 3]);
                     out.extend([n.line_dwell[i] as f64, n.line_turn[i] as f64, 0.0]);
                 }
             }
@@ -1032,6 +1162,9 @@ impl TrackApi {
     }
     pub fn line_name(&self, id: u32) -> String {
         self.w.net.line_name.get(id as usize).cloned().unwrap_or_default()
+    }
+    pub fn line_symbol(&self, id: u32) -> String {
+        self.w.net.line_symbol.get(id as usize).cloned().unwrap_or_default()
     }
     pub fn line_stops(&self, id: u32) -> Vec<u32> {
         if self.w.net.line_ok(id) {
@@ -1346,6 +1479,15 @@ fn lead_in_along(x: f64, y: f64, level: i8, dir: f64, toward: (f64, f64)) -> Opt
 
 /// Points along an alignment for drawing: x, y, height triples; arcs within 5 cm, straights
 /// every 100 m (so ramps show), ramp ends included.
+fn render_speeds(pieces: &[geom::Piece], vert: &[[f64; 2]]) -> Vec<f32> {
+    if pieces.is_empty() { return vec![]; }
+    render_chainages(pieces, vert).windows(2).map(|pair| {
+        let mid = (pair[0] + pair[1]) * 0.5;
+        let i = pieces.partition_point(|p| p.s0 <= mid).saturating_sub(1);
+        (pieces[i].v_limit() * 3.6) as f32
+    }).collect()
+}
+
 fn render_chainages(pieces: &[geom::Piece], vert: &[[f64; 2]]) -> Vec<f64> {
     let mut ss: Vec<f64> = vec![];
     for p in pieces {
@@ -1409,6 +1551,40 @@ pub fn track_bench_save(km: f64, stations: u32, lines: u32) -> Vec<u8> {
     save::encode(&w.net)
 }
 
+impl TrackApi {
+    /// Compose the water mask from the pack rasters for the loaded network's frame. In the legacy
+    /// frame each raster is the affine `TransformedMask` earlier builds used (same arithmetic as
+    /// the clock worker's, so the costs of legacy saves are unchanged); in the world frame it is
+    /// a `GeoMask` through longitude and latitude.
+    fn rebuild_water(&mut self) {
+        let net = &self.w.net;
+        let (frame, rad) = (net.frame(), std::f64::consts::PI / 180.0);
+        let mut mask: Box<dyn WaterMask> = Box::new(NoWater);
+        for r in &self.rasters {
+            let m: Box<dyn WaterMask> = if frame.kind == FrameKind::Equirect {
+                Box::new(TransformedMask {
+                    mask: r.mask.clone(),
+                    offset: [EARTH_R * (r.lon - frame.lon0) * rad * (frame.lat0 * rad).cos(), EARTH_R * (r.lat - frame.lat0) * rad],
+                    scale: [(frame.lat0 * rad).cos() / (r.lat * rad).cos(), 1.0],
+                })
+            } else {
+                Box::new(GeoMask::new(r.mask.clone(), frame, r.lon, r.lat))
+            };
+            mask = Box::new(UnionMask(mask, m));
+        }
+        self.w.net.set_water_mask(mask);
+        self.w.reload();
+    }
+}
+
+#[cfg(test)]
+impl TrackApi {
+    /// Detailed refusal text for native test failures; absent from the production WASM API.
+    fn issues(&self) -> String {
+        self.issues.iter().map(|i| format!("{i:?}")).collect::<Vec<_>>().join("\n")
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1418,6 +1594,151 @@ mod tests {
     }
     fn free(x: f64, y: f64) -> [f64; 5] {
         [0.0, 0.0, x, y, 0.0]
+    }
+
+    #[test]
+    fn draft_line_copy_symbol_save_and_undo() {
+        let mut a = api();
+        let id = a.new_line_id();
+        let name = a.next_line_name();
+        assert_eq!(name, "Line 1");
+        assert_eq!(a.set_line_with_trains(id, &[], 0, 0, 0, 30.0, 180.0, 0, 0xd7263d, name), 0);
+        assert!(!a.w.net.line_broken[id as usize]);
+        assert!(!a.w.svc.lines[id as usize].running);
+        assert_eq!(a.lines_info()[5..8], [0.0; 3]);
+        assert_eq!(a.set_line_badge(id, "Blue".into(), 0x123456, "AB".into()), 0);
+        let copied = a.new_line_id();
+        assert_eq!(a.copy_line(id, copied, "Blue copy".into()), 0);
+        assert_eq!(a.line_symbol(copied), "AB");
+        assert_eq!(a.set_line_look(copied, "Branch".into(), 0xffffff), 0);
+        assert_eq!(a.line_name(id), "Blue");
+        assert_eq!(a.line_symbol(copied), "AB");
+        assert_eq!(a.undo(), 0);
+        assert_eq!(a.line_name(copied), "Blue copy");
+        assert_eq!(a.undo(), 0);
+        assert!(!a.w.net.line_ok(copied));
+        assert_eq!(a.redo(), 0);
+        assert!(a.w.net.line_ok(copied));
+        let bytes = a.save();
+        let saved = save::decode(&bytes).unwrap();
+        assert_eq!(saved.line_symbol, ["AB", "AB"]);
+        assert_eq!(saved.next_line_number, 3);
+        assert!(saved.line_stops(0).is_empty());
+        // Core TWT4 without extension is still accepted, custom symbols default to initials.
+        let extension = bytes.windows(4).rposition(|w| w == b"LUI1").unwrap();
+        let old = save::decode(&bytes[..extension]).unwrap();
+        assert_eq!(old.line_symbol, ["", ""]);
+        assert_eq!(old.next_line_number, 3);
+        assert!(save::decode(&bytes[..bytes.len()-1]).is_err(), "truncated known extension refused");
+        assert_eq!(a.remove_line(id), 0);
+        let reused = a.new_line_id();
+        assert_eq!(a.next_line_name(), "Line 3", "creation numbering survives id reuse");
+        assert_eq!(a.set_line_with_trains(reused, &[], 0, 0, 0, 30.0, 180.0, 0, 0, "Line 4".into()), 0);
+        assert_eq!(a.next_line_name(), "Line 5", "taken seeded names skipped");
+    }
+
+    #[test]
+    fn insert_stop_infill_ends_and_reduce_to_empty() {
+        let mut a = api();
+        let ends: Vec<f64> = free(0.0, 0.0).iter().chain(free(6000.0, 0.0).iter()).copied().collect();
+        assert_eq!(a.add_route(&ends, &[], 2, false), 0);
+        for x in [1000.0, 2000.0, 4000.0, 5000.0] {
+            let edge = (0..a.w.net.edge_count() as u32).find(|&e| {
+                let n = &a.w.net;
+                n.edge_ok(e) && n.node_x[n.edge_a[e as usize] as usize] < x && n.node_x[n.edge_b[e as usize] as usize] > x
+            }).unwrap();
+            assert_eq!(a.add_station(2, edge, x, 0.0, 200, format!("S{x}")), 0, "{}", a.issues());
+        }
+        let station = |a: &TrackApi, x: f64| (0..a.w.net.node_count() as u32).find(|&n| a.w.net.node_platform[n as usize] > 0 && a.w.net.node_x[n as usize] == x).unwrap();
+        let (left, first, second, right) = (station(&a, 1000.0), station(&a, 2000.0), station(&a, 4000.0), station(&a, 5000.0));
+        let id = a.new_line_id();
+        assert_eq!(a.set_line_with_trains(id, &[first, right], 0, 0, 0, 30.0, 180.0, 0, 0, "Test".into()), 0);
+        assert_eq!(a.insert_stop(id, second), [first as f64, second as f64, right as f64]);
+        assert_eq!(a.insert_stop(id, left), [left as f64, first as f64, right as f64]);
+        assert_eq!(a.set_stops(id, &[first, second]), 0);
+        assert_eq!(a.insert_stop(id, right), [first as f64, second as f64, right as f64]);
+        assert!(a.insert_stop(id, first).is_empty());
+        assert!(a.insert_stop(id, u32::MAX).is_empty());
+        assert_eq!(a.construct_all(), 0);
+        assert_eq!(a.set_train_counts(id, 2, 1, 0), 0);
+        let copy = a.new_line_id();
+        assert_eq!(a.copy_line(id, copy, "Copy".into()), 0);
+        assert_eq!(a.w.net.line_data(copy).unwrap().trains, Some([2, 1, 0]));
+        assert_eq!(a.set_stops(id, &[first]), 0);
+        assert_eq!(a.line_stops(copy), [first, second], "copy stops independent");
+        assert!(!a.w.net.line_broken[id as usize]);
+        assert!(!a.w.svc.lines[id as usize].running);
+        assert_eq!(a.set_stops(id, &[]), 0);
+        assert_eq!(a.insert_stop(id, left), [left as f64]);
+        assert_eq!(a.undo(), 0);
+        assert_eq!(a.line_stops(id), [first]);
+        assert_eq!(a.redo(), 0);
+        assert!(a.line_stops(id).is_empty());
+        let loaded = super::super::world::TrackWorld::new(save::decode(&a.save()).unwrap());
+        assert!(!loaded.svc.lines[0].running);
+        assert!(loaded.net.line_stops(0).is_empty());
+    }
+
+    #[test]
+    fn preview_render_speeds_match_committed_geometry() {
+        let mut a = api();
+        let ends: Vec<f64> = free(0.0, 0.0).iter().chain(free(1000.0, 500.0).iter()).copied().collect();
+        let pis = [500.0, 0.0, 0.0, 0.0];
+        let preview = a.preview_route(&ends, &pis, 2, false);
+        let speed = a.preview_render_speeds();
+        let p0 = 5 + preview[3] as usize * 4;
+        assert_eq!(speed.len(), (preview.len() - p0) / 3 - 1);
+        assert!(speed.iter().any(|&s| s < V_TOP as f32 * 3.6 - 1.0));
+        assert!(speed.iter().any(|&s| (s - V_TOP as f32 * 3.6).abs() < 0.01));
+        assert!(a.edges_info().is_empty(), "preview cannot create track");
+        assert_eq!(a.add_route(&ends, &pis, 2, false), 0);
+        let edge = a.edges_info()[0] as u32;
+        assert_eq!(speed, a.edge_render_speeds(edge));
+        assert_eq!(&preview[p0..], a.edge_render(edge).as_slice());
+        let edge_preview = a.preview_edge(edge, &pis);
+        let ep0 = 5 + edge_preview[3] as usize * 4;
+        assert_eq!(a.preview_render_speeds().len(), (edge_preview.len()-ep0)/3-1);
+        a.preview_edge(u32::MAX, &[]);
+        assert!(a.preview_render_speeds().is_empty(), "refusal cannot reuse old preview speeds");
+    }
+
+    #[test]
+    fn render_segment_speeds_and_whole_line_fleet_charge() {
+        let mut a = api();
+        let ends: Vec<f64> = free(0.0, 0.0).iter().chain(free(1000.0, 500.0).iter()).copied().collect();
+        assert_eq!(a.add_route(&ends, &[500.0, 0.0, 0.0, 0.0], 2, false), 0, "{}", a.issues());
+        let edge = a.edges_info()[0] as u32;
+        let pts = a.edge_render(edge);
+        let speeds = a.edge_render_speeds(edge);
+        assert_eq!(speeds.len(), pts.len() / 3 - 1);
+        assert!(speeds.iter().any(|&s| s < V_TOP as f32 * 3.6 - 1.0), "curve speed present");
+        assert!(speeds.iter().any(|&s| (s - V_TOP as f32 * 3.6).abs() < 0.01), "straight speed present");
+        let nodes = a.nodes_info();
+        let (n0, n1) = (nodes[0] as u32, nodes[10] as u32);
+        assert_eq!(a.add_station(1, n0, 0.0, 0.0, 200, "West".into()), 0);
+        assert_eq!(a.add_station(1, n1, 0.0, 0.0, 200, "East".into()), 0);
+        let id = a.new_line_id();
+        assert_eq!(a.set_line_with_trains(id, &[n0, n1], 8, 4, 2, 30.0, 180.0, 0, 0xd7263d, "Line".into()), 0);
+        assert_eq!(a.w.svc.lines[id as usize].trains, [8, 4, 2]);
+        let before = a.save();
+        let (cash_before, undo_before) = (a.cash(), a.can_undo());
+        let quoted: f64 = a.blueprint_cost_items().chunks(7).map(|r| r[6]).sum();
+        let repeated: f64 = a.blueprint_cost_items().chunks(7).map(|r| r[6]).sum();
+        assert_eq!(quoted, repeated);
+        assert_eq!(a.save(), before, "quoting leaves the count-scheduled save unchanged");
+        assert_eq!((a.cash(), a.can_undo()), (cash_before, undo_before));
+        assert_eq!(a.construct_all(), 0);
+        assert!((a.last_charge() - quoted).abs() < 0.000001);
+        let cars = a.w.svc.lines[id as usize].cars;
+        assert_eq!(a.fleet(), 8 * cars);
+        let cash = a.cash();
+        assert_eq!(a.set_train_counts(id, 9, 4, 0), 0);
+        assert!((cash - a.cash() - cars as f64 * CAR_PRICE).abs() < 0.000001);
+        assert_eq!(a.w.svc.lines[id as usize].trains, [9, 4, 0]);
+        let snapshot = a.save();
+        let mut b = api();
+        assert!(b.load(&snapshot));
+        assert_eq!(b.w.svc.lines[0].trains, [9, 4, 0]);
     }
 
     #[test]
@@ -1880,5 +2201,115 @@ mod tests {
         let ends: Vec<f64> = free(0.0, 0.0).iter().chain(free(3000.0, 0.0).iter()).copied().collect();
         assert_ne!(w.add_route(&ends, &[], 2, false), 0);
         assert!(w.issue_kinds().contains("GroundOverWater"), "{}", w.issue_kinds());
+    }
+}
+#[cfg(test)]
+mod regional_water_tests {
+    use super::*;
+    fn api() -> TrackApi { TrackApi::new(-73.985, 40.758, true) }
+    #[cfg(feature = "demand")]
+    fn free(x: f64, y: f64) -> [f64; 5] { [0.0, 0.0, x, y, 0.0] }
+    #[test]
+    fn pack_water_follows_the_frame_of_the_loaded_save() {
+        // A pack at Philadelphia with one water cell of 100 m at its origin, in the Northeast.
+        let mut a = api();
+        let legacy_empty = a.save();
+        a.clear_water();
+        a.add_pack_water(100.0, 0.0, 0.0, 1, 1, &[0, 2], &[0, 1], -75.1636, 39.9526);
+        let at = |a: &TrackApi, lon: f64, lat: f64| {
+            let p = a.from_lonlat(lon, lat);
+            a.w.net.water_mask.is_water(p[0], p[1])
+        };
+        // legacy frame: the Philadelphia cell is water, a point 1 km east is not
+        assert_eq!(a.frame_kind(), 0);
+        assert!(at(&a, -75.1636 + 0.0004, 39.9526 + 0.0004));
+        assert!(!at(&a, -75.1636 + 0.012, 39.9526 + 0.0004));
+        // a world-frame network: the same ground is water, through the other chart
+        assert!(a.set_empty_frame(true));
+        assert_eq!(a.frame_kind(), 1);
+        assert!(at(&a, -75.1636 + 0.0004, 39.9526 + 0.0004));
+        assert!(!at(&a, -75.1636 + 0.012, 39.9526 + 0.0004));
+        let world_empty = a.save();
+        assert_eq!(&world_empty[..4], b"TWT5");
+        assert_eq!(&legacy_empty[..4], b"TWT4");
+        // loading each kind of save rebuilds the mask for its frame
+        assert!(a.load(&legacy_empty));
+        assert_eq!(a.frame_kind(), 0);
+        assert!(at(&a, -75.1636 + 0.0004, 39.9526 + 0.0004));
+        assert!(!at(&a, -75.1636 + 0.012, 39.9526 + 0.0004));
+        assert!(a.load(&world_empty));
+        assert_eq!(a.frame_kind(), 1);
+        assert!(at(&a, -75.1636 + 0.0004, 39.9526 + 0.0004));
+        assert!(!at(&a, -75.1636 + 0.012, 39.9526 + 0.0004));
+        // a frame cannot be switched under drawn track
+        assert!(a.set_empty_frame(false));
+        let n = a.new_node_id();
+        assert_eq!(a.add_route(&[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 3000.0, 0.0, 0.0], &[], 2, false), 0);
+        let _ = n;
+        assert!(!a.set_empty_frame(true));
+        assert_eq!(TrackApi::convert_save_frame(&a.save(), true)[..4], *b"TWT5");
+        assert!(TrackApi::convert_save_frame(b"junk", true).is_empty());
+    }
+
+    #[test]
+    fn regional_water_union_survives_legacy_network_load() {
+        let mut a = api();
+        let legacy = a.save();
+        a.set_water(25.0, 0.0, 0.0, 1, 1, &[0, 2], &[0, 1]);
+        a.append_water(25.0, 0.0, 0.0, 1, 1, &[0, 2], &[0, 1], -100000.0, -90000.0, 0.98, 1.0);
+        assert!(a.w.net.water_mask.is_water(12.0, 12.0));
+        assert!(a.w.net.water_mask.is_water(-99988.0, -89988.0));
+        assert!(!a.w.net.water_mask.is_water(-50000.0, -45000.0));
+        assert!(a.load(&legacy));
+        assert_eq!(a.save(), legacy, "adding region coverage changes no saved inputs");
+        assert_eq!(a.w.net.origin_lon, -73.985);
+        assert_eq!(a.w.net.origin_lat, 40.758);
+        assert!(a.w.net.water_mask.is_water(-99988.0, -89988.0));
+        a.set_water(25.0, 0.0, 0.0, 1, 1, &[0, 2], &[0, 1]);
+        assert!(!a.w.net.water_mask.is_water(-99988.0, -89988.0), "legacy setter replaces coverage");
+        a.clear_water();
+        assert!(a.w.net.water_mask.is_empty());
+    }
+
+    #[test]
+    #[cfg(feature = "demand")]
+    #[ignore = "requires the generated NYC and Philadelphia city packs"]
+    fn northeast_pack_water_crossings() {
+        // The same crossings, in the legacy Northeast frame and in the world frame (T-125).
+        for world_frame in [false, true] {
+            let mut a = api();
+            assert!(a.set_empty_frame(world_frame));
+            for city in ["nyc", "phl"] {
+                let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../data/packs");
+                let head: serde_json::Value = serde_json::from_slice(&std::fs::read(dir.join(format!("{city}.json"))).unwrap()).unwrap();
+                let bin = std::fs::read(dir.join(format!("{city}.bin"))).unwrap();
+                let array = |name: &str, width: usize| {
+                    let item = head["arrays"].as_array().unwrap().iter().find(|v| v["name"] == name).unwrap();
+                    let start = item["offset"].as_u64().unwrap() as usize;
+                    &bin[start..start + item["count"].as_u64().unwrap() as usize * width]
+                };
+                let water = &head["water"];
+                let m = RunMask::from_pack(water["cell_m"].as_f64().unwrap(),
+                    [water["origin_m"][0].as_f64().unwrap(), water["origin_m"][1].as_f64().unwrap()],
+                    [water["size"][0].as_u64().unwrap() as u32, water["size"][1].as_u64().unwrap() as u32],
+                    array("water_row", 4), array("water_x", 2));
+                let lon = head["origin"]["lon"].as_f64().unwrap();
+                let lat = head["origin"]["lat"].as_f64().unwrap();
+                a.add_pack_water(m.cell, m.x0, m.y0, m.w, m.h, &m.row, &m.xs, lon, lat);
+            }
+            let world = |a: &TrackApi, lon: f64, lat: f64| { let p = a.from_lonlat(lon, lat); [p[0], p[1]] };
+            for (name, lon, lat, water) in [
+                ("Hudson", -74.018, 40.742, true), ("Times Square", -73.985, 40.758, false),
+                ("Delaware at Philadelphia", -75.135, 39.950, true), ("City Hall", -75.1636, 39.9526, false),
+                ("Delaware at Trenton", -74.7755, 40.2169, true), ("Trenton station", -74.754, 40.219, false),
+            ] {
+                let [x, y] = world(&a, lon, lat);
+                assert_eq!(a.w.net.water_mask.is_water(x, y), water, "{name} (world frame {world_frame})");
+            }
+            let [x, y] = world(&a, -74.7755, 40.2169);
+            let ends: Vec<f64> = free(x - 200.0, y).into_iter().chain(free(x + 200.0, y)).collect();
+            assert_eq!(a.preview_route(&ends, &[], 2, false)[0], 0.0, "ground-level Delaware crossing refused");
+            assert!(a.issue_kinds().contains("GroundOverWater"));
+        }
     }
 }

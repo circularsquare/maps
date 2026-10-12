@@ -31,9 +31,55 @@ pub fn station(w: &mut TrackWorld, n: u32, platform: u16) {
 pub fn line(w: &mut TrackWorld, stops: &[u32], tph: [f32; 3]) -> u32 {
     let path = w.net.route(stops).expect("no route");
     let id = w.net.alloc_line();
-    let d = LineData { trains: None, name: format!("L{id}"), colour: 0, stops: stops.to_vec(), path, tph, dwell_s: 30.0, turnaround_s: 180.0, cars: 0 };
+    let d = LineData { symbol: String::new(), trains: None, name: format!("L{id}"), colour: 0, stops: stops.to_vec(), path, tph, dwell_s: 30.0, turnaround_s: 180.0, cars: 0 };
     w.apply(Op::Line { id, data: Some(d) }).unwrap();
     id
+}
+
+#[test]
+fn unused_blueprint_extension_preserves_running_service_but_planned_lines_preview_it() {
+    for tracks in [1, 2] {
+        let mut w = world();
+        let a = node(&mut w, 0.0, 0.0, 0);
+        let b = node(&mut w, 3000.0, 0.0, 0);
+        let c = node(&mut w, 6000.0, 0.0, 0);
+        let built = edge(&mut w, a, b, &[], 0).unwrap();
+        let mut data = w.net.edge_data(built).unwrap();
+        data.tracks = tracks;
+        w.apply(Op::Edge { id: built, data: Some(data) }).unwrap();
+        for n in [a, b, c] { station(&mut w, n, 200); }
+        let l = line(&mut w, &[a, b], [8.0, 4.0, 2.0]);
+        let before = w.svc.lines[l as usize].clone();
+        let capacity = w.svc.cap.canonical();
+        let trips = w.svc.trips(&w.net, 28800.0, 32400.0);
+        let blueprint = w.net.alloc_edge();
+        w.apply(Op::Edge { id: blueprint, data: Some(EdgeData {
+            a: b, b: c, tracks: 2, pis: vec![], built: false, thru: vec![],
+        }) }).unwrap();
+        let check = |w: &TrackWorld| {
+            let after = &w.svc.lines[l as usize];
+            assert!(after.running);
+            assert_eq!(before.round_trip, after.round_trip);
+            assert_eq!(before.trains, after.trains);
+            assert_eq!(before.delay, after.delay);
+            for run in 0..2 {
+                assert_eq!(before.runs[run].stop_s, after.runs[run].stop_s);
+                assert_eq!(before.runs[run].free, after.runs[run].free);
+                assert_eq!(before.runs[run].prof, after.runs[run].prof);
+            }
+            assert_eq!(capacity, w.svc.cap.canonical());
+            assert_eq!(trips, w.svc.trips(&w.net, 28800.0, 32400.0));
+        };
+        check(&w);
+        w.undo().unwrap().unwrap(); check(&w);
+        w.redo().unwrap().unwrap(); check(&w);
+        let planned = line(&mut w, &[b, c], [8.0, 4.0, 2.0]);
+        let preview = &w.svc.lines[planned as usize];
+        assert!(preview.ok && !preview.running);
+        assert_eq!(preview.runs[0].stop_s[0], 0.0, "planned station B has two planned ports");
+        assert_eq!(preview.runs[1].stop_s[1], preview.runs[1].len);
+        check(&w);
+    }
 }
 
 /// A - B - C, stations at all three; B-C bends at a PI.
@@ -395,5 +441,29 @@ fn whole_line_counts_include_congestion_and_odd_fleets() {
         let t = 8.0 * 3600.0 + 37.0;
         let trips = w.svc.trips(&w.net, t, t + 0.001);
         assert_eq!(trips.iter().filter(|tr| tr.line == id).count(), 9, "odd whole-line fleet at steady demand");
+    }
+}
+
+
+#[test]
+#[ignore = "native schedule edit timing"]
+fn whole_line_count_edit_timing() {
+    use std::time::Instant;
+    for (km, stations, lines) in [(2000.0, 800, 120), (10000.0, 3500, 500)] {
+        let mut w = TrackWorld::new(super::bench::synth(km, stations, lines, 7));
+        let id = w.svc.lines.iter().position(|s| s.ok).unwrap() as u32;
+        let mut counts = w.svc.lines[id as usize].trains;
+        let tph = w.net.line_tph[id as usize];
+        let start = Instant::now();
+        w.apply(Op::TrainCounts { id, trains: Some(counts), tph }).unwrap();
+        let conversion = start.elapsed().as_secs_f64() * 1000.0;
+        let start = Instant::now();
+        counts[0] += 1;
+        w.apply(Op::TrainCounts { id, trains: Some(counts), tph }).unwrap();
+        let edit = start.elapsed().as_secs_f64() * 1000.0;
+        let ls = &w.svc.lines[id as usize];
+        let residual = (w.net.line_tph[id as usize][0] as f64 * ls.round_trip[0] / 3600.0 - counts[0] as f64).abs();
+        assert!(residual < 0.001, "{residual}");
+        println!("{km} km: legacy conversion {conversion:.2} ms; add one train {edit:.2} ms; residual {residual:.6}");
     }
 }

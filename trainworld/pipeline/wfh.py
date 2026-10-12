@@ -43,7 +43,7 @@ def extract(table, cols, tract_keys, raw, fetch):
     if os.path.exists(path):
         d = pd.read_csv(path, dtype={"key": str})
         if want <= set(d["key"]):
-            return d
+            return d[d["key"].isin(want)].copy()
     src = fetch(ACS_SF.format(t=table))
     out = []
     for ch in pd.read_csv(src, sep="|", usecols=["GEO_ID"] + cols, dtype={"GEO_ID": str}, chunksize=200_000):
@@ -56,7 +56,10 @@ def extract(table, cols, tract_keys, raw, fetch):
     lack = sorted(want - set(d["key"]))
     if lack:
         d = pd.concat([d, pd.DataFrame({"key": lack})], ignore_index=True)
-    d.to_csv(path + ".part", index=False)
+    # Keep other cities' rows cached, but never include them in this city's rates.
+    cached = pd.read_csv(path, dtype={"key": str}) if os.path.exists(path) else None
+    saved = pd.concat([cached[~cached["key"].isin(want)], d], ignore_index=True) if cached is not None else d
+    saved.to_csv(path + ".part", index=False)
     os.replace(path + ".part", path)
     return d
 

@@ -2672,8 +2672,7 @@
 "id": "indoeuropean.iranian.kurdish",
 "label": "Kurdish",
 "parent": "indoeuropean.iranian",
-"color": "#d2764a",
-"color_own": "#b89687"
+"color": "#d27649"
 },
 {
 "id": "indoeuropean.iranian.zazaki",
@@ -18938,13 +18937,13 @@
 "id": "indoeuropean.iranian.kurdish.central",
 "label": "Central Kurdish (Sorani)",
 "parent": "indoeuropean.iranian.kurdish",
-"color": "#d2764a"
+"color": "#c76749"
 },
 {
 "id": "indoeuropean.iranian.kurdish.northern",
 "label": "Northern Kurdish (Kurmanji, Badini)",
 "parent": "indoeuropean.iranian.kurdish",
-"color": "#e79f5c"
+"color": "#dc8649"
 },
 {
 "id": "indoeuropean.iranian.shabaki",

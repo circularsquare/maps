@@ -10,18 +10,18 @@
 //   markers  capacity marker DOM tags
 //   idle     the idle-frame fix (adopted as default in T-073): frames again with no trips
 //   labelPan station labels placed individually every map frame (before T-074)
+//   noDouble duplicate clock-loop draws while MapLibre has a frame queued (before T-075)
 //
 // `?perfTry=...` turns on candidate fixes, measured in notes/T-045.md before anyone adopts them:
 //   labelLayers  each station label and capacity tag on its own compositor layer
 //                (will-change: transform), so moving it does not repaint text
 //   hoverCursor  hover writes the cursor style only when it changes
 //   idle         (adopted, now default; see perfOff idle)
-//   noDouble     the frame loop skips its own draw when MapLibre has a frame queued (it draws
-//                the overlay itself in that frame)
+//   noDouble     adopted as default in T-075; use perfOff=noDouble for the old behavior
 
 const q = new URLSearchParams(location.search);
 const off = new Set((q.get("perfOff") ?? "").split(",").filter(Boolean));
 const tries = new Set((q.get("perfTry") ?? "").split(",").filter(Boolean));
 
-export const perfOff = (part: "labels" | "shadow" | "hover" | "clock" | "overlay" | "markers" | "idle" | "labelPan") => off.has(part);
+export const perfOff = (part: "labels" | "shadow" | "hover" | "clock" | "overlay" | "markers" | "idle" | "labelPan" | "noDouble") => off.has(part);
 export const perfTry = (fix: "labelLayers" | "hoverCursor" | "idle" | "noDouble") => tries.has(fix);

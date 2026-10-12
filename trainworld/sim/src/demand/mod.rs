@@ -16,6 +16,8 @@
 pub mod alloc;
 /// T-026: the demand workers' API (`DemandApi`), in the app's wasm build.
 pub mod api;
+pub mod intercity;
+pub mod everyday;
 pub mod bench;
 pub mod clock;
 pub mod kernel;

@@ -17,9 +17,9 @@ afroasiatic.iraqi_arabic | Iraqi Arabic | 0.66 0.10 150
 afroasiatic.assyrian | Assyrian Neo-Aramaic
 indoeuropean | Indo-European
 indoeuropean.iranian | Iranian
-indoeuropean.iranian.kurdish | Kurdish | 0.66 0.13 45
-indoeuropean.iranian.kurdish.central | Central Kurdish (Sorani) | 0.66 0.13 45
-indoeuropean.iranian.kurdish.northern | Northern Kurdish (Kurmanji, Badini) | 0.76 0.12 62
+indoeuropean.iranian.kurdish | Kurdish | 0.66 0.13 46
+indoeuropean.iranian.kurdish.central | Central Kurdish (Sorani) | 0.62 0.13 38
+indoeuropean.iranian.kurdish.northern | Northern Kurdish (Kurmanji, Badini) | 0.70 0.13 54
 indoeuropean.iranian.shabaki | Shabaki | 0.58 0.10 70
 turkic | Turkic
 turkic.iraqi_turkmen | Iraqi Turkmen

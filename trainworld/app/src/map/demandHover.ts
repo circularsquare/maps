@@ -52,11 +52,9 @@ export function startHover(map: MlMap) {
     tag.style.display = "none";
     last = "";
   };
-  map.on("mousemove", (e) => {
-    if (e.originalEvent.buttons) return hide();
-    // over a capacity tag, its own tooltip answers (T-099)
-    if ((e.originalEvent.target as HTMLElement | null)?.closest?.(".cap-mark")) return hide();
-    const t = hoverAt(map, e.point.x, e.point.y);
+  const show = (e: MouseEvent, px: number, py: number) => {
+    if (e.buttons) return hide();
+    const t = hoverAt(map, px, py);
     if (!t) return hide();
     const html = t.map((s) => `<div>${s}</div>`).join("");
     if (html !== last) {
@@ -64,7 +62,15 @@ export function startHover(map: MlMap) {
       last = html;
     }
     tag.style.display = "";
-    tag.style.transform = `translate(${Math.round(e.point.x + 14)}px, ${Math.round(e.point.y + 14)}px)`;
+    tag.style.transform = `translate(${Math.round(px + 14)}px, ${Math.round(py + 14)}px)`;
+  };
+  map.on("mousemove", (e) => show(e.originalEvent, e.point.x, e.point.y));
+  // A lower capacity tag is a DOM target even when an upper demand disc covers it. MapLibre
+  // canvas events need not fire there, so use the actual pointer for those targets too.
+  map.getContainer().addEventListener("mousemove", (e) => {
+    if (!(e.target as HTMLElement | null)?.closest?.(".cap-mark")) return;
+    const r = map.getContainer().getBoundingClientRect();
+    show(e, e.clientX - r.left, e.clientY - r.top);
   });
   map.getContainer().addEventListener("mouseleave", hide);
   map.on("movestart", hide);

@@ -91,8 +91,9 @@ export function bubbleLevel(z: number): number {
 }
 
 /** Disc layers, drawn in this order. */
-export type DiscLayer = "far" | "near" | "stationFar" | "stationNear";
-const LAYERS: DiscLayer[] = ["far", "near", "stationFar", "stationNear"];
+export type DiscLayer = "inter" | "far" | "near" | "stationFar" | "stationNear";
+// "inter": a selection's or a station's longer trips (T-118), under the commuters' discs
+const LAYERS: DiscLayer[] = ["inter", "far", "near", "stationFar", "stationNear"];
 
 interface DiscSet {
   vao: WebGLVertexArrayObject;
@@ -241,7 +242,7 @@ export class DemandOverlay {
     if (b) list.push([b, this.bubbleSize]);
     for (const l of LAYERS) {
       const s = this.sets.get(l);
-      if (s) list.push([s, l === "far" || l === "near" ? this.bubbleSize : 1]);
+      if (s) list.push([s, l === "far" || l === "near" || l === "inter" ? this.bubbleSize : 1]);
     }
     if (!list.length) {
       // clear once, then leave the canvas alone

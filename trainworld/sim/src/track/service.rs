@@ -100,6 +100,7 @@ pub struct Service {
 
 fn build_run(net: &Network, l: u32, rev: bool, train_len: f64, dwell: f64) -> Option<Run> {
     let path = net.line_path(l);
+    let running = net.line_constructed(l);
     let mut run = Run::default();
     run.segs = if rev { path.iter().rev().map(|p| p ^ 1).collect() } else { path.to_vec() };
     let mut s = 0.0;
@@ -146,7 +147,10 @@ fn build_run(net: &Network, l: u32, rev: bool, train_len: f64, dwell: f64) -> Op
         }
         let mut at = run.node_s[k];
         // At a dead end the platform lies along the track: stop at its middle.
-        if net.node_ports[st as usize].n == 1 {
+        // Unused blueprints do not move the stops of a constructed service. Planned
+        // services still preview the complete planned station geometry.
+        let ports = if running { net.built_ports(st) } else { net.node_ports[st as usize].n as usize };
+        if ports == 1 {
             let half = net.node_platform[st as usize] as f64 / 2.0;
             at += if j == 0 { half } else { -half };
         }
@@ -167,6 +171,7 @@ fn build_line(net: &Network, l: u32) -> LineSvc {
         return ls;
     }
     ls.stops = net.line_stops(l).to_vec();
+    if ls.stops.len() < 2 { return ls; }
     let min_plat = net.line_stops(l).iter().map(|&s| net.node_platform[s as usize]).min().unwrap_or(0) as f64;
     let fit = (min_plat / CAR_LEN).floor().max(1.0) as u32;
     let want = net.line_cars[l as usize] as u32;

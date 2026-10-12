@@ -1,0 +1,118 @@
+[
+  {
+    "name": "Boston work selection found",
+    "ok": true
+  },
+  {
+    "name": "close view retains every positive far zone",
+    "ok": true,
+    "detail": {
+      "all": 226.68515734474093,
+      "zones": 1441,
+      "places": [
+        {
+          "place": 0,
+          "all": 134.34343224618027,
+          "rail": 0
+        },
+        {
+          "place": 3,
+          "all": 77.86475599109451,
+          "rail": 0
+        },
+        {
+          "place": 1,
+          "all": 10.571582162451955,
+          "rail": 0
+        },
+        {
+          "place": 4,
+          "all": 2.7360809983212553,
+          "rail": 0
+        },
+        {
+          "place": 2,
+          "all": 1.169305946692917,
+          "rail": 0
+        }
+      ]
+    }
+  },
+  {
+    "name": "one bubble per other city, selected Boston omitted",
+    "ok": true
+  },
+  {
+    "name": "other city totals labeled",
+    "ok": true,
+    "detail": [
+      "New York · 134 trips/day",
+      "Philadelphia · 11 trips/day",
+      "Washington, DC · 3 trips/day",
+      "Trenton · 1 trips/day"
+    ]
+  },
+  {
+    "name": "circle area proportional to total travellers",
+    "ok": true,
+    "detail": [
+      {
+        "radius": 42159.671875,
+        "colour": [
+          0.9019607901573181,
+          0.11764705926179886,
+          0.11764705926179886
+        ]
+      },
+      {
+        "radius": 11826.5751953125,
+        "colour": [
+          0.9019607901573181,
+          0.11764705926179886,
+          0.11764705926179886
+        ]
+      },
+      {
+        "radius": 6016.63232421875,
+        "colour": [
+          0.9019607901573181,
+          0.11764705926179886,
+          0.11764705926179886
+        ]
+      },
+      {
+        "radius": 3933.263916015625,
+        "colour": [
+          0.9019607901573181,
+          0.11764705926179886,
+          0.11764705926179886
+        ]
+      }
+    ]
+  },
+  {
+    "name": "work selection shows incoming Washington demand",
+    "ok": true,
+    "detail": [
+      "3 longer trips a day from Washington, DC",
+      "0 by train"
+    ]
+  },
+  {
+    "name": "regional panning retains Boston selection",
+    "ok": true
+  },
+  {
+    "name": "hide setting clears circles and labels",
+    "ok": true
+  },
+  {
+    "name": "zoom back restores detailed zones",
+    "ok": true
+  },
+  {
+    "name": "no browser exceptions",
+    "ok": true,
+    "detail": []
+  }
+]

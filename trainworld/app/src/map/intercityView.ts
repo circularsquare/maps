@@ -1,0 +1,192 @@
+// Longer trips on the map and in the inspectors (T-118, T-120, SPEC 8). The commuter views show
+// where people go to work; this shows where the same places send the market's other, longer trips
+// (visits, shopping, business; sim/src/demand/intercity.rs), which a commuter bubble cannot: a
+// Philadelphia bubble's longer trips end in New York, far off the screen.
+//
+// - A bubble selection (a `commuters` selection) asks `intercitySelection(end, cells)`: how many
+//   trips start in those cells and how many end there, by far zone and by place, all modes and by
+//   train. The map shows the far end of the selection's own end (homes: where the trips go; jobs:
+//   where they come from).
+// - A selected station asks `intercityStation(id)`: the longer-trip rail riders starting and ending
+//   there. The map shows the ones starting there (their home end is the station).
+//
+// Up close every positive far 6 km zone outside the focused market is shown on its own relative
+// trip scale. Same-city longer trips remain in the inspector only (T-139). Regional zooms
+// aggregate to one labeled circle per other market (T-135, T-136). Area represents total
+// travellers, without a minimum radius or additive size offset. Both use the same opacity and size slider, coloured by
+// `modeMix(rail, 0, everything else)`: blue train, red the rest. The display
+// setting `intercity` hides the bubbles; the numbers stay in the inspectors. Asked for, not pushed,
+// and asked again whenever `demandView` changes, keeping the last answer meanwhile.
+
+import { effect, signal } from "@preact/signals";
+import type { Map as MlMap } from "maplibre-gl";
+import { activeCity, cityById, CITIES } from "../game/cities";
+import { packToLngLat } from "../game/coords";
+import { demandView, INTERCITY_PLACES, intercitySelection, intercityStation, type IntercitySelection, type IntercityStation, type PlaceFlows } from "../game/demand";
+import { count } from "../game/format";
+import { BUBBLE_ALPHA, modeMix } from "../game/palette";
+import { display, selection } from "../game/ui";
+import type { Selection } from "../game/types";
+import { DISC } from "../workers/commutersProtocol";
+import { addFinder, discAt } from "./demandHover";
+import type { DemandOverlay } from "./demandOverlay";
+import { EARTH_C, MERC_K, toLocal, toLngLat } from "./geo";
+
+/** A bubble selection's longer trips, for the commuters inspector; null while unknown. */
+export const intercityPick = signal<{ sel: Selection; data: IntercitySelection; own: number } | null>(null);
+/** A selected station's, for the station inspector. */
+export const intercityStationView = signal<IntercityStation | null>(null);
+
+const marketOf = (id: string) => cityById(id).market;
+
+/** Regional views show the complete place totals, rather than scattered endpoint specks. */
+export const CITY_BUBBLE_ZOOM = 9.5;
+/** Keep longer-trip bubbles subordinate to the local demand view at every zoom. */
+const INTERCITY_RADIUS_SCALE = 0.5;
+
+interface Marks {
+  discs: Float32Array;
+  /** per disc, in disc order */
+  all: Float32Array;
+  rail: Float32Array;
+  verb: string;
+  railOnly: boolean;
+  names: string[];
+}
+
+export function startIntercityView(view: DemandOverlay, map: MlMap) {
+  let marks: Marks | null = null;
+  /** what is on show, redrawn when the setting changes */
+  let current: { flows: PlaceFlows; verb: string; railOnly: boolean; own: number } | null = null;
+  const labels = document.createElement("div");
+  labels.className = "intercity-labels";
+  map.getContainer().appendChild(labels);
+  const placeLabels = () => {
+    const used: { x: number; y: number; w: number; h: number }[] = [];
+    Array.from(labels.children).forEach((child, i) => {
+      const el = child as HTMLElement;
+      if (!marks) return;
+      const p = map.project(toLngLat(marks.discs[i * DISC], marks.discs[i * DISC + 1]));
+      const r = marks.discs[i * DISC + 2] * (512 * 2 ** map.getZoom() / EARTH_C) * view.bubbleSize;
+      const w = el.offsetWidth, h = el.offsetHeight;
+      const positions = [[p.x + r + 5, p.y - h / 2], [p.x - w - r - 5, p.y - h / 2], [p.x - w / 2, p.y + r + 5], [p.x - w / 2, p.y - h - r - 5]];
+      const at = positions.find(([x, y]) => x >= 0 && y >= 0 && x + w <= map.getContainer().clientWidth && y + h <= map.getContainer().clientHeight && !used.some(a => x < a.x + a.w + 4 && x + w + 4 > a.x && y < a.y + a.h + 4 && y + h + 4 > a.y));
+      el.style.visibility = at ? "" : "hidden";
+      if (at) {
+        el.style.transform = `translate(${Math.round(at[0])}px, ${Math.round(at[1])}px)`;
+        used.push({x: at[0], y: at[1], w, h});
+      }
+    });
+  };
+
+  const render = () => {
+    marks = null;
+    labels.replaceChildren();
+    if (!current || !display.peek().intercity) {
+      view.setDiscs("inter", null);
+      return;
+    }
+    const regional = map.getZoom() <= CITY_BUBBLE_ZOOM;
+    const points = regional ? current.flows.places.filter(p => p.all > 0 && p.place !== current!.own).map(p => {
+      const city = CITIES.find(c => c.market === p.place);
+      const ll = city?.center ?? packToLngLat(p.x, p.y);
+      return { ...p, ll, name: INTERCITY_PLACES[p.place] };
+    }) : current.flows.zones.filter(z => z.all > 0 && z.place !== current!.own).map(z => ({...z, ll: packToLngLat(z.x, z.y), name: ""}));
+    points.sort((a, b) => b.all - a.all);
+    const { verb, railOnly } = current;
+    const max = points[0]?.all || 1;
+    const pxPerUnit = 512 * 2 ** map.getZoom() / EARTH_C;
+    // biggest first, so the small ones draw on top of the big ones
+    const n = points.length;
+    const discs = new Float32Array(n * DISC);
+    const all = new Float32Array(n), rail = new Float32Array(n);
+    points.forEach((z, i) => {
+      const [lng, lat] = z.ll;
+      const [x, y] = toLocal(lng, lat);
+      const c = modeMix(z.rail, 0, Math.max(0, z.all - z.rail));
+      // Area, not radius, represents total travellers. Before the common radius scale, the
+      // biggest regional circle is 38px and detailed zones scale against their busiest zone.
+      // No minimum distorts smaller counts.
+      const unscaledRadius = regional ? 38 * Math.sqrt(z.all / max) / pxPerUnit
+        : Math.sqrt(0.6 * 6000 ** 2 / Math.PI * z.all / max) * MERC_K;
+      const r = unscaledRadius * INTERCITY_RADIUS_SCALE;
+      discs.set([x, y, r, c[0] / 255, c[1] / 255, c[2] / 255, BUBBLE_ALPHA, 1], i * DISC);
+      all[i] = z.all;
+      rail[i] = z.rail;
+      if (regional) {
+        const el = document.createElement("div");
+        el.className = "intercity-label";
+        el.textContent = `${z.name} · ${count(z.all)} ${railOnly ? "riders" : "trips"}/day`;
+        labels.appendChild(el);
+      }
+    });
+    marks = { discs, all, rail, verb, railOnly, names: points.map(p => p.name) };
+    view.setDiscs("inter", discs);
+    placeLabels();
+  };
+  effect(() => {
+    display.value.intercity;
+    display.value.bubbleSize;
+    render();
+  });
+  map.on("zoom", render);
+  map.on("move", placeLabels);
+  map.on("resize", placeLabels);
+
+  // under the commuter discs (order 10): where both are under the pointer, the commuters answer
+  addFinder(5, (x, y) => {
+    if (!marks) return null;
+    const i = discAt(marks.discs, x, y, view.bubbleSize);
+    if (i < 0) return null;
+    const place = marks.names[i] || "here";
+    if (marks.railOnly) return [`${count(marks.rail[i])} riders a day on longer trips ${marks.verb} ${place}`];
+    return [`${count(marks.all[i])} longer trips a day ${marks.verb} ${place}`, `${count(marks.rail[i])} by train`];
+  });
+
+  // ---- what is selected ----
+  let seen: Selection = null;
+  let ask = 0;
+  const show = (flows: PlaceFlows, verb: string, railOnly: boolean, own: number) => {
+    current = { flows, verb, railOnly, own };
+    render();
+  };
+  const clear = () => {
+    current = null;
+    intercityPick.value = null;
+    intercityStationView.value = null;
+    render();
+  };
+  effect(() => {
+    const sel = selection.value;
+    const dv = demandView.value;
+    const focus = activeCity.value;
+    if ((sel?.kind !== "commuters" && sel?.kind !== "station") || !dv) {
+      ask++;
+      seen = null;
+      clear();
+      return;
+    }
+    if (seen !== sel) {
+      // a different selection: nothing of the last one's answer stays
+      seen = sel;
+      clear();
+    }
+    const mine = ++ask;
+    void (async () => {
+      if (sel.kind === "commuters") {
+        const own = marketOf(focus);
+        const r = await intercitySelection(sel.end, Uint32Array.from(sel.cells));
+        // null: the workers moved on, and the next demandView asks again
+        if (mine !== ask || !r || selection.peek() !== sel) return;
+        intercityPick.value = { sel, data: r, own };
+        // homes: where their trips go; jobs: where the trips to them come from
+        show(sel.end === "home" ? r.starts : r.ends, sel.end === "home" ? "to" : "from", false, own);
+      } else {
+        const r = await intercityStation(sel.station);
+        if (mine !== ask || !r || selection.peek() !== sel) return;
+        intercityStationView.value = r;
+        show(r.starts, "to", true, marketOf(focus));
+      }
+    })();
+  });
+}

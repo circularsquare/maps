@@ -1,0 +1,17 @@
+{
+  "result": {
+    "stations": 1756,
+    "clustered": 1353,
+    "isolated": 403,
+    "lines": 109,
+    "round": 3,
+    "split": {
+      "train": 23.01381434885481,
+      "walk": 4.35334086459721,
+      "drive": 72.63284478654798
+    },
+    "railTripsPerDay": 3962613.77912934,
+    "webglError": 0
+  },
+  "errors": []
+}

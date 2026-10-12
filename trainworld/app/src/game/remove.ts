@@ -1,6 +1,6 @@
 // Removing track, stations and flyovers (T-096): the delete tool and the inspectors' remove
-// buttons. Blueprint goes at once (undoable); something constructed asks first in the hint area
-// above the bottom bar (`ask`, ui/Toolbar.tsx), because removing it is final and refunds nothing
+// buttons. Blueprint goes at once (undoable); something constructed asks first in the centered
+// modal (`ask`, ui/Toolbar.tsx), because removing it is final and refunds nothing
 // (SPEC 6.4). Lines are removed from the Lines tab, not here.
 
 import type { EditOp } from "../workers/protocol";
@@ -42,7 +42,7 @@ function selected(r: Removable): boolean {
   return false;
 }
 
-/** Remove it: at once if blueprint, after a yes in the hint area if constructed. */
+/** Remove it: at once if blueprint, after a modal confirmation if constructed. */
 export async function removeThing(r: Removable) {
   const d = describeRemovable(r);
   if (!d) return;

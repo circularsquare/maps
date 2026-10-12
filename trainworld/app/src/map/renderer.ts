@@ -1,3 +1,4 @@
+import { insideStation, stationBox, stationHaloRadius, stationRadii, type Project } from "./stationGeometry";
 // WebGL2 network renderer: track and line strokes (one instanced quad per polyline segment, white
 // casing under the colour; blueprint dashed and faded), station dots, the drawing tool's preview,
 // and instanced trains positioned on the GPU from keyframes (shared phase tables, notes/T-040.md)
@@ -58,7 +59,8 @@ void main() {
   int flags = int(a_flags + 0.5);
   bool sel = (u_kind == 1 && int(a_colour) == u_sel_line) || (u_kind == 0 && int(a_edge) == u_sel_edge);
   bool blueprint = (flags & 1) != 0;
-  if ((u_only_sel == 1 && !sel) || (u_casing > 0.0 && blueprint)) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
+  bool placement = (flags & 32) != 0;
+  if ((u_only_sel == 1 && !sel) || (u_casing > 0.0 && blueprint && !placement)) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
   float w = u_width.x * a_wmul + (sel ? u_width.y : 0.0) + u_casing;
   int id = gl_VertexID;
   float along = float(id & 1);
@@ -77,12 +79,12 @@ void main() {
   c.xy += off / half_vp * c.w;
   gl_Position = c;
   v_dash = a_dist * u_px_per_unit + along * len - (along * 2.0 - 1.0) * w * 0.5;
-  v_dashed = blueprint ? 1.0 : 0.0;
-  v_alpha = (flags & 3) != 0 ? 0.55 : 1.0;
+  v_dashed = blueprint && !placement ? 1.0 : 0.0;
+  v_alpha = !placement && (flags & 3) != 0 ? 0.55 : 1.0;
   vec3 lc = u_level_colours[clamp(3 - int(round(a_level)), 0, 6)];
-  if (u_casing > 0.0) v_color = vec3(1.0);
+  if (u_casing > 0.0) v_color = placement ? u_sel : vec3(1.0);
   else if ((flags & 16) != 0) v_color = u_bad;
-  else if (u_kind == 2 || u_by_level == 1) v_color = lc;
+  else if ((u_kind == 2 && !placement) || u_by_level == 1) v_color = lc;
   else if (u_by_speed == 1) {
     vec3 slow = vec3(0.8471, 0.3569, 0.2941), medium = vec3(0.8510, 0.6431, 0.2157);
     vec3 fast = vec3(0.3333, 0.6588, 0.5255), top = vec3(0.2235, 0.4824, 0.7569);
@@ -90,6 +92,7 @@ void main() {
       : a_speed < 120.0 ? mix(medium, fast, (a_speed - 80.0) / 40.0)
       : mix(fast, top, clamp((a_speed - 120.0) / 40.0, 0.0, 1.0));
   }
+  else if (placement) v_color = vec3(1.0);
   else if (u_kind == 0) v_color = sel ? u_sel : u_track;
   else v_color = texelFetch(u_line_colours, ivec2(int(a_colour) % ${LINES_W}, int(a_colour) / ${LINES_W}), 0).rgb;
 }`;
@@ -110,29 +113,35 @@ const STATION_VS = `#version 300 es
 precision highp float;
 uniform mat4 u_matrix;
 uniform vec2 u_viewport;
-uniform vec2 u_radius;   // normal, transfer (px)
-uniform float u_sel;     // index of the selected station, -1 for none
-uniform float u_slot;    // px between side-by-side lines (T-062), 0 when lines are not drawn
-in vec3 a_st;            // x, y, flags (1 transfer, 2 blueprint, lines side by side here << 2)
-in vec2 a_sz;            // the bundle's width here in line widths; riders, 0..1 (T-084)
+uniform vec2 u_radius;   // normal, transfer minimum box radius (px)
+uniform float u_sel;
+uniform float u_slot;
+uniform highp int u_halo;
+uniform float u_halo_radius;
+uniform float u_pixel;
+in vec3 a_st;
+in vec2 a_axis;          // half-platform vector in local units
+in vec2 a_sz;            // bundle width, daily riders' square-root scale
 out vec2 v_p;
-out float v_r;
+out vec2 v_size;
 out float v_alpha;
 void main() {
   int flags = int(a_st.z + 0.5);
   float r = (flags & 1) != 0 ? u_radius.y : u_radius.x;
-  // bigger with more riders (T-084): up to 2.6 times at the busiest
-  r *= 1.0 + 1.6 * a_sz.y;
-  // span the bundle of lines through it
-  if (a_sz.x > 1.5) r = max(r, 0.5 * a_sz.x * u_slot + 1.0);
-  if (float(gl_InstanceID) == u_sel) r *= 1.35;
-  vec2 corner = vec2(float(gl_VertexID & 1) * 2.0 - 1.0, gl_VertexID < 2 ? -1.0 : 1.0);
   vec4 c = u_matrix * vec4(a_st.xy, 0.0, 1.0);
-  vec2 off = corner * (r + 1.0);
-  c.xy += off / (u_viewport * 0.5) * c.w;
+  vec4 end = u_matrix * vec4(a_st.xy+a_axis, 0.0, 1.0);
+  vec2 axis = (end.xy/end.w-c.xy/c.w)*u_viewport*0.5;
+  float len = length(axis);
+  vec2 along = len > 0.000001 ? axis/len : vec2(1.0,0.0);
+  vec2 size = vec2(max(1.8*r,len),max(0.65*r,a_sz.x>1.5?0.5*a_sz.x*u_slot+u_pixel:0.0));
+  if (float(gl_InstanceID) == u_sel) size *= 1.35;
+  if (u_halo == 1) { size=vec2(u_halo_radius*a_sz.y); along=vec2(1.0,0.0); }
+  vec2 corner = vec2(float(gl_VertexID & 1)*2.0-1.0,gl_VertexID<2?-1.0:1.0);
+  v_p = corner*(size+1.0);
+  vec2 off = along*v_p.x+vec2(-along.y,along.x)*v_p.y;
+  c.xy += off/(u_viewport*0.5)*c.w;
   gl_Position = c;
-  v_p = off;
-  v_r = r;
+  v_size = size;
   v_alpha = (flags & 2) != 0 ? 0.6 : 1.0;
 }`;
 
@@ -140,15 +149,25 @@ const STATION_FS = `#version 300 es
 precision mediump float;
 uniform float u_ring;
 uniform vec3 u_ink;
+uniform highp int u_halo;
 in vec2 v_p;
-in float v_r;
+in vec2 v_size;
 in float v_alpha;
 out vec4 o;
 void main() {
-  float d = length(v_p);
-  float a = clamp(v_r - d + 0.5, 0.0, 1.0) * v_alpha;
-  vec3 col = d > v_r - u_ring ? u_ink : vec3(1.0);
-  o = vec4(col * a, a);
+  if (u_halo == 1) {
+    if (v_size.x < 0.5 || v_alpha < 0.9) discard;
+    float d=length(v_p);
+    float a=clamp(v_size.x-d+0.5,0.0,1.0)*(d>v_size.x-u_ring?0.48:0.22);
+    vec3 blue=vec3(0.118,0.235,0.902);
+    o=vec4(blue*a,a);
+  } else {
+    vec2 edge=abs(v_p)-v_size;
+    float d=max(edge.x,edge.y);
+    float a=clamp(0.5-d,0.0,1.0)*v_alpha;
+    vec3 col=d>-u_ring?u_ink:vec3(1.0);
+    o=vec4(col*a,a);
+  }
 }`;
 
 // Shared by the draw shader and the transform-feedback probe, so the probe checks the very
@@ -249,8 +268,9 @@ void main() {
   float offsetM = u_detail ? (float(car) + 0.5) * pitchM - totalM * 0.5 : 0.0;
   float carD = u_detail ? centre + offsetM : d;
   vec2 p = lineAt(L, carD);
-  vec2 px = max(u_min_px, vec2(cars * 20.0 * ${MERC_K.toFixed(6)}, 0.0) * u_px_per_unit);
-  if (u_detail) px = vec2(max(2.0 * u_dpr, pitchM * ${MERC_K.toFixed(6)} * u_px_per_unit - max(1.5 * u_dpr, ${MERC_K.toFixed(6)} * u_px_per_unit)), max(6.0 * u_dpr, 3.0 * ${MERC_K.toFixed(6)} * u_px_per_unit));
+  // Both representations share the same width: splitting into cars must not shrink the train.
+  vec2 px = max(u_min_px, vec2(cars * 20.0, 3.0) * ${MERC_K.toFixed(6)} * u_px_per_unit);
+  if (u_detail) px.x = max(2.0 * u_dpr, pitchM * ${MERC_K.toFixed(6)} * u_px_per_unit - max(1.5 * u_dpr, ${MERC_K.toFixed(6)} * u_px_per_unit));
   // Heading along the chord between the train's two ends (as its bogies sit on the track), not
   // the sample segment under its centre, which turns in steps on curves (T-047).
   float h = max(0.5 * px.x / u_px_per_unit / ${MERC_K.toFixed(6)}, 1.0);
@@ -453,6 +473,21 @@ export class NetworkRenderer {
   /** Used by picking to follow the same close-up representation. */
   detailedTrains = false;
   private stationSizeBuf: WebGLBuffer | null = null;
+  private stationSizes: Float32Array = new Float32Array(0);
+  private stationRadiiPx: [number,number] = stationRadii(12);
+  private selectedStation = -1;
+  /** Topmost visible platform box, with a small pointer tolerance; demand halos are not targets. */
+  stationAt(px: number,py: number,project: Project,padding=7): number {
+    const n=this.net;
+    if (!n) return -1;
+    for (let i=n.stationCount-1;i>=0;i--) {
+      const flag=Math.round(n.stations[i*3+2]);
+      const b=stationBox(n.stations[i*3],n.stations[i*3+1],n.stationAxis?.[i*2] ?? 0,n.stationAxis?.[i*2+1] ?? 0,
+        project,this.stationRadiiPx[flag&1],this.stationSizes[i*2] ?? Math.floor(flag/4),this.slotPx,i===this.selectedStation);
+      if (insideStation(b,px,py,padding)) return i;
+    }
+    return -1;
+  }
   /** CSS px between side-by-side lines at the last draw, 0 when lines are not drawn (picking) */
   slotPx = 0;
   private levelColours = new Float32Array([3, 2, 1, 0, -1, -2, -3].flatMap((l) => rgb(LEVEL_COLOURS[l as 3]).map((v) => v / 255)));
@@ -482,7 +517,7 @@ export class NetworkRenderer {
     this.stationProg = compile(gl, STATION_VS, STATION_FS);
     this.trainProg = compile(gl, TRAIN_VS, TRAIN_FS);
     this.strokeU = uniforms(gl, this.strokeProg, ["u_matrix", "u_viewport", "u_width", "u_casing", "u_kind", "u_sel_line", "u_sel_edge", "u_only_sel", "u_by_level", "u_by_speed", "u_px_per_unit", "u_slot", "u_level_colours", "u_track", "u_bad", "u_sel", "u_line_colours"]);
-    this.stationU = uniforms(gl, this.stationProg, ["u_matrix", "u_viewport", "u_radius", "u_ring", "u_ink", "u_sel", "u_slot"]);
+    this.stationU = uniforms(gl, this.stationProg, ["u_matrix", "u_viewport", "u_radius", "u_ring", "u_ink", "u_sel", "u_slot", "u_halo", "u_halo_radius", "u_pixel"]);
     this.trainU = uniforms(gl, this.trainProg, ["u_matrix", "u_viewport", "u_time", "u_px_per_unit", "u_min_px", "u_phases", "u_meta", "u_samples", "u_lines", "u_line_colours", "u_soff", "u_fill", "u_bad", "u_slot", "u_detail", "u_dpr", "u_cars"]);
     this.timerExt = gl.getExtension("EXT_disjoint_timer_query_webgl2");
     this.tripBuf = gl.createBuffer();
@@ -585,7 +620,8 @@ export class NetworkRenderer {
     };
     upload(this.tex.soff, l ? l.sampleOff : n.sampleOff ?? new Float32Array(samples), "r32f");
     upload(this.tex.fill, l ? l.fill : new Float32Array(samples * 2), "rg32f");
-    if (this.stationSizeBuf && n.stationCount) this.rewrite(this.stationSizeBuf, l ? l.stationSize : plainStationSize(n.stations, n.stationCount));
+    this.stationSizes = l ? l.stationSize : plainStationSize(n.stations, n.stationCount);
+    if (this.stationSizeBuf && n.stationCount) this.rewrite(this.stationSizeBuf, this.stationSizes);
   }
 
   /** Replace everything drawn but the trips (an edit). */
@@ -613,7 +649,9 @@ export class NetworkRenderer {
     this.res.push({ del: () => gl.deleteVertexArray(sv) });
     gl.bindVertexArray(this.stationVao);
     this.attrib(this.stationProg, "a_st", this.buffer(n.stations.length ? n.stations : new Float32Array(3)), 3, gl.FLOAT, 1);
-    this.stationSizeBuf = this.buffer(n.stationCount ? plainStationSize(n.stations, n.stationCount) : new Float32Array(2));
+    this.attrib(this.stationProg, "a_axis", this.buffer(n.stationAxis?.length ? n.stationAxis : new Float32Array(Math.max(1,n.stationCount)*2)),2,gl.FLOAT,1);
+    this.stationSizes=plainStationSize(n.stations,n.stationCount);
+    this.stationSizeBuf = this.buffer(n.stationCount ? this.stationSizes : new Float32Array(2));
     this.attrib(this.stationProg, "a_sz", this.stationSizeBuf, 2, gl.FLOAT, 1);
 
     this.trainVao = gl.createVertexArray()!;
@@ -740,8 +778,9 @@ export class NetworkRenderer {
     stroke(this.preview, 2, wLine, false);
 
     if (n.stationCount) {
-      const r = interp(zoom, [[9, 2.6], [12, 4.8], [15, 7]]) * dpr;
-      const rx = interp(zoom, [[9, 3.5], [12, 6.2], [15, 9]]) * dpr;
+      this.stationRadiiPx=stationRadii(zoom);
+      this.selectedStation=opt.selStation;
+      const [r,rx]=this.stationRadiiPx.map(v=>v*dpr);
       gl.useProgram(this.stationProg);
       gl.uniformMatrix4fv(this.stationU.u_matrix, false, m);
       gl.uniform2f(this.stationU.u_viewport, vp[0], vp[1]);
@@ -751,11 +790,17 @@ export class NetworkRenderer {
       gl.uniform1f(this.stationU.u_sel, opt.selStation);
       gl.uniform1f(this.stationU.u_slot, slot);
       gl.bindVertexArray(this.stationVao);
+      // Analytical circles behind the normal, still-selectable platform boxes.
+      gl.uniform1f(this.stationU.u_halo_radius,stationHaloRadius(zoom)*dpr);
+      gl.uniform1f(this.stationU.u_pixel,dpr);
+      gl.uniform1i(this.stationU.u_halo,1);
+      gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, n.stationCount);
+      gl.uniform1i(this.stationU.u_halo,0);
       gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, n.stationCount);
     }
 
     if (opt.showTrains && this.tripCount) {
-      this.detailedTrains = zoom >= 15.5;
+      this.detailedTrains = zoom >= 15;
       const tw = interp(zoom, [[9, 5], [12, 8], [15, 12]]) * dpr;
       gl.useProgram(this.trainProg);
       gl.uniformMatrix4fv(this.trainU.u_matrix, false, m);

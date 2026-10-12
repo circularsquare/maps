@@ -1,6 +1,8 @@
 //! Build costs (SPEC 6.4) and the water mask interface (T-030 will supply the real mask).
 
+use super::frame::Frame;
 use super::params::*;
+use std::sync::Arc;
 
 /// Where the water is. T-030 ships a mask in the city pack; anything that can answer "is this
 /// point water?" in local metres works here.
@@ -21,6 +23,104 @@ impl WaterMask for NoWater {
     fn is_empty(&self) -> bool {
         true
     }
+}
+
+/// A pack raster in a shared world's legacy equirectangular frame. Pack -> world is
+/// `offset + scale * point`.
+pub struct TransformedMask {
+    pub mask: Arc<RunMask>,
+    pub offset: [f64; 2],
+    pub scale: [f64; 2],
+}
+impl WaterMask for TransformedMask {
+    fn is_water(&self, x: f64, y: f64) -> bool {
+        self.mask.is_water((x - self.offset[0]) / self.scale[0], (y - self.offset[1]) / self.scale[1])
+    }
+}
+
+/// A pack raster seen from any world frame (T-125). The pack grid is laid out in the pack's own
+/// equirectangular frame, so a world point goes to longitude and latitude and from there into the
+/// pack frame. That is a few trigonometric calls, too slow to do for every sample of every edit, so
+/// the map is tabulated on a `WARP_STEP` lattice over the raster's extent and interpolated
+/// bilinearly: the map is smooth (its curvature is 1/R), which makes the interpolation off by
+/// under 0.1 m, against 25 m raster cells. A point outside the lattice is land.
+pub struct GeoMask {
+    pub mask: Arc<RunMask>,
+    /// `[xmin, ymin, xmax, ymax]` of the lattice in the world frame.
+    pub bounds: [f64; 4],
+    nx: usize,
+    /// Pack coordinates at each lattice node, row after row from the south-west corner.
+    warp: Vec<[f64; 2]>,
+}
+
+/// Lattice spacing of `GeoMask`, metres.
+pub const WARP_STEP: f64 = 2000.0;
+
+impl GeoMask {
+    pub fn new(mask: Arc<RunMask>, world: Frame, pack_lon: f64, pack_lat: f64) -> GeoMask {
+        let pack = Frame::equirect(pack_lon, pack_lat);
+        let (x0, y0) = (mask.x0, mask.y0);
+        let (x1, y1) = (x0 + mask.w as f64 * mask.cell, y0 + mask.h as f64 * mask.cell);
+        let mut b = [f64::INFINITY, f64::INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY];
+        const STEPS: usize = 32;
+        for i in 0..=STEPS {
+            let t = i as f64 / STEPS as f64;
+            let (u, v) = (x0 + (x1 - x0) * t, y0 + (y1 - y0) * t);
+            for (px, py) in [(u, y0), (u, y1), (x0, v), (x1, v)] {
+                let (lon, lat) = pack.to_lonlat(px, py);
+                let (wx, wy) = world.from_lonlat(lon, lat);
+                b = [b[0].min(wx), b[1].min(wy), b[2].max(wx), b[3].max(wy)];
+            }
+        }
+        let m = 2.0 * mask.cell + 0.002 * (b[2] - b[0]).max(b[3] - b[1]);
+        let bounds = [b[0] - m, b[1] - m, b[2] + m, b[3] + m];
+        let nx = ((bounds[2] - bounds[0]) / WARP_STEP).ceil() as usize + 2;
+        let ny = ((bounds[3] - bounds[1]) / WARP_STEP).ceil() as usize + 2;
+        let mut warp = Vec::with_capacity(nx * ny);
+        for j in 0..ny {
+            for i in 0..nx {
+                let (lon, lat) = world.to_lonlat(bounds[0] + i as f64 * WARP_STEP, bounds[1] + j as f64 * WARP_STEP);
+                let (px, py) = pack.from_lonlat(lon, lat);
+                warp.push([px, py]);
+            }
+        }
+        GeoMask { mask, bounds, nx, warp }
+    }
+
+    /// A world point in the pack's frame (bilinear), or `None` outside the lattice.
+    pub fn to_pack(&self, x: f64, y: f64) -> Option<(f64, f64)> {
+        if x < self.bounds[0] || y < self.bounds[1] {
+            return None;
+        }
+        let (fx, fy) = ((x - self.bounds[0]) / WARP_STEP, (y - self.bounds[1]) / WARP_STEP);
+        let (i, j) = (fx as usize, fy as usize);
+        let ny = self.warp.len() / self.nx;
+        if i + 1 >= self.nx || j + 1 >= ny {
+            return None;
+        }
+        let (tx, ty) = (fx - i as f64, fy - j as f64);
+        let at = |i: usize, j: usize| self.warp[j * self.nx + i];
+        let (a, b, c, d) = (at(i, j), at(i + 1, j), at(i, j + 1), at(i + 1, j + 1));
+        let lerp = |k: usize| (a[k] * (1.0 - tx) + b[k] * tx) * (1.0 - ty) + (c[k] * (1.0 - tx) + d[k] * tx) * ty;
+        Some((lerp(0), lerp(1)))
+    }
+}
+impl WaterMask for GeoMask {
+    fn is_water(&self, x: f64, y: f64) -> bool {
+        match self.to_pack(x, y) {
+            Some((px, py)) => self.mask.is_water(px, py),
+            None => false,
+        }
+    }
+}
+
+/// Keep overlapping city rasters as a union: an uncovered point in one is not evidence of land.
+pub struct UnionMask(pub Box<dyn WaterMask>, pub Box<dyn WaterMask>);
+impl WaterMask for UnionMask {
+    fn is_water(&self, x: f64, y: f64) -> bool {
+        self.0.is_water(x, y) || self.1.is_water(x, y)
+    }
+    fn is_empty(&self) -> bool { self.0.is_empty() && self.1.is_empty() }
 }
 
 impl<F: Fn(f64, f64) -> bool> WaterMask for F {
@@ -170,6 +270,24 @@ pub fn crossing_cost(level: i8, wet: bool) -> f64 {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn transformed_water_union_keeps_cell_edges_and_uncovered_land() {
+        let pack = RunMask { x0: -10.0, y0: -20.0, cell: 5.0, w: 3, h: 2,
+            row: vec![0, 2, 4], xs: vec![1, 3, 0, 1] };
+        let transformed = TransformedMask { mask: Arc::new(pack), offset: [-100000.0, -90000.0], scale: [0.5, 1.0] };
+        let at = |x, y| transformed.is_water(-100000.0 + 0.5 * x, -90000.0 + y);
+        assert!(!at(-7.5, -17.5));
+        assert!(at(-2.5, -17.5));
+        assert!(at(-7.5, -12.5));
+        assert!(!at(-2.5, -12.5));
+        assert!(!at(5.0, -17.5));
+        assert!(!at(-7.5, -10.0));
+        let union = UnionMask(Box::new(transformed), Box::new(|x: f64, y: f64| x.abs() < 1.0 && y.abs() < 1.0));
+        assert!(union.is_water(0.0, 0.0));
+        assert!(union.is_water(-100001.25, -90017.5));
+        assert!(!union.is_water(1000.0, 1000.0));
+    }
 
     #[test]
     fn spec_worked_example_20km_at_minus2_with_18_stations() {

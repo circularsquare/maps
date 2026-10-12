@@ -1,0 +1,161 @@
+[
+  {
+    "name": "four local populations solve",
+    "ok": true
+  },
+  {
+    "name": "five-market corridor summary",
+    "ok": true
+  },
+  {
+    "name": "Boston cells load",
+    "ok": true,
+    "detail": {
+      "n": 86131,
+      "first": [
+        258622.078125,
+        223980.21875
+      ],
+      "finite": true
+    }
+  },
+  {
+    "name": "Boston selectable homes visible",
+    "ok": true,
+    "detail": {
+      "x": 420,
+      "y": 125,
+      "cells": 49
+    }
+  },
+  {
+    "name": "Boston longer trips map into all five places",
+    "ok": true,
+    "detail": {
+      "matched": 1,
+      "all": 282.6230064358561,
+      "places": [
+        {
+          "id": 0,
+          "all": 171.58136743187956
+        },
+        {
+          "id": 3,
+          "all": 92.62349904759569
+        },
+        {
+          "id": 1,
+          "all": 13.356594951366988
+        },
+        {
+          "id": 4,
+          "all": 3.5962804363904914
+        },
+        {
+          "id": 2,
+          "all": 1.4652645686234127
+        }
+      ],
+      "finite": true
+    }
+  },
+  {
+    "name": "Boston map click opens its demand inspector",
+    "ok": true
+  },
+  {
+    "name": "Washington, DC cells load",
+    "ok": true,
+    "detail": {
+      "n": 156617,
+      "first": [
+        -358496.71875,
+        -257872.640625
+      ],
+      "finite": true
+    }
+  },
+  {
+    "name": "Washington, DC selectable homes visible",
+    "ok": true,
+    "detail": {
+      "x": 570,
+      "y": 110,
+      "cells": 49
+    }
+  },
+  {
+    "name": "Washington, DC longer trips map into all five places",
+    "ok": true,
+    "detail": {
+      "matched": 1,
+      "all": 189.4947966869869,
+      "places": [
+        {
+          "id": 1,
+          "all": 67.9963372555741
+        },
+        {
+          "id": 4,
+          "all": 62.19428045567737
+        },
+        {
+          "id": 0,
+          "all": 55.259802779336745
+        },
+        {
+          "id": 2,
+          "all": 2.3309502712862495
+        },
+        {
+          "id": 3,
+          "all": 1.7134259251123996
+        }
+      ],
+      "finite": true
+    }
+  },
+  {
+    "name": "Washington, DC map click opens its demand inspector",
+    "ok": true
+  },
+  {
+    "name": "both new cities earn local train riders",
+    "ok": true,
+    "detail": [
+      {
+        "id": "nyc",
+        "riders": 0
+      },
+      {
+        "id": "phl",
+        "riders": 0
+      },
+      {
+        "id": "bos",
+        "riders": 4727.808700460941
+      },
+      {
+        "id": "wdc",
+        "riders": 6093.904521493241
+      }
+    ]
+  },
+  {
+    "name": "new-city station queries decode",
+    "ok": true,
+    "detail": {
+      "local": 1591.5081691681517,
+      "regionalFinite": true
+    }
+  },
+  {
+    "name": "existing NYC save remains playable",
+    "ok": true
+  },
+  {
+    "name": "no browser exceptions",
+    "ok": true,
+    "detail": []
+  }
+]

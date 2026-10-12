@@ -96,6 +96,7 @@ impl TrackWorld {
             .filter(|&l| self.net.line_ok(l) && self.net.line_trains[l as usize].is_some() && self.svc.lines[l as usize].ok).collect();
         if ids.is_empty() { return vec![]; }
         let before = self.net.line_tph.clone();
+        let mut affected = vec![];
         for _ in 0..80 {
             let trips: Vec<[f64; 3]> = ids.iter().map(|&id| self.svc.lines[id as usize].round_trip).collect();
             let rates: Vec<[f32; 3]> = ids.iter().map(|&id| self.net.line_tph[id as usize]).collect();
@@ -110,7 +111,8 @@ impl TrackWorld {
             for &id in &ids {
                 for lev in 0..LEVELS { self.net.line_tph[id as usize][lev] *= 1.01; }
             }
-            self.svc.update_scoped(&self.net, &[], &ids, true, Some((&[], &[])));
+            let d = self.svc.update_scoped(&self.net, &[], &ids, true, Some((&[], &[])));
+            affected.extend(d.recomputed);
             let mut error = 0.0f64;
             for (j, &id) in ids.iter().enumerate() {
                 let i = id as usize;
@@ -126,11 +128,13 @@ impl TrackWorld {
                     }) as f32;
                 }
             }
-            self.svc.update_scoped(&self.net, &[], &ids, true, Some((&[], &[])));
+            let d = self.svc.update_scoped(&self.net, &[], &ids, true, Some((&[], &[])));
+            affected.extend(d.recomputed);
             if error < 0.0001 { break; }
         }
         for &id in &ids { self.svc.lines[id as usize].trains = self.net.line_trains[id as usize].unwrap(); }
-        ids.into_iter().filter(|&id| before[id as usize] != self.net.line_tph[id as usize]).collect()
+        affected.extend(ids.into_iter().filter(|&id| before[id as usize] != self.net.line_tph[id as usize]));
+        affected.sort_unstable(); affected.dedup(); affected
     }
 
     pub fn can_undo(&self) -> bool {

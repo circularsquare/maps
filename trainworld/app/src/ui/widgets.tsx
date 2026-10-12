@@ -30,7 +30,7 @@ export const Icon = {
 export function Chip({ line, size = "" }: { line: LineInput; size?: "" | "sm" | "lg" }) {
   return (
     <span class={"chip " + size} style={{ "--c": line.colour, "--ct": inkOn(line.colour) }}>
-      {line.letter}
+      <span>{line.letter}</span>
     </span>
   );
 }

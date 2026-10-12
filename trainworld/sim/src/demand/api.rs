@@ -47,7 +47,7 @@ pub const FLOW_CUT: f64 = 0.01;
 /// route's track, so crossing lines need a node each) are one station for access and change
 /// trains there without a walk. Two stations next to each other on one line are never merged.
 /// Returns the merged positions (means) and the map snapshot station -> demand station.
-fn merge_stations(st_xy: &[f32], line_off: &[u32], stops: &[u32], merge_m: f32) -> (Vec<f32>, Vec<f32>, Vec<u32>) {
+pub(crate) fn merge_stations(st_xy: &[f32], line_off: &[u32], stops: &[u32], merge_m: f32) -> (Vec<f32>, Vec<f32>, Vec<u32>) {
     let n = st_xy.len() / 2;
     let mut parent: Vec<usize> = (0..n).collect();
     fn find(p: &mut [usize], mut i: usize) -> usize {
@@ -118,19 +118,19 @@ fn merge_stations(st_xy: &[f32], line_off: &[u32], stops: &[u32], merge_m: f32) 
 }
 
 /// The network as the snapshot packs it (`set_network`).
-struct Service {
+pub(crate) struct Service {
     /// Demand stations: the snapshot's stations, those within `Params::station_merge_m` of each
     /// other merged into one (`st_map`: snapshot station -> demand station).
-    st_x: Vec<f32>,
-    st_y: Vec<f32>,
-    st_map: Vec<u32>,
-    line_off: Vec<u32>,
-    stops: Vec<u32>,
+    pub(crate) st_x: Vec<f32>,
+    pub(crate) st_y: Vec<f32>,
+    pub(crate) st_map: Vec<u32>,
+    pub(crate) line_off: Vec<u32>,
+    pub(crate) stops: Vec<u32>,
     /// Seconds, 6 per stop: per run and level, `(run * 3 + level) * n + k` from the line's
     /// offset x 6. Run 0: stop k to k + 1 (0 at the last); run 1: stop k to k - 1 (0 at the first).
-    times: Vec<f32>,
-    tph: Vec<[f32; LEVELS]>,
-    cars: Vec<f32>,
+    pub(crate) times: Vec<f32>,
+    pub(crate) tph: Vec<[f32; LEVELS]>,
+    pub(crate) cars: Vec<f32>,
 }
 
 struct Period {
@@ -147,12 +147,17 @@ struct Period {
     pairs: u64,
     /// Where the rail trips come from and go to, averaged like the loads (T-078's demand views).
     sub: SubOut,
+    /// The crowding factors the last pass was solved with, and whether every pass so far used
+    /// these same ones (free flow is all ones). Then another pass with them would give exactly
+    /// the loads already averaged in, so the round is skipped (T-119).
+    fac: Vec<f32>,
+    uniform: bool,
 }
 
 /// A pass's rail trips by place (`kernel::ModeOut`), both directions of the period's commutes
 /// counted at their home and work ends.
 struct SubOut {
-    /// Rail trips by home subzone and by work subzone, and the walk trips they took (`ModeOut`).
+    /// Rail trips by home/work subzone and legacy zero walking-loss arrays (`ModeOut`).
     rail_home: Vec<f32>,
     rail_work: Vec<f32>,
     walk_lost_home: Vec<f32>,
@@ -185,20 +190,22 @@ impl SubOut {
 
 #[wasm_bindgen]
 pub struct DemandApi {
-    city: City,
-    z: Zones,
+    pub(crate) city: City,
+    pub(crate) z: Zones,
     gr: Gravity,
-    base: Params,
+    pub(crate) base: Params,
     /// All-day home -> work trips that would walk with no rail (`Gravity::walk_trips`), and the
     /// same by home zone and by work zone.
     walk_all: f64,
     walk_home_zone: Vec<f64>,
     walk_work_zone: Vec<f64>,
-    svc: Option<Service>,
-    sz: Option<Subzones>,
+    pub(crate) svc: Option<Service>,
+    pub(crate) sz: Option<Subzones>,
+    /// The stations a trip can end at (`egress_stations`): the only ones strategies are searched to.
+    want: Vec<bool>,
     per: Vec<Option<Period>>,
-    fare_per_km: f32,
-    fare_km: Vec<f32>,
+    pub(crate) fare_per_km: f32,
+    pub(crate) fare_km: Vec<f32>,
     open_ms: f64,
 }
 
@@ -213,6 +220,13 @@ pub fn demand_periods() -> Vec<f64> {
             [h0, h1, PERIOD_LEVEL[q] as f64, TO_WORK[q] as f64, TO_HOME[q] as f64, PEAK_HOUR_FACTOR[q] as f64]
         })
         .collect()
+}
+
+/// Free the strategy tables the populations on this thread share (`kernel::with_skims`); a worker
+/// calls it when it has finished a period's stage (T-119).
+#[wasm_bindgen]
+pub fn release_skims() {
+    clear_skim_cache();
 }
 
 impl DemandApi {
@@ -230,7 +244,7 @@ impl DemandApi {
     /// The kernel's network for period `q`: that period's demand level's run times, and every
     /// period's headway (a line with no trains in a period has an infinite headway, so nobody
     /// boards it, and keeps its route nodes so results line up across periods).
-    fn period_net(svc: &Service, q: usize) -> Network {
+    pub(crate) fn period_net(svc: &Service, q: usize) -> Network {
         let lev = PERIOD_LEVEL[q];
         let nl = svc.cars.len();
         let mut net = Network {
@@ -267,24 +281,27 @@ impl DemandApi {
     /// trips rail took, the loads, the pairs and the rail trips by place.
     fn pass(&self, g: &Graph, p: &Params, q: usize) -> (f64, f64, Loads, u64, SubOut) {
         let sz = self.sz.as_ref().unwrap();
-        let sk = skims(g, p);
-        let er = station_exp(&sk, p);
-        let mo = mode_choice(&self.z, &self.gr, sz, &er, g.n_st, p);
-        drop(er);
-        // the trips home: the same station pairs reversed
-        let s = g.n_st;
-        let (w, h) = (TO_WORK[q], TO_HOME[q]);
-        let fw = w / (w + h);
-        let fh = h / (w + h);
-        let mut od = mo.od.clone();
-        for a in 0..s {
-            for t in a + 1..s {
-                let (x, y) = (od[a * s + t], od[t * s + a]);
-                od[a * s + t] = fw * x + fh * y;
-                od[t * s + a] = fw * y + fh * x;
+        // the strategies are shared with the other populations on the same service (T-119)
+        let (mo, l) = with_skims(g, p, &self.want, |sk| {
+            let er = station_exp(sk, p);
+            let mo = mode_choice(&self.z, &self.gr, sz, &er, g.n_st, p);
+            drop(er);
+            // the trips home: the same station pairs reversed
+            let s = g.n_st;
+            let (w, h) = (TO_WORK[q], TO_HOME[q]);
+            let fw = w / (w + h);
+            let fh = h / (w + h);
+            let mut od = mo.od.clone();
+            for a in 0..s {
+                for t in a + 1..s {
+                    let (x, y) = (od[a * s + t], od[t * s + a]);
+                    od[a * s + t] = fw * x + fh * y;
+                    od[t * s + a] = fw * y + fh * x;
+                }
             }
-        }
-        let l = assign(g, &sk, &od);
+            let l = assign(g, sk, &od);
+            (mo, l)
+        });
         let sub = SubOut {
             rail_home: mo.rail_by_sub,
             rail_work: mo.rail_to_sub,
@@ -376,7 +393,7 @@ impl DemandApi {
         let (z, gr, _) = city_gravity(&city, &base);
         let (walk_home_zone, walk_work_zone) = gr.walk_trips_by_zone(&z);
         let walk_all = walk_home_zone.iter().sum();
-        Ok(DemandApi { city, z, gr, base, walk_all, walk_home_zone, walk_work_zone, svc: None, sz: None, per: (0..PERIODS).map(|_| None).collect(), fare_per_km: 0.0, fare_km: vec![], open_ms: now_ms() - t0 })
+        Ok(DemandApi { city, z, gr, base, walk_all, walk_home_zone, walk_work_zone, svc: None, sz: None, want: vec![], per: (0..PERIODS).map(|_| None).collect(), fare_per_km: 0.0, fare_km: vec![], open_ms: now_ms() - t0 })
     }
 
     /// Cells, zones, home -> work trips a day, the walk share of all trips with no rail at all,
@@ -419,10 +436,13 @@ impl DemandApi {
         self.per.iter_mut().for_each(|p| *p = None);
         self.fare_km.clear();
         self.sz = None;
+        self.want.clear();
         if ns > 0 && nl > 0 {
             let net = Self::period_net(&svc, 0);
             let acc = build_access(&self.city, &net, &self.base);
-            self.sz = Some(build_subzones(&self.city, &self.z, &acc, &net, &self.base));
+            let sz = build_subzones(&self.city, &self.z, &acc, &net, &self.base);
+            self.want = egress_stations(&sz, svc.st_x.len());
+            self.sz = Some(sz);
         }
         self.svc = Some(svc);
         Ok(now_ms() - t0)
@@ -472,6 +492,8 @@ impl DemandApi {
         self.per.iter_mut().for_each(|p| *p = None);
         self.svc = None;
         self.sz = None;
+        self.want.clear();
+        clear_skim_cache();
         now_ms() - t0
     }
 
@@ -497,18 +519,40 @@ impl DemandApi {
         } else {
             (0.0, 0.0, Loads::zero(g.n_st, g.n - g.n_st), 0, SubOut::empty())
         };
-        self.per[q] = Some(Period { net, p, g, avg, rail, walk: walk0 - rail_walk, trips, round: 0, ms: now_ms() - t0, pairs, sub });
+        self.per[q] = Some(Period { net, p, g, avg, rail, walk: walk0 - rail_walk, trips, round: 0, ms: now_ms() - t0, pairs, sub, fac: no_crowding, uniform: true });
         true
     }
 
     /// One crowding round for period `q` (a penalty per segment from the averaged loads, then
     /// search, mode choice and assignment again, averaged in). False if `q` has no solve yet.
     pub fn crowd(&mut self, q: usize) -> bool {
+        let Some(Some(st)) = self.per.get(q) else { return false };
+        let total = st.avg.seg.clone();
+        self.crowd_with_external(q, &total)
+    }
+
+    /// One population's assignment under the complete shared-world segment loads. `total`
+    /// includes this population; it is frozen before ANY population advances its round.
+    pub fn crowd_with_external(&mut self, q: usize, total: &[f32]) -> bool {
+        let Some(Some(st)) = self.per.get(q) else { return false };
+        if total.len() != st.avg.seg.len() || total.iter().any(|v| !v.is_finite() || *v < 0.0) { return false; }
         let t0 = now_ms();
         let Some(mut st) = self.per.get_mut(q).and_then(|p| p.take()) else { return false };
         if self.sz.is_some() {
-            let (fac, _) = crowd_factors(&st.g, &st.net, &st.avg, &st.p);
+            let mut shared = st.avg.clone();
+            shared.seg.copy_from_slice(total);
+            let (fac, _) = crowd_factors(&st.g, &st.net, &shared, &st.p);
+            if st.uniform && fac == st.fac && !legacy() {
+                // Nothing is crowded enough to change a cost, so this round would solve what the
+                // round before did and average in the same loads: exactly nothing changes (T-119).
+                st.round += 1;
+                st.ms = now_ms() - t0;
+                self.per[q] = Some(st);
+                return true;
+            }
             set_crowding(&mut st.g, &fac);
+            st.uniform = false;
+            st.fac = fac;
             let (rail, rail_walk, l, _, sub) = self.pass(&st.g, &st.p, q);
             st.round += 1;
             let r = st.round;
@@ -586,13 +630,64 @@ impl DemandApi {
         (0..PERIODS).filter(|&q| self.period(q).is_some()).fold(0, |m, q| m | 1 << q)
     }
 
+    /// Selected commute trip legs: outward then return, each mode-major, five periods.
+    /// Same endpoint allocation as cell_modes; this is a period-specific mode query.
+    pub fn purpose_timing(&self, end: u32, cells: &[u32]) -> Vec<f32> {
+        let n = self.city.len();
+        let (tp,tj) = self.city.totals();
+        let mut out = vec![0.0; 30];
+        for q in 0..PERIODS {
+            let Some(st) = self.period(q) else { continue };
+            let mut sums = vec![0.0; 4 * self.sz.as_ref().map_or(0, |s| s.n)];
+            let ns = sums.len() / 4;
+            if ns > 0 {
+                sums[..ns].copy_from_slice(&st.sub.rail_home);
+                sums[ns..2*ns].copy_from_slice(&st.sub.rail_work);
+                sums[2*ns..3*ns].copy_from_slice(&st.sub.walk_lost_home);
+                sums[3*ns..].copy_from_slice(&st.sub.walk_lost_work);
+            }
+            let modes = self.cell_modes(&sums);
+            let share = TO_WORK[q] + TO_HOME[q];
+            for &c in cells {
+                let c = c as usize;
+                if c >= n { continue; }
+                let base = (end.min(1) as usize * 3) * n + c;
+                let rail = 2.0 * modes[base];
+                // cell_modes includes all-day walking/driving baselines: take this period's
+                // baseline and subtract its actual rail diversion, rather than scaling daily rail.
+                let daily_total = if end == 0 {
+                    (self.city.pop[c] as f64 * self.gr.total / tp.max(1e-9)) as f32
+                } else { (self.city.jobs[c] as f64 * self.gr.total / tj.max(1e-9)) as f32 };
+                let z = self.z.cell_zone[c] as usize;
+                let (mass, zmass, walkz) = if end == 0 { (self.city.pop[c], self.z.pop[z], self.walk_home_zone[z]) }
+                    else { (self.city.jobs[c], self.z.jobs[z], self.walk_work_zone[z]) };
+                let lost = if let Some(sz) = &self.sz {
+                    let u = sz.cell[c];
+                    if u == u32::MAX { 0.0 } else {
+                        let u = u as usize;
+                        let denom = if end == 0 { sz.pop[u] } else { sz.jobs[u] };
+                        let v = if end == 0 { st.sub.walk_lost_home[u] } else { st.sub.walk_lost_work[u] };
+                        if denom > 0.0 { v * mass / denom } else { 0.0 }
+                    }
+                } else { 0.0 };
+                let walk = ((walkz / zmass.max(1e-9)) as f32 * mass * share - lost).max(0.0);
+                let drive = (daily_total * share - rail - walk).max(0.0);
+                for (m, v) in [rail, walk, drive].into_iter().enumerate() {
+                    out[m*5+q] += v * TO_WORK[q] / share;
+                    out[15+m*5+q] += v * TO_HOME[q] / share;
+                }
+            }
+        }
+        out
+    }
+
     /// Subzones of the current network (0 with none).
     pub fn n_subzones(&self) -> u32 {
         self.sz.as_ref().map_or(0, |sz| sz.n as u32)
     }
 
     /// Rail trips by subzone summed over this worker's solved periods, four blocks of
-    /// `n_subzones`: by home, by work, walk trips they took by home, by work. Add the blocks of
+    /// `n_subzones`: rail by home/work, then legacy zero walking-loss blocks. Add the blocks of
     /// every worker and pass the sum to `cell_modes`.
     pub fn sub_sums(&self) -> Vec<f32> {
         let ns = self.n_subzones() as usize;
@@ -771,7 +866,7 @@ impl DemandApi {
 
     /// Step 1, every worker: the selected cells' rail trips over this worker's solved periods,
     /// three blocks of `n_subzones`: by subzone at the far end; and for the selected subzones at
-    /// their own end, all their rail trips and the walk trips rail took (whole subzones, not
+    /// their own end, rail trips and legacy zero walking-loss values (whole subzones, not
     /// scaled to the selection; `flows` does that per cell, as `cell_modes` does). Trips, both
     /// directions: add every worker's blocks and pass the sum to `flows`. Riders boarding at a
     /// station are assumed to spread over the stations they ride to like all its riders, and
@@ -923,7 +1018,7 @@ impl DemandApi {
         for v in 0..ns {
             r_z[szone[v] as usize] += sums[v] as f64 / 2.0;
         }
-        // the walk trips rail took, spread by rail and the walk share to each far zone
+        // Legacy loss reconciliation (zero since T-153); layout retained for worker compatibility.
         let lost_w: f64 = (0..nz).filter(|&b| t_z[b] > 0.0).map(|b| r_z[b] * w_z[b] / t_z[b]).sum();
         let lf = if lost_w > 0.0 { lost / lost_w } else { 0.0 };
         // per far cell: its zone's commuters by its people, rail from its subzone, the rest split
@@ -1005,6 +1100,11 @@ impl DemandApi {
     pub fn cell_h3(&self) -> Vec<u64> {
         self.city.h3.clone()
     }
+    /// The weights of local commuting per cell: commuters living there, then commuters working
+    /// there (T-118: a selection's share of a 600 m square of the longer-trip market).
+    pub fn cell_commuters(&self) -> Vec<f32> {
+        self.city.pop.iter().chain(self.city.jobs.iter()).copied().collect()
+    }
     /// Gravity zone of each cell.
     pub fn cell_zone(&self) -> Vec<u32> {
         self.z.cell_zone.clone()
@@ -1081,6 +1181,111 @@ mod tests {
     }
 
     #[test]
+    fn shared_crowding_uses_complete_loads_without_overwriting_own_assignment() {
+        let (mut own, xy, n, stops, times, tph, cars) = small();
+        let (mut external, ..) = small();
+        let (mut legacy, ..) = small();
+        for api in [&mut own, &mut external, &mut legacy] {
+            api.set_network(&xy, &n, &stops, &times, &tph, &cars).unwrap();
+            assert!(api.solve(0));
+        }
+        let loads = own.seg(0);
+        assert!(own.crowd_with_external(0, &loads));
+        assert!(legacy.crowd(0));
+        assert_eq!(own.seg(0), legacy.seg(0), "own-only external input exactly preserves old solver");
+        let shared: Vec<f32> = loads.iter().map(|v| v * 50.0).collect();
+        assert!(external.crowd_with_external(0, &shared));
+        assert!(external.summary(0)[2] < own.summary(0)[2], "other populations must reduce this population's rail choice when trains are full");
+        assert!(external.seg(0).iter().sum::<f32>() < shared.iter().sum::<f32>(), "assignment remains this population, not the summed feedback vector");
+        let before = external.seg(0);
+        assert!(!external.crowd_with_external(0, &[f32::NAN]));
+        let mut invalid = shared; invalid[0] = -1.0;
+        assert!(!external.crowd_with_external(0, &invalid));
+        assert_eq!(external.seg(0), before, "bad shared loads leave period intact");
+        assert_eq!(external.summary(0)[0], 1.0);
+    }
+
+    /// T-119: strategies are searched only towards stations someone can alight at. A line out in the
+    /// country (no cell within the walk's bound of its stations) is not searched towards, and the
+    /// pass gives what a search towards every station gives, bit for bit.
+    #[test]
+    fn searching_only_the_egress_stations_changes_nothing() {
+        let (mut api, mut xy, mut n, mut stops, mut times, mut tph, mut cars) = small();
+        // a third line of two stations 60 km out, 4 minutes between them
+        let far = (xy.len() / 2) as u32;
+        xy.extend([60_000.0, 0.0, 62_000.0, 0.0]);
+        n.push(2);
+        stops.extend([far, far + 1]);
+        for _ in 0..2 {
+            times.extend([240.0, 0.0, 240.0, 0.0, 240.0, 0.0]);
+        }
+        // run 1 of a two-stop line: stop 1 to stop 0
+        let at = times.len() - 6;
+        times[at..].copy_from_slice(&[0.0, 240.0, 0.0, 240.0, 0.0, 240.0]);
+        tph.extend([6.0, 6.0, 6.0]);
+        cars.push(8.0);
+        api.set_network(&xy, &n, &stops, &times, &tph, &cars).unwrap();
+        assert!(api.want.iter().any(|&w| !w) && api.want.iter().any(|&w| w), "some stations searched, some not");
+        assert!(!api.want[far as usize] && !api.want[far as usize + 1]);
+        api.solve(0);
+        api.crowd(0);
+        let st = api.per[0].as_ref().unwrap();
+        clear_skim_cache();
+        let (rail, rail_walk, l, pairs, sub) = api.pass(&st.g, &st.p, 0);
+        // the reference: every station searched, nothing cached
+        let sz = api.sz.as_ref().unwrap();
+        let sk = kernel::skims(&st.g, &st.p);
+        let er = kernel::station_exp(&sk, &st.p);
+        let mo = kernel::mode_choice(&api.z, &api.gr, sz, &er, st.g.n_st, &st.p);
+        let s = st.g.n_st;
+        let (w, h) = (TO_WORK[0], TO_HOME[0]);
+        let (fw, fh) = (w / (w + h), h / (w + h));
+        let mut od = mo.od.clone();
+        for a in 0..s {
+            for t in a + 1..s {
+                let (x, y) = (od[a * s + t], od[t * s + a]);
+                od[a * s + t] = fw * x + fh * y;
+                od[t * s + a] = fw * y + fh * x;
+            }
+        }
+        let want = kernel::assign(&st.g, &sk, &od);
+        assert_eq!((rail, rail_walk, pairs), (mo.rail, mo.rail_walk, mo.pairs));
+        assert_eq!(l.seg, want.seg);
+        assert_eq!(l.board, want.board);
+        assert_eq!(l.rn_board, want.rn_board);
+        assert_eq!(l.rn_alight, want.rn_alight);
+        assert_eq!(l.entry, want.entry);
+        assert_eq!(sub.od, mo.od);
+        assert!(rail > 0.0);
+        clear_skim_cache();
+    }
+
+    /// T-119: when nothing is crowded a crowding round solves what the free-flow estimate did, so it
+    /// is skipped, and the skip changes nothing: the loads, the rail trips and the views' sums are
+    /// the free-flow estimate's to the last bit, round by round, and the round count still moves.
+    #[test]
+    fn uncrowded_rounds_repeat_the_estimate_exactly() {
+        let (mut api, xy, n, stops, times, tph, _) = small();
+        api.set_network(&xy, &n, &stops, &times, &tph, &[400.0, 400.0]).unwrap();
+        api.solve(0);
+        let (seg, rail, sums) = (api.seg(0), api.summary(0)[2], api.sub_sums());
+        for r in 1..=3 {
+            assert!(api.crowd(0));
+            assert_eq!(api.summary(0)[0], r as f64);
+            assert_eq!(api.seg(0), seg);
+            assert_eq!(api.summary(0)[2], rail);
+            assert_eq!(api.sub_sums(), sums);
+        }
+        // a skipped round is the pass it replaces: the same network crowded the legacy way gives the same
+        let (mut crowded, xy, n, stops, times, tph, cars) = small();
+        crowded.set_network(&xy, &n, &stops, &times, &tph, &cars).unwrap();
+        crowded.solve(0);
+        let free = crowded.seg(0);
+        crowded.crowd(0);
+        assert_ne!(crowded.seg(0), free, "a crowded network moves in a round");
+    }
+
+    #[test]
     fn fares_change_ridership_and_preserve_legacy_price() {
         let (mut api, xy, n, stops, times, tph, cars) = small();
         api.set_network(&xy, &n, &stops, &times, &tph, &cars).unwrap();
@@ -1154,6 +1359,34 @@ mod tests {
                 assert_eq!(graph.adj_cost[e], 2.0 * graph.rn_ride[r] + km[r] * 1.5);
             }
         }
+    }
+
+    #[test]
+    fn short_commutes_reserve_walking_before_rail_choice() {
+        let city = pack::City { name: "short".into(), h3: vec![1, 2],
+            x: vec![0.0, 300.0], y: vec![0.0, 0.0],
+            pop: vec![100.0, 0.0], jobs: vec![0.0, 100.0], gravity: None };
+        let (h, b) = pack::write(&city);
+        let mut api = DemandApi::new(&h, &b).unwrap();
+        let baseline = api.info()[3];
+        assert!(baseline > 0.8, "same-zone trips overwhelmingly walk");
+        api.params_mut().asc_rail = 20.0; // even overwhelmingly attractive rail cannot take walkers
+        let times = [10.0,0.0,10.0,0.0,10.0,0.0,0.0,10.0,0.0,10.0,0.0,10.0];
+        api.set_network(&[0.0,0.0,300.0,0.0], &[2], &[0,1], &times, &[60.0;3], &[4.0]).unwrap();
+        api.set_fares(0.0, 0.0, &[0.3,0.0,0.0,0.3]).unwrap();
+        for q in 0..5 {
+            api.solve(q);
+            let v = api.summary(q);
+            assert!((v[3]/v[1]-baseline).abs()<1e-6);
+            assert!(v[2] > 0.0 && v[2]/v[1] <= 1.0-baseline+1e-5);
+            api.crowd(q);
+            let crowded = api.summary(q);
+            assert!((crowded[3]/crowded[1]-baseline).abs()<1e-6);
+        }
+        let sums = api.flow_rail(1, &[1]);
+        let flows = api.flows(1, &[1], &sums);
+        assert!((flows[1] as f64/(flows[0]+flows[1]+flows[2]) as f64-baseline).abs()<1e-5);
+        println!("300m same-zone commute: walk {:.2}%, rail capped {:.2}%", baseline*100.0,(1.0-baseline)*100.0);
     }
 
     #[test]
@@ -1349,6 +1582,232 @@ mod tests {
             walk += s[3];
         }
         println!("day: {:.0} trips, train {:.1}%, walk {:.1}%, drive {:.1}%", trips, 100.0 * rail / trips, 100.0 * walk / trips, 100.0 * (1.0 - (rail + walk) / trips));
+    }
+
+    /// T-119: the real combined Northeast network (nyc_real_track.json plus one Philadelphia line)
+    /// solved as the app's workers do (both city populations and the regional market, five periods,
+    /// free flow and three crowding rounds), with timings per stage. With `TW_DUMP=<file>` the
+    /// summed results are written; with `TW_COMPARE=<file>` they are compared to such a file.
+    /// `cargo test --release --features demand northeast_profile -- --ignored --nocapture`
+    #[test]
+    #[ignore]
+    fn northeast_profile() {
+        use crate::demand::intercity::IntercityApi;
+        let root = concat!(env!("CARGO_MANIFEST_DIR"), "/..");
+        let nyc = pack::load_raw(&format!("{root}/data/packs/nyc.json")).unwrap();
+        let phl = pack::load_raw(&format!("{root}/data/packs/phl.json")).unwrap();
+        let ic_header = std::fs::read_to_string(format!("{root}/data/packs/intercity.json")).unwrap();
+        let t0 = now_ms();
+        let mut pops = [DemandApi::new(&nyc.0, &nyc.1).unwrap(), DemandApi::new(&phl.0, &phl.1).unwrap()];
+        let mut ic = IntercityApi::new(&ic_header).unwrap();
+        println!("open {:.0} ms", now_ms() - t0);
+        let j: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(format!("{root}/data/work/realnet/nyc_real_track.json")).unwrap()).unwrap();
+        let d = &j["demand"];
+        let f32s = |k: &str| d[k].as_array().unwrap().iter().map(|v| v.as_f64().unwrap() as f32).collect::<Vec<f32>>();
+        let u32s = |k: &str| d[k].as_array().unwrap().iter().map(|v| v.as_u64().unwrap() as u32).collect::<Vec<u32>>();
+        let (mut st_xy, mut line_n, mut stops, mut times, mut tph, mut cars) = (f32s("st_xy"), u32s("line_n"), u32s("stops"), f32s("times"), f32s("tph"), f32s("cars"));
+        // one Philadelphia line: two stations 4 km apart under City Hall's world position
+        const R: f64 = 6371008.8;
+        let rad = std::f64::consts::PI / 180.0;
+        let wx = R * (-75.1636 + 73.985) * rad * (40.758 * rad).cos();
+        let wy = R * (39.9526 - 40.758) * rad;
+        let a = (st_xy.len() / 2) as u32;
+        st_xy.extend([wx as f32, (wy - 2000.0) as f32, wx as f32, (wy + 2000.0) as f32]);
+        line_n.push(2);
+        stops.extend([a, a + 1]);
+        for run in 0..2 {
+            for _ in 0..3 {
+                times.extend(if run == 0 { [600.0, 0.0] } else { [0.0, 600.0] });
+            }
+        }
+        // `times` is laid out per line as 6 blocks of n values; the NYC lines were pushed in that order
+        tph.extend([4.0, 4.0, 2.0]);
+        cars.push(8.0);
+        let ns = st_xy.len() / 2;
+        println!("{ns} stations, {} lines, {} stops", line_n.len(), stops.len());
+        let hop_km: Vec<f32> = {
+            let mut v = vec![];
+            let mut off = 0usize;
+            for &n in &line_n {
+                for dir in 0..2 {
+                    for i in 0..n as usize {
+                        let k = if dir == 0 { off + i } else { off + n as usize - 1 - i };
+                        let next = if dir == 0 { k + 1 } else { k.wrapping_sub(1) };
+                        v.push(if i + 1 < n as usize {
+                            let (s0, s1) = (stops[k] as usize, stops[next] as usize);
+                            ((st_xy[2 * s0] - st_xy[2 * s1]).hypot(st_xy[2 * s0 + 1] - st_xy[2 * s1 + 1])) / 1000.0
+                        } else {
+                            0.0
+                        });
+                    }
+                }
+                off += n as usize;
+            }
+            v
+        };
+        // the game's start fare is 0.1 a km; TW_PERKM=0 shows the changes that must be exact
+        if std::env::var("TW_LEGACY").is_ok() {
+            kernel::LEGACY.store(true, std::sync::atomic::Ordering::Relaxed);
+            println!("LEGACY: the solver as it was before T-119");
+        }
+        let per_km: f32 = std::env::var("TW_PERKM").ok().and_then(|v| v.parse().ok()).unwrap_or(0.1);
+        let origin = [(-73.985f64, 40.758f64), (-75.1636, 39.9526)];
+        for (k, a) in pops.iter_mut().enumerate() {
+            let (lon0, lat0) = origin[k];
+            let mut xy = st_xy.clone();
+            for i in 0..ns {
+                let lon = -73.985 + xy[2 * i] as f64 / (R * (40.758 * rad).cos() * rad);
+                let lat = 40.758 + xy[2 * i + 1] as f64 / (R * rad);
+                xy[2 * i] = (R * (lon - lon0) * rad * (lat0 * rad).cos()) as f32;
+                xy[2 * i + 1] = (R * (lat - lat0) * rad) as f32;
+            }
+            let ms = a.set_network(&xy, &line_n, &stops, &times, &tph, &cars).unwrap();
+            a.set_fares(2.9, per_km, &hop_km).unwrap();
+            println!("pop {k}: set_network {ms:.0} ms, {} subzones", a.n_subzones());
+        }
+        let ms = ic.set_network(&st_xy, &line_n, &stops, &times, &tph, &cars).unwrap();
+        ic.set_fares(2.9, per_km, &hop_km).unwrap();
+        println!("intercity set_network {ms:.0} ms");
+        // stage breakdown of the big population, period 0
+        {
+            let a = &mut pops[0];
+            a.solve(0);
+            let st = a.per[0].as_ref().unwrap();
+            let t = now_ms();
+            let g = kernel::build_graph(&st.net, &st.p);
+            let t_graph = now_ms() - t;
+            let t = now_ms();
+            let sk = kernel::skims(&g, &st.p);
+            let t_skims = now_ms() - t;
+            let t = now_ms();
+            let er = kernel::station_exp(&sk, &st.p);
+            let t_er = now_ms() - t;
+            let t = now_ms();
+            let mo = kernel::mode_choice(&a.z, &a.gr, a.sz.as_ref().unwrap(), &er, g.n_st, &st.p);
+            let t_mode = now_ms() - t;
+            let t = now_ms();
+            let _l = kernel::assign(&g, &sk, &mo.od);
+            let t_assign = now_ms() - t;
+            println!("NYC period 0 breakdown: graph {t_graph:.0}, skims {t_skims:.0}, station_exp {t_er:.0}, mode_choice {t_mode:.0} ({} pairs), assign {t_assign:.0} ms; S={} N={}", mo.pairs, g.n_st, g.n);
+        }
+        for a in pops.iter_mut() {
+            a.per.iter_mut().for_each(|p| *p = None);
+        }
+        let mut result = serde_json::Map::new();
+        crate::demand::alloc::reset_peak();
+        let live0 = crate::demand::alloc::current();
+        let tstart = now_ms();
+        let mut stage_ms = vec![[0.0f64; 3]; 4];
+        for round in 0..4 {
+            let tr = now_ms();
+            let mut per_period: Vec<f64> = vec![];
+            for q in 0..PERIODS {
+                let sum = |pops: &[DemandApi; 2], ic: &IntercityApi| -> Vec<f32> {
+                    let mut out = pops[0].seg(q);
+                    for (o, v) in out.iter_mut().zip(pops[1].seg(q)) {
+                        *o += v;
+                    }
+                    for (o, v) in out.iter_mut().zip(ic.seg(q)) {
+                        *o += v;
+                    }
+                    out
+                };
+                if round == 0 {
+                    for (k, a) in pops.iter_mut().enumerate() {
+                        let t = now_ms();
+                        a.solve(q);
+                        stage_ms[round][k] += now_ms() - t;
+                    }
+                    let t = now_ms();
+                    ic.solve(q);
+                    stage_ms[round][2] += now_ms() - t;
+                } else {
+                    let total = sum(&pops, &ic);
+                    for (k, a) in pops.iter_mut().enumerate() {
+                        let t = now_ms();
+                        assert!(a.crowd_with_external(q, &total));
+                        stage_ms[round][k] += now_ms() - t;
+                    }
+                    let t = now_ms();
+                    assert!(ic.crowd_with_external(q, &total));
+                    stage_ms[round][2] += now_ms() - t;
+                }
+                release_skims();
+                print!("[p{q} {:.0}] ", now_ms() - tr - per_period.iter().sum::<f64>());
+                per_period.push(now_ms() - tr - per_period.iter().sum::<f64>());
+            }
+            println!();
+            per_period.clear();
+            println!("round {round}: all five periods one after another {:.0} ms (nyc {:.0}, phl {:.0}, intercity {:.0})", now_ms() - tr, stage_ms[round][0], stage_ms[round][1], stage_ms[round][2]);
+        }
+        println!("total {:.0} ms; heap {:.0} MB before, peak {:.0} MB", now_ms() - tstart, crate::demand::alloc::mb(live0), crate::demand::alloc::mb(crate::demand::alloc::peak()));
+        for q in 0..PERIODS {
+            let mut seg = pops[0].seg(q);
+            let mut board = pops[0].board(q);
+            let mut alight = pops[0].alight(q);
+            for (o, v) in seg.iter_mut().zip(pops[1].seg(q).iter().zip(ic.seg(q)).map(|(a, b)| a + b)) {
+                *o += v;
+            }
+            for (o, v) in board.iter_mut().zip(pops[1].board(q).iter().zip(ic.board(q)).map(|(a, b)| a + b)) {
+                *o += v;
+            }
+            for (o, v) in alight.iter_mut().zip(pops[1].alight(q).iter().zip(ic.alight(q)).map(|(a, b)| a + b)) {
+                *o += v;
+            }
+            result.insert(format!("seg{q}"), serde_json::json!(seg));
+            result.insert(format!("board{q}"), serde_json::json!(board));
+            result.insert(format!("alight{q}"), serde_json::json!(alight));
+            result.insert(format!("icboard{q}"), serde_json::json!(ic.board(q)));
+            result.insert(format!("entries{q}"), serde_json::json!(pops[0].entries(q)));
+            result.insert(format!("sum_nyc{q}"), serde_json::json!(pops[0].summary(q)));
+            result.insert(format!("sum_phl{q}"), serde_json::json!(pops[1].summary(q)));
+            result.insert(format!("sum_ic{q}"), serde_json::json!(ic.summary(q)));
+            result.insert(format!("cm_nyc{q}"), serde_json::json!(pops[0].sub_sums().iter().map(|&v| v as f64).sum::<f64>()));
+        }
+        let sums: Vec<f64> = (0..PERIODS).map(|q| pops[0].summary(q)[2] + pops[1].summary(q)[2] + ic.summary(q)[2]).collect();
+        println!("rail trips by period (all populations): {sums:?}");
+        let now = serde_json::Value::Object(result);
+        if let Ok(path) = std::env::var("TW_DUMP") {
+            std::fs::write(&path, serde_json::to_string(&now).unwrap()).unwrap();
+            println!("dumped to {path}");
+        }
+        if let Ok(path) = std::env::var("TW_COMPARE") {
+            let base: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(&path).unwrap()).unwrap();
+            let flat = |v: &serde_json::Value| -> Vec<f64> {
+                match v {
+                    serde_json::Value::Array(a) => a.iter().map(|x| x.as_f64().unwrap_or(0.0)).collect(),
+                    other => vec![other.as_f64().unwrap_or(0.0)],
+                }
+            };
+            let mut worst = 0.0f64;
+            for (k, v) in now.as_object().unwrap() {
+                let (a, b) = (flat(v), flat(&base[k]));
+                assert_eq!(a.len(), b.len(), "{k} length");
+                let scale = b.iter().fold(0.0f64, |m, x| m.max(x.abs())).max(1e-9);
+                let mut kmax = 0.0f64;
+                let mut rel_total = 0.0;
+                let (sa, sb): (f64, f64) = (a.iter().sum(), b.iter().sum());
+                for (x, y) in a.iter().zip(&b) {
+                    kmax = kmax.max((x - y).abs());
+                }
+                if sb.abs() > 0.0 {
+                    rel_total = (sa - sb).abs() / sb.abs();
+                }
+                if k.starts_with("sum_") {
+                    // ms (index 4) differs run to run
+                    let mut m = 0.0f64;
+                    for (i, (x, y)) in a.iter().zip(&b).enumerate() {
+                        if i != 4 {
+                            m = m.max((x - y).abs() / y.abs().max(1.0));
+                        }
+                    }
+                    kmax = m * scale;
+                }
+                worst = worst.max(kmax / scale);
+                println!("{k}: max abs diff {kmax:.4e} = {:.2e} of max {scale:.3e}; sum differs {rel_total:.2e}", kmax / scale);
+            }
+            println!("WORST relative to each array's max: {worst:.3e}");
+        }
     }
 
     /// Two crossing lines whose crossing stations are `gap` metres apart: riders change trains by

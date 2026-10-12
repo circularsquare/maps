@@ -1,0 +1,63 @@
+{
+  "packs": [
+    {
+      "city": "bal",
+      "counties": 7,
+      "cells": 67314,
+      "zones": 1970,
+      "pop": 2844510,
+      "jobs": 1345787,
+      "commutes": 1127757
+    },
+    {
+      "city": "pvd",
+      "counties": 6,
+      "cells": 40026,
+      "zones": 1260,
+      "pop": 1676579,
+      "jobs": 710441,
+      "commutes": 632795
+    },
+    {
+      "city": "nhv",
+      "counties": 1,
+      "cells": 15120,
+      "zones": 472,
+      "pop": 864835,
+      "jobs": 396290,
+      "commutes": 349247
+    },
+    {
+      "city": "hfd",
+      "counties": 3,
+      "cells": 37203,
+      "zones": 1119,
+      "pop": 1213531,
+      "jobs": 619060,
+      "commutes": 525283
+    },
+    {
+      "city": "spf",
+      "counties": 3,
+      "cells": 43182,
+      "zones": 1307,
+      "pop": 699162,
+      "jobs": 301154,
+      "commutes": 267330
+    }
+  ],
+  "markets": [
+    "New York",
+    "Philadelphia",
+    "Trenton",
+    "Boston",
+    "Washington, DC",
+    "Baltimore",
+    "Providence",
+    "New Haven",
+    "Hartford",
+    "Springfield"
+  ],
+  "sites": 229885,
+  "disjoint_counties": true
+}

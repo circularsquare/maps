@@ -1,6 +1,7 @@
 // Messages between the main thread (map/demandViews.ts) and the commuter bubble worker
 // (workers/commuters.worker.ts), T-097.
 
+import type { FrameSpec } from "../game/frame";
 /** H3 resolutions the bubbles are aggregated at, finest first (cells are resolution 9). */
 export const BUBBLE_RES = [9, 8, 7, 6] as const;
 /** Average H3 cell area per resolution in BUBBLE_RES, m² (H3's own table). */
@@ -16,10 +17,11 @@ export const DISC = 8;
  * Manhattan's: dense home areas touch. Jobs at 80,000: job centres are several times denser than
  * any home area, and at the homes' scale Midtown's bubbles covered half of Manhattan.
  */
-export const BUBBLE_DENSITY = { home: 25000 / 1e6, work: 80000 / 1e6 } as const;
+// Two trip legs per former commuter: retain the old commute bubble area when converting units.
+export const BUBBLE_DENSITY = { home: 50000 / 1e6, work: 160000 / 1e6 } as const;
 
 export type ToCommuters =
-  | { kind: "cells"; xy: Float32Array; h3: BigUint64Array; origin: { lon: number; lat: number } }
+  | { kind: "cells"; xy: Float32Array; h3: BigUint64Array; frame: FrameSpec }
   | { kind: "build"; id: number; end: "home" | "work"; train: Float32Array; walk: Float32Array; drive: Float32Array }
   /** a set of cells with their own counts (a selection's far end, up to ~80k cells), summed
    * into every level */

@@ -12,7 +12,7 @@ Read this, then `SPEC.md`, then `TASKS.md`. Everything else on demand.
 | `ARCHIVE.md` | Finished and abandoned tasks, newest first | agents, add only |
 | `notes/T-###.md` | Working notes for a task too big for one line | the task's agent |
 | `research/` | Background reports with sources, one file per topic | agents |
-| `docs/` | Spec sections that outgrew SPEC.md (none yet) | agents |
+| `docs/` | Current detailed spec: `demand.md` (4), `track-and-service.md` (6), `interface.md` (8) | agents |
 | `TODO.md` | Anita's list: her decisions, tests, chores | Anita; agents add under "Added by agents" only |
 
 ## Rules
@@ -53,7 +53,7 @@ it.
 
 - `sim/`: Rust crate (`trainworld-sim`), compiled to WebAssembly with wasm-pack 0.15.
   `cargo test --manifest-path sim/Cargo.toml` runs its tests natively.
-  - `src/track/`: the track model (T-040): geometry, costs, crossings, the network and its edits
+  - `src/track/`: the track model (T-040): geometry, costs, crossings, world frames (`frame.rs`, T-125), the network and its edits
     with undo (`world.rs`; blueprint and construct, T-055), run-time profiles, capacity, saves,
     and `wasm.rs` (`TrackApi`, the clock worker's API, with the drawing tool's routes). In the default build. `cargo run --release --bin track_bench` times edits
     on a synthetic 2,000 km network; feature `track-bench` exports it to WASM. notes/T-040.md.
@@ -68,7 +68,7 @@ it.
     `Selection`), `world.ts` (the snapshot signal and the edit functions), `ui.ts` (tab,
     selection, display settings, theme), `clock.ts`, `periods.ts` (the five periods),
     `demand.ts` (demand results: mode split, riders), `palette.ts`, `format.ts`, `coords.ts`
-    (pack metres to lng/lat), `issues.ts` (the track model's refusals in plain words),
+    (world metres to lng/lat), `frame.ts` and `registry.json` (the two world frames and the one city registry, `cities.ts` reads it, T-125), `issues.ts` (the track model's refusals in plain words),
     `money.ts` (cash and ledger from the worker, fare income from riders, T-028), `places.ts`
     (station and compass names for the inspectors), `remove.ts` (removing things, with the
     question asked before removing anything constructed, T-096). The `WorldView` is built from the clock
@@ -81,7 +81,8 @@ it.
     blueprint nodes, T-093), `geo.ts`,
     `synth.ts` (stress network), and the demand views (T-084, T-097): `demandViews.ts` (wiring,
     a station's catchment), `demandLayers.ts` (line width, station size, train fill),
-    `commuterView.ts` and `bubbles.ts` (commuter bubbles and bubble selections), `demandOverlay.ts`
+    `commuterView.ts` and `bubbles.ts` (commuter bubbles and bubble selections), `intercityView.ts`
+    (longer trips of a selection or station, one bubble per far zone, T-118, T-120), `demandOverlay.ts`
     (their canvas, over the network's), `demandHover.ts` (the count tag by the pointer).
   - `src/ui/`: Preact components, `style.css` (theme tokens). `src/workers/`: `protocol.ts`
     (edit ops, clock messages, the network snapshot for demand), `clock.worker.ts` (owns the
@@ -99,7 +100,15 @@ it.
 - `pipeline/`: Python city packs, run with `..\venv\Scripts\python.exe` (maps venv).
   `build_city.py nyc` → `data/packs/` (downloads cached in `data/raw/`; the zone gravity is
   solved by the sim crate's `pack_gravity` bin through cargo, built in `data/work/target`), `read_pack.py nyc`
-  checks a pack, `look_pack.py nyc` draws `T-004.png`. City configs are in `build_city.py`.
+  checks a pack, `look_pack.py nyc` draws `../artifacts/trainworld/T-004.png`. City configs are in `build_city.py`.
+  `frame_fixture.py` writes PROJ's values for the world frame (`app/src/game/frame.fixture.json`),
+  which `notes/t125-frame-check.mjs` and the Rust frame test compare with.
+- Northeast runtime needs `build_city.py` outputs for all registered cities (`nyc`, `phl`, `bos`,
+  `wdc`, `bal`, `pvd`, `nhv`, `hfd`, `spf`), plus
+  `pipeline/intercity.py` for `data/packs/intercity.json` (nine cities plus Mercer endpoints).
+  Vite serves/copies all registered packs. City packs stay separate; demand workers share a
+  regional pool. Registry market places retain NYC0/PHL1/Mercer2/BOS3/WDC4 and append
+  Baltimore5/Providence6/NewHaven7/Hartford8/Springfield9. The regional builder reads this registry.
 - Basemap glyph tiles (`app/public/fonts/`, checked in): `pipeline\glyphs.py` rebuilds them, after a
   one-off `cargo install build_pbf_glyphs --locked` (on Windows set `CFLAGS` to a libz-sys zlib
   folder first, see notes/T-056.md). Only needed to change the font, weights or fallback.
@@ -108,6 +117,16 @@ it.
 
 ## Working here
 
+- **City additions in delegated batches** (Anita, 2026-10-11). A city-expansion subagent may
+  choose useful batches of up to five cities. Reuse established sources with pragmatic metro
+  extents and basic pack/runtime checks; avoid a new extent study or independent calibration.
+- **Content first** (Anita, 2026-10-10). Performance is adequate. Pick content and gameplay
+  tasks; leave optimization work parked until Anita reports a performance issue. Keep the
+  existing responsive architecture, but do not start profiling or optimizing proactively.
+- **Keep diagnostic images outside this project.** Screenshots and diagnostic plots go in
+  `maps/artifacts/trainworld/` (from this folder: `../artifacts/trainworld/`), ignored by Git.
+  Never put captures in the trainworld root or its notes directory. Keep actual game assets
+  in their normal source locations. Task notes may link to the external local artifacts.
 - **open** in the spec means Anita decides. Otherwise decide, record why, and carry on; do not ask
   her to confirm rail facts.
 - Asks for Anita go in the "For you" block of your final message and, if they will outlive the

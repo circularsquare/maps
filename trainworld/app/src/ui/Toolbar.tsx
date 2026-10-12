@@ -1,7 +1,7 @@
-// Tool hints, removal questions and the last edit's message, at the map's bottom left.
+// Tool hints/messages at the map's bottom left; confirmations in a centered modal.
 // Construction controls and the blueprint quote live together in Build (T-100).
 
-import { useEffect, useState } from "preact/hooks";
+import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { ask, lineDraft, tool, type Tool } from "../game/ui";
 import { notice } from "../game/world";
 
@@ -9,26 +9,47 @@ const HINT: Record<Tool, string> = {
   select: "",
   track: "Click where the track should turn. Start or end on track to join it. Click the last point again or press Enter to finish. Backspace takes a point back.",
   station: "Click on track to put a station there.",
-  line: "Click stations in order. Press Enter or click the last station again when the line is done.",
+  line: "Click stations to insert stops. Press Enter or Escape to finish editing.",
   delete: "Click track, a station or a flyover to remove it. Blueprint is removed at once. Constructed things need a yes first and are not refunded.",
 };
 
-/** A question from the game (T-096: removing something constructed), answered here; Esc is no. */
+/** Native modal keeps map input blocked and traps/restores focus; Escape answers no. */
 function Ask() {
   const q = ask.value;
+  const dialog = useRef<HTMLDialogElement>(null);
+  const cancel = useRef<HTMLButtonElement>(null);
+  useLayoutEffect(() => {
+    if (!q || !dialog.current) return;
+    const el = dialog.current;
+    const before = document.activeElement;
+    if (!el.open) el.showModal();
+    cancel.current?.focus();
+    return () => {
+      if (el.open) el.close();
+      if (before instanceof HTMLElement && before.isConnected) before.focus();
+    };
+  }, [q]);
   if (!q) return null;
   return (
-    <div id="tool-notes" class="ask">
-      <p>{q.text}</p>
-      <div class="group">
-        <button class="btn text" onClick={q.run}>
-          {q.yes}
-        </button>
-        <button class="btn text" onClick={() => (ask.value = null)}>
+    <dialog class="confirmation" ref={dialog} aria-labelledby="confirmation-title" aria-describedby="confirmation-text" onCancel={() => ask.value = null} onKeyDown={e => {
+      e.stopPropagation();
+      if (e.key !== "Tab") return;
+      const buttons = [...e.currentTarget.querySelectorAll<HTMLButtonElement>("button:not(:disabled)")];
+      const first = buttons[0], last = buttons[buttons.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last?.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first?.focus(); }
+    }}>
+      <h2 id="confirmation-title">Are you sure?</h2>
+      <p id="confirmation-text">{q.text}</p>
+      <div class="confirmation-actions">
+        <button class="btn text" ref={cancel} onClick={() => (ask.value = null)}>
           {q.no}
         </button>
+        <button class="btn text danger" onClick={() => { ask.value = null; q.run(); }}>
+          {q.yes}
+        </button>
       </div>
-    </div>
+    </dialog>
   );
 }
 

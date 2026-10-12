@@ -31,3 +31,6 @@ posters/*/nudge/nudges.backup.json
 # transient files from serve.py add/remove:
 served.json.lock
 served.json.tmp
+
+# Local game screenshots and diagnostic plots, outside the trainworld source tree.
+/artifacts/trainworld/

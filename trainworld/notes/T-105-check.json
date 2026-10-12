@@ -1,0 +1,73 @@
+{
+  "modes": [
+    {
+      "mode": "line",
+      "widths": [
+        1
+      ],
+      "slot": 6.799999999999999,
+      "error": 0,
+      "layout": {
+        "width": 303,
+        "scrollWidth": 303
+      }
+    },
+    {
+      "mode": "traffic",
+      "widths": [
+        0.7195528149604797,
+        1.0422759056091309,
+        1.0255076885223389,
+        1.021042823791504,
+        1.0317169427871704
+      ],
+      "slot": 6.799999999999999,
+      "error": 0,
+      "layout": {
+        "width": 303,
+        "scrollWidth": 303
+      }
+    },
+    {
+      "mode": "height",
+      "widths": [
+        1
+      ],
+      "slot": 0,
+      "error": 0,
+      "layout": {
+        "width": 303,
+        "scrollWidth": 303
+      }
+    },
+    {
+      "mode": "speed",
+      "widths": [
+        1
+      ],
+      "slot": 0,
+      "error": 0,
+      "layout": {
+        "width": 303,
+        "scrollWidth": 303
+      }
+    }
+  ],
+  "speeds": {
+    "count": 43,
+    "segments": 43,
+    "min": 37.757118225097656,
+    "max": 160
+  },
+  "migrations": [
+    {
+      "lineLoad": false,
+      "mode": "line"
+    },
+    {
+      "lineLoad": true,
+      "mode": "traffic"
+    }
+  ],
+  "errors": []
+}

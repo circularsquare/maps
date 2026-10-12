@@ -21,7 +21,7 @@ try {
   if((mode==='height'||mode==='speed')&&sample.slot!==0)throw Error('Colour mode retained line slots');
   modes.push({...sample,widths:sample.widths.slice(0,5)});
  }
- await page.screenshot({path:'trainworld/T-105-speed.png'});
+ await page.screenshot({path:'artifacts/trainworld/T-105-speed.png'});
  await page.getByRole('button',{name:'Line',exact:true}).click();await page.reload();await page.waitForFunction(()=>window.tw?.world.value);
  if(await page.evaluate(()=>window.tw.display.value.trackColour)!=='line')throw Error('Plain line mode not persisted');
  const ack=await page.evaluate(()=>window.tw.client.edit({op:'route',from:{kind:'free',x:0,y:0,level:0},to:{kind:'free',x:1000,y:1000,level:0},pis:[{x:1000,y:0,radius:100,level:0}],single:false}));

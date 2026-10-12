@@ -3,7 +3,245 @@
 Newest first. One entry per decision: what, and why. The spec states the result; this keeps the
 reasoning and what it replaced.
 
+## 2026-10-11
+
+- **Add NYC public-school attendance using enrollment, not employee jobs** (T-140). Match DOE
+  buildings once to reported enrollment, then estimate homes from child-population weights.
+  Destination budgets avoid mistaking staff counts for pupil capacity. The initial 90% attendance
+  factor and 2.5 km home-distance decay are provisional; morning arrivals and mostly midday
+  returns distinguish school from work. Include actual assignment in purpose/timing inspection,
+  loads and fares, with explicit public-building coverage and no inferred student OD claim.
+
+- **Lower the everyday-trip exclusion to 150 m** (Anita, T-141). Replaces the initial 300 m
+  threshold. New outings below 150 m represented cell-centre distance are excluded from every
+  mode and total; exactly 150 m remains eligible. Other demand parameters stay unchanged.
+
+- **NYC everyday outings and a 300 m exclusion** (Anita, T-066). Shopping/errands use retail/
+  service jobs; social/leisure use food/recreation jobs and visits to residents. Source-neutral
+  weights allow later international inputs. Trial rates and timing generate partial demand,
+  never a forced commute-share target. Outward/return routes are priced separately and join
+  shared fares, loads and crowding. New outings under 300 m cell-centre distance disappear from
+  all modes and totals without replacement. Bubbles now count local trip legs, with purpose and
+  directional timing inspection shipped alongside them; station commute queries remain labelled.
+
+- **Separate same-city commuting from the longer-trip overlay; show metropolitan focus**
+  (Anita, T-139). The relative longer-trip scale made 26 trips look larger than 583 commuters.
+  Same-city longer-trip discs are now hidden at all zooms, with counts retained in the inspector
+  and cross-city discs retained. Every far zone carries its exact market ID. Thin solid city
+  boundaries replace dashes; a subtle exterior basemap shade and darker outside/lighter inside
+  focus stroke distinguish the active pack. NYC's pack includes northern New Jersey.
+- **Trip-purpose shares need their own distance/time context** (Anita, T-066).
+  Work journeys are generally longer than everyday journeys. Compare counts and length profiles
+  separately; a trip-count share is not a passenger-distance, travel-time or transit-mode share.
+
+- **Ship destination purpose/timing inspection alongside non-work demand** (Anita, T-066).
+  Each selected destination bubble explains its work, shopping/errands, social/leisure and later
+  school/facility trip counts and shares, with a rough daily distribution for each purpose.
+  Use the bubble's actual purpose/period results and clearly labelled mode and direction;
+  counts must add up. Planned behavior, implementation details in notes/T-138.md.
+
+- **Reopen non-work local trips, starting with NYC where useful** (Anita, T-066/T-138).
+  Distinguish trip purposes and daily timing; do not force a reported commute share while the
+  model covers only part of non-work travel. T-138 records sources and a proposed bounded first
+  slice. Its numerical rates/weights are trial suggestions, not calibration or shipped behavior.
+
+- **Add Northeast cities in coherent batches of at most five** (Anita, T-137).
+  Baltimore, Providence, New Haven, Hartford and Springfield fill the corridor between existing
+  metros, using disjoint conventional county extents and the established trusted data pipeline.
+  Basic pack and gameplay checks replace independent calibration. City/place metadata now drives
+  the regional builder through the shared registry; new IDs append without renumbering old places.
+
+- **Traveller totals determine bubble area; omit the selected city's aggregate** (Anita, T-136).
+  Remove additive radius offsets and minimum sizes that inflated small flows. Use the normal
+  demand mix: blue at full train share, red at zero, blended in between. A Boston selection
+  shows grouped totals only for other places, keeping Boston's local dots at their real positions.
+- **Selected longer trips stay visible, with city totals when zoomed out** (Anita, T-135).
+  Work selections show incoming origins, home selections outgoing destinations. Their smaller
+  counts need their own visible scale rather than commuter-density sizing and a small-count
+  cutoff. All positive detailed zones remain; regional zooms show one labeled bubble per market
+  with its exact daily total. This changes display only, preserving trip assignments and shares.
+
 ## 2026-10-10
+
+- **Add cities through the established sources with broad metro extents** (Anita, T-134).
+  Boston and Washington, DC reuse the Census/LODES/ACS/water pipeline. Basic format, totals and
+  game-loading checks suffice; a new extent study or independent calibration is unnecessary for
+  familiar sources. Both get local commute packs and regional endpoints. Original market IDs
+  stay stable, while flow headers and corridor tables scale to the pack's market count.
+- **Demand controls stay on the map; picking follows drawing order** (Anita, T-131–133).
+  None/Homes/Destinations is always visible at the map's upper left, with the existing commute
+  endpoints and saved preferences. Exact metropolitan pack footprints show at regional zooms.
+  Visible demand bubbles beat underlying trains/stations; same-layer hits follow the last drawn
+  object, and selection/catchment discs retain their parent selection. Explicit selected editing
+  handles stay usable. Local non-commute trips are deferred until their scope is bounded.
+- **Content first; performance work waits for a reported problem** (Anita). Current performance
+  is adequate. Choose new content and gameplay features rather than proactive optimization;
+  keep the existing responsive architecture. Screenshots and diagnostic plots belong outside
+  the project in `maps/artifacts/trainworld/`, ignored by Git; preserve existing evidence there
+  and update producers/references instead of cluttering the source directory (T-130).
+- **Regional packs parse into numeric rows, and immutable tables release spare capacity**
+  (T-123). Generic JSON trees kept large temporary allocations alive during pair construction,
+  inflating every worker's WASM memory high-water mark. Typed rows preserve numeric precision
+  and pair order while skipping metadata; unused capacity is released once pairs and lookup
+  indices are complete. Keep separate worker ownership and the existing trip model. On the
+  full NYC/Philadelphia fixture this saves about 46 MB across the pool, and 236 MB on opening,
+  with unchanged demand. notes/T-123.md.
+- **World coordinates: a Lambert conformal frame for new games, the old frame kept for old saves**
+  (T-125, closing T-053; Anita: grow past two cities, intercity track between regions, correct
+  lengths, curves and speeds on a line of several hundred km, existing saves identical). The track
+  model stays planar; what changes is the plane. New games use a spherical Lambert conformal conic
+  tangent at New York with the old origin and metre units: conformal, so arc radii and curve speeds
+  are right in any direction, and its scale is `1 + dlat^2/2` (0.24% at 4 degrees of latitude,
+  under 0.4% across 35.8 to 45.8 N at any longitude), against the old frame's direction-dependent
+  1.2% at Philadelphia and 2.7% at Boston. Straight edges from New York to Philadelphia, Boston,
+  Washington and Pittsburgh come out within 0.02% of the great circle (they were off by 0.2 to
+  0.8%). A network records its frame: TWT5 is the world frame, TWT4 and older the legacy one, and
+  a legacy-frame network still encodes as TWT4 byte for byte. Existing saves are NOT converted:
+  they load in the legacy frame and stay there, because moving their track would change lengths,
+  quotes and schedules and she asked for identical geometry, money, fares and ledger (the real
+  NYC network's derived geometry, costs and service hash identically before and after, and its
+  demand results are equal to the last digit). An explicit, tested conversion exists but is not
+  offered in the UI (her call, T-129). Rejected: per-region local frames with a region id per node
+  (an edge between regions needs a frame of its own, crossing tests need a common one, the format
+  grows a field, and the old saves' Philadelphia track still needs a frame that is 1.2% off);
+  lon/lat plus a local metric (rewrites the planar geometry); Web Mercator as the model frame
+  (conformal but scale 1.32 here, which would scale every limit and cost). Water masks go
+  through lon/lat from each pack's own frame (tabulated on a 2 km lattice, under 0.1 m, because
+  the exact version made an edit 3.7x slower); all demand conversions go through lon/lat so packs
+  keep their own origins; one registry file (`game/registry.json`) names the world, frames, packs
+  and cities for the workers, the build, the save header and the UI. The regional market keeps its
+  sites in its pack frame, so its own zone distances still carry the old frame's 1.2% to 2.7%
+  (T-128). notes/T-125.md.
+- **Longer-trip bubbles are drawn like commuter bubbles, one per far zone** (T-120; Anita: "Elsewhere
+  in the New York region" is confusing, starts within the region should be visualised normally, and
+  the yellow bubble style is out: size by people, red or blue by train usage, everyone not on a
+  train red). Replaces T-118's one pale-plus-solid amber disc per place at a fixed 44 px. Now a disc
+  per 6 km zone at the zone's own place, the commuter far end's sizing (biggest 0.6 of a zone, scales
+  with the map and the size slider), opacity and mode mix, blue for rail and red for the rest.
+  Per-zone sums come from Rust so the workers' answers still add up; the station's per-market rows
+  became per-zone rows (f32) and the market sums are derived from them. The map's name tags are gone;
+  the inspector keeps its by-place lists, and the own region's row is "Other New York region places".
+  notes/T-120.md.
+- **The demand solve is made faster without changing its numbers** (T-119, closing T-061). It was
+  4.5 s to the free-flow estimate and 17 s to round three on the real network, and the bubbles
+  waited for round three because a worker could only answer about a round while it had no later
+  one under way. Now: strategy searches only towards stations a trip can end at, shared between
+  the populations of a worker; each worker sends the bubbles' sums with every round and a worker
+  with no periods answers the rest; the pool is up to 5 workers (one per period) plus that one
+  (was at most 3). Rejected: splitting mode choice by origin zone over the pool (it only fixes
+  the 5-periods-on-3-workers imbalance that five workers remove, at a reduce step per round);
+  wasm SIMD on the pair loop (no gain in Chrome). Left alone, flagged in TASKS (T-121): the
+  regional market's free-flow estimate routes without the distance fare, 17% more rail than a
+  consistent run. Crowding rounds in which no segment is over its seats are skipped, exactly.
+  The cost is about 240 MB more WASM memory (5 + 1 workers) on a 16-thread machine.
+  notes/T-119.md.
+- **One Northeast network with shared crowding** (T-116). Keep the existing NYC metre frame
+  and legacy saves; transform city queries and append transformed water masks. Both city
+  commute packs and the regional market share one bounded worker pool. Every crowding stage
+  reads one frozen combined flow vector, and publications require matching versions/rounds.
+  Navigation changes the local commute share and queries, while network loads/income remain
+  global. The fixed plane's roughly 1.2% Philadelphia east/west scale error is acceptable for
+  this first region; broader world coordinates remain T-053.
+- **Longer trips are shown by place on selections and stations** (T-118, 2026-10-10; Anita: a
+  Philadelphia bubble selection panned to New York lost its selection and could not show intercity
+  demand). One bubble per place (the market's three: New York, Philadelphia, Trenton and Mercer),
+  not per zone, because the market is coarse and a player reads places. Selected local cells map
+  to the market through the 600 m squares both are built from, with the selected share of a
+  square; no new numbers are made, and the numbers are the market's own pair totals. Station
+  riders come from the assignment itself (per-station counts by far market), so they equal its
+  entries and exits. Rail per pair is kept per period and averaged over crowding rounds like the
+  loads. Bubbles use area for trips, a pale all-modes disc and a solid rail disc, in a colour no
+  mode uses. The "Longer trips" check hides bubbles only; the numbers stay in the inspectors.
+  notes/T-118.md.
+- **Intercity begins as a tunable non-commute market** (T-117). Actual population/job locations
+  in NYC, Philadelphia and Mercer form coarse zone-pair trips, including long trips within
+  metros, with a smooth geographic onset. The common rail graph gives feeder lines actual
+  passengers and applies fares/service/shared crowding. Keep attribution separate from commute
+  denominators. Judgement trip rates are explicit; measured OD calibration, park-and-ride,
+  air/coach and cross-pack commuting remain future work rather than implied implemented features.
+- **Conventional centered confirmations** (Anita, T-113). Replace bottom-left questions
+  with a modal Are you sure? dialog, cancel focused first, trapped keyboard focus and blocked
+  background input. Keep the existing operation-specific warning and action labels.
+- **City pane is for navigation** (Anita, T-114). Remove the diagnostic period rail-share
+  chart and People/Jobs totals; the top bar already supplies the goal share. Begin with
+  New York navigation and extend it with shared-world cities, rather than inventing metrics.
+- **Philadelphia is the first Northeast expansion** (Anita, T-115/T-116/T-117). Build the
+  standard 11-county metro pack separately from New York, with no duplicate demand counties.
+  Preserve New York's track/save frame in the future shared world; transform local demand
+  into each city's pack frame and combine shared-line crowding before feedback. City packs
+  alone do not generate intercity trips; that separate layer remains T-117. notes/T-116.md.
+
+- **Line management starts in the inspector** (Anita, T-109 to T-112). New line creates an
+  empty zero-train draft immediately, enters stop editing and selects its default name for typing.
+  Persist creation-order names, custom multi-character badges and independent full-property
+  copies. Put list actions above long lists; sort lines by natural name or daily passengers.
+  Restrict red stop-removal controls to Edit stops and confirm line deletion. Infill additions
+  test all ordered insertion positions, rather than failing after trying only the end.
+  Optional save metadata keeps old saves readable.
+
+- **Short turns share the station they reverse in** (T-052). Count their full turnaround on
+  the arrival platform and their crossover against crossing through moves or opposite reversals.
+  Use per-move conflicts with the own-move queue subtracted, so independent through directions
+  stay independent and tiny reversing service introduces no abrupt extra queue. Single track
+  retains one shared platform; adding a passing loop would require explicit geometry and cost.
+  Only constructed track contributes active station capacity. notes/T-052.md.
+
+- **Blueprint planning leaves running endpoint geometry alone** (T-108). Constructed lines
+  use constructed edge ends to identify dead ends; planned lines still preview planned ends.
+  Drawing an unused extension must not shift a running train's stop or change its timing.
+  notes/T-108.md.
+
+- **Draw the overlay once per presented map frame** (T-075). Adopt the existing queued-frame
+  guard after six alternating stress checks reproduce half as many draws and about half the
+  drawing work, with unchanged map frames and zero camera lag. This measures overlay work, not
+  a claimed halving of total browser CPU. `perfOff=noDouble` retains the old path for comparison.
+
+- **Edit blueprint corners from their inspector** (T-071). Add inserts midway between adjacent
+  control points, then the player drags its square; each corner has level and removal controls.
+  Reuse checked shape edits and undo rather than adding a map gesture that conflicts with
+  selection or drawing. Removing the last corner yields a straight stretch. notes/T-071.md.
+
+- **M1 spec stays current and readable** (T-010). Correct stale schedule, save, demand and
+  backlog claims; keep earlier calibration figures explicitly historical. Move oversized demand,
+  track/service and interface sections intact into `docs/`, with linked summaries in SPEC and
+  their existing section numbers preserved. No gameplay design changes. notes/T-010.md.
+
+- **Independent browser saves with one writer per slot** (T-068). Named slots retain the
+  original autosave and copy the current game without replacing it. Hold a browser lock in the
+  worker for each writable slot; blocked tabs can play/export and rescue into a new slot.
+  Flush before switching, read after acquiring the new lock, and keep save failures visible.
+  Different slots can save concurrently. notes/T-068.md.
+
+- **Conservative circle growth at station complexes** (T-094). Platforms within 100 m keep
+  individual dots and selection but cap rider growth at 1.6x radius, versus 2.6x for isolated
+  stations. This reduces clutter without moving station geometry or hiding distinct platforms.
+  A cached spatial grid keeps nearby-platform detection out of the animation loop.
+- **Common-line waiting is destination-specific** (T-069). Reverse strategy searches combine
+  useful departures and their expected onward cost; boarding splits by frequency. Pooling every
+  line at a station would incorrectly shorten waits for the wrong branch. Keep per-line loads
+  for crowding, income and displays; fares remain separate from crowding. notes/T-069.md.
+
+- **Top bar follows the map column's width** (T-106). Use container queries, since resizing
+  the dock can narrow the map without changing the browser window. Hide secondary labels before
+  moving to two or three rows; preserve cash, time, train share and all playback buttons.
+  Full mode shares and day/demand remain in hover titles. notes/T-106.md.
+
+- **Earlier car detail with continuous train width** (T-107, Anita). Show separate cars from
+  zoom 15 instead of 15.5. Both representations use the same width, including physical scaling
+  at very close zooms; remove the detailed view's smaller minimum that made cars suddenly tiny.
+  Preserve actual car lengths and route positions. notes/T-107.md.
+
+- **Whole-line trains are the schedule input** (T-104, Anita). Choose an integer allocation
+  across both directions for each demand level; derive headway from the capacity-adjusted round
+  trip. Keep allocations through route and congestion changes, with zero stopping new departures.
+  New lines start 8/4/2. Existing TWT2/3 rates stay intact until the player edits a schedule;
+  TWT4 saves the integer inputs. Use continuous capacity delays on resources serving count
+  schedules to avoid rounding-induced oscillation. No frame-time scheduling work. notes/T-104.md.
+- **Four track display choices** (T-105, Anita). Combine line colour and traffic width into
+  Line and Line with traffic thickness (default), alongside Height and Max speed. Speed colours
+  show the geometry's per-section limit, not current train motion; curves and straights can
+  differ on one edge. Height/speed use uniform-width bare track while trains keep line colours.
+  Migrate the previous width checkbox preference and remember the chosen mode. notes/T-105.md.
 
 - **Close-up trains bend car by car; quieter crowding colours** (T-103, Anita). Switch at zoom
   15.5 from a compact capsule to the line's actual 20 m cars. Each has its own route position,
@@ -730,3 +968,15 @@ reasoning and what it replaced.
 - **Flows, not agents; trains as functions of time.** Subway Builder's own changelog blames per-group
   passenger work for its lag and freezes; NIMBY Rails simulates individual riders and slows when
   queues grow. See `research/`.
+
+- 2026-10-11 (T-143, Anita feedback): replace the all-city navigation list with the viewed city and its five largest external corridors by all-mode demand. Label the existing corridor totals as both directions. Preserve demand selection while its first result loads; use stable purpose colours in a share pie and departure plots. T-149 separately tracks startup gating and city scheduling.
+
+- 2026-10-11 (T-150, Anita broader school-data request): preserve NYC DOE building totals inside the five boroughs and use official NCES EDGE/CCD 2023-24 public-school locations/enrollment elsewhere in the NYC metro. Spatially exclude the DOE area to avoid duplicates; expand estimated pupil homes across all metro counties. Keep university inputs separate from child-origin/school-day assumptions. National source reuse is implemented; wider city rollout and university attendance remain follow-ups.
+
+- 2026-10-11 (T-153, Anita short-trip feedback): reserve the distance-based walking share before rail and road compete. Attractive rail may win the non-walking remainder, but it must not erase trips that the simple model already considers walkable. Keep the existing 2 km commute-zone grain as an explicit precision limit; everyday purposes continue to use sampled cell distance.
+
+- 2026-10-11 (T-154, Anita compact intercity feedback): halve both detailed and regional longer-trip bubble radii while preserving area proportionality. Use 5 px connection bars and show train/all trips in the city list; keep percentages and expanded counts in tooltips.
+
+- 2026-10-11 (T-144, Anita station-rendering feedback): ordinary stations are track-aligned platform boxes. Rider magnitude is a separate, off-by-default analytical layer of large translucent circles behind the boxes; those circles do not change picking.
+
+- 2026-10-11 (T-145, Anita track-placement feedback): draw the live track placement ghost as a solid, dark-cased stroke. Its body follows Height or Max speed display colours and is white in Line/Traffic modes; invalid geometry stays red. The placed blueprint retains its normal dashed, faded construction state. Preview speed colours come from the track model's fitted geometry rather than main-thread inference.

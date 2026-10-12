@@ -13,7 +13,7 @@ default = ["track-api"]
 track-api = []
 # Demand kernel (src/demand/, T-005, T-019, T-020). The app's wasm build enables it (T-026: the
 # demand workers' `DemandApi`); plain `cargo test` and the pipeline-free builds leave it off.
-demand = ["dep:serde_json"]
+demand = ["dep:serde_json", "dep:serde"]
 # T-005: also export the demand benchmark (`demand_bench`) from the wasm build.
 demand-bench = ["demand"]
 # T-040: export the track benchmark from the wasm build too.
@@ -22,6 +22,7 @@ track-bench = ["track-api"]
 [dependencies]
 wasm-bindgen = "0.2"
 serde_json = { version = "1", optional = true, features = ["preserve_order"] }
+serde = { version = "1", optional = true, features = ["derive"] }
 
 [[bin]]
 name = "demand_bench"

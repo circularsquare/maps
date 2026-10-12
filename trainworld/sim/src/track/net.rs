@@ -8,6 +8,7 @@
 
 use super::cost::{self, NoWater, WaterMask};
 use super::cross::{self, Grid};
+use super::frame::{Frame, FrameKind};
 use super::geom::{self, GeomIssue, Pi, Piece};
 use super::params::*;
 use std::cmp::Ordering;
@@ -152,6 +153,7 @@ pub struct StationData {
 #[derive(Clone, Debug, PartialEq)]
 pub struct LineData {
     pub name: String,
+    pub symbol: String,
     pub colour: u32,
     /// Station nodes in order.
     pub stops: Vec<u32>,
@@ -245,9 +247,12 @@ pub struct Derived {
 }
 
 pub struct Network {
-    /// City origin; local metres are equirectangular from here (as in the city pack).
+    /// The frame's origin (T-125, `frame.rs`).
     pub origin_lon: f64,
     pub origin_lat: f64,
+    /// Which frame the metres are in: `Equirect` for every network made before T-125.
+    pub frame_kind: FrameKind,
+    frame: Frame,
     /// Running side from the city pack: right in the US, left in Japan and the UK.
     pub right_hand: bool,
 
@@ -290,6 +295,8 @@ pub struct Network {
 
     pub line_alive: Vec<bool>,
     pub line_name: Vec<String>,
+    pub line_symbol: Vec<String>,
+    pub next_line_number: u32,
     pub line_colour: Vec<u32>,
     pub line_stops: Vec<Span>,
     pub line_path: Vec<Span>,
@@ -336,10 +343,26 @@ pub fn path_dir(p: u32) -> u32 {
 }
 
 impl Network {
+    /// The network's frame (origin and kind).
+    pub fn frame(&self) -> Frame {
+        self.frame
+    }
+
+    /// An empty network in the given frame kind.
+    pub fn new_in(kind: FrameKind, origin_lon: f64, origin_lat: f64, right_hand: bool) -> Network {
+        let mut n = Network::new(origin_lon, origin_lat, right_hand);
+        n.frame_kind = kind;
+        n.frame = Frame::new(kind, origin_lon, origin_lat);
+        n
+    }
+
+    /// An empty network in the legacy equirectangular frame.
     pub fn new(origin_lon: f64, origin_lat: f64, right_hand: bool) -> Network {
         Network {
             origin_lon,
             origin_lat,
+            frame_kind: FrameKind::Equirect,
+            frame: Frame::new(FrameKind::Equirect, origin_lon, origin_lat),
             right_hand,
             node_alive: vec![],
             node_x: vec![],
@@ -372,6 +395,8 @@ impl Network {
             water: Pool::default(),
             line_alive: vec![],
             line_name: vec![],
+            line_symbol: vec![],
+            next_line_number: 1,
             line_colour: vec![],
             line_stops: vec![],
             line_path: vec![],
@@ -482,6 +507,7 @@ impl Network {
     fn grow_lines(&mut self) {
         self.line_alive.push(false);
         self.line_name.push(String::new());
+        self.line_symbol.push(String::new());
         self.line_colour.push(0);
         self.line_stops.push(Span::default());
         self.line_path.push(Span::default());
@@ -546,6 +572,7 @@ impl Network {
             let i = l as usize;
             LineData {
                 name: self.line_name[i].clone(),
+                symbol: self.line_symbol[i].clone(),
                 colour: self.line_colour[i],
                 stops: self.stops.get(self.line_stops[i]).to_vec(),
                 path: self.paths.get(self.line_path[i]).to_vec(),
@@ -760,6 +787,7 @@ impl Network {
                 let i = id as usize;
                 self.line_alive[i] = true;
                 self.line_name[i] = d.name;
+                self.line_symbol[i] = d.symbol;
                 self.line_colour[i] = d.colour;
                 self.line_stops[i] = self.stops.replace(self.line_stops[i], &d.stops);
                 self.line_path[i] = self.paths.replace(self.line_path[i], &d.path);
@@ -1079,9 +1107,8 @@ impl Network {
 
     /// Web mercator tile (zoom 12) of a local point.
     pub fn tile_of(&self, x: f64, y: f64) -> (u32, u32) {
-        let lat0 = self.origin_lat.to_radians();
-        let lon = self.origin_lon + (x / (EARTH_R * lat0.cos())).to_degrees();
-        let lat = (self.origin_lat + (y / EARTH_R).to_degrees()).to_radians();
+        let (lon, lat) = self.frame().to_lonlat(x, y);
+        let lat = lat.to_radians();
         let z = (1u32 << TILE_ZOOM) as f64;
         let tx = ((lon + 180.0) / 360.0 * z).floor();
         let ty = ((1.0 - (lat.tan() + 1.0 / lat.cos()).ln() / PI) / 2.0 * z).floor();
@@ -1236,6 +1263,10 @@ impl Network {
     pub fn check_line(&self, l: u32) -> Result<Vec<u32>, Issue> {
         let path = self.line_path(l);
         let stops = self.line_stops(l);
+        if stops.len() < 2 && path.is_empty() {
+            if stops.iter().all(|&s| self.node_ok(s) && self.node_platform[s as usize] > 0) { return Ok(stops.to_vec()); }
+            return Err(Issue::LineStops { line: l });
+        }
         if path.is_empty() {
             return Err(Issue::LinePath { line: l });
         }
@@ -1484,6 +1515,7 @@ impl Network {
 
     /// Fastest path through a list of stops, hop by hop.
     pub fn route(&self, stops: &[u32]) -> Option<Vec<u32>> {
+        if stops.iter().any(|&s| !self.node_ok(s) || self.node_platform[s as usize] == 0) { return None; }
         let mut path = vec![];
         let mut side = None;
         for w in stops.windows(2) {

@@ -5,18 +5,21 @@
 
 import { effect, signal } from "@preact/signals";
 import { clock, SPEEDS } from "../game/clock";
-import { setPackOrigin } from "../game/coords";
+import { HOME_CITY, setWorldFrame } from "../game/cities";
 import { income, lastSaved, moneyState } from "../game/money";
 import { lineDraft, selection, tool } from "../game/ui";
 import { say, setEditSink, world } from "../game/world";
 import type { LineInput, LineStats, StationInput, TrackEdge, TrackNode, WorldView } from "../game/types";
 import type { ClockState, EditOp, FromClock, NetworkSnapshot, PiInput, RouteEnd, ToClock } from "./protocol";
 
+export const saveSlotsState = signal<{ slots: import("./saveFile").SaveSlot[]; active: string; writable: boolean; at: number; reason?: string; error?: string }>({ slots: [], active: "autosave", writable: true, at: 0 });
+export function manageSaveSlot(action: "refresh" | "create" | "open" | "rename" | "delete", key?: string, name?: string) {
+  current?.post({ kind: "saveSlot", action, key, name });
+}
+
 export const clockWorkerStatus = signal("loading");
 /** The newest network snapshot (what demand runs on); null until the worker has started. */
 export const networkSnapshot = signal<NetworkSnapshot | null>(null);
-/** The pack's origin (pack metres are east and north of it), once the worker has read it. */
-export const packOrigin = signal<{ lon: number; lat: number } | null>(null);
 
 export interface EditAnswer {
   ok: boolean;
@@ -36,6 +39,7 @@ export interface PreviewAnswer {
   issues: string[];
   verts: Float64Array;
   pts: Float32Array;
+  speeds?: Float32Array;
   /** where each alignment starts in `pts` (triples) when there are several (a node drag) */
   parts?: Uint32Array;
 }
@@ -63,7 +67,7 @@ function toWorld(s: ClockState, city: { population: number; jobs: number }): Wor
       id: String(n.id), num: n.id, name: n.name, lng: n.lng, lat: n.lat, x: n.x, y: n.y, level: n.level as any, length: n.platform, built: n.stationBuilt, heading: n.heading,
     }));
   const lines: LineInput[] = s.lines.map((l) => ({
-    id: String(l.id), num: l.id, letter: letterOf(l.name), name: l.name, colour: l.colour, stops: l.stops.map(String),
+    id: String(l.id), num: l.id, letter: l.letter || letterOf(l.name), name: l.name, colour: l.colour, stops: l.stops.map(String),
     tph: { high: l.tph[0], medium: l.tph[1], low: l.tph[2] },
   }));
   const lineStats: Record<string, LineStats> = {};
@@ -75,7 +79,7 @@ function toWorld(s: ClockState, city: { population: number; jobs: number }): Wor
       edgeLines.set(p, v);
     }
     lineStats[String(l.id)] = {
-      status: l.running ? "running" : l.ok ? "planned" : "broken",
+      status: l.running ? "running" : l.ok || (!l.broken && l.stops.length < 2) ? "planned" : "broken",
       km: l.lengthM / 1000,
       fromStartS: l.fromStart[0] ?? [],
       fromStartByLevel: l.fromStart,
@@ -101,7 +105,7 @@ function toWorld(s: ClockState, city: { population: number; jobs: number }): Wor
   return {
     version: s.version,
     capacity: s.markers,
-    save: { version: 0, city: "nyc", clock: clock.now(), cash: s.cash * 1e6, stations, lines },
+    save: { version: 0, city: HOME_CITY, clock: clock.now(), cash: s.cash * 1e6, stations, lines },
     lineStats,
     edges,
     nodes,
@@ -147,17 +151,20 @@ export class ClockClient {
   private previewCb: ((a: PreviewAnswer) => void) | null = null;
   private city = { population: 0, jobs: 0 };
   private epoch = NaN;
+  private sawSlots = false;
   /** the renderer's hooks, set by main.ts */
   onState: (s: ClockState) => void = () => {};
   onTrips: (epoch: number, version: number, trips: Float32Array) => void = () => {};
 
-  constructor(cityId = "nyc") {
+  constructor(cityId = HOME_CITY) {
     this.worker = new Worker(new URL("./clock.worker.ts", import.meta.url), { type: "module" });
     this.worker.onmessage = (e: MessageEvent<FromClock>) => this.receive(e.data);
     this.worker.onerror = (e) => (clockWorkerStatus.value = "failed to load: " + (e.message ?? ""));
     const fresh = new URLSearchParams(location.search).get("new") === "1";
     this.cityId = cityId;
-    this.post({ kind: "init", city: cityId, pack: new URL("packs/" + cityId, document.baseURI).href, fresh });
+    let slot = "autosave";
+    try { slot = localStorage.getItem("anitabuilder-save-slot") || slot; } catch { /* storage unavailable */ }
+    this.post({ kind: "init", city: cityId, pack: new URL("packs/" + cityId, document.baseURI).href, fresh, slot });
     setEditSink((op) => this.edit(op));
     current = this;
     // The worker settles money by the game hour from the clock (T-028): tell it each time the
@@ -190,8 +197,7 @@ export class ClockClient {
     switch (msg.kind) {
       case "ready":
         clockWorkerStatus.value = `ready in ${msg.initMs.toFixed(0)} ms${msg.water ? "" : ", no water mask"}`;
-        setPackOrigin(msg.origin);
-        packOrigin.value = msg.origin;
+        setWorldFrame(msg.frame);
         this.city = { population: msg.population, jobs: msg.jobs };
         break;
       case "error":
@@ -206,6 +212,8 @@ export class ClockClient {
         moneyState.value = msg.money;
         break;
       case "loaded":
+        // the game now in the worker may be in the other frame (T-125); first, before anything reads positions
+        setWorldFrame(msg.frame);
         if (msg.error) {
           say(msg.error, true);
           if (msg.from === "file") break;
@@ -224,6 +232,18 @@ export class ClockClient {
         a.download = `anitabuilder-${this.cityId}-day-${msg.day}.save`;
         a.click();
         setTimeout(() => URL.revokeObjectURL(a.href), 10_000);
+        break;
+      }
+      case "saveSlots": {
+        const before = saveSlotsState.value;
+        saveSlotsState.value = { slots: msg.slots, active: msg.active, writable: msg.writable, at: msg.at, reason: msg.reason, error: msg.error };
+        lastSaved.value = msg.at;
+        if (!this.sawSlots || before.active !== msg.active) {
+          try { localStorage.setItem("anitabuilder-save-slot", msg.active); } catch { /* storage unavailable */ }
+        }
+        this.sawSlots = true;
+        if (msg.error) say(msg.error, true);
+        else if (!msg.writable && before.writable) say(msg.reason || "This slot is open in another tab. Autosave is off here.", true);
         break;
       }
       case "saved":
@@ -246,7 +266,7 @@ export class ClockClient {
       }
       case "preview": {
         this.previewBusy = false;
-        this.previewCb?.({ ok: msg.ok, cost: msg.cost, lengthM: msg.lengthM, mult: msg.mult, issues: msg.issues, verts: msg.verts, pts: msg.pts, parts: msg.parts });
+        this.previewCb?.({ ok: msg.ok, cost: msg.cost, lengthM: msg.lengthM, mult: msg.mult, issues: msg.issues, verts: msg.verts, pts: msg.pts, speeds: msg.speeds, parts: msg.parts });
         const n = this.previewNext;
         this.previewNext = null;
         if (n) this.ask(n.msg, n.cb);

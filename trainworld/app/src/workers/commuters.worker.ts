@@ -12,20 +12,18 @@ import { aggregate, biggestFirst, discs, reorder } from "../map/bubbles";
 import { toLocal } from "../map/geo";
 import { BUBBLE_DENSITY, BUBBLE_RES, type BubbleLevel, type FromCommuters, type Grouping, type ToCommuters } from "./commutersProtocol";
 
-const R_EARTH = 6371008.8;
-const DEG = 180 / Math.PI;
+import { makeFrame, type FrameSpec } from "../game/frame";
 
 let cellX = new Float32Array(0), cellY = new Float32Array(0);
 let levels: Grouping[] = [];
 
-function setCells(xy: Float32Array, h3: BigUint64Array, origin: { lon: number; lat: number }) {
+function setCells(xy: Float32Array, h3: BigUint64Array, spec: FrameSpec) {
+  const frame = makeFrame(spec);
   const n = xy.length / 2;
   cellX = new Float32Array(n);
   cellY = new Float32Array(n);
-  const cosO = Math.cos(origin.lat / DEG);
   for (let i = 0; i < n; i++) {
-    const lng = origin.lon + (xy[i * 2] / (R_EARTH * cosO)) * DEG;
-    const lat = origin.lat + (xy[i * 2 + 1] / R_EARTH) * DEG;
+    const [lng, lat] = frame.toLonLat(xy[i * 2], xy[i * 2 + 1]);
     const [x, y] = toLocal(lng, lat);
     cellX[i] = x;
     cellY[i] = y;
@@ -75,7 +73,7 @@ self.onmessage = (e: MessageEvent<ToCommuters>) => {
   const t0 = performance.now();
   const post = (m: FromCommuters, transfer: Transferable[]) => (self as unknown as Worker).postMessage(m, transfer);
   if (msg.kind === "cells") {
-    setCells(msg.xy, msg.h3, msg.origin);
+    setCells(msg.xy, msg.h3, msg.frame);
     // copies: the worker keeps its own for every build
     const ready: FromCommuters = { kind: "ready", ms: performance.now() - t0, cellX: cellX.slice(), cellY: cellY.slice(), levels: levels.map((l) => ({ ...l, groupOf: l.groupOf.slice(), off: l.off.slice(), members: l.members.slice() })) };
     post(ready, [ready.cellX.buffer, ready.cellY.buffer, ...ready.levels.flatMap((l) => [l.groupOf.buffer, l.off.buffer, l.members.buffer])]);

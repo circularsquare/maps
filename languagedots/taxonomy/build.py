@@ -238,7 +238,9 @@ GROUP = {
 # UK's and Australia's "Chinese"): to a reader it is one commonly named language, not a
 # remainder, and washed out it came out a pale blue-grey beside English's near-white in every
 # American and Canadian city (Anita, 2026-10-04).
-UNWASHED = {"sinotibetan.sinitic"}
+UNWASHED = {"sinotibetan.sinitic",
+            "indoeuropean.iranian.kurdish"}   # Anita 2026-10-09: plain Kurdish stays orange (Iraq's
+                                              # Sorani / Badini made it a group, which washed it grey)
 
 # Generated colours: the slot grid around the parent (see the docstring).
 SLOT_DL = (-0.12, -0.06, 0.0, 0.06, 0.12)

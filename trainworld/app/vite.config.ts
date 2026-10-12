@@ -1,15 +1,16 @@
-import { copyFileSync, createReadStream, existsSync, mkdirSync, statSync } from "node:fs";
+import { copyFileSync, createReadStream, existsSync, mkdirSync, readFileSync, statSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig, type Plugin } from "vite";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const PACKS = resolve(here, "../data/packs");
-/** City packs the app loads (pipeline output in data/packs/, gitignored). */
-const CITIES = ["nyc"];
+/** The packs the game opens: the registry's cities (T-125), and its regional market. Pipeline output, gitignored. */
+const REGISTRY = JSON.parse(readFileSync(resolve(here, "src/game/registry.json"), "utf8")) as { cities: { id: string }[]; market: { pack: string } };
+const CITIES = REGISTRY.cities.map((c) => c.id);
 
 /**
- * City packs at `packs/<city>.json` and `packs/<city>.bin` beside the page (T-025): served from
+ * City packs at `packs/<city>.json`, `.bin` and `.boundary.geojson` beside the page: served from
  * data/packs/ by the dev server and copied into dist/packs/ by a build. The clock worker reads the
  * water mask from it with a Range request, the demand workers the cells.
  */
@@ -23,7 +24,7 @@ function packs(): Plugin {
         const size = statSync(file).size;
         const range = /bytes=(\d+)-(\d*)/.exec(req.headers.range ?? "");
         res.setHeader("Accept-Ranges", "bytes");
-        res.setHeader("Content-Type", file.endsWith(".json") ? "application/json" : "application/octet-stream");
+        res.setHeader("Content-Type", file.endsWith(".geojson") ? "application/geo+json" : file.endsWith(".json") ? "application/json" : "application/octet-stream");
         if (range) {
           const a = Number(range[1]), b = range[2] ? Math.min(Number(range[2]), size - 1) : size - 1;
           res.statusCode = 206;
@@ -40,11 +41,14 @@ function packs(): Plugin {
       const out = join(opts.dir ?? resolve(here, "dist"), "packs");
       mkdirSync(out, { recursive: true });
       for (const c of CITIES)
-        for (const ext of [".json", ".bin"]) {
+        for (const ext of [".json", ".bin", ".boundary.geojson"]) {
           const src = join(PACKS, c + ext);
           if (existsSync(src)) copyFileSync(src, join(out, c + ext));
           else this.warn(`city pack missing: ${src} (build it with pipeline/build_city.py ${c})`);
         }
+      const intercity = join(PACKS, REGISTRY.market.pack + ".json");
+      if (existsSync(intercity)) copyFileSync(intercity, join(out, REGISTRY.market.pack + ".json"));
+      else this.warn("intercity market missing: build pipeline/intercity.py");
     },
   };
 }

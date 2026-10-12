@@ -61,6 +61,7 @@ export class EdgeEditor {
   private tag: HTMLDivElement;
   private edge = -1;
   private version = -1;
+  private loading = false;
   private shape: EdgePis = { legacy: false, pis: [] };
   private drag: { i: number; moved: boolean; from: EdgePi } | null = null;
   private preview: PreviewAnswer | null = null;
@@ -94,7 +95,12 @@ export class EdgeEditor {
     this.edge = e;
     this.version = v;
     if (this.drag) return;
-    this.shape = e >= 0 ? parseEdgePis((await queryClock({ what: "edgePis", edge: e })) ?? new Float64Array(0)) : { legacy: false, pis: [] };
+    this.loading = e >= 0;
+    this.place();
+    const shape = e >= 0 ? parseEdgePis((await queryClock({ what: "edgePis", edge: e })) ?? new Float64Array(0)) : { legacy: false, pis: [] };
+    if (this.edge !== e || this.version !== v || this.drag) return;
+    this.loading = false;
+    this.shape = shape;
     this.place();
   }
 
@@ -124,6 +130,7 @@ export class EdgeEditor {
   }
 
   private onDown(i: number, e: PointerEvent) {
+    if (this.loading || this.target() !== this.edge) return;
     e.preventDefault();
     e.stopPropagation();
     this.drag = { i, moved: false, from: { ...this.shape.pis[i] } };
@@ -182,12 +189,12 @@ export class EdgeEditor {
   /** Squares and curve labels to the camera. */
   place() {
     // hidden while a node of the stretch is being dragged (map/nodeDrag.ts): they would be stale
-    const on = this.edge >= 0 && this.target() === this.edge && !live.nodeDrag?.dragging;
+    const on = !this.loading && this.edge >= 0 && this.target() === this.edge && !live.nodeDrag?.dragging;
     const pis = on ? this.shape.pis : [];
     for (let i = 0; i < pis.length; i++) {
       const [x, y] = this.overlay.toScreen(...this.local(pis[i]));
       const m = this.el(this.marks, i, "pi-mark drag");
-      m.title = "Drag to move this corner";
+      m.title = `Corner ${i + 1}: drag to move`;
       m.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px)`;
     }
     for (let i = pis.length; i < this.marks.length; i++) this.marks[i].style.display = "none";

@@ -50,9 +50,90 @@ COUNTIES = "https://www2.census.gov/geo/tiger/GENZ2020/shp/cb_2020_us_county_500
 POPEST = "https://www2.census.gov/programs-surveys/popest/datasets/2020-2021/counties/totals/co-est2021-alldata.csv"
 QCEW_TOTAL = "https://data.bls.gov/cew/data/api/{year}/a/industry/10.csv"
 
-STATES = {"09": "ct", "34": "nj", "36": "ny", "42": "pa"}
+STATES = {"09": "ct", "10": "de", "11": "dc", "24": "md", "25": "ma", "33": "nh",
+          "34": "nj", "36": "ny", "42": "pa", "44": "ri", "51": "va", "54": "wv"}
 
 CITIES = {
+    "bal": {
+        "origin": (-76.6122, 39.2904),
+        "lodes_years": (2023, 2022),
+        "water": {"cell_m": 25.0, "min_width_px": 2},
+        "boundary_notes": "notes/T-137.md",
+        "counties": {'24003': 'Anne Arundel', '24005': 'Baltimore County', '24013': 'Carroll', '24025': 'Harford', '24027': 'Howard', '24035': "Queen Anne's", '24510': 'Baltimore city'},
+    },
+    "pvd": {
+        "origin": (-71.4128, 41.824),
+        "lodes_years": (2023, 2022),
+        "water": {"cell_m": 25.0, "min_width_px": 2},
+        "boundary_notes": "notes/T-137.md",
+        "counties": {'44001': 'Bristol RI', '44003': 'Kent', '44005': 'Newport', '44007': 'Providence', '44009': 'Washington RI', '25005': 'Bristol MA'},
+    },
+    "nhv": {
+        "origin": (-72.9279, 41.3083),
+        "lodes_years": (2023, 2022),
+        "water": {"cell_m": 25.0, "min_width_px": 2},
+        "boundary_notes": "notes/T-137.md",
+        "counties": {'09009': 'New Haven'},
+    },
+    "hfd": {
+        "origin": (-72.6851, 41.7637),
+        "lodes_years": (2023, 2022),
+        "water": {"cell_m": 25.0, "min_width_px": 2},
+        "boundary_notes": "notes/T-137.md",
+        "counties": {'09003': 'Hartford', '09007': 'Middlesex CT', '09013': 'Tolland'},
+    },
+    "spf": {
+        "origin": (-72.5898, 42.1015),
+        "lodes_years": (2023, 2022),
+        "water": {"cell_m": 25.0, "min_width_px": 2},
+        "boundary_notes": "notes/T-137.md",
+        "counties": {'25011': 'Franklin MA', '25013': 'Hampden', '25015': 'Hampshire'},
+    },
+    "bos": {
+        "origin": (-71.0589, 42.3601),  # central Boston
+        "lodes_years": (2023, 2022),
+        "water": {"cell_m": 25.0, "min_width_px": 2},
+        "boundary_notes": "notes/T-134-packs.md",
+        # Broad Boston-Cambridge-Newton county metro extent, including southern NH.
+        "counties": {
+            "25009": "Essex MA", "25017": "Middlesex MA", "25021": "Norfolk",
+            "25023": "Plymouth", "25025": "Suffolk MA",
+            "33015": "Rockingham NH", "33017": "Strafford",
+        },
+    },
+    "wdc": {
+        "origin": (-77.0365, 38.8977),  # central Washington
+        "lodes_years": (2023, 2022),
+        "water": {"cell_m": 25.0, "min_width_px": 2},
+        "boundary_notes": "notes/T-134-packs.md",
+        # Broad Washington-Arlington-Alexandria metro extent. Keep Calvert's
+        # established DC commuter catchment rather than chasing recent MSA revisions.
+        "counties": {
+            "11001": "District of Columbia",
+            "24009": "Calvert", "24017": "Charles", "24021": "Frederick MD",
+            "24031": "Montgomery MD", "24033": "Prince George's",
+            "51013": "Arlington", "51043": "Clarke", "51047": "Culpeper",
+            "51059": "Fairfax County", "51061": "Fauquier", "51107": "Loudoun",
+            "51153": "Prince William", "51157": "Rappahannock", "51177": "Spotsylvania",
+            "51179": "Stafford", "51187": "Warren", "51510": "Alexandria",
+            "51600": "Fairfax city", "51610": "Falls Church", "51630": "Fredericksburg",
+            "51683": "Manassas", "51685": "Manassas Park", "54037": "Jefferson WV",
+        },
+    },
+    "phl": {
+        "origin": (-75.1636, 39.9526),  # Philadelphia City Hall
+        "lodes_years": (2023, 2022),
+        "water": {"cell_m": 25.0, "min_width_px": 2},
+        "boundary_notes": "notes/T-115.md",
+        # Philadelphia-Camden-Wilmington MSA, OMB July 2023: 11 counties.
+        # Disjoint from nyc; Mercer/Trenton is a separate MSA, for future corridor demand.
+        "counties": {
+            "42017": "Bucks", "42029": "Chester", "42045": "Delaware PA",
+            "42091": "Montgomery", "42101": "Philadelphia",
+            "34005": "Burlington", "34007": "Camden", "34015": "Gloucester",
+            "34033": "Salem", "10003": "New Castle", "24015": "Cecil",
+        },
+    },
     "nyc": {
         "origin": (-73.985, 40.758),  # Times Square / Midtown
         "lodes_years": (2023, 2022),
@@ -400,6 +481,9 @@ def write_cells(city, cfg, cells, totals, sources, mask=None, mask_info=None, co
     if "commute_home" in cells:  # T-042: what the gravity balances on (notes/T-004.md)
         arrays += [("commute_home", "f32", "cell", cells["commute_home"][order].astype("<f4")),
                    ("commute_work", "f32", "cell", cells["commute_work"][order].astype("<f4"))]
+    for name in ("errand_jobs", "leisure_jobs"):
+        if name in cells:
+            arrays.append((name, "f32", "cell", cells[name][order].astype("<f4")))
     if mask is not None:
         arrays += [("water_row", "u32", "water", mask.row_off.astype("<u4")),
                    ("water_x", "u16", "water", mask.xs.astype("<u2"))]
@@ -551,8 +635,12 @@ def main(city):
     for r in wstats["industries"]:
         print(f"    {r['industry']:<42} {r['share']:6.1%} of {r['workers']:>9,}")
     adj_df, adj_log = adjust_jobs(df, cfg, rates)
+    # Customer attractors retain their observed sector locations, independently of the
+    # corrections to office/headquarters commuting employment.
+    adj_df["errand_jobs"] = df["CNS07"] + df["CNS19"]
+    adj_df["leisure_jobs"] = df["CNS17"] + df["CNS18"]
     uniq, vals, st = spread.spread(adj_df, county_set, fetch, mask, lon0, lat0,
-                                   cols=("pop", "jobs", "home_c", "work_c"))
+                                   cols=("pop", "jobs", "home_c", "work_c", "errand_jobs", "leisure_jobs"))
     pop, job, hc, wc = vals["pop"], vals["jobs"], vals["home_c"], vals["work_c"]
     print(f"spread: {st}")
     keep = (pop > 0) | (job > 0)
@@ -570,7 +658,7 @@ def main(city):
          "url": "https://www2.census.gov/geo/tiger/TIGER2020/TABBLOCK20/"},
         {"what": "jobs", "name": f"LEHD LODES 8 WAC S000 JT00 {lodes_year}, C000 (all jobs)",
          "url": "https://lehd.ces.census.gov/data/lodes/LODES8/"},
-        {"what": "boundary", "name": "Census cb_2020_us_county_500k, counties in notes/T-003.md",
+        {"what": "boundary", "name": "Census cb_2020_us_county_500k, counties in " + cfg.get("boundary_notes", "notes/T-003.md"),
          "url": COUNTIES},
     ]
     sources.append({"what": "water", "name": "TIGER/Line 2020 AREAWATER by county, and the sea outside "
@@ -585,9 +673,16 @@ def main(city):
                "region_share": round(ts["region_share"], 4),
                "industries": wstats["industries"]}
     cells_json = write_cells(city, cfg, {"h3": uniq, "x_m": x, "y_m": y, "pop": pop, "jobs": job,
+                                         "errand_jobs": vals["errand_jobs"][keep], "leisure_jobs": vals["leisure_jobs"][keep],
                                          "commute_home": hc, "commute_work": wc},
                              totals, sources, mask, mask_info, commute)
     nbytes, gz = add_gravity(cells_json, city)
+    if city == "nyc":
+        # Attendance inputs are separate from commuting sectors; rebuild them with the pack.
+        import enrich_schools
+        enrich_schools.main()
+        import enrich_universities
+        enrich_universities.main()
 
     print(f"totals: pop {totals['pop']:,}, jobs {totals['jobs']:,}")
     checks(cfg, county_pop, county_jobs, lodes_year)

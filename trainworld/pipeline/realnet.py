@@ -569,7 +569,7 @@ PEAK_HOUR_FACTOR = [1.4, 1.15, 1.4, 1.3, 1.5]
 
 def compare(result_path, tag=None, plot=True, quiet=False, net_path=None):
     """Model (realnet bin output) against the measured targets. Returns a dict of headline
-    numbers; prints a report; with `plot`, writes T-007<tag>.png in the project root."""
+    numbers; prints a report; with `plot`, writes diagnostic images in maps/artifacts/trainworld/."""
     net = json.load(open(net_path or os.path.join(WORK, "nyc_real.json")))
     tg = json.load(open(os.path.join(WORK, "targets.json")))
     res = json.load(open(result_path))
@@ -759,7 +759,8 @@ def plot_compare(df, cty, lk, h, tag):
     a.set_xlabel("Measured riders 8-9 (nycriders routing of the OD)"), a.set_ylabel("Model busiest hour (6-10 x 1.4 / 4)")
     a.set_title(f"Subway link loads, morning busiest hour (log r {h['link_logr_am']:.2f})")
     fig.tight_layout()
-    p = os.path.join(ROOT, f"T-007{('-' + tag) if tag else ''}.png")
+    p = os.path.join(ROOT, "..", "artifacts", "trainworld", f"T-007{('-' + tag) if tag else ''}.png")
+    os.makedirs(os.path.dirname(os.path.abspath(p)), exist_ok=True)
     fig.savefig(p, dpi=110)
     print("->", p)
 

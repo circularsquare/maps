@@ -35,7 +35,7 @@ export interface StationInput {
   name: string;
   lng: number;
   lat: number;
-  /** metres east and north of the city pack's origin */
+  /** world metres east and north of the frame's origin (game/frame.ts) */
   x: number;
   y: number;
   level: Level;

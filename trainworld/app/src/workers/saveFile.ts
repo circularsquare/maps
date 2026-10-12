@@ -5,10 +5,13 @@
 //   "TWG1"                 magic
 //   u32 little-endian      length of the JSON header in bytes
 //   JSON header (UTF-8)    `SaveHeader`: city, clock, money, fares, the day ledger
-//   the rest               the track model's network save (`TrackApi.save()`, "TWT3" since T-079; "TWT2" loads)
+//   the rest               the track model's network save (`TrackApi.save()`: "TWT4" legacy frame since T-104,
+//                          "TWT5" world frame since T-125; TWT2/3 load, always in the legacy frame)
 //
 // Nothing in it depends on wall time, so saving the same game twice gives the same bytes.
-// Autosaves live in IndexedDB (database "anitabuilder", store "saves", key "autosave").
+// Autosaves live in IndexedDB (database "anitabuilder", store "saves", one key per slot; the original game keeps key "autosave").
+
+import registry from "../game/registry.json";
 
 export const SAVE_MAGIC = "TWG1";
 export const SAVE_FORMAT = 1;
@@ -28,6 +31,9 @@ export interface SaveHeader {
   game: "anitabuilder";
   format: number;
   city: string;
+  /** The shared world (registry.json `world`); absent in legacy NYC saves. */
+  region?: string;
+  cities?: string[];
   /** game seconds since day 0 00:00 */
   clock: number;
   /** US$M */
@@ -38,6 +44,17 @@ export interface SaveHeader {
   fares: { base: number; perKm: number };
   /** recent days, oldest first (today last) */
   ledger: DayLedger[];
+}
+
+/**
+ * Whether this build can open the save: it names the registry's world (or none, as legacy NYC
+ * files do) and only cities the registry lists. Which frame the track is in is not the header's
+ * business: the network bytes say (TWT5 world frame, TWT4 and older legacy, T-125).
+ */
+export function isNortheastSave(h: SaveHeader): boolean {
+  const ids = registry.cities.map(c => c.id);
+  return h.city === ids[0] && (h.region === undefined || h.region === registry.world)
+    && (h.cities === undefined || h.cities.every(c => ids.includes(c)));
 }
 
 async function pipe(bytes: Uint8Array, s: CompressionStream | DecompressionStream): Promise<Uint8Array> {
@@ -87,7 +104,14 @@ export interface StoredSave {
   /** Date.now() when written */
   at: number;
   day: number;
+  name?: string;
+  city?: string;
 }
+
+export interface SaveSlot { key: string; name: string; at: number; day: number; }
+export const ORIGINAL_SLOT = "autosave";
+export const ORIGINAL_NAME = "Original game";
+export function slotName(key: string, save?: StoredSave | null): string { return save?.name || (key === ORIGINAL_SLOT ? ORIGINAL_NAME : "Saved game"); }
 
 function open(): Promise<IDBDatabase> {
   return new Promise((res, rej) => {
@@ -119,11 +143,70 @@ export async function readStored(key: string): Promise<StoredSave | null> {
   }
 }
 
+function committed(tx: IDBTransaction): Promise<void> {
+  const done = new Promise<void>((resolve, reject) => {
+    tx.oncomplete = () => resolve();
+    tx.onabort = tx.onerror = () => reject(tx.error ?? new Error("Browser storage is unavailable."));
+  });
+  // A request can fail before the caller reaches await done; retain the error without an
+  // unhandled rejection while it unwinds through the request promise.
+  void done.catch(() => {});
+  return done;
+}
+
 export async function writeStored(key: string, v: StoredSave): Promise<boolean> {
   try {
-    await req((await store("readwrite")).put(v, key));
+    const s = await store("readwrite");
+    const done = committed(s.transaction);
+    await req(s.put(v, key));
+    await done;
     return true;
   } catch {
     return false;
   }
+}
+
+/** Metadata only leaves the worker; unreadable-save recovery copies are kept out of the list. */
+export async function listSlots(): Promise<SaveSlot[]> {
+  const s = await store("readonly");
+  const [keys, saves] = await Promise.all([req(s.getAllKeys()), req(s.getAll())]);
+  return keys.flatMap((key, i) => typeof key === "string" && (key === ORIGINAL_SLOT || key.startsWith("slot-"))
+    ? [{ key, name: slotName(key, saves[i]), at: saves[i].at, day: saves[i].day }] : []).sort((a, b) => b.at - a.at);
+}
+
+/** Save while preserving a slot's latest name (it may have been renamed elsewhere). */
+export async function writeSlot(key: string, v: StoredSave): Promise<void> {
+  const s = await store("readwrite");
+  const done = committed(s.transaction);
+  const old = await req<StoredSave | undefined>(s.get(key));
+  await req(s.put({ ...v, name: v.name ?? old?.name ?? slotName(key) }, key));
+  await done;
+}
+
+export async function renameSlot(key: string, name: string): Promise<void> {
+  const s = await store("readwrite");
+  const done = committed(s.transaction);
+  const old = await req<StoredSave | undefined>(s.get(key));
+  if (!old) throw new Error("That save slot no longer exists.");
+  await req(s.put({ ...old, name: name.trim() || slotName(key) }, key));
+  await done;
+}
+
+export async function deleteSlot(key: string): Promise<void> {
+  const s = await store("readwrite");
+  const done = committed(s.transaction);
+  await req(s.delete(key));
+  await done;
+}
+
+export interface SlotLease { release: () => void; }
+/** A browser-managed lock lives for this worker's lifetime and releases even if the tab crashes. */
+export async function leaseSlot(key: string): Promise<SlotLease | null> {
+  if (!navigator.locks) return null;
+  return new Promise((resolve, reject) => {
+    void navigator.locks.request("anitabuilder-save-" + key, { ifAvailable: true }, (lock) => {
+      if (!lock) { resolve(null); return; }
+      return new Promise<void>((release) => resolve({ release }));
+    }).catch(reject);
+  });
 }

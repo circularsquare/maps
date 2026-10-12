@@ -10,7 +10,7 @@ try {
  await page.evaluate(data=>{const bytes=Uint8Array.from(data).buffer;window.tw.client.post({kind:'import',bytes},[bytes]);},Array.from(bytes));
  await page.waitForFunction(()=>window.twDemand?.view()?.lines.size>30&&window.twDemand.view().round>=3,null,{timeout:90000});
  await page.evaluate(()=>{window.tw.map.jumpTo({center:[-74,40.74],zoom:12});document.querySelector('#debug').style.display='none';window.tw.display.value={...window.tw.display.value,capacity:false,stationNames:false};});
- await page.waitForTimeout(300);await page.screenshot({path:'trainworld/T-103-network.png'});
+ await page.waitForTimeout(300);await page.screenshot({path:'artifacts/trainworld/T-103-network.png'});
  const actualCars=await page.evaluate(()=>{
   const w=window.tw.world.value,n=window.tw.renderer.net;
   for(const l of w.save.lines)if(n.lineCars[l.num]!==w.lineStats[l.id].cars)throw Error('Car count differs from line');
@@ -31,13 +31,36 @@ try {
   const epoch=Math.floor(tw.clock.now()/3600)*3600;r.setTrips(epoch,999,new Float32Array([0,tw.clock.now()-epoch]));
   const mx=tw.originMerc[0]+90*K/40075016.686;tw.map.jumpTo({center:[mx*360-180,40.73],zoom:18});tw.overlay.invalidate();
  });await page.waitForTimeout(300);
- await page.screenshot({path:'trainworld/T-103-cars.png'});
+ await page.screenshot({path:'artifacts/trainworld/T-103-cars.png'});
  const checks=[];
- for(const [zoom,expected] of [[15.49,false],[15.5,true],[18,true]]){
+ for(const [zoom,expected] of [[14.99,false],[15,true],[18,true]]){
   await page.evaluate(z=>window.tw.map.jumpTo({zoom:z}),zoom);await page.waitForTimeout(150);
   const result=await page.evaluate(()=>({zoom:window.tw.map.getZoom(),detail:window.tw.renderer.detailedTrains,error:window.tw.renderer.gl.getError()}));
   if(result.detail!==expected||result.error)throw Error(JSON.stringify(result));checks.push(result);
  }
+ // Sample the overlay's alpha across a train body immediately after drawing. Width should
+ // stay continuous at the car transition, including when world-scale width overtakes the minimum.
+ const widths=[];
+ for(const zoom of [14.99,15,16,19]){
+  await page.evaluate(z=>window.tw.map.jumpTo({zoom:z}),zoom);await page.waitForTimeout(150);
+  const measurement=await page.evaluate(()=>{
+   const tw=window.tw,r=tw.renderer,o=tw.overlay,K=1/Math.cos(40.73*Math.PI/180);
+   const phi=r.detailedTrains?-10/90:0,x=90*Math.cos(phi)*K,y=90*Math.sin(phi)*K;
+   const a=o.toScreen(x,y),b=o.toScreen(x+Math.cos(phi)*K,y+Math.sin(phi)*K);
+   const dx=b[0]-a[0],dy=b[1]-a[1],len=Math.hypot(dx,dy),dpr=tw.map.getPixelRatio();
+   o.draw();const gl=r.gl,pixels=new Uint8Array(o.canvas.width*o.canvas.height*4);
+   gl.readPixels(0,0,o.canvas.width,o.canvas.height,gl.RGBA,gl.UNSIGNED_BYTE,pixels);
+   let width=0;
+   for(let t=-40;t<=40;t++){
+    const px=Math.round((a[0]+dx/len*t/dpr)*dpr),py=o.canvas.height-1-Math.round((a[1]+dy/len*t/dpr)*dpr);
+    if(pixels[(py*o.canvas.width+px)*4+3]>127)width++;
+   }
+   return {zoom:tw.map.getZoom(),detail:r.detailedTrains,width:width/dpr};
+  });widths.push(measurement);
+  if(zoom===16)await page.screenshot({path:'artifacts/trainworld/T-107-cars.png'});
+ }
+ if(Math.abs(widths[0].width-widths[1].width)>1||widths[1].width<11)throw Error('Train width jumps: '+JSON.stringify(widths));
+ await page.evaluate(()=>window.tw.map.jumpTo({zoom:18}));await page.waitForTimeout(150);
  // Click the outermost cars rather than the analytic centre: picking follows the whole consist.
  const picks=await page.evaluate(()=>{
   const tw=window.tw,n=tw.renderer.net,len=n.lineTable[2],K=1/Math.cos(40.73*Math.PI/180),results=[];
@@ -51,5 +74,5 @@ try {
   if(await page.evaluate(()=>window.tw.renderer.gl.getError()))throw Error('WebGL error');
  }
  if(errors.length)throw Error(errors.join('\n'));
- const result={actualCars,checks,picks,errors};console.log(JSON.stringify(result));await writeFile('trainworld/notes/T-103-check.json',JSON.stringify(result,null,2));
+ const result={actualCars,checks,widths,picks,errors};console.log(JSON.stringify(result));await writeFile('trainworld/notes/T-107-check.json',JSON.stringify(result,null,2));
 }finally{await browser.close();}

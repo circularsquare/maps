@@ -1,3 +1,5 @@
+import type { CityId } from "../game/cities";
+import type { FrameSpec } from "../game/frame";
 // Messages between the main thread and the demand workers (T-026, T-021; notes/T-026.md).
 //
 // Each worker owns a copy of the city (parsed from the pack it is sent once) and a fixed set of
@@ -12,7 +14,9 @@
  * into the snapshot's station list; lines are in the snapshot's order.
  */
 export interface DemandNetwork {
-  /** x, y per station, metres east and north of the pack origin */
+  /** the world frame of `stXY` (T-125): the loaded game's */
+  frame: FrameSpec;
+  /** x, y per station in that frame; each pack receives a copy in its own frame */
   stXY: Float32Array;
   /** stops per line */
   lineN: Uint32Array;
@@ -36,7 +40,7 @@ export interface DemandNetwork {
 
 export type ToDemand =
   /** the city pack (header text and .bin) and the periods this worker solves */
-  | { kind: "init"; header: string; bin: ArrayBuffer; periods: number[] }
+  | { kind: "init"; packs: { id: CityId; header: string; bin: ArrayBuffer }[]; intercity: string; periods: number[]; aux?: boolean }
   /** solve every period of this worker on `net`: free flow, then `rounds` crowding rounds */
   | { kind: "solve"; version: number; net: DemandNetwork; rounds: number }
   /**
@@ -45,24 +49,32 @@ export type ToDemand =
    * network answers with nulls.
    */
   /** the city's cells and zones (static; any worker) */
-  | { kind: "cells"; id: number }
+  /** `frame`: the world frame the answer's coordinates are wanted in (T-125) */
+  | { kind: "cells"; id: number; city: CityId; frame: FrameSpec }
   /** rail trips by subzone over this worker's periods (`DemandApi.sub_sums`) */
-  | { kind: "subSums"; id: number; version: number }
+  | { kind: "subSums"; id: number; city: CityId; version: number; round: number }
   /** commuters a day per cell by mode from every worker's `subSums` added up (one worker) */
-  | { kind: "cellModes"; id: number; version: number; sums: Float32Array }
+  | { kind: "cellModes"; id: number; city: CityId; version: number; round: number; sums: Float32Array }
   /** one station's riders over this worker's periods (`DemandApi.station_riders`); `station`
    * indexes the solve's station list (`DemandNetwork.stXY`) */
-  | { kind: "station"; id: number; version: number; station: number }
+  | { kind: "station"; id: number; city: CityId; version: number; round: number; station: number }
   /** a selection's rail trips over this worker's periods (`DemandApi.flow_rail`, T-098); `end`
    * 0 homes, 1 jobs; `cells` pack cell ids */
-  | { kind: "flowRail"; id: number; version: number; end: number; cells: Uint32Array }
+  | { kind: "flowRail"; id: number; city: CityId; version: number; round: number; end: number; cells: Uint32Array }
+  | { kind: "purposes"; id: number; city: CityId; version: number; round: number; end: number; cells: Uint32Array }
   /** the selection's commuters by mode spread over the far end, from every worker's `flowRail`
    * added up (`DemandApi.flows`, one worker) */
-  | { kind: "flows"; id: number; version: number; end: number; cells: Uint32Array; sums: Float32Array };
+  | { kind: "flows"; id: number; city: CityId; version: number; round: number; end: number; cells: Uint32Array; sums: Float32Array }
+  /** longer trips (T-118) of a bubble selection's cells over this worker's periods
+   * (`IntercityApi.selection_flows`); `end` 0 homes, 1 jobs; `cells` pack cell ids of `city` */
+  | { kind: "icSel"; id: number; city: CityId; version: number; round: number; end: number; cells: Uint32Array }
+  /** a station's longer-trip rail riders over this worker's periods (`IntercityApi.station_flows`) */
+  | { kind: "icStation"; id: number; city: CityId; version: number; round: number; station: number };
 
 export type FromDemand =
   | {
       kind: "ready";
+      cityInfo: Record<CityId, number[]>;
       /** WASM start and pack parse + gravity rebuild, ms */
       wasmMs: number;
       openMs: number;
@@ -82,9 +94,13 @@ export type FromDemand =
       period: number;
       /** DemandApi.summary(): round, trips, rail, walk, ms, pairs, crowding stats */
       summary: number[];
+      citySummary: Record<CityId, number[]>;
+      intercitySummary: number[];
+      corridors: number[];
       /** per route node (line by line, run 0 stops then run 1 stops): riders in the period */
       seg: Float32Array;
       board: Float32Array;
+      intercityBoard: Float32Array;
       alight: Float32Array;
       /** busiest-hour load on the segment leaving the node, share of crush capacity */
       loadOfCrush: Float32Array;
@@ -94,12 +110,19 @@ export type FromDemand =
       memBytes: number;
     }
   | { kind: "done"; version: number; memBytes: number }
-  | { kind: "cells"; id: number; xy: Float32Array; h3: BigUint64Array; zone: Uint32Array; zoneXY: Float32Array }
+  /** a worker's `sub_sums` for one city once all its periods have `round` (sent unasked, T-119) */
+  | { kind: "sums"; version: number; round: number; city: CityId; mask: number; sums: Float32Array; everyday: Float32Array | null }
+  | { kind: "cells"; id: number; city: CityId; xy: Float32Array; h3: BigUint64Array; zone: Uint32Array; zoneXY: Float32Array }
   /** `mask`: bit q set for each period included; null sums: no network, or not `version` */
-  | { kind: "subSums"; id: number; version: number; mask: number; sums: Float32Array | null }
+  | { kind: "subSums"; id: number; city: CityId; version: number; mask: number; sums: Float32Array | null; everyday: Float32Array | null }
+  | { kind: "purposes"; id: number; city: CityId; version: number; mask: number; work: Float32Array | null; everyday: Float32Array | null; names: string[] }
   /** six blocks of one value per cell (home rail, walk, drive, work rail, walk, drive) */
-  | { kind: "cellModes"; id: number; version: number; modes: Float32Array | null }
-  | { kind: "station"; id: number; version: number; mask: number; packed: Float32Array | null }
-  | { kind: "flowRail"; id: number; version: number; mask: number; sums: Float32Array | null }
+  | { kind: "cellModes"; id: number; city: CityId; version: number; modes: Float32Array | null }
+  | { kind: "station"; id: number; city: CityId; version: number; mask: number; packed: Float32Array | null }
+  | { kind: "flowRail"; id: number; city: CityId; version: number; mask: number; sums: Float32Array | null }
   /** `[rail, walk, drive, cut rail, cut walk, cut drive, n, n cells.., rail.., walk.., drive..]` */
-  | { kind: "flows"; id: number; version: number; packed: Float32Array | null };
+  | { kind: "flows"; id: number; city: CityId; version: number; packed: Float32Array | null }
+  /** `mask` as `subSums`; `packed` as `IntercityApi.selection_flows` (null: no network, or not `version`) */
+  | { kind: "icSel"; id: number; city: CityId; version: number; mask: number; packed: Float64Array | null }
+  /** `packed` as `IntercityApi.station_flows` */
+  | { kind: "icStation"; id: number; city: CityId; version: number; mask: number; packed: Float64Array | null };

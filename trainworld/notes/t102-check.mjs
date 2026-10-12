@@ -23,7 +23,7 @@ try {
   await page.evaluate(z=>window.tw.map.jumpTo({center:[-74,40.75],zoom:z}),zoom);await page.waitForTimeout(300);
   const s=await sample();samples.push(s);
   if(s.overlaps||zoom<12&&s.visible||zoom>=12&&!s.visible)throw Error(JSON.stringify(s));
-  if(zoom===12.5)await page.screenshot({path:'trainworld/T-102-delay-tags.png'});
+  if(zoom===12.5)await page.screenshot({path:'artifacts/trainworld/T-102-delay-tags.png'});
  }
  await page.evaluate(()=>window.tw.map.panBy([130,45],{duration:500}));
  for(let i=0;i<6;i++){await page.waitForTimeout(90);const s=await sample();if(s.overlaps)throw Error('Overlap during pan');}

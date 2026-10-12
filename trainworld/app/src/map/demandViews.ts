@@ -11,6 +11,7 @@
 
 import { computed, effect, signal } from "@preact/signals";
 import type { Map as MlMap } from "maplibre-gl";
+import { activeCity } from "../game/cities";
 import { clock } from "../game/clock";
 import { packToLngLat } from "../game/coords";
 import { cityCells, demandView, stationRiders, type CityCells, type DemandView, type StationRiders } from "../game/demand";
@@ -27,6 +28,7 @@ import { buildLayers } from "./demandLayers";
 import { addFinder, discAt, hoverAt, startHover } from "./demandHover";
 import { DemandOverlay } from "./demandOverlay";
 import { MERC_K, toLocal } from "./geo";
+import { startIntercityView } from "./intercityView";
 import type { Overlay } from "./overlay";
 
 /** Which end of a selected station's riders the map and inspector show. */
@@ -102,9 +104,12 @@ export function startDemandViews(overlay: Overlay, map: MlMap): DemandViews {
   });
 
   // ---- commuter bubbles ----
-  const commuters = startCommuterView(map, overlay, view);
+  const commuters = startCommuterView(map, view);
+  // ---- longer trips of a selection or a station (T-118) ----
+  startIntercityView(view, map);
 
   // ---- a selected station's riders ----
+  let focusSeen = activeCity.peek();
   let cellsP: Promise<CityCells | null> | null = null;
   let stationAsk = 0;
   let last: { r: StationRiders; dv: DemandView } | null = null;
@@ -122,6 +127,8 @@ export function startDemandViews(overlay: Overlay, map: MlMap): DemandViews {
     stationView.value = describe(r, side, cells);
   };
   effect(() => {
+    const focus = activeCity.value;
+    if (focus !== focusSeen) { focusSeen = focus; cellsP = null; stationAsk++; last = null; clear(); stationView.value = null; }
     const sel = selection.value;
     const dv = demandView.value;
     stationSide.value;
@@ -170,7 +177,13 @@ export function startDemandViews(overlay: Overlay, map: MlMap): DemandViews {
     networkChanged() {
       if (renderer.net !== netSeen) schedule();
     },
-    click: commuters.click,
+    click(px, py, add) {
+      const picked = commuters.click(px, py, add);
+      if (picked !== undefined) return picked;
+      // Station catchments and longer-trip discs describe the current selection. They are
+      // drawn over the network, so a click on them retains that selection and is consumed.
+      return hoverAt(map, px, py) ? selection.peek() ?? undefined : undefined;
+    },
     hover: (px, py) => hoverAt(map, px, py),
     overlay: view,
   };

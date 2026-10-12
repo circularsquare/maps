@@ -1,0 +1,449 @@
+[
+  {
+    "name": "nine local populations solve",
+    "ok": true
+  },
+  {
+    "name": "ten-market corridor summary",
+    "ok": true,
+    "detail": {
+      "trips": 696093.2383514749,
+      "corridors": 55
+    }
+  },
+  {
+    "name": "Baltimore cells load",
+    "ok": true,
+    "detail": {
+      "n": 67314,
+      "first": [
+        -221713.546875,
+        -196960.984375
+      ],
+      "finite": true
+    }
+  },
+  {
+    "name": "Baltimore selectable homes visible",
+    "ok": true,
+    "detail": {
+      "x": 240,
+      "y": 95,
+      "cells": 49
+    }
+  },
+  {
+    "name": "Baltimore longer trips match their selection and reach NYC",
+    "ok": true,
+    "detail": {
+      "matched": 1,
+      "all": 297.7685048680887,
+      "places": [
+        {
+          "id": 4,
+          "all": 182.35685929611697
+        },
+        {
+          "id": 1,
+          "all": 63.22337747162567
+        },
+        {
+          "id": 0,
+          "all": 43.85410373545363
+        },
+        {
+          "id": 5,
+          "all": 4.105757789651454
+        },
+        {
+          "id": 2,
+          "all": 1.73375647094525
+        },
+        {
+          "id": 3,
+          "all": 0.9799591863255557
+        },
+        {
+          "id": 7,
+          "all": 0.5057055317869834
+        },
+        {
+          "id": 8,
+          "all": 0.5022797198853886
+        },
+        {
+          "id": 6,
+          "all": 0.30873997360379873
+        },
+        {
+          "id": 9,
+          "all": 0.19796569269399028
+        }
+      ],
+      "finite": true
+    }
+  },
+  {
+    "name": "Baltimore map click opens its demand inspector",
+    "ok": true
+  },
+  {
+    "name": "Providence cells load",
+    "ok": true,
+    "detail": {
+      "n": 40026,
+      "first": [
+        204136.890625,
+        47890.30859375
+      ],
+      "finite": true
+    }
+  },
+  {
+    "name": "Providence selectable homes visible",
+    "ok": true,
+    "detail": {
+      "x": 555,
+      "y": 110,
+      "cells": 49
+    }
+  },
+  {
+    "name": "Providence longer trips match their selection and reach NYC",
+    "ok": true,
+    "detail": {
+      "matched": 1,
+      "all": 213.91062509932706,
+      "places": [
+        {
+          "id": 3,
+          "all": 115.8700570904242
+        },
+        {
+          "id": 0,
+          "all": 54.40624942098165
+        },
+        {
+          "id": 8,
+          "all": 17.46081409967387
+        },
+        {
+          "id": 9,
+          "all": 10.638857282635714
+        },
+        {
+          "id": 7,
+          "all": 6.54496612720059
+        },
+        {
+          "id": 1,
+          "all": 3.700083052354203
+        },
+        {
+          "id": 6,
+          "all": 3.4067887439420432
+        },
+        {
+          "id": 4,
+          "all": 0.9674660368938195
+        },
+        {
+          "id": 5,
+          "all": 0.5298329109679409
+        },
+        {
+          "id": 2,
+          "all": 0.3855103342530443
+        }
+      ],
+      "finite": true
+    }
+  },
+  {
+    "name": "Providence map click opens its demand inspector",
+    "ok": true
+  },
+  {
+    "name": "New Haven cells load",
+    "ok": true,
+    "detail": {
+      "n": 15120,
+      "first": [
+        74062.8046875,
+        46531.97265625
+      ],
+      "finite": true
+    }
+  },
+  {
+    "name": "New Haven selectable homes visible",
+    "ok": true,
+    "detail": {
+      "x": 570,
+      "y": 110,
+      "cells": 49
+    }
+  },
+  {
+    "name": "New Haven longer trips match their selection and reach NYC",
+    "ok": true,
+    "detail": {
+      "matched": 1,
+      "all": 130.87165590499617,
+      "places": [
+        {
+          "id": 0,
+          "all": 95.04768947291598
+        },
+        {
+          "id": 3,
+          "all": 14.452805071341043
+        },
+        {
+          "id": 6,
+          "all": 6.315951214883404
+        },
+        {
+          "id": 9,
+          "all": 4.644183583783542
+        },
+        {
+          "id": 1,
+          "all": 4.413981736890751
+        },
+        {
+          "id": 8,
+          "all": 3.7451337658733
+        },
+        {
+          "id": 4,
+          "all": 1.1930251993310876
+        },
+        {
+          "id": 5,
+          "all": 0.6185917626356586
+        },
+        {
+          "id": 2,
+          "all": 0.4402940973414118
+        }
+      ],
+      "finite": true
+    }
+  },
+  {
+    "name": "New Haven map click opens its demand inspector",
+    "ok": true
+  },
+  {
+    "name": "Hartford cells load",
+    "ok": true,
+    "detail": {
+      "n": 37203,
+      "first": [
+        81346.71875,
+        109328.8359375
+      ],
+      "finite": true
+    }
+  },
+  {
+    "name": "Hartford selectable homes visible",
+    "ok": true,
+    "detail": {
+      "x": 345,
+      "y": 125,
+      "cells": 49
+    }
+  },
+  {
+    "name": "Hartford longer trips match their selection and reach NYC",
+    "ok": true,
+    "detail": {
+      "matched": 1,
+      "all": 68.18738215583701,
+      "places": [
+        {
+          "id": 0,
+          "all": 39.380839627025644
+        },
+        {
+          "id": 3,
+          "all": 16.126561836971113
+        },
+        {
+          "id": 6,
+          "all": 6.023518623585732
+        },
+        {
+          "id": 7,
+          "all": 2.0207583694150366
+        },
+        {
+          "id": 1,
+          "all": 1.9965369081393043
+        },
+        {
+          "id": 9,
+          "all": 1.3671755363297822
+        },
+        {
+          "id": 4,
+          "all": 0.5638950418706983
+        },
+        {
+          "id": 5,
+          "all": 0.2840218011006601
+        },
+        {
+          "id": 8,
+          "all": 0.2291711165762061
+        },
+        {
+          "id": 2,
+          "all": 0.19490329482283003
+        }
+      ],
+      "finite": true
+    }
+  },
+  {
+    "name": "Hartford map click opens its demand inspector",
+    "ok": true
+  },
+  {
+    "name": "Springfield cells load",
+    "ok": true,
+    "detail": {
+      "n": 43182,
+      "first": [
+        111135.5078125,
+        145233.140625
+      ],
+      "finite": true
+    }
+  },
+  {
+    "name": "Springfield selectable homes visible",
+    "ok": true,
+    "detail": {
+      "x": 420,
+      "y": 110,
+      "cells": 49
+    }
+  },
+  {
+    "name": "Springfield longer trips match their selection and reach NYC",
+    "ok": true,
+    "detail": {
+      "matched": 1,
+      "all": 126.00638758790956,
+      "places": [
+        {
+          "id": 0,
+          "all": 51.06774379203229
+        },
+        {
+          "id": 3,
+          "all": 42.82591325071046
+        },
+        {
+          "id": 6,
+          "all": 12.460964129843472
+        },
+        {
+          "id": 8,
+          "all": 7.408801284978587
+        },
+        {
+          "id": 7,
+          "all": 7.118493066595432
+        },
+        {
+          "id": 1,
+          "all": 3.1571805317570023
+        },
+        {
+          "id": 4,
+          "all": 0.8671531275005336
+        },
+        {
+          "id": 5,
+          "all": 0.4786157115948283
+        },
+        {
+          "id": 2,
+          "all": 0.31828814246822745
+        },
+        {
+          "id": 9,
+          "all": 0.30323455042872605
+        }
+      ],
+      "finite": true
+    }
+  },
+  {
+    "name": "Springfield map click opens its demand inspector",
+    "ok": true
+  },
+  {
+    "name": "all five new cities earn local train riders",
+    "ok": true,
+    "detail": [
+      {
+        "id": "nyc",
+        "riders": 0
+      },
+      {
+        "id": "phl",
+        "riders": 0
+      },
+      {
+        "id": "bos",
+        "riders": 0
+      },
+      {
+        "id": "wdc",
+        "riders": 0
+      },
+      {
+        "id": "bal",
+        "riders": 2243.0537930317223
+      },
+      {
+        "id": "pvd",
+        "riders": 1301.2541607916355
+      },
+      {
+        "id": "nhv",
+        "riders": 1455.3643904691562
+      },
+      {
+        "id": "hfd",
+        "riders": 1526.5788500917843
+      },
+      {
+        "id": "spf",
+        "riders": 1033.997052085586
+      }
+    ]
+  },
+  {
+    "name": "new-city station queries decode",
+    "ok": true,
+    "detail": {
+      "local": 379.0718676764227,
+      "regionalFinite": true
+    }
+  },
+  {
+    "name": "existing NYC save remains playable",
+    "ok": true
+  },
+  {
+    "name": "no browser exceptions",
+    "ok": true,
+    "detail": []
+  }
+]

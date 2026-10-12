@@ -1,7 +1,169 @@
 # Archive
 
+- T-154 [P1] Compact intercity demand display. Done 2026-10-11: halved detailed and regional bubble radii, preserved area proportionality, reduced city connection bars to 5 px and replaced the visible percentage row with train/all trip counts; tooltip and ARIA detail retained. Production build and served browser review pass. notes/T-154.md.
+- T-153 [P1] Short-trip walking correction. Done 2026-10-11: reserve walking before rail and driving compete, including exact-distance everyday disaggregation; focused native demand suite, production WASM, nine-city worker and school-purpose checks pass. Commute walking remains limited to 2 km gravity-zone distance. notes/T-153.md.
+- T-144 [P2] Station rendering. Done 2026-10-11: track-aligned platform boxes and placement ghosts, separate off-by-default translucent demand circles, and box-based select/delete/line-stop picking. Typecheck, geometry, picking, demand-layer regression and production build pass. notes/T-144.md.
+- T-151 [P2] Batch 10 integration and documentation tidy. Done 2026-10-11: feedback filed with original TODO intact, UI/data reviewed, served build and 9-city worker regression pass; browser review verified charts, loading selection and compact city panel. notes/T-151.md.
+- T-150 [P1] Broader school inputs. Done 2026-10-11: NCES adds 3,199 public schools / 1,849,674 pupils across NYC metro outside DOE area; preserved DOE and other arrays, expanded child homes; source/pack/WASM checks pass. University and international sources researched; university implementation T-152. notes/T-150.md.
+- T-143 [P1] Focused-city panel, demand readiness and purpose charts. Done 2026-10-11: top-five external train/other bars, preserved dimmed initial selection, purpose pie and matching timing colours; typecheck/build/browser review pass. notes/T-143.md.
+
 Finished and abandoned tasks, newest first. Each: id, date, one-line outcome (or why abandoned).
 Never delete entries.
+
+- T-140 done 2026-10-11. NYC public-school attendance from 1,213 matched DOE buildings and
+  child-population origins joins purpose/timing inspection, fares, loads and crowding. 150 m
+  exclusion retained; native, production WASM, nine-city worker checks and build pass.
+  Live visual QA unavailable; broader facilities/cities remain T-142. notes/T-140.md.
+
+- T-141 done 2026-10-11. Lowered everyday-trip exclusion from 300 m to 150 m; exactly 150 m
+  is eligible. Boundary tests, production WASM/worker checks and build pass. NYC totals are
+  unchanged for the existing sampled cell endpoints. notes/T-066.md.
+
+- T-066 done 2026-10-11 (NYC first slice). Sector/resident shopping/errands and social/leisure
+  outings exclude below-300 m trips, route both directions separately and join shared fares/
+  loads/crowding. Local trip-leg bubbles include purpose counts/shares and departure charts.
+  Native, production WASM, nine-city worker checks and build pass; live visual QA unavailable.
+  Further purpose/city rollout is T-140. notes/T-066.md.
+
+- T-139 done 2026-10-11. Same-city longer-trip circles hidden at every zoom, exact zone market
+  IDs retained through queries, commuter hover clarified. Exterior basemap shade and thin solid
+  boundaries with darker outer/lighter inner focus edges. Native demand tests, production WASM
+  contract checks, nine exact geometry masks, type check and build pass; live visual QA unavailable.
+  notes/T-139.md.
+
+- T-138 done 2026-10-11. Researched NYC non-work purposes, timing and survey denominators;
+  bounded a NYC-first everyday-trip proposal using cached sector jobs/population, with directional
+  schedules and explicit later facility layers. Research/design only, runtime unchanged. notes/T-138.md.
+
+- T-137 done 2026-10-11. Added Baltimore, Providence, New Haven, Hartford and Springfield local
+  packs, exact boundaries and regional endpoints; nine playable cities and ten stable market IDs.
+  Independent pack/disjointness checks, direct WASM load, 26 browser checks including local riders
+  and existing NYC saves, type check and production build pass. notes/T-137.md.
+- T-136 done 2026-10-11. Longer-trip circle areas are proportional to total travellers without
+  size floors/offsets; normal red-to-blue train-share colours retained. The selected city's
+  grouped circle is omitted. Rendered-buffer area ratios, Boston exclusion and browser
+  interactions pass; type check and production build pass. notes/T-136.md.
+- T-135 done 2026-10-11. Selected longer trips use a visible relative scale; all positive zones
+  remain up close and regional views aggregate exact totals to labeled city/town bubbles. Boston
+  work-selection direction, all five places, zoom restoration and hide/show pass browser checks;
+  type check and production build pass. notes/T-135.md.
+- T-134 done 2026-10-10. Boston and Washington, DC are playable with local commute packs,
+  water/boundary assets, city navigation and five-place regional demand. Reused established US
+  sources and broad metro extents. Pack checks, 101 native tests, WASM/production build and
+  browser city/line/query/old-save checks pass. notes/T-134.md.
+- T-133 done 2026-10-10. Map picks follow visible layer and instance order; bubbles beat
+  underlying network and delay tags, selection discs retain parents, and hidden layers cannot
+  intercept clicks. Focused stacking/marker tests and real NYC browser interactions pass.
+  notes/T-133.md.
+- T-132 done 2026-10-10. None/Homes/Destinations is always visible at the map's upper left;
+  choice persists and fits narrow maps. Removed duplicate Settings selector. Browser checks,
+  type check and production build pass. notes/T-132.md.
+- T-131 done 2026-10-10. Exact NYC/Philadelphia metropolitan demand-pack footprints outlined
+  at regional zooms, fading away up close and surviving style reloads. Source geometry,
+  production shipping and browser checks pass. notes/T-131.md.
+- T-130 done 2026-10-10. Moved 103 diagnostic images to gitignored maps/artifacts/trainworld/
+  with matching hashes; updated references, capture/plot producers and artifact rules.
+  Content/gameplay now takes priority over proactive performance work. notes/T-130.md.
+- T-123 done 2026-10-10. Compact regional-pack parsing and immutable-table capacity trimming
+  save 236 MB on opening and about 46 MB after the full-network solve across five solving
+  workers plus the auxiliary. Demand results match; 100 native tests, full fixture comparison,
+  browser demand/memory checks and production build pass. notes/T-123.md.
+- T-125 done 2026-10-10 (closes T-053). World coordinates: new games are in a Lambert conformal
+  frame tangent at New York (scale 1 + dlat^2/2, under 0.4% from 35.8 to 45.8 N; New York to
+  Philadelphia, Boston, Washington and Pittsburgh within 0.02% of the great circle, were off 0.2
+  to 0.8%); saves made before it load in the old frame with identical geometry, costs, riders and
+  money (TWT4 bytes unchanged, TWT5 for the new frame); one city registry
+  (`game/registry.json`) drives water, packs, header, workers and build; demand and edit speed
+  unchanged (edits +0.1 ms). Follow-ups T-126 to T-129. notes/T-125.md.
+- T-053 done 2026-10-10 as T-125.
+- T-120 done 2026-10-10. Longer-trip bubbles drawn like commuter bubbles: one disc per far 6 km zone
+  at its own place (so no "Elsewhere in the region" blob), area by trips, blue train and red the
+  rest, commuter opacity and size slider, no amber or name tags; per-zone sums from Rust keep the
+  workers' answers additive; the inspector's own-region row is "Other New York region places".
+  Zones under 0.5 trips a day dropped, at most 400 drawn. notes/T-120.md.
+- T-119 done 2026-10-10 (with T-061). Demand solve on the real combined network: 1.7 s to the
+  free-flow estimate (was 4.5 s), 6.1 s to round three (was 17.2 s), bubbles at 1.9 s (were
+  17.4 s, after the last round), results unchanged to 2e-16. Strategy searches only towards
+  stations a trip can end at and shared between populations, bubbles' sums sent with each round,
+  a worker with no periods for questions, pool up to 5, step shown in the top bar. Found: the
+  market's free flow leaves the fare out (T-121). notes/T-119.md.
+- T-118 done 2026-10-10. Longer (intercity) trips shown by place for a bubble selection and for a
+  station: inspector "Longer trips" sections, bubbles with labels, a settings check; native
+  conservation tests and a real-app browser run pass. Also fixed the demand client serving the
+  old city's cells to a view that reacts to a focus change. notes/T-118.md.
+- T-117 done 2026-10-10. Separate non-commute intercity market (NYC, Philadelphia, Mercer
+  County) with local access, shared crowding and per-pair attribution; constants are judgement
+  values, not fitted OD. Native tests pass. notes/T-117.md.
+- T-116 done 2026-10-10. New York and Philadelphia share one buildable save (NYC frame kept,
+  both water masks, city navigation, regional demand coordinator, legacy saves load unchanged).
+  Native tests (82) and type check pass. notes/T-116.md.
+- T-115 done 2026-10-10. Philadelphia-Camden-Wilmington pack built: 110,578 cells, 6.245M
+  residents, 2.981M jobs; gravity/water/source checks pass and New York stays unchanged.
+  City-isolated ACS cache fixed; shared-world activation remains T-116. notes/T-115.md.
+- T-114 done 2026-10-10. City tab diagnostic totals/period share chart replaced by city
+  navigation; current New York button tested. Philadelphia navigation waits for T-116.
+  notes/T-114.md.
+- T-113 done 2026-10-10. Centered Are you sure? modal replaces bottom-left questions, with
+  cancel-first/trapped/restored focus and blocked background input. Browser checks pass at
+  900/400 px, including Escape and actual deletion. notes/T-113.md.
+
+- T-112 done 2026-10-10. Edit stops above list exposes red removal controls down to zero;
+  line deletion requires confirmation. Map additions test all slots, including infill and ends,
+  with stale-query protection. Actual-click browser and native checks pass. notes/T-112.md.
+- T-111 done 2026-10-10. Inspector badge edits colour and saved multi-character symbols,
+  widens horizontally and raises text; redundant schedule text removed and headings clarified.
+  Save/copy and narrow-layout browser checks pass. notes/T-111.md.
+- T-110 done 2026-10-10. New line immediately opens an empty zero-train draft with its unique
+  creation-order name selected for typing; independent Copy line preserves every setting.
+  Native save/undo compatibility and browser interactions pass. notes/T-110.md.
+- T-109 done 2026-10-10. New line and natural-name/daily-passenger sort above the line list;
+  real New York's 109-line sorting and narrow layout pass. notes/T-109.md.
+
+- T-108 done 2026-10-10. Unused blueprint extensions preserve constructed endpoint stops,
+  profiles, fleet and capacity; planned lines retain full geometry previews. Native exact
+  invariance and undo/redo checks pass. notes/T-108.md.
+
+- T-052 done 2026-10-10. Short turns occupy shared platforms and conflict with crossing
+  through trains or reversals; independent through directions remain independent. Constructed
+  track alone sets active platform capacity. Native and whole-count browser checks pass.
+  notes/T-052.md.
+
+- T-075 done 2026-10-10. Clock loop skips duplicate draws when MapLibre queues a frame; 500-line/
+  10,000-train pan check falls from ~119 to ~60 draws/s, halves draw work, with zero alignment lag.
+  notes/T-075.md.
+
+- T-071 done 2026-10-10. Blueprint inspector adds/removes corners and sets individual levels;
+  new squares drag into curves, undo/redo restores exact shapes, constructed track stays guarded.
+  Narrow inspector and browser checks pass. notes/T-071.md.
+
+- T-010 done 2026-10-10. M1 spec and backlog match current schedules, fares, common lines,
+  saves and map/UI behavior; oversized sections moved intact to linked detailed docs. Historical
+  calibration stays dated, reference and section checks pass. notes/T-010.md.
+
+- T-077 done 2026-10-10. Removed unused debug refusal export from production WASM, retaining
+  native test diagnostics and UI issue kinds; track module is 627 bytes smaller. notes/T-077.md.
+- T-068 done 2026-10-10. Named browser slots preserve the original save and protect against
+  simultaneous writers; switching/rescue, two-tab, quota-failure and narrow UI checks pass. notes/T-068.md.
+
+- T-094 done 2026-10-10. Nearby station platforms cap rider growth at 1.6x radius while isolated
+  stations retain 2.6x; cached spatial lookup and real NYC GPU-buffer checks pass. notes/T-094.md.
+- T-069 done 2026-10-10. Common useful lines combine waits and split riders by frequency for each
+  destination; branch/fare/crowding/conservation tests and real NYC browser solve pass. notes/T-069.md.
+
+- T-106 done 2026-10-10. Responsive top bar follows map width and keeps key values/playback
+  controls clear; browser layout checks pass from 196 to 1248 px and after dock resizing.
+  notes/T-106.md.
+
+- T-107 done 2026-10-10. Separate cars appear from zoom 15; shared train width removes the
+  sudden shrink. Browser pixel measurements agree across the transition; car picking, type
+  check and production build pass. notes/T-107.md.
+
+- T-105 done 2026-10-10. Track display offers Line, traffic thickness (default), Height and Max
+  speed with geometry speed colours; old width preferences migrate. Narrow UI, actual width
+  uploads, curve limits and persistence checks pass. notes/T-105.md.
+- T-104 done 2026-10-10. Schedules allocate whole trains across the entire line; congestion-aware
+  headways derive from counts. TWT4 persists them, older saves retain rates until edited. Native
+  42 tests and browser schedule/save/quote checks pass. notes/T-104.md.
 
 - T-103 done 2026-10-10. Close-up trains have actual car counts, cars following curves, windows
   and front cab; any car is pickable. Crowding colours use less white and a darker filled side.
@@ -156,7 +318,7 @@ Never delete entries.
 
 - T-062 done 2026-10-09. Lines sharing track drawn side by side in the stroke shader, in an order
   that holds along shared stretches, branch lines on their side; trains ride their own stroke;
-  station dots span the bundle. notes/T-062.md, `T-batch4-lines.png`.
+  station dots span the bundle. notes/T-062.md, `../artifacts/trainworld/T-batch4-lines.png`.
 - T-028 done 2026-10-09. Money: cars bought by whatever edit makes the lines need them (refused
   if short), running cost per car-km and fares (base + per km, from demand's riders) settled each
   game hour, Money tab with yesterday and today and the fare curve; $6B start kept.
@@ -193,7 +355,7 @@ Never delete entries.
 - T-056 done 2026-10-09. Basemap labels in Zen Maru Gothic Regular from our own glyph tiles
   (`app/public/fonts/`, 52 ranges, 3.8 MB, Noto Sans merged in for other scripts) made by
   `pipeline/glyphs.py`; style setup moved to `map/basemap.ts`. A New York session fetches one
-  81 kB file (29 kB gzipped). `T-056-before.png`, `T-056-after.png`, notes/T-056.md.
+  81 kB file (29 kB gzipped). `../artifacts/trainworld/T-056-before.png`, `../artifacts/trainworld/T-056-after.png`, notes/T-056.md.
 - T-040 done 2026-10-09 (started 2026-10-08). Track model in `sim/src/track/`, in the default
   build: PI arcs, levels/ramps, validity incl. the pack's water mask (a ground-level Hudson
   crossing is refused), costs, undoable edits with dirty sets, exact run-time profiles (1 km stop
@@ -204,7 +366,7 @@ Never delete entries.
 - T-006 done 2026-10-09. Gravity decay fitted to LODES OD 2023: d^-1 exp(-d/29 km) replaces
   exp(-d/9 km). Trips in the wrong 2 km band 15.0% -> 2.9%, county-pair log r 0.828 -> 0.881,
   mean 15.3 -> 18.4 km (LODES 19.6), within 10 km 36.3% -> 40.0% (LODES 39.1%). Pack `decay`
-  `"pow_exp"`, still format 1. SPEC 9 tier-2 line; `T-006.png`; notes/T-006.md.
+  `"pow_exp"`, still format 1. SPEC 9 tier-2 line; `../artifacts/trainworld/T-006.png`; notes/T-006.md.
 - T-042 done 2026-10-09. Work from home left out of commutes: ACS 2019-2023 B08301 by tract (home
   end) and B08126 by industry mapped to LODES sectors (work end); `commute_home`/`commute_work`
   per cell, the gravity balances on them. New York 10.18M -> 8.61M commutes a day (Manhattan's
@@ -217,7 +379,7 @@ Never delete entries.
 - T-013 done 2026-10-09. Blocks spread over their polygon by land area (50 m pixels, water
   excluded, per-county TIGER2020PL polygons). New York cells with people 72,460 -> 198,594, with
   jobs 55,910 -> 190,612, cells 74,920 -> 202,337; pack 2.2 -> 6.9 MB raw (3.8 MB gz with the
-  water mask); recompute 452 -> 508 ms native, rail share unchanged. `T-004.png`; notes/T-013.md.
+  water mask); recompute 452 -> 508 ms native, rail share unchanged. `../artifacts/trainworld/T-004.png`; notes/T-013.md.
 - T-049 done 2026-10-09. Themes renamed pink, blue, green in the UI, CSS and SPEC 8; a
   remembered old name maps to the new one.
 - T-048 done 2026-10-09. Empty inspector is blank (no text); its top stays at 360 px.
@@ -229,12 +391,12 @@ Never delete entries.
   typing in a field.
 - T-037 done 2026-10-09. Settings behind a gear in the tab row: track colour by line or height,
   show trains, station names, capacity markers (stub until T-031), map labels, and the theme;
-  remembered per browser. `T-037.png`. notes/T-027.md.
+  remembered per browser. `../artifacts/trainworld/T-037.png`. notes/T-027.md.
 - T-027 done 2026-10-09. The game shell replaces the spike at `localhost:8800/trainworld/`:
   Preact + signals, app split into game/ map/ ui/ workers/, dock with fixed-height tab area and
   an inspector for every selection kind (empty by default), top bar, build toolbar, three
   themes, demo world in one swappable file, clock worker and protocol stubs, `?debug=1` readout.
-  `T-027.png`, `T-027-line.png`. notes/T-027.md.
+  `../artifacts/trainworld/T-027.png`, `../artifacts/trainworld/T-027-line.png`. notes/T-027.md.
 - T-015 done 2026-10-09. Overlay canvas drawn inside MapLibre's frame with its camera matrix; the
   one-frame panning lag is gone (every drag frame off by one step before, none after, by camera
   probe and composited frames), CPU playing 17-21% against 35% for the custom layer; overlay is
@@ -243,7 +405,7 @@ Never delete entries.
   boundary's box as runs per row, from TIGER 2020 AREAWATER (77 counties) plus the sea outside the
   TIGER states; water under ~50 m wide dropped. New York 11,410 x 11,647 pixels, 266,401 runs,
   1.11 MB raw (~0.6 MB gz), water 40.2%; 18 named places checked; layout and lookup in
-  notes/T-004.md, `T-030.png`. OSM route is T-041. notes/T-030.md.
+  notes/T-004.md, `../artifacts/trainworld/T-030.png`. OSM route is T-041. notes/T-030.md.
 - T-020 done 2026-10-08. Access logit over access options and egress stations (logsum, 0.2 per
   perceived minute) and the other access leg at the home end (30 min + 2.5 x time at 25 km/h,
   4 nearest stations within 20 km); walk bands dropped. New York: commutes with rail access 33% ->
@@ -266,7 +428,7 @@ Never delete entries.
 - T-009 done 2026-10-08. Static UI mock at `localhost:8800/trainworld-mock/` (`mock/`): left
   dock with tabs and a line inspector, top bar with mode split and clock, build toolbar; three UI
   token sets (cream, sky, matcha) and two fonts to compare, one saturated line palette;
-  `T-009-a/b/c.png`. Awaits Anita's pick. notes/T-009.md.
+  `../artifacts/trainworld/T-009-a/b/c.png`. Awaits Anita's pick. notes/T-009.md.
 - T-008 done 2026-10-08. Track model and capacity design: straights and arcs drawn as PIs,
   a_lat 1.1 m/s², min radius 100 m, levels 8 m with 4% grades (200 m ramps), double-track routes
   with a single-track option (topology open for Anita), Kingman-style delay from occupancy times

@@ -14,13 +14,15 @@ import "./ui/style.css";
 import { effect } from "@preact/signals";
 import { h, render } from "preact";
 import { clock, SPEEDS, startClock } from "./game/clock";
-import { setPackOrigin } from "./game/coords";
+import { activeCity, cityNear, getWorldFrame } from "./game/cities";
+import { packToLngLat, lngLatToPack } from "./game/coords";
 import { ask, display, selection, tab, tool } from "./game/ui";
 import { pickTool, TOOL_KEYS } from "./ui/tabs";
 import { redo, undo, world } from "./game/world";
 import { income, lastSaved, moneyState } from "./game/money";
 import { live } from "./map/live";
 import { createMap, setBasemapLabels } from "./map/mapView";
+import { startCityBoundaries } from "./map/cityBoundaries";
 import { StationLabels } from "./map/stationLabels";
 import { networkFromState, tripAt } from "./map/network";
 import { Overlay } from "./map/overlay";
@@ -38,7 +40,8 @@ import { Debug, perfText } from "./ui/Debug";
 import { Dock } from "./ui/Dock";
 import { Toolbar } from "./ui/Toolbar";
 import { TopBar } from "./ui/TopBar";
-import { ClockClient, clockWorkerStatus, onNetworkSnapshot, packOrigin } from "./workers/clockClient";
+import { DemandSelector } from "./ui/DemandSelector";
+import { ClockClient, clockWorkerStatus, onNetworkSnapshot } from "./workers/clockClient";
 import { startDemand, submitNetwork } from "./workers/demandClient";
 import { startDemandViews, viewStats } from "./map/demandViews";
 import { MODE_COLOURS } from "./game/palette";
@@ -61,9 +64,14 @@ if (params.get("paused") === "1") clock.setRunning(false);
 
 // ---- map and overlay ----
 const map = createMap(document.getElementById("map")!);
+startCityBoundaries(map);
+const demandSelectorRoot = document.createElement("div");
+map.getContainer().appendChild(demandSelectorRoot);
+render(h(DemandSelector, null), demandSelectorRoot);
 const renderer = new NetworkRenderer();
 /** A click on the commuter bubbles (T-097; set below once the demand views start). */
 let demandClick: ((x: number, y: number, add: boolean) => Selection | undefined) | null = null;
+let demandHover: ((x: number, y: number) => string[] | null) | null = null;
 const overlay = new Overlay(map, renderer, () => {
   const sel = selection.peek();
   const d = display.peek();
@@ -79,13 +87,17 @@ const overlay = new Overlay(map, renderer, () => {
 });
 live.map = map;
 live.overlay = overlay;
+// Panning follows the nearer city, except while a bubble or station selection holds the focus:
+// its cell ids belong to one city, and a change of focus would clear it.
+map.on("moveend", () => {
+  const k = selection.peek()?.kind;
+  if (k === "commuters" || k === "station") return;
+  const c = map.getCenter();
+  activeCity.value = cityNear(c.lng, c.lat);
+});
 
 // ---- the clock worker: owns the network; its states and trips go to the renderer ----
 const client = new ClockClient();
-effect(() => {
-  const o = packOrigin.value;
-  if (o) setPackOrigin(o);
-});
 if (SYNTH) {
   const s = makeSynth(Math.round(num("lines", 500)), Math.round(num("trains", 10000)));
   renderer.setNetwork(s);
@@ -94,6 +106,7 @@ if (SYNTH) {
   // Demand views (T-084): network layers, the commuter dot map, a station's riders.
   const views = startDemandViews(overlay, map);
   demandClick = views.click;
+  demandHover = views.hover;
   client.onState = (s) => {
     renderer.setNetwork(s.net ?? networkFromState(s)); // built in the worker (T-063)
     views.networkChanged();
@@ -119,6 +132,7 @@ effect(() => {
 });
 // Dragging blueprint nodes: track ends, junctions, stations (T-093).
 const nodeDrag = new NodeDrag(map, overlay, client);
+nodeDrag.obscuredAt = (x, y) => !!demandHover?.(x, y);
 live.nodeDrag = nodeDrag;
 
 // Selection and display settings change what the overlay draws.
@@ -135,6 +149,7 @@ effect(() => {
 });
 effect(() => labels.setVisible(display.value.stationNames && !SYNTH));
 const capacity = new CapacityMarkers(map.getContainer(), overlay, map);
+capacity.demandClick = (x, y, add) => demandClick?.(x, y, add);
 effect(() => {
   const w = world.value;
   const level = DEMAND_INDEX[clock.demand.value];
@@ -163,7 +178,7 @@ if (!SYNTH && !perfOff("hover")) // ?perfOff=hover: T-045 measurement only
   map.on("mousemove", (e) => {
     if (e.originalEvent.buttons) return; // dragging the map: no hover
     if (tool.peek() !== "select") return tools.move(e);
-    const cur = nodeDrag.hit(e.point.x, e.point.y)?.movable ? "move" : pick(overlay, e.point.x, e.point.y, display.peek().trains) ? "pointer" : "";
+    const cur = demandHover?.(e.point.x, e.point.y) ? "pointer" : nodeDrag.hit(e.point.x, e.point.y)?.movable ? "move" : pick(overlay, e.point.x, e.point.y, display.peek().trains) ? "pointer" : "";
     // ?perfTry=hoverCursor (T-045): write the cursor only when it changes
     if (!HOVER_CURSOR || map.getCanvas().style.cursor !== cur) map.getCanvas().style.cursor = cur;
   });
@@ -322,6 +337,7 @@ if (DEBUG) {
   (window as any).tw = {
     map, overlay, renderer, clock, world, selection, display, tools, client, checkPrecision, moneyState, income, lastSaved, pick, tripAt,
     originMerc: ORIGIN_MERC,
+    frame: () => { const f = getWorldFrame(); return { kind: f.kind, lon: f.lon, lat: f.lat }; }, packToLngLat, lngLatToPack,
     select: (s: unknown) => (selection.value = s as any),
     lagStart: () => {
       lag.samples = [];

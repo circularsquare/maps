@@ -9,19 +9,20 @@
 
 import init, { TrackApi } from "../wasm/track/sim"; // the track model only (T-051)
 import { toLocal } from "../map/geo";
+import { CITIES, HOME_CITY, NEW_GAME_FRAME, WORLD_ID } from "../game/cities";
+import { frameKindName, makeFrame, type Frame, type FrameSpec } from "../game/frame";
 import { PERIODS, periodAt } from "../game/periods";
 import { networkFromState } from "../map/network";
-import { decodeSave, encodeSave, readStored, SAVE_FORMAT, START_CLOCK, writeStored, type DayLedger, type SaveHeader } from "./saveFile";
+import { decodeSave, encodeSave, isNortheastSave, readStored, SAVE_FORMAT, START_CLOCK, writeStored, listSlots, writeSlot, renameSlot, deleteSlot, leaseSlot, ORIGINAL_SLOT, type SlotLease, type DayLedger, type SaveHeader } from "./saveFile";
 import type { ClockEdge, ClockLine, ClockNode, ClockState, EditOp, FromClock, MoneyState, NetworkSnapshot, PiInput, RouteEnd, ToClock } from "./protocol";
 
-const R = 6371008.8;
 /** Run 0 of each line is resampled this often (m) for the renderer's line texture. */
 const SAMPLE_STEP = 50;
 const SNAPSHOT_DEBOUNCE_MS = 500;
 /** SPEC 6.4: US$6B to start, in US$M. */
 const START_CASH = 6000;
 /** Whole trains on a new line across both directions, high/medium/low demand. */
-const NEW_LINE_TRAINS: [number, number, number] = [8, 4, 2];
+const NEW_LINE_TRAINS: [number, number, number] = [0, 0, 0];
 /** Default fare curve (T-028): US$ a ride plus US$ a km. */
 const START_FARES = { base: 1.5, perKm: 0.1 };
 /** Autosave (T-029): this long after the last one if anything changed, wall ms; at once after a
@@ -32,8 +33,15 @@ const LEDGER_DAYS = 30;
 const LEVEL_OF = { high: 0, medium: 1, low: 2 } as const;
 
 let api: TrackApi | null = null;
-let city = "nyc";
-let origin = { lon: -73.985, lat: 40.758 };
+let city = HOME_CITY;
+/** the frame of the loaded game (T-125): new games are in the world frame, saves made before it in
+ * the legacy one; read from the track model after every load */
+let frame: Frame = makeFrame(NEW_GAME_FRAME);
+function frameSpec(): FrameSpec { return { kind: frame.kind, lon: frame.lon, lat: frame.lat }; }
+function syncFrame() {
+  const o = api!.frame_origin();
+  frame = makeFrame({ kind: frameKindName(api!.frame_kind()), lon: o[0], lat: o[1] });
+}
 let version = 0;
 let snapVersion = 0;
 let epoch = NaN;
@@ -52,7 +60,28 @@ let settledHour = Math.floor(START_CLOCK / 3600);
 /** something to autosave; when the last autosave was written */
 let dirty = false;
 let savedAt = Date.now();
-let saving = false;
+let saveInFlight: Promise<boolean> | null = null;
+let activeSlot = ORIGINAL_SLOT;
+let activeLease: SlotLease | null = null;
+let storageReady = true;
+let saveFailure: string | undefined;
+const slotChanges = typeof BroadcastChannel === "undefined" ? null : new BroadcastChannel("anitabuilder-save-slots");
+slotChanges?.addEventListener("message", () => { if (api) void publishSlots(); });
+
+async function publishSlots(error?: string) {
+  let slots: Awaited<ReturnType<typeof listSlots>> = [];
+  try { slots = await listSlots(); storageReady = true; } catch { storageReady = false; }
+  const writable = !!activeLease && storageReady && !saveFailure;
+  const reason = saveFailure || (!storageReady ? "Browser storage is unavailable. Save to a file to keep this game."
+    : !activeLease ? navigator.locks ? "Autosave is off here because this slot was opened in another tab. Save to a new slot, or close the other tab and reload."
+      : "This browser cannot protect save slots. Save to a file to keep this game." : undefined);
+  send({ kind: "saveSlots", slots, active: activeSlot, writable, at: slots.find(s => s.key === activeSlot)?.at ?? 0, reason, error });
+}
+
+async function flushBeforeSwitch() {
+  if (dirty && !activeLease) throw new Error("Save this game to a new slot before opening another slot. You can also download a file and reload this page.");
+  if (!await autosave()) throw new Error("This game could not be saved. Save to a file before opening another slot.");
+}
 /** the empty network's save, for a new game (keeps the water mask) */
 let emptyTrack: Uint8Array | null = null;
 let moneyParams = [2.5, 6, 100];
@@ -61,10 +90,9 @@ function send(msg: FromClock, transfer: Transferable[] = []) {
   postMessage(msg, { transfer });
 }
 
-/** pack metres -> lng/lat (the pack's equirectangular frame, notes/T-004.md) */
+/** world metres -> lng/lat in the loaded game's frame (game/frame.ts) */
 function packLngLat(x: number, y: number): [number, number] {
-  const r = 180 / Math.PI;
-  return [origin.lon + (x / (R * Math.cos(origin.lat / r))) * r, origin.lat + (y / R) * r];
+  return frame.toLonLat(x, y);
 }
 function packLocal(x: number, y: number): [number, number] {
   const [lng, lat] = packLngLat(x, y);
@@ -74,7 +102,6 @@ function packLocal(x: number, y: number): [number, number] {
 async function loadWater(packUrl: string): Promise<{ ok: boolean; population: number; jobs: number }> {
   const head = await (await fetch(packUrl + ".json")).json();
   const pop = head.totals?.pop ?? 0, jobs = head.totals?.jobs ?? 0;
-  origin = { lon: head.origin.lon, lat: head.origin.lat };
   const row = head.arrays.find((a: any) => a.name === "water_row");
   const xs = head.arrays.find((a: any) => a.name === "water_x");
   if (!head.water || !row || !xs) return { ok: false, population: pop, jobs };
@@ -85,7 +112,8 @@ async function loadWater(packUrl: string): Promise<{ ok: boolean; population: nu
   const rows = new Uint32Array(buf, row.offset - base, row.count);
   const runs = new Uint16Array(buf, xs.offset - base, xs.count);
   const w = head.water;
-  api!.set_water(w.cell_m, w.origin_m[0], w.origin_m[1], w.size[0], w.size[1], rows, runs);
+  // The raster is laid out in the pack's own frame; the track model puts it in the game's (T-125).
+  api!.add_pack_water(w.cell_m, w.origin_m[0], w.origin_m[1], w.size[0], w.size[1], rows, runs, head.origin.lon, head.origin.lat);
   return { ok: true, population: pop, jobs };
 }
 
@@ -161,7 +189,7 @@ function buildState(): ClockState {
     const ok = li[i + 2] === 1, running = li[i + 3] === 1;
     const t3 = (k: number) => [li[i + k], li[i + k + 1], li[i + k + 2]] as [number, number, number];
     lines.push({
-      id, name: a.line_name(id), colour: hex(li[i + 1]), ok, running, broken: li[i + 4] === 1, tph: t3(5), cars: li[i + 21] || li[i + 8],
+      id, name: a.line_name(id), letter: a.line_symbol(id), colour: hex(li[i + 1]), ok, running, broken: li[i + 4] === 1, tph: t3(5), cars: li[i + 21] || li[i + 8],
       lengthM: li[i + 9], roundTrip: t3(10), trains: t3(13), delay: t3(16), dwell: li[i + 19], turnaround: li[i + 20],
       stops: [...a.line_stops(id)], path: [...a.line_path(id)],
       fromStart: [0, 1, 2].map((lev) => [...a.stop_times(id, 0, lev)]),
@@ -287,7 +315,7 @@ function settle(): boolean {
 // ---------------------------------------------------------------- saves (T-029)
 
 function header(): SaveHeader {
-  return { game: "anitabuilder", format: SAVE_FORMAT, city, clock: gameNow(), cash: api!.cash(), fleet: api!.fleet(), fares: { ...fares }, ledger: ledger.map((d) => ({ ...d })) };
+  return { game: "anitabuilder", format: SAVE_FORMAT, city, region: WORLD_ID, cities: CITIES.map(c => c.id), clock: gameNow(), cash: api!.cash(), fleet: api!.fleet(), fares: { ...fares }, ledger: ledger.map((d) => ({ ...d })) };
 }
 
 /** The game as file bytes. The network and header are taken at once, before anything awaits. */
@@ -296,28 +324,95 @@ function saveBytes(): Promise<Uint8Array> {
   return encodeSave(header(), api!.save());
 }
 
-async function autosave() {
-  if (!api || saving || !dirty) return;
-  saving = true;
+function autosave(): Promise<boolean> {
+  if (saveInFlight) return saveInFlight.then(ok => dirty && ok ? autosave() : ok);
+  if (!api || !dirty) return Promise.resolve(true);
+  if (!activeLease) return Promise.resolve(false);
+  const key = activeSlot; // an in-flight write must never move to the next slot
   dirty = false;
+  saveInFlight = (async () => {
+    try {
+      const day = Math.floor(gameNow() / 86400);
+      const t0 = performance.now();
+      const bytes = await saveBytes();
+      const encodeMs = performance.now() - t0;
+      const at = Date.now();
+      await writeSlot(key, { bytes, at, day, city });
+      savedAt = at;
+      saveFailure = undefined;
+      send({ kind: "saved", at, bytes: bytes.length, encodeMs, totalMs: performance.now() - t0 });
+      await publishSlots();
+      slotChanges?.postMessage({ key });
+      return true;
+    } catch {
+      dirty = true;
+      savedAt = Date.now(); // retry on the next autosave interval, rather than every tick
+      saveFailure = "The browser could not save this game. Save to a file to keep your changes.";
+      await publishSlots(saveFailure);
+      return false;
+    } finally { saveInFlight = null; }
+  })();
+  return saveInFlight;
+}
+
+async function manageSlot(msg: Extract<ToClock, { kind: "saveSlot" }>) {
   try {
-    const day = Math.floor(gameNow() / 86400);
-    const t0 = performance.now();
-    const bytes = await saveBytes();
-    const encodeMs = performance.now() - t0;
-    savedAt = Date.now();
-    if (await writeStored("autosave", { bytes, at: savedAt, day })) send({ kind: "saved", at: savedAt, bytes: bytes.length, encodeMs, totalMs: performance.now() - t0 });
-  } catch (err) {
-    send({ kind: "error", message: "autosave failed: " + err });
-  } finally {
-    saving = false;
-  }
+    if (msg.action === "refresh") { await publishSlots(); return; }
+    if (msg.action === "create") {
+      const key = "slot-" + crypto.randomUUID();
+      const lease = await leaseSlot(key);
+      if (!lease) throw new Error("This browser cannot protect save slots. Save to a file instead.");
+      try {
+        const bytes = await saveBytes();
+        await writeSlot(key, { bytes, at: Date.now(), day: Math.floor(gameNow() / 86400), city, name: msg.name?.trim() || "Saved game" });
+        // Finish earlier writes before releasing the old slot's guard. The new copy is already safe.
+        if (activeLease) await autosave();
+        activeLease?.release();
+        activeSlot = key;
+        activeLease = lease;
+        saveFailure = undefined;
+        dirty = true;
+        savedAt = Date.now();
+      } catch (err) { lease.release(); throw err; }
+    } else if (msg.action === "open") {
+      const key = msg.key;
+      if (!key || key === activeSlot) { await publishSlots(); return; }
+      await flushBeforeSwitch();
+      const lease = await leaseSlot(key);
+      try {
+        // Read after acquiring the guard: the previous owner may have saved just before release.
+        const stored = await readStored(key);
+        if (!stored) throw new Error("That save slot no longer exists.");
+        const decoded = await decodeSave(stored.bytes);
+        if (!isNortheastSave(decoded.header)) throw new Error("This save is for another region.");
+        await loadGame(stored.bytes, "file");
+        activeLease?.release();
+        activeSlot = key;
+        activeLease = lease;
+        saveFailure = undefined;
+        dirty = false;
+        savedAt = stored.at;
+      } catch (err) { lease?.release(); throw err; }
+    } else {
+      const key = msg.key;
+      if (!key) throw new Error("Choose a save slot first.");
+      if (msg.action === "delete" && key === activeSlot) throw new Error("Open another slot before deleting this one.");
+      const temporary = key === activeSlot ? null : await leaseSlot(key);
+      if (key === activeSlot ? !activeLease : !temporary) throw new Error("That slot is open in another tab. Close it before changing this save.");
+      try {
+        if (msg.action === "rename") await renameSlot(key, msg.name ?? "");
+        else await deleteSlot(key);
+      } finally { temporary?.release(); }
+    }
+    await publishSlots();
+    slotChanges?.postMessage({ key: activeSlot });
+  } catch (err) { await publishSlots((err as Error).message); }
 }
 
 /** Replace the game with a save's. Throws a player-readable reason, changing nothing. */
 async function loadGame(bytes: Uint8Array, from: "autosave" | "file") {
   const { header: h, track } = await decodeSave(bytes);
-  if (h.city !== city) throw new Error("This save is for another city.");
+  if (!isNortheastSave(h)) throw new Error("This save is for another region.");
   if (!api!.load(track)) throw new Error("This save is damaged.");
   api!.set_cash(h.cash);
   api!.set_fleet(h.fleet ?? 0);
@@ -341,7 +436,8 @@ function restart(t: number, from: "autosave" | "file" | "new") {
   settledHour = Math.floor(t / 3600);
   incomePerHour = PERIODS.map(() => 0); // the main thread sends the new network's once demand lands
   forget(true);
-  send({ kind: "loaded", from, clock: t });
+  syncFrame();
+  send({ kind: "loaded", from, clock: t, frame: frameSpec() });
   sendState();
   clearTimeout(snapTimer);
   send({ kind: "snapshot", snapshot: buildSnapshot() });
@@ -359,7 +455,7 @@ function sendState() {
   const bufs = new Set<ArrayBufferLike>([r.edgePts.buffer, r.edgeOff.buffer, r.phases.buffer, r.meta.buffer, r.samples.buffer, r.lineTable.buffer]);
   if (r.edgeSpeed) bufs.add(r.edgeSpeed.buffer);
   for (const st of [n.track, n.lines]) for (const v of [st.seg, st.colour, st.edge, st.level, st.flags, st.dist, st.offset, st.speed]) if (v) bufs.add(v.buffer);
-  for (const v of [n.lineColours, n.lineCars, n.stations, n.junctions, n.sampleOff]) if (v) bufs.add(v.buffer);
+  for (const v of [n.lineColours, n.lineCars, n.stations, n.stationAxis, n.junctions, n.sampleOff]) if (v) bufs.add(v.buffer);
   send({ kind: "state", state: s }, [...bufs] as Transferable[]);
   sendTrips();
 }
@@ -403,7 +499,7 @@ function buildSnapshot(): NetworkSnapshot {
       turnaroundS: li[i + 20], cars: li[i + 21],
     });
   }
-  return { version: ++snapVersion, city, stations, lines, fare: { ...fares } };
+  return { version: ++snapVersion, city, frame: frameSpec(), stations, lines, fare: { ...fares } };
 }
 
 function scheduleSnapshot() {
@@ -457,14 +553,26 @@ function apply(op: EditOp): { r: number; line?: number } {
     case "addLine": {
       const id = a.new_line_id();
       const [h, m, l] = NEW_LINE_TRAINS;
-      return { r: a.set_line_with_trains(id, new Uint32Array(op.stops), h, m, l, 30, 180, 0, colourInt(op.colour), op.name), line: id };
+      return { r: a.set_line_with_trains(id, new Uint32Array(op.stops), h, m, l, 30, 180, 0, colourInt(op.colour), op.name || a.next_line_name()), line: id };
+    }
+    case "copyLine": {
+      const id = a.new_line_id();
+      const existing = new Set<string>();
+      const info = a.lines_info();
+      for (let i = 0; i < info.length; i += 22) existing.add(a.line_name(info[i]));
+      const base = op.name?.trim() || `${a.line_name(op.line)} copy`;
+      let name = base, n = 2;
+      while (existing.has(name)) name = `${base} ${n++}`;
+      return { r: a.copy_line(op.line, id, name), line: id };
     }
     case "setStops":
       return { r: a.set_stops(op.line, new Uint32Array(op.stops)) };
     case "setTrainCount":
       return { r: a.set_train_counts(op.line, ...op.trains) };
     case "lineLook":
-      return { r: a.set_line_look(op.line, op.name, colourInt(op.colour)) };
+      return { r: op.letter === undefined
+        ? a.set_line_look(op.line, op.name, colourInt(op.colour))
+        : a.set_line_badge(op.line, op.name, colourInt(op.colour), op.letter.trim()) };
     case "removeLine":
       return { r: a.remove_line(op.line) };
     case "fares":
@@ -485,32 +593,43 @@ function issues(): string[] {
 
 let ready: Promise<void> | null = null;
 
-onmessage = async (e: MessageEvent<ToClock>) => {
+let messages = Promise.resolve();
+onmessage = (e: MessageEvent<ToClock>) => {
   const msg = e.data;
+  messages = messages.then(() => processMessage(msg)).catch(err => send({ kind: "error", message: String(err) }));
+};
+async function processMessage(msg: ToClock) {
   if (msg.kind === "init") {
-    city = msg.city;
+    // World identity and coordinates never follow the map's focused city.
+    city = HOME_CITY;
     ready = (async () => {
       const t0 = performance.now();
       await init();
-      api = new TrackApi(origin.lon, origin.lat, true);
+      api = new TrackApi(NEW_GAME_FRAME.lon, NEW_GAME_FRAME.lat, true);
+      api.set_empty_frame(NEW_GAME_FRAME.kind === "lcc");
+      syncFrame();
       let water = { ok: false, population: 0, jobs: 0 };
       try {
-        water = await loadWater(msg.pack);
-        // The network's frame is the pack's: start again on its origin, then lay the mask.
-        if (Math.abs(origin.lon + 73.985) > 1e-9 || Math.abs(origin.lat - 40.758) > 1e-9) {
-          api.free();
-          api = new TrackApi(origin.lon, origin.lat, true);
-          await loadWater(msg.pack);
-        }
+        api.clear_water();
+        const packs = msg.packs ?? CITIES.map(c => new URL(c.id, msg.pack).href);
+        const loaded = await Promise.allSettled(packs.map(pack => loadWater(pack)));
+        const results = loaded.flatMap(r => r.status === "fulfilled" ? [r.value] : []);
+        water = { ok: loaded.length === results.length && results.every(r => r.ok), population: results[0]?.population ?? 0, jobs: results[0]?.jobs ?? 0 };
+        const failure = loaded.find(r => r.status === "rejected");
+        if (failure?.status === "rejected") send({ kind: "error", message: "Some regional water coverage could not be loaded: " + failure.reason });
       } catch (err) {
         send({ kind: "error", message: "city pack not loaded, building without the water mask: " + err });
       }
       api.set_cash(START_CASH);
       emptyTrack = api.save();
       moneyParams = [...api.money_params()];
-      send({ kind: "ready", initMs: performance.now() - t0, origin, water: water.ok, population: water.population, jobs: water.jobs });
+      send({ kind: "ready", initMs: performance.now() - t0, frame: frameSpec(), water: water.ok, population: water.population, jobs: water.jobs });
       // The last game, unless the page asked for a new one (T-029).
-      const stored = msg.fresh ? null : await readStored("autosave");
+      activeSlot = msg.slot?.startsWith("slot-") ? msg.slot : ORIGINAL_SLOT;
+      if (activeSlot !== ORIGINAL_SLOT && !await readStored(activeSlot)) activeSlot = ORIGINAL_SLOT;
+      activeLease = await leaseSlot(activeSlot);
+      await publishSlots();
+      const stored = msg.fresh ? null : await readStored(activeSlot);
       if (stored) {
         try {
           await loadGame(stored.bytes, "autosave");
@@ -518,7 +637,7 @@ onmessage = async (e: MessageEvent<ToClock>) => {
         } catch (err) {
           // Keep the unreadable save aside rather than overwrite it with the new game.
           await writeStored("unreadable-" + stored.at, stored);
-          send({ kind: "loaded", from: "new", clock: START_CLOCK, error: "The last game could not be loaded. " + (err as Error).message });
+          send({ kind: "loaded", from: "new", clock: START_CLOCK, error: "The last game could not be loaded. " + (err as Error).message, frame: frameSpec() });
         }
       }
       sendState();
@@ -530,6 +649,7 @@ onmessage = async (e: MessageEvent<ToClock>) => {
   await ready;
   if (!api) return;
   try {
+    if (msg.kind === "saveSlot") return await manageSlot(msg);
     if (msg.kind === "import" || msg.kind === "export" || msg.kind === "newGame") return await whole(msg);
     handle(msg);
   } catch (err) {
@@ -556,7 +676,7 @@ async function whole(msg: Extract<ToClock, { kind: "import" | "export" | "newGam
     try {
       await loadGame(new Uint8Array(msg.bytes), "file");
     } catch (err) {
-      send({ kind: "loaded", from: "file", clock: gameNow(), error: (err as Error).message });
+      send({ kind: "loaded", from: "file", clock: gameNow(), frame: frameSpec(), error: (err as Error).message });
       return;
     }
     dirty = true;
@@ -608,7 +728,8 @@ function handle(msg: ToClock) {
   } else if (msg.kind === "query") {
     const q = msg.q;
     const data =
-      q.what === "junction" ? api.junction_info(q.node)
+      q.what === "insertStop" ? api.insert_stop(q.line, q.station)
+      : q.what === "junction" ? api.junction_info(q.node)
       : q.what === "edgePis" ? api.edge_pis(q.edge)
       : q.what === "flyover" ? new Float64Array([api.flyover_cost(q.node)])
       : api.line_delays(q.line, q.level);
@@ -632,7 +753,10 @@ function handle(msg: ToClock) {
       const [x, y] = packLocal(out[k], out[k + 1]);
       pts.set([x, y, out[k + 2]], k - p0);
     }
-    send({ kind: "preview", seq: msg.seq, ok, cost: out[1], lengthM: out[2], mult: out[4], issues: ok ? [] : issues(), verts, pts }, [verts.buffer, pts.buffer]);
+    // Explicit shape also permits type-checking before the track WASM declarations regenerate.
+    const speeds = (api as TrackApi & { preview_render_speeds(): Float32Array }).preview_render_speeds();
+    if (speeds.length !== Math.max(0, pts.length / 3 - 1)) throw new Error("Preview speed/point length mismatch");
+    send({ kind: "preview", seq: msg.seq, ok, cost: out[1], lengthM: out[2], mult: out[4], issues: ok ? [] : issues(), verts, pts, speeds }, [verts.buffer, pts.buffer, speeds.buffer]);
   } else if (msg.kind === "epoch") {
     if (msg.epoch !== epoch) {
       epoch = msg.epoch;

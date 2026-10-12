@@ -5,6 +5,7 @@
 // in step if either changes.
 
 import type { NetworkSnapshot } from "./protocol";
+import { HOME_CITY, LEGACY_FRAME } from "../game/cities";
 
 type Kind = "subway" | "light" | "commuter" | "orbital";
 const KIND: Record<Kind, { speed: number; tph: [number, number, number]; cars: number; spacing: (r: number) => number }> = {
@@ -86,7 +87,8 @@ export function demandTestSnapshot(version = 1): NetworkSnapshot {
   });
   return {
     version,
-    city: "nyc",
+    city: HOME_CITY,
+    frame: LEGACY_FRAME,
     stations: st.map((p, id) => ({ id, name: `Test ${id}`, x: p.x, y: p.y, level: 0, platform: 400 })),
     lines,
   };

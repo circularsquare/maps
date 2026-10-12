@@ -1,0 +1,42 @@
+{
+  "created": {
+    "name": "Line 1",
+    "stops": [],
+    "trains": [
+      0,
+      0,
+      0
+    ],
+    "selection": {
+      "kind": "line",
+      "line": "0"
+    },
+    "tool": true,
+    "selectedText": "Line 1"
+  },
+  "copied": {
+    "id": "1",
+    "num": 1,
+    "letter": "AB",
+    "name": "Branch test copy",
+    "colour": "#d7263d",
+    "stops": [],
+    "tph": {
+      "high": 0,
+      "medium": 0,
+      "low": 0
+    }
+  },
+  "badge": {
+    "text": "AB",
+    "width": 37.296875,
+    "height": 30
+  },
+  "next": "Line 3",
+  "sortCount": 109,
+  "layout": {
+    "width": 303,
+    "scrollWidth": 303
+  },
+  "errors": []
+}

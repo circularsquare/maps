@@ -6,8 +6,9 @@
 // Hovering a tag says what it means (T-099). The tags sit under the demand views' canvas.
 
 import { duration } from "../game/format";
-import type { WorldView } from "../game/types";
-import { selection } from "../game/ui";
+import type { Selection, WorldView } from "../game/types";
+import { selection, tool } from "../game/ui";
+import { hoverAt } from "./demandHover";
 import { toLocal } from "./geo";
 import type { Overlay } from "./overlay";
 import { perfOff, perfTry } from "../perfFlags";
@@ -21,6 +22,8 @@ const KIND = ["Track", "Single track", "Platform", "Terminus", "Junction", "Flat
 const DEMAND = ["high", "medium", "low"];
 
 export class CapacityMarkers {
+  /** Demand discs draw above these DOM tags; wired to the same select handler as the map. */
+  demandClick: ((px: number, py: number, add: boolean) => Selection | undefined) | null = null;
   private box: HTMLDivElement;
   private items: { el: HTMLDivElement; x: number; y: number; w: number; h: number }[] = [];
   private visible = true;
@@ -67,15 +70,38 @@ export class CapacityMarkers {
       el.textContent = d >= 2 ? `+${Math.floor(d / 60)}:${String(d % 60).padStart(2, "0")}` : `${Math.round(m.rho * 100)}%`;
       // the tooltip (T-099): what the tag means, in plain words
       const tip = [`${KIND[m.kind] ?? "Track"} at ${Math.round(m.rho * 100)}% of capacity`, d >= 2 ? `Each train waits ${duration(d)} here at ${DEMAND[level] ?? "this"} demand` : "Trains do not wait here yet"];
+      let junction: number | null = null;
       if (m.kind === 4) {
         const node = nearestJunction(w, m.x, m.y);
         if (node !== null) {
+          junction = node;
           el.classList.add("link");
           tip.push("Click to see the junction and its flyover");
-          el.onclick = () => (selection.value = { kind: "junction", node });
         }
       }
-      el.onmouseenter = () => this.showTip(el, tip);
+      const point = (e: MouseEvent) => {
+        const r = this.container.getBoundingClientRect();
+        return [e.clientX - r.left, e.clientY - r.top] as const;
+      };
+      el.onclick = (e) => {
+        if (tool.peek() !== "select") return;
+        const [x, y] = point(e);
+        const above = this.demandClick?.(x, y, e.shiftKey);
+        if (above !== undefined) {
+          selection.value = above;
+          e.stopPropagation();
+        } else if (junction !== null) {
+          selection.value = { kind: "junction", node: junction };
+          e.stopPropagation();
+        }
+      };
+      const hover = (e: MouseEvent) => {
+        const [x, y] = point(e);
+        if (hoverAt(this.map, x, y)) this.tip.style.display = "none";
+        else this.showTip(el, tip);
+      };
+      el.onmouseenter = hover;
+      el.onmousemove = hover;
       el.onmouseleave = () => (this.tip.style.display = "none");
       this.box.appendChild(el);
       return { el, x: m.x, y: m.y, w: 0, h: 0 };

@@ -11,21 +11,19 @@
 
 import { effect, signal } from "@preact/signals";
 import type { Map as MlMap } from "maplibre-gl";
-import { cellModes, cityCells, demandUpdating, demandView, flows, type CellModes, type DemandView } from "../game/demand";
+import { activeCity, getWorldFrame, worldFrameEpoch } from "../game/cities";
+import { cellModes, cityCells, demandUpdating, demandView, flows, type CellModes, type DemandView, type PurposeTrips } from "../game/demand";
 import { count } from "../game/format";
 import { BUBBLE_ALPHA } from "../game/palette";
 import { compass } from "../game/places";
 import type { Selection } from "../game/types";
 import { display, selection, tool } from "../game/ui";
 import { world } from "../game/world";
-import { packOrigin } from "../workers/clockClient";
 import { BUBBLE_DENSITY, RES_AREA_M2, type Bubbles, type FromCommuters, type Ready, type Summed, type ToCommuters } from "../workers/commutersProtocol";
 import { aggregate, discs, type Groups } from "./bubbles";
 import { addFinder, discAt, pointerLocal } from "./demandHover";
 import { bubbleLevel, type DemandOverlay } from "./demandOverlay";
 import { MERC_K, toLocal } from "./geo";
-import { pick } from "./pick";
-import type { Overlay } from "./overlay";
 
 
 export interface Place {
@@ -34,7 +32,7 @@ export interface Place {
 }
 /** A bubble selection as the inspector shows it. `far` is null while its far end is being asked
  * for,. */
-export const commuterPick = signal<{ sel: Selection; totals: [number, number, number]; far: { totals: [number, number, number]; places: Place[] } | null } | null>(null);
+export const commuterPick = signal<{ sel: Selection; totals: [number, number, number]; purposes?: PurposeTrips[]; far: { totals: [number, number, number]; places: Place[] } | null } | null>(null);
 
 
 export const commuterStats = { cellsMs: 0, workerMs: 0, roundTripMs: 0, builds: 0, uploadMs: 0, selectMs: 0, flowsMs: 0, farMs: 0, farCells: 0, sumMs: 0 };
@@ -45,7 +43,8 @@ const modeLine = (t: number, w: number, d: number) => {
   return `Train ${pct(t, all)}%, walking ${pct(w, all)}%, driving ${pct(d, all)}%`;
 };
 
-export function startCommuterView(map: MlMap, overlay: Overlay, view: DemandOverlay) {
+export function startCommuterView(map: MlMap, view: DemandOverlay) {
+  let focusSeen = activeCity.peek(), focusEpoch = 0, frameSeen = worldFrameEpoch.peek();
   let city: Ready | null = null;
   let worker: Worker | null = null;
   let workerReady: Promise<boolean> | null = null;
@@ -53,7 +52,9 @@ export function startCommuterView(map: MlMap, overlay: Overlay, view: DemandOver
   const pending = new Map<number, (b: any) => void>();
   const startWorker = (): Promise<boolean> =>
     (workerReady ??= (async () => {
+      const epoch = focusEpoch;
       const cells = await cityCells();
+      if (epoch !== focusEpoch) return false;
       if (!cells) {
         workerReady = null;
         return false;
@@ -72,8 +73,8 @@ export function startCommuterView(map: MlMap, overlay: Overlay, view: DemandOver
           }
         };
       });
-      const o = packOrigin.peek() ?? { lon: -73.985, lat: 40.758 };
-      const msg: ToCommuters = { kind: "cells", xy: cells.xy.slice(), h3: cells.h3.slice(), origin: { lon: o.lon, lat: o.lat } };
+      const f = getWorldFrame();
+      const msg: ToCommuters = { kind: "cells", xy: cells.xy.slice(), h3: cells.h3.slice(), frame: { kind: f.kind, lon: f.lon, lat: f.lat } };
       worker.postMessage(msg, [msg.xy.buffer, msg.h3.buffer]);
       return ready;
     })());
@@ -83,6 +84,16 @@ export function startCommuterView(map: MlMap, overlay: Overlay, view: DemandOver
   let built: { dv: DemandView; modes: CellModes; ends: Map<string, Bubbles> } | null = null;
   let wanted = 0;
   effect(() => {
+    const focus = activeCity.value, frameNow = worldFrameEpoch.value;
+    if (focus !== focusSeen || frameNow !== frameSeen) {
+      focusSeen = focus; frameSeen = frameNow; focusEpoch++; wanted++;
+      worker?.terminate(); worker = null; workerReady = null; city = null; pending.clear();
+      shown = built = null;
+      near = far = null; nearDiscs = farDiscs = null; farCells = null;
+      view.setBubbles([]); view.setDiscs("near", null); view.setDiscs("far", null);
+      commuterPick.value = null;
+      if (selection.peek()?.kind === "commuters") selection.value = null;
+    }
     const d = display.value;
     const dv = demandView.value;
     const updating = demandUpdating.value;
@@ -129,22 +140,22 @@ export function startCommuterView(map: MlMap, overlay: Overlay, view: DemandOver
   effect(() => view.setBubbleSize(display.value.bubbleSize));
 
   // ---- hover ----
-  const endWord = (end: "home" | "work") => (end === "home" ? "live" : "work");
+  const endWord = (end: "home" | "work") => (end === "home" ? "at homes" : "at destinations");
   addFinder(10, (x, y) => {
     if (!shown || !display.peek().commuters) return null;
     const sel = selection.peek();
     if (sel?.kind === "station") return null;
     if (sel?.kind === "commuters") {
       let i = discAt(nearDiscs, x, y, view.bubbleSize);
-      if (i >= 0 && near) return [`${count(near.train[i] + near.walk[i] + near.drive[i])} commuters ${endWord(sel.end)} here`, modeLine(near.train[i], near.walk[i], near.drive[i])];
+      if (i >= 0 && near) return [`${count(near.train[i] + near.walk[i] + near.drive[i])} local trips a day ${endWord(sel.end)} here`, "Outward and return legs included.", modeLine(near.train[i], near.walk[i], near.drive[i])];
       i = discAt(farDiscs, x, y, view.bubbleSize);
-      if (i >= 0 && far) return [`${count(far.train[i] + far.walk[i] + far.drive[i])} of them ${endWord(sel.end === "home" ? "work" : "home")} here`, modeLine(far.train[i], far.walk[i], far.drive[i])];
+      if (i >= 0 && far) return [`${count(far.train[i] + far.walk[i] + far.drive[i])} local trips a day ${endWord(sel.end === "home" ? "work" : "home")} here`, `${sel.end === "home" ? "Their homes" : "Their destinations"} are in the selected area.`, modeLine(far.train[i], far.walk[i], far.drive[i])];
       return null;
     }
     const L = shown.bubbles.levels[bubbleLevel(map.getZoom())];
     const i = discAt(L.discs, x, y, view.bubbleSize);
     if (i < 0) return null;
-    return [`${count(L.train[i] + L.walk[i] + L.drive[i])} commuters ${endWord(shown.end)} here`, modeLine(L.train[i], L.walk[i], L.drive[i])];
+    return [`${count(L.train[i] + L.walk[i] + L.drive[i])} local trips a day ${endWord(shown.end)} here`, "Outward and return legs included.", modeLine(L.train[i], L.walk[i], L.drive[i])];
   });
 
   // ---- selecting bubbles ----
@@ -180,10 +191,13 @@ export function startCommuterView(map: MlMap, overlay: Overlay, view: DemandOver
   /** A click in the select tool: a bubble selection, or undefined to let the network have it. */
   const click = (px: number, py: number, add: boolean): Selection | undefined => {
     if (!display.peek().commuters || !shown || selection.peek()?.kind === "station") return undefined;
-    // stations and trains stay clickable through the bubbles
-    const net = pick(overlay, px, py, display.peek().trains);
-    if (net && (net.kind === "station" || net.kind === "train")) return undefined;
     const [x, y] = pointerLocal(map, px, py);
+    const sel = selection.peek();
+    // A selection replaces the city's bubbles. Its near/far discs remain above the network,
+    // but clicking them must not select an invisible city bubble underneath.
+    if (sel?.kind === "commuters") {
+      return discAt(nearDiscs, x, y, view.bubbleSize) >= 0 || discAt(farDiscs, x, y, view.bubbleSize) >= 0 ? sel : undefined;
+    }
     const s = selectGroups(groupsAt(x, y), add);
     return s ?? undefined;
   };
@@ -203,6 +217,12 @@ export function startCommuterView(map: MlMap, overlay: Overlay, view: DemandOver
   canvas.addEventListener("mousedown", (e) => {
     if (e.button !== 0 || tool.peek() !== "select" || !display.peek().commuters || !shown) return;
     const [x, y] = rel(e);
+    const sel = selection.peek();
+    if (sel?.kind === "station") return;
+    const [lx, ly] = pointerLocal(map, x, y);
+    // Start a bubble box only on a visible city/selected-home bubble. A long press on a train,
+    // station, empty map or a destination disc should keep its ordinary interaction.
+    if (sel?.kind === "commuters" ? discAt(nearDiscs, lx, ly, view.bubbleSize) < 0 : !groupsAt(lx, ly).length) return;
     const p = { x, y, on: false, add: e.shiftKey, timer: 0 };
     p.timer = window.setTimeout(() => {
       p.on = true;
@@ -318,7 +338,7 @@ export function startCommuterView(map: MlMap, overlay: Overlay, view: DemandOver
     for (const c of sel.cells) (totals[0] += mt[c]), (totals[1] += mw[c]), (totals[2] += md[c]);
     const prev = commuterPick.peek();
     const keepFar = prev?.sel === sel ? prev.far : null;
-    commuterPick.value = { sel, totals, far: keepFar };
+    commuterPick.value = { sel, totals, far: keepFar, purposes: prev?.sel === sel ? prev.purposes : undefined };
     drawPick();
     commuterStats.selectMs = performance.now() - t0;
     // the far end: asked again when the selection or the demand result changes
@@ -343,7 +363,7 @@ export function startCommuterView(map: MlMap, overlay: Overlay, view: DemandOver
       if (ask !== flowAsk || selection.peek() !== sel) return;
       const t2 = performance.now();
       farCells = summed.levels;
-      commuterPick.value = { sel, totals, far: { totals: ft, places: places(farCells) } };
+      commuterPick.value = { sel, totals, purposes: f.purposes, far: { totals: ft, places: places(farCells) } };
       drawPick();
       commuterStats.farMs = performance.now() - t2;
       commuterStats.sumMs = summed.ms;

@@ -3,16 +3,23 @@
 //! browser) is the caller's. Derived geometry is rebuilt on load and is bit-identical, because
 //! positions and radii are already on the 1 mm grid.
 
+use super::frame::FrameKind;
 use super::geom::Pi;
 use super::net::{EdgeData, LineData, Network, NodeData, StationData};
 use super::params::*;
 
+/// TWT4 (T-104) adds optional whole-line train allocations; derived frequencies are not saved
+/// for allocated lines. Legacy TWT2/TWT3 keep their scheduled frequencies until edited.
 /// TWT3 (T-079): an edge may carry the points it was drawn through (tracks | 8, then count and
 /// points like PIs, no radius). Only edges drawn between T-079 and T-092 have them (`EdgeData::
 /// thru`); they are kept so such an edge reshapes from its clicks, and are written back as long
 /// as it is unchanged. TWT2 (T-055: constructed flags on stations, node flag 4, and edges,
 /// tracks | 4) has none and still loads.
 const MAGIC: &[u8; 4] = b"TWT4";
+/// TWT5 (T-125) is TWT4 byte for byte except that the metres are in the Lambert conformal world
+/// frame (`frame.rs`). TWT4 and older are always the legacy equirectangular frame, and a network
+/// in that frame still encodes as TWT4, identical to what earlier builds wrote.
+const MAGIC_TWT5: &[u8; 4] = b"TWT5";
 const MAGIC_TWT3: &[u8; 4] = b"TWT3";
 const MAGIC_TWT2: &[u8; 4] = b"TWT2";
 
@@ -82,7 +89,7 @@ impl R<'_> {
 
 /// Encode the network's inputs.
 pub fn encode(net: &Network) -> Vec<u8> {
-    let mut w = W(MAGIC.to_vec());
+    let mut w = W(if net.frame_kind == FrameKind::Lcc { MAGIC_TWT5 } else { MAGIC }.to_vec());
     w.0.extend_from_slice(&net.origin_lon.to_le_bytes());
     w.0.extend_from_slice(&net.origin_lat.to_le_bytes());
     w.u(net.right_hand as u64);
@@ -169,16 +176,75 @@ pub fn encode(net: &Network) -> Vec<u8> {
             prev = v;
         }
     }
+    // Optional trailing inputs: older TWT4 readers safely ignore this extension.
+    w.0.extend_from_slice(b"LUI1");
+    w.u(net.next_line_number as u64);
+    w.u(lines.len() as u64);
+    for &l in &lines { w.s(&net.line_symbol[l as usize]); }
     w.0
+}
+
+/// Re-express a save's network in another frame (T-125). Every node, PI and drawn-through point
+/// keeps its place on the ground (it goes through longitude and latitude and is put back on the
+/// 1 mm grid); ids, levels, radii, stations, lines and flags are copied as they are. The geometry
+/// is re-derived on load, so lengths and costs follow the new frame (a legacy network gets about
+/// 1.2% longer around Philadelphia); money, schedules and fares are not touched. Not applied to
+/// any save unasked: a legacy save stays in its frame unless a player converts it.
+pub fn convert_frame(bytes: &[u8], to: FrameKind) -> Result<Vec<u8>, String> {
+    let net = decode(bytes)?;
+    if net.frame_kind == to {
+        return Ok(encode(&net));
+    }
+    let (from, into) = (net.frame(), net.frame().with_kind(to));
+    let at = |x: f64, y: f64| {
+        let (lon, lat) = from.to_lonlat(x, y);
+        let (x, y) = into.from_lonlat(lon, lat);
+        (quant(x), quant(y))
+    };
+    let mut out = Network::new_in(to, net.origin_lon, net.origin_lat, net.right_hand);
+    for n in 0..net.node_count() as u32 {
+        let id = out.alloc_node();
+        if !net.node_ok(n) {
+            continue;
+        }
+        let i = n as usize;
+        let (x, y) = at(net.node_x[i], net.node_y[i]);
+        out.set_node(id, Some(NodeData { x, y, level: net.node_level[i], flying: net.node_flying[i] })).map_err(|e| format!("{e:?}"))?;
+        if net.node_platform[i] > 0 {
+            out.set_station(id, Some(StationData { platform: net.node_platform[i], name: net.node_name[i].clone(), built: net.node_built[i] })).map_err(|e| format!("{e:?}"))?;
+        }
+    }
+    let moved = |p: &Pi| {
+        let (x, y) = at(p.x, p.y);
+        Pi { x, y, ..*p }
+    };
+    for e in 0..net.edge_count() as u32 {
+        let id = out.alloc_edge();
+        if let Some(d) = net.edge_data(e) {
+            let d = EdgeData { pis: d.pis.iter().map(&moved).collect(), thru: d.thru.iter().map(&moved).collect(), ..d };
+            out.set_edge(id, Some(d)).map_err(|e| format!("{e:?}"))?;
+        }
+    }
+    for l in 0..net.line_count() as u32 {
+        let id = out.alloc_line();
+        if let Some(d) = net.line_data(l) {
+            out.set_line(id, Some(d)).map_err(|e| format!("{e:?}"))?;
+            out.line_symbol[id as usize] = net.line_symbol[l as usize].clone();
+        }
+    }
+    out.next_line_number = net.next_line_number;
+    Ok(encode(&out))
 }
 
 /// Decode into a fresh network (dense ids). Derive with `TrackWorld::new`.
 pub fn decode(bytes: &[u8]) -> Result<Network, String> {
-    if bytes.len() < 20 || (&bytes[..4] != MAGIC && &bytes[..4] != MAGIC_TWT3 && &bytes[..4] != MAGIC_TWT2) {
+    if bytes.len() < 20 || (&bytes[..4] != MAGIC && &bytes[..4] != MAGIC_TWT5 && &bytes[..4] != MAGIC_TWT3 && &bytes[..4] != MAGIC_TWT2) {
         return Err("not a trainworld track save".into());
     }
     let f = |o: usize| f64::from_le_bytes(bytes[o..o + 8].try_into().unwrap());
-    let mut net = Network::new(f(4), f(12), false);
+    let v4 = &bytes[..4] == MAGIC || &bytes[..4] == MAGIC_TWT5;
+    let kind = if &bytes[..4] == MAGIC_TWT5 { FrameKind::Lcc } else { FrameKind::Equirect };
+    let mut net = Network::new_in(kind, f(4), f(12), false);
     let mut r = R(bytes, 20);
     net.right_hand = r.u()? == 1;
     let n_nodes = r.u()? as usize;
@@ -232,7 +298,7 @@ pub fn decode(bytes: &[u8]) -> Result<Network, String> {
         let name = r.s()?;
         let colour = r.u()? as u32;
         let tph = [r.tenth()?, r.tenth()?, r.tenth()?];
-        let trains = if &bytes[..4] == MAGIC && r.u()? != 0 { Some([r.u()? as u32, r.u()? as u32, r.u()? as u32]) } else { None };
+        let trains = if v4 && r.u()? != 0 { Some([r.u()? as u32, r.u()? as u32, r.u()? as u32]) } else { None };
         let (dwell_s, turnaround_s) = (r.tenth()?, r.tenth()?);
         let cars = r.u()? as u8;
         let mut stops = vec![];
@@ -248,7 +314,14 @@ pub fn decode(bytes: &[u8]) -> Result<Network, String> {
             prev += v >> 1;
             path.push((prev as u32) << 1 | (v & 1) as u32);
         }
-        net.set_line(id, Some(LineData { trains, name, colour, stops, path, tph, dwell_s, turnaround_s, cars })).map_err(|e| format!("{e:?}"))?;
+        net.set_line(id, Some(LineData { symbol: String::new(), trains, name, colour, stops, path, tph, dwell_s, turnaround_s, cars })).map_err(|e| format!("{e:?}"))?;
+    }
+    net.next_line_number = n_lines as u32 + 1;
+    if r.0.get(r.1..r.1 + 4) == Some(b"LUI1") {
+        r.1 += 4;
+        net.next_line_number = (r.u()? as u32).max(1);
+        if r.u()? as usize != n_lines { return Err("bad line UI extension".into()); }
+        for i in 0..n_lines { net.line_symbol[i] = r.s()?; }
     }
     net.take_touch();
     Ok(net)

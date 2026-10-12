@@ -1,0 +1,191 @@
+{
+  "world": "northeast",
+  "frame": {
+    "kind": "lcc",
+    "lon": -73.985,
+    "lat": 40.758
+  },
+  "legacyFrame": {
+    "kind": "equirect",
+    "lon": -73.985,
+    "lat": 40.758
+  },
+  "market": {
+    "pack": "intercity",
+    "frame": {
+      "kind": "equirect",
+      "lon": -73.985,
+      "lat": 40.758
+    },
+    "places": [
+      {
+        "name": "New York",
+        "regionName": "New York region"
+      },
+      {
+        "name": "Philadelphia",
+        "regionName": "Philadelphia region"
+      },
+      {
+        "name": "Trenton",
+        "regionName": "Trenton and Mercer County"
+      },
+      {
+        "name": "Boston",
+        "regionName": "Boston region"
+      },
+      {
+        "name": "Washington, DC",
+        "regionName": "Washington region"
+      },
+      {
+        "name": "Baltimore",
+        "regionName": "Baltimore region"
+      },
+      {
+        "name": "Providence",
+        "regionName": "Providence region"
+      },
+      {
+        "name": "New Haven",
+        "regionName": "New Haven region"
+      },
+      {
+        "name": "Hartford",
+        "regionName": "Hartford region"
+      },
+      {
+        "name": "Springfield",
+        "regionName": "Springfield region"
+      }
+    ]
+  },
+  "cities": [
+    {
+      "id": "nyc",
+      "name": "New York",
+      "origin": {
+        "lon": -73.985,
+        "lat": 40.758
+      },
+      "center": [
+        -73.985,
+        40.758
+      ],
+      "zoom": 11.2,
+      "market": 0
+    },
+    {
+      "id": "phl",
+      "name": "Philadelphia",
+      "origin": {
+        "lon": -75.1636,
+        "lat": 39.9526
+      },
+      "center": [
+        -75.1636,
+        39.9526
+      ],
+      "zoom": 11.2,
+      "market": 1
+    },
+    {
+      "id": "bos",
+      "name": "Boston",
+      "origin": {
+        "lon": -71.0589,
+        "lat": 42.3601
+      },
+      "center": [
+        -71.0589,
+        42.3601
+      ],
+      "zoom": 11.2,
+      "market": 3
+    },
+    {
+      "id": "wdc",
+      "name": "Washington, DC",
+      "origin": {
+        "lon": -77.0365,
+        "lat": 38.8977
+      },
+      "center": [
+        -77.0365,
+        38.8977
+      ],
+      "zoom": 11.2,
+      "market": 4
+    },
+    {
+      "id": "bal",
+      "name": "Baltimore",
+      "origin": {
+        "lon": -76.6122,
+        "lat": 39.2904
+      },
+      "center": [
+        -76.6122,
+        39.2904
+      ],
+      "zoom": 11.2,
+      "market": 5
+    },
+    {
+      "id": "pvd",
+      "name": "Providence",
+      "origin": {
+        "lon": -71.4128,
+        "lat": 41.824
+      },
+      "center": [
+        -71.4128,
+        41.824
+      ],
+      "zoom": 11.2,
+      "market": 6
+    },
+    {
+      "id": "nhv",
+      "name": "New Haven",
+      "origin": {
+        "lon": -72.9279,
+        "lat": 41.3083
+      },
+      "center": [
+        -72.9279,
+        41.3083
+      ],
+      "zoom": 11.2,
+      "market": 7
+    },
+    {
+      "id": "hfd",
+      "name": "Hartford",
+      "origin": {
+        "lon": -72.6851,
+        "lat": 41.7637
+      },
+      "center": [
+        -72.6851,
+        41.7637
+      ],
+      "zoom": 11.2,
+      "market": 8
+    },
+    {
+      "id": "spf",
+      "name": "Springfield",
+      "origin": {
+        "lon": -72.5898,
+        "lat": 42.1015
+      },
+      "center": [
+        -72.5898,
+        42.1015
+      ],
+      "zoom": 11.2,
+      "market": 9
+    }
+  ]
+}

@@ -24,7 +24,7 @@ try{
   if(zoom<12&&s.visible!==0)throw Error('Station labels visible below cutoff');
   if(zoom>=12&&s.visible===0)throw Error('Labels did not return at closer zoom');
   if(s.overlaps||s.legend||!s.font.includes('Zen Maru Gothic'))throw Error('Labels/legend/font check failed');
-  if(zoom===11.2||zoom===12.5||zoom===14.5)await page.screenshot({path:`trainworld/T-101-zoom-${zoom}.png`});
+  if(zoom===11.2||zoom===12.5||zoom===14.5)await page.screenshot({path:`artifacts/trainworld/T-101-zoom-${zoom}.png`});
  }
  const cdp=await page.context().newCDPSession(page);await cdp.send('DOM.enable');await cdp.send('CSS.enable');
  const root=await cdp.send('DOM.getDocument');const label=await cdp.send('DOM.querySelector',{nodeId:root.root.nodeId,selector:'.stn-label:not([style*="hidden"])'});

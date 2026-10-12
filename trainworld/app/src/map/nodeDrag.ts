@@ -32,6 +32,8 @@ interface Hit {
 }
 
 export class NodeDrag {
+  /** Visible demand discs cover ordinary nodes; selected edit handles remain draggable. */
+  obscuredAt: (x: number, y: number) => boolean = () => false;
   private box: HTMLDivElement;
   private ring: HTMLDivElement;
   private tag: HTMLDivElement;
@@ -96,6 +98,7 @@ export class NodeDrag {
     const px = e.clientX - r.left, py = e.clientY - r.top;
     const h = this.hit(px, py);
     if (!h || (!h.movable && !this.selected(h.node))) return;
+    if (!this.selected(h.node) && this.obscuredAt(px, py)) return;
     // ours: the map must not pan; a press without a drag still reaches MapLibre as a click
     this.map.dragPan.disable();
     this.press = { ...h, px, py };

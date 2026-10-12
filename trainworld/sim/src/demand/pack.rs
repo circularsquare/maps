@@ -97,6 +97,19 @@ fn read_f32s(bin: &[u8], off: usize, count: usize, dtype: &str) -> Result<Vec<f3
     Ok(read_f64s(bin, off, count, dtype)?.into_iter().map(|v| v as f32).collect())
 }
 
+/// Optional, source-neutral per-cell inputs for additional purpose layers.
+pub(crate) fn cell_weights(header: &str, bin: &[u8], name: &str, n: usize) -> Result<Option<Vec<f32>>, String> {
+    let h: Value = serde_json::from_str(header).map_err(|e| e.to_string())?;
+    let arrays = h["arrays"].as_array().ok_or("missing arrays")?;
+    let Some(a) = arrays.iter().find(|a| a["name"] == name) else { return Ok(None) };
+    if a["per"].as_str().unwrap_or("cell") != "cell" || a["count"].as_u64() != Some(n as u64) {
+        return Err(format!("invalid cell weights {name}"));
+    }
+    let v = read_f32s(bin, a["offset"].as_u64().ok_or("missing offset")? as usize, n, a["dtype"].as_str().ok_or("missing dtype")?)?;
+    if v.iter().any(|v| !v.is_finite() || *v < 0.0) { return Err(format!("invalid weights in {name}")); }
+    Ok(Some(v))
+}
+
 /// Integer arrays (ids, grid positions): any unsigned or signed integer dtype up to 32 bits.
 fn read_ints(bin: &[u8], off: usize, count: usize, dtype: &str) -> Result<Vec<i64>, String> {
     let b = slice(bin, off, count, dtype)?;

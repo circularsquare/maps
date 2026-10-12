@@ -1,6 +1,7 @@
 //! Capacity and delay (SPEC 6.2, notes/T-008.md 5): resources, utilisation per demand level from
-//! the scheduled trains per hour, Kingman's delay, and holds for the run-time profiles. One pass,
-//! no iteration: delays change run times and fleet, never trains per hour.
+//! the scheduled trains per hour, Kingman's delay, and holds for the run-time profiles. Each
+//! capacity pass uses fixed rates; whole-line count schedules repeat it within the bounded
+//! rate/round-trip solve in world.rs (T-104). Legacy frequency schedules need one pass.
 //!
 //! Incremental (T-050): after an edit, `Capacity::update` throws away only the resources around
 //! what it touched (sections reaching a touched edge or node, platforms, termini and junction
@@ -65,6 +66,9 @@ enum Tag {
     Section { first: u32, count: u32 },
     /// A platform, terminus or junction move at `Resource::node`.
     Node,
+    /// Station crossover: the first `turns` users reverse; through moves load it only while
+    /// a reversing stream runs at the demand level being solved.
+    Turnback { turns: u32 },
     /// A flat crossing of `Resource::edge` with `other`.
     Crossing { other: u32 },
 }
@@ -77,7 +81,8 @@ pub struct Capacity {
     pub users: Vec<User>,
     /// Utilisation per demand level (high, medium, low).
     pub rho: Vec<[f64; 3]>,
-    /// Delay per train per level, whole seconds, 0 under 2 s.
+    /// Delay per train per level: continuous for resources used by count schedules; legacy-only
+    /// resources round to whole seconds and omit holds under 2 s.
     pub delay: Vec<[f64; 3]>,
     tag: Vec<Tag>,
     keys: Vec<u32>,
@@ -279,12 +284,22 @@ fn build_sections(net: &Network, lines: &[LineSvc], cand: &[u32], in_k: &dyn Fn(
     }
 }
 
+/// Active station capacity follows constructed track; planned extensions cannot add platforms.
+fn active_node_tracks(net: &Network, node: u32) -> u8 {
+    net.node_ports[node as usize].ends().iter().filter_map(|&p| {
+        let e = (p >> 1) as usize;
+        net.edge_built[e].then_some(net.edge_tracks[e])
+    }).max().unwrap_or(1)
+}
+
 /// Platforms, termini and junction moves at the nodes `in_n` accepts, from the runs of `cand`
 /// (which must hold every running line through those nodes).
 fn build_nodes(net: &Network, lines: &[LineSvc], cand: &[u32], in_n: &dyn Fn(u32) -> bool, cap: &mut Capacity) {
     let mut plat: Vec<(u32, u8, u32, u8, i32, f64, f64)> = vec![]; // node, track, line, run, stop, at, occ
     let mut term: Vec<(u32, u32, u8, f64, f64)> = vec![]; // node, line, run, at, occ
     let mut moves: Vec<(u32, f64, f64, u32, u8, f64)> = vec![]; // node, pA, pB, line, run, at
+    let mut turns: Vec<(u32, u8, u32, u8, f64)> = vec![]; // node, arrival track, line, incoming run, approach
+    let mut through: Vec<(u32, u8, u32, u8, i32, f64)> = vec![]; // node, track, line, run, stop, approach
     for &l in cand {
         let ls = &lines[l as usize];
         if !ls.running {
@@ -302,11 +317,13 @@ fn build_nodes(net: &Network, lines: &[LineSvc], cand: &[u32], in_n: &dyn Fn(u32
                 if net.node_platform[n as usize] > 0 {
                     let prev = run.segs[k - 1];
                     let side_in = net.port_side(path_edge(prev), 1 - path_dir(prev)).unwrap_or(0);
-                    let track = if net.node_tracks(n) == 1 { 0 } else { side_in };
-                    match run.stop_idx.iter().position(|&s| s as usize == k) {
-                        Some(j) => plat.push((n, track, l as u32, r as u8, j as i32, run.stop_s[j], dwell + PLATFORM_MARGIN_S)),
-                        None => plat.push((n, track, l as u32, r as u8, -1, run.node_s[k] - hold_back(lines, l), PASSING_S)),
-                    }
+                    let track = if active_node_tracks(net, n) == 1 { 0 } else { side_in };
+                    let (stop, at, occ) = match run.stop_idx.iter().position(|&s| s as usize == k) {
+                        Some(j) => (j as i32, run.stop_s[j], dwell + PLATFORM_MARGIN_S),
+                        None => (-1, run.node_s[k] - hold_back(lines, l), PASSING_S),
+                    };
+                    plat.push((n, track, l as u32, r as u8, stop, at, occ));
+                    if active_node_tracks(net, n) > 1 { through.push((n, track, l as u32, r as u8, stop, at)); }
                 }
                 if net.node_ports[n as usize].n >= 3 && !net.node_flying[n as usize] {
                     let (p, q) = (run.segs[k - 1], run.segs[k]);
@@ -325,8 +342,20 @@ fn build_nodes(net: &Network, lines: &[LineSvc], cand: &[u32], in_n: &dyn Fn(u32
             if in_n(n) {
                 let reach = net.node_platform[n as usize] as f64;
                 let at = run.stop_s.last().unwrap() - reach.max(ls.train_len) - HOLD_MARGIN_M;
-                let occ_s = (net.line_turn[l] as f64 + TERMINUS_MARGIN_S) / net.node_tracks(n) as f64;
-                term.push((n, l as u32, r as u8, at, occ_s));
+                let tracks = active_node_tracks(net, n);
+                let occ_s = net.line_turn[l] as f64 + TERMINUS_MARGIN_S;
+                if net.built_ports(n) > 1 {
+                    // A short turn occupies its arrival platform throughout the turnaround.
+                    // Through trains using that platform must not bypass its layover.
+                    let prev = *run.segs.last().unwrap();
+                    let side_in = net.port_side(path_edge(prev), 1 - path_dir(prev)).unwrap_or(0);
+                    let track = if tracks == 1 { 0 } else { side_in };
+                    plat.push((n, track, l as u32, r as u8, -1, at, occ_s));
+                    if tracks > 1 { turns.push((n, track, l as u32, r as u8, at)); }
+                } else {
+                    // A true dead end retains the pooled platform-track turnaround capacity.
+                    term.push((n, l as u32, r as u8, at, occ_s / tracks as f64));
+                }
             }
         }
     }
@@ -347,6 +376,36 @@ fn build_nodes(net: &Network, lines: &[LineSvc], cand: &[u32], in_n: &dyn Fn(u32
         users = term[i..end].iter().map(|x| User { line: x.1, run: x.2, owner: true, occ: x.4, at: x.3, stop: -1 }).collect();
         let n = term[i].0 as usize;
         push_res(cap, ResKind::Terminus, net.node_x[n], net.node_y[n], n as u32, u32::MAX, &users, Tag::Node);
+        i = end;
+    }
+    turns.sort_by(|a, b| (a.0, a.1, a.2, a.3).cmp(&(b.0, b.1, b.2, b.3)));
+    through.sort_by(|a, b| (a.0, a.1, a.2, a.3).cmp(&(b.0, b.1, b.2, b.3)));
+    let mut i = 0;
+    while i < turns.len() {
+        let n = turns[i].0;
+        let end = turns[i..].partition_point(|x| x.0 == n) + i;
+        let reversing = &turns[i..end];
+        let start_through = through.partition_point(|x| x.0 < n);
+        let end_through = through.partition_point(|x| x.0 <= n);
+        let passing = &through[start_through..end_through];
+        for track in 0..2 {
+            // A reversal sees the opposite through track and reversals from the other side.
+            // Same-side through traffic already shares its occupied arrival platform.
+            if reversing.iter().any(|x| x.1 == track) {
+                users = reversing.iter().map(|x| User { line: x.2, run: x.3, owner: x.1 == track, occ: CONFLICT_S, at: x.4, stop: -1 }).collect();
+                let turn_count = users.len() as u32;
+                users.extend(passing.iter().filter(|x| x.1 != track).map(|x| User { line: x.2, run: x.3, owner: false, occ: CONFLICT_S, at: x.5, stop: x.4 }));
+                push_res(cap, ResKind::Terminus, net.node_x[n as usize], net.node_y[n as usize], n, u32::MAX, &users, Tag::Turnback { turns: turn_count });
+            }
+            // Reciprocal resource for each through movement: independent opposite-direction
+            // through trains must never load each other's crossover capacity.
+            users = reversing.iter().filter(|x| x.1 != track).map(|x| User { line: x.2, run: x.3, owner: false, occ: CONFLICT_S, at: x.4, stop: -1 }).collect();
+            if !users.is_empty() && passing.iter().any(|x| x.1 == track) {
+                let turn_count = users.len() as u32;
+                users.extend(passing.iter().filter(|x| x.1 == track).map(|x| User { line: x.2, run: x.3, owner: true, occ: CONFLICT_S, at: x.5, stop: x.4 }));
+                push_res(cap, ResKind::Terminus, net.node_x[n as usize], net.node_y[n as usize], n, u32::MAX, &users, Tag::Turnback { turns: turn_count });
+            }
+        }
         i = end;
     }
     moves.sort_by(|a, b| a.0.cmp(&b.0).then(a.1.total_cmp(&b.1)).then(a.2.total_cmp(&b.2)).then((a.3, a.4).cmp(&(b.3, b.4))));
@@ -435,10 +494,13 @@ pub fn build(net: &Network, lines: &[LineSvc]) -> Capacity {
 }
 
 /// Utilisation and delay of one resource's users for each demand level.
-fn solve_one(us: &[User], net: &Network, streams: &mut Vec<((u32, u8), f64)>) -> ([f64; 3], [f64; 3]) {
+fn solve_one(us: &[User], net: &Network, streams: &mut Vec<((u32, u8), f64)>, turns: Option<usize>) -> ([f64; 3], [f64; 3]) {
     let (mut rho_r, mut delay_r) = ([0.0; 3], [0.0; 3]);
     let continuous = us.iter().any(|u| net.line_trains[u.line as usize].is_some());
+    let mut owner_streams: Vec<((u32, u8), f64)> = vec![];
     for lev in 0..LEVELS {
+        if turns.is_some_and(|n| !us[..n].iter().any(|u| net.line_tph[u.line as usize][lev] > 0.0)
+            || !us.iter().any(|u| u.owner && net.line_tph[u.line as usize][lev] > 0.0)) { continue; }
         let (mut load, mut trains) = (0.0, 0.0);
         streams.clear();
         for u in us {
@@ -459,7 +521,26 @@ fn solve_one(us: &[User], net: &Network, streams: &mut Vec<((u32, u8), f64)>) ->
         let rho = load / 3600.0;
         let tot: f64 = streams.iter().map(|s| s.1).sum();
         let mix = 1.0 - streams.iter().map(|s| (s.1 / tot).powi(2)).sum::<f64>();
-        let raw = kingman(rho, mix, load / trains);
+        let mut raw = kingman(rho, mix, load / trains);
+        if turns.is_some() {
+            // Track/platform resources already price queues between trains using the same
+            // move. Charge only the extra queue from crossing moves here; as conflicting
+            // reversal service tends to zero, the through movement's added delay also does.
+            owner_streams.clear();
+            let (mut own_load, mut own_trains) = (0.0, 0.0);
+            for u in us.iter().filter(|u| u.owner) {
+                let tph = net.line_tph[u.line as usize][lev] as f64;
+                if tph <= 0.0 { continue; }
+                own_load += tph * u.occ; own_trains += tph;
+                match owner_streams.iter_mut().find(|s| s.0 == (u.line, u.run)) {
+                    Some(s) => s.1 = s.1.max(tph),
+                    None => owner_streams.push(((u.line, u.run), tph)),
+                }
+            }
+            let own_total: f64 = owner_streams.iter().map(|s| s.1).sum();
+            let own_mix = 1.0 - owner_streams.iter().map(|s| (s.1 / own_total).powi(2)).sum::<f64>();
+            raw = (raw - kingman(own_load / 3600.0, own_mix, own_load / own_trains)).max(0.0);
+        }
         let w = if continuous { raw } else { raw.round() };
         rho_r[lev] = rho;
         delay_r[lev] = if !continuous && w < HOLD_MIN_S { 0.0 } else { w };
@@ -474,7 +555,7 @@ pub fn solve(cap: &mut Capacity, net: &Network) {
     cap.rho.resize(n, [0.0; 3]);
     cap.delay.resize(n, [0.0; 3]);
     for r in 0..n {
-        let (rho, delay) = solve_one(cap.users_of(r), net, &mut streams);
+        let (rho, delay) = solve_one(cap.users_of(r), net, &mut streams, match cap.tag[r] { Tag::Turnback { turns } => Some(turns as usize), _ => None });
         cap.rho[r] = rho;
         cap.delay[r] = delay;
     }
@@ -546,7 +627,7 @@ impl Capacity {
                         false
                     }
                 }
-                Tag::Node => flag(&dn, self.res[r].node),
+                Tag::Node | Tag::Turnback { .. } => flag(&dn, self.res[r].node),
                 Tag::Crossing { other } => flag(&de, self.res[r].edge) || flag(&de, other),
             };
             if dead {
@@ -597,7 +678,7 @@ impl Capacity {
         // ---- solve the new ones, and the old ones a rescheduled line uses
         let mut streams = vec![];
         for r in first_new..self.res.len() {
-            let (rho, delay) = solve_one(self.users_of(r), net, &mut streams);
+            let (rho, delay) = solve_one(self.users_of(r), net, &mut streams, match self.tag[r] { Tag::Turnback { turns } => Some(turns as usize), _ => None });
             self.rho[r] = rho;
             self.delay[r] = delay;
             for u in self.users_of(r) {
@@ -617,7 +698,7 @@ impl Capacity {
                 if !self.users_of(r).iter().any(|u| rs[u.line as usize]) {
                     continue;
                 }
-                let (rho, delay) = solve_one(self.users_of(r), net, &mut streams);
+                let (rho, delay) = solve_one(self.users_of(r), net, &mut streams, match self.tag[r] { Tag::Turnback { turns } => Some(turns as usize), _ => None });
                 self.rho[r] = rho;
                 if delay != self.delay[r] {
                     self.delay[r] = delay;
@@ -748,6 +829,207 @@ mod tests {
     use super::super::net::StationData;
     use super::super::service::Service;
     use super::super::world::{Op, TrackWorld};
+
+    fn turnback_fixture(single: bool, pass: bool) -> (TrackWorld, u32, u32, u32) {
+        use super::super::tests::{edge, line, node, station, world};
+        let mut w = world();
+        let a = node(&mut w, 0.0, 0.0, 0);
+        let b = node(&mut w, 3000.0, 0.0, 0);
+        let c = node(&mut w, 6000.0, 0.0, 0);
+        for (x, y) in [(a, b), (b, c)] {
+            let e = edge(&mut w, x, y, &[], 0).unwrap();
+            if single {
+                let mut d = w.net.edge_data(e).unwrap(); d.tracks = 1;
+                w.apply(Op::Edge { id: e, data: Some(d) }).unwrap();
+            }
+        }
+        for n in [a, b, c] { station(&mut w, n, 200); }
+        let stops = if pass { vec![a, c] } else { vec![a, b, c] };
+        let through = line(&mut w, &stops, [12.0, 8.0, 4.0]);
+        let short = line(&mut w, &[a, b], [8.0, 0.0, 0.0]);
+        (w, b, through, short)
+    }
+
+    #[test]
+    fn short_turns_occupy_platform_and_conflict_with_both_through_directions() {
+        let (mut w, b, through, short) = turnback_fixture(false, false);
+        let cap = &w.svc.cap;
+        let crossing = cap.res.iter().enumerate().find(|(r, x)| x.node == b && x.kind == ResKind::Terminus
+            && cap.users_of(*r).iter().any(|u| u.line == short && u.owner)).unwrap().0;
+        // 8 reversing moves cross 12 opposite-direction through moves, 90 seconds each.
+        assert!((cap.rho[crossing][0] - 20.0 * CONFLICT_S / 3600.0).abs() < 1e-12);
+        assert!(cap.delay[crossing][0] > 0.0);
+        assert_eq!(cap.rho[crossing][1], 0.0, "no crossover conflict when the reversing line is off");
+        assert_eq!(cap.delay[crossing][1], 0.0);
+        let users = cap.users_of(crossing);
+        assert_eq!(users.iter().filter(|u| u.line == through && u.owner).count(), 0);
+        assert_eq!(users.iter().filter(|u| u.line == through && !u.owner).count(), 1);
+        assert_eq!(users.iter().filter(|u| u.line == short && u.owner).count(), 1, "turnaround counted once per train");
+        let reciprocal = cap.res.iter().enumerate().find(|(r, x)| x.node == b && x.kind == ResKind::Terminus
+            && cap.users_of(*r).iter().any(|u| u.line == through && u.owner)).unwrap().0;
+        assert_eq!(cap.users_of(reciprocal).iter().filter(|u| u.line == through && u.owner).count(), 1);
+        assert_eq!(cap.rho[reciprocal][0], cap.rho[crossing][0]);
+        for run in 0..2 {
+            assert!(w.svc.lines[through as usize].runs[run].stop_holds[0][1] > 0.0, "through direction {run} waits at the short turn");
+            assert_eq!(w.svc.lines[through as usize].runs[run].stop_holds[1][1], 0.0);
+        }
+        let platforms: Vec<_> = cap.res.iter().enumerate().filter(|(_, r)| r.node == b && r.kind == ResKind::Platform).map(|(i, _)| i).collect();
+        assert_eq!(platforms.len(), 2);
+        let arrival = *platforms.iter().find(|&&r| cap.users_of(r).iter().any(|u| u.line == short)).unwrap();
+        assert!((cap.rho[arrival][0] - (12.0 * (30.0 + PLATFORM_MARGIN_S) + 8.0 * (180.0 + TERMINUS_MARGIN_S)) / 3600.0).abs() < 1e-12);
+        same_as_global(&w, "short turn start");
+        w.apply(Op::Schedule { id: short, tph: [0.0; 3] }).unwrap();
+        same_as_global(&w, "short turn off");
+        for run in 0..2 { assert_eq!(w.svc.lines[through as usize].runs[run].stop_holds[0][1], 0.0); }
+        w.undo().unwrap().unwrap(); same_as_global(&w, "short turn undo");
+        w.redo().unwrap().unwrap(); same_as_global(&w, "short turn redo");
+    }
+
+    #[test]
+    fn single_track_platform_shares_stops_and_short_turns_without_extra_tracks() {
+        let (mut w, b, through, short) = turnback_fixture(true, false);
+        assert_eq!(w.net.node_tracks(b), 1);
+        let platforms: Vec<_> = w.svc.cap.res.iter().enumerate().filter(|(_, r)| r.node == b && r.kind == ResKind::Platform).map(|(i, _)| i).collect();
+        assert_eq!(platforms.len(), 1);
+        let platform = platforms[0];
+        let cap = &w.svc.cap;
+        assert_eq!(cap.users_of(platform).len(), 3);
+        assert_eq!(cap.users_of(platform).iter().filter(|u| u.line == through).count(), 2);
+        assert!((cap.rho[platform][0] - (24.0 * (30.0 + PLATFORM_MARGIN_S) + 8.0 * (180.0 + TERMINUS_MARGIN_S)) / 3600.0).abs() < 1e-12);
+        assert!(cap.res.iter().all(|r| r.node != b || r.kind != ResKind::Terminus), "one shared platform; no fictional crossover or isolated turnaround pool");
+        same_as_global(&w, "single short turn");
+        w.apply(Op::Line { id: short, data: None }).unwrap();
+        same_as_global(&w, "single remove short turn");
+        let platform = w.svc.cap.res.iter().position(|r| r.node == b && r.kind == ResKind::Platform).unwrap();
+        assert!((w.svc.cap.rho[platform][0] - 24.0 * (30.0 + PLATFORM_MARGIN_S) / 3600.0).abs() < 1e-12);
+    }
+
+    #[test]
+    fn short_turn_conflicts_include_trains_passing_the_station() {
+        for single in [false, true] {
+            let (w, b, through, _) = turnback_fixture(single, true);
+            let cap = &w.svc.cap;
+            for run in 0..2 {
+                let resource = cap.res.iter().enumerate().find(|(r, x)| x.node == b && cap.delay[*r][0] > 0.0
+                    && cap.users_of(*r).iter().any(|u| u.line == through && u.run == run && u.owner)).unwrap().0;
+                let u = cap.users_of(resource).iter().find(|u| u.line == through && u.run == run && u.owner).unwrap();
+                assert_eq!(u.stop, -1);
+                assert!(w.svc.lines[through as usize].runs[run as usize].holds[0].iter().any(|h| h.s == u.at && h.delay == cap.delay[resource][0]), "passing trains wait before the station");
+            }
+            same_as_global(&w, "passing short turn");
+        }
+    }
+
+    #[test]
+    fn true_dead_end_keeps_pooled_platform_turnaround_capacity() {
+        let (w, b, _, _) = turnback_fixture(false, false);
+        let cap = &w.svc.cap;
+        for (r, resource) in cap.res.iter().enumerate().filter(|(_, x)| x.kind == ResKind::Terminus && x.node != b) {
+            assert!(cap.users_of(r).iter().all(|u| u.occ == (180.0 + TERMINUS_MARGIN_S) / 2.0));
+            assert_eq!(w.net.node_ports[resource.node as usize].n, 1);
+        }
+    }
+
+    #[test]
+    fn blueprint_extension_does_not_change_dead_end_turnaround_capacity() {
+        use super::super::tests::{edge, line, node, station, world};
+        let mut w = world();
+        let a = node(&mut w, 0.0, 0.0, 0);
+        let b = node(&mut w, 3000.0, 0.0, 0);
+        edge(&mut w, a, b, &[], 0).unwrap();
+        station(&mut w, a, 200); station(&mut w, b, 200);
+        line(&mut w, &[a, b], [12.0, 8.0, 4.0]);
+        let c = node(&mut w, 6000.0, 0.0, 0);
+        let id = w.net.alloc_edge();
+        w.apply(Op::Edge { id, data: Some(super::super::net::EdgeData { a: b, b: c, tracks: 2, pis: vec![], built: false, thru: vec![] }) }).unwrap();
+        assert_eq!(w.net.built_ports(b), 1);
+        let cap = &w.svc.cap;
+        let term = cap.res.iter().position(|r| r.node == b && r.kind == ResKind::Terminus).unwrap();
+        assert_eq!(cap.users_of(term).len(), 1);
+        assert_eq!(cap.users_of(term)[0].occ, (180.0 + TERMINUS_MARGIN_S) / 2.0);
+        assert!(cap.res.iter().all(|r| r.node != b || r.kind != ResKind::Platform));
+        same_as_global(&w, "blueprint extension of terminus");
+    }
+
+    #[test]
+    fn short_turn_counts_settle_against_shared_platform_and_crossover_delays() {
+        let (mut w, _, through, short) = turnback_fixture(false, false);
+        for (id, counts) in [(through, [9, 4, 2]), (short, [5, 0, 0])] {
+            let tph = w.net.line_tph[id as usize];
+            w.apply(Op::TrainCounts { id, trains: Some(counts), tph }).unwrap();
+        }
+        for id in [through, short] {
+            let ls = &w.svc.lines[id as usize];
+            let counts = w.net.line_trains[id as usize].unwrap();
+            assert_eq!(ls.trains, counts);
+            for lev in 0..LEVELS {
+                let implied = w.net.line_tph[id as usize][lev] as f64 * ls.round_trip[lev] / 3600.0;
+                assert!((implied - counts[lev] as f64).abs() < 0.001, "count residual {implied}, target {}", counts[lev]);
+            }
+        }
+        assert!(w.svc.lines[through as usize].delay[0] > 0.0);
+        assert!(w.svc.lines[short as usize].delay[0] > 0.0);
+    }
+
+    #[test]
+    fn tiny_reversal_does_not_couple_independent_through_directions() {
+        use super::super::tests::line;
+        let (mut w, b, through, short) = turnback_fixture(false, true);
+        w.apply(Op::Schedule { id: through, tph: [10.0, 8.0, 4.0] }).unwrap();
+        let stops = w.net.line_stops(through).to_vec();
+        let second = line(&mut w, &stops, [10.0, 8.0, 4.0]);
+        w.apply(Op::Schedule { id: short, tph: [0.0; 3] }).unwrap();
+        let baseline: Vec<_> = [through, second].iter().map(|&id| w.svc.lines[id as usize].runs.iter().map(|r| r.prof[0].hold).collect::<Vec<_>>()).collect();
+        w.apply(Op::Schedule { id: short, tph: [0.001, 0.0, 0.0] }).unwrap();
+        let cap = &w.svc.cap;
+        for (r, resource) in cap.res.iter().enumerate().filter(|(_, x)| x.node == b && x.kind == ResKind::Terminus) {
+            assert!(cap.rho[r][0] < 1.0, "two independent 20/h through directions must not be pooled: {}", cap.rho[r][0]);
+            if cap.users_of(r).iter().any(|u| u.owner && (u.line == through || u.line == second)) {
+                assert_eq!(cap.delay[r][0], 0.0, "rare reversing service adds no material trunk queue");
+                assert_eq!(cap.users_of(r).iter().filter(|u| u.owner).map(|u| u.run).collect::<std::collections::BTreeSet<_>>().len(), 1);
+            }
+            assert_eq!(resource.kind, ResKind::Terminus);
+        }
+        for (j, &id) in [through, second].iter().enumerate() {
+            for run in 0..2 { assert!((w.svc.lines[id as usize].runs[run].prof[0].hold - baseline[j][run]).abs() < 2.0); }
+        }
+        same_as_global(&w, "tiny reversal");
+    }
+
+    #[test]
+    fn opposite_short_turns_cross_without_through_trains() {
+        use super::super::tests::line;
+        let (mut w, b, through, short) = turnback_fixture(false, false);
+        let far = *w.net.line_stops(through).last().unwrap();
+        w.apply(Op::Line { id: through, data: None }).unwrap();
+        let opposite = line(&mut w, &[far, b], [8.0, 0.0, 0.0]);
+        let cap = &w.svc.cap;
+        for id in [short, opposite] {
+            let r = cap.res.iter().enumerate().find(|(r, x)| x.node == b && x.kind == ResKind::Terminus
+                && cap.users_of(*r).iter().any(|u| u.line == id && u.owner)).unwrap().0;
+            assert!(cap.delay[r][0] > 0.0, "opposite reversals must not be subtracted as one owners-only stream");
+            assert!(cap.users_of(r).iter().any(|u| u.line != id && !u.owner));
+        }
+        same_as_global(&w, "opposite reversals");
+    }
+
+    #[test]
+    fn double_track_blueprint_cannot_double_single_track_terminal_capacity() {
+        use super::super::tests::{edge, line, node, station, world};
+        let mut w = world();
+        let a = node(&mut w, 0.0, 0.0, 0); let b = node(&mut w, 3000.0, 0.0, 0);
+        let e = edge(&mut w, a, b, &[], 0).unwrap();
+        let mut d = w.net.edge_data(e).unwrap(); d.tracks = 1;
+        w.apply(Op::Edge { id: e, data: Some(d) }).unwrap();
+        station(&mut w, a, 200); station(&mut w, b, 200); line(&mut w, &[a,b], [8.0,4.0,2.0]);
+        let c = node(&mut w, 6000.0, 0.0, 0); let extension = w.net.alloc_edge();
+        w.apply(Op::Edge { id: extension, data: Some(super::super::net::EdgeData { a:b,b:c,tracks:2,pis:vec![],built:false,thru:vec![] }) }).unwrap();
+        assert_eq!(w.net.node_tracks(b), 2, "planning geometry retains proposed double track");
+        assert_eq!(active_node_tracks(&w.net,b),1, "active capacity sees only constructed track");
+        let r = w.svc.cap.res.iter().position(|r|r.node==b&&r.kind==ResKind::Terminus).unwrap();
+        assert_eq!(w.svc.cap.users_of(r)[0].occ,180.0+TERMINUS_MARGIN_S);
+        same_as_global(&w,"mixed-track blueprint terminal");
+    }
 
     struct Rng(u64);
     impl Rng {

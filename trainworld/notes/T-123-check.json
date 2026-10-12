@@ -1,0 +1,38 @@
+{
+  "nativeValuesCompared": 74835,
+  "nativeWorstRelativeDifference": 0,
+  "browserResultsMatch": true,
+  "before": {
+    "openingMB": 595.656704,
+    "combinedMB": 713.770304,
+    "perSolverMB": [
+      137,
+      137,
+      137,
+      137,
+      137
+    ]
+  },
+  "after": {
+    "openingMB": 359.72710400000005,
+    "combinedMB": 667.770304,
+    "perSolverMB": [
+      128,
+      128,
+      128,
+      128,
+      127
+    ]
+  },
+  "savedMB": 46,
+  "reductionPct": 6.444650294669585,
+  "firstEstimateMs": [
+    1823.6000000014901,
+    1752.3999999985099
+  ],
+  "refinedMs": [
+    6276.30000000447,
+    6099.60000000149
+  ],
+  "remoteBasemapUnavailable": true
+}

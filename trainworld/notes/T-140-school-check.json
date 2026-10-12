@@ -1,0 +1,16 @@
+{
+  "matchedBuildings": 4412,
+  "enrollment": 2694630,
+  "sourceEnrollmentCoverage": 0.9932786899748752,
+  "attendanceOutings": 2418183.501385689,
+  "dailySchoolTripLegs": 4836367.002771378,
+  "schoolWalkFraction": 0.17743931611936706,
+  "schoolMeanKm": 4.682474943241904,
+  "selectedBuilding": "M011",
+  "selectedSchoolTripLegs": 4048.1999621093273,
+  "selectedSchoolRailLegs": 664.0903024077415,
+  "morningOutwardShare": 0.9400000024809502,
+  "middayHomewardShare": 0.819999989350024,
+  "existingLayersPreserved": true,
+  "purposeAndFarCountsReconcile": true
+}

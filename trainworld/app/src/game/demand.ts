@@ -6,11 +6,14 @@
 // String()).
 
 import { computed, signal } from "@preact/signals";
+import { activeCity, REGISTRY, type CityId } from "./cities";
 import type { ModeSplit } from "./types";
 
 export interface LineDemand {
   /** boardings onto the line a day, both directions, transfers included */
   ridersPerDay: number;
+  /** The separately modelled regional market's boardings onto this line. */
+  intercityRidersPerDay?: number;
   /** fullest train at high demand: the worst segment's busiest-hour load in a high-demand
    * period, % of the crush capacity of the trains running then */
   fullestPct: number;
@@ -31,7 +34,7 @@ export interface DemandView {
   version: number;
   /** crowding rounds every period has had: 0 = the free-flow first estimate */
   round: number;
-  /** city-wide commute mode split, % of trips */
+  /** Mode split, % of legs: network-wide here, all modelled local purposes in cityDemandViews. */
   split: ModeSplit;
   trainShareByPeriod: [string, number][];
   /** per period (game/periods.ts order), the busiest hour's riders against the period's mean
@@ -47,11 +50,19 @@ export interface DemandView {
 export const demandView = signal<DemandView | null>(null);
 /** The split with no rail at all, known once the city pack is open (before any solve). */
 export const baseSplit = signal<ModeSplit | null>(null);
+/** Local purpose shares (NYC everyday trips included), separate from network-wide totals. */
+export const cityDemandViews = signal<Map<CityId, DemandView>>(new Map());
+export const cityBaseSplits = signal<Map<CityId, ModeSplit>>(new Map());
+/** Distinct, synthetic intercity trips: never included in local commute denominators. */
+export const intercityDemand = signal<{version: number; round: number; tripsPerDay: number; railTripsPerDay: number; corridors: {from: number; to: number; trips: number; rail: number}[] } | null>(null);
 /** A solve is running for a newer network than the one `demandView` shows. */
 export const demandUpdating = signal(false);
+/** How far that solve has got: results published so far (the free-flow estimate, then each
+ * crowding round) of all it will publish. */
+export const demandStep = signal({ done: 0, of: 4 });
 
 /** The mode-split bar's numbers (null while the pack is still loading). */
-export const modeSplit = computed<ModeSplit | null>(() => demandView.value?.split ?? baseSplit.value);
+export const modeSplit = computed<ModeSplit | null>(() => cityDemandViews.value.get(activeCity.value)?.split ?? cityBaseSplits.value.get(activeCity.value) ?? baseSplit.value);
 
 export const lineDemand = (id: string): LineDemand | null => demandView.value?.lines.get(id) ?? null;
 export const stationDemand = (id: string): StationDemand | null => demandView.value?.stations.get(id) ?? null;
@@ -68,7 +79,7 @@ export const stationDemand = (id: string): StationDemand | null => demandView.va
 export interface CityCells {
   /** number of cells (New York 202,337) */
   n: number;
-  /** x, y per cell, metres east and north of the pack origin (game/coords.ts turns them into lng/lat) */
+  /** x, y per cell in the fixed NYC world frame (game/coords.ts turns them into lng/lat) */
   xy: Float32Array;
   /** H3 index (resolution 9) of each cell */
   h3: BigUint64Array;
@@ -79,7 +90,7 @@ export interface CityCells {
   zoneXY: Float32Array;
 }
 
-/** Commuters a day per cell by how they travel, at both ends of the commute. */
+/** Local trip legs a day per cell by mode, home and activity ends, both directions. */
 export interface CellModes {
   /** the `DemandView.version` these belong to */
   version: number;
@@ -87,7 +98,7 @@ export interface CellModes {
   homeRail: Float32Array;
   homeWalk: Float32Array;
   homeDrive: Float32Array;
-  /** working in the cell, the same three */
+  /** activity destinations (work plus implemented everyday purposes), the same three */
   workRail: Float32Array;
   workWalk: Float32Array;
   workDrive: Float32Array;
@@ -146,6 +157,82 @@ export interface Flows {
   cutRail: number;
   cutWalk: number;
   cutDrive: number;
+  /** Same local trip legs as the bubbles, separated by activity and departure direction. */
+  purposes: PurposeTrips[];
+}
+
+export interface PurposeTrips {
+  name: string;
+  /** Five departure periods per mode: rail, walk, drive. */
+  outward: number[][];
+  returning: number[][];
+}
+
+/** Registered places in pipeline/intercity.py order: the indices in the arrays below. */
+export const INTERCITY_PLACES = REGISTRY.market.places.map(p => p.name);
+/** The places as the player reads them. `own` is the place the selection itself lies in: the trips
+ * that stay within it are all 40 km or longer (the market has none shorter). */
+export function intercityPlaceName(place: number, own = -1): string {
+  const name = REGISTRY.market.places[place]?.regionName ?? "";
+  return place === own ? `Other ${name} places` : name;
+}
+
+/** Longer trips (non-commute, T-117) to or from one place, a day. */
+export interface PlaceTrips {
+  /** index into INTERCITY_PLACES */
+  place: number;
+  /** all modes, and by rail */
+  all: number;
+  rail: number;
+  /** where the trips' far ends are, mean position in the world frame (NaN with no trips) */
+  x: number;
+  y: number;
+}
+
+/** Longer trips to or from one far 6 km zone, a day (T-120): drawn as one bubble. */
+export interface ZoneTrips {
+  /** Exact market membership from the demand pack, not inferred from a zone's centroid. */
+  place: number;
+  /** the zone's own position, pack metres (as `PlaceTrips.x`) */
+  x: number;
+  y: number;
+  /** all modes, and by rail (a station's: both the riders) */
+  all: number;
+  rail: number;
+}
+
+/** One direction of a selection's or a station's longer trips, by place at the far end. */
+export interface PlaceFlows {
+  all: number;
+  rail: number;
+  /** the places with trips, biggest (all modes) first */
+  places: PlaceTrips[];
+  /** the far zones with trips, biggest first; their sums equal the places' */
+  zones: ZoneTrips[];
+}
+
+/**
+ * A bubble selection's longer trips (`intercitySelection(end, cells)`, T-118): the market's own
+ * trips from the 6 km zones the selected cells lie in, each zone's share given to the 600 m squares
+ * by people (starts) or attraction (ends) and the selected part of every square counted. Units:
+ * trips a day, and `rail` the part by train. Not commuters.
+ */
+export interface IntercitySelection {
+  version: number;
+  /** trips starting in the selected cells, by where they end */
+  starts: PlaceFlows;
+  /** trips ending in the selected cells, by where they start */
+  ends: PlaceFlows;
+  /** share of the selected squares that the market has sites for (1 = all) */
+  matched: number;
+}
+
+/** A station's longer-trip rail riders (`intercityStation(id)`): starting here, ending here, by place. */
+export interface IntercityStation {
+  version: number;
+  stationId: string;
+  starts: PlaceFlows;
+  ends: PlaceFlows;
 }
 
 export interface DemandQueries {
@@ -153,6 +240,8 @@ export interface DemandQueries {
   cellModes(): Promise<CellModes | null>;
   stationRiders(stationId: string, top?: number): Promise<StationRiders | null>;
   flows(end: "home" | "work", cells: Uint32Array): Promise<Flows | null>;
+  intercitySelection(end: "home" | "work", cells: Uint32Array): Promise<IntercitySelection | null>;
+  intercityStation(stationId: string): Promise<IntercityStation | null>;
 }
 
 let queries: DemandQueries | null = null;
@@ -173,3 +262,10 @@ export const stationRiders = (stationId: string, top?: number): Promise<StationR
  * moved on to a newer network. */
 export const flows = (end: "home" | "work", cells: Uint32Array): Promise<Flows | null> =>
   queries?.flows(end, cells) ?? Promise.resolve(null);
+/** The longer (non-commute) trips of the people living or working in `cells`, by place, for the
+ * solve `demandView` shows. Null while there is no solve or the workers moved on. */
+export const intercitySelection = (end: "home" | "work", cells: Uint32Array): Promise<IntercitySelection | null> =>
+  queries?.intercitySelection(end, cells) ?? Promise.resolve(null);
+/** A station's longer-trip riders by place. Null as above. */
+export const intercityStation = (stationId: string): Promise<IntercityStation | null> =>
+  queries?.intercityStation(stationId) ?? Promise.resolve(null);

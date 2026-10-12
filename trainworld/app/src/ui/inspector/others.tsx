@@ -17,6 +17,7 @@ import { removeThing } from "../../game/remove";
 import { tripAt } from "../../map/network";
 import { Chip, Row, Stepper } from "../widgets";
 import { StationRiders } from "./StationRiders";
+import { StationLongerTrips } from "./LongerTrips";
 
 function StationGlyph() {
   return <span class="st-glyph" />;
@@ -103,6 +104,7 @@ export function StationInspector({ id }: { id: string }) {
         </button>
       </div>
       <StationRiders id={id} />
+      <StationLongerTrips id={id} />
     </>
   );
 }
@@ -149,7 +151,7 @@ const SEATS_PER_CAR = 44;
 const CRUSH_PER_CAR = 160;
 
 /**
- * Who is on a train now (T-083, SPEC 8): the riders demand puts on the segment it is running
+ * The steady-state load forecast for a train's current segment (T-083, SPEC 8): the riders demand puts on the segment it is running
  * (`LineDemand.loads`, riders over the whole period) shared among the trains the line runs in
  * that period, with both the average and busiest hour; against seats and crush load.
  */
@@ -165,8 +167,8 @@ function OnBoard({ line, run, s, stopS, cars }: { line: LineInput; run: number; 
   if (!demandView.value || !loads || loads.length !== 2 * (n - 1) || trains <= 0)
     return (
       <ul class="rows">
-        <Row label="On board">
-          <span class="muted">{demandView.value ? "worked out after the next demand update" : "worked out once demand is ready"}</span>
+        <Row label="Forecast load">
+          <span class="muted">{demandView.value ? "available after the next demand update" : "available once demand is ready"}</span>
         </Row>
       </ul>
     );
@@ -180,11 +182,12 @@ function OnBoard({ line, run, s, stopS, cars }: { line: LineInput; run: number; 
   return (
     <>
       <div class="h">
-        On board<span class="right muted small">{PERIODS[p].name.toLowerCase()}, {basis === "average" ? "average" : "busiest hour"}</span>
+        Forecast load<span class="right muted small">{PERIODS[p].name.toLowerCase()}, {basis === "average" ? "average" : "busiest hour"}</span>
       </div>
+      <p class="muted small">Steady-state demand for this stretch, not a live passenger count.</p>
       <ul class="rows">
-        <Row label="Average riders" bold={basis === "average"}>{Math.round(average).toLocaleString("en-US")}</Row>
-        <Row label="Busiest hour" bold={basis === "busiest"}>{Math.round(busiest).toLocaleString("en-US")}</Row>
+        <Row label="Typical train" bold={basis === "average"}>{Math.round(average).toLocaleString("en-US")}</Row>
+        <Row label="Busiest-hour train" bold={basis === "busiest"}>{Math.round(busiest).toLocaleString("en-US")}</Row>
         <li>
           <span class="grow">
             <span class="load-bar">
@@ -209,8 +212,10 @@ const RADII = [100, 150, 200, 250, 300, 400, 500, 600, 800, 1000, 1200, 1500, 17
  * (map/edgeEdit.ts). */
 function Shape({ edge, version }: { edge: number; version: number }) {
   const [shape, setShape] = useState<EdgePis | null>(null);
+  const [busy, setBusy] = useState(false);
   useEffect(() => {
     let on = true;
+    setShape(null);
     void queryClock({ what: "edgePis", edge }).then((d) => on && d && setShape(parseEdgePis(d)));
     return () => {
       on = false;
@@ -218,42 +223,70 @@ function Shape({ edge, version }: { edge: number; version: number }) {
   }, [edge, version]);
   if (!shape) return null;
   const pis = shape.pis;
-  if (!pis.length) return <p class="note muted">A straight stretch.</p>;
-  const put = (next: EdgePi[]) => void live.edgeEditor?.setPis(edge, next);
+  const w = world.value;
+  const track = w?.edges.find(e => e.id === edge);
+  const from = track ? w?.nodes.get(track.a) : undefined, to = track ? w?.nodes.get(track.b) : undefined;
+  if (!from || !to) return null;
+  const put = async (next: EdgePi[]) => {
+    if (busy) return;
+    setBusy(true);
+    try { await live.edgeEditor?.setPis(edge, next); }
+    finally { setBusy(false); }
+  };
+  const add = (i: number) => {
+    const a = i === 0 ? from : pis[i - 1], b = i === pis.length ? to : pis[i];
+    const x = (a.x + b.x) / 2, y = (a.y + b.y) / 2;
+    const p: EdgePi = { x, y, level: Math.round((a.level + b.level) / 2), radius: 0, used: 0, kmh: 0, mx: x, my: y };
+    void put([...pis.slice(0, i), p, ...pis.slice(i)]);
+  };
   const step = (i: number, d: number) => {
     const p = pis[i];
     const cur = p.radius > 0 ? p.radius : Infinity;
     let r: number;
     if (d < 0) r = [...RADII].reverse().find((x) => x < Math.min(cur, p.used > 0 ? p.used + 1 : cur)) ?? RADII[0];
     else r = RADII.find((x) => x > cur) ?? 0;
-    put(pis.map((q, k) => (k === i ? { ...q, radius: r >= RADII[RADII.length - 1] ? 0 : r } : q)));
+    void put(pis.map((q, k) => (k === i ? { ...q, radius: r >= RADII[RADII.length - 1] ? 0 : r } : q)));
   };
-  const level = pis.every((p) => p.level === pis[0].level) ? pis[0].level : null;
+  const level = pis.length && pis.every((p) => p.level === pis[0].level) ? pis[0].level : null;
   return (
     <>
       <div class="h">
-        Curves<span class="right muted small">drag the squares on the map</span>
+        Corners
       </div>
+      <p class="muted small">Add a corner between points, then drag its square on the map.</p>
       {shape.legacy && <p class="note muted">This stretch runs through its squares. Once you change it, they become corners like on any other track.</p>}
-      <ul class="rows">
-        {pis.map((p, i) => (
-          <li>
-            <span class="grow">
-              {p.used > 0 ? `${Math.round(p.kmh)} km/h` : "No curve"}
-              {p.radius > 0 ? "" : <span class="muted"> auto</span>}
-            </span>
-            <Stepper value={p.used > 0 ? Math.round(p.used).toLocaleString("en-US") + " m" : "none"} wide label="radius" onStep={(d) => step(i, d)} />
-          </li>
-        ))}
-      </ul>
-      <div class="h">Level of the stretch</div>
+      <div class="blueprint-corners">
+        {Array.from({ length: pis.length + 1 }, (_, i) => <>
+          <button class="btn text add-corner" disabled={busy} onClick={() => add(i)}
+            aria-label={pis.length ? `Add corner ${i + 1}` : "Add corner"}>Add corner</button>
+          {i < pis.length && <fieldset class="corner" disabled={busy}>
+            <legend>Corner {i + 1}</legend>
+            <div class="corner-row">
+              <span class="grow">
+                {pis[i].used > 0 ? `${Math.round(pis[i].kmh)} km/h` : "No curve"}
+                {pis[i].radius > 0 ? "" : <span class="muted"> auto</span>}
+              </span>
+              <Stepper value={pis[i].used > 0 ? Math.round(pis[i].used).toLocaleString("en-US") + " m" : "none"} wide label={`corner ${i + 1} radius`} onStep={(d) => step(i, d)} />
+            </div>
+            <div class="corner-row">
+              <span class="grow">Level</span>
+              <Stepper value={levelLabel(pis[i].level)} label={`corner ${i + 1} level`} onStep={d => {
+                const next = Math.max(-3, Math.min(3, pis[i].level + d));
+                if (next !== pis[i].level) void put(pis.map((p, k) => k === i ? { ...p, level: next } : p));
+              }} />
+              <button class="btn text" aria-label={`Remove corner ${i + 1}`} onClick={() => void put(pis.filter((_, k) => k !== i))}>Remove</button>
+            </div>
+          </fieldset>}
+        </>)}
+      </div>
+      {pis.length > 0 && <><div class="h">Level of the stretch</div>
       <div class="group levels">
         {[3, 2, 1, 0, -1, -2, -3].map((l) => (
-          <button class={"btn" + (l === level ? " on" : "")} onClick={() => void edit({ op: "edgeLevel", edge, level: l as Level })}>
+          <button disabled={busy} class={"btn" + (l === level ? " on" : "")} onClick={() => void edit({ op: "edgeLevel", edge, level: l as Level })}>
             {levelLabel(l)}
           </button>
         ))}
-      </div>
+      </div></>}
     </>
   );
 }

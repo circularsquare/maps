@@ -1,0 +1,46 @@
+[
+  {
+    "frame": "legacy (equirectangular)",
+    "preview": {
+      "n": 300,
+      "meanMs": 0.679,
+      "medianMs": 0.597,
+      "p95Ms": 1.297
+    },
+    "add": {
+      "n": 300,
+      "meanMs": 0.33,
+      "medianMs": 0.295,
+      "p95Ms": 0.66
+    },
+    "refused": 0,
+    "edges": 300,
+    "saveBytes": 7238,
+    "saveMs": 0.07,
+    "loadMs": 138.75,
+    "renderAllMs": 4.67,
+    "renderPoints": 68246
+  },
+  {
+    "frame": "world (Lambert conformal)",
+    "preview": {
+      "n": 300,
+      "meanMs": 0.822,
+      "medianMs": 0.765,
+      "p95Ms": 1.479
+    },
+    "add": {
+      "n": 300,
+      "meanMs": 0.404,
+      "medianMs": 0.391,
+      "p95Ms": 0.734
+    },
+    "refused": 0,
+    "edges": 300,
+    "saveBytes": 7241,
+    "saveMs": 0.09,
+    "loadMs": 134.03,
+    "renderAllMs": 4.11,
+    "renderPoints": 68246
+  }
+]

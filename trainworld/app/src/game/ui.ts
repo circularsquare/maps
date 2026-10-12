@@ -18,7 +18,7 @@ export interface DisplaySettings {
   stationNames: boolean;
   capacity: boolean;
   basemapLabels: boolean;
-  /** station circles sized by riders a day */
+  /** explicit analytical view: translucent circles behind platforms, area by daily entries/exits */
   stationRiders: boolean;
   /** trains filled by how full they are */
   trainLoad: boolean;
@@ -30,6 +30,8 @@ export interface DisplaySettings {
   commuterEnd: "home" | "work";
   /** commuter bubbles' size, as a multiple of their width (T-099; 1 = BUBBLE_DENSITY's sizes) */
   bubbleSize: number;
+  /** longer trips (non-commute, T-118) drawn as bubbles for a selected bubble set or station */
+  intercity: boolean;
 }
 
 const DEFAULT_DISPLAY: DisplaySettings = {
@@ -38,12 +40,13 @@ const DEFAULT_DISPLAY: DisplaySettings = {
   stationNames: true,
   capacity: true,
   basemapLabels: true,
-  stationRiders: true,
+  stationRiders: false,
   trainLoad: true,
   trainLoadBasis: "busiest",
   commuters: false,
   commuterEnd: "home",
   bubbleSize: 1,
+  intercity: true,
 };
 
 const STORE = "trainworld-ui";
@@ -80,11 +83,14 @@ export const theme = signal<Theme>(THEMES.includes(savedTheme as Theme) ? (saved
  * remove what is clicked (T-096). */
 export type Tool = "select" | "track" | "station" | "line" | "delete";
 export const tool = signal<Tool>("select");
-/** A question waiting in the hint area above the bottom bar (T-096: removing something
+/** A question waiting in a centered modal (T-096/T-113: removing something
  * constructed): `run` on the yes button, nothing on the no button or Esc. */
 export const ask = signal<{ text: string; yes: string; no: string; run: () => void } | null>(null);
-/** The line the line tool is adding stops to (null until its first two stops make it). */
+/** The selected line whose stops the map tool is editing. */
 export const lineDraft = signal<{ line: number | null; stops: number[] }>({ line: null, stops: [] });
+/** A newly created line opens its inspector with the default name selected for replacement. */
+export const renameLinePrompt = signal<string | null>(null);
+export const lineSort = signal<"name" | "passengers">("name");
 /** Platform length for new stations, m. */
 export const buildPlatform = signal(200);
 export const buildLevel = signal<Level>(0);

@@ -4,12 +4,13 @@
 // swaps in the newest snapshot (a version number on every result). Big arrays travel as
 // transferred buffers.
 //
-// Coordinates in edits are pack metres (east and north of the city pack's origin, the track
+// Coordinates in edits are world metres (the loaded game's frame, game/frame.ts: the track
 // model's frame); what the renderer draws comes back in local units (map/geo.ts). Money in
 // messages is US$M, as in the track model.
 
 import type { EdgeId, Level, NodeId } from "../game/types";
-import type { DayLedger } from "./saveFile";
+import type { FrameSpec } from "../game/frame";
+import type { DayLedger, SaveSlot } from "./saveFile";
 import type { NetworkBuffers } from "../map/network";
 
 export type { DayLedger };
@@ -55,9 +56,10 @@ export type EditOp =
   | { op: "constructAll" }
   | { op: "constructLine"; line: number }
   | { op: "addLine"; stops: NodeId[]; name: string; colour: string }
+  | { op: "copyLine"; line: number; name?: string }
   | { op: "setStops"; line: number; stops: NodeId[] }
   | { op: "setTrainCount"; line: number; trains: [number, number, number] }
-  | { op: "lineLook"; line: number; name: string; colour: string }
+  | { op: "lineLook"; line: number; name: string; colour: string; letter?: string }
   | { op: "removeLine"; line: number }
   /** the fare curve (T-028): US$ a ride plus US$ a km; not undoable, a setting */
   | { op: "fares"; base: number; perKm: number }
@@ -67,7 +69,7 @@ export type EditOp =
 export type ToClock =
   /** `pack`: the city pack's URL without extension (".../packs/nyc"), absolute. `fresh`: start a
    * new game even if there is an autosave (`?new=1`). */
-  | { kind: "init"; city: string; pack: string; fresh?: boolean }
+  | { kind: "init"; city: string; pack: string; packs?: string[]; fresh?: boolean; slot?: string }
   | { kind: "edit"; seq: number; op: EditOp }
   /** what a route would cost and whether it can be built; answered with "preview" */
   | { kind: "preview"; seq: number; from: RouteEnd; to: RouteEnd; pis: PiInput[]; single: boolean }
@@ -93,13 +95,14 @@ export type ToClock =
   | { kind: "import"; bytes: ArrayBuffer }
   /** start again: empty city, $6B, day 1 07:00; answered with "loaded" */
   | { kind: "newGame" }
+  | { kind: "saveSlot"; action: "refresh" | "create" | "open" | "rename" | "delete"; key?: string; name?: string }
   /** inspector queries (T-031), answered with "answer": a junction's moves
    * (`TrackApi.junction_info`), where a line waits at a demand level (`line_delays`), a blueprint
    * stretch's PIs with their curves (`edge_pis`, T-064), or a flyover's price (`[US$M]`, T-080) */
   | {
       kind: "query";
       seq: number;
-      q: { what: "junction"; node: number } | { what: "lineDelays"; line: number; level: number } | { what: "edgePis"; edge: number } | { what: "flyover"; node: number };
+      q: { what: "insertStop"; line: number; station: number } | { what: "junction"; node: number } | { what: "lineDelays"; line: number; level: number } | { what: "edgePis"; edge: number } | { what: "flyover"; node: number };
     };
 
 /** Money as the worker keeps it (T-028), US$M unless said. */
@@ -154,6 +157,7 @@ export interface ClockNode {
 export interface ClockLine {
   id: number;
   name: string;
+  letter: string;
   colour: string;
   ok: boolean;
   running: boolean;
@@ -230,7 +234,7 @@ export interface ClockState {
 }
 
 export type FromClock =
-  | { kind: "ready"; initMs: number; origin: { lon: number; lat: number }; water: boolean; population: number; jobs: number }
+  | { kind: "ready"; initMs: number; frame: FrameSpec; water: boolean; population: number; jobs: number }
   /** an edit's answer; `issues` are the track model's problem kinds (`TrackApi.issue_kinds`) */
   | { kind: "edited"; seq: number; ok: boolean; issues: string[]; charge: number; line?: number }
   | {
@@ -248,6 +252,8 @@ export type FromClock =
       verts: Float64Array;
       /** x, y (local units), height m */
       pts: Float32Array;
+      /** Geometry km/h per consecutive point pair, for a route/edge preview. */
+      speeds?: Float32Array;
       /** several alignments (a node drag moves every edge there, T-093): where each starts in
        * `pts`, in triples, and the end; absent = one */
       parts?: Uint32Array;
@@ -260,13 +266,15 @@ export type FromClock =
   | { kind: "money"; money: MoneyState }
   /** a game was loaded or started (`from`), at game time `clock`; a failed import says why in
    * `error` and changes nothing */
-  | { kind: "loaded"; from: "autosave" | "file" | "new"; clock: number; error?: string }
+  /** `frame`: the game now in the worker (a save made before T-125 is in the legacy frame) */
+  | { kind: "loaded"; from: "autosave" | "file" | "new"; clock: number; frame: FrameSpec; error?: string }
   /** the save file, for the player to keep */
   | { kind: "exported"; bytes: Uint8Array; day: number }
   /** a query's answer, in the track model's flat layout (pack metres) */
   | { kind: "answer"; seq: number; data: Float64Array }
   /** an autosave was written (Date.now()), its size, and worker ms to encode and to write */
   | { kind: "saved"; at: number; bytes: number; encodeMs: number; totalMs: number }
+  | { kind: "saveSlots"; slots: SaveSlot[]; active: string; writable: boolean; at: number; reason?: string; error?: string }
   | { kind: "error"; message: string };
 
 // ---------- the network as demand sees it (T-025 -> T-026) ----------
@@ -285,6 +293,8 @@ export interface NetworkSnapshot {
   /** increases with every snapshot; a newer one replaces an older one */
   version: number;
   city: string;
+  /** the frame the stations' x, y are in (T-125): the loaded game's */
+  frame: FrameSpec;
   stations: SnapshotStation[];
   lines: SnapshotLine[];
   /** The player's fare curve: US$ once per trip plus US$ per km ridden. */
@@ -295,7 +305,7 @@ export interface SnapshotStation {
   /** the track model's node id; stable while the station exists */
   id: number;
   name: string;
-  /** metres east and north of the city pack's origin (the pack's own frame, notes/T-004.md) */
+  /** world metres east and north of the frame's origin (the snapshot's `frame`, game/frame.ts) */
   x: number;
   y: number;
   level: Level;

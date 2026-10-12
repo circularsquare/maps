@@ -1,0 +1,25 @@
+{
+  "checks": [
+    {
+      "width": 900,
+      "box": {
+        "x": 260,
+        "y": 291.65625,
+        "width": 380,
+        "height": 166.6875
+      }
+    },
+    {
+      "width": 400,
+      "box": {
+        "x": 20,
+        "y": 291.65625,
+        "width": 360,
+        "height": 166.6875
+      }
+    }
+  ],
+  "confirmed": true,
+  "cityNavigation": true,
+  "errors": []
+}
