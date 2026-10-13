@@ -197,7 +197,8 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
     points.forEach((p, i) => {
       const [x, y] = toLocal(p.city.center[0], p.city.center[1]);
       const c = modeMix(p.rail, 0, Math.max(0, p.all - p.rail));
-      const r = OVERVIEW_PX * Math.sqrt(p.all / max) / pxPerUnit;
+      // a zone off screen bigger than the scale is drawn at the scale (T-276)
+      const r = OVERVIEW_PX * Math.sqrt(Math.min(1, p.all / max)) / pxPerUnit;
       discs.set([x, y, r, c[0] / 255, c[1] / 255, c[2] / 255, BUBBLE_ALPHA, p.isOwn ? 2 : 1], i * DISC);
       label(`${p.city.name} · ${count(p.all)} trips/day`);
     });

@@ -172,7 +172,7 @@ it.
 - **Rebuild from a snapshot** (Anita, 2026-10-13). 8800 serves a build of the last commit, made in
   the orchestrator's snapshot worktree `maps/.tw-snap/` (detached HEAD, kept out of Git by
   `.git/info/exclude`; `trainworld/data` and `trainworld/app/node_modules` are junctions to the main
-  tree's; its own `CARGO_TARGET_DIR`), registered as `serve.py add trainworld
+  tree's; its own `CARGO_TARGET_DIR=maps/.tw-snap-target`, also excluded), registered as `serve.py add trainworld
   .tw-snap/trainworld/app/dist`. So a rebuild never waits for agents mid-edit: commit what is
   finished, check the snapshot out at that commit, build there. Agents still work in the one main
   tree (Anita does not want a worktree per agent).
